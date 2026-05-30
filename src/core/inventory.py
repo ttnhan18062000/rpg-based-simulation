@@ -137,7 +137,7 @@ class InventoryService:
             if update.gold_delta == 0:
                 return inventory
             from dataclasses import replace
-            return replace(inventory, gold=inventory.gold + update.gold_delta)
+            return replace(inventory, gold=max(0, inventory.gold + update.gold_delta))
             
         from dataclasses import replace
         new_items = list(inventory.items)
@@ -211,5 +211,5 @@ class InventoryService:
         return replace(
             inventory,
             items=new_items,
-            gold=inventory.gold + update.gold_delta
+            gold=max(0, inventory.gold + update.gold_delta)
         )

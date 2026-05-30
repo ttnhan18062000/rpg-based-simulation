@@ -68,6 +68,9 @@ def create_v2_app(profile: RuntimeProfile) -> FastAPI:
     from src.api.routes import search
     app.include_router(search.router, prefix="/api/v1")
 
+    from src.api.routes import behavior
+    app.include_router(behavior.router, prefix="/api/v1")
+
     from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
     from fastapi import Response
 
@@ -1863,6 +1866,27 @@ def create_v2_app(profile: RuntimeProfile) -> FastAPI:
                 const reportRes = await fetch(`/api/v1/observability/history/runs/${runId}/report`);
                 const reportMd = reportRes.ok ? await reportRes.text() : 'No report available.';
                 
+                const scorecardRes = await fetch(`/api/v1/behavior/runs/${runId}/scorecard`);
+                const scorecard = scorecardRes.ok ? await scorecardRes.json() : {};
+                
+                const insightsRes = await fetch(`/api/v1/behavior/runs/${runId}/insights`);
+                const insights = insightsRes.ok ? await insightsRes.json() : [];
+                
+                let insightsHTML = '';
+                if (!insights || insights.length === 0) {
+                    insightsHTML = '<div class="inspector-empty">No behavior insights found.</div>';
+                } else {
+                    insights.forEach(ins => {
+                        insightsHTML += `
+                            <div style="background: rgba(31, 41, 55, 0.4); padding: 0.75rem; border-radius: 6px; border-left: 3px solid #3B82F6; margin-bottom: 0.5rem;">
+                                <div style="font-weight: 600; font-size: 0.85rem; color: #F3F4F6; margin-bottom: 0.25rem;">${ins.title}</div>
+                                <div style="font-size: 0.775rem; color: #9CA3AF; margin-bottom: 0.4rem;">${ins.recommendation}</div>
+                                <span class="badge-${ins.severity ? ins.severity.toLowerCase() : 'unknown'}" style="font-size: 0.65rem; padding: 0.1rem 0.3rem; border-radius: 3px;">${ins.severity || 'INFO'}</span>
+                            </div>
+                        `;
+                    });
+                }
+                
                 let reportHTML = reportMd;
                 if (window.marked && window.marked.parse) {
                     reportHTML = window.marked.parse(reportMd);
@@ -1931,6 +1955,7 @@ def create_v2_app(profile: RuntimeProfile) -> FastAPI:
                         <button class="details-subtab" id="subtab-btn-anomalies" onclick="switchSubTab('anomalies')">Anomalies (${anomalies.length})</button>
                         <button class="details-subtab" id="subtab-btn-violations" onclick="switchSubTab('violations')">Hard Violations (${events.length})</button>
                         <button class="details-subtab" id="subtab-btn-report" onclick="switchSubTab('report')">Executive Report</button>
+                        <button class="details-subtab" id="subtab-btn-behavior" onclick="switchSubTab('behavior')">Behavior Scorecard</button>
                     </div>
                     
                     <div id="subview-manifest" class="details-subview-panel active">
@@ -1971,6 +1996,34 @@ def create_v2_app(profile: RuntimeProfile) -> FastAPI:
                     
                     <div id="subview-report" class="details-subview-panel report-markdown-body">
                         ${reportHTML}
+                    </div>
+                    
+                    <div id="subview-behavior" class="details-subview-panel">
+                        <div class="stats-grid">
+                            <div class="stat-box">
+                                <div class="stat-label">Total Events</div>
+                                <div class="stat-value">${scorecard.total_events || 0}</div>
+                            </div>
+                            <div class="stat-box">
+                                <div class="stat-label">Total Episodes</div>
+                                <div class="stat-value">${scorecard.total_episodes || 0}</div>
+                            </div>
+                            <div class="stat-box">
+                                <div class="stat-label">Total Failures</div>
+                                <div class="stat-value">${scorecard.total_failures || 0}</div>
+                            </div>
+                            <div class="stat-box">
+                                <div class="stat-label">Total Adaptations</div>
+                                <div class="stat-value">${scorecard.total_adaptations || 0}</div>
+                            </div>
+                        </div>
+                        
+                        <div class="card" style="margin-top: 1rem;">
+                            <div class="card-title">Top Behavior Insights</div>
+                            <div id="insights-list" style="display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.5rem;">
+                                ${insightsHTML}
+                            </div>
+                        </div>
                     </div>
                 `;
             } catch (err) {

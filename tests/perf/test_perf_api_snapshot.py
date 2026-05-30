@@ -77,6 +77,7 @@ def _run_snapshot_benchmark(entity_count, samples, perf_report_dir):
     return results
 
 @pytest.mark.perf
+@pytest.mark.slow
 @pytest.mark.parametrize("entity_count", [100, 1000])
 def test_api_snapshot_performance_comparison(entity_count, perf_report_dir):
     """

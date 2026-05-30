@@ -17,7 +17,16 @@ from src.observability.warehouse.models import (
     BaselineRecord,
     ComparisonRecord,
     WarehouseIngestionResult,
-    WarehouseHealthStatus
+    WarehouseHealthStatus,
+    BehaviorMetricWindowRecord,
+    BehaviorEventRecord,
+    BehaviorEpisodeRecord,
+    EntityBehaviorScorecardRecord,
+    RunBehaviorScorecardRecord,
+    BehaviorFindingRecord,
+    BehaviorInsightRecord,
+    CohortBehaviorReportRecord,
+    RunBehaviorComparisonRecord
 )
 from src.observability.warehouse.registry import WarehouseSchemaRegistry
 from src.observability.reporting.artifact_repository import RunArtifactRepository
@@ -59,6 +68,33 @@ class NullWarehouseAdapter(WarehouseAdapter):
     def query_violations(self, filters: Dict[str, Any]) -> List[HardLawViolationRecord]:
         return []
 
+    def query_behavior_events(self, filters: Dict[str, Any]) -> List[BehaviorEventRecord]:
+        return []
+
+    def query_behavior_episodes(self, filters: Dict[str, Any]) -> List[BehaviorEpisodeRecord]:
+        return []
+
+    def query_behavior_metric_windows(self, filters: Dict[str, Any]) -> List[BehaviorMetricWindowRecord]:
+        return []
+
+    def query_entity_behavior_scorecards(self, filters: Dict[str, Any]) -> List[EntityBehaviorScorecardRecord]:
+        return []
+
+    def query_run_behavior_scorecards(self, filters: Dict[str, Any]) -> List[RunBehaviorScorecardRecord]:
+        return []
+
+    def query_behavior_findings(self, filters: Dict[str, Any]) -> List[BehaviorFindingRecord]:
+        return []
+
+    def query_behavior_insights(self, filters: Dict[str, Any]) -> List[BehaviorInsightRecord]:
+        return []
+
+    def query_cohort_behavior_reports(self, filters: Dict[str, Any]) -> List[CohortBehaviorReportRecord]:
+        return []
+
+    def query_run_behavior_comparisons(self, filters: Dict[str, Any]) -> List[RunBehaviorComparisonRecord]:
+        return []
+
     def health(self) -> WarehouseHealthStatus:
         return WarehouseHealthStatus(connected=True, latency_ms=0.0)
 
@@ -89,7 +125,8 @@ class LocalWarehouseAdapter(WarehouseAdapter):
             "events": 0,
             "anomalies": 0,
             "violations": 0,
-            "metrics": 0
+            "metrics": 0,
+            "behavior_metrics": 0
         }
         errors = []
 
@@ -187,6 +224,31 @@ class LocalWarehouseAdapter(WarehouseAdapter):
                             evidence_json=json.dumps(anomaly_dict.get("evidence", {}))
                         )
                         records_count["anomalies"] += 1
+
+            # 7. Map behavior metric windows if available
+            run_dir = os.path.join(self.run_repo.base_dir, run_id)
+            behavior_metrics_path = os.path.join(run_dir, "behavior_metric_windows.jsonl")
+            if os.path.exists(behavior_metrics_path):
+                from src.observability.warehouse.models import BehaviorMetricWindowRecord
+                with open(behavior_metrics_path, "r", encoding="utf-8") as f:
+                    for line in f:
+                        if not line.strip():
+                            continue
+                        m_dict = json.loads(line)
+                        BehaviorMetricWindowRecord(
+                            run_id=run_id,
+                            window_start_tick=m_dict.get("window_start_tick", 0),
+                            window_end_tick=m_dict.get("window_end_tick", 0),
+                            behavior_counts_json=json.dumps(m_dict.get("behavior_counts", {})),
+                            route_family_counts_json=json.dumps(m_dict.get("route_family_counts", {})),
+                            episode_counts_json=json.dumps(m_dict.get("episode_counts", {})),
+                            episode_outcomes_json=json.dumps(m_dict.get("episode_outcomes", {})),
+                            failure_counts_json=json.dumps(m_dict.get("failure_counts", {})),
+                            adaptation_counts_json=json.dumps(m_dict.get("adaptation_counts", {})),
+                            entity_activity_counts_json=json.dumps(m_dict.get("entity_activity_counts", {})),
+                            schema_version=m_dict.get("schema_version", 1)
+                        )
+                        records_count["behavior_metrics"] = records_count.get("behavior_metrics", 0) + 1
 
         except Exception as e:
             errors.append(str(e))
@@ -523,6 +585,314 @@ class LocalWarehouseAdapter(WarehouseAdapter):
         offset = int(filters.get("offset", 0))
         limit = int(filters.get("limit", 50))
         return records[offset:offset+limit]
+
+    def query_behavior_events(self, filters: Dict[str, Any]) -> List[BehaviorEventRecord]:
+        run_id = filters.get("run_id")
+        if not run_id:
+            return []
+        try:
+            path = self.run_repo.resolve_path(run_id, "behavior_events")
+        except Exception:
+            return []
+        if not os.path.exists(path):
+            return []
+        records = []
+        with open(path, "r", encoding="utf-8") as f:
+            for line in f:
+                if not line.strip():
+                    continue
+                try:
+                    d = json.loads(line)
+                    if "entity_id" in filters and d.get("entity_id") != filters["entity_id"]:
+                        continue
+                    if "category" in filters and d.get("category") != filters["category"]:
+                        continue
+                    records.append(BehaviorEventRecord(
+                        run_id=run_id,
+                        tick=d.get("tick", 0),
+                        event_id=d.get("event_id", ""),
+                        entity_id=d.get("entity_id", ""),
+                        category=d.get("category", ""),
+                        family=d.get("family", ""),
+                        action=d.get("action", ""),
+                        subject_type=d.get("subject_type", ""),
+                        subject_id=d.get("subject_id"),
+                        success=d.get("success", True),
+                        metadata_json=json.dumps(d.get("metadata", {}))
+                    ))
+                except Exception:
+                    continue
+        records.sort(key=lambda x: x.tick)
+        offset = int(filters.get("offset", 0))
+        limit = int(filters.get("limit", 50))
+        return records[offset:offset+limit]
+
+    def query_behavior_episodes(self, filters: Dict[str, Any]) -> List[BehaviorEpisodeRecord]:
+        run_id = filters.get("run_id")
+        if not run_id:
+            return []
+        try:
+            path = self.run_repo.resolve_path(run_id, "behavior_episodes")
+        except Exception:
+            return []
+        if not os.path.exists(path):
+            return []
+        records = []
+        with open(path, "r", encoding="utf-8") as f:
+            for line in f:
+                if not line.strip():
+                    continue
+                try:
+                    d = json.loads(line)
+                    if "entity_id" in filters and d.get("entity_id") != filters["entity_id"]:
+                        continue
+                    if "category" in filters and d.get("category") != filters["category"]:
+                        continue
+                    records.append(BehaviorEpisodeRecord(
+                        run_id=run_id,
+                        episode_id=d.get("episode_id", ""),
+                        entity_id=d.get("entity_id", ""),
+                        category=d.get("category", ""),
+                        start_tick=d.get("start_tick", 0),
+                        end_tick=d.get("end_tick", 0),
+                        duration_ticks=d.get("duration_ticks", 0),
+                        outcome=d.get("outcome", ""),
+                        event_count=d.get("event_count", 0),
+                        events_json=json.dumps(d.get("events", []))
+                    ))
+                except Exception:
+                    continue
+        records.sort(key=lambda x: x.start_tick)
+        offset = int(filters.get("offset", 0))
+        limit = int(filters.get("limit", 50))
+        return records[offset:offset+limit]
+
+    def query_behavior_metric_windows(self, filters: Dict[str, Any]) -> List[BehaviorMetricWindowRecord]:
+        run_id = filters.get("run_id")
+        if not run_id:
+            return []
+        try:
+            path = self.run_repo.resolve_path(run_id, "behavior_metric_windows")
+        except Exception:
+            return []
+        if not os.path.exists(path):
+            return []
+        records = []
+        with open(path, "r", encoding="utf-8") as f:
+            for line in f:
+                if not line.strip():
+                    continue
+                try:
+                    d = json.loads(line)
+                    records.append(BehaviorMetricWindowRecord(
+                        run_id=run_id,
+                        window_start_tick=d.get("window_start_tick", 0),
+                        window_end_tick=d.get("window_end_tick", 0),
+                        behavior_counts_json=json.dumps(d.get("behavior_counts", {})),
+                        route_family_counts_json=json.dumps(d.get("route_family_counts", {})),
+                        episode_counts_json=json.dumps(d.get("episode_counts", {})),
+                        episode_outcomes_json=json.dumps(d.get("episode_outcomes", {})),
+                        failure_counts_json=json.dumps(d.get("failure_counts", {})),
+                        adaptation_counts_json=json.dumps(d.get("adaptation_counts", {})),
+                        entity_activity_counts_json=json.dumps(d.get("entity_activity_counts", {})),
+                        schema_version=d.get("schema_version", 1)
+                    ))
+                except Exception:
+                    continue
+        records.sort(key=lambda x: x.window_start_tick)
+        offset = int(filters.get("offset", 0))
+        limit = int(filters.get("limit", 50))
+        return records[offset:offset+limit]
+
+    def query_entity_behavior_scorecards(self, filters: Dict[str, Any]) -> List[EntityBehaviorScorecardRecord]:
+        run_id = filters.get("run_id")
+        if not run_id:
+            return []
+        try:
+            path = self.run_repo.resolve_path(run_id, "entity_behavior_scorecards")
+        except Exception:
+            return []
+        if not os.path.exists(path):
+            return []
+        records = []
+        with open(path, "r", encoding="utf-8") as f:
+            for line in f:
+                if not line.strip():
+                    continue
+                try:
+                    d = json.loads(line)
+                    if "entity_id" in filters and d.get("entity_id") != filters["entity_id"]:
+                        continue
+                    records.append(EntityBehaviorScorecardRecord(
+                        run_id=run_id,
+                        entity_id=d.get("entity_id", ""),
+                        total_events=d.get("total_events", 0),
+                        category_counts_json=json.dumps(d.get("category_counts", {})),
+                        family_counts_json=json.dumps(d.get("family_counts", {})),
+                        episode_counts_json=json.dumps(d.get("episode_counts", {})),
+                        episode_outcomes_json=json.dumps(d.get("episode_outcomes", {})),
+                        total_failures=d.get("total_failures", 0),
+                        total_adaptations=d.get("total_adaptations", 0),
+                        failure_loop_count=d.get("failure_loop_count", 0),
+                        adaptation_proof_count=d.get("adaptation_proof_count", 0),
+                        suspicion_score=d.get("suspicion_score", 0.0),
+                        verdict=d.get("verdict", "INCONCLUSIVE")
+                    ))
+                except Exception:
+                    continue
+        offset = int(filters.get("offset", 0))
+        limit = int(filters.get("limit", 50))
+        return records[offset:offset+limit]
+
+    def query_run_behavior_scorecards(self, filters: Dict[str, Any]) -> List[RunBehaviorScorecardRecord]:
+        run_id = filters.get("run_id")
+        if not run_id:
+            return []
+        try:
+            path = self.run_repo.resolve_path(run_id, "run_behavior_scorecard")
+        except Exception:
+            return []
+        if not os.path.exists(path):
+            return []
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                d = json.load(f)
+            return [RunBehaviorScorecardRecord(
+                run_id=run_id,
+                total_events=d.get("total_events", 0),
+                total_episodes=d.get("total_episodes", 0),
+                total_failures=d.get("total_failures", 0),
+                total_adaptations=d.get("total_adaptations", 0),
+                entity_count=d.get("entity_count", 0),
+                verdict_distribution_json=json.dumps(d.get("verdict_distribution", {})),
+                category_counts_json=json.dumps(d.get("category_counts", {})),
+                family_counts_json=json.dumps(d.get("family_counts", {}))
+            )]
+        except Exception:
+            return []
+
+    def query_behavior_findings(self, filters: Dict[str, Any]) -> List[BehaviorFindingRecord]:
+        run_id = filters.get("run_id")
+        if not run_id:
+            return []
+        try:
+            path = self.run_repo.resolve_path(run_id, "behavior_findings")
+        except Exception:
+            return []
+        if not os.path.exists(path):
+            return []
+        records = []
+        with open(path, "r", encoding="utf-8") as f:
+            for line in f:
+                if not line.strip():
+                    continue
+                try:
+                    d = json.loads(line)
+                    if "entity_id" in filters and d.get("entity_id") != filters["entity_id"]:
+                        continue
+                    records.append(BehaviorFindingRecord(
+                        run_id=run_id,
+                        finding_id=d.get("finding_id", ""),
+                        entity_id=d.get("entity_id", ""),
+                        pattern_type=d.get("pattern_type", ""),
+                        tick=d.get("tick", 0),
+                        severity=d.get("severity", "INFO"),
+                        evidence_json=json.dumps(d.get("evidence", {}))
+                    ))
+                except Exception:
+                    continue
+        records.sort(key=lambda x: x.tick)
+        offset = int(filters.get("offset", 0))
+        limit = int(filters.get("limit", 50))
+        return records[offset:offset+limit]
+
+    def query_behavior_insights(self, filters: Dict[str, Any]) -> List[BehaviorInsightRecord]:
+        run_id = filters.get("run_id")
+        if not run_id:
+            return []
+        try:
+            path = self.run_repo.resolve_path(run_id, "behavior_insights")
+        except Exception:
+            return []
+        if not os.path.exists(path):
+            return []
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            # If it's a list:
+            if isinstance(data, list):
+                records = []
+                for d in data:
+                    records.append(BehaviorInsightRecord(
+                        run_id=run_id,
+                        insight_id=d.get("insight_id", ""),
+                        insight_type=d.get("insight_type", ""),
+                        title=d.get("title", ""),
+                        evidence_json=json.dumps(d.get("evidence", {})),
+                        recommendation=d.get("recommendation", ""),
+                        severity=d.get("severity", "INFO")
+                    ))
+                return records
+            # Otherwise single dict:
+            return [BehaviorInsightRecord(
+                run_id=run_id,
+                insight_id=data.get("insight_id", ""),
+                insight_type=data.get("insight_type", ""),
+                title=data.get("title", ""),
+                evidence_json=json.dumps(data.get("evidence", {})),
+                recommendation=data.get("recommendation", ""),
+                severity=data.get("severity", "INFO")
+            )]
+        except Exception:
+            return []
+
+    def query_cohort_behavior_reports(self, filters: Dict[str, Any]) -> List[CohortBehaviorReportRecord]:
+        run_id = filters.get("run_id")
+        if not run_id:
+            return []
+        try:
+            path = self.run_repo.resolve_path(run_id, "cohort_behavior_report")
+        except Exception:
+            return []
+        if not os.path.exists(path):
+            return []
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                d = json.load(f)
+            # Wrap in list
+            return [CohortBehaviorReportRecord(
+                run_id=run_id,
+                cohort_name=d.get("cohort_name", "all"),
+                entities_json=json.dumps(d.get("entities", [])),
+                metrics_json=json.dumps(d.get("metrics", {}))
+            )]
+        except Exception:
+            return []
+
+    def query_run_behavior_comparisons(self, filters: Dict[str, Any]) -> List[RunBehaviorComparisonRecord]:
+        run_id = filters.get("run_id")
+        if not run_id:
+            return []
+        try:
+            path = self.run_repo.resolve_path(run_id, "run_behavior_comparison")
+        except Exception:
+            return []
+        if not os.path.exists(path):
+            return []
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                d = json.load(f)
+            return [RunBehaviorComparisonRecord(
+                run_id=run_id,
+                baseline_run_id=d.get("baseline_run_id", ""),
+                episode_success_rate_delta=d.get("episode_success_rate_delta", 0.0),
+                consecutive_failures_delta=d.get("consecutive_failures_delta", 0.0),
+                event_volume_delta=d.get("event_volume_delta", 0.0),
+                verdict=d.get("verdict", "NO_CHANGE"),
+                reason=d.get("reason", "")
+            )]
+        except Exception:
+            return []
 
     def health(self) -> WarehouseHealthStatus:
         return WarehouseHealthStatus(connected=True, latency_ms=0.5)

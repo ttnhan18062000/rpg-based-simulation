@@ -98,7 +98,20 @@ class BeliefCycleSystem:
             certainty=LeadCertainty.VAGUE,
             source_entity_id=source_entity_id
         )
-        return StrategicUpdate(leads_add_or_update=[lead])
+        belief = BeliefEntry(
+            id=f"belief_rumor_{rumor_subject}_{current_tick}",
+            subject=rumor_subject,
+            claim=rumor_detail,
+            certainty=0.3,
+            source="rumor",
+            source_entity_id=source_entity_id,
+            created_tick=current_tick,
+            last_refreshed_tick=current_tick
+        )
+        return StrategicUpdate(
+            leads_add_or_update=[lead],
+            beliefs_add_or_update=[belief]
+        )
 
     @staticmethod
     def process_observation(
@@ -118,7 +131,19 @@ class BeliefCycleSystem:
             discovered_tick=current_tick,
             certainty=LeadCertainty.PRECISE
         )
-        return StrategicUpdate(leads_add_or_update=[lead])
+        belief = BeliefEntry(
+            id=f"belief_obs_{subject}_{current_tick}",
+            subject=subject,
+            claim=detail,
+            certainty=1.0,
+            source="observation",
+            created_tick=current_tick,
+            last_refreshed_tick=current_tick
+        )
+        return StrategicUpdate(
+            leads_add_or_update=[lead],
+            beliefs_add_or_update=[belief]
+        )
 
     @staticmethod
     def apply_contradiction(
@@ -153,9 +178,18 @@ class BeliefCycleSystem:
                 new_confidence = max(0.0, hyp.confidence - 0.2)
                 hypotheses_to_update.append(replace(hyp, confidence=new_confidence))
 
+        # Degrade associated BeliefEntry
+        beliefs_to_update = []
+        matching_belief = next((b for b in entity.strategic.beliefs.values() if b.subject == lead.subject), None)
+        if matching_belief:
+            new_bel_certainty = max(0.0, matching_belief.certainty - 0.3)
+            new_contradictions = matching_belief.contradictions + 1
+            beliefs_to_update.append(replace(matching_belief, certainty=new_bel_certainty, contradictions=new_contradictions))
+
         return StrategicUpdate(
             leads_add_or_update=[updated_lead],
-            hypotheses_add_or_update=hypotheses_to_update
+            hypotheses_add_or_update=hypotheses_to_update,
+            beliefs_add_or_update=beliefs_to_update
         )
 
     @staticmethod

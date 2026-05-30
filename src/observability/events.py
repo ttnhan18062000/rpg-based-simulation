@@ -3,6 +3,43 @@ import time
 import uuid
 from typing import Any, Dict, List, Literal, Optional, Tuple
 from pydantic import BaseModel, Field
+from dataclasses import dataclass, field
+from typing import Mapping
+
+
+@dataclass(frozen=True)
+class ObservabilityEventEnvelope:
+    """
+    Standard lightweight event envelope for cheap hot-path observability dispatch.
+    """
+    event_id: str
+    run_id: str
+    tick: int
+    entity_id: Optional[int]
+    event_type: str
+    event_category: str
+    severity: str
+    source_system: str
+    message: str
+    payload: Mapping[str, Any] = field(default_factory=dict)
+    related_entity_ids: tuple[int, ...] = ()
+
+    @classmethod
+    def from_simulation_event(cls, event: SimulationEvent, run_id: Optional[str] = None) -> ObservabilityEventEnvelope:
+        return cls(
+            event_id=event.event_id,
+            run_id=run_id or event.run_id or "unknown_run",
+            tick=event.tick,
+            entity_id=event.entity_id,
+            event_type=event.event_type,
+            event_category=event.event_category,
+            severity=event.severity,
+            source_system=event.source_system,
+            message=event.message,
+            payload=event.payload,
+            related_entity_ids=tuple(event.related_entity_ids)
+        )
+
 
 EventCategory = Literal[
     "movement", "combat", "resource", "economy", "inventory",

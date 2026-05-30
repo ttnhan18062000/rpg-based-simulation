@@ -35,15 +35,17 @@ def test_blocker_inference_and_detour():
     entity = replace(entity, 
                      task=replace(entity.task, work_kind="ENTITY_ACT", payload={"action": "INTERACT", "target_id": 10}))
     
-    state = AuthoritativeState(entities={1: entity}, tick=1, seed=1)
-    
     # 3. Setup lead for "resource"
     lead = LeadState(id="lead1", kind="location", subject="(5, 5)", detail="Alternative resource source", certainty=LeadCertainty.PRECISE)
     entity = replace(entity, strategic=replace(entity.strategic, leads={"lead1": lead}))
     
-    # 4. Execute Brain
-    updates = SimulationDomainLogic.execute_brain(state, entity, force=True)
-    ent_up = updates[1]
+    state = AuthoritativeState(entities={1: entity}, tick=1, seed=1)
+    
+    # 4. Execute Pipeline
+    from src.engine.pipeline import AuthoritativeApplyPipeline
+    raw_update = StateUpdate(entity_updates={1: EntityUpdate(entity_id=1)}, force_full_scan=True)
+    refined = AuthoritativeApplyPipeline.refine(state, raw_update)
+    ent_up = refined.entity_updates[1]
     
     # Verify blocker was inferred
     assert any(b.kind == "material" and b.subject == "resource" for b in ent_up.strategic.blockers_add_or_update)
@@ -70,9 +72,11 @@ def test_detour_completion_and_resumption():
     
     state = AuthoritativeState(entities={1: entity}, tick=100, seed=1)
     
-    # 3. Execute Brain - should resume parent
-    updates = SimulationDomainLogic.execute_brain(state, entity, force=True)
-    ent_up = updates[1]
+    # 3. Execute Pipeline
+    from src.engine.pipeline import AuthoritativeApplyPipeline
+    raw_update = StateUpdate(entity_updates={1: EntityUpdate(entity_id=1)}, force_full_scan=True)
+    refined = AuthoritativeApplyPipeline.refine(state, raw_update)
+    ent_up = refined.entity_updates[1]
     
     assert ent_up.strategic.current_project_id_set == "parent"
     assert any(p.id == "parent" and p.status == ProjectStatus.ACTIVE for p in ent_up.strategic.projects_add_or_update)

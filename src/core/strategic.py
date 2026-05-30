@@ -90,6 +90,28 @@ class ObjectiveKind(str, Enum):
     ACQUIRE_ITEM = "acquire_item"
     DEFEAT_ENEMY = "defeat_enemy"
     INVESTIGATE = "investigate"
+    REACH_SERVICE = "reach_service"
+    ASK_INFORMATION = "ask_information"
+    BUY_ITEM = "buy_item"
+    REQUEST_CRAFT = "request_craft"
+    REACH_RESOURCE = "reach_resource"
+    HARVEST_RESOURCE = "harvest_resource"
+    ACCEPT_QUEST = "accept_quest"
+    REST = "rest"
+    RETURN_TOWN = "return_town"
+
+
+class GoalKind(str, Enum):
+    """Types of strategic goals/scorers."""
+    HARVESTING = "harvesting"
+    FATIGUE = "fatigue"
+    HUNGER = "hunger"
+    SOCIAL = "social"
+    TOWN_RETURN = "town_return"
+    COMBAT_ENGAGE = "combat_engage"
+    COMBAT_RETREAT = "combat_retreat"
+    RECOVER = "recover"
+    RESOLVE_BLOCKER = "resolve_blocker"
 
 
 class ProjectKind(str, Enum):
@@ -99,6 +121,12 @@ class ProjectKind(str, Enum):
     EXPLORATION = "exploration"
     COMBAT = "combat"
     SOCIAL = "social"
+    RECOVERY = "recovery"
+    PREPARATION = "preparation"
+    TRAINING = "training"
+    HARVESTING = "harvesting"
+    INFORMATION = "information"
+    TRAVEL = "travel"
 
 
 class ConcernKind(str, Enum):
@@ -273,7 +301,7 @@ class CognitionProfile:
     interruption_resistance: float = 0.3  # 0.0 (easy switch) to 1.0 (never switch)
     resistance_multiplier: float = 30.0   # Scales resistance into project utility score
     detour_breadth: int = 3  # Max detour suggestions per tick
-    detour_depth: int = 2    # Max nesting depth for detour chains
+    reserved_detour_depth: int = 2    # Max nesting depth for detour chains (reserved for future recursive planning)
 
 
 @dataclass(frozen=True, slots=True)
@@ -294,6 +322,7 @@ class StrategicComponent:
     source_trust: Dict[int, SourceTrustEntry] = field(default_factory=dict)
     contracts: Dict[str, ContractState] = field(default_factory=dict)
     turning_points: List[TurningPointState] = field(default_factory=list)
+    beliefs: Dict[str, Any] = field(default_factory=dict)
 
     # Active tracking
     current_project_id: Optional[str] = None

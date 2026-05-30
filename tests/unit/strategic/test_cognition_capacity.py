@@ -29,7 +29,7 @@ def test_high_intelligence_scaling():
     
     # Detour breadth/depth should scale
     assert profile.detour_breadth >= 3
-    assert profile.detour_depth >= 2
+    assert profile.reserved_detour_depth >= 2
 
 def test_fatigue_penalty():
     # Fresh entity

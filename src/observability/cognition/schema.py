@@ -68,6 +68,9 @@ def build_snapshot_record(
     current_project_id: str | None = None,
     current_objective_id: str | None = None,
     overload_source: str | None = None,
+    source_goal_score: float | None = None,
+    resulting_action: str | None = None,
+    target_pos: list[float] | None = None,
 ) -> Dict[str, Any]:
     """
     Constructs a compliant compact cognition snapshot record.
@@ -121,6 +124,9 @@ def build_snapshot_record(
         "current_project_id": current_project_id,
         "current_objective_id": current_objective_id,
         "overload_source": overload_source,
+        "source_goal_score": source_goal_score,
+        "resulting_action": resulting_action,
+        "target_pos": target_pos,
         "node_count": len(clean_nodes),
         "edge_count": len(clean_edges),
         "graph_hash": graph_hash,

@@ -65,6 +65,32 @@ class AuthoritativeApplyPipeline:
 
         costs = {}
 
+        # M10 Feature flags manager
+        from src.domains.optimization.feature_flags import FeatureFlagManager, FeatureMode
+        ff_manager = FeatureFlagManager()
+        # Retrieve overrides if configured on the state/profile
+        if getattr(state, "rollout_profile", None) is not None:
+             # Merge profile flags
+             for flag_name in state.rollout_profile.enabled_phases:
+                 ff_manager.set_flag_mode(flag_name, FeatureMode.ON)
+             for flag_name in state.rollout_profile.shadow_phases:
+                 ff_manager.set_flag_mode(flag_name, FeatureMode.SHADOW)
+             for flag_name in state.rollout_profile.disabled_phases:
+                 ff_manager.set_flag_mode(flag_name, FeatureMode.OFF)
+
+        # Allow simple direct state config flags
+        if getattr(state, "feature_flags", None) is not None:
+             for k, v in state.feature_flags.items():
+                 ff_manager.set_flag_mode(k, v)
+
+        # Allow mapping flags from state.pressure_signals dictionary
+        if getattr(state, "pressure_signals", None) is not None:
+             for k, v in state.pressure_signals.items():
+                 if k.startswith("ENABLE_"):
+                     # If pressure signal is non-zero, treat as active (ON)
+                     mode = FeatureMode.ON if v > 0.0 else FeatureMode.OFF
+                     ff_manager.set_flag_mode(k, mode)
+
         # --- Phase 1: Trust & Validity ---
         t_start = time.perf_counter_ns()
         update, compaction_metrics = StateUpdateCompactor.compact_with_metrics(state, update)
@@ -73,11 +99,34 @@ class AuthoritativeApplyPipeline:
         metric_counters["compacted_entity_updates"] = compaction_metrics.compacted_entity_updates
         update = replace(update, metric_counters=metric_counters)
 
-        def run_phase(phase_name: str, upd: StateUpdate, phase_fn) -> StateUpdate:
+        def run_phase(phase_name: str, upd: StateUpdate, phase_fn, feature_flag: Optional[str] = None) -> StateUpdate:
+            # 1. Evaluate Feature Rollout Mode
+            mode = FeatureMode.ON
+            if feature_flag:
+                mode = ff_manager.get_flag_mode(feature_flag)
+
+            if mode == FeatureMode.OFF:
+                metric_counters[f"skip_{phase_name}"] = metric_counters.get(f"skip_{phase_name}", 0) + 1
+                return upd
+
+            # 2. Evaluate skip dependency policies
             if PhaseDependencyGraph.should_run_phase(phase_name, state, upd, cadence):
                 metric_counters["phase_runs"] = metric_counters.get("phase_runs", 0) + 1
                 metric_counters[f"run_{phase_name}"] = metric_counters.get(f"run_{phase_name}", 0) + 1
-                return phase_fn(upd)
+                
+                phase_upd = phase_fn(upd)
+                
+                # 3. Strictly enforce SHADOW mode: discard all aspect mutations from update
+                if mode == FeatureMode.SHADOW:
+                    # In shadow mode, we return a copy with original entity/world/group updates,
+                    # but we keep metric counters and diagnostic telemetry
+                    shadow_upd = replace(
+                        upd,
+                        metric_counters=phase_upd.metric_counters,
+                        sub_phase_costs=phase_upd.sub_phase_costs
+                    )
+                    return shadow_upd
+                return phase_upd
             else:
                 metric_counters["phase_skips"] = metric_counters.get("phase_skips", 0) + 1
                 metric_counters[f"skip_{phase_name}"] = metric_counters.get(f"skip_{phase_name}", 0) + 1
@@ -88,11 +137,38 @@ class AuthoritativeApplyPipeline:
 
         costs["trust_validity"] = (time.perf_counter_ns() - t_start) / 1e6
 
+        # --- Enhanced RPG Phase 2: Self Model Cognition ---
+        t_start = time.perf_counter_ns()
+        from src.cognition import SelfModelUpdatePhase
+        update = run_phase("self_model", update, lambda u: SelfModelUpdatePhase.apply(state, u), "ENABLE_SELF_MODEL_COGNITION")
+        costs["self_model"] = (time.perf_counter_ns() - t_start) / 1e6
+
+        # --- Enhanced RPG Phase 5: Belief Assimilation ---
+        t_start = time.perf_counter_ns()
+        from src.domains.information.phase import InformationBeliefPhase
+        # Retrieve dynamic profiles/pending responses from state or context if present
+        source_profiles = getattr(state, "information_source_profiles", [])
+        pending_resps = getattr(state, "pending_information_responses", [])
+        update = run_phase("information_belief", update, lambda u: InformationBeliefPhase.apply(state, source_profiles, pending_resps), "ENABLE_BELIEF_ASSIMILATION")
+        costs["information_belief"] = (time.perf_counter_ns() - t_start) / 1e6
+
+        # --- Enhanced RPG Phase 7: Social Cooperation ---
+        t_start = time.perf_counter_ns()
+        from src.domains.cooperation.phase import CooperationPhase
+        update = run_phase("cooperation", update, lambda u: CooperationPhase.execute(state, u), "ENABLE_SOCIAL_COOPERATION")
+        costs["cooperation"] = (time.perf_counter_ns() - t_start) / 1e6
+
         # --- Phase 2: Contracts & Production ---
         t_start = time.perf_counter_ns()
         update = run_phase("contracts", update, lambda u: AuthoritativeApplyPipeline._resolve_contract_expirations(state, u))
         update = run_phase("blacksmith", update, lambda u: BlacksmithSystem.enforce(state, u))
         costs["contracts_production"] = (time.perf_counter_ns() - t_start) / 1e6
+
+        # --- Enhanced RPG Phase 3: Adventure Routing ---
+        t_start = time.perf_counter_ns()
+        from src.domains.adventure.phase import AdventureDecisionPhase
+        update = run_phase("adventure_decision", update, lambda u: AdventureDecisionPhase.apply(state), "ENABLE_ADVENTURE_ROUTING")
+        costs["adventure_decision"] = (time.perf_counter_ns() - t_start) / 1e6
 
         # --- Phase 3: Action & Movement Routing ---
         t_start = time.perf_counter_ns()
@@ -100,6 +176,12 @@ class AuthoritativeApplyPipeline:
         update = run_phase("position_swaps", update, lambda u: AuthoritativeApplyPipeline._resolve_position_swaps(state, u))
         update = run_phase("movement_routing", update, lambda u: AuthoritativeApplyPipeline._route_movement_intent(state, u))
         costs["locomotion"] = (time.perf_counter_ns() - t_start) / 1e6
+
+        # --- Enhanced RPG Phase 4: Combat Engagement ---
+        t_start = time.perf_counter_ns()
+        from src.domains.combat_engagement.phase import CombatEngagementPhase
+        update = run_phase("combat_engagement", update, lambda u: CombatEngagementPhase.apply(state), "ENABLE_COMBAT_ENGAGEMENT")
+        costs["combat_engagement"] = (time.perf_counter_ns() - t_start) / 1e6
 
         # --- Phase 4: Interaction & World Effects ---
         t_start = time.perf_counter_ns()
@@ -124,13 +206,32 @@ class AuthoritativeApplyPipeline:
         update = run_phase("world_dynamics", update, lambda u: WorldDynamicsSystem.resolve_dynamics(state, u, generator, cadence=cadence))
         costs["governance_ecology"] = (time.perf_counter_ns() - t_start) / 1e6
 
-        # --- Phase 6: Economy & Evolution ---
+        # --- Enhanced RPG Phase 8: World Emergence ---
         t_start = time.perf_counter_ns()
+        from src.domains.world_emergence.phase import WorldEmergencePhase
+        recent_world_events = getattr(state, "recent_world_events", [])
+        update = run_phase("world_emergence", update, lambda u: WorldEmergencePhase.execute(state, u, recent_world_events)[0], "ENABLE_WORLD_EMERGENCE")
+        costs["world_emergence"] = (time.perf_counter_ns() - t_start) / 1e6
+
+        # --- Phase 6: Economy & Evolution ---
+        # Refresh dirty set to capture resource_transfers added by town_resolution and world_dynamics
+        t_start = time.perf_counter_ns()
+        dirty_builder.mark_from_update(state, update)
+        update = update.replace(dirty_set=dirty_builder.build())
         update = run_phase("quest_rewards", update, lambda u: AuthoritativeApplyPipeline._resolve_quest_rewards(state, u))
         update = run_phase("shop", update, lambda u: ShopSystem.enforce(state, u))
         update = run_phase("resource_transactions", update, lambda u: AuthoritativeApplyPipeline._resolve_resource_transactions(state, u))
+        # Refresh dirty set to capture reward_upd set by resource_transactions (XP rewards)
+        dirty_builder.mark_from_update(state, update)
+        update = update.replace(dirty_set=dirty_builder.build())
         update = run_phase("evolution", update, lambda u: EvolutionSystem.evaluate(state, u))
         costs["economy"] = (time.perf_counter_ns() - t_start) / 1e6
+
+        # --- Enhanced RPG Phase 6: Progression & Conversion ---
+        t_start = time.perf_counter_ns()
+        from src.domains.progression.phase import ProgressionConversionPhase
+        update = run_phase("progression_conversion", update, lambda u: ProgressionConversionPhase.execute(state, u), "ENABLE_PROGRESSION_EVOLUTION")
+        costs["progression_conversion"] = (time.perf_counter_ns() - t_start) / 1e6
 
         # --- Phase 7: Cognitive & Final Integrity ---
         t_start = time.perf_counter_ns()
@@ -150,6 +251,11 @@ class AuthoritativeApplyPipeline:
         t5 = time.perf_counter_ns()
         update = run_phase("groups", update, lambda u: AuthoritativeApplyPipeline._resolve_groups(state, u))
         t6 = time.perf_counter_ns()
+        
+        from src.systems.social_systems.contracts import ContractService
+        update = run_phase("active_contracts", update, lambda u: ContractService.process_active_contracts(state, u))
+        update = run_phase("expired_offers", update, lambda u: ContractService.reap_expired_offers(state, u))
+        
         update = run_phase("capacity_enforcement", update, lambda u: CapacityEnforcementPhase.enforce(state, u))
         t7 = time.perf_counter_ns()
         

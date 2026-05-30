@@ -6,6 +6,7 @@ from src.platform.rng import DeterministicRNG
 from src.engine.checkpoint import CanonicalStateHasher
 
 @pytest.mark.slow
+@pytest.mark.extra_slow
 def test_1000_tick_determinism():
     """
     Pillar 1: Long-Run Stability

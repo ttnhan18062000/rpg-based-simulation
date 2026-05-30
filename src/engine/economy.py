@@ -132,6 +132,10 @@ class ResourceTransactionSystem:
                                 transaction_id=intent.transaction_id, accepted=False, reason=result.reason,
                                 source_kind=intent.source_kind, source_id=intent.source_id
                             ))
+                            # Reset interaction on failure (e.g. inventory full / depleted)
+                            from src.core.updates import InteractionUpdate
+                            ent_upd = replace(ent_upd, interaction=InteractionUpdate(reset=True))
+                            
                             # Audit Log (RPG-INFRA-200)
                             new_rejection_events.append(RejectionEvent(
                                 tick=state.tick,
@@ -219,6 +223,13 @@ class ResourceTransactionSystem:
                             new_rejections_delta = dict(update.rejections_delta)
                             new_rejections_delta[reason_key] = new_rejections_delta.get(reason_key, 0) + 1
                             update = replace(update, rejections_delta=new_rejections_delta)
+                            
+                            # Roll back quest state to ACTIVE if there was a quest reward intent in this failed group
+                            if intent.source_kind == "QUEST" and intent.transfer_kind == "QUEST_REWARD":
+                                if reason == ReasonCode.GROUP_ROLLBACK:
+                                    from src.core.updates import QuestUpdate
+                                    from src.core.quests import QuestStatus
+                                    ent_upd = replace(ent_upd, quest=QuestUpdate(quest_id=str(intent.source_id), status_set=QuestStatus.ACTIVE))
 
             # Update the refined update for this entity
             refined_entity_updates[e_id] = replace(ent_upd, 

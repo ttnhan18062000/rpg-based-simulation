@@ -7,6 +7,7 @@ from src.platform.rng import DeterministicRNG
 from src.engine.checkpoint import CanonicalStateHasher
 from src.core.enums import Faction, EntityRole
 
+@pytest.mark.extra_slow
 def test_long_run_stability():
     """
     Simulate 2,000 ticks and verify:

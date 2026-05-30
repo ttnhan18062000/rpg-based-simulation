@@ -48,6 +48,7 @@ from src.systems.party import PartyCoordinationSystem
 from src.systems.strategic_systems.detour import DetourSuggestionSystem
 from src.systems.strategic_systems.work_queue import StrategicWorkQueue
 from src.core.dirty import get_dirty_set
+from src.systems.strategic_systems.belief import BeliefCycleSystem
 
 if TYPE_CHECKING:
     from src.core.state import AuthoritativeState, EntityState
@@ -303,6 +304,61 @@ class StrategicIntelligenceSystem:
                 ent_upd = EntityUpdate(entity_id=e_id)
             
             strat_up = strat_up or StrategicUpdate()
+            
+            # --- Belief confirmation / contradiction check ---
+            from src.core.strategic import LeadCertainty
+            for lead in list(entity.strategic.leads.values()):
+                if lead.kind == "location" and lead.certainty != LeadCertainty.EXHAUSTED and not lead.tested:
+                    try:
+                        coords = tuple(map(float, lead.detail.split(',')))
+                        px, py = entity.navigation.position
+                        dist = ((px - coords[0])**2 + (py - coords[1])**2)**0.5
+                        if dist < 1.0:
+                            raw_neighbors = SimulationDomainLogic.get_neighbor_view(state, entity, radius=10.0)
+                            hostiles = [n[1] for n in raw_neighbors if n[1].identity.faction != entity.identity.faction and n[1].combat.alive]
+                            
+                            if hostiles:
+                                confirm_up = BeliefCycleSystem.process_observation(entity, lead.subject, lead.detail, state.tick)
+                                updated_leads = [replace(l, id=lead.id, tested=True, test_outcome="SUCCESS") for l in confirm_up.leads_add_or_update]
+                                updated_beliefs = [replace(b, id=f"belief_rumor_{lead.subject}_{lead.discovered_tick}") if b.source == "observation" else b for b in confirm_up.beliefs_add_or_update]
+                                strat_up = strat_up.merge(StrategicUpdate(
+                                    leads_add_or_update=updated_leads,
+                                    beliefs_add_or_update=updated_beliefs
+                                ))
+                                logger.debug(
+                                    f"[Tick {state.tick}] BeliefUpgraded: Entity {entity.id} verified threat at {lead.subject} "
+                                    f"via direct observation. Certainty set to 1.0."
+                                )
+                            else:
+                                contra_up = BeliefCycleSystem.apply_contradiction(entity, lead.id, "no_hostiles_found")
+                                updated_leads = [replace(l, tested=True, test_outcome="FAILURE") for l in contra_up.leads_add_or_update]
+                                strat_up = strat_up.merge(replace(contra_up, leads_add_or_update=updated_leads))
+                                logger.debug(
+                                    f"[Tick {state.tick}] BeliefContradicted: Entity {entity.id} observed no threat at {lead.subject}. "
+                                    f"Contradiction count incremented."
+                                )
+                    except Exception as ex:
+                        logger.error(f"Failed to check belief lead outcome: {ex}")
+
+            # --- Blocker Inference ---
+            current_proj_id = strat_up.current_project_id_set if strat_up.current_project_id_set is not None else entity.strategic.current_project_id
+            current_proj = next((p for p in strat_up.projects_add_or_update if p.id == current_proj_id), None) or entity.strategic.projects.get(current_proj_id) if current_proj_id else None
+            
+            inferred_up = StrategicIntelligenceSystem.infer_blockers(
+                entity,
+                entity.task.work_kind,
+                entity.task.payload,
+                navigation_failure=entity.navigation.last_failure_reason,
+                current_project=current_proj
+            )
+            
+            new_additions = list(strat_up.blockers_add_or_update)
+            if inferred_up.blockers_add_or_update:
+                for b in inferred_up.blockers_add_or_update:
+                    if b.id not in [x.id for x in new_additions]:
+                        new_additions.append(b)
+            
+            strat_up = replace(strat_up, blockers_add_or_update=new_additions)
             removals = set(strat_up.blockers_remove)
             resolved_ids = set()
             for b_id, b in entity.strategic.blockers.items():
@@ -407,12 +463,28 @@ class StrategicIntelligenceSystem:
 
             # --- 3. Strategic Intents ---
             if should_run(state.tick, e_id, cadence.strategic_intelligence):
+                temp_entity = entity
+                active_blockers = {**entity.strategic.blockers}
+                for b in strat_up.blockers_add_or_update:
+                    active_blockers[b.id] = b
+                if active_blockers != entity.strategic.blockers:
+                    temp_entity = replace(entity, strategic=replace(entity.strategic, blockers=active_blockers))
+                
                 # Call original intent evaluation but with force=True to bypass its own cadence check
                 # (since we already checked cadence here)
-                intent_up = StrategicIntelligenceSystem.evaluate_strategic_intent(state, entity, force=True, cadence=cadence)
+                intent_up = StrategicIntelligenceSystem.evaluate_strategic_intent(state, temp_entity, force=True, cadence=cadence)
                 strat_up = strat_up.merge(intent_up)
-            
-            # --- 4. Redirection (Bridge to Navigation) ---
+
+            # --- 4. Capacity Enforcement (unconditional, every tick) ---
+            # Enforces profile limits on leads, concerns, hypotheses, and projects.
+            # Runs after all cognition items are accumulated so final removals are
+            # applied before navigation decisions read from strat_up.
+            # Logic ID: STRAT-012 (Cognition capacity is enforced unconditionally)
+            capacity_up = DetourSuggestionSystem.enforce_bandwidth(entity, state.tick)
+            if not capacity_up.is_noop():
+                strat_up = strat_up.merge(capacity_up)
+
+            # --- 5. Redirection (Bridge to Navigation) ---
             # (Hoisted logic from StrategicRedirectionSystem)
             
             has_nav_update = ent_upd.navigation and ent_upd.navigation.target_set is not None
@@ -499,7 +571,8 @@ class StrategicIntelligenceSystem:
                 for stack in inventory.items
             )
 
-        for e_id in sorted(state.entities.keys()):
+        candidate_ids = list(state.entities.keys())
+        for e_id in sorted(candidate_ids):
             entity = state.entities[e_id]
             ent_upd = refined_entity_updates.get(e_id, EntityUpdate(entity_id=e_id))
 
@@ -1164,14 +1237,25 @@ class StrategicIntelligenceSystem:
         all_scores = PartyCoordinationSystem.apply_leadership_influence(entity, state, all_scores)
         
         modified_scores = ScoreModifierSystem.apply_modifiers(entity, state, all_scores)
-        modified_scores.sort(key=lambda x: x.utility, reverse=True)
+        modified_scores.sort(key=lambda x: (-x.utility, x.kind))
         
         best_candidate = None
         for g_score in modified_scores:
-            if g_score.utility < 20.0 or g_score.target_id is None:
+            if g_score.utility < 20.0 or (g_score.target_id is None and g_score.target_pos is None):
                 continue
             best_candidate = g_score
             break
+            
+        # Observability: Trace chosen goal and rejected alternatives
+        if modified_scores:
+            chosen_kind = getattr(best_candidate.kind, "value", best_candidate.kind) if best_candidate else "None"
+            chosen_utility = best_candidate.utility if best_candidate else 0.0
+            rejected = [f"{getattr(s.kind, 'value', s.kind)}:{s.utility:.1f}" for s in modified_scores if s != best_candidate]
+            logger.debug(
+                f"[Tick {state.tick}] Entity {entity.id} strategic goal selection: "
+                f"chosen={chosen_kind} ({chosen_utility:.1f}), rejected={', '.join(rejected)}"
+            )
+
             
         if best_candidate:
             existing = next((p for p in strat.projects.values() if p.kind == best_candidate.kind), None)
@@ -1180,20 +1264,21 @@ class StrategicIntelligenceSystem:
                 resumed_up = StrategicIntelligenceSystem.resume_project(entity, existing.id)
                 if resumed_up:
                     return replace(resumed_up,
-                        boredom_delta=boredom_upd,
-                        leads_add_or_update=memory_upd.leads_add_or_update,
-                        leads_remove=memory_upd.leads_remove
+                         boredom_delta=boredom_upd,
+                         leads_add_or_update=memory_upd.leads_add_or_update,
+                         leads_remove=memory_upd.leads_remove
                     )
             
+            cand_kind_str = getattr(best_candidate.kind, "value", best_candidate.kind)
             obj = ObjectiveState(
-                id=f"{best_candidate.kind}_{best_candidate.target_id}",
+                id=f"{cand_kind_str}_{best_candidate.target_id}",
                 kind="reach_location",
                 target=best_candidate.target_id,
                 target_position=best_candidate.target_pos,
                 status=ObjectiveStatus.ACTIVE
             )
             candidate_proj = ProjectState(
-                id=f"proj_{best_candidate.kind}_{current_tick}",
+                id=f"proj_{cand_kind_str}_{current_tick}",
                 kind=best_candidate.kind,
                 status=ProjectStatus.ACTIVE,
                 objectives=[obj],

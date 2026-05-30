@@ -66,6 +66,9 @@ class CognitionEventMapper:
                     previous_project_id=prev_proj,
                     new_project_id=curr_proj,
                     reason=curr_snapshot.get("reason", ""),
+                    source_goal_score=curr_snapshot.get("source_goal_score"),
+                    resulting_action=curr_snapshot.get("resulting_action"),
+                    target_pos=curr_snapshot.get("target_pos"),
                 )
             )
 

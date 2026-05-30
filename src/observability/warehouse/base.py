@@ -8,7 +8,16 @@ from src.observability.warehouse.models import (
     EventRecord,
     AnomalyRecord,
     MetricWindowRecord,
-    HardLawViolationRecord
+    HardLawViolationRecord,
+    BehaviorMetricWindowRecord,
+    BehaviorEventRecord,
+    BehaviorEpisodeRecord,
+    EntityBehaviorScorecardRecord,
+    RunBehaviorScorecardRecord,
+    BehaviorFindingRecord,
+    BehaviorInsightRecord,
+    CohortBehaviorReportRecord,
+    RunBehaviorComparisonRecord
 )
 
 class WarehouseAdapter(ABC):
@@ -68,6 +77,51 @@ class WarehouseAdapter(ABC):
         """
         Queries historical hard law violations.
         """
+        pass
+
+    @abstractmethod
+    def query_behavior_events(self, filters: Dict[str, Any]) -> List[BehaviorEventRecord]:
+        """Queries historical behavior events."""
+        pass
+
+    @abstractmethod
+    def query_behavior_episodes(self, filters: Dict[str, Any]) -> List[BehaviorEpisodeRecord]:
+        """Queries historical behavior episodes."""
+        pass
+
+    @abstractmethod
+    def query_behavior_metric_windows(self, filters: Dict[str, Any]) -> List[BehaviorMetricWindowRecord]:
+        """Queries historical behavior metric windows."""
+        pass
+
+    @abstractmethod
+    def query_entity_behavior_scorecards(self, filters: Dict[str, Any]) -> List[EntityBehaviorScorecardRecord]:
+        """Queries historical entity behavior scorecards."""
+        pass
+
+    @abstractmethod
+    def query_run_behavior_scorecards(self, filters: Dict[str, Any]) -> List[RunBehaviorScorecardRecord]:
+        """Queries historical run behavior scorecards."""
+        pass
+
+    @abstractmethod
+    def query_behavior_findings(self, filters: Dict[str, Any]) -> List[BehaviorFindingRecord]:
+        """Queries historical behavior findings."""
+        pass
+
+    @abstractmethod
+    def query_behavior_insights(self, filters: Dict[str, Any]) -> List[BehaviorInsightRecord]:
+        """Queries historical behavior insights."""
+        pass
+
+    @abstractmethod
+    def query_cohort_behavior_reports(self, filters: Dict[str, Any]) -> List[CohortBehaviorReportRecord]:
+        """Queries historical cohort behavior reports."""
+        pass
+
+    @abstractmethod
+    def query_run_behavior_comparisons(self, filters: Dict[str, Any]) -> List[RunBehaviorComparisonRecord]:
+        """Queries historical run behavior comparisons."""
         pass
 
     @abstractmethod

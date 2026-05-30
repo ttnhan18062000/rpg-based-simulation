@@ -25,6 +25,12 @@ class TacticalDecisionSystem:
     Logic ID: 123
     Responsible for target selection, engagement commitment, and anti-stalemate.
     VERIFIED v2: TacticalDecisionSystem
+
+    SYSTEM BOUNDARIES:
+    - Tactical Decision strictly consumes the selected strategic state
+      (`entity.strategic.current_project_id` and the active project/objective).
+    - It does not mutate or make parallel strategic decisions, maintaining the
+      Strategic Pass as the single source of truth for planning.
     """
 
     @staticmethod

@@ -1,0 +1,15 @@
+scenario_id: scenario5_perf
+world_pack: phase1_adventure_seed
+actors:
+  - count: 30
+    role: HERO
+    level: 1
+    class_id: warrior
+    start_region: hometown
+valid_route_families:
+  - gather_for_gold
+  - easy_quest
+  - hunt_weak_enemy
+forbidden_behavior:
+  - tick_time_above_budget
+  - unbounded_provider_calls

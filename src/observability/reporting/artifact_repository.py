@@ -55,7 +55,17 @@ class RunArtifactRepository:
             "violations": "hard_law_violations.jsonl",
             "anomalies": "anomalies.json",
             "report_json": "run_report.json",
-            "report_md": "run_report.md"
+            "report_md": "run_report.md",
+            "behavior_events": "behavior_events.jsonl",
+            "behavior_timelines": "behavior_timelines.json",
+            "behavior_episodes": "behavior_episodes.jsonl",
+            "behavior_metric_windows": "behavior_metric_windows.jsonl",
+            "entity_behavior_scorecards": "entity_behavior_scorecards.jsonl",
+            "run_behavior_scorecard": "run_behavior_scorecard.json",
+            "behavior_findings": "behavior_findings.jsonl",
+            "behavior_insights": "behavior_insights.json",
+            "cohort_behavior_report": "cohort_behavior_report.json",
+            "run_behavior_comparison": "run_behavior_comparison.json"
         }
         if file_key not in keys:
             raise KeyError(f"Unsupported file key: {file_key}")

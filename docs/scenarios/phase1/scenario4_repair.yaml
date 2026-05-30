@@ -1,0 +1,21 @@
+scenario_id: scenario4_repair
+world_pack: phase1_adventure_seed
+actors:
+  - id: 1
+    name: Arl
+    role: HERO
+    level: 1
+    class_id: warrior
+    start_region: hometown
+    gold: 60
+    equipment:
+      weapon: rusted_sword
+    durability:
+      rusted_sword: 20
+initial_pressure:
+  - damaged_weapon
+valid_route_families:
+  - repair_gear
+  - buy_upgrade
+forbidden_behavior:
+  - fight_with_broken_weapon

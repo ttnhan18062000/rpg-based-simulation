@@ -16,7 +16,16 @@ from src.observability.warehouse.models import (
     AnomalyRecord,
     HardLawViolationRecord,
     WarehouseIngestionResult,
-    WarehouseHealthStatus
+    WarehouseHealthStatus,
+    BehaviorMetricWindowRecord,
+    BehaviorEventRecord,
+    BehaviorEpisodeRecord,
+    EntityBehaviorScorecardRecord,
+    RunBehaviorScorecardRecord,
+    BehaviorFindingRecord,
+    BehaviorInsightRecord,
+    CohortBehaviorReportRecord,
+    RunBehaviorComparisonRecord
 )
 from src.observability.warehouse.registry import WarehouseSchemaRegistry
 from src.observability.reporting.artifact_repository import RunArtifactRepository
@@ -793,3 +802,194 @@ class ClickHouseWarehouseAdapter(WarehouseAdapter):
         for row in res.named_results():
             records.append(HardLawViolationRecord(**row))
         return records
+
+    def query_behavior_events(self, filters: Dict[str, Any]) -> List[BehaviorEventRecord]:
+        if not self.client:
+            return []
+        try:
+            query = "SELECT * FROM behavior_events"
+            conditions = []
+            params = {}
+            if "run_id" in filters:
+                conditions.append("run_id = %(run_id)s")
+                params["run_id"] = filters["run_id"]
+            if "entity_id" in filters:
+                conditions.append("entity_id = %(entity_id)s")
+                params["entity_id"] = filters["entity_id"]
+            if "category" in filters:
+                conditions.append("category = %(category)s")
+                params["category"] = filters["category"]
+            if conditions:
+                query += " WHERE " + " AND ".join(conditions)
+            query += " ORDER BY tick ASC"
+            if "limit" in filters:
+                query += " LIMIT %(limit)s"
+                params["limit"] = int(filters["limit"])
+            res = self.client.query(query, params)
+            return [BehaviorEventRecord(**row) for row in res.named_results()]
+        except Exception:
+            return []
+
+    def query_behavior_episodes(self, filters: Dict[str, Any]) -> List[BehaviorEpisodeRecord]:
+        if not self.client:
+            return []
+        try:
+            query = "SELECT * FROM behavior_episodes"
+            conditions = []
+            params = {}
+            if "run_id" in filters:
+                conditions.append("run_id = %(run_id)s")
+                params["run_id"] = filters["run_id"]
+            if "entity_id" in filters:
+                conditions.append("entity_id = %(entity_id)s")
+                params["entity_id"] = filters["entity_id"]
+            if "category" in filters:
+                conditions.append("category = %(category)s")
+                params["category"] = filters["category"]
+            if conditions:
+                query += " WHERE " + " AND ".join(conditions)
+            query += " ORDER BY start_tick ASC"
+            if "limit" in filters:
+                query += " LIMIT %(limit)s"
+                params["limit"] = int(filters["limit"])
+            res = self.client.query(query, params)
+            return [BehaviorEpisodeRecord(**row) for row in res.named_results()]
+        except Exception:
+            return []
+
+    def query_behavior_metric_windows(self, filters: Dict[str, Any]) -> List[BehaviorMetricWindowRecord]:
+        if not self.client:
+            return []
+        try:
+            query = "SELECT * FROM behavior_metric_windows"
+            conditions = []
+            params = {}
+            if "run_id" in filters:
+                conditions.append("run_id = %(run_id)s")
+                params["run_id"] = filters["run_id"]
+            if conditions:
+                query += " WHERE " + " AND ".join(conditions)
+            query += " ORDER BY window_start_tick ASC"
+            if "limit" in filters:
+                query += " LIMIT %(limit)s"
+                params["limit"] = int(filters["limit"])
+            res = self.client.query(query, params)
+            return [BehaviorMetricWindowRecord(**row) for row in res.named_results()]
+        except Exception:
+            return []
+
+    def query_entity_behavior_scorecards(self, filters: Dict[str, Any]) -> List[EntityBehaviorScorecardRecord]:
+        if not self.client:
+            return []
+        try:
+            query = "SELECT * FROM entity_behavior_scorecards"
+            conditions = []
+            params = {}
+            if "run_id" in filters:
+                conditions.append("run_id = %(run_id)s")
+                params["run_id"] = filters["run_id"]
+            if "entity_id" in filters:
+                conditions.append("entity_id = %(entity_id)s")
+                params["entity_id"] = filters["entity_id"]
+            if conditions:
+                query += " WHERE " + " AND ".join(conditions)
+            if "limit" in filters:
+                query += " LIMIT %(limit)s"
+                params["limit"] = int(filters["limit"])
+            res = self.client.query(query, params)
+            return [EntityBehaviorScorecardRecord(**row) for row in res.named_results()]
+        except Exception:
+            return []
+
+    def query_run_behavior_scorecards(self, filters: Dict[str, Any]) -> List[RunBehaviorScorecardRecord]:
+        if not self.client:
+            return []
+        try:
+            query = "SELECT * FROM run_behavior_scorecards"
+            conditions = []
+            params = {}
+            if "run_id" in filters:
+                conditions.append("run_id = %(run_id)s")
+                params["run_id"] = filters["run_id"]
+            if conditions:
+                query += " WHERE " + " AND ".join(conditions)
+            res = self.client.query(query, params)
+            return [RunBehaviorScorecardRecord(**row) for row in res.named_results()]
+        except Exception:
+            return []
+
+    def query_behavior_findings(self, filters: Dict[str, Any]) -> List[BehaviorFindingRecord]:
+        if not self.client:
+            return []
+        try:
+            query = "SELECT * FROM behavior_findings"
+            conditions = []
+            params = {}
+            if "run_id" in filters:
+                conditions.append("run_id = %(run_id)s")
+                params["run_id"] = filters["run_id"]
+            if "entity_id" in filters:
+                conditions.append("entity_id = %(entity_id)s")
+                params["entity_id"] = filters["entity_id"]
+            if conditions:
+                query += " WHERE " + " AND ".join(conditions)
+            query += " ORDER BY tick ASC"
+            if "limit" in filters:
+                query += " LIMIT %(limit)s"
+                params["limit"] = int(filters["limit"])
+            res = self.client.query(query, params)
+            return [BehaviorFindingRecord(**row) for row in res.named_results()]
+        except Exception:
+            return []
+
+    def query_behavior_insights(self, filters: Dict[str, Any]) -> List[BehaviorInsightRecord]:
+        if not self.client:
+            return []
+        try:
+            query = "SELECT * FROM behavior_insights"
+            conditions = []
+            params = {}
+            if "run_id" in filters:
+                conditions.append("run_id = %(run_id)s")
+                params["run_id"] = filters["run_id"]
+            if conditions:
+                query += " WHERE " + " AND ".join(conditions)
+            res = self.client.query(query, params)
+            return [BehaviorInsightRecord(**row) for row in res.named_results()]
+        except Exception:
+            return []
+
+    def query_cohort_behavior_reports(self, filters: Dict[str, Any]) -> List[CohortBehaviorReportRecord]:
+        if not self.client:
+            return []
+        try:
+            query = "SELECT * FROM cohort_reports"
+            conditions = []
+            params = {}
+            if "run_id" in filters:
+                conditions.append("run_id = %(run_id)s")
+                params["run_id"] = filters["run_id"]
+            if conditions:
+                query += " WHERE " + " AND ".join(conditions)
+            res = self.client.query(query, params)
+            return [CohortBehaviorReportRecord(**row) for row in res.named_results()]
+        except Exception:
+            return []
+
+    def query_run_behavior_comparisons(self, filters: Dict[str, Any]) -> List[RunBehaviorComparisonRecord]:
+        if not self.client:
+            return []
+        try:
+            query = "SELECT * FROM behavior_comparisons"
+            conditions = []
+            params = {}
+            if "run_id" in filters:
+                conditions.append("run_id = %(run_id)s")
+                params["run_id"] = filters["run_id"]
+            if conditions:
+                query += " WHERE " + " AND ".join(conditions)
+            res = self.client.query(query, params)
+            return [RunBehaviorComparisonRecord(**row) for row in res.named_results()]
+        except Exception:
+            return []
+

@@ -11,6 +11,9 @@ class ObservabilityMode(str, Enum):
     """
     OFF = "OFF"
     LIGHT = "LIGHT"
+    NORMAL = "NORMAL"
+    FULL = "FULL"
+    RESEARCH = "RESEARCH"
     DEBUG = "DEBUG"
     CERTIFICATION = "CERTIFICATION"
     LONG_RUN = "LONG_RUN"
@@ -22,13 +25,260 @@ class ObservabilityConfig:
     Precedence: Direct override -> Environment variable -> Default (LIGHT)
     """
     _override_mode: Optional[ObservabilityMode] = None
+    _override_flags: dict[str, bool] = {}
     _lock = threading.Lock()
+
+    _DEFAULT_FLAG_MAPPINGS = {
+        ObservabilityMode.OFF: {
+            "OBS_RUNTIME_PROFILING": False,
+            "OBS_RAW_EVENTS": False,
+            "OBS_LIVE_STREAM": False,
+            "OBS_EVENT_RECORDER": False,
+            "OBS_ENTITY_TIMELINE": False,
+            "OBS_BEHAVIOR_NORMALIZATION": False,
+            "OBS_BEHAVIOR_TIMELINE": False,
+            "OBS_BEHAVIOR_EPISODES": False,
+            "OBS_BEHAVIOR_METRICS": False,
+            "OBS_BEHAVIOR_PATTERNS": False,
+            "OBS_BEHAVIOR_SCORECARDS": False,
+            "OBS_COHORT_ANALYSIS": False,
+            "OBS_RUN_COMPARISON": False,
+            "OBS_INSIGHT_GENERATION": False,
+            "OBS_WAREHOUSE_INGEST": False,
+            "OBS_DASHBOARD_EXPORT": False,
+        },
+        ObservabilityMode.LIGHT: {
+            "OBS_RUNTIME_PROFILING": True,
+            "OBS_RAW_EVENTS": True,
+            "OBS_LIVE_STREAM": False,
+            "OBS_EVENT_RECORDER": True,
+            "OBS_ENTITY_TIMELINE": True,
+            "OBS_BEHAVIOR_NORMALIZATION": False,
+            "OBS_BEHAVIOR_TIMELINE": False,
+            "OBS_BEHAVIOR_EPISODES": False,
+            "OBS_BEHAVIOR_METRICS": False,
+            "OBS_BEHAVIOR_PATTERNS": False,
+            "OBS_BEHAVIOR_SCORECARDS": False,
+            "OBS_COHORT_ANALYSIS": False,
+            "OBS_RUN_COMPARISON": False,
+            "OBS_INSIGHT_GENERATION": False,
+            "OBS_WAREHOUSE_INGEST": False,
+            "OBS_DASHBOARD_EXPORT": False,
+        },
+        ObservabilityMode.NORMAL: {
+            "OBS_RUNTIME_PROFILING": True,
+            "OBS_RAW_EVENTS": True,
+            "OBS_LIVE_STREAM": False,
+            "OBS_EVENT_RECORDER": True,
+            "OBS_ENTITY_TIMELINE": True,
+            "OBS_BEHAVIOR_NORMALIZATION": True,
+            "OBS_BEHAVIOR_TIMELINE": True,
+            "OBS_BEHAVIOR_EPISODES": False,
+            "OBS_BEHAVIOR_METRICS": True,
+            "OBS_BEHAVIOR_PATTERNS": False,
+            "OBS_BEHAVIOR_SCORECARDS": False,
+            "OBS_COHORT_ANALYSIS": False,
+            "OBS_RUN_COMPARISON": False,
+            "OBS_INSIGHT_GENERATION": False,
+            "OBS_WAREHOUSE_INGEST": True,
+            "OBS_DASHBOARD_EXPORT": False,
+        },
+        ObservabilityMode.FULL: {
+            "OBS_RUNTIME_PROFILING": True,
+            "OBS_RAW_EVENTS": True,
+            "OBS_LIVE_STREAM": False,
+            "OBS_EVENT_RECORDER": True,
+            "OBS_ENTITY_TIMELINE": True,
+            "OBS_BEHAVIOR_NORMALIZATION": True,
+            "OBS_BEHAVIOR_TIMELINE": True,
+            "OBS_BEHAVIOR_EPISODES": True,
+            "OBS_BEHAVIOR_METRICS": True,
+            "OBS_BEHAVIOR_PATTERNS": True,
+            "OBS_BEHAVIOR_SCORECARDS": True,
+            "OBS_COHORT_ANALYSIS": True,
+            "OBS_RUN_COMPARISON": False,
+            "OBS_INSIGHT_GENERATION": True,
+            "OBS_WAREHOUSE_INGEST": True,
+            "OBS_DASHBOARD_EXPORT": False,
+        },
+        ObservabilityMode.RESEARCH: {
+            "OBS_RUNTIME_PROFILING": True,
+            "OBS_RAW_EVENTS": True,
+            "OBS_LIVE_STREAM": False,
+            "OBS_EVENT_RECORDER": True,
+            "OBS_ENTITY_TIMELINE": True,
+            "OBS_BEHAVIOR_NORMALIZATION": True,
+            "OBS_BEHAVIOR_TIMELINE": True,
+            "OBS_BEHAVIOR_EPISODES": True,
+            "OBS_BEHAVIOR_METRICS": True,
+            "OBS_BEHAVIOR_PATTERNS": True,
+            "OBS_BEHAVIOR_SCORECARDS": True,
+            "OBS_COHORT_ANALYSIS": True,
+            "OBS_RUN_COMPARISON": True,
+            "OBS_INSIGHT_GENERATION": True,
+            "OBS_WAREHOUSE_INGEST": True,
+            "OBS_DASHBOARD_EXPORT": False,
+        },
+        ObservabilityMode.DEBUG: {
+            "OBS_RUNTIME_PROFILING": True,
+            "OBS_RAW_EVENTS": True,
+            "OBS_LIVE_STREAM": True,
+            "OBS_EVENT_RECORDER": True,
+            "OBS_ENTITY_TIMELINE": True,
+            "OBS_BEHAVIOR_NORMALIZATION": True,
+            "OBS_BEHAVIOR_TIMELINE": True,
+            "OBS_BEHAVIOR_EPISODES": True,
+            "OBS_BEHAVIOR_METRICS": True,
+            "OBS_BEHAVIOR_PATTERNS": True,
+            "OBS_BEHAVIOR_SCORECARDS": True,
+            "OBS_COHORT_ANALYSIS": True,
+            "OBS_RUN_COMPARISON": True,
+            "OBS_INSIGHT_GENERATION": True,
+            "OBS_WAREHOUSE_INGEST": True,
+            "OBS_DASHBOARD_EXPORT": True,
+        },
+        ObservabilityMode.CERTIFICATION: {
+            "OBS_RUNTIME_PROFILING": True,
+            "OBS_RAW_EVENTS": True,
+            "OBS_LIVE_STREAM": False,
+            "OBS_EVENT_RECORDER": True,
+            "OBS_ENTITY_TIMELINE": True,
+            "OBS_BEHAVIOR_NORMALIZATION": True,
+            "OBS_BEHAVIOR_TIMELINE": True,
+            "OBS_BEHAVIOR_EPISODES": False,
+            "OBS_BEHAVIOR_METRICS": True,
+            "OBS_BEHAVIOR_PATTERNS": False,
+            "OBS_BEHAVIOR_SCORECARDS": False,
+            "OBS_COHORT_ANALYSIS": False,
+            "OBS_RUN_COMPARISON": False,
+            "OBS_INSIGHT_GENERATION": False,
+            "OBS_WAREHOUSE_INGEST": True,
+            "OBS_DASHBOARD_EXPORT": False,
+        },
+        ObservabilityMode.LONG_RUN: {
+            "OBS_RUNTIME_PROFILING": True,
+            "OBS_RAW_EVENTS": True,
+            "OBS_LIVE_STREAM": False,
+            "OBS_EVENT_RECORDER": True,
+            "OBS_ENTITY_TIMELINE": True,
+            "OBS_BEHAVIOR_NORMALIZATION": True,
+            "OBS_BEHAVIOR_TIMELINE": True,
+            "OBS_BEHAVIOR_EPISODES": False,
+            "OBS_BEHAVIOR_METRICS": True,
+            "OBS_BEHAVIOR_PATTERNS": False,
+            "OBS_BEHAVIOR_SCORECARDS": False,
+            "OBS_COHORT_ANALYSIS": False,
+            "OBS_RUN_COMPARISON": False,
+            "OBS_INSIGHT_GENERATION": False,
+            "OBS_WAREHOUSE_INGEST": True,
+            "OBS_DASHBOARD_EXPORT": False,
+        },
+    }
 
     @classmethod
     def set_override_mode(cls, mode: Optional[ObservabilityMode]) -> None:
         """Sets a programmatic override mode, e.g. for specific tests."""
         with cls._lock:
             cls._override_mode = mode
+
+    @classmethod
+    def set_flag_override(cls, flag_name: str, value: Optional[bool]) -> None:
+        """Programmatically override a specific observability flag thread-safely."""
+        with cls._lock:
+            if value is None:
+                cls._override_flags.pop(flag_name, None)
+            else:
+                cls._override_flags[flag_name] = value
+
+    @classmethod
+    def clear_all_overrides(cls) -> None:
+        """Clear all mode and flag programmatic overrides thread-safely."""
+        with cls._lock:
+            cls._override_mode = None
+            cls._override_flags.clear()
+
+    @classmethod
+    def get_flag(cls, flag_name: str) -> bool:
+        """Resolves an individual feature flag's active boolean status thread-safely."""
+        # 1. Programmatic direct flag override
+        with cls._lock:
+            if flag_name in cls._override_flags:
+                return cls._override_flags[flag_name]
+
+        # 2. Env variable check for the exact flag or common prefixes
+        for env_key in (flag_name, f"SIM_{flag_name}", f"RPG_{flag_name}"):
+            env_val = os.environ.get(env_key)
+            if env_val is not None:
+                return env_val.strip().lower() in ("true", "1", "yes", "on")
+
+        # 3. Active Mode mapping resolution
+        mode = cls.get_mode()
+        mapping = cls._DEFAULT_FLAG_MAPPINGS.get(mode, cls._DEFAULT_FLAG_MAPPINGS[ObservabilityMode.LIGHT])
+        return mapping.get(flag_name, False)
+
+    @classmethod
+    def is_runtime_profiling_enabled(cls) -> bool:
+        return cls.get_flag("OBS_RUNTIME_PROFILING")
+
+    @classmethod
+    def is_raw_events_enabled(cls) -> bool:
+        return cls.get_flag("OBS_RAW_EVENTS")
+
+    @classmethod
+    def is_live_stream_enabled(cls) -> bool:
+        return cls.get_flag("OBS_LIVE_STREAM")
+
+    @classmethod
+    def is_event_recorder_enabled(cls) -> bool:
+        return cls.get_flag("OBS_EVENT_RECORDER")
+
+    @classmethod
+    def is_entity_timeline_enabled(cls) -> bool:
+        return cls.get_flag("OBS_ENTITY_TIMELINE")
+
+    @classmethod
+    def is_behavior_normalization_enabled(cls) -> bool:
+        return cls.get_flag("OBS_BEHAVIOR_NORMALIZATION")
+
+    @classmethod
+    def is_behavior_timeline_enabled(cls) -> bool:
+        return cls.get_flag("OBS_BEHAVIOR_TIMELINE")
+
+    @classmethod
+    def is_behavior_episodes_enabled(cls) -> bool:
+        return cls.get_flag("OBS_BEHAVIOR_EPISODES")
+
+    @classmethod
+    def is_behavior_metrics_enabled(cls) -> bool:
+        return cls.get_flag("OBS_BEHAVIOR_METRICS")
+
+    @classmethod
+    def is_behavior_patterns_enabled(cls) -> bool:
+        return cls.get_flag("OBS_BEHAVIOR_PATTERNS")
+
+    @classmethod
+    def is_behavior_scorecards_enabled(cls) -> bool:
+        return cls.get_flag("OBS_BEHAVIOR_SCORECARDS")
+
+    @classmethod
+    def is_cohort_analysis_enabled(cls) -> bool:
+        return cls.get_flag("OBS_COHORT_ANALYSIS")
+
+    @classmethod
+    def is_run_comparison_enabled(cls) -> bool:
+        return cls.get_flag("OBS_RUN_COMPARISON")
+
+    @classmethod
+    def is_insight_generation_enabled(cls) -> bool:
+        return cls.get_flag("OBS_INSIGHT_GENERATION")
+
+    @classmethod
+    def is_warehouse_ingest_enabled(cls) -> bool:
+        return cls.get_flag("OBS_WAREHOUSE_INGEST")
+
+    @classmethod
+    def is_dashboard_export_enabled(cls) -> bool:
+        return cls.get_flag("OBS_DASHBOARD_EXPORT")
 
     @classmethod
     def get_mode(cls) -> ObservabilityMode:

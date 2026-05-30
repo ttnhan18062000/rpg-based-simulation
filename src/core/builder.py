@@ -47,6 +47,8 @@ from src.core.strategic import (
 
 from src.core.enums import EntityRole, Faction
 from src.core.movement_modes import MovementMode
+from src.core.self_model import SelfModelBundle
+from src.core.cognition import CognitionModel
 
 
 def _component(cls: type, **kwargs):
@@ -104,14 +106,16 @@ class V2EntityBuilder:
         self._interaction = InteractionComponent()
         self._task = TaskComponent()
         self._stamina = StaminaComponent()
+        self._self_model = SelfModelBundle()
+        self._cognition = CognitionModel()
 
     def kind(self, value: str) -> V2EntityBuilder:
         self._kind = value
         return self
-
+ 
     def location(self, x: float, y: float) -> V2EntityBuilder:
         self._location = (float(x), float(y))
-
+ 
         self._navigation = _component(
             NavigationComponent,
             **{
@@ -120,6 +124,41 @@ class V2EntityBuilder:
             },
         )
         return self
+
+    def replace_cognition(self, component: CognitionModel) -> V2EntityBuilder:
+        self._cognition = component
+        return self
+
+    def build(self) -> EntityState:
+        navigation = _component(
+            NavigationComponent,
+            **{
+                **self._navigation_to_dict(),
+                "position": self._location,
+            },
+        )
+
+        return EntityState(
+            id=self._entity_id,
+            kind=self._kind,
+            interaction=self._interaction,
+            identity=self._identity,
+            attributes=self._attributes,
+            inventory=self._inventory,
+            strategic=self._strategic,
+            social=self._social,
+            biological=self._biological,
+            lifecycle=self._lifecycle,
+            aptitude=self._aptitude,
+            combat=self._combat,
+            equipment=self._equipment,
+            navigation=navigation,
+            task=self._task,
+            stamina=self._stamina,
+            self_model=self._self_model,
+            cognition=self._cognition,
+        )
+
 
     def identity(
         self,
@@ -328,6 +367,7 @@ class V2EntityBuilder:
         chase_ticks: Optional[int] = None,
         max_chase_ticks: Optional[int] = None,
         returning_home: Optional[bool] = None,
+        region_id: Optional[str] = None,
     ) -> V2EntityBuilder:
         current = self._navigation_to_dict()
 
@@ -346,6 +386,7 @@ class V2EntityBuilder:
             "chase_ticks": chase_ticks,
             "max_chase_ticks": max_chase_ticks,
             "returning_home": returning_home,
+            "region_id": region_id,
         }
 
         for key, value in updates.items():
@@ -369,7 +410,7 @@ class V2EntityBuilder:
         max_hypotheses: Optional[int] = None,
         interruption_resistance: Optional[float] = None,
         detour_breadth: Optional[int] = None,
-        detour_depth: Optional[int] = None,
+        reserved_detour_depth: Optional[int] = None,
     ) -> V2EntityBuilder:
         current = self._cognition_to_dict(self._strategic.profile)
 
@@ -381,7 +422,7 @@ class V2EntityBuilder:
             "max_hypotheses": max_hypotheses,
             "interruption_resistance": interruption_resistance,
             "detour_breadth": detour_breadth,
-            "detour_depth": detour_depth,
+            "reserved_detour_depth": reserved_detour_depth,
         }
 
         for key, value in updates.items():
@@ -705,33 +746,9 @@ class V2EntityBuilder:
         self._stamina = component
         return self
 
-    def build(self) -> EntityState:
-        navigation = _component(
-            NavigationComponent,
-            **{
-                **self._navigation_to_dict(),
-                "position": self._location,
-            },
-        )
-
-        return EntityState(
-            id=self._entity_id,
-            kind=self._kind,
-            interaction=self._interaction,
-            identity=self._identity,
-            attributes=self._attributes,
-            inventory=self._inventory,
-            strategic=self._strategic,
-            social=self._social,
-            biological=self._biological,
-            lifecycle=self._lifecycle,
-            aptitude=self._aptitude,
-            combat=self._combat,
-            equipment=self._equipment,
-            navigation=navigation,
-            task=self._task,
-            stamina=self._stamina,
-        )
+    def replace_self_model(self, component: SelfModelBundle) -> V2EntityBuilder:
+        self._self_model = component
+        return self
 
     def _identity_to_dict(self) -> Dict[str, Any]:
         return self._to_dict(self._identity)

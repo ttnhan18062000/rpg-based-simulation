@@ -104,12 +104,30 @@ class InteractionSystem:
                     refined_entity_updates[e_id] = replace(ent_upd, interaction=InteractionUpdate(reset=True))
                     continue
 
-                # 3. Resource Transfer & Pressure Law
-                # Logic ID: TOWN-010 (Harvesting progress is authoritative)
+                if node and node.remaining_charges <= 0:
+                    refined_entity_updates[e_id] = replace(ent_upd, interaction=InteractionUpdate(reset=True))
+                    continue
+
                 new_progress = entity.interaction.progress + ent_upd.interaction.progress_delta
                 required_ticks = node.required_ticks if node else 10
                 
-                
+                # Capacity/Weight check before completion/intent emission
+                from src.core.inventory import InventoryService
+                from src.core.state import ItemStack
+                proposed_items = []
+                if node:
+                    proposed_items = [ItemStack(node.yields_item, 1)]
+                elif ground_item:
+                    proposed_items = [ItemStack(ground_item.item_id, ground_item.quantity)]
+                elif corpse:
+                    proposed_items = list(corpse.items)
+                elif chest:
+                    proposed_items = list(chest.items)
+                        
+                if not InventoryService.can_add_items(entity.inventory, proposed_items):
+                    refined_entity_updates[e_id] = replace(ent_upd, interaction=InteractionUpdate(reset=True))
+                    continue
+
                 intents = list(ent_upd.resource_transfers)
                 if not intents and new_progress >= required_ticks:
                     # Logic ID: TOWN-006 (Completion triggers intent)
@@ -154,15 +172,20 @@ class InteractionSystem:
                         transfer_kind="AUTO"
                     )]
 
-                if intents and len(intents) > len(ent_upd.resource_transfers):
-                    refined_entity_updates[e_id] = replace(
-                        ent_upd,
-                        resource_transfers=intents,
-                        interaction=InteractionUpdate(reset=True)
-                    )
-                    continue 
-                else:
-                    pass
+                if intents:
+                    if len(intents) > len(ent_upd.resource_transfers):
+                        refined_entity_updates[e_id] = replace(
+                            ent_upd,
+                            resource_transfers=intents,
+                            interaction=InteractionUpdate(reset=True)
+                        )
+                    else:
+                        # intents already present — still emit reset signal
+                        refined_entity_updates[e_id] = replace(
+                            ent_upd,
+                            interaction=InteractionUpdate(reset=True)
+                        )
+                    continue
 
         return replace(
             update,

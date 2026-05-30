@@ -88,11 +88,12 @@ def test_pipeline_integrates_biological_concerns():
     ent = (V2EntityBuilder(1)
         .kind("HERO")
         .location(0.0, 0.0)
-        .biological(hunger=80.0)
+        .biological(hunger=85.0)
         .build())
     state = AuthoritativeState(tick=99, seed=42, entities={1: ent}, world_time=1200)
     
-    raw_update = StateUpdate()
+    from src.core.updates import EntityUpdate
+    raw_update = StateUpdate(entity_updates={1: EntityUpdate(entity_id=1)}, force_full_scan=True)
     refined = AuthoritativeApplyPipeline.refine(state, raw_update)
     
     ent_upd = refined.entity_updates[1]

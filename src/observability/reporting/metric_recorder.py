@@ -36,6 +36,17 @@ class MetricWindowRecord(BaseModel):
     governor_mode_dominant: str = "NORMAL"
     worker_utilization_avg: float = 0.0
     queue_utilization_avg: float = 0.0
+    
+    # Phase 20 timing extension fields
+    phase_duration_ms_avg_json: Optional[str] = None
+    phase_duration_ms_p95_json: Optional[str] = None
+    phase_event_count_json: Optional[str] = None
+    phase_budget_status_json: Optional[str] = None
+    observability_overhead_ms_avg: Optional[float] = 0.0
+    event_emission_ms_avg: Optional[float] = 0.0
+    event_stream_publish_ms_avg: Optional[float] = 0.0
+    behavior_queue_push_ms_avg: Optional[float] = 0.0
+
 
 class MetricWindowAccumulator:
     """
@@ -60,6 +71,47 @@ class MetricWindowAccumulator:
         self._governor_modes: List[str] = []
         self._worker_utilization: List[float] = []
         self._queue_utilization: List[float] = []
+        
+        # Phase 20 aggregation registers
+        self._observability_overhead: List[float] = []
+        self._event_emission: List[float] = []
+        self._event_stream_publish: List[float] = []
+        self._behavior_queue_push: List[float] = []
+        
+        self._phase_timings: Dict[str, List[float]] = {}
+        self._phase_event_counts: Dict[str, List[int]] = {}
+        self._phase_budget_statuses: Dict[str, List[str]] = {}
+
+    def record_profile_metrics(
+        self,
+        phase_records: list[Any],
+        observability_overhead_ms: float = 0.0,
+        event_emission_ms: float = 0.0,
+        event_stream_publish_ms: float = 0.0,
+        behavior_queue_push_ms: float = 0.0
+    ) -> None:
+        """
+        Record the performance profiling and overhead metrics for the current tick.
+        """
+        self._observability_overhead.append(observability_overhead_ms)
+        self._event_emission.append(event_emission_ms)
+        self._event_stream_publish.append(event_stream_publish_ms)
+        self._behavior_queue_push.append(behavior_queue_push_ms)
+        
+        for r in phase_records:
+            # duration_ns is in nanoseconds, convert to ms
+            duration_ms = getattr(r, "duration_ns", 0) / 1_000_000.0
+            phase_name = getattr(r, "phase_name", "unknown")
+            
+            if phase_name not in self._phase_timings:
+                self._phase_timings[phase_name] = []
+                self._phase_event_counts[phase_name] = []
+                self._phase_budget_statuses[phase_name] = []
+                
+            self._phase_timings[phase_name].append(duration_ms)
+            self._phase_event_counts[phase_name].append(getattr(r, "event_count", 0))
+            self._phase_budget_statuses[phase_name].append(getattr(r, "budget_status", "OK"))
+
 
     def record_tick(
         self,
@@ -164,6 +216,7 @@ class MetricWindowAccumulator:
         """
         Flush rolling aggregates into a standard MetricWindowRecord.
         """
+        import json
         ticks = self.ticks_observed if self.ticks_observed > 0 else 1
         
         alive_avg = sum(self._alive_entities) / ticks
@@ -181,6 +234,38 @@ class MetricWindowAccumulator:
         
         worker_util_avg = sum(self._worker_utilization) / ticks
         queue_util_avg = sum(self._queue_utilization) / ticks
+
+        # Compile phase timings JSON
+        phase_avg_dict = {}
+        phase_p95_dict = {}
+        phase_event_dict = {}
+        phase_budget_dict = {}
+        
+        for name, durations in self._phase_timings.items():
+            phase_avg_dict[name] = sum(durations) / len(durations) if durations else 0.0
+            phase_p95_dict[name] = self._calculate_p95(durations)
+            
+        for name, events in self._phase_event_counts.items():
+            phase_event_dict[name] = sum(events) / len(events) if events else 0.0
+            
+        for name, statuses in self._phase_budget_statuses.items():
+            if statuses:
+                counts = {}
+                for s in statuses:
+                    counts[s] = counts.get(s, 0) + 1
+                phase_budget_dict[name] = max(counts, key=counts.get)
+            else:
+                phase_budget_dict[name] = "OK"
+
+        phase_duration_ms_avg_json = json.dumps(phase_avg_dict) if phase_avg_dict else None
+        phase_duration_ms_p95_json = json.dumps(phase_p95_dict) if phase_p95_dict else None
+        phase_event_count_json = json.dumps(phase_event_dict) if phase_event_dict else None
+        phase_budget_status_json = json.dumps(phase_budget_dict) if phase_budget_dict else None
+        
+        obs_overhead_avg = sum(self._observability_overhead) / ticks if self._observability_overhead else 0.0
+        event_emission_avg = sum(self._event_emission) / ticks if self._event_emission else 0.0
+        event_stream_publish_avg = sum(self._event_stream_publish) / ticks if self._event_stream_publish else 0.0
+        behavior_queue_push_avg = sum(self._behavior_queue_push) / ticks if self._behavior_queue_push else 0.0
 
         return MetricWindowRecord(
             run_id=self.run_id,
@@ -202,8 +287,17 @@ class MetricWindowAccumulator:
             quest_completed_count=quest_completed_avg,
             governor_mode_dominant=dominant_mode,
             worker_utilization_avg=worker_util_avg,
-            queue_utilization_avg=queue_util_avg
+            queue_utilization_avg=queue_util_avg,
+            phase_duration_ms_avg_json=phase_duration_ms_avg_json,
+            phase_duration_ms_p95_json=phase_duration_ms_p95_json,
+            phase_event_count_json=phase_event_count_json,
+            phase_budget_status_json=phase_budget_status_json,
+            observability_overhead_ms_avg=obs_overhead_avg,
+            event_emission_ms_avg=event_emission_avg,
+            event_stream_publish_ms_avg=event_stream_publish_avg,
+            behavior_queue_push_ms_avg=behavior_queue_push_avg
         )
+
 
 class MetricWindowRecorder:
     """
@@ -262,6 +356,28 @@ class MetricWindowRecorder:
         # Flush on window boundaries
         if self._accumulator.ticks_observed >= self.window_size:
             self._flush_window(tick)
+
+    def record_profile_metrics(
+        self,
+        phase_records: list[Any],
+        observability_overhead_ms: float = 0.0,
+        event_emission_ms: float = 0.0,
+        event_stream_publish_ms: float = 0.0,
+        behavior_queue_push_ms: float = 0.0
+    ) -> None:
+        """
+        Record the performance profiling and overhead metrics.
+        """
+        if not self.enabled:
+            return
+        self._accumulator.record_profile_metrics(
+            phase_records,
+            observability_overhead_ms,
+            event_emission_ms,
+            event_stream_publish_ms,
+            behavior_queue_push_ms
+        )
+
 
     def _flush_window(self, end_tick: int) -> None:
         """

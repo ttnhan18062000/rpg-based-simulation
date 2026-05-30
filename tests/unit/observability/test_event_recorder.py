@@ -30,6 +30,9 @@ def test_event_recorder_disabled():
 def test_event_recorder_bounds_and_eviction(run_dir):
     # Setup event recorder with capacity limit of 3
     recorder = EventRecorder(run_dir=run_dir, max_events=3, enabled=True)
+    # Ensure queue capacity is high enough so it doesn't drop low priority events under queue pressure,
+    # allowing the test to verify in-memory buffer bounds and file writing independently.
+    recorder.queue.max_size = 100
 
     ev_info1 = SimulationEvent(
         event_type="info_event", event_category="combat", tick=1, severity="INFO",
@@ -82,7 +85,7 @@ def test_event_recorder_bounds_and_eviction(run_dir):
     assert ev_info1 not in recorder.events
     assert ev_crit in recorder.events
 
-    # Shutdown to close file handles
+    # Shutdown to close file handles, which stops the worker and drains all remaining events synchronously
     recorder.shutdown()
     
     # Assert JSONL file exists and is populated

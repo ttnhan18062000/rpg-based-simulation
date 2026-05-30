@@ -77,7 +77,8 @@ def test_entity_serialization_roundtrip():
     
     # Mock "json" roundtrip with set handling
     def set_default(obj):
-        if isinstance(obj, set):
+        from collections import deque
+        if isinstance(obj, (set, deque)):
             return list(obj)
         # Handle enums
         from enum import Enum

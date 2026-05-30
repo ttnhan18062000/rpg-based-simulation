@@ -14,6 +14,8 @@ from src.core.governance import RuntimeMode
 from src.core.models.inventory import ItemKind, EquipSlot, ItemStack, InventoryComponent
 from src.core.models.social import SocialBond, BetrayalRecord, SocialComponent
 from src.core.immutability import shallow_freeze
+from src.core.self_model import SelfModelBundle
+from src.core.cognition import CognitionModel
 
 
 def _readonly_mapping(value):
@@ -586,6 +588,8 @@ class EntityState:
     navigation: NavigationComponent = field(default_factory=NavigationComponent)
     task: TaskComponent = field(default_factory=TaskComponent)
     stamina: StaminaComponent = field(default_factory=StaminaComponent)
+    self_model: SelfModelBundle = field(default_factory=SelfModelBundle)
+    cognition: CognitionModel = field(default_factory=CognitionModel)
     _canonical_cache: Any = field(default=None, init=False, repr=False, compare=False)
     timeline: Any = field(default=None, init=False, repr=False, compare=False)
 
@@ -610,7 +614,7 @@ class EntityState:
                 "current_objective_id": self.strategic.current_objective_id,
                 "projects": {k: {
                     "kind": v.kind, 
-                    "status": str(v.status),
+                     "status": str(v.status),
                     "active_objective_id": v.active_objective_id,
                     "objectives": [asdict(o) for o in v.objectives]
                 } for k, v in sorted(self.strategic.projects.items())},
@@ -618,7 +622,8 @@ class EntityState:
                 "blockers": {k: asdict(v) for k, v in sorted(self.strategic.blockers.items())},
                 "leads": {k: asdict(v) for k, v in sorted(self.strategic.leads.items())},
                 "concerns": {k: asdict(v) for k, v in sorted(self.strategic.concerns.items())},
-                "boredom": dict(sorted(self.strategic.boredom.items()))
+                "boredom": dict(sorted(self.strategic.boredom.items())),
+                "beliefs": {k: asdict(v) for k, v in sorted(self.strategic.beliefs.items())}
             },
             "social": {
                 "trust_history": {str(k): v for k, v in sorted(self.social.trust_history.items())},
@@ -644,7 +649,9 @@ class EntityState:
                 "payload": dict(sorted(self.task.payload.items()))
             },
             "group_id": self.identity.group_id,
-            "properties": dict(sorted(self.identity.properties.items()))
+            "properties": dict(sorted(self.identity.properties.items())),
+            "self_model": self.self_model.to_canonical_dict(),
+            "cognition": self.cognition.to_canonical_dict(),
         }
         object.__setattr__(self, "_canonical_cache", res)
         return res
@@ -779,7 +786,9 @@ class EntityState:
             equipment=equip_comp,
             navigation=shallow_freeze(self.navigation),
             task=shallow_freeze(self.task),
-            stamina=self.stamina
+            stamina=self.stamina,
+            self_model=self.self_model,
+            cognition=self.cognition
         )
         object.__setattr__(self, "_readonly_cache", res)
         object.__setattr__(res, "_readonly_cache", res)
@@ -1033,6 +1042,9 @@ class AuthoritativeState:
     pressure_signals: Dict[str, float] = field(default_factory=dict)
     _opt_profile: Any = field(default=None, repr=False, compare=False)
     _force_full_scan: bool = field(default=False, repr=False, compare=False)
+    pending_information_responses: List[Dict[str, Any]] = field(default_factory=list, repr=False, compare=False)
+    information_source_profiles: List[Any] = field(default_factory=list, repr=False, compare=False)
+    feature_flags: Dict[str, Any] = field(default_factory=dict, repr=False, compare=False)
 
     def __post_init__(self):
         # M10 Law: Ensure cache is cleared on every new object creation (including replace)

@@ -129,7 +129,17 @@ class RetentionManager:
                     "files": [
                         "simulation_events.jsonl",
                         "metric_windows.jsonl",
-                        "hard_law_violations.jsonl"
+                        "hard_law_violations.jsonl",
+                        "behavior_events.jsonl",
+                        "behavior_timelines.json",
+                        "behavior_episodes.jsonl",
+                        "behavior_metric_windows.jsonl",
+                        "entity_behavior_scorecards.jsonl",
+                        "run_behavior_scorecard.json",
+                        "behavior_findings.jsonl",
+                        "behavior_insights.json",
+                        "cohort_behavior_report.json",
+                        "run_behavior_comparison.json"
                     ],
                     "expired": is_expired
                 }

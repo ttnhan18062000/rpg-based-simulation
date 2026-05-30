@@ -1,0 +1,356 @@
+%% Entity Aspect Relationship Diagram
+%% Legend:
+%% [IMPL] = currently implemented / observed in uploaded source
+%% [NI] = suggested not implemented entity aspect
+%% Solid edge = current intended/implemented relationship
+%% Dashed edge = proposed relationship
+%% Edge label format: A -- "uses / writes / derives: properties" --> B
+
+flowchart TB
+
+classDef impl fill:#e8f3ff,stroke:#1f77b4,stroke-width:1px,color:#0b2545
+classDef ni fill:#fff2cc,stroke:#d6a100,stroke-width:1px,stroke-dasharray: 5 5,color:#3d2b00
+classDef service fill:#eef7ee,stroke:#2e7d32,stroke-width:1px,color:#0b2e13
+classDef world fill:#f3e8ff,stroke:#7b1fa2,stroke-width:1px,color:#2b003b
+classDef action fill:#ffe8e8,stroke:#b71c1c,stroke-width:1px,color:#3a0000
+classDef view fill:#f5f5f5,stroke:#666,stroke-width:1px,stroke-dasharray: 2 2,color:#111
+
+subgraph EntityState["EntityState [IMPL] - core actor aggregate"]
+  Identity["IdentityComponent [IMPL]<br/>role, faction, class_id, level/evolution,<br/>unspent_ap, personality, group_id,<br/>learned_skills, known_recipes, cooldowns"]
+  Attributes["AttributeComponent [IMPL]<br/>strength, agility, vitality, endurance, intelligence,<br/>spirit, wisdom, perception, charisma"]
+  Aptitude["AptitudeComponent [IMPL]<br/>learning rate, stat aptitudes,<br/>stamina efficiency"]
+  Biological["BiologicalComponent [IMPL]<br/>hunger, sleep debt, rest pressure,<br/>meal/sleep timestamps"]
+  Lifecycle["LifecycleComponent [IMPL]<br/>active/dead, age, death reason,<br/>generation/heir fields"]
+  Combat["CombatComponent [IMPL]<br/>hp, max_hp, atk, def_stat, speed, range,<br/>readiness, wounds, scars, tactical role, alive"]
+  Stamina["StaminaComponent [IMPL]<br/>current, max_stamina, regen_rate,<br/>exhaustion limits & costs"]
+  Equipment["EquipmentComponent [IMPL]<br/>slots, durability"]
+  Inventory["InventoryComponent [IMPL]<br/>items, gold, slots/weight bounds"]
+  Navigation["NavigationComponent [IMPL]<br/>position, target, path, movement mode,<br/>failure reason, home/leash, wait/oscillation count"]
+  Interaction["InteractionComponent [IMPL]<br/>target_node_id, progress, start_tick"]
+  Task["TaskComponent [IMPL]<br/>work_kind, payload"]
+  Social["SocialComponent [IMPL]<br/>trust/familiarity/debt/fear/grudge,<br/>bonds, nemesis_ids, place_attachment,<br/>betrayal_records, reputation scores"]
+  Strategic["StrategicComponent [IMPL]<br/>projects, objectives, blockers, leads,<br/>concerns, directives, hypotheses,<br/>contracts, source_trust, turning_points,<br/>cognition_profile"]
+end
+
+class Identity,Attributes,Aptitude,Biological,Lifecycle,Combat,Stamina,Equipment,Inventory,Navigation,Interaction,Task,Social,Strategic impl
+
+subgraph ProposedSelfModel["Bottom-up self model [IMPL] - entity self model layer"]
+  SelfAwareness["SelfAwarenessComponent [IMPL]<br/>perceived_condition, perceived_strengths,<br/>perceived_weaknesses, confidence,<br/>stress, uncertainty"]
+  NeedInterpretation["NeedInterpretationComponent [IMPL]<br/>active_needs, urgency,<br/>dominant_need, reason, confidence"]
+  CapabilityEstimate["CapabilityEstimateComponent [IMPL]<br/>capability_key, estimate,<br/>confidence, source, last_updated_tick"]
+  KnowledgeModel["KnowledgeModelComponent [IMPL]<br/>facts, unknowns, certainty,<br/>source_id, verified_tick,<br/>contradiction_count"]
+  ExperienceMemory["NI: ExperienceMemoryComponent<br/>important lived events, outcome,<br/>emotional_weight, learned_tick, tags"]
+  RiskBelief["NI: RiskBeliefComponent<br/>risk subject, severity,<br/>confidence, evidence_count,<br/>last_updated_tick"]
+  PossessionUnderstanding["PossessionUnderstandingComponent [IMPL]<br/>item meaning, known_uses,<br/>estimated_value, keep/sell priority"]
+  RewardLedger["RewardLedgerComponent [IMPL]<br/>event-driven reward ledger,<br/>gold, item, and XP entries"]
+  GrowthGap["GrowthGapReport [IMPL]<br/>active weakness gaps,<br/>dominant gap prioritization"]
+  RewardInterpretation["RewardInterpretationReport [IMPL]<br/>subjective meaning interpretation,<br/>resolved dominant gaps"]
+  IntentPressure["NI: IntentPressureComponent<br/>pressure key/category,<br/>strength, source, created_tick"]
+  PlanContext["NI: PlanContextComponent<br/>active context, constraints,<br/>alternatives, selected/rejected reasons"]
+  TemporalAwareness["NI: TemporalAwarenessComponent<br/>deadlines, recurring patterns,<br/>urgency bias, last_time_check"]
+end
+
+class SelfAwareness,NeedInterpretation,CapabilityEstimate,KnowledgeModel,PossessionUnderstanding,RewardLedger,GrowthGap,RewardInterpretation impl
+class ExperienceMemory,RiskBelief,IntentPressure,PlanContext,TemporalAwareness ni
+
+subgraph DerivedViews["Derived views [NI] - services/evaluators, not stored entity components"]
+  SurvivalReadiness["NI View: SurvivalReadiness<br/>needs + body + risk"]
+  CombatReadiness["NI View: CombatReadiness<br/>self + capability + combat + equipment"]
+  TravelReadiness["NI View: TravelReadiness<br/>knowledge + risk + navigation + supplies"]
+  QuestReadiness["NI View: QuestReadiness<br/>capability + risk + knowledge + strategy"]
+  CraftingReadiness["NI View: CraftingReadiness<br/>possession meaning + knowledge + inventory"]
+  AdventureReadiness["NI View: AdventureReadiness<br/>computed, not core component"]
+end
+
+class SurvivalReadiness,CombatReadiness,TravelReadiness,QuestReadiness,CraftingReadiness,AdventureReadiness view
+
+subgraph CognitionServices["Cognition / strategy mechanisms [IMPL + gaps]"]
+  SensoryFilter["SensoryFilter [IMPL]<br/>selective attention from viewport"]
+  AppraisalSystem["AppraisalSystem [IMPL]<br/>panic, aggression, fleeing"]
+  ConcernIntake["ConcernIntakeSystem [IMPL]<br/>external salience -> concerns"]
+  RoutineService["RoutineService [IMPL]<br/>biological / anchored / environmental concerns"]
+  GoalRegistry["GoalRegistry [IMPL]<br/>current scorers: harvest, sleep, eat,<br/>social, town_return"]
+  StrategicIntel["StrategicIntelligenceSystem [IMPL]<br/>goal scores -> projects/objectives<br/>project switching + interruption resistance"]
+  DetourSystem["DetourSuggestionSystem [IMPL]<br/>blockers + leads -> detour candidates<br/>capacity/bandwidth trimming"]
+  TacticalDecision["TacticalDecisionSystem [IMPL]<br/>local action, target choice,<br/>movement intention"]
+  StrategicRedirection["StrategicRedirectionSystem [IMPL]<br/>strategy/blocker/detour -> navigation target"]
+  BeliefCycle["BeliefCycleSystem [IMPL/UNDERUSED]<br/>observation/rumor/certainty/contradiction"]
+  SocialAppraisal["SocialAppraisalSystem [IMPL/UNDERUSED]<br/>trust/risk/reward -> contract decision"]
+end
+
+class SensoryFilter,AppraisalSystem,ConcernIntake,RoutineService,GoalRegistry,StrategicIntel,DetourSystem,TacticalDecision,StrategicRedirection,BeliefCycle,SocialAppraisal service
+
+subgraph ActionLayer["Action / execution layer [IMPL + fragmented]"]
+  ActionRouter["ActionRouter [IMPL]<br/>routes: sleep, eat, rest, recruit,<br/>allocate_ap, train, repair, interact,<br/>attack, skill, aoe_attack"]
+  MovementActions["MovementActions / MovementSystem [IMPL]<br/>move, path, reroute, sidestep, yield,<br/>opportunity attack, stamina/readiness cost"]
+  CombatActions["CombatActions [IMPL]<br/>attack, damage, kill reward, wounds,<br/>quest kill progress, stamina/equipment effects"]
+  SkillActions["SkillActions [IMPL]<br/>learned skill, cooldown, stamina,<br/>target, effect resolution"]
+  InteractionSystem["InteractionSystem [IMPL]<br/>channeling, harvest, loot,<br/>node/ground/corpse/chest transfer"]
+  ShopSystem["ShopSystem / ShopService [IMPL]<br/>buy/sell, price, stock/capacity,<br/>trauma price effect"]
+  BlacksmithSystem["BlacksmithSystem / Service [IMPL]<br/>recipe, material/gold check,<br/>craft, repair"]
+  GuildAction["GuildAction / GuildIntel [IMPL]<br/>visit guild -> raw leads / quest projects"]
+  HomeInnStorage["Home / Inn / Storage [IMPL]<br/>rest, upgrade, deposit, withdraw"]
+  RecruitAction["Recruit [IMPL]<br/>contract appraisal, group, payout,<br/>accept/reject"]
+end
+
+class ActionRouter,MovementActions,CombatActions,SkillActions,InteractionSystem,ShopSystem,BlacksmithSystem,GuildAction,HomeInnStorage,RecruitAction action
+
+subgraph WorldState["World / authoritative state [IMPL]"]
+  AuthoritativeState["AuthoritativeState [IMPL]<br/>entities, regions, resource_nodes,<br/>items, quests, buildings, world_time"]
+  ResourceTransfer["ResourceTransferIntent [IMPL]<br/>items/gold/xp/equipment/identity/<br/>biological/strategic updates,<br/>conservation law"]
+  EntityUpdate["EntityUpdate / StateUpdate [IMPL]<br/>position, inventory, combat, strategic,<br/>social, biological, lifecycle,<br/>task, navigation"]
+  Regions["RegionState [IMPL]<br/>bounds, kind, danger/trauma/scars"]
+  ResourceNodes["ResourceNodeState [IMPL]<br/>position, yields_item, charges,<br/>cooldown/required_ticks"]
+  Quests["QuestSystem / QuestGeneration [IMPL]<br/>exploration/hunt progress,<br/>world scars/blockers -> quests"]
+  Observability["CognitionGraphExporter / Events / RCA [IMPL]<br/>snapshots, diffs, strategic events,<br/>root cause hypotheses"]
+end
+
+class AuthoritativeState,ResourceTransfer,EntityUpdate,Regions,ResourceNodes,Quests,Observability world
+
+Identity -- "biases / gates: role, faction, class, level, traits, group status" --> Strategic
+Attributes -- "derives: cognition bandwidth, combat/math, perception/charisma" --> Strategic
+Attributes -- "feeds: damage, evasion, learning, perception" --> Combat
+Aptitude -- "modifies: training/AP/learning efficiency" --> Attributes
+Biological -- "creates: hunger, fatigue, rest concerns" --> Strategic
+Lifecycle -- "gates: active/alive/dead eligibility" --> Strategic
+Lifecycle -- "gates: can act / zombie prevention" --> ActionRouter
+Combat -- "provides: hp, readiness, wounds, attack/defense" --> TacticalDecision
+Stamina -- "limits: move/attack/skill/harvest cost" --> TacticalDecision
+Equipment -- "modifies: combat power, durability, gear state" --> Combat
+Inventory -- "limits/provides: items, gold, capacity" --> ShopSystem
+Inventory -- "provides: materials, consumables, loot" --> BlacksmithSystem
+Navigation -- "provides: position, target, path, movement intention" --> MovementActions
+Interaction -- "tracks: target/progress/channel state" --> InteractionSystem
+Social -- "provides: trust, bonds, betrayal, reputation" --> SocialAppraisal
+Strategic -- "owns: current project/objective/blockers/leads/concerns" --> StrategicIntel
+
+AuthoritativeState -- "provides: world/entity snapshot" --> SensoryFilter
+SensoryFilter -- "uses: viewport + salience" --> ConcernIntake
+RoutineService -- "uses: biological + anchored + environment" --> ConcernIntake
+ConcernIntake -- "writes: ConcernState" --> Strategic
+AppraisalSystem -- "uses: combat hp, neighbors, environment" --> TacticalDecision
+GoalRegistry -- "uses: entity + state; returns GoalScore(kind, utility, target)" --> StrategicIntel
+StrategicIntel -- "writes: ProjectState + ObjectiveState + current_project_id" --> Strategic
+StrategicIntel -- "uses: profile.interruption_resistance" --> Strategic
+DetourSystem -- "uses: blockers + leads + source trust; writes detour project" --> Strategic
+StrategicRedirection -- "uses: blocker/detour/objective target" --> Navigation
+TacticalDecision -- "uses: current objective, combat state, local threat" --> ActionRouter
+
+ActionRouter -- "delegates: move/attack/skill/rest/eat/train/etc." --> MovementActions
+ActionRouter -- "delegates: attack" --> CombatActions
+ActionRouter -- "delegates: skill / aoe" --> SkillActions
+ActionRouter -- "delegates: interact" --> InteractionSystem
+ActionRouter -- "delegates: recruit" --> RecruitAction
+MovementActions -- "writes: position, path, readiness, stamina, failure reason" --> EntityUpdate
+CombatActions -- "writes: hp, wounds, death, xp/gold, quest progress, social grudge" --> EntityUpdate
+SkillActions -- "writes: combat/effects/cooldown/stamina" --> EntityUpdate
+InteractionSystem -- "emits: harvest/loot/chest/corpse transfer" --> ResourceTransfer
+ShopSystem -- "emits: buy/sell transfer" --> ResourceTransfer
+BlacksmithSystem -- "emits: craft/repair transfer" --> ResourceTransfer
+HomeInnStorage -- "emits: rest/storage/update transfer" --> EntityUpdate
+RecruitAction -- "writes: contracts/group/social/strategic updates" --> EntityUpdate
+ResourceTransfer -- "applies conservation: item/gold/xp changes" --> EntityUpdate
+EntityUpdate -- "mutates" --> AuthoritativeState
+
+AuthoritativeState -- "contains: region conditions, resource nodes, quests" --> GoalRegistry
+ResourceNodes -- "provide: harvest targets, depletion, cooldown" --> InteractionSystem
+Regions -- "provide: trauma/danger/scars" --> AppraisalSystem
+Regions -- "influence: price/risk/quest pressure" --> ShopSystem
+Quests -- "provide: objectives/rewards/progression" --> Strategic
+Quests -- "reads: blockers/world scars for generation" --> AuthoritativeState
+Observability -- "reads: strategic graph, events, diffs" --> Strategic
+Observability -- "diagnoses: stale targets, movement bottlenecks, impossible quests" --> AuthoritativeState
+
+Identity -. "feeds NI: class/role/self-label/personality priors" .-> SelfAwareness
+Attributes -. "feeds NI: estimated strengths/weaknesses" .-> SelfAwareness
+Combat -. "feeds NI: perceived health, wounds, power" .-> SelfAwareness
+Equipment -. "feeds NI: perceived equipment quality" .-> SelfAwareness
+Inventory -. "feeds NI: carried resources, gold, capacity stress" .-> SelfAwareness
+Biological -. "feeds NI: hunger/fatigue/rest pressure" .-> NeedInterpretation
+SelfAwareness -. "derives NI: subjective condition -> needs" .-> NeedInterpretation
+NeedInterpretation -. "creates NI: survival/recovery/inventory/info pressure" .-> IntentPressure
+ExperienceMemory -. "updates NI: confidence, fear, trusted patterns" .-> SelfAwareness
+ExperienceMemory -. "updates NI: success/failure by capability" .-> CapabilityEstimate
+ExperienceMemory -. "updates NI: danger remembered from outcomes" .-> RiskBelief
+KnowledgeModel -. "stores NI: facts and unknowns; source certainty" .-> CapabilityEstimate
+KnowledgeModel -. "creates NI: unknown facts -> learn/info pressure" .-> IntentPressure
+RiskBelief -. "modifies NI: travel/fight/quest risk estimate" .-> CapabilityEstimate
+Inventory -. "feeds NI: item list/gold/materials" .-> PossessionUnderstanding
+KnowledgeModel -. "explains NI: item uses, recipe needs, quest material meaning" .-> PossessionUnderstanding
+PossessionUnderstanding -. "creates NI: keep/sell/equip/store intent pressure" .-> IntentPressure
+TemporalAwareness -. "creates NI: deadline/restock/night/threat growth pressure" .-> IntentPressure
+IntentPressure -. "feeds NI: raw motivation candidates" .-> PlanContext
+PlanContext -. "records NI: alternatives, rejection reasons, selected route" .-> StrategicIntel
+CapabilityEstimate -. "feeds NI: goal score feasibility/risk" .-> GoalRegistry
+NeedInterpretation -. "feeds NI: goal urgency" .-> GoalRegistry
+RiskBelief -. "feeds NI: danger penalty / party need / retreat threshold" .-> GoalRegistry
+KnowledgeModel -. "feeds NI: target/source known vs unknown" .-> GoalRegistry
+PossessionUnderstanding -. "feeds NI: sell/craft/equip/keep decisions" .-> GoalRegistry
+
+SelfAwareness -. "uses NI: perceived body + equipment state" .-> SurvivalReadiness
+NeedInterpretation -. "uses NI: urgent needs" .-> SurvivalReadiness
+CapabilityEstimate -. "uses NI: combat/travel/task estimates" .-> CombatReadiness
+RiskBelief -. "uses NI: enemy/region/route risks" .-> CombatReadiness
+KnowledgeModel -. "uses NI: route/target/service facts" .-> TravelReadiness
+TemporalAwareness -. "uses NI: deadline/time pressure" .-> TravelReadiness
+PossessionUnderstanding -. "uses NI: materials, supplies, gear meaning" .-> CraftingReadiness
+Strategic -. "uses IMPL: projects/objectives/blockers/leads" .-> QuestReadiness
+SurvivalReadiness -. "composes NI: not an entity component" .-> AdventureReadiness
+CombatReadiness -. "composes NI: not an entity component" .-> AdventureReadiness
+TravelReadiness -. "composes NI: not an entity component" .-> AdventureReadiness
+QuestReadiness -. "composes NI: not an entity component" .-> AdventureReadiness
+
+EntityUpdate -. "after action NI: update perceived condition" .-> SelfAwareness
+EntityUpdate -. "after action NI: update need interpretation" .-> NeedInterpretation
+EntityUpdate -. "after success/failure NI: append experience" .-> ExperienceMemory
+EntityUpdate -. "after observation NI: verify/contradict facts" .-> KnowledgeModel
+EntityUpdate -. "after combat/travel NI: update risk belief" .-> RiskBelief
+ResourceTransfer -. "after buy/sell/craft/loot NI: update item meaning" .-> PossessionUnderstanding
+Strategic -. "after blockers/detours NI: update plan context" .-> PlanContext
+
+%% Phase 3 Subjective Routing Flow (Implemented)
+SelfModelBundle -. "supplies: needs & perceived condition" .-> AdventureRouteGenerator
+AdventureRouteGenerator -. "generates: candidate options" .-> AdventureDecisionService
+PersonalityComponent -. "biases: urgency & risk expected" .-> AdventureRouteScorer
+AdventureDecisionService -. "selects best route & maps" .-> RouteToProjectMapper
+RouteToProjectMapper -. "creates strategic bridge" .-> StrategicComponent
+ObjectiveIntentResolver -. "translates active objective" .-> ActionIntent
+
+
+%% Phase 7 Social Cooperation & Party Flow (Implemented)
+subgraph Phase7Cooperation["Phase 7: Cooperation Domain & Social Pipeline [IMPL]"]
+  HelpNeed["HelpNeed<br/>key, severity, reason,<br/>support_tags, acceptable_postures"]
+  PartnerCandidate["PartnerCandidate<br/>entity_id, relationship_score, trust_score,<br/>role_fit_score, availability_score"]
+  PartnerFitReport["PartnerFitReport<br/>candidate_id, fit_score, trust_score,<br/>capability_match, objective_alignment, risk"]
+  CooperationDecision["CooperationDecision<br/>selected_posture, selected_partner_id, fit_score,<br/>rejected_partners, trace"]
+  CohesionReport["NI: PartyCohesionReport<br/>group_id, stability_score, status"]
+end
+
+class HelpNeed,PartnerCandidate,PartnerFitReport,CooperationDecision,CohesionReport impl
+
+Strategic -- "reads capability, near-death, HP" --> HelpNeedEvaluator
+HelpNeedEvaluator -- "creates" --> HelpNeed
+HelpNeed -- "requests support tags" --> PartnerCandidateProvider
+PartnerCandidateProvider -- "scans spatial/trust allies" --> PartnerCandidate
+PartnerCandidate -- "analyzes trust, grudge, role" --> PartnerFitEvaluator
+PartnerFitEvaluator -- "creates" --> PartnerFitReport
+PartnerFitReport -- "evaluates optimal candidate" --> CooperationDecisionService
+CooperationDecisionService -- "chooses posture/partner" --> CooperationDecision
+CooperationDecision -- "maps to contract/blocker intents" --> CooperationIntentBridge
+CooperationIntentBridge -- "mutates strategic / social" --> StateUpdate
+PartyObjectiveAlignmentService & PartyCohesionService -- "evaluates group records" --> CohesionReport
+CohesionReport -- "collapses group trust on decay" --> StateUpdate
+CooperationLearningService -- "remembers betrayal outcomes" --> Strategic
+
+
+%% Phase 8 World Emergence & Population-Level Consequences (Implemented)
+subgraph Phase8WorldEmergence["Phase 8: World Emergence & Population-Level Feedback [IMPL]"]
+  WorldEvent["WorldEvent<br/>category, tick, region_id, subject"]
+  EventAggregator["WorldEventAggregator<br/>compiles sliding window of events"]
+  RegionalPressure["RegionalPressure<br/>region_id, pressure_kind, intensity"]
+  ResourceScarcity["ResourceScarcitySignal<br/>region_id, resource_type, scarcity_level"]
+  ServicePressure["ServiceStatePressure<br/>service_id, pressure_kind, intensity"]
+  QuestSeed["QuestSeed<br/>id, kind, region_id, difficulty, reward"]
+  RumorSeed["RumorSeed<br/>id, subject, region_id, certainty"]
+  EntityExposure["Entity Signal Exposure<br/>exposed_world_signals, force_route_reevaluation"]
+end
+
+class WorldEvent,EventAggregator,RegionalPressure,ResourceScarcity,ServicePressure,QuestSeed,RumorSeed,EntityExposure impl
+
+AuthoritativeState -- "emits events on death/harvest" --> WorldEvent
+WorldEvent -- "filters by bounded tick window" --> EventAggregator
+EventAggregator -- "feeds danger/camp counts" --> RegionalPressureModel
+EventAggregator -- "feeds node depletion counts" --> ScarcityModel
+RegionalPressureModel -- "creates" --> RegionalPressure
+ScarcityModel -- "creates" --> ResourceScarcity
+RegionalPressure & ResourceScarcity -- "translates to" --> WorldOpportunityPressureService
+RegionalPressure & ResourceScarcity -- "evaluates service strain" --> ServiceStatePressureModel
+ServiceStatePressureModel -- "creates" --> ServicePressure
+WorldOpportunityPressureService -- "generates dynamic quests" --> DynamicQuestSeedService
+DynamicQuestSeedService -- "creates" --> QuestSeed
+RegionalPressure & ResourceScarcity -- "spreads chatters" --> RumorSeedService
+RumorSeedService -- "creates" --> RumorSeed
+RegionalPressure & ResourceScarcity & ServicePressure & QuestSeed & RumorSeed -- "bridges to entities" --> WorldToEntitySignalBridge
+WorldToEntitySignalBridge -- "projects subjective signals" --> EntityExposure
+EntityExposure -- "triggers Route Reevaluation" --> AdventureRouteScorer
+EntityExposure -- "updates property maps" --> StateUpdate
+
+
+%% Phase 9 Long-Run Life-Arc Campaigns (Implemented)
+subgraph Phase9Campaigns["Phase 9: Long-Run Life-Arc campaigns [IMPL]"]
+  CampaignSpec["CampaignSpec<br/>campaign_id, actors, expected_arcs, forbidden"]
+  CampaignRunner["CampaignRunner<br/>executes long runs deterministic"]
+  LifeArcClassifier["LifeArcClassifier<br/>classifies entity life traces"]
+  BehaviorChangeProofDetector["BehaviorChangeProofDetector<br/>detects learning and causal behavior changes"]
+  RouteDiversityAnalyzer["RouteDiversityAnalyzer<br/>analyzes route usage, stagnation entropy"]
+  ForbiddenBehaviorDetector["ForbiddenBehaviorDetector<br/>flags post-death, hidden knowledge loops"]
+  CampaignScorecardEvaluator["CampaignScorecardEvaluator<br/>issues pass/fail verdicts on lifecycle coherence"]
+  CampaignReportGenerator["CampaignReportGenerator<br/>produces HTML/Markdown/JSON artifact verification"]
+end
+
+class CampaignSpec,CampaignRunner,LifeArcClassifier,BehaviorChangeProofDetector,RouteDiversityAnalyzer,ForbiddenBehaviorDetector,CampaignScorecardEvaluator,CampaignReportGenerator impl
+
+CampaignSpec --> CampaignRunner
+CampaignRunner --> AuthoritativeState
+AuthoritativeState -- "emits event stream" --> LifeArcClassifier
+AuthoritativeState -- "emits event stream" --> BehaviorChangeProofDetector
+AuthoritativeState -- "emits event stream" --> RouteDiversityAnalyzer
+AuthoritativeState -- "emits event stream" --> ForbiddenBehaviorDetector
+LifeArcClassifier & BehaviorChangeProofDetector & RouteDiversityAnalyzer & ForbiddenBehaviorDetector --> CampaignScorecardEvaluator
+CampaignScorecardEvaluator --> CampaignReportGenerator
+
+
+%% Phase 10 Optimization, Scaling & Rollout Hardening (Implemented)
+subgraph Phase10Optimization["Phase 10: Optimization & Rollout Hardening [IMPL]"]
+  FeatureFlags["FeatureFlagManager<br/>OFF, SHADOW, ON, STRICT controls"]
+  RolloutProfiles["RolloutProfileManager<br/>Class A/B/C HW profile budgets"]
+  DirtyScheduler["DirtyWorkScheduler<br/>Skip ticks for static regions/entities"]
+  ProviderEnforcement["ProviderBudgetEnforcement<br/>Strict limits & deterministic query orders"]
+  CacheStrategy["CacheStrategy & Invalidation<br/>LRU local cache & event invalidation"]
+  TraceVolumeGovernor["TraceVolumeGovernor<br/>Cap low-severity traces & summarize repeated logs"]
+  MemoryLimits["MemoryCapacityLimits<br/>Deterministic salience-based fact/opp/coop eviction"]
+  GracefulDegradation["GracefulDegradationManager<br/>NORMAL, CONSTRAINED, DEGRADED, CRITICAL throttling"]
+  DeveloperDiagnostics["DeveloperDiagnostics<br/>DiagnosticIssue reports for budget skips / loops"]
+  RolloutGate["RolloutGate Script<br/>CI/CD verification check for safe production rollouts"]
+end
+
+class FeatureFlags,RolloutProfiles,DirtyScheduler,ProviderEnforcement,CacheStrategy,TraceVolumeGovernor,MemoryLimits,GracefulDegradation,DeveloperDiagnostics,RolloutGate impl
+
+AuthoritativeState -- "reads features & hardware" --> FeatureFlags & RolloutProfiles
+FeatureFlags & RolloutProfiles -- "orchestrates runtime throttles" --> DirtyScheduler & ProviderEnforcement & CacheStrategy & TraceVolumeGovernor & MemoryLimits & GracefulDegradation
+GracefulDegradation -- "records budget skip & loop telemetry" --> DeveloperDiagnostics
+DeveloperDiagnostics -- "produces diagnostic report" --> RolloutGate
+CampaignRunner -- "produces production candidate run report" --> RolloutGate
+
+
+%% Phase 19-28 Observability & Behavior Profiling Pipeline (Implemented)
+subgraph Phase19to28Observability["Phases 19-28: Observability & Behavior Profiling [IMPL]"]
+  EventSchema["BehaviorEventSchema<br/>Typed events (ticks, severity, tags, metadata)"]
+  BoundedQueue["BoundedBehaviorQueue<br/>Non-blocking worker queue, dynamic drops"]
+  Normalizer["BehaviorEventNormalizer<br/>Standardizes domain-specific state tuples"]
+  Aggregator["BehaviorMetricAggregator<br/>Computes sliding window frequency, entropy, diversity"]
+  EpisodeDetector["ChronologicalEpisodeDetector<br/>Reconstructs episodes: loops, failures, adaptation"]
+  ScorecardBuilder["BehaviorScorecardBuilder<br/>Generates Entity and Run scorecards, cohort metrics"]
+  Warehouse["LocalWarehouseAdapter<br/>Saves JSON/JSONL datasets, streams, indices"]
+  QueryAPI["FastAPI Query API<br/>Paginated query endpoints (/api/v1/behavior/*)"]
+  BudgetController["ObservabilityBudgetController<br/>Throttles/drops events, handles self-healing degradation"]
+  VerificationGate["ObservabilityRolloutGate<br/>Certifies RC releases based on budget & TPS thresholds"]
+end
+
+class EventSchema,BoundedQueue,Normalizer,Aggregator,EpisodeDetector,ScorecardBuilder,Warehouse,QueryAPI,BudgetController,VerificationGate impl
+
+AuthoritativeState -- "emits ticks & domain changes" --> EventSchema
+EventSchema -- "enqueues safely" --> BoundedQueue
+BoundedQueue -- "processes asynchronously" --> Normalizer
+Normalizer -- "feeds normalized streams" --> Aggregator
+Normalizer -- "rebuilds timeline histories" --> EpisodeDetector
+Aggregator & EpisodeDetector -- "compiles scorecard summaries" --> ScorecardBuilder
+ScorecardBuilder -- "persists datasets" --> Warehouse
+Warehouse -- "exposes paginated views" --> QueryAPI
+BoundedQueue -- "triggers backpressure degradation" --> BudgetController
+BudgetController -- "applies sampling/drop rules" --> BoundedQueue
+Warehouse & BudgetController -- "verifies candidate compliance" --> VerificationGate
+
+
+
+

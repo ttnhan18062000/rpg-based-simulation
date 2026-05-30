@@ -17,6 +17,7 @@ The orchestration layer and deterministic loop.
 - [Simulation Kernel](../engine/kernel.md): The 6-phase deterministic loop.
 - [Project Lawbook](../engine/project_lawbook_m10.md): Architectural invariants and contracts.
 - [Performance Contract](../engine/performance_contract.md): Hardware classes and scaling limits.
+- [How to Run Simulation Guide](../observability/how_to_run_simulation.md): Seeding, compiling, and running headless CLI simulations with full observability.
 
 ### ⚔️ [Gameplay Systems](systems/README.md)
 The implementation of specific RPG domains.

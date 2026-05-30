@@ -36,21 +36,31 @@ class GuildIntelSystem:
                 )
                 
                 leads_add = []
+                beliefs_add = []
                 concerns_add = []
                 
                 if high_risk_regions:
                     target = high_risk_regions[0]
-                    # Create a Lead
-                    from src.core.strategic import LeadCertainty
-                    leads_add.append(LeadState(
-                        id=f"guild_lead_{target.id}_{state.tick}",
-                        kind="location",
-                        subject=target.id,
-                        detail=f"Danger reported in {target.name}",
-                        discovered_tick=state.tick,
-                        certainty=LeadCertainty.APPROXIMATE,
-                        source_entity_id=building_id
-                    ))
+                    # Create rumor belief and lead
+                    from src.systems.strategic_systems.belief import BeliefCycleSystem
+                    rumor_up = BeliefCycleSystem.process_rumor(
+                        entity,
+                        target.id,
+                        f"Danger reported in {target.name}",
+                        building_id,
+                        state.tick
+                    )
+                    leads_add.extend(rumor_up.leads_add_or_update)
+                    beliefs_add.extend(rumor_up.beliefs_add_or_update)
+                    
+                    # Log belief creation event
+                    import logging
+                    logger = logging.getLogger(__name__)
+                    for b in rumor_up.beliefs_add_or_update:
+                        logger.debug(
+                            f"[Tick {state.tick}] BeliefCreated: Entity {entity.id} acquired rumor "
+                            f"belief '{b.id}' about {b.subject} with certainty {b.certainty:.2f} from source {building_id}"
+                        )
                     
                     # Create a Concern if trauma is very high
                     if target.trauma_score > 5.0:
@@ -67,6 +77,7 @@ class GuildIntelSystem:
                     interaction=InteractionUpdate(reset=True),
                     strategic=StrategicUpdate(
                         leads_add_or_update=leads_add,
+                        beliefs_add_or_update=beliefs_add,
                         concerns_add_or_update=concerns_add
                     )
                 )

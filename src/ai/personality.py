@@ -24,6 +24,8 @@ class PersonalityService:
         if personality.bravery != 0.0:
             mods["combat"] = personality.bravery * 0.4
             mods["flee"] = -personality.bravery * 0.6 # Brave entities flee less
+            mods["combat_engage"] = personality.bravery * 0.5
+            mods["combat_retreat"] = -personality.bravery * 0.5
             
         # Sociability biases social goals
         if personality.sociability != 0.0:
@@ -33,5 +35,7 @@ class PersonalityService:
         if personality.industry != 0.0:
             mods["harvesting"] = mods.get("harvesting", 0.0) + personality.industry * 0.3
             mods["crafting"] = personality.industry * 0.4
+            mods["resolve_blocker"] = personality.industry * 0.3
+
             
         return mods

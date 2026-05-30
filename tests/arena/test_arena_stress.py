@@ -3,6 +3,7 @@ from src.certification.harness import CertificationHarness
 from src.certification.scenarios import build_scenario_state, get_scenario_expectations
 from src.config.profiles import RuntimeProfile, HardwareClass
 
+@pytest.mark.extra_slow
 def test_arena_stress_50v50():
     """Verify that a 50v50 battle stays within resource limits."""
     profile = RuntimeProfile(
