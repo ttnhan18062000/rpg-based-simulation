@@ -1,0 +1,18 @@
+# data/content/terrain.yaml
+- id: "plain"
+  display_name: "Grass Plains"
+  schema_version: "terraindefinition.v1"
+  move_cost_multiplier: 1.0
+  hazard_multiplier: 1.0
+
+- id: "forest"
+  display_name: "Wild Forest"
+  schema_version: "terraindefinition.v1"
+  move_cost_multiplier: 1.2
+  hazard_multiplier: 1.0
+
+- id: "swamp"
+  display_name: "Hazardous Swamp"
+  schema_version: "terraindefinition.v1"
+  move_cost_multiplier: 1.5
+  hazard_multiplier: 1.5

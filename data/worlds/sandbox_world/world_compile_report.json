@@ -1,0 +1,12 @@
+{
+  "world_id": "sandbox_world",
+  "seed": 42,
+  "entity_count": 20,
+  "region_count": 2,
+  "resource_node_count": 10,
+  "building_count": 2,
+  "quest_count": 0,
+  "warnings": [],
+  "compile_duration_ms": 15.767067001434043,
+  "state_hash": "2f94f10135bc2aff1a68fc2c54b2c415"
+}

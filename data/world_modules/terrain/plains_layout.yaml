@@ -1,0 +1,22 @@
+# data/world_modules/terrain/plains_layout.yaml
+schema_version: "worldmodule.v1"
+module_id: "plains_layout"
+module_type: "terrain"
+display_name: "Baseline Plains Topology Layout"
+description: "Paints town tiles and basic regional boundaries"
+version: "1.0.0"
+provides:
+  - "baseline_layout"
+parameters:
+  - name: "town_size"
+    type: "integer"
+    default: 4
+    required: true
+    min_value: 1
+    max_value: 10
+regions:
+  - id: "town_center"
+    type: "town"
+    grid_bounds: [1, 1, 8, 8]
+    terrain: "GRASS"
+    hazard_level: 0.0

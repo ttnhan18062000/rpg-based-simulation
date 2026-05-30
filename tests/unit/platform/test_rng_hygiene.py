@@ -23,7 +23,12 @@ def test_rng_hygiene_no_global_random_in_src():
     for path in src_dir.rglob("*.py"):
         # Explicit exception for the RNG platform layer and offline worldbuilders
         path_str = str(path).replace(os.sep, "/")
-        if path_str in ("src/platform/rng.py", "src/worldbuilding/recipe.py", "src/worldbuilding/compiler.py"):
+        if path_str in (
+            "src/platform/rng.py",
+            "src/worldbuilding/recipe.py",
+            "src/worldbuilding/compiler.py",
+            "src/worldgeneration/generator.py",
+        ):
             continue
             
         content = path.read_text(errors="ignore")

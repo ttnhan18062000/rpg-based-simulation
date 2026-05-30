@@ -1,7 +1,7 @@
 # Compliance IDs: WORLD-070, WORLD-071, WORLD-072
 import pytest
 from src.worldbuilding.schema import WorldSpec, InvalidWorldSpecError
-from src.worldbuilding.validator import WorldValidator
+from src.worldbuilding.validator import WorldValidator, ValidationContext
 
 def create_valid_base_spec() -> dict:
     return {
@@ -119,3 +119,69 @@ def test_validator_does_not_modify_spec():
     # Values must remain identical (Pydantic model is frozen, but we assert state stability)
     assert spec.name == orig_name
     assert spec.topology.width == orig_width
+
+def test_validator_context_aware_filtering():
+    data = create_valid_base_spec()
+    # 1. No resources in MODULE context must pass without issues (NoResourcesWarningRule skipped)
+    data["resources"] = []
+    spec = WorldSpec.model_validate(data)
+    
+    validator = WorldValidator()
+    issues = validator.validate(spec, context=ValidationContext.MODULE)
+    assert issues == []  # Warning bypassed in MODULE context!
+
+    # 2. Unknown spawn region in MODULE context should be bypassed because SpawnRegionExistenceRule is skipped in MODULE
+    data["entities"][0]["spawn_region"] = "unknown_region"
+    spec = WorldSpec.model_validate(data)
+    issues = validator.validate(spec, context=ValidationContext.MODULE)
+    assert issues == []
+
+    # 3. FactionExistenceRule still runs in MODULE context
+    data["entities"][0]["faction"] = "unknown_faction"
+    spec = WorldSpec.model_validate(data)
+    with pytest.raises(InvalidWorldSpecError) as exc_info:
+        validator.validate(spec, context=ValidationContext.MODULE)
+    assert "WORLD-REF-001" in str(exc_info.value)
+
+def test_validator_strict_mode_context_aware():
+    data = create_valid_base_spec()
+    data["resources"] = []  # Triggers warning in WORLD context, skipped in MODULE context
+    spec = WorldSpec.model_validate(data)
+    
+    validator = WorldValidator()
+    
+    # Passing in MODULE context with strict=True must succeed (warning is skipped entirely)
+    issues = validator.validate(spec, strict=True, context=ValidationContext.MODULE)
+    assert issues == []
+
+    # Passing in WORLD context with strict=True must fail (warning is evaluated and strict mode raises exception)
+    with pytest.raises(InvalidWorldSpecError) as exc_info:
+        validator.validate(spec, strict=True, context=ValidationContext.WORLD)
+    assert "WORLD-WARN-001" in str(exc_info.value)
+
+def test_validator_custom_context_overrides():
+    from src.worldbuilding.validator import WorldValidationRule, ValidationIssue
+    
+    # Create custom rule with context-specific overrides
+    class ContextOverrideRule(WorldValidationRule):
+        rule_id = "CUSTOM-001"
+        severity = "WARNING"
+        description = "Test custom overrides"
+        severity_overrides = {
+            ValidationContext.MODULE: "ERROR"
+        }
+        
+        def validate(self, spec: WorldSpec, context: ValidationContext = ValidationContext.WORLD) -> list[ValidationIssue]:
+            return [ValidationIssue(
+                rule_id=self.rule_id,
+                severity=self.get_severity(context),
+                message="Custom warning raised"
+            )]
+            
+    rule = ContextOverrideRule()
+    
+    # 1. Under WORLD, severity should remain default (WARNING)
+    assert rule.get_severity(ValidationContext.WORLD) == "WARNING"
+    
+    # 2. Under MODULE, severity should override to (ERROR)
+    assert rule.get_severity(ValidationContext.MODULE) == "ERROR"

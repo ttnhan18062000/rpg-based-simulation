@@ -1,0 +1,7 @@
+# data/content/spawn_tables.yaml
+- id: "forest_spawn_pool"
+  display_name: "Forest Spawning weights"
+  schema_version: "spawntabledefinition.v1"
+  spawn_weights:
+    "monster": 0.8
+    "worker": 0.2

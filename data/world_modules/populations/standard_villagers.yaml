@@ -1,0 +1,19 @@
+# data/world_modules/populations/standard_villagers.yaml
+schema_version: "worldmodule.v1"
+module_id: "standard_villagers"
+module_type: "population"
+display_name: "Baseline Spawning Population"
+description: "Adds starter heroes and worker groups"
+version: "1.0.0"
+requires:
+  - "plains_layout"
+population_recipes:
+  - role: "hero"
+    count: 2
+    faction: "villagers"
+    spawn_region: "town_center"
+    stats_profile: "hero_base"
+  - role: "worker"
+    count: 3
+    faction: "villagers"
+    spawn_region: "town_center"

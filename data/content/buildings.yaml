@@ -1,0 +1,14 @@
+# data/content/buildings.yaml
+- id: "shop"
+  display_name: "General Store"
+  description: "Standard trading post facility"
+  schema_version: "buildingdefinition.v1"
+  hp: 500
+  max_hp: 500
+  service_profile_id: "general_store_service"
+
+- id: "town_hall"
+  display_name: "Town Council Hall"
+  schema_version: "buildingdefinition.v1"
+  hp: 1000
+  max_hp: 1000

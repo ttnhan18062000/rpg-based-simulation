@@ -230,9 +230,10 @@ stored_artifacts/**/*.json
 !stored_artifacts/**/manifest.json
 
 # Runtime simulation data (transient, regenerated each run)
-# Runtime simulation data (transient, regenerated each run)
-data/*
-!data/expectation_packs/
+data/runs/
+data/test_cli_basic/
+data/test_obs_replay/
+data/run_sets/
 
 # Observability reports and transient run verification logs
 reports/*

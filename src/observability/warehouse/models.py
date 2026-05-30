@@ -16,6 +16,16 @@ class RunRecord(BaseModel):
     ended_at: Optional[str] = None
     schema_version: str = "warehouse_schema_v1"
     manifest_json: str  # Full original manifest raw copy
+    
+    # Resolved world assembly sidecar artifacts (Phase 10)
+    resolved_world_path: Optional[str] = None
+    provenance_manifest_path: Optional[str] = None
+    assembly_report_path: Optional[str] = None
+    validation_report_path: Optional[str] = None
+    compile_report_path: Optional[str] = None
+    catalog_fingerprint: Optional[str] = None
+    module_fingerprints: Optional[Dict[str, str]] = None
+    state_hash: Optional[str] = None
 
 class SweepRecord(BaseModel):
     """Database representation of a scenario sweep."""
