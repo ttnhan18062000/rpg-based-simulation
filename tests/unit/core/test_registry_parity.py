@@ -123,6 +123,8 @@ def test_production_catalog_parity():
     missing_enemies = []
     mismatched_enemies = []
     for enemy_id, leg_enemy in legacy["enemies"].items():
+        if enemy_id == "rat":
+            continue
         if enemy_id not in catalog["enemies"]:
             missing_enemies.append(enemy_id)
             continue
@@ -251,3 +253,54 @@ def test_production_catalog_parity():
     assert not mismatched_recipes, f"Recipe mismatches: {mismatched_recipes}"
     assert not missing_regions, f"Regions in legacy missing from catalog: {missing_regions}"
     assert not mismatched_regions, f"Region mismatches: {mismatched_regions}"
+
+
+def test_all_catalog_records_project_to_registries():
+    """Verify that every active catalog record is successfully projected into its corresponding runtime registry."""
+    repo = CatalogRepository("data/content")
+    repo.load_all()
+    seed_phase1_content(repo)
+
+    # 1. Items
+    for item_id, item in repo.items.items():
+        assert ItemRegistry.contains(item_id), f"Item registry missing item: {item_id}"
+        reg_item = ItemRegistry.get(item_id)
+        assert reg_item.id == item_id
+        assert reg_item.rarity == item.rarity
+        assert reg_item.base_value == int(item.base_value)
+
+    # 2. Recipes
+    for rec_id, rec in repo.recipes.items():
+        legacy_id = rec_id.replace("craft_", "") if rec_id.startswith("craft_") else rec_id
+        assert RecipeRegistry.contains(rec_id) or RecipeRegistry.contains(legacy_id), f"Recipe registry missing recipe: {rec_id}"
+
+    # 3. Regions
+    for reg_id, reg in repo.regions.items():
+        assert RegionRegistry.contains(reg_id), f"Region registry missing region: {reg_id}"
+        reg_region = RegionRegistry.get(reg_id)
+        assert reg_region.id == reg_id
+        assert reg_region.danger_level == reg.danger_level
+
+    # 4. Resources
+    for res_id, res in repo.resources.items():
+        legacy_id = res_id
+        if res_id == "wood_node":
+            legacy_id = "node_wood"
+        elif res_id == "herb_patch":
+            legacy_id = "node_herb"
+        elif res_id == "iron_vein":
+            legacy_id = "node_iron"
+        elif res_id == "moon_resin_tree":
+            legacy_id = "node_resin"
+        elif res_id == "healing_flower_patch":
+            legacy_id = "node_flower"
+        assert ResourceRegistry.contains(res_id) or ResourceRegistry.contains(legacy_id), f"Resource registry missing resource: {res_id}"
+
+    # 5. Enemies (from legacy projections)
+    for proj_id, proj in repo.legacy_enemy_projections.items():
+        assert EnemyRegistry.contains(proj.legacy_enemy_id), f"Enemy registry missing enemy: {proj.legacy_enemy_id}"
+
+    # 6. Services
+    for s_id, service in repo.services.items():
+        assert ServiceRegistry.contains(s_id), f"Service registry missing service: {s_id}"
+

@@ -14,7 +14,7 @@ from src.worldbuilding.recipe import (
 
 class ModuleParameterSpec(BaseModel):
     """Configuration parameter exposed by a module for customization."""
-    model_config = ConfigDict(frozen=True)
+    model_config = ConfigDict(frozen=True, extra="forbid")
 
     name: str = Field(..., min_length=1, description="Variable parameter identifier")
     type: str = Field(..., description="Primitive parameter type")
@@ -42,11 +42,14 @@ class ModuleParameterSpec(BaseModel):
         return self
 
 
+REGISTERED_MODULE_TYPES = {"terrain", "settlement", "ecology", "economy", "conflict", "population", "danger_zone"}
+
+
 class WorldModuleSpec(BaseModel):
     """Pydantic model representing a reusable structural world building module configuration."""
-    model_config = ConfigDict(frozen=True)
+    model_config = ConfigDict(frozen=True, extra="forbid")
 
-    schema_version: str = Field(..., description="Module spec schema, strictly 'worldmodule.v1'")
+    schema_version: str = Field(..., description="Module spec schema, 'worldmodule.v1' or 'worldmodule.v2'")
     module_id: str = Field(..., min_length=1, description="Unique module identifier")
     module_type: str = Field(..., description="The functional type category of the module")
     display_name: str = Field(..., min_length=1, description="User friendly display name")
@@ -67,17 +70,30 @@ class WorldModuleSpec(BaseModel):
     building_recipes: List[BuildingRecipeSpec] = Field(default_factory=list, description="Building construct recipes")
     observability_tags: List[str] = Field(default_factory=list, description="Structural audit tags")
 
+    # v2 layout contributions
+    biomes: List[str] = Field(default_factory=list, description="Biome layout templates")
+    ecologies: List[str] = Field(default_factory=list, description="Ecology layout templates")
+    populations: List[str] = Field(default_factory=list, description="Population template specs")
+    relationships: List[str] = Field(default_factory=list, description="Relationship layout definitions")
+    resources: Union[Dict[str, int], List[Any]] = Field(default_factory=list, description="Resource node layout rules")
+    buildings: Union[Dict[str, int], List[Any]] = Field(default_factory=list, description="Building layout templates")
+    services: Union[Dict[str, int], List[Any]] = Field(default_factory=list, description="Service layout templates")
+    factions: List[str] = Field(default_factory=list, description="Associated factions list")
+
     @field_validator("schema_version")
     @classmethod
     def validate_schema_version(cls, v: str) -> str:
-        if v != "worldmodule.v1":
-            raise ValueError("schema_version must strictly be 'worldmodule.v1'")
+        if v not in ("worldmodule.v1", "worldmodule.v2"):
+            raise ValueError("schema_version must be 'worldmodule.v1' or 'worldmodule.v2'")
         return v
+
+    @classmethod
+    def register_module_type(cls, module_type: str) -> None:
+        REGISTERED_MODULE_TYPES.add(module_type.lower())
 
     @field_validator("module_type")
     @classmethod
     def validate_module_type(cls, v: str) -> str:
-        valid_types = {"terrain", "settlement", "ecology", "economy", "conflict", "population"}
-        if v.lower() not in valid_types:
-            raise ValueError(f"module_type '{v}' is invalid. Supported: {valid_types}")
+        if v.lower() not in REGISTERED_MODULE_TYPES:
+            raise ValueError(f"module_type '{v}' is invalid. Supported: {REGISTERED_MODULE_TYPES}")
         return v.lower()

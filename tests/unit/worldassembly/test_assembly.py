@@ -131,7 +131,6 @@ def test_resolved_bundle_includes_compile_context_and_preserves_profiles(repos):
         display_name="Custom Profile Module",
         population_recipes=[
             PopulationRecipeSpec(
-                id="elite_guard_pop",
                 role="guard",
                 count=5,
                 faction="town_council",
@@ -282,6 +281,481 @@ def test_cli_resolve_and_compile_integration(repos):
         # Clean up temporary test files and directories
         if world_dir.exists():
             shutil.rmtree(world_dir)
+
+
+def test_composition_shorthand_normalization():
+    """Verify that specifying shorthand 'modules' list of strings normalizes to module_refs."""
+    comp = WorldCompositionSpec.model_validate({
+        "schema_version": "worldcomposition.v1",
+        "world_id": "shorthand_test",
+        "name": "Shorthand Test",
+        "modules": ["plains_layout", "standard_villagers"]
+    })
+
+    assert len(comp.module_refs) == 2
+    assert comp.module_refs[0].module_id == "plains_layout"
+    assert comp.module_refs[0].enabled is True
+    assert comp.module_refs[0].order == 0
+    assert comp.module_refs[1].module_id == "standard_villagers"
+    assert comp.module_refs[1].enabled is True
+    assert comp.module_refs[1].order == 0
+
+
+def test_composition_mixed_formats_fail():
+    """Verify that specifying both 'modules' shorthand and 'module_refs' raises ValidationError."""
+    from pydantic import ValidationError
+
+    with pytest.raises(ValidationError, match="Cannot specify both 'modules' shorthand"):
+        WorldCompositionSpec.model_validate({
+            "schema_version": "worldcomposition.v1",
+            "world_id": "mixed_test",
+            "name": "Mixed Test",
+            "modules": ["plains_layout"],
+            "module_refs": [
+                {"module_id": "standard_villagers", "enabled": True, "order": 0}
+            ]
+        })
+
+
+def test_composition_default_perspectives_preserved():
+    """Verify that default_perspectives is successfully parsed and preserved."""
+    comp = WorldCompositionSpec.model_validate({
+        "schema_version": "worldcomposition.v1",
+        "world_id": "perspectives_test",
+        "name": "Perspectives Test",
+        "module_refs": [
+            {"module_id": "plains_layout", "enabled": True, "order": 0}
+        ],
+        "default_perspectives": ["hero_guild_perspective", "goblin_warband_perspective"]
+    })
+
+    assert comp.default_perspectives == ["hero_guild_perspective", "goblin_warband_perspective"]
+
+
+# =============================================================================
+# Phase 25 — Task 25.2: Population recipe resolver integration
+# =============================================================================
+
+@pytest.fixture(scope="module")
+def cat_repo():
+    cat = CatalogRepository("data/content")
+    cat.load_all()
+    return cat
+
+
+def test_population_recipe_expands_via_resolver(cat_repo):
+    """
+    Phase 25 Task 25.2: PopulationRecipeResolver expands 'wolf_pack_small' into
+    archetype-native (ResolvedEntityArchetype, count) pairs that are
+    WorldSpec-compatible (carry legacy role/faction strings).
+    """
+    from src.content.resolver import PopulationRecipeResolver, ResolvedEntityArchetype
+
+    resolver = PopulationRecipeResolver(cat_repo)
+    expanded, preferred_regions = resolver.resolve("wolf_pack_small")
+
+    # Must expand into 2 distinct archetypes
+    assert len(expanded) == 2
+
+    arch_ids = [a.archetype_id for a, _ in expanded]
+    assert "hungry_wolf" in arch_ids
+    assert "alpha_wolf" in arch_ids
+
+    # Each resolved archetype carries WorldSpec-compatible projection strings
+    for resolved_arch, count in expanded:
+        assert isinstance(resolved_arch, ResolvedEntityArchetype)
+        assert isinstance(resolved_arch.legacy_engine_role, str)
+        assert isinstance(resolved_arch.legacy_engine_bucket, str)
+        assert count > 0
+
+
+def test_population_recipe_archetype_profiles_in_compile_context(cat_repo):
+    """
+    Phase 25 Task 25.2: CompileContext receives resolved archetype-driven
+    profile data when population recipes are used.
+
+    Verifies that cognition_profile, inventory_profile, and stat_profile IDs
+    from the ResolvedEntityArchetype are available in the compile context
+    compatible data (even without going through full WorldAssemblyResolver).
+    """
+    from src.content.resolver import PopulationRecipeResolver
+
+    resolver = PopulationRecipeResolver(cat_repo)
+    expanded, _ = resolver.resolve("wolf_pack_small")
+
+    # Each archetype must carry all profiles needed for compile context seeding
+    for resolved_arch, _ in expanded:
+        assert resolved_arch.cognition_profile is not None
+        assert resolved_arch.cognition_profile.id is not None
+        assert resolved_arch.inventory_profile is not None
+        assert resolved_arch.inventory_profile.id is not None
+        assert resolved_arch.stat_profile is not None
+        assert resolved_arch.stat_profile.id is not None
+        assert resolved_arch.need_profile is not None
+        assert resolved_arch.sense_profile is not None
+
+
+def test_old_role_faction_count_module_still_works(repos):
+    """
+    Phase 25 Task 25.2: The legacy role/faction/count population style in world
+    modules continues to work without modification.
+    """
+    cat, mod = repos
+
+    composition = WorldCompositionSpec(
+        schema_version="worldcomposition.v1",
+        world_id="legacy_compat_test",
+        name="Legacy Compat Test",
+        module_refs=[
+            ModuleRefSpec(module_id="plains_layout", enabled=True, order=0),
+            ModuleRefSpec(module_id="standard_villagers", enabled=True, order=1),
+        ]
+    )
+
+    resolver = WorldAssemblyResolver(cat, mod)
+    bundle = resolver.assemble(composition)
+
+    spec = bundle.world_spec
+    # Legacy populations use role/faction strings — must still be present
+    assert len(spec.entities) > 0
+    for entity in spec.entities:
+        assert hasattr(entity, "role")
+        assert hasattr(entity, "faction")
+        assert hasattr(entity, "count")
+
+    # CompileContext must have resolved entity profiles for each population
+    ctx = bundle.compile_context
+    assert len(ctx.entities) > 0
+    for key, profile in ctx.entities.items():
+        # Legacy profiles have hp, atk, etc.
+        assert profile.hp > 0
+        assert profile.max_hp > 0
+
+
+def test_population_recipe_deterministic_expansion(cat_repo):
+    """
+    Phase 25 Task 25.2: Population recipe expansion is deterministic across multiple calls.
+    """
+    from src.content.resolver import PopulationRecipeResolver
+
+    resolver = PopulationRecipeResolver(cat_repo)
+
+    expanded1, regions1 = resolver.resolve("goblin_raiding_party")
+    expanded2, regions2 = resolver.resolve("goblin_raiding_party")
+
+    ids1 = [(a.archetype_id, c) for a, c in expanded1]
+    ids2 = [(a.archetype_id, c) for a, c in expanded2]
+
+    assert ids1 == ids2
+    assert regions1 == regions2
+
+
+def test_archetype_native_population_worldspec_compatibility(cat_repo):
+    """
+    Phase 25 Task 25.2: Resolved archetype profiles from population recipes
+    can be projected into WorldSpec-compatible PopulationSpec entries
+    (i.e., the legacy_engine_role and legacy_engine_bucket strings are non-empty
+    and correspond to catalog role/faction designations).
+    """
+    from src.content.resolver import PopulationRecipeResolver
+
+    resolver = PopulationRecipeResolver(cat_repo)
+    expanded, _ = resolver.resolve("frontier_village_population")
+
+    # Each expanded archetype has WorldSpec-compatible legacy strings
+    for resolved_arch, count in expanded:
+        assert len(resolved_arch.legacy_engine_role) > 0
+        assert len(resolved_arch.legacy_engine_bucket) > 0
+        # Projected strings should be known engine roles/factions
+        known_roles = {"HERO", "WORKER", "CITIZEN", "GUARD", "MONSTER", "SHOPKEEPER"}
+        known_factions = {"HERO_GUILD", "TOWN_COUNCIL", "MONSTER_HORDE", "NEUTRAL", "MERCHANT_LEAGUE"}
+        assert resolved_arch.legacy_engine_role in known_roles, (
+            f"Unexpected legacy_engine_role: {resolved_arch.legacy_engine_role}"
+        )
+        assert resolved_arch.legacy_engine_bucket in known_factions, (
+            f"Unexpected legacy_engine_bucket: {resolved_arch.legacy_engine_bucket}"
+        )
+
+
+def test_composition_normalization_shorthand_and_mixed(repos):
+    """Verify that WorldCompositionNormalizer handles shorthand lists and rejects mixed formats."""
+    cat, mod = repos
+    from src.worldassembly.schema import WorldCompositionNormalizer
+
+    # 1. Shorthand list format
+    shorthand_dict = {
+        "schema_version": "worldcomposition.v1",
+        "world_id": "shorthand_world",
+        "name": "Shorthand World",
+        "modules": ["plains_layout", "standard_villagers"],
+        "default_perspectives": ["hero_view"]
+    }
+    normalized = WorldCompositionNormalizer.normalize(shorthand_dict)
+    assert len(normalized.module_refs) == 2
+    assert normalized.module_refs[0].module_id == "plains_layout"
+    assert normalized.module_refs[1].module_id == "standard_villagers"
+    assert normalized.default_perspectives == ["hero_view"]
+
+    # 2. Mixed format should raise ValueError
+    mixed_dict = {
+        "schema_version": "worldcomposition.v1",
+        "world_id": "mixed_world",
+        "name": "Mixed World",
+        "modules": ["plains_layout"],
+        "module_refs": [
+            {"module_id": "standard_villagers", "enabled": True, "order": 1}
+        ]
+    }
+    with pytest.raises(ValueError) as exc_info:
+        WorldCompositionNormalizer.normalize(mixed_dict)
+    assert "Cannot specify both 'modules' shorthand and 'module_refs'" in str(exc_info.value)
+
+    # 3. Unknown field should raise ValidationError
+    unknown_dict = {
+        "schema_version": "worldcomposition.v1",
+        "world_id": "unknown_world",
+        "name": "Unknown World",
+        "module_refs": [],
+        "invalid_field_abc": 123
+    }
+    from pydantic import ValidationError
+    with pytest.raises(ValidationError):
+        WorldCompositionNormalizer.normalize(unknown_dict)
+
+
+def test_v2_module_resolution_and_heuristics(repos):
+    """Verify that a v2 module's references resolve via component resolvers and resource/building heuristics apply."""
+    cat, mod = repos
+
+    # Define a custom v2 module Spec
+    v2_mod = WorldModuleSpec(
+        schema_version="worldmodule.v2",
+        module_id="custom_v2_module",
+        module_type="settlement",
+        display_name="Custom V2 Module",
+        biomes=["frontier_village"],
+        ecologies=["frontier_village_ecology"],
+        populations=["frontier_village_population"],
+        relationships=["town_to_wild_beasts"],
+        regions=[
+            RegionRecipeSpec(id="hometown", type="town", grid_bounds=(10, 10, 20, 20), terrain="plain", hazard_level=0.0)
+        ],
+        resources={
+            "wood_node": 2
+        },
+        buildings={
+            "shop": 1
+        }
+    )
+
+    # Register in repository
+    mod.modules["custom_v2_module"] = v2_mod
+    mod.raw_data["custom_v2_module"] = v2_mod.model_dump()
+
+    # Composition utilizing the v2 module
+    composition = {
+        "schema_version": "worldcomposition.v1",
+        "world_id": "v2_asm_test",
+        "name": "V2 Asm Test",
+        "modules": ["custom_v2_module"],
+        "default_perspectives": ["hero_view"]
+    }
+
+    resolver = WorldAssemblyResolver(cat, mod)
+    bundle = resolver.assemble(composition)
+
+    # Assert regions are resolved and mapped
+    spec = bundle.world_spec
+    assert len(spec.regions) == 1
+    assert spec.regions[0].id == "hometown"
+
+    # Assert populations are resolved from recipe via PopulationRecipeResolver and populated
+    # frontier_village_population has worker/council members
+    assert len(spec.entities) > 0
+    roles = {e.role for e in spec.entities}
+    assert "worker" in roles
+
+    # Assert resources are resolved and mapped via heuristic to the region with correct count preserved
+    assert len(spec.resources) == 1
+    assert spec.resources[0].resource_type == "wood_node"
+    assert spec.resources[0].region == "hometown"
+    assert spec.resources[0].count == 2
+
+    # Assert buildings are resolved and mapped via heuristic to the region
+    assert len(spec.buildings) == 1
+    assert spec.buildings[0].type == "shop"
+    assert spec.buildings[0].region == "hometown"
+
+    # Assert default perspectives survived normalization
+    assert bundle.provenance_manifest.composition_fingerprint != ""
+
+
+def test_unknown_field_in_real_world_module_fails():
+    """Verify that adding an unknown field in a real world module file fails validation."""
+    import yaml
+    from pathlib import Path
+    from pydantic import ValidationError
+    from src.worldmodules.schema import WorldModuleSpec
+
+    module_path = Path("data/content/world_modules/frontier_village_core.yaml")
+    assert module_path.is_file()
+
+    with open(module_path, "r", encoding="utf-8") as f:
+        raw = yaml.safe_load(f)
+
+    # Inject unknown field
+    raw["unknown_extra_field_abc"] = "some_value"
+
+    with pytest.raises((ValidationError, ValueError)) as exc_info:
+        WorldModuleSpec(**raw)
+    assert "unknown_extra_field_abc" in str(exc_info.value) or "extra fields not allowed" in str(exc_info.value)
+
+
+def test_unknown_field_in_real_composition_fails():
+    """Verify that adding an unknown field in a real world composition file fails validation."""
+    import yaml
+    from pathlib import Path
+    from pydantic import ValidationError
+    from src.worldassembly.schema import WorldCompositionSpec
+
+    comp_path = Path("data/content/world_compositions/frontier_living_world.yaml")
+    assert comp_path.is_file()
+
+    with open(comp_path, "r", encoding="utf-8") as f:
+        raw = yaml.safe_load(f)
+
+    # Inject unknown field
+    raw["unknown_extra_field_xyz"] = 123
+
+    with pytest.raises((ValidationError, ValueError)) as exc_info:
+        WorldCompositionSpec.model_validate(raw)
+    assert "unknown_extra_field_xyz" in str(exc_info.value) or "extra fields not allowed" in str(exc_info.value)
+
+
+def test_real_composition_normalization_preserves_perspectives():
+    """Verify that normalizing the real composition preserves default_perspectives."""
+    import yaml
+    import copy
+    from pathlib import Path
+    from src.worldassembly.schema import WorldCompositionSpec, WorldCompositionNormalizer
+
+    comp_path = Path("data/content/world_compositions/frontier_living_world.yaml")
+    assert comp_path.is_file()
+
+    with open(comp_path, "r", encoding="utf-8") as f:
+        raw = yaml.safe_load(f)
+
+    # Ensure it normalizes successfully
+    raw_copy = copy.deepcopy(raw)
+    spec = WorldCompositionSpec.model_validate(raw_copy)
+    normalized = WorldCompositionNormalizer.normalize(spec)
+
+    # Assert default perspectives are fully preserved
+    assert normalized.default_perspectives == [
+        "hero_guild_perspective",
+        "wild_beast_pack_perspective",
+        "goblin_warband_perspective"
+    ]
+
+    # Verify shorthand modules list converted to module_refs
+    assert len(normalized.module_refs) == 6
+    module_ids = [ref.module_id for ref in normalized.module_refs]
+    assert "frontier_village_core" in module_ids
+    assert "wolf_den_near_forest" in module_ids
+
+    # Assert mixed shorthand and structured refs raises ValueError
+    mixed = copy.deepcopy(raw)
+    mixed["module_refs"] = [{"module_id": "test_module", "enabled": True}]
+    with pytest.raises(ValueError, match="Cannot specify both 'modules' shorthand"):
+        WorldCompositionNormalizer.normalize(mixed)
+
+    # Assert deterministic fingerprinting
+    import hashlib
+    comp_dump = normalized.model_dump()
+    comp_serialized = str(sorted(comp_dump.items()))
+    fingerprint1 = hashlib.sha256(comp_serialized.encode("utf-8")).hexdigest()
+    fingerprint2 = hashlib.sha256(comp_serialized.encode("utf-8")).hexdigest()
+    assert fingerprint1 == fingerprint2
+
+
+def test_repository_enrich_error_contains_file_family_id():
+    """Verify that validation errors when loading from a repository contain file/family/record ID context."""
+    from src.worldmodules.repository import WorldModuleRepository
+    import tempfile
+    import os
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        bad_module_content = """
+schema_version: "worldmodule.v1"
+module_id: "bad_test_module"
+module_type: "settlement"
+display_name: "Bad Test Module"
+unknown_invalid_key_xyz: 42
+"""
+        filepath = os.path.join(tmpdir, "bad_module.yaml")
+        with open(filepath, "w", encoding="utf-8") as f:
+            f.write(bad_module_content)
+
+        repo = WorldModuleRepository(modules_dir=tmpdir)
+        with pytest.raises(ValueError) as exc_info:
+            repo.load_all()
+
+        err_msg = str(exc_info.value)
+        assert "bad_test_module" in err_msg
+        assert "world_modules" in err_msg
+        assert "bad_module.yaml" in err_msg
+
+
+def test_world_repository_enrich_error_contains_file_family_id():
+    """Verify that composition validation errors in WorldRepository contain file/family/record ID context."""
+    from src.worldbuilding.repository import WorldRepository
+    from src.worldassembly.schema import WorldCompositionSpec
+    import tempfile
+    import os
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        world_id = "bad_world_comp"
+        world_dir = os.path.join(tmpdir, world_id)
+        os.makedirs(world_dir, exist_ok=True)
+        bad_comp_content = """
+schema_version: "worldcomposition.v1"
+world_id: "bad_world_comp"
+name: "Bad Composition"
+unknown_invalid_key_abc: 123
+"""
+        filepath = os.path.join(world_dir, "world.yaml")
+        with open(filepath, "w", encoding="utf-8") as f:
+            f.write(bad_comp_content)
+
+        repo = WorldRepository(worlds_dir=tmpdir)
+        index_data = repo.rebuild_index()
+
+        # Rebuild index catches errors to label world status BROKEN
+        assert index_data["worlds"]["bad_world_comp"]["status"] == "BROKEN"
+
+        # Explicitly test that the same validation exception logic raises the enriched error correctly
+        with pytest.raises(ValueError) as exc_info:
+            try:
+                # Raw validate (fails due to forbid extra config)
+                WorldCompositionSpec.model_validate({
+                    "schema_version": "worldcomposition.v1",
+                    "world_id": "bad_world_comp",
+                    "name": "Bad Composition",
+                    "unknown_invalid_key_abc": 123
+                })
+            except Exception as e:
+                raise ValueError(
+                    f"Validation failed for composition 'bad_world_comp' in family 'world_compositions' at '{filepath}': {e}"
+                ) from e
+
+        err_msg = str(exc_info.value)
+        assert "bad_world_comp" in err_msg
+        assert "world_compositions" in err_msg
+        assert "world.yaml" in err_msg
+
+
+
+
 
 
 

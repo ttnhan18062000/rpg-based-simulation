@@ -55,7 +55,7 @@ class PhaseDependencyGraph:
         "near_death_hardening": PhaseMetadata("near_death_hardening", {"combat", "biological", "lifecycle"}, {"combat", "attributes"}),
         "occupancy_resolution": PhaseMetadata("occupancy_resolution", {"movement"}, {"movement", "navigation"}),
         "lifecycle": PhaseMetadata("lifecycle", {"all"}, {"all"}, must_run_every_tick=True),
-        "groups": PhaseMetadata("groups", {"social", "movement", "combat", "groups"}, {"social", "group_id_set", "strategic"}),
+        "groups": PhaseMetadata("groups", {"social", "movement", "combat", "groups"}, {"social", "group_id_set", "strategic"}, must_run_every_tick=True),
         "capacity_enforcement": PhaseMetadata("capacity_enforcement", {"all"}, {"all"}, must_run_every_tick=True),
         
         # Phase 2-8 Enhanced RPG cognitive & world emergence loop integration

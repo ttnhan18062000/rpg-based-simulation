@@ -8,14 +8,17 @@ from typing import Dict, List, Optional, Any
 from src.worldmodules.schema import WorldModuleSpec
 
 
+from src.content.paths import ContentPathConfig
+
+
 class WorldModuleRepository:
     """
     Authoritative repository that loads and parses reusable structural layout packages
     from data/world_modules/ directories.
     """
 
-    def __init__(self, modules_dir: str):
-        self.modules_dir = modules_dir
+    def __init__(self, modules_dir: Optional[str] = None):
+        self.modules_dir = modules_dir or ContentPathConfig().world_modules_dir
         self.modules: Dict[str, WorldModuleSpec] = {}
         self.raw_data: Dict[str, Dict[str, Any]] = {}
 
@@ -47,7 +50,10 @@ class WorldModuleRepository:
             if module_id in self.modules:
                 raise ValueError(f"Duplicate module ID '{module_id}' found in repository load pipeline.")
 
-            validated = WorldModuleSpec(**item)
+            try:
+                validated = WorldModuleSpec(**item)
+            except Exception as e:
+                raise ValueError(f"Validation failed for module '{module_id}' in family 'world_modules' at '{filepath}': {e}") from e
             self.modules[module_id] = validated
             self.raw_data[module_id] = item
 

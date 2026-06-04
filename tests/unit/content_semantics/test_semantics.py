@@ -73,3 +73,107 @@ def test_compiler_adapters_with_catalog(base_repo):
     # Backward compatibility with string fallback when no catalog is supplied
     assert get_role_enum("hero") == EntityRole.HERO
     assert get_faction_enum("villagers") == Faction.HERO_GUILD
+
+
+def test_relation_projection_clean(base_repo):
+    from src.content_semantics.relation import RelationProjectionService, RelationContext
+
+    service = RelationProjectionService(base_repo)
+
+    # 1. Goblin warband projects as enemy from hero perspective.
+    proj1 = service.project_relation(
+        perspective_id="hero_guild_perspective",
+        source_faction_id="hero_guild",
+        target_faction_id="goblin_warband",
+    )
+    assert proj1.label == "enemy"
+    assert "perspective:hero_guild_perspective" in proj1.source_records
+    assert proj1.confidence == 1.0
+
+    # 2. Wild beast pack projects as contextual threat, not enemy-by-race.
+    proj2 = service.project_relation(
+        perspective_id="hero_guild_perspective",
+        source_faction_id="hero_guild",
+        target_faction_id="wild_beast_pack",
+    )
+    assert proj2.label == "threat"
+    assert "perspective:hero_guild_perspective" in proj2.source_records
+
+    # Wild beast pack looking at town council
+    proj3 = service.project_relation(
+        perspective_id="wild_beast_pack_perspective",
+        source_faction_id="wild_beast_pack",
+        target_faction_id="town_council",
+        context=RelationContext(intruding=True),
+    )
+    assert proj3.label == "intruder"
+
+    proj4 = service.project_relation(
+        perspective_id="wild_beast_pack_perspective",
+        source_faction_id="wild_beast_pack",
+        target_faction_id="town_council",
+        context=RelationContext(intruding=False),
+    )
+    assert proj4.label == "neutral"
+
+    # 3. Merchant league projects as neutral.
+    proj5 = service.project_relation(
+        perspective_id="hero_guild_perspective",
+        source_faction_id="hero_guild",
+        target_faction_id="merchant_league",
+    )
+    assert proj5.label == "neutral"
+
+
+def test_relation_projection_fallback(base_repo):
+    from src.content_semantics.relation import RelationProjectionService
+
+    service = RelationProjectionService(base_repo)
+
+    # Fallback to legacy is_hostile logic
+    proj = service.project_relation(
+        perspective_id="unknown_perspective",
+        source_faction_id="villagers",
+        target_faction_id="monsters",
+    )
+    assert proj.label == "enemy"
+    assert proj.confidence == 0.5
+    assert "legacy_fallback" in proj.source_records
+
+
+def test_is_hostile_compat(base_repo, caplog):
+    import logging
+    from src.content_semantics.relation import RelationContext
+
+    service = FactionSemanticsService(base_repo)
+
+    # 1. Clean projection matches
+    # Goblin warband is hostile to Hero Guild
+    assert service.is_hostile_compat("hero_guild", "goblin_warband") is True
+
+    # Wild beast pack is not hostile to Hero Guild by default
+    assert service.is_hostile_compat("hero_guild", "wild_beast_pack") is False
+
+    # Wild beast pack becomes hostile under combat engagement
+    context_combat = RelationContext(combat_engaged=True)
+    assert service.is_hostile_compat("hero_guild", "wild_beast_pack", context=context_combat) is True
+
+    # Wild beast pack becomes hostile if within close proximity
+    context_close = RelationContext(distance=3.0)
+    assert service.is_hostile_compat("hero_guild", "wild_beast_pack", context=context_close) is True
+
+    # Wild beast pack is not hostile if far away
+    context_far = RelationContext(distance=10.0)
+    assert service.is_hostile_compat("hero_guild", "wild_beast_pack", context=context_far) is False
+
+    # 2. Legacy fallback works and logs in debug mode
+    with caplog.at_level(logging.DEBUG):
+        caplog.clear()
+        # villagers has no perspective/relationship definitions
+        assert service.is_hostile_compat("villagers", "monsters") is True
+        # Check that it logged the fallback statement
+        assert any(
+            "Falling back to legacy hostility semantics" in record.message
+            for record in caplog.records
+        )
+

@@ -39,7 +39,7 @@ def mock_simulation_loop():
         mock_kernel.tick_once.return_value = None
         mock_kernel.shutdown.return_value = None
         
-        def side_effect(world_spec, seed):
+        def side_effect(*args, **kwargs):
             # Inspect stack to find caller's run_id and write mock report
             try:
                 frame = sys._getframe(1)

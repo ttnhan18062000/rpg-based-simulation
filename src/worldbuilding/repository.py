@@ -198,7 +198,11 @@ class WorldRepository:
                                 status_str = "TEMPLATE"
                             elif "worldcomposition" in schema_ver:
                                 from src.worldassembly.schema import WorldCompositionSpec
-                                spec = WorldCompositionSpec.model_validate(raw_dict)
+                                try:
+                                    spec = WorldCompositionSpec.model_validate(raw_dict)
+                                except Exception as e:
+                                    world_id_val = raw_dict.get("world_id", world_id)
+                                    raise ValueError(f"Validation failed for composition '{world_id_val}' in family 'world_compositions' at '{yaml_file}': {e}") from e
                                 status_str = "COMPOSITION"
                             else:
                                 spec = load_world_spec_from_yaml(yaml_file)

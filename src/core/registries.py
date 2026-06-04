@@ -194,16 +194,307 @@ class RegionRegistry:
 # For all active development and new gameplay systems, catalog-backed registries
 # sourced from the Content Catalog database (data/content/) are authoritative.
 # No new hardcoded definitions should be added to python structures directly.
+class AdapterError(ValueError):
+    """Raised when an adapter fails to convert a catalog record."""
+    def __init__(self, record_id: str, message: str) -> None:
+        self.record_id = record_id
+        super().__init__(f"Error adapting record '{record_id}': {message}")
+
+
+class CatalogToItemRegistryAdapter:
+    def __init__(self, repo: Any, migration_mode: bool = True) -> None:
+        self.repo = repo
+        self.migration_mode = migration_mode
+
+    def adapt(self) -> Dict[str, ItemDef]:
+        items: Dict[str, ItemDef] = {}
+        for item_id, item in self.repo.items.items():
+            try:
+                use_kind = getattr(item, "use_kind", None)
+                if not use_kind:
+                    if not self.migration_mode:
+                        raise AdapterError(item_id, "Missing explicit 'use_kind' in catalog-backed mode")
+                    use_kind = "material"
+                    if "weapon" in item.categories:
+                        use_kind = "weapon"
+                    elif "armor" in item.categories:
+                        use_kind = "armor"
+                    elif "consumable" in item.categories:
+                        if "healing" in item.categories:
+                            use_kind = "potion"
+                        elif "food" in item.categories:
+                            use_kind = "food"
+                        else:
+                            use_kind = "consumable"
+                    elif "tool" in item.categories:
+                        use_kind = "tool"
+                
+                # Map class fit from metadata fallback
+                class_fit = tuple(getattr(item, "class_fit", ())) if getattr(item, "class_fit", None) else ()
+                if not class_fit:
+                    metadata_fit = tuple(item.metadata.get("class_fit", ())) if hasattr(item, "metadata") and item.metadata else ()
+                    if metadata_fit:
+                        class_fit = metadata_fit
+                    else:
+                        if not self.migration_mode:
+                            raise AdapterError(item_id, "Missing explicit 'class_fit' in catalog-backed mode")
+                        if item_id in ("rusted_sword", "iron_sword", "hunter_blade"):
+                            class_fit = ("warrior",)
+                            if item_id == "hunter_blade":
+                                class_fit = ("warrior", "ranger")
+                        elif item_id in ("wooden_staff", "apprentice_staff"):
+                            class_fit = ("mage",)
+                        elif item_id == "basic_bow":
+                            class_fit = ("ranger",)
+                
+                items[item_id] = ItemDef(
+                    id=item_id,
+                    tags=tuple(item.categories),
+                    rarity=item.rarity,
+                    base_value=int(item.base_value),
+                    use_kind=use_kind,
+                    class_fit=class_fit
+                )
+            except AdapterError:
+                raise
+            except Exception as e:
+                raise AdapterError(item_id, str(e)) from e
+        return items
+
+
+class CatalogToRecipeRegistryAdapter:
+    def __init__(self, repo: Any) -> None:
+        self.repo = repo
+
+    def adapt(self) -> Dict[str, RecipeDef]:
+        recipes: Dict[str, RecipeDef] = {}
+        for rec_id, rec in self.repo.recipes.items():
+            try:
+                service_req = "blacksmith"
+                if rec.required_service:
+                    if "blacksmith" in rec.required_service:
+                        service_req = "blacksmith"
+                    elif "healer" in rec.required_service:
+                        service_req = "healer"
+                    else:
+                        service_req = rec.required_service
+                
+                legacy_id = rec_id
+                if rec_id.startswith("craft_"):
+                    legacy_id = rec_id.replace("craft_", "")
+                
+                output_item = list(rec.outputs.keys())[0] if rec.outputs else ""
+                
+                r_def = RecipeDef(
+                    id=legacy_id,
+                    requires_items=dict(rec.ingredients),
+                    service_req=service_req,
+                    gold_cost=int(rec.gold_cost),
+                    output_item_id=output_item
+                )
+                recipes[legacy_id] = r_def
+                if legacy_id != rec_id:
+                    recipes[rec_id] = r_def
+            except Exception as e:
+                raise AdapterError(rec_id, str(e)) from e
+        return recipes
+
+
+class CatalogToServiceRegistryAdapter:
+    def __init__(self, repo: Any, catalog_mode: bool = False, migration_mode: bool = True) -> None:
+        self.repo = repo
+        self.catalog_mode = catalog_mode
+        self.migration_mode = migration_mode
+
+    def adapt(self) -> Dict[str, ServiceDef]:
+        services: Dict[str, ServiceDef] = {}
+        # Prepopulate hometown services for compatibility/seeding only if not catalog_mode
+        if not self.catalog_mode:
+            services["shop_hometown"] = ServiceDef("shop_hometown", "hometown", ("buy", "sell"))
+            services["blacksmith_hometown"] = ServiceDef("blacksmith_hometown", "hometown", ("craft", "repair"))
+            services["guide_hometown"] = ServiceDef("guide_hometown", "hometown", ("ask_info",), ("wood", "herb", "iron_ore", "healing_flower", "moon_resin"))
+            services["guild_hometown"] = ServiceDef("guild_hometown", "hometown", ("quest", "info"))
+            services["inn_hometown"] = ServiceDef("inn_hometown", "hometown", ("rest",))
+        
+        for s_id, s_prof in self.repo.services.items():
+            try:
+                affordances = list(getattr(s_prof, "affordances", [])) if getattr(s_prof, "affordances", None) else []
+                if not affordances:
+                    if not self.migration_mode:
+                        raise AdapterError(s_id, "Missing explicit 'affordances' in catalog-backed mode")
+                    if "trade" in s_id or "store" in s_id or s_prof.provided_items:
+                        affordances.extend(["buy", "sell"])
+                    if "blacksmith" in s_id or "craft" in s_id:
+                        affordances.extend(["craft", "repair"])
+                    if "inn" in s_id or "rest" in s_id:
+                        affordances.append("rest")
+                    if "healer" in s_id or "healing" in s_id:
+                        affordances.append("rest")
+                
+                services[s_id] = ServiceDef(
+                    id=s_id,
+                    region_id="hometown",
+                    supported_affordances=tuple(affordances)
+                )
+            except AdapterError:
+                raise
+            except Exception as e:
+                raise AdapterError(s_id, str(e)) from e
+        return services
+
+
+class CatalogToRegionRegistryAdapter:
+    def __init__(self, repo: Any) -> None:
+        self.repo = repo
+
+    def adapt(self) -> Dict[str, RegionDef]:
+        regions: Dict[str, RegionDef] = {}
+        for reg_id, reg in self.repo.regions.items():
+            try:
+                regions[reg_id] = RegionDef(
+                    id=reg_id,
+                    name=reg.display_name or reg_id.replace("_", " ").title(),
+                    tags=tuple(reg.tags),
+                    danger_level=reg.danger_level
+                )
+            except Exception as e:
+                raise AdapterError(reg_id, str(e)) from e
+        if "hometown" not in regions:
+            regions["hometown"] = RegionDef("hometown", "Hometown Center", ("safe",), 0)
+        return regions
+
+
+class CatalogToResourceRegistryAdapter:
+    def __init__(self, repo: Any, migration_mode: bool = True) -> None:
+        self.repo = repo
+        self.migration_mode = migration_mode
+
+    def adapt(self) -> Dict[str, ResourceDef]:
+        resources: Dict[str, ResourceDef] = {}
+        for res_id, res in self.repo.resources.items():
+            try:
+                legacy_id = getattr(res, "legacy_id", None)
+                if not legacy_id:
+                    if not self.migration_mode:
+                        raise AdapterError(res_id, "Missing explicit 'legacy_id' in catalog-backed mode")
+                    legacy_id = res_id
+                    if res_id == "wood_node":
+                        legacy_id = "node_wood"
+                    elif res_id == "herb_patch":
+                        legacy_id = "node_herb"
+                    elif res_id == "iron_vein":
+                        legacy_id = "node_iron"
+                    elif res_id == "moon_resin_tree":
+                        legacy_id = "node_resin"
+                    elif res_id == "healing_flower_patch":
+                        legacy_id = "node_flower"
+
+                source_region_tags = tuple(res.metadata.get("source_region_tags", ())) if hasattr(res, "metadata") and res.metadata else ()
+                if not source_region_tags:
+                    source_region_tags = tuple(res.metadata.get("preferred_biomes", [])) if hasattr(res, "metadata") and res.metadata else ()
+                    if not source_region_tags:
+                        if not self.migration_mode:
+                            raise AdapterError(res_id, "Missing source region tags in catalog-backed mode")
+                        if legacy_id == "node_wood":
+                            source_region_tags = ("near_forest",)
+                        elif legacy_id == "node_herb":
+                            source_region_tags = ("near_forest", "moon_cave")
+                        elif legacy_id == "node_iron":
+                            source_region_tags = ("old_mine",)
+                        elif legacy_id == "node_resin":
+                            source_region_tags = ("moon_cave",)
+                        elif legacy_id == "node_flower":
+                            source_region_tags = ("near_forest",)
+                
+                required_tool = getattr(res, "required_tool", None)
+                if required_tool is None:
+                    required_tool = res.metadata.get("required_tool") if hasattr(res, "metadata") and res.metadata else None
+                    if required_tool is None:
+                        if not self.migration_mode:
+                            required_tool = None
+                        else:
+                            if "iron" in res_id or "silver" in res_id:
+                                required_tool = "pickaxe"
+                
+                base_difficulty = res.metadata.get("base_difficulty") if hasattr(res, "metadata") and res.metadata else None
+                if base_difficulty is None:
+                    if not self.migration_mode:
+                        base_difficulty = 1
+                    else:
+                        if "iron" in res_id or "silver" in res_id or "resin" in res_id:
+                            base_difficulty = 2
+                            if "resin" in res_id:
+                                base_difficulty = 3
+                        else:
+                            base_difficulty = 1
+
+                yield_item = getattr(res, "runtime_kind", None) or res.resource_type
+
+                r_def = ResourceDef(
+                    id=legacy_id,
+                    yield_item=yield_item,
+                    source_region_tags=source_region_tags,
+                    required_tool=required_tool,
+                    base_difficulty=int(base_difficulty)
+                )
+                resources[legacy_id] = r_def
+                if legacy_id != res_id:
+                    resources[res_id] = r_def
+            except AdapterError:
+                raise
+            except Exception as e:
+                raise AdapterError(res_id, str(e)) from e
+        return resources
+
+
+class ArchetypeToEnemyRegistryAdapter:
+    def __init__(self, repo: Any, catalog_mode: bool = False) -> None:
+        self.repo = repo
+        self.catalog_mode = catalog_mode
+
+    def adapt(self) -> Dict[str, EnemyDef]:
+        enemies: Dict[str, EnemyDef] = {}
+        for proj_id, proj in self.repo.legacy_enemy_projections.items():
+            try:
+                max_hp = 50
+                atk = 10
+                def_stat = 2
+                
+                arch = self.repo.get_entity_archetype(proj.archetype_id)
+                if arch:
+                    stats = self.repo.get_stats_profile(arch.stat_profile)
+                    if stats:
+                        max_hp = stats.max_hp
+                        atk = stats.atk
+                        def_stat = stats.def_stat
+                
+                enemies[proj.legacy_enemy_id] = EnemyDef(
+                    id=proj.legacy_enemy_id,
+                    danger_hint=proj.danger_hint,
+                    max_hp=max_hp,
+                    atk=atk,
+                    def_stat=def_stat,
+                    loot_table=dict(proj.loot_table),
+                    spawn_regions=tuple(proj.spawn_regions)
+                )
+            except Exception as e:
+                raise AdapterError(proj_id, str(e)) from e
+        if "rat" not in enemies and not self.catalog_mode:
+            enemies["rat"] = EnemyDef("rat", "EASY", 15, 4, 1, {"beast_fang": 0.2}, ("hometown", "near_forest"))
+        return enemies
+
+
 runtime_content_source: str = "legacy_hardcoded"
 catalog_fingerprint: Optional[str] = None
+fallback_usage_reported: bool = False
 
 
 _sentinel = object()
 
 
-def seed_phase1_content(catalog_repo: Optional[Any] = _sentinel, required: bool = False) -> None:
+def seed_phase1_content(catalog_repo: Optional[Any] = _sentinel, required: bool = False, migration_mode: bool = True) -> None:
     """Load default adventure seed contents either from Content Catalog or legacy hardcoded backup."""
-    global runtime_content_source, catalog_fingerprint
+    global runtime_content_source, catalog_fingerprint, fallback_usage_reported
 
     # Switch default development path to catalog mode if default catalog directory is present
     if catalog_repo is _sentinel:
@@ -212,6 +503,7 @@ def seed_phase1_content(catalog_repo: Optional[Any] = _sentinel, required: bool 
             try:
                 from src.content.repository import CatalogRepository
                 catalog_repo = CatalogRepository(default_path)
+                catalog_repo.load_all()
             except Exception as e:
                 if required:
                     raise ValueError(f"Failed to load default content catalog from {default_path}: {e}")
@@ -233,207 +525,33 @@ def seed_phase1_content(catalog_repo: Optional[Any] = _sentinel, required: bool 
             if errors:
                 raise CatalogValidationError(f"Catalog has validation errors: {errors}")
         
-        # 1. Items
-        items: Dict[str, ItemDef] = {}
-        for item_id, item in catalog_repo.items.items():
-            use_kind = "material"
-            if "weapon" in item.categories:
-                use_kind = "weapon"
-            elif "armor" in item.categories:
-                use_kind = "armor"
-            elif "consumable" in item.categories:
-                if "healing" in item.categories:
-                    use_kind = "potion"
-                elif "food" in item.categories:
-                    use_kind = "food"
-                else:
-                    use_kind = "consumable"
-            elif "tool" in item.categories:
-                use_kind = "tool"
-            
-            # Map class fit from metadata fallback
-            class_fit = tuple(item.metadata.get("class_fit", ()))
-            if not class_fit:
-                if item_id in ("rusted_sword", "iron_sword", "hunter_blade"):
-                    class_fit = ("warrior",)
-                    if item_id == "hunter_blade":
-                        class_fit = ("warrior", "ranger")
-                elif item_id in ("wooden_staff", "apprentice_staff"):
-                    class_fit = ("mage",)
-                elif item_id == "basic_bow":
-                    class_fit = ("ranger",)
-            
-            items[item_id] = ItemDef(
-                id=item_id,
-                tags=tuple(item.categories),
-                rarity=item.rarity,
-                base_value=int(item.base_value),
-                use_kind=use_kind,
-                class_fit=class_fit
-            )
+        # Run adapters with strict or migration mode as requested
+        items = CatalogToItemRegistryAdapter(catalog_repo, migration_mode=migration_mode).adapt()
+        recipes = CatalogToRecipeRegistryAdapter(catalog_repo).adapt()
+        services = CatalogToServiceRegistryAdapter(catalog_repo, catalog_mode=True, migration_mode=migration_mode).adapt()
+        regions = CatalogToRegionRegistryAdapter(catalog_repo).adapt()
+        resources = CatalogToResourceRegistryAdapter(catalog_repo, migration_mode=migration_mode).adapt()
+        enemies = ArchetypeToEnemyRegistryAdapter(catalog_repo, catalog_mode=True).adapt()
+
+        # Seed registries
         ItemRegistry.bootstrap(items)
+        RecipeRegistry.bootstrap(recipes)
+        ServiceRegistry.bootstrap(services)
+        RegionRegistry.bootstrap(regions)
+        ResourceRegistry.bootstrap(resources)
+        EnemyRegistry.bootstrap(enemies)
         
         # Bootstrap ItemRegistry in src.core.items as well
         from src.core.items import ItemRegistry as CoreItemRegistry
         CoreItemRegistry.bootstrap(catalog_repo.items)
 
-        # 2. Resources
-        resources: Dict[str, ResourceDef] = {}
-        for res_id, res in catalog_repo.resources.items():
-            legacy_id = res_id
-            if res_id == "wood_node":
-                legacy_id = "node_wood"
-            elif res_id == "herb_patch":
-                legacy_id = "node_herb"
-            elif res_id == "iron_vein":
-                legacy_id = "node_iron"
-            elif res_id == "moon_resin_tree":
-                legacy_id = "node_resin"
-            elif res_id == "healing_flower_patch":
-                legacy_id = "node_flower"
-
-            source_region_tags = tuple(res.metadata.get("source_region_tags", ()))
-            if not source_region_tags:
-                source_region_tags = tuple(res.metadata.get("preferred_biomes", []))
-                if not source_region_tags:
-                    if legacy_id == "node_wood":
-                        source_region_tags = ("near_forest",)
-                    elif legacy_id == "node_herb":
-                        source_region_tags = ("near_forest", "moon_cave")
-                    elif legacy_id == "node_iron":
-                        source_region_tags = ("old_mine",)
-                    elif legacy_id == "node_resin":
-                        source_region_tags = ("moon_cave",)
-                    elif legacy_id == "node_flower":
-                        source_region_tags = ("near_forest",)
-            
-            required_tool = res.metadata.get("required_tool")
-            if required_tool is None:
-                if "iron" in res_id or "silver" in res_id:
-                    required_tool = "pickaxe"
-            
-            base_difficulty = res.metadata.get("base_difficulty")
-            if base_difficulty is None:
-                if "iron" in res_id or "silver" in res_id or "resin" in res_id:
-                    base_difficulty = 2
-                    if "resin" in res_id:
-                        base_difficulty = 3
-                else:
-                    base_difficulty = 1
-
-            r_def = ResourceDef(
-                id=legacy_id,
-                yield_item=res.resource_type,
-                source_region_tags=source_region_tags,
-                required_tool=required_tool,
-                base_difficulty=int(base_difficulty)
-            )
-            resources[legacy_id] = r_def
-            if legacy_id != res_id:
-                resources[res_id] = r_def
-        ResourceRegistry.bootstrap(resources)
-
-        # 3. Enemies
-        enemies: Dict[str, EnemyDef] = {}
-        for proj_id, proj in catalog_repo.legacy_enemy_projections.items():
-            max_hp = 50
-            atk = 10
-            def_stat = 2
-            
-            arch = catalog_repo.get_entity_archetype(proj.archetype_id)
-            if arch:
-                stats = catalog_repo.get_stats_profile(arch.stat_profile)
-                if stats:
-                    max_hp = stats.max_hp
-                    atk = stats.atk
-                    def_stat = stats.def_stat
-            
-            enemies[proj.legacy_enemy_id] = EnemyDef(
-                id=proj.legacy_enemy_id,
-                danger_hint=proj.danger_hint,
-                max_hp=max_hp,
-                atk=atk,
-                def_stat=def_stat,
-                loot_table=dict(proj.loot_table),
-                spawn_regions=tuple(proj.spawn_regions)
-            )
-        if "rat" not in enemies:
-            enemies["rat"] = EnemyDef("rat", "EASY", 15, 4, 1, {"beast_fang": 0.2}, ("hometown", "near_forest"))
-        EnemyRegistry.bootstrap(enemies)
-
-        # 4. Recipes
-        recipes: Dict[str, RecipeDef] = {}
-        for rec_id, rec in catalog_repo.recipes.items():
-            service_req = "blacksmith"
-            if rec.required_service:
-                if "blacksmith" in rec.required_service:
-                    service_req = "blacksmith"
-                elif "healer" in rec.required_service:
-                    service_req = "healer"
-                else:
-                    service_req = rec.required_service
-            
-            legacy_id = rec_id
-            if rec_id.startswith("craft_"):
-                legacy_id = rec_id.replace("craft_", "")
-            
-            output_item = list(rec.outputs.keys())[0] if rec.outputs else ""
-            
-            r_def = RecipeDef(
-                id=legacy_id,
-                requires_items=dict(rec.ingredients),
-                service_req=service_req,
-                gold_cost=int(rec.gold_cost),
-                output_item_id=output_item
-            )
-            recipes[legacy_id] = r_def
-            if legacy_id != rec_id:
-                recipes[rec_id] = r_def
-        RecipeRegistry.bootstrap(recipes)
-
-        # 5. Services
-        services: Dict[str, ServiceDef] = {}
-        services["shop_hometown"] = ServiceDef("shop_hometown", "hometown", ("buy", "sell"))
-        services["blacksmith_hometown"] = ServiceDef("blacksmith_hometown", "hometown", ("craft", "repair"))
-        services["guide_hometown"] = ServiceDef("guide_hometown", "hometown", ("ask_info",), ("wood", "herb", "iron_ore", "healing_flower", "moon_resin"))
-        services["guild_hometown"] = ServiceDef("guild_hometown", "hometown", ("quest", "info"))
-        services["inn_hometown"] = ServiceDef("inn_hometown", "hometown", ("rest",))
-        
-        for s_id, s_prof in catalog_repo.services.items():
-            affordances = []
-            if "trade" in s_id or "store" in s_id or s_prof.provided_items:
-                affordances.extend(["buy", "sell"])
-            if "blacksmith" in s_id or "craft" in s_id:
-                affordances.extend(["craft", "repair"])
-            if "inn" in s_id or "rest" in s_id:
-                affordances.append("rest")
-            if "healer" in s_id or "healing" in s_id:
-                affordances.append("rest")
-            
-            services[s_id] = ServiceDef(
-                id=s_id,
-                region_id="hometown",
-                supported_affordances=tuple(affordances)
-            )
-        ServiceRegistry.bootstrap(services)
-
-        # 6. Regions
-        regions: Dict[str, RegionDef] = {}
-        for reg_id, reg in catalog_repo.regions.items():
-            regions[reg_id] = RegionDef(
-                id=reg_id,
-                name=reg.display_name or reg_id.replace("_", " ").title(),
-                tags=tuple(reg.tags),
-                danger_level=reg.danger_level
-            )
-        if "hometown" not in regions:
-            regions["hometown"] = RegionDef("hometown", "Hometown Center", ("safe",), 0)
-        RegionRegistry.bootstrap(regions)
-        
         runtime_content_source = "catalog"
         catalog_fingerprint = catalog_repo.fingerprint
         
     else:
+        import logging
+        logging.getLogger(__name__).warning("Falling back to legacy hardcoded Phase 1 content seeding")
+        fallback_usage_reported = True
         # FALLBACK: Seeding with legacy hardcoded Phase 1 content
         # 1. Items
         items = {

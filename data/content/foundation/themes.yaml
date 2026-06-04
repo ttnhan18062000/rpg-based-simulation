@@ -90,3 +90,7 @@
 # STATE: ADDITIONAL
 - id: "mountain"
   display_name: "Mountain"
+
+# STATE: ADDITIONAL
+- id: "cult"
+  display_name: "Cult"

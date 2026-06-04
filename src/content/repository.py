@@ -4,6 +4,7 @@ from __future__ import annotations
 import os
 import yaml
 import hashlib
+from dataclasses import dataclass
 from typing import Dict, List, Optional, Any, Type, TypeVar
 from pydantic import BaseModel
 
@@ -48,14 +49,90 @@ from src.content.schema import (
 T = TypeVar("T", bound=CatalogBaseDefinition)
 
 
+@dataclass(frozen=True)
+class ContentFamilySpec:
+    family: str
+    path: str
+    schema: Type[BaseModel]
+    repository_index: str
+    required: bool = True
+    state_policy: str = "active"
+
+
+@dataclass
+class CatalogLoadReport:
+    loaded_families: List[str]
+    loaded_files: List[str]
+    record_counts: Dict[str, int]
+    missing_required_files: List[str]
+    missing_optional_files: List[str]
+    ignored_files: List[str]
+    duplicate_ids: List[str]
+    schema_errors: Dict[str, Any]
+    fingerprint: str
+
+
+CANONICAL_FAMILIES: List[ContentFamilySpec] = [
+    # 1. Foundation
+    ContentFamilySpec("foundation.materials", "foundation/materials.yaml", MaterialDefinition, "materials"),
+    ContentFamilySpec("foundation.traits", "foundation/traits.yaml", TraitDefinition, "traits"),
+    ContentFamilySpec("foundation.themes", "foundation/themes.yaml", ThemeDefinition, "themes"),
+    ContentFamilySpec("foundation.relationship_axes", "foundation/relationship_axes.yaml", RelationshipAxisDefinition, "relationship_axes"),
+    ContentFamilySpec("foundation.attributes", "foundation/attributes.yaml", AttributeDefinition, "attributes"),
+    ContentFamilySpec("foundation.elements", "foundation/elements.yaml", ElementDefinition, "elements"),
+
+    # 2. Living
+    ContentFamilySpec("living.races", "living/races.yaml", RaceDefinition, "races"),
+    ContentFamilySpec("living.need_profiles", "living/need_profiles.yaml", NeedProfileDefinition, "need_profiles"),
+    ContentFamilySpec("living.sense_profiles", "living/sense_profiles.yaml", SenseProfileDefinition, "sense_profiles"),
+    ContentFamilySpec("living.body_models", "living/body_models.yaml", BodyModelDefinition, "body_models"),
+    ContentFamilySpec("living.drive_profiles", "living/drive_profiles.yaml", DriveProfileDefinition, "drive_profiles"),
+    ContentFamilySpec("living.cognition_profiles", "living/cognition_profiles.yaml", CognitionProfileDefinition, "cognition_profiles"),
+
+    # 3. Social
+    ContentFamilySpec("social.roles", "social/roles.yaml", RoleDefinition, "roles"),
+    ContentFamilySpec("social.factions", "social/factions.yaml", FactionDefinition, "factions"),
+    ContentFamilySpec("social.perspectives", "social/perspectives.yaml", PerspectiveDefinition, "perspectives"),
+    ContentFamilySpec("social.faction_relationships", "social/faction_relationships.yaml", FactionRelationshipDefinition, "faction_relationships"),
+
+    # 4. Entities
+    ContentFamilySpec("entities.stat_profiles", "entities/stat_profiles.yaml", StatsProfileDefinition, "stats_profiles"),
+    ContentFamilySpec("entities.combat_profiles", "entities/combat_profiles.yaml", CombatProfileDefinition, "combat_profiles"),
+    ContentFamilySpec("entities.inventory_profiles", "entities/inventory_profiles.yaml", InventoryProfileDefinition, "inventory_profiles"),
+    ContentFamilySpec("entities.skill_profiles", "entities/skill_profiles.yaml", SkillProfileDefinition, "skill_profiles"),
+    ContentFamilySpec("entities.populations", "entities/populations.yaml", PopulationRecipeDefinition, "populations"),
+    ContentFamilySpec("entities.entity_archetypes", "entities/entity_archetypes.yaml", EntityArchetypeDefinition, "entity_archetypes"),
+
+    # 5. World
+    ContentFamilySpec("world.buildings", "world/buildings.yaml", BuildingDefinition, "buildings"),
+    ContentFamilySpec("world.terrain", "world/terrain.yaml", TerrainDefinition, "terrain"),
+    ContentFamilySpec("world.services", "world/services.yaml", ServiceProfileDefinition, "services"),
+    ContentFamilySpec("world.regions", "world/runtime_regions.yaml", RuntimeRegionDefinition, "regions"),
+    ContentFamilySpec("world.recipes", "world/recipes.yaml", RecipeDefinition, "recipes"),
+    ContentFamilySpec("world.resources", "world/resources.yaml", ResourceDefinition, "resources"),
+    ContentFamilySpec("world.items", "world/items.yaml", ItemDefinition, "items"),
+    ContentFamilySpec("world.biomes", "world/biomes.yaml", BiomeDefinition, "biomes"),
+    ContentFamilySpec("world.ecologies", "world/ecologies.yaml", EcologyDefinition, "ecologies"),
+
+    # 6. Defaults & Legacy
+    ContentFamilySpec("defaults", "defaults.yaml", DefaultCompileProfile, "defaults", required=False),
+    ContentFamilySpec("spawn_tables", "spawn_tables.yaml", SpawnTableDefinition, "spawn_tables", required=False),
+
+    # 7. Compatibility
+    ContentFamilySpec("compatibility.legacy_enemy_projection", "compatibility/legacy_enemy_projection.yaml", LegacyEnemyProjectionDefinition, "legacy_enemy_projections", required=False, state_policy="compatibility"),
+]
+
+
+from src.content.paths import ContentPathConfig
+
 class CatalogRepository:
     """
     Thread-safe repository loader that coordinates static catalog schema configuration loading
     from data/content/**/*.yaml. Exposes clean lookup operations.
     """
 
-    def __init__(self, content_dir: str):
-        self.content_dir = content_dir
+    def __init__(self, content_dir: Optional[str] = None):
+        self.content_dir = content_dir or ContentPathConfig().content_root
         
         # In-memory indices
         # Foundational
@@ -110,95 +187,145 @@ class CatalogRepository:
         self.raw_data: Dict[str, List[Dict[str, Any]]] = {}
         self._fingerprint: str = ""
         self._version: str = "2.0.0"
+        self.last_report: Optional[CatalogLoadReport] = None
 
-    def load_all(self) -> None:
-        """Loads and parses all files under the content directory into structured indices."""
-        # 1. Foundation
-        self.materials = self._load_file("foundation/materials.yaml", MaterialDefinition)
-        self.traits = self._load_file("foundation/traits.yaml", TraitDefinition)
-        self.themes = self._load_file("foundation/themes.yaml", ThemeDefinition)
-        self.relationship_axes = self._load_file("foundation/relationship_axes.yaml", RelationshipAxisDefinition)
-        self.attributes = self._load_file("foundation/attributes.yaml", AttributeDefinition)
-        self.elements = self._load_file("foundation/elements.yaml", ElementDefinition)
+    def load_all(self, strict: bool = False) -> CatalogLoadReport:
+        """Loads and parses all files under the content directory into structured indices based on CANONICAL_FAMILIES."""
+        # Check duplicate paths in specs
+        seen_paths = set()
+        for spec in CANONICAL_FAMILIES:
+            if spec.path in seen_paths:
+                if strict:
+                    raise ValueError(f"Duplicate family path detected: {spec.path}")
+            seen_paths.add(spec.path)
 
-        # 2. Living
-        self.races = self._load_file("living/races.yaml", RaceDefinition)
-        self.need_profiles = self._load_file("living/need_profiles.yaml", NeedProfileDefinition)
-        self.sense_profiles = self._load_file("living/sense_profiles.yaml", SenseProfileDefinition)
-        self.body_models = self._load_file("living/body_models.yaml", BodyModelDefinition)
-        self.drive_profiles = self._load_file("living/drive_profiles.yaml", DriveProfileDefinition)
-        self.cognition_profiles = self._load_file("living/cognition_profiles.yaml", CognitionProfileDefinition)
+        loaded_families: List[str] = []
+        loaded_files: List[str] = []
+        record_counts: Dict[str, int] = {}
+        missing_required_files: List[str] = []
+        missing_optional_files: List[str] = []
+        duplicate_ids: List[str] = []
+        schema_errors: Dict[str, Any] = {}
 
-        # 3. Social
-        self.roles = self._load_file("social/roles.yaml", RoleDefinition)
-        self.factions = self._load_file("social/factions.yaml", FactionDefinition)
-        self.perspectives = self._load_file("social/perspectives.yaml", PerspectiveDefinition)
-        self.faction_relationships = self._load_file("social/faction_relationships.yaml", FactionRelationshipDefinition)
+        # Reset raw_data
+        self.raw_data = {}
 
-        # 4. Entities
-        self.stats_profiles = self._load_file("entities/stat_profiles.yaml", StatsProfileDefinition)
-        self.combat_profiles = self._load_file("entities/combat_profiles.yaml", CombatProfileDefinition)
-        self.inventory_profiles = self._load_file("entities/inventory_profiles.yaml", InventoryProfileDefinition)
-        self.skill_profiles = self._load_file("entities/skill_profiles.yaml", SkillProfileDefinition)
-        self.populations = self._load_file("entities/populations.yaml", PopulationRecipeDefinition)
-        self.entity_archetypes = self._load_file("entities/entity_archetypes.yaml", EntityArchetypeDefinition)
+        for spec in CANONICAL_FAMILIES:
+            filepath = os.path.join(self.content_dir, spec.path)
+            if not os.path.exists(filepath):
+                if spec.required:
+                    missing_required_files.append(spec.path)
+                else:
+                    missing_optional_files.append(spec.path)
+                setattr(self, spec.repository_index, {})
+                record_counts[spec.family] = 0
+                continue
 
-        # 5. World
-        self.buildings = self._load_file("world/buildings.yaml", BuildingDefinition)
-        self.terrain = self._load_file("world/terrain.yaml", TerrainDefinition)
-        self.services = self._load_file("world/services.yaml", ServiceProfileDefinition)
-        self.regions = self._load_file("world/runtime_regions.yaml", RuntimeRegionDefinition)
-        self.recipes = self._load_file("world/recipes.yaml", RecipeDefinition)
-        self.resources = self._load_file("world/resources.yaml", ResourceDefinition)
-        self.items = self._load_file("world/items.yaml", ItemDefinition)
-        self.biomes = self._load_file("world/biomes.yaml", BiomeDefinition)
-        self.ecologies = self._load_file("world/ecologies.yaml", EcologyDefinition)
+            loaded_families.append(spec.family)
+            loaded_files.append(spec.path)
 
-        # 6. Legacy / Defaults
-        self.spawn_tables = self._load_file("spawn_tables.yaml", SpawnTableDefinition)
-        self.defaults = self._load_file("defaults.yaml", DefaultCompileProfile)
+            try:
+                with open(filepath, "r", encoding="utf-8") as f:
+                    data = yaml.safe_load(f)
+            except Exception as e:
+                schema_errors[spec.path] = str(e)
+                setattr(self, spec.repository_index, {})
+                record_counts[spec.family] = 0
+                self.raw_data[spec.path] = []
+                continue
 
-        # 7. Compatibility
-        self.legacy_enemy_projections = self._load_file("compatibility/legacy_enemy_projection.yaml", LegacyEnemyProjectionDefinition)
+            if not data:
+                setattr(self, spec.repository_index, {})
+                record_counts[spec.family] = 0
+                self.raw_data[spec.path] = []
+                continue
+
+            items: List[Any] = []
+            format_error = False
+            if isinstance(data, dict):
+                items = data.get("items", []) or list(data.values())
+            elif isinstance(data, list):
+                items = data
+            else:
+                format_error = True
+                err_msg = f"Catalog file {spec.path} must contain a list or map of definitions"
+                schema_errors[spec.path] = err_msg
+                setattr(self, spec.repository_index, {})
+                record_counts[spec.family] = 0
+                self.raw_data[spec.path] = []
+
+            if not format_error:
+                self.raw_data[spec.path] = items
+                results = {}
+                for item in items:
+                    if not isinstance(item, dict) or "id" not in item:
+                        err_msg = f"Definition in {spec.path} is malformed or missing 'id'"
+                        schema_errors[spec.path] = err_msg
+                        continue
+
+                    def_id = item["id"]
+                    if def_id in results:
+                        duplicate_ids.append(def_id)
+                        continue
+
+                    try:
+                        validated = spec.schema(**item)
+                        results[def_id] = validated
+                    except Exception as e:
+                        schema_errors[spec.path] = str(e)
+                        continue
+
+                setattr(self, spec.repository_index, results)
+                record_counts[spec.family] = len(results)
+
+        # Detect ignored files
+        ignored_files: List[str] = []
+        registered_paths = {spec.path for spec in CANONICAL_FAMILIES}
+        if os.path.exists(self.content_dir):
+            for root, _, files in os.walk(self.content_dir):
+                for file in files:
+                    if file.endswith((".yaml", ".yml")):
+                        full_path = os.path.join(root, file)
+                        rel_path = os.path.relpath(full_path, self.content_dir)
+                        rel_path = rel_path.replace(os.sep, "/")
+                        if rel_path not in registered_paths:
+                            ignored_files.append(rel_path)
 
         # Generate unique content fingerprint
         self._compute_fingerprint()
 
-    def _load_file(self, filename: str, model_cls: Type[T]) -> Dict[str, T]:
-        """Helper to read, load, and validate definitions from a target yaml file."""
-        filepath = os.path.join(self.content_dir, filename)
-        if not os.path.exists(filepath):
-            return {}
+        empty_required_families = []
+        for spec in CANONICAL_FAMILIES:
+            if spec.required and record_counts.get(spec.family, 0) == 0:
+                empty_required_families.append(spec.family)
 
-        with open(filepath, "r", encoding="utf-8") as f:
-            data = yaml.safe_load(f)
+        report = CatalogLoadReport(
+            loaded_families=loaded_families,
+            loaded_files=loaded_files,
+            record_counts=record_counts,
+            missing_required_files=missing_required_files,
+            missing_optional_files=missing_optional_files,
+            ignored_files=sorted(ignored_files),
+            duplicate_ids=duplicate_ids,
+            schema_errors=schema_errors,
+            fingerprint=self.fingerprint
+        )
+        self.last_report = report
 
-        if not data:
-            return {}
+        # Strict checks
+        if strict:
+            if missing_required_files:
+                raise ValueError(f"Missing required catalog files: {missing_required_files}")
+            if schema_errors:
+                raise ValueError(f"Schema validation errors found: {schema_errors}")
+            if duplicate_ids:
+                raise ValueError(f"Duplicate IDs detected: {duplicate_ids}")
+            if ignored_files:
+                raise ValueError(f"Ignored active YAML files found in repository: {ignored_files}")
+            if empty_required_families:
+                raise ValueError(f"Empty required active families found: {empty_required_families}")
 
-        # The yaml must contain a list of definitions under a root key or directly as a list/dict
-        if isinstance(data, dict):
-            items = data.get("items", []) or list(data.values())
-        elif isinstance(data, list):
-            items = data
-        else:
-            raise ValueError(f"Catalog file {filename} must contain a list or map of definitions")
-
-        results: Dict[str, T] = {}
-        self.raw_data[filename] = items
-
-        for item in items:
-            if not isinstance(item, dict) or "id" not in item:
-                raise ValueError(f"Definition in {filename} is malformed or missing 'id'")
-            
-            def_id = item["id"]
-            if def_id in results:
-                raise ValueError(f"Duplicate definition ID '{def_id}' found in {filename}")
-
-            validated = model_cls(**item)
-            results[def_id] = validated
-
-        return results
+        return report
 
     def _compute_fingerprint(self) -> None:
         """Deterministically generates a hash signature of the active catalog repository data."""

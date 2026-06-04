@@ -66,3 +66,192 @@ def test_circular_dependency_checks():
     with pytest.raises(ValueError) as exc_info:
         topological_sort_modules(circular_graph)
     assert "Circular dependency detected" in str(exc_info.value)
+
+
+def test_normalizer_v1_and_v2():
+    """Verify v1 and v2 modules parse correctly and normalize to NormalizedWorldModule."""
+    from src.worldmodules.normalizer import WorldModuleAuthoringNormalizer, NormalizedWorldModule
+
+    # v1 spec
+    v1_data = {
+        "schema_version": "worldmodule.v1",
+        "module_id": "v1_test_module",
+        "module_type": "terrain",
+        "display_name": "V1 Test Module",
+        "description": "A v1 module",
+        "version": "1.0.0",
+        "regions": [
+            {
+                "id": "region_v1",
+                "type": "forest",
+                "grid_bounds": [0, 0, 10, 10],
+            }
+        ]
+    }
+    v1_spec = WorldModuleSpec(**v1_data)
+    normalized_v1 = WorldModuleAuthoringNormalizer.normalize(v1_spec)
+    assert isinstance(normalized_v1, NormalizedWorldModule)
+    assert normalized_v1.module_id == "v1_test_module"
+    assert len(normalized_v1.regions) == 1
+    assert normalized_v1.regions[0].id == "region_v1"
+    assert len(normalized_v1.biomes) == 0
+
+    # v2 spec
+    v2_data = {
+        "schema_version": "worldmodule.v2",
+        "module_id": "v2_test_module",
+        "module_type": "ecology",
+        "display_name": "V2 Test Module",
+        "description": "A v2 module",
+        "version": "2.0.0",
+        "biomes": ["biome_v2"],
+        "ecologies": ["ecology_v2"]
+    }
+    v2_spec = WorldModuleSpec(**v2_data)
+    normalized_v2 = WorldModuleAuthoringNormalizer.normalize(v2_spec)
+    assert isinstance(normalized_v2, NormalizedWorldModule)
+    assert normalized_v2.module_id == "v2_test_module"
+    assert len(normalized_v2.biomes) == 1
+    assert normalized_v2.biomes[0] == "biome_v2"
+    assert len(normalized_v2.regions) == 0
+
+
+def test_invalid_v2_field_fails():
+    """Verify that unknown fields on v2 modules cause a validation error."""
+    from pydantic import ValidationError
+
+    v2_invalid_data = {
+        "schema_version": "worldmodule.v2",
+        "module_id": "v2_invalid_module",
+        "module_type": "ecology",
+        "display_name": "Invalid V2 Module",
+        "unknown_top_level_field": "some_value"
+    }
+    with pytest.raises(ValidationError):
+        WorldModuleSpec(**v2_invalid_data)
+
+
+def test_unsupported_module_type_registration():
+    """Verify that unsupported module type fails unless explicitly registered."""
+    from pydantic import ValidationError
+
+    unsupported_data = {
+        "schema_version": "worldmodule.v2",
+        "module_id": "unsupported_module",
+        "module_type": "custom_adventure",
+        "display_name": "Unsupported Type Module"
+    }
+
+    # Should fail initially
+    with pytest.raises(ValidationError) as exc_info:
+        WorldModuleSpec(**unsupported_data)
+    assert "module_type 'custom_adventure' is invalid" in str(exc_info.value)
+
+    # Register the type
+    WorldModuleSpec.register_module_type("custom_adventure")
+
+    # Should succeed now
+    spec = WorldModuleSpec(**unsupported_data)
+    assert spec.module_type == "custom_adventure"
+
+
+def test_list_resources_normalize_to_count_one():
+    """Verify that a list of resources normalizes to a count of 1 for each."""
+    from src.worldmodules.normalizer import WorldModuleAuthoringNormalizer
+    spec = WorldModuleSpec(
+        schema_version="worldmodule.v2",
+        module_id="test_list_res",
+        module_type="settlement",
+        display_name="Test List Res",
+        resources=["wood_node", "iron_vein"]
+    )
+    normalized = WorldModuleAuthoringNormalizer.normalize(spec)
+    assert normalized.resources == {"wood_node": 1, "iron_vein": 1}
+
+
+def test_dict_resources_preserve_counts():
+    """Verify that a dict of resources preserves counts."""
+    from src.worldmodules.normalizer import WorldModuleAuthoringNormalizer
+    spec = WorldModuleSpec(
+        schema_version="worldmodule.v2",
+        module_id="test_dict_res",
+        module_type="settlement",
+        display_name="Test Dict Res",
+        resources={"wood_node": 5, "iron_vein": 2}
+    )
+    normalized = WorldModuleAuthoringNormalizer.normalize(spec)
+    assert normalized.resources == {"wood_node": 5, "iron_vein": 2}
+
+
+def test_dict_buildings_preserve_counts():
+    """Verify that a dict of buildings preserves counts."""
+    from src.worldmodules.normalizer import WorldModuleAuthoringNormalizer
+    spec = WorldModuleSpec(
+        schema_version="worldmodule.v2",
+        module_id="test_dict_bld",
+        module_type="settlement",
+        display_name="Test Dict Bld",
+        buildings={"shop": 3, "tavern": 1}
+    )
+    normalized = WorldModuleAuthoringNormalizer.normalize(spec)
+    assert normalized.buildings == {"shop": 3, "tavern": 1}
+
+
+def test_dict_services_preserve_counts():
+    """Verify that a dict of services preserves counts."""
+    from src.worldmodules.normalizer import WorldModuleAuthoringNormalizer
+    spec = WorldModuleSpec(
+        schema_version="worldmodule.v2",
+        module_id="test_dict_svc",
+        module_type="settlement",
+        display_name="Test Dict Svc",
+        services={"healing": 2, "training": 1}
+    )
+    normalized = WorldModuleAuthoringNormalizer.normalize(spec)
+    assert normalized.services == {"healing": 2, "training": 1}
+
+
+def test_negative_count_fails():
+    """Verify that a negative count in resources, buildings, or services fails normalization."""
+    from src.worldmodules.normalizer import WorldModuleAuthoringNormalizer
+    spec = WorldModuleSpec(
+        schema_version="worldmodule.v2",
+        module_id="test_neg",
+        module_type="settlement",
+        display_name="Test Neg",
+        resources={"wood_node": -1}
+    )
+    with pytest.raises(ValueError) as exc_info:
+        WorldModuleAuthoringNormalizer.normalize(spec)
+    assert "Non-positive count" in str(exc_info.value)
+
+
+def test_zero_count_fails():
+    """Verify that a zero count in resources, buildings, or services fails normalization."""
+    from src.worldmodules.normalizer import WorldModuleAuthoringNormalizer
+    spec = WorldModuleSpec(
+        schema_version="worldmodule.v2",
+        module_id="test_zero",
+        module_type="settlement",
+        display_name="Test Zero",
+        buildings={"shop": 0}
+    )
+    with pytest.raises(ValueError) as exc_info:
+        WorldModuleAuthoringNormalizer.normalize(spec)
+    assert "Non-positive count" in str(exc_info.value)
+
+
+def test_duplicate_list_refs_fail():
+    """Verify that duplicate items in a list shorthand fail normalization."""
+    from src.worldmodules.normalizer import WorldModuleAuthoringNormalizer
+    spec = WorldModuleSpec(
+        schema_version="worldmodule.v2",
+        module_id="test_dup",
+        module_type="settlement",
+        display_name="Test Dup",
+        services=["healing", "healing"]
+    )
+    with pytest.raises(ValueError) as exc_info:
+        WorldModuleAuthoringNormalizer.normalize(spec)
+    assert "Duplicate list value" in str(exc_info.value)
+

@@ -1,9 +1,53 @@
 # Compliance IDs: WORLD-SEM-001, WORLD-SEM-002
 from __future__ import annotations
 
-from typing import Optional
+import logging
+from typing import Optional, TYPE_CHECKING, Any
 from src.core.enums import Faction
 from src.content.repository import CatalogRepository
+
+if TYPE_CHECKING:
+    from src.content_semantics.relation import RelationContext
+
+logger = logging.getLogger(__name__)
+
+
+_semantics_service_cache: Optional[FactionSemanticsService] = None
+
+def get_faction_semantics_service() -> FactionSemanticsService:
+    global _semantics_service_cache
+    if _semantics_service_cache is None:
+        repo = CatalogRepository("data/content")
+        repo.load_all()
+        _semantics_service_cache = FactionSemanticsService(repo)
+    return _semantics_service_cache
+
+def get_faction_id_str(entity: Any) -> str:
+    """Retrieves the dynamic faction ID string of an entity, falling back to enum name."""
+    if hasattr(entity, "identity") and hasattr(entity.identity, "properties"):
+        faction_id = entity.identity.properties.get("faction_id")
+        if faction_id:
+            return faction_id
+    if hasattr(entity, "identity") and hasattr(entity.identity, "faction"):
+        faction_val = entity.identity.faction
+        if isinstance(faction_val, str):
+            return faction_val.lower()
+        try:
+            if isinstance(faction_val, int):
+                f_enum = Faction(faction_val)
+            else:
+                f_enum = faction_val
+            return f_enum.name.lower()
+        except (ValueError, TypeError, AttributeError):
+            pass
+    return "neutral"
+
+def get_race_id_str(entity: Any) -> str:
+    """Retrieves the race ID string of an entity if present in properties."""
+    if hasattr(entity, "identity") and hasattr(entity.identity, "properties"):
+        return entity.identity.properties.get("race_id")
+    return None
+
 
 
 class FactionSemanticsService:
@@ -90,3 +134,58 @@ class FactionSemanticsService:
 
     def is_neutral(self, faction_id: str) -> bool:
         return self.get_alignment_bucket(faction_id) == "neutral"
+
+    def is_hostile_compat(
+        self,
+        source: str,
+        target: str,
+        context: Optional[RelationContext] = None,
+    ) -> bool:
+        """
+        Wrapper that attempts clean perspective/relationship projection first,
+        falling back to legacy bucket-based semantics and logging fallback usage.
+        """
+        from src.content_semantics.relation import RelationProjectionService
+
+        # Check if source faction has perspective OR if there's a relationship definition
+        has_perspective = False
+        for p in self.repo.perspectives.values():
+            if p.chosen_faction == source or p.id == source:
+                has_perspective = True
+                break
+
+        has_relationship = False
+        for rel in self.repo.faction_relationships.values():
+            if rel.source_faction == source and rel.target_faction == target:
+                has_relationship = True
+                break
+
+        if not has_perspective and not has_relationship:
+            logger.debug(
+                "Falling back to legacy hostility semantics for %s -> %s (missing clean relationship/perspective data)",
+                source,
+                target,
+            )
+            return self.is_hostile(source, target)
+
+        projection_service = RelationProjectionService(self.repo)
+        perspective_id = source
+        for p in self.repo.perspectives.values():
+            if p.chosen_faction == source:
+                perspective_id = p.id
+                break
+
+        proj = projection_service.project_relation(perspective_id, source, target, context)
+
+        if proj.label == "enemy":
+            return True
+        elif proj.label == "threat":
+            if context:
+                return bool(context.combat_engaged or (context.distance is not None and context.distance <= 5.0))
+            return False
+        elif proj.label == "intruder":
+            if context:
+                return bool(context.intruding or context.combat_engaged)
+            return False
+
+        return False

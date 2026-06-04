@@ -118,10 +118,27 @@ class TacticalDecisionSystem:
                       )
                   )
 
-        hostiles = [
-            n for n in neighbors 
-            if n.identity.faction != entity.identity.faction and n.combat.alive
-        ]
+        from src.content_semantics.faction import get_faction_semantics_service, get_faction_id_str, get_race_id_str
+        from src.content_semantics.relation import RelationContext
+
+        semantics_service = get_faction_semantics_service()
+        hostiles = []
+        for n in neighbors:
+            if not n.combat.alive:
+                continue
+            dist = LegalityServiceV2.get_manhattan_dist(entity.navigation.position, n.navigation.position)
+            combat_engaged = False
+            if entity.task.payload.get("target_id") == n.id or n.task.payload.get("target_id") == entity.id:
+                combat_engaged = True
+
+            context = RelationContext(
+                distance=float(dist),
+                combat_engaged=combat_engaged,
+                target_race=get_race_id_str(n),
+                intruding=False
+            )
+            if semantics_service.is_hostile_compat(get_faction_id_str(entity), get_faction_id_str(n), context):
+                hostiles.append(n)
         
         # 4. Strategic Persistence (Pillar 5.1)
         # If hostiles are present, we should SUSPEND the current project if it's not already

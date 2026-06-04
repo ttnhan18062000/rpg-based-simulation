@@ -243,8 +243,21 @@ def mock_catalog_repo():
         with open(os.path.join(tmp_dir, "world", "recipes.yaml"), "w", encoding="utf-8") as f:
             yaml.dump(recipes_data, f)
 
-        # 7. World services
         services_data = [
+            {
+                "id": "shop_hometown",
+                "display_name": "Shop Hometown",
+                "schema_version": "serviceprofiledefinition.v1",
+                "provided_items": ["small_potion"],
+                "gold_cost": 0.0
+            },
+            {
+                "id": "blacksmith_hometown",
+                "display_name": "Blacksmith Hometown",
+                "schema_version": "serviceprofiledefinition.v1",
+                "provided_items": [],
+                "gold_cost": 10.0
+            },
             {
                 "id": "shop",
                 "display_name": "General Shop",

@@ -1,0 +1,137 @@
+# Skills
+
+Skills are slash commands that trigger focused, session-scoped task patterns. They are defined in `.claude/skills/*/SKILL.md` (project-level) or built into Claude Code (system-level).
+
+**Invocation:** Type `/skill-name` in the prompt. Skills may prompt for additional context before executing.
+
+---
+
+## Project Skills (Workflow Shortcuts)
+
+These skills are shorthand triggers for the project's multi-agent workflows. Invoking them is equivalent to calling `Workflow({ name: "..." })`.
+
+| Skill | Workflow triggered | When to use |
+|---|---|---|
+| `/implement-ticket` | `implement-ticket` | Implement a development task end-to-end |
+| `/generate-simulation-setup` | `generate-simulation-setup` | Create specs for a new simulation experiment |
+| `/prepare-simulation-execution` | `prepare-simulation-execution` | Validate specs and get the run command |
+| `/investigate-simulation-result` | `investigate-simulation-result` | Deep anomaly investigation after a run |
+| `/propose-simulation-enhancements` | `propose-simulation-enhancements` | Hypothesize and propose fixes for anomalies |
+| `/register-simulation-result` | `register-simulation-result` | Register a completed run into the lab index |
+| `/compact-simulation-result` | `compact-simulation-result` | Compress old run logs to recover disk space |
+| `/update-knowledge-store` | `update-knowledge-store` | Commit approved insights to the knowledge graph |
+
+---
+
+## Built-in Skills
+
+### Code Quality
+
+**`/code-review`** — Review the current diff for correctness bugs and simplification opportunities.
+```
+/code-review           # medium effort
+/code-review high      # broader coverage, may include uncertain findings
+/code-review --fix     # apply findings to working tree after review
+/code-review --comment # post findings as inline PR comments
+```
+Use before opening a PR or after a large implementation session.
+
+**`/simplify`** — Review changed code for reuse, simplification, and efficiency, then apply the fixes. Quality only — does not hunt for bugs (`/code-review` for that).
+
+**`/security-review`** — Review for security vulnerabilities across the diff.
+
+**`/verify`** — Run the app and observe behavior to confirm a change works. Use to validate the golden path and edge cases after implementation.
+
+---
+
+### Development Workflow
+
+**`/test-driven-development`** — Use before writing implementation code. Produces failing tests first, then the minimal implementation to pass them.
+
+**`/brainstorming`** — Use before any creative work: new features, new system design, exploring alternatives. Surfaces intent and trade-offs before committing to an approach.
+
+**`/debugging-strategies`** — Systematic debugging with profiling and root cause analysis. Use when investigating bugs or unexpected behavior. Complements `world-debugger` (agent) for world assembly failures.
+
+---
+
+### Testing
+
+**`/python-testing-patterns`** — Comprehensive pytest patterns: fixtures, mocking, parametrize, test-driven development for Python. Use when setting up new test modules or improving test structure.
+
+**`/backend-testing`** — Backend test strategy covering unit, integration, and API tests. Use for testing repository layers, data pipelines, or service boundaries.
+
+---
+
+### Architecture and Design
+
+**`/architecture`** — ADR (Architecture Decision Record) workflow. Use when making a significant architectural decision that should be recorded in `docs/architecture/`.
+
+**`/api-design-principles`** — REST and API design review. Use when designing new API endpoints or reviewing schema shape.
+
+**`/doc-coauthoring`** — Structured workflow for writing documentation (proposals, specs, decision docs). Use when creating new `docs/` content.
+
+---
+
+### Performance
+
+**`/python-performance-optimization`** — Profile and optimize Python code using cProfile and memory profilers. Use when investigating slow simulation ticks or high-memory world assembly.
+
+---
+
+### Knowledge Graph
+
+**`/graphify`** — Build or rebuild the project knowledge graph at `graphify-out/`. Parses AST, extracts symbols, relationships, and community structure. Read `graphify-out/GRAPH_REPORT.md` for god nodes and architecture overview.
+
+```
+/graphify              # full rebuild
+graphify update .      # incremental update after src/ changes (run in shell)
+```
+
+The `graphify-out/wiki/index.md` provides a navigable wiki built from the graph. Use it instead of reading raw source files for architecture questions.
+
+---
+
+### Configuration
+
+**`/update-config`** — Modify `settings.json` or `settings.local.json`. Use for:
+- Adding tool permissions (`allow X commands`)
+- Configuring hooks (`when Claude stops, show X`)
+- Setting environment variables
+
+**`/fewer-permission-prompts`** — Scans transcripts for common read-only Bash and MCP calls, then adds an allowlist to `settings.json` to reduce future prompts.
+
+---
+
+## Project-Level Skill Files
+
+These skills are Python and engineering patterns adapted for this project and stored in `.claude/skills/`:
+
+| Skill | File | Purpose |
+|---|---|---|
+| `/python-testing-patterns` | `python-testing-patterns/SKILL.md` | Project-specific pytest patterns |
+| `/debugging-strategies` | `debugging-strategies/SKILL.md` | Systematic debugging adapted to this stack |
+| `/backend-testing` | `backend-testing/SKILL.md` | Backend test patterns |
+| `/test-driven-development` | `test-driven-development/SKILL.md` | TDD workflow |
+| `/python-performance-optimization` | `python-performance-optimization/SKILL.md` | Performance profiling |
+| `/brainstorming` | `brainstorming/SKILL.md` | Feature exploration |
+| `/api-design-principles` | `api-design-principles/SKILL.md` | API design review |
+| `/architecture` | `architecture/SKILL.md` | ADR documentation |
+| `/doc-coauthoring` | `doc-coauthoring/SKILL.md` | Documentation co-authoring |
+| `/prompt-builder` | `prompt-builder/SKILL.md` | Prompt construction guidance |
+| `/frontend-design` | `frontend-design/SKILL.md` | Frontend component design |
+
+---
+
+## Choosing the Right Tool
+
+| Situation | Tool |
+|---|---|
+| Implement a development task | `/implement-ticket` |
+| Quick code review before PR | `/code-review` |
+| Understand codebase architecture | `/graphify` → read `graphify-out/wiki/index.md` |
+| Debug a world assembly failure | `Agent(subagent_type: "world-debugger")` |
+| Check mechanics parity after a change | `Agent(subagent_type: "mechanics-auditor")` |
+| Profile slow simulation tick | `/python-performance-optimization` |
+| Design a new subsystem | `/architecture` then `/brainstorming` |
+| Run a simulation experiment | `/generate-simulation-setup` → `/prepare-simulation-execution` → `/register-simulation-result` |
+| Analyze run anomalies | `Agent(subagent_type: "simulation-analyst")` for quick check; `/investigate-simulation-result` for deep diagnosis |

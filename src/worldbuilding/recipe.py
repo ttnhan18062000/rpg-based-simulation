@@ -10,7 +10,7 @@ from src.worldbuilding.validator import WorldValidator
 
 
 class RegionRecipeSpec(BaseModel):
-    model_config = ConfigDict(frozen=True)
+    model_config = ConfigDict(frozen=True, extra="forbid")
 
     id: str = Field(..., min_length=1, description="Unique identifier for the region")
     type: str = Field(..., min_length=1, description="Ecological type of the region")
@@ -29,7 +29,7 @@ class RegionRecipeSpec(BaseModel):
 
 
 class PopulationRecipeSpec(BaseModel):
-    model_config = ConfigDict(frozen=True)
+    model_config = ConfigDict(frozen=True, extra="forbid")
 
     role: str = Field(..., min_length=1, description="Societal role")
     count: int = Field(..., ge=0, description="Number of entities to spawn")
@@ -42,7 +42,7 @@ class PopulationRecipeSpec(BaseModel):
 
 
 class ResourceRecipeSpec(BaseModel):
-    model_config = ConfigDict(frozen=True)
+    model_config = ConfigDict(frozen=True, extra="forbid")
 
     resource_type: str = Field(..., min_length=1, description="Type of resource node")
     count: int = Field(..., gt=0, description="Number of nodes to place")
@@ -52,7 +52,7 @@ class ResourceRecipeSpec(BaseModel):
 
 
 class BuildingRecipeSpec(BaseModel):
-    model_config = ConfigDict(frozen=True)
+    model_config = ConfigDict(frozen=True, extra="forbid")
 
     building_type: str = Field(..., min_length=1, description="Constructed type of the building")
     count: int = Field(..., gt=0, description="Number of buildings to place")
@@ -61,13 +61,13 @@ class BuildingRecipeSpec(BaseModel):
 
 
 class WorldTemplateEntitiesSpec(BaseModel):
-    model_config = ConfigDict(frozen=True)
+    model_config = ConfigDict(frozen=True, extra="forbid")
 
     populations: list[PopulationRecipeSpec] = Field(default_factory=list, description="List of population recipes")
 
 
 class WorldTemplateSpec(BaseModel):
-    model_config = ConfigDict(frozen=True)
+    model_config = ConfigDict(frozen=True, extra="forbid")
 
     schema_version: str = Field(..., description="Schema version, strictly 'worldtemplate.v1'")
     world_id: str = Field(..., min_length=1, description="Unique world ID")

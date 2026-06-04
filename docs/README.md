@@ -49,5 +49,14 @@ The non-technical laws and formulas of the V2 simulation.
 2.  **Explore the [Authoritative Pipeline](../engine/authoritative_pipeline.md)** to see how state mutations are refined and applied.
 3.  **Review the [Conventions](../engine/architecture_reference.md)** before contributing new logic.
 
+### 🤖 [AI Tooling](ai/README.md)
+Claude Code subagents, workflows, and skills for the development and simulation lifecycle.
+- [Agents](ai/agents.md): All 11 subagents — roles, inputs, outputs.
+- [Workflows](ai/workflows.md): Multi-agent orchestration — phases, args, return values.
+- [Skills](ai/skills.md): Slash commands for focused task patterns.
+- [Ticket Lifecycle](ai/ticket-lifecycle.md): Complete flow from request to closed ticket, with Phase 28 as example.
+
+---
+
 ## 🛠️ Verification
 All documentation is verified against the source code via the `tests/docs/` suite. If you find a discrepancy, please mark it with a `TODO:` tag in the code and update the documentation accordingly.

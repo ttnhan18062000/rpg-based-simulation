@@ -265,6 +265,19 @@ class WorldCompiler:
                         if hasattr(resolved, "legacy_faction") and resolved.legacy_faction is not None:
                             faction_enum = Faction(resolved.legacy_faction)
 
+                    # Populate properties
+                    ent_properties = {
+                        "spawn_region": pop_spec.spawn_region,
+                        "population_id": pop_key,
+                        "faction_id": pop_spec.faction,
+                    }
+                    if context is not None and pop_key in context.entities:
+                        resolved = context.entities[pop_key]
+                        if hasattr(resolved, "faction_id") and resolved.faction_id:
+                            ent_properties["faction_id"] = resolved.faction_id
+                        if hasattr(resolved, "race_id") and resolved.race_id:
+                            ent_properties["race_id"] = resolved.race_id
+
                     builder = (
                         V2EntityBuilder(next_entity_id)
                         .kind(pop_spec.role.lower())
@@ -272,7 +285,7 @@ class WorldCompiler:
                         .identity(
                             role=role_enum,
                             faction=faction_enum,
-                            properties={"spawn_region": pop_spec.spawn_region, "population_id": pop_key}
+                            properties=ent_properties
                         )
                         .combat(
                             hp=hp,

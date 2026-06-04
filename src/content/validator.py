@@ -3,8 +3,12 @@ from __future__ import annotations
 
 from typing import List, Dict, Any, Optional
 from pydantic import BaseModel, Field
+from pathlib import Path
+import yaml
 
-from src.content.repository import CatalogRepository
+from src.content.repository import CatalogRepository, CANONICAL_FAMILIES
+from src.worldmodules.schema import WorldModuleSpec
+from src.worldassembly.schema import WorldCompositionSpec
 
 
 class CatalogValidationError(Exception):
@@ -21,20 +25,74 @@ class ValidationIssue(BaseModel):
     filename: Optional[str] = Field(None, description="Filename where the issue resides")
 
 
+def load_all_compositions(worlds_dir: str = "data/worlds") -> List[WorldCompositionSpec]:
+    compositions = []
+    dir_path = Path(worlds_dir)
+    if not dir_path.exists():
+        return compositions
+    for filepath in dir_path.glob("**/*.yaml"):
+        try:
+            with open(filepath, "r", encoding="utf-8") as f:
+                data = yaml.safe_load(f)
+            if isinstance(data, dict) and "worldcomposition" in data.get("schema_version", ""):
+                compositions.append(WorldCompositionSpec(**data))
+        except Exception:
+            pass
+    for filepath in dir_path.glob("**/*.yml"):
+        try:
+            with open(filepath, "r", encoding="utf-8") as f:
+                data = yaml.safe_load(f)
+            if isinstance(data, dict) and "worldcomposition" in data.get("schema_version", ""):
+                compositions.append(WorldCompositionSpec(**data))
+        except Exception:
+            pass
+    return compositions
+
+
 class CatalogValidator:
     """
     Independent validator for the static Content Catalog. 
     Catches relational, schema, mapping, and range errors across definition directories.
     """
 
-    def __init__(self, repo: CatalogRepository):
+    def __init__(
+        self,
+        repo: CatalogRepository,
+        modules: Optional[List[WorldModuleSpec]] = None,
+        compositions: Optional[List[WorldCompositionSpec]] = None,
+    ):
         self.repo = repo
+        self._custom_modules = modules
+        self._custom_compositions = compositions
+        self.graph = None
 
     def validate(self) -> List[ValidationIssue]:
         """
         Runs validation sweeps and returns a complete list of structured warnings and errors.
         """
         issues: List[ValidationIssue] = []
+
+        # Resolve modules and compositions
+        from src.worldmodules.repository import WorldModuleRepository
+        
+        if self._custom_modules is not None:
+            modules = self._custom_modules
+        else:
+            mod_repo = WorldModuleRepository("data/world_modules")
+            try:
+                mod_repo.load_all()
+                modules = list(mod_repo.modules.values())
+            except Exception:
+                modules = []
+
+        if self._custom_compositions is not None:
+            compositions = self._custom_compositions
+        else:
+            compositions = load_all_compositions("data/worlds")
+
+        # Build graph
+        from src.content.reference_graph import ContentReferenceGraph
+        self.graph = ContentReferenceGraph(self.repo, modules, compositions)
 
         # Validate relational linkages
         self._validate_role_relations(issues)
@@ -49,6 +107,10 @@ class CatalogValidator:
         self._validate_biome_relations(issues)
         self._validate_ecology_relations(issues)
         self._validate_defaults(issues)
+        
+        # Generic reference and dead active data checks
+        self._validate_reference_graph(issues)
+        self._validate_dead_active_data(issues)
         
         return issues
 
@@ -485,3 +547,108 @@ class CatalogValidator:
                 message="No global default compile profiles are configured inside the catalog.",
                 filename="defaults.yaml"
             ))
+
+    def _validate_reference_graph(self, issues: List[ValidationIssue]) -> None:
+        """Verify referential integrity using the ContentReferenceGraph."""
+        from src.content.reference_graph import FAMILY_TO_SHORT
+        
+        def get_rule_id(src_concept: str, tgt_concept: str) -> str:
+            if src_concept == "archetype":
+                return "CAT-REL-011"
+            elif src_concept == "role":
+                if tgt_concept == "stat_profile":
+                    return "CAT-REL-001"
+                elif tgt_concept == "inventory_profile":
+                    return "CAT-REL-002"
+                elif tgt_concept == "cognition_profile":
+                    return "CAT-REL-003"
+                return "CAT-REL-001"
+            elif src_concept == "faction_relationship":
+                return "CAT-REL-012"
+            elif src_concept == "perspective":
+                return "CAT-REL-013"
+            elif src_concept == "projection":
+                return "CAT-REL-014"
+            elif src_concept == "recipe":
+                return "CAT-REL-015"
+            elif src_concept == "region":
+                return "CAT-REL-016"
+            elif src_concept == "race":
+                return "CAT-REL-017"
+            elif src_concept == "biome":
+                return "CAT-REL-018"
+            elif src_concept == "ecology":
+                return "CAT-REL-019"
+            elif src_concept == "building":
+                return "CAT-REL-004"
+            return "CAT-REL-099"
+
+        for edge in self.graph.edges:
+            source, target = edge
+            if not self.graph.has_node(target):
+                src_concept, src_id = source.split(":", 1)
+                tgt_concept, tgt_id = target.split(":", 1)
+                
+                # Check race fallback for faction labels
+                if tgt_concept == "faction" and self.graph.has_node(f"race:{tgt_id}"):
+                    continue
+                
+                filename = None
+                for spec in CANONICAL_FAMILIES:
+                    if FAMILY_TO_SHORT.get(spec.family) == src_concept:
+                        filename = spec.path
+                        break
+                
+                rule_id = get_rule_id(src_concept, tgt_concept)
+                issues.append(ValidationIssue(
+                    severity="ERROR",
+                    rule_id=rule_id,
+                    message=f"{src_concept.capitalize()} '{src_id}' references non-existent {tgt_concept} '{tgt_id}'",
+                    target_id=src_id,
+                    filename=filename
+                ))
+
+    def _validate_dead_active_data(self, issues: List[ValidationIssue]) -> None:
+        """Verify that active data is consumed by downstream components (no dead active data)."""
+        from src.content.matrix import CONTENT_USAGE_MATRIX
+        from src.content.reference_graph import FAMILY_TO_SHORT
+        
+        for node_id, record in self.graph.nodes.items():
+            concept, rec_id = node_id.split(":", 1)
+            
+            # Exempt entry points
+            if concept in ("defaults", "spawn_table", "composition", "scenario"):
+                continue
+                
+            # Find the corresponding family key
+            family_key = None
+            for key, short in FAMILY_TO_SHORT.items():
+                if short == concept:
+                    family_key = key.replace(".", "/")
+                    break
+            
+            if not family_key or family_key not in CONTENT_USAGE_MATRIX:
+                continue
+                
+            entry = CONTENT_USAGE_MATRIX[family_key]
+            
+            # Exempt records under ADDITIONAL, FUTURE-EXTENSION, or DESIGN_ONLY
+            if entry.implementation_state in ("ADDITIONAL", "FUTURE-EXTENSION") or entry.content_maturity in ("ADDITIONAL", "FUTURE-EXTENSION", "DESIGN_ONLY"):
+                continue
+                
+            if not self.graph.is_record_used(node_id):
+                filename = None
+                for spec in CANONICAL_FAMILIES:
+                    if FAMILY_TO_SHORT.get(spec.family) == concept:
+                        filename = spec.path
+                        break
+                
+                severity = "WARNING"
+                
+                issues.append(ValidationIssue(
+                    severity=severity,
+                    rule_id="CAT-DEAD-001",
+                    message=f"{concept.capitalize()} '{rec_id}' is active but never consumed by any downstream component",
+                    target_id=rec_id,
+                    filename=filename
+                ))

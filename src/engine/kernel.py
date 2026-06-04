@@ -115,7 +115,8 @@ class Kernel:
 
         self._run_id = run_id
         if self._run_id is None:
-            self._run_id = f"run_{int(time.time())}"
+            import random
+            self._run_id = f"run_{int(time.time())}_{random.randint(1000, 9999)}"
 
         self._artifact_repo = None
         if obs_mode != ObservabilityMode.OFF:

@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field, ConfigDict, field_validator
 
 class CatalogBaseDefinition(BaseModel):
     """Base class for all content catalog definitions."""
-    model_config = ConfigDict(frozen=True)
+    model_config = ConfigDict(frozen=True, extra="forbid")
 
     id: str = Field(..., min_length=1, description="Unique content identifier")
     display_name: Optional[str] = Field(None, description="User-friendly display name")
@@ -16,6 +16,8 @@ class CatalogBaseDefinition(BaseModel):
     schema_version: Optional[str] = Field(None, description="Schema version identifier")
     deprecated: bool = Field(False, description="Whether this definition is deprecated")
     metadata: Dict[str, Any] = Field(default_factory=dict, description="Custom extensible metadata dict")
+    extension: Dict[str, Any] = Field(default_factory=dict, description="Custom extensible compatibility dict")
+    design_notes: Optional[str] = Field(None, description="Developer design notes")
 
 
 # ==========================================
@@ -114,6 +116,7 @@ class CombatProfileDefinition(CatalogBaseDefinition):
     accuracy: float = Field(1.0, ge=0.0, description="Base hit chance multiplier")
     crit_chance: float = Field(0.05, ge=0.0, le=1.0, description="Critical strike chance")
     crit_multiplier: float = Field(1.5, ge=1.0, description="Critical damage multiplier")
+    damage_tags: List[str] = Field(default_factory=list, description="Damage type semantic tags")
 
 
 class InventoryProfileDefinition(CatalogBaseDefinition):
@@ -233,6 +236,11 @@ class ResourceDefinition(CatalogBaseDefinition):
     resource_type: str = Field(..., description="Resource item identifier")
     required_ticks: int = Field(10, gt=0, description="Standard ticks required to harvest one charge")
     default_charges: int = Field(10, gt=0, description="Default remaining charges")
+    material: Optional[str] = Field(None, description="Material ID yielded by harvesting")
+    preferred_biomes: List[str] = Field(default_factory=list, description="Biomes where this resource commonly spawns")
+    runtime_kind: Optional[str] = Field(None, description="Explicit runtime resource type")
+    legacy_id: Optional[str] = Field(None, description="Explicit legacy ID mapping")
+    required_tool: Optional[str] = Field(None, description="Explicit required tool")
 
 
 class BuildingDefinition(CatalogBaseDefinition):
@@ -240,6 +248,7 @@ class BuildingDefinition(CatalogBaseDefinition):
     hp: int = Field(500, gt=0, description="Standard starting HP")
     max_hp: int = Field(500, gt=0, description="Standard max HP")
     service_profile_id: Optional[str] = Field(None, description="Default service profile mapping")
+    themes: List[str] = Field(default_factory=list, description="Aesthetic/functional themes of the building")
 
 
 class ServiceProfileDefinition(CatalogBaseDefinition):
@@ -247,6 +256,10 @@ class ServiceProfileDefinition(CatalogBaseDefinition):
     provided_items: List[str] = Field(default_factory=list, description="Items sold or stocked")
     heal_amount: Optional[int] = Field(0, ge=0, description="Amount of health restored by service")
     gold_cost: float = Field(0.0, ge=0.0, description="Cost of service in gold")
+    service_type: Optional[str] = Field(None, description="Role/type of the service")
+    provided_recipes: List[str] = Field(default_factory=list, description="Recipes supported by this service station")
+    resource_bias: List[str] = Field(default_factory=list, description="Associated resources for extraction bias")
+    affordances: List[str] = Field(default_factory=list, description="Explicit service affordances")
 
 
 class TerrainDefinition(CatalogBaseDefinition):
@@ -278,6 +291,9 @@ class ItemDefinition(CatalogBaseDefinition):
     rarity: str = Field("COMMON", description="Item rarity")
     base_value: float = Field(0.0, ge=0.0, description="Base value in gold")
     materials: List[str] = Field(default_factory=list, description="Materials composing this item")
+    use_kind: Optional[str] = Field(None, description="Explicit runtime usage kind")
+    class_fit: List[str] = Field(default_factory=list, description="Explicit class fit tags")
+    equipment_slot: Optional[str] = Field(None, description="Explicit equipment slot")
 
 
 class RecipeDefinition(CatalogBaseDefinition):
@@ -295,6 +311,8 @@ class RuntimeRegionDefinition(CatalogBaseDefinition):
     allowed_enemy_ids: List[str] = Field(default_factory=list, description="Referenced EnemyDefinition IDs allowed to spawn")
     resource_bias: Dict[str, float] = Field(default_factory=dict, description="Probability biases for different resource spawns")
     travel_cost: float = Field(0.0, ge=0.0, description="Gold or tick cost to travel to this region")
+    biome: Optional[str] = Field(None, description="Primary biome of this runtime region")
+    controlling_faction: Optional[str] = Field(None, description="Faction that owns or controls this region")
 
 
 class BiomeDefinition(CatalogBaseDefinition):

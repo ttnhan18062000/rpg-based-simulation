@@ -159,7 +159,11 @@ def handle_resolve(args) -> int:
             return 1
 
         # Load composition
-        composition = WorldCompositionSpec.model_validate(raw_data)
+        try:
+            composition = WorldCompositionSpec.model_validate(raw_data)
+        except Exception as e:
+            world_id_val = raw_data.get("world_id", world_id)
+            raise ValueError(f"Validation failed for composition '{world_id_val}' in family 'world_compositions' at '{yaml_path}': {e}") from e
 
         # Load repositories
         cat_repo = CatalogRepository("data/content")
