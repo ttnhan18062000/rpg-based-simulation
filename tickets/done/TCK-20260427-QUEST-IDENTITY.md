@@ -6,6 +6,15 @@ Fixing Quest Identity Paradox and Hardening Authoritative Rewards
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 The user requested a "continue" after a long conversation about a perceived "Quest Identity Paradox" where quest state appeared to revert or stay stuck in ACTIVE despite completion conditions being met.
 

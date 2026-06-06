@@ -8,6 +8,15 @@ Pattern Detectors and Behavior Insights (Phase 25)
 
 INPROGRESS
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Detect behavioral problems and improvements post-run, converting them into structured findings and insights.

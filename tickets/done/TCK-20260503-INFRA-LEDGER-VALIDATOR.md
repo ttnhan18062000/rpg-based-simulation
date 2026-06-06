@@ -6,6 +6,15 @@ Implement Engine Logic Ledger Validator
 ## Status
 INPROGRESS
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Develop a diagnostic tool (`scripts/ledger_validator.py`) to programmatically verify the integrity of the `logic_checklist_exhaustive.md` registry. The validator must ensure ID uniqueness, domain taxonomy compliance, and presence of mandatory metadata (SOURCE, TEST, PROOF) for all checked items.
 

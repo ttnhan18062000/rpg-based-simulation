@@ -8,6 +8,15 @@ Phase 13 — Runtime Content Catalog Schema Expansion
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Implement Phase 13 as specified in `world_phases_11_19.md`. Extend the content catalog schema definitions to include items, recipes, enemies, and runtime regions, load them via `CatalogRepository`, and support cross-reference validation in `CatalogValidator`.

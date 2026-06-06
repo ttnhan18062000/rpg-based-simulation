@@ -6,6 +6,15 @@ Implement Initial Resource Interaction Differential Parity Proof
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Introduce the first old-vs-new proof layer for resource interaction behavior (Harvesting and Looting) to ensure bit-identical outcome parity where preservation is intended.
 

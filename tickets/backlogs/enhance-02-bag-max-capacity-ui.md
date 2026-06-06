@@ -25,3 +25,7 @@ The InspectPanel shows inventory items but does not indicate how full the bag is
 ## Labels
 
 `enhance`, `frontend`, `ui`, `small`
+
+**Tier:** standard
+**Type:** feature
+**Priority:** P2

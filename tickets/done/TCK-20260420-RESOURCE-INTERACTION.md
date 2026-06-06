@@ -6,6 +6,15 @@ Second Supported RPG Slice: Deterministic Resource Interaction Core
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Implement the fourth milestone of Resource Phase 4, establishing deterministic loot/harvest channeling and inventory pressure as the second officially supported gameplay slice in the V2 engine.
 

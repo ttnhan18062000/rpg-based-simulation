@@ -6,6 +6,15 @@ Phase 12 Milestone 1: Readiness Gate
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Establish the formal entry gate for Phase 12 Cutover. Ensure that the cutover surface is strictly bounded by Phase 11 ratified truth and that operational boundaries are explicit.
 

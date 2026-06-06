@@ -8,6 +8,15 @@ Implement InvestigateSimulationResult Workflow (Milestone 100)
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Implement the `InvestigateSimulationResultWorkflow` in `src/lab/workflows.py` to analyze registered and compacted simulation run data at different analysis depths (light, standard, deep) and write structured investigation reports and backlogs.

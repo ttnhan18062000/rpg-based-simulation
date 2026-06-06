@@ -6,6 +6,15 @@ Benchmarking and Profiling Foundation (Milestone 3)
 ## Status
 INPROGRESS
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Establish a trustworthy foundation for engine performance work, including per-phase timing, stable benchmark scenarios, and initial baseline measurements.
 

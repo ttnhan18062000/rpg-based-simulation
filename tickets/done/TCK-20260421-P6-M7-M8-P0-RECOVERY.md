@@ -8,6 +8,15 @@ Implement Phase 6 P0 Logic Recovery (Social Trust & Opportunity Attacks)
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Hardening Phase 6: Recover the P0 "Must-Have" gaps identified in the Master Ledger implementation. This includes Social Trust history and Opportunity Attack mechanics to ensure the engine baseline is not "decorative" in critical gameplay contracts.

@@ -18,3 +18,7 @@ Validate the stability, deterministic integrity, and performance characteristics
 
 ## Related Tickets
 - TCK-20260402-HARDENING
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

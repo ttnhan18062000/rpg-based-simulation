@@ -22,3 +22,7 @@ Implement an opt-in binary WebSocket protocol using MessagePack and positional a
 
 ## Status: INPROGRESS
 Plan approved. Starting implementation.
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

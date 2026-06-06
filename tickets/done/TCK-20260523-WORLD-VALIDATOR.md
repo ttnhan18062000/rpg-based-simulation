@@ -8,6 +8,15 @@ Implementation of World Validation Layer (Milestone 69)
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Implement `WorldValidator` and a pluggable validation rules framework for high-level world specs validation with severity levels (ERROR, WARNING, INFO).

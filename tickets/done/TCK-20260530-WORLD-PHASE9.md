@@ -8,6 +8,15 @@ World Compiler Integration Hardening
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Implement Phase 9: "Compiler Integration Hardening" of `world_phases_0_10_updated.md` to reduce hardcoding by routing compile-time defaults through resolved profiles and semantic services.

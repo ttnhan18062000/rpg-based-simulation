@@ -8,6 +8,15 @@ Phase 11 Assembly Hardening and CompileContext Integrity
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Implement Phase 11 as specified in the Next Phases Implementation Plan (world_phases_11_19.md). Make explicit profile references survive assembly and populate CompileContext inside ResolvedWorldBundle, split assembly stages, specify module dependency semantics, and fix provenance determinism.

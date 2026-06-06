@@ -8,6 +8,15 @@ Motivation, Identity Doctrine, and Role-Fit Domain Implementation
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Implement Phase 14 to prevent entities from converging on identical strategic route decisions by defining structured schemas (`IdentityDoctrine`, `ValuePreferenceProfile`, `RoleFitPreference`) and services (`DoctrineResolver`, `RoleFitEvaluator`, `MotivationBiasService`) that apply stable cognitive biases to route evaluations.

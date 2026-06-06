@@ -15,3 +15,7 @@
 
 ## Related Tickets
 - RESTRUCTURE-01 (Architectural Vision)
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

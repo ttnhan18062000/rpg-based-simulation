@@ -8,6 +8,15 @@ Wire Belief System into Actual Gameplay
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Implement a minimal belief-to-action path in the simulation where guild intel creates rumors, direct observations upgrade or contradict belief certainty, and detours weigh lead certainty and source trust to influence final actions.

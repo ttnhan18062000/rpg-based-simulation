@@ -8,6 +8,15 @@ Fact check and propose updates for entity aspects and base documentation
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 The user requested an investigation into the current source code concerning entity aspects, comparing it with two specific documentation files: `docs/entity/entity_aspect_relationship_diagram.mmd` and `docs/entity/entity_base.md`. The goal is to fact check both documents against the implementation, point out any missing or incorrect statements, and propose the necessary updates.

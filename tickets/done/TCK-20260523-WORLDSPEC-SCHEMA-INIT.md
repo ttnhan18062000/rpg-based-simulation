@@ -8,6 +8,15 @@ Design and Implementation of WorldSpec File Schema (Milestone 67)
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Define the first stable world definition format (WorldSpec YAML/JSON schema) and create the test suite to validate it.

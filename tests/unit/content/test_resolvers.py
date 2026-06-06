@@ -769,3 +769,39 @@ class TestPopulationRecipeResolver:
         ids2 = [(a.archetype_id, c) for a, c in expanded2]
         assert ids1 == ids2
         assert regions1 == regions2
+
+    # --- Three-case contract (documented in resolver.py docstring) ---
+
+    def test_case1_valid_recipe_expands_members(
+        self, pop_resolver: PopulationRecipeResolver
+    ):
+        """Case 1: valid recipe ID → expands to full member list."""
+        expanded, preferred_regions = pop_resolver.resolve("wolf_pack_small")
+        assert len(expanded) >= 1
+        assert isinstance(expanded[0][0], ResolvedEntityArchetype)
+
+    def test_case2_direct_archetype_id_returns_single_entity(
+        self, pop_resolver: PopulationRecipeResolver
+    ):
+        """Case 2: population_id is a valid archetype ID (not a recipe) → single-entity shorthand.
+
+        Returns [(archetype, 1)] with empty preferred_regions.
+        This is the intentional direct-archetype shorthand documented in the resolver.
+        """
+        # "hungry_wolf" is a known archetype (used inside wolf_pack_small recipe) but is not itself a recipe
+        expanded, preferred_regions = pop_resolver.resolve("hungry_wolf")
+        assert len(expanded) == 1
+        resolved_arch, count = expanded[0]
+        assert isinstance(resolved_arch, ResolvedEntityArchetype)
+        assert resolved_arch.archetype_id == "hungry_wolf"
+        assert count == 1
+        assert preferred_regions == []
+
+    def test_case3_unknown_id_raises_resolver_error(
+        self, pop_resolver: PopulationRecipeResolver
+    ):
+        """Case 3: population_id is neither a recipe nor an archetype → raises ResolverError."""
+        with pytest.raises(ResolverError) as exc_info:
+            pop_resolver.resolve("totally_nonexistent_id_xxxx")
+        assert "population_recipe" in str(exc_info.value)
+        assert "totally_nonexistent_id_xxxx" in str(exc_info.value)

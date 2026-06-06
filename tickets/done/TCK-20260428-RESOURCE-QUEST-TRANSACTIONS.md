@@ -8,6 +8,15 @@ Implement Transactional Quest Rewards (Phase 3.1)
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Migrate and harden quest reward logic from legacy to V2, ensuring quest status changes are transactional and tied to successful reward delivery.

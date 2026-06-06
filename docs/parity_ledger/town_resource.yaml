@@ -1763,3 +1763,17 @@
   test_path: null
   divergence_note: null
   support_boundary: null
+- id: TOWN-170
+  text: PopulationRecipeResolver supports three resolution cases — (1) recipe ID expands
+    to full member list, (2) bare archetype ID is a supported single-entity shorthand
+    returning count=1 with no preferred regions, (3) unknown ID raises ResolverError.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/content/resolver.py PopulationRecipeResolver.resolve() — case 2
+    fallback validated against entity_archetypes catalog before returning shorthand
+    result; case 3 raises ResolverError
+  proof_type: parity
+  test_path: tests/unit/content/test_resolvers.py::TestPopulationRecipeResolver::test_case2_direct_archetype_id_returns_single_entity
+  divergence_note: null
+  support_boundary: null

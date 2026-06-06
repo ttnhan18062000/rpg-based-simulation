@@ -8,6 +8,15 @@ Harden Authoritative Rulebook and Quiet-Tick Lifecycle Contract
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Implement Milestone 1 of the Combat and Movement Overhaul corrective plan (combat_movement_updated.md). This includes hardening the LegalityService as the singular source of truth for spatial/occupancy rules and protecting quiet-tick passive progression against future drift.

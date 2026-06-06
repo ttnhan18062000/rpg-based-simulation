@@ -8,6 +8,15 @@ Complete Authoritative Action Proposal Model
 
 INPROGRESS
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Execute Task 2 of Phase 7 Milestone 2: Complete the authoritative action proposal model for supported substrate scope. This involves making action intent explicit, structured, and stable by defining the `ActionProposal` model and its linkage to authoritative updates.

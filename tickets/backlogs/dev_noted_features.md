@@ -15,3 +15,7 @@ All items from the original backlog have been addressed. Kept here for historica
 - ✅ ~~[ENHANCE] mobs roaming should not be too far from its camp, not chasing play through the whole map, reference in the popular RPG games~~ → **enhance-04**
 - ✅ ~~[EPIC] check the performance of the game, if there are issue, mentioned it to me and write the ticket~~ → **epic-16** (Performance Audit)
 - ✅ ~~[ENHANCE] revise the ticking mechanism, tell the the current logic and we should decide a better one make sure to ask me for the decision~~ → **design-02**
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P2

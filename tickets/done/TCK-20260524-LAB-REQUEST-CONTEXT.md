@@ -8,6 +8,15 @@ Implement Input Request Model and Context Pack Builder (M94-M95)
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Implement validated Pydantic input request schemas for workflows (`generic` vs `specific` modes) and build a token-conserving `ContextPackBuilder` that aggregates high-level summaries/indexes without importing large raw telemetry files.

@@ -8,6 +8,15 @@ MovementPlanCache Implementation for Spatial Routing Recomputation Optimization
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Implement `MovementPlanCache` to cache next-step movement decisions when entity position, target position, and local occupancy conditions remain unchanged, reducing A* and flow-field navigation calculations.

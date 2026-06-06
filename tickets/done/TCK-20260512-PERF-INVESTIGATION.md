@@ -6,6 +6,15 @@ Research and finalize performance testing design
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Investigate `performance_implementation.md` and current infrastructure to finalize the implementation plan for the performance testing framework.
 

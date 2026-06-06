@@ -6,6 +6,15 @@ Milestone 5: API and Replay Snapshot Optimization
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Optimize the API and inspection layer to handle large world states (5000+ entities) without $O(N)$ deep-copy or full-serialization overhead.
 

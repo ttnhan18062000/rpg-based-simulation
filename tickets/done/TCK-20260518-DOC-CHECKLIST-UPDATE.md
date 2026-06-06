@@ -8,6 +8,15 @@ Update Logic Checklists and Performance Test Plan with Verified Completed Tasks
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 The user requested to update `docs/logic_checklist_exhaustive.md` and `perf_test_plan.md` to mark all newly completed and verified tasks.

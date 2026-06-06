@@ -6,6 +6,15 @@ Milestone 9: CI Performance Regression Guard
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Implement an automated performance regression detection system to prevent throughput degradation in future commits.
 

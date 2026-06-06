@@ -12,15 +12,32 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
+# Process-level singleton — valid performance optimization for the hot path.
+# Use configure_faction_semantics_service() to pre-install a custom repo (e.g. in tests).
+# Use reset_faction_semantics_service() to clear the cache in test teardown.
 _semantics_service_cache: Optional[FactionSemanticsService] = None
+
 
 def get_faction_semantics_service() -> FactionSemanticsService:
     global _semantics_service_cache
     if _semantics_service_cache is None:
-        repo = CatalogRepository("data/content")
+        from src.content.paths import ContentPathConfig
+        repo = CatalogRepository(ContentPathConfig().content_root)
         repo.load_all()
         _semantics_service_cache = FactionSemanticsService(repo)
     return _semantics_service_cache
+
+
+def configure_faction_semantics_service(repo: CatalogRepository) -> None:
+    """Install a pre-built service into the singleton cache. For test setup and app boot."""
+    global _semantics_service_cache
+    _semantics_service_cache = FactionSemanticsService(repo)
+
+
+def reset_faction_semantics_service() -> None:
+    """Clear the singleton cache. For test teardown."""
+    global _semantics_service_cache
+    _semantics_service_cache = None
 
 def get_faction_id_str(entity: Any) -> str:
     """Retrieves the dynamic faction ID string of an entity, falling back to enum name."""

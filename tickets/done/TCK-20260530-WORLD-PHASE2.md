@@ -8,6 +8,15 @@ World Data Refactor Phase 2: Content Semantics Layer
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Establish the Content Semantics Layer under `src/content_semantics`. This includes building services that interpret faction, role, and default properties from catalog definitions (without exposing raw YAML specs to runtime components), and building compatibility adapters to allow existing compiler enum mappers to fall back seamlessly onto semantic definitions.

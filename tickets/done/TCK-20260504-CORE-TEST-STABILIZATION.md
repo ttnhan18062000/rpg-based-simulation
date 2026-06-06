@@ -8,6 +8,15 @@ Fix all failed tests by restoring EntityState backward compatibility and updatin
 DONE
 INPROGRESS
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Fix all failed tests using pytest. Ensure graphify is updated and used for context. Use logic_checklist_exhaustive.md and follow clean-code principles.

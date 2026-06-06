@@ -7,6 +7,15 @@ Milestone B Gate and Stability Validation
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Complete the final validation gate for Milestone B. This ensures all laws (Truth, Boundedness, Hysteresis, Elasticity) are verified by a unified closure test suite.
 

@@ -6,6 +6,15 @@ Hardening Navigation and Ecology (Domain 5)
 ## Status
 INPROGRESS
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Close specialized navigation and anchored-world behavior not covered by basic movement. Finalize Flow Field logic, tactical movement integration, arena stop conditions, and mob ecology.
 

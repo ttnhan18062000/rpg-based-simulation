@@ -6,6 +6,15 @@ Resolve Replay Manager Thread-Safety
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Resolve race conditions in ReplayManager where background persistence relied on shared state that could change before disk IO.
 

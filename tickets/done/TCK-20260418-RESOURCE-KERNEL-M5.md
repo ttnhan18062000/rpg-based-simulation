@@ -6,6 +6,15 @@ Milestone 5: Resource Governor and Degradation State Machine
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Implement an authoritative resource governor to protect the simulation envelope via deterministic degradation modes.
 

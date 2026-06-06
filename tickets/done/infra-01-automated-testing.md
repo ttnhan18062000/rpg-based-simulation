@@ -43,3 +43,7 @@ make test-cov      # With coverage
 ## Labels
 
 `infra`, `testing`, `automation`, `done`
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

@@ -6,6 +6,15 @@ Stabilizing Social Contract Expiration
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Resolve the regression in `test_contract_expiration_resolves_and_dissolves` where `ACTIVE` contracts were not expiring correctly in the authoritative pipeline.
 

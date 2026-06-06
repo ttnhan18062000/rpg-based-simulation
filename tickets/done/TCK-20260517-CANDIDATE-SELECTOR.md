@@ -8,6 +8,15 @@ CandidateSelector & ScanPolicy Implementation
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Implement `CandidateSelector` as an authoritative centralized candidate selection mechanism for engine phases, eliminating scattered direct `update.dirty_set` reads. Validate via comprehensive unit tests guaranteeing deterministic ordering, active/inactive filtering, and exact domain union logic.

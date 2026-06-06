@@ -8,6 +8,15 @@ Consolidate Phase 5 truths: Divergences, Limitations, and Unsupported Logic
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Milestone 1 Task 2 of Phase 6: Consolidate known Phase 5 divergences, limitations, and unsupported remainder into one authoritative truth package. This ensures that Phase 6 begins with a clear, documented record of how src differs from legacy src.

@@ -125,6 +125,12 @@ CANONICAL_FAMILIES: List[ContentFamilySpec] = [
 
 from src.content.paths import ContentPathConfig
 
+# Directories inside data/content/ that are managed by loaders other than CatalogRepository
+# (WorldModuleRepository, composition loader, ScenarioLabOrchestrator). Files in these
+# directories must not be reported as "ignored" by strict mode.
+NON_CATALOG_DIRS: frozenset = frozenset({"world_modules", "world_compositions", "simulation_scenarios"})
+
+
 class CatalogRepository:
     """
     Thread-safe repository loader that coordinates static catalog schema configuration loading
@@ -288,6 +294,8 @@ class CatalogRepository:
                         full_path = os.path.join(root, file)
                         rel_path = os.path.relpath(full_path, self.content_dir)
                         rel_path = rel_path.replace(os.sep, "/")
+                        if rel_path.split("/")[0] in NON_CATALOG_DIRS:
+                            continue
                         if rel_path not in registered_paths:
                             ignored_files.append(rel_path)
 

@@ -6,6 +6,15 @@ Phase 2 Milestone 3: Regional Sovereignty
 ## Status
 OPEN
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Implement regional trauma (Dread) accumulation and environmental hazards to drive emergent geographic behavior and risk management.
 

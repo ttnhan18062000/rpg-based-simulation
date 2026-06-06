@@ -8,6 +8,15 @@ StateUpdateCompactor Implementation for Performance Optimization
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Implement `StateUpdateCompactor` to filter out no-op and redundant entity updates before they reach `ApplyPath.apply_generation()`. The profiler identifies `ApplyPath` and dataclass replacement as a major performance bottleneck during high-concurrency simulation ticks. By systematically stripping empty subcomponents, pruning property updates that match current entity state, and dropping empty entity updates entirely, we reduce memory churn and state application latency.

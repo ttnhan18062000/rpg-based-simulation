@@ -6,6 +6,15 @@ Implement Combat and Movement Overhaul Corrective Update
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Implement the work specified in `combat_movement_updated.md`, which addresses remaining gaps and "thin parts" in the combat and movement overhaul across 7 milestones.
 

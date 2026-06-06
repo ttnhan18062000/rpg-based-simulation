@@ -4,8 +4,6 @@ from __future__ import annotations
 from typing import Optional, Dict, Any, List
 from pydantic import BaseModel, Field, ConfigDict
 
-from src.worldbuilding.schema import RegionSpec, FactionSpec, PopulationSpec
-
 
 class ResolvedEntityProfile(BaseModel):
     """Internal compile-ready properties for a specific unit group/population."""
@@ -58,19 +56,3 @@ class ResolvedResourceProfile(BaseModel):
 class ResolvedFactionEconomyProfile(BaseModel):
     """Internal compile-ready properties for a faction's treasury."""
     starting_gold: float
-
-
-class ResolvedModuleContribution(BaseModel):
-    """Normalized structural and semantic contributions resolved from a world module."""
-    model_config = ConfigDict(frozen=True, extra="forbid")
-
-    regions: List[RegionSpec] = Field(default_factory=list)
-    factions: List[FactionSpec] = Field(default_factory=list)
-    population_refs: List[str] = Field(default_factory=list)
-    resolved_population_specs: List[PopulationSpec] = Field(default_factory=list)
-    resource_refs: List[str] = Field(default_factory=list)
-    building_refs: List[str] = Field(default_factory=list)
-    service_refs: List[str] = Field(default_factory=list)
-    relationship_refs: List[str] = Field(default_factory=list)
-    biome_refs: List[str] = Field(default_factory=list)
-    ecology_refs: List[str] = Field(default_factory=list)

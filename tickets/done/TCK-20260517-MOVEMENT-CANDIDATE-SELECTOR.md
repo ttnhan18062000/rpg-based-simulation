@@ -8,6 +8,15 @@ MovementCandidateSelector Implementation for Spatial Routing Optimization
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Implement MovementCandidateSelector to accurately and deterministically select entity IDs eligible for movement routing and spatial resolution during the authoritative movement phase.

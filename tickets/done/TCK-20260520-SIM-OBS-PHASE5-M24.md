@@ -8,6 +8,15 @@ WebSocket Live Observatory API
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Implement Milestone 24: WebSocket Live Observatory API to expose live events to developer tools through a robust, thread-safe, and rate-limited WebSocket endpoint.

@@ -1,6 +1,15 @@
 # Ticket: TCK-20260408-PH3-STG1-HOUSEHOLD
 # Title: Phase 3 Stage 1: Household & Home-Role System
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Implement the foundational data structures and services for managing Households and Home anchoring. This allows entities to belong to social groups that share a base of operations (Building) and resources.
 

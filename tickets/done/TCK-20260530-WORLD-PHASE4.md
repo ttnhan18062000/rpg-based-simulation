@@ -8,6 +8,15 @@ World Data Refactor Phase 4: World Module Schema and Repository
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Establish the structural World Module system under `src/worldmodules`. Define Pydantic schemas for `WorldModuleSpec v1` to enable composing worlds out of reusable structural layout fragments (terrain, settlements, ecology, conflicts, populations, economy), with parameters and requires/provides clauses, explicitly deferring quest seeds. Create the dedicated `WorldModuleRepository` loader, and define topological sorting dependency checking and merge rules preventing silent overwrites.

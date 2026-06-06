@@ -8,6 +8,15 @@ Milestone 76 — ExperimentSpec Schema
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Define how the scenarios should be executed. Create an ExperimentSpec schema, validation rules checking scenarios, parameters, budgets, and retention limits, and a safe traversal-proof repository.

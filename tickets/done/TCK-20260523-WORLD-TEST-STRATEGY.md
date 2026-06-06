@@ -8,6 +8,15 @@ Milestone 73 — Worldbuilding Test Strategy
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Establish the comprehensive test strategy, anti-misdirection safeguards, smoke simulation suite, and observatory integration testing for the worldbuilding pipeline to prevent silent compilation failures, mismatch drift, and invalid spatial layouts.

@@ -6,6 +6,15 @@ Phase 11 Milestone 3: Non-Preserved Scope Ratification
 ## Status
 OPEN
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Verify and justify all intentional divergences, unsupported legacy behaviors, and retired scope. Ensure the divergence log and registers are complete and aligned with the ledger.
 

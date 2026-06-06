@@ -8,6 +8,15 @@ Semantic Behavior Metrics (Phase 24)
 
 INPROGRESS
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Add semantic counters that explain entity behavior, entirely separate and decoupled from existing runtime/performance metrics.

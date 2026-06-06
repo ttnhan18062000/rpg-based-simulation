@@ -6,6 +6,15 @@ Phase 3 Milestone 2: Group-Level Coordination and Social Clustering
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Implement group formation, cohesion, and shared strategic intent to allow entities to cooperate on projects and engage in coordinated tactical behavior (e.g., party-based exploration or combat).
 

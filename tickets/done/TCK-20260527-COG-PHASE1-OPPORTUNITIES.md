@@ -8,6 +8,15 @@ Implement Phase 1 OpportunityProvider Layers (Resource & Service)
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Implement ResourceOpportunityProvider and ServiceOpportunityProvider to expose a bounded set of relevant action choices based on nearby visible nodes or active blockers (crafting, buy/sell, resting, info, quests). Ensure that opportunities expose structured requirement lists for strategic tracing.

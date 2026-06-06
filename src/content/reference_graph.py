@@ -92,7 +92,6 @@ FIELD_TO_TARGET = {
     "spawn_weights": "role",
     "loot_table": "item",
     "requires": "module",
-    "provided_recipes": "recipe",
     "resource_bias": "item",
 }
 

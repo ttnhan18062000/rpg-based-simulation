@@ -8,6 +8,15 @@ World Lifecycle Dynamics (Spawning & Ecology)
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Implement robust world lifecycle services including regional monster spawning and resource node replenishment.

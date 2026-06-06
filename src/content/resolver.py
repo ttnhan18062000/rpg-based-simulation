@@ -560,19 +560,24 @@ class PopulationRecipeResolver:
         """
         Resolve the population recipe with the given ID.
 
-        Returns:
-            (expanded, preferred_regions) where:
-            - ``expanded`` is a list of (ResolvedEntityArchetype, count) tuples
-              in the same order as the ``members`` dict.
-            - ``preferred_regions`` is the list of preferred region IDs from the
-              recipe (not resolved here; passed through for assembly use).
+        Three resolution cases:
+        1. ``population_id`` matches a PopulationRecipe → expand to full member list.
+        2. ``population_id`` does not match a recipe but IS a valid archetype ID →
+           single-entity shorthand: returns [(archetype, 1)] with empty preferred_regions.
+           This shorthand is intentional and supported for YAML convenience.
+        3. Neither recipe nor archetype found → raises ResolverError.
 
-        Raises ResolverError if the population recipe or any member archetype
-        is missing from the catalog.
+        Returns:
+            (expanded, preferred_regions) where ``expanded`` is a list of
+            (ResolvedEntityArchetype, count) tuples and ``preferred_regions`` is the
+            list of preferred region IDs from the recipe (empty for case 2).
+
+        Raises:
+            ResolverError: if ``population_id`` is neither a known recipe nor a known archetype.
         """
         recipe = self._repo.get_population_recipe(population_id)
         if recipe is None:
-            # Fallback check: is it a direct archetype ID?
+            # Case 2: shorthand — treat population_id as a direct archetype ID (count=1, no regions).
             archetype = self._repo.get_entity_archetype(population_id)
             if archetype is not None:
                 resolved_arch = self._archetype_resolver.resolve(population_id)

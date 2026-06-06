@@ -88,3 +88,7 @@ Inspired by: Diablo dungeon crawling, Darkest Dungeon room progression, roguelik
 - Backend: ~15 files new/modified
 - Frontend: ~5 components new/modified
 - Config: New dungeon parameters in `SimulationConfig`
+
+**Tier:** epic
+**Type:** feature
+**Priority:** P2

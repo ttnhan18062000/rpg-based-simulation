@@ -8,6 +8,15 @@ Implementation of WorldRepository and Versioning (Milestone 68)
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Create a file-based world storage layer supporting path-safety checks, listing, schema version tracking, loading/saving, and optional `world_index.json` manifests.

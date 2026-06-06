@@ -8,6 +8,15 @@ Milestone 85 — Mutation Engine
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Implement the `MutationEngine` component that safely consumes `WorldSpec`, `ScenarioSpec`, and a `MutationSpec` to generate mutated variants of the world and scenario specifications without in-place side effects. It must generate an execution report (`MutationApplyReport`) detailing old/new values, warnings, and errors, and enforce strict semantic validation on the mutated outputs.

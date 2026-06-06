@@ -6,6 +6,15 @@ Milestone D - Task 2: Harden Worker Protocol and Commit Law
 ## Status
 INPROGRESS
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Harden the worker protocol by implementing deterministic neighbor context, explicit work-id tracking, and a frozen priority-based commit law. Ensure authoritative equivalence between local and concurrent execution.
 

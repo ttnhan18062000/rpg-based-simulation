@@ -6,3 +6,7 @@
 - [x] add a detail stats for all the stats (main and secondary stats), with base stat + additional stats (buff or equipment) in inspec pannel
 - [x] add a effect tab for buffs/debuffs in inspec pannel
 - Revise all the new logics, it should be updated and reflected in frontend
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

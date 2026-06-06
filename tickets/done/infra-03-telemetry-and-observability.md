@@ -21,3 +21,7 @@ Standard terminal logging is insufficient to detect sub-component degradation ov
 - `/metrics` endpoint correctly resolves in standard Prometheus format.
 - Spans successfully emit to an OpenTelemetry collector or console exporter.
 - Tick performance overhead remains negligible (< 2ms added per tick).
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

@@ -8,6 +8,15 @@ Milestone 19 — Minimal Balance Envelope Config
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Introduce scenario-specific expectations using `balance_envelope.json` configurations without building a full designer-facing balance system. Allow these envelope definitions to override comparison thresholds in the Baseline Comparator and Rule Engine, and integrate support into the rpg-observe CLI.

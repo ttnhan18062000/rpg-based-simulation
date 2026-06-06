@@ -6,6 +6,15 @@ Audit and harden canonical hashing
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Finalize the `CanonicalStateHasher` to ensure it only includes authoritative fields and that it is fully deterministic. Ensure that non-authoritative state (governance, replay, transients) is strictly excluded and verify hash reproducibility.
 

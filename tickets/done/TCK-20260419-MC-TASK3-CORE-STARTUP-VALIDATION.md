@@ -6,6 +6,15 @@ Milestone C - Task 3: Complete Startup Validation and Flag Enforcement
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Harden startup and runtime control behavior to ensure contradictory or unsafe flags are rejected.
 

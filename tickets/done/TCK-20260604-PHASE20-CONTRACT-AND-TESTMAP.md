@@ -6,6 +6,15 @@ Phase 20 — Content usage contract and test map
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Investigate and implement Phase 20 requirements, defining exactly how every `data/content/` component is used via a concrete implementation contract (`ContentUsageMatrix`) and implementation states.
 

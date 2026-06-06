@@ -11,3 +11,7 @@ Introduce environmental pressure and shifting difficulty landscapes. Time become
 - [ ] **F7 Faction Raids**: Periodic invasions directly targeting the town. 
 - [ ] **F8 Enemy Scaling**: Respawning enemies get consistently harder directly proportional to `world_day`.
 - [ ] **F10 Camp Reinforcement**: Left-alone camps upgrade their garrison guard limits and tiers.
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

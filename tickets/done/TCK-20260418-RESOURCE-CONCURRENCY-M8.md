@@ -6,6 +6,15 @@ Milestone 8: Safe Concurrency and Bounded Worker Execution
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Implement the engine's first bounded concurrency model. Introduce worker packets, bounded inflight execution, and deterministic fallback-to-local logic while preserving authoritative result equivalence.
 

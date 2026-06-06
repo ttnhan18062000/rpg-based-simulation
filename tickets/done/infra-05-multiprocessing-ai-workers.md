@@ -18,3 +18,7 @@ By distributing the workloads to independent Docker containers communicating ove
 - `pika` integrated into the backend and robust connections established to a RabbitMQ docker container.
 - AI `Collect` phase processing time scales horizontally and reduces main thread CPU load.
 - Main engine correctly awaits full AI turnaround per-tick.
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

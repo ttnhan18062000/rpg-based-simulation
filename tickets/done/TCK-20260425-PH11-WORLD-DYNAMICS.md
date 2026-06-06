@@ -6,6 +6,15 @@ Phase 11: Environmental Hazards, Calamity, and Region Transformation
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Recover world-state dynamics, calamity spread, and dynamic region modifiers in the V2 engine.
 

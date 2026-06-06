@@ -8,6 +8,15 @@ Observability Provenance Join
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Connect resolved world assembly provenance sidecars and compile-time metadata with post-run analytics and investigation reports to allow grouping anomalies/violations by source module, profile, faction, and seed.

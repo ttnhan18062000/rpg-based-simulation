@@ -8,6 +8,15 @@ Freeze Phase 5 slice as Phase 6 entry baseline
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Milestone 1 Task 1 of Phase 6: Restate exactly what gameplay/runtime surface Phase 5 actually completed and what it did not, creating a formal Phase 6 baseline.

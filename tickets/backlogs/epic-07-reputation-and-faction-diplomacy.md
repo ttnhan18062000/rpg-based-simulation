@@ -104,3 +104,7 @@ Inspired by: Mount & Blade faction diplomacy, Crusader Kings relationship system
 - Backend: ~10 files new/modified
 - Frontend: ~5 files modified
 - Data: Reputation events, diplomacy rules, faction quest templates
+
+**Tier:** epic
+**Type:** feature
+**Priority:** P2

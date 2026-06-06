@@ -8,6 +8,15 @@ Event-Driven Reprioritization and Durable Consequences
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Phase 5: Transform the existing consequence substrate—interpreted life events, turning points, and regional scars—into actionable strategic pressure. Shift from emotional theater to durable behavioral mutation.

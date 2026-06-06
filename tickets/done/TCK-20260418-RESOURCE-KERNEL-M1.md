@@ -6,6 +6,15 @@ Milestone 1: Simulation Kernel Contract and Resource-Envelope Rulebook
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Establish the foundational laws, contracts, and skeletal engine structure for the fresh resource-safe simulation project (`src`).
 

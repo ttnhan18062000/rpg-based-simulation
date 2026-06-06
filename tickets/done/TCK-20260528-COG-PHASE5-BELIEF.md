@@ -8,6 +8,15 @@ Phase 5 — Information / Belief / Source-Trust Loop
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Implement Phase 5 - Information, Belief, and Source-Trust loop. Entities should handle uncertain information subjectively (routing queries, processing partial leads and rumors, detecting contradictions with direct observations, adapting source trust metrics gradually, and redirecting adventure route goals dynamically).

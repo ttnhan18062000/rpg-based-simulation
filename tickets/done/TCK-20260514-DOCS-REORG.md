@@ -6,6 +6,15 @@ Architecting Authoritative RPG Documentation Suite
 ## Status
 INPROGRESS
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Reorganize and expand the V2 RPG Engine's documentation suite into a hierarchical, developer-first structure. Create a single source of truth mirroring `src/` and `tests/`, clearly defining the 17-phase Authoritative Pipeline and its causal interdependencies.
 

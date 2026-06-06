@@ -8,6 +8,15 @@ Rework test base to remove legacy V2EntityBuilder API calls
 DONE
 INPROGRESS
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Migrate all test files and production code from legacy V2EntityBuilder methods to current V2 API, following test_base_rework_plan.md strictly. Fix all 320 failures + 49 errors caused by removed builder methods.

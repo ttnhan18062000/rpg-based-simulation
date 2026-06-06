@@ -8,6 +8,15 @@ Milestone 1: Prometheus `/metrics` Exporter Route and Telemetry Integration
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Add a standard `/metrics` endpoint to the FastAPI app serving the V2 Engine, exporting P0 and P1 simulation engine performance, resource, and economic indicators.

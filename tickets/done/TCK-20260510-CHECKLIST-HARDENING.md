@@ -8,6 +8,15 @@ Hardening RPG Engine Logic Ledger
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Restore the reliability of the RPG Engine logic checklist by transitioning it into an auditable truth ledger. Downgrade "false-green" items, fix stale paths and duplicate IDs, and establish a strict validation gate.

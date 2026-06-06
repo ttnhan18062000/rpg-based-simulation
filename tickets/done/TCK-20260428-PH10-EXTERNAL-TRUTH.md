@@ -8,6 +8,15 @@ External Truth and Replay Proof (Tracing & Metrics)
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Ensure authoritative state transitions (transactions, rewards) are fully visible to external observers and reproducible in replays.

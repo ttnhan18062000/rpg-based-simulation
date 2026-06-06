@@ -6,6 +6,15 @@ Complete deterministic test suite and Real Domain Slice for Milestone D
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Provide final certification that the V2 concurrency layer is bit-identical to the single-thread model under high pressure and non-deterministic execution noise, and replace placeholder logic with a real domain slice.
 

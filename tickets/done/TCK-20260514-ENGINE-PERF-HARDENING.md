@@ -6,6 +6,15 @@ V2 RPG Engine Performance Hardening - Phase 3
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Optimize V2 Engine performance for 1,000+ entities by reducing object churn and improving lookup efficiency.

@@ -8,6 +8,15 @@ Implement Phase 1 RequirementEvaluator Engine
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Implement the generic RequirementEvaluator engine that checks dynamic constraints (has_gold, has_item, knows_fact, near_service, inventory_space, target_alive, recipe_known) and translates failed requirements into structured BlockerState objects for strategic cognition.

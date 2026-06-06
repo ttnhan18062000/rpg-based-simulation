@@ -8,6 +8,15 @@ Cognition Graph Artifact Schema and Triggered Snapshot Recorder
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Establish the initial structural foundation for Phase 10: define stable artifact schemas for strategic cognition snapshots, build a read-only post-commit snapshot recorder that leverages the existing `CognitionGraphExporter`, and implement capture policies restricting snapshots to controlled, low-overhead moments.

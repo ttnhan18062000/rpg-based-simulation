@@ -8,6 +8,15 @@ Behavior Scorecards, Cohort Analysis, and Run Comparison (Phase 26)
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Prove whether an enrichment feature changed behavior and whether the cost was acceptable using structured entity/run scorecards.

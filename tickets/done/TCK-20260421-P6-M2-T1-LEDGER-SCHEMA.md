@@ -8,6 +8,15 @@ Define the canonical row schema for legacy replacement items
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Milestone 2 Task 1 of Phase 6: Define the formal schema for the Authoritative Replacement Ledger. This schema will be used to inventory every legacy behavior and track its replacement status, divergence, and proof path.

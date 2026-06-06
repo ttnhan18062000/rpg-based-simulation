@@ -6,6 +6,15 @@ Fixing RPG Pipeline Regression Failures (101 Fails)
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 The user identified 101 regression failures after Phase E5 pipeline hardening. Investigation revealed that `IntentResult` tracking was missing, `WorldDynamicsSystem` was omitted from orchestration, and `InteractionSystem` channeling logic was decoupled incorrectly.
 

@@ -8,6 +8,15 @@ Milestone 88 — Balance Comparison Engine
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Implement the `BalanceComparisonEngine` to compare base variant run results against mutated variant run results, classify the shifts, include structured evidence, and explain findings without claiming absolute root cause.

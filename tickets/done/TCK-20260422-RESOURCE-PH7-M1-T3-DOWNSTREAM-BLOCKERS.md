@@ -8,6 +8,15 @@ Identify Phase 7 Downstream Blockers
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Execute Task 3 of Phase 7 Milestone 1: Identify downstream dependency blockers. This involved analyzing the dependencies between Phase 7 (Substrate Closure) and future phases (8, 9) to ensure correct prioritization.

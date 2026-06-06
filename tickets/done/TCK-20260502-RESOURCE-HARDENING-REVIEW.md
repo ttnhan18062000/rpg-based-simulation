@@ -6,6 +6,15 @@ Implement Resource Hardening Review and Legacy Migration
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Implement the recommendations from `resource_v2_e3_e4_e5_review.md`, including migrating legacy logic from `src_legacy/` and `tests_legacy/` to `src/` and `tests/`, optimizing where possible while maintaining RPG core logic, and re-verifying the logic checklist.
 

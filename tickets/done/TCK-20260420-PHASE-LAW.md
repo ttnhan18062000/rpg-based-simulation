@@ -6,6 +6,15 @@ Tick-Phase Contract Alignment
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Formalize the "Law of 6 Phases" in the Kernel and ensure Phase 7 (Persistence) is strictly observational.
 

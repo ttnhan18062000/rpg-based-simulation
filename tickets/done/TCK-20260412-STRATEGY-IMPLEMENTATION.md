@@ -7,6 +7,15 @@ Implement Strategic Cognition Layer (Roadmap Milestones 0-7)
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Implement the strategic mind layer for entities in the RPG simulation, following the "right high-level plan" in `strategy_implementation.md`. This layer provides multi-tick continuity, project persistence, and observability of entity reasoning.
 

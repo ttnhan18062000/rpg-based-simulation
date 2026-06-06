@@ -6,6 +6,15 @@ Release Gate Ledger Path Discrepancy Remediation
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Remediate broken source and test file paths in `docs/logic_checklist_exhaustive.md` and add the `OPT` domain prefix to `scripts/ledger_validator.py` to restore 100% pass rate in the M10 certification release gate.
 

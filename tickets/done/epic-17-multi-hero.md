@@ -22,3 +22,7 @@ The simulation previously hardcoded the existence of a single Hero entity. This 
 
 ## Related Tickets
 Subsumes features from `epic-04` (Multi-Hero) and partially addresses `epic-18` tracking concepts.
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

@@ -8,6 +8,15 @@ Define the canonical src row schema aligned to the legacy inventory
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Milestone 3 Task 1: Define the schema for the src side of the replacement ledger. This ensures that every V2 implementation can be directly compared against the legacy inventory defined in Milestone 2.

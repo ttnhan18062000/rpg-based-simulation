@@ -6,6 +6,15 @@ Implement Automated Log Rotation for HeadlessRunner
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Implement a mechanism to automatically prune old simulation artifacts (replay logs, cognition graphs) from the `logs/` directory to prevent disk clutter during intensive testing.
 

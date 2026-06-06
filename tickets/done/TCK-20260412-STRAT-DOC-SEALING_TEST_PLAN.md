@@ -15,3 +15,7 @@ The objective is to confirm that the strategic E2E suite covers all relevant beh
 - 8/8 strategic E2E tests pass.
 - Milestones 5, 6, and 7 have all boxes checked.
 - No next-phase mentions are added/modified.
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

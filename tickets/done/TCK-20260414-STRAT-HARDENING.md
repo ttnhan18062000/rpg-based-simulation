@@ -7,6 +7,15 @@ Strategic Cognition & Intel Capacity Hardening
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Harden strategic cognition pipeline by implementing richer capacity derivation and robust infrastructure isolation.

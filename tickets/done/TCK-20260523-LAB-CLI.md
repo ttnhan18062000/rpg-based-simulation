@@ -8,6 +8,15 @@ Milestone 81 — Lab CLI / Tooling
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Create the standalone `rpg-lab` CLI (Milestone 81) providing operators with the ability to validate specs, execute sweeps, check status, inspect results, and generate markdown reports directly from the terminal.

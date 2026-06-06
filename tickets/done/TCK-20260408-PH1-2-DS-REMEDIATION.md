@@ -1,5 +1,14 @@
 # Ticket TCK-20260408-PH1-2-DS-REMEDIATION
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Remediate architectural and implementation flaws in Phase 1 and Phase 2 of the Macro-Interest and Behavioral Realism design shift, as identified in `phase_1_2_ds_implementation_plan_updated.md`.
 

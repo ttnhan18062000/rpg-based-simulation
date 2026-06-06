@@ -24,3 +24,7 @@ Centralize simulation map-stream production (Slim/Rich/Compact) into the engine'
 ## Artifacts
 - [walkthrough_pillar5.md](file:///home/vboxuser/.gemini/antigravity/brain/d4923ea4-ede4-4b42-b61d-5fb64aef880a/walkthrough_pillar5.md)
 - [test_canonical_stream.py](file:///home/vboxuser/Work/rpg-based-simulation/tests/unit/engine/test_canonical_stream.py)
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

@@ -2,6 +2,15 @@
 Title: Phase 2 Stage 3: Routine and Biological Needs Simulation
 Status: INPROGRESS
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Implement the biological needs (sleep, hunger) and daily routine simulation for entities. This is part of the Phase 2 Macro-Interest and Behavioral Realism design shift, designated as Stage 3.
 

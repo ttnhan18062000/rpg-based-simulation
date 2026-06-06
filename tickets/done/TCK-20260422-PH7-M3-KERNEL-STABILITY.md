@@ -6,6 +6,15 @@ Phase 7 Milestone 3: Kernel Stability and Resource-Bounded Finalization
 ## Status
 OPEN
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Close the authoritative application model to ensure that one authoritative outcome is produced per tick, handling conflicts (e.g., occupancy), partial failures, and ensuring that authoritative outcomes are the source for replay/observability.
 

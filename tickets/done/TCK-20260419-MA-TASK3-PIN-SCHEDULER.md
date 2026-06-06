@@ -6,6 +6,15 @@ Complete and pin deterministic scheduler classes
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Hard-code the deterministic work hierarchy and tie-break rules for the simulation scheduler. Ensure no placeholders remain in the baseline path and verify the exact sorting behavior via tests.
 

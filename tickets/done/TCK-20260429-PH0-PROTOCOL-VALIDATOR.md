@@ -6,6 +6,15 @@ Implement Phase 0 Protocol Validator
 ## Status
 INPROGRESS
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Implement an authoritative validation tool that checks the exhaustive semantic ledger (`logic_checklist_exhaustive_v2.md`) against the actual code implementation to prevent "logic drift."
 

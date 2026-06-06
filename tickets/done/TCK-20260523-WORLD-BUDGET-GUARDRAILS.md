@@ -8,6 +8,15 @@ Milestone 74 — Resource and Storage Guardrails
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Implement robust budget specifications and runtime/compile guardrails to restrict entity populations, regional area, and forecasted telemetry storage size, avoiding huge accidental workloads under various execution profiles (`local_dev`, `ci`, `long_run_lab`).

@@ -6,6 +6,15 @@ Phase 23 — Global content reference graph and active-data validation
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Upgrade catalog validation to use a generic, global `ContentReferenceGraph` containing all loaded content records and references. Detect "dead active data" that is loaded and marked as active but never referenced/consumed by downstream features.
 

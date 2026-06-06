@@ -6,6 +6,15 @@ Strategic Cognition Truth Surface Hardening
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Replace simulated proofs with authoritative end-to-end integration tests and solidify the strategic explainability contract.
 

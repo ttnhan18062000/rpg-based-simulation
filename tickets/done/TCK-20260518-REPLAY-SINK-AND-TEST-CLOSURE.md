@@ -8,6 +8,15 @@ Replay Sink Hardening and Certification Test Closure
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Debug and resolve remaining test failures across the suite (`tests/cli/test_observability.py`, `tests/certification/test_final_gate.py`, `tests/arena/test_arena_regional_control.py`) to achieve 100% test pass rate and complete Milestone 9 certification.

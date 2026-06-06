@@ -8,6 +8,15 @@ Implement Phase 1 Data Registries and Content Pack Loaders
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Implement static read-only world registries (ItemRegistry, ResourceRegistry, EnemyRegistry, RecipeRegistry, ServiceRegistry, and RegionRegistry) that load Phase 1 content packs dynamically from JSON or YAML data files. Ensure that the registries are fast, static, read-only at runtime, and throw clear validation errors if invalid ID bindings are resolved.

@@ -6,6 +6,15 @@ Phase 2 Milestone 1: RPG Core Recovery
 ## Status
 OPEN
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Reintegrate the fundamental RPG interaction loop (Combat, Movement, Progression) into the V2 Engine.
 

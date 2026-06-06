@@ -8,6 +8,15 @@ Upgrade Observability to Provide Cognition-to-Action Trace and Causal Trace Fiel
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Make strategic observability prove behavior rather than just exposing state. Connect state changes to behavioral consequences by adding causal trace fields to the strategic project changed events, mapping resulting actions and positions, and adding automated tests for diagnostic trace validation.

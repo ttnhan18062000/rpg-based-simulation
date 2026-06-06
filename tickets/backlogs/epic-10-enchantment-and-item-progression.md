@@ -109,3 +109,7 @@ Inspired by: Diablo gem socketing, Dark Souls weapon reinforcement, Path of Exil
 - Backend: ~8 files new/modified
 - Frontend: ~4 files modified (tooltips, BuildingPanel, InspectPanel, colors)
 - Data: Enhancement tables, gem definitions, item set definitions
+
+**Tier:** epic
+**Type:** feature
+**Priority:** P2

@@ -6,6 +6,15 @@ Phase 8: Implementing Equipment Durability and Hardening Crafting
 ## Status
 INPROGRESS
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Implement equipment durability decay during combat, a repair mechanism at the blacksmith, and ensure crafting consumes materials only upon successful output delivery.
 

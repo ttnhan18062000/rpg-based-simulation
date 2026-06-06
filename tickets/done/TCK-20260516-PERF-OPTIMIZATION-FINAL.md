@@ -8,6 +8,15 @@ Resolving Performance Benchmark Bottlenecks and Monkeypatch Regressions
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Investigate and resolve 2 remaining unit test failures in `test_routine_biasing.py` (`KeyError: 'fatigue'`) and 7 performance benchmark failures where p95 tick latency exceeds the 100.0ms limit on 500/1000 entity simulations. Ensure zero regressions across the 730-test unit suite while maintaining strict architectural and simulation compliance.

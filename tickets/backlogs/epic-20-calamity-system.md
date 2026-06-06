@@ -76,3 +76,7 @@ For developers implementing this system:
 - **Void Pylon Entities**: Pylons are spawned as `kind="prop"` with fixed HP (10,000) and no AI. They must be added to the `WorldState` spatial index.
 - **Fame Attribute**: Add `fame: float = 0.0` to the `Stats` model.
 - **Effect Mapping**: Void Fluctuations should be implemented as a new `EffectType.VOID_AURA` that is applied globally to all entities in the target region during the `_apply_calamity_auras` phase.
+
+**Tier:** epic
+**Type:** feature
+**Priority:** P2

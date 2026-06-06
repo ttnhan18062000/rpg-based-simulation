@@ -10,6 +10,13 @@ from src.content.repository import CatalogRepository, CANONICAL_FAMILIES
 from src.worldmodules.schema import WorldModuleSpec
 from src.worldassembly.schema import WorldCompositionSpec
 
+# Families whose dot-notation key (e.g. "world.regions" → "world/regions") does not match
+# the corresponding CONTENT_USAGE_MATRIX key. Add overrides here to prevent silent skips
+# in dead-record validation.
+_FAMILY_KEY_OVERRIDES: Dict[str, str] = {
+    "world/regions": "world/runtime_regions",
+}
+
 
 class CatalogValidationError(Exception):
     """Exception raised when catalog validation discovers errors."""
@@ -626,14 +633,16 @@ class CatalogValidator:
                 if short == concept:
                     family_key = key.replace(".", "/")
                     break
-            
+
+            if family_key:
+                family_key = _FAMILY_KEY_OVERRIDES.get(family_key, family_key)
+
             if not family_key or family_key not in CONTENT_USAGE_MATRIX:
                 continue
                 
             entry = CONTENT_USAGE_MATRIX[family_key]
             
-            # Exempt records under ADDITIONAL, FUTURE-EXTENSION, or DESIGN_ONLY
-            if entry.implementation_state in ("ADDITIONAL", "FUTURE-EXTENSION") or entry.content_maturity in ("ADDITIONAL", "FUTURE-EXTENSION", "DESIGN_ONLY"):
+            if entry.implementation_state in ("DESIGN_ONLY", "LOADED_ONLY"):
                 continue
                 
             if not self.graph.is_record_used(node_id):

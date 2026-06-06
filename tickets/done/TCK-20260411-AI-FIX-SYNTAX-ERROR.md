@@ -8,6 +8,15 @@ Fix syntax error in `test_stuck.py`
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Fix Parse error: Invalid assignment target in `tests/unit/ai/test_stuck.py:L29` and subsequent ValidationError.

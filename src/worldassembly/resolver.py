@@ -532,6 +532,12 @@ class WorldAssemblyResolver:
                             details={"region": spawn_region}
                         )
 
+            # NOTE: contribution.service_refs (Dict[str, int]) is intentionally not assembled here.
+            # WorldSpec has no services field; service assembly is deferred until ServiceNodeSpec
+            # and WorldSpec.services are defined. See docs/guidelines/v2_intentional_divergences.md
+            # (entry 2.19) and docs/parity_ledger/substrate.yaml (SUB-367).
+            # When adding that field, add a v2 service merge loop here parallel to the building loop above.
+
             # Merge relationships provenance
             for rel_id in contribution.relationship_refs:
                 rel_def = self.relationship_resolver.resolve(rel_id)

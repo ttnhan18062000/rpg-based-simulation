@@ -8,6 +8,15 @@ Strategic Cognition Lifecycle Hardening
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Implement the complete Phase E4.3 Strategic Cognition Lifecycle, ensuring actors pursue durable goals, react to environmental pressures (concerns), infer explicit blockers from failures, and generate alternative paths (detours) using strategic memory.

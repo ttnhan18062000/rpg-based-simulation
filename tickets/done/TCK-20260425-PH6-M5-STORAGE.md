@@ -8,6 +8,15 @@ Implementation of Advanced Equipment and World Storage
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Implement deterministic gear ranking, world treasure chests, and persistent home storage. Ensure authoritative state management for all storage domains.

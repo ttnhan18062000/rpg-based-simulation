@@ -8,6 +8,15 @@ Phase 4 — Combat Engagement Cognition
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Implement Phase 4 - Combat Engagement Cognition. Entities should evaluate potential opponents subjectively, choose dynamic combat postures (such as PROBE, AVOID, retreat, etc.), apply Personality traits, learn from losses, and adapt future behaviors dynamically.

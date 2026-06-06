@@ -6,6 +6,15 @@ Phase 24: Regional Sovereignty & Taxation
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Restore regional ownership, influence shifts, and taxation to the V2 authoritative engine. Port macroscopic logic from legacy `StrategySystem` to the `ApplyPath`.
 

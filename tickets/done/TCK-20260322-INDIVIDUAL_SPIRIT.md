@@ -22,3 +22,7 @@ Implement persistent AI personality traits including grudges, mood-driven combat
 
 ## Related Tickets
 - TCK-20260322-RPG_REFINEMENT (General system improvements)
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

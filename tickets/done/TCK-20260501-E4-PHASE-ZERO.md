@@ -6,6 +6,15 @@ Phase E4.0 — Coverage Ledger Completion
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Implement Phase E4.0 — Coverage Ledger Completion by reconciling the exhaustive checklist with the authoritative source implementation. This ensures that the current coverage is honest, auditable, and mapped to machine-readable proof.
 

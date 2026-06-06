@@ -8,6 +8,15 @@ Milestone 13: Evidence, Triage, and Report V2
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Implement the post-simulation triage engine, evidence builder, and investigation hint generator. Upgrade the Markdown report generator to support all Report V2 sections, including anomaly clustering, evidence samples, and skipped rules to make the diagnostic outputs highly actionable and robust.

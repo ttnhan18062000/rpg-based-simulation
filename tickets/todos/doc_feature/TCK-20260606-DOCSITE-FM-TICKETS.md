@@ -6,6 +6,15 @@ Apply frontmatter to tickets and stored artifacts; update ticket format for new 
 ## Status
 OPEN
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Apply frontmatter to all existing closed tickets (`tickets/done/`) and stored artifact files (`stored_artifacts/*/`). Update the project's ticket format, CLAUDE.md, and relevant agents so that all future tickets are born with valid frontmatter automatically.
 

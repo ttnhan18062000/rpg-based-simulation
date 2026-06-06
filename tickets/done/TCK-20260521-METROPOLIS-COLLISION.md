@@ -6,6 +6,15 @@ Fixing Metropolis Simulation Collisions and Synchronization
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Resolve the LAW-OCCUPANCY-COLLISION in Metropolis scenario, specifically between entity 760 and 755 at tile (-21, 12) during tick 4210.
 

@@ -6,6 +6,15 @@ Strategic Cognition Pipeline Final Hardening
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 achieve 100% stability in the strategic cognition regression suite by resolving remaining integration failures and closing proof gaps in the implementation plans.
 

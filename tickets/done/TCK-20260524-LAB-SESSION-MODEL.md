@@ -8,6 +8,15 @@ Implement Lab Session Model and Storage (M92)
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Implement the foundational storage and lifecycle manager for Phase 14 Human-Gated Simulation Lab sessions under `data/lab_sessions/session_{session_id}/`.

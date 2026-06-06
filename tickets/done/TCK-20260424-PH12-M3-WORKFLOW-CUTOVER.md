@@ -6,6 +6,15 @@ Phase 12 Milestone 3: Workflow, CI, and Operational Artifact Cutover
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Transition internal workflows, CI validation paths, and operational artifact generation from the legacy `src` engine to the hardened `src` engine.
 

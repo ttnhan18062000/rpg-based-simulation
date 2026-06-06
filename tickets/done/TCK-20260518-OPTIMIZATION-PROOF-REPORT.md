@@ -8,6 +8,15 @@ Optimization Proof Instrumentation and Post-Implementation Lock
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Execute Milestone 13 of the V2 Performance Roadmap (`perf_plan_v2.md`): Structural discovery and proof instrumentation. Establish empirical proof reports comparing unoptimized vs optimized performance across the core benchmark scenarios.

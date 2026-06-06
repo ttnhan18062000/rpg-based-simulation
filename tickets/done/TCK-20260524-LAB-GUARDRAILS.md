@@ -8,6 +8,15 @@ Token, Time, and Storage Guardrails with E2E System Tests (M104 + M105)
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Implement Phase 14 guardrails (M104) to prevent agent workflow token exhaustion, oversized sweep execution, and unauthorized raw log access. Then build comprehensive end-to-end integration tests (M105) confirming the full 13-stage human-gated lab pipeline maintains strict pipeline integrity and authorized gating.

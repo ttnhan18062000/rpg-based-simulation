@@ -8,6 +8,15 @@ Reconcile release-truth and support-language surfaces with actual baseline
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Milestone 1 Task 4 of Phase 6: Bring release/readiness language in high-level documentation (README.md, matrices, etc.) back into sync with the real Phase 5 branch state. This ensures we do not overclaim support or replacement readiness before entering the Phase 6 ledger phase.

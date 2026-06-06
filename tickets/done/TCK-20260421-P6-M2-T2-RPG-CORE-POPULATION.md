@@ -8,6 +8,15 @@ Enumerate the RPG-core semantic replacement surface into the canonical legacy in
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Milestone 2 Task 2 of Phase 6: Populate the Authoritative Replacement Ledger with all RPG-core behaviors defined in the existing 4 legacy checklists.

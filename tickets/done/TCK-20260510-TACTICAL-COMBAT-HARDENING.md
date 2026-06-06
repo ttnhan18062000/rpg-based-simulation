@@ -6,6 +6,15 @@ Hardening Tactical Combat Bonuses (Bracketing/Flanking)
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Integrate tactical bonuses (flanking, high ground, cover) into the `resolve_multi_attack` pipeline and refactor `CombatResolutionSystem` to use a centralized tactical helper.
 

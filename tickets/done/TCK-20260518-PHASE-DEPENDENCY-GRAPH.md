@@ -8,6 +8,15 @@ Implement Phase Dependency Graph for Dynamic Phase Skipping (Milestone 16)
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Implement a Phase Dependency Graph to dynamically schedule and skip pipeline phases based on expanded DirtySet analysis and system cadences, reducing unnecessary computation while maintaining byte-identical determinism.

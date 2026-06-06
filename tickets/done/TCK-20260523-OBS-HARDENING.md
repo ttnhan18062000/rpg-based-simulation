@@ -8,6 +8,15 @@ Exhaustive RPG Engine V2 Observability & Simulation Observatory Hardening (Phase
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 A comprehensive post-implementation audit of the V2 Simulation Observatory across Phases 1-9 has revealed several critical logic gaps, schema drifts, missing scenario expectation packs, incorrect metric naming, and system safety holes that prevent reliable long-run operations. The objective is to fix all P0, P1, and P2 issues identified in the audit review file `obs_sim_harden_phase1.md`, align Grafana/Prometheus schemas, standardize the event taxonomy, ensure robust local/Parquet/DuckDB analytics query capability, implement missing scenario expectation packs, correct `ObservabilityMode` mapping, expand the post-run dataset schema, and add a comprehensive regression test suite.

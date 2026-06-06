@@ -8,6 +8,15 @@ Milestone 15: Component-Level Patch Model
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Transition state update mechanics from monolithic EntityUpdate objects toward component-specific patches (`ComponentPatch`).

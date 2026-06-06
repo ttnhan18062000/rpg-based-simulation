@@ -8,6 +8,15 @@ Legacy Deprecation and Cleanup
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Phase 19: Clean up legacy dependencies and fallback behaviors, set catalog-backed runtime registries as default, document legacy compatibility fallbacks, and write a regression guard ensuring no new hardcoded items/enemies/recipes/regions are added.

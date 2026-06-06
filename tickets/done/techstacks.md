@@ -135,3 +135,7 @@ What to implement:
 
 * Publish per-tick events to **Redis Streams**; consumers (UI, analytics) read with consumer groups.
 * Use stream IDs to support `since_tick` style reading.
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

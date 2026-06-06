@@ -6,6 +6,15 @@ Optimize RPG Engine Dirty Tracking and Spatial Lookups
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Implement O(1) dirty-entity tracking and spatial indexing to reduce computational overhead in the V2 RPG Engine.
 

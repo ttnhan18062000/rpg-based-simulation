@@ -8,6 +8,15 @@ Milestones 89, 90, 91 — Mutation Lab Orchestrator, CLI, and Safety Compliance
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Implement the `MutationLabOrchestrator` to run end-to-end variant mutation sweeps, integrate sweep controls into the RPG Lab CLI, and enforce strict anti-misdirection safety guards to prevent misleading balance claims.

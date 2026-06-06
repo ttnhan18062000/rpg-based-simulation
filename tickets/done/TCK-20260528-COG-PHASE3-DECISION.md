@@ -8,6 +8,15 @@ Phase 3 — Adventure Decision Layer
 
 INPROGRESS
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Implement the adventure decision layer. Entities should choose an explainable route family based on self-model status and world opportunities, mapping that choice to a strategic project/objective and resolving the first intent.

@@ -107,3 +107,7 @@ Inspired by: StarCraft replay system, League of Legends spectator mode, Factorio
 > - Back to the current time, exit the history view
 
 This maps to **F3 (Timeline Scrubbing)** + **F6 (Battle Replay)** but with a specific UX: clicking an event in the InspectPanel events tab triggers the rewind. This is a more integrated approach than a standalone timeline bar — the event log itself becomes the navigation. Consider implementing this specific flow as the MVP before the full timeline UI.
+
+**Tier:** epic
+**Type:** feature
+**Priority:** P2

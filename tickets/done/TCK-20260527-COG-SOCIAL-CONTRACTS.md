@@ -8,6 +8,15 @@ Integrate social contracts (Loan and Recruitment) into authoritative pipeline an
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Fully integrate the social contract lifecycle into the simulation loop and strategic projects. When a loan or recruitment contract is accepted, it must create a real project/objective on the entity. Wire the active contracts and offer reapers into Phase 7 of the apply pipeline. Verify with integration tests.

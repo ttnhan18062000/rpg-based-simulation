@@ -8,6 +8,15 @@ Phase 6 — Progression / Equipment / Reward Conversion
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Implement Phase 6 - Progression, Equipment, and Reward Conversion. Entities should interpret loot value, prioritize items to keep/sell/equip/craft, evaluate growth gaps (weapon, repair, material, gold gaps), process rewards event-driven, score options with personality biases (greedy, industrious, cautious), and translate decisions to standard ActionIntents.

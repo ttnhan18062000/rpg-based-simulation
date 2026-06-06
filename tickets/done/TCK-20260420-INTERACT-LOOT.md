@@ -6,6 +6,15 @@ Channeled Looting and Interruption Recovery
 ## Status
 OPEN
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Recover the original RPG-core interaction behavior for looting ground items and ensuring all channeled interactions are reset by movement or target changes.
 

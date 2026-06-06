@@ -8,6 +8,15 @@ Migration, Integration, and Architecture Guardrails Domain Implementation
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Implement Phase 18 to establish architectural boundaries, linting safety checks, and formal deprecation maps to ensure long-term nested hierarchy safety.

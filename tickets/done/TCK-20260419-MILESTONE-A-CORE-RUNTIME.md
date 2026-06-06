@@ -6,6 +6,15 @@ Milestone A: Core Runtime Completion (Closure)
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Harden the engine's core runtime into a provably deterministic single-process baseline by aligning with the 6-phase TickPhase contract and implementing canonical checkpointing.
 

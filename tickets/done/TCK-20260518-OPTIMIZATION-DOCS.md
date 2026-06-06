@@ -8,6 +8,15 @@ Optimization Documentation and Invariant Ledger (Milestone 21)
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Establish the definitive optimization architectural documentation, invariant ledger, and performance baseline policy suite to formalize the rules, contracts, and test citations for all 20 performance hardening mechanisms in the V2 engine.

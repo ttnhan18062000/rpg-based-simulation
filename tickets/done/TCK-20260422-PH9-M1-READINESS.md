@@ -6,6 +6,15 @@ Phase 9 Milestone 1: Readiness Gate
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Establish the Phase 9 entry gate with frozen row ownership, closure conditions, support boundary, and formal readiness package.
 

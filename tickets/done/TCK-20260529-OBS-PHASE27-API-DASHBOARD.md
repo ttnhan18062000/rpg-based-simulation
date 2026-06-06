@@ -8,6 +8,15 @@ Storage, Query API, and Dashboard Integration (Phase 27)
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Expose behavior observability through the current data examination stack, query APIs, and dashboard panels.

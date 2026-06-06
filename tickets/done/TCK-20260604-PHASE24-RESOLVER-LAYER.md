@@ -6,6 +6,15 @@ Phase 24 — Resolver layer for foundation, living, and social defaults
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Implement the resolver layer to dynamically resolve lower-layer data relationships. Create `FoundationResolver`, `LivingDefaultsResolver`, and `SocialDefaultsResolver` to support structured and validated inheritance of traits, profiles, and relationships.
 

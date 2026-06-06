@@ -6,6 +6,15 @@ Phase 7 Milestone 2: Substrate Closure and Intent Hardening
 ## Status
 OPEN
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Audit and harden the action/update substrate to ensure all mutation intent is explicit, typed, and emitted through the authoritative substrate model. Eliminate non-deterministic shortcuts and "decorative" bypasses.
 

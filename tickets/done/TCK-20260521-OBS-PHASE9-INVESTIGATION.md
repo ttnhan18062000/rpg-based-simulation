@@ -6,6 +6,15 @@ Phase 9 Simulation Mining and AI-Assisted Investigation Planning
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Investigate, design, and fully implement Phase 9 (Simulation Mining and AI-Assisted Investigation) of the V2 RPG Engine's Observability platform. This includes implementing robust post-run mining engines, relational DuckDB datasets, quality auditors, cross-run pattern mining, AI orchestrators, and CI quality gates.
 

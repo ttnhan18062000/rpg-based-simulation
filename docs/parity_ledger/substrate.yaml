@@ -3753,3 +3753,18 @@
   test_path: null
   divergence_note: null
   support_boundary: null
+- id: SUB-367
+  text: v2 service_refs from world module contributions are computed in resolve_module_contribution()
+    but not assembled into WorldSpec — WorldSpec has no services field yet.
+  status: divergent
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: src/worldassembly/resolver.py resolve_module_contribution() builds
+    service_refs Dict[str,int] at step 6; assemble() has v2 resource and building
+    loops but no v2 service merge loop; WorldSpec has no services field.
+  proof_type: null
+  test_path: tests/unit/worldassembly/test_resolver.py::test_v2_service_refs_assembly_is_documented_gap
+  divergence_note: Intentional deferral until ServiceNodeSpec and WorldSpec.services
+    are defined. See docs/guidelines/v2_intentional_divergences.md entry 2.19. All
+    current modules are worldmodule.v1 so runtime impact is zero.
+  support_boundary: null

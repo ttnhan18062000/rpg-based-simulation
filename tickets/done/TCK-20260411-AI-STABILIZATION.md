@@ -6,6 +6,15 @@ Stabilizing Combat AI Decision Loop & Behavioral Resilience
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Resolve remaining E2E combat failures and harden AI decision logic against state jitter and behavioral regressions.
 

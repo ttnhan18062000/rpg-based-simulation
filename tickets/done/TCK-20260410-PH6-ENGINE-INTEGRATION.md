@@ -8,6 +8,15 @@ Engine Integration, Presentation, Replay, and Operational Observability
 
 INPROGRESS
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Phase 6: Wire the strategic layer into the core engine surfaces—building handlers, world systems, snapshots, API/CLI presenters, replay, telemetry, and metrics. Ensure strategic behavior is visible, debuggable, and integrated with world-tier systems.

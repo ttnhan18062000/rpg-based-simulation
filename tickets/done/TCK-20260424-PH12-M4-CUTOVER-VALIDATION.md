@@ -6,6 +6,15 @@ Phase 12 Milestone 4: Real-Condition Cutover Validation and Rollback Discipline
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Validate the `src` engine cutover under long-running simulation conditions and verify the functional integrity of the rollback mechanism.
 

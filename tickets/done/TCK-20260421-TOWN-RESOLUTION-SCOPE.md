@@ -6,6 +6,15 @@ Town Resource Resolution Scope and Oracle Capture
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Define the narrow scope for town resource resolution in Phase 5 and capture the original `src` behavior as an oracle for parity testing.
 

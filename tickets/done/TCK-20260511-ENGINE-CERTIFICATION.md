@@ -6,6 +6,15 @@ Authoritative V2 Engine Logic Certification
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Authoritative audit and verification of the V2 RPG Engine's core infrastructure to ensure 100% semantic coverage in the logic checklist.
 

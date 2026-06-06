@@ -6,6 +6,15 @@ Certification Artifact Consolidation
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 The user requested a reduction in the file count in `reports/release_proof/`, which was cluttered with 60+ individual scenario JSON and MD files.
 

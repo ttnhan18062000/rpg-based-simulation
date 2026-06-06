@@ -8,6 +8,15 @@ Milestone 18 — Baseline Comparator and Drift Detector
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Implement a Baseline Comparator and Drift Detector that compares a single run report or a multi-run sweep index against a saved baseline. Identify outlier runs, perform statistical distribution shift comparisons to detect drift, register comparison CLI commands, and support exit codes for CI gating.

@@ -6,6 +6,15 @@ Phase 6 M7/M8 P0 Recovery Hardening and Ledger Truth Alignment
 ## Status
 INPROGRESS
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Verify the Phase 6 M7 (Social Trust) and M8 (Opportunity Attacks) P0 recovery implementation. Align the Authoritative Replacement Ledger with the actual implementation status and harden the "decorative" implementation shortcuts to ensure legacy parity and architectural integrity.
 

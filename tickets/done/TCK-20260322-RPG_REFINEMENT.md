@@ -23,3 +23,7 @@ This ticket covers the transition from a "Robotic/Reactive" simulation to a "Liv
 ## Related Artifacts
 - [Complete Thinking Flow](file:///staging_artifacts/TCK-20260322-RPG_REFINEMENT/rpg_core_refinement_specification.md)
 - [Technical Review](file:///staging_artifacts/TCK-20260322-RPG_REFINEMENT/technical_review.md)
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

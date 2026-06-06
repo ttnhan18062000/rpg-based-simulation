@@ -6,6 +6,15 @@ Phase 21 — Content family registry and strict load report
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Create a central registry `ContentFamilySpec` describing each content family and make `CatalogRepository` load all content dynamically based on this registry. Add a strict load report output/storage from `CatalogRepository.load_all()`.
 

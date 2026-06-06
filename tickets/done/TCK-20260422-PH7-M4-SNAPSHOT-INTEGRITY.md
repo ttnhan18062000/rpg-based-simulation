@@ -6,6 +6,15 @@ Phase 7 Milestone 4: Snapshot Integrity, Isolation, and Serialization Closure
 ## Status
 OPEN
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Close the snapshot and state-isolation substrate to ensure read surfaces are immutable, deep-isolated, and produce stable serialization behavior without state-shape drift.
 

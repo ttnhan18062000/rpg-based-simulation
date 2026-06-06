@@ -6,6 +6,15 @@ Hardening RPG Engine Mechanics Documentation & Logic Parity
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Complete the 100% semantic compliance certification of the V2 RPG Engine by codifying core simulation laws into a definitive, formula-centric "Mechanics Bible." Ensure strict source-code parity across all chapters and refactor identified logic gaps.
 

@@ -1,7 +1,15 @@
 # Ticket TCK-20260410-PH1-STG1-CORE-MODELS
 ## Phase 1 Stage 1: Strategic Domain Schema
 
-### Request Summary
+### Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+## Request Summary
 Implementation of the core strategic record models to establish a durable strategic stratum in the simulation mind.
 
 ### Scope

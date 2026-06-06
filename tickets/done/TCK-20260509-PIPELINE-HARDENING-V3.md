@@ -6,6 +6,15 @@ Final Authoritative Pipeline Hardening & Test Stabilization
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Resolve remaining engine test failures by hardening EntityUpdate merging and harmonizing trace logging formats.
 

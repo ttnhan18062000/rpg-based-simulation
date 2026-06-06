@@ -8,6 +8,15 @@ Create Scenario-Driven TDD Test Harness for Phase 1
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Implement the scenario runner that parses scenario specification files, executes synchronous ticks deterministically, captures route traces, and compiles diagnostic scorecards/metrics outputs. The test suite must verify the harness loading and scoring, showing initial TDD failures before world registries are added.

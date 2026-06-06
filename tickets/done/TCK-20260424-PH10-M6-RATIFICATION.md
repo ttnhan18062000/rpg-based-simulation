@@ -6,6 +6,15 @@ Phase 10 Milestone 6: Final System Ratification
 ## Status
 INPROGRESS
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Final audit and closure of Phase 10. Ensure all infrastructure parity goals are met and verified.
 

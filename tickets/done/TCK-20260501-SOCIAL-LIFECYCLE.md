@@ -8,6 +8,15 @@ Complete Social Contract and Party Lifecycle
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Implement the full social lifecycle from offer to consequence, ensuring parties are grounded in durable contracts and coordinated through shared strategic objectives.

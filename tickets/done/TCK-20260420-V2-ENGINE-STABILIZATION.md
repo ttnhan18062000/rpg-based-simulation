@@ -6,6 +6,15 @@ V2 Resource Engine Test Stabilization and Protocol Alignment
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Resolve all failing tests in `tests/` following the Milestone C/D architecture hardening.
 

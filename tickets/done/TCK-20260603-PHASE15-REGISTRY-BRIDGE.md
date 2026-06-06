@@ -8,6 +8,15 @@ Phase 15 — Runtime Registry Bridge with Legacy Projection
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Implement a translation bridge in `src/core/registries.py` and `src/core/items.py` that loads the content catalog database and uses it to dynamically bootstrap the legacy runtime registries.

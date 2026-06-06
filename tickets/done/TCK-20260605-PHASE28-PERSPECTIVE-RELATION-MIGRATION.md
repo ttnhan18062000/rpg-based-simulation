@@ -8,6 +8,15 @@ Perspective/relation usage and legacy-safe migration
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Implement Phase 28 ("Perspective/relation usage and legacy-safe migration") sequentially, following strict AGENTS.md rules.

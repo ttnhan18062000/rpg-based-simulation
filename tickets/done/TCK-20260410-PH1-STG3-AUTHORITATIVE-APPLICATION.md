@@ -1,7 +1,15 @@
 # Ticket TCK-20260410-PH1-STG3-AUTHORITATIVE-APPLICATION
 ## Phase 1 Stage 3: Authoritative Application
 
-### Request Summary
+### Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+## Request Summary
 Implementation of the authoritative update pipeline for strategic state mutations.
 
 ### Scope

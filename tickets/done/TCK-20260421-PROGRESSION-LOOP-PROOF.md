@@ -8,6 +8,15 @@ Integrated Resource Progression Differential Proof (Phase 5, Milestone 4)
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Prove the integrated resource progression loop (Movement -> Interaction -> Resolution -> Intelligence -> Redirection) matches the original engine's core logic within the supported Phase 5 boundary.

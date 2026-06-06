@@ -6,6 +6,15 @@ Phase 7 Milestone 6: Replay-Visible Deterministic State Closure and Phase 7 Exit
 ## Status
 OPEN
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Verify that replay-visible authoritative state matches the supported deterministic substrate and publish the formal Phase 7 Exit Package documenting the finalized support boundary.
 

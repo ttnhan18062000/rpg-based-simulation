@@ -24,3 +24,7 @@ Entities oscillate between states (Combat↔Flee, Loot↔Wander) when their scor
 
 ## Related Tickets
 - TCK-20260322-RPG_REFINEMENT (Parent)
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

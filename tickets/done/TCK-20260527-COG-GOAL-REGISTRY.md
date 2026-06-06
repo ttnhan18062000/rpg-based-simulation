@@ -8,6 +8,15 @@ Expand Goal Registry and Validate Personality Claims
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Expand the `GoalRegistry` with four new goal scorers (`combat_engage`, `combat_retreat`, `recover`, and `resolve_blocker`) to validate personality claims (bravery, greed, industry) and ensure deterministic tie-breaking and updated observability.

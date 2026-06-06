@@ -8,6 +8,15 @@ OccupancySnapshot Implementation for Stable Per-Tick Spatial Read Model
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Implement `OccupancySnapshot` to provide an immutable, stable read model for entity tile occupancy and priority per tick, eliminating redundant recalculations during movement and legality checks.

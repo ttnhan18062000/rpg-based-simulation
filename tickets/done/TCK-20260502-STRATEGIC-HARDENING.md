@@ -6,6 +6,15 @@ Hardening Strategic Limits and Pipeline Integrity (Phase E5.5)
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Implement and verify missing logic laws from `logic_checklist_exhaustive.md` as specified in `tmp/msg1.txt`. Focus on strategic bandwidth, reason code refactoring, interaction stability, and pipeline budget enforcement.
 

@@ -145,11 +145,11 @@ def test_runtime_authoritative_requires_evidence():
 
 
 def test_compatibility_family_not_runtime_authoritative():
-    """Verify COMPATIBILITY content maturity classification cannot be RUNTIME_AUTHORITATIVE."""
+    """Families with a resolver component but no runtime consumer cannot be RUNTIME_AUTHORITATIVE."""
     for key, entry in CONTENT_USAGE_MATRIX.items():
-        if entry.content_maturity == "COMPATIBILITY":
+        if entry.resolver_component and not entry.compile_runtime_consumer:
             assert entry.implementation_state != "RUNTIME_AUTHORITATIVE", (
-                f"Compatibility family '{key}' cannot be marked RUNTIME_AUTHORITATIVE"
+                f"Resolver-only family '{key}' cannot be RUNTIME_AUTHORITATIVE"
             )
 
 
@@ -245,6 +245,34 @@ def test_social_resolver_resolves_relationships_without_claiming_all_runtime_usa
     assert entry.implementation_state == "RESOLVED_PARTIALLY"
     assert entry.resolver_component == "SocialDefaultsResolver"
     assert "RelationProjectionService" in entry.runtime_consumer_evidence
+
+
+def test_dead_record_validator_covers_region_concept():
+    """Verify that the region concept correctly maps to world/runtime_regions via FAMILY_KEY_OVERRIDES.
+
+    Without the override, 'world.regions' → 'world/regions' (via dot-to-slash) does not match
+    the matrix key 'world/runtime_regions', causing dead-record validation to silently skip all
+    region records.
+    """
+    from src.content.validator import _FAMILY_KEY_OVERRIDES
+    from src.content.reference_graph import FAMILY_TO_SHORT
+
+    # Confirm the region concept short-name
+    region_concept = FAMILY_TO_SHORT.get("world.regions")
+    assert region_concept == "region", "world.regions must map to short name 'region'"
+
+    # Confirm the dot-to-slash derivation produces the override key
+    derived_key = "world.regions".replace(".", "/")
+    assert derived_key == "world/regions"
+    assert derived_key in _FAMILY_KEY_OVERRIDES, (
+        f"'{derived_key}' must be in _FAMILY_KEY_OVERRIDES so region dead-record validation is not silently skipped"
+    )
+
+    # Confirm the override maps to the actual matrix key
+    resolved_key = _FAMILY_KEY_OVERRIDES[derived_key]
+    assert resolved_key in CONTENT_USAGE_MATRIX, (
+        f"Override target '{resolved_key}' must exist in CONTENT_USAGE_MATRIX"
+    )
 
 
 

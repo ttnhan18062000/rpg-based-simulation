@@ -8,6 +8,15 @@ World Data Refactor Phase 1: Content Catalog Foundation
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Establish the Content Catalog Foundation (`src/content`). Define static schemas for factions, roles, profiles (stats, combat, inventory, cognition), resources, buildings, services, terrain, and spawn tables. Create the repository layer to load definitions from files and resolve lookup operations, validate semantic definitions independently, and populate a minimal base catalog matching all legacy configurations.

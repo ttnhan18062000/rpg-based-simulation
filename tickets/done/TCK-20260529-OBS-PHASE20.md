@@ -8,6 +8,15 @@ Observability Runtime Performance Profiling Lane (Phase 20)
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Implement the Phase 20 Runtime Performance Profiling Lane to track simulation phase costs, metrics windows, and observability overhead separately.

@@ -37,3 +37,7 @@
 - `src/core/logic/strategic_evaluator.py`
 - `src/ai/brain.py`
 - `tests/integration/ai/test_strategic_reprioritization.py` (New)
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

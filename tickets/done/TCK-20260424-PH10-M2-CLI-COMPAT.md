@@ -6,6 +6,15 @@ Phase 10 Milestone 2: CLI and Entrypoint Compatibility
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Recover the legacy CLI contract and unified entrypoint for the V2 engine.
 

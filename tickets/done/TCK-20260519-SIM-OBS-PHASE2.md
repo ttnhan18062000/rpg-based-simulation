@@ -8,6 +8,15 @@ Implement Phase 2 Semantic Events and Post-Run Observatory
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Implement the Simulation Observatory semantic event layer and post-run diagnostics pipeline to allow the engine to cleanly extract low-volume domain events, buffer and write them to disk safely, store per-entity histories externally, analyze runs post-hoc for behavioral anomalies, and generate beautiful simulation health reports.

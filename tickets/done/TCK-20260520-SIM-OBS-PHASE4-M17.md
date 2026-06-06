@@ -8,6 +8,15 @@ Milestone 17 — Baseline Generator
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Implement a Baseline Generator that parses multi-run index records and telemetry outputs from successful runs of a scenario, calculates distribution summaries (p10, p50, p90, p95, mean, etc.), recommends auto-generated control thresholds, and exports a structured `baseline.json` file.

@@ -6,6 +6,15 @@ Investigate and harden test infrastructure to prevent lingering/stuck processes.
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 The user observed multiple lingering `pytest` processes that do not exit properly, causing resource overhead and indicating potential deadlocks in the test suite.
 

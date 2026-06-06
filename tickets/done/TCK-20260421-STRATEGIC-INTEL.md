@@ -6,6 +6,15 @@ Strategic Resource Intelligence and Blocker/Lead Recovery
 ## Status
 INPROGRESS
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Recover the strategic feedback layer necessary for the RPG progression loop in V2. This involves emitting blockers (material/gold) and leads (hints) based on town and resource outcomes.
 

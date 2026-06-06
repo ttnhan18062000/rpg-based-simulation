@@ -21,3 +21,7 @@ The WorldLoop E2E test suite is 90% stable. `test_deep_stack_error_audit` is fai
 
 ## Status
 DONE
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

@@ -6,6 +6,15 @@ PerfRegressionGate Implementation and Automated Baseline Comparison
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Implement `PerfRegressionGate`, `PerfBaseline`, `PerfResult`, and `PerfGateResult` in `src/perf/regression_gate.py` to compare benchmark runs against committed baselines. Prevent silent regression on compute latency percentiles (p95, p99), phase costs, and memory consumption (RSS peak, memory delta), while isolating comparisons from wall-clock variance and strictly enforcing CI baseline presence.
 

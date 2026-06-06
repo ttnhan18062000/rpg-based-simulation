@@ -8,6 +8,15 @@ World Data Refactor Phase 8: Simple Procedural Generation Foundation
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Establish the procedurally generated worldspec pipeline. Define `GenerationIntentSpec` allowing users to configure world specifications from seeds, and build a deterministic generation system outputting clean, validated `worldspec.v1` models traced dynamically through Provenance Manifests.

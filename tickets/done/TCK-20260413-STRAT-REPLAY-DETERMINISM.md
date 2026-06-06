@@ -6,6 +6,15 @@ Strategic Replay & Determinism: Snapshot Safety and Graph Hardening
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Harden simulation replay stability by ensuring snapshot deep isolation and refine strategic observability through enhanced cognition graph exports.
 

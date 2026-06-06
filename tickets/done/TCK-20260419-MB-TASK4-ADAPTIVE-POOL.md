@@ -6,6 +6,15 @@ Implement Adaptive Saturated-Pool Strategy
 ## Status
 OPEN
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Transition the worker pool from a static-only resource to an elastic resource governed by operational policy. This implements Principle 8 (Elastic Concurrency) from the handbook.
 

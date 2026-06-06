@@ -8,6 +8,15 @@ Implementation of Town Economy and Crafting Services
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Implement deterministic shopping and crafting services. Establish the recipe substrate and ensure authoritative exchange of items and gold.

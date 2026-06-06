@@ -24,3 +24,7 @@ Comprehensive refactor of the simulation's Core Architecture to reclaim the Aspe
 
 ## Status
 DONE
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

@@ -8,6 +8,15 @@ Implement HardLawMonitor V1 and Observability Configuration (Milestone 3 & 4)
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Implement HardLawMonitor V1 to perform lightweight, O(1)-efficient, DirtySet-scoped state checks at the end of each authoritative tick, preventing corruption in debug/certification modes while logging/counting in light mode.

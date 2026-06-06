@@ -6,6 +6,15 @@ Milestone 1: Substrate Baseline and Vocabulary Freeze
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Freeze the core substrate baseline (Kernel, Apply, Sched) and the operational vocabulary (Signals, Status) to establish a stable "Source of Truth" and "Observable Truth" for Phase 4 gameplay attachment.
 

@@ -8,6 +8,15 @@ Metropolis Collision Resolution via Cascading Occupancy Rejection & Spawning Har
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Resolve the `LAW-OCCUPANCY-COLLISION` crash at tick 1291/2503 between entities in the Metropolis scenario. Understand and correct why movement updates, spawning, and stale index caching cause authoritative state desynchronization and illegal collisions.

@@ -6,6 +6,15 @@ Milestone C - Task 5: Complete Operational-Integrity Test Suite
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Close the proof gap in replay, startup, flags, and shutdown through comprehensive test verification.
 

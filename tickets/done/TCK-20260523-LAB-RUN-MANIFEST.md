@@ -8,6 +8,15 @@ Milestone 77 — LabRun Manifest and Artifact Layout
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Establish a stable file layout and manifest tracking system for LabRun executions under the Scenario Lab. This maps run counts, directory structures, and results to isolate telemetry logs.

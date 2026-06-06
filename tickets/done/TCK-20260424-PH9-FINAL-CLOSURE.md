@@ -6,6 +6,15 @@ Phase 9: Strategic & Social Cognition Final Closure
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Finalize the implementation of Phase 9 milestones including biological needs, hero lifecycle, recruitment negotiation, and regional dynamics. Update all project management artifacts.
 

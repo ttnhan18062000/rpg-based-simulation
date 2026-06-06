@@ -6,6 +6,15 @@ Milestone C - Task 1: Audit and Freeze Operational Lifecycle Law
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Create the exact completion contract for the engine's operational lifecycle (Replay, Startup, Shutdown, Snapshots).
 

@@ -8,6 +8,15 @@ Implementation of Goals, Motives, Emotion, and Biological Needs
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Restore the non-strategic AI mind loop. This includes biological pressures (Hunger, Sleep), emotional appraisal (Panic, Aggression), and a unified goal scoring system that balances strategic directives with immediate needs.

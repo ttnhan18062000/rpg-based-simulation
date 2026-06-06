@@ -6,6 +6,15 @@ Phase 9 — Long-Run Life-Arc Scenario Campaigns
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Detailed implementation and verification of Phase 9 — Long-Run Life-Arc Scenario Campaigns.
 

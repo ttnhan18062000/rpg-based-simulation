@@ -8,6 +8,15 @@ Scenario Lab Observatory Integration
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Connect Scenario Lab execution with the simulation's Observatory artifacts and analysis pipeline (Milestone 79). This requires:

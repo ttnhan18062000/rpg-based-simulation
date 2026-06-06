@@ -8,6 +8,15 @@ Milestone 72 — World CLI / Tooling
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Implement a robust, clean command-line interface `rpg-world` to make worldbuilding and procedural template expansion/compilation usable without writing code.

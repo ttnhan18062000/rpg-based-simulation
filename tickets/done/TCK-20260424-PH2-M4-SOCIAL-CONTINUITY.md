@@ -6,6 +6,15 @@ Phase 2 Milestone 4: Social Continuity & Nemesis System
 ## Status
 OPEN
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Implement the Nemesis System to enable persistent social interactions. Entities should remember combatants and adjust their tactical behavior based on past harm.
 

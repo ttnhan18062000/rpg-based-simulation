@@ -6,6 +6,15 @@ Extend E2E Arena Testing for Quest Progression
 ## Status
 INPROGRESS
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Extend the End-to-End Arena testing suite to verify that RPG mechanics (specifically Quests) operate correctly under full simulation pressure.
 

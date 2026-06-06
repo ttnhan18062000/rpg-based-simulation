@@ -6,6 +6,15 @@ Final V2 Engine Signal Hardening & consolidation
 ## Status
 INPROGRESS
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Close the remaining "Signal Semantic Compression" and "Environmental Capture" drift items identified in the final V2 review to reach 100% production readiness.
 

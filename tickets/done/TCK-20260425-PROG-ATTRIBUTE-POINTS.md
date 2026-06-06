@@ -6,6 +6,15 @@ Implement Attribute Points and Manual Growth (PH8 M5)
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Implement the AP system for Heroes, allowing manual stat growth while keeping Monsters on an automatic scaling model (Hybrid Growth). Ensure authoritative recalculation and aptitude-based scaling.
 

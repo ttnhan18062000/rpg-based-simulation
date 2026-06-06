@@ -56,9 +56,10 @@ Otherwise, follow existing patterns.
 - Scan tickets, docs, stored artifacts, relevant code, and tests.
 - Identify reuse opportunities and conflicts.
 - Create `tickets/inprogress/{ticket_id}.md`.
-- Create `staging_artifacts/{ticket_id}/`.
+- **Standard/epic only:** Create `staging_artifacts/{ticket_id}/` with `plan.md`, `investigation.md`, `test_plan.md`.
+- **Hotfix:** No staging artifacts required — self-evident intent is captured in the ticket itself.
 
-### Required Artifacts
+### Required Artifacts (standard/epic only)
 
 At minimum: `plan.md`, `investigation.md`, `test_plan.md`.
 
@@ -74,11 +75,27 @@ Ticket must include: title, summary, scope, out of scope, acceptance criteria, r
 ### After Work
 
 - Finish ticket, move to `tickets/done/`.
-- Append `tickets/working_log.csv`.
-- Move staging artifacts to `stored_artifacts/`.
+- Append to the **bottom** of `tickets/working_log.csv` (never insert after the header).
+- **Standard/epic only:** Move staging artifacts to `stored_artifacts/`.
 - Update related docs.
 - Clean up: `rm -rf data/runs/* reports/release_proof/*`.
 - Verify no leftover staging/temp files remain.
+
+### Commit Convention
+
+Reference the ticket ID in every commit for this ticket's work:
+
+```
+TCK-YYYYMMDD-SHORT-SCOPE: Brief description of change
+```
+
+### Tier Routing
+
+| Tier | Pipeline | Use when |
+|---|---|---|
+| `hotfix` | Scope → Implement → Test → Parity → Verify → Finalize | Bug fix or minimal targeted change with self-evident intent |
+| `standard` | Full 9-phase pipeline | Any new feature, refactor, or substantive repair |
+| `epic` | Scope only — tracks child tickets | Large multi-ticket initiative; no direct implementation |
 
 ---
 
@@ -95,6 +112,9 @@ Ticket must include: title, summary, scope, out of scope, acceptance criteria, r
 
 ## Title
 ## Status         (OPEN | INPROGRESS | BLOCKED | DONE)
+## Tier           (hotfix | standard | epic)
+## Type           (bug | feature | refactor | chore | repair)
+## Priority       (P0 | P1 | P2)
 ## Request Summary
 ## Scope
 ## Out of Scope
@@ -248,6 +268,32 @@ The canonical record of V2 behavior shifts from legacy. Any new divergence must 
 - `docs/guidelines/design_patterns.md` — Coding and design conventions
 - `docs/compliance/checklist.md` + `gap_analysis.md` — Compliance tracking
 - `docs/testing/v2_test_taxonomy.md` — Test classification rules
+
+---
+
+## Proactive Tool Use
+
+Some tools should be invoked automatically based on the task — the user does not need to mention them.
+
+### Always auto-invoke (no user prompt required)
+
+| Trigger | Action |
+|---|---|
+| "how does X work?" or explaining an unfamiliar module | Read `graphify-out/GRAPH_REPORT.md`, then `graphify explain "<X>"` |
+| "how does X relate to Y?" or cross-module question | `graphify path "<X>" "<Y>"` |
+| "where is X defined/used?" | `graphify query "<X>"` |
+| Searching across more than 3 files | Spawn `Explore` agent instead of sequential Bash greps |
+| Starting implementation on an unfamiliar module | Read `GRAPH_REPORT.md` for community structure before touching code |
+| `docs/REGISTRY.yaml` exists + user asks about prior work or related docs | Query registry by `related_code_areas` or `layer` — do not scan raw directories |
+
+### Require explicit user opt-in (never auto-invoke)
+
+| Tool | Why |
+|---|---|
+| `Workflow` (`implement-ticket`, `investigate-simulation-result`, etc.) | Spawns many agents, costs real tokens — user must request the scale |
+| `git push`, PR creation, external service calls | Irreversible or visible to others |
+
+The boundary is: **single read/query tools are free to invoke proactively; multi-agent orchestration requires the user to ask**.
 
 ---
 

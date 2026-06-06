@@ -1,5 +1,14 @@
 # Ticket TCK-20260410-PH3-STRATEGIC-KNOWLEDGE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Implement Phase 3: Strategic Knowledge & Blockers. This involves expanding the strategic layer to handle structural uncertainty (Leads) and detecting stalled progress (Blockers). The goal is to move AI beyond binary "success/fail" and into a state of active inquiry and detour-based problem solving.
 

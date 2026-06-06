@@ -6,6 +6,15 @@ Implement Phase 6 — Strategic Cognition Hardening
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Implement and stabilize the Phase 6 strategic cognition engine, including deterministic blocker resolution, detour suggestions, and authoritative state signaling for resolution events.
 

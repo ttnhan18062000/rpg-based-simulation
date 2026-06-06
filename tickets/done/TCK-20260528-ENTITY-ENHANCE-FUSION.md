@@ -8,6 +8,15 @@ Integrate Enhanced RPG Cognitive and World Emergence Lifecycle (Phases 1-10)
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 We need to wire the Phase 2–10 enhanced domain packages (Self-Model, Adventure Decisions, Combat Engagement, Information/Belief, Progression, Cooperation, World Emergence, Campaigns, Optimization) into the authoritative engine loop (`AuthoritativeApplyPipeline`) behind feature flags and Shadow Mode capability, fix the fake ScenarioRunner, make Phase 1 opportunity providers state-driven, resolve Phase 4 combat spatial performance issues, and guarantee knowledge persistence.

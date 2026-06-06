@@ -6,6 +6,15 @@ Implement Authoritative Quest Lifecycle and Reward Models
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Establish the foundational models and authoritative lifecycle for RPG quests in the V2 engine.
 

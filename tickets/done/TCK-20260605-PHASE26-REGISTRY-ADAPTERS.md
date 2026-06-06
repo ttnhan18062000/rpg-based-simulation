@@ -8,6 +8,15 @@ World content projection and runtime registry adapters
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Make world content families such as items, recipes, regions, resources, services, and buildings move through explicit adapters, not scattered heuristics, extracting registry adapters. Prove parity with tests.

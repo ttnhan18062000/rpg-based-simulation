@@ -6,6 +6,15 @@ Milestone 12: Read Model and API Projection Optimization
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Implement `ReadModelCache` and `ReadModelInvalidationPolicy` to eliminate expensive O(N) full-state DTO recalculations across API and UI inspection paths.
 

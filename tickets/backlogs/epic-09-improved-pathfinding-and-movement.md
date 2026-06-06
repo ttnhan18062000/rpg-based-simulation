@@ -113,3 +113,7 @@ Inspired by: Warcraft III unit pathing, Rimworld pawn movement, StarCraft pathfi
 - Backend: ~5 files new/modified (new pathfinding.py, modified states.py, brain.py)
 - Frontend: ~2 files modified (useCanvas path overlay)
 - Data: Terrain cost registry, formation offset definitions
+
+**Tier:** epic
+**Type:** feature
+**Priority:** P2

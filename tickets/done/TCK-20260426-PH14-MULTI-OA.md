@@ -6,6 +6,15 @@ Implement Multi-Attacker Opportunity Attacks
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Recover the legacy capability for multiple hostiles to execute Opportunity Attacks (OA) against a single moving target in the same tick.
 

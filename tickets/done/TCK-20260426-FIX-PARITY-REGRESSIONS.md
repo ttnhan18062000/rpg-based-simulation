@@ -6,6 +6,15 @@ Fix RPG Progression and Action Readiness Regressions
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Fix regressions in RPG progression (XP rewards during evolution) and action readiness (double-subtraction bug) to restore 100% parity with src engine and pass all pytest tests.
 

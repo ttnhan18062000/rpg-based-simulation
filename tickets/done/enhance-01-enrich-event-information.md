@@ -71,3 +71,6 @@ SimEvent(
 
 **DONE**: Successfully implemented the Domain Event Bus (Option C) and enriched Combat, Death, Loot, Quest, and Level Up events with heavily structured generic JSON dictionaries. Verified 0 regression via E2E test suite.
 
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

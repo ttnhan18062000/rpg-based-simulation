@@ -6,6 +6,15 @@ Phase 8 Strategic Recovery: Combat, Tactical, & Local World Closure
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Recover the authoritative moment-to-moment gameplay layer, including deterministic combat, tactical AI, and local world-interaction semantics (terrain, buildings, LoS).
 

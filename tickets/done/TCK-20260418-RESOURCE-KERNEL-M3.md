@@ -6,6 +6,15 @@ Milestone 3: Bounded Runtime State and Lean Hot-Path Models
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Design and implement the runtime state shape to prevent unbounded memory growth and high hot-path serialization costs.
 

@@ -6,6 +6,15 @@ Milestone C - Task 2: Harden Replay Staging and Chunk Rotation
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Ensure replay behavior is fully exact and bounded under normal and pressured conditions.
 

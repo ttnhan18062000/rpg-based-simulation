@@ -6,6 +6,15 @@ Phase 25 — Entity archetype and population resolution
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Implement `ResolvedEntityArchetype` (the fully-merged compile-ready archetype template) and `PopulationRecipeResolver` (which expands population recipes into world assembly contributions). This makes `entity_archetypes.yaml` and `populations.yaml` the preferred spawn authoring path.
 

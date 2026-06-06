@@ -8,6 +8,15 @@ World Data Refactor Phase 3: Profile Consumer Bridge
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Implement the Profile Consumer Bridge. Create the `CompileProfileResolver` inside `src/worldassembly` to translate and resolve static recipes, role, and faction references into compiler-ready profiles. Wire this profile resolver into the `WorldCompiler` through a new optional `CompileContext` object, allowing profile-backed settings to govern compile attributes (e.g. entity HP/atk, starting gold, node tick-cost) while fully preserving backward compatibility for old world specifications.

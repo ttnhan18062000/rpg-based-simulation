@@ -23,3 +23,7 @@
 - TCK-20260410-STRAT-GOVERNANCE (Phase 2 Pre-req)
 
 **Current Status**: DONE
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

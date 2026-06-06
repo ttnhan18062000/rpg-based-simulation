@@ -6,6 +6,15 @@ Final RPG Engine Hardening and Observability Expansion
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Complete Phase E5 of the RPG V2 engine hardening, focusing on semantic correctness, diagnostic observability, and long-run stability.
 

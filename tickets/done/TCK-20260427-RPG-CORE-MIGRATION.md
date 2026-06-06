@@ -8,6 +8,15 @@ Migrate and Harden RPG Core Logic (Phases 1-11)
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Migrate the legacy logic from `src_legacy/` and `tests_legacy/` to the current `src/` and `tests/`, following the `resource_v2_e2_phases.md` roadmap and `logic_checklist_exhaustive.md` reference. The user has warned that existing `[x]` marks in these documents might be unreliable and should be verified.

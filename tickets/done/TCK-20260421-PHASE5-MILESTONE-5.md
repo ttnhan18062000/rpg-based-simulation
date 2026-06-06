@@ -6,6 +6,15 @@ Supported Progression Surface Consolidation
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Consolidate the supported progression surface for Phase 5. This involves defining the official support matrix, expanding certification and benchmark scenarios to cover the integrated loop, hardening regression guards, and publishing the canonical truth package.
 

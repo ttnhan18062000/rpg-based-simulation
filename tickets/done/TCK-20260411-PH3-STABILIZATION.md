@@ -6,6 +6,15 @@ Phase 3 Social & Strategic Stabilization
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Verify and fix regressions in social and strategic integration tests after the Phase 3 refactoring.
 

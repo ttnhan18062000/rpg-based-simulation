@@ -8,6 +8,15 @@ Scenario-Specific Optimization Profiles (Milestone 20)
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Implement scenario-aware `OptimizationProfile` definitions (`COMBAT_HEAVY`, `MOVEMENT_HEAVY`, `RESOURCE_HEAVY`, `METROPOLIS`, `LOW_MEMORY`, `DEBUG_REFERENCE`) to tailor engine optimization budgets, indexing modes, compaction levels, cache size limits, and phase skipping behaviors to specific simulation workloads.

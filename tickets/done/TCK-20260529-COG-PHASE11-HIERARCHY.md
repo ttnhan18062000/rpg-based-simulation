@@ -8,6 +8,15 @@ Entity Cognition Hierarchy Restructure
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Restructure the flat entity self-model and knowledge fields into a clean nested cognition hierarchy model under EntityState.cognition, providing backward compatibility, deterministic hashing, and updated tests.

@@ -6,6 +6,15 @@ Phase 11 Milestone 2: Preserved-Surface Proof Closure
 ## Status
 OPEN
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Verify and reconcile every preserved row in the ledger against actual evidence. Downgrade or correct any inflated preserved labels.
 

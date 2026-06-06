@@ -6,6 +6,15 @@ Fixing Unit Test Regressions from Phase 2 Performance Optimization
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Investigate and fix all unit test regressions caused by recent performance optimizations while adhering to repository rules and maintaining high performance.
 

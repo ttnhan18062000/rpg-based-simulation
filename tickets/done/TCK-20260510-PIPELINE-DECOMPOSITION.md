@@ -6,6 +6,15 @@ Modularize AuthoritativeApplyPipeline into Domain-Driven Phases
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Refactor the monolithic `AuthoritativeApplyPipeline` class in `src/engine/pipeline.py` into smaller, maintainable phase modules under `src/engine/pipeline_phases/`.
 

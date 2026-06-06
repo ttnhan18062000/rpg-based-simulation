@@ -6,6 +6,15 @@ Phase 11 Milestone 1: Readiness Gate
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Close the implementation-to-ratification boundary. Ensure Phase 11 begins with a frozen ratification row set, honest support boundary, and explicit cutover blocking.
 

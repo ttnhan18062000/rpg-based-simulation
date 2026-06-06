@@ -6,6 +6,15 @@ Final Production Profile Tuning (Milestone 10)
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Define and implement production-ready runtime profiles based on post-optimization performance metrics.
 

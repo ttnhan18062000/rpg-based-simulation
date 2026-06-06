@@ -18,3 +18,7 @@ Final stabilization of the AOA architecture across the entire 1227-test suite. R
 
 ## Status
 DONE
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

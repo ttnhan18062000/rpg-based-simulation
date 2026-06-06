@@ -24,6 +24,7 @@ This document is the canonical record of intentional behavior shifts in `src` co
 | **RPG-CORE** | Lead Suppression | **Stabilized** | RATIFIED |
 | **RPG-CORE** | Attention Limits | **Bounded** | RATIFIED |
 | **RPG-CORE** | Action Style | **Hardened** | RATIFIED |
+| **World Assembly** | v2 Service Assembly | **Stabilized** | DEFERRED |
 
 ---
 
@@ -136,6 +137,14 @@ This document is the canonical record of intentional behavior shifts in `src` co
 - **Subsystem**: AI / Strategic
 - **Rationale**: **Stabilized**. Proactively suppresses leads rejected 3 times to prevent loops.
 - **Verification**: `test_resource_intelligence_contract.py`
+
+### 2.19 v2 Service Assembly Gap (World Assembly)
+- **Subsystem**: World Assembly
+- **Old Behavior**: Not applicable — service assembly is a new V2 feature.
+- **New Behavior**: `WorldModuleAssemblyResolver.resolve_module_contribution()` validates and computes `service_refs: Dict[str, int]` for v2 modules, but `assemble()` does not consume it. `WorldSpec` has no `services` field. All current real modules are `worldmodule.v1` so `service_refs` is always empty at runtime.
+- **Rationale**: **Stabilized**. Service assembly is deferred until `ServiceNodeSpec` and `WorldSpec.services` are defined. Adding a half-wired loop before the output type exists would create dead code.
+- **Verification**: `tests/unit/worldassembly/test_resolver.py::test_v2_service_refs_assembly_is_documented_gap`
+- **Unblock condition**: Add `ServiceNodeSpec` to `worldbuilding/schema.py`, add `services: List[ServiceNodeSpec]` to `WorldSpec`, then add the v2 service merge loop in `assemble()` parallel to the building loop. Update `SUB-367` in `substrate.yaml` to `status: verified` and remove this entry.
 
 ### 2.18 Action Style (LEG-RPG-155)
 - **Subsystem**: AI / Tactical

@@ -6,6 +6,15 @@ Implement performance regression tests and conftest utilities
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Establish a suite of performance regression tests using `pytest` and the enhanced `BenchHarness`.
 

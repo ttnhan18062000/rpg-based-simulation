@@ -8,6 +8,15 @@ Phase 12 — Resolve CLI, Artifact Contract, and Lab Integration
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Implement Phase 12 as specified in `world_phases_11_19.md`. Create a first-class resolve command in `rpg-world` CLI, export resolved bundle artifacts to disk following the standardized contract, allow `compile` to load and consume `compile_context.json`, and make lab execution aware of resolved world artifacts.

@@ -6,6 +6,15 @@ Completing Performance Test Suite (P1/P2)
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Complete the implementation of the performance testing suite as defined in the performance_implementation.md milestones P1 and P2.
 

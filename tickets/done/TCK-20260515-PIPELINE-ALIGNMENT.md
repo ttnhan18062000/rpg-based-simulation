@@ -8,6 +8,15 @@ Reconcile Authoritative Pipeline with Staggered Cadence Regressions
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Resolve 29 test failures introduced by performance hardening (staggered cadence). Ensure that biological decay, strategic intelligence, and shop enforcement remain functionally correct while maintaining performance benefits.

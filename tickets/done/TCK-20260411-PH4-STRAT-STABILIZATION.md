@@ -6,6 +6,15 @@ Phase 4 Strategic Pipeline Stabilization & Observability
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Finalize the event-driven reprioritization and durable consequence systems. Ensure logic services (Concern, Directive, Place Appraisal, and Project Mutation) are integrated, deterministic, and observable.
 

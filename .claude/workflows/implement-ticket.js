@@ -3,9 +3,9 @@ export const meta = {
   description: 'Full ticket lifecycle: scope → investigate → plan → architecture review → implement → test → parity → done-check → finalize',
   phases: [
     { title: 'Scope', detail: 'Create or load ticket, create staging directory' },
-    { title: 'Investigate', detail: 'Investigate codebase, produce investigation.md and test_plan.md' },
-    { title: 'Plan', detail: 'Produce plan.md from investigation findings' },
-    { title: 'Review', detail: 'Architecture review of plan — gate before implementation' },
+    { title: 'Investigate', detail: 'Investigate codebase, produce investigation.md and test_plan.md (skipped for hotfix)' },
+    { title: 'Plan', detail: 'Produce plan.md from investigation findings (skipped for hotfix)' },
+    { title: 'Review', detail: 'Architecture review of plan — gate before implementation (skipped for hotfix)' },
     { title: 'Implement', detail: 'Write code following the approved plan' },
     { title: 'Test', detail: 'Scope and run tests for changed files' },
     { title: 'Parity', detail: 'Update parity ledger entries for behavior changes' },
@@ -14,11 +14,13 @@ export const meta = {
   ],
 }
 
-// Args: { ticket_id?, request? }
+// Args: { ticket_id?, request?, tier? }
 // Pass ticket_id to resume from an existing ticket (skips ticket creation).
 // Pass request to create a new ticket from a description.
+// Pass tier ('hotfix' | 'standard' | 'epic') to override — otherwise read from ticket or default to 'standard'.
 const ticketId = (args && args.ticket_id) || ''
 const request = (args && args.request) || ''
+const tierOverride = (args && args.tier) || ''
 
 // ─── Phase 1: Scope ───────────────────────────────────────────────────────────
 
@@ -26,12 +28,13 @@ phase('Scope')
 
 const TICKET_SCHEMA = {
   type: 'object',
-  required: ['ticket_id', 'ticket_path', 'status', 'conflicts'],
+  required: ['ticket_id', 'ticket_path', 'status', 'conflicts', 'tier'],
   properties: {
     ticket_id: { type: 'string' },
     ticket_path: { type: 'string' },
     status: { type: 'string', enum: ['CREATED', 'EXISTING'] },
     conflicts: { type: 'array', items: { type: 'string' } },
+    tier: { type: 'string', enum: ['hotfix', 'standard', 'epic'] },
   },
 }
 
@@ -40,7 +43,9 @@ const ticketInfo = await agent(
     ? `Load the existing ticket.
 
 Read tickets/inprogress/${ticketId}.md (or tickets/done/${ticketId}.md if already moved).
-Return: ticket_id="${ticketId}", ticket_path (full path), status="EXISTING", conflicts=[] (empty — already scoped).`
+Also read the ## Tier field from the ticket — return it as the 'tier' field.
+If no ## Tier field present, default to 'standard'.
+Return: ticket_id="${ticketId}", ticket_path (full path), status="EXISTING", conflicts=[], tier=(value from ticket or 'standard').`
     : `Create a new ticket for this request using the ticket-scoper role.
 
 Request: ${request}
@@ -52,18 +57,21 @@ Steps:
 4. Read relevant source files to understand current state.
 5. Check docs/parity_ledger/ for entries that overlap with the proposed scope.
 6. Draft the ticket at tickets/inprogress/TCK-20260606-SHORT-SCOPE.md with all required sections:
-   Title, Status (OPEN), Request Summary, Scope, Out of Scope, Acceptance Criteria,
+   Title, Status (OPEN), Tier (infer from request: hotfix/standard/epic), Type (infer: bug/feature/refactor/chore/repair), Priority (infer or default P1),
+   Request Summary, Scope, Out of Scope, Acceptance Criteria,
    Related Tickets, Related Docs, Related Stored Artifacts, Related Code Areas,
    Assumptions/Open Questions, Implementation Notes (blank), Test Summary (blank),
    Files Changed (blank), Completion Summary (blank).
 7. Create the staging directory: staging_artifacts/{ticket_id}/
 
 Return: ticket_id (the full TCK-... ID), ticket_path, status="CREATED",
-conflicts (list of any duplicates or conflicts found — empty array if none).`,
+conflicts (list of any duplicates or conflicts found — empty array if none),
+tier (the tier value written into the ticket).`,
   { label: 'scope', schema: TICKET_SCHEMA, agentType: 'ticket-scoper' }
 )
 
 const tid = ticketInfo.ticket_id
+const tier = tierOverride || ticketInfo.tier || 'standard'
 
 if (ticketInfo.conflicts && ticketInfo.conflicts.length > 0) {
   log(`Conflicts detected: ${ticketInfo.conflicts.join(' | ')}`)
@@ -71,18 +79,40 @@ if (ticketInfo.conflicts && ticketInfo.conflicts.length > 0) {
   return {
     status: 'CONFLICTS_DETECTED',
     ticket_id: tid,
+    tier,
     conflicts: ticketInfo.conflicts,
   }
 }
 
-log(`Ticket: ${tid} (${ticketInfo.status})`)
+log(`Ticket: ${tid} (${ticketInfo.status}) | tier=${tier}`)
 
-// ─── Phase 2: Investigate ─────────────────────────────────────────────────────
+// Epic tier — scope only; no implementation
+if (tier === 'epic') {
+  log('Epic tier: ticket scoped. Implement child tickets separately.')
+  return {
+    status: 'EPIC_SCOPED',
+    ticket_id: tid,
+    message: 'Create and implement child tickets for this epic. Re-run with a child ticket_id to process each one.',
+  }
+}
 
-phase('Investigate')
+// Default values used by Implement phase — overwritten by standard pipeline if tier !== 'hotfix'
+let investigation = '(hotfix — investigation skipped)'
+let plan = '(hotfix — plan skipped)'
+let review = {
+  verdict: 'APPROVED',
+  violations: [],
+  parity_entries_affected: [],
+  mechanics_chapters_to_read: [],
+}
 
-const investigation = await agent(
-  `Investigate ticket ${tid} using the investigator role.
+if (tier !== 'hotfix') {
+  // ─── Phase 2: Investigate ─────────────────────────────────────────────────────
+
+  phase('Investigate')
+
+  investigation = await agent(
+    `Investigate ticket ${tid} using the investigator role.
 
 Read:
 - ${ticketInfo.ticket_path}
@@ -101,15 +131,15 @@ FILE 2: staging_artifacts/${tid}/test_plan.md
 Sections: Regression Surface (existing tests that must pass) | New Tests Required (per AC) | Scoped Pytest Commands | Anti-Drift Test Guards
 
 Write both files. Return: key findings, open questions requiring a decision, parity entry IDs that will need updating.`,
-  { label: 'investigate', agentType: 'investigator' }
-)
+    { label: 'investigate', agentType: 'investigator' }
+  )
 
-// ─── Phase 3: Plan ────────────────────────────────────────────────────────────
+  // ─── Phase 3: Plan ────────────────────────────────────────────────────────────
 
-phase('Plan')
+  phase('Plan')
 
-const plan = await agent(
-  `Produce the implementation plan for ticket ${tid} using the planner role.
+  plan = await agent(
+    `Produce the implementation plan for ticket ${tid} using the planner role.
 
 Read:
 - ${ticketInfo.ticket_path}
@@ -129,36 +159,36 @@ Produce staging_artifacts/${tid}/plan.md with:
 If the investigation raised unresolved questions, flag them under "Unresolved Questions" — do not decide them. The workflow will pause for human review if present.
 
 Write the file. Return: ordered step list (one line per step) + any unresolved questions.`,
-  { label: 'plan', agentType: 'planner' }
-)
+    { label: 'plan', agentType: 'planner' }
+  )
 
-if (plan && plan.toString().toLowerCase().includes('unresolved question')) {
-  log('Plan contains unresolved questions — human review required before implementation.')
-  return {
-    status: 'NEEDS_HUMAN_INPUT',
-    ticket_id: tid,
-    plan_summary: plan,
-    message: 'Review staging_artifacts/' + tid + '/plan.md, resolve open questions, then re-run with ticket_id="' + tid + '".',
+  if (plan && plan.toString().toLowerCase().includes('unresolved question')) {
+    log('Plan contains unresolved questions — human review required before implementation.')
+    return {
+      status: 'NEEDS_HUMAN_INPUT',
+      ticket_id: tid,
+      plan_summary: plan,
+      message: 'Review staging_artifacts/' + tid + '/plan.md, resolve open questions, then re-run with ticket_id="' + tid + '".',
+    }
   }
-}
 
-// ─── Phase 4: Review ──────────────────────────────────────────────────────────
+  // ─── Phase 4: Review ──────────────────────────────────────────────────────────
 
-phase('Review')
+  phase('Review')
 
-const REVIEW_SCHEMA = {
-  type: 'object',
-  required: ['verdict', 'violations', 'parity_entries_affected', 'mechanics_chapters_to_read'],
-  properties: {
-    verdict: { type: 'string', enum: ['APPROVED', 'NEEDS_CHANGES', 'BLOCKED'] },
-    violations: { type: 'array', items: { type: 'string' } },
-    parity_entries_affected: { type: 'array', items: { type: 'string' } },
-    mechanics_chapters_to_read: { type: 'array', items: { type: 'string' } },
-  },
-}
+  const REVIEW_SCHEMA = {
+    type: 'object',
+    required: ['verdict', 'violations', 'parity_entries_affected', 'mechanics_chapters_to_read'],
+    properties: {
+      verdict: { type: 'string', enum: ['APPROVED', 'NEEDS_CHANGES', 'BLOCKED'] },
+      violations: { type: 'array', items: { type: 'string' } },
+      parity_entries_affected: { type: 'array', items: { type: 'string' } },
+      mechanics_chapters_to_read: { type: 'array', items: { type: 'string' } },
+    },
+  }
 
-const review = await agent(
-  `Architecture review for ticket ${tid}.
+  review = await agent(
+    `Architecture review for ticket ${tid}.
 
 Read:
 - staging_artifacts/${tid}/plan.md
@@ -179,23 +209,26 @@ Validate against:
 
 Return: APPROVED / NEEDS_CHANGES (fixable violations) / BLOCKED (fundamental conflict),
 list of violations (empty if APPROVED), parity ledger entry IDs affected, mechanics chapters implementer must read.`,
-  { label: 'architecture-review', schema: REVIEW_SCHEMA, agentType: 'architecture-reviewer' }
-)
+    { label: 'architecture-review', schema: REVIEW_SCHEMA, agentType: 'architecture-reviewer' }
+  )
 
-if (review.verdict !== 'APPROVED') {
-  log(`Architecture review: ${review.verdict}`)
-  if (review.violations.length > 0) {
-    log(`Violations: ${review.violations.join(' | ')}`)
+  if (review.verdict !== 'APPROVED') {
+    log(`Architecture review: ${review.verdict}`)
+    if (review.violations.length > 0) {
+      log(`Violations: ${review.violations.join(' | ')}`)
+    }
+    return {
+      status: review.verdict,
+      ticket_id: tid,
+      violations: review.violations,
+      message: 'Fix violations in staging_artifacts/' + tid + '/plan.md then re-run with ticket_id="' + tid + '".',
+    }
   }
-  return {
-    status: review.verdict,
-    ticket_id: tid,
-    violations: review.violations,
-    message: 'Fix violations in staging_artifacts/' + tid + '/plan.md then re-run with ticket_id="' + tid + '".',
-  }
+
+  log('Architecture review: APPROVED')
+} else {
+  log('Hotfix tier: skipping Investigate, Plan, and Architecture Review.')
 }
-
-log('Architecture review: APPROVED')
 
 // ─── Phase 5: Implement ───────────────────────────────────────────────────────
 
@@ -213,14 +246,14 @@ const IMPL_SCHEMA = {
 }
 
 const implementation = await agent(
-  `Implement ticket ${tid}.
+  `Implement ticket ${tid}. Tier: ${tier}.
 
 Read:
-- staging_artifacts/${tid}/plan.md (follow this exactly)
-- staging_artifacts/${tid}/investigation.md
+${tier !== 'hotfix' ? `- staging_artifacts/${tid}/plan.md (follow this exactly)
+- staging_artifacts/${tid}/investigation.md` : `- ${ticketInfo.ticket_path} (hotfix — implement the fix directly from the ticket scope)`}
 - ${ticketInfo.ticket_path}
 
-Architecture is APPROVED. Mechanics chapters to read first: ${review.mechanics_chapters_to_read.length > 0 ? review.mechanics_chapters_to_read.join(', ') : 'none specified — verify with investigation.md'}.
+${tier !== 'hotfix' ? `Architecture is APPROVED. Mechanics chapters to read first: ${review.mechanics_chapters_to_read.length > 0 ? review.mechanics_chapters_to_read.join(', ') : 'none specified — verify with investigation.md'}.` : 'Hotfix: implement the minimal targeted fix described in the ticket scope.'}
 
 Architecture constraints (non-negotiable):
 - Decision logic reads state only. Never mutate durable state directly.
@@ -232,7 +265,7 @@ Architecture constraints (non-negotiable):
 
 After writing code:
 1. Update the "Implementation Notes" section in ${ticketInfo.ticket_path} with what was done (concise, factual).
-2. Update staging_artifacts/${tid}/plan.md "Deviations" section if any step differed from the plan — never silently deviate.
+${tier !== 'hotfix' ? `2. Update staging_artifacts/${tid}/plan.md "Deviations" section if any step differed from the plan — never silently deviate.` : ''}
 
 Return: files changed (list of paths), whether observable behavior changed (affects parity ledger), which parity subsystems are affected (from: substrate, combat_movement, strategic_cognition, town_resource, progression, social_narrative, world_dynamics, infrastructure), one-paragraph implementation summary.`,
   { label: 'implement', schema: IMPL_SCHEMA, agentType: 'implementer' }
@@ -263,7 +296,7 @@ ${implementation.files_changed.join('\n')}
 
 Step 1 — Map each changed src/ file to its tests/unit/ counterpart. For changes to src/core/, src/systems/, or src/engine/, also find transitive test dependents via grep.
 
-Step 2 — Check staging_artifacts/${tid}/test_plan.md: are all required new tests present? List any missing.
+Step 2 — ${tier !== 'hotfix' ? `Check staging_artifacts/${tid}/test_plan.md: are all required new tests present? List any missing.` : 'For a hotfix, confirm the targeted behavior is tested. No formal test_plan.md required.'}
 
 Step 3 — Build the scoped pytest command. Never use bare "pytest tests/".
 
@@ -345,6 +378,7 @@ const doneCheck = await agent(
   `Definition-of-Done check for ticket ${tid}.
 
 Ticket path: ${ticketInfo.ticket_path}
+Tier: ${tier}
 
 Context from this run:
 - Files changed: ${implementation.files_changed.join(', ')}
@@ -352,6 +386,10 @@ Context from this run:
 - Parity updated: yes
 - Behavior changed: ${implementation.behavior_changed}
 - Coverage gaps: ${testResult.coverage_gaps.join(', ') || 'none'}
+
+Tier-specific N/A rules:
+- If tier is 'hotfix': mark Condition 4 (staging artifacts) as N/A — no investigation.md / plan.md / test_plan.md required.
+- If tier is 'standard': all 11 conditions apply.
 
 Check all 11 DoD conditions with evidence. For these two, mark as noted:
 - Condition 7 (working_log.csv entry): NOT yet written — workflow writes it after READY_TO_CLOSE.
@@ -379,7 +417,7 @@ if (doneCheck.verdict !== 'READY_TO_CLOSE') {
 phase('Finalize')
 
 await agent(
-  `Finalize ticket ${tid} — all gates passed.
+  `Finalize ticket ${tid} — all gates passed. Tier: ${tier}.
 
 Complete these steps in order:
 
@@ -397,9 +435,9 @@ Complete these steps in order:
    - title: from the ticket Title section
    - status: DONE
    - summary: one sentence of what was implemented
-   - artifacts_path: stored_artifacts/${tid}
+   - artifacts_path: ${tier !== 'hotfix' ? `stored_artifacts/${tid}` : 'none (hotfix — no staging artifacts)'}
 
-4. Move staging_artifacts/${tid}/ → stored_artifacts/${tid}/
+4. ${tier !== 'hotfix' ? `Move staging_artifacts/${tid}/ → stored_artifacts/${tid}/` : 'Hotfix: no staging artifacts to move.'}
 
 5. Clean data/runs/* and reports/release_proof/* only if they contain artifacts from this work session (check modification times before deleting).
 
@@ -412,9 +450,10 @@ Report each step: DONE / SKIPPED (reason).`
 return {
   status: 'DONE',
   ticket_id: tid,
+  tier,
   implementation_summary: implementation.implementation_summary,
   files_changed: implementation.files_changed,
   tests: { pass_count: testResult.pass_count },
   parity_updated: implementation.behavior_changed,
-  artifacts: `stored_artifacts/${tid}`,
+  artifacts: tier !== 'hotfix' ? `stored_artifacts/${tid}` : 'none (hotfix)',
 }

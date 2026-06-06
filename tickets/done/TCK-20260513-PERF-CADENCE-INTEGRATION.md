@@ -6,6 +6,15 @@ Integrate System Cadence into Authoritative Pipeline
 ## Status
 OPEN
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Apply the cadence model to non-critical subsystems in the `AuthoritativeApplyPipeline` to reduce per-tick CPU load.
 

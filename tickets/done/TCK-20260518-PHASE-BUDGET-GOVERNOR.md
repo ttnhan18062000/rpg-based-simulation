@@ -8,6 +8,15 @@ Implement Adaptive Phase Budget Governor (Milestone 17)
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Implement an adaptive Phase Budget Governor that monitors recent per-phase compute costs (p95 latency, tick cost, work debt) and dynamically throttles sub-phase candidate budgets, scan policies, and background sweep intervals under system pressure without skipping correctness-critical simulation work.

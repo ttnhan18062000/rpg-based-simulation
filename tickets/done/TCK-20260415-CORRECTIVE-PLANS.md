@@ -8,6 +8,15 @@ Execute Remaining Corrective Plan Tasks (strategy_implementation_updated_v2 + in
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Systematically complete all remaining tasks from the two corrective implementation plans.

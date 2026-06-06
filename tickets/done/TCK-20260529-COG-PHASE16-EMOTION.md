@@ -8,6 +8,15 @@ Emotion, Recovery, Habit, and Opportunity Cost Domain Implementation
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Implement Phase 16 to integrate short-term emotional biases, recovery states, learned habits, and explicit trade-off reasoning into entities to make them less robotic and more realistic.

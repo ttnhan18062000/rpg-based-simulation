@@ -8,6 +8,15 @@ Migrate inventory test suites to V2EntityBuilder
 
 INPROGRESS
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Resolve remaining test suite failures in `tests/inventory/` by systematically refactoring legacy `EntityState` instantiations to the `V2EntityBuilder` fluent API.

@@ -8,6 +8,15 @@ Fix near-death panic threshold and TownScorer target ID strategic bridge
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Implement fixes for the two immediate, high-priority cognition bugs in Phase 0:

@@ -8,6 +8,15 @@ Observability Boundary, Feature Flags, and Safety Contract (Phase 19)
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Continue entity enhancement to Phase 19, implementing the observability boundary document, feature flags, modes mapping, hot-path safety contract, and corresponding architecture/unit tests.

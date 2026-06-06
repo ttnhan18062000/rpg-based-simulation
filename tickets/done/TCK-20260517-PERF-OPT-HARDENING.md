@@ -6,6 +6,15 @@ Performance Optimization Hardening and Measurement Integrity
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Investigate and implement the performance optimization hardening plan defined in `performance_opt_hardening.md` to fix incorrect/missing logic across recent performance hardening tasks.
 

@@ -23,3 +23,7 @@ INPROGRESS
 - `design_shift_implementation_plan_high_level.md`
 - `docs/architecture/macro_interest_constraints.md`
 - `TCK-20260406-PHASE0`
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

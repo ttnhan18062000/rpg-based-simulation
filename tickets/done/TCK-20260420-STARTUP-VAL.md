@@ -6,6 +6,15 @@ Hardened Patch-Friendly Startup Boundaries
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Decouple profile validation from the Kernel constructor to allow for non-blocking startup and easier patching.
 

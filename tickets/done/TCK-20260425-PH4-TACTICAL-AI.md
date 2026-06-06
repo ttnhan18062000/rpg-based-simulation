@@ -8,6 +8,15 @@ Tactical AI Recovery and Cognitive Capacity Hardening
 
 INPROGRESS
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Implement Phase 4 of the V2 Engine roadmap: Tactical AI roles, melee/ranged behavior differences, and enforce strategic cognition capacity limits (max projects/leads/concerns).

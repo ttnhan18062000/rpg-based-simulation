@@ -6,6 +6,15 @@ Enhance BenchHarness with p95, p99, and RSS metrics
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Upgrade the `BenchHarness` to capture production-grade telemetry, including latency percentiles and physical memory usage (RSS).
 

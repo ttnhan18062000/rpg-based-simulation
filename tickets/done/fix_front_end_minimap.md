@@ -4,3 +4,7 @@
 - zoom in/out in world break the hover and click on entities, buildings and loots
 - spectate entity minimap is different from world, should hide all the other entities which is ghosts and not in vision range, not just in the world
 - under the minimap, show a small collapsible panel, showing the location of the places (towns, ruins, etc), click on them will make the camera move to that location
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

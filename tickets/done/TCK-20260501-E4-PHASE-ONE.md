@@ -6,6 +6,15 @@ Phase E4.1 — Determinism and Replay Completion
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Implement Phase E4.1 — Determinism and Replay Completion to ensure every gameplay result is reproducible across execution modes.
 

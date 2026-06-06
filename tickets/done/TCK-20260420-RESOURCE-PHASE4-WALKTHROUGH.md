@@ -42,3 +42,7 @@ Recent benchmark results ([baseline.json](file:///home/vboxuser/Work/rpg-based-s
 
 > [!IMPORTANT]
 > The engine now officially guarantees deterministic parity for movement and interaction. Any change to these slices will now automatically trigger a certification failure if it breaks the established contract.
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

@@ -8,6 +8,15 @@ Phase 28 Perspective and Relation Runtime Usage Repair
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Prove perspective-derived relationship labels reach at least one real runtime decision (combat target classification/hostility checking) without broad rewrites of legacy systems.

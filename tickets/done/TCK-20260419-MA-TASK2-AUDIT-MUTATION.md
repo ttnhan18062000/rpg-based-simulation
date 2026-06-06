@@ -6,6 +6,15 @@ Audit and close all authoritative mutation paths
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Make the authoritative apply path singular, explicit, and provably exclusive. Ensure no hidden mutation paths exist through aliasing of nested mutable collections.
 

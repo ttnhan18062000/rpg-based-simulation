@@ -8,6 +8,15 @@ Commitment, Obligation, and Reputation Domain Implementation
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Implement Phase 15 to make promises, contracts, accepted quests, party duties, and public reputation affect future behavior, preventing immediate greedy route switches and establishing clear social consequences for betrayal.

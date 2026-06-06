@@ -8,6 +8,15 @@ Non-Blocking Event Emission Pipeline (Phase 21)
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Implement a safe, bounded, and non-blocking event emission queue inside the simulation loop to decouple simulation execution from heavy I/O or downstream consumers.

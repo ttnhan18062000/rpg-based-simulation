@@ -8,6 +8,15 @@ Comprehensive Investigation and Brainstorming of Phase 1 - World Capability Foun
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Carefully investigate, analyze, and brainstorm the architectural design and roadmap for implementing the Phase 1 - World Capability Foundation features specified in `entity_enhance_phase1.md`.

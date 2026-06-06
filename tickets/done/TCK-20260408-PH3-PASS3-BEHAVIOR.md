@@ -1,5 +1,14 @@
 # Ticket TCK-20260408-PH3-PASS3-BEHAVIOR
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Implement Behavioral Integration for Phase 3 Lived-Structure. Make entities follow their seeded routines and favor their place attachments in AI decision making. Integrate small-group coordination (cliques) into goal selection.
 

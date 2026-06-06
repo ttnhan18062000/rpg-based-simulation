@@ -8,6 +8,15 @@ Milestone 3: Congestion & Advanced Anti-Oscillation
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Implementing advanced movement anti-oscillation logic and hardening edge-case congestion handling (blocked retreat, pursuit collisions, corridor contention).

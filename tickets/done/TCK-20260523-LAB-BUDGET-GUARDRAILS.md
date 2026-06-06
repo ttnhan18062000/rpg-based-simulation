@@ -8,6 +8,15 @@ Resource, Storage, and Runtime Guardrails for Scenario Lab Sweeps (Milestone 82)
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Implement a robust profile-aware budget guardrails and pre-flight validation mechanism to protect the laboratory sandbox against accidental resource explosion, excessive runtimes, or excessive storage footprint.

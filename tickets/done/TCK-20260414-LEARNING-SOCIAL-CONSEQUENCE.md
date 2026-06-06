@@ -6,6 +6,15 @@ Strategic Learning Loops & Social Consequences
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Address learning, social consequences, and graph relationships from the updated implementation plans.
 

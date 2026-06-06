@@ -6,6 +6,15 @@ Town-Driven Resource Resolution (Material Handback)
 ## Status
 INPROGRESS
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Implement the 'Town Loop' where entities on Town tiles convert their harvested materials into Gold or secondary resources. This recovers the original RPG-core resolution cycle.
 

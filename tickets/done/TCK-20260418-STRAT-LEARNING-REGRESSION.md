@@ -6,6 +6,15 @@ Resolve Strategic Learning Regression
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Resolved a persistence regression where LeadRecord flags (tested, is_exhausted) were incorrectly reverted during simulation ticks.
 

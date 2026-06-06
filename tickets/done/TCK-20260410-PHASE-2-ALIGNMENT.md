@@ -6,6 +6,15 @@ Phase 2 Strategic Verification and Architectural Alignment
 ## Status
 INPROGRESS
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Verify the implementation of Phase 2 (Strategic Appraisal and Project Selection) against the master thinking file and ensure all documentation, naming, and staging artifacts comply with the repository's mandatory rules (AGENTIC mode standards).
 

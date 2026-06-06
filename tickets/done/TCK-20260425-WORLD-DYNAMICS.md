@@ -8,6 +8,15 @@ Implementation of Phase 11 World Dynamics: Influence, Conquest, Strongholds, and
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Implement regional influence shifts, territory conquest/liberation lifecycle, stronghold spawning with debuffs, world maturity, calamities (world bosses), and faction raids.

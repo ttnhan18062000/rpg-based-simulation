@@ -8,6 +8,15 @@ Milestone 16 — Multi-Run Artifact Index
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Create an index and repository abstraction that manages sweeps, indexes individual run records, builds aggregate summaries, and exposes CLI commands to list and inspect sweeps.

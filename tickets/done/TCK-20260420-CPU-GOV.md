@@ -6,6 +6,15 @@ End-to-End CPU Resource Contract
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Wire the Governor's concurrency limit through the Kernel/Executor into the WorkerManager to ensure proactive shedding.
 

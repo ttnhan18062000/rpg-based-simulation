@@ -8,6 +8,15 @@ Observability Budget, Sampling, Degradation, and Rollout Gate (Phase 28)
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Guarantee behavior observability does not harm the simulation engine, allowing details to degrade under pressure without changing simulation determinism or correctness.

@@ -8,6 +8,15 @@ Behavior Timeline and Episode Reconstruction (Phase 23)
 
 INPROGRESS
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Build readable entity behavior histories by grouping behavioral events chronologically and reconstructing episodes post-run.

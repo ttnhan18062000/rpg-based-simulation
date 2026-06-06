@@ -6,6 +6,15 @@ Implement System Cadence Infrastructure
 ## Status
 OPEN
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Create the core cadence module to support staggered execution of engine subsystems.
 

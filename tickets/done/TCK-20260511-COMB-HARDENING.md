@@ -6,6 +6,15 @@ Hardening Tactical Combat Logic & Anti-Stalemate Audit
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Hardening of tactical combat logic to ensure skill-aware decision making, target stickiness, and 100% compliance with COMB subsystem laws.
 

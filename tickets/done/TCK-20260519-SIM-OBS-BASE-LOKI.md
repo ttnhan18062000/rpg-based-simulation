@@ -6,6 +6,15 @@ Phase 1 Observability Foundation: Performance Baselines and Loki Label Hardening
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Establish safe observability foundations. Before adding any Prometheus /metrics endpoints or HardLawMonitor infrastructure, capture pre-observability performance benchmarks, Git commit anchors, and confirm 404 behavior. Then, resolve the Promtail high-cardinality label risk by removing `tick` label promotion from `promtail-config.yml` while ensuring all contextual attributes remain queryable inside JSON log payloads.
 

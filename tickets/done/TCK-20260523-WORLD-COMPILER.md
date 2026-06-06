@@ -8,6 +8,15 @@ Milestone 70 — World Compiler to AuthoritativeState
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Implement a deterministic `WorldCompiler` that transforms a validated `WorldSpec` into the engine's `AuthoritativeState` based on a seed, compiles all stages (topology, regions, factions, resources, buildings, entities, quests, strategic setup), performs post-compile validation, produces a detailed `world_compile_report.json`, and certifies state parity.

@@ -23,3 +23,7 @@ The `tests/e2e/test_production_stack.py` which verifies the full Docker-Compose 
 
 ## Status
 DONE
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

@@ -8,6 +8,15 @@ Verify and mark RPG Core Logic Checklist IDs in test suite
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 The user requested to verify the logic checklist in `logic_checklist_exhaustive.md` manually and carefully. The verification must not fully rely on tool checking. For each verified logic ID, the corresponding part in the `tests/` (user said `src/tests`) must be marked with the logic ID.

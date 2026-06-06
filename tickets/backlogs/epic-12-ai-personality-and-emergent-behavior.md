@@ -118,3 +118,7 @@ Inspired by: Rimworld pawn stories, Dwarf Fortress personality system, The Sims 
 - Backend: ~8 files modified (models.py, states.py, scorers.py, brain.py, world_loop.py, traits.py)
 - Frontend: ~3 files modified (InspectPanel AI tab, EventLog, useCanvas tooltips)
 - Data: Mood event registry, personality message templates, nemesis effect definitions
+
+**Tier:** epic
+**Type:** feature
+**Priority:** P2

@@ -8,6 +8,15 @@ Implementation of Guild Service and Quest Generation
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Implement the Guild service for strategic lead generation and world intelligence. Ensure entities can receive quests and world-knowledge authoritatively.

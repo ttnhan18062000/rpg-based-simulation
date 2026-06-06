@@ -388,3 +388,7 @@ Total estimated effort: **XXL** (4-6 weeks)
 - `frontend/src/components/EntityList.tsx` — hero names
 - `frontend/src/hooks/useCanvas.ts` — world boss minimap marker, transcended hero glow
 - `frontend/src/constants/colors.ts` — legendary item color, world boss color
+
+**Tier:** epic
+**Type:** feature
+**Priority:** P2

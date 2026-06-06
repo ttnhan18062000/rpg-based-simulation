@@ -8,6 +8,15 @@ Hardening Resource Conservation Law (Phase 3.1)
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Implement and verify the "Resource, Inventory, and Interaction Conservation" law (Phase 3 of `resource_v2_e2_phases.md`). This involves ensuring that items are never lost or duplicated during harvest, loot, pickup, and crafting, and that capacity limits are strictly enforced BEFORE world depletion.

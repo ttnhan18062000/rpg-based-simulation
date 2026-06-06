@@ -13,3 +13,7 @@
 - make enemy stronger, stats generation formulas
 - also add all the neccessary sub-tabs in the inspect panel for these features
 -> DONE
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

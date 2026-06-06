@@ -8,6 +8,15 @@ Freeze Phase 7 Replacement Ledger Row Set
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Execute Task 1 of Phase 7 Milestone 1: Freeze the exact Phase 7 replacement-ledger row set as the official substrate backlog. This involved triaging rows in the `legacy_replacement_ledger.md` to focus on "Substrate Closure" and publishing the final backlog.

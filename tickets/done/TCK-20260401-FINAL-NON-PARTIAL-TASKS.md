@@ -19,3 +19,7 @@ To complete specific tasks from `final_implementation_plan_2.md` that are marked
 - `TCK-20260401-FINAL-CONVERGENCE`
 
 ## Status: INPROGRESS
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

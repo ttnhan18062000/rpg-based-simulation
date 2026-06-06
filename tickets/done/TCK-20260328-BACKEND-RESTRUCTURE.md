@@ -37,3 +37,7 @@ Restore and complete the architectural refactoring of the RPG simulation backend
 ## Related Tickets
 - `TCK-20260327-WINDBIGMOD-CLEANUP` (Included)
 - `TCK-20260322-RPG_REFINEMENT`
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

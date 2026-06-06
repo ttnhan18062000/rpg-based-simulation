@@ -6,6 +6,15 @@ Phase 12 Milestone 6: Phase 12 Exit Package and Legacy-Retirement Constraints
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Finalize the Phase 12 operational cutover by consolidating all artifacts, publishing the closure report, and establishing retirement constraints for Phase 13.
 

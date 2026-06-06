@@ -8,6 +8,15 @@ Define Phase 7 Closure Conditions
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Execute Task 2 of Phase 7 Milestone 1: Define concrete closure conditions for the Phase 7 backlog. This involved specifying the exact verification steps, parity requirements, and certification proofs needed for each row.

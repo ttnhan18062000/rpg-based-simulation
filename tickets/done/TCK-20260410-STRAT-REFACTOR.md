@@ -42,3 +42,7 @@
 - `src/ai/brain.py`
 - `src/actions/base.py`
 - `tests/test_strategic_consistency.py`
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

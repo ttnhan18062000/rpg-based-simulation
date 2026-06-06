@@ -6,6 +6,15 @@ Implementation of Phase 4 Social Contracts, Party Formation, and Cooperative Coo
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Implementing Phase 4 of the social system: Social Contracts and Party Formation.
 

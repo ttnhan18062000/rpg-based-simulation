@@ -27,3 +27,7 @@ Implemented all planned optimizations. Verified with micro-benchmarks and automa
 - `Material` cache was added to avoid `Enum` instantiation overhead ($50\times$ speedup).
 - AI Task Batching reduces RabbitMQ roundtrips from 188 to 2 per tick.
 - Docker environment requires `up --build` to propagate code changes.
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

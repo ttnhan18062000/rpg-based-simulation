@@ -6,6 +6,15 @@ Current-State Observability Assessment for Simulation Observatory
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Conduct Phase 3 final clarification report for Simulation Observatory observability architecture based on sim_test_init_instruction_3.md, focusing on feasibility, prioritization, and an implementation-ready 6-milestone roadmap in a new report file (`observability_feasibility_and_milestones_v3.md`) in the same staging artifacts directory.
 

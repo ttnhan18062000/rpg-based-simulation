@@ -103,3 +103,7 @@ Inspired by: Dark Souls item descriptions, Hollow Knight lore tablets, Skyrim bo
 - Backend: ~6 files new/modified
 - Frontend: ~3 files modified (InspectPanel, useCanvas, colors)
 - Data: Lore fragment definitions, ruins definitions, guardian tables, cache loot tables
+
+**Tier:** epic
+**Type:** feature
+**Priority:** P2

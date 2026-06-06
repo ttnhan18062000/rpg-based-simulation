@@ -6,6 +6,15 @@ Implement Engine Profiling Suite
 ## Status
 INPROGRESS
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Implement a robust profiling harness to establish performance baselines and debug subsystem hotspots in the V2 RPG Engine.
 

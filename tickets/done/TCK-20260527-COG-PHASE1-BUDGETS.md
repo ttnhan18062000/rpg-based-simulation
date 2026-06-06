@@ -8,6 +8,15 @@ Implement Phase 1 Provider Performance Budget Gates
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Add performance counters and budget gates for resource/service providers and requirement evaluation steps to ensure CPU execution cost scales boundedly for 10, 30, and 100 entities.

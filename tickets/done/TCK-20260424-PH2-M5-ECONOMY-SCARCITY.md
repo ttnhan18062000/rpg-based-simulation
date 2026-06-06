@@ -6,6 +6,15 @@ Phase 2 Milestone 5: Economy & Scarcity
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Implement dynamic pricing and resource depletion mechanics to enforce economic scarcity and environmental pressure.
 

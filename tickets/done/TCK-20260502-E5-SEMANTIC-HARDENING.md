@@ -6,6 +6,15 @@ Hardening Social Contract Semantics and Replay Fidelity
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Formalize social contract state machine and ensure deterministic event-level replay.
 

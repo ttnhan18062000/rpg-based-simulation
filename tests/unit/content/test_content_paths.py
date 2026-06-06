@@ -1,6 +1,6 @@
 import pytest
 from src.content.paths import ContentPathConfig
-from src.content.repository import CatalogRepository
+from src.content.repository import CatalogRepository, NON_CATALOG_DIRS
 from src.worldmodules.repository import WorldModuleRepository
 from src.content.schema import MaterialDefinition, SpawnTableDefinition
 
@@ -144,3 +144,32 @@ def test_load_report_fingerprint_changes_when_content_changes(tmp_path):
 
     assert fp1 != fp2
 
+
+
+def test_strict_load_on_real_content_dir():
+    """Verify that load_all(strict=True) succeeds on the real data/content/ tree.
+
+    Regression guard: world_modules/ and world_compositions/ must not be reported
+    as 'ignored' YAML files by CatalogRepository. If this test fails it means a
+    new YAML file was added to a catalog-managed directory without registering it
+    in CANONICAL_FAMILIES, or NON_CATALOG_DIRS is missing a directory.
+    """
+    repo = CatalogRepository("data/content")
+    report = repo.load_all(strict=True)
+    assert report.ignored_files == [], (
+        f"strict=True found unregistered catalog YAML files: {report.ignored_files}"
+    )
+
+
+def test_non_catalog_dirs_constant_matches_path_config():
+    """Verify NON_CATALOG_DIRS matches the directory names declared in ContentPathConfig."""
+    config = ContentPathConfig()
+    expected = {
+        config.world_modules_dir.split("/")[-1],
+        config.world_compositions_dir.split("/")[-1],
+        config.simulation_scenarios_dir.split("/")[-1],
+    }
+    assert expected == NON_CATALOG_DIRS, (
+        f"NON_CATALOG_DIRS {NON_CATALOG_DIRS} does not match ContentPathConfig dirs {expected}. "
+        "Update NON_CATALOG_DIRS in repository.py when adding new non-catalog directories."
+    )

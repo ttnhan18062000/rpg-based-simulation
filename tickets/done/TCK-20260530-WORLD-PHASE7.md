@@ -8,6 +8,15 @@ World Data Refactor Phase 7: Provenance Manifest and Report Integration
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Establish the Sidecar Provenance Manifest and integrated compile reporting system. Ensure resolving processes log all region, population, resource, and building origins dynamically, outputting a bit-identical stable `provenance_manifest.json` along with detailed multi-layer reports stored in resolved subdirectories.

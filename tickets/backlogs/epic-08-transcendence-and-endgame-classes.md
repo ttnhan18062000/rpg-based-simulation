@@ -98,3 +98,7 @@ Inspired by: Final Fantasy job mastery, Diablo III Paragon system, Path of Exile
 - Backend: ~5 files modified (classes.py, states.py, buildings.py, config.py, enums.py)
 - Frontend: ~3 files modified (ClassHallPanel, InspectPanel, useCanvas)
 - Data: 4 Transcendence class definitions, 4 ultimate skill definitions, 4 trial quest definitions
+
+**Tier:** epic
+**Type:** feature
+**Priority:** P2

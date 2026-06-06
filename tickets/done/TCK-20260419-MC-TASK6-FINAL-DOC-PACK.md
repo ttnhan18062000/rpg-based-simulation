@@ -6,6 +6,15 @@ Milestone C - Task 6: Final Milestone C Documentation Pack
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Add exact Milestone C documentation pack and close the lifecycle integrity milestone.
 

@@ -8,6 +8,15 @@ Complete Progression, Skills, Equipment, and Crafting Loop
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Harden the progression and equipment systems to ensure advancement meaningfully impacts gameplay outcomes, while maintaining transactional integrity for resources and crafting.

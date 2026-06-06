@@ -32,3 +32,7 @@ This ticket implements the strategic layer of the world. Factions no longer just
 - Added `CONQUERED_DEBUFF` and stronghold spawning logic.
 - Updated `EntityGenerator` to respect regional control and war states for spawn distribution.
 - Verified with comprehensive unit test suite in `tests/unit/systems/test_strategy.py`.
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

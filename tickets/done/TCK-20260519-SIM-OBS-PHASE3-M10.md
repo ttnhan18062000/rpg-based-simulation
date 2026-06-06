@@ -8,6 +8,15 @@ Milestone 10: Metric Window Recorder
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Implement rolling metric window recording capabilities for post-run analysis, creating the standard `metric_windows.jsonl` artifact containing aggregated tick performance, memory usage, events, violations, and game state metrics over standard time/tick bounds.

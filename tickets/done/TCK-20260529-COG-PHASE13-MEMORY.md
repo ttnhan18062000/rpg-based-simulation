@@ -8,6 +8,15 @@ Temporal, Causal, and Spatial Memory Domain Implementation
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Implement the Phase 13 Memory Domain consisting of TemporalModel, CausalMemory, and SpatialMemory, enabling entities to remember recent events, interpret causal outcomes, and update spatial mappings.

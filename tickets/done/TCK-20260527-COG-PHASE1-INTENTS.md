@@ -8,6 +8,15 @@ Implement Phase 1 ActionIntent Adapter Layer
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Implement ActionIntent schema and adapter to trace and adapt strategic intent choices into existing game loop updates/state actions without breaking core game systems.

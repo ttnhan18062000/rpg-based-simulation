@@ -8,6 +8,15 @@ Consolidate Phase 5 proof artifacts into a discoverable baseline package
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Milestone 1 Task 3 of Phase 6: Turn the current Phase 5 proof surface into one discoverable baseline package. This ensures that the evidence for Phase 5's "Official Support" is indexed and verifiable before proceeding with the Phase 6 replacement ledger.

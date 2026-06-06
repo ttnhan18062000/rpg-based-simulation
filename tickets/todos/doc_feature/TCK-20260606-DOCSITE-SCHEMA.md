@@ -6,6 +6,15 @@ Define frontmatter schema for all documentation content types
 ## Status
 OPEN
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Establish a formal YAML frontmatter schema that classifies every markdown file in the project (docs, tickets, stored artifacts, archive) by status, layer, authority, and audience. This schema is the foundation that makes Docusaurus navigation, Registry generation, and agent doc discovery possible.
 

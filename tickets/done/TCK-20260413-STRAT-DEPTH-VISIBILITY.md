@@ -6,6 +6,15 @@ Strategic Lifecycle & Observability Hardening
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Expand the strategic cognition layer's depth and visibility by hardening transport stability, ensuring debug rendering safety, and enriching the cognition graph with durable narrative elements (turning points, attachments).
 

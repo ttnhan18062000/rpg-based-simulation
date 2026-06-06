@@ -6,6 +6,15 @@ Stabilize V2 Engine and API Test Suites
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Investigate and fix widespread test failures in the RPG simulation repository, specifically targeting API, Arena, and Engine modules while adhering to V2 architecture and AuthoritativeState contracts.
 

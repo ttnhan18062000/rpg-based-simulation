@@ -118,3 +118,30 @@ def test_compiler_backward_compatibility():
 
     building = state.buildings[20000]
     assert building.hp == 500
+
+
+def test_v2_service_refs_assembly_is_documented_gap():
+    """Guard test: service_refs is computed in contributions but WorldSpec has no services field.
+
+    If WorldSpec gains a 'services' field, this test will fail — that is the signal to add
+    the v2 service merge loop in WorldModuleAssemblyResolver.assemble() and update
+    docs/guidelines/v2_intentional_divergences.md (entry 2.19).
+    """
+    from src.worldassembly.schema import ResolvedModuleContribution
+    from src.worldbuilding.schema import WorldSpec
+
+    # service_refs must exist in the contribution schema with the correct type
+    fields = ResolvedModuleContribution.model_fields
+    assert "service_refs" in fields, "ResolvedModuleContribution must have service_refs field"
+    annotation = str(fields["service_refs"].annotation)
+    assert "Dict" in annotation or "dict" in annotation, (
+        f"service_refs must be Dict[str, int], got {annotation}"
+    )
+
+    # WorldSpec must NOT yet have a services field — the gap is intentional and documented
+    assert "services" not in WorldSpec.model_fields, (
+        "WorldSpec gained a 'services' field — add the v2 service merge loop in "
+        "WorldModuleAssemblyResolver.assemble() (parallel to the v2 building loop), "
+        "update docs/guidelines/v2_intentional_divergences.md (entry 2.19), "
+        "and update docs/parity_ledger/substrate.yaml (SUB-367) to status: verified."
+    )

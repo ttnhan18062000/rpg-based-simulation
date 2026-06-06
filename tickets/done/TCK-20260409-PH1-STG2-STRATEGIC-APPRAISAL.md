@@ -1,5 +1,14 @@
 # Ticket TCK-20260409-PH2-STRATEGIC-APPRAISAL
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Implement Phase 2: Strategic Appraisal & Project Selection. This involves the cognitive logic that bridges the gap between raw biological needs (Concerns) and high-level directives, resulting in a durable "Project" commitment that biases tactical utility scoring.
 

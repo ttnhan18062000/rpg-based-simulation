@@ -6,6 +6,15 @@ Milestone 9: Resource Certification and Resilience Harness
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Create a disciplined certification harness that proves the engine obeys its resource-envelope contract, degrades safe, and produces stable deterministic behavior under named profiles and hardware classes.
 

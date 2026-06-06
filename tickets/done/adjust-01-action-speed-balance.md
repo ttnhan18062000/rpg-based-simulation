@@ -41,3 +41,7 @@ Each AI state handler has implicit or explicit action durations (how many ticks 
 ## Labels
 
 `adjust`, `balance`, `ai`, `needs-decision`
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

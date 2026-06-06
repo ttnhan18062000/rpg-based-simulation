@@ -15,3 +15,7 @@ The simulation test suite currently emits 14+ failures. The objective is to appl
 **Acceptance Criteria:**
 - `pytest tests/ -v` completes with 0 failures, 0 errors.
 - Code conforms to clean architectural constraints.
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

@@ -8,6 +8,15 @@ V2 Engine Latency Optimization (Phase 2)
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Achieve sub-100ms p95 latency for 1000+ entity simulations (specifically benchmarked against movement and action scenarios) by identifying and eliminating performance bottlenecks across locomotion, state advancement, and read-only view reconstruction.

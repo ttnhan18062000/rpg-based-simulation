@@ -6,6 +6,15 @@ Milestone 10: Documentation Pack and Engineering Playbook
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Final hardening of the engine by establishing authoritative documentation, contributor guardrails, and an engineering playbook to prevent future semantic drift and resource safety violations.
 

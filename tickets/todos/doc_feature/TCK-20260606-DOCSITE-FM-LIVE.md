@@ -6,6 +6,15 @@ Apply frontmatter to all live and authoritative docs in docs/
 ## Status
 OPEN
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Apply the frontmatter schema (from TCK-20260606-DOCSITE-SCHEMA) to every actively-referenced markdown file in `docs/`, excluding `docs/archive/` and `docs/superpowers/specs/` (covered by Ticket 5). This is the largest frontmatter pass — roughly 150 files across 13 subdirectories.
 

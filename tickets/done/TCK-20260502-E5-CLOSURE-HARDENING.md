@@ -6,6 +6,15 @@ Implementation of Final Closure Hardening for Phase E5
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Complete the remaining P0 items from the Phase E5 review to achieve architectural closure and deterministic proof validation. This includes source-level conflict locks, robust transaction grouping, and a machine-readable checklist validator.
 

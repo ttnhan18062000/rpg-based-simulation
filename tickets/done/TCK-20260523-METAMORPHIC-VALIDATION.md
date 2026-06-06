@@ -8,6 +8,15 @@ Milestone 87 — Metamorphic Validation Rules
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Define and implement a metamorphic rule validation system for the RPG simulation balance lab. Traditional testing asserts exact values; metamorphic testing asserts that when configuration inputs change in known ways, performance/balance outputs change in expected relative directions.

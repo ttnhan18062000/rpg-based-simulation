@@ -399,3 +399,7 @@ This package should become the canonical reference for “what gameplay `src` cu
 #### [Task acceptance criteria]
 
 The current V2 gameplay surface is published as one coherent, supportable, reviewable truth package.
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

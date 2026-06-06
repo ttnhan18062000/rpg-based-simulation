@@ -6,6 +6,15 @@ Final Certification Proof and Production Readiness Gate
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Transform the engine's certification harness into a fully trustworthy evidence-backed proof system. Implement a manifest-driven production-readiness gate.
 

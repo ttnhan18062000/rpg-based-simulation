@@ -8,6 +8,15 @@ Milestone 75 — ScenarioSpec Schema
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Define the test intent separately from the world. Create a file-based ScenarioSpec schema, pluggable rules validator (with metrics/signals/anomalies permissiveness), and a safe path-traversal-proof repository.

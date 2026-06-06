@@ -6,6 +6,15 @@ Freeze the runtime signal and governor law set
 ## Status
 INPROGRESS
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Establish the absolute operational contract for Milestone B. This document defines the signal catalog, transition rules, recovery thresholds, and isolation boundaries that make the governor "trustworthy."
 

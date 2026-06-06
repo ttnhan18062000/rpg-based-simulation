@@ -98,3 +98,7 @@ Inspired by: Minecraft day/night mob spawning, Don't Starve survival pressure, B
 - Backend: ~8 files new/modified
 - Frontend: ~5 files modified (overlay, header, particles)
 - Config: Time cycle length, weather transition frequency, effect magnitudes
+
+**Tier:** epic
+**Type:** feature
+**Priority:** P2

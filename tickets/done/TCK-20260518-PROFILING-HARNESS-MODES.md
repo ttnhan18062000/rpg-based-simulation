@@ -6,6 +6,15 @@ Profiling Harness Modes (Pure, Runtime, Audit) and Report Flag Inclusion
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Implement profiling harness modes (pure, runtime, audit) in `scripts/profile_engine.py` to isolate compute performance from replay serialization and frame pacing, ensure generated reports include the flags used, and prevent unverified claims of GC/memory stability without explicit RSS/GC metrics.
 

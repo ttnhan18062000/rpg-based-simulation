@@ -5,8 +5,15 @@ from src.core.enums import ReasonCode, Faction
 from src.core.builder import V2EntityBuilder
 from src.engine.legality import LegalityServiceV2
 from src.engine.tactical import TacticalDecisionSystem
-from src.content_semantics.faction import get_faction_semantics_service, get_faction_id_str, get_race_id_str
+from src.content_semantics.faction import get_faction_semantics_service, get_faction_id_str, get_race_id_str, reset_faction_semantics_service
 from src.content_semantics.relation import RelationContext
+
+
+@pytest.fixture(autouse=True)
+def reset_semantics_cache():
+    """Reset the faction semantics singleton after each test to prevent cross-test state leakage."""
+    yield
+    reset_faction_semantics_service()
 
 def create_relation_entity(e_id, pos, faction_id, faction_enum=Faction.NEUTRAL, role=EntityRole.HERO, race_id=None):
     properties = {"faction_id": faction_id}

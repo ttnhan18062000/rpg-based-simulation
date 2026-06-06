@@ -1,5 +1,14 @@
 # Ticket TCK-20260409-PH1-STG1-STRATEGIC-STATE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Implement Phase 1: Strategic State Foundation as described in `thinking_implementation_phase_1.md`. This involves creating a dedicated strategic domain in `MindAspect` to store durable projects, directives, and continuity state.
 

@@ -8,6 +8,15 @@ Cognition Evidence Reports Integration and CLI/API Inspection
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Enrich Phase 9 Observatory reports and evidence packs with strategic cognition summaries, and implement a robust, read-only Click CLI and API layer to allow developers to inspect cognition logs without opening raw artifact files.

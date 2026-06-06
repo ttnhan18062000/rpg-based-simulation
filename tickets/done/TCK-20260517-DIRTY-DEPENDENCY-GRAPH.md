@@ -8,6 +8,15 @@ Dirty Dependency Graph Implementation
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Implement Milestone 4 of the Performance Optimization Hardening Plan: `DirtyDependencyGraph`, an explicit mechanism that expands direct domain dirtiness (e.g. movement) into derived downstream dirtiness (e.g. strategic, social, lifecycle). Integrate this directly into `DirtySetBuilder.build()` and `DirtySet.from_update()` to ensure all simulation phases operate on fully expanded, causally correct dirty sets while maintaining strict determinism and idempotency.

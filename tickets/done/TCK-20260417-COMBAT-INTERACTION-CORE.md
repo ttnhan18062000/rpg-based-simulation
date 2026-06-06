@@ -6,6 +6,15 @@ Combat Interaction Core Implementation
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Implement Milestone 2 of the Combat and Movement Overhaul, focusing on formalizing the combat interaction model. This includes engagement mechanics, opportunity attacks, target stickiness (hysteresis), and anti-stalemate logic.
 

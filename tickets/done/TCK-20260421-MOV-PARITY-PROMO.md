@@ -6,6 +6,15 @@ Promote Movement Parity Verification to Standard Test Path
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Take the existing movement parity work (currently in script-oriented support) and turn it into an ordinary validation requirement in `tests/parity/test_movement_parity.py` that runs under `pytest`.
 

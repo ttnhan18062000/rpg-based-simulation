@@ -38,3 +38,7 @@ Update tasks to reflect current progress (unit tests completed) and add the fina
 
 ### Manual Verification
 - Inspect the generated `cognition_eX.json` to verify the "Near Death" node and its edges in the Cytoscape format.
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

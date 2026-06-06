@@ -6,6 +6,15 @@ Hardening Milestone E Certification and Release Trust
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Transform the existing certification harness into a comprehensive, production-grade trust system (Milestone E closure).
 

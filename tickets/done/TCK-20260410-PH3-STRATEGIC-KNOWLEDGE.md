@@ -6,6 +6,15 @@ Implementation of Phase 3 Strategic Knowledge: Leads, Blockers, and Detours
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Implement the strategic knowledge layer as defined in `thinking_implementation_phase_3.md`. This involves moving away from "fake omniscience" by representing uncertainty as durable leads, candidate zones, and typed blockers that drive detour branching.
 

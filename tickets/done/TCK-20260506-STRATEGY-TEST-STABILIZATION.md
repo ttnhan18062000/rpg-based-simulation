@@ -8,6 +8,15 @@ Migrate strategy test suites to V2EntityBuilder
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Resolve test suite failures in `tests/strategy/` by refactoring legacy `EntityState` instantiations to the `V2EntityBuilder` fluent API.

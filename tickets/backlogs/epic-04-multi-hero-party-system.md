@@ -95,3 +95,7 @@ Inspired by: Final Fantasy party system, Baldur's Gate companion AI, Rimworld co
 - Backend: ~12 files new/modified
 - Frontend: ~6 files modified
 - Config: `num_heroes`, party size limits, XP split ratios
+
+**Tier:** epic
+**Type:** feature
+**Priority:** P2

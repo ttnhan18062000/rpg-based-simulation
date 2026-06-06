@@ -8,6 +8,15 @@ Phase 14 — Adopting Layered Catalog and Populating Profiles
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Copy the designed YAML files from `new_data_design/` to `data/content/` (overwriting and reorganizing the catalog directory structure) and populate all necessary baseline profiles (combat, cognition, needs, senses) for all races and archetypes.

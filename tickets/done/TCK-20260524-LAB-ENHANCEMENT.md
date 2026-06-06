@@ -8,6 +8,15 @@ Implement ProposeSimulationEnhancements Workflow (Milestone 101)
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Implement the `ProposeSimulationEnhancementsWorkflow` class in `src/lab/workflows.py` to ingest an investigation report and construct actionable enhancement proposals, next experiment drafts, change risk reports, and structured patches without automatically applying them.

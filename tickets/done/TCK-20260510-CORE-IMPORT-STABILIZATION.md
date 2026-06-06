@@ -6,6 +6,15 @@ Stabilizing Engine Import Paths & Social Domain Unification
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Resolve import resolution failures introduced during modularization and consolidate social domain logic (Contracts, Memory, Appraisal) into a hardened, authoritative structure while maintaining backward compatibility.
 

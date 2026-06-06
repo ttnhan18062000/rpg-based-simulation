@@ -11,3 +11,7 @@ DONE
 
 ## Final Status
 **DONE**: Extended the default simulation maximum tick limit to 50,000 in `src/config.py`. Verified that the authoritative world loop and event logging systems handle long-running simulations gracefully.
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

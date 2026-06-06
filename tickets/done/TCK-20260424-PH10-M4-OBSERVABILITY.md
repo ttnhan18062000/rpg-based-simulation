@@ -6,6 +6,15 @@ Phase 10 Milestone 4: Observability and Operational Artifacts
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Recover legacy logging format, metrics emission, and replay artifact semantics for the V2 engine.
 

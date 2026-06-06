@@ -6,6 +6,15 @@ Phase 12 Milestone 2: Supported Runtime Entrypoint Cutover
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Switch the default operational entrypoints (CLI, Serve) from the legacy `src` engine to the hardened `src` engine.
 

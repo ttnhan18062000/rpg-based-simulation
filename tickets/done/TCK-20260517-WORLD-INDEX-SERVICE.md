@@ -8,6 +8,15 @@ WorldIndexService and SpatialQueryService Implementation for Reusable Spatial In
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Implement `WorldIndexService`, `WorldIndexes`, `SpatialQueryService`, and `CacheInvalidationPolicy` to build reusable spatial indices over world state (active resource nodes, buildings by kind, entities, corpses, ground items) and replace ad-hoc caches in scorers.

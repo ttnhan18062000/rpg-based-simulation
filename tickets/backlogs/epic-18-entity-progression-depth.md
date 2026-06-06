@@ -257,3 +257,7 @@ Attributes slowly decay without use — an idle blade grows dull.
 - Entity list: veterancy rank indicator
 - Tooltip: marks and veterancy
 - Canvas: visual veterancy indicators (ring thickness/color)
+
+**Tier:** epic
+**Type:** feature
+**Priority:** P2

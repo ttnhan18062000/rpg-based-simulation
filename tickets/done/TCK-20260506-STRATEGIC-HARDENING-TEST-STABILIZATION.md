@@ -8,6 +8,15 @@ Migrate strategic hardening test suites to V2EntityBuilder
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Resolve 37 test suite failures in `tests/strategic/` by refactoring legacy `EntityState` instantiations to the `V2EntityBuilder` fluent API.

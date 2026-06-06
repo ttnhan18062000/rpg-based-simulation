@@ -8,6 +8,15 @@ Preserve archetype metadata and validate population preferred spawn regions
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Preserve archetype and population metadata through compile/assembly boundaries and validate preferred spawn regions against the selected module/composition contributions.

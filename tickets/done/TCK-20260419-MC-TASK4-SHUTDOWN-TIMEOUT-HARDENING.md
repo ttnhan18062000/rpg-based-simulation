@@ -6,6 +6,15 @@ Milestone C - Task 4: Implement Shutdown Timeout and Manifest Integrity
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Ensure replay shutdown is bounded by a real timeout and final manifest integrity is prioritize.
 

@@ -23,3 +23,7 @@ Implement refined attribute depth and systemic RPG mechanics identified in the s
 
 ## Related Tickets
 - TCK-20260325-RPG_SIMULATION_REVIEW (Done)
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

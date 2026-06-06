@@ -6,6 +6,15 @@ Hardening Social Contracts, Party Cooperation, and Goal Registry (Domain 4)
 ## Status
 OPEN
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Complete the final domain (Domain 4) of the `unchecked_logic_implementation_plan.md` to achieve full hardening of the RPG V2 engine.
 

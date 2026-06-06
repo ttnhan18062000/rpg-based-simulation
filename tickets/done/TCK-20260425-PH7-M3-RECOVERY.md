@@ -8,6 +8,15 @@ Implementation of Inn, Home, and Class Hall Services
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Implement town recovery services (Inn/Home) and progression hubs (Class Hall). Ensure biological debt can be managed and strategic blockers can be resolved through town actions.

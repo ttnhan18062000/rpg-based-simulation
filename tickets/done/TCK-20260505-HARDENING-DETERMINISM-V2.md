@@ -6,6 +6,15 @@ Hardening V2 Engine Determinism and Test Parity
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Resolve non-deterministic readiness divergence and fix the 224 test failures caused by the V2 contract migration. Ensure bit-identical states between sequential and concurrent simulations.
 

@@ -6,6 +6,15 @@ Expanding Authoritative Flanking Geometry (Diagonal & Surround)
 ## Status
 OPEN
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Expand the flanking detection logic to include diagonal positions and multi-entity surrounding configurations.
 

@@ -6,6 +6,15 @@ In-Process Event Publisher and Subscription Filters
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Create a lightweight, in-process event publishing system that enables downstream developer tooling (like live WebSockets) to subscribe to real-time simulation events with precise filters without blocking the simulation tick loop.
 

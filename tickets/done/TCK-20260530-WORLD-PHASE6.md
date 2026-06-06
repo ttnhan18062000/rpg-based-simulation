@@ -8,6 +8,15 @@ World Data Refactor Phase 6: Context-Aware Validation System
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Upgrade the world validation model from global strict mode into scoped validation contexts (`CATALOG`, `MODULE`, `COMPOSITION`, `ASSEMBLY`, `GENERATED_WORLD`, `WORLD`, `COMPILE`, `EXPERIMENT`). Ensure rules can declare applicable contexts, default severity per context, and strict mode applicability per context. Refactor validator execution and add a multi-layer structured Assembly Validation Report.

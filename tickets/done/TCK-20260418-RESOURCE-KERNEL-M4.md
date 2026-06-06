@@ -6,6 +6,15 @@ Milestone 4: Deterministic Scheduler and Work Model
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Replace naive execution with an explicit deterministic scheduler that classifies and bounds work items.
 

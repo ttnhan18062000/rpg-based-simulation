@@ -6,6 +6,15 @@ Combat and Movement Overhaul Finalization (Milestones 1-7)
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Audit and finalize Milestones 1-6 documentation, then implement Milestone 7 (Observability, Rollout Hardening, and Final Documentation) for the Combat and Movement Overhaul.
 

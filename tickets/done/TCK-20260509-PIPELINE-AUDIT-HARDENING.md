@@ -6,6 +6,15 @@ Hardening Authoritative Audit Fidelity & Pipeline Determinism
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Resolve regression failures in `test_rejection_audit_aggregation` and ensure pipeline determinism for actor validity.
 

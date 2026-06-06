@@ -8,6 +8,15 @@ Implement Setup Generation (M96) and Execution Preparation (M97) Workflows
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Implement the core logic for `GenerateSimulationSetup` (M96) and `PrepareSimulationExecution` (M97) workflows in `src/lab/workflows.py` to support dynamic, human-gated simulation environments, along with comprehensive integration test suites.

@@ -6,6 +6,15 @@ Implement Intel Capacity (Cognition Capacity and Bounded Intelligence)
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Implement the cognition-capacity and bounded-intelligence extension for the strategic simulation engine, iteratively by milestones. Focus on Milestone 1 first (Cognition Capacity Foundation).
 

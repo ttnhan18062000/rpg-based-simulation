@@ -474,3 +474,7 @@ They are required close-out checks for every milestone in this phase.
 - [ ] Benchmark impact reviewed if applicable
 - [ ] Known limitations recorded
 - [ ] Old-`src` parity expectation reviewed where relevant
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

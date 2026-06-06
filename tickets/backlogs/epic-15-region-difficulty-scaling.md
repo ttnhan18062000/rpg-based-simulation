@@ -225,3 +225,7 @@ Total estimated effort: **XL** (largest ticket so far)
 - `frontend/src/types/api.ts` — Region, Location types
 - `frontend/src/components/GameCanvas.tsx` — minimap region labels + boundaries
 - `frontend/src/components/GameCanvas.tsx` — enhanced Locations panel with region groups
+
+**Tier:** epic
+**Type:** feature
+**Priority:** P2

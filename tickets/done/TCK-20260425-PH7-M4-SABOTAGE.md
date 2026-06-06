@@ -8,6 +8,15 @@ Implementation of Building Damage and Sabotage
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Implement authoritative building damage and regional trauma. Ensure building destruction has world-level consequences.

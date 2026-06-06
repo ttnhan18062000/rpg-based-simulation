@@ -6,6 +6,15 @@ Hardening Authoritative Engine Pipeline and Audit
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Stabilize the RPG Authoritative Engine by resolving persistent regressions in quest progression, regional debuffs, and state reconciliation.
 

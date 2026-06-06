@@ -6,6 +6,15 @@ Harden fallback, failure handling, and bounded execution controls
 ## Status
 OPEN
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Ensure that the concurrency layer handles failures, queue saturation, and pressure signals with production-grade robustness.
 

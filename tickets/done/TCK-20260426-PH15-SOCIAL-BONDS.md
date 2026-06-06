@@ -6,6 +6,15 @@ Implement First-Class Social Bonds
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Replace the simplified 'Trust Proxy' model with a first-class SocialBond system in the V2 engine.
 

@@ -6,6 +6,15 @@ Milestone 12: Regional Sovereignty and Governance Logic
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Implement and certify the final gameplay systems for Regional Sovereignty and Governance as part of the V2 Engine completion.
 

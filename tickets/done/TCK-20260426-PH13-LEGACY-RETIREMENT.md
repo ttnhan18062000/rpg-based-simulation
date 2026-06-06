@@ -6,6 +6,15 @@ Execute Phase 13 Legacy Retirement and Canonical Refactor
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Retire all legacy `src/` assets identified in the Phase 13 manifest and promote `src` to the canonical `src` namespace.
 

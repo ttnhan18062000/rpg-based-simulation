@@ -8,6 +8,15 @@ Implement CompactSimulationData Workflow (Milestone 99)
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Implement the `CompactSimulationDataWorkflow` in `src/lab/workflows.py` to convert large raw simulation run directories into compact summaries and indexes inside the active lab session, preparing data for downstream metamorphic and balance investigations.

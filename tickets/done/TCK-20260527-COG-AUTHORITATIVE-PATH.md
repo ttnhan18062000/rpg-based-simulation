@@ -8,6 +8,15 @@ Establish single authoritative strategic planning path and clarify cognition-to-
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Ensure that strategic decisions are handled exclusively by the pipeline-level `StrategicIntelligenceSystem.fused_strategic_pass()`, and that `CognitionDomain.execute_brain()` acts solely as a read-only tactical/appraisal provider. Document boundaries clearly and add verification tests.

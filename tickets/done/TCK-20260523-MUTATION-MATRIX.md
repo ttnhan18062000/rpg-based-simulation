@@ -8,6 +8,15 @@ Milestone 86 — Variant Matrix Builder
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Implement the `VariantMatrixBuilder` to generate experiment variant configurations from base `WorldSpec` and `ScenarioSpec` templates using one of three modes: `one_at_a_time`, `combined`, and `factorial_limited` (avoiding unbounded full-factorial sweeps). Generate `VariantManifest` indexes detailing variant metadata, mutation histories, and validation barriers.

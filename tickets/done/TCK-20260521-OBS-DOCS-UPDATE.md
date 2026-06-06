@@ -8,6 +8,15 @@ Comprehensive RPG Engine V2 Observability & Simulation Understanding Documentati
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Update all necessary repository documents, the root `README.md`, and add any missing phase-level documentation files to comprehensively document all the core observability and understanding features added to the V2 RPG Engine from Phase 1 through Phase 8.

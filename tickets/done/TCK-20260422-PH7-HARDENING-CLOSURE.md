@@ -6,6 +6,15 @@ Phase 7 Substrate Hardening and Closure Correction
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Complete the hardening of the Phase 7 substrate as defined in the `resource_phase7_updated.md` plan. This involves moving from planning assumptions to implementation-backed truth across all core engine subsystems.
 

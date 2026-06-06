@@ -100,3 +100,7 @@ Inspired by: Stardew Valley NPC schedules, Dwarf Fortress social simulation, Eld
 - Backend: ~10 files new/modified
 - Frontend: ~4 components new/modified
 - Data: NPC definitions, schedules, dialogue pools
+
+**Tier:** epic
+**Type:** feature
+**Priority:** P2

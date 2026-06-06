@@ -8,6 +8,15 @@ Phase 17 — Procedural Generator Re-gating
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Refactor the procedural generator to generate against the unified content catalog and resolved artifact contract.

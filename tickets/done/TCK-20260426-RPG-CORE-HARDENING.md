@@ -6,6 +6,15 @@ RPG Core Life-Loop & Arena Hardening
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Recover and verify the authoritative RPG life-loop (rewards, mortality) and extend End-to-End Arena testing to include attrition and status effects.
 

@@ -26,3 +26,7 @@ Resolving runtime regressions in AI decision-making (TypeError in finalization p
 - `stored_artifacts/TCK-20260405-TEST-RECOVERY/plan.md`
 - `stored_artifacts/TCK-20260405-TEST-RECOVERY/investigation.md`
 - `stored_artifacts/TCK-20260405-TEST-RECOVERY/test_plan.md`
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

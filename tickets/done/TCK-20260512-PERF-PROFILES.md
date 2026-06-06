@@ -6,6 +6,15 @@ Implement performance-oriented RuntimeProfiles
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Create a dedicated location for performance profiles as specified in `performance_implementation.md`.
 

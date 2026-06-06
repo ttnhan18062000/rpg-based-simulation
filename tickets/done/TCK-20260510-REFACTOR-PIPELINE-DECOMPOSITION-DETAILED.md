@@ -6,6 +6,15 @@ Decompose AuthoritativeApplyPipeline into dedicated phases
 ## Status
 INPROGRESS
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Split `src/engine/pipeline.py` into multiple modules under `src/engine/pipeline_phases/` to improve maintainability while preserving the existing public API via static wrappers.
 

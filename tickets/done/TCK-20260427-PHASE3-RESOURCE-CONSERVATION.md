@@ -8,6 +8,15 @@ Implement Authoritative Resource Conservation (Phase 3)
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Implement the missing RPG-core logic for resource, inventory, and interaction conservation as defined in Phase 3 of `resource_v2_e2_phases.md`. Ensure that items do not vanish and resource nodes/corpses are not depleted if the inventory cannot accept the rewards.

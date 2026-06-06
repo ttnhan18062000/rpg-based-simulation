@@ -8,6 +8,15 @@ Final V2 Engine Consolidation and Certification
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Finalize the v2 engine overhaul by enforcing phase laws, hardening signal modeling, standardizing terminology, and closing the proof system.

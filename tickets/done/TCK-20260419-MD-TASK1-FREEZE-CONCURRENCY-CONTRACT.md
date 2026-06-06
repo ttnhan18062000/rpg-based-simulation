@@ -6,6 +6,15 @@ Milestone D - Task 1: Audit and Freeze the Bounded Concurrency Contract
 ## Status
 INPROGRESS
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Audit the existing concurrency documentation and draft a finalized contract that resolves all naming drift and explicitly defines the laws for packets, results, and commit ordering.
 

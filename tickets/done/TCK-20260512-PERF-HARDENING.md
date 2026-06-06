@@ -6,6 +6,15 @@ V2 Engine Performance Hardening & CI Integration
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Hardening the V2 engine performance by optimizing key logic bottlenecks, enforcing strict per-phase latency budgets, and establishing a CI-ready performance regression suite.
 

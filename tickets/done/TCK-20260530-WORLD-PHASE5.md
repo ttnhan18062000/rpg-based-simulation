@@ -8,6 +8,15 @@ World Data Refactor Phase 5: WorldCompositionSpec and Structural Assembly Resolv
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Establish the Composition and Assembly Resolver pipeline. Define pydantic schema `WorldCompositionSpec` allowing world scenarios to reference catalogs and modules, load them recursively, perform deterministic top-down module sorting, merge modular layout fragment lists safely, evaluate parameter specifications, and generate a clean `ResolvedWorldBundle` containing a validated `worldspec.v1` and sidecar provenance/assembly logs.

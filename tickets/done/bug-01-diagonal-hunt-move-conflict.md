@@ -33,3 +33,7 @@ At least one entity should close the gap. Possible solutions (requires decision)
 ## Labels
 
 `bug`, `ai`, `conflict-resolution`, `needs-decision`
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

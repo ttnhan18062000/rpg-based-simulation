@@ -2,6 +2,15 @@
 Title: Phase 2 Stage 4: Social Convergence and Narrative Causal Analysis
 Status: INPROGRESS
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Finalize the Phase 2 Social Meaning layer by enabling active gossip, hardening the propagation of rumors, and surfacing life-level causal explanations to the user.
 

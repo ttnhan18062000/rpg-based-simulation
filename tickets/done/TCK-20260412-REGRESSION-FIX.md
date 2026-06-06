@@ -8,6 +8,15 @@ Stabilization of Simulation Regression Suite (9 Failures)
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Fix several test failures in the regression suite, ranging from unit tests to E2E and benchmarks.
 

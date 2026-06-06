@@ -6,6 +6,15 @@ Migrate Subsystem Unit Tests and World Long-Run Tests
 ## Status
 INPROGRESS
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Move long-run world simulation tests and direct system tests to their respective `unit/` and `integration/world/` folders as per Milestone 1 (Tasks 1.3 & 1.4).
 

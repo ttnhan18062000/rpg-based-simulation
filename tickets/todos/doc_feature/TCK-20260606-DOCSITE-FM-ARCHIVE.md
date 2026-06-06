@@ -6,6 +6,15 @@ Apply minimal frontmatter to archived and historical docs (bulk pass)
 ## Status
 OPEN
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P2
+
 ## Request Summary
 Apply minimal frontmatter to `docs/archive/` (173 files), `docs/superpowers/specs/` (33 files), and `docs/specs/` (4 files). These are historical records — they don't need full classification, just enough frontmatter to be indexed correctly by Docusaurus and the Registry without polluting search results for current docs.
 

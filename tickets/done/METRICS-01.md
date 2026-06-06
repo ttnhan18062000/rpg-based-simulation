@@ -33,3 +33,7 @@ Implement a comprehensive monitoring system for the RPG simulation, providing bo
 
 ## Labels
 `metrics`, `observability`, `admin-tools`, `grafana`, `inprogress`
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

@@ -8,6 +8,15 @@ Implement Staggered Entity Execution in DeterministicScheduler
 
 OPEN
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Optimize kernel throughput by gating ENTITY_BRAIN and ENTITY_ACT (idle) work items using SystemCadence.

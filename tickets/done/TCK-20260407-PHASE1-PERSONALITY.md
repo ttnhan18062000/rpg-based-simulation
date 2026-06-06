@@ -24,3 +24,7 @@ Integrated Phase 1 Macro-Interest systems into the simulation's cognitive pipeli
     - `plan.md`
     - `test_plan.md`
     - `investigation.md`
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

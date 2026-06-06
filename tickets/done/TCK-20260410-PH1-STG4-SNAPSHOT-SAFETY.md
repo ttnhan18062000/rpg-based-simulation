@@ -1,7 +1,15 @@
 # Ticket TCK-20260410-PH1-STG4-SNAPSHOT-SAFETY
 ## Phase 1 Stage 4: Snapshot & Safety
 
-### Request Summary
+### Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+## Request Summary
 Hardware the strategic domain for architectural integrity, snapshot safety, and serialization.
 
 ### Scope

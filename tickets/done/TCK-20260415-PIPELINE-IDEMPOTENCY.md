@@ -8,6 +8,15 @@ Strategic Pipeline Idempotency Hardening
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Harden the strategic application pipeline by enforcing strict idempotency in `ActionSystem.apply_strategic_update`, removing an unsafe recursive call to `ContractOutcomeService`, and adding comprehensive smoke/idempotency tests.

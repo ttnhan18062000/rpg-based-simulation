@@ -8,6 +8,15 @@ Cognition Graph Diff Builder and Event Integration
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Implement deterministic Strategic Cognition Graph diffing to compare subsequent entity snapshots and translate significant structural changes into high-salience SimulationEvents captured by the `EventRecorder` pipeline.

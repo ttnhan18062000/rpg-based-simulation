@@ -8,6 +8,15 @@ Implementation of Personality, Boredom, and Life-Stage AI Modifiers
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Introduce psychological depth to AI decision-making by applying personality traits, boredom (repeated behavior tax), and life-stage biases to goal scoring.

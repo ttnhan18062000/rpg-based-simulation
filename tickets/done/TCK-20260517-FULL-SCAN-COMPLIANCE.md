@@ -8,6 +8,15 @@ Full-Scan Phase Compliance Integration Test Suite
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Implement Milestone 2 of the Performance Hardening Plan: a comprehensive integration test suite verifying that all engine phases (`InteractionPhase`, `MovementPhase`, `StrategicIntelligenceSystem`, `ShopSystem`, `CapacityEnforcementPhase`, `LifecycleSystem`, `GroupPhase`) strictly adhere to the `force_full_scan=True` and `dirty_set` fallback contracts, guaranteeing that an empty `DirtySet` cannot suppress evaluation under full-scan conditions.

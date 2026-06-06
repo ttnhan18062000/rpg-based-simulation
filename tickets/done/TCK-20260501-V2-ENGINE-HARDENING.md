@@ -6,6 +6,15 @@ V2 Engine Logic Hardening & Audit Reconciliation
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Harden the V2 engine logic by reconciling the exhaustive semantic checklist with the authoritative source code, injecting 'VERIFIED v2' markers, and achieving high-confidence parity in the protocol validator.
 

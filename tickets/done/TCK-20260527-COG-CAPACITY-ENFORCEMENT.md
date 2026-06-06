@@ -8,6 +8,15 @@ Make Capacity Enforcement Unconditional and Testable
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Separate capacity enforcement from strategic mutation, making it unconditional, idempotent, and testable. Ensure that trimming of projects, leads, concerns, and hypotheses is executed deterministically on its cadence, preserving active projects and highest-priority items while emitting trace events.

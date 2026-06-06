@@ -6,6 +6,15 @@ Initialize Docusaurus 3 site with multi-instance content plugins and local searc
 ## Status
 OPEN
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Set up a Docusaurus 3 site that can serve all project content types (docs, tickets, artifacts, archive) as a unified, searchable site. This is the structural skeleton — content wiring and frontmatter-driven features come in Ticket 7.
 

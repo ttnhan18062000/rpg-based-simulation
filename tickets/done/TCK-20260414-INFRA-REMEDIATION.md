@@ -6,6 +6,15 @@ Infrastructure Isolation & Replay-Assertion Repair
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Address the remediation track from `strategy_implementation_updated_v2.md`: prove optional infrastructure disabled-modes, repair stale replay-vs-graph assertions, and define explicit truth-surface ownership.
 

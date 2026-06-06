@@ -6,6 +6,15 @@ Weight Pressure and Inventory Parity Enforcement
 ## Status
 INPROGRESS
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Implement the 'Pressure Law' for inventory weight, matching the original `src` behavior. Current v2 only checks slot availability.
 

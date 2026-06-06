@@ -23,3 +23,7 @@ Complete the remaining open items in `final_implementation_plan_3.md` to achieve
 ## Related Tickets
 - TCK-20260403-RECOVERY
 - TCK-20260402-VALIDATION
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

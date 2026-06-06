@@ -8,6 +8,15 @@ Static Guard Against Direct DirtySet Usage
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Implement Milestone 3 of the Performance Optimization Hardening Plan: a static analysis test suite (`tests/static/test_no_direct_dirtyset_candidate_selection.py`) that strictly prohibits simulation phases, systems, and AI modules from directly accessing `update.dirty_set` properties (e.g. `update.dirty_set.movement_entities`). This guarantees that all candidate selection remains centralized inside `CandidateSelector` and prevents optimization inconsistencies or silent bypasses in future feature additions.

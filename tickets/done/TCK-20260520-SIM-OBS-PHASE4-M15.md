@@ -8,6 +8,15 @@ Milestone 15 — Scenario Run Matrix and Sweeper
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Build a working scenario sweeper that runs the same scenario across multiple seeds and/or configurations sequentially, collecting standard Phase 3 run artifacts and producing a structured Run Set Manifest.

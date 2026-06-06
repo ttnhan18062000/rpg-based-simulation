@@ -27,3 +27,7 @@ This ticket combines the maintenance refactor of overgrown modules with the func
 - TCK-20260322-RPG_REFINEMENT (InProgress)
 - TCK-20260326-BIGMOD (Subsumed)
 - epic-09-improved-pathfinding-and-movement.md
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

@@ -8,6 +8,15 @@ Repair global content reference graph and active-data validation without comment
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Ensure the ContentReferenceGraph and CatalogValidator:

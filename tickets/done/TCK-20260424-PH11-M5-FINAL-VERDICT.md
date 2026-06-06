@@ -6,6 +6,15 @@ Phase 11 Milestone 5: Final Replacement Verdict
 ## Status
 OPEN
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Consolidate the final proof bundle and issue the official replacement verdict for the V2 engine. Ensure all release-truth surfaces say exactly what the evidence says.
 

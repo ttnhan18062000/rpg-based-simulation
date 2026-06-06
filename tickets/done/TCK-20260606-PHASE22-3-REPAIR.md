@@ -8,6 +8,15 @@ Repair World Module v2 normalization count loss
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Fix count loss bug where resources, buildings, services dicts / mappings get converted via list(...) in normalizer, losing counts/quantities. Preserve them as `dict[str, int]` count maps and handle list shorthand normalizing to count `1`.

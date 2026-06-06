@@ -8,6 +8,15 @@ Repair fail-closed schemas and composition normalization validation using real f
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Ensure active authoring schemas are fail-closed and composition normalization preserves structure using real content files under `data/content/`.

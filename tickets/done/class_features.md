@@ -6,3 +6,7 @@
 - - also show the class skill tree, and class breakthroughs (... -> swordman -> swordmaster -> ...)
 - - also show the class attributes information of the class (scaling like E, D, B, C ,B, A, S, SS, SSS, etc)
 - - you can add more features if you  think it is neccessary, making a most detailed, realistic RPG-class system
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

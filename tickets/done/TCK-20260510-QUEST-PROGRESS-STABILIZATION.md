@@ -8,6 +8,15 @@ Resolving Quest Progress Double-Counting and Merging Regressions
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Identify and resolve a double-counting regression in quest progression logic. Ensure atomic, deterministic quest updates and reward delivery within the V2 authoritative pipeline.

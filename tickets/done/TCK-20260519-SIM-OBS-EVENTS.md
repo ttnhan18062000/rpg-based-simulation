@@ -6,6 +6,15 @@ Curated SimulationEvent & Entity Timeline Buffers
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Implement Pydantic-based event hierarchy, attach in-memory entity timeline ring buffers to `EntityState`, and implement real-time WebSocket broadcasting from the post-commit asynchronous observer hook in the kernel, ensuring 0% impact on deterministic replay hashes.
 

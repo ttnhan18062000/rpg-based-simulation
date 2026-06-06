@@ -6,6 +6,15 @@ Live Run Status and Snapshot Provider
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Expose the current simulation run status safely via new read-only API endpoints to allow developers to query running simulations (current tick, health state, metrics, errors) without blocking the engine's tick loop or scanning all entities.
 

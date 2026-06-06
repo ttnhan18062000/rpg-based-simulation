@@ -6,6 +6,15 @@ Milestone 6: Worker Throughput Hardening
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Optimize the worker execution pipeline to eliminate Kernel-side bottlenecks and $O(N^2)$ scaling issues during result aggregation.
 

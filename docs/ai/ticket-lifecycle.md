@@ -6,27 +6,42 @@ For a concrete example, this document traces **Phase 28 Task 28.1** — integrat
 
 ---
 
+## Tier Routing
+
+The workflow short-circuits based on the ticket's `## Tier` field:
+
+| Tier | Phases run | Use when |
+|---|---|---|
+| `hotfix` | Scope → Implement → Test → Parity → Verify → Finalize | Targeted fix with self-evident intent — no investigation needed |
+| `standard` | Full 9-phase pipeline (default) | Any substantive feature, repair, or refactor |
+| `epic` | Scope only | Large initiative; tracks child tickets, no direct implementation |
+
+The tier can be set in the ticket file (`## Tier`) or passed as `args.tier` to override.
+
+---
+
 ## Overview
 
 ```
 Request
   │
   ▼
-[Scope]          ticket-scoper     → tickets/inprogress/{id}.md
+[Scope]          ticket-scoper     → tickets/inprogress/{id}.md  (tier read here)
                                      staging_artifacts/{id}/
   │
   ├─ CONFLICTS_DETECTED → human resolves, re-run
+  ├─ tier=epic → EPIC_SCOPED (done — implement children separately)
   │
-  ▼
+  ▼  (standard only)
 [Investigate]    investigator      → investigation.md
                                      test_plan.md
   │
-  ▼
+  ▼  (standard only)
 [Plan]           planner           → plan.md
   │
   ├─ NEEDS_HUMAN_INPUT → human resolves open questions, re-run with ticket_id
   │
-  ▼
+  ▼  (standard only)
 [Review]         architecture-reviewer  → APPROVED / NEEDS_CHANGES / BLOCKED
   │
   ├─ NEEDS_CHANGES / BLOCKED → human fixes plan.md, re-run with ticket_id
@@ -44,14 +59,14 @@ Request
 [Parity]         parity-updater    → docs/parity_ledger/*.yaml updated
   │
   ▼
-[Verify]         done-checker      → 11-condition DoD check
+[Verify]         done-checker      → DoD check (hotfix: condition 4 N/A)
   │
   ├─ DOD_BLOCKED → human fixes remaining items, re-run with ticket_id
   │
   ▼
 [Finalize]       inline            → ticket moved to tickets/done/
                                      working_log.csv appended
-                                     staging_artifacts/ → stored_artifacts/
+                                     staging_artifacts/ → stored_artifacts/  (standard)
                                      data/runs/ and reports/ cleaned
   │
   ▼
@@ -66,6 +81,12 @@ DONE
 // New task (ticket created from description):
 Workflow({ name: 'implement-ticket', args: {
   request: 'Implement Task 28.1 — integrate relation projection into combat target classification'
+}})
+
+// Hotfix (skip investigate/plan/review):
+Workflow({ name: 'implement-ticket', args: {
+  request: 'Fix off-by-one in region boundary check',
+  tier: 'hotfix'
 }})
 
 // Resume after a gate failure:

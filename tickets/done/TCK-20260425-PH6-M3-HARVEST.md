@@ -8,6 +8,15 @@ Implementation of Harvesting and Resource Node Lifecycle
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Implement deterministic, channeled harvesting of resource nodes. Ensure authoritative node depletion, cooldowns, and item production without duplication.

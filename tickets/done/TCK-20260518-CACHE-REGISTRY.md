@@ -8,6 +8,15 @@ Cache Lifecycle and Memory Boundaries (Milestone 19)
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Implement a centralized `CacheRegistry` and `CacheBudgetPolicy` to formally manage, observe, and enforce deterministic eviction across all runtime optimization caches (`MovementPlanCache`, `ReadModelCache`, spatial grids, occupancy snapshots, strategic queues) preventing unbounded memory growth during long simulation horizons.

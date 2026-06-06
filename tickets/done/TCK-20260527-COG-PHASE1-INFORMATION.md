@@ -8,6 +8,15 @@ Implement Phase 1 InformationProvider System
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Implement the structured InformationProvider system that allows entities to query knowledge sources (guide, guild, blacksmith) dynamically. Ensure that queries for secret materials (like moon_resin) return partial hints or rumor-based leads rather than full world truth, preventing omniscient global scanning.

@@ -6,6 +6,15 @@ Hardening Combat Legality Matrix and AoE Authoritative Substrate
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Complete the integration of the authoritative V2 combat loop by finalizing the Combat Legality Matrix. Ensure all melee, ranged, and AoE interactions adhere to deterministic engine laws, validate legality contracts (LOS, range, readiness, friendly fire), and update the exhaustive logic ledger.
 

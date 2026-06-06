@@ -34,3 +34,7 @@ Entities record significant events (GLORY, TRAUMA) into `memory_log` via `action
 ## Related Tickets
 - TCK-20260322-RPG_REFINEMENT (Parent)
 - TCK-20260326-HYSTERESIS (Sibling — completed)
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

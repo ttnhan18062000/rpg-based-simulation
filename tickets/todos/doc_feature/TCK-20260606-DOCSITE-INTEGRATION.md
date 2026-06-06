@@ -6,6 +6,15 @@ Wire all content into Docusaurus with sidebars, tags, status badges, search, and
 ## Status
 OPEN
 
+## Tier
+standard
+
+## Type
+feature
+
+## Priority
+P1
+
 ## Request Summary
 Complete the Docusaurus site by wiring frontmatter-driven features: tag index pages, status badges, layer-filtered sidebars, unified search tuning, and artifact grouping (investigation + plan + test_plan shown together per ticket). This is the final integration ticket — all content should be navigable and searchable in one site.
 

@@ -6,6 +6,15 @@ RPG Strategic & Transaction History Bounding
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Enforce capacity limits on entity strategic history (leads, concerns, turning points) and transaction logs in the V2 Engine to mitigate state bloat and memory inflation in long-running simulations.
 

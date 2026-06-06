@@ -8,6 +8,15 @@ Phase 26 Registry Adapter Repair
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Make registry projection explicit and testable, not hidden inside heuristic/fallback code.

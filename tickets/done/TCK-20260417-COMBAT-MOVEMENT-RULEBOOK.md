@@ -6,6 +6,15 @@ Combat and Movement Rulebook Milestone 1 Implementation
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Implement Milestone 1 of the Combat and Movement Overhaul, focusing on locking the rulebook contract for space, timing, and world progression.
 

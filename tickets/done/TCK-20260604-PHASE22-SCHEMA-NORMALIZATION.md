@@ -6,6 +6,15 @@ Phase 22 — Fail-closed schema and authoring-form normalization
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Prevent YAML fields from being silently ignored by adding a fail-closed schema mode (forbidding extra fields). Support author-friendly composition and module formats while preserving executable schema compatibility via normalizers.
 

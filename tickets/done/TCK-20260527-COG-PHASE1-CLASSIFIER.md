@@ -8,6 +8,15 @@ Implement Phase 1 Route-Family Classifier
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Implement a RouteFamilyClassifier that consumes action and intent traces to group low-level raw actions into strategic route families (e.g., buy_upgrade, craft_upgrade, ask_information, recover, defer_with_reason).

@@ -8,6 +8,15 @@ Cognition Feature Extractor and Strategic Pattern Miner
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Implement the logic to extract structured strategic features from raw cognition artifacts and analyze these features across ticks/runs to mine complex behavioral patterns (e.g. stalled progress, looping detours, or strategic overloading).

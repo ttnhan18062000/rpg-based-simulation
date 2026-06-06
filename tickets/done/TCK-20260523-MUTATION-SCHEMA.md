@@ -8,6 +8,15 @@ Implement Phase 13 MutationSpec Schema and Validation Framework
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Implement the schema, parser, safe loader, and pluggable verification rules for MutationSpec to support controlled world and scenario mutations.

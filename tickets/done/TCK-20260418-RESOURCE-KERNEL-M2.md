@@ -6,6 +6,15 @@ Milestone 2: Minimal Deterministic Single-Thread Kernel
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Build the smallest correct runtime that obeys the Milestone 1 contract and proves deterministic execution.
 

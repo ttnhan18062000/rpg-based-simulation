@@ -8,6 +8,15 @@ Cognition Graph Observability Safety, Parity, and Performance Certification
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Conduct exhaustive, mandatory safety and validation verification for Phase 10 logic. This includes writing determinism/parity tests (confirming state hash alignment across different mode profiles), performance overhead profiling, false positive checks, and complete end-to-end simulation flow testing.

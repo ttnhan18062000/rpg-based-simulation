@@ -6,6 +6,15 @@ Replace weak signals with real bounded accounting
 ## Status
 OPEN
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Transition runtime signals from estimates to truthful facts. This involves implementing peak-accounting for workers, windowed math for trends, and profile-bound sampling cadences.
 

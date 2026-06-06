@@ -8,6 +8,15 @@ Phase 2 — Bottom-Up Entity Self Model
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Build the internal interpretation layer: entities must be able to assess their own condition, interpret their needs, estimate capabilities, and maintain personal knowledge/unknowns — without hardcoding adventure readiness views.

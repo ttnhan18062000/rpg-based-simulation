@@ -8,6 +8,15 @@ Final verification and certification of Phase 10: Cognition Graph Observability 
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Conduct final verification and certification of all Phase 10 milestones (Milestones 58 through 66) as described in `obs_sim_phase10.md` to ensure a robust, non-intrusive, secure, and fully verified cognition observability pipeline.

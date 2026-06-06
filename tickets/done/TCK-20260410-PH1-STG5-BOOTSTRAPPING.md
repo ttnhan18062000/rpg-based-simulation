@@ -1,7 +1,15 @@
 # Ticket TCK-20260410-PH1-STG5-BOOTSTRAPPING
 ## Phase 1 Stage 5: Bootstrapping
 
-### Request Summary
+### Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+## Request Summary
 Implementation of default strategic orientation seeding during entity generation.
 
 ### Scope

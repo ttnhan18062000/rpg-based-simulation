@@ -8,6 +8,15 @@ World Data Refactor Phase 0: Architecture Inventory and Boundary Freeze
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Establish and freeze the architecture before world-data refactor implementation begins. This includes creating a detailed Architecture Decision Record (ADR), auditing all hardcoded content and semantic assumptions within the compiler and runtime engine, and deciding the repository layout for `WorldCompositionSpec`.

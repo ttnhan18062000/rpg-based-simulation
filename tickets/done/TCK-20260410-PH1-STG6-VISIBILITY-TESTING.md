@@ -1,7 +1,15 @@
 # Ticket TCK-20260410-PH1-STG6-VISIBILITY-TESTING
 ## Phase 1 Stage 6: Visibility & Testing
 
-### Request Summary
+### Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+## Request Summary
 Implementation of strategic introspection tools and foundational regression tests.
 
 ### Scope

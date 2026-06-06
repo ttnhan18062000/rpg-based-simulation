@@ -48,3 +48,7 @@
 - `src/core/logic/contract_consequence_service.py` [NEW]
 - `tests/test_social_contracts.py` [FIXED/EXPANDED]
 - `tests/test_party_tactics.py` [NEW]
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

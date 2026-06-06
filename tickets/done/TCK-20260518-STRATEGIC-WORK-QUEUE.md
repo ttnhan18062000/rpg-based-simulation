@@ -8,6 +8,15 @@ Implement StrategicWorkQueue for Bounded Strategic Cognition
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Implement `StrategicWorkQueue` to narrow candidate entities evaluated in strategic intelligence loops across 7 urgency tiers, respecting a configurable budget and preventing starvation via deterministic round-robin background sampling.

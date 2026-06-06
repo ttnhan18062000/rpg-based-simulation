@@ -20,3 +20,7 @@ Comprehensive review of the RPG simulation mechanics, AI behavior, and economic 
 
 ## Related Tickets
 - TCK-20260322-RPG_REFINEMENT (Deferred)
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

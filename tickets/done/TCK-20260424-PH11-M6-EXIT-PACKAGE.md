@@ -6,6 +6,15 @@ Phase 11 Milestone 6: Phase 12 Cutover Baseline and Phase 11 Exit Package
 ## Status
 OPEN
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Define the exact supported cutover surface and constraints for Phase 12. Publish the final Phase 11 exit package to formally close the ratification phase.
 

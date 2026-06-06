@@ -10,3 +10,7 @@
     - No debug print statements remain in production code.
 - **Related tickets**: Phase 3 Stage 4 tasks in `phase_3_ds_implementation_plan.md`.
 - **Status**: INPROGRESS
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

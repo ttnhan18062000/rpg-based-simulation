@@ -6,6 +6,15 @@ Enforcing Authoritative Movement Costs (Terrain Weighting)
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Integrate terrain-based movement costs into the authoritative legality matrix to prevent entities from ignoring difficult terrain.
 

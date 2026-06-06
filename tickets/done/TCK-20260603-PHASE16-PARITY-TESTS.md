@@ -8,6 +8,15 @@ Phase 16 — Catalog-vs-Legacy Runtime Parity Tests
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Ensure dynamic content catalog configuration matches or exceeds legacy capabilities. Implement content parity validation, cross-reference behavior checks, simulation smoke test, and legacy fallback configuration logic.

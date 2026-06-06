@@ -6,6 +6,15 @@ Initialize Refactored Test Structure and Migrate Pipeline Tests
 ## Status
 INPROGRESS
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Create the new test directory hierarchy and move the first batch of integration tests (Pipeline Phase) as per Milestone 1 of the refactor plan.
 

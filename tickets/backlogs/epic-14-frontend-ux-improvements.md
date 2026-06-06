@@ -117,3 +117,7 @@ Inspired by: Factorio map viewer, Rimworld camera controls, RTS spectator modes,
 - Frontend: ~15 files new/modified
 - Backend: 0 changes
 - Assets: Alternative color palette definitions
+
+**Tier:** epic
+**Type:** feature
+**Priority:** P2

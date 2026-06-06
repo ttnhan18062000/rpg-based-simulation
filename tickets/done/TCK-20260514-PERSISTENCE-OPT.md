@@ -6,6 +6,15 @@ Persistence Layer Optimization (Hashing & Serialization)
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Optimize the `CanonicalStateHasher` to reduce the time spent in the persistence phase. For 1,000 entities, `get_hash` currently takes ~230ms, which exceeds the tick budget. The primary bottleneck is recursive `asdict()` calls.
 

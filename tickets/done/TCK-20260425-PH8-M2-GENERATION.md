@@ -6,6 +6,15 @@ Implement Deterministic, Scaled Quest Generation
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Implement a dynamic quest generator that produces deterministic, level-scaled quests for town buildings.
 

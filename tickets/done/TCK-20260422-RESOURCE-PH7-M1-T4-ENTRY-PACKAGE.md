@@ -8,6 +8,15 @@ Publish Phase 7 Entry Package
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Execute Task 4 of Phase 7 Milestone 1: Publish the formal Phase 7 Entry Package. This document serves as the authoritative summary of the Milestone 1 "Readiness Gate" and signals the start of Phase 7 implementation work.

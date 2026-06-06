@@ -6,6 +6,15 @@ Implement Authoritative AoE Legality and Splash
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Recover the authoritative Area-of-Effect (AoE) logic where impact center legality is separate from splash consequences.
 

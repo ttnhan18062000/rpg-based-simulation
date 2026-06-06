@@ -6,6 +6,15 @@ Resource Contract and Domain invariants
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Establish authoritative contract tests for resource interactions and ensure the InteractionSystem enforces all domain invariants (weight pressure, slot capacity, etc.) regardless of AI proposals.
 

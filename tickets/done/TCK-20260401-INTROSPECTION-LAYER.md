@@ -23,3 +23,7 @@ DONE
 
 ## Final Status
 **DONE**: Finalized rich introspection services including Combat Traces, Stat Breakdown, and Scheduler internal projections. Successfully offloaded detailed rendering data from the main world stream to specialized endpoints, enhancing frontend explainability.
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

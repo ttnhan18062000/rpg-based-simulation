@@ -6,6 +6,15 @@ Aligning Strategic Cognition with Tactical Execution (Phase Order)
 ## Status
 OPEN
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Reduce the 1-tick latency between strategic redirection and tactical execution.
 

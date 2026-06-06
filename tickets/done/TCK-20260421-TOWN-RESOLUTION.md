@@ -6,6 +6,15 @@ Implement Town Resource Resolution (Milestone 2)
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Implement authoritative Shop and Blacksmith systems in V2 Engine to achieve bit-identical parity with V1 oracle.
 

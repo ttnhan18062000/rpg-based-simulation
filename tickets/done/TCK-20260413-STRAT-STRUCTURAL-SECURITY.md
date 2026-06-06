@@ -6,6 +6,15 @@ Strategic Engine Hardening: Structural Integrity & Uncertainty Verification
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Remediate structural weaknesses in the strategic simulation engine to ensure byte-identical persistence, authoritative traceability, and anti-cheating uncertainty.
 

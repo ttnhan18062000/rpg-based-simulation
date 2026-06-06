@@ -6,6 +6,15 @@ Phase 10 Milestone 5: API, Protocol, and Transport Compatibility
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Recover legacy API routes, WebSocket protocol, and transport-level semantics (compression, etc.) for the V2 engine.
 

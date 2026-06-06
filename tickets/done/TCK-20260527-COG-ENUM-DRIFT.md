@@ -8,6 +8,15 @@ Fix strategic enum and string drift across goal, project, concern, and event kin
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Introduce canonical enums or constants for all strategic kinds to eliminate schema drift. Ensure goal kinds, project kinds, concern kinds, and emitted cognition events use canonical enums rather than raw strings, and that loaded persisted state is strictly validated.

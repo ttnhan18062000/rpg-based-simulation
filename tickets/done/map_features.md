@@ -5,3 +5,7 @@
 - make the map larger
 - make every places larger
 -> DONE
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

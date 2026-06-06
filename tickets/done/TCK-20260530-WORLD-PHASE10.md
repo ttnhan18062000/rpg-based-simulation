@@ -8,6 +8,15 @@ Observability Join and Migration Cleanup
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Implement Phase 10: "Observability Join and Migration Cleanup" of `world_phases_0_10_updated.md` to connect world assembly provenance to observability and clean up migration debt.

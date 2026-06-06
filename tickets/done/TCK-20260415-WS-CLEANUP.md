@@ -8,6 +8,15 @@ Workspace Cleanup of Temporary Files
 
 OPEN
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Remove all temporary files in the workspace (caches, scratch files, build artifacts) while explicitly preserving any directory named `tmp/`.

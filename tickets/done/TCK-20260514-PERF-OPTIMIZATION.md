@@ -6,6 +6,15 @@ Engine Performance Hotspot Optimization
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Optimize the V2 Engine performance by addressing hotspots identified in the profiling harness:
 1. `dataclasses.replace` churn in `StateUpdate` and `EntityUpdate` merges.

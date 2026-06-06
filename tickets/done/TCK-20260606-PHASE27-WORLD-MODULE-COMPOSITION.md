@@ -8,6 +8,15 @@ Phase 27 World Module and Composition Usage Repair
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Prove that real `data/content/world_modules` and `data/content/world_compositions` are executable.

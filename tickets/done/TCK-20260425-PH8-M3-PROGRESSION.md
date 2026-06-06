@@ -6,6 +6,15 @@ Implement Authoritative Leveling and Attribute Growth
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Implement the core growth mechanics: converting XP (Evolution Points) into Levels and updating derived attributes (HP, ATK, DEF).
 

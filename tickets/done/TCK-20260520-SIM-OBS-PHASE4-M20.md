@@ -8,6 +8,15 @@ Milestone 20 — Scenario-Level Report and CI Gate
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Generate a report for the whole sweep/baseline comparison and implement a CI-friendly pass/fail gate checking both statistical baseline drift and custom balance expectations.

@@ -24,3 +24,7 @@ Achieve full architectural convergence by addressing partially implemented tasks
 - `TCK-20260331-RUNTIME-INTEGRITY`
 
 ## Status: INPROGRESS
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

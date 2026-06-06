@@ -6,6 +6,15 @@ Phase 5 Resource Engine Hardening & Integrity Guards
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Implement a robust, automated integrity suite to prevent silent architectural drift between code, documentation, and manifest definitions for Resource Phase 5.
 

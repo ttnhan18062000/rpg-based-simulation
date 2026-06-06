@@ -18,3 +18,7 @@
     - [ ] Verify canonical headless bootstrap in `HeadlessRunner`
     - [ ] Implement Scenario-specific baseline tests
     - [ ] Verify Cognition Graph + Replay consistency
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

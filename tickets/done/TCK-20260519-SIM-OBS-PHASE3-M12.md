@@ -8,6 +8,15 @@ Milestone 12: Rule Engine Infrastructure with Core Rules
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Implement the formal `RuleEngine` infrastructure and the five core simulation observability rules (`HardLawViolationDetected`, `NavigationStuckBasic`, `QuestStalledBasic`, `ResourceProductionZero`, `GovernorDegradedTooLong`). The rules must support dynamic configuration, scenario-specific gating, robust missing-signal fallback states, and structured output formatting via `AnomalyRecord` models.

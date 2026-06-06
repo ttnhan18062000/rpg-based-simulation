@@ -6,6 +6,15 @@ Milestone 6: Streaming Replay and Bounded Persistence
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Implement a resource-safe persistence model for replay data with streaming emission, bounded staging, and deterministic chunking.
 

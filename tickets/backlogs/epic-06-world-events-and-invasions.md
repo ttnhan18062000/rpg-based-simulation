@@ -106,3 +106,7 @@ Inspired by: Rimworld random events, Terraria invasions, Dwarf Fortress sieges, 
 - Backend: ~8 files new/modified
 - Frontend: ~4 files modified (event banner, rendering, event log)
 - Data: Event definitions, invasion compositions, world boss definitions
+
+**Tier:** epic
+**Type:** feature
+**Priority:** P2

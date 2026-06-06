@@ -8,6 +8,15 @@ Implement UpdateSimulationKnowledge Workflow (Milestone 102) & Approval Gates/Au
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Implement `UpdateSimulationKnowledgeWorkflow` class in `src/lab/workflows.py` to ingest approved insights, patches, and decisions, and securely store them in the global knowledge base folder (`data/lab_knowledge/`) with audit tracking, preventing unapproved rule updates or path breakouts. Additionally, build a human-gated approval gate and an append-only audit trail logger to ensure 100% security, isolation, and transparency.

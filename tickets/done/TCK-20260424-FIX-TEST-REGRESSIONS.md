@@ -6,6 +6,15 @@ Fix Test Regressions in tests/
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Fix 4 failed test cases in `tests/` identified after Phase 9 closure.
 

@@ -8,6 +8,15 @@ Long-Run Stability Certification (Milestone 18)
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Implement real long-run stability certification (`LongRunStabilityHarness`) running 1,000 entities across 5,000 ticks in multiple simulation modes (pure mode vs runtime mode) to prove bounded memory RSS, stable p95/p99 tick costs without progressive latency spikes, bounded cache sizes, and bit-identical determinism.

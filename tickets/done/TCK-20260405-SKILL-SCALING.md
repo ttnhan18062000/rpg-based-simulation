@@ -14,3 +14,7 @@
 
 ## Related Tickets
 - [TCK-20260405-CONVERGENCE](file:///home/vboxuser/Work/rpg-based-simulation/tickets/done/TCK-20260405-CONVERGENCE.md)
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

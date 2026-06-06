@@ -23,6 +23,15 @@ Produce a file named `TCK-YYYYMMDD-SHORT-SCOPE.md` using today's date. All secti
 ## Status
 OPEN
 
+## Tier
+standard
+
+## Type
+feature
+
+## Priority
+P1
+
 ## Request Summary
 ## Scope
 ## Out of Scope
@@ -39,6 +48,12 @@ OPEN
 ```
 
 - **Status** starts as `OPEN`.
+- **Tier** — infer from the request:
+  - `hotfix` — self-evident targeted fix (bug, one-liner, no investigation needed)
+  - `standard` — any substantive change (default)
+  - `epic` — large multi-ticket initiative; this ticket tracks children, no direct implementation
+- **Type** — infer from the request: `bug` (fixes broken behavior), `feature` (new functionality), `refactor` (restructure without behavior change), `chore` (maintenance/tooling/docs), `repair` (targeted fix to an existing implementation)
+- **Priority** — `P0` (blocking, urgent), `P1` (important, default), `P2` (nice to have / backlog). Use P0 only if explicitly stated or obvious from context.
 - **Acceptance Criteria** must be testable — no vague "works correctly" items.
 - **Out of Scope** must explicitly exclude adjacent things that could scope-creep in.
 - **Assumptions / Open Questions** must list anything that, if wrong, would invalidate the scope.

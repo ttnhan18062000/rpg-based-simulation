@@ -6,6 +6,15 @@ Hardening V2 Resource Engine Substrate (Milestone C & E)
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Finalize the hardening of the V2 Resource Engine by replacing simulated lifecycle outcomes with authoritative runtime truth, cleaning up legacy telemetry, and refreshing all certification proofs.
 

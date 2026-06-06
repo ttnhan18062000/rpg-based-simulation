@@ -6,6 +6,15 @@ Phase 2 Milestone 2: Cognitive Hardening
 ## Status
 OPEN
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Implement selective attention, emotional appraisal, and goal hysteresis to deepen entity cognition and ensure persistence in behavior.
 

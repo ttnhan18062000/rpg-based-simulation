@@ -6,6 +6,15 @@ Implement performance scenario builders
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Implement scenario builders to construct various simulation states for performance testing, as specified in `performance_implementation.md`.
 

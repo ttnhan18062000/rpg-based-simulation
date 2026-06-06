@@ -12,3 +12,7 @@
 - `[ ]` Phase 5: Verification
     - `[ ]` Run performance tests
     - `[ ]` Verify memory boundary tripwire
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

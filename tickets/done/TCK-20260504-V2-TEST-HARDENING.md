@@ -6,6 +6,15 @@ Hardening Legacy Test Suites via V2EntityBuilder
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Complete the AOA (Atomic Object Access) migration for the V2 RPG Engine by refactoring legacy test suites to strictly utilize the `V2EntityBuilder`. This ensures that all entity state constructions are consistent with the V2 architecture and that no legacy `EntityState` instantiations bypass the builder's validation and component population logic.
 

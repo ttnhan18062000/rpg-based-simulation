@@ -8,3 +8,7 @@ DONE
 
 ## Final Status
 **DONE**: Implemented comprehensive profiling infrastructure including `scripts/profile_simulation.py` and `scripts/profile_api_payload.py`. Integrated with `Makefile` for automated performance auditing. Achieved 100% visibility into engine tick phases and API payload overhead, leading to successful optimizations (TCK-20260322-PERF_OPT).
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

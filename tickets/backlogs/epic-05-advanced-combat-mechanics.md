@@ -99,3 +99,7 @@ Inspired by: Final Fantasy Tactics positioning, Dark Souls stamina management, D
 > **[EPIC] combat? ranged combat?**
 
 F4 (Ranged Combat Positioning) is the highest-priority feature from this epic per developer request. Consider implementing F4 as a standalone deliverable before the full epic.
+
+**Tier:** epic
+**Type:** feature
+**Priority:** P2

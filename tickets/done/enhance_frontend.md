@@ -5,3 +5,7 @@
 - add a sub-tab in the inspect panel, to show the events of the entity only
 - add information on everything that have, for example: hover on goal and thoughts, show a short description of what it is; hover on buildings
 -> DONE
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

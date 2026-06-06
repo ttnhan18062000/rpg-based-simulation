@@ -6,6 +6,15 @@ Freeze exact Milestone A runtime law set
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Write the finished law set for the deterministic single-process baseline so implementation, tests, and later milestones all target one exact contract.
 

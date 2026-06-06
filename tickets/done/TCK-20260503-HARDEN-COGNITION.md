@@ -6,6 +6,15 @@ Hardening RPG Strategic Cognition and Tactical Legality
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Complete the hardening of the RPG V2 engine by finalizing Domain 2 (Tactical Decision Boundedness) and Domain 3 (Strategic Cognition).
 

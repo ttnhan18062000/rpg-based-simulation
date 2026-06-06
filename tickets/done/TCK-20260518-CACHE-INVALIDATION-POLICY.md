@@ -8,6 +8,15 @@ CacheInvalidationPolicy Implementation and Centralized Invalidation Rules
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Implement `invalidated_indexes` in `CacheInvalidationPolicy` to centralize dirty-domain cache invalidation rules and verify with a comprehensive unit test suite.

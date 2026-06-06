@@ -8,6 +8,15 @@ Implement missing resolution logic for 'access' and 'inventory' blockers
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 The StrategicIntelligenceSystem.resolve_blockers method only resolves 'material' blockers. 'access' blockers (navigation failures) and 'inventory' blockers (capacity failures) are currently never resolved once generated, causing entities to stay in a blocked state even after reaching their destination or clearing inventory.

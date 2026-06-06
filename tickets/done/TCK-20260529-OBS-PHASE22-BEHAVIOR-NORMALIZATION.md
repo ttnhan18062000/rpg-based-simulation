@@ -8,6 +8,15 @@ Phase 22 — Async Behavior Normalization Worker
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Implement Phase 22 of the Observability & Behavior Profiling roadmap: convert raw simulation events into semantic behavior events outside the hot path. Also includes Phase 28 initial guard (queue full, worker failure, determinism checks).

@@ -7,6 +7,15 @@ RPG Engine E5 Hardening: Race Conditions & Idempotency
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Harden the RPG V2 engine by implementing race-condition safeguards (deterministic resolution) and exactly-once transaction idempotency.
 

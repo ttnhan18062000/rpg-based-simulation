@@ -8,6 +8,15 @@ Migrate town test suites to V2EntityBuilder
 DONE
 INPROGRESS
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Resolve 21 test suite failures in `tests/town/` by refactoring legacy `EntityState` instantiations to the `V2EntityBuilder` fluent API.

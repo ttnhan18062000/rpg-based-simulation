@@ -11,3 +11,7 @@ DONE
 
 ## Final Status
 **DONE**: Implemented `src/core/registry_loader.py` using Pydantic `TypeAdapter` for robust validation. Successfully externalized item, class, skill, breakthrough, and trait definitions into JSON data files, decoupling content from engine logic.
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

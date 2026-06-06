@@ -8,6 +8,15 @@ Clean exit package for Phase 5: Truth, Proof, and Release-Ready Status
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Milestone 1 Task 5 of Phase 6: Produce the final, authoritative Phase 5 Exit Package. This artifact serves as the formal handoff to the Phase 6 replacement ledger work, ensuring all consolidations, reconciliations, and proofs are unified into a single release-ready package.

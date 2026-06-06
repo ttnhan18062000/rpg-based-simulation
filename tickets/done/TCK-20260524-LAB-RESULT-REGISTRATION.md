@@ -8,6 +8,15 @@ Implement RegisterSimulationResult Workflow (Milestone 98)
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Implement the `RegisterSimulationResultWorkflow` in `src/lab/workflows.py` to support registering completed or partially completed manually executed simulation results into active lab sessions, performing integrity checks, and outputting structured registration reports.

@@ -8,6 +8,15 @@ Milestone 11: Analysis Pipeline Orchestrator
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Create the central orchestrator (`AnalysisPipeline`) that executes post-run analysis. The pipeline should load standard run context and artifacts (manifest, events, metrics, violations), run extensible analyzers via an analyzer registry in stable order, support partial run mode, collect anomalies, trigger report generation, update manifest status, and write results back to the run directory.

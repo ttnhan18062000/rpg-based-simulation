@@ -6,6 +6,15 @@ Fixing Group Cohesion Latency (Phantom Leader Bug)
 ## Status
 OPEN
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Ensure that group cohesion and leadership dissolution reflect real-time entity status (death/active) within the same simulation tick.
 

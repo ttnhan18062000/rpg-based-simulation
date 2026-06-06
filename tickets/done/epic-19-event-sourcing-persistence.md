@@ -28,3 +28,7 @@ This epic introduces Kafka into the simulation as the source of truth for the wo
 
 ## Dependencies
 - Precursor feature to **epic-17** Phase 2 (World Evolution). Demands that determinism is strictly maintained.
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

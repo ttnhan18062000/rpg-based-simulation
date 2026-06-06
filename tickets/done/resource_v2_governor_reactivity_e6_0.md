@@ -6,6 +6,15 @@ Fixing Governor Reactivity Lag (Zero-Tick Throttle)
 ## Status
 OPEN
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Reduce the 1-tick delay in Governor response to extreme hardware or compute pressure.
 

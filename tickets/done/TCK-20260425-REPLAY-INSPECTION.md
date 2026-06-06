@@ -8,6 +8,15 @@ Implementation of Phase 12: Replay, Inspection, and Certification
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Extend the V2 engine with deterministic replay, comprehensive state fingerprinting, API inspection schemas, and behavioral metrics to finalize the truth layer.

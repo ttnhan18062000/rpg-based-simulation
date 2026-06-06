@@ -23,3 +23,7 @@ This ticket addresses the first priority of the `final_implementation_plan.md`. 
 
 ## Status
 INPROGRESS
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

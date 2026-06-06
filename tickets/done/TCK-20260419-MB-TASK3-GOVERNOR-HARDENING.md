@@ -6,6 +6,15 @@ Harden Governor Transitions and Policy Integration
 ## Status
 OPEN
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Transition the `ResourceGovernor` from rough heuristics to a hardened control layer. This involves implementing profile-driven recovery, monotonicity in de-escalation, and a "Confidence Window" to prevent thrashing.
 

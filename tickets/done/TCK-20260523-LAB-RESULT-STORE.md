@@ -8,6 +8,15 @@ Milestone 80 — Lab Result Store
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Implement the `LabResultStore` component (Milestone 80) to store and retrieve lab results in file-based form for later review.

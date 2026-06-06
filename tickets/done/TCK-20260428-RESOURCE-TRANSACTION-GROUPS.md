@@ -8,6 +8,15 @@ Multi-Transfer Transaction Semantics (Atomic Groups)
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Implement support for grouping `ResourceTransferIntent` objects into atomic "all-or-nothing" transaction groups.

@@ -23,3 +23,7 @@ DONE
 
 ## Final Status
 **DONE**: Unified resolver/action system/replay via authoritative update-driven pipeline. Verified replay consistency and implemented typed update models for AI-generated intents and building sabotage targeting.
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

@@ -8,6 +8,15 @@ Rename detour_depth to reserved_detour_depth to Resolve Config Overpromise
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 The strategic configuration parameter `detour_depth` was misleading as it was not actively used by any recursive detour planning mechanisms. Rename it to `reserved_detour_depth` and document/comment it clearly as a reserved configuration parameter for future multi-step planning to align architectural design and prevent user confusion.

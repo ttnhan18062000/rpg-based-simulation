@@ -6,6 +6,15 @@ Phase 3 Milestone 1: Strategic Objective Persistence
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Implement long-term strategic goal setting and objective persistence to prevent tactical jitter and ensure entities follow through on non-combat projects.
 

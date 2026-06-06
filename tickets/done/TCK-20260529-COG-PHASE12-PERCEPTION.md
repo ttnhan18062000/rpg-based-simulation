@@ -8,6 +8,15 @@ Perception and Attention Domain Implementation
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Implement the Phase 12 Perception and Attention Domain. This prevents entity omniscience by scoring world signals through salience and filtering them based on attention focus and bounded capacity.

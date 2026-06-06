@@ -2,6 +2,15 @@
 
 **Status**: DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Implement Phase 2 of the Macro-Interest and Behavioral Realism design shift. This phase focuses on making the individual subjective state (established in Phase 1) socially meaningful by introducing turning-point memory, interpreted events, bounded relationships, and public reputation.
 

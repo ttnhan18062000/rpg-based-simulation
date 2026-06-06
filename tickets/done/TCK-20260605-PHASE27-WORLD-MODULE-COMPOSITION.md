@@ -8,6 +8,15 @@ World module and composition usage correction
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Make modules and compositions consume lower-layer data properly.

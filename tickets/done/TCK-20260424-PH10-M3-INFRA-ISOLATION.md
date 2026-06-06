@@ -6,6 +6,15 @@ Phase 10 Milestone 3: Infrastructure and Environment Precedence
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Recover environment flags, broker-disabled mode, and infrastructure-isolation behavior for the V2 engine.
 

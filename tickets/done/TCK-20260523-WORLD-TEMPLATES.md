@@ -8,6 +8,15 @@ Milestone 71 — World Template and Recipe System
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Implement a pluggable World Template and Recipe System that allows worlds to be created dynamically using population, resource, building, and region recipes instead of tedious manual lists. The system must support deterministic recipe expansion to standard `WorldSpec` specifications, strictly validate topological containment, ensure stable ID generation, and guarantee that expanded specs pass all existing validation checks without bypassing them.

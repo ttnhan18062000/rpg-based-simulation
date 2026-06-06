@@ -124,3 +124,7 @@ Potential optimizations (implement only if profiling confirms need):
 ## Labels
 
 `epic`, `performance`, `audit`, `done`
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

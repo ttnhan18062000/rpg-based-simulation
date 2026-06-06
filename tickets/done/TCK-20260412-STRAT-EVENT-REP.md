@@ -6,6 +6,15 @@ Event-driven Strategic Reprioritization Implementation
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Implement Milestone 5 of the strategic cognition layer: ensuring that major narrative events (trauma, home damage, betrayal) trigger structural reprioritization (concerns, project pivots, social feedback) based on identity and attachment.
 

@@ -8,6 +8,15 @@ Milestone 14: ApplyPath Structural Redesign via ApplyPlan precomputation
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Implement `ApplyPlan` and `ApplyPlanBuilder` to precompute and structure state updates, replacing repeated branching and checking during state application in `ApplyPath`.

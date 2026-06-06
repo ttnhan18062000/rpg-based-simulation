@@ -8,6 +8,15 @@ Audit Phase 7 Action/Update Rows
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Execute Task 1 of Phase 7 Milestone 2: Audit Phase 7 action/update rows against the current `src` substrate implementation. This involved identifying gaps in typed action proposals, update buckets, and legacy coercion points to ensure a concrete implementation roadmap for Milestone 2.

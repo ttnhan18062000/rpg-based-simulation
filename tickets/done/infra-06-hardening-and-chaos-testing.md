@@ -11,3 +11,7 @@ DONE
 
 ## Final Status
 **DONE**: Successfully implemented Chaos Testing and System Invariant Validation. Integrated `chaos_enabled` and `chaos_drop_rate` into `SimulationConfig` for fault injection. Verified engine resilience via `Hypothesis` property-based testing and recorded findings in `stored_artifacts/infra_06/guide.md`.
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

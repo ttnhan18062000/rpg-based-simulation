@@ -11,3 +11,7 @@
   - [ ] `test_signal_hardening.py`
   - [ ] ... others ...
 - [ ] Final verification of all tests in `tests/engine/`.
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

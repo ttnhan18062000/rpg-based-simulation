@@ -6,6 +6,15 @@ Isolate Milestone A Baseline from Concurrency Plumbing
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 The Milestone A baseline is currently entangled with `WorkerPacket` and `WorkerManager`, preventing it from being an isolated "semantic source of truth." This ticket decouples the kernel execution phase into local and concurrent paths.
 

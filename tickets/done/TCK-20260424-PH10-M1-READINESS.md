@@ -6,6 +6,15 @@ Phase 10 Milestone 1: Phase 9 Exit Closure and Phase 10 Readiness
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Establish the readiness gate for Phase 10 (System Compatibility Closure). Identify the compatibility backlog, define closure conditions, and publish the entry package.
 

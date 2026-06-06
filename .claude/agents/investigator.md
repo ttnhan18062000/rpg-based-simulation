@@ -9,8 +9,20 @@ You receive a ticket ID. Read:
 - Every source file listed in "Related Code Areas" (read the actual code, not just the path)
 - Every doc listed in "Related Docs" — especially the relevant `docs/mechanics/` chapter(s) and any `docs/engine/` contracts
 - `docs/parity_ledger/` — find entries whose `text` overlaps with the ticket scope
-- `stored_artifacts/` — search for prior investigations or plans covering the same area
-- `tickets/done/` — check if similar work was done before and what was learned
+
+### Finding Prior Work
+
+Use whichever path is available:
+
+**If `docs/REGISTRY.yaml` exists (preferred):**
+1. Read it once. Filter entries where `type: ticket` and `related_code_areas` overlaps with the current ticket's Related Code Areas.
+2. For each matching ticket, read the ticket file and any listed `artifact_files` (investigation.md, plan.md — skip test_plan.md unless the regression surface is relevant).
+3. Do not scan `stored_artifacts/` or `tickets/done/` by directory — the registry is the index.
+
+**Fallback (no REGISTRY.yaml yet):**
+1. Read `tickets/done/` listing, filter by name similarity to the affected modules (e.g., if working on `src/content/`, look for tickets with `CONTENT`, `PHASE2[0-8]`, or module-specific names).
+2. For promising matches, check `stored_artifacts/{ticket_id}/` for investigation.md and plan.md. Join by ticket_id — the folder name is the ticket ID.
+3. Do not read every file in `stored_artifacts/` — only the ones matched from `tickets/done/`.
 
 ## Output 1 — `staging_artifacts/{ticket_id}/investigation.md`
 

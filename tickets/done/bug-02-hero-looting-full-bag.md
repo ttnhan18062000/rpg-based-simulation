@@ -32,3 +32,7 @@ When bag is full, the hero should:
 ## Labels
 
 `bug`, `ai`, `goal-evaluation`, `needs-decision`
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

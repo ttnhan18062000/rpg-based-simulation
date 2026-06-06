@@ -8,6 +8,15 @@ Implement Workflow Registry and Skill Contracts (M93)
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Implement a dynamic Markdown frontmatter parsing engine `WorkflowRegistry` and validated `WorkflowSkill` contracts that load specifications directly from `.agents/workflows/` and `.agents/skills/`.

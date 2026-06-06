@@ -22,3 +22,7 @@ Polling every 80ms forces continuous and aggressive JSON serialization of the *e
 - API payload sizes decrease by 90%+ during idle ticks.
 - Client successfully reconstructs full snapshot locally from deltas without visual stutter.
 - Backend CPU utilization drops under heavy client connection load.
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

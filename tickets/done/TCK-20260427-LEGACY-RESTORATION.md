@@ -6,6 +6,15 @@ Legacy Code Restoration and Test Environment Hardening
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 The user requested the restoration of `src_legacy` and `tests_legacy` which were previously removed, and asked to fix tests that incorrectly pointed to the legacy namespace while ensuring new tests use the authoritative V2 engine.
 

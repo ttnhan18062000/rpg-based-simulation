@@ -1,5 +1,14 @@
 # Ticket TCK-20260409-PH4-STG1-CORE-MODELS
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Start Phase 4: Inheritance and Succession. Specifically, implement the core continuity and consequence models (Stage 1).
 

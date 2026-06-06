@@ -8,6 +8,15 @@ Implementation of Inventory Model and Item Contracts
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Establish the foundation for item management. This includes the item registry, inventory constraints (slots/weight), and authoritative mutation paths for items and gold.

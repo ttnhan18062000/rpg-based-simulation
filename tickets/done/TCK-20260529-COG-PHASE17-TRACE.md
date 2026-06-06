@@ -8,6 +8,15 @@ Derived Views and Decision Trace Contract Domain Implementation
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Implement Phase 17 to standardize derived view calculations and establish a unified decision-tracing contract and validator to make all complex choices inspectable and readable.

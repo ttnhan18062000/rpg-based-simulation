@@ -10,3 +10,7 @@
 - add treasure chest (different from loots) with rare loot, and it can be found in the world (rare spawn guarded by elite or boss monsters)
 - I think the way entity pick up items is somehow incorrect, revise it
 - I think the derived stats is calculated wrong (mostly about non-combat stats), revise it
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

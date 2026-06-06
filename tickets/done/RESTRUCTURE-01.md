@@ -46,3 +46,7 @@ Refactor the monolithic simulation codebase into a modular, feature-based "Aspec
 
 ## Labels
 `refactor`, `architecture`, `clean-code`, `epic`, `inprogress`
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

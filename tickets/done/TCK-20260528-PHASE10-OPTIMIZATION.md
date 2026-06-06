@@ -6,6 +6,15 @@ Phase 10 — Optimization / Scaling / Rollout Hardening
 ## Status
 INPROGRESS
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Please execute Tasks 1 through 14 of Phase 10 — Optimization / Scaling / Rollout Hardening.
 

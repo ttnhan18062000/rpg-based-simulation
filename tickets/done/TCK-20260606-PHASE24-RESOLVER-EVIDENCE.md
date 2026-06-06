@@ -8,6 +8,15 @@ Repair resolver layer claims and add evidence fields
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 - Downgrade resolver-only content families to `RESOLVED_PARTIALLY` if their data does not yet affect runtime behavior.

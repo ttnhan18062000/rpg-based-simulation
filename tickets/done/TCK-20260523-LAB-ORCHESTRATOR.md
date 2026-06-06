@@ -8,6 +8,15 @@ Milestone 78 — Scenario Lab Orchestrator
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Implement the central workflow controller `ScenarioLabOrchestrator` to coordinate the entire Scenario Lab run sequence: loading/validating specs, compiling the world, generating the seed matrix, executing runs sequentially, running Observatory analysis, and compiling the lab execution results.

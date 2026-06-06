@@ -6,6 +6,15 @@ Implement Exportable Entity Cognition Graph (Milestone 6)
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Create a canonical, deterministic, and observable representation of entity strategic state as a graph for regression testing and visualization.
 

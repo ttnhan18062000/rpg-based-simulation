@@ -8,6 +8,15 @@ Milestone 9: Run Artifact Contract and Repository
 
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 
 Establish the unified directory and artifact layout contract for every simulation run under `data/runs/<run_id>/`, defining the standard `RunManifest` configuration and implementing the `RunArtifactRepository` class to manage read/write access to all post-run diagnostics, JSONL event databases, metrics, and report summaries.

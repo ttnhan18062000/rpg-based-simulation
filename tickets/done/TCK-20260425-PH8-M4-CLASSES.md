@@ -6,6 +6,15 @@ Implement Registry-Backed Classes and Skills
 ## Status
 DONE
 
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+
 ## Request Summary
 Implement a robust, registry-backed system for defining entity classes (Warrior, Mage, Rogue) and their associated skill sets.
 
