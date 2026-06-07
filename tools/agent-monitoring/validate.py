@@ -75,6 +75,10 @@ def main():
                 if tid.startswith("TCK-"):
                     log_tids.add(tid)
         for run_id, run in runs_by_id.items():
+            # Batch epic/folder runs (EPIC-*, FOLDER-*) are orchestration records, not
+            # individual tickets — they never produce their own working_log entry.
+            if not run_id.startswith("TCK-"):
+                continue
             if run.get("final_status") == "DONE" and run_id not in log_tids:
                 warnings.append(f"Run marked DONE has no working_log entry: {run_id}")
     else:

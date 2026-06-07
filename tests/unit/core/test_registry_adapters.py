@@ -1,5 +1,6 @@
 import pytest
 from typing import Any, Dict
+from src.core.modes import RuntimeContentMode
 from src.core.registries import (
     AdapterError,
     CatalogToItemRegistryAdapter,
@@ -98,7 +99,7 @@ def test_item_adapter_happy_path():
     repo.items["wood"] = MockItem(categories=["material"], rarity="COMMON", base_value=2)
 
     adapter = CatalogToItemRegistryAdapter(repo)
-    adapted = adapter.adapt()
+    adapted, _ = adapter.adapt()
 
     assert len(adapted) == 3
     assert adapted["iron_sword"].use_kind == "weapon"
@@ -115,7 +116,7 @@ def test_item_adapter_error_handling():
     adapter = CatalogToItemRegistryAdapter(repo)
     with pytest.raises(AdapterError) as exc_info:
         adapter.adapt()
-    
+
     assert exc_info.value.record_id == "broken_item"
     assert "invalid literal" in str(exc_info.value)
 
@@ -160,7 +161,7 @@ def test_service_adapter_happy_path():
     repo.services["general_store"] = MockService(provided_items=["potion"])
 
     adapter = CatalogToServiceRegistryAdapter(repo)
-    adapted = adapter.adapt()
+    adapted, _ = adapter.adapt()
 
     # Hometown defaults should exist
     assert "shop_hometown" in adapted
@@ -187,7 +188,7 @@ def test_resource_adapter_happy_path():
     repo.resources["iron_vein"] = MockResource("iron_ore", metadata={"base_difficulty": 2, "required_tool": "pickaxe"})
 
     adapter = CatalogToResourceRegistryAdapter(repo)
-    adapted = adapter.adapt()
+    adapted, _ = adapter.adapt()
 
     assert "node_iron" in adapted
     assert "iron_vein" in adapted
@@ -224,9 +225,9 @@ def test_item_adapter_uses_explicit_use_kind():
     item.class_fit = ["warrior"]
     repo.items["test_item"] = item
 
-    # Strict catalog-backed mode (migration_mode=False)
-    adapter = CatalogToItemRegistryAdapter(repo, migration_mode=False)
-    adapted = adapter.adapt()
+    # Strict catalog-backed mode (mode=RuntimeContentMode.V2)
+    adapter = CatalogToItemRegistryAdapter(repo, mode=RuntimeContentMode.V2)
+    adapted, _ = adapter.adapt()
     assert adapted["test_item"].use_kind == "custom_use_kind"
 
 
@@ -237,8 +238,8 @@ def test_item_adapter_uses_explicit_class_fit():
     item.class_fit = ["ranger", "rogue"]
     repo.items["test_item"] = item
 
-    adapter = CatalogToItemRegistryAdapter(repo, migration_mode=False)
-    adapted = adapter.adapt()
+    adapter = CatalogToItemRegistryAdapter(repo, mode=RuntimeContentMode.V2)
+    adapted, _ = adapter.adapt()
     assert adapted["test_item"].class_fit == ("ranger", "rogue")
 
 
@@ -249,8 +250,8 @@ def test_resource_adapter_uses_explicit_legacy_id():
     res.metadata = {"source_region_tags": ["forest"]}
     repo.resources["wood_node"] = res
 
-    adapter = CatalogToResourceRegistryAdapter(repo, migration_mode=False)
-    adapted = adapter.adapt()
+    adapter = CatalogToResourceRegistryAdapter(repo, mode=RuntimeContentMode.V2)
+    adapted, _ = adapter.adapt()
     assert "custom_node_wood" in adapted
     assert adapted["custom_node_wood"].yield_item == "wood"
 
@@ -261,8 +262,8 @@ def test_service_adapter_does_not_inject_default_service_in_catalog_mode():
     service.affordances = ["buy"]
     repo.services["trade_service"] = service
 
-    adapter = CatalogToServiceRegistryAdapter(repo, catalog_mode=True, migration_mode=False)
-    adapted = adapter.adapt()
+    adapter = CatalogToServiceRegistryAdapter(repo, catalog_mode=True, mode=RuntimeContentMode.V2)
+    adapted, _ = adapter.adapt()
     # Should NOT contain hometown services
     assert "shop_hometown" not in adapted
     assert "trade_service" in adapted

@@ -26,6 +26,7 @@ These skills trigger the project's multi-agent workflows.
 
 | Skill | Workflow triggered | When to use |
 |---|---|---|
+| `/create-tickets` | `create-tickets` | Parse a markdown doc into TCK-*.md ticket files |
 | `/implement-ticket` | `implement-ticket` | Implement one development task end-to-end |
 | `/implement-epic` | `implement-epic` | Implement all tickets in a folder or epic sequentially |
 | `/generate-simulation-setup` | `generate-simulation-setup` | Create specs for a new simulation experiment |
@@ -141,6 +142,7 @@ These skills are Python and engineering patterns adapted for this project and st
 
 | Situation | Tool |
 |---|---|
+| Parse a plan doc into ticket files | `/create-tickets` |
 | Implement a single task or resume a ticket | `/implement-ticket` |
 | Implement all tickets in a folder or epic | `/implement-epic` |
 | Quick code review before PR | `/code-review` |

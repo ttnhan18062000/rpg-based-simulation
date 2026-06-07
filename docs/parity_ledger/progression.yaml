@@ -656,9 +656,11 @@
   status: verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  v2_evidence: '`src/engine/combat_rewards.py` (`CombatRewardClassificationService.classify()`,
+    `RewardClassification.source` field), `src/engine/combat.py` (trace["REWARD_SOURCE"]
+    and full_trace["REWARD_SOURCE"] in resolve_attack and resolve_multi_attack)'
   proof_type: null
-  test_path: null
+  test_path: '`tests/unit/combat/test_combat_rewards.py`'
   divergence_note: null
   support_boundary: null
 - id: PROG-065

@@ -145,3 +145,64 @@ def test_v2_service_refs_assembly_is_documented_gap():
         "update docs/guidelines/v2_intentional_divergences.md (entry 2.19), "
         "and update docs/parity_ledger/substrate.yaml (SUB-367) to status: verified."
     )
+
+
+def test_contribution_snapshot_after_normalization(base_repo):
+    """Contribution record fields must match the normalized module's structure.
+
+    Uses a minimal empty-field module to assert that resolve_module_contribution
+    returns empty collections of the correct types when no content is specified.
+    """
+    from src.worldmodules.schema import WorldModuleSpec
+    from src.worldmodules.normalizer import WorldModuleAuthoringNormalizer
+    from src.worldmodules.repository import WorldModuleRepository
+    from src.worldassembly.resolver import WorldAssemblyResolver
+
+    spec = WorldModuleSpec(
+        schema_version="worldmodule.v2",
+        module_id="test_empty_module",
+        module_type="terrain",
+        display_name="Test Empty Module",
+    )
+    normalized = WorldModuleAuthoringNormalizer.normalize(spec)
+
+    module_repo = WorldModuleRepository("data/content/world_modules")
+    resolver = WorldAssemblyResolver(base_repo, module_repo)
+    contribution = resolver.resolve_module_contribution(normalized)
+
+    # Empty module produces empty collections of the correct types
+    assert contribution.resource_refs == {}
+    assert contribution.building_refs == {}
+    assert contribution.service_refs == {}
+    assert isinstance(contribution.resource_refs, dict)
+    assert isinstance(contribution.building_refs, dict)
+    assert isinstance(contribution.service_refs, dict)
+    assert contribution.regions == []
+    assert contribution.factions == []
+    assert contribution.population_refs == []
+    assert contribution.resolved_population_specs == []
+    assert contribution.biome_refs == []
+    assert contribution.ecology_refs == []
+    assert contribution.relationship_refs == []
+
+
+def test_resolve_module_contribution_rejects_raw_spec(base_repo):
+    """resolve_module_contribution must raise TypeError when passed a raw WorldModuleSpec.
+
+    Callers must normalize via WorldModuleAuthoringNormalizer.normalize() first.
+    """
+    from src.worldmodules.schema import WorldModuleSpec
+    from src.worldmodules.repository import WorldModuleRepository
+    from src.worldassembly.resolver import WorldAssemblyResolver
+
+    raw_spec = WorldModuleSpec(
+        schema_version="worldmodule.v2",
+        module_id="test_raw_spec",
+        module_type="terrain",
+        display_name="Test Raw Spec",
+    )
+
+    module_repo = WorldModuleRepository("data/content/world_modules")
+    resolver = WorldAssemblyResolver(base_repo, module_repo)
+    with pytest.raises(TypeError, match="resolve_module_contribution requires NormalizedWorldModule"):
+        resolver.resolve_module_contribution(raw_spec)

@@ -20,6 +20,48 @@ Workflow({ name: "workflow-name", args: { key: value } })
 
 ## Development Workflows
 
+### `create-tickets`
+
+**Purpose:** Parse a detailed markdown document into individual `TCK-*.md` ticket files. The natural first step before `/implement-epic`.
+
+**Phases:**
+
+| Phase | What happens |
+|---|---|
+| Parse | Reads source doc + optional structure template; scans existing tickets for duplicates; extracts one task per discrete concern |
+| Write | Writes `TCK-YYYYMMDD-<SHORT-SCOPE>.md` per task into the output folder (parallel) |
+| Link | If `epic_id` given, appends new ticket IDs to the epic's `## Related Tickets` section |
+
+**Args:**
+
+| Arg | Type | Required | Description |
+|---|---|---|---|
+| `source` | string | Yes | Path to the source markdown document |
+| `structure` | string | No | Path to a ticket plan structure / template doc — guides task granularity |
+| `output` | string | No | Output folder override; inferred from doc content if omitted |
+| `epic_id` | string | No | Epic ticket ID to link created tickets to |
+
+**Usage:**
+```
+/create-tickets source=docs/plans/another_repair_phase_20_28.md
+/create-tickets source=docs/plans/phase29.md structure=docs/plans/ticket_plan_structure.md
+/create-tickets source=docs/plans/phase29.md output=tickets/todos/phase29-repair/
+/create-tickets source=docs/plans/phase29.md epic_id=TCK-20260608-PHASE29-EPIC
+```
+
+**Typical full flow:**
+```
+/create-tickets source=docs/plans/phase29.md structure=docs/plans/ticket_plan_structure.md
+        ↓  (review generated tickets, adjust if needed)
+/implement-epic folder=tickets/todos/phase29-repair/
+```
+
+**Artifacts produced:**
+- `tickets/todos/<folder>/TCK-YYYYMMDD-<SHORT-SCOPE>.md` — one per task, Status: OPEN, all required sections filled
+- Epic `## Related Tickets` updated (if `epic_id` provided)
+
+---
+
 ### `implement-ticket`
 
 **Purpose:** Full ticket lifecycle from request to closed ticket. Orchestrates all development subagents in sequence with hard gates.

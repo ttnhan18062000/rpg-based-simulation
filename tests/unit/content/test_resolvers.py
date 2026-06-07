@@ -805,3 +805,70 @@ class TestPopulationRecipeResolver:
             pop_resolver.resolve("totally_nonexistent_id_xxxx")
         assert "population_recipe" in str(exc_info.value)
         assert "totally_nonexistent_id_xxxx" in str(exc_info.value)
+
+
+# ===========================================================================
+# PopulationSpec.archetype_id field contract
+# TCK-20260607-ARCHETYPE-METADATA-EXPLICIT
+# ===========================================================================
+
+class TestPopulationSpecArchetypeId:
+
+    def test_population_spec_archetype_id_field_exists(self):
+        """Explicit archetype_id is readable and holds the supplied value."""
+        from src.worldbuilding.schema import PopulationSpec
+        p = PopulationSpec(
+            id="test_pop",
+            count=3,
+            role="raider",
+            faction="goblin_warband",
+            spawn_region="goblin_camp",
+            archetype_id="hungry_wolf",
+        )
+        assert p.archetype_id == "hungry_wolf"
+
+    def test_population_spec_archetype_id_defaults_to_none(self):
+        """archetype_id defaults to None when not supplied."""
+        from src.worldbuilding.schema import PopulationSpec
+        p = PopulationSpec(
+            id="test_pop",
+            count=1,
+            role="raider",
+            faction="goblin_warband",
+            spawn_region="goblin_camp",
+        )
+        assert p.archetype_id is None
+
+    def test_population_spec_is_still_frozen_after_field_addition(self):
+        """frozen=True invariant is preserved after adding the archetype_id field."""
+        from src.worldbuilding.schema import PopulationSpec
+        p = PopulationSpec(
+            id="test_pop",
+            count=1,
+            role="raider",
+            faction="goblin_warband",
+            spawn_region="goblin_camp",
+            archetype_id="hungry_wolf",
+        )
+        with pytest.raises(Exception):
+            p.archetype_id = "alpha_wolf"  # type: ignore[misc]
+
+    def test_case2_result_resolvedentityarchetype_has_archetype_id(
+        self, pop_resolver: PopulationRecipeResolver
+    ):
+        """Case 2: resolver returns a ResolvedEntityArchetype whose archetype_id equals the input."""
+        expanded, _ = pop_resolver.resolve("hungry_wolf")
+        assert len(expanded) == 1
+        resolved_arch, _ = expanded[0]
+        assert resolved_arch.archetype_id == "hungry_wolf"
+
+    def test_case1_recipe_members_each_have_archetype_id(
+        self, loaded_repo: CatalogRepository, pop_resolver: PopulationRecipeResolver
+    ):
+        """Case 1: every expanded archetype carries a non-empty archetype_id present in catalog."""
+        expanded, _ = pop_resolver.resolve("wolf_pack_small")
+        for arch, _ in expanded:
+            assert arch.archetype_id, "archetype_id must not be empty"
+            assert loaded_repo.get_entity_archetype(arch.archetype_id) is not None, (
+                f"archetype_id '{arch.archetype_id}' not found in catalog"
+            )

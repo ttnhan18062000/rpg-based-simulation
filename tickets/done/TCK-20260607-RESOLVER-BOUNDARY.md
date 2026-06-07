@@ -4,7 +4,7 @@
 Narrow resolve_module_contribution to NormalizedWorldModule only and add snapshot test
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -102,16 +102,22 @@ Grep `resolve_module_contribution(` across `src/` and verify all call sites pass
 - Are there external callers outside `assemble()` that currently pass `WorldModuleSpec`? — investigation step must grep for these.
 
 ## Implementation Notes
-Investigation phase must grep `resolve_module_contribution(` in all .py files to identify call sites before changing the signature.
+- Renamed `module` parameter to `normalized_module` in `resolve_module_contribution()` signature.
+- Changed type annotation from `WorldModuleSpec | NormalizedWorldModule` to `NormalizedWorldModule` only.
+- Added `isinstance` guard at top of function body raising `TypeError` with descriptive message.
+- Renamed all internal `module.` references to `normalized_module.` within the function body (regions, factions, biomes, ecologies, relationships, services, populations, resources, buildings sections).
+- `WorldModuleSpec` was never imported in `resolver.py` — no import changes required.
+- All four existing call sites already passed `NormalizedWorldModule`; no callers broken.
+- Added `test_contribution_snapshot_after_normalization` and `test_resolve_module_contribution_rejects_raw_spec` to `tests/unit/worldassembly/test_resolver.py`.
 
 ## Test Summary
 ```
-pytest tests/unit/worldassembly/ -q
+pytest tests/unit/worldassembly/ tests/unit/worldmodules/ -q
 ```
 
 ## Files Changed
-- `src/worldassembly/resolver.py`
-- `tests/unit/worldassembly/test_resolver.py`
+- `src/worldassembly/resolver.py` — signature narrowed, isinstance guard added, body refs renamed
+- `tests/unit/worldassembly/test_resolver.py` — two new tests added
 
 ## Completion Summary
-(to be filled)
+Narrowed resolve_module_contribution() signature to NormalizedWorldModule only (removed WorldModuleSpec union arm). Added isinstance guard raising TypeError. Renamed parameter from 'module' to 'normalized_module' throughout body. Added snapshot test (contribution structure) and TypeError guard test. All existing call sites already passed NormalizedWorldModule — zero callers broken.

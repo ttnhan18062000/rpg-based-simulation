@@ -578,6 +578,8 @@ class PopulationRecipeResolver:
         recipe = self._repo.get_population_recipe(population_id)
         if recipe is None:
             # Case 2: shorthand — treat population_id as a direct archetype ID (count=1, no regions).
+            # The returned ResolvedEntityArchetype.archetype_id carries the explicit identity;
+            # callers must not re-derive it by splitting the population ID string.
             archetype = self._repo.get_entity_archetype(population_id)
             if archetype is not None:
                 resolved_arch = self._archetype_resolver.resolve(population_id)

@@ -92,3 +92,142 @@ def test_population_preferred_region_validation_fails_on_missing_region(repos):
         resolver.resolve_module_contribution(normalized_spec)
     assert "region" in str(exc_info.value)
     assert "wolf_den" in str(exc_info.value) or "near_forest" in str(exc_info.value)
+
+
+# ===========================================================================
+# TCK-20260607-ARCHETYPE-METADATA-EXPLICIT — explicit archetype_id field tests
+# ===========================================================================
+
+def test_archetype_id_survives_resolve_module_contribution(repos):
+    """archetype_id on every PopulationSpec coming out of resolve_module_contribution is not None
+    and matches a key in the catalog's entity_archetypes."""
+    cat, mod = repos
+
+    from src.worldmodules.schema import WorldModuleSpec
+    from src.worldmodules.normalizer import WorldModuleAuthoringNormalizer
+    from src.worldbuilding.recipe import RegionRecipeSpec
+
+    raw_spec = WorldModuleSpec(
+        schema_version="worldmodule.v2",
+        module_id="wolf_test_module",
+        module_type="population",
+        display_name="Wolf Test Module",
+        regions=[
+            RegionRecipeSpec(id="wolf_den", type="wilderness", grid_bounds=(0, 0, 50, 50), terrain="forest", hazard_level=2.0),
+            RegionRecipeSpec(id="near_forest", type="wilderness", grid_bounds=(51, 0, 100, 50), terrain="forest", hazard_level=1.0),
+        ],
+        populations=["wolf_pack_small"]
+    )
+    normalized_spec = WorldModuleAuthoringNormalizer.normalize(raw_spec)
+
+    resolver = WorldAssemblyResolver(cat, mod)
+    contribution = resolver.resolve_module_contribution(normalized_spec)
+
+    assert len(contribution.resolved_population_specs) > 0, "Should resolve at least one population spec"
+    for pop_spec in contribution.resolved_population_specs:
+        assert pop_spec.archetype_id is not None, (
+            f"pop_spec '{pop_spec.id}' has archetype_id=None; expected explicit value"
+        )
+        assert cat.get_entity_archetype(pop_spec.archetype_id) is not None, (
+            f"archetype_id '{pop_spec.archetype_id}' not found in catalog"
+        )
+
+
+def test_archetype_id_carried_into_compile_context_without_string_inference(repos):
+    """goblin_camp_conflict entities in CompileContext carry archetype_id from the explicit field,
+    not from string suffix inference.
+
+    Uses resolve_module_contribution + CompileProfileResolver directly to avoid triggering
+    the global catalog validator (which has a pre-existing failure for moon_cult_ruins).
+    """
+    cat, mod = repos
+
+    from src.worldmodules.normalizer import WorldModuleAuthoringNormalizer
+    from src.worldassembly.resolver import CompileProfileResolver
+    from src.worldbuilding.schema import WorldSpec, TopologySpec
+
+    module_spec = mod.get_module("goblin_camp_conflict")
+    normalized = WorldModuleAuthoringNormalizer.normalize(module_spec)
+
+    resolver = WorldAssemblyResolver(cat, mod)
+    contribution = resolver.resolve_module_contribution(normalized)
+
+    # Build a minimal WorldSpec carrying only the resolved population specs
+    world_spec = WorldSpec(
+        schema_version="worldspec.v1",
+        world_id="test_ctx",
+        name="Test",
+        topology=TopologySpec(width=200, height=200, coordinate_system="grid"),
+        entities=list(contribution.resolved_population_specs),
+    )
+
+    profile_resolver = CompileProfileResolver(cat)
+    ctx = profile_resolver.resolve(world_spec)
+
+    goblin_raider_found = False
+    for key, entity in ctx.entities.items():
+        if entity.archetype_id is not None:
+            assert cat.get_entity_archetype(entity.archetype_id) is not None, (
+                f"entity '{key}' has archetype_id='{entity.archetype_id}' not in catalog"
+            )
+        if "goblin_raider" in key:
+            goblin_raider_found = True
+            assert entity.archetype_id == "goblin_raider", (
+                f"Expected archetype_id='goblin_raider', got {entity.archetype_id!r}"
+            )
+
+    assert goblin_raider_found, "goblin_raider entity must be present in compile context"
+
+
+def test_population_spec_archetype_id_is_not_inferred_from_id_string(repos):
+    """Two PopulationSpec instances with the same id string but different archetype_id values
+    return the explicitly-set field, not a value derived from the id string."""
+    from src.worldbuilding.schema import PopulationSpec
+
+    with_archetype = PopulationSpec(
+        id="wolf_pack_small_hungry_wolf",
+        count=4,
+        role="predator",
+        faction="wild_beasts",
+        spawn_region="wolf_den",
+        archetype_id="hungry_wolf",
+    )
+    without_archetype = PopulationSpec(
+        id="wolf_pack_small_hungry_wolf",
+        count=4,
+        role="predator",
+        faction="wild_beasts",
+        spawn_region="wolf_den",
+    )
+
+    assert with_archetype.archetype_id == "hungry_wolf"
+    assert without_archetype.archetype_id is None
+
+
+def test_resolve_module_contribution_does_not_use_split_for_archetype_id(repos):
+    """Modules whose recipe ID and archetype IDs contain underscores yield pop_specs
+    whose archetype_id exists verbatim in the catalog — split truncation would corrupt it.
+
+    Uses resolve_module_contribution directly; goblin_camp_conflict has multi-underscore
+    IDs (goblin_raiding_party / goblin_raider) which the old split heuristic could truncate.
+    """
+    cat, mod = repos
+
+    from src.worldmodules.normalizer import WorldModuleAuthoringNormalizer
+
+    module_spec = mod.get_module("goblin_camp_conflict")
+    normalized = WorldModuleAuthoringNormalizer.normalize(module_spec)
+
+    resolver = WorldAssemblyResolver(cat, mod)
+    contribution = resolver.resolve_module_contribution(normalized)
+
+    # Every resolved PopulationSpec must carry an archetype_id that exists verbatim in catalog
+    assert len(contribution.resolved_population_specs) > 0
+    for pop_spec in contribution.resolved_population_specs:
+        assert pop_spec.archetype_id is not None, (
+            f"pop_spec '{pop_spec.id}' has archetype_id=None"
+        )
+        assert cat.get_entity_archetype(pop_spec.archetype_id) is not None, (
+            f"pop_spec '{pop_spec.id}' has archetype_id='{pop_spec.archetype_id}' "
+            f"not found in catalog — likely a string-split truncation regression"
+        )

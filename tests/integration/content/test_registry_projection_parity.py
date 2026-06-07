@@ -1,5 +1,6 @@
 import pytest
 from src.content.repository import CatalogRepository
+from src.core.modes import RuntimeContentMode
 from src.core.registries import (
     seed_phase1_content,
     ItemRegistry,
@@ -15,8 +16,8 @@ from src.core.registries import (
 def loaded_catalog_repo():
     repo = CatalogRepository("data/content")
     repo.load_all()
-    # Seed registries with strict migration_mode=True to verify default behavior
-    seed_phase1_content(repo, migration_mode=True)
+    # Seed registries with compatibility mode to verify default behavior
+    seed_phase1_content(repo, mode=RuntimeContentMode.CATALOG_WITH_COMPATIBILITY)
     return repo
 
 

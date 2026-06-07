@@ -25,14 +25,20 @@ One record per workflow invocation.
 
 | Field | Type | Nullable | Description |
 |---|---|---|---|
-| `run_id` | string | No | Unique run identifier. For `implement-ticket`: the ticket ID. |
-| `start_ts` | ISO 8601 | No | UTC timestamp when the workflow started (written at Scope phase). |
+| `run_id` | string | No | Unique run identifier. For `implement-ticket`: the ticket ID. For `implement-epic`: `EPIC-{id}` or `FOLDER-{path}`. |
+| `start_ts` | ISO 8601 | No | UTC timestamp when the workflow started (captured at Scope / Discover phase via `date -u`). |
 | `end_ts` | ISO 8601 | Yes | UTC timestamp when the workflow finished. `null` if the workflow crashed before writing the end record. |
 | `workflow` | string | No | Name of the workflow that produced this run. |
 | `tier` | string | No | Ticket tier: `hotfix` \| `standard` \| `epic`. |
 | `final_status` | string | No | Outcome of the run. See values below. |
 | `agent_count` | int | No | Total number of agent calls that produced events. |
 | `duration_s` | int | Yes | Wall-clock seconds from start to end. `null` for crashed runs. |
+
+### What is not recorded
+
+**Token counts** are not recorded. The workflow `agent()` call returns the agent's structured output only; API usage metadata (`input_tokens`, `output_tokens`) is consumed internally by the Claude Code runtime and is not forwarded to the workflow script. There is no field for it and no workaround within the current platform.
+
+**Tool call counts** per agent are also not recorded. They could be self-reported (each agent counts its own tool calls and includes the total in its return value), but this is not currently implemented. Use `agent_count` as a coarse proxy for run complexity.
 
 ### `final_status` values
 

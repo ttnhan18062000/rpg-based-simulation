@@ -171,21 +171,21 @@ class CombatResolutionSystem:
         if new_hp <= 0:
             outcome = "KILL" if is_lethal else "DEFEAT"
             alive = False
-            
-            if defender.identity.role == EntityRole.MONSTER:
-                xp_gain = defender.identity.evolution_level * 10
-                gold_gain = defender.identity.evolution_level * 5
-            elif defender.identity.role == EntityRole.HERO:
-                xp_gain = defender.identity.evolution_level * 20
-                gold_gain = defender.identity.evolution_level * 50
-                
+
+            from src.engine.combat_rewards import CombatRewardClassificationService
+            classification = CombatRewardClassificationService.classify(defender.identity.role)
+            xp_gain = defender.identity.evolution_level * classification.xp_multiplier
+            gold_gain = defender.identity.evolution_level * classification.gold_multiplier
+            trace["REWARD_SOURCE"] = classification.source
+
+            if classification.rebirth_eligible:
                 if defender.lifecycle.generation < 4:
                     gen_delta = 1
                     outcome = "REBIRTH"
                 else:
                     perma_set = True
                     outcome = "PERMADEATH"
- 
+
         # 5. Durability Decay (Phase 8)
         attacker_equip_upd, defender_equip_upd = CombatResolutionSystem._get_durability_decay(attacker, defender)
 
@@ -274,9 +274,10 @@ class CombatResolutionSystem:
         xp_gain = 0
         gold_gain = 0
         if not alive:
-            if defender.identity.role == EntityRole.MONSTER:
-                xp_gain = 10 * defender.identity.evolution_level
-                gold_gain = 5 * defender.identity.evolution_level
+            from src.engine.combat_rewards import CombatRewardClassificationService
+            classification = CombatRewardClassificationService.classify(defender.identity.role)
+            xp_gain = classification.xp_multiplier * defender.identity.evolution_level
+            gold_gain = classification.gold_multiplier * defender.identity.evolution_level
 
         attacker_equip_upd, defender_equip_upd = CombatResolutionSystem._get_durability_decay(attacker, defender)
         wound_upd = CombatResolutionSystem._get_wound_infliction(attacker, defender, damage, state.tick, alive)
@@ -380,13 +381,12 @@ class CombatResolutionSystem:
         gold_gain = 0
         resource_transfers = []
         if not alive and defender.combat.alive:
-             if defender.identity.role == EntityRole.MONSTER:
-                xp_gain = defender.identity.evolution_level * 10
-                gold_gain = defender.identity.evolution_level * 5
-             elif defender.identity.role == EntityRole.HERO:
-                xp_gain = defender.identity.evolution_level * 20
-                gold_gain = defender.identity.evolution_level * 50
-                
+             from src.engine.combat_rewards import CombatRewardClassificationService
+             classification = CombatRewardClassificationService.classify(defender.identity.role)
+             xp_gain = defender.identity.evolution_level * classification.xp_multiplier
+             gold_gain = defender.identity.evolution_level * classification.gold_multiplier
+             full_trace["REWARD_SOURCE"] = classification.source
+
              from src.core.updates import ResourceTransferIntent
              resource_transfers.append(ResourceTransferIntent(
                  source_id=defender.id, source_kind="COMBAT",

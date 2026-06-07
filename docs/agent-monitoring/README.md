@@ -12,9 +12,10 @@ Observability layer for the Claude Code AI agent workflow. Tracks workflow runs 
 
 ## What It Does NOT Capture
 
-- Per-agent token counts (not accessible from workflow scripts)
-- Agent internal reasoning or thoughts
-- Ad-hoc `Agent()` calls outside a workflow
+- **Token counts** — the workflow `agent()` call returns the agent's output content only; the underlying API usage (`input_tokens`, `output_tokens`) is consumed by the Claude Code runtime and never forwarded to the workflow script. There is no workaround short of a platform change from Anthropic.
+- **Tool call counts** — not surfaced by the runtime either. Could be self-reported by agents (each agent counts its own Bash/Read/Edit/Write calls and includes the total in its return value), but this is not currently implemented.
+- Agent internal reasoning or chain-of-thought
+- Ad-hoc `Agent()` calls made outside a workflow (e.g. direct use from the main session)
 - Simulation engine telemetry
 
 ## Navigation

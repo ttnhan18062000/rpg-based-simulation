@@ -28,14 +28,16 @@ phase('Scope')
 
 const TICKET_SCHEMA = {
   type: 'object',
-  required: ['ticket_id', 'ticket_path', 'status', 'conflicts', 'tier', 'summary'],
+  required: ['ticket_id', 'ticket_path', 'status', 'conflicts', 'tier', 'summary', 'ts'],
   properties: {
     ticket_id: { type: 'string' },
     ticket_path: { type: 'string' },
+    todos_source_path: { type: 'string', description: 'Path of the original file under tickets/todos/ if the ticket originated there; empty string otherwise.' },
     status: { type: 'string', enum: ['CREATED', 'EXISTING'] },
     conflicts: { type: 'array', items: { type: 'string' } },
     tier: { type: 'string', enum: ['hotfix', 'standard', 'epic'] },
     summary: { type: 'string', description: 'One sentence: what was scoped and any conflicts found (≤200 chars)' },
+    ts: { type: 'string', description: 'ISO timestamp from `date -u +%Y-%m-%dT%H:%M:%SZ` run at start of this phase' },
   },
 }
 
@@ -43,11 +45,24 @@ const ticketInfo = await agent(
   ticketId
     ? `Load the existing ticket.
 
-Read tickets/inprogress/${ticketId}.md (or tickets/done/${ticketId}.md if already moved).
-Also read the ## Tier field from the ticket — return it as the 'tier' field.
-If no ## Tier field present, default to 'standard'.
-Return: ticket_id="${ticketId}", ticket_path (full path), status="EXISTING", conflicts=[], tier=(value from ticket or 'standard'), summary="Loaded existing ticket ${ticketId}".`
+Step 0: run \`date -u +%Y-%m-%dT%H:%M:%SZ\` — save result as TS (use as the \`ts\` field).
+
+Step 1 — locate the ticket file. Check these locations in order, stop at the first hit:
+  a. tickets/inprogress/${ticketId}.md
+  b. tickets/done/${ticketId}.md
+  c. Run: find tickets/todos -name "${ticketId}.md" 2>/dev/null
+     If found, the file exists under tickets/todos/. Copy it to tickets/inprogress/${ticketId}.md
+     so it enters the standard workflow location, then use that as ticket_path.
+
+Step 2 — read the file at ticket_path. Extract the ## Tier field (default 'standard' if absent).
+
+Return: ticket_id="${ticketId}", ticket_path (full path used in step 1/2),
+todos_source_path (the tickets/todos/... path if found in step 1c, else ""),
+status="EXISTING", conflicts=[], tier=(value from ticket or 'standard'),
+summary="Loaded existing ticket ${ticketId}", ts=TS.`
     : `Create a new ticket for this request using the ticket-scoper role.
+
+Step 0: run \`date -u +%Y-%m-%dT%H:%M:%SZ\` — save result as TS (use as the \`ts\` field).
 
 Request: ${request}
 
@@ -68,48 +83,55 @@ Steps:
 Return: ticket_id (the full TCK-... ID), ticket_path, status="CREATED",
 conflicts (list of any duplicates or conflicts found — empty array if none),
 tier (the tier value written into the ticket),
-summary (one sentence: what was scoped and any conflicts found, ≤200 chars).`,
+summary (one sentence: what was scoped and any conflicts found, ≤200 chars),
+ts=TS.`,
   { label: 'scope', schema: TICKET_SCHEMA, agentType: 'ticket-scoper' }
 )
 
 const tid = ticketInfo.ticket_id
 const tier = tierOverride || ticketInfo.tier || 'standard'
+const startTs = ticketInfo.ts || null
 
 // ─── Agent Monitoring Setup ────────────────────────────────────────────────────
 // Hard rule: mandatory for every run (including hotfix). Failure is non-fatal.
+// Per-event ts captured by each agent via bash date; writeMonitoring uses them
+// for distinct timestamps and threads startTs into the run record's start_ts.
 
 const events = []
-const pushEvent = (phaseLabel, agentName, status, summary) => {
+const pushEvent = (phaseLabel, agentName, status, summary, ts) => {
   events.push({
     seq: events.length + 1,
     phase: phaseLabel,
     agent: agentName,
     status,
     summary: (summary || '').toString().slice(0, 200),
+    ts: ts || null,
   })
 }
 
 const writeMonitoring = async (finalStatus) => {
   const eventsJson = JSON.stringify(events)
   const eventsCount = events.length
+  // Pre-embed startTs so the agent only substitutes one placeholder (<END_TS>).
+  // When startTs is null the run crashed before Scope captured a timestamp — use END_TS for both.
+  const startTsLiteral = startTs ? startTs : '<END_TS>'
   const result = await agent(
     `Write agent monitoring records for run "${tid}". This is bookkeeping — do NOT fail if writes error.
 
-Step 1 — get current timestamp:
+Step 1 — get current timestamp (run end time):
   Run via Bash: date -u +%Y-%m-%dT%H:%M:%SZ
-  Save result as TS.
+  Save result as END_TS. Replace every literal <END_TS> in the commands below with this value.
 
-Step 2 — add run_id and ts to each event, then write:
-  Input events (${eventsCount} total): ${eventsJson}
-  For each event above, add: "run_id": "${tid}", "ts": "<TS value from step 1>".
-  Then run: python3 tools/agent-monitoring/record_events.py --data '<JSON array with ts added>'
+Step 2 — build and write events:
+  Input events: ${eventsJson}
+  For each event: add "run_id": "${tid}". If "ts" is null or missing, set "ts" to END_TS.
+  Run: python3 tools/agent-monitoring/record_events.py --data '<final JSON array>'
 
-Step 3 — write run record:
-  Run: python3 tools/agent-monitoring/record_run.py --data '{"run_id":"${tid}","start_ts":"<TS>","end_ts":"<TS>","workflow":"implement-ticket","tier":"${tier}","final_status":"${finalStatus}","agent_count":${eventsCount}}'
-  (Replace <TS> with the actual timestamp from step 1.)
+Step 3 — write run record (replace <END_TS> with the value from Step 1):
+  Run: python3 tools/agent-monitoring/record_run.py --data '{"run_id":"${tid}","start_ts":"${startTsLiteral}","end_ts":"<END_TS>","workflow":"implement-ticket","tier":"${tier}","final_status":"${finalStatus}","agent_count":${eventsCount}}'
 
 If any python3 command fails, print "WARNING: monitoring write failed: <error>" and continue — do NOT raise.
-Return the string: "monitoring written" or "monitoring write failed: <reason>".`,
+Return "monitoring written" or "monitoring write failed: <reason>".`,
     { label: 'monitoring-write' }
   )
   if (!result) {
@@ -118,7 +140,7 @@ Return the string: "monitoring written" or "monitoring write failed: <reason>".`
 }
 
 // Push scope event
-pushEvent('Scope', 'scope', ticketInfo.conflicts && ticketInfo.conflicts.length > 0 ? 'failed' : 'ok', ticketInfo.summary || 'Scoped ticket ' + tid)
+pushEvent('Scope', 'ticket-scoper', ticketInfo.conflicts && ticketInfo.conflicts.length > 0 ? 'failed' : 'ok', ticketInfo.summary || 'Scoped ticket ' + tid, ticketInfo.ts)
 
 if (ticketInfo.conflicts && ticketInfo.conflicts.length > 0) {
   log(`Conflicts detected: ${ticketInfo.conflicts.join(' | ')}`)
@@ -147,13 +169,16 @@ if (tier === 'epic') {
 
 // Default values used by Implement phase — overwritten by standard pipeline if tier !== 'hotfix'
 let investigation = '(hotfix — investigation skipped)'
+let investigationText = investigation
 let plan = '(hotfix — plan skipped)'
+let planText = plan
 let review = {
   verdict: 'APPROVED',
   violations: [],
   parity_entries_affected: [],
   mechanics_chapters_to_read: [],
   summary: 'Hotfix tier — architecture review skipped',
+  ts: null,
 }
 
 if (tier !== 'hotfix') {
@@ -163,6 +188,9 @@ if (tier !== 'hotfix') {
 
   investigation = await agent(
     `Investigate ticket ${tid} using the investigator role.
+
+Step 0: run \`date -u +%Y-%m-%dT%H:%M:%SZ\`. Your response MUST begin with this exact line (nothing before it):
+PHASE_TS: <result>
 
 Read:
 - ${ticketInfo.ticket_path}
@@ -180,11 +208,13 @@ Sections: Current Behavior (file:line refs) | Mechanics/Engine Constraints | Par
 FILE 2: staging_artifacts/${tid}/test_plan.md
 Sections: Regression Surface (existing tests that must pass) | New Tests Required (per AC) | Scoped Pytest Commands | Anti-Drift Test Guards
 
-Write both files. Begin your response with one sentence summarizing the key finding (≤200 chars). Then return: key findings, open questions requiring a decision, parity entry IDs that will need updating.`,
+Write both files. Then return: key findings, open questions requiring a decision, parity entry IDs that will need updating.`,
     { label: 'investigate', agentType: 'investigator' }
   )
 
-  pushEvent('Investigate', 'investigator', 'ok', investigation.toString().slice(0, 200))
+  const investigationTs = investigation.toString().match(/^PHASE_TS: (\S+)/m)?.[1] || null
+  investigationText = investigation.toString().replace(/^PHASE_TS: \S+\n?/, '').trim()
+  pushEvent('Investigate', 'investigator', 'ok', investigationText.slice(0, 200), investigationTs)
 
   // ─── Phase 3: Plan ────────────────────────────────────────────────────────────
 
@@ -193,13 +223,16 @@ Write both files. Begin your response with one sentence summarizing the key find
   plan = await agent(
     `Produce the implementation plan for ticket ${tid} using the planner role.
 
+Step 0: run \`date -u +%Y-%m-%dT%H:%M:%SZ\`. Your response MUST begin with this exact line (nothing before it):
+PHASE_TS: <result>
+
 Read:
 - ${ticketInfo.ticket_path}
 - staging_artifacts/${tid}/investigation.md
 - staging_artifacts/${tid}/test_plan.md
 
 Investigation summary:
-${investigation}
+${investigationText}
 
 Produce staging_artifacts/${tid}/plan.md with:
 - Ordered steps (each narrow and independently verifiable)
@@ -210,23 +243,26 @@ Produce staging_artifacts/${tid}/plan.md with:
 
 If the investigation raised unresolved questions, flag them under "Unresolved Questions" — do not decide them. The workflow will pause for human review if present.
 
-Begin your response with one sentence summarizing the plan approach (≤200 chars). Then write the file. Return: ordered step list (one line per step) + any unresolved questions.`,
+Then return: ordered step list (one line per step) + any unresolved questions.`,
     { label: 'plan', agentType: 'planner' }
   )
 
-  if (plan && plan.toString().toLowerCase().includes('unresolved question')) {
-    pushEvent('Plan', 'planner', 'blocked', 'Plan contains unresolved questions — human review required')
+  const planTs = plan.toString().match(/^PHASE_TS: (\S+)/m)?.[1] || null
+  planText = plan.toString().replace(/^PHASE_TS: \S+\n?/, '').trim()
+
+  if (planText.toLowerCase().includes('unresolved question')) {
+    pushEvent('Plan', 'planner', 'blocked', 'Plan contains unresolved questions — human review required', planTs)
     log('Plan contains unresolved questions — human review required before implementation.')
     await writeMonitoring('NEEDS_HUMAN_INPUT')
     return {
       status: 'NEEDS_HUMAN_INPUT',
       ticket_id: tid,
-      plan_summary: plan,
+      plan_summary: planText,
       message: 'Review staging_artifacts/' + tid + '/plan.md, resolve open questions, then re-run with ticket_id="' + tid + '".',
     }
   }
 
-  pushEvent('Plan', 'planner', 'ok', plan.toString().slice(0, 200))
+  pushEvent('Plan', 'planner', 'ok', planText.slice(0, 200), planTs)
 
   // ─── Phase 4: Review ──────────────────────────────────────────────────────────
 
@@ -241,11 +277,14 @@ Begin your response with one sentence summarizing the plan approach (≤200 char
       parity_entries_affected: { type: 'array', items: { type: 'string' } },
       mechanics_chapters_to_read: { type: 'array', items: { type: 'string' } },
       summary: { type: 'string', description: 'One sentence: verdict + key reason (≤200 chars)' },
+      ts: { type: 'string', description: 'ISO timestamp from `date -u +%Y-%m-%dT%H:%M:%SZ` at start of this phase' },
     },
   }
 
   review = await agent(
     `Architecture review for ticket ${tid}.
+
+Step 0: run \`date -u +%Y-%m-%dT%H:%M:%SZ\` and include result as the \`ts\` field.
 
 Read:
 - staging_artifacts/${tid}/plan.md
@@ -253,7 +292,7 @@ Read:
 - ${ticketInfo.ticket_path}
 
 Plan summary:
-${plan}
+${planText}
 
 Validate against:
 1. Durable state rule: no durable changes outside authoritative path, no meaning in reason/metadata strings
@@ -266,7 +305,7 @@ Validate against:
 
 Return: APPROVED / NEEDS_CHANGES (fixable violations) / BLOCKED (fundamental conflict),
 list of violations (empty if APPROVED), parity ledger entry IDs affected, mechanics chapters implementer must read,
-summary (one sentence: verdict + key reason, ≤200 chars).`,
+summary (one sentence: verdict + key reason, ≤200 chars), ts.`,
     { label: 'architecture-review', schema: REVIEW_SCHEMA, agentType: 'architecture-reviewer' }
   )
 
@@ -275,7 +314,7 @@ summary (one sentence: verdict + key reason, ≤200 chars).`,
     if (review.violations.length > 0) {
       log(`Violations: ${review.violations.join(' | ')}`)
     }
-    pushEvent('Review', 'architecture-reviewer', 'failed', review.summary || 'Review: ' + review.verdict)
+    pushEvent('Review', 'architecture-reviewer', 'failed', review.summary || 'Review: ' + review.verdict, review.ts)
     await writeMonitoring(review.verdict)
     return {
       status: review.verdict,
@@ -285,7 +324,7 @@ summary (one sentence: verdict + key reason, ≤200 chars).`,
     }
   }
 
-  pushEvent('Review', 'architecture-reviewer', 'ok', review.summary || 'Architecture review: APPROVED')
+  pushEvent('Review', 'architecture-reviewer', 'ok', review.summary || 'Architecture review: APPROVED', review.ts)
   log('Architecture review: APPROVED')
 } else {
   log('Hotfix tier: skipping Investigate, Plan, and Architecture Review.')
@@ -307,11 +346,14 @@ const IMPL_SCHEMA = {
     parity_subsystems: { type: 'array', items: { type: 'string' } },
     implementation_summary: { type: 'string' },
     summary: { type: 'string', description: 'One sentence: what was implemented (≤200 chars)' },
+    ts: { type: 'string', description: 'ISO timestamp from `date -u +%Y-%m-%dT%H:%M:%SZ` at start of this phase' },
   },
 }
 
 const implementation = await agent(
   `Implement ticket ${tid}. Tier: ${tier}.
+
+Step 0: run \`date -u +%Y-%m-%dT%H:%M:%SZ\` and include result as the \`ts\` field.
 
 Read:
 ${tier !== 'hotfix' ? `- staging_artifacts/${tid}/plan.md (follow this exactly)
@@ -332,11 +374,11 @@ After writing code:
 1. Update the "Implementation Notes" section in ${ticketInfo.ticket_path} with what was done (concise, factual).
 ${tier !== 'hotfix' ? `2. Update staging_artifacts/${tid}/plan.md "Deviations" section if any step differed from the plan — never silently deviate.` : ''}
 
-Return: files_changed (list of paths), behavior_changed (boolean), parity_subsystems (from: substrate, combat_movement, strategic_cognition, town_resource, progression, social_narrative, world_dynamics, infrastructure), implementation_summary (one paragraph), summary (one sentence ≤200 chars).`,
+Return: files_changed (list of paths), behavior_changed (boolean), parity_subsystems (from: substrate, combat_movement, strategic_cognition, town_resource, progression, social_narrative, world_dynamics, infrastructure), implementation_summary (one paragraph), summary (one sentence ≤200 chars), ts.`,
   { label: 'implement', schema: IMPL_SCHEMA, agentType: 'implementer' }
 )
 
-pushEvent('Implement', 'implementer', 'ok', implementation.summary || implementation.implementation_summary || 'Implementation complete')
+pushEvent('Implement', 'implementer', 'ok', implementation.summary || implementation.implementation_summary || 'Implementation complete', implementation.ts)
 
 // ─── Phase 6: Test ────────────────────────────────────────────────────────────
 
@@ -353,11 +395,14 @@ const TEST_SCHEMA = {
     failed_tests: { type: 'array', items: { type: 'string' } },
     coverage_gaps: { type: 'array', items: { type: 'string' } },
     summary: { type: 'string', description: 'One sentence: pass/fail result (≤200 chars)' },
+    ts: { type: 'string', description: 'ISO timestamp from `date -u +%Y-%m-%dT%H:%M:%SZ` at start of this phase' },
   },
 }
 
 const testResult = await agent(
   `Scope and run tests for ticket ${tid}.
+
+Step 0: run \`date -u +%Y-%m-%dT%H:%M:%SZ\` and include result as the \`ts\` field.
 
 Files changed:
 ${implementation.files_changed.join('\n')}
@@ -370,12 +415,12 @@ Step 3 — Build the scoped pytest command. Never use bare "pytest tests/".
 
 Step 4 — Run the command via Bash. Capture stdout/stderr.
 
-Step 5 — Report: pytest_command used, pass_count, fail_count, failed_tests (empty if all pass), coverage_gaps (changed files with no test coverage), summary (one sentence: pass/fail result, ≤200 chars).`,
+Step 5 — Report: pytest_command used, pass_count, fail_count, failed_tests (empty if all pass), coverage_gaps (changed files with no test coverage), summary (one sentence: pass/fail result, ≤200 chars), ts.`,
   { label: 'test-scope-and-run', schema: TEST_SCHEMA, agentType: 'test-scoper' }
 )
 
 if (!testResult.passed) {
-  pushEvent('Test', 'test-scoper', 'failed', testResult.summary || testResult.fail_count + ' tests failing: ' + testResult.failed_tests.slice(0, 3).join(', '))
+  pushEvent('Test', 'test-scoper', 'failed', testResult.summary || testResult.fail_count + ' tests failing: ' + testResult.failed_tests.slice(0, 3).join(', '), testResult.ts)
   log(`Tests FAILED: ${testResult.fail_count} failing — ${testResult.failed_tests.join(', ')}`)
   await writeMonitoring('TESTS_FAILED')
   return {
@@ -387,7 +432,7 @@ if (!testResult.passed) {
   }
 }
 
-pushEvent('Test', 'test-scoper', 'ok', testResult.summary || testResult.pass_count + ' tests passed')
+pushEvent('Test', 'test-scoper', 'ok', testResult.summary || testResult.pass_count + ' tests passed', testResult.ts)
 log(`Tests passed: ${testResult.pass_count} passing`)
 
 if (testResult.coverage_gaps.length > 0) {
@@ -400,6 +445,9 @@ phase('Parity')
 
 const parity = await agent(
   `Update parity ledger for ticket ${tid}.
+
+Step 0: run \`date -u +%Y-%m-%dT%H:%M:%SZ\`. Your response MUST begin with this exact line (nothing before it):
+PHASE_TS: <result>
 
 Behavior changed: ${implementation.behavior_changed}
 Parity subsystems affected: ${(implementation.parity_subsystems || []).join(', ') || 'check implementation summary'}
@@ -416,11 +464,13 @@ Rules:
 - P0 entries MUST have a non-null test_path pointing to a now-passing test`
   : `No observable behavior change reported. Verify this is accurate by checking whether any referenced parity entries need test_path updates (e.g., tests were renamed or moved). Report what you checked.`}
 
-Begin your response with one sentence summarizing what was updated (≤200 chars). Then report: entries updated (by ID and what changed), any P0 entries missing a test_path.`,
+Then report: entries updated (by ID and what changed), any P0 entries missing a test_path.`,
   { label: 'parity-update', agentType: 'parity-updater' }
 )
 
-pushEvent('Parity', 'parity-updater', 'ok', parity.toString().slice(0, 200))
+const parityTs = parity.toString().match(/^PHASE_TS: (\S+)/m)?.[1] || null
+const parityText = parity.toString().replace(/^PHASE_TS: \S+\n?/, '').trim()
+pushEvent('Parity', 'parity-updater', 'ok', parityText.slice(0, 200), parityTs)
 
 // ─── Phase 8: Verify ──────────────────────────────────────────────────────────
 
@@ -433,6 +483,7 @@ const DONE_SCHEMA = {
     verdict: { type: 'string', enum: ['READY_TO_CLOSE', 'BLOCKED'] },
     failing_items: { type: 'array', items: { type: 'string' } },
     summary: { type: 'string', description: 'One sentence: verdict + item count (≤200 chars)' },
+    ts: { type: 'string', description: 'ISO timestamp from `date -u +%Y-%m-%dT%H:%M:%SZ` at start of this phase' },
     checklist: {
       type: 'array',
       items: {
@@ -450,6 +501,8 @@ const DONE_SCHEMA = {
 
 const doneCheck = await agent(
   `Definition-of-Done check for ticket ${tid}.
+
+Step 0: run \`date -u +%Y-%m-%dT%H:%M:%SZ\` and include result as the \`ts\` field.
 
 Ticket path: ${ticketInfo.ticket_path}
 Tier: ${tier}
@@ -472,12 +525,12 @@ Check all DoD conditions with evidence. For these, mark as noted:
 Mark those three as PASS with note "will be completed by workflow" — they are guaranteed by the workflow.
 
 For all others, read the actual files to verify.
-Return: verdict, failing_items, checklist, summary (one sentence: READY_TO_CLOSE or BLOCKED + count, ≤200 chars).`,
+Return: verdict, failing_items, checklist, summary (one sentence: READY_TO_CLOSE or BLOCKED + count, ≤200 chars), ts.`,
   { label: 'done-check', schema: DONE_SCHEMA, agentType: 'done-checker' }
 )
 
 if (doneCheck.verdict !== 'READY_TO_CLOSE') {
-  pushEvent('Verify', 'done-checker', 'failed', doneCheck.summary || 'DoD BLOCKED — ' + doneCheck.failing_items.length + ' items failing')
+  pushEvent('Verify', 'done-checker', 'failed', doneCheck.summary || 'DoD BLOCKED — ' + doneCheck.failing_items.length + ' items failing', doneCheck.ts)
   log(`DoD check: BLOCKED — ${doneCheck.failing_items.length} items failing`)
   log(doneCheck.failing_items.join(' | '))
   await writeMonitoring('DOD_BLOCKED')
@@ -490,7 +543,7 @@ if (doneCheck.verdict !== 'READY_TO_CLOSE') {
   }
 }
 
-pushEvent('Verify', 'done-checker', 'ok', doneCheck.summary || 'DoD: READY_TO_CLOSE')
+pushEvent('Verify', 'done-checker', 'ok', doneCheck.summary || 'DoD: READY_TO_CLOSE', doneCheck.ts)
 
 // ─── Phase 9: Finalize ────────────────────────────────────────────────────────
 
@@ -508,7 +561,10 @@ Complete these steps in order:
 
 2. Move the ticket: tickets/inprogress/${tid}.md → tickets/done/${tid}.md
 
-3. Append to tickets/working_log.csv (one new row, comma-separated):
+3. Remove the todos source file if one exists:
+${ticketInfo.todos_source_path ? `   Run: rm "${ticketInfo.todos_source_path}"` : '   No todos source path recorded — skip.'}
+
+4. Append to tickets/working_log.csv (one new row, comma-separated):
    Format: timestamp,ticket_id,title,status,summary,artifacts_path
    - timestamp: ISO 8601 (e.g., 2026-06-06T00:00:00Z — use the current session date)
    - ticket_id: ${tid}
@@ -517,14 +573,14 @@ Complete these steps in order:
    - summary: one sentence of what was implemented
    - artifacts_path: ${tier !== 'hotfix' ? `stored_artifacts/${tid}` : 'none (hotfix — no staging artifacts)'}
 
-4. ${tier !== 'hotfix' ? `Move staging_artifacts/${tid}/ → stored_artifacts/${tid}/` : 'Hotfix: no staging artifacts to move.'}
+5. ${tier !== 'hotfix' ? `Move staging_artifacts/${tid}/ → stored_artifacts/${tid}/` : 'Hotfix: no staging artifacts to move.'}
 
-5. Clean data/runs/* and reports/release_proof/* only if they contain artifacts from this work session (check modification times before deleting).
+6. Clean data/runs/* and reports/release_proof/* only if they contain artifacts from this work session (check modification times before deleting).
 
-6. Verify no leftover staging files remain under staging_artifacts/.
+7. Verify no leftover staging files remain under staging_artifacts/.
 
-Report each step: DONE / SKIPPED (reason).`
-  , { label: 'finalize' }
+Report each step: DONE / SKIPPED (reason).`,
+  { label: 'finalize' }
 )
 
 pushEvent('Finalize', 'finalizer', 'ok', 'Ticket ' + tid + ' finalized and moved to done')

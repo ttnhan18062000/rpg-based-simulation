@@ -4,7 +4,7 @@
 Fix hardcoded old content paths in src/ and add architecture guard
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -103,15 +103,20 @@ Allowlist:
 ## Implementation Notes
 Hotfix — three targeted line changes + one new test file.
 
+Applied changes:
+1. `src/content/validator.py`: Added `from src.content.paths import ContentPathConfig` import and module-level `_paths = ContentPathConfig()`. Changed `load_all_compositions` default parameter from `"data/worlds"` to `ContentPathConfig().world_compositions_dir`. Changed `WorldModuleRepository("data/world_modules")` to `WorldModuleRepository(_paths.world_modules_dir)`. Changed `load_all_compositions("data/worlds")` to `load_all_compositions(_paths.world_compositions_dir)`.
+2. `src/worldbuilding/cli.py`: Added `from src.content.paths import ContentPathConfig` import. Changed `WorldModuleRepository("data/world_modules")` on line 171 to `WorldModuleRepository(ContentPathConfig().world_modules_dir)`.
+3. `tests/architecture/test_no_old_structural_content_paths.py` (new): Architecture guard that scans all src/ .py files for forbidden patterns (`"data/world_modules"` literal, `WorldModuleRepository("data/world_modules")`, `load_all_compositions("data/worlds")`). `WorldRepository("data/worlds")` is explicitly not flagged (compiled-world output repo). Supports allowlisting via `legacy_*` filename prefix or `# legacy fixture` comment.
+
 ## Test Summary
 ```
 pytest tests/unit/content/test_content_paths.py tests/architecture/test_no_old_structural_content_paths.py -q
 ```
 
 ## Files Changed
-- `src/content/validator.py`
-- `src/worldbuilding/cli.py`
-- `tests/architecture/test_no_old_structural_content_paths.py` (new)
+- `src/content/validator.py` — added ContentPathConfig import and _paths, fixed 3 hardcoded path usages
+- `src/worldbuilding/cli.py` — added ContentPathConfig import, fixed WorldModuleRepository path at line 171
+- `tests/architecture/test_no_old_structural_content_paths.py` (new) — architecture guard scanning src/ for forbidden patterns
 
 ## Completion Summary
-(to be filled)
+Fix replaced hardcoded "data/world_modules" and "data/worlds" strings in src/content/validator.py (lines 88, 98, and default param) and src/worldbuilding/cli.py (line 171/172) with ContentPathConfig()-resolved paths. Added architecture guard test at tests/architecture/test_no_old_structural_content_paths.py that scans all src/ .py files for forbidden path strings. 159 tests passing.

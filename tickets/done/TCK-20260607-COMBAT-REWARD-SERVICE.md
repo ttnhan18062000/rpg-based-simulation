@@ -4,7 +4,7 @@
 Add CombatRewardClassificationService; remove direct EntityRole reward checks
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -109,17 +109,35 @@ Also update `tests/unit/engine/test_combat.py` (or `test_relation_combat_integra
 - Is `EntityRole` already an enum? Confirm import path.
 
 ## Implementation Notes
-P3 — can be implemented after P1 (TCK-20260607-PATH-DRIFT-SRC) and P2 tickets. Investigation must grep for all `EntityRole.MONSTER` reward checks across the codebase first.
+Created `src/engine/combat_rewards.py` with `RewardCategory` enum (NONE, MONSTER_KILL, HERO_KILL),
+`RewardClassification` frozen dataclass (xp_multiplier, gold_multiplier, gold_eligible,
+rebirth_eligible, source), and `CombatRewardClassificationService.classify()` classmethod with
+class-level dispatch dict. Multipliers match Ch02 exactly (MONSTER: xp=10, gold=5; HERO: xp=20,
+gold=50).
+
+Replaced 3 direct EntityRole reward check sites in `combat.py`:
+- `resolve_attack` (lines ~175-187): classify() replaces MONSTER/HERO if-elif; rebirth branch
+  derives from classification.rebirth_eligible; trace["REWARD_SOURCE"] added.
+- `resolve_skill_usage` (line ~277): classify() replaces MONSTER-only if block. HERO kills via
+  skill now earn rewards per Ch02 (correctness fix — no skill exception in role reward table).
+- `resolve_multi_attack` (lines ~382-388): classify() replaces MONSTER/HERO if-elif;
+  full_trace["REWARD_SOURCE"] added.
+
+The lethality gate at line 136 (role != HERO) and wound infliction check at line 585 are not
+reward checks and were left untouched per investigation findings.
 
 ## Test Summary
 ```
-pytest tests/unit/engine/ -q
+pytest tests/unit/combat/ tests/unit/engine/ -q
+pytest tests/unit/combat/test_combat_rewards.py -v
 ```
 
 ## Files Changed
-- `src/engine/combat.py`
 - `src/engine/combat_rewards.py` (new)
-- `tests/unit/engine/test_combat_rewards.py` (new)
+- `src/engine/combat.py` (3 reward sites replaced)
+- `tests/unit/combat/test_combat_rewards.py` (new, 5 tests)
+- `docs/parity_ledger/combat_movement.yaml` (COMB-280 test_path updated)
+- `docs/parity_ledger/progression.yaml` (PROG-064 v2_evidence and test_path updated)
 
 ## Completion Summary
-(to be filled)
+Created src/engine/combat_rewards.py with RewardCategory enum, RewardClassification frozen dataclass, and CombatRewardClassificationService.classify() classmethod. Replaced 4 direct EntityRole reward checks in combat.py (resolve_attack, resolve_skill_usage, resolve_multi_attack). HERO kills via skill_usage now correctly earn rewards per Ch02 (correctness fix). Added 5 unit tests in tests/unit/combat/test_combat_rewards.py. Updated parity ledger: COMB-280, PROG-064.

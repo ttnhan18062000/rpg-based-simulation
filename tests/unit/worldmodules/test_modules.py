@@ -255,3 +255,130 @@ def test_duplicate_list_refs_fail():
         WorldModuleAuthoringNormalizer.normalize(spec)
     assert "Duplicate list value" in str(exc_info.value)
 
+
+# --- Typed ref collection tests ---
+
+def test_string_biomes_normalize_to_tuple():
+    """biomes field normalizes to Tuple[str, ...] when given list of strings."""
+    from src.worldmodules.normalizer import WorldModuleAuthoringNormalizer, NormalizedWorldModule
+    spec = WorldModuleSpec(
+        schema_version="worldmodule.v2",
+        module_id="test_biome_tuple",
+        module_type="terrain",
+        display_name="Biome Tuple Test",
+        biomes=["forest", "plains"],
+    )
+    normalized = WorldModuleAuthoringNormalizer.normalize(spec)
+    assert isinstance(normalized.biomes, tuple)
+    assert normalized.biomes == ("forest", "plains")
+
+
+def test_string_ecologies_normalize_to_tuple():
+    """ecologies field normalizes to Tuple[str, ...] when given list of strings."""
+    from src.worldmodules.normalizer import WorldModuleAuthoringNormalizer
+    spec = WorldModuleSpec(
+        schema_version="worldmodule.v2",
+        module_id="test_ecology_tuple",
+        module_type="ecology",
+        display_name="Ecology Tuple Test",
+        ecologies=["temperate", "arid"],
+    )
+    normalized = WorldModuleAuthoringNormalizer.normalize(spec)
+    assert isinstance(normalized.ecologies, tuple)
+    assert normalized.ecologies == ("temperate", "arid")
+
+
+def test_string_populations_normalize_to_tuple():
+    """populations field normalizes to Tuple[str, ...] when given list of strings."""
+    from src.worldmodules.normalizer import WorldModuleAuthoringNormalizer
+    spec = WorldModuleSpec(
+        schema_version="worldmodule.v2",
+        module_id="test_pop_tuple",
+        module_type="population",
+        display_name="Population Tuple Test",
+        populations=["human_village", "orc_camp"],
+    )
+    normalized = WorldModuleAuthoringNormalizer.normalize(spec)
+    assert isinstance(normalized.populations, tuple)
+    assert normalized.populations == ("human_village", "orc_camp")
+
+
+def test_string_relationships_normalize_to_tuple():
+    """relationships field normalizes to Tuple[str, ...] when given list of strings."""
+    from src.worldmodules.normalizer import WorldModuleAuthoringNormalizer
+    spec = WorldModuleSpec(
+        schema_version="worldmodule.v2",
+        module_id="test_rel_tuple",
+        module_type="ecology",
+        display_name="Relationship Tuple Test",
+        relationships=["allies", "enemies"],
+    )
+    normalized = WorldModuleAuthoringNormalizer.normalize(spec)
+    assert isinstance(normalized.relationships, tuple)
+    assert normalized.relationships == ("allies", "enemies")
+
+
+def test_empty_ref_fields_normalize_to_empty_tuple():
+    """All four ref fields produce empty tuples when the spec has no values."""
+    from src.worldmodules.normalizer import WorldModuleAuthoringNormalizer
+    spec = WorldModuleSpec(
+        schema_version="worldmodule.v2",
+        module_id="test_empty_refs",
+        module_type="terrain",
+        display_name="Empty Refs Test",
+    )
+    normalized = WorldModuleAuthoringNormalizer.normalize(spec)
+    assert normalized.biomes == ()
+    assert normalized.ecologies == ()
+    assert normalized.populations == ()
+    assert normalized.relationships == ()
+    assert isinstance(normalized.biomes, tuple)
+    assert isinstance(normalized.ecologies, tuple)
+    assert isinstance(normalized.populations, tuple)
+    assert isinstance(normalized.relationships, tuple)
+
+
+def test_dict_with_id_biome_normalizes_to_id_string():
+    """_normalize_ref_list converts a dict-with-id to its string ID."""
+    from src.worldmodules.normalizer import _normalize_ref_list
+    result = _normalize_ref_list([{"id": "forest_biome", "extra": "ignored"}], field_name="biomes")
+    assert result == ("forest_biome",)
+    assert isinstance(result, tuple)
+
+
+def test_dict_without_id_biome_raises_normalization_error():
+    """_normalize_ref_list raises NormalizationError for dict without 'id' key."""
+    from src.worldmodules.normalizer import _normalize_ref_list, NormalizationError
+    with pytest.raises(NormalizationError) as exc_info:
+        _normalize_ref_list([{"name": "forest_biome"}], field_name="biomes")
+    assert "biomes" in str(exc_info.value)
+    assert "no valid 'id' key" in str(exc_info.value)
+
+
+def test_duplicate_biome_ref_fails():
+    """_normalize_ref_list raises NormalizationError for duplicate string IDs."""
+    from src.worldmodules.normalizer import _normalize_ref_list, NormalizationError
+    with pytest.raises(NormalizationError) as exc_info:
+        _normalize_ref_list(["forest", "plains", "forest"], field_name="biomes")
+    assert "forest" in str(exc_info.value)
+    assert "biomes" in str(exc_info.value)
+
+
+def test_normalizer_v1_and_v2_biomes_are_tuple():
+    """Existing v1/v2 normalizer test extended: biomes/ecologies fields must be tuples."""
+    from src.worldmodules.normalizer import WorldModuleAuthoringNormalizer, NormalizedWorldModule
+    v2_data = {
+        "schema_version": "worldmodule.v2",
+        "module_id": "v2_tuple_check",
+        "module_type": "ecology",
+        "display_name": "V2 Tuple Check",
+        "biomes": ["biome_v2"],
+        "ecologies": ["ecology_v2"],
+    }
+    v2_spec = WorldModuleSpec(**v2_data)
+    normalized_v2 = WorldModuleAuthoringNormalizer.normalize(v2_spec)
+    assert isinstance(normalized_v2.biomes, tuple)
+    assert isinstance(normalized_v2.ecologies, tuple)
+    assert normalized_v2.biomes[0] == "biome_v2"
+    assert normalized_v2.ecologies[0] == "ecology_v2"
+

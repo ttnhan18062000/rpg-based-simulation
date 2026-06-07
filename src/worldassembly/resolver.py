@@ -331,14 +331,14 @@ class WorldAssemblyResolver:
                 entities[pop.id] = pop
                 entity_origins[pop.id] = m_id
                 
-                # Attempt to determine archetype_id and population_recipe_id for provenance
-                archetype_id = None
+                # Provenance: archetype_id is now an explicit field on PopulationSpec
+                archetype_id = pop.archetype_id
                 pop_recipe_id = None
-                for pr in contribution.population_refs:
-                    if pr in pop.id:
-                        pop_recipe_id = pr
-                        archetype_id = pop.id.split(pr + "_")[-1]
-                        break
+                if archetype_id:
+                    for pr in contribution.population_refs:
+                        if pr in pop.id:
+                            pop_recipe_id = pr
+                            break
                 
                 resolved_arch = None
                 if archetype_id:
@@ -651,7 +651,7 @@ class WorldAssemblyResolver:
 
     def resolve_module_contribution(
         self,
-        module: WorldModuleSpec | NormalizedWorldModule,
+        normalized_module: NormalizedWorldModule,
         prefix: str = "",
         param_vals: Dict[str, Any] = None
     ) -> ResolvedModuleContribution:
@@ -661,17 +661,23 @@ class WorldAssemblyResolver:
         """
         if param_vals is None:
             param_vals = {}
+        if not isinstance(normalized_module, NormalizedWorldModule):
+            raise TypeError(
+                f"resolve_module_contribution requires NormalizedWorldModule, got "
+                f"{type(normalized_module).__name__}. "
+                "Call WorldModuleAuthoringNormalizer.normalize() before resolving."
+            )
 
         # 1. Resolve Regions
         regions_spec_list: List[RegionSpec] = []
-        for reg in module.regions:
+        for reg in normalized_module.regions:
             # Call RegionResolver if in catalog
             if self.catalog_repo.get_region(reg.id) is not None:
                 self.region_resolver.resolve(reg.id)
             else:
-                if module.schema_version == "worldmodule.v2":
-                    raise ResolverError("region", reg.id, f"referenced by v2 module '{module.module_id}'")
-            
+                if normalized_module.schema_version == "worldmodule.v2":
+                    raise ResolverError("region", reg.id, f"referenced by v2 module '{normalized_module.module_id}'")
+
             regions_spec_list.append(RegionSpec(
                 id=f"{prefix}{reg.id}",
                 type=reg.type,
@@ -682,34 +688,34 @@ class WorldAssemblyResolver:
 
         # 2. Resolve Factions
         factions_spec_list: List[FactionSpec] = []
-        for f_id in module.factions:
+        for f_id in normalized_module.factions:
             cat_faction = self.catalog_repo.get_faction(f_id)
             if cat_faction is None:
-                raise ResolverError("faction", f_id, context=f"referenced by module '{module.module_id}'")
+                raise ResolverError("faction", f_id, context=f"referenced by module '{normalized_module.module_id}'")
             factions_spec_list.append(FactionSpec(id=f_id, type=cat_faction.alignment_bucket))
 
         # 3. Resolve Biomes
         biome_refs: List[str] = []
-        for b_id in module.biomes:
+        for b_id in normalized_module.biomes:
             self.biome_resolver.resolve(b_id)
             biome_refs.append(b_id)
 
         # 4. Resolve Ecologies
         ecology_refs: List[str] = []
-        for e_id in module.ecologies:
+        for e_id in normalized_module.ecologies:
             self.ecology_resolver.resolve(e_id)
             ecology_refs.append(e_id)
 
         # 5. Resolve Relationships
         relationship_refs: List[str] = []
-        for rel_id in module.relationships:
+        for rel_id in normalized_module.relationships:
             self.relationship_resolver.resolve(rel_id)
             relationship_refs.append(rel_id)
 
         # 6. Resolve Services
         service_refs: Dict[str, int] = {}
-        # module.services is normalized to Dict[str, int] now
-        for s_id, count in module.services.items():
+        # normalized_module.services is normalized to Dict[str, int] now
+        for s_id, count in normalized_module.services.items():
             if self.catalog_repo.get_service_profile(s_id) is None:
                 raise ResolverError("service_profile", s_id)
             service_refs[s_id] = count
@@ -717,15 +723,15 @@ class WorldAssemblyResolver:
         # 7. Resolve Populations
         population_refs: List[str] = []
         resolved_population_specs: List[PopulationSpec] = []
-        
-        for p_id in module.populations:
+
+        for p_id in normalized_module.populations:
             expanded_archetypes, preferred_regions = self.population_recipe_resolver.resolve(p_id)
             population_refs.append(p_id)
-            
+
             # Collect regions defined in this module and recursively required modules
-            module_region_ids = {r.id for r in module.regions}
-            if hasattr(module, "requires") and module.requires:
-                for req_id in module.requires:
+            module_region_ids = {r.id for r in normalized_module.regions}
+            if hasattr(normalized_module, "requires") and normalized_module.requires:
+                for req_id in normalized_module.requires:
                     req_spec = self.module_repo.get_module(req_id)
                     if req_spec:
                         module_region_ids.update({r.id for r in req_spec.regions})
@@ -744,9 +750,9 @@ class WorldAssemblyResolver:
             for arch_idx, (resolved_arch, count) in enumerate(expanded_archetypes):
                 spawn_region = preferred_regions[0] if preferred_regions else ""
                 spawn_region = REGION_MIGRATION_MAP.get(spawn_region, spawn_region)
-                if not spawn_region and module.regions:
-                    spawn_region = module.regions[0].id
-                if spawn_region in [r.id for r in module.regions]:
+                if not spawn_region and normalized_module.regions:
+                    spawn_region = normalized_module.regions[0].id
+                if spawn_region in [r.id for r in normalized_module.regions]:
                     spawn_region = f"{prefix}{spawn_region}"
                 elif spawn_region:
                     spawn_region = f"{prefix}{spawn_region}"
@@ -757,7 +763,8 @@ class WorldAssemblyResolver:
                     count=count,
                     role=resolved_arch.role_id,
                     faction=resolved_arch.faction_id,
-                    spawn_region=spawn_region
+                    spawn_region=spawn_region,
+                    archetype_id=resolved_arch.archetype_id,
                 ))
 
         # 8. Resolve Resources & Buildings
@@ -765,11 +772,11 @@ class WorldAssemblyResolver:
         building_refs: Dict[str, int] = {}
 
         # Both are normalized to Dict[str, int] by WorldModuleAuthoringNormalizer
-        for res_id, count in module.resources.items():
+        for res_id, count in normalized_module.resources.items():
             self.resource_resolver.resolve(res_id)
             resource_refs[res_id] = count
 
-        for bld_id, count in module.buildings.items():
+        for bld_id, count in normalized_module.buildings.items():
             self.building_resolver.resolve(bld_id)
             building_refs[bld_id] = count
 
@@ -897,16 +904,9 @@ class CompileProfileResolver:
 
             hp, max_hp, atk, def_stat, attack_range, readiness = self._resolve_entity_stats(pop_spec, stats_profile_id)
 
-            # Look up archetype details if available to preserve metadata (Phase 25)
-            archetype_id = None
-            if "_" in key:
-                # E.g., goblin_camp_conflict_goblin_raiding_party_goblin_raider
-                # Let's extract the part after the population recipe if it matches an archetype ID
-                for arch_key in self.repo.entity_archetypes:
-                    if key.endswith(f"_{arch_key}"):
-                        archetype_id = arch_key
-                        break
-            
+            # Archetype_id is now explicit on PopulationSpec — no string scan needed
+            archetype_id = pop_spec.archetype_id
+
             resolved_arch = None
             if archetype_id:
                 try:

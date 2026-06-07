@@ -1770,9 +1770,12 @@
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: src/content/resolver.py PopulationRecipeResolver.resolve() — case 2
-    fallback validated against entity_archetypes catalog before returning shorthand
-    result; case 3 raises ResolverError
+  v2_evidence: >-
+    src/content/resolver.py PopulationRecipeResolver.resolve() — case 2 fallback validated
+    against entity_archetypes catalog before returning shorthand result; case 3 raises
+    ResolverError. As of TCK-20260607-ARCHETYPE-METADATA-EXPLICIT, the returned
+    ResolvedEntityArchetype.archetype_id is the authoritative identity; downstream callers
+    read PopulationSpec.archetype_id directly instead of inferring from string suffix.
   proof_type: parity
   test_path: tests/unit/content/test_resolvers.py::TestPopulationRecipeResolver::test_case2_direct_archetype_id_returns_single_entity
   divergence_note: null

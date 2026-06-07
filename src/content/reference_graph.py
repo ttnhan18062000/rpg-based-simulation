@@ -208,6 +208,25 @@ class ContentReferenceGraph:
         """Returns True if the record has at least one incoming edge."""
         return len(self.get_incoming_neighbors(node_id)) > 0
 
+    def add_module_edges(self, normalized_module: "NormalizedWorldModule") -> None:
+        """Add edges from a normalized module into the reference graph."""
+        from src.worldmodules.normalizer import NormalizedWorldModule  # local import to avoid circular
+        module_node = f"module:{normalized_module.module_id}"
+        for b_id in normalized_module.biomes:
+            self.add_edge(module_node, f"biome:{b_id}")
+        for e_id in normalized_module.ecologies:
+            self.add_edge(module_node, f"ecology:{e_id}")
+        for p_id in normalized_module.populations:
+            self.add_edge(module_node, f"population:{p_id}")
+        for rel_id in normalized_module.relationships:
+            self.add_edge(module_node, f"faction_relationship:{rel_id}")
+        for res_id, count in normalized_module.resources.items():
+            self.add_edge(module_node, f"resource:{res_id}", {"count": count})
+        for bld_id, count in normalized_module.buildings.items():
+            self.add_edge(module_node, f"building:{bld_id}", {"count": count})
+        for svc_id, count in normalized_module.services.items():
+            self.add_edge(module_node, f"service:{svc_id}", {"count": count})
+
     def _build_graph(
         self,
         repo: CatalogRepository,
@@ -285,28 +304,12 @@ class ContentReferenceGraph:
                 if bld.service_profile:
                     self.add_edge(module_node, f"service:{bld.service_profile}")
 
-            # Scan V2 layout lists and attributes explicitly
-            for biome in module.biomes:
-                self.add_edge(module_node, f"biome:{biome}")
-            for ecology in module.ecologies:
-                self.add_edge(module_node, f"ecology:{ecology}")
-            for population in module.populations:
-                self.add_edge(module_node, f"population:{population}")
+            # Scan V2 layout lists and dict refs via normalized module
+            from src.worldmodules.normalizer import WorldModuleAuthoringNormalizer
+            normalized = WorldModuleAuthoringNormalizer.normalize(module)
             for faction in module.factions:
                 self.add_edge(module_node, f"faction:{faction}")
-            for relationship in module.relationships:
-                self.add_edge(module_node, f"faction_relationship:{relationship}")
-
-            # Scan resources, buildings, services (can be dict count map or list shorthand)
-            for field_name, short_concept in [("resources", "resource"), ("buildings", "building"), ("services", "service")]:
-                val = getattr(module, field_name, None)
-                if isinstance(val, dict):
-                    for ref_id, count in val.items():
-                        self.add_edge(module_node, f"{short_concept}:{ref_id}", {"count": count})
-                elif isinstance(val, list):
-                    for ref_id in val:
-                        if isinstance(ref_id, str):
-                            self.add_edge(module_node, f"{short_concept}:{ref_id}", {"count": 1})
+            self.add_module_edges(normalized)
 
         # 3. Add compositions
         for comp in compositions:

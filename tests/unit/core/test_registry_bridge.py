@@ -2,10 +2,13 @@ import os
 import tempfile
 import yaml
 import pytest
+import dataclasses
 
 from src.content.repository import CatalogRepository
+from src.core.modes import RuntimeContentMode
 from src.core.registries import (
     seed_phase1_content,
+    AdapterProjectionResult,
     ItemRegistry,
     ResourceRegistry,
     EnemyRegistry,
@@ -467,3 +470,66 @@ def test_referential_integrity_catalog(mock_catalog_repo):
     # 4. Service locations match valid RegionRegistry IDs
     for service in ServiceRegistry.all().values():
         assert RegionRegistry.contains(service.region_id)
+
+
+def test_runtime_content_mode_enum_has_migration_and_v2():
+    assert RuntimeContentMode.MIGRATION.value == "migration"
+    assert RuntimeContentMode.V2.value == "v2"
+    assert len(RuntimeContentMode) == 2
+
+
+def test_seed_with_migration_mode_returns_projection_result(mock_catalog_repo):
+    result = seed_phase1_content(mock_catalog_repo, mode=RuntimeContentMode.MIGRATION)
+    assert isinstance(result, AdapterProjectionResult)
+    assert result.mode == RuntimeContentMode.MIGRATION
+    assert result.item_count > 0
+    assert result.service_count > 0
+    assert result.resource_count > 0
+    assert result.heuristic_count >= 0
+
+
+def test_seed_with_v2_mode_raises_if_unresolved_entities_exist():
+    import tempfile, os, yaml
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        os.makedirs(os.path.join(tmp_dir, "world"), exist_ok=True)
+        os.makedirs(os.path.join(tmp_dir, "compatibility"), exist_ok=True)
+        os.makedirs(os.path.join(tmp_dir, "entities"), exist_ok=True)
+        items_data = [{"id": "no_use_kind_item", "schema_version": "itemdefinition.v1", "categories": ["weapon"], "rarity": "COMMON", "base_value": 5.0}]
+        with open(os.path.join(tmp_dir, "world", "items.yaml"), "w") as f:
+            yaml.dump(items_data, f)
+        for fname in ["resources.yaml", "recipes.yaml", "services.yaml"]:
+            with open(os.path.join(tmp_dir, "world", fname), "w") as f:
+                yaml.dump([], f)
+        with open(os.path.join(tmp_dir, "world", "runtime_regions.yaml"), "w") as f:
+            yaml.dump([{"id": "hometown", "schema_version": "runtimeregiondefinition.v1", "danger_level": 0, "tags": ["safe"]}], f)
+        with open(os.path.join(tmp_dir, "compatibility", "legacy_enemy_projection.yaml"), "w") as f:
+            yaml.dump([], f)
+        with open(os.path.join(tmp_dir, "entities", "entity_archetypes.yaml"), "w") as f:
+            yaml.dump([], f)
+        with open(os.path.join(tmp_dir, "entities", "stat_profiles.yaml"), "w") as f:
+            yaml.dump([], f)
+        from src.content.repository import CatalogRepository
+        from src.core.registries import AdapterError
+        repo = CatalogRepository(tmp_dir)
+        repo.load_all()
+        with pytest.raises(AdapterError):
+            seed_phase1_content(repo, mode=RuntimeContentMode.V2)
+
+
+def test_seed_legacy_fallback_returns_none():
+    result = seed_phase1_content(None)
+    assert result is None
+
+
+def test_adapter_projection_result_is_frozen_dataclass():
+    result = AdapterProjectionResult(
+        mode=RuntimeContentMode.MIGRATION,
+        item_count=5,
+        service_count=3,
+        resource_count=2,
+        heuristic_count=1,
+    )
+    assert dataclasses.is_dataclass(result)
+    assert result.item_count == 5
+    with pytest.raises((dataclasses.FrozenInstanceError, AttributeError)):
+        result.item_count = 99

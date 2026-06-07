@@ -56,6 +56,10 @@ class PopulationSpec(BaseModel):
     role: str = Field(..., min_length=1, description="Combat or societal role of the entities")
     faction: str = Field(..., min_length=1, description="Faction affiliation")
     spawn_region: str = Field(..., min_length=1, description="Region where entities are spawned")
+    archetype_id: Optional[str] = Field(
+        default=None,
+        description="Archetype that originated this population entry; set at assembly time, never inferred from the id string."
+    )
 
 class ResourceNodeSpec(BaseModel):
     model_config = ConfigDict(frozen=True)

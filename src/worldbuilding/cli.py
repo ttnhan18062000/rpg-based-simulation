@@ -15,6 +15,7 @@ from src.worldbuilding.validator import WorldValidator
 from src.worldbuilding.compiler import WorldCompiler
 from src.worldbuilding.recipe import WorldTemplateSpec, WorldTemplateExpander
 from src.content.repository import CatalogRepository
+from src.content.paths import ContentPathConfig
 from src.worldmodules.repository import WorldModuleRepository
 from src.worldassembly.schema import WorldCompositionSpec
 from src.worldassembly.resolver import WorldAssemblyResolver
@@ -168,7 +169,7 @@ def handle_resolve(args) -> int:
         # Load repositories
         cat_repo = CatalogRepository("data/content")
         cat_repo.load_all()
-        mod_repo = WorldModuleRepository("data/world_modules")
+        mod_repo = WorldModuleRepository(ContentPathConfig().world_modules_dir)
         mod_repo.load_all()
 
         print(f"Resolving composition world '{world_id}'...")

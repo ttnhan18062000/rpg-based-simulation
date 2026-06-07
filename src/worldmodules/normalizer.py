@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Optional, List, Any, Dict, Union
+from typing import Optional, List, Any, Dict, Tuple, Union
 
 from src.worldmodules.schema import ModuleParameterSpec, WorldModuleSpec
 from src.worldbuilding.recipe import (
@@ -8,6 +8,10 @@ from src.worldbuilding.recipe import (
     ResourceRecipeSpec,
     BuildingRecipeSpec,
 )
+
+
+class NormalizationError(ValueError):
+    """Raised when a module field cannot be normalized to a typed ref collection."""
 
 
 @dataclass(frozen=True)
@@ -26,14 +30,46 @@ class NormalizedWorldModule:
     population_recipes: List[PopulationRecipeSpec]
     resource_recipes: List[ResourceRecipeSpec]
     building_recipes: List[BuildingRecipeSpec]
-    biomes: List[Any]
-    ecologies: List[Any]
-    populations: List[Any]
-    relationships: List[Any]
+    biomes: Tuple[str, ...]
+    ecologies: Tuple[str, ...]
+    populations: Tuple[str, ...]
+    relationships: Tuple[str, ...]
     resources: Dict[str, int]
     buildings: Dict[str, int]
     services: Dict[str, int]
     factions: List[str]
+
+
+def _normalize_ref_list(value: List[Any], *, field_name: str) -> Tuple[str, ...]:
+    """
+    Normalize a raw ref list to an immutable tuple of string IDs.
+    - List[str]: validate no duplicates, return as tuple.
+    - List[dict] with 'id' key: extract IDs, validate no duplicates, return as tuple.
+    - List[dict] without 'id' key: raise NormalizationError.
+    - Other element types: raise NormalizationError.
+    """
+    seen: set = set()
+    result: list = []
+    for item in value:
+        if isinstance(item, str):
+            item_id = item
+        elif isinstance(item, dict):
+            item_id = item.get("id")
+            if not item_id or not isinstance(item_id, str):
+                raise NormalizationError(
+                    f"Dict entry in '{field_name}' has no valid 'id' key: {item!r}"
+                )
+        else:
+            raise NormalizationError(
+                f"Unexpected element type {type(item).__name__!r} in '{field_name}': {item!r}"
+            )
+        if item_id in seen:
+            raise NormalizationError(
+                f"Duplicate ref '{item_id}' in '{field_name}' is rejected."
+            )
+        seen.add(item_id)
+        result.append(item_id)
+    return tuple(result)
 
 
 def normalize_count_map(value: Any, *, field_name: str) -> Dict[str, int]:
@@ -109,10 +145,10 @@ class WorldModuleAuthoringNormalizer:
             population_recipes=list(spec.population_recipes),
             resource_recipes=list(spec.resource_recipes),
             building_recipes=list(spec.building_recipes),
-            biomes=list(spec.biomes),
-            ecologies=list(spec.ecologies),
-            populations=list(spec.populations),
-            relationships=list(spec.relationships),
+            biomes=_normalize_ref_list(list(spec.biomes), field_name="biomes"),
+            ecologies=_normalize_ref_list(list(spec.ecologies), field_name="ecologies"),
+            populations=_normalize_ref_list(list(spec.populations), field_name="populations"),
+            relationships=_normalize_ref_list(list(spec.relationships), field_name="relationships"),
             resources=normalize_count_map(spec.resources, field_name="resources"),
             buildings=normalize_count_map(spec.buildings, field_name="buildings"),
             services=normalize_count_map(spec.services, field_name="services"),

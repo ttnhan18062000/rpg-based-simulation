@@ -4,7 +4,7 @@
 Replace List[Any] fields in NormalizedWorldModule with typed ref collections
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -119,17 +119,29 @@ Add in `tests/unit/content/test_reference_graph.py` (or `test_content_usage_matr
 - Are there real modules that use dict-with-id format for biomes/ecologies? Check `data/content/world_modules/*.yaml` before implementing.
 
 ## Implementation Notes
-9-phase standard. Investigation must check real YAML module files for dict vs string biome/ecology/population/relationship formats before changing normalizer behavior.
+All seven real YAML module files use plain string lists for biomes/ecologies/populations/relationships — no dict-with-id format exists in real data. The dict-with-id branch in `_normalize_ref_list` is defensive infrastructure for a future authoring path.
+
+`NormalizationError(ValueError)` defined locally in `normalizer.py` — no shared errors module existed.
+
+`add_module_edges` passes count metadata (`{"count": count}`) for resources/buildings/services edges, preserving parity with the old inline loop's behavior in `_build_graph`. This was caught by `test_layered_catalog.py::test_graph_module_count_maps_and_metadata`.
+
+`_build_graph` factions loop (`for faction in module.factions`) was kept inline (not folded into `add_module_edges`) because factions come from raw `WorldModuleSpec`, not `NormalizedWorldModule`. Only the four V2 layout tuple fields and the resources/buildings/services dict loops were replaced by `add_module_edges`.
+
+`test_string_relationships_normalize_to_tuple` uses `module_type="ecology"` — `"social"` is not a registered module type in `WorldModuleSpec`.
+
+Pre-existing worldassembly failures (`CAT-REL-099` missing `apprentice_mage` population) confirmed to be unrelated to this ticket.
 
 ## Test Summary
 ```
-pytest tests/unit/worldmodules/ tests/unit/content/test_reference_graph.py -q
+pytest tests/unit/worldmodules/ tests/unit/content/test_reference_graph.py tests/unit/content/test_layered_catalog.py -q
 ```
+29 passed.
 
 ## Files Changed
 - `src/worldmodules/normalizer.py`
 - `src/content/reference_graph.py`
 - `tests/unit/worldmodules/test_modules.py`
+- `tests/unit/content/test_reference_graph.py` (new)
 
 ## Completion Summary
-(to be filled)
+Replaced List[Any] with Tuple[str, ...] on NormalizedWorldModule.biomes/ecologies/populations/relationships. Added NormalizationError(ValueError) and _normalize_ref_list() helper in normalizer.py. Updated WorldModuleAuthoringNormalizer.normalize() to use _normalize_ref_list(). Added ContentReferenceGraph.add_module_edges(NormalizedWorldModule) and replaced inline V2 layout loops in _build_graph. Added 13 new tests (9 in test_modules.py, 4 in test_reference_graph.py). All tests passing.

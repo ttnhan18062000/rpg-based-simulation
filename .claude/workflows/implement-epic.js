@@ -40,7 +40,7 @@ phase('Discover')
 
 const DISCOVER_SCHEMA = {
   type: 'object',
-  required: ['mode', 'ticket_ids', 'already_done', 'summary'],
+  required: ['mode', 'ticket_ids', 'already_done', 'summary', 'ts'],
   properties: {
     mode: { type: 'string', enum: ['folder', 'epic_id', 'request'] },
     ticket_ids: {
@@ -55,6 +55,7 @@ const DISCOVER_SCHEMA = {
     },
     epic_ticket_path: { type: 'string', description: 'Path of the epic ticket, if created or found' },
     summary: { type: 'string', description: 'One sentence: how many tickets found and how many to implement (≤200 chars)' },
+    ts: { type: 'string', description: 'ISO timestamp from `date -u +%Y-%m-%dT%H:%M:%SZ` run at start of Discover phase' },
   },
 }
 
@@ -62,27 +63,40 @@ const discovery = await agent(
   folder
     ? `Discover tickets in folder "${folder}".
 
+Step 0 — run \`date -u +%Y-%m-%dT%H:%M:%SZ\` and include result as the \`ts\` field.
+
 Step 1 — list all files in the folder:
   Run: ls "${folder}"
-  Filter to files matching TCK-*.md (case-sensitive). Sort alphabetically.
 
-Step 2 — for each file, extract the ticket_id (filename without .md extension).
+Step 2 — check for a SEQUENCE.md ordering file:
+  If SEQUENCE.md appears in the ls output, read it:
+    Read: ${folder}SEQUENCE.md
+  Extract all TCK-... IDs in the order they appear. This is the authoritative
+  implementation order for this batch — use it instead of alphabetical.
 
-Step 3 — check which are already done:
+Step 3 — build the ordered ticket list:
+  Start with the TCK IDs from SEQUENCE.md (if found), in that order, keeping
+  only those that actually exist as TCK-*.md files in the folder.
+  Append any TCK-*.md files in the folder that do NOT appear in SEQUENCE.md,
+  sorted alphabetically.
+
+Step 4 — check which are already done:
   Run: ls tickets/done/
   A ticket is already done if tickets/done/{ticket_id}.md exists.
 
-Step 4 — return:
+Step 5 — return:
   mode="folder"
-  ticket_ids = ordered list of ticket IDs NOT yet done
+  ticket_ids = ordered list of ticket IDs NOT yet done (SEQUENCE.md order if available, else alphabetical)
   already_done = ticket IDs that ARE already in tickets/done/
   epic_ticket_path = "" (no epic ticket for folder mode)
-  summary = one sentence: e.g. "Found 5 tickets in folder, 3 to implement, 2 already done."
+  summary = one sentence noting order source, e.g. "Found 5 tickets in folder (SEQUENCE.md order), 3 to implement, 2 already done."
 
 Do not implement anything. Discovery only.`
 
     : epicId
     ? `Discover child tickets for epic "${epicId}".
+
+Step 0 — run \`date -u +%Y-%m-%dT%H:%M:%SZ\` and include result as the \`ts\` field.
 
 Step 1 — find and read the epic ticket:
   Check tickets/inprogress/${epicId}.md, tickets/done/${epicId}.md, tickets/todos/ subdirectories.
@@ -107,6 +121,8 @@ Step 4 — return:
 
 Request: ${request}
 
+Step 0 — run \`date -u +%Y-%m-%dT%H:%M:%SZ\` and include result as the \`ts\` field.
+
 Step 1 — create an epic ticket using the ticket-scoper approach:
   - Scan tickets/ for overlapping scope
   - Draft the epic ticket at tickets/inprogress/TCK-YYYYMMDD-SHORT-SCOPE.md
@@ -123,6 +139,8 @@ Step 2 — return:
 
   { label: 'discover', schema: DISCOVER_SCHEMA }
 )
+
+const batchStartTs = discovery.ts || null
 
 log(`Discover: ${discovery.summary}`)
 
@@ -208,19 +226,21 @@ const batchEvents = results.map((r, i) => ({
   summary: (r.implementation_summary || r.message || r.status || '').slice(0, 200),
 }))
 
+// Pre-embed batchStartTs so the agent only substitutes one placeholder (<END_TS>).
+const batchStartTsLiteral = batchStartTs ? batchStartTs : '<END_TS>'
 await agent(
   `Write batch monitoring record for epic run "${batchRunId}". This is bookkeeping — do NOT fail if writes error.
 
-Step 1 — get current timestamp:
+Step 1 — get current timestamp (batch end time):
   Run via Bash: date -u +%Y-%m-%dT%H:%M:%SZ
-  Save as TS.
+  Save as END_TS. Replace every literal <END_TS> in the commands below with this value.
 
-Step 2 — write batch events (add run_id="${batchRunId}" and ts=TS to each):
+Step 2 — write batch events (add run_id="${batchRunId}" and ts=END_TS to each):
   Events: ${JSON.stringify(batchEvents)}
-  Run: python3 tools/agent-monitoring/record_events.py --data '<JSON array with run_id and ts added>'
+  Run: python3 tools/agent-monitoring/record_events.py --data '<JSON array with run_id and ts=END_TS added>'
 
-Step 3 — write batch run record:
-  python3 tools/agent-monitoring/record_run.py --data '{"run_id":"${batchRunId}","start_ts":"<TS>","end_ts":"<TS>","workflow":"implement-epic","tier":"epic","final_status":"${batchStatus}","agent_count":${results.length}}'
+Step 3 — write batch run record (replace <END_TS> with the value from Step 1):
+  python3 tools/agent-monitoring/record_run.py --data '{"run_id":"${batchRunId}","start_ts":"${batchStartTsLiteral}","end_ts":"<END_TS>","workflow":"implement-epic","tier":"epic","final_status":"${batchStatus}","agent_count":${results.length}}'
 
 If any command fails, print "WARNING: batch monitoring write failed: <error>" but do NOT raise. Return "done".`,
   { label: 'batch-monitoring-write' }

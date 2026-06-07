@@ -2,6 +2,8 @@ import os
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Tuple, Set
 
+from src.core.modes import RuntimeContentMode
+
 
 @dataclass(frozen=True, slots=True)
 class ItemDef:
@@ -202,18 +204,20 @@ class AdapterError(ValueError):
 
 
 class CatalogToItemRegistryAdapter:
-    def __init__(self, repo: Any, migration_mode: bool = True) -> None:
+    def __init__(self, repo: Any, mode: RuntimeContentMode = RuntimeContentMode.CATALOG_WITH_COMPATIBILITY) -> None:
         self.repo = repo
-        self.migration_mode = migration_mode
+        self.mode = mode
 
-    def adapt(self) -> Dict[str, ItemDef]:
+    def adapt(self) -> Tuple[Dict[str, ItemDef], int]:
         items: Dict[str, ItemDef] = {}
+        heuristic_count = 0
         for item_id, item in self.repo.items.items():
             try:
                 use_kind = getattr(item, "use_kind", None)
                 if not use_kind:
-                    if not self.migration_mode:
+                    if self.mode == RuntimeContentMode.CATALOG_STRICT:
                         raise AdapterError(item_id, "Missing explicit 'use_kind' in catalog-backed mode")
+                    heuristic_count += 1
                     use_kind = "material"
                     if "weapon" in item.categories:
                         use_kind = "weapon"
@@ -228,7 +232,7 @@ class CatalogToItemRegistryAdapter:
                             use_kind = "consumable"
                     elif "tool" in item.categories:
                         use_kind = "tool"
-                
+
                 # Map class fit from metadata fallback
                 class_fit = tuple(getattr(item, "class_fit", ())) if getattr(item, "class_fit", None) else ()
                 if not class_fit:
@@ -236,8 +240,9 @@ class CatalogToItemRegistryAdapter:
                     if metadata_fit:
                         class_fit = metadata_fit
                     else:
-                        if not self.migration_mode:
+                        if self.mode == RuntimeContentMode.CATALOG_STRICT:
                             raise AdapterError(item_id, "Missing explicit 'class_fit' in catalog-backed mode")
+                        heuristic_count += 1
                         if item_id in ("rusted_sword", "iron_sword", "hunter_blade"):
                             class_fit = ("warrior",)
                             if item_id == "hunter_blade":
@@ -246,7 +251,7 @@ class CatalogToItemRegistryAdapter:
                             class_fit = ("mage",)
                         elif item_id == "basic_bow":
                             class_fit = ("ranger",)
-                
+
                 items[item_id] = ItemDef(
                     id=item_id,
                     tags=tuple(item.categories),
@@ -259,7 +264,7 @@ class CatalogToItemRegistryAdapter:
                 raise
             except Exception as e:
                 raise AdapterError(item_id, str(e)) from e
-        return items
+        return items, heuristic_count
 
 
 class CatalogToRecipeRegistryAdapter:
@@ -301,13 +306,14 @@ class CatalogToRecipeRegistryAdapter:
 
 
 class CatalogToServiceRegistryAdapter:
-    def __init__(self, repo: Any, catalog_mode: bool = False, migration_mode: bool = True) -> None:
+    def __init__(self, repo: Any, catalog_mode: bool = False, mode: RuntimeContentMode = RuntimeContentMode.CATALOG_WITH_COMPATIBILITY) -> None:
         self.repo = repo
         self.catalog_mode = catalog_mode
-        self.migration_mode = migration_mode
+        self.mode = mode
 
-    def adapt(self) -> Dict[str, ServiceDef]:
+    def adapt(self) -> Tuple[Dict[str, ServiceDef], int]:
         services: Dict[str, ServiceDef] = {}
+        heuristic_count = 0
         # Prepopulate hometown services for compatibility/seeding only if not catalog_mode
         if not self.catalog_mode:
             services["shop_hometown"] = ServiceDef("shop_hometown", "hometown", ("buy", "sell"))
@@ -315,13 +321,14 @@ class CatalogToServiceRegistryAdapter:
             services["guide_hometown"] = ServiceDef("guide_hometown", "hometown", ("ask_info",), ("wood", "herb", "iron_ore", "healing_flower", "moon_resin"))
             services["guild_hometown"] = ServiceDef("guild_hometown", "hometown", ("quest", "info"))
             services["inn_hometown"] = ServiceDef("inn_hometown", "hometown", ("rest",))
-        
+
         for s_id, s_prof in self.repo.services.items():
             try:
                 affordances = list(getattr(s_prof, "affordances", [])) if getattr(s_prof, "affordances", None) else []
                 if not affordances:
-                    if not self.migration_mode:
+                    if self.mode == RuntimeContentMode.CATALOG_STRICT:
                         raise AdapterError(s_id, "Missing explicit 'affordances' in catalog-backed mode")
+                    heuristic_count += 1
                     if "trade" in s_id or "store" in s_id or s_prof.provided_items:
                         affordances.extend(["buy", "sell"])
                     if "blacksmith" in s_id or "craft" in s_id:
@@ -330,7 +337,7 @@ class CatalogToServiceRegistryAdapter:
                         affordances.append("rest")
                     if "healer" in s_id or "healing" in s_id:
                         affordances.append("rest")
-                
+
                 services[s_id] = ServiceDef(
                     id=s_id,
                     region_id="hometown",
@@ -340,7 +347,7 @@ class CatalogToServiceRegistryAdapter:
                 raise
             except Exception as e:
                 raise AdapterError(s_id, str(e)) from e
-        return services
+        return services, heuristic_count
 
 
 class CatalogToRegionRegistryAdapter:
@@ -365,18 +372,20 @@ class CatalogToRegionRegistryAdapter:
 
 
 class CatalogToResourceRegistryAdapter:
-    def __init__(self, repo: Any, migration_mode: bool = True) -> None:
+    def __init__(self, repo: Any, mode: RuntimeContentMode = RuntimeContentMode.CATALOG_WITH_COMPATIBILITY) -> None:
         self.repo = repo
-        self.migration_mode = migration_mode
+        self.mode = mode
 
-    def adapt(self) -> Dict[str, ResourceDef]:
+    def adapt(self) -> Tuple[Dict[str, ResourceDef], int]:
         resources: Dict[str, ResourceDef] = {}
+        heuristic_count = 0
         for res_id, res in self.repo.resources.items():
             try:
                 legacy_id = getattr(res, "legacy_id", None)
                 if not legacy_id:
-                    if not self.migration_mode:
+                    if self.mode == RuntimeContentMode.CATALOG_STRICT:
                         raise AdapterError(res_id, "Missing explicit 'legacy_id' in catalog-backed mode")
+                    heuristic_count += 1
                     legacy_id = res_id
                     if res_id == "wood_node":
                         legacy_id = "node_wood"
@@ -393,8 +402,9 @@ class CatalogToResourceRegistryAdapter:
                 if not source_region_tags:
                     source_region_tags = tuple(res.metadata.get("preferred_biomes", [])) if hasattr(res, "metadata") and res.metadata else ()
                     if not source_region_tags:
-                        if not self.migration_mode:
+                        if self.mode == RuntimeContentMode.CATALOG_STRICT:
                             raise AdapterError(res_id, "Missing source region tags in catalog-backed mode")
+                        heuristic_count += 1
                         if legacy_id == "node_wood":
                             source_region_tags = ("near_forest",)
                         elif legacy_id == "node_herb":
@@ -405,20 +415,20 @@ class CatalogToResourceRegistryAdapter:
                             source_region_tags = ("moon_cave",)
                         elif legacy_id == "node_flower":
                             source_region_tags = ("near_forest",)
-                
+
                 required_tool = getattr(res, "required_tool", None)
                 if required_tool is None:
                     required_tool = res.metadata.get("required_tool") if hasattr(res, "metadata") and res.metadata else None
                     if required_tool is None:
-                        if not self.migration_mode:
+                        if self.mode == RuntimeContentMode.CATALOG_STRICT:
                             required_tool = None
                         else:
                             if "iron" in res_id or "silver" in res_id:
                                 required_tool = "pickaxe"
-                
+
                 base_difficulty = res.metadata.get("base_difficulty") if hasattr(res, "metadata") and res.metadata else None
                 if base_difficulty is None:
-                    if not self.migration_mode:
+                    if self.mode == RuntimeContentMode.CATALOG_STRICT:
                         base_difficulty = 1
                     else:
                         if "iron" in res_id or "silver" in res_id or "resin" in res_id:
@@ -444,7 +454,7 @@ class CatalogToResourceRegistryAdapter:
                 raise
             except Exception as e:
                 raise AdapterError(res_id, str(e)) from e
-        return resources
+        return resources, heuristic_count
 
 
 class ArchetypeToEnemyRegistryAdapter:
@@ -492,7 +502,20 @@ fallback_usage_reported: bool = False
 _sentinel = object()
 
 
-def seed_phase1_content(catalog_repo: Optional[Any] = _sentinel, required: bool = False, migration_mode: bool = True) -> None:
+@dataclass(frozen=True)
+class AdapterProjectionResult:
+    mode: RuntimeContentMode
+    item_count: int
+    service_count: int
+    resource_count: int
+    heuristic_count: int
+
+
+def seed_phase1_content(
+    catalog_repo: Optional[Any] = _sentinel,
+    required: bool = False,
+    mode: RuntimeContentMode = RuntimeContentMode.CATALOG_WITH_COMPATIBILITY,
+) -> Optional[AdapterProjectionResult]:
     """Load default adventure seed contents either from Content Catalog or legacy hardcoded backup."""
     global runtime_content_source, catalog_fingerprint, fallback_usage_reported
 
@@ -516,7 +539,7 @@ def seed_phase1_content(catalog_repo: Optional[Any] = _sentinel, required: bool 
     if catalog_repo is not None:
         from src.content.repository import CatalogRepository
         assert isinstance(catalog_repo, CatalogRepository)
-        
+
         if required:
             from src.content.validator import CatalogValidator, CatalogValidationError
             validator = CatalogValidator(catalog_repo)
@@ -524,13 +547,13 @@ def seed_phase1_content(catalog_repo: Optional[Any] = _sentinel, required: bool 
             errors = [issue for issue in issues if issue.severity == "ERROR"]
             if errors:
                 raise CatalogValidationError(f"Catalog has validation errors: {errors}")
-        
-        # Run adapters with strict or migration mode as requested
-        items = CatalogToItemRegistryAdapter(catalog_repo, migration_mode=migration_mode).adapt()
+
+        # Run adapters with the requested mode
+        items, items_heuristic = CatalogToItemRegistryAdapter(catalog_repo, mode=mode).adapt()
         recipes = CatalogToRecipeRegistryAdapter(catalog_repo).adapt()
-        services = CatalogToServiceRegistryAdapter(catalog_repo, catalog_mode=True, migration_mode=migration_mode).adapt()
+        services, services_heuristic = CatalogToServiceRegistryAdapter(catalog_repo, catalog_mode=True, mode=mode).adapt()
         regions = CatalogToRegionRegistryAdapter(catalog_repo).adapt()
-        resources = CatalogToResourceRegistryAdapter(catalog_repo, migration_mode=migration_mode).adapt()
+        resources, resources_heuristic = CatalogToResourceRegistryAdapter(catalog_repo, mode=mode).adapt()
         enemies = ArchetypeToEnemyRegistryAdapter(catalog_repo, catalog_mode=True).adapt()
 
         # Seed registries
@@ -540,14 +563,22 @@ def seed_phase1_content(catalog_repo: Optional[Any] = _sentinel, required: bool 
         RegionRegistry.bootstrap(regions)
         ResourceRegistry.bootstrap(resources)
         EnemyRegistry.bootstrap(enemies)
-        
+
         # Bootstrap ItemRegistry in src.core.items as well
         from src.core.items import ItemRegistry as CoreItemRegistry
         CoreItemRegistry.bootstrap(catalog_repo.items)
 
         runtime_content_source = "catalog"
         catalog_fingerprint = catalog_repo.fingerprint
-        
+
+        return AdapterProjectionResult(
+            mode=mode,
+            item_count=len(items),
+            service_count=len(services),
+            resource_count=len(resources),
+            heuristic_count=items_heuristic + services_heuristic + resources_heuristic,
+        )
+
     else:
         import logging
         logging.getLogger(__name__).warning("Falling back to legacy hardcoded Phase 1 content seeding")
@@ -633,10 +664,11 @@ def seed_phase1_content(catalog_repo: Optional[Any] = _sentinel, required: bool 
         
         from src.core.items import ItemRegistry as CoreItemRegistry
         CoreItemRegistry.bootstrap({})
-        
+
         runtime_content_source = "legacy_hardcoded"
         catalog_fingerprint = None
+        return None
 
 
 # Self-seed on import for seamless execution compatibility
-seed_phase1_content()
+seed_phase1_content(mode=RuntimeContentMode.CATALOG_WITH_COMPATIBILITY)

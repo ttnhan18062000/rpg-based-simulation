@@ -4,7 +4,7 @@
 Replace migration_mode bool with RuntimeContentMode enum; add adapter heuristic report
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -108,17 +108,20 @@ Add to `tests/unit/worldassembly/test_resolver.py`:
 - Are there other callers of `seed_phase1_content()` besides line 642?
 
 ## Implementation Notes
-Investigation phase must read `seed_phase1_content()` fully before designing `AdapterProjectionResult`.
+Ticket stated file was `src/worldassembly/resolver.py:642` — this was wrong. Actual file is `src/core/registries.py`. `seed_phase1_content()` is at line 495, the bare self-call at line 642. `src/worldassembly/resolver.py` is the world module assembly resolver (a different file). All changes applied to `src/core/registries.py`. Enum placed in `src/core/modes.py` (not `src/worldassembly/modes.py`) to avoid import inversion since core is foundational to worldassembly. Three adapter classes updated: `CatalogToItemRegistryAdapter`, `CatalogToServiceRegistryAdapter`, `CatalogToResourceRegistryAdapter`. All `.adapt()` methods now return `Tuple[Dict, int]` where the int is the heuristic count. `seed_phase1_content()` unpacks tuples and aggregates into `AdapterProjectionResult`.
 
 ## Test Summary
 ```
-pytest tests/unit/worldassembly/test_resolver.py -q
+pytest tests/unit/core/ tests/integration/content/ -q
 ```
+203 passed, 1 pre-existing failure in test_p1_semantic_hardening unrelated to this ticket.
 
 ## Files Changed
-- `src/worldassembly/resolver.py`
-- `src/worldassembly/modes.py` (new)
-- `tests/unit/worldassembly/test_resolver.py`
+- `src/core/modes.py` (new)
+- `src/core/registries.py`
+- `tests/unit/core/test_registry_bridge.py`
+- `tests/unit/core/test_registry_adapters.py`
+- `tests/integration/content/test_registry_projection_parity.py`
 
 ## Completion Summary
-(to be filled)
+Created `src/core/modes.py` with `RuntimeContentMode(Enum)` MIGRATION/V2. Updated three adapter classes in `src/core/registries.py` to use `mode: RuntimeContentMode` param replacing `migration_mode: bool`. Added `AdapterProjectionResult` frozen dataclass. Updated `seed_phase1_content()` signature and return type to `Optional[AdapterProjectionResult]`. Fixed 2 explicit callers in test files. Added 5 new tests in `tests/unit/core/test_registry_bridge.py`. Investigation found ticket's file path was wrong (`src/worldassembly/resolver.py` → actually `src/core/registries.py`) — documented in Implementation Notes.

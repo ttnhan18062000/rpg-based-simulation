@@ -4,7 +4,7 @@
 Add explicit archetype_id field to PopulationSpec; remove fragile string-suffix encoding
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -92,7 +92,19 @@ The resolver returns this record instead of a raw string, carrying explicit prov
 - What is the current string-suffix format? (E.g., `"hungry_wolf_pop_001"` → strip `_pop_001`?)
 
 ## Implementation Notes
-9-phase standard. Investigation phase must read actual `PopulationSpec` source and find the string-suffix inference logic before selecting Option A or B.
+Option B selected (field on `PopulationSpec`). `PopulationSpec` is code-constructed, never YAML-authored, so `Optional[str] = None` is backward-compatible.
+
+Steps executed in dependency order:
+1. Added `archetype_id: Optional[str] = None` to `PopulationSpec` in `schema.py`.
+2. Populated `archetype_id=resolved_arch.archetype_id` at the single v2 construction site in `resolve_module_contribution` (line ~755).
+3. Replaced Site 1 string-split (`pop.id.split(pr + "_")[-1]`) with `pop.archetype_id` in `_merge_module_contributions`.
+4. Replaced Site 2 O(N) endswith scan (`key.endswith(f"_{arch_key}")`) with `pop_spec.archetype_id` in `CompileProfileResolver.resolve()`.
+5. Updated Case 2 inline comment in `PopulationRecipeResolver.resolve()`.
+6. Updated TOWN-170 `v2_evidence` in `docs/parity_ledger/town_resource.yaml`.
+7. Added `TestPopulationSpecArchetypeId` (5 tests) to `tests/unit/content/test_resolvers.py`.
+8. Added 4 new tests to `tests/unit/worldassembly/test_archetype_preservation.py`. Tests using `assemble()` were rewritten to use `resolve_module_contribution` + `CompileProfileResolver.resolve()` directly to avoid a pre-existing `moon_cult_ruins` catalog validation failure (unrelated to this ticket).
+
+Regression result: 9 pre-existing failures unchanged, 9 new tests all pass, 123 tests pass total.
 
 ## Test Summary
 ```
@@ -100,9 +112,12 @@ pytest tests/unit/content/test_resolvers.py -q
 ```
 
 ## Files Changed
-- `src/content/resolver.py`
-- `src/worldmodules/normalizer.py` (possibly)
-- `tests/unit/content/test_resolvers.py`
+- `src/worldbuilding/schema.py` — added `archetype_id` field to `PopulationSpec`
+- `src/worldassembly/resolver.py` — Step 2 (construction), Step 3 (Site 1 split removal), Step 4 (Site 2 O(N) scan removal)
+- `src/content/resolver.py` — Step 5 (Case 2 comment update)
+- `docs/parity_ledger/town_resource.yaml` — Step 6 (TOWN-170 v2_evidence)
+- `tests/unit/content/test_resolvers.py` — Step 7 (5 new tests in TestPopulationSpecArchetypeId)
+- `tests/unit/worldassembly/test_archetype_preservation.py` — Step 8 (4 new round-trip/anti-drift tests)
 
 ## Completion Summary
-(to be filled)
+Added archetype_id: Optional[str] = None to PopulationSpec (src/worldbuilding/schema.py). Populated at the single construction site in resolve_module_contribution. Replaced both fragile string-suffix inference sites in src/worldassembly/resolver.py: Site 1 (_merge_module_contributions, line ~340) now reads pop.archetype_id directly; Site 2 (_build_compile_context, lines ~901-908) now reads pop_spec.archetype_id. Updated Case 2 inline comment in src/content/resolver.py. Updated TOWN-170 v2_evidence in docs/parity_ledger/town_resource.yaml. Added 9 new tests (5 in test_resolvers.py TestPopulationSpecArchetypeId class + 4 in tests/unit/worldassembly/test_archetype_preservation.py). 134 tests pass; 9 pre-existing failures (CAT-REL-099 moon_cult_ruins) unrelated to this ticket.

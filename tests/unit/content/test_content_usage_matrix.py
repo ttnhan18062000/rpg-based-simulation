@@ -275,4 +275,22 @@ def test_dead_record_validator_covers_region_concept():
     )
 
 
+VALID_TRANSITIONS = {
+    "DESIGN_ONLY":            frozenset({"LOADED_ONLY", "VALIDATED_ONLY"}),
+    "LOADED_ONLY":            frozenset({"VALIDATED_ONLY", "RESOLVED_PARTIALLY"}),
+    "VALIDATED_ONLY":         frozenset({"RESOLVED_PARTIALLY", "PROJECTED_TO_LEGACY"}),
+    "RESOLVED_PARTIALLY":     frozenset({"RUNTIME_AUTHORITATIVE", "PROJECTED_TO_LEGACY"}),
+    "PROJECTED_TO_LEGACY":    frozenset({"RUNTIME_AUTHORITATIVE"}),
+    "RUNTIME_AUTHORITATIVE":  frozenset(),  # terminal
+}
+
+
+def test_implementation_state_values_are_valid():
+    valid_states = set(VALID_TRANSITIONS.keys())
+    for key, entry in CONTENT_USAGE_MATRIX.items():
+        assert entry.implementation_state in valid_states, (
+            f"'{key}' has unknown implementation_state '{entry.implementation_state}'"
+        )
+
+
 

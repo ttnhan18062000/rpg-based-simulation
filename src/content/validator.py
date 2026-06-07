@@ -7,8 +7,11 @@ from pathlib import Path
 import yaml
 
 from src.content.repository import CatalogRepository, CANONICAL_FAMILIES
+from src.content.paths import ContentPathConfig
 from src.worldmodules.schema import WorldModuleSpec
 from src.worldassembly.schema import WorldCompositionSpec
+
+_paths = ContentPathConfig()
 
 # Families whose dot-notation key (e.g. "world.regions" → "world/regions") does not match
 # the corresponding CONTENT_USAGE_MATRIX key. Add overrides here to prevent silent skips
@@ -32,7 +35,7 @@ class ValidationIssue(BaseModel):
     filename: Optional[str] = Field(None, description="Filename where the issue resides")
 
 
-def load_all_compositions(worlds_dir: str = "data/worlds") -> List[WorldCompositionSpec]:
+def load_all_compositions(worlds_dir: str = ContentPathConfig().world_compositions_dir) -> List[WorldCompositionSpec]:
     compositions = []
     dir_path = Path(worlds_dir)
     if not dir_path.exists():
@@ -56,9 +59,61 @@ def load_all_compositions(worlds_dir: str = "data/worlds") -> List[WorldComposit
     return compositions
 
 
+def validate_matrix_evidence(
+    matrix: Dict[str, "ContentFamilyMatrixEntry"] = None,
+) -> List[str]:
+    """
+    Check that every evidence_tests string in the matrix resolves to a real file path,
+    and that any ::node_id suffix names a def or class that actually appears in that file.
+
+    Returns a list of violation messages (empty list = no violations).
+    Entries with DESIGN_ONLY (or other non-active states) and no evidence_tests are exempt.
+    Entries in RUNTIME_AUTHORITATIVE or RESOLVED_PARTIALLY with no evidence_tests are violations.
+    """
+    from src.content.matrix import CONTENT_USAGE_MATRIX, ContentFamilyMatrixEntry  # noqa: F401 — local import avoids circular at module load
+
+    if matrix is None:
+        matrix = CONTENT_USAGE_MATRIX
+
+    violations: List[str] = []
+    project_root = Path(__file__).resolve().parents[2]
+
+    for key, entry in matrix.items():
+        if not entry.evidence_tests:
+            if entry.implementation_state in {"RUNTIME_AUTHORITATIVE", "RESOLVED_PARTIALLY"}:
+                violations.append(
+                    f"'{key}': state is {entry.implementation_state} but evidence_tests is not declared"
+                )
+            continue
+
+        tokens = [t.strip() for t in entry.evidence_tests.split(",")]
+        for token in tokens:
+            if not token:
+                continue
+            parts = token.split("::", 1)
+            file_part = parts[0]
+            node_id = parts[1] if len(parts) == 2 else None
+
+            file_path = project_root / file_part
+            if not file_path.exists():
+                violations.append(
+                    f"'{key}': evidence path does not exist: {file_part}"
+                )
+                continue
+
+            if node_id is not None:
+                file_text = file_path.read_text(encoding="utf-8")
+                if f"def {node_id}" not in file_text and f"class {node_id}" not in file_text:
+                    violations.append(
+                        f"'{key}': node ID '{node_id}' not found in {file_part}"
+                    )
+
+    return violations
+
+
 class CatalogValidator:
     """
-    Independent validator for the static Content Catalog. 
+    Independent validator for the static Content Catalog.
     Catches relational, schema, mapping, and range errors across definition directories.
     """
 
@@ -85,7 +140,7 @@ class CatalogValidator:
         if self._custom_modules is not None:
             modules = self._custom_modules
         else:
-            mod_repo = WorldModuleRepository("data/world_modules")
+            mod_repo = WorldModuleRepository(_paths.world_modules_dir)
             try:
                 mod_repo.load_all()
                 modules = list(mod_repo.modules.values())
@@ -95,7 +150,7 @@ class CatalogValidator:
         if self._custom_compositions is not None:
             compositions = self._custom_compositions
         else:
-            compositions = load_all_compositions("data/worlds")
+            compositions = load_all_compositions(_paths.world_compositions_dir)
 
         # Build graph
         from src.content.reference_graph import ContentReferenceGraph
