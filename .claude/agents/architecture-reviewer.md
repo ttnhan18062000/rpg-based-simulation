@@ -46,5 +46,6 @@ Produce a structured review with:
 2. Per-violation findings: which rule, what the plan says, what the correct approach is.
 3. Parity ledger entries that will need updating after implementation (with their IDs).
 4. Any mechanics chapters the implementer must read before coding.
+5. A `summary` field (one sentence ≤200 chars): verdict + key reason. This goes into the agent monitoring event record.
 
 Do not suggest implementation details beyond what is needed to fix the violations.

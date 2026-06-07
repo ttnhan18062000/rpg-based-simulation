@@ -20,6 +20,7 @@
 * Do not break determinism.
 * Do not expose raw domain models from APIs.
 * Do not leave changes untested or untraceable.
+* Every implement-ticket workflow run (including hotfix) must record a run entry and at least one event entry to `agent-monitoring/`. Monitoring write failure must never fail the workflow.
 
 ---
 
@@ -188,6 +189,7 @@ A task is not done unless all are true:
 - Repo state is consistent
 - Temporary run data cleaned: `data/runs/`, `reports/release_proof/`
 - No known material gap is left unstated
+- Agent monitoring records written: run entry in `agent-monitoring/runs.jsonl`, at least one event in `agent-monitoring/events.jsonl` _(guaranteed by workflow — not verified by done-checker)_
 
 ---
 

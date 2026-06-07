@@ -103,6 +103,17 @@ lint: ## Run linters (frontend)
 typecheck: ## Run TypeScript type checking
 	cd frontend && npx tsc --noEmit
 
+# ── Agent Monitoring ─────────────────────────────────────
+
+agent-monitoring-retro: ## Generate current-week agent monitoring retro report
+	python3 tools/agent-monitoring/generate_retro.py
+
+agent-monitoring-validate: ## Cross-check agent monitoring integrity against working_log.csv
+	python3 tools/agent-monitoring/validate.py
+
+agent-monitoring-query: ## Query agent monitoring records (pass ARGS="--agent investigator --days 14")
+	python3 tools/agent-monitoring/query.py $(ARGS)
+
 # ── Cleanup ──────────────────────────────────────────────
 
 clean: ## Remove build artifacts

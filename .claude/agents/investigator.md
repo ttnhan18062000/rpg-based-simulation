@@ -88,4 +88,4 @@ Tests that would catch scope-creep or silent behavior change in adjacent systems
 
 ## Output
 
-Write both files. Return a summary: key findings, open questions that require a decision, and parity entries that will need updating.
+Write both files. Begin your response with **one sentence** (≤200 chars) summarizing the key finding — this is used as the agent monitoring event summary. Then return: key findings, open questions that require a decision, and parity entries that will need updating.

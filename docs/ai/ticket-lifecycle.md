@@ -77,27 +77,25 @@ DONE
 
 ## Invocation
 
+**From a user prompt — use the skill (preferred):**
+```
+/implement-ticket request="Implement Task 28.1 — relation projection into combat target classification"
+/implement-ticket ticket_id=TCK-20260606-PHASE28-RUNTIME-RELATION
+/implement-ticket request="Fix off-by-one in region boundary check" tier=hotfix
+```
+
+**Important:** Do **not** type `/workflow implement-ticket` — `/workflow` is a Claude-internal tool name, not a slash command. The skill `/implement-ticket` is the correct user-facing form.
+
+**From Claude's internal tools (when orchestrating):**
 ```js
-// New task (ticket created from description):
 Workflow({ name: 'implement-ticket', args: {
   request: 'Implement Task 28.1 — integrate relation projection into combat target classification'
-}})
-
-// Hotfix (skip investigate/plan/review):
-Workflow({ name: 'implement-ticket', args: {
-  request: 'Fix off-by-one in region boundary check',
-  tier: 'hotfix'
 }})
 
 // Resume after a gate failure:
 Workflow({ name: 'implement-ticket', args: {
   ticket_id: 'TCK-20260606-PHASE28-RUNTIME-RELATION'
 }})
-```
-
-Or via skill shortcut:
-```
-/implement-ticket
 ```
 
 ---
@@ -280,6 +278,7 @@ The agent executes this via Bash and reports results.
 | Repo consistent | No leftover temp files |
 | data/runs/ cleaned | — |
 | No material gaps | Phase 28.2 (fallback reporting) also marked complete or flagged as follow-up |
+| **Agent monitoring** _(pre-marked PASS)_ | Written by workflow `writeMonitoring` after READY_TO_CLOSE |
 
 ---
 
@@ -295,6 +294,56 @@ The agent executes this via Bash and reports results.
    ```
 4. Move: `staging_artifacts/{id}/` → `stored_artifacts/{id}/`
 5. Clean: `data/runs/*`, `reports/release_proof/*`
+6. **Write agent monitoring records** (`writeMonitoring`): appends one run entry to `agent-monitoring/runs.jsonl` and one event per phase to `agent-monitoring/events.jsonl`. This step is non-fatal — if the write fails, it logs a WARNING and the workflow still returns DONE.
+
+---
+
+---
+
+## Epic Batch Workflow
+
+Use `/implement-epic` when you have multiple tickets to implement in sequence.
+
+```
+/implement-epic folder=tickets/todos/monitoring/
+/implement-epic epic_id=TCK-20260607-MY-EPIC
+/implement-epic request="add a caching layer to the world registry"
+```
+
+**How it works:**
+1. **Discover** — lists all TCK-*.md tickets in the folder or reads the epic's `## Related Tickets` section; filters out any already in `tickets/done/`
+2. **Implement** — calls `implement-ticket` for each ticket in order; stops at the first gate failure
+3. **Report** — summarizes done/failed/remaining tickets and writes a batch monitoring record
+
+**Gate failure recovery:**
+```
+# Batch stopped at TCK-20260607-C (TESTS_FAILED). Fix it, then re-run:
+/implement-epic folder=tickets/todos/my-feature/
+# Already-done tickets are skipped automatically — resumes at TCK-20260607-C
+```
+
+**Batch monitoring:** A single batch run record (prefixed `EPIC-` or `FOLDER-`) is written to `agent-monitoring/runs.jsonl` in addition to the per-ticket run records.
+
+See `docs/ai/workflows.md` → `implement-epic` for the full args reference.
+
+---
+
+## Agent Monitoring
+
+Every `implement-ticket` run (including hotfix) writes:
+- `agent-monitoring/runs.jsonl` — one run record: `run_id`, timestamps, tier, `final_status`, phase event count
+- `agent-monitoring/events.jsonl` — one event per phase: phase name, agent name, status, summary
+
+These records are written at the end of every exit point (CONFLICTS_DETECTED, DONE, TESTS_FAILED, etc.) — not just on success. Hotfix runs push three `skipped` events for the Investigate/Plan/Review phases.
+
+**DoD condition 12** (pre-marked PASS) — the `done-checker` agent marks this PASS with the note "will be written by workflow writeMonitoring after READY_TO_CLOSE". You do not need to verify monitoring manually.
+
+**Retrospective tools:**
+```sh
+make agent-monitoring-retro        # current-week retro report
+make agent-monitoring-validate     # cross-check integrity against working_log.csv
+make agent-monitoring-query ARGS="--agent investigator --days 14"
+```
 
 ---
 

@@ -66,4 +66,4 @@ Specific hazards from the investigation that the implementer must keep in mind.
 
 ## Output
 
-Write `staging_artifacts/{ticket_id}/plan.md`. Return the ordered step list as a summary (one line per step), plus any unresolved questions that need a decision before implementation begins.
+Write `staging_artifacts/{ticket_id}/plan.md`. Begin your response with **one sentence** (≤200 chars) summarizing the plan approach — this is used as the agent monitoring event summary. Then return the ordered step list (one line per step), plus any unresolved questions that need a decision before implementation begins.

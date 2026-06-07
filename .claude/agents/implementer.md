@@ -61,6 +61,6 @@ src/
 
 1. **Update the ticket** — fill in the "Implementation Notes" section of `tickets/inprogress/{ticket_id}.md` with what was done: which functions were added/changed, why any step deviated from the plan (if it did), and any non-obvious decisions.
 2. **Update staging artifacts** — if any step deviated from `staging_artifacts/{ticket_id}/plan.md`, add a "Deviations" section at the bottom of that file. Never silently deviate.
-3. **Report structured output**: list of changed files (paths), whether observable behavior changed (boolean — affects parity ledger), which parity subsystems are affected, and a one-paragraph implementation summary.
+3. **Report structured output**: list of changed files (paths), whether observable behavior changed (boolean — affects parity ledger), which parity subsystems are affected, a one-paragraph `implementation_summary`, and a one-sentence `summary` (≤200 chars) for the agent monitoring event record.
 
 If you discover a conflict with the plan or an architectural issue mid-implementation, stop and report it — do not work around it silently.

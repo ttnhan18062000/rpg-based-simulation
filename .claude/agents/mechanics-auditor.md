@@ -41,4 +41,4 @@ Status values:
 - **MISSING** — rule is documented but has no implementation.
 - **UNDOCUMENTED** — implementation exists but has no corresponding mechanics law.
 
-Then: a summary of gaps and divergences that need to be resolved, with recommended next steps for each.
+Then: a **one-sentence summary** (≤200 chars) of the overall parity health of the audited module, followed by a full list of gaps and divergences that need to be resolved, with recommended next steps for each.

@@ -64,3 +64,4 @@ P1
 1. The completed ticket markdown.
 2. A short conflict report: any duplicates, mechanic constraints, or parity entries the implementer must know about.
 3. The path where the ticket should be written: `tickets/inprogress/{ticket_id}.md`.
+4. A `summary` field (one sentence ≤200 chars): what was scoped and any conflicts found. This goes into the agent monitoring event record.

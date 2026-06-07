@@ -61,10 +61,14 @@ Check each condition. Mark PASS, FAIL, or N/A with evidence.
 11. **No material gaps unstated**
     - If anything was deferred or left incomplete, it must be explicitly documented in the ticket's Completion Summary with a follow-up ticket reference.
 
+12. **Agent monitoring records** _(pre-marked PASS — written by workflow after READY_TO_CLOSE)_
+    - Mark PASS with note "will be written by workflow writeMonitoring after READY_TO_CLOSE".
+    - Do not try to verify it exists yet.
+
 ## Output
 
-Produce a table with all 11 items: condition | status (PASS/FAIL/N/A) | evidence or blocking issue.
+Produce a table with all 12 items: condition | status (PASS/FAIL/N/A) | evidence or blocking issue.
 
-Then: **READY TO CLOSE** or **BLOCKED — {N} items failing**.
+Then: **READY TO CLOSE** or **BLOCKED — {N} items failing**. Include a `summary` field (one sentence ≤200 chars): verdict + item count — this goes into the agent monitoring event record.
 
 If BLOCKED, list the exact items that must be fixed and what the fix is for each.

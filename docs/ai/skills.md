@@ -6,13 +6,28 @@ Skills are slash commands that trigger focused, session-scoped task patterns. Th
 
 ---
 
+## Skills vs. Workflows — How Invocation Works
+
+**Skills** are the user-facing slash commands. Type `/skill-name args` in the prompt. Claude reads the skill's `SKILL.md`, parses the args, and invokes the workflow internally via the `Workflow` tool.
+
+**Workflows** (`.claude/workflows/*.js`) are Claude-internal multi-agent scripts. They are **not** directly slash-commandable. `/workflow implement-ticket` is not a valid command — it will fail with "Unknown command: /workflow". The correct form is `/implement-ticket` (the skill).
+
+```
+You type:                Claude does internally:
+/implement-ticket ...  →  Workflow({ name: "implement-ticket", args: { ... } })
+/implement-epic ...    →  Workflow({ name: "implement-epic", args: { ... } })
+```
+
+---
+
 ## Project Skills (Workflow Shortcuts)
 
-These skills are shorthand triggers for the project's multi-agent workflows. Invoking them is equivalent to calling `Workflow({ name: "..." })`.
+These skills trigger the project's multi-agent workflows.
 
 | Skill | Workflow triggered | When to use |
 |---|---|---|
-| `/implement-ticket` | `implement-ticket` | Implement a development task end-to-end |
+| `/implement-ticket` | `implement-ticket` | Implement one development task end-to-end |
+| `/implement-epic` | `implement-epic` | Implement all tickets in a folder or epic sequentially |
 | `/generate-simulation-setup` | `generate-simulation-setup` | Create specs for a new simulation experiment |
 | `/prepare-simulation-execution` | `prepare-simulation-execution` | Validate specs and get the run command |
 | `/investigate-simulation-result` | `investigate-simulation-result` | Deep anomaly investigation after a run |
@@ -126,7 +141,8 @@ These skills are Python and engineering patterns adapted for this project and st
 
 | Situation | Tool |
 |---|---|
-| Implement a development task | `/implement-ticket` |
+| Implement a single task or resume a ticket | `/implement-ticket` |
+| Implement all tickets in a folder or epic | `/implement-epic` |
 | Quick code review before PR | `/code-review` |
 | Understand codebase architecture | `/graphify` → read `graphify-out/wiki/index.md` |
 | Debug a world assembly failure | `Agent(subagent_type: "world-debugger")` |

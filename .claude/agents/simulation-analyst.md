@@ -46,6 +46,7 @@ You are a **lightweight** simulation run analysis subagent for the rpg-based-sim
 
 ## Output
 
+0. **One-sentence summary** (≤200 chars): overall assessment of run health and highest-severity anomaly found, if any.
 1. **Run summary**: tick count, entity population arc, economy arc, combat volume.
 2. **Anomaly table**: anomaly ID | dimension | severity | description | evidence (tick/event reference) | relevant mechanics law.
 3. **Mechanics Bible compliance**: which laws were verified, which were not testable from this run's data.

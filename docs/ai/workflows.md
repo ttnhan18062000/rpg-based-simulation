@@ -2,17 +2,23 @@
 
 Workflows are multi-agent orchestration scripts in `.claude/workflows/*.js`. They coordinate subagents across phases, carry structured state between steps, and enforce hard gates (architecture review, test pass, DoD check) before proceeding.
 
-**Invocation:**
+**Invocation — from a user prompt:**
 ```
+/implement-ticket request="add pagination to world listing"
+/implement-epic folder=tickets/todos/monitoring/
+```
+Type the skill name as a slash command with args. Do **not** type `/workflow` — that is a Claude-internal tool name, not a user command.
+
+**Invocation — from Claude's tools (internal):**
+```js
 Workflow({ name: "workflow-name", args: { key: value } })
 ```
-Or via skill shortcut: `/workflow-name`
 
 **Resuming after a gate failure:** Most workflows return a structured failure with a `ticket_id` or `session_id`. Fix the blocking issue, then re-run passing that ID to skip completed phases.
 
 ---
 
-## Development Workflow
+## Development Workflows
 
 ### `implement-ticket`
 
@@ -64,6 +70,59 @@ Workflow({ name: 'implement-ticket', args: { ticket_id: 'TCK-20260606-PHASE28-RU
 - `tickets/done/{ticket_id}.md`
 - `stored_artifacts/{ticket_id}/` (investigation.md, plan.md, test_plan.md)
 - `tickets/working_log.csv` (one new row)
+- `agent-monitoring/runs.jsonl` + `events.jsonl` (one run record + per-phase events)
+
+---
+
+### `implement-epic`
+
+**Purpose:** Implement all tickets in a folder or epic sequentially. Calls `implement-ticket` for each ticket in order, stops on any gate failure, skips already-done tickets on re-run.
+
+**Phases:**
+
+| Phase | What happens |
+|---|---|
+| Discover | Lists tickets in the folder or reads the epic's Related Tickets section; filters out already-done |
+| Implement | Runs `implement-ticket` for each ticket sequentially — stops on first gate failure |
+| Report | Summarises results: DONE count, gate failures, remaining tickets |
+
+**Args:**
+
+| Arg | Type | Required | Description |
+|---|---|---|---|
+| `folder` | string | One of three | Path to a folder of TCK-*.md files, e.g. `tickets/todos/monitoring/` |
+| `epic_id` | string | One of three | Existing epic ticket ID — reads its `## Related Tickets` section |
+| `request` | string | One of three | Natural language — creates an epic ticket, returns `EPIC_CREATED` for user to add children |
+| `tier_override` | string | No | Overrides the tier for every child ticket (`hotfix` / `standard`) |
+
+**Usage:**
+```
+/implement-epic folder=tickets/todos/monitoring/
+/implement-epic epic_id=TCK-20260607-MY-EPIC
+/implement-epic request="add a full caching layer to the world registry"
+/implement-epic folder=tickets/todos/my-feature/ tier_override=hotfix
+```
+
+**Return values:**
+
+| Status | Meaning | Next action |
+|---|---|---|
+| `EPIC_CREATED` | `request` mode — epic ticket created | Add child tickets to `## Related Tickets`, re-run with `epic_id` |
+| `NOTHING_TO_DO` | All tickets already done | — |
+| `DONE` | All tickets implemented | — |
+| Any gate status | A child ticket failed (e.g. `TESTS_FAILED`) | Fix the blocking ticket, re-run same command — done tickets skip automatically |
+
+**Re-running after a failure:**
+```
+# Batch stopped at TCK-20260607-C (TESTS_FAILED). Fix it, then:
+/implement-epic folder=tickets/todos/my-feature/
+# → skips TCK-20260607-A (done) and TCK-20260607-B (done), resumes at TCK-20260607-C
+```
+
+**Artifacts produced:**
+- All artifacts from each child `implement-ticket` run (tickets, stored_artifacts, working_log)
+- `agent-monitoring/runs.jsonl` — one batch run record (`EPIC-{id}` or `FOLDER-{path}`)
+- `agent-monitoring/events.jsonl` — one event per child ticket
 
 ---
 

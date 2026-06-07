@@ -32,6 +32,7 @@ This agent covers failures in:
 
 ## Output
 
+0. **One-sentence summary** (≤200 chars): root cause location and failure type.
 1. **Root cause**: the exact location (file:line) where the failure originates.
 2. **Upstream state**: what the input looked like and why it was invalid.
 3. **Pipeline stage**: which of the 17 authoritative phases failed and why.

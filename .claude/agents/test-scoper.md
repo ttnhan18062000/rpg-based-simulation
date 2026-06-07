@@ -42,3 +42,4 @@ tests/unit/
 4. Report results: pass count, fail count, names of any failing tests.
 5. Any changed files with no test coverage (flag as gap).
 6. Any tests included because of transitive dependency (explain why).
+7. A `summary` field (one sentence ≤200 chars): pass/fail result. This goes into the agent monitoring event record.

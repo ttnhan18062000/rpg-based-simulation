@@ -48,4 +48,4 @@ For `divergent` status, `divergence_note` is also required.
 
 ## Output
 
-Report: which entries were updated (by ID), what fields changed, and whether any P0 entries now lack a passing `test_path` (which must be fixed before the ticket can close).
+Begin your response with **one sentence** (≤200 chars) summarizing what was updated — this is used as the agent monitoring event summary. Then report: which entries were updated (by ID), what fields changed, and whether any P0 entries now lack a passing `test_path` (which must be fixed before the ticket can close).
