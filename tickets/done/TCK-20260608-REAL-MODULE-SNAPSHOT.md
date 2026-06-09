@@ -4,7 +4,7 @@
 Add integration snapshot test using a real world module YAML for normalized contract proof
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -59,9 +59,13 @@ None.
 - WorldModuleRepository has a load_all() and get_module() or equivalent interface to retrieve a specific module by ID
 
 ## Implementation Notes
+Created tests/integration/worldassembly/test_real_module_normalized_snapshot.py loading frontier_village_core via WorldModuleRepository (no synthetic construction). frontier_village_core has biomes, ecologies, populations, buildings — all verified to normalize into the correct *_refs tuple/dict shapes. relationship_refs and resources are empty (module has none); this is valid and tested. The `test_snapshot_loaded_from_repository_not_synthetic` test verifies the module came from real YAML via schema_version and display_name fields that synthetic objects wouldn't carry.
 
 ## Test Summary
+10 passed — tests/integration/worldassembly/test_real_module_normalized_snapshot.py
 
 ## Files Changed
+- tests/integration/worldassembly/test_real_module_normalized_snapshot.py (new)
 
 ## Completion Summary
+Integration snapshot test added. Proves the full repository→normalizer pipeline produces typed *_refs tuples and str→int count maps from a real YAML file.
