@@ -4,7 +4,7 @@
 Add active-data consumer gate — prove active content has a consumer path
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -58,9 +58,18 @@ None.
 - State markers are parseable from content YAML files (STATE: field in YAML comments or metadata)
 
 ## Implementation Notes
+- Sticky-state YAML comment parser handles both file-level and per-record STATE markers
+- `attribute`, `element`, `perspective`, `projection` exempt (implicit runtime consumers)
+- 11 pre-existing content graves in KNOWN_INACTIVE_CONTENT baseline; gate fires only on NEW violations
+- `test_known_gaps_are_genuinely_inactive` guards against stale baseline entries
 
 ## Test Summary
+5 passed. Gate correctly identifies 11 pre-existing gaps (in baseline); finds 0 new violations.
 
 ## Files Changed
+- `tests/integration/content/test_active_data_consumer.py` (new)
 
 ## Completion Summary
+Active-data consumer gate implemented. Detects content graves for EXISTING-LOGIC, LEGACY-EXPORT,
+REDESIGNED-CORE records with no reference graph consumer. Pre-existing gaps documented in baseline;
+gate will turn red on any new unconsumable active content.
