@@ -2861,10 +2861,11 @@
   status: verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: '`src/engine/combat_rewards.py` (`CombatRewardClassificationService.classify()`),
-    `src/engine/combat.py` (`resolve_attack`, `resolve_skill_usage`, `resolve_multi_attack`)'
+  v2_evidence: '`src/engine/combat_rewards.py` (`CombatRewardClassificationService.classify_defeated_target()`
+    — primary; `classify()` retained as compatibility wrapper), `src/engine/combat.py`
+    (`resolve_attack`, `resolve_skill_usage`, `resolve_multi_attack`)'
   proof_type: null
-  test_path: '`tests/unit/combat/test_combat_rewards.py`'
+  test_path: tests/unit/combat/test_combat_rewards.py
   divergence_note: null
   support_boundary: null
 - id: COMB-281

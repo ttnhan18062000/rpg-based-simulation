@@ -173,7 +173,7 @@ class CombatResolutionSystem:
             alive = False
 
             from src.engine.combat_rewards import CombatRewardClassificationService
-            classification = CombatRewardClassificationService.classify(defender.identity.role)
+            classification = CombatRewardClassificationService.classify_defeated_target(attacker, defender, state)
             xp_gain = defender.identity.evolution_level * classification.xp_multiplier
             gold_gain = defender.identity.evolution_level * classification.gold_multiplier
             trace["REWARD_SOURCE"] = classification.source
@@ -275,7 +275,7 @@ class CombatResolutionSystem:
         gold_gain = 0
         if not alive:
             from src.engine.combat_rewards import CombatRewardClassificationService
-            classification = CombatRewardClassificationService.classify(defender.identity.role)
+            classification = CombatRewardClassificationService.classify_defeated_target(attacker, defender, state)
             xp_gain = classification.xp_multiplier * defender.identity.evolution_level
             gold_gain = classification.gold_multiplier * defender.identity.evolution_level
 
@@ -382,7 +382,7 @@ class CombatResolutionSystem:
         resource_transfers = []
         if not alive and defender.combat.alive:
              from src.engine.combat_rewards import CombatRewardClassificationService
-             classification = CombatRewardClassificationService.classify(defender.identity.role)
+             classification = CombatRewardClassificationService.classify_defeated_target(attacker, defender, state)
              xp_gain = defender.identity.evolution_level * classification.xp_multiplier
              gold_gain = defender.identity.evolution_level * classification.gold_multiplier
              full_trace["REWARD_SOURCE"] = classification.source
