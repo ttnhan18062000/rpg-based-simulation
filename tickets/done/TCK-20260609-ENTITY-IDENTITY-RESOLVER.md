@@ -4,7 +4,7 @@
 Add EntityIdentityResolver with clean-first fallback to legacy enum identity
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -62,9 +62,14 @@ None.
 - RuntimeContentMode is accessible for the missing-identity failure behavior (TEST_MANUAL allows unknown)
 
 ## Implementation Notes
+Created EntityIdentityResolver with 4-path resolution (clean_metadata → runtime_identity_extension → compatibility_projection → legacy_enum). ResolvedEntityIdentity is a frozen Pydantic model with a source Literal field. Compatibility projection maps EntityRole/Faction int values to string IDs. IdentityResolutionError raised for entities with no resolvable identity.
 
 ## Test Summary
+8 passed — tests/unit/entities/test_entity_identity_resolver.py
 
 ## Files Changed
+- src/entities/identity_resolver.py (new)
+- tests/unit/entities/test_entity_identity_resolver.py (new)
 
 ## Completion Summary
+EntityIdentityResolver resolves clean catalog identity first, falls back to legacy enums. All 6 specified test cases pass plus 2 additional.
