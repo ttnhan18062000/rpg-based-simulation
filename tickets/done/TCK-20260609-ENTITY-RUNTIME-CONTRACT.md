@@ -4,7 +4,7 @@
 Define ResolvedEntityRuntimeContract — boundary model between catalog resolution and entity creation
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -62,9 +62,16 @@ None.
 - The contract uses string IDs for profile references (not resolved profile objects) to stay decoupled
 
 ## Implementation Notes
+Created src/entities/ package with runtime_contract.py containing ResolvedEntityRuntimeContract as a frozen Pydantic BaseModel. All profile references stored as optional string IDs to avoid catalog coupling. legacy_role and legacy_faction are optional projection fields only. No catalog imports.
 
 ## Test Summary
+9 passed — tests/unit/entities/test_resolved_entity_runtime_contract.py
 
 ## Files Changed
+- src/entities/__init__.py (new)
+- src/entities/runtime_contract.py (new)
+- tests/unit/entities/__init__.py (new)
+- tests/unit/entities/test_resolved_entity_runtime_contract.py (new)
 
 ## Completion Summary
+ResolvedEntityRuntimeContract defined as frozen Pydantic BaseModel with all required fields. 9 tests pass covering construction, serialization, immutability, no catalog imports, and no enemy/ally source-truth fields.
