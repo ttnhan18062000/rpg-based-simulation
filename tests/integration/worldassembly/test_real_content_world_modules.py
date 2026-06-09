@@ -62,7 +62,7 @@ def test_real_world_modules_preserve_count_maps(repos):
         assert len(normalized.regions) == len(spec.regions)
         
         # Verify that populations, resources, and buildings are count-preserved
-        assert set(spec.populations) == set(normalized.populations)
+        assert set(spec.populations) == set(normalized.population_refs)
         
         # resources count-preservation
         if isinstance(spec.resources, dict):
@@ -88,7 +88,7 @@ def test_real_world_modules_resolve_contributions(repos):
         
         # Verify regions, populations, resources, and buildings are mapped in contribution
         assert len(contribution.regions) == len(normalized.regions)
-        assert len(contribution.population_refs) == len(normalized.populations)
+        assert len(contribution.population_refs) == len(normalized.population_refs)
         assert len(contribution.resource_refs) == len(normalized.resources)
         assert len(contribution.building_refs) == len(normalized.buildings)
 

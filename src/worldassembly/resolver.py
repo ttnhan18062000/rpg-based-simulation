@@ -696,19 +696,19 @@ class WorldAssemblyResolver:
 
         # 3. Resolve Biomes
         biome_refs: List[str] = []
-        for b_id in normalized_module.biomes:
+        for b_id in normalized_module.biome_refs:
             self.biome_resolver.resolve(b_id)
             biome_refs.append(b_id)
 
         # 4. Resolve Ecologies
         ecology_refs: List[str] = []
-        for e_id in normalized_module.ecologies:
+        for e_id in normalized_module.ecology_refs:
             self.ecology_resolver.resolve(e_id)
             ecology_refs.append(e_id)
 
         # 5. Resolve Relationships
         relationship_refs: List[str] = []
-        for rel_id in normalized_module.relationships:
+        for rel_id in normalized_module.relationship_refs:
             self.relationship_resolver.resolve(rel_id)
             relationship_refs.append(rel_id)
 
@@ -724,7 +724,7 @@ class WorldAssemblyResolver:
         population_refs: List[str] = []
         resolved_population_specs: List[PopulationSpec] = []
 
-        for p_id in normalized_module.populations:
+        for p_id in normalized_module.population_refs:
             expanded_archetypes, preferred_regions = self.population_recipe_resolver.resolve(p_id)
             population_refs.append(p_id)
 

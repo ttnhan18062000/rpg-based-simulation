@@ -52,3 +52,4 @@
 {"run_id":"FOLDER-tickets-todos-world_phase_2028_repair_remaining","ts":"2026-06-07T14:39:32Z","seq":6,"phase":"Implement","agent":"implement-ticket","status":"ok","summary":"TCK-20260607-RUNTIME-CONTENT-MODE DONE"}
 {"run_id":"FOLDER-tickets-todos-world_phase_2028_repair_remaining","ts":"2026-06-07T14:39:32Z","seq":7,"phase":"Implement","agent":"implement-ticket","status":"ok","summary":"TCK-20260607-COMBAT-REWARD-SERVICE DONE"}
 {"run_id":"TCK-20260608-RUNTIME-MODE-EXPLICIT","seq":1,"ts":"2026-06-08T00:00:00Z","phase":"Finalize","agent":"finalizer","status":"ok","summary":"Replaced MIGRATION/V2 with 4 explicit modes; 12/12 tests pass"}
+{"run_id":"TCK-20260608-NORMALIZED-MODULE-REFS","ts":"2026-06-09T00:00:00Z","event":"ticket_finalized","ticket_id":"TCK-20260608-NORMALIZED-MODULE-REFS","status":"DONE","tests_passed":31,"files_changed":6}

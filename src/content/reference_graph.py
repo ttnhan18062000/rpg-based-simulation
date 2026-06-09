@@ -212,13 +212,13 @@ class ContentReferenceGraph:
         """Add edges from a normalized module into the reference graph."""
         from src.worldmodules.normalizer import NormalizedWorldModule  # local import to avoid circular
         module_node = f"module:{normalized_module.module_id}"
-        for b_id in normalized_module.biomes:
+        for b_id in normalized_module.biome_refs:
             self.add_edge(module_node, f"biome:{b_id}")
-        for e_id in normalized_module.ecologies:
+        for e_id in normalized_module.ecology_refs:
             self.add_edge(module_node, f"ecology:{e_id}")
-        for p_id in normalized_module.populations:
+        for p_id in normalized_module.population_refs:
             self.add_edge(module_node, f"population:{p_id}")
-        for rel_id in normalized_module.relationships:
+        for rel_id in normalized_module.relationship_refs:
             self.add_edge(module_node, f"faction_relationship:{rel_id}")
         for res_id, count in normalized_module.resources.items():
             self.add_edge(module_node, f"resource:{res_id}", {"count": count})

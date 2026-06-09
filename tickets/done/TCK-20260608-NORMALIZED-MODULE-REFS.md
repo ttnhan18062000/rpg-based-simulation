@@ -4,7 +4,7 @@
 Rename NormalizedWorldModule biomes/ecologies/populations/relationships to *_refs fields
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -66,13 +66,18 @@ None.
 - Compatibility shims are acceptable temporarily but must not become permanent
 
 ## Implementation Notes
-_To be filled during implementation._
+Renamed four NormalizedWorldModule dataclass fields from biomes/ecologies/populations/relationships to biome_refs/ecology_refs/population_refs/relationship_refs. Updated all internal consumers (normalizer, reference_graph, resolver) and all tests. WorldModuleSpec (raw authoring schema) field names were left unchanged as out of scope. Pre-existing failures in test_real_content_world_compositions.py (moon_cult_ruins) and test_generator.py are unrelated to this change (confirmed via git stash verification).
 
 ## Test Summary
-_To be filled during implementation._
+31 passed — tests/unit/worldmodules/test_modules.py, tests/unit/content/test_reference_graph.py, tests/integration/worldassembly/test_real_content_world_modules.py
 
 ## Files Changed
-_To be filled during implementation._
+- src/worldmodules/normalizer.py (field rename + normalize() assignments)
+- src/content/reference_graph.py (add_module_edges field accesses)
+- src/worldassembly/resolver.py (4 field accesses at lines 699, 705, 711, 727)
+- tests/unit/content/test_reference_graph.py (kwargs in _make_normalized_module)
+- tests/unit/worldmodules/test_modules.py (12 field access occurrences)
+- tests/integration/worldassembly/test_real_content_world_modules.py (2 occurrences)
 
 ## Completion Summary
-_To be filled upon completion._
+All four NormalizedWorldModule fields renamed to *_refs convention. No production code reads old names. All tests pass.

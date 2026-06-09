@@ -94,7 +94,7 @@ def test_normalizer_v1_and_v2():
     assert normalized_v1.module_id == "v1_test_module"
     assert len(normalized_v1.regions) == 1
     assert normalized_v1.regions[0].id == "region_v1"
-    assert len(normalized_v1.biomes) == 0
+    assert len(normalized_v1.biome_refs) == 0
 
     # v2 spec
     v2_data = {
@@ -111,8 +111,8 @@ def test_normalizer_v1_and_v2():
     normalized_v2 = WorldModuleAuthoringNormalizer.normalize(v2_spec)
     assert isinstance(normalized_v2, NormalizedWorldModule)
     assert normalized_v2.module_id == "v2_test_module"
-    assert len(normalized_v2.biomes) == 1
-    assert normalized_v2.biomes[0] == "biome_v2"
+    assert len(normalized_v2.biome_refs) == 1
+    assert normalized_v2.biome_refs[0] == "biome_v2"
     assert len(normalized_v2.regions) == 0
 
 
@@ -269,8 +269,8 @@ def test_string_biomes_normalize_to_tuple():
         biomes=["forest", "plains"],
     )
     normalized = WorldModuleAuthoringNormalizer.normalize(spec)
-    assert isinstance(normalized.biomes, tuple)
-    assert normalized.biomes == ("forest", "plains")
+    assert isinstance(normalized.biome_refs, tuple)
+    assert normalized.biome_refs == ("forest", "plains")
 
 
 def test_string_ecologies_normalize_to_tuple():
@@ -284,8 +284,8 @@ def test_string_ecologies_normalize_to_tuple():
         ecologies=["temperate", "arid"],
     )
     normalized = WorldModuleAuthoringNormalizer.normalize(spec)
-    assert isinstance(normalized.ecologies, tuple)
-    assert normalized.ecologies == ("temperate", "arid")
+    assert isinstance(normalized.ecology_refs, tuple)
+    assert normalized.ecology_refs == ("temperate", "arid")
 
 
 def test_string_populations_normalize_to_tuple():
@@ -299,8 +299,8 @@ def test_string_populations_normalize_to_tuple():
         populations=["human_village", "orc_camp"],
     )
     normalized = WorldModuleAuthoringNormalizer.normalize(spec)
-    assert isinstance(normalized.populations, tuple)
-    assert normalized.populations == ("human_village", "orc_camp")
+    assert isinstance(normalized.population_refs, tuple)
+    assert normalized.population_refs == ("human_village", "orc_camp")
 
 
 def test_string_relationships_normalize_to_tuple():
@@ -314,8 +314,8 @@ def test_string_relationships_normalize_to_tuple():
         relationships=["allies", "enemies"],
     )
     normalized = WorldModuleAuthoringNormalizer.normalize(spec)
-    assert isinstance(normalized.relationships, tuple)
-    assert normalized.relationships == ("allies", "enemies")
+    assert isinstance(normalized.relationship_refs, tuple)
+    assert normalized.relationship_refs == ("allies", "enemies")
 
 
 def test_empty_ref_fields_normalize_to_empty_tuple():
@@ -328,14 +328,14 @@ def test_empty_ref_fields_normalize_to_empty_tuple():
         display_name="Empty Refs Test",
     )
     normalized = WorldModuleAuthoringNormalizer.normalize(spec)
-    assert normalized.biomes == ()
-    assert normalized.ecologies == ()
-    assert normalized.populations == ()
-    assert normalized.relationships == ()
-    assert isinstance(normalized.biomes, tuple)
-    assert isinstance(normalized.ecologies, tuple)
-    assert isinstance(normalized.populations, tuple)
-    assert isinstance(normalized.relationships, tuple)
+    assert normalized.biome_refs == ()
+    assert normalized.ecology_refs == ()
+    assert normalized.population_refs == ()
+    assert normalized.relationship_refs == ()
+    assert isinstance(normalized.biome_refs, tuple)
+    assert isinstance(normalized.ecology_refs, tuple)
+    assert isinstance(normalized.population_refs, tuple)
+    assert isinstance(normalized.relationship_refs, tuple)
 
 
 def test_dict_with_id_biome_normalizes_to_id_string():
@@ -377,8 +377,8 @@ def test_normalizer_v1_and_v2_biomes_are_tuple():
     }
     v2_spec = WorldModuleSpec(**v2_data)
     normalized_v2 = WorldModuleAuthoringNormalizer.normalize(v2_spec)
-    assert isinstance(normalized_v2.biomes, tuple)
-    assert isinstance(normalized_v2.ecologies, tuple)
-    assert normalized_v2.biomes[0] == "biome_v2"
-    assert normalized_v2.ecologies[0] == "ecology_v2"
+    assert isinstance(normalized_v2.biome_refs, tuple)
+    assert isinstance(normalized_v2.ecology_refs, tuple)
+    assert normalized_v2.biome_refs[0] == "biome_v2"
+    assert normalized_v2.ecology_refs[0] == "ecology_v2"
 

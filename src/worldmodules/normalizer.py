@@ -30,10 +30,10 @@ class NormalizedWorldModule:
     population_recipes: List[PopulationRecipeSpec]
     resource_recipes: List[ResourceRecipeSpec]
     building_recipes: List[BuildingRecipeSpec]
-    biomes: Tuple[str, ...]
-    ecologies: Tuple[str, ...]
-    populations: Tuple[str, ...]
-    relationships: Tuple[str, ...]
+    biome_refs: Tuple[str, ...]
+    ecology_refs: Tuple[str, ...]
+    population_refs: Tuple[str, ...]
+    relationship_refs: Tuple[str, ...]
     resources: Dict[str, int]
     buildings: Dict[str, int]
     services: Dict[str, int]
@@ -145,10 +145,10 @@ class WorldModuleAuthoringNormalizer:
             population_recipes=list(spec.population_recipes),
             resource_recipes=list(spec.resource_recipes),
             building_recipes=list(spec.building_recipes),
-            biomes=_normalize_ref_list(list(spec.biomes), field_name="biomes"),
-            ecologies=_normalize_ref_list(list(spec.ecologies), field_name="ecologies"),
-            populations=_normalize_ref_list(list(spec.populations), field_name="populations"),
-            relationships=_normalize_ref_list(list(spec.relationships), field_name="relationships"),
+            biome_refs=_normalize_ref_list(list(spec.biomes), field_name="biomes"),
+            ecology_refs=_normalize_ref_list(list(spec.ecologies), field_name="ecologies"),
+            population_refs=_normalize_ref_list(list(spec.populations), field_name="populations"),
+            relationship_refs=_normalize_ref_list(list(spec.relationships), field_name="relationships"),
             resources=normalize_count_map(spec.resources, field_name="resources"),
             buildings=normalize_count_map(spec.buildings, field_name="buildings"),
             services=normalize_count_map(spec.services, field_name="services"),

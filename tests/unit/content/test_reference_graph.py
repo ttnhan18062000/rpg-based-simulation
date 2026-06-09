@@ -20,10 +20,10 @@ def _make_normalized_module(**kwargs) -> NormalizedWorldModule:
         population_recipes=[],
         resource_recipes=[],
         building_recipes=[],
-        biomes=(),
-        ecologies=(),
-        populations=(),
-        relationships=(),
+        biome_refs=(),
+        ecology_refs=(),
+        population_refs=(),
+        relationship_refs=(),
         resources={},
         buildings={},
         services={},
@@ -49,7 +49,7 @@ def test_add_module_edges_adds_biome_edges():
     graph = _make_empty_graph()
     normalized = _make_normalized_module(
         module_id="mod_biome",
-        biomes=("forest", "plains"),
+        biome_refs=("forest", "plains"),
     )
     graph.add_module_edges(normalized)
     assert ("module:mod_biome", "biome:forest") in graph.edges
@@ -61,9 +61,9 @@ def test_add_module_edges_adds_ecology_population_relationship_edges():
     graph = _make_empty_graph()
     normalized = _make_normalized_module(
         module_id="mod_multi",
-        ecologies=("temperate",),
-        populations=("human_village",),
-        relationships=("allies",),
+        ecology_refs=("temperate",),
+        population_refs=("human_village",),
+        relationship_refs=("allies",),
     )
     graph.add_module_edges(normalized)
     assert ("module:mod_multi", "ecology:temperate") in graph.edges
@@ -78,7 +78,7 @@ def test_add_module_edges_uses_normalized_ids_not_raw_dicts():
     # Normalized module always contains string tuples after normalization
     normalized = _make_normalized_module(
         module_id="mod_ids_only",
-        biomes=("biome_a", "biome_b"),
+        biome_refs=("biome_a", "biome_b"),
         resources={"wood_node": 3},
         buildings={"shop": 1},
         services={"healing": 2},
