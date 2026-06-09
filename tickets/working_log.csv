@@ -531,3 +531,4 @@ TCK-20260606-PHASE25-METADATA,DONE,2026-06-06,Phase 25: Preserve archetype metad
 2026-06-09T00:00:00Z,TCK-20260609-TEST-DELTA-BUDGET,Document test delta budget per task type,DONE,docs/testing/test_delta_budget.md created; 10 task types with budgets + justification process,
 2026-06-09T00:00:00Z,TCK-20260609-MIGRATION-TEST-MARKERS,Add migration pytest markers,DONE,8 new markers; 11 files marked; 7 selections verified; 51 tests pass,stored_artifacts/TCK-20260609-MIGRATION-TEST-MARKERS/
 2026-06-09T00:00:00Z,TCK-20260609-MIGRATION-CI-LANES,Define migration CI lanes,DONE,7 Makefile targets + docs/testing/migration_ci_lanes.md; 7 lane expressions verified,stored_artifacts/TCK-20260609-MIGRATION-CI-LANES/
+2026-06-09T00:00:00Z,TCK-20260609-CONTENT-EXPANSION-GATE,Define content expansion readiness gate,DONE,12-item gate; 11 pass + 1 xfail (CAT-REL-099); make gate-expansion target,stored_artifacts/TCK-20260609-CONTENT-EXPANSION-GATE/

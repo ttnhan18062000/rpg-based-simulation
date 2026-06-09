@@ -107,6 +107,9 @@ lane-architecture: ## [fast] Static architecture guards (no simulation, no catal
 lane-all-fast: ## [fast] All fast migration lanes combined (excludes slow and strict_matrix)
 	python3 -m pytest tests/ -m "(catalog or content_graph or worldassembly or registry_projection or scenario_setup or architecture) and not strict_matrix and not slow" -v --tb=short
 
+gate-expansion: ## Content expansion readiness gate — must pass before horizontal expansion
+	python3 -m pytest tests/integration/content/test_expansion_gate.py -v --tb=short
+
 # ── Profiling ────────────────────────────────────────────
 
 profile: ## Run automated performance profile (500 ticks, prints report)
