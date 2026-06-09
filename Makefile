@@ -81,6 +81,32 @@ test-quick: ## Run fast tests only (skip slow integration)
 test-cov: ## Run tests with coverage report (V2)
 	python3 -m pytest tests_v2/ -v --tb=short --cov=src_v2 --cov-report=term-missing
 
+# ── Migration CI Lanes ────────────────────────────────────
+# Targeted test lanes for content migration work. Each lane selects a
+# focused subset of the suite using pytest -m markers.
+# See docs/testing/migration_ci_lanes.md for full documentation.
+
+lane-catalog: ## [fast] Catalog schema, adapter heuristics, reference graph, active-data-consumer
+	python3 -m pytest tests/ -m "catalog or content_graph" -v --tb=short
+
+lane-worldassembly: ## [fast] World module normalizers, assembly, provenance (excludes strict matrix)
+	python3 -m pytest tests/ -m "worldassembly and not strict_matrix" -v --tb=short
+
+lane-runtime: ## [fast] Registry bootstrap modes, scenario setup, adapter projection
+	python3 -m pytest tests/ -m "registry_projection or scenario_setup" -v --tb=short
+
+lane-strict-matrix: ## [medium] Cumulative world module matrix (end-to-end content builds)
+	python3 -m pytest tests/ -m "strict_matrix" -v --tb=short
+
+lane-legacy-regression: ## [slow] Arena, certification, legacy compat regression tests
+	python3 -m pytest tests/ -m "legacy_compat" -v --tb=short
+
+lane-architecture: ## [fast] Static architecture guards (no simulation, no catalog load)
+	python3 -m pytest tests/ -m "architecture" -v --tb=short
+
+lane-all-fast: ## [fast] All fast migration lanes combined (excludes slow and strict_matrix)
+	python3 -m pytest tests/ -m "(catalog or content_graph or worldassembly or registry_projection or scenario_setup or architecture) and not strict_matrix and not slow" -v --tb=short
+
 # ── Profiling ────────────────────────────────────────────
 
 profile: ## Run automated performance profile (500 ticks, prints report)
