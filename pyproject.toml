@@ -67,4 +67,12 @@ markers = [
     "e2e: end-to-end simulation scenario tests",
     "strategic_loop: strategic loop mechanics tests",
     "worldassembly: world module assembly, composition, provenance, and compile-context tests",
+    "catalog: content catalog schema, adapter, and runtime content mode tests",
+    "content_graph: content reference graph and active-data-consumer gate tests",
+    "registry_projection: registry bootstrap mode routing and adapter projection tests",
+    "scenario_setup: scenario schema, resolver, and modifier applicator tests",
+    "strict_matrix: cumulative world module matrix tests (worldassembly subset)",
+    "legacy_compat: arena and certification regression tests preserving legacy behavior",
+    "content_pack: content pack format validation and expansion gate tests",
+    "architecture: static architecture guard tests (no runtime, no catalog load)",
 ]

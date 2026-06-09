@@ -1,6 +1,8 @@
 import pytest
 
 from src.scenarios.resolver import StateSetupModifier
+
+pytestmark = pytest.mark.scenario_setup
 from src.scenarios.modifier_applicator import (
     ModifierApplicator,
     ScenarioSetupContext,

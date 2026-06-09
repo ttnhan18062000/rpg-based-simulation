@@ -9,6 +9,8 @@ tests do not require assembly and pass unconditionally.
 
 import pytest
 
+pytestmark = pytest.mark.scenario_setup
+
 from src.content.repository import CatalogRepository
 from src.worldmodules.repository import WorldModuleRepository
 from src.scenarios.schema import SimulationScenarioDefinition

@@ -22,6 +22,8 @@ from typing import FrozenSet, Tuple
 import pytest
 import yaml
 
+pytestmark = pytest.mark.architecture
+
 _MIGRATION_MAP_PATH = Path("data/content/compatibility/migration_map.yaml")
 _SRC_ROOT = Path("src")
 

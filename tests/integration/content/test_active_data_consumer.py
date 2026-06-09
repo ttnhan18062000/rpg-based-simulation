@@ -22,6 +22,8 @@ from typing import Dict, List, Optional, Tuple
 
 import pytest
 
+pytestmark = pytest.mark.content_graph
+
 from src.content.reference_graph import ContentReferenceGraph, FAMILY_TO_SHORT
 from src.content.repository import CatalogRepository, CANONICAL_FAMILIES
 from src.worldmodules.repository import WorldModuleRepository

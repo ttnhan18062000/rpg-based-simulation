@@ -22,6 +22,8 @@ from src.runtime.bootstrap import (
 )
 from src.core.registries import EnemyRegistry, ItemRegistry, RegionRegistry
 
+pytestmark = pytest.mark.registry_projection
+
 
 # ---------------------------------------------------------------------------
 # Minimal mock catalog (empty collections + optional enemy projection)

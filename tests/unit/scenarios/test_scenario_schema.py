@@ -3,6 +3,8 @@ from pydantic import ValidationError
 
 from src.scenarios.schema import SimulationScenarioDefinition, ALLOWED_INITIAL_CONDITION_CATEGORIES
 
+pytestmark = pytest.mark.scenario_setup
+
 
 def _make(**kw) -> SimulationScenarioDefinition:
     defaults = dict(

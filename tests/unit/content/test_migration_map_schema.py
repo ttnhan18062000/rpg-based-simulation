@@ -10,6 +10,8 @@ from pathlib import Path
 import pytest
 import yaml
 
+pytestmark = pytest.mark.catalog
+
 MIGRATION_MAP_PATH = Path("data/content/compatibility/migration_map.yaml")
 
 REQUIRED_FIELDS = frozenset({

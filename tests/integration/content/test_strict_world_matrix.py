@@ -54,7 +54,7 @@ _PREEXISTING_CAT_BUG = pytest.mark.xfail(
     strict=False,
 )
 
-pytestmark = pytest.mark.worldassembly
+pytestmark = [pytest.mark.worldassembly, pytest.mark.strict_matrix]
 
 
 # ---------------------------------------------------------------------------
