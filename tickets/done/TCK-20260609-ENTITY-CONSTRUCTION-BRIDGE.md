@@ -4,7 +4,7 @@
 Wire ArchetypeEntityFactory into world assembly with migration-safe construction paths
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -59,9 +59,15 @@ None.
 - One tick smoke test can use a minimal world with a single archetype-backed entity
 
 ## Implementation Notes
+Created resolved_archetype_to_contract() in src/entities/contract_builder.py mapping ResolvedEntityArchetype → ResolvedEntityRuntimeContract. Three construction paths documented in function docstring. Integration smoke test proves hungry_wolf archetype → resolved contract → EntityState → one-tick-ready state pipeline works end to end.
 
 ## Test Summary
+7 passed — tests/integration/entities/test_entity_construction_bridge.py
 
 ## Files Changed
+- src/entities/contract_builder.py (new)
+- tests/integration/entities/__init__.py (new)
+- tests/integration/entities/test_entity_construction_bridge.py (new)
 
 ## Completion Summary
+Archetype-native construction path is wired and proven. resolved_archetype_to_contract() bridges catalog resolution to runtime entity creation. Legacy V2EntityBuilder path remains valid and tested.
