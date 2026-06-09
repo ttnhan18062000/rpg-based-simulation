@@ -4,7 +4,7 @@
 Apply scenario setup modifiers safely as deterministic state/context effects
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -56,9 +56,19 @@ None.
 - Initial world/runtime state object is accessible at setup time before the first tick
 
 ## Implementation Notes
+- `ModifierApplicator.apply()` processes modifiers sorted by type for determinism, builds
+  `ScenarioSetupContext` fields per type, raises `UnsupportedModifierError` for unknown types
+- `ScenarioSetupContext` is a frozen Pydantic model; no catalog/repo/tick access required
+- Modifiers do not embed entity actions — all effects are typed overlay fields
 
 ## Test Summary
+16 passed — all 8 modifier types covered, empty list, unsupported type error, determinism, frozen context, no catalog imports
 
 ## Files Changed
+- `src/scenarios/modifier_applicator.py` (new)
+- `tests/unit/scenarios/test_scenario_modifier_apply.py` (new)
 
 ## Completion Summary
+ModifierApplicator converts StateSetupModifier list into ScenarioSetupContext deterministically.
+All acceptance criteria met: deterministic, no entity actions, unsupported types fail explicitly,
+testable without tick.
