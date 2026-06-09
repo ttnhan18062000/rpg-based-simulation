@@ -4,7 +4,7 @@
 Implement ArchetypeEntityFactory — convert ResolvedEntityRuntimeContract into EntityState
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -62,9 +62,14 @@ None.
 - Unresolved profile IDs stored as strings in identity extension do not affect combat or movement behavior
 
 ## Implementation Notes
+Created EntitySpawnContext frozen dataclass and ArchetypeEntityFactory using V2EntityBuilder internally. Clean identity (archetype_id, race_id, faction_id, role_id) and all profile IDs stored in IdentityComponent.properties. Legacy role/faction mapped from contract optional fields. Gold truncated from float to int for InventoryComponent.
 
 ## Test Summary
+12 passed — tests/unit/entities/test_archetype_entity_factory.py
 
 ## Files Changed
+- src/entities/archetype_factory.py (new)
+- tests/unit/entities/test_archetype_entity_factory.py (new)
 
 ## Completion Summary
+ArchetypeEntityFactory builds valid EntityState from ResolvedEntityRuntimeContract + EntitySpawnContext. All 5 specified test cases pass plus 7 additional coverage tests. No CatalogRepository import.
