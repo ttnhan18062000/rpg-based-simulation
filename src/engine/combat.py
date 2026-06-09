@@ -177,6 +177,7 @@ class CombatResolutionSystem:
             xp_gain = defender.identity.evolution_level * classification.xp_multiplier
             gold_gain = defender.identity.evolution_level * classification.gold_multiplier
             trace["REWARD_SOURCE"] = classification.source
+            trace["REWARD_CATEGORY"] = classification.category.value
 
             if classification.rebirth_eligible:
                 if defender.lifecycle.generation < 4:
@@ -273,11 +274,14 @@ class CombatResolutionSystem:
             
         xp_gain = 0
         gold_gain = 0
+        skill_trace: Dict[str, Any] = {}
         if not alive:
             from src.engine.combat_rewards import CombatRewardClassificationService
             classification = CombatRewardClassificationService.classify_defeated_target(attacker, defender, state)
             xp_gain = classification.xp_multiplier * defender.identity.evolution_level
             gold_gain = classification.gold_multiplier * defender.identity.evolution_level
+            skill_trace["REWARD_SOURCE"] = classification.source
+            skill_trace["REWARD_CATEGORY"] = classification.category.value
 
         attacker_equip_upd, defender_equip_upd = CombatResolutionSystem._get_durability_decay(attacker, defender)
         wound_upd = CombatResolutionSystem._get_wound_infliction(attacker, defender, damage, state.tick, alive)
@@ -315,7 +319,8 @@ class CombatResolutionSystem:
             attacker_equipment_upd=attacker_equip_upd,
             wound_update=wound_upd,
             social_upd=social_upd,
-            resource_transfers=resource_transfers
+            resource_transfers=resource_transfers,
+            trace=skill_trace,
         )
 
     @staticmethod
@@ -386,6 +391,7 @@ class CombatResolutionSystem:
              xp_gain = defender.identity.evolution_level * classification.xp_multiplier
              gold_gain = defender.identity.evolution_level * classification.gold_multiplier
              full_trace["REWARD_SOURCE"] = classification.source
+             full_trace["REWARD_CATEGORY"] = classification.category.value
 
              from src.core.updates import ResourceTransferIntent
              resource_transfers.append(ResourceTransferIntent(
