@@ -69,3 +69,17 @@
     dragon_cult_champion: 1
     apprentice_mage: 3
   preferred_regions: ["volcanic_pass", "dragon_roost"]
+
+# STATE: ADDITIONAL
+- id: "orc_clan_warband"
+  display_name: "Orc Clan Warband"
+  members:
+    orc_brute: 5
+  preferred_regions: ["orc_stronghold"]
+
+# STATE: ADDITIONAL
+- id: "sacred_grove_guardians"
+  display_name: "Sacred Grove Guardians"
+  members:
+    spirit_guardian: 2
+  preferred_regions: ["sacred_grove", "deep_forest"]

@@ -44,3 +44,21 @@
   initial_conditions:
     undead_activity: "high"
     shrine_support: "low"
+
+# STATE: ADDITIONAL
+- id: "orc_clan_border_tension"
+  world_composition: "frontier_extended"
+  focus_modules: ["orc_clan_territory"]
+  perspective: "hero_guild_perspective"
+  initial_conditions:
+    orc_pressure: "medium"
+    town_diplomatic_stance: "cautious"
+
+# STATE: ADDITIONAL
+- id: "sacred_grove_incursion"
+  world_composition: "frontier_extended"
+  focus_modules: ["forest_warden_grove"]
+  perspective: "hero_guild_perspective"
+  initial_conditions:
+    grove_threat_level: "low"
+    spirit_activity: "dormant"

@@ -42,6 +42,12 @@ _MATRIX = [
     ("+ moon_cult",     ["frontier_village_core", "wolf_den_near_forest", "goblin_camp_conflict",
                          "old_mine_resource_loop", "bandit_road_trade_pressure", "undead_battlefield",
                          "moon_cult_ruins"]),
+    ("+ orc_clan",      ["frontier_village_core", "wolf_den_near_forest", "goblin_camp_conflict",
+                         "old_mine_resource_loop", "bandit_road_trade_pressure", "undead_battlefield",
+                         "orc_clan_territory"]),
+    ("+ forest_warden", ["frontier_village_core", "wolf_den_near_forest", "goblin_camp_conflict",
+                         "old_mine_resource_loop", "bandit_road_trade_pressure", "undead_battlefield",
+                         "orc_clan_territory", "forest_warden_grove"]),
 ]
 
 _MATRIX_IDS = [label for label, _ in _MATRIX]

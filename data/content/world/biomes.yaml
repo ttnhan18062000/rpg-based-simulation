@@ -89,6 +89,15 @@
   danger_level: 5
 
 # STATE: ADDITIONAL
+- id: "orc_territory"
+  display_name: "Orc Territory"
+  themes: ["orc", "frontier"]
+  terrain_mix: ["plain", "forest"]
+  common_materials: ["iron_ore", "goblin_token", "wood"]
+  default_factions: ["orc_clan"]
+  danger_level: 3
+
+# STATE: ADDITIONAL
 - id: "frozen_peak"
   display_name: "Frozen Peak"
   themes: ["frozen", "mountain"]

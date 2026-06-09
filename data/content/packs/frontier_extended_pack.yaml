@@ -1,0 +1,39 @@
+schema_version: "content_pack.v1"
+pack_id: "frontier_extended_pack"
+display_name: "Frontier Extended Pack"
+version: "1.0.0"
+enabled: true
+
+dependencies: []
+
+included_families:
+  entity_archetypes:
+    - "orc_brute"
+    - "forest_ranger"
+    - "spirit_guardian"
+  populations:
+    - "orc_clan_warband"
+    - "forest_warden_patrol"
+    - "sacred_grove_guardians"
+  world_modules:
+    - "orc_clan_territory"
+    - "forest_warden_grove"
+
+state_markers:
+  orc_brute: "EXISTING-LOGIC"
+  forest_ranger: "EXISTING-LOGIC"
+  spirit_guardian: "EXISTING-LOGIC"
+  orc_clan_warband: "EXISTING-LOGIC"
+  forest_warden_patrol: "EXISTING-LOGIC"
+  sacred_grove_guardians: "EXISTING-LOGIC"
+  orc_clan_territory: "EXISTING-LOGIC"
+  forest_warden_grove: "EXISTING-LOGIC"
+
+strict_validation_result: "PASS"
+
+sample_compositions:
+  - "frontier_extended"
+
+sample_scenarios:
+  - "orc_clan_border_tension"
+  - "sacred_grove_incursion"
