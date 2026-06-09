@@ -66,3 +66,4 @@
 {"run_id":"TCK-20260609-STRICT-WORLD-MATRIX","ts":"2026-06-09T16:30:00Z","event":"ticket_finalized","status":"DONE","tests_passed":22,"tests_xfailed":35,"files_changed":1}
 {"run_id":"TCK-20260609-ACTIVE-DATA-CONSUMER","ts":"2026-06-09T16:50:00Z","event":"ticket_finalized","status":"DONE","tests_passed":5,"files_changed":1}
 {"run_id":"TCK-20260609-MIGRATION-MAP-YAML","ts":"2026-06-09T00:00:00Z","event":"ticket_done","ticket_id":"TCK-20260609-MIGRATION-MAP-YAML","detail":"Created migration_map.yaml (30 entries, 8 families) and schema validation tests (10/10 pass)"}
+{"run_id":"TCK-20260609-REGISTRY-BOOTSTRAP-MODES","ts":"2026-06-09T00:00:00Z","event":"ticket_done","ticket_id":"TCK-20260609-REGISTRY-BOOTSTRAP-MODES","detail":"Created src/runtime/bootstrap.py; HardcodedFallbackError; ContentSourceReport; 9/9 tests pass"}
