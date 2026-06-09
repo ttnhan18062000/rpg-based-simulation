@@ -4,7 +4,7 @@
 Define SimulationScenarioDefinition schema for scenario setup
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -53,9 +53,16 @@ None.
 - Allowed initial_condition categories are fixed at: region_pressure, faction_activity, resource_scarcity, population_alertness, territorial_intrusion, trade_route_risk, danger_level_override, spawn_bias
 
 ## Implementation Notes
+Created src/scenarios/ package with SimulationScenarioDefinition as a frozen Pydantic model with extra="forbid". Initial condition keys validated via model_validator against 8 allowed categories. No observability/reporting/metrics fields present.
 
 ## Test Summary
+11 passed — tests/unit/scenarios/test_scenario_schema.py
 
 ## Files Changed
+- src/scenarios/__init__.py (new)
+- src/scenarios/schema.py (new)
+- tests/unit/scenarios/__init__.py (new)
+- tests/unit/scenarios/test_scenario_schema.py (new)
 
 ## Completion Summary
+SimulationScenarioDefinition schema defined with fail-closed unknown fields and validated initial_condition category set. 11 tests pass.
