@@ -66,4 +66,5 @@ markers = [
     "integration: integration tests across multiple components",
     "e2e: end-to-end simulation scenario tests",
     "strategic_loop: strategic loop mechanics tests",
+    "worldassembly: world module assembly, composition, provenance, and compile-context tests",
 ]

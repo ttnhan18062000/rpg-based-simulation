@@ -4,7 +4,7 @@
 Audit and guard existing worldassembly tests against duplication by new strict matrix
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -54,9 +54,27 @@ None.
 - docs/testing/v2_test_taxonomy.md exists from earlier phases
 
 ## Implementation Notes
+- Added `worldassembly` marker to pyproject.toml markers list
+- Added `pytestmark = pytest.mark.worldassembly` at module level in all 7 worldassembly test files
+- No test logic was changed — only marker added
+- Pre-existing CAT-REL-099 failures in 9 tests are unchanged (moon_cult_ruins pre-existing defect)
+- Updated v2_test_taxonomy.md with ownership boundary table and strict-matrix duplication rule
 
 ## Test Summary
+No new tests added (hotfix tier). Existing worldassembly tests: 33 pass, 9 fail pre-existing.
+Marker collection: 52 tests collected with `-m worldassembly`.
 
 ## Files Changed
+- `pyproject.toml` (worldassembly marker added)
+- `tests/unit/worldassembly/test_assembly.py` (pytestmark)
+- `tests/unit/worldassembly/test_provenance.py` (pytestmark)
+- `tests/unit/worldassembly/test_resolver.py` (pytestmark)
+- `tests/unit/worldassembly/test_archetype_preservation.py` (pytestmark)
+- `tests/integration/worldassembly/test_real_content_world_modules.py` (pytestmark)
+- `tests/integration/worldassembly/test_real_content_world_compositions.py` (pytestmark)
+- `tests/integration/worldassembly/test_real_module_normalized_snapshot.py` (pytestmark)
+- `docs/testing/v2_test_taxonomy.md` (ownership boundary section)
 
 ## Completion Summary
+All worldassembly test files now carry the worldassembly marker. Ownership boundaries documented
+in v2_test_taxonomy.md. No test behavior changed. Pre-existing CAT-REL-099 failures unaffected.

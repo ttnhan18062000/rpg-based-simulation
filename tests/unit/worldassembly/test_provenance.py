@@ -6,6 +6,8 @@ from src.worldmodules.repository import WorldModuleRepository
 from src.worldassembly.schema import WorldCompositionSpec, ModuleRefSpec, ProvenanceManifest, ProvenanceRecord
 from src.worldassembly.resolver import WorldAssemblyResolver
 
+pytestmark = pytest.mark.worldassembly
+
 
 @pytest.fixture
 def repos():

@@ -4,6 +4,9 @@ from src.worldmodules.repository import WorldModuleRepository
 from src.worldassembly.resolver import WorldAssemblyResolver, ResolverError
 from src.worldassembly.schema import WorldCompositionSpec, ModuleRefSpec
 
+pytestmark = pytest.mark.worldassembly
+
+
 @pytest.fixture(scope="module")
 def repos():
     cat = CatalogRepository("data/content")

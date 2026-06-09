@@ -8,6 +8,8 @@ from src.worldbuilding.repository import WorldRepository
 from src.worldmodules.schema import WorldModuleSpec
 from src.worldbuilding.recipe import RegionRecipeSpec
 
+pytestmark = pytest.mark.worldassembly
+
 
 @pytest.fixture
 def repos():

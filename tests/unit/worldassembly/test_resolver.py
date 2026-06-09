@@ -5,6 +5,8 @@ from src.worldassembly.resolver import CompileProfileResolver
 from src.worldbuilding.compiler import WorldCompiler
 from src.worldbuilding.schema import WorldSpec, TopologySpec, RegionSpec, FactionSpec, PopulationSpec, ResourceNodeSpec, BuildingSpec
 
+pytestmark = pytest.mark.worldassembly
+
 
 @pytest.fixture
 def base_repo():

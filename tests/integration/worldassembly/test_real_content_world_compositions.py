@@ -7,6 +7,8 @@ from src.worldmodules.repository import WorldModuleRepository
 from src.worldassembly.schema import WorldCompositionSpec, WorldCompositionNormalizer
 from src.worldassembly.resolver import WorldAssemblyResolver
 
+pytestmark = pytest.mark.worldassembly
+
 
 @pytest.fixture(scope="module")
 def repos():

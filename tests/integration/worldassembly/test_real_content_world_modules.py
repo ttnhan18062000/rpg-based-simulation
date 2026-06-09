@@ -5,6 +5,7 @@ from src.worldmodules.repository import WorldModuleRepository
 from src.worldmodules.normalizer import WorldModuleAuthoringNormalizer
 from src.worldassembly.resolver import WorldAssemblyResolver
 
+pytestmark = pytest.mark.worldassembly
 
 MODULE_MATRIX = [
     "frontier_village_core",

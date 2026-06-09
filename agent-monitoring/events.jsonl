@@ -62,3 +62,4 @@
 {"run_id":"TCK-20260609-SCENARIO-DEFINITION","ts":"2026-06-09T15:21:00Z","event":"ticket_finalized","status":"DONE","tests_passed":11,"files_changed":4}
 {"run_id":"TCK-20260609-SCENARIO-SETUP-RESOLVER","ts":"2026-06-09T15:45:00Z","event":"ticket_finalized","status":"DONE","tests_passed":17,"tests_xfailed":4,"files_changed":2}
 {"run_id":"TCK-20260609-SCENARIO-MODIFIER-APPLY","ts":"2026-06-09T16:00:00Z","event":"ticket_finalized","status":"DONE","tests_passed":16,"files_changed":2}
+{"run_id":"TCK-20260609-PRESERVE-ASSEMBLY-TESTS","ts":"2026-06-09T16:15:00Z","event":"ticket_finalized","status":"DONE","files_changed":9}

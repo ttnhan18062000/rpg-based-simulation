@@ -2,6 +2,8 @@ import pytest
 from src.worldmodules.repository import WorldModuleRepository
 from src.worldmodules.normalizer import WorldModuleAuthoringNormalizer
 
+pytestmark = pytest.mark.worldassembly
+
 
 @pytest.fixture(scope="module")
 def normalized_frontier():
