@@ -1,0 +1,343 @@
+# Machine-readable migration map: legacy-to-catalog content migration status.
+# Used by: TCK-20260609-HARDCODED-GAMEPLAY-GUARD and TCK-20260609-REGISTRY-BOOTSTRAP-MODES.
+#
+# Schema: migration_map.v1
+# Required fields per entry: legacy_id, legacy_family, catalog_family, catalog_id,
+#   adapter, status, fallback_allowed
+#
+# Status values:
+#   catalog_authoritative  - catalog record is the source of truth; legacy ID is a compat alias
+#   compat_projected       - legacy ID has a known catalog equivalent; compatibility projection active
+#   fallback_only          - no catalog equivalent; legacy hardcoded fallback still required
+#   deprecated             - scheduled for removal; no new consumers should reference this
+#   removed                - already removed; entry retained for historical traceability
+schema_version: "migration_map.v1"
+description: >
+  Tracks all known legacy IDs and their catalog migration status.
+  Sources: src/core/registries.py hardcoded fallback maps,
+           src/worldassembly/resolver.py REGION_MIGRATION_MAP,
+           src/entities/identity_resolver.py _ROLE_COMPAT / _FACTION_COMPAT,
+           data/content/compatibility/legacy_enemy_projection.yaml.
+
+entries:
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # Resources — node_* legacy IDs hardcoded in registries.py fallback
+  # ──────────────────────────────────────────────────────────────────────────
+
+  - legacy_id: "node_wood"
+    legacy_family: "resource"
+    catalog_family: "world.resources"
+    catalog_id: "wood"
+    adapter: "CatalogToResourceRegistryAdapter"
+    status: "compat_projected"
+    fallback_allowed: true
+    notes: "Hardcoded in registries.py LEGACY_FALLBACK path; catalog wood resource is authoritative."
+
+  - legacy_id: "node_herb"
+    legacy_family: "resource"
+    catalog_family: "world.resources"
+    catalog_id: "herb"
+    adapter: "CatalogToResourceRegistryAdapter"
+    status: "compat_projected"
+    fallback_allowed: true
+    notes: "Hardcoded in registries.py LEGACY_FALLBACK path."
+
+  - legacy_id: "node_iron"
+    legacy_family: "resource"
+    catalog_family: "world.resources"
+    catalog_id: "iron_ore"
+    adapter: "CatalogToResourceRegistryAdapter"
+    status: "compat_projected"
+    fallback_allowed: true
+    notes: "Hardcoded in registries.py LEGACY_FALLBACK path."
+
+  - legacy_id: "node_resin"
+    legacy_family: "resource"
+    catalog_family: "world.resources"
+    catalog_id: "moon_resin"
+    adapter: "CatalogToResourceRegistryAdapter"
+    status: "compat_projected"
+    fallback_allowed: true
+    notes: "Hardcoded in registries.py LEGACY_FALLBACK path."
+
+  - legacy_id: "node_flower"
+    legacy_family: "resource"
+    catalog_family: "world.resources"
+    catalog_id: "healing_flower"
+    adapter: "CatalogToResourceRegistryAdapter"
+    status: "compat_projected"
+    fallback_allowed: true
+    notes: "Hardcoded in registries.py LEGACY_FALLBACK path."
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # Recipes — craft_* prefix stripped for legacy_id in registry seeding
+  # ──────────────────────────────────────────────────────────────────────────
+
+  - legacy_id: "small_potion"
+    legacy_family: "recipe"
+    catalog_family: "world.recipes"
+    catalog_id: "craft_small_potion"
+    adapter: "CatalogToRecipeRegistryAdapter"
+    status: "compat_projected"
+    fallback_allowed: true
+    notes: >
+      registries.py strips 'craft_' prefix; legacy callers use 'small_potion'
+      while catalog key is 'craft_small_potion'. No archetype currently consumes this.
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # Regions — REGION_MIGRATION_MAP in worldassembly/resolver.py
+  # ──────────────────────────────────────────────────────────────────────────
+
+  - legacy_id: "trade_road"
+    legacy_family: "region"
+    catalog_family: "world.regions"
+    catalog_id: "bandit_road"
+    adapter: "REGION_MIGRATION_MAP"
+    status: "compat_projected"
+    fallback_allowed: false
+    notes: >
+      Renamed during world restructure. REGION_MIGRATION_MAP in resolver.py applies
+      automatically during population recipe resolution. No fallback needed.
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # Legacy enemies — compatibility projections from legacy_enemy_projection.yaml
+  # ──────────────────────────────────────────────────────────────────────────
+
+  - legacy_id: "wolf"
+    legacy_family: "enemy"
+    catalog_family: "entities.entity_archetypes"
+    catalog_id: "hungry_wolf"
+    adapter: "LegacyEnemyProjectionAdapter"
+    status: "compat_projected"
+    fallback_allowed: false
+    notes: "Projected to hungry_wolf archetype via legacy_enemy_projection.yaml."
+
+  - legacy_id: "goblin"
+    legacy_family: "enemy"
+    catalog_family: "entities.entity_archetypes"
+    catalog_id: "goblin_raider"
+    adapter: "LegacyEnemyProjectionAdapter"
+    status: "compat_projected"
+    fallback_allowed: false
+    notes: "Projected to goblin_raider archetype."
+
+  - legacy_id: "goblin_archer"
+    legacy_family: "enemy"
+    catalog_family: "entities.entity_archetypes"
+    catalog_id: "goblin_archer"
+    adapter: "LegacyEnemyProjectionAdapter"
+    status: "compat_projected"
+    fallback_allowed: false
+    notes: "Archetype ID unchanged; projection entry ensures formal tracking."
+
+  - legacy_id: "cave_spider"
+    legacy_family: "enemy"
+    catalog_family: "entities.entity_archetypes"
+    catalog_id: "cave_spider"
+    adapter: "LegacyEnemyProjectionAdapter"
+    status: "compat_projected"
+    fallback_allowed: false
+    notes: "Archetype ID unchanged."
+
+  - legacy_id: "bandit_scout"
+    legacy_family: "enemy"
+    catalog_family: "entities.entity_archetypes"
+    catalog_id: "bandit_scout"
+    adapter: "LegacyEnemyProjectionAdapter"
+    status: "compat_projected"
+    fallback_allowed: false
+    notes: "Archetype ID unchanged."
+
+  - legacy_id: "elite_goblin"
+    legacy_family: "enemy"
+    catalog_family: "entities.entity_archetypes"
+    catalog_id: "goblin_warlord"
+    adapter: "LegacyEnemyProjectionAdapter"
+    status: "compat_projected"
+    fallback_allowed: false
+    notes: "Projected to goblin_warlord archetype (boss-tier)."
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # Legacy roles — EntityRole int enum → string ID via _ROLE_COMPAT
+  # (src/entities/identity_resolver.py)
+  # ──────────────────────────────────────────────────────────────────────────
+
+  - legacy_id: "HERO"
+    legacy_family: "role_enum"
+    catalog_family: "social.roles"
+    catalog_id: "hero"
+    adapter: "EntityIdentityResolver._ROLE_COMPAT"
+    status: "compat_projected"
+    fallback_allowed: false
+    notes: "EntityRole.HERO int enum projected to clean role ID via compatibility_projection path."
+
+  - legacy_id: "SHOPKEEPER"
+    legacy_family: "role_enum"
+    catalog_family: "social.roles"
+    catalog_id: "shopkeeper"
+    adapter: "EntityIdentityResolver._ROLE_COMPAT"
+    status: "compat_projected"
+    fallback_allowed: true
+    notes: >
+      shopkeeper role has no archetype consumer currently (TCK-20260609-ACTIVE-DATA-CONSUMER gap).
+      Fallback allowed until a shopkeeper archetype is added to the catalog.
+
+  - legacy_id: "MONSTER"
+    legacy_family: "role_enum"
+    catalog_family: "social.roles"
+    catalog_id: "creature"
+    adapter: "EntityIdentityResolver._ROLE_COMPAT"
+    status: "compat_projected"
+    fallback_allowed: false
+    notes: "Projected to 'creature' (V2 renamed from 'monster')."
+
+  - legacy_id: "CITIZEN"
+    legacy_family: "role_enum"
+    catalog_family: "social.roles"
+    catalog_id: "citizen"
+    adapter: "EntityIdentityResolver._ROLE_COMPAT"
+    status: "compat_projected"
+    fallback_allowed: false
+
+  - legacy_id: "WORKER"
+    legacy_family: "role_enum"
+    catalog_family: "social.roles"
+    catalog_id: "worker"
+    adapter: "EntityIdentityResolver._ROLE_COMPAT"
+    status: "compat_projected"
+    fallback_allowed: false
+
+  - legacy_id: "GUARD"
+    legacy_family: "role_enum"
+    catalog_family: "social.roles"
+    catalog_id: "guard"
+    adapter: "EntityIdentityResolver._ROLE_COMPAT"
+    status: "compat_projected"
+    fallback_allowed: false
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # Legacy factions — Faction int enum → string ID via _FACTION_COMPAT
+  # ──────────────────────────────────────────────────────────────────────────
+
+  - legacy_id: "HERO_GUILD"
+    legacy_family: "faction_enum"
+    catalog_family: "social.factions"
+    catalog_id: "hero_guild"
+    adapter: "EntityIdentityResolver._FACTION_COMPAT"
+    status: "compat_projected"
+    fallback_allowed: false
+
+  - legacy_id: "MONSTER_HORDE"
+    legacy_family: "faction_enum"
+    catalog_family: "social.factions"
+    catalog_id: "monster_horde"
+    adapter: "EntityIdentityResolver._FACTION_COMPAT"
+    status: "compat_projected"
+    fallback_allowed: false
+
+  - legacy_id: "TOWN_COUNCIL"
+    legacy_family: "faction_enum"
+    catalog_family: "social.factions"
+    catalog_id: "town_council"
+    adapter: "EntityIdentityResolver._FACTION_COMPAT"
+    status: "compat_projected"
+    fallback_allowed: false
+
+  - legacy_id: "NEUTRAL"
+    legacy_family: "faction_enum"
+    catalog_family: "social.factions"
+    catalog_id: "neutral"
+    adapter: "EntityIdentityResolver._FACTION_COMPAT"
+    status: "compat_projected"
+    fallback_allowed: true
+    notes: >
+      neutral faction has no reference graph consumer (TCK-20260609-ACTIVE-DATA-CONSUMER gap).
+      Fallback allowed until a consumer is added.
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # Legacy items — LEGACY-EXPORT items with no current archetype/inventory consumer
+  # ──────────────────────────────────────────────────────────────────────────
+
+  - legacy_id: "rusted_sword"
+    legacy_family: "item"
+    catalog_family: "world.items"
+    catalog_id: "rusted_sword"
+    adapter: "CatalogToItemRegistryAdapter"
+    status: "deprecated"
+    fallback_allowed: false
+    notes: "LEGACY-EXPORT item; no inventory profile or archetype references it. Candidate for removal."
+
+  - legacy_id: "wooden_staff"
+    legacy_family: "item"
+    catalog_family: "world.items"
+    catalog_id: "wooden_staff"
+    adapter: "CatalogToItemRegistryAdapter"
+    status: "deprecated"
+    fallback_allowed: false
+    notes: "LEGACY-EXPORT item; no consumer."
+
+  - legacy_id: "leather_armor"
+    legacy_family: "item"
+    catalog_family: "world.items"
+    catalog_id: "leather_armor"
+    adapter: "CatalogToItemRegistryAdapter"
+    status: "deprecated"
+    fallback_allowed: false
+    notes: "LEGACY-EXPORT item; no consumer."
+
+  - legacy_id: "basic_bow"
+    legacy_family: "item"
+    catalog_family: "world.items"
+    catalog_id: "basic_bow"
+    adapter: "CatalogToItemRegistryAdapter"
+    status: "deprecated"
+    fallback_allowed: false
+    notes: "LEGACY-EXPORT item; no consumer."
+
+  - legacy_id: "herb"
+    legacy_family: "item"
+    catalog_family: "world.items"
+    catalog_id: "herb"
+    adapter: "CatalogToItemRegistryAdapter"
+    status: "deprecated"
+    fallback_allowed: false
+    notes: "LEGACY-EXPORT item; no consumer. Not to be confused with node_herb resource."
+
+  - legacy_id: "apprentice_staff"
+    legacy_family: "item"
+    catalog_family: "world.items"
+    catalog_id: "apprentice_staff"
+    adapter: "CatalogToItemRegistryAdapter"
+    status: "deprecated"
+    fallback_allowed: false
+    notes: "LEGACY-EXPORT item; no consumer."
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # Services — catalog service_profiles consumed via CatalogToServiceRegistryAdapter
+  # ──────────────────────────────────────────────────────────────────────────
+
+  - legacy_id: "general_store"
+    legacy_family: "service"
+    catalog_family: "world.services"
+    catalog_id: "general_store"
+    adapter: "CatalogToServiceRegistryAdapter"
+    status: "catalog_authoritative"
+    fallback_allowed: false
+    notes: "Service profile ID unchanged; catalog is authoritative."
+
+  - legacy_id: "blacksmith"
+    legacy_family: "service"
+    catalog_family: "world.services"
+    catalog_id: "blacksmith"
+    adapter: "CatalogToServiceRegistryAdapter"
+    status: "catalog_authoritative"
+    fallback_allowed: false
+
+  - legacy_id: "tavern"
+    legacy_family: "service"
+    catalog_family: "world.services"
+    catalog_id: "tavern"
+    adapter: "CatalogToServiceRegistryAdapter"
+    status: "catalog_authoritative"
+    fallback_allowed: false
