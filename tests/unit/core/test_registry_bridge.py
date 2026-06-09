@@ -472,23 +472,25 @@ def test_referential_integrity_catalog(mock_catalog_repo):
         assert RegionRegistry.contains(service.region_id)
 
 
-def test_runtime_content_mode_enum_has_migration_and_v2():
-    assert RuntimeContentMode.MIGRATION.value == "migration"
-    assert RuntimeContentMode.V2.value == "v2"
-    assert len(RuntimeContentMode) == 2
+def test_runtime_content_mode_enum_has_four_explicit_modes():
+    assert RuntimeContentMode.CATALOG_STRICT.value == "catalog_strict"
+    assert RuntimeContentMode.CATALOG_WITH_COMPATIBILITY.value == "catalog_with_compatibility"
+    assert RuntimeContentMode.LEGACY_FALLBACK.value == "legacy_fallback"
+    assert RuntimeContentMode.TEST_MANUAL.value == "test_manual"
+    assert len(RuntimeContentMode) == 4
 
 
-def test_seed_with_migration_mode_returns_projection_result(mock_catalog_repo):
-    result = seed_phase1_content(mock_catalog_repo, mode=RuntimeContentMode.MIGRATION)
+def test_seed_with_compatibility_mode_returns_projection_result(mock_catalog_repo):
+    result = seed_phase1_content(mock_catalog_repo, mode=RuntimeContentMode.CATALOG_WITH_COMPATIBILITY)
     assert isinstance(result, AdapterProjectionResult)
-    assert result.mode == RuntimeContentMode.MIGRATION
+    assert result.mode == RuntimeContentMode.CATALOG_WITH_COMPATIBILITY
     assert result.item_count > 0
     assert result.service_count > 0
     assert result.resource_count > 0
     assert result.heuristic_count >= 0
 
 
-def test_seed_with_v2_mode_raises_if_unresolved_entities_exist():
+def test_seed_with_strict_mode_raises_if_unresolved_entities_exist():
     import tempfile, os, yaml
     with tempfile.TemporaryDirectory() as tmp_dir:
         os.makedirs(os.path.join(tmp_dir, "world"), exist_ok=True)
@@ -513,7 +515,7 @@ def test_seed_with_v2_mode_raises_if_unresolved_entities_exist():
         repo = CatalogRepository(tmp_dir)
         repo.load_all()
         with pytest.raises(AdapterError):
-            seed_phase1_content(repo, mode=RuntimeContentMode.V2)
+            seed_phase1_content(repo, mode=RuntimeContentMode.CATALOG_STRICT)
 
 
 def test_seed_legacy_fallback_returns_none():
@@ -522,14 +524,19 @@ def test_seed_legacy_fallback_returns_none():
 
 
 def test_adapter_projection_result_is_frozen_dataclass():
+    from src.core.modes import AdapterHeuristicUsage
     result = AdapterProjectionResult(
-        mode=RuntimeContentMode.MIGRATION,
+        mode=RuntimeContentMode.CATALOG_WITH_COMPATIBILITY,
         item_count=5,
         service_count=3,
         resource_count=2,
-        heuristic_count=1,
+        heuristic_usages=(AdapterHeuristicUsage(
+            record_id="x", family="item", adapter="A",
+            heuristic_type="use_kind", reason="test", mode=RuntimeContentMode.CATALOG_WITH_COMPATIBILITY,
+        ),),
     )
     assert dataclasses.is_dataclass(result)
     assert result.item_count == 5
+    assert result.heuristic_count == 1
     with pytest.raises((dataclasses.FrozenInstanceError, AttributeError)):
         result.item_count = 99

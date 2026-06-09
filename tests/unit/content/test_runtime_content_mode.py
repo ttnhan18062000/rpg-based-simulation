@@ -71,9 +71,9 @@ def test_catalog_with_compatibility_allows_heuristic():
         repo = CatalogRepository(tmp_dir)
         repo.load_all()
         adapter = CatalogToItemRegistryAdapter(repo, mode=RuntimeContentMode.CATALOG_WITH_COMPATIBILITY)
-        items, heuristic_count = adapter.adapt()
+        items, heuristic_usages = adapter.adapt()
         assert "mystery_item" in items
-        assert heuristic_count > 0
+        assert len(heuristic_usages) > 0
 
 
 def test_legacy_fallback_seeds_hardcoded_records():

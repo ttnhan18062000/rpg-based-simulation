@@ -1815,3 +1815,21 @@
   test_path: tests/unit/content/test_content_usage_evidence.py::test_all_matrix_evidence_paths_exist
   divergence_note: null
   support_boundary: null
+- id: INFRA-178
+  text: >
+    Adapter projection tracking uses typed AdapterHeuristicUsage records
+    (record_id, family, adapter, heuristic_type, reason, mode) instead of
+    a raw integer count. AdapterProjectionResult.heuristic_usages is a
+    tuple of these records; heuristic_count is a compatibility property
+    returning len(heuristic_usages).
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/core/registries.py::AdapterProjectionResult +
+    src/core/modes.py::AdapterHeuristicUsage +
+    tests/unit/content/test_adapter_heuristic_reporting.py
+  proof_type: null
+  test_path: tests/unit/content/test_adapter_heuristic_reporting.py
+  divergence_note: null
+  support_boundary: null
