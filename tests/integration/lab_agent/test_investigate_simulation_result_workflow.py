@@ -238,7 +238,86 @@ def test_investigation_traversal_blocked(mock_workspace_with_compacted_data: Pat
             "analysis_depth": "standard"
         }
     )
-    
+
     workflow = InvestigateSimulationResultWorkflow(workspace_root=mock_workspace_with_compacted_data)
     with pytest.raises(PermissionError):
         workflow.run("session_investigate_01", request)
+
+
+# ── Semantic assertions ──────────────────────────────────────────────────────
+
+@pytest.fixture
+def mock_workspace_with_healthy_run(tmp_path: Path) -> Path:
+    """Workspace where all runs completed with zero anomalies — no CRITICAL issues expected."""
+    (tmp_path / "data" / "lab_sessions").mkdir(parents=True)
+    (tmp_path / "data" / "lab_runs").mkdir(parents=True)
+
+    session_store = LabSessionStore(tmp_path / "data" / "lab_sessions")
+    session_store.create_session("session_healthy_01")
+
+    run_dir = tmp_path / "data" / "lab_runs" / "healthy_run_01"
+    run_dir.mkdir(parents=True)
+    with open(run_dir / "lab_run_manifest.json", "w", encoding="utf-8") as f:
+        json.dump({
+            "lab_run_id": "healthy_run_01",
+            "world_id": "world_01", "scenario_id": "scenario_01", "experiment_id": "exp_01",
+            "status": "COMPLETED",
+            "started_at": "2026-06-10T00:00:00Z", "ended_at": "2026-06-10T00:05:00Z",
+            "run_count": 1, "completed_run_count": 1, "failed_run_count": 0,
+            "artifact_root": str(run_dir),
+            "schema_versions": {}, "budgets": {}, "storage_usage_mb": 0.1
+        }, f)
+
+    child_dir = run_dir / "runs" / "run_0"
+    child_dir.mkdir(parents=True)
+    with open(child_dir / "run_report.json", "w", encoding="utf-8") as f:
+        json.dump({
+            "health_score": 99.0,
+            "total_anomalies_count": 0,
+            "anomalies": [],
+            "critical_count": 0,
+            "warning_count": 0,
+            "error_count": 0
+        }, f)
+
+    # Run compaction to produce compact_summary.json and issue_index.json
+    comp_request = WorkflowRequest(
+        workflow="CompactSimulationData",
+        mode="specific",
+        specific_inputs={
+            "lab_run_path": "data/lab_runs/healthy_run_01",
+            "top_n": 5,
+            "focus_domains": ["resource", "movement", "strategy", "combat", "kernel"]
+        }
+    )
+    CompactSimulationDataWorkflow(workspace_root=tmp_path).run("session_healthy_01", comp_request)
+
+    reg_dir = tmp_path / "data" / "lab_sessions" / "session_healthy_01" / "registration"
+    (reg_dir / "actual_lab_run_path.txt").write_text("data/lab_runs/healthy_run_01", encoding="utf-8")
+    return tmp_path
+
+
+def test_investigation_healthy_run_zero_critical_issues(mock_workspace_with_healthy_run: Path):
+    """A run with no anomalies must produce zero critical issues — no false positives."""
+    request = WorkflowRequest(
+        workflow="InvestigateSimulationResult",
+        mode="specific",
+        specific_inputs={
+            "lab_run_path": "data/lab_runs/healthy_run_01",
+            "analysis_depth": "standard"
+        }
+    )
+    workflow = InvestigateSimulationResultWorkflow(workspace_root=mock_workspace_with_healthy_run)
+    res = workflow.run("session_healthy_01", request)
+    assert res["status"] == "READY"
+
+    invest_dir = (
+        mock_workspace_with_healthy_run / "data" / "lab_sessions"
+        / "session_healthy_01" / "investigation"
+    )
+    with open(invest_dir / "investigation_report.json", encoding="utf-8") as f:
+        report = json.load(f)
+
+    assert report["critical_issues"] == [], (
+        f"Healthy run must produce zero critical issues; got: {report['critical_issues']}"
+    )

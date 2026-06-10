@@ -234,7 +234,86 @@ def test_registration_traversal_blocked(mock_workspace: Path):
         mode="specific",
         specific_inputs={"lab_run_path": "../../etc/shadow"}
     )
-    
+
     workflow = RegisterSimulationResultWorkflow(workspace_root=mock_workspace)
     with pytest.raises(PermissionError):
         workflow.run("session_reg_01", request)
+
+
+# ── Semantic assertions ──────────────────────────────────────────────────────
+
+def test_result_integrity_counts_reflect_manifest(mock_workspace: Path):
+    """completed_run_count and failed_run_count in result_integrity_report.json
+    must match the values declared in the lab_run_manifest."""
+    run_dir = mock_workspace / "data" / "lab_runs" / "run_semantic_01"
+    run_dir.mkdir(parents=True)
+    with open(run_dir / "lab_run_manifest.json", "w", encoding="utf-8") as f:
+        json.dump({
+            "lab_run_id": "run_semantic_01",
+            "world_id": "w1", "scenario_id": "s1", "experiment_id": "e1",
+            "status": "COMPLETED",
+            "started_at": "2026-06-10T00:00:00Z", "ended_at": "2026-06-10T00:05:00Z",
+            "run_count": 3, "completed_run_count": 2, "failed_run_count": 1,
+            "artifact_root": str(run_dir),
+            "schema_versions": {}, "budgets": {}, "storage_usage_mb": 0.5
+        }, f)
+    for i in range(3):
+        child_dir = run_dir / "runs" / f"run_{i}"
+        child_dir.mkdir(parents=True)
+        with open(child_dir / "run_report.json", "w", encoding="utf-8") as f:
+            json.dump({"run_id": f"run_{i}"}, f)
+
+    request = WorkflowRequest(
+        workflow="RegisterSimulationResult",
+        mode="specific",
+        specific_inputs={"lab_run_path": "data/lab_runs/run_semantic_01"}
+    )
+    workflow = RegisterSimulationResultWorkflow(workspace_root=mock_workspace)
+    res = workflow.run("session_reg_01", request)
+    assert res["status"] == "READY"
+
+    reg_dir = mock_workspace / "data" / "lab_sessions" / "session_reg_01" / "registration"
+    with open(reg_dir / "result_integrity_report.json", encoding="utf-8") as f:
+        report = json.load(f)
+
+    assert report["completed_run_count"] == 2, (
+        f"Expected completed_run_count=2, got {report['completed_run_count']}"
+    )
+    assert report["failed_run_count"] == 1, (
+        f"Expected failed_run_count=1, got {report['failed_run_count']}"
+    )
+    assert report["run_count"] == 3
+
+
+def test_artifact_index_contains_manifest_entry(mock_workspace: Path):
+    """artifact_index.json must contain an entry for lab_run_manifest.json."""
+    run_dir = mock_workspace / "data" / "lab_runs" / "run_semantic_02"
+    run_dir.mkdir(parents=True)
+    with open(run_dir / "lab_run_manifest.json", "w", encoding="utf-8") as f:
+        json.dump({
+            "lab_run_id": "run_semantic_02",
+            "world_id": "w1", "scenario_id": "s1", "experiment_id": "e1",
+            "status": "COMPLETED",
+            "started_at": "2026-06-10T00:00:00Z", "ended_at": "2026-06-10T00:05:00Z",
+            "run_count": 1, "completed_run_count": 1, "failed_run_count": 0,
+            "artifact_root": str(run_dir),
+            "schema_versions": {}, "budgets": {}, "storage_usage_mb": 0.1
+        }, f)
+
+    request = WorkflowRequest(
+        workflow="RegisterSimulationResult",
+        mode="specific",
+        specific_inputs={"lab_run_path": "data/lab_runs/run_semantic_02"}
+    )
+    workflow = RegisterSimulationResultWorkflow(workspace_root=mock_workspace)
+    res = workflow.run("session_reg_01", request)
+    assert res["status"] == "READY"
+
+    reg_dir = mock_workspace / "data" / "lab_sessions" / "session_reg_01" / "registration"
+    with open(reg_dir / "artifact_index.json", encoding="utf-8") as f:
+        index = json.load(f)
+
+    relative_paths = [entry["relative_path"] for entry in index]
+    assert any("lab_run_manifest.json" in p for p in relative_paths), (
+        f"artifact_index must include lab_run_manifest.json; paths found: {relative_paths}"
+    )
