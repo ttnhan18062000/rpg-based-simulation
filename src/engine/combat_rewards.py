@@ -80,14 +80,32 @@ class CombatRewardClassificationService:
         defender: EntityState,
         state: AuthoritativeState,
     ) -> RewardClassification:
-        # Step 1: relation projection — defender in MONSTER_HORDE faction = hostile creature
+        # Step 1: relation projection via FactionSemanticsService.
+        # Uses the same hostility path as combat legality checks. RelationContext marks
+        # this call as combat-engaged so contextual entities project hostile correctly.
         try:
-            defender_faction = Faction(defender.identity.faction)
-            if defender_faction == Faction.MONSTER_HORDE:
-                return cls._HOSTILE_CREATURE_CLASSIFICATION
-        except ValueError:
+            from src.content_semantics.faction import (
+                get_faction_id_str,
+                get_faction_semantics_service,
+            )
+            from src.content_semantics.relation import RelationContext
+            attacker_faction_id = get_faction_id_str(attacker)
+            defender_faction_id = get_faction_id_str(defender)
+            context = RelationContext(combat_engaged=True)
+            svc = get_faction_semantics_service()
+            if svc.is_hostile_compat(attacker_faction_id, defender_faction_id, context):
+                return RewardClassification(
+                    category=RewardCategory.HOSTILE_CREATURE,
+                    xp_multiplier=10,
+                    gold_multiplier=5,
+                    gold_eligible=True,
+                    rebirth_eligible=False,
+                    source="relation_projection",
+                )
+        except Exception:
             pass
-        # Step 2/3: legacy EntityRole fallback
+        # Step 2: legacy EntityRole fallback — reached when factions are not hostile
+        # or when the relation service is unavailable.
         try:
             role = EntityRole(defender.identity.role)
         except ValueError:

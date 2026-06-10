@@ -80,17 +80,35 @@ _STATE = _FakeState()
 # ── classify_defeated_target ─────────────────────────────────────────────────
 
 def test_classify_defeated_target_monster_horde_returns_hostile_creature():
-    """Defender in MONSTER_HORDE faction → HOSTILE_CREATURE regardless of EntityRole."""
+    """Hero (HERO_GUILD) defeating Monster (MONSTER_HORDE) → HOSTILE_CREATURE via relation_projection."""
     attacker = _make_entity(1, EntityRole.HERO, Faction.HERO_GUILD)
     defender = _make_entity(2, EntityRole.MONSTER, Faction.MONSTER_HORDE)
     result = CombatRewardClassificationService.classify_defeated_target(attacker, defender, _STATE)
     assert result.category == RewardCategory.HOSTILE_CREATURE
-    assert result.source == "hostile_relation"
+    assert result.source == "relation_projection"
 
 
-def test_classify_defeated_target_hero_defender_returns_hero_kill():
-    """Defender with HERO role and non-MONSTER_HORDE faction → HERO_KILL via fallback."""
+def test_classify_defeated_target_monster_attacks_hero_gives_hostile_creature():
+    """Monster (MONSTER_HORDE) defeating Hero (HERO_GUILD) → HOSTILE_CREATURE via relation_projection.
+
+    MONSTER_HORDE and HERO_GUILD are mutually hostile in the legacy bucket model.
+    Relation projection runs first — the HERO_KILL path is only reached for neutral-faction
+    attackers that are not in a hostile relation with the defender.
+    """
     attacker = _make_entity(1, EntityRole.MONSTER, Faction.MONSTER_HORDE)
+    defender = _make_entity(2, EntityRole.HERO, Faction.HERO_GUILD)
+    result = CombatRewardClassificationService.classify_defeated_target(attacker, defender, _STATE)
+    assert result.category == RewardCategory.HOSTILE_CREATURE
+    assert result.source == "relation_projection"
+
+
+def test_classify_defeated_target_hero_defender_neutral_attacker_returns_hero_kill():
+    """Defender with HERO role, attacker with NEUTRAL faction → HERO_KILL via EntityRole fallback.
+
+    NEUTRAL faction has no hostile relation with HERO_GUILD in the legacy bucket model,
+    so relation projection returns False and the EntityRole path is reached.
+    """
+    attacker = _make_entity(1, EntityRole.CITIZEN, Faction.NEUTRAL)
     defender = _make_entity(2, EntityRole.HERO, Faction.HERO_GUILD)
     result = CombatRewardClassificationService.classify_defeated_target(attacker, defender, _STATE)
     assert result.category == RewardCategory.HERO_KILL
@@ -107,7 +125,7 @@ def test_classify_defeated_target_neutral_merchant_returns_none():
 
 
 def test_classify_defeated_target_hostile_creature_xp_and_gold_multipliers():
-    """HOSTILE_CREATURE classification uses same multipliers as MONSTER_KILL."""
+    """HOSTILE_CREATURE classification uses xp_multiplier=10, gold_multiplier=5."""
     attacker = _make_entity(1, EntityRole.HERO, Faction.HERO_GUILD)
     defender = _make_entity(2, EntityRole.MONSTER, Faction.MONSTER_HORDE)
     result = CombatRewardClassificationService.classify_defeated_target(attacker, defender, _STATE)
@@ -115,6 +133,7 @@ def test_classify_defeated_target_hostile_creature_xp_and_gold_multipliers():
     assert result.gold_multiplier == 5
     assert result.gold_eligible is True
     assert result.rebirth_eligible is False
+    assert result.source == "relation_projection"
 
 
 def test_classify_is_still_a_valid_compatibility_wrapper():

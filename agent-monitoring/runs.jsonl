@@ -64,3 +64,4 @@
 {"run_id":"TCK-20260610-EXPANSION-GATE-USAGE-MATRIX","start_ts":"2026-06-10T14:49:31Z","end_ts":"2026-06-10T14:55:00Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":1}
 {"run_id":"TCK-20260610-KNOWLEDGE-APPROVAL-SPLIT","start_ts":"2026-06-10T15:00:00Z","end_ts":"2026-06-10T15:10:00Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":1}
 {"run_id":"TCK-20260610-REAL-RUN-ARTIFACT-FIXTURE","start_ts":"2026-06-10T15:15:00Z","end_ts":"2026-06-10T15:25:00Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":1}
+{"run_id":"TCK-20260610-REWARD-RELATION-CLASSIFY","start_ts":"2026-06-10T15:30:00Z","end_ts":"2026-06-10T15:45:00Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":1}
