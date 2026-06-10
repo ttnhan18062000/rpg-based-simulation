@@ -97,3 +97,4 @@
 {"run_id":"TCK-20260610-STRICT-MATRIX-UNXFAIL","ts":"2026-06-10T04:12:00Z","event":"ticket_done","detail":"73/73 strict matrix tests pass. xfail markers already removed in TCK-20260610-CAT-REL-099-FIX. Verification-only ticket."}
 {"run_id":"TCK-20260610-SCENARIO-RESOLVER-UNXFAIL","ts":"2026-06-10T04:14:00Z","event":"ticket_done","detail":"10/10 scenario setup resolver tests pass. xfail markers already removed in TCK-20260610-CAT-REL-099-FIX. Verification-only ticket."}
 {"run_id":"FOLDER-tickets/todos/phase2034-repair-followup","ts":"2026-06-10T04:14:00Z","event":"epic_done","detail":"5/5 tickets DONE: TCK-20260610-CAT-REL-099-FIX, TCK-20260610-ACTIVE-DATA-CONSUMER-REPAIR, TCK-20260610-ARCHETYPE-DEFAULT-PATH, TCK-20260610-STRICT-MATRIX-UNXFAIL, TCK-20260610-SCENARIO-RESOLVER-UNXFAIL"}
+{"run_id":"TCK-20260610-CATALOG-SCENARIO-BUILDER","ts":"2026-06-10T05:05:00Z","event":"ticket_done","detail":"Created CatalogScenarioStateBuilder. 8/8 tests pass. SUB-369 added."}

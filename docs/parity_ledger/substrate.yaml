@@ -3778,3 +3778,13 @@
   test_path: tests/integration/worldassembly/test_world_entity_spawner.py::test_archetype_native_entities_carry_archetype_id
   divergence_note: null
   support_boundary: null
+- id: SUB-369
+  text: CatalogScenarioStateBuilder composes ScenarioSetupResolver + WorldEntitySpawner + AuthoritativeState construction into a single catalog-native pipeline. It does not replace build_scenario_state() or ArenaInjector.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/scenarios/catalog_state_builder.py CatalogScenarioStateBuilder.build()
+  proof_type: parity
+  test_path: tests/unit/certification/test_catalog_scenario_state_builder.py::test_archetype_entities_carry_archetype_id
+  divergence_note: null
+  support_boundary: null
