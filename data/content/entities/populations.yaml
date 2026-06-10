@@ -83,3 +83,10 @@
   members:
     spirit_guardian: 2
   preferred_regions: ["sacred_grove", "deep_forest"]
+
+# STATE: ADDITIONAL
+- id: "moon_cult_apprentice_circle"
+  display_name: "Moon Cult Apprentice Circle"
+  members:
+    apprentice_mage: 4
+  preferred_regions: ["moon_cave"]

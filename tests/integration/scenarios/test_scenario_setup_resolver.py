@@ -1,10 +1,8 @@
 """
 Integration tests for ScenarioSetupResolver.
 
-Happy-path tests that require full WorldAssemblyResolver.assemble() are marked xfail
-due to a pre-existing CatalogValidator issue (CAT-REL-099 moon_cult_ruins / apprentice_mage)
-that blocks assembly regardless of which composition is used. Error-path and structural
-tests do not require assembly and pass unconditionally.
+Happy-path tests verify full WorldAssemblyResolver.assemble() integration.
+Error-path and structural tests verify resolver behavior without requiring assembly.
 """
 
 import pytest
@@ -19,13 +17,6 @@ from src.scenarios.resolver import (
     ResolvedScenarioSetup,
     StateSetupModifier,
 )
-
-_PREEXISTING_CAT_BUG = pytest.mark.xfail(
-    reason="Pre-existing CAT-REL-099: moon_cult_ruins references non-existent population "
-    "'apprentice_mage'; CatalogValidator sweeps entire catalog and blocks assembly.",
-    strict=False,
-)
-
 
 @pytest.fixture(scope="module")
 def catalog():
@@ -57,10 +48,9 @@ def _frontier_scenario(**kw) -> SimulationScenarioDefinition:
 
 
 # ---------------------------------------------------------------------------
-# Happy-path tests (require full assembly — xfail due to pre-existing defect)
+# Happy-path tests (require full assembly)
 # ---------------------------------------------------------------------------
 
-@_PREEXISTING_CAT_BUG
 def test_resolver_produces_resolved_setup(resolver):
     scenario = _frontier_scenario()
     setup = resolver.resolve(scenario)
@@ -69,21 +59,18 @@ def test_resolver_produces_resolved_setup(resolver):
     assert setup.world_bundle is not None
 
 
-@_PREEXISTING_CAT_BUG
 def test_perspective_preserved_in_output(resolver):
     scenario = _frontier_scenario(perspective="hero_guild_perspective")
     setup = resolver.resolve(scenario)
     assert setup.perspective_id == "hero_guild_perspective"
 
 
-@_PREEXISTING_CAT_BUG
 def test_empty_initial_conditions_produces_no_modifiers(resolver):
     scenario = _frontier_scenario(id="empty_cond", initial_conditions={})
     setup = resolver.resolve(scenario)
     assert setup.initial_state_modifiers == []
 
 
-@_PREEXISTING_CAT_BUG
 def test_initial_conditions_become_modifiers_via_full_resolve(resolver):
     scenario = _frontier_scenario(
         id="modifiers_test",

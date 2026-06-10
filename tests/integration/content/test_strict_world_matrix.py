@@ -6,9 +6,7 @@ Each row is a cumulative module composition proving the full content pipeline:
   → runtime registry seeding → deterministic fingerprint
 
 Pre-assembly tests (load, normalize, fingerprint) always pass.
-Full-assembly tests are xfail due to CAT-REL-099: moon_cult_ruins references
-non-existent population 'apprentice_mage'; CatalogValidator sweeps the entire
-catalog and blocks assembly regardless of which modules are in the composition.
+Full-assembly tests verify the complete pipeline through WorldSpec + CompileContext.
 
 Tests respect the ownership boundary from TCK-20260609-PRESERVE-ASSEMBLY-TESTS:
 basic "assembly works" and "catalog loads" behaviors are not duplicated here.
@@ -51,14 +49,6 @@ _MATRIX = [
 ]
 
 _MATRIX_IDS = [label for label, _ in _MATRIX]
-
-_PREEXISTING_CAT_BUG = pytest.mark.xfail(
-    reason=(
-        "CAT-REL-099 pre-existing: moon_cult_ruins references non-existent population "
-        "'apprentice_mage'; CatalogValidator sweeps entire catalog and blocks all assembly."
-    ),
-    strict=False,
-)
 
 pytestmark = [pytest.mark.worldassembly, pytest.mark.strict_matrix]
 
@@ -141,10 +131,9 @@ def test_catalog_seeds_runtime_registries(catalog):
 
 
 # ---------------------------------------------------------------------------
-# Full-assembly tests: xfail due to pre-existing CAT-REL-099
+# Full-assembly tests
 # ---------------------------------------------------------------------------
 
-@_PREEXISTING_CAT_BUG
 @pytest.mark.parametrize("label,modules", _MATRIX, ids=_MATRIX_IDS)
 def test_row_produces_world_spec(assembly_resolver, label, modules):
     comp = _make_composition(modules)
@@ -154,7 +143,6 @@ def test_row_produces_world_spec(assembly_resolver, label, modules):
     assert len(bundle.world_spec.regions) > 0
 
 
-@_PREEXISTING_CAT_BUG
 @pytest.mark.parametrize("label,modules", _MATRIX, ids=_MATRIX_IDS)
 def test_row_produces_compile_context_with_seeded_entities(assembly_resolver, label, modules):
     comp = _make_composition(modules)
@@ -165,7 +153,6 @@ def test_row_produces_compile_context_with_seeded_entities(assembly_resolver, la
     assert len(ctx.entities) > 0, "CompileContext has no seeded entity profiles"
 
 
-@_PREEXISTING_CAT_BUG
 @pytest.mark.parametrize("label,modules", _MATRIX, ids=_MATRIX_IDS)
 def test_row_assembly_has_no_blocking_errors(assembly_resolver, label, modules):
     comp = _make_composition(modules)
@@ -175,7 +162,6 @@ def test_row_assembly_has_no_blocking_errors(assembly_resolver, label, modules):
     assert report["blocking_errors"] == []
 
 
-@_PREEXISTING_CAT_BUG
 @pytest.mark.parametrize("label,modules", _MATRIX, ids=_MATRIX_IDS)
 def test_row_assembly_is_deterministic(assembly_resolver, label, modules):
     """Assembling the same composition twice must produce the same content fingerprint."""
@@ -188,7 +174,6 @@ def test_row_assembly_is_deterministic(assembly_resolver, label, modules):
     )
 
 
-@_PREEXISTING_CAT_BUG
 @pytest.mark.parametrize("label,modules", _MATRIX, ids=_MATRIX_IDS)
 def test_row_no_hidden_legacy_fallback_in_archetype_entities(assembly_resolver, label, modules):
     """Entities that came from archetype resolution must have archetype_id set in profile."""

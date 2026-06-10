@@ -118,6 +118,28 @@
     religious_conflict: "high"
 
 # STATE: ADDITIONAL
+- id: "town_to_orc_clan"
+  source_faction: "town_council"
+  target_faction: "orc_clan"
+  relationship_model: "security_hostility"
+  axes:
+    hostility: "high"
+    fear: "high"
+    trust: "none"
+    territorial_conflict: "high"
+
+# STATE: ADDITIONAL
+- id: "orc_clan_to_town"
+  source_faction: "orc_clan"
+  target_faction: "town_council"
+  relationship_model: "territorial_raider"
+  axes:
+    hostility: "high"
+    fear: "none"
+    trust: "none"
+    territorial_conflict: "high"
+
+# STATE: ADDITIONAL
 - id: "undead_to_living"
   source_faction: "undead_remnants"
   target_faction: "town_council"

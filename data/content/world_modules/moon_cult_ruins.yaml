@@ -13,7 +13,7 @@ regions:
     hazard_level: 4.0
 factions: ["moon_cult", "arcane_circle"]
 populations:
-  - "apprentice_mage"
+  - "moon_cult_apprentice_circle"
 resources:
   moon_resin_tree: 3
   crystal_outcrop: 4

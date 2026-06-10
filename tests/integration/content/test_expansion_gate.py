@@ -23,7 +23,7 @@ Pass conditions required before expansion:
   08  All world composition specs load without error
   09  Registry adapters project without AdapterError
   10  Scenario schema validates correctly
-  11  World assembly resolves at least one composition  [xfail: CAT-REL-099]
+  11  World assembly resolves at least one composition
   12  Migration map covers all required legacy families
 """
 
@@ -41,12 +41,6 @@ from src.content.repository import CatalogRepository, CANONICAL_FAMILIES
 from src.worldmodules.repository import WorldModuleRepository
 
 pytestmark = [pytest.mark.content_pack, pytest.mark.integration]
-
-_CAT_REL_099 = pytest.mark.xfail(
-    reason="CAT-REL-099: moon_cult_ruins references apprentice_mage population not in catalog; "
-    "CatalogValidator sweeps entire catalog so all assembly calls fail.",
-    strict=False,
-)
 
 # Inline baseline from test_active_data_consumer — must stay in sync with that file.
 _ACTIVE_STATES = frozenset({"EXISTING-LOGIC", "LEGACY-EXPORT", "REDESIGNED-CORE"})
@@ -299,10 +293,9 @@ def test_gate_10_scenario_schema_validates():
 
 
 # ---------------------------------------------------------------------------
-# Gate item 11 — World assembly resolves  [xfail: CAT-REL-099]
+# Gate item 11 — World assembly resolves
 # ---------------------------------------------------------------------------
 
-@_CAT_REL_099
 def test_gate_11_world_assembly_resolves(catalog, module_repo):
     """WorldAssemblyResolver must assemble at least one composition without error."""
     from src.worldassembly.resolver import WorldAssemblyResolver
