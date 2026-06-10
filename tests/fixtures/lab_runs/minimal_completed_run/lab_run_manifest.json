@@ -1,0 +1,23 @@
+{
+  "lab_run_id": "minimal-completed-run",
+  "world_id": "world-fixture-01",
+  "scenario_id": "scenario-fixture-01",
+  "experiment_id": "experiment-fixture-01",
+  "status": "COMPLETED",
+  "started_at": "2026-06-10T00:00:00Z",
+  "ended_at": "2026-06-10T00:05:00Z",
+  "run_count": 1,
+  "completed_run_count": 1,
+  "failed_run_count": 0,
+  "artifact_root": "__REPLACED_AT_TEST_TIME__",
+  "schema_versions": {
+    "world": "worldspec.v1",
+    "scenario": "scenariospec.v1",
+    "manifest": "lab_run_manifest.v1"
+  },
+  "budgets": {
+    "max_runtime_minutes": 30,
+    "max_ticks": 100
+  },
+  "storage_usage_mb": 0.1
+}

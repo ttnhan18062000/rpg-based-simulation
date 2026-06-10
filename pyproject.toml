@@ -75,4 +75,5 @@ markers = [
     "legacy_compat: arena and certification regression tests preserving legacy behavior",
     "content_pack: content pack format validation and expansion gate tests",
     "architecture: static architecture guard tests (no runtime, no catalog load)",
+    "e2e_golden: golden artifact fixture tests validating schema compatibility with real engine output",
 ]
