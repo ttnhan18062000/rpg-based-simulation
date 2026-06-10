@@ -44,3 +44,4 @@
 {"run_id":"TCK-20260610-COMBAT-RELATION-PROJECTION","start_ts":"2026-06-10T05:32:00Z","end_ts":"2026-06-10T05:48:00Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":5}
 {"run_id":"TCK-20260610-QUEST-RELATION-PROJECTION","start_ts":"2026-06-10T05:48:00Z","end_ts":"2026-06-10T06:00:00Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":4}
 {"run_id":"TCK-20260610-REGION-THREAT-PROJECTION","start_ts":"2026-06-10T06:00:00Z","end_ts":"2026-06-10T06:15:00Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":4}
+{"run_id":"FOLDER-tickets/todos/phase35-39-catalog-runtime","start_ts":"2026-06-10T04:30:00Z","end_ts":"2026-06-10T06:15:00Z","workflow":"implement-epic","tier":"standard","final_status":"DONE","tickets_done":6,"tickets_skipped":0}
