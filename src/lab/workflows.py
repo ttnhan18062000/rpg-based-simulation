@@ -2471,20 +2471,29 @@ class UpdateSimulationKnowledgeWorkflow:
         report_path.write_text(report_md, encoding="utf-8")
 
         # 10. Audit Logging
+        synced_count = len(stored_insights) + len(stored_patches)
+        sync_status = "SYNCED" if synced_count > 0 else "NO_INSIGHTS"
+
         trail.log_event(session_id, "files_read", {
             "files": ["insight_candidates.json", "proposed_patches/*"]
         })
         trail.log_event(session_id, "files_written", {
             "files": [str(report_path), "decision_log.jsonl"] + [f"insights/{i['insight_id'].lower()}.json" for i in stored_insights]
         })
+        trail.log_event(session_id, "knowledge_sync_result", {
+            "status": sync_status,
+            "synced_insights": len(stored_insights),
+            "synced_patches": len(stored_patches),
+        })
         trail.log_event(session_id, "workflow_completed", {
             "workflow": "UpdateSimulationKnowledge",
-            "status": "READY"
+            "status": sync_status,
         })
 
         return {
-            "status": "READY",
-            "report_path": str(report_path)
+            "status": sync_status,
+            "report_path": str(report_path),
+            "synced_count": synced_count,
         }
 
     def _format_knowledge_report_md(self, session_id: str, insights: list, patches: list, note: str) -> str:

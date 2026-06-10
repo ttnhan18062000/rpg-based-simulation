@@ -356,8 +356,9 @@ class TestHumanGatedAgenticLabE2E:
             )
             try:
                 approved_result = update_wf.run(sid, approved_request)
-                assert approved_result["status"] in ("SYNCED", "READY", "NO_INSIGHTS", "BLOCKED"), \
-                    f"Knowledge update with approval failed: {approved_result}"
+                assert approved_result["status"] == "SYNCED", (
+                    f"Approved non-empty insight set must return SYNCED, got: {approved_result['status']}"
+                )
             except ValueError:
                 # Acceptable — the test is about the gate enforcement, not the full sync
                 pass

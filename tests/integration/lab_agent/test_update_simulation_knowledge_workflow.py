@@ -121,7 +121,7 @@ def test_knowledge_update_success(mock_workspace_for_knowledge: Path):
     workflow = UpdateSimulationKnowledgeWorkflow(workspace_root=mock_workspace_for_knowledge)
     res = workflow.run("session_know_01", request)
     
-    assert res["status"] == "READY"
+    assert res["status"] == "SYNCED", f"Expected SYNCED, got {res['status']}"
     assert "knowledge_update_report.md" in res["report_path"]
     
     knowledge_dir = mock_workspace_for_knowledge / "data" / "lab_knowledge"
@@ -227,3 +227,80 @@ def test_knowledge_anti_misdirection_rules(mock_workspace_for_knowledge: Path):
     with pytest.raises(ValueError) as exc:
         workflow.run("session_know_01", request)
     assert "Workflow cannot update rules/principles without a valid approval marker" in str(exc.value)
+
+
+@pytest.fixture
+def mock_workspace_empty_insights(mock_workspace_for_knowledge: Path) -> Path:
+    """Same as mock_workspace_for_knowledge but with all insight/patch candidates cleared."""
+    enhance_dir = (
+        mock_workspace_for_knowledge / "data" / "lab_sessions" / "session_know_01" / "enhancement"
+    )
+    with open(enhance_dir / "insight_candidates.json", "w", encoding="utf-8") as f:
+        json.dump([], f)
+    patches_dir = enhance_dir / "proposed_patches"
+    if patches_dir.is_dir():
+        import shutil
+        shutil.rmtree(patches_dir)
+        patches_dir.mkdir()
+    return mock_workspace_for_knowledge
+
+
+def test_approved_with_no_insights_returns_no_insights(mock_workspace_empty_insights: Path):
+    """Approved run with no insight candidates must return NO_INSIGHTS, not BLOCKED or READY."""
+    request = WorkflowRequest(
+        workflow="UpdateSimulationKnowledge",
+        mode="generic",
+        user_goal="Sync with empty insight set",
+        specific_inputs={
+            "approved_by": "user_admin",
+            "approval_recorded": True,
+            "decision_note": "No new insights this cycle",
+        },
+    )
+    workflow = UpdateSimulationKnowledgeWorkflow(workspace_root=mock_workspace_empty_insights)
+    res = workflow.run("session_know_01", request)
+
+    assert res["status"] == "NO_INSIGHTS", (
+        f"Approved run with no insights must return NO_INSIGHTS, got {res['status']}"
+    )
+    assert res["synced_count"] == 0
+
+    # Audit trail must record the sync result
+    from src.lab.audit import LabAuditTrail
+    trail = LabAuditTrail(mock_workspace_empty_insights)
+    events = trail.read_log("session_know_01")
+    sync_events = [e for e in events if e["event_type"] == "knowledge_sync_result"]
+    assert sync_events, "knowledge_sync_result event must be written to audit trail"
+    assert sync_events[-1]["details"]["status"] == "NO_INSIGHTS"
+    assert sync_events[-1]["details"]["synced_insights"] == 0
+
+
+def test_approved_with_insights_not_blocked(mock_workspace_for_knowledge: Path):
+    """Approved run with real insights must return SYNCED, not BLOCKED, not READY, not NO_INSIGHTS."""
+    request = WorkflowRequest(
+        workflow="UpdateSimulationKnowledge",
+        mode="generic",
+        user_goal="Sync with approved insights",
+        specific_inputs={
+            "approved_by": "user_admin",
+            "approval_recorded": True,
+            "decision_note": "Syncing verified anomalies",
+        },
+    )
+    workflow = UpdateSimulationKnowledgeWorkflow(workspace_root=mock_workspace_for_knowledge)
+    res = workflow.run("session_know_01", request)
+
+    assert res["status"] == "SYNCED", (
+        f"Approved non-empty insight set must return SYNCED, got {res['status']}"
+    )
+    assert res["status"] != "BLOCKED", "BLOCKED must never be the result of an approved sync"
+    assert res["synced_count"] >= 1
+
+    # Audit trail must record the sync result with correct counts
+    from src.lab.audit import LabAuditTrail
+    trail = LabAuditTrail(mock_workspace_for_knowledge)
+    events = trail.read_log("session_know_01")
+    sync_events = [e for e in events if e["event_type"] == "knowledge_sync_result"]
+    assert sync_events, "knowledge_sync_result event must be written to audit trail"
+    assert sync_events[-1]["details"]["status"] == "SYNCED"
+    assert sync_events[-1]["details"]["synced_insights"] >= 1
