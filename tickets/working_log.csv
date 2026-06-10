@@ -542,3 +542,4 @@ TCK-20260610-SCENARIO-RESOLVER-UNXFAIL,2026-06-10,2026-06-10,repair,hotfix,P1,DO
 TCK-20260610-CATALOG-SCENARIO-BUILDER,2026-06-10,2026-06-10,feature,standard,P1,DONE,"Create CatalogScenarioStateBuilder composing ScenarioSetupResolver+WorldEntitySpawner+AuthoritativeState; 8 tests"
 TCK-20260610-CATALOG-ARENA-SMOKE,2026-06-10,2026-06-10,feature,standard,P1,DONE,"Add CATALOG_ARENA_SMALL integration smoke test; 4/4 pass including 3-tick CertificationHarness execution"
 TCK-20260610-CATALOG-VS-LEGACY-SEMANTICS,2026-06-10,2026-06-10,feature,standard,P2,DONE,"Add semantic comparison test: catalog vs legacy path; 10/10 pass"
+TCK-20260610-COMBAT-RELATION-PROJECTION,2026-06-10,2026-06-10,feature,standard,P1,DONE,"Wire EntityIdentityResolver into combat targeting; target_identity_source in ATTACK/SKILL/PURSUE payloads; 9 new tests + 83 regression pass"

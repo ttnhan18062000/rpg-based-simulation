@@ -120,25 +120,44 @@ class TacticalDecisionSystem:
 
         from src.content_semantics.faction import get_faction_semantics_service, get_faction_id_str, get_race_id_str
         from src.content_semantics.relation import RelationContext
+        from src.entities.identity_resolver import EntityIdentityResolver, IdentityResolutionError
 
         semantics_service = get_faction_semantics_service()
+        _id_resolver = EntityIdentityResolver()
         hostiles = []
+        hostile_identity_sources: dict = {}
+
+        try:
+            _src_identity = _id_resolver.resolve(entity)
+            _src_faction_id = _src_identity.faction_id
+            _src_identity_source = _src_identity.source
+        except IdentityResolutionError:
+            _src_faction_id = get_faction_id_str(entity)
+            _src_identity_source = "legacy_fallback"
+
         for n in neighbors:
             if not n.combat.alive:
                 continue
             dist = LegalityServiceV2.get_manhattan_dist(entity.navigation.position, n.navigation.position)
-            combat_engaged = False
-            if entity.task.payload.get("target_id") == n.id or n.task.payload.get("target_id") == entity.id:
-                combat_engaged = True
-
+            combat_engaged = (
+                entity.task.payload.get("target_id") == n.id
+                or n.task.payload.get("target_id") == entity.id
+            )
             context = RelationContext(
                 distance=float(dist),
                 combat_engaged=combat_engaged,
                 target_race=get_race_id_str(n),
-                intruding=False
+                intruding=False,
             )
-            if semantics_service.is_hostile_compat(get_faction_id_str(entity), get_faction_id_str(n), context):
+            try:
+                _tgt_identity = _id_resolver.resolve(n)
+                _tgt_faction_id = _tgt_identity.faction_id
+            except IdentityResolutionError:
+                _tgt_faction_id = get_faction_id_str(n)
+
+            if semantics_service.is_hostile_compat(_src_faction_id, _tgt_faction_id, context):
                 hostiles.append(n)
+                hostile_identity_sources[n.id] = _src_identity_source
         
         # 4. Strategic Persistence (Pillar 5.1)
         # If hostiles are present, we should SUSPEND the current project if it's not already
@@ -531,7 +550,8 @@ class TacticalDecisionSystem:
                             "skill_id": chosen_skill_id,
                             "target_id": target.id,
                             "stale_ticks": stale_ticks + 1,
-                            "recent_positions": recent_positions
+                            "recent_positions": recent_positions,
+                            "target_identity_source": hostile_identity_sources.get(target.id, _src_identity_source),
                         }
                     )
                 )
@@ -543,10 +563,11 @@ class TacticalDecisionSystem:
                 task=TaskUpdate(
                     work_kind_set="ENTITY_ACT",
                     payload_set={
-                        "action": "ATTACK", 
+                        "action": "ATTACK",
                         "target_id": target.id,
                         "stale_ticks": stale_ticks + 1,
-                        "recent_positions": recent_positions
+                        "recent_positions": recent_positions,
+                        "target_identity_source": hostile_identity_sources.get(target.id, _src_identity_source),
                     }
                 )
             )
@@ -571,10 +592,11 @@ class TacticalDecisionSystem:
                 task=TaskUpdate(
                     work_kind_set="ENTITY_MOVE",
                     payload_set={
-                        "target_position": target_pos, 
+                        "target_position": target_pos,
                         "target_id": target.id,
                         "stale_ticks": stale_ticks + 1,
-                        "recent_positions": recent_positions
+                        "recent_positions": recent_positions,
+                        "target_identity_source": hostile_identity_sources.get(target.id, _src_identity_source),
                     }
                 )
             )
