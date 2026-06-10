@@ -1,0 +1,127 @@
+from __future__ import annotations
+
+from typing import Dict, Optional, Tuple
+
+from src.core.state import EntityState
+from src.entities.archetype_factory import ArchetypeEntityFactory, EntitySpawnContext
+from src.entities.contract_builder import resolved_archetype_to_contract
+from src.worldassembly.context import CompileContext
+from src.worldassembly.models import ResolvedEntityProfile
+
+
+class WorldEntitySpawner:
+    """
+    Converts CompileContext entity profiles into EntityState objects.
+
+    Primary path: archetype-native — EntityArchetypeResolver → resolved_archetype_to_contract
+    → ArchetypeEntityFactory.build_entity(). Used for profiles that carry an archetype_id.
+
+    Legacy guard: profiles without archetype_id fall back to V2EntityBuilder with explicit
+    labelling. This path exists for non-archetype-backed entities (town NPCs, synthetic
+    entities) that have no catalog archetype definition.
+    """
+
+    def __init__(self) -> None:
+        self._factory = ArchetypeEntityFactory()
+
+    def spawn_from_context(
+        self,
+        ctx: CompileContext,
+        catalog_repo: object,
+        *,
+        base_entity_id: int = 1,
+        default_position: Tuple[float, float] = (0.0, 0.0),
+    ) -> Dict[int, EntityState]:
+        """
+        Spawn EntityState objects for all entity profiles in a CompileContext.
+
+        Returns a dict mapping entity_id (int) to EntityState.
+        Entity IDs are assigned sequentially starting from base_entity_id.
+
+        Profiles with archetype_id use the archetype-native path.
+        Profiles without archetype_id use the explicit legacy guard path.
+        """
+        result: Dict[int, EntityState] = {}
+        entity_id = base_entity_id
+
+        for _key, profile in ctx.entities.items():
+            spawn = EntitySpawnContext(
+                position=default_position,
+                spawn_region=None,
+                initial_alive=True,
+                initial_active=True,
+            )
+
+            state = self._spawn_one(entity_id, profile, spawn, catalog_repo)
+            if state is not None:
+                result[entity_id] = state
+            entity_id += 1
+
+        return result
+
+    def _spawn_one(
+        self,
+        entity_id: int,
+        profile: ResolvedEntityProfile,
+        spawn: EntitySpawnContext,
+        catalog_repo: object,
+    ) -> Optional[EntityState]:
+        if profile.archetype_id:
+            return self._spawn_archetype_native(entity_id, profile, spawn, catalog_repo)
+        else:
+            return self._spawn_legacy_guard(entity_id, profile, spawn)
+
+    def _spawn_archetype_native(
+        self,
+        entity_id: int,
+        profile: ResolvedEntityProfile,
+        spawn: EntitySpawnContext,
+        catalog_repo: object,
+    ) -> Optional[EntityState]:
+        """Archetype-native path: catalog → resolved archetype → contract → EntityState."""
+        try:
+            from src.content.resolver import EntityArchetypeResolver
+            resolver = EntityArchetypeResolver(catalog_repo)  # type: ignore[arg-type]
+            resolved_arch = resolver.resolve(profile.archetype_id)
+            contract = resolved_archetype_to_contract(resolved_arch)
+            return self._factory.build_entity(entity_id, contract, spawn)
+        except Exception:
+            # Archetype resolution failed — fall through to legacy guard
+            return self._spawn_legacy_guard(entity_id, profile, spawn)
+
+    def _spawn_legacy_guard(
+        self,
+        entity_id: int,
+        profile: ResolvedEntityProfile,
+        spawn: EntitySpawnContext,
+    ) -> EntityState:
+        # LEGACY GUARD: no archetype_id available or archetype resolution failed.
+        # Uses V2EntityBuilder directly from profile stats. This path is explicit
+        # and intentional — not a silent fallback.
+        from src.core.builder import V2EntityBuilder
+        return (
+            V2EntityBuilder(entity_id)
+            .kind(profile.race_id or "human")
+            .location(*spawn.position)
+            .identity(
+                role=profile.legacy_role,
+                faction=profile.legacy_faction,
+                traits=set(profile.traits),
+                properties={
+                    "archetype_id": profile.archetype_id,
+                    "race_id": profile.race_id,
+                    "faction_id": profile.faction_id,
+                    "role_id": profile.role_id,
+                },
+            )
+            .combat(
+                hp=profile.hp,
+                max_hp=profile.max_hp,
+                atk=profile.atk,
+                def_stat=profile.def_stat,
+                attack_range=profile.attack_range,
+                readiness=profile.readiness,
+                alive=True,
+            )
+            .build()
+        )

@@ -3768,3 +3768,13 @@
     are defined. See docs/guidelines/v2_intentional_divergences.md entry 2.19. All
     current modules are worldmodule.v1 so runtime impact is zero.
   support_boundary: null
+- id: SUB-368
+  text: WorldEntitySpawner converts CompileContext entity profiles to EntityState via the archetype-native path (EntityArchetypeResolver → resolved_archetype_to_contract → ArchetypeEntityFactory) for profiles with archetype_id; V2EntityBuilder is guarded to an explicit legacy fallback for profiles without archetype_id.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/worldassembly/entity_spawner.py WorldEntitySpawner._spawn_archetype_native() and _spawn_legacy_guard()
+  proof_type: parity
+  test_path: tests/integration/worldassembly/test_world_entity_spawner.py::test_archetype_native_entities_carry_archetype_id
+  divergence_note: null
+  support_boundary: null
