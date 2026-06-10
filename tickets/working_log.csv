@@ -544,3 +544,4 @@ TCK-20260610-CATALOG-ARENA-SMOKE,2026-06-10,2026-06-10,feature,standard,P1,DONE,
 TCK-20260610-CATALOG-VS-LEGACY-SEMANTICS,2026-06-10,2026-06-10,feature,standard,P2,DONE,"Add semantic comparison test: catalog vs legacy path; 10/10 pass"
 TCK-20260610-COMBAT-RELATION-PROJECTION,2026-06-10,2026-06-10,feature,standard,P1,DONE,"Wire EntityIdentityResolver into combat targeting; target_identity_source in ATTACK/SKILL/PURSUE payloads; 9 new tests + 83 regression pass"
 TCK-20260610-QUEST-RELATION-PROJECTION,2026-06-10,2026-06-10,feature,standard,P1,DONE,"Wire EntityIdentityResolver+RelationProjectionService into HUNT quest target resolution; 9 new tests + 43 regression pass"
+TCK-20260610-REGION-THREAT-PROJECTION,2026-06-10,2026-06-10,feature,standard,P1,DONE,"New RegionThreatClassifier with perspective-based projection; labels safe/neutral/contested/threatened/hostile/unknown; 10 new tests"
