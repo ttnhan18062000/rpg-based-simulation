@@ -92,7 +92,9 @@ class GenerateSimulationSetupWorkflow:
         manifest = self.session_store.load_session(session_id)
         manifest.current_stage = "GENERATION"
         self.session_store.save_session(manifest)
-        
+        trail = LabAuditTrail(self.workspace_root)
+        trail.log_event(session_id, "workflow_started", {"workflow": "GenerateSimulationSetup"})
+
         # Resolve stage directory
         stage_dir = self.session_store.get_stage_dir(session_id, "GENERATION")
         draft_specs_dir = stage_dir / "draft_specs"
@@ -177,6 +179,7 @@ class GenerateSimulationSetupWorkflow:
         manifest.linked_scenarios = list(set(manifest.linked_scenarios + [scenario_spec.scenario_id]))
         manifest.linked_experiments = list(set(manifest.linked_experiments + [experiment_spec.experiment_id]))
         self.session_store.save_session(manifest)
+        trail.log_event(session_id, "workflow_completed", {"workflow": "GenerateSimulationSetup"})
 
         return {
             "world_spec_id": world_spec.world_id,
@@ -598,7 +601,9 @@ class PrepareSimulationExecutionWorkflow:
         manifest = self.session_store.load_session(session_id)
         manifest.current_stage = "EXECUTION_SUPPORT"
         self.session_store.save_session(manifest)
-        
+        trail = LabAuditTrail(self.workspace_root)
+        trail.log_event(session_id, "workflow_started", {"workflow": "PrepareSimulationExecution"})
+
         gen_dir = self.session_store.get_stage_dir(session_id, "GENERATION")
         support_dir = self.session_store.get_stage_dir(session_id, "EXECUTION_SUPPORT")
         
@@ -768,6 +773,11 @@ rpg-lab run \\
                 }
             }, f, indent=2)
 
+        trail.log_event(session_id, "workflow_completed", {"workflow": "PrepareSimulationExecution"})
+        trail.log_event(session_id, "manual_boundary_declared", {
+            "stage": "EXECUTION",
+            "command_script": str(cmd_script_path.relative_to(self.workspace_root)),
+        })
         return {
             "status": "READY",
             "command_script_path": str(cmd_script_path),
@@ -865,7 +875,9 @@ class RegisterSimulationResultWorkflow:
         manifest = self.session_store.load_session(session_id)
         manifest.current_stage = "REGISTRATION"
         self.session_store.save_session(manifest)
-        
+        trail = LabAuditTrail(self.workspace_root)
+        trail.log_event(session_id, "workflow_started", {"workflow": "RegisterSimulationResult"})
+
         reg_dir = self.session_store.get_stage_dir(session_id, "REGISTRATION")
         reg_dir.mkdir(parents=True, exist_ok=True)
 
@@ -994,6 +1006,7 @@ class RegisterSimulationResultWorkflow:
         except Exception as e:
             logger.warning(f"Rebuild index failed during registration: {e}")
 
+        trail.log_event(session_id, "workflow_completed", {"workflow": "RegisterSimulationResult"})
         return {
             "status": "READY",
             "classification": classification,
@@ -2054,7 +2067,9 @@ class ProposeSimulationEnhancementsWorkflow:
         
         # 1. Access session and confirm stage
         manifest = self.session_store.load_session(session_id)
-        
+        trail = LabAuditTrail(self.workspace_root)
+        trail.log_event(session_id, "workflow_started", {"workflow": "ProposeSimulationEnhancements"})
+
         # Check if investigation stage completed
         invest_dir = self.session_store.get_stage_dir(session_id, "INVESTIGATION")
         invest_report_file = invest_dir / "investigation_report.json"
@@ -2234,6 +2249,7 @@ class ProposeSimulationEnhancementsWorkflow:
         plan_md = self._format_enhancement_plan_md(session_id, proposed_patches, change_risk_report)
         (enhance_dir / "enhancement_plan.md").write_text(plan_md, encoding="utf-8")
 
+        trail.log_event(session_id, "workflow_completed", {"workflow": "ProposeSimulationEnhancements"})
         return {
             "status": "READY",
             "report_path": str(enhance_dir / "enhancement_plan.md")
