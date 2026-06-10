@@ -67,40 +67,44 @@ def test_dirty_set_vs_full_scan_parity(rng):
     
     # 1. Run Optimized (Default)
     kernel_opt = Kernel(SimulationProfile, initial_state, DeterministicRNG(42))
-    for _ in range(ticks_to_run):
-        kernel_opt.tick_once()
-    
-    final_state_opt = kernel_opt._state
-    fingerprint_opt = StateFingerprinter.get_fingerprint(final_state_opt)
-    
-    # 2. Run Full Scan (Reference)
-    # We use a fresh RNG with the SAME seed to ensure determinism
+    # 2. Run Full Scan (Reference) — created early so both are shut down together
     kernel_ref = Kernel(SimulationProfile, initial_state, DeterministicRNG(42), flags={"force_full_scan": True})
-    for _ in range(ticks_to_run):
-        kernel_ref.tick_once()
-        
-    final_state_ref = kernel_ref._state
-    fingerprint_ref = StateFingerprinter.get_fingerprint(final_state_ref)
-    
-    # 3. Compare
-    print(f"Optimized Hash: {fingerprint_opt['state_hash']}")
-    print(f"Reference Hash: {fingerprint_ref['state_hash']}")
-    
-    # If hashes differ, we need to find out why
-    if fingerprint_opt['state_hash'] != fingerprint_ref['state_hash']:
-        # Check some basic fields first
-        assert final_state_opt.tick == final_state_ref.tick
-        assert len(final_state_opt.entities) == len(final_state_ref.entities)
-        
-        # Check entities one by one
-        for eid in sorted(final_state_opt.entities.keys()):
-            e_opt = final_state_opt.entities[eid]
-            e_ref = final_state_ref.entities[eid]
-            
-            if e_opt.navigation.position != e_ref.navigation.position:
-                pytest.fail(f"Entity {eid} position mismatch: {e_opt.navigation.position} vs {e_ref.navigation.position}")
-            
-            if e_opt.strategic.current_project_id != e_ref.strategic.current_project_id:
-                pytest.fail(f"Entity {eid} project mismatch: {e_opt.strategic.current_project_id} vs {e_ref.strategic.current_project_id}")
-    
-    assert fingerprint_opt['state_hash'] == fingerprint_ref['state_hash'], "Optimized vs Full Scan parity failed!"
+    try:
+        for _ in range(ticks_to_run):
+            kernel_opt.tick_once()
+
+        final_state_opt = kernel_opt._state
+        fingerprint_opt = StateFingerprinter.get_fingerprint(final_state_opt)
+
+        # We use a fresh RNG with the SAME seed to ensure determinism
+        for _ in range(ticks_to_run):
+            kernel_ref.tick_once()
+
+        final_state_ref = kernel_ref._state
+        fingerprint_ref = StateFingerprinter.get_fingerprint(final_state_ref)
+
+        # 3. Compare
+        print(f"Optimized Hash: {fingerprint_opt['state_hash']}")
+        print(f"Reference Hash: {fingerprint_ref['state_hash']}")
+
+        # If hashes differ, we need to find out why
+        if fingerprint_opt['state_hash'] != fingerprint_ref['state_hash']:
+            # Check some basic fields first
+            assert final_state_opt.tick == final_state_ref.tick
+            assert len(final_state_opt.entities) == len(final_state_ref.entities)
+
+            # Check entities one by one
+            for eid in sorted(final_state_opt.entities.keys()):
+                e_opt = final_state_opt.entities[eid]
+                e_ref = final_state_ref.entities[eid]
+
+                if e_opt.navigation.position != e_ref.navigation.position:
+                    pytest.fail(f"Entity {eid} position mismatch: {e_opt.navigation.position} vs {e_ref.navigation.position}")
+
+                if e_opt.strategic.current_project_id != e_ref.strategic.current_project_id:
+                    pytest.fail(f"Entity {eid} project mismatch: {e_opt.strategic.current_project_id} vs {e_ref.strategic.current_project_id}")
+
+        assert fingerprint_opt['state_hash'] == fingerprint_ref['state_hash'], "Optimized vs Full Scan parity failed!"
+    finally:
+        kernel_opt.shutdown()
+        kernel_ref.shutdown()

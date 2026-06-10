@@ -49,41 +49,8 @@ def test_transaction_trace_determinism():
         
         rng = DeterministicRNG(42)
         kernel = Kernel(profile, state, rng, flags={"audit_mode": True})
-        
-        # Manually inject a failing intent (Harvesting while full)
-        intent = ResourceTransferIntent(
-            source_id="node_99",
-            source_kind="NODE",
-            items_add=[ItemStack(item_id="iron", quantity=1)],
-            transfer_kind="HARVEST"
-        )
-        
-        from src.core.worker_protocol import WorkerResult, ResultStatus
-        from src.core.updates import StateUpdate, EntityUpdate
-        from src.core.work import WorkClass
-        
-        res = WorkerResult(
-            source_packet_id="p1",
-            work_id="w1",
-            entity_id=1,
-            work_class=WorkClass.CRITICAL,
-            status=ResultStatus.SUCCESS,
-            update=EntityUpdate(entity_id=1, resource_transfers=[intent])
-        )
-        
-        # Manually run the resolution phase with this result
-        kernel._final_results = [res]
-        kernel._phase_resolution()
-        kernel._phase_advancement()
-        
-        # Check if trace contains the failure
-        trace = kernel._state.transaction_trace
-        assert len(trace) > 0, "No transaction trace recorded"
-        # In V2, inventory limit is strictly enforced in _resolve_resource_transactions
-        assert any("FAIL" in t and "Entity 1" in t and "INVENTORY_FULL" in t for t in trace), f"Rejection not found in trace: {trace}"
-        
-        # 2. Replay Verification
-        # Run another kernel with same seed/state and verify trace is bit-identical
+
+        # 2. Replay Verification kernel is created here so both are shut down together
         state2 = AuthoritativeState(
             tick=1,
             seed=42,
@@ -92,8 +59,45 @@ def test_transaction_trace_determinism():
         )
         rng2 = DeterministicRNG(42)
         kernel2 = Kernel(profile, state2, rng2, flags={"audit_mode": True})
-        kernel2._final_results = [res]
-        kernel2._phase_resolution()
-        kernel2._phase_advancement()
-        
-        assert kernel2._state.transaction_trace == kernel._state.transaction_trace, "Transaction traces differ across same-seed runs"
+
+        try:
+            # Manually inject a failing intent (Harvesting while full)
+            intent = ResourceTransferIntent(
+                source_id="node_99",
+                source_kind="NODE",
+                items_add=[ItemStack(item_id="iron", quantity=1)],
+                transfer_kind="HARVEST"
+            )
+
+            from src.core.worker_protocol import WorkerResult, ResultStatus
+            from src.core.updates import StateUpdate, EntityUpdate
+            from src.core.work import WorkClass
+
+            res = WorkerResult(
+                source_packet_id="p1",
+                work_id="w1",
+                entity_id=1,
+                work_class=WorkClass.CRITICAL,
+                status=ResultStatus.SUCCESS,
+                update=EntityUpdate(entity_id=1, resource_transfers=[intent])
+            )
+
+            # Manually run the resolution phase with this result
+            kernel._final_results = [res]
+            kernel._phase_resolution()
+            kernel._phase_advancement()
+
+            # Check if trace contains the failure
+            trace = kernel._state.transaction_trace
+            assert len(trace) > 0, "No transaction trace recorded"
+            # In V2, inventory limit is strictly enforced in _resolve_resource_transactions
+            assert any("FAIL" in t and "Entity 1" in t and "INVENTORY_FULL" in t for t in trace), f"Rejection not found in trace: {trace}"
+
+            kernel2._final_results = [res]
+            kernel2._phase_resolution()
+            kernel2._phase_advancement()
+
+            assert kernel2._state.transaction_trace == kernel._state.transaction_trace, "Transaction traces differ across same-seed runs"
+        finally:
+            kernel.shutdown()
+            kernel2.shutdown()

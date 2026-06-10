@@ -103,3 +103,25 @@ def pytest_collection_modifyitems(config, items):
         # We raise a UsageError during collection to stop the run early
         # and provide a clear list of all non-compliant tests.
         raise pytest.UsageError("\n" + "\n".join(errors))
+
+
+@pytest.fixture(scope="session", autouse=True)
+def _observability_worker_thread_sentinel():
+    """Session-scoped sentinel that fails the suite if QueueDrainWorker threads accumulate.
+
+    Counts active drain-worker threads at session start and end. Fails only if the
+    count grew — pre-existing workers (before > 0) are tolerated so isolated runs
+    against a warm process are not penalised.
+    """
+    from tests.tools.memory_probe import count_drain_workers
+    before = count_drain_workers()
+    yield
+    after = count_drain_workers()
+    leaked = after - before
+    if leaked > 0:
+        pytest.fail(
+            f"QueueDrainWorker thread leak detected: {leaked} thread(s) remained after test session "
+            f"(before={before}, after={after}). "
+            "A test created a QueueDrainWorker without calling shutdown(). "
+            "Check tests that create Kernel or EventRecorder instances."
+        )

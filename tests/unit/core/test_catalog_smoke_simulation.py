@@ -93,13 +93,15 @@ def test_catalog_mode_smoke_simulation():
     # 3. Instantiate kernel and execute tick loop
     profile = get_test_profile()
     rng = DeterministicRNG(state.seed)
-    
+
     kernel = Kernel(profile, state, rng, flags={"audit_mode": True})
-    
-    # Run 5 ticks and assert progress
-    for _ in range(5):
-        kernel.tick_once()
-        
-    assert kernel.state.tick == 5
-    # Confirm entities still exist and simulator ticks proceeded cleanly
-    assert len(kernel.state.entities) == 3
+    try:
+        # Run 5 ticks and assert progress
+        for _ in range(5):
+            kernel.tick_once()
+
+        assert kernel.state.tick == 5
+        # Confirm entities still exist and simulator ticks proceeded cleanly
+        assert len(kernel.state.entities) == 3
+    finally:
+        kernel.shutdown()

@@ -112,6 +112,9 @@ class QueueDrainWorker:
         self._thread = threading.Thread(target=self._run, daemon=True, name="observability-drain-worker")
         self._thread.start()
 
+    def is_alive(self) -> bool:
+        return self._thread is not None and self._thread.is_alive()
+
     def stop(self) -> None:
         self.running = False
         if self._thread:
@@ -146,6 +149,10 @@ class QueueDrainWorker:
 _global_queue: Optional[BoundedObservabilityQueue] = None
 _queue_lock = threading.Lock()
 
+_global_worker: Optional[QueueDrainWorker] = None
+_global_worker_lock = threading.Lock()
+
+
 def get_observability_queue() -> BoundedObservabilityQueue:
     global _global_queue
     with _queue_lock:
@@ -153,3 +160,23 @@ def get_observability_queue() -> BoundedObservabilityQueue:
             max_size = ObservabilityConfig.get_max_queue_size()
             _global_queue = BoundedObservabilityQueue(max_size=max_size)
         return _global_queue
+
+
+def get_or_start_global_worker(queue: BoundedObservabilityQueue) -> QueueDrainWorker:
+    """Return the active global drain worker, starting a new one if none is alive.
+
+    Double-checked: the lock is held for the full check-and-start sequence so
+    concurrent callers cannot each observe None and each start a worker.
+    """
+    global _global_worker
+    with _global_worker_lock:
+        if _global_worker is None or not _global_worker.is_alive():
+            worker = QueueDrainWorker(queue=queue)
+            worker.start()
+            _global_worker = worker
+        return _global_worker
+
+
+def get_active_global_worker_count() -> int:
+    """Return 1 if the global drain worker is alive, 0 otherwise."""
+    return 1 if (_global_worker is not None and _global_worker.is_alive()) else 0

@@ -38,7 +38,9 @@ def kernel(base_state):
         max_tick_budget_ms=100
     )
     rng = DeterministicRNG(base_seed=42)
-    return Kernel(profile, base_state, rng)
+    k = Kernel(profile, base_state, rng)
+    yield k
+    k.shutdown()
 
 def test_law_of_necessity_blocker_generation(kernel):
     """Verify that crafting failures produce correct blockers."""

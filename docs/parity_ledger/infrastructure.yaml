@@ -1833,3 +1833,13 @@
   test_path: tests/unit/content/test_adapter_heuristic_reporting.py
   divergence_note: null
   support_boundary: null
+- id: INFRA-179
+  text: Only one QueueDrainWorker drains the global observability queue at a time.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: "src/observability/queue.py::get_or_start_global_worker"
+  proof_type: null
+  test_path: tests/unit/test_queue_worker_singleton.py
+  divergence_note: ""
+  support_boundary: null

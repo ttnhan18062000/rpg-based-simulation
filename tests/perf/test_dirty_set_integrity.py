@@ -16,7 +16,9 @@ def base_state():
 @pytest.fixture
 def kernel_with_audit(base_state):
     rng = DeterministicRNG(42)
-    return Kernel(SimulationProfile, base_state, rng, flags={"audit_dirty_set": True})
+    k = Kernel(SimulationProfile, base_state, rng, flags={"audit_dirty_set": True})
+    yield k
+    k.shutdown()
 
 def add_entity(state, entity):
     new_ents = dict(state.entities)

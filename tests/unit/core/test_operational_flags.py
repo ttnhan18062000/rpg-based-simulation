@@ -22,16 +22,19 @@ def test_safe_operational_flags_accepted(tmp_path):
         max_tick_budget_ms=10.0
     )
     state = AuthoritativeState(tick=0, seed=42)
-    
+
     # Flags that are explicitly allowed/safe
     safe_flags = {
         "FORCE_REPLAY_OFF": True,
         "MINIMAL_DIAGNOSTICS": True
     }
-    
+
     # Should not raise
     kernel = Kernel(profile=profile, state=state, rng=MagicMock(), flags=safe_flags)
-    assert kernel._profile.name == "SAFE_FLAGS"
+    try:
+        assert kernel._profile.name == "SAFE_FLAGS"
+    finally:
+        kernel.shutdown()
 
 
 def test_unsafe_flags_rejected():
@@ -52,7 +55,7 @@ def test_flags_cannot_alter_authoritative_semantics():
     """
     from src.engine.checkpoint import CanonicalStateHasher
     from src.platform.rng import DeterministicRNG
-    
+
     profile = RuntimeProfile(
         name="TEST",
         hardware_class=HardwareClass.CLASS_B,
@@ -66,17 +69,19 @@ def test_flags_cannot_alter_authoritative_semantics():
     )
     state = AuthoritativeState(tick=0, seed=42)
     rng = MagicMock(spec=DeterministicRNG)
-    
-    # Run with flag A
+
     k1 = Kernel(profile=profile, state=state, rng=rng, flags={"FLAG_A": True})
-    k1.tick_once()
-    hash_a = CanonicalStateHasher.get_hash(k1.state)
-    
-    # Run with flag B
     k2 = Kernel(profile=profile, state=state, rng=rng, flags={"FLAG_B": True})
-    k2.tick_once()
-    hash_b = CanonicalStateHasher.get_hash(k2.state)
-    
-    # Authoritative outcome must be identical
-    assert hash_a == hash_b
-    assert k1.state.tick == k2.state.tick
+    try:
+        k1.tick_once()
+        hash_a = CanonicalStateHasher.get_hash(k1.state)
+
+        k2.tick_once()
+        hash_b = CanonicalStateHasher.get_hash(k2.state)
+
+        # Authoritative outcome must be identical
+        assert hash_a == hash_b
+        assert k1.state.tick == k2.state.tick
+    finally:
+        k1.shutdown()
+        k2.shutdown()

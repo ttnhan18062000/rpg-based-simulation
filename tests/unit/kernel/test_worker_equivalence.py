@@ -29,13 +29,15 @@ def dual_kernel_setup(base_profile):
     state1 = AuthoritativeState(tick=0, seed=42)
     rng1 = DeterministicRNG(42)
     k_local = Kernel(profile=base_profile.model_copy(update={"max_worker_count": 0}), state=state1, rng=rng1)
-    
+
     # Kernel 2: Concurrent Mode (4 workers)
     state2 = AuthoritativeState(tick=0, seed=42)
     rng2 = DeterministicRNG(42)
     k_concurrent = Kernel(profile=base_profile, state=state2, rng=rng2)
-    
-    return k_local, k_concurrent
+
+    yield k_local, k_concurrent
+    k_local.shutdown()
+    k_concurrent.shutdown()
 
 def test_authoritative_equivalence(dual_kernel_setup):
     """M8 Law: Local and Concurrent execution produce identical authoritative hashes."""
@@ -63,20 +65,24 @@ def test_authoritative_equivalence(dual_kernel_setup):
 def test_zero_worker_fallback_equivalence(base_profile):
     """M8 Law: max_workers=0 behaves exactly like local execution."""
     profile_zero = base_profile.model_copy(update={"max_worker_count": 0})
-    
+
     state1 = AuthoritativeState(tick=0, seed=42)
     rng1 = DeterministicRNG(42)
     k1 = Kernel(profile=profile_zero, state=state1, rng=rng1)
-    
+
     state2 = AuthoritativeState(tick=0, seed=42)
     rng2 = DeterministicRNG(42)
     k2 = Kernel(profile=profile_zero, state=state2, rng=rng2)
-    
-    # Add an entity to both
-    ent = V2EntityBuilder(1).location(0.0, 0.0).lifecycle(active=True).build()
-    k1._state = replace(k1._state, entities={**k1._state.entities, 1: ent})
-    k2._state = replace(k2._state, entities={**k2._state.entities, 1: ent})
-    
-    k1.tick_once()
-    k2.tick_once()
-    assert CanonicalStateHasher.get_hash(k1._state) == CanonicalStateHasher.get_hash(k2._state)
+
+    try:
+        # Add an entity to both
+        ent = V2EntityBuilder(1).location(0.0, 0.0).lifecycle(active=True).build()
+        k1._state = replace(k1._state, entities={**k1._state.entities, 1: ent})
+        k2._state = replace(k2._state, entities={**k2._state.entities, 1: ent})
+
+        k1.tick_once()
+        k2.tick_once()
+        assert CanonicalStateHasher.get_hash(k1._state) == CanonicalStateHasher.get_hash(k2._state)
+    finally:
+        k1.shutdown()
+        k2.shutdown()

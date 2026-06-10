@@ -68,16 +68,19 @@ def test_recorded_tick_compute_includes_all_phases(base_state, profile):
     rng = DeterministicRNG(42)
     # We'll check the kernel directly
     kernel = Kernel(profile, base_state, rng)
-    kernel.tick_once()
-    
-    history = kernel.status.get_recent_history(1)
-    tick_compute = history[0].tick_compute_ms
-    phase_sum = sum(history[0].phase_costs_ms.values())
-    
-    # tick_compute should be very close to the sum of phases
-    assert tick_compute >= phase_sum
-    # And it should include 'persistence'
-    assert "persistence" in history[0].phase_costs_ms
+    try:
+        kernel.tick_once()
+
+        history = kernel.status.get_recent_history(1)
+        tick_compute = history[0].tick_compute_ms
+        phase_sum = sum(history[0].phase_costs_ms.values())
+
+        # tick_compute should be very close to the sum of phases
+        assert tick_compute >= phase_sum
+        # And it should include 'persistence'
+        assert "persistence" in history[0].phase_costs_ms
+    finally:
+        kernel.shutdown()
 
 def test_benchmark_schema_contains_compute_and_wall_clock_metrics(base_state, profile):
     """
