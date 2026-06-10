@@ -635,11 +635,19 @@ def seed_phase1_content(
         )
 
     else:
+        from src.core.modes import FallbackRestrictedError, _FORBIDDEN_FALLBACK_MODES
+        if mode.value in _FORBIDDEN_FALLBACK_MODES:
+            raise FallbackRestrictedError(mode)
         import logging
         logging.getLogger(__name__).warning("Falling back to legacy hardcoded Phase 1 content seeding")
         fallback_usage_reported = True
-        # FALLBACK: Seeding with legacy hardcoded Phase 1 content
-        # 1. Items
+        # LEGACY_FALLBACK: Seeding with legacy hardcoded Phase 1 content.
+        # All families except enemies are QUARANTINED: catalog (data/content/) is authoritative.
+        # These records are retained for LEGACY_FALLBACK debugging only (explicit opt-in mode).
+        # DO NOT add new records here — add to the appropriate catalog YAML file instead.
+        # See migration_map.yaml for per-record status.
+
+        # 1. Items — QUARANTINED (catalog world/items.yaml covers all IDs)
         items = {
             "rusted_sword": ItemDef("rusted_sword", ("weapon", "melee"), "COMMON", 10, "weapon", ("warrior",)),
             "wooden_staff": ItemDef("wooden_staff", ("weapon", "magic"), "COMMON", 10, "weapon", ("mage",)),
@@ -651,7 +659,6 @@ def seed_phase1_content(
             "small_potion": ItemDef("small_potion", ("consumable", "healing"), "COMMON", 15, "potion"),
             "travel_ration": ItemDef("travel_ration", ("consumable", "food"), "COMMON", 5, "food"),
             "repair_kit": ItemDef("repair_kit", ("tool",), "COMMON", 20, "tool"),
-            # Base Resources
             "wood": ItemDef("wood", ("material",), "COMMON", 2, "material"),
             "herb": ItemDef("herb", ("material",), "COMMON", 3, "material"),
             "iron_ore": ItemDef("iron_ore", ("material",), "UNCOMMON", 12, "material"),
@@ -665,7 +672,7 @@ def seed_phase1_content(
         }
         ItemRegistry.bootstrap(items)
 
-        # 2. Resources
+        # 2. Resources — QUARANTINED (catalog world/resources.yaml covers all node_* IDs)
         resources = {
             "node_wood": ResourceDef("node_wood", "wood", ("near_forest",), None, 1),
             "node_herb": ResourceDef("node_herb", "herb", ("near_forest", "moon_cave"), None, 1),
@@ -675,7 +682,8 @@ def seed_phase1_content(
         }
         ResourceRegistry.bootstrap(resources)
 
-        # 3. Enemies
+        # 3. Enemies — NOT QUARANTINED: "rat" has no catalog equivalent
+        # (see migration_map.yaml: rat → fallback_only; all others → compat_projected)
         enemies = {
             "rat": EnemyDef("rat", "EASY", 15, 4, 1, {"beast_fang": 0.2}, ("hometown", "near_forest")),
             "wolf": EnemyDef("wolf", "MEDIUM", 45, 12, 3, {"wolf_pelt": 0.6, "beast_fang": 0.3}, ("near_forest", "wolf_den")),
@@ -687,7 +695,7 @@ def seed_phase1_content(
         }
         EnemyRegistry.bootstrap(enemies)
 
-        # 4. Recipes
+        # 4. Recipes — QUARANTINED (catalog world/recipes.yaml covers iron_sword, hunter_blade, small_potion)
         recipes = {
             "iron_sword": RecipeDef("iron_sword", {"iron_ore": 2, "wood": 1}, "blacksmith", 40, "iron_sword"),
             "hunter_blade": RecipeDef("hunter_blade", {"iron_ore": 2, "beast_fang": 1, "moon_resin": 1}, "blacksmith", 50, "hunter_blade"),
@@ -695,7 +703,8 @@ def seed_phase1_content(
         }
         RecipeRegistry.bootstrap(recipes)
 
-        # 5. Services
+        # 5. Services — QUARANTINED (catalog world/services.yaml + adapter prepopulates these IDs)
+        # Legacy IDs (shop_hometown, etc.) are hardwired in information.py; adapter covers them in catalog mode.
         services = {
             "shop_hometown": ServiceDef("shop_hometown", "hometown", ("buy", "sell")),
             "blacksmith_hometown": ServiceDef("blacksmith_hometown", "hometown", ("craft", "repair")),
@@ -705,7 +714,7 @@ def seed_phase1_content(
         }
         ServiceRegistry.bootstrap(services)
 
-        # 6. Regions
+        # 6. Regions — QUARANTINED (catalog world/runtime_regions.yaml covers all 7 IDs)
         regions = {
             "hometown": RegionDef("hometown", "Hometown Center", ("safe",), 0),
             "near_forest": RegionDef("near_forest", "Near Forest Wilderness", ("wild",), 1),
@@ -725,5 +734,7 @@ def seed_phase1_content(
         return None
 
 
-# Self-seed on import for seamless execution compatibility
-seed_phase1_content(mode=RuntimeContentMode.CATALOG_WITH_COMPATIBILITY)
+# Self-seed on import for seamless execution compatibility.
+# Uses LEGACY_FALLBACK so this import-time seed is always allowed to fall back
+# if data/content is not present (e.g., stripped environments).
+seed_phase1_content(mode=RuntimeContentMode.LEGACY_FALLBACK)

@@ -4,6 +4,8 @@ from src.core.state import AuthoritativeState, RegionState, EntityState, Identit
 from src.core.updates import StateUpdate
 from src.core.enums import Faction
 from src.world.influence import FactionInfluenceService
+from src.content.repository import CatalogRepository
+from src.content_semantics.faction import configure_faction_semantics_service, reset_faction_semantics_service
 
 def test_influence_shift_on_death():
     from src.core.builder import V2EntityBuilder
@@ -72,3 +74,68 @@ def test_conquest_and_liberation_thresholds():
     update_lib = FactionInfluenceService.process_influence_shift(state_conquered, [monster])
     
     assert update_lib.world_updates["forest"].owner_faction_id_set == -1 # Sentinel for None
+
+
+@pytest.fixture(autouse=False)
+def catalog_semantics():
+    repo = CatalogRepository("data/content")
+    repo.load_all()
+    configure_faction_semantics_service(repo)
+    yield repo
+    reset_faction_semantics_service()
+
+
+def test_clean_catalog_entity_hero_triggers_influence_shift(catalog_semantics):
+    """Clean entity with faction_id='hero_guild' in properties uses is_protector() path."""
+    from src.core.builder import V2EntityBuilder
+    region = RegionState(id="forest", name="Forest", bounds=(0, 0, 10, 10), influence=0.0)
+    state = AuthoritativeState(tick=1, seed=1, regions={"forest": region})
+
+    hero = (V2EntityBuilder(10)
+        .kind("hero")
+        .location(5.0, 5.0)
+        .properties({"faction_id": "hero_guild"})
+        .build())
+    update = FactionInfluenceService.process_influence_shift(state, [hero])
+
+    assert "forest" in update.world_updates
+    assert update.world_updates["forest"].influence_delta == -5.0
+
+
+def test_clean_catalog_entity_invader_triggers_influence_shift(catalog_semantics):
+    """Clean entity with faction_id='goblin_warband' (invader bucket) uses is_invader() path."""
+    from src.core.builder import V2EntityBuilder
+    region = RegionState(id="forest", name="Forest", bounds=(0, 0, 10, 10), influence=0.0)
+    state = AuthoritativeState(tick=1, seed=1, regions={"forest": region})
+
+    goblin = (V2EntityBuilder(11)
+        .kind("goblin")
+        .location(5.0, 5.0)
+        .properties({"faction_id": "goblin_warband"})
+        .build())
+    update = FactionInfluenceService.process_influence_shift(state, [goblin])
+
+    assert "forest" in update.world_updates
+    assert update.world_updates["forest"].influence_delta == 5.0
+
+
+def test_mixed_legacy_and_clean_entities_coexist(catalog_semantics):
+    """Legacy enum hero + clean catalog goblin both contribute correct influence deltas."""
+    from src.core.builder import V2EntityBuilder
+    region = RegionState(id="forest", name="Forest", bounds=(0, 0, 10, 10), influence=0.0)
+    state = AuthoritativeState(tick=1, seed=1, regions={"forest": region})
+
+    legacy_hero = (V2EntityBuilder(20)
+        .kind("hero")
+        .location(5.0, 5.0)
+        .identity(faction=Faction.HERO_GUILD)
+        .build())
+    clean_goblin = (V2EntityBuilder(21)
+        .kind("goblin")
+        .location(5.0, 5.0)
+        .properties({"faction_id": "goblin_warband"})
+        .build())
+
+    update = FactionInfluenceService.process_influence_shift(state, [legacy_hero, clean_goblin])
+    # Hero: -5.0, Goblin: +5.0 → net 0.0
+    assert update.world_updates["forest"].influence_delta == 0.0

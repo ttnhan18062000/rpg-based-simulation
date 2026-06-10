@@ -62,3 +62,12 @@
   initial_conditions:
     grove_threat_level: "low"
     spirit_activity: "dormant"
+
+# STATE: ADDITIONAL
+- id: "swamp_border_incursion"
+  world_composition: "swamp_border_world"
+  focus_modules: ["sunken_swamp_border"]
+  perspective: "hero_guild_perspective"
+  initial_conditions:
+    swamp_tribe_pressure: "medium"
+    frontier_expansion_threat: "low"

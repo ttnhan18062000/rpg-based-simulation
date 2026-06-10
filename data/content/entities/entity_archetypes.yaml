@@ -265,3 +265,45 @@
   inventory_profile: "boss_hoard_token"
   traits: ["flying", "fire_aligned", "leader", "magic_sensitive"]
   themes: ["dragon", "volcanic"]
+
+# STATE: ADDITIONAL
+- id: "lizardfolk_scout"
+  display_name: "Lizardfolk Scout"
+  race: "lizardfolk"
+  faction: "swamp_tribe"
+  role: "scout"
+  stat_profile: "bandit_scout_base"
+  combat_profile: "predator_melee"
+  cognition_profile: "instinctive_animal"
+  drive_profile: "territorial_predator"
+  inventory_profile: "empty_animal_inventory"
+  traits: ["amphibious", "territorial"]
+  themes: ["swamp"]
+
+# STATE: ADDITIONAL
+- id: "lizardfolk_shaman"
+  display_name: "Lizardfolk Shaman"
+  race: "lizardfolk"
+  faction: "swamp_tribe"
+  role: "shaman"
+  stat_profile: "apprentice_mage_base"
+  combat_profile: "arcane_bolt"
+  cognition_profile: "practical_humanoid"
+  drive_profile: "ritual_fixated"
+  inventory_profile: "mage_satchel"
+  traits: ["amphibious", "magic_sensitive", "leader"]
+  themes: ["swamp"]
+
+# STATE: ADDITIONAL
+- id: "swamp_troll"
+  display_name: "Swamp Troll"
+  race: "troll"
+  faction: "wild_beast_pack"
+  role: "brute"
+  stat_profile: "troll_brute_base"
+  combat_profile: "brute_crush"
+  cognition_profile: "instinctive_animal"
+  drive_profile: "territorial_predator"
+  inventory_profile: "empty_animal_inventory"
+  traits: ["large_body", "regenerating", "territorial"]
+  themes: ["swamp"]

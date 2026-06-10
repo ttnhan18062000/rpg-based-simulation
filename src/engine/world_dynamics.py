@@ -60,21 +60,26 @@ class WorldDynamicsSystem:
                         )
 
         # 2.2 Ownership & Calamity Progression
+        from src.world.influence import _region_owner_faction_id_str
+        from src.content_semantics.faction import get_faction_semantics_service as _get_sem
+        _sem = _get_sem()
         for r_id, region in state.regions.items():
             w_upd = update.world_updates.get(r_id)
-            
+
             # Apply proposed trauma/influence if any
             current_trauma = region.trauma_score + (w_upd.trauma_delta if w_upd else 0.0)
             current_influence = region.influence + (w_upd.influence_delta if w_upd else 0.0)
-            
+
             world_upd = w_upd or WorldUpdate(region_id=r_id)
             changed = False
 
+            owner_fid = _region_owner_faction_id_str(region.owner_faction_id)
+
             # Ownership Law: Threshold of 100/-100 for control
-            if current_influence >= 100.0 and region.owner_faction_id != Faction.HERO_GUILD:
+            if current_influence >= 100.0 and (owner_fid is None or not _sem.is_protector(owner_fid)):
                 world_upd = replace(world_upd, owner_faction_id_set=Faction.HERO_GUILD)
                 changed = True
-            elif current_influence <= -100.0 and region.owner_faction_id != Faction.MONSTER_HORDE:
+            elif current_influence <= -100.0 and (owner_fid is None or not _sem.is_invader(owner_fid)):
                 world_upd = replace(world_upd, owner_faction_id_set=Faction.MONSTER_HORDE)
                 changed = True
             

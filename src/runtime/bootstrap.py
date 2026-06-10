@@ -14,7 +14,7 @@ import os
 from dataclasses import dataclass
 from typing import Any, Optional, Tuple
 
-from src.core.modes import RuntimeContentMode
+from src.core.modes import FallbackRestrictedError, RuntimeContentMode
 from src.core.registries import (
     ArchetypeToEnemyRegistryAdapter,
     CatalogToItemRegistryAdapter,
@@ -35,13 +35,8 @@ _log = logging.getLogger(__name__)
 _AUTO = object()
 
 
-class HardcodedFallbackError(RuntimeError):
-    """Raised when a mode that forbids hardcoded fallback encounters a missing catalog."""
-
-    def __init__(self, mode: RuntimeContentMode, detail: str = "") -> None:
-        self.mode = mode
-        suffix = f" {detail}" if detail else ""
-        super().__init__(f"[mode={mode.value}] Hardcoded fallback is not permitted.{suffix}")
+class HardcodedFallbackError(FallbackRestrictedError):
+    """Backward-compatible alias for FallbackRestrictedError."""
 
 
 @dataclass(frozen=True)
@@ -90,10 +85,7 @@ def bootstrap_registries(
         RuntimeContentMode.CATALOG_STRICT,
         RuntimeContentMode.CATALOG_WITH_COMPATIBILITY,
     ):
-        raise HardcodedFallbackError(
-            mode,
-            "Catalog not found; hardcoded fallback is not permitted in this mode.",
-        )
+        raise HardcodedFallbackError(mode)
 
     return _bootstrap_from_hardcoded(mode)
 

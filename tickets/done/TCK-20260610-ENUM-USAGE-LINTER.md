@@ -4,7 +4,7 @@
 Add architecture test enforcing enum usage boundaries with allowlist
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard

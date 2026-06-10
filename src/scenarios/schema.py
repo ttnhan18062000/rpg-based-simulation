@@ -24,6 +24,9 @@ class SimulationScenarioDefinition(BaseModel):
     Scenarios select world composition, perspective, focus modules, and initial
     conditions. They do not define diagnostics, metrics, scorecards, telemetry,
     or post-run analysis.
+
+    Optionally, a scenario may declare a `template_id` to opt into template-based
+    structural validation (allowed initial conditions, required features, etc.).
     """
 
     model_config = ConfigDict(frozen=True, extra="forbid")
@@ -35,6 +38,7 @@ class SimulationScenarioDefinition(BaseModel):
     focus_modules: List[str] = Field(default_factory=list)
     initial_conditions: Dict[str, Any] = Field(default_factory=dict)
     setup_tags: List[str] = Field(default_factory=list)
+    template_id: Optional[str] = None
 
     @model_validator(mode="after")
     def validate_initial_condition_keys(self) -> SimulationScenarioDefinition:
@@ -44,4 +48,17 @@ class SimulationScenarioDefinition(BaseModel):
                 f"Unknown initial_condition categories: {sorted(unknown)}. "
                 f"Allowed: {sorted(ALLOWED_INITIAL_CONDITION_CATEGORIES)}"
             )
+        return self
+
+    @model_validator(mode="after")
+    def validate_template_constraints(self) -> SimulationScenarioDefinition:
+        if self.template_id is None:
+            return self
+        from src.scenarios.templates import get_scenario_template_registry
+        registry = get_scenario_template_registry()
+        error = registry.validate_scenario(
+            self.template_id, frozenset(self.initial_conditions.keys())
+        )
+        if error:
+            raise ValueError(f"[scenario={self.id!r}] Template validation failed: {error}")
         return self

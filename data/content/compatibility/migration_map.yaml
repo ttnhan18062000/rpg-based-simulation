@@ -8,6 +8,8 @@
 # Status values:
 #   catalog_authoritative  - catalog record is the source of truth; legacy ID is a compat alias
 #   compat_projected       - legacy ID has a known catalog equivalent; compatibility projection active
+#   quarantined            - catalog covers this ID; record retained in LEGACY_FALLBACK block for
+#                            debugging only (explicit opt-in mode); no new consumers allowed
 #   fallback_only          - no catalog equivalent; legacy hardcoded fallback still required
 #   deprecated             - scheduled for removal; no new consumers should reference this
 #   removed                - already removed; entry retained for historical traceability
@@ -30,45 +32,45 @@ entries:
     catalog_family: "world.resources"
     catalog_id: "wood"
     adapter: "CatalogToResourceRegistryAdapter"
-    status: "compat_projected"
-    fallback_allowed: true
-    notes: "Hardcoded in registries.py LEGACY_FALLBACK path; catalog wood resource is authoritative."
+    status: "quarantined"
+    fallback_allowed: false
+    notes: "Quarantined TCK-20260610-FALLBACK-RECORDS-REMOVAL. Catalog wood_node/wood resources are authoritative. Retained in LEGACY_FALLBACK block for debugging only."
 
   - legacy_id: "node_herb"
     legacy_family: "resource"
     catalog_family: "world.resources"
     catalog_id: "herb"
     adapter: "CatalogToResourceRegistryAdapter"
-    status: "compat_projected"
-    fallback_allowed: true
-    notes: "Hardcoded in registries.py LEGACY_FALLBACK path."
+    status: "quarantined"
+    fallback_allowed: false
+    notes: "Quarantined TCK-20260610-FALLBACK-RECORDS-REMOVAL."
 
   - legacy_id: "node_iron"
     legacy_family: "resource"
     catalog_family: "world.resources"
     catalog_id: "iron_ore"
     adapter: "CatalogToResourceRegistryAdapter"
-    status: "compat_projected"
-    fallback_allowed: true
-    notes: "Hardcoded in registries.py LEGACY_FALLBACK path."
+    status: "quarantined"
+    fallback_allowed: false
+    notes: "Quarantined TCK-20260610-FALLBACK-RECORDS-REMOVAL."
 
   - legacy_id: "node_resin"
     legacy_family: "resource"
     catalog_family: "world.resources"
     catalog_id: "moon_resin"
     adapter: "CatalogToResourceRegistryAdapter"
-    status: "compat_projected"
-    fallback_allowed: true
-    notes: "Hardcoded in registries.py LEGACY_FALLBACK path."
+    status: "quarantined"
+    fallback_allowed: false
+    notes: "Quarantined TCK-20260610-FALLBACK-RECORDS-REMOVAL."
 
   - legacy_id: "node_flower"
     legacy_family: "resource"
     catalog_family: "world.resources"
     catalog_id: "healing_flower"
     adapter: "CatalogToResourceRegistryAdapter"
-    status: "compat_projected"
-    fallback_allowed: true
-    notes: "Hardcoded in registries.py LEGACY_FALLBACK path."
+    status: "quarantined"
+    fallback_allowed: false
+    notes: "Quarantined TCK-20260610-FALLBACK-RECORDS-REMOVAL."
 
   # ──────────────────────────────────────────────────────────────────────────
   # Recipes — craft_* prefix stripped for legacy_id in registry seeding
@@ -79,11 +81,29 @@ entries:
     catalog_family: "world.recipes"
     catalog_id: "craft_small_potion"
     adapter: "CatalogToRecipeRegistryAdapter"
-    status: "compat_projected"
-    fallback_allowed: true
+    status: "quarantined"
+    fallback_allowed: false
     notes: >
-      registries.py strips 'craft_' prefix; legacy callers use 'small_potion'
-      while catalog key is 'craft_small_potion'. No archetype currently consumes this.
+      Quarantined TCK-20260610-FALLBACK-RECORDS-REMOVAL. registries.py strips 'craft_' prefix;
+      catalog produces both 'craft_small_potion' and 'small_potion' keys. No archetype consumes this.
+
+  - legacy_id: "iron_sword"
+    legacy_family: "recipe"
+    catalog_family: "world.recipes"
+    catalog_id: "craft_iron_sword"
+    adapter: "CatalogToRecipeRegistryAdapter"
+    status: "quarantined"
+    fallback_allowed: false
+    notes: "Quarantined TCK-20260610-FALLBACK-RECORDS-REMOVAL. Catalog produces both prefixed and unprefixed IDs."
+
+  - legacy_id: "hunter_blade"
+    legacy_family: "recipe"
+    catalog_family: "world.recipes"
+    catalog_id: "craft_hunter_blade"
+    adapter: "CatalogToRecipeRegistryAdapter"
+    status: "quarantined"
+    fallback_allowed: false
+    notes: "Quarantined TCK-20260610-FALLBACK-RECORDS-REMOVAL."
 
   # ──────────────────────────────────────────────────────────────────────────
   # Regions — REGION_MIGRATION_MAP in worldassembly/resolver.py
@@ -99,6 +119,69 @@ entries:
     notes: >
       Renamed during world restructure. REGION_MIGRATION_MAP in resolver.py applies
       automatically during population recipe resolution. No fallback needed.
+
+  - legacy_id: "hometown"
+    legacy_family: "region"
+    catalog_family: "world.regions"
+    catalog_id: "hometown"
+    adapter: "CatalogToRegionRegistryAdapter"
+    status: "quarantined"
+    fallback_allowed: false
+    notes: "Quarantined TCK-20260610-FALLBACK-RECORDS-REMOVAL. Catalog runtime_regions.yaml is authoritative."
+
+  - legacy_id: "near_forest"
+    legacy_family: "region"
+    catalog_family: "world.regions"
+    catalog_id: "near_forest"
+    adapter: "CatalogToRegionRegistryAdapter"
+    status: "quarantined"
+    fallback_allowed: false
+    notes: "Quarantined TCK-20260610-FALLBACK-RECORDS-REMOVAL."
+
+  - legacy_id: "old_mine"
+    legacy_family: "region"
+    catalog_family: "world.regions"
+    catalog_id: "old_mine"
+    adapter: "CatalogToRegionRegistryAdapter"
+    status: "quarantined"
+    fallback_allowed: false
+    notes: "Quarantined TCK-20260610-FALLBACK-RECORDS-REMOVAL."
+
+  - legacy_id: "wolf_den"
+    legacy_family: "region"
+    catalog_family: "world.regions"
+    catalog_id: "wolf_den"
+    adapter: "CatalogToRegionRegistryAdapter"
+    status: "quarantined"
+    fallback_allowed: false
+    notes: "Quarantined TCK-20260610-FALLBACK-RECORDS-REMOVAL."
+
+  - legacy_id: "north_ruin"
+    legacy_family: "region"
+    catalog_family: "world.regions"
+    catalog_id: "north_ruin"
+    adapter: "CatalogToRegionRegistryAdapter"
+    status: "quarantined"
+    fallback_allowed: false
+    notes: "Quarantined TCK-20260610-FALLBACK-RECORDS-REMOVAL."
+
+  - legacy_id: "goblin_camp"
+    legacy_family: "region"
+    catalog_family: "world.regions"
+    catalog_id: "goblin_camp"
+    adapter: "CatalogToRegionRegistryAdapter"
+    status: "quarantined"
+    fallback_allowed: false
+    notes: "Quarantined TCK-20260610-FALLBACK-RECORDS-REMOVAL."
+
+  - legacy_id: "moon_cave"
+    legacy_family: "region"
+    catalog_family: "world.regions"
+    catalog_id: "moon_cave"
+    adapter: "CatalogToRegionRegistryAdapter"
+    status: "quarantined"
+    fallback_allowed: false
+    notes: "Quarantined TCK-20260610-FALLBACK-RECORDS-REMOVAL."
 
   # ──────────────────────────────────────────────────────────────────────────
   # Legacy enemies — compatibility projections from legacy_enemy_projection.yaml
@@ -157,6 +240,18 @@ entries:
     status: "compat_projected"
     fallback_allowed: false
     notes: "Projected to goblin_warlord archetype (boss-tier)."
+
+  - legacy_id: "rat"
+    legacy_family: "enemy"
+    catalog_family: "entities.entity_archetypes"
+    catalog_id: ""
+    adapter: "none"
+    status: "fallback_only"
+    fallback_allowed: true
+    notes: >
+      No catalog archetype equivalent. Referenced in src/cognition/capability_estimate.py:60.
+      Must remain in LEGACY_FALLBACK block until a rat archetype is added to the catalog.
+      Blocker for enemy family quarantine.
 
   # ──────────────────────────────────────────────────────────────────────────
   # Legacy roles — EntityRole int enum → string ID via _ROLE_COMPAT
@@ -341,3 +436,51 @@ entries:
     adapter: "CatalogToServiceRegistryAdapter"
     status: "catalog_authoritative"
     fallback_allowed: false
+
+  - legacy_id: "shop_hometown"
+    legacy_family: "service"
+    catalog_family: "world.services"
+    catalog_id: "general_store_service"
+    adapter: "CatalogToServiceRegistryAdapter"
+    status: "quarantined"
+    fallback_allowed: false
+    notes: >
+      Quarantined TCK-20260610-FALLBACK-RECORDS-REMOVAL. Legacy ID hardwired in
+      src/world/providers/information.py and tests. Adapter prepopulates this ID in catalog mode
+      (line 331 of registries.py); retained in LEGACY_FALLBACK block for debugging only.
+
+  - legacy_id: "blacksmith_hometown"
+    legacy_family: "service"
+    catalog_family: "world.services"
+    catalog_id: "blacksmith_service"
+    adapter: "CatalogToServiceRegistryAdapter"
+    status: "quarantined"
+    fallback_allowed: false
+    notes: "Quarantined TCK-20260610-FALLBACK-RECORDS-REMOVAL. Hardwired in information.py and tests."
+
+  - legacy_id: "guide_hometown"
+    legacy_family: "service"
+    catalog_family: "world.services"
+    catalog_id: "guide_service"
+    adapter: "CatalogToServiceRegistryAdapter"
+    status: "quarantined"
+    fallback_allowed: false
+    notes: "Quarantined TCK-20260610-FALLBACK-RECORDS-REMOVAL. Hardwired in information.py."
+
+  - legacy_id: "guild_hometown"
+    legacy_family: "service"
+    catalog_family: "world.services"
+    catalog_id: "guild_service"
+    adapter: "CatalogToServiceRegistryAdapter"
+    status: "quarantined"
+    fallback_allowed: false
+    notes: "Quarantined TCK-20260610-FALLBACK-RECORDS-REMOVAL. Hardwired in information.py."
+
+  - legacy_id: "inn_hometown"
+    legacy_family: "service"
+    catalog_family: "world.services"
+    catalog_id: "inn_service"
+    adapter: "CatalogToServiceRegistryAdapter"
+    status: "quarantined"
+    fallback_allowed: false
+    notes: "Quarantined TCK-20260610-FALLBACK-RECORDS-REMOVAL."

@@ -4,7 +4,7 @@
 Replace direct Faction/EntityRole enum checks in reward attribution and faction influence update
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -54,13 +54,16 @@ Phase 40.1 targets five systems for enum cleanup. Combat target classification (
 - `FactionSemanticsService.is_invader(faction_id)` returns True for MONSTER_HORDE bucket. Verify this is consistent with conquest semantics before changing.
 
 ## Implementation Notes
-<!-- Fill during implementation -->
+Added `_region_owner_faction_id_str()` helper to convert stored Optional[int] owner to faction_id string. Replaced direct `entity.identity.faction == Faction.HERO_GUILD/MONSTER_HORDE` checks with `get_faction_id_str(entity)` + `semantics.is_protector()/is_invader()`. Replaced `region.owner_faction_id == Faction.MONSTER_HORDE` liberation check with `is_invader(owner_fid)`. In `world_dynamics.py` ownership threshold logic, replaced enum comparisons with `_region_owner_faction_id_str()` + `_sem.is_protector()/is_invader()`. All `owner_faction_id_set` assignments remain as Faction enum values (data model type constraint, out of scope).
 
 ## Test Summary
-<!-- Fill after implementation -->
+10 tests pass: 5 influence tests (2 existing + 3 new), 5 world_dynamics tests (all existing).
+New tests: clean catalog hero → -5.0, clean catalog goblin_warband → +5.0, mixed legacy+clean → 0.0.
 
 ## Files Changed
-<!-- Fill after implementation -->
+- `src/world/influence.py` — added helper + replaced entity/region enum checks
+- `src/engine/world_dynamics.py` — replaced region owner enum comparisons in section 2.2
+- `tests/unit/world/test_influence.py` — added 3 new catalog path tests
 
 ## Completion Summary
-<!-- Fill after completion -->
+Replaced direct Faction enum comparisons in FactionInfluenceService and WorldDynamicsSystem with FactionSemanticsService.is_protector()/is_invader() via get_faction_id_str() for entities and _region_owner_faction_id_str() for region owners. Legacy enum entities continue to work via get_legacy_faction_bucket() fallback in FactionSemanticsService.

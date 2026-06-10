@@ -4,7 +4,7 @@
 Add scenario authoring templates with structural validation schema
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard

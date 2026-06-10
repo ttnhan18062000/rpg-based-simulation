@@ -90,3 +90,18 @@
   members:
     apprentice_mage: 4
   preferred_regions: ["moon_cave"]
+
+# STATE: ADDITIONAL
+- id: "swamp_tribe_patrol"
+  display_name: "Swamp Tribe Patrol"
+  members:
+    lizardfolk_scout: 3
+    lizardfolk_shaman: 1
+  preferred_regions: ["swamp_border_territory"]
+
+# STATE: ADDITIONAL
+- id: "swamp_ambush_party"
+  display_name: "Swamp Ambush Party"
+  members:
+    lizardfolk_scout: 4
+  preferred_regions: ["swamp_border_territory"]

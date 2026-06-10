@@ -28,6 +28,7 @@ VALID_STATUSES = frozenset({
     "catalog_authoritative",
     "compat_projected",
     "fallback_only",
+    "quarantined",
     "deprecated",
     "removed",
 })

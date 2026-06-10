@@ -47,3 +47,13 @@
     ally_groups: ["undead_remnants"]
     hostile_groups: ["town_council", "hero_guild", "forest_wardens"]
     ignored_groups: ["wild_beast_pack"]
+
+# STATE: ADDITIONAL
+- id: "swamp_tribe_perspective"
+  chosen_faction: "swamp_tribe"
+  default_focus: "territory_and_survival"
+  projected_labels:
+    ally_groups: ["swamp_tribe"]
+    neutral_groups: ["wild_beast_pack"]
+    contextual_intruder_groups: ["hero_guild", "town_council", "merchant_league"]
+    hostile_groups: []

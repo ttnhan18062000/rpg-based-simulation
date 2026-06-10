@@ -31,7 +31,8 @@ class WorldCompositionSpec(BaseModel):
     module_refs: List[ModuleRefSpec] = Field(default_factory=list, description="Modular components making up the composition")
     modules: Optional[List[str]] = Field(None, description="Shorthand list of module IDs")
     default_perspectives: List[str] = Field(default_factory=list, description="Default perspective IDs")
-    
+    provided_features: List[str] = Field(default_factory=list, description="Declarative feature tags this composition provides (e.g. ecology_module, trade_route, settlement). Used by ScenarioWorldFeatureValidator.")
+
     global_parameters: Dict[str, Any] = Field(default_factory=dict, description="Global configuration variables")
     generation_seed: int = Field(42, description="Seed for deterministic procedural resolution")
     validation_profile: str = Field("local_dev", description="Validation profile budget category (e.g. local_dev, ci)")
@@ -135,7 +136,8 @@ class NormalizedWorldComposition(BaseModel):
     catalog_refs: List[str] = Field(default_factory=list, description="Associated static catalog paths relative to data/content/")
     module_refs: List[ModuleRefSpec] = Field(default_factory=list, description="Modular components making up the composition")
     default_perspectives: List[str] = Field(default_factory=list, description="Default perspective IDs")
-    
+    provided_features: List[str] = Field(default_factory=list, description="Declarative feature tags this composition provides.")
+
     global_parameters: Dict[str, Any] = Field(default_factory=dict, description="Global configuration variables")
     generation_seed: int = Field(42, description="Seed for deterministic procedural resolution")
     validation_profile: str = Field("local_dev", description="Validation profile budget category (e.g. local_dev, ci)")
