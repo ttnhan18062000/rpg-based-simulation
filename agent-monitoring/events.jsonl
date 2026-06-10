@@ -94,3 +94,4 @@
 {"run_id":"TCK-20260610-ACTIVE-DATA-CONSUMER-REPAIR","seq":6,"phase":"Test","agent":"test-scoper","status":"ok","summary":"3/3 passed; expansion gate gate_04 confirmed passing","ts":"2026-06-10T03:47:54Z"}
 {"run_id":"TCK-20260610-ACTIVE-DATA-CONSUMER-REPAIR","seq":7,"phase":"Finalize","agent":"finalizer","status":"ok","summary":"Ticket moved to done","ts":"2026-06-10T03:47:54Z"}
 {"run_id":"TCK-20260610-ARCHETYPE-DEFAULT-PATH","ts":"2026-06-10T04:10:00Z","event":"ticket_done","detail":"Created WorldEntitySpawner with archetype-native primary path and explicit LEGACY GUARD fallback. 6/6 integration tests pass. SUB-368 added to parity ledger."}
+{"run_id":"TCK-20260610-STRICT-MATRIX-UNXFAIL","ts":"2026-06-10T04:12:00Z","event":"ticket_done","detail":"73/73 strict matrix tests pass. xfail markers already removed in TCK-20260610-CAT-REL-099-FIX. Verification-only ticket."}
