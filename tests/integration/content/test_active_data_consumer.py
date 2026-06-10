@@ -15,33 +15,21 @@ Run standalone:
 
 from __future__ import annotations
 
-from typing import List, Tuple
+from typing import List
 
 import pytest
 
 pytestmark = pytest.mark.content_graph
 
 from src.content.matrix import CONTENT_USAGE_MATRIX
-from src.content.reference_graph import ContentReferenceGraph, FAMILY_TO_SHORT
+from src.content.reference_graph import ContentReferenceGraph
 from src.content.repository import CatalogRepository, CANONICAL_FAMILIES
 from src.worldmodules.repository import WorldModuleRepository
-
-# ---------------------------------------------------------------------------
-# Active states by ContentUsageMatrix definition
-# ---------------------------------------------------------------------------
-
-_ACTIVE_IMPL_STATES = frozenset({"RESOLVED_PARTIALLY", "RUNTIME_AUTHORITATIVE"})
-
-# Families whose records are consumed via implicit runtime mechanisms that do
-# not produce reference graph edges, or are graph entry points (no inbound edges
-# by design). These are exempted from graph-coverage checks.
-_GRAPH_EXEMPT_SHORTS = frozenset({
-    "attribute", "element", "perspective", "projection",  # implicit runtime consumers
-    "defaults",         # entry point: consumers read from it, nothing points to it
-    "spawn_table",      # entry point
-    "composition",      # entry point
-    "scenario",         # entry point
-})
+from tests.helpers.content_usage_gate import (
+    ACTIVE_IMPL_STATES,
+    GRAPH_EXEMPT_SHORTS,
+    collect_family_graph_violations,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -83,7 +71,7 @@ def test_active_families_have_documented_consumers():
     violations: List[str] = []
 
     for family_key, entry in CONTENT_USAGE_MATRIX.items():
-        if entry.implementation_state not in _ACTIVE_IMPL_STATES:
+        if entry.implementation_state not in ACTIVE_IMPL_STATES:
             continue
         if not entry.resolver_component and not entry.compile_runtime_consumer:
             violations.append(
@@ -103,30 +91,10 @@ def test_active_families_have_graph_coverage(ref_graph):
     one record in that family must have at least one incoming edge (be consumed
     by something in the reference graph).
 
-    Families in _GRAPH_EXEMPT_SHORTS have implicit consumers outside the graph
+    Families in GRAPH_EXEMPT_SHORTS have implicit consumers outside the graph
     and are exempted from this check.
     """
-    violations: List[str] = []
-
-    for family_key, entry in CONTENT_USAGE_MATRIX.items():
-        if entry.implementation_state not in _ACTIVE_IMPL_STATES:
-            continue
-
-        short = FAMILY_TO_SHORT.get(family_key.replace("/", "."))
-        if not short or short in _GRAPH_EXEMPT_SHORTS:
-            continue
-
-        family_nodes = [nid for nid in ref_graph.nodes if nid.startswith(f"{short}:")]
-        if not family_nodes:
-            continue  # family not indexed in this graph build; skip
-
-        consumed = [nid for nid in family_nodes if ref_graph.is_record_used(nid)]
-        if not consumed:
-            violations.append(
-                f"  {family_key} ({short}): {len(family_nodes)} records loaded, "
-                f"none have any incoming reference graph edge"
-            )
-
+    violations = collect_family_graph_violations(ref_graph)
     assert not violations, (
         f"{len(violations)} active content families have no consumed records in the reference graph:\n"
         + "\n".join(violations)

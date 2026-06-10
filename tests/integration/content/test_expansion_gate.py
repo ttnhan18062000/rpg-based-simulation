@@ -7,16 +7,14 @@ Asserts all prerequisite conditions before horizontal content expansion begins
 Run standalone with:
     pytest tests/integration/content/test_expansion_gate.py -v
 
-Each gate item maps to one checklist line in the output. Items blocked by
-the pre-existing CAT-REL-099 defect (moon_cult_ruins / apprentice_mage) are
-marked xfail(strict=False) so they appear as expected-failures rather than hard
-failures in the baseline report.
+Each gate item maps to one checklist line in the output. All items are hard
+pass conditions — the gate must be fully green before expansion begins.
 
 Pass conditions required before expansion:
   01  Content family registry complete (all families load)
   02  Fail-closed scenario schema active (extra="forbid")
   03  Content reference graph builds without error
-  04  No new dead active-data violations beyond known baseline
+  04  No active content family has zero consumed records in the reference graph
   05  Entity archetypes present in catalog
   06  Populations reference valid archetypes
   07  All world modules normalize without error
@@ -29,37 +27,17 @@ Pass conditions required before expansion:
 
 from __future__ import annotations
 
-import re
 from pathlib import Path
-from typing import Dict, Tuple
 
 import pytest
 import yaml
 
-from src.content.reference_graph import ContentReferenceGraph, FAMILY_TO_SHORT
+from src.content.reference_graph import ContentReferenceGraph
 from src.content.repository import CatalogRepository, CANONICAL_FAMILIES
 from src.worldmodules.repository import WorldModuleRepository
+from tests.helpers.content_usage_gate import collect_family_graph_violations
 
 pytestmark = [pytest.mark.content_pack, pytest.mark.integration]
-
-# Inline baseline from test_active_data_consumer — must stay in sync with that file.
-_ACTIVE_STATES = frozenset({"EXISTING-LOGIC", "LEGACY-EXPORT", "REDESIGNED-CORE"})
-_FAMILIES_WITH_IMPLICIT_CONSUMERS = frozenset({"attribute", "element", "perspective", "projection"})
-_KNOWN_INACTIVE_CONTENT: frozenset[Tuple[str, str]] = frozenset({
-    ("faction", "neutral"),
-    ("role", "shopkeeper"),
-    ("stat_profile", "monster_base"),
-    ("item", "apprentice_staff"),
-    ("item", "basic_bow"),
-    ("item", "herb"),
-    ("item", "leather_armor"),
-    ("item", "rusted_sword"),
-    ("item", "wooden_staff"),
-    ("recipe", "craft_small_potion"),
-    ("skill_profile", "warrior_skills"),
-})
-_STATE_RE = re.compile(r"#\s*STATE:\s*(\S+)")
-_ID_RE = re.compile(r"^-?\s*id:\s*[\"']?([^\"':\s#]+)[\"']?\s*(?:#.*)?$")
 
 
 # ---------------------------------------------------------------------------
@@ -129,54 +107,21 @@ def test_gate_03_reference_graph_builds(ref_graph):
 
 
 # ---------------------------------------------------------------------------
-# Gate item 04 — No new dead active-data violations
+# Gate item 04 — No active content family with zero consumed records
 # ---------------------------------------------------------------------------
 
-def test_gate_04_no_new_dead_active_data(catalog, module_repo):
-    """Active content records must have at least one consumer path.
+def test_gate_04_no_new_dead_active_data(ref_graph):
+    """Active content families must have at least one consumed record in the reference graph.
 
-    New violations beyond KNOWN_INACTIVE_CONTENT fail the gate.
+    Uses ContentUsageMatrix as the authoritative family-level activity source.
+    Does not scan YAML comment markers — per Option A (Phase 20-28 repair):
+    YAML comments are human planning notes only and must never be parsed by tests.
     """
-    ref_graph = ContentReferenceGraph(
-        repo=catalog,
-        modules=list(module_repo.modules.values()),
-    )
-    family_to_short: Dict[str, str] = FAMILY_TO_SHORT
-    path_to_family: Dict[Path, str] = {}
-    for spec in CANONICAL_FAMILIES:
-        path = Path("data/content") / spec.path
-        if path.is_file():
-            path_to_family[path] = spec.family.split(".")[-1]
-
-    violations = []
-    for file_path, short_family in path_to_family.items():
-        if short_family in _FAMILIES_WITH_IMPLICIT_CONSUMERS:
-            continue
-        if short_family not in family_to_short.values():
-            continue
-        text = file_path.read_text(encoding="utf-8")
-        current_state = None
-        for line in text.splitlines():
-            m = _STATE_RE.search(line)
-            if m:
-                current_state = m.group(1)
-            if current_state not in _ACTIVE_STATES:
-                continue
-            id_m = _ID_RE.match(line)
-            if not id_m:
-                continue
-            record_id = id_m.group(1)
-            key = (short_family, record_id)
-            if key in _KNOWN_INACTIVE_CONTENT:
-                continue
-            node_id = f"{short_family}:{record_id}"
-            if not ref_graph.is_record_used(node_id):
-                violations.append(f"  {short_family}:{record_id} (no consumer path)")
-
+    violations = collect_family_graph_violations(ref_graph)
     assert not violations, (
-        f"Gate 04 FAIL — {len(violations)} active record(s) with no consumer path:\n"
+        f"Gate 04 FAIL — {len(violations)} active content family/families with no consumed records:\n"
         + "\n".join(violations)
-        + "\nAdd to KNOWN_INACTIVE_CONTENT or add a consumer path."
+        + "\nUpdate ContentUsageMatrix implementation_state or add a consumer path."
     )
 
 
