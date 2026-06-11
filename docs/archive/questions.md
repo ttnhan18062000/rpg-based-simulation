@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: misc
+original_date: unknown
+---
+
 # Verification Audit: Open Questions
 
 1. **Authoritative Personality Model**: The latest design spec (`2026-04-07-personality-relationships-design.md`) references the **OCEAN** (Openness, Conscientiousness, Extraversion, Agreeableness, Neuroticism) system. However, the current implementation in `MindAspect` and `SocialAppraisalService` uses a discrete **RPG Trait** system (`aggression`, `greed`, `caution`, `loyalty`, etc.). 

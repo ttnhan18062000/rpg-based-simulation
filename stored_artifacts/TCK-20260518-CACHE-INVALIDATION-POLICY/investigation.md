@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260518-CACHE-INVALIDATION-POLICY
+artifact_type: investigation
+tags: [cache, invalidation, policy]
+---
+
 # Investigation: CacheInvalidationPolicy
 
 `CacheInvalidationPolicy` in `src/engine/world_index.py` already implements `should_invalidate(domain: str, dirty: Optional[DirtySet]) -> bool`.

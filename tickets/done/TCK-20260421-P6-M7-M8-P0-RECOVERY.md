@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260421-P6-M7-M8-P0-RECOVERY
+phase: done
+date: 2026-04-21
+tags: [p6, m7, m8, p0, recovery]
+---
+
 # TCK-20260421-P6-M7-M8-P0-RECOVERY
 
 ## Title
@@ -7,6 +18,15 @@ Implement Phase 6 P0 Logic Recovery (Social Trust & Opportunity Attacks)
 ## Status
 
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 

@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: misc
+authority: P2
+audience: agent
+tags: []
+---
+
 # Combat Simulation & AI Stability (TCK-20260328)
 
 I am resolving the final 5 E2E test failures in `tests/e2e/test_combat_arena_e2e.py`. Root causes include systemic AI state transitions (Respawn/Town logic), missing skill initialization in tests, and rigid targeting resolution for AoE.

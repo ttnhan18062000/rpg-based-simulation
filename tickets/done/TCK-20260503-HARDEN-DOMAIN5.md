@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260503-HARDEN-DOMAIN5
+phase: done
+date: 2026-05-03
+tags: [harden, domain5]
+---
+
 # TCK-20260503-HARDEN-DOMAIN5
 
 ## Title
@@ -5,6 +16,15 @@ Hardening Navigation and Ecology (Domain 5)
 
 ## Status
 INPROGRESS
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Close specialized navigation and anchored-world behavior not covered by basic movement. Finalize Flow Field logic, tactical movement integration, arena stop conditions, and mob ecology.

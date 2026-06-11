@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: core
+original_date: unknown
+---
+
 # Review verdict
 
 You implemented a **large amount of phase-shaped code**, but this is **not yet a complete implementation of the 10-phase roadmap**.

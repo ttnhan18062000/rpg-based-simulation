@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260422-RECOVERY-GAPS
+phase: done
+date: 2026-04-22
+tags: [recovery, gaps]
+---
+
 # TCK-20260422-RECOVERY-GAPS
 
 ## Title
@@ -5,6 +16,15 @@ Implementing Phase 7 & 8 Recovery Gaps (Hazards, Calamities, Evolution, Sabotage
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Continue the V2 engine recovery by implementing the remaining semantic gaps identified in the Phase 7 backlog and Phase 8 planning. This includes regional hazards, calamity consequences, entity evolution, and building sabotage.

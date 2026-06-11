@@ -1,3 +1,10 @@
+---
+status: active
+layer: engine
+authority: P1
+audience: developer
+---
+
 # V2 Engine Performance Contract
 
 ## 1. Purpose

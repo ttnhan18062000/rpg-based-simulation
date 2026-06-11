@@ -1,3 +1,14 @@
+---
+status: historical
+layer: strategy
+authority: P1
+audience: agent
+ticket_id: TCK-20260506-STRATEGIC-HARDENING-TEST-STABILIZATION
+phase: done
+date: 2026-05-06
+tags: [strategic, hardening, test, stabilization]
+---
+
 # TCK-20260506-STRATEGIC-HARDENING-TEST-STABILIZATION
 
 ## Title
@@ -7,6 +18,15 @@ Migrate strategic hardening test suites to V2EntityBuilder
 ## Status
 
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 

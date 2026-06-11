@@ -1,6 +1,26 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260408-PH2-STG4-CONVERGENCE
+phase: done
+date: 2026-04-08
+tags: [ph2, stg4, convergence]
+---
+
 # Ticket: TCK-20260408-PH2-STG4-CONVERGENCE
 Title: Phase 2 Stage 4: Social Convergence and Narrative Causal Analysis
 Status: INPROGRESS
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Finalize the Phase 2 Social Meaning layer by enabling active gossip, hardening the propagation of rumors, and surfacing life-level causal explanations to the user.

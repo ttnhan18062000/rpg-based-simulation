@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260521-METROPOLIS-COLLISION
+phase: done
+date: 2026-05-21
+tags: [metropolis, collision]
+---
+
 # TCK-20260521-METROPOLIS-COLLISION
 
 ## Title
@@ -5,6 +16,15 @@ Fixing Metropolis Simulation Collisions and Synchronization
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Resolve the LAW-OCCUPANCY-COLLISION in Metropolis scenario, specifically between entity 760 and 755 at tile (-21, 12) during tick 4210.

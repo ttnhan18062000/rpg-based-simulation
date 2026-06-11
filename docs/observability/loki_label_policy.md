@@ -1,3 +1,10 @@
+---
+status: active
+layer: observability
+authority: P1
+audience: developer
+---
+
 # Loki Label Ingestion Policy
 
 ## Purpose

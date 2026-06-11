@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: engine
+authority: P2
+audience: agent
+tags: [combat, movement, finalize]
+---
+
 - [x] ActionSystem Stabilization
     - [x] Add `is_rejection` field to `ActionReason` in `src/core/models/reason_codes.py`
     - [x] Update `ActionReason.reason_text` to handle "REJECTED: " prefix

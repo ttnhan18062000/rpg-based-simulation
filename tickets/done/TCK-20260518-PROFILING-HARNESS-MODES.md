@@ -1,3 +1,14 @@
+---
+status: historical
+layer: observability
+authority: P1
+audience: agent
+ticket_id: TCK-20260518-PROFILING-HARNESS-MODES
+phase: done
+date: 2026-05-18
+tags: [profiling, harness, modes]
+---
+
 # TCK-20260518-PROFILING-HARNESS-MODES
 
 ## Title
@@ -5,6 +16,15 @@ Profiling Harness Modes (Pure, Runtime, Audit) and Report Flag Inclusion
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Implement profiling harness modes (pure, runtime, audit) in `scripts/profile_engine.py` to isolate compute performance from replay serialization and frame pacing, ensure generated reports include the flags used, and prevent unverified claims of GC/memory stability without explicit RSS/GC metrics.

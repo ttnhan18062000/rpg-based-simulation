@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260523-LAB-RUN-MANIFEST
+artifact_type: plan
+tags: [lab, run, manifest]
+---
+
 # Milestone 77 Implementation Plan
 
 Provide a safe, isolated LabRun directory structure and stateful manifest tracking under `src/lab/` domain package.

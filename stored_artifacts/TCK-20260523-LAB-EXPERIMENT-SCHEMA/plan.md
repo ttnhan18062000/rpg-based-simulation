@@ -1,3 +1,13 @@
+---
+status: historical
+layer: guidelines
+authority: P2
+audience: agent
+ticket_id: TCK-20260523-LAB-EXPERIMENT-SCHEMA
+artifact_type: plan
+tags: [lab, experiment, schema]
+---
+
 # Milestone 76 Implementation Plan
 
 Provide a robust file-based ExperimentSpec schema, pluggable rules validator, and traversal-safe repository under the `src/lab/` domain package.

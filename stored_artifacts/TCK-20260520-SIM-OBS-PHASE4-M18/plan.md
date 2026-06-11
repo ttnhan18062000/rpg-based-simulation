@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260520-SIM-OBS-PHASE4-M18
+artifact_type: plan
+tags: [sim, obs, phase4, m18]
+---
+
 # Implementation Plan - Milestone 18: Baseline Comparator and Drift Detector
 
 We will implement the baseline comparison engine, outlier runs locator, and statistical drift analyzer.

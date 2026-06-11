@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: misc
+original_date: unknown
+---
+
 I reviewed both the design memo and the codebase. The blunt truth is that the engine already has a strong tactical substrate: `MindAspect` is split into decision, perception, emotion, navigation, narrative, routine, and social domains; beliefs already carry freshness, confidence, directness, and source quality; turning points, interpreted life events, reputation, place attachment, groups, gossip, immutable snapshots, and authoritative action application already exist. The missing piece is exactly what the design doc says: a persistent **strategic layer** that survives interruptions and converts memory, uncertainty, and social consequence into durable projects rather than just better next-tick choices.
 
 The design doc is also right about what not to do: this should not become authored quest trees or a pile of extra shallow goals. The target is a life-direction system built from directives, projects, objectives, concerns, leads, blockers, obligations, and social contracts, with the tactical AI remaining narrow and subordinate.

@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: engine
+authority: P2
+audience: agent
+tags: [infra_06]
+---
+
 # Phase E: Property-Based Fuzzing (Hardening)
 
 ## Objective

@@ -1,3 +1,11 @@
+---
+status: authoritative
+layer: mechanics
+authority: P0
+audience: developer
+last_verified: 2026-06-06
+---
+
 # Chapter 2: Combat Laws
 
 This chapter details the mathematical and logical sequence of combat resolution. The simulation follows a deterministic, non-random resolution for all primary attacks.

@@ -1,3 +1,13 @@
+---
+status: historical
+layer: performance
+authority: P2
+audience: agent
+ticket_id: TCK-20260515-PERF-BASELINE
+artifact_type: plan
+tags: [perf, baseline]
+---
+
 # Implementation Plan - TCK-20260515-PERF-BASELINE
 
 ## Goal

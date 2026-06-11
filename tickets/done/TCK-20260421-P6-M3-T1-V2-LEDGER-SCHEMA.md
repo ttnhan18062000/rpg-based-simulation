@@ -1,3 +1,14 @@
+---
+status: historical
+layer: guidelines
+authority: P1
+audience: agent
+ticket_id: TCK-20260421-P6-M3-T1-V2-LEDGER-SCHEMA
+phase: done
+date: 2026-04-21
+tags: [p6, m3, t1, v2, ledger, schema]
+---
+
 # TCK-20260421-P6-M3-T1-V2-LEDGER-SCHEMA
 
 ## Title
@@ -7,6 +18,15 @@ Define the canonical src row schema aligned to the legacy inventory
 ## Status
 
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 

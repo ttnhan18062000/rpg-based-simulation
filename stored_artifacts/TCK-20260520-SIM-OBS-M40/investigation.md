@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260520-SIM-OBS-M40
+artifact_type: investigation
+tags: [sim, obs, m40]
+---
+
 # Investigation — Milestone 40: Alert Routing and Incident Workflow
 
 This document records the investigation into existing code components, the anomaly worker, hard law monitor, and how we will safely route alerts.

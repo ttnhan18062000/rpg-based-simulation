@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260506-INVENTORY-TEST-STABILIZATION
+artifact_type: investigation
+tags: [inventory, test, stabilization]
+---
+
 # Investigation - Inventory Test Failures
 
 ## Observations

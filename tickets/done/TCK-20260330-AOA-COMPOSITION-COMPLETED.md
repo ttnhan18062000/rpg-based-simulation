@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260330-AOA-COMPOSITION-COMPLETED
+phase: done
+date: 2026-03-30
+tags: [aoa, composition, completed]
+---
+
 # TCK-20260330-AOA-COMPOSITION-COMPLETED: Baseline Architectural Foundation
 
 ## Description
@@ -20,3 +31,7 @@ This ticket documents the successful completion of the core Aspect-Oriented Arch
 
 ## Status
 DONE
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

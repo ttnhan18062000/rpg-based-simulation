@@ -1,3 +1,14 @@
+---
+status: historical
+layer: economy
+authority: P1
+audience: agent
+ticket_id: TCK-20260424-PH2-M5-ECONOMY-SCARCITY
+phase: done
+date: 2026-04-24
+tags: [ph2, m5, economy, scarcity]
+---
+
 # TCK-20260424-PH2-M5-ECONOMY-SCARCITY
 
 ## Title
@@ -5,6 +16,15 @@ Phase 2 Milestone 5: Economy & Scarcity
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Implement dynamic pricing and resource depletion mechanics to enforce economic scarcity and environmental pressure.

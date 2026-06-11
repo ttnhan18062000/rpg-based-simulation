@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: economy
+original_date: unknown
+---
+
 Below is the **high-level implementation plan for Phase 12** in the same milestone style as the earlier high-level phase plans.
 
 This plan is grounded in the corrected roadmap and the ratification-first sequencing from [resource_phases.md](sandbox:/mnt/data/resource_phases.md) and the support/cutover discipline from [src_principle.md](sandbox:/mnt/data/src_principle.md).

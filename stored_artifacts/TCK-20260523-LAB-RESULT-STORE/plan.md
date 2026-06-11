@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260523-LAB-RESULT-STORE
+artifact_type: plan
+tags: [lab, result, store]
+---
+
 # Plan - Lab Result Store (Milestone 80)
 
 We will implement `LabResultStore` in a dedicated file `src/lab/store.py` to retrieve, index, and load laboratory artifacts securely.

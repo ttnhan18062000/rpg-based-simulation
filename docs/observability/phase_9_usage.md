@@ -1,3 +1,10 @@
+---
+status: historical
+layer: observability
+authority: P2
+audience: developer
+---
+
 # Phase 9: Simulation Mining & AI-Assisted Investigation — Developer Guide
 
 This guide provides practical instructions, copy-pasteable code snippets, SQL query recipes, and diagnostic workflows to run, query, and utilize the **Phase 9 Simulation Mining & AI-Assisted Investigation Platform** in the V2 RPG Engine.

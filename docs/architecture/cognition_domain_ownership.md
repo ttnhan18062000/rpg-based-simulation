@@ -1,3 +1,10 @@
+---
+status: active
+layer: architecture
+authority: P1
+audience: developer
+---
+
 # Cognition Domain Ownership Map
 
 This document establishes the official ownership mapping between core `CognitionModel` sub-components and their authoritative domain service logic packages.

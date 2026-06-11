@@ -1,3 +1,14 @@
+---
+status: historical
+layer: strategy
+authority: P1
+audience: agent
+ticket_id: TCK-20260418-STRAT-LEARNING-REGRESSION
+phase: done
+date: 2026-04-18
+tags: [strat, learning, regression]
+---
+
 # TCK-20260418-STRAT-LEARNING-REGRESSION
 
 ## Title
@@ -5,6 +16,15 @@ Resolve Strategic Learning Regression
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Resolved a persistence regression where LeadRecord flags (tested, is_exhausted) were incorrectly reverted during simulation ticks.

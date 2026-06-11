@@ -1,3 +1,10 @@
+---
+status: active
+layer: engine
+authority: P1
+audience: developer
+---
+
 # V2 CLI & Entrypoint Compatibility Contract
 
 This document defines the supported system-entry surface for the V2 engine.

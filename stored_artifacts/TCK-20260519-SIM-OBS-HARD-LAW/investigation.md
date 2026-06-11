@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260519-SIM-OBS-HARD-LAW
+artifact_type: investigation
+tags: [sim, obs, hard, law]
+---
+
 # Investigation - HardLawMonitor V1 & Observability Config
 
 This document records the architectural findings and research conducted for the HardLawMonitor implementation.

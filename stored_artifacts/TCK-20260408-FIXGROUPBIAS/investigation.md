@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260408-FIXGROUPBIAS
+artifact_type: investigation
+tags: [fixgroupbias]
+---
+
 # Investigation: TCK-20260408-FIXGROUPBIAS
 
 ## Findings

@@ -1,3 +1,10 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: developer
+---
+
 # Phase 12 Exit Package: Operational Cutover Proof Bundle
 
 ## 1. Governance Artifacts

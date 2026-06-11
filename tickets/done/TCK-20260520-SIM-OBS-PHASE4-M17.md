@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260520-SIM-OBS-PHASE4-M17
+phase: done
+date: 2026-05-20
+tags: [sim, obs, phase4, m17]
+---
+
 # TCK-20260520-SIM-OBS-PHASE4-M17
 
 ## Title
@@ -7,6 +18,15 @@ Milestone 17 — Baseline Generator
 ## Status
 
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 

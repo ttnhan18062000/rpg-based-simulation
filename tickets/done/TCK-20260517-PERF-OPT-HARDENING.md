@@ -1,3 +1,14 @@
+---
+status: historical
+layer: performance
+authority: P1
+audience: agent
+ticket_id: TCK-20260517-PERF-OPT-HARDENING
+phase: done
+date: 2026-05-17
+tags: [perf, opt, hardening]
+---
+
 # TCK-20260517-PERF-OPT-HARDENING
 
 ## Title
@@ -5,6 +16,15 @@ Performance Optimization Hardening and Measurement Integrity
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Investigate and implement the performance optimization hardening plan defined in `performance_opt_hardening.md` to fix incorrect/missing logic across recent performance hardening tasks.

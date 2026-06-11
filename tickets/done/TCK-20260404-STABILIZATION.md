@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260404-STABILIZATION
+phase: done
+date: 2026-04-04
+tags: [stabilization]
+---
+
 # TCK-20260404-STABILIZATION: Final AOA AI and Freezing Stabilization
 
 ## Description
@@ -24,3 +35,7 @@ Resolve AI decision errors and Pydantic validation failures occurring during sna
 
 ## Status
 DONE
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

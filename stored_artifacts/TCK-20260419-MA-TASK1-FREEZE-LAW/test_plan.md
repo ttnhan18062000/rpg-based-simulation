@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260419-MA-TASK1-FREEZE-LAW
+artifact_type: test_plan
+tags: [ma, task1, freeze, law]
+---
+
 # Test Plan: Milestone A Law Set Freeze
 
 ## Objective

@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260419-MA-TASK2-AUDIT-MUTATION
+artifact_type: investigation
+tags: [ma, task2, audit, mutation]
+---
+
 # Investigation: Authoritative Mutation Audit
 
 ## Current State of Mutation

@@ -1,3 +1,14 @@
+---
+status: historical
+layer: performance
+authority: P1
+audience: agent
+ticket_id: TCK-20260512-PERF-INVESTIGATION
+phase: done
+date: 2026-05-12
+tags: [perf, investigation]
+---
+
 # TCK-20260512-PERF-INVESTIGATION
 
 ## Title
@@ -5,6 +16,15 @@ Research and finalize performance testing design
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Investigate `performance_implementation.md` and current infrastructure to finalize the implementation plan for the performance testing framework.

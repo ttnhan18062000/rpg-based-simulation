@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: infra-01-automated-testing
+phase: done
+date: unknown
+tags: [infra, automated, testing]
+---
+
 # Infra 01: Automated Testing Infrastructure
 
 ## Status: DONE
@@ -43,3 +54,7 @@ make test-cov      # With coverage
 ## Labels
 
 `infra`, `testing`, `automation`, `done`
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

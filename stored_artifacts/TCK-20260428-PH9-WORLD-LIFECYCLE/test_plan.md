@@ -1,3 +1,13 @@
+---
+status: historical
+layer: world
+authority: P2
+audience: agent
+ticket_id: TCK-20260428-PH9-WORLD-LIFECYCLE
+artifact_type: test_plan
+tags: [ph9, world, lifecycle]
+---
+
 # Phase 9 Test Plan
 
 ## Automated Tests

@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260527-COG-ENUM-DRIFT
+phase: done
+date: 2026-05-27
+tags: [cog, enum, drift]
+---
+
 # TCK-20260527-COG-ENUM-DRIFT
 
 ## Title
@@ -7,6 +18,15 @@ Fix strategic enum and string drift across goal, project, concern, and event kin
 ## Status
 
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 

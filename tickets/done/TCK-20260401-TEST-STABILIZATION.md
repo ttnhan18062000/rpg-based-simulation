@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260401-TEST-STABILIZATION
+phase: done
+date: 2026-04-01
+tags: [test, stabilization]
+---
+
 # TCK-20260401-TEST-STABILIZATION: Architecture Locking & Determinism Tests
 
 ## Description
@@ -23,3 +34,7 @@ DONE
 
 ## Final Status
 **DONE**: Implemented AOA integrity locks and a deterministic convergence test suite. Achieved bit-identical simulation results across recovery cycles and enforced strict boundary safety via recursive freeze guards. Total test count expanded to 1,227+ passing tests.
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

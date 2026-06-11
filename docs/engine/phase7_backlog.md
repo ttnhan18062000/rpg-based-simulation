@@ -1,3 +1,10 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: developer
+---
+
 # Phase 7 Substrate Backlog
 
 This document defines the official implementation backlog and closure conditions for Phase 7 (Substrate Closure).

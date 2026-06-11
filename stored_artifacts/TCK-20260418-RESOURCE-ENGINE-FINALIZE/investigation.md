@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260418-RESOURCE-ENGINE-FINALIZE
+artifact_type: investigation
+tags: [resource, engine, finalize]
+---
+
 # Task: Project Documentation Close-out (m1-m10)
 
 - [x] **Phase 1: Update Milestone Docs (Root)**

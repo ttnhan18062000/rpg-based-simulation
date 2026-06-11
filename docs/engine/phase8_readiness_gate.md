@@ -1,3 +1,10 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: developer
+---
+
 # Phase 8 Readiness Gate
 
 This document certifies the transition from Phase 7 (Substrate Closure) to Phase 8 (Strategic Recovery).

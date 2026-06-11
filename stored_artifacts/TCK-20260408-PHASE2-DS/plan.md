@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260408-PHASE2-DS
+artifact_type: plan
+tags: [phase2, ds]
+---
+
 # Phase 2 Implementation Plan — Social Meaning and Behavioral Realism
 
 ## Goal

@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: economy
+original_date: unknown
+---
+
 [Milestone 2] - Minimal Deterministic Single-Thread Kernel
 
 [Milestone Description]

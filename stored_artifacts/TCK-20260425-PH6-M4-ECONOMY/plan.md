@@ -1,3 +1,13 @@
+---
+status: historical
+layer: economy
+authority: P2
+audience: agent
+ticket_id: TCK-20260425-PH6-M4-ECONOMY
+artifact_type: plan
+tags: [ph6, m4, economy]
+---
+
 # PH6 M4: Economy Interactions
 
 Implement deterministic town-based economy services: shopping, crafting, and repair.

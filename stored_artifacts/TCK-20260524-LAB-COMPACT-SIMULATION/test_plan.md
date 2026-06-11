@@ -1,3 +1,13 @@
+---
+status: historical
+layer: simulation
+authority: P2
+audience: agent
+ticket_id: TCK-20260524-LAB-COMPACT-SIMULATION
+artifact_type: test_plan
+tags: [lab, compact, simulation]
+---
+
 # Test Plan - M99 CompactSimulationData Workflow
 
 ## 1. Automated Integration Tests

@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260524-LAB-REQUEST-CONTEXT
+artifact_type: investigation
+tags: [lab, request, context]
+---
+
 # Investigation: Input Request Model and Context Pack Builder (M94-M95)
 
 We need to implement a structured input verification layer (`WorkflowRequest`) and a token-efficient context compilation engine (`ContextPackBuilder`).

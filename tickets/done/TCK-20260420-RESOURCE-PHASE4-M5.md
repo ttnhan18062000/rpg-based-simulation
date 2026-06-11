@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260420-RESOURCE-PHASE4-M5
+phase: done
+date: 2026-04-20
+tags: [resource, phase4, m5]
+---
+
 # [Milestone 5] - Supported Gameplay Surface Consolidation
 
 ## [Milestone Description]
@@ -399,3 +410,7 @@ This package should become the canonical reference for “what gameplay `src` cu
 #### [Task acceptance criteria]
 
 The current V2 gameplay surface is published as one coherent, supportable, reviewable truth package.
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

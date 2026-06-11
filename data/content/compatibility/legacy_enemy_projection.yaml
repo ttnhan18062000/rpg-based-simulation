@@ -1,0 +1,56 @@
+# STATE: COMPATIBILITY
+# Projects clean archetypes into legacy EnemyRegistry-like records. Not source truth.
+- id: "wolf"
+  archetype_id: "hungry_wolf"
+  legacy_enemy_id: "wolf"
+  danger_hint: "MEDIUM"
+  loot_table:
+    wolf_pelt: 0.6
+    beast_fang: 0.3
+  spawn_regions: ["near_forest", "wolf_den"]
+
+# STATE: COMPATIBILITY
+- id: "goblin"
+  archetype_id: "goblin_raider"
+  legacy_enemy_id: "goblin"
+  danger_hint: "MEDIUM"
+  loot_table:
+    goblin_token: 0.8
+  spawn_regions: ["goblin_camp"]
+
+# STATE: COMPATIBILITY
+- id: "goblin_archer"
+  archetype_id: "goblin_archer"
+  legacy_enemy_id: "goblin_archer"
+  danger_hint: "MEDIUM"
+  loot_table:
+    goblin_token: 0.5
+  spawn_regions: ["goblin_camp"]
+
+# STATE: COMPATIBILITY
+- id: "cave_spider"
+  archetype_id: "cave_spider"
+  legacy_enemy_id: "cave_spider"
+  danger_hint: "MEDIUM"
+  loot_table:
+    crystal_shard: 0.2
+  spawn_regions: ["old_mine", "moon_cave"]
+
+# STATE: COMPATIBILITY
+- id: "bandit_scout"
+  archetype_id: "bandit_scout"
+  legacy_enemy_id: "bandit_scout"
+  danger_hint: "HARD"
+  loot_table:
+    ancient_fragment: 0.1
+  spawn_regions: ["north_ruin", "bandit_road"]
+
+# STATE: COMPATIBILITY
+- id: "elite_goblin"
+  archetype_id: "goblin_warlord"
+  legacy_enemy_id: "elite_goblin"
+  danger_hint: "BOSS"
+  loot_table:
+    goblin_token: 1.0
+    ancient_fragment: 0.4
+  spawn_regions: ["goblin_camp"]

@@ -1,3 +1,14 @@
+---
+status: historical
+layer: performance
+authority: P1
+audience: agent
+ticket_id: TCK-20260513-PERF-API-SNAPSHOTS
+phase: done
+date: 2026-05-13
+tags: [perf, api, snapshots]
+---
+
 # TCK-20260513-PERF-API-SNAPSHOTS
 
 ## Title
@@ -5,6 +16,15 @@ Milestone 5: API and Replay Snapshot Optimization
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Optimize the API and inspection layer to handle large world states (5000+ entities) without $O(N)$ deep-copy or full-serialization overhead.

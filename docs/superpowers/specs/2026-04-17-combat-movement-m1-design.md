@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: combat
+original_date: 2026-04-17
+---
+
 # Design Spec: Combat and Movement Milestone 1 — Core Rulebook and Engine-Time Refactor
 
 **Date**: 2026-04-17

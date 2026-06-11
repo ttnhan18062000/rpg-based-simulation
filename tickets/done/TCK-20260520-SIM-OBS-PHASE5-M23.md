@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260520-SIM-OBS-PHASE5-M23
+phase: done
+date: 2026-05-20
+tags: [sim, obs, phase5, m23]
+---
+
 # TCK-20260520-SIM-OBS-PHASE5-M23
 
 ## Title
@@ -5,6 +16,15 @@ In-Process Event Publisher and Subscription Filters
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Create a lightweight, in-process event publishing system that enables downstream developer tooling (like live WebSockets) to subscribe to real-time simulation events with precise filters without blocking the simulation tick loop.

@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260425-PH4-TACTICAL-AI
+artifact_type: plan
+tags: [ph4, tactical, ai]
+---
+
 # Implementation Plan: Tactical AI and Capacity Hardening
 
 ## Goal

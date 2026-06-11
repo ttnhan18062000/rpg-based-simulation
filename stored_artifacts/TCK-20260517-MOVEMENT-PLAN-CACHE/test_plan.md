@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260517-MOVEMENT-PLAN-CACHE
+artifact_type: test_plan
+tags: [movement, plan, cache]
+---
+
+
 # Test Plan: MovementPlanCache
 
 ## Unit Tests (`tests/unit/optimization/test_movement_plan_cache.py`)

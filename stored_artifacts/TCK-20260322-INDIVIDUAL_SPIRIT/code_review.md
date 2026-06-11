@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: misc
+authority: P2
+audience: agent
+tags: [individual_spirit]
+---
+
 # Code Review: Milestone 10 - The Individual Spirit
 
 ## Status: 🟢 Approved with minor fixes

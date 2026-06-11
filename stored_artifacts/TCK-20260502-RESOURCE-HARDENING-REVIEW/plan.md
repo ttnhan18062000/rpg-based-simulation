@@ -1,3 +1,13 @@
+---
+status: historical
+layer: economy
+authority: P2
+audience: agent
+ticket_id: TCK-20260502-RESOURCE-HARDENING-REVIEW
+artifact_type: plan
+tags: [resource, hardening, review]
+---
+
 # Implementation Plan: Resource Hardening Review and Legacy Migration
 
 ## Goal

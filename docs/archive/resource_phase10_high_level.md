@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: economy
+original_date: unknown
+---
+
 Below is the **high-level implementation plan for Phase 10** in the same milestone style as the earlier high-level phase plans.
 
 This plan is grounded in the corrected roadmap and the remaining system-surface replacement scope described in [resource_phases.md](sandbox:/mnt/data/resource_phases.md), plus the V2 completion rules in [src_principle.md](sandbox:/mnt/data/src_principle.md). It also follows the earlier correction that full replacement is **not** just semantic subsumption of gameplay. It also requires **legacy system-compatibility closure**.

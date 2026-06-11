@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: misc
+authority: P2
+audience: agent
+tags: [hardening, finalize]
+---
+
 - [ ] Fix Strategic Cognition Tests (tests/ai/)
     - [ ] Update `test_cognition_explainability.py` (complexity source)
     - [ ] Update `test_cognition_integrity.py` (nesting metrics)

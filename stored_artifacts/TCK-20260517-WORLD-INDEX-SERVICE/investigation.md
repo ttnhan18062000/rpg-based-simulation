@@ -1,3 +1,13 @@
+---
+status: historical
+layer: world
+authority: P2
+audience: agent
+ticket_id: TCK-20260517-WORLD-INDEX-SERVICE
+artifact_type: investigation
+tags: [world, index, service]
+---
+
 # Investigation: WorldIndexService & SpatialQueryService
 
 ## Current State

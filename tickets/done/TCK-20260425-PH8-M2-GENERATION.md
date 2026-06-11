@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260425-PH8-M2-GENERATION
+phase: done
+date: 2026-04-25
+tags: [ph8, m2, generation]
+---
+
 # TCK-20260425-PH8-M2-GENERATION
 
 ## Title
@@ -5,6 +16,15 @@ Implement Deterministic, Scaled Quest Generation
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Implement a dynamic quest generator that produces deterministic, level-scaled quests for town buildings.

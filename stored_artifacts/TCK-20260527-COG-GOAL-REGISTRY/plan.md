@@ -1,3 +1,13 @@
+---
+status: historical
+layer: guidelines
+authority: P2
+audience: agent
+ticket_id: TCK-20260527-COG-GOAL-REGISTRY
+artifact_type: plan
+tags: [cog, goal, registry]
+---
+
 # Implementation Plan - TCK-20260527-COG-GOAL-REGISTRY
 
 The objective is to expand `GoalRegistry` with four new goal scorers: `combat_engage`, `combat_retreat`, `recover`, and `resolve_blocker`. We will make sure they are fully registered, support downstream strategic project selection, respect entity personality attributes, use deterministic tie-breaking, and are captured clearly in observability events.

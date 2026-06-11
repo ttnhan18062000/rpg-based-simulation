@@ -1,0 +1,17 @@
+# STATE: ADDITIONAL
+schema_version: "worldmodule.v1"
+module_id: "bandit_road_trade_pressure"
+module_type: "conflict"
+display_name: "Bandit Road Trade Pressure"
+requires: ["frontier_village_core"]
+biomes: ["bandit_road"]
+ecologies: ["bandit_road_ecology"]
+regions:
+  - id: "bandit_road"
+    type: "road"
+    grid_bounds: [40, 40, 100, 60]
+    terrain: "road"
+    hazard_level: 2.0
+factions: ["bandit_company", "merchant_league"]
+populations: ["bandit_ambush_group", "merchant_caravan"]
+relationships: ["town_to_bandits", "bandits_to_merchants"]

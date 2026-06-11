@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: engine
+original_date: unknown
+---
+
 ## WorldLoop RPG Macro-Interest and Behavioral Realism Plan — Phase 3
 
 This phase moves from social meaning into lived structure. Phase 1 established subjective individuality. Phase 2 made events, relationships, and reputation matter. Phase 3 makes entities feel like they actually live somewhere, belong to groups, and follow patterns that can be disrupted. The core goal is to create recognizable daily life, local roles, group coordination, and faction-internal texture so the simulation produces scenes, not just decisions. This phase should still stay disciplined: it is not yet the inheritance/regional-history phase. It is the “routines, homes, roles, and clusters” phase. The current codebase already has useful anchors for this: home storage, buildings, faction/role structures, AI state, spatial data, and presenter/introspection support.

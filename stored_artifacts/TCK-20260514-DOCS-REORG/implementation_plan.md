@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: misc
+authority: P2
+audience: agent
+tags: [docs, reorg]
+---
+
 # Implementation Plan - RPG Documentation Rework [COMPLETED]
 
 This plan outlines the restructuring of the V2 RPG Engine documentation into a hierarchical, developer-first suite. It aims to provide 100% clarity on the authoritative refinement process and the underlying state architecture.

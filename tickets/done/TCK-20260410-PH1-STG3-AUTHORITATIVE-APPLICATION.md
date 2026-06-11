@@ -1,7 +1,26 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260410-PH1-STG3-AUTHORITATIVE-APPLICATION
+phase: done
+date: 2026-04-10
+tags: [ph1, stg3, authoritative, application]
+---
+
 # Ticket TCK-20260410-PH1-STG3-AUTHORITATIVE-APPLICATION
 ## Phase 1 Stage 3: Authoritative Application
 
-### Request Summary
+### Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+## Request Summary
 Implementation of the authoritative update pipeline for strategic state mutations.
 
 ### Scope

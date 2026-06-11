@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260402-VALIDATION
+phase: done
+date: 2026-04-02
+tags: [validation]
+---
+
 # TCK-20260402-VALIDATION: Post-Hardening Validation & Performance Benchmarking
 
 ## Status: DONE
@@ -18,3 +29,7 @@ Validate the stability, deterministic integrity, and performance characteristics
 
 ## Related Tickets
 - TCK-20260402-HARDENING
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

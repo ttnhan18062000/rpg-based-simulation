@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260419-MA-TASK2-AUDIT-MUTATION
+phase: done
+date: 2026-04-19
+tags: [ma, task2, audit, mutation]
+---
+
 # TCK-20260419-MA-TASK2-AUDIT-MUTATION
 
 ## Title
@@ -5,6 +16,15 @@ Audit and close all authoritative mutation paths
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Make the authoritative apply path singular, explicit, and provably exclusive. Ensure no hidden mutation paths exist through aliasing of nested mutable collections.

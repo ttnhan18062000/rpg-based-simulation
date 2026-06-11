@@ -1,3 +1,10 @@
+---
+status: active
+layer: engine
+authority: P1
+audience: developer
+---
+
 # Scheduler Contract (M4) — Deterministic Work Selection
 
 ## 1. Purpose

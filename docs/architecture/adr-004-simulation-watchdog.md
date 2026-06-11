@@ -1,3 +1,10 @@
+---
+status: active
+layer: architecture
+authority: P1
+audience: developer
+---
+
 # ADR-004: Persistent Simulation Watchdog
 
 ## Status

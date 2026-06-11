@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260524-LAB-SESSION-MODEL
+phase: done
+date: 2026-05-24
+tags: [lab, session, model]
+---
+
 # TCK-20260524-LAB-SESSION-MODEL
 
 ## Title
@@ -7,6 +18,15 @@ Implement Lab Session Model and Storage (M92)
 ## Status
 
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 

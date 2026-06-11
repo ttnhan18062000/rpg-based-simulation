@@ -1,3 +1,10 @@
+---
+status: active
+layer: systems
+authority: P1
+audience: developer
+---
+
 # Gameplay Systems
 
 Technical specifications for individual simulation domains.

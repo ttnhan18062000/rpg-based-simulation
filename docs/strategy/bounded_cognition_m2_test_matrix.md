@@ -1,3 +1,10 @@
+---
+status: active
+layer: strategy
+authority: P1
+audience: developer
+---
+
 # Strategic Appraisal Test Matrix (Milestone 2)
 
 This matrix documents the regression test coverage for the `BoundedStrategicAppraisalService`.

@@ -1,3 +1,14 @@
+---
+status: historical
+layer: strategy
+authority: P1
+audience: agent
+ticket_id: TCK-20260413-STRAT-DEPTH-VISIBILITY
+phase: done
+date: 2026-04-13
+tags: [strat, depth, visibility]
+---
+
 # TCK-20260413-STRAT-DEPTH-VISIBILITY
 
 ## Title
@@ -5,6 +16,15 @@ Strategic Lifecycle & Observability Hardening
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Expand the strategic cognition layer's depth and visibility by hardening transport stability, ensuring debug rendering safety, and enriching the cognition graph with durable narrative elements (turning points, attachments).

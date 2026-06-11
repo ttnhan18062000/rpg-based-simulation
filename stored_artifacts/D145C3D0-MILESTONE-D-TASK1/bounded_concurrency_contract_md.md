@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: misc
+authority: P2
+audience: agent
+tags: [d145c3d0, milestone, task1]
+---
+
 # Bounded Concurrency Contract - [Milestone D]
 
 ## Purpose

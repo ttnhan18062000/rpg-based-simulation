@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260501-PROGRESSION-HARDENING
+artifact_type: investigation
+tags: [progression, hardening]
+---
+
 # Investigation: Progression, Skills, Equipment, and Crafting
 
 ## Current State Audit

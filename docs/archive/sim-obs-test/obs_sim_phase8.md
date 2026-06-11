@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: engine
+original_date: unknown
+---
+
 # Phase 8 Implementation Plan — Advanced Simulation Understanding
 
 Phase 8 should **not add more infrastructure**.

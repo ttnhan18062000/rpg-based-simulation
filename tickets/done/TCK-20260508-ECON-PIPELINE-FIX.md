@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260508-ECON-PIPELINE-FIX
+phase: done
+date: 2026-05-08
+tags: [econ, pipeline, fix]
+---
+
 # TCK-20260508-ECON-PIPELINE-FIX
 
 ## Title
@@ -5,6 +16,15 @@ Fixing RPG Pipeline Regression Failures (101 Fails)
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 The user identified 101 regression failures after Phase E5 pipeline hardening. Investigation revealed that `IntentResult` tracking was missing, `WorldDynamicsSystem` was omitted from orchestration, and `InteractionSystem` channeling logic was decoupled incorrectly.

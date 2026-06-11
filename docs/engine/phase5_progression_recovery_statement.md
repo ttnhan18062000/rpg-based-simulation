@@ -1,3 +1,10 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: developer
+---
+
 # Phase 5 Progression Recovery Statement
 
 ## 1. Recovered Behavior

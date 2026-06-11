@@ -1,3 +1,14 @@
+---
+status: historical
+layer: world
+authority: P1
+audience: agent
+ticket_id: TCK-20260523-WORLD-REPO-INIT
+phase: done
+date: 2026-05-23
+tags: [world, repo, init]
+---
+
 # TCK-20260523-WORLD-REPO-INIT
 
 ## Title
@@ -7,6 +18,15 @@ Implementation of WorldRepository and Versioning (Milestone 68)
 ## Status
 
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 

@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260401-ACTION-CONVERGENCE
+phase: done
+date: 2026-04-01
+tags: [action, convergence]
+---
+
 # TCK-20260401-ACTION-CONVERGENCE: Unify Action Application Pipeline
 
 ## Description
@@ -23,3 +34,7 @@ DONE
 
 ## Final Status
 **DONE**: Unified resolver/action system/replay via authoritative update-driven pipeline. Verified replay consistency and implemented typed update models for AI-generated intents and building sabotage targeting.
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: misc
+authority: P2
+audience: agent
+tags: []
+---
+
 - [x] Phase 1: Investigation & Research
     - [x] Analyzed `ActionSystem` AoE resolution logic
     - [x] Identified `combat_target_id` clearing bug

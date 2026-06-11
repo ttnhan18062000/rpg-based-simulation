@@ -1,3 +1,10 @@
+---
+status: active
+layer: observability
+authority: P1
+audience: developer
+---
+
 # Running Simulations Headlessly with Full Observability
 
 This guide provides simple, practical developer instructions to seed, compile, and run simulation worlds headlessly with maximum behavior observation enabled under the **Phase 19–28 Observability & Behavior Profiling** guidelines.

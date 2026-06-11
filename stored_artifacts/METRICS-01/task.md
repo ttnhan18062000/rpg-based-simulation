@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: observability
+authority: P2
+audience: agent
+tags: [metrics]
+---
+
 # RPG Simulation - Metrics Overhaul (METRICS-01)
 
 - [x] Debug and Pass E2E Combat Tests

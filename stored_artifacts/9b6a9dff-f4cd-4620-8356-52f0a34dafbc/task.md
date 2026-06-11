@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: misc
+authority: P2
+audience: agent
+tags: [9b6a9dff, f4cd, 52f0a34dafbc]
+---
+
 # Milestone 1: Phase 4 Exit & Phase 5 Readiness
 - [x] Task 1: Movement Parity Promotion
 - [x] Task 2: Resource Interaction Parity

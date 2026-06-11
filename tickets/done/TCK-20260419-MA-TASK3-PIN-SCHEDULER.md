@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260419-MA-TASK3-PIN-SCHEDULER
+phase: done
+date: 2026-04-19
+tags: [ma, task3, pin, scheduler]
+---
+
 # TCK-20260419-MA-TASK3-PIN-SCHEDULER
 
 ## Title
@@ -5,6 +16,15 @@ Complete and pin deterministic scheduler classes
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Hard-code the deterministic work hierarchy and tie-break rules for the simulation scheduler. Ensure no placeholders remain in the baseline path and verify the exact sorting behavior via tests.

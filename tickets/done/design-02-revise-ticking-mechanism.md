@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: design-02-revise-ticking-mechanism
+phase: done
+date: unknown
+tags: [design, revise, ticking, mechanism]
+---
+
 # Design 02: Revise Ticking Mechanism
 
 ## Summary
@@ -8,3 +19,7 @@ DONE
 
 ## Final Status
 **DONE**: Implemented variable subsystem tick rates in `src/config.py` and finalized the 4-phase tick cycle (Schedule, Collect, Resolve, Cleanup). This allows for performance optimization by running heavy subsystems (Environment, Economy) at lower frequencies while maintaining a high-fidelity Core tick rate.
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

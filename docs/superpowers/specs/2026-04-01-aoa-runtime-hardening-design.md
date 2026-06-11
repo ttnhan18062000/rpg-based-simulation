@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: simulation
+original_date: 2026-04-01
+---
+
 # Design Spec: AOA Runtime Hardening (TCK-20260331)
 
 ## Overview

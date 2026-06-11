@@ -1,3 +1,13 @@
+---
+status: historical
+layer: strategy
+authority: P2
+audience: agent
+ticket_id: TCK-20260501-STRAT-HARDENING
+artifact_type: test_plan
+tags: [strat, hardening]
+---
+
 # Strategic Cognition Test Plan
 
 ## Goals

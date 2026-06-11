@@ -1,3 +1,14 @@
+---
+status: historical
+layer: ai
+authority: P1
+audience: agent
+ticket_id: TCK-20260424-PH2-M4-SOCIAL-CONTINUITY
+phase: done
+date: 2026-04-24
+tags: [ph2, m4, social, continuity]
+---
+
 # TCK-20260424-PH2-M4-SOCIAL-CONTINUITY
 
 ## Title
@@ -5,6 +16,15 @@ Phase 2 Milestone 4: Social Continuity & Nemesis System
 
 ## Status
 OPEN
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Implement the Nemesis System to enable persistent social interactions. Entities should remember combatants and adjust their tactical behavior based on past harm.

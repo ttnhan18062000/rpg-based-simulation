@@ -1,3 +1,14 @@
+---
+status: historical
+layer: strategy
+authority: P1
+audience: agent
+ticket_id: TCK-20260411-PH4-STRAT-STABILIZATION
+phase: done
+date: 2026-04-11
+tags: [ph4, strat, stabilization]
+---
+
 # TCK-20260411-PH4-STRAT-STABILIZATION
 
 ## Title
@@ -5,6 +16,15 @@ Phase 4 Strategic Pipeline Stabilization & Observability
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Finalize the event-driven reprioritization and durable consequence systems. Ensure logic services (Concern, Directive, Place Appraisal, and Project Mutation) are integrated, deterministic, and observable.

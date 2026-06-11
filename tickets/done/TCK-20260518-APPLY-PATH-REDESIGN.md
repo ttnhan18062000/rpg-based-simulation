@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260518-APPLY-PATH-REDESIGN
+phase: done
+date: 2026-05-18
+tags: [apply, path, redesign]
+---
+
 # TCK-20260518-APPLY-PATH-REDESIGN
 
 ## Title
@@ -7,6 +18,15 @@ Milestone 14: ApplyPath Structural Redesign via ApplyPlan precomputation
 ## Status
 
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 

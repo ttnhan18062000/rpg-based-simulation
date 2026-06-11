@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: misc
+authority: P2
+audience: agent
+tags: [sim, obs, events]
+---
+
 # Walkthrough: Phase 1 Observability - Curated SimulationEvent & Entity Timeline Buffers
 
 This document details the successful design, implementation, and verification of the final milestone for **Phase 1 Observability: Curated SimulationEvent & Entity Timeline Buffers** (TCK-20260519-SIM-OBS-EVENTS).

@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260520-SIM-OBS-M37
+artifact_type: investigation
+tags: [sim, obs, m37]
+---
+
 # Investigation - TCK-20260520-SIM-OBS-M37
 
 ## Codebase Audit Findings

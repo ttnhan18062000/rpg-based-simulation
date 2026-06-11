@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260420-ME-CERT-TRUST
+artifact_type: investigation
+tags: [me, cert, trust]
+---
+
 # Investigation - Milestone E Certification Hardening
 
 ## Context

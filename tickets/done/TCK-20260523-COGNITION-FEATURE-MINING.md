@@ -1,3 +1,14 @@
+---
+status: historical
+layer: strategy
+authority: P1
+audience: agent
+ticket_id: TCK-20260523-COGNITION-FEATURE-MINING
+phase: done
+date: 2026-05-23
+tags: [cognition, feature, mining]
+---
+
 # TCK-20260523-COGNITION-FEATURE-MINING
 
 ## Title
@@ -7,6 +18,15 @@ Cognition Feature Extractor and Strategic Pattern Miner
 ## Status
 
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 

@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260501-E5-HARDENING
+phase: done
+date: 2026-05-01
+tags: [e5, hardening]
+---
+
 
 # TCK-20260501-E5-HARDENING
 
@@ -6,6 +17,15 @@ RPG Engine E5 Hardening: Race Conditions & Idempotency
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Harden the RPG V2 engine by implementing race-condition safeguards (deterministic resolution) and exactly-once transaction idempotency.

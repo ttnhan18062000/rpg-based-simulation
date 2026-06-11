@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: enhance-01
+artifact_type: investigation
+tags: [enhance]
+---
+
 # Investigation: Enhance 01 - Enrich Event Information
 
 ## Context Map

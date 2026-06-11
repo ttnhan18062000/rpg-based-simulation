@@ -1,3 +1,14 @@
+---
+status: historical
+layer: economy
+authority: P1
+audience: agent
+ticket_id: TCK-20260418-RESOURCE-CONCURRENCY-M8
+phase: done
+date: 2026-04-18
+tags: [resource, concurrency, m8]
+---
+
 # TCK-20260418-RESOURCE-CONCURRENCY-M8
 
 ## Title
@@ -5,6 +16,15 @@ Milestone 8: Safe Concurrency and Bounded Worker Execution
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Implement the engine's first bounded concurrency model. Introduce worker packets, bounded inflight execution, and deterministic fallback-to-local logic while preserving authoritative result equivalence.

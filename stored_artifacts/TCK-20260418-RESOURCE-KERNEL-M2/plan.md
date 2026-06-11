@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260418-RESOURCE-KERNEL-M2
+artifact_type: plan
+tags: [resource, kernel, m2]
+---
+
 # Implementation Plan: Resource-Safe Engine Milestone 2
 
 ## Purpose

@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260405-PROD-STACK-STABILIZE
+phase: done
+date: 2026-04-05
+tags: [prod, stack, stabilize]
+---
+
 # TCK-20260405-PROD-STACK-STABILIZE: E2E Production Stack Stabilization
 
 ## Description
@@ -23,3 +34,7 @@ The `tests/e2e/test_production_stack.py` which verifies the full Docker-Compose 
 
 ## Status
 DONE
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

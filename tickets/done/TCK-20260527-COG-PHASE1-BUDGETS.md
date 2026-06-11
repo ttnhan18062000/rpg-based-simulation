@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260527-COG-PHASE1-BUDGETS
+phase: done
+date: 2026-05-27
+tags: [cog, phase1, budgets]
+---
+
 # TCK-20260527-COG-PHASE1-BUDGETS
 
 ## Title
@@ -7,6 +18,15 @@ Implement Phase 1 Provider Performance Budget Gates
 ## Status
 
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 

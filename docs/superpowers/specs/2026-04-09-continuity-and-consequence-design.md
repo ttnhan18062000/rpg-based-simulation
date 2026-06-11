@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: misc
+original_date: 2026-04-09
+---
+
 # Design Spec: Continuity and Consequence Core Models (Phase 4 Stage 1)
 
 **Date**: 2026-04-09

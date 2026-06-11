@@ -1,3 +1,11 @@
+---
+status: authoritative
+layer: mechanics
+authority: P0
+audience: developer
+last_verified: 2026-06-06
+---
+
 # Simulation Mechanics Bible (V2)
 
 Welcome to the definitive reference for the V2 RPG Engine's simulation laws. This manual is designed for developers, modders, and curious users who want to understand the exact mathematical and logical frameworks that drive the world.

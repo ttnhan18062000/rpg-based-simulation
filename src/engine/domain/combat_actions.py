@@ -69,7 +69,7 @@ class CombatActions:
             # Check HUNT quests if target was killed
             if combat_up.alive_set is False:
                 from src.engine.quests import QuestResolutionSystem
-                q_updates = QuestResolutionSystem.evaluate_combat_victory(entity, target.kind)
+                q_updates = QuestResolutionSystem.evaluate_combat_victory(entity, target.kind, victim_entity=target)
                 if q_updates:
                     merged_qu = q_updates[0]
                     for i in range(1, len(q_updates)):

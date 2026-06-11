@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260514-DOCS-REORG
+artifact_type: investigation
+tags: [docs, reorg]
+---
+
 # Investigation - Documentation Audit
 
 ## Objective

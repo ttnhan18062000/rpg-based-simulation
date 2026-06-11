@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260527-COG-IMMEDIATE-BUGS
+artifact_type: test_plan
+tags: [cog, immediate, bugs]
+---
+
 # Test Plan: Cognition Immediate Bugs
 
 ## Automated Tests

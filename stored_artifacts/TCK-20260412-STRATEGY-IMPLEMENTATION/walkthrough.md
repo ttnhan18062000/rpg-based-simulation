@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: strategy
+authority: P2
+audience: agent
+tags: [strategy, implementation]
+---
+
 # Walkthrough: Strategic Cognition Stabilization (Milestones 3-4)
 
 We have successfully stabilized the strategic cognition layer, focusing on knowledge continuity (avoiding redundant lead testing) and hardened social candidate selection (incorporating faction and debt).

@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260518-READ-MODEL-CACHE
+phase: done
+date: 2026-05-18
+tags: [read, model, cache]
+---
+
 # TCK-20260518-READ-MODEL-CACHE
 
 ## Title
@@ -5,6 +16,15 @@ Milestone 12: Read Model and API Projection Optimization
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Implement `ReadModelCache` and `ReadModelInvalidationPolicy` to eliminate expensive O(N) full-state DTO recalculations across API and UI inspection paths.

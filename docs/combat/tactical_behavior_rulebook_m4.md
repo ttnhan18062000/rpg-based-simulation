@@ -1,3 +1,10 @@
+---
+status: historical
+layer: combat
+authority: P2
+audience: developer
+---
+
 # Tactical Behavior Rulebook (Milestone 4)
 
 ## Purpose

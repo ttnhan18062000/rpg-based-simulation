@@ -1,0 +1,7 @@
+/* Status badges injected via frontmatter */
+.badge-authoritative { background: #2e7d32; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.75em; font-weight: bold; margin-right: 8px; }
+.badge-active { background: #1565c0; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.75em; font-weight: bold; margin-right: 8px; }
+.badge-historical { background: #757575; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.75em; font-weight: bold; margin-right: 8px; }
+.badge-archive { background: #4a148c; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.75em; font-weight: bold; margin-right: 8px; }
+/* Demote archive pages visually */
+.docs-wrapper[data-status="archive"] { opacity: 0.85; border-left: 3px solid #4a148c; padding-left: 8px; }

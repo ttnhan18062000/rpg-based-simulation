@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260520-SIM-OBS-PHASE4-M18
+artifact_type: investigation
+tags: [sim, obs, phase4, m18]
+---
+
 # Investigation - Milestone 18: Baseline Comparator and Drift Detector
 
 ## Outliers and Drift Formulas

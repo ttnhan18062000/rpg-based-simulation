@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260507-TEST-BASE-REWORK
+artifact_type: test_plan
+tags: [test, base, rework]
+---
+
 # Test Plan
 
 ## Per Domain

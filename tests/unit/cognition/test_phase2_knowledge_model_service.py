@@ -21,6 +21,10 @@ from src.world.providers.information import (
 from src.core.strategic import LeadState, LeadCertainty
 from src.cognition.knowledge_model import KnowledgeModelService
 
+@pytest.fixture(autouse=True, scope="module")
+def seed_registries():
+    from src.core.registries import seed_phase1_content
+    seed_phase1_content(None)
 
 def _entity(unknowns=None, facts=None):
     from src.core.self_model import KnowledgeFact as EntityFact

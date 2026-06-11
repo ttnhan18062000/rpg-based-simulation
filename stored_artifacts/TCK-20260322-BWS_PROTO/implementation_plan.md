@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: misc
+authority: P2
+audience: agent
+tags: [bws_proto]
+---
+
 # High-Performance Binary WebSocket Protocol (BWS)
 
 Optimize the real-time world state synchronization by introducing a binary WebSocket protocol using MessagePack and positional arrays.

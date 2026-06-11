@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260519-SIM-OBS-PHASE3-M12
+phase: done
+date: 2026-05-19
+tags: [sim, obs, phase3, m12]
+---
+
 # TCK-20260519-SIM-OBS-PHASE3-M12
 
 ## Title
@@ -7,6 +18,15 @@ Milestone 12: Rule Engine Infrastructure with Core Rules
 ## Status
 
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 

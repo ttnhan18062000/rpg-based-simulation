@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260502-E5-CLOSURE-HARDENING
+artifact_type: plan
+tags: [e5, closure, hardening]
+---
+
 # Implementation Plan - E5 Closure Hardening
 
 ## Goal

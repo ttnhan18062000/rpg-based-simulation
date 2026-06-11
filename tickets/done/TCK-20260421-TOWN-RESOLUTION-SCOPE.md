@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260421-TOWN-RESOLUTION-SCOPE
+phase: done
+date: 2026-04-21
+tags: [town, resolution, scope]
+---
+
 # TCK-20260421-TOWN-RESOLUTION-SCOPE
 
 ## Title
@@ -5,6 +16,15 @@ Town Resource Resolution Scope and Oracle Capture
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Define the narrow scope for town resource resolution in Phase 5 and capture the original `src` behavior as an oracle for parity testing.

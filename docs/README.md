@@ -1,53 +1,192 @@
+---
+status: active
+layer: guidelines
+authority: P1
+audience: developer
+---
+
 # RPG Engine V2 Documentation
 
-Welcome to the Authoritative Developer Documentation for the RPG Engine V2. This documentation suite is organized to mirror the engine's architectural boundaries.
-
-## 🗺️ Navigation Map
-
-### 🏗️ [Core Architecture](core/README.md)
-The foundational laws and data structures that govern the simulation.
-- [Authoritative State](../core/state.md): The "Single Source of Truth."
-- [Entities & Components](../core/entities.md): The anatomy of an actor.
-- [Attributes & Classes](../core/attributes_and_classes.md): Progression and power scaling.
-- [Items & Inventory](../core/items_and_inventory.md): Resource conservation laws.
-
-### ⚙️ [Simulation Engine](engine/README.md)
-The orchestration layer and deterministic loop.
-- [Authoritative Pipeline](../engine/authoritative_pipeline.md): The 17-phase refinement sequence.
-- [Simulation Kernel](../engine/kernel.md): The 6-phase deterministic loop.
-- [Project Lawbook](../engine/project_lawbook_m10.md): Architectural invariants and contracts.
-- [Performance Contract](../engine/performance_contract.md): Hardware classes and scaling limits.
-- [How to Run Simulation Guide](../observability/how_to_run_simulation.md): Seeding, compiling, and running headless CLI simulations with full observability.
-
-### ⚔️ [Gameplay Systems](systems/README.md)
-The implementation of specific RPG domains.
-- [Combat & Progression](../systems/combat_and_progression.md): Formulas, damage, and leveling.
-- [Strategic Intelligence](../systems/strategic_cognition.md): Bounded cognition and project management.
-- [World & Ecology](../systems/world.md): Environment, time, and world events.
-- [Buildings & Economy](../systems/buildings_and_economy.md): Harvest, craft, and trade loops.
-
-### 📜 [Compliance & Guidelines](guidelines/README.md)
-Standards for contributing and auditing.
-- [Design Patterns](../guidelines/design_patterns.md): Coding conventions and architectural spines.
-- [Intentional Divergences](guidelines/v2_intentional_divergences.md): Deviations from legacy logic.
-- [Logic Checklist](compliance/checklist.md): The master ledger of verified gameplay laws.
-- [Gap Analysis](compliance/gap_analysis.md): Tracking documentation-to-code divergences.
-
-### 📖 [Simulation Mechanics Bible](mechanics/README.md)
-The non-technical laws and formulas of the V2 simulation.
-- [01: Entity Anatomy](mechanics/01_entity_anatomy.md): Biological and physical traits.
-- [02: Combat Laws](mechanics/02_combat_laws.md): Deterministic resolution and tactical math.
-- [03: Economic Laws](mechanics/03_economic_laws.md): Conservation, trade, and industry.
-- [04: Strategic Cognition](mechanics/04_strategic_cognition.md): Goal management and mental models.
-- [05: World Evolution](mechanics/05_world_evolution.md): Time, trauma, and regional dynamics.
+> **Browse all docs locally:** `make docs-serve` → [http://localhost:3000](http://localhost:3000)
 
 ---
 
-## 🚀 Getting Started
+## Documentation Site
 
-1.  **Read the [Architecture Overview](../engine/architecture.md)** to understand the threaded concurrency model.
-2.  **Explore the [Authoritative Pipeline](../engine/authoritative_pipeline.md)** to see how state mutations are refined and applied.
-3.  **Review the [Conventions](../engine/architecture_reference.md)** before contributing new logic.
+The project uses a [Docusaurus 3](https://docusaurus.io/) site to make all documentation navigable and searchable in one place.
 
-## 🛠️ Verification
-All documentation is verified against the source code via the `tests/docs/` suite. If you find a discrepancy, please mark it with a `TODO:` tag in the code and update the documentation accordingly.
+### Starting the site
+
+```bash
+make docs-serve      # Start dev server at http://localhost:3000 (live-reload)
+make docs-build      # Build static site into website/build/
+```
+
+The site has four sections accessible from the homepage:
+
+| Section | URL | What's in it |
+|---|---|---|
+| **Docs** | `/docs/` | Mechanics Bible, engine contracts, architecture ADRs, guidelines — sidebar grouped by layer |
+| **Tickets** | `/tickets/` | All ~657 closed tickets, full-text searchable |
+| **Artifacts** | `/artifacts/` | Investigation, plan, and test_plan files per ticket, grouped by ticket ID |
+| **Archive** | `/archive/` | Historical docs and design specs from earlier milestones |
+
+Full-text search covers all four sections. Each page shows a **status badge** (`authoritative` / `active` / `historical` / `archive`) based on the file's frontmatter.
+
+### Adding new docs to the site
+
+1. Create the `.md` file under `docs/` (or the appropriate section).
+2. Add a YAML frontmatter block at the very top (see schema below).
+3. Run `make docs-registry` to update the machine-readable index.
+4. Run `make docs-serve` — the new file appears automatically.
+
+---
+
+## How the System Works
+
+### Frontmatter classification
+
+Every `.md` file in the project carries a YAML frontmatter block that classifies it by content type, status, layer, authority, and audience. This is the foundation that powers Docusaurus navigation, the registry index, and agent doc discovery.
+
+Schema: [`docs/guidelines/frontmatter_schema.md`](guidelines/frontmatter_schema.md)
+
+**Doc frontmatter** (files under `docs/`, excluding archive):
+```yaml
+---
+status: authoritative    # authoritative | active | historical | archive
+layer: mechanics         # mechanics | engine | core | architecture | systems | combat |
+                         # strategy | observability | performance | testing | compliance |
+                         # ai | guidelines | simulation | economy | world | misc
+authority: P0            # P0 (gates on it) | P1 (active reference) | P2 (historical/FYI)
+audience: developer      # developer | agent | designer | historical
+tags: [combat, damage]   # optional free list
+last_verified: 2026-06-06  # required when status: authoritative
+---
+```
+
+**Ticket frontmatter** (files in `tickets/done/`):
+```yaml
+---
+ticket_id: TCK-20260606-PHASE28-FOO
+title: "Short title"
+status: DONE
+layer: engine
+authority: P1
+audience: developer
+date: 2026-06-06
+tags: []
+---
+```
+
+**Artifact frontmatter** (`stored_artifacts/*/investigation.md` etc.):
+```yaml
+---
+ticket_id: TCK-20260606-PHASE28-FOO
+artifact_type: investigation    # investigation | plan | test_plan
+layer: engine
+tags: []
+---
+```
+
+**Archive frontmatter** (`docs/archive/`, `docs/superpowers/specs/`, `docs/specs/`):
+```yaml
+---
+status: archive
+authority: P2
+audience: historical
+layer: combat              # auto-inferred from filename
+original_date: 2026-03-15  # from filename date prefix if present
+---
+```
+
+### Validating frontmatter
+
+```bash
+python3 tools/validate_frontmatter.py docs/mechanics/       # check a directory
+python3 tools/validate_frontmatter.py docs/engine/kernel.md # check a single file
+```
+
+Exits 0 if valid, 1 on any violation. Content type is inferred from path (no `content_type` field required).
+
+### The doc registry
+
+`docs/REGISTRY.yaml` is a flat machine-readable index of all tagged docs and closed tickets (912 entries after the initial pass). It is committed to git so agents can query it without running the script.
+
+```bash
+make docs-registry   # Regenerate docs/REGISTRY.yaml
+```
+
+Each entry is either a `doc` entry or a `ticket` entry (with `artifact_files` listing investigation/plan/test_plan if they exist):
+
+```yaml
+- type: doc
+  path: docs/mechanics/02_combat_laws.md
+  title: Combat Laws
+  status: authoritative
+  layer: mechanics
+  authority: P0
+  ...
+
+- type: ticket
+  path: tickets/done/TCK-20260606-PHASE28-FOO.md
+  ticket_id: TCK-20260606-PHASE28-FOO
+  title: "Phase 28 Foo"
+  date: "2026-06-06"
+  artifact_files:
+    - stored_artifacts/TCK-20260606-PHASE28-FOO/investigation.md
+    - stored_artifacts/TCK-20260606-PHASE28-FOO/plan.md
+    - stored_artifacts/TCK-20260606-PHASE28-FOO/test_plan.md
+  related_code_areas:
+    - src/core/foo.py
+```
+
+Agents query the registry to find relevant docs without reading 500+ files. The `investigator` agent uses `related_code_areas` overlap to surface prior work; `mechanics-auditor` and `architecture-reviewer` use it to find P0 authoritative docs for a given layer.
+
+### Artifact index pages
+
+`stored_artifacts/*/index.md` landing pages are generated by `tools/generate_artifact_pages.py`. Each page groups the investigation, plan, and test_plan files for one ticket under a single navigable URL in the Artifacts section.
+
+```bash
+make docs-artifacts   # Regenerate stored_artifacts/*/index.md
+```
+
+---
+
+## Authoritative Docs (P0)
+
+These files are law — simulation behavior must match them exactly:
+
+| Chapter | File | Covers |
+|---|---|---|
+| 01 | [mechanics/01_entity_anatomy.md](mechanics/01_entity_anatomy.md) | Core attributes, derived stats, biological pressures, XP scaling |
+| 02 | [mechanics/02_combat_laws.md](mechanics/02_combat_laws.md) | Damage formula, tactical modifiers, durability decay |
+| 03 | [mechanics/03_economic_laws.md](mechanics/03_economic_laws.md) | Atomic conservation, harvesting, trade, crafting |
+| 04 | [mechanics/04_strategic_cognition.md](mechanics/04_strategic_cognition.md) | Goal hierarchy, interruption resistance, knowledge management |
+| 05 | [mechanics/05_world_evolution.md](mechanics/05_world_evolution.md) | Tick-to-day time, regional trauma, ecology, calamities |
+| 06 | [mechanics/06_worldbuilding_foundation.md](mechanics/06_worldbuilding_foundation.md) | Declarative topology, sovereignty, integrity validation |
+
+Engine contracts: [engine/kernel.md](engine/kernel.md) · [engine/authoritative_pipeline.md](engine/authoritative_pipeline.md) · [engine/project_lawbook_m10.md](engine/project_lawbook_m10.md)
+
+---
+
+## AI Tooling
+
+Claude Code subagents, workflows, and skills for the development and simulation lifecycle.
+
+- [AI README](ai/README.md) — overview
+- [Agents](ai/agents.md) — all subagents: roles, inputs, outputs
+- [Workflows](ai/workflows.md) — multi-agent orchestration phases and return values
+- [Skills](ai/skills.md) — slash commands for focused task patterns
+- [Ticket Lifecycle](ai/ticket-lifecycle.md) — complete flow from request to closed ticket
+
+---
+
+## Verification
+
+All documentation is verified against source code via `tests/docs/`. Run:
+
+```bash
+pytest tests/docs/ -v
+```
+
+If you find a discrepancy, mark it with `TODO:` in the code and update the doc. See [parity ledger](parity_ledger/) for machine-readable verification status per subsystem.

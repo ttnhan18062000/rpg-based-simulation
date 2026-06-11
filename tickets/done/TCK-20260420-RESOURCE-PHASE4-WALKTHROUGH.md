@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260420-RESOURCE-PHASE4-WALKTHROUGH
+phase: done
+date: 2026-04-20
+tags: [resource, phase4, walkthrough]
+---
+
 # Walkthrough - Milestone 5: Supported Gameplay Surface Consolidation
 
 We have successfully consolidated the V2 engine's current gameplay capabilities (Grid Movement and Resource Interaction) into a single, officially supported, and certifiable package.
@@ -42,3 +53,7 @@ Recent benchmark results ([baseline.json](file:///home/vboxuser/Work/rpg-based-s
 
 > [!IMPORTANT]
 > The engine now officially guarantees deterministic parity for movement and interaction. Any change to these slices will now automatically trigger a certification failure if it breaks the established contract.
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

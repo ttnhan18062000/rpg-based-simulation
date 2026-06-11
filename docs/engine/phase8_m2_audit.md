@@ -1,3 +1,10 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: developer
+---
+
 # Phase 8 Milestone 2 Audit: Combat Legality & Outcomes
 
 This document maps the Phase 8 combat rows to the current implementation and identifies specific gaps.

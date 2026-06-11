@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260322-RPG_REFINEMENT
+phase: done
+date: 2026-03-22
+tags: [rpg_refinement]
+---
+
 # TCK-20260322-RPG_REFINEMENT
 
 ## Title
@@ -23,3 +34,7 @@ This ticket covers the transition from a "Robotic/Reactive" simulation to a "Liv
 ## Related Artifacts
 - [Complete Thinking Flow](file:///staging_artifacts/TCK-20260322-RPG_REFINEMENT/rpg_core_refinement_specification.md)
 - [Technical Review](file:///staging_artifacts/TCK-20260322-RPG_REFINEMENT/technical_review.md)
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

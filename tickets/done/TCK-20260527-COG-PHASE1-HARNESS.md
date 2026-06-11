@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260527-COG-PHASE1-HARNESS
+phase: done
+date: 2026-05-27
+tags: [cog, phase1, harness]
+---
+
 # TCK-20260527-COG-PHASE1-HARNESS
 
 ## Title
@@ -7,6 +18,15 @@ Create Scenario-Driven TDD Test Harness for Phase 1
 ## Status
 
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 

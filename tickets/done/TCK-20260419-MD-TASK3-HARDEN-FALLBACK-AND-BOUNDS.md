@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260419-MD-TASK3-HARDEN-FALLBACK-AND-BOUNDS
+phase: done
+date: 2026-04-19
+tags: [md, task3, harden, fallback, and, bounds]
+---
+
 # TCK-20260419-MD-TASK3-HARDEN-FALLBACK-AND-BOUNDS
 
 ## Title
@@ -5,6 +16,15 @@ Harden fallback, failure handling, and bounded execution controls
 
 ## Status
 OPEN
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Ensure that the concurrency layer handles failures, queue saturation, and pressure signals with production-grade robustness.

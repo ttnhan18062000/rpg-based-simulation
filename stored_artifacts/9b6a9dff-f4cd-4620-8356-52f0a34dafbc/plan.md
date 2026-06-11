@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: 9b6a9dff-f4cd-4620-8356-52f0a34dafbc
+artifact_type: plan
+tags: [9b6a9dff, f4cd, 52f0a34dafbc]
+---
+
 # Milestone 3: Contract Enforcement & Finalization [COMPLETED]
 
 The goal of this milestone was to finalize the Town Resource Resolution by implementing a robust contract test suite. This suite ensures that the V2 engine systems (`ShopSystem`, `BlacksmithSystem`) strictly enforce the gameplay laws defined during Milestone 2, preventing invalid state transitions even if proposed by an AI.

@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: economy
+original_date: unknown
+---
+
 # [Milestone A] - Core Runtime Completion and Contract Closure
 
 ## [Milestone Description]

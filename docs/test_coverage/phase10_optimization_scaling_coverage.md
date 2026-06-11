@@ -1,3 +1,10 @@
+---
+status: historical
+layer: testing
+authority: P2
+audience: developer
+---
+
 # Phase 10 — Optimization / Scaling / Rollout Hardening Coverage
 
 This document outlines the test coverage matrix for Phase 10, distinguishing existing stability, stress, and API health checks from the new feature-specific scaling, budgeting, and rollout gates.

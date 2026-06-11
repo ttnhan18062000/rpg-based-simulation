@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: c6306454-56e4-4a14-b03f-7fc75ea22c2d
+artifact_type: test_plan
+tags: [c6306454, 56e4, 4a14, b03f, 7fc75ea22c2d]
+---
+
 # Test Plan - Tactical Combat Hardening
 
 ## Objectives

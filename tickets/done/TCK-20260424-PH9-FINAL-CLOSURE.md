@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260424-PH9-FINAL-CLOSURE
+phase: done
+date: 2026-04-24
+tags: [ph9, final, closure]
+---
+
 # TCK-20260424-PH9-FINAL-CLOSURE
 
 ## Title
@@ -5,6 +16,15 @@ Phase 9: Strategic & Social Cognition Final Closure
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Finalize the implementation of Phase 9 milestones including biological needs, hero lifecycle, recruitment negotiation, and regional dynamics. Update all project management artifacts.

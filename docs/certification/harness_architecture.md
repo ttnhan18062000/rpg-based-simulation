@@ -1,3 +1,11 @@
+---
+status: active
+layer: testing
+authority: P1
+audience: developer
+tags: [certification, harness, testing]
+---
+
 # Certification Harness Architecture
 
 The Certification Harness is a proof-oriented runner designed to verify the architectural integrity and logic compliance of the RPG Engine.

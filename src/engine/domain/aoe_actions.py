@@ -91,6 +91,7 @@ class AoeActions:
                         q_updates = QuestResolutionSystem.evaluate_combat_victory(
                             entity,
                             target.kind,
+                            victim_entity=target,
                         )
 
                         if q_updates:

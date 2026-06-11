@@ -1,3 +1,14 @@
+---
+status: historical
+layer: strategy
+authority: P1
+audience: agent
+ticket_id: TCK-20260414-COGNITION-EXPLAINABILITY-HARDENING
+phase: done
+date: 2026-04-14
+tags: [cognition, explainability, hardening]
+---
+
 # TCK-20260414-COGNITION-EXPLAINABILITY-HARDENING
 
 ## Title
@@ -5,6 +16,15 @@ Cognition Derivation Hardening & Strategic Explainability
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Address derivation gaps and explainability proof from `intel_capacity_implementation_updated.md` and `strategy_implementation_updated_v2.md`. Hardened the strategic cognition pipeline with robust bounding and transparent observability.

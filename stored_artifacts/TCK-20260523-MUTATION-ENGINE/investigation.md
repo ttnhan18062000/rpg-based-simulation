@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260523-MUTATION-ENGINE
+artifact_type: investigation
+tags: [mutation, engine]
+---
+
 # Investigation Report - Mutation Engine
 
 ## Codebase Analysis

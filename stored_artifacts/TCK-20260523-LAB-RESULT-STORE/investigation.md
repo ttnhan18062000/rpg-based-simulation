@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260523-LAB-RESULT-STORE
+artifact_type: investigation
+tags: [lab, result, store]
+---
+
 # Investigation - Lab Result Store (Milestone 80)
 
 We analyzed the existing `LabRunRepository` implementation in `src/lab/repository.py` and the orchestrator's directory outputs.

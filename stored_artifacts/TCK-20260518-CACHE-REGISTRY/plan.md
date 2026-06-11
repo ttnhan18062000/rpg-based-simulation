@@ -1,3 +1,13 @@
+---
+status: historical
+layer: guidelines
+authority: P2
+audience: agent
+ticket_id: TCK-20260518-CACHE-REGISTRY
+artifact_type: plan
+tags: [cache, registry]
+---
+
 # Plan: Cache Lifecycle and Memory Boundaries (Milestone 19)
 
 ## 1. Architectural Design

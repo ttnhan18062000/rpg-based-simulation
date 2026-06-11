@@ -1,3 +1,13 @@
+---
+status: historical
+layer: strategy
+authority: P2
+audience: agent
+ticket_id: TCK-20260518-STRATEGIC-WORK-QUEUE
+artifact_type: plan
+tags: [strategic, work, queue]
+---
+
 # Implementation Plan: StrategicWorkQueue
 
 ## Proposed Changes

@@ -1,3 +1,14 @@
+---
+status: historical
+layer: world
+authority: P1
+audience: agent
+ticket_id: TCK-20260523-WORLD-CLI
+phase: done
+date: 2026-05-23
+tags: [world, cli]
+---
+
 # TCK-20260523-WORLD-CLI
 
 ## Title
@@ -7,6 +18,15 @@ Milestone 72 — World CLI / Tooling
 ## Status
 
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 

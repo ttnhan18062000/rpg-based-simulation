@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260405-DOCS
+artifact_type: plan
+tags: [docs]
+---
+
 # Documentation Update Plan
 
 ## Goal

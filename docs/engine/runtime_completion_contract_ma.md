@@ -1,3 +1,10 @@
+---
+status: active
+layer: engine
+authority: P1
+audience: developer
+---
+
 # Phase 4 / Milestone 1: Substrate Baseline Freeze Contract
 
 ## 1. Purpose

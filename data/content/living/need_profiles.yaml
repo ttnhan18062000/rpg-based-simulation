@@ -1,0 +1,55 @@
+# STATE: REDESIGNED-CORE
+# Need profiles are reasonable vertical data because they explain survival pressure for all living entities.
+- id: "humanoid_survival"
+  display_name: "Humanoid Survival"
+  needs:
+    hunger: "medium"
+    safety: "high"
+    sleep: "medium"
+    social_belonging: "medium"
+    shelter: "medium"
+
+# STATE: REDESIGNED-CORE
+- id: "carnivore_survival"
+  display_name: "Carnivore Survival"
+  needs:
+    hunger: "high"
+    safety: "medium"
+    territory: "high"
+    pack_belonging: "medium"
+
+# STATE: ADDITIONAL
+- id: "goblin_survival"
+  display_name: "Goblin Survival"
+  needs:
+    hunger: "medium"
+    safety: "high"
+    group_belonging: "medium"
+    loot_security: "high"
+
+# STATE: ADDITIONAL
+- id: "undead_purpose"
+  display_name: "Undead Purpose"
+  needs:
+    hunger: "none"
+    safety: "low"
+    pain_avoidance: "low"
+    purpose_fixation: "high"
+
+# STATE: ADDITIONAL
+- id: "spirit_anchor"
+  display_name: "Spirit Anchor"
+  needs:
+    hunger: "none"
+    safety: "medium"
+    anchor_integrity: "high"
+    memory_echo: "medium"
+
+# STATE: ADDITIONAL
+- id: "elemental_stability"
+  display_name: "Elemental Stability"
+  needs:
+    hunger: "none"
+    safety: "medium"
+    elemental_charge: "high"
+    environment_alignment: "high"

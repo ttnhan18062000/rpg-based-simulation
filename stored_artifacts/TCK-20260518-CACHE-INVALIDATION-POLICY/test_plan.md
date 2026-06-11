@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260518-CACHE-INVALIDATION-POLICY
+artifact_type: test_plan
+tags: [cache, invalidation, policy]
+---
+
 # Test Plan: CacheInvalidationPolicy
 
 Implement the following unit tests in `tests/unit/optimization/test_cache_invalidation_policy.py`:

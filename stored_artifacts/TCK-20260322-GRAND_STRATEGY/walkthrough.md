@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: strategy
+authority: P2
+audience: agent
+tags: [grand_strategy]
+---
+
 # Walkthrough: Milestone 11 - Grand Strategy
 
 I have implemented the Grand Strategy layer, introducing faction wars, territory conquest, and siege mechanics. This system adds a dynamic strategic layer where regional control shifts based on combat outcomes, affecting both hero performance and world evolution.

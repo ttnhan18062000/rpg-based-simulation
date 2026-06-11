@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: epic-17-multi-hero
+phase: done
+date: unknown
+tags: [epic, multi, hero]
+---
+
 # Epic 17 Phase 1: Multi-Hero & Permanent Death
 
 ## Title
@@ -22,3 +33,7 @@ The simulation previously hardcoded the existence of a single Hero entity. This 
 
 ## Related Tickets
 Subsumes features from `epic-04` (Multi-Hero) and partially addresses `epic-18` tracking concepts.
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

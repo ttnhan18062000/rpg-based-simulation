@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260529-COG-PHASE12-PERCEPTION
+phase: done
+date: 2026-05-29
+tags: [cog, phase12, perception]
+---
+
 # TCK-20260529-COG-PHASE12-PERCEPTION
 
 ## Title
@@ -7,6 +18,15 @@ Perception and Attention Domain Implementation
 ## Status
 
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 

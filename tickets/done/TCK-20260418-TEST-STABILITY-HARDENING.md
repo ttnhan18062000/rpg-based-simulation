@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260418-TEST-STABILITY-HARDENING
+phase: done
+date: 2026-04-18
+tags: [test, stability, hardening]
+---
+
 # TCK-20260418-TEST-STABILITY-HARDENING
 
 ## Title
@@ -5,6 +16,15 @@ Investigate and harden test infrastructure to prevent lingering/stuck processes.
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 The user observed multiple lingering `pytest` processes that do not exit properly, causing resource overhead and indicating potential deadlocks in the test suite.

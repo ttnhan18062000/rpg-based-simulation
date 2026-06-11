@@ -1,0 +1,77 @@
+# STATE: EXISTING-LOGIC
+# Current project already has cognition/aspect direction; this expands it as data.
+- id: "practical_humanoid"
+  display_name: "Practical Humanoid"
+  planning_depth: "medium"
+  abstraction: "medium"
+  memory_span: "medium"
+  language_capacity: "high"
+  tool_reasoning: "medium"
+  social_reasoning: "medium"
+  risk_modeling: "medium"
+
+# STATE: REDESIGNED-CORE
+- id: "instinctive_animal"
+  display_name: "Instinctive Animal"
+  planning_depth: "very_low"
+  abstraction: "very_low"
+  memory_span: "low_medium"
+  language_capacity: "none"
+  tool_reasoning: "none"
+  social_reasoning: "pack_basic"
+  risk_modeling: "instinctive"
+
+# STATE: ADDITIONAL
+- id: "opportunistic_humanoid"
+  display_name: "Opportunistic Humanoid"
+  planning_depth: "low_medium"
+  abstraction: "medium_low"
+  memory_span: "medium"
+  language_capacity: "medium"
+  tool_reasoning: "medium"
+  social_reasoning: "medium"
+  risk_modeling: "medium"
+
+# STATE: ADDITIONAL
+- id: "disciplined_guard"
+  display_name: "Disciplined Guard"
+  planning_depth: "medium"
+  abstraction: "medium"
+  memory_span: "medium_high"
+  language_capacity: "high"
+  tool_reasoning: "medium"
+  social_reasoning: "medium"
+  risk_modeling: "medium_high"
+
+# STATE: ADDITIONAL
+- id: "trade_pragmatist"
+  display_name: "Trade Pragmatist"
+  planning_depth: "medium_high"
+  abstraction: "medium"
+  memory_span: "high"
+  language_capacity: "high"
+  tool_reasoning: "medium"
+  social_reasoning: "high"
+  risk_modeling: "high"
+
+# STATE: ADDITIONAL
+- id: "arcane_scholar"
+  display_name: "Arcane Scholar"
+  planning_depth: "high"
+  abstraction: "very_high"
+  memory_span: "high"
+  language_capacity: "high"
+  tool_reasoning: "high"
+  social_reasoning: "medium"
+  risk_modeling: "medium"
+
+# STATE: ADDITIONAL
+- id: "undead_fixated"
+  display_name: "Undead Fixated"
+  planning_depth: "low"
+  abstraction: "low"
+  memory_span: "fragmented"
+  language_capacity: "low"
+  tool_reasoning: "low"
+  social_reasoning: "low"
+  risk_modeling: "low"

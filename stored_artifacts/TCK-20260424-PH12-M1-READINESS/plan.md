@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260424-PH12-M1-READINESS
+artifact_type: plan
+tags: [ph12, m1, readiness]
+---
+
 # Phase 12 Milestone 1 Execution Plan
 
 ## 1. Surface Freezing

@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260408-PH3-PASS3-BEHAVIOR
+artifact_type: test_plan
+tags: [ph3, pass3, behavior]
+---
+
 # Test Plan - Phase 3 Pass 3: Behavioral Integration
 
 ## Automated Tests

@@ -1,3 +1,10 @@
+---
+status: active
+layer: engine
+authority: P1
+audience: developer
+---
+
 # Project Architecture: The Resource-Safe Conductor (v2)
 
 This document provides a deep technical overview of the **Resource-Safe Simulation Engine** at the heart of the v2 RPG simulation. It defines the authoritative execution laws, deterministic guarantees, and resource-safety boundaries.

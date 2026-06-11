@@ -218,9 +218,47 @@ class LegalityServiceV2:
         if attacker.identity.properties.get("status_frozen") or attacker.identity.properties.get("status_stunned"):
             return False, ReasonCode.ATTACKER_STATUS_BLOCKED
 
-        # 3. Faction Validity (Friendly Fire Law)
-        if attacker.identity.faction == target.identity.faction:
-            return False, ReasonCode.FRIENDLY_FIRE_ILLEGAL
+        # 3. Faction Validity (Friendly Fire Law / Dynamic Relationship Check)
+        from src.content_semantics.faction import get_faction_semantics_service, get_faction_id_str, get_race_id_str
+        from src.content_semantics.relation import RelationContext
+
+        attacker_faction_str = get_faction_id_str(attacker)
+        target_faction_str = get_faction_id_str(target)
+
+        dist = LegalityServiceV2.get_manhattan_dist(attacker.navigation.position, target.navigation.position)
+        # Check if they are already engaged in combat
+        combat_engaged = False
+        if attacker.task.payload.get("target_id") == target.id or target.task.payload.get("target_id") == attacker.id:
+            combat_engaged = True
+
+        context = RelationContext(
+            distance=float(dist),
+            combat_engaged=combat_engaged,
+            target_race=get_race_id_str(target),
+            intruding=False
+        )
+
+        semantics_service = get_faction_semantics_service()
+        # Verify if clean relationship or perspective data exists
+        has_clean = False
+        source = attacker_faction_str
+        target_fac = target_faction_str
+        for p in semantics_service.repo.perspectives.values():
+            if p.chosen_faction == source or p.id == source:
+                has_clean = True
+                break
+        if not has_clean:
+            for rel in semantics_service.repo.faction_relationships.values():
+                if rel.source_faction == source and rel.target_faction == target_fac:
+                    has_clean = True
+                    break
+
+        if has_clean:
+            if not semantics_service.is_hostile_compat(attacker_faction_str, target_faction_str, context):
+                return False, ReasonCode.FRIENDLY_FIRE_ILLEGAL
+        else:
+            if attacker.identity.faction == target.identity.faction:
+                return False, ReasonCode.FRIENDLY_FIRE_ILLEGAL
 
         # 4. Range Validity
         dist = LegalityServiceV2.get_manhattan_dist(attacker.navigation.position, target.navigation.position)

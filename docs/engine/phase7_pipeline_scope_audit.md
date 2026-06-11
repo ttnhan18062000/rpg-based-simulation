@@ -1,3 +1,10 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: developer
+---
+
 # Phase 7 Pipeline Scope Audit
 
 This document audits the systems invoked by the `AuthoritativeApplyPipeline.refine` method to identify semantic bleed and define ownership boundaries.

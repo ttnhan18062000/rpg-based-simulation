@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260519-SIM-OBS-PHASE3-M13
+artifact_type: investigation
+tags: [sim, obs, phase3, m13]
+---
+
 # Investigation Notes - Milestone 13: Evidence, Triage, and Report V2
 
 We investigated the current structure of `src/observability/reporting/run_report.py` and `src/observability/anomaly/pipeline.py`.

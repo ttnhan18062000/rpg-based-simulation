@@ -1,3 +1,14 @@
+---
+status: historical
+layer: performance
+authority: P1
+audience: agent
+ticket_id: TCK-20260513-PERF-CADENCE-INTEGRATION
+phase: done
+date: 2026-05-13
+tags: [perf, cadence, integration]
+---
+
 # TCK-20260513-PERF-CADENCE-INTEGRATION
 
 ## Title
@@ -5,6 +16,15 @@ Integrate System Cadence into Authoritative Pipeline
 
 ## Status
 OPEN
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Apply the cadence model to non-critical subsystems in the `AuthoritativeApplyPipeline` to reduce per-tick CPU load.

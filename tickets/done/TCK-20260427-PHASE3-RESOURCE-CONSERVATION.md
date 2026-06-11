@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260427-PHASE3-RESOURCE-CONSERVATION
+phase: done
+date: 2026-04-27
+tags: [phase3, resource, conservation]
+---
+
 # TCK-20260427-PHASE3-RESOURCE-CONSERVATION
 
 ## Title
@@ -7,6 +18,15 @@ Implement Authoritative Resource Conservation (Phase 3)
 ## Status
 
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 

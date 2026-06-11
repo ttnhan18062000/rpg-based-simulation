@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: misc
+authority: P2
+audience: agent
+tags: [core, import, stabilization]
+---
+
 # Consolidated Certification Report
 
 **Last Run ID**: `4a9c8315-1415-45ad-8f9c-1d7f3a9b9bbc`

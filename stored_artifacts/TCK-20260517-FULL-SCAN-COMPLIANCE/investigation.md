@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260517-FULL-SCAN-COMPLIANCE
+artifact_type: investigation
+tags: [full, scan, compliance]
+---
+
 # Milestone 2: Full-Scan Phase Compliance Investigation
 
 ## 1. Background & Parity Contract

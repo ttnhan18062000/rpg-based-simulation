@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: economy
+original_date: unknown
+---
+
 Here is the updated high-level v2 plan, corrected to match the **actual state of the implemented code**, not the milestone documents on paper.
 
 This version assumes the truth we already established:

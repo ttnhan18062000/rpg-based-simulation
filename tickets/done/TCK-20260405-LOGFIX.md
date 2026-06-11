@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260405-LOGFIX
+phase: done
+date: 2026-04-05
+tags: [logfix]
+---
+
 # TCK-20260405-LOGFIX: Fix E2E Logging Timeouts
 
 ## Description
@@ -15,3 +26,7 @@ The `tests/e2e/test_logging_structure.py` was failing in certain headless enviro
 
 ## Status
 DONE
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

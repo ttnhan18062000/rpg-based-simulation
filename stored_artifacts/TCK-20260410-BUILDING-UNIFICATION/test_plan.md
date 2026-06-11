@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260410-BUILDING-UNIFICATION
+artifact_type: test_plan
+tags: [building, unification]
+---
+
 # Test Plan: TCK-20260410-BUILDING-UNIFICATION
 
 ## Functional Tests

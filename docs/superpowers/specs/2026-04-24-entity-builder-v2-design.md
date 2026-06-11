@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: core
+original_date: 2026-04-24
+---
+
 # V2 Entity Builder Design Specification
 
 ## 1. Goal

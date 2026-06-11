@@ -1,3 +1,10 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: developer
+---
+
 # Phase 11 Preserved-Row Review
 
 This document contains the explicit proof review for every row labeled as **SUPPORTED** (Preserved) in the replacement ledger.

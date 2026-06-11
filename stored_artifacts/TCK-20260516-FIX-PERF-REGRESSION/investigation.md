@@ -1,3 +1,13 @@
+---
+status: historical
+layer: performance
+authority: P2
+audience: agent
+ticket_id: TCK-20260516-FIX-PERF-REGRESSION
+artifact_type: investigation
+tags: [fix, perf, regression]
+---
+
 # Investigation: Phase 2 Performance Regressions
 
 ## Background

@@ -1,3 +1,10 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: developer
+---
+
 # Milestone 2 Test Matrix — Determinism & Execution
 
 ## 1. Purpose

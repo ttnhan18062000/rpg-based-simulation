@@ -1,3 +1,13 @@
+---
+status: historical
+layer: performance
+authority: P2
+audience: agent
+ticket_id: TCK-20260518-OPTIMIZATION-PROOF-REPORT
+artifact_type: investigation
+tags: [optimization, proof, report]
+---
+
 # Milestone 13 Investigation: Structural Discovery & Proof Instrumentation
 
 ## Executive Summary

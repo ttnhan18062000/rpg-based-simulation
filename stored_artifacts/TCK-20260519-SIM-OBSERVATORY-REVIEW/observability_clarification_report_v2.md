@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: observability
+authority: P2
+audience: agent
+tags: [sim, observatory, review]
+---
+
 # Second-Pass Observability Clarification Report for Simulation Observatory (Phase 2)
 
 ## Executive Summary

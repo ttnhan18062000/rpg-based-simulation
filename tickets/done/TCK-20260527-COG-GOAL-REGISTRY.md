@@ -1,3 +1,14 @@
+---
+status: historical
+layer: guidelines
+authority: P1
+audience: agent
+ticket_id: TCK-20260527-COG-GOAL-REGISTRY
+phase: done
+date: 2026-05-27
+tags: [cog, goal, registry]
+---
+
 # TCK-20260527-COG-GOAL-REGISTRY
 
 ## Title
@@ -7,6 +18,15 @@ Expand Goal Registry and Validate Personality Claims
 ## Status
 
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 

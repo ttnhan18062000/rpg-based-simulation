@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: misc
+authority: P2
+audience: agent
+tags: [restructure]
+---
+
 - [x] Fix 1: Add `Inventory.is_effectively_full`, `weight_ratio`, `count_item` (36+ tests)
 - [x] Fix 2: Add `TreasureChest.try_respawn`, `loot`, `is_available` (6 tests)
 - [x] Fix 3: Update `WorkerPool` constructor call sites (43 tests)

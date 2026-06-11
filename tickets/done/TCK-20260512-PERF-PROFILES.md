@@ -1,3 +1,14 @@
+---
+status: historical
+layer: observability
+authority: P1
+audience: agent
+ticket_id: TCK-20260512-PERF-PROFILES
+phase: done
+date: 2026-05-12
+tags: [perf, profiles]
+---
+
 # TCK-20260512-PERF-PROFILES
 
 ## Title
@@ -5,6 +16,15 @@ Implement performance-oriented RuntimeProfiles
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Create a dedicated location for performance profiles as specified in `performance_implementation.md`.

@@ -1,3 +1,10 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: developer
+---
+
 # Attach Gate 2: Resource Interaction Support Boundary (Milestone 1)
 
 ## Supported Behavior

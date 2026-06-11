@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: core
+original_date: unknown
+---
+
 # Phase 2 — Bottom-Up Entity Self Model
 
 Phase 1 makes the world expose richer options. Phase 2 makes the entity able to **interpret itself and its known world** without hardcoding “adventure readiness.”

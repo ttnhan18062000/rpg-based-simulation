@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: simulation
+original_date: 2026-03-21
+---
+
 # High-Speed Chaos & Fraud Detection Design
 
 ## 1. Goal

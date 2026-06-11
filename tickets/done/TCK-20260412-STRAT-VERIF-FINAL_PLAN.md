@@ -1,3 +1,14 @@
+---
+status: historical
+layer: strategy
+authority: P1
+audience: agent
+ticket_id: TCK-20260412-STRAT-VERIF-FINAL_PLAN
+phase: done
+date: 2026-04-12
+tags: [strat, verif, final_plan]
+---
+
 # TCK-20260412-STRAT-VERIF-FINAL
 
 ## Goal Description
@@ -38,3 +49,7 @@ Update tasks to reflect current progress (unit tests completed) and add the fina
 
 ### Manual Verification
 - Inspect the generated `cognition_eX.json` to verify the "Near Death" node and its edges in the Cytoscape format.
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

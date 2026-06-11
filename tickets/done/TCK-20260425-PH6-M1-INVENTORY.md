@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260425-PH6-M1-INVENTORY
+phase: done
+date: 2026-04-25
+tags: [ph6, m1, inventory]
+---
+
 # TCK-20260425-PH6-M1-INVENTORY
 
 ## Title
@@ -7,6 +18,15 @@ Implementation of Inventory Model and Item Contracts
 ## Status
 
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 

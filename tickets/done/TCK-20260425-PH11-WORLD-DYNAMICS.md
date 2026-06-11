@@ -1,3 +1,14 @@
+---
+status: historical
+layer: world
+authority: P1
+audience: agent
+ticket_id: TCK-20260425-PH11-WORLD-DYNAMICS
+phase: done
+date: 2026-04-25
+tags: [ph11, world, dynamics]
+---
+
 # TCK-20260425-PH11-WORLD-DYNAMICS
 
 ## Title
@@ -5,6 +16,15 @@ Phase 11: Environmental Hazards, Calamity, and Region Transformation
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Recover world-state dynamics, calamity spread, and dynamic region modifiers in the V2 engine.

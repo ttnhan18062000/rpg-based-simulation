@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260524-LAB-SETUP-PREPARATION
+artifact_type: test_plan
+tags: [lab, setup, preparation]
+---
+
 # Staging Test Plan: TCK-20260524-LAB-SETUP-PREPARATION
 
 ## Integration Tests

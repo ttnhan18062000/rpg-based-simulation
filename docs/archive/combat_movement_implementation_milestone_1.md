@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: combat
+original_date: unknown
+---
+
 [Milestone 1] - Core Rulebook and Engine-Time Refactor
 
 [Milestone Description]

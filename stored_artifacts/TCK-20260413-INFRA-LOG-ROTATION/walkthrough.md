@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: engine
+authority: P2
+audience: agent
+tags: [infra, log, rotation]
+---
+
 # Walkthrough - Log Rotation Mechanism
 
 I have implemented an automated log rotation mechanism for simulation artifacts generated during regression tests and stress runs. This ensures the `logs/` directory remains clean and manageable.

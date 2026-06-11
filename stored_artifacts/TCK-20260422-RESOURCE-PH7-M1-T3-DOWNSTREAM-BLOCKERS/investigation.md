@@ -1,3 +1,13 @@
+---
+status: historical
+layer: economy
+authority: P2
+audience: agent
+ticket_id: TCK-20260422-RESOURCE-PH7-M1-T3-DOWNSTREAM-BLOCKERS
+artifact_type: investigation
+tags: [resource, ph7, m1, t3, downstream, blockers]
+---
+
 # Investigation: Phase 7 Downstream Blockers
 
 ## Dependency Analysis

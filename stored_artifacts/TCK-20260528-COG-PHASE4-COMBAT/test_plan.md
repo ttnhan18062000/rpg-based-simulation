@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260528-COG-PHASE4-COMBAT
+artifact_type: test_plan
+tags: [cog, phase4, combat]
+---
+
 # Test Plan: Phase 4 — Combat Engagement Cognition
 
 This document outlines the detailed verification plan for Phase 4.

@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260524-LAB-ENHANCEMENT
+phase: done
+date: 2026-05-24
+tags: [lab, enhancement]
+---
+
 # TCK-20260524-LAB-ENHANCEMENT
 
 ## Title
@@ -7,6 +18,15 @@ Implement ProposeSimulationEnhancements Workflow (Milestone 101)
 ## Status
 
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 

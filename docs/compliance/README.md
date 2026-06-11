@@ -1,3 +1,10 @@
+---
+status: active
+layer: compliance
+authority: P1
+audience: developer
+---
+
 # Compliance & Certification
 
 This directory contains the authoritative records of simulation integrity, logic verification, and technical debt tracking.

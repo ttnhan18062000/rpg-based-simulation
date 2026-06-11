@@ -1,3 +1,13 @@
+---
+status: historical
+layer: performance
+authority: P2
+audience: agent
+ticket_id: TCK-20260518-OPTIMIZATION-PROOF-REPORT
+artifact_type: test_plan
+tags: [optimization, proof, report]
+---
+
 # Milestone 13 Test Plan: Optimization Proof Report Verification
 
 ## 1. Automated Verification (`pytest`)

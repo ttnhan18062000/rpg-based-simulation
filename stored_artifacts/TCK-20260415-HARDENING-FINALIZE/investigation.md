@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260415-HARDENING-FINALIZE
+artifact_type: investigation
+tags: [hardening, finalize]
+---
+
 # Investigation - Strategic Learning & Social Consequences
 
 ## Uncertainty Resolution (Anti-Cheating)

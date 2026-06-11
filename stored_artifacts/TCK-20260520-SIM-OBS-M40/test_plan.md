@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260520-SIM-OBS-M40
+artifact_type: test_plan
+tags: [sim, obs, m40]
+---
+
 # Test Plan — Milestone 40: Alert Routing and Incident Workflow
 
 We will establish robust test suites covering both unit logic and integration paths to guarantee correctness, reliability, and security of the Alert Routing system.

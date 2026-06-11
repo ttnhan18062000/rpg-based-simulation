@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: testing
+original_date: unknown
+---
+
 ## 1. Split tests by execution cost and dependency level
 
 Right now, fast logic tests and slow process/integration tests are mixed. For example, the uploaded test base includes normal engine tests, subprocess API tests using `python3 -m src serve`, WebSocket tests, certification harness tests, and release-gate tests in the same broad run surface. 

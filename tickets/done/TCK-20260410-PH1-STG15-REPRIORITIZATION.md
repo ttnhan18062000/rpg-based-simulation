@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260410-PH1-STG15-REPRIORITIZATION
+phase: done
+date: 2026-04-10
+tags: [ph1, stg15, reprioritization]
+---
+
 # TCK-20260410-PH1-STG15-REPRIORITIZATION: Strategic Reprioritization
 
 **Request Summary**: Implement Phase 1 Stage 15 — Strategic Reprioritization from Life Events. This involves linking regional consequence data (danger/stability) and localized scars to the strategic appraisal pass, allowing entities to pivot their projects in response to world-tier trauma.
@@ -37,3 +48,7 @@
 - `src/core/logic/strategic_evaluator.py`
 - `src/ai/brain.py`
 - `tests/integration/ai/test_strategic_reprioritization.py` (New)
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

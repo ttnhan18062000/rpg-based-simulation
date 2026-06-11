@@ -1,3 +1,14 @@
+---
+status: historical
+layer: strategy
+authority: P1
+audience: agent
+ticket_id: TCK-20260518-STRATEGIC-WORK-QUEUE
+phase: done
+date: 2026-05-18
+tags: [strategic, work, queue]
+---
+
 # TCK-20260518-STRATEGIC-WORK-QUEUE
 
 ## Title
@@ -7,6 +18,15 @@ Implement StrategicWorkQueue for Bounded Strategic Cognition
 ## Status
 
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 

@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: engine
+authority: P2
+audience: agent
+tags: [infra, log, rotation]
+---
+
 - [ ] Implement Log Rotation Mechanism
     - [ ] Add `max_regression_runs` to `SimulationConfig` in `src/config.py`
     - [ ] Update `HeadlessRunner` in `src/testing/headless_regression_runner.py`

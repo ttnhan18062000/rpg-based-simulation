@@ -1,3 +1,10 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: developer
+---
+
 # Phase 12 Cutover-Allowed Surface
 
 This document defines the exact simulation surface eligible for production cutover in Phase 12.

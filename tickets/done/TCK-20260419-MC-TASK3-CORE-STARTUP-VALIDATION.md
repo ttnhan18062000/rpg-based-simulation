@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260419-MC-TASK3-CORE-STARTUP-VALIDATION
+phase: done
+date: 2026-04-19
+tags: [mc, task3, core, startup, validation]
+---
+
 # TCK-20260419-MC-TASK3-CORE-STARTUP-VALIDATION
 
 ## Title
@@ -5,6 +16,15 @@ Milestone C - Task 3: Complete Startup Validation and Flag Enforcement
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Harden startup and runtime control behavior to ensure contradictory or unsafe flags are rejected.

@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260411-AI-FIX-SYNTAX-ERROR
+artifact_type: investigation
+tags: [ai, fix, syntax, error]
+---
+
 # Investigation: TCK-20260411-AI-FIX-SYNTAX-ERROR
 
 ## Findings

@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260528-PHASE10-OPTIMIZATION
+phase: done
+date: 2026-05-28
+tags: [phase10, optimization]
+---
+
 # TCK-20260528-PHASE10-OPTIMIZATION
 
 ## Title
@@ -5,6 +16,15 @@ Phase 10 — Optimization / Scaling / Rollout Hardening
 
 ## Status
 INPROGRESS
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Please execute Tasks 1 through 14 of Phase 10 — Optimization / Scaling / Rollout Hardening.

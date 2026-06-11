@@ -1,3 +1,10 @@
+---
+status: active
+layer: engine
+authority: P1
+audience: developer
+---
+
 # Engineering Playbook: Resource-Safe Engine Maintenance
 
 ## Purpose

@@ -1,0 +1,14 @@
+{
+  "worlds": {
+    "sandbox_world": {
+      "world_id": "sandbox_world",
+      "name": "Dev Sandbox",
+      "path": "sandbox_world/world.yaml",
+      "schema_version": "worldtemplate.v1",
+      "tags": [],
+      "created_at": "2026-05-23T15:47:38.022954",
+      "updated_at": "2026-05-23T15:48:07.458360",
+      "status": "TEMPLATE"
+    }
+  }
+}

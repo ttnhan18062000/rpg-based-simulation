@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260515-PROD-HARDENING
+artifact_type: investigation
+tags: [prod, hardening]
+---
+
 # Investigation: Production Latency & GC Spikes
 
 ## Objective

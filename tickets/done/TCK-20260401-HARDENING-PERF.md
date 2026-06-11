@@ -1,3 +1,14 @@
+---
+status: historical
+layer: performance
+authority: P1
+audience: agent
+ticket_id: TCK-20260401-HARDENING-PERF
+phase: done
+date: 2026-04-01
+tags: [hardening, perf]
+---
+
 # TCK-20260401-HARDENING-PERF: Infrastructure Safety & Performance Optimization
 
 ## Description
@@ -22,3 +33,7 @@ DONE
 
 ## Final Status
 **DONE**: Implemented recursive freeze guards to prevent mutation during serialization and optimized StaticData payload caching. Replaced vulnerable serialization with structured Pydantic models and verified < 2ms overview generation.
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

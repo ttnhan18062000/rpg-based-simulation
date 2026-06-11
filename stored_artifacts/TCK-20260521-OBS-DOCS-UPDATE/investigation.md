@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260521-OBS-DOCS-UPDATE
+artifact_type: investigation
+tags: [obs, docs, update]
+---
+
 # Investigation - Codebase Verification for Phases 1 to 8
 
 ## Context

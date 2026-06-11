@@ -1,3 +1,14 @@
+---
+status: historical
+layer: performance
+authority: P1
+audience: agent
+ticket_id: TCK-20260514-PERF-OPTIMIZATION
+phase: done
+date: 2026-05-14
+tags: [perf, optimization]
+---
+
 # TCK-20260514-PERF-OPTIMIZATION
 
 ## Title
@@ -5,6 +16,15 @@ Engine Performance Hotspot Optimization
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Optimize the V2 Engine performance by addressing hotspots identified in the profiling harness:

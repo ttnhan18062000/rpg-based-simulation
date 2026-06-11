@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260520-SIM-OBS-M38
+artifact_type: investigation
+tags: [sim, obs, m38]
+---
+
 # Investigation — Historical Event Search API (Milestone 38)
 
 ## 1. Existing Query Architecture

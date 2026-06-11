@@ -1,3 +1,14 @@
+---
+status: historical
+layer: strategy
+authority: P1
+audience: agent
+ticket_id: TCK-20260503-HARDEN-COGNITION
+phase: done
+date: 2026-05-03
+tags: [harden, cognition]
+---
+
 # TCK-20260503-HARDEN-COGNITION
 
 ## Title
@@ -5,6 +16,15 @@ Hardening RPG Strategic Cognition and Tactical Legality
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Complete the hardening of the RPG V2 engine by finalizing Domain 2 (Tactical Decision Boundedness) and Domain 3 (Strategic Cognition).

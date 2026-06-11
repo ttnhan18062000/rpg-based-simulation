@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260410-PH6-ENGINE-INTEGRATION
+phase: done
+date: 2026-04-10
+tags: [ph6, engine, integration]
+---
+
 # TCK-20260410-PH6-ENGINE-INTEGRATION
 
 ## Title
@@ -7,6 +18,15 @@ Engine Integration, Presentation, Replay, and Operational Observability
 ## Status
 
 INPROGRESS
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 

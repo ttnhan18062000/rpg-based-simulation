@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260427-RPG-CORE-MIGRATION
+artifact_type: investigation
+tags: [rpg, core, migration]
+---
+
 # Investigation: RPG Core Logic Gaps (Phases 1-5)
 
 ## Overview

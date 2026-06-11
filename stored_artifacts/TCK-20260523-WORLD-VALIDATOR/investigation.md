@@ -1,3 +1,13 @@
+---
+status: historical
+layer: world
+authority: P2
+audience: agent
+ticket_id: TCK-20260523-WORLD-VALIDATOR
+artifact_type: investigation
+tags: [world, validator]
+---
+
 # Investigation: World Validator & Extensible Rules
 
 ## Pluggable Validation Architecture

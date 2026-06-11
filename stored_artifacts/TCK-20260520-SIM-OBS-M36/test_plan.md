@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260520-SIM-OBS-M36
+artifact_type: test_plan
+tags: [sim, obs, m36]
+---
+
 # Test Plan: Stream Adapter & Consumer
 
 We will comprehensively test unit behaviors and integration resilience for the Production Stream Adapter.

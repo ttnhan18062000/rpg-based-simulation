@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260419-MA-TASK1-FREEZE-LAW
+phase: done
+date: 2026-04-19
+tags: [ma, task1, freeze, law]
+---
+
 # TCK-20260419-MA-TASK1-FREEZE-LAW
 
 ## Title
@@ -5,6 +16,15 @@ Freeze exact Milestone A runtime law set
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Write the finished law set for the deterministic single-process baseline so implementation, tests, and later milestones all target one exact contract.

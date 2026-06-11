@@ -1,3 +1,10 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: developer
+---
+
 # Phase 10 Entry Support Boundary
 
 This document defines the honest support status of the system-compatibility surface as of the start of Phase 10.

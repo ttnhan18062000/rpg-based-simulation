@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: epic-17-phase-2
+artifact_type: plan
+tags: [epic, phase]
+---
+
 # Implementation Plan: Epic 17 Phase 2
 
 ## 1. F6: World Age & F8: Enemy Scaling

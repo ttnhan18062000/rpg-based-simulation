@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260520-SIM-OBS-PHASE5-M21
+phase: done
+date: 2026-05-20
+tags: [sim, obs, phase5, m21]
+---
+
 # TCK-20260520-SIM-OBS-PHASE5-M21
 
 ## Title
@@ -5,6 +16,15 @@ Live Run Status and Snapshot Provider
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Expose the current simulation run status safely via new read-only API endpoints to allow developers to query running simulations (current tick, health state, metrics, errors) without blocking the engine's tick loop or scanning all entities.

@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260420-V2-ENGINE-STABILIZATION
+phase: done
+date: 2026-04-20
+tags: [v2, engine, stabilization]
+---
+
 # TCK-20260420-V2-ENGINE-STABILIZATION
 
 ## Title
@@ -5,6 +16,15 @@ V2 Resource Engine Test Stabilization and Protocol Alignment
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Resolve all failing tests in `tests/` following the Milestone C/D architecture hardening.

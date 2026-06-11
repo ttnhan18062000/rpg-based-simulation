@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: c6306454-56e4-4a14-b03f-7fc75ea22c2d
+artifact_type: plan
+tags: [c6306454, 56e4, 4a14, b03f, 7fc75ea22c2d]
+---
+
 # Implementing Bracketing Bonus for Multi-Attacks
 
 The current implementation of `CombatResolutionSystem.resolve_multi_attack` fails to apply tactical bonuses such as flanking, high ground, and cover. While `resolve_attack` (single attack) handles these correctly, multi-attacks (used for Opportunity Attacks and simultaneous hits) only sum raw damages.

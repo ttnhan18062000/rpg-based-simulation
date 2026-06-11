@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260424-PH10-M2-CLI-COMPAT
+phase: done
+date: 2026-04-24
+tags: [ph10, m2, cli, compat]
+---
+
 # TCK-20260424-PH10-M2-CLI-COMPAT
 
 ## Title
@@ -5,6 +16,15 @@ Phase 10 Milestone 2: CLI and Entrypoint Compatibility
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Recover the legacy CLI contract and unified entrypoint for the V2 engine.

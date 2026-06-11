@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: strategy
+original_date: unknown
+---
+
 This document is a corrective update to the bounded-intelligence implementation plan.
 
 It is **not** a restatement of the original feature roadmap.

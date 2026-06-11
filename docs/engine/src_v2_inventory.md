@@ -1,3 +1,10 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: developer
+---
+
 # Canonical `src` Surface Inventory
 
 This document tracks the current state of the `src` implementation. It is used as the current-state mirror to the Legacy Replacement Ledger.

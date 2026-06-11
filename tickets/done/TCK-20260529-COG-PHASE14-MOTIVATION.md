@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260529-COG-PHASE14-MOTIVATION
+phase: done
+date: 2026-05-29
+tags: [cog, phase14, motivation]
+---
+
 # TCK-20260529-COG-PHASE14-MOTIVATION
 
 ## Title
@@ -7,6 +18,15 @@ Motivation, Identity Doctrine, and Role-Fit Domain Implementation
 ## Status
 
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 

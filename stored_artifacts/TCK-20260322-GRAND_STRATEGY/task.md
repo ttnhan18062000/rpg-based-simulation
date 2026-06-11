@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: strategy
+authority: P2
+audience: agent
+tags: [grand_strategy]
+---
+
 # Milestone 4: The Living World (Part 1 - Soul & Body)
 - [x] Phase 0: Architectural Cleanup
     - [x] Refactor `AIBrain.decide` into Cognitive Pipeline.

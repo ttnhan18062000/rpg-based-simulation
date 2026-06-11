@@ -1,3 +1,14 @@
+---
+status: historical
+layer: performance
+authority: P1
+audience: agent
+ticket_id: epic-16-performance-audit
+phase: done
+date: unknown
+tags: [epic, performance, audit]
+---
+
 # Epic 16: Performance Audit & Optimization
 
 ## Summary
@@ -124,3 +135,7 @@ Potential optimizations (implement only if profiling confirms need):
 ## Labels
 
 `epic`, `performance`, `audit`, `done`
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

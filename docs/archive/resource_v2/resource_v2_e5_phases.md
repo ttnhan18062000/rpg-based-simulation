@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: economy
+original_date: unknown
+---
+
 # E5 — Final RPG Logic Closure Plan
 
 ## E5 Goal

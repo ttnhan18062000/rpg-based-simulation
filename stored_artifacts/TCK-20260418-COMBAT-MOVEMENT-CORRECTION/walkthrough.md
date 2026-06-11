@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: engine
+authority: P2
+audience: agent
+tags: [combat, movement, correction]
+---
+
 # Walkthrough: Overhaul Documentation Finalization
 
 I have successfully updated the authoritative overhaul plan to reflect the completed state of the repository.

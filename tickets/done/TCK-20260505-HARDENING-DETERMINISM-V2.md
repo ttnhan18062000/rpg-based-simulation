@@ -1,3 +1,14 @@
+---
+status: historical
+layer: simulation
+authority: P1
+audience: agent
+ticket_id: TCK-20260505-HARDENING-DETERMINISM-V2
+phase: done
+date: 2026-05-05
+tags: [hardening, determinism, v2]
+---
+
 # TCK-20260505-HARDENING-DETERMINISM-V2
 
 ## Title
@@ -5,6 +16,15 @@ Hardening V2 Engine Determinism and Test Parity
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Resolve non-deterministic readiness divergence and fix the 224 test failures caused by the V2 contract migration. Ensure bit-identical states between sequential and concurrent simulations.

@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260520-SIM-OBS-M40
+artifact_type: plan
+tags: [sim, obs, m40]
+---
+
 # Plan — Milestone 40: Alert Routing and Incident Workflow
 
 This plan outlines the architecture, data models, routing pipeline, and integration paths for the production-grade Alert Routing system.

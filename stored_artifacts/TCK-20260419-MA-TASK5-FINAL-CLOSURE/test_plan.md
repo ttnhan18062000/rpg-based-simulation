@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260419-MA-TASK5-FINAL-CLOSURE
+artifact_type: test_plan
+tags: [ma, task5, final, closure]
+---
+
 # Test Plan: Milestone A Closure Gating
 
 ## Objective

@@ -1,3 +1,13 @@
+---
+status: historical
+layer: observability
+authority: P2
+audience: agent
+ticket_id: TCK-20260519-SIM-OBS-PROM-METRICS
+artifact_type: investigation
+tags: [sim, obs, prom, metrics]
+---
+
 # Observability Milestone 1 Investigation
 
 Researching and documenting core metric sources and exporter patterns.

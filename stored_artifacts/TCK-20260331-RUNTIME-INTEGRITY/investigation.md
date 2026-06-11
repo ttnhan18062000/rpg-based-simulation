@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260331-RUNTIME-INTEGRITY
+artifact_type: investigation
+tags: [runtime, integrity]
+---
+
 # Investigation: Runtime Integrity & Legacy Access Patterns
 
 ## Current State Analysis

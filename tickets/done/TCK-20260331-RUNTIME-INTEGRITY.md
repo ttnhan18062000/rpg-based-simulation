@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260331-RUNTIME-INTEGRITY
+phase: done
+date: 2026-03-31
+tags: [runtime, integrity]
+---
+
 # TCK-20260331-RUNTIME-INTEGRITY: Restore Runtime Integrity & AOA Convergence
 
 ## Description
@@ -23,3 +34,7 @@ This ticket addresses the first priority of the `final_implementation_plan.md`. 
 
 ## Status
 INPROGRESS
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

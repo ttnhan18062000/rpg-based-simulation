@@ -1,7 +1,26 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260410-PH1-STG5-BOOTSTRAPPING
+phase: done
+date: 2026-04-10
+tags: [ph1, stg5, bootstrapping]
+---
+
 # Ticket TCK-20260410-PH1-STG5-BOOTSTRAPPING
 ## Phase 1 Stage 5: Bootstrapping
 
-### Request Summary
+### Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+## Request Summary
 Implementation of default strategic orientation seeding during entity generation.
 
 ### Scope

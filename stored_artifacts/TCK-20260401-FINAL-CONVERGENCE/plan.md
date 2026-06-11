@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260401-FINAL-CONVERGENCE
+artifact_type: plan
+tags: [final, convergence]
+---
+
 # Implementation Plan: TCK-20260401-FINAL-CONVERGENCE
 
 ## Goal

@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260425-PH7-M2-GUILD
+phase: done
+date: 2026-04-25
+tags: [ph7, m2, guild]
+---
+
 # TCK-20260425-PH7-M2-GUILD
 
 ## Title
@@ -7,6 +18,15 @@ Implementation of Guild Service and Quest Generation
 ## Status
 
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 

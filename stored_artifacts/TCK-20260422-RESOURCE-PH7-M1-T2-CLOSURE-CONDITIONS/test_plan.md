@@ -1,3 +1,13 @@
+---
+status: historical
+layer: economy
+authority: P2
+audience: agent
+ticket_id: TCK-20260422-RESOURCE-PH7-M1-T2-CLOSURE-CONDITIONS
+artifact_type: test_plan
+tags: [resource, ph7, m1, t2, closure, conditions]
+---
+
 # Test Plan: Phase 7 Closure Conditions
 
 ## Objective

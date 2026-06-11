@@ -1,3 +1,14 @@
+---
+status: historical
+layer: strategy
+authority: P1
+audience: agent
+ticket_id: TCK-20260427-PH6-STRATEGIC-COGNITION
+phase: done
+date: 2026-04-27
+tags: [ph6, strategic, cognition]
+---
+
 # TCK-20260427-PH6-STRATEGIC-COGNITION
 
 ## Title
@@ -5,6 +16,15 @@ Implement Phase 6 — Strategic Cognition Hardening
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Implement and stabilize the Phase 6 strategic cognition engine, including deterministic blocker resolution, detour suggestions, and authoritative state signaling for resolution events.

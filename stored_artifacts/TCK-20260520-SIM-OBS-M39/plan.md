@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260520-SIM-OBS-M39
+artifact_type: plan
+tags: [sim, obs, m39]
+---
+
 # Implementation Plan - Observatory Dashboard V1 (Milestone 39)
 
 We will design and implement the first production-grade SPA dashboard that provides comprehensive simulation telemetry, run manifests, sweep analysis, multi-run query, and entity timelines.

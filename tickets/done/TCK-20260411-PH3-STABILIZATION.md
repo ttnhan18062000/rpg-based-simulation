@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260411-PH3-STABILIZATION
+phase: done
+date: 2026-04-11
+tags: [ph3, stabilization]
+---
+
 # TCK-20260411-PH3-STABILIZATION
 
 ## Title
@@ -5,6 +16,15 @@ Phase 3 Social & Strategic Stabilization
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Verify and fix regressions in social and strategic integration tests after the Phase 3 refactoring.

@@ -1,3 +1,10 @@
+---
+status: active
+layer: compliance
+authority: P1
+audience: developer
+---
+
 # Logic Gap Analysis (V2 Engine)
 
 This document tracks technical debt where the documented "Authoritative Laws" or "Compliance Checklist" diverge from the current `src/` implementation.

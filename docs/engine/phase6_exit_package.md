@@ -1,3 +1,10 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: developer
+---
+
 # Phase 6 Exit Package: Authoritative Replacement Baseline
 
 This artifact serves as the official exit gate for Phase 6. It certifies that the legacy replacement scope has been fully audited, classified, and allocated to future phases under strict governance.

@@ -1,3 +1,13 @@
+---
+status: historical
+layer: ai
+authority: P2
+audience: agent
+ticket_id: TCK-20260410-PH4-SOCIAL-CONTRACTS
+artifact_type: test_plan
+tags: [ph4, social, contracts]
+---
+
 # Test Plan: Phase 4 Social Contracts
 
 ## Candidate Selection

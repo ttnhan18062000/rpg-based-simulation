@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260410-BUILDING-UNIFICATION
+phase: done
+date: 2026-04-10
+tags: [building, unification]
+---
+
 # TCK-20260410-BUILDING-UNIFICATION: Strategic Knowledge Unification (Phase 2)
 
 **Request Summary**: Execute [Improvement Phase 2] from `thinking_implementation_improvement.md`. Standardize all building handlers to use typed strategic ingestion and harden centralized detour suggestion logic.
@@ -23,3 +34,7 @@
 - TCK-20260410-STRAT-GOVERNANCE (Phase 2 Pre-req)
 
 **Current Status**: DONE
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

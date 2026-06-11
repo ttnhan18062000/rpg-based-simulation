@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260529-COG-PHASE15-COMMITMENT
+phase: done
+date: 2026-05-29
+tags: [cog, phase15, commitment]
+---
+
 # TCK-20260529-COG-PHASE15-COMMITMENT
 
 ## Title
@@ -7,6 +18,15 @@ Commitment, Obligation, and Reputation Domain Implementation
 ## Status
 
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 

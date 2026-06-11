@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260529-OBS-PHASE23-BEHAVIOR-TIMELINE-EPISODES
+phase: done
+date: 2026-05-29
+tags: [obs, phase23, behavior, timeline, episodes]
+---
+
 # TCK-20260529-OBS-PHASE23-BEHAVIOR-TIMELINE-EPISODES
 
 ## Title
@@ -7,6 +18,15 @@ Behavior Timeline and Episode Reconstruction (Phase 23)
 ## Status
 
 INPROGRESS
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 

@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: engine
+authority: P2
+audience: agent
+tags: [infra_06]
+---
+
 # Newcomer's Guide: Understanding "Hardening & Chaos Testing"
 
 Welcome to the Simulation Infrastructure team! One of the most critical aspects of our engine is **Determinism**—the guarantee that the same input always produces the exact same output. 

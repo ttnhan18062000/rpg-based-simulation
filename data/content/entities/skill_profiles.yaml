@@ -1,0 +1,40 @@
+# STATE: LEGACY-EXPORT
+# Inspired by existing test helper class skills: warrior/mage/rogue.
+- id: "warrior_skills"
+  skills: ["power_strike"]
+
+# STATE: LEGACY-EXPORT
+- id: "mage_skills"
+  skills: ["firebolt"]
+
+# STATE: LEGACY-EXPORT
+- id: "rogue_skills"
+  skills: ["backstab"]
+
+# STATE: ADDITIONAL
+- id: "ranger_skills"
+  skills: ["aimed_shot", "track_beast"]
+
+# STATE: ADDITIONAL
+- id: "guard_skills"
+  skills: ["hold_line", "shield_bash"]
+
+# STATE: ADDITIONAL
+- id: "merchant_skills"
+  skills: ["appraise", "bargain"]
+
+# STATE: ADDITIONAL
+- id: "blacksmith_skills"
+  skills: ["repair", "forge_basic"]
+
+# STATE: ADDITIONAL
+- id: "predator_skills"
+  skills: ["track_scent", "pounce"]
+
+# STATE: ADDITIONAL
+- id: "goblin_raider_skills"
+  skills: ["ambush", "dirty_strike"]
+
+# STATE: ADDITIONAL
+- id: "undead_sentinel_skills"
+  skills: ["relentless_advance"]

@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: D145C3D0-MILESTONE-B
+artifact_type: plan
+tags: [d145c3d0, milestone]
+---
+
 # Implementation Plan - Milestone B: Final Validation Gate
 
 This plan establishes the final **Verification Gate** for Milestone B. It ensures that the engine's runtime signals, governor transitions, and adaptive pool are functionally correct and compliant with the architectural laws.

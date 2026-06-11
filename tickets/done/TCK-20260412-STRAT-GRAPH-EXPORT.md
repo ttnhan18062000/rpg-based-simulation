@@ -1,3 +1,14 @@
+---
+status: historical
+layer: strategy
+authority: P1
+audience: agent
+ticket_id: TCK-20260412-STRAT-GRAPH-EXPORT
+phase: done
+date: 2026-04-12
+tags: [strat, graph, export]
+---
+
 # TCK-20260412-STRAT-GRAPH-EXPORT
 
 ## Title
@@ -5,6 +16,15 @@ Implement Exportable Entity Cognition Graph (Milestone 6)
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Create a canonical, deterministic, and observable representation of entity strategic state as a graph for regression testing and visualization.

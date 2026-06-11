@@ -1,3 +1,14 @@
+---
+status: historical
+layer: economy
+authority: P1
+audience: agent
+ticket_id: TCK-20260422-RESOURCE-PH7-M1-T2-CLOSURE-CONDITIONS
+phase: done
+date: 2026-04-22
+tags: [resource, ph7, m1, t2, closure, conditions]
+---
+
 # TCK-20260422-RESOURCE-PH7-M1-T2-CLOSURE-CONDITIONS
 
 ## Title
@@ -7,6 +18,15 @@ Define Phase 7 Closure Conditions
 ## Status
 
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 

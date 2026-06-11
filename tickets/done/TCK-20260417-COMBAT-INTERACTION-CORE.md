@@ -1,3 +1,14 @@
+---
+status: historical
+layer: combat
+authority: P1
+audience: agent
+ticket_id: TCK-20260417-COMBAT-INTERACTION-CORE
+phase: done
+date: 2026-04-17
+tags: [combat, interaction, core]
+---
+
 # TCK-20260417-COMBAT-INTERACTION-CORE
 
 ## Title
@@ -5,6 +16,15 @@ Combat Interaction Core Implementation
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Implement Milestone 2 of the Combat and Movement Overhaul, focusing on formalizing the combat interaction model. This includes engagement mechanics, opportunity attacks, target stickiness (hysteresis), and anti-stalemate logic.

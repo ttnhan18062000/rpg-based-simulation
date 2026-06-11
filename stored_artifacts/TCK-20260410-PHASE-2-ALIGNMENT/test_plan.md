@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260410-PHASE-2-ALIGNMENT
+artifact_type: test_plan
+tags: [phase, alignment]
+---
+
 # Test Plan: Phase 2 Alignment Verification
 
 ## Automated Tests

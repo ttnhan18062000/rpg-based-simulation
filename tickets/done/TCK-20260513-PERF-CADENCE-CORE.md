@@ -1,3 +1,14 @@
+---
+status: historical
+layer: performance
+authority: P1
+audience: agent
+ticket_id: TCK-20260513-PERF-CADENCE-CORE
+phase: done
+date: 2026-05-13
+tags: [perf, cadence, core]
+---
+
 # TCK-20260513-PERF-CADENCE-CORE
 
 ## Title
@@ -5,6 +16,15 @@ Implement System Cadence Infrastructure
 
 ## Status
 OPEN
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Create the core cadence module to support staggered execution of engine subsystems.

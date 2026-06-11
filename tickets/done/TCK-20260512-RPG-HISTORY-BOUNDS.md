@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260512-RPG-HISTORY-BOUNDS
+phase: done
+date: 2026-05-12
+tags: [rpg, history, bounds]
+---
+
 # TCK-20260512-RPG-HISTORY-BOUNDS
 
 ## Title
@@ -5,6 +16,15 @@ RPG Strategic & Transaction History Bounding
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Enforce capacity limits on entity strategic history (leads, concerns, turning points) and transaction logs in the V2 Engine to mitigate state bloat and memory inflation in long-running simulations.

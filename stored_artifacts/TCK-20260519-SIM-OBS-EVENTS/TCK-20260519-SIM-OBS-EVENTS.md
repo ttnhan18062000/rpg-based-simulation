@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: misc
+authority: P2
+audience: agent
+tags: [sim, obs, events]
+---
+
 # TCK-20260519-SIM-OBS-EVENTS
 
 ## Title

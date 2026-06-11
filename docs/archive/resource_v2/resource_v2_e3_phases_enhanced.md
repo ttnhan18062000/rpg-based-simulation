@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: economy
+original_date: unknown
+---
+
 # Implementation Plan Enhance3 — Missing / Incorrect RPG Core Logic
 
 Current checklist coverage is **~52%**. The next target should be **~60%**, by continuing to close semantic gaps in AI choice, movement recovery, and authoritative validation.

@@ -1,3 +1,14 @@
+---
+status: historical
+layer: strategy
+authority: P1
+audience: agent
+ticket_id: TCK-20260410-PH5-STRATEGIC-CONSEQUENCES
+phase: done
+date: 2026-04-10
+tags: [ph5, strategic, consequences]
+---
+
 # TCK-20260410-PH5-STRATEGIC-CONSEQUENCES
 
 ## Title
@@ -7,6 +18,15 @@ Event-Driven Reprioritization and Durable Consequences
 ## Status
 
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 

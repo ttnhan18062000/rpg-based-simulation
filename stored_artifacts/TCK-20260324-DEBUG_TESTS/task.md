@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: observability
+authority: P2
+audience: agent
+tags: [debug_tests]
+---
+
 # Task: Debug and Fix WorldLoop Tests
 
 - [x] Investigation phase

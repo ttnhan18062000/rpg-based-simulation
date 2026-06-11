@@ -22,3 +22,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Temporary simulation run data (data/ contains: content, expectation_packs, mutation_labs, run_sets, runs [ignored], test_cli_basic, test_obs_replay, world_modules, worlds)
+data/runs/*
+reports/release_proof/*
+

@@ -1,3 +1,10 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: developer
+---
+
 # Phase 11 Entry Package
 
 This package formalizes the handoff from Phase 10 implementation closure to Phase 11 system ratification.

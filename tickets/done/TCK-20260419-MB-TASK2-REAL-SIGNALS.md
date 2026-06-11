@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260419-MB-TASK2-REAL-SIGNALS
+phase: done
+date: 2026-04-19
+tags: [mb, task2, real, signals]
+---
+
 # TCK-20260419-MB-TASK2-REAL-SIGNALS
 
 ## Title
@@ -5,6 +16,15 @@ Replace weak signals with real bounded accounting
 
 ## Status
 OPEN
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Transition runtime signals from estimates to truthful facts. This involves implementing peak-accounting for workers, windowed math for trends, and profile-bound sampling cadences.

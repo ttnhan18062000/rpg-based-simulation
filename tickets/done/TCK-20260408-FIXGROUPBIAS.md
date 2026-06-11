@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260408-FIXGROUPBIAS
+phase: done
+date: 2026-04-08
+tags: [fixgroupbias]
+---
+
 # TCK-20260408-FIXGROUPBIAS: Fix Group AI Integration Bias
 
 - **Ticket ID**: TCK-20260408-FIXGROUPBIAS
@@ -10,3 +21,7 @@
     - No debug print statements remain in production code.
 - **Related tickets**: Phase 3 Stage 4 tasks in `phase_3_ds_implementation_plan.md`.
 - **Status**: INPROGRESS
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

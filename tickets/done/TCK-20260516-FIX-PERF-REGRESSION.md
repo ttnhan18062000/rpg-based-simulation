@@ -1,3 +1,14 @@
+---
+status: historical
+layer: performance
+authority: P1
+audience: agent
+ticket_id: TCK-20260516-FIX-PERF-REGRESSION
+phase: done
+date: 2026-05-16
+tags: [fix, perf, regression]
+---
+
 # TCK-20260516-FIX-PERF-REGRESSION
 
 ## Title
@@ -5,6 +16,15 @@ Fixing Unit Test Regressions from Phase 2 Performance Optimization
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Investigate and fix all unit test regressions caused by recent performance optimizations while adhering to repository rules and maintaining high performance.

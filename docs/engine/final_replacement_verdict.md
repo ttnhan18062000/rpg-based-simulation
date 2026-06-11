@@ -1,3 +1,10 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: developer
+---
+
 # Authoritative Replacement Verdict: Phase 11 Final
 
 ## 1. Official Statement

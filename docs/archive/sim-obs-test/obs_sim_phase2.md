@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: engine
+original_date: unknown
+---
+
 # Phase 2 Implementation Plan — Semantic Events and Post-Run Observatory
 
 Phase 1 gave the safe foundation:

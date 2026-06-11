@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: ai
+authority: P2
+audience: agent
+tags: [skill, scaling]
+---
+
 # TCK-20260405-SKILL-SCALING: Unified Skill Damage Resolution
 
 Unify skill damage calculation with the authoritative `DamageResolutionService`. Currently, `ActionSystem._get_use_skill_updates` uses a hardcoded `atk * power` formula that ignores magical scaling (MATK), elemental multipliers, critical hits, and evasion logic.

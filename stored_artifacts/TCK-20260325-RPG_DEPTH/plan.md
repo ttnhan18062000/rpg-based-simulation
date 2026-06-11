@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260325-RPG_DEPTH
+artifact_type: plan
+tags: [rpg_depth]
+---
+
 # Implementation Plan - TCK-20260325-RPG_DEPTH
 
 ## Proposed Changes

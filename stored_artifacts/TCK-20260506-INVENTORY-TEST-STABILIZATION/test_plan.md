@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260506-INVENTORY-TEST-STABILIZATION
+artifact_type: test_plan
+tags: [inventory, test, stabilization]
+---
+
 # Test Plan - Inventory Test Stabilization
 
 ## Strategy

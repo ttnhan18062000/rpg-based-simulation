@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260407-PHASE0-CONTINUE
+phase: done
+date: 2026-04-07
+tags: [phase0, continue]
+---
+
 # TCK-20260407-PHASE0-CONTINUE: Finishing Phase 0 Foundations
 
 ## Goal
@@ -23,3 +34,7 @@ INPROGRESS
 - `design_shift_implementation_plan_high_level.md`
 - `docs/architecture/macro_interest_constraints.md`
 - `TCK-20260406-PHASE0`
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

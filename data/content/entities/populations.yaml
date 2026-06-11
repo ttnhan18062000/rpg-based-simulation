@@ -1,0 +1,107 @@
+# STATE: REDESIGNED-CORE
+- id: "wolf_pack_small"
+  display_name: "Small Wolf Pack"
+  members:
+    hungry_wolf: 4
+    alpha_wolf: 1
+  preferred_regions: ["wolf_den", "near_forest"]
+
+# STATE: REDESIGNED-CORE
+- id: "frontier_village_population"
+  display_name: "Frontier Village Population"
+  members:
+    village_worker: 8
+    frontier_guard: 3
+    traveling_merchant: 1
+    village_blacksmith: 1
+  preferred_regions: ["hometown"]
+
+# STATE: LEGACY-EXPORT
+- id: "goblin_raiding_party"
+  display_name: "Goblin Raiding Party"
+  members:
+    goblin_scout: 2
+    goblin_raider: 4
+    goblin_archer: 2
+    goblin_warlord: 1
+  preferred_regions: ["goblin_camp"]
+
+# STATE: ADDITIONAL
+- id: "merchant_caravan"
+  display_name: "Merchant Caravan"
+  members:
+    traveling_merchant: 2
+    frontier_guard: 2
+  preferred_regions: ["trade_road", "hometown"]
+
+# STATE: ADDITIONAL
+- id: "forest_warden_patrol"
+  display_name: "Forest Warden Patrol"
+  members:
+    forest_ranger: 3
+  preferred_regions: ["sacred_grove", "deep_forest"]
+
+# STATE: ADDITIONAL
+- id: "bandit_ambush_group"
+  display_name: "Bandit Ambush Group"
+  members:
+    bandit_scout: 4
+  preferred_regions: ["bandit_road"]
+
+# STATE: ADDITIONAL
+- id: "old_mine_spider_cluster"
+  display_name: "Old Mine Spider Cluster"
+  members:
+    cave_spider: 5
+  preferred_regions: ["old_mine"]
+
+# STATE: ADDITIONAL
+- id: "undead_battlefield_patrol"
+  display_name: "Undead Battlefield Patrol"
+  members:
+    undead_sentinel: 6
+  preferred_regions: ["haunted_battlefield"]
+
+# STATE: ADDITIONAL
+- id: "dragon_cult_elite_cell"
+  display_name: "Dragon Cult Elite Cell"
+  members:
+    dragon_cult_champion: 1
+    apprentice_mage: 3
+  preferred_regions: ["volcanic_pass", "dragon_roost"]
+
+# STATE: ADDITIONAL
+- id: "orc_clan_warband"
+  display_name: "Orc Clan Warband"
+  members:
+    orc_brute: 5
+  preferred_regions: ["orc_stronghold"]
+
+# STATE: ADDITIONAL
+- id: "sacred_grove_guardians"
+  display_name: "Sacred Grove Guardians"
+  members:
+    spirit_guardian: 2
+  preferred_regions: ["sacred_grove", "deep_forest"]
+
+# STATE: ADDITIONAL
+- id: "moon_cult_apprentice_circle"
+  display_name: "Moon Cult Apprentice Circle"
+  members:
+    apprentice_mage: 4
+  preferred_regions: ["moon_cave"]
+
+# STATE: ADDITIONAL
+- id: "swamp_tribe_patrol"
+  display_name: "Swamp Tribe Patrol"
+  members:
+    lizardfolk_scout: 3
+    lizardfolk_shaman: 1
+  preferred_regions: ["swamp_border_territory"]
+
+# STATE: ADDITIONAL
+- id: "swamp_ambush_party"
+  display_name: "Swamp Ambush Party"
+  members:
+    lizardfolk_scout: 4
+  preferred_regions: ["swamp_border_territory"]

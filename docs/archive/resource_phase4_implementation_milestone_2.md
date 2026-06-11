@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: economy
+original_date: unknown
+---
+
 # [Milestone 2] - Attach Gate 1: Deterministic Grid Movement as the First Official RPG Slice
 
 ## [Milestone Description]

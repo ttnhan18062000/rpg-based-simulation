@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260411-AI-STABILIZATION
+phase: done
+date: 2026-04-11
+tags: [ai, stabilization]
+---
+
 # TCK-20260411-AI-STABILIZATION
 
 ## Title
@@ -5,6 +16,15 @@ Stabilizing Combat AI Decision Loop & Behavioral Resilience
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Resolve remaining E2E combat failures and harden AI decision logic against state jitter and behavioral regressions.

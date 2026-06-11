@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260419-MB-TASK4-ADAPTIVE-POOL
+phase: done
+date: 2026-04-19
+tags: [mb, task4, adaptive, pool]
+---
+
 # TCK-20260419-MB-TASK4-ADAPTIVE-POOL
 
 ## Title
@@ -5,6 +16,15 @@ Implement Adaptive Saturated-Pool Strategy
 
 ## Status
 OPEN
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Transition the worker pool from a static-only resource to an elastic resource governed by operational policy. This implements Principle 8 (Elastic Concurrency) from the handbook.

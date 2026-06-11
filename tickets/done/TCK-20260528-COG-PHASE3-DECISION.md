@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260528-COG-PHASE3-DECISION
+phase: done
+date: 2026-05-28
+tags: [cog, phase3, decision]
+---
+
 # TCK-20260528-COG-PHASE3-DECISION
 
 ## Title
@@ -7,6 +18,15 @@ Phase 3 — Adventure Decision Layer
 ## Status
 
 INPROGRESS
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 

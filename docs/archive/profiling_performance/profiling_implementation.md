@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: observability
+original_date: unknown
+---
+
 Yes. Python profiling is exactly what you should add before deciding optimization.
 
 Use profiling in this order:

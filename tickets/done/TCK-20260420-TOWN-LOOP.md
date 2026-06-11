@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260420-TOWN-LOOP
+phase: done
+date: 2026-04-20
+tags: [town, loop]
+---
+
 # TCK-20260420-TOWN-LOOP
 
 ## Title
@@ -5,6 +16,15 @@ Town-Driven Resource Resolution (Material Handback)
 
 ## Status
 INPROGRESS
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Implement the 'Town Loop' where entities on Town tiles convert their harvested materials into Gold or secondary resources. This recovers the original RPG-core resolution cycle.

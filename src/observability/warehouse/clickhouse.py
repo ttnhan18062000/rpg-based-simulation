@@ -72,7 +72,17 @@ class ClickHouseSchemaManager:
             ended_at Nullable(String),
             schema_version String,
             checksum String,
-            manifest_json String
+            manifest_json String,
+            resolved_world_path Nullable(String),
+            compile_context_path Nullable(String),
+            provenance_manifest_path Nullable(String),
+            assembly_report_path Nullable(String),
+            validation_report_path Nullable(String),
+            compile_report_path Nullable(String),
+            runtime_content_source Nullable(String),
+            catalog_fingerprint Nullable(String),
+            module_fingerprints Nullable(String),
+            state_hash Nullable(String)
         ) ENGINE = MergeTree()
         ORDER BY (run_id)
         """)
@@ -350,10 +360,25 @@ class ClickHouseWarehouseAdapter(WarehouseAdapter):
                 health_score=manifest_dict.get("health_score", 100.0) if "health_score" in manifest_dict else 100.0,
                 started_at=manifest_dict.get("started_at", ""),
                 ended_at=manifest_dict.get("ended_at"),
-                manifest_json=json.dumps(manifest_dict)
+                manifest_json=json.dumps(manifest_dict),
+                resolved_world_path=manifest_dict.get("resolved_world_path"),
+                compile_context_path=manifest_dict.get("compile_context_path"),
+                provenance_manifest_path=manifest_dict.get("provenance_manifest_path"),
+                assembly_report_path=manifest_dict.get("assembly_report_path"),
+                validation_report_path=manifest_dict.get("validation_report_path"),
+                compile_report_path=manifest_dict.get("compile_report_path"),
+                runtime_content_source=manifest_dict.get("runtime_content_source"),
+                catalog_fingerprint=manifest_dict.get("catalog_fingerprint"),
+                module_fingerprints=manifest_dict.get("module_fingerprints"),
+                state_hash=manifest_dict.get("state_hash")
             )
 
             if not dry_run:
+                module_fingerprints_str = (
+                    json.dumps(run_rec.module_fingerprints)
+                    if run_rec.module_fingerprints is not None
+                    else None
+                )
                 self.client.insert("runs", [[
                     run_rec.run_id,
                     run_rec.scenario_name,
@@ -366,11 +391,24 @@ class ClickHouseWarehouseAdapter(WarehouseAdapter):
                     run_rec.ended_at,
                     run_rec.schema_version,
                     checksum,
-                    run_rec.manifest_json
+                    run_rec.manifest_json,
+                    run_rec.resolved_world_path,
+                    run_rec.compile_context_path,
+                    run_rec.provenance_manifest_path,
+                    run_rec.assembly_report_path,
+                    run_rec.validation_report_path,
+                    run_rec.compile_report_path,
+                    run_rec.runtime_content_source,
+                    run_rec.catalog_fingerprint,
+                    module_fingerprints_str,
+                    run_rec.state_hash
                 ]], column_names=[
                     "run_id", "scenario_name", "scenario_type", "seed", "status",
                     "ticks_completed", "health_score", "started_at", "ended_at",
-                    "schema_version", "checksum", "manifest_json"
+                    "schema_version", "checksum", "manifest_json",
+                    "resolved_world_path", "compile_context_path", "provenance_manifest_path", "assembly_report_path",
+                    "validation_report_path", "compile_report_path", "runtime_content_source", "catalog_fingerprint",
+                    "module_fingerprints", "state_hash"
                 ])
             records_count["runs"] += 1
 
@@ -674,6 +712,11 @@ class ClickHouseWarehouseAdapter(WarehouseAdapter):
         res = self.client.query(query, params)
         records = []
         for row in res.named_results():
+            if "module_fingerprints" in row and isinstance(row["module_fingerprints"], str):
+                try:
+                    row["module_fingerprints"] = json.loads(row["module_fingerprints"])
+                except Exception:
+                    row["module_fingerprints"] = None
             records.append(RunRecord(**row))
         return records
 

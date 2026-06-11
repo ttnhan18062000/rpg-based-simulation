@@ -1,4 +1,4 @@
-.PHONY: help install install-py install-fe build dev serve stop clean lint profile-api
+.PHONY: help install install-py install-fe build dev serve stop clean lint profile-api docs-serve docs-build docs-registry docs-artifacts
 
 # Default
 help: ## Show available commands
@@ -81,6 +81,35 @@ test-quick: ## Run fast tests only (skip slow integration)
 test-cov: ## Run tests with coverage report (V2)
 	python3 -m pytest tests_v2/ -v --tb=short --cov=src_v2 --cov-report=term-missing
 
+# ── Migration CI Lanes ────────────────────────────────────
+# Targeted test lanes for content migration work. Each lane selects a
+# focused subset of the suite using pytest -m markers.
+# See docs/testing/migration_ci_lanes.md for full documentation.
+
+lane-catalog: ## [fast] Catalog schema, adapter heuristics, reference graph, active-data-consumer
+	python3 -m pytest tests/ -m "catalog or content_graph" -v --tb=short
+
+lane-worldassembly: ## [fast] World module normalizers, assembly, provenance (excludes strict matrix)
+	python3 -m pytest tests/ -m "worldassembly and not strict_matrix" -v --tb=short
+
+lane-runtime: ## [fast] Registry bootstrap modes, scenario setup, adapter projection
+	python3 -m pytest tests/ -m "registry_projection or scenario_setup" -v --tb=short
+
+lane-strict-matrix: ## [medium] Cumulative world module matrix (end-to-end content builds)
+	python3 -m pytest tests/ -m "strict_matrix" -v --tb=short
+
+lane-legacy-regression: ## [slow] Arena, certification, legacy compat regression tests
+	python3 -m pytest tests/ -m "legacy_compat" -v --tb=short
+
+lane-architecture: ## [fast] Static architecture guards (no simulation, no catalog load)
+	python3 -m pytest tests/ -m "architecture" -v --tb=short
+
+lane-all-fast: ## [fast] All fast migration lanes combined (excludes slow and strict_matrix)
+	python3 -m pytest tests/ -m "(catalog or content_graph or worldassembly or registry_projection or scenario_setup or architecture) and not strict_matrix and not slow" -v --tb=short
+
+gate-expansion: ## Content expansion readiness gate — must pass before horizontal expansion
+	python3 -m pytest tests/integration/content/test_expansion_gate.py -v --tb=short
+
 # ── Profiling ────────────────────────────────────────────
 
 profile: ## Run automated performance profile (500 ticks, prints report)
@@ -102,6 +131,31 @@ lint: ## Run linters (frontend)
 
 typecheck: ## Run TypeScript type checking
 	cd frontend && npx tsc --noEmit
+
+# ── Documentation Site ───────────────────────────────────
+
+docs-artifacts: ## Generate stored_artifacts index pages
+	python3 tools/generate_artifact_pages.py
+
+docs-serve: docs-artifacts ## Start Docusaurus dev server (http://localhost:3000)
+	cd website && npm run start
+
+docs-build: docs-artifacts ## Build Docusaurus static site to website/build/
+	cd website && npm run build
+
+docs-registry: ## Regenerate docs/REGISTRY.yaml from frontmatter
+	python3 tools/generate_registry.py
+
+# ── Agent Monitoring ─────────────────────────────────────
+
+agent-monitoring-retro: ## Generate current-week agent monitoring retro report
+	python3 tools/agent-monitoring/generate_retro.py
+
+agent-monitoring-validate: ## Cross-check agent monitoring integrity against working_log.csv
+	python3 tools/agent-monitoring/validate.py
+
+agent-monitoring-query: ## Query agent monitoring records (pass ARGS="--agent investigator --days 14")
+	python3 tools/agent-monitoring/query.py $(ARGS)
 
 # ── Cleanup ──────────────────────────────────────────────
 

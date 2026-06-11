@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260506-TOWN-TEST-STABILIZATION
+artifact_type: plan
+tags: [town, test, stabilization]
+---
+
 # Implementation Plan - Town Test Stabilization
 
 Migrate `tests/town/` to `V2EntityBuilder` to resolve `TypeError` regressions.

@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: misc
+original_date: 2026-04-24
+---
+
 # Design Specification — Phase 1 Task 1.4: V2 State Isolation Boundary
 
 ## 1. Goal

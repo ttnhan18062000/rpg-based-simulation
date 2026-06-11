@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260502-E5-CLOSURE-HARDENING
+phase: done
+date: 2026-05-02
+tags: [e5, closure, hardening]
+---
+
 # TCK-20260502-E5-CLOSURE-HARDENING
 
 ## Title
@@ -5,6 +16,15 @@ Implementation of Final Closure Hardening for Phase E5
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Complete the remaining P0 items from the Phase E5 review to achieve architectural closure and deterministic proof validation. This includes source-level conflict locks, robust transaction grouping, and a machine-readable checklist validator.

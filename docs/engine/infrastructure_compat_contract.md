@@ -1,3 +1,10 @@
+---
+status: active
+layer: engine
+authority: P1
+audience: developer
+---
+
 # V2 Infrastructure & Isolation Compatibility Contract
 
 This document defines the supported infrastructure surface and isolation guarantees for the V2 engine.

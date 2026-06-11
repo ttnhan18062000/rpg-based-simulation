@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260425-PH8-M4-CLASSES
+phase: done
+date: 2026-04-25
+tags: [ph8, m4, classes]
+---
+
 # TCK-20260425-PH8-M4-CLASSES
 
 ## Title
@@ -5,6 +16,15 @@ Implement Registry-Backed Classes and Skills
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Implement a robust, registry-backed system for defining entity classes (Warrior, Mage, Rogue) and their associated skill sets.

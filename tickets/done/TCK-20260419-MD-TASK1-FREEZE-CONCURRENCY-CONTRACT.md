@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260419-MD-TASK1-FREEZE-CONCURRENCY-CONTRACT
+phase: done
+date: 2026-04-19
+tags: [md, task1, freeze, concurrency, contract]
+---
+
 # TCK-20260419-MD-TASK1-FREEZE-CONCURRENCY-CONTRACT
 
 ## Title
@@ -5,6 +16,15 @@ Milestone D - Task 1: Audit and Freeze the Bounded Concurrency Contract
 
 ## Status
 INPROGRESS
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Audit the existing concurrency documentation and draft a finalized contract that resolves all naming drift and explicitly defines the laws for packets, results, and commit ordering.

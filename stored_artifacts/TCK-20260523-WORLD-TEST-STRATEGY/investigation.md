@@ -1,3 +1,13 @@
+---
+status: historical
+layer: strategy
+authority: P2
+audience: agent
+ticket_id: TCK-20260523-WORLD-TEST-STRATEGY
+artifact_type: investigation
+tags: [world, test, strategy]
+---
+
 # Investigation — Milestone 73 Worldbuilding Test Strategy
 
 ## Target Verification Checklist

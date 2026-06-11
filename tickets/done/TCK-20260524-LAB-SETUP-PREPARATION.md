@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260524-LAB-SETUP-PREPARATION
+phase: done
+date: 2026-05-24
+tags: [lab, setup, preparation]
+---
+
 # TCK-20260524-LAB-SETUP-PREPARATION
 
 ## Title
@@ -7,6 +18,15 @@ Implement Setup Generation (M96) and Execution Preparation (M97) Workflows
 ## Status
 
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 

@@ -1,3 +1,14 @@
+---
+status: historical
+layer: guidelines
+authority: P1
+audience: agent
+ticket_id: TCK-20260421-P6-M2-T1-LEDGER-SCHEMA
+phase: done
+date: 2026-04-21
+tags: [p6, m2, t1, ledger, schema]
+---
+
 # TCK-20260421-P6-M2-T1-LEDGER-SCHEMA
 
 ## Title
@@ -7,6 +18,15 @@ Define the canonical row schema for legacy replacement items
 ## Status
 
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 

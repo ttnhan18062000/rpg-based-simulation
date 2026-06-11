@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: observability
+authority: P2
+audience: agent
+tags: [metrics]
+---
+
 # Design Spec: Grafana Dashboard & Metrics Overhaul
 
 **Date:** 2026-03-20

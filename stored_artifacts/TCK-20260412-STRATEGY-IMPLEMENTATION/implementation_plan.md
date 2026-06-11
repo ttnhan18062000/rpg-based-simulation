@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: strategy
+authority: P2
+audience: agent
+tags: [strategy, implementation]
+---
+
 # Implementation Plan - Strategic Cognition Stabilization (Milestones 3-5)
 
 Stabilize the strategic cognition layer by finalizing Milestone 5 (Event-driven Reprioritization), adding memory for tested leads in Milestone 3, and hardening social candidate selection in Milestone 4.

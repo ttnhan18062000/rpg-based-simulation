@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260330-CORE-STABILIZATION
+artifact_type: investigation
+tags: [core, stabilization]
+---
+
 # Investigation: Core AOA Stabilization State (Updated)
 
 ## Current Progress Assessment

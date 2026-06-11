@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260418-CORE-RULEBOOK-HARDENING
+phase: done
+date: 2026-04-18
+tags: [core, rulebook, hardening]
+---
+
 # TCK-20260418-CORE-RULEBOOK-HARDENING
 
 ## Title
@@ -7,6 +18,15 @@ Harden Authoritative Rulebook and Quiet-Tick Lifecycle Contract
 ## Status
 
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 

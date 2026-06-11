@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260520-SIM-OBS-M35
+artifact_type: investigation
+tags: [sim, obs, m35]
+---
+
 # Investigation: ClickHouse Event Warehouse Integration (Milestone 35)
 
 We investigated the target environment requirements and capabilities for implementing a production-grade external event warehouse using ClickHouse.

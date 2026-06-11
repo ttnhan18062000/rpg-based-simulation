@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260326-HYSTERESIS
+phase: done
+date: 2026-03-26
+tags: [hysteresis]
+---
+
 # TCK-20260326-HYSTERESIS
 
 ## Title
@@ -24,3 +35,7 @@ Entities oscillate between states (Combat↔Flee, Loot↔Wander) when their scor
 
 ## Related Tickets
 - TCK-20260322-RPG_REFINEMENT (Parent)
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

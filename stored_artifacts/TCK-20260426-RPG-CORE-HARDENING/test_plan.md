@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260426-RPG-CORE-HARDENING
+artifact_type: test_plan
+tags: [rpg, core, hardening]
+---
+
 # Test Plan: RPG Core Hardening
 
 ## Scenario PROGRESSION

@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260412-REGRESSION-FIX
+phase: done
+date: 2026-04-12
+tags: [regression, fix]
+---
+
 # TCK-20260412-REGRESSION-FIX
 
 ## Title
@@ -7,6 +18,15 @@ Stabilization of Simulation Regression Suite (9 Failures)
 ## Status
 
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Fix several test failures in the regression suite, ranging from unit tests to E2E and benchmarks.

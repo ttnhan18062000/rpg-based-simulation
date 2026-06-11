@@ -1,0 +1,21 @@
+# STATE: ADDITIONAL
+schema_version: "worldmodule.v1"
+module_id: "orc_clan_territory"
+module_type: "conflict"
+display_name: "Orc Clan Territory"
+description: "Orc clan stronghold with territorial pressure on the frontier settlement."
+requires: ["frontier_village_core"]
+biomes: ["orc_territory"]
+ecologies: ["orc_territory_ecology"]
+regions:
+  - id: "orc_stronghold"
+    type: "wilderness"
+    grid_bounds: [160, 60, 200, 100]
+    terrain: "plain"
+    hazard_level: 3.0
+factions: ["orc_clan"]
+populations: ["orc_clan_warband"]
+resources:
+  iron_vein: 4
+  wood_node: 6
+relationships: ["town_to_orc_clan", "orc_clan_to_town"]

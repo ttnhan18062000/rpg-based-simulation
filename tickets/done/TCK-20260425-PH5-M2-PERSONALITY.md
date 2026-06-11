@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260425-PH5-M2-PERSONALITY
+phase: done
+date: 2026-04-25
+tags: [ph5, m2, personality]
+---
+
 # TCK-20260425-PH5-M2-PERSONALITY
 
 ## Title
@@ -7,6 +18,15 @@ Implementation of Personality, Boredom, and Life-Stage AI Modifiers
 ## Status
 
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 

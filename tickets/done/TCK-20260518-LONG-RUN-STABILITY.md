@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260518-LONG-RUN-STABILITY
+phase: done
+date: 2026-05-18
+tags: [long, run, stability]
+---
+
 # TCK-20260518-LONG-RUN-STABILITY
 
 ## Title
@@ -7,6 +18,15 @@ Long-Run Stability Certification (Milestone 18)
 ## Status
 
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 

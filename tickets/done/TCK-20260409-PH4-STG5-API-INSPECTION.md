@@ -1,4 +1,24 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260409-PH4-STG5-API-INSPECTION
+phase: done
+date: 2026-04-09
+tags: [ph4, stg5, api, inspection]
+---
+
 # Ticket TCK-20260409-PH4-STG5-API-INSPECTION
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Complete Phase 4: Inheritance and Succession by exposing continuity data via the API inspection layer. (Stage 5).

@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260529-OBS-PHASE24-BEHAVIOR-METRICS
+artifact_type: plan
+tags: [obs, phase24, behavior, metrics]
+---
+
 # Proposed Plan
 
 Introduce BehaviorMetricWindow and BehaviorMetricsAggregator to summarize behavioral observations on a per-window tick interval.

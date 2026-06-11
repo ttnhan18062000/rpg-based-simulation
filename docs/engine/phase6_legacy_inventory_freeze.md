@@ -1,3 +1,10 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: developer
+---
+
 # Phase 6 Legacy Inventory Freeze
 
 This document marks the formal freeze of the **Authoritative Replacement Ledger** inventory. This inventory represents the consolidated surface of the legacy `src` system that must be addressed during Phase 6 and Phase 7.

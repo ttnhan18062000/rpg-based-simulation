@@ -1,3 +1,10 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: developer
+---
+
 # Phase 9 Entry Package
 
 This package formalizes the readiness gate for Phase 9: Strategic & Social Cognition.

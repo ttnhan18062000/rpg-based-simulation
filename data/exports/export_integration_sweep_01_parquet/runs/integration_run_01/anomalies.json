@@ -1,0 +1,1 @@
+[{"rule_name": "QuestStalledRule", "severity": "WARNING", "tick_detected": 50, "message": "Stalled", "context": {"domain": "simulation", "run_id": "integration_run_01"}}]

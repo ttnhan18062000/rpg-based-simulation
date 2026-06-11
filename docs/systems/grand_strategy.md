@@ -1,3 +1,10 @@
+---
+status: active
+layer: systems
+authority: P1
+audience: developer
+---
+
 # Grand Strategy System
 
 Technical documentation for the macroscopic faction simulation, including regional control, war states, and siege mechanics.

@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: strategy
+original_date: 2026-04-16
+---
+
 # Design Specification: Strategic Cognition Repair & Hardening
 
 ## 1. Cognition Capacity Derivation (Milestone 1)

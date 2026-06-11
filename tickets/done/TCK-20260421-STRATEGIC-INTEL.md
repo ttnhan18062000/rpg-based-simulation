@@ -1,3 +1,14 @@
+---
+status: historical
+layer: strategy
+authority: P1
+audience: agent
+ticket_id: TCK-20260421-STRATEGIC-INTEL
+phase: done
+date: 2026-04-21
+tags: [strategic, intel]
+---
+
 # TCK-20260421-STRATEGIC-INTEL
 
 ## Title
@@ -5,6 +16,15 @@ Strategic Resource Intelligence and Blocker/Lead Recovery
 
 ## Status
 INPROGRESS
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Recover the strategic feedback layer necessary for the RPG progression loop in V2. This involves emitting blockers (material/gold) and leads (hints) based on town and resource outcomes.

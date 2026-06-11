@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260419-MB-TASK3-GOVERNOR-HARDENING
+phase: done
+date: 2026-04-19
+tags: [mb, task3, governor, hardening]
+---
+
 # TCK-20260419-MB-TASK3-GOVERNOR-HARDENING
 
 ## Title
@@ -5,6 +16,15 @@ Harden Governor Transitions and Policy Integration
 
 ## Status
 OPEN
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Transition the `ResourceGovernor` from rough heuristics to a hardened control layer. This involves implementing profile-driven recovery, monotonicity in de-escalation, and a "Confidence Window" to prevent thrashing.

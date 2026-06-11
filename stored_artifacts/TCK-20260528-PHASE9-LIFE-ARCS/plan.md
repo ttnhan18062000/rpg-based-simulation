@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260528-PHASE9-LIFE-ARCS
+artifact_type: plan
+tags: [phase9, life, arcs]
+---
+
 # Implementation Plan - Phase 9 Campaigns
 
 ## Proposed Changes

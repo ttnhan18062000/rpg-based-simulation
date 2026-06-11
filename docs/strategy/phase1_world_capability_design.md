@@ -1,3 +1,10 @@
+---
+status: active
+layer: strategy
+authority: P1
+audience: developer
+---
+
 # Spec: Phase 1 — World Capability Foundation Design Document
 
 This design document outlines the technical implementation strategy for **Phase 1 — World Capability Foundation**. The objective is to establish a robust, performant, and TDD-backed layer that exposes structured options (opportunities, query providers, requirements) so that entities can intelligently plan their lifepaths in subsequent phases.

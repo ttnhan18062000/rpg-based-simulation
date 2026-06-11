@@ -1,3 +1,15 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260420-CORE-MOVEMENT-SLICE
+phase: done
+date: 2026-04-20
+tags: [core, movement, slice]
+---
+
+
 # TCK-20260420-CORE-MOVEMENT-SLICE
 
 ## Title
@@ -5,6 +17,15 @@ First Official RPG Slice: Deterministic Grid Movement
 
 ## Status
 OPEN
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Implement the first official gameplay slice for `src` by porting deterministic grid movement from the original `src`, ensuring it adheres to the frozen substrate contract without semantic drift.

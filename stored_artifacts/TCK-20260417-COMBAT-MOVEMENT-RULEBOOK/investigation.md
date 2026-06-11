@@ -1,3 +1,13 @@
+---
+status: historical
+layer: combat
+authority: P2
+audience: agent
+ticket_id: TCK-20260417-COMBAT-MOVEMENT-RULEBOOK
+artifact_type: investigation
+tags: [combat, movement, rulebook]
+---
+
 # Investigation: Combat and Movement Milestone 1
 
 ## Existing Distance Logic

@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260322-INDIVIDUAL_SPIRIT
+phase: done
+date: 2026-03-22
+tags: [individual_spirit]
+---
+
 # TCK-20260322-INDIVIDUAL_SPIRIT
 
 ## Title
@@ -22,3 +33,7 @@ Implement persistent AI personality traits including grudges, mood-driven combat
 
 ## Related Tickets
 - TCK-20260322-RPG_REFINEMENT (General system improvements)
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

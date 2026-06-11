@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260328-BACKEND-RESTRUCTURE
+phase: done
+date: 2026-03-28
+tags: [backend, restructure]
+---
+
 # TCK-20260328-BACKEND-RESTRUCTURE: Backend Modularization & Refactor
 
 ## Goal
@@ -37,3 +48,7 @@ Restore and complete the architectural refactoring of the RPG simulation backend
 ## Related Tickets
 - `TCK-20260327-WINDBIGMOD-CLEANUP` (Included)
 - `TCK-20260322-RPG_REFINEMENT`
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

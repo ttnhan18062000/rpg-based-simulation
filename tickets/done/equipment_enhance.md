@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: equipment_enhance
+phase: done
+date: unknown
+tags: [equipment_enhance]
+---
+
 - all entities should have ability to equip items, with better stats in their inventory
 - the hero have a house, which he can store items in it, have a cap but very large compared to inventory, they consider sell, store or throw away, this should in decision logic (probability) with current logic of thinking
 - the hero have a complex logics of whether they should use the money, they consider the current state of the hero, such as gold, inventory, house, etc.
@@ -10,3 +21,7 @@
 - add treasure chest (different from loots) with rare loot, and it can be found in the world (rare spawn guarded by elite or boss monsters)
 - I think the way entity pick up items is somehow incorrect, revise it
 - I think the derived stats is calculated wrong (mostly about non-combat stats), revise it
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

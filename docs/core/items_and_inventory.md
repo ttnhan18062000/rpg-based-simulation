@@ -1,3 +1,11 @@
+---
+status: authoritative
+layer: core
+authority: P0
+audience: developer
+last_verified: 2026-06-06
+---
+
 # Items & Inventory
 
 Technical documentation for item templates, inventory management, equipment, loot tables, home storage, and auto-equip mechanics.

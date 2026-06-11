@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260518-PHASE-DEPENDENCY-GRAPH
+artifact_type: investigation
+tags: [phase, dependency, graph]
+---
+
 # Phase Dependency Graph Investigation Notes
 
 ## Pipeline Architecture Analysis

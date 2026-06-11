@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: design-03-data-driven-registries
+phase: done
+date: unknown
+tags: [design, data, driven, registries]
+---
+
 # design-03: Data-Driven Content Registries
 
 ## Objective
@@ -11,3 +22,7 @@ DONE
 
 ## Final Status
 **DONE**: Implemented `src/core/registry_loader.py` using Pydantic `TypeAdapter` for robust validation. Successfully externalized item, class, skill, breakthrough, and trait definitions into JSON data files, decoupling content from engine logic.
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

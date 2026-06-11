@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: misc
+original_date: 2026-04-13
+---
+
 # Design Specification: Trust Boundary & Infrastructure Remediation
 
 **Date**: 2026-04-13

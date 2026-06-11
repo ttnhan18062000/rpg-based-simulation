@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260414-INFRA-REMEDIATION
+artifact_type: test_plan
+tags: [infra, remediation]
+---
+
 # Test Plan: Infrastructure Remediation
 
 ## 1. Brokerless Isolation (Proof)

@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260410-PHASE-2-ALIGNMENT
+phase: done
+date: 2026-04-10
+tags: [phase, alignment]
+---
+
 # TCK-20260410-PHASE-2-ALIGNMENT
 
 ## Title
@@ -5,6 +16,15 @@ Phase 2 Strategic Verification and Architectural Alignment
 
 ## Status
 INPROGRESS
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Verify the implementation of Phase 2 (Strategic Appraisal and Project Selection) against the master thinking file and ensure all documentation, naming, and staging artifacts comply with the repository's mandatory rules (AGENTIC mode standards).

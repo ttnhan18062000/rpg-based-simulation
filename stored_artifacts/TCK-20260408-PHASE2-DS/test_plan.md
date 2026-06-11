@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260408-PHASE2-DS
+artifact_type: test_plan
+tags: [phase2, ds]
+---
+
 # Test Plan — Phase 2 Design Shift
 
 ## Existing Tests to Run (Regression)

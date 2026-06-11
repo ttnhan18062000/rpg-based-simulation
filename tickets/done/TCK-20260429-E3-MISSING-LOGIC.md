@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260429-E3-MISSING-LOGIC
+phase: done
+date: 2026-04-29
+tags: [e3, missing, logic]
+---
+
 # TCK-20260429-E3-MISSING-LOGIC
 
 ## Title
@@ -5,6 +16,15 @@ Implement Missing RPG Core Logic (E3 Phases Gap Closure)
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Implement the missing/incorrect logic identified during the semantic audit of resource_v2_e3_phases_enhanced.md against logic_checklist_exhaustive_v2.md.

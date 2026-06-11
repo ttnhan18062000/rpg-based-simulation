@@ -1,3 +1,13 @@
+---
+status: historical
+layer: economy
+authority: P2
+audience: agent
+ticket_id: TCK-20260420-RESOURCE-INTERACTION
+artifact_type: investigation
+tags: [resource, interaction]
+---
+
 # Investigation: Resource Interaction Slice (Milestone 4)
 
 ## Core Mechanics from Old src

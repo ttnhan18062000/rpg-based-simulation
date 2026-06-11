@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260510-CORE-IMPORT-STABILIZATION
+phase: done
+date: 2026-05-10
+tags: [core, import, stabilization]
+---
+
 # TCK-20260510-CORE-IMPORT-STABILIZATION
 
 ## Title
@@ -5,6 +16,15 @@ Stabilizing Engine Import Paths & Social Domain Unification
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Resolve import resolution failures introduced during modularization and consolidate social domain logic (Contracts, Memory, Appraisal) into a hardened, authoritative structure while maintaining backward compatibility.

@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260401-FINAL-CONVERGENCE
+phase: done
+date: 2026-04-01
+tags: [final, convergence]
+---
+
 # TCK-20260401-FINAL-CONVERGENCE: Final Convergence and Stabilization
 
 ## Goal
@@ -24,3 +35,7 @@ Achieve full architectural convergence by addressing partially implemented tasks
 - `TCK-20260331-RUNTIME-INTEGRITY`
 
 ## Status: INPROGRESS
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

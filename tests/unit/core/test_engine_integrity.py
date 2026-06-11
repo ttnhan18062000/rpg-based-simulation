@@ -67,29 +67,31 @@ def test_bit_identical_determinism(base_state):
     Law: Two kernels with same seed/state produce bit-identical results.
     """
     profile = get_test_profile()
-    
-    # Run 1
+
     rng1 = DeterministicRNG(base_state.seed)
     kernel1 = Kernel(profile, base_state, rng1, flags={"audit_mode": True})
-    for _ in range(5):
-        kernel1.tick_once()
-    state1 = kernel1.state
-    
-    # Run 2
     rng2 = DeterministicRNG(base_state.seed)
     kernel2 = Kernel(profile, base_state, rng2, flags={"audit_mode": True})
-    for _ in range(5):
-        kernel2.tick_once()
-    state2 = kernel2.state
-    
-    # Verify bit-identical fingerprints
-    from src.engine.checkpoint import CanonicalStateHasher
-    hash1 = CanonicalStateHasher.get_hash(state1)
-    hash2 = CanonicalStateHasher.get_hash(state2)
-    
-    assert hash1 == hash2
-    assert state1.tick == 6
-    assert state2.tick == 6
+    try:
+        for _ in range(5):
+            kernel1.tick_once()
+        state1 = kernel1.state
+
+        for _ in range(5):
+            kernel2.tick_once()
+        state2 = kernel2.state
+
+        # Verify bit-identical fingerprints
+        from src.engine.checkpoint import CanonicalStateHasher
+        hash1 = CanonicalStateHasher.get_hash(state1)
+        hash2 = CanonicalStateHasher.get_hash(state2)
+
+        assert hash1 == hash2
+        assert state1.tick == 6
+        assert state2.tick == 6
+    finally:
+        kernel1.shutdown()
+        kernel2.shutdown()
 
 def test_id_generation_integrity(base_state):
     """
@@ -152,14 +154,16 @@ def test_isolation_guard_trigger(base_state):
     profile = get_test_profile()
     rng = DeterministicRNG(base_state.seed)
     kernel = Kernel(profile, base_state, rng, flags={"audit_mode": True})
-    
-    from src.core.protocol_validator import ProtocolViolationError
-    prior_fp = kernel._state.fingerprint()
-    # Directly mutate the state (violating frozen dataclass via object.__setattr__)
-    # movement_count is part of the state_hash, tick is not.
-    object.__setattr__(kernel._state, "movement_count", 999)
-    
-    with pytest.raises(ProtocolViolationError) as excinfo:
-        kernel._guard_stability("MaliciousPhase", prior_fp)
-    
-    assert "Isolation Breach" in str(excinfo.value)
+    try:
+        from src.core.protocol_validator import ProtocolViolationError
+        prior_fp = kernel._state.fingerprint()
+        # Directly mutate the state (violating frozen dataclass via object.__setattr__)
+        # movement_count is part of the state_hash, tick is not.
+        object.__setattr__(kernel._state, "movement_count", 999)
+
+        with pytest.raises(ProtocolViolationError) as excinfo:
+            kernel._guard_stability("MaliciousPhase", prior_fp)
+
+        assert "Isolation Breach" in str(excinfo.value)
+    finally:
+        kernel.shutdown()

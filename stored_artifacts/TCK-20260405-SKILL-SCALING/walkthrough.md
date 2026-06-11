@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: ai
+authority: P2
+audience: agent
+tags: [skill, scaling]
+---
+
 # Walkthrough: Aspect-Oriented Skill Scaling Unification
 
 Successfully unified combat skill scaling under the Aspect-Oriented Architecture (AOA), ensuring consistent damage resolution for both physical and magical skills while maintaining 100% simulation determinism.

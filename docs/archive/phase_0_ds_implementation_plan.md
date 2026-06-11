@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: engine
+original_date: unknown
+---
+
 ## WorldLoop RPG Macro-Interest and Behavioral Realism Plan — Phase 0
 
 This phase prepares the codebase for the macro-interest redesign. It does not add major viewer-facing simulation features by itself. Its purpose is to lock ownership, update flow, salience rules, retention limits, inspection boundaries, and event-interpretation contracts before later phases add large amounts of subjective, social, and historical state. Without this phase, later feature work risks becoming duplicated, unbounded, and behaviorally fake.

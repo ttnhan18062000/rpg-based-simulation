@@ -1,3 +1,13 @@
+---
+status: historical
+layer: strategy
+authority: P2
+audience: agent
+ticket_id: TCK-20260523-COGNITION-FEATURE-MINING
+artifact_type: test_plan
+tags: [cognition, feature, mining]
+---
+
 # test_plan.md - Mining Tests
 
 ## Unit Tests

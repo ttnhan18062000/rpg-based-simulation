@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260428-PH10-EXTERNAL-TRUTH
+artifact_type: plan
+tags: [ph10, external, truth]
+---
+
 # Phase 10 Plan: External Truth and Replay Proof
 
 ## Goal

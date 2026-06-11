@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260422-RECOVERY-GAPS
+artifact_type: test_plan
+tags: [recovery, gaps]
+---
+
 # Test Plan: Phase 7/8 Recovery Gaps
 
 ## 1. Focused Recovery Proofs

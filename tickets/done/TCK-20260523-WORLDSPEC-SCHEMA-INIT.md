@@ -1,3 +1,14 @@
+---
+status: historical
+layer: guidelines
+authority: P1
+audience: agent
+ticket_id: TCK-20260523-WORLDSPEC-SCHEMA-INIT
+phase: done
+date: 2026-05-23
+tags: [worldspec, schema, init]
+---
+
 # TCK-20260523-WORLDSPEC-SCHEMA-INIT
 
 ## Title
@@ -7,6 +18,15 @@ Design and Implementation of WorldSpec File Schema (Milestone 67)
 ## Status
 
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 

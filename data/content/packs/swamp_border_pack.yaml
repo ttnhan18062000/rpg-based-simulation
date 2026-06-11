@@ -1,0 +1,34 @@
+schema_version: "content_pack.v1"
+pack_id: "swamp_border_pack"
+display_name: "Swamp Border Pack"
+version: "1.0.0"
+enabled: true
+
+dependencies: []
+
+included_families:
+  entity_archetypes:
+    - "lizardfolk_scout"
+    - "lizardfolk_shaman"
+    - "swamp_troll"
+  populations:
+    - "swamp_tribe_patrol"
+    - "swamp_ambush_party"
+  world_modules:
+    - "sunken_swamp_border"
+
+state_markers:
+  lizardfolk_scout: "ADDITIONAL"
+  lizardfolk_shaman: "ADDITIONAL"
+  swamp_troll: "ADDITIONAL"
+  swamp_tribe_patrol: "ADDITIONAL"
+  swamp_ambush_party: "ADDITIONAL"
+  sunken_swamp_border: "ADDITIONAL"
+
+strict_validation_result: "PASS"
+
+sample_compositions:
+  - "swamp_border_world"
+
+sample_scenarios:
+  - "swamp_border_incursion"

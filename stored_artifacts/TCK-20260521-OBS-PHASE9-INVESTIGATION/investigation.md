@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260521-OBS-PHASE9-INVESTIGATION
+artifact_type: investigation
+tags: [obs, phase9, investigation]
+---
+
 # Phase 9 Investigation & Subsystem Reuse Mapping
 
 ## 1. Overview of Phase 9 Core Pillars

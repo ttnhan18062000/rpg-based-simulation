@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: engine
+original_date: 2026-04-07
+---
+
 # Spec: Phase 0 Corrective Alignment (Strict Foundation)
 
 ## Metadata

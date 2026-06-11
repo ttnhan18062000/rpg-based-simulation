@@ -1,3 +1,14 @@
+---
+status: historical
+layer: strategy
+authority: P1
+audience: agent
+ticket_id: TCK-20260413-STRAT-REPLAY-DETERMINISM
+phase: done
+date: 2026-04-13
+tags: [strat, replay, determinism]
+---
+
 # TCK-20260413-STRAT-REPLAY-DETERMINISM
 
 ## Title
@@ -5,6 +16,15 @@ Strategic Replay & Determinism: Snapshot Safety and Graph Hardening
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Harden simulation replay stability by ensuring snapshot deep isolation and refine strategic observability through enhanced cognition graph exports.

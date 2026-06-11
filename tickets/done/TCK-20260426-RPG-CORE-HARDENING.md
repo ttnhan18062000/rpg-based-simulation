@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260426-RPG-CORE-HARDENING
+phase: done
+date: 2026-04-26
+tags: [rpg, core, hardening]
+---
+
 # TCK-20260426-RPG-CORE-HARDENING
 
 ## Title
@@ -5,6 +16,15 @@ RPG Core Life-Loop & Arena Hardening
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Recover and verify the authoritative RPG life-loop (rewards, mortality) and extend End-to-End Arena testing to include attrition and status effects.

@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260501-E4-PHASE-ZERO
+phase: done
+date: 2026-05-01
+tags: [e4, phase, zero]
+---
+
 # TCK-20260501-E4-PHASE-ZERO
 
 ## Title
@@ -5,6 +16,15 @@ Phase E4.0 — Coverage Ledger Completion
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Implement Phase E4.0 — Coverage Ledger Completion by reconciling the exhaustive checklist with the authoritative source implementation. This ensures that the current coverage is honest, auditable, and mapped to machine-readable proof.

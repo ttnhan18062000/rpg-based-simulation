@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260514-PERSISTENCE-OPT
+artifact_type: plan
+tags: [persistence, opt]
+---
+
 # Implementation Plan: Persistence Layer Optimization (get_hash)
 
 Optimize the `CanonicalStateHasher` to reduce the time spent in the persistence phase from ~230ms to < 50ms for 1,000 entities.

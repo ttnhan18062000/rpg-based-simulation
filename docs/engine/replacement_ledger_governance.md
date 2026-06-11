@@ -1,3 +1,10 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: developer
+---
+
 # Replacement Ledger Governance & Change Control
 
 This document defines the formal rules for managing the [Authoritative Replacement Ledger](../engine/legacy_replacement_ledger.md) across all future phases of the engine transition.

@@ -1,3 +1,10 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: developer
+---
+
 # Milestone E Test Matrix - Final Verification
 
 ## 1. Clean Baselines

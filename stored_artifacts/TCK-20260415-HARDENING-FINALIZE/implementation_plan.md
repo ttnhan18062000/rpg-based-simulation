@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: misc
+authority: P2
+audience: agent
+tags: [hardening, finalize]
+---
+
 # Regression Stabilization Plan
 
 Resolve 17 test failures in the full regression suite to achieve 100% stability. Most failures stem from "stale" test logic that hasn't been updated to match the finalized strategic cognition architecture.

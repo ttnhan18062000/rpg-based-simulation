@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260418-RESOURCE-KERNEL-M1
+phase: done
+date: 2026-04-18
+tags: [resource, kernel, m1]
+---
+
 # TCK-20260418-RESOURCE-KERNEL-M1
 
 ## Title
@@ -5,6 +16,15 @@ Milestone 1: Simulation Kernel Contract and Resource-Envelope Rulebook
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Establish the foundational laws, contracts, and skeletal engine structure for the fresh resource-safe simulation project (`src`).

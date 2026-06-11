@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260326-HYSTERESIS
+artifact_type: investigation
+tags: [hysteresis]
+---
+
 # Investigation: Goal Hysteresis & Anti-Oscillation
 
 ## Current Architecture

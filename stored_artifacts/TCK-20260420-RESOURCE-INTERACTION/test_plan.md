@@ -1,3 +1,13 @@
+---
+status: historical
+layer: economy
+authority: P2
+audience: agent
+ticket_id: TCK-20260420-RESOURCE-INTERACTION
+artifact_type: test_plan
+tags: [resource, interaction]
+---
+
 # Test Plan: Resource Interaction (Milestone 4)
 
 ## Parity Verification

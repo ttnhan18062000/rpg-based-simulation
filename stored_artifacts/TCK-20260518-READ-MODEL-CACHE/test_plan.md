@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260518-READ-MODEL-CACHE
+artifact_type: test_plan
+tags: [read, model, cache]
+---
+
 # Test Plan: Read Model and API Projection Optimization
 
 ## Verification Goals

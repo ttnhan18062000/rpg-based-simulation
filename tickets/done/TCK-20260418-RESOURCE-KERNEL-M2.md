@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260418-RESOURCE-KERNEL-M2
+phase: done
+date: 2026-04-18
+tags: [resource, kernel, m2]
+---
+
 # TCK-20260418-RESOURCE-KERNEL-M2
 
 ## Title
@@ -5,6 +16,15 @@ Milestone 2: Minimal Deterministic Single-Thread Kernel
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Build the smallest correct runtime that obeys the Milestone 1 contract and proves deterministic execution.

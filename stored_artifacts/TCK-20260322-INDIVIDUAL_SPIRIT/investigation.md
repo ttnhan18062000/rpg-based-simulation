@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260322-INDIVIDUAL_SPIRIT
+artifact_type: investigation
+tags: [individual_spirit]
+---
+
 # Investigation: Milestone 10 - The Individual Spirit
 
 ## Findings

@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260419-V2-CONSOLIDATION-FINAL-HARDENING
+phase: done
+date: 2026-04-19
+tags: [v2, consolidation, final, hardening]
+---
+
 # TCK-20260419-V2-CONSOLIDATION-FINAL-HARDENING
 
 ## Title
@@ -5,6 +16,15 @@ Final V2 Engine Signal Hardening & consolidation
 
 ## Status
 INPROGRESS
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Close the remaining "Signal Semantic Compression" and "Environmental Capture" drift items identified in the final V2 review to reach 100% production readiness.

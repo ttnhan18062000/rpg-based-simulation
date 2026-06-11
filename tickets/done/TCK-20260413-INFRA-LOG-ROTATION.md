@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260413-INFRA-LOG-ROTATION
+phase: done
+date: 2026-04-13
+tags: [infra, log, rotation]
+---
+
 # TCK-20260413-INFRA-LOG-ROTATION
 
 ## Title
@@ -5,6 +16,15 @@ Implement Automated Log Rotation for HeadlessRunner
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Implement a mechanism to automatically prune old simulation artifacts (replay logs, cognition graphs) from the `logs/` directory to prevent disk clutter during intensive testing.

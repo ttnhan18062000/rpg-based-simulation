@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260523-OBS-HARDENING
+artifact_type: test_plan
+tags: [obs, hardening]
+---
+
 # Verification Plan - Simulation Observability Hardening
 
 This document outlines the test strategy and specific unit/integration test definitions to certify the correctness of our hardening changes.

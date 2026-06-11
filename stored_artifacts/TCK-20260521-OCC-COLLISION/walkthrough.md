@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: misc
+authority: P2
+audience: agent
+tags: [occ, collision]
+---
+
 # Walkthrough: Metropolis Occupancy Collision Resolution
 
 We have successfully resolved the deterministic `LAW-OCCUPANCY-COLLISION` crash occurring at tick 2503 in the Metropolis simulation.

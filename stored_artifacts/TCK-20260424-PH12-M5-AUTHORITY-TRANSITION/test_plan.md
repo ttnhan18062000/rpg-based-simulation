@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260424-PH12-M5-AUTHORITY-TRANSITION
+artifact_type: test_plan
+tags: [ph12, m5, authority, transition]
+---
+
 # Phase 12 M5 Test Plan: Authority Validation
 
 ## 1. Governance Audit

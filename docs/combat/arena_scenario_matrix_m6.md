@@ -1,3 +1,10 @@
+---
+status: historical
+layer: combat
+authority: P2
+audience: developer
+---
+
 # Arena Scenario Matrix (Milestone 6)
 
 This document defines the core scenarios used to validate the combat and movement overhaul.

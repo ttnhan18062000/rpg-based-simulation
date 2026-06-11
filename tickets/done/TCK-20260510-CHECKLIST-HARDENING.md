@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260510-CHECKLIST-HARDENING
+phase: done
+date: 2026-05-10
+tags: [checklist, hardening]
+---
+
 # TCK-20260510-CHECKLIST-HARDENING
 
 ## Title
@@ -7,6 +18,15 @@ Hardening RPG Engine Logic Ledger
 ## Status
 
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 

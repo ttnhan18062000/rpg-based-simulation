@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260419-MD-TASK4-DETERMINISTIC-SUITE
+phase: done
+date: 2026-04-19
+tags: [md, task4, deterministic, suite]
+---
+
 # TCK-20260419-MD-TASK4-DETERMINISTIC-SUITE
 
 ## Title
@@ -5,6 +16,15 @@ Complete deterministic test suite and Real Domain Slice for Milestone D
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Provide final certification that the V2 concurrency layer is bit-identical to the single-thread model under high pressure and non-deterministic execution noise, and replace placeholder logic with a real domain slice.

@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: performance
+original_date: unknown
+---
+
 # Implementation Plan — Performance Optimization Architecture
 
 The correct target is **not** “make current code faster.” The target is:

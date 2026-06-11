@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260523-MUTATION-MATRIX
+artifact_type: test_plan
+tags: [mutation, matrix]
+---
+
 # Test Plan - Variant Matrix Builder
 
 We will implement a unit test suite in `tests/unit/lab/test_variant_matrix_builder.py` covering:

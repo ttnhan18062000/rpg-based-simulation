@@ -1,3 +1,14 @@
+---
+status: historical
+layer: performance
+authority: P1
+audience: agent
+ticket_id: TCK-20260420-PERF-FOUNDATION
+phase: done
+date: 2026-04-20
+tags: [perf, foundation]
+---
+
 # TCK-20260420-PERF-FOUNDATION
 
 ## Title
@@ -5,6 +16,15 @@ Benchmarking and Profiling Foundation (Milestone 3)
 
 ## Status
 INPROGRESS
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Establish a trustworthy foundation for engine performance work, including per-phase timing, stable benchmark scenarios, and initial baseline measurements.

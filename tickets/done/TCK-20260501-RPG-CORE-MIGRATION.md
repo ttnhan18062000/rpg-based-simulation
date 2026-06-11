@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260501-RPG-CORE-MIGRATION
+phase: done
+date: 2026-05-01
+tags: [rpg, core, migration]
+---
+
 # TCK-20260501-RPG-CORE-MIGRATION
 
 ## Title
@@ -5,6 +16,15 @@ Migrating Phase 7 (Social Contract) and Phase 6 (Strategic Cognition) Legacy Log
 
 ## Status
 INPROGRESS
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Implement the legacy logic for Phases 7 and 6 into the authoritative V2 engine, ensuring architectural parity and validating with migrated legacy tests.

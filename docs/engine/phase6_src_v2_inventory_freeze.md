@@ -1,3 +1,10 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: developer
+---
+
 # Phase 6 `src` Surface Inventory Freeze
 
 This document formalizes the current state of the `src` engine as of the start of the Replacement Ledger mapping. It represents the "Replacement" side of the comparison.

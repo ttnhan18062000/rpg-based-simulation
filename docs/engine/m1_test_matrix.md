@@ -1,3 +1,10 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: developer
+---
+
 # Milestone 1 Test Matrix — Contract Enforcement
 
 ## 1. Purpose

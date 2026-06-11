@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260524-LAB-REQUEST-CONTEXT
+phase: done
+date: 2026-05-24
+tags: [lab, request, context]
+---
+
 # TCK-20260524-LAB-REQUEST-CONTEXT
 
 ## Title
@@ -7,6 +18,15 @@ Implement Input Request Model and Context Pack Builder (M94-M95)
 ## Status
 
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 

@@ -1,3 +1,13 @@
+---
+status: historical
+layer: performance
+authority: P2
+audience: agent
+ticket_id: TCK-20260518-OPTIMIZATION-PROOF-REPORT
+artifact_type: plan
+tags: [optimization, proof, report]
+---
+
 # Milestone 13 Implementation Plan: Proof Instrumentation & Lock
 
 ## 1. Core Model Instrumentation (`src/core/`)

@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260504-CORE-TEST-STABILIZATION
+phase: done
+date: 2026-05-04
+tags: [core, test, stabilization]
+---
+
 # TCK-20260504-CORE-TEST-STABILIZATION
 
 ## Title
@@ -7,6 +18,15 @@ Fix all failed tests by restoring EntityState backward compatibility and updatin
 ## Status
 DONE
 INPROGRESS
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 

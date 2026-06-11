@@ -1,3 +1,10 @@
+---
+status: active
+layer: systems
+authority: P1
+audience: developer
+---
+
 # Buildings & Economy
 
 Technical documentation for town buildings, shop system, crafting, guild services, quests, and treasure chests.

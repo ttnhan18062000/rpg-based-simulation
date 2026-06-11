@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260418-CORE-RULEBOOK-HARDENING
+artifact_type: test_plan
+tags: [core, rulebook, hardening]
+---
+
 # Test Plan: Core Rulebook Hardening
 
 ## 1. Unit Tests (LegalityService)

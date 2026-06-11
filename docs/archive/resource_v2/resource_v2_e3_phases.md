@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: economy
+original_date: unknown
+---
+
 # Implementation Plan Enhance3 — Missing / Incorrect RPG Core Logic
 
 Current checklist coverage is **~100%**. All phases (1-10) are hardened and verified.

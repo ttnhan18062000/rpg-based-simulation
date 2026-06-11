@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260422-PH6-M7-M8-HARDENING
+phase: done
+date: 2026-04-22
+tags: [ph6, m7, m8, hardening]
+---
+
 # TCK-20260422-PH6-M7-M8-HARDENING
 
 ## Title
@@ -5,6 +16,15 @@ Phase 6 M7/M8 P0 Recovery Hardening and Ledger Truth Alignment
 
 ## Status
 INPROGRESS
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Verify the Phase 6 M7 (Social Trust) and M8 (Opportunity Attacks) P0 recovery implementation. Align the Authoritative Replacement Ledger with the actual implementation status and harden the "decorative" implementation shortcuts to ensure legacy parity and architectural integrity.

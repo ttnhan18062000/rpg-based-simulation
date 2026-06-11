@@ -1,3 +1,13 @@
+---
+status: historical
+layer: strategy
+authority: P2
+audience: agent
+ticket_id: TCK-20260523-LAB-ORCHESTRATOR
+artifact_type: investigation
+tags: [lab, orchestrator]
+---
+
 # Investigation — Milestone 78 Orchestrator
 
 ## Current Mechanisms

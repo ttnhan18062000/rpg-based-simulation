@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: bug-01-diagonal-hunt-move-conflict
+phase: done
+date: unknown
+tags: [bug, diagonal, hunt, move, conflict]
+---
+
 # Bug 01: Diagonal Adjacent HUNT Move Conflict
 
 ## Summary
@@ -33,3 +44,7 @@ At least one entity should close the gap. Possible solutions (requires decision)
 ## Labels
 
 `bug`, `ai`, `conflict-resolution`, `needs-decision`
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

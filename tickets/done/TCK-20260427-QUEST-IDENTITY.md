@@ -1,3 +1,14 @@
+---
+status: historical
+layer: core
+authority: P1
+audience: agent
+ticket_id: TCK-20260427-QUEST-IDENTITY
+phase: done
+date: 2026-04-27
+tags: [quest, identity]
+---
+
 # TCK-20260427-QUEST-IDENTITY
 
 ## Title
@@ -5,6 +16,15 @@ Fixing Quest Identity Paradox and Hardening Authoritative Rewards
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 The user requested a "continue" after a long conversation about a perceived "Quest Identity Paradox" where quest state appeared to revert or stay stuck in ACTIVE despite completion conditions being met.

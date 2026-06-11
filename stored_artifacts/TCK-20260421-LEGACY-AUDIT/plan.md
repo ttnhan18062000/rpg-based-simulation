@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260421-LEGACY-AUDIT
+artifact_type: plan
+tags: [legacy, audit]
+---
+
 # Plan: Legacy Logic Audit
 
 ## Goal

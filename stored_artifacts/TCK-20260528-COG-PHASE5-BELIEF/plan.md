@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260528-COG-PHASE5-BELIEF
+artifact_type: plan
+tags: [cog, phase5, belief]
+---
+
 # Plan: Phase 5 — Information / Belief / Source-Trust Loop
 
 This document coordinates the technical plan for Phase 5.

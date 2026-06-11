@@ -1,0 +1,69 @@
+# STATE: EXISTING-LOGIC
+- id: "basic_melee"
+  accuracy: 0.75
+  crit_chance: 0.05
+  crit_multiplier: 1.5
+  damage_tags: ["physical", "blunt"]
+
+# STATE: REDESIGNED-CORE
+- id: "predator_melee"
+  accuracy: 0.78
+  crit_chance: 0.08
+  crit_multiplier: 1.4
+  damage_tags: ["physical", "piercing"]
+
+# STATE: ADDITIONAL
+- id: "guard_disciplined"
+  accuracy: 0.82
+  crit_chance: 0.04
+  crit_multiplier: 1.4
+  damage_tags: ["physical", "slashing"]
+
+# STATE: ADDITIONAL
+- id: "opportunist_raider"
+  accuracy: 0.72
+  crit_chance: 0.1
+  crit_multiplier: 1.6
+  damage_tags: ["physical", "slashing"]
+
+# STATE: ADDITIONAL
+- id: "ranged_archer"
+  accuracy: 0.7
+  crit_chance: 0.1
+  crit_multiplier: 1.5
+  damage_tags: ["physical", "piercing"]
+
+# STATE: ADDITIONAL
+- id: "arcane_bolt"
+  accuracy: 0.78
+  crit_chance: 0.08
+  crit_multiplier: 1.6
+  damage_tags: ["arcane"]
+
+# STATE: ADDITIONAL
+- id: "venom_bite"
+  accuracy: 0.76
+  crit_chance: 0.06
+  crit_multiplier: 1.3
+  damage_tags: ["physical", "poison"]
+
+# STATE: ADDITIONAL
+- id: "undead_slam"
+  accuracy: 0.7
+  crit_chance: 0.04
+  crit_multiplier: 1.4
+  damage_tags: ["physical", "shadow"]
+
+# STATE: ADDITIONAL
+- id: "brute_crush"
+  accuracy: 0.68
+  crit_chance: 0.12
+  crit_multiplier: 1.8
+  damage_tags: ["physical", "blunt"]
+
+# STATE: ADDITIONAL
+- id: "dragon_fire"
+  accuracy: 0.8
+  crit_chance: 0.1
+  crit_multiplier: 1.8
+  damage_tags: ["fire", "arcane"]

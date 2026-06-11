@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260420-RESOURCE-PHASE4-HIGH-LEVEL
+phase: done
+date: 2026-04-20
+tags: [resource, phase4, high, level]
+---
+
 # Revised High-Level Implementation Plan — Next Phase of `src`
 
 This plan assumes the current `src` branch is **close** to build-ready, but not yet ready to freeze blindly.
@@ -474,3 +485,7 @@ They are required close-out checks for every milestone in this phase.
 - [ ] Benchmark impact reviewed if applicable
 - [ ] Known limitations recorded
 - [ ] Old-`src` parity expectation reviewed where relevant
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: engine
+original_date: unknown
+---
+
 - The chosen-entity viewer requirement is not met.
 The high-level plan says the chosen-entity view should answer who the entity is, what it wants, what changed it, what is at risk, and what it might do next, showing current goal, emotional trend, notable relationships, recent major memories, traits, routine, ongoing arc, and likely next choices. The current inspector only shows general info, biological needs, social bonds, and the last 10 memory logs. That is a debug panel, not the curated spectator lens both the high-level plan and Phase 0 require. 
 - The salience story is overstated.

@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260519-SIM-OBS-PHASE3-M13
+artifact_type: plan
+tags: [sim, obs, phase3, m13]
+---
+
 # Implementation Plan - Milestone 13: Evidence, Triage, and Report V2
 
 We propose implementing the post-simulation triage, clustering, and Report V2 generation logic to turn raw lists of anomalies into highly actionable diagnostic summaries.

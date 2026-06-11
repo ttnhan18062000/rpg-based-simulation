@@ -1,3 +1,13 @@
+---
+status: historical
+layer: world
+authority: P2
+audience: agent
+ticket_id: TCK-20260523-WORLD-TEMPLATES
+artifact_type: plan
+tags: [world, templates]
+---
+
 # Plan: World Template and Recipe System
 
 We will implement a clean, robust, and decoupled Recipe expansion system.

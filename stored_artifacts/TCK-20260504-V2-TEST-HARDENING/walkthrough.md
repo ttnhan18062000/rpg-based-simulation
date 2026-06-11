@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: misc
+authority: P2
+audience: agent
+tags: [v2, test, hardening]
+---
+
 # Walkthrough - V2 Engine Hardening & Test Refactoring
 
 I have completed the refactoring of the core engine test suite to align with the V2 architecture. This hardening effort ensures that all state mutations are authoritative, deterministic, and schema-compliant.

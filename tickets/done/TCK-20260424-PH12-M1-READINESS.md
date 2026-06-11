@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260424-PH12-M1-READINESS
+phase: done
+date: 2026-04-24
+tags: [ph12, m1, readiness]
+---
+
 # TCK-20260424-PH12-M1-READINESS
 
 ## Title
@@ -5,6 +16,15 @@ Phase 12 Milestone 1: Readiness Gate
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Establish the formal entry gate for Phase 12 Cutover. Ensure that the cutover surface is strictly bounded by Phase 11 ratified truth and that operational boundaries are explicit.

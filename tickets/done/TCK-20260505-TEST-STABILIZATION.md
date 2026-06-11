@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260505-TEST-STABILIZATION
+phase: done
+date: 2026-05-05
+tags: [test, stabilization]
+---
+
 # TCK-20260505-TEST-STABILIZATION
 
 ## Title
@@ -5,6 +16,15 @@ Fixing 200+ Failed Tests due to EntityState Architectural Mismatch
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 After a major componentization refactor of the `EntityState` model, over 200 tests are failing with `TypeError` (unexpected keyword arguments like `readiness`, `active`) and `AttributeError` (missing attributes or `NoneType` access due to failed legality checks). These tests need to be updated to use the new component-based initialization and ensure entities meet authoritative legality requirements (e.g., 100.0 readiness for actions).

@@ -32,7 +32,7 @@ def test_friendly_fire_regression_pipeline_rejection():
 def test_range_legality():
     """Verify that attacking out of range is illegal."""
     hero = create_mock_entity(1, (1.0, 1.0), role=EntityRole.HERO)
-    monster = create_mock_entity(2, (10.0, 10.0), role=EntityRole.MONSTER, faction=2)
+    monster = create_mock_entity(2, (10.0, 10.0), role=EntityRole.MONSTER, faction=Faction.MONSTER_HORDE)
     
     state = AuthoritativeState(tick=1, seed=42, entities={1: hero, 2: monster})
     

@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260518-PHASE-DEPENDENCY-GRAPH
+phase: done
+date: 2026-05-18
+tags: [phase, dependency, graph]
+---
+
 # TCK-20260518-PHASE-DEPENDENCY-GRAPH
 
 ## Title
@@ -7,6 +18,15 @@ Implement Phase Dependency Graph for Dynamic Phase Skipping (Milestone 16)
 ## Status
 
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 

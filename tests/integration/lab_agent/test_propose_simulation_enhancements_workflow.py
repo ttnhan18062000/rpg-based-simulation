@@ -239,7 +239,99 @@ def test_enhancement_evidence_free_critical_rejected(mock_workspace_with_investi
             ]
         }
     )
-    
+
     workflow = ProposeSimulationEnhancementsWorkflow(workspace_root=mock_workspace_with_investigation_data)
     with pytest.raises(ValueError):
         workflow.run("session_enhance_01", request)
+
+
+# ── Semantic assertions ──────────────────────────────────────────────────────
+
+def test_critical_issue_generates_known_issues_proposal(mock_workspace_with_investigation_data: Path):
+    """A CRITICAL issue in issue_backlog must produce at least one KnownIssues patch proposal."""
+    request = WorkflowRequest(
+        workflow="ProposeSimulationEnhancements",
+        mode="generic",
+        user_goal="Verify critical produces proposal"
+    )
+    workflow = ProposeSimulationEnhancementsWorkflow(workspace_root=mock_workspace_with_investigation_data)
+    res = workflow.run("session_enhance_01", request)
+    assert res["status"] == "READY"
+
+    enhance_dir = (
+        mock_workspace_with_investigation_data / "data" / "lab_sessions"
+        / "session_enhance_01" / "enhancement"
+    )
+    known_issues_patches = []
+    for patch_file in (enhance_dir / "proposed_patches").glob("*.yaml"):
+        patch = yaml.safe_load(patch_file.read_text(encoding="utf-8"))
+        if patch.get("target_type") == "KnownIssues":
+            known_issues_patches.append(patch)
+
+    assert len(known_issues_patches) >= 1, (
+        "CRITICAL HardLawViolationRule must produce at least one KnownIssues patch"
+    )
+    assert any(
+        "HardLawViolationRule" in str(p.get("value", "")) or
+        "HardLawViolationRule" in str(p.get("reason", ""))
+        for p in known_issues_patches
+    ), f"KnownIssues patch must reference HardLawViolationRule; found: {known_issues_patches}"
+
+
+@pytest.fixture
+def mock_workspace_warning_only(tmp_path: Path) -> Path:
+    """Workspace where investigation found only WARNING-level issues — no CRITICAL."""
+    (tmp_path / "data" / "lab_sessions").mkdir(parents=True)
+    session_store = LabSessionStore(tmp_path / "data" / "lab_sessions")
+    session_store.create_session("session_enhance_warn")
+
+    invest_dir = (
+        tmp_path / "data" / "lab_sessions" / "session_enhance_warn" / "investigation"
+    )
+    invest_dir.mkdir(parents=True, exist_ok=True)
+
+    with open(invest_dir / "investigation_report.json", "w", encoding="utf-8") as f:
+        json.dump({
+            "session_id": "session_enhance_warn",
+            "lab_run_id": "run_warn",
+            "analysis_depth": "standard",
+            "critical_issues": [],
+        }, f)
+    with open(invest_dir / "issue_backlog.json", "w", encoding="utf-8") as f:
+        json.dump([{
+            "issue_id": "ISSUE-001",
+            "rule_name": "EconInflation",
+            "severity": "WARNING",
+            "domain": "resource",
+            "description": "Minor inflation drift",
+            "frequency": 2,
+            "affected_entities": [],
+            "state": "OPEN"
+        }], f)
+    with open(invest_dir / "missing_signals.json", "w", encoding="utf-8") as f:
+        json.dump([], f)
+    return tmp_path
+
+
+def test_warning_only_issue_no_known_issues_patch(mock_workspace_warning_only: Path):
+    """WARNING-level issues must not auto-generate KnownIssues patches — only CRITICAL triggers them."""
+    request = WorkflowRequest(
+        workflow="ProposeSimulationEnhancements",
+        mode="generic",
+        user_goal="Verify WARNING does not auto-propose"
+    )
+    workflow = ProposeSimulationEnhancementsWorkflow(workspace_root=mock_workspace_warning_only)
+    res = workflow.run("session_enhance_warn", request)
+    assert res["status"] == "READY"
+
+    enhance_dir = (
+        mock_workspace_warning_only / "data" / "lab_sessions"
+        / "session_enhance_warn" / "enhancement"
+    )
+    known_issues_patches = [
+        f for f in (enhance_dir / "proposed_patches").glob("*.yaml")
+        if yaml.safe_load(f.read_text(encoding="utf-8")).get("target_type") == "KnownIssues"
+    ]
+    assert len(known_issues_patches) == 0, (
+        f"WARNING-only issues must not generate KnownIssues patches; found: {known_issues_patches}"
+    )

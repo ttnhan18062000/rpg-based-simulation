@@ -1,3 +1,14 @@
+---
+status: historical
+layer: strategy
+authority: P1
+audience: agent
+ticket_id: TCK-20260422-PH8-STRATEGIC-RECOVERY
+phase: done
+date: 2026-04-22
+tags: [ph8, strategic, recovery]
+---
+
 # TCK-20260422-PH8-STRATEGIC-RECOVERY
 
 ## Title
@@ -5,6 +16,15 @@ Phase 8 Strategic Recovery: Combat, Tactical, & Local World Closure
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Recover the authoritative moment-to-moment gameplay layer, including deterministic combat, tactical AI, and local world-interaction semantics (terrain, buildings, LoS).

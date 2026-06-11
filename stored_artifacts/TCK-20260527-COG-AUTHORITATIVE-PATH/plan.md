@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260527-COG-AUTHORITATIVE-PATH
+artifact_type: plan
+tags: [cog, authoritative, path]
+---
+
 # Implementation Plan: TCK-20260527-COG-AUTHORITATIVE-PATH
 
 ## Goal

@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260527-COG-PHASE1-OPPORTUNITIES
+artifact_type: investigation
+tags: [cog, phase1, opportunities]
+---
+
 # Investigation Report - Phase 1 Opportunities
 
 ## Findings

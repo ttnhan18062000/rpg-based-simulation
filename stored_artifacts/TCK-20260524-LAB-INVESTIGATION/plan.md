@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260524-LAB-INVESTIGATION
+artifact_type: plan
+tags: [lab, investigation]
+---
+
 # Implementation Plan - Milestone 100 Investigation Workflow
 
 ## Goal Description

@@ -1,3 +1,14 @@
+---
+status: historical
+layer: ai
+authority: P1
+audience: agent
+ticket_id: TCK-20260414-LEARNING-SOCIAL-CONSEQUENCE
+phase: done
+date: 2026-04-14
+tags: [learning, social, consequence]
+---
+
 # TCK-20260414-LEARNING-SOCIAL-CONSEQUENCE
 
 ## Title
@@ -5,6 +16,15 @@ Strategic Learning Loops & Social Consequences
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Address learning, social consequences, and graph relationships from the updated implementation plans.

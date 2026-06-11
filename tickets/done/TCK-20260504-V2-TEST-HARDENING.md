@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260504-V2-TEST-HARDENING
+phase: done
+date: 2026-05-04
+tags: [v2, test, hardening]
+---
+
 # TCK-20260504-V2-TEST-HARDENING
 
 ## Title
@@ -5,6 +16,15 @@ Hardening Legacy Test Suites via V2EntityBuilder
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Complete the AOA (Atomic Object Access) migration for the V2 RPG Engine by refactoring legacy test suites to strictly utilize the `V2EntityBuilder`. This ensures that all entity state constructions are consistent with the V2 architecture and that no legacy `EntityState` instantiations bypass the builder's validation and component population logic.

@@ -1,0 +1,96 @@
+# STATE: REDESIGNED-CORE
+# Themes guide selection/composition. They should not directly execute logic.
+- id: "frontier"
+  display_name: "Frontier"
+
+# STATE: REDESIGNED-CORE
+- id: "village"
+  display_name: "Village"
+
+# STATE: REDESIGNED-CORE
+- id: "forest"
+  display_name: "Forest"
+
+# STATE: REDESIGNED-CORE
+- id: "wolf_den"
+  display_name: "Wolf Den"
+
+# STATE: REDESIGNED-CORE
+- id: "goblin"
+  display_name: "Goblin"
+
+# STATE: LEGACY-EXPORT
+- id: "mine"
+  display_name: "Mine"
+
+# STATE: LEGACY-EXPORT
+- id: "ruin"
+  display_name: "Ruin"
+
+# STATE: LEGACY-EXPORT
+- id: "moon"
+  display_name: "Moon"
+
+# STATE: ADDITIONAL
+- id: "bandit"
+  display_name: "Bandit"
+
+# STATE: ADDITIONAL
+- id: "trade"
+  display_name: "Trade"
+
+# STATE: ADDITIONAL
+- id: "undead"
+  display_name: "Undead"
+
+# STATE: ADDITIONAL
+- id: "swamp"
+  display_name: "Swamp"
+
+# STATE: ADDITIONAL
+- id: "orc"
+  display_name: "Orc"
+
+# STATE: ADDITIONAL
+- id: "dwarven"
+  display_name: "Dwarven"
+
+# STATE: ADDITIONAL
+- id: "elven"
+  display_name: "Elven"
+
+# STATE: ADDITIONAL
+- id: "arcane"
+  display_name: "Arcane"
+
+# STATE: ADDITIONAL
+- id: "dragon"
+  display_name: "Dragon"
+
+# STATE: ADDITIONAL
+- id: "spirit"
+  display_name: "Spirit"
+
+# STATE: ADDITIONAL
+- id: "sacred"
+  display_name: "Sacred"
+
+# STATE: ADDITIONAL
+- id: "corrupted"
+  display_name: "Corrupted"
+
+# STATE: ADDITIONAL
+- id: "frozen"
+  display_name: "Frozen"
+
+# STATE: ADDITIONAL
+- id: "volcanic"
+  display_name: "Volcanic"
+
+# STATE: ADDITIONAL
+- id: "mountain"
+  display_name: "Mountain"
+
+# STATE: ADDITIONAL
+- id: "cult"
+  display_name: "Cult"

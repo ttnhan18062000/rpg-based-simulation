@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260425-PH5-MIND-AND-NEEDS
+artifact_type: plan
+tags: [ph5, mind, and, needs]
+---
+
 # Implementation Plan - Phase 5: Mind and Needs
 
 ## Goal Description

@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260419-MD-TASK2-HARDEN-PROTOCOL-AND-COMMIT-LAW
+phase: done
+date: 2026-04-19
+tags: [md, task2, harden, protocol, and, commit, law]
+---
+
 # TCK-20260419-MD-TASK2-HARDEN-PROTOCOL-AND-COMMIT-LAW
 
 ## Title
@@ -5,6 +16,15 @@ Milestone D - Task 2: Harden Worker Protocol and Commit Law
 
 ## Status
 INPROGRESS
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Harden the worker protocol by implementing deterministic neighbor context, explicit work-id tracking, and a frozen priority-based commit law. Ensure authoritative equivalence between local and concurrent execution.

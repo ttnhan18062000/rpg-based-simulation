@@ -1,3 +1,13 @@
+---
+status: historical
+layer: observability
+authority: P2
+audience: agent
+ticket_id: TCK-20260501-E4.7-OBSERVABILITY-HARDENING
+artifact_type: plan
+tags: [e4, observability, hardening]
+---
+
 # Walkthrough — Phase E4.7 Observability & Certification
 
 We have completed the authoritative hardening of the V2 Engine's observability stack. This phase ensures that every engine failure (rejection) is now a first-class, auditable "Truth Signal" rather than a silent drop.

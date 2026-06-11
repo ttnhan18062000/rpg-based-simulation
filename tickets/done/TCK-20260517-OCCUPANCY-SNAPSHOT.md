@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260517-OCCUPANCY-SNAPSHOT
+phase: done
+date: 2026-05-17
+tags: [occupancy, snapshot]
+---
+
 # TCK-20260517-OCCUPANCY-SNAPSHOT
 
 ## Title
@@ -7,6 +18,15 @@ OccupancySnapshot Implementation for Stable Per-Tick Spatial Read Model
 ## Status
 
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 

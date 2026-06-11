@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260523-BALANCE-COMPARISON
+artifact_type: investigation
+tags: [balance, comparison]
+---
+
 # Balance Comparison Engine - Investigation
 
 ## 1. Goal and Core Mechanics

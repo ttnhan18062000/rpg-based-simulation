@@ -1,3 +1,10 @@
+---
+status: active
+layer: engine
+authority: P1
+audience: developer
+---
+
 # Frontend: Real-time Visualization
 
 The WorldLoop Frontend is a high-performance React application built with **Vite** and **TypeScript**. It utilizes the **HTML5 Canvas API** to render thousands of entities and world objects at 60 FPS.

@@ -1,3 +1,13 @@
+---
+status: historical
+layer: observability
+authority: P2
+audience: agent
+ticket_id: TCK-20260518-PROFILING-HARNESS-MODES
+artifact_type: plan
+tags: [profiling, harness, modes]
+---
+
 # Profiling Harness Modes Plan
 
 ## Proposed Changes

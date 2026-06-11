@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260425-PH8-M3-PROGRESSION
+artifact_type: investigation
+tags: [ph8, m3, progression]
+---
+
 # Investigation — PH8 M3: Progression and Leveling
 
 ## Goal

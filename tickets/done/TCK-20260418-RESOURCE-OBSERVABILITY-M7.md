@@ -1,3 +1,14 @@
+---
+status: historical
+layer: economy
+authority: P1
+audience: agent
+ticket_id: TCK-20260418-RESOURCE-OBSERVABILITY-M7
+phase: done
+date: 2026-04-18
+tags: [resource, observability, m7]
+---
+
 # TCK-20260418-RESOURCE-OBSERVABILITY-M7
 
 ## Title
@@ -5,6 +16,15 @@ Milestone 7: Observability and Operational Controls
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Establish the engine's first runtime-visibility and operational-control surfaces. Implement strict startup validation, stable runtime signals (with memory trends), and formal graceful shutdown sequences.

@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: misc
+original_date: unknown
+---
+
 # Combat and Movement Overhaul: Authoritative Specification
 
 This document serves as the singular, authoritative reference for the core simulation mechanics as refined during the Combat and Movement Overhaul.

@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: economy
+original_date: unknown
+---
+
 Good. Phase 9 is where the rewrite either recovers the game’s mind, or keeps pretending local behavior is enough.
 
 After Phase 8, the trap is obvious: once combat and local action look credible, people start saying “the core game is basically back.” That is false. What is still missing is the layer that gives the world continuity, consequence, memory, and progression meaning.

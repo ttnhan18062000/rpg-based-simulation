@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260327-WINDBIGMOD
+artifact_type: test_plan
+tags: [windbigmod]
+---
+
 # WINDBIGMOD Test Plan
 
 ## 1. Unit Tests

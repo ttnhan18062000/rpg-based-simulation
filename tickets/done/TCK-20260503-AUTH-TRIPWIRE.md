@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260503-AUTH-TRIPWIRE
+phase: done
+date: 2026-05-03
+tags: [auth, tripwire]
+---
+
 # TCK-20260503-AUTH-TRIPWIRE
 
 ## Title
@@ -5,6 +16,15 @@ Authoritative Mutation Tripwire Hardening
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Harden the authoritative engine's state isolation by implementing a mutation tripwire that prevents worker code from accidentally modifying the world state.

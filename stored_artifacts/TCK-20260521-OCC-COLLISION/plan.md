@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260521-OCC-COLLISION
+artifact_type: plan
+tags: [occ, collision]
+---
+
 # Plan: Metropolis Occupancy Collision Fix
 
 ## Proposed Changes

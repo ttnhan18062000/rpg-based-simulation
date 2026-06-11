@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: misc
+original_date: 2026-04-12
+---
+
 # Design Spec: Hybrid Skill Selection (best_ready_skill)
 
 ## Goal

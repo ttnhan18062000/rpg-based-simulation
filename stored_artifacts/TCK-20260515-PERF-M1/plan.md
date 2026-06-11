@@ -1,3 +1,13 @@
+---
+status: historical
+layer: performance
+authority: P2
+audience: agent
+ticket_id: TCK-20260515-PERF-M1
+artifact_type: plan
+tags: [perf, m1]
+---
+
 # Implementation Plan - TCK-20260515-PERF-M1
 
 ## Goal

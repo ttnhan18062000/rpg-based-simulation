@@ -1,3 +1,13 @@
+---
+status: historical
+layer: ai
+authority: P2
+audience: agent
+ticket_id: TCK-20260527-COG-SOCIAL-CONTRACTS
+artifact_type: plan
+tags: [cog, social, contracts]
+---
+
 # Implementation Plan: TCK-20260527-COG-SOCIAL-CONTRACTS
 
 ## Goal

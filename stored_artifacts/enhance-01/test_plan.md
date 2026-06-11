@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: enhance-01
+artifact_type: test_plan
+tags: [enhance]
+---
+
 # Test Plan: Enhance 01 
 
 ## Scope

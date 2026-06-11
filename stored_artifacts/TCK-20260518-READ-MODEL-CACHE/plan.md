@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260518-READ-MODEL-CACHE
+artifact_type: plan
+tags: [read, model, cache]
+---
+
 # Plan: Read Model and API Projection Optimization
 
 ## Objective

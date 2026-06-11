@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260412-REGRESSION-FIX
+artifact_type: test_plan
+tags: [regression, fix]
+---
+
 # Test Plan - TCK-20260412-REGRESSION-FIX
 
 ## Target Areas

@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: misc
+authority: P2
+audience: agent
+tags: [epic_18]
+---
+
 # Newcomer's Guide: Understanding "Progression Depth"
 
 Welcome to the RPG Simulation! As a new developer, it's easy to see the system as just numbers on a grid. This guide explains **Progression Depth**—the feature that turns "units" into "individuals" with life stories.

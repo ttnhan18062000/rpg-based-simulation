@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: economy
+original_date: unknown
+---
+
 Blunt answer:
 
 **We do not need to finish every v2 milestone before attaching to real RPG logic.**

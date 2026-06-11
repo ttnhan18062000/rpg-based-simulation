@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260416-REPAIR-FINALIZE
+phase: done
+date: 2026-04-16
+tags: [repair, finalize]
+---
+
 # TCK-20260416-REPAIR-FINALIZE
 
 ## Title
@@ -5,6 +16,15 @@ Strategic Cognition Truth Surface Hardening
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Replace simulated proofs with authoritative end-to-end integration tests and solidify the strategic explainability contract.

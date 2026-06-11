@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260401-AOA-STABILIZE
+artifact_type: plan
+tags: [aoa, stabilize]
+---
+
 # AOA Runtime & Test Suite Stabilization Plan
 
 Resolving the remaining 29 failures in the 748-test suite to achieve 100% pass rate and enforce AOA integrity.

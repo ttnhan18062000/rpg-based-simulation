@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260518-COMPONENT-PATCH-MODEL
+artifact_type: plan
+tags: [component, patch, model]
+---
+
 # Implementation Plan: Component-Level Patch Model
 
 ## Phase 1: Define `ComponentPatch` Hierarchy

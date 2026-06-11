@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260418-RESOURCE-PERSISTENCE-M6
+phase: done
+date: 2026-04-18
+tags: [resource, persistence, m6]
+---
+
 # TCK-20260418-RESOURCE-PERSISTENCE-M6
 
 ## Title
@@ -5,6 +16,15 @@ Milestone 6: Streaming Replay and Bounded Persistence
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Implement a resource-safe persistence model for replay data with streaming emission, bounded staging, and deterministic chunking.

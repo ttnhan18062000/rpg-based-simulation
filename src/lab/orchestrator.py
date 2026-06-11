@@ -165,9 +165,32 @@ class ScenarioLabOrchestrator:
 
                 run_success = False
                 try:
+                    os.makedirs(temp_run_dir, exist_ok=True)
+                    
+                    # Load compile context and resolved paths if resolved files exist
+                    world_dir = self.world_repo.worlds_dir / scenario_spec.world_id
+                    compile_context_path = world_dir / "resolved" / "compile_context.json"
+                    resolved_world_path = world_dir / "resolved" / "world.resolved.yaml"
+                    provenance_manifest_path = world_dir / "resolved" / "provenance_manifest.json"
+                    assembly_report_path = world_dir / "resolved" / "assembly_report.json"
+                    validation_report_path = world_dir / "resolved" / "validation_report.json"
+                    
+                    compile_context = None
+                    if compile_context_path.is_file():
+                        from src.worldassembly.context import CompileContext
+                        with open(compile_context_path, "r", encoding="utf-8") as f:
+                            context_data = json.load(f)
+                        compile_context = CompileContext.from_dict(context_data)
+                    
                     # Compile the world dynamically for this seed
                     from src.worldbuilding.compiler import WorldCompiler
-                    initial_state, compile_report = WorldCompiler.compile(world_spec, seed)
+                    compile_report_path = os.path.join(temp_run_dir, "world_compile_report.json")
+                    initial_state, compile_report = WorldCompiler.compile(
+                        world_spec,
+                        seed,
+                        output_report_path=compile_report_path,
+                        context=compile_context
+                    )
 
                     # Initialize profile and Kernel
                     profile = ConfigLoader.load_profile(
@@ -181,12 +204,27 @@ class ScenarioLabOrchestrator:
                     from src.engine.kernel import Kernel
 
                     rng = DeterministicRNG(seed)
-                    kernel = Kernel(
-                        profile=profile,
-                        state=initial_state,
-                        rng=rng,
-                        run_id=run_id
-                    )
+                    
+                    if compile_context:
+                        kernel = Kernel(
+                            profile=profile,
+                            state=initial_state,
+                            rng=rng,
+                            run_id=run_id,
+                            resolved_world_path=str(resolved_world_path),
+                            compile_context_path=str(compile_context_path),
+                            provenance_manifest_path=str(provenance_manifest_path),
+                            assembly_report_path=str(assembly_report_path),
+                            validation_report_path=str(validation_report_path) if validation_report_path.is_file() else None,
+                            compile_report_path=str(compile_report_path)
+                        )
+                    else:
+                        kernel = Kernel(
+                            profile=profile,
+                            state=initial_state,
+                            rng=rng,
+                            run_id=run_id
+                        )
 
                     # Ticks execution
                     for _ in range(experiment_spec.run.ticks):

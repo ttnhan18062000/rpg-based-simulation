@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260529-OBS-PHASE27-API-DASHBOARD
+artifact_type: test_plan
+tags: [obs, phase27, api, dashboard]
+---
+
 # Test Plan — Phase 27 API & Dashboard Integration
 
 We will implement the following test suites to fully verify Phase 27:

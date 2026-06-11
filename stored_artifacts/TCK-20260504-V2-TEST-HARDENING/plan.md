@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260504-V2-TEST-HARDENING
+artifact_type: plan
+tags: [v2, test, hardening]
+---
+
 # Plan: V2 Test Hardening
 
 ## Goal

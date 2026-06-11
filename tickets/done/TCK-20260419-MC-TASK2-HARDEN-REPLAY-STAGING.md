@@ -1,3 +1,14 @@
+---
+status: historical
+layer: observability
+authority: P1
+audience: agent
+ticket_id: TCK-20260419-MC-TASK2-HARDEN-REPLAY-STAGING
+phase: done
+date: 2026-04-19
+tags: [mc, task2, harden, replay, staging]
+---
+
 # TCK-20260419-MC-TASK2-HARDEN-REPLAY-STAGING
 
 ## Title
@@ -5,6 +16,15 @@ Milestone C - Task 2: Harden Replay Staging and Chunk Rotation
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Ensure replay behavior is fully exact and bounded under normal and pressured conditions.

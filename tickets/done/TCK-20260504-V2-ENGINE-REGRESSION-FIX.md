@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260504-V2-ENGINE-REGRESSION-FIX
+phase: done
+date: 2026-05-04
+tags: [v2, engine, regression, fix]
+---
+
 # TCK-20260504-V2-ENGINE-REGRESSION-FIX
 
 ## Title
@@ -5,6 +16,15 @@ Fix 39 engine test regressions by completing V2EntityBuilder migration
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 The simulation engine has 39 failing tests in the `tests/engine/` directory. These failures are primarily due to legacy code (specifically `EntityGenerator` and various test files) attempting to instantiate `EntityState` directly, which violates the V2 engine's frozen dataclass and updated component contract.

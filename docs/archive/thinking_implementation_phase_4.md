@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: engine
+original_date: unknown
+---
+
 [Phase 4] - Social Contracts, Party Formation, and Cooperative Coordination
 
 [Phase Description]

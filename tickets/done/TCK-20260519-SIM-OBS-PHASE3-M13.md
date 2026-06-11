@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260519-SIM-OBS-PHASE3-M13
+phase: done
+date: 2026-05-19
+tags: [sim, obs, phase3, m13]
+---
+
 # TCK-20260519-SIM-OBS-PHASE3-M13
 
 ## Title
@@ -7,6 +18,15 @@ Milestone 13: Evidence, Triage, and Report V2
 ## Status
 
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 

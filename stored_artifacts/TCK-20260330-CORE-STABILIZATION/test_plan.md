@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260330-CORE-STABILIZATION
+artifact_type: test_plan
+tags: [core, stabilization]
+---
+
 # Test Plan: TCK-20260330-CORE-STABILIZATION (Updated)
 
 ## Automated Verification

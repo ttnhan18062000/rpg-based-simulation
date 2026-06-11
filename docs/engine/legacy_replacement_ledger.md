@@ -1,3 +1,10 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: developer
+---
+
 # Authoritative Legacy Replacement Ledger
 
 ## Purpose

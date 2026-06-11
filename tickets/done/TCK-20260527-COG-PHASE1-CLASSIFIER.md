@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260527-COG-PHASE1-CLASSIFIER
+phase: done
+date: 2026-05-27
+tags: [cog, phase1, classifier]
+---
+
 # TCK-20260527-COG-PHASE1-CLASSIFIER
 
 ## Title
@@ -7,6 +18,15 @@ Implement Phase 1 Route-Family Classifier
 ## Status
 
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 

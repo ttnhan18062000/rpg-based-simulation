@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260527-COG-DETOUR-DEPTH
+phase: done
+date: 2026-05-27
+tags: [cog, detour, depth]
+---
+
 # TCK-20260527-COG-DETOUR-DEPTH
 
 ## Title
@@ -7,6 +18,15 @@ Rename detour_depth to reserved_detour_depth to Resolve Config Overpromise
 ## Status
 
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 

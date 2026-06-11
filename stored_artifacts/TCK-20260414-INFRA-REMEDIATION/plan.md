@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260414-INFRA-REMEDIATION
+artifact_type: plan
+tags: [infra, remediation]
+---
+
 # Infrastructure Isolation & Replay-Assertion Repair
 
 This plan addresses the remediation track for the Strategic Cognition pipeline, ensuring that the system is structurally sound, decoupled from external message brokers, and verifiable through deterministic replay assertions.

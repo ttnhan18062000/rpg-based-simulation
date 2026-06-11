@@ -1,3 +1,14 @@
+---
+status: historical
+layer: performance
+authority: P1
+audience: agent
+ticket_id: TCK-20260512-PERF-TESTS
+phase: done
+date: 2026-05-12
+tags: [perf, tests]
+---
+
 # TCK-20260512-PERF-TESTS
 
 ## Title
@@ -5,6 +16,15 @@ Implement performance regression tests and conftest utilities
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Establish a suite of performance regression tests using `pytest` and the enhanced `BenchHarness`.

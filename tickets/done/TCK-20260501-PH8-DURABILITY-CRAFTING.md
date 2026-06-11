@@ -1,3 +1,14 @@
+---
+status: historical
+layer: combat
+authority: P1
+audience: agent
+ticket_id: TCK-20260501-PH8-DURABILITY-CRAFTING
+phase: done
+date: 2026-05-01
+tags: [ph8, durability, crafting]
+---
+
 # TCK-20260501-PH8-DURABILITY-CRAFTING
 
 ## Title
@@ -5,6 +16,15 @@ Phase 8: Implementing Equipment Durability and Hardening Crafting
 
 ## Status
 INPROGRESS
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Implement equipment durability decay during combat, a repair mechanism at the blacksmith, and ensure crafting consumes materials only upon successful output delivery.

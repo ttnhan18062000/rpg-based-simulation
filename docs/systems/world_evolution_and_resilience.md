@@ -1,3 +1,10 @@
+---
+status: active
+layer: systems
+authority: P1
+audience: developer
+---
+
 # World Evolution & Town Resilience
 
 Technical documentation for the global difficulty scaling, faction aggression, building durability, and historical legacy systems introduced in Epic 19.

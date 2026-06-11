@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: misc
+original_date: unknown
+---
+
 This is a comprehensive technical proposal that synthesizes the architectural core of **v1** with the advanced deterministic, AI, and optimization strategies of **v2**.
 
 This document is designed to serve as a **specification for implementation**.

@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: observability
+original_date: unknown
+---
+
 # Implementation Plan for Remaining Unchecked Logic
 
 Use this as the next closure plan after the fresh re-audit. The remaining work is no longer “build big systems.” Most major systems exist. The unchecked work is now mostly:

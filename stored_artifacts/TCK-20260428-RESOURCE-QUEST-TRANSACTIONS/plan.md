@@ -1,3 +1,13 @@
+---
+status: historical
+layer: economy
+authority: P2
+audience: agent
+ticket_id: TCK-20260428-RESOURCE-QUEST-TRANSACTIONS
+artifact_type: plan
+tags: [resource, quest, transactions]
+---
+
 # TCK-20260428-RESOURCE-QUEST-TRANSACTIONS Implementation Plan
 
 This plan aims to make quest reward delivery transactional and capacity-aware, ensuring quest status only advances to `REWARDED` when the reward is successfully delivered.

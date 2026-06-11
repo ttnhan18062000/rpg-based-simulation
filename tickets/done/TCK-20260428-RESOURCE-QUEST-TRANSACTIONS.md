@@ -1,3 +1,14 @@
+---
+status: historical
+layer: economy
+authority: P1
+audience: agent
+ticket_id: TCK-20260428-RESOURCE-QUEST-TRANSACTIONS
+phase: done
+date: 2026-04-28
+tags: [resource, quest, transactions]
+---
+
 # TCK-20260428-RESOURCE-QUEST-TRANSACTIONS
 
 ## Title
@@ -7,6 +18,15 @@ Implement Transactional Quest Rewards (Phase 3.1)
 ## Status
 
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 

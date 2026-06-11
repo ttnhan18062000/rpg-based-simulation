@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: misc
+authority: P2
+audience: agent
+tags: [lab, cli]
+---
+
 # Walkthrough - Lab CLI / Tooling (Milestone 81)
 
 We have successfully completed Milestone 81: Lab CLI / Tooling.

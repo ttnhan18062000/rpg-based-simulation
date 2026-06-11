@@ -1,3 +1,14 @@
+---
+status: historical
+layer: strategy
+authority: P1
+audience: agent
+ticket_id: TCK-20260424-PH2-M2-COGNITIVE-HARDENING
+phase: done
+date: 2026-04-24
+tags: [ph2, m2, cognitive, hardening]
+---
+
 # TCK-20260424-PH2-M2-COGNITIVE-HARDENING
 
 ## Title
@@ -5,6 +16,15 @@ Phase 2 Milestone 2: Cognitive Hardening
 
 ## Status
 OPEN
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Implement selective attention, emotional appraisal, and goal hysteresis to deepen entity cognition and ensure persistence in behavior.

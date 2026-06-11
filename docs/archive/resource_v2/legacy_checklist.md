@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: misc
+original_date: unknown
+---
+
 # Original `src` RPG-core Atomic Logic Checklist
 
 This document is a port-audit checklist derived from the uploaded original `src` and `tests` snapshots.

@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260510-REFACTOR-SUBSYSTEM-TEST-MIGRATION
+phase: done
+date: 2026-05-10
+tags: [refactor, subsystem, test, migration]
+---
+
 # TCK-20260510-REFACTOR-SUBSYSTEM-TEST-MIGRATION
 
 ## Title
@@ -5,6 +16,15 @@ Migrate Subsystem Unit Tests and World Long-Run Tests
 
 ## Status
 INPROGRESS
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Move long-run world simulation tests and direct system tests to their respective `unit/` and `integration/world/` folders as per Milestone 1 (Tasks 1.3 & 1.4).

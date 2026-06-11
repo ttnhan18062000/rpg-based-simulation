@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: strategy
+original_date: unknown
+---
+
 # Implementation Plan — Fix Critical Cognition / Strategy Issues First
 
 The source confirms several concrete problems: `GoalRegistry` currently registers only five built-in scorers, `TownScorer` returns `target_pos` but no `target_id`, and `AppraisalSystem` has an unreachable `< 0.1` panic branch because `< 0.2` is checked first.

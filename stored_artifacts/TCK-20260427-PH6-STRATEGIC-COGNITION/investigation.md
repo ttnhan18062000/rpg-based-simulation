@@ -1,3 +1,13 @@
+---
+status: historical
+layer: strategy
+authority: P2
+audience: agent
+ticket_id: TCK-20260427-PH6-STRATEGIC-COGNITION
+artifact_type: investigation
+tags: [ph6, strategic, cognition]
+---
+
 # Investigation - Phase 6 Strategic Cognition
 
 ## Current State Analysis

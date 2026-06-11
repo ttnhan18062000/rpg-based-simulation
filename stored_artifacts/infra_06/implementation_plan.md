@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: engine
+authority: P2
+audience: agent
+tags: [infra_06]
+---
+
 # Implementation Plan: Infra-06 (Hardening & Chaos Testing)
 
 ## 1. Objective & Rationale

@@ -49,30 +49,106 @@ class QuestResolutionSystem:
 
     @staticmethod
     def evaluate_combat_victory(
-        attacker: EntityState, 
-        victim_kind: str
+        attacker: EntityState,
+        victim_kind: str,
+        victim_entity: Optional[EntityState] = None,
     ) -> List[QuestUpdate]:
         """Advance HUNT quests when an enemy is defeated."""
+        import logging as _log
+        _logger = _log.getLogger(__name__)
+
         updates = []
-        
+
+        # Pre-resolve clean identity fields once (before the project loop).
+        _victim_archetype_id: Optional[str] = None
+        _victim_faction_id: Optional[str] = None
+        _attacker_faction_id: Optional[str] = None
+        _proj_service = None
+        _perspective_id: Optional[str] = None
+
+        if victim_entity is not None:
+            from src.entities.identity_resolver import EntityIdentityResolver, IdentityResolutionError
+            _resolver = EntityIdentityResolver()
+            try:
+                _v = _resolver.resolve(victim_entity)
+                _victim_archetype_id = _v.archetype_id
+                _victim_faction_id = _v.faction_id
+            except IdentityResolutionError:
+                _logger.debug("Quest resolution: could not resolve victim identity for entity %s", victim_entity.id)
+            try:
+                _a = _resolver.resolve(attacker)
+                _attacker_faction_id = _a.faction_id
+            except IdentityResolutionError:
+                _logger.debug("Quest resolution: could not resolve attacker identity for entity %s", attacker.id)
+
         # Phase 9 Fix: Sort projects by ID for deterministic progress evaluation
         for q_id, project in sorted(attacker.strategic.projects.items()):
             if not isinstance(project, QuestState):
                 continue
-                
             if project.quest_status != QuestStatus.ACTIVE:
                 continue
-                
             if project.quest_kind != QuestKind.HUNT:
                 continue
-                
-            target_kind = project.metadata.get("target_kind")
-            if target_kind == victim_kind:
-                updates.append(QuestUpdate(
-                    quest_id=q_id,
-                    progress_delta=1.0 # Standard kill progress
-                ))
-                
+
+            matched = False
+
+            # Path 1: clean archetype_id match
+            if not matched and _victim_archetype_id is not None:
+                t_arch = project.metadata.get("target_archetype_id")
+                if t_arch:
+                    if t_arch == _victim_archetype_id:
+                        matched = True
+                    else:
+                        _logger.debug(
+                            "Quest %s: target_archetype_id=%s did not match victim archetype=%s",
+                            q_id, t_arch, _victim_archetype_id,
+                        )
+
+            # Path 2: clean faction_id match
+            if not matched and _victim_faction_id is not None:
+                t_fac = project.metadata.get("target_faction_id")
+                if t_fac:
+                    if t_fac == _victim_faction_id:
+                        matched = True
+                    else:
+                        _logger.debug(
+                            "Quest %s: target_faction_id=%s did not match victim faction=%s",
+                            q_id, t_fac, _victim_faction_id,
+                        )
+
+            # Path 3: projected relation label match
+            if not matched and _victim_faction_id and _attacker_faction_id:
+                t_label = project.metadata.get("target_projected_label")
+                if t_label:
+                    if _proj_service is None:
+                        from src.content_semantics.faction import get_faction_semantics_service
+                        from src.content_semantics.relation import RelationProjectionService
+                        _svc = get_faction_semantics_service()
+                        _proj_service = RelationProjectionService(_svc.repo)
+                        _perspective_id = _attacker_faction_id
+                        for _p in _svc.repo.perspectives.values():
+                            if _p.chosen_faction == _attacker_faction_id:
+                                _perspective_id = _p.id
+                                break
+                    proj = _proj_service.project_relation(
+                        _perspective_id, _attacker_faction_id, _victim_faction_id, None
+                    )
+                    if proj.label == t_label:
+                        matched = True
+                    else:
+                        _logger.debug(
+                            "Quest %s: target_projected_label=%s did not match projected label=%s",
+                            q_id, t_label, proj.label,
+                        )
+
+            # Path 4: legacy target_kind fallback (existing behavior, unchanged)
+            if not matched:
+                if project.metadata.get("target_kind") == victim_kind:
+                    matched = True
+
+            if matched:
+                updates.append(QuestUpdate(quest_id=q_id, progress_delta=1.0))
+
         return updates
 
     @staticmethod

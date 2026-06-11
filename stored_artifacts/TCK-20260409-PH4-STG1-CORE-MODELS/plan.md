@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260409-PH4-STG1-CORE-MODELS
+artifact_type: plan
+tags: [ph4, stg1, core, models]
+---
+
 # Phase 4 Stage 1 Implementation Plan
 
 ## Intent

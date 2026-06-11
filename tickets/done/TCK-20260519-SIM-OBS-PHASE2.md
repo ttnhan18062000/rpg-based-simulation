@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260519-SIM-OBS-PHASE2
+phase: done
+date: 2026-05-19
+tags: [sim, obs, phase2]
+---
+
 # TCK-20260519-SIM-OBS-PHASE2
 
 ## Title
@@ -7,6 +18,15 @@ Implement Phase 2 Semantic Events and Post-Run Observatory
 ## Status
 
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 

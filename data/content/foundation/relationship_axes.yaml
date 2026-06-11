@@ -1,0 +1,55 @@
+# STATE: REDESIGNED-CORE
+# Axes for relationships. Enemy/ally labels are derived from these + perspective/context.
+- id: "hostility"
+  display_name: "Hostility"
+  description: "Conflict tendency."
+
+# STATE: REDESIGNED-CORE
+- id: "trust"
+  display_name: "Trust"
+  description: "Expectation of safe cooperation."
+
+# STATE: REDESIGNED-CORE
+- id: "fear"
+  display_name: "Fear"
+  description: "Avoidance/caution pressure toward another party."
+
+# STATE: REDESIGNED-CORE
+- id: "respect"
+  display_name: "Respect"
+  description: "Recognition of power, status, authority, or competence."
+
+# STATE: REDESIGNED-CORE
+- id: "territorial_conflict"
+  display_name: "Territorial Conflict"
+  description: "Conflict from intrusion into claimed space."
+
+# STATE: REDESIGNED-CORE
+- id: "trade_affinity"
+  display_name: "Trade Affinity"
+  description: "Willingness to exchange goods/services."
+
+# STATE: REDESIGNED-CORE
+- id: "resource_competition"
+  display_name: "Resource Competition"
+  description: "Conflict from competing over materials/resources."
+
+# STATE: ADDITIONAL
+- id: "religious_conflict"
+  display_name: "Religious Conflict"
+
+# STATE: ADDITIONAL
+- id: "ancient_grudge"
+  display_name: "Ancient Grudge"
+
+# STATE: ADDITIONAL
+- id: "kinship"
+  display_name: "Kinship"
+
+# STATE: ADDITIONAL
+- id: "dominance"
+  display_name: "Dominance"
+
+# STATE: ADDITIONAL
+- id: "debt"
+  display_name: "Debt"

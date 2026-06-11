@@ -1,3 +1,13 @@
+---
+status: historical
+layer: strategy
+authority: P2
+audience: agent
+ticket_id: TCK-20260427-PH6-STRATEGIC-COGNITION
+artifact_type: plan
+tags: [ph6, strategic, cognition]
+---
+
 # Implementation Plan - Phase 6 Strategic Cognition Hardening
 
 ## Goal

@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260426-ARENA-QUESTS
+phase: done
+date: 2026-04-26
+tags: [arena, quests]
+---
+
 # TCK-20260426-ARENA-QUESTS
 
 ## Title
@@ -5,6 +16,15 @@ Extend E2E Arena Testing for Quest Progression
 
 ## Status
 INPROGRESS
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Extend the End-to-End Arena testing suite to verify that RPG mechanics (specifically Quests) operate correctly under full simulation pressure.

@@ -1,3 +1,10 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: developer
+---
+
 # Phase 11 Final Proof Bundle
 
 This document consolidates all proof artifacts required for the V2 replacement verdict.

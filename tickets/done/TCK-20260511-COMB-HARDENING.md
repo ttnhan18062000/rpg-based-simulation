@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260511-COMB-HARDENING
+phase: done
+date: 2026-05-11
+tags: [comb, hardening]
+---
+
 # TCK-20260511-COMB-HARDENING
 
 ## Title
@@ -5,6 +16,15 @@ Hardening Tactical Combat Logic & Anti-Stalemate Audit
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Hardening of tactical combat logic to ensure skill-aware decision making, target stickiness, and 100% compliance with COMB subsystem laws.

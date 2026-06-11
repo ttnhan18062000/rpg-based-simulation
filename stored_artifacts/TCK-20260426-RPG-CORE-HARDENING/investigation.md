@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260426-RPG-CORE-HARDENING
+artifact_type: investigation
+tags: [rpg, core, hardening]
+---
+
 # Investigation: RPG Core Drift
 
 ## Findings

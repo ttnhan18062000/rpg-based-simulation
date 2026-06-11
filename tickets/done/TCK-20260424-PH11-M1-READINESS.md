@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260424-PH11-M1-READINESS
+phase: done
+date: 2026-04-24
+tags: [ph11, m1, readiness]
+---
+
 # TCK-20260424-PH11-M1-READINESS
 
 ## Title
@@ -5,6 +16,15 @@ Phase 11 Milestone 1: Readiness Gate
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Close the implementation-to-ratification boundary. Ensure Phase 11 begins with a frozen ratification row set, honest support boundary, and explicit cutover blocking.

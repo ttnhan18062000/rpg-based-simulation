@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: economy
+original_date: unknown
+---
+
 I reviewed the updated code again. It is better than the previous revision, but it is still **not fully closed** against the A–E plans.
 
 The short verdict:

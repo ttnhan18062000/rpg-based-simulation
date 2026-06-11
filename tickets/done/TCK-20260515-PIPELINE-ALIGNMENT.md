@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260515-PIPELINE-ALIGNMENT
+phase: done
+date: 2026-05-15
+tags: [pipeline, alignment]
+---
+
 # TCK-20260515-PIPELINE-ALIGNMENT
 
 ## Title
@@ -7,6 +18,15 @@ Reconcile Authoritative Pipeline with Staggered Cadence Regressions
 ## Status
 
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 

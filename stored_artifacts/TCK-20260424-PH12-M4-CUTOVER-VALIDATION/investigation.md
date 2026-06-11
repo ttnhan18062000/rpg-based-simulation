@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260424-PH12-M4-CUTOVER-VALIDATION
+artifact_type: investigation
+tags: [ph12, m4, cutover, validation]
+---
+
 # Phase 12 Milestone 4: Cutover Validation Investigation
 
 ## 1. V2 Stress Test (Real Condition)

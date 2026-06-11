@@ -1,3 +1,10 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: developer
+---
+
 # Phase 5 Proof Bundle
 
 This document serves as the canonical index of all proof artifacts backing the "Official Support" claims for `src` at the conclusion of Phase 5. It ensures that every supported feature is tied to a verifiable proof.

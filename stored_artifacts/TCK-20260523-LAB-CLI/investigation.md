@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260523-LAB-CLI
+artifact_type: investigation
+tags: [lab, cli]
+---
+
 # Investigation - Lab CLI (Milestone 81)
 
 We investigated the subcommands and repository layouts, ensuring full alignment with established V2 command-line patterns.

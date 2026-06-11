@@ -1,3 +1,13 @@
+---
+status: historical
+layer: combat
+authority: P2
+audience: agent
+ticket_id: TCK-20260417-COMBAT-MOVEMENT-RULEBOOK
+artifact_type: test_plan
+tags: [combat, movement, rulebook]
+---
+
 # Test Plan: Combat and Movement Milestone 1
 
 ## Rule-Contract Tests

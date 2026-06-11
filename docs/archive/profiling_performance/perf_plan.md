@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: performance
+original_date: unknown
+---
+
 # Milestone-Based High-Level Design
 
 The roadmap below replaces “Epic” with **Milestone** and adds more implementation detail without going into actual code.

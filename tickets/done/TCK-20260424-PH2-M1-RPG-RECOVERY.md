@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260424-PH2-M1-RPG-RECOVERY
+phase: done
+date: 2026-04-24
+tags: [ph2, m1, rpg, recovery]
+---
+
 # TCK-20260424-PH2-M1-RPG-RECOVERY
 
 ## Title
@@ -5,6 +16,15 @@ Phase 2 Milestone 1: RPG Core Recovery
 
 ## Status
 OPEN
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Reintegrate the fundamental RPG interaction loop (Combat, Movement, Progression) into the V2 Engine.

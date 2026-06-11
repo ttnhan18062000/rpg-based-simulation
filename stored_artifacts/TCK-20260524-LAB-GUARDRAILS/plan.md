@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260524-LAB-GUARDRAILS
+artifact_type: plan
+tags: [lab, guardrails]
+---
+
 # Implementation Plan: Token, Time, and Storage Guardrails with E2E System Tests
 
 We will harden the human-gated simulation workflows by implementing dynamic context budgets, resource/storage/time pre-flight guardrail checks, audit trail logging for all violations, and a full 13-stage E2E integration test suite.

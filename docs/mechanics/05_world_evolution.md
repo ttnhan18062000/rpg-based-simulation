@@ -1,3 +1,11 @@
+---
+status: authoritative
+layer: mechanics
+authority: P0
+audience: developer
+last_verified: 2026-06-06
+---
+
 # Chapter 5: World Evolution
 
 This chapter describes the "Macro Laws" that govern the state of the world environment, regional safety, and the passage of time.

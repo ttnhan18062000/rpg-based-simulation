@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260406-AOA-CANONICALIZE-STREAM
+phase: done
+date: 2026-04-06
+tags: [aoa, canonicalize, stream]
+---
+
 # TCK-20260406-AOA-CANONICALIZE-STREAM: Canonicalization & Stream Isolation
 
 ## Status: DONE
@@ -24,3 +35,7 @@ Centralize simulation map-stream production (Slim/Rich/Compact) into the engine'
 ## Artifacts
 - [walkthrough_pillar5.md](file:///home/vboxuser/.gemini/antigravity/brain/d4923ea4-ede4-4b42-b61d-5fb64aef880a/walkthrough_pillar5.md)
 - [test_canonical_stream.py](file:///home/vboxuser/Work/rpg-based-simulation/tests/unit/engine/test_canonical_stream.py)
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

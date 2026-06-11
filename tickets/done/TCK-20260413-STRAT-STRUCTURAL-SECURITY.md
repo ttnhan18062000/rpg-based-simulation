@@ -1,3 +1,14 @@
+---
+status: historical
+layer: strategy
+authority: P1
+audience: agent
+ticket_id: TCK-20260413-STRAT-STRUCTURAL-SECURITY
+phase: done
+date: 2026-04-13
+tags: [strat, structural, security]
+---
+
 # TCK-20260413-STRAT-STRUCTURAL-SECURITY
 
 ## Title
@@ -5,6 +16,15 @@ Strategic Engine Hardening: Structural Integrity & Uncertainty Verification
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Remediate structural weaknesses in the strategic simulation engine to ensure byte-identical persistence, authoritative traceability, and anti-cheating uncertainty.

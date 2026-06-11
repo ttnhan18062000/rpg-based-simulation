@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: performance
+original_date: unknown
+---
+
 # Test Implementation Plan First
 
 Your current test suite has useful pieces already: `StateUpdate` has `force_full_scan`, the pipeline has a `_refresh_dirty_set()` rule that expands dirty domains to all entities when full-scan is enabled, and there is already an optimized-vs-full-scan parity test.

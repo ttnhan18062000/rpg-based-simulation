@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260514-ENGINE-PERF-HARDENING
+phase: done
+date: 2026-05-14
+tags: [engine, perf, hardening]
+---
+
 # TCK-20260514-ENGINE-PERF-HARDENING
 
 ## Title
@@ -5,6 +16,15 @@ V2 RPG Engine Performance Hardening - Phase 3
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 

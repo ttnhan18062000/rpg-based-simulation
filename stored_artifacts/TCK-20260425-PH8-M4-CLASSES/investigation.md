@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260425-PH8-M4-CLASSES
+artifact_type: investigation
+tags: [ph8, m4, classes]
+---
+
 # Investigation — PH8 M4: Classes and Skills
 
 ## Goal

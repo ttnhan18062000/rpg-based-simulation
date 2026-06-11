@@ -1,3 +1,10 @@
+---
+status: active
+layer: systems
+authority: P1
+audience: developer
+---
+
 # Strategic Cognition: The Mind's Hierarchy
 
 > [!NOTE]

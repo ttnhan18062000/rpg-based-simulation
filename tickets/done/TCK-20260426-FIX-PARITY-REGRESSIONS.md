@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260426-FIX-PARITY-REGRESSIONS
+phase: done
+date: 2026-04-26
+tags: [fix, parity, regressions]
+---
+
 # TCK-20260426-FIX-PARITY-REGRESSIONS
 
 ## Title
@@ -5,6 +16,15 @@ Fix RPG Progression and Action Readiness Regressions
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Fix regressions in RPG progression (XP rewards during evolution) and action readiness (double-subtraction bug) to restore 100% parity with src engine and pass all pytest tests.

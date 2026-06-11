@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260520-SIM-OBS-M38
+artifact_type: plan
+tags: [sim, obs, m38]
+---
+
 # Implementation Plan — Historical Event Search API (Milestone 38)
 
 ## 1. Schema & Interfaces

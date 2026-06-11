@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: performance
+authority: P2
+audience: agent
+tags: [perf, hardening]
+---
+
 # Performance Summary Report
 
 ## Overview

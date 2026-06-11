@@ -1,3 +1,10 @@
+---
+status: active
+layer: engine
+authority: P1
+audience: developer
+---
+
 # Certification Contract (Milestone 9)
 
 ## Purpose

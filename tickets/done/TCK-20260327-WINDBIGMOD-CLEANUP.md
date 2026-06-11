@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260327-WINDBIGMOD-CLEANUP
+phase: done
+date: 2026-03-27
+tags: [windbigmod, cleanup]
+---
+
 # TCK-20260327-WINDBIGMOD-CLEANUP: Architectual Stat Logic Refactor (BigMod)
 
 ## Goal
@@ -24,3 +35,7 @@ Remove all backward compatibility shims and legacy `effective_*()` methods from 
 
 ## Status
 DONE
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

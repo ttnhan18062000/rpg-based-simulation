@@ -1,0 +1,2329 @@
+diff --git a/docs/mechanics/content_usage_matrix.md b/docs/mechanics/content_usage_matrix.md
+index 1472eac..0e9cf6d 100644
+--- a/docs/mechanics/content_usage_matrix.md
++++ b/docs/mechanics/content_usage_matrix.md
+@@ -10,30 +10,30 @@ This report is generated dynamically to define the component family contract and
+ | Content Family | File Path / Directory | Schema Class | Repo Index | Validator Coverage | Resolver Component | Compile/Runtime Consumer | Test Coverage | Evidence Tests | Resolver Evidence | Runtime Consumer Evidence | Implementation State | Content Maturity |
+ |---|---|---|---|---|---|---|---|---|---|---|---|---|
+ | **compatibility/legacy_enemy_projection** | `compatibility/legacy_enemy_projection.yaml` | `LegacyEnemyProjectionDefinition` | `legacy_enemy_projections` | CAT-REL-014, CAT-REL-016 | None | EnemyRegistry | `tests/unit/content/test_catalog.py, tests/unit/content/test_runtime_catalog.py` | `tests/unit/core/test_registry_adapters.py::test_enemy_adapter_happy_path` | None | EnemyRegistry projects to legacy combat types | **PROJECTED_TO_LEGACY** | `COMPATIBILITY` |
+-| **defaults** | `defaults.yaml` | `DefaultCompileProfile` | `defaults` | CAT-DEF-001 | CompileProfileResolver | CompileContext | `tests/unit/content/test_catalog.py` | `tests/unit/worldassembly/test_assembly.py::test_resolved_bundle_includes_compile_context` | CompileProfileResolver resolves compilation defaults | CompileContext holds defaults during build phase | **RESOLVED_PARTIALLY** | `REDESIGNED-CORE` |
+-| **entities/combat_profiles** | `entities/combat_profiles.yaml` | `CombatProfileDefinition` | `combat_profiles` | CAT-REL-011 | CompileProfileResolver | CompileContext, WorldCompiler | `tests/unit/content/test_catalog.py, tests/unit/content/test_layered_catalog.py` | `tests/unit/worldassembly/test_assembly.py::test_resolved_bundle_includes_compile_context` | CompileProfileResolver fetches combat profiles | CompileContext captures combat rules for entity spawning | **RESOLVED_PARTIALLY** | `REDESIGNED-CORE` |
+-| **entities/entity_archetypes** | `entities/entity_archetypes.yaml` | `EntityArchetypeDefinition` | `entity_archetypes` | CAT-REL-011, CAT-REL-014, CAT-REL-016 | ResolvedEntityArchetype | PopulationRecipeResolver, WorldAssemblyResolver | `tests/unit/content/test_catalog.py, tests/unit/content/test_layered_catalog.py` | `tests/unit/content/test_resolvers.py::test_entity_archetype_resolver` | EntityArchetypeResolver resolves archetype composition | PopulationRecipeResolver and WorldAssemblyResolver use archetypes | **RESOLVED_PARTIALLY** | `REDESIGNED-CORE` |
+-| **entities/inventory_profiles** | `entities/inventory_profiles.yaml` | `InventoryProfileDefinition` | `inventory_profiles` | CAT-REL-002, CAT-REL-011 | CompileProfileResolver | CompileContext, WorldCompiler | `tests/unit/content/test_catalog.py, tests/unit/content/test_layered_catalog.py` | `tests/unit/worldassembly/test_assembly.py::test_resolved_bundle_includes_compile_context` | CompileProfileResolver fetches inventory profiles | CompileContext captures inventory items for entity spawning | **RESOLVED_PARTIALLY** | `REDESIGNED-CORE` |
+-| **entities/populations** | `entities/populations.yaml` | `PopulationRecipeDefinition` | `populations` | CAT-REL-019 | PopulationRecipeResolver | WorldAssemblyResolver | `tests/unit/content/test_catalog.py, tests/unit/content/test_layered_catalog.py` | `tests/unit/content/test_resolvers.py::test_population_recipe_resolver` | PopulationRecipeResolver expands recipes to archetypes | WorldAssemblyResolver resolves population spawners | **RESOLVED_PARTIALLY** | `REDESIGNED-CORE` |
+-| **entities/skill_profiles** | `entities/skill_profiles.yaml` | `SkillProfileDefinition` | `skill_profiles` | CAT-REL-011 | CompileProfileResolver | CompileContext, WorldCompiler | `tests/unit/content/test_catalog.py, tests/unit/content/test_layered_catalog.py` | `tests/unit/worldassembly/test_assembly.py::test_resolved_bundle_includes_compile_context` | CompileProfileResolver fetches skill profiles | CompileContext captures skills for entity spawning | **RESOLVED_PARTIALLY** | `REDESIGNED-CORE` |
+-| **entities/stat_profiles** | `entities/stat_profiles.yaml` | `StatsProfileDefinition` | `stats_profiles` | CAT-REL-001, CAT-REL-011 | CompileProfileResolver | CompileContext, WorldCompiler | `tests/unit/content/test_catalog.py, tests/unit/content/test_layered_catalog.py` | `tests/unit/worldassembly/test_assembly.py::test_resolved_bundle_includes_compile_context` | CompileProfileResolver fetches stat profiles | CompileContext captures stats for entity spawning | **RESOLVED_PARTIALLY** | `REDESIGNED-CORE` |
+-| **foundation/attributes** | `foundation/attributes.yaml` | `AttributeDefinition` | `attributes` | None | FoundationResolver | CompileContext | `tests/unit/content/test_catalog.py, tests/unit/content/test_layered_catalog.py` | `tests/unit/content/test_resolvers.py::test_foundation_resolver` | FoundationResolver resolves attributes correctly | CompileContext uses attributes | **RESOLVED_PARTIALLY** | `REDESIGNED-CORE` |
+-| **foundation/elements** | `foundation/elements.yaml` | `ElementDefinition` | `elements` | None | FoundationResolver | CompileContext | `tests/unit/content/test_catalog.py, tests/unit/content/test_layered_catalog.py` | `tests/unit/content/test_resolvers.py::test_foundation_resolver` | FoundationResolver resolves elements correctly | CompileContext uses elements | **RESOLVED_PARTIALLY** | `REDESIGNED-CORE` |
+-| **foundation/materials** | `foundation/materials.yaml` | `MaterialDefinition` | `materials` | CAT-REL-018, CAT-REL-019 | FoundationResolver | CompileContext, WorldCompiler | `tests/unit/content/test_catalog.py, tests/unit/content/test_layered_catalog.py` | `tests/unit/content/test_resolvers.py::test_foundation_resolver` | FoundationResolver resolves materials correctly | CompileContext handles material compilation | **RESOLVED_PARTIALLY** | `REDESIGNED-CORE` |
+-| **foundation/relationship_axes** | `foundation/relationship_axes.yaml` | `RelationshipAxisDefinition` | `relationship_axes` | CAT-REL-012 | FoundationResolver | CompileContext | `tests/unit/content/test_catalog.py, tests/unit/content/test_layered_catalog.py` | `tests/unit/content/test_resolvers.py::test_foundation_resolver` | FoundationResolver resolves axes correctly | CompileContext aggregates relationship axes | **RESOLVED_PARTIALLY** | `REDESIGNED-CORE` |
+-| **foundation/themes** | `foundation/themes.yaml` | `ThemeDefinition` | `themes` | CAT-REL-011, CAT-REL-018 | FoundationResolver | CompileContext | `tests/unit/content/test_catalog.py, tests/unit/content/test_layered_catalog.py` | `tests/unit/content/test_resolvers.py::test_foundation_resolver` | FoundationResolver resolves themes correctly | CompileContext captures themes during module compilation | **RESOLVED_PARTIALLY** | `REDESIGNED-CORE` |
+-| **foundation/traits** | `foundation/traits.yaml` | `TraitDefinition` | `traits` | CAT-REL-001, CAT-REL-011, CAT-REL-017 | FoundationResolver | CompileContext, WorldCompiler | `tests/unit/content/test_catalog.py, tests/unit/content/test_layered_catalog.py` | `tests/unit/content/test_resolvers.py::test_foundation_resolver` | FoundationResolver resolves traits correctly | CompileContext and WorldCompiler use traits for validation and archetypes | **RESOLVED_PARTIALLY** | `REDESIGNED-CORE` |
+-| **living/body_models** | `living/body_models.yaml` | `BodyModelDefinition` | `body_models` | CAT-REL-017 | LivingDefaultsResolver | CompileContext, WorldCompiler | `tests/unit/content/test_catalog.py, tests/unit/content/test_layered_catalog.py` | `tests/unit/content/test_resolvers.py::test_living_defaults_resolver` | LivingDefaultsResolver fetches body models | None yet | **RESOLVED_PARTIALLY** | `REDESIGNED-CORE` |
+-| **living/cognition_profiles** | `living/cognition_profiles.yaml` | `CognitionProfileDefinition` | `cognition_profiles` | CAT-REL-003, CAT-REL-011, CAT-REL-017 | LivingDefaultsResolver | CompileContext, WorldCompiler | `tests/unit/content/test_catalog.py, tests/unit/content/test_layered_catalog.py` | `tests/unit/content/test_resolvers.py::test_living_defaults_resolver` | LivingDefaultsResolver fetches cognition profiles | None yet | **RESOLVED_PARTIALLY** | `REDESIGNED-CORE` |
+-| **living/drive_profiles** | `living/drive_profiles.yaml` | `DriveProfileDefinition` | `drive_profiles` | CAT-REL-017 | LivingDefaultsResolver | CompileContext, WorldCompiler | `tests/unit/content/test_catalog.py, tests/unit/content/test_layered_catalog.py` | `tests/unit/content/test_resolvers.py::test_living_defaults_resolver` | LivingDefaultsResolver fetches drive profiles | None yet | **RESOLVED_PARTIALLY** | `REDESIGNED-CORE` |
+-| **living/need_profiles** | `living/need_profiles.yaml` | `NeedProfileDefinition` | `need_profiles` | CAT-REL-017 | LivingDefaultsResolver | CompileContext, WorldCompiler | `tests/unit/content/test_catalog.py, tests/unit/content/test_layered_catalog.py` | `tests/unit/content/test_resolvers.py::test_living_defaults_resolver` | LivingDefaultsResolver fetches need profiles | None yet | **RESOLVED_PARTIALLY** | `REDESIGNED-CORE` |
+-| **living/races** | `living/races.yaml` | `RaceDefinition` | `races` | CAT-REL-011, CAT-REL-017 | LivingDefaultsResolver | CompileContext, WorldCompiler | `tests/unit/content/test_catalog.py, tests/unit/content/test_layered_catalog.py` | `tests/unit/content/test_resolvers.py::test_living_defaults_resolver` | LivingDefaultsResolver fetches race defaults | CompileContext, WorldCompiler use race definitions during compilation | **RESOLVED_PARTIALLY** | `REDESIGNED-CORE` |
+-| **living/sense_profiles** | `living/sense_profiles.yaml` | `SenseProfileDefinition` | `sense_profiles` | CAT-REL-017 | LivingDefaultsResolver | CompileContext, WorldCompiler | `tests/unit/content/test_catalog.py, tests/unit/content/test_layered_catalog.py` | `tests/unit/content/test_resolvers.py::test_living_defaults_resolver` | LivingDefaultsResolver fetches sense profiles | None yet | **RESOLVED_PARTIALLY** | `REDESIGNED-CORE` |
++| **defaults** | `defaults.yaml` | `DefaultCompileProfile` | `defaults` | CAT-DEF-001 | CompileProfileResolver | CompileContext | `tests/unit/content/test_catalog.py` | `tests/unit/worldassembly/test_assembly.py::test_resolved_bundle_includes_compile_context_and_preserves_profiles` | CompileProfileResolver resolves compilation defaults | CompileContext holds defaults during build phase | **RESOLVED_PARTIALLY** | `REDESIGNED-CORE` |
++| **entities/combat_profiles** | `entities/combat_profiles.yaml` | `CombatProfileDefinition` | `combat_profiles` | CAT-REL-011 | CompileProfileResolver | CompileContext, WorldCompiler | `tests/unit/content/test_catalog.py, tests/unit/content/test_layered_catalog.py` | `tests/unit/worldassembly/test_assembly.py::test_resolved_bundle_includes_compile_context_and_preserves_profiles` | CompileProfileResolver fetches combat profiles | CompileContext captures combat rules for entity spawning | **RESOLVED_PARTIALLY** | `REDESIGNED-CORE` |
++| **entities/entity_archetypes** | `entities/entity_archetypes.yaml` | `EntityArchetypeDefinition` | `entity_archetypes` | CAT-REL-011, CAT-REL-014, CAT-REL-016 | ResolvedEntityArchetype | PopulationRecipeResolver, WorldAssemblyResolver | `tests/unit/content/test_catalog.py, tests/unit/content/test_layered_catalog.py` | `tests/unit/content/test_resolvers.py::TestEntityArchetypeResolver` | EntityArchetypeResolver resolves archetype composition | PopulationRecipeResolver and WorldAssemblyResolver use archetypes | **RESOLVED_PARTIALLY** | `REDESIGNED-CORE` |
++| **entities/inventory_profiles** | `entities/inventory_profiles.yaml` | `InventoryProfileDefinition` | `inventory_profiles` | CAT-REL-002, CAT-REL-011 | CompileProfileResolver | CompileContext, WorldCompiler | `tests/unit/content/test_catalog.py, tests/unit/content/test_layered_catalog.py` | `tests/unit/worldassembly/test_assembly.py::test_resolved_bundle_includes_compile_context_and_preserves_profiles` | CompileProfileResolver fetches inventory profiles | CompileContext captures inventory items for entity spawning | **RESOLVED_PARTIALLY** | `REDESIGNED-CORE` |
++| **entities/populations** | `entities/populations.yaml` | `PopulationRecipeDefinition` | `populations` | CAT-REL-019 | PopulationRecipeResolver | WorldAssemblyResolver | `tests/unit/content/test_catalog.py, tests/unit/content/test_layered_catalog.py` | `tests/unit/content/test_resolvers.py::TestPopulationRecipeResolver` | PopulationRecipeResolver expands recipes to archetypes | WorldAssemblyResolver resolves population spawners | **RESOLVED_PARTIALLY** | `REDESIGNED-CORE` |
++| **entities/skill_profiles** | `entities/skill_profiles.yaml` | `SkillProfileDefinition` | `skill_profiles` | CAT-REL-011 | CompileProfileResolver | CompileContext, WorldCompiler | `tests/unit/content/test_catalog.py, tests/unit/content/test_layered_catalog.py` | `tests/unit/worldassembly/test_assembly.py::test_resolved_bundle_includes_compile_context_and_preserves_profiles` | CompileProfileResolver fetches skill profiles | CompileContext captures skills for entity spawning | **RESOLVED_PARTIALLY** | `REDESIGNED-CORE` |
++| **entities/stat_profiles** | `entities/stat_profiles.yaml` | `StatsProfileDefinition` | `stats_profiles` | CAT-REL-001, CAT-REL-011 | CompileProfileResolver | CompileContext, WorldCompiler | `tests/unit/content/test_catalog.py, tests/unit/content/test_layered_catalog.py` | `tests/unit/worldassembly/test_assembly.py::test_resolved_bundle_includes_compile_context_and_preserves_profiles` | CompileProfileResolver fetches stat profiles | CompileContext captures stats for entity spawning | **RESOLVED_PARTIALLY** | `REDESIGNED-CORE` |
++| **foundation/attributes** | `foundation/attributes.yaml` | `AttributeDefinition` | `attributes` | None | FoundationResolver | CompileContext | `tests/unit/content/test_catalog.py, tests/unit/content/test_layered_catalog.py` | `tests/unit/content/test_resolvers.py::TestFoundationResolverSingle` | FoundationResolver resolves attributes correctly | CompileContext uses attributes | **RESOLVED_PARTIALLY** | `REDESIGNED-CORE` |
++| **foundation/elements** | `foundation/elements.yaml` | `ElementDefinition` | `elements` | None | FoundationResolver | CompileContext | `tests/unit/content/test_catalog.py, tests/unit/content/test_layered_catalog.py` | `tests/unit/content/test_resolvers.py::TestFoundationResolverSingle` | FoundationResolver resolves elements correctly | CompileContext uses elements | **RESOLVED_PARTIALLY** | `REDESIGNED-CORE` |
++| **foundation/materials** | `foundation/materials.yaml` | `MaterialDefinition` | `materials` | CAT-REL-018, CAT-REL-019 | FoundationResolver | CompileContext, WorldCompiler | `tests/unit/content/test_catalog.py, tests/unit/content/test_layered_catalog.py` | `tests/unit/content/test_resolvers.py::TestFoundationResolverSingle` | FoundationResolver resolves materials correctly | CompileContext handles material compilation | **RESOLVED_PARTIALLY** | `REDESIGNED-CORE` |
++| **foundation/relationship_axes** | `foundation/relationship_axes.yaml` | `RelationshipAxisDefinition` | `relationship_axes` | CAT-REL-012 | FoundationResolver | CompileContext | `tests/unit/content/test_catalog.py, tests/unit/content/test_layered_catalog.py` | `tests/unit/content/test_resolvers.py::TestFoundationResolverSingle` | FoundationResolver resolves axes correctly | CompileContext aggregates relationship axes | **RESOLVED_PARTIALLY** | `REDESIGNED-CORE` |
++| **foundation/themes** | `foundation/themes.yaml` | `ThemeDefinition` | `themes` | CAT-REL-011, CAT-REL-018 | FoundationResolver | CompileContext | `tests/unit/content/test_catalog.py, tests/unit/content/test_layered_catalog.py` | `tests/unit/content/test_resolvers.py::TestFoundationResolverSingle` | FoundationResolver resolves themes correctly | CompileContext captures themes during module compilation | **RESOLVED_PARTIALLY** | `REDESIGNED-CORE` |
++| **foundation/traits** | `foundation/traits.yaml` | `TraitDefinition` | `traits` | CAT-REL-001, CAT-REL-011, CAT-REL-017 | FoundationResolver | CompileContext, WorldCompiler | `tests/unit/content/test_catalog.py, tests/unit/content/test_layered_catalog.py` | `tests/unit/content/test_resolvers.py::TestFoundationResolverSingle` | FoundationResolver resolves traits correctly | CompileContext and WorldCompiler use traits for validation and archetypes | **RESOLVED_PARTIALLY** | `REDESIGNED-CORE` |
++| **living/body_models** | `living/body_models.yaml` | `BodyModelDefinition` | `body_models` | CAT-REL-017 | LivingDefaultsResolver | CompileContext, WorldCompiler | `tests/unit/content/test_catalog.py, tests/unit/content/test_layered_catalog.py` | `tests/unit/content/test_resolvers.py::TestLivingDefaultsResolver` | LivingDefaultsResolver fetches body models | None yet | **RESOLVED_PARTIALLY** | `REDESIGNED-CORE` |
++| **living/cognition_profiles** | `living/cognition_profiles.yaml` | `CognitionProfileDefinition` | `cognition_profiles` | CAT-REL-003, CAT-REL-011, CAT-REL-017 | LivingDefaultsResolver | CompileContext, WorldCompiler | `tests/unit/content/test_catalog.py, tests/unit/content/test_layered_catalog.py` | `tests/unit/content/test_resolvers.py::TestLivingDefaultsResolver` | LivingDefaultsResolver fetches cognition profiles | None yet | **RESOLVED_PARTIALLY** | `REDESIGNED-CORE` |
++| **living/drive_profiles** | `living/drive_profiles.yaml` | `DriveProfileDefinition` | `drive_profiles` | CAT-REL-017 | LivingDefaultsResolver | CompileContext, WorldCompiler | `tests/unit/content/test_catalog.py, tests/unit/content/test_layered_catalog.py` | `tests/unit/content/test_resolvers.py::TestLivingDefaultsResolver` | LivingDefaultsResolver fetches drive profiles | None yet | **RESOLVED_PARTIALLY** | `REDESIGNED-CORE` |
++| **living/need_profiles** | `living/need_profiles.yaml` | `NeedProfileDefinition` | `need_profiles` | CAT-REL-017 | LivingDefaultsResolver | CompileContext, WorldCompiler | `tests/unit/content/test_catalog.py, tests/unit/content/test_layered_catalog.py` | `tests/unit/content/test_resolvers.py::TestLivingDefaultsResolver` | LivingDefaultsResolver fetches need profiles | None yet | **RESOLVED_PARTIALLY** | `REDESIGNED-CORE` |
++| **living/races** | `living/races.yaml` | `RaceDefinition` | `races` | CAT-REL-011, CAT-REL-017 | LivingDefaultsResolver | CompileContext, WorldCompiler | `tests/unit/content/test_catalog.py, tests/unit/content/test_layered_catalog.py` | `tests/unit/content/test_resolvers.py::TestLivingDefaultsResolver` | LivingDefaultsResolver fetches race defaults | CompileContext, WorldCompiler use race definitions during compilation | **RESOLVED_PARTIALLY** | `REDESIGNED-CORE` |
++| **living/sense_profiles** | `living/sense_profiles.yaml` | `SenseProfileDefinition` | `sense_profiles` | CAT-REL-017 | LivingDefaultsResolver | CompileContext, WorldCompiler | `tests/unit/content/test_catalog.py, tests/unit/content/test_layered_catalog.py` | `tests/unit/content/test_resolvers.py::TestLivingDefaultsResolver` | LivingDefaultsResolver fetches sense profiles | None yet | **RESOLVED_PARTIALLY** | `REDESIGNED-CORE` |
+ | **simulation_scenarios** | `simulation_scenarios` | `ScenarioSpec` | `None` | ScenarioLabValidator | None (Design-Only) | ScenarioLabOrchestrator | `tests/unit/lab/test_variant_matrix_builder.py` | `tests/unit/lab/test_variant_matrix_builder.py` | None | ScenarioLabOrchestrator loads scenarios | **DESIGN_ONLY** | `REDESIGNED-CORE` |
+-| **social/faction_relationships** | `social/faction_relationships.yaml` | `FactionRelationshipDefinition` | `faction_relationships` | CAT-REL-012 | SocialDefaultsResolver | RelationProjectionService | `tests/unit/content/test_catalog.py, tests/unit/content/test_layered_catalog.py` | `tests/unit/content_semantics/test_semantics.py::test_perspective_projection` | SocialDefaultsResolver resolves relationship vectors | RelationProjectionService projects relationships to combat checks | **RESOLVED_PARTIALLY** | `REDESIGNED-CORE` |
+-| **social/factions** | `social/factions.yaml` | `FactionDefinition` | `factions` | CAT-REL-011, CAT-REL-012, CAT-REL-013, CAT-REL-018, CAT-REL-019 | SocialDefaultsResolver | CompileContext, WorldCompiler | `tests/unit/content/test_catalog.py, tests/unit/content/test_layered_catalog.py` | `tests/unit/content/test_resolvers.py::test_social_defaults_resolver` | SocialDefaultsResolver fetches faction defaults | CompileContext and WorldCompiler resolve faction dependencies | **RESOLVED_PARTIALLY** | `REDESIGNED-CORE` |
+-| **social/perspectives** | `social/perspectives.yaml` | `PerspectiveDefinition` | `perspectives` | CAT-REL-013 | SocialDefaultsResolver | RelationProjectionService | `tests/unit/content/test_catalog.py, tests/unit/content/test_layered_catalog.py` | `tests/unit/content_semantics/test_semantics.py::test_perspective_projection` | SocialDefaultsResolver resolves perspectives | RelationProjectionService maps perspectives to relationships | **RESOLVED_PARTIALLY** | `REDESIGNED-CORE` |
+-| **social/roles** | `social/roles.yaml` | `RoleDefinition` | `roles` | CAT-REL-001, CAT-REL-002, CAT-REL-003, CAT-REL-011, CAT-REL-017 | SocialDefaultsResolver | CompileContext, WorldCompiler | `tests/unit/content/test_catalog.py, tests/unit/content/test_layered_catalog.py` | `tests/unit/content/test_resolvers.py::test_social_defaults_resolver` | SocialDefaultsResolver fetches role defaults | CompileContext and WorldCompiler resolve role dependencies | **RESOLVED_PARTIALLY** | `REDESIGNED-CORE` |
++| **social/faction_relationships** | `social/faction_relationships.yaml` | `FactionRelationshipDefinition` | `faction_relationships` | CAT-REL-012 | SocialDefaultsResolver | RelationProjectionService | `tests/unit/content/test_catalog.py, tests/unit/content/test_layered_catalog.py` | `tests/unit/content_semantics/test_semantics.py::test_relation_projection_clean` | SocialDefaultsResolver resolves relationship vectors | RelationProjectionService projects relationships to combat checks | **RESOLVED_PARTIALLY** | `REDESIGNED-CORE` |
++| **social/factions** | `social/factions.yaml` | `FactionDefinition` | `factions` | CAT-REL-011, CAT-REL-012, CAT-REL-013, CAT-REL-018, CAT-REL-019 | SocialDefaultsResolver | CompileContext, WorldCompiler | `tests/unit/content/test_catalog.py, tests/unit/content/test_layered_catalog.py` | `tests/unit/content/test_resolvers.py::TestSocialDefaultsResolver` | SocialDefaultsResolver fetches faction defaults | CompileContext and WorldCompiler resolve faction dependencies | **RESOLVED_PARTIALLY** | `REDESIGNED-CORE` |
++| **social/perspectives** | `social/perspectives.yaml` | `PerspectiveDefinition` | `perspectives` | CAT-REL-013 | SocialDefaultsResolver | RelationProjectionService | `tests/unit/content/test_catalog.py, tests/unit/content/test_layered_catalog.py` | `tests/unit/content_semantics/test_semantics.py::test_relation_projection_clean` | SocialDefaultsResolver resolves perspectives | RelationProjectionService maps perspectives to relationships | **RESOLVED_PARTIALLY** | `REDESIGNED-CORE` |
++| **social/roles** | `social/roles.yaml` | `RoleDefinition` | `roles` | CAT-REL-001, CAT-REL-002, CAT-REL-003, CAT-REL-011, CAT-REL-017 | SocialDefaultsResolver | CompileContext, WorldCompiler | `tests/unit/content/test_catalog.py, tests/unit/content/test_layered_catalog.py` | `tests/unit/content/test_resolvers.py::TestSocialDefaultsResolver` | SocialDefaultsResolver fetches role defaults | CompileContext and WorldCompiler resolve role dependencies | **RESOLVED_PARTIALLY** | `REDESIGNED-CORE` |
+ | **spawn_tables** | `spawn_tables.yaml` | `SpawnTableDefinition` | `spawn_tables` | None | None (Design-Only) | None | `tests/unit/content/test_catalog.py` | `tests/unit/content/test_catalog.py` | None | None | **PROJECTED_TO_LEGACY** | `COMPATIBILITY` |
+ | **world/biomes** | `world/biomes.yaml` | `BiomeDefinition` | `biomes` | CAT-REL-018, CAT-REL-019 | BiomeResolver | RegionRegistry, WorldCompiler | `tests/unit/content/test_catalog.py, tests/unit/content/test_layered_catalog.py` | `tests/unit/core/test_registry_adapters.py::test_region_adapter_happy_path` | BiomeResolver resolves biome definitions | RegionRegistry checks biomes for weather/spawning | **RUNTIME_AUTHORITATIVE** | `REDESIGNED-CORE` |
+ | **world/buildings** | `world/buildings.yaml` | `BuildingDefinition` | `buildings` | CAT-REL-004 | BuildingResolver | BuildingRegistry, WorldCompiler | `tests/unit/content/test_catalog.py, tests/unit/content/test_layered_catalog.py` | `tests/unit/core/test_registry_adapters.py::test_service_adapter_happy_path` | BuildingResolver resolves building templates | BuildingRegistry registers buildings in simulation runtime | **RUNTIME_AUTHORITATIVE** | `REDESIGNED-CORE` |
+diff --git a/docs/parity_ledger/combat_movement.yaml b/docs/parity_ledger/combat_movement.yaml
+index 32ab1f3..9850208 100644
+--- a/docs/parity_ledger/combat_movement.yaml
++++ b/docs/parity_ledger/combat_movement.yaml
+@@ -2861,9 +2861,10 @@
+   status: verified
+   priority: P0
+   legacy_evidence: null
+-  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
++  v2_evidence: '`src/engine/combat_rewards.py` (`CombatRewardClassificationService.classify()`),
++    `src/engine/combat.py` (`resolve_attack`, `resolve_skill_usage`, `resolve_multi_attack`)'
+   proof_type: null
+-  test_path: null
++  test_path: '`tests/unit/combat/test_combat_rewards.py`'
+   divergence_note: null
+   support_boundary: null
+ - id: COMB-281
+diff --git a/docs/parity_ledger/infrastructure.yaml b/docs/parity_ledger/infrastructure.yaml
+index 75c53ae..0beedc8 100644
+--- a/docs/parity_ledger/infrastructure.yaml
++++ b/docs/parity_ledger/infrastructure.yaml
+@@ -845,9 +845,11 @@
+   status: verified
+   priority: P0
+   legacy_evidence: null
+-  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
++  v2_evidence: >
++    src/content/validator.py::validate_matrix_evidence +
++    tests/unit/content/test_content_usage_evidence.py::test_all_matrix_evidence_paths_exist
+   proof_type: null
+-  test_path: null
++  test_path: tests/unit/content/test_content_usage_evidence.py::test_all_matrix_evidence_paths_exist
+   divergence_note: null
+   support_boundary: null
+ - id: INFRA-083
+@@ -970,7 +972,7 @@
+   legacy_evidence: null
+   v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+   proof_type: null
+-  test_path: null
++  test_path: tests/unit/content/test_content_usage_evidence.py::test_all_matrix_evidence_paths_exist
+   divergence_note: null
+   support_boundary: null
+ - id: INFRA-095
+@@ -1798,3 +1800,18 @@
+   test_path: null
+   divergence_note: null
+   support_boundary: null
++- id: INFRA-177
++  text: >
++    validate_matrix_evidence() detects ghost evidence_tests node IDs in
++    CONTENT_USAGE_MATRIX — both missing files and ::node_id suffixes that
++    do not appear in the referenced file.
++  status: verified
++  priority: P1
++  legacy_evidence: null
++  v2_evidence: >
++    src/content/validator.py::validate_matrix_evidence +
++    tests/unit/content/test_content_usage_evidence.py
++  proof_type: null
++  test_path: tests/unit/content/test_content_usage_evidence.py::test_all_matrix_evidence_paths_exist
++  divergence_note: null
++  support_boundary: null
+diff --git a/docs/parity_ledger/progression.yaml b/docs/parity_ledger/progression.yaml
+index 6e4688d..975e1c8 100644
+--- a/docs/parity_ledger/progression.yaml
++++ b/docs/parity_ledger/progression.yaml
+@@ -656,9 +656,11 @@
+   status: verified
+   priority: P0
+   legacy_evidence: null
+-  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
++  v2_evidence: '`src/engine/combat_rewards.py` (`CombatRewardClassificationService.classify()`,
++    `RewardClassification.source` field), `src/engine/combat.py` (trace["REWARD_SOURCE"]
++    and full_trace["REWARD_SOURCE"] in resolve_attack and resolve_multi_attack)'
+   proof_type: null
+-  test_path: null
++  test_path: '`tests/unit/combat/test_combat_rewards.py`'
+   divergence_note: null
+   support_boundary: null
+ - id: PROG-065
+diff --git a/docs/parity_ledger/town_resource.yaml b/docs/parity_ledger/town_resource.yaml
+index 99c4ca0..54babba 100644
+--- a/docs/parity_ledger/town_resource.yaml
++++ b/docs/parity_ledger/town_resource.yaml
+@@ -1770,9 +1770,12 @@
+   status: verified
+   priority: P1
+   legacy_evidence: null
+-  v2_evidence: src/content/resolver.py PopulationRecipeResolver.resolve() — case 2
+-    fallback validated against entity_archetypes catalog before returning shorthand
+-    result; case 3 raises ResolverError
++  v2_evidence: >-
++    src/content/resolver.py PopulationRecipeResolver.resolve() — case 2 fallback validated
++    against entity_archetypes catalog before returning shorthand result; case 3 raises
++    ResolverError. As of TCK-20260607-ARCHETYPE-METADATA-EXPLICIT, the returned
++    ResolvedEntityArchetype.archetype_id is the authoritative identity; downstream callers
++    read PopulationSpec.archetype_id directly instead of inferring from string suffix.
+   proof_type: parity
+   test_path: tests/unit/content/test_resolvers.py::TestPopulationRecipeResolver::test_case2_direct_archetype_id_returns_single_entity
+   divergence_note: null
+diff --git a/src/content/matrix.py b/src/content/matrix.py
+index b52c6e3..50cf90d 100644
+--- a/src/content/matrix.py
++++ b/src/content/matrix.py
+@@ -36,7 +36,7 @@ CONTENT_USAGE_MATRIX: Dict[str, ContentFamilyMatrixEntry] = {
+         resolver_component="FoundationResolver",
+         compile_runtime_consumer="CompileContext, WorldCompiler",
+         test_coverage="tests/unit/content/test_catalog.py, tests/unit/content/test_layered_catalog.py",
+-        evidence_tests="tests/unit/content/test_resolvers.py::test_foundation_resolver",
++        evidence_tests="tests/unit/content/test_resolvers.py::TestFoundationResolverSingle",
+         resolver_evidence="FoundationResolver resolves materials correctly",
+         runtime_consumer_evidence="CompileContext handles material compilation",
+         implementation_state="RESOLVED_PARTIALLY",
+@@ -50,7 +50,7 @@ CONTENT_USAGE_MATRIX: Dict[str, ContentFamilyMatrixEntry] = {
+         resolver_component="FoundationResolver",
+         compile_runtime_consumer="CompileContext, WorldCompiler",
+         test_coverage="tests/unit/content/test_catalog.py, tests/unit/content/test_layered_catalog.py",
+-        evidence_tests="tests/unit/content/test_resolvers.py::test_foundation_resolver",
++        evidence_tests="tests/unit/content/test_resolvers.py::TestFoundationResolverSingle",
+         resolver_evidence="FoundationResolver resolves traits correctly",
+         runtime_consumer_evidence="CompileContext and WorldCompiler use traits for validation and archetypes",
+         implementation_state="RESOLVED_PARTIALLY",
+@@ -64,7 +64,7 @@ CONTENT_USAGE_MATRIX: Dict[str, ContentFamilyMatrixEntry] = {
+         resolver_component="FoundationResolver",
+         compile_runtime_consumer="CompileContext",
+         test_coverage="tests/unit/content/test_catalog.py, tests/unit/content/test_layered_catalog.py",
+-        evidence_tests="tests/unit/content/test_resolvers.py::test_foundation_resolver",
++        evidence_tests="tests/unit/content/test_resolvers.py::TestFoundationResolverSingle",
+         resolver_evidence="FoundationResolver resolves themes correctly",
+         runtime_consumer_evidence="CompileContext captures themes during module compilation",
+         implementation_state="RESOLVED_PARTIALLY",
+@@ -78,7 +78,7 @@ CONTENT_USAGE_MATRIX: Dict[str, ContentFamilyMatrixEntry] = {
+         resolver_component="FoundationResolver",
+         compile_runtime_consumer="CompileContext",
+         test_coverage="tests/unit/content/test_catalog.py, tests/unit/content/test_layered_catalog.py",
+-        evidence_tests="tests/unit/content/test_resolvers.py::test_foundation_resolver",
++        evidence_tests="tests/unit/content/test_resolvers.py::TestFoundationResolverSingle",
+         resolver_evidence="FoundationResolver resolves axes correctly",
+         runtime_consumer_evidence="CompileContext aggregates relationship axes",
+         implementation_state="RESOLVED_PARTIALLY",
+@@ -92,7 +92,7 @@ CONTENT_USAGE_MATRIX: Dict[str, ContentFamilyMatrixEntry] = {
+         resolver_component="FoundationResolver",
+         compile_runtime_consumer="CompileContext",
+         test_coverage="tests/unit/content/test_catalog.py, tests/unit/content/test_layered_catalog.py",
+-        evidence_tests="tests/unit/content/test_resolvers.py::test_foundation_resolver",
++        evidence_tests="tests/unit/content/test_resolvers.py::TestFoundationResolverSingle",
+         resolver_evidence="FoundationResolver resolves attributes correctly",
+         runtime_consumer_evidence="CompileContext uses attributes",
+         implementation_state="RESOLVED_PARTIALLY",
+@@ -106,7 +106,7 @@ CONTENT_USAGE_MATRIX: Dict[str, ContentFamilyMatrixEntry] = {
+         resolver_component="FoundationResolver",
+         compile_runtime_consumer="CompileContext",
+         test_coverage="tests/unit/content/test_catalog.py, tests/unit/content/test_layered_catalog.py",
+-        evidence_tests="tests/unit/content/test_resolvers.py::test_foundation_resolver",
++        evidence_tests="tests/unit/content/test_resolvers.py::TestFoundationResolverSingle",
+         resolver_evidence="FoundationResolver resolves elements correctly",
+         runtime_consumer_evidence="CompileContext uses elements",
+         implementation_state="RESOLVED_PARTIALLY",
+@@ -122,7 +122,7 @@ CONTENT_USAGE_MATRIX: Dict[str, ContentFamilyMatrixEntry] = {
+         resolver_component="LivingDefaultsResolver",
+         compile_runtime_consumer="CompileContext, WorldCompiler",
+         test_coverage="tests/unit/content/test_catalog.py, tests/unit/content/test_layered_catalog.py",
+-        evidence_tests="tests/unit/content/test_resolvers.py::test_living_defaults_resolver",
++        evidence_tests="tests/unit/content/test_resolvers.py::TestLivingDefaultsResolver",
+         resolver_evidence="LivingDefaultsResolver fetches race defaults",
+         runtime_consumer_evidence="CompileContext, WorldCompiler use race definitions during compilation",
+         implementation_state="RESOLVED_PARTIALLY",
+@@ -136,7 +136,7 @@ CONTENT_USAGE_MATRIX: Dict[str, ContentFamilyMatrixEntry] = {
+         resolver_component="LivingDefaultsResolver",
+         compile_runtime_consumer="CompileContext, WorldCompiler",
+         test_coverage="tests/unit/content/test_catalog.py, tests/unit/content/test_layered_catalog.py",
+-        evidence_tests="tests/unit/content/test_resolvers.py::test_living_defaults_resolver",
++        evidence_tests="tests/unit/content/test_resolvers.py::TestLivingDefaultsResolver",
+         resolver_evidence="LivingDefaultsResolver fetches need profiles",
+         runtime_consumer_evidence="None yet",
+         implementation_state="RESOLVED_PARTIALLY",
+@@ -150,7 +150,7 @@ CONTENT_USAGE_MATRIX: Dict[str, ContentFamilyMatrixEntry] = {
+         resolver_component="LivingDefaultsResolver",
+         compile_runtime_consumer="CompileContext, WorldCompiler",
+         test_coverage="tests/unit/content/test_catalog.py, tests/unit/content/test_layered_catalog.py",
+-        evidence_tests="tests/unit/content/test_resolvers.py::test_living_defaults_resolver",
++        evidence_tests="tests/unit/content/test_resolvers.py::TestLivingDefaultsResolver",
+         resolver_evidence="LivingDefaultsResolver fetches sense profiles",
+         runtime_consumer_evidence="None yet",
+         implementation_state="RESOLVED_PARTIALLY",
+@@ -164,7 +164,7 @@ CONTENT_USAGE_MATRIX: Dict[str, ContentFamilyMatrixEntry] = {
+         resolver_component="LivingDefaultsResolver",
+         compile_runtime_consumer="CompileContext, WorldCompiler",
+         test_coverage="tests/unit/content/test_catalog.py, tests/unit/content/test_layered_catalog.py",
+-        evidence_tests="tests/unit/content/test_resolvers.py::test_living_defaults_resolver",
++        evidence_tests="tests/unit/content/test_resolvers.py::TestLivingDefaultsResolver",
+         resolver_evidence="LivingDefaultsResolver fetches body models",
+         runtime_consumer_evidence="None yet",
+         implementation_state="RESOLVED_PARTIALLY",
+@@ -178,7 +178,7 @@ CONTENT_USAGE_MATRIX: Dict[str, ContentFamilyMatrixEntry] = {
+         resolver_component="LivingDefaultsResolver",
+         compile_runtime_consumer="CompileContext, WorldCompiler",
+         test_coverage="tests/unit/content/test_catalog.py, tests/unit/content/test_layered_catalog.py",
+-        evidence_tests="tests/unit/content/test_resolvers.py::test_living_defaults_resolver",
++        evidence_tests="tests/unit/content/test_resolvers.py::TestLivingDefaultsResolver",
+         resolver_evidence="LivingDefaultsResolver fetches drive profiles",
+         runtime_consumer_evidence="None yet",
+         implementation_state="RESOLVED_PARTIALLY",
+@@ -192,7 +192,7 @@ CONTENT_USAGE_MATRIX: Dict[str, ContentFamilyMatrixEntry] = {
+         resolver_component="LivingDefaultsResolver",
+         compile_runtime_consumer="CompileContext, WorldCompiler",
+         test_coverage="tests/unit/content/test_catalog.py, tests/unit/content/test_layered_catalog.py",
+-        evidence_tests="tests/unit/content/test_resolvers.py::test_living_defaults_resolver",
++        evidence_tests="tests/unit/content/test_resolvers.py::TestLivingDefaultsResolver",
+         resolver_evidence="LivingDefaultsResolver fetches cognition profiles",
+         runtime_consumer_evidence="None yet",
+         implementation_state="RESOLVED_PARTIALLY",
+@@ -208,7 +208,7 @@ CONTENT_USAGE_MATRIX: Dict[str, ContentFamilyMatrixEntry] = {
+         resolver_component="SocialDefaultsResolver",
+         compile_runtime_consumer="CompileContext, WorldCompiler",
+         test_coverage="tests/unit/content/test_catalog.py, tests/unit/content/test_layered_catalog.py",
+-        evidence_tests="tests/unit/content/test_resolvers.py::test_social_defaults_resolver",
++        evidence_tests="tests/unit/content/test_resolvers.py::TestSocialDefaultsResolver",
+         resolver_evidence="SocialDefaultsResolver fetches role defaults",
+         runtime_consumer_evidence="CompileContext and WorldCompiler resolve role dependencies",
+         implementation_state="RESOLVED_PARTIALLY",
+@@ -222,7 +222,7 @@ CONTENT_USAGE_MATRIX: Dict[str, ContentFamilyMatrixEntry] = {
+         resolver_component="SocialDefaultsResolver",
+         compile_runtime_consumer="CompileContext, WorldCompiler",
+         test_coverage="tests/unit/content/test_catalog.py, tests/unit/content/test_layered_catalog.py",
+-        evidence_tests="tests/unit/content/test_resolvers.py::test_social_defaults_resolver",
++        evidence_tests="tests/unit/content/test_resolvers.py::TestSocialDefaultsResolver",
+         resolver_evidence="SocialDefaultsResolver fetches faction defaults",
+         runtime_consumer_evidence="CompileContext and WorldCompiler resolve faction dependencies",
+         implementation_state="RESOLVED_PARTIALLY",
+@@ -236,7 +236,7 @@ CONTENT_USAGE_MATRIX: Dict[str, ContentFamilyMatrixEntry] = {
+         resolver_component="SocialDefaultsResolver",
+         compile_runtime_consumer="RelationProjectionService",
+         test_coverage="tests/unit/content/test_catalog.py, tests/unit/content/test_layered_catalog.py",
+-        evidence_tests="tests/unit/content_semantics/test_semantics.py::test_perspective_projection",
++        evidence_tests="tests/unit/content_semantics/test_semantics.py::test_relation_projection_clean",
+         resolver_evidence="SocialDefaultsResolver resolves perspectives",
+         runtime_consumer_evidence="RelationProjectionService maps perspectives to relationships",
+         implementation_state="RESOLVED_PARTIALLY",
+@@ -250,7 +250,7 @@ CONTENT_USAGE_MATRIX: Dict[str, ContentFamilyMatrixEntry] = {
+         resolver_component="SocialDefaultsResolver",
+         compile_runtime_consumer="RelationProjectionService",
+         test_coverage="tests/unit/content/test_catalog.py, tests/unit/content/test_layered_catalog.py",
+-        evidence_tests="tests/unit/content_semantics/test_semantics.py::test_perspective_projection",
++        evidence_tests="tests/unit/content_semantics/test_semantics.py::test_relation_projection_clean",
+         resolver_evidence="SocialDefaultsResolver resolves relationship vectors",
+         runtime_consumer_evidence="RelationProjectionService projects relationships to combat checks",
+         implementation_state="RESOLVED_PARTIALLY",
+@@ -266,7 +266,7 @@ CONTENT_USAGE_MATRIX: Dict[str, ContentFamilyMatrixEntry] = {
+         resolver_component="CompileProfileResolver",
+         compile_runtime_consumer="CompileContext, WorldCompiler",
+         test_coverage="tests/unit/content/test_catalog.py, tests/unit/content/test_layered_catalog.py",
+-        evidence_tests="tests/unit/worldassembly/test_assembly.py::test_resolved_bundle_includes_compile_context",
++        evidence_tests="tests/unit/worldassembly/test_assembly.py::test_resolved_bundle_includes_compile_context_and_preserves_profiles",
+         resolver_evidence="CompileProfileResolver fetches stat profiles",
+         runtime_consumer_evidence="CompileContext captures stats for entity spawning",
+         implementation_state="RESOLVED_PARTIALLY",
+@@ -280,7 +280,7 @@ CONTENT_USAGE_MATRIX: Dict[str, ContentFamilyMatrixEntry] = {
+         resolver_component="CompileProfileResolver",
+         compile_runtime_consumer="CompileContext, WorldCompiler",
+         test_coverage="tests/unit/content/test_catalog.py, tests/unit/content/test_layered_catalog.py",
+-        evidence_tests="tests/unit/worldassembly/test_assembly.py::test_resolved_bundle_includes_compile_context",
++        evidence_tests="tests/unit/worldassembly/test_assembly.py::test_resolved_bundle_includes_compile_context_and_preserves_profiles",
+         resolver_evidence="CompileProfileResolver fetches combat profiles",
+         runtime_consumer_evidence="CompileContext captures combat rules for entity spawning",
+         implementation_state="RESOLVED_PARTIALLY",
+@@ -294,7 +294,7 @@ CONTENT_USAGE_MATRIX: Dict[str, ContentFamilyMatrixEntry] = {
+         resolver_component="CompileProfileResolver",
+         compile_runtime_consumer="CompileContext, WorldCompiler",
+         test_coverage="tests/unit/content/test_catalog.py, tests/unit/content/test_layered_catalog.py",
+-        evidence_tests="tests/unit/worldassembly/test_assembly.py::test_resolved_bundle_includes_compile_context",
++        evidence_tests="tests/unit/worldassembly/test_assembly.py::test_resolved_bundle_includes_compile_context_and_preserves_profiles",
+         resolver_evidence="CompileProfileResolver fetches inventory profiles",
+         runtime_consumer_evidence="CompileContext captures inventory items for entity spawning",
+         implementation_state="RESOLVED_PARTIALLY",
+@@ -308,7 +308,7 @@ CONTENT_USAGE_MATRIX: Dict[str, ContentFamilyMatrixEntry] = {
+         resolver_component="CompileProfileResolver",
+         compile_runtime_consumer="CompileContext, WorldCompiler",
+         test_coverage="tests/unit/content/test_catalog.py, tests/unit/content/test_layered_catalog.py",
+-        evidence_tests="tests/unit/worldassembly/test_assembly.py::test_resolved_bundle_includes_compile_context",
++        evidence_tests="tests/unit/worldassembly/test_assembly.py::test_resolved_bundle_includes_compile_context_and_preserves_profiles",
+         resolver_evidence="CompileProfileResolver fetches skill profiles",
+         runtime_consumer_evidence="CompileContext captures skills for entity spawning",
+         implementation_state="RESOLVED_PARTIALLY",
+@@ -322,7 +322,7 @@ CONTENT_USAGE_MATRIX: Dict[str, ContentFamilyMatrixEntry] = {
+         resolver_component="PopulationRecipeResolver",
+         compile_runtime_consumer="WorldAssemblyResolver",
+         test_coverage="tests/unit/content/test_catalog.py, tests/unit/content/test_layered_catalog.py",
+-        evidence_tests="tests/unit/content/test_resolvers.py::test_population_recipe_resolver",
++        evidence_tests="tests/unit/content/test_resolvers.py::TestPopulationRecipeResolver",
+         resolver_evidence="PopulationRecipeResolver expands recipes to archetypes",
+         runtime_consumer_evidence="WorldAssemblyResolver resolves population spawners",
+         implementation_state="RESOLVED_PARTIALLY",
+@@ -336,7 +336,7 @@ CONTENT_USAGE_MATRIX: Dict[str, ContentFamilyMatrixEntry] = {
+         resolver_component="ResolvedEntityArchetype",
+         compile_runtime_consumer="PopulationRecipeResolver, WorldAssemblyResolver",
+         test_coverage="tests/unit/content/test_catalog.py, tests/unit/content/test_layered_catalog.py",
+-        evidence_tests="tests/unit/content/test_resolvers.py::test_entity_archetype_resolver",
++        evidence_tests="tests/unit/content/test_resolvers.py::TestEntityArchetypeResolver",
+         resolver_evidence="EntityArchetypeResolver resolves archetype composition",
+         runtime_consumer_evidence="PopulationRecipeResolver and WorldAssemblyResolver use archetypes",
+         implementation_state="RESOLVED_PARTIALLY",
+@@ -480,7 +480,7 @@ CONTENT_USAGE_MATRIX: Dict[str, ContentFamilyMatrixEntry] = {
+         resolver_component="CompileProfileResolver",
+         compile_runtime_consumer="CompileContext",
+         test_coverage="tests/unit/content/test_catalog.py",
+-        evidence_tests="tests/unit/worldassembly/test_assembly.py::test_resolved_bundle_includes_compile_context",
++        evidence_tests="tests/unit/worldassembly/test_assembly.py::test_resolved_bundle_includes_compile_context_and_preserves_profiles",
+         resolver_evidence="CompileProfileResolver resolves compilation defaults",
+         runtime_consumer_evidence="CompileContext holds defaults during build phase",
+         implementation_state="RESOLVED_PARTIALLY",
+diff --git a/src/content/reference_graph.py b/src/content/reference_graph.py
+index bca1bc7..580f667 100644
+--- a/src/content/reference_graph.py
++++ b/src/content/reference_graph.py
+@@ -208,6 +208,25 @@ class ContentReferenceGraph:
+         """Returns True if the record has at least one incoming edge."""
+         return len(self.get_incoming_neighbors(node_id)) > 0
+ 
++    def add_module_edges(self, normalized_module: "NormalizedWorldModule") -> None:
++        """Add edges from a normalized module into the reference graph."""
++        from src.worldmodules.normalizer import NormalizedWorldModule  # local import to avoid circular
++        module_node = f"module:{normalized_module.module_id}"
++        for b_id in normalized_module.biomes:
++            self.add_edge(module_node, f"biome:{b_id}")
++        for e_id in normalized_module.ecologies:
++            self.add_edge(module_node, f"ecology:{e_id}")
++        for p_id in normalized_module.populations:
++            self.add_edge(module_node, f"population:{p_id}")
++        for rel_id in normalized_module.relationships:
++            self.add_edge(module_node, f"faction_relationship:{rel_id}")
++        for res_id, count in normalized_module.resources.items():
++            self.add_edge(module_node, f"resource:{res_id}", {"count": count})
++        for bld_id, count in normalized_module.buildings.items():
++            self.add_edge(module_node, f"building:{bld_id}", {"count": count})
++        for svc_id, count in normalized_module.services.items():
++            self.add_edge(module_node, f"service:{svc_id}", {"count": count})
++
+     def _build_graph(
+         self,
+         repo: CatalogRepository,
+@@ -285,28 +304,12 @@ class ContentReferenceGraph:
+                 if bld.service_profile:
+                     self.add_edge(module_node, f"service:{bld.service_profile}")
+ 
+-            # Scan V2 layout lists and attributes explicitly
+-            for biome in module.biomes:
+-                self.add_edge(module_node, f"biome:{biome}")
+-            for ecology in module.ecologies:
+-                self.add_edge(module_node, f"ecology:{ecology}")
+-            for population in module.populations:
+-                self.add_edge(module_node, f"population:{population}")
++            # Scan V2 layout lists and dict refs via normalized module
++            from src.worldmodules.normalizer import WorldModuleAuthoringNormalizer
++            normalized = WorldModuleAuthoringNormalizer.normalize(module)
+             for faction in module.factions:
+                 self.add_edge(module_node, f"faction:{faction}")
+-            for relationship in module.relationships:
+-                self.add_edge(module_node, f"faction_relationship:{relationship}")
+-
+-            # Scan resources, buildings, services (can be dict count map or list shorthand)
+-            for field_name, short_concept in [("resources", "resource"), ("buildings", "building"), ("services", "service")]:
+-                val = getattr(module, field_name, None)
+-                if isinstance(val, dict):
+-                    for ref_id, count in val.items():
+-                        self.add_edge(module_node, f"{short_concept}:{ref_id}", {"count": count})
+-                elif isinstance(val, list):
+-                    for ref_id in val:
+-                        if isinstance(ref_id, str):
+-                            self.add_edge(module_node, f"{short_concept}:{ref_id}", {"count": 1})
++            self.add_module_edges(normalized)
+ 
+         # 3. Add compositions
+         for comp in compositions:
+diff --git a/src/content/resolver.py b/src/content/resolver.py
+index dabccb9..7afece7 100644
+--- a/src/content/resolver.py
++++ b/src/content/resolver.py
+@@ -578,6 +578,8 @@ class PopulationRecipeResolver:
+         recipe = self._repo.get_population_recipe(population_id)
+         if recipe is None:
+             # Case 2: shorthand — treat population_id as a direct archetype ID (count=1, no regions).
++            # The returned ResolvedEntityArchetype.archetype_id carries the explicit identity;
++            # callers must not re-derive it by splitting the population ID string.
+             archetype = self._repo.get_entity_archetype(population_id)
+             if archetype is not None:
+                 resolved_arch = self._archetype_resolver.resolve(population_id)
+diff --git a/src/content/validator.py b/src/content/validator.py
+index 1924569..a26aefe 100644
+--- a/src/content/validator.py
++++ b/src/content/validator.py
+@@ -7,9 +7,12 @@ from pathlib import Path
+ import yaml
+ 
+ from src.content.repository import CatalogRepository, CANONICAL_FAMILIES
++from src.content.paths import ContentPathConfig
+ from src.worldmodules.schema import WorldModuleSpec
+ from src.worldassembly.schema import WorldCompositionSpec
+ 
++_paths = ContentPathConfig()
++
+ # Families whose dot-notation key (e.g. "world.regions" → "world/regions") does not match
+ # the corresponding CONTENT_USAGE_MATRIX key. Add overrides here to prevent silent skips
+ # in dead-record validation.
+@@ -32,7 +35,7 @@ class ValidationIssue(BaseModel):
+     filename: Optional[str] = Field(None, description="Filename where the issue resides")
+ 
+ 
+-def load_all_compositions(worlds_dir: str = "data/worlds") -> List[WorldCompositionSpec]:
++def load_all_compositions(worlds_dir: str = ContentPathConfig().world_compositions_dir) -> List[WorldCompositionSpec]:
+     compositions = []
+     dir_path = Path(worlds_dir)
+     if not dir_path.exists():
+@@ -56,9 +59,61 @@ def load_all_compositions(worlds_dir: str = "data/worlds") -> List[WorldComposit
+     return compositions
+ 
+ 
++def validate_matrix_evidence(
++    matrix: Dict[str, "ContentFamilyMatrixEntry"] = None,
++) -> List[str]:
++    """
++    Check that every evidence_tests string in the matrix resolves to a real file path,
++    and that any ::node_id suffix names a def or class that actually appears in that file.
++
++    Returns a list of violation messages (empty list = no violations).
++    Entries with DESIGN_ONLY (or other non-active states) and no evidence_tests are exempt.
++    Entries in RUNTIME_AUTHORITATIVE or RESOLVED_PARTIALLY with no evidence_tests are violations.
++    """
++    from src.content.matrix import CONTENT_USAGE_MATRIX, ContentFamilyMatrixEntry  # noqa: F401 — local import avoids circular at module load
++
++    if matrix is None:
++        matrix = CONTENT_USAGE_MATRIX
++
++    violations: List[str] = []
++    project_root = Path(__file__).resolve().parents[2]
++
++    for key, entry in matrix.items():
++        if not entry.evidence_tests:
++            if entry.implementation_state in {"RUNTIME_AUTHORITATIVE", "RESOLVED_PARTIALLY"}:
++                violations.append(
++                    f"'{key}': state is {entry.implementation_state} but evidence_tests is not declared"
++                )
++            continue
++
++        tokens = [t.strip() for t in entry.evidence_tests.split(",")]
++        for token in tokens:
++            if not token:
++                continue
++            parts = token.split("::", 1)
++            file_part = parts[0]
++            node_id = parts[1] if len(parts) == 2 else None
++
++            file_path = project_root / file_part
++            if not file_path.exists():
++                violations.append(
++                    f"'{key}': evidence path does not exist: {file_part}"
++                )
++                continue
++
++            if node_id is not None:
++                file_text = file_path.read_text(encoding="utf-8")
++                if f"def {node_id}" not in file_text and f"class {node_id}" not in file_text:
++                    violations.append(
++                        f"'{key}': node ID '{node_id}' not found in {file_part}"
++                    )
++
++    return violations
++
++
+ class CatalogValidator:
+     """
+-    Independent validator for the static Content Catalog. 
++    Independent validator for the static Content Catalog.
+     Catches relational, schema, mapping, and range errors across definition directories.
+     """
+ 
+@@ -85,7 +140,7 @@ class CatalogValidator:
+         if self._custom_modules is not None:
+             modules = self._custom_modules
+         else:
+-            mod_repo = WorldModuleRepository("data/world_modules")
++            mod_repo = WorldModuleRepository(_paths.world_modules_dir)
+             try:
+                 mod_repo.load_all()
+                 modules = list(mod_repo.modules.values())
+@@ -95,7 +150,7 @@ class CatalogValidator:
+         if self._custom_compositions is not None:
+             compositions = self._custom_compositions
+         else:
+-            compositions = load_all_compositions("data/worlds")
++            compositions = load_all_compositions(_paths.world_compositions_dir)
+ 
+         # Build graph
+         from src.content.reference_graph import ContentReferenceGraph
+diff --git a/src/core/modes.py b/src/core/modes.py
+new file mode 100644
+index 0000000..2f492cc
+--- /dev/null
++++ b/src/core/modes.py
+@@ -0,0 +1,6 @@
++from enum import Enum
++
++
++class RuntimeContentMode(Enum):
++    MIGRATION = "migration"
++    V2 = "v2"
+diff --git a/src/core/registries.py b/src/core/registries.py
+index 4767149..6e3ae4f 100644
+--- a/src/core/registries.py
++++ b/src/core/registries.py
+@@ -2,6 +2,8 @@ import os
+ from dataclasses import dataclass, field
+ from typing import Any, Dict, List, Optional, Tuple, Set
+ 
++from src.core.modes import RuntimeContentMode
++
+ 
+ @dataclass(frozen=True, slots=True)
+ class ItemDef:
+@@ -202,18 +204,20 @@ class AdapterError(ValueError):
+ 
+ 
+ class CatalogToItemRegistryAdapter:
+-    def __init__(self, repo: Any, migration_mode: bool = True) -> None:
++    def __init__(self, repo: Any, mode: RuntimeContentMode = RuntimeContentMode.MIGRATION) -> None:
+         self.repo = repo
+-        self.migration_mode = migration_mode
++        self.mode = mode
+ 
+-    def adapt(self) -> Dict[str, ItemDef]:
++    def adapt(self) -> Tuple[Dict[str, ItemDef], int]:
+         items: Dict[str, ItemDef] = {}
++        heuristic_count = 0
+         for item_id, item in self.repo.items.items():
+             try:
+                 use_kind = getattr(item, "use_kind", None)
+                 if not use_kind:
+-                    if not self.migration_mode:
++                    if self.mode == RuntimeContentMode.V2:
+                         raise AdapterError(item_id, "Missing explicit 'use_kind' in catalog-backed mode")
++                    heuristic_count += 1
+                     use_kind = "material"
+                     if "weapon" in item.categories:
+                         use_kind = "weapon"
+@@ -228,7 +232,7 @@ class CatalogToItemRegistryAdapter:
+                             use_kind = "consumable"
+                     elif "tool" in item.categories:
+                         use_kind = "tool"
+-                
++
+                 # Map class fit from metadata fallback
+                 class_fit = tuple(getattr(item, "class_fit", ())) if getattr(item, "class_fit", None) else ()
+                 if not class_fit:
+@@ -236,8 +240,9 @@ class CatalogToItemRegistryAdapter:
+                     if metadata_fit:
+                         class_fit = metadata_fit
+                     else:
+-                        if not self.migration_mode:
++                        if self.mode == RuntimeContentMode.V2:
+                             raise AdapterError(item_id, "Missing explicit 'class_fit' in catalog-backed mode")
++                        heuristic_count += 1
+                         if item_id in ("rusted_sword", "iron_sword", "hunter_blade"):
+                             class_fit = ("warrior",)
+                             if item_id == "hunter_blade":
+@@ -246,7 +251,7 @@ class CatalogToItemRegistryAdapter:
+                             class_fit = ("mage",)
+                         elif item_id == "basic_bow":
+                             class_fit = ("ranger",)
+-                
++
+                 items[item_id] = ItemDef(
+                     id=item_id,
+                     tags=tuple(item.categories),
+@@ -259,7 +264,7 @@ class CatalogToItemRegistryAdapter:
+                 raise
+             except Exception as e:
+                 raise AdapterError(item_id, str(e)) from e
+-        return items
++        return items, heuristic_count
+ 
+ 
+ class CatalogToRecipeRegistryAdapter:
+@@ -301,13 +306,14 @@ class CatalogToRecipeRegistryAdapter:
+ 
+ 
+ class CatalogToServiceRegistryAdapter:
+-    def __init__(self, repo: Any, catalog_mode: bool = False, migration_mode: bool = True) -> None:
++    def __init__(self, repo: Any, catalog_mode: bool = False, mode: RuntimeContentMode = RuntimeContentMode.MIGRATION) -> None:
+         self.repo = repo
+         self.catalog_mode = catalog_mode
+-        self.migration_mode = migration_mode
++        self.mode = mode
+ 
+-    def adapt(self) -> Dict[str, ServiceDef]:
++    def adapt(self) -> Tuple[Dict[str, ServiceDef], int]:
+         services: Dict[str, ServiceDef] = {}
++        heuristic_count = 0
+         # Prepopulate hometown services for compatibility/seeding only if not catalog_mode
+         if not self.catalog_mode:
+             services["shop_hometown"] = ServiceDef("shop_hometown", "hometown", ("buy", "sell"))
+@@ -315,13 +321,14 @@ class CatalogToServiceRegistryAdapter:
+             services["guide_hometown"] = ServiceDef("guide_hometown", "hometown", ("ask_info",), ("wood", "herb", "iron_ore", "healing_flower", "moon_resin"))
+             services["guild_hometown"] = ServiceDef("guild_hometown", "hometown", ("quest", "info"))
+             services["inn_hometown"] = ServiceDef("inn_hometown", "hometown", ("rest",))
+-        
++
+         for s_id, s_prof in self.repo.services.items():
+             try:
+                 affordances = list(getattr(s_prof, "affordances", [])) if getattr(s_prof, "affordances", None) else []
+                 if not affordances:
+-                    if not self.migration_mode:
++                    if self.mode == RuntimeContentMode.V2:
+                         raise AdapterError(s_id, "Missing explicit 'affordances' in catalog-backed mode")
++                    heuristic_count += 1
+                     if "trade" in s_id or "store" in s_id or s_prof.provided_items:
+                         affordances.extend(["buy", "sell"])
+                     if "blacksmith" in s_id or "craft" in s_id:
+@@ -330,7 +337,7 @@ class CatalogToServiceRegistryAdapter:
+                         affordances.append("rest")
+                     if "healer" in s_id or "healing" in s_id:
+                         affordances.append("rest")
+-                
++
+                 services[s_id] = ServiceDef(
+                     id=s_id,
+                     region_id="hometown",
+@@ -340,7 +347,7 @@ class CatalogToServiceRegistryAdapter:
+                 raise
+             except Exception as e:
+                 raise AdapterError(s_id, str(e)) from e
+-        return services
++        return services, heuristic_count
+ 
+ 
+ class CatalogToRegionRegistryAdapter:
+@@ -365,18 +372,20 @@ class CatalogToRegionRegistryAdapter:
+ 
+ 
+ class CatalogToResourceRegistryAdapter:
+-    def __init__(self, repo: Any, migration_mode: bool = True) -> None:
++    def __init__(self, repo: Any, mode: RuntimeContentMode = RuntimeContentMode.MIGRATION) -> None:
+         self.repo = repo
+-        self.migration_mode = migration_mode
++        self.mode = mode
+ 
+-    def adapt(self) -> Dict[str, ResourceDef]:
++    def adapt(self) -> Tuple[Dict[str, ResourceDef], int]:
+         resources: Dict[str, ResourceDef] = {}
++        heuristic_count = 0
+         for res_id, res in self.repo.resources.items():
+             try:
+                 legacy_id = getattr(res, "legacy_id", None)
+                 if not legacy_id:
+-                    if not self.migration_mode:
++                    if self.mode == RuntimeContentMode.V2:
+                         raise AdapterError(res_id, "Missing explicit 'legacy_id' in catalog-backed mode")
++                    heuristic_count += 1
+                     legacy_id = res_id
+                     if res_id == "wood_node":
+                         legacy_id = "node_wood"
+@@ -393,8 +402,9 @@ class CatalogToResourceRegistryAdapter:
+                 if not source_region_tags:
+                     source_region_tags = tuple(res.metadata.get("preferred_biomes", [])) if hasattr(res, "metadata") and res.metadata else ()
+                     if not source_region_tags:
+-                        if not self.migration_mode:
++                        if self.mode == RuntimeContentMode.V2:
+                             raise AdapterError(res_id, "Missing source region tags in catalog-backed mode")
++                        heuristic_count += 1
+                         if legacy_id == "node_wood":
+                             source_region_tags = ("near_forest",)
+                         elif legacy_id == "node_herb":
+@@ -405,20 +415,20 @@ class CatalogToResourceRegistryAdapter:
+                             source_region_tags = ("moon_cave",)
+                         elif legacy_id == "node_flower":
+                             source_region_tags = ("near_forest",)
+-                
++
+                 required_tool = getattr(res, "required_tool", None)
+                 if required_tool is None:
+                     required_tool = res.metadata.get("required_tool") if hasattr(res, "metadata") and res.metadata else None
+                     if required_tool is None:
+-                        if not self.migration_mode:
++                        if self.mode == RuntimeContentMode.V2:
+                             required_tool = None
+                         else:
+                             if "iron" in res_id or "silver" in res_id:
+                                 required_tool = "pickaxe"
+-                
++
+                 base_difficulty = res.metadata.get("base_difficulty") if hasattr(res, "metadata") and res.metadata else None
+                 if base_difficulty is None:
+-                    if not self.migration_mode:
++                    if self.mode == RuntimeContentMode.V2:
+                         base_difficulty = 1
+                     else:
+                         if "iron" in res_id or "silver" in res_id or "resin" in res_id:
+@@ -444,7 +454,7 @@ class CatalogToResourceRegistryAdapter:
+                 raise
+             except Exception as e:
+                 raise AdapterError(res_id, str(e)) from e
+-        return resources
++        return resources, heuristic_count
+ 
+ 
+ class ArchetypeToEnemyRegistryAdapter:
+@@ -492,7 +502,20 @@ fallback_usage_reported: bool = False
+ _sentinel = object()
+ 
+ 
+-def seed_phase1_content(catalog_repo: Optional[Any] = _sentinel, required: bool = False, migration_mode: bool = True) -> None:
++@dataclass(frozen=True)
++class AdapterProjectionResult:
++    mode: RuntimeContentMode
++    item_count: int
++    service_count: int
++    resource_count: int
++    heuristic_count: int
++
++
++def seed_phase1_content(
++    catalog_repo: Optional[Any] = _sentinel,
++    required: bool = False,
++    mode: RuntimeContentMode = RuntimeContentMode.MIGRATION,
++) -> Optional[AdapterProjectionResult]:
+     """Load default adventure seed contents either from Content Catalog or legacy hardcoded backup."""
+     global runtime_content_source, catalog_fingerprint, fallback_usage_reported
+ 
+@@ -516,7 +539,7 @@ def seed_phase1_content(catalog_repo: Optional[Any] = _sentinel, required: bool
+     if catalog_repo is not None:
+         from src.content.repository import CatalogRepository
+         assert isinstance(catalog_repo, CatalogRepository)
+-        
++
+         if required:
+             from src.content.validator import CatalogValidator, CatalogValidationError
+             validator = CatalogValidator(catalog_repo)
+@@ -524,13 +547,13 @@ def seed_phase1_content(catalog_repo: Optional[Any] = _sentinel, required: bool
+             errors = [issue for issue in issues if issue.severity == "ERROR"]
+             if errors:
+                 raise CatalogValidationError(f"Catalog has validation errors: {errors}")
+-        
+-        # Run adapters with strict or migration mode as requested
+-        items = CatalogToItemRegistryAdapter(catalog_repo, migration_mode=migration_mode).adapt()
++
++        # Run adapters with the requested mode
++        items, items_heuristic = CatalogToItemRegistryAdapter(catalog_repo, mode=mode).adapt()
+         recipes = CatalogToRecipeRegistryAdapter(catalog_repo).adapt()
+-        services = CatalogToServiceRegistryAdapter(catalog_repo, catalog_mode=True, migration_mode=migration_mode).adapt()
++        services, services_heuristic = CatalogToServiceRegistryAdapter(catalog_repo, catalog_mode=True, mode=mode).adapt()
+         regions = CatalogToRegionRegistryAdapter(catalog_repo).adapt()
+-        resources = CatalogToResourceRegistryAdapter(catalog_repo, migration_mode=migration_mode).adapt()
++        resources, resources_heuristic = CatalogToResourceRegistryAdapter(catalog_repo, mode=mode).adapt()
+         enemies = ArchetypeToEnemyRegistryAdapter(catalog_repo, catalog_mode=True).adapt()
+ 
+         # Seed registries
+@@ -540,14 +563,22 @@ def seed_phase1_content(catalog_repo: Optional[Any] = _sentinel, required: bool
+         RegionRegistry.bootstrap(regions)
+         ResourceRegistry.bootstrap(resources)
+         EnemyRegistry.bootstrap(enemies)
+-        
++
+         # Bootstrap ItemRegistry in src.core.items as well
+         from src.core.items import ItemRegistry as CoreItemRegistry
+         CoreItemRegistry.bootstrap(catalog_repo.items)
+ 
+         runtime_content_source = "catalog"
+         catalog_fingerprint = catalog_repo.fingerprint
+-        
++
++        return AdapterProjectionResult(
++            mode=mode,
++            item_count=len(items),
++            service_count=len(services),
++            resource_count=len(resources),
++            heuristic_count=items_heuristic + services_heuristic + resources_heuristic,
++        )
++
+     else:
+         import logging
+         logging.getLogger(__name__).warning("Falling back to legacy hardcoded Phase 1 content seeding")
+@@ -633,10 +664,11 @@ def seed_phase1_content(catalog_repo: Optional[Any] = _sentinel, required: bool
+         
+         from src.core.items import ItemRegistry as CoreItemRegistry
+         CoreItemRegistry.bootstrap({})
+-        
++
+         runtime_content_source = "legacy_hardcoded"
+         catalog_fingerprint = None
++        return None
+ 
+ 
+ # Self-seed on import for seamless execution compatibility
+-seed_phase1_content()
++seed_phase1_content(mode=RuntimeContentMode.MIGRATION)
+diff --git a/src/engine/combat.py b/src/engine/combat.py
+index 3e9f1b4..45e106b 100644
+--- a/src/engine/combat.py
++++ b/src/engine/combat.py
+@@ -171,21 +171,21 @@ class CombatResolutionSystem:
+         if new_hp <= 0:
+             outcome = "KILL" if is_lethal else "DEFEAT"
+             alive = False
+-            
+-            if defender.identity.role == EntityRole.MONSTER:
+-                xp_gain = defender.identity.evolution_level * 10
+-                gold_gain = defender.identity.evolution_level * 5
+-            elif defender.identity.role == EntityRole.HERO:
+-                xp_gain = defender.identity.evolution_level * 20
+-                gold_gain = defender.identity.evolution_level * 50
+-                
++
++            from src.engine.combat_rewards import CombatRewardClassificationService
++            classification = CombatRewardClassificationService.classify(defender.identity.role)
++            xp_gain = defender.identity.evolution_level * classification.xp_multiplier
++            gold_gain = defender.identity.evolution_level * classification.gold_multiplier
++            trace["REWARD_SOURCE"] = classification.source
++
++            if classification.rebirth_eligible:
+                 if defender.lifecycle.generation < 4:
+                     gen_delta = 1
+                     outcome = "REBIRTH"
+                 else:
+                     perma_set = True
+                     outcome = "PERMADEATH"
+- 
++
+         # 5. Durability Decay (Phase 8)
+         attacker_equip_upd, defender_equip_upd = CombatResolutionSystem._get_durability_decay(attacker, defender)
+ 
+@@ -274,9 +274,10 @@ class CombatResolutionSystem:
+         xp_gain = 0
+         gold_gain = 0
+         if not alive:
+-            if defender.identity.role == EntityRole.MONSTER:
+-                xp_gain = 10 * defender.identity.evolution_level
+-                gold_gain = 5 * defender.identity.evolution_level
++            from src.engine.combat_rewards import CombatRewardClassificationService
++            classification = CombatRewardClassificationService.classify(defender.identity.role)
++            xp_gain = classification.xp_multiplier * defender.identity.evolution_level
++            gold_gain = classification.gold_multiplier * defender.identity.evolution_level
+ 
+         attacker_equip_upd, defender_equip_upd = CombatResolutionSystem._get_durability_decay(attacker, defender)
+         wound_upd = CombatResolutionSystem._get_wound_infliction(attacker, defender, damage, state.tick, alive)
+@@ -380,13 +381,12 @@ class CombatResolutionSystem:
+         gold_gain = 0
+         resource_transfers = []
+         if not alive and defender.combat.alive:
+-             if defender.identity.role == EntityRole.MONSTER:
+-                xp_gain = defender.identity.evolution_level * 10
+-                gold_gain = defender.identity.evolution_level * 5
+-             elif defender.identity.role == EntityRole.HERO:
+-                xp_gain = defender.identity.evolution_level * 20
+-                gold_gain = defender.identity.evolution_level * 50
+-                
++             from src.engine.combat_rewards import CombatRewardClassificationService
++             classification = CombatRewardClassificationService.classify(defender.identity.role)
++             xp_gain = defender.identity.evolution_level * classification.xp_multiplier
++             gold_gain = defender.identity.evolution_level * classification.gold_multiplier
++             full_trace["REWARD_SOURCE"] = classification.source
++
+              from src.core.updates import ResourceTransferIntent
+              resource_transfers.append(ResourceTransferIntent(
+                  source_id=defender.id, source_kind="COMBAT",
+diff --git a/src/engine/combat_rewards.py b/src/engine/combat_rewards.py
+new file mode 100644
+index 0000000..5ee40c5
+--- /dev/null
++++ b/src/engine/combat_rewards.py
+@@ -0,0 +1,60 @@
++from __future__ import annotations
++from dataclasses import dataclass
++from enum import Enum
++from src.core.enums import EntityRole
++
++
++class RewardCategory(Enum):
++    NONE = "none"
++    MONSTER_KILL = "monster_kill"
++    HERO_KILL = "hero_kill"
++
++
++@dataclass(frozen=True)
++class RewardClassification:
++    category: RewardCategory
++    xp_multiplier: int      # Multiplier against evolution_level; MONSTER=10, HERO=20, else=0
++    gold_multiplier: int    # Multiplier against evolution_level; MONSTER=5, HERO=50, else=0
++    gold_eligible: bool
++    rebirth_eligible: bool
++    source: str             # e.g. "EntityRole.MONSTER"
++
++
++class CombatRewardClassificationService:
++    """
++    Owns all entity-role -> reward-category mapping.
++    Reads entity role. Does not mutate any state.
++    Logic IDs: COMB-279, COMB-280, PROG-004, PROG-064
++    """
++
++    _CLASSIFICATIONS: dict[EntityRole, RewardClassification] = {
++        EntityRole.MONSTER: RewardClassification(
++            category=RewardCategory.MONSTER_KILL,
++            xp_multiplier=10,
++            gold_multiplier=5,
++            gold_eligible=True,
++            rebirth_eligible=False,
++            source="EntityRole.MONSTER",
++        ),
++        EntityRole.HERO: RewardClassification(
++            category=RewardCategory.HERO_KILL,
++            xp_multiplier=20,
++            gold_multiplier=50,
++            gold_eligible=True,
++            rebirth_eligible=True,
++            source="EntityRole.HERO",
++        ),
++    }
++
++    _NONE_CLASSIFICATION = RewardClassification(
++        category=RewardCategory.NONE,
++        xp_multiplier=0,
++        gold_multiplier=0,
++        gold_eligible=False,
++        rebirth_eligible=False,
++        source="EntityRole.NONE",
++    )
++
++    @classmethod
++    def classify(cls, entity_role: EntityRole) -> RewardClassification:
++        return cls._CLASSIFICATIONS.get(entity_role, cls._NONE_CLASSIFICATION)
+diff --git a/src/worldassembly/resolver.py b/src/worldassembly/resolver.py
+index 5e9ae7b..fc1b88f 100644
+--- a/src/worldassembly/resolver.py
++++ b/src/worldassembly/resolver.py
+@@ -331,14 +331,14 @@ class WorldAssemblyResolver:
+                 entities[pop.id] = pop
+                 entity_origins[pop.id] = m_id
+                 
+-                # Attempt to determine archetype_id and population_recipe_id for provenance
+-                archetype_id = None
++                # Provenance: archetype_id is now an explicit field on PopulationSpec
++                archetype_id = pop.archetype_id
+                 pop_recipe_id = None
+-                for pr in contribution.population_refs:
+-                    if pr in pop.id:
+-                        pop_recipe_id = pr
+-                        archetype_id = pop.id.split(pr + "_")[-1]
+-                        break
++                if archetype_id:
++                    for pr in contribution.population_refs:
++                        if pr in pop.id:
++                            pop_recipe_id = pr
++                            break
+                 
+                 resolved_arch = None
+                 if archetype_id:
+@@ -651,7 +651,7 @@ class WorldAssemblyResolver:
+ 
+     def resolve_module_contribution(
+         self,
+-        module: WorldModuleSpec | NormalizedWorldModule,
++        normalized_module: NormalizedWorldModule,
+         prefix: str = "",
+         param_vals: Dict[str, Any] = None
+     ) -> ResolvedModuleContribution:
+@@ -661,17 +661,23 @@ class WorldAssemblyResolver:
+         """
+         if param_vals is None:
+             param_vals = {}
++        if not isinstance(normalized_module, NormalizedWorldModule):
++            raise TypeError(
++                f"resolve_module_contribution requires NormalizedWorldModule, got "
++                f"{type(normalized_module).__name__}. "
++                "Call WorldModuleAuthoringNormalizer.normalize() before resolving."
++            )
+ 
+         # 1. Resolve Regions
+         regions_spec_list: List[RegionSpec] = []
+-        for reg in module.regions:
++        for reg in normalized_module.regions:
+             # Call RegionResolver if in catalog
+             if self.catalog_repo.get_region(reg.id) is not None:
+                 self.region_resolver.resolve(reg.id)
+             else:
+-                if module.schema_version == "worldmodule.v2":
+-                    raise ResolverError("region", reg.id, f"referenced by v2 module '{module.module_id}'")
+-            
++                if normalized_module.schema_version == "worldmodule.v2":
++                    raise ResolverError("region", reg.id, f"referenced by v2 module '{normalized_module.module_id}'")
++
+             regions_spec_list.append(RegionSpec(
+                 id=f"{prefix}{reg.id}",
+                 type=reg.type,
+@@ -682,34 +688,34 @@ class WorldAssemblyResolver:
+ 
+         # 2. Resolve Factions
+         factions_spec_list: List[FactionSpec] = []
+-        for f_id in module.factions:
++        for f_id in normalized_module.factions:
+             cat_faction = self.catalog_repo.get_faction(f_id)
+             if cat_faction is None:
+-                raise ResolverError("faction", f_id, context=f"referenced by module '{module.module_id}'")
++                raise ResolverError("faction", f_id, context=f"referenced by module '{normalized_module.module_id}'")
+             factions_spec_list.append(FactionSpec(id=f_id, type=cat_faction.alignment_bucket))
+ 
+         # 3. Resolve Biomes
+         biome_refs: List[str] = []
+-        for b_id in module.biomes:
++        for b_id in normalized_module.biomes:
+             self.biome_resolver.resolve(b_id)
+             biome_refs.append(b_id)
+ 
+         # 4. Resolve Ecologies
+         ecology_refs: List[str] = []
+-        for e_id in module.ecologies:
++        for e_id in normalized_module.ecologies:
+             self.ecology_resolver.resolve(e_id)
+             ecology_refs.append(e_id)
+ 
+         # 5. Resolve Relationships
+         relationship_refs: List[str] = []
+-        for rel_id in module.relationships:
++        for rel_id in normalized_module.relationships:
+             self.relationship_resolver.resolve(rel_id)
+             relationship_refs.append(rel_id)
+ 
+         # 6. Resolve Services
+         service_refs: Dict[str, int] = {}
+-        # module.services is normalized to Dict[str, int] now
+-        for s_id, count in module.services.items():
++        # normalized_module.services is normalized to Dict[str, int] now
++        for s_id, count in normalized_module.services.items():
+             if self.catalog_repo.get_service_profile(s_id) is None:
+                 raise ResolverError("service_profile", s_id)
+             service_refs[s_id] = count
+@@ -717,15 +723,15 @@ class WorldAssemblyResolver:
+         # 7. Resolve Populations
+         population_refs: List[str] = []
+         resolved_population_specs: List[PopulationSpec] = []
+-        
+-        for p_id in module.populations:
++
++        for p_id in normalized_module.populations:
+             expanded_archetypes, preferred_regions = self.population_recipe_resolver.resolve(p_id)
+             population_refs.append(p_id)
+-            
++
+             # Collect regions defined in this module and recursively required modules
+-            module_region_ids = {r.id for r in module.regions}
+-            if hasattr(module, "requires") and module.requires:
+-                for req_id in module.requires:
++            module_region_ids = {r.id for r in normalized_module.regions}
++            if hasattr(normalized_module, "requires") and normalized_module.requires:
++                for req_id in normalized_module.requires:
+                     req_spec = self.module_repo.get_module(req_id)
+                     if req_spec:
+                         module_region_ids.update({r.id for r in req_spec.regions})
+@@ -744,9 +750,9 @@ class WorldAssemblyResolver:
+             for arch_idx, (resolved_arch, count) in enumerate(expanded_archetypes):
+                 spawn_region = preferred_regions[0] if preferred_regions else ""
+                 spawn_region = REGION_MIGRATION_MAP.get(spawn_region, spawn_region)
+-                if not spawn_region and module.regions:
+-                    spawn_region = module.regions[0].id
+-                if spawn_region in [r.id for r in module.regions]:
++                if not spawn_region and normalized_module.regions:
++                    spawn_region = normalized_module.regions[0].id
++                if spawn_region in [r.id for r in normalized_module.regions]:
+                     spawn_region = f"{prefix}{spawn_region}"
+                 elif spawn_region:
+                     spawn_region = f"{prefix}{spawn_region}"
+@@ -757,7 +763,8 @@ class WorldAssemblyResolver:
+                     count=count,
+                     role=resolved_arch.role_id,
+                     faction=resolved_arch.faction_id,
+-                    spawn_region=spawn_region
++                    spawn_region=spawn_region,
++                    archetype_id=resolved_arch.archetype_id,
+                 ))
+ 
+         # 8. Resolve Resources & Buildings
+@@ -765,11 +772,11 @@ class WorldAssemblyResolver:
+         building_refs: Dict[str, int] = {}
+ 
+         # Both are normalized to Dict[str, int] by WorldModuleAuthoringNormalizer
+-        for res_id, count in module.resources.items():
++        for res_id, count in normalized_module.resources.items():
+             self.resource_resolver.resolve(res_id)
+             resource_refs[res_id] = count
+ 
+-        for bld_id, count in module.buildings.items():
++        for bld_id, count in normalized_module.buildings.items():
+             self.building_resolver.resolve(bld_id)
+             building_refs[bld_id] = count
+ 
+@@ -897,16 +904,9 @@ class CompileProfileResolver:
+ 
+             hp, max_hp, atk, def_stat, attack_range, readiness = self._resolve_entity_stats(pop_spec, stats_profile_id)
+ 
+-            # Look up archetype details if available to preserve metadata (Phase 25)
+-            archetype_id = None
+-            if "_" in key:
+-                # E.g., goblin_camp_conflict_goblin_raiding_party_goblin_raider
+-                # Let's extract the part after the population recipe if it matches an archetype ID
+-                for arch_key in self.repo.entity_archetypes:
+-                    if key.endswith(f"_{arch_key}"):
+-                        archetype_id = arch_key
+-                        break
+-            
++            # Archetype_id is now explicit on PopulationSpec — no string scan needed
++            archetype_id = pop_spec.archetype_id
++
+             resolved_arch = None
+             if archetype_id:
+                 try:
+diff --git a/src/worldbuilding/cli.py b/src/worldbuilding/cli.py
+index 0607441..470d1e0 100644
+--- a/src/worldbuilding/cli.py
++++ b/src/worldbuilding/cli.py
+@@ -15,6 +15,7 @@ from src.worldbuilding.validator import WorldValidator
+ from src.worldbuilding.compiler import WorldCompiler
+ from src.worldbuilding.recipe import WorldTemplateSpec, WorldTemplateExpander
+ from src.content.repository import CatalogRepository
++from src.content.paths import ContentPathConfig
+ from src.worldmodules.repository import WorldModuleRepository
+ from src.worldassembly.schema import WorldCompositionSpec
+ from src.worldassembly.resolver import WorldAssemblyResolver
+@@ -168,7 +169,7 @@ def handle_resolve(args) -> int:
+         # Load repositories
+         cat_repo = CatalogRepository("data/content")
+         cat_repo.load_all()
+-        mod_repo = WorldModuleRepository("data/world_modules")
++        mod_repo = WorldModuleRepository(ContentPathConfig().world_modules_dir)
+         mod_repo.load_all()
+ 
+         print(f"Resolving composition world '{world_id}'...")
+diff --git a/src/worldbuilding/schema.py b/src/worldbuilding/schema.py
+index 2ff8e92..a963c17 100644
+--- a/src/worldbuilding/schema.py
++++ b/src/worldbuilding/schema.py
+@@ -56,6 +56,10 @@ class PopulationSpec(BaseModel):
+     role: str = Field(..., min_length=1, description="Combat or societal role of the entities")
+     faction: str = Field(..., min_length=1, description="Faction affiliation")
+     spawn_region: str = Field(..., min_length=1, description="Region where entities are spawned")
++    archetype_id: Optional[str] = Field(
++        default=None,
++        description="Archetype that originated this population entry; set at assembly time, never inferred from the id string."
++    )
+ 
+ class ResourceNodeSpec(BaseModel):
+     model_config = ConfigDict(frozen=True)
+diff --git a/src/worldmodules/normalizer.py b/src/worldmodules/normalizer.py
+index 8c2055a..381269d 100644
+--- a/src/worldmodules/normalizer.py
++++ b/src/worldmodules/normalizer.py
+@@ -1,5 +1,5 @@
+ from dataclasses import dataclass
+-from typing import Optional, List, Any, Dict, Union
++from typing import Optional, List, Any, Dict, Tuple, Union
+ 
+ from src.worldmodules.schema import ModuleParameterSpec, WorldModuleSpec
+ from src.worldbuilding.recipe import (
+@@ -10,6 +10,10 @@ from src.worldbuilding.recipe import (
+ )
+ 
+ 
++class NormalizationError(ValueError):
++    """Raised when a module field cannot be normalized to a typed ref collection."""
++
++
+ @dataclass(frozen=True)
+ class NormalizedWorldModule:
+     """Stable internal representation of a world module contribution."""
+@@ -26,16 +30,48 @@ class NormalizedWorldModule:
+     population_recipes: List[PopulationRecipeSpec]
+     resource_recipes: List[ResourceRecipeSpec]
+     building_recipes: List[BuildingRecipeSpec]
+-    biomes: List[Any]
+-    ecologies: List[Any]
+-    populations: List[Any]
+-    relationships: List[Any]
++    biomes: Tuple[str, ...]
++    ecologies: Tuple[str, ...]
++    populations: Tuple[str, ...]
++    relationships: Tuple[str, ...]
+     resources: Dict[str, int]
+     buildings: Dict[str, int]
+     services: Dict[str, int]
+     factions: List[str]
+ 
+ 
++def _normalize_ref_list(value: List[Any], *, field_name: str) -> Tuple[str, ...]:
++    """
++    Normalize a raw ref list to an immutable tuple of string IDs.
++    - List[str]: validate no duplicates, return as tuple.
++    - List[dict] with 'id' key: extract IDs, validate no duplicates, return as tuple.
++    - List[dict] without 'id' key: raise NormalizationError.
++    - Other element types: raise NormalizationError.
++    """
++    seen: set = set()
++    result: list = []
++    for item in value:
++        if isinstance(item, str):
++            item_id = item
++        elif isinstance(item, dict):
++            item_id = item.get("id")
++            if not item_id or not isinstance(item_id, str):
++                raise NormalizationError(
++                    f"Dict entry in '{field_name}' has no valid 'id' key: {item!r}"
++                )
++        else:
++            raise NormalizationError(
++                f"Unexpected element type {type(item).__name__!r} in '{field_name}': {item!r}"
++            )
++        if item_id in seen:
++            raise NormalizationError(
++                f"Duplicate ref '{item_id}' in '{field_name}' is rejected."
++            )
++        seen.add(item_id)
++        result.append(item_id)
++    return tuple(result)
++
++
+ def normalize_count_map(value: Any, *, field_name: str) -> Dict[str, int]:
+     """Helper to convert resource/building/service list or dict to count dict, validating bounds."""
+     if isinstance(value, dict):
+@@ -109,10 +145,10 @@ class WorldModuleAuthoringNormalizer:
+             population_recipes=list(spec.population_recipes),
+             resource_recipes=list(spec.resource_recipes),
+             building_recipes=list(spec.building_recipes),
+-            biomes=list(spec.biomes),
+-            ecologies=list(spec.ecologies),
+-            populations=list(spec.populations),
+-            relationships=list(spec.relationships),
++            biomes=_normalize_ref_list(list(spec.biomes), field_name="biomes"),
++            ecologies=_normalize_ref_list(list(spec.ecologies), field_name="ecologies"),
++            populations=_normalize_ref_list(list(spec.populations), field_name="populations"),
++            relationships=_normalize_ref_list(list(spec.relationships), field_name="relationships"),
+             resources=normalize_count_map(spec.resources, field_name="resources"),
+             buildings=normalize_count_map(spec.buildings, field_name="buildings"),
+             services=normalize_count_map(spec.services, field_name="services"),
+diff --git a/tests/architecture/test_no_old_structural_content_paths.py b/tests/architecture/test_no_old_structural_content_paths.py
+new file mode 100644
+index 0000000..46a6924
+--- /dev/null
++++ b/tests/architecture/test_no_old_structural_content_paths.py
+@@ -0,0 +1,78 @@
++"""
++Architecture guard: no hardcoded old content catalog paths in src/.
++
++Forbidden patterns (catalog input paths, not compiled-world output):
++  - "data/world_modules" as a literal string
++  - WorldModuleRepository("data/world_modules") direct instantiation
++  - load_all_compositions("data/worlds") — "data/worlds" used as a composition source
++
++Allowed:
++  - WorldRepository("data/worlds") — compiled world output repo, not the catalog
++  - Any file in tests/ named legacy_* or containing "# legacy fixture"
++  - Docstrings and comments that only describe the old path (not call it)
++"""
++from __future__ import annotations
++
++import re
++from pathlib import Path
++
++_SRC_ROOT = Path(__file__).parent.parent.parent / "src"
++
++# Patterns that are forbidden in non-allowlisted src/ files.
++_FORBIDDEN: list[tuple[str, re.Pattern[str]]] = [
++    (
++        "hardcoded data/world_modules path",
++        re.compile(r'"data/world_modules"'),
++    ),
++    (
++        "WorldModuleRepository with hardcoded data/world_modules",
++        re.compile(r'WorldModuleRepository\s*\(\s*"data/world_modules"\s*\)'),
++    ),
++    (
++        "load_all_compositions with hardcoded data/worlds (composition source)",
++        re.compile(r'load_all_compositions\s*\(\s*"data/worlds"\s*\)'),
++    ),
++]
++
++# WorldRepository("data/worlds") is the compiled-world output repo — NOT forbidden.
++# We do not flag it.
++
++
++def _is_allowlisted(path: Path) -> bool:
++    """Return True for files that are explicitly exempt from this guard."""
++    name = path.name
++    if name.startswith("legacy_"):
++        return True
++    try:
++        text = path.read_text(encoding="utf-8")
++    except OSError:
++        return False
++    if "# legacy fixture" in text:
++        return True
++    return False
++
++
++def test_no_hardcoded_old_content_paths_in_src() -> None:
++    violations: list[str] = []
++
++    for py_file in sorted(_SRC_ROOT.rglob("*.py")):
++        if _is_allowlisted(py_file):
++            continue
++
++        try:
++            source = py_file.read_text(encoding="utf-8")
++        except OSError:
++            continue
++
++        for description, pattern in _FORBIDDEN:
++            for match in pattern.finditer(source):
++                # Compute line number for readability
++                line_no = source.count("\n", 0, match.start()) + 1
++                rel = py_file.relative_to(_SRC_ROOT.parent)
++                violations.append(f"{rel}:{line_no} — {description}: {match.group()!r}")
++
++    assert not violations, (
++        "Hardcoded old content catalog paths found in src/.\n"
++        "Use ContentPathConfig() from src.content.paths instead.\n\n"
++        + "\n".join(f"  {v}" for v in violations)
++    )
+diff --git a/tests/integration/content/test_registry_projection_parity.py b/tests/integration/content/test_registry_projection_parity.py
+index 7eeca23..01e9af9 100644
+--- a/tests/integration/content/test_registry_projection_parity.py
++++ b/tests/integration/content/test_registry_projection_parity.py
+@@ -1,5 +1,6 @@
+ import pytest
+ from src.content.repository import CatalogRepository
++from src.core.modes import RuntimeContentMode
+ from src.core.registries import (
+     seed_phase1_content,
+     ItemRegistry,
+@@ -15,8 +16,8 @@ from src.core.registries import (
+ def loaded_catalog_repo():
+     repo = CatalogRepository("data/content")
+     repo.load_all()
+-    # Seed registries with strict migration_mode=True to verify default behavior
+-    seed_phase1_content(repo, migration_mode=True)
++    # Seed registries with migration mode to verify default behavior
++    seed_phase1_content(repo, mode=RuntimeContentMode.MIGRATION)
+     return repo
+ 
+ 
+diff --git a/tests/unit/combat/test_combat_rewards.py b/tests/unit/combat/test_combat_rewards.py
+new file mode 100644
+index 0000000..6c744c6
+--- /dev/null
++++ b/tests/unit/combat/test_combat_rewards.py
+@@ -0,0 +1,59 @@
++"""
++Unit tests for CombatRewardClassificationService.
++Logic IDs: COMB-279, COMB-280, PROG-004, PROG-064
++"""
++import pytest
++from dataclasses import FrozenInstanceError
++from src.core.enums import EntityRole
++from src.engine.combat_rewards import (
++    CombatRewardClassificationService,
++    RewardCategory,
++    RewardClassification,
++)
++
++
++def test_monster_role_classify():
++    """Monster role maps to MONSTER_KILL with correct XP/gold multipliers and flags."""
++    result = CombatRewardClassificationService.classify(EntityRole.MONSTER)
++    assert result.category == RewardCategory.MONSTER_KILL
++    assert result.xp_multiplier == 10
++    assert result.gold_multiplier == 5
++    assert result.gold_eligible is True
++    assert result.rebirth_eligible is False
++
++
++def test_hero_role_classify():
++    """Hero role maps to HERO_KILL with correct XP/gold multipliers and rebirth flag."""
++    result = CombatRewardClassificationService.classify(EntityRole.HERO)
++    assert result.category == RewardCategory.HERO_KILL
++    assert result.xp_multiplier == 20
++    assert result.gold_multiplier == 50
++    assert result.gold_eligible is True
++    assert result.rebirth_eligible is True
++
++
++def test_unknown_role_returns_none_category():
++    """An EntityRole that is not MONSTER or HERO returns RewardCategory.NONE with zero multipliers."""
++    for role in (EntityRole.SHOPKEEPER, EntityRole.CITIZEN, EntityRole.WORKER, EntityRole.GUARD):
++        result = CombatRewardClassificationService.classify(role)
++        assert result.category == RewardCategory.NONE, f"Expected NONE for {role}, got {result.category}"
++        assert result.xp_multiplier == 0
++        assert result.gold_multiplier == 0
++        assert result.gold_eligible is False
++        assert result.rebirth_eligible is False
++
++
++def test_classification_carries_source_string():
++    """Every returned classification must carry a non-empty source string."""
++    for role in EntityRole:
++        result = CombatRewardClassificationService.classify(role)
++        assert isinstance(result.source, str) and len(result.source) > 0, (
++            f"Expected non-empty source for {role}, got {result.source!r}"
++        )
++
++
++def test_classification_is_frozen_dataclass():
++    """RewardClassification is frozen; assigning to any field must raise FrozenInstanceError."""
++    result = CombatRewardClassificationService.classify(EntityRole.MONSTER)
++    with pytest.raises(FrozenInstanceError):
++        result.xp_multiplier = 999  # type: ignore[misc]
+diff --git a/tests/unit/content/test_content_usage_evidence.py b/tests/unit/content/test_content_usage_evidence.py
+new file mode 100644
+index 0000000..c04b658
+--- /dev/null
++++ b/tests/unit/content/test_content_usage_evidence.py
+@@ -0,0 +1,87 @@
++"""
++Tests for validate_matrix_evidence() — TCK-20260607-MATRIX-EVIDENCE-VALIDATOR.
++
++Four tests:
++1. Integration: all real matrix paths and node IDs are valid after ghost-node-ID corrections.
++2. RUNTIME_AUTHORITATIVE with no evidence_tests is a violation.
++3. DESIGN_ONLY with no evidence_tests is NOT a violation.
++4. ::node_id suffix that does not exist in the file is a violation.
++"""
++from src.content.matrix import CONTENT_USAGE_MATRIX, ContentFamilyMatrixEntry
++from src.content.validator import validate_matrix_evidence
++
++
++def test_all_matrix_evidence_paths_exist():
++    """Integration guard: all evidence_tests values in the real matrix resolve correctly."""
++    violations = validate_matrix_evidence(CONTENT_USAGE_MATRIX)
++    assert violations == [], (
++        "Evidence path violations found in CONTENT_USAGE_MATRIX:\n" + "\n".join(violations)
++    )
++
++
++def test_missing_evidence_for_runtime_authoritative_is_violation():
++    """RUNTIME_AUTHORITATIVE entries without evidence_tests must produce a violation."""
++    fake_matrix = {
++        "test/fake_runtime": ContentFamilyMatrixEntry(
++            file_path="test/fake_runtime.yaml",
++            schema_class="FakeSchema",
++            repository_index="fake_runtime",
++            validator_coverage="None",
++            resolver_component="FakeResolver",
++            compile_runtime_consumer="FakeRegistry",
++            test_coverage="tests/unit/content/test_catalog.py",
++            evidence_tests=None,
++            resolver_evidence=None,
++            runtime_consumer_evidence=None,
++            implementation_state="RUNTIME_AUTHORITATIVE",
++            content_maturity="REDESIGNED-CORE",
++        )
++    }
++    violations = validate_matrix_evidence(fake_matrix)
++    assert len(violations) >= 1
++    assert "test/fake_runtime" in violations[0]
++
++
++def test_missing_evidence_for_design_only_is_not_violation():
++    """DESIGN_ONLY entries without evidence_tests must NOT produce a violation."""
++    fake_matrix = {
++        "test/fake_design": ContentFamilyMatrixEntry(
++            file_path="test/fake_design.yaml",
++            schema_class=None,
++            repository_index=None,
++            validator_coverage="None",
++            resolver_component="None (Design-Only)",
++            compile_runtime_consumer="None",
++            test_coverage="tests/unit/content/test_catalog.py",
++            evidence_tests=None,
++            resolver_evidence=None,
++            runtime_consumer_evidence=None,
++            implementation_state="DESIGN_ONLY",
++            content_maturity="FUTURE-EXTENSION",
++        )
++    }
++    violations = validate_matrix_evidence(fake_matrix)
++    assert violations == []
++
++
++def test_ghost_node_id_is_violation():
++    """A ::node_id suffix that does not exist in the referenced file is a violation."""
++    fake_matrix = {
++        "test/fake_ghost": ContentFamilyMatrixEntry(
++            file_path="test/fake_ghost.yaml",
++            schema_class="FakeSchema",
++            repository_index="fake_ghost",
++            validator_coverage="None",
++            resolver_component="FakeResolver",
++            compile_runtime_consumer="FakeRegistry",
++            test_coverage="tests/unit/content/test_catalog.py",
++            evidence_tests="tests/unit/core/test_registry_adapters.py::test_nonexistent_function_zzz",
++            resolver_evidence=None,
++            runtime_consumer_evidence=None,
++            implementation_state="RUNTIME_AUTHORITATIVE",
++            content_maturity="REDESIGNED-CORE",
++        )
++    }
++    violations = validate_matrix_evidence(fake_matrix)
++    assert len(violations) >= 1
++    assert "test_nonexistent_function_zzz" in violations[0]
+diff --git a/tests/unit/content/test_content_usage_matrix.py b/tests/unit/content/test_content_usage_matrix.py
+index e68d0e0..ae70ddf 100644
+--- a/tests/unit/content/test_content_usage_matrix.py
++++ b/tests/unit/content/test_content_usage_matrix.py
+@@ -275,4 +275,22 @@ def test_dead_record_validator_covers_region_concept():
+     )
+ 
+ 
++VALID_TRANSITIONS = {
++    "DESIGN_ONLY":            frozenset({"LOADED_ONLY", "VALIDATED_ONLY"}),
++    "LOADED_ONLY":            frozenset({"VALIDATED_ONLY", "RESOLVED_PARTIALLY"}),
++    "VALIDATED_ONLY":         frozenset({"RESOLVED_PARTIALLY", "PROJECTED_TO_LEGACY"}),
++    "RESOLVED_PARTIALLY":     frozenset({"RUNTIME_AUTHORITATIVE", "PROJECTED_TO_LEGACY"}),
++    "PROJECTED_TO_LEGACY":    frozenset({"RUNTIME_AUTHORITATIVE"}),
++    "RUNTIME_AUTHORITATIVE":  frozenset(),  # terminal
++}
++
++
++def test_implementation_state_values_are_valid():
++    valid_states = set(VALID_TRANSITIONS.keys())
++    for key, entry in CONTENT_USAGE_MATRIX.items():
++        assert entry.implementation_state in valid_states, (
++            f"'{key}' has unknown implementation_state '{entry.implementation_state}'"
++        )
++
++
+ 
+diff --git a/tests/unit/content/test_reference_graph.py b/tests/unit/content/test_reference_graph.py
+new file mode 100644
+index 0000000..ec27e33
+--- /dev/null
++++ b/tests/unit/content/test_reference_graph.py
+@@ -0,0 +1,130 @@
++"""Tests for ContentReferenceGraph.add_module_edges and normalized module edge building."""
++import pytest
++from src.content.reference_graph import ContentReferenceGraph
++from src.worldmodules.normalizer import NormalizedWorldModule
++
++
++def _make_normalized_module(**kwargs) -> NormalizedWorldModule:
++    """Build a minimal NormalizedWorldModule for testing."""
++    defaults = dict(
++        module_id="test_module",
++        schema_version="worldmodule.v2",
++        module_type="terrain",
++        display_name="Test Module",
++        description=None,
++        version="1.0.0",
++        requires=[],
++        provides=[],
++        parameters=[],
++        regions=[],
++        population_recipes=[],
++        resource_recipes=[],
++        building_recipes=[],
++        biomes=(),
++        ecologies=(),
++        populations=(),
++        relationships=(),
++        resources={},
++        buildings={},
++        services={},
++        factions=[],
++    )
++    defaults.update(kwargs)
++    return NormalizedWorldModule(**defaults)
++
++
++def _make_empty_graph() -> ContentReferenceGraph:
++    """Build a ContentReferenceGraph struct without running _build_graph."""
++    graph = ContentReferenceGraph.__new__(ContentReferenceGraph)
++    graph.nodes = {}
++    graph.edges = set()
++    graph.adj = {}
++    graph.reverse_adj = {}
++    graph.edge_metadata = {}
++    return graph
++
++
++def test_add_module_edges_adds_biome_edges():
++    """add_module_edges creates module→biome edges for each biome ID."""
++    graph = _make_empty_graph()
++    normalized = _make_normalized_module(
++        module_id="mod_biome",
++        biomes=("forest", "plains"),
++    )
++    graph.add_module_edges(normalized)
++    assert ("module:mod_biome", "biome:forest") in graph.edges
++    assert ("module:mod_biome", "biome:plains") in graph.edges
++
++
++def test_add_module_edges_adds_ecology_population_relationship_edges():
++    """add_module_edges creates edges for ecologies, populations, and relationships."""
++    graph = _make_empty_graph()
++    normalized = _make_normalized_module(
++        module_id="mod_multi",
++        ecologies=("temperate",),
++        populations=("human_village",),
++        relationships=("allies",),
++    )
++    graph.add_module_edges(normalized)
++    assert ("module:mod_multi", "ecology:temperate") in graph.edges
++    assert ("module:mod_multi", "population:human_village") in graph.edges
++    assert ("module:mod_multi", "faction_relationship:allies") in graph.edges
++
++
++def test_add_module_edges_uses_normalized_ids_not_raw_dicts():
++    """add_module_edges only reads string IDs from Tuple[str, ...] fields — no dict parsing.
++    Count metadata is preserved on resource/building/service edges."""
++    graph = _make_empty_graph()
++    # Normalized module always contains string tuples after normalization
++    normalized = _make_normalized_module(
++        module_id="mod_ids_only",
++        biomes=("biome_a", "biome_b"),
++        resources={"wood_node": 3},
++        buildings={"shop": 1},
++        services={"healing": 2},
++    )
++    graph.add_module_edges(normalized)
++    # Edges use string IDs directly
++    assert ("module:mod_ids_only", "biome:biome_a") in graph.edges
++    assert ("module:mod_ids_only", "biome:biome_b") in graph.edges
++    assert ("module:mod_ids_only", "resource:wood_node") in graph.edges
++    assert ("module:mod_ids_only", "building:shop") in graph.edges
++    assert ("module:mod_ids_only", "service:healing") in graph.edges
++    # Count metadata is preserved
++    assert graph.edge_metadata.get(("module:mod_ids_only", "resource:wood_node")) == {"count": 3}
++    assert graph.edge_metadata.get(("module:mod_ids_only", "building:shop")) == {"count": 1}
++    assert graph.edge_metadata.get(("module:mod_ids_only", "service:healing")) == {"count": 2}
++    # No raw dict edges should appear
++    for edge in graph.edges:
++        assert not edge[1].startswith("biome:{"), f"Raw dict appeared as edge target: {edge}"
++
++
++def test_graph_build_uses_add_module_edges():
++    """When ContentReferenceGraph is built with modules, biome/ecology edges appear in the graph."""
++    from src.content.repository import CatalogRepository
++    from src.worldmodules.schema import WorldModuleSpec
++
++    # Build a minimal repo (no real content needed, just an empty one)
++    repo = CatalogRepository.__new__(CatalogRepository)
++    # Initialize all repository index attributes to empty dicts
++    from src.content.repository import CANONICAL_FAMILIES
++    for spec in CANONICAL_FAMILIES:
++        setattr(repo, spec.repository_index, {})
++
++    module_spec = WorldModuleSpec(
++        schema_version="worldmodule.v2",
++        module_id="graph_test_module",
++        module_type="terrain",
++        display_name="Graph Test Module",
++        biomes=["meadow_biome"],
++        ecologies=["grassland_ecology"],
++        populations=["settler_pop"],
++        relationships=["treaty_rel"],
++    )
++
++    graph = ContentReferenceGraph(repo, modules=[module_spec])
++
++    assert ("module:graph_test_module", "biome:meadow_biome") in graph.edges
++    assert ("module:graph_test_module", "ecology:grassland_ecology") in graph.edges
++    assert ("module:graph_test_module", "population:settler_pop") in graph.edges
++    assert ("module:graph_test_module", "faction_relationship:treaty_rel") in graph.edges
+diff --git a/tests/unit/content/test_resolvers.py b/tests/unit/content/test_resolvers.py
+index 6d73329..79ad4a6 100644
+--- a/tests/unit/content/test_resolvers.py
++++ b/tests/unit/content/test_resolvers.py
+@@ -805,3 +805,70 @@ class TestPopulationRecipeResolver:
+             pop_resolver.resolve("totally_nonexistent_id_xxxx")
+         assert "population_recipe" in str(exc_info.value)
+         assert "totally_nonexistent_id_xxxx" in str(exc_info.value)
++
++
++# ===========================================================================
++# PopulationSpec.archetype_id field contract
++# TCK-20260607-ARCHETYPE-METADATA-EXPLICIT
++# ===========================================================================
++
++class TestPopulationSpecArchetypeId:
++
++    def test_population_spec_archetype_id_field_exists(self):
++        """Explicit archetype_id is readable and holds the supplied value."""
++        from src.worldbuilding.schema import PopulationSpec
++        p = PopulationSpec(
++            id="test_pop",
++            count=3,
++            role="raider",
++            faction="goblin_warband",
++            spawn_region="goblin_camp",
++            archetype_id="hungry_wolf",
++        )
++        assert p.archetype_id == "hungry_wolf"
++
++    def test_population_spec_archetype_id_defaults_to_none(self):
++        """archetype_id defaults to None when not supplied."""
++        from src.worldbuilding.schema import PopulationSpec
++        p = PopulationSpec(
++            id="test_pop",
++            count=1,
++            role="raider",
++            faction="goblin_warband",
++            spawn_region="goblin_camp",
++        )
++        assert p.archetype_id is None
++
++    def test_population_spec_is_still_frozen_after_field_addition(self):
++        """frozen=True invariant is preserved after adding the archetype_id field."""
++        from src.worldbuilding.schema import PopulationSpec
++        p = PopulationSpec(
++            id="test_pop",
++            count=1,
++            role="raider",
++            faction="goblin_warband",
++            spawn_region="goblin_camp",
++            archetype_id="hungry_wolf",
++        )
++        with pytest.raises(Exception):
++            p.archetype_id = "alpha_wolf"  # type: ignore[misc]
++
++    def test_case2_result_resolvedentityarchetype_has_archetype_id(
++        self, pop_resolver: PopulationRecipeResolver
++    ):
++        """Case 2: resolver returns a ResolvedEntityArchetype whose archetype_id equals the input."""
++        expanded, _ = pop_resolver.resolve("hungry_wolf")
++        assert len(expanded) == 1
++        resolved_arch, _ = expanded[0]
++        assert resolved_arch.archetype_id == "hungry_wolf"
++
++    def test_case1_recipe_members_each_have_archetype_id(
++        self, loaded_repo: CatalogRepository, pop_resolver: PopulationRecipeResolver
++    ):
++        """Case 1: every expanded archetype carries a non-empty archetype_id present in catalog."""
++        expanded, _ = pop_resolver.resolve("wolf_pack_small")
++        for arch, _ in expanded:
++            assert arch.archetype_id, "archetype_id must not be empty"
++            assert loaded_repo.get_entity_archetype(arch.archetype_id) is not None, (
++                f"archetype_id '{arch.archetype_id}' not found in catalog"
++            )
+diff --git a/tests/unit/core/test_registry_adapters.py b/tests/unit/core/test_registry_adapters.py
+index b561efc..1ac416e 100644
+--- a/tests/unit/core/test_registry_adapters.py
++++ b/tests/unit/core/test_registry_adapters.py
+@@ -1,5 +1,6 @@
+ import pytest
+ from typing import Any, Dict
++from src.core.modes import RuntimeContentMode
+ from src.core.registries import (
+     AdapterError,
+     CatalogToItemRegistryAdapter,
+@@ -98,7 +99,7 @@ def test_item_adapter_happy_path():
+     repo.items["wood"] = MockItem(categories=["material"], rarity="COMMON", base_value=2)
+ 
+     adapter = CatalogToItemRegistryAdapter(repo)
+-    adapted = adapter.adapt()
++    adapted, _ = adapter.adapt()
+ 
+     assert len(adapted) == 3
+     assert adapted["iron_sword"].use_kind == "weapon"
+@@ -115,7 +116,7 @@ def test_item_adapter_error_handling():
+     adapter = CatalogToItemRegistryAdapter(repo)
+     with pytest.raises(AdapterError) as exc_info:
+         adapter.adapt()
+-    
++
+     assert exc_info.value.record_id == "broken_item"
+     assert "invalid literal" in str(exc_info.value)
+ 
+@@ -160,7 +161,7 @@ def test_service_adapter_happy_path():
+     repo.services["general_store"] = MockService(provided_items=["potion"])
+ 
+     adapter = CatalogToServiceRegistryAdapter(repo)
+-    adapted = adapter.adapt()
++    adapted, _ = adapter.adapt()
+ 
+     # Hometown defaults should exist
+     assert "shop_hometown" in adapted
+@@ -187,7 +188,7 @@ def test_resource_adapter_happy_path():
+     repo.resources["iron_vein"] = MockResource("iron_ore", metadata={"base_difficulty": 2, "required_tool": "pickaxe"})
+ 
+     adapter = CatalogToResourceRegistryAdapter(repo)
+-    adapted = adapter.adapt()
++    adapted, _ = adapter.adapt()
+ 
+     assert "node_iron" in adapted
+     assert "iron_vein" in adapted
+@@ -224,9 +225,9 @@ def test_item_adapter_uses_explicit_use_kind():
+     item.class_fit = ["warrior"]
+     repo.items["test_item"] = item
+ 
+-    # Strict catalog-backed mode (migration_mode=False)
+-    adapter = CatalogToItemRegistryAdapter(repo, migration_mode=False)
+-    adapted = adapter.adapt()
++    # Strict catalog-backed mode (mode=RuntimeContentMode.V2)
++    adapter = CatalogToItemRegistryAdapter(repo, mode=RuntimeContentMode.V2)
++    adapted, _ = adapter.adapt()
+     assert adapted["test_item"].use_kind == "custom_use_kind"
+ 
+ 
+@@ -237,8 +238,8 @@ def test_item_adapter_uses_explicit_class_fit():
+     item.class_fit = ["ranger", "rogue"]
+     repo.items["test_item"] = item
+ 
+-    adapter = CatalogToItemRegistryAdapter(repo, migration_mode=False)
+-    adapted = adapter.adapt()
++    adapter = CatalogToItemRegistryAdapter(repo, mode=RuntimeContentMode.V2)
++    adapted, _ = adapter.adapt()
+     assert adapted["test_item"].class_fit == ("ranger", "rogue")
+ 
+ 
+@@ -249,8 +250,8 @@ def test_resource_adapter_uses_explicit_legacy_id():
+     res.metadata = {"source_region_tags": ["forest"]}
+     repo.resources["wood_node"] = res
+ 
+-    adapter = CatalogToResourceRegistryAdapter(repo, migration_mode=False)
+-    adapted = adapter.adapt()
++    adapter = CatalogToResourceRegistryAdapter(repo, mode=RuntimeContentMode.V2)
++    adapted, _ = adapter.adapt()
+     assert "custom_node_wood" in adapted
+     assert adapted["custom_node_wood"].yield_item == "wood"
+ 
+@@ -261,8 +262,8 @@ def test_service_adapter_does_not_inject_default_service_in_catalog_mode():
+     service.affordances = ["buy"]
+     repo.services["trade_service"] = service
+ 
+-    adapter = CatalogToServiceRegistryAdapter(repo, catalog_mode=True, migration_mode=False)
+-    adapted = adapter.adapt()
++    adapter = CatalogToServiceRegistryAdapter(repo, catalog_mode=True, mode=RuntimeContentMode.V2)
++    adapted, _ = adapter.adapt()
+     # Should NOT contain hometown services
+     assert "shop_hometown" not in adapted
+     assert "trade_service" in adapted
+diff --git a/tests/unit/core/test_registry_bridge.py b/tests/unit/core/test_registry_bridge.py
+index f7b1a85..502556a 100644
+--- a/tests/unit/core/test_registry_bridge.py
++++ b/tests/unit/core/test_registry_bridge.py
+@@ -2,10 +2,13 @@ import os
+ import tempfile
+ import yaml
+ import pytest
++import dataclasses
+ 
+ from src.content.repository import CatalogRepository
++from src.core.modes import RuntimeContentMode
+ from src.core.registries import (
+     seed_phase1_content,
++    AdapterProjectionResult,
+     ItemRegistry,
+     ResourceRegistry,
+     EnemyRegistry,
+@@ -467,3 +470,66 @@ def test_referential_integrity_catalog(mock_catalog_repo):
+     # 4. Service locations match valid RegionRegistry IDs
+     for service in ServiceRegistry.all().values():
+         assert RegionRegistry.contains(service.region_id)
++
++
++def test_runtime_content_mode_enum_has_migration_and_v2():
++    assert RuntimeContentMode.MIGRATION.value == "migration"
++    assert RuntimeContentMode.V2.value == "v2"
++    assert len(RuntimeContentMode) == 2
++
++
++def test_seed_with_migration_mode_returns_projection_result(mock_catalog_repo):
++    result = seed_phase1_content(mock_catalog_repo, mode=RuntimeContentMode.MIGRATION)
++    assert isinstance(result, AdapterProjectionResult)
++    assert result.mode == RuntimeContentMode.MIGRATION
++    assert result.item_count > 0
++    assert result.service_count > 0
++    assert result.resource_count > 0
++    assert result.heuristic_count >= 0
++
++
++def test_seed_with_v2_mode_raises_if_unresolved_entities_exist():
++    import tempfile, os, yaml
++    with tempfile.TemporaryDirectory() as tmp_dir:
++        os.makedirs(os.path.join(tmp_dir, "world"), exist_ok=True)
++        os.makedirs(os.path.join(tmp_dir, "compatibility"), exist_ok=True)
++        os.makedirs(os.path.join(tmp_dir, "entities"), exist_ok=True)
++        items_data = [{"id": "no_use_kind_item", "schema_version": "itemdefinition.v1", "categories": ["weapon"], "rarity": "COMMON", "base_value": 5.0}]
++        with open(os.path.join(tmp_dir, "world", "items.yaml"), "w") as f:
++            yaml.dump(items_data, f)
++        for fname in ["resources.yaml", "recipes.yaml", "services.yaml"]:
++            with open(os.path.join(tmp_dir, "world", fname), "w") as f:
++                yaml.dump([], f)
++        with open(os.path.join(tmp_dir, "world", "runtime_regions.yaml"), "w") as f:
++            yaml.dump([{"id": "hometown", "schema_version": "runtimeregiondefinition.v1", "danger_level": 0, "tags": ["safe"]}], f)
++        with open(os.path.join(tmp_dir, "compatibility", "legacy_enemy_projection.yaml"), "w") as f:
++            yaml.dump([], f)
++        with open(os.path.join(tmp_dir, "entities", "entity_archetypes.yaml"), "w") as f:
++            yaml.dump([], f)
++        with open(os.path.join(tmp_dir, "entities", "stat_profiles.yaml"), "w") as f:
++            yaml.dump([], f)
++        from src.content.repository import CatalogRepository
++        from src.core.registries import AdapterError
++        repo = CatalogRepository(tmp_dir)
++        repo.load_all()
++        with pytest.raises(AdapterError):
++            seed_phase1_content(repo, mode=RuntimeContentMode.V2)
++
++
++def test_seed_legacy_fallback_returns_none():
++    result = seed_phase1_content(None)
++    assert result is None
++
++
++def test_adapter_projection_result_is_frozen_dataclass():
++    result = AdapterProjectionResult(
++        mode=RuntimeContentMode.MIGRATION,
++        item_count=5,
++        service_count=3,
++        resource_count=2,
++        heuristic_count=1,
++    )
++    assert dataclasses.is_dataclass(result)
++    assert result.item_count == 5
++    with pytest.raises((dataclasses.FrozenInstanceError, AttributeError)):
++        result.item_count = 99
+diff --git a/tests/unit/worldassembly/test_archetype_preservation.py b/tests/unit/worldassembly/test_archetype_preservation.py
+index 36abadb..586bacb 100644
+--- a/tests/unit/worldassembly/test_archetype_preservation.py
++++ b/tests/unit/worldassembly/test_archetype_preservation.py
+@@ -92,3 +92,142 @@ def test_population_preferred_region_validation_fails_on_missing_region(repos):
+         resolver.resolve_module_contribution(normalized_spec)
+     assert "region" in str(exc_info.value)
+     assert "wolf_den" in str(exc_info.value) or "near_forest" in str(exc_info.value)
++
++
++# ===========================================================================
++# TCK-20260607-ARCHETYPE-METADATA-EXPLICIT — explicit archetype_id field tests
++# ===========================================================================
++
++def test_archetype_id_survives_resolve_module_contribution(repos):
++    """archetype_id on every PopulationSpec coming out of resolve_module_contribution is not None
++    and matches a key in the catalog's entity_archetypes."""
++    cat, mod = repos
++
++    from src.worldmodules.schema import WorldModuleSpec
++    from src.worldmodules.normalizer import WorldModuleAuthoringNormalizer
++    from src.worldbuilding.recipe import RegionRecipeSpec
++
++    raw_spec = WorldModuleSpec(
++        schema_version="worldmodule.v2",
++        module_id="wolf_test_module",
++        module_type="population",
++        display_name="Wolf Test Module",
++        regions=[
++            RegionRecipeSpec(id="wolf_den", type="wilderness", grid_bounds=(0, 0, 50, 50), terrain="forest", hazard_level=2.0),
++            RegionRecipeSpec(id="near_forest", type="wilderness", grid_bounds=(51, 0, 100, 50), terrain="forest", hazard_level=1.0),
++        ],
++        populations=["wolf_pack_small"]
++    )
++    normalized_spec = WorldModuleAuthoringNormalizer.normalize(raw_spec)
++
++    resolver = WorldAssemblyResolver(cat, mod)
++    contribution = resolver.resolve_module_contribution(normalized_spec)
++
++    assert len(contribution.resolved_population_specs) > 0, "Should resolve at least one population spec"
++    for pop_spec in contribution.resolved_population_specs:
++        assert pop_spec.archetype_id is not None, (
++            f"pop_spec '{pop_spec.id}' has archetype_id=None; expected explicit value"
++        )
++        assert cat.get_entity_archetype(pop_spec.archetype_id) is not None, (
++            f"archetype_id '{pop_spec.archetype_id}' not found in catalog"
++        )
++
++
++def test_archetype_id_carried_into_compile_context_without_string_inference(repos):
++    """goblin_camp_conflict entities in CompileContext carry archetype_id from the explicit field,
++    not from string suffix inference.
++
++    Uses resolve_module_contribution + CompileProfileResolver directly to avoid triggering
++    the global catalog validator (which has a pre-existing failure for moon_cult_ruins).
++    """
++    cat, mod = repos
++
++    from src.worldmodules.normalizer import WorldModuleAuthoringNormalizer
++    from src.worldassembly.resolver import CompileProfileResolver
++    from src.worldbuilding.schema import WorldSpec, TopologySpec
++
++    module_spec = mod.get_module("goblin_camp_conflict")
++    normalized = WorldModuleAuthoringNormalizer.normalize(module_spec)
++
++    resolver = WorldAssemblyResolver(cat, mod)
++    contribution = resolver.resolve_module_contribution(normalized)
++
++    # Build a minimal WorldSpec carrying only the resolved population specs
++    world_spec = WorldSpec(
++        schema_version="worldspec.v1",
++        world_id="test_ctx",
++        name="Test",
++        topology=TopologySpec(width=200, height=200, coordinate_system="grid"),
++        entities=list(contribution.resolved_population_specs),
++    )
++
++    profile_resolver = CompileProfileResolver(cat)
++    ctx = profile_resolver.resolve(world_spec)
++
++    goblin_raider_found = False
++    for key, entity in ctx.entities.items():
++        if entity.archetype_id is not None:
++            assert cat.get_entity_archetype(entity.archetype_id) is not None, (
++                f"entity '{key}' has archetype_id='{entity.archetype_id}' not in catalog"
++            )
++        if "goblin_raider" in key:
++            goblin_raider_found = True
++            assert entity.archetype_id == "goblin_raider", (
++                f"Expected archetype_id='goblin_raider', got {entity.archetype_id!r}"
++            )
++
++    assert goblin_raider_found, "goblin_raider entity must be present in compile context"
++
++
++def test_population_spec_archetype_id_is_not_inferred_from_id_string(repos):
++    """Two PopulationSpec instances with the same id string but different archetype_id values
++    return the explicitly-set field, not a value derived from the id string."""
++    from src.worldbuilding.schema import PopulationSpec
++
++    with_archetype = PopulationSpec(
++        id="wolf_pack_small_hungry_wolf",
++        count=4,
++        role="predator",
++        faction="wild_beasts",
++        spawn_region="wolf_den",
++        archetype_id="hungry_wolf",
++    )
++    without_archetype = PopulationSpec(
++        id="wolf_pack_small_hungry_wolf",
++        count=4,
++        role="predator",
++        faction="wild_beasts",
++        spawn_region="wolf_den",
++    )
++
++    assert with_archetype.archetype_id == "hungry_wolf"
++    assert without_archetype.archetype_id is None
++
++
++def test_resolve_module_contribution_does_not_use_split_for_archetype_id(repos):
++    """Modules whose recipe ID and archetype IDs contain underscores yield pop_specs
++    whose archetype_id exists verbatim in the catalog — split truncation would corrupt it.
++
++    Uses resolve_module_contribution directly; goblin_camp_conflict has multi-underscore
++    IDs (goblin_raiding_party / goblin_raider) which the old split heuristic could truncate.
++    """
++    cat, mod = repos
++
++    from src.worldmodules.normalizer import WorldModuleAuthoringNormalizer
++
++    module_spec = mod.get_module("goblin_camp_conflict")
++    normalized = WorldModuleAuthoringNormalizer.normalize(module_spec)
++
++    resolver = WorldAssemblyResolver(cat, mod)
++    contribution = resolver.resolve_module_contribution(normalized)
++
++    # Every resolved PopulationSpec must carry an archetype_id that exists verbatim in catalog
++    assert len(contribution.resolved_population_specs) > 0
++    for pop_spec in contribution.resolved_population_specs:
++        assert pop_spec.archetype_id is not None, (
++            f"pop_spec '{pop_spec.id}' has archetype_id=None"
++        )
++        assert cat.get_entity_archetype(pop_spec.archetype_id) is not None, (
++            f"pop_spec '{pop_spec.id}' has archetype_id='{pop_spec.archetype_id}' "
++            f"not found in catalog — likely a string-split truncation regression"
++        )
+diff --git a/tests/unit/worldassembly/test_resolver.py b/tests/unit/worldassembly/test_resolver.py
+index 1d63796..8ab1716 100644
+--- a/tests/unit/worldassembly/test_resolver.py
++++ b/tests/unit/worldassembly/test_resolver.py
+@@ -145,3 +145,64 @@ def test_v2_service_refs_assembly_is_documented_gap():
+         "update docs/guidelines/v2_intentional_divergences.md (entry 2.19), "
+         "and update docs/parity_ledger/substrate.yaml (SUB-367) to status: verified."
+     )
++
++
++def test_contribution_snapshot_after_normalization(base_repo):
++    """Contribution record fields must match the normalized module's structure.
++
++    Uses a minimal empty-field module to assert that resolve_module_contribution
++    returns empty collections of the correct types when no content is specified.
++    """
++    from src.worldmodules.schema import WorldModuleSpec
++    from src.worldmodules.normalizer import WorldModuleAuthoringNormalizer
++    from src.worldmodules.repository import WorldModuleRepository
++    from src.worldassembly.resolver import WorldAssemblyResolver
++
++    spec = WorldModuleSpec(
++        schema_version="worldmodule.v2",
++        module_id="test_empty_module",
++        module_type="terrain",
++        display_name="Test Empty Module",
++    )
++    normalized = WorldModuleAuthoringNormalizer.normalize(spec)
++
++    module_repo = WorldModuleRepository("data/content/world_modules")
++    resolver = WorldAssemblyResolver(base_repo, module_repo)
++    contribution = resolver.resolve_module_contribution(normalized)
++
++    # Empty module produces empty collections of the correct types
++    assert contribution.resource_refs == {}
++    assert contribution.building_refs == {}
++    assert contribution.service_refs == {}
++    assert isinstance(contribution.resource_refs, dict)
++    assert isinstance(contribution.building_refs, dict)
++    assert isinstance(contribution.service_refs, dict)
++    assert contribution.regions == []
++    assert contribution.factions == []
++    assert contribution.population_refs == []
++    assert contribution.resolved_population_specs == []
++    assert contribution.biome_refs == []
++    assert contribution.ecology_refs == []
++    assert contribution.relationship_refs == []
++
++
++def test_resolve_module_contribution_rejects_raw_spec(base_repo):
++    """resolve_module_contribution must raise TypeError when passed a raw WorldModuleSpec.
++
++    Callers must normalize via WorldModuleAuthoringNormalizer.normalize() first.
++    """
++    from src.worldmodules.schema import WorldModuleSpec
++    from src.worldmodules.repository import WorldModuleRepository
++    from src.worldassembly.resolver import WorldAssemblyResolver
++
++    raw_spec = WorldModuleSpec(
++        schema_version="worldmodule.v2",
++        module_id="test_raw_spec",
++        module_type="terrain",
++        display_name="Test Raw Spec",
++    )
++
++    module_repo = WorldModuleRepository("data/content/world_modules")
++    resolver = WorldAssemblyResolver(base_repo, module_repo)
++    with pytest.raises(TypeError, match="resolve_module_contribution requires NormalizedWorldModule"):
++        resolver.resolve_module_contribution(raw_spec)
+diff --git a/tests/unit/worldmodules/test_modules.py b/tests/unit/worldmodules/test_modules.py
+index ba868dd..a1970a7 100644
+--- a/tests/unit/worldmodules/test_modules.py
++++ b/tests/unit/worldmodules/test_modules.py
+@@ -255,3 +255,130 @@ def test_duplicate_list_refs_fail():
+         WorldModuleAuthoringNormalizer.normalize(spec)
+     assert "Duplicate list value" in str(exc_info.value)
+ 
++
++# --- Typed ref collection tests ---
++
++def test_string_biomes_normalize_to_tuple():
++    """biomes field normalizes to Tuple[str, ...] when given list of strings."""
++    from src.worldmodules.normalizer import WorldModuleAuthoringNormalizer, NormalizedWorldModule
++    spec = WorldModuleSpec(
++        schema_version="worldmodule.v2",
++        module_id="test_biome_tuple",
++        module_type="terrain",
++        display_name="Biome Tuple Test",
++        biomes=["forest", "plains"],
++    )
++    normalized = WorldModuleAuthoringNormalizer.normalize(spec)
++    assert isinstance(normalized.biomes, tuple)
++    assert normalized.biomes == ("forest", "plains")
++
++
++def test_string_ecologies_normalize_to_tuple():
++    """ecologies field normalizes to Tuple[str, ...] when given list of strings."""
++    from src.worldmodules.normalizer import WorldModuleAuthoringNormalizer
++    spec = WorldModuleSpec(
++        schema_version="worldmodule.v2",
++        module_id="test_ecology_tuple",
++        module_type="ecology",
++        display_name="Ecology Tuple Test",
++        ecologies=["temperate", "arid"],
++    )
++    normalized = WorldModuleAuthoringNormalizer.normalize(spec)
++    assert isinstance(normalized.ecologies, tuple)
++    assert normalized.ecologies == ("temperate", "arid")
++
++
++def test_string_populations_normalize_to_tuple():
++    """populations field normalizes to Tuple[str, ...] when given list of strings."""
++    from src.worldmodules.normalizer import WorldModuleAuthoringNormalizer
++    spec = WorldModuleSpec(
++        schema_version="worldmodule.v2",
++        module_id="test_pop_tuple",
++        module_type="population",
++        display_name="Population Tuple Test",
++        populations=["human_village", "orc_camp"],
++    )
++    normalized = WorldModuleAuthoringNormalizer.normalize(spec)
++    assert isinstance(normalized.populations, tuple)
++    assert normalized.populations == ("human_village", "orc_camp")
++
++
++def test_string_relationships_normalize_to_tuple():
++    """relationships field normalizes to Tuple[str, ...] when given list of strings."""
++    from src.worldmodules.normalizer import WorldModuleAuthoringNormalizer
++    spec = WorldModuleSpec(
++        schema_version="worldmodule.v2",
++        module_id="test_rel_tuple",
++        module_type="ecology",
++        display_name="Relationship Tuple Test",
++        relationships=["allies", "enemies"],
++    )
++    normalized = WorldModuleAuthoringNormalizer.normalize(spec)
++    assert isinstance(normalized.relationships, tuple)
++    assert normalized.relationships == ("allies", "enemies")
++
++
++def test_empty_ref_fields_normalize_to_empty_tuple():
++    """All four ref fields produce empty tuples when the spec has no values."""
++    from src.worldmodules.normalizer import WorldModuleAuthoringNormalizer
++    spec = WorldModuleSpec(
++        schema_version="worldmodule.v2",
++        module_id="test_empty_refs",
++        module_type="terrain",
++        display_name="Empty Refs Test",
++    )
++    normalized = WorldModuleAuthoringNormalizer.normalize(spec)
++    assert normalized.biomes == ()
++    assert normalized.ecologies == ()
++    assert normalized.populations == ()
++    assert normalized.relationships == ()
++    assert isinstance(normalized.biomes, tuple)
++    assert isinstance(normalized.ecologies, tuple)
++    assert isinstance(normalized.populations, tuple)
++    assert isinstance(normalized.relationships, tuple)
++
++
++def test_dict_with_id_biome_normalizes_to_id_string():
++    """_normalize_ref_list converts a dict-with-id to its string ID."""
++    from src.worldmodules.normalizer import _normalize_ref_list
++    result = _normalize_ref_list([{"id": "forest_biome", "extra": "ignored"}], field_name="biomes")
++    assert result == ("forest_biome",)
++    assert isinstance(result, tuple)
++
++
++def test_dict_without_id_biome_raises_normalization_error():
++    """_normalize_ref_list raises NormalizationError for dict without 'id' key."""
++    from src.worldmodules.normalizer import _normalize_ref_list, NormalizationError
++    with pytest.raises(NormalizationError) as exc_info:
++        _normalize_ref_list([{"name": "forest_biome"}], field_name="biomes")
++    assert "biomes" in str(exc_info.value)
++    assert "no valid 'id' key" in str(exc_info.value)
++
++
++def test_duplicate_biome_ref_fails():
++    """_normalize_ref_list raises NormalizationError for duplicate string IDs."""
++    from src.worldmodules.normalizer import _normalize_ref_list, NormalizationError
++    with pytest.raises(NormalizationError) as exc_info:
++        _normalize_ref_list(["forest", "plains", "forest"], field_name="biomes")
++    assert "forest" in str(exc_info.value)
++    assert "biomes" in str(exc_info.value)
++
++
++def test_normalizer_v1_and_v2_biomes_are_tuple():
++    """Existing v1/v2 normalizer test extended: biomes/ecologies fields must be tuples."""
++    from src.worldmodules.normalizer import WorldModuleAuthoringNormalizer, NormalizedWorldModule
++    v2_data = {
++        "schema_version": "worldmodule.v2",
++        "module_id": "v2_tuple_check",
++        "module_type": "ecology",
++        "display_name": "V2 Tuple Check",
++        "biomes": ["biome_v2"],
++        "ecologies": ["ecology_v2"],
++    }
++    v2_spec = WorldModuleSpec(**v2_data)
++    normalized_v2 = WorldModuleAuthoringNormalizer.normalize(v2_spec)
++    assert isinstance(normalized_v2.biomes, tuple)
++    assert isinstance(normalized_v2.ecologies, tuple)
++    assert normalized_v2.biomes[0] == "biome_v2"
++    assert normalized_v2.ecologies[0] == "ecology_v2"
++

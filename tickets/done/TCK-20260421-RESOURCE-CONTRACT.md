@@ -1,3 +1,14 @@
+---
+status: historical
+layer: economy
+authority: P1
+audience: agent
+ticket_id: TCK-20260421-RESOURCE-CONTRACT
+phase: done
+date: 2026-04-21
+tags: [resource, contract]
+---
+
 # TCK-20260421-RESOURCE-CONTRACT
 
 ## Title
@@ -5,6 +16,15 @@ Resource Contract and Domain invariants
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Establish authoritative contract tests for resource interactions and ensure the InteractionSystem enforces all domain invariants (weight pressure, slot capacity, etc.) regardless of AI proposals.

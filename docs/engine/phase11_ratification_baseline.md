@@ -1,3 +1,10 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: developer
+---
+
 # Phase 11 Ratification Baseline
 
 This document contains the frozen set of legacy replacement rows from Phases 5-10 that are subject to final ratification in Phase 11.

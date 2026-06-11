@@ -1,3 +1,13 @@
+---
+status: historical
+layer: strategy
+authority: P2
+audience: agent
+ticket_id: TCK-20260506-STRATEGIC-HARDENING-TEST-STABILIZATION
+artifact_type: plan
+tags: [strategic, hardening, test, stabilization]
+---
+
 # Implementation Plan - Strategic Hardening Test Stabilization
 
 Migrate `tests/strategic/` to `V2EntityBuilder` to resolve `TypeError` regressions.

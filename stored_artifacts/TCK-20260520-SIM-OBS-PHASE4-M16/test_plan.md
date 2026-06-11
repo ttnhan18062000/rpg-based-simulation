@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260520-SIM-OBS-PHASE4-M16
+artifact_type: test_plan
+tags: [sim, obs, phase4, m16]
+---
+
 # Test Plan - Milestone 16: Multi-Run Artifact Index
 
 We will verify both repository operations and end-to-end integration flows.

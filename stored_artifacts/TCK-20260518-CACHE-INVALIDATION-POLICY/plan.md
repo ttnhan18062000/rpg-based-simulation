@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260518-CACHE-INVALIDATION-POLICY
+artifact_type: plan
+tags: [cache, invalidation, policy]
+---
+
 # Implementation Plan: CacheInvalidationPolicy
 
 ## Proposed Changes

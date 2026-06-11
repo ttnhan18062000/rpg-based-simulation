@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: misc
+authority: P2
+audience: agent
+tags: [ph10, m1, readiness]
+---
+
 # Walkthrough: Phase 10 Milestone 1 Readiness Gate
 
 Established the official readiness gate for Phase 10: Infrastructure/Fallback Stabilization & System Compatibility Closure.

@@ -1,3 +1,14 @@
+---
+status: historical
+layer: performance
+authority: P1
+audience: agent
+ticket_id: TCK-20260513-PERF-CI-GUARD
+phase: done
+date: 2026-05-13
+tags: [perf, ci, guard]
+---
+
 # TCK-20260513-PERF-CI-GUARD
 
 ## Title
@@ -5,6 +16,15 @@ Milestone 9: CI Performance Regression Guard
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Implement an automated performance regression detection system to prevent throughput degradation in future commits.

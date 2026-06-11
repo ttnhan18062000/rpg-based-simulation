@@ -1,3 +1,10 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: developer
+---
+
 # Milestone 4 Test Matrix — Scheduling & Debt
 
 ## 1. Purpose

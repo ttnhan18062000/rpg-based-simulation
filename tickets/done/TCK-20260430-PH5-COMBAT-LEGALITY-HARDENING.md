@@ -1,3 +1,14 @@
+---
+status: historical
+layer: combat
+authority: P1
+audience: agent
+ticket_id: TCK-20260430-PH5-COMBAT-LEGALITY-HARDENING
+phase: done
+date: 2026-04-30
+tags: [ph5, combat, legality, hardening]
+---
+
 # TCK-20260430-PH5-COMBAT-LEGALITY-HARDENING
 
 ## Title
@@ -5,6 +16,15 @@ Hardening Combat Legality Matrix and AoE Authoritative Substrate
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Complete the integration of the authoritative V2 combat loop by finalizing the Combat Legality Matrix. Ensure all melee, ranged, and AoE interactions adhere to deterministic engine laws, validate legality contracts (LOS, range, readiness, friendly fire), and update the exhaustive logic ledger.

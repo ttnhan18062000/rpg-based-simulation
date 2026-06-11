@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260527-COG-PHASE1-INVESTIGATION
+phase: done
+date: 2026-05-27
+tags: [cog, phase1, investigation]
+---
+
 # TCK-20260527-COG-PHASE1-INVESTIGATION
 
 ## Title
@@ -7,6 +18,15 @@ Comprehensive Investigation and Brainstorming of Phase 1 - World Capability Foun
 ## Status
 
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 

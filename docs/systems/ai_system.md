@@ -1,3 +1,10 @@
+---
+status: active
+layer: systems
+authority: P1
+audience: developer
+---
+
 # AI System: The Cognitive Pipeline (v2)
 
 Following the **Resource-Safe Engineering** model, the AI system is strictly decoupled from the authoritative world state. Deliberation occurs in background workers using read-only snapshots, and the results are returned as authoritative `ActionResults`.

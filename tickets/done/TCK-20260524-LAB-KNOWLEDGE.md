@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260524-LAB-KNOWLEDGE
+phase: done
+date: 2026-05-24
+tags: [lab, knowledge]
+---
+
 # TCK-20260524-LAB-KNOWLEDGE
 
 ## Title
@@ -7,6 +18,15 @@ Implement UpdateSimulationKnowledge Workflow (Milestone 102) & Approval Gates/Au
 ## Status
 
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 

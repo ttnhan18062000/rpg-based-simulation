@@ -1,3 +1,14 @@
+---
+status: historical
+layer: ai
+authority: P1
+audience: agent
+ticket_id: TCK-20260326-NARRATIVE
+phase: done
+date: 2026-03-26
+tags: [narrative]
+---
+
 # TCK-20260326-NARRATIVE
 
 ## Title
@@ -34,3 +45,7 @@ Entities record significant events (GLORY, TRAUMA) into `memory_log` via `action
 ## Related Tickets
 - TCK-20260322-RPG_REFINEMENT (Parent)
 - TCK-20260326-HYSTERESIS (Sibling — completed)
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

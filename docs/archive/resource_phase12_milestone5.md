@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: economy
+original_date: unknown
+---
+
 # [Milestone 5] - Default-Authority Transition and Phase 13 Readiness Baseline
 
 ## [Milestone Description]

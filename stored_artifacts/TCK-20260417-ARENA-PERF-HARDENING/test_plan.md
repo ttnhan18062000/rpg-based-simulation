@@ -1,3 +1,13 @@
+---
+status: historical
+layer: performance
+authority: P2
+audience: agent
+ticket_id: TCK-20260417-ARENA-PERF-HARDENING
+artifact_type: test_plan
+tags: [arena, perf, hardening]
+---
+
 # Arena Performance Hardening Test Plan
 
 ## Objectives

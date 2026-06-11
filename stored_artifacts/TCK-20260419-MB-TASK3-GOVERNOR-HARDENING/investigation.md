@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260419-MB-TASK3-GOVERNOR-HARDENING
+artifact_type: investigation
+tags: [mb, task3, governor, hardening]
+---
+
 # Investigation: Milestone B Governor Hardening
 
 Confirmed that the previous governor used point-in-time signals and hard-coded scalars.

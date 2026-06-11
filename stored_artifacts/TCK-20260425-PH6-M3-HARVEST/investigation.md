@@ -1,3 +1,13 @@
+---
+status: historical
+layer: economy
+authority: P2
+audience: agent
+ticket_id: TCK-20260425-PH6-M3-HARVEST
+artifact_type: investigation
+tags: [ph6, m3, harvest]
+---
+
 # Investigation — PH6 M3: Harvesting and Resource Nodes
 
 ## Goal

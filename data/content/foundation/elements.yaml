@@ -1,0 +1,44 @@
+# STATE: REDESIGNED-CORE
+# Damage/elemental tags. These should be simple tags first, not a full elemental subsystem.
+- id: "physical"
+  display_name: "Physical"
+
+# STATE: REDESIGNED-CORE
+- id: "piercing"
+  display_name: "Piercing"
+
+# STATE: REDESIGNED-CORE
+- id: "slashing"
+  display_name: "Slashing"
+
+# STATE: REDESIGNED-CORE
+- id: "blunt"
+  display_name: "Blunt"
+
+# STATE: ADDITIONAL
+- id: "fire"
+  display_name: "Fire"
+
+# STATE: ADDITIONAL
+- id: "ice"
+  display_name: "Ice"
+
+# STATE: ADDITIONAL
+- id: "poison"
+  display_name: "Poison"
+
+# STATE: ADDITIONAL
+- id: "holy"
+  display_name: "Holy"
+
+# STATE: ADDITIONAL
+- id: "shadow"
+  display_name: "Shadow"
+
+# STATE: ADDITIONAL
+- id: "arcane"
+  display_name: "Arcane"
+
+# STATE: ADDITIONAL
+- id: "spirit"
+  display_name: "Spirit"

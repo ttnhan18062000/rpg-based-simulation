@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: engine
+original_date: unknown
+---
+
 # Phase 6 Implementation Plan — Externalization and Scale Readiness
 
 Phase 6 should introduce **externalization points**, but still avoid building a heavy production platform too early.

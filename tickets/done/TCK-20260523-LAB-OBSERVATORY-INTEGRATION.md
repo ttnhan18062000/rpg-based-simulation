@@ -1,3 +1,14 @@
+---
+status: historical
+layer: observability
+authority: P1
+audience: agent
+ticket_id: TCK-20260523-LAB-OBSERVATORY-INTEGRATION
+phase: done
+date: 2026-05-23
+tags: [lab, observatory, integration]
+---
+
 # TCK-20260523-LAB-OBSERVATORY-INTEGRATION
 
 ## Title
@@ -7,6 +18,15 @@ Scenario Lab Observatory Integration
 ## Status
 
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 

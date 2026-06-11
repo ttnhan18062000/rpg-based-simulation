@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260410-PH1-STG-AUDIT
+artifact_type: investigation
+tags: [ph1, stg, audit]
+---
+
 # Investigation - Strategic Design Shift Audit
 
 ## Sources Scanned

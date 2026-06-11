@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260425-PH4-TACTICAL-AI
+phase: done
+date: 2026-04-25
+tags: [ph4, tactical, ai]
+---
+
 # TCK-20260425-PH4-TACTICAL-AI
 
 ## Title
@@ -7,6 +18,15 @@ Tactical AI Recovery and Cognitive Capacity Hardening
 ## Status
 
 INPROGRESS
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 

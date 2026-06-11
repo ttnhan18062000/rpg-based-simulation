@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260424-PH3-M2-GROUP-COORDINATION
+phase: done
+date: 2026-04-24
+tags: [ph3, m2, group, coordination]
+---
+
 # TCK-20260424-PH3-M2-GROUP-COORDINATION
 
 ## Title
@@ -5,6 +16,15 @@ Phase 3 Milestone 2: Group-Level Coordination and Social Clustering
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Implement group formation, cohesion, and shared strategic intent to allow entities to cooperate on projects and engage in coordinated tactical behavior (e.g., party-based exploration or combat).

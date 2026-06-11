@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260420-CORE-MOVEMENT-SLICE
+artifact_type: investigation
+tags: [core, movement, slice]
+---
+
+
 # Investigation - TCK-20260420-CORE-MOVEMENT-SLICE
 
 ## Findings

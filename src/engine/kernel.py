@@ -58,7 +58,16 @@ class Kernel:
         replay: Optional[ReplayManager] = None,
         executor: Optional[IWorkExecutor] = None,
         flags: Optional[Dict[str, Any]] = None,
-        run_id: Optional[str] = None
+        run_id: Optional[str] = None,
+        resolved_world_path: Optional[str] = None,
+        compile_context_path: Optional[str] = None,
+        provenance_manifest_path: Optional[str] = None,
+        assembly_report_path: Optional[str] = None,
+        validation_report_path: Optional[str] = None,
+        compile_report_path: Optional[str] = None,
+        runtime_content_source: Optional[str] = None,
+        catalog_fingerprint: Optional[str] = None,
+        module_fingerprints: Optional[Dict[str, str]] = None
     ) -> None:
         self._stopped = False
         self._profile = profile
@@ -106,7 +115,8 @@ class Kernel:
 
         self._run_id = run_id
         if self._run_id is None:
-            self._run_id = f"run_{int(time.time())}"
+            import random
+            self._run_id = f"run_{int(time.time())}_{random.randint(1000, 9999)}"
 
         self._artifact_repo = None
         if obs_mode != ObservabilityMode.OFF:
@@ -115,6 +125,27 @@ class Kernel:
             from src.observability.reporting.artifact_repository import RunArtifactRepository, RunManifest
             self._artifact_repo = RunArtifactRepository()
             
+            # Load metadata from provenance manifest if available
+            prov_manifest_data = None
+            if provenance_manifest_path and os.path.exists(provenance_manifest_path):
+                try:
+                    with open(provenance_manifest_path, "r", encoding="utf-8") as f:
+                        prov_manifest_data = json.load(f)
+                except Exception:
+                    pass
+
+            catalog_fp = catalog_fingerprint
+            if not catalog_fp and prov_manifest_data:
+                catalog_fp = prov_manifest_data.get("catalog_fingerprint")
+            
+            module_fps = module_fingerprints
+            if not module_fps and prov_manifest_data:
+                module_fps = prov_manifest_data.get("module_fingerprints")
+
+            from src.core.registries import runtime_content_source as registries_source, catalog_fingerprint as registries_fingerprint
+            actual_content_source = runtime_content_source or registries_source
+            actual_catalog_fp = catalog_fp or registries_fingerprint
+
             # Create standard manifest
             manifest = RunManifest(
                 run_id=self._run_id,
@@ -124,7 +155,17 @@ class Kernel:
                 observability_mode=obs_mode.value,
                 started_at=datetime.now(timezone.utc).isoformat(),
                 ticks_requested=profile.cadence.max_ticks if hasattr(profile, "cadence") and hasattr(profile.cadence, "max_ticks") else 100,
-                status="CREATED"
+                status="CREATED",
+                resolved_world_path=resolved_world_path,
+                compile_context_path=compile_context_path,
+                provenance_manifest_path=provenance_manifest_path,
+                assembly_report_path=assembly_report_path,
+                validation_report_path=validation_report_path,
+                compile_report_path=compile_report_path,
+                runtime_content_source=actual_content_source,
+                catalog_fingerprint=actual_catalog_fp,
+                module_fingerprints=module_fps,
+                state_hash=None
             )
             self._artifact_repo.create_run(self._run_id, manifest, overwrite=True)
             self._artifact_repo.update_manifest(self._run_id, status="RUNNING")
@@ -768,7 +809,8 @@ class Kernel:
                 self._run_id,
                 status=status,
                 ticks_completed=self._state.tick,
-                ended_at=datetime.now(timezone.utc).isoformat()
+                ended_at=datetime.now(timezone.utc).isoformat(),
+                state_hash=final_hash
             )
 
         self._cache_registry.clear_all()

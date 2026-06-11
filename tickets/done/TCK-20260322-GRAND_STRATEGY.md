@@ -1,3 +1,14 @@
+---
+status: historical
+layer: strategy
+authority: P1
+audience: agent
+ticket_id: TCK-20260322-GRAND_STRATEGY
+phase: done
+date: 2026-03-22
+tags: [grand_strategy]
+---
+
 # TCK-20260322-GRAND_STRATEGY
 
 ## Title
@@ -32,3 +43,7 @@ This ticket implements the strategic layer of the world. Factions no longer just
 - Added `CONQUERED_DEBUFF` and stronghold spawning logic.
 - Updated `EntityGenerator` to respect regional control and war states for spawn distribution.
 - Verified with comprehensive unit test suite in `tests/unit/systems/test_strategy.py`.
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

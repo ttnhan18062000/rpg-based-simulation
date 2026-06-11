@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260517-DIRTY-DEPENDENCY-GRAPH
+phase: done
+date: 2026-05-17
+tags: [dirty, dependency, graph]
+---
+
 # TCK-20260517-DIRTY-DEPENDENCY-GRAPH
 
 ## Title
@@ -7,6 +18,15 @@ Dirty Dependency Graph Implementation
 ## Status
 
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 

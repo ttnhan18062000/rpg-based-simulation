@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260427-PHASE3-RESOURCE-CONSERVATION
+artifact_type: plan
+tags: [phase3, resource, conservation]
+---
+
 # Implementation Plan: Phase 3 Resource Conservation
 
 ## Goal Description

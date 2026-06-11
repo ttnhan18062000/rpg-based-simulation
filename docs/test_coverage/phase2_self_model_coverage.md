@@ -1,3 +1,10 @@
+---
+status: historical
+layer: testing
+authority: P2
+audience: developer
+---
+
 # Phase 2 Self-Model Test Coverage Map
 
 This document catalogs all test suites covering the Bottom-Up Entity Self Model implementation for Phase 2.

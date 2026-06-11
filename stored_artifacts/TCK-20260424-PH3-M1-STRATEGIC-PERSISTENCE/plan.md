@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260424-PH3-M1-STRATEGIC-PERSISTENCE
+artifact_type: plan
+tags: [ph3, m1, strategic, persistence]
+---
+
 # Strategic Objective Persistence Plan
 
 ## Goal

@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: engine
+original_date: unknown
+---
+
 ## WorldLoop RPG Macro-Interest and Behavioral Realism Plan — Phase 4
 
 This phase moves from present-day lived structure into durable historical continuity and world consequence. Phase 1 made entities subjectively distinct. Phase 2 made events socially meaningful. Phase 3 made entities feel like they lived somewhere and belonged to groups. Phase 4 makes the world remember across deaths, recover imperfectly from damage, and carry consequences forward through households, successors, places, and regions. The core goal is to stop the simulation from feeling episodic. Actions should leave scars, recovery paths, inheritances, and altered local conditions that remain legible over time. The current codebase already has useful anchors for this: homes/buildings, storage, quests, factions, camps, world events, calamity/boss systems, typed updates, and inspection/introspection support.

@@ -1,3 +1,11 @@
+---
+status: authoritative
+layer: core
+authority: P0
+audience: developer
+last_verified: 2026-06-06
+---
+
 # Attributes & Classes
 
 Technical documentation for the 9 primary attributes, derived stats, stamina, hero classes, breakthroughs, skills, and mastery.

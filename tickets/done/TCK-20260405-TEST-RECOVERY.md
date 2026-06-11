@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260405-TEST-RECOVERY
+phase: done
+date: 2026-04-05
+tags: [test, recovery]
+---
+
 # TCK-20260405-TEST-RECOVERY: Stabilizing AOA Combat Engine
 
 Restore 100% pass rate in combat and AI test suites by resolving regressions from AOA architectural pivot.
@@ -26,3 +37,7 @@ Resolving runtime regressions in AI decision-making (TypeError in finalization p
 - `stored_artifacts/TCK-20260405-TEST-RECOVERY/plan.md`
 - `stored_artifacts/TCK-20260405-TEST-RECOVERY/investigation.md`
 - `stored_artifacts/TCK-20260405-TEST-RECOVERY/test_plan.md`
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

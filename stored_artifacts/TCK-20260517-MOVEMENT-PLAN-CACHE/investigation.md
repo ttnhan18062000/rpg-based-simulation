@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260517-MOVEMENT-PLAN-CACHE
+artifact_type: investigation
+tags: [movement, plan, cache]
+---
+
+
 # Investigation: MovementPlanCache
 
 ## Current State & Problem

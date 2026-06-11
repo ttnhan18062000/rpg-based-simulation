@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260418-RESOURCE-KERNEL-M5
+artifact_type: test_plan
+tags: [resource, kernel, m5]
+---
+
 # Test Plan: Resource-Safe Engine Milestone 5
 
 ## Purpose

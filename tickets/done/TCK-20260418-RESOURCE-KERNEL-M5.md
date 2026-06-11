@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260418-RESOURCE-KERNEL-M5
+phase: done
+date: 2026-04-18
+tags: [resource, kernel, m5]
+---
+
 # TCK-20260418-RESOURCE-KERNEL-M5
 
 ## Title
@@ -5,6 +16,15 @@ Milestone 5: Resource Governor and Degradation State Machine
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Implement an authoritative resource governor to protect the simulation envelope via deterministic degradation modes.

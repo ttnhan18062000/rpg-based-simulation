@@ -1,3 +1,13 @@
+---
+status: historical
+layer: strategy
+authority: P2
+audience: agent
+ticket_id: TCK-20260523-COGNITION-DIFF-EVENTS
+artifact_type: test_plan
+tags: [cognition, diff, events]
+---
+
 # test_plan.md - Diff & Event Tests
 
 ## Unit Tests

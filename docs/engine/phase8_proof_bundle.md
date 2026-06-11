@@ -1,3 +1,10 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: developer
+---
+
 # Phase 8 Proof Bundle: Combat, Tactical, & Local World Semantics
 
 This bundle aggregates all evidence proving the recovery of Phase 8 semantics in the `src` engine.

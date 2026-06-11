@@ -1,7 +1,26 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260407-PHASE1-DS
+phase: done
+date: 2026-04-07
+tags: [phase1, ds]
+---
+
 # Ticket: TCK-20260407-PHASE1-DS
 ## Phase 1 - Design Shift Implementation: Behavioral Realism
 
-### Request Summary
+### Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
+## Request Summary
 Implementation of Phase 1 of the RPG Macro-Interest and Behavioral Realism Plan. This Phase focuses on establishing recognizable individuals through personality traits, long-term motives, and subjective belief-based perception.
 
 ### Scope

@@ -1,3 +1,10 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: developer
+---
+
 # Phase 11 Preserved-Surface Baseline
 
 This document summarizes the reconciled preserved replacement truth as of Phase 11.

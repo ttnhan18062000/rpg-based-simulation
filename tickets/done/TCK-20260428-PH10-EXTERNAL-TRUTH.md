@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260428-PH10-EXTERNAL-TRUTH
+phase: done
+date: 2026-04-28
+tags: [ph10, external, truth]
+---
+
 # TCK-20260428-PH10-EXTERNAL-TRUTH
 
 ## Title
@@ -7,6 +18,15 @@ External Truth and Replay Proof (Tracing & Metrics)
 ## Status
 
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 

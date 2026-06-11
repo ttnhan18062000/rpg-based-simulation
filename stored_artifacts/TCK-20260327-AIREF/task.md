@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: misc
+authority: P2
+audience: agent
+tags: [airef]
+---
+
 - [x] Initial Research and Analysis
 - [x] Stabilization Phase 1: Cognitive Pipeline
     - [x] Refine Hysteresis locking in AIBrain

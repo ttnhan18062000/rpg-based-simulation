@@ -1,3 +1,10 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: developer
+---
+
 # RPG Simulation: Scenario Sweep Configuration & Execution Guide
 
 Scenario sweeps are programmatic, multi-seed simulation matrices run sequentially or in parallel. They establish statistical performance baselines, audit determinism stability, and validate gameplay balance envelopes across identical conditions under controlled seed distributions.

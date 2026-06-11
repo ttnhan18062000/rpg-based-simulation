@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: engine
+authority: P2
+audience: agent
+tags: [combat, movement, finalize]
+---
+
 # Implementation Plan - Finalizing Combat Movement Milestone 7
 
 Finalize the observability, rollout-hardening, and documentation consolidation for the Combat and Movement Overhaul.

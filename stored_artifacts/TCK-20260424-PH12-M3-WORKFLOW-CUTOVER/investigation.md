@@ -1,3 +1,13 @@
+---
+status: historical
+layer: ai
+authority: P2
+audience: agent
+ticket_id: TCK-20260424-PH12-M3-WORKFLOW-CUTOVER
+artifact_type: investigation
+tags: [ph12, m3, workflow, cutover]
+---
+
 # Phase 12 M3 Investigation: Workflow & CI Cutover
 
 ## 1. CI Configuration

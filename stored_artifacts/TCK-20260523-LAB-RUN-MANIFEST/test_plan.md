@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260523-LAB-RUN-MANIFEST
+artifact_type: test_plan
+tags: [lab, run, manifest]
+---
+
 # Milestone 77 Test Plan
 
 ## Unit Tests

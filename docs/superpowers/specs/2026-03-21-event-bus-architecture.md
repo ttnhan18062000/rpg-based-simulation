@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: misc
+original_date: 2026-03-21
+---
+
 # Event Bus Architecture & Dataclass Contract Telemetry
 
 ## Overview

@@ -1,3 +1,15 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260517-MOVEMENT-CANDIDATE-SELECTOR
+phase: done
+date: 2026-05-17
+tags: [movement, candidate, selector]
+---
+
+
 # TCK-20260517-MOVEMENT-CANDIDATE-SELECTOR
 
 ## Title
@@ -7,6 +19,15 @@ MovementCandidateSelector Implementation for Spatial Routing Optimization
 ## Status
 
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 

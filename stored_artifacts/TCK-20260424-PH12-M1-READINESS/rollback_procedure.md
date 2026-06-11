@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: misc
+authority: P2
+audience: agent
+tags: [ph12, m1, readiness]
+---
+
 # Phase 12 Rollback Procedure
 
 ## 1. Detection

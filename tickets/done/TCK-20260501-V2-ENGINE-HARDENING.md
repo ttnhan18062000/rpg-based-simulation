@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260501-V2-ENGINE-HARDENING
+phase: done
+date: 2026-05-01
+tags: [v2, engine, hardening]
+---
+
 # TCK-20260501-V2-ENGINE-HARDENING
 
 ## Title
@@ -5,6 +16,15 @@ V2 Engine Logic Hardening & Audit Reconciliation
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Harden the V2 engine logic by reconciling the exhaustive semantic checklist with the authoritative source code, injecting 'VERIFIED v2' markers, and achieving high-confidence parity in the protocol validator.

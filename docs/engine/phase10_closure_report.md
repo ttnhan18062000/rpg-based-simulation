@@ -1,3 +1,10 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: developer
+---
+
 # Phase 10 Closure Report: Infrastructure Compatibility
 
 ## 1. Overview

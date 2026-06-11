@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: misc
+authority: P2
+audience: agent
+tags: [airef]
+---
+
 # AI Refinement E2E Final Stabilization Plan (Forced Engagement)
 
 I have identified the final logical hurdle in the `1012 < 1012` failure:

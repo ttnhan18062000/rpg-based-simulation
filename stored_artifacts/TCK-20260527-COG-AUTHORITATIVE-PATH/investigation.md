@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260527-COG-AUTHORITATIVE-PATH
+artifact_type: investigation
+tags: [cog, authoritative, path]
+---
+
 # Investigation: Authoritative Strategic Path
 
 Our investigation confirmed:

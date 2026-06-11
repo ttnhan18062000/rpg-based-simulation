@@ -1,0 +1,21 @@
+# STATE: ADDITIONAL
+schema_version: "worldmodule.v1"
+module_id: "sunken_swamp_border"
+module_type: "conflict"
+display_name: "Sunken Swamp Border"
+description: "Lizardfolk swamp tribe territory bordering the frontier settlement. Creates territorial pressure from swamp_tribe and wild_beast_pack."
+requires: ["frontier_village_core"]
+biomes: ["sunken_swamp"]
+ecologies: []
+regions:
+  - id: "swamp_border_territory"
+    type: "wilderness"
+    grid_bounds: [180, 80, 220, 120]
+    terrain: "swamp"
+    hazard_level: 2.5
+factions: ["swamp_tribe", "wild_beast_pack"]
+populations: ["swamp_tribe_patrol", "swamp_ambush_party"]
+resources:
+  wood_node: 4
+  herb_patch: 3
+relationships: []

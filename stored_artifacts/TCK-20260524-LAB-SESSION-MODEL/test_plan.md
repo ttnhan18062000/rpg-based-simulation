@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260524-LAB-SESSION-MODEL
+artifact_type: test_plan
+tags: [lab, session, model]
+---
+
 # Test Plan: Lab Session Model and Storage (M92)
 
 We will implement isolated unit tests in `tests/unit/lab/test_lab_session_store.py` using `pytest`.

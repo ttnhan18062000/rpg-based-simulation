@@ -1,3 +1,10 @@
+---
+status: active
+layer: engine
+authority: P1
+audience: developer
+---
+
 # Governance Logic: Authoritative Implementation
 
 ## 1. Authoritative Flow

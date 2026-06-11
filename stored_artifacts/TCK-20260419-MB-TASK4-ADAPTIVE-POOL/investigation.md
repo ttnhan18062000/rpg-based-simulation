@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260419-MB-TASK4-ADAPTIVE-POOL
+artifact_type: investigation
+tags: [mb, task4, adaptive, pool]
+---
+
 # Investigation: Milestone B Adaptive Pool Implementation
 
 Confirmed that `WorkerManager` previously used a static `max_workers` cap only.

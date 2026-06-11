@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260419-MB-TASK5-FINAL-VALIDATION
+phase: done
+date: 2026-04-19
+tags: [mb, task5, final, validation]
+---
+
 # TCK-20260419-MB-TASK5-FINAL-VALIDATION
 
 ## Title
@@ -6,6 +17,15 @@ Milestone B Gate and Stability Validation
 ## Status
 
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Complete the final validation gate for Milestone B. This ensures all laws (Truth, Boundedness, Hysteresis, Elasticity) are verified by a unified closure test suite.

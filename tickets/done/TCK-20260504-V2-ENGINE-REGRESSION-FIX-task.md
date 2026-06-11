@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260504-V2-ENGINE-REGRESSION-FIX-task
+phase: done
+date: 2026-05-04
+tags: [v2, engine, regression, fix, task]
+---
+
 # Task List - TCK-20260504-V2-ENGINE-REGRESSION-FIX
 
 - [ ] Harden `V2EntityBuilder` with missing navigation/stamina methods.
@@ -11,3 +22,7 @@
   - [ ] `test_signal_hardening.py`
   - [ ] ... others ...
 - [ ] Final verification of all tests in `tests/engine/`.
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

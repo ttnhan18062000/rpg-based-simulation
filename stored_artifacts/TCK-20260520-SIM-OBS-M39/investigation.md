@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260520-SIM-OBS-M39
+artifact_type: investigation
+tags: [sim, obs, m39]
+---
+
 # Investigation Notes - Observatory Dashboard V1 (Milestone 39)
 
 ## Current State Analysis

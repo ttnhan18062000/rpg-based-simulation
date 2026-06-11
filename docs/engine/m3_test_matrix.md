@@ -1,3 +1,10 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: developer
+---
+
 # Milestone 3 Test Matrix — Retention & Separation
 
 ## 1. Purpose

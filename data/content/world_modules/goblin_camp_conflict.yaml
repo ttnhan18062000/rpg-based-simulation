@@ -1,0 +1,17 @@
+# STATE: LEGACY-EXPORT
+schema_version: "worldmodule.v1"
+module_id: "goblin_camp_conflict"
+module_type: "conflict"
+display_name: "Goblin Camp Conflict"
+requires: ["frontier_village_core"]
+biomes: ["goblin_camp"]
+ecologies: ["goblin_camp_ecology"]
+regions:
+  - id: "goblin_camp"
+    type: "wilderness"
+    grid_bounds: [95, 20, 125, 55]
+    terrain: "forest"
+    hazard_level: 3.0
+factions: ["goblin_warband"]
+populations: ["goblin_raiding_party"]
+relationships: ["town_to_goblin_warband", "goblin_warband_to_town"]

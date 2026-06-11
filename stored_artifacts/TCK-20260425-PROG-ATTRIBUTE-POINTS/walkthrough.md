@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: core
+authority: P2
+audience: agent
+tags: [prog, attribute, points]
+---
+
 # Walkthrough - Attribute Points and Manual Growth (PH8 M5)
 
 I have successfully implemented the Attribute Points (AP) and Manual Growth system for the V2 engine. This implementation follows the **Authoritative Apply Path** (M8 Law) and introduces a **Hybrid Growth Model** as requested.

@@ -1,3 +1,14 @@
+---
+status: historical
+layer: performance
+authority: P1
+audience: agent
+ticket_id: TCK-20260512-PERF-COMPLETION
+phase: done
+date: 2026-05-12
+tags: [perf, completion]
+---
+
 # TCK-20260512-PERF-COMPLETION
 
 ## Title
@@ -5,6 +16,15 @@ Completing Performance Test Suite (P1/P2)
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Complete the implementation of the performance testing suite as defined in the performance_implementation.md milestones P1 and P2.

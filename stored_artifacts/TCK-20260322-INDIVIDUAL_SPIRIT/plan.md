@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260322-INDIVIDUAL_SPIRIT
+artifact_type: plan
+tags: [individual_spirit]
+---
+
 # Plan: Milestone 10 - The Individual Spirit
 
 ## Overview

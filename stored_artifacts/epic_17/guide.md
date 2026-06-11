@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: misc
+authority: P2
+audience: agent
+tags: [epic_17]
+---
+
 # Newcomer's Guide: Understanding the "Long-Story Progression Spine"
 
 Welcome to the Simulation Design team! One of the most common pitfalls of RPG simulations is the **Endgame Stall**. Without a proper "Progression Spine," even the most complex world eventually becomes static and boring.

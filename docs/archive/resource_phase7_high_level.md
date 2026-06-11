@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: economy
+original_date: unknown
+---
+
 # High-Level Implementation Plan — Phase 7 of `src`
 
 This plan assumes Phase 6 has already produced:

@@ -1,3 +1,14 @@
+---
+status: historical
+layer: observability
+authority: P1
+audience: agent
+ticket_id: TCK-20260420-REPLAY-RACE
+phase: done
+date: 2026-04-20
+tags: [replay, race]
+---
+
 # TCK-20260420-REPLAY-RACE
 
 ## Title
@@ -5,6 +16,15 @@ Resolve Replay Manager Thread-Safety
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Resolve race conditions in ReplayManager where background persistence relied on shared state that could change before disk IO.

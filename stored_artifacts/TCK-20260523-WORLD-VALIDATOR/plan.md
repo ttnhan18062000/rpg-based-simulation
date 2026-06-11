@@ -1,3 +1,13 @@
+---
+status: historical
+layer: world
+authority: P2
+audience: agent
+ticket_id: TCK-20260523-WORLD-VALIDATOR
+artifact_type: plan
+tags: [world, validator]
+---
+
 # Implementation Plan: World Validation Layer
 
 Build the pluggable validation rules framework and `WorldValidator` component.

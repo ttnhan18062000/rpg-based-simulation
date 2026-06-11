@@ -1,4 +1,24 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260409-PH4-STG2-SUCCESSION-LOGIC
+phase: done
+date: 2026-04-09
+tags: [ph4, stg2, succession, logic]
+---
+
 # Ticket: TCK-20260409-PH4-STG2-SUCCESSION-LOGIC
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Implement the logic for inheritance and succession when an entity (specifically heroes) dies permanently. This includes creating historical records, transferring legacy data, and ensuring successors are linked to the same household.

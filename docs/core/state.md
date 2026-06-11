@@ -1,3 +1,11 @@
+---
+status: authoritative
+layer: core
+authority: P0
+audience: developer
+last_verified: 2026-06-06
+---
+
 # Authoritative State Architecture
 
 > [!IMPORTANT]

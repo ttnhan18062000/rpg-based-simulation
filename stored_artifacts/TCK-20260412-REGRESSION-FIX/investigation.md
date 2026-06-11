@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260412-REGRESSION-FIX
+artifact_type: investigation
+tags: [regression, fix]
+---
+
 # Investigation Notes - TCK-20260412-REGRESSION-FIX
 
 ## Problem Statement

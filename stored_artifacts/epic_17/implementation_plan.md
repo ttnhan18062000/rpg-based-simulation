@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: misc
+authority: P2
+audience: agent
+tags: [epic_17]
+---
+
 # Implementation Plan: Epic 17 — Phase 1 (Core Spine & Multi-Hero)
 
 ## 1. Objective

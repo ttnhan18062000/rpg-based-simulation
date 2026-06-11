@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260529-OBS-PHASE24-BEHAVIOR-METRICS
+phase: done
+date: 2026-05-29
+tags: [obs, phase24, behavior, metrics]
+---
+
 # TCK-20260529-OBS-PHASE24-BEHAVIOR-METRICS
 
 ## Title
@@ -7,6 +18,15 @@ Semantic Behavior Metrics (Phase 24)
 ## Status
 
 INPROGRESS
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 

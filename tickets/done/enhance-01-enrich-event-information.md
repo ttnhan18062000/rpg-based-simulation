@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: enhance-01-enrich-event-information
+phase: done
+date: unknown
+tags: [enhance, enrich, event, information]
+---
+
 # Enhance 01: Enrich Event Information
 
 ## Summary
@@ -71,3 +82,6 @@ SimEvent(
 
 **DONE**: Successfully implemented the Domain Event Bus (Option C) and enriched Combat, Death, Loot, Quest, and Level Up events with heavily structured generic JSON dictionaries. Verified 0 regression via E2E test suite.
 
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

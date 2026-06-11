@@ -1,3 +1,13 @@
+---
+status: historical
+layer: world
+authority: P2
+audience: agent
+ticket_id: TCK-20260425-WORLD-DYNAMICS
+artifact_type: investigation
+tags: [world, dynamics]
+---
+
 # Investigation - World Dynamics
 
 ## Legacy Parity

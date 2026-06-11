@@ -1,3 +1,10 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: developer
+---
+
 # Phase 7 Proof Bundle: Substrate Hardening
 
 This bundle aggregates all technical evidence supporting the closure of the Phase 7 substrate hardening milestone.

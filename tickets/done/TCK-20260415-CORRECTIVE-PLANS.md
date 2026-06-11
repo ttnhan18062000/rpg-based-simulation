@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260415-CORRECTIVE-PLANS
+phase: done
+date: 2026-04-15
+tags: [corrective, plans]
+---
+
 # TCK-20260415-CORRECTIVE-PLANS
 
 ## Title
@@ -7,6 +18,15 @@ Execute Remaining Corrective Plan Tasks (strategy_implementation_updated_v2 + in
 ## Status
 
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 

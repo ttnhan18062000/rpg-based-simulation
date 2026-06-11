@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260501-E5-REVIEW-HARDENING
+phase: done
+date: 2026-05-01
+tags: [e5, review, hardening]
+---
+
 # TCK-20260501-E5-REVIEW-HARDENING
 
 ## Title
@@ -5,6 +16,15 @@ Implementation of E5 Review Findings for RPG Engine Closure
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Implement the hardening requirements for combat rewards to achieve true logical closure of Phase E5. This involved transitioning XP and Gold rewards from legacy shadow fields in `CombatUpdate` to the authoritative `ResourceTransferIntent` flow.

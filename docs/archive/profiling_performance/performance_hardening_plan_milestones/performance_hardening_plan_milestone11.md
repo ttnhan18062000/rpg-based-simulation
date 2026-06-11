@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: performance
+original_date: unknown
+---
+
 # Milestone 11: Logic Hardening (17-Phase Pipeline)
 
 ## Goal

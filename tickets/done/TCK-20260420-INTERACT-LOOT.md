@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260420-INTERACT-LOOT
+phase: done
+date: 2026-04-20
+tags: [interact, loot]
+---
+
 # TCK-20260420-INTERACT-LOOT
 
 ## Title
@@ -5,6 +16,15 @@ Channeled Looting and Interruption Recovery
 
 ## Status
 OPEN
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Recover the original RPG-core interaction behavior for looting ground items and ensuring all channeled interactions are reset by movement or target changes.

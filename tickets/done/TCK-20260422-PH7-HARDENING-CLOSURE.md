@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260422-PH7-HARDENING-CLOSURE
+phase: done
+date: 2026-04-22
+tags: [ph7, hardening, closure]
+---
+
 # TCK-20260422-PH7-HARDENING-CLOSURE
 
 ## Title
@@ -5,6 +16,15 @@ Phase 7 Substrate Hardening and Closure Correction
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Complete the hardening of the Phase 7 substrate as defined in the `resource_phase7_updated.md` plan. This involves moving from planning assumptions to implementation-backed truth across all core engine subsystems.

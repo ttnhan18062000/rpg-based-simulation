@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: economy
+original_date: unknown
+---
+
 # Updated Implementation Plan — [Phase 4] of the `src` Epic
 
 ## [Phase Name]

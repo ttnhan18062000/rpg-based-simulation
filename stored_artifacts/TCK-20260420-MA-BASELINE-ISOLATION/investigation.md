@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260420-MA-BASELINE-ISOLATION
+artifact_type: investigation
+tags: [ma, baseline, isolation]
+---
+
 # Investigation - Milestone A Isolation (TCK-20260420-MA-BASELINE-ISOLATION)
 
 ## Problem

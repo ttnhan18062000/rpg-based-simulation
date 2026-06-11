@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260520-SIM-OBS-PHASE4-M16
+artifact_type: plan
+tags: [sim, obs, phase4, m16]
+---
+
 # Implementation Plan - Milestone 16: Multi-Run Artifact Index
 
 We will implement the run-set indexer and abstraction layers to compare multiple simulation runs systematically.

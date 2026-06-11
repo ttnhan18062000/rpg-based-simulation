@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: strategy
+original_date: unknown
+---
+
 Good. Milestone 3 is where the system stops faking knowledge.
 
 Up to Milestone 2, you can get continuity. That is necessary, but it is still not enough. An entity can carry a project across ticks and still be cheating if the world conveniently hands it exact answers. Milestone 3 is the point where projects start colliding with uncertainty, and the engine has to respond with investigation, detours, and blocker-driven behavior instead of silent omniscience. The design reference is explicit: without uncertainty, there is no search, no rumor, no suspense, and no divergence. Leads, blockers, and candidate regions are the substrate for that.

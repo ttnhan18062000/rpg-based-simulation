@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: combat
+original_date: unknown
+---
+
 # combat_movement_updated.md
 
 This document is the **corrective update** for the combat and movement overhaul. It is not a reprint of the original plan. It keeps the milestone structure, but narrows each milestone to the **remaining missing or incompletely proven logic** based on the current source and test state.

@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: economy
+original_date: unknown
+---
+
 Below is the **full detailed implementation plan for Phase 10**, in the same milestone/task structure style as your earlier implementation docs, and aligned with the Phase 10 high-level plan plus the roadmap and V2 completion rules in [resource_phases.md](sandbox:/mnt/data/resource_phases.md), [src_principle.md](sandbox:/mnt/data/src_principle.md), and the legacy system-compatibility surface captured in [legacy_logic_checklist_part2.md](sandbox:/mnt/data/legacy_logic_checklist_part2.md).
 
 # Detailed Implementation Plan — Phase 10 of `src`

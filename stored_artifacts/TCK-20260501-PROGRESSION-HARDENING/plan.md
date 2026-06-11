@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260501-PROGRESSION-HARDENING
+artifact_type: plan
+tags: [progression, hardening]
+---
+
 # Plan: Phase E4.5 — Progression, Skills, Equipment, and Crafting Completion
 
 This phase hardens the core RPG loop by ensuring that character growth and equipment are authoritative, impactful, and transactionally sound.

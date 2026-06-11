@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: engine
+authority: P2
+audience: agent
+tags: [engine, memory, pooling]
+---
+
 # Walkthrough: Milestone 9 - Memory Management & Pooling
 
 ## Overview

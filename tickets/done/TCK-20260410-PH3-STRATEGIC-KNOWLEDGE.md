@@ -1,3 +1,14 @@
+---
+status: historical
+layer: strategy
+authority: P1
+audience: agent
+ticket_id: TCK-20260410-PH3-STRATEGIC-KNOWLEDGE
+phase: done
+date: 2026-04-10
+tags: [ph3, strategic, knowledge]
+---
+
 # TCK-20260410-PH3-STRATEGIC-KNOWLEDGE
 
 ## Title
@@ -5,6 +16,15 @@ Implementation of Phase 3 Strategic Knowledge: Leads, Blockers, and Detours
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Implement the strategic knowledge layer as defined in `thinking_implementation_phase_3.md`. This involves moving away from "fake omniscience" by representing uncertainty as durable leads, candidate zones, and typed blockers that drive detour branching.

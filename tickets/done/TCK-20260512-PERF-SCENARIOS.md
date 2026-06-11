@@ -1,3 +1,14 @@
+---
+status: historical
+layer: performance
+authority: P1
+audience: agent
+ticket_id: TCK-20260512-PERF-SCENARIOS
+phase: done
+date: 2026-05-12
+tags: [perf, scenarios]
+---
+
 # TCK-20260512-PERF-SCENARIOS
 
 ## Title
@@ -5,6 +16,15 @@ Implement performance scenario builders
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Implement scenario builders to construct various simulation states for performance testing, as specified in `performance_implementation.md`.

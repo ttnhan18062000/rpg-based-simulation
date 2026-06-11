@@ -1,3 +1,10 @@
+---
+status: active
+layer: engine
+authority: P1
+audience: developer
+---
+
 # Regression & Verification: Hardening the Engine
 
 To maintain high architectural integrity, the simulation employs a strict verification pipeline centered on **Absolute Determinism** and **Observable AI**.

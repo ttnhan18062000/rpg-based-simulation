@@ -1,3 +1,14 @@
+---
+status: historical
+layer: economy
+authority: P1
+audience: agent
+ticket_id: TCK-20260422-RESOURCE-PH7-M2-T1-ACTION-UPDATE-AUDIT
+phase: done
+date: 2026-04-22
+tags: [resource, ph7, m2, t1, action, update, audit]
+---
+
 # TCK-20260422-RESOURCE-PH7-M2-T1-ACTION-UPDATE-AUDIT
 
 ## Title
@@ -7,6 +18,15 @@ Audit Phase 7 Action/Update Rows
 ## Status
 
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 

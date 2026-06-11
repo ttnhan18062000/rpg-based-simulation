@@ -1,3 +1,14 @@
+---
+status: historical
+layer: world
+authority: P1
+audience: agent
+ticket_id: TCK-20260523-WORLD-COMPILER
+phase: done
+date: 2026-05-23
+tags: [world, compiler]
+---
+
 # TCK-20260523-WORLD-COMPILER
 
 ## Title
@@ -7,6 +18,15 @@ Milestone 70 — World Compiler to AuthoritativeState
 ## Status
 
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 

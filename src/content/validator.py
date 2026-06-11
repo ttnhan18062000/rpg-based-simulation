@@ -1,0 +1,718 @@
+# Compliance IDs: WORLD-CAT-006, WORLD-CAT-007
+from __future__ import annotations
+
+from typing import List, Dict, Any, Optional
+from pydantic import BaseModel, Field
+from pathlib import Path
+import yaml
+
+from src.content.repository import CatalogRepository, CANONICAL_FAMILIES
+from src.content.paths import ContentPathConfig
+from src.worldmodules.schema import WorldModuleSpec
+from src.worldassembly.schema import WorldCompositionSpec
+
+_paths = ContentPathConfig()
+
+# Families whose dot-notation key (e.g. "world.regions" → "world/regions") does not match
+# the corresponding CONTENT_USAGE_MATRIX key. Add overrides here to prevent silent skips
+# in dead-record validation.
+_FAMILY_KEY_OVERRIDES: Dict[str, str] = {
+    "world/regions": "world/runtime_regions",
+}
+
+
+class CatalogValidationError(Exception):
+    """Exception raised when catalog validation discovers errors."""
+    pass
+
+
+class ValidationIssue(BaseModel):
+    """Represents a specific semantic warning or error inside the catalog files."""
+    severity: str = Field(..., description="Either 'ERROR' or 'WARNING'")
+    rule_id: str = Field(..., description="Unique validation rule code")
+    message: str = Field(..., description="Informative explanation of the validation constraint violation")
+    target_id: Optional[str] = Field(None, description="Optional definition ID causing the violation")
+    filename: Optional[str] = Field(None, description="Filename where the issue resides")
+
+
+def load_all_compositions(worlds_dir: str = ContentPathConfig().world_compositions_dir) -> List[WorldCompositionSpec]:
+    compositions = []
+    dir_path = Path(worlds_dir)
+    if not dir_path.exists():
+        return compositions
+    for filepath in dir_path.glob("**/*.yaml"):
+        try:
+            with open(filepath, "r", encoding="utf-8") as f:
+                data = yaml.safe_load(f)
+            if isinstance(data, dict) and "worldcomposition" in data.get("schema_version", ""):
+                compositions.append(WorldCompositionSpec(**data))
+        except Exception:
+            pass
+    for filepath in dir_path.glob("**/*.yml"):
+        try:
+            with open(filepath, "r", encoding="utf-8") as f:
+                data = yaml.safe_load(f)
+            if isinstance(data, dict) and "worldcomposition" in data.get("schema_version", ""):
+                compositions.append(WorldCompositionSpec(**data))
+        except Exception:
+            pass
+    return compositions
+
+
+def validate_matrix_evidence(
+    matrix: Dict[str, "ContentFamilyMatrixEntry"] = None,
+) -> List[str]:
+    """
+    Check that every evidence_tests string in the matrix resolves to a real file path,
+    and that any ::node_id suffix names a def or class that actually appears in that file.
+
+    Returns a list of violation messages (empty list = no violations).
+    Entries with DESIGN_ONLY (or other non-active states) and no evidence_tests are exempt.
+    Entries in RUNTIME_AUTHORITATIVE or RESOLVED_PARTIALLY with no evidence_tests are violations.
+    """
+    from src.content.matrix import CONTENT_USAGE_MATRIX, ContentFamilyMatrixEntry  # noqa: F401 — local import avoids circular at module load
+
+    if matrix is None:
+        matrix = CONTENT_USAGE_MATRIX
+
+    violations: List[str] = []
+    project_root = Path(__file__).resolve().parents[2]
+
+    for key, entry in matrix.items():
+        if not entry.evidence_tests:
+            if entry.implementation_state in {"RUNTIME_AUTHORITATIVE", "RESOLVED_PARTIALLY"}:
+                violations.append(
+                    f"'{key}': state is {entry.implementation_state} but evidence_tests is not declared"
+                )
+            continue
+
+        tokens = [t.strip() for t in entry.evidence_tests.split(",")]
+        for token in tokens:
+            if not token:
+                continue
+            parts = token.split("::", 1)
+            file_part = parts[0]
+            node_id = parts[1] if len(parts) == 2 else None
+
+            file_path = project_root / file_part
+            if not file_path.exists():
+                violations.append(
+                    f"'{key}': evidence path does not exist: {file_part}"
+                )
+                continue
+
+            if node_id is not None:
+                file_text = file_path.read_text(encoding="utf-8")
+                if f"def {node_id}" not in file_text and f"class {node_id}" not in file_text:
+                    violations.append(
+                        f"'{key}': node ID '{node_id}' not found in {file_part}"
+                    )
+
+    return violations
+
+
+class CatalogValidator:
+    """
+    Independent validator for the static Content Catalog.
+    Catches relational, schema, mapping, and range errors across definition directories.
+    """
+
+    def __init__(
+        self,
+        repo: CatalogRepository,
+        modules: Optional[List[WorldModuleSpec]] = None,
+        compositions: Optional[List[WorldCompositionSpec]] = None,
+    ):
+        self.repo = repo
+        self._custom_modules = modules
+        self._custom_compositions = compositions
+        self.graph = None
+
+    def validate(self) -> List[ValidationIssue]:
+        """
+        Runs validation sweeps and returns a complete list of structured warnings and errors.
+        """
+        issues: List[ValidationIssue] = []
+
+        # Resolve modules and compositions
+        from src.worldmodules.repository import WorldModuleRepository
+        
+        if self._custom_modules is not None:
+            modules = self._custom_modules
+        else:
+            mod_repo = WorldModuleRepository(_paths.world_modules_dir)
+            try:
+                mod_repo.load_all()
+                modules = list(mod_repo.modules.values())
+            except Exception:
+                modules = []
+
+        if self._custom_compositions is not None:
+            compositions = self._custom_compositions
+        else:
+            compositions = load_all_compositions(_paths.world_compositions_dir)
+
+        # Build graph
+        from src.content.reference_graph import ContentReferenceGraph
+        self.graph = ContentReferenceGraph(self.repo, modules, compositions)
+
+        # Validate relational linkages
+        self._validate_role_relations(issues)
+        self._validate_building_relations(issues)
+        self._validate_archetype_relations(issues)
+        self._validate_relationship_relations(issues)
+        self._validate_perspective_relations(issues)
+        self._validate_legacy_projection_relations(issues)
+        self._validate_recipe_relations(issues)
+        self._validate_region_relations(issues)
+        self._validate_race_relations(issues)
+        self._validate_biome_relations(issues)
+        self._validate_ecology_relations(issues)
+        self._validate_defaults(issues)
+        
+        # Generic reference and dead active data checks
+        self._validate_reference_graph(issues)
+        self._validate_dead_active_data(issues)
+        
+        return issues
+
+    def _validate_role_relations(self, issues: List[ValidationIssue]) -> None:
+        """Verify referenced stats, inventory, and cognition profiles exist."""
+        for role_id, role in self.repo.roles.items():
+            if role.default_stats_profile:
+                if not self.repo.get_stats_profile(role.default_stats_profile):
+                    issues.append(ValidationIssue(
+                        severity="ERROR",
+                        rule_id="CAT-REL-001",
+                        message=f"Role '{role_id}' references non-existent stats profile '{role.default_stats_profile}'",
+                        target_id=role_id,
+                        filename="social/roles.yaml"
+                    ))
+            
+            if role.default_inventory_profile:
+                if not self.repo.get_inventory_profile(role.default_inventory_profile):
+                    issues.append(ValidationIssue(
+                        severity="ERROR",
+                        rule_id="CAT-REL-002",
+                        message=f"Role '{role_id}' references non-existent inventory profile '{role.default_inventory_profile}'",
+                        target_id=role_id,
+                        filename="social/roles.yaml"
+                    ))
+
+            if role.default_cognition_profile:
+                if not self.repo.get_cognition_profile(role.default_cognition_profile):
+                    issues.append(ValidationIssue(
+                        severity="ERROR",
+                        rule_id="CAT-REL-003",
+                        message=f"Role '{role_id}' references non-existent cognition profile '{role.default_cognition_profile}'",
+                        target_id=role_id,
+                        filename="social/roles.yaml"
+                    ))
+
+            for trait_id in role.compatible_traits:
+                if not self.repo.get_trait(trait_id):
+                    issues.append(ValidationIssue(
+                        severity="ERROR",
+                        rule_id="CAT-REL-001",
+                        message=f"Role '{role_id}' references non-existent trait '{trait_id}'",
+                        target_id=role_id,
+                        filename="social/roles.yaml"
+                    ))
+
+    def _validate_building_relations(self, issues: List[ValidationIssue]) -> None:
+        """Verify referenced service profiles inside buildings exist."""
+        for bld_id, bld in self.repo.buildings.items():
+            if bld.service_profile_id:
+                if not self.repo.get_service_profile(bld.service_profile_id):
+                    issues.append(ValidationIssue(
+                        severity="ERROR",
+                        rule_id="CAT-REL-004",
+                        message=f"Building '{bld_id}' references non-existent service profile '{bld.service_profile_id}'",
+                        target_id=bld_id,
+                        filename="world/buildings.yaml"
+                    ))
+
+    def _validate_archetype_relations(self, issues: List[ValidationIssue]) -> None:
+        """Verify archetype components exist."""
+        for arch_id, arch in self.repo.entity_archetypes.items():
+            # Check race
+            if not self.repo.get_race(arch.race):
+                issues.append(ValidationIssue(
+                    severity="ERROR",
+                    rule_id="CAT-REL-011",
+                    message=f"Archetype '{arch_id}' references non-existent race '{arch.race}'",
+                    target_id=arch_id,
+                    filename="entities/entity_archetypes.yaml"
+                ))
+            # Check faction
+            if not self.repo.get_faction(arch.faction):
+                issues.append(ValidationIssue(
+                    severity="ERROR",
+                    rule_id="CAT-REL-011",
+                    message=f"Archetype '{arch_id}' references non-existent faction '{arch.faction}'",
+                    target_id=arch_id,
+                    filename="entities/entity_archetypes.yaml"
+                ))
+            # Check role
+            if not self.repo.get_role(arch.role):
+                issues.append(ValidationIssue(
+                    severity="ERROR",
+                    rule_id="CAT-REL-011",
+                    message=f"Archetype '{arch_id}' references non-existent role '{arch.role}'",
+                    target_id=arch_id,
+                    filename="entities/entity_archetypes.yaml"
+                ))
+            # Check stats profile
+            if not self.repo.get_stats_profile(arch.stat_profile):
+                issues.append(ValidationIssue(
+                    severity="ERROR",
+                    rule_id="CAT-REL-011",
+                    message=f"Archetype '{arch_id}' references non-existent stats profile '{arch.stat_profile}'",
+                    target_id=arch_id,
+                    filename="entities/entity_archetypes.yaml"
+                ))
+            # Check combat profile
+            if not self.repo.get_combat_profile(arch.combat_profile):
+                issues.append(ValidationIssue(
+                    severity="ERROR",
+                    rule_id="CAT-REL-011",
+                    message=f"Archetype '{arch_id}' references non-existent combat profile '{arch.combat_profile}'",
+                    target_id=arch_id,
+                    filename="entities/entity_archetypes.yaml"
+                ))
+            # Check cognition profile
+            if not self.repo.get_cognition_profile(arch.cognition_profile):
+                issues.append(ValidationIssue(
+                    severity="ERROR",
+                    rule_id="CAT-REL-011",
+                    message=f"Archetype '{arch_id}' references non-existent cognition profile '{arch.cognition_profile}'",
+                    target_id=arch_id,
+                    filename="entities/entity_archetypes.yaml"
+                ))
+            # Check drive profile
+            if not self.repo.get_drive_profile(arch.drive_profile):
+                issues.append(ValidationIssue(
+                    severity="ERROR",
+                    rule_id="CAT-REL-011",
+                    message=f"Archetype '{arch_id}' references non-existent drive profile '{arch.drive_profile}'",
+                    target_id=arch_id,
+                    filename="entities/entity_archetypes.yaml"
+                ))
+            # Check inventory profile
+            if not self.repo.get_inventory_profile(arch.inventory_profile):
+                issues.append(ValidationIssue(
+                    severity="ERROR",
+                    rule_id="CAT-REL-011",
+                    message=f"Archetype '{arch_id}' references non-existent inventory profile '{arch.inventory_profile}'",
+                    target_id=arch_id,
+                    filename="entities/entity_archetypes.yaml"
+                ))
+            # Check skill profile
+            if arch.skill_profile:
+                if not self.repo.get_skill_profile(arch.skill_profile):
+                    issues.append(ValidationIssue(
+                        severity="ERROR",
+                        rule_id="CAT-REL-011",
+                        message=f"Archetype '{arch_id}' references non-existent skill profile '{arch.skill_profile}'",
+                        target_id=arch_id,
+                        filename="entities/entity_archetypes.yaml"
+                    ))
+
+            # Check traits
+            for trait_id in arch.traits:
+                if not self.repo.get_trait(trait_id):
+                    issues.append(ValidationIssue(
+                        severity="ERROR",
+                        rule_id="CAT-REL-011",
+                        message=f"Archetype '{arch_id}' references non-existent trait '{trait_id}'",
+                        target_id=arch_id,
+                        filename="entities/entity_archetypes.yaml"
+                    ))
+
+            # Check themes
+            for theme_id in arch.themes:
+                if not self.repo.get_theme(theme_id):
+                    issues.append(ValidationIssue(
+                        severity="ERROR",
+                        rule_id="CAT-REL-011",
+                        message=f"Archetype '{arch_id}' references non-existent theme '{theme_id}'",
+                        target_id=arch_id,
+                        filename="entities/entity_archetypes.yaml"
+                    ))
+
+    def _validate_relationship_relations(self, issues: List[ValidationIssue]) -> None:
+        """Verify relationship source, target, and axes exist."""
+        for rel_id, rel in self.repo.faction_relationships.items():
+            if not self.repo.get_faction(rel.source_faction):
+                issues.append(ValidationIssue(
+                    severity="ERROR",
+                    rule_id="CAT-REL-012",
+                    message=f"Relationship '{rel_id}' references non-existent source faction '{rel.source_faction}'",
+                    target_id=rel_id,
+                    filename="social/faction_relationships.yaml"
+                ))
+            if not self.repo.get_faction(rel.target_faction):
+                issues.append(ValidationIssue(
+                    severity="ERROR",
+                    rule_id="CAT-REL-012",
+                    message=f"Relationship '{rel_id}' references non-existent target faction '{rel.target_faction}'",
+                    target_id=rel_id,
+                    filename="social/faction_relationships.yaml"
+                ))
+            for axis_id in rel.axes:
+                if not self.repo.get_relationship_axis(axis_id):
+                    issues.append(ValidationIssue(
+                        severity="ERROR",
+                        rule_id="CAT-REL-012",
+                        message=f"Relationship '{rel_id}' references non-existent axis '{axis_id}'",
+                        target_id=rel_id,
+                        filename="social/faction_relationships.yaml"
+                    ))
+
+    def _validate_perspective_relations(self, issues: List[ValidationIssue]) -> None:
+        """Verify perspective chosen faction and labels exist."""
+        for pers_id, pers in self.repo.perspectives.items():
+            if not self.repo.get_faction(pers.chosen_faction):
+                issues.append(ValidationIssue(
+                    severity="ERROR",
+                    rule_id="CAT-REL-013",
+                    message=f"Perspective '{pers_id}' references non-existent chosen faction '{pers.chosen_faction}'",
+                    target_id=pers_id,
+                    filename="social/perspectives.yaml"
+                ))
+            for group, factions in pers.projected_labels.items():
+                for f_id in factions:
+                    # Let it pass if it is also a race (like prey_or_threat_by_context contains 'human', etc.)
+                    if not self.repo.get_faction(f_id) and not self.repo.get_race(f_id):
+                        issues.append(ValidationIssue(
+                            severity="ERROR",
+                            rule_id="CAT-REL-013",
+                            message=f"Perspective '{pers_id}' projected label group '{group}' references non-existent faction/race '{f_id}'",
+                            target_id=pers_id,
+                            filename="social/perspectives.yaml"
+                        ))
+
+    def _validate_legacy_projection_relations(self, issues: List[ValidationIssue]) -> None:
+        """Verify legacy projections map valid archetypes, items, and regions."""
+        for proj_id, proj in self.repo.legacy_enemy_projections.items():
+            if not self.repo.get_entity_archetype(proj.archetype_id):
+                issues.append(ValidationIssue(
+                    severity="ERROR",
+                    rule_id="CAT-REL-014",
+                    message=f"Legacy projection '{proj_id}' references non-existent archetype '{proj.archetype_id}'",
+                    target_id=proj_id,
+                    filename="compatibility/legacy_enemy_projection.yaml"
+                ))
+            for item_id in proj.loot_table:
+                if not self.repo.get_item(item_id):
+                    issues.append(ValidationIssue(
+                        severity="ERROR",
+                        rule_id="CAT-REL-014",
+                        message=f"Legacy projection '{proj_id}' loot table references non-existent item '{item_id}'",
+                        target_id=proj_id,
+                        filename="compatibility/legacy_enemy_projection.yaml"
+                    ))
+            for region_id in proj.spawn_regions:
+                if not self.repo.get_region(region_id):
+                    issues.append(ValidationIssue(
+                        severity="ERROR",
+                        rule_id="CAT-REL-014",
+                        message=f"Legacy projection '{proj_id}' references non-existent spawn region '{region_id}'",
+                        target_id=proj_id,
+                        filename="compatibility/legacy_enemy_projection.yaml"
+                    ))
+
+    def _validate_recipe_relations(self, issues: List[ValidationIssue]) -> None:
+        """Verify recipe items and services exist."""
+        for recipe_id, recipe in self.repo.recipes.items():
+            for item_id in recipe.ingredients:
+                if not self.repo.get_item(item_id):
+                    issues.append(ValidationIssue(
+                        severity="ERROR",
+                        rule_id="CAT-REL-015",
+                        message=f"Recipe '{recipe_id}' ingredient references non-existent item '{item_id}'",
+                        target_id=recipe_id,
+                        filename="world/recipes.yaml"
+                    ))
+            for item_id in recipe.outputs:
+                if not self.repo.get_item(item_id):
+                    issues.append(ValidationIssue(
+                        severity="ERROR",
+                        rule_id="CAT-REL-015",
+                        message=f"Recipe '{recipe_id}' output references non-existent item '{item_id}'",
+                        target_id=recipe_id,
+                        filename="world/recipes.yaml"
+                    ))
+            if recipe.required_service:
+                # We can check either ServiceProfile or building service reference
+                if not self.repo.get_service_profile(recipe.required_service) and not any(recipe.required_service in b.id for b in self.repo.buildings.values()):
+                    issues.append(ValidationIssue(
+                        severity="ERROR",
+                        rule_id="CAT-REL-015",
+                        message=f"Recipe '{recipe_id}' references non-existent service '{recipe.required_service}'",
+                        target_id=recipe_id,
+                        filename="world/recipes.yaml"
+                    ))
+
+    def _validate_region_relations(self, issues: List[ValidationIssue]) -> None:
+        """Verify region allowed enemy list reference valid archetypes."""
+        for region_id, region in self.repo.regions.items():
+            for enemy_id in region.allowed_enemy_ids:
+                if not self.repo.get_entity_archetype(enemy_id) and not self.repo.get_legacy_enemy_projection(enemy_id):
+                    issues.append(ValidationIssue(
+                        severity="ERROR",
+                        rule_id="CAT-REL-016",
+                        message=f"Region '{region_id}' references non-existent archetype/projection '{enemy_id}'",
+                        target_id=region_id,
+                        filename="world/runtime_regions.yaml"
+                    ))
+
+    def _validate_race_relations(self, issues: List[ValidationIssue]) -> None:
+        """Verify race body models, needs, senses, cognition, drives, traits, and roles exist."""
+        for race_id, race in self.repo.races.items():
+            if not self.repo.get_body_model(race.body_model):
+                issues.append(ValidationIssue(
+                    severity="ERROR",
+                    rule_id="CAT-REL-017",
+                    message=f"Race '{race_id}' references non-existent body model '{race.body_model}'",
+                    target_id=race_id,
+                    filename="living/races.yaml"
+                ))
+            if not self.repo.get_need_profile(race.need_profile):
+                issues.append(ValidationIssue(
+                    severity="ERROR",
+                    rule_id="CAT-REL-017",
+                    message=f"Race '{race_id}' references non-existent need profile '{race.need_profile}'",
+                    target_id=race_id,
+                    filename="living/races.yaml"
+                ))
+            if not self.repo.get_sense_profile(race.sense_profile):
+                issues.append(ValidationIssue(
+                    severity="ERROR",
+                    rule_id="CAT-REL-017",
+                    message=f"Race '{race_id}' references non-existent sense profile '{race.sense_profile}'",
+                    target_id=race_id,
+                    filename="living/races.yaml"
+                ))
+            if not self.repo.get_cognition_profile(race.cognition_profile):
+                issues.append(ValidationIssue(
+                    severity="ERROR",
+                    rule_id="CAT-REL-017",
+                    message=f"Race '{race_id}' references non-existent cognition profile '{race.cognition_profile}'",
+                    target_id=race_id,
+                    filename="living/races.yaml"
+                ))
+            if not self.repo.get_drive_profile(race.drive_profile):
+                issues.append(ValidationIssue(
+                    severity="ERROR",
+                    rule_id="CAT-REL-017",
+                    message=f"Race '{race_id}' references non-existent drive profile '{race.drive_profile}'",
+                    target_id=race_id,
+                    filename="living/races.yaml"
+                ))
+            for trait_id in race.natural_traits:
+                if not self.repo.get_trait(trait_id):
+                    issues.append(ValidationIssue(
+                        severity="ERROR",
+                        rule_id="CAT-REL-017",
+                        message=f"Race '{race_id}' references non-existent trait '{trait_id}'",
+                        target_id=race_id,
+                        filename="living/races.yaml"
+                    ))
+            for role_id in race.compatible_roles:
+                if not self.repo.get_role(role_id):
+                    issues.append(ValidationIssue(
+                        severity="ERROR",
+                        rule_id="CAT-REL-017",
+                        message=f"Race '{race_id}' references non-existent role '{role_id}'",
+                        target_id=race_id,
+                        filename="living/races.yaml"
+                    ))
+
+    def _validate_biome_relations(self, issues: List[ValidationIssue]) -> None:
+        """Verify biomes reference existing themes, materials, and factions."""
+        for biome_id, biome in self.repo.biomes.items():
+            for theme_id in biome.themes:
+                if not self.repo.get_theme(theme_id):
+                    issues.append(ValidationIssue(
+                        severity="ERROR",
+                        rule_id="CAT-REL-018",
+                        message=f"Biome '{biome_id}' references non-existent theme '{theme_id}'",
+                        target_id=biome_id,
+                        filename="world/biomes.yaml"
+                    ))
+            for mat_id in biome.common_materials:
+                if not self.repo.get_material(mat_id):
+                    issues.append(ValidationIssue(
+                        severity="ERROR",
+                        rule_id="CAT-REL-018",
+                        message=f"Biome '{biome_id}' references non-existent material '{mat_id}'",
+                        target_id=biome_id,
+                        filename="world/biomes.yaml"
+                    ))
+            for f_id in biome.default_factions:
+                if not self.repo.get_faction(f_id):
+                    issues.append(ValidationIssue(
+                        severity="ERROR",
+                        rule_id="CAT-REL-018",
+                        message=f"Biome '{biome_id}' references non-existent faction '{f_id}'",
+                        target_id=biome_id,
+                        filename="world/biomes.yaml"
+                    ))
+
+    def _validate_ecology_relations(self, issues: List[ValidationIssue]) -> None:
+        """Verify ecology biomes, factions, populations, and resources exist."""
+        for eco_id, eco in self.repo.ecologies.items():
+            for biome_id in eco.biomes:
+                if not self.repo.get_biome(biome_id):
+                    issues.append(ValidationIssue(
+                        severity="ERROR",
+                        rule_id="CAT-REL-019",
+                        message=f"Ecology '{eco_id}' references non-existent biome '{biome_id}'",
+                        target_id=eco_id,
+                        filename="world/ecologies.yaml"
+                    ))
+            for f_id in eco.dominant_factions:
+                if not self.repo.get_faction(f_id):
+                    issues.append(ValidationIssue(
+                        severity="ERROR",
+                        rule_id="CAT-REL-019",
+                        message=f"Ecology '{eco_id}' references non-existent faction '{f_id}'",
+                        target_id=eco_id,
+                        filename="world/ecologies.yaml"
+                    ))
+            for pop_id in eco.populations:
+                if not self.repo.get_population_recipe(pop_id):
+                    issues.append(ValidationIssue(
+                        severity="ERROR",
+                        rule_id="CAT-REL-019",
+                        message=f"Ecology '{eco_id}' references non-existent population recipe '{pop_id}'",
+                        target_id=eco_id,
+                        filename="world/ecologies.yaml"
+                    ))
+            for res_id in eco.resources:
+                if not self.repo.get_resource(res_id) and not any(res_id in r.id for r in self.repo.resources.values()):
+                    issues.append(ValidationIssue(
+                        severity="ERROR",
+                        rule_id="CAT-REL-019",
+                        message=f"Ecology '{eco_id}' references non-existent resource '{res_id}'",
+                        target_id=eco_id,
+                        filename="world/ecologies.yaml"
+                    ))
+
+    def _validate_defaults(self, issues: List[ValidationIssue]) -> None:
+        """Verify that at least one global default compile profile exists."""
+        if not self.repo.defaults:
+            issues.append(ValidationIssue(
+                severity="WARNING",
+                rule_id="CAT-DEF-001",
+                message="No global default compile profiles are configured inside the catalog.",
+                filename="defaults.yaml"
+            ))
+
+    def _validate_reference_graph(self, issues: List[ValidationIssue]) -> None:
+        """Verify referential integrity using the ContentReferenceGraph."""
+        from src.content.reference_graph import FAMILY_TO_SHORT
+        
+        def get_rule_id(src_concept: str, tgt_concept: str) -> str:
+            if src_concept == "archetype":
+                return "CAT-REL-011"
+            elif src_concept == "role":
+                if tgt_concept == "stat_profile":
+                    return "CAT-REL-001"
+                elif tgt_concept == "inventory_profile":
+                    return "CAT-REL-002"
+                elif tgt_concept == "cognition_profile":
+                    return "CAT-REL-003"
+                return "CAT-REL-001"
+            elif src_concept == "faction_relationship":
+                return "CAT-REL-012"
+            elif src_concept == "perspective":
+                return "CAT-REL-013"
+            elif src_concept == "projection":
+                return "CAT-REL-014"
+            elif src_concept == "recipe":
+                return "CAT-REL-015"
+            elif src_concept == "region":
+                return "CAT-REL-016"
+            elif src_concept == "race":
+                return "CAT-REL-017"
+            elif src_concept == "biome":
+                return "CAT-REL-018"
+            elif src_concept == "ecology":
+                return "CAT-REL-019"
+            elif src_concept == "building":
+                return "CAT-REL-004"
+            return "CAT-REL-099"
+
+        for edge in self.graph.edges:
+            source, target = edge
+            if not self.graph.has_node(target):
+                src_concept, src_id = source.split(":", 1)
+                tgt_concept, tgt_id = target.split(":", 1)
+                
+                # Check race fallback for faction labels
+                if tgt_concept == "faction" and self.graph.has_node(f"race:{tgt_id}"):
+                    continue
+                
+                filename = None
+                for spec in CANONICAL_FAMILIES:
+                    if FAMILY_TO_SHORT.get(spec.family) == src_concept:
+                        filename = spec.path
+                        break
+                
+                rule_id = get_rule_id(src_concept, tgt_concept)
+                issues.append(ValidationIssue(
+                    severity="ERROR",
+                    rule_id=rule_id,
+                    message=f"{src_concept.capitalize()} '{src_id}' references non-existent {tgt_concept} '{tgt_id}'",
+                    target_id=src_id,
+                    filename=filename
+                ))
+
+    def _validate_dead_active_data(self, issues: List[ValidationIssue]) -> None:
+        """Verify that active data is consumed by downstream components (no dead active data)."""
+        from src.content.matrix import CONTENT_USAGE_MATRIX
+        from src.content.reference_graph import FAMILY_TO_SHORT
+        
+        for node_id, record in self.graph.nodes.items():
+            concept, rec_id = node_id.split(":", 1)
+            
+            # Exempt entry points
+            if concept in ("defaults", "spawn_table", "composition", "scenario"):
+                continue
+                
+            # Find the corresponding family key
+            family_key = None
+            for key, short in FAMILY_TO_SHORT.items():
+                if short == concept:
+                    family_key = key.replace(".", "/")
+                    break
+
+            if family_key:
+                family_key = _FAMILY_KEY_OVERRIDES.get(family_key, family_key)
+
+            if not family_key or family_key not in CONTENT_USAGE_MATRIX:
+                continue
+                
+            entry = CONTENT_USAGE_MATRIX[family_key]
+            
+            if entry.implementation_state in ("DESIGN_ONLY", "LOADED_ONLY"):
+                continue
+                
+            if not self.graph.is_record_used(node_id):
+                filename = None
+                for spec in CANONICAL_FAMILIES:
+                    if FAMILY_TO_SHORT.get(spec.family) == concept:
+                        filename = spec.path
+                        break
+                
+                severity = "WARNING"
+                
+                issues.append(ValidationIssue(
+                    severity=severity,
+                    rule_id="CAT-DEAD-001",
+                    message=f"{concept.capitalize()} '{rec_id}' is active but never consumed by any downstream component",
+                    target_id=rec_id,
+                    filename=filename
+                ))

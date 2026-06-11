@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260427-RPG-CORE-MIGRATION
+artifact_type: plan
+tags: [rpg, core, migration]
+---
+
 # Implementation Plan: RPG Core Migration (Phases 1-11)
 
 ## Goal

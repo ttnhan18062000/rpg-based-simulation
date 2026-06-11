@@ -1,3 +1,14 @@
+---
+status: historical
+layer: combat
+authority: P1
+audience: agent
+ticket_id: TCK-20260510-TACTICAL-COMBAT-HARDENING
+phase: done
+date: 2026-05-10
+tags: [tactical, combat, hardening]
+---
+
 # TCK-20260510-TACTICAL-COMBAT-HARDENING
 
 ## Title
@@ -5,6 +16,15 @@ Hardening Tactical Combat Bonuses (Bracketing/Flanking)
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Integrate tactical bonuses (flanking, high ground, cover) into the `resolve_multi_attack` pipeline and refactor `CombatResolutionSystem` to use a centralized tactical helper.

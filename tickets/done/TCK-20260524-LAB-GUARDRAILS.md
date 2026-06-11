@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260524-LAB-GUARDRAILS
+phase: done
+date: 2026-05-24
+tags: [lab, guardrails]
+---
+
 # TCK-20260524-LAB-GUARDRAILS
 
 ## Title
@@ -7,6 +18,15 @@ Token, Time, and Storage Guardrails with E2E System Tests (M104 + M105)
 ## Status
 
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 

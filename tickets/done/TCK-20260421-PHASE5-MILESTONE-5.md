@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260421-PHASE5-MILESTONE-5
+phase: done
+date: 2026-04-21
+tags: [phase5, milestone]
+---
+
 # TCK-20260421-PHASE5-MILESTONE-5
 
 ## Title
@@ -5,6 +16,15 @@ Supported Progression Surface Consolidation
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Consolidate the supported progression surface for Phase 5. This involves defining the official support matrix, expanding certification and benchmark scenarios to cover the integrated loop, hardening regression guards, and publishing the canonical truth package.

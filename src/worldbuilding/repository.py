@@ -70,8 +70,19 @@ class WorldRepository:
             raise WorldRepositoryError(f"World spec file not found: '{world_id}'")
 
         try:
+            # Check if this is a composition; if so, redirect to its resolved spec
+            with open(yaml_path, "r", encoding="utf-8") as f:
+                raw_dict = yaml.safe_load(f)
+            if raw_dict and "worldcomposition" in raw_dict.get("schema_version", ""):
+                resolved_path = yaml_path.parent / "resolved" / "world.resolved.yaml"
+                if resolved_path.is_file():
+                    return load_world_spec_from_yaml(resolved_path)
+                raise WorldRepositoryError(f"Composition world '{world_id}' has not been resolved. Run resolve first.")
+
             return load_world_spec_from_yaml(yaml_path)
-        except InvalidWorldSpecError as e:
+        except Exception as e:
+            if isinstance(e, WorldRepositoryError):
+                raise e
             raise WorldRepositoryError(f"Failed to load world '{world_id}': {e}") from e
 
     def save_world(self, spec: WorldSpec) -> Path:
@@ -185,6 +196,14 @@ class WorldRepository:
                                 from src.worldbuilding.recipe import WorldTemplateSpec
                                 spec = WorldTemplateSpec.model_validate(raw_dict)
                                 status_str = "TEMPLATE"
+                            elif "worldcomposition" in schema_ver:
+                                from src.worldassembly.schema import WorldCompositionSpec
+                                try:
+                                    spec = WorldCompositionSpec.model_validate(raw_dict)
+                                except Exception as e:
+                                    world_id_val = raw_dict.get("world_id", world_id)
+                                    raise ValueError(f"Validation failed for composition '{world_id_val}' in family 'world_compositions' at '{yaml_file}': {e}") from e
+                                status_str = "COMPOSITION"
                             else:
                                 spec = load_world_spec_from_yaml(yaml_file)
                                 status_str = "VALIDATED"

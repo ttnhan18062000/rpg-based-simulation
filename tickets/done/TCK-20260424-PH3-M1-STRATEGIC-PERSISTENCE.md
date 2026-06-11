@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260424-PH3-M1-STRATEGIC-PERSISTENCE
+phase: done
+date: 2026-04-24
+tags: [ph3, m1, strategic, persistence]
+---
+
 # TCK-20260424-PH3-M1-STRATEGIC-PERSISTENCE
 
 ## Title
@@ -5,6 +16,15 @@ Phase 3 Milestone 1: Strategic Objective Persistence
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Implement long-term strategic goal setting and objective persistence to prevent tactical jitter and ensure entities follow through on non-combat projects.

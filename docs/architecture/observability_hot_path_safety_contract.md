@@ -1,3 +1,10 @@
+---
+status: active
+layer: architecture
+authority: P1
+audience: developer
+---
+
 # Observability Hot-Path Safety Contract
 
 This contract establishes strict rules governing code execution inside the simulation loop (the "hot path"). Developers and automated static analysis tools must enforce this contract to prevent observability from causing unacceptable CPU/memory overhead or breaking engine determinism.
@@ -54,3 +61,22 @@ The following operations are highly resource-intensive or blocking, and are **ab
 To ensure compile-time and import-time separation:
 1. **Zero Imports of Heavy Analyzers in Hot Path**: Hot-path modules (such as `src/engine/` or core `src/observability/` event dispatchers) must never import analytical modules (e.g., `src/observability/anomaly/`, `src/observability/cognition/`, or `src/observability/reporting/`).
 2. **Graceful Degradation**: If downstream observability consumers (Redis, workers) crash or saturate the bounded queue, the queue must drop new events gracefully instead of blocking the main thread.
+
+---
+
+## 5. Worker Lifecycle Contract
+
+`QueueDrainWorker` is the background thread that drains the bounded observability queue to disk/downstream consumers. Its lifecycle is governed by these rules:
+
+**Singleton guarantee**: Only one `QueueDrainWorker` may drain the module-level `_global_queue` at a time. Use `get_or_start_global_worker(queue)` (in `src/observability/queue.py`) to obtain or reuse the running global worker. Never call `QueueDrainWorker.start()` directly on the global queue — doing so bypasses the guard and creates a second concurrent drain loop.
+
+**Per-instance queues**: `EventRecorder` uses its own private `BoundedObservabilityQueue`, not the global queue. Its worker is created and owned by the recorder instance. Callers must invoke `EventRecorder.shutdown()` (or `Kernel.shutdown()`, which calls it transitively) to stop the worker and drain remaining events before the instance is discarded.
+
+**Test teardown rule**: Any test that constructs a `Kernel` or `EventRecorder` must call `.shutdown()` in teardown — either in a `try/finally` block or in a `yield`-fixture cleanup block. The session-scoped conftest sentinel (`_observability_worker_thread_sentinel` in `tests/conftest.py`) will fail the test suite if worker thread count grows across the session, catching regressions automatically.
+
+**Relevant code**:
+- `src/observability/queue.py` — `get_or_start_global_worker()`, `get_active_global_worker_count()`
+- `src/observability/event_recorder.py` — `EventRecorder.shutdown()`
+- `src/engine/kernel.py` — `Kernel.shutdown()` (calls `EventRecorder.shutdown()` transitively)
+- `tests/conftest.py` — `_observability_worker_thread_sentinel` (CI regression guard)
+- `tests/tools/memory_probe.py` — `count_drain_workers()`, `snapshot_start/end` (diagnostic helpers)

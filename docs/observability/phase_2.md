@@ -1,3 +1,10 @@
+---
+status: historical
+layer: observability
+authority: P2
+audience: developer
+---
+
 # Phase 2 Semantic Observability & Post-Run Observatory
 
 This document details the architectural specifications, components, and validation verification of **Phase 2 Semantic Observability and Post-Run Diagnostics** implemented for the V2 RPG Simulation Engine.

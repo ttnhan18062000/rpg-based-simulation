@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260424-PH11-M3-NON-PRESERVED-RATIFICATION
+phase: done
+date: 2026-04-24
+tags: [ph11, m3, non, preserved, ratification]
+---
+
 # TCK-20260424-PH11-M3-NON-PRESERVED-RATIFICATION
 
 ## Title
@@ -5,6 +16,15 @@ Phase 11 Milestone 3: Non-Preserved Scope Ratification
 
 ## Status
 OPEN
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Verify and justify all intentional divergences, unsupported legacy behaviors, and retired scope. Ensure the divergence log and registers are complete and aligned with the ledger.

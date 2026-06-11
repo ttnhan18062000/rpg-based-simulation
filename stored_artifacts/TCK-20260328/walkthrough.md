@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: misc
+authority: P2
+audience: agent
+tags: []
+---
+
 # Walkthrough: Combat Simulation Backend Stabilization
 
 We have successfully stabilized the combat simulation backend, resolving persistent E2E test failures and improving the reliability of AOE mechanics and AI decision-making.

@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: engine
+original_date: unknown
+---
+
 [Phase 5] - Event-Driven Reprioritization and Durable Consequences
 
 [Phase Description]

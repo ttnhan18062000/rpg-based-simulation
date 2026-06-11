@@ -1,3 +1,10 @@
+---
+status: historical
+layer: observability
+authority: P2
+audience: developer
+---
+
 # Phase 3: Single-Run Observatory Processing Pipeline
 
 This document describes the architectural specifications, processing pipelines, and data layout introduced in **Phase 3: Single-Run Observatory processing pipeline**. This phase established the unified post-run diagnostic orchestration layer, enabling transition from raw metrics and standard log formats to decoupled behavioral analysis.

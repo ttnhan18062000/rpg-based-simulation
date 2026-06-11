@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260422-PH7-M6-EXIT-PACKAGE
+artifact_type: investigation
+tags: [ph7, m6, exit, package]
+---
+
 # Investigation: Phase 7 Exit Readiness
 
 ## Findings

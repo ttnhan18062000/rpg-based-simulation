@@ -1,3 +1,14 @@
+---
+status: historical
+layer: strategy
+authority: P1
+audience: agent
+ticket_id: TCK-20260523-MUTATION-ORCHESTRATION
+phase: done
+date: 2026-05-23
+tags: [mutation, orchestration]
+---
+
 # TCK-20260523-MUTATION-ORCHESTRATION
 
 ## Title
@@ -7,6 +18,15 @@ Milestones 89, 90, 91 — Mutation Lab Orchestrator, CLI, and Safety Compliance
 ## Status
 
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 

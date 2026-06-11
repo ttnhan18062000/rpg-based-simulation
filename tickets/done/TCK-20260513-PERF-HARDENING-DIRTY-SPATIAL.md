@@ -1,3 +1,14 @@
+---
+status: historical
+layer: performance
+authority: P1
+audience: agent
+ticket_id: TCK-20260513-PERF-HARDENING-DIRTY-SPATIAL
+phase: done
+date: 2026-05-13
+tags: [perf, hardening, dirty, spatial]
+---
+
 # TCK-20260513-PERF-HARDENING-DIRTY-SPATIAL
 
 ## Title
@@ -5,6 +16,15 @@ Optimize RPG Engine Dirty Tracking and Spatial Lookups
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Implement O(1) dirty-entity tracking and spatial indexing to reduce computational overhead in the V2 RPG Engine.

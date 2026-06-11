@@ -1,3 +1,14 @@
+---
+status: historical
+layer: world
+authority: P1
+audience: agent
+ticket_id: TCK-20260517-WORLD-INDEX-SERVICE
+phase: done
+date: 2026-05-17
+tags: [world, index, service]
+---
+
 # TCK-20260517-WORLD-INDEX-SERVICE
 
 ## Title
@@ -7,6 +18,15 @@ WorldIndexService and SpatialQueryService Implementation for Reusable Spatial In
 ## Status
 
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 

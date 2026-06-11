@@ -1,3 +1,14 @@
+---
+status: historical
+layer: economy
+authority: P1
+audience: agent
+ticket_id: TCK-20260421-RESOURCE-INTERACT-PARITY
+phase: done
+date: 2026-04-21
+tags: [resource, interact, parity]
+---
+
 # TCK-20260421-RESOURCE-INTERACT-PARITY
 
 ## Title
@@ -5,6 +16,15 @@ Implement Initial Resource Interaction Differential Parity Proof
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Introduce the first old-vs-new proof layer for resource interaction behavior (Harvesting and Looting) to ensure bit-identical outcome parity where preservation is intended.

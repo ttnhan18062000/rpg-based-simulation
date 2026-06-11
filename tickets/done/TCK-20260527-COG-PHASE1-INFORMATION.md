@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260527-COG-PHASE1-INFORMATION
+phase: done
+date: 2026-05-27
+tags: [cog, phase1, information]
+---
+
 # TCK-20260527-COG-PHASE1-INFORMATION
 
 ## Title
@@ -7,6 +18,15 @@ Implement Phase 1 InformationProvider System
 ## Status
 
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 

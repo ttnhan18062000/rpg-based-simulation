@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260519-SIM-OBS-BASE-LOKI
+artifact_type: test_plan
+tags: [sim, obs, base, loki]
+---
+
 # Test Plan: TCK-20260519-SIM-OBS-BASE-LOKI
 
 ## Automated Tests

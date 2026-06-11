@@ -1,3 +1,10 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: developer
+---
+
 # Phase 9 Backlog: Strategic & Social Cognition
 
 This document defines the authoritative row set for Phase 9, derived from the [Legacy Replacement Ledger](../engine/legacy_replacement_ledger.md).

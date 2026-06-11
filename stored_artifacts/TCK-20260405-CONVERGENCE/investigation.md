@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260405-CONVERGENCE
+artifact_type: investigation
+tags: [convergence]
+---
+
 # AOA Convergence Investigation (TCK-20260405-CONVERGENCE)
 
 ## Findings

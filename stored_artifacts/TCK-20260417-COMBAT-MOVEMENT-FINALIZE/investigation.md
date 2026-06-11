@@ -1,3 +1,13 @@
+---
+status: historical
+layer: combat
+authority: P2
+audience: agent
+ticket_id: TCK-20260417-COMBAT-MOVEMENT-FINALIZE
+artifact_type: investigation
+tags: [combat, movement, finalize]
+---
+
 # Investigation: Milestone 7 Diagnostic Failures
 
 ## Current Failures

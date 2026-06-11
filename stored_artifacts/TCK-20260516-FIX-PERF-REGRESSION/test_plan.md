@@ -1,3 +1,13 @@
+---
+status: historical
+layer: performance
+authority: P2
+audience: agent
+ticket_id: TCK-20260516-FIX-PERF-REGRESSION
+artifact_type: test_plan
+tags: [fix, perf, regression]
+---
+
 # Test Plan: Phase 2 Performance Regression Fixes
 
 ## Automated Tests

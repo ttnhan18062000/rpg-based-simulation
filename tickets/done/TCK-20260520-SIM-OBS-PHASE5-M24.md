@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260520-SIM-OBS-PHASE5-M24
+phase: done
+date: 2026-05-20
+tags: [sim, obs, phase5, m24]
+---
+
 # TCK-20260520-SIM-OBS-PHASE5-M24
 
 ## Title
@@ -7,6 +18,15 @@ WebSocket Live Observatory API
 ## Status
 
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 

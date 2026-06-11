@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260406-PHASE0
+artifact_type: investigation
+tags: [phase0]
+---
+
 # TCK-20260406-PHASE0 Investigation
 
 ## Existing State Analysis

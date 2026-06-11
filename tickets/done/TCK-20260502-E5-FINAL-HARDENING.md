@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260502-E5-FINAL-HARDENING
+phase: done
+date: 2026-05-02
+tags: [e5, final, hardening]
+---
+
 # TCK-20260502-E5-FINAL-HARDENING
 
 ## Title
@@ -5,6 +16,15 @@ Final RPG Engine Hardening and Observability Expansion
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Complete Phase E5 of the RPG V2 engine hardening, focusing on semantic correctness, diagnostic observability, and long-run stability.

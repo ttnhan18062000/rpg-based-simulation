@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260424-PH12-M6-EXIT-PACKAGE
+phase: done
+date: 2026-04-24
+tags: [ph12, m6, exit, package]
+---
+
 # TCK-20260424-PH12-M6-EXIT-PACKAGE
 
 ## Title
@@ -5,6 +16,15 @@ Phase 12 Milestone 6: Phase 12 Exit Package and Legacy-Retirement Constraints
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Finalize the Phase 12 operational cutover by consolidating all artifacts, publishing the closure report, and establishing retirement constraints for Phase 13.

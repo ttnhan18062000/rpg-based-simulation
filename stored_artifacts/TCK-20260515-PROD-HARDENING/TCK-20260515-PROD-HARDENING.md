@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: misc
+authority: P2
+audience: agent
+tags: [prod, hardening]
+---
+
 # TCK-20260515-PROD-HARDENING
 
 ## Title

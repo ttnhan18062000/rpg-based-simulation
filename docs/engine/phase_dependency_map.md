@@ -1,3 +1,10 @@
+---
+status: active
+layer: engine
+authority: P1
+audience: developer
+---
+
 # Phase Dependency & Blocker Map
 
 This document tracks the dependencies between engine phases and identifies specific blockers for downstream semantics.

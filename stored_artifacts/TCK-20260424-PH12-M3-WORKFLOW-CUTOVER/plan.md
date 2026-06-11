@@ -1,3 +1,13 @@
+---
+status: historical
+layer: ai
+authority: P2
+audience: agent
+ticket_id: TCK-20260424-PH12-M3-WORKFLOW-CUTOVER
+artifact_type: plan
+tags: [ph12, m3, workflow, cutover]
+---
+
 # Phase 12 Milestone 3 Execution Plan: Workflow Cutover
 
 ## 1. Makefile Modernization

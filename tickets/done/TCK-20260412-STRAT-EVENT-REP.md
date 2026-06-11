@@ -1,3 +1,14 @@
+---
+status: historical
+layer: strategy
+authority: P1
+audience: agent
+ticket_id: TCK-20260412-STRAT-EVENT-REP
+phase: done
+date: 2026-04-12
+tags: [strat, event, rep]
+---
+
 # TCK-20260412-STRAT-EVENT-REP
 
 ## Title
@@ -5,6 +16,15 @@ Event-driven Strategic Reprioritization Implementation
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Implement Milestone 5 of the strategic cognition layer: ensuring that major narrative events (trauma, home damage, betrayal) trigger structural reprioritization (concerns, project pivots, social feedback) based on identity and attachment.

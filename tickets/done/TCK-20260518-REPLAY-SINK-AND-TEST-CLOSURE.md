@@ -1,3 +1,14 @@
+---
+status: historical
+layer: observability
+authority: P1
+audience: agent
+ticket_id: TCK-20260518-REPLAY-SINK-AND-TEST-CLOSURE
+phase: done
+date: 2026-05-18
+tags: [replay, sink, and, test, closure]
+---
+
 # TCK-20260518-REPLAY-SINK-AND-TEST-CLOSURE
 
 ## Title
@@ -7,6 +18,15 @@ Replay Sink Hardening and Certification Test Closure
 ## Status
 
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 

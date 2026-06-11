@@ -1,3 +1,10 @@
+---
+status: active
+layer: engine
+authority: P1
+audience: developer
+---
+
 # Operational Integrity Contract (Milestone C)
 
 ## Purpose

@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260501-E4-PHASE-ONE
+phase: done
+date: 2026-05-01
+tags: [e4, phase, one]
+---
+
 # TCK-20260501-E4-PHASE-ONE
 
 ## Title
@@ -5,6 +16,15 @@ Phase E4.1 — Determinism and Replay Completion
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Implement Phase E4.1 — Determinism and Replay Completion to ensure every gameplay result is reproducible across execution modes.

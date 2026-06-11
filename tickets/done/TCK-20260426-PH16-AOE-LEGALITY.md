@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260426-PH16-AOE-LEGALITY
+phase: done
+date: 2026-04-26
+tags: [ph16, aoe, legality]
+---
+
 # TCK-20260426-PH16-AOE-LEGALITY
 
 ## Title
@@ -5,6 +16,15 @@ Implement Authoritative AoE Legality and Splash
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Recover the authoritative Area-of-Effect (AoE) logic where impact center legality is separate from splash consequences.

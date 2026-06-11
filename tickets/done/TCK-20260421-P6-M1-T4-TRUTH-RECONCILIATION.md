@@ -1,3 +1,14 @@
+---
+status: historical
+layer: economy
+authority: P1
+audience: agent
+ticket_id: TCK-20260421-P6-M1-T4-TRUTH-RECONCILIATION
+phase: done
+date: 2026-04-21
+tags: [p6, m1, t4, truth, reconciliation]
+---
+
 # TCK-20260421-P6-M1-T4-TRUTH-RECONCILIATION
 
 ## Title
@@ -7,6 +18,15 @@ Reconcile release-truth and support-language surfaces with actual baseline
 ## Status
 
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 

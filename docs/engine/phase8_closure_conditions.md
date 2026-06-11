@@ -1,3 +1,10 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: developer
+---
+
 # Phase 8 Closure Conditions
 
 This document defines the exact finish lines for every Phase 8 row.

@@ -1,3 +1,14 @@
+---
+status: historical
+layer: strategy
+authority: P1
+audience: agent
+ticket_id: TCK-20260523-COGNITION-SAFETY-VERIFICATION
+phase: done
+date: 2026-05-23
+tags: [cognition, safety, verification]
+---
+
 # TCK-20260523-COGNITION-SAFETY-VERIFICATION
 
 ## Title
@@ -7,6 +18,15 @@ Cognition Graph Observability Safety, Parity, and Performance Certification
 ## Status
 
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 

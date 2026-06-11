@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260426-PH13-LEGACY-RETIREMENT
+phase: done
+date: 2026-04-26
+tags: [ph13, legacy, retirement]
+---
+
 # TCK-20260426-PH13-LEGACY-RETIREMENT
 
 ## Title
@@ -5,6 +16,15 @@ Execute Phase 13 Legacy Retirement and Canonical Refactor
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Retire all legacy `src/` assets identified in the Phase 13 manifest and promote `src` to the canonical `src` namespace.

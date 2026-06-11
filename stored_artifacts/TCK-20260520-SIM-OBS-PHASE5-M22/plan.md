@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260520-SIM-OBS-PHASE5-M22
+artifact_type: plan
+tags: [sim, obs, phase5, m22]
+---
+
 # Implementation Plan - Entity Inspector V1 (Milestone 22)
 
 Expose single-entity inspection capabilities for active or dead simulation entities in real-time, non-blocking, and thread-safe manner.

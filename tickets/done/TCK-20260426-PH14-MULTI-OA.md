@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260426-PH14-MULTI-OA
+phase: done
+date: 2026-04-26
+tags: [ph14, multi, oa]
+---
+
 # TCK-20260426-PH14-MULTI-OA
 
 ## Title
@@ -5,6 +16,15 @@ Implement Multi-Attacker Opportunity Attacks
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Recover the legacy capability for multiple hostiles to execute Opportunity Attacks (OA) against a single moving target in the same tick.

@@ -1,3 +1,13 @@
+---
+status: historical
+layer: world
+authority: P2
+audience: agent
+ticket_id: TCK-20260425-WORLD-DYNAMICS
+artifact_type: test_plan
+tags: [world, dynamics]
+---
+
 # Test Plan - World Dynamics
 
 ## Automated Tests

@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260524-LAB-REQUEST-CONTEXT
+artifact_type: plan
+tags: [lab, request, context]
+---
+
 # Implementation Plan: Input Request Model and Context Pack Builder (M94-M95)
 
 We will introduce two new modules: `src/lab/request.py` and `src/lab/context.py`.

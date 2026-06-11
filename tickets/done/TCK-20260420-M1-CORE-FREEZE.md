@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260420-M1-CORE-FREEZE
+phase: done
+date: 2026-04-20
+tags: [m1, core, freeze]
+---
+
 # TCK-20260420-M1-CORE-FREEZE
 
 ## Title
@@ -5,6 +16,15 @@ Milestone 1: Substrate Baseline and Vocabulary Freeze
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Freeze the core substrate baseline (Kernel, Apply, Sched) and the operational vocabulary (Signals, Status) to establish a stable "Source of Truth" and "Observable Truth" for Phase 4 gameplay attachment.

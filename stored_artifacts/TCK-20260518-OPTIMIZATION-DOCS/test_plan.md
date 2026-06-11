@@ -1,3 +1,13 @@
+---
+status: historical
+layer: performance
+authority: P2
+audience: agent
+ticket_id: TCK-20260518-OPTIMIZATION-DOCS
+artifact_type: test_plan
+tags: [optimization, docs]
+---
+
 # Staging Test Plan — Optimization Documentation and Invariant Ledger
 
 ## 1. Test Verification

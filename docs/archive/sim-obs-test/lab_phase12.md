@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: engine
+original_date: unknown
+---
+
 # Phase 12 — Scenario Lab Workflow
 
 Phase 11 builds the **Worldbuilding Foundation**:

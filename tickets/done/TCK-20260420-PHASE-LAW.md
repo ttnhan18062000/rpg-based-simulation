@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260420-PHASE-LAW
+phase: done
+date: 2026-04-20
+tags: [phase, law]
+---
+
 # TCK-20260420-PHASE-LAW
 
 ## Title
@@ -5,6 +16,15 @@ Tick-Phase Contract Alignment
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Formalize the "Law of 6 Phases" in the Kernel and ensure Phase 7 (Persistence) is strictly observational.

@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: core
+original_date: 2026-03-20
+---
+
 # Design Spec: Aspect-Oriented Entity Modularization
 
 ## Purpose

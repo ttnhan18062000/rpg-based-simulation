@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260527-COG-PHASE2-SELFMODEL
+phase: done
+date: 2026-05-27
+tags: [cog, phase2, selfmodel]
+---
+
 # TCK-20260527-COG-PHASE2-SELFMODEL
 
 ## Title
@@ -7,6 +18,15 @@ Phase 2 — Bottom-Up Entity Self Model
 ## Status
 
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 

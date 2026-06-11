@@ -1,3 +1,10 @@
+---
+status: active
+layer: engine
+authority: P1
+audience: developer
+---
+
 # Simulation Kernel Contract — Milestone 1
 
 ## 1. Purpose

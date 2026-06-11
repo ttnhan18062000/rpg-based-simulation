@@ -1,3 +1,14 @@
+---
+status: historical
+layer: guidelines
+authority: P1
+audience: agent
+ticket_id: TCK-20260523-MUTATION-SCHEMA
+phase: done
+date: 2026-05-23
+tags: [mutation, schema]
+---
+
 # TCK-20260523-MUTATION-SCHEMA
 
 ## Title
@@ -7,6 +18,15 @@ Implement Phase 13 MutationSpec Schema and Validation Framework
 ## Status
 
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 

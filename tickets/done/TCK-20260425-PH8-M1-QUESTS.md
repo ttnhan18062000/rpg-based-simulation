@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260425-PH8-M1-QUESTS
+phase: done
+date: 2026-04-25
+tags: [ph8, m1, quests]
+---
+
 # TCK-20260425-PH8-M1-QUESTS
 
 ## Title
@@ -5,6 +16,15 @@ Implement Authoritative Quest Lifecycle and Reward Models
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Establish the foundational models and authoritative lifecycle for RPG quests in the V2 engine.

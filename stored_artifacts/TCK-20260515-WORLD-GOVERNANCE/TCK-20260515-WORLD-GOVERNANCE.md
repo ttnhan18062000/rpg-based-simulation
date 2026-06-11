@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: engine
+authority: P2
+audience: agent
+tags: [world, governance]
+---
+
 # TCK-20260515-WORLD-GOVERNANCE
 
 ## Title

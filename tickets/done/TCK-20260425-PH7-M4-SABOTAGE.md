@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260425-PH7-M4-SABOTAGE
+phase: done
+date: 2026-04-25
+tags: [ph7, m4, sabotage]
+---
+
 # TCK-20260425-PH7-M4-SABOTAGE
 
 ## Title
@@ -7,6 +18,15 @@ Implementation of Building Damage and Sabotage
 ## Status
 
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 

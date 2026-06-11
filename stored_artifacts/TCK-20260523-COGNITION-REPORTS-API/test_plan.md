@@ -1,3 +1,13 @@
+---
+status: historical
+layer: strategy
+authority: P2
+audience: agent
+ticket_id: TCK-20260523-COGNITION-REPORTS-API
+artifact_type: test_plan
+tags: [cognition, reports, api]
+---
+
 # test_plan.md - API & CLI Tests
 
 ## Milestone 64: Evidence and Report Tests

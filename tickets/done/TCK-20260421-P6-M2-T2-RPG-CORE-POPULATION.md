@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260421-P6-M2-T2-RPG-CORE-POPULATION
+phase: done
+date: 2026-04-21
+tags: [p6, m2, t2, rpg, core, population]
+---
+
 # TCK-20260421-P6-M2-T2-RPG-CORE-POPULATION
 
 ## Title
@@ -7,6 +18,15 @@ Enumerate the RPG-core semantic replacement surface into the canonical legacy in
 ## Status
 
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 

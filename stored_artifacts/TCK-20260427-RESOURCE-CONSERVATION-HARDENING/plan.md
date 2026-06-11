@@ -1,3 +1,13 @@
+---
+status: historical
+layer: economy
+authority: P2
+audience: agent
+ticket_id: TCK-20260427-RESOURCE-CONSERVATION-HARDENING
+artifact_type: plan
+tags: [resource, conservation, hardening]
+---
+
 # Implementation Plan - Resource Conservation Hardening (Phase 3.1)
 
 Hardening the Resource Conservation Law by introducing a unified `ResourceTransactionResolver` and refactoring systems to use it.

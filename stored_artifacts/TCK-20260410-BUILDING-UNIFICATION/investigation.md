@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260410-BUILDING-UNIFICATION
+artifact_type: investigation
+tags: [building, unification]
+---
+
 # Investigation: TCK-20260410-BUILDING-UNIFICATION
 
 ## Current Hybrid Pattern

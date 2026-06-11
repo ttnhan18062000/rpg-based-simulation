@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: observability
+authority: P2
+audience: agent
+tags: [sim, observatory, review]
+---
+
 # Current-State Observability Assessment for Simulation Observatory (Phase 1)
 
 ## Executive Summary

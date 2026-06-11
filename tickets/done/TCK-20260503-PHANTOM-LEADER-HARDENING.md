@@ -1,3 +1,14 @@
+---
+status: historical
+layer: strategy
+authority: P1
+audience: agent
+ticket_id: TCK-20260503-PHANTOM-LEADER-HARDENING
+phase: done
+date: 2026-05-03
+tags: [phantom, leader, hardening]
+---
+
 # TCK-20260503-PHANTOM-LEADER-HARDENING
 
 ## Title
@@ -5,6 +16,15 @@ Fixing Group Cohesion Latency (Phantom Leader Bug)
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Ensure that group cohesion and leadership dissolution reflect real-time entity status (death/active) within the same simulation tick.

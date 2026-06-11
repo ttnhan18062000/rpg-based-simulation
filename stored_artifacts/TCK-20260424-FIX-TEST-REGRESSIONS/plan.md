@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260424-FIX-TEST-REGRESSIONS
+artifact_type: plan
+tags: [fix, test, regressions]
+---
+
 # Plan: Fix Test Regressions
 
 Fix 4 failed test cases in `tests/` to restore 100% test stability.

@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260520-SIM-OBS-M35
+artifact_type: test_plan
+tags: [sim, obs, m35]
+---
+
 # Test Plan: ClickHouse Event Warehouse (Milestone 35)
 
 We will verify both abstract mapping logic (via mock tests) and physical data mutations (via containerized integration tests).

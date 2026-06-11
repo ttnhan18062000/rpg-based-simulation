@@ -1,3 +1,13 @@
+---
+status: historical
+layer: strategy
+authority: P2
+audience: agent
+ticket_id: TCK-20260523-WORLD-TEST-STRATEGY
+artifact_type: plan
+tags: [world, test, strategy]
+---
+
 # Implementation Plan — Milestone 73 Worldbuilding Test Strategy
 
 We will build a comprehensive, dedicated validation and test suite to satisfy all anti-misdirection requirements and smoke simulation objectives of Milestone 73.

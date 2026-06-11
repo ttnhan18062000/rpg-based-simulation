@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260518-APPLY-PATH-REDESIGN
+artifact_type: plan
+tags: [apply, path, redesign]
+---
+
 # Implementation Plan - Milestone 14 ApplyPath Structural Redesign
 
 ## Problem Statement

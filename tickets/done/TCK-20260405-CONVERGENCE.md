@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260405-CONVERGENCE
+phase: done
+date: 2026-04-05
+tags: [convergence]
+---
+
 # TCK-20260405-CONVERGENCE: Full-Suite Stability and Convergence
 
 ## Description
@@ -18,3 +29,7 @@ Final stabilization of the AOA architecture across the entire 1227-test suite. R
 
 ## Status
 DONE
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

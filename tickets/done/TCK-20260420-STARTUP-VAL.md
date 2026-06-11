@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260420-STARTUP-VAL
+phase: done
+date: 2026-04-20
+tags: [startup, val]
+---
+
 # TCK-20260420-STARTUP-VAL
 
 ## Title
@@ -5,6 +16,15 @@ Hardened Patch-Friendly Startup Boundaries
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Decouple profile validation from the Kernel constructor to allow for non-blocking startup and easier patching.

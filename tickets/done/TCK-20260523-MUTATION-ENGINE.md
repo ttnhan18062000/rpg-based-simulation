@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260523-MUTATION-ENGINE
+phase: done
+date: 2026-05-23
+tags: [mutation, engine]
+---
+
 # TCK-20260523-MUTATION-ENGINE
 
 ## Title
@@ -7,6 +18,15 @@ Milestone 85 — Mutation Engine
 ## Status
 
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 

@@ -1,3 +1,13 @@
+---
+status: historical
+layer: ai
+authority: P2
+audience: agent
+ticket_id: TCK-20260326-NARRATIVE
+artifact_type: investigation
+tags: [narrative]
+---
+
 # Investigation: Narrative Memory System
 
 ## Current State

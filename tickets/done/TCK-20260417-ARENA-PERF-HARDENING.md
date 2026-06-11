@@ -1,3 +1,14 @@
+---
+status: historical
+layer: performance
+authority: P1
+audience: agent
+ticket_id: TCK-20260417-ARENA-PERF-HARDENING
+phase: done
+date: 2026-04-17
+tags: [arena, perf, hardening]
+---
+
 - `[/]` Phase 1: Snapshot Optimization
     - `[ ]` Update `src/core/models/snapshot.py` with universal shallow support
     - `[ ]` Update `src/engine/phases/persistence.py` to use optimization
@@ -12,3 +23,7 @@
 - `[ ]` Phase 5: Verification
     - `[ ]` Run performance tests
     - `[ ]` Verify memory boundary tripwire
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

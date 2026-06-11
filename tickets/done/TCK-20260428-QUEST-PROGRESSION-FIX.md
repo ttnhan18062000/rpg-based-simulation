@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260428-QUEST-PROGRESSION-FIX
+phase: done
+date: 2026-04-28
+tags: [quest, progression, fix]
+---
+
 # TCK-20260428-QUEST-PROGRESSION-FIX
 
 ## Title
@@ -5,6 +16,15 @@ Fix Quest Progression XP Double-Counting Regression
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Resolve the `AssertionError` in `tests/arena/test_arena_quests.py` where heroes received 220 XP instead of 110 XP (10 kill + 100 quest), leading to an incorrect remainder after leveling up.

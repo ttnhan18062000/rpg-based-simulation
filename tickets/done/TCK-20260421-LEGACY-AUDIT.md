@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260421-LEGACY-AUDIT
+phase: done
+date: 2026-04-21
+tags: [legacy, audit]
+---
+
 # TCK-20260421-LEGACY-AUDIT
 
 ## Title
@@ -5,6 +16,15 @@ Legacy `src` Logic and System Compatibility Audit
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Audit the legacy checklists (Part 1-5) against the `src` implementation and mark completed/divergent/unsupported status for each item with evidence.

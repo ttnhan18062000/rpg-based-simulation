@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260425-PH7-M3-RECOVERY
+phase: done
+date: 2026-04-25
+tags: [ph7, m3, recovery]
+---
+
 # TCK-20260425-PH7-M3-RECOVERY
 
 ## Title
@@ -7,6 +18,15 @@ Implementation of Inn, Home, and Class Hall Services
 ## Status
 
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 

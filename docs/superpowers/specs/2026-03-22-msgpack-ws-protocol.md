@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: misc
+original_date: 2026-03-22
+---
+
 # Spec: High-Performance Binary WebSocket Protocol (BWS)
 
 ## Overview

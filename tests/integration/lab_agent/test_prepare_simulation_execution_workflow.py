@@ -188,3 +188,65 @@ def test_absolute_path_traversal_blocked(mock_workspace_with_draft: Path):
     with pytest.raises(PermissionError) as exc_info:
         workflow.run("session_prep_01", prep_request)
     assert "Path traversal blocked" in str(exc_info.value)
+
+
+# ── Semantic assertions ──────────────────────────────────────────────────────
+
+def test_command_references_generated_experiment_path(mock_workspace_with_draft: Path):
+    """The generated command script must reference the actual experiment.yaml path produced by
+    GenerateSimulationSetup, not a hardcoded placeholder."""
+    request = WorkflowRequest(
+        workflow="PrepareSimulationExecution",
+        mode="generic",
+        user_goal="Verify command path accuracy",
+        constraints={"budget_profile": "local_dev"}
+    )
+    workflow = PrepareSimulationExecutionWorkflow(workspace_root=mock_workspace_with_draft)
+    res = workflow.run("session_prep_01", request)
+    assert res["status"] == "READY"
+
+    support_dir = mock_workspace_with_draft / "data" / "lab_sessions" / "session_prep_01" / "execution_support"
+    script_content = (support_dir / "execution_command.sh").read_text(encoding="utf-8")
+
+    # The draft experiment YAML must have been written by GenerateSimulationSetup
+    experiment_yaml = (
+        mock_workspace_with_draft / "data" / "lab_sessions"
+        / "session_prep_01" / "generation" / "draft_specs" / "experiment.yaml"
+    )
+    assert experiment_yaml.is_file(), "Draft experiment.yaml must exist before Prepare"
+    # The command must reference the relative path to this file
+    relative_str = str(experiment_yaml.relative_to(mock_workspace_with_draft))
+    assert relative_str in script_content, (
+        f"Command script must contain experiment path {relative_str!r}; got:\n{script_content}"
+    )
+
+
+def test_budget_estimate_run_count_reflects_seeds(mock_workspace_with_draft: Path):
+    """storage_estimate.run_count in the readiness report must match the seeds count in the spec."""
+    import yaml as _yaml
+    request = WorkflowRequest(
+        workflow="PrepareSimulationExecution",
+        mode="generic",
+        user_goal="Verify budget run count",
+        constraints={"budget_profile": "local_dev"}
+    )
+    workflow = PrepareSimulationExecutionWorkflow(workspace_root=mock_workspace_with_draft)
+    res = workflow.run("session_prep_01", request)
+    assert res["status"] == "READY"
+
+    experiment_yaml = (
+        mock_workspace_with_draft / "data" / "lab_sessions"
+        / "session_prep_01" / "generation" / "draft_specs" / "experiment.yaml"
+    )
+    with open(experiment_yaml, "r", encoding="utf-8") as f:
+        spec = _yaml.safe_load(f)
+    seed_count = len(spec["run"]["seeds"])
+
+    support_dir = mock_workspace_with_draft / "data" / "lab_sessions" / "session_prep_01" / "execution_support"
+    with open(support_dir / "execution_readiness_report.json", encoding="utf-8") as f:
+        readiness = json.load(f)
+
+    assert readiness["storage_estimate"]["run_count"] == seed_count, (
+        f"Expected run_count={seed_count} (from seeds), "
+        f"got {readiness['storage_estimate']['run_count']}"
+    )

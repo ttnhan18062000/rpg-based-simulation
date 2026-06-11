@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260502-E5-SEMANTIC-HARDENING
+phase: done
+date: 2026-05-02
+tags: [e5, semantic, hardening]
+---
+
 # TCK-20260502-E5-SEMANTIC-HARDENING
 
 ## Title
@@ -5,6 +16,15 @@ Hardening Social Contract Semantics and Replay Fidelity
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Formalize social contract state machine and ensure deterministic event-level replay.

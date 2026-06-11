@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260515-PROD-HARDENING
+artifact_type: plan
+tags: [prod, hardening]
+---
+
 # Implementation Plan: Milestone 10 Production Hardening
 
 ## Goal

@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: core
+original_date: unknown
+---
+
 # Phase 3 — Adventure Decision Layer
 
 Phase 1 gives the world enough structured options.

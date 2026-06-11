@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260529-COG-PHASE16-EMOTION
+phase: done
+date: 2026-05-29
+tags: [cog, phase16, emotion]
+---
+
 # TCK-20260529-COG-PHASE16-EMOTION
 
 ## Title
@@ -7,6 +18,15 @@ Emotion, Recovery, Habit, and Opportunity Cost Domain Implementation
 ## Status
 
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 

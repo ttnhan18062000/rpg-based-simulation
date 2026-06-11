@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260426-PHASE-24-SOVEREIGNTY
+phase: done
+date: 2026-04-26
+tags: [phase, sovereignty]
+---
+
 # TCK-20260426-PHASE-24-SOVEREIGNTY
 
 ## Title
@@ -5,6 +16,15 @@ Phase 24: Regional Sovereignty & Taxation
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Restore regional ownership, influence shifts, and taxation to the V2 authoritative engine. Port macroscopic logic from legacy `StrategySystem` to the `ApplyPath`.

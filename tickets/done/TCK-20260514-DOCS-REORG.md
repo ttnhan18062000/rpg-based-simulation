@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260514-DOCS-REORG
+phase: done
+date: 2026-05-14
+tags: [docs, reorg]
+---
+
 # TCK-20260514-DOCS-REORG
 
 ## Title
@@ -5,6 +16,15 @@ Architecting Authoritative RPG Documentation Suite
 
 ## Status
 INPROGRESS
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Reorganize and expand the V2 RPG Engine's documentation suite into a hierarchical, developer-first structure. Create a single source of truth mirroring `src/` and `tests/`, clearly defining the 17-phase Authoritative Pipeline and its causal interdependencies.

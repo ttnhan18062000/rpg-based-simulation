@@ -1,3 +1,10 @@
+---
+status: active
+layer: engine
+authority: P1
+audience: developer
+---
+
 # Proof-Path Taxonomy
 
 This document defines the controlled vocabulary for how open replacement rows are proven or closed in current and future phases.

@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260529-OBS-PHASE25-BEHAVIOR-PATTERNS-INSIGHTS
+phase: done
+date: 2026-05-29
+tags: [obs, phase25, behavior, patterns, insights]
+---
+
 # TCK-20260529-OBS-PHASE25-BEHAVIOR-PATTERNS-INSIGHTS
 
 ## Title
@@ -7,6 +18,15 @@ Pattern Detectors and Behavior Insights (Phase 25)
 ## Status
 
 INPROGRESS
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 

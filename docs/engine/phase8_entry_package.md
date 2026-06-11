@@ -1,3 +1,10 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: developer
+---
+
 # Phase 8 Entry Package: Strategic Recovery (Combat & Tactics)
 
 This artifact serves as the official entry gate for Phase 8. It certifies that the Phase 7 substrate handoff is complete and that Phase 8 row ownership is explicitly defined.

@@ -1,3 +1,10 @@
+---
+status: historical
+layer: testing
+authority: P2
+audience: developer
+---
+
 # Phases 19–28 — Observability & Behavior Profiling Test Coverage
 
 This document outlines the detailed test coverage audit matrix for the Observability & Behavior Profiling module (Phases 19 through 28). It maps each feature requirements area to its respective test files and validates that behavior metrics are decoupled from the simulation hot path under budget constraints.
@@ -13,6 +20,10 @@ This document outlines the detailed test coverage audit matrix for the Observabi
 - **Non-Blocking Bounded Queue**:
   - Verifies event buffering, lockless multi-producer single-consumer emission, and drop safety under backpressure.
   - Test File: [test_phase21_bounded_observability_queue.py](file:///home/vboxuser/Work/rpg-based-simulation/tests/unit/observability/stream/test_phase21_bounded_observability_queue.py)
+- **QueueDrainWorker Singleton Guard** _(added 2026-06-11)_:
+  - Verifies that `get_or_start_global_worker()` returns the same worker on repeated calls and that at most one worker drains the global queue at a time. Covers dead-worker replacement and `get_active_global_worker_count()`.
+  - Test File: [test_queue_worker_singleton.py](file:///home/vboxuser/Work/rpg-based-simulation/tests/unit/test_queue_worker_singleton.py)
+  - Parity: INFRA-179
 
 ## Normalization, Worker & Timeline Ingestion (Phases 22–24)
 
@@ -72,3 +83,16 @@ This document outlines the detailed test coverage audit matrix for the Observabi
 - **Rollout Parity & Release Gate Verification**:
   - Certifies release readiness by ensuring zero loss of determinism parity when logging.
   - Test File: [test_phase28_observability_determinism.py](file:///home/vboxuser/Work/rpg-based-simulation/tests/integration/observability/test_phase28_observability_determinism.py)
+
+## Worker Lifecycle & Leak Regression (added 2026-06-11)
+
+These tests and infrastructure guard against observability worker thread accumulation across the test suite — the root cause of the historical MemoryError / Fatal abort crashes on full-suite runs.
+
+- **Memory Probe Helpers**:
+  - `snapshot_start/end`, `count_drain_workers`, `count_event_recorders`, `assert_no_worker_leak` — importable from `tests/tools/memory_probe.py` for targeted per-test assertions.
+  - Test File: [test_memory_probe.py](file:///home/vboxuser/Work/rpg-based-simulation/tests/unit/test_memory_probe.py)
+- **Session-Level Leak Sentinel**:
+  - `_observability_worker_thread_sentinel` autouse fixture in `tests/conftest.py` counts `QueueDrainWorker` threads at session start and end; `pytest.fail()` if count grows. Catches any future test that starts a worker without teardown.
+  - Location: `tests/conftest.py`
+- **Standalone Diagnostic Script**:
+  - `scripts/memory_probe.py` — run with `--flamegraph` to produce an HTML memray allocation flamegraph, or default mode for RSS + tracemalloc report. `--simulate-leak` demonstrates the accumulation pattern.

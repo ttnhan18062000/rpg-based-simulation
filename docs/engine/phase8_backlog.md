@@ -1,3 +1,10 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: developer
+---
+
 # Phase 8 Implementation Backlog - Combat & Tactical Semantics
 
 This document defines the frozen row set for Phase 8, focused on moment-to-moment combat legality, tactical decision-making, and local world interaction.

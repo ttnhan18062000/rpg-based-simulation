@@ -1,3 +1,13 @@
+---
+status: historical
+layer: strategy
+authority: P2
+audience: agent
+ticket_id: TCK-20260523-COGNITION-SAFETY-VERIFICATION
+artifact_type: plan
+tags: [cognition, safety, verification]
+---
+
 # plan.md - safety & verification Plan
 
 Run final verification, determinism, performance, and negative semantic safety suites.

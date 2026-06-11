@@ -1,3 +1,13 @@
+---
+status: historical
+layer: ai
+authority: P2
+audience: agent
+ticket_id: TCK-20260510-SOCIAL-EXPIRATION
+artifact_type: plan
+tags: [social, expiration]
+---
+
 # Stabilizing Social Contract Expiration
 
 The test `test_contract_expiration_resolves_and_dissolves` fails because `ACTIVE` social contracts that reach their `expiry_tick` are not being transitioned to terminal states (like `FULFILLED`/`COMPLETED`). While `ContractService.process_active_contracts` exists in `src/social/contracts.py` to handle this, it is not integrated into the `AuthoritativeApplyPipeline`.

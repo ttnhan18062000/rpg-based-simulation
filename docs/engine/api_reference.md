@@ -1,3 +1,10 @@
+---
+status: active
+layer: engine
+authority: P1
+audience: developer
+---
+
 # API Reference: The Presentation Layer
 
 The WorldLoop RPG provides a gzipped JSON API designed for low-latency state synchronization. Following the AOA pivot, the API layer is decoupled from the simulation via a "Presenter" pattern.

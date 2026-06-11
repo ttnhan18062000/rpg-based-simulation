@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: misc
+authority: P2
+audience: agent
+tags: [quest, progress, stabilization]
+---
+
 # Walkthrough: RPG Engine Progression Stabilization
 
 Successfully hardened the V2 Engine's quest progression and authoritative pipeline.

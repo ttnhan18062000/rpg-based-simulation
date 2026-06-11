@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260521-OBS-DOCS-UPDATE
+artifact_type: test_plan
+tags: [obs, docs, update]
+---
+
 # Test Plan - Documentation Quality & Parity
 
 ## Goal

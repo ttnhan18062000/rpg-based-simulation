@@ -1,3 +1,14 @@
+---
+status: historical
+layer: world
+authority: P1
+audience: agent
+ticket_id: TCK-20260503-TERRAIN-WEIGHT-AUTHORITY
+phase: done
+date: 2026-05-03
+tags: [terrain, weight, authority]
+---
+
 # TCK-20260503-TERRAIN-WEIGHT-AUTHORITY
 
 ## Title
@@ -5,6 +16,15 @@ Enforcing Authoritative Movement Costs (Terrain Weighting)
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Integrate terrain-based movement costs into the authoritative legality matrix to prevent entities from ignoring difficult terrain.

@@ -1,3 +1,10 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: developer
+---
+
 # Phase 7 Entry Package: Substrate Closure Readiness
 
 This artifact serves as the official entry gate for Phase 7 of the Resource Epic. It certifies that the planning milestones are complete and the engine is ready for substrate hardening.

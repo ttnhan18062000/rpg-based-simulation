@@ -1,3 +1,10 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: developer
+---
+
 # Phase 10 Cross-Phase Boundary Notes
 
 This document distinguishes the four distinct types of work occurring during the final stages of the V2 engine replacement.

@@ -1,3 +1,13 @@
+---
+status: historical
+layer: strategy
+authority: P2
+audience: agent
+ticket_id: TCK-20260418-STRAT-LEARNING-REGRESSION
+artifact_type: plan
+tags: [strat, learning, regression]
+---
+
 # Resolve Strategic Learning Persistence Regression
 
 Fixes a persistence regression where `LeadRecord` flags (`tested`, `is_exhausted`) are incorrectly reverted during simulation ticks.

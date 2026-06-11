@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: economy
+original_date: unknown
+---
+
 Below is the **full detailed implementation plan for Phase 11**, in the same milestone/task structure style as your earlier implementation docs, and aligned with the Phase 11 high-level plan plus the roadmap and completion standards in [resource_phases.md](sandbox:/mnt/data/resource_phases.md) and [src_principle.md](sandbox:/mnt/data/src_principle.md).
 
 # Detailed Implementation Plan — Phase 11 of `src`

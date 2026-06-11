@@ -1,0 +1,22 @@
+{
+  "run_id": "run-seed-42",
+  "seed": 42,
+  "status": "COMPLETED",
+  "health_score": 92.0,
+  "total_anomalies_count": 1,
+  "critical_count": 0,
+  "warning_count": 1,
+  "error_count": 0,
+  "anomalies": [
+    {
+      "rule_name": "EconInflationRule",
+      "severity": "WARNING",
+      "entity_id": 1,
+      "tick_detected": 50,
+      "message": "Minor economic inflation detected at tick 50"
+    }
+  ],
+  "rule_execution": [
+    {"rule_id": "EconInflationRule", "status": "TRIGGERED"}
+  ]
+}

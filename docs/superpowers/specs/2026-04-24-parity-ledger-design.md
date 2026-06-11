@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: misc
+original_date: 2026-04-24
+---
+
 # Parity Ledger Design Specification
 
 ## 1. Goal

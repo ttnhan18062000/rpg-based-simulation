@@ -1,0 +1,64 @@
+# STATE: EXISTING-LOGIC
+- id: "hero_pocket"
+  starting_items:
+    small_potion: 1
+  starting_gold: 100.0
+
+# STATE: REDESIGNED-CORE
+- id: "empty_animal_inventory"
+  starting_items: {}
+  starting_gold: 0.0
+
+# STATE: ADDITIONAL
+- id: "goblin_looter_pouch"
+  starting_items:
+    goblin_token: 1
+  starting_gold: 5.0
+
+# STATE: ADDITIONAL
+- id: "guard_basic_kit"
+  starting_items:
+    iron_sword: 1
+    leather_armor: 1
+  starting_gold: 20.0
+
+# STATE: ADDITIONAL
+- id: "merchant_trade_pack"
+  starting_items:
+    small_potion: 2
+    travel_ration: 5
+    repair_kit: 1
+  starting_gold: 250.0
+
+# STATE: ADDITIONAL
+- id: "blacksmith_toolkit"
+  starting_items:
+    repair_kit: 2
+    iron_ore: 3
+    wood: 2
+  starting_gold: 80.0
+
+# STATE: ADDITIONAL
+- id: "mage_satchel"
+  starting_items:
+    wooden_staff: 1
+    crystal_shard: 1
+  starting_gold: 60.0
+
+# STATE: ADDITIONAL
+- id: "ranger_pack"
+  starting_items:
+    basic_bow: 1
+    travel_ration: 2
+  starting_gold: 40.0
+
+# STATE: ADDITIONAL
+- id: "undead_empty"
+  starting_items: {}
+  starting_gold: 0.0
+
+# STATE: ADDITIONAL
+- id: "boss_hoard_token"
+  starting_items:
+    ancient_fragment: 1
+  starting_gold: 200.0

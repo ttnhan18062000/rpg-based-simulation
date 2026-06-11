@@ -1,3 +1,10 @@
+---
+status: historical
+layer: observability
+authority: P2
+audience: developer
+---
+
 # Phase 4: Multi-Run Baseline and Balance Analysis
 
 This document describes the architectural specifications, processing pipelines, and data layout introduced in **Phase 4: Multi-Run Baseline and Balance Analysis**. This phase expanded the single-run Observatory into a robust multi-run comparison engine, allowing developers to execute sweeps, compute statistical baselines, and detect metric drift across multiple seeds.

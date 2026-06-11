@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260527-COG-CAPACITY-ENFORCEMENT
+artifact_type: investigation
+tags: [cog, capacity, enforcement]
+---
+
 # Investigation — Capacity Enforcement
 
 ## Current Implementation Analysis

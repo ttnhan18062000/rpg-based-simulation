@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: misc
+authority: P2
+audience: agent
+tags: [test, stability, hardening]
+---
+
 # Restoring Data-Integrity & Contract Tests
 
 The user noted a drop in test count and asked if the missing tests are "still needed." My audit shows that the removed tests were largely **Data Integrity checks** (verifying ranges in `items.json` and NPC gear assignments).

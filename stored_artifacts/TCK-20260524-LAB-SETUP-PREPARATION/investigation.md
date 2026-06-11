@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260524-LAB-SETUP-PREPARATION
+artifact_type: investigation
+tags: [lab, setup, preparation]
+---
+
 # Staging Investigation: TCK-20260524-LAB-SETUP-PREPARATION
 
 ## Investigation & Existing Patterns

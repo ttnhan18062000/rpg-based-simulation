@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260514-MECHANICS-HARDENING
+phase: done
+date: 2026-05-14
+tags: [mechanics, hardening]
+---
+
 # TCK-20260514-MECHANICS-HARDENING
 
 ## Title
@@ -5,6 +16,15 @@ Hardening RPG Engine Mechanics Documentation & Logic Parity
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Complete the 100% semantic compliance certification of the V2 RPG Engine by codifying core simulation laws into a definitive, formula-centric "Mechanics Bible." Ensure strict source-code parity across all chapters and refactor identified logic gaps.

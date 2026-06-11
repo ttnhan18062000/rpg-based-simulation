@@ -1,3 +1,14 @@
+---
+status: historical
+layer: world
+authority: P1
+audience: agent
+ticket_id: TCK-20260425-WORLD-DYNAMICS
+phase: done
+date: 2026-04-25
+tags: [world, dynamics]
+---
+
 # TCK-20260425-WORLD-DYNAMICS
 
 ## Title
@@ -7,6 +18,15 @@ Implementation of Phase 11 World Dynamics: Influence, Conquest, Strongholds, and
 ## Status
 
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 

@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: infra-06-hardening-and-chaos-testing
+phase: done
+date: unknown
+tags: [infra, hardening, and, chaos, testing]
+---
+
 # infra-06: Hardening and Chaos Testing
 
 ## Objective
@@ -11,3 +22,7 @@ DONE
 
 ## Final Status
 **DONE**: Successfully implemented Chaos Testing and System Invariant Validation. Integrated `chaos_enabled` and `chaos_drop_rate` into `SimulationConfig` for fault injection. Verified engine resilience via `Hypothesis` property-based testing and recorded findings in `stored_artifacts/infra_06/guide.md`.
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

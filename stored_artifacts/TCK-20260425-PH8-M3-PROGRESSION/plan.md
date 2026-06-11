@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260425-PH8-M3-PROGRESSION
+artifact_type: plan
+tags: [ph8, m3, progression]
+---
+
 # PH8 M3: Progression and Leveling
 
 Implement authoritative leveling and stat growth logic.

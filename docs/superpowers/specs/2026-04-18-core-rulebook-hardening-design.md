@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: misc
+original_date: 2026-04-18
+---
+
 # Design Spec: Core Rulebook Hardening (Milestone 1)
 
 **Date**: 2026-04-18

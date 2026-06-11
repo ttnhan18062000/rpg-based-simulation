@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260523-LAB-BUDGET-GUARDRAILS
+artifact_type: investigation
+tags: [lab, budget, guardrails]
+---
+
 # Investigation - Resource, Storage, and Runtime Guardrails (Milestone 82)
 
 ## Context

@@ -1,3 +1,13 @@
+---
+status: historical
+layer: world
+authority: P2
+audience: agent
+ticket_id: TCK-20260523-WORLD-COMPILER
+artifact_type: investigation
+tags: [world, compiler]
+---
+
 # Investigation: World Compiler Implementation (Milestone 70)
 
 This investigation outlines how we translate a validated `WorldSpec` into an engine `AuthoritativeState` deterministically using a seed.

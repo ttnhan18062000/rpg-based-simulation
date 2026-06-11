@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260424-PH10-M6-RATIFICATION
+phase: done
+date: 2026-04-24
+tags: [ph10, m6, ratification]
+---
+
 # TCK-20260424-PH10-M6-RATIFICATION
 
 ## Title
@@ -5,6 +16,15 @@ Phase 10 Milestone 6: Final System Ratification
 
 ## Status
 INPROGRESS
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Final audit and closure of Phase 10. Ensure all infrastructure parity goals are met and verified.

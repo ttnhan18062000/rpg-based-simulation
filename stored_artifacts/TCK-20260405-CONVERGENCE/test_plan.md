@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260405-CONVERGENCE
+artifact_type: test_plan
+tags: [convergence]
+---
+
 # AOA Convergence Test Plan (TCK-20260405-CONVERGENCE)
 
 ## What to Test

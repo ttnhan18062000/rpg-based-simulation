@@ -1,3 +1,13 @@
+---
+status: historical
+layer: strategy
+authority: P2
+audience: agent
+ticket_id: TCK-20260523-COGNITION-FINAL-CERTIFICATION
+artifact_type: plan
+tags: [cognition, final, certification]
+---
+
 # Verification and Certification Plan for Phase 10: Cognition Graph Observability
 
 ## Goal Description

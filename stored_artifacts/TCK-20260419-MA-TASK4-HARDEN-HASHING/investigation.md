@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260419-MA-TASK4-HARDEN-HASHING
+artifact_type: investigation
+tags: [ma, task4, harden, hashing]
+---
+
 # Investigation: Canonical Hashing Audit
 
 ## Truth Isolation

@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260527-COG-BELIEF-INTEGRATION
+artifact_type: test_plan
+tags: [cog, belief, integration]
+---
+
 # Test Plan - TCK-20260527-COG-BELIEF-INTEGRATION
 
 We will verify that beliefs are created correctly, direct observations update certainty, contradictions decrease utility, and detours factor in both certainty and source trust.

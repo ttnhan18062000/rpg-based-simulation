@@ -1,3 +1,14 @@
+---
+status: historical
+layer: economy
+authority: P1
+audience: agent
+ticket_id: resource_v2_governor_reactivity_e6_0
+phase: done
+date: unknown
+tags: [resource_v2_governor_reactivity_e6_0]
+---
+
 # TCK-20260503-GOVERNOR-REACTIVITY-HARDENING
 
 ## Title
@@ -5,6 +16,15 @@ Fixing Governor Reactivity Lag (Zero-Tick Throttle)
 
 ## Status
 OPEN
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Reduce the 1-tick delay in Governor response to extreme hardware or compute pressure.

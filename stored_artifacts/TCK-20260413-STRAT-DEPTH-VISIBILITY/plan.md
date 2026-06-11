@@ -1,3 +1,13 @@
+---
+status: historical
+layer: strategy
+authority: P2
+audience: agent
+ticket_id: TCK-20260413-STRAT-DEPTH-VISIBILITY
+artifact_type: plan
+tags: [strat, depth, visibility]
+---
+
 # Investigation: Strategic Depth & Visibility Hardening
 
 ## Overview

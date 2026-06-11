@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: economy
+original_date: unknown
+---
+
 # High-Level Implementation Plan — Phase 6 of `src`
 
 This plan assumes Phase 5 has materially improved `src` by recovering a bounded resource/town/progression slice and by strengthening runtime truth around supported behavior.

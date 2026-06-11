@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260508-ECON-PIPELINE-FIX
+artifact_type: test_plan
+tags: [econ, pipeline, fix]
+---
+
 # Test Plan - TCK-20260508-ECON-PIPELINE-FIX
 
 ## Target

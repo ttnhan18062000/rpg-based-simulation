@@ -1,3 +1,14 @@
+---
+status: historical
+layer: economy
+authority: P1
+audience: agent
+ticket_id: TCK-20260427-RESOURCE-CONSERVATION-HARDENING
+phase: done
+date: 2026-04-27
+tags: [resource, conservation, hardening]
+---
+
 # TCK-20260427-RESOURCE-CONSERVATION-HARDENING
 
 ## Title
@@ -7,6 +18,15 @@ Hardening Resource Conservation Law (Phase 3.1)
 ## Status
 
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 

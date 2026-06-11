@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260509-PIPELINE-AUDIT-HARDENING
+phase: done
+date: 2026-05-09
+tags: [pipeline, audit, hardening]
+---
+
 # TCK-20260509-PIPELINE-AUDIT-HARDENING
 
 ## Title
@@ -5,6 +16,15 @@ Hardening Authoritative Audit Fidelity & Pipeline Determinism
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Resolve regression failures in `test_rejection_audit_aggregation` and ensure pipeline determinism for actor validity.

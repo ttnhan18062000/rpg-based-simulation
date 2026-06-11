@@ -1,3 +1,14 @@
+---
+status: historical
+layer: core
+authority: P1
+audience: agent
+ticket_id: design-01-skill-stat-scaling
+phase: done
+date: unknown
+tags: [design, skill, stat, scaling]
+---
+
 # Design 01: Skill & Basic Attack Stat Scaling
 
 ## Summary
@@ -26,3 +37,7 @@ DONE
 
 ## Final Status
 **DONE**: Unified skill damage resolution and deterministic RNG passing via `TCK-20260405-SKILL-SCALING`. Implemented scaling chain: `base_stat → class_scaling → skill_power → final_damage` and verified with automated combat tests.
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

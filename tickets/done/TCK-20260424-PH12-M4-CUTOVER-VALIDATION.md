@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260424-PH12-M4-CUTOVER-VALIDATION
+phase: done
+date: 2026-04-24
+tags: [ph12, m4, cutover, validation]
+---
+
 # TCK-20260424-PH12-M4-CUTOVER-VALIDATION
 
 ## Title
@@ -5,6 +16,15 @@ Phase 12 Milestone 4: Real-Condition Cutover Validation and Rollback Discipline
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Validate the `src` engine cutover under long-running simulation conditions and verify the functional integrity of the rollback mechanism.

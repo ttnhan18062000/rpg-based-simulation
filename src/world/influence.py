@@ -4,9 +4,21 @@ from typing import Dict, List, Optional, TYPE_CHECKING
 from src.core.state import AuthoritativeState, EntityState
 from src.core.updates import StateUpdate, WorldUpdate
 from src.core.enums import Faction
+from src.content_semantics.faction import get_faction_id_str, get_faction_semantics_service
 
 if TYPE_CHECKING:
     from src.systems.world_systems.generator import EntityGenerator
+
+
+def _region_owner_faction_id_str(owner_int: Optional[int]) -> Optional[str]:
+    """Convert stored Optional[int] region owner to faction_id string for semantics checks."""
+    if owner_int is None:
+        return None
+    try:
+        return Faction(owner_int).name.lower()
+    except (ValueError, TypeError):
+        return None
+
 
 class FactionInfluenceService:
     """
@@ -23,39 +35,40 @@ class FactionInfluenceService:
         Calculates influence deltas based on entity deaths.
         """
         influence_deltas: Dict[str, float] = {}
-        
+        semantics = get_faction_semantics_service()
+
         for entity in recent_deaths:
             from src.engine.legality import LegalityServiceV2
             region = LegalityServiceV2.get_region_for_position(entity.navigation.position, state)
             if not region:
                 continue
-                
-            # Hero death decreases influence (Monster gain)
-            if entity.identity.faction == Faction.HERO_GUILD:
+
+            faction_id = get_faction_id_str(entity)
+            if semantics.is_protector(faction_id):
                 delta = -FactionInfluenceService.DEATH_INFLUENCE_SHIFT
-            # Monster death increases influence (Hero gain)
-            elif entity.identity.faction == Faction.MONSTER_HORDE:
+            elif semantics.is_invader(faction_id):
                 delta = FactionInfluenceService.DEATH_INFLUENCE_SHIFT
             else:
                 continue
-            
+
             influence_deltas[region.id] = influence_deltas.get(region.id, 0.0) + delta
             
         world_updates = {}
         for r_id, delta in influence_deltas.items():
             region = state.regions[r_id]
             new_influence = max(-100.0, min(100.0, region.influence + delta))
-            
+            owner_fid = _region_owner_faction_id_str(region.owner_faction_id)
+
             w_upd_args = {"region_id": r_id, "influence_delta": delta}
-            
+
             # Conquest Check
             if region.owner_faction_id is None and new_influence <= FactionInfluenceService.CONQUEST_THRESHOLD:
                 w_upd_args["owner_faction_id_set"] = Faction.MONSTER_HORDE
-                
+
             # Liberation Check
-            elif region.owner_faction_id == Faction.MONSTER_HORDE and new_influence >= FactionInfluenceService.LIBERATION_THRESHOLD:
-                w_upd_args["owner_faction_id_set"] = -1 # Sentinel for None
-                
+            elif owner_fid is not None and semantics.is_invader(owner_fid) and new_influence >= FactionInfluenceService.LIBERATION_THRESHOLD:
+                w_upd_args["owner_faction_id_set"] = -1  # Sentinel for None
+
             world_updates[r_id] = WorldUpdate(**w_upd_args)
             
         return StateUpdate(world_updates=world_updates)

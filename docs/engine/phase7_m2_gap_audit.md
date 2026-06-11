@@ -1,3 +1,10 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: developer
+---
+
 # Gap Audit: Phase 7 Action/Update Substrate
 
 ## 1. Executive Summary

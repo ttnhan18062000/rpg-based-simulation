@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260327-WINDBIGMOD
+phase: done
+date: 2026-03-27
+tags: [windbigmod]
+---
+
 # TCK-20260327-WINDBIGMOD
 
 ## Title
@@ -27,3 +38,7 @@ This ticket combines the maintenance refactor of overgrown modules with the func
 - TCK-20260322-RPG_REFINEMENT (InProgress)
 - TCK-20260326-BIGMOD (Subsumed)
 - epic-09-improved-pathfinding-and-movement.md
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

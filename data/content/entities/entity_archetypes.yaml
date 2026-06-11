@@ -1,0 +1,309 @@
+# STATE: REDESIGNED-CORE
+# Archetype is first spawnable entity template. No enemy field here.
+- id: "hungry_wolf"
+  display_name: "Hungry Wolf"
+  race: "wolf"
+  faction: "wild_beast_pack"
+  role: "predator_hunter"
+  stat_profile: "wolf_predator_base"
+  combat_profile: "predator_melee"
+  cognition_profile: "instinctive_animal"
+  drive_profile: "territorial_predator"
+  inventory_profile: "empty_animal_inventory"
+  skill_profile: "predator_skills"
+  traits: ["pack_hunter", "territorial", "carnivore"]
+  themes: ["forest", "wolf_den"]
+
+# STATE: ADDITIONAL
+- id: "alpha_wolf"
+  display_name: "Alpha Wolf"
+  race: "wolf"
+  faction: "wild_beast_pack"
+  role: "alpha"
+  stat_profile: "wolf_predator_base"
+  combat_profile: "predator_melee"
+  cognition_profile: "instinctive_animal"
+  drive_profile: "territorial_predator"
+  inventory_profile: "empty_animal_inventory"
+  skill_profile: "predator_skills"
+  traits: ["pack_hunter", "territorial", "carnivore", "leader"]
+  themes: ["forest", "wolf_den"]
+
+# STATE: LEGACY-EXPORT
+- id: "goblin_scout"
+  display_name: "Goblin Scout"
+  race: "goblin"
+  faction: "goblin_warband"
+  role: "scout"
+  stat_profile: "goblin_scout_base"
+  combat_profile: "opportunist_raider"
+  cognition_profile: "opportunistic_humanoid"
+  drive_profile: "opportunistic_raider"
+  inventory_profile: "goblin_looter_pouch"
+  skill_profile: "goblin_raider_skills"
+  traits: ["humanoid", "tool_user", "opportunistic"]
+  themes: ["goblin", "frontier"]
+
+# STATE: LEGACY-EXPORT
+- id: "goblin_raider"
+  display_name: "Goblin Raider"
+  race: "goblin"
+  faction: "goblin_warband"
+  role: "raider"
+  stat_profile: "goblin_raider_base"
+  combat_profile: "opportunist_raider"
+  cognition_profile: "opportunistic_humanoid"
+  drive_profile: "opportunistic_raider"
+  inventory_profile: "goblin_looter_pouch"
+  skill_profile: "goblin_raider_skills"
+  traits: ["humanoid", "tool_user", "opportunistic"]
+  themes: ["goblin"]
+
+# STATE: LEGACY-EXPORT
+- id: "goblin_archer"
+  display_name: "Goblin Archer"
+  race: "goblin"
+  faction: "goblin_warband"
+  role: "scout"
+  stat_profile: "goblin_archer_base"
+  combat_profile: "ranged_archer"
+  cognition_profile: "opportunistic_humanoid"
+  drive_profile: "opportunistic_raider"
+  inventory_profile: "goblin_looter_pouch"
+  skill_profile: "goblin_raider_skills"
+  traits: ["humanoid", "tool_user", "ranged_attacker", "opportunistic"]
+  themes: ["goblin"]
+
+# STATE: LEGACY-EXPORT
+- id: "goblin_warlord"
+  display_name: "Goblin Warlord"
+  race: "goblin"
+  faction: "goblin_warband"
+  role: "leader"
+  stat_profile: "warlord_base"
+  combat_profile: "brute_crush"
+  cognition_profile: "opportunistic_humanoid"
+  drive_profile: "opportunistic_raider"
+  inventory_profile: "boss_hoard_token"
+  skill_profile: "goblin_raider_skills"
+  traits: ["humanoid", "tool_user", "opportunistic", "leader"]
+  themes: ["goblin"]
+
+# STATE: REDESIGNED-CORE
+- id: "village_worker"
+  display_name: "Village Worker"
+  race: "human"
+  faction: "town_council"
+  role: "worker"
+  stat_profile: "commoner_base"
+  combat_profile: "basic_melee"
+  cognition_profile: "practical_humanoid"
+  drive_profile: "cautious_commoner"
+  inventory_profile: "hero_pocket"
+  skill_profile: "blacksmith_skills"
+  traits: ["humanoid", "tool_user", "social_humanoid"]
+  themes: ["village", "frontier"]
+
+# STATE: ADDITIONAL
+- id: "frontier_guard"
+  display_name: "Frontier Guard"
+  race: "human"
+  faction: "town_council"
+  role: "guard"
+  stat_profile: "frontier_guard_base"
+  combat_profile: "guard_disciplined"
+  cognition_profile: "disciplined_guard"
+  drive_profile: "disciplined_protector"
+  inventory_profile: "guard_basic_kit"
+  skill_profile: "guard_skills"
+  traits: ["humanoid", "tool_user", "social_humanoid", "disciplined"]
+  themes: ["village", "frontier"]
+
+# STATE: ADDITIONAL
+- id: "traveling_merchant"
+  display_name: "Traveling Merchant"
+  race: "human"
+  faction: "merchant_league"
+  role: "merchant"
+  stat_profile: "merchant_base"
+  combat_profile: "basic_melee"
+  cognition_profile: "trade_pragmatist"
+  drive_profile: "profit_seeker"
+  inventory_profile: "merchant_trade_pack"
+  skill_profile: "merchant_skills"
+  traits: ["humanoid", "tool_user", "merchant_minded"]
+  themes: ["trade", "frontier"]
+
+# STATE: ADDITIONAL
+- id: "village_blacksmith"
+  display_name: "Village Blacksmith"
+  race: "human"
+  faction: "town_council"
+  role: "blacksmith"
+  stat_profile: "artisan_base"
+  combat_profile: "basic_melee"
+  cognition_profile: "practical_humanoid"
+  drive_profile: "cautious_commoner"
+  inventory_profile: "blacksmith_toolkit"
+  skill_profile: "blacksmith_skills"
+  traits: ["humanoid", "tool_user", "craftsman"]
+  themes: ["village", "frontier"]
+
+# STATE: ADDITIONAL
+- id: "apprentice_mage"
+  display_name: "Apprentice Mage"
+  race: "human"
+  faction: "arcane_circle"
+  role: "mage"
+  stat_profile: "apprentice_mage_base"
+  combat_profile: "arcane_bolt"
+  cognition_profile: "arcane_scholar"
+  drive_profile: "ritual_fixated"
+  inventory_profile: "mage_satchel"
+  skill_profile: "mage_skills"
+  traits: ["humanoid", "tool_user", "magic_sensitive"]
+  themes: ["arcane", "moon"]
+
+# STATE: ADDITIONAL
+- id: "forest_ranger"
+  display_name: "Forest Ranger"
+  race: "elf"
+  faction: "forest_wardens"
+  role: "ranger"
+  stat_profile: "ranger_base"
+  combat_profile: "ranged_archer"
+  cognition_profile: "disciplined_guard"
+  drive_profile: "disciplined_protector"
+  inventory_profile: "ranger_pack"
+  skill_profile: "ranger_skills"
+  traits: ["humanoid", "tool_user", "disciplined", "ranged_attacker"]
+  themes: ["forest", "sacred"]
+
+# STATE: ADDITIONAL
+- id: "cave_spider"
+  display_name: "Cave Spider"
+  race: "spider"
+  faction: "wild_beast_pack"
+  role: "predator_hunter"
+  stat_profile: "cave_spider_base"
+  combat_profile: "venom_bite"
+  cognition_profile: "instinctive_animal"
+  drive_profile: "territorial_predator"
+  inventory_profile: "empty_animal_inventory"
+  skill_profile: "predator_skills"
+  traits: ["venomous", "territorial"]
+  themes: ["mine", "swamp"]
+
+# STATE: ADDITIONAL
+- id: "bandit_scout"
+  display_name: "Bandit Scout"
+  race: "human"
+  faction: "bandit_company"
+  role: "scout"
+  stat_profile: "bandit_scout_base"
+  combat_profile: "opportunist_raider"
+  cognition_profile: "opportunistic_humanoid"
+  drive_profile: "opportunistic_raider"
+  inventory_profile: "goblin_looter_pouch"
+  skill_profile: "rogue_skills"
+  traits: ["humanoid", "tool_user", "opportunistic"]
+  themes: ["bandit", "frontier"]
+
+# STATE: ADDITIONAL
+- id: "orc_brute"
+  display_name: "Orc Brute"
+  race: "orc"
+  faction: "orc_clan"
+  role: "raider"
+  stat_profile: "orc_brute_base"
+  combat_profile: "brute_crush"
+  cognition_profile: "opportunistic_humanoid"
+  drive_profile: "opportunistic_raider"
+  inventory_profile: "goblin_looter_pouch"
+  traits: ["humanoid", "tool_user", "large_body"]
+  themes: ["orc"]
+
+# STATE: ADDITIONAL
+- id: "undead_sentinel"
+  display_name: "Undead Sentinel"
+  race: "undead"
+  faction: "undead_remnants"
+  role: "sentinel"
+  stat_profile: "undead_sentinel_base"
+  combat_profile: "undead_slam"
+  cognition_profile: "undead_fixated"
+  drive_profile: "undead_purpose_bound"
+  inventory_profile: "undead_empty"
+  skill_profile: "undead_sentinel_skills"
+  traits: ["undead"]
+  themes: ["undead", "ruin"]
+
+# STATE: ADDITIONAL
+- id: "spirit_guardian"
+  display_name: "Spirit Guardian"
+  race: "spirit"
+  faction: "spirit_court"
+  role: "guardian"
+  stat_profile: "spirit_guardian_base"
+  combat_profile: "arcane_bolt"
+  cognition_profile: "arcane_scholar"
+  drive_profile: "ritual_fixated"
+  inventory_profile: "undead_empty"
+  traits: ["spiritual", "magic_sensitive"]
+  themes: ["spirit", "sacred"]
+
+# STATE: ADDITIONAL
+- id: "dragon_cult_champion"
+  display_name: "Dragon Cult Champion"
+  race: "dragonkin"
+  faction: "dragon_cult"
+  role: "leader"
+  stat_profile: "dragon_champion_base"
+  combat_profile: "dragon_fire"
+  cognition_profile: "arcane_scholar"
+  drive_profile: "ritual_fixated"
+  inventory_profile: "boss_hoard_token"
+  traits: ["flying", "fire_aligned", "leader", "magic_sensitive"]
+  themes: ["dragon", "volcanic"]
+
+# STATE: ADDITIONAL
+- id: "lizardfolk_scout"
+  display_name: "Lizardfolk Scout"
+  race: "lizardfolk"
+  faction: "swamp_tribe"
+  role: "scout"
+  stat_profile: "bandit_scout_base"
+  combat_profile: "predator_melee"
+  cognition_profile: "instinctive_animal"
+  drive_profile: "territorial_predator"
+  inventory_profile: "empty_animal_inventory"
+  traits: ["amphibious", "territorial"]
+  themes: ["swamp"]
+
+# STATE: ADDITIONAL
+- id: "lizardfolk_shaman"
+  display_name: "Lizardfolk Shaman"
+  race: "lizardfolk"
+  faction: "swamp_tribe"
+  role: "shaman"
+  stat_profile: "apprentice_mage_base"
+  combat_profile: "arcane_bolt"
+  cognition_profile: "practical_humanoid"
+  drive_profile: "ritual_fixated"
+  inventory_profile: "mage_satchel"
+  traits: ["amphibious", "magic_sensitive", "leader"]
+  themes: ["swamp"]
+
+# STATE: ADDITIONAL
+- id: "swamp_troll"
+  display_name: "Swamp Troll"
+  race: "troll"
+  faction: "wild_beast_pack"
+  role: "brute"
+  stat_profile: "troll_brute_base"
+  combat_profile: "brute_crush"
+  cognition_profile: "instinctive_animal"
+  drive_profile: "territorial_predator"
+  inventory_profile: "empty_animal_inventory"
+  traits: ["large_body", "regenerating", "territorial"]
+  themes: ["swamp"]

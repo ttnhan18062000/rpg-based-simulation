@@ -1,3 +1,13 @@
+---
+status: historical
+layer: combat
+authority: P2
+audience: agent
+ticket_id: TCK-20260417-COMBAT-MOVEMENT-FINALIZE
+artifact_type: plan
+tags: [combat, movement, finalize]
+---
+
 # Implementation Plan - Combat Movement Milestone 7 Continuation
 
 This plan outlines the steps to finalize Milestone 7 of the Combat and Movement Overhaul, focusing on structured observability, rollout hardening, and documentation integrity.

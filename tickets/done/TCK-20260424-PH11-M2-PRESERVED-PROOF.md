@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260424-PH11-M2-PRESERVED-PROOF
+phase: done
+date: 2026-04-24
+tags: [ph11, m2, preserved, proof]
+---
+
 # TCK-20260424-PH11-M2-PRESERVED-PROOF
 
 ## Title
@@ -5,6 +16,15 @@ Phase 11 Milestone 2: Preserved-Surface Proof Closure
 
 ## Status
 OPEN
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Verify and reconcile every preserved row in the ledger against actual evidence. Downgrade or correct any inflated preserved labels.

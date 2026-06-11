@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: enhance-04-mob-roaming-leash
+phase: done
+date: unknown
+tags: [enhance, mob, roaming, leash]
+---
+
 # Enhance 04: Mob Roaming Leash Distance
 
 ## Summary
@@ -14,3 +25,7 @@ DONE
 
 ## Final Status
 **DONE**: Implemented the Leash mechanic including `home_pos` on Entity and `mob_leash_radius` in `config.py`. Added `beyond_leash` utility in `src/ai/states/base.py` and integrated leash checks into `HUNT` and `WANDER` states in `src/ai/states/combat.py`. Mobs now correctly return home and heal when the leash is exceeded.
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

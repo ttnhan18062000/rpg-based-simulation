@@ -1,3 +1,10 @@
+---
+status: active
+layer: engine
+authority: P1
+audience: developer
+---
+
 # Local Environment & World-Interaction Contract (Phase 8)
 
 This document defines the authoritative semantics for environment and building interactions in the `src` engine.

@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: engine
+original_date: unknown
+---
+
 # Phase 1 Implementation Plan — Observability Foundation
 
 Phase 1 should focus on **safe observability foundations**, not the full Simulation Observatory yet.

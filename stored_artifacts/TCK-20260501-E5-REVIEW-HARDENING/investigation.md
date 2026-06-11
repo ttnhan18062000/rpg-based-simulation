@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260501-E5-REVIEW-HARDENING
+artifact_type: investigation
+tags: [e5, review, hardening]
+---
+
 # Investigation: E5 Review Implementation
 
 ## 1. Proof Governance and Ledger Validator

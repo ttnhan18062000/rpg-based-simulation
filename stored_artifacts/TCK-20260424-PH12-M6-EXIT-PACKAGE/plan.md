@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260424-PH12-M6-EXIT-PACKAGE
+artifact_type: plan
+tags: [ph12, m6, exit, package]
+---
+
 # Phase 12 Milestone 6 Execution Plan: Exit Package
 
 ## 1. Closure Report

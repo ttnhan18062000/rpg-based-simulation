@@ -1,3 +1,13 @@
+---
+status: historical
+layer: guidelines
+authority: P2
+audience: agent
+ticket_id: TCK-20260523-COGNITION-SCHEMA-RECORDER
+artifact_type: test_plan
+tags: [cognition, schema, recorder]
+---
+
 # test_plan.md - Schema & Recorder Tests
 
 ## Unit Tests

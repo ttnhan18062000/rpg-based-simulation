@@ -1,3 +1,10 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: developer
+---
+
 # Phase 5 Resource Intelligence: Support Boundary
 
 ## 1. Supported Intelligence Surface

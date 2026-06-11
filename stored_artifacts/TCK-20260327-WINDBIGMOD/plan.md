@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260327-WINDBIGMOD
+artifact_type: plan
+tags: [windbigmod]
+---
+
 # WINDBIGMOD Implementation Plan
 
 ## Step 1: BIGMOD (StatsShim Extraction)

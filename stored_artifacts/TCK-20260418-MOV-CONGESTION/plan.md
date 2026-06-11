@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260418-MOV-CONGESTION
+artifact_type: plan
+tags: [mov, congestion]
+---
+
 # Implementation Plan - Milestone 3: Congestion & Advanced Anti-Oscillation
 
 Focusing on broadening the movement model's handling of oscillation and hardening congestion logic in tight spaces.

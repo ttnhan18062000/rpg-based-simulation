@@ -1,3 +1,13 @@
+---
+status: historical
+layer: world
+authority: P2
+audience: agent
+ticket_id: TCK-20260425-PH11-WORLD-DYNAMICS
+artifact_type: test_plan
+tags: [ph11, world, dynamics]
+---
+
 # Phase 10 World Dynamics Test Plan
 
 ## Unit Tests

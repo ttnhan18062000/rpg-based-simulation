@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: combat
+original_date: unknown
+---
+
 [Milestone 5] - Persistent Combat Consequences and Stat Ownership Rebalance
 
 [Milestone Description]

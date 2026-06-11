@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260325-FINAL_E2E_SMOKE
+artifact_type: test_plan
+tags: [final_e2e_smoke]
+---
+
 # Test Plan: TCK-20260325-FINAL_E2E_SMOKE
 
 ## Test Strategy

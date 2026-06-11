@@ -1,3 +1,10 @@
+---
+status: historical
+layer: observability
+authority: P2
+audience: developer
+---
+
 # Phase 14: Human-Gated Agentic Simulation Lab Guideline
 
 The V2 RPG Engine incorporates a secure, robust **Human-Gated Agentic Simulation Lab** (Phase 14). Designed around a strict "Agent Assists, User Controls" philosophy, it enforces isolation boundaries, budget guardrails, and absolute manual control over execution and knowledge promotion.

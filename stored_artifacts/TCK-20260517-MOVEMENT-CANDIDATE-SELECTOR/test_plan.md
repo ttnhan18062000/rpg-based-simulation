@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260517-MOVEMENT-CANDIDATE-SELECTOR
+artifact_type: test_plan
+tags: [movement, candidate, selector]
+---
+
+
 # Test Plan: MovementCandidateSelector
 
 ## Objectives

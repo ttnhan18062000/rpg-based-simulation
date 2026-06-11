@@ -1,6 +1,26 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260408-PHASE2-DS
+phase: done
+date: 2026-04-08
+tags: [phase2, ds]
+---
+
 # TCK-20260408-PHASE2-DS: Phase 2 Design Shift — Social Meaning and Behavioral Realism
 
 **Status**: DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Implement Phase 2 of the Macro-Interest and Behavioral Realism design shift. This phase focuses on making the individual subjective state (established in Phase 1) socially meaningful by introducing turning-point memory, interpreted events, bounded relationships, and public reputation.

@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260426-PH14-16-RECOVERY
+artifact_type: test_plan
+tags: [ph14, recovery]
+---
+
 # Test Plan: RPG-Core Parity (Phases 14-16)
 
 ## Parity Tests (New)

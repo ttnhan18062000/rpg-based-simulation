@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: world
+original_date: unknown
+---
+
 # Phase 11 — Data-Driven Worldbuilding Foundation
 
 Phase 11 should start a new major component:

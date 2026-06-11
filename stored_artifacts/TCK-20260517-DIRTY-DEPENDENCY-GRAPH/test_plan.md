@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260517-DIRTY-DEPENDENCY-GRAPH
+artifact_type: test_plan
+tags: [dirty, dependency, graph]
+---
+
 # Test Plan: Dirty Dependency Graph
 
 ## Automated Verification

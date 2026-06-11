@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: misc
+authority: P2
+audience: agent
+tags: [core, import, stabilization]
+---
+
 # Refactoring Implementation Plan — Detailed Version
 
 ## Global Rules for the AI Agent

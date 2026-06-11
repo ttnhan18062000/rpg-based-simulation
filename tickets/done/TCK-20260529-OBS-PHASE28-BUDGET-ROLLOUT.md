@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260529-OBS-PHASE28-BUDGET-ROLLOUT
+phase: done
+date: 2026-05-29
+tags: [obs, phase28, budget, rollout]
+---
+
 # TCK-20260529-OBS-PHASE28-BUDGET-ROLLOUT
 
 ## Title
@@ -7,6 +18,15 @@ Observability Budget, Sampling, Degradation, and Rollout Gate (Phase 28)
 ## Status
 
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 

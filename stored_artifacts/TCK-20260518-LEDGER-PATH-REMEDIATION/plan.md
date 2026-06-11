@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260518-LEDGER-PATH-REMEDIATION
+artifact_type: plan
+tags: [ledger, path, remediation]
+---
+
 # Remediation Plan: Release Gate Ledger Path Synchronization
 
 ## Purpose

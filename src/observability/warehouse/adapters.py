@@ -153,7 +153,17 @@ class LocalWarehouseAdapter(WarehouseAdapter):
                 health_score=manifest_dict.get("health_score", 100.0) if "health_score" in manifest_dict else 100.0,
                 started_at=manifest_dict.get("started_at", ""),
                 ended_at=manifest_dict.get("ended_at"),
-                manifest_json=json.dumps(manifest_dict)
+                manifest_json=json.dumps(manifest_dict),
+                resolved_world_path=manifest_dict.get("resolved_world_path"),
+                compile_context_path=manifest_dict.get("compile_context_path"),
+                provenance_manifest_path=manifest_dict.get("provenance_manifest_path"),
+                assembly_report_path=manifest_dict.get("assembly_report_path"),
+                validation_report_path=manifest_dict.get("validation_report_path"),
+                compile_report_path=manifest_dict.get("compile_report_path"),
+                runtime_content_source=manifest_dict.get("runtime_content_source"),
+                catalog_fingerprint=manifest_dict.get("catalog_fingerprint"),
+                module_fingerprints=manifest_dict.get("module_fingerprints"),
+                state_hash=manifest_dict.get("state_hash")
             )
             records_count["runs"] += 1
 
@@ -365,7 +375,17 @@ class LocalWarehouseAdapter(WarehouseAdapter):
                 health_score=health_score,
                 started_at=manifest.started_at,
                 ended_at=manifest.ended_at,
-                manifest_json=manifest.model_dump_json()
+                manifest_json=manifest.model_dump_json(),
+                resolved_world_path=getattr(manifest, "resolved_world_path", None),
+                compile_context_path=getattr(manifest, "compile_context_path", None),
+                provenance_manifest_path=getattr(manifest, "provenance_manifest_path", None),
+                assembly_report_path=getattr(manifest, "assembly_report_path", None),
+                validation_report_path=getattr(manifest, "validation_report_path", None),
+                compile_report_path=getattr(manifest, "compile_report_path", None),
+                runtime_content_source=getattr(manifest, "runtime_content_source", None),
+                catalog_fingerprint=getattr(manifest, "catalog_fingerprint", None),
+                module_fingerprints=getattr(manifest, "module_fingerprints", None),
+                state_hash=getattr(manifest, "state_hash", None)
             )
             records.append(run_rec)
 

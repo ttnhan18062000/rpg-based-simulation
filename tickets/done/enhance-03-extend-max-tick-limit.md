@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: enhance-03-extend-max-tick-limit
+phase: done
+date: unknown
+tags: [enhance, extend, max, tick, limit]
+---
+
 # Enhance 03: Extend Simulation Maximum Tick to 50000
 
 ## Summary
@@ -11,3 +22,7 @@ DONE
 
 ## Final Status
 **DONE**: Extended the default simulation maximum tick limit to 50,000 in `src/config.py`. Verified that the authoritative world loop and event logging systems handle long-running simulations gracefully.
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

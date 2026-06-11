@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: misc
+authority: P2
+audience: agent
+tags: [airef]
+---
+
 # Combat Arena AI Refinement Walkthrough
 
 The "Three Pillars" of AI refinement — Ground (Hysteresis), Soul (Memory/Personality), and Wind (Flow Fields) — are now fully integrated and validated. The specialized E2E test suite achieved a 100% pass rate.

@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: economy
+original_date: unknown
+---
+
 # Updated Phase 7 Implementation — Remaining Work Only
 
 ## [Milestone 1] - Scope and substrate-boundary correction

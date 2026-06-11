@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: economy
+original_date: unknown
+---
+
 # [Milestone 2] - Preserved-Surface Proof Closure and Coverage Reconciliation
 
 ## [Milestone Description]

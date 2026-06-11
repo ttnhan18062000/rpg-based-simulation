@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: performance
+authority: P2
+audience: agent
+tags: [arena, perf, hardening]
+---
+
 # Arena Regression Harness Stabilization Walkthrough
 
 Successfully resolved persistent resource exhaustion and behavioral stalling issues to achieve 100% regression test reliability.

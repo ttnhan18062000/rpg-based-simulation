@@ -34,11 +34,14 @@ def test_arena_group_coordination():
         from src.engine.kernel import Kernel
         from src.platform.rng import DeterministicRNG
         baseline_kernel = Kernel(RuntimeProfile(**profile_dict), state, DeterministicRNG(state.seed), flags={"no_replay": True, "audit_mode": True})
-        for _ in range(20):
-            baseline_kernel.tick_once()
-        
-        diffs = diff_states(baseline_kernel.state, result.final_state)
-        print(f"ALL DIFFS: {diffs}")
+        try:
+            for _ in range(20):
+                baseline_kernel.tick_once()
+
+            diffs = diff_states(baseline_kernel.state, result.final_state)
+            print(f"ALL DIFFS: {diffs}")
+        finally:
+            baseline_kernel.shutdown()
 
     assert result.conformance_passed
     

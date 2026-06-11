@@ -1,3 +1,13 @@
+---
+status: historical
+layer: strategy
+authority: P2
+audience: agent
+ticket_id: TCK-20260523-COGNITION-FEATURE-MINING
+artifact_type: investigation
+tags: [cognition, feature, mining]
+---
+
 # investigation.md - Feature & Pattern Rules
 
 - Churn rate: calculated as the number of strategic project transitions divided by the elapsed tick window.

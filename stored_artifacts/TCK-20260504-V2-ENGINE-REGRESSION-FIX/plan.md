@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260504-V2-ENGINE-REGRESSION-FIX
+artifact_type: plan
+tags: [v2, engine, regression, fix]
+---
+
 # Implementation Plan - V2 Engine Regression Fix
 
 Fixing 39 failed tests by completing the migration to `V2EntityBuilder`.

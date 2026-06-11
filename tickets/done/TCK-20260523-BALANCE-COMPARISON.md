@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260523-BALANCE-COMPARISON
+phase: done
+date: 2026-05-23
+tags: [balance, comparison]
+---
+
 # TCK-20260523-BALANCE-COMPARISON
 
 ## Title
@@ -7,6 +18,15 @@ Milestone 88 — Balance Comparison Engine
 ## Status
 
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 

@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260515-WORLD-GOVERNANCE
+phase: done
+date: 2026-05-15
+tags: [world, governance]
+---
+
 # TCK-20260515-WORLD-GOVERNANCE
 
 ## Title
@@ -5,6 +16,15 @@ Milestone 12: Regional Sovereignty and Governance Logic
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Implement and certify the final gameplay systems for Regional Sovereignty and Governance as part of the V2 Engine completion.

@@ -345,40 +345,60 @@ class TestHumanGatedAgenticLabE2E:
             assert "approval" in str(e).lower(), \
                 f"ValueError from knowledge update should mention 'approval', got: {e}"
 
-        # Now attempt with proper approval
-        if proposals_list:
-            approved_request = WorkflowRequest(
-                workflow="UpdateSimulationKnowledge",
-                mode="generic",
-                user_goal="Update knowledge with approved insights",
-                specific_inputs={"approved_by": "test_human"},
-                constraints={"approved_by": "test_human"}
-            )
-            try:
-                approved_result = update_wf.run(sid, approved_request)
-                assert approved_result["status"] in ("SYNCED", "READY", "NO_INSIGHTS", "BLOCKED"), \
-                    f"Knowledge update with approval failed: {approved_result}"
-            except ValueError:
-                # Acceptable — the test is about the gate enforcement, not the full sync
-                pass
+        # Now attempt with proper approval — unconditional so UpdateSimulationKnowledge
+        # always runs and its audit lifecycle events always appear in the sequence.
+        approved_request = WorkflowRequest(
+            workflow="UpdateSimulationKnowledge",
+            mode="generic",
+            user_goal="Update knowledge with approved insights",
+            specific_inputs={"approved_by": "test_human"},
+            constraints={"approved_by": "test_human"}
+        )
+        approved_result = update_wf.run(sid, approved_request)
+        assert approved_result["status"] in ("SYNCED", "NO_INSIGHTS"), (
+            f"Approved knowledge update must complete, got: {approved_result['status']}"
+        )
 
-        # ─── FINAL: Verify audit trail completeness ──────────────────────
+        # ─── FINAL: Verify ordered audit event sequence ──────────────────
+        # The 13 required checkpoints covering the full generate→register→approve→sync pipeline.
+        # Checkpoints within UpdateSimulationKnowledge appear in emit order:
+        #   workflow_started → approval_required → approval_recorded → workflow_completed.
+        # The gap-tolerant scan allows intervening events (e.g. approval_recorded from the
+        # GENERATION gate, guardrail_violation, files_read/written) without failing.
+        _REQUIRED_SEQUENCE = [
+            ("workflow_started",         "workflow", "GenerateSimulationSetup"),
+            ("workflow_completed",        "workflow", "GenerateSimulationSetup"),
+            ("workflow_started",         "workflow", "PrepareSimulationExecution"),
+            ("workflow_completed",        "workflow", "PrepareSimulationExecution"),
+            ("manual_boundary_declared",  None,       None),
+            ("workflow_started",         "workflow", "RegisterSimulationResult"),
+            ("workflow_completed",        "workflow", "RegisterSimulationResult"),
+            ("workflow_started",         "workflow", "ProposeSimulationEnhancements"),
+            ("workflow_completed",        "workflow", "ProposeSimulationEnhancements"),
+            ("workflow_started",         "workflow", "UpdateSimulationKnowledge"),
+            ("approval_required",         None,       None),
+            ("approval_recorded",         None,       None),
+            ("workflow_completed",        "workflow", "UpdateSimulationKnowledge"),
+        ]
+
         events = trail.read_log(sid)
         assert len(events) > 0, "Audit trail must not be empty after full E2E run"
 
-        event_types = {e["event_type"] for e in events}
-
-        # Must have workflow started events
-        assert "workflow_started" in event_types or "approval_recorded" in event_types, \
-            f"Expected workflow lifecycle events in audit log. Found: {event_types}"
-
-        # Must have an approval_recorded event from Stage 2
-        approval_events = [e for e in events if e["event_type"] == "approval_recorded"]
-        assert len(approval_events) >= 1, "Approval must be recorded in audit trail"
-
-        # Approval event must reference the stage and approver
-        assert approval_events[0]["details"]["approved_by"] == "test_human"
-        assert approval_events[0]["details"]["stage"] == "GENERATION"
+        idx = 0
+        for cp_type, cp_key, cp_val in _REQUIRED_SEQUENCE:
+            found = False
+            while idx < len(events):
+                e = events[idx]
+                idx += 1
+                if e["event_type"] == cp_type:
+                    if cp_key is None or e.get("details", {}).get(cp_key) == cp_val:
+                        found = True
+                        break
+            assert found, (
+                f"Missing audit checkpoint: event_type={cp_type!r}"
+                + (f" details.{cp_key}={cp_val!r}" if cp_key else "")
+                + f" — scanned {idx} of {len(events)} events"
+            )
 
 
 # ──────────────────────────────────────────────────────────────────

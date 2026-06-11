@@ -1,3 +1,14 @@
+---
+status: historical
+layer: strategy
+authority: P1
+audience: agent
+ticket_id: TCK-20260412-STRATEGY-IMPLEMENTATION
+phase: done
+date: 2026-04-12
+tags: [strategy, implementation]
+---
+
 # TCK-20260412-STRATEGY-IMPLEMENTATION
 
 ## Title
@@ -6,6 +17,15 @@ Implement Strategic Cognition Layer (Roadmap Milestones 0-7)
 ## Status
 
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Implement the strategic mind layer for entities in the RPG simulation, following the "right high-level plan" in `strategy_implementation.md`. This layer provides multi-tick continuity, project persistence, and observability of entity reasoning.

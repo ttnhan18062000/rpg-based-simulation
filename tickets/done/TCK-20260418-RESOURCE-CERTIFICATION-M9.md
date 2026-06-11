@@ -1,3 +1,14 @@
+---
+status: historical
+layer: economy
+authority: P1
+audience: agent
+ticket_id: TCK-20260418-RESOURCE-CERTIFICATION-M9
+phase: done
+date: 2026-04-18
+tags: [resource, certification, m9]
+---
+
 # TCK-20260418-RESOURCE-CERTIFICATION-M9
 
 ## Title
@@ -5,6 +16,15 @@ Milestone 9: Resource Certification and Resilience Harness
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Create a disciplined certification harness that proves the engine obeys its resource-envelope contract, degrades safe, and produces stable deterministic behavior under named profiles and hardware classes.

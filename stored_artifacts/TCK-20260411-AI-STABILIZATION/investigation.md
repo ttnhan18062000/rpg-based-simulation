@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260411-AI-STABILIZATION
+artifact_type: investigation
+tags: [ai, stabilization]
+---
+
 # Investigation: Combat AI Behavioral Regressions
 
 ## 1. Goal Jitter (Hysteresis)

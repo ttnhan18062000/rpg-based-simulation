@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: performance
+original_date: unknown
+---
+
 # Critical issue 1 — `no_frame_pacing` flag exists but is not enforced
 
 `BenchHarness` correctly defaults benchmark flags to:

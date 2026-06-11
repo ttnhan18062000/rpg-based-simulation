@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260524-LAB-KNOWLEDGE
+artifact_type: investigation
+tags: [lab, knowledge]
+---
+
 # Investigation and Design Notes - Milestone 102
 
 ## 1. Global Knowledge Base Schema

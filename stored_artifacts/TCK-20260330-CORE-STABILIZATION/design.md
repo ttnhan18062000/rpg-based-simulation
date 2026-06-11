@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: misc
+authority: P2
+audience: agent
+tags: [core, stabilization]
+---
+
 # Design: Core AOA Stabilization (TCK-20260330)
 
 ## 1. Core Structural Hardening (Burn and Rebuild)

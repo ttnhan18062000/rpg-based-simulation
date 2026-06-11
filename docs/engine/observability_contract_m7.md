@@ -1,3 +1,10 @@
+---
+status: active
+layer: engine
+authority: P1
+audience: developer
+---
+
 # Observability Contract (Milestone 7)
 
 ## Purpose

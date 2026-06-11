@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260523-METAMORPHIC-VALIDATION
+phase: done
+date: 2026-05-23
+tags: [metamorphic, validation]
+---
+
 # TCK-20260523-METAMORPHIC-VALIDATION
 
 ## Title
@@ -7,6 +18,15 @@ Milestone 87 — Metamorphic Validation Rules
 ## Status
 
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 

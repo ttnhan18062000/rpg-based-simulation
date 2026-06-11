@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: misc
+original_date: unknown
+---
+
 Below is an updated corrective implementation plan in the same format, narrowed to what is still genuinely open after the latest source and test updates.
 
 This document is a corrective implementation plan derived from verification of the current updated source and test suite.

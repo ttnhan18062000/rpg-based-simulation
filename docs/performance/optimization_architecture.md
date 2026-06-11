@@ -1,3 +1,10 @@
+---
+status: active
+layer: performance
+authority: P1
+audience: developer
+---
+
 # Authoritative V2 Engine Optimization Architecture
 
 ## 1. Overview and Design Philosophy

@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260507-STABILIZE-TESTS
+phase: done
+date: 2026-05-07
+tags: [stabilize, tests]
+---
+
 # TCK-20260507-STABILIZE-TESTS
 
 ## Title
@@ -5,6 +16,15 @@ Stabilize V2 Engine and API Test Suites
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Investigate and fix widespread test failures in the RPG simulation repository, specifically targeting API, Arena, and Engine modules while adhering to V2 architecture and AuthoritativeState contracts.

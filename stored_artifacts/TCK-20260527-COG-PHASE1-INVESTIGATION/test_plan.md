@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260527-COG-PHASE1-INVESTIGATION
+artifact_type: test_plan
+tags: [cog, phase1, investigation]
+---
+
 # Test Plan - Phase 1 World Capability Foundation
 
 ## Verification

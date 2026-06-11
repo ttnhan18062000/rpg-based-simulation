@@ -1,0 +1,151 @@
+# STATE: REDESIGNED-CORE
+# Relationship models are named, code-owned models; no free-form condition language required at first.
+- id: "town_to_wild_beasts"
+  source_faction: "town_council"
+  target_faction: "wild_beast_pack"
+  relationship_model: "settlement_safety_vs_wildlife"
+  axes:
+    hostility: "medium_contextual"
+    fear: "medium"
+    trust: "none"
+    territorial_conflict: "medium"
+
+# STATE: REDESIGNED-CORE
+- id: "wild_beasts_to_town"
+  source_faction: "wild_beast_pack"
+  target_faction: "town_council"
+  relationship_model: "territorial_animal"
+  axes:
+    hostility: "low_base_contextual"
+    fear: "medium"
+    trust: "none"
+    territorial_conflict: "high_if_intruding"
+
+# STATE: LEGACY-EXPORT
+- id: "town_to_goblin_warband"
+  source_faction: "town_council"
+  target_faction: "goblin_warband"
+  relationship_model: "security_hostility"
+  axes:
+    hostility: "high"
+    fear: "medium"
+    trust: "none"
+    resource_competition: "high"
+
+# STATE: LEGACY-EXPORT
+- id: "goblin_warband_to_town"
+  source_faction: "goblin_warband"
+  target_faction: "town_council"
+  relationship_model: "raider_opportunity"
+  axes:
+    hostility: "high"
+    fear: "medium"
+    trust: "none"
+    resource_competition: "high"
+
+# STATE: ADDITIONAL
+- id: "town_to_merchants"
+  source_faction: "town_council"
+  target_faction: "merchant_league"
+  relationship_model: "trade_positive"
+  axes:
+    hostility: "none"
+    trust: "medium"
+    trade_affinity: "high"
+
+# STATE: ADDITIONAL
+- id: "merchants_to_town"
+  source_faction: "merchant_league"
+  target_faction: "town_council"
+  relationship_model: "trade_positive"
+  axes:
+    hostility: "none"
+    trust: "medium"
+    trade_affinity: "high"
+
+# STATE: ADDITIONAL
+- id: "town_to_bandits"
+  source_faction: "town_council"
+  target_faction: "bandit_company"
+  relationship_model: "security_hostility"
+  axes:
+    hostility: "high"
+    fear: "medium"
+    trust: "none"
+    trade_affinity: "none"
+
+# STATE: ADDITIONAL
+- id: "bandits_to_merchants"
+  source_faction: "bandit_company"
+  target_faction: "merchant_league"
+  relationship_model: "predatory_trade_ambush"
+  axes:
+    hostility: "high"
+    trust: "none"
+    resource_competition: "high"
+    trade_affinity: "exploitative"
+
+# STATE: ADDITIONAL
+- id: "forest_wardens_to_wild_beasts"
+  source_faction: "forest_wardens"
+  target_faction: "wild_beast_pack"
+  relationship_model: "ecology_respect"
+  axes:
+    hostility: "low"
+    trust: "low_medium"
+    respect: "medium"
+    territorial_conflict: "low"
+
+# STATE: ADDITIONAL
+- id: "dwarves_to_goblins"
+  source_faction: "dwarven_mine_clan"
+  target_faction: "goblin_warband"
+  relationship_model: "resource_security_hostility"
+  axes:
+    hostility: "high"
+    trust: "none"
+    resource_competition: "high"
+
+# STATE: ADDITIONAL
+- id: "moon_cult_to_town"
+  source_faction: "moon_cult"
+  target_faction: "town_council"
+  relationship_model: "hidden_conflict"
+  axes:
+    hostility: "medium"
+    trust: "low"
+    fear: "low"
+    religious_conflict: "high"
+
+# STATE: ADDITIONAL
+- id: "town_to_orc_clan"
+  source_faction: "town_council"
+  target_faction: "orc_clan"
+  relationship_model: "security_hostility"
+  axes:
+    hostility: "high"
+    fear: "high"
+    trust: "none"
+    territorial_conflict: "high"
+
+# STATE: ADDITIONAL
+- id: "orc_clan_to_town"
+  source_faction: "orc_clan"
+  target_faction: "town_council"
+  relationship_model: "territorial_raider"
+  axes:
+    hostility: "high"
+    fear: "none"
+    trust: "none"
+    territorial_conflict: "high"
+
+# STATE: ADDITIONAL
+- id: "undead_to_living"
+  source_faction: "undead_remnants"
+  target_faction: "town_council"
+  relationship_model: "purpose_bound_hostility"
+  axes:
+    hostility: "high_contextual"
+    trust: "none"
+    fear: "none"
+    ancient_grudge: "medium"

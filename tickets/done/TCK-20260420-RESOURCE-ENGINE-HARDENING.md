@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260420-RESOURCE-ENGINE-HARDENING
+phase: done
+date: 2026-04-20
+tags: [resource, engine, hardening]
+---
+
 # TCK-20260420-RESOURCE-ENGINE-HARDENING
 
 ## Title
@@ -5,6 +16,15 @@ Hardening V2 Resource Engine Substrate (Milestone C & E)
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Finalize the hardening of the V2 Resource Engine by replacing simulated lifecycle outcomes with authoritative runtime truth, cleaning up legacy telemetry, and refreshing all certification proofs.

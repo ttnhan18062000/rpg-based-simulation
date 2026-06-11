@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: strategy
+original_date: unknown
+---
+
 # Milestone 1 — Strategic state foundation
 
 ## What this milestone actually delivers

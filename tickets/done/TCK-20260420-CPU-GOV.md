@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260420-CPU-GOV
+phase: done
+date: 2026-04-20
+tags: [cpu, gov]
+---
+
 # TCK-20260420-CPU-GOV
 
 ## Title
@@ -5,6 +16,15 @@ End-to-End CPU Resource Contract
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Wire the Governor's concurrency limit through the Kernel/Executor into the WorkerManager to ensure proactive shedding.

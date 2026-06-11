@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: combat
+original_date: unknown
+---
+
 [Milestone 7] - Observability, Rollout Hardening, and Final Documentation
 
 [Milestone Description]

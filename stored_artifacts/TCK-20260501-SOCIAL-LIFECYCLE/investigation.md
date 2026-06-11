@@ -1,3 +1,13 @@
+---
+status: historical
+layer: ai
+authority: P2
+audience: agent
+ticket_id: TCK-20260501-SOCIAL-LIFECYCLE
+artifact_type: investigation
+tags: [social, lifecycle]
+---
+
 # Investigation: Social Contract and Party Lifecycle
 
 ## Current State Audit

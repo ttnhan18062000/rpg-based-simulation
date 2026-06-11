@@ -1,3 +1,14 @@
+---
+status: historical
+layer: strategy
+authority: P1
+audience: agent
+ticket_id: TCK-20260413-INTEL-CAPACITY-IMPLEMENTATION
+phase: done
+date: 2026-04-13
+tags: [intel, capacity, implementation]
+---
+
 # TCK-20260413-INTEL-CAPACITY-IMPLEMENTATION
 
 ## Title
@@ -5,6 +16,15 @@ Implement Intel Capacity (Cognition Capacity and Bounded Intelligence)
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Implement the cognition-capacity and bounded-intelligence extension for the strategic simulation engine, iteratively by milestones. Focus on Milestone 1 first (Cognition Capacity Foundation).

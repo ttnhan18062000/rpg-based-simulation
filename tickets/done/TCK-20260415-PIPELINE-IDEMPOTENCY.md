@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260415-PIPELINE-IDEMPOTENCY
+phase: done
+date: 2026-04-15
+tags: [pipeline, idempotency]
+---
+
 # TCK-20260415-PIPELINE-IDEMPOTENCY
 
 ## Title
@@ -7,6 +18,15 @@ Strategic Pipeline Idempotency Hardening
 ## Status
 
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 

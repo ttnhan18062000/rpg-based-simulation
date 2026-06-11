@@ -1,3 +1,10 @@
+---
+status: active
+layer: engine
+authority: P1
+audience: developer
+---
+
 # V2 Observability & Operational Artifact Contract
 
 This document defines the supported operational surface (logs, metrics, reports, replays) for the V2 engine.

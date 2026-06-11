@@ -1,3 +1,14 @@
+---
+status: historical
+layer: strategy
+authority: P1
+audience: agent
+ticket_id: TCK-20260414-STRAT-HARDENING
+phase: done
+date: 2026-04-14
+tags: [strat, hardening]
+---
+
 # TCK-20260414-STRAT-HARDENING
 
 ## Title
@@ -6,6 +17,15 @@ Strategic Cognition & Intel Capacity Hardening
 ## Status
 
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 

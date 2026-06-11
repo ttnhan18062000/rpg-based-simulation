@@ -1,3 +1,14 @@
+---
+status: historical
+layer: ai
+authority: P1
+audience: agent
+ticket_id: TCK-20260503-SOCIAL-COORDINATION
+phase: done
+date: 2026-05-03
+tags: [social, coordination]
+---
+
 # TCK-20260503-SOCIAL-COORDINATION
 
 ## Title
@@ -5,6 +16,15 @@ Hardening Social Contracts, Party Cooperation, and Goal Registry (Domain 4)
 
 ## Status
 OPEN
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Complete the final domain (Domain 4) of the `unchecked_logic_implementation_plan.md` to achieve full hardening of the RPG V2 engine.

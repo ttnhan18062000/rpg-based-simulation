@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: strategy
+original_date: unknown
+---
+
 Good. Milestone 4 is where the system stops pretending that “nearby entities in a group” equals cooperation.
 
 It does not.

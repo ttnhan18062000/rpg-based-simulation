@@ -1,3 +1,13 @@
+---
+status: historical
+layer: strategy
+authority: P2
+audience: agent
+ticket_id: TCK-20260523-COGNITION-SAFETY-VERIFICATION
+artifact_type: test_plan
+tags: [cognition, safety, verification]
+---
+
 # test_plan.md - Safety & Parity Tests
 
 - `tests/certification/test_cognition_observability_parity.py`:

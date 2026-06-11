@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260406-RPG-CORE-STABILIZE
+phase: done
+date: 2026-04-06
+tags: [rpg, core, stabilize]
+---
+
 # TCK-20260406-RPG-CORE-STABILIZE: RPG Core Stabilization & Introspection
 
 ## Description
@@ -21,3 +32,7 @@ Achieved 100% architectural parity with the Aspect-Oriented Architecture (AOA) b
 
 ## Status
 DONE
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

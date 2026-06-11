@@ -1,3 +1,13 @@
+---
+status: historical
+layer: guidelines
+authority: P2
+audience: agent
+ticket_id: TCK-20260523-LAB-EXPERIMENT-SCHEMA
+artifact_type: investigation
+tags: [lab, experiment, schema]
+---
+
 # Milestone 76 Investigation Notes
 
 ## Objectives

@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260425-PH8-M3-PROGRESSION
+phase: done
+date: 2026-04-25
+tags: [ph8, m3, progression]
+---
+
 # TCK-20260425-PH8-M3-PROGRESSION
 
 ## Title
@@ -5,6 +16,15 @@ Implement Authoritative Leveling and Attribute Growth
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Implement the core growth mechanics: converting XP (Evolution Points) into Levels and updating derived attributes (HP, ATK, DEF).

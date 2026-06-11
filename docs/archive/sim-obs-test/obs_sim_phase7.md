@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: engine
+original_date: unknown
+---
+
 # Phase 7 Implementation Plan — Production-Grade Observatory Platform
 
 Phase 7 should only start after Phase 6 proves that local artifacts, DuckDB/Parquet, historical APIs, and optional stream adapters are useful.

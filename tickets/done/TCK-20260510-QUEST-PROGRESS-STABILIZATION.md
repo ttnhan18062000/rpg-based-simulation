@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260510-QUEST-PROGRESS-STABILIZATION
+phase: done
+date: 2026-05-10
+tags: [quest, progress, stabilization]
+---
+
 # TCK-20260510-QUEST-PROGRESS-STABILIZATION
 
 ## Title
@@ -7,6 +18,15 @@ Resolving Quest Progress Double-Counting and Merging Regressions
 ## Status
 
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 

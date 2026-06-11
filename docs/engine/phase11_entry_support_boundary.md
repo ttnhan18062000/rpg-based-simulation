@@ -1,3 +1,10 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: developer
+---
+
 # Phase 11 Entry Support Boundary
 
 This document defines the honest support boundary of the `src` engine as of the start of Phase 11.

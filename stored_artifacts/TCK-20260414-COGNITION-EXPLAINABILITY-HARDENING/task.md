@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: strategy
+authority: P2
+audience: agent
+tags: [cognition, explainability, hardening]
+---
+
 - [x] Expand `BoundedStrategicAppraisalService`
     - [x] Gather `candidate_zones` and `offers`
     - [x] Apply caps in `_apply_pre_bounds`

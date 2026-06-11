@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: enhance-01
+artifact_type: plan
+tags: [enhance]
+---
+
 # Implementation Plan: Event Enrichment & Extensible Event Bus
 
 ## Overview

@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: economy
+original_date: unknown
+---
+
 ## Bottom line
 
 The E5 implementation is now **fully hardened** and **logically closed** against the checklist. All P0/P1/P2 items are verified.

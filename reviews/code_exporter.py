@@ -1,8 +1,25 @@
 from __future__ import annotations
 
+import subprocess
 from pathlib import Path
 
 SEPARATOR = "\n\n#####\n\n"
+
+
+def get_git_tracked_files(root_dir: Path) -> list[Path]:
+    """Retrieves all files currently tracked by Git to ensure 100% deterministic exports."""
+    try:
+        result = subprocess.run(
+            ["git", "ls-files"],
+            cwd=root_dir,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            check=True
+        )
+        return [root_dir / line for line in result.stdout.splitlines() if line]
+    except (subprocess.SubprocessError, FileNotFoundError):
+        return []
 
 
 def should_include(path: Path, suffixes: set[str]) -> bool:
@@ -10,7 +27,10 @@ def should_include(path: Path, suffixes: set[str]) -> bool:
         return False
 
     parts = [p.lower() for p in path.parts]
-    exclude_dirs = {"pycache", "node_modules", "dist", ".vite", ".pytest_cache", ".hypothesis"}
+    exclude_dirs = {
+        "pycache", "node_modules", "dist", ".vite", ".pytest_cache", ".hypothesis",
+        "runs", "test_cli_basic", "test_obs_replay"
+    }
     for d in exclude_dirs:
         if d in parts:
             return False
@@ -25,15 +45,33 @@ def export_directories(
     suffixes: set[str],
     extra_files: list[Path] | None = None
 ) -> None:
+    tracked_files = get_git_tracked_files(root_dir)
     files: list[Path] = []
-    for target_dir in target_dirs:
-        if not target_dir.exists():
-            print(f"Skipping non-existent directory: {target_dir}")
-            continue
 
-        for p in target_dir.rglob("*"):
-            if should_include(p, suffixes):
-                files.append(p)
+    if tracked_files:
+        # Prioritize 100% deterministic git-tracked files
+        for f in tracked_files:
+            is_in_target = False
+            for target_dir in target_dirs:
+                try:
+                    f.relative_to(target_dir)
+                    is_in_target = True
+                    break
+                except ValueError:
+                    continue
+
+            if is_in_target and should_include(f, suffixes):
+                files.append(f)
+    else:
+        # Fallback to local filesystem traversal if git is not initialized/installed
+        for target_dir in target_dirs:
+            if not target_dir.exists():
+                print(f"Skipping non-existent directory: {target_dir}")
+                continue
+
+            for p in target_dir.rglob("*"):
+                if should_include(p, suffixes):
+                    files.append(p)
 
     if extra_files:
         for f in extra_files:
@@ -86,6 +124,7 @@ def main() -> None:
         workspace_root / "src",
         workspace_root / "scripts",
         workspace_root / "tools",
+        workspace_root / "data",
     ]
     test_dirs = [
         workspace_root / "tests",
@@ -121,8 +160,14 @@ def main() -> None:
     print(f"Workspace Root: {workspace_root}")
     print(f"Output Directory: {reviews_dir}")
 
-    # 1. Export Backend Sources + Infrastructure Context (Loki, Prometheus, Grafana, Watchdog)
-    export_directories(workspace_root, src_dirs, src_output, {".py"}, extra_files=extra_infra_files)
+    # 1. Export Backend Sources + Dynamic/Static Content Catalog & Configurations + Infrastructure Context
+    export_directories(
+        workspace_root,
+        src_dirs,
+        src_output,
+        {".py", ".yaml", ".yml", ".json", ".jsonl"},
+        extra_files=extra_infra_files
+    )
 
     # 2. Export Backend Tests (unit, integration, parity, docs, performance, benchmarks)
     export_directories(workspace_root, test_dirs, test_output, {".py"})

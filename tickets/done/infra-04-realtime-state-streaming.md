@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: infra-04-realtime-state-streaming
+phase: done
+date: unknown
+tags: [infra, realtime, state, streaming]
+---
+
 # [DONE] infra-04: Realtime State Streaming (WebSockets / SSE)
 
 ## Objective
@@ -22,3 +33,7 @@ Polling every 80ms forces continuous and aggressive JSON serialization of the *e
 - API payload sizes decrease by 90%+ during idle ticks.
 - Client successfully reconstructs full snapshot locally from deltas without visual stutter.
 - Backend CPU utilization drops under heavy client connection load.
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

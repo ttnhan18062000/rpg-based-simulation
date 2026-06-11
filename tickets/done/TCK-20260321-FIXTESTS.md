@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260321-FIXTESTS
+phase: done
+date: 2026-03-21
+tags: [fixtests]
+---
+
 # TCK-20260321-FIXTESTS
 
 **Title:** Resolve Core Engine Test Regressions
@@ -15,3 +26,7 @@ The simulation test suite currently emits 14+ failures. The objective is to appl
 **Acceptance Criteria:**
 - `pytest tests/ -v` completes with 0 failures, 0 errors.
 - Code conforms to clean architectural constraints.
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

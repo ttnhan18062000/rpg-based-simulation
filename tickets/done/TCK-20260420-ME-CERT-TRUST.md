@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260420-ME-CERT-TRUST
+phase: done
+date: 2026-04-20
+tags: [me, cert, trust]
+---
+
 # TCK-20260420-ME-CERT-TRUST
 
 ## Title
@@ -5,6 +16,15 @@ Hardening Milestone E Certification and Release Trust
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Transform the existing certification harness into a comprehensive, production-grade trust system (Milestone E closure).

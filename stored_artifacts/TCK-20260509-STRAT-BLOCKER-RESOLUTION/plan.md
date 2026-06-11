@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260509-STRAT-BLOCKER-RESOLUTION
+artifact_type: plan
+tags: [strat, blocker, resolution]
+---
+
 # Plan - Implement Access and Inventory Blocker Resolution
 
 Implement missing resolution logic in `StrategicIntelligenceSystem.resolve_blockers` to ensure 'access' and 'inventory' blockers are correctly resolved.

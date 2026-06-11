@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260419-MA-TASK4-HARDEN-HASHING
+phase: done
+date: 2026-04-19
+tags: [ma, task4, harden, hashing]
+---
+
 # TCK-20260419-MA-TASK4-HARDEN-HASHING
 
 ## Title
@@ -5,6 +16,15 @@ Audit and harden canonical hashing
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Finalize the `CanonicalStateHasher` to ensure it only includes authoritative fields and that it is fully deterministic. Ensure that non-authoritative state (governance, replay, transients) is strictly excluded and verify hash reproducibility.

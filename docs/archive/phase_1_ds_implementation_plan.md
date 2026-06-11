@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: engine
+original_date: unknown
+---
+
 ## WorldLoop RPG Macro-Interest and Behavioral Realism Plan — Phase 1
 
 This phase turns the design shift into an actual implementation slice. The goal is not to build the full living-world stack yet. The goal is narrower: make entities observably different, make them reason from belief instead of hidden truth in selected decision paths, and make that visible when inspecting a chosen entity. The current codebase already has the right structural footholds for this: nested mind state, typed updates, staged AI, and presenter/introspection support.

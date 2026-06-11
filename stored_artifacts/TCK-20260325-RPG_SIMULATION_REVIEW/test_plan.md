@@ -1,3 +1,13 @@
+---
+status: historical
+layer: simulation
+authority: P2
+audience: agent
+ticket_id: TCK-20260325-RPG_SIMULATION_REVIEW
+artifact_type: test_plan
+tags: [rpg_simulation_review]
+---
+
 # Test Plan - TCK-20260325-RPG_SIMULATION_REVIEW
 
 ## Unit Tests

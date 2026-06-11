@@ -1,3 +1,10 @@
+---
+status: historical
+layer: performance
+authority: P2
+audience: developer
+---
+
 # Performance Hardening Report: Milestone 10 (Production Scale)
 Date: 2026-05-15
 Status: CERTIFIED

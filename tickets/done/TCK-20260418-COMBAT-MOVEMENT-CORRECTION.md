@@ -1,3 +1,14 @@
+---
+status: historical
+layer: combat
+authority: P1
+audience: agent
+ticket_id: TCK-20260418-COMBAT-MOVEMENT-CORRECTION
+phase: done
+date: 2026-04-18
+tags: [combat, movement, correction]
+---
+
 # TCK-20260418-COMBAT-MOVEMENT-CORRECTION
 
 ## Title
@@ -5,6 +16,15 @@ Implement Combat and Movement Overhaul Corrective Update
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Implement the work specified in `combat_movement_updated.md`, which addresses remaining gaps and "thin parts" in the combat and movement overhaul across 7 milestones.

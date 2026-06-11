@@ -1,3 +1,13 @@
+---
+status: historical
+layer: strategy
+authority: P2
+audience: agent
+ticket_id: TCK-20260523-COGNITION-FINAL-CERTIFICATION
+artifact_type: investigation
+tags: [cognition, final, certification]
+---
+
 # Investigation Notes: Cognition Pipeline Robustness & Safety
 
 ## Overview of the Implementation

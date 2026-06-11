@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260422-PH9-M1-READINESS
+phase: done
+date: 2026-04-22
+tags: [ph9, m1, readiness]
+---
+
 # TCK-20260422-PH9-M1-READINESS
 
 ## Title
@@ -5,6 +16,15 @@ Phase 9 Milestone 1: Readiness Gate
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Establish the Phase 9 entry gate with frozen row ownership, closure conditions, support boundary, and formal readiness package.

@@ -1,3 +1,13 @@
+---
+status: historical
+layer: strategy
+authority: P2
+audience: agent
+ticket_id: TCK-20260523-COGNITION-FINAL-CERTIFICATION
+artifact_type: test_plan
+tags: [cognition, final, certification]
+---
+
 # Test Plan & Coverage Matrix for Cognition Graph Observability
 
 ## Test Suites

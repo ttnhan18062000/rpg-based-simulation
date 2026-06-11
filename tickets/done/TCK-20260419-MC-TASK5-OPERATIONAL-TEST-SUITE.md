@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260419-MC-TASK5-OPERATIONAL-TEST-SUITE
+phase: done
+date: 2026-04-19
+tags: [mc, task5, operational, test, suite]
+---
+
 # TCK-20260419-MC-TASK5-OPERATIONAL-TEST-SUITE
 
 ## Title
@@ -5,6 +16,15 @@ Milestone C - Task 5: Complete Operational-Integrity Test Suite
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Close the proof gap in replay, startup, flags, and shutdown through comprehensive test verification.

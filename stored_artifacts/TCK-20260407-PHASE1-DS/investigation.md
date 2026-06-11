@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260407-PHASE1-DS
+artifact_type: investigation
+tags: [phase1, ds]
+---
+
 # Investigation: Phase 1 Behavioral Realism
 
 ## Root Cause Analysis (AOA Regression)

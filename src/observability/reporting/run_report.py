@@ -234,9 +234,141 @@ class RunReportGenerator:
             except Exception as e:
                 logger.error(f"Failed loading cognition_graph_diffs.jsonl: {e}")
 
+        # Resolve provenance info for each anomaly
+        from src.observability.reporting.artifact_repository import RunArtifactRepository
+        from src.observability.warehouse.provenance_lookup import ProvenanceLookupService
+
+        base_dir = os.path.dirname(run_dir) or "."
+        repo = RunArtifactRepository(base_dir=base_dir)
+        lookup_service = ProvenanceLookupService(run_repo=repo)
+        run_id = os.path.basename(run_dir)
+
+        by_module = {}
+        by_profile = {}
+        by_faction = {}
+
+        for a in anomalies:
+            entity_ids = []
+            region_ids = []
+            resource_ids = []
+
+            # Extract from anomaly record / dict representation
+            if "affected_entity_ids" in a and a["affected_entity_ids"]:
+                entity_ids.extend([str(eid) for eid in a["affected_entity_ids"]])
+            elif a.get("entity_id") is not None:
+                entity_ids.append(str(a["entity_id"]))
+
+            ctx = a.get("context", {})
+            if isinstance(ctx, dict):
+                # Check for structured evidence
+                if "affected_ids" in ctx:
+                    aff = ctx["affected_ids"]
+                    if isinstance(aff, dict):
+                        entity_ids.extend([str(eid) for eid in aff.get("entities", []) if eid is not None])
+                        region_ids.extend([str(rid) for rid in aff.get("regions", []) if rid is not None])
+                        resource_ids.extend([str(rid) for rid in aff.get("resources", []) if rid is not None])
+                elif "evidence" in ctx and isinstance(ctx["evidence"], dict):
+                    aff = ctx["evidence"].get("affected_ids", {})
+                    if isinstance(aff, dict):
+                        entity_ids.extend([str(eid) for eid in aff.get("entities", []) if eid is not None])
+                        region_ids.extend([str(rid) for rid in aff.get("regions", []) if rid is not None])
+                        resource_ids.extend([str(rid) for rid in aff.get("resources", []) if rid is not None])
+                
+                # Check directly in context
+                for r_id in ctx.get("affected_region_ids", []):
+                    if r_id is not None:
+                        region_ids.append(str(r_id))
+                for r_id in ctx.get("affected_resource_ids", []):
+                    if r_id is not None:
+                        resource_ids.append(str(r_id))
+
+            entity_ids = list(set(entity_ids))
+            region_ids = list(set(region_ids))
+            resource_ids = list(set(resource_ids))
+
+            # Resolve origins
+            a_modules = set()
+            a_profiles = set()
+            a_factions = set()
+
+            for eid in entity_ids:
+                origin = lookup_service.get_entity_origin(run_id, eid)
+                if origin:
+                    if origin.get("source_module"):
+                        a_modules.add(origin["source_module"])
+                    prof = origin.get("profiles", {})
+                    if isinstance(prof, dict):
+                        role = prof.get("role") or prof.get("building_type") or prof.get("resource_type")
+                        if role:
+                            a_profiles.add(role)
+                        fact = prof.get("faction")
+                        if fact:
+                            a_factions.add(fact)
+
+            for rid in region_ids:
+                origin = lookup_service.get_region_origin(run_id, rid)
+                if origin:
+                    if origin.get("source_module"):
+                        a_modules.add(origin["source_module"])
+                    prof = origin.get("profiles", {})
+                    if isinstance(prof, dict):
+                        reg_type = prof.get("region_type")
+                        if reg_type:
+                            a_profiles.add(reg_type)
+
+            for rid in resource_ids:
+                try:
+                    num_id = int(rid)
+                except ValueError:
+                    num_id = None
+
+                if num_id is not None and num_id >= 20000:
+                    origin = lookup_service.get_building_origin(run_id, rid)
+                else:
+                    origin = lookup_service.get_resource_origin(run_id, rid)
+                    if not origin:
+                        origin = lookup_service.get_building_origin(run_id, rid)
+
+                if origin:
+                    if origin.get("source_module"):
+                        a_modules.add(origin["source_module"])
+                    prof = origin.get("profiles", {})
+                    if isinstance(prof, dict):
+                        val = prof.get("resource_type") or prof.get("building_type")
+                        if val:
+                            a_profiles.add(val)
+
+            # Ensure default unknown is handled
+            if not a_modules:
+                a_modules.add("unknown")
+            if not a_profiles:
+                a_profiles.add("unknown")
+            if not a_factions:
+                a_factions.add("unknown")
+
+            a["provenance"] = {
+                "source_modules": list(a_modules),
+                "profiles": list(a_profiles),
+                "factions": list(a_factions)
+            }
+
+            for m in a_modules:
+                by_module.setdefault(m, []).append(a)
+            for p in a_profiles:
+                by_profile.setdefault(p, []).append(a)
+            for f in a_factions:
+                by_faction.setdefault(f, []).append(a)
+
+        provenance_grouping = {
+            "by_module": {m: [{"rule_name": an.get("rule_name"), "severity": an.get("severity"), "message": an.get("message"), "tick": an.get("tick_detected")} for an in list_an] for m, list_an in by_module.items()},
+            "by_profile": {p: [{"rule_name": an.get("rule_name"), "severity": an.get("severity"), "message": an.get("message"), "tick": an.get("tick_detected")} for an in list_an] for p, list_an in by_profile.items()},
+            "by_faction": {f: [{"rule_name": an.get("rule_name"), "severity": an.get("severity"), "message": an.get("message"), "tick": an.get("tick_detected")} for an in list_an] for f, list_an in by_faction.items()}
+        }
+
         report_data = {
             "metadata": metadata,
             "anomalies": anomalies,
+            "provenance_grouping": provenance_grouping,
             "flagged_timelines": flagged_timelines,
             "rule_execution": serialized_rule_results,
             "anomaly_clusters": serialized_clusters,
@@ -512,6 +644,50 @@ class RunReportGenerator:
                         tick = p.get("tick_detected")
                         f.write(f"- `{ptype}` ({sev}) on Entity `{eid}` at Tick `{tick}`: {desc}\n")
                     f.write("\n")
+
+            # Provenance grouping section
+            f.write("## 🌐 Provenance Source Grouping\n\n")
+            if not anomalies:
+                f.write("🟢 **No anomalies detected. All provenance sources (modules, profiles, factions) are verified and clean.**\n\n")
+            else:
+                f.write("This section groups detected anomalies and violations by their compile-time source module, profile, and faction based on resolved world assembly provenance metadata.\n\n")
+                
+                # Reconstruct groups from anomalies list
+                by_module = {}
+                by_profile = {}
+                by_faction = {}
+                for a in anomalies:
+                    prov = a.get("provenance", {})
+                    for m in prov.get("source_modules", ["unknown"]):
+                        by_module.setdefault(m, []).append(a)
+                    for p in prov.get("profiles", ["unknown"]):
+                        by_profile.setdefault(p, []).append(a)
+                    for fac in prov.get("factions", ["unknown"]):
+                        by_faction.setdefault(fac, []).append(a)
+                        
+                f.write("### 📦 By Source Module\n\n")
+                f.write("| Source Module | Severity | Rule ID | Message (Tick) |\n")
+                f.write("| :--- | :--- | :--- | :--- |\n")
+                for m, list_an in sorted(by_module.items()):
+                    for a in list_an:
+                        f.write(f"| `{m}` | `{a.get('severity', 'WARNING')}` | `{a.get('rule_name', '')}` | {a.get('message', '')} (Tick `{a.get('tick_detected', 0)}`) |\n")
+                f.write("\n")
+                
+                f.write("### 👤 By Profile / Role\n\n")
+                f.write("| Profile | Severity | Rule ID | Message (Tick) |\n")
+                f.write("| :--- | :--- | :--- | :--- |\n")
+                for p, list_an in sorted(by_profile.items()):
+                    for a in list_an:
+                        f.write(f"| `{p}` | `{a.get('severity', 'WARNING')}` | `{a.get('rule_name', '')}` | {a.get('message', '')} (Tick `{a.get('tick_detected', 0)}`) |\n")
+                f.write("\n")
+                
+                f.write("### 🛡️ By Faction\n\n")
+                f.write("| Faction | Severity | Rule ID | Message (Tick) |\n")
+                f.write("| :--- | :--- | :--- | :--- |\n")
+                for fact, list_an in sorted(by_faction.items()):
+                    for a in list_an:
+                        f.write(f"| `{fact}` | `{a.get('severity', 'WARNING')}` | `{a.get('rule_name', '')}` | {a.get('message', '')} (Tick `{a.get('tick_detected', 0)}`) |\n")
+                f.write("\n")
 
             f.write("## 📜 Diagnostic Entity Timelines\n\n")
             if not timelines:

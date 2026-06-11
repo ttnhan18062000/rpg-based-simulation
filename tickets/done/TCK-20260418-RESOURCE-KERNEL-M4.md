@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260418-RESOURCE-KERNEL-M4
+phase: done
+date: 2026-04-18
+tags: [resource, kernel, m4]
+---
+
 # TCK-20260418-RESOURCE-KERNEL-M4
 
 ## Title
@@ -5,6 +16,15 @@ Milestone 4: Deterministic Scheduler and Work Model
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Replace naive execution with an explicit deterministic scheduler that classifies and bounds work items.

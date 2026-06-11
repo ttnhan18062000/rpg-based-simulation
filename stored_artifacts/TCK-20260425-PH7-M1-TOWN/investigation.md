@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260425-PH7-M1-TOWN
+artifact_type: investigation
+tags: [ph7, m1, town]
+---
+
 # Investigation — PH7 M1: Town Return and Building Registry
 
 ## Goal

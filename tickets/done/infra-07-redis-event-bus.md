@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: infra-07-redis-event-bus
+phase: done
+date: unknown
+tags: [infra, redis, event, bus]
+---
+
 # [DONE] infra-07: Redis Streams Event Bus
 
 ## Objective
@@ -24,3 +35,7 @@ By introducing Redis (`redis.asyncio`), the Engine simply publishes `XADD` comma
 - Engine loop completes its ticks without tracking specific `subscriber` callbacks.
 - FastAPI endpoints retrieve ticks from Redis without error.
 - SSE stream matches the original functionality structurally but routes through Redis infrastructure.
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

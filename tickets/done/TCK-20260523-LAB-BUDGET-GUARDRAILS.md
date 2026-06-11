@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260523-LAB-BUDGET-GUARDRAILS
+phase: done
+date: 2026-05-23
+tags: [lab, budget, guardrails]
+---
+
 # TCK-20260523-LAB-BUDGET-GUARDRAILS
 
 ## Title
@@ -7,6 +18,15 @@ Resource, Storage, and Runtime Guardrails for Scenario Lab Sweeps (Milestone 82)
 ## Status
 
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 

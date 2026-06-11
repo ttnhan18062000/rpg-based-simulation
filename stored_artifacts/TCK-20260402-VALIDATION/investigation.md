@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260402-VALIDATION
+artifact_type: investigation
+tags: [validation]
+---
+
 # Investigation: TCK-20260402-VALIDATION
 
 ## Findings

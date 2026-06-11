@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: testing
+original_date: unknown
+---
+
 You are an expert simulation-engine architect, observability engineer, and RPG systems designer.
 
 Your task is to review the current RPG simulation project and produce a detailed current-state assessment before we plan the next implementation phase.

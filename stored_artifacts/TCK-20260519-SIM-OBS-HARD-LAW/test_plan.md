@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260519-SIM-OBS-HARD-LAW
+artifact_type: test_plan
+tags: [sim, obs, hard, law]
+---
+
 # Test Plan - HardLawMonitor V1 & Observability Mode Config
 
 We will construct a comprehensive test suite validating all aspects of the monitor, config, failure policies, and metrics.

@@ -1,3 +1,13 @@
+---
+status: historical
+layer: performance
+authority: P2
+audience: agent
+ticket_id: TCK-20260516-PERF-OPTIMIZATION-FINAL
+artifact_type: test_plan
+tags: [perf, optimization, final]
+---
+
 # Test Plan: TCK-20260516-PERF-OPTIMIZATION-FINAL
 
 ## 1. Automated Unit Tests

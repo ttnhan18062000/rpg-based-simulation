@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260510-REFACTOR-PIPELINE-DECOMPOSITION-DETAILED
+phase: done
+date: 2026-05-10
+tags: [refactor, pipeline, decomposition, detailed]
+---
+
 # TCK-20260510-REFACTOR-PIPELINE-DECOMPOSITION
 
 ## Title
@@ -5,6 +16,15 @@ Decompose AuthoritativeApplyPipeline into dedicated phases
 
 ## Status
 INPROGRESS
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Split `src/engine/pipeline.py` into multiple modules under `src/engine/pipeline_phases/` to improve maintainability while preserving the existing public API via static wrappers.

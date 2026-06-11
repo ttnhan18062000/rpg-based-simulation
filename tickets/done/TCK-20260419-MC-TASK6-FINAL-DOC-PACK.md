@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260419-MC-TASK6-FINAL-DOC-PACK
+phase: done
+date: 2026-04-19
+tags: [mc, task6, final, doc, pack]
+---
+
 # TCK-20260419-MC-TASK6-FINAL-DOC-PACK
 
 ## Title
@@ -5,6 +16,15 @@ Milestone C - Task 6: Final Milestone C Documentation Pack
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Add exact Milestone C documentation pack and close the lifecycle integrity milestone.

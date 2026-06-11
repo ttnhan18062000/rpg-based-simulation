@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: combat
+original_date: unknown
+---
+
 [Milestone 2] - Combat Interaction Core
 
 [Milestone Description]

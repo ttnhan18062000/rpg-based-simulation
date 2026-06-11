@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260518-LEDGER-PATH-REMEDIATION
+phase: done
+date: 2026-05-18
+tags: [ledger, path, remediation]
+---
+
 # TCK-20260518-LEDGER-PATH-REMEDIATION
 
 ## Title
@@ -5,6 +16,15 @@ Release Gate Ledger Path Discrepancy Remediation
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Remediate broken source and test file paths in `docs/logic_checklist_exhaustive.md` and add the `OPT` domain prefix to `scripts/ledger_validator.py` to restore 100% pass rate in the M10 certification release gate.

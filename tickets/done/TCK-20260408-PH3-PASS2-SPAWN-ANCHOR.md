@@ -1,5 +1,25 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260408-PH3-PASS2-SPAWN-ANCHOR
+phase: done
+date: 2026-04-08
+tags: [ph3, pass2, spawn, anchor]
+---
+
 # Ticket: TCK-20260408-PH3-PASS2-SPAWN-ANCHOR
 # Title: Phase 3 Pass 2: Spawn-time Anchoring
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Implement the logic to anchor entities in the world through routines, roles, and place attachments at spawn time.

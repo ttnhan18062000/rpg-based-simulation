@@ -1,3 +1,10 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: developer
+---
+
 # Phase 10 Compatibility Backlog
 
 This document defines the frozen set of legacy system-compatibility rows owned by Phase 10.

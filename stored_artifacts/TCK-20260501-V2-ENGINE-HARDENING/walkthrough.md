@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: engine
+authority: P2
+audience: agent
+tags: [v2, engine, hardening]
+---
+
 # Walkthrough — V2 Engine Logic Hardening & Audit
 
 I have completed the hardening of the V2 engine logic by reconciling the exhaustive semantic checklist with the authoritative source code. This ensures that every atomic RPG law is explicitly verified and marked for the protocol validator.

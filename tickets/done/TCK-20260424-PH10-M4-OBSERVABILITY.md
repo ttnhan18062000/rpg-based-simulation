@@ -1,3 +1,14 @@
+---
+status: historical
+layer: observability
+authority: P1
+audience: agent
+ticket_id: TCK-20260424-PH10-M4-OBSERVABILITY
+phase: done
+date: 2026-04-24
+tags: [ph10, m4, observability]
+---
+
 # TCK-20260424-PH10-M4-OBSERVABILITY
 
 ## Title
@@ -5,6 +16,15 @@ Phase 10 Milestone 4: Observability and Operational Artifacts
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Recover legacy logging format, metrics emission, and replay artifact semantics for the V2 engine.

@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260528-PHASE9-LIFE-ARCS
+artifact_type: investigation
+tags: [phase9, life, arcs]
+---
+
 # Investigation - Phase 9 Campaigns
 
 We need to analyze the existing simulation engine, specifically how it executes ticks, traces events, and stores entities and their states.

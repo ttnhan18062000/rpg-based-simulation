@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: engine
+original_date: unknown
+---
+
 # phase_1_2_updated_ds_implementation_plan.md
 
 ## Purpose

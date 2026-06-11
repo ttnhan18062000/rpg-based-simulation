@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260520-SIM-OBS-PHASE5-M22
+phase: done
+date: 2026-05-20
+tags: [sim, obs, phase5, m22]
+---
+
 # TCK-20260520-SIM-OBS-PHASE5-M22
 
 ## Title
@@ -5,6 +16,15 @@ Entity Inspector V1
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Implement safe, real-time read-only inspection of individual simulation entities. Developers should be able to query the exact state and timeline of a single entity during live simulation execution without causing any locks or full-world scans.

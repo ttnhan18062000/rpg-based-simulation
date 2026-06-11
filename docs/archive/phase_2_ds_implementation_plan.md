@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: engine
+original_date: unknown
+---
+
 ## WorldLoop RPG Macro-Interest and Behavioral Realism Implementation Plan — Phase 2 [COMPLETED]
 
 This plan covers the second major design shift: **Dynamic Social Meaning, Relationships, and Durable History.**

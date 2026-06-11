@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260421-MOV-PARITY-PROMO
+phase: done
+date: 2026-04-21
+tags: [mov, parity, promo]
+---
+
 # TCK-20260421-MOV-PARITY-PROMO
 
 ## Title
@@ -5,6 +16,15 @@ Promote Movement Parity Verification to Standard Test Path
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Take the existing movement parity work (currently in script-oriented support) and turn it into an ordinary validation requirement in `tests/parity/test_movement_parity.py` that runs under `pytest`.

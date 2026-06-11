@@ -1,3 +1,10 @@
+---
+status: historical
+layer: testing
+authority: P2
+audience: developer
+---
+
 # Test Coverage Audit: Phase 8 — World Emergence / Population-Level Consequences
 
 This document outlines the test coverage partition for population-level and world emergence feedback mechanics, ensuring Phase 8 tests are high-fidelity, focused on macro-loops, and non-redundant with existing world-dynamics.

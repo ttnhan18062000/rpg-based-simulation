@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: misc
+authority: P2
+audience: agent
+tags: [checklist, hardening]
+---
+
 I verified the new checklist against the current uploaded source/test bundles:
 
 ```text id="ox9s85"

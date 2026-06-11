@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260401-INTROSPECTION-LAYER
+phase: done
+date: 2026-04-01
+tags: [introspection, layer]
+---
+
 # TCK-20260401-INTROSPECTION-LAYER: Rendering & Explainability Endpoints
 
 ## Description
@@ -23,3 +34,7 @@ DONE
 
 ## Final Status
 **DONE**: Finalized rich introspection services including Combat Traces, Stat Breakdown, and Scheduler internal projections. Successfully offloaded detailed rendering data from the main world stream to specialized endpoints, enhancing frontend explainability.
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260524-LAB-INVESTIGATION
+artifact_type: investigation
+tags: [lab, investigation]
+---
+
 # Investigation and Design Notes - Milestone 100
 
 ## 1. Output Schema Mapping

@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: testing
+original_date: unknown
+---
+
 You are an expert simulation-engine architect and observability engineer.
 
 We have reviewed your second-pass observability report. Before implementation planning, we need one final clarification focused on feasibility and prioritization.

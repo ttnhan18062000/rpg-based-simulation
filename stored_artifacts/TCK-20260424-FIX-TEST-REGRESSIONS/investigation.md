@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260424-FIX-TEST-REGRESSIONS
+artifact_type: investigation
+tags: [fix, test, regressions]
+---
+
 # Investigation: Test Regressions
 
 ## Failure 1: TacticalDecisionSystem AttributeError

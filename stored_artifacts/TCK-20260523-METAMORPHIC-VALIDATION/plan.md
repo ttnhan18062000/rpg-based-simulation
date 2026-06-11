@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260523-METAMORPHIC-VALIDATION
+artifact_type: plan
+tags: [metamorphic, validation]
+---
+
 # Metamorphic Validation Rules - Implementation Plan
 
 We will implement **Milestone 87: Metamorphic Validation Rules** by designing a dedicated metamorphic testing module, integrating it with the lab schemas, and writing a comprehensive test suite.

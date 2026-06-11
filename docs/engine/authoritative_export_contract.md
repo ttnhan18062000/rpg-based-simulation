@@ -1,3 +1,10 @@
+---
+status: active
+layer: engine
+authority: P1
+audience: developer
+---
+
 # Authoritative Export Contract
 
 This document defines the requirements for exporting the engine's authoritative state and transitions (TraceEvents).

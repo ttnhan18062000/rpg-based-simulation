@@ -1,3 +1,13 @@
+---
+status: historical
+layer: simulation
+authority: P2
+audience: agent
+ticket_id: TCK-20260325-RPG_SIMULATION_REVIEW
+artifact_type: plan
+tags: [rpg_simulation_review]
+---
+
 # Implementation Plan - TCK-20260325-RPG_SIMULATION_OVERHAUL
 
 ## Goal Description

@@ -1,3 +1,10 @@
+---
+status: active
+layer: observability
+authority: P1
+audience: developer
+---
+
 # Prometheus Metrics Telemetry Specification
 
 The V2 Simulation Engine exposes a standard `/metrics` endpoint serving Prometheus-compatible text representation of live telemetry data.

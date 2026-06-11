@@ -1,3 +1,13 @@
+---
+status: historical
+layer: simulation
+authority: P2
+audience: agent
+ticket_id: TCK-20260524-LAB-COMPACT-SIMULATION
+artifact_type: investigation
+tags: [lab, compact, simulation]
+---
+
 # Investigation Report - M99 CompactSimulationData Workflow
 
 ## 1. Context Analysis & System Design

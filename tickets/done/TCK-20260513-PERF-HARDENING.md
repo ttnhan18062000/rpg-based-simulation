@@ -1,3 +1,14 @@
+---
+status: historical
+layer: performance
+authority: P1
+audience: agent
+ticket_id: TCK-20260513-PERF-HARDENING
+phase: done
+date: 2026-05-13
+tags: [perf, hardening]
+---
+
 # TCK-20260513-PERF-HARDENING
 
 ## Title
@@ -5,6 +16,15 @@ V2 RPG Engine Performance Hardening
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Finalize the performance hardening of the V2 RPG Engine by implementing optimized passive component updates and system-level cadence gating. Goal is to maximize simulation throughput and achieve production-grade performance thresholds (p95 latency) in high-density scenarios.

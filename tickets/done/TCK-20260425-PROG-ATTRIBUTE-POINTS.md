@@ -1,3 +1,14 @@
+---
+status: historical
+layer: core
+authority: P1
+audience: agent
+ticket_id: TCK-20260425-PROG-ATTRIBUTE-POINTS
+phase: done
+date: 2026-04-25
+tags: [prog, attribute, points]
+---
+
 # TCK-20260425-PROG-ATTRIBUTE-POINTS
 
 ## Title
@@ -5,6 +16,15 @@ Implement Attribute Points and Manual Growth (PH8 M5)
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Implement the AP system for Heroes, allowing manual stat growth while keeping Monsters on an automatic scaling model (Hybrid Growth). Ensure authoritative recalculation and aptitude-based scaling.

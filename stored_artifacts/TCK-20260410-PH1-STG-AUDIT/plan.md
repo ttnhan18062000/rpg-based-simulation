@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260410-PH1-STG-AUDIT
+artifact_type: plan
+tags: [ph1, stg, audit]
+---
+
 # Audit Plan - Strategic Design Shift (Phase 1 & 2)
 
 ## Goal

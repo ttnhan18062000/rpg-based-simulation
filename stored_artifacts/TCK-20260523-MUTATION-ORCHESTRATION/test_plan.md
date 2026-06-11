@@ -1,3 +1,13 @@
+---
+status: historical
+layer: strategy
+authority: P2
+audience: agent
+ticket_id: TCK-20260523-MUTATION-ORCHESTRATION
+artifact_type: test_plan
+tags: [mutation, orchestration]
+---
+
 # Test Plan: Mutation Lab Orchestration
 
 We will verify all components of the Mutation Lab Orchestration, CLI, and Safety gates using unit and integration tests.

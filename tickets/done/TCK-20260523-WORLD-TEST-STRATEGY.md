@@ -1,3 +1,14 @@
+---
+status: historical
+layer: strategy
+authority: P1
+audience: agent
+ticket_id: TCK-20260523-WORLD-TEST-STRATEGY
+phase: done
+date: 2026-05-23
+tags: [world, test, strategy]
+---
+
 # TCK-20260523-WORLD-TEST-STRATEGY
 
 ## Title
@@ -7,6 +18,15 @@ Milestone 73 — Worldbuilding Test Strategy
 ## Status
 
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 

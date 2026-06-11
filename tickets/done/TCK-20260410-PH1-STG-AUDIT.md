@@ -1,4 +1,24 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260410-PH1-STG-AUDIT
+phase: done
+date: 2026-04-10
+tags: [ph1, stg, audit]
+---
+
 # Ticket TCK-20260410-STRATEGIC-AUDIT
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Audit and reconcile the Phase 1 and Phase 2 stages of the Strategic Design Shift. Mark completed tasks in `thinking_implementation_phase_1.md`, add implementation comments, and ensure all work is correctly ticketed according to the `Phase_N_stage_M` naming convention.

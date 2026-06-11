@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: fix_update_rpg_system
+phase: done
+date: unknown
+tags: [fix_update_rpg_system]
+---
+
 - [x] Adjust the Class Hall information based on the new attributes and stats
 - [x] hover on attribute in the attributes sub-tab in inspec pannel should show the attribute description (scaling, etc.)
 - [x] update the AI sub-tab in inspec pannel, show detailed information about the AI, with the new logic
@@ -6,3 +17,7 @@
 - [x] add a detail stats for all the stats (main and secondary stats), with base stat + additional stats (buff or equipment) in inspec pannel
 - [x] add a effect tab for buffs/debuffs in inspec pannel
 - Revise all the new logics, it should be updated and reflected in frontend
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

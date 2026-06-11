@@ -118,10 +118,63 @@ class TacticalDecisionSystem:
                       )
                   )
 
-        hostiles = [
-            n for n in neighbors 
-            if n.identity.faction != entity.identity.faction and n.combat.alive
-        ]
+        from src.content_semantics.faction import get_faction_semantics_service, get_faction_id_str, get_race_id_str
+        from src.content_semantics.relation import RelationContext
+        from src.entities.identity_resolver import EntityIdentityResolver, IdentityResolutionError
+        from src.engine.behavior_consumers import (
+            get_perception_gate, get_pressure_resolver, get_entity_signals,
+        )
+        from src.world.motivation.pressure_resolver import MotivationPressureSet
+
+        # Resolve entity pressures once — used for scoring and flee gating
+        try:
+            entity_pressures = get_pressure_resolver().resolve_pressures(entity)
+        except Exception:
+            entity_pressures = MotivationPressureSet.empty()
+
+        semantics_service = get_faction_semantics_service()
+        _id_resolver = EntityIdentityResolver()
+        _gate = get_perception_gate()
+        hostiles = []
+        hostile_identity_sources: dict = {}
+
+        try:
+            _src_identity = _id_resolver.resolve(entity)
+            _src_faction_id = _src_identity.faction_id
+            _src_identity_source = _src_identity.source
+        except IdentityResolutionError:
+            _src_faction_id = get_faction_id_str(entity)
+            _src_identity_source = "legacy_fallback"
+
+        for n in neighbors:
+            if not n.combat.alive:
+                continue
+            dist = LegalityServiceV2.get_manhattan_dist(entity.navigation.position, n.navigation.position)
+            # Perception gate: entity can only engage targets it can detect
+            try:
+                if not _gate.can_perceive(entity, get_entity_signals(n), {"distance": float(dist)}).perceived:
+                    continue
+            except Exception:
+                pass  # Gate failure → permissive fallback
+            combat_engaged = (
+                entity.task.payload.get("target_id") == n.id
+                or n.task.payload.get("target_id") == entity.id
+            )
+            context = RelationContext(
+                distance=float(dist),
+                combat_engaged=combat_engaged,
+                target_race=get_race_id_str(n),
+                intruding=False,
+            )
+            try:
+                _tgt_identity = _id_resolver.resolve(n)
+                _tgt_faction_id = _tgt_identity.faction_id
+            except IdentityResolutionError:
+                _tgt_faction_id = get_faction_id_str(n)
+
+            if semantics_service.is_hostile_compat(_src_faction_id, _tgt_faction_id, context):
+                hostiles.append(n)
+                hostile_identity_sources[n.id] = _src_identity_source
         
         # 4. Strategic Persistence (Pillar 5.1)
         # If hostiles are present, we should SUSPEND the current project if it's not already
@@ -136,6 +189,18 @@ class TacticalDecisionSystem:
                       current_project_id_set="",
                       current_objective_id_set=""
                   )
+
+        # Safety pressure: high-safety entities retreat from threats rather than engage
+        if hostiles and entity_pressures.safety_pressure > 0.75:
+            return EntityUpdate(
+                entity_id=entity.id,
+                strategic=strat_up,
+                navigation=NavigationUpdate(target_set=(0.0, 0.0), movement_mode_set=MovementMode.RETREAT),
+                task=TaskUpdate(
+                    work_kind_set="ENTITY_MOVE",
+                    payload_set={"target_position": (0.0, 0.0), "reason": "SAFETY_PRESSURE_RETREAT"}
+                )
+            )
 
         if not hostiles:
             # Pillar 5.1: Objective Pursuit
@@ -251,8 +316,18 @@ class TacticalDecisionSystem:
                 
             # Local Hysteresis: Previous target gets a small bonus
             is_current_target = 0 if h.id == entity.task.payload.get("target_id") else 1
-            
-            return (group_bias, is_current_target, h.combat.hp, dist, h.id)
+
+            # Pressure-based priority: territory and duty pressure reduce effective distance
+            # (lower score = higher priority), making territorial/duty-bound entities more
+            # aggressive toward threats.
+            pressure_dist_mod = max(
+                0.0,
+                1.0
+                - entity_pressures.territory_pressure * 0.4
+                - entity_pressures.duty_pressure * 0.3,
+            )
+
+            return (group_bias, is_current_target, h.combat.hp, dist * pressure_dist_mod, h.id)
 
         logger.debug(f"DEBUG: entity {entity.id} evaluating targets. Group target: {group.shared_target_id if group else None}")
         for h in hostiles:
@@ -514,7 +589,8 @@ class TacticalDecisionSystem:
                             "skill_id": chosen_skill_id,
                             "target_id": target.id,
                             "stale_ticks": stale_ticks + 1,
-                            "recent_positions": recent_positions
+                            "recent_positions": recent_positions,
+                            "target_identity_source": hostile_identity_sources.get(target.id, _src_identity_source),
                         }
                     )
                 )
@@ -526,10 +602,11 @@ class TacticalDecisionSystem:
                 task=TaskUpdate(
                     work_kind_set="ENTITY_ACT",
                     payload_set={
-                        "action": "ATTACK", 
+                        "action": "ATTACK",
                         "target_id": target.id,
                         "stale_ticks": stale_ticks + 1,
-                        "recent_positions": recent_positions
+                        "recent_positions": recent_positions,
+                        "target_identity_source": hostile_identity_sources.get(target.id, _src_identity_source),
                     }
                 )
             )
@@ -554,10 +631,11 @@ class TacticalDecisionSystem:
                 task=TaskUpdate(
                     work_kind_set="ENTITY_MOVE",
                     payload_set={
-                        "target_position": target_pos, 
+                        "target_position": target_pos,
                         "target_id": target.id,
                         "stale_ticks": stale_ticks + 1,
-                        "recent_positions": recent_positions
+                        "recent_positions": recent_positions,
+                        "target_identity_source": hostile_identity_sources.get(target.id, _src_identity_source),
                     }
                 )
             )

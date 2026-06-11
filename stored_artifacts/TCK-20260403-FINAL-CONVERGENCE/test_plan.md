@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260403-FINAL-CONVERGENCE
+artifact_type: test_plan
+tags: [final, convergence]
+---
+
 # Test Plan: Architectural Stability & Convergence (TCK-20260403-FINAL-CONVERGENCE)
 
 ## Automated Verification

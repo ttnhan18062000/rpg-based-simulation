@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260420-CERT-CONSOLIDATION
+phase: done
+date: 2026-04-20
+tags: [cert, consolidation]
+---
+
 # TCK-20260420-CERT-CONSOLIDATION
 
 ## Title
@@ -5,6 +16,15 @@ Certification Artifact Consolidation
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 The user requested a reduction in the file count in `reports/release_proof/`, which was cluttered with 60+ individual scenario JSON and MD files.

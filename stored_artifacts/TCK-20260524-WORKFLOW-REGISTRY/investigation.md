@@ -1,3 +1,13 @@
+---
+status: historical
+layer: guidelines
+authority: P2
+audience: agent
+ticket_id: TCK-20260524-WORKFLOW-REGISTRY
+artifact_type: investigation
+tags: [workflow, registry]
+---
+
 # Investigation: Workflow Registry and Skill Contracts (M93)
 
 We need to implement a dynamic parser that scans markdown specifications and registers their frontmatter schemas as validated Python models.

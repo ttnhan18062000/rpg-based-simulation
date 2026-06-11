@@ -1,0 +1,13 @@
+# data/content/defaults.yaml
+- id: "global_default"
+  display_name: "Global Default Compile Profile"
+  description: "Fallback compile properties for units, resources, and vaults"
+  schema_version: "defaultcompileprofile.v1"
+  default_entity_hp: 100
+  default_entity_atk: 10
+  default_entity_def: 0
+  default_entity_range: 1
+  default_entity_readiness: 100.0
+  default_resource_required_ticks: 10
+  default_building_hp: 500
+  default_faction_starting_gold: 1000.0

@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: misc
+original_date: unknown
+---
+
 # RPG Simulation Engine — Project Pitch
 
 ## One-Liner

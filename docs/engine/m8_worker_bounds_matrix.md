@@ -1,3 +1,10 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: developer
+---
+
 # Worker Bounds Matrix (Milestone 8)
 
 | Bound Name | Purpose | Profile Source | Overflow/Violation Behavior |

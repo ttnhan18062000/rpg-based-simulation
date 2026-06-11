@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: engine
+authority: P2
+audience: agent
+tags: [sim, obs, phase4, m20]
+---
+
 # Walkthrough: Scenario-Level Reporting and CI Gate (Milestone 20)
 
 We have successfully implemented and thoroughly verified **Milestone 20: Scenario-Level Reporting and CI Gate** for the observability suite. This completes the full multi-run sweep execution, analysis, baseline comparative reporting, and continuous integration validation gating lifecycle.

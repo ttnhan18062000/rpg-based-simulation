@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: engine
+authority: P2
+audience: agent
+tags: [persistence, opt]
+---
+
 # V2 Engine Performance Hardening & Persistence Optimization Walkthrough
 
 Successfully implemented Phase 3 (Simulation Speed) and Phase 4 (Persistence Speed) of the V2 Engine performance hardening.

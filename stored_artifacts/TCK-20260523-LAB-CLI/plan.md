@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260523-LAB-CLI
+artifact_type: plan
+tags: [lab, cli]
+---
+
 # Plan - Lab CLI (Milestone 81)
 
 We will design a standalone CLI tool `rpg-lab` to run, monitor, validate, and report on Scenario Lab executions.

@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260520-SIM-OBS-M39
+artifact_type: test_plan
+tags: [sim, obs, m39]
+---
+
 # Test Plan - Observatory Dashboard V1 (Milestone 39)
 
 We will exhaustively verify that the updated dashboard serves correct HTML layouts, has all required view tags, and interacts gracefully with the server endpoints.

@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: economy
+original_date: unknown
+---
+
 Below is the detailed Phase 5 implementation plan in the same structure as before.
 
 # Detailed Implementation Plan — Phase 5 of `src`

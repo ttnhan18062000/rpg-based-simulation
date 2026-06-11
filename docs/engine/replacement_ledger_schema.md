@@ -1,3 +1,10 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: developer
+---
+
 # Authoritative Replacement Ledger Schema
 
 This document defines the canonical schema for the **Authoritative Replacement Ledger**. Every legacy behavior or system contract must be represented as a row in this ledger to track its status, divergence, and implementation phase.

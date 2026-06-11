@@ -1,3 +1,14 @@
+---
+status: historical
+layer: simulation
+authority: P1
+audience: agent
+ticket_id: TCK-20260325-RPG_SIMULATION_REVIEW
+phase: done
+date: 2026-03-25
+tags: [rpg_simulation_review]
+---
+
 # TCK-20260325-RPG_SIMULATION_REVIEW
 
 ## Description
@@ -20,3 +31,7 @@ Comprehensive review of the RPG simulation mechanics, AI behavior, and economic 
 
 ## Related Tickets
 - TCK-20260322-RPG_REFINEMENT (Deferred)
+
+**Tier:** standard
+**Type:** chore
+**Priority:** P1

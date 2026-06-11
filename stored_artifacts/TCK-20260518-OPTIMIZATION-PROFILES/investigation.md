@@ -1,3 +1,13 @@
+---
+status: historical
+layer: observability
+authority: P2
+audience: agent
+ticket_id: TCK-20260518-OPTIMIZATION-PROFILES
+artifact_type: investigation
+tags: [optimization, profiles]
+---
+
 # Investigation - Scenario-Specific Optimization Profiles
 
 ## Context

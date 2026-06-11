@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: engine
+authority: P2
+audience: agent
+tags: [ph10, m3, infra, isolation]
+---
+
 # V2 Infrastructure & Isolation Compatibility Contract
 
 This document defines the supported infrastructure surface and isolation guarantees for the V2 engine.

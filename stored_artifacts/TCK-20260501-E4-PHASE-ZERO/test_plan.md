@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260501-E4-PHASE-ZERO
+artifact_type: test_plan
+tags: [e4, phase, zero]
+---
+
 # E4 Phase 0 — Test Plan
 
 ## Objective

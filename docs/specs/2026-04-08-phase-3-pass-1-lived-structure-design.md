@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: engine
+original_date: 2026-04-08
+---
+
 # Design Spec: Phase 3 Pass 1 — Lived-Structure Core Models
 
 **Date**: 2026-04-08

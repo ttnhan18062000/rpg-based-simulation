@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: observability
+authority: P2
+audience: agent
+tags: [debug_tests]
+---
+
 # Implementation Plan - Fix WorldLoop Tests
 
 Fix the 8 failing tests and investigate/address the 51 skipped tests to achieve a stable test suite.

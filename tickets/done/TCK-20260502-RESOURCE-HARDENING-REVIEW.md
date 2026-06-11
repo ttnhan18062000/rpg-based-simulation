@@ -1,3 +1,14 @@
+---
+status: historical
+layer: economy
+authority: P1
+audience: agent
+ticket_id: TCK-20260502-RESOURCE-HARDENING-REVIEW
+phase: done
+date: 2026-05-02
+tags: [resource, hardening, review]
+---
+
 # TCK-20260502-RESOURCE-HARDENING-REVIEW
 
 ## Title
@@ -5,6 +16,15 @@ Implement Resource Hardening Review and Legacy Migration
 
 ## Status
 DONE
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Implement the recommendations from `resource_v2_e3_e4_e5_review.md`, including migrating legacy logic from `src_legacy/` and `tests_legacy/` to `src/` and `tests/`, optimizing where possible while maintaining RPG core logic, and re-verifying the logic checklist.

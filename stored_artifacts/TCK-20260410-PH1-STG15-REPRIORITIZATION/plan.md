@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260410-PH1-STG15-REPRIORITIZATION
+artifact_type: plan
+tags: [ph1, stg15, reprioritization]
+---
+
 # Phase 1 Stage 15: Strategic Reprioritization — Plan
 
 ## Goal

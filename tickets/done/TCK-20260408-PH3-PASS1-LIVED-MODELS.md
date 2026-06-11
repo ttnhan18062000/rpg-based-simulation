@@ -1,5 +1,25 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260408-PH3-PASS1-LIVED-MODELS
+phase: done
+date: 2026-04-08
+tags: [ph3, pass1, lived, models]
+---
+
 # Ticket: TCK-20260408-PH3-PASS1-LIVED-MODELS
 # Title: Phase 3 Pass 1: Lived-Structure Core Models
+
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
 
 ## Request Summary
 Implement the core data structures for Phase 3: Macro-Continuity and Strategic Realism. This involves defining models for routines, roles, place attachments, and group coordination.
