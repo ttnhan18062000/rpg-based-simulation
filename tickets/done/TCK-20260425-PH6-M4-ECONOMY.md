@@ -1,3 +1,14 @@
+---
+status: historical
+layer: economy
+authority: P1
+audience: agent
+ticket_id: TCK-20260425-PH6-M4-ECONOMY
+phase: done
+date: 2026-04-25
+tags: [ph6, m4, economy]
+---
+
 # TCK-20260425-PH6-M4-ECONOMY
 
 ## Title

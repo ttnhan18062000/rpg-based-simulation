@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260427-RPG-CORE-MIGRATION
+artifact_type: test_plan
+tags: [rpg, core, migration]
+---
+
 # Test Plan: RPG Core Migration
 
 ## Objective

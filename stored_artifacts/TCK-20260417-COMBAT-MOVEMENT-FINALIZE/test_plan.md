@@ -1,3 +1,13 @@
+---
+status: historical
+layer: combat
+authority: P2
+audience: agent
+ticket_id: TCK-20260417-COMBAT-MOVEMENT-FINALIZE
+artifact_type: test_plan
+tags: [combat, movement, finalize]
+---
+
 # Test Plan - Milestone 7 Stabilization
 
 ## Scope

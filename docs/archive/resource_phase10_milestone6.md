@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: economy
+original_date: unknown
+---
+
 # [Milestone 6] - Differential Proof, Compatibility Ratification, and Phase 10 Exit Package
 
 ## [Milestone Description]

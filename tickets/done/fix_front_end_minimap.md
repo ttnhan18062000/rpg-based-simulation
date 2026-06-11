@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: fix_front_end_minimap
+phase: done
+date: unknown
+tags: [fix_front_end_minimap]
+---
+
 - make minimap smaller
 - allow maximize and minimize the minimap (dragging the edges)
 - zoom in/out the minimap, separate from the actual world zoom (hover on minimap or world)

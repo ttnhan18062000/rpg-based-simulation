@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: world
+original_date: unknown
+---
+
 RevoZ
 revoz_r06
 :ogu:

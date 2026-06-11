@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260607-NORMALIZEDMODULE-TYPING
+artifact_type: investigation
+tags: [normalizedmodule, typing]
+---
+
 # Investigation — TCK-20260607-NORMALIZEDMODULE-TYPING
 
 ## Current Behavior (file:line)

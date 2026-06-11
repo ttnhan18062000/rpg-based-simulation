@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260520-SIM-OBS-M38
+artifact_type: test_plan
+tags: [sim, obs, m38]
+---
+
 # Test Plan — Historical Event Search API (Milestone 38)
 
 To guarantee reliability, performance, and security across both Local Fallback and ClickHouse backends, we will implement a multi-tiered test suite.

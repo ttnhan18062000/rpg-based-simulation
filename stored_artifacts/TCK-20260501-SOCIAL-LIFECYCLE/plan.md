@@ -1,3 +1,13 @@
+---
+status: historical
+layer: ai
+authority: P2
+audience: agent
+ticket_id: TCK-20260501-SOCIAL-LIFECYCLE
+artifact_type: plan
+tags: [social, lifecycle]
+---
+
 # Plan: Phase E4.4 — Complete Social Contract and Party Lifecycle
 
 This phase hardens the social layer by ensuring cooperation is backed by durable, authoritative contracts and that parties act as coordinated units.

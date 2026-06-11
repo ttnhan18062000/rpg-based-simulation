@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260517-FULL-SCAN-COMPLIANCE
+phase: done
+date: 2026-05-17
+tags: [full, scan, compliance]
+---
+
 # TCK-20260517-FULL-SCAN-COMPLIANCE
 
 ## Title

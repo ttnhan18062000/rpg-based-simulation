@@ -1,3 +1,14 @@
+---
+status: historical
+layer: world
+authority: P1
+audience: agent
+ticket_id: TCK-20260424-PH2-M3-REGIONAL-SOVEREIGNTY
+phase: done
+date: 2026-04-24
+tags: [ph2, m3, regional, sovereignty]
+---
+
 # TCK-20260424-PH2-M3-REGIONAL-SOVEREIGNTY
 
 ## Title

@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260425-PH8-M2-GENERATION
+artifact_type: investigation
+tags: [ph8, m2, generation]
+---
+
 # Investigation — PH8 M2: Quest Generation
 
 ## Goal

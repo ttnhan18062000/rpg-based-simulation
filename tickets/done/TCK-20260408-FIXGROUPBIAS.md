@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260408-FIXGROUPBIAS
+phase: done
+date: 2026-04-08
+tags: [fixgroupbias]
+---
+
 # TCK-20260408-FIXGROUPBIAS: Fix Group AI Integration Bias
 
 - **Ticket ID**: TCK-20260408-FIXGROUPBIAS

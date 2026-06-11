@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260607-V2-SERVICE-ASSEMBLY-GAP
+artifact_type: investigation
+tags: [v2, service, assembly, gap]
+---
+
 # Investigation — TCK-20260607-V2-SERVICE-ASSEMBLY-GAP
 
 ## Finding

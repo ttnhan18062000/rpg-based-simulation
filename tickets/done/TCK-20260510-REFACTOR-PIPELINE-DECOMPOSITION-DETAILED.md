@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260510-REFACTOR-PIPELINE-DECOMPOSITION-DETAILED
+phase: done
+date: 2026-05-10
+tags: [refactor, pipeline, decomposition, detailed]
+---
+
 # TCK-20260510-REFACTOR-PIPELINE-DECOMPOSITION
 
 ## Title

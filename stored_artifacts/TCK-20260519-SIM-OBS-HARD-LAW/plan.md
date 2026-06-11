@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260519-SIM-OBS-HARD-LAW
+artifact_type: plan
+tags: [sim, obs, hard, law]
+---
+
 # Implementation Plan - HardLawMonitor V1 & Observability Mode Config
 
 This document outlines the detailed implementation steps for introducing the lightweight `HardLawMonitor` and a clean `ObservabilityConfig` to the RPG engine.

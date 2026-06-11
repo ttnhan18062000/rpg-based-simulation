@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260518-DOC-CHECKLIST-UPDATE
+phase: done
+date: 2026-05-18
+tags: [doc, checklist, update]
+---
+
 # TCK-20260518-DOC-CHECKLIST-UPDATE
 
 ## Title

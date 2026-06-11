@@ -1,3 +1,14 @@
+---
+status: historical
+layer: performance
+authority: P1
+audience: agent
+ticket_id: TCK-20260513-PERF-CADENCE-INTEGRATION
+phase: done
+date: 2026-05-13
+tags: [perf, cadence, integration]
+---
+
 # TCK-20260513-PERF-CADENCE-INTEGRATION
 
 ## Title

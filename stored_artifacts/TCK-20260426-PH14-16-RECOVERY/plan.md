@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260426-PH14-16-RECOVERY
+artifact_type: plan
+tags: [ph14, recovery]
+---
+
 # Plan: RPG-Core Logic Recovery (Phases 14-16)
 
 ## Goal

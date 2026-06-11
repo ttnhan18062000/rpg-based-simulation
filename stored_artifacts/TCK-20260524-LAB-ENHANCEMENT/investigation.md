@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260524-LAB-ENHANCEMENT
+artifact_type: investigation
+tags: [lab, enhancement]
+---
+
 # Investigation and Design Notes - Milestone 101
 
 ## 1. Structured Patch Schema

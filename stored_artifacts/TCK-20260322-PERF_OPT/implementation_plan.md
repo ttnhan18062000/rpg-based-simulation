@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: performance
+authority: P2
+audience: agent
+tags: [perf_opt]
+---
+
 # Performance Optimization for Sub-1.0 TPS Bottleneck
 
 The simulation is currently experiencing severe performance degradation (approx. 0.4 TPS) with 100% CPU utilization. Investigation revealed that the `collect` phase (worker dispatch and result collection) consumes 96% of the tick time. See [ADR-005](file:///d:/Projects/rpg-based-simulation/docs/architecture/adr-005-performance-optimization.md) for full architectural rationale.

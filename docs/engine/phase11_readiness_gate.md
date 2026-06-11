@@ -1,3 +1,10 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: developer
+---
+
 # Phase 11 Readiness Gate
 
 This gate must be cleared before entering Milestone 2 (Semantic Proof Ratification).

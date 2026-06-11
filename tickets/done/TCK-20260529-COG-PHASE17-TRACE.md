@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260529-COG-PHASE17-TRACE
+phase: done
+date: 2026-05-29
+tags: [cog, phase17, trace]
+---
+
 # TCK-20260529-COG-PHASE17-TRACE
 
 ## Title

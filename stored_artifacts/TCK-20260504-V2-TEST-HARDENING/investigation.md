@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260504-V2-TEST-HARDENING
+artifact_type: investigation
+tags: [v2, test, hardening]
+---
+
 # Investigation: V2 Test Hardening
 
 ## Key Findings

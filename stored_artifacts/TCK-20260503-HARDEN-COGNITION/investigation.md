@@ -1,3 +1,13 @@
+---
+status: historical
+layer: strategy
+authority: P2
+audience: agent
+ticket_id: TCK-20260503-HARDEN-COGNITION
+artifact_type: investigation
+tags: [harden, cognition]
+---
+
 # Investigation: Strategic Cognition Hardening
 
 ## Current State Analysis

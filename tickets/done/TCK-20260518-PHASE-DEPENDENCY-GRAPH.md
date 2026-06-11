@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260518-PHASE-DEPENDENCY-GRAPH
+phase: done
+date: 2026-05-18
+tags: [phase, dependency, graph]
+---
+
 # TCK-20260518-PHASE-DEPENDENCY-GRAPH
 
 ## Title

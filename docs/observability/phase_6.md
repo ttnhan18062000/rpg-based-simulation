@@ -1,3 +1,10 @@
+---
+status: historical
+layer: observability
+authority: P2
+audience: developer
+---
+
 # Phase 6: Externalization and Scale Readiness
 
 This document describes the architectural specifications, processing pipelines, and data layout introduced in **Phase 6: Externalization and Scale Readiness**. This phase established clear abstractions, analytical storage mappings, and stream adapter interfaces, preparing the Observatory for high-volume deployments while maintaining a simple, local-first default path.

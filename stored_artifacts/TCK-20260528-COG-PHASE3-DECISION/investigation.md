@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260528-COG-PHASE3-DECISION
+artifact_type: investigation
+tags: [cog, phase3, decision]
+---
+
 # Investigation Report: Cognition Immediate Bugs
 
 **Ticket ID:** TCK-20260527-COG-IMMEDIATE-BUGS  

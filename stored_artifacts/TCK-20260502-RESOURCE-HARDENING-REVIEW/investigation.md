@@ -1,3 +1,13 @@
+---
+status: historical
+layer: economy
+authority: P2
+audience: agent
+ticket_id: TCK-20260502-RESOURCE-HARDENING-REVIEW
+artifact_type: investigation
+tags: [resource, hardening, review]
+---
+
 # Investigation: Resource Hardening Review
 
 ## Findings

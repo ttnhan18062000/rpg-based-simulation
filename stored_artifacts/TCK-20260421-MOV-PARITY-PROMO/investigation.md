@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260421-MOV-PARITY-PROMO
+artifact_type: investigation
+tags: [mov, parity, promo]
+---
+
 # Investigation: Movement Parity Promotion
 
 ## Current State

@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260419-MC-TASK4-SHUTDOWN-TIMEOUT-HARDENING
+phase: done
+date: 2026-04-19
+tags: [mc, task4, shutdown, timeout, hardening]
+---
+
 # TCK-20260419-MC-TASK4-SHUTDOWN-TIMEOUT-HARDENING
 
 ## Title

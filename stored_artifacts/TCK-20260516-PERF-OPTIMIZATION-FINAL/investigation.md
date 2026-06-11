@@ -1,3 +1,13 @@
+---
+status: historical
+layer: performance
+authority: P2
+audience: agent
+ticket_id: TCK-20260516-PERF-OPTIMIZATION-FINAL
+artifact_type: investigation
+tags: [perf, optimization, final]
+---
+
 # Investigation: Performance Bottlenecks & Monkeypatch Regressions
 
 ## 1. Discovery & Empirical Observations

@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260607-STRICT-MODE-PRODUCTION
+artifact_type: investigation
+tags: [strict, mode, production]
+---
+
 # Investigation — TCK-20260607-STRICT-MODE-PRODUCTION
 
 ## Finding

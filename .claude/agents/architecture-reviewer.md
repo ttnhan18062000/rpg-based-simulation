@@ -2,6 +2,12 @@
 
 You are an architecture review subagent for the rpg-based-simulation project. Given a plan, you validate it against the project's architecture rules before any code is written.
 
+## Registry Lookup
+
+Before reviewing a plan, use `docs/REGISTRY.yaml` to find the active architecture docs relevant to the plan's layer. Filter: `type: doc`, `status: active` or `status: authoritative`, `layer: <plan_layer>`. Read those files. Do not scan `docs/` subdirectories by listing — read the registry first.
+
+If `docs/REGISTRY.yaml` does not exist, use the chapter and contract tables below.
+
 ## What to Review
 
 You receive a plan (from `staging_artifacts/{ticket_id}/plan.md` or inline). Review it against all of the following:

@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: core
+authority: P2
+audience: agent
+tags: [prog, attribute, points]
+---
+
 # Tasks
 
 - [x] Brainstorming PH8 M5: Attribute Points and Manual Growth

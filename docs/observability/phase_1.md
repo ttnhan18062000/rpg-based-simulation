@@ -1,3 +1,10 @@
+---
+status: historical
+layer: observability
+authority: P2
+audience: developer
+---
+
 # Phase 1 Observability Foundation
 
 This document details the architectural foundation and execution progress of Phase 1 Observability for the V2 RPG Simulation Engine.

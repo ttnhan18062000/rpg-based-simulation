@@ -1,3 +1,13 @@
+---
+status: historical
+layer: performance
+authority: P2
+audience: agent
+ticket_id: TCK-20260518-PERF-REGRESSION-GATE
+artifact_type: test_plan
+tags: [perf, regression, gate]
+---
+
 # Test Plan - PerfRegressionGate
 
 ## Automated Unit Tests

@@ -1,3 +1,13 @@
+---
+status: historical
+layer: guidelines
+authority: P2
+audience: agent
+ticket_id: TCK-20260603-PHASE15-REGISTRY-BRIDGE
+artifact_type: test_plan
+tags: [phase15, registry, bridge]
+---
+
 # Test Plan - Phase 15 Registry Bridge
 
 ## Automated Verification Steps

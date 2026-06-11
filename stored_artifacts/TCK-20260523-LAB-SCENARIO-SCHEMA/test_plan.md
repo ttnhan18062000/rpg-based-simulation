@@ -1,3 +1,13 @@
+---
+status: historical
+layer: guidelines
+authority: P2
+audience: agent
+ticket_id: TCK-20260523-LAB-SCENARIO-SCHEMA
+artifact_type: test_plan
+tags: [lab, scenario, schema]
+---
+
 # Test Plan — Milestone 75: ScenarioSpec Schema
 
 This test plan defines the automated and E2E verification requirements for the `src.lab` schema, pluggable validation rules, and file-based repository.

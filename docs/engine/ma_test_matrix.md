@@ -1,3 +1,10 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: developer
+---
+
 # Milestone A: Test Matrix
 
 This document maps the Core Runtime Laws to specific automated test groups. Every law defined in the `runtime_completion_contract_ma.md` must be pinned by at least one regression test.

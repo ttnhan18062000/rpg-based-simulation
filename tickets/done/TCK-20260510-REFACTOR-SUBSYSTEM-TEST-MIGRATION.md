@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260510-REFACTOR-SUBSYSTEM-TEST-MIGRATION
+phase: done
+date: 2026-05-10
+tags: [refactor, subsystem, test, migration]
+---
+
 # TCK-20260510-REFACTOR-SUBSYSTEM-TEST-MIGRATION
 
 ## Title

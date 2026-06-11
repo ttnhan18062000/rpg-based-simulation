@@ -1,3 +1,13 @@
+---
+status: historical
+layer: guidelines
+authority: P2
+audience: agent
+ticket_id: TCK-20260523-MUTATION-SCHEMA
+artifact_type: plan
+tags: [mutation, schema]
+---
+
 # Implementation Plan - MutationSpec Schema & Validator
 
 This plan outlines the technical steps to implement Milestone 84 in the `src/lab/` package.

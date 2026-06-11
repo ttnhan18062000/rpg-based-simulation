@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260530-WORLD-PHASE10
+artifact_type: investigation
+tags: [world, phase10]
+---
+
 # Investigation - Observability Join and Migration Cleanup (Phase 10)
 
 ## Schema Registration Analysis

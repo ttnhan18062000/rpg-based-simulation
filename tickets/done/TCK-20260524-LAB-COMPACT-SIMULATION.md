@@ -1,3 +1,14 @@
+---
+status: historical
+layer: simulation
+authority: P1
+audience: agent
+ticket_id: TCK-20260524-LAB-COMPACT-SIMULATION
+phase: done
+date: 2026-05-24
+tags: [lab, compact, simulation]
+---
+
 # TCK-20260524-LAB-COMPACT-SIMULATION
 
 ## Title

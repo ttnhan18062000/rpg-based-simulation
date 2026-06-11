@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260421-TOWN-RESOLUTION-SCOPE
+phase: done
+date: 2026-04-21
+tags: [town, resolution, scope]
+---
+
 # TCK-20260421-TOWN-RESOLUTION-SCOPE
 
 ## Title

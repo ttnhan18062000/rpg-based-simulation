@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260330-CORE-STABILIZATION
+artifact_type: plan
+tags: [core, stabilization]
+---
+
 # Implementation Plan: TCK-20260330-CORE-STABILIZATION (Strict Refactor Follow-up)
 
 ## Objective

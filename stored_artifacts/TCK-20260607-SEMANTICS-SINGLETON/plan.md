@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260607-SEMANTICS-SINGLETON
+artifact_type: plan
+tags: [semantics, singleton]
+---
+
 # Plan — TCK-20260607-SEMANTICS-SINGLETON
 
 ## Changes

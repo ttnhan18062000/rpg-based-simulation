@@ -1,3 +1,13 @@
+---
+status: historical
+layer: world
+authority: P2
+audience: agent
+ticket_id: TCK-20260517-WORLD-INDEX-SERVICE
+artifact_type: plan
+tags: [world, index, service]
+---
+
 # Plan: WorldIndexService & SpatialQueryService
 
 ## Phase 1: Core Indexing Models and Service (`src/engine/world_index.py`)

@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260523-LAB-BUDGET-GUARDRAILS
+artifact_type: test_plan
+tags: [lab, budget, guardrails]
+---
+
 # Test Plan - Resource, Storage, and Runtime Guardrails (Milestone 82)
 
 We verify functionality at three levels:

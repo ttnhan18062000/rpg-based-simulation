@@ -1,3 +1,13 @@
+---
+status: historical
+layer: strategy
+authority: P2
+audience: agent
+ticket_id: TCK-20260523-COGNITION-SAFETY-VERIFICATION
+artifact_type: investigation
+tags: [cognition, safety, verification]
+---
+
 # investigation.md - Parity & Performance Checks
 
 - State Hash Parity: simulation logic runs deterministically via the Kernel. The state hash is calculated from the entity map at the end of each tick.

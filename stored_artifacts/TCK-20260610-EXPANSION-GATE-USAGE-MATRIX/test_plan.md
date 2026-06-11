@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260610-EXPANSION-GATE-USAGE-MATRIX
+artifact_type: test_plan
+tags: [expansion, gate, usage, matrix]
+---
+
 # Test Plan — TCK-20260610-EXPANSION-GATE-USAGE-MATRIX
 
 ## Existing Tests to Re-run

@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260514-MECHANICS-HARDENING
+phase: done
+date: 2026-05-14
+tags: [mechanics, hardening]
+---
+
 # TCK-20260514-MECHANICS-HARDENING
 
 ## Title

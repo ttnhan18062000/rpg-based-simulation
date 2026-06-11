@@ -1,3 +1,15 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260517-MOVEMENT-PLAN-CACHE
+phase: done
+date: 2026-05-17
+tags: [movement, plan, cache]
+---
+
+
 # TCK-20260517-MOVEMENT-PLAN-CACHE
 
 ## Title

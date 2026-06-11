@@ -15,6 +15,12 @@ You are a mechanics compliance auditor for the rpg-based-simulation project. Giv
 
 Also check `docs/mechanics/content_usage_matrix.md` for content resolution rules.
 
+## Registry Lookup
+
+Before auditing, use `docs/REGISTRY.yaml` to identify the P0 doc entries for the relevant layer. Filter: `type: doc`, `layer: <target_layer>`, `authority: P0`. These are the canonical law sources to audit against. Do not scan `docs/mechanics/` by directory listing — read the registry first, then read only the matched files.
+
+If `docs/REGISTRY.yaml` does not exist, fall back to the chapter table below.
+
 ## What to Do
 
 1. Read the specified mechanics chapter (or all chapters if not specified).

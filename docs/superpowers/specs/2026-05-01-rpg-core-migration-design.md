@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: misc
+original_date: 2026-05-01
+---
+
 # RPG Core Migration Design: Phases 6 & 7
 
 **Date**: 2026-05-01

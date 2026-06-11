@@ -1,3 +1,13 @@
+---
+status: historical
+layer: world
+authority: P2
+audience: agent
+ticket_id: TCK-20260523-WORLD-CLI
+artifact_type: test_plan
+tags: [world, cli]
+---
+
 # Test Plan: World CLI / Tooling
 
 We will create a robust CLI test suite under `tests/cli/test_world_cli.py`.

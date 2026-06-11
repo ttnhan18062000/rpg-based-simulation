@@ -1,3 +1,11 @@
+---
+status: active
+layer: observability
+authority: P1
+audience: developer
+tags: [agent-monitoring, retro]
+---
+
 # Agent Monitoring Retro Guide
 
 The retro process transforms raw `runs.jsonl` + `events.jsonl` into a structured improvement cycle. Run it weekly or after a batch of tickets.

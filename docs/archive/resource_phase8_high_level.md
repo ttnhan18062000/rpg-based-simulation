@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: economy
+original_date: unknown
+---
+
 Below is the **high-level implementation plan for Phase 8** in the same milestone style as the earlier high-level phase plans.
 
 This plan is grounded in the corrected roadmap and the legacy replacement surfaces described in [resource_phases.md](sandbox:/mnt/data/resource_phases.md), [legacy_logic_checklist_part1.md](sandbox:/mnt/data/legacy_logic_checklist_part1.md), [legacy_logic_checklist_part4.md](sandbox:/mnt/data/legacy_logic_checklist_part4.md), [legacy_logic_checklist_part5.md](sandbox:/mnt/data/legacy_logic_checklist_part5.md), and the V2 completion rules in [src_principle.md](sandbox:/mnt/data/src_principle.md).

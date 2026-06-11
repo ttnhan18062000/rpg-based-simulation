@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260427-RPG-CORE-MIGRATION
+phase: done
+date: 2026-04-27
+tags: [rpg, core, migration]
+---
+
 # TCK-20260427-RPG-CORE-MIGRATION
 
 ## Title

@@ -1,3 +1,13 @@
+---
+status: historical
+layer: guidelines
+authority: P2
+audience: agent
+ticket_id: TCK-20260608-REGISTRY-PARITY-SPLIT
+artifact_type: plan
+tags: [registry, parity, split]
+---
+
 # Plan — TCK-20260608-REGISTRY-PARITY-SPLIT
 
 ## Steps

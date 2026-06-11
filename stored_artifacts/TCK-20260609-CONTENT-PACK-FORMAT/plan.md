@@ -1,7 +1,13 @@
 ---
-ticket: TCK-20260609-CONTENT-PACK-FORMAT
-phase: plan
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260609-CONTENT-PACK-FORMAT
+artifact_type: plan
+tags: [content, pack, format]
 ---
+
 
 # Plan
 

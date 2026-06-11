@@ -1,3 +1,10 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: developer
+---
+
 # Remaining Replacement Scope (Phases 6-10)
 
 This document summarizes the high-level backlog of legacy requirements that remain open at the end of Phase 6.

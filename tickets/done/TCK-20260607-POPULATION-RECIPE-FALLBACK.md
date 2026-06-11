@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260607-POPULATION-RECIPE-FALLBACK
+phase: done
+date: 2026-06-07
+tags: [population, recipe, fallback]
+---
+
 # TCK-20260607-POPULATION-RECIPE-FALLBACK
 
 ## Title

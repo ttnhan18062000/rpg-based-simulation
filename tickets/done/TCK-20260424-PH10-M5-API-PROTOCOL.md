@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260424-PH10-M5-API-PROTOCOL
+phase: done
+date: 2026-04-24
+tags: [ph10, m5, api, protocol]
+---
+
 # TCK-20260424-PH10-M5-API-PROTOCOL
 
 ## Title

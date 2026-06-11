@@ -1,3 +1,14 @@
+---
+status: historical
+layer: observability
+authority: P1
+audience: agent
+ticket_id: TCK-20260608-REWARD-TRACE-COVERAGE
+phase: done
+date: 2026-06-08
+tags: [reward, trace, coverage]
+---
+
 # TCK-20260608-REWARD-TRACE-COVERAGE
 
 ## Title

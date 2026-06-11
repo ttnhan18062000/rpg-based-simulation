@@ -1,3 +1,14 @@
+---
+status: historical
+layer: core
+authority: P1
+audience: agent
+ticket_id: TCK-20260517-STATE-UPDATE-COMPACTOR
+phase: done
+date: 2026-05-17
+tags: [state, update, compactor]
+---
+
 # TCK-20260517-STATE-UPDATE-COMPACTOR
 
 ## Title

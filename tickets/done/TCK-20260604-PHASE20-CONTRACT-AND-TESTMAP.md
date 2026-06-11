@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260604-PHASE20-CONTRACT-AND-TESTMAP
+phase: done
+date: 2026-06-04
+tags: [phase20, contract, and, testmap]
+---
+
 # TCK-20260604-PHASE20-CONTRACT-AND-TESTMAP
 
 ## Title

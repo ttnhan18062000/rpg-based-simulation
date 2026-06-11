@@ -1,3 +1,14 @@
+---
+status: historical
+layer: performance
+authority: P1
+audience: agent
+ticket_id: TCK-20260420-PERF-FOUNDATION
+phase: done
+date: 2026-04-20
+tags: [perf, foundation]
+---
+
 # TCK-20260420-PERF-FOUNDATION
 
 ## Title

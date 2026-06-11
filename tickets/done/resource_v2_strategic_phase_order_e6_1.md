@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: resource_v2_strategic_phase_order_e6_1
+phase: done
+date: unknown
+tags: [resource_v2_strategic_phase_order_e6_1]
+---
+
 # TCK-20260503-STRATEGIC-PHASE-REALIGNMENT
 
 ## Title

@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: observability
+original_date: 2026-05-14
+---
+
 # Design Spec: Engine Profiling Suite
 **Date**: 2026-05-14
 **Goal**: Implement a robust profiling harness to establish performance baselines and debug subsystem hotspots.

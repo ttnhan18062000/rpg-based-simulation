@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260610-CATALOG-SCENARIO-BUILDER
+artifact_type: investigation
+tags: [catalog, scenario, builder]
+---
+
 # Investigation — TCK-20260610-CATALOG-SCENARIO-BUILDER
 
 ## Current Behavior

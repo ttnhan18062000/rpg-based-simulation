@@ -1,3 +1,13 @@
+---
+status: historical
+layer: strategy
+authority: P2
+audience: agent
+ticket_id: TCK-20260412-STRATEGY-IMPLEMENTATION
+artifact_type: investigation
+tags: [strategy, implementation]
+---
+
 # Investigation Notes - TCK-20260412-STRATEGY-IMPLEMENTATION
 
 ## Problem Statement

@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260524-LAB-GUARDRAILS
+artifact_type: test_plan
+tags: [lab, guardrails]
+---
+
 # Test Plan: Guardrails and E2E Integration
 
 ## Unit Verification

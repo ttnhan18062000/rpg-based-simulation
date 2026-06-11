@@ -1,3 +1,13 @@
+---
+status: historical
+layer: world
+authority: P2
+audience: agent
+ticket_id: TCK-20260523-WORLD-REPO-INIT
+artifact_type: test_plan
+tags: [world, repo, init]
+---
+
 # Test Plan: World Repository Verification
 
 We will verify the implementation using isolated, deterministic unit tests in `tests/unit/worldbuilding/test_world_repository.py`.

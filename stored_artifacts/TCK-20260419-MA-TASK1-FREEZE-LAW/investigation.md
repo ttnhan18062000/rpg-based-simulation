@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260419-MA-TASK1-FREEZE-LAW
+artifact_type: investigation
+tags: [ma, task1, freeze, law]
+---
+
 # Investigation: Milestone A Law Set Freeze
 
 ## Current Engine State

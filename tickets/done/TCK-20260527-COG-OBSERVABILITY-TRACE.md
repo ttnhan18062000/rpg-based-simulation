@@ -1,3 +1,14 @@
+---
+status: historical
+layer: observability
+authority: P1
+audience: agent
+ticket_id: TCK-20260527-COG-OBSERVABILITY-TRACE
+phase: done
+date: 2026-05-27
+tags: [cog, observability, trace]
+---
+
 # TCK-20260527-COG-OBSERVABILITY-TRACE
 
 ## Title

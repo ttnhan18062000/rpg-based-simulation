@@ -1,3 +1,10 @@
+---
+status: active
+layer: architecture
+authority: P1
+audience: developer
+---
+
 # Macro-Interest Redesign: Foundational Constraints (Phase 0)
 
 This document defines the architectural boundaries, canonical ownership, and update pathways for the "Macro-Interest" systems. Every feature implemented in Phase 1+ must adhere to these rules to prevent state duplication and hidden coupling.

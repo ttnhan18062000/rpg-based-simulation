@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260403-FINAL-CONVERGENCE
+artifact_type: plan
+tags: [final, convergence]
+---
+
 # Implementation Plan: Final Architectural Stability & Convergence (TCK-20260403-FINAL-CONVERGENCE)
 
 Complete the remaining items in `final_implementation_plan_3.md` to achieve full architectural convergence and stability.

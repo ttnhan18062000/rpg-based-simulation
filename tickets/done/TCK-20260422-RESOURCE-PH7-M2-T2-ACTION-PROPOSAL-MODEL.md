@@ -1,3 +1,14 @@
+---
+status: historical
+layer: economy
+authority: P1
+audience: agent
+ticket_id: TCK-20260422-RESOURCE-PH7-M2-T2-ACTION-PROPOSAL-MODEL
+phase: done
+date: 2026-04-22
+tags: [resource, ph7, m2, t2, action, proposal, model]
+---
+
 # TCK-20260422-RESOURCE-PH7-M2-T2-ACTION-PROPOSAL-MODEL
 
 ## Title

@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260527-COG-PHASE1-INFORMATION
+artifact_type: plan
+tags: [cog, phase1, information]
+---
+
 # Implementation Plan - Phase 1 Information Provider
 
 ## Proposed Changes

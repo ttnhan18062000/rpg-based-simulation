@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260608-CLASSIFY-DEFEATED-TARGET
+phase: done
+date: 2026-06-08
+tags: [classify, defeated, target]
+---
+
 # TCK-20260608-CLASSIFY-DEFEATED-TARGET
 
 ## Title

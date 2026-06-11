@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260528-COG-PHASE5-BELIEF
+artifact_type: investigation
+tags: [cog, phase5, belief]
+---
+
 # Investigation: Phase 5 — Information / Belief / Source-Trust Loop
 
 This document outlines codebase findings, data structures, and architectural bounds relevant for Phase 5.

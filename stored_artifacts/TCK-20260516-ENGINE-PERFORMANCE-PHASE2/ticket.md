@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: engine
+authority: P2
+audience: agent
+tags: [engine, performance, phase2]
+---
+
 # TCK-20260516-ENGINE-PERFORMANCE-PHASE2
 
 ## Title

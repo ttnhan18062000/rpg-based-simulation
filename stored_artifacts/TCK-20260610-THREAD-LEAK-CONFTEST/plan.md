@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260610-THREAD-LEAK-CONFTEST
+artifact_type: plan
+tags: [thread, leak, conftest]
+---
+
 # Plan — TCK-20260610-THREAD-LEAK-CONFTEST
 
 ## Ordered Steps

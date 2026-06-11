@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260519-SIM-OBS-PHASE3-M10
+artifact_type: investigation
+tags: [sim, obs, phase3, m10]
+---
+
 # Investigation - Metric Window Recorder
 
 ## Sources of Metric Snapshots

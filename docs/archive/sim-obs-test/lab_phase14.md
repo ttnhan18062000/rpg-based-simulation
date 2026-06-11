@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: engine
+original_date: unknown
+---
+
 # Phase 14 — Human-Gated Agentic Simulation Lab
 
 Corrected scope:

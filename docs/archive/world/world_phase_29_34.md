@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: world
+original_date: unknown
+---
+
 # Plan — Phase 29 to Phase 34
 
 Plan focuses on making the resolved data actually enter the simulation runtime and proving it with careful tests.

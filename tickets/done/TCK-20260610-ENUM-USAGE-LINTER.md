@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260610-ENUM-USAGE-LINTER
+phase: done
+date: 2026-06-10
+tags: [enum, usage, linter]
+---
+
 # TCK-20260610-ENUM-USAGE-LINTER
 
 ## Title

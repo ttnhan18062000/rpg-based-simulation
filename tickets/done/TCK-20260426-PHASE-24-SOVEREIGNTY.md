@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260426-PHASE-24-SOVEREIGNTY
+phase: done
+date: 2026-04-26
+tags: [phase, sovereignty]
+---
+
 # TCK-20260426-PHASE-24-SOVEREIGNTY
 
 ## Title

@@ -1,3 +1,10 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: developer
+---
+
 # Phase 9 Entry Support Boundary
 
 This document restates the honest current support level for strategic and social semantics entering Phase 9.

@@ -1,3 +1,10 @@
+---
+status: active
+layer: systems
+authority: P1
+audience: developer
+---
+
 # World Generation
 
 Technical documentation for the world map, tile types, zone placement, terrain regions, resource nodes, and map structures.

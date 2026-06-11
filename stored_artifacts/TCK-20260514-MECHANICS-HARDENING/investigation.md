@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260514-MECHANICS-HARDENING
+artifact_type: investigation
+tags: [mechanics, hardening]
+---
+
 # Investigation - Documentation Audit
 
 ## Objective

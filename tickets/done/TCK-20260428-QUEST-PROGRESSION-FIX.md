@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260428-QUEST-PROGRESSION-FIX
+phase: done
+date: 2026-04-28
+tags: [quest, progression, fix]
+---
+
 # TCK-20260428-QUEST-PROGRESSION-FIX
 
 ## Title

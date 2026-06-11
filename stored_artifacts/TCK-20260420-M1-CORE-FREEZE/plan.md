@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260420-M1-CORE-FREEZE
+artifact_type: plan
+tags: [m1, core, freeze]
+---
+
 # Implementation Plan - Core Substrate Freeze (M1)
 
 ## Goal

@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: engine
+original_date: unknown
+---
+
 # Phase 9 — Simulation Mining and AI-Assisted Investigation
 
 Yes, Phase 9 should exist.

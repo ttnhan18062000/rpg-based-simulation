@@ -1,3 +1,10 @@
+---
+status: active
+layer: systems
+authority: P1
+audience: developer
+---
+
 # Gameplay Mechanics: Formulas & Progression
 
 The simulation follows a deterministic RPG logic where stats, skills, and environment interact through a strictly defined mathematical pipeline.

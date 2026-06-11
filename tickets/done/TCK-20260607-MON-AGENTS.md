@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260607-MON-AGENTS
+phase: done
+date: 2026-06-07
+tags: [mon, agents]
+---
+
 # TCK-20260607-MON-AGENTS
 
 ## Title

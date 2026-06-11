@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260516-ENGINE-PERFORMANCE-PHASE2
+artifact_type: plan
+tags: [engine, performance, phase2]
+---
+
 # Plan: V2 Engine Performance Optimization (Phase 2)
 
 ## Goal

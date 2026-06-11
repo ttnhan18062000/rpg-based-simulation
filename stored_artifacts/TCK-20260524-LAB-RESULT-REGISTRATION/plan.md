@@ -1,3 +1,13 @@
+---
+status: historical
+layer: strategy
+authority: P2
+audience: agent
+ticket_id: TCK-20260524-LAB-RESULT-REGISTRATION
+artifact_type: plan
+tags: [lab, result, registration]
+---
+
 # Implementation Plan: RegisterSimulationResult Workflow (Milestone 98)
 
 ## Proposed Changes

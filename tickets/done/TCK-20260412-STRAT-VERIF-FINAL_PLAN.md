@@ -1,3 +1,14 @@
+---
+status: historical
+layer: strategy
+authority: P1
+audience: agent
+ticket_id: TCK-20260412-STRAT-VERIF-FINAL_PLAN
+phase: done
+date: 2026-04-12
+tags: [strat, verif, final_plan]
+---
+
 # TCK-20260412-STRAT-VERIF-FINAL
 
 ## Goal Description

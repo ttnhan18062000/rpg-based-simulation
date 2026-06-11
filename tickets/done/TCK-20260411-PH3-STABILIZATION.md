@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260411-PH3-STABILIZATION
+phase: done
+date: 2026-04-11
+tags: [ph3, stabilization]
+---
+
 # TCK-20260411-PH3-STABILIZATION
 
 ## Title

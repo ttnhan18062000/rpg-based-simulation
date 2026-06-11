@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: misc
+authority: P2
+audience: agent
+tags: [restructure]
+---
+
 # Implementation Plan: Static vs. Dynamic State Separation
 
 This plan addresses the "Mixing Static vs. Dynamic State" issues identified in the architecture audit. It decouples invariant world data from frequently changing simulation variables.

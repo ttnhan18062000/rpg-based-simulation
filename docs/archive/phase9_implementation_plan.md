@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: engine
+original_date: unknown
+---
+
 # Phase 9: Strategic & Social Cognition
 
 Phase 9 recovers the next major semantic surface of the original `src`: deep strategic intelligence, social narrative mechanics, and bounded progression systems. It builds directly on the verified local gameplay baseline established by Phase 8 (Combat, Tactics, World Interaction).

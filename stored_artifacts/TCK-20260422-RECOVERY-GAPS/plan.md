@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260422-RECOVERY-GAPS
+artifact_type: plan
+tags: [recovery, gaps]
+---
+
 # Implementation Plan: Phase 7/8 Recovery Gaps
 
 ## 1. Core State Expansion

@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: testing
+original_date: 2026-04-03
+---
+
 # Test Suite Restructure and AOA Alignment Design Spec
 
 **Date**: 2026-04-03

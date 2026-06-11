@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260603-PHASE16-PARITY-TESTS
+artifact_type: plan
+tags: [phase16, parity, tests]
+---
+
 # Implementation Plan - Phase 16 Parity Tests
 
 This plan describes the implementation and verification strategy for testing legacy-to-catalog parity, downstream behaviors, and smoke simulation runs in catalog mode.

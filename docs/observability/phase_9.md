@@ -1,3 +1,10 @@
+---
+status: historical
+layer: observability
+authority: P2
+audience: developer
+---
+
 # Phase 9: Simulation Mining & AI-Assisted Investigation
 
 This document describes the architectural specifications, processing pipelines, and queryable schemas introduced in **Phase 9: Simulation Mining and AI-Assisted Investigation**. This framework extends the V2 RPG Engine's Observability platform to support large-scale post-run experiment orchestration, relational data mining, determinism audits, self-contained evidence packaging, and evidence-grounded AI diagnostic sweeps.

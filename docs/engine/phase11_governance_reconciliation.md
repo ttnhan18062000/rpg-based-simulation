@@ -1,3 +1,10 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: developer
+---
+
 # Phase 11 Governance Reconciliation Report
 
 This document summarizes the reconciliation of all authoritative governance artifacts for the V2 engine.

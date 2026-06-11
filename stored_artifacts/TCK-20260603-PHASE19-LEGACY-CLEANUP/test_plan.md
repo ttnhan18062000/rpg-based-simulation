@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260603-PHASE19-LEGACY-CLEANUP
+artifact_type: test_plan
+tags: [phase19, legacy, cleanup]
+---
+
 # Test Plan: Phase 19 Legacy Deprecation and Cleanup
 
 This outlines the testing strategy for verifying Phase 19.

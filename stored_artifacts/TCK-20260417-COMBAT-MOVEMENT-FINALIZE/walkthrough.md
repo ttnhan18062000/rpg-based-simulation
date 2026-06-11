@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: engine
+authority: P2
+audience: agent
+tags: [combat, movement, finalize]
+---
+
 # Walkthrough: Combat Movement Overhaul Finalization (Milestone 7)
 
 I have successfully completed the final phase of the **Combat and Movement Overhaul**. This milestone focused on stabilizing runtime observability, hardening the rollout logic, and ensuring documentation remains the authoritative source of truth.

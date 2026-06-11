@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260609-PRESERVE-ASSEMBLY-TESTS
+phase: done
+date: 2026-06-09
+tags: [preserve, assembly, tests]
+---
+
 # TCK-20260609-PRESERVE-ASSEMBLY-TESTS
 
 ## Title

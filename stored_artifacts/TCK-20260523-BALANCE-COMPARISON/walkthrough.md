@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: misc
+authority: P2
+audience: agent
+tags: [balance, comparison]
+---
+
 # Balance Comparison Engine - Walkthrough
 
 We have successfully implemented **Milestone 88 — Balance Comparison Engine** of the Mutation and Balance Lab (Phase 13). This completes the engine's capability to analyze metric differentials, apply safety gates, and generate detailed scorecards with absolute scientific humility.

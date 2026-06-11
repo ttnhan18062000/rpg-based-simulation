@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260518-PHASE-DEPENDENCY-GRAPH
+artifact_type: test_plan
+tags: [phase, dependency, graph]
+---
+
 # Phase Dependency Graph Verification Plan
 
 ## Unit Testing

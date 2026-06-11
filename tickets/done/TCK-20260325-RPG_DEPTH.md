@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260325-RPG_DEPTH
+phase: done
+date: 2026-03-25
+tags: [rpg_depth]
+---
+
 # TCK-20260325-RPG_DEPTH
 
 ## Description

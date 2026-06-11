@@ -1,3 +1,10 @@
+---
+status: active
+layer: architecture
+authority: P1
+audience: developer
+---
+
 # Observability & Behavior Profiling Architectural Boundaries
 
 This document defines the architectural boundaries, terminology, and operational pipeline separating **Runtime Profiling** from **Behavior Profiling** within the RPG Simulation Engine.

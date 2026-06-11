@@ -1,3 +1,14 @@
+---
+status: historical
+layer: performance
+authority: P1
+audience: agent
+ticket_id: TCK-20260513-PERF-API-SNAPSHOTS
+phase: done
+date: 2026-05-13
+tags: [perf, api, snapshots]
+---
+
 # TCK-20260513-PERF-API-SNAPSHOTS
 
 ## Title

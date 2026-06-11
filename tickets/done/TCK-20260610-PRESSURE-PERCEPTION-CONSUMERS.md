@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260610-PRESSURE-PERCEPTION-CONSUMERS
+phase: done
+date: 2026-06-10
+tags: [pressure, perception, consumers]
+---
+
 # TCK-20260610-PRESSURE-PERCEPTION-CONSUMERS
 
 ## Title

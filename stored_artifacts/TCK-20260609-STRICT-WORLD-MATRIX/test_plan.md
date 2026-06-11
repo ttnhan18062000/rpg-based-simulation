@@ -1,7 +1,13 @@
 ---
-ticket: TCK-20260609-STRICT-WORLD-MATRIX
-phase: test_plan
+status: historical
+layer: world
+authority: P2
+audience: agent
+ticket_id: TCK-20260609-STRICT-WORLD-MATRIX
+artifact_type: test_plan
+tags: [strict, world, matrix]
 ---
+
 
 # Test Plan
 

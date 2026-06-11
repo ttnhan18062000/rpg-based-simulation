@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260528-COG-PHASE3-DECISION
+artifact_type: plan
+tags: [cog, phase3, decision]
+---
+
 # Implementation Plan - Phase 3: Adventure Decision Layer
 
 This plan outlines the architecture, logic, and test suites for building the **Adventure Decision Layer** under `src/domains/adventure/`. This layer translates interpreted entity self-models and dynamic world options into structured adventure route choices, mapping the selected route to strategic projects and executable action intents.

@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260523-MUTATION-ENGINE
+artifact_type: test_plan
+tags: [mutation, engine]
+---
+
 # Test Plan - Mutation Engine
 
 We will write a comprehensive unit test suite in `tests/unit/lab/test_mutation_engine.py` covering:

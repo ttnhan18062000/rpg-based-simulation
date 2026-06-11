@@ -1,3 +1,14 @@
+---
+status: historical
+layer: combat
+authority: P1
+audience: agent
+ticket_id: TCK-20260417-COMBAT-MOVEMENT-RULEBOOK
+phase: done
+date: 2026-04-17
+tags: [combat, movement, rulebook]
+---
+
 # TCK-20260417-COMBAT-MOVEMENT-RULEBOOK
 
 ## Title

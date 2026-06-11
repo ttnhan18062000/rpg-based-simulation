@@ -1,3 +1,14 @@
+---
+status: historical
+layer: guidelines
+authority: P1
+audience: agent
+ticket_id: TCK-20260604-PHASE21-FAMILY-REGISTRY
+phase: done
+date: 2026-06-04
+tags: [phase21, family, registry]
+---
+
 # TCK-20260604-PHASE21-FAMILY-REGISTRY
 
 ## Title

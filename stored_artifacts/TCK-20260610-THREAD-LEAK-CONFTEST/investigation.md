@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260610-THREAD-LEAK-CONFTEST
+artifact_type: investigation
+tags: [thread, leak, conftest]
+---
+
 # Investigation — TCK-20260610-THREAD-LEAK-CONFTEST
 
 ## Current Behavior

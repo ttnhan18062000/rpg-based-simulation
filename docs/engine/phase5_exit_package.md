@@ -1,3 +1,10 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: developer
+---
+
 # Phase 5 Exit Package: Hardened Resource Baseline
 
 This document is the authoritative exit summary for Phase 5 of the Resource Epic. It marks the formal completion of Milestone 1 (Hardening and Consolidation) and provides the certified baseline for the Phase 6 Authoritative Replacement Ledger.

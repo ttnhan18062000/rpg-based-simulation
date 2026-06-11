@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: economy
+original_date: unknown
+---
+
 # [Milestone 4] - Snapshot Integrity, Isolation, and Serialization Closure
 
 ## [Milestone Description]

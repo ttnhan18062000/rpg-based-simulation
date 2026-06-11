@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260409-PH4-STG5-API-INSPECTION
+phase: done
+date: 2026-04-09
+tags: [ph4, stg5, api, inspection]
+---
+
 # Ticket TCK-20260409-PH4-STG5-API-INSPECTION
 
 ## Tier

@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260520-SIM-OBS-M36
+artifact_type: investigation
+tags: [sim, obs, m36]
+---
+
 # Investigation: Stream Adapter Design Considerations
 
 We evaluated the stream adapter transport mechanisms, interface structure, and architectural boundaries in the codebase.

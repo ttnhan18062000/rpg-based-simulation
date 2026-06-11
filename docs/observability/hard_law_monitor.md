@@ -1,3 +1,10 @@
+---
+status: active
+layer: observability
+authority: P1
+audience: developer
+---
+
 # Hard Law Monitor (HardLawMonitor)
 
 The **Hard Law Monitor** is a core simulation health compliance guardian in the V2 RPG Simulation Engine. It executes lightweight, $O(1)$-efficient checks at the end of each tick, scoped strictly to the tick's modified elements (`DirtySet`), ensuring that simulation rules are perfectly maintained without compromising operational performance.

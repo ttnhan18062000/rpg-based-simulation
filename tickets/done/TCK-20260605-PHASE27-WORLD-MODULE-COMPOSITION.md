@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260605-PHASE27-WORLD-MODULE-COMPOSITION
+phase: done
+date: 2026-06-05
+tags: [phase27, world, module, composition]
+---
+
 # TCK-20260605-PHASE27-WORLD-MODULE-COMPOSITION
 
 ## Title

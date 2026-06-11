@@ -1,3 +1,13 @@
+---
+status: historical
+layer: core
+authority: P2
+audience: agent
+ticket_id: TCK-20260609-ENTITY-IDENTITY-RESOLVER
+artifact_type: plan
+tags: [entity, identity, resolver]
+---
+
 # Plan
 1. Create src/entities/identity_resolver.py with ResolvedEntityIdentity + EntityIdentityResolver
 2. Implement 4-path resolution: clean_metadata → runtime_identity_extension → compatibility_projection → legacy_enum

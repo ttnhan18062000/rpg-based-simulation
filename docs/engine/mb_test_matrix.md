@@ -1,3 +1,10 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: developer
+---
+
 # Milestone B: Test Matrix (Operational Truth)
 
 ## 1. Signal Truth Tests

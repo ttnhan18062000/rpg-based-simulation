@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260530-PHASE14-LEGACY-EXPORT
+artifact_type: plan
+tags: [phase14, legacy, export]
+---
+
 # Implementation Plan - Phase 14 Adopting Layered Catalog and Populating Profiles
 
 This plan covers adopting the new Layered World Data Direction by copying the layered configurations into the active catalog directory and fully populating the baseline profiles.

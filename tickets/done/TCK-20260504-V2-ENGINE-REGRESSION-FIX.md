@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260504-V2-ENGINE-REGRESSION-FIX
+phase: done
+date: 2026-05-04
+tags: [v2, engine, regression, fix]
+---
+
 # TCK-20260504-V2-ENGINE-REGRESSION-FIX
 
 ## Title

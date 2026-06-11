@@ -1,3 +1,13 @@
+---
+status: historical
+layer: combat
+authority: P2
+audience: agent
+ticket_id: TCK-20260430-PH5-COMBAT-LEGALITY-HARDENING
+artifact_type: investigation
+tags: [ph5, combat, legality, hardening]
+---
+
 # Investigation: Combat Legality Matrix Gaps
 
 ## 1. Pipeline Action Routing Omission

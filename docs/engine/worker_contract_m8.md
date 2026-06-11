@@ -1,3 +1,10 @@
+---
+status: active
+layer: engine
+authority: P1
+audience: developer
+---
+
 # Worker Contract (Milestone 8)
 
 ## Purpose

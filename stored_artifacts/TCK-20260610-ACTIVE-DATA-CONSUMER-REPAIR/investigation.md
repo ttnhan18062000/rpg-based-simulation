@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260610-ACTIVE-DATA-CONSUMER-REPAIR
+artifact_type: investigation
+tags: [active, data, consumer, repair]
+---
+
 # Investigation — TCK-20260610-ACTIVE-DATA-CONSUMER-REPAIR
 
 ## Current Behavior

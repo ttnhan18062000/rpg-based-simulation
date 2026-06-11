@@ -1,3 +1,13 @@
+---
+status: historical
+layer: observability
+authority: P2
+audience: agent
+ticket_id: TCK-20260519-SIM-OBS-PROM-METRICS
+artifact_type: plan
+tags: [sim, obs, prom, metrics]
+---
+
 # Milestone 1: Prometheus Exporter and Core Telemetry
 
 Expose core RPG simulation engine metrics through `/metrics` on the FastAPI server using `prometheus_client`.

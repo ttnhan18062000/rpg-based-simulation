@@ -1,3 +1,13 @@
+---
+status: historical
+layer: strategy
+authority: P2
+audience: agent
+ticket_id: TCK-20260503-HARDEN-COGNITION
+artifact_type: test_plan
+tags: [harden, cognition]
+---
+
 # Test Plan: Strategic Cognition Hardening
 
 ## Regression Testing

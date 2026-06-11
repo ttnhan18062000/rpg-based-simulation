@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: epic-19-event-sourcing-persistence
+phase: done
+date: unknown
+tags: [epic, event, sourcing, persistence]
+---
+
 # epic-19: Kafka Event-Sourcing Persistence
 
 **Status**: ✅ Completed (infra-08 / epic-19)

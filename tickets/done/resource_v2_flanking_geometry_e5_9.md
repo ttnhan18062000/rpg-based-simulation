@@ -1,3 +1,14 @@
+---
+status: historical
+layer: economy
+authority: P1
+audience: agent
+ticket_id: resource_v2_flanking_geometry_e5_9
+phase: done
+date: unknown
+tags: [resource_v2_flanking_geometry_e5_9]
+---
+
 # TCK-20260503-FLANKING-GEOMETRY-EXPANSION
 
 ## Title

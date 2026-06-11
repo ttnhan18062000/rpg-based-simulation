@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260530-WORLD-PHASE0
+artifact_type: plan
+tags: [world, phase0]
+---
+
 # Phase 0 Implementation Plan
 
 We will perform Phase 0 tasks systematically:

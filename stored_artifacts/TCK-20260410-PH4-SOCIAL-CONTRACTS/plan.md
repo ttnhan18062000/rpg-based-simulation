@@ -1,3 +1,13 @@
+---
+status: historical
+layer: ai
+authority: P2
+audience: agent
+ticket_id: TCK-20260410-PH4-SOCIAL-CONTRACTS
+artifact_type: plan
+tags: [ph4, social, contracts]
+---
+
 # Implementation Plan - Phase 4 Social Contracts
 
 Phase 4 implements "Social Contracts, Party Formation, and Cooperative Coordination". The goal is to evolve the AI's social behavior from simplistic clustering to negotiated, contract-backed parties with role-based coordination and long-term social consequences.

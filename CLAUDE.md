@@ -109,6 +109,17 @@ TCK-YYYYMMDD-SHORT-SCOPE: Brief description of change
 **Required sections (in order):**
 
 ```
+---
+status: active
+layer: <engine|combat|economy|strategy|world|core|observability|performance|testing|simulation|guidelines|ai|architecture|misc>
+authority: P1
+audience: agent
+ticket_id: TCK-YYYYMMDD-SHORT-SCOPE
+phase: open
+date: YYYY-MM-DD
+tags: []
+---
+
 # TCK-YYYYMMDD-SHORT-SCOPE
 
 ## Title
@@ -130,6 +141,8 @@ TCK-YYYYMMDD-SHORT-SCOPE: Brief description of change
 ## Files Changed
 ## Completion Summary
 ```
+
+Frontmatter block is required as the first element. Fill `layer` and `tags` based on scope; leave `tags: []` if uncertain. Use `misc` for layer only if no keyword match is possible.
 
 ---
 
@@ -307,3 +320,4 @@ This project has a graphify knowledge graph at `graphify-out/`.
 - For cross-module questions ("how does X relate to Y"), prefer `graphify query "<question>"`, `graphify path "<A>" "<B>"`, or `graphify explain "<concept>"` over grep — these traverse extracted and inferred edges instead of scanning files.
 - After modifying files under `src/` or `tests/`, run `graphify update .` to keep the graph current (AST-only, no API cost). Do not run if changes are only to docs, configurations, or non-code files.
 - Use `/graphify` to build or rebuild the full graph.
+- `docs/REGISTRY.yaml` is the authoritative flat index of all tagged docs and closed tickets. Query it with `grep` or `python3 -c 'import yaml; ...'` before scanning raw directories. Run `make docs-registry` to regenerate after new docs are added.

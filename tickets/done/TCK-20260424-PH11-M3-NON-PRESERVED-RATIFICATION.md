@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260424-PH11-M3-NON-PRESERVED-RATIFICATION
+phase: done
+date: 2026-04-24
+tags: [ph11, m3, non, preserved, ratification]
+---
+
 # TCK-20260424-PH11-M3-NON-PRESERVED-RATIFICATION
 
 ## Title

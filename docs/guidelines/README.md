@@ -1,3 +1,10 @@
+---
+status: active
+layer: guidelines
+authority: P1
+audience: developer
+---
+
 # Implementation Guidelines & Best Practices
 
 Standards and conventions for developers contributing to the RPG Engine V2.

@@ -1,3 +1,13 @@
+---
+status: historical
+layer: observability
+authority: P2
+audience: agent
+ticket_id: TCK-20260519-SIM-OBSERVATORY-REVIEW
+artifact_type: plan
+tags: [sim, observatory, review]
+---
+
 # Simulation Observatory Review Plan (Phases 1-3)
 
 ## Objective

@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: engine
+authority: P2
+audience: agent
+tags: [combat, movement, correction]
+---
+
 # Task: Milestone 7 - Structured Reason Migration
 
 - [x] **Core Models: Observability Metrics**

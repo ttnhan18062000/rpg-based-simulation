@@ -1,3 +1,10 @@
+---
+status: historical
+layer: testing
+authority: P2
+audience: developer
+---
+
 # Phases 19–28 — Observability & Behavior Profiling Test Coverage
 
 This document outlines the detailed test coverage audit matrix for the Observability & Behavior Profiling module (Phases 19 through 28). It maps each feature requirements area to its respective test files and validates that behavior metrics are decoupled from the simulation hot path under budget constraints.

@@ -1,3 +1,10 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: developer
+---
+
 # Phase 5 Truth Package
 
 This document serves as the authoritative container for the truth state of `src` at the conclusion of Phase 5. It consolidates scattered notes on divergences, limitations, and unsupported logic to provide a clean entry baseline for Phase 6.

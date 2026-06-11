@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260528-COG-PHASE4-COMBAT
+artifact_type: investigation
+tags: [cog, phase4, combat]
+---
+
 # Investigation: Phase 4 — Combat Engagement Cognition
 
 This document tracks technical discoveries, existing code patterns, and state interactions for Phase 4.

@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260603-PHASE19-LEGACY-CLEANUP
+artifact_type: plan
+tags: [phase19, legacy, cleanup]
+---
+
 # Implementation Plan: Phase 19 Legacy Deprecation and Cleanup
 
 This plan covers the transition of the runtime simulation registries to default catalog-backed seeding, marking legacy seed maps as compatibility fallbacks, and adding a regression guard.

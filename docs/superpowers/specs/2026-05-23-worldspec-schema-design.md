@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: world
+original_date: 2026-05-23
+---
+
 # Design Spec: WorldSpec Schema Foundation
 
 **Date**: 2026-05-23

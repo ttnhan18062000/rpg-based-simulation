@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: class_features
+phase: done
+date: unknown
+tags: [class_features]
+---
+
 - Add more information to Class Hall building, showing:
 - - each tab is a class
 - - detail description of the class

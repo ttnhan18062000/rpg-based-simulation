@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: performance
+authority: P2
+audience: agent
+tags: [perf_opt]
+---
+
 # Epic 17: Multi-Hero & Permadeath (Phase 2)
 - [x] Implement `world_day` properties natively mapping scaled formulas into `models/schemas`.
 - [x] Add `raid_interval_days` & `raid_base_strength` parameters to configuration constants.

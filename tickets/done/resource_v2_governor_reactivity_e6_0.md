@@ -1,3 +1,14 @@
+---
+status: historical
+layer: economy
+authority: P1
+audience: agent
+ticket_id: resource_v2_governor_reactivity_e6_0
+phase: done
+date: unknown
+tags: [resource_v2_governor_reactivity_e6_0]
+---
+
 # TCK-20260503-GOVERNOR-REACTIVITY-HARDENING
 
 ## Title

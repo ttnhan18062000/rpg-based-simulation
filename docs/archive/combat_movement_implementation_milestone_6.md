@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: combat
+original_date: unknown
+---
+
 [Milestone 6] - Arena Harness, Scenario Regression, and Tuning Surface
 
 [Milestone Description]

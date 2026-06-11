@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: testing
+original_date: 2026-04-24
+---
+
 # Test Taxonomy and Marker Enforcement Design
 
 ## 1. Goal

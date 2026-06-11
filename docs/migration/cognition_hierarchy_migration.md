@@ -1,3 +1,11 @@
+---
+status: historical
+layer: ai
+authority: P2
+audience: developer
+tags: [migration, cognition, deprecation]
+---
+
 # Cognition Hierarchy Migration & Deprecation Plan
 
 This document details deprecated legacy aspect fields, temporary whitelisted accessors, and the clear removal target to achieve full structural compliance with the nested `CognitionModel` hierarchy.

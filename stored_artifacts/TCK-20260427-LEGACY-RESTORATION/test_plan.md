@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260427-LEGACY-RESTORATION
+artifact_type: test_plan
+tags: [legacy, restoration]
+---
+
 # Test Plan: Legacy Restoration
 
 ## Automated Tests

@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260328
+artifact_type: test_plan
+tags: []
+---
+
 # Test Plan - Backend Restructuring & StatsProxy
 
 ## 1. StatsProxy Verification

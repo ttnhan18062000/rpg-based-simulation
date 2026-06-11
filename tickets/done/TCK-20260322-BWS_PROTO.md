@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260322-BWS_PROTO
+phase: done
+date: 2026-03-22
+tags: [bws_proto]
+---
+
 # TCK-20260322-BWS_PROTO: High-Performance Binary WebSocket Protocol (BWS)
 
 ## Description

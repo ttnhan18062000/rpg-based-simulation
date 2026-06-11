@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: engine
+authority: P2
+audience: agent
+tags: [resource, persistence, m6]
+---
+
 # Replay and Bounded Persistence Contract (Milestone 6)
 
 ## Purpose

@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260609-MIGRATION-MAP-YAML
+phase: done
+date: 2026-06-09
+tags: [migration, map, yaml]
+---
+
 # TCK-20260609-MIGRATION-MAP-YAML
 
 ## Title

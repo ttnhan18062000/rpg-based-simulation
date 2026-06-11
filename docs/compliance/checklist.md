@@ -1,3 +1,10 @@
+---
+status: active
+layer: compliance
+authority: P1
+audience: developer
+---
+
 # RPG Core Logic Checklist — Exhaustive Semantic Ledger
 
 This checklist is intentionally exhaustive. It keeps the atomic granularity of the original `legacy_checklist.md` and adds missing RPG-core semantic laws discovered during the updated implementation audit.

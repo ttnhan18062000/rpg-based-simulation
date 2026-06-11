@@ -1,3 +1,14 @@
+---
+status: historical
+layer: ai
+authority: P1
+audience: agent
+ticket_id: TCK-20260411-SOCIAL-CONTRACTS
+phase: done
+date: 2026-04-11
+tags: [social, contracts]
+---
+
 # TCK-20260411-SOCIAL-CONTRACTS: Social Contract Hardening (Phase 3 Improvement)
 
 **Title**: Implement Negotiation Lifecycle, Consequence closure, and Role-Aware Parties

@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260518-PHASE-BUDGET-GOVERNOR
+artifact_type: investigation
+tags: [phase, budget, governor]
+---
+
 # Investigation: Adaptive Phase Budget Governor
 
 ## Problem Statement

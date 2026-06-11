@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260609-FRONTIER-EXTENDED-PACK
+artifact_type: plan
+tags: [frontier, extended, pack]
+---
+
 # Plan: TCK-20260609-FRONTIER-EXTENDED-PACK
 
 ## Files to Modify

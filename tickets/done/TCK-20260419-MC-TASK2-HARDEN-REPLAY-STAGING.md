@@ -1,3 +1,14 @@
+---
+status: historical
+layer: observability
+authority: P1
+audience: agent
+ticket_id: TCK-20260419-MC-TASK2-HARDEN-REPLAY-STAGING
+phase: done
+date: 2026-04-19
+tags: [mc, task2, harden, replay, staging]
+---
+
 # TCK-20260419-MC-TASK2-HARDEN-REPLAY-STAGING
 
 ## Title

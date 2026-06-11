@@ -1,7 +1,13 @@
 ---
-ticket: TCK-20260609-CONTENT-EXPANSION-GATE
-phase: investigation
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260609-CONTENT-EXPANSION-GATE
+artifact_type: investigation
+tags: [content, expansion, gate]
 ---
+
 
 # Investigation
 

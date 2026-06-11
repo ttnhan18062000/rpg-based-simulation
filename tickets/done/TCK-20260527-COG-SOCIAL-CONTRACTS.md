@@ -1,3 +1,14 @@
+---
+status: historical
+layer: ai
+authority: P1
+audience: agent
+ticket_id: TCK-20260527-COG-SOCIAL-CONTRACTS
+phase: done
+date: 2026-05-27
+tags: [cog, social, contracts]
+---
+
 # TCK-20260527-COG-SOCIAL-CONTRACTS
 
 ## Title

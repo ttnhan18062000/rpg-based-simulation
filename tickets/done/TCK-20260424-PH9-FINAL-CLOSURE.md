@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260424-PH9-FINAL-CLOSURE
+phase: done
+date: 2026-04-24
+tags: [ph9, final, closure]
+---
+
 # TCK-20260424-PH9-FINAL-CLOSURE
 
 ## Title

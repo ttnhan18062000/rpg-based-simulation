@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260610-EXPANSION-GATE-USAGE-MATRIX
+artifact_type: plan
+tags: [expansion, gate, usage, matrix]
+---
+
 # Plan — TCK-20260610-EXPANSION-GATE-USAGE-MATRIX
 
 ## Step 1 — Create `tests/helpers/content_usage_gate.py`

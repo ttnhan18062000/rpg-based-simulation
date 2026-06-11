@@ -1,3 +1,10 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: developer
+---
+
 # Phase 11 Non-Preserved-Scope Baseline
 
 This document summarizes the ratified non-equivalence truth as of Phase 11.

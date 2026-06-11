@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260607-MON-CAPTURE
+artifact_type: test_plan
+tags: [mon, capture]
+---
+
 # Test Plan — TCK-20260607-MON-CAPTURE
 
 ## Regression Surface

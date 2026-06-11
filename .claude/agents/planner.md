@@ -25,6 +25,20 @@ A bad plan:
 
 ## Output — `staging_artifacts/{ticket_id}/plan.md`
 
+The file must begin with a YAML frontmatter block before the `# Implementation Plan —` heading:
+
+```yaml
+---
+status: historical
+layer: <same layer as the ticket>
+authority: P2
+audience: agent
+ticket_id: <ticket_id>
+artifact_type: plan
+tags: [<scope words from ticket ID, lowercase>]
+---
+```
+
 Structure:
 
 ```

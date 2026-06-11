@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260610-CATALOG-VS-LEGACY-SEMANTICS
+artifact_type: plan
+tags: [catalog, vs, legacy, semantics]
+---
+
 # Plan — TCK-20260610-CATALOG-VS-LEGACY-SEMANTICS
 
 ## Steps

@@ -1,3 +1,13 @@
+---
+status: historical
+layer: world
+authority: P2
+audience: agent
+ticket_id: TCK-20260523-WORLD-CLI
+artifact_type: plan
+tags: [world, cli]
+---
+
 # Plan: World CLI / Tooling
 
 We will create a clean and decoupled command-line interface under `src/worldbuilding/cli.py`.

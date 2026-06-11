@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260606-PHASE28-PERSPECTIVE-RELATION-MIGRATION
+phase: done
+date: 2026-06-06
+tags: [phase28, perspective, relation, migration]
+---
+
 # TCK-20260606-PHASE28-PERSPECTIVE-RELATION-MIGRATION
 
 ## Title

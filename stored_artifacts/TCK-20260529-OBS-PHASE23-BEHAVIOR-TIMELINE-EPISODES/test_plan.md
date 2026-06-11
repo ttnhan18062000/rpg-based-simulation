@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260529-OBS-PHASE23-BEHAVIOR-TIMELINE-EPISODES
+artifact_type: test_plan
+tags: [obs, phase23, behavior, timeline, episodes]
+---
+
 # Test Plan
 
 ## Unit Tests

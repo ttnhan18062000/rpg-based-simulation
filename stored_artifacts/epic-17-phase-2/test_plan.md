@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: epic-17-phase-2
+artifact_type: test_plan
+tags: [epic, phase]
+---
+
 # Test Plan: Epic 17 Phase 2
 
 ## 1. F6 & F8: World Age Scaling

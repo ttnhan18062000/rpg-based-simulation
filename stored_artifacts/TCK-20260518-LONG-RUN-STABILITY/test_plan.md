@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260518-LONG-RUN-STABILITY
+artifact_type: test_plan
+tags: [long, run, stability]
+---
+
 # Test Plan: Long-Run Stability Certification (Milestone 18)
 
 ## 1. Test Targets

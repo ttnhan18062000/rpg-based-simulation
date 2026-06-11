@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260517-CANDIDATE-SELECTOR
+artifact_type: investigation
+tags: [candidate, selector]
+---
+
 # Investigation: CandidateSelector & ScanPolicy
 
 ## Current Architecture Analysis

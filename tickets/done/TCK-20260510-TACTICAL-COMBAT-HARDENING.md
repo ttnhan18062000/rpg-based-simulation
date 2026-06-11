@@ -1,3 +1,14 @@
+---
+status: historical
+layer: combat
+authority: P1
+audience: agent
+ticket_id: TCK-20260510-TACTICAL-COMBAT-HARDENING
+phase: done
+date: 2026-05-10
+tags: [tactical, combat, hardening]
+---
+
 # TCK-20260510-TACTICAL-COMBAT-HARDENING
 
 ## Title

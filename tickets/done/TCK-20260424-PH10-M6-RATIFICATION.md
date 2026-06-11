@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260424-PH10-M6-RATIFICATION
+phase: done
+date: 2026-04-24
+tags: [ph10, m6, ratification]
+---
+
 # TCK-20260424-PH10-M6-RATIFICATION
 
 ## Title

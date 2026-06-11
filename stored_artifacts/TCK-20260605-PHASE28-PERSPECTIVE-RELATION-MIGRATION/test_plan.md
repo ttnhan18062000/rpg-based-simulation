@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260605-PHASE28-PERSPECTIVE-RELATION-MIGRATION
+artifact_type: test_plan
+tags: [phase28, perspective, relation, migration]
+---
+
 # Test Plan - Phase 28 (Perspective/relation usage and legacy-safe migration)
 
 We will verify both clean perspective projections and fallback compatibility behaviors.

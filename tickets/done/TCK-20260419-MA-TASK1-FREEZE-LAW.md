@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260419-MA-TASK1-FREEZE-LAW
+phase: done
+date: 2026-04-19
+tags: [ma, task1, freeze, law]
+---
+
 # TCK-20260419-MA-TASK1-FREEZE-LAW
 
 ## Title

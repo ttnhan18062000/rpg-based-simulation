@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260512-RPG-HISTORY-BOUNDS
+phase: done
+date: 2026-05-12
+tags: [rpg, history, bounds]
+---
+
 # TCK-20260512-RPG-HISTORY-BOUNDS
 
 ## Title

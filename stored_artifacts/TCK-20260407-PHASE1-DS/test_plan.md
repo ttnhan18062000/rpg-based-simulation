@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260407-PHASE1-DS
+artifact_type: test_plan
+tags: [phase1, ds]
+---
+
 # Test Plan: TCK-20260407-PHASE1-DS
 
 ## Status: VERIFIED

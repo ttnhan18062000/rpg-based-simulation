@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260520-SIM-OBS-PHASE4-M17
+artifact_type: plan
+tags: [sim, obs, phase4, m17]
+---
+
 # Implementation Plan - Milestone 17: Baseline Generator
 
 We will implement the pure-Python distribution analyzer and threshold generator for multi-run balance baselines.

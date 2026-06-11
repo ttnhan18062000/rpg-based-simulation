@@ -1,3 +1,13 @@
+---
+status: historical
+layer: ai
+authority: P2
+audience: agent
+ticket_id: TCK-20260527-COG-SOCIAL-CONTRACTS
+artifact_type: test_plan
+tags: [cog, social, contracts]
+---
+
 # Test Plan: TCK-20260527-COG-SOCIAL-CONTRACTS
 
 We will add a new test file: `tests/unit/strategic/test_social_contracts.py` covering:

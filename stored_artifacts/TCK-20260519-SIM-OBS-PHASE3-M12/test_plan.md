@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260519-SIM-OBS-PHASE3-M12
+artifact_type: test_plan
+tags: [sim, obs, phase3, m12]
+---
+
 # Test Plan - Milestone 12: Rule Engine Infrastructure with Core Rules
 
 ## Unit Tests (`tests/unit/observability/test_rule_engine.py`)

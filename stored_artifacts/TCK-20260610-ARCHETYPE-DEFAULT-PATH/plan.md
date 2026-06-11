@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260610-ARCHETYPE-DEFAULT-PATH
+artifact_type: plan
+tags: [archetype, default, path]
+---
+
 # Plan — TCK-20260610-ARCHETYPE-DEFAULT-PATH
 
 ## Ordered Steps

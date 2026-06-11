@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: economy
+original_date: unknown
+---
+
 Below is a phase-by-phase implementation blueprint for adding the missing RPG-core logic into `src`.
 
 This assumes the updated checklist is the source of truth, and that V2 must preserve intended legacy semantics unless a divergence is explicitly documented and tested. The checklist now covers RPG gameplay, combat, movement, strategic cognition, social contracts, progression, world state, deterministic substrate, CLI, replay, logging, API, and infrastructure fallback concerns. The plan also follows the V2 principle that authoritative mutation must stay singular, bounded, deterministic, and truthfully reported.

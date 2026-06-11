@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260527-COG-IMMEDIATE-BUGS
+artifact_type: plan
+tags: [cog, immediate, bugs]
+---
+
 # Technical Implementation Plan: Cognition Immediate Bugs
 
 ## Goal Description

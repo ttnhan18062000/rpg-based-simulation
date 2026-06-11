@@ -1,3 +1,13 @@
+---
+status: historical
+layer: strategy
+authority: P2
+audience: agent
+ticket_id: TCK-20260409-PH1-STG1-STRATEGIC-STATE
+artifact_type: test_plan
+tags: [ph1, stg1, strategic, state]
+---
+
 # Test Plan: Strategic State Foundation (Phase 1)
 
 ## Core Scenarios

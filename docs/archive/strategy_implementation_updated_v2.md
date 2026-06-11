@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: strategy
+original_date: unknown
+---
+
 This document is a corrective implementation plan derived from verification of the current source and test suite.
 
 It is **not** a restatement of the original corrective draft.

@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260610-KNOWLEDGE-APPROVAL-SPLIT
+phase: done
+date: 2026-06-10
+tags: [knowledge, approval, split]
+---
+
 # TCK-20260610-KNOWLEDGE-APPROVAL-SPLIT
 
 ## Title

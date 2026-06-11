@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260428-PH10-EXTERNAL-TRUTH
+artifact_type: investigation
+tags: [ph10, external, truth]
+---
+
 # Phase 10 Investigation
 
 ## Transaction Visibility

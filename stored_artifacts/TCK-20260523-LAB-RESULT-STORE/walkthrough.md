@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: misc
+authority: P2
+audience: agent
+tags: [lab, result, store]
+---
+
 # Walkthrough - Lab Result Store (Milestone 80)
 
 We have successfully completed Milestone 80: Lab Result Store.

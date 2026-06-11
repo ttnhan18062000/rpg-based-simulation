@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260328-RESTRUCTURE-CORE-SYSTEMS
+phase: done
+date: 2026-03-28
+tags: [restructure, core, systems]
+---
+
 # Restructure Core & Systems into Domain-Based Subfolders
 
 **Goal**: Organize the bloated 'src/core/' (31 files) and 'src/systems/' (22 files) directories into logical subfolders to improve maintainability and follow the architectural trend toward domain-driven features.

@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260530-PHASE11-ASSEMBLY-HARDENING
+phase: done
+date: 2026-05-30
+tags: [phase11, assembly, hardening]
+---
+
 # TCK-20260530-PHASE11-ASSEMBLY-HARDENING
 
 ## Title

@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: economy
+authority: P2
+audience: agent
+tags: [resource, quest, transactions]
+---
+
 # Walkthrough: Quest Reward Transaction Hardening
 
 Implemented transactional integrity for quest rewards, ensuring that a quest is only marked as `REWARDED` if the associated items and gold are successfully delivered to the hero's inventory.

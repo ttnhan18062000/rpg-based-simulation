@@ -1,3 +1,13 @@
+---
+status: historical
+layer: economy
+authority: P2
+audience: agent
+ticket_id: TCK-20260418-RESOURCE-CONCURRENCY-M8
+artifact_type: test_plan
+tags: [resource, concurrency, m8]
+---
+
 # Test Plan: Milestone 8 Concurrency
 
 ## 1. Worker Contract Validation

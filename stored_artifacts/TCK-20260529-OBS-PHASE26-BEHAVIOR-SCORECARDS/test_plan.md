@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260529-OBS-PHASE26-BEHAVIOR-SCORECARDS
+artifact_type: test_plan
+tags: [obs, phase26, behavior, scorecards]
+---
+
 # Test Plan
 
 ## Unit Tests

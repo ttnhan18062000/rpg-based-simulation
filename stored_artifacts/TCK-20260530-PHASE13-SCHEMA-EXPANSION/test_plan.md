@@ -1,3 +1,13 @@
+---
+status: historical
+layer: guidelines
+authority: P2
+audience: agent
+ticket_id: TCK-20260530-PHASE13-SCHEMA-EXPANSION
+artifact_type: test_plan
+tags: [phase13, schema, expansion]
+---
+
 # Test Plan - Phase 13 Schema Expansion
 
 ## Automated Verification Steps

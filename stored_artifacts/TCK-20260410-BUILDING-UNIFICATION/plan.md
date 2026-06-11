@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260410-BUILDING-UNIFICATION
+artifact_type: plan
+tags: [building, unification]
+---
+
 # Implementation Plan: TCK-20260410-BUILDING-UNIFICATION
 
 Execute [Improvement Phase 2] to standardize building handlers and decision logic. Unify all town-based detour navigation through the strategic stratum.

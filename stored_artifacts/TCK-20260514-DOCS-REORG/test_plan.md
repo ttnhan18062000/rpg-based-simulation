@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260514-DOCS-REORG
+artifact_type: test_plan
+tags: [docs, reorg]
+---
+
 # Test Plan - Documentation Integrity
 
 ## Automated Tests

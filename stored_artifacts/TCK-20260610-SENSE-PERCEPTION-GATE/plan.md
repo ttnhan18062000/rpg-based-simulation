@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260610-SENSE-PERCEPTION-GATE
+artifact_type: plan
+tags: [sense, perception, gate]
+---
+
 # Plan — TCK-20260610-SENSE-PERCEPTION-GATE
 
 ## Approach

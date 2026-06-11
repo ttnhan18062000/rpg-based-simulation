@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: misc
+authority: P2
+audience: agent
+tags: [docs, reorg]
+---
+
 # Walkthrough: RPG V2 Engine Documentation Audit & Hierarchy
 
 We have successfully reorganized the V2 RPG Engine documentation into a developer-first nested hierarchy that mirrors the source code structure.

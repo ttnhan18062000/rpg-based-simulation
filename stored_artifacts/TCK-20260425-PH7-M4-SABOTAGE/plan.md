@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260425-PH7-M4-SABOTAGE
+artifact_type: plan
+tags: [ph7, m4, sabotage]
+---
+
 # PH7 M4: Building Damage and Sabotage
 
 Implement authoritative building damage and regional trauma.

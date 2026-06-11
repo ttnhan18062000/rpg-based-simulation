@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: engine
+authority: P2
+audience: agent
+tags: [phase4_reconstruction]
+---
+
 # Walkthrough: Phase 4 Resource Engine Reconstruction
 
 Phase 4 has been successfully closed, transitioning from infrastructure hardening into a disciplined gameplay attachment phase. This closure resolves critical "Truth Defects" in the substrate and recovers original RPG-core resource loop parity.

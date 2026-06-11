@@ -1,3 +1,14 @@
+---
+status: historical
+layer: combat
+authority: P1
+audience: agent
+ticket_id: TCK-20260418-COMBAT-MOVEMENT-CORRECTION
+phase: done
+date: 2026-04-18
+tags: [combat, movement, correction]
+---
+
 # TCK-20260418-COMBAT-MOVEMENT-CORRECTION
 
 ## Title

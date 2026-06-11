@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260407-PHASE0-CONTINUE
+phase: done
+date: 2026-04-07
+tags: [phase0, continue]
+---
+
 # TCK-20260407-PHASE0-CONTINUE: Finishing Phase 0 Foundations
 
 ## Goal

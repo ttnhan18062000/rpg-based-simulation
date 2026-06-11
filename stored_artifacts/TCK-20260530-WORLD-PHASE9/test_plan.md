@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260530-WORLD-PHASE9
+artifact_type: test_plan
+tags: [world, phase9]
+---
+
 # Test Plan - Compiler Integration Hardening (Phase 9)
 
 Verify that both the context-backed path and the legacy fallback compile path are fully functional, deterministic, and safe.

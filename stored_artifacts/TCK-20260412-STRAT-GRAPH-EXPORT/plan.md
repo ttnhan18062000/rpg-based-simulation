@@ -1,3 +1,13 @@
+---
+status: historical
+layer: strategy
+authority: P2
+audience: agent
+ticket_id: TCK-20260412-STRAT-GRAPH-EXPORT
+artifact_type: plan
+tags: [strat, graph, export]
+---
+
 # Plan: Milestone 6 — Entity Cognition Graph Exporter
 
 ## Goal

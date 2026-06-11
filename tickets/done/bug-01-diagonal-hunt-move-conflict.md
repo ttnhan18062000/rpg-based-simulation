@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: bug-01-diagonal-hunt-move-conflict
+phase: done
+date: unknown
+tags: [bug, diagonal, hunt, move, conflict]
+---
+
 # Bug 01: Diagonal Adjacent HUNT Move Conflict
 
 ## Summary

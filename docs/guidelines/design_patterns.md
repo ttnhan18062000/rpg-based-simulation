@@ -1,3 +1,10 @@
+---
+status: active
+layer: guidelines
+authority: P1
+audience: developer
+---
+
 # Design Patterns & Extension Guide
 
 Technical documentation for the OOP design patterns used in the simulation engine and how to extend each system.

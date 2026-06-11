@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260424-PH12-M1-READINESS
+artifact_type: investigation
+tags: [ph12, m1, readiness]
+---
+
 # Phase 12 M1 Investigation: Cutover Surface Audit
 
 ## Ratified Allowed Surface (from Phase 11)

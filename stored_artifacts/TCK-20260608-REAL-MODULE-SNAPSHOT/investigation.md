@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260608-REAL-MODULE-SNAPSHOT
+artifact_type: investigation
+tags: [real, module, snapshot]
+---
+
 # Investigation — TCK-20260608-REAL-MODULE-SNAPSHOT
 
 ## Findings

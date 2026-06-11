@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260514-MECHANICS-HARDENING
+artifact_type: test_plan
+tags: [mechanics, hardening]
+---
+
 # Test Plan - Documentation Integrity
 
 ## Automated Tests

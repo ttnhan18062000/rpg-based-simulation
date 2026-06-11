@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260610-EXPANSION-GATE-USAGE-MATRIX
+phase: done
+date: 2026-06-10
+tags: [expansion, gate, usage, matrix]
+---
+
 # TCK-20260610-EXPANSION-GATE-USAGE-MATRIX
 
 ## Title

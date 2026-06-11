@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260424-PH11-M5-FINAL-VERDICT
+phase: done
+date: 2026-04-24
+tags: [ph11, m5, final, verdict]
+---
+
 # TCK-20260424-PH11-M5-FINAL-VERDICT
 
 ## Title

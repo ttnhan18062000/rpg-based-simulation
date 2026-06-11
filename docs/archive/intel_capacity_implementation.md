@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: strategy
+original_date: unknown
+---
+
 ## High-level implementation plan — cognition-capacity and bounded-intelligence extension
 
 This plan assumes the existing strategic epic foundation is already in place: `StrategicState`, `StrategicUpdate`, strategic appraisal before tactics, uncertainty structures, social contract machinery, event-driven strategic consequences, API presenter serialization of strategy, cognition graph export, and the headless regression runner. The current implementation already exposes strategy through `AIPresenter._serialize_strategy` and `StrategicStateSchema`, so this feature must extend those same presenter/schema/API paths instead of inventing a second debug-only channel.

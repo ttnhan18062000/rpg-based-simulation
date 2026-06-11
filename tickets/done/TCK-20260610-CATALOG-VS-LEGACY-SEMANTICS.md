@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260610-CATALOG-VS-LEGACY-SEMANTICS
+phase: done
+date: 2026-06-10
+tags: [catalog, vs, legacy, semantics]
+---
+
 # TCK-20260610-CATALOG-VS-LEGACY-SEMANTICS
 
 ## Title

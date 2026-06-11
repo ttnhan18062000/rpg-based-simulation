@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260401-FINAL-NON-PARTIAL-TASKS
+artifact_type: test_plan
+tags: [final, non, partial, tasks]
+---
+
 # Test Plan: Final Non-Partial Implementation Tasks
 
 ## Test Cases

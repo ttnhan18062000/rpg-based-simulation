@@ -1,3 +1,13 @@
+---
+status: historical
+layer: world
+authority: P2
+audience: agent
+ticket_id: TCK-20260523-WORLD-BUDGET-GUARDRAILS
+artifact_type: investigation
+tags: [world, budget, guardrails]
+---
+
 # Investigation — Milestone 74 Resource and Storage Guardrails
 
 ## Objectives

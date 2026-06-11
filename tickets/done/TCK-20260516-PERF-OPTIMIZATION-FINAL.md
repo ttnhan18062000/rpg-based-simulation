@@ -1,3 +1,14 @@
+---
+status: historical
+layer: performance
+authority: P1
+audience: agent
+ticket_id: TCK-20260516-PERF-OPTIMIZATION-FINAL
+phase: done
+date: 2026-05-16
+tags: [perf, optimization, final]
+---
+
 # TCK-20260516-PERF-OPTIMIZATION-FINAL
 
 ## Title

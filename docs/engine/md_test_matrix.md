@@ -1,3 +1,10 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: developer
+---
+
 # Milestone D Test Matrix - Trustworthy Concurrency
 
 ## 1. Protocol Structure Tests

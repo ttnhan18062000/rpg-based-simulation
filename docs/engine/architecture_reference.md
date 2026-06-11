@@ -1,3 +1,10 @@
+---
+status: active
+layer: engine
+authority: P1
+audience: developer
+---
+
 # Technical Implementation Conventions
 
 This codebase already has a strong architectural spine. The right goal is not to “make it cleaner” in the abstract. The goal is to preserve the parts that already make it maintainable: typed state models, immutable snapshots for decision-making, authoritative state application, deterministic ordering, decoupled systems, and presenter-based read surfaces. If new work ignores those patterns, the project will get more features and less reliability at the same time.

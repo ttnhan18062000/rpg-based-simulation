@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260527-COG-IMMEDIATE-BUGS
+phase: done
+date: 2026-05-27
+tags: [cog, immediate, bugs]
+---
+
 # TCK-20260527-COG-IMMEDIATE-BUGS
 
 ## Title

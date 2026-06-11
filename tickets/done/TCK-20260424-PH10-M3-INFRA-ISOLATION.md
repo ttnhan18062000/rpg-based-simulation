@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260424-PH10-M3-INFRA-ISOLATION
+phase: done
+date: 2026-04-24
+tags: [ph10, m3, infra, isolation]
+---
+
 # TCK-20260424-PH10-M3-INFRA-ISOLATION
 
 ## Title

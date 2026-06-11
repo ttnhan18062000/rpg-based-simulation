@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260409-PH4-STG2-SUCCESSION-LOGIC
+artifact_type: investigation
+tags: [ph4, stg2, succession, logic]
+---
+
 # Investigation: Phase 4 Stage 2 — Succession Logic
 
 ## Existing Death Logic

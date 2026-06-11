@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260509-PIPELINE-HARDENING-V3
+phase: done
+date: 2026-05-09
+tags: [pipeline, hardening, v3]
+---
+
 # TCK-20260509-PIPELINE-HARDENING-V3
 
 ## Title

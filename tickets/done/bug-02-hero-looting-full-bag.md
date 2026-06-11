@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: bug-02-hero-looting-full-bag
+phase: done
+date: unknown
+tags: [bug, hero, looting, full, bag]
+---
+
 # Bug 02: Hero Keeps Looting When Bag Is Full
 
 ## Summary

@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: design-03-data-driven-registries
+phase: done
+date: unknown
+tags: [design, data, driven, registries]
+---
+
 # design-03: Data-Driven Content Registries
 
 ## Objective

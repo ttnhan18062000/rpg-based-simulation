@@ -1,3 +1,13 @@
+---
+status: historical
+layer: strategy
+authority: P2
+audience: agent
+ticket_id: TCK-20260523-MUTATION-ORCHESTRATION
+artifact_type: plan
+tags: [mutation, orchestration]
+---
+
 # Implementation Plan: Mutation Lab Orchestration
 
 ## Proposed Steps

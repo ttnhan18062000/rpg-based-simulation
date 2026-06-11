@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: strategy
+original_date: unknown
+---
+
 [Phase 5] - Apply Cognition Capacity to Event Interpretation and Identity Drift
 
 [Phase Description]

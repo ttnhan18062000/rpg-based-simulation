@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260610-PRESSURE-PERCEPTION-CONSUMERS
+artifact_type: investigation
+tags: [pressure, perception, consumers]
+---
+
 # Investigation — TCK-20260610-PRESSURE-PERCEPTION-CONSUMERS
 
 ## Key findings

@@ -1,3 +1,10 @@
+---
+status: historical
+layer: combat
+authority: P2
+audience: developer
+---
+
 # Combat-Movement Milestone 1 — Test Matrix
 
 ## 1. Spatial Contract Tests

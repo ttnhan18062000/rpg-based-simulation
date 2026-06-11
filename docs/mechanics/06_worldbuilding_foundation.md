@@ -1,3 +1,11 @@
+---
+status: authoritative
+layer: mechanics
+authority: P0
+audience: developer
+last_verified: 2026-06-06
+---
+
 # Chapter 6: Worldbuilding Foundation
 
 This chapter describes the "Structural Laws" governing the definition, validation, and compilation of world topologies, regions, factions, and entities from file-based declarations into runtime simulation states.

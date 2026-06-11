@@ -1,3 +1,10 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: developer
+---
+
 # Phase 7 Entry Support Boundary: Substrate Hardening Initiation
 
 ## 1. Overview

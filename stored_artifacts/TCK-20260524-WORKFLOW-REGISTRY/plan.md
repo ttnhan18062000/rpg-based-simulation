@@ -1,3 +1,13 @@
+---
+status: historical
+layer: guidelines
+authority: P2
+audience: agent
+ticket_id: TCK-20260524-WORKFLOW-REGISTRY
+artifact_type: plan
+tags: [workflow, registry]
+---
+
 # Implementation Plan: Workflow Registry and Skill Contracts (M93)
 
 We will introduce `src/lab/registry.py` and populate the `.agents/workflows/` automation specs.

@@ -14,9 +14,20 @@ Stop and report if you find: duplicate work in progress, conflicting requirement
 
 ## Ticket Format
 
-Produce a file named `TCK-YYYYMMDD-SHORT-SCOPE.md` using today's date. All sections are required in this order:
+Produce a file named `TCK-YYYYMMDD-SHORT-SCOPE.md` using today's date. The file must begin with a YAML frontmatter block (before the `# TCK` heading), then the markdown body. All sections are required in this order:
 
 ```
+---
+status: active
+layer: <infer from scope — see LAYER_VALUES in tools/validate_frontmatter.py>
+authority: P1
+audience: agent
+ticket_id: TCK-YYYYMMDD-SHORT-SCOPE
+phase: open
+date: YYYY-MM-DD
+tags: [<scope words from ticket ID, lowercase>]
+---
+
 # TCK-YYYYMMDD-SHORT-SCOPE
 
 ## Title
@@ -46,6 +57,8 @@ P1
 ## Files Changed
 ## Completion Summary
 ```
+
+If `layer` cannot be confidently inferred from the scope, use `misc` and note it in Assumptions / Open Questions.
 
 - **Status** starts as `OPEN`.
 - **Tier** — infer from the request:

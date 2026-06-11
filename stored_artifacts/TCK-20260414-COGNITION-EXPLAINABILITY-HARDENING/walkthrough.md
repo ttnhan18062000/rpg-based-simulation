@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: strategy
+authority: P2
+audience: agent
+tags: [cognition, explainability, hardening]
+---
+
 # Walkthrough: Hardening Strategic Cognition Explainability
 
 We have completed the hardening of the Strategic Cognition pipeline, focusing on enforcing strict cognitive bounds on candidate zones and social ally evaluations, and enhancing the observability of cognitive overload.

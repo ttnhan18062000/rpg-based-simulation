@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260605-PHASE28-PERSPECTIVE-RELATION-MIGRATION
+artifact_type: plan
+tags: [phase28, perspective, relation, migration]
+---
+
 # Implementation Plan - Phase 28 (Perspective/relation usage and legacy-safe migration)
 
 Provide one clean service to project relationship labels and implement a compatibility wrapper to fallback to legacy bucket-based semantics.

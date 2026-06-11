@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260322-RPG_REFINEMENT
+phase: done
+date: 2026-03-22
+tags: [rpg_refinement]
+---
+
 # TCK-20260322-RPG_REFINEMENT
 
 ## Title

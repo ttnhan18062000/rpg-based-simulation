@@ -1,3 +1,14 @@
+---
+status: historical
+layer: observability
+authority: P1
+audience: agent
+ticket_id: TCK-20260519-SIM-OBS-PROM-METRICS
+phase: done
+date: 2026-05-19
+tags: [sim, obs, prom, metrics]
+---
+
 # TCK-20260519-SIM-OBS-PROM-METRICS
 
 ## Title

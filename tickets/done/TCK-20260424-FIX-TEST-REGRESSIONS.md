@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260424-FIX-TEST-REGRESSIONS
+phase: done
+date: 2026-04-24
+tags: [fix, test, regressions]
+---
+
 # TCK-20260424-FIX-TEST-REGRESSIONS
 
 ## Title

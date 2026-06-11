@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260523-LAB-RESULT-STORE
+artifact_type: test_plan
+tags: [lab, result, store]
+---
+
 # Test Plan - Lab Result Store (Milestone 80)
 
 We will write unit tests to achieve high coverage and absolute stability for the `LabResultStore`.

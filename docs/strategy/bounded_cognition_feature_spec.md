@@ -1,3 +1,10 @@
+---
+status: active
+layer: strategy
+authority: P1
+audience: developer
+---
+
 # Feature Specification: Bounded Strategic Cognition
 
 ## Purpose

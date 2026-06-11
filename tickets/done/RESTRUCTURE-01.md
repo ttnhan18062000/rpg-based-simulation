@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: RESTRUCTURE-01
+phase: done
+date: unknown
+tags: [restructure]
+---
+
 # Ticket RESTRUCTURE-01: Component-Based Codebase Restructure
 
 ## Summary

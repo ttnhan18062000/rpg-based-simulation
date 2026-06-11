@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260530-WORLD-PHASE0
+artifact_type: investigation
+tags: [world, phase0]
+---
+
 # Phase 0 Investigation Notes
 
 This investigation involves identifying:

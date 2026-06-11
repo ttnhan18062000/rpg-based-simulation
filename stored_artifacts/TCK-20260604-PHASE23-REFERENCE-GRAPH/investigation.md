@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260604-PHASE23-REFERENCE-GRAPH
+artifact_type: investigation
+tags: [phase23, reference, graph]
+---
+
 # Investigation: Global Content Reference Graph and Dead Data Validation
 
 ## 1. Content Reference Graph Design

@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260603-PHASE16-PARITY-TESTS
+artifact_type: investigation
+tags: [phase16, parity, tests]
+---
+
 # Investigation Notes - Phase 16 Parity Tests
 
 ## Context & Constraints

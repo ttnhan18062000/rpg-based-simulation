@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260520-SIM-OBS-M36
+artifact_type: plan
+tags: [sim, obs, m36]
+---
+
 # Technical Plan: Production Stream Adapter
 
 We will implement a resilient, highly-optimized, non-blocking Redis Streams integration to support out-of-process live analytics (Milestone 36).

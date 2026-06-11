@@ -1,3 +1,14 @@
+---
+status: historical
+layer: guidelines
+authority: P1
+audience: agent
+ticket_id: TCK-20260523-LAB-SCENARIO-SCHEMA
+phase: done
+date: 2026-05-23
+tags: [lab, scenario, schema]
+---
+
 # TCK-20260523-LAB-SCENARIO-SCHEMA
 
 ## Title

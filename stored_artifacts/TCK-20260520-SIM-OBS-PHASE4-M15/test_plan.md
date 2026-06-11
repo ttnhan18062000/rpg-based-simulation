@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260520-SIM-OBS-PHASE4-M15
+artifact_type: test_plan
+tags: [sim, obs, phase4, m15]
+---
+
 # Test Plan - Milestone 15: Scenario Run Matrix and Sweeper
 
 We will verify both unit-level configuration constraints and e2e integration flow outcomes.

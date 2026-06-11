@@ -1,3 +1,13 @@
+---
+status: historical
+layer: world
+authority: P2
+audience: agent
+ticket_id: TCK-20260523-WORLD-REPO-INIT
+artifact_type: investigation
+tags: [world, repo, init]
+---
+
 # Investigation: World Repository Design & Security
 
 ## Root Directory Structure

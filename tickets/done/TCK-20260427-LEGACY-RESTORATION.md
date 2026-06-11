@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260427-LEGACY-RESTORATION
+phase: done
+date: 2026-04-27
+tags: [legacy, restoration]
+---
+
 # TCK-20260427-LEGACY-RESTORATION
 
 ## Title

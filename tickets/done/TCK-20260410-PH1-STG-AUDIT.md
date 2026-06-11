@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260410-PH1-STG-AUDIT
+phase: done
+date: 2026-04-10
+tags: [ph1, stg, audit]
+---
+
 # Ticket TCK-20260410-STRATEGIC-AUDIT
 
 ## Tier

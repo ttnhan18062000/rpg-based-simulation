@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260501-V2-ENGINE-HARDENING
+artifact_type: plan
+tags: [v2, engine, hardening]
+---
+
 # Implementation Plan E4 — Full RPG Logic Coverage
 
 This plan covers the transition from strong partial coverage (~50-60%) to system-wide semantic coverage (~75-85%), starting with Phase E4.0: Coverage Ledger Completion.

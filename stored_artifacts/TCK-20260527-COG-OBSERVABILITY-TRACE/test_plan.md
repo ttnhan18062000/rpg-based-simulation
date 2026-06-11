@@ -1,3 +1,13 @@
+---
+status: historical
+layer: observability
+authority: P2
+audience: agent
+ticket_id: TCK-20260527-COG-OBSERVABILITY-TRACE
+artifact_type: test_plan
+tags: [cog, observability, trace]
+---
+
 # Test Plan - Observability Trace (Task 9)
 
 ## Automated Tests

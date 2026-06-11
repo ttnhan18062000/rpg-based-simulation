@@ -1,3 +1,13 @@
+---
+status: historical
+layer: testing
+authority: P2
+audience: agent
+ticket_id: TCK-20260610-REAL-RUN-ARTIFACT-FIXTURE
+artifact_type: investigation
+tags: [real, run, artifact, fixture]
+---
+
 # Investigation — TCK-20260610-REAL-RUN-ARTIFACT-FIXTURE
 
 ## LabRunManifest schema (src/lab/schema.py:222)

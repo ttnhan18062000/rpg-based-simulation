@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260520-SIM-OBS-M34
+artifact_type: test_plan
+tags: [sim, obs, m34]
+---
+
 # Test Plan: Warehouse Adapter & Schema Validation
 
 We will implement complete unit and integration tests to verify the robustness of the Warehouse Adapter boundary and schema stabilization.

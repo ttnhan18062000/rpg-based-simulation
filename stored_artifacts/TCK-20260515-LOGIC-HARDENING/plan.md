@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260515-LOGIC-HARDENING
+artifact_type: plan
+tags: [logic, hardening]
+---
+
 # Implementation Plan: Milestone 11 - Logic Hardening
 
 ## Goal

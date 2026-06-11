@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260408-PHASE2-DS
+phase: done
+date: 2026-04-08
+tags: [phase2, ds]
+---
+
 # TCK-20260408-PHASE2-DS: Phase 2 Design Shift — Social Meaning and Behavioral Realism
 
 **Status**: DONE

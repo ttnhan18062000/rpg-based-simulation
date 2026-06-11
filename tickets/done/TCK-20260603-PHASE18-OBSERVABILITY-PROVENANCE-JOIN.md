@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260603-PHASE18-OBSERVABILITY-PROVENANCE-JOIN
+phase: done
+date: 2026-06-03
+tags: [phase18, observability, provenance, join]
+---
+
 # TCK-20260603-PHASE18-OBSERVABILITY-PROVENANCE-JOIN
 
 ## Title

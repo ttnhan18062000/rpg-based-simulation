@@ -1,3 +1,10 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: developer
+---
+
 # Phase 6 Differential Gap Report
 
 This report identifies the authoritative logic gaps between the Frozen Legacy Inventory and the Current-State audited `src` engine.

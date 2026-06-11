@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260420-STARTUP-VAL
+phase: done
+date: 2026-04-20
+tags: [startup, val]
+---
+
 # TCK-20260420-STARTUP-VAL
 
 ## Title

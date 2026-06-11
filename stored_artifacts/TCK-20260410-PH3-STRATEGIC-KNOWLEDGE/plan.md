@@ -1,3 +1,13 @@
+---
+status: historical
+layer: strategy
+authority: P2
+audience: agent
+ticket_id: TCK-20260410-PH3-STRATEGIC-KNOWLEDGE
+artifact_type: plan
+tags: [ph3, strategic, knowledge]
+---
+
 # Implementation Plan - Phase 3 Strategic Knowledge
 
 Phase 3 implements the "Uncertainty, Leads, and Blocker-Driven Investigation" layer. The goal is to move from fake omniscience to a structural representation of uncertain world knowledge that drives investigative behavior and branching detours.

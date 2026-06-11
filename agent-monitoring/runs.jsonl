@@ -73,3 +73,12 @@
 {"run_id":"TCK-20260610-WORKER-SINGLETON-GUARD","start_ts":"2026-06-10T17:23:25Z","workflow":"implement-ticket","tier":"standard","final_status":"done","ticket_id":"TCK-20260610-WORKER-SINGLETON-GUARD","summary":"Added get_or_start_global_worker() singleton guard with threading.Lock to prevent multiple QueueDrainWorker threads on the global observability queue."}
 {"run_id":"TCK-20260610-THREAD-LEAK-CONFTEST","start_ts":"2026-06-10T17:29:02Z","end_ts":"2026-06-10T17:33:33Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":9}
 {"run_id":"FOLDER-tickets-todos-observability-worker-leak","start_ts":"2026-06-10T16:58:45Z","end_ts":"2026-06-10T17:34:13Z","workflow":"implement-epic","tier":"epic","final_status":"DONE","agent_count":4}
+{"run_id":"TCK-20260606-DOCSITE-SCHEMA","start_ts":"2026-06-11T01:13:36Z","end_ts":"2026-06-11T01:13:36Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":1}
+{"run_id":"TCK-20260606-DOCSITE-SCHEMA","start_ts":"2026-06-11T01:06:18Z","end_ts":"2026-06-11T01:32:25Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":9}
+{"run_id":"TCK-20260606-DOCSITE-SCAFFOLD","start_ts":"2026-06-11T01:32:52Z","end_ts":"2026-06-11T01:59:25Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":9}
+{"run_id":"TCK-20260606-DOCSITE-FM-ARCHIVE","start_ts":"2026-06-11T02:01:52Z","end_ts":"2026-06-11T11:56:00Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE"}
+{"run_id":"TCK-20260606-DOCSITE-FM-LIVE","start_ts":"2026-06-11T12:05:08Z","end_ts":"2026-06-11T12:21:31Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":9}
+{"run_id":"TCK-20260606-DOCSITE-FM-TICKETS","start_ts":"2026-06-11T12:21:31Z","end_ts":"2026-06-11T12:43:26Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":9}
+{"run_id":"TCK-20260606-DOCSITE-REGISTRY","start_ts":"2026-06-11T12:43:26Z","end_ts":"2026-06-11T13:16:30Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":9}
+{"run_id":"TCK-20260606-DOCSITE-INTEGRATION","start_ts":"2026-06-11T13:16:30Z","end_ts":"2026-06-11T13:52:01Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":9}
+{"run_id":"FOLDER-tickets-todos-doc_feature-","start_ts":"2026-06-11T01:04:55Z","end_ts":"2026-06-11T13:54:25Z","workflow":"implement-epic","tier":"epic","final_status":"DONE","agent_count":7}

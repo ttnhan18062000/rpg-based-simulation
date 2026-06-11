@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260419-MD-TASK1-FREEZE-CONCURRENCY-CONTRACT
+phase: done
+date: 2026-04-19
+tags: [md, task1, freeze, concurrency, contract]
+---
+
 # TCK-20260419-MD-TASK1-FREEZE-CONCURRENCY-CONTRACT
 
 ## Title

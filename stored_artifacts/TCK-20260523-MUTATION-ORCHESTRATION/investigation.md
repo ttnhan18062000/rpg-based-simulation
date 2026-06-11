@@ -1,3 +1,13 @@
+---
+status: historical
+layer: strategy
+authority: P2
+audience: agent
+ticket_id: TCK-20260523-MUTATION-ORCHESTRATION
+artifact_type: investigation
+tags: [mutation, orchestration]
+---
+
 # Investigation: Mutation Lab Orchestration
 
 ## Current Codebase Architecture

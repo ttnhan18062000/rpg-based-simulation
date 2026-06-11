@@ -1,3 +1,13 @@
+---
+status: historical
+layer: strategy
+authority: P2
+audience: agent
+ticket_id: TCK-20260506-STRATEGY-TEST-STABILIZATION
+artifact_type: investigation
+tags: [strategy, test, stabilization]
+---
+
 # Investigation - Strategy Test Failures
 
 ## Observations

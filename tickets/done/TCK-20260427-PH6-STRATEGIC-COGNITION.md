@@ -1,3 +1,14 @@
+---
+status: historical
+layer: strategy
+authority: P1
+audience: agent
+ticket_id: TCK-20260427-PH6-STRATEGIC-COGNITION
+phase: done
+date: 2026-04-27
+tags: [ph6, strategic, cognition]
+---
+
 # TCK-20260427-PH6-STRATEGIC-COGNITION
 
 ## Title

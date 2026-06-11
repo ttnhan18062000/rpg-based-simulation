@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260411-AI-FIX-SYNTAX-ERROR
+phase: done
+date: 2026-04-11
+tags: [ai, fix, syntax, error]
+---
+
 # TCK-20260411-AI-FIX-SYNTAX-ERROR
 
 ## Title

@@ -47,7 +47,35 @@ Core laws: [Simulation Kernel](docs/engine/kernel.md) · [Authoritative Pipeline
 
 ---
 
-## Documentation
+## Documentation Site
+
+The project has a unified Docusaurus 3 documentation site that covers all content layers: mechanics laws, engine contracts, architecture, tickets, stored artifacts, and archived historical docs.
+
+```bash
+make docs-serve      # Start site at http://localhost:3000
+make docs-build      # Build static site (website/build/)
+make docs-registry   # Regenerate docs/REGISTRY.yaml after adding new docs
+make docs-artifacts  # Regenerate stored_artifacts/*/index.md landing pages
+```
+
+The site has four sections:
+
+| Section | URL | Contents |
+|---|---|---|
+| **Docs** | `/docs/` | Mechanics Bible, engine contracts, architecture, guidelines — grouped by layer |
+| **Tickets** | `/tickets/` | All closed tickets (~657), searchable |
+| **Artifacts** | `/artifacts/` | Investigation, plan, and test_plan files per ticket |
+| **Archive** | `/archive/` | Historical docs and design specs |
+
+Full-text search works across all four sections. Every page shows a status badge (`authoritative` / `active` / `historical` / `archive`) drawn from the file's YAML frontmatter.
+
+**How docs are classified:** every `.md` file carries a YAML frontmatter block (`status`, `layer`, `authority`, `audience`). The schema is defined in [`docs/guidelines/frontmatter_schema.md`](docs/guidelines/frontmatter_schema.md). Run `python3 tools/validate_frontmatter.py <path>` to check any file or directory.
+
+**Machine-readable index:** [`docs/REGISTRY.yaml`](docs/REGISTRY.yaml) is a flat list of all tagged docs and closed tickets (912 entries). Agents and scripts query it instead of scanning 500+ files.
+
+---
+
+## Documentation Reference
 
 | Area | Location |
 |---|---|
@@ -59,6 +87,8 @@ Core laws: [Simulation Kernel](docs/engine/kernel.md) · [Authoritative Pipeline
 | Compliance, parity ledger, divergences | [`docs/parity_ledger/`](docs/parity_ledger/) · [`docs/guidelines/`](docs/guidelines/) |
 | Design patterns and coding conventions | [`docs/guidelines/design_patterns.md`](docs/guidelines/design_patterns.md) |
 | AI tooling (agents, workflows, skills) | [`docs/ai/`](docs/ai/) |
+| Frontmatter schema (doc classification) | [`docs/guidelines/frontmatter_schema.md`](docs/guidelines/frontmatter_schema.md) |
+| Doc registry (machine-readable index) | [`docs/REGISTRY.yaml`](docs/REGISTRY.yaml) |
 
 Full doc index: [docs/README.md](docs/README.md)
 

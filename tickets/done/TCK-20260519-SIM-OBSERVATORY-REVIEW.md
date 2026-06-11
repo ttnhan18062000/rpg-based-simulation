@@ -1,3 +1,14 @@
+---
+status: historical
+layer: observability
+authority: P1
+audience: agent
+ticket_id: TCK-20260519-SIM-OBSERVATORY-REVIEW
+phase: done
+date: 2026-05-19
+tags: [sim, observatory, review]
+---
+
 # TCK-20260519-SIM-OBSERVATORY-REVIEW
 
 ## Title

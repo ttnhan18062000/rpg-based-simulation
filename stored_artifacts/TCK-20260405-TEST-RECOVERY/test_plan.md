@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260405-TEST-RECOVERY
+artifact_type: test_plan
+tags: [test, recovery]
+---
+
 # TCK-20260405-TEST-RECOVERY: Test Plan
 
 ## Automated Tests

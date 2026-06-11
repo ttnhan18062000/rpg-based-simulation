@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260529-OBS-PHASE21
+phase: done
+date: 2026-05-29
+tags: [obs, phase21]
+---
+
 # TCK-20260529-OBS-PHASE21
 
 ## Title

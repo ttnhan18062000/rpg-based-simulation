@@ -1,3 +1,14 @@
+---
+status: historical
+layer: combat
+authority: P1
+audience: agent
+ticket_id: TCK-20260501-PH8-DURABILITY-CRAFTING
+phase: done
+date: 2026-05-01
+tags: [ph8, durability, crafting]
+---
+
 # TCK-20260501-PH8-DURABILITY-CRAFTING
 
 ## Title

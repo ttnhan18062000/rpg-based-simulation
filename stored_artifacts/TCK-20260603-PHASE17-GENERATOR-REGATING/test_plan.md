@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260603-PHASE17-GENERATOR-REGATING
+artifact_type: test_plan
+tags: [phase17, generator, regating]
+---
+
 # Test Plan - Phase 17 (Procedural Generator Re-gating)
 
 This document outlines the testing strategy for verifying generator integration with the unified content catalog.

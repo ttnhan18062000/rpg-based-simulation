@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260422-PH7-HARDENING-CLOSURE
+phase: done
+date: 2026-04-22
+tags: [ph7, hardening, closure]
+---
+
 # TCK-20260422-PH7-HARDENING-CLOSURE
 
 ## Title

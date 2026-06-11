@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260419-MC-TASK3-CORE-STARTUP-VALIDATION
+phase: done
+date: 2026-04-19
+tags: [mc, task3, core, startup, validation]
+---
+
 # TCK-20260419-MC-TASK3-CORE-STARTUP-VALIDATION
 
 ## Title

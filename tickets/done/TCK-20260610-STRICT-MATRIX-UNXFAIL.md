@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260610-STRICT-MATRIX-UNXFAIL
+phase: done
+date: 2026-06-10
+tags: [strict, matrix, unxfail]
+---
+
 # TCK-20260610-STRICT-MATRIX-UNXFAIL
 
 ## Title

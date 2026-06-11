@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260520-SIM-OBS-M41
+artifact_type: plan
+tags: [sim, obs, m41]
+---
+
 # Plan — Milestone 41: Production Readiness Validation
 
 ## Objective

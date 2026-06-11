@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260408-PH3-PASS3-BEHAVIOR
+artifact_type: investigation
+tags: [ph3, pass3, behavior]
+---
+
 # Investigation - Phase 3 Pass 3: Behavioral Integration
 
 ## Findings from Codebase

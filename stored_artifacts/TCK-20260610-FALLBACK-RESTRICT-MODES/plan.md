@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260610-FALLBACK-RESTRICT-MODES
+artifact_type: plan
+tags: [fallback, restrict, modes]
+---
+
 # TCK-20260610-FALLBACK-RESTRICT-MODES — Plan
 
 ## Changes

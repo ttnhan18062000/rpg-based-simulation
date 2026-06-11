@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: misc
+original_date: 2026-04-07
+---
+
 # Design Spec: Phase 1 — Personality & Relationships (RPG Traits & Motives)
 
 ## Goal

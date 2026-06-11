@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: strategy
+original_date: unknown
+---
+
 Good. Milestone 5 is where the system stops having memory as decoration and starts having memory as causation.
 
 Up to Milestone 4, you can have continuity, blockers, detours, and cooperation. That still is not enough. An entity can carry projects across ticks and recruit allies, but if near death, betrayal, ally loss, home damage, or public success do not materially change what it pursues next, then the system is still strategically hollow. Milestone 5 is the point where interpreted events become **strategic reprioritization**, not temporary flavor or utility noise. That is exactly what the design reference demands: events should generate concerns, mutate directives, suspend or replace projects, and change future judgment based on attachment, obligation, irreversibility, and emotional charge.

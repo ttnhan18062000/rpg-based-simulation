@@ -1,3 +1,13 @@
+---
+status: historical
+layer: strategy
+authority: P2
+audience: agent
+ticket_id: TCK-20260502-STRATEGIC-HARDENING
+artifact_type: investigation
+tags: [strategic, hardening]
+---
+
 # Investigation: Strategic Hardening E5.5
 
 ## Reason Code Audit

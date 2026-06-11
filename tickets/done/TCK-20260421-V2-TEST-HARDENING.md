@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260421-V2-TEST-HARDENING
+phase: done
+date: 2026-04-21
+tags: [v2, test, hardening]
+---
+
 # TCK-20260421-V2-TEST-HARDENING
 
 ## Title

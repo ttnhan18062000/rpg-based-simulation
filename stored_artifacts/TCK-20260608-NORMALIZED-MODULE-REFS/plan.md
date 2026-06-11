@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260608-NORMALIZED-MODULE-REFS
+artifact_type: plan
+tags: [normalized, module, refs]
+---
+
 # Plan — TCK-20260608-NORMALIZED-MODULE-REFS
 
 ## Steps

@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260610-SWAMP-BORDER-PACK
+artifact_type: investigation
+tags: [swamp, border, pack]
+---
+
 # Investigation — TCK-20260610-SWAMP-BORDER-PACK
 
 ## Findings

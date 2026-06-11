@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260425-PH6-M2-LOOT
+artifact_type: plan
+tags: [ph6, m2, loot]
+---
+
 # PH6 M2: Channeled Loot and Corpse Recovery
 
 Implement deterministic channeled looting and ground item management.

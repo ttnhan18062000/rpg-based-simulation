@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260406-AOA-CANONICALIZE-STREAM
+phase: done
+date: 2026-04-06
+tags: [aoa, canonicalize, stream]
+---
+
 # TCK-20260406-AOA-CANONICALIZE-STREAM: Canonicalization & Stream Isolation
 
 ## Status: DONE

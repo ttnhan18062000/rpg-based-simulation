@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260607-MATRIX-EVIDENCE-VALIDATOR
+artifact_type: plan
+tags: [matrix, evidence, validator]
+---
+
 # Plan — TCK-20260607-MATRIX-EVIDENCE-VALIDATOR
 
 ## Approach

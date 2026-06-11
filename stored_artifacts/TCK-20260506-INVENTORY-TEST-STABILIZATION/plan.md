@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260506-INVENTORY-TEST-STABILIZATION
+artifact_type: plan
+tags: [inventory, test, stabilization]
+---
+
 # Implementation Plan - Inventory Test Stabilization
 
 Migrate `tests/inventory/` to `V2EntityBuilder` to resolve `TypeError` regressions.

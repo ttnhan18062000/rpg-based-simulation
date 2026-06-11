@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260521-METROPOLIS-COLLISION
+artifact_type: plan
+tags: [metropolis, collision]
+---
+
 # Implementation Plan - Metropolis Collision Resolution
 
 ## Goal Description

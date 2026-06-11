@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260501-E4-PHASE-ONE
+phase: done
+date: 2026-05-01
+tags: [e4, phase, one]
+---
+
 # TCK-20260501-E4-PHASE-ONE
 
 ## Title

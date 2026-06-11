@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260523-BALANCE-COMPARISON
+artifact_type: plan
+tags: [balance, comparison]
+---
+
 # Balance Comparison Engine - Implementation Plan
 
 We will implement **Milestone 88 — Balance Comparison Engine** by introducing modular differential metric comparison, automated scorecard reporting, and rigorous humility constraints.

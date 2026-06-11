@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: performance
+original_date: unknown
+---
+
 # Milestone 3 — Add O(Dirty) vs O(N) Reference Parity
 
 ## Goal

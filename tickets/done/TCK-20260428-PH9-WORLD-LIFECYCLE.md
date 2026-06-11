@@ -1,3 +1,14 @@
+---
+status: historical
+layer: world
+authority: P1
+audience: agent
+ticket_id: TCK-20260428-PH9-WORLD-LIFECYCLE
+phase: done
+date: 2026-04-28
+tags: [ph9, world, lifecycle]
+---
+
 # TCK-20260428-PH9-WORLD-LIFECYCLE
 
 ## Title

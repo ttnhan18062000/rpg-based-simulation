@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260610-MULTI-PACK-INTERACTION
+phase: done
+date: 2026-06-10
+tags: [multi, pack, interaction]
+---
+
 # TCK-20260610-MULTI-PACK-INTERACTION
 
 ## Title

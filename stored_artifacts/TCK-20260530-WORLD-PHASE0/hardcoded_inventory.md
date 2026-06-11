@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: engine
+authority: P2
+audience: agent
+tags: [world, phase0]
+---
+
 # Hardcoded Semantic Assumptions Inventory
 
 This document serves as an exhaustive semantic inventory of hardcoded assumptions currently embedded within `src/` as compiled in RPG-Based Simulation Phase 0.

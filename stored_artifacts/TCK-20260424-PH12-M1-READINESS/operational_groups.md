@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: misc
+authority: P2
+audience: agent
+tags: [ph12, m1, readiness]
+---
+
 # Phase 12 Operational Cutover Groups
 
 ## Group A: Headless CLI (Priority 1)

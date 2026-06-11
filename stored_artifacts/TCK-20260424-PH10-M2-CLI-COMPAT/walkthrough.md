@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: misc
+authority: P2
+audience: agent
+tags: [ph10, m2, cli, compat]
+---
+
 # Walkthrough: Phase 10 Milestone 2 CLI Compatibility
 
 Recovered the user- and operator-facing entry surface for the V2 engine.

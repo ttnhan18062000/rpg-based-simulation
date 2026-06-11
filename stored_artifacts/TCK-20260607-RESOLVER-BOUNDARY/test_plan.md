@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260607-RESOLVER-BOUNDARY
+artifact_type: test_plan
+tags: [resolver, boundary]
+---
+
 # TCK-20260607-RESOLVER-BOUNDARY — Test Plan
 
 ## Run Command

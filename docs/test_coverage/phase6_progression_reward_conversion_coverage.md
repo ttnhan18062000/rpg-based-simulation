@@ -1,3 +1,10 @@
+---
+status: historical
+layer: testing
+authority: P2
+audience: developer
+---
+
 # Progression Coverage Audit — Phase 6
 
 This document lists existing authoritative law systems and boundaries to guarantee that Phase 6 does not duplicate existing verification paths.

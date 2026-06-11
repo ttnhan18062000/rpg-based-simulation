@@ -1,3 +1,13 @@
+---
+status: historical
+layer: strategy
+authority: P2
+audience: agent
+ticket_id: TCK-20260523-COGNITION-DIFF-EVENTS
+artifact_type: investigation
+tags: [cognition, diff, events]
+---
+
 # investigation.md - Graph Diff Mechanics
 
 Evaluating comparative graph models:

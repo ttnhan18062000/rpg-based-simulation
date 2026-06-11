@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: strategy
+original_date: unknown
+---
+
 Here is the right high-level plan.
 
 Your current instinct is directionally correct, but the order matters. Do **not** start with “export the graph” as the main feature. That is backward. First make the strategic state real, deterministic, and authoritative. Then make it visible. Then use that visibility to test the final-system path. That sequencing is exactly what the reference material is pushing toward: the missing piece is the persistent strategic layer above the tactical substrate, and Phase 1 is a contract layer, not optional prep.

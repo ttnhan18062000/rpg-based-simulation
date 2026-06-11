@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260518-CACHE-INVALIDATION-POLICY
+phase: done
+date: 2026-05-18
+tags: [cache, invalidation, policy]
+---
+
 # TCK-20260518-CACHE-INVALIDATION-POLICY
 
 ## Title

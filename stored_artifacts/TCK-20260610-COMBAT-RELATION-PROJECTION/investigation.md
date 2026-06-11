@@ -1,3 +1,13 @@
+---
+status: historical
+layer: combat
+authority: P2
+audience: agent
+ticket_id: TCK-20260610-COMBAT-RELATION-PROJECTION
+artifact_type: investigation
+tags: [combat, relation, projection]
+---
+
 # TCK-20260610-COMBAT-RELATION-PROJECTION — Investigation
 
 ## Key Files

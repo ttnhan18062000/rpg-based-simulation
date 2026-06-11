@@ -1,3 +1,13 @@
+---
+status: historical
+layer: guidelines
+authority: P2
+audience: agent
+ticket_id: TCK-20260527-COG-GOAL-REGISTRY
+artifact_type: investigation
+tags: [cog, goal, registry]
+---
+
 # Investigation - TCK-20260527-COG-GOAL-REGISTRY
 
 ## Objectives

@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260530-PHASE12-RESOLVE-CLI-INTEGRATION
+phase: done
+date: 2026-05-30
+tags: [phase12, resolve, cli, integration]
+---
+
 # TCK-20260530-PHASE12-RESOLVE-CLI-INTEGRATION
 
 ## Title

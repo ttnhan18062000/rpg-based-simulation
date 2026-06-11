@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260514-DOCS-REORG
+phase: done
+date: 2026-05-14
+tags: [docs, reorg]
+---
+
 # TCK-20260514-DOCS-REORG
 
 ## Title

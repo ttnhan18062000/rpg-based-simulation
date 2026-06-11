@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260610-ARCHETYPE-DEFAULT-PATH
+artifact_type: investigation
+tags: [archetype, default, path]
+---
+
 # Investigation — TCK-20260610-ARCHETYPE-DEFAULT-PATH
 
 ## Current Behavior

@@ -1,3 +1,13 @@
+---
+status: historical
+layer: guidelines
+authority: P2
+audience: agent
+ticket_id: TCK-20260605-PHASE26-REGISTRY-ADAPTERS
+artifact_type: plan
+tags: [phase26, registry, adapters]
+---
+
 # Plan - Phase 26
 
 We will extract the registry adapters into `src/core/registries.py` (or a dedicated adapter module if appropriate, but keeping it in `registries.py` keeps it close to the registry definitions and `seed_phase1_content()`).

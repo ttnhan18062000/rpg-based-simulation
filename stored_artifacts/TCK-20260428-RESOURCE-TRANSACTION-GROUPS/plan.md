@@ -1,3 +1,13 @@
+---
+status: historical
+layer: economy
+authority: P2
+audience: agent
+ticket_id: TCK-20260428-RESOURCE-TRANSACTION-GROUPS
+artifact_type: plan
+tags: [resource, transaction, groups]
+---
+
 # Transaction Groups Plan
 
 ## Goal

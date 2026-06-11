@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: misc
+authority: P2
+audience: agent
+tags: [test, stability, hardening]
+---
+
 # Test Infrastructure Hardening & Coverage Restoration
 
 I have completed the stabilization of the engine's test infrastructure and restored the missing coverage identified during the move to the `v2` combat and movement system.

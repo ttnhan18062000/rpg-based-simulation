@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260408-PHASE2-STAGE3-ROUTINE
+phase: done
+date: 2026-04-08
+tags: [phase2, stage3, routine]
+---
+
 # Ticket: TCK-20260408-PHASE2-STAGE3-ROUTINE
 Title: Phase 2 Stage 3: Routine and Biological Needs Simulation
 Status: INPROGRESS

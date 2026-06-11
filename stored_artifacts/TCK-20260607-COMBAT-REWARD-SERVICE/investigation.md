@@ -1,3 +1,13 @@
+---
+status: historical
+layer: combat
+authority: P2
+audience: agent
+ticket_id: TCK-20260607-COMBAT-REWARD-SERVICE
+artifact_type: investigation
+tags: [combat, reward, service]
+---
+
 # Investigation — TCK-20260607-COMBAT-REWARD-SERVICE
 
 ## EntityRole definition

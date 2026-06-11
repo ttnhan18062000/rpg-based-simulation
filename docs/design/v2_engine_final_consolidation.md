@@ -1,3 +1,11 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: developer
+tags: [design, v2, engine, consolidation]
+---
+
 # Design Spec: V2 Engine Final Consolidation
 
 **Date**: 2026-04-19  

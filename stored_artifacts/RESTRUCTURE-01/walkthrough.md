@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: misc
+authority: P2
+audience: agent
+tags: [restructure]
+---
+
 # Walkthrough: API & Architecture Refactoring (Phase 1-4)
 
 ## Summary

@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: misc
+authority: P2
+audience: agent
+tags: [mechanics, hardening]
+---
+
 # Walkthrough: Simulation Mechanics Bible (V2)
 
 The V2 RPG Engine now has a dedicated "Mechanics Bible" located in `docs/mechanics/`. This manual provides a deep, formula-centric reference for developers and users.

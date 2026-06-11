@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260610-ACTIVE-DATA-CONSUMER-REPAIR
+phase: done
+date: 2026-06-10
+tags: [active, data, consumer, repair]
+---
+
 # TCK-20260610-ACTIVE-DATA-CONSUMER-REPAIR
 
 ## Title

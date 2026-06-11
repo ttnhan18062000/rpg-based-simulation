@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260524-LAB-SESSION-MODEL
+artifact_type: investigation
+tags: [lab, session, model]
+---
+
 # Investigation: Lab Session Model and Storage (M92)
 
 We need to implement a secure, robust file-based storage layer for Phase 14 Lab Sessions under `data/lab_sessions/session_{session_id}/`.

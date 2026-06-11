@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: misc
+authority: P2
+audience: agent
+tags: [repair, finalize]
+---
+
 - [ ] Root Cleanup
     - [ ] Delete `replay.json`
     - [ ] Delete `test_output.txt`

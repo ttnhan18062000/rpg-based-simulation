@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: engine
+authority: P2
+audience: agent
+tags: [engine, perf, hardening]
+---
+
 # Phase 3 Performance Hardening Walkthrough
 
 ## Overview

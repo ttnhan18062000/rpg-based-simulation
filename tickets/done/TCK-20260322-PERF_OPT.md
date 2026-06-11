@@ -1,3 +1,14 @@
+---
+status: historical
+layer: performance
+authority: P1
+audience: agent
+ticket_id: TCK-20260322-PERF_OPT
+phase: done
+date: 2026-03-22
+tags: [perf_opt]
+---
+
 # TCK-20260322-PERF_OPT: RPG Simulation Performance Optimization
 
 ## Description

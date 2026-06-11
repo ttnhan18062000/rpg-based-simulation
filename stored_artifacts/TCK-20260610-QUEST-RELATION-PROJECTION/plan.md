@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260610-QUEST-RELATION-PROJECTION
+artifact_type: plan
+tags: [quest, relation, projection]
+---
+
 # TCK-20260610-QUEST-RELATION-PROJECTION — Plan
 
 ## Changes

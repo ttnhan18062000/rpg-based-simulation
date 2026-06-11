@@ -1,3 +1,14 @@
+---
+status: historical
+layer: combat
+authority: P1
+audience: agent
+ticket_id: TCK-20260430-PH5-COMBAT-LEGALITY-HARDENING
+phase: done
+date: 2026-04-30
+tags: [ph5, combat, legality, hardening]
+---
+
 # TCK-20260430-PH5-COMBAT-LEGALITY-HARDENING
 
 ## Title

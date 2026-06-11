@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: misc
+authority: P2
+audience: agent
+tags: [ph14, recovery]
+---
+
 # Walkthrough: Closing the Parity Gap (Phases 14-16)
 
 This walkthrough documents the final recovery of critical RPG-core logic, achieving 100% parity for the V2 engine.

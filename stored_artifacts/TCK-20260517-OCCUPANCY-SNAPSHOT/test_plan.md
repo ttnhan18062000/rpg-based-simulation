@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260517-OCCUPANCY-SNAPSHOT
+artifact_type: test_plan
+tags: [occupancy, snapshot]
+---
+
 # Test Plan: OccupancySnapshot
 
 ## Objectives

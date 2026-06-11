@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260603-PHASE18-OBSERVABILITY-PROVENANCE-JOIN
+artifact_type: test_plan
+tags: [phase18, observability, provenance, join]
+---
+
 # Test Plan: Phase 18 Observability Provenance Join
 
 This document outlines the testing strategy for verifying Phase 18 implementation.

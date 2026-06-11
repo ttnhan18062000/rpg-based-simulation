@@ -1,3 +1,10 @@
+---
+status: historical
+layer: performance
+authority: P2
+audience: developer
+---
+
 # Performance Report — Frontend Rendering Optimization
 
 ## Problem

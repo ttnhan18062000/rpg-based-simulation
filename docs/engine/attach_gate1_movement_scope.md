@@ -1,3 +1,10 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: developer
+---
+
 # Attach Gate 1: Movement Support Boundary (Milestone 2)
 
 ## Supported Behavior

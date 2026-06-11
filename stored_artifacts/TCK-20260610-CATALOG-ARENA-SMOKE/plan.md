@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260610-CATALOG-ARENA-SMOKE
+artifact_type: plan
+tags: [catalog, arena, smoke]
+---
+
 # Plan — TCK-20260610-CATALOG-ARENA-SMOKE
 
 ## Steps

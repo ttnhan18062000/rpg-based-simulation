@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: strategy
+original_date: unknown
+---
+
 Good. Milestone 2 is where the system stops being a storage exercise and starts becoming a mind.
 
 But do not fool yourself: this milestone is still **not** about making the AI globally smarter. It is about inserting a real **strategic appraisal layer above tactical choice** so the engine can preserve continuity instead of re-deciding life direction every tick. The reference material is explicit: the tactical layer should remain narrow, and the missing loop is identity to directives to projects to objectives to local action to interpreted events back into updated strategy.

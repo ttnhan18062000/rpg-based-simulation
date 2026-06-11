@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260510-CORE-IMPORT-STABILIZATION
+phase: done
+date: 2026-05-10
+tags: [core, import, stabilization]
+---
+
 # TCK-20260510-CORE-IMPORT-STABILIZATION
 
 ## Title

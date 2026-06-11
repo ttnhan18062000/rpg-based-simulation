@@ -1,3 +1,13 @@
+---
+status: historical
+layer: guidelines
+authority: P2
+audience: agent
+ticket_id: TCK-20260608-REGISTRY-PARITY-SPLIT
+artifact_type: test_plan
+tags: [registry, parity, split]
+---
+
 # Test Plan — TCK-20260608-REGISTRY-PARITY-SPLIT
 
 ## Scoped Command

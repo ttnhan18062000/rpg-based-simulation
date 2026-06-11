@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260420-ME-CERT-TRUST
+artifact_type: plan
+tags: [me, cert, trust]
+---
+
 # Implementation Plan - Milestone E Certification Hardening
 
 ## Goal

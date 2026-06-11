@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260426-RPG-CORE-HARDENING
+phase: done
+date: 2026-04-26
+tags: [rpg, core, hardening]
+---
+
 # TCK-20260426-RPG-CORE-HARDENING
 
 ## Title

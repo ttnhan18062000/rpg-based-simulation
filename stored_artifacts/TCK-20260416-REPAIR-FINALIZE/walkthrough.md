@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: misc
+authority: P2
+audience: agent
+tags: [repair, finalize]
+---
+
 # Walkthrough - Strategic Cognition Repair Finalization
 
 The strategic cognition hardening has been finalized by replacing simulated proofs with authoritative end-to-end integration tests. This ensures that the simulation engine's claims are backed by real runtime behavior, not test-local manual patching.

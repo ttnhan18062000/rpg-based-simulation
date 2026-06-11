@@ -1,3 +1,10 @@
+---
+status: active
+layer: engine
+authority: P1
+audience: developer
+---
+
 # Phase-Allocation Map (Phase 6 - 10)
 
 This document maps the remaining replacement scope to specific future phases and proof paths, derived from the [Authoritative Replacement Ledger](../engine/legacy_replacement_ledger.md).

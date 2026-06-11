@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260528-PROG-PHASE6-GROWTH
+phase: done
+date: 2026-05-28
+tags: [prog, phase6, growth]
+---
+
 # TCK-20260528-PROG-PHASE6-GROWTH
 
 ## Title

@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260419-ENGINE-CONSOLIDATION
+phase: done
+date: 2026-04-19
+tags: [engine, consolidation]
+---
+
 # TCK-20260419-ENGINE-CONSOLIDATION
 
 ## Title

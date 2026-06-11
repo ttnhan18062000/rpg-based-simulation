@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260530-WORLD-PHASE6
+artifact_type: investigation
+tags: [world, phase6]
+---
+
 # Investigation: Context-Aware Validation System (Phase 6)
 
 ## Analysis of Existing System

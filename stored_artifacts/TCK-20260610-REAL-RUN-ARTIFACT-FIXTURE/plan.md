@@ -1,3 +1,13 @@
+---
+status: historical
+layer: testing
+authority: P2
+audience: agent
+ticket_id: TCK-20260610-REAL-RUN-ARTIFACT-FIXTURE
+artifact_type: plan
+tags: [real, run, artifact, fixture]
+---
+
 # Plan — TCK-20260610-REAL-RUN-ARTIFACT-FIXTURE
 
 ## Step 1 — Create fixture directory tree

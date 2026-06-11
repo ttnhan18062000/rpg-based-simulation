@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: D145C3D0-MILESTONE-C
+artifact_type: test_plan
+tags: [d145c3d0, milestone]
+---
+
 # Test Plan: Milestone C - Operational Integrity
 
 ## Strategy

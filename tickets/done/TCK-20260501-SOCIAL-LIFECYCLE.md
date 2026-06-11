@@ -1,3 +1,14 @@
+---
+status: historical
+layer: ai
+authority: P1
+audience: agent
+ticket_id: TCK-20260501-SOCIAL-LIFECYCLE
+phase: done
+date: 2026-05-01
+tags: [social, lifecycle]
+---
+
 # TCK-20260501-SOCIAL-LIFECYCLE
 
 ## Title

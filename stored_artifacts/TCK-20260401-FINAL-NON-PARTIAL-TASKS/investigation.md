@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260401-FINAL-NON-PARTIAL-TASKS
+artifact_type: investigation
+tags: [final, non, partial, tasks]
+---
+
 # Investigation: Final Non-Partial Tasks (TCK-20260401)
 
 ## Town AI Handlers (`src/ai/states/town.py`)

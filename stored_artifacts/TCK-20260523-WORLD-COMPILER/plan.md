@@ -1,3 +1,13 @@
+---
+status: historical
+layer: world
+authority: P2
+audience: agent
+ticket_id: TCK-20260523-WORLD-COMPILER
+artifact_type: plan
+tags: [world, compiler]
+---
+
 # Plan: World Compiler Implementation (Milestone 70)
 
 We will build the `WorldCompiler` in `src/worldbuilding/compiler.py` and register it in `src/worldbuilding/__init__.py`.

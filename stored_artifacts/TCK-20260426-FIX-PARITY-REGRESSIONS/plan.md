@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260426-FIX-PARITY-REGRESSIONS
+artifact_type: plan
+tags: [fix, parity, regressions]
+---
+
 # Plan: Fix Parity Regressions
 
 ## Proposed Changes

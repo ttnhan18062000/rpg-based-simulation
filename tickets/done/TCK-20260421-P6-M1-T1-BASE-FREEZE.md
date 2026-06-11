@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260421-P6-M1-T1-BASE-FREEZE
+phase: done
+date: 2026-04-21
+tags: [p6, m1, t1, base, freeze]
+---
+
 # TCK-20260421-P6-M1-T1-BASE-FREEZE
 
 ## Title

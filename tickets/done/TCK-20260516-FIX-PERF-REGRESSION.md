@@ -1,3 +1,14 @@
+---
+status: historical
+layer: performance
+authority: P1
+audience: agent
+ticket_id: TCK-20260516-FIX-PERF-REGRESSION
+phase: done
+date: 2026-05-16
+tags: [fix, perf, regression]
+---
+
 # TCK-20260516-FIX-PERF-REGRESSION
 
 ## Title

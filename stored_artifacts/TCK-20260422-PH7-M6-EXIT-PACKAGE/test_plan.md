@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260422-PH7-M6-EXIT-PACKAGE
+artifact_type: test_plan
+tags: [ph7, m6, exit, package]
+---
+
 # Test Plan: Phase 7 Exit Validation
 
 ## 1. Documentation Audit

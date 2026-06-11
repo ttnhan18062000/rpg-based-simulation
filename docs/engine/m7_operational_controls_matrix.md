@@ -1,3 +1,10 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: developer
+---
+
 # Operational Controls Matrix (Milestone 7)
 
 ## 1. Startup Validation Controls

@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260606-PHASE25-METADATA
+phase: done
+date: 2026-06-06
+tags: [phase25, metadata]
+---
+
 # TCK-20260606-PHASE25-METADATA
 
 ## Title

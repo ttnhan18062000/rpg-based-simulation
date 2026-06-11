@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260527-COG-DETOUR-DEPTH
+artifact_type: test_plan
+tags: [cog, detour, depth]
+---
+
 # Test Plan - Detour Depth (Task 10)
 
 ## Automated Tests

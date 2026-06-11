@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260426-PH14-16-RECOVERY
+artifact_type: investigation
+tags: [ph14, recovery]
+---
+
 # Investigation: RPG-Core Logic Gaps (Phases 14-16)
 
 ## Findings

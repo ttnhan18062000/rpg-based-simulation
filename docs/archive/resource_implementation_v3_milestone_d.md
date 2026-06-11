@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: economy
+original_date: unknown
+---
+
 # [Milestone D] - Bounded Concurrency That Can Be Trusted
 
 ## [Milestone Description]

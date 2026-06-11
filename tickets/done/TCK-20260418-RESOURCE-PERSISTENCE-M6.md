@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260418-RESOURCE-PERSISTENCE-M6
+phase: done
+date: 2026-04-18
+tags: [resource, persistence, m6]
+---
+
 # TCK-20260418-RESOURCE-PERSISTENCE-M6
 
 ## Title

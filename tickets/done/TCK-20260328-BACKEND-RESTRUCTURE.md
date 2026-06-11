@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260328-BACKEND-RESTRUCTURE
+phase: done
+date: 2026-03-28
+tags: [backend, restructure]
+---
+
 # TCK-20260328-BACKEND-RESTRUCTURE: Backend Modularization & Refactor
 
 ## Goal

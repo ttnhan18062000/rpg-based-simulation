@@ -1,3 +1,14 @@
+---
+status: historical
+layer: economy
+authority: P1
+audience: agent
+ticket_id: TCK-20260428-RESOURCE-TRANSACTION-GROUPS
+phase: done
+date: 2026-04-28
+tags: [resource, transaction, groups]
+---
+
 # TCK-20260428-RESOURCE-TRANSACTION-GROUPS
 
 ## Title

@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: misc
+original_date: unknown
+---
+
 > **Note:** This is the original design proposal. The backend API was implemented as described. The frontend was later redesigned from a single `index.html` to a **React 19 + TypeScript + Vite + Tailwind CSS v4** SPA — see [docs/frontend.md](../engine/frontend.md) for the current frontend architecture.
 
 This is a technical proposal to wrap your existing deterministic RPG engine with a **FastAPI** layer.

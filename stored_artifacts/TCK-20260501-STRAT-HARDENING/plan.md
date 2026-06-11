@@ -1,3 +1,13 @@
+---
+status: historical
+layer: strategy
+authority: P2
+audience: agent
+ticket_id: TCK-20260501-STRAT-HARDENING
+artifact_type: plan
+tags: [strat, hardening]
+---
+
 # Strategic Cognition Hardening Plan
 
 Implement the full strategic loop from environmental sensing to historical learning.

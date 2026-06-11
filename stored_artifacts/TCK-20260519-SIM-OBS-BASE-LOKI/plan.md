@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260519-SIM-OBS-BASE-LOKI
+artifact_type: plan
+tags: [sim, obs, base, loki]
+---
+
 # Implementation Plan: TCK-20260519-SIM-OBS-BASE-LOKI
 
 ## Objectives

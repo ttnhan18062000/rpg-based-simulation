@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260322-RPG_REFINEMENT
+artifact_type: test_plan
+tags: [rpg_refinement]
+---
+
 # Test Plan: RPG Core Refinement (TCK-20260322-RPG_REFINEMENT)
 
 ## Objectives

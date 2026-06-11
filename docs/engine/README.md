@@ -1,3 +1,10 @@
+---
+status: active
+layer: engine
+authority: P1
+audience: developer
+---
+
 # Simulation Engine & Orchestration
 
 This directory documents the engine's deterministic heart and the pipeline that governs state transitions.

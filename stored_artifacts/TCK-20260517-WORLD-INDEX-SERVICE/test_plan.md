@@ -1,3 +1,13 @@
+---
+status: historical
+layer: world
+authority: P2
+audience: agent
+ticket_id: TCK-20260517-WORLD-INDEX-SERVICE
+artifact_type: test_plan
+tags: [world, index, service]
+---
+
 # Test Plan: WorldIndexService & SpatialQueryService
 
 ## Target Test Files

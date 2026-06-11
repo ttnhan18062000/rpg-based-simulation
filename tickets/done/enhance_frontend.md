@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: enhance_frontend
+phase: done
+date: unknown
+tags: [enhance_frontend]
+---
+
 - smaller minimap
 - minimap reflect the fog when spectate an entity
 - allow zoom in/out the minimap by scrolling

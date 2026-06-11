@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: misc
+original_date: 2026-04-24
+---
+
 # Legacy Oracle Framework Design
 
 ## 1. Goal

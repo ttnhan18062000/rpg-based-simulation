@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260407-PH0-FIX
+artifact_type: test_plan
+tags: [ph0, fix]
+---
+
 # Phase 0 Corrective Alignment Test Plan
 
 ## Existing Tests to Run:

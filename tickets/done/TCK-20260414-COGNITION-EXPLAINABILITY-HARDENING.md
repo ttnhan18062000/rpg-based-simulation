@@ -1,3 +1,14 @@
+---
+status: historical
+layer: strategy
+authority: P1
+audience: agent
+ticket_id: TCK-20260414-COGNITION-EXPLAINABILITY-HARDENING
+phase: done
+date: 2026-04-14
+tags: [cognition, explainability, hardening]
+---
+
 # TCK-20260414-COGNITION-EXPLAINABILITY-HARDENING
 
 ## Title

@@ -1,3 +1,10 @@
+---
+status: active
+layer: strategy
+authority: P1
+audience: developer
+---
+
 # Tuning Guide: Bounded Strategic Cognition
 
 ## Numeric Ranges & Feel

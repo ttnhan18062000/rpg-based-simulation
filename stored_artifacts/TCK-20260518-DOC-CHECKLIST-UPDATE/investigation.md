@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260518-DOC-CHECKLIST-UPDATE
+artifact_type: investigation
+tags: [doc, checklist, update]
+---
+
 # Investigation - TCK-20260518-DOC-CHECKLIST-UPDATE
 
 - Verified that all 14 test suites in `perf_test_plan.md` are fully implemented across `tests/unit/optimization`, `tests/integration/optimization`, `tests/static`, and `tests/unit/perf`.

@@ -1,3 +1,11 @@
+---
+status: authoritative
+layer: core
+authority: P0
+audience: developer
+last_verified: 2026-06-06
+---
+
 # Entities & Factions: The Aspect-Oriented Model (v2)
 
 In the WorldLoop RPG, every agent (Heroes, Mobs, NPCs) is an `Entity`. Following the **Resource-Safe Engine (v2)** architecture, entities are composed of discrete **Aspects** and governed by strict authoritative mutation laws.

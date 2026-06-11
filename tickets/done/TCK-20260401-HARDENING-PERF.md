@@ -1,3 +1,14 @@
+---
+status: historical
+layer: performance
+authority: P1
+audience: agent
+ticket_id: TCK-20260401-HARDENING-PERF
+phase: done
+date: 2026-04-01
+tags: [hardening, perf]
+---
+
 # TCK-20260401-HARDENING-PERF: Infrastructure Safety & Performance Optimization
 
 ## Description

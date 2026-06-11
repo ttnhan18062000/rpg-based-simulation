@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260527-COG-BELIEF-INTEGRATION
+phase: done
+date: 2026-05-27
+tags: [cog, belief, integration]
+---
+
 # TCK-20260527-COG-BELIEF-INTEGRATION
 
 ## Title

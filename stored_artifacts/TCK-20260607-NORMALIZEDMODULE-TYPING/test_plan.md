@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260607-NORMALIZEDMODULE-TYPING
+artifact_type: test_plan
+tags: [normalizedmodule, typing]
+---
+
 # Test Plan — TCK-20260607-NORMALIZEDMODULE-TYPING
 
 ## Regression Surface

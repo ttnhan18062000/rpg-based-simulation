@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260607-V2-SERVICE-ASSEMBLY-GAP
+phase: done
+date: 2026-06-07
+tags: [v2, service, assembly, gap]
+---
+
 # TCK-20260607-V2-SERVICE-ASSEMBLY-GAP
 
 ## Title

@@ -1,3 +1,10 @@
+---
+status: historical
+layer: combat
+authority: P2
+audience: developer
+---
+
 # Arena Harness Rulebook (Milestone 6)
 
 ## Purpose

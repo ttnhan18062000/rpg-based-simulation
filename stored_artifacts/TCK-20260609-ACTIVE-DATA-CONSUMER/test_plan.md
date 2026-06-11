@@ -1,7 +1,13 @@
 ---
-ticket: TCK-20260609-ACTIVE-DATA-CONSUMER
-phase: test_plan
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260609-ACTIVE-DATA-CONSUMER
+artifact_type: test_plan
+tags: [active, data, consumer]
 ---
+
 
 # Test Plan
 

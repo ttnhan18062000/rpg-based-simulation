@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260610-WORKER-SINGLETON-GUARD
+artifact_type: test_plan
+tags: [worker, singleton, guard]
+---
+
 # Test Plan — TCK-20260610-WORKER-SINGLETON-GUARD
 
 ## Scoped Test Command

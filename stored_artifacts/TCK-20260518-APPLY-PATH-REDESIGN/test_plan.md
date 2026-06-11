@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260518-APPLY-PATH-REDESIGN
+artifact_type: test_plan
+tags: [apply, path, redesign]
+---
+
 # Test Plan - Milestone 14 ApplyPath Structural Redesign
 
 ## Unit Tests (`tests/unit/optimization/test_apply_plan_builder.py`)

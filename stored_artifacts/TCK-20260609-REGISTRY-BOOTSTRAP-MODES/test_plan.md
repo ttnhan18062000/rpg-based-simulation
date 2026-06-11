@@ -1,7 +1,13 @@
 ---
-ticket: TCK-20260609-REGISTRY-BOOTSTRAP-MODES
-phase: test_plan
+status: historical
+layer: guidelines
+authority: P2
+audience: agent
+ticket_id: TCK-20260609-REGISTRY-BOOTSTRAP-MODES
+artifact_type: test_plan
+tags: [registry, bootstrap, modes]
 ---
+
 
 # Test Plan
 

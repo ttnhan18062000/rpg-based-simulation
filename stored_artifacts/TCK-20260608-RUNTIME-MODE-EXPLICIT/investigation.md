@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260608-RUNTIME-MODE-EXPLICIT
+artifact_type: investigation
+tags: [runtime, mode, explicit]
+---
+
 # Investigation — TCK-20260608-RUNTIME-MODE-EXPLICIT
 
 ## Current State

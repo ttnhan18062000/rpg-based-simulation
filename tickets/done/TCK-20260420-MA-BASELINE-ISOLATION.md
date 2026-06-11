@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260420-MA-BASELINE-ISOLATION
+phase: done
+date: 2026-04-20
+tags: [ma, baseline, isolation]
+---
+
 # TCK-20260420-MA-BASELINE-ISOLATION
 
 ## Title

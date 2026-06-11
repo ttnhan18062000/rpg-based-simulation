@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260520-SIM-OBS-PHASE5-M23
+artifact_type: test_plan
+tags: [sim, obs, phase5, m23]
+---
+
 # Test Plan: In-Process Event Publisher & Subscription Filters (Milestone 23)
 
 We will use a comprehensive testing strategy covering pure unit filters, publisher concurrency and capacity, and end-to-end event recorder integration.

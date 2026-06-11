@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: misc
+authority: P2
+audience: agent
+tags: [quest, progress, stabilization]
+---
+
 # Quest Progress Stabilization Plan
 
 Resolve double-counting and data loss in quest progression by hardening the update merge logic and ensuring strictly authoritative delta application.

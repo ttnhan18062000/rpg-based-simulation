@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260422-RECOVERY-GAPS
+artifact_type: investigation
+tags: [recovery, gaps]
+---
+
 # Investigation: Phase 7/8 Recovery Gaps
 
 ## Objective

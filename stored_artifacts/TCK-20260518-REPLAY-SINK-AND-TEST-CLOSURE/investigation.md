@@ -1,3 +1,13 @@
+---
+status: historical
+layer: observability
+authority: P2
+audience: agent
+ticket_id: TCK-20260518-REPLAY-SINK-AND-TEST-CLOSURE
+artifact_type: investigation
+tags: [replay, sink, and, test, closure]
+---
+
 # Investigation Notes: Replay Sink Hardening and Test Closure
 
 ## Findings

@@ -1,3 +1,14 @@
+---
+status: historical
+layer: world
+authority: P1
+audience: agent
+ticket_id: TCK-20260609-STRICT-WORLD-MATRIX
+phase: done
+date: 2026-06-09
+tags: [strict, world, matrix]
+---
+
 # TCK-20260609-STRICT-WORLD-MATRIX
 
 ## Title

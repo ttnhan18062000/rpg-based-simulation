@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260325-RPG_DEPTH
+artifact_type: investigation
+tags: [rpg_depth]
+---
+
 # Investigation - TCK-20260325-RPG_DEPTH
 
 ## Problem Statement

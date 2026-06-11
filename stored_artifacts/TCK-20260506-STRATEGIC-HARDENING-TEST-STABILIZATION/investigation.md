@@ -1,3 +1,13 @@
+---
+status: historical
+layer: strategy
+authority: P2
+audience: agent
+ticket_id: TCK-20260506-STRATEGIC-HARDENING-TEST-STABILIZATION
+artifact_type: investigation
+tags: [strategic, hardening, test, stabilization]
+---
+
 # Investigation - Strategic Hardening Test Failures
 
 ## Observations

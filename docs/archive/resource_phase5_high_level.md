@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: economy
+original_date: unknown
+---
+
 # High-Level Implementation Plan — Phase 5 of `src`
 
 This plan assumes Phase 4 has brought `src` to a materially better state, but not yet to full RPG-core progression closure.

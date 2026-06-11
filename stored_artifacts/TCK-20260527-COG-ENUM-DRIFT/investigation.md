@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260527-COG-ENUM-DRIFT
+artifact_type: investigation
+tags: [cog, enum, drift]
+---
+
 # Investigation: Enum and String Drift in RPG Cognition
 
 We investigated the current usage of raw strings for strategic kinds in the codebase:

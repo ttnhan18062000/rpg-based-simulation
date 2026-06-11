@@ -1,3 +1,13 @@
+---
+status: historical
+layer: world
+authority: P2
+audience: agent
+ticket_id: TCK-20260523-WORLD-COMPILER
+artifact_type: test_plan
+tags: [world, compiler]
+---
+
 # Test Plan: World Compiler Implementation (Milestone 70)
 
 We will implement three distinct test suites covering unit, integration, and certification aspects of the World Compiler.

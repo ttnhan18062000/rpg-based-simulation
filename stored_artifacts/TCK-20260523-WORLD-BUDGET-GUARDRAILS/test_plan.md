@@ -1,3 +1,13 @@
+---
+status: historical
+layer: world
+authority: P2
+audience: agent
+ticket_id: TCK-20260523-WORLD-BUDGET-GUARDRAILS
+artifact_type: test_plan
+tags: [world, budget, guardrails]
+---
+
 # Test Plan — Milestone 74 Resource and Storage Guardrails
 
 We will create a new test module `tests/unit/worldbuilding/test_world_budget_guardrails.py`.

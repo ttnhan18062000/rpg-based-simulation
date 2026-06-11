@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: engine
+authority: P2
+audience: agent
+tags: [cog, phase3, decision]
+---
+
 # Walkthrough - Phase 2 Bottom-Up Entity Self Model
 
 We have successfully completed all 10 milestones/tasks of **Phase 2 — Bottom-Up Entity Self Model** as specified in `entity_enhance_phase2.md`.

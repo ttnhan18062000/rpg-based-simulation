@@ -1,3 +1,13 @@
+---
+status: historical
+layer: economy
+authority: P2
+audience: agent
+ticket_id: TCK-20260428-RESOURCE-QUEST-TRANSACTIONS
+artifact_type: investigation
+tags: [resource, quest, transactions]
+---
+
 # Investigation: Quest Reward Transactions
 
 ## Current State

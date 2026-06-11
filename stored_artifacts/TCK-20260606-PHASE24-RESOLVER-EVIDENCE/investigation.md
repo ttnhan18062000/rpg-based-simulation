@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260606-PHASE24-RESOLVER-EVIDENCE
+artifact_type: investigation
+tags: [phase24, resolver, evidence]
+---
+
 # Investigation - Phase 24 Resolver layer claims and evidence fields
 
 ## Current State Analysis

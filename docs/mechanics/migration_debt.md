@@ -1,3 +1,11 @@
+---
+status: authoritative
+layer: mechanics
+authority: P0
+audience: developer
+last_verified: 2026-06-06
+---
+
 # Migration Debt & Compatibility Layer Log
 
 This document provides a formal audit of current compatibility adapters, legacy logic, and fallback defaults implemented in the worldbuilding compilation pipelines to ensure safe and deterministic system migration paths.

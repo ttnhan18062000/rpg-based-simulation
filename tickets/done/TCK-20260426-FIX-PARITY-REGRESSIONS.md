@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260426-FIX-PARITY-REGRESSIONS
+phase: done
+date: 2026-04-26
+tags: [fix, parity, regressions]
+---
+
 # TCK-20260426-FIX-PARITY-REGRESSIONS
 
 ## Title

@@ -1,3 +1,10 @@
+---
+status: active
+layer: ai
+authority: P1
+audience: developer
+---
+
 # Ticket Lifecycle
 
 This document describes the complete flow from an implementation request to a closed ticket. It covers the `implement-ticket` workflow in detail, including gate behavior, failure recovery, and artifact layout.

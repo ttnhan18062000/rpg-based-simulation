@@ -1,3 +1,14 @@
+---
+status: historical
+layer: performance
+authority: P1
+audience: agent
+ticket_id: TCK-20260512-PERF-COMPLETION
+phase: done
+date: 2026-05-12
+tags: [perf, completion]
+---
+
 # TCK-20260512-PERF-COMPLETION
 
 ## Title

@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260610-SENSE-PERCEPTION-GATE
+artifact_type: investigation
+tags: [sense, perception, gate]
+---
+
 # Investigation — TCK-20260610-SENSE-PERCEPTION-GATE
 
 ## Findings

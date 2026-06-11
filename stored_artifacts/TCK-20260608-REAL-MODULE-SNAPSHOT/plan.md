@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260608-REAL-MODULE-SNAPSHOT
+artifact_type: plan
+tags: [real, module, snapshot]
+---
+
 # Plan — TCK-20260608-REAL-MODULE-SNAPSHOT
 
 ## Steps

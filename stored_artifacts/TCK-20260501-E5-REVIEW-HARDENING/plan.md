@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260501-E5-REVIEW-HARDENING
+artifact_type: plan
+tags: [e5, review, hardening]
+---
+
 # Implementation Plan - Combat Reward Hardening (Phase E5)
 
 ## Goal

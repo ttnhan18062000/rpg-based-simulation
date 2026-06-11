@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260606-PHASE22-3-REPAIR
+artifact_type: plan
+tags: [phase22, repair]
+---
+
 # Staging Plan - TCK-20260606-PHASE22-3-REPAIR
 
 ## 1. Goal

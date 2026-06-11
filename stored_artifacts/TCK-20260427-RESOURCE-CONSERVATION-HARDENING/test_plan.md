@@ -1,3 +1,13 @@
+---
+status: historical
+layer: economy
+authority: P2
+audience: agent
+ticket_id: TCK-20260427-RESOURCE-CONSERVATION-HARDENING
+artifact_type: test_plan
+tags: [resource, conservation, hardening]
+---
+
 # Test Plan - Resource Conservation Hardening
 
 ## Goal

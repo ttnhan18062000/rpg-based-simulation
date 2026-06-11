@@ -1,3 +1,13 @@
+---
+status: historical
+layer: observability
+authority: P2
+audience: agent
+ticket_id: TCK-20260523-LAB-OBSERVATORY-INTEGRATION
+artifact_type: investigation
+tags: [lab, observatory, integration]
+---
+
 # Investigation - Milestone 79 Observatory Integration
 
 ## Findings

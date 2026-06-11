@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260516-ENGINE-PERFORMANCE-PHASE2
+artifact_type: test_plan
+tags: [engine, performance, phase2]
+---
+
 # Test Plan: Phase 2 Performance
 
 ## Automated Benchmarks

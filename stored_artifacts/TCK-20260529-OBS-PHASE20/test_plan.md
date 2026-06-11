@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260529-OBS-PHASE20
+artifact_type: test_plan
+tags: [obs, phase20]
+---
+
 # Test Plan - TCK-20260529-OBS-PHASE20
 
 We will implement unit and integration tests to verify the Phase 20 Runtime Performance Profiling Lane:

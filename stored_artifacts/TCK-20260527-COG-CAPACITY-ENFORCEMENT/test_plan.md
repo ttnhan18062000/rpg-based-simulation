@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260527-COG-CAPACITY-ENFORCEMENT
+artifact_type: test_plan
+tags: [cog, capacity, enforcement]
+---
+
 # Test Plan — Capacity Enforcement
 
 We will verify that cognitive capacity limits are enforced unconditionally, idempotent, and respect prioritization constraints.

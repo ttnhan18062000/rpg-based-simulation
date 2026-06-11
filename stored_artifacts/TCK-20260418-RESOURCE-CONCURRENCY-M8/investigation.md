@@ -1,3 +1,13 @@
+---
+status: historical
+layer: economy
+authority: P2
+audience: agent
+ticket_id: TCK-20260418-RESOURCE-CONCURRENCY-M8
+artifact_type: investigation
+tags: [resource, concurrency, m8]
+---
+
 # Investigation: Milestone 8 Concurrency Mechanics
 
 ## Objective

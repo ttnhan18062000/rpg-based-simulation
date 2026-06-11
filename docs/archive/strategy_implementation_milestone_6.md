@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: strategy
+original_date: unknown
+---
+
 Good. Milestone 6 is where the system stops being “maybe strategic internally” and becomes **provable**.
 
 Up to Milestone 5, you can build a serious life-direction engine. But unless you can export a canonical, deterministic representation of an entity’s persisted cognition, you are still mostly trusting yourself. That is not engineering. That is optimism. Milestone 6 is the point where the stored strategic/subjective state becomes an explicit artifact you can inspect, diff, and regression-test. That matches both the design direction and your own goal of exporting the stored graph of an entity and using it to test the whole thinking feature.

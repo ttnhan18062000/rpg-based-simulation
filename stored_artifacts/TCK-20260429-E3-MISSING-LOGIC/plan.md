@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260429-E3-MISSING-LOGIC
+artifact_type: plan
+tags: [e3, missing, logic]
+---
+
 # Plan: E3 Missing Logic Implementation
 
 ## Completed Work

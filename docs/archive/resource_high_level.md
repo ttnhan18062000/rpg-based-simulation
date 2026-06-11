@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: economy
+original_date: unknown
+---
+
 Below is the rewritten high-level implementation plan.
 
 It is now aligned to the constraints you locked in:

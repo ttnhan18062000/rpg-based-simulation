@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260519-SIM-OBS-PHASE3-M11
+artifact_type: plan
+tags: [sim, obs, phase3, m11]
+---
+
 # Implementation Plan - Milestone 11: Analysis Pipeline Orchestrator
 
 ## Proposed Architecture

@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: ai
+authority: P2
+audience: agent
+tags: [skill, scaling]
+---
+
 - [x] Unify Combat Skill Damage Scaling under AOA
     - [x] Refactor `ActionSystem._get_use_skill_updates` to accept `DeterministicRNG`
     - [x] Fix `WorldState` attribute access by passing authoritative RNG through the pipeline

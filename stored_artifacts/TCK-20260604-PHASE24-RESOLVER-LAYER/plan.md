@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260604-PHASE24-RESOLVER-LAYER
+artifact_type: plan
+tags: [phase24, resolver, layer]
+---
+
 # Plan: Phase 24 — Resolver Layer
 
 ## Goal

@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: strategy
+original_date: unknown
+---
+
 [Phase 1] - Cognition Capacity Foundation
 
 [Phase Description]

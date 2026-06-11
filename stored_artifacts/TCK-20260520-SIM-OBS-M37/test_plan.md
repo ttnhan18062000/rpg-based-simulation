@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260520-SIM-OBS-M37
+artifact_type: test_plan
+tags: [sim, obs, m37]
+---
+
 # Test Plan - TCK-20260520-SIM-OBS-M37
 
 ## Automated Verification

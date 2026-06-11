@@ -1,7 +1,13 @@
 ---
-ticket: TCK-20260609-REGISTRY-BOOTSTRAP-MODES
-phase: investigation
+status: historical
+layer: guidelines
+authority: P2
+audience: agent
+ticket_id: TCK-20260609-REGISTRY-BOOTSTRAP-MODES
+artifact_type: investigation
+tags: [registry, bootstrap, modes]
 ---
+
 
 # Investigation
 

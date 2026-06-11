@@ -1,3 +1,10 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: developer
+---
+
 # Phase 4 Exit Package: Core Truth & Parity Status
 
 ## 1. Executive Summary

@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260516-ENGINE-PERFORMANCE-PHASE2
+artifact_type: investigation
+tags: [engine, performance, phase2]
+---
+
 # Investigation: Engine Bottlenecks
 
 Profiling via `profile_subphases.py` and `test_perf_movement.py` revealed:

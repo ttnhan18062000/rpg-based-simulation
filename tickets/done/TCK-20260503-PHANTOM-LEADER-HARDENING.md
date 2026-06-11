@@ -1,3 +1,14 @@
+---
+status: historical
+layer: strategy
+authority: P1
+audience: agent
+ticket_id: TCK-20260503-PHANTOM-LEADER-HARDENING
+phase: done
+date: 2026-05-03
+tags: [phantom, leader, hardening]
+---
+
 # TCK-20260503-PHANTOM-LEADER-HARDENING
 
 ## Title

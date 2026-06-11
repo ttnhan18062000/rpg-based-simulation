@@ -1,3 +1,13 @@
+---
+status: historical
+layer: ai
+authority: P2
+audience: agent
+ticket_id: TCK-20260410-PH4-SOCIAL-CONTRACTS
+artifact_type: investigation
+tags: [ph4, social, contracts]
+---
+
 # Investigation: Phase 4 Social Contracts
 
 ## Current State Analysis

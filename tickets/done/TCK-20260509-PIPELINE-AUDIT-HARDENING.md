@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260509-PIPELINE-AUDIT-HARDENING
+phase: done
+date: 2026-05-09
+tags: [pipeline, audit, hardening]
+---
+
 # TCK-20260509-PIPELINE-AUDIT-HARDENING
 
 ## Title

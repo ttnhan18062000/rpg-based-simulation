@@ -1,3 +1,14 @@
+---
+status: historical
+layer: observability
+authority: P1
+audience: agent
+ticket_id: METRICS-01
+phase: done
+date: unknown
+tags: [metrics]
+---
+
 # Ticket METRICS-01: Grafana Dashboard & Metrics Overhaul
 
 ## Summary

@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: engine
+original_date: unknown
+---
+
 Got it. I reviewed it as the **whole Observatory feature from Phase 1 → Phase 9**, not only Phase 9.
 
 # Overall verdict

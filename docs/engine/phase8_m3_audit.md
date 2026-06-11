@@ -1,3 +1,10 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: developer
+---
+
 # Phase 8 Milestone 3: Bounded Tactical Audit
 
 ## 1. Current State of Tactical Decision Paths

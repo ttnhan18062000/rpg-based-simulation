@@ -1,3 +1,10 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: developer
+---
+
 # Final Replacement Boundary Summary
 
 This document defines the authoritative boundary between supported replacement and unsupported remainder as of Phase 11 close.

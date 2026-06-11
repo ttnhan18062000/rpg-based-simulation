@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: misc
+authority: P2
+audience: agent
+tags: [fix, test, regressions]
+---
+
 # Walkthrough: Fix Test Regressions
 
 Restored 100% test stability for the V2 engine.

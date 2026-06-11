@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260503-HARDEN-DOMAIN5
+phase: done
+date: 2026-05-03
+tags: [harden, domain5]
+---
+
 # TCK-20260503-HARDEN-DOMAIN5
 
 ## Title

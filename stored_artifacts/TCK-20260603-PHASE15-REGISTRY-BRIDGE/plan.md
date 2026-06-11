@@ -1,3 +1,13 @@
+---
+status: historical
+layer: guidelines
+authority: P2
+audience: agent
+ticket_id: TCK-20260603-PHASE15-REGISTRY-BRIDGE
+artifact_type: plan
+tags: [phase15, registry, bridge]
+---
+
 # Implementation Plan - Phase 15 Registry Bridge
 
 This plan integrates the content catalog database with the legacy simulation registries by implementing an authoritative bootstrapping bridge.

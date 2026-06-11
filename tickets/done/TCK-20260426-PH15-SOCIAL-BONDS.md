@@ -1,3 +1,14 @@
+---
+status: historical
+layer: ai
+authority: P1
+audience: agent
+ticket_id: TCK-20260426-PH15-SOCIAL-BONDS
+phase: done
+date: 2026-04-26
+tags: [ph15, social, bonds]
+---
+
 # TCK-20260426-PH15-SOCIAL-BONDS
 
 ## Title

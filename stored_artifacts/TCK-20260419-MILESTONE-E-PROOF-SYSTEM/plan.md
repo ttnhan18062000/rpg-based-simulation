@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260419-MILESTONE-E-PROOF-SYSTEM
+artifact_type: plan
+tags: [milestone, proof, system]
+---
+
 # Implementation Plan: Milestone E Proof System
 
 ## Goal

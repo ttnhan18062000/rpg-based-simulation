@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260420-V2-ENGINE-STABILIZATION
+phase: done
+date: 2026-04-20
+tags: [v2, engine, stabilization]
+---
+
 # TCK-20260420-V2-ENGINE-STABILIZATION
 
 ## Title

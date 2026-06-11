@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260328
+artifact_type: investigation
+tags: []
+---
+
 # Investigation Report - Backend Restructuring
 
 ## Current State Analysis

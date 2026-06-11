@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260606-PHASE28-PERSPECTIVE-RELATION-MIGRATION
+artifact_type: plan
+tags: [phase28, perspective, relation, migration]
+---
+
 # Phase 28 Implementation Plan
 
 ## Goal Description

@@ -1,3 +1,13 @@
+---
+status: historical
+layer: guidelines
+authority: P2
+audience: agent
+ticket_id: TCK-20260523-MUTATION-SCHEMA
+artifact_type: investigation
+tags: [mutation, schema]
+---
+
 # Investigation Report - MutationSpec Schema & Validator
 
 This report documents the repository architecture analysis, integration points, and baseline health state before implementing Milestone 84.

@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: infra-07-redis-event-bus
+phase: done
+date: unknown
+tags: [infra, redis, event, bus]
+---
+
 # [DONE] infra-07: Redis Streams Event Bus
 
 ## Objective

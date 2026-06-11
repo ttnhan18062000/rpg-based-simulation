@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: misc
+authority: P2
+audience: agent
+tags: [me, cert, trust]
+---
+
 # Walkthrough - Milestone E: Engine Certification and Release Trust
 
 We have successfully completed Milestone E, transforming the V2 Engine's certification harness into a production-grade trust system. The engine now provides deterministic proof of its governance laws across a comprehensive matrix of 15 scenarios and 2 hardware profiles.

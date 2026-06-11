@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260419-MA-TASK4-HARDEN-HASHING
+phase: done
+date: 2026-04-19
+tags: [ma, task4, harden, hashing]
+---
+
 # TCK-20260419-MA-TASK4-HARDEN-HASHING
 
 ## Title

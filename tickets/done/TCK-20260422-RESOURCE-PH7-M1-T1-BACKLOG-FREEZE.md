@@ -1,3 +1,14 @@
+---
+status: historical
+layer: economy
+authority: P1
+audience: agent
+ticket_id: TCK-20260422-RESOURCE-PH7-M1-T1-BACKLOG-FREEZE
+phase: done
+date: 2026-04-22
+tags: [resource, ph7, m1, t1, backlog, freeze]
+---
+
 # TCK-20260422-RESOURCE-PH7-M1-T1-BACKLOG-FREEZE
 
 ## Title

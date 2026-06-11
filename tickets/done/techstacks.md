@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: techstacks
+phase: done
+date: unknown
+tags: [techstacks]
+---
+
 You already have a “senior backend playground” in these docs: deterministic concurrency (single-writer + immutable snapshots), a hard tick loop with timeouts, a clean intent/effect split, shared Pydantic schemas as the single source of truth, and heavy test coverage.  
 
 If you want *advanced backend techniques* (tools/frameworks/libraries) that actually level you up, don’t chase trendy stacks. Use this project to practice the stuff most “senior” backends still do badly: correctness under concurrency, reproducibility, observability, contracts, and performance.

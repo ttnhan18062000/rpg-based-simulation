@@ -1,3 +1,14 @@
+---
+status: historical
+layer: world
+authority: P1
+audience: agent
+ticket_id: TCK-20260610-SCENARIO-WORLD-VALIDATION
+phase: done
+date: 2026-06-10
+tags: [scenario, world, validation]
+---
+
 # TCK-20260610-SCENARIO-WORLD-VALIDATION
 
 ## Title

@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260331-RUNTIME-INTEGRITY
+phase: done
+date: 2026-03-31
+tags: [runtime, integrity]
+---
+
 # TCK-20260331-RUNTIME-INTEGRITY: Restore Runtime Integrity & AOA Convergence
 
 ## Description

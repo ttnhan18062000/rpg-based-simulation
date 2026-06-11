@@ -1,7 +1,13 @@
 ---
-ticket: TCK-20260609-MIGRATION-MAP-YAML
-phase: plan
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260609-MIGRATION-MAP-YAML
+artifact_type: plan
+tags: [migration, map, yaml]
 ---
+
 
 # Plan
 

@@ -1,3 +1,10 @@
+---
+status: active
+layer: testing
+authority: P1
+audience: developer
+---
+
 # Content Expansion Readiness Gate
 
 **Status:** Active  

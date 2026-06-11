@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260510-LOGIC-VERIFICATION
+phase: done
+date: 2026-05-10
+tags: [logic, verification]
+---
+
 # TCK-20260510-LOGIC-VERIFICATION
 
 ## Title

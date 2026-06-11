@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: economy
+original_date: unknown
+---
+
 # [Milestone C] - Replay, Startup, Shutdown, and Operational Integrity
 
 ## [Milestone Description]

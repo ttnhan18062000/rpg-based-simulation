@@ -1,3 +1,14 @@
+---
+status: historical
+layer: ai
+authority: P1
+audience: agent
+ticket_id: TCK-20260414-LEARNING-SOCIAL-CONSEQUENCE
+phase: done
+date: 2026-04-14
+tags: [learning, social, consequence]
+---
+
 # TCK-20260414-LEARNING-SOCIAL-CONSEQUENCE
 
 ## Title

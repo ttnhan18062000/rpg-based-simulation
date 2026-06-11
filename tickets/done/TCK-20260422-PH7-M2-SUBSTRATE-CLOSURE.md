@@ -1,3 +1,14 @@
+---
+status: historical
+layer: strategy
+authority: P1
+audience: agent
+ticket_id: TCK-20260422-PH7-M2-SUBSTRATE-CLOSURE
+phase: done
+date: 2026-04-22
+tags: [ph7, m2, substrate, closure]
+---
+
 # TCK-20260422-PH7-M2-SUBSTRATE-CLOSURE
 
 ## Title

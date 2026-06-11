@@ -1,3 +1,13 @@
+---
+status: historical
+layer: world
+authority: P2
+audience: agent
+ticket_id: TCK-20260523-WORLD-VALIDATOR
+artifact_type: test_plan
+tags: [world, validator]
+---
+
 # Test Plan: World Validation Layer
 
 We will implement two separate unit test suites to isolate validation rule testing from the high-level orchestration testing.

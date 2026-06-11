@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: economy
+authority: P2
+audience: agent
+tags: [resource, observability, m7]
+---
+
 # Operational Controls Matrix (Milestone 7)
 
 ## 1. Startup Validation Controls

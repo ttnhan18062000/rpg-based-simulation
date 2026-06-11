@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260422-PH7-M6-EXIT-PACKAGE
+phase: done
+date: 2026-04-22
+tags: [ph7, m6, exit, package]
+---
+
 # TCK-20260422-PH7-M6-EXIT-PACKAGE
 
 ## Title

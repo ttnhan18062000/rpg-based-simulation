@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260530-WORLD-PHASE9
+artifact_type: plan
+tags: [world, phase9]
+---
+
 # Implementation Plan - Compiler Integration Hardening (Phase 9)
 
 Reduce hardcoded parameters inside the `WorldCompiler` by integrating `CompileContext` dynamic lookups. Ensure full backward compatibility.

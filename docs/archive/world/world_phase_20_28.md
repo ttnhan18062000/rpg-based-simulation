@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: world
+original_date: unknown
+---
+
 # Phase 20 — Content usage contract and test map
 
 ## Goal

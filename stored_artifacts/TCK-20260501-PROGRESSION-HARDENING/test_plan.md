@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260501-PROGRESSION-HARDENING
+artifact_type: test_plan
+tags: [progression, hardening]
+---
+
 # Test Plan: Phase E4.5 Progression Hardening
 
 ## Unit Tests

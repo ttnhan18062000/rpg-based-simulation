@@ -1,3 +1,10 @@
+---
+status: active
+layer: engine
+authority: P1
+audience: developer
+---
+
 # The 4 Pillars of RPG Refinement (v2)
 
 The WorldLoop simulation is structured around four architectural pillars that drive emergent, personality-driven gameplay within a strict **Resource-Safe** container.

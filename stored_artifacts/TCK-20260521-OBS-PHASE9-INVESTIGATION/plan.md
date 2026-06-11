@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260521-OBS-PHASE9-INVESTIGATION
+artifact_type: plan
+tags: [obs, phase9, investigation]
+---
+
 # Phase 9 Implementation Plan — Simulation Mining and AI-Assisted Investigation
 
 ## 1. Goal Description

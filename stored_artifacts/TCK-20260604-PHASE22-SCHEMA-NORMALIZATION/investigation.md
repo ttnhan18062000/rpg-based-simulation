@@ -1,3 +1,13 @@
+---
+status: historical
+layer: guidelines
+authority: P2
+audience: agent
+ticket_id: TCK-20260604-PHASE22-SCHEMA-NORMALIZATION
+artifact_type: investigation
+tags: [phase22, schema, normalization]
+---
+
 # Investigation: Fail-Closed Schema and Authoring-Form Normalization
 
 ## Context & Requirements

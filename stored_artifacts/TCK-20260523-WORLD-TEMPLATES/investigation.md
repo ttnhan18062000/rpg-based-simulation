@@ -1,3 +1,13 @@
+---
+status: historical
+layer: world
+authority: P2
+audience: agent
+ticket_id: TCK-20260523-WORLD-TEMPLATES
+artifact_type: investigation
+tags: [world, templates]
+---
+
 # Investigation: World Template and Recipe System
 
 We need to allow developers/simulation designers to create worlds with procedural recipes instead of manual listings.

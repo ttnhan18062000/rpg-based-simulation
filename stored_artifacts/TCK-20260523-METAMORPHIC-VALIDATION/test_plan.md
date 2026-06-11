@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260523-METAMORPHIC-VALIDATION
+artifact_type: test_plan
+tags: [metamorphic, validation]
+---
+
 # Metamorphic Validation Rules - Test Plan
 
 ## 1. Unit Tests

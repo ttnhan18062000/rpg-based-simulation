@@ -1,3 +1,14 @@
+---
+status: historical
+layer: economy
+authority: P1
+audience: agent
+ticket_id: TCK-20260425-PH6-M3-HARVEST
+phase: done
+date: 2026-04-25
+tags: [ph6, m3, harvest]
+---
+
 # TCK-20260425-PH6-M3-HARVEST
 
 ## Title

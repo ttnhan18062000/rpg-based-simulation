@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: enhance-04-mob-roaming-leash
+phase: done
+date: unknown
+tags: [enhance, mob, roaming, leash]
+---
+
 # Enhance 04: Mob Roaming Leash Distance
 
 ## Summary

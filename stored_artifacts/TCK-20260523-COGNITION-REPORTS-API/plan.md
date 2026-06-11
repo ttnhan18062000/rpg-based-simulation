@@ -1,3 +1,13 @@
+---
+status: historical
+layer: strategy
+authority: P2
+audience: agent
+ticket_id: TCK-20260523-COGNITION-REPORTS-API
+artifact_type: plan
+tags: [cognition, reports, api]
+---
+
 # plan.md - Reports, CLI & API Plan
 
 Integrate cognition evidence in reports/packs, and implement API/CLI endpoints.

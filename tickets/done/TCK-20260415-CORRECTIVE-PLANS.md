@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260415-CORRECTIVE-PLANS
+phase: done
+date: 2026-04-15
+tags: [corrective, plans]
+---
+
 # TCK-20260415-CORRECTIVE-PLANS
 
 ## Title

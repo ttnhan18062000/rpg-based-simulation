@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260424-PH12-M5-AUTHORITY-TRANSITION
+phase: done
+date: 2026-04-24
+tags: [ph12, m5, authority, transition]
+---
+
 # TCK-20260424-PH12-M5-AUTHORITY-TRANSITION
 
 ## Title

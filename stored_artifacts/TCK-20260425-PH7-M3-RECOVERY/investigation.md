@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260425-PH7-M3-RECOVERY
+artifact_type: investigation
+tags: [ph7, m3, recovery]
+---
+
 # Investigation — PH7 M3: Inn, Home, and Class Hall Services
 
 ## Goal

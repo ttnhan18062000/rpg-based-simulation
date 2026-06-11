@@ -1,3 +1,13 @@
+---
+status: historical
+layer: guidelines
+authority: P2
+audience: agent
+ticket_id: TCK-20260523-WORLDSPEC-SCHEMA-INIT
+artifact_type: test_plan
+tags: [worldspec, schema, init]
+---
+
 # Test Plan - WorldSpec Schema Initialization
 
 ## Unit Tests

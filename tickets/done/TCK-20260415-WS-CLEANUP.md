@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260415-WS-CLEANUP
+phase: done
+date: 2026-04-15
+tags: [ws, cleanup]
+---
+
 # TCK-20260415-WS-CLEANUP
 
 ## Title

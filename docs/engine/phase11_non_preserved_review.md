@@ -1,3 +1,10 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: developer
+---
+
 # Phase 11 Non-Preserved Review
 
 This document contains the explicit ratification review for all rows labeled as **DIVERGENT**, **UNSUPPORTED**, or **RETIRED**.

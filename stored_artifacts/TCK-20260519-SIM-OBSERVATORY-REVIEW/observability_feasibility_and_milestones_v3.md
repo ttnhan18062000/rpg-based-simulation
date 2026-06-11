@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: observability
+authority: P2
+audience: agent
+tags: [sim, observatory, review]
+---
+
 # Simulation Observatory Observability Feasibility & Milestone Roadmap (Phase 3 Final Clarification)
 
 This report provides the final feasibility, prioritization, and implementation-ready milestone analysis for the Simulation Observatory observability architecture, fully responding to the requirements defined in `sim_test_init_instruction_3.md`.

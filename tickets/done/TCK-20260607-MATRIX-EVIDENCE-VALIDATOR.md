@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260607-MATRIX-EVIDENCE-VALIDATOR
+phase: done
+date: 2026-06-07
+tags: [matrix, evidence, validator]
+---
+
 # TCK-20260607-MATRIX-EVIDENCE-VALIDATOR
 
 ## Title

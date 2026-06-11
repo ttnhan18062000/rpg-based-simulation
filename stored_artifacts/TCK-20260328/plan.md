@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260328
+artifact_type: plan
+tags: []
+---
+
 # Plan: Backend Restructure (TCK-20260328)
 
 ## Phase 1: Fix Regression Blockers [COMPLETED 🟢]

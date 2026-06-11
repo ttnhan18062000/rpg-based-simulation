@@ -1,3 +1,14 @@
+---
+status: historical
+layer: guidelines
+authority: P1
+audience: agent
+ticket_id: TCK-20260603-PHASE15-REGISTRY-BRIDGE
+phase: done
+date: 2026-06-03
+tags: [phase15, registry, bridge]
+---
+
 # TCK-20260603-PHASE15-REGISTRY-BRIDGE
 
 ## Title

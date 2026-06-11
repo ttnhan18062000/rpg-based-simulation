@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: misc
+authority: P2
+audience: agent
+tags: [ph9, final, closure]
+---
+
 # Phase 9: Strategic & Social Cognition Closure Walkthrough
 
 We have successfully completed the implementation of the remaining Phase 9 milestones, bringing the Strategic and Social Cognition systems to full authoritative maturity.

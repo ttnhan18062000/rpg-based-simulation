@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260606-GRAPH-MODELFIX
+phase: done
+date: 2026-06-06
+tags: [graph, modelfix]
+---
+
 # TCK-20260606-GRAPH-MODELFIX
 
 ## Title

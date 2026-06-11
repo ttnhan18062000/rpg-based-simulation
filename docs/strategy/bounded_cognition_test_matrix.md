@@ -1,3 +1,10 @@
+---
+status: active
+layer: strategy
+authority: P1
+audience: developer
+---
+
 # Test Matrix: Bounded Strategic Cognition
 
 This matrix identifies the test suite segments that prove the operational integrity of the bounded cognition engine.

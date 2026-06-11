@@ -1,3 +1,10 @@
+---
+status: active
+layer: ai
+authority: P1
+audience: developer
+---
+
 # Subagents
 
 Subagents are focused system-prompt files in `.claude/agents/*.md`. Each agent owns exactly one responsibility in the task pipeline. They are invoked by workflows or directly from the main session.

@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260610-KERNEL-TEST-TEARDOWN
+phase: done
+date: 2026-06-10
+tags: [kernel, test, teardown]
+---
+
 # TCK-20260610-KERNEL-TEST-TEARDOWN
 
 ## Title

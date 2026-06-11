@@ -1,3 +1,13 @@
+---
+status: historical
+layer: world
+authority: P2
+audience: agent
+ticket_id: TCK-20260523-WORLD-CLI
+artifact_type: investigation
+tags: [world, cli]
+---
+
 # Investigation: World CLI / Tooling
 
 We want to introduce a standalone command `rpg-world` that operates as a CLI tool for file-based world building.

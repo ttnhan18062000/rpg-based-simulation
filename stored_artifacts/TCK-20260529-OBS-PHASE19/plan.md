@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260529-OBS-PHASE19
+artifact_type: plan
+tags: [obs, phase19]
+---
+
 # Plan - TCK-20260529-OBS-PHASE19
 
 ## Goal

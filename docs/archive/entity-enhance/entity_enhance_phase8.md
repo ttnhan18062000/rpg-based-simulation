@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: core
+original_date: unknown
+---
+
 # Phase 8 — World Emergence / Population-Level Consequences
 
 Phase 1:

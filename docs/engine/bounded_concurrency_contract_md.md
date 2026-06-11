@@ -1,3 +1,10 @@
+---
+status: active
+layer: engine
+authority: P1
+audience: developer
+---
+
 # Bounded Concurrency Contract - [Milestone D]
 
 ## Purpose

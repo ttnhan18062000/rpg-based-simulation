@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: core
+original_date: unknown
+---
+
 # Phase 7 — Party / Social Cooperation Adventure
 
 Phase 1:

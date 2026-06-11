@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260610-REWARD-RELATION-CLASSIFY
+phase: done
+date: 2026-06-10
+tags: [reward, relation, classify]
+---
+
 # TCK-20260610-REWARD-RELATION-CLASSIFY
 
 ## Title

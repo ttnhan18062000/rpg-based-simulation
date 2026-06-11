@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260608-CLASSIFY-DEFEATED-TARGET
+artifact_type: investigation
+tags: [classify, defeated, target]
+---
+
 # Investigation — TCK-20260608-CLASSIFY-DEFEATED-TARGET
 
 ## Current Behavior

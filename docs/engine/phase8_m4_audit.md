@@ -1,3 +1,10 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: developer
+---
+
 # Phase 8 Milestone 4: Environment & World-Interaction Audit
 
 ## 1. Current State of World Interaction

@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: economy
+original_date: unknown
+---
+
 Below is the **full detailed implementation plan for Phase 7**, using the same milestone/task structure style as your Phase 5 reference document in [resource_phase5_implementation_milestone_1.md](sandbox:/mnt/data/resource_phase5_implementation_milestone_1.md), and aligned with the phase direction from [resource_phases.md](sandbox:/mnt/data/resource_phases.md), the substrate-related legacy checklists in [legacy_logic_checklist_part1.md](sandbox:/mnt/data/legacy_logic_checklist_part1.md) and [legacy_logic_checklist_part5.md](sandbox:/mnt/data/legacy_logic_checklist_part5.md), plus the completion standards in [src_principle.md](sandbox:/mnt/data/src_principle.md).
 
 # Detailed Implementation Plan — Phase 7 of `src`

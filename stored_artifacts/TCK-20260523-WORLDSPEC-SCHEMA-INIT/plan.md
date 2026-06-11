@@ -1,3 +1,13 @@
+---
+status: historical
+layer: guidelines
+authority: P2
+audience: agent
+ticket_id: TCK-20260523-WORLDSPEC-SCHEMA-INIT
+artifact_type: plan
+tags: [worldspec, schema, init]
+---
+
 # Plan - WorldSpec Schema Initialization
 
 ## Goal

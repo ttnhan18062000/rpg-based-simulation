@@ -249,3 +249,8 @@ task.md
 # graphify-out/.graphify_root
 # graphify-out/.graphify_python
 graphify-out/*
+
+# Docusaurus
+website/node_modules/
+website/build/
+website/.docusaurus/

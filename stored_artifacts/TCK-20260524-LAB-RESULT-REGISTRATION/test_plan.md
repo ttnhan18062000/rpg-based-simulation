@@ -1,3 +1,13 @@
+---
+status: historical
+layer: strategy
+authority: P2
+audience: agent
+ticket_id: TCK-20260524-LAB-RESULT-REGISTRATION
+artifact_type: test_plan
+tags: [lab, result, registration]
+---
+
 # Test Plan: RegisterSimulationResult Workflow (Milestone 98)
 
 We will implement standard pytest-based integration tests at `tests/integration/lab_agent/test_register_simulation_result_workflow.py`.

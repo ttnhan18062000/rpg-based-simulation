@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260523-LAB-CLI
+artifact_type: test_plan
+tags: [lab, cli]
+---
+
 # Test Plan - Lab CLI (Milestone 81)
 
 We will verify all subcommand executions via command-line simulation tests.

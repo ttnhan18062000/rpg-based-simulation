@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260523-LAB-BUDGET-GUARDRAILS
+artifact_type: plan
+tags: [lab, budget, guardrails]
+---
+
 # Plan - Resource, Storage, and Runtime Guardrails (Milestone 82)
 
 Prevent lab executions from accidentally generating excessive computational work, massive artifact storage footprint, or prolonged execution runtimes. 

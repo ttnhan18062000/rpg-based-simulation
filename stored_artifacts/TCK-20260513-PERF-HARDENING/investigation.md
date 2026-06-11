@@ -1,3 +1,13 @@
+---
+status: historical
+layer: performance
+authority: P2
+audience: agent
+ticket_id: TCK-20260513-PERF-HARDENING
+artifact_type: investigation
+tags: [perf, hardening]
+---
+
 # Performance Investigation
 
 ## Identified Bottlenecks

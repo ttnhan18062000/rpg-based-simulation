@@ -1,3 +1,13 @@
+---
+status: historical
+layer: strategy
+authority: P2
+audience: agent
+ticket_id: TCK-20260518-STRATEGIC-WORK-QUEUE
+artifact_type: investigation
+tags: [strategic, work, queue]
+---
+
 # Investigation: StrategicWorkQueue
 
 `StrategicWorkQueue` narrows candidate entities for strategic intelligence evaluation each tick to avoid O(N) evaluation across all entities when only a few require immediate strategic cognition.

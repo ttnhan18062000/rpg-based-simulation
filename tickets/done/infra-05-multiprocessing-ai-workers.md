@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: infra-05-multiprocessing-ai-workers
+phase: done
+date: unknown
+tags: [infra, multiprocessing, ai, workers]
+---
+
 # infra-05: Distributed AI Workers (RabbitMQ)
 
 ## Objective

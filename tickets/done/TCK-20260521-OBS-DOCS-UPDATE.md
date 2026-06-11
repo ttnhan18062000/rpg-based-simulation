@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260521-OBS-DOCS-UPDATE
+phase: done
+date: 2026-05-21
+tags: [obs, docs, update]
+---
+
 # TCK-20260521-OBS-DOCS-UPDATE
 
 ## Title

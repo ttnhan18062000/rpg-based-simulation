@@ -1,7 +1,13 @@
 ---
-ticket: TCK-20260609-SCENARIO-SETUP-RESOLVER
-phase: test_plan
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260609-SCENARIO-SETUP-RESOLVER
+artifact_type: test_plan
+tags: [scenario, setup, resolver]
 ---
+
 
 # Test Plan
 

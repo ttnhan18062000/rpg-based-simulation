@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: testing
+original_date: unknown
+---
+
 # Test Suite Investigation & Fixing Plan
 
 Generated: 2026-05-28  

@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: misc
+authority: P2
+audience: agent
+tags: [epic, multi, hero]
+---
+
 # Design: Dedicated `HeroLifecycleSystem` Architecture
 
 ## Why the Dedicated System?

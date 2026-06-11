@@ -1,3 +1,14 @@
+---
+status: historical
+layer: strategy
+authority: P1
+audience: agent
+ticket_id: TCK-20260503-HARDEN-COGNITION
+phase: done
+date: 2026-05-03
+tags: [harden, cognition]
+---
+
 # TCK-20260503-HARDEN-COGNITION
 
 ## Title

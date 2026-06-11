@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260518-LEDGER-PATH-REMEDIATION
+artifact_type: investigation
+tags: [ledger, path, remediation]
+---
+
 # Investigation: Release Gate Ledger Discrepancies
 
 ## Root Cause Analysis

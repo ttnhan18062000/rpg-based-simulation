@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: engine
+original_date: unknown
+---
+
 # Phase 4 Implementation Plan — Multi-Run Baseline and Balance Analysis
 
 Phase 3 created the **single-run Observatory flow**:

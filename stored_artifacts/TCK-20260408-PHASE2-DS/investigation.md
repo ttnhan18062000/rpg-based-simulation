@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260408-PHASE2-DS
+artifact_type: investigation
+tags: [phase2, ds]
+---
+
 # Investigation — Phase 2 Design Shift: Social Meaning and Behavioral Realism
 
 ## Codebase Scan Summary

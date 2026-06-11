@@ -1,3 +1,10 @@
+---
+status: active
+layer: engine
+authority: P1
+audience: developer
+---
+
 # Authoritative Mutation Pipeline Contract
 
 This document integrates the **Refinement** and **Apply** contracts into a unified specification for the `src` state transition lifecycle.

@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260527-COG-BELIEF-INTEGRATION
+artifact_type: plan
+tags: [cog, belief, integration]
+---
+
 # Implementation Plan - TCK-20260527-COG-BELIEF-INTEGRATION
 
 We will integrate first-class `beliefs` into the core strategy and updates layer, connect it to guild intel and direct observation, penalize detours based on contradictions, and add detailed event outputs.

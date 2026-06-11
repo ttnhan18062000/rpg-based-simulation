@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260404-STABILIZATION
+artifact_type: investigation
+tags: [stabilization]
+---
+
 # Investigation: AI State Regressions & Model Freezing
 
 ## Context

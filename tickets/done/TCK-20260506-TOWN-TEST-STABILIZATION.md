@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260506-TOWN-TEST-STABILIZATION
+phase: done
+date: 2026-05-06
+tags: [town, test, stabilization]
+---
+
 # TCK-20260506-TOWN-TEST-STABILIZATION
 
 ## Title

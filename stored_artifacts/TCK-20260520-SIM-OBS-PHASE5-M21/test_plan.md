@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260520-SIM-OBS-PHASE5-M21
+artifact_type: test_plan
+tags: [sim, obs, phase5, m21]
+---
+
 # Test Plan - Live Run Status and Snapshot Provider
 
 ## Scope of Testing

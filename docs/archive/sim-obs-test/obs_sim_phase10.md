@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: engine
+original_date: unknown
+---
+
 # Phase 10 — Cognition Graph Observability and Mining
 
 Phase 10 should integrate the previous **strategic cognition graph export** into the Observatory.

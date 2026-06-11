@@ -1,3 +1,10 @@
+---
+status: active
+layer: engine
+authority: P1
+audience: developer
+---
+
 # V2 API, Protocol, and Transport Compatibility Contract
 
 This document defines the supported network and system interfaces for the V2 engine.

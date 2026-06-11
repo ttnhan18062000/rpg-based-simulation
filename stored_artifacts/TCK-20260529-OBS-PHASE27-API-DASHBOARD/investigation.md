@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260529-OBS-PHASE27-API-DASHBOARD
+artifact_type: investigation
+tags: [obs, phase27, api, dashboard]
+---
+
 # Investigation — Phase 27 API & Dashboard Integration
 
 We analyzed:

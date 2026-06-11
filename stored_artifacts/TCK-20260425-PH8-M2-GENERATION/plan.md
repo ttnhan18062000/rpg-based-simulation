@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260425-PH8-M2-GENERATION
+artifact_type: plan
+tags: [ph8, m2, generation]
+---
+
 # PH8 M2: Quest Generation
 
 Implement dynamic, deterministic quest generation for town buildings.

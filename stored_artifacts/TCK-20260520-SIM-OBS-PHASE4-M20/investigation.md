@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260520-SIM-OBS-PHASE4-M20
+artifact_type: investigation
+tags: [sim, obs, phase4, m20]
+---
+
 # Investigation - Scenario-Level Report and CI Gate
 
 ## Code & Data Dependency Scanning

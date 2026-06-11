@@ -1,3 +1,14 @@
+---
+status: historical
+layer: core
+authority: P1
+audience: agent
+ticket_id: TCK-20260410-PH1-STG2-ASPECT-INTEGRATION
+phase: done
+date: 2026-04-10
+tags: [ph1, stg2, aspect, integration]
+---
+
 # Ticket TCK-20260410-PH1-STG2-ASPECT-INTEGRATION
 ## Phase 1 Stage 2: Aspect Integration
 

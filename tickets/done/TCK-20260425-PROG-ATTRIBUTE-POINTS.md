@@ -1,3 +1,14 @@
+---
+status: historical
+layer: core
+authority: P1
+audience: agent
+ticket_id: TCK-20260425-PROG-ATTRIBUTE-POINTS
+phase: done
+date: 2026-04-25
+tags: [prog, attribute, points]
+---
+
 # TCK-20260425-PROG-ATTRIBUTE-POINTS
 
 ## Title

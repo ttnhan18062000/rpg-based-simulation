@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260530-WORLD-PHASE6
+artifact_type: test_plan
+tags: [world, phase6]
+---
+
 # Test Plan: Context-Aware Validation System (Phase 6)
 
 ## Scenarios to Cover

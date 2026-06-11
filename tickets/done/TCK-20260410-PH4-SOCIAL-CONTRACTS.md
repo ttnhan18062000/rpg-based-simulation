@@ -1,3 +1,14 @@
+---
+status: historical
+layer: ai
+authority: P1
+audience: agent
+ticket_id: TCK-20260410-PH4-SOCIAL-CONTRACTS
+phase: done
+date: 2026-04-10
+tags: [ph4, social, contracts]
+---
+
 # TCK-20260410-PH4-SOCIAL-CONTRACTS
 
 ## Title

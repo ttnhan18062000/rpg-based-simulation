@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260607-RESOLVER-BOUNDARY
+phase: done
+date: 2026-06-07
+tags: [resolver, boundary]
+---
+
 # TCK-20260607-RESOLVER-BOUNDARY
 
 ## Title

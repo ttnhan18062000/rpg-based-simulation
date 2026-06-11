@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260409-PH4-STG1-CORE-MODELS
+phase: done
+date: 2026-04-09
+tags: [ph4, stg1, core, models]
+---
+
 # Ticket TCK-20260409-PH4-STG1-CORE-MODELS
 
 ## Tier

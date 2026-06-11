@@ -1,3 +1,14 @@
+---
+status: historical
+layer: performance
+authority: P1
+audience: agent
+ticket_id: TCK-20260513-PERF-HARDENING-DIRTY-SPATIAL
+phase: done
+date: 2026-05-13
+tags: [perf, hardening, dirty, spatial]
+---
+
 # TCK-20260513-PERF-HARDENING-DIRTY-SPATIAL
 
 ## Title

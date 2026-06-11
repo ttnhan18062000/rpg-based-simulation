@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260519-SIM-OBS-PHASE3-M11
+artifact_type: test_plan
+tags: [sim, obs, phase3, m11]
+---
+
 # Test Plan - Milestone 11: Analysis Pipeline Orchestrator
 
 ## Unit Tests (`tests/unit/observability/test_analysis_pipeline.py`)

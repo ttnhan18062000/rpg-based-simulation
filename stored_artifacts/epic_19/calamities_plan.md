@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: misc
+authority: P2
+audience: agent
+tags: [epic_19]
+---
+
 # Calamities (World Boss) System - Phase 2 & 3 Expansion
 
 This document outlines the design and implementation details for the Calamity system, restoring and enhancing Phase 2 (World Evolution) and Phase 3 (Town Resilience) of Epic 19.

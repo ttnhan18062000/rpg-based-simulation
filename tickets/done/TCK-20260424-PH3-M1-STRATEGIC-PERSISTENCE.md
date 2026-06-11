@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260424-PH3-M1-STRATEGIC-PERSISTENCE
+phase: done
+date: 2026-04-24
+tags: [ph3, m1, strategic, persistence]
+---
+
 # TCK-20260424-PH3-M1-STRATEGIC-PERSISTENCE
 
 ## Title

@@ -1,3 +1,14 @@
+---
+status: historical
+layer: strategy
+authority: P1
+audience: agent
+ticket_id: TCK-20260410-STRAT-REFACTOR
+phase: done
+date: 2026-04-10
+tags: [strat, refactor]
+---
+
 # TCK-20260410-STRAT-REFACTOR: Strategic Consistency and Authoritative Closure
 
 **Request Summary**: Execute [Improvement Phase 1] from `thinking_implementation_improvement.md`. Reconcile `StrategicUpdate` schema to support blockers, eliminate live-mutation shortcuts in `SocialStateApplicator` and `BeliefService`, and harden strategic snapshot isolation.

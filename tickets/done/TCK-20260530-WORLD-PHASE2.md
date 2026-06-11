@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260530-WORLD-PHASE2
+phase: done
+date: 2026-05-30
+tags: [world, phase2]
+---
+
 # TCK-20260530-WORLD-PHASE2
 
 ## Title

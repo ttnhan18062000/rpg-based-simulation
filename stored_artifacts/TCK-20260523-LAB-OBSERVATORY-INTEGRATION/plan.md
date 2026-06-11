@@ -1,3 +1,13 @@
+---
+status: historical
+layer: observability
+authority: P2
+audience: agent
+ticket_id: TCK-20260523-LAB-OBSERVATORY-INTEGRATION
+artifact_type: plan
+tags: [lab, observatory, integration]
+---
+
 # Plan - Milestone 79 Observatory Integration
 
 ## Objective

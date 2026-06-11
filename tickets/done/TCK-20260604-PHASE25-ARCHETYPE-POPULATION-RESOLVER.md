@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260604-PHASE25-ARCHETYPE-POPULATION-RESOLVER
+phase: done
+date: 2026-06-04
+tags: [phase25, archetype, population, resolver]
+---
+
 # TCK-20260604-PHASE25-ARCHETYPE-POPULATION-RESOLVER
 
 ## Title

@@ -1,3 +1,13 @@
+---
+status: historical
+layer: economy
+authority: P2
+audience: agent
+ticket_id: TCK-20260418-RESOURCE-CERTIFICATION-M9
+artifact_type: investigation
+tags: [resource, certification, m9]
+---
+
 # Investigation: Milestone 9 Certification Harness
 
 ## Objective

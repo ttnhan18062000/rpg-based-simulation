@@ -1,3 +1,14 @@
+---
+status: historical
+layer: combat
+authority: P1
+audience: agent
+ticket_id: TCK-20260607-COMBAT-REWARD-SERVICE
+phase: done
+date: 2026-06-07
+tags: [combat, reward, service]
+---
+
 # TCK-20260607-COMBAT-REWARD-SERVICE
 
 ## Title

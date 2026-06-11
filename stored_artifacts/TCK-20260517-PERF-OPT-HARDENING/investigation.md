@@ -1,3 +1,13 @@
+---
+status: historical
+layer: performance
+authority: P2
+audience: agent
+ticket_id: TCK-20260517-PERF-OPT-HARDENING
+artifact_type: investigation
+tags: [perf, opt, hardening]
+---
+
 # Investigation Notes: Performance Optimization Hardening
 
 ## Overview

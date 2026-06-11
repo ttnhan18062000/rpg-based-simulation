@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260529-OBS-PHASE20
+artifact_type: investigation
+tags: [obs, phase20]
+---
+
 # Investigation - TCK-20260529-OBS-PHASE20
 
 ## Key Findings

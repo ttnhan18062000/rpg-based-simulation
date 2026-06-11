@@ -1,3 +1,10 @@
+---
+status: active
+layer: ai
+authority: P1
+audience: developer
+---
+
 # Workflows
 
 Workflows are multi-agent orchestration scripts in `.claude/workflows/*.js`. They coordinate subagents across phases, carry structured state between steps, and enforce hard gates (architecture review, test pass, DoD check) before proceeding.

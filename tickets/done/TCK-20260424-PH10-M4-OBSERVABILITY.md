@@ -1,3 +1,14 @@
+---
+status: historical
+layer: observability
+authority: P1
+audience: agent
+ticket_id: TCK-20260424-PH10-M4-OBSERVABILITY
+phase: done
+date: 2026-04-24
+tags: [ph10, m4, observability]
+---
+
 # TCK-20260424-PH10-M4-OBSERVABILITY
 
 ## Title

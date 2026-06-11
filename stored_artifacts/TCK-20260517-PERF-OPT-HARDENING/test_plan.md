@@ -1,3 +1,13 @@
+---
+status: historical
+layer: performance
+authority: P2
+audience: agent
+ticket_id: TCK-20260517-PERF-OPT-HARDENING
+artifact_type: test_plan
+tags: [perf, opt, hardening]
+---
+
 # Test Plan: Performance Optimization Hardening
 
 ## Automated Unit Tests

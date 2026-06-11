@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260325-FINAL_E2E_SMOKE
+phase: done
+date: 2026-03-25
+tags: [final_e2e_smoke]
+---
+
 # TCK-20260325-FINAL_E2E_SMOKE: Final E2E Test Stabilization
 
 ## Description

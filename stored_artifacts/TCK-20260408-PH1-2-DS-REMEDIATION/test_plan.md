@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260408-PH1-2-DS-REMEDIATION
+artifact_type: test_plan
+tags: [ph1, ds, remediation]
+---
+
 # Test Plan for TCK-20260408-PH1-2-DS-REMEDIATION
 
 ## Existing Tests to Run

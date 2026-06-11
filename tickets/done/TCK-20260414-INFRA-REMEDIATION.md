@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260414-INFRA-REMEDIATION
+phase: done
+date: 2026-04-14
+tags: [infra, remediation]
+---
+
 # TCK-20260414-INFRA-REMEDIATION
 
 ## Title

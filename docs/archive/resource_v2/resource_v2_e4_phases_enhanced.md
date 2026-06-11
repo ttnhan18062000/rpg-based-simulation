@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: economy
+original_date: unknown
+---
+
 # Implementation Plan Enhance4 — System-Wide Semantic Coverage
 
 Target checklist coverage after E4: **~75–85%**. This phase moves beyond individual subsystem fixes to establish a provable, machine-readable truth baseline and complete the missing high-level RPG loops (Determinism, Combat Matrix, Strategic Cognition, Social Contracts, Progression, World Lifecycle, and Observability).

@@ -1,3 +1,13 @@
+---
+status: historical
+layer: core
+authority: P2
+audience: agent
+ticket_id: TCK-20260609-ARCHETYPE-ENTITY-FACTORY
+artifact_type: test_plan
+tags: [archetype, entity, factory]
+---
+
 # Test Plan — TCK-20260609-ARCHETYPE-ENTITY-FACTORY
 
 ## Command

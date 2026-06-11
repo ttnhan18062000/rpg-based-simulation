@@ -1,3 +1,13 @@
+---
+status: historical
+layer: combat
+authority: P2
+audience: agent
+ticket_id: TCK-20260418-COMBAT-MOVEMENT-CORRECTION
+artifact_type: plan
+tags: [combat, movement, correction]
+---
+
 # Milestone 7: Structured Reason Migration & Documentation Integrity
 
 This milestone finalizes the Combat and Movement Overhaul by hardening the observability contract. It ensures that every action decision — whether accepted or rejected — is traceable via a structured `ActionReason` schema, and that these outcomes are aggregated into the Arena reports for deep stability auditing.

@@ -1,3 +1,14 @@
+---
+status: historical
+layer: observability
+authority: P1
+audience: agent
+ticket_id: TCK-20260518-OPTIMIZATION-PROFILES
+phase: done
+date: 2026-05-18
+tags: [optimization, profiles]
+---
+
 # TCK-20260518-OPTIMIZATION-PROFILES
 
 ## Title

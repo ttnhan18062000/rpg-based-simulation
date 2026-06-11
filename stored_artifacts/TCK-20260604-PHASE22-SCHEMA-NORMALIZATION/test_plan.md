@@ -1,3 +1,13 @@
+---
+status: historical
+layer: guidelines
+authority: P2
+audience: agent
+ticket_id: TCK-20260604-PHASE22-SCHEMA-NORMALIZATION
+artifact_type: test_plan
+tags: [phase22, schema, normalization]
+---
+
 # Test Plan: Phase 22 Schema Fail-Closed and Shorthand Normalization
 
 ## Unit Tests

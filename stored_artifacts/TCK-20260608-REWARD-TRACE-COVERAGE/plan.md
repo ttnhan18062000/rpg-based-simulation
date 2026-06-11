@@ -1,3 +1,13 @@
+---
+status: historical
+layer: observability
+authority: P2
+audience: agent
+ticket_id: TCK-20260608-REWARD-TRACE-COVERAGE
+artifact_type: plan
+tags: [reward, trace, coverage]
+---
+
 # Plan — TCK-20260608-REWARD-TRACE-COVERAGE
 
 ## Steps

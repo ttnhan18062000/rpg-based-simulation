@@ -1,3 +1,13 @@
+---
+status: historical
+layer: economy
+authority: P2
+audience: agent
+ticket_id: TCK-20260422-RESOURCE-PH7-M1-T4-ENTRY-PACKAGE
+artifact_type: investigation
+tags: [resource, ph7, m1, t4, entry, package]
+---
+
 # Investigation: Phase 7 Entry Package
 
 ## Purpose

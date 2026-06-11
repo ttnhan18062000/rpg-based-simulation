@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260609-CONTENT-PACK-FORMAT
+phase: done
+date: 2026-06-09
+tags: [content, pack, format]
+---
+
 # TCK-20260609-CONTENT-PACK-FORMAT
 
 ## Title

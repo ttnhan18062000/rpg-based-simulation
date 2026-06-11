@@ -1,3 +1,13 @@
+---
+status: historical
+layer: world
+authority: P2
+audience: agent
+ticket_id: TCK-20260523-WORLD-REPO-INIT
+artifact_type: plan
+tags: [world, repo, init]
+---
+
 # Implementation Plan: World Repository & Versioning
 
 Establish a robust, secure repository layer for managing, loading, listing, and saving WorldSpecs from YAML files.

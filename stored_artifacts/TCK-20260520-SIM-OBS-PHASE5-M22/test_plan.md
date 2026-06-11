@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260520-SIM-OBS-PHASE5-M22
+artifact_type: test_plan
+tags: [sim, obs, phase5, m22]
+---
+
 # Test Plan - Entity Inspector V1 (Milestone 22)
 
 ## 1. Unit Tests (`tests/unit/observability/test_entity_inspector.py`)

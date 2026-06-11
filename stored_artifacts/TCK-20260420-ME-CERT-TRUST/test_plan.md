@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260420-ME-CERT-TRUST
+artifact_type: test_plan
+tags: [me, cert, trust]
+---
+
 # Test Plan - Milestone E Certification Hardening
 
 ## Scenario Matrix Verification

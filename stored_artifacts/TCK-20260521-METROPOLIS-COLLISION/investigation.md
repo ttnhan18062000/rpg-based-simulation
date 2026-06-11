@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260521-METROPOLIS-COLLISION
+artifact_type: investigation
+tags: [metropolis, collision]
+---
+
 # Investigation Notes - Metropolis Collision Debugging
 
 ## Problem Description

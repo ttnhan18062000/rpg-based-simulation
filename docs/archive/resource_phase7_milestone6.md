@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: economy
+original_date: unknown
+---
+
 # [Milestone 6] - Replay-Visible Deterministic State Closure and Phase 7 Exit Package
 
 ## [Milestone Description]

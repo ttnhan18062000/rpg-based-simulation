@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260605-PHASE28-PERSPECTIVE-RELATION-MIGRATION
+artifact_type: investigation
+tags: [phase28, perspective, relation, migration]
+---
+
 # Investigation - Phase 28 (Perspective/relation usage and legacy-safe migration)
 
 ## Factions and Perspectives

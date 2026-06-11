@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260419-MD-TASK2-HARDEN-PROTOCOL-AND-COMMIT-LAW
+phase: done
+date: 2026-04-19
+tags: [md, task2, harden, protocol, and, commit, law]
+---
+
 # TCK-20260419-MD-TASK2-HARDEN-PROTOCOL-AND-COMMIT-LAW
 
 ## Title

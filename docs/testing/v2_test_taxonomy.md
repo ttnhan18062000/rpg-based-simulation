@@ -1,3 +1,10 @@
+---
+status: active
+layer: testing
+authority: P1
+audience: developer
+---
+
 # V2 Test Taxonomy and Proof Standards
 
 To ensure the V2 RPG Engine is a truthful, deterministic port of the legacy `src`, all tests in the `tests/parity/` suite must adhere to this taxonomy.

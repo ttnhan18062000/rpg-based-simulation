@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260603-PHASE17-GENERATOR-REGATING
+artifact_type: investigation
+tags: [phase17, generator, regating]
+---
+
 # Investigation - Phase 17 (Procedural Generator Re-gating)
 
 ## 1. Context Analysis & Research

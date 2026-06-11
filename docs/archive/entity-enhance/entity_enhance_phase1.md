@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: core
+original_date: unknown
+---
+
 # Phase 1 — World Capability Foundation
 
 ## Phase 1 goal

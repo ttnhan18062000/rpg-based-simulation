@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260606-PHASE22-1-2-REPAIR
+phase: done
+date: 2026-06-06
+tags: [phase22, repair]
+---
+
 # TCK-20260606-PHASE22-1-2-REPAIR
 
 ## Title

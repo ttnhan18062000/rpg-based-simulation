@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: world
+original_date: unknown
+---
+
 # Implementation Plan: Remaining Phase 20–28 Repair
 
 ## 1. Goal

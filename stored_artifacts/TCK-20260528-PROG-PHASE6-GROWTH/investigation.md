@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260528-PROG-PHASE6-GROWTH
+artifact_type: investigation
+tags: [prog, phase6, growth]
+---
+
 # Investigation: Phase 6 — Progression / Equipment / Reward Conversion
 
 This document tracks technical findings and codebase integration points for Phase 6.

@@ -1,3 +1,13 @@
+---
+status: historical
+layer: guidelines
+authority: P2
+audience: agent
+ticket_id: TCK-20260607-MON-SCHEMA
+artifact_type: investigation
+tags: [mon, schema]
+---
+
 # Investigation — TCK-20260607-MON-SCHEMA
 
 ## Current Behavior

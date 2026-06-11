@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: economy
+original_date: unknown
+---
+
 Below is the **full detailed implementation plan for Phase 12**, in the same milestone/task structure style as your earlier implementation docs, and aligned with the Phase 12 high-level plan plus the ratification-first sequencing from [resource_phases.md](sandbox:/mnt/data/resource_phases.md) and the support/cutover discipline from [src_principle.md](sandbox:/mnt/data/src_principle.md).
 
 # Detailed Implementation Plan — Phase 12 of `src`

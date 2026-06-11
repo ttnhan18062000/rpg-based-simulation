@@ -1,3 +1,13 @@
+---
+status: historical
+layer: economy
+authority: P2
+audience: agent
+ticket_id: TCK-20260425-PH6-M3-HARVEST
+artifact_type: plan
+tags: [ph6, m3, harvest]
+---
+
 # PH6 M3: Harvesting and Resource Nodes
 
 Implement deterministic channeled harvesting and resource node lifecycle.

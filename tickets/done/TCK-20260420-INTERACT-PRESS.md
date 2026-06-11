@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260420-INTERACT-PRESS
+phase: done
+date: 2026-04-20
+tags: [interact, press]
+---
+
 # TCK-20260420-INTERACT-PRESS
 
 ## Title

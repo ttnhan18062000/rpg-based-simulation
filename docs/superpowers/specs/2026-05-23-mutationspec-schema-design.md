@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: misc
+original_date: 2026-05-23
+---
+
 # MutationSpec Schema Design Spec (Milestone 84)
 
 This specification defines the schema, Pydantic models, file parser loader, and pluggable validator framework for `MutationSpec` (Milestone 84 under Phase 13 - Mutation and Balance Lab). 

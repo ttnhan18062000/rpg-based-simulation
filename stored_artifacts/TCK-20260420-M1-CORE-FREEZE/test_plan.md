@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260420-M1-CORE-FREEZE
+artifact_type: test_plan
+tags: [m1, core, freeze]
+---
+
 # Test Plan - Core Substrate Freeze (M1)
 
 ## Strategy

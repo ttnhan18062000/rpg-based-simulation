@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: economy
+original_date: unknown
+---
+
 Using the latest design pattern in your uploaded source, the current solution is:
 
 ```text

@@ -1,3 +1,10 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: developer
+---
+
 # Phase 7 Exit Package: Substrate Closure
 
 ## 1. Executive Summary

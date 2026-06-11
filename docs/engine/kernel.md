@@ -1,3 +1,10 @@
+---
+status: active
+layer: engine
+authority: P1
+audience: developer
+---
+
 # Simulation Kernel Loop
 
 The `Kernel` is the heartbeat of the RPG V2 Engine. It orchestrates the deterministic, tick-based execution of all simulation systems.

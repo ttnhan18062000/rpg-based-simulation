@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260610-CAT-REL-099-FIX
+artifact_type: investigation
+tags: [cat, rel, fix]
+---
+
 # Investigation — TCK-20260610-CAT-REL-099-FIX
 
 ## Current Behavior

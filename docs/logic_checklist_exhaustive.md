@@ -1,3 +1,10 @@
+---
+status: active
+layer: guidelines
+authority: P1
+audience: developer
+---
+
 # RPG Core Logic Checklist — Fresh V2 Re-Audit
 
 > Fresh audit note: This version resets all previous verification marks/comments and re-marks completed logic only from the currently uploaded `all_src_updated(5).py` and `all_test_updated(5).py`. Historical `VERIFIED`, `RECOVERED`, and prior `[x]` marks were not reused as evidence.

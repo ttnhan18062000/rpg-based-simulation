@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260520-SIM-OBS-M29-M33
+artifact_type: plan
+tags: [sim, obs, m29, m33]
+---
+
 # Plan: Observability Event Streaming, standalone anomaly workers, historical API, and retention policies
 
 This plan outlines the architecture, code locations, and testing paths for the remaining Milestones of the RPG Simulation Live Observatory Phase 6.

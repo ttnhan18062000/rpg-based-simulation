@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260419-MC-TASK6-FINAL-DOC-PACK
+phase: done
+date: 2026-04-19
+tags: [mc, task6, final, doc, pack]
+---
+
 # TCK-20260419-MC-TASK6-FINAL-DOC-PACK
 
 ## Title

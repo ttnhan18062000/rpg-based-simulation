@@ -1,3 +1,14 @@
+---
+status: historical
+layer: performance
+authority: P1
+audience: agent
+ticket_id: TCK-20260518-OPTIMIZATION-PROOF-REPORT
+phase: done
+date: 2026-05-18
+tags: [optimization, proof, report]
+---
+
 # TCK-20260518-OPTIMIZATION-PROOF-REPORT
 
 ## Title

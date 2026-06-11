@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260517-CANDIDATE-SELECTOR
+phase: done
+date: 2026-05-17
+tags: [candidate, selector]
+---
+
 # TCK-20260517-CANDIDATE-SELECTOR
 
 ## Title

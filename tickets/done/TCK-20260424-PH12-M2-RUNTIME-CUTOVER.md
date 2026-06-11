@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260424-PH12-M2-RUNTIME-CUTOVER
+phase: done
+date: 2026-04-24
+tags: [ph12, m2, runtime, cutover]
+---
+
 # TCK-20260424-PH12-M2-RUNTIME-CUTOVER
 
 ## Title

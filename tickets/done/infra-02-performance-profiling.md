@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: infra-02-performance-profiling
+phase: done
+date: unknown
+tags: [infra, performance, profiling]
+---
+
 # Infra 02: Performance Profiling Infrastructure
 
 ## Summary

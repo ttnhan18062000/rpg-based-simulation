@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260524-LAB-SESSION-MODEL
+artifact_type: plan
+tags: [lab, session, model]
+---
+
 # Implementation Plan: Lab Session Model and Storage (M92)
 
 We will introduce a dedicated module `src/lab/session.py` containing Pydantic models for the session manifest and the main controller `LabSessionStore`.

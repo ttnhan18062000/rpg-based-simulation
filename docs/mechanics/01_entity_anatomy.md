@@ -1,3 +1,11 @@
+---
+status: authoritative
+layer: mechanics
+authority: P0
+audience: developer
+last_verified: 2026-06-06
+---
+
 # Chapter 1: Entity Anatomy
 
 This chapter defines the biological, physical, and developmental laws that govern every actor within the simulation. 

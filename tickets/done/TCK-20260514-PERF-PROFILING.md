@@ -1,3 +1,14 @@
+---
+status: historical
+layer: observability
+authority: P1
+audience: agent
+ticket_id: TCK-20260514-PERF-PROFILING
+phase: done
+date: 2026-05-14
+tags: [perf, profiling]
+---
+
 # TCK-20260514-PERF-PROFILING
 
 ## Title

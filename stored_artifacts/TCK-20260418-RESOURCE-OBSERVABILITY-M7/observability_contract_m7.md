@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: economy
+authority: P2
+audience: agent
+tags: [resource, observability, m7]
+---
+
 # Observability Contract (Milestone 7)
 
 ## Purpose

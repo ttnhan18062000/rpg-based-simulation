@@ -1,3 +1,13 @@
+---
+status: historical
+layer: strategy
+authority: P2
+audience: agent
+ticket_id: TCK-20260523-COGNITION-FEATURE-MINING
+artifact_type: plan
+tags: [cognition, feature, mining]
+---
+
 # plan.md - Feature & Pattern Mining
 
 Extract strategic features and run behavior pattern mining rules across simulation ticks/runs.

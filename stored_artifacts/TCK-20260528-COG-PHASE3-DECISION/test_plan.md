@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260528-COG-PHASE3-DECISION
+artifact_type: test_plan
+tags: [cog, phase3, decision]
+---
+
 # Phase 3 Test Plan
 
 ## Unit Testing

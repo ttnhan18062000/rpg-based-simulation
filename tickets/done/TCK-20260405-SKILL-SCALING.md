@@ -1,3 +1,14 @@
+---
+status: historical
+layer: ai
+authority: P1
+audience: agent
+ticket_id: TCK-20260405-SKILL-SCALING
+phase: done
+date: 2026-04-05
+tags: [skill, scaling]
+---
+
 # TCK-20260405-SKILL-SCALING: Unified Skill Damage Resolution
 
 ## Status: INPROGRESS

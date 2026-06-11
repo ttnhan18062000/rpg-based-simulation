@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260501-V2-ENGINE-HARDENING
+phase: done
+date: 2026-05-01
+tags: [v2, engine, hardening]
+---
+
 # TCK-20260501-V2-ENGINE-HARDENING
 
 ## Title

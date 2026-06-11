@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260528-PROG-PHASE6-GROWTH
+artifact_type: test_plan
+tags: [prog, phase6, growth]
+---
+
 # Test Plan: Phase 6 — Progression / Equipment / Reward Conversion
 
 This document coordinates the verification plan for the Phase 6 implementation.

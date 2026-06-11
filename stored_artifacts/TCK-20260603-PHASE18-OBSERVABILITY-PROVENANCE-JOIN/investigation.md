@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260603-PHASE18-OBSERVABILITY-PROVENANCE-JOIN
+artifact_type: investigation
+tags: [phase18, observability, provenance, join]
+---
+
 # Investigation Notes: Phase 18 Observability Provenance Join
 
 ## Context & Findings

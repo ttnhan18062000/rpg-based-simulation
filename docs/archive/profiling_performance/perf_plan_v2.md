@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: performance
+original_date: unknown
+---
+
 Assuming the previous milestones are already implemented, the next phase should move from **optimization framework** to **deeper engine restructuring**.
 
 The first wave gave you:

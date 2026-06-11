@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: design-02-revise-ticking-mechanism
+phase: done
+date: unknown
+tags: [design, revise, ticking, mechanism]
+---
+
 # Design 02: Revise Ticking Mechanism
 
 ## Summary

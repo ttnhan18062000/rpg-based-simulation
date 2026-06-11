@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260607-V2-SERVICE-ASSEMBLY-GAP
+artifact_type: test_plan
+tags: [v2, service, assembly, gap]
+---
+
 # Test Plan — TCK-20260607-V2-SERVICE-ASSEMBLY-GAP
 
 ## Tests added

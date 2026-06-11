@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260528-COG-PHASE4-COMBAT
+phase: done
+date: 2026-05-28
+tags: [cog, phase4, combat]
+---
+
 # TCK-20260528-COG-PHASE4-COMBAT
 
 ## Title

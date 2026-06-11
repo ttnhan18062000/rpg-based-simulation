@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260331-RUNTIME-INTEGRITY
+artifact_type: test_plan
+tags: [runtime, integrity]
+---
+
 # Test Plan: TCK-20260331-RUNTIME-INTEGRITY
 
 ## Strategy

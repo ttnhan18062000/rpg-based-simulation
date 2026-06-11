@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: observability
+authority: P2
+audience: agent
+tags: [ph10, m4, observability]
+---
+
 # V2 Observability & Operational Artifact Contract
 
 This document defines the supported operational surface (logs, metrics, reports, replays) for the V2 engine.

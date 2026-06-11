@@ -1,3 +1,14 @@
+---
+status: historical
+layer: core
+authority: P1
+audience: agent
+ticket_id: TCK-20260528-ENTITY-ENHANCE-FUSION
+phase: done
+date: 2026-05-28
+tags: [entity, enhance, fusion]
+---
+
 # TCK-20260528-ENTITY-ENHANCE-FUSION
 
 ## Title

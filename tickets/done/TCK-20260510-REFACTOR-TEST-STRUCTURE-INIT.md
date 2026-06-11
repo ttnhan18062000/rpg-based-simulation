@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260510-REFACTOR-TEST-STRUCTURE-INIT
+phase: done
+date: 2026-05-10
+tags: [refactor, test, structure, init]
+---
+
 # TCK-20260510-REFACTOR-TEST-STRUCTURE-INIT
 
 ## Title

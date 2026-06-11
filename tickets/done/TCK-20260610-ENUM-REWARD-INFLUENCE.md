@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260610-ENUM-REWARD-INFLUENCE
+phase: done
+date: 2026-06-10
+tags: [enum, reward, influence]
+---
+
 # TCK-20260610-ENUM-REWARD-INFLUENCE
 
 ## Title

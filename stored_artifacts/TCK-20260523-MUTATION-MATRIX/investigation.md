@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260523-MUTATION-MATRIX
+artifact_type: investigation
+tags: [mutation, matrix]
+---
+
 # Investigation - Variant Matrix Builder
 
 ## Combinatorics

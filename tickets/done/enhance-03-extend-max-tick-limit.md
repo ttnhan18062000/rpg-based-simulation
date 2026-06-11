@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: enhance-03-extend-max-tick-limit
+phase: done
+date: unknown
+tags: [enhance, extend, max, tick, limit]
+---
+
 # Enhance 03: Extend Simulation Maximum Tick to 50000
 
 ## Summary

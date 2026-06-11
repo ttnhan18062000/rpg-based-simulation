@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260508-ECON-PIPELINE-FIX
+artifact_type: investigation
+tags: [econ, pipeline, fix]
+---
+
 # Investigation - TCK-20260508-ECON-PIPELINE-FIX
 
 ## Initial Findings

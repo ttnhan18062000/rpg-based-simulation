@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260408-FIXGROUPBIAS
+artifact_type: plan
+tags: [fixgroupbias]
+---
+
 # Plan: TCK-20260408-FIXGROUPBIAS
 
 ## Implementation Steps

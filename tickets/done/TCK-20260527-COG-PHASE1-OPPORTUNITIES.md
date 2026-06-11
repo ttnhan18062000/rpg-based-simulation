@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260527-COG-PHASE1-OPPORTUNITIES
+phase: done
+date: 2026-05-27
+tags: [cog, phase1, opportunities]
+---
+
 # TCK-20260527-COG-PHASE1-OPPORTUNITIES
 
 ## Title

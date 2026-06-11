@@ -1,3 +1,10 @@
+---
+status: active
+layer: testing
+authority: P1
+audience: developer
+---
+
 # No-Duplication Test Policy
 
 **Status:** Active  

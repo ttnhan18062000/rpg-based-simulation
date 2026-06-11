@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: misc
+original_date: 2026-05-23
+---
+
 # ScenarioSpec Design Document — Milestone 75
 
 ## Goal

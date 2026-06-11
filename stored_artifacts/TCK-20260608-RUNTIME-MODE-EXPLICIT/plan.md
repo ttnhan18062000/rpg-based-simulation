@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260608-RUNTIME-MODE-EXPLICIT
+artifact_type: plan
+tags: [runtime, mode, explicit]
+---
+
 # Plan — TCK-20260608-RUNTIME-MODE-EXPLICIT
 
 1. Replace `RuntimeContentMode` enum in `src/core/modes.py` — remove MIGRATION/V2, add four new values.

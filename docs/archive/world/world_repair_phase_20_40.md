@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: world
+original_date: unknown
+---
+
 Below is the deeper breakdown of the remaining issues and how I would repair them.
 
 I’m focusing on **actionable implementation gaps**, not general code quality.

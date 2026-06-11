@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260607-ARCHETYPE-METADATA-EXPLICIT
+artifact_type: investigation
+tags: [archetype, metadata, explicit]
+---
+
 # Investigation — TCK-20260607-ARCHETYPE-METADATA-EXPLICIT
 
 ## Current Behavior

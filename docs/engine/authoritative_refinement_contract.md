@@ -1,3 +1,10 @@
+---
+status: active
+layer: engine
+authority: P1
+audience: developer
+---
+
 # Authoritative Refinement Contract
 
 This document defines the **Refinement** stage of the `src` authoritative mutation pipeline.

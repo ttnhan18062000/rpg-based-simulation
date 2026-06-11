@@ -1,4 +1,4 @@
-.PHONY: help install install-py install-fe build dev serve stop clean lint profile-api
+.PHONY: help install install-py install-fe build dev serve stop clean lint profile-api docs-serve docs-build docs-registry docs-artifacts
 
 # Default
 help: ## Show available commands
@@ -131,6 +131,20 @@ lint: ## Run linters (frontend)
 
 typecheck: ## Run TypeScript type checking
 	cd frontend && npx tsc --noEmit
+
+# ── Documentation Site ───────────────────────────────────
+
+docs-artifacts: ## Generate stored_artifacts index pages
+	python3 tools/generate_artifact_pages.py
+
+docs-serve: docs-artifacts ## Start Docusaurus dev server (http://localhost:3000)
+	cd website && npm run start
+
+docs-build: docs-artifacts ## Build Docusaurus static site to website/build/
+	cd website && npm run build
+
+docs-registry: ## Regenerate docs/REGISTRY.yaml from frontmatter
+	python3 tools/generate_registry.py
 
 # ── Agent Monitoring ─────────────────────────────────────
 

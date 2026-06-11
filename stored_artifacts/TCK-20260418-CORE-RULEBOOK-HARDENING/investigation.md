@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260418-CORE-RULEBOOK-HARDENING
+artifact_type: investigation
+tags: [core, rulebook, hardening]
+---
+
 # Investigation: Rulebook and Quiet-Tick Bypasses
 
 ## Audit Findings

@@ -1,3 +1,13 @@
+---
+status: historical
+layer: economy
+authority: P2
+audience: agent
+ticket_id: TCK-20260428-RESOURCE-QUEST-TRANSACTIONS
+artifact_type: test_plan
+tags: [resource, quest, transactions]
+---
+
 # Test Plan: Quest Reward Transactions
 
 ## Objective

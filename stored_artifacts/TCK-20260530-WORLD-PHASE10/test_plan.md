@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260530-WORLD-PHASE10
+artifact_type: test_plan
+tags: [world, phase10]
+---
+
 # Test Plan - Observability Join and Migration Cleanup (Phase 10)
 
 Verify schema extensions, dry-run local and ClickHouse ingestion pipeline enhancements, and post-run provenance lookup queries.

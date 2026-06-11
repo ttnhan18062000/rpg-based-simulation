@@ -1,3 +1,14 @@
+---
+status: historical
+layer: ai
+authority: P1
+audience: agent
+ticket_id: TCK-20260503-SOCIAL-COORDINATION
+phase: done
+date: 2026-05-03
+tags: [social, coordination]
+---
+
 # TCK-20260503-SOCIAL-COORDINATION
 
 ## Title

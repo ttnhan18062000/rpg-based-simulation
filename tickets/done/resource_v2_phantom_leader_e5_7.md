@@ -1,3 +1,14 @@
+---
+status: historical
+layer: economy
+authority: P1
+audience: agent
+ticket_id: resource_v2_phantom_leader_e5_7
+phase: done
+date: unknown
+tags: [resource_v2_phantom_leader_e5_7]
+---
+
 # TCK-20260503-PHANTOM-LEADER-HARDENING
 
 ## Title

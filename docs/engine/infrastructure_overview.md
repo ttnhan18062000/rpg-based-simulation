@@ -1,3 +1,10 @@
+---
+status: active
+layer: engine
+authority: P1
+audience: developer
+---
+
 # RPG Simulation Ecosystem: Component Map & Architecture Directory
 
 This document serves as the master structural directory for the entire RPG Simulation Ecosystem. It maps the relationships between the Core Source Code (`src/`), the Test Suites (`tests/`), the Interactive Web Client (`frontend/`), and the Distributed Infrastructure Stack.

@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: economy
+authority: P2
+audience: agent
+tags: [second, pack, theme]
+---
+
 # Theme Selection — swamp_border_pack
 
 ## Selected Theme

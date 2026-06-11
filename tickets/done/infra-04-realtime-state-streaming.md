@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: infra-04-realtime-state-streaming
+phase: done
+date: unknown
+tags: [infra, realtime, state, streaming]
+---
+
 # [DONE] infra-04: Realtime State Streaming (WebSockets / SSE)
 
 ## Objective

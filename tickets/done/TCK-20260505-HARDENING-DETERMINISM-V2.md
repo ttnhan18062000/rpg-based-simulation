@@ -1,3 +1,14 @@
+---
+status: historical
+layer: simulation
+authority: P1
+audience: agent
+ticket_id: TCK-20260505-HARDENING-DETERMINISM-V2
+phase: done
+date: 2026-05-05
+tags: [hardening, determinism, v2]
+---
+
 # TCK-20260505-HARDENING-DETERMINISM-V2
 
 ## Title

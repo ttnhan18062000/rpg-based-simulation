@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260425-PH8-M1-QUESTS
+phase: done
+date: 2026-04-25
+tags: [ph8, m1, quests]
+---
+
 # TCK-20260425-PH8-M1-QUESTS
 
 ## Title

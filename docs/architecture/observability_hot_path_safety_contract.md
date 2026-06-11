@@ -1,3 +1,10 @@
+---
+status: active
+layer: architecture
+authority: P1
+audience: developer
+---
+
 # Observability Hot-Path Safety Contract
 
 This contract establishes strict rules governing code execution inside the simulation loop (the "hot path"). Developers and automated static analysis tools must enforce this contract to prevent observability from causing unacceptable CPU/memory overhead or breaking engine determinism.

@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260519-SIM-OBS-HARD-LAW
+phase: done
+date: 2026-05-19
+tags: [sim, obs, hard, law]
+---
+
 # TCK-20260519-SIM-OBS-HARD-LAW
 
 ## Title

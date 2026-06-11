@@ -1,3 +1,13 @@
+---
+status: historical
+layer: guidelines
+authority: P2
+audience: agent
+ticket_id: TCK-20260604-PHASE21-FAMILY-REGISTRY
+artifact_type: plan
+tags: [phase21, family, registry]
+---
+
 # Implementation Plan: Phase 21 Family Registry & Strict Load Report
 
 ## Proposed Changes

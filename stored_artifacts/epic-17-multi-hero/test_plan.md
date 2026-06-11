@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: epic-17-multi-hero
+artifact_type: test_plan
+tags: [epic, multi, hero]
+---
+
 # Test Plan: Epic 17 Multi-Hero
 
 ## Scope

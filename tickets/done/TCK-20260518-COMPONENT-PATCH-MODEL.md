@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260518-COMPONENT-PATCH-MODEL
+phase: done
+date: 2026-05-18
+tags: [component, patch, model]
+---
+
 # TCK-20260518-COMPONENT-PATCH-MODEL
 
 ## Title

@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260606-PHASE24-RESOLVER-EVIDENCE
+phase: done
+date: 2026-06-06
+tags: [phase24, resolver, evidence]
+---
+
 # TCK-20260606-PHASE24-RESOLVER-EVIDENCE
 
 ## Title

@@ -1,3 +1,13 @@
+---
+status: historical
+layer: strategy
+authority: P2
+audience: agent
+ticket_id: TCK-20260322-GRAND_STRATEGY
+artifact_type: plan
+tags: [grand_strategy]
+---
+
 # Milestone 11: Grand Strategy - Faction Wars & Territory Conquest
 
 This milestone introduces a strategic overlay where factions compete for regional control, enter formal war states, and engage in siege mechanics.

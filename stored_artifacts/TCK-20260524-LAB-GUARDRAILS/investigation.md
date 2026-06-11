@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260524-LAB-GUARDRAILS
+artifact_type: investigation
+tags: [lab, guardrails]
+---
+
 # Investigation: Token, Time, and Storage Guardrails
 
 ## Context budget guardrails

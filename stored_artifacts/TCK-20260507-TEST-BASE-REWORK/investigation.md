@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260507-TEST-BASE-REWORK
+artifact_type: investigation
+tags: [test, base, rework]
+---
+
 # Investigation: Legacy Builder API in Tests
 
 ## Findings

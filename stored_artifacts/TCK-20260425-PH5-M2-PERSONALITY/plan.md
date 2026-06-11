@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260425-PH5-M2-PERSONALITY
+artifact_type: plan
+tags: [ph5, m2, personality]
+---
+
 # PH5 M2: Personality, Boredom, and Life Stage
 
 Implement modifiers that add psychological depth to entity decision making.

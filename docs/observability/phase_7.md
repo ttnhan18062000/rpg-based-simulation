@@ -1,3 +1,10 @@
+---
+status: historical
+layer: observability
+authority: P2
+audience: developer
+---
+
 # Phase 7: Production-Grade Observatory Platform
 
 This document describes the architectural specifications, processing pipelines, and data layout introduced in **Phase 7: Production-Grade Observatory Platform**. This phase introduced production-scale components (ClickHouse database warehouse, Redis Streams adapters, detached anomaly processing, webhook alert routing), turning the Observatory into an enterprise-ready laboratory analysis platform.

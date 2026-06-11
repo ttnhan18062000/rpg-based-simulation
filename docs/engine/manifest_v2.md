@@ -1,3 +1,10 @@
+---
+status: active
+layer: engine
+authority: P1
+audience: developer
+---
+
 # Phase 11 Engine Manifest (V2 Hardened Baseline)
 
 This document tracks the authoritative "Hardened" status of the V2 engine subsystems as of Phase 11.

@@ -1,3 +1,10 @@
+---
+status: active
+layer: engine
+authority: P1
+audience: developer
+---
+
 # Bounded Tactical Engagement Contract (Phase 8)
 
 This document defines the authoritative logic for local tactical decisions in the `src` engine.

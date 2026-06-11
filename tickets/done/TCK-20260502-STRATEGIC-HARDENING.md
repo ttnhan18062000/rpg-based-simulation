@@ -1,3 +1,14 @@
+---
+status: historical
+layer: strategy
+authority: P1
+audience: agent
+ticket_id: TCK-20260502-STRATEGIC-HARDENING
+phase: done
+date: 2026-05-02
+tags: [strategic, hardening]
+---
+
 # TCK-20260502-STRATEGIC-HARDENING
 
 ## Title

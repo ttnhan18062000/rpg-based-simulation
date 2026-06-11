@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260607-NORMALIZEDMODULE-TYPING
+artifact_type: plan
+tags: [normalizedmodule, typing]
+---
+
 # Implementation Plan — TCK-20260607-NORMALIZEDMODULE-TYPING
 
 ## Accepted Types

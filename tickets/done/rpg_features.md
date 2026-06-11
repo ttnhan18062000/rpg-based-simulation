@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: rpg_features
+phase: done
+date: unknown
+tags: [rpg_features]
+---
+
 - add RPG attributes like STR, DEF, AGI, INT, etc. (deep), and make it affect the damage and defense (fomulas)
 - level up now is based on experience, make it affect the attributes (attribute cap, which is max value of attribute can increase in base, not count from external sources like equipments or potions)
 - level up also gain minor increase in base attributes instantly, but much less than the attribute cap (i.e., 5 attributes directly but 30 in cap, so it can be used to train)

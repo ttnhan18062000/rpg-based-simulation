@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260521-OBS-PHASE9-INVESTIGATION
+artifact_type: test_plan
+tags: [obs, phase9, investigation]
+---
+
 # Phase 9 Verification and Testing Plan
 
 ## 1. Testing Strategy

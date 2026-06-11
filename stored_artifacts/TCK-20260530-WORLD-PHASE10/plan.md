@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260530-WORLD-PHASE10
+artifact_type: plan
+tags: [world, phase10]
+---
+
 # Implementation Plan - Observability Join and Migration Cleanup (Phase 10)
 
 Connect world assembly provenance sidecars to post-run telemetry observability, and formally document remaining legacy migration debt.

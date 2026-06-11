@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: update_rpg_system
+phase: done
+date: unknown
+tags: [update_rpg_system]
+---
+
 Rework the RPG system with the changes below (applied for all entities),
 Think about the core aspects: balance, reality, complexity and deep mechanical, make it a deep RPG simulation. Brainstorming about this deeply, using reference from: games, books, novels, etc.
 - add magical damage and related stats (MATK, MDEF, etc)

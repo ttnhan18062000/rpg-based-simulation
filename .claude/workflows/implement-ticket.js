@@ -72,7 +72,19 @@ Steps:
 3. Scan stored_artifacts/ for prior investigations in the same area.
 4. Read relevant source files to understand current state.
 5. Check docs/parity_ledger/ for entries that overlap with the proposed scope.
-6. Draft the ticket at tickets/inprogress/TCK-20260606-SHORT-SCOPE.md with all required sections:
+6. Draft the ticket at tickets/inprogress/TCK-YYYYMMDD-SHORT-SCOPE.md.
+   The file MUST begin with a YAML frontmatter block (before the # heading):
+   ---
+   status: active
+   layer: <infer from scope — use LAYER_VALUES in tools/validate_frontmatter.py>
+   authority: P1
+   audience: agent
+   ticket_id: TCK-YYYYMMDD-SHORT-SCOPE
+   phase: open
+   date: YYYY-MM-DD
+   tags: []
+   ---
+   Then the markdown body with all required sections:
    Title, Status (OPEN), Tier (infer from request: hotfix/standard/epic), Type (infer: bug/feature/refactor/chore/repair), Priority (infer or default P1),
    Request Summary, Scope, Out of Scope, Acceptance Criteria,
    Related Tickets, Related Docs, Related Stored Artifacts, Related Code Areas,
@@ -555,7 +567,8 @@ await agent(
 Complete these steps in order:
 
 1. Update ${ticketInfo.ticket_path}:
-   - Set Status to DONE
+   - In the YAML frontmatter block at the top of the file: set `phase: done` and `status: historical`
+   - Set Status to DONE in the ## Status section
    - Fill in "Completion Summary" section: what was implemented, tests added, files changed
    - Fill in "Files Changed" section if not already done
 

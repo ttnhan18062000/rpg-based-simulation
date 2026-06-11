@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260521-OBS-DOCS-UPDATE
+artifact_type: plan
+tags: [obs, docs, update]
+---
+
 # Plan - Documentation Updates for Phase 1 to Phase 8 Observability
 
 ## Goal

@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: engine
+original_date: unknown
+---
+
 # Phase 5 Implementation Plan — Live Observatory and Developer Inspection
 
 Phase 5 should add **live inspection**, but still avoid heavy infrastructure.

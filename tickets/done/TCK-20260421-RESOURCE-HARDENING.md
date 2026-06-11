@@ -1,3 +1,14 @@
+---
+status: historical
+layer: economy
+authority: P1
+audience: agent
+ticket_id: TCK-20260421-RESOURCE-HARDENING
+phase: done
+date: 2026-04-21
+tags: [resource, hardening]
+---
+
 # TCK-20260421-RESOURCE-HARDENING
 
 ## Title

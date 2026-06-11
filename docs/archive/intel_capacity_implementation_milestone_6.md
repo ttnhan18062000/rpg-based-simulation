@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: strategy
+original_date: unknown
+---
+
 [Phase 6] - Expose Bounded Cognition and Full Strategy State through API and UI
 
 [Phase Description]

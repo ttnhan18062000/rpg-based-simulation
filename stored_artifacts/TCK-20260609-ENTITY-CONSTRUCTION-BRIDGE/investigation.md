@@ -1,3 +1,13 @@
+---
+status: historical
+layer: core
+authority: P2
+audience: agent
+ticket_id: TCK-20260609-ENTITY-CONSTRUCTION-BRIDGE
+artifact_type: investigation
+tags: [entity, construction, bridge]
+---
+
 # Investigation
 ResolvedEntityArchetype has nested profile objects (stat_profile, inventory_profile, etc.) with CatalogBaseDefinition.id.
 TraitDefinition.id and ThemeDefinition.id are the string IDs for traits/themes.

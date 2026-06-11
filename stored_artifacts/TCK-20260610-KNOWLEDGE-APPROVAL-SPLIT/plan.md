@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260610-KNOWLEDGE-APPROVAL-SPLIT
+artifact_type: plan
+tags: [knowledge, approval, split]
+---
+
 # Plan — TCK-20260610-KNOWLEDGE-APPROVAL-SPLIT
 
 ## Step 1 — Update workflow return code (src/lab/workflows.py)

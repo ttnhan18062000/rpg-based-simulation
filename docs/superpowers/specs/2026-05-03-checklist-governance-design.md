@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: engine
+original_date: 2026-05-03
+---
+
 # Design Spec: Checklist Governance & Stable IDs
 
 ## Goal

@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: strategy
+original_date: unknown
+---
+
 [Phase 7] - Extend Replay, Graph Export, and Headless Regression for Bounded Cognition
 
 [Phase Description]

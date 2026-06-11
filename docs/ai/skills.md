@@ -1,3 +1,10 @@
+---
+status: active
+layer: ai
+authority: P1
+audience: developer
+---
+
 # Skills
 
 Skills are slash commands that trigger focused, session-scoped task patterns. They are defined in `.claude/skills/*/SKILL.md` (project-level) or built into Claude Code (system-level).

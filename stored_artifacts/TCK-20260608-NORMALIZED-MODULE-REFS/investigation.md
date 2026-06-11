@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260608-NORMALIZED-MODULE-REFS
+artifact_type: investigation
+tags: [normalized, module, refs]
+---
+
 # Investigation — TCK-20260608-NORMALIZED-MODULE-REFS
 
 ## Findings

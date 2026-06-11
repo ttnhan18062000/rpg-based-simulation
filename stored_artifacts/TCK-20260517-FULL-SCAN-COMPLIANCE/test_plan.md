@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260517-FULL-SCAN-COMPLIANCE
+artifact_type: test_plan
+tags: [full, scan, compliance]
+---
+
 # Milestone 2: Full-Scan Phase Compliance Test Plan
 
 ## 1. Automated Test Execution

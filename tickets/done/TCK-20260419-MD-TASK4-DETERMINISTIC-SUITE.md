@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260419-MD-TASK4-DETERMINISTIC-SUITE
+phase: done
+date: 2026-04-19
+tags: [md, task4, deterministic, suite]
+---
+
 # TCK-20260419-MD-TASK4-DETERMINISTIC-SUITE
 
 ## Title

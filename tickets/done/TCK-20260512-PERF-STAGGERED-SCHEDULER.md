@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260512-PERF-STAGGERED-SCHEDULER
+phase: done
+date: 2026-05-12
+tags: [perf, staggered, scheduler]
+---
+
 # TCK-20260512-PERF-STAGGERED-SCHEDULER
 
 ## Title

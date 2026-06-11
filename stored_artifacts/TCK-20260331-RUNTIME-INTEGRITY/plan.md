@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260331-RUNTIME-INTEGRITY
+artifact_type: plan
+tags: [runtime, integrity]
+---
+
 # Implementation Plan: TCK-20260331-RUNTIME-INTEGRITY
 
 ## Step-by-Step Approach

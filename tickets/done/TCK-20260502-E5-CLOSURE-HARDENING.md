@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260502-E5-CLOSURE-HARDENING
+phase: done
+date: 2026-05-02
+tags: [e5, closure, hardening]
+---
+
 # TCK-20260502-E5-CLOSURE-HARDENING
 
 ## Title

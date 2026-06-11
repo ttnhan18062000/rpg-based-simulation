@@ -1,3 +1,14 @@
+---
+status: historical
+layer: strategy
+authority: P1
+audience: agent
+ticket_id: TCK-20260409-PH1-STG2-STRATEGIC-APPRAISAL
+phase: done
+date: 2026-04-09
+tags: [ph1, stg2, strategic, appraisal]
+---
+
 # Ticket TCK-20260409-PH2-STRATEGIC-APPRAISAL
 
 ## Tier

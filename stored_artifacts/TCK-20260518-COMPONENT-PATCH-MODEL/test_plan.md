@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260518-COMPONENT-PATCH-MODEL
+artifact_type: test_plan
+tags: [component, patch, model]
+---
+
 # Test Plan: Component-Level Patch Model
 
 ## Objectives

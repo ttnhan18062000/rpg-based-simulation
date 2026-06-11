@@ -1,3 +1,13 @@
+---
+status: historical
+layer: strategy
+authority: P2
+audience: agent
+ticket_id: TCK-20260524-LAB-RESULT-REGISTRATION
+artifact_type: investigation
+tags: [lab, result, registration]
+---
+
 # Investigation: RegisterSimulationResult Workflow (Milestone 98)
 
 ## 1. Analysis of `LabResultStore` and Completed Runs

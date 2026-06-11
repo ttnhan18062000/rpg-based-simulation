@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: economy
+original_date: unknown
+---
+
 # [Milestone 6] - Phase 8 Exit Package and Phase 9 Handoff Baseline
 
 ## [Milestone Description]

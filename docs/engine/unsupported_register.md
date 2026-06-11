@@ -1,3 +1,10 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: developer
+---
+
 # RPG Engine: Unsupported Logic Register
 
 This document tracks legacy RPG logic that is explicitly NOT supported in V2. Every row in the logic checklist marked as `UNSUPPORTED` must link to an entry here explaining why the behavior is omitted.

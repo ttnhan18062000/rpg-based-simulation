@@ -1,3 +1,14 @@
+---
+status: historical
+layer: observability
+authority: P1
+audience: agent
+ticket_id: TCK-20260425-REPLAY-INSPECTION
+phase: done
+date: 2026-04-25
+tags: [replay, inspection]
+---
+
 # TCK-20260425-REPLAY-INSPECTION
 
 ## Title

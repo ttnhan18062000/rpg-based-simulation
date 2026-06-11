@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260524-LAB-REQUEST-CONTEXT
+artifact_type: test_plan
+tags: [lab, request, context]
+---
+
 # Test Plan: Input Request Model and Context Pack Builder (M94-M95)
 
 We will implement isolated unit tests in `tests/unit/lab_agent/test_workflow_request_model.py` and `tests/unit/lab_agent/test_context_pack_builder.py`.

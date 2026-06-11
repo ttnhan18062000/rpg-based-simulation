@@ -1,3 +1,14 @@
+---
+status: historical
+layer: economy
+authority: P1
+audience: agent
+ticket_id: TCK-20260422-RESOURCE-PH7-M1-T3-DOWNSTREAM-BLOCKERS
+phase: done
+date: 2026-04-22
+tags: [resource, ph7, m1, t3, downstream, blockers]
+---
+
 # TCK-20260422-RESOURCE-PH7-M1-T3-DOWNSTREAM-BLOCKERS
 
 ## Title

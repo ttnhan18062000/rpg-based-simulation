@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260520-SIM-OBS-M34
+artifact_type: investigation
+tags: [sim, obs, m34]
+---
+
 # Investigation: Warehouse Schema and Adapter Interface
 
 ## 1. Existing Local Artifact Architecture

@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260520-SIM-OBS-PHASE4-M19
+artifact_type: plan
+tags: [sim, obs, phase4, m19]
+---
+
 # Implementation Plan: Minimal Balance Envelope Config
 
 ## Proposed Changes

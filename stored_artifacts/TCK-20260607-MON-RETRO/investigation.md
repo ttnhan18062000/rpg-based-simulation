@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260607-MON-RETRO
+artifact_type: investigation
+tags: [mon, retro]
+---
+
 # Investigation — TCK-20260607-MON-RETRO
 
 ## Current Behavior

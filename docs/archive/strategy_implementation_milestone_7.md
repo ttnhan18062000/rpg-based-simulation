@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: strategy
+original_date: unknown
+---
+
 Good. Milestone 7 is the point where all the previous work stops being architecture on paper and becomes a **real regression path**.
 
 Up to Milestone 6, you can have a strong strategic engine and a canonical cognition export. That still is not enough. Until you can run a minimal production-like path, execute the real engine, produce artifacts, and assert invariants end to end, you are still testing components more than the system. Milestone 7 is where “run CLI -> engine execution -> result” becomes an actual proof harness rather than a vague hope. That is consistent with the implementation notes that frame the headless run plus export artifact as the right final-system validation path.

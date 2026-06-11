@@ -1,7 +1,13 @@
 ---
-ticket: TCK-20260609-MIGRATION-CI-LANES
-phase: investigation
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260609-MIGRATION-CI-LANES
+artifact_type: investigation
+tags: [migration, ci, lanes]
 ---
+
 
 # Investigation
 

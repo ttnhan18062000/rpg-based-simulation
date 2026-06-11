@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260506-TOWN-TEST-STABILIZATION
+artifact_type: test_plan
+tags: [town, test, stabilization]
+---
+
 # Test Plan - Town Test Stabilization
 
 ## Strategy

@@ -1,3 +1,14 @@
+---
+status: historical
+layer: economy
+authority: P1
+audience: agent
+ticket_id: TCK-20260418-RESOURCE-STABILIZATION-M10
+phase: done
+date: 2026-04-18
+tags: [resource, stabilization, m10]
+---
+
 # TCK-20260418-RESOURCE-STABILIZATION-M10
 
 ## Title

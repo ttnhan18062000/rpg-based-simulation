@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260518-APPLY-PATH-REDESIGN
+artifact_type: investigation
+tags: [apply, path, redesign]
+---
+
 # Investigation - ApplyPath Execution Analysis
 
 ## Current Flow

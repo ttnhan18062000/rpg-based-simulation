@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260608-ADAPTER-HEURISTIC-USAGE
+phase: done
+date: 2026-06-08
+tags: [adapter, heuristic, usage]
+---
+
 # TCK-20260608-ADAPTER-HEURISTIC-USAGE
 
 ## Title

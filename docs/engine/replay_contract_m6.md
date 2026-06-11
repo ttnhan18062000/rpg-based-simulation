@@ -1,3 +1,10 @@
+---
+status: active
+layer: engine
+authority: P1
+audience: developer
+---
+
 # Replay and Bounded Persistence Contract (Milestone 6)
 
 ## Purpose

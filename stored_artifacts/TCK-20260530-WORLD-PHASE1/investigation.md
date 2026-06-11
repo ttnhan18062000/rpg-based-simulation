@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260530-WORLD-PHASE1
+artifact_type: investigation
+tags: [world, phase1]
+---
+
 # Phase 1 Investigation Notes
 
 We need to check:

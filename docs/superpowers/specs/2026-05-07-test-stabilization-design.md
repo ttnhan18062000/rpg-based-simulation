@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: testing
+original_date: 2026-05-07
+---
+
 # Design Spec: RPG Simulation Test Stabilization (2026-05-07)
 
 ## 1. Goal Description

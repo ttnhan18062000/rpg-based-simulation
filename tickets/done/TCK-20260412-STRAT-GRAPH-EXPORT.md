@@ -1,3 +1,14 @@
+---
+status: historical
+layer: strategy
+authority: P1
+audience: agent
+ticket_id: TCK-20260412-STRAT-GRAPH-EXPORT
+phase: done
+date: 2026-04-12
+tags: [strat, graph, export]
+---
+
 # TCK-20260412-STRAT-GRAPH-EXPORT
 
 ## Title

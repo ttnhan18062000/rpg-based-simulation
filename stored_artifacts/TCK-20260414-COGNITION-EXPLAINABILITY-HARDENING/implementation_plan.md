@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: strategy
+authority: P2
+audience: agent
+tags: [cognition, explainability, hardening]
+---
+
 # Cognition Explainability Hardening Plan
 
 This plan addresses the remaining gaps in strategic cognition derivation and explainability listed in `TCK-20260414-COGNITION-EXPLAINABILITY-HARDENING`.

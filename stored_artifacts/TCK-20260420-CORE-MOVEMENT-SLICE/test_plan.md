@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260420-CORE-MOVEMENT-SLICE
+artifact_type: test_plan
+tags: [core, movement, slice]
+---
+
+
 # Test Plan - TCK-20260420-CORE-MOVEMENT-SLICE
 
 ## Verification Strategy

@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260501-E4-PHASE-ONE
+artifact_type: plan
+tags: [e4, phase, one]
+---
+
 # Implementation Plan - Phase E4.1 Determinism
 
 ## Goal

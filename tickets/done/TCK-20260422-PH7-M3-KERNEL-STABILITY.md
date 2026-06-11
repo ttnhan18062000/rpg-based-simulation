@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260422-PH7-M3-KERNEL-STABILITY
+phase: done
+date: 2026-04-22
+tags: [ph7, m3, kernel, stability]
+---
+
 # TCK-20260422-PH7-M3-KERNEL-STABILITY
 
 ## Title

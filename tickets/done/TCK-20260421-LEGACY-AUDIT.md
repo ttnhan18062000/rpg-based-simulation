@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260421-LEGACY-AUDIT
+phase: done
+date: 2026-04-21
+tags: [legacy, audit]
+---
+
 # TCK-20260421-LEGACY-AUDIT
 
 ## Title

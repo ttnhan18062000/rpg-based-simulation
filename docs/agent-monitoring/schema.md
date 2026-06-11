@@ -1,3 +1,11 @@
+---
+status: active
+layer: observability
+authority: P1
+audience: developer
+tags: [agent-monitoring, schema]
+---
+
 # Agent Monitoring — Schema Reference
 
 Two append-only JSONL files, joined by `run_id`.

@@ -1,3 +1,13 @@
+---
+status: historical
+layer: observability
+authority: P2
+audience: agent
+ticket_id: TCK-20260324-DEBUG_TESTS
+artifact_type: investigation
+tags: [debug_tests]
+---
+
 # Investigation: WorldLoop Test Failures
 
 ## Summary of Failures

@@ -1,3 +1,13 @@
+---
+status: historical
+layer: strategy
+authority: P2
+audience: agent
+ticket_id: TCK-20260413-INTEL-CAPACITY-IMPLEMENTATION
+artifact_type: investigation
+tags: [intel, capacity, implementation]
+---
+
 # Investigation: Intel Capacity Foundation
 
 ## Current State Analysis

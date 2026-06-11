@@ -1,3 +1,13 @@
+---
+status: historical
+layer: strategy
+authority: P2
+audience: agent
+ticket_id: TCK-20260523-COGNITION-DIFF-EVENTS
+artifact_type: plan
+tags: [cognition, diff, events]
+---
+
 # plan.md - Graph Diffing & Event Mapping
 
 Compute deterministic differences between cognition graph snapshots and translate them to high-severity SimulationEvents.

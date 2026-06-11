@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260603-PHASE19-LEGACY-CLEANUP
+phase: done
+date: 2026-06-03
+tags: [phase19, legacy, cleanup]
+---
+
 # TCK-20260603-PHASE19-LEGACY-CLEANUP
 
 ## Title

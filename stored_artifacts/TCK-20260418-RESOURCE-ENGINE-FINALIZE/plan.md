@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260418-RESOURCE-ENGINE-FINALIZE
+artifact_type: plan
+tags: [resource, engine, finalize]
+---
+
 # Project Documentation Close-out (Milestones 1-10)
 
 This plan covers the final documentation hardening of the simulation engine. Every milestone document (1-10) will be updated to reflect full project completion, marking all checklists as done and adding "Implementation Comments" that link the theoretical tasks to the actual code/test artifacts in `src` and `tests`.

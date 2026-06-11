@@ -1,3 +1,13 @@
+---
+status: historical
+layer: strategy
+authority: P2
+audience: agent
+ticket_id: TCK-20260410-PH3-STRATEGIC-KNOWLEDGE
+artifact_type: test_plan
+tags: [ph3, strategic, knowledge]
+---
+
 # Test Plan: Phase 3 Strategic Knowledge
 
 ## Strategic Uncertainty & Detours (Integration)

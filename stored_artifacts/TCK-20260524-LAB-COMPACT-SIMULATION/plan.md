@@ -1,3 +1,13 @@
+---
+status: historical
+layer: simulation
+authority: P2
+audience: agent
+ticket_id: TCK-20260524-LAB-COMPACT-SIMULATION
+artifact_type: plan
+tags: [lab, compact, simulation]
+---
+
 # Implementation Plan - M99 CompactSimulationData Workflow
 
 This plan outlines the design and implementation of the `CompactSimulationDataWorkflow` to convert heavy raw simulation logs and scorecards into a highly structured, token-efficient series of compact digests and indexes.

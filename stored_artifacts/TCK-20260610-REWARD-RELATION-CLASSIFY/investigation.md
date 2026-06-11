@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260610-REWARD-RELATION-CLASSIFY
+artifact_type: investigation
+tags: [reward, relation, classify]
+---
+
 # Investigation — TCK-20260610-REWARD-RELATION-CLASSIFY
 
 ## Problem

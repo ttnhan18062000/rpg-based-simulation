@@ -1,7 +1,13 @@
 ---
-ticket: TCK-20260609-SCENARIO-SETUP-RESOLVER
-phase: investigation
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260609-SCENARIO-SETUP-RESOLVER
+artifact_type: investigation
+tags: [scenario, setup, resolver]
 ---
+
 
 # Investigation
 

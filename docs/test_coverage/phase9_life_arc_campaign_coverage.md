@@ -1,3 +1,10 @@
+---
+status: historical
+layer: testing
+authority: P2
+audience: developer
+---
+
 # Phase 9 — Long-Run Life-Arc Scenario Campaigns Coverage Audit
 
 This audit documents the coverage boundaries between existing long-run/arena stress tests and Phase 9 semantic campaigns.

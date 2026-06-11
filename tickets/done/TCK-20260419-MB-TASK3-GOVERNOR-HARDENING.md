@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260419-MB-TASK3-GOVERNOR-HARDENING
+phase: done
+date: 2026-04-19
+tags: [mb, task3, governor, hardening]
+---
+
 # TCK-20260419-MB-TASK3-GOVERNOR-HARDENING
 
 ## Title

@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260524-LAB-ENHANCEMENT
+artifact_type: plan
+tags: [lab, enhancement]
+---
+
 # Implementation Plan - Milestone 101 Enhancement Proposals
 
 ## Goal Description

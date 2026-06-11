@@ -1,3 +1,10 @@
+---
+status: active
+layer: systems
+authority: P1
+audience: developer
+---
+
 # RPG Simulation — Formal State Machine Specifications
 
 > **Generated from codebase analysis** — `src/ai/states/`, `src/ai/brain.py`, `src/ai/goals/`, `src/systems/`, `src/engine/`, `src/core/models/enums.py`

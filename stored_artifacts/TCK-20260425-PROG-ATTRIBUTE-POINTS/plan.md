@@ -1,3 +1,13 @@
+---
+status: historical
+layer: core
+authority: P2
+audience: agent
+ticket_id: TCK-20260425-PROG-ATTRIBUTE-POINTS
+artifact_type: plan
+tags: [prog, attribute, points]
+---
+
 # Implementation Plan — PH8 M5: Attribute Points and Manual Growth
 
 This milestone implements the Attribute Point (AP) system and manual growth for Heroes, while maintaining automatic scaling for Monsters.

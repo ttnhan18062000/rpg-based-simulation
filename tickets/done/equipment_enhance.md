@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: equipment_enhance
+phase: done
+date: unknown
+tags: [equipment_enhance]
+---
+
 - all entities should have ability to equip items, with better stats in their inventory
 - the hero have a house, which he can store items in it, have a cap but very large compared to inventory, they consider sell, store or throw away, this should in decision logic (probability) with current logic of thinking
 - the hero have a complex logics of whether they should use the money, they consider the current state of the hero, such as gold, inventory, house, etc.

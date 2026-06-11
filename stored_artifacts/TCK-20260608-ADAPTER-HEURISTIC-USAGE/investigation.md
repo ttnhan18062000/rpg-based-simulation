@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260608-ADAPTER-HEURISTIC-USAGE
+artifact_type: investigation
+tags: [adapter, heuristic, usage]
+---
+
 # Investigation — TCK-20260608-ADAPTER-HEURISTIC-USAGE
 
 ## Current Behavior

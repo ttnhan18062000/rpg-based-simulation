@@ -1,3 +1,13 @@
+---
+status: historical
+layer: performance
+authority: P2
+audience: agent
+ticket_id: TCK-20260517-PERF-OPT-HARDENING
+artifact_type: plan
+tags: [perf, opt, hardening]
+---
+
 # Implementation Plan: Performance Optimization Hardening
 
 ## Milestone 1: Fix `force_full_scan` as a real reference path

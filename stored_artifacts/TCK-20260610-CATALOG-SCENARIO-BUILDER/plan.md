@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260610-CATALOG-SCENARIO-BUILDER
+artifact_type: plan
+tags: [catalog, scenario, builder]
+---
+
 # Plan — TCK-20260610-CATALOG-SCENARIO-BUILDER
 
 ## Ordered Steps

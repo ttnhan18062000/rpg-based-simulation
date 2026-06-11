@@ -1,3 +1,13 @@
+---
+status: historical
+layer: ai
+authority: P2
+audience: agent
+ticket_id: TCK-20260527-COG-SOCIAL-CONTRACTS
+artifact_type: investigation
+tags: [cog, social, contracts]
+---
+
 # Investigation: Social Contracts Integration
 
 Our investigation of the social system revealed:

@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260425-PH6-M5-STORAGE
+phase: done
+date: 2026-04-25
+tags: [ph6, m5, storage]
+---
+
 # TCK-20260425-PH6-M5-STORAGE
 
 ## Title

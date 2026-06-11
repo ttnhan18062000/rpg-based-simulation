@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260530-PHASE14-LEGACY-EXPORT
+phase: done
+date: 2026-05-30
+tags: [phase14, legacy, export]
+---
+
 # TCK-20260530-PHASE14-LEGACY-EXPORT
 
 ## Title

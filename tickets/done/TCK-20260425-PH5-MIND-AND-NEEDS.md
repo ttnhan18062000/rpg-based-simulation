@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260425-PH5-MIND-AND-NEEDS
+phase: done
+date: 2026-04-25
+tags: [ph5, mind, and, needs]
+---
+
 # TCK-20260425-PH5-MIND-AND-NEEDS
 
 ## Title

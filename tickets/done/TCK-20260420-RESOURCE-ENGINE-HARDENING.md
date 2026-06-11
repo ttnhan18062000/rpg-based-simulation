@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260420-RESOURCE-ENGINE-HARDENING
+phase: done
+date: 2026-04-20
+tags: [resource, engine, hardening]
+---
+
 # TCK-20260420-RESOURCE-ENGINE-HARDENING
 
 ## Title

@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260603-PHASE17-GENERATOR-REGATING
+phase: done
+date: 2026-06-03
+tags: [phase17, generator, regating]
+---
+
 # TCK-20260603-PHASE17-GENERATOR-REGATING
 
 ## Title

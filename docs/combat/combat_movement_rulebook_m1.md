@@ -1,3 +1,10 @@
+---
+status: historical
+layer: combat
+authority: P2
+audience: developer
+---
+
 # Combat-Movement Rulebook — Milestone 1
 
 ## 1. Purpose

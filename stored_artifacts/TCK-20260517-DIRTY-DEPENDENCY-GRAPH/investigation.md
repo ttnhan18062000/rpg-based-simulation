@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260517-DIRTY-DEPENDENCY-GRAPH
+artifact_type: investigation
+tags: [dirty, dependency, graph]
+---
+
 # Architectural Investigation: Dirty Dependency Graph
 
 ## Current State Analysis

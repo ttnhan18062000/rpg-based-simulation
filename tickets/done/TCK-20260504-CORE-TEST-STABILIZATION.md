@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260504-CORE-TEST-STABILIZATION
+phase: done
+date: 2026-05-04
+tags: [core, test, stabilization]
+---
+
 # TCK-20260504-CORE-TEST-STABILIZATION
 
 ## Title

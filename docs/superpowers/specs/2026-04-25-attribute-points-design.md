@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: core
+original_date: 2026-04-25
+---
+
 # Design Spec — PH8 M5: Attribute Points and Manual Growth
 
 ## Status

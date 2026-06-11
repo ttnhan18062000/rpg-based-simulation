@@ -1,3 +1,13 @@
+---
+status: historical
+layer: observability
+authority: P2
+audience: agent
+ticket_id: TCK-20260519-SIM-OBS-PROM-METRICS
+artifact_type: test_plan
+tags: [sim, obs, prom, metrics]
+---
+
 # Observability Milestone 1 Test Plan
 
 Exhaustive verification of Prometheus `/metrics` exporter route and metric computation.

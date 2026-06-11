@@ -1,3 +1,14 @@
+---
+status: historical
+layer: guidelines
+authority: P1
+audience: agent
+ticket_id: TCK-20260523-WORLDSPEC-SCHEMA-INIT
+phase: done
+date: 2026-05-23
+tags: [worldspec, schema, init]
+---
+
 # TCK-20260523-WORLDSPEC-SCHEMA-INIT
 
 ## Title

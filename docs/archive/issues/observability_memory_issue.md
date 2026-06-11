@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: observability
+original_date: unknown
+---
+
 ### Investigation Report: Pytest instability, memory growth, and worker-thread accumulation
 
 Prepared for: Engineering management / issue tracking

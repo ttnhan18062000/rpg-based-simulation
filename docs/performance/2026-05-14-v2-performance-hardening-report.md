@@ -1,3 +1,10 @@
+---
+status: historical
+layer: performance
+authority: P2
+audience: developer
+---
+
 # Performance Report: V2 RPG Engine Hardening (2026-05-14)
 
 ## Status: CERTIFIED (Phase 3)

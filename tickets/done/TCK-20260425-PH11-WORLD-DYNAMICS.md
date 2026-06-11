@@ -1,3 +1,14 @@
+---
+status: historical
+layer: world
+authority: P1
+audience: agent
+ticket_id: TCK-20260425-PH11-WORLD-DYNAMICS
+phase: done
+date: 2026-04-25
+tags: [ph11, world, dynamics]
+---
+
 # TCK-20260425-PH11-WORLD-DYNAMICS
 
 ## Title

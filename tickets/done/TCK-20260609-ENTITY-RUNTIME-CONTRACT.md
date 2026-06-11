@@ -1,3 +1,14 @@
+---
+status: historical
+layer: core
+authority: P1
+audience: agent
+ticket_id: TCK-20260609-ENTITY-RUNTIME-CONTRACT
+phase: done
+date: 2026-06-09
+tags: [entity, runtime, contract]
+---
+
 # TCK-20260609-ENTITY-RUNTIME-CONTRACT
 
 ## Title

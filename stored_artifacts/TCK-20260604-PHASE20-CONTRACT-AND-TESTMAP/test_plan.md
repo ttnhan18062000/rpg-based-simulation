@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260604-PHASE20-CONTRACT-AND-TESTMAP
+artifact_type: test_plan
+tags: [phase20, contract, and, testmap]
+---
+
 # Test Plan: Phase 20 Content Usage Contract
 
 ## Unit Tests

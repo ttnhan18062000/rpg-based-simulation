@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: economy
+original_date: unknown
+---
+
 # [Milestone 2] - Supported Runtime Entrypoint and Consumer Cutover
 
 ## [Milestone Description]

@@ -1,3 +1,13 @@
+---
+status: historical
+layer: core
+authority: P2
+audience: agent
+ticket_id: TCK-20260517-STATIC-DIRTYSET-GUARD
+artifact_type: plan
+tags: [static, dirtyset, guard]
+---
+
 # Implementation Plan: Static Guard Against Direct DirtySet Usage
 
 ## Objective

@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: strategy
+authority: P2
+audience: agent
+tags: [strategy, implementation]
+---
+
 - [ ] Milestone 5: Unit Tests for strategic logic
     - [ ] Create `tests/unit/core/logic/test_strategic_reprioritization.py`
     - [ ] Implement tests for `ConcernGenerationService`

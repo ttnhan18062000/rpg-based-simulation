@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: misc
+authority: P2
+audience: agent
+tags: [graph, modelfix]
+---
+
 # TCK-20260606-GRAPH-MODELFIX
 
 ## Title

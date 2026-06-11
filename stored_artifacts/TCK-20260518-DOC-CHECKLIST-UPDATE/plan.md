@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260518-DOC-CHECKLIST-UPDATE
+artifact_type: plan
+tags: [doc, checklist, update]
+---
+
 # Plan - TCK-20260518-DOC-CHECKLIST-UPDATE
 
 1. Update `perf_test_plan.md` lines 1354-1376 to mark items 1 through 11 as `[x]`.

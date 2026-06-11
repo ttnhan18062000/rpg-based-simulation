@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260502-E5-SEMANTIC-HARDENING
+phase: done
+date: 2026-05-02
+tags: [e5, semantic, hardening]
+---
+
 # TCK-20260502-E5-SEMANTIC-HARDENING
 
 ## Title

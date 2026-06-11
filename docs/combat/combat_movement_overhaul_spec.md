@@ -1,3 +1,10 @@
+---
+status: active
+layer: combat
+authority: P1
+audience: developer
+---
+
 # Combat and Movement Overhaul: Authoritative Specification
 
 This document serves as the final, consolidated rulebook for the Combat and Movement system overhaul. It aggregates all rules, mechanics, and implementation standards established across Milestones 1 through 7.

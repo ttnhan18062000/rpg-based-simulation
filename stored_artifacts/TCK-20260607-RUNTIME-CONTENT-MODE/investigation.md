@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260607-RUNTIME-CONTENT-MODE
+artifact_type: investigation
+tags: [runtime, content, mode]
+---
+
 # Investigation — TCK-20260607-RUNTIME-CONTENT-MODE
 
 ## Key Finding

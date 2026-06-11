@@ -1,3 +1,10 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: developer
+---
+
 # Phase 10 Entry Package
 
 This package formalizes the transition into Phase 10.

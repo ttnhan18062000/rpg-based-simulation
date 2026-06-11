@@ -1,3 +1,14 @@
+---
+status: historical
+layer: strategy
+authority: P1
+audience: agent
+ticket_id: TCK-20260421-STRATEGIC-INTEL
+phase: done
+date: 2026-04-21
+tags: [strategic, intel]
+---
+
 # TCK-20260421-STRATEGIC-INTEL
 
 ## Title

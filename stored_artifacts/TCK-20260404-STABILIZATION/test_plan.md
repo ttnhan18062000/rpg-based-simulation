@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260404-STABILIZATION
+artifact_type: test_plan
+tags: [stabilization]
+---
+
 # Test Plan - TCK-20260404-STABILIZATION
 
 ## Objectives

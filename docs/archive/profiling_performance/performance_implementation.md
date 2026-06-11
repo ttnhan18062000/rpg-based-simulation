@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: performance
+original_date: unknown
+---
+
 # 1. Performance testing goals
 
 The engine performance test should answer these questions:

@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260606-PHASE22-1-2-REPAIR
+artifact_type: test_plan
+tags: [phase22, repair]
+---
+
 # Test Plan - Phase 22.1 & 22.2 Schema and Normalization Repair
 
 We will verify our implementation by running the updated unit tests.

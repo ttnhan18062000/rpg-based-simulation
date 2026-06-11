@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260419-MA-TASK5-FINAL-CLOSURE
+artifact_type: investigation
+tags: [ma, task5, final, closure]
+---
+
 # Investigation: Milestone A Final Closure Audit
 
 ## Audit of Core Files

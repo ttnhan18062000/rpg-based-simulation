@@ -1,3 +1,14 @@
+---
+status: historical
+layer: guidelines
+authority: P1
+audience: agent
+ticket_id: TCK-20260609-REGISTRY-BOOTSTRAP-MODES
+phase: done
+date: 2026-06-09
+tags: [registry, bootstrap, modes]
+---
+
 # TCK-20260609-REGISTRY-BOOTSTRAP-MODES
 
 ## Title

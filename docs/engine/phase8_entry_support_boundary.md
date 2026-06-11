@@ -1,3 +1,10 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: developer
+---
+
 # Phase 8 Entry Support Boundary
 
 This document defines the honest truth of combat and tactical support in `src` at the start of Phase 8.

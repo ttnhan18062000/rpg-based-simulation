@@ -1,3 +1,13 @@
+---
+status: historical
+layer: guidelines
+authority: P2
+audience: agent
+ticket_id: TCK-20260527-COG-GOAL-REGISTRY
+artifact_type: test_plan
+tags: [cog, goal, registry]
+---
+
 # Test Plan - TCK-20260527-COG-GOAL-REGISTRY
 
 We will verify that the new goal scorers and personality-based biases function correctly and deterministically.

@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260523-OBS-HARDENING
+artifact_type: plan
+tags: [obs, hardening]
+---
+
 # Implementation Plan - RPG Engine V2 Observability Hardening (Phases 1-9)
 
 This plan details the technical steps to harden the V2 Simulation Observatory across Phases 1-9. We will address every P0, P1, and P2 issue identified during the detailed audit.

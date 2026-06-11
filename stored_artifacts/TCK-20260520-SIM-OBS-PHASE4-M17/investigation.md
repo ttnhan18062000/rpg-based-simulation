@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260520-SIM-OBS-PHASE4-M17
+artifact_type: investigation
+tags: [sim, obs, phase4, m17]
+---
+
 # Investigation - Milestone 17: Baseline Generator
 
 ## Pure Python Statistics Equations

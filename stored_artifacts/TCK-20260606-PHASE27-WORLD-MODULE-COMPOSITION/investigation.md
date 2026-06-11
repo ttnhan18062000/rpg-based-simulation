@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260606-PHASE27-WORLD-MODULE-COMPOSITION
+artifact_type: investigation
+tags: [phase27, world, module, composition]
+---
+
 # Phase 27 Investigation
 
 ## Current Code Analysis

@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260518-COMPONENT-PATCH-MODEL
+artifact_type: investigation
+tags: [component, patch, model]
+---
+
 # Investigation: Component-Level Patch Model
 
 ## Current State & Problem

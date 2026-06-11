@@ -1,3 +1,14 @@
+---
+status: historical
+layer: ai
+authority: P1
+audience: agent
+ticket_id: TCK-20260610-WORKFLOW-SEMANTIC-TESTS
+phase: done
+date: 2026-06-10
+tags: [workflow, semantic, tests]
+---
+
 # TCK-20260610-WORKFLOW-SEMANTIC-TESTS
 
 ## Title

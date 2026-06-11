@@ -1,3 +1,13 @@
+---
+status: historical
+layer: guidelines
+authority: P2
+audience: agent
+ticket_id: TCK-20260524-WORKFLOW-REGISTRY
+artifact_type: test_plan
+tags: [workflow, registry]
+---
+
 # Test Plan: Workflow Registry and Skill Contracts (M93)
 
 We will implement isolated unit tests in `tests/unit/lab_agent/test_workflow_registry.py` using `pytest`.

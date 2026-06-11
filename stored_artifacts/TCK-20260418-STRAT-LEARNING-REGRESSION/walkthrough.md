@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: strategy
+authority: P2
+audience: agent
+tags: [strat, learning, regression]
+---
+
 # Walkthrough: Resolved Strategic Learning Regression
 
 Successfully identified and resolved the persistence regression where `LeadRecord` flags (`tested`, `is_exhausted`) were incorrectly reverted during simulation ticks.

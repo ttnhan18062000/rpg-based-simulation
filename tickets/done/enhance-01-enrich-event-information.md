@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: enhance-01-enrich-event-information
+phase: done
+date: unknown
+tags: [enhance, enrich, event, information]
+---
+
 # Enhance 01: Enrich Event Information
 
 ## Summary

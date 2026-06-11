@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260407-PHASE1-DS
+phase: done
+date: 2026-04-07
+tags: [phase1, ds]
+---
+
 # Ticket: TCK-20260407-PHASE1-DS
 ## Phase 1 - Design Shift Implementation: Behavioral Realism
 

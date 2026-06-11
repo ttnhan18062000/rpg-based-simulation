@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260429-PH0-PROTOCOL-VALIDATOR
+phase: done
+date: 2026-04-29
+tags: [ph0, protocol, validator]
+---
+
 # TCK-20260429-PH0-PROTOCOL-VALIDATOR
 
 ## Title

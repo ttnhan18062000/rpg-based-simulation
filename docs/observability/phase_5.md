@@ -1,3 +1,10 @@
+---
+status: historical
+layer: observability
+authority: P2
+audience: developer
+---
+
 # Phase 5: Live Observatory and Developer Inspection
 
 This document describes the architectural specifications, processing pipelines, and data layout introduced in **Phase 5: Live Observatory and Developer Inspection**. This phase added real-time inspection capabilities, enabling developers to monitor live simulations, inspect individual entities, and subscribe to streamed semantic events with zero lockouts or performance overhead in the hot tick path.

@@ -1,3 +1,14 @@
+---
+status: historical
+layer: guidelines
+authority: P1
+audience: agent
+ticket_id: TCK-20260524-WORKFLOW-REGISTRY
+phase: done
+date: 2026-05-24
+tags: [workflow, registry]
+---
+
 # TCK-20260524-WORKFLOW-REGISTRY
 
 ## Title

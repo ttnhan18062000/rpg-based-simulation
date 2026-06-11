@@ -1,3 +1,14 @@
+---
+status: historical
+layer: strategy
+authority: P1
+audience: agent
+ticket_id: TCK-20260413-STRAT-REPLAY-DETERMINISM
+phase: done
+date: 2026-04-13
+tags: [strat, replay, determinism]
+---
+
 # TCK-20260413-STRAT-REPLAY-DETERMINISM
 
 ## Title

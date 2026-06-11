@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260418-RESOURCE-KERNEL-M5
+phase: done
+date: 2026-04-18
+tags: [resource, kernel, m5]
+---
+
 # TCK-20260418-RESOURCE-KERNEL-M5
 
 ## Title

@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260519-SIM-OBS-PHASE3-M9
+artifact_type: test_plan
+tags: [sim, obs, phase3, m9]
+---
+
 # Test Plan - Run Artifact Repository (Milestone 9)
 
 ## 1. Unit Tests

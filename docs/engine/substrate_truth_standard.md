@@ -1,3 +1,10 @@
+---
+status: active
+layer: engine
+authority: P1
+audience: developer
+---
+
 # Substrate Truth Standard
 
 This document defines the authoritative truth levels and verification standards for the `src` substrate closure (Phase 7).

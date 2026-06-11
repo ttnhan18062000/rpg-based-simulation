@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260609-TEST-OWNERSHIP-MAP
+phase: done
+date: 2026-06-09
+tags: [test, ownership, map]
+---
+
 # TCK-20260609-TEST-OWNERSHIP-MAP
 
 ## Title

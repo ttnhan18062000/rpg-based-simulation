@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: economy
+original_date: 2026-04-20
+---
+
 # Design Specification: Resource Engine Substrate Hardening (A/B/C Closure)
 
 ## 1. Problem Statement

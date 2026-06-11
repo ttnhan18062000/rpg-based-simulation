@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260606-PHASE28-PERSPECTIVE-RELATION-MIGRATION
+artifact_type: investigation
+tags: [phase28, perspective, relation, migration]
+---
+
 # Phase 28 Investigation
 
 ## Relationship Semantics Service and Combat targeting

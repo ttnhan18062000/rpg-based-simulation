@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260604-PHASE24-RESOLVER-LAYER
+artifact_type: investigation
+tags: [phase24, resolver, layer]
+---
+
 # Investigation: Phase 24 — Resolver layer for foundation, living, and social defaults
 
 We need to design and implement a clean, decoupled resolver layer that retrieves, resolves, and validates static content relationships from the `CatalogRepository`.

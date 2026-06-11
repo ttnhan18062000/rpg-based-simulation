@@ -1,3 +1,10 @@
+---
+status: active
+layer: strategy
+authority: P1
+audience: developer
+---
+
 # UI Contract: Bounded Strategic Cognition
 
 ## Overview

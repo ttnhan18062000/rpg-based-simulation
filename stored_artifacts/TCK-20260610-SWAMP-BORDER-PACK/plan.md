@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260610-SWAMP-BORDER-PACK
+artifact_type: plan
+tags: [swamp, border, pack]
+---
+
 # Plan — TCK-20260610-SWAMP-BORDER-PACK
 
 Pack follows `data/content/packs/` single-file manifest pattern (matching frontier_extended_pack).

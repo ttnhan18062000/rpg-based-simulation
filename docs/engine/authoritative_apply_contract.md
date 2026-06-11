@@ -1,3 +1,10 @@
+---
+status: active
+layer: engine
+authority: P1
+audience: developer
+---
+
 # Authoritative Apply Contract
 
 This document defines the **Apply** stage of the `src` authoritative mutation pipeline.

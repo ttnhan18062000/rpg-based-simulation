@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: testing
+original_date: unknown
+---
+
 You are an expert simulation-engine architect and observability engineer.
 
 We already have your first current-state observability report for the V2 RPG Simulation Engine. The report identified these major findings:

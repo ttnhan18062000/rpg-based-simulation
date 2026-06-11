@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260523-MUTATION-MATRIX
+artifact_type: plan
+tags: [mutation, matrix]
+---
+
 # Plan - Variant Matrix Builder
 
 We will implement the `VariantMatrixBuilder` and schema additions to support generating experiment variants safely:

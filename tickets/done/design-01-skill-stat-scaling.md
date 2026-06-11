@@ -1,3 +1,14 @@
+---
+status: historical
+layer: core
+authority: P1
+audience: agent
+ticket_id: design-01-skill-stat-scaling
+phase: done
+date: unknown
+tags: [design, skill, stat, scaling]
+---
+
 # Design 01: Skill & Basic Attack Stat Scaling
 
 ## Summary

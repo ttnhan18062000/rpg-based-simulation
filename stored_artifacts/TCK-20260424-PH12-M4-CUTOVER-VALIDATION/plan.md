@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260424-PH12-M4-CUTOVER-VALIDATION
+artifact_type: plan
+tags: [ph12, m4, cutover, validation]
+---
+
 # Phase 12 Milestone 4 Execution Plan: Cutover Validation
 
 ## 1. Real-Condition Simulation (V2 Default)

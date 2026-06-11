@@ -1,3 +1,14 @@
+---
+status: historical
+layer: observability
+authority: P1
+audience: agent
+ticket_id: TCK-20260513-PERF-PROFILES-TUNING
+phase: done
+date: 2026-05-13
+tags: [perf, profiles, tuning]
+---
+
 # TCK-20260513-PERF-PROFILES-TUNING
 
 ## Title

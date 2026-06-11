@@ -1,3 +1,13 @@
+---
+status: historical
+layer: economy
+authority: P2
+audience: agent
+ticket_id: TCK-20260502-RESOURCE-HARDENING-REVIEW
+artifact_type: test_plan
+tags: [resource, hardening, review]
+---
+
 # Test Plan: Resource Hardening Review
 
 ## New Tests

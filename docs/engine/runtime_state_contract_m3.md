@@ -1,3 +1,10 @@
+---
+status: active
+layer: engine
+authority: P1
+audience: developer
+---
+
 # Runtime State Contract (M3) — Shape and Retention
 
 ## 1. Purpose

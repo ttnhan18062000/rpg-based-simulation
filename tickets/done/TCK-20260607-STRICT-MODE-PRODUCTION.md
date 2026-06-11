@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260607-STRICT-MODE-PRODUCTION
+phase: done
+date: 2026-06-07
+tags: [strict, mode, production]
+---
+
 # TCK-20260607-STRICT-MODE-PRODUCTION
 
 ## Title

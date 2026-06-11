@@ -1,3 +1,13 @@
+---
+status: historical
+layer: combat
+authority: P2
+audience: agent
+ticket_id: TCK-20260607-COMBAT-REWARD-SERVICE
+artifact_type: plan
+tags: [combat, reward, service]
+---
+
 # Plan — TCK-20260607-COMBAT-REWARD-SERVICE
 
 ## Decision Summary

@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260608-ADAPTER-HEURISTIC-USAGE
+artifact_type: plan
+tags: [adapter, heuristic, usage]
+---
+
 # Plan — TCK-20260608-ADAPTER-HEURISTIC-USAGE
 
 ## Steps

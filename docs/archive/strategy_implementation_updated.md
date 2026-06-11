@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: strategy
+original_date: unknown
+---
+
 # strategy_implementation_updated_plan.md
 
 This document is a corrective implementation plan derived from a deep verification of the currently implemented source and test suite.

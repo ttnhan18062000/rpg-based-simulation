@@ -1,3 +1,14 @@
+---
+status: historical
+layer: economy
+authority: P1
+audience: agent
+ticket_id: TCK-20260502-RESOURCE-HARDENING-REVIEW
+phase: done
+date: 2026-05-02
+tags: [resource, hardening, review]
+---
+
 # TCK-20260502-RESOURCE-HARDENING-REVIEW
 
 ## Title

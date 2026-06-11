@@ -1,3 +1,13 @@
+---
+status: historical
+layer: ai
+authority: P2
+audience: agent
+ticket_id: TCK-20260501-SOCIAL-LIFECYCLE
+artifact_type: test_plan
+tags: [social, lifecycle]
+---
+
 # Test Plan: Phase E4.4 Social Contract Lifecycle
 
 ## Unit Tests

@@ -1,3 +1,14 @@
+---
+status: historical
+layer: guidelines
+authority: P1
+audience: agent
+ticket_id: TCK-20260604-PHASE22-SCHEMA-NORMALIZATION
+phase: done
+date: 2026-06-04
+tags: [phase22, schema, normalization]
+---
+
 # TCK-20260604-PHASE22-SCHEMA-NORMALIZATION
 
 ## Title

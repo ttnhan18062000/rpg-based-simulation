@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260604-PHASE23-REFERENCE-GRAPH
+artifact_type: plan
+tags: [phase23, reference, graph]
+---
+
 # Implementation Plan: Phase 23 Content Reference Graph & Active Data Validation
 
 ## Proposed Changes

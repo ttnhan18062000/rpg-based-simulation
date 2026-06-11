@@ -1,3 +1,13 @@
+---
+status: historical
+layer: strategy
+authority: P2
+audience: agent
+ticket_id: TCK-20260518-STRATEGIC-WORK-QUEUE
+artifact_type: test_plan
+tags: [strategic, work, queue]
+---
+
 # Test Plan: StrategicWorkQueue
 
 Implement the following unit tests in `tests/unit/optimization/test_strategic_work_queue.py`:

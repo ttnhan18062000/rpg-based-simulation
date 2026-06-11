@@ -1,7 +1,13 @@
 ---
-ticket: TCK-20260609-MIGRATION-TEST-MARKERS
-phase: plan
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260609-MIGRATION-TEST-MARKERS
+artifact_type: plan
+tags: [migration, test, markers]
 ---
+
 
 # Plan
 

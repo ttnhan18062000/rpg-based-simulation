@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260528-PHASE9-LIFE-ARCS
+phase: done
+date: 2026-05-28
+tags: [phase9, life, arcs]
+---
+
 # TCK-20260528-PHASE9-LIFE-ARCS
 
 ## Title

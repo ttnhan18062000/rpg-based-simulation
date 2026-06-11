@@ -1,3 +1,13 @@
+---
+status: historical
+layer: world
+authority: P2
+audience: agent
+ticket_id: TCK-20260523-WORLD-BUDGET-GUARDRAILS
+artifact_type: plan
+tags: [world, budget, guardrails]
+---
+
 # Implementation Plan — Milestone 74 Resource and Storage Guardrails
 
 We will implement robust budget specifications, runtime validation guardrails, and artifact storage estimations across execution profiles.

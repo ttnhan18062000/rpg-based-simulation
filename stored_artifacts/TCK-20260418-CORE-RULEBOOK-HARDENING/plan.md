@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260418-CORE-RULEBOOK-HARDENING
+artifact_type: plan
+tags: [core, rulebook, hardening]
+---
+
 # Final Verification Audit Plan
 
 This plan outlines the steps for a comprehensive verification of the **Combat and Movement Overhaul** work, ensuring that all tickets, artifacts, logs, and tests are perfectly synced and consistent with the "Definition of Done".

@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: misc
+authority: P2
+audience: agent
+tags: [metamorphic, validation]
+---
+
 # Metamorphic Validation Rules - Walkthrough
 
 We have successfully implemented **Milestone 87: Metamorphic Validation Rules** of the Mutation and Balance Lab (Phase 13). This completes the engine's capability to define and assert metamorphic relationships between mutated variants based on simulation metrics.

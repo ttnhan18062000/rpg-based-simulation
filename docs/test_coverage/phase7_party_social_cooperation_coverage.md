@@ -1,3 +1,10 @@
+---
+status: historical
+layer: testing
+authority: P2
+audience: developer
+---
+
 # Test Coverage Audit: Phase 7 — Party / Social Cooperation Adventure
 
 This document outlines the test coverage partition for social cooperation mechanics, ensuring that Phase 7 tests are high-fidelity, life-strategy-oriented, and non-redundant with existing social/contract mechanisms.

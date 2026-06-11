@@ -1,3 +1,13 @@
+---
+status: historical
+layer: guidelines
+authority: P2
+audience: agent
+ticket_id: TCK-20260523-COGNITION-SCHEMA-RECORDER
+artifact_type: investigation
+tags: [cognition, schema, recorder]
+---
+
 # investigation.md - Exporter & Strategic Components
 
 The existing `CognitionGraphExporter` defined in `src/systems/strategic_systems/cognition_export.py` exposes:

@@ -1,3 +1,13 @@
+---
+status: historical
+layer: observability
+authority: P2
+audience: agent
+ticket_id: TCK-20260519-SIM-OBSERVATORY-REVIEW
+artifact_type: investigation
+tags: [sim, observatory, review]
+---
+
 # Investigation Notes: Current-State Observability Assessment & Phase 2 Clarification Findings
 
 ## 1. Existing Event and Logging Mechanisms

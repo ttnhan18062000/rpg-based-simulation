@@ -1,3 +1,14 @@
+---
+status: historical
+layer: performance
+authority: P1
+audience: agent
+ticket_id: adjust-01-action-speed-balance
+phase: done
+date: unknown
+tags: [adjust, action, speed, balance]
+---
+
 # Adjust 01: Action Speed Balance Review
 
 ## Summary

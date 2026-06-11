@@ -1,3 +1,13 @@
+---
+status: historical
+layer: strategy
+authority: P2
+audience: agent
+ticket_id: TCK-20260410-STRAT-REFACTOR
+artifact_type: investigation
+tags: [strat, refactor]
+---
+
 # Investigation: TCK-20260410-STRAT-REFACTOR
 
 ## Identified Drift

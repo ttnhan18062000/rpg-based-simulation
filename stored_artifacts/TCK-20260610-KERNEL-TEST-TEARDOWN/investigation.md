@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260610-KERNEL-TEST-TEARDOWN
+artifact_type: investigation
+tags: [kernel, test, teardown]
+---
+
 # Investigation — TCK-20260610-KERNEL-TEST-TEARDOWN
 
 ## Per-File Audit Table

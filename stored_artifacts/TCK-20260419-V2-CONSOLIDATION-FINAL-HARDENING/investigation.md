@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260419-V2-CONSOLIDATION-FINAL-HARDENING
+artifact_type: investigation
+tags: [v2, consolidation, final, hardening]
+---
+
 # Investigation: Signal Semantics & Model Drift (Milestone B/M7)
 
 ## 1. Divergence: Code vs Contract (M7)

@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260511-ENGINE-CERTIFICATION
+phase: done
+date: 2026-05-11
+tags: [engine, certification]
+---
+
 # TCK-20260511-ENGINE-CERTIFICATION
 
 ## Title

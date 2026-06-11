@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: observability
+authority: P2
+audience: agent
+tags: [metrics]
+---
+
 # Implementation Plan - Grafana & Metrics Overhaul (METRICS-01)
 
 ## Goal Description

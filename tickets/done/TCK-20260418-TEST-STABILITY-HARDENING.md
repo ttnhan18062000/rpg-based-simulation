@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260418-TEST-STABILITY-HARDENING
+phase: done
+date: 2026-04-18
+tags: [test, stability, hardening]
+---
+
 # TCK-20260418-TEST-STABILITY-HARDENING
 
 ## Title

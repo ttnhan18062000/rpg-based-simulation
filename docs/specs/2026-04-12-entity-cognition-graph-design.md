@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: strategy
+original_date: 2026-04-12
+---
+
 # Design Spec: Entity Cognition Graph Exporter (Milestone 6)
 
 ## Title

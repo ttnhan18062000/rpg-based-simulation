@@ -1,3 +1,10 @@
+---
+status: active
+layer: architecture
+authority: P1
+audience: developer
+---
+
 # ADR-005: Simulation Performance Optimization (Sub-1.0 TPS)
 
 ## Status

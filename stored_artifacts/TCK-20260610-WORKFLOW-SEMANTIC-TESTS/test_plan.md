@@ -1,3 +1,13 @@
+---
+status: historical
+layer: ai
+authority: P2
+audience: agent
+ticket_id: TCK-20260610-WORKFLOW-SEMANTIC-TESTS
+artifact_type: test_plan
+tags: [workflow, semantic, tests]
+---
+
 # Test Plan: TCK-20260610-WORKFLOW-SEMANTIC-TESTS
 
 ## Results: 50/50 pass

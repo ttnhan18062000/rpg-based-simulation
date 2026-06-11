@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: combat
+original_date: unknown
+---
+
 ## Finalize Plan
 
 ### 1. [x] Finish the structured reason migration

@@ -1,3 +1,13 @@
+---
+status: historical
+layer: guidelines
+authority: P2
+audience: agent
+ticket_id: TCK-20260523-LAB-SCENARIO-SCHEMA
+artifact_type: plan
+tags: [lab, scenario, schema]
+---
+
 # Implementation Plan — Milestone 75: ScenarioSpec Schema
 
 Provide a robust, decoupled, and safe file-based schema and validation layer to model testing scenario intents separately from worlds, allowing test configurations to target compiled simulation environments.

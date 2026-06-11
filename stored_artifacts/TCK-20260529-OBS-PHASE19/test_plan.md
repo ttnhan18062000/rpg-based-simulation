@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260529-OBS-PHASE19
+artifact_type: test_plan
+tags: [obs, phase19]
+---
+
 # Test Plan - TCK-20260529-OBS-PHASE19
 
 We will implement three sets of test suites to fully verify the requirements of Phase 19:

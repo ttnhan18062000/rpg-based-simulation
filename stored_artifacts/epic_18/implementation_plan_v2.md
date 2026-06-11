@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: misc
+authority: P2
+audience: agent
+tags: [epic_18]
+---
+
 # Comparative Implementation Guide: Epic 18 & AI Heuristics
 
 This document provides a detailed breakdown of the shift from the current "Reactive" simulation model to a "Living Lifecycle" model. It contrasts existing logic with proposed enhancements, detailing the rationale behind each technical decision.

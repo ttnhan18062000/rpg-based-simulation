@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260405-LOGFIX
+phase: done
+date: 2026-04-05
+tags: [logfix]
+---
+
 # TCK-20260405-LOGFIX: Fix E2E Logging Timeouts
 
 ## Description

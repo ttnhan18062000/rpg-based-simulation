@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260530-PHASE14-LEGACY-EXPORT
+artifact_type: test_plan
+tags: [phase14, legacy, export]
+---
+
 # Test Plan - Phase 14 Legacy Export
 
 ## Automated Verification Steps

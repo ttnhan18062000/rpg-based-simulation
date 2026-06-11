@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260610-CAT-REL-099-FIX
+artifact_type: test_plan
+tags: [cat, rel, fix]
+---
+
 # Test Plan — TCK-20260610-CAT-REL-099-FIX
 
 ## Regression Surface

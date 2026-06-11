@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260609-SCENARIO-MODIFIER-APPLY
+phase: done
+date: 2026-06-09
+tags: [scenario, modifier, apply]
+---
+
 # TCK-20260609-SCENARIO-MODIFIER-APPLY
 
 ## Title

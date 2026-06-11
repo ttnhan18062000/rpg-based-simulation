@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260413-INFRA-LOG-ROTATION
+phase: done
+date: 2026-04-13
+tags: [infra, log, rotation]
+---
+
 # TCK-20260413-INFRA-LOG-ROTATION
 
 ## Title

@@ -1,3 +1,14 @@
+---
+status: historical
+layer: strategy
+authority: P1
+audience: agent
+ticket_id: TCK-20260410-PH1-STG8-STRATEGIC-KNOWLEDGE
+phase: done
+date: 2026-04-10
+tags: [ph1, stg8, strategic, knowledge]
+---
+
 # Ticket TCK-20260410-PH3-STRATEGIC-KNOWLEDGE
 
 ## Tier

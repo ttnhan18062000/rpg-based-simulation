@@ -1,3 +1,10 @@
+---
+status: active
+layer: engine
+authority: P1
+audience: developer
+---
+
 # Task/Result/Update Substrate Contract
 
 This document defines the authoritative substrate contract for the `src` engine. It formalizes the flow of information from scheduling to authoritative application.

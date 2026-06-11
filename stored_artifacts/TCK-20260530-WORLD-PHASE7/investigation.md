@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260530-WORLD-PHASE7
+artifact_type: investigation
+tags: [world, phase7]
+---
+
 # Investigation: Provenance Manifest and Report Integration (Phase 7)
 
 ## Codebase Analysis

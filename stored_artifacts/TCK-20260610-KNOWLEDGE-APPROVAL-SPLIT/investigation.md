@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260610-KNOWLEDGE-APPROVAL-SPLIT
+artifact_type: investigation
+tags: [knowledge, approval, split]
+---
+
 # Investigation — TCK-20260610-KNOWLEDGE-APPROVAL-SPLIT
 
 ## Current Behavior

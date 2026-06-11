@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: misc
+authority: P2
+audience: agent
+tags: [core, import, stabilization]
+---
+
 # Walkthrough: Engine Import Path Stabilization & Modularization
 
 ## Objective

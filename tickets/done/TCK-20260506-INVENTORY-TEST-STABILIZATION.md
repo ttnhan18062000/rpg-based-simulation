@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260506-INVENTORY-TEST-STABILIZATION
+phase: done
+date: 2026-05-06
+tags: [inventory, test, stabilization]
+---
+
 # TCK-20260506-INVENTORY-TEST-STABILIZATION
 
 ## Title

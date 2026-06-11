@@ -1,3 +1,10 @@
+---
+status: active
+layer: performance
+authority: P1
+audience: developer
+---
+
 # Optimization Audit Ledger
 
 This ledger tracks performance issues, optimizations, and proofs for the RPG Engine V2.

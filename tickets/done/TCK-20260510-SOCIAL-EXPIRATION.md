@@ -1,3 +1,14 @@
+---
+status: historical
+layer: ai
+authority: P1
+audience: agent
+ticket_id: TCK-20260510-SOCIAL-EXPIRATION
+phase: done
+date: 2026-05-10
+tags: [social, expiration]
+---
+
 # TCK-20260510-SOCIAL-EXPIRATION
 
 ## Title

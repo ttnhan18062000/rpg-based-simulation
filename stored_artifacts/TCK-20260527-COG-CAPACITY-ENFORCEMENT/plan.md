@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260527-COG-CAPACITY-ENFORCEMENT
+artifact_type: plan
+tags: [cog, capacity, enforcement]
+---
+
 # Implementation Plan — Capacity Enforcement
 
 We will implement an unconditional capacity enforcement layer that regularly trims entity cognitive capacity limits (projects, leads, concerns, hypotheses) to ensure strict invariants are maintained.

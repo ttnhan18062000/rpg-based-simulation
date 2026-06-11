@@ -1,3 +1,10 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: developer
+---
+
 # Phase 11 Exit Package (Ratification Closure)
 
 This is the formal handoff package from Phase 11 (Ratification) to Phase 12 (Cutover).

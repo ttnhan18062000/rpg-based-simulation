@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260408-PH3-PASS2-SPAWN-ANCHOR
+phase: done
+date: 2026-04-08
+tags: [ph3, pass2, spawn, anchor]
+---
+
 # Ticket: TCK-20260408-PH3-PASS2-SPAWN-ANCHOR
 # Title: Phase 3 Pass 2: Spawn-time Anchoring
 

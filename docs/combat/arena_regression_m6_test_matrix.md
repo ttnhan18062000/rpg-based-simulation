@@ -1,3 +1,10 @@
+---
+status: historical
+layer: combat
+authority: P2
+audience: developer
+---
+
 # Arena Regression Test Matrix (Milestone 6)
 
 This document maps arena scenarios to exact automated regression checks.

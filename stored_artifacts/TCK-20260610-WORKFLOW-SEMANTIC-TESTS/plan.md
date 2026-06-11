@@ -1,3 +1,13 @@
+---
+status: historical
+layer: ai
+authority: P2
+audience: agent
+ticket_id: TCK-20260610-WORKFLOW-SEMANTIC-TESTS
+artifact_type: plan
+tags: [workflow, semantic, tests]
+---
+
 # Plan: TCK-20260610-WORKFLOW-SEMANTIC-TESTS
 
 ## Strategy

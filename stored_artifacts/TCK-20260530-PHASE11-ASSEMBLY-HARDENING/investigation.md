@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260530-PHASE11-ASSEMBLY-HARDENING
+artifact_type: investigation
+tags: [phase11, assembly, hardening]
+---
+
 # Investigation Notes - Phase 11 Assembly Hardening
 
 ## Current Implementation Findings

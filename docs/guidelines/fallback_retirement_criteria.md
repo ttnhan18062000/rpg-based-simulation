@@ -1,3 +1,10 @@
+---
+status: active
+layer: guidelines
+authority: P1
+audience: developer
+---
+
 # Fallback Retirement Criteria
 
 **Version:** 1.0  

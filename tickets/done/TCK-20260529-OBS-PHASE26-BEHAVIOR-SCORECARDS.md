@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260529-OBS-PHASE26-BEHAVIOR-SCORECARDS
+phase: done
+date: 2026-05-29
+tags: [obs, phase26, behavior, scorecards]
+---
+
 # TCK-20260529-OBS-PHASE26-BEHAVIOR-SCORECARDS
 
 ## Title

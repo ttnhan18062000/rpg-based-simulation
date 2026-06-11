@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260327-WINDBIGMOD
+phase: done
+date: 2026-03-27
+tags: [windbigmod]
+---
+
 # TCK-20260327-WINDBIGMOD
 
 ## Title

@@ -1,3 +1,10 @@
+---
+status: active
+layer: strategy
+authority: P1
+audience: developer
+---
+
 # Bounded Cognition — Milestone 1 Test Matrix
 
 ## Golden-Value (Case A, B, C)

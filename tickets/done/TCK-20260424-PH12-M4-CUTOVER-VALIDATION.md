@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260424-PH12-M4-CUTOVER-VALIDATION
+phase: done
+date: 2026-04-24
+tags: [ph12, m4, cutover, validation]
+---
+
 # TCK-20260424-PH12-M4-CUTOVER-VALIDATION
 
 ## Title

@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: strategy
+original_date: unknown
+---
+
 [Phase 3] - Apply Cognition Capacity to Blockers, Detours, and Lead Learning
 
 [Phase Description]

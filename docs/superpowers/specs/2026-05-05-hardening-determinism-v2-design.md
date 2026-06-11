@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: simulation
+original_date: 2026-05-05
+---
+
 # Hardening V2 Engine Determinism Phase 2
 
 ## Problem

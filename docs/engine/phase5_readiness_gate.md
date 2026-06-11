@@ -1,3 +1,10 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: developer
+---
+
 # Phase 5 Readiness Gate: Entry Criteria
 
 ## 1. Compliance Checklist

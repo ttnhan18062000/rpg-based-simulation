@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260524-LAB-GUARDRAILS
+phase: done
+date: 2026-05-24
+tags: [lab, guardrails]
+---
+
 # TCK-20260524-LAB-GUARDRAILS
 
 ## Title

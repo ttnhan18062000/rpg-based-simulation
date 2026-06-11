@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260425-PH6-M1-INVENTORY
+artifact_type: plan
+tags: [ph6, m1, inventory]
+---
+
 # PH6 M1: Inventory and Item Substrate
 
 Implement the foundation for item management and authoritative inventory mutation.

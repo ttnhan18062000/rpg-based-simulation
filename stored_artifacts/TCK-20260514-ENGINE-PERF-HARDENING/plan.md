@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260514-ENGINE-PERF-HARDENING
+artifact_type: plan
+tags: [engine, perf, hardening]
+---
+
 # Implementation Plan: V2 RPG Engine Performance Hardening (Phase 3)
 
 Further reduce compute time and object churn by optimizing the authoritative apply pipeline, focusing on lazy dictionary creation and reuse, and improving spatial lookup efficiency.

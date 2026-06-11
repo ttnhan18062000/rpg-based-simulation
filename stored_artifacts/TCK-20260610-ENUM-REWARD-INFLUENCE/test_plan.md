@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260610-ENUM-REWARD-INFLUENCE
+artifact_type: test_plan
+tags: [enum, reward, influence]
+---
+
 # Test Plan — TCK-20260610-ENUM-REWARD-INFLUENCE
 
 ## Regression Surface

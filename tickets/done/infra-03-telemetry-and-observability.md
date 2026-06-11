@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: infra-03-telemetry-and-observability
+phase: done
+date: unknown
+tags: [infra, telemetry, and, observability]
+---
+
 # [DONE] infra-03: Production Telemetry and Observability
 
 ## Objective

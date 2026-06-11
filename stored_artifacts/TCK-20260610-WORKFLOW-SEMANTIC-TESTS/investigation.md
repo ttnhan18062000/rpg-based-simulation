@@ -1,3 +1,13 @@
+---
+status: historical
+layer: ai
+authority: P2
+audience: agent
+ticket_id: TCK-20260610-WORKFLOW-SEMANTIC-TESTS
+artifact_type: investigation
+tags: [workflow, semantic, tests]
+---
+
 # Investigation: TCK-20260610-WORKFLOW-SEMANTIC-TESTS
 
 ## Findings

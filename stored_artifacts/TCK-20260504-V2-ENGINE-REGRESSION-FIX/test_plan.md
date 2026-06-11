@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260504-V2-ENGINE-REGRESSION-FIX
+artifact_type: test_plan
+tags: [v2, engine, regression, fix]
+---
+
 # Test Plan - TCK-20260504-V2-ENGINE-REGRESSION-FIX
 
 ## Regression Testing

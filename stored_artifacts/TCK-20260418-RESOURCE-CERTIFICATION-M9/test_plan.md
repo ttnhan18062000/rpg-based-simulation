@@ -1,3 +1,13 @@
+---
+status: historical
+layer: economy
+authority: P2
+audience: agent
+ticket_id: TCK-20260418-RESOURCE-CERTIFICATION-M9
+artifact_type: test_plan
+tags: [resource, certification, m9]
+---
+
 # Test Plan: Milestone 9 Certification Harness
 
 ## 1. Harness Contract Tests

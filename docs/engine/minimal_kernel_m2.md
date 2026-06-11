@@ -1,3 +1,10 @@
+---
+status: active
+layer: engine
+authority: P1
+audience: developer
+---
+
 # Minimal Deterministic Kernel (M2) — Execution Specs
 
 ## 1. Purpose

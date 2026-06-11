@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: core
+original_date: unknown
+---
+
 # Phase 10 — Optimization / Scaling / Rollout Hardening
 
 Phase 1:

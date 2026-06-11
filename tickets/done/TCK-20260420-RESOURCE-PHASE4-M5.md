@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260420-RESOURCE-PHASE4-M5
+phase: done
+date: 2026-04-20
+tags: [resource, phase4, m5]
+---
+
 # [Milestone 5] - Supported Gameplay Surface Consolidation
 
 ## [Milestone Description]

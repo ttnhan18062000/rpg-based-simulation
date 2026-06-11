@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260523-MUTATION-MATRIX
+phase: done
+date: 2026-05-23
+tags: [mutation, matrix]
+---
+
 # TCK-20260523-MUTATION-MATRIX
 
 ## Title

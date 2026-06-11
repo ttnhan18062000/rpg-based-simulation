@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260503-AUTH-TRIPWIRE
+phase: done
+date: 2026-05-03
+tags: [auth, tripwire]
+---
+
 # TCK-20260503-AUTH-TRIPWIRE
 
 ## Title

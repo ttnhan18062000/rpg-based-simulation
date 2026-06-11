@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: performance
+authority: P2
+audience: agent
+tags: [perf_opt]
+---
+
 # Performance Optimization Walkthrough
 
 I have successfully addressed the performance bottleneck that caused the RPG simulation backend to hit 100% CPU usage and drop to 0.4 TPS.

@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260401-INTROSPECTION-LAYER
+phase: done
+date: 2026-04-01
+tags: [introspection, layer]
+---
+
 # TCK-20260401-INTROSPECTION-LAYER: Rendering & Explainability Endpoints
 
 ## Description

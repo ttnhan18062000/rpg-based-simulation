@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260422-PH9-M1-READINESS
+phase: done
+date: 2026-04-22
+tags: [ph9, m1, readiness]
+---
+
 # TCK-20260422-PH9-M1-READINESS
 
 ## Title

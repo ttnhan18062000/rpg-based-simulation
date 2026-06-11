@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260605-PHASE27-WORLD-MODULE-COMPOSITION
+artifact_type: plan
+tags: [phase27, world, module, composition]
+---
+
 # Plan - Phase 27
 
 We will implement `ResolvedModuleContribution` and `WorldCompositionNormalizer` to solve Task 27.1, 27.2, and 27.3.

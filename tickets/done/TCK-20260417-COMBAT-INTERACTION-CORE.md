@@ -1,3 +1,14 @@
+---
+status: historical
+layer: combat
+authority: P1
+audience: agent
+ticket_id: TCK-20260417-COMBAT-INTERACTION-CORE
+phase: done
+date: 2026-04-17
+tags: [combat, interaction, core]
+---
+
 # TCK-20260417-COMBAT-INTERACTION-CORE
 
 ## Title

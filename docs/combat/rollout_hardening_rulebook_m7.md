@@ -1,3 +1,10 @@
+---
+status: active
+layer: combat
+authority: P1
+audience: developer
+---
+
 # Rollout Hardening Rulebook (Milestone 7)
 
 ## 1. Overview

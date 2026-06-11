@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260507-TEST-BASE-REWORK
+phase: done
+date: 2026-05-07
+tags: [test, base, rework]
+---
+
 # TCK-20260507-TEST-BASE-REWORK
 
 ## Title

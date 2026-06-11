@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260530-PHASE14-LEGACY-EXPORT
+artifact_type: investigation
+tags: [phase14, legacy, export]
+---
+
 # Investigation Notes - Phase 14 Legacy Export
 
 ## Current Hardcoded State

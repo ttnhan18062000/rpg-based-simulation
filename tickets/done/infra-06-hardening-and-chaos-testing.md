@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: infra-06-hardening-and-chaos-testing
+phase: done
+date: unknown
+tags: [infra, hardening, and, chaos, testing]
+---
+
 # infra-06: Hardening and Chaos Testing
 
 ## Objective

@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260523-OBS-HARDENING
+artifact_type: investigation
+tags: [obs, hardening]
+---
+
 # Technical Investigation - Simulation Observability Stack Hardening
 
 This document outlines the root-causes and technical details for all identified issues in the observability pipeline across Phases 1–9.

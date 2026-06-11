@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260610-CATALOG-ARENA-SMOKE
+phase: done
+date: 2026-06-10
+tags: [catalog, arena, smoke]
+---
+
 # TCK-20260610-CATALOG-ARENA-SMOKE
 
 ## Title

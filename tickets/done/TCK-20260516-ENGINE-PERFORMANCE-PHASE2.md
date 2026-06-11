@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260516-ENGINE-PERFORMANCE-PHASE2
+phase: done
+date: 2026-05-16
+tags: [engine, performance, phase2]
+---
+
 # TCK-20260516-ENGINE-PERFORMANCE-PHASE2
 
 ## Title

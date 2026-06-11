@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: misc
+authority: P2
+audience: agent
+tags: [c6306454, 56e4, 4a14, b03f, 7fc75ea22c2d]
+---
+
 # Walkthrough - Tactical Combat Stabilization (Bracketing Bonus)
 
 I have finalized the implementation of the bracketing bonus mechanics for multi-attacker scenarios, ensuring that tactical geometry and positioning are correctly factored into authoritative damage resolution.

@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: epic-17-phase-2
+phase: done
+date: unknown
+tags: [epic, phase]
+---
+
 # Epic 17: Long-Story Progression Spine (Phase 2)
 ## World Evolution & External Pressure
 

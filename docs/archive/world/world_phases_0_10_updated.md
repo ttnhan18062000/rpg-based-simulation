@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: world
+original_date: unknown
+---
+
 # Updated Implementation Plan: World Data Refactor and World Assembly Foundation
 
 ## Purpose

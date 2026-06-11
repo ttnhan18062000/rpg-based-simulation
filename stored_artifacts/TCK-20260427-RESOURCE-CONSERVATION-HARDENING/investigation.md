@@ -1,3 +1,13 @@
+---
+status: historical
+layer: economy
+authority: P2
+audience: agent
+ticket_id: TCK-20260427-RESOURCE-CONSERVATION-HARDENING
+artifact_type: investigation
+tags: [resource, conservation, hardening]
+---
+
 # Investigation - Resource Conservation Law Gaps
 
 ## Current State

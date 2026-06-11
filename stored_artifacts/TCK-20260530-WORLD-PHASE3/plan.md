@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260530-WORLD-PHASE3
+artifact_type: plan
+tags: [world, phase3]
+---
+
 # Phase 3 Execution Plan
 
 We will implement the profile consumer bridge systematically:

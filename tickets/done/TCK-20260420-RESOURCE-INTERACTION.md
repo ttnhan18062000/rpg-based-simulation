@@ -1,3 +1,14 @@
+---
+status: historical
+layer: economy
+authority: P1
+audience: agent
+ticket_id: TCK-20260420-RESOURCE-INTERACTION
+phase: done
+date: 2026-04-20
+tags: [resource, interaction]
+---
+
 # TCK-20260420-RESOURCE-INTERACTION
 
 ## Title

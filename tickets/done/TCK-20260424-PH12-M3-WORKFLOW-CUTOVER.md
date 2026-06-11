@@ -1,3 +1,14 @@
+---
+status: historical
+layer: ai
+authority: P1
+audience: agent
+ticket_id: TCK-20260424-PH12-M3-WORKFLOW-CUTOVER
+phase: done
+date: 2026-04-24
+tags: [ph12, m3, workflow, cutover]
+---
+
 # TCK-20260424-PH12-M3-WORKFLOW-CUTOVER
 
 ## Title

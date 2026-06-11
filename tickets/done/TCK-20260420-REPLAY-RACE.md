@@ -1,3 +1,14 @@
+---
+status: historical
+layer: observability
+authority: P1
+audience: agent
+ticket_id: TCK-20260420-REPLAY-RACE
+phase: done
+date: 2026-04-20
+tags: [replay, race]
+---
+
 # TCK-20260420-REPLAY-RACE
 
 ## Title

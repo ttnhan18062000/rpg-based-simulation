@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260520-SIM-OBS-M34
+artifact_type: plan
+tags: [sim, obs, m34]
+---
+
 # Implementation Plan: Warehouse Adapter & Schema Stabilization
 
 Defining the high-volume data warehouse boundary for the RPG simulation's Observatory, establishing standardized logical schema representations, adding a schema registry with descriptive validation error alerts, and implementing a database-free dry-run verification pipeline.

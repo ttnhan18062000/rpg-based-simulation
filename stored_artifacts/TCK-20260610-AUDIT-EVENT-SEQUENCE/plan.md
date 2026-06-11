@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260610-AUDIT-EVENT-SEQUENCE
+artifact_type: plan
+tags: [audit, event, sequence]
+---
+
 # Plan: TCK-20260610-AUDIT-EVENT-SEQUENCE
 
 ## Approach

@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260610-SWAMP-BORDER-PACK
+phase: done
+date: 2026-06-10
+tags: [swamp, border, pack]
+---
+
 # TCK-20260610-SWAMP-BORDER-PACK
 
 ## Title

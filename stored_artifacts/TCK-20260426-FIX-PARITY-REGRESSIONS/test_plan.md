@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260426-FIX-PARITY-REGRESSIONS
+artifact_type: test_plan
+tags: [fix, parity, regressions]
+---
+
 # Test Plan: Parity Regressions
 
 ## Automated Verification

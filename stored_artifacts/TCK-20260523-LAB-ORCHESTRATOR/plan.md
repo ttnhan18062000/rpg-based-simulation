@@ -1,3 +1,13 @@
+---
+status: historical
+layer: strategy
+authority: P2
+audience: agent
+ticket_id: TCK-20260523-LAB-ORCHESTRATOR
+artifact_type: plan
+tags: [lab, orchestrator]
+---
+
 # Implementation Plan — Milestone 78 Orchestrator
 
 ## Proposed Changes

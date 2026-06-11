@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: strategy
+authority: P2
+audience: agent
+tags: [ph6, strategic, cognition]
+---
+
 # Walkthrough - V2 Engine Stabilization (Strategic & Progression)
 
 Stabilized the V2 combat and lifecycle engine by resolving critical regressions in strategic cognition, occupancy conflict resolution, and attribute-driven growth.

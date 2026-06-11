@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260409-PH4-STG2-SUCCESSION-LOGIC
+artifact_type: plan
+tags: [ph4, stg2, succession, logic]
+---
+
 # Plan: Phase 4 Stage 2 — Succession Logic
 
 ## Proposed Changes

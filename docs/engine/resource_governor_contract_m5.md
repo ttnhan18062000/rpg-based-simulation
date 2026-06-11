@@ -1,3 +1,10 @@
+---
+status: active
+layer: engine
+authority: P1
+audience: developer
+---
+
 # Resource Governor Contract (Milestone 5)
 
 ## Purpose

@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260521-OCC-COLLISION
+artifact_type: investigation
+tags: [occ, collision]
+---
+
 # Investigation: Metropolis Occupancy Collision at Tick 1291 & 2503
 
 ## Issue Summary

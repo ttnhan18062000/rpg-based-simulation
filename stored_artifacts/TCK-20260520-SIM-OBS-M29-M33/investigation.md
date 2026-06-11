@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260520-SIM-OBS-M29-M33
+artifact_type: investigation
+tags: [sim, obs, m29, m33]
+---
+
 # Investigation: Observability Scaling & Retention Integration Points
 
 This document records the results of code research and dependency evaluation for integrating Milestones 29 through 33 of Phase 6.

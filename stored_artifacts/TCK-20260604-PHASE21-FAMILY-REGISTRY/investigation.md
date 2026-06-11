@@ -1,3 +1,13 @@
+---
+status: historical
+layer: guidelines
+authority: P2
+audience: agent
+ticket_id: TCK-20260604-PHASE21-FAMILY-REGISTRY
+artifact_type: investigation
+tags: [phase21, family, registry]
+---
+
 # Investigation: Content Family Registry & Strict Load Report
 
 ## Requirements

@@ -1,7 +1,13 @@
 ---
-ticket: TCK-20260609-MIGRATION-MAP-YAML
-phase: investigation
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260609-MIGRATION-MAP-YAML
+artifact_type: investigation
+tags: [migration, map, yaml]
 ---
+
 
 # Investigation
 

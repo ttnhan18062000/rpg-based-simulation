@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260521-OBS-PHASE9-INVESTIGATION
+phase: done
+date: 2026-05-21
+tags: [obs, phase9, investigation]
+---
+
 # TCK-20260521-OBS-PHASE9-INVESTIGATION
 
 ## Title

@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260513-PERF-WORKER-HARDENING
+phase: done
+date: 2026-05-13
+tags: [perf, worker, hardening]
+---
+
 # TCK-20260513-PERF-WORKER-HARDENING
 
 ## Title

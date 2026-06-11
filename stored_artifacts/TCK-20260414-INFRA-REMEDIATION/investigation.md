@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260414-INFRA-REMEDIATION
+artifact_type: investigation
+tags: [infra, remediation]
+---
+
 # Investigation: Infrastructure Remediation
 
 ## Current Broker Handling

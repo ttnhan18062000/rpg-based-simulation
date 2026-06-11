@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260610-REWARD-RELATION-CLASSIFY
+artifact_type: plan
+tags: [reward, relation, classify]
+---
+
 # Plan — TCK-20260610-REWARD-RELATION-CLASSIFY
 
 ## Step 1 — Rewrite classify_defeated_target (src/engine/combat_rewards.py)

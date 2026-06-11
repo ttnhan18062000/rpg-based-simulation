@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260507-STABILIZE-TESTS
+phase: done
+date: 2026-05-07
+tags: [stabilize, tests]
+---
+
 # TCK-20260507-STABILIZE-TESTS
 
 ## Title

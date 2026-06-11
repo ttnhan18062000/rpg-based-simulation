@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260603-PHASE16-PARITY-TESTS
+phase: done
+date: 2026-06-03
+tags: [phase16, parity, tests]
+---
+
 # TCK-20260603-PHASE16-PARITY-TESTS
 
 ## Title

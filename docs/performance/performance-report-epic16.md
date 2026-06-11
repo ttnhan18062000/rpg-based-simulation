@@ -1,3 +1,10 @@
+---
+status: historical
+layer: performance
+authority: P2
+audience: developer
+---
+
 # Performance Audit Report — Epic 16
 
 ## Baseline (pre-optimization)

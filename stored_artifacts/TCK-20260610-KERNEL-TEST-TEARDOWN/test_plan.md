@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260610-KERNEL-TEST-TEARDOWN
+artifact_type: test_plan
+tags: [kernel, test, teardown]
+---
+
 # Test Plan — TCK-20260610-KERNEL-TEST-TEARDOWN
 
 ## Verification Approach

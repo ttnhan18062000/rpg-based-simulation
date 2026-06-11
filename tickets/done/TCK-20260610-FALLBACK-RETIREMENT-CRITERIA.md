@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260610-FALLBACK-RETIREMENT-CRITERIA
+phase: done
+date: 2026-06-10
+tags: [fallback, retirement, criteria]
+---
+
 # TCK-20260610-FALLBACK-RETIREMENT-CRITERIA
 
 ## Title

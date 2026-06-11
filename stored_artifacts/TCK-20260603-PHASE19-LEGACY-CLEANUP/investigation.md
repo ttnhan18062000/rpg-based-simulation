@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260603-PHASE19-LEGACY-CLEANUP
+artifact_type: investigation
+tags: [phase19, legacy, cleanup]
+---
+
 # Investigation: Phase 19 Legacy Deprecation and Cleanup
 
 ## Context & Findings

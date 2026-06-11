@@ -1,3 +1,14 @@
+---
+status: historical
+layer: core
+authority: P1
+audience: agent
+ticket_id: TCK-20260517-STATIC-DIRTYSET-GUARD
+phase: done
+date: 2026-05-17
+tags: [static, dirtyset, guard]
+---
+
 # TCK-20260517-STATIC-DIRTYSET-GUARD
 
 ## Title

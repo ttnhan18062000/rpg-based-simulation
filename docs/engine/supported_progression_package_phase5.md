@@ -1,3 +1,10 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: developer
+---
+
 # Supported Progression Package (Phase 5)
 
 ## 1. Overview

@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260418-RESOURCE-KERNEL-M5
+artifact_type: investigation
+tags: [resource, kernel, m5]
+---
+
 # Investigation: Resource-Safe Engine Milestone 5
 
 ## Goal

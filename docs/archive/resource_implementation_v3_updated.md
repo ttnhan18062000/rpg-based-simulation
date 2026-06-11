@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: economy
+original_date: unknown
+---
+
 # Updated implementation plan
 
 ## Phase 1 — Finish Milestone A for real [DONE]

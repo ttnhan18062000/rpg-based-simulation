@@ -1,3 +1,14 @@
+---
+status: historical
+layer: ai
+authority: P1
+audience: agent
+ticket_id: TCK-20260326-NARRATIVE
+phase: done
+date: 2026-03-26
+tags: [narrative]
+---
+
 # TCK-20260326-NARRATIVE
 
 ## Title

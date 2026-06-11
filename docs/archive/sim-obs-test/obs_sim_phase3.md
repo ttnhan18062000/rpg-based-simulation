@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: engine
+original_date: unknown
+---
+
 # Phase 3 Implementation Plan — Observatory Processing Pipeline
 
 Phase 3 should focus on **end-to-end component flow**, not full data/rule coverage.

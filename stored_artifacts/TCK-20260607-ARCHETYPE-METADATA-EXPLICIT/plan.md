@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260607-ARCHETYPE-METADATA-EXPLICIT
+artifact_type: plan
+tags: [archetype, metadata, explicit]
+---
+
 # Implementation Plan — TCK-20260607-ARCHETYPE-METADATA-EXPLICIT
 
 ## Summary

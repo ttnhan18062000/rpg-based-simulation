@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260419-MA-TASK2-AUDIT-MUTATION
+phase: done
+date: 2026-04-19
+tags: [ma, task2, audit, mutation]
+---
+
 # TCK-20260419-MA-TASK2-AUDIT-MUTATION
 
 ## Title

@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260530-WORLD-PHASE2
+artifact_type: plan
+tags: [world, phase2]
+---
+
 # Phase 2 Execution Plan
 
 We will implement the content semantics layer systematically:

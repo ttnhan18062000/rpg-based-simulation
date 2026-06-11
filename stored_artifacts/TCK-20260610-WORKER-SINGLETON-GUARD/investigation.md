@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260610-WORKER-SINGLETON-GUARD
+artifact_type: investigation
+tags: [worker, singleton, guard]
+---
+
 # Investigation — TCK-20260610-WORKER-SINGLETON-GUARD
 
 ## File: src/observability/queue.py

@@ -1,3 +1,14 @@
+---
+status: historical
+layer: strategy
+authority: P1
+audience: agent
+ticket_id: TCK-20260524-LAB-RESULT-REGISTRATION
+phase: done
+date: 2026-05-24
+tags: [lab, result, registration]
+---
+
 # TCK-20260524-LAB-RESULT-REGISTRATION
 
 ## Title

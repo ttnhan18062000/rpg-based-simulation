@@ -1,3 +1,13 @@
+---
+status: historical
+layer: core
+authority: P2
+audience: agent
+ticket_id: TCK-20260528-ENTITY-ENHANCE-FUSION
+artifact_type: investigation
+tags: [entity, enhance, fusion]
+---
+
 # Investigation Notes - RPG Cognitive & World Loop Fusion
 
 ## 1. Duplicate Test Filename Fix

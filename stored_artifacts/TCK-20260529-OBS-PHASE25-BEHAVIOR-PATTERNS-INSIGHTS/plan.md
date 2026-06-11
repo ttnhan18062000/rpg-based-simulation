@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260529-OBS-PHASE25-BEHAVIOR-PATTERNS-INSIGHTS
+artifact_type: plan
+tags: [obs, phase25, behavior, patterns, insights]
+---
+
 # Proposed Plan
 
 Introduce BehaviorFinding, BehaviorInsight, pattern detectors, and insight generators to compile structured post-run analysis.

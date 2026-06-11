@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: core
+original_date: unknown
+---
+
 # Phase 9 — Long-Run Life-Arc Scenario Campaigns
 
 Phase 1:

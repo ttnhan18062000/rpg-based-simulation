@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260606-PHASE22-3-REPAIR
+artifact_type: investigation
+tags: [phase22, repair]
+---
+
 # Staging Investigation - TCK-20260606-PHASE22-3-REPAIR
 
 ## Current Findings

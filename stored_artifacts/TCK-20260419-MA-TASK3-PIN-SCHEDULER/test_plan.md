@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260419-MA-TASK3-PIN-SCHEDULER
+artifact_type: test_plan
+tags: [ma, task3, pin, scheduler]
+---
+
 # Test Plan: Deterministic Scheduler Contract
 
 ## Objective

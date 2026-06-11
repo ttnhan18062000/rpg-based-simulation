@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260610-SENSE-PERCEPTION-GATE
+phase: done
+date: 2026-06-10
+tags: [sense, perception, gate]
+---
+
 # TCK-20260610-SENSE-PERCEPTION-GATE
 
 ## Title

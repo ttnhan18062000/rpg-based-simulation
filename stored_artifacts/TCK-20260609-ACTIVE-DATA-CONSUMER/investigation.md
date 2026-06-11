@@ -1,7 +1,13 @@
 ---
-ticket: TCK-20260609-ACTIVE-DATA-CONSUMER
-phase: investigation
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260609-ACTIVE-DATA-CONSUMER
+artifact_type: investigation
+tags: [active, data, consumer]
 ---
+
 
 # Investigation
 

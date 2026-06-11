@@ -1,3 +1,13 @@
+---
+status: historical
+layer: core
+authority: P2
+audience: agent
+ticket_id: TCK-20260517-STATE-UPDATE-COMPACTOR
+artifact_type: test_plan
+tags: [state, update, compactor]
+---
+
 # Test Plan: StateUpdateCompactor
 
 ## Objectives

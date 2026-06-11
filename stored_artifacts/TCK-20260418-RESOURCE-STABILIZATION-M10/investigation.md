@@ -1,3 +1,13 @@
+---
+status: historical
+layer: economy
+authority: P2
+audience: agent
+ticket_id: TCK-20260418-RESOURCE-STABILIZATION-M10
+artifact_type: investigation
+tags: [resource, stabilization, m10]
+---
+
 # Investigation: Milestone 10 Documentation and Playbook
 
 ## Objective

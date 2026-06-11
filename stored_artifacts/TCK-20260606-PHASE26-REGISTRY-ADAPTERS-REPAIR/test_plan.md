@@ -1,3 +1,13 @@
+---
+status: historical
+layer: guidelines
+authority: P2
+audience: agent
+ticket_id: TCK-20260606-PHASE26-REGISTRY-ADAPTERS-REPAIR
+artifact_type: test_plan
+tags: [phase26, registry, adapters, repair]
+---
+
 # Phase 26 Test Plan
 
 ## Unit/Integration Tests

@@ -1,3 +1,14 @@
+---
+status: historical
+layer: world
+authority: P1
+audience: agent
+ticket_id: TCK-20260422-PH7-M5-DETERMINISTIC-WORLD-GEN
+phase: done
+date: 2026-04-22
+tags: [ph7, m5, deterministic, world, gen]
+---
+
 # TCK-20260422-PH7-M5-DETERMINISTIC-WORLD-GEN
 
 ## Title

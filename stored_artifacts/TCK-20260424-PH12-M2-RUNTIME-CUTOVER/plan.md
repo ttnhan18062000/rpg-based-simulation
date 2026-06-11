@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260424-PH12-M2-RUNTIME-CUTOVER
+artifact_type: plan
+tags: [ph12, m2, runtime, cutover]
+---
+
 # Phase 12 Milestone 2 Execution Plan: Runtime Cutover
 
 ## 1. Entrypoint Delegation (`src/__main__.py`)

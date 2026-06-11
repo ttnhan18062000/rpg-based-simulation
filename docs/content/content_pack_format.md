@@ -1,3 +1,11 @@
+---
+status: active
+layer: systems
+authority: P1
+audience: developer
+tags: [content, content-pack, schema]
+---
+
 # Content Pack Format
 
 **Status:** Active  

@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260515-WORLD-GOVERNANCE
+phase: done
+date: 2026-05-15
+tags: [world, governance]
+---
+
 # TCK-20260515-WORLD-GOVERNANCE
 
 ## Title

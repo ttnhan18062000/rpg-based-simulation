@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260520-SIM-OBS-M27-M28
+artifact_type: test_plan
+tags: [sim, obs, m27, m28]
+---
+
 # Test Plan - Storage Export and Local Analytics
 
 ## Scope of Testing

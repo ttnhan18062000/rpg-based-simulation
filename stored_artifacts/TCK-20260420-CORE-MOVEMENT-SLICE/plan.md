@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260420-CORE-MOVEMENT-SLICE
+artifact_type: plan
+tags: [core, movement, slice]
+---
+
+
 # Plan - TCK-20260420-CORE-MOVEMENT-SLICE
 
 ## Goal

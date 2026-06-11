@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: engine
+authority: P2
+audience: agent
+tags: [phase4_reconstruction]
+---
+
 # Phase 4 Task List
 
 ## Milestone 0: Truth Closure (Pre-Milestone Gate)

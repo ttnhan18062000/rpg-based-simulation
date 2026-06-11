@@ -1,3 +1,14 @@
+---
+status: historical
+layer: strategy
+authority: P1
+audience: agent
+ticket_id: TCK-20260422-PH8-STRATEGIC-RECOVERY
+phase: done
+date: 2026-04-22
+tags: [ph8, strategic, recovery]
+---
+
 # TCK-20260422-PH8-STRATEGIC-RECOVERY
 
 ## Title

@@ -26,6 +26,20 @@ Use whichever path is available:
 
 ## Output 1 — `staging_artifacts/{ticket_id}/investigation.md`
 
+Each output file must begin with a YAML frontmatter block before the `# Investigation —` heading:
+
+```yaml
+---
+status: historical
+layer: <same layer as the ticket>
+authority: P2
+audience: agent
+ticket_id: <ticket_id>
+artifact_type: investigation
+tags: [<scope words from ticket ID, lowercase>]
+---
+```
+
 Structure:
 
 ```
@@ -54,6 +68,20 @@ Specific things in this area that are easy to accidentally break or scope-creep 
 ```
 
 ## Output 2 — `staging_artifacts/{ticket_id}/test_plan.md`
+
+Each output file must begin with a YAML frontmatter block before the `# Test Plan —` heading:
+
+```yaml
+---
+status: historical
+layer: <same layer as the ticket>
+authority: P2
+audience: agent
+ticket_id: <ticket_id>
+artifact_type: test_plan
+tags: [<scope words from ticket ID, lowercase>]
+---
+```
 
 Structure:
 

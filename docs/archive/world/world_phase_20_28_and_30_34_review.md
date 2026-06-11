@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: world
+original_date: unknown
+---
+
 Static review only. I reviewed the uploaded full `src_export_34.py` and `test_export_34.py`; I did **not** run pytest.
 
 # Overall verdict

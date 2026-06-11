@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260405-CONVERGENCE
+artifact_type: plan
+tags: [convergence]
+---
+
 # AOA Convergence Implementation Plan (TCK-20260405-CONVERGENCE)
 
 ## Proposed Changes

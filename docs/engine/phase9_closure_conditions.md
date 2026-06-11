@@ -1,3 +1,10 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: developer
+---
+
 # Phase 9 Closure Conditions
 
 Every Phase 9 row has a concrete, testable finish line. No row is closed by "feeling better."

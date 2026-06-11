@@ -1,3 +1,14 @@
+---
+status: historical
+layer: guidelines
+authority: P1
+audience: agent
+ticket_id: TCK-20260518-CACHE-REGISTRY
+phase: done
+date: 2026-05-18
+tags: [cache, registry]
+---
+
 # TCK-20260518-CACHE-REGISTRY
 
 ## Title

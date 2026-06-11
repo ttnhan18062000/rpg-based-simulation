@@ -1,3 +1,10 @@
+---
+status: active
+layer: guidelines
+authority: P1
+audience: developer
+---
+
 # `src` Divergence Log
 <!-- VERIFIED v2: DIVERGENCE_LOG -->
 <!-- VERIFIED v2: UNSUPPORTED -->

@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260520-SIM-OBS-PHASE4-M16
+phase: done
+date: 2026-05-20
+tags: [sim, obs, phase4, m16]
+---
+
 # TCK-20260520-SIM-OBS-PHASE4-M16
 
 ## Title

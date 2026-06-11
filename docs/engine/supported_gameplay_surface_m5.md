@@ -1,3 +1,10 @@
+---
+status: active
+layer: engine
+authority: P1
+audience: developer
+---
+
 # Supported Gameplay Surface Matrix (Milestone 5)
 
 ## 1. Purpose

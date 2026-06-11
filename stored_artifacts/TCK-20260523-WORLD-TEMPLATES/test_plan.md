@@ -1,3 +1,13 @@
+---
+status: historical
+layer: world
+authority: P2
+audience: agent
+ticket_id: TCK-20260523-WORLD-TEMPLATES
+artifact_type: test_plan
+tags: [world, templates]
+---
+
 # Test Plan: World Template and Recipe System
 
 We will write unit tests to cover all required cases and invariants defined in `world_phase11.md`.

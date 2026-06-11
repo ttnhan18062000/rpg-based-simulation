@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: economy
+original_date: unknown
+---
+
 Below is the **full detailed implementation plan for Phase 8**, using the same milestone/task structure style as your earlier implementation docs, and aligned with the Phase 8 high-level plan, the revised roadmap, the legacy replacement checklists, and the V2 completion rules in:
 
 [resource_phase5_implementation_milestone_1.md](sandbox:/mnt/data/resource_phase5_implementation_milestone_1.md)

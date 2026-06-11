@@ -1,3 +1,13 @@
+---
+status: historical
+layer: core
+authority: P2
+audience: agent
+ticket_id: TCK-20260528-ENTITY-ENHANCE-FUSION
+artifact_type: plan
+tags: [entity, enhance, fusion]
+---
+
 # Implementation Plan - Integrating Enhanced Domain Cognitive / World Loop (Phases 1-10)
 
 This plan outlines how to integrate the 10 domain enhancement phases (Self-Model, Adventure Decisions, Combat Engagement, Information/Belief, Progression, Cooperation, World Emergence, Campaigns, Optimization) into the `AuthoritativeApplyPipeline` and resolve the critical architectural findings listed in `entity_enhance_fix.md`.

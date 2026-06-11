@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: misc
+original_date: 2026-05-27
+---
+
 # Design Spec — Durable Belief System Integration
 
 This specification outlines the architectural changes required to wire the RPG simulation engine's belief system into durable state and actual gameplay. It ensures that rumors, direct observations, contradictions, and source trust directly influence strategic detours and actions in an inspectable, testable way.

@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: engine
+authority: P2
+audience: agent
+tags: [phase4_reconstruction]
+---
+
 # Phase 4 — Controlled RPG-Core Attachment and Resource Loop Recovery
 
 This plan implements the updated Phase 4 requirements, transitioning from pure infrastructure hardening into a disciplined gameplay attachment phase while resolving lingering substrate defects.

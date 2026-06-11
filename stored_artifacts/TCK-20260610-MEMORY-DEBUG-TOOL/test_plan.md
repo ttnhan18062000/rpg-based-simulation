@@ -1,3 +1,13 @@
+---
+status: historical
+layer: observability
+authority: P2
+audience: agent
+ticket_id: TCK-20260610-MEMORY-DEBUG-TOOL
+artifact_type: test_plan
+tags: [memory, debug, tool]
+---
+
 PHASE_TS: 2026-06-10T17:20:30Z
 
 # Test Plan: TCK-20260610-MEMORY-DEBUG-TOOL

@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260603-PHASE17-GENERATOR-REGATING
+artifact_type: plan
+tags: [phase17, generator, regating]
+---
+
 # Implementation Plan - Phase 17 (Procedural Generator Re-gating)
 
 This plan details the changes necessary to integrate the procedural generator with the unified catalog and resolved compile context.

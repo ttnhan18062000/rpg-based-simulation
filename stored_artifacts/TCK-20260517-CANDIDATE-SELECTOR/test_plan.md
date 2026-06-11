@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260517-CANDIDATE-SELECTOR
+artifact_type: test_plan
+tags: [candidate, selector]
+---
+
 # Test Plan: CandidateSelector & ScanPolicy
 
 ## Scope

@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260530-WORLD-PHASE4
+artifact_type: plan
+tags: [world, phase4]
+---
+
 # Phase 4 Execution Plan
 
 We will implement the world module schema and repository systematically:

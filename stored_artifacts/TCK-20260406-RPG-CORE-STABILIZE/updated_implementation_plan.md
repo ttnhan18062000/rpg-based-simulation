@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: misc
+authority: P2
+audience: agent
+tags: [rpg, core, stabilize]
+---
+
 ## WorldLoop RPG Core Stabilization and Introspection Plan — COMPLETED
 
 This revision removes already-completed work and keeps only tasks that are still missing, partially done, overstated, or incorrectly marked as complete in the previous plan. It is grounded in the current source snapshot and test bundle. The previous plan file is here: The current source and tests are here:

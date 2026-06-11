@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260527-COG-IMMEDIATE-BUGS
+artifact_type: investigation
+tags: [cog, immediate, bugs]
+---
+
 # Investigation Report: Cognition Immediate Bugs
 
 **Ticket ID:** TCK-20260527-COG-IMMEDIATE-BUGS

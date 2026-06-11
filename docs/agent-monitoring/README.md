@@ -1,3 +1,11 @@
+---
+status: active
+layer: observability
+authority: P1
+audience: developer
+tags: [agent-monitoring, observability]
+---
+
 # Agent Monitoring
 
 Observability layer for the Claude Code AI agent workflow. Tracks workflow runs and per-agent actions for weekly retrospectives.

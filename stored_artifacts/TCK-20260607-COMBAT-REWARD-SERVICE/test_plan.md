@@ -1,3 +1,13 @@
+---
+status: historical
+layer: combat
+authority: P2
+audience: agent
+ticket_id: TCK-20260607-COMBAT-REWARD-SERVICE
+artifact_type: test_plan
+tags: [combat, reward, service]
+---
+
 # Test Plan — TCK-20260607-COMBAT-REWARD-SERVICE
 
 ## Test file to create

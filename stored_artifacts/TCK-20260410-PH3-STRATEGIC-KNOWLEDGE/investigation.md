@@ -1,3 +1,13 @@
+---
+status: historical
+layer: strategy
+authority: P2
+audience: agent
+ticket_id: TCK-20260410-PH3-STRATEGIC-KNOWLEDGE
+artifact_type: investigation
+tags: [ph3, strategic, knowledge]
+---
+
 # Investigation: Phase 3 Strategic Knowledge
 
 ## Current State Analysis

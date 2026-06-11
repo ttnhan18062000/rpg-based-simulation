@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260425-PH6-M5-STORAGE
+artifact_type: investigation
+tags: [ph6, m5, storage]
+---
+
 # Investigation — PH6 M5: Equipment, Chests, and Storage
 
 ## Goal

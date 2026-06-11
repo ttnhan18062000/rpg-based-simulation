@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: misc
+original_date: 2026-03-20
+---
+
 # Design Spec: Component-Based Codebase Restructure
 
 This document outlines the architectural shift from a layered, monolithic structure to a modular, feature-based "Aspect.Oriented" design for the RPG simulation.

@@ -1,3 +1,13 @@
+---
+status: historical
+layer: guidelines
+authority: P2
+audience: agent
+ticket_id: TCK-20260523-LAB-SCENARIO-SCHEMA
+artifact_type: investigation
+tags: [lab, scenario, schema]
+---
+
 # ScenarioSpec Design Document — Milestone 75
 
 ## Goal

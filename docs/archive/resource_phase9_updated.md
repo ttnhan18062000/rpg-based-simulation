@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: economy
+original_date: unknown
+---
+
 Below is the **Phase 9 remaining-tasks implementation plan only**, based on the uploaded current branch [all_src_p9.py](sandbox:/mnt/data/all_src_p9.py) and [all_test_v2_p9.py](sandbox:/mnt/data/all_test_v2_p9.py), reviewed against the original [all_src.py](sandbox:/mnt/data/all_src.py) and [all_test.py](sandbox:/mnt/data/all_test.py). The current V2 branch already has real coverage for belief cycle, cognition export, narrative memory, parts of social consequence, genetics/skill scaling, and dynamic quest generation, but it still lacks several original RPG consequence families that are explicit in the legacy test surface.
 
 # Phase 9 Remaining Tasks Implementation Plan

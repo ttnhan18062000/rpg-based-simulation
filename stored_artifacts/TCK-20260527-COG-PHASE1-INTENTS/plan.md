@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260527-COG-PHASE1-INTENTS
+artifact_type: plan
+tags: [cog, phase1, intents]
+---
+
 # Implementation Plan - Phase 1 ActionIntent Adapter
 
 ## Proposed Changes

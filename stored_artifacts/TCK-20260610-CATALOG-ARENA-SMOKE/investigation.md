@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260610-CATALOG-ARENA-SMOKE
+artifact_type: investigation
+tags: [catalog, arena, smoke]
+---
+
 # Investigation — TCK-20260610-CATALOG-ARENA-SMOKE
 
 ## Current Behavior

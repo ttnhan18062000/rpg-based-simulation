@@ -1,7 +1,13 @@
 ---
-ticket: TCK-20260609-STRICT-WORLD-MATRIX
-phase: investigation
+status: historical
+layer: world
+authority: P2
+audience: agent
+ticket_id: TCK-20260609-STRICT-WORLD-MATRIX
+artifact_type: investigation
+tags: [strict, world, matrix]
 ---
+
 
 # Investigation
 

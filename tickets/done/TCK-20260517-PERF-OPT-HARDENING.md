@@ -1,3 +1,14 @@
+---
+status: historical
+layer: performance
+authority: P1
+audience: agent
+ticket_id: TCK-20260517-PERF-OPT-HARDENING
+phase: done
+date: 2026-05-17
+tags: [perf, opt, hardening]
+---
+
 # TCK-20260517-PERF-OPT-HARDENING
 
 ## Title

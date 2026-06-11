@@ -1,3 +1,13 @@
+---
+status: historical
+layer: guidelines
+authority: P2
+audience: agent
+ticket_id: TCK-20260523-MUTATION-SCHEMA
+artifact_type: test_plan
+tags: [mutation, schema]
+---
+
 # Test Plan - MutationSpec Schema & Validator
 
 This document establishes the testing strategy, scenarios, and assertions to verify the correctness of the MutationSpec implementation.

@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260426-FIX-PARITY-REGRESSIONS
+artifact_type: investigation
+tags: [fix, parity, regressions]
+---
+
 # Investigation: RPG Progression and Readiness Regressions
 
 ## 1. RPG Progression Delay

@@ -1,3 +1,14 @@
+---
+status: historical
+layer: guidelines
+authority: P1
+audience: agent
+ticket_id: TCK-20260605-PHASE26-REGISTRY-ADAPTERS
+phase: done
+date: 2026-06-05
+tags: [phase26, registry, adapters]
+---
+
 # TCK-20260605-PHASE26-REGISTRY-ADAPTERS
 
 ## Title

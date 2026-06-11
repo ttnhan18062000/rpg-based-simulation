@@ -1,3 +1,14 @@
+---
+status: historical
+layer: economy
+authority: P1
+audience: agent
+ticket_id: resource_v2_terrain_weight_e5_8
+phase: done
+date: unknown
+tags: [resource_v2_terrain_weight_e5_8]
+---
+
 # TCK-20260503-TERRAIN-WEIGHT-AUTHORITY
 
 ## Title

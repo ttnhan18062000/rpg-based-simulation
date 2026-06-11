@@ -1,3 +1,10 @@
+---
+status: historical
+layer: observability
+authority: P2
+audience: developer
+---
+
 # Phase 8: Advanced Simulation Understanding Framework
 
 This document describes the architectural specifications, post-run processing pipelines, and data layout introduced in **Phase 8: Advanced Simulation Understanding**. This framework transitions the V2 RPG Engine from simple anomaly alert detection into a proactive diagnostic system, providing behavioral interpretation, balance audits, narrative extraction, and developer investigation checklists.

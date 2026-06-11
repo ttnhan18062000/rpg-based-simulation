@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260529-OBS-PHASE25-BEHAVIOR-PATTERNS-INSIGHTS
+artifact_type: test_plan
+tags: [obs, phase25, behavior, patterns, insights]
+---
+
 # Test Plan
 
 ## Unit Tests

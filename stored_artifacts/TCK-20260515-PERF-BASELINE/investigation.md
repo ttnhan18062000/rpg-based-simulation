@@ -1,3 +1,13 @@
+---
+status: historical
+layer: performance
+authority: P2
+audience: agent
+ticket_id: TCK-20260515-PERF-BASELINE
+artifact_type: investigation
+tags: [perf, baseline]
+---
+
 # Investigation - TCK-20260515-PERF-BASELINE
 
 ## Summary

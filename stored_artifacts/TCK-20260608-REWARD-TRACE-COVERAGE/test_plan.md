@@ -1,3 +1,13 @@
+---
+status: historical
+layer: observability
+authority: P2
+audience: agent
+ticket_id: TCK-20260608-REWARD-TRACE-COVERAGE
+artifact_type: test_plan
+tags: [reward, trace, coverage]
+---
+
 # Test Plan — TCK-20260608-REWARD-TRACE-COVERAGE
 
 ## Command

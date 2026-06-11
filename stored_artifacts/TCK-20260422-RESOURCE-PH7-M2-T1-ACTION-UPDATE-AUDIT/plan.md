@@ -1,3 +1,13 @@
+---
+status: historical
+layer: economy
+authority: P2
+audience: agent
+ticket_id: TCK-20260422-RESOURCE-PH7-M2-T1-ACTION-UPDATE-AUDIT
+artifact_type: plan
+tags: [resource, ph7, m2, t1, action, update, audit]
+---
+
 # Implementation Plan: Audit Phase 7 Action/Update Rows
 
 ## Goal

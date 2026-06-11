@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260524-LAB-KNOWLEDGE
+artifact_type: plan
+tags: [lab, knowledge]
+---
+
 # Implementation Plan - Milestone 102 Update Knowledge Base
 
 ## Goal Description

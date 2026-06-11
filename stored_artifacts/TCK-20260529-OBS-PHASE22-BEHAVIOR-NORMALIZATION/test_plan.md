@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260529-OBS-PHASE22-BEHAVIOR-NORMALIZATION
+artifact_type: test_plan
+tags: [obs, phase22, behavior, normalization]
+---
+
 # Test Plan — Phase 22 + Phase 28 Initial Guard
 
 ## Scope

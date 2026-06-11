@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: observability
+authority: P2
+audience: agent
+tags: [debug_tests]
+---
+
 # Walkthrough - WorldLoop Test Suite Stabilization
 
 I have stabilized the WorldLoop test suite by fixing 8 failing unit tests and implementing Docker port isolation to prevent conflicts with production environments.

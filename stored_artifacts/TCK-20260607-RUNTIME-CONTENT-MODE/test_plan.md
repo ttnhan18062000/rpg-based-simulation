@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260607-RUNTIME-CONTENT-MODE
+artifact_type: test_plan
+tags: [runtime, content, mode]
+---
+
 # Test Plan — TCK-20260607-RUNTIME-CONTENT-MODE
 
 ## Test Command

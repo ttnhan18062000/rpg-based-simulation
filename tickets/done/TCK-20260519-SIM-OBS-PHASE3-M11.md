@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260519-SIM-OBS-PHASE3-M11
+phase: done
+date: 2026-05-19
+tags: [sim, obs, phase3, m11]
+---
+
 # TCK-20260519-SIM-OBS-PHASE3-M11
 
 ## Title

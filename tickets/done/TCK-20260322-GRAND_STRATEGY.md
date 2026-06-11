@@ -1,3 +1,14 @@
+---
+status: historical
+layer: strategy
+authority: P1
+audience: agent
+ticket_id: TCK-20260322-GRAND_STRATEGY
+phase: done
+date: 2026-03-22
+tags: [grand_strategy]
+---
+
 # TCK-20260322-GRAND_STRATEGY
 
 ## Title

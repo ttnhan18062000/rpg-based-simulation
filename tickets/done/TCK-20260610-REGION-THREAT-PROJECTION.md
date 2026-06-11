@@ -1,3 +1,14 @@
+---
+status: historical
+layer: world
+authority: P1
+audience: agent
+ticket_id: TCK-20260610-REGION-THREAT-PROJECTION
+phase: done
+date: 2026-06-10
+tags: [region, threat, projection]
+---
+
 # TCK-20260610-REGION-THREAT-PROJECTION
 
 ## Title

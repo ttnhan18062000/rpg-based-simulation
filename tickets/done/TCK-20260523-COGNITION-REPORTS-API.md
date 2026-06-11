@@ -1,3 +1,14 @@
+---
+status: historical
+layer: strategy
+authority: P1
+audience: agent
+ticket_id: TCK-20260523-COGNITION-REPORTS-API
+phase: done
+date: 2026-05-23
+tags: [cognition, reports, api]
+---
+
 # TCK-20260523-COGNITION-REPORTS-API
 
 ## Title

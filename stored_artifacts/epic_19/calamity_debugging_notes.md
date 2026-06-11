@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: misc
+authority: P2
+audience: agent
+tags: [epic_19]
+---
+
 # Calamity System Debugging Notes
 
 ## Final Resolution Summary

@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: epic-17-multi-hero
+phase: done
+date: unknown
+tags: [epic, multi, hero]
+---
+
 # Epic 17 Phase 1: Multi-Hero & Permanent Death
 
 ## Title

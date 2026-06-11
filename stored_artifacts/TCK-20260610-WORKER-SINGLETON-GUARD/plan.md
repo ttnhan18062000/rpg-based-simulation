@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260610-WORKER-SINGLETON-GUARD
+artifact_type: plan
+tags: [worker, singleton, guard]
+---
+
 # Plan — TCK-20260610-WORKER-SINGLETON-GUARD
 
 ## Architecture Review Status: APPROVED

@@ -1,7 +1,13 @@
 ---
-ticket: TCK-20260609-HARDCODED-GAMEPLAY-GUARD
-phase: investigation
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260609-HARDCODED-GAMEPLAY-GUARD
+artifact_type: investigation
+tags: [hardcoded, gameplay, guard]
 ---
+
 
 # Investigation
 

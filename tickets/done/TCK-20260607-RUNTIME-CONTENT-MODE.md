@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260607-RUNTIME-CONTENT-MODE
+phase: done
+date: 2026-06-07
+tags: [runtime, content, mode]
+---
+
 # TCK-20260607-RUNTIME-CONTENT-MODE
 
 ## Title

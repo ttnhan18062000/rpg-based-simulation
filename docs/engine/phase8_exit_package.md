@@ -1,3 +1,10 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: developer
+---
+
 # Phase 8 Exit Package: Combat, Tactical, & Local World Closure
 
 This package formalizes the completion of Phase 8 and establishes the baseline for Phase 9.

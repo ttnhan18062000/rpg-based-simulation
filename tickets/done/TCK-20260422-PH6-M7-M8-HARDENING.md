@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260422-PH6-M7-M8-HARDENING
+phase: done
+date: 2026-04-22
+tags: [ph6, m7, m8, hardening]
+---
+
 # TCK-20260422-PH6-M7-M8-HARDENING
 
 ## Title

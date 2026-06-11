@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260401-TEST-STABILIZATION
+phase: done
+date: 2026-04-01
+tags: [test, stabilization]
+---
+
 # TCK-20260401-TEST-STABILIZATION: Architecture Locking & Determinism Tests
 
 ## Description

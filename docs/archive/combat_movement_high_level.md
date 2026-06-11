@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: combat
+original_date: unknown
+---
+
 ## High-level implementation plan — corrected combat and movement overhaul
 
 This version corrects the earlier high-level plan by doing three things:

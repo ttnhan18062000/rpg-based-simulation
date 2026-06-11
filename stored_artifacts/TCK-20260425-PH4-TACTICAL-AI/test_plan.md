@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260425-PH4-TACTICAL-AI
+artifact_type: test_plan
+tags: [ph4, tactical, ai]
+---
+
 # Test Plan: Tactical Roles and Capacity
 
 ## Automated Tests

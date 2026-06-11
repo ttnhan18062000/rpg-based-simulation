@@ -1,3 +1,13 @@
+---
+status: historical
+layer: core
+authority: P2
+audience: agent
+ticket_id: TCK-20260528-ENTITY-ENHANCE-FUSION
+artifact_type: test_plan
+tags: [entity, enhance, fusion]
+---
+
 # Test Plan - Integrating Enhanced Domain Cognitive / World Loop (Phases 1-10)
 
 This document maps out the specific test targets to verify the correct integration of the cognitive and world emergence loop.

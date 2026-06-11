@@ -1,3 +1,10 @@
+---
+status: active
+layer: engine
+authority: P1
+audience: developer
+---
+
 # Milestone B: Runtime Signals and Governor Law
 
 ## 1. Purpose

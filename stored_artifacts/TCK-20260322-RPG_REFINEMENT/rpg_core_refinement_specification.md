@@ -1,3 +1,12 @@
+---
+content_type: doc
+status: historical
+layer: misc
+authority: P2
+audience: agent
+tags: [rpg_refinement]
+---
+
 # Specification: RPG Core Refinement (The 4 Pillars)
 
 This document defines the transition from a "Robotic/Reactive" simulation to a "Living/Proactive" RPG world.

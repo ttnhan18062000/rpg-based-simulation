@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260518-LEDGER-PATH-REMEDIATION
+phase: done
+date: 2026-05-18
+tags: [ledger, path, remediation]
+---
+
 # TCK-20260518-LEDGER-PATH-REMEDIATION
 
 ## Title

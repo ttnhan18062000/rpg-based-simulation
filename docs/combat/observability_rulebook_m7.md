@@ -1,3 +1,10 @@
+---
+status: active
+layer: combat
+authority: P1
+audience: developer
+---
+
 # Observability Rulebook (Milestone 7)
 
 ## 1. Overview

@@ -1,3 +1,13 @@
+---
+status: historical
+layer: combat
+authority: P2
+audience: agent
+ticket_id: TCK-20260501-PH8-DURABILITY-CRAFTING
+artifact_type: plan
+tags: [ph8, durability, crafting]
+---
+
 # Plan - Phase 8 Durability and Crafting
 
 ## Objective

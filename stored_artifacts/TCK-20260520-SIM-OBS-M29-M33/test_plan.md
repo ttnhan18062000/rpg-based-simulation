@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260520-SIM-OBS-M29-M33
+artifact_type: test_plan
+tags: [sim, obs, m29, m33]
+---
+
 # Test Plan: Observability Event Streaming, Standalone Workers, Historical APIs, and Retention
 
 This document lists the tests we will write and run to formally certify Milestones 29 through 33.

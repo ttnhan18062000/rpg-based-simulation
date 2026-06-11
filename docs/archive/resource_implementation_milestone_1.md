@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: economy
+original_date: unknown
+---
+
 [Milestone 1] - Simulation Kernel Contract and Resource-Envelope Rulebook
 
 [Milestone Description]

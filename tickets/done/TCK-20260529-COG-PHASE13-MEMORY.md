@@ -1,3 +1,14 @@
+---
+status: historical
+layer: engine
+authority: P1
+audience: agent
+ticket_id: TCK-20260529-COG-PHASE13-MEMORY
+phase: done
+date: 2026-05-29
+tags: [cog, phase13, memory]
+---
+
 # TCK-20260529-COG-PHASE13-MEMORY
 
 ## Title

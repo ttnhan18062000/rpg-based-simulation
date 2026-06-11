@@ -1,3 +1,11 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: developer
+tags: [investigation, signal, drift, milestone]
+---
+
 # Investigation: Signal Semantics & Model Drift (Milestone B/M7)
 
 ## 1. Divergence: Code vs Contract (M7)

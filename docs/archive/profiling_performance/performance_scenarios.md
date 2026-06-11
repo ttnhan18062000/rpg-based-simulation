@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: performance
+original_date: unknown
+---
+
 # Real-world scenarios when profile resources hit limits
 
 Current design is basically:

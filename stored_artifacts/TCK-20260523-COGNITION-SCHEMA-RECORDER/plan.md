@@ -1,3 +1,13 @@
+---
+status: historical
+layer: guidelines
+authority: P2
+audience: agent
+ticket_id: TCK-20260523-COGNITION-SCHEMA-RECORDER
+artifact_type: plan
+tags: [cognition, schema, recorder]
+---
+
 # plan.md - Schema & Recorder Plan
 
 Define the JSON schemas and trigger policy for entity strategic cognition snapshots.

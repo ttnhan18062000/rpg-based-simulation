@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260420-MA-BASELINE-ISOLATION
+artifact_type: test_plan
+tags: [ma, baseline, isolation]
+---
+
 # Test Plan - Milestone A Isolation (TCK-20260420-MA-BASELINE-ISOLATION)
 
 ## 1. Unit Tests

@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260330-CORE-STABILIZATION
+phase: done
+date: 2026-03-30
+tags: [core, stabilization]
+---
+
 # TCK-20260330-CORE-STABILIZATION: AOA Hardening & Simulation Purity
 
 ## Description

@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260520-SIM-OBS-M35
+artifact_type: plan
+tags: [sim, obs, m35]
+---
+
 # Implementation Plan: ClickHouse Event Warehouse V1 (Milestone 35)
 
 Introducing a production-grade external database adapter interface for ClickHouse event analytics, an automatic schema creation/verification manager, and new analytical query routes with idempotency gates.

@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260518-READ-MODEL-CACHE
+phase: done
+date: 2026-05-18
+tags: [read, model, cache]
+---
+
 # TCK-20260518-READ-MODEL-CACHE
 
 ## Title

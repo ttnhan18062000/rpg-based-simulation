@@ -218,8 +218,22 @@ ${JSON.stringify(task, null, 2)}
 Steps:
 1. Run: mkdir -p ${outputFolder}
 2. Run: date -u +%Y-%m-%dT%H:%M:%SZ — save as TS (use as the \`ts\` field).
-3. Write the ticket to ${ticketPath} using your canonical ticket format (all sections in order).
-   Map task data to sections:
+3. Write the ticket to ${ticketPath}. The file MUST begin with a YAML frontmatter block
+   (before the # heading), then the markdown body with all sections in order.
+
+   Frontmatter block (substitute actual values):
+   ---
+   status: active
+   layer: <infer from task.related_code_areas and task.title — use LAYER_VALUES in tools/validate_frontmatter.py>
+   authority: P1
+   audience: agent
+   ticket_id: ${ticketId}
+   phase: open
+   date: <YYYY-MM-DD from TS>
+   tags: []
+   ---
+
+   Map task data to markdown sections:
    - Title           → task.title
    - Status          → OPEN
    - Tier            → task.tier

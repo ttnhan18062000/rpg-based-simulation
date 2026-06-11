@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260527-COG-BELIEF-INTEGRATION
+artifact_type: investigation
+tags: [cog, belief, integration]
+---
+
 # Investigation - TCK-20260527-COG-BELIEF-INTEGRATION
 
 ## Objectives

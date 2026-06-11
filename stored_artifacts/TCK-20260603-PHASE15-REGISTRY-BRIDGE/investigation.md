@@ -1,3 +1,13 @@
+---
+status: historical
+layer: guidelines
+authority: P2
+audience: agent
+ticket_id: TCK-20260603-PHASE15-REGISTRY-BRIDGE
+artifact_type: investigation
+tags: [phase15, registry, bridge]
+---
+
 # Investigation Notes - Phase 15 Registry Bridge
 
 ## Registries Analysis

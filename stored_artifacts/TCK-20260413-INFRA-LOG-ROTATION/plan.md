@@ -1,3 +1,13 @@
+---
+status: historical
+layer: engine
+authority: P2
+audience: agent
+ticket_id: TCK-20260413-INFRA-LOG-ROTATION
+artifact_type: plan
+tags: [infra, log, rotation]
+---
+
 # Implementation Plan - HeadlessRunner Log Rotation
 
 I propose implementing an automated log rotation mechanism within the `HeadlessRunner` to prevent the `logs/` directory from being cluttered with hundreds of stale simulation artifacts.

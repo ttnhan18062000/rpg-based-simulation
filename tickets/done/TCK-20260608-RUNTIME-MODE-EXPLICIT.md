@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260608-RUNTIME-MODE-EXPLICIT
+phase: done
+date: 2026-06-08
+tags: [runtime, mode, explicit]
+---
+
 # TCK-20260608-RUNTIME-MODE-EXPLICIT
 
 ## Title

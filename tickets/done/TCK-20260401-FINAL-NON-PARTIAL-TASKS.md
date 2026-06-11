@@ -1,3 +1,14 @@
+---
+status: historical
+layer: misc
+authority: P1
+audience: agent
+ticket_id: TCK-20260401-FINAL-NON-PARTIAL-TASKS
+phase: done
+date: 2026-04-01
+tags: [final, non, partial, tasks]
+---
+
 # TCK-20260401-FINAL-NON-PARTIAL-TASKS: Address "Truly Open" Implementation Tasks
 
 ## Goal

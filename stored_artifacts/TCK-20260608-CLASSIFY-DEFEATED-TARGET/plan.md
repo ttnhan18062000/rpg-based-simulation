@@ -1,3 +1,13 @@
+---
+status: historical
+layer: misc
+authority: P2
+audience: agent
+ticket_id: TCK-20260608-CLASSIFY-DEFEATED-TARGET
+artifact_type: plan
+tags: [classify, defeated, target]
+---
+
 # Plan — TCK-20260608-CLASSIFY-DEFEATED-TARGET
 
 ## Steps

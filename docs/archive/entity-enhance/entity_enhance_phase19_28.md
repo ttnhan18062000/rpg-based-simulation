@@ -1,3 +1,11 @@
+---
+status: archive
+authority: P2
+audience: historical
+layer: core
+original_date: unknown
+---
+
 # Updated Observability / Profiling Roadmap
 
 This replaces the previous Phase 19–27 plan.

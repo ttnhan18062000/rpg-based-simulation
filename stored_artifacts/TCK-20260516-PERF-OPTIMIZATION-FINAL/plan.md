@@ -1,3 +1,13 @@
+---
+status: historical
+layer: performance
+authority: P2
+audience: agent
+ticket_id: TCK-20260516-PERF-OPTIMIZATION-FINAL
+artifact_type: plan
+tags: [perf, optimization, final]
+---
+
 # Implementation Plan: TCK-20260516-PERF-OPTIMIZATION-FINAL
 
 ## 1. Goal
