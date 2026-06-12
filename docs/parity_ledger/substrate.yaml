@@ -3788,3 +3788,62 @@
   test_path: tests/unit/certification/test_catalog_scenario_state_builder.py::test_archetype_entities_carry_archetype_id
   divergence_note: null
   support_boundary: null
+- id: SUBSTRATE-NEW-001
+  text: >
+    WorldBuilding compiler (WORLD-050/051/052) directly produces AuthoritativeState
+    from WorldSpec. Two compilation paths: direct (WorldSpec→AuthoritativeState) and
+    composition (WorldCompositionSpec→CompileContext via WorldAssembly). Validator
+    (WORLD-070/071/072) aborts on ERROR severity — no silent failures.
+    Repository (WORLD-060/061/062) is file-based with path safety guards.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: >
+    docs/world/compiler_contract.md +
+    src/worldbuilding/compiler.py:1 + src/worldbuilding/schema.py:1 +
+    src/worldbuilding/validator.py:1 + src/worldbuilding/repository.py:1
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: "WorldBuilding compiler — world setup only, not tick-path."
+- id: SUBSTRATE-NEW-002
+  text: >
+    WorldProceduralGenerator (WORLD-GEN-003/004) is fully deterministic: uses an
+    isolated random.Random(seed) instance — global random state is never read or
+    written. Same (intent, catalog_repo) inputs produce bit-identical WorldSpec,
+    CompileContext, and ProvenanceManifest (except created_at timestamp). Validation
+    failures (GENERATED_WORLD context) are reported but do NOT abort generation.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: >
+    docs/world/generator_contract.md +
+    src/worldgeneration/generator.py:41 (rng = random.Random(intent.seed)) +
+    tests/unit/worldgeneration/test_generator.py
+  proof_type: null
+  test_path: tests/unit/worldgeneration/test_generator.py
+  divergence_note: >
+    created_at in ProvenanceManifest is wall-clock (datetime.now(timezone.utc)) —
+    not seed-controlled. All other output fields are deterministic.
+  support_boundary: "WorldGeneration — world setup only, not tick-path."
+- id: SUBSTRATE-NEW-003
+  text: >
+    WorldModuleRepository (WORLD-MOD-004/005) rejects duplicate module_id across
+    all loaded files (raises ValueError). topological_sort_modules (WORLD-MOD-006/007)
+    uses Kahn's algorithm with alphabetical tie-breaking — deterministic given same
+    modules_map. Cycle detection raises ValueError. External requires refs (not in
+    modules_map) are silently ignored. WorldModuleAuthoringNormalizer produces
+    NormalizedWorldModule: ref lists → immutable Tuple[str,...], count maps → Dict[str,int]
+    with all counts ≥ 1; duplicates and non-positive counts raise NormalizationError.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    docs/world/modules_contract.md +
+    src/worldmodules/repository.py:1 (WORLD-MOD-004/005) +
+    src/worldmodules/utils.py:1 (WORLD-MOD-006/007) +
+    src/worldmodules/normalizer.py
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: "WorldModules — world setup preprocessing only, not tick-path."
