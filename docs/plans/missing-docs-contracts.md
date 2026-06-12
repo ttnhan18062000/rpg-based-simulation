@@ -36,7 +36,7 @@ context.py. The resolver carries Compliance IDs WORLD-ASM-008, WORLD-ASM-009, WO
 Currently the only coverage is two ADRs (world_assembly_architecture.md,
 world_repository_layout.md) — decision records, not pipeline contracts.
 
-We need docs/worldassembly/ with a contract covering: the assembly pipeline phases (how a
+We need docs/world/ with a contract covering: the assembly pipeline phases (how a
 WorldCompositionSpec becomes a live world), entity spawning rules, schema validation flow,
 context lifecycle, and the full WORLD-ASM-* compliance ID namespace with v2_evidence
 pointing to the actual source lines.
@@ -52,7 +52,7 @@ topology laws but there is no engine contract for the compilation pipeline itsel
 declarative world specs are compiled into WorldCompositionSpec, recipe resolution, validation
 rules, and the repository interface.
 
-We need docs/worldbuilding/ with a contract covering: compiler pipeline, recipe system,
+We need docs/world/ with a contract covering: compiler pipeline, recipe system,
 validator rules, repository interface, and the WORLD-* compliance ID namespace.
 
 ---
@@ -63,7 +63,7 @@ validator rules, repository interface, and the WORLD-* compliance ID namespace.
 repository.py carries Compliance IDs WORLD-MOD-004, WORLD-MOD-005. There are zero docs
 for this module anywhere in docs/.
 
-We need docs/worldmodules/ with a contract covering: the module schema, normalization rules,
+We need docs/world/ with a contract covering: the module schema, normalization rules,
 repository interface (how modules are loaded and resolved), and the WORLD-MOD-* compliance
 ID namespace.
 
@@ -77,7 +77,7 @@ request.py, schema.py, store.py, validator.py, workflows.py, cli.py. orchestrato
 Compliance IDs SCENARIO-012, SCENARIO-013, SCENARIO-014, SCENARIO-015. The only existing doc
 is the historical docs/observability/agentic_lab.md — a phase report, not a contract.
 
-We need docs/lab/ with a contract covering: lab session lifecycle, mutation pipeline and safety
+We need docs/simulation/ with a contract covering: lab session lifecycle, mutation pipeline and safety
 guardrails, metamorphic testing contract, audit trail rules, human-gated approval flow, and
 the SCENARIO-* compliance ID namespace.
 
@@ -92,7 +92,7 @@ world_emergence (5) — with a total of approximately 85 files. The only partial
 bounded_cognition contracts in docs/strategy/ (covering strategy/cognition only) and
 docs/architecture/cognition_domain_ownership.md (cognition only).
 
-We need docs/domains/ with: a unified domain ownership map covering all 14 subsystems (which
+We need docs/simulation/domains/ with: a unified domain ownership map covering all 14 subsystems (which
 owns what, boundaries, interaction rules), plus individual contracts for the four highest-
 complexity domains: combat_engagement, information, campaigns, and optimization. These four
 each have 9-10 files and touch critical simulation paths (combat resolution, trust/assimilation,
@@ -122,7 +122,7 @@ is a high-level system overview, not an engine contract. There is no contract de
 generator's authoritative status, its inputs (WorldCompositionSpec), outputs, determinism
 guarantees, or its place in the world data pipeline.
 
-We need docs/worldgeneration/ with a contract covering: generator pipeline, schema definition,
+We need docs/world/ with a contract covering: generator pipeline, schema definition,
 determinism guarantees (seeding rules), and how worldgeneration fits between worldbuilding
 (compiler output) and worldassembly (assembly input).
 
@@ -136,7 +136,7 @@ docs/mechanics/03_economic_laws.md — RPG economic laws — and docs/systems/bu
 — a system overview. There is no engine contract for town-level logic: building sabotage rules,
 home storage lifecycle, shop transaction flow, or town navigation.
 
-We need docs/town/ with a contract covering: building system rules, sabotage pipeline, home
+We need docs/simulation/ with a contract covering: building system rules, sabotage pipeline, home
 storage lifecycle, shop/trade flow, and how the town subsystem interacts with the authoritative
 pipeline phases that reference town logic (phases 4, 9, 12, 15 in authoritative_pipeline.md).
 
@@ -149,6 +149,6 @@ for the quest system anywhere in docs/. The quest system appears to connect to t
 pipeline (authoritative pipeline phase 14 — Objective Reward) but there is no contract
 documenting how quests are generated, tracked, completed, or expired.
 
-We need docs/quests/ with a contract covering: quest generation rules, quest lifecycle
+We need docs/simulation/ with a contract covering: quest generation rules, quest lifecycle
 (creation, tracking, completion, expiry), template system, and the connection to phase 14
 (Objective Reward) in the authoritative pipeline.

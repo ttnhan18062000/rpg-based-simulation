@@ -14,7 +14,7 @@ This design document outlines the technical implementation strategy for **Phase 
 ## 1. Context Exploration & System Comparison
 
 ### 1.1 Existing Entity Aspect Mappings
-We compare our planned Phase 1 components with the current architecture detailed in `docs/entity/entity_base.md` and `docs/entity/entity_aspect_relationship_diagram.mmd`:
+We compare our planned Phase 1 components with the current architecture detailed in `docs/core/entity_base.md` and `docs/core/entity_aspect_relationship_diagram.mmd`:
 
 *   **State Aggregates**: Currently, the `EntityState` includes `StrategicComponent` (active projects, objectives, leads, blockers) and `SocialComponent` (trust, debt, contracts). However, these are purely *local mental state representations*.
 *   **The Mismatch**: Currently, the *World* (`AuthoritativeState`) does not expose structured options (e.g. "What resources can I harvest near me that will satisfy my blocker?"). The entity has to search the entire world manually or fall back to ad-hoc, hardcoded logic.

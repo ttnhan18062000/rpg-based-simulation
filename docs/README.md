@@ -88,7 +88,7 @@ tags: []
 ---
 ```
 
-**Archive frontmatter** (`docs/archive/`, `docs/superpowers/specs/`, `docs/specs/`):
+**Archive frontmatter** (`docs/archive/`, `docs/specs/`, `docs/specs/`):
 ```yaml
 ---
 status: archive

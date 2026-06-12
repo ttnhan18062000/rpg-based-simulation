@@ -3799,7 +3799,7 @@
   priority: P0
   legacy_evidence: null
   v2_evidence: >
-    docs/worldbuilding/compiler_contract.md +
+    docs/world/compiler_contract.md +
     src/worldbuilding/compiler.py:1 + src/worldbuilding/schema.py:1 +
     src/worldbuilding/validator.py:1 + src/worldbuilding/repository.py:1
   proof_type: null
@@ -3817,7 +3817,7 @@
   priority: P0
   legacy_evidence: null
   v2_evidence: >
-    docs/worldgeneration/generator_contract.md +
+    docs/world/generator_contract.md +
     src/worldgeneration/generator.py:41 (rng = random.Random(intent.seed)) +
     tests/unit/worldgeneration/test_generator.py
   proof_type: null
@@ -3839,7 +3839,7 @@
   priority: P1
   legacy_evidence: null
   v2_evidence: >
-    docs/worldmodules/modules_contract.md +
+    docs/world/modules_contract.md +
     src/worldmodules/repository.py:1 (WORLD-MOD-004/005) +
     src/worldmodules/utils.py:1 (WORLD-MOD-006/007) +
     src/worldmodules/normalizer.py

@@ -1,3 +1,9 @@
+---
+status: historical
+layer: core
+authority: P2
+---
+
 # Source Inventory — Implemented Entity Actions and Action-Related Aspects
 
 ## Inventory verdict

@@ -1880,14 +1880,14 @@
   text: >
     Bulk archive frontmatter script tools/add_frontmatter_archive.py applies
     status:archive/authority:P2/audience:historical frontmatter to docs/archive/
-    (235 files), docs/superpowers/specs/ (33 files), docs/specs/ (4 files).
+    (235 files), docs/specs/ (33 files), docs/specs/ (4 files).
     Idempotent: safe to re-run.
   status: verified
   priority: P2
   legacy_evidence: null
   v2_evidence: >
     tools/add_frontmatter_archive.py + docs/archive/**/*.md +
-    docs/superpowers/specs/*.md + docs/specs/*.md
+    docs/specs/*.md + docs/specs/*.md
   proof_type: null
   test_path: tests/tools/test_add_frontmatter_archive.py
   divergence_note: null
@@ -1953,7 +1953,7 @@
   priority: P1
   legacy_evidence: null
   v2_evidence: >
-    docs/lab/lab_contract.md +
+    docs/simulation/lab_contract.md +
     src/lab/orchestrator.py:1 + src/lab/schema.py:1 +
     src/lab/validator.py:1 + src/lab/guardrails.py +
     src/lab/mutation.py:1 + src/lab/metamorphic.py:1
@@ -1972,7 +1972,7 @@
   priority: P0
   legacy_evidence: null
   v2_evidence: >
-    docs/worldassembly/assembly_contract.md +
+    docs/world/assembly_contract.md +
     src/worldassembly/resolver.py:1 + src/worldassembly/context.py:1 +
     src/worldassembly/models.py:1 + src/worldassembly/schema.py:1
   proof_type: null

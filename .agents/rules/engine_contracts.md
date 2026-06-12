@@ -103,12 +103,12 @@ size, thread count, or degradation-mode thresholds in the `ResourceGovernor`.
 
 **Required updates:**
 - The specific substrate contract that owns the changed bound:
-  - Worker bounds → `docs/engine/worker_contract.md`
-  - Resource governor thresholds → `docs/engine/resource_governor_contract.md`
-  - Scheduler eligibility or work model → `docs/engine/scheduler_contract.md`
-  - Replay retention → `docs/engine/replay_contract.md`
-  - Observability budgets → `docs/engine/observability_contract.md`
-  - Runtime state partition → `docs/engine/runtime_state_contract.md`
+  - Worker bounds → `docs/engine/contracts/worker_contract.md`
+  - Resource governor thresholds → `docs/engine/contracts/resource_governor_contract.md`
+  - Scheduler eligibility or work model → `docs/engine/contracts/scheduler_contract.md`
+  - Replay retention → `docs/engine/contracts/replay_contract.md`
+  - Observability budgets → `docs/engine/contracts/observability_contract.md`
+  - Runtime state partition → `docs/engine/contracts/runtime_state_contract.md`
 - Update `docs/engine/runtime_profiles.md` if the Runtime Profile envelope (Max RAM,
   Max CPU, Max Worker Count) changes for any hardware class
 - `docs/parity_ledger/infrastructure.yaml` for affected entries
@@ -165,16 +165,16 @@ updated in the same commit/session.
 
 | Source path | Contract doc | Parity ledger file | Compliance namespace |
 |---|---|---|---|
-| `src/worldassembly/` | `docs/worldassembly/assembly_contract.md` | `infrastructure.yaml` | `WORLD-ASM-*` |
-| `src/worldbuilding/` | `docs/worldbuilding/compiler_contract.md` | `substrate.yaml` | `WORLD-*` |
-| `src/worldmodules/` | `docs/worldmodules/modules_contract.md` | `infrastructure.yaml` | `WORLD-MOD-*` |
-| `src/worldgeneration/` | `docs/worldgeneration/generator_contract.md` | `substrate.yaml` | — |
-| `src/lab/` | `docs/lab/lab_contract.md` | `infrastructure.yaml` | `SCENARIO-*` |
-| `src/domains/` | `docs/domains/domain_ownership_map.md` + relevant domain contract | — | — |
+| `src/worldassembly/` | `docs/world/assembly_contract.md` | `infrastructure.yaml` | `WORLD-ASM-*` |
+| `src/worldbuilding/` | `docs/world/compiler_contract.md` | `substrate.yaml` | `WORLD-*` |
+| `src/worldmodules/` | `docs/world/modules_contract.md` | `infrastructure.yaml` | `WORLD-MOD-*` |
+| `src/worldgeneration/` | `docs/world/generator_contract.md` | `substrate.yaml` | — |
+| `src/lab/` | `docs/simulation/lab_contract.md` | `infrastructure.yaml` | `SCENARIO-*` |
+| `src/domains/` | `docs/simulation/domains/domain_ownership_map.md` + relevant domain contract | — | — |
 | `src/content/` | `docs/content/pipeline_contract.md` | — | — |
 | `src/content_semantics/` | `docs/content/content_semantics_contract.md` | — | — |
-| `src/town/` | `docs/town/town_contract.md` | — | — |
-| `src/quests/` | `docs/quests/quest_contract.md` | — | — |
+| `src/town/` | `docs/simulation/town_contract.md` | — | — |
+| `src/quests/` | `docs/simulation/quest_contract.md` | — | — |
 
 **Rule:** If the contract doc listed above does not yet exist (tickets are open), note the gap in
 the Implementation Notes of the ticket you are working and do not invent content — wait for the
@@ -212,13 +212,13 @@ If any are present, the ticket is not done — fix before closing.
 | Resource / concurrency bounds | Relevant substrate contract + `runtime_profiles.md` | `infrastructure.yaml` | If structural |
 | Architectural decision | ADR in `docs/architecture/` | — | Yes, always |
 | Data-driven config / profile | `runtime_profiles.md` + scenario matrix | — | No |
-| `src/worldassembly/` behavior | `docs/worldassembly/assembly_contract.md` | `infrastructure.yaml` | If structural |
-| `src/worldbuilding/` behavior | `docs/worldbuilding/compiler_contract.md` | `substrate.yaml` | If structural |
-| `src/worldmodules/` behavior | `docs/worldmodules/modules_contract.md` | `infrastructure.yaml` | If structural |
-| `src/worldgeneration/` behavior | `docs/worldgeneration/generator_contract.md` | `substrate.yaml` | If structural |
-| `src/lab/` behavior | `docs/lab/lab_contract.md` | `infrastructure.yaml` | If structural |
-| `src/domains/<name>/` behavior | `docs/domains/<name>_contract.md` | — | If structural |
+| `src/worldassembly/` behavior | `docs/world/assembly_contract.md` | `infrastructure.yaml` | If structural |
+| `src/worldbuilding/` behavior | `docs/world/compiler_contract.md` | `substrate.yaml` | If structural |
+| `src/worldmodules/` behavior | `docs/world/modules_contract.md` | `infrastructure.yaml` | If structural |
+| `src/worldgeneration/` behavior | `docs/world/generator_contract.md` | `substrate.yaml` | If structural |
+| `src/lab/` behavior | `docs/simulation/lab_contract.md` | `infrastructure.yaml` | If structural |
+| `src/domains/<name>/` behavior | `docs/simulation/domains/<name>_contract.md` | — | If structural |
 | `src/content/` or `src/content_semantics/` | `docs/content/pipeline_contract.md` or `content_semantics_contract.md` | — | If structural |
-| `src/town/` behavior | `docs/town/town_contract.md` | — | If structural |
-| `src/quests/` behavior | `docs/quests/quest_contract.md` | — | If structural |
+| `src/town/` behavior | `docs/simulation/town_contract.md` | — | If structural |
+| `src/quests/` behavior | `docs/simulation/quest_contract.md` | — | If structural |
 | Any of the above | Run `make docs-registry` after writing new docs | — | — |
