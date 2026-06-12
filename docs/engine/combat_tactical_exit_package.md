@@ -19,7 +19,7 @@ The following contracts are now frozen and authoritative:
 - **Local World**: [Spatial Legality & LoS Blocking](../engine/local_world_interaction_contract.md).
 
 ## 3. Proof Index
-Evidence of recovery is consolidated in the [Phase 8 Proof Bundle](../engine/phase8_proof_bundle.md).
+Evidence of recovery is consolidated in the [Phase 8 Proof Bundle](../engine/combat_tactical_proof_bundle.md).
 - **100% Pass Rate** on Tactical and World interaction contract tests.
 - **Bit-Identical Parity** on the core damage resolution formula.
 - **Ratified Divergences** for AI prioritization and retreat thresholds.

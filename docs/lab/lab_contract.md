@@ -13,7 +13,7 @@ tags: [lab, simulation, agentic, contract, scenario]
 **Phase:** Phase 14 — Lab Session Lifecycle  
 **Authoritative status:** Shadow state — lab sessions are isolated from `AuthoritativeState`. Session data is stored in `data/lab_sessions/` (file-based), not in the simulation hash.
 
-For historical context only: `docs/observability/phase_14_agentic_lab.md` (a phase report — not a contract).
+For historical context only: `docs/observability/agentic_lab.md` (a phase report — not a contract).
 
 ---
 

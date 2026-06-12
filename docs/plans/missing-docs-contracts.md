@@ -75,7 +75,7 @@ ID namespace.
 metamorphic.py, audit.py, comparison.py, context.py, mutation.py, registry.py, repository.py,
 request.py, schema.py, store.py, validator.py, workflows.py, cli.py. orchestrator.py carries
 Compliance IDs SCENARIO-012, SCENARIO-013, SCENARIO-014, SCENARIO-015. The only existing doc
-is the historical docs/observability/phase_14_agentic_lab.md — a phase report, not a contract.
+is the historical docs/observability/agentic_lab.md — a phase report, not a contract.
 
 We need docs/lab/ with a contract covering: lab session lifecycle, mutation pipeline and safety
 guardrails, metamorphic testing contract, audit trail rules, human-gated approval flow, and

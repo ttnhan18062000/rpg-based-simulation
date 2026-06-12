@@ -9,8 +9,8 @@ performance/optimization, architecture decisions, resource bounds, data-driven c
 concurrency. This rule is separate from `authoritative_mechanics.md`, which covers RPG simulation
 laws (Mechanics Bible). Engine-layer changes have their own doc update requirements.
 
-The master index of all engine contracts is `docs/engine/project_lawbook_m10.md`.
-The extension and maintenance laws are in `docs/engine/engineering_playbook_m10.md`.
+The master index of all engine contracts is `docs/engine/project_lawbook.md`.
+The extension and maintenance laws are in `docs/engine/engineering_playbook.md`.
 
 ---
 
@@ -58,12 +58,12 @@ durable state, a tick-path hook, a worker type, or an internal buffer/queue.
 
 **Required updates:**
 - Write a subsystem contract doc at `docs/engine/<subsystem_name>_contract.md` using the
-  Subsystem Contract Template from `docs/engine/engineering_playbook_m10.md`. Must declare:
+  Subsystem Contract Template from `docs/engine/engineering_playbook.md`. Must declare:
   - **Authoritative Status**: YES if state participates in the hash; NO for shadow/telemetry
   - **Resource Budget**: max RSS (MB) and max compute (ms/tick) per hardware class
   - **Retention / Overflow Policy**: what happens when internal buffers hit their ceiling
   - **Degradation Laws**: behavior under CONSTRAINED, DEGRADED, SURVIVAL modes
-- Add the new contract to the Table of Contents in `docs/engine/project_lawbook_m10.md`
+- Add the new contract to the Table of Contents in `docs/engine/project_lawbook.md`
 - Add at least one entry to `docs/parity_ledger/infrastructure.yaml` for the new subsystem
 - Run `make docs-registry` after writing the contract so REGISTRY.yaml picks it up
 
@@ -103,13 +103,13 @@ size, thread count, or degradation-mode thresholds in the `ResourceGovernor`.
 
 **Required updates:**
 - The specific substrate contract that owns the changed bound:
-  - Worker bounds → `docs/engine/worker_contract_m8.md`
-  - Resource governor thresholds → `docs/engine/resource_governor_contract_m5.md`
-  - Scheduler eligibility or work model → `docs/engine/scheduler_contract_m4.md`
-  - Replay retention → `docs/engine/replay_contract_m6.md`
-  - Observability budgets → `docs/engine/observability_contract_m7.md`
-  - Runtime state partition → `docs/engine/runtime_state_contract_m3.md`
-- Update `docs/engine/runtime_profiles_m1.md` if the Runtime Profile envelope (Max RAM,
+  - Worker bounds → `docs/engine/worker_contract.md`
+  - Resource governor thresholds → `docs/engine/resource_governor_contract.md`
+  - Scheduler eligibility or work model → `docs/engine/scheduler_contract.md`
+  - Replay retention → `docs/engine/replay_contract.md`
+  - Observability budgets → `docs/engine/observability_contract.md`
+  - Runtime state partition → `docs/engine/runtime_state_contract.md`
+- Update `docs/engine/runtime_profiles.md` if the Runtime Profile envelope (Max RAM,
   Max CPU, Max Worker Count) changes for any hardware class
 - `docs/parity_ledger/infrastructure.yaml` for affected entries
 
@@ -146,9 +146,9 @@ scenario definition, a sweep configuration, a governance policy parameter, or an
 that controls engine behavior through configuration rather than code.
 
 **Required updates:**
-- `docs/engine/runtime_profiles_m1.md` — add or update the profile using the Runtime Profile
-  Template from `docs/engine/engineering_playbook_m10.md`
-- The relevant certification or test matrix doc for the milestone (e.g., `m9_certification_matrix.md`)
+- `docs/engine/runtime_profiles.md` — add or update the profile using the Runtime Profile
+  Template from `docs/engine/engineering_playbook.md`
+- The relevant certification or test matrix doc for the milestone (e.g., `certification_matrix.md`)
   if scenario definitions or expected outcomes change
 - `docs/engine/performance_contract.md` if hardware class TPS targets change
 - If the config is a new engine feature surface: document it in `docs/engine/known_limitations.md`
@@ -193,10 +193,10 @@ If any are present, the ticket is not done — fix before closing.
 
 | Forbidden pattern | Where defined | Check |
 |---|---|---|
-| Unbounded collection (list/dict with no `max_size` or retention policy) | `engineering_playbook_m10.md §Forbidden` | grep new collections in changed files |
-| Alternate authority (static var or global registry influencing simulation outcome) | `engineering_playbook_m10.md §Forbidden` | grep module-level state in changed files |
+| Unbounded collection (list/dict with no `max_size` or retention policy) | `engineering_playbook.md §Forbidden` | grep new collections in changed files |
+| Alternate authority (static var or global registry influencing simulation outcome) | `engineering_playbook.md §Forbidden` | grep module-level state in changed files |
 | Dishonest performance claim (speed claim without Profile+Scenario+HardwareClass) | `performance_contract.md §3.1` | check any doc or comment claiming TPS/ms |
-| Ad-hoc threading (Thread/asyncio outside Scheduler and WorkerPool bounds) | `engineering_playbook_m10.md §Forbidden` | grep `threading.Thread`, `asyncio.create_task` in changed files |
+| Ad-hoc threading (Thread/asyncio outside Scheduler and WorkerPool bounds) | `engineering_playbook.md §Forbidden` | grep `threading.Thread`, `asyncio.create_task` in changed files |
 | Durable meaning in `reason` strings or free-form metadata | `architecture.md §Durable State Rule` | review new fields added to state models |
 
 ---
@@ -209,9 +209,9 @@ If any are present, the ticket is not done — fix before closing.
 | Pipeline phase / Logic ID | `authoritative_pipeline.md` | `substrate.yaml` | If structural |
 | New subsystem | New `<name>_contract.md` + Lawbook TOC | `infrastructure.yaml` | No (contract is sufficient) |
 | Tick-path optimization | `performance_contract.md` (verify + update numbers) | `infrastructure.yaml` | If structural |
-| Resource / concurrency bounds | Relevant substrate contract + `runtime_profiles_m1.md` | `infrastructure.yaml` | If structural |
+| Resource / concurrency bounds | Relevant substrate contract + `runtime_profiles.md` | `infrastructure.yaml` | If structural |
 | Architectural decision | ADR in `docs/architecture/` | — | Yes, always |
-| Data-driven config / profile | `runtime_profiles_m1.md` + scenario matrix | — | No |
+| Data-driven config / profile | `runtime_profiles.md` + scenario matrix | — | No |
 | `src/worldassembly/` behavior | `docs/worldassembly/assembly_contract.md` | `infrastructure.yaml` | If structural |
 | `src/worldbuilding/` behavior | `docs/worldbuilding/compiler_contract.md` | `substrate.yaml` | If structural |
 | `src/worldmodules/` behavior | `docs/worldmodules/modules_contract.md` | `infrastructure.yaml` | If structural |

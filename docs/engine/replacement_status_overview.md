@@ -25,7 +25,7 @@ This document tracks the cumulative replacement progress of the V2 engine agains
 ### Resource & Economy
 - **Status**: ~40% (Verified Baseline)
 - **Status Detail**: Harvesting, looting, and basic town resolution are recovered. Economy overhaul deferred.
-- **Reference**: [Final Proof Bundle](../engine/phase11_proof_bundle.md)
+- **Reference**: [Final Proof Bundle](../engine/ratification_proof_bundle.md)
 
 ### Combat & Action
 - **Status**: ~85% (Hardened)
@@ -35,7 +35,7 @@ This document tracks the cumulative replacement progress of the V2 engine agains
 ### Strategic & Social
 - **Status**: 100% (Ratified)
 - **Status Detail**: Bounded cognition, social trust, and project-based AI are fully recovered and hardened.
-- **Reference**: [Strategic Cognition Baseline](../engine/phase11_preserved_review.md)
+- **Reference**: [Strategic Cognition Baseline](../engine/ratification_preserved_review.md)
 
 ## 3. Phase 11 Ratification Summary
 - **Replacement Coverage**: 80.4% (152/189 behaviors).

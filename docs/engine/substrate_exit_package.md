@@ -29,7 +29,7 @@ Phase 7 (Substrate Closure) is officially **CLOSED**. The `src` engine now opera
 ## 3. Truth & Certification
 - **Verification Result**: 100% pass on `tests` (232+ tests).
 - **Parity Rating**: GOLD (Identical outcomes to legacy RPG-core intent).
-- **Proof Bundle**: See [Phase 7 Proof Bundle](../engine/phase7_proof_bundle.md).
+- **Proof Bundle**: See [Phase 7 Proof Bundle](../engine/substrate_proof_bundle.md).
 
 ## 4. Operational Boundaries
 - **Supported**: Single-tick deterministic progression, multi-agent occupancy resolution, regional hazards, evolution.

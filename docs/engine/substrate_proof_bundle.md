@@ -30,7 +30,7 @@ This bundle aggregates all technical evidence supporting the closure of the Phas
 - `tests/replay/test_authoritative_outcome_truth.py`: Proves replay truth sources from post-apply outcomes.
 
 ## 3. Structural Audits
-- [Pipeline Scope Audit](../engine/phase7_pipeline_scope_audit.md): Classifies all systems in the refinement pipeline and identifies semantic bleed.
+- [Pipeline Scope Audit](../engine/substrate_pipeline_scope_audit.md): Classifies all systems in the refinement pipeline and identifies semantic bleed.
 
 ## 4. Status Matrix Alignment
 - All Phase 7 recovery gaps in `docs/engine/legacy_replacement_ledger.md` are verified as **SUPPORTED** by the above evidence.

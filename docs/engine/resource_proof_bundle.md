@@ -26,8 +26,8 @@ The following integrated loops have been verified through high-fidelity parity a
 | Scenario | Matrix | Verification Code |
 | :--- | :--- | :--- |
 | **Integrated Progression**| [support_matrix.md](../engine/support_matrix.md) | `tests/parity/test_progression_loop_parity.py` |
-| **Kernel Determinism** | [m1_test_matrix.md](../engine/m1_test_matrix.md) | `tests/engine/test_determinism_suite.py` |
-| **Authoritative Apply** | [m7_test_matrix.md](../engine/m7_test_matrix.md) | `tests/engine/test_authoritative_apply.py` |
+| **Kernel Determinism** | [simulation_kernel_test_matrix.md](../engine/simulation_kernel_test_matrix.md) | `tests/engine/test_determinism_suite.py` |
+| **Authoritative Apply** | [observability_test_matrix.md](../engine/observability_test_matrix.md) | `tests/engine/test_authoritative_apply.py` |
 
 ## 3. Contract & Lifecycle Integrity
 
@@ -36,9 +36,9 @@ The following V2 core contracts have been formally validated against the runtime
 | Contract | Matrix | Verification Code |
 | :--- | :--- | :--- |
 | **Strategic Intelligence**| [ma_test_matrix.md](../engine/ma_test_matrix.md) | `tests/contract/test_resource_intelligence_contract.py` |
-| **Governor & Boundedness**| [m5_test_matrix.md](../engine/m5_test_matrix.md) | `tests/engine/test_resource_governor_contract.py` |
+| **Governor & Boundedness**| [resource_governor_test_matrix.md](../engine/resource_governor_test_matrix.md) | `tests/engine/test_resource_governor_contract.py` |
 | **Lifecycle & Shutdown** | [mc_test_matrix.md](../engine/mc_test_matrix.md) | `tests/engine/test_graceful_shutdown.py` |
-| **Worker Equivalence** | [m8_test_matrix.md](../engine/m8_test_matrix.md) | `tests/engine/test_worker_equivalence.py` |
+| **Worker Equivalence** | [worker_test_matrix.md](../engine/worker_test_matrix.md) | `tests/engine/test_worker_equivalence.py` |
 
 ## 4. Performance & Certification Gates
 

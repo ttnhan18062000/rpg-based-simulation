@@ -13,10 +13,10 @@ This package formalizes the readiness gate for Phase 9: Strategic & Social Cogni
 
 | Requirement | Status | Evidence |
 | :--- | :--- | :--- |
-| Phase 8 Exit Package ratified | **PASSED** | `docs/engine/phase8_exit_package.md` |
-| Phase 9 row set frozen | **PASSED** | `docs/engine/phase9_backlog.md` (10 rows) |
-| Closure conditions defined | **PASSED** | `docs/engine/phase9_closure_conditions.md` |
-| Support boundary restated | **PASSED** | `docs/engine/phase9_entry_support_boundary.md` |
+| Phase 8 Exit Package ratified | **PASSED** | `docs/engine/combat_tactical_exit_package.md` |
+| Phase 9 row set frozen | **PASSED** | `docs/engine/strategy_social_backlog.md` (10 rows) |
+| Closure conditions defined | **PASSED** | `docs/engine/strategy_social_closure_conditions.md` |
+| Support boundary restated | **PASSED** | `docs/engine/strategy_social_entry_support_boundary.md` |
 | All existing tests passing | **PASSED** | Full `tests/` regression suite |
 
 ## 2. Phase 9 Scope

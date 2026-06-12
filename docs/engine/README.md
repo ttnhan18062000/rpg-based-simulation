@@ -16,7 +16,7 @@ This directory documents the engine's deterministic heart and the pipeline that 
 ## Architectural Standards
 - [High-Level Architecture](../engine/architecture.md): System context and threading model.
 - [Implementation Conventions](../engine/architecture_reference.md): Coding standards and architectural spines.
-- [Project Lawbook](../engine/project_lawbook_m10.md): The master index of technical contracts.
+- [Project Lawbook](../engine/project_lawbook.md): The master index of technical contracts.
 
 ## Verification & Performance
 - [Performance Contract](../engine/performance_contract.md): Hardware classes and scaling limits.

@@ -165,7 +165,7 @@ These files are law — simulation behavior must match them exactly:
 | 05 | [mechanics/05_world_evolution.md](mechanics/05_world_evolution.md) | Tick-to-day time, regional trauma, ecology, calamities |
 | 06 | [mechanics/06_worldbuilding_foundation.md](mechanics/06_worldbuilding_foundation.md) | Declarative topology, sovereignty, integrity validation |
 
-Engine contracts: [engine/kernel.md](engine/kernel.md) · [engine/authoritative_pipeline.md](engine/authoritative_pipeline.md) · [engine/project_lawbook_m10.md](engine/project_lawbook_m10.md)
+Engine contracts: [engine/kernel.md](engine/kernel.md) · [engine/authoritative_pipeline.md](engine/authoritative_pipeline.md) · [engine/project_lawbook.md](engine/project_lawbook.md)
 
 ---
 

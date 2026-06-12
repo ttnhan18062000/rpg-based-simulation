@@ -212,7 +212,7 @@ This ledger is the singular source of truth for the replacement status of every 
 | **IMPLEMENTED** | 185 | 132 | 53 | `src/` Source Coverage |
 | **TESTED** | 185 | 128 | 57 | `tests/` Parity Suites |
 | **PROOF-BACKED** | 185 | 114 | 71 | `data/runs/` Manifests |
-| **SUPPORTED**| 185 | 113 | 72 | `docs/engine/phase5_exit_support_boundary.md` |
+| **SUPPORTED**| 185 | 113 | 72 | `docs/engine/resource_exit_support_boundary.md` |
 
 ## Audit Log
 

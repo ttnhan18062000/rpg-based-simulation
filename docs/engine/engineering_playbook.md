@@ -64,7 +64,7 @@ All new features must follow this exact sequence:
 ```markdown
 ## Subsystem: [Name]
 - **Authoritative Status**: [YES/NO] (Must be YES if impacting simulation)
-- **State Partition**: [State category in runtime_state_contract_m3.md]
+- **State Partition**: [State category in runtime_state_contract.md]
 - **Resource Budget**:
   - Max RSS: [X] MB
   - Max Compute: [Y] ms / tick

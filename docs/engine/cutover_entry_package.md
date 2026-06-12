@@ -19,8 +19,8 @@ This document formally opens **Phase 12 (Cutover)** for the `src` engine.
 
 ## 2. Cutover Baseline Reference
 - **Baseline**: `PH12-READINESS-20260424`
-- **Supported Surface**: [phase12_cutover_allowed_surface.md](../engine/phase12_cutover_allowed_surface.md)
-- **Constraints**: [phase12_cutover_constraints.md](../engine/phase12_cutover_constraints.md)
+- **Supported Surface**: [cutover_allowed_surface.md](../engine/cutover_allowed_surface.md)
+- **Constraints**: [cutover_constraints.md](../engine/cutover_constraints.md)
 
 ## Cutover Authorization
 Execution of Phase 12 Milestone 2 (Runtime Entry Cutover) is authorized. The project will now begin switching default operational paths to `src`.

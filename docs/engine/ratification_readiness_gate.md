@@ -13,9 +13,9 @@ This gate must be cleared before entering Milestone 2 (Semantic Proof Ratificati
 
 | Condition | Status | Evidence |
 | :--- | :--- | :--- |
-| **Frozen Scope** | CLEARED | `phase11_ratification_baseline.md` |
-| **Truth Alignment** | CLEARED | `phase11_entry_support_boundary.md` |
-| **Handoff Integrity** | CLEARED | `phase11_entry_package.md` |
+| **Frozen Scope** | CLEARED | `ratification_baseline.md` |
+| **Truth Alignment** | CLEARED | `ratification_entry_support_boundary.md` |
+| **Handoff Integrity** | CLEARED | `ratification_entry_package.md` |
 | **Baseline Stability** | CLEARED | 391/391 tests passing. |
 | **Cutover Blocking** | CLEARED | Phase 12 explicitly deferred. |
 

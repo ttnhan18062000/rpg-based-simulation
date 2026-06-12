@@ -15,7 +15,7 @@ The following criteria must be met before any Phase 5 gameplay expansion logic i
 | **Movement Parity** | Must be in standard proof path. | `test_movement_parity.py` | [x] |
 | **Interaction Parity**| Initial differential proof exists. | `test_resource_interaction_parity.py` | [x] |
 | **Release Truth** | Manifest and docs are in-sync. | `manifest.json` | [x] |
-| **Support Boundary** | Explicit movement/interaction scope.| `phase4_exit_package.md` | [x] |
+| **Support Boundary** | Explicit movement/interaction scope.| `parity_exit_package.md` | [x] |
 | **Contract Closure** | No decorative/fake fields. | `resource_governor_contract.md` | [x] |
 
 ## 2. Decision Record: CPU Governance

@@ -16,10 +16,10 @@ The branch has passed the Phase 8 Readiness Gate. All combat and tactical rows h
 
 | Artifact | Purpose | Location |
 | :--- | :--- | :--- |
-| **Phase 8 Backlog** | Frozen implementation backlog (12 items). | [phase8_backlog.md](../engine/phase8_backlog.md) |
-| **Closure Conditions** | Concrete finish lines for all Phase 8 rows. | [phase8_closure_conditions.md](../engine/phase8_closure_conditions.md) |
+| **Phase 8 Backlog** | Frozen implementation backlog (12 items). | [combat_tactical_backlog.md](../engine/combat_tactical_backlog.md) |
+| **Closure Conditions** | Concrete finish lines for all Phase 8 rows. | [combat_tactical_closure_conditions.md](../engine/combat_tactical_closure_conditions.md) |
 | **Dependency Map** | Identification of Phase 9 blockers. | [phase_dependency_map.md](../engine/phase_dependency_map.md) |
-| **Entry Support Boundary** | The "honest truth" of current semantics. | [phase8_entry_support_boundary.md](../engine/phase8_entry_support_boundary.md) |
+| **Entry Support Boundary** | The "honest truth" of current semantics. | [combat_tactical_entry_support_boundary.md](../engine/combat_tactical_entry_support_boundary.md) |
 
 ## 3. Row Allocation Adjustments
 As part of this gate, the following rows were reallocated from Phase 8 to **Phase 9** to maintain architectural discipline:

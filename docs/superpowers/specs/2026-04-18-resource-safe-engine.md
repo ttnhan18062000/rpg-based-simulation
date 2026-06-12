@@ -32,9 +32,9 @@ To prevent structural contamination from the legacy codebase:
 
 ### Step 1: Contract Documentation (Design Authority)
 Before any code, the following "Laws" must be drafted in `docs/engine/`:
-- `simulation_kernel_contract_m1.md`: Defines tick semantics, phase order, and authoritative state (state required to determine future simulation outcomes).
-- `runtime_profiles_m1.md`: Defines hard resource ceilings (RAM, CPU, queue depth, etc.) and hardware-class certification language.
-- `m1_test_matrix.md`: Maps law requirements to specific deterministic test groups.
+- `simulation_kernel_contract.md`: Defines tick semantics, phase order, and authoritative state (state required to determine future simulation outcomes).
+- `runtime_profiles.md`: Defines hard resource ceilings (RAM, CPU, queue depth, etc.) and hardware-class certification language.
+- `simulation_kernel_test_matrix.md`: Maps law requirements to specific deterministic test groups.
 
 ### Step 2: Code-Facing Contract Types
 Implement immutable contract types in `src/`:

@@ -30,4 +30,4 @@ The overhaul is divided into four major feature families, controlled by `Simulat
 A feature family is considered "Release Ready" when:
 1. It is covered by 100% of its required Milestone-specific TDD tests.
 2. It does not cause crashes in a 100-tick stress test.
-3. Its behavioral outcomes fall within the accepted envelopes defined in `docs/combat/arena_regression_m6_test_matrix.md`.
+3. Its behavioral outcomes fall within the accepted envelopes defined in `docs/combat/arena_regression_test_matrix.md`.
