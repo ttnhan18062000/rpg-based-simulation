@@ -17,7 +17,7 @@ The following artifacts are the primary inputs for Phase 11 review:
 
 - **[Ratification Baseline](../engine/ratification_baseline.md)**: Frozen row set.
 - **[Entry Support Boundary](../engine/ratification_entry_support_boundary.md)**: Honest support claims.
-- **[API Protocol Contract](file:///home/vboxuser/Work/rpg-based-simulation/docs/engine/api_protocol_contract.md)**: Published interface truth.
+- **[API Protocol Contract](file:///home/vboxuser/Work/rpg-based-simulation/docs/engine/contracts/api_protocol_contract.md)**: Published interface truth.
 - **[Phase 10 Closure Report](../engine/infrastructure_closure_report.md)**: Proof of infra parity.
 
 ## 3. Readiness Checklist (Milestone 1)

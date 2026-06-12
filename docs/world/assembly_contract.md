@@ -16,8 +16,8 @@ tags: [worldassembly, engine, contract, compilation, entity-spawning]
 See also:
 - `docs/architecture/world_assembly_architecture.md` — architectural decision record
 - `docs/architecture/world_repository_layout.md` — repository layout ADR
-- `docs/worldbuilding/compiler_contract.md` — upstream stage (produces `WorldCompositionSpec`)
-- `docs/worldgeneration/generator_contract.md` — upstream stage (generates world from spec)
+- `docs/world/compiler_contract.md` — upstream stage (produces `WorldCompositionSpec`)
+- `docs/world/generator_contract.md` — upstream stage (generates world from spec)
 
 ---
 

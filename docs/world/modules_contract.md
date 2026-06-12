@@ -14,7 +14,7 @@ tags: [worldmodules, engine, contract, pipeline, normalization, topology]
 **Authoritative status:** `WorldModuleSpec` objects are **preprocessing inputs** — they are consumed during world assembly to produce `AuthoritativeState`. The module specs themselves are not part of `AuthoritativeState` or the simulation hash.
 
 Cross-links:
-- Consumer: `docs/worldassembly/assembly_contract.md` — `WorldAssemblyResolver` consumes `NormalizedWorldModule` via `topological_sort_modules`
+- Consumer: `docs/world/assembly_contract.md` — `WorldAssemblyResolver` consumes `NormalizedWorldModule` via `topological_sort_modules`
 - Upstream content path: `docs/content/pipeline_contract.md` — `ContentPathConfig.world_modules_dir` governs discovery root
 
 ---
@@ -36,7 +36,7 @@ topological_sort_modules(modules_map)     [utils.py — WORLD-MOD-006/007]
     ↓  (Kahn's algorithm, alphabetical tie-breaking)
 Ordered List[str] of module IDs
     ↓
-WorldAssemblyResolver (see docs/worldassembly/assembly_contract.md)
+WorldAssemblyResolver (see docs/world/assembly_contract.md)
 ```
 
 ---

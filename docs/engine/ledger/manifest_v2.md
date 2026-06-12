@@ -13,8 +13,8 @@ This document tracks the authoritative "Hardened" status of the V2 engine subsys
 
 | Slice | Milestone | Gate Doc | Parity Proof | Contract Proof | Status |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Movement** | Milestone 2 | [Gate 1](file:///home/vboxuser/Work/rpg-based-simulation/docs/engine/attach_gate1_movement_scope.md) | `test_movement_parity.py` | `test_movement_contract.py` | **HARDENED** |
-| **Resource** | Milestone 1 | [Gate 2](file:///home/vboxuser/Work/rpg-based-simulation/docs/engine/attach_gate2_resource_scope.md) | `test_resource_interaction_parity.py` | `test_resource_contract.py` | **HARDENED** |
+| **Movement** | Milestone 2 | [Gate 1](file:///home/vboxuser/Work/rpg-based-simulation/docs/engine/contracts/attach_gate1_movement_scope.md) | `test_movement_parity.py` | `test_movement_contract.py` | **HARDENED** |
+| **Resource** | Milestone 1 | [Gate 2](file:///home/vboxuser/Work/rpg-based-simulation/docs/engine/contracts/attach_gate2_resource_scope.md) | `test_resource_interaction_parity.py` | `test_resource_contract.py` | **HARDENED** |
 | **Strategic** | Phase 9 | [PH9 Entry](../engine/strategy_social_entry_support_boundary.md) | `test_recruitment.py` | `test_resource_intelligence_contract.py` | **HARDENED** |
 | **Legality** | Phase 10 | [PH10 Entry](../engine/infrastructure_entry_support_boundary.md) | `test_legality.py` | `test_legality.py` | **HARDENED** |
 | **Compatibility**| Phase 10 | [PH10 Entry](../engine/infrastructure_entry_support_boundary.md) | `test_entry_parity.py` | `test_infra_isolation.py` | **HARDENED** |

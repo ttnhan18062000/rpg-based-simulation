@@ -42,8 +42,8 @@ This path does **not** go through `WorldAssembly`. The generator calls `CompileP
 | Declarative | `WorldCompositionSpec` or YAML | Loaded from file or composition | Yes — full pipeline |
 
 Cross-links:
-- Upstream: `docs/worldbuilding/compiler_contract.md` — declarative compilation (alternative to this path)
-- Downstream: `docs/worldassembly/assembly_contract.md` — shares `ResolvedWorldBundle` type
+- Upstream: `docs/world/compiler_contract.md` — declarative compilation (alternative to this path)
+- Downstream: `docs/world/assembly_contract.md` — shares `ResolvedWorldBundle` type
 
 ---
 

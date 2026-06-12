@@ -24,7 +24,7 @@ The worldbuilding module supports two distinct compilation paths:
 | **Direct** | `WorldSpec` (YAML) | `AuthoritativeState` | Simple scenarios, legacy, lab runs |
 | **Composition** | `WorldCompositionSpec` | `CompileContext` → `AuthoritativeState` via WorldAssembly | Complex multi-module worlds |
 
-This contract covers the **direct path** (`WorldSpec` → `AuthoritativeState` via `WorldCompiler`). For the composition path see `docs/worldassembly/assembly_contract.md`.
+This contract covers the **direct path** (`WorldSpec` → `AuthoritativeState` via `WorldCompiler`). For the composition path see `docs/world/assembly_contract.md`.
 
 ---
 

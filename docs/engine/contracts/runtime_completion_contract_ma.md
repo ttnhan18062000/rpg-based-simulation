@@ -80,7 +80,7 @@ The `CanonicalStateHasher` defines the proof of integrity.
 
 ## 10. Verification Status
 This contract is **FROZEN** for Phase 4 Milestone 1 and verified by the following:
-- **Test Matrix**: `docs/engine/ma_test_matrix.md`
+- **Test Matrix**: `docs/engine/matrices/ma_test_matrix.md`
 - **Closure Guard**: `tests/engine/test_milestone_a_closure.py`
 - **Integrity Guard**: `tests/engine/test_substrate_freeze_m1.py` (New for Phase 4)
 

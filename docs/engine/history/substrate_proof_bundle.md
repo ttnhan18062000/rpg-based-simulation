@@ -33,7 +33,7 @@ This bundle aggregates all technical evidence supporting the closure of the Phas
 - [Pipeline Scope Audit](../engine/substrate_pipeline_scope_audit.md): Classifies all systems in the refinement pipeline and identifies semantic bleed.
 
 ## 4. Status Matrix Alignment
-- All Phase 7 recovery gaps in `docs/engine/legacy_replacement_ledger.md` are verified as **SUPPORTED** by the above evidence.
+- All Phase 7 recovery gaps in `docs/engine/ledger/legacy_replacement_ledger.md` are verified as **SUPPORTED** by the above evidence.
 
 ---
 *Certified as part of Phase 7 Closure — Substrate Hardening Complete.*
