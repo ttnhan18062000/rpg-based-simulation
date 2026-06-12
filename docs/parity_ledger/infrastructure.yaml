@@ -1906,3 +1906,76 @@
   test_path: tests/tools/test_generate_registry.py
   divergence_note: null
   support_boundary: "Doc tooling only — no simulation behavior involved."
+- id: INFRA-184
+  text: >
+    Content catalog pipeline loads static YAML data into CatalogRepository via
+    ContentFamilySpec declarations (WORLD-CAT-001 through WORLD-CAT-025,
+    WORLD-PATH-001). Content is read-only after load_all(); no tick-path
+    code writes to it. Compliance namespace: WORLD-CAT-*, WORLD-PATH-*.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    docs/content/pipeline_contract.md +
+    src/content/schema.py:1 + src/content/repository.py:1 +
+    src/content/validator.py:1 + src/content/resolver.py:1 +
+    src/content/paths.py:1
+  proof_type: null
+  test_path: tests/unit/content/test_content_usage_evidence.py::test_all_matrix_evidence_paths_exist
+  divergence_note: null
+  support_boundary: "Content pipeline — preprocessing only, not simulation state."
+- id: INFRA-185
+  text: >
+    content_semantics layer (WORLD-SEM-001 through WORLD-SEM-006) provides
+    advisory compile-time semantic defaults: FactionSemanticsService (singleton),
+    RelationProjectionService, RoleSemanticsService, DefaultSemanticsService.
+    Not authoritative state — used at world-building time only.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    docs/content/content_semantics_contract.md +
+    src/content_semantics/faction.py:1 + src/content_semantics/relation.py:1 +
+    src/content_semantics/role.py:1 + src/content_semantics/defaults.py:1
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: "Semantic defaults — compile-time only, not simulation behavior."
+- id: INFRA-186
+  text: >
+    Agentic simulation lab (src/lab/) implements human-gated session lifecycle
+    (ACTIVE/WAITING_FOR_USER/COMPLETED/FAILED/ARCHIVED) with budget guardrails
+    (BudgetBlockedError hard stop, BudgetWarningError soft confirmation gate).
+    Compliance namespaces: SCENARIO-001 through SCENARIO-015,
+    METAMORPHIC-RULE-*, MUTATION-ENGINE-*, MUTATION-ORCHESTRATOR-*,
+    BALANCE-COMPARE-*. Lab state is shadow state — not in AuthoritativeState hash.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    docs/lab/lab_contract.md +
+    src/lab/orchestrator.py:1 + src/lab/schema.py:1 +
+    src/lab/validator.py:1 + src/lab/guardrails.py +
+    src/lab/mutation.py:1 + src/lab/metamorphic.py:1
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: "Agentic lab — shadow state, not primary simulation."
+- id: INFRA-187
+  text: >
+    WorldAssembly pipeline (WORLD-ASM-001 through WORLD-ASM-010) converts
+    WorldCompositionSpec → NormalizedWorldComposition → ResolvedWorldBundle +
+    CompileContext → Dict[int, EntityState]. Not simulation state — preprocessing
+    only. ResolverError is fatal (no silent skips). Entity IDs assigned
+    sequentially from base_entity_id for determinism.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: >
+    docs/worldassembly/assembly_contract.md +
+    src/worldassembly/resolver.py:1 + src/worldassembly/context.py:1 +
+    src/worldassembly/models.py:1 + src/worldassembly/schema.py:1
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: "World assembly preprocessing — not tick-path, not AuthoritativeState."

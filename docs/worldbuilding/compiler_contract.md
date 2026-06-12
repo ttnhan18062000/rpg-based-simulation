@@ -1,0 +1,163 @@
+---
+status: authoritative
+layer: engine
+authority: P0
+audience: agent
+last_verified: 2026-06-12
+tags: [worldbuilding, compiler, engine, contract, schema]
+---
+
+# World Building Compiler Contract
+
+**Source:** `src/worldbuilding/` (7 files: compiler.py, schema.py, recipe.py, validator.py, repository.py, cli.py, `__init__.py`)  
+**Compliance namespaces:** `WORLD-050/051/052` (schema + compiler), `WORLD-060/061/062` (repository), `WORLD-070/071/072` (validator + recipe + CLI)  
+**RPG topology laws:** `docs/mechanics/06_worldbuilding_foundation.md` — do not duplicate here.
+
+---
+
+## Two Compilation Paths
+
+The worldbuilding module supports two distinct compilation paths:
+
+| Path | Input | Output | Used by |
+|---|---|---|---|
+| **Direct** | `WorldSpec` (YAML) | `AuthoritativeState` | Simple scenarios, legacy, lab runs |
+| **Composition** | `WorldCompositionSpec` | `CompileContext` → `AuthoritativeState` via WorldAssembly | Complex multi-module worlds |
+
+This contract covers the **direct path** (`WorldSpec` → `AuthoritativeState` via `WorldCompiler`). For the composition path see `docs/worldassembly/assembly_contract.md`.
+
+---
+
+## Direct Compilation Pipeline
+
+```
+WorldSpec (YAML file)
+    ↓
+WorldRepository.load()       [repository.py — WORLD-060/061/062]
+    ↓
+WorldValidator.validate()    [validator.py — WORLD-070/071/072]
+    ↓ (abort if ERROR severity issues found)
+WorldCompiler.compile()      [compiler.py — WORLD-050/051/052]
+    ↓  (reads: TopologySpec, RegionSpec, FactionSpec, PopulationSpec,
+        ResourceNodeSpec, BuildingSpec; uses V2EntityBuilder, RoleSemanticsService)
+AuthoritativeState
+    └── StateFingerprinter.fingerprint()  (hash computed immediately after compile)
+```
+
+---
+
+## Schema Contract (schema.py — WORLD-050, WORLD-051, WORLD-052)
+
+**`WorldSpec`** — the root declarative specification for a world. Contains:
+- `TopologySpec` — grid dimensions, region layout
+- `List[RegionSpec]` — region definitions (type, terrain, hazard_level, grid_bounds)
+- `List[FactionSpec]` — faction definitions and starting parameters
+- `List[PopulationSpec]` — entity population groups per region
+- `List[ResourceNodeSpec]` — resource node placements
+- `List[BuildingSpec]` — building placements
+
+All sub-specs are validated by Pydantic at construction time. `InvalidWorldSpecError` is raised on schema violations.
+
+`load_world_spec_from_yaml(path)` — loads a `WorldSpec` from a YAML file. Raises `InvalidWorldSpecError` on parse or schema failure.
+
+---
+
+## Compiler Contract (compiler.py — WORLD-050, WORLD-051, WORLD-052)
+
+**Entry point:** `WorldCompiler.compile(world_spec, catalog_repo=None, context=None) → AuthoritativeState`
+
+**Compilation sequence:**
+1. Create empty `AuthoritativeState`
+2. Instantiate `RegionState` objects from `TopologySpec` and `List[RegionSpec]`
+3. Spawn entities from `PopulationSpec` using `V2EntityBuilder` (or archetype-native if `context` provided)
+4. Instantiate `BuildingState` objects from `List[BuildingSpec]`
+5. Instantiate `ResourceNodeState` objects from `List[ResourceNodeSpec]`
+6. Assign faction and role enums via `get_role_enum()` / `RoleSemanticsService`
+7. Generate initial `QuestState` for hero entities
+8. Compute `StateFingerprinter` hash
+
+**Role resolution (`get_role_enum`):**
+Priority order:
+1. `context.legacy_roles[role_str]` — if a `CompileContext` is provided with pre-resolved roles
+2. `RoleSemanticsService(catalog_repo).get_legacy_entity_role(role_str)` — if a `CatalogRepository` is provided
+3. Keyword fallback on uppercase role string: HERO→EntityRole.HERO, SHOP/STORE→SHOPKEEPER, MONSTER→MONSTER, CITIZEN/CIVILIAN→CITIZEN, WORKER/PEASANT→WORKER, GUARD→GUARD
+
+**Determinism:** The compiler uses `random` for some entity placement — callers requiring bit-identical output must seed `random` before calling `compile()`.
+
+---
+
+## Repository Contract (repository.py — WORLD-060, WORLD-061, WORLD-062)
+
+`WorldRepository` — file-based YAML repository for `WorldSpec` documents.
+
+**Operations:**
+- `load(world_id)` → `WorldSpec` — loads a world spec by ID from the worlds root directory
+- `save(world_spec)` — serialises and writes a `WorldSpec` to YAML
+- `list()` → list of world IDs
+- Index tracking: maintains an index file for fast listing
+
+**Safety:** All file operations are scoped to the configured worlds root directory. Path traversal is rejected by design (`WorldRepositoryError` raised on invalid paths).
+
+`WorldRepositoryError` — base exception for all repository operations.
+
+---
+
+## Validator Contract (validator.py — WORLD-070, WORLD-071, WORLD-072)
+
+`WorldValidator` runs pluggable `WorldValidationRule` instances against a `WorldSpec`.
+
+**ValidationContext enum** — scopes when a rule is evaluated:
+
+| Context | When applied |
+|---|---|
+| `CATALOG` | Content catalog consistency |
+| `MODULE` | World module structure |
+| `COMPOSITION` | WorldCompositionSpec validation |
+| `ASSEMBLY` | Assembly pipeline validation |
+| `GENERATED_WORLD` | Post-generation world state |
+| `WORLD` | WorldSpec structural validation |
+| `COMPILE` | Pre-compile validation |
+| `EXPERIMENT` | Lab experiment validation |
+
+**ValidationIssue** fields: `rule_id`, `severity` (`ERROR`/`WARNING`/`INFO`), `message`, `path`.
+
+**Abort rule:** Any `ERROR`-severity issue aborts the compilation pipeline — the world spec is rejected. `WARNING` and `INFO` issues are reported but do not abort.
+
+---
+
+## Recipe Contract (recipe.py — WORLD-070, WORLD-071, WORLD-072)
+
+`RegionRecipeSpec` — a frozen Pydantic model for declaring a region in recipe-driven world building.
+
+Fields: `id`, `type`, `grid_bounds: (min_x, min_y, max_x, max_y)`, `terrain` (default `"GRASS"`), `hazard_level` (default `0.0`).
+
+**Validation rules (enforced at construction):**
+- `min_x ≤ max_x` — width must be non-negative
+- `min_y ≤ max_y` — height must be non-negative
+
+After building a `WorldSpec` from recipes, `WorldValidator` is run before compilation.
+
+---
+
+## CLI Contract (cli.py — CLI-002, WORLD-070, WORLD-071, WORLD-072)
+
+The CLI (`cli.py`) provides a command-line interface to `WorldRepository` and `WorldValidator`. It is the entry point for operator-driven world management (list, validate, compile). It does not implement any business logic — it delegates to `WorldRepository` and `WorldValidator`.
+
+CLI-002 governs the CLI's operational contract (argument parsing, exit codes, error reporting format).
+
+---
+
+## Compliance ID Index
+
+| ID | File | Line | Description |
+|---|---|---|---|
+| WORLD-050 | src/worldbuilding/compiler.py, schema.py, `__init__.py` | 1 | WorldSpec schema and compiler entry contract |
+| WORLD-051 | src/worldbuilding/compiler.py, schema.py, `__init__.py` | 1 | Compilation sequence and entity construction |
+| WORLD-052 | src/worldbuilding/compiler.py, schema.py, `__init__.py` | 1 | Role/faction resolution and state fingerprinting |
+| WORLD-060 | src/worldbuilding/repository.py | 1 | WorldRepository load/save contract |
+| WORLD-061 | src/worldbuilding/repository.py | 1 | Repository index tracking |
+| WORLD-062 | src/worldbuilding/repository.py | 1 | Path safety and WorldRepositoryError contract |
+| WORLD-070 | src/worldbuilding/validator.py, recipe.py, cli.py | 1 | WorldValidator and ValidationContext |
+| WORLD-071 | src/worldbuilding/validator.py, recipe.py, cli.py | 1 | ValidationIssue and abort-on-ERROR rule |
+| WORLD-072 | src/worldbuilding/validator.py, recipe.py, cli.py | 1 | RegionRecipeSpec and CLI contract |
+| CLI-002 | src/worldbuilding/cli.py | 1 | CLI operational contract |
