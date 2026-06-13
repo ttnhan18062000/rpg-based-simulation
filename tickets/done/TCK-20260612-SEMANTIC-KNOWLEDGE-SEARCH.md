@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: misc
 authority: P1
 audience: agent
 ticket_id: TCK-20260612-SEMANTIC-KNOWLEDGE-SEARCH
-phase: open
+phase: done
 date: 2026-06-12
 tags: [tooling, workflow, rag, knowledge-search]
 ---
@@ -15,7 +15,7 @@ tags: [tooling, workflow, rag, knowledge-search]
 Semantic Knowledge Search for Ticket and Investigation History (Tier 2)
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -62,7 +62,10 @@ The `create-tickets` Investigate phase now uses REGISTRY.yaml, graphify, and wor
 - [ ] `knowledge-index/` is listed in `.gitignore`
 
 ## Related Tickets
-- None.
+- TCK-20260612-LOCAL-CTX-DOCS-CORPUS (extends corpus to docs/)
+- TCK-20260612-LOCAL-CTX-HYBRID-SEARCH (adds BM25 + hybrid scoring)
+- TCK-20260612-LOCAL-CTX-HTTP-API (local FastAPI endpoint for agents)
+- TCK-20260612-LOCAL-CTX-EVAL (evaluation set and Recall@5 measurement)
 
 ## Related Docs
 - docs/plans/tier2-knowledge-search.md
@@ -84,8 +87,55 @@ The `create-tickets` Investigate phase now uses REGISTRY.yaml, graphify, and wor
 
 ## Implementation Notes
 
+All 6 steps executed exactly as specified in plan.md. No deviations.
+
+Step 1: Added `knowledge = ["sentence-transformers>=2.7.0", "sqlite-vec>=0.1.1"]` under
+`[project.optional-dependencies]` in pyproject.toml. Core deps and requirements.txt untouched.
+
+Step 2: Appended `knowledge-index/` entry to .gitignore immediately after the `graphify-out/*`
+block, with a comment explaining it is a local generated artifact.
+
+Step 3: Added `knowledge-index` target in a new `# ── Knowledge Search ───` Makefile section
+between Agent Monitoring and Cleanup sections. Includes `@echo` hint and "developer env only —
+not CI" comment. Not a dependency of any CI target.
+
+Step 4: Created `tools/knowledge_search.py` with `build` and `query` subcommands. Key design
+choices: lazy ImportError guards at top of each subcommand function (not module level); three
+corpus roots only (tickets/done, stored_artifacts, working_log.csv); graceful exit 0 on
+missing deps or missing db; SQLite version check in build; tab-separated output format for
+query; `--corpus-root` and `--db-path` CLI overrides for test isolation; `--mode` parameter
+accepted but only vector implemented (per spec). Model name `all-MiniLM-L6-v2` hardcoded.
+
+Step 5: Created `tests/tools/test_knowledge_search.py` following test_validate_frontmatter.py
+pattern. 7 test groups, 32 total tests (24 non-slow, 8 slow). All 316 tool tests pass with no
+regressions. Slow integration tests skip when knowledge-index/ doesn't exist. Graceful
+degradation tested via subprocess with sys.modules patching.
+
+Step 6: Prepended Step 0 block in create-tickets.js Investigate phase prompt, immediately
+before the `─── Step 1` header. Uses same template-literal style as surrounding code.
+Interpolates `${concern.title}` and `${concern.description}`. Contains skip-if-absent guard.
+
 ## Test Summary
+
+24/24 non-slow tests pass. 8 slow integration tests require `make knowledge-index` first.
+Full tools suite: 316 passed, 0 failures.
+
+Scoped run:
+  pytest tests/tools/test_knowledge_search.py -v -m "not slow"
 
 ## Files Changed
 
+- pyproject.toml
+- .gitignore
+- Makefile
+- tools/knowledge_search.py (new)
+- tests/tools/test_knowledge_search.py (new)
+- .claude/workflows/create-tickets.js
+
 ## Completion Summary
+
+Semantic knowledge search tool implemented: `tools/knowledge_search.py` provides `build` and
+`query` subcommands backed by `sentence-transformers` + `sqlite-vec`. Corpus covers three
+authoritative sources. All acceptance criteria covered by 32 tests (24 passing immediately,
+8 slow requiring `make knowledge-index`). Investigate phase updated with Step 0 for semantic
+prior-work retrieval.

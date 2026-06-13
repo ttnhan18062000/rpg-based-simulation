@@ -1979,3 +1979,21 @@
   test_path: null
   divergence_note: null
   support_boundary: "World assembly preprocessing — not tick-path, not AuthoritativeState."
+- id: INFRA-188
+  text: >
+    Local knowledge search HTTP server (tools/search_server.py) exposes POST /api/search
+    and GET /api/health on localhost:8765. Loads sqlite-vec vector index and BM25 keyword
+    index from knowledge-index/ at startup; returns SearchResponse with hybrid-scored
+    results. Developer tooling only — not part of simulation or AuthoritativeState. Deployed
+    via Docker (make search-server-docker) with read-only knowledge-index volume mount.
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: >
+    tools/search_server.py + tools/search/Dockerfile +
+    tools/search/docker-compose.yml +
+    tests/tools/test_search_server.py
+  proof_type: null
+  test_path: tests/tools/test_search_server.py
+  divergence_note: null
+  support_boundary: "Developer tooling only — not simulation state, not tick-path."

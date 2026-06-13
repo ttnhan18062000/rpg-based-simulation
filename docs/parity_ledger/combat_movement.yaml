@@ -2963,3 +2963,21 @@
   test_path: null
   divergence_note: null
   support_boundary: null
+- id: COMB-290
+  text: Wound infliction threshold — damage > max_hp * 0.25 triggers a wound on surviving
+    defender. Chapter 02 (combat_laws.md) states this threshold as 40% of max HP;
+    source code combat.py uses 25%.
+  status: divergent
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: '`src/engine/combat.py` `_get_wound_infliction()` — threshold `damage
+    > defender.combat.max_hp * 0.25`; test COMB-071 (`test_wound_infliction_massive_hit`)
+    verifies >25% source behavior'
+  proof_type: parity
+  test_path: '`tests_v2/parity/test_combat_parity.py::test_wound_infliction_massive_hit`'
+  divergence_note: 'Chapter 02 (02_combat_laws.md) documents wound threshold as 40%
+    of max HP. Source code (combat.py line 583, _get_wound_infliction) uses 0.25
+    (25%). Source is authoritative per CLAUDE.md and TCK-20260613-DOC-MECHANICS-SUBCONTRACTS
+    investigation. Chapter 02 must be corrected in a parity-repair ticket. Sub-contract
+    doc damage_formula_contract.md documents the source-authoritative 25% value.'
+  support_boundary: null

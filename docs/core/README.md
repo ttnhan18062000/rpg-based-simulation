@@ -15,3 +15,5 @@ This directory contains documentation for the foundational data models and state
 - [Entities](../core/entities.md): Entity composition and component mapping.
 - [Attributes & Classes](../core/attributes_and_classes.md): Derived stats and breakthrough milestones.
 - [Items & Inventory](../core/items_and_inventory.md): Slot-based inventory and item templates.
+- [Dirty State & Dependency Model](../core/dirty_state_and_dependency.md): Dirty flag system, dependency expansion graph, and pipeline routing.
+- [Update Intent Pipeline](../core/update_intents.md): Typed update intent taxonomy, lifecycle (create → merge → apply), and compaction semantics.

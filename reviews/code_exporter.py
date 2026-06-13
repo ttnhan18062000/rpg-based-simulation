@@ -29,7 +29,7 @@ def should_include(path: Path, suffixes: set[str]) -> bool:
     parts = [p.lower() for p in path.parts]
     exclude_dirs = {
         "pycache", "node_modules", "dist", ".vite", ".pytest_cache", ".hypothesis",
-        "runs", "test_cli_basic", "test_obs_replay"
+        "runs", "test_cli_basic", "test_obs_replay", "archive",
     }
     for d in exclude_dirs:
         if d in parts:
@@ -133,15 +133,18 @@ def main() -> None:
         workspace_root / "frontend",
     ]
 
-    # Explicit extra infrastructure and watchdog files for Loki, Prometheus, Grafana, and the Watchdog
+    # Explicit extra infrastructure and workflow files for Loki, Prometheus, Grafana, and agent workflows
     extra_infra_files = [
-        workspace_root / ".agents/workflows/compact-simulation-result.md",
-        workspace_root / ".agents/workflows/generate-simulation-setup.md",
-        workspace_root / ".agents/workflows/investigate-simulation-result.md",
-        workspace_root / ".agents/workflows/prepare-simulation-execution.md",
-        workspace_root / ".agents/workflows/propose-simulation-enhancements.md",
-        workspace_root / ".agents/workflows/register-simulation-result.md",
-        workspace_root / ".agents/workflows/update-knowledge-store.md",
+        workspace_root / ".claude/workflows/compact-simulation-result.js",
+        workspace_root / ".claude/workflows/create-tickets.js",
+        workspace_root / ".claude/workflows/generate-simulation-setup.js",
+        workspace_root / ".claude/workflows/implement-epic.js",
+        workspace_root / ".claude/workflows/implement-ticket.js",
+        workspace_root / ".claude/workflows/investigate-simulation-result.js",
+        workspace_root / ".claude/workflows/prepare-simulation-execution.js",
+        workspace_root / ".claude/workflows/propose-simulation-enhancements.js",
+        workspace_root / ".claude/workflows/register-simulation-result.js",
+        workspace_root / ".claude/workflows/update-knowledge-store.js",
         workspace_root / "docker-compose.yml",
         workspace_root / "prometheus.yml",
         workspace_root / "promtail-config.yml",
@@ -152,9 +155,14 @@ def main() -> None:
         workspace_root / "grafana/dashboards/simulation.json",
     ]
 
+    docs_dirs = [
+        workspace_root / "docs",
+    ]
+
     src_output = reviews_dir / "src_export.py"
     test_output = reviews_dir / "test_export.py"
     frontend_output = reviews_dir / "frontend_export.txt"
+    docs_output = reviews_dir / "docs_export.txt"
 
     print("Starting full project export...")
     print(f"Workspace Root: {workspace_root}")
@@ -174,6 +182,9 @@ def main() -> None:
 
     # 3. Export Frontend (React components, canvas boards, dashboards, TS, TSX, CSS, HTML)
     export_directories(workspace_root, frontend_dirs, frontend_output, {".ts", ".tsx", ".css", ".html", ".js", ".jsx"})
+
+    # 4. Export Docs (all markdown + YAML — excludes archive/ via should_include)
+    export_directories(workspace_root, docs_dirs, docs_output, {".md", ".yaml", ".yml"})
 
     print("Project export completed successfully!")
 

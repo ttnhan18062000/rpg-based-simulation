@@ -169,6 +169,19 @@ Engine contracts: [engine/kernel.md](engine/kernel.md) · [engine/authoritative_
 
 ---
 
+## Cognition Subsystem — `cognition/`
+
+Entity self-knowledge layer (Phase 2). Covers: self-assessment, capability estimation, knowledge assimilation, and need interpretation.
+
+| Doc | Contents |
+|---|---|
+| [cognition/README.md](cognition/README.md) | Subsystem overview, pipeline, relationship to strategy/domains/AI |
+| [cognition/self_model_contract.md](cognition/self_model_contract.md) | Self-assessment thresholds, dirty check, SelfAwarenessComponent |
+| [cognition/capability_and_knowledge_contract.md](cognition/capability_and_knowledge_contract.md) | Capability estimation formulas, knowledge model assimilation |
+| [cognition/need_interpretation_contract.md](cognition/need_interpretation_contract.md) | Drive-to-need translation, urgency thresholds, trace events |
+
+---
+
 ## AI Tooling
 
 Claude Code subagents, workflows, and skills for the development and simulation lifecycle.

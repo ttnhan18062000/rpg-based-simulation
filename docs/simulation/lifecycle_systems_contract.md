@@ -1,0 +1,156 @@
+---
+status: active
+layer: simulation
+authority: P1
+audience: agent
+last_verified: 2026-06-13
+---
+
+# Lifecycle Systems Contract
+
+**Source:** `src/systems/lifecycle_systems/lifecycle.py`, `src/systems/lifecycle_systems/biological.py`, `src/systems/lifecycle_systems/genetics.py`
+**Related docs:** [docs/mechanics/01_entity_anatomy.md](../mechanics/01_entity_anatomy.md) (P0 mechanics law parent), [docs/simulation/domains/adventure_contract.md](domains/adventure_contract.md) (biological pressure → routing)
+
+---
+
+## Purpose
+
+Lifecycle systems govern the biological layer of entity existence: aging and death transitions, ongoing biological pressure accumulation, and innate genetic traits that modify attribute scaling. This is distinct from the progression layer (`src/progression/`) which handles XP, leveling, and skill advancement.
+
+---
+
+## Lifecycle — `lifecycle.py`
+
+### Entity lifecycle states
+
+Entities have two lifecycle flags rather than a state enum:
+- `entity.lifecycle.active` — whether the entity is alive and simulation-active
+- `entity.lifecycle.is_permadeath_set` — whether the entity has died (cannot be revived)
+
+An inactive entity (`active=False`) is removed from tick processing. Death is permanent.
+
+### Death triggers
+
+`LifecycleSystem.resolve_lifecycle()` detects deaths each tick:
+
+| Trigger | Condition | death_reason |
+|---|---|---|
+| Old age | `age_ticks >= max_age_ticks` | "OLD_AGE" |
+| Combat death | EntityUpdate with `combat.outcome_kind == "KILL"` | "COMBAT" |
+
+On death:
+1. `active = False`
+2. `is_permadeath_set = True`
+3. `death_tick_set = state.tick`
+4. `death_reason_set` populated
+5. Succession processing (if `heir_entity_id` is set)
+6. Influence shift processing (via `FactionInfluenceService.process_influence_shift()`)
+7. Conquest lifecycle evaluation (stronghold spawn/removal)
+
+### Succession and heirlooms
+
+If `entity.lifecycle.heir_entity_id` is set, the deceased entity's inventory and designated heirlooms transfer to the heir via `ResourceTransferIntent` (source_kind="CHEST"). This is a transactional transfer — if the heir's inventory is full, the transfer may partially fail per the atomic conservation law.
+
+### Engine phase
+
+`LifecycleSystem.resolve_lifecycle()` runs inside the authoritative apply pipeline. It receives the `StateUpdate` from workers and returns a refined `StateUpdate` with death processing added.
+
+---
+
+## Biological — `biological.py`
+
+`BiologicalSystem.update()` applies biological pressure accumulation every tick.
+
+### Applies to
+
+Only `HERO` and `VILLAGER` entity kinds. Monsters and NPCs do not have biological needs in the current implementation.
+
+### Biological pressure rates
+
+| Pressure | Rate | Damage condition |
+|---|---|---|
+| Hunger | +0.5 per tick | `hunger > 90` → HP −1 per tick (starvation) |
+| Sleep debt | +0.3 per tick | `sleep_debt > 95` → HP −1 per tick (exhaustion) |
+
+Both pressures accumulate monotonically until the entity eats (resets hunger) or rests (resets sleep_debt). There is no passive decay.
+
+### Output
+
+Returns `StateUpdate` with `BiologicalUpdate(hunger_delta, sleep_debt_delta)` and `CombatUpdate(hp_delta)` for entities hitting damage thresholds.
+
+### Connection to need interpretation
+
+High biological pressure → `src/cognition/need_interpretation.py` interprets the biological state into prioritized need signals. The motivation domain reads those signals to generate survival route biases (rest, gather food). See [docs/cognition/need_interpretation_contract.md](../cognition/need_interpretation_contract.md).
+
+---
+
+## Genetics — `genetics.py`
+
+Compliance IDs: LEG-RPG-144, LEG-RPG-145
+
+### GeneticProfile data model
+
+```python
+GeneticProfile:
+    strength_mult: float      # 0.8 to 1.3
+    agility_mult: float       # 0.8 to 1.3
+    intelligence_mult: float  # 0.8 to 1.3
+    wisdom_mult: float        # 0.8 to 1.3
+    constitution_mult: float  # 0.8 to 1.3
+    charisma_mult: float      # 0.8 to 1.3
+```
+
+All multipliers range 0.8–1.3. A multiplier of 1.0 is neutral. 1.3 means the entity has a 30% genetic advantage in that attribute.
+
+### Assignment at spawn
+
+`GeneticsSystem.generate_profile_from_seed(seed: int) -> GeneticProfile`
+
+Seed is derived from the entity's spawn parameters. Uses MD5 hash of the seed string, extracting 6 two-byte hex offsets to generate 6 multipliers deterministically. Identical seeds produce identical profiles.
+
+Genetic profiles are **permanent** — they do not change during simulation (no evolution or mutation during a run).
+
+### Effect on attributes
+
+`GeneticsSystem.apply_genetic_profile(base_stats, profile) -> effective_stats`
+
+`effective_stat = base_stat × genetic_multiplier` per attribute. Effective stats (not base stats) are used in all downstream calculations: combat, skill scaling, progression.
+
+### Skill scaling by genetics
+
+`SkillScalingSystem.compute_skill_power()` applies effective stats to skill power formulas:
+
+| Skill type | Formula |
+|---|---|
+| PHYSICAL | `base × (1 + primary_stat / 100)` |
+| MAGICAL | `base × (1 + primary_stat / 80 + secondary_stat / 200)` |
+| ELEMENTAL | `base × (1 + primary_stat / 90) × 1.1` |
+| HYBRID | `base × (1 + (primary + secondary) / 150)` |
+
+---
+
+## Genetics vs evolution boundary
+
+| Layer | File | Scope |
+|---|---|---|
+| **Genetics** | `src/systems/lifecycle_systems/genetics.py` | Innate talent multipliers assigned at spawn; permanent |
+| **Evolution** | `src/progression/evolution.py` | Permanent stat changes from milestone accomplishments (e.g., defeating 100 enemies unlocks an ATK bonus); applied via the progression system |
+
+Genetics is a starting condition; evolution is earned progression. Both modify effective stats, but through different mechanisms and at different lifecycle points.
+
+---
+
+## Regression tests
+
+- `tests/integration/world/test_long_run_stability.py` — death detection, succession, permadeath flag, influence shift on death
+- `tests/integration/kernel/test_long_run_determinism.py` — hunger/sleep accumulation rates, HP damage at thresholds
+- `tests/unit/worldgeneration/test_generator.py` — deterministic profile generation, multiplier range 0.8–1.3, skill power formulas
+
+---
+
+## Extension rules
+
+1. To add a new biological pressure type (e.g., thirst): add a field to `BiologicalUpdate`, add accumulation logic in `BiologicalSystem.update()`, add a damage condition, add need interpretation handling in `src/cognition/need_interpretation.py`. Applies to HERO and VILLAGER kinds only unless explicitly extended.
+2. To add a new genetic trait: extend `GeneticProfile` with a new multiplier field (default 1.0), extend `generate_profile_from_seed()` to compute it from the hash, extend `apply_genetic_profile()` to apply it. Multiplier range must stay 0.8–1.3 unless the trait is intentionally extreme (document in v2_intentional_divergences.md).
+3. To add a new death trigger: add detection logic in `LifecycleSystem.resolve_lifecycle()` with a new `death_reason` string. Always process succession and influence shifts on death regardless of reason.
+4. Biological pressure accumulation must remain deterministic — never introduce randomness into hunger/sleep rates.

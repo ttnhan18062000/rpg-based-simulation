@@ -1,4 +1,4 @@
-.PHONY: help install install-py install-fe build dev serve stop clean lint profile-api docs-serve docs-build docs-registry docs-artifacts
+.PHONY: help install install-py install-fe build dev serve stop clean lint profile-api docs-serve docs-build docs-registry docs-artifacts knowledge-index knowledge-index-update search-server search-server-docker search-server-stop search-server-logs install-hooks eval-search mcp-server-test
 
 # Default
 help: ## Show available commands
@@ -156,6 +156,42 @@ agent-monitoring-validate: ## Cross-check agent monitoring integrity against wor
 
 agent-monitoring-query: ## Query agent monitoring records (pass ARGS="--agent investigator --days 14")
 	python3 tools/agent-monitoring/query.py $(ARGS)
+
+# ── Knowledge Search ─────────────────────────────────────────────────────────
+# developer env only — not CI
+# Requires: pip install -e ".[knowledge]"
+
+knowledge-index: ## Build local semantic knowledge index (developer env only — not CI)
+	@echo "Building knowledge index (requires: pip install -e '.[knowledge]')..."
+	python3 tools/knowledge_search.py build
+
+knowledge-index-update: ## Incremental reindex — only re-embeds changed/new files (fast)
+	python3 tools/knowledge_search.py build --incremental
+
+search-server-docker: ## PRIMARY — start knowledge search server in Docker (persistent, survives terminal close)
+	docker compose -f tools/search/docker-compose.yml up -d --build
+	@echo "[search-server] Server starting on http://localhost:8765 (check logs: make search-server-logs)"
+
+search-server-stop: ## Stop knowledge search Docker container
+	docker compose -f tools/search/docker-compose.yml down
+
+search-server-logs: ## Tail knowledge search server logs
+	docker compose -f tools/search/docker-compose.yml logs -f
+
+search-server: ## FALLBACK ONLY — start search server directly via uvicorn (exits when terminal closes)
+	@echo "[search-server] Fallback mode — use make search-server-docker for persistent deployment"
+	uvicorn tools.search_server:app --host 127.0.0.1 --port 8765 --reload
+
+install-hooks: ## Install git hooks (post-commit incremental reindex when docs/ or tickets/done/ changed)
+	cp tools/hooks/post-commit-reindex.sh .git/hooks/post-commit
+	chmod +x .git/hooks/post-commit
+	@echo "[hooks] post-commit hook installed"
+
+eval-search: ## Run search quality evaluation — Recall@5, MRR@10 (requires knowledge-index)
+	python3 tools/eval_search.py
+
+mcp-server-test: ## Smoke-test MCP search_docs tool via --test mode (no MCP client needed)
+	@echo '{"query": "damage formula", "top_k": 3}' | python3 tools/search_mcp.py --test
 
 # ── Cleanup ──────────────────────────────────────────────
 

@@ -250,6 +250,9 @@ task.md
 # graphify-out/.graphify_python
 graphify-out/*
 
+# Knowledge search index (local only — rebuild with: make knowledge-index)
+knowledge-index/
+
 # Docusaurus
 website/node_modules/
 website/build/

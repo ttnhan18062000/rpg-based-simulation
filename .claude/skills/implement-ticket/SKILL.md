@@ -42,6 +42,17 @@ If the input is a natural language sentence, treat it as `request`.
 
 ## Pipeline (standard tier)
 
+0. **Context search** (before Scope) — if `knowledge-index/knowledge.db` exists, run:
+   ```
+   python3 tools/knowledge_search.py query "<ticket title + request summary>" --top-k 5
+   ```
+   Or if the HTTP server is running on :8765:
+   ```
+   curl -s -X POST http://localhost:8765/api/search -H "Content-Type: application/json" \
+     -d '{"query": "<ticket title + request summary>", "top_k": 5}'
+   ```
+   Note the top results (source_path + excerpt) as warm-start context for investigation. Skip silently if index not found.
+
 1. **Scope** — create or load ticket; copy from `tickets/todos/**/` to `tickets/inprogress/` if needed
 2. **Investigate** — produce `investigation.md` and `test_plan.md`
 3. **Plan** — produce `plan.md`

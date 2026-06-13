@@ -81,6 +81,7 @@ Ticket must include: title, summary, scope, out of scope, acceptance criteria, r
 - Update related docs.
 - Clean up: `rm -rf data/runs/* reports/release_proof/*`.
 - Verify no leftover staging/temp files remain.
+- If any files under `docs/` were created or modified: run `make knowledge-index-update` to keep the agent context search index current.
 
 ### Commit Convention
 
@@ -300,6 +301,7 @@ Some tools should be invoked automatically based on the task — the user does n
 | Searching across more than 3 files | Spawn `Explore` agent instead of sequential Bash greps |
 | Starting implementation on an unfamiliar module | Read `GRAPH_REPORT.md` for community structure before touching code |
 | `docs/REGISTRY.yaml` exists + user asks about prior work or related docs | Query registry by `related_code_areas` or `layer` — do not scan raw directories |
+| User asks project-specific mechanics, architecture, or history question | **Primary**: call MCP tool `search_docs` with `query` set to the question. **Fallback (HTTP server running on :8765)**: `POST http://localhost:8765/api/search`. **Fallback (no server)**: `python3 tools/knowledge_search.py query "<q>" --top-k 5`. Always prefer `search_docs` — it is always available inside Claude Code sessions registered with `.mcp.json`. |
 
 ### Require explicit user opt-in (never auto-invoke)
 
