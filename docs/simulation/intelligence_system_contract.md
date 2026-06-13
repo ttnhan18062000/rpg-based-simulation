@@ -111,9 +111,9 @@ Does NOT mutate state directly (Logic ID: STRAT-002).
 
 ## Regression tests
 
-- `tests/integration/test_strategic_intelligence.py` — blocker inference, project switching with interruption resistance
-- `tests/unit/test_strategic_blocker_inference.py` — blocker kind/severity/origin correctness
-- `tests/unit/test_cognition_profile.py` — profile derivation, capacity enforcement
+- `tests/unit/strategic/test_strategic_hardening.py` — blocker inference, project switching with interruption resistance
+- `tests/unit/strategic/test_leads.py` — blocker kind/severity/origin correctness
+- `tests/unit/strategic/test_cognition_capacity.py` — profile derivation, capacity enforcement
 
 ---
 

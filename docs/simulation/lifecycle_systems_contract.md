@@ -142,9 +142,9 @@ Genetics is a starting condition; evolution is earned progression. Both modify e
 
 ## Regression tests
 
-- `tests/integration/test_lifecycle.py` — death detection, succession, permadeath flag, influence shift on death
-- `tests/unit/test_biological.py` — hunger/sleep accumulation rates, HP damage at thresholds, entity kind filter
-- `tests/unit/test_genetics.py` — deterministic profile generation, multiplier range 0.8–1.3, skill power formulas
+- `tests/integration/world/test_long_run_stability.py` — death detection, succession, permadeath flag, influence shift on death
+- `tests/integration/kernel/test_long_run_determinism.py` — hunger/sleep accumulation rates, HP damage at thresholds
+- `tests/unit/worldgeneration/test_generator.py` — deterministic profile generation, multiplier range 0.8–1.3, skill power formulas
 
 ---
 

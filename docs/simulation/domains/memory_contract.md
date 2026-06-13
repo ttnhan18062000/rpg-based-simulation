@@ -133,9 +133,9 @@ These are two distinct layers with different ownership and purpose. Confusing th
 
 | Question | Correct layer | Location |
 |---|---|---|
-| "What lessons has this entity learned from failures?" | Memory domain — causal memory | `src/domains/memory/causal_service.py` |
-| "How familiar is this entity with region X?" | Memory domain — spatial memory | `src/domains/memory/spatial_service.py` |
-| "How urgently does this entity need to act?" | Memory domain — temporal memory | `src/domains/memory/temporal_service.py` |
+| "What lessons has this entity learned from failures?" | Memory domain — causal memory | `src/domains/memory/attribution.py` |
+| "How familiar is this entity with region X?" | Memory domain — spatial memory | `src/domains/memory/spatial_update.py` |
+| "How urgently does this entity need to act?" | Time domain — temporal pressure | `src/domains/time/service.py` |
 | "What does this entity know about world locations, factions, or facts?" | Cognition layer — knowledge model | `src/cognition/knowledge_model.py` |
 | "What leads or unknowns is this entity tracking?" | Cognition layer — knowledge model | `src/cognition/knowledge_model.py` |
 

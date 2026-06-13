@@ -154,9 +154,9 @@ All three systems return `StrategicUpdate` — they never mutate `AuthoritativeS
 
 ## Regression tests
 
-- `tests/unit/test_belief_cycle.py` — decay, contradiction degradation, certainty thresholds
-- `tests/unit/test_detour_suggestion.py` — blocker+lead pairing, scoring, bandwidth enforcement
-- `tests/integration/test_detour_lifecycle.py` — full cycle: blocker → detour → resolution → project resume
+- `tests/unit/strategic/test_belief_integration.py` — decay, contradiction degradation, certainty thresholds
+- `tests/unit/strategic/test_detour_suggestion.py` — blocker+lead pairing, scoring, bandwidth enforcement
+- `tests/integration/scenarios/test_phase5_information_belief_scenarios.py` — full cycle: blocker → detour → resolution → project resume
 
 ---
 

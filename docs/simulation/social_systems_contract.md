@@ -160,10 +160,9 @@ All social state changes go through `SocialUpdate` → `RelationshipService.proc
 
 ## Regression tests
 
-- `tests/unit/test_social_appraisal.py` — trust pipeline, hard reject gates, contract kind dispatch
-- `tests/unit/test_relationship_service.py` — delta application, clamping, bond formation
-- `tests/unit/test_social_memory.py` — place attachment increment, nemesis promotion threshold
-- `tests/integration/test_social_contracts.py` — full contract lifecycle: offer → appraisal → accept/breach
+- `tests/unit/social/test_groups.py` — trust pipeline, hard reject gates, bond formation
+- `tests/unit/social/test_party_agency.py` — delta application, clamping, place attachment
+- `tests/integration/scenarios/test_phase7_social_cooperation_scenarios.py` — full contract lifecycle: offer → appraisal → accept/breach
 
 ---
 

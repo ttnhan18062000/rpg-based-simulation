@@ -144,10 +144,10 @@ World state read →
 
 ## Regression tests
 
-- `tests/unit/test_resource_provider.py` — node-to-opportunity mapping, depletion flags, blocker reward scaling
-- `tests/unit/test_service_provider.py` — affordance dispatch, faction lock filtering
-- `tests/unit/test_perception_gate.py` — sense channel formula, threshold 0.2, baseline profile fallback
-- `tests/unit/test_pressure_resolver.py` — 8-dimension max-merge, normalisation
+- `tests/unit/resource/test_resource_intelligence_contract.py` — node-to-opportunity mapping, depletion flags, blocker reward scaling
+- `tests/unit/world/test_interaction_system.py` — affordance dispatch, faction lock filtering
+- `tests/unit/domains/perception/test_phase12_signal_salience_evaluator.py` — sense channel formula, threshold 0.2, baseline profile fallback
+- `tests/unit/world/test_motivation_pressure_resolver.py` — 8-dimension max-merge, normalisation
 
 ---
 

@@ -108,9 +108,9 @@ Environment effects are applied as temporary per-tick modifiers — they do not 
 
 ## Regression tests
 
-- `tests/integration/test_ecology.py` — node replenishment cadence, biome mapping, minimum count
-- `tests/integration/test_calamity.py` — forced-interval trigger, world_boss spawn, intensity accumulation
-- `tests/unit/test_environment.py` — hazard drain rates, MIASMA/FROST/HEAT effect application
+- `tests/integration/world/test_long_run_stability.py` — node replenishment cadence, biome mapping, minimum count
+- `tests/certification/test_cert_long_run_stability.py` — forced-interval trigger, world_boss spawn, intensity accumulation
+- `tests/unit/world/test_interaction_system.py` — hazard drain rates, MIASMA/FROST/HEAT effect application
 
 ---
 

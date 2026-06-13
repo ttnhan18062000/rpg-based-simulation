@@ -129,10 +129,10 @@ Monsters spawned in monster-controlled regions (influence ≤ −50) receive a f
 
 ## Regression tests
 
-- `tests/integration/test_camp.py` — maturity growth, monster cap, raid trigger threshold
-- `tests/integration/test_raid.py` — raid size formula, raid outcome (suppressed vs successful)
-- `tests/integration/test_boss.py` — spawn condition gating, idempotency, boss defeat consequences
-- `tests/unit/test_spawn.py` — density formula, spawn pool selection, difficulty zone application
+- `tests/integration/world/test_long_run_stability.py` — maturity growth, monster cap, raid trigger threshold
+- `tests/integration/world/test_long_run_stability.py` — raid size formula, raid outcome (suppressed vs successful)
+- `tests/certification/test_cert_long_run_stability.py` — spawn condition gating, idempotency, boss defeat consequences
+- `tests/unit/worldgeneration/test_generator.py` — density formula, spawn pool selection, difficulty zone application
 
 ---
 

@@ -8,7 +8,7 @@ last_verified: 2026-06-13
 
 # State Update Compaction Contract
 
-**Source:** `src/core/compactor.py` (StateUpdateCompactor), `src/core/updates.py` (StateUpdate.merge_many), `src/engine/authoritative_pipeline.py` (AuthoritativeApplyPipeline)
+**Source:** `src/engine/compactor.py` (StateUpdateCompactor), `src/core/updates.py` (StateUpdate.merge_many), `src/engine/pipeline.py` (AuthoritativeApplyPipeline)
 **Related docs:** [update_intents.md](../core/update_intents.md) (merge semantics), [authoritative_pipeline.md](authoritative_pipeline.md) (pipeline context)
 
 ---
@@ -43,7 +43,7 @@ After merge, one `StateUpdate` represents the combined intent of all workers for
 
 ## Layer 2: No-op Pruning — `StateUpdateCompactor.compact_with_metrics()`
 
-**Location:** `src/core/compactor.py:37`
+**Location:** `src/engine/compactor.py:37`
 **Trigger:** First operation inside `AuthoritativeApplyPipeline.refine()` (`src/engine/pipeline.py:96`) — before any of the 17 pipeline phases.
 
 The compactor prunes fragments that are provably no-ops given the current `AuthoritativeState`. It does NOT change semantics — only efficiency.
@@ -104,7 +104,7 @@ These metrics are emitted as telemetry and appear in the `TICK_END` event in the
 ## Regression tests
 
 - `tests/perf/test_apply_compaction_perf.py` — fingerprint invariant, compaction throughput under N-worker load
-- `tests/integration/test_authoritative_pipeline.py` — end-to-end: workers produce fragments, compaction runs, pipeline applies, state matches expected
+- `tests/integration/pipeline/test_authoritative_apply.py` — end-to-end: workers produce fragments, compaction runs, pipeline applies, state matches expected
 
 ---
 

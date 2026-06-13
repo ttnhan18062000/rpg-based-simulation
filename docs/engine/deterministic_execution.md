@@ -8,7 +8,7 @@ last_verified: 2026-06-13
 
 # Deterministic Execution Contract
 
-**Source:** `src/engine/kernel.py`, `src/engine/checkpoint.py` (CanonicalStateHasher), `src/core/determinism.py` (DeterministicRNG), `src/engine/pipeline.py`
+**Source:** `src/engine/kernel.py`, `src/engine/checkpoint.py` (CanonicalStateHasher), `src/platform/rng.py` (DeterministicRNG), `src/engine/pipeline.py`
 **Related docs:** [kernel.md](kernel.md) (6-phase loop), [candidate_selection.md](candidate_selection.md) (ordering guarantees), [dirty_state_and_dependency.md](../core/dirty_state_and_dependency.md) (audit_dirty_set)
 
 ---
@@ -46,7 +46,7 @@ The hash is emitted in the `TICK_END` event in the warehouse (field: `tick_hash`
 
 ### Rule 1: Stateless random numbers — `DeterministicRNG`
 
-**Location:** `src/core/determinism.py`
+**Location:** `src/platform/rng.py`
 
 ```
 DeterministicRNG.get_float(domain, tick, entity_id, sub_id) -> float
@@ -115,9 +115,9 @@ A reference run stores the `tick_hash` sequence from the `TICK_END` warehouse ev
 
 ## Regression tests
 
-- `tests/integration/kernel/test_determinism.py` — same seed → same tick_hash for N ticks
-- `tests/integration/kernel/test_replay.py` — checkpoint load → resume → same hash sequence
-- `tests/certification/test_determinism_certification.py` — P0 hard gate; must pass for release
+- `tests/integration/kernel/test_determinism_suite.py` — same seed → same tick_hash for N ticks
+- `tests/integration/kernel/test_replay_fidelity.py` — checkpoint load → resume → same hash sequence
+- `tests/certification/test_world_compile_determinism.py` — P0 hard gate; must pass for release
 
 ---
 

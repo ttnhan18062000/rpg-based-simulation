@@ -106,9 +106,9 @@ All tiers are covered by the broader determinism guarantee in [deterministic_exe
 
 ## Regression tests
 
-- `tests/integration/kernel/test_determinism.py` — same seed → same WorkItem set across multiple runs
-- `tests/unit/test_candidate_selector.py` — MovementCandidateSelector stage-by-stage filter verification
-- `tests/unit/test_dirty_set.py` — CandidateSelector domain routing (15 mappings)
+- `tests/integration/kernel/test_determinism_suite.py` — same seed → same WorkItem set across multiple runs
+- `tests/unit/optimization/test_candidate_selector.py` — MovementCandidateSelector stage-by-stage filter verification
+- `tests/perf/test_dirty_set_integrity.py` — CandidateSelector domain routing (15 mappings)
 
 ---
 

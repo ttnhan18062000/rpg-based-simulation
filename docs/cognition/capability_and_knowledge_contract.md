@@ -139,9 +139,9 @@ Both events are collected by the orchestrator and routed to the warehouse/histor
 
 ## Regression tests
 
-- `tests/unit/test_capability_estimate.py` — combat/travel/gather/craft formulas, scoped context, None context → empty
-- `tests/unit/test_knowledge_model.py` — assimilation by answer_kind, accumulation (no removal), certainty propagation, insufficient_gold no-op
-- `tests/unit/test_trace_events.py` — KnowledgeFactLearnedEvent emitted on fact update
+- `tests/unit/cognition/test_phase2_capability_estimate_service.py` — combat/travel/gather/craft formulas, scoped context, None context → empty
+- `tests/unit/cognition/test_phase2_knowledge_model_service.py` — assimilation by answer_kind, accumulation (no removal), certainty propagation, insufficient_gold no-op
+- `tests/integration/scenarios/test_phase2_self_model_scenarios.py` — KnowledgeFactLearnedEvent emitted on fact update, trace event emission coverage
 
 ---
 

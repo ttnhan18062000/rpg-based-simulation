@@ -109,8 +109,8 @@ The resulting `SelfModelBundle` is written to `entity.self_model` through the au
 
 ## Regression tests
 
-- `tests/unit/test_self_assessment.py` — threshold boundary tests for each weakness/strength label
-- `tests/unit/test_self_model_phase.py` — dirty check (skip on unchanged), first-tick full assessment, death skip
+- `tests/unit/cognition/test_phase2_self_assessment_service.py` — threshold boundary tests for each weakness/strength label
+- `tests/unit/cognition/test_phase2_self_model_phase.py` — dirty check (skip on unchanged), first-tick full assessment, death skip
 
 ---
 

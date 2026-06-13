@@ -201,7 +201,7 @@ Tests must cover:
 ## Extension Rules
 
 **Adding a new posture:**
-1. Add the value to the posture enum in `src/domains/cooperation/posture.py`.
+1. Add the value to the posture enum in `src/domains/cooperation/postures.py`.
 2. Add a case in `CooperationPhase.execute()` that maps the new posture to a typed intent output.
 3. Define clearly what trigger conditions activate the new posture and at what priority relative to existing postures.
 4. Add tests: trigger detection, intent output type, downstream consumption.

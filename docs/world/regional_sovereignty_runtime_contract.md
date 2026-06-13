@@ -97,8 +97,8 @@ Liberation (influence ≥ +50) removes the stronghold and restores open town acc
 
 ## Regression tests
 
-- `tests/integration/test_sovereignty.py` — taxation cadence, gold transfer correctness, faction lock
-- `tests/unit/test_regions.py` — adjacency graph validity, cross-region movement gate
+- `tests/integration/world/test_long_run_stability.py` — taxation cadence, gold transfer correctness, faction lock
+- `tests/unit/worldmodules/test_modules.py` — adjacency graph validity, cross-region movement gate
 - Note: sovereignty debuff tests are pending (incomplete implementation)
 
 ---

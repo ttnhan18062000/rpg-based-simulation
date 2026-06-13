@@ -111,8 +111,8 @@ Events are collected in a `trace_events_collector` list during `SelfModelUpdateP
 
 ## Regression tests
 
-- `tests/unit/test_need_interpretation.py` — each need's trigger conditions, urgency levels, survival-outranks-growth deflation, dominant_need selection
-- `tests/unit/test_trace_events.py` — event emission on dirty-check trigger, needs_summary format
+- `tests/unit/cognition/test_phase2_need_interpretation_service.py` — each need's trigger conditions, urgency levels, survival-outranks-growth deflation, dominant_need selection
+- `tests/integration/scenarios/test_phase2_self_model_scenarios.py` — event emission on dirty-check trigger, needs_summary format
 
 ---
 

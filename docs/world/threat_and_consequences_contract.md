@@ -106,10 +106,10 @@ Influence is a durable world field. All changes go through StateUpdate → autho
 
 ## Regression tests
 
-- `tests/integration/test_threat.py` — trauma accumulation, decay rates, retaliation cooling
-- `tests/unit/test_threat_classifier.py` — perspective-based classification, label correctness
-- `tests/integration/test_consequences.py` — camp clear, boss defeat consequence triggers
-- `tests/integration/test_transformation.py` — region type transition at thresholds
+- `tests/integration/world/test_long_run_stability.py` — trauma accumulation, decay rates, retaliation cooling
+- `tests/unit/world/test_region_threat_classifier.py` — perspective-based classification, label correctness
+- `tests/certification/test_cert_long_run_stability.py` — camp clear, boss defeat consequence triggers
+- `tests/integration/world/test_long_run_stability.py` — region type transition at thresholds
 
 ---
 

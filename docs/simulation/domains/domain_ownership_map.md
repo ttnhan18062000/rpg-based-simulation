@@ -39,7 +39,7 @@ Domains are **decision logic** — they read `AuthoritativeState` and `EntitySta
 | **optimization** | `src/domains/optimization/` | Phase 10 | Cross-cutting performance utilities: cache, degradation, feature flags, budget | DegradationLevel, CacheStrategy, FeatureFlagManager | [optimization_contract.md](optimization_contract.md) |
 | **perception** | `src/domains/perception/` | Phase 12 | Salience filtering, attention focus, signal budget clamping | entity.cognition.subjective.perception (immutable replace) | [perception_contract.md](perception_contract.md) |
 | **progression** | `src/domains/progression/` | Phase 6 | Reward ledger, conversion option generation, AP/equipment decisions | EquipmentUpdate, TaskUpdate, ResourceTransferIntent, IdentityUpdate | [progression_contract.md](progression_contract.md) |
-| **time** | `src/domains/time/` | — | Temporal tracking service (internal tick accounting) | temporal state | (see cognition_domain_ownership.md) |
+| **time** | `src/domains/time/` | Phase 13 (alongside memory) | Temporal pressure service: deadline/cooldown/staleness urgency calculation | Urgency map (read-only derived signal, not persisted) | [time_contract.md](time_contract.md) |
 | **world_emergence** | `src/domains/world_emergence/` | Phase 8 | Regional pressure modeling, opportunity generation, signal broadcasting | StateUpdate (world opportunities), entity.exposed_world_signals | [world_emergence_contract.md](world_emergence_contract.md) |
 
 ---
