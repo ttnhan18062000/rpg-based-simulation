@@ -63,5 +63,23 @@ The structural laws of data-driven setup.
 
 ---
 
-## 📜 Compliance Status
-All chapters are currently **Certified Level 1 (Authoritative)**. This means the documentation matches the current source code implementation as of Tick 0 of the V2 Engine deployment.
+## Sub-Contract Index
+
+The following companion docs extend the Mechanics Bible chapters with formula depth, edge cases, source-module pointers, and regression test references. They are siblings to the chapter files (no subdirectory). Each sub-contract follows the logic-contract template: Purpose, RPG Meaning, Inputs, Core Rules, Formula/Decision Logic, Lifecycle, Mutation Rules, Edge Cases, Examples, Source Areas, Regression Tests, Extension Rules.
+
+| Sub-Contract | Extends | Covers |
+|---|---|---|
+| [`resource_conservation_contract.md`](resource_conservation_contract.md) | Chapter 03 | Atomic law 4-gate sequence, all 13 failure codes, loot vs regular node, home storage, crafting atomicity, market pricing, concurrent reservation |
+| [`adventure_routing_contract.md`](adventure_routing_contract.md) | Chapter 04 | 13 RouteFamily values, opportunity inputs, blocker handling, scoring formula, personality bias, candidate cap, fallback guarantee, ObjectiveIntentResolver |
+| [`damage_formula_contract.md`](damage_formula_contract.md) | Chapter 02 | Fractional armor mitigation formula, 7 tactical modifiers in exact application order, durability decay, wound infliction (25% source-authoritative), AoE splash, kill rewards |
+| [`attribute_progression_contract.md`](attribute_progression_contract.md) | Chapter 01 | XP threshold formula, level-up execution, +5 AP per level, skill unlocks, 6-phase stat recalc order, skill scaling by type, breakthrough placeholder status |
+
+> **Parity note:** `damage_formula_contract.md` documents wound infliction threshold as **25%** (source-authoritative). Chapter 02 states 40%. This divergence is recorded in `docs/parity_ledger/combat_movement.yaml` entry COMB-290 as `status: divergent`. Chapter 02 requires correction in a parity-repair ticket.
+
+---
+
+## Compliance Status
+
+All Bible chapters are currently **Certified Level 1 (Authoritative)**. This means the documentation matches the current source code implementation as of Tick 0 of the V2 Engine deployment.
+
+Sub-contracts are **Authoritative (P1)** as of 2026-06-13 and are verified against source code. They do not replace chapters — they extend them.

@@ -1,0 +1,175 @@
+---
+status: active
+layer: simulation
+authority: P1
+audience: agent
+last_verified: 2026-06-13
+---
+
+# Social Systems Contract
+
+**Source:** `src/systems/social_systems/` (appraisal.py, contracts.py, relationships.py, guilds.py, party.py, memory.py, group_service.py, reputation.py)
+**Related docs:** [docs/simulation/domains/cooperation_contract.md](domains/cooperation_contract.md), [docs/simulation/domains/commitment_contract.md](domains/commitment_contract.md), [docs/simulation/domains/domain_ownership_map.md](domains/domain_ownership_map.md)
+
+---
+
+## Purpose
+
+The social systems layer applies social outcomes to entity state. The cooperation and commitment domains (Phase 7, Phase 15) make decisions about social posture; this layer implements those decisions as durable state changes — trust updates, bond formation, contract lifecycle, reputation shifts, and party management.
+
+**Caller/callee direction:** The cooperation domain (`src/domains/cooperation/`) produces `ContractState` and `BlockerState`. Social systems receive those outputs and apply them. Social systems do NOT call the domain — the domain calls social systems to execute decisions.
+
+---
+
+## Appraisal — `appraisal.py`
+
+Compliance IDs: SOC-001, SOC-002, SOC-004, SOC-008, STRAT-071, STRAT-073
+
+`SocialAppraisalSystem` evaluates social contracts and offers before accepting or rejecting them.
+
+### Trust evaluation pipeline
+
+1. **Public reputation bias:** `source_entity.social.public_reputation / 2.0` → 0.0–1.0 baseline
+2. **Private bond override:** if a SocialBond exists, `trust_score = (bond.sentiment + 1.0) / 2.0` (private sentiment overrides public)
+3. **Blended fallback:** `trust_score = public_trust × 0.7 + history_trust × 0.3`
+4. **Hard reject gates:** `trust_score < 0.2` → TOTAL_DISTRUST; `betrayal_count > 0 AND trust_score < 0.4` → BETRAYAL_HISTORY
+
+### Contract kinds
+
+| Kind | Special logic |
+|---|---|
+| RECRUITMENT | Social fatigue check; checks entity's current party commitment; employment cost evaluation |
+| LOAN | Simple trust threshold; no counter-terms |
+| POSITION_SWAP | Spatial proximity check; validates both parties can reach the target position |
+
+### Re-appraisal triggers
+
+Re-appraisal occurs on: new contract offer received, betrayal event witnessed, entity's public_reputation changes significantly (±0.3), party dissolution.
+
+---
+
+## Relationships — `relationships.py`
+
+Compliance IDs: SOC-193–SOC-196, SOC-217
+
+`RelationshipService.process_update()` applies `SocialUpdate` deltas to `SocialComponent` fields.
+
+### Relationship dimensions (all clamped per-field)
+
+| Field | Range | What it tracks |
+|---|---|---|
+| trust_history | −1.0 to 1.0 | Per-entity trust accumulation |
+| familiarity_history | 0.0 to 1.0 | Interaction frequency |
+| debt_history | −1.0 to 1.0 | Social obligation balance |
+| fear_history | 0.0 to 1.0 | Fear from combat/intimidation |
+| grudge_history | 0.0 to 5.0 | Accumulated harm (5.0 cap) |
+| salience_history | 0.0 to 1.0 | How "top of mind" an entity is |
+
+### Social bonds
+
+`SocialBond` is a richer directional relationship: `familiarity`, `sentiment` (−1.0 to 1.0), `last_interaction_tick`. Bonds are formed for entities with high familiarity or strong sentiment. Bond sentiment takes priority over trust_history in appraisal.
+
+### Decay
+
+Social history fields decay passively over time when there are no new interactions. Rate is configurable per-field in the social config.
+
+---
+
+## Social Memory — `memory.py`
+
+`SocialMemoryService` handles two persistent social memory types:
+
+**Place attachment:** Increments 0.001 per tick while entity is in a region. Long-term presence creates "home" attachment (`SocialUpdate(place_attachment_delta={region_id: 0.001})`).
+
+**Nemesis promotion:** When `grudge_history[entity_id] >= 3.0`, the entity is promoted to `nemesis_ids`. Threshold: 3 kills or equivalent repeated harm. Nemesis relationship affects routing (the adventure domain avoids nemesis regions) and cooperation (never cooperates with a nemesis).
+
+**Distinction from other memory types:**
+- Social memory (this layer): place attachment + nemesis tracking
+- Domain memory (`src/domains/memory/`): causal/spatial/temporal memory updated per tick
+- Cognition knowledge model (`src/cognition/knowledge_model.py`): factual world knowledge with freshness
+
+---
+
+## Contracts — `contracts.py`
+
+Social contracts are durable `ContractState` records. Each contract has: `kind`, `source_id`, `target_id`, `terms`, `status` (OFFERED/ACCEPTED/COUNTERED/CANCELLED/FULFILLED/BREACHED), `deadline_tick`.
+
+### Breach conditions
+
+| Contract kind | Breach triggers |
+|---|---|
+| RECRUITMENT | Source entity abandons party; party trust drops below threshold |
+| ESCORT | Source entity dies before reaching destination |
+| LOAN | Target entity fails to return gold by deadline_tick |
+| POSITION_SWAP | Either party cannot reach the target position within agreed ticks |
+
+Breach records `betrayal_count += 1` on the breaching entity and triggers reputation update via `ReputationUpdateService`.
+
+---
+
+## Guilds — `guilds.py`
+
+Guild membership stores a `GuildMembership` record on the entity. Benefits and obligations:
+- Members gain access to guild-affiliated service opportunities (guild halls, job boards)
+- Members pay guild dues (ResourceTransferIntent at guild taxation cadence)
+- Guild rank affects appraisal: higher-rank entities receive better contract terms from guild affiliates
+- Routing: entities prefer regions where their guild has presence (guild presence is a positive route bias factor)
+
+---
+
+## Party — `party.py`
+
+Party state is stored as a `PartyRecord` on a designated party leader entity. Assembly conditions:
+- Requires a COOPERATION or RECRUITMENT contract between at least 2 entities
+- Party forms when contract status transitions to ACCEPTED
+
+Dissolution rules:
+- Leader death → party dissolved; trust decreases by 0.25 for all members (cooperation domain handles this)
+- All members reach destination → party fulfills and dissolves
+- Explicit LEAVE action by any member → voluntary quit (commitment penalty applies)
+
+Shared goal mechanics: party members share objective visibility. When the leader sets a project, members receive a `force_route_reevaluation` flag pointing them toward the same region.
+
+---
+
+## Reputation — `reputation.py`
+
+`ReputationUpdateService.process_witnessed_event()` updates `PublicReputationProfile.labels` for witnessed events:
+
+| Event | Effect |
+|---|---|
+| escort completed | reputation +0.1; RELIABLE label added |
+| betrayal witnessed | reputation −0.2; BETRAYER label added |
+| camp cleared | reputation +0.05; COMBATANT label added |
+
+Public reputation (0.0–1.0) is visible to all entities and used in trust appraisal.
+
+---
+
+## Engine phase
+
+Social system updates run as part of the authoritative apply pipeline. There is no dedicated social phase — social updates are triggered by events (contract offers, betrayal events, death events) and processed within the relevant pipeline phase. `RelationshipService.process_update()` is called wherever a `SocialUpdate` is produced.
+
+---
+
+## Mutation rules
+
+All social state changes go through `SocialUpdate` → `RelationshipService.process_update()` → authoritative apply. Direct mutation of `SocialComponent` fields outside this path is prohibited (SOC-217).
+
+---
+
+## Regression tests
+
+- `tests/unit/test_social_appraisal.py` — trust pipeline, hard reject gates, contract kind dispatch
+- `tests/unit/test_relationship_service.py` — delta application, clamping, bond formation
+- `tests/unit/test_social_memory.py` — place attachment increment, nemesis promotion threshold
+- `tests/integration/test_social_contracts.py` — full contract lifecycle: offer → appraisal → accept/breach
+
+---
+
+## Extension rules
+
+1. To add a new contract kind: add to `ContractKind` enum, implement an appraisal method in `SocialAppraisalSystem`, add breach conditions in `contracts.py`, add tests.
+2. To add a new relationship dimension: extend `SocialComponent` and `SocialUpdate`, add clamping in `RelationshipService.process_update()`. Update consumers that read the new dimension.
+3. To add a new guild benefit: extend `guilds.py` and update the service opportunity filtering in `providers/services.py`. Guild benefits must be readable by the adventure domain without importing social systems directly.
+4. Never read social state in a domain service — domain services produce ContractState/SocialUpdate outputs; social systems apply them. Cross-imports between domains and social systems violate the architecture boundary.

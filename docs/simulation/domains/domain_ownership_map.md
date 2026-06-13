@@ -3,7 +3,7 @@ status: authoritative
 layer: ai
 authority: P1
 audience: agent
-last_verified: 2026-06-12
+last_verified: 2026-06-13
 tags: [domains, architecture, ownership, ai]
 ---
 
@@ -27,20 +27,20 @@ Domains are **decision logic** — they read `AuthoritativeState` and `EntitySta
 
 | Domain | src/ path | Phase | Key responsibility | Owned state / output | Detailed contract |
 |---|---|---|---|---|---|
-| **adventure** | `src/domains/adventure/` | — | Route scoring, mapper, quest resolution for exploration | AdventureResult, route scores | (see files) |
+| **adventure** | `src/domains/adventure/` | Phase 3 | Route generation, scoring, selection; project mapping | StrategicUpdate (projects, current_project_id, objectives) | [adventure_contract.md](adventure_contract.md) |
 | **campaigns** | `src/domains/campaigns/` | Phase 9 | Multi-tick campaign orchestration, arc analysis, forbidden-behaviour detection | CampaignResult, EntityArcReport, WorldArcReport | [campaigns_contract.md](campaigns_contract.md) |
 | **combat_engagement** | `src/domains/combat_engagement/` | Phase 4 | Pre-combat subjective assessment: opponent perception, self-estimate, posture selection | CombatEngagementDecisionResult, CombatPosture | [combat_engagement_contract.md](combat_engagement_contract.md) |
-| **commitment** | `src/domains/commitment/` | — | Commitment tracking, abandonment pressure, reputation impact | commitment records | (see cognition_domain_ownership.md) |
-| **cooperation** | `src/domains/cooperation/` | — | Group cooperation evaluators, cooperative postures, social events | cooperation evaluations | (see cognition_domain_ownership.md) |
-| **emotion** | `src/domains/emotion/` | — | Emotional state, habit formation, opportunity cost, recovery | emotion updates | (see files) |
+| **commitment** | `src/domains/commitment/` | Phase 15 (inline) | Commitment pressure, abandonment classification, reputation route impact | PublicReputationProfile.labels (via ReputationUpdateService) | [commitment_contract.md](commitment_contract.md) |
+| **cooperation** | `src/domains/cooperation/` | Phase 7 | Help-need detection, partner scoring, posture selection, party cohesion | ContractState, BlockerState, StrategicUpdate | [cooperation_contract.md](cooperation_contract.md) |
+| **emotion** | `src/domains/emotion/` | Phase 16 (event-driven) | Emotional state updates, habit bias, recovery window, opportunity cost | EmotionalModel, HabitMemory (immutable replace) | [emotion_contract.md](emotion_contract.md) |
 | **information** | `src/domains/information/` | Phase 5 | Belief assimilation, source trust, contradiction detection, knowledge routing | SourceTrustEntry updates, assimilation records | [information_contract.md](information_contract.md) |
-| **memory** | `src/domains/memory/` | — | Spatial memory attribution and updates | spatial memory records | (see cognition_domain_ownership.md) |
-| **motivation** | `src/domains/motivation/` | — | Motivation/drive resolution and filtering | motivation evaluations | (see cognition_domain_ownership.md) |
+| **memory** | `src/domains/memory/` | Phase 13 | Causal attribution, spatial memory, temporal urgency recalculation | CausalMemory, SpatialMemory, TemporalModel (immutable replace) | [memory_contract.md](memory_contract.md) |
+| **motivation** | `src/domains/motivation/` | Phase 14 (inline, scoring utility) | Drive evaluation, doctrine-based routing bias, role-fit scoring | None — pure scoring utility; no EntityUpdate produced | [motivation_contract.md](motivation_contract.md) |
 | **optimization** | `src/domains/optimization/` | Phase 10 | Cross-cutting performance utilities: cache, degradation, feature flags, budget | DegradationLevel, CacheStrategy, FeatureFlagManager | [optimization_contract.md](optimization_contract.md) |
-| **perception** | `src/domains/perception/` | — | Sensory salience filtering and perception phase | perception records | (see cognition_domain_ownership.md) |
-| **progression** | `src/domains/progression/` | — | XP, skill gaps, ledger, progression generation | progression records | (see files) |
-| **time** | `src/domains/time/` | — | Temporal tracking service | temporal state | (see cognition_domain_ownership.md) |
-| **world_emergence** | `src/domains/world_emergence/` | — | World-level emergence aggregation, ecology events | emergence models | (see files) |
+| **perception** | `src/domains/perception/` | Phase 12 | Salience filtering, attention focus, signal budget clamping | entity.cognition.subjective.perception (immutable replace) | [perception_contract.md](perception_contract.md) |
+| **progression** | `src/domains/progression/` | Phase 6 | Reward ledger, conversion option generation, AP/equipment decisions | EquipmentUpdate, TaskUpdate, ResourceTransferIntent, IdentityUpdate | [progression_contract.md](progression_contract.md) |
+| **time** | `src/domains/time/` | — | Temporal tracking service (internal tick accounting) | temporal state | (see cognition_domain_ownership.md) |
+| **world_emergence** | `src/domains/world_emergence/` | Phase 8 | Regional pressure modeling, opportunity generation, signal broadcasting | StateUpdate (world opportunities), entity.exposed_world_signals | [world_emergence_contract.md](world_emergence_contract.md) |
 
 ---
 
