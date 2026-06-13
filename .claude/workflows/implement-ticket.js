@@ -114,7 +114,7 @@ const startTs = ticketInfo.ts || null
 // for distinct timestamps and threads startTs into the run record's start_ts.
 
 const events = []
-const pushEvent = (phaseLabel, agentName, status, summary, ts) => {
+const pushEvent = (phaseLabel, agentName, status, summary, ts, toolCallCount) => {
   events.push({
     seq: events.length + 1,
     phase: phaseLabel,
@@ -122,6 +122,7 @@ const pushEvent = (phaseLabel, agentName, status, summary, ts) => {
     status,
     summary: (summary || '').toString().slice(0, 200),
     ts: ts || null,
+    tool_call_count: toolCallCount != null ? toolCallCount : null,
   })
 }
 
@@ -138,15 +139,37 @@ Step 1 — get current timestamp (run end time):
   Run via Bash: date -u +%Y-%m-%dT%H:%M:%SZ
   Save result as END_TS. Replace every literal <END_TS> in the commands below with this value.
 
-Step 2 — build and write events:
+Step 2 — compute tool_call_count per agent seq from tools.jsonl:
+  Run via Bash:
+    python3 -c "
+import json
+from pathlib import Path
+from collections import Counter
+f = Path('agent-monitoring/tools.jsonl')
+counts = Counter()
+if f.exists():
+    for line in f.read_text().splitlines():
+        if not line: continue
+        r = json.loads(line)
+        if r.get('run_id') == '${tid}' and r.get('seq') is not None:
+            counts[r['seq']] += 1
+print(json.dumps(dict(counts)))
+"
+  Save the JSON dict result as TOOL_COUNTS (e.g. {"2":4,"3":11}).
+
+Step 3 — build and write events:
   Input events: ${eventsJson}
   For each event: add "run_id": "${tid}". If "ts" is null or missing, set "ts" to END_TS.
+  Set "tool_call_count" on each event to the integer from TOOL_COUNTS[str(event.seq)], or 0 if not present.
   Run: python3 tools/agent-monitoring/record_events.py --data '<final JSON array>'
 
-Step 3 — write run record (replace <END_TS> with the value from Step 1):
+Step 4 — write run record (replace <END_TS> with the value from Step 1):
   Run: python3 tools/agent-monitoring/record_run.py --data '{"run_id":"${tid}","start_ts":"${startTsLiteral}","end_ts":"<END_TS>","workflow":"implement-ticket","tier":"${tier}","final_status":"${finalStatus}","agent_count":${eventsCount}}'
 
-If any python3 command fails, print "WARNING: monitoring write failed: <error>" and continue — do NOT raise.
+Step 5 — clear the tool-tracking sidecar:
+  Run via Bash: printf '{}' > .claude/current_run
+
+If any command fails, print "WARNING: monitoring write failed: <error>" and continue — do NOT raise.
 Return "monitoring written" or "monitoring write failed: <reason>".`,
     { label: 'monitoring-write' }
   )
@@ -208,6 +231,8 @@ if (tier !== 'hotfix') {
 Step 0: run \`date -u +%Y-%m-%dT%H:%M:%SZ\`. Your response MUST begin with this exact line (nothing before it):
 PHASE_TS: <result>
 
+Step 0b: run \`python3 -c "import json; open('.claude/current_run','w').write(json.dumps({'run_id':'${tid}','seq':${events.length + 1}}))" 2>/dev/null || true\` — register this agent call for tool tracking.
+
 Read:
 - ${ticketInfo.ticket_path}
 - All source files listed in the "Related Code Areas" section (read the actual code)
@@ -241,6 +266,8 @@ Write both files. Then return: key findings, open questions requiring a decision
 
 Step 0: run \`date -u +%Y-%m-%dT%H:%M:%SZ\`. Your response MUST begin with this exact line (nothing before it):
 PHASE_TS: <result>
+
+Step 0b: run \`python3 -c "import json; open('.claude/current_run','w').write(json.dumps({'run_id':'${tid}','seq':${events.length + 1}}))" 2>/dev/null || true\` — register this agent call for tool tracking.
 
 Read:
 - ${ticketInfo.ticket_path}
@@ -301,6 +328,8 @@ Then return: ordered step list (one line per step) + any unresolved questions.`,
     `Architecture review for ticket ${tid}.
 
 Step 0: run \`date -u +%Y-%m-%dT%H:%M:%SZ\` and include result as the \`ts\` field.
+
+Step 0b: run \`python3 -c "import json; open('.claude/current_run','w').write(json.dumps({'run_id':'${tid}','seq':${events.length + 1}}))" 2>/dev/null || true\` — register this agent call for tool tracking.
 
 Read:
 - staging_artifacts/${tid}/plan.md
@@ -371,6 +400,8 @@ const implementation = await agent(
 
 Step 0: run \`date -u +%Y-%m-%dT%H:%M:%SZ\` and include result as the \`ts\` field.
 
+Step 0b: run \`python3 -c "import json; open('.claude/current_run','w').write(json.dumps({'run_id':'${tid}','seq':${events.length + 1}}))" 2>/dev/null || true\` — register this agent call for tool tracking.
+
 Read:
 ${tier !== 'hotfix' ? `- staging_artifacts/${tid}/plan.md (follow this exactly)
 - staging_artifacts/${tid}/investigation.md` : `- ${ticketInfo.ticket_path} (hotfix — implement the fix directly from the ticket scope)`}
@@ -420,6 +451,8 @@ const testResult = await agent(
 
 Step 0: run \`date -u +%Y-%m-%dT%H:%M:%SZ\` and include result as the \`ts\` field.
 
+Step 0b: run \`python3 -c "import json; open('.claude/current_run','w').write(json.dumps({'run_id':'${tid}','seq':${events.length + 1}}))" 2>/dev/null || true\` — register this agent call for tool tracking.
+
 Files changed:
 ${implementation.files_changed.join('\n')}
 
@@ -464,6 +497,8 @@ const parity = await agent(
 
 Step 0: run \`date -u +%Y-%m-%dT%H:%M:%SZ\`. Your response MUST begin with this exact line (nothing before it):
 PHASE_TS: <result>
+
+Step 0b: run \`python3 -c "import json; open('.claude/current_run','w').write(json.dumps({'run_id':'${tid}','seq':${events.length + 1}}))" 2>/dev/null || true\` — register this agent call for tool tracking.
 
 Behavior changed: ${implementation.behavior_changed}
 Parity subsystems affected: ${(implementation.parity_subsystems || []).join(', ') || 'check implementation summary'}
@@ -520,6 +555,8 @@ const doneCheck = await agent(
 
 Step 0: run \`date -u +%Y-%m-%dT%H:%M:%SZ\` and include result as the \`ts\` field.
 
+Step 0b: run \`python3 -c "import json; open('.claude/current_run','w').write(json.dumps({'run_id':'${tid}','seq':${events.length + 1}}))" 2>/dev/null || true\` — register this agent call for tool tracking.
+
 Ticket path: ${ticketInfo.ticket_path}
 Tier: ${tier}
 
@@ -567,6 +604,8 @@ phase('Finalize')
 
 await agent(
   `Finalize ticket ${tid} — all gates passed. Tier: ${tier}.
+
+Step 0: run \`python3 -c "import json; open('.claude/current_run','w').write(json.dumps({'run_id':'${tid}','seq':${events.length + 1}}))" 2>/dev/null || true\` — register this agent call for tool tracking.
 
 Complete these steps in order:
 

@@ -1,7 +1,7 @@
 {
   "mcpServers": {
     "knowledge-search": {
-      "command": "python3",
+      "command": "/home/vboxuser/Work/venv/bin/python3",
       "args": ["tools/search_mcp.py"],
       "description": "Local semantic search over project docs, tickets, and investigations"
     }
