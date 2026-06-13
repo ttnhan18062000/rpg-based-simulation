@@ -247,6 +247,16 @@ ${concern.raw_excerpts.map(e => `  - ${e}`).join('\n')}
 Work through these steps in order. Each step narrows the search so the next step is more targeted.
 Do NOT invent file paths — report only what the tools actually return.
 
+─── Step 0: Semantic prior-work retrieval ─────────────────────────────────────
+
+  Run (only if knowledge-index/ exists — the tool will self-check):
+    python3 tools/knowledge_search.py query "${concern.title} ${concern.description}" --top-k 5
+
+  If the command prints "knowledge index not found" or exits non-zero: skip and proceed to Step 1.
+  If results are returned: note each returned ticket ID and path. Use these as warm-start
+  candidates in Step 3 (prior ticket cross-reference) — check them in working_log.csv before
+  running additional keyword greps.
+
 ─── Step 1: Knowledge graph — code structure ──────────────────────────────────
 
   1a. Read graphify-out/GRAPH_REPORT.md for god nodes and community structure.

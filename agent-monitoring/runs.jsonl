@@ -83,3 +83,12 @@
 {"run_id":"TCK-20260606-DOCSITE-INTEGRATION","start_ts":"2026-06-11T13:16:30Z","end_ts":"2026-06-11T13:52:01Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":9}
 {"run_id":"FOLDER-tickets-todos-doc_feature-","start_ts":"2026-06-11T01:04:55Z","end_ts":"2026-06-11T13:54:25Z","workflow":"implement-epic","tier":"epic","final_status":"DONE","agent_count":7}
 {"run_id":"FOLDER-tickets-todos-missing-docs-contracts-","start_ts":"2026-06-12T00:00:00Z","end_ts":"2026-06-12T00:00:00Z","workflow":"implement-epic","tier":"standard","final_status":"DONE","agent_count":9}
+{"run_id":"TCK-20260612-SEMANTIC-KNOWLEDGE-SEARCH","start_ts":"2026-06-12T13:44:38Z","end_ts":"2026-06-12T13:55:00Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":1}
+{"run_id":"TCK-20260612-SEMANTIC-KNOWLEDGE-SEARCH","start_ts":"2026-06-12T13:36:07Z","end_ts":"2026-06-12T14:29:41Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":9}
+{"run_id":"TCK-20260612-LOCAL-CTX-DOCS-CORPUS","start_ts":"2026-06-12T14:30:13Z","end_ts":"2026-06-12T14:50:30Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":9}
+{"run_id":"TCK-20260612-LOCAL-CTX-HYBRID-SEARCH","start_ts":"2026-06-12T14:52:03Z","end_ts":"2026-06-12T15:00:00Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":9}
+{"run_id":"TCK-20260612-LOCAL-CTX-HTTP-API","start_ts":"2026-06-12T00:00:00Z","end_ts":"2026-06-12T00:00:00Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":4}
+{"run_id":"TCK-20260612-LOCAL-CTX-EVAL","start_ts":"2026-06-12T00:00:00Z","end_ts":"2026-06-12T00:00:00Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":3}
+{"run_id":"TCK-20260612-LOCAL-CTX-OPS","start_ts":"2026-06-12T00:00:00Z","end_ts":"2026-06-12T00:00:00Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":3}
+{"run_id":"TCK-20260612-LOCAL-CTX-MCP","start_ts":"2026-06-12T00:00:00Z","end_ts":"2026-06-13T17:14:10Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":3}
+{"run_id":"FOLDER-tickets-todos-local-agent-context-search-","start_ts":"2026-06-12T00:00:00Z","end_ts":"2026-06-13T17:14:10Z","workflow":"implement-epic","tier":"epic","final_status":"DONE","agent_count":6}

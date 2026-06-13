@@ -1,0 +1,242 @@
+[
+  {
+    "query": "how does the damage formula work for attacker vs defender",
+    "expected_doc_ids": ["mechanics/02_combat_laws"],
+    "category": "semantic",
+    "notes": "semantic — 'damage formula' is an H2 heading in combat laws"
+  },
+  {
+    "query": "what core attributes does an entity have at creation",
+    "expected_doc_ids": ["mechanics/01_entity_anatomy"],
+    "category": "semantic",
+    "notes": "semantic — entity anatomy chapter covers starting attributes"
+  },
+  {
+    "query": "how does stamina pressure build up over time and affect an entity",
+    "expected_doc_ids": ["mechanics/01_entity_anatomy"],
+    "category": "semantic",
+    "notes": "semantic — biological pressures section of entity anatomy"
+  },
+  {
+    "query": "how does the economy enforce conservation of resources",
+    "expected_doc_ids": ["mechanics/03_economic_laws"],
+    "category": "semantic",
+    "notes": "semantic — atomic conservation is the central law of chapter 03"
+  },
+  {
+    "query": "what is the goal hierarchy for AI strategic decisions",
+    "expected_doc_ids": ["mechanics/04_strategic_cognition"],
+    "category": "semantic",
+    "notes": "semantic — goal hierarchy is chapter 04's core concept"
+  },
+  {
+    "query": "how does regional trauma accumulate from events",
+    "expected_doc_ids": ["mechanics/05_world_evolution"],
+    "category": "semantic",
+    "notes": "semantic — regional trauma is a world evolution mechanic"
+  },
+  {
+    "query": "what happens during each phase of the engine tick loop",
+    "expected_doc_ids": ["engine/kernel"],
+    "category": "semantic",
+    "notes": "semantic — kernel defines the 6-phase deterministic loop"
+  },
+  {
+    "query": "how are entities identified and what is their lifecycle",
+    "expected_doc_ids": ["core/entities"],
+    "category": "semantic",
+    "notes": "semantic — entity lifecycle and identity are in core/entities"
+  },
+  {
+    "query": "what is the immutability law for simulation state",
+    "expected_doc_ids": ["core/state"],
+    "category": "semantic",
+    "notes": "semantic — state immutability law defined in core/state"
+  },
+  {
+    "query": "how does durability decay for items used in combat",
+    "expected_doc_ids": ["mechanics/02_combat_laws"],
+    "category": "semantic",
+    "notes": "semantic — durability decay is a combat laws topic"
+  },
+  {
+    "query": "how does harvesting work and what governs resource yields",
+    "expected_doc_ids": ["mechanics/03_economic_laws"],
+    "category": "semantic",
+    "notes": "semantic — harvesting rules are part of economic laws"
+  },
+  {
+    "query": "how are world regions defined and what are their boundaries",
+    "expected_doc_ids": ["mechanics/06_worldbuilding_foundation"],
+    "category": "semantic",
+    "notes": "semantic — declarative topology and region definitions"
+  },
+  {
+    "query": "how does an agent perceive and store knowledge about the world",
+    "expected_doc_ids": ["mechanics/04_strategic_cognition"],
+    "category": "semantic",
+    "notes": "semantic — perception and knowledge management in chapter 04"
+  },
+  {
+    "query": "what are the performance targets for different hardware classes",
+    "expected_doc_ids": ["engine/performance_contract"],
+    "category": "semantic",
+    "notes": "semantic — hardware class A/B/C scaling limits in performance contract"
+  },
+  {
+    "query": "what calamities can affect the world and how do they trigger",
+    "expected_doc_ids": ["mechanics/05_world_evolution"],
+    "category": "semantic",
+    "notes": "semantic — calamities are a world evolution mechanism"
+  },
+  {
+    "query": "WorldRepository",
+    "expected_doc_ids": ["architecture/world_repository_layout"],
+    "category": "exact-term",
+    "notes": "exact-term — WorldRepository is the subject of the layout doc"
+  },
+  {
+    "query": "AuthoritativeState",
+    "expected_doc_ids": ["core/state", "engine/authoritative_mutation_pipeline_contract"],
+    "category": "exact-term",
+    "notes": "exact-term — canonical state concept defined in core/state and engine contracts"
+  },
+  {
+    "query": "authoritative_mutation_pipeline",
+    "expected_doc_ids": ["engine/authoritative_mutation_pipeline_contract", "engine/authoritative_pipeline"],
+    "category": "exact-term",
+    "notes": "exact-term — phrase appears as doc name and in pipeline contract text"
+  },
+  {
+    "query": "WorldCompositionSpec",
+    "expected_doc_ids": ["architecture/world_assembly_architecture"],
+    "category": "exact-term",
+    "notes": "exact-term — WorldCompositionSpec is the input type in world assembly"
+  },
+  {
+    "query": "governance_logic eligibility",
+    "expected_doc_ids": ["engine/governance_logic"],
+    "category": "exact-term",
+    "notes": "exact-term — governance_logic is both a file name and the concept"
+  },
+  {
+    "query": "replay contract determinism",
+    "expected_doc_ids": ["engine/contracts/replay_contract"],
+    "category": "exact-term",
+    "notes": "exact-term — replay contract doc name plus key topic"
+  },
+  {
+    "query": "scheduler_contract tick scheduling",
+    "expected_doc_ids": ["engine/contracts/scheduler_contract"],
+    "category": "exact-term",
+    "notes": "exact-term — scheduler contract file and concept"
+  },
+  {
+    "query": "XP scaling progression formula",
+    "expected_doc_ids": ["mechanics/01_entity_anatomy"],
+    "category": "exact-term",
+    "notes": "exact-term — XP scaling is covered in entity anatomy chapter"
+  },
+  {
+    "query": "apply_packet authoritative application",
+    "expected_doc_ids": ["engine/authoritative_pipeline", "engine/authoritative_apply_contract"],
+    "category": "exact-term",
+    "notes": "exact-term — apply_packet is the mutation application unit"
+  },
+  {
+    "query": "parity_ledger infrastructure status verified",
+    "expected_doc_ids": ["engine/contracts/infrastructure_overview"],
+    "category": "exact-term",
+    "notes": "exact-term — parity ledger schema and infrastructure coverage"
+  },
+  {
+    "query": "design_patterns coding conventions",
+    "expected_doc_ids": ["guidelines/design_patterns"],
+    "category": "exact-term",
+    "notes": "exact-term — the design patterns guideline doc by name"
+  },
+  {
+    "query": "ResolvedWorldBundle entity assignment",
+    "expected_doc_ids": ["architecture/world_assembly_architecture"],
+    "category": "exact-term",
+    "notes": "exact-term — ResolvedWorldBundle is the output of world assembly"
+  },
+  {
+    "query": "watchdog adr simulation safety",
+    "expected_doc_ids": ["architecture/adr-004-simulation-watchdog"],
+    "category": "exact-term",
+    "notes": "exact-term — ADR-004 covers simulation watchdog"
+  },
+  {
+    "query": "performance optimization adr bounded cognition",
+    "expected_doc_ids": ["architecture/adr-005-performance-optimization"],
+    "category": "exact-term",
+    "notes": "exact-term — ADR-005 covers performance optimization"
+  },
+  {
+    "query": "entity_anatomy attributes derived stats",
+    "expected_doc_ids": ["mechanics/01_entity_anatomy"],
+    "category": "exact-term",
+    "notes": "exact-term — doc name and subject combined"
+  },
+  {
+    "query": "how does crafting relate to economic conservation laws",
+    "expected_doc_ids": ["mechanics/03_economic_laws"],
+    "category": "cross-section",
+    "notes": "cross-section — crafting (economy) ties back to conservation law, may also surface engine contracts"
+  },
+  {
+    "query": "how do combat outcomes affect the authoritative state pipeline",
+    "expected_doc_ids": ["mechanics/02_combat_laws", "engine/authoritative_pipeline"],
+    "category": "cross-section",
+    "notes": "cross-section — combat (mechanics) and authoritative pipeline (engine) both relevant"
+  },
+  {
+    "query": "entity attribute changes after XP reward and level up",
+    "expected_doc_ids": ["mechanics/01_entity_anatomy", "engine/contracts/progression_package"],
+    "category": "cross-section",
+    "notes": "cross-section — progression (entity anatomy) and progression contract (engine)"
+  },
+  {
+    "query": "how does world ecology affect resource node availability",
+    "expected_doc_ids": ["mechanics/05_world_evolution", "mechanics/03_economic_laws"],
+    "category": "cross-section",
+    "notes": "cross-section — ecology (world evolution) drives resource yields (economics)"
+  },
+  {
+    "query": "observability and replay for simulation determinism verification",
+    "expected_doc_ids": ["engine/contracts/replay_contract", "engine/contracts/observability_contract"],
+    "category": "cross-section",
+    "notes": "cross-section — replay and observability both serve determinism verification"
+  },
+  {
+    "query": "aaa",
+    "expected_doc_ids": [],
+    "category": "edge-case",
+    "notes": "edge-case — very short nonsense query, should return some results or zero; no expected match"
+  },
+  {
+    "query": "damge formuler attakcer defneder",
+    "expected_doc_ids": ["mechanics/02_combat_laws"],
+    "category": "edge-case",
+    "notes": "edge-case — misspelled version of semantic query 1; BM25 may miss, semantic should still find"
+  },
+  {
+    "query": "what is the meaning of simulation",
+    "expected_doc_ids": [],
+    "category": "edge-case",
+    "notes": "edge-case — extremely broad query with no single correct answer; test that results are returned without crash"
+  },
+  {
+    "query": "xyzzy_nonexistent_term_not_in_any_doc",
+    "expected_doc_ids": [],
+    "category": "edge-case",
+    "notes": "edge-case — token with no match anywhere; should return zero or near-zero results gracefully"
+  },
+  {
+    "query": "how",
+    "expected_doc_ids": [],
+    "category": "edge-case",
+    "notes": "edge-case — single stop-word query; stopword filtering should handle gracefully"
+  }
+]

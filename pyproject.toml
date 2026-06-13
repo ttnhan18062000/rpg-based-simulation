@@ -31,6 +31,14 @@ dev = [
     "hypothesis>=6.0.0",
     "memray>=1.0.0",
 ]
+knowledge = [
+    "sentence-transformers>=2.7.0",
+    "sqlite-vec>=0.1.1",
+    "rank-bm25>=0.2.2",
+]
+search-mcp = [
+    "mcp>=1.0.0",
+]
 
 [project.scripts]
 rpg-sim = "src.__main__:main"

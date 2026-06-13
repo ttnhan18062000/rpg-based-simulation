@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "knowledge-search": {
+      "command": "python3",
+      "args": ["tools/search_mcp.py"],
+      "description": "Local semantic search over project docs, tickets, and investigations"
+    }
+  }
+}

@@ -64,6 +64,10 @@ summary="Loaded existing ticket ${ticketId}", ts=TS.`
 
 Step 0: run \`date -u +%Y-%m-%dT%H:%M:%SZ\` — save result as TS (use as the \`ts\` field).
 
+Step 0b (context warm-start): if knowledge-index/knowledge.db exists, call the MCP tool \`search_docs\`
+with query="${request}" and top_k=5. Note the top results as context for scoping. If MCP is unavailable,
+run: python3 tools/knowledge_search.py query "${request}" --top-k 5 (skip silently if index missing).
+
 Request: ${request}
 
 Steps:
