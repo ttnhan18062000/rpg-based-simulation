@@ -2203,6 +2203,28 @@
   divergence_note: null
   support_boundary: null
 
+- id: INFRA-200
+  text: >
+    ShutdownReport dataclass (src/core/lifecycle.py) produced by Kernel.shutdown()
+    and cached as _last_shutdown_report. Accessible via kernel.shutdown_report().
+    Fields: workers_started, workers_stopped, open_file_handles (psutil or -1),
+    pending_replay_flushes (from replay_metrics()), survival_event_counts (from
+    EventRecorder._survival_event_counts), outcome ("SUCCESS"/"PARTIAL"/"FAILED"),
+    warnings (list[str]). outcome="PARTIAL" when workers_stopped < workers_started
+    or when a behavior-normalization-worker thread does not join within 1s.
+    pending_replay_flushes > 0 appends a warning. Kernel.shutdown() return type
+    remains ShutdownResult (backward-compatible); ShutdownReport is an addendum.
+    BehaviorWorker threads (name="behavior-normalization-worker") are joined in
+    Kernel.shutdown() with a 1s timeout; non-stop generates a PARTIAL outcome.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/engine/kernel.py::Kernel.shutdown_report
+  proof_type: null
+  test_path: tests/unit/engine/test_lifecycle_supervisor.py
+  divergence_note: null
+  support_boundary: null
+
 - id: INFRA-199
   text: >
     EventRecorder supports four dynamic observability modes: NORMAL, PRESSURE,

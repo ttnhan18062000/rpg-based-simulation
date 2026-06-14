@@ -44,7 +44,8 @@ class Kernel:
         "_current_signals", "_current_policy", "_current_work_items",
         "_source_packets", "_source_work_items", "_final_results", "_final_compute_ms",
         "_phase_costs", "_metrics", "_audit_mode", "_no_frame_pacing", "_no_replay", "_audit_dirty_set", "_perf_tracker", "_force_full_scan", "_current_update", "_cache_registry", "_cache_policy", "_opt_profile", "_event_listeners", "_event_recorder", "_entity_timeline_store",
-        "_run_id", "_artifact_repo", "_metric_recorder", "_current_tick_event_count", "_current_tick_violation_count", "_cognition_recorder"
+        "_run_id", "_artifact_repo", "_metric_recorder", "_current_tick_event_count", "_current_tick_violation_count", "_cognition_recorder",
+        "_workers_started", "_last_shutdown_report",
     )
 
     def __init__(
@@ -244,6 +245,11 @@ class Kernel:
 
         self._current_tick_event_count = 0
         self._current_tick_violation_count = 0
+
+        # Lifecycle supervisor: count registered workers for shutdown accounting.
+        # 1 = EventRecorder._worker (QueueDrainWorker), started when obs is enabled.
+        self._workers_started = 1 if (obs_mode != ObservabilityMode.OFF) else 0
+        self._last_shutdown_report = None
 
         self.validate(flags)
 
@@ -809,17 +815,68 @@ class Kernel:
         self._replay.on_tick_end(self._state.tick)
 
     def shutdown(self, timeout_s: float = 5.0) -> ShutdownResult:
+        from src.core.lifecycle import ShutdownReport
         self._stopped = True
+        report = ShutdownReport(workers_started=getattr(self, "_workers_started", 0))
+        workers_stopped = 0
+
         self._worker_manager.shutdown()
+
         if hasattr(self, "_event_recorder") and self._event_recorder:
             self._event_recorder.shutdown()
+            workers_stopped += 1
+
         if hasattr(self, "_metric_recorder") and self._metric_recorder:
             self._metric_recorder.shutdown(self._state.tick)
+
+        # Wire BehaviorWorker into shutdown: join any running behavior-normalization threads.
+        import threading
+        for t in threading.enumerate():
+            if t.name == "behavior-normalization-worker" and t.is_alive():
+                t.join(timeout=1.0)
+                if t.is_alive():
+                    report.warnings.append(f"behavior-normalization-worker did not stop within 1s")
+                    report.outcome = "PARTIAL"
+
         from src.engine.checkpoint import CanonicalStateHasher
         final_hash = CanonicalStateHasher.get_hash(self._state)
         logger.info(f"Final Auth Hash: {final_hash}")
         replay_outcome = self._replay.finalize(timeout_s=timeout_s)
-        
+
+        # Collect replay backpressure metrics.
+        if hasattr(self._replay, "replay_metrics"):
+            rm = self._replay.replay_metrics()
+            report.pending_replay_flushes = rm.get("pending_replay_flushes", rm.get("pending_flushes", 0))
+            if report.pending_replay_flushes > 0:
+                report.warnings.append(
+                    f"pending_replay_flushes={report.pending_replay_flushes} at shutdown"
+                )
+
+        # Collect survival event counts from observability mode controller.
+        if hasattr(self, "_event_recorder") and self._event_recorder:
+            report.survival_event_counts = dict(
+                getattr(self._event_recorder, "_survival_event_counts", {})
+            )
+
+        # Open file handle count via psutil (advisory, non-fatal).
+        try:
+            import psutil
+            report.open_file_handles = len(psutil.Process().open_files())
+        except Exception:
+            report.open_file_handles = -1
+
+        report.workers_stopped = workers_stopped
+        if report.outcome == "SUCCESS" and workers_stopped < report.workers_started:
+            report.outcome = "PARTIAL"
+            report.warnings.append(
+                f"workers_started={report.workers_started} but workers_stopped={workers_stopped}"
+            )
+
+        if replay_outcome == LifecycleOutcome.FAILED and report.outcome == "SUCCESS":
+            report.outcome = "FAILED"
+
+        self._last_shutdown_report = report
+
         # Update manifest status to COMPLETED/FAILED
         if hasattr(self, "_artifact_repo") and self._artifact_repo and self._run_id:
             from datetime import datetime, timezone
@@ -839,6 +896,10 @@ class Kernel:
             replay_outcome=replay_outcome,
             overall_outcome=LifecycleOutcome.SUCCESS if replay_outcome != LifecycleOutcome.FAILED else LifecycleOutcome.FAILED
         )
+
+    def shutdown_report(self):
+        """Return the ShutdownReport cached by the last shutdown() call, or None."""
+        return getattr(self, "_last_shutdown_report", None)
 
     @property
     def status(self) -> RuntimeStatus:
