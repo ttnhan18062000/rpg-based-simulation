@@ -3,96 +3,212 @@ status: active
 layer: observability
 authority: P1
 audience: developer
+tags: [observability, cli, simulation, sweep, worldbuilding, diagnostics]
 ---
 
 # Running Simulations Headlessly with Full Observability
 
-This guide provides simple, practical developer instructions to seed, compile, and run simulation worlds headlessly with maximum behavior observation enabled under the **Phase 19–28 Observability & Behavior Profiling** guidelines.
+Practical developer reference for seeding, compiling, and running simulation worlds headlessly. Covers the full pipeline from world authoring through run analysis.
 
 ---
 
-## 🚀 Seeding & Compiling the World
+## 1. World Generation Pipeline
 
-The RPG V2 Engine completely decouples world creation from the simulation loop. Before running a simulation, the world spec must be parsed and compiled into an active state by the `WorldCompiler` and `WorldRepository`.
+The engine decouples world authoring from the simulation loop. Worlds are authored as declarative YAML specs, compiled once, and then consumed by any number of simulation runs.
 
-### Default Sandbox World
-By default, the CLI uses the `sandbox_world` specification stored under `data/worlds/sandbox_world/world.yaml`. 
-This template dynamically spawns:
-- **Town District**: Spawns **15 citizens**, **2 taverns**, and GRASS terrain.
-- **Woods Wilderness**: Spawns **5 monsters**, **10 wood resource nodes**, and FOREST terrain with high hazards.
+### CLI (worldbuilding — separate entry point)
 
-### Custom World Setup
-To list all available compiled worlds in the repository index, run:
 ```bash
+# List all compiled worlds in the repository
 python3 -m src.worldbuilding.cli list
+# or: make world-list
+
+# Validate a world spec against compile constraints
+python3 -m src.worldbuilding.cli validate sandbox_world
+# or: make world-validate WORLD=sandbox_world
+
+# Compile a world spec into active state files
+python3 -m src.worldbuilding.cli compile sandbox_world
+# or: make world-compile WORLD=sandbox_world
+
+# Resolve compositional specs into compiled assets
+python3 -m src.worldbuilding.cli resolve sandbox_world
+# or: make world-resolve WORLD=sandbox_world
+
+# Inspect structural metrics of a world definition
+python3 -m src.worldbuilding.cli inspect sandbox_world
+# or: make world-inspect WORLD=sandbox_world
+
+# Bootstrap a starter world template
+python3 -m src.worldbuilding.cli create-template my_world
+# or: make world-template WORLD=my_world
+```
+
+### Default sandbox world
+
+`data/worlds/sandbox_world/world.yaml` — pre-compiled, always available:
+- **Town District**: 15 citizens, 2 taverns, GRASS terrain
+- **Woods Wilderness**: 5 monsters, 10 wood resource nodes, FOREST terrain
+
+---
+
+## 2. Running a Simulation
+
+All simulation commands go through `python3 -m src cli` (or `make sim`).
+
+### Basic run
+
+```bash
+python3 -m src cli --ticks 200 --seed 42
+# or: make sim
+```
+
+### Custom world
+
+```bash
+python3 -m src cli --ticks 200 --seed 42 --world my_world
+# or: make sim-world WORLD=my_world TICKS=200
+```
+
+### Log levels
+
+`--log-level` controls Python logging verbosity. It does **not** affect the dynamic observability backpressure mode (see §3).
+
+| Flag | When to use |
+|---|---|
+| `--log-level WARNING` | Quick smoke test — minimal output (`make sim-quick`) |
+| `--log-level INFO` | Default for normal runs |
+| `--log-level DEBUG` | Verbose phase-by-phase tracing (`make sim-debug`) |
+
+```bash
+# Verbose debug run
+python3 -m src cli --ticks 100 --seed 42 --log-level DEBUG
+# or: make sim-debug TICKS=100
+
+# Quick 20-tick smoke test
+make sim-quick
+```
+
+### Other flags
+
+| Flag | Default | Description |
+|---|---|---|
+| `--ticks N` | 200 | Number of ticks to simulate |
+| `--seed N` | 42 | World seed (deterministic) |
+| `--entities N` | — | Override entity count |
+| `--workers N` | — | Override worker thread count |
+| `--replay` | — | Enable replay trace capture |
+| `--world NAME` | sandbox_world | Custom world spec folder |
+
+---
+
+## 3. Dynamic Observability Backpressure
+
+`EventRecorder` automatically adjusts its recording behaviour based on its queue fill ratio. This is **not a CLI flag** — it is adaptive and always active.
+
+| Mode | Fill ratio | Behaviour |
+|---|---|---|
+| `NORMAL` | < 70% | All events recorded |
+| `PRESSURE` | 70–90% | INFO/DEBUG sampled 1-in-5; WARNING+ always pass |
+| `DEGRADED` | 90–100% | INFO/DEBUG dropped; WARNING+ pass |
+| `SURVIVAL` | ≥ 100% | Counter-only — no queue push, no I/O overhead |
+
+Mode transitions are logged once at INFO level. Check current pressure at any time:
+
+```bash
+python3 -m src diagnostics resources
+# or: make check-resources
+```
+
+Exit code 0 = all subsystems OK or WARN. Exit code 1 = any subsystem DEGRADED (CI gate).
+
+```bash
+# JSON output for scripting
+python3 -m src diagnostics resources --format json
+
+# Offline mode — read from a completed run's artifacts
+python3 -m src diagnostics resources --run-id <run_id>
 ```
 
 ---
 
-## 💻 Headless Simulation CLI Run Commands
+## 4. Scenario Sweep (Run Matrix)
 
-### 1. Default Sandbox Simulation (With DEBUG Observability)
-To launch a simulation of **100 ticks** using the default compiled `sandbox_world` under the highest behavioral profiling mode (`DEBUG`), run:
+A sweep runs a parameterised matrix of scenarios and aggregates outcomes.
 
 ```bash
-# Activate the virtual environment
-source /home/vboxuser/Work/venv/bin/activate
-
-# Execute headlessly with full behavior tracking enabled
-OBS_MODE=DEBUG python3 -m src cli --ticks 100 --seed 42 --log-level INFO
+python3 -m src sweep path/to/sweep.json
+# or: make sim-sweep CONFIG=path/to/sweep.json
 ```
 
-### 2. Custom World Simulation (With DEBUG Observability)
-To launch a simulation on a custom compiled world specification folder (e.g. `another_world`), run:
+Sweep config is a JSON file matching `ScenarioSweepConfig`. After the sweep:
 
 ```bash
-SIM_OBS_MODE=DEBUG python3 -m src cli --ticks 100 --seed 42 --world another_world --log-level INFO
+# List all completed sweeps
+python3 -m src list-sweeps
+
+# Inspect a sweep summary
+python3 -m src inspect-sweep <sweep_id>
+
+# Compare sweep against baseline
+python3 -m src compare-sweep <sweep_id> --baseline path/to/baseline.json
+
+# CI gate — exit 1 if outcomes regressed
+python3 -m src gate <sweep_id> --baseline path/to/baseline.json
 ```
 
 ---
 
-## 📁 3. Locating and Processing Mined Data
+## 5. Run Artifacts
 
-Once your run completes, the telemetry datasets are persisted inside `data/runs/<run_id>/`. You can query, extract, and analyze this data using standard tools:
+After any run, artifacts land in `data/runs/<run_id>/`:
 
-### Raw Artifact Paths
-*   **Behavior Event Logs**: `data/runs/<run_id>/simulation_events.jsonl`
-*   **Metric Windows**: `data/runs/<run_id>/metric_windows.jsonl`
-*   **Strategic Cognition Graphs**: `data/runs/<run_id>/cognition_snapshots.jsonl`
-*   **Hard Law Violations**: `data/runs/<run_id>/hard_law_violations.jsonl`
+| File | Contents |
+|---|---|
+| `simulation_events.jsonl` | Raw behavioral event log |
+| `metric_windows.jsonl` | Aggregated metric windows |
+| `cognition_snapshots.jsonl` | Strategic cognition graphs |
+| `hard_law_violations.jsonl` | Hard-law violation records |
 
-### Command-Line Dataset Processing
+### Export and analysis
 
-#### A. Export to Parquet
-To convert a raw run's JSONL telemetry into high-performance, compressed Parquet files under `data/exports/`, run:
 ```bash
+# Export a run to Parquet
 python3 -m src export <run_id> --format parquet
-```
+# or: make export-run RUN_ID=<run_id>
 
-#### B. DB Warehouse Ingestion (SQLite/ClickHouse)
-To ingest a completed run's behavior scorecard, timeline episodes, and findings into your SQL warehouse repository:
-```bash
+# Ingest into warehouse (SQLite/ClickHouse)
 python3 -m src warehouse ingest-run <run_id>
+# or: make warehouse-ingest RUN_ID=<run_id>
+
+# SQL queries on the warehouse
+python3 -m src warehouse query worst-runs --limit 10
+python3 -m src warehouse query entity-events --entity-id 12 --limit 50
+
+# Cognition inspection
+python3 -m src cognition snapshot --entity-id 12 --run-id <run_id>
+python3 -m src cognition patterns --run-id <run_id>
 ```
 
-#### C. SQL Predefined Analytical Queries
-To execute deep analytical checks (e.g. finding the worst runs by health or fetching an entity's event log) on the database:
-```bash
-# Query the worst runs
-python3 -m src warehouse query worst-runs --limit 10
+### Retention
 
-# Fetch a detailed event history for entity 12
-python3 -m src warehouse query entity-events --entity-id 12 --limit 50
+```bash
+# Dry-run scan of prunable files
+python3 -m src retention plan
+# or: make retention-plan
+
+# Clean expired files (confirmation prompt)
+python3 -m src retention clean
+# or: make retention-clean
 ```
 
 ---
 
-## 🛡️ 4. Crash Recovery & Durability Guarantees
+## 6. Crash Recovery
 
-> [!IMPORTANT]
-> **Zero Telemetry Loss on Engine Crashes**: 
-> The simulation runner implements a strict `try...finally` boundary in `src/cli/entry.py`. If the simulation encounters an uncaught exception, a `HardLawViolationError`, or a system crash:
-> 1. The engine catches the error, outputs the diagnostic trace to logs, and triggers the `finally` block.
-> 2. The `finally` block **synchronously forces a final queue flush** inside the `EventRecorder` and `ReplayManager`.
-> 3. All buffered in-flight behavioral events are safely written out to `simulation_events.jsonl` before the process exits.
-> 4. The run manifest status is updated as `FAILED` in the repository, making it fully troubleshooting-ready for offline analysis.
+If the simulation crashes, `src/cli/entry.py` guarantees a `finally` block that:
+1. Forces a final flush of the `EventRecorder` queue to disk
+2. Forces `ReplayManager` to drain any pending chunks
+3. Marks the run manifest as `FAILED` in the repository
+
+No telemetry is lost on crash.
