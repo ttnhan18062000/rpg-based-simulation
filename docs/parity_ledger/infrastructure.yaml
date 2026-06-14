@@ -2264,3 +2264,27 @@
   test_path: tests/unit/observability/test_obs_backpressure.py
   divergence_note: null
   support_boundary: null
+
+- id: INFRA-202
+  text: >
+    ContentHotPathViolation(RuntimeError) is raised when CatalogRepository.load_all()
+    is called while a kernel tick is executing. Kernel.tick_once() sets the thread-local
+    flag _tick_context_active.active = True on entry and clears it in a finally block
+    (src/content/repository.py). ContentWarmupService.warmup() is called by
+    Kernel.__init__() after validate() to eagerly initialize all content singletons
+    before the first tick, ensuring the guard never fires under normal operation.
+    ContentWarmupService.is_warm() returns True after warmup; reset() is test-only
+    (asserts pytest in sys.modules). The guard is bypassed when _tick_context_active
+    is not set (e.g., direct pipeline calls in tests) — violation only fires inside
+    an active Kernel tick context.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/content/repository.py::_tick_context_active +
+    src/content/warmup.py::ContentWarmupService +
+    src/engine/kernel.py::Kernel.tick_once (tick context flag)
+  proof_type: null
+  test_path: tests/unit/content/test_content_hotpath_guard.py
+  divergence_note: null
+  support_boundary: null
