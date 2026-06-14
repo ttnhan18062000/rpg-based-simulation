@@ -35,7 +35,8 @@ class ReplayManager:
         buffer_capacity_kb: int = 1024,
         chunk_tick_limit: int = 100,
         replay_mode: ReplayMode = ReplayMode.DEBUG_WINDOWED,
-        rotation_threshold: float = 0.9
+        rotation_threshold: float = 0.9,
+        max_pending_flushes: int = 2,
     ):
         self._run_dir = run_dir
         self._profile_name = profile_name
@@ -70,6 +71,16 @@ class ReplayManager:
         # for pressure signal.  Incremented inside _execute_persistence() on
         # success only; read lock-free by pressure_report().
         self._chunks_persisted: int = 0
+
+        # Backpressure tracking (INFRA-198): _inflight_count is protected by
+        # _inflight_lock because it is decremented from the executor callback
+        # thread. max_pending_flushes is sourced from SubsystemBudget if passed.
+        self._max_pending_flushes: int = max_pending_flushes
+        self._inflight_count: int = 0
+        self._inflight_lock = threading.Lock()
+        self._threshold_warning_logged: bool = False
+        # Rolling average chunk size for bytes_pending_estimate (exponential MA, α=0.1).
+        self._avg_chunk_size_bytes: float = 0.0
 
     def emit(self, event: TraceEvent, policy: GovernorPolicy) -> None:
         """
@@ -198,13 +209,30 @@ class ReplayManager:
         if async_write:
             # Submit to background thread to satisfy M7 "Non-blocking" Law
             # M6 Law: Capture metadata snapshot to prevent race with next tick
-            self._executor.submit(
+            with self._inflight_lock:
+                # Backpressure check (INFRA-198): log once per threshold crossing.
+                # ReplayManager does NOT drop or switch to sync — the Governor decides.
+                if self._inflight_count >= self._max_pending_flushes:
+                    if not self._threshold_warning_logged:
+                        logger.warning(
+                            "ReplayManager: inflight=%d >= max_pending_flushes=%d — "
+                            "replay backpressure detected; Governor should degrade richness.",
+                            self._inflight_count,
+                            self._max_pending_flushes,
+                        )
+                        self._threshold_warning_logged = True
+                else:
+                    self._threshold_warning_logged = False
+                self._inflight_count += 1
+
+            future = self._executor.submit(
                 self._execute_persistence,
                 self._current_chunk_id,
                 self._chunk_start_tick,
                 end_tick,
                 events
             )
+            future.add_done_callback(lambda _f: self._on_persist_done())
         else:
             # Synchronous path for shutdown or small-scale tests
             self._execute_persistence(
@@ -216,6 +244,11 @@ class ReplayManager:
 
         self._current_chunk_id += 1
         self._chunk_start_tick = end_tick + 1
+
+    def _on_persist_done(self) -> None:
+        """Callback invoked by the executor thread when a persistence future completes."""
+        with self._inflight_lock:
+            self._inflight_count = max(0, self._inflight_count - 1)
 
     def _execute_persistence(
         self,
@@ -240,6 +273,24 @@ class ReplayManager:
                     self._sink.write_manifest(self._manifest)
                 # Advisory only — plain int, no lock needed (see __init__ comment).
                 self._chunks_persisted += 1
+
+            # Update rolling average chunk size for bytes_pending_estimate.
+            try:
+                def _to_dict(e):
+                    if isinstance(e, dict):
+                        return e
+                    if dataclasses.is_dataclass(e) and not isinstance(e, type):
+                        return dataclasses.asdict(e)
+                    if hasattr(e, '__dict__'):
+                        return e.__dict__
+                    return str(e)
+                chunk_bytes = len(json.dumps([_to_dict(e) for e in events], default=str).encode())
+                self._avg_chunk_size_bytes = (
+                    self._avg_chunk_size_bytes * 0.9 + chunk_bytes * 0.1
+                    if self._avg_chunk_size_bytes > 0 else float(chunk_bytes)
+                )
+            except Exception:
+                pass
         except Exception as e:
             # M6 Law: Non-authoritative fallback. Failure must not stall.
             logger.error("Background persistence failed: %s", e)
@@ -248,23 +299,37 @@ class ReplayManager:
     def metrics(self):
         return self._sink.metrics
 
+    def replay_metrics(self) -> dict:
+        """Return current replay subsystem metrics (INFRA-198).
+
+        Returns:
+            pending_flushes: current inflight async persist tasks
+            chunks_persisted: total chunks successfully written to disk
+            bytes_pending_estimate: approximate bytes in flight (rolling avg × pending)
+        """
+        with self._inflight_lock:
+            inflight = self._inflight_count
+        avg = self._avg_chunk_size_bytes
+        return {
+            "pending_flushes": inflight,
+            "chunks_persisted": self._chunks_persisted,
+            "bytes_pending_estimate": int(avg * inflight),
+        }
+
     def pressure_report(self, budget: SubsystemBudget | None = None) -> SubsystemPressureReport:
         """
-        Return an advisory pressure snapshot for the replay subsystem.
+        Return an advisory pressure snapshot for the replay subsystem (INFRA-198).
 
-        Non-blocking and read-only — must never be called on the kernel tick
-        hot path.  The inflight count is derived from _current_chunk_id minus
-        _chunks_persisted; both are plain ints read without a lock (advisory
-        accuracy is acceptable for a pressure signal).
+        Non-blocking and read-only.  Uses _inflight_count (lock-protected accurate
+        count) against max_pending_flushes as the primary pressure signal.
 
         degradation_action is a string description consumed by the Governor;
         ReplayManager does not execute it.
         """
-        budget = budget or DEFAULT_REPLAY_BUDGET
-        # Lock-free advisory snapshot.
-        inflight = max(0, self._current_chunk_id - self._chunks_persisted)
-        max_f = budget.max_inflight_chunks
-        if max_f is None:
+        with self._inflight_lock:
+            inflight = self._inflight_count
+        max_f = self._max_pending_flushes
+        if max_f <= 0:
             return SubsystemPressureReport(
                 subsystem="replay",
                 current_usage=float(inflight),
@@ -273,7 +338,7 @@ class ReplayManager:
                 degradation_action=None,
             )
         pct = inflight / max_f
-        if pct < 0.8:
+        if pct <= 0.8:
             state, action = "OK", None
         elif pct < 1.0:
             state, action = "WARN", "reduce_replay_richness"

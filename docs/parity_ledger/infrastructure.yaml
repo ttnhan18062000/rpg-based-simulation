@@ -2164,3 +2164,41 @@
   test_path: tests/unit/engine/test_resource_budget_gate.py::TestBudgetedCanonicalHasher::test_canonical_hasher_reports_warn_over_budget
   divergence_note: null
   support_boundary: null
+
+- id: INFRA-197
+  text: >
+    CanonicalHashScheduler enforces sanctioned-boundary policy for full canonical
+    state hashes. Full-hash calls are only allowed at tick=0, tick==run_end_tick,
+    or when reason is in {"certification","audit","replay"}. Any other call raises
+    HashScheduleViolation(RuntimeError). Light-hash (MD5 over tick+seed+entity/region
+    counts) is always allowed and never raises. HashMode enum values: FULL="full",
+    LIGHT="light". Both harness.py call sites updated to use
+    CanonicalHashScheduler.compute_hash(..., mode=FULL, reason="certification").
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/engine/checkpoint.py::CanonicalHashScheduler
+  proof_type: null
+  test_path: tests/unit/engine/test_hash_scheduler.py
+  divergence_note: null
+  support_boundary: null
+
+- id: INFRA-198
+  text: >
+    ReplayManager tracks in-flight async persist tasks via _inflight_count (int,
+    protected by _inflight_lock threading.Lock). Count is incremented before
+    executor.submit() and decremented in the future done-callback (_on_persist_done).
+    pressure_report() returns WARN when inflight/max_pending_flushes >= 0.8 and
+    DEGRADED at >= 1.0. When inflight >= max_pending_flushes a warning is logged once
+    per threshold crossing. ReplayManager never drops chunks or falls back to sync
+    write autonomously; all degradation decisions belong to the Governor.
+    replay_metrics() returns pending_flushes, chunks_persisted, bytes_pending_estimate
+    (rolling exponential MA, alpha=0.1 of chunk sizes × inflight count).
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/engine/replay_manager.py::ReplayManager.replay_metrics
+  proof_type: null
+  test_path: tests/unit/engine/test_replay_backpressure.py
+  divergence_note: null
+  support_boundary: null
