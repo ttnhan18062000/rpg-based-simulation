@@ -2202,3 +2202,24 @@
   test_path: tests/unit/engine/test_replay_backpressure.py
   divergence_note: null
   support_boundary: null
+
+- id: INFRA-199
+  text: >
+    EventRecorder supports four dynamic observability modes: NORMAL, PRESSURE,
+    DEGRADED, SURVIVAL. ObservabilityController.evaluate() is a pure function
+    returning the recommended mode from queue fill ratio (PRESSURE>=0.70,
+    DEGRADED>=0.90, SURVIVAL>=1.00). record() evaluates mode on every call.
+    In SURVIVAL mode: no queue push, no buffer append, only _survival_event_counts
+    incremented — zero IO overhead on the hot path. In DEGRADED: INFO/DEBUG events
+    dropped entirely; WARNING+ proceed normally. In PRESSURE: INFO/DEBUG sampled at
+    1-in-5 (default); WARNING+ always pass. Mode transitions logged at INFO level
+    (once per change). observability_status() exposes mode, queue_fill_ratio,
+    events_dropped, survival_counts. reset_mode() clears mode state for tests.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/observability/event_recorder.py::ObservabilityController
+  proof_type: null
+  test_path: tests/unit/observability/test_obs_backpressure.py
+  divergence_note: null
+  support_boundary: null
