@@ -1,4 +1,4 @@
-.PHONY: help install install-py install-fe build dev serve stop clean lint profile-api memray-profile docs-serve docs-build docs-registry docs-artifacts knowledge-index knowledge-index-update search-server search-server-docker search-server-stop search-server-logs install-hooks eval-search mcp-server-test
+.PHONY: help install install-py install-fe build dev serve stop clean lint profile-api memray-profile docs-serve docs-build docs-registry docs-artifacts knowledge-index knowledge-index-update search-server search-server-docker search-server-stop search-server-logs install-hooks eval-search mcp-server-test world-list world-validate world-compile world-resolve world-inspect world-template sim sim-debug sim-quick sim-world sim-sweep check-resources export-run retention-plan retention-clean warehouse-init warehouse-ingest
 
 # Default
 help: ## Show available commands
@@ -65,10 +65,79 @@ run-worker: ## Start the AI Worker Daemon locally
 run-engine: ## Start the Backend Engine locally
 	uv run python3 -m src serve --host 0.0.0.0 --port 8000
 
-# ── CLI ──────────────────────────────────────────────────
+# ── World Generation ─────────────────────────────────────
+# Worldbuilding CLI: data-driven world spec authoring and compilation pipeline.
+# Override WORLD to target a specific world spec folder (default: sandbox_world).
 
-cli: ## Run headless simulation (200 ticks)
-	python3 -m src cli --ticks 200 --seed 42
+WORLD ?= sandbox_world
+
+world-list: ## List all compiled worlds in the repository
+	python3 -m src.worldbuilding.cli list
+
+world-validate: ## Validate a world spec against compile constraints (WORLD=sandbox_world)
+	python3 -m src.worldbuilding.cli validate $(WORLD)
+
+world-compile: ## Compile a world spec into active state files (WORLD=sandbox_world)
+	python3 -m src.worldbuilding.cli compile $(WORLD)
+
+world-resolve: ## Resolve compositional world specs into compiled assets (WORLD=sandbox_world)
+	python3 -m src.worldbuilding.cli resolve $(WORLD)
+
+world-inspect: ## Inspect structural metrics of a world definition (WORLD=sandbox_world)
+	python3 -m src.worldbuilding.cli inspect $(WORLD)
+
+world-template: ## Bootstrap a starter world template (WORLD=my_world)
+	python3 -m src.worldbuilding.cli create-template $(WORLD)
+
+# ── Simulation CLI ───────────────────────────────────────
+# Override TICKS, SEED, or WORLD to customise any run.
+# Dynamic observability backpressure (NORMAL→PRESSURE→DEGRADED→SURVIVAL) is
+# automatic — driven by EventRecorder queue fill ratio, not a CLI flag.
+# Use --log-level DEBUG to increase log verbosity; it does not affect mode switching.
+
+TICKS  ?= 200
+SEED   ?= 42
+CONFIG ?= data/sweeps/default.json
+
+cli: ## Run headless simulation (200 ticks, seed 42) — legacy alias for sim
+	python3 -m src cli --ticks $(TICKS) --seed $(SEED)
+
+sim: ## Run headless simulation (TICKS=200 SEED=42 WORLD=sandbox_world)
+	python3 -m src cli --ticks $(TICKS) --seed $(SEED) $(if $(filter-out sandbox_world,$(WORLD)),--world $(WORLD),)
+
+sim-debug: ## Run simulation with verbose DEBUG logging (TICKS=200 SEED=42)
+	python3 -m src cli --ticks $(TICKS) --seed $(SEED) --log-level DEBUG
+
+sim-quick: ## Quick 20-tick smoke test (WARNING-level logs only)
+	python3 -m src cli --ticks 20 --seed $(SEED) --log-level WARNING
+
+sim-world: ## Run simulation on a specific world (WORLD=<id> TICKS=200)
+	python3 -m src cli --ticks $(TICKS) --seed $(SEED) --world $(WORLD)
+
+sim-sweep: ## Run a scenario sweep matrix (CONFIG=data/sweeps/default.json)
+	python3 -m src sweep $(CONFIG)
+
+check-resources: ## Show per-subsystem resource pressure (exit 1 if any DEGRADED)
+	python3 -m src diagnostics resources
+
+# ── Data Pipeline ────────────────────────────────────────
+
+RUN_ID ?=
+
+export-run: ## Export a single run artifact set to Parquet (RUN_ID=<id>)
+	python3 -m src export $(RUN_ID)
+
+retention-plan: ## Dry-run scan of expired/prunable observability files
+	python3 -m src retention plan
+
+retention-clean: ## Clean expired observability files (confirmation prompt)
+	python3 -m src retention clean
+
+warehouse-init: ## Initialise database warehouse schemas
+	python3 -m src warehouse init
+
+warehouse-ingest: ## Ingest a single run into the warehouse (RUN_ID=<id>)
+	python3 -m src warehouse ingest-run $(RUN_ID)
 
 # ── Testing ──────────────────────────────────────────────
 
