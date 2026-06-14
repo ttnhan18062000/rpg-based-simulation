@@ -1997,3 +1997,96 @@
   test_path: tests/tools/test_search_server.py
   divergence_note: null
   support_boundary: "Developer tooling only — not simulation state, not tick-path."
+- id: INFRA-189
+  text: >
+    CertificationResult.to_artifact_dict() builds the proof artifact field-by-field
+    without calling asdict() or safe_asdict(). Accepts optional evidence_level
+    (EvidenceLevel.SUMMARY/COMPACT/FULL), final_state_artifact_path, and
+    final_state_hash parameters; all default to None/SUMMARY for backward
+    compatibility. final_state is always None in the artifact dict regardless of
+    evidence_level. final_state_summary contains compact counts when final_state is
+    attached (SUMMARY), or compact counts plus entity_sample and resource_snapshot
+    (COMPACT/FULL). final_state_artifact and final_state_hash are set from
+    caller-provided params (never speculatively computed inside this method).
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: >
+    src/certification/models.py::CertificationResult.to_artifact_dict +
+    src/certification/models.py::CertificationResult._final_state_summary_compact +
+    src/certification/models.py::EvidenceLevel +
+    tests/certification/test_cert_result_serialization.py +
+    tests/certification/test_evidence_levels.py
+  proof_type: null
+  test_path: >
+    tests/certification/test_cert_result_serialization.py,
+    tests/certification/test_evidence_levels.py
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-190
+  text: >
+    CertificationRecorder.record() populates the proofs_bundle.json entry via
+    result.to_artifact_dict() directly, eliminating the json.loads(result.to_json())
+    string roundtrip. record() now accepts evidence_level (EvidenceLevel, default
+    SUMMARY), final_state_artifact_path (Optional[str], default None), and
+    final_state_hash (Optional[str], default None); all three are threaded through
+    to to_artifact_dict(). Existing callers with no extra args are unaffected.
+    proofs_bundle.json continues to be written after every record() call.
+    Bundle entries never contain final_state data regardless of evidence_level.
+    final_state_artifact in the entry is either a relative path string (when FULL
+    and write succeeded) or None.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/certification/recorder.py::CertificationRecorder.record +
+    tests/certification/test_recorder_refactor.py +
+    tests/certification/test_evidence_levels.py
+  proof_type: null
+  test_path: >
+    tests/certification/test_recorder_refactor.py,
+    tests/certification/test_evidence_levels.py
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-191
+  text: >
+    When EvidenceLevel.FULL is requested, CertificationHarness._write_full_evidence()
+    writes CanonicalStateHasher.to_canonical_data() output to
+    <output_dir>/state/<run_id>.final_state.canonical.json using pretty JSON (indent=2).
+    final_state_hash in the artifact dict is SHA-256 of the compact canonical JSON,
+    matching CanonicalStateHasher.get_hash(). Write failure is non-fatal and logged
+    as a warning; _persist_proof_bundle() passes None for both artifact_path and
+    artifact_hash to recorder.record() on failure. proofs_bundle.json never contains
+    state file content. _write_full_evidence() is called BEFORE recorder.record() so
+    the bundle entry only contains confirmed paths (OPEN-1 resolution).
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/certification/harness.py::CertificationHarness._write_full_evidence +
+    src/certification/harness.py::CertificationHarness._persist_proof_bundle +
+    tests/certification/test_evidence_levels.py
+  proof_type: null
+  test_path: tests/certification/test_evidence_levels.py
+  divergence_note: null
+  support_boundary: null
+
+- id: INFRA-192
+  text: >
+    CertificationHarness writes manifest_snapshot.json to <output_dir>/ after recording
+    the proof bundle (certification_contract_me.md §1). Source path is injectable via
+    manifest_path= constructor arg (default: docs/engine/manifest.json). If the manifest
+    file is absent, a warning is logged and the run continues without writing the snapshot.
+    Write failure is wrapped in try/except — non-fatal. File is written with Path.write_text()
+    (verbatim copy, no transform).
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/certification/harness.py::CertificationHarness.__init__ (manifest_path param) +
+    src/certification/harness.py::CertificationHarness._persist_proof_bundle (§2 block) +
+    tests/certification/test_manifest_snapshot.py
+  proof_type: null
+  test_path: tests/certification/test_manifest_snapshot.py
+  divergence_note: null
+  support_boundary: null

@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: performance
 authority: P1
 audience: agent
 ticket_id: TCK-20260614-CERT-SAFE-SERIAL
-phase: open
+phase: done
 date: 2026-06-14
 tags: [certification, memory, serialization, performance]
 ---
@@ -15,7 +15,7 @@ tags: [certification, memory, serialization, performance]
 Add safe artifact serialization boundary to CertificationResult
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -86,6 +86,24 @@ P0
 - PoisonState test pattern: override `__getattribute__` to allow only `tick`, `seed`, `entities`, `resource_nodes`, `regions`, `buildings`, `corpses`, `ground_items` — raise `AssertionError` for all others.
 - `schema_version` value: `"certification_result.v1"`
 
+### Implementation (2026-06-14)
+
+All 7 plan steps executed exactly as specified:
+
+1. **`MeasurementPoint.to_dict()`** added to `src/certification/models.py` (line 60–74). Maps all 12 primitive fields explicitly. No `asdict()` call.
+
+2. **`CertificationResult._final_state_summary()`** added (line 142–168). Uses `getattr(state, name, default)` for all 8 state attributes. Returns `None` when `final_state is None`. PoisonState-safe.
+
+3. **`CertificationResult.to_artifact_dict()`** added (line 170–220). Builds proof artifact dict field-by-field. Raises `ValueError` if `profile_name`, `scenario_id`, or `environment` is missing/falsy. Maps `detected_class → detected_hardware_class` and `effective_class → effective_hardware_class` using `.value`. `final_state` always `None`. `final_state_artifact` always `None`.
+
+4. **`to_json()` rewritten** (line 222–232). Delegates entirely to `to_artifact_dict()`. `safe_asdict` inner function, `try/except RecursionError` block, and local `asdict` import all removed. Module-level `asdict` import removed from `from dataclasses import dataclass, field, asdict` → `from dataclasses import dataclass, field`.
+
+5. **New test file** `tests/certification/test_cert_result_serialization.py` created with 8 tests covering all 5 AC test cases. All 8 pass.
+
+6. **INFRA-189 parity entry** appended to `docs/parity_ledger/infrastructure.yaml`. Priority P0, status verified.
+
+7. **Regression suite** `pytest tests/certification/` — 18 pre-existing passing tests still pass. 2 pre-existing failures confirmed unrelated (missing `reports/release_proof/` dir and QueueDrainWorker thread leak in test teardown). All 8 new tests pass.
+
 ## Test Summary
 - `tests/certification/test_cert_result_serialization.py` (new file):
   - `test_certification_result_summary_does_not_serialize_final_state` — PoisonState as `final_state`, asserts artifact dict has `final_state=None` and `final_state_summary` with correct counts
@@ -94,7 +112,9 @@ P0
 - Run: `pytest tests/certification/ -v`
 
 ## Files Changed
-_(filled after implementation)_
+- src/certification/models.py
+- tests/certification/test_cert_result_serialization.py
+- docs/parity_ledger/infrastructure.yaml
 
 ## Completion Summary
-_(filled after implementation)_
+Safe serialization boundary added via to_artifact_dict() + to_json() rewrite; asdict() eliminated; MeasurementPoint.to_dict() added; 8 new tests pass; INFRA-189 added to parity ledger.

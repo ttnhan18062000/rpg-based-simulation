@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: engine
 authority: P1
 audience: agent
 ticket_id: TCK-20260614-CERT-MANIFEST-SNAPSHOT
-phase: open
+phase: done
 date: 2026-06-14
 tags: [certification, manifest, proof-bundle, compliance]
 ---
@@ -15,7 +15,7 @@ tags: [certification, manifest, proof-bundle, compliance]
 Write manifest_snapshot.json to proof bundle output directory per certification contract
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -76,7 +76,9 @@ P1
 - Run: `pytest tests/certification/ -v`
 
 ## Files Changed
-_(filled after implementation)_
+- src/certification/harness.py (manifest_path param in __init__, hardened _persist_proof_bundle §2 block with try/except + warning)
+- tests/certification/test_manifest_snapshot.py (new — 2 tests)
+- docs/parity_ledger/infrastructure.yaml (INFRA-192 added)
 
 ## Completion Summary
-_(filled after implementation)_
+Added manifest_path constructor param to CertificationHarness; hardened _persist_proof_bundle to wrap manifest write in try/except and emit warning when manifest missing; 2 tests pass; INFRA-192 added to parity ledger.

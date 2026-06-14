@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20260614-CERT-MEMRAY-BUDGET
-phase: open
+phase: done
 date: 2026-06-14
 tags: [certification, memray, testing, performance, tooling]
 ---
@@ -15,7 +15,7 @@ tags: [certification, memray, testing, performance, tooling]
 Add profiling mode script with baseline comparison and Memray-compatible test runner configuration
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -91,7 +91,11 @@ The pytest `--resource-budget large` hook sets `RLIMIT_AS` to 8 GB. Under Memray
 - Manual verification: run `make memray-profile` with Memray installed; confirm pytest completes without `MemoryError` in its own internals.
 
 ## Files Changed
-_(filled after implementation)_
+- scripts/profile_memory.py (new — profiling runner with --suite, --memray, --save-baseline flags)
+- tests/unit/cli/test_profile_memory_script.py (new — 4 tests)
+- tests/unit/cli/__init__.py (new — empty init)
+- tests/conftest.py (one-line comment at pytest_runtest_setup about profiler budget incompatibility)
+- Makefile (memray-profile target added to .PHONY and profiling section)
 
 ## Completion Summary
-_(filled after implementation)_
+Added scripts/profile_memory.py with --suite/--memray/--save-baseline flags; added memray-profile Makefile target; added profiler budget comment in conftest.py; 4 tests pass.

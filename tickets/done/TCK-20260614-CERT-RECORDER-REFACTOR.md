@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: performance
 authority: P1
 audience: agent
 ticket_id: TCK-20260614-CERT-RECORDER-REFACTOR
-phase: open
+phase: done
 date: 2026-06-14
 tags: [certification, memory, recorder, performance]
 ---
@@ -15,7 +15,7 @@ tags: [certification, memory, recorder, performance]
 Refactor CertificationRecorder to eliminate JSON roundtrip while preserving proofs_bundle.json contract
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -82,9 +82,15 @@ P1
 - Existing tests that read `proofs_bundle.json` directly will need updating — identify all such references before implementation
 
 ## Implementation Notes
-- Minimal diff: only change `recorder.py:37` from `json.loads(result.to_json())` to `result.to_artifact_dict()`
-- If optionally adding a per-run side file: use `pathlib.Path`; create `runs/` subdirectory with `mkdir(parents=True, exist_ok=True)`; write atomically (write to `<run_id>.tmp`, rename to final path)
-- `proofs_bundle.json` write path and bundle load/rewrite logic are unchanged — only the per-entry value changes
+- Minimal diff: changed `recorder.py:37` from `json.loads(result.to_json())` to `result.to_artifact_dict()` — single line change
+- `import json` retained in recorder.py: still used for `json.load()` (bundle read, L31) and `json.dump()` (bundle write, L40)
+- `test_final_gate.py` updated at L51 and L83: renamed `effective_class` → `effective_hardware_class` to match `to_artifact_dict()` canonical key output
+- `tests/certification/test_recorder_refactor.py` created with 7 tests; all pass
+- PoisonState in test_recorder_refactor.py is a lighter sentinel than the serialisation tests: it exposes the named attributes that `_final_state_summary()` reads via `getattr` (safe path), but raises on `__dict__` access (bulk traversal path). This correctly validates that final_state is always None in the bundle entry without interfering with the legitimate summary path.
+- Per-run side file (`runs/<run_id>.certification_result.json`) deferred to TCK-20260614-CERT-EVIDENCE-LEVELS per plan scope guard
+- `proofs_bundle.json` write path and bundle load/rewrite logic unchanged — only per-entry value assignment changed
+- INFRA-190 appended to `docs/parity_ledger/infrastructure.yaml`; YAML validity confirmed
+- `test_real_release_proof_is_valid` fails due to absent `reports/release_proof/` directory — pre-existing integration guard, not a regression from this ticket (documented in plan Step 5)
 
 ## Test Summary
 - `tests/certification/test_recorder_refactor.py` (new file):
@@ -94,7 +100,10 @@ P1
 - Run: `pytest tests/certification/ -v`
 
 ## Files Changed
-_(filled after implementation)_
+- `src/certification/recorder.py` — replaced `json.loads(result.to_json())` with `result.to_artifact_dict()` at line 37
+- `tests/certification/test_final_gate.py` — renamed `effective_class` → `effective_hardware_class` at L51 and L83 to match `to_artifact_dict()` canonical key output
+- `tests/certification/test_recorder_refactor.py` — new file; 7 tests covering roundtrip elimination, bundle write preservation, and final_state exclusion
+- `docs/parity_ledger/infrastructure.yaml` — added INFRA-190 entry
 
 ## Completion Summary
-_(filled after implementation)_
+Replaced `json.loads(result.to_json())` with `result.to_artifact_dict()` in `recorder.py:37`, eliminating the JSON roundtrip memory amplification. `proofs_bundle.json` is preserved as required by `observability_artifact_contract.md` (section 4) and `certification_contract_me.md` (section 1). `test_final_gate.py` updated at L51 and L83: `effective_class` → `effective_hardware_class` to match `to_artifact_dict()` canonical key. 7 new tests in `test_recorder_refactor.py` all pass. INFRA-190 added to parity ledger (`docs/parity_ledger/infrastructure.yaml`). Per-run side file deferred to TCK-20260614-CERT-EVIDENCE-LEVELS per scope guard.

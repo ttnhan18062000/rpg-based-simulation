@@ -3,7 +3,8 @@ from __future__ import annotations
 import os
 import json
 from pathlib import Path
-from src.certification.models import CertificationResult
+from typing import Optional
+from src.certification.models import CertificationResult, EvidenceLevel
 
 
 class CertificationRecorder:
@@ -14,9 +15,21 @@ class CertificationRecorder:
     def __init__(self, output_dir: str = "reports/certification"):
         self._output_dir = Path(output_dir)
         self._output_dir.mkdir(parents=True, exist_ok=True)
-    def record(self, result: CertificationResult) -> str:
+    def record(
+        self,
+        result: CertificationResult,
+        evidence_level: EvidenceLevel = EvidenceLevel.SUMMARY,
+        final_state_artifact_path: Optional[str] = None,
+        final_state_hash: Optional[str] = None,
+    ) -> str:
         """
         M10 Law: Record machine-readable truth in a consolidated bundle.
+
+        Args:
+            result: The certification result to record.
+            evidence_level: Controls final_state_summary richness (default SUMMARY).
+            final_state_artifact_path: Resolved path to the canonical state file, or None.
+            final_state_hash: SHA-256 hex of compact canonical JSON, or None.
         """
         # 1. Invariant Check: Scoped metadata must be present
         if not result.environment.effective_class:
@@ -34,7 +47,11 @@ class CertificationRecorder:
 
         # Keyed by profile x scenario for easy lookup
         key = f"{result.profile_name}:{result.scenario_id}"
-        bundle[key] = json.loads(result.to_json())
+        bundle[key] = result.to_artifact_dict(
+            evidence_level,
+            final_state_artifact_path=final_state_artifact_path,
+            final_state_hash=final_state_hash,
+        )
         
         with open(bundle_path, "w") as f:
             json.dump(bundle, f, indent=2)

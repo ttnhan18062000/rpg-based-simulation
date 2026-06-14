@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: performance
 authority: P1
 audience: agent
 ticket_id: TCK-20260614-CERT-EVIDENCE-LEVELS
-phase: open
+phase: done
 date: 2026-06-14
 tags: [certification, evidence, canonical-state, performance]
 ---
@@ -15,7 +15,7 @@ tags: [certification, evidence, canonical-state, performance]
 Add EvidenceLevel enum and optional full canonical state export to certification
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -84,20 +84,45 @@ After the serialization boundary is fixed (TCK-20260614-CERT-SAFE-SERIAL) and th
 - `run_id` field on `CertificationResult` — needed to construct the state artifact filename; verify it exists
 
 ## Implementation Notes
-- Full evidence write should be wrapped in try/except — failure to write optional artifact must not fail the certification run (log warning, set `final_state_artifact=None`)
-- State file directory: `<output_dir>/state/` — create with `mkdir(parents=True, exist_ok=True)`
-- Compute `final_state_hash` as `hashlib.sha256(canonical_json_bytes).hexdigest()`
+- OPEN-1 (coordination timing): _write_full_evidence() is called BEFORE recorder.record() in
+  _persist_proof_bundle(). The resolved path/hash (or None) is passed into recorder.record(),
+  which passes them to to_artifact_dict(). The bundle entry never carries a speculative path.
+- to_artifact_dict() signature changed to accept evidence_level, final_state_artifact_path,
+  final_state_hash — all defaulted so existing no-arg callers are unaffected.
+- EvidenceLevel placed above ArenaStopCondition in models.py. Uses str,Enum pattern.
+- _final_state_summary_compact() delegates to _final_state_summary() for the base dict, then
+  adds entity_sample (first 5 IDs sorted ascending as strings) and resource_snapshot (top 5
+  node IDs by quantity descending). PoisonState-safe via getattr.
+- _write_full_evidence() wrapped in try/except — always non-fatal. Returns None on failure.
+  Uses CanonicalStateHasher.to_canonical_data() (never asdict). Pretty JSON written to disk;
+  compact JSON used for SHA-256 hash computation (matches get_hash() format).
+- State file directory: <output_dir>/state/ — created with mkdir(parents=True, exist_ok=True).
+- final_state_hash is hashlib.sha256(compact_json.encode("utf-8")).hexdigest().
+- FakeState in tests uses _FakeCanonicalObj instances (with to_canonical_dict()) to satisfy
+  CanonicalStateHasher.to_canonical_data() requirements for TC-7/TC-8/TC-11.
+
+## Deviations from Plan
+- TC-6 in the test plan described calling to_artifact_dict(FULL) directly and asserting
+  final_state_artifact path. After OPEN-1 resolution, to_artifact_dict() does NOT compute
+  the path — it receives it as a param. TC-6 was adapted to test _write_full_evidence()
+  return value directly (still covers the same AC: path is as expected).
+- FakeState required _FakeCanonicalObj children (with to_canonical_dict()) to be compatible
+  with CanonicalStateHasher.to_canonical_data() for hash comparison tests. Test plan did not
+  anticipate this; adapted fixture accordingly.
 
 ## Test Summary
-- `tests/certification/test_evidence_levels.py` (new file):
-  - `test_summary_level_has_no_state_artifact` — default level produces no state file
-  - `test_full_evidence_writes_canonical_state_file` — FULL level writes `state/<run_id>.final_state.canonical.json`
-  - `test_full_evidence_uses_canonical_hasher_not_asdict` — monkeypatch `asdict` to raise; assert FULL evidence write still works
-  - `test_proof_index_never_contains_full_state` — FULL evidence level does not leak state into `proof_index.json`
-- Run: `pytest tests/certification/ -v`
+- `tests/certification/test_evidence_levels.py` (new file, 14 tests, all passing):
+  - TC-1 through TC-14 as defined in test_plan.md, with adaptations noted above.
+- Regression: tests/certification/test_cert_result_serialization.py (8 tests) — all pass
+- Regression: tests/certification/test_recorder_refactor.py (7 tests) — all pass
+- Run: `pytest tests/certification/test_evidence_levels.py -v`
 
 ## Files Changed
-_(filled after implementation)_
+- src/certification/models.py
+- src/certification/recorder.py
+- src/certification/harness.py
+- tests/certification/test_evidence_levels.py
+- docs/parity_ledger/infrastructure.yaml
 
 ## Completion Summary
-_(filled after implementation)_
+EvidenceLevel enum (SUMMARY/COMPACT/FULL) added; to_artifact_dict() extended with evidence_level/artifact_path/hash params; _write_full_evidence() added to harness (non-fatal, writes canonical state side-file); recorder.record() threaded; 14 new tests pass; INFRA-189/190/191 updated in parity ledger
