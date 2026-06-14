@@ -57,6 +57,30 @@ Milestone E covers the final consolidation of the certification, conformance, an
 - **Evidence Requirement**: A release is blocked unless a valid, passing, fresh (matching `commit_sha`) Proof Bundle exists for every declared target.
 - **Integrity Requirement**: Any documentation drift detected by the integrity suite blocks the release.
 
+## 7. Serialization Safety Law
+
+- **No Deep-Copy of Live State**: `CertificationResult.to_artifact_dict()` MUST build its output field-by-field using `getattr()`. Calling `dataclasses.asdict()` on any object that holds a reference to live `AuthoritativeState` is forbidden — it triggers deep traversal and unbounded memory amplification.
+- **`final_state` field is always `null` in the proof bundle**: Even when a final state is captured, it is never embedded in `proofs_bundle.json`. It is written to a separate side-file under `<output_dir>/state/` only when `EvidenceLevel.FULL` is requested.
+- **Recorder consumes dict directly**: `CertificationRecorder.record()` accepts a dict from `to_artifact_dict()` — not a JSON-serialised/deserialised roundtrip via `to_json()`.
+
+## 8. Evidence Level Law
+
+Proof capture depth is controlled by `EvidenceLevel` (passed to `run_scenario()` and `to_artifact_dict()`):
+
+| Level | What is captured |
+|---|---|
+| `SUMMARY` (default) | Scalar metrics only. `final_state_summary` contains entity/resource/region counts. No state file. |
+| `COMPACT` | SUMMARY + `entity_sample` (top 5 by ID ascending) + `resource_snapshot` (top 5 nodes by quantity descending). No state file. |
+| `FULL` | COMPACT + writes `CanonicalStateHasher.to_canonical_data()` to `<output_dir>/state/<run_id>.final_state.canonical.json`. `final_state_hash` (SHA-256) added to bundle entry. Write failure is non-fatal. |
+
+`EvidenceLevel.SUMMARY` is always backward-compatible — callers that do not pass `evidence_level` receive SUMMARY behaviour unchanged.
+
+## 9. Manifest Snapshot Law
+
+- **Implementation**: `CertificationHarness` writes `<output_dir>/manifest_snapshot.json` as a verbatim copy of the source manifest after the proof bundle is recorded.
+- **Injectable path**: The manifest source path defaults to `docs/engine/manifest.json`. It can be overridden via the `manifest_path` constructor argument (used in tests).
+- **Non-fatal**: If the manifest file is absent or the write fails, a warning is logged and the certification run continues normally. The run must not fail due to manifest snapshot write errors.
+
 ## Non-Goals
 - No gameplay or actor-logic changes.
 - No distributed cluster orchestration certification.
