@@ -4,6 +4,7 @@ import json
 import logging
 from typing import Any, Dict, List, Optional
 from src.observability.events import SimulationEvent
+from src.config.optimization_profiles import SubsystemBudget, SubsystemPressureReport, DEFAULT_OBSERVABILITY_BUDGET
 
 logger = logging.getLogger(__name__)
 
@@ -17,7 +18,13 @@ SEVERITY_ORDER = {
 
 class EventRecorder:
     """Manages thread-safe, memory-bounded SimulationEvent recording and JSONL persistence."""
-    def __init__(self, run_dir: Optional[str] = None, max_events: int = 5000, enabled: bool = True) -> None:
+    def __init__(
+        self,
+        run_dir: Optional[str] = None,
+        max_events: int = 5000,
+        enabled: bool = True,
+        budget: SubsystemBudget | None = None,
+    ) -> None:
         self.enabled = enabled
         self.max_events = max_events
         self.run_dir = run_dir
@@ -26,6 +33,10 @@ class EventRecorder:
         self.event_count_by_type: Dict[str, int] = {}
         self._file_handle = None
         self.filepath = None
+        # Subsystem budget for advisory pressure reporting (INFRA-194).
+        # Independent of max_events — budget.max_queue_items is checked against
+        # the queue size, not the in-memory buffer.
+        self._subsystem_budget: SubsystemBudget = budget or DEFAULT_OBSERVABILITY_BUDGET
 
         if self.enabled and self.run_dir:
             try:
@@ -131,6 +142,44 @@ class EventRecorder:
         
         # Pushing into BoundedObservabilityQueue is thread-safe and non-blocking
         self.queue.try_push(envelope)
+
+    def pressure_report(self) -> SubsystemPressureReport:
+        """
+        Advisory pressure snapshot for the observability subsystem (INFRA-194).
+
+        Non-blocking and read-only.  Checks the current queue occupancy against
+        max_queue_items.  This is independent of max_events (in-memory buffer).
+
+        Returns:
+            WARN  when queue occupancy >= 80% of max_queue_items.
+            DEGRADED when queue occupancy >= 100% of max_queue_items.
+            OK    otherwise, or when budget.max_queue_items is None (unlimited).
+        """
+        current = self.queue.get_size()
+        max_q = self._subsystem_budget.max_queue_items
+        if max_q is None:
+            return SubsystemPressureReport(
+                subsystem="observability",
+                current_usage=float(current),
+                budget=None,
+                pressure_state="OK",
+                degradation_action=None,
+            )
+        cap = max(max_q, 1)  # guard against zero-division
+        pct = current / cap
+        if pct < 0.8:
+            state, action = "OK", None
+        elif pct < 1.0:
+            state, action = "WARN", "increase_sampling_interval"
+        else:
+            state, action = "DEGRADED", "drop_low_priority_events"
+        return SubsystemPressureReport(
+            subsystem="observability",
+            current_usage=float(current),
+            budget=float(max_q),
+            pressure_state=state,
+            degradation_action=action,
+        )
 
     def get_stats(self) -> Dict[str, Any]:
         """Returns diagnostic statistics of the recorder."""

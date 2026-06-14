@@ -1,11 +1,16 @@
 # Compliance IDs: INFRA-119, INFRA-120, INFRA-121, INFRA-122, INFRA-123, INFRA-124, INFRA-125, INFRA-126, INFRA-127, INFRA-128, INFRA-129, INFRA-130, INFRA-133
+# Compliance IDs: INFRA-196
 from __future__ import annotations
 
 import hashlib
 import json
-from typing import Any, Dict
+import logging
+from typing import Any, Dict, Optional
 
+from src.config.optimization_profiles import SubsystemBudget, SubsystemPressureReport, DEFAULT_HASHING_BUDGET
 from src.core.state import AuthoritativeState
+
+logger = logging.getLogger(__name__)
 
 
 class CanonicalStateHasher:
@@ -76,5 +81,91 @@ class CanonicalStateHasher:
         
         # 4. RNG Checkpoint
         data["rng_checkpoint"] = state.rng_checkpoint
-        
+
         return data
+
+
+class BudgetedCanonicalHasher:
+    """
+    Rate-limited wrapper around CanonicalStateHasher.
+
+    Tracks the number of full-hash calls within a 100-tick sliding window.
+    When the call count reaches the budget ceiling, a WARNING is logged and
+    the last known (stale) hash is returned instead of computing a new one.
+
+    Note: callers must handle the case where get_hash() is called before any
+    successful hash has been computed (first call at or above the limit); in
+    that case the stale hash fallback delegates to CanonicalStateHasher.get_hash()
+    to avoid returning None.
+
+    This class does NOT modify CanonicalStateHasher (INFRA-119–130 unaffected).
+    degradation_action "returning_stale_hash" is advisory — the Governor decides
+    how to react.
+    """
+
+    def __init__(self, budget: SubsystemBudget | None = None) -> None:
+        self._budget: SubsystemBudget = budget or DEFAULT_HASHING_BUDGET
+        self._call_count: int = 0
+        self._window_start_tick: int = 0
+        self._last_known_hash: Optional[str] = None
+
+    def get_hash(self, state: AuthoritativeState, current_tick: int = 0) -> str:
+        """
+        Return a canonical hash of *state*, subject to the rate budget.
+
+        Window resets every 100 ticks.  Over-budget calls return the last
+        known hash (stale).  The hash value itself is bit-identical to
+        CanonicalStateHasher.get_hash() on the normal path.
+        """
+        # Window reset: start a new 100-tick counting window.
+        if current_tick - self._window_start_tick >= 100:
+            self._call_count = 0
+            self._window_start_tick = current_tick
+
+        max_h = self._budget.max_full_hashes_per_100_ticks
+        if max_h is not None and self._call_count >= max_h:
+            logger.warning(
+                "BudgetedCanonicalHasher: rate limit reached (%d/%d per 100 ticks)"
+                " — returning stale hash",
+                self._call_count,
+                max_h,
+            )
+            # Return stale hash; fall back to a fresh hash if none is cached yet
+            # (first call over-budget, e.g. budget=0).
+            return self._last_known_hash or CanonicalStateHasher.get_hash(state)
+
+        self._call_count += 1
+        self._last_known_hash = CanonicalStateHasher.get_hash(state)
+        return self._last_known_hash
+
+    def pressure_report(self) -> SubsystemPressureReport:
+        """
+        Advisory pressure snapshot for the hashing subsystem.
+
+        Returns WARN when call_count exceeds max_full_hashes_per_100_ticks
+        (i.e. the rate limiter is active and stale hashes are being returned).
+        Returns OK when within budget or when budget is unlimited (None).
+        """
+        max_h = self._budget.max_full_hashes_per_100_ticks
+        if max_h is None:
+            return SubsystemPressureReport(
+                subsystem="hashing",
+                current_usage=float(self._call_count),
+                budget=None,
+                pressure_state="OK",
+                degradation_action=None,
+            )
+        pct = self._call_count / max_h
+        if pct < 0.8:
+            state, action = "OK", None
+        elif pct < 1.0:
+            state, action = "WARN", "reduce_hash_frequency"
+        else:
+            state, action = "DEGRADED", "returning_stale_hash"
+        return SubsystemPressureReport(
+            subsystem="hashing",
+            current_usage=float(self._call_count),
+            budget=float(max_h),
+            pressure_state=state,
+            degradation_action=action,
+        )

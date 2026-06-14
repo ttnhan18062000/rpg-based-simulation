@@ -2090,3 +2090,77 @@
   test_path: tests/certification/test_manifest_snapshot.py
   divergence_note: null
   support_boundary: null
+- id: INFRA-193
+  text: >-
+    `ArtifactBudgetRegistry.check()` enforces per-artifact-type write-time size
+    budgets. Unknown types return action="allow". Violations with
+    fail_on_budget_violation=True return action="reject" (allowed=False). Violations
+    with fail_on_budget_violation=False return action="warn" (allowed=True). Soft
+    limit (soft_limit_mb) triggers action="warn" before hard limit. All violation
+    events are logged (INFRA-060 compliance). Default registry pre-registers budgets
+    for certification_result (2 MB), replay_chunk (10 MB), behavior_report (5 MB),
+    proof_index (1 MB).
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >-
+    Implemented in src/certification/artifact_budget.py; wired in
+    src/certification/recorder.py and src/engine/replay_manager.py; verified by
+    tests/certification/test_artifact_budget.py.
+  proof_type: null
+  test_path: tests/certification/test_artifact_budget.py
+  divergence_note: null
+  support_boundary: null
+
+- id: INFRA-194
+  text: >
+    EventRecorder.pressure_report() returns pressure_state=WARN when queue occupancy
+    is >= 80% of max_queue_items, and DEGRADED at >= 100%. Returns OK when below 80%.
+    None budget yields OK unconditionally. The budget check is independent of max_events
+    (in-memory buffer); it checks the BoundedObservabilityQueue size via get_size().
+    pressure_report() is non-blocking and read-only — never called on the kernel tick
+    hot path.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/observability/event_recorder.py::EventRecorder.pressure_report
+  proof_type: null
+  test_path: tests/unit/engine/test_resource_budget_gate.py::TestEventRecorderPressureReport::test_event_recorder_reports_warn_at_80pct_capacity
+  divergence_note: null
+  support_boundary: null
+
+- id: INFRA-195
+  text: >
+    ReplayManager.pressure_report() reports inflight chunk count vs. max_inflight_chunks
+    budget. The method is non-blocking, lock-free, and advisory-only. Inflight count is
+    derived from _current_chunk_id - _chunks_persisted (plain int reads, no lock).
+    The degradation_action string is consumed by the Governor; ReplayManager does not
+    execute it. _chunks_persisted is incremented inside _execute_persistence() on
+    success only.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/engine/replay_manager.py::ReplayManager.pressure_report
+  proof_type: null
+  test_path: tests/unit/engine/test_resource_budget_gate.py::TestReplayManagerPressureReport::test_replay_pressure_report_exists
+  divergence_note: null
+  support_boundary: null
+
+- id: INFRA-196
+  text: >
+    BudgetedCanonicalHasher tracks full-hash call count per 100-tick window.
+    pressure_report() returns WARN when call count reaches >= 80% of
+    max_full_hashes_per_100_ticks, and DEGRADED at >= 100%. Over-budget calls to
+    get_hash() return the last known hash (stale); degradation_action contains
+    "returning_stale_hash" to make the degraded return value self-documenting.
+    The underlying CanonicalStateHasher static class is unchanged (INFRA-119 through
+    INFRA-130 unaffected); BudgetedCanonicalHasher is a thin wrapper.
+    Window resets when current_tick - window_start_tick >= 100.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/engine/checkpoint.py::BudgetedCanonicalHasher
+  proof_type: null
+  test_path: tests/unit/engine/test_resource_budget_gate.py::TestBudgetedCanonicalHasher::test_canonical_hasher_reports_warn_over_budget
+  divergence_note: null
+  support_boundary: null
