@@ -901,6 +901,24 @@ class Kernel:
         """Return the ShutdownReport cached by the last shutdown() call, or None."""
         return getattr(self, "_last_shutdown_report", None)
 
+    def resource_snapshot(self) -> list:
+        """Return a list of SubsystemPressureReport from all subsystems (RESOURCE-DASHBOARD).
+
+        Non-blocking. Each report is advisory only.
+        """
+        reports = []
+        try:
+            if hasattr(self, "_event_recorder") and self._event_recorder:
+                reports.append(self._event_recorder.pressure_report())
+        except Exception:
+            pass
+        try:
+            if hasattr(self, "_replay") and self._replay:
+                reports.append(self._replay.pressure_report())
+        except Exception:
+            pass
+        return reports
+
     @property
     def status(self) -> RuntimeStatus:
         return self._status

@@ -2203,6 +2203,25 @@
   divergence_note: null
   support_boundary: null
 
+- id: INFRA-201
+  text: >
+    diagnostics resources CLI (src/cli/diagnostics.py) collects SubsystemPressureReport
+    from Kernel.resource_snapshot() and prints a fixed-width table or JSON array.
+    Kernel.resource_snapshot() aggregates pressure_report() from event_recorder and
+    replay subsystems; errors per subsystem are swallowed (advisory only).
+    Exit code 0 when all subsystems are OK or WARN; exit code 1 when any DEGRADED
+    (enables CI gating via `make check-resources`). Offline mode (no live kernel)
+    attempts to read from RunArtifactRepository and prints a notice if no data found.
+    CLI wired as `python -m src diagnostics resources [--format table|json] [--run-id]`.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/cli/diagnostics.py::run_diagnostics_resources
+  proof_type: null
+  test_path: tests/unit/cli/test_diagnostics_resources.py
+  divergence_note: null
+  support_boundary: null
+
 - id: INFRA-200
   text: >
     ShutdownReport dataclass (src/core/lifecycle.py) produced by Kernel.shutdown()

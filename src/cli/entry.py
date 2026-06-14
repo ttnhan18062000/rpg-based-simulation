@@ -163,10 +163,20 @@ def _build_parser():
     cog_patt = cog_sub.add_parser("patterns", help="Retrieve all strategic failure patterns for a run")
     cog_patt.add_argument("run_id", type=str, help="ID of the completed simulation run")
 
+    # Diagnostics subcommand group
+    diag_parser = sub.add_parser("diagnostics", help="Runtime resource diagnostics")
+    diag_sub = diag_parser.add_subparsers(dest="diagnostics_command", required=True)
+
+    # resources sub-subcommand
+    diag_res = diag_sub.add_parser("resources", help="Show per-subsystem resource pressure snapshot")
+    diag_res.add_argument("--run-id", type=str, default=None, help="Run ID for offline mode")
+    diag_res.add_argument("--format", dest="fmt", choices=["table", "json"], default="table",
+                          help="Output format (default: table)")
+
     # Global options
     parser.add_argument("--config", type=str, default=None, help="Path to YAML config file")
     parser.add_argument("--json-logs", action="store_true", help="Enable JSON-formatted logging")
-    
+
     return parser
 
 
@@ -923,6 +933,13 @@ def main():
         _run_warehouse(args)
     elif args.command == "cognition":
         _run_cognition(args)
+    elif args.command == "diagnostics":
+        from src.cli.diagnostics import run_diagnostics_resources
+        exit_code = run_diagnostics_resources(
+            fmt=getattr(args, "fmt", "table"),
+            run_id=getattr(args, "run_id", None),
+        )
+        sys.exit(exit_code)
     elif args.command == "inspect":
         print("V2 Inspect mode not yet fully implemented. Entity state inspection logic pending M4.")
     else:
