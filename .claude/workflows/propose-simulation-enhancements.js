@@ -16,10 +16,16 @@ phase('Read')
 const investigationData = await agent(
   `Load investigation reports and anomaly data for enhancement proposal.
 
+Step 0 — REQUIRED context search (before any file reads):
+1. Call mcp__knowledge-search__search_docs with query = "balance anomaly enhancement proposal ${sessionId || 'simulation'}". Note returned Mechanics Bible sections, prior ticket IDs, and investigation docs as warm-start candidates.
+2. Run: graphify query "balance enhancement proposal" — note any returned code nodes for systems related to the anomalies.
+   If graphify unavailable, read graphify-out/GRAPH_REPORT.md for community structure instead.
+Use returned paths as primary targets below; fall back to directory scans only if search returns nothing.
+
 ${sessionId ? `Session ID: ${sessionId} — read investigation/investigation_report.md and investigation/investigation_report.json` : 'No session ID — find the most recent investigation report under investigation/ or stored_artifacts/.'}
 
 Also read:
-- docs/mechanics/ for relevant balance laws
+- docs/mechanics/ for relevant balance laws (use search_docs results above to target specific chapters)
 - enhancement/ folder for any prior proposals (to avoid duplication)
 - tickets/ for any open balance-related tickets
 

@@ -64,9 +64,11 @@ summary="Loaded existing ticket ${ticketId}", ts=TS.`
 
 Step 0: run \`date -u +%Y-%m-%dT%H:%M:%SZ\` — save result as TS (use as the \`ts\` field).
 
-Step 0b (context warm-start): if knowledge-index/knowledge.db exists, call the MCP tool \`search_docs\`
-with query="${request}" and top_k=5. Note the top results as context for scoping. If MCP is unavailable,
-run: python3 tools/knowledge_search.py query "${request}" --top-k 5 (skip silently if index missing).
+Step 0b (context warm-start — REQUIRED before any file reads):
+1. Call mcp__knowledge-search__search_docs with query="${request}" and top_k=5. Note the top results as context for scoping.
+   If MCP is unavailable, run: python3 tools/knowledge_search.py query "${request}" --top-k 5 (skip silently if index missing).
+2. Run: graphify query "${request}" — note returned code nodes as primary file targets for steps below.
+   If graphify CLI unavailable, read graphify-out/GRAPH_REPORT.md for community structure instead.
 
 Request: ${request}
 
@@ -232,6 +234,13 @@ Step 0: run \`date -u +%Y-%m-%dT%H:%M:%SZ\`. Your response MUST begin with this 
 PHASE_TS: <result>
 
 Step 0b: run \`python3 -c "import json; open('.claude/current_run','w').write(json.dumps({'run_id':'${tid}','seq':${events.length + 1}}))" 2>/dev/null || true\` — register this agent call for tool tracking.
+
+Step 0c — REQUIRED context search (do this BEFORE any file reads or grep):
+1. Call mcp__knowledge-search__search_docs with query = "<ticket title> <request summary>" (read the ticket first to get these). Note all returned doc paths, ticket IDs, and excerpts as warm-start candidates.
+   If MCP is unavailable, run: python3 tools/knowledge_search.py query "<ticket title>" --top-k 5
+2. Run: graphify query "<ticket title>" — note all returned code nodes and relationships as primary file targets.
+   If graphify CLI is unavailable, read graphify-out/GRAPH_REPORT.md for community structure and god nodes instead.
+Raw file reads and grep are follow-up steps only — use the paths and node names returned above as primary targets.
 
 Read:
 - ${ticketInfo.ticket_path}

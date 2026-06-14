@@ -13,6 +13,10 @@ def _input_summary(tool_name: str, tool_input: dict) -> str:
         return (tool_input.get("command") or "")[:80]
     if tool_name == "Agent":
         return (tool_input.get("description") or tool_input.get("prompt") or "")[:80]
+    if tool_name.startswith("mcp__"):
+        # e.g. mcp__knowledge-search__search_docs with {"query": "..."}
+        query = tool_input.get("query") or tool_input.get("q") or tool_input.get("text") or ""
+        return f"query={query!r}"[:120]
     return str(tool_input)[:80]
 
 
