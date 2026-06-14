@@ -1,16 +1,38 @@
 # Compliance IDs: INFRA-119, INFRA-120, INFRA-121, INFRA-122, INFRA-123, INFRA-124, INFRA-125, INFRA-126, INFRA-127, INFRA-128, INFRA-129, INFRA-130, INFRA-133
-# Compliance IDs: INFRA-196
+# Compliance IDs: INFRA-196, INFRA-197
 from __future__ import annotations
 
 import hashlib
 import json
 import logging
+from enum import Enum
 from typing import Any, Dict, Optional
 
 from src.config.optimization_profiles import SubsystemBudget, SubsystemPressureReport, DEFAULT_HASHING_BUDGET
 from src.core.state import AuthoritativeState
 
 logger = logging.getLogger(__name__)
+
+
+class HashMode(str, Enum):
+    """Controls whether a full or light canonical hash is computed.
+
+    FULL  — delegates to CanonicalStateHasher.get_hash(); expensive, deterministic proof.
+            Only allowed at sanctioned boundaries (see CanonicalHashScheduler.allow_full_hash_at).
+    LIGHT — hashes (tick, seed, entity_count, region_count) via MD5; fast dirty signal only,
+            NOT a cryptographic proof and NOT suitable for determinism verification.
+    """
+    FULL = "full"
+    LIGHT = "light"
+
+
+class HashScheduleViolation(RuntimeError):
+    """Raised when a FULL canonical hash is requested outside a sanctioned boundary.
+
+    INFRA-197: Full canonical hashing must only occur at start-of-run (tick=0),
+    end-of-run (shutdown), or when an explicit sanctioned reason is provided
+    ("certification", "audit", "replay"). Any other FULL hash call is a violation.
+    """
 
 
 class CanonicalStateHasher:
@@ -169,3 +191,62 @@ class BudgetedCanonicalHasher:
             pressure_state=state,
             degradation_action=action,
         )
+
+
+# Sanctioned reasons that permit a FULL canonical hash outside tick 0 / run-end.
+_SANCTIONED_REASONS: frozenset = frozenset({"certification", "audit", "replay"})
+
+
+class CanonicalHashScheduler:
+    """Enforces that FULL canonical hashing only occurs at sanctioned boundaries.
+
+    INFRA-197: Full canonical hashing is expensive (sorts and JSON-serialises all
+    collections). It must only occur at:
+      - tick == 0  (start-of-run baseline)
+      - tick == run_end_tick  (end-of-run final hash)
+      - reason in {"certification", "audit", "replay"}  (explicit sanctioned call)
+
+    All other full-hash attempts raise HashScheduleViolation.
+
+    LIGHT hashing hashes (tick, seed, entity_count, region_count) via MD5 — a cheap
+    dirty signal. It is NOT a determinism proof and must not be used for certification.
+    """
+
+    def __init__(self, run_end_tick: int = -1) -> None:
+        self._run_end_tick = run_end_tick
+
+    def allow_full_hash_at(self, tick: int, reason: str) -> bool:
+        """Return True if a FULL hash is sanctioned at the given tick and reason."""
+        if tick == 0:
+            return True
+        if self._run_end_tick >= 0 and tick == self._run_end_tick:
+            return True
+        if reason in _SANCTIONED_REASONS:
+            return True
+        return False
+
+    def compute_hash(
+        self,
+        state: AuthoritativeState,
+        tick: int,
+        mode: HashMode = HashMode.LIGHT,
+        reason: str = "",
+    ) -> str:
+        """Compute a canonical hash according to *mode*.
+
+        FULL:  delegates to CanonicalStateHasher.get_hash(state). Raises
+               HashScheduleViolation if tick/reason is not sanctioned.
+        LIGHT: hashes (tick, seed, entity_count, region_count) via MD5.
+               Always allowed; no state-walk or JSON serialisation.
+        """
+        if mode is HashMode.FULL:
+            if not self.allow_full_hash_at(tick, reason):
+                raise HashScheduleViolation(
+                    f"Full canonical hash requested at tick={tick} reason={reason!r} "
+                    f"but this is not a sanctioned boundary. "
+                    f"Use reason='certification'|'audit'|'replay', or tick=0/run_end."
+                )
+            return CanonicalStateHasher.get_hash(state)
+        # LIGHT: fast non-cryptographic dirty signal
+        payload = f"{tick}:{state.seed}:{len(state.entities)}:{len(state.regions)}"
+        return hashlib.md5(payload.encode("utf-8"), usedforsecurity=False).hexdigest()

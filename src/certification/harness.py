@@ -181,8 +181,10 @@ class CertificationHarness:
                 kernel2.tick_once()
             # We don't necessarily need a clean shutdown for the 2nd run's hash,
             # but we use the state hash directly for performance.
-            from src.engine.checkpoint import CanonicalStateHasher
-            secondary_hash = CanonicalStateHasher.get_hash(kernel2.state)
+            from src.engine.checkpoint import CanonicalHashScheduler, HashMode
+            secondary_hash = CanonicalHashScheduler().compute_hash(
+                kernel2.state, tick=kernel2.state.tick, mode=HashMode.FULL, reason="certification"
+            )
 
         # 5. Evaluate Conformance
             
@@ -301,8 +303,10 @@ class CertificationHarness:
 
             kernel.tick_once()
             
-        from src.engine.checkpoint import CanonicalStateHasher
-        return CanonicalStateHasher.get_hash(kernel.state)
+        from src.engine.checkpoint import CanonicalHashScheduler, HashMode
+        return CanonicalHashScheduler().compute_hash(
+            kernel.state, tick=kernel.state.tick, mode=HashMode.FULL, reason="certification"
+        )
 
 
 if __name__ == "__main__":
