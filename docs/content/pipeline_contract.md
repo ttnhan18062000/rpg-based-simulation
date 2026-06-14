@@ -38,6 +38,21 @@ Defined in `src/content/paths.py` (WORLD-PATH-001):
 
 ---
 
+## Hot-Path Loading Prohibition (CONTENT-HOTPATH-GUARD)
+
+**`CatalogRepository.load_all()` is forbidden while a kernel tick is executing.**
+
+`Kernel.tick_once()` sets `_tick_context_active.active = True` (thread-local, `src/content/repository.py`) on entry and clears it in a `finally` block. If `load_all()` is called while this flag is set, `ContentHotPathViolation(RuntimeError)` is raised immediately with a descriptive message citing WORLD-CAT-004.
+
+**Prevention**: `Kernel.__init__()` calls `ContentWarmupService.warmup()` after `validate()` to eagerly initialize all content singletons (faction semantics cache, etc.) before the first tick. This guarantees the guard never fires under normal operation.
+
+`ContentWarmupService` (in `src/content/warmup.py`) provides:
+- `warmup(repo=None)` — eager singleton initialization
+- `is_warm() -> bool` — inspection
+- `reset()` — test-only teardown (asserts `pytest` is in `sys.modules`)
+
+---
+
 ## Load Pipeline
 
 Entry point: `CatalogRepository.load_all()` (WORLD-CAT-004, WORLD-CAT-005).
