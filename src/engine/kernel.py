@@ -247,6 +247,14 @@ class Kernel:
 
         self.validate(flags)
 
+        # WORLD-CAT-004: warm all content singletons before the first tick so that
+        # CatalogRepository.load_all() is never triggered from inside tick_once().
+        try:
+            from src.content.warmup import ContentWarmupService
+            ContentWarmupService.warmup()
+        except Exception as _warmup_err:
+            logger.warning("ContentWarmupService.warmup() failed (non-fatal): %s", _warmup_err)
+
     def validate(self, flags: Optional[Dict[str, bool]] = None) -> None:
         from src.config.validator import ProfileValidator
         ProfileValidator.validate_profile(self._profile)
@@ -261,6 +269,17 @@ class Kernel:
         if getattr(self, "_stopped", False):
              return
 
+        # WORLD-CAT-004: mark tick context active so CatalogRepository.load_all()
+        # raises ContentHotPathViolation if called from inside the tick pipeline.
+        from src.content.repository import _tick_context_active
+        _tick_context_active.active = True
+        try:
+            self._tick_once_inner()
+        finally:
+            _tick_context_active.active = False
+
+    def _tick_once_inner(self) -> None:
+        """Inner tick body — never call directly, use tick_once()."""
         t0 = time.perf_counter_ns()
         self._start_perf_ts = t0
         self._phase_init()
