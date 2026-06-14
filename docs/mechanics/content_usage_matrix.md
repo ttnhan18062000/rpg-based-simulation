@@ -1,9 +1,9 @@
 ---
 status: authoritative
 layer: mechanics
-authority: P0
+authority: P1
 audience: developer
-last_verified: 2026-06-06
+tags: [content, catalog, matrix, implementation-state]
 ---
 
 # Content Usage Matrix Report

@@ -1,12 +1,26 @@
-# Compliance IDs: WORLD-CAT-004, WORLD-CAT-005
+# Compliance IDs: WORLD-CAT-004, WORLD-CAT-005, WORLD-CAT-HOTPATH-001
 from __future__ import annotations
 
 import os
+import threading
 import yaml
 import hashlib
 from dataclasses import dataclass
 from typing import Dict, List, Optional, Any, Type, TypeVar
 from pydantic import BaseModel
+
+
+class ContentHotPathViolation(RuntimeError):
+    """Raised when CatalogRepository.load_all() is called while a kernel tick is active.
+
+    WORLD-CAT-004 law: content must be fully loaded before any simulation tick begins.
+    Calling load_all() inside tick_once() indicates a missing warmup or singleton reset.
+    """
+
+
+# Thread-local flag set by Kernel.tick_once() before entering the tick pipeline.
+# CatalogRepository.load_all() checks this to enforce WORLD-CAT-004.
+_tick_context_active: threading.local = threading.local()
 
 from src.content.schema import (
     CatalogBaseDefinition,
@@ -197,6 +211,13 @@ class CatalogRepository:
 
     def load_all(self, strict: bool = False) -> CatalogLoadReport:
         """Loads and parses all files under the content directory into structured indices based on CANONICAL_FAMILIES."""
+        # WORLD-CAT-004: content must be fully loaded before any simulation tick begins.
+        if getattr(_tick_context_active, "active", False):
+            raise ContentHotPathViolation(
+                "CatalogRepository.load_all() called while a kernel tick is active. "
+                "Ensure ContentWarmupService.warmup() is called during kernel __init__ "
+                "before the first tick_once() invocation."
+            )
         # Check duplicate paths in specs
         seen_paths = set()
         for spec in CANONICAL_FAMILIES:

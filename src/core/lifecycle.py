@@ -1,6 +1,6 @@
 from enum import Enum
-from dataclasses import dataclass
-from typing import Optional
+from dataclasses import dataclass, field
+from typing import Dict, List, Optional
 
 class LifecycleOutcome(str, Enum):
     """
@@ -22,3 +22,20 @@ class ShutdownResult:
     replay_outcome: LifecycleOutcome
     overall_outcome: LifecycleOutcome
     failure_reason: Optional[str] = None
+
+
+@dataclass
+class ShutdownReport:
+    """
+    Machine-readable lifecycle supervisor report produced by Kernel.shutdown().
+
+    Consumers: dashboard, tests, post-mortem tooling.
+    Access via kernel.shutdown_report() after shutdown() returns.
+    """
+    workers_started: int = 0
+    workers_stopped: int = 0
+    open_file_handles: int = -1
+    pending_replay_flushes: int = 0
+    survival_event_counts: Dict[str, int] = field(default_factory=dict)
+    outcome: str = "SUCCESS"
+    warnings: List[str] = field(default_factory=list)

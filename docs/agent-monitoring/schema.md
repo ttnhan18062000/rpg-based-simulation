@@ -92,6 +92,7 @@ One record per agent call within a workflow run. FK: `run_id → runs.run_id`.
 | `agent` | string | No | Agent identifier (matches `.claude/agents/{agent}.md` filename). |
 | `summary` | string | No | One sentence describing what the agent did and the key finding. Empty string = agent did not provide a summary (prompt quality signal). Max 200 chars. |
 | `status` | string | No | `ok` \| `failed` \| `blocked` \| `skipped` |
+| `tool_call_count` | int | Yes | Total number of tool calls made by this agent. Computed by `writeMonitoring` from `tools.jsonl` (counts entries matching `run_id` + `seq`). `null` for runs produced before this field was added. |
 
 ### `status` values
 
@@ -105,6 +106,51 @@ One record per agent call within a workflow run. FK: `run_id → runs.run_id`.
 ### `phase` values (implement-ticket workflow)
 
 `Scope`, `Investigate`, `Plan`, `Review`, `Implement`, `Test`, `Parity`, `Verify`, `Finalize`
+
+---
+
+## `agent-monitoring/tools.jsonl`
+
+One record per tool call, written by `PreToolUse` and `PostToolUse` hooks. Joined to events by `run_id` + `seq`.
+
+```json
+{
+  "session_id": "abc123",
+  "run_id": "TCK-20260614-TOOL-TRACKING",
+  "seq": 5,
+  "ts": "2026-06-14T10:12:01Z",
+  "tool": "Bash",
+  "input_summary": "pytest tests/engine/ -x",
+  "status": "ok",
+  "duration_ms": 4210
+}
+```
+
+### Fields
+
+| Field | Type | Nullable | Description |
+|---|---|---|---|
+| `session_id` | string | No | Claude Code session ID from the hook payload. Groups all tool calls within one session. |
+| `run_id` | string | Yes | FK → runs.jsonl. `null` when the tool call occurred outside an active workflow run (interactive session use). |
+| `seq` | int | Yes | FK → events.seq. Identifies which agent event this tool call belongs to. Written by the agent to `.claude/current_run` as its first Bash step; `null` if the sidecar was not yet written at hook time. |
+| `ts` | ISO 8601 | No | UTC timestamp of the tool call (captured at PostToolUse). |
+| `tool` | string | No | Tool name: `Read`, `Edit`, `Write`, `Bash`, `Agent`, `MultiEdit`, etc. |
+| `input_summary` | string | No | Extracted key identifier from tool input. Per-tool: file path for Read/Edit/Write/MultiEdit; first 80 chars of command for Bash; description/prompt for Agent. Max 120 chars. |
+| `status` | string | No | `ok` \| `failed`. Derived from the tool response's error flag. |
+| `duration_ms` | int | Yes | Wall-clock milliseconds from PreToolUse to PostToolUse. `null` if the pre-hook temp file was missing. |
+
+### How tool calls are attributed to agent events
+
+Each agent prompt includes an early Bash step that writes `{"run_id": "...", "seq": N}` to `.claude/current_run`. The PostToolUse hook reads this file on every tool call and tags the record with `run_id` + `seq`. The `writeMonitoring` step at the end of the workflow counts records per seq to produce `tool_call_count` in events.jsonl.
+
+Tool calls made outside a workflow (interactive Claude Code session) are still recorded with `run_id: null, seq: null` — useful for auditing overall tool usage.
+
+### `status` values
+
+| Value | Meaning |
+|---|---|
+| `ok` | Tool completed without error. |
+| `failed` | Tool response contained an error flag or `"ERROR"` prefix. |
 
 ---
 
@@ -124,7 +170,17 @@ for line in Path('agent-monitoring/events.jsonl').read_text().splitlines():
         e = json.loads(line)
         events_by_run[e['run_id']].append(e)
 
-# Full run with events:
+tools_by_event = defaultdict(list)
+for line in Path('agent-monitoring/tools.jsonl').read_text().splitlines():
+    if line:
+        t = json.loads(line)
+        if t.get('run_id') and t.get('seq') is not None:
+            tools_by_event[(t['run_id'], t['seq'])].append(t)
+
+# Full run with events and per-event tool calls:
 run = runs['TCK-20260607-...']
 events = sorted(events_by_run[run['run_id']], key=lambda e: e['seq'])
+for event in events:
+    tools = tools_by_event[(run['run_id'], event['seq'])]
+    print(f"  {event['phase']} ({event['agent']}): {len(tools)} tool calls")
 ```

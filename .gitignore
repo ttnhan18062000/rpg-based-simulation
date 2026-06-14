@@ -257,3 +257,8 @@ knowledge-index/
 website/node_modules/
 website/build/
 website/.docusaurus/
+
+# Agent-monitoring hook temp files
+.claude/.tool_start
+.claude/.current_session_id
+.claude/current_run

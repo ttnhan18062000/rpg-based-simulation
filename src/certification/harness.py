@@ -2,18 +2,19 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import uuid
 import time
 import logging
-from typing import List, Optional, Callable
+from typing import List, Optional, Callable, Tuple
 from src.core.state import AuthoritativeState
 from src.platform.rng import DeterministicRNG
 from src.engine.kernel import Kernel
 from src.config.profiles import RuntimeProfile, HardwareClass
 from src.certification.models import (
-    CertificationResult, MeasurementPoint, ScenarioExpectations, 
+    CertificationResult, MeasurementPoint, ScenarioExpectations,
     HardwareClass as CertHardwareClass, FailureKind, FailureKind as FK,
-    EnvironmentCapture
+    EnvironmentCapture, EvidenceLevel
 )
 from src.certification.hardware import HardwareClassifier
 from src.certification.conformance import ConformanceEvaluator
@@ -35,14 +36,15 @@ class CertificationHarness:
     Generated evidence is the definitive source of truth for production readiness.
     """
 
-    def __init__(self, profile: RuntimeProfile, override_class: Optional[CertHardwareClass] = None, output_dir: str = "reports/certification"):
+    def __init__(self, profile: RuntimeProfile, override_class: Optional[CertHardwareClass] = None, output_dir: str = "reports/certification", manifest_path: Optional[Path] = None):
         self._profile = profile
         self._output_dir = Path(output_dir)
         self._detected_facts = HardwareClassifier.get_detailed_telemetry()
         self._detected_class = HardwareClassifier.detect_class()
         self._effective_class = override_class or self._detected_class
         self._override_applied = override_class is not None
-        
+        self._manifest_path: Optional[Path] = manifest_path if manifest_path is not None else Path("docs/engine/manifest.json")
+
         # M10 Law: Initialize the authoritative recorder
         self._recorder = CertificationRecorder(output_dir)
         
@@ -60,11 +62,12 @@ class CertificationHarness:
             return "unknown-dirty"
 
     def run_scenario(
-        self, 
+        self,
         scenario_id: str,
         initial_state: AuthoritativeState,
         expectations: ScenarioExpectations,
-        ticks: int = 100
+        ticks: int = 100,
+        evidence_level: EvidenceLevel = EvidenceLevel.SUMMARY,
     ) -> CertificationResult:
         """
         Execute a full certification scenario run and return machine-readable proof.
@@ -178,8 +181,10 @@ class CertificationHarness:
                 kernel2.tick_once()
             # We don't necessarily need a clean shutdown for the 2nd run's hash,
             # but we use the state hash directly for performance.
-            from src.engine.checkpoint import CanonicalStateHasher
-            secondary_hash = CanonicalStateHasher.get_hash(kernel2.state)
+            from src.engine.checkpoint import CanonicalHashScheduler, HashMode
+            secondary_hash = CanonicalHashScheduler().compute_hash(
+                kernel2.state, tick=kernel2.state.tick, mode=HashMode.FULL, reason="certification"
+            )
 
         # 5. Evaluate Conformance
             
@@ -224,23 +229,62 @@ class CertificationHarness:
         )
         
         # 6. Persist Proof Bundle (M10 Law)
-        self._persist_proof_bundle(result)
+        self._persist_proof_bundle(result, evidence_level)
         
         return result
 
-    def _persist_proof_bundle(self, result: CertificationResult):
+    def _write_full_evidence(self, result: CertificationResult) -> "Optional[Tuple[str, str]]":
+        """Write canonical state to <output_dir>/state/<run_id>.final_state.canonical.json.
+
+        Returns (relative_path, sha256_hex) on success, None on failure.
+        Failure is non-fatal — logged as a warning, never raises.
+        Uses CanonicalStateHasher.to_canonical_data() — never asdict().
+        """
+        if result.final_state is None:
+            return None
+        try:
+            from src.engine.checkpoint import CanonicalStateHasher
+            state_dir = self._output_dir / "state"
+            state_dir.mkdir(parents=True, exist_ok=True)
+            state_path = state_dir / f"{result.run_id}.final_state.canonical.json"
+            canonical_data = CanonicalStateHasher.to_canonical_data(result.final_state)
+            # Pretty for human readability; compact for hash (matching get_hash())
+            pretty_json = json.dumps(canonical_data, sort_keys=True, indent=2)
+            compact_json = json.dumps(canonical_data, sort_keys=True, separators=(",", ":"))
+            final_state_hash = hashlib.sha256(compact_json.encode("utf-8")).hexdigest()
+            state_path.write_text(pretty_json, encoding="utf-8")
+            relative_path = f"state/{result.run_id}.final_state.canonical.json"
+            logger.info(f"Full canonical state written to {state_path}")
+            return (relative_path, final_state_hash)
+        except Exception as exc:
+            logger.warning(f"Full evidence write failed (non-fatal): {exc}")
+            return None
+
+    def _persist_proof_bundle(self, result: CertificationResult, evidence_level: EvidenceLevel = EvidenceLevel.SUMMARY):
         """Save evidence to the deterministic output directory."""
+        # OPEN-1 resolution: write the state file FIRST so the actual path (or None on
+        # failure) is passed into to_artifact_dict() — never a speculative path string.
+        artifact_path: Optional[str] = None
+        artifact_hash: Optional[str] = None
+        if evidence_level == EvidenceLevel.FULL:
+            write_result = self._write_full_evidence(result)
+            if write_result is not None:
+                artifact_path, artifact_hash = write_result
+
         # 1. Authoritative Recording (M10 Law)
         # This handles JSON persistence and human-readable MD generation.
-        self._recorder.record(result)
-            
-        # 2. Manifest Snapshot (M10 Alignment)
-        manifest_path = Path("docs/engine/manifest.json")
-        if manifest_path.exists():
-            snapshot_path = self._output_dir / "manifest_snapshot.json"
-            with open(manifest_path, "r") as src, open(snapshot_path, "w") as dst:
-                dst.write(src.read())
-            
+        self._recorder.record(result, evidence_level, artifact_path, artifact_hash)
+
+        # 2. Manifest Snapshot (certification_contract_me.md §1)
+        try:
+            if self._manifest_path is None or not self._manifest_path.exists():
+                logger.warning("manifest_snapshot.json not written: manifest path unavailable or missing")
+            else:
+                snapshot_path = self._output_dir / "manifest_snapshot.json"
+                snapshot_path.write_text(self._manifest_path.read_text())
+        except Exception as exc:
+            logger.warning(f"manifest_snapshot.json write failed (non-fatal): {exc}")
+
         logger.info(f"Proof bundle persisted to {self._output_dir}")
 
 
@@ -259,8 +303,10 @@ class CertificationHarness:
 
             kernel.tick_once()
             
-        from src.engine.checkpoint import CanonicalStateHasher
-        return CanonicalStateHasher.get_hash(kernel.state)
+        from src.engine.checkpoint import CanonicalHashScheduler, HashMode
+        return CanonicalHashScheduler().compute_hash(
+            kernel.state, tick=kernel.state.tick, mode=HashMode.FULL, reason="certification"
+        )
 
 
 if __name__ == "__main__":

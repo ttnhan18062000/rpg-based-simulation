@@ -36,6 +36,19 @@ The Replay System provides a non-authoritative stream of simulation events for d
 - **Degradation**: Under pressure, the Governor will downgrade replay richness or disable capture entirely.
 - **Quota Enforcement**: If the disk budget is exceeded, the oldest chunks are rotated out or new writes are suppressed.
 
+## Backpressure Implementation (INFRA-198)
+
+`ReplayManager` tracks in-flight async persist tasks via `_inflight_count` (protected by `_inflight_lock: threading.Lock`). The count is incremented before `executor.submit()` and decremented in the done-callback (`_on_persist_done()`).
+
+**Key invariant**: `ReplayManager` never drops chunks or falls back to synchronous writes autonomously. All degradation decisions belong to the Governor. When `_inflight_count >= max_pending_flushes`, a warning is logged once per threshold crossing.
+
+**`pressure_report() -> SubsystemPressureReport`**:
+- `OK` when inflight / max_pending_flushes < 0.80
+- `WARN` when ≥ 0.80 and < 1.00 — `degradation_action = "reduce_replay_richness"`
+- `DEGRADED` when ≥ 1.00 — `degradation_action = "disable_replay_capture"`
+
+**`replay_metrics() -> dict`**: returns `pending_flushes`, `chunks_persisted`, `bytes_pending_estimate` (rolling EMA of chunk sizes × inflight count).
+
 ## Safety Guarantees
 - **Simulation Protection**: Replay IO pressure will never cause a spike in `tick_compute_ms` beyond the contractually allowed budget.
 - **Memory Safety**: The replay subsystem has a verifiable memory floor and ceiling.

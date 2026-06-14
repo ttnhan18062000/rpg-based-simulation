@@ -1997,3 +1997,294 @@
   test_path: tests/tools/test_search_server.py
   divergence_note: null
   support_boundary: "Developer tooling only — not simulation state, not tick-path."
+- id: INFRA-189
+  text: >
+    CertificationResult.to_artifact_dict() builds the proof artifact field-by-field
+    without calling asdict() or safe_asdict(). Accepts optional evidence_level
+    (EvidenceLevel.SUMMARY/COMPACT/FULL), final_state_artifact_path, and
+    final_state_hash parameters; all default to None/SUMMARY for backward
+    compatibility. final_state is always None in the artifact dict regardless of
+    evidence_level. final_state_summary contains compact counts when final_state is
+    attached (SUMMARY), or compact counts plus entity_sample and resource_snapshot
+    (COMPACT/FULL). final_state_artifact and final_state_hash are set from
+    caller-provided params (never speculatively computed inside this method).
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: >
+    src/certification/models.py::CertificationResult.to_artifact_dict +
+    src/certification/models.py::CertificationResult._final_state_summary_compact +
+    src/certification/models.py::EvidenceLevel +
+    tests/certification/test_cert_result_serialization.py +
+    tests/certification/test_evidence_levels.py
+  proof_type: null
+  test_path: >
+    tests/certification/test_cert_result_serialization.py,
+    tests/certification/test_evidence_levels.py
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-190
+  text: >
+    CertificationRecorder.record() populates the proofs_bundle.json entry via
+    result.to_artifact_dict() directly, eliminating the json.loads(result.to_json())
+    string roundtrip. record() now accepts evidence_level (EvidenceLevel, default
+    SUMMARY), final_state_artifact_path (Optional[str], default None), and
+    final_state_hash (Optional[str], default None); all three are threaded through
+    to to_artifact_dict(). Existing callers with no extra args are unaffected.
+    proofs_bundle.json continues to be written after every record() call.
+    Bundle entries never contain final_state data regardless of evidence_level.
+    final_state_artifact in the entry is either a relative path string (when FULL
+    and write succeeded) or None.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/certification/recorder.py::CertificationRecorder.record +
+    tests/certification/test_recorder_refactor.py +
+    tests/certification/test_evidence_levels.py
+  proof_type: null
+  test_path: >
+    tests/certification/test_recorder_refactor.py,
+    tests/certification/test_evidence_levels.py
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-191
+  text: >
+    When EvidenceLevel.FULL is requested, CertificationHarness._write_full_evidence()
+    writes CanonicalStateHasher.to_canonical_data() output to
+    <output_dir>/state/<run_id>.final_state.canonical.json using pretty JSON (indent=2).
+    final_state_hash in the artifact dict is SHA-256 of the compact canonical JSON,
+    matching CanonicalStateHasher.get_hash(). Write failure is non-fatal and logged
+    as a warning; _persist_proof_bundle() passes None for both artifact_path and
+    artifact_hash to recorder.record() on failure. proofs_bundle.json never contains
+    state file content. _write_full_evidence() is called BEFORE recorder.record() so
+    the bundle entry only contains confirmed paths (OPEN-1 resolution).
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/certification/harness.py::CertificationHarness._write_full_evidence +
+    src/certification/harness.py::CertificationHarness._persist_proof_bundle +
+    tests/certification/test_evidence_levels.py
+  proof_type: null
+  test_path: tests/certification/test_evidence_levels.py
+  divergence_note: null
+  support_boundary: null
+
+- id: INFRA-192
+  text: >
+    CertificationHarness writes manifest_snapshot.json to <output_dir>/ after recording
+    the proof bundle (certification_contract_me.md §1). Source path is injectable via
+    manifest_path= constructor arg (default: docs/engine/manifest.json). If the manifest
+    file is absent, a warning is logged and the run continues without writing the snapshot.
+    Write failure is wrapped in try/except — non-fatal. File is written with Path.write_text()
+    (verbatim copy, no transform).
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/certification/harness.py::CertificationHarness.__init__ (manifest_path param) +
+    src/certification/harness.py::CertificationHarness._persist_proof_bundle (§2 block) +
+    tests/certification/test_manifest_snapshot.py
+  proof_type: null
+  test_path: tests/certification/test_manifest_snapshot.py
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-193
+  text: >-
+    `ArtifactBudgetRegistry.check()` enforces per-artifact-type write-time size
+    budgets. Unknown types return action="allow". Violations with
+    fail_on_budget_violation=True return action="reject" (allowed=False). Violations
+    with fail_on_budget_violation=False return action="warn" (allowed=True). Soft
+    limit (soft_limit_mb) triggers action="warn" before hard limit. All violation
+    events are logged (INFRA-060 compliance). Default registry pre-registers budgets
+    for certification_result (2 MB), replay_chunk (10 MB), behavior_report (5 MB),
+    proof_index (1 MB).
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >-
+    Implemented in src/certification/artifact_budget.py; wired in
+    src/certification/recorder.py and src/engine/replay_manager.py; verified by
+    tests/certification/test_artifact_budget.py.
+  proof_type: null
+  test_path: tests/certification/test_artifact_budget.py
+  divergence_note: null
+  support_boundary: null
+
+- id: INFRA-194
+  text: >
+    EventRecorder.pressure_report() returns pressure_state=WARN when queue occupancy
+    is >= 80% of max_queue_items, and DEGRADED at >= 100%. Returns OK when below 80%.
+    None budget yields OK unconditionally. The budget check is independent of max_events
+    (in-memory buffer); it checks the BoundedObservabilityQueue size via get_size().
+    pressure_report() is non-blocking and read-only — never called on the kernel tick
+    hot path.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/observability/event_recorder.py::EventRecorder.pressure_report
+  proof_type: null
+  test_path: tests/unit/engine/test_resource_budget_gate.py::TestEventRecorderPressureReport::test_event_recorder_reports_warn_at_80pct_capacity
+  divergence_note: null
+  support_boundary: null
+
+- id: INFRA-195
+  text: >
+    ReplayManager.pressure_report() reports inflight chunk count vs. max_inflight_chunks
+    budget. The method is non-blocking, lock-free, and advisory-only. Inflight count is
+    derived from _current_chunk_id - _chunks_persisted (plain int reads, no lock).
+    The degradation_action string is consumed by the Governor; ReplayManager does not
+    execute it. _chunks_persisted is incremented inside _execute_persistence() on
+    success only.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/engine/replay_manager.py::ReplayManager.pressure_report
+  proof_type: null
+  test_path: tests/unit/engine/test_resource_budget_gate.py::TestReplayManagerPressureReport::test_replay_pressure_report_exists
+  divergence_note: null
+  support_boundary: null
+
+- id: INFRA-196
+  text: >
+    BudgetedCanonicalHasher tracks full-hash call count per 100-tick window.
+    pressure_report() returns WARN when call count reaches >= 80% of
+    max_full_hashes_per_100_ticks, and DEGRADED at >= 100%. Over-budget calls to
+    get_hash() return the last known hash (stale); degradation_action contains
+    "returning_stale_hash" to make the degraded return value self-documenting.
+    The underlying CanonicalStateHasher static class is unchanged (INFRA-119 through
+    INFRA-130 unaffected); BudgetedCanonicalHasher is a thin wrapper.
+    Window resets when current_tick - window_start_tick >= 100.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/engine/checkpoint.py::BudgetedCanonicalHasher
+  proof_type: null
+  test_path: tests/unit/engine/test_resource_budget_gate.py::TestBudgetedCanonicalHasher::test_canonical_hasher_reports_warn_over_budget
+  divergence_note: null
+  support_boundary: null
+
+- id: INFRA-197
+  text: >
+    CanonicalHashScheduler enforces sanctioned-boundary policy for full canonical
+    state hashes. Full-hash calls are only allowed at tick=0, tick==run_end_tick,
+    or when reason is in {"certification","audit","replay"}. Any other call raises
+    HashScheduleViolation(RuntimeError). Light-hash (MD5 over tick+seed+entity/region
+    counts) is always allowed and never raises. HashMode enum values: FULL="full",
+    LIGHT="light". Both harness.py call sites updated to use
+    CanonicalHashScheduler.compute_hash(..., mode=FULL, reason="certification").
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/engine/checkpoint.py::CanonicalHashScheduler
+  proof_type: null
+  test_path: tests/unit/engine/test_hash_scheduler.py
+  divergence_note: null
+  support_boundary: null
+
+- id: INFRA-198
+  text: >
+    ReplayManager tracks in-flight async persist tasks via _inflight_count (int,
+    protected by _inflight_lock threading.Lock). Count is incremented before
+    executor.submit() and decremented in the future done-callback (_on_persist_done).
+    pressure_report() returns WARN when inflight/max_pending_flushes >= 0.8 and
+    DEGRADED at >= 1.0. When inflight >= max_pending_flushes a warning is logged once
+    per threshold crossing. ReplayManager never drops chunks or falls back to sync
+    write autonomously; all degradation decisions belong to the Governor.
+    replay_metrics() returns pending_flushes, chunks_persisted, bytes_pending_estimate
+    (rolling exponential MA, alpha=0.1 of chunk sizes × inflight count).
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/engine/replay_manager.py::ReplayManager.replay_metrics
+  proof_type: null
+  test_path: tests/unit/engine/test_replay_backpressure.py
+  divergence_note: null
+  support_boundary: null
+
+- id: INFRA-201
+  text: >
+    diagnostics resources CLI (src/cli/diagnostics.py) collects SubsystemPressureReport
+    from Kernel.resource_snapshot() and prints a fixed-width table or JSON array.
+    Kernel.resource_snapshot() aggregates pressure_report() from event_recorder and
+    replay subsystems; errors per subsystem are swallowed (advisory only).
+    Exit code 0 when all subsystems are OK or WARN; exit code 1 when any DEGRADED
+    (enables CI gating via `make check-resources`). Offline mode (no live kernel)
+    attempts to read from RunArtifactRepository and prints a notice if no data found.
+    CLI wired as `python -m src diagnostics resources [--format table|json] [--run-id]`.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/cli/diagnostics.py::run_diagnostics_resources
+  proof_type: null
+  test_path: tests/unit/cli/test_diagnostics_resources.py
+  divergence_note: null
+  support_boundary: null
+
+- id: INFRA-200
+  text: >
+    ShutdownReport dataclass (src/core/lifecycle.py) produced by Kernel.shutdown()
+    and cached as _last_shutdown_report. Accessible via kernel.shutdown_report().
+    Fields: workers_started, workers_stopped, open_file_handles (psutil or -1),
+    pending_replay_flushes (from replay_metrics()), survival_event_counts (from
+    EventRecorder._survival_event_counts), outcome ("SUCCESS"/"PARTIAL"/"FAILED"),
+    warnings (list[str]). outcome="PARTIAL" when workers_stopped < workers_started
+    or when a behavior-normalization-worker thread does not join within 1s.
+    pending_replay_flushes > 0 appends a warning. Kernel.shutdown() return type
+    remains ShutdownResult (backward-compatible); ShutdownReport is an addendum.
+    BehaviorWorker threads (name="behavior-normalization-worker") are joined in
+    Kernel.shutdown() with a 1s timeout; non-stop generates a PARTIAL outcome.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/engine/kernel.py::Kernel.shutdown_report
+  proof_type: null
+  test_path: tests/unit/engine/test_lifecycle_supervisor.py
+  divergence_note: null
+  support_boundary: null
+
+- id: INFRA-199
+  text: >
+    EventRecorder supports four dynamic observability modes: NORMAL, PRESSURE,
+    DEGRADED, SURVIVAL. ObservabilityController.evaluate() is a pure function
+    returning the recommended mode from queue fill ratio (PRESSURE>=0.70,
+    DEGRADED>=0.90, SURVIVAL>=1.00). record() evaluates mode on every call.
+    In SURVIVAL mode: no queue push, no buffer append, only _survival_event_counts
+    incremented — zero IO overhead on the hot path. In DEGRADED: INFO/DEBUG events
+    dropped entirely; WARNING+ proceed normally. In PRESSURE: INFO/DEBUG sampled at
+    1-in-5 (default); WARNING+ always pass. Mode transitions logged at INFO level
+    (once per change). observability_status() exposes mode, queue_fill_ratio,
+    events_dropped, survival_counts. reset_mode() clears mode state for tests.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/observability/event_recorder.py::ObservabilityController
+  proof_type: null
+  test_path: tests/unit/observability/test_obs_backpressure.py
+  divergence_note: null
+  support_boundary: null
+
+- id: INFRA-202
+  text: >
+    ContentHotPathViolation(RuntimeError) is raised when CatalogRepository.load_all()
+    is called while a kernel tick is executing. Kernel.tick_once() sets the thread-local
+    flag _tick_context_active.active = True on entry and clears it in a finally block
+    (src/content/repository.py). ContentWarmupService.warmup() is called by
+    Kernel.__init__() after validate() to eagerly initialize all content singletons
+    before the first tick, ensuring the guard never fires under normal operation.
+    ContentWarmupService.is_warm() returns True after warmup; reset() is test-only
+    (asserts pytest in sys.modules). The guard is bypassed when _tick_context_active
+    is not set (e.g., direct pipeline calls in tests) — violation only fires inside
+    an active Kernel tick context.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/content/repository.py::_tick_context_active +
+    src/content/warmup.py::ContentWarmupService +
+    src/engine/kernel.py::Kernel.tick_once (tick context flag)
+  proof_type: null
+  test_path: tests/unit/content/test_content_hotpath_guard.py
+  divergence_note: null
+  support_boundary: null

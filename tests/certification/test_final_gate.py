@@ -48,7 +48,7 @@ def validate_bundle_logic(manifest, bundle_dir, current_sha=None):
             
             data = bundle[key]
             if not data["conformance_passed"]: return False, f"Conformance failed for {key}"
-            if data["environment"]["effective_class"] not in required_classes: return False, f"Invalid HW class for {key}"
+            if data["environment"]["effective_hardware_class"] not in required_classes: return False, f"Invalid HW class for {key}"
             
             age = time.time() - data["timestamp"]
             if age > 86400: return False, f"Stale proof for {key}"
@@ -79,7 +79,7 @@ def test_gate_rejects_malformed_bundle(tmp_path):
             "failure_reason": "Too slow",
             "timestamp": time.time(),
             "commit_sha": "abc",
-            "environment": {"effective_class": "class_b"}
+            "environment": {"effective_hardware_class": "class_b"}
         }
     }))
     

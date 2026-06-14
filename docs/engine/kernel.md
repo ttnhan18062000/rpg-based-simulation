@@ -70,3 +70,29 @@ If a tick exceeds 2x its average duration or the hard cap in `RuntimeProfile`, t
 1. Signal the Governor to transition to **DEGRADED** mode.
 2. Drop remaining work items in the current resolution queue.
 3. Log a "Tick Budget Violated" warning with phase-by-phase cost breakdown.
+
+---
+
+## 🔒 Content Hot-Path Guard (WORLD-CAT-004)
+
+`CatalogRepository.load_all()` is forbidden during a kernel tick. The Kernel sets a thread-local flag `_tick_context_active.active = True` inside `tick_once()` and clears it in a `finally` block. If `load_all()` is called while the flag is set, `ContentHotPathViolation(RuntimeError)` is raised immediately.
+
+**Warmup**: `Kernel.__init__()` calls `ContentWarmupService.warmup()` after validation to eagerly load all content singletons before the first tick. This guarantees the hot-path guard never fires under normal operation.
+
+---
+
+## 📊 Resource Snapshot and Lifecycle Supervisor
+
+### `Kernel.resource_snapshot() -> list[SubsystemPressureReport]`
+Collects advisory `pressure_report()` from all owned subsystems (event recorder, replay). Errors per subsystem are swallowed — this is a read-only diagnostic method, never called on the tick hot path.
+
+### `Kernel.shutdown() → ShutdownResult` + `Kernel.shutdown_report() → ShutdownReport`
+`shutdown()` return type is unchanged (`ShutdownResult`). After shutdown, `shutdown_report()` returns a cached `ShutdownReport` with:
+- `workers_started` / `workers_stopped` — lifecycle accounting
+- `pending_replay_flushes` — from `ReplayManager.replay_metrics()`
+- `survival_event_counts` — from `EventRecorder._survival_event_counts`
+- `open_file_handles` — from `psutil` (or -1 if unavailable)
+- `outcome` — `"SUCCESS"` / `"PARTIAL"` / `"FAILED"`
+- `warnings` — list of advisory strings
+
+`BehaviorWorker` threads (named `"behavior-normalization-worker"`) are joined with a 1-second timeout during shutdown. Non-stop generates `outcome = "PARTIAL"` and a warning entry.

@@ -1,4 +1,4 @@
-.PHONY: help install install-py install-fe build dev serve stop clean lint profile-api docs-serve docs-build docs-registry docs-artifacts knowledge-index knowledge-index-update search-server search-server-docker search-server-stop search-server-logs install-hooks eval-search mcp-server-test
+.PHONY: help install install-py install-fe build dev serve stop clean lint profile-api memray-profile docs-serve docs-build docs-registry docs-artifacts knowledge-index knowledge-index-update search-server search-server-docker search-server-stop search-server-logs install-hooks eval-search mcp-server-test
 
 # Default
 help: ## Show available commands
@@ -123,6 +123,9 @@ profile-memory: ## Run memory profiling (500 ticks)
 
 profile-api: ## Measure API payload sizes (map, static, state endpoints)
 	python3 scripts/profile_api_payload.py --ticks 10 --seed 42
+
+memray-profile: ## Run certification suite under Memray (disables RLIMIT_AS; requires: pip install memray)
+	python3 scripts/profile_memory.py --suite certification --memray
 
 # ── Quality ──────────────────────────────────────────────
 

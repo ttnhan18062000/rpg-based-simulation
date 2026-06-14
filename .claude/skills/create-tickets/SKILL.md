@@ -28,10 +28,41 @@ Invoke the Workflow tool with:
 - `name: "create-tickets"`
 - `args`: an object with the parsed fields above (omit any not provided)
 
+If the Workflow tool is unavailable, execute the pipeline inline using the steps below. **Do not skip or abbreviate the Investigate phase** — the investigation steps are the core value of this skill.
+
 ## Pipeline
 
 1. **Comprehend** — reads the proposal as natural language, extracts discrete concerns without enforcing ticket schema. Preserves the author's intent and framing.
-2. **Investigate** — per concern (parallel): greps the actual codebase, checks the Mechanics Bible and Engine contracts, scans existing tickets, finds real file paths and derives testable AC signals from code behavior.
+
+2. **Investigate** — per concern: find real file paths, doc constraints, existing tests, and derive testable AC signals. **Required order — do not skip steps:**
+
+   **Step 0 — Semantic retrieval (REQUIRED FIRST):**
+   - Call `mcp__knowledge-search__search_docs` with the concern title + description as query.
+   - Run `graphify query "<concern title>"` for code structure and relationships.
+   - Run `python3 tools/knowledge_search.py query "<concern>" --top-k 5` as fallback if MCP unavailable.
+   - Note all returned ticket IDs and file paths as warm-start candidates before doing any grep.
+
+   **Step 1 — Knowledge graph:**
+   - Read `graphify-out/GRAPH_REPORT.md` for community structure (which community owns this domain?).
+   - Use node names from graphify as primary file targets.
+
+   **Step 2 — Docs and REGISTRY.yaml:**
+   - Query `docs/REGISTRY.yaml` for entries in the relevant layer.
+   - Read highest-authority matching docs (P0 first).
+
+   **Step 3 — Prior ticket history:**
+   - `grep -i "<keyword>" tickets/working_log.csv` for domain keywords.
+   - Read `stored_artifacts/<ticket_id>/investigation.md` for up to 3 matching prior tickets.
+
+   **Step 4 — Code files (follow-up only):**
+   - Use node names and paths from Step 1 as primary targets. Read up to 3 relevant files.
+   - Only fall back to `grep -r "<noun>" src/ --include="*.py" -l` if Step 0-1 returned no usable paths.
+
+   **Step 5 — Existing tests:**
+   - Find test files for modules found in Step 4.
+
+   **Step 6 — Derive AC signals** from concern + code behavior + doc constraints + test patterns.
+
 3. **Structure** — one synthesis agent takes all investigation results and produces properly-formed ticket fields: real file paths from grep, concrete ACs from code evidence, correct tier from scope, author's intent preserved in request_summary.
 4. **Write** — creates `TCK-YYYYMMDD-<SHORT-SCOPE>.md` per task into the output folder (parallel).
 5. **Link** — if `epic_id` given, appends the new ticket IDs to the epic's `## Related Tickets` section.

@@ -15,8 +15,15 @@ const constraints = (args && args.constraints) || {}
 phase('Scan')
 
 const context = await agent(
-  `Scan the following locations in the rpg-based-simulation repo and summarize what is relevant for generating a new simulation setup:
-  - docs/mechanics/ (especially the Mechanics Bible)
+  `Scan for context needed to generate a new simulation setup.
+
+Step 0 — REQUIRED context search (before any file reads):
+1. Call mcp__knowledge-search__search_docs with query = "simulation setup world scenario ${userGoal || 'configuration'}". Note returned Mechanics Bible sections, validator docs, and prior spec examples as primary targets.
+   If MCP unavailable, run: python3 tools/knowledge_search.py query "simulation setup world scenario" --top-k 5
+Use returned paths as primary targets below rather than scanning all of docs/mechanics/.
+
+Scan the following locations in the rpg-based-simulation repo and summarize what is relevant for generating a new simulation setup:
+  - docs/mechanics/ chapters identified by search_docs above (do not read all chapters blindly)
   - generation/ folder (existing draft specs, indexes, validators)
   - config/ folder (world configs, scenario configs)
   - tickets/ (any in-progress or recent simulation-related tickets)

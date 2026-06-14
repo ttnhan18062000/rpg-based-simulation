@@ -42,16 +42,11 @@ If the input is a natural language sentence, treat it as `request`.
 
 ## Pipeline (standard tier)
 
-0. **Context search** (before Scope) — if `knowledge-index/knowledge.db` exists, run:
-   ```
-   python3 tools/knowledge_search.py query "<ticket title + request summary>" --top-k 5
-   ```
-   Or if the HTTP server is running on :8765:
-   ```
-   curl -s -X POST http://localhost:8765/api/search -H "Content-Type: application/json" \
-     -d '{"query": "<ticket title + request summary>", "top_k": 5}'
-   ```
-   Note the top results (source_path + excerpt) as warm-start context for investigation. Skip silently if index not found.
+0. **Context search** (REQUIRED before Scope — before any file reads or grep):
+   1. Call `mcp__knowledge-search__search_docs` with `query` = ticket title + request summary. Note returned doc paths, ticket IDs, and excerpts as warm-start candidates.
+   2. Run `graphify query "<ticket title>"` — note returned code nodes as primary file targets for the Investigate phase.
+   3. Fallback only if MCP unavailable: `python3 tools/knowledge_search.py query "<ticket title + request summary>" --top-k 5`
+   Raw file reads and grep are follow-up steps only — use paths from steps 1–2 first.
 
 1. **Scope** — create or load ticket; copy from `tickets/todos/**/` to `tickets/inprogress/` if needed
 2. **Investigate** — produce `investigation.md` and `test_plan.md`

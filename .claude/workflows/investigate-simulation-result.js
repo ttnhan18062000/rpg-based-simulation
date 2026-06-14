@@ -20,6 +20,11 @@ phase('Load')
 const runData = await agent(
   `Load and summarize simulation run data from this repo.
 
+Step 0 — REQUIRED context search (before any file reads):
+1. Call mcp__knowledge-search__search_docs with query = "simulation result investigation ${sessionId || 'run analysis'}". Note returned Mechanics Bible sections and prior investigation docs as context for the Analyze phase.
+   If MCP unavailable, run: python3 tools/knowledge_search.py query "simulation result investigation" --top-k 5
+Use returned doc paths to target specific Mechanics Bible chapters in the Analyze phase rather than reading all of docs/mechanics/.
+
 ${sessionId ? `Session ID: ${sessionId} — look in data/runs/${sessionId}/ or registration/runs/${sessionId}/` : 'No session ID provided — find the most recent completed run under data/runs/ or registration/runs/.'}
 
 Read and summarize:
@@ -28,7 +33,7 @@ Read and summarize:
 - Event logs or compact_event_log.json
 - Any existing investigation reports under investigation/
 
-Return a structured summary: session metadata, key metrics, any existing scorecard grades.`,
+Return a structured summary: session metadata, key metrics, any existing scorecard grades, and which Mechanics Bible chapters (from search_docs) are most relevant to any anomalies hinted at by the scorecard.`,
   { label: 'load-run-data' }
 )
 

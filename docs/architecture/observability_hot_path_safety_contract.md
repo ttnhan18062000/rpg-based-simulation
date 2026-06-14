@@ -64,7 +64,28 @@ To ensure compile-time and import-time separation:
 
 ---
 
-## 5. Worker Lifecycle Contract
+## 5. Dynamic Observability Mode (OBS-BACKPRESSURE, INFRA-199)
+
+`EventRecorder` supports four dynamic modes driven by queue fill ratio:
+
+| Mode | Fill ratio | Behavior |
+|------|-----------|----------|
+| `NORMAL` | < 70% | All events recorded as-is |
+| `PRESSURE` | 70–90% | INFO/DEBUG sampled at 1-in-5; WARNING+ always pass |
+| `DEGRADED` | 90–100% | INFO/DEBUG dropped entirely; WARNING+ pass |
+| `SURVIVAL` | ≥ 100% | Counter-only path — no queue push, no buffer append |
+
+`ObservabilityController.evaluate(queue_fill_ratio)` is a pure function that returns the recommended mode. Mode is evaluated on every `record()` call. Transitions are logged once at INFO level.
+
+**SURVIVAL mode** is explicitly designed to comply with §2: only `dict.get()` + dict assignment — zero IO, no locks, no allocations beyond the dict entry. This is the hot-path ceiling; no IO or lock contention is ever introduced.
+
+**DEGRADED batching**: INFO events are dropped before queue push; file writes continue to happen in the async `QueueDrainWorker` (off hot-path), satisfying §3.
+
+**Accessors**: `observability_status() -> dict` (mode, queue_fill_ratio, events_dropped, survival_counts); `reset_mode()` for test cleanup.
+
+---
+
+## 6. Worker Lifecycle Contract
 
 `QueueDrainWorker` is the background thread that drains the bounded observability queue to disk/downstream consumers. Its lifecycle is governed by these rules:
 

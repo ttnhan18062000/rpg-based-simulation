@@ -2,8 +2,10 @@ from __future__ import annotations
 import os
 import json
 import logging
+from enum import Enum
 from typing import Any, Dict, List, Optional
 from src.observability.events import SimulationEvent
+from src.config.optimization_profiles import SubsystemBudget, SubsystemPressureReport, DEFAULT_OBSERVABILITY_BUDGET
 
 logger = logging.getLogger(__name__)
 
@@ -15,9 +17,51 @@ SEVERITY_ORDER = {
     "CRITICAL": 4
 }
 
+_WARNING_SEVERITY = SEVERITY_ORDER["WARNING"]
+
+
+class ObservabilityMode(str, Enum):
+    NORMAL = "NORMAL"
+    PRESSURE = "PRESSURE"
+    DEGRADED = "DEGRADED"
+    SURVIVAL = "SURVIVAL"
+
+
+class ObservabilityController:
+    """Pure-function mode advisor for the observability subsystem.
+
+    Thresholds (queue fill ratio):
+      PRESSURE  >= 0.70
+      DEGRADED  >= 0.90
+      SURVIVAL  >= 1.00 (queue at capacity)
+    """
+
+    PRESSURE_THRESHOLD: float = 0.70
+    DEGRADED_THRESHOLD: float = 0.90
+    SURVIVAL_THRESHOLD: float = 1.00
+
+    def evaluate(
+        self,
+        queue_fill_ratio: float,
+        event_rate_per_tick: float = 0.0,
+    ) -> ObservabilityMode:
+        if queue_fill_ratio >= self.SURVIVAL_THRESHOLD:
+            return ObservabilityMode.SURVIVAL
+        if queue_fill_ratio >= self.DEGRADED_THRESHOLD:
+            return ObservabilityMode.DEGRADED
+        if queue_fill_ratio >= self.PRESSURE_THRESHOLD:
+            return ObservabilityMode.PRESSURE
+        return ObservabilityMode.NORMAL
+
 class EventRecorder:
     """Manages thread-safe, memory-bounded SimulationEvent recording and JSONL persistence."""
-    def __init__(self, run_dir: Optional[str] = None, max_events: int = 5000, enabled: bool = True) -> None:
+    def __init__(
+        self,
+        run_dir: Optional[str] = None,
+        max_events: int = 5000,
+        enabled: bool = True,
+        budget: SubsystemBudget | None = None,
+    ) -> None:
         self.enabled = enabled
         self.max_events = max_events
         self.run_dir = run_dir
@@ -26,6 +70,18 @@ class EventRecorder:
         self.event_count_by_type: Dict[str, int] = {}
         self._file_handle = None
         self.filepath = None
+        # Subsystem budget for advisory pressure reporting (INFRA-194).
+        # Independent of max_events — budget.max_queue_items is checked against
+        # the queue size, not the in-memory buffer.
+        self._subsystem_budget: SubsystemBudget = budget or DEFAULT_OBSERVABILITY_BUDGET
+
+        # Dynamic mode controller (OBS-BACKPRESSURE)
+        self._obs_controller = ObservabilityController()
+        self._obs_mode: ObservabilityMode = ObservabilityMode.NORMAL
+        self._press_sample_rate: int = 5
+        self._press_event_counter: int = 0
+        self._survival_event_counts: Dict[str, int] = {}
+        self._events_dropped_by_mode: int = 0
 
         if self.enabled and self.run_dir:
             try:
@@ -98,6 +154,38 @@ class EventRecorder:
         ev_type = event.event_type
         self.event_count_by_type[ev_type] = self.event_count_by_type.get(ev_type, 0) + 1
 
+        # Evaluate observability mode from current queue fill ratio.
+        max_q = self.queue.max_size
+        fill = self.queue.get_size() / max_q if max_q > 0 else 0.0
+        new_mode = self._obs_controller.evaluate(fill)
+        if new_mode is not self._obs_mode:
+            logger.info(
+                "ObservabilityMode transition: %s -> %s (fill=%.2f)",
+                self._obs_mode.value, new_mode.value, fill,
+            )
+            self._obs_mode = new_mode
+
+        # SURVIVAL: counter-only path — no queue, no file, no buffer append.
+        if self._obs_mode is ObservabilityMode.SURVIVAL:
+            self._survival_event_counts[ev_type] = self._survival_event_counts.get(ev_type, 0) + 1
+            self._events_dropped_by_mode += 1
+            return
+
+        severity_val = SEVERITY_ORDER.get(event.severity, 1)
+
+        # DEGRADED: drop INFO/DEBUG events entirely; WARNING+ pass through.
+        if self._obs_mode is ObservabilityMode.DEGRADED and severity_val < _WARNING_SEVERITY:
+            self._events_dropped_by_mode += 1
+            return
+
+        # PRESSURE: sample INFO/DEBUG events at 1-in-N; WARNING+ always pass.
+        if self._obs_mode is ObservabilityMode.PRESSURE and severity_val < _WARNING_SEVERITY:
+            self._press_event_counter += 1
+            if self._press_event_counter % self._press_sample_rate != 0:
+                self._events_dropped_by_mode += 1
+                return
+
+        # NORMAL or passed mode filter — apply capacity management then record.
         # Capacity management for in-memory buffer
         if len(self.events) >= self.max_events:
             # Find the oldest event of the lowest severity that is not CRITICAL
@@ -131,6 +219,62 @@ class EventRecorder:
         
         # Pushing into BoundedObservabilityQueue is thread-safe and non-blocking
         self.queue.try_push(envelope)
+
+    def pressure_report(self) -> SubsystemPressureReport:
+        """
+        Advisory pressure snapshot for the observability subsystem (INFRA-194).
+
+        Non-blocking and read-only.  Checks the current queue occupancy against
+        max_queue_items.  This is independent of max_events (in-memory buffer).
+
+        Returns:
+            WARN  when queue occupancy >= 80% of max_queue_items.
+            DEGRADED when queue occupancy >= 100% of max_queue_items.
+            OK    otherwise, or when budget.max_queue_items is None (unlimited).
+        """
+        current = self.queue.get_size()
+        max_q = self._subsystem_budget.max_queue_items
+        if max_q is None:
+            return SubsystemPressureReport(
+                subsystem="observability",
+                current_usage=float(current),
+                budget=None,
+                pressure_state="OK",
+                degradation_action=None,
+            )
+        cap = max(max_q, 1)  # guard against zero-division
+        pct = current / cap
+        if pct < 0.8:
+            state, action = "OK", None
+        elif pct < 1.0:
+            state, action = "WARN", "increase_sampling_interval"
+        else:
+            state, action = "DEGRADED", "drop_low_priority_events"
+        return SubsystemPressureReport(
+            subsystem="observability",
+            current_usage=float(current),
+            budget=float(max_q),
+            pressure_state=state,
+            degradation_action=action,
+        )
+
+    def observability_status(self) -> Dict[str, Any]:
+        """Return current dynamic mode state (OBS-BACKPRESSURE)."""
+        max_q = self.queue.max_size
+        fill = self.queue.get_size() / max_q if max_q > 0 else 0.0
+        return {
+            "mode": self._obs_mode.value,
+            "queue_fill_ratio": fill,
+            "events_dropped": self._events_dropped_by_mode,
+            "survival_counts": dict(self._survival_event_counts),
+        }
+
+    def reset_mode(self) -> None:
+        """Reset dynamic mode to NORMAL and clear mode-related counters. Test-only."""
+        self._obs_mode = ObservabilityMode.NORMAL
+        self._press_event_counter = 0
+        self._survival_event_counts.clear()
+        self._events_dropped_by_mode = 0
 
     def get_stats(self) -> Dict[str, Any]:
         """Returns diagnostic statistics of the recorder."""

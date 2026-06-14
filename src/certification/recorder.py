@@ -1,9 +1,19 @@
 from __future__ import annotations
 
-import os
 import json
+import logging
+import os
 from pathlib import Path
-from src.certification.models import CertificationResult
+from typing import Optional
+
+from src.certification.artifact_budget import (
+    ArtifactBudgetRegistry,
+    ArtifactBudgetViolationError,
+    get_default_registry,
+)
+from src.certification.models import CertificationResult, EvidenceLevel
+
+logger = logging.getLogger(__name__)
 
 
 class CertificationRecorder:
@@ -11,12 +21,31 @@ class CertificationRecorder:
     M10 Law: Record machine-readable truth and generate MD derivatives.
     """
 
-    def __init__(self, output_dir: str = "reports/certification"):
+    def __init__(
+        self,
+        output_dir: str = "reports/certification",
+        registry: Optional[ArtifactBudgetRegistry] = None,
+    ):
         self._output_dir = Path(output_dir)
         self._output_dir.mkdir(parents=True, exist_ok=True)
-    def record(self, result: CertificationResult) -> str:
+        # None = lazy-resolve default singleton at call time (allows test injection)
+        self._registry = registry
+
+    def record(
+        self,
+        result: CertificationResult,
+        evidence_level: EvidenceLevel = EvidenceLevel.SUMMARY,
+        final_state_artifact_path: Optional[str] = None,
+        final_state_hash: Optional[str] = None,
+    ) -> str:
         """
         M10 Law: Record machine-readable truth in a consolidated bundle.
+
+        Args:
+            result: The certification result to record.
+            evidence_level: Controls final_state_summary richness (default SUMMARY).
+            final_state_artifact_path: Resolved path to the canonical state file, or None.
+            final_state_hash: SHA-256 hex of compact canonical JSON, or None.
         """
         # 1. Invariant Check: Scoped metadata must be present
         if not result.environment.effective_class:
@@ -34,8 +63,29 @@ class CertificationRecorder:
 
         # Keyed by profile x scenario for easy lookup
         key = f"{result.profile_name}:{result.scenario_id}"
-        bundle[key] = json.loads(result.to_json())
-        
+        bundle[key] = result.to_artifact_dict(
+            evidence_level,
+            final_state_artifact_path=final_state_artifact_path,
+            final_state_hash=final_state_hash,
+        )
+
+        # Budget check (INFRA-193 / INFRA-060): estimate size BEFORE writing.
+        # Use to_artifact_dict() output only — never dataclasses.asdict() (INFRA-189).
+        _registry = self._registry if self._registry is not None else get_default_registry()
+        estimated_bytes = len(json.dumps(bundle[key], default=str).encode())
+        _check = _registry.check("certification_result", estimated_bytes)
+        if _check.action == "reject":
+            raise ArtifactBudgetViolationError(
+                artifact_type="certification_result",
+                size_bytes=estimated_bytes,
+                message=f"CertificationRecorder: budget reject for certification_result — {_check.reason}",
+            )
+        elif _check.action == "warn":
+            logger.warning(
+                "CertificationRecorder: budget warning for certification_result — %s",
+                _check.reason,
+            )
+
         with open(bundle_path, "w") as f:
             json.dump(bundle, f, indent=2)
 
@@ -49,17 +99,18 @@ class CertificationRecorder:
             f.write("## Scenario Summary\n\n")
             f.write("| Profile | Scenario | Status | Fail Kind | Reason |\n")
             f.write("| :--- | :--- | :--- | :--- | :--- |\n")
-            
+
             # Sort by profile then scenario
             sorted_keys = sorted(bundle.keys())
             for k in sorted_keys:
                 r = bundle[k]
                 status = "✅" if r["conformance_passed"] else "❌"
-                if r.get("allowed_failure_observed"): status = "⚠️"
+                if r.get("allowed_failure_observed"):
+                    status = "⚠️"
                 f.write(f"| {r['profile_name']} | {r['scenario_id']} | {status} | {r['failure_kind']} | {r.get('failure_reason', '')} |\n")
-            
+
             f.write("\n---\n\n")
-            
+
             # Detailed breakdown for the CURRENT result (or all? Let's do latest and summary)
             f.write("## Latest Run Detail\n\n")
             f.write(self._generate_markdown(result))
@@ -73,8 +124,8 @@ class CertificationRecorder:
         """
         status_emoji = "✅" if result.conformance_passed else "❌"
         if result.allowed_failure_observed:
-            status_emoji = "⚠️" # Allowed Failure
-            
+            status_emoji = "⚠️"  # Allowed Failure
+
         env = result.environment
         class_label = env.effective_class.name
         if env.override_applied:
@@ -111,7 +162,7 @@ class CertificationRecorder:
         for p in sampled:
             # M10 Law: Use disaggregated worker/queue utilization
             lines.append(f"| {p.tick} | {p.mode} | {p.memory_rss_mb:.1f} | {p.tick_compute_ms:.1f} | {p.worker_utilization:.2f} | {p.queue_utilization:.2f} |")
-        
+
         if len(points) > len(sampled):
             lines.append("| ... | ... | ... | ... | ... | ... |")
 

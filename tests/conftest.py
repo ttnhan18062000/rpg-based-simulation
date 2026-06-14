@@ -32,6 +32,7 @@ def pytest_runtest_setup(item):
     """
     Hook called before running every test to set strict resource and time limits.
     """
+    # Profilers (e.g. Memray) inflate virtual address space — use --resource-budget off when profiling.
     budget = item.config.getoption("--resource-budget")
     if budget == "off":
         return

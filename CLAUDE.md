@@ -21,17 +21,20 @@
 * Do not expose raw domain models from APIs.
 * Do not leave changes untested or untraceable.
 * Every implement-ticket workflow run (including hotfix) must record a run entry and at least one event entry to `agent-monitoring/`. Monitoring write failure must never fail the workflow.
+* **Do not run grep, find, raw file reads, or spawn Explore agents for investigation before first calling `search_docs` (MCP) and `graphify query` for the topic.** These tools traverse inferred relationships and doc registries that raw grep cannot. Grep and file reads are permitted only as follow-up after the semantic search results are in hand.
 
 ---
 
 ## Context Scan (Mandatory)
 
-Before any implementation, check:
+Before any implementation or investigation (ticket creation, scoping, planning), run these tools **in this order**:
 
-* `tickets/`
-* `docs/` (especially the Mechanics Bible in `docs/mechanics/`)
-* `stored_artifacts/`
-* relevant code and tests
+1. `mcp__knowledge-search__search_docs` — semantic search over docs, tickets, and investigations. Always call this first.
+2. `graphify query "<topic>"` — code structure, relationships, and inferred edges.
+3. `python3 tools/knowledge_search.py query "<q>" --top-k 5` — fallback if MCP unavailable.
+4. Then check: `tickets/`, `docs/`, `stored_artifacts/`, relevant code and tests.
+
+Raw grep and direct file reads are **follow-up steps only** — they narrow down what the semantic tools already surfaced. Never start with grep.
 
 Detect and stop on duplicate work, conflicting requirements, or architectural mismatch.
 
@@ -301,7 +304,8 @@ Some tools should be invoked automatically based on the task — the user does n
 | Searching across more than 3 files | Spawn `Explore` agent instead of sequential Bash greps |
 | Starting implementation on an unfamiliar module | Read `GRAPH_REPORT.md` for community structure before touching code |
 | `docs/REGISTRY.yaml` exists + user asks about prior work or related docs | Query registry by `related_code_areas` or `layer` — do not scan raw directories |
-| User asks project-specific mechanics, architecture, or history question | **Primary**: call MCP tool `search_docs` with `query` set to the question. **Fallback (HTTP server running on :8765)**: `POST http://localhost:8765/api/search`. **Fallback (no server)**: `python3 tools/knowledge_search.py query "<q>" --top-k 5`. Always prefer `search_docs` — it is always available inside Claude Code sessions registered with `.mcp.json`. |
+| **Any investigation** (ticket creation, scoping, implementation planning, answering "how does X work") | **Step 1 (required)**: `mcp__knowledge-search__search_docs` with `query` = the topic. **Step 2 (required)**: `graphify query "<topic>"`. **Step 3 (fallback only)**: `python3 tools/knowledge_search.py query "<q>" --top-k 5`. Only after these: use grep/read/Explore to verify specific file paths. |
+| User asks project-specific mechanics, architecture, or history question | Same as "Any investigation" row above. `search_docs` is always available inside Claude Code sessions registered with `.mcp.json` — never skip it. |
 
 ### Require explicit user opt-in (never auto-invoke)
 
