@@ -64,11 +64,13 @@ Frozen Pydantic model (`extra="forbid"`) defining a single configurable paramete
 
 Frozen Pydantic model (`extra="forbid"`) representing a reusable structural world-building module.
 
+**Schema Contract (WORLD-MOD-001):** Single unified format. `schema_version` is an optional human-readable label defaulting to `None`. It is not validated by the schema — any string value (or absence) is accepted. `module_type` is the enforced identity discriminator (see WORLD-MOD-002 below).
+
 **Identity fields:**
 
 | Field | Type | Default | Description |
 |---|---|---|---|
-| `schema_version` | `str` | required | Must be `"worldmodule.v1"` or `"worldmodule.v2"` |
+| `schema_version` | `Optional[str]` | `None` | Optional human-readable label; not validated |
 | `module_id` | `str` (min_length=1) | required | Unique module identifier |
 | `module_type` | `str` | required | Functional type — validated against `REGISTERED_MODULE_TYPES` |
 | `display_name` | `str` (min_length=1) | required | Human-readable name |
@@ -83,7 +85,7 @@ Frozen Pydantic model (`extra="forbid"`) representing a reusable structural worl
 | `provides` | `List[str]` | Semantic aliases advertised by this module |
 | `parameters` | `List[ModuleParameterSpec]` | Exposed configurable variables |
 
-**Structural contribution fields (v1 and v2):**
+**Structural contribution fields:**
 
 | Field | Type | Notes |
 |---|---|---|
@@ -93,7 +95,7 @@ Frozen Pydantic model (`extra="forbid"`) representing a reusable structural worl
 | `building_recipes` | `List[BuildingRecipeSpec]` | Building construct recipes |
 | `observability_tags` | `List[str]` | Structural audit tags |
 
-**v2-only catalog reference fields** (normalized to tuples by `WorldModuleAuthoringNormalizer`):
+**Catalog reference fields** (normalized to tuples/dicts by `WorldModuleAuthoringNormalizer`; available in all modules alongside recipe fields):
 
 | Field | Normalized to | Description |
 |---|---|---|
@@ -197,8 +199,8 @@ Sorts module IDs so that every module appears **after** all of its `requires` de
 
 | ID | File | Description |
 |---|---|---|
-| WORLD-MOD-001 | src/worldmodules/schema.py | `WorldModuleSpec` schema and field contract |
-| WORLD-MOD-002 | src/worldmodules/schema.py | `REGISTERED_MODULE_TYPES` and schema_version validation |
+| WORLD-MOD-001 | src/worldmodules/schema.py | `WorldModuleSpec` unified schema and field contract |
+| WORLD-MOD-002 | src/worldmodules/schema.py | `REGISTERED_MODULE_TYPES` and `module_type` validation |
 | WORLD-MOD-003 | src/worldmodules/schema.py | `ModuleParameterSpec` schema and default/allowed_values cross-validation |
 | WORLD-MOD-004 | src/worldmodules/repository.py | `WorldModuleRepository.load_all()` — discovery, deduplication, validation |
 | WORLD-MOD-005 | src/worldmodules/repository.py | Query operations and `module_fingerprint` contract |

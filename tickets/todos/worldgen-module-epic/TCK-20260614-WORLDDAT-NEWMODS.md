@@ -69,6 +69,17 @@ Each module must include `module_id`, `module_type`, `display_name`, `descriptio
 - New compositions (TCK-20260614-WORLDDAT-COMPOSE)
 - Runtime behavior of quests or relationships
 
+## Anti-Drift Rule (mandatory for all 4 modules)
+Modules compose lower-layer definitions. They do not invent primitive behavior.
+
+No new module may contain:
+- Direct behavior scripts, scripted events, or embedded AI logic
+- Enemy/ally labels as free-form strings (e.g. `enemy: cursed_spirit`)
+- Hardcoded damage values, stat modifiers, or runtime effect descriptions
+
+All behavior must be expressed through catalog refs:
+`biomes`, `ecologies`, `populations` (by archetype ID), `relationships` (by catalog ID), `quest_definitions` (typed), `resources` (by resource_type), `services`, `pressure_tags`, and `provenance`.
+
 ## Acceptance Criteria
 - All 4 modules load via `WorldModuleRepository` without error
 - `scalable_bandit_camp` assembles with `danger_scale=4` and produces a population with count=12

@@ -56,6 +56,7 @@ All compositions must use `module_refs` (structured form) to demonstrate paramet
 ## Out of Scope
 - Runtime simulation tuning
 - Scenario definitions referencing these compositions (TCK-20260614-WORLDSCEN-PERSPECTIVES)
+- 10-tick simulation smoke tests (moved to TCK-20260614-WORLDGEN-E2E-SMOKE — keeps data authoring separate from runtime stability)
 
 ## Acceptance Criteria
 - All 3 compositions load as valid `WorldCompositionSpec`
@@ -63,13 +64,13 @@ All compositions must use `module_refs` (structured form) to demonstrate paramet
 - All 3 compile via `WorldCompiler.compile()` to a valid `AuthoritativeState`
 - `dungeon_crawl` compiled world has at least 2 `QuestDefinition` entries in `quest_definitions`
 - `urban_political` compiled world has at least 2 resolved faction relationships in `CompileContext`
-- Each composition can run 10 simulation ticks without error (`make sim WORLD=wilderness_survival TICKS=10`)
 - `make lane-strict-matrix` passes with the 3 new compositions included
 
 ## Related Tickets
 - TCK-20260614-WORLDDAT-NEWMODS (prerequisite — new modules must exist)
 - TCK-20260614-WORLDMOD-PARAMS (prerequisite — urban_political uses parametric trading_company_hub)
 - TCK-20260614-WORLDSCEN-PERSPECTIVES (follows — scenario layer references these)
+- TCK-20260614-WORLDGEN-E2E-SMOKE (follows — runtime 10-tick smoke gate for these compositions)
 
 ## Related Code Areas
 - `data/content/world_compositions/` — new YAML files
@@ -77,9 +78,9 @@ All compositions must use `module_refs` (structured form) to demonstrate paramet
 - `tests/integration/content/test_strict_world_matrix.py`
 
 ## Test Summary
-- Extend `test_real_content_world_compositions.py` for each new composition
+- Extend `test_real_content_world_compositions.py` for each new composition (load + assemble + compile)
 - Extend `test_strict_world_matrix.py` matrix rows for the 3 new archetypes
-- Smoke-test: each compiles + ticks 10 without error
+- Runtime smoke (10 ticks) is in TCK-20260614-WORLDGEN-E2E-SMOKE, not here
 
 ## Files Changed
 <!-- filled during implementation -->

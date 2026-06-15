@@ -18,7 +18,6 @@ class NormalizationError(ValueError):
 class NormalizedWorldModule:
     """Stable internal representation of a world module contribution."""
     module_id: str
-    schema_version: str
     module_type: str
     display_name: str
     description: Optional[str]
@@ -133,7 +132,6 @@ class WorldModuleAuthoringNormalizer:
     def normalize(spec: WorldModuleSpec) -> NormalizedWorldModule:
         return NormalizedWorldModule(
             module_id=spec.module_id,
-            schema_version=spec.schema_version,
             module_type=spec.module_type,
             display_name=spec.display_name,
             description=spec.description,

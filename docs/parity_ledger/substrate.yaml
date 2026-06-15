@@ -3833,8 +3833,15 @@
     uses Kahn's algorithm with alphabetical tie-breaking — deterministic given same
     modules_map. Cycle detection raises ValueError. External requires refs (not in
     modules_map) are silently ignored. WorldModuleAuthoringNormalizer produces
-    NormalizedWorldModule: ref lists → immutable Tuple[str,...], count maps → Dict[str,int]
-    with all counts ≥ 1; duplicates and non-positive counts raise NormalizationError.
+    NormalizedWorldModule via a single unified code path (no schema_version branching):
+    ref lists → immutable Tuple[str,...], count maps → Dict[str,int] with all counts ≥ 1;
+    duplicates and non-positive counts raise NormalizationError.
+    WorldModuleAssemblyResolver.assemble() uses unconditional count-map merge loops
+    for both resources and buildings — no v2-gated dead branches remain; count-map
+    contributions are always assembled into the CompileContext (previously silently
+    dropped). spawn_region defaults to the first contributed region deterministically
+    when no explicit spawn_region is set (empty-string bug removed). Catalog includes
+    deep_forest, orc_stronghold, and swamp_border_territory regions.
   status: verified
   priority: P1
   legacy_evidence: null
@@ -3842,8 +3849,17 @@
     docs/world/modules_contract.md +
     src/worldmodules/repository.py:1 (WORLD-MOD-004/005) +
     src/worldmodules/utils.py:1 (WORLD-MOD-006/007) +
-    src/worldmodules/normalizer.py
+    src/worldmodules/normalizer.py +
+    src/worldmodules/resolver.py (assemble() — unconditional count-map loops, spawn_region fix) +
+    TCK-20260614-WORLDMOD-UNIFY (schema unification — schema_version validator removed,
+    v2-gated assemble blocks replaced, spawn_region empty-string bug fixed,
+    3 catalog regions added)
   proof_type: null
-  test_path: null
+  test_path: >
+    tests/unit/worldmodules/test_schema_unified.py +
+    tests/unit/worldmodules/test_modules.py +
+    tests/unit/worldassembly/test_resolver.py +
+    tests/integration/worldassembly/test_count_map_assembly.py +
+    tests/integration/worldassembly/test_real_content_world_modules.py
   divergence_note: null
   support_boundary: "WorldModules — world setup preprocessing only, not tick-path."

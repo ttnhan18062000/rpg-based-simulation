@@ -56,8 +56,8 @@ def test_provenance_manifest_attributes(repos):
     assert manifest.resolver_version == "1.0.0"
 
     # Assert records mapping matches the merged components
-    assert "town_center" in manifest.records
-    region_record = manifest.records["town_center"]
+    assert "hometown" in manifest.records
+    region_record = manifest.records["hometown"]
     assert region_record.element_type == "region"
     assert region_record.source_module == "plains_layout"
 

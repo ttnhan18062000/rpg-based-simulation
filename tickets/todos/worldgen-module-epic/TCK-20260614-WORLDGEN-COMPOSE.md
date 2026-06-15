@@ -38,6 +38,7 @@ There is no code path from `GenerationIntentSpec` to a `WorldCompositionSpec`. T
     - Include one `settlement`-type module if `intent.settlement_style != "none"`
     - Fill remaining slots (up to `budget` — default 6 modules) with highest-scoring remaining candidates
     - Add dependency modules automatically: for each selected module's `requires` list, ensure the required module is also selected
+  - **Conflict policy — strict fail-fast:** if any two selected modules have incompatible `provided_features` (same feature claimed by two modules with `exclusive: true`), raise `GenerationCompositionError` with the conflicting module IDs. Do NOT silently resolve.
   - Build `WorldCompositionSpec` with selected modules as `module_refs` (structured form), `order` set by selection rank
   - Set `generation_seed = intent.seed` on the composition
   - Derive `world_id` as `f"generated_{intent.settlement_style}_{int(intent.danger_level)}_{intent.seed}"`
@@ -49,16 +50,18 @@ There is no code path from `GenerationIntentSpec` to a `WorldCompositionSpec`. T
 
 ## Out of Scope
 - Seed-based parameter value randomization (TCK-20260614-WORLDGEN-SEED-PARAMS)
-- Assembling or compiling the generated composition (caller's responsibility)
-- Conflict resolution between modules (strict collision policy unchanged)
+- Full compile and simulation smoke (TCK-20260614-WORLDGEN-E2E-SMOKE — the `make world-compile` end-to-end check lives there)
+- Soft conflict resolution or scoring-based avoidance — this ticket uses strict fail-fast policy
 
 ## Acceptance Criteria
 - `generate(intent, repo)` with `danger_level=3, settlement_style=frontier, seed=42` produces a YAML file at `data/content/world_compositions/generated/generated_frontier_3_42.yaml`
-- The output YAML is a valid `WorldCompositionSpec` that assembles without errors via `WorldAssemblyResolver.assemble()`
+- The output YAML is a valid `WorldCompositionSpec` (parses without errors)
+- The output YAML assembles without errors via `WorldAssemblyResolver.assemble()` (integration test)
 - Calling twice with the same intent and seed produces identical YAML (deterministic)
 - Dependency modules are automatically included: if `goblin_camp_conflict` requires `frontier_village_core`, both appear even if only the conflict module scored high enough alone
-- `make world-compile WORLD=generated_frontier_3_42` works end-to-end after generation
+- Selecting two modules that conflict (same exclusive provided_feature) raises `GenerationCompositionError` naming both module IDs
 - `python3 -m src.worldbuilding.cli generate --danger-level 3 --settlement-style frontier --seed 42` prints the output path
+- Full compile/smoke (`make world-compile`) is deferred to TCK-20260614-WORLDGEN-E2E-SMOKE
 
 ## Related Tickets
 - TCK-20260614-WORLDGEN-SCORING (prerequisite)

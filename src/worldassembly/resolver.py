@@ -452,33 +452,32 @@ class WorldAssemblyResolver:
                     details={"count": res.count, "region": spawn_region}
                 )
 
-            # Merge v2 resources (using normalized count map dict)
-            if spec.schema_version == "worldmodule.v2":
-                module_regions = [r for r in regions.values() if entity_origins.get(r.id) == m_id]
-                for res_idx, (res_type, count) in enumerate(contribution.resource_refs.items()):
-                    res_id = f"{prefix}{res_type}_{res_idx}"
-                    if res_id in resources:
-                        raise ValueError(f"Duplicate resource ID collision '{res_id}' detected during merge.")
-                    
-                    self.resource_resolver.resolve(res_type)
-                    spawn_region = self._find_best_region_for_resource(res_type, module_regions)
-                    
-                    resources[res_id] = ResourceNodeSpec(
-                        id=res_id,
-                        resource_type=res_type,
-                        count=count,
-                        region=spawn_region
-                    )
-                    entity_origins[res_id] = m_id
-                    prov_records[res_id] = ProvenanceRecord(
-                        element_id=res_id,
-                        element_type="resource",
-                        source_module=m_id,
-                        recipe_type="resource_layout",
-                        parameters=param_vals,
-                        profiles={"resource_type": res_type},
-                        details={"count": count, "region": spawn_region}
-                    )
+            # Merge count-map resources (unified path for all modules)
+            default_region = contribution.regions[0].id if contribution.regions else ""
+            for res_idx, (res_type, count) in enumerate(contribution.resource_refs.items()):
+                res_id = f"{prefix}{res_type}_{res_idx}"
+                if res_id in resources:
+                    raise ValueError(f"Duplicate resource ID collision '{res_id}' detected during merge.")
+
+                self.resource_resolver.resolve(res_type)
+                spawn_region = default_region
+
+                resources[res_id] = ResourceNodeSpec(
+                    id=res_id,
+                    resource_type=res_type,
+                    count=count,
+                    region=spawn_region
+                )
+                entity_origins[res_id] = m_id
+                prov_records[res_id] = ProvenanceRecord(
+                    element_id=res_id,
+                    element_type="resource",
+                    source_module=m_id,
+                    recipe_type="resource_layout",
+                    parameters=param_vals,
+                    profiles={"resource_type": res_type},
+                    details={"count": count, "region": spawn_region}
+                )
 
             # Merge v1 buildings
             for bld_idx, bld in enumerate(spec.building_recipes):
@@ -504,39 +503,37 @@ class WorldAssemblyResolver:
                     details={"region": spawn_region}
                 )
 
-            # Merge v2 buildings (using normalized count map dict)
-            if spec.schema_version == "worldmodule.v2":
-                module_regions = [r for r in regions.values() if entity_origins.get(r.id) == m_id]
-                for bld_idx, (bld_type, count) in enumerate(contribution.building_refs.items()):
-                    for b_sub in range(count):
-                        bld_id = f"{prefix}{bld_type}_{b_sub}"
-                        if bld_id in buildings:
-                            raise ValueError(f"Duplicate building ID collision '{bld_id}' detected during merge.")
-                        
-                        self.building_resolver.resolve(bld_type)
-                        spawn_region = self._find_best_region_for_building(bld_type, module_regions)
-                        
-                        buildings[bld_id] = BuildingSpec(
-                            id=bld_id,
-                            type=bld_type,
-                            region=spawn_region
-                        )
-                        entity_origins[bld_id] = m_id
-                        prov_records[bld_id] = ProvenanceRecord(
-                            element_id=bld_id,
-                            element_type="building",
-                            source_module=m_id,
-                            recipe_type="building_layout",
-                            parameters=param_vals,
-                            profiles={"building_type": bld_type},
-                            details={"region": spawn_region}
-                        )
+            # Merge count-map buildings (unified path for all modules)
+            for bld_idx, (bld_type, count) in enumerate(contribution.building_refs.items()):
+                for b_sub in range(count):
+                    bld_id = f"{prefix}{bld_type}_{b_sub}"
+                    if bld_id in buildings:
+                        raise ValueError(f"Duplicate building ID collision '{bld_id}' detected during merge.")
+
+                    self.building_resolver.resolve(bld_type)
+                    spawn_region = default_region
+
+                    buildings[bld_id] = BuildingSpec(
+                        id=bld_id,
+                        type=bld_type,
+                        region=spawn_region
+                    )
+                    entity_origins[bld_id] = m_id
+                    prov_records[bld_id] = ProvenanceRecord(
+                        element_id=bld_id,
+                        element_type="building",
+                        source_module=m_id,
+                        recipe_type="building_layout",
+                        parameters=param_vals,
+                        profiles={"building_type": bld_type},
+                        details={"region": spawn_region}
+                    )
 
             # NOTE: contribution.service_refs (Dict[str, int]) is intentionally not assembled here.
             # WorldSpec has no services field; service assembly is deferred until ServiceNodeSpec
             # and WorldSpec.services are defined. See docs/guidelines/v2_intentional_divergences.md
             # (entry 2.19) and docs/parity_ledger/substrate.yaml (SUB-367).
-            # When adding that field, add a v2 service merge loop here parallel to the building loop above.
+            # When adding that field, add a service merge loop here parallel to the building loop above.
 
             # Merge relationships provenance
             for rel_id in contribution.relationship_refs:
@@ -675,8 +672,7 @@ class WorldAssemblyResolver:
             if self.catalog_repo.get_region(reg.id) is not None:
                 self.region_resolver.resolve(reg.id)
             else:
-                if normalized_module.schema_version == "worldmodule.v2":
-                    raise ResolverError("region", reg.id, f"referenced by v2 module '{normalized_module.module_id}'")
+                raise ResolverError("region", reg.id, f"referenced by module '{normalized_module.module_id}' but not found in catalog")
 
             regions_spec_list.append(RegionSpec(
                 id=f"{prefix}{reg.id}",
@@ -792,53 +788,6 @@ class WorldAssemblyResolver:
             biome_refs=biome_refs,
             ecology_refs=ecology_refs
         )
-
-    def _find_best_region_for_resource(self, resource_type: str, module_regions: List[RegionSpec]) -> str:
-        if not module_regions:
-            return ""
-        
-        res_def = self.catalog_repo.get_resource(resource_type)
-        preferred_biomes = res_def.preferred_biomes if res_def else []
-        
-        if preferred_biomes:
-            for reg in module_regions:
-                for pb in preferred_biomes:
-                    if pb in reg.id or pb in reg.type:
-                        return reg.id
-                
-                reg_def = self.catalog_repo.get_region(reg.id)
-                if not reg_def and "_" in reg.id:
-                    reg_def = self.catalog_repo.get_region(reg.id.split("_", 1)[1])
-                
-                if reg_def and reg_def.biome in preferred_biomes:
-                    return reg.id
-                    
-        return module_regions[0].id
-
-    def _find_best_region_for_building(self, building_type: str, module_regions: List[RegionSpec]) -> str:
-        if not module_regions:
-            return ""
-            
-        bld_def = self.catalog_repo.get_building(building_type)
-        building_themes = bld_def.themes if bld_def else []
-        
-        if building_themes:
-            for reg in module_regions:
-                reg_def = self.catalog_repo.get_region(reg.id)
-                if not reg_def and "_" in reg.id:
-                    reg_def = self.catalog_repo.get_region(reg.id.split("_", 1)[1])
-                
-                if reg_def and reg_def.biome:
-                    biome_def = self.catalog_repo.get_biome(reg_def.biome)
-                    if biome_def and any(theme in building_themes for theme in biome_def.themes):
-                        return reg.id
-                
-                for theme in building_themes:
-                    if theme in reg.id or theme in reg.type or (reg.terrain and theme in reg.terrain.lower()):
-                        return reg.id
-                        
-        return module_regions[0].id
-
 
 class CompileProfileResolver:
     """

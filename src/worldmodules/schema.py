@@ -49,7 +49,7 @@ class WorldModuleSpec(BaseModel):
     """Pydantic model representing a reusable structural world building module configuration."""
     model_config = ConfigDict(frozen=True, extra="forbid")
 
-    schema_version: str = Field(..., description="Module spec schema, 'worldmodule.v1' or 'worldmodule.v2'")
+    schema_version: Optional[str] = Field(None, description="Module schema identifier (optional human-readable label)")
     module_id: str = Field(..., min_length=1, description="Unique module identifier")
     module_type: str = Field(..., description="The functional type category of the module")
     display_name: str = Field(..., min_length=1, description="User friendly display name")
@@ -79,13 +79,6 @@ class WorldModuleSpec(BaseModel):
     buildings: Union[Dict[str, int], List[Any]] = Field(default_factory=list, description="Building layout templates")
     services: Union[Dict[str, int], List[Any]] = Field(default_factory=list, description="Service layout templates")
     factions: List[str] = Field(default_factory=list, description="Associated factions list")
-
-    @field_validator("schema_version")
-    @classmethod
-    def validate_schema_version(cls, v: str) -> str:
-        if v not in ("worldmodule.v1", "worldmodule.v2"):
-            raise ValueError("schema_version must be 'worldmodule.v1' or 'worldmodule.v2'")
-        return v
 
     @classmethod
     def register_module_type(cls, module_type: str) -> None:

@@ -41,7 +41,7 @@ def test_structural_world_assembly_resolver(repos):
     spec = bundle.world_spec
     assert spec.schema_version == "worldspec.v1"
     assert len(spec.regions) == 1
-    assert spec.regions[0].id == "town_center"
+    assert spec.regions[0].id == "hometown"
 
     assert len(spec.entities) == 2
     roles = {e.role for e in spec.entities}
@@ -52,7 +52,7 @@ def test_structural_world_assembly_resolver(repos):
     prov = bundle.provenance_manifest
     assert prov.world_id == "resolved_asm_test"
     assert prov.catalog_fingerprint != ""
-    assert prov.entity_origins["town_center"] == "plains_layout"
+    assert prov.entity_origins["hometown"] == "plains_layout"
     assert "standard_villagers" in prov.module_fingerprints
 
 
@@ -60,14 +60,15 @@ def test_id_collision_prevention(repos):
     """Verify duplicate IDs across merged layouts raise structural errors."""
     cat, mod = repos
 
-    # Construct two distinct custom modules contributing duplicate region IDs
+    # Construct two distinct custom modules both contributing the same catalog region ID
+    # to trigger the duplicate-ID collision check in the assembly merge loop.
     m1 = WorldModuleSpec(
         schema_version="worldmodule.v1",
         module_id="mod1",
         module_type="terrain",
         display_name="Mod 1",
         regions=[
-            RegionRecipeSpec(id="dup_region", type="forest", grid_bounds=(0, 0, 5, 5))
+            RegionRecipeSpec(id="hometown", type="town", grid_bounds=(0, 0, 5, 5))
         ]
     )
     m2 = WorldModuleSpec(
@@ -76,7 +77,7 @@ def test_id_collision_prevention(repos):
         module_type="terrain",
         display_name="Mod 2",
         regions=[
-            RegionRecipeSpec(id="dup_region", type="plain", grid_bounds=(6, 6, 9, 9))
+            RegionRecipeSpec(id="hometown", type="town", grid_bounds=(6, 6, 9, 9))
         ]
     )
 
@@ -99,7 +100,7 @@ def test_id_collision_prevention(repos):
     resolver = WorldAssemblyResolver(cat, mod)
     with pytest.raises(ValueError) as exc_info:
         resolver.assemble(collision_composition)
-    assert "Duplicate region ID collision 'dup_region' detected" in str(exc_info.value)
+    assert "Duplicate region ID collision 'hometown' detected" in str(exc_info.value)
 
 
 def test_resolved_bundle_includes_compile_context_and_preserves_profiles(repos):
@@ -136,7 +137,7 @@ def test_resolved_bundle_includes_compile_context_and_preserves_profiles(repos):
                 role="guard",
                 count=5,
                 faction="town_council",
-                spawn_region="town_center",
+                spawn_region="hometown",
                 stats_profile="elite_monster"  # Explicitly override standard role defaults
             )
         ]

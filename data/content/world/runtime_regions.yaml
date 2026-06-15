@@ -93,3 +93,27 @@
   tags: ["swamp"]
   danger_level: 3
   controlling_faction: "swamp_tribe"
+
+# STATE: ADDITIONAL
+- id: "deep_forest"
+  display_name: "Deep Forest"
+  biome: "near_forest"
+  tags: ["forest", "dense", "sacred"]
+  danger_level: 2
+  controlling_faction: "forest_wardens"
+
+# STATE: ADDITIONAL
+- id: "orc_stronghold"
+  display_name: "Orc Clan Stronghold"
+  biome: "orc_territory"
+  tags: ["hostile", "orc", "stronghold"]
+  danger_level: 3
+  controlling_faction: "orc_clan"
+
+# STATE: ADDITIONAL
+- id: "swamp_border_territory"
+  display_name: "Swamp Border Territory"
+  biome: "sunken_swamp"
+  tags: ["swamp", "border", "lizardfolk"]
+  danger_level: 3
+  controlling_faction: "swamp_tribe"
