@@ -1,0 +1,14 @@
+{
+  "world_id": "wilderness_survival",
+  "seed": 42,
+  "entity_count": 11,
+  "region_count": 3,
+  "resource_node_count": 4,
+  "building_count": 0,
+  "quest_count": 1,
+  "warnings": [
+    "QuestDefinition 'forest_survey' required_location_tag 'wilderness' does not match any region ID in this world"
+  ],
+  "compile_duration_ms": 40.16392400080804,
+  "state_hash": "3672cfada56025713709c26e4407a697"
+}

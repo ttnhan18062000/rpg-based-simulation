@@ -1,0 +1,37 @@
+# STATE: ADDITIONAL
+module_id: "trading_company_hub"
+module_type: "settlement"
+display_name: "Trading Company Hub"
+description: "A merchant-dominated trading settlement. Merchant count is parameterized to allow scaling from a small outpost to a major trade hub. Relationships with the town council are pre-wired."
+version: "1.0.0"
+provides: ["trade_hub", "settlement", "trade_route"]
+observability_tags: ["trade", "urban", "economy"]
+parameters:
+  - name: "merchant_count"
+    type: "integer"
+    default: 3
+    min_value: 1
+    max_value: 8
+    description: "Number of merchant entities to spawn in the trading hub"
+biomes: ["frontier_village"]
+ecologies: ["frontier_village_ecology"]
+regions:
+  - id: "hometown"
+    type: "town"
+    grid_bounds: [45, 10, 80, 45]
+    terrain: "plain"
+    hazard_level: 0.5
+factions: ["merchant_league", "town_council"]
+population_recipes:
+  - role: "merchant"
+    count: "{merchant_count}"
+    faction: "merchant_league"
+    spawn_region: "hometown"
+building_recipes:
+  - building_type: "shop"
+    count: 1
+    region: "hometown"
+  - building_type: "inn"
+    count: 1
+    region: "hometown"
+relationships: ["town_to_merchants", "merchants_to_town"]

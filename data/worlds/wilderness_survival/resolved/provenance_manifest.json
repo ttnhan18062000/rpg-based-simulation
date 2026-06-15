@@ -1,0 +1,462 @@
+{
+  "manifest_id": "prov_04585026bea5f287",
+  "world_id": "wilderness_survival",
+  "source_schema_version": "provenancemanifest.v1",
+  "catalog_fingerprint": "b1cec5dc8a96b2614a622544840330384aa0da562c0d706bfc28ef4f7713c198",
+  "module_fingerprints": {
+    "forest_deep_ecology": "6baaf90058bc583806e9644af7e4fc5313fcf8964e8d8c6aa1f015834387ac65",
+    "undead_battlefield": "3c7e1a61bb0114907f765c55b6a6ff0fada0cd99f4627943b55116d6d6c7e38c",
+    "wolf_den_near_forest": "b21f5bf50ac28d2b7a7ee7525de72a9560cc229a39bd28c9a36231d4a54b6749"
+  },
+  "composition_fingerprint": "394484809f85fbeee407d9387569d85cac949f2b227f66bf32e9641156a534cd",
+  "resolver_version": "1.0.0",
+  "content_fingerprint": "04585026bea5f2879ace45aa2cfbefa73f67b43c339a3d2138302820fbb0da6b",
+  "created_at": "2026-06-15T12:20:01.150537Z",
+  "records": {
+    "hero_guild": {
+      "element_id": "hero_guild",
+      "element_type": "faction",
+      "recipe_type": "catalog",
+      "parameters": {},
+      "profiles": {
+        "alignment_bucket": "defender"
+      },
+      "details": {
+        "description": "Default chosen faction for hero-centered scenarios."
+      }
+    },
+    "town_council": {
+      "element_id": "town_council",
+      "element_type": "faction",
+      "recipe_type": "catalog",
+      "parameters": {},
+      "profiles": {
+        "alignment_bucket": "defender"
+      },
+      "details": {
+        "description": "Settlement authority and civil administration."
+      }
+    },
+    "neutral": {
+      "element_id": "neutral",
+      "element_type": "faction",
+      "recipe_type": "catalog",
+      "parameters": {},
+      "profiles": {
+        "alignment_bucket": "neutral"
+      },
+      "details": {
+        "description": "Fallback for unaffiliated content."
+      }
+    },
+    "wild_beast_pack": {
+      "element_id": "wild_beast_pack",
+      "element_type": "faction",
+      "recipe_type": "catalog",
+      "parameters": {},
+      "profiles": {
+        "alignment_bucket": "wild"
+      },
+      "details": {
+        "description": "Territorial animal groups. Contextual threat, not enemy-by-race."
+      }
+    },
+    "goblin_warband": {
+      "element_id": "goblin_warband",
+      "element_type": "faction",
+      "recipe_type": "catalog",
+      "parameters": {},
+      "profiles": {
+        "alignment_bucket": "invader"
+      },
+      "details": {
+        "description": "Opportunistic raider faction."
+      }
+    },
+    "merchant_league": {
+      "element_id": "merchant_league",
+      "element_type": "faction",
+      "recipe_type": "catalog",
+      "parameters": {},
+      "profiles": {
+        "alignment_bucket": "neutral"
+      },
+      "details": {
+        "description": "Trade-centered faction that prefers negotiated safety."
+      }
+    },
+    "bandit_company": {
+      "element_id": "bandit_company",
+      "element_type": "faction",
+      "recipe_type": "catalog",
+      "parameters": {},
+      "profiles": {
+        "alignment_bucket": "invader"
+      },
+      "details": {
+        "description": "Outlaw faction hostile to settlement safety and trade routes."
+      }
+    },
+    "forest_wardens": {
+      "element_id": "forest_wardens",
+      "element_type": "faction",
+      "recipe_type": "catalog",
+      "parameters": {},
+      "profiles": {
+        "alignment_bucket": "defender"
+      },
+      "details": {
+        "description": "Protective faction defending forest balance."
+      }
+    },
+    "orc_clan": {
+      "element_id": "orc_clan",
+      "element_type": "faction",
+      "recipe_type": "catalog",
+      "parameters": {},
+      "profiles": {
+        "alignment_bucket": "rival"
+      },
+      "details": {
+        "description": "Honor/strength-driven clan faction, not always hostile."
+      }
+    },
+    "dwarven_mine_clan": {
+      "element_id": "dwarven_mine_clan",
+      "element_type": "faction",
+      "recipe_type": "catalog",
+      "parameters": {},
+      "profiles": {
+        "alignment_bucket": "defender"
+      },
+      "details": {
+        "description": "Mining and crafting faction controlling mountain/mine assets."
+      }
+    },
+    "moon_cult": {
+      "element_id": "moon_cult",
+      "element_type": "faction",
+      "recipe_type": "catalog",
+      "parameters": {},
+      "profiles": {
+        "alignment_bucket": "invader"
+      },
+      "details": {
+        "description": "Ritual faction tied to moon ruins and arcane materials."
+      }
+    },
+    "undead_remnants": {
+      "element_id": "undead_remnants",
+      "element_type": "faction",
+      "recipe_type": "catalog",
+      "parameters": {},
+      "profiles": {
+        "alignment_bucket": "invader"
+      },
+      "details": {
+        "description": "Purpose-bound remnants around battlefields, ruins, and barrows."
+      }
+    },
+    "arcane_circle": {
+      "element_id": "arcane_circle",
+      "element_type": "faction",
+      "recipe_type": "catalog",
+      "parameters": {},
+      "profiles": {
+        "alignment_bucket": "neutral"
+      },
+      "details": {
+        "description": "Research faction interested in crystals, ruins, and magical anomalies."
+      }
+    },
+    "swamp_tribe": {
+      "element_id": "swamp_tribe",
+      "element_type": "faction",
+      "recipe_type": "catalog",
+      "parameters": {},
+      "profiles": {
+        "alignment_bucket": "rival"
+      },
+      "details": {
+        "description": "Lizardfolk/swamp faction defending wetland territory."
+      }
+    },
+    "dragon_cult": {
+      "element_id": "dragon_cult",
+      "element_type": "faction",
+      "recipe_type": "catalog",
+      "parameters": {},
+      "profiles": {
+        "alignment_bucket": "invader"
+      },
+      "details": {
+        "description": "Cult faction serving dragonkin/fire-aligned power."
+      }
+    },
+    "spirit_court": {
+      "element_id": "spirit_court",
+      "element_type": "faction",
+      "recipe_type": "catalog",
+      "parameters": {},
+      "profiles": {
+        "alignment_bucket": "neutral"
+      },
+      "details": {
+        "description": "Spirit faction protecting sacred or haunted territories."
+      }
+    },
+    "quest_forest_survey": {
+      "element_id": "quest_forest_survey",
+      "element_type": "quest_definition",
+      "source_module": "forest_deep_ecology",
+      "recipe_type": "quest_definition",
+      "parameters": {},
+      "profiles": {
+        "quest_type": "explore"
+      },
+      "details": {
+        "tags": [
+          "nature",
+          "exploration"
+        ],
+        "reward_budget": 80
+      }
+    },
+    "haunted_battlefield": {
+      "element_id": "haunted_battlefield",
+      "element_type": "region",
+      "source_module": "undead_battlefield",
+      "recipe_type": "region",
+      "parameters": {},
+      "profiles": {
+        "biome": "haunted_battlefield"
+      },
+      "details": {
+        "bounds": [
+          120,
+          20,
+          160,
+          60
+        ],
+        "terrain": "ruin",
+        "hazard_level": 4.0,
+        "ecology_source": [
+          "haunted_battlefield_ecology"
+        ]
+      }
+    },
+    "undead_battlefield_patrol_undead_sentinel": {
+      "element_id": "undead_battlefield_patrol_undead_sentinel",
+      "element_type": "population",
+      "source_module": "undead_battlefield",
+      "recipe_type": "population_recipe",
+      "parameters": {},
+      "profiles": {
+        "role": "sentinel",
+        "faction": "undead_remnants",
+        "stats_profile": "undead_sentinel_base",
+        "inventory_profile": "undead_empty",
+        "cognition_profile": "undead_fixated",
+        "compatibility_projection": {
+          "legacy_engine_role": "MONSTER",
+          "legacy_engine_bucket": "MONSTER_HORDE"
+        }
+      },
+      "details": {
+        "count": 6,
+        "spawn_region": "haunted_battlefield",
+        "archetype_source": "undead_sentinel",
+        "population_recipe_source": "undead_battlefield_patrol"
+      }
+    },
+    "spirit_wisp_0": {
+      "element_id": "spirit_wisp_0",
+      "element_type": "resource",
+      "source_module": "undead_battlefield",
+      "recipe_type": "resource_layout",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "spirit_wisp"
+      },
+      "details": {
+        "count": 2,
+        "region": "haunted_battlefield"
+      }
+    },
+    "rel_undead_to_living": {
+      "element_id": "rel_undead_to_living",
+      "element_type": "faction",
+      "source_module": "undead_battlefield",
+      "recipe_type": "relationship",
+      "parameters": {},
+      "profiles": {
+        "source_faction": "undead_remnants",
+        "target_faction": "town_council",
+        "relationship_model": "purpose_bound_hostility"
+      },
+      "details": {}
+    },
+    "near_forest": {
+      "element_id": "near_forest",
+      "element_type": "region",
+      "source_module": "wolf_den_near_forest",
+      "recipe_type": "region",
+      "parameters": {},
+      "profiles": {
+        "biome": "near_forest"
+      },
+      "details": {
+        "bounds": [
+          45,
+          10,
+          90,
+          55
+        ],
+        "terrain": "forest",
+        "hazard_level": 1.0,
+        "ecology_source": [
+          "wolf_den_ecology"
+        ]
+      }
+    },
+    "wolf_den": {
+      "element_id": "wolf_den",
+      "element_type": "region",
+      "source_module": "wolf_den_near_forest",
+      "recipe_type": "region",
+      "parameters": {},
+      "profiles": {
+        "biome": "wolf_den"
+      },
+      "details": {
+        "bounds": [
+          70,
+          30,
+          105,
+          70
+        ],
+        "terrain": "forest",
+        "hazard_level": 2.0,
+        "ecology_source": [
+          "wolf_den_ecology"
+        ]
+      }
+    },
+    "wolf_pack_small_hungry_wolf": {
+      "element_id": "wolf_pack_small_hungry_wolf",
+      "element_type": "population",
+      "source_module": "wolf_den_near_forest",
+      "recipe_type": "population_recipe",
+      "parameters": {},
+      "profiles": {
+        "role": "predator_hunter",
+        "faction": "wild_beast_pack",
+        "stats_profile": "wolf_predator_base",
+        "inventory_profile": "empty_animal_inventory",
+        "cognition_profile": "instinctive_animal",
+        "compatibility_projection": {
+          "legacy_engine_role": "MONSTER",
+          "legacy_engine_bucket": "MONSTER_HORDE"
+        }
+      },
+      "details": {
+        "count": 4,
+        "spawn_region": "wolf_den",
+        "archetype_source": "hungry_wolf",
+        "population_recipe_source": "wolf_pack_small"
+      }
+    },
+    "wolf_pack_small_alpha_wolf": {
+      "element_id": "wolf_pack_small_alpha_wolf",
+      "element_type": "population",
+      "source_module": "wolf_den_near_forest",
+      "recipe_type": "population_recipe",
+      "parameters": {},
+      "profiles": {
+        "role": "alpha",
+        "faction": "wild_beast_pack",
+        "stats_profile": "wolf_predator_base",
+        "inventory_profile": "empty_animal_inventory",
+        "cognition_profile": "instinctive_animal",
+        "compatibility_projection": {
+          "legacy_engine_role": "MONSTER",
+          "legacy_engine_bucket": "MONSTER_HORDE"
+        }
+      },
+      "details": {
+        "count": 1,
+        "spawn_region": "wolf_den",
+        "archetype_source": "alpha_wolf",
+        "population_recipe_source": "wolf_pack_small"
+      }
+    },
+    "wood_node_0": {
+      "element_id": "wood_node_0",
+      "element_type": "resource",
+      "source_module": "wolf_den_near_forest",
+      "recipe_type": "resource_layout",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "wood_node"
+      },
+      "details": {
+        "count": 8,
+        "region": "near_forest"
+      }
+    },
+    "herb_patch_1": {
+      "element_id": "herb_patch_1",
+      "element_type": "resource",
+      "source_module": "wolf_den_near_forest",
+      "recipe_type": "resource_layout",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "herb_patch"
+      },
+      "details": {
+        "count": 6,
+        "region": "near_forest"
+      }
+    },
+    "healing_flower_patch_2": {
+      "element_id": "healing_flower_patch_2",
+      "element_type": "resource",
+      "source_module": "wolf_den_near_forest",
+      "recipe_type": "resource_layout",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "healing_flower_patch"
+      },
+      "details": {
+        "count": 3,
+        "region": "near_forest"
+      }
+    },
+    "rel_town_to_wild_beasts": {
+      "element_id": "rel_town_to_wild_beasts",
+      "element_type": "faction",
+      "source_module": "wolf_den_near_forest",
+      "recipe_type": "relationship",
+      "parameters": {},
+      "profiles": {
+        "source_faction": "town_council",
+        "target_faction": "wild_beast_pack",
+        "relationship_model": "settlement_safety_vs_wildlife"
+      },
+      "details": {}
+    },
+    "rel_wild_beasts_to_town": {
+      "element_id": "rel_wild_beasts_to_town",
+      "element_type": "faction",
+      "source_module": "wolf_den_near_forest",
+      "recipe_type": "relationship",
+      "parameters": {},
+      "profiles": {
+        "source_faction": "wild_beast_pack",
+        "target_faction": "town_council",
+        "relationship_model": "territorial_animal"
+      },
+      "details": {}
+    }
+  }
+}

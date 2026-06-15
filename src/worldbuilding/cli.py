@@ -20,6 +20,8 @@ from src.worldmodules.repository import WorldModuleRepository
 from src.worldassembly.schema import WorldCompositionSpec
 from src.worldassembly.resolver import WorldAssemblyResolver
 from src.worldassembly.context import CompileContext
+from src.worldgeneration.schema import GenerationIntentSpec
+from src.worldgeneration.generator import ProceduralCompositionGenerator, GenerationCompositionError
 
 # Diagnostic output colors
 COLOR_RESET = "\033[0m"
@@ -359,7 +361,7 @@ def handle_inspect(args) -> int:
             print(f"Entities Count:   {sum(ent.count for ent in spec.entities)} total in {len(spec.entities)} population groups")
             print(f"Resource Nodes:   {len(spec.resources)}")
             print(f"Buildings Count:  {len(spec.buildings)}")
-            print(f"Quests Defined:   {len(spec.quests)}")
+            print(f"Quests Defined:   {len(spec.quest_definitions)}")
 
         return 0
 
@@ -474,6 +476,48 @@ def handle_create_template(args) -> int:
         return 1
 
 
+def handle_generate(args) -> int:
+    """Generates a WorldCompositionSpec YAML from a GenerationIntentSpec via ProceduralCompositionGenerator."""
+    import hashlib
+    danger_level = args.danger_level
+    settlement_style = args.settlement_style
+    seed = args.seed
+    terrain_style = getattr(args, "terrain_style", "temperate")
+    resource_density = getattr(args, "resource_density", 1.0)
+    population_scale = getattr(args, "population_scale", 1.0)
+
+    # Derive a stable generation_id from the intent parameters
+    gen_id_raw = f"generated_{settlement_style}_{int(danger_level)}_{seed}"
+    generation_id = gen_id_raw
+
+    intent = GenerationIntentSpec(
+        generation_id=generation_id,
+        seed=seed,
+        terrain_style=terrain_style,
+        settlement_style=settlement_style,
+        danger_level=float(danger_level),
+        resource_density=float(resource_density),
+        population_scale=float(population_scale),
+    )
+
+    try:
+        mod_repo = WorldModuleRepository(ContentPathConfig().world_modules_dir)
+        mod_repo.load_all()
+
+        generator = ProceduralCompositionGenerator()
+        output_path = generator.generate(intent, mod_repo)
+
+        print(str(output_path))
+        return 0
+
+    except GenerationCompositionError as e:
+        print_colored(f"Composition conflict: {e}", COLOR_RED)
+        return 1
+    except Exception as e:
+        print_colored(f"Unexpected error during generate: {e}", COLOR_RED)
+        return 1
+
+
 def main() -> int:
     """CLI Entrypoint parser definition and router dispatch."""
     parser = argparse.ArgumentParser(description="rpg-world: Simulation Worldbuilding CLI Tool")
@@ -509,6 +553,15 @@ def main() -> int:
     crt.add_argument("template_name", type=str, help="Descriptive name of the starter template")
     crt.add_argument("world_id", type=str, help="Target world directory and registry identifier")
 
+    # generate
+    gen = sub.add_parser("generate", help="Generate a WorldCompositionSpec YAML from a GenerationIntentSpec")
+    gen.add_argument("--danger-level", type=float, default=1.0, help="Hazard difficulty scalar (default: 1.0)")
+    gen.add_argument("--settlement-style", type=str, default="scattered", help="Settlement distribution style (default: scattered)")
+    gen.add_argument("--seed", type=int, default=42, help="Deterministic RNG seed (default: 42)")
+    gen.add_argument("--terrain-style", type=str, default="temperate", help="Climatic terrain style (default: temperate)")
+    gen.add_argument("--resource-density", type=float, default=1.0, help="Resource node density scalar (default: 1.0)")
+    gen.add_argument("--population-scale", type=float, default=1.0, help="Population scale scalar (default: 1.0)")
+
     args = parser.parse_args()
 
     if args.command == "list":
@@ -523,6 +576,8 @@ def main() -> int:
         return handle_inspect(args)
     elif args.command == "create-template":
         return handle_create_template(args)
+    elif args.command == "generate":
+        return handle_generate(args)
 
     return 0
 

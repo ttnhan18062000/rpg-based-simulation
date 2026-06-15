@@ -1,0 +1,37 @@
+# STATE: ADDITIONAL
+module_id: "ruins_mystery_quest"
+module_type: "danger_zone"
+display_name: "Ruins of Mystery"
+description: "Ancient ruins haunted by undead remnants and restless spirits. Rich quest seeding for investigation and dungeon exploration. Standalone — no settlement dependency."
+version: "1.0.0"
+provides: ["dungeon", "quest_seeding"]
+observability_tags: ["ruins", "mystery", "quest", "conflict"]
+biomes: ["haunted_battlefield"]
+ecologies: ["haunted_battlefield_ecology"]
+regions:
+  - id: "haunted_battlefield"
+    type: "wilderness"
+    grid_bounds: [60, 80, 100, 120]
+    terrain: "ruin"
+    hazard_level: 3.5
+factions: ["undead_remnants", "spirit_court"]
+populations: ["undead_battlefield_patrol"]
+quest_definitions:
+  - id: "ruins_first_contact"
+    type: "investigate"
+    required_participant_tags: ["undead"]
+    required_location_tags: ["ruins"]
+    reward_budget: 120
+    procedural_hints:
+      difficulty: 2
+      escalation: false
+    tags: ["mystery", "ruins"]
+  - id: "spirit_source_trace"
+    type: "investigate"
+    required_participant_tags: ["spiritual"]
+    required_location_tags: ["ruins"]
+    reward_budget: 150
+    procedural_hints:
+      difficulty: 3
+      escalation: true
+    tags: ["mystery", "ruins", "spirit"]

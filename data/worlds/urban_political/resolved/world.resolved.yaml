@@ -1,0 +1,146 @@
+schema_version: worldspec.v1
+world_id: urban_political
+name: Urban Political
+description: Settlement-heavy world with faction relationships and trade pressure.
+  A frontier village coexists with a separate merchant trading hub and is pressured
+  by bandit road activity.
+topology:
+  width: 101
+  height: 100
+  coordinate_system: grid
+regions:
+- id: hometown
+  type: town
+  bounds:
+  - 10
+  - 10
+  - 40
+  - 40
+  terrain: plain
+  hazard_level: 0.0
+- id: bandit_road
+  type: road
+  bounds:
+  - 40
+  - 40
+  - 100
+  - 60
+  terrain: road
+  hazard_level: 2.0
+- id: trading_hometown
+  type: town
+  bounds:
+  - 45
+  - 10
+  - 80
+  - 45
+  terrain: plain
+  hazard_level: 0.5
+factions:
+- id: hero_guild
+  type: defender
+- id: town_council
+  type: defender
+- id: neutral
+  type: neutral
+- id: wild_beast_pack
+  type: wild
+- id: goblin_warband
+  type: invader
+- id: merchant_league
+  type: neutral
+- id: bandit_company
+  type: invader
+- id: forest_wardens
+  type: defender
+- id: orc_clan
+  type: rival
+- id: dwarven_mine_clan
+  type: defender
+- id: moon_cult
+  type: invader
+- id: undead_remnants
+  type: invader
+- id: arcane_circle
+  type: neutral
+- id: swamp_tribe
+  type: rival
+- id: dragon_cult
+  type: invader
+- id: spirit_court
+  type: neutral
+entities:
+- id: frontier_village_population_village_worker
+  count: 8
+  role: worker
+  faction: town_council
+  spawn_region: hometown
+  archetype_id: village_worker
+- id: frontier_village_population_frontier_guard
+  count: 3
+  role: guard
+  faction: town_council
+  spawn_region: hometown
+  archetype_id: frontier_guard
+- id: frontier_village_population_traveling_merchant
+  count: 1
+  role: merchant
+  faction: merchant_league
+  spawn_region: hometown
+  archetype_id: traveling_merchant
+- id: frontier_village_population_village_blacksmith
+  count: 1
+  role: blacksmith
+  faction: town_council
+  spawn_region: hometown
+  archetype_id: village_blacksmith
+- id: bandit_ambush_group_bandit_scout
+  count: 4
+  role: scout
+  faction: bandit_company
+  spawn_region: bandit_road
+  archetype_id: bandit_scout
+- id: merchant_caravan_traveling_merchant
+  count: 2
+  role: merchant
+  faction: merchant_league
+  spawn_region: bandit_road
+  archetype_id: traveling_merchant
+- id: merchant_caravan_frontier_guard
+  count: 2
+  role: guard
+  faction: town_council
+  spawn_region: bandit_road
+  archetype_id: frontier_guard
+- id: trading_pop_0
+  count: 6
+  role: merchant
+  faction: merchant_league
+  spawn_region: trading_hometown
+resources: []
+buildings:
+- id: town_hall_0
+  type: town_hall
+  region: hometown
+- id: shop_0
+  type: shop
+  region: hometown
+- id: blacksmith_0
+  type: blacksmith
+  region: hometown
+- id: inn_0
+  type: inn
+  region: hometown
+- id: healer_hut_0
+  type: healer_hut
+  region: hometown
+- id: trading_bld_0
+  type: shop
+  region: trading_hometown
+- id: trading_bld_1
+  type: inn
+  region: trading_hometown
+quest_definitions: []
+validation:
+  expected_min_entities: 1
+  allow_overlapping_regions: false

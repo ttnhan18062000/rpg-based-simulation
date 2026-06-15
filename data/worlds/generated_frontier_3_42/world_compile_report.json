@@ -1,0 +1,15 @@
+{
+  "world_id": "generated_frontier_3_42",
+  "seed": 42,
+  "entity_count": 44,
+  "region_count": 6,
+  "resource_node_count": 7,
+  "building_count": 6,
+  "quest_count": 1,
+  "warnings": [
+    "QuestDefinition 'mine_fetch_ore' required_location_tag 'mine' does not match any region ID in this world",
+    "QuestDefinition 'mine_fetch_ore' required_location_tag 'underground' does not match any region ID in this world"
+  ],
+  "compile_duration_ms": 21.504689000721555,
+  "state_hash": "b8d40803a17564d5ab3d72ec48d6650d"
+}

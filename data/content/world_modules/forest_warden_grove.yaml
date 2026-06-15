@@ -1,5 +1,4 @@
 # STATE: ADDITIONAL
-schema_version: "worldmodule.v1"
 module_id: "forest_warden_grove"
 module_type: "ecology"
 display_name: "Forest Warden Grove"
@@ -24,3 +23,4 @@ resources:
   healing_flower_patch: 5
   spirit_wisp: 2
 relationships: ["forest_wardens_to_wild_beasts"]
+observability_tags: ["ecology"]

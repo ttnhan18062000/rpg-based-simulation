@@ -3853,14 +3853,24 @@
     src/worldmodules/resolver.py (assemble() — unconditional count-map loops, spawn_region fix) +
     TCK-20260614-WORLDMOD-UNIFY (schema unification — schema_version validator removed,
     v2-gated assemble blocks replaced, spawn_region empty-string bug fixed,
-    3 catalog regions added)
+    3 catalog regions added) +
+    src/worldmodules/evaluator.py (ModuleParameterEvaluator — WORLD-MOD-003 constraint enforcement) +
+    src/worldassembly/resolver.py (AssemblyParameterError + evaluate_field call sites in assemble()) +
+    TCK-20260614-WORLDMOD-PARAMS +
+    TCK-20260614-WORLDDAT-MIGRATE (all 10 real modules migrated to unified schema:
+    schema_version field removed; observability_tags added to all modules;
+    frontier_village_core enriched with relationships=[town_to_merchants,merchants_to_town];
+    old_mine_resource_loop enriched with relationships=[dwarves_to_goblins] and
+    quest_definitions=[mine_fetch_ore type=fetch]; all modules now exercise non-trivial
+    unified schema fields — biomes, ecologies, relationships, observability_tags)
   proof_type: null
   test_path: >
     tests/unit/worldmodules/test_schema_unified.py +
     tests/unit/worldmodules/test_modules.py +
     tests/unit/worldassembly/test_resolver.py +
     tests/integration/worldassembly/test_count_map_assembly.py +
-    tests/integration/worldassembly/test_real_content_world_modules.py
+    tests/integration/worldassembly/test_real_content_world_modules.py +
+    tests/unit/worldmodules/test_parameter_evaluator.py
   divergence_note: null
   support_boundary: "WorldModules — world setup preprocessing only, not tick-path."
 - id: SUBSTRATE-NEW-004
@@ -3884,3 +3894,151 @@
   test_path: tests/unit/worldassembly/test_perspective_resolution.py
   divergence_note: null
   support_boundary: null
+- id: SUBSTRATE-NEW-005
+  text: >
+    ModuleParameterEvaluator (WORLD-MOD-003) enforces ModuleParameterSpec constraints
+    at assembly time: required params with no value raise AssemblyParameterError,
+    allowed_values/min_value/max_value violations raise AssemblyParameterError naming
+    module_id and param_name. Recipe count fields declared as "{key} * N" string
+    templates are substituted from resolved param values and evaluated via AST-only
+    arithmetic (no eval()). Modules with parameters: [] are zero-overhead fast path.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/worldmodules/evaluator.py +
+    src/worldassembly/resolver.py (AssemblyParameterError) +
+    src/worldbuilding/recipe.py (Union[int, str] count fields) +
+    docs/world/modules_contract.md (WORLD-MOD-003)
+  proof_type: null
+  test_path: tests/unit/worldmodules/test_parameter_evaluator.py
+  divergence_note: null
+  support_boundary: "WorldModules — world setup preprocessing only, not tick-path."
+- id: SUBSTRATE-NEW-006
+  text: >
+    WorldCompositionSpec.pack_refs (List[str]) declares content pack dependencies for
+    a composition. WorldAssemblyResolver.assemble() validates pack_refs at the START
+    of assembly (before module loading): loads each pack's ContentPackManifest from
+    data/content/packs/<pack_id>.yaml, raises AssemblyPackError if a pack is not found
+    or has enabled==False, raises AssemblyPackError if any dependency pack is missing
+    or disabled. Compositions with empty pack_refs skip validation unconditionally
+    (no breaking change). pack_refs is stripped from NormalizedWorldComposition
+    (pre-assembly gate only, not carried into compilation context).
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/worldassembly/schema.py (WorldCompositionSpec.pack_refs) +
+    src/worldassembly/resolver.py (AssemblyPackError, assemble() pack validation block) +
+    src/content/pack_manifest.py (ContentPackManifest)
+  proof_type: null
+  test_path: tests/unit/worldassembly/test_pack_validation.py
+  divergence_note: null
+  support_boundary: "WorldAssembly — world setup preprocessing only, not tick-path."
+- id: SUBSTRATE-NEW-007
+  text: >
+    WorldSpec.quest_definitions (List[QuestDefinition]) replaces the untyped
+    WorldSpec.quests (list[dict]) field. QuestDefinition is a frozen Pydantic model with
+    fields: id, type (Literal["escort","hunt","fetch","explore","defend","investigate"]),
+    required_participant_tags, required_location_tags, reward_budget (int, ge=0),
+    procedural_hints (Dict[str,Any]), tags (List[str]), source_module (Optional[str]).
+    A model_validator(mode="before") migrates legacy YAML with quests: key to
+    quest_definitions: with no silent data loss. The compiler iterates quest_definitions
+    and validates required_location_tags against known region IDs, emitting warnings
+    for unresolvable tags. src/quests/ runtime system is unchanged.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/worldbuilding/schema.py (QuestDefinition, WorldSpec.quest_definitions,
+    _migrate_quests_field validator) +
+    src/worldbuilding/compiler.py (quest_definitions loop) +
+    src/worldbuilding/cli.py (quest_definitions display) +
+    src/worldbuilding/recipe.py (expanded_data quest_definitions key)
+  proof_type: null
+  test_path: tests/unit/worldbuilding/test_quest_definition.py
+  divergence_note: null
+  support_boundary: "WorldBuilding authoring layer — world setup only, not tick-path."
+- id: SUBSTRATE-NEW-008
+  text: >
+    ModuleScorer.score() returns Dict[str, ModuleScore] with normalized scores per
+    intent dimension. Each ModuleScore has module_id, score (0.0–1.0), reasons (non-empty
+    list), and dimensions dict. Required modules always score 1.0. Danger-aligned modules
+    (type conflict/danger_zone or observability_tags containing hostile/conflict/danger_zone)
+    score proportionally to danger_level. Settlement modules are penalised at high danger_level.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: "src/worldgeneration/scorer.py — ModuleScorer.score()"
+  proof_type: null
+  test_path: "tests/unit/worldgeneration/test_module_scorer.py"
+  divergence_note: ""
+  support_boundary: "WorldGeneration authoring layer — world setup only, not tick-path."
+- id: SUBSTRATE-NEW-009
+  text: >
+    WorldModuleSpec.quest_definitions (List[QuestDefinition]) allows modules to declare
+    authoring-time quest blueprints. The assembly resolver (WorldAssemblyResolver.assemble())
+    collects quest_definitions from each module contribution via resolve_module_contribution(),
+    stamps source_module=module_id on each QuestDefinition via model_copy(), accumulates them
+    in a dict keyed by id, raises AssemblyCollisionError on duplicate id (naming both
+    contributing modules), and populates WorldSpec.quest_definitions with the merged list.
+    ProvenanceRecord entries with recipe_type="quest_definition" are written per quest.
+    NormalizedWorldModule carries quest_definitions as Tuple[QuestDefinition, ...].
+    ResolvedModuleContribution carries quest_definitions as List[QuestDefinition].
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/worldmodules/schema.py (WorldModuleSpec.quest_definitions) +
+    src/worldmodules/normalizer.py (NormalizedWorldModule.quest_definitions, WorldModuleAuthoringNormalizer.normalize()) +
+    src/worldassembly/schema.py (ResolvedModuleContribution.quest_definitions) +
+    src/worldassembly/resolver.py (AssemblyCollisionError, resolve_module_contribution() step 9, assemble() quest merge loop)
+  proof_type: null
+  test_path: tests/unit/worldassembly/test_quest_merge.py
+  divergence_note: null
+  support_boundary: "WorldAssembly — world setup only, not tick-path."
+- id: SUBSTRATE-NEW-010
+  text: >
+    ProceduralCompositionGenerator converts a GenerationIntentSpec into a WorldCompositionSpec
+    YAML by scoring, selecting, and dependency-resolving WorldModuleSpec candidates via
+    ModuleScorer.score(). Selection rules: (1) top-scoring terrain module always included;
+    (2) top-scoring settlement module included when settlement_style != "none"; (3) remaining
+    budget slots (default BUDGET=6) filled by highest-scoring non-settlement candidates when
+    settlement_style="none"; (4) dependency modules auto-added via BFS on WorldModuleSpec.requires;
+    (5) fail-fast GenerationCompositionError raised if two selected modules share a provides string.
+    Output written to data/content/world_compositions/generated/{world_id}.yaml.
+    world_id = f"generated_{settlement_style}_{int(danger_level)}_{seed}".
+    Sort is deterministic: (-score, module_id) for tie-breaking.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/worldgeneration/generator.py (ProceduralCompositionGenerator, GenerationCompositionError) +
+    src/worldgeneration/scorer.py (ModuleScorer.score) +
+    src/worldassembly/schema.py (WorldCompositionSpec, ModuleRefSpec)
+  proof_type: null
+  test_path: tests/unit/worldgeneration/test_composition_generator.py
+  divergence_note: null
+  support_boundary: "WorldGeneration — procedural composition pipeline only."
+- id: SUBSTRATE-NEW-011
+  text: >
+    ProceduralCompositionGenerator.generate() performs seed-based parameter sampling after
+    module selection. A fresh random.Random(intent.seed) (stdlib, not numpy) is initialized
+    per call. For each selected module in rank order, for each ModuleParameterSpec in
+    declaration order: (1) if allowed_values is non-empty → rng.choice(allowed_values);
+    (2) elif min_value and max_value are both set → rng.randint(int(min), int(max)) for
+    type="integer", rng.uniform(float(min), float(max)) otherwise; (3) else → use declared
+    default unchanged (no rng call). Required params with no default and no bounds are left
+    absent from the parameters dict. Same seed + same module selection order → identical
+    ModuleRefSpec.parameters on every call.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/worldgeneration/generator.py (ProceduralCompositionGenerator.generate — param_rng
+    sampling loop) + src/worldmodules/schema.py (ModuleParameterSpec) +
+    src/worldassembly/schema.py (ModuleRefSpec.parameters)
+  proof_type: null
+  test_path: tests/unit/worldgeneration/test_seed_params.py
+  divergence_note: null
+  support_boundary: "WorldGeneration — seed-based parameter sampling only."

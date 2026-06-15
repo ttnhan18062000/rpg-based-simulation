@@ -45,7 +45,7 @@ def test_valid_minimal_world_spec_loads(tmp_path):
     assert spec.entities == []
     assert spec.resources == []
     assert spec.buildings == []
-    assert spec.quests == []
+    assert spec.quest_definitions == []
     assert spec.validation.expected_min_entities == 1
     assert spec.validation.allow_overlapping_regions is False
 

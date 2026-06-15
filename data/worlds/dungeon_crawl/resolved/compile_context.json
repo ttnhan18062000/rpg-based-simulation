@@ -1,0 +1,360 @@
+{
+  "entities": {
+    "goblin_raiding_party_goblin_scout": {
+      "legacy_role": 5,
+      "legacy_faction": 1,
+      "hp": 35,
+      "max_hp": 35,
+      "atk": 8,
+      "def": 2,
+      "attack_range": 1,
+      "readiness": 100.0,
+      "inventory_seed": "goblin_looter_pouch",
+      "cognition_seed": "opportunistic_humanoid",
+      "archetype_id": "goblin_scout",
+      "race_id": "goblin",
+      "role_id": "scout",
+      "faction_id": "goblin_warband",
+      "traits": [
+        "humanoid",
+        "tool_user",
+        "opportunistic",
+        "social_humanoid",
+        "small_body"
+      ],
+      "themes": [
+        "goblin",
+        "frontier"
+      ],
+      "stat_profile_id": "goblin_scout_base",
+      "combat_profile_id": "opportunist_raider",
+      "cognition_profile_id": "opportunistic_humanoid",
+      "drive_profile_id": "opportunistic_raider",
+      "need_profile_id": "goblin_survival",
+      "sense_profile_id": "goblin_alert_senses",
+      "inventory_profile_id": "goblin_looter_pouch",
+      "skill_profile_id": "goblin_raider_skills"
+    },
+    "goblin_raiding_party_goblin_raider": {
+      "legacy_role": 2,
+      "legacy_faction": 1,
+      "hp": 40,
+      "max_hp": 40,
+      "atk": 10,
+      "def": 2,
+      "attack_range": 1,
+      "readiness": 100.0,
+      "inventory_seed": "goblin_looter_pouch",
+      "cognition_seed": "opportunistic_humanoid",
+      "archetype_id": "goblin_raider",
+      "race_id": "goblin",
+      "role_id": "raider",
+      "faction_id": "goblin_warband",
+      "traits": [
+        "humanoid",
+        "tool_user",
+        "opportunistic",
+        "social_humanoid",
+        "small_body"
+      ],
+      "themes": [
+        "goblin"
+      ],
+      "stat_profile_id": "goblin_raider_base",
+      "combat_profile_id": "opportunist_raider",
+      "cognition_profile_id": "opportunistic_humanoid",
+      "drive_profile_id": "opportunistic_raider",
+      "need_profile_id": "goblin_survival",
+      "sense_profile_id": "goblin_alert_senses",
+      "inventory_profile_id": "goblin_looter_pouch",
+      "skill_profile_id": "goblin_raider_skills"
+    },
+    "goblin_raiding_party_goblin_archer": {
+      "legacy_role": 5,
+      "legacy_faction": 1,
+      "hp": 35,
+      "max_hp": 35,
+      "atk": 11,
+      "def": 1,
+      "attack_range": 3,
+      "readiness": 100.0,
+      "inventory_seed": "goblin_looter_pouch",
+      "cognition_seed": "opportunistic_humanoid",
+      "archetype_id": "goblin_archer",
+      "race_id": "goblin",
+      "role_id": "scout",
+      "faction_id": "goblin_warband",
+      "traits": [
+        "humanoid",
+        "tool_user",
+        "ranged_attacker",
+        "opportunistic",
+        "social_humanoid",
+        "small_body"
+      ],
+      "themes": [
+        "goblin"
+      ],
+      "stat_profile_id": "goblin_archer_base",
+      "combat_profile_id": "ranged_archer",
+      "cognition_profile_id": "opportunistic_humanoid",
+      "drive_profile_id": "opportunistic_raider",
+      "need_profile_id": "goblin_survival",
+      "sense_profile_id": "goblin_alert_senses",
+      "inventory_profile_id": "goblin_looter_pouch",
+      "skill_profile_id": "goblin_raider_skills"
+    },
+    "goblin_raiding_party_goblin_warlord": {
+      "legacy_role": 2,
+      "legacy_faction": 1,
+      "hp": 120,
+      "max_hp": 120,
+      "atk": 24,
+      "def": 8,
+      "attack_range": 1,
+      "readiness": 100.0,
+      "inventory_seed": "boss_hoard_token",
+      "cognition_seed": "opportunistic_humanoid",
+      "archetype_id": "goblin_warlord",
+      "race_id": "goblin",
+      "role_id": "leader",
+      "faction_id": "goblin_warband",
+      "traits": [
+        "humanoid",
+        "tool_user",
+        "opportunistic",
+        "leader",
+        "social_humanoid",
+        "small_body"
+      ],
+      "themes": [
+        "goblin"
+      ],
+      "stat_profile_id": "warlord_base",
+      "combat_profile_id": "brute_crush",
+      "cognition_profile_id": "opportunistic_humanoid",
+      "drive_profile_id": "opportunistic_raider",
+      "need_profile_id": "goblin_survival",
+      "sense_profile_id": "goblin_alert_senses",
+      "inventory_profile_id": "boss_hoard_token",
+      "skill_profile_id": "goblin_raider_skills"
+    },
+    "old_mine_spider_cluster_cave_spider": {
+      "legacy_role": 2,
+      "legacy_faction": 1,
+      "hp": 50,
+      "max_hp": 50,
+      "atk": 14,
+      "def": 4,
+      "attack_range": 1,
+      "readiness": 100.0,
+      "inventory_seed": "empty_animal_inventory",
+      "cognition_seed": "instinctive_animal",
+      "archetype_id": "cave_spider",
+      "race_id": "spider",
+      "role_id": "predator_hunter",
+      "faction_id": "wild_beast_pack",
+      "traits": [
+        "venomous",
+        "territorial"
+      ],
+      "themes": [
+        "mine",
+        "swamp"
+      ],
+      "stat_profile_id": "cave_spider_base",
+      "combat_profile_id": "venom_bite",
+      "cognition_profile_id": "instinctive_animal",
+      "drive_profile_id": "territorial_predator",
+      "need_profile_id": "carnivore_survival",
+      "sense_profile_id": "spider_vibration_senses",
+      "inventory_profile_id": "empty_animal_inventory",
+      "skill_profile_id": "predator_skills"
+    },
+    "undead_battlefield_patrol_undead_sentinel": {
+      "legacy_role": 2,
+      "legacy_faction": 1,
+      "hp": 130,
+      "max_hp": 130,
+      "atk": 14,
+      "def": 6,
+      "attack_range": 1,
+      "readiness": 100.0,
+      "inventory_seed": "undead_empty",
+      "cognition_seed": "undead_fixated",
+      "archetype_id": "undead_sentinel",
+      "race_id": "undead",
+      "role_id": "sentinel",
+      "faction_id": "undead_remnants",
+      "traits": [
+        "undead"
+      ],
+      "themes": [
+        "undead",
+        "ruin"
+      ],
+      "stat_profile_id": "undead_sentinel_base",
+      "combat_profile_id": "undead_slam",
+      "cognition_profile_id": "undead_fixated",
+      "drive_profile_id": "undead_purpose_bound",
+      "need_profile_id": "undead_purpose",
+      "sense_profile_id": "undead_dread_senses",
+      "inventory_profile_id": "undead_empty",
+      "skill_profile_id": "undead_sentinel_skills"
+    },
+    "pop_0": {
+      "legacy_role": 5,
+      "legacy_faction": 1,
+      "hp": 35,
+      "max_hp": 35,
+      "atk": 8,
+      "def": 2,
+      "attack_range": 1,
+      "readiness": 100.0,
+      "inventory_seed": null,
+      "cognition_seed": null,
+      "archetype_id": null,
+      "race_id": null,
+      "role_id": null,
+      "faction_id": null,
+      "traits": [],
+      "themes": [],
+      "stat_profile_id": null,
+      "combat_profile_id": null,
+      "cognition_profile_id": null,
+      "drive_profile_id": null,
+      "need_profile_id": null,
+      "sense_profile_id": null,
+      "inventory_profile_id": null,
+      "skill_profile_id": null
+    }
+  },
+  "buildings": {
+    "mine_entrance_0": {
+      "hp": 900,
+      "max_hp": 900,
+      "service_profile_id": "mining_service",
+      "owner_faction": null
+    }
+  },
+  "resources": {
+    "iron_vein_0": {
+      "required_ticks": 15,
+      "resource_type": "iron_vein",
+      "yield_policy": null
+    },
+    "crystal_outcrop_1": {
+      "required_ticks": 18,
+      "resource_type": "crystal_outcrop",
+      "yield_policy": null
+    },
+    "silver_vein_2": {
+      "required_ticks": 18,
+      "resource_type": "silver_vein",
+      "yield_policy": null
+    }
+  },
+  "factions": {
+    "hero_guild": {
+      "starting_gold": 1000.0
+    },
+    "town_council": {
+      "starting_gold": 1000.0
+    },
+    "neutral": {
+      "starting_gold": 1000.0
+    },
+    "wild_beast_pack": {
+      "starting_gold": 1000.0
+    },
+    "goblin_warband": {
+      "starting_gold": 1000.0
+    },
+    "merchant_league": {
+      "starting_gold": 1000.0
+    },
+    "bandit_company": {
+      "starting_gold": 1000.0
+    },
+    "forest_wardens": {
+      "starting_gold": 1000.0
+    },
+    "orc_clan": {
+      "starting_gold": 1000.0
+    },
+    "dwarven_mine_clan": {
+      "starting_gold": 1000.0
+    },
+    "moon_cult": {
+      "starting_gold": 1000.0
+    },
+    "undead_remnants": {
+      "starting_gold": 1000.0
+    },
+    "arcane_circle": {
+      "starting_gold": 1000.0
+    },
+    "swamp_tribe": {
+      "starting_gold": 1000.0
+    },
+    "dragon_cult": {
+      "starting_gold": 1000.0
+    },
+    "spirit_court": {
+      "starting_gold": 1000.0
+    }
+  },
+  "region_ownership": {},
+  "legacy_factions": {
+    "goblin_warband": 1,
+    "wild_beast_pack": 1,
+    "undead_remnants": 1,
+    "bandit_company": 1
+  },
+  "legacy_roles": {
+    "scout": 5,
+    "raider": 2,
+    "leader": 2,
+    "predator_hunter": 2,
+    "sentinel": 2
+  },
+  "perspectives": {
+    "hero_guild_perspective": {
+      "id": "hero_guild_perspective",
+      "display_name": null,
+      "description": null,
+      "tags": [],
+      "schema_version": null,
+      "deprecated": false,
+      "metadata": {},
+      "extension": {},
+      "design_notes": null,
+      "chosen_faction": "hero_guild",
+      "default_focus": "settlement_survival",
+      "projected_labels": {
+        "ally_groups": [
+          "town_council",
+          "forest_wardens",
+          "dwarven_mine_clan"
+        ],
+        "neutral_groups": [
+          "merchant_league",
+          "arcane_circle",
+          "spirit_court"
+        ],
+        "hostile_groups": [
+          "goblin_warband",
+          "bandit_company",
+          "moon_cult",
+          "undead_remnants",
+          "dragon_cult"
+        ],
+        "contextual_threat_groups": [
+          "wild_beast_pack",
+          "orc_clan",
+          "swamp_tribe"
+        ]
+      }
+    }
+  }
+}

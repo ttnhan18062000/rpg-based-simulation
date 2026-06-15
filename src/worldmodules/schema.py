@@ -10,6 +10,7 @@ from src.worldbuilding.recipe import (
     ResourceRecipeSpec,
     BuildingRecipeSpec,
 )
+from src.worldbuilding.schema import QuestDefinition
 
 
 class ModuleParameterSpec(BaseModel):
@@ -79,6 +80,10 @@ class WorldModuleSpec(BaseModel):
     buildings: Union[Dict[str, int], List[Any]] = Field(default_factory=list, description="Building layout templates")
     services: Union[Dict[str, int], List[Any]] = Field(default_factory=list, description="Service layout templates")
     factions: List[str] = Field(default_factory=list, description="Associated factions list")
+    quest_definitions: List[QuestDefinition] = Field(
+        default_factory=list,
+        description="Authoring-time quest blueprints contributed by this module"
+    )
 
     @classmethod
     def register_module_type(cls, module_type: str) -> None:

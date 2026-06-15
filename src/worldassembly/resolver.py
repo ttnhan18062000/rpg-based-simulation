@@ -1,6 +1,8 @@
 # Compliance IDs: WORLD-ASM-008, WORLD-ASM-009, WORLD-ASM-010
 from __future__ import annotations
 
+import yaml
+from pathlib import Path
 from typing import List, Dict, Any, Optional
 from pydantic import BaseModel, Field, ConfigDict
 
@@ -29,6 +31,8 @@ from src.content.resolver import (
     SocialDefaultsResolver,
 )
 from src.worldbuilding.recipe import PopulationRecipeSpec
+from src.worldmodules.evaluator import AssemblyParameterError, ModuleParameterEvaluator
+from src.content.pack_manifest import ContentPackManifest
 
 
 from src.worldbuilding.schema import (
@@ -39,8 +43,17 @@ from src.worldbuilding.schema import (
     PopulationSpec,
     ResourceNodeSpec,
     BuildingSpec,
+    QuestDefinition,
 )
 
+
+
+class AssemblyPackError(ValueError):
+    """Raised when a composition references a content pack that is missing or disabled."""
+
+
+class AssemblyCollisionError(ValueError):
+    """Raised when two modules contribute an element with the same ID during assembly merge."""
 
 
 class ResolvedWorldBundle(BaseModel):
@@ -76,6 +89,9 @@ class WorldAssemblyValidator:
         world_validator = WorldValidator()
         module_reports = {}
         for m_id, module in graph_map.items():
+            # Build a default param context so parametric template fields (e.g. "{merchant_count}")
+            # resolve to their declared defaults during validation, even when no overrides are injected.
+            default_param_vals = {p.name: p.default for p in module.parameters if p.default is not None}
             dummy_spec = WorldSpec(
                 schema_version="worldspec.v1",
                 world_id=module.module_id,
@@ -87,11 +103,11 @@ class WorldAssemblyValidator:
                 ],
                 factions=list(factions.values()),
                 entities=[
-                    PopulationSpec(id=getattr(p, 'id', f"pop_{idx}"), count=p.count, role=p.role, faction=p.faction, spawn_region=p.spawn_region)
+                    PopulationSpec(id=getattr(p, 'id', f"pop_{idx}"), count=ModuleParameterEvaluator.evaluate_field(p.count, default_param_vals), role=p.role, faction=p.faction, spawn_region=p.spawn_region)
                     for idx, p in enumerate(module.population_recipes)
                 ],
                 resources=[
-                    ResourceNodeSpec(id=getattr(r, 'id', f"res_{idx}"), resource_type=r.resource_type, count=r.count, region=r.region)
+                    ResourceNodeSpec(id=getattr(r, 'id', f"res_{idx}"), resource_type=r.resource_type, count=ModuleParameterEvaluator.evaluate_field(r.count, default_param_vals), region=r.region)
                     for idx, r in enumerate(module.resource_recipes)
                 ],
                 buildings=[
@@ -218,6 +234,42 @@ class WorldAssemblyResolver:
         # Normalize composition to NormalizedWorldComposition
         normalized_comp = WorldCompositionNormalizer.normalize(composition)
 
+        # Pack validation gate — runs before any module assembly
+        # Extract pack_refs from the original composition (before normalization strips it)
+        if isinstance(composition, WorldCompositionSpec):
+            _pack_refs = list(composition.pack_refs)
+        elif isinstance(composition, dict):
+            _pack_refs = list(composition.get("pack_refs", []))
+        else:
+            _pack_refs = []
+
+        if _pack_refs:
+            _packs_dir = Path("data/content/packs")
+            for _pack_id in _pack_refs:
+                _pack_path = _packs_dir / f"{_pack_id}.yaml"
+                try:
+                    with open(_pack_path, "r", encoding="utf-8") as _fh:
+                        _pack_data = yaml.safe_load(_fh)
+                    _manifest = ContentPackManifest.model_validate(_pack_data)
+                except FileNotFoundError:
+                    raise AssemblyPackError(f"Pack '{_pack_id}' not found")
+                if not _manifest.enabled:
+                    raise AssemblyPackError(f"Pack '{_pack_id}' is disabled")
+                for _dep in _manifest.dependencies:
+                    _dep_path = _packs_dir / f"{_dep}.yaml"
+                    try:
+                        with open(_dep_path, "r", encoding="utf-8") as _fh:
+                            _dep_data = yaml.safe_load(_fh)
+                        _dep_manifest = ContentPackManifest.model_validate(_dep_data)
+                    except FileNotFoundError:
+                        raise AssemblyPackError(
+                            f"Pack '{_pack_id}' requires pack '{_dep}' which is disabled"
+                        )
+                    if not _dep_manifest.enabled:
+                        raise AssemblyPackError(
+                            f"Pack '{_pack_id}' requires pack '{_dep}' which is disabled"
+                        )
+
         # 1. Collect and filter enabled modules
         enabled_refs = [ref for ref in normalized_comp.module_refs if ref.enabled]
         
@@ -244,7 +296,9 @@ class WorldAssemblyResolver:
         entities: Dict[str, PopulationSpec] = {}
         resources: Dict[str, ResourceNodeSpec] = {}
         buildings: Dict[str, BuildingSpec] = {}
-        
+        quest_defs: Dict[str, QuestDefinition] = {}
+        quest_def_origins: Dict[str, str] = {}
+
         entity_origins: Dict[str, str] = {}
         module_fingerprints: Dict[str, str] = {}
         prov_records: Dict[str, ProvenanceRecord] = {}
@@ -406,9 +460,10 @@ class WorldAssemblyResolver:
                     raise ResolverError("faction", pop.faction)
 
                 spawn_region = f"{prefix}{pop.spawn_region}" if pop.spawn_region else ""
+                resolved_count = ModuleParameterEvaluator.evaluate_field(pop.count, param_vals, m_id, "count")
                 entities[pop_id] = PopulationSpec(
                     id=pop_id,
-                    count=pop.count,
+                    count=resolved_count,
                     role=pop.role,
                     faction=pop.faction,
                     spawn_region=spawn_region
@@ -426,7 +481,7 @@ class WorldAssemblyResolver:
                         "faction": pop.faction,
                         "stats_profile": getattr(pop, "stats_profile", None)
                     },
-                    details={"count": pop.count, "spawn_region": spawn_region}
+                    details={"count": resolved_count, "spawn_region": spawn_region}
                 )
 
             # Merge v1 resources
@@ -437,10 +492,11 @@ class WorldAssemblyResolver:
                 
                 self.resource_resolver.resolve(res.resource_type)
                 spawn_region = f"{prefix}{res.region}" if res.region else ""
+                resolved_count = ModuleParameterEvaluator.evaluate_field(res.count, param_vals, m_id, "count")
                 resources[res_id] = ResourceNodeSpec(
                     id=res_id,
                     resource_type=res.resource_type,
-                    count=res.count,
+                    count=resolved_count,
                     region=spawn_region
                 )
                 entity_origins[res_id] = m_id
@@ -451,13 +507,17 @@ class WorldAssemblyResolver:
                     recipe_type="resource",
                     parameters=param_vals,
                     profiles={"resource_type": res.resource_type},
-                    details={"count": res.count, "region": spawn_region}
+                    details={"count": resolved_count, "region": spawn_region}
                 )
 
             # Merge count-map resources (unified path for all modules)
+            # ID is scoped to the module to prevent collisions when two modules share
+            # the same catalog resource type (e.g. iron_vein in both a mine module and
+            # an orc territory module). The module ID is incorporated so that identical
+            # resource types at identical local indices still produce distinct node IDs.
             default_region = contribution.regions[0].id if contribution.regions else ""
             for res_idx, (res_type, count) in enumerate(contribution.resource_refs.items()):
-                res_id = f"{prefix}{res_type}_{res_idx}"
+                res_id = f"{prefix}{m_id}__{res_type}_{res_idx}"
                 if res_id in resources:
                     raise ValueError(f"Duplicate resource ID collision '{res_id}' detected during merge.")
 
@@ -489,6 +549,7 @@ class WorldAssemblyResolver:
                 
                 self.building_resolver.resolve(bld.building_type)
                 spawn_region = f"{prefix}{bld.region}" if bld.region else ""
+                ModuleParameterEvaluator.evaluate_field(bld.count, param_vals, m_id, "count")
                 buildings[bld_id] = BuildingSpec(
                     id=bld_id,
                     type=bld.building_type,
@@ -554,6 +615,25 @@ class WorldAssemblyResolver:
                     details={}
                 )
 
+            # Merge quest definitions
+            for qd in contribution.quest_definitions:
+                if qd.id in quest_defs:
+                    existing_source = quest_def_origins[qd.id]
+                    raise AssemblyCollisionError(
+                        f"Quest definition '{qd.id}' contributed by both '{existing_source}' and '{m_id}'"
+                    )
+                quest_defs[qd.id] = qd
+                quest_def_origins[qd.id] = m_id
+                prov_records[f"quest_{qd.id}"] = ProvenanceRecord(
+                    element_id=f"quest_{qd.id}",
+                    element_type="quest_definition",
+                    source_module=m_id,
+                    recipe_type="quest_definition",
+                    parameters=param_vals,
+                    profiles={"quest_type": qd.type},
+                    details={"tags": qd.tags, "reward_budget": qd.reward_budget}
+                )
+
         # Resolve perspectives declared in composition (WORLD-ASM-009: unknown ID raises ResolverError)
         resolved_perspectives: Dict[str, Any] = {}
         for persp_id in normalized_comp.default_perspectives:
@@ -581,7 +661,8 @@ class WorldAssemblyResolver:
             factions=list(factions.values()),
             entities=list(entities.values()),
             resources=list(resources.values()),
-            buildings=list(buildings.values())
+            buildings=list(buildings.values()),
+            quest_definitions=list(quest_defs.values()),
         )
 
         import hashlib
@@ -669,6 +750,15 @@ class WorldAssemblyResolver:
         """
         if param_vals is None:
             param_vals = {}
+
+        if normalized_module.parameters:
+            evaluator = ModuleParameterEvaluator(
+                param_specs=list(normalized_module.parameters),
+                injected=param_vals,
+                module_id=normalized_module.module_id,
+            )
+            param_vals = evaluator.evaluate()
+
         if not isinstance(normalized_module, NormalizedWorldModule):
             raise TypeError(
                 f"resolve_module_contribution requires NormalizedWorldModule, got "
@@ -787,6 +877,12 @@ class WorldAssemblyResolver:
             self.building_resolver.resolve(bld_id)
             building_refs[bld_id] = count
 
+        # 9. Collect quest definitions — stamp source_module from this module
+        quest_definitions: List[QuestDefinition] = [
+            qd.model_copy(update={"source_module": normalized_module.module_id})
+            for qd in normalized_module.quest_definitions
+        ]
+
         return ResolvedModuleContribution(
             regions=regions_spec_list,
             factions=factions_spec_list,
@@ -797,7 +893,8 @@ class WorldAssemblyResolver:
             service_refs=service_refs,
             relationship_refs=relationship_refs,
             biome_refs=biome_refs,
-            ecology_refs=ecology_refs
+            ecology_refs=ecology_refs,
+            quest_definitions=quest_definitions,
         )
 
 class CompileProfileResolver:

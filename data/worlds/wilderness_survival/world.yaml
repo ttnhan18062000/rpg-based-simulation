@@ -1,0 +1,20 @@
+# STATE: ADDITIONAL
+schema_version: "worldcomposition.v1"
+world_id: "wilderness_survival"
+name: "Wilderness Survival"
+description: "High danger ecology world with no settlement — survival challenge for entities placed in a hostile natural environment."
+provided_features:
+  - "deep_wilderness"
+  - "ecology_module"
+  - "survival"
+global_parameters:
+  topology_width: 256
+  topology_height: 256
+module_refs:
+  - module_id: "forest_deep_ecology"
+    order: 0
+  - module_id: "wolf_den_near_forest"
+    order: 1
+  - module_id: "undead_battlefield"
+    order: 2
+generation_seed: 101

@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import random
-from typing import Optional, Any
+from typing import Optional, Any, Union
 from pydantic import BaseModel, Field, model_validator, ConfigDict
 
 from src.worldbuilding.schema import TopologySpec, FactionSpec, WorldSpec, InvalidWorldSpecError
@@ -32,8 +32,14 @@ class PopulationRecipeSpec(BaseModel):
     model_config = ConfigDict(frozen=True, extra="forbid")
 
     role: str = Field(..., min_length=1, description="Societal role")
-    count: int = Field(..., ge=0, description="Number of entities to spawn")
+    count: Union[int, str] = Field(..., description="Number of entities to spawn; may be a parameter template expression")
     faction: str = Field(..., min_length=1, description="Faction affiliation")
+
+    @model_validator(mode="after")
+    def _validate_count(self) -> "PopulationRecipeSpec":
+        if isinstance(self.count, int) and self.count < 0:
+            raise ValueError("count must be >= 0")
+        return self
     spawn_region: Optional[str] = Field(None, description="Optional spawn region")
     spawn_distribution: Optional[dict[str, Any]] = Field(None, description="Optional spawn distribution")
     stats_profile: Optional[str] = Field(None, description="Optional stats attributes template")
@@ -45,8 +51,14 @@ class ResourceRecipeSpec(BaseModel):
     model_config = ConfigDict(frozen=True, extra="forbid")
 
     resource_type: str = Field(..., min_length=1, description="Type of resource node")
-    count: int = Field(..., gt=0, description="Number of nodes to place")
+    count: Union[int, str] = Field(..., description="Number of nodes to place; may be a parameter template expression")
     region: str = Field(..., min_length=1, description="Target region placement")
+
+    @model_validator(mode="after")
+    def _validate_count(self) -> "ResourceRecipeSpec":
+        if isinstance(self.count, int) and self.count <= 0:
+            raise ValueError("count must be > 0")
+        return self
     density: Optional[str] = Field(None, description="Resource node placement clustering factor")
     respawn_policy: Optional[str] = Field(None, description="Optional dynamic replenishment behavior")
 
@@ -55,8 +67,14 @@ class BuildingRecipeSpec(BaseModel):
     model_config = ConfigDict(frozen=True, extra="forbid")
 
     building_type: str = Field(..., min_length=1, description="Constructed type of the building")
-    count: int = Field(..., gt=0, description="Number of buildings to place")
+    count: Union[int, str] = Field(..., description="Number of buildings to place; may be a parameter template expression")
     region: str = Field(..., min_length=1, description="Target region placement")
+
+    @model_validator(mode="after")
+    def _validate_count(self) -> "BuildingRecipeSpec":
+        if isinstance(self.count, int) and self.count <= 0:
+            raise ValueError("count must be > 0")
+        return self
     service_profile: Optional[str] = Field(None, description="Optional functional profile definition")
 
 
@@ -119,7 +137,7 @@ class WorldTemplateExpander:
             "entities": [],
             "resources": [],
             "buildings": [],
-            "quests": list(template.quests)
+            "quest_definitions": list(template.quests)
         }
 
         # 1. Expand Regions and validate containment limits
@@ -190,6 +208,11 @@ class WorldTemplateExpander:
             if base_key not in res_counts:
                 res_counts[base_key] = 0
 
+            if not isinstance(res.count, int):
+                raise ValueError(
+                    f"Resource recipe '{res.resource_type}' count must be an integer in template YAML, "
+                    f"got {type(res.count).__name__!r}. Template expressions are only valid in module YAML."
+                )
             for _ in range(res.count):
                 node_id = f"{base_key}_{res_counts[base_key]}"
                 res_counts[base_key] += 1
@@ -211,6 +234,11 @@ class WorldTemplateExpander:
             if base_key not in bld_counts:
                 bld_counts[base_key] = 0
 
+            if not isinstance(bld.count, int):
+                raise ValueError(
+                    f"Building recipe '{bld.building_type}' count must be an integer in template YAML, "
+                    f"got {type(bld.count).__name__!r}. Template expressions are only valid in module YAML."
+                )
             for _ in range(bld.count):
                 bld_id = f"{base_key}_{bld_counts[base_key]}"
                 bld_counts[base_key] += 1

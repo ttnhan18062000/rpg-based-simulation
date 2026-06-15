@@ -60,6 +60,37 @@ Frozen Pydantic model (`extra="forbid"`) defining a single configurable paramete
 
 **Validation rule:** If both `default` and `allowed_values` are set, `default` must appear in `allowed_values`. Violation raises `ValueError` at construction.
 
+#### WORLD-MOD-003 — Parameter Expression Engine
+
+`ModuleParameterEvaluator` (`src/worldmodules/evaluator.py`) enforces `ModuleParameterSpec` constraints at assembly time and evaluates template expressions in recipe count fields.
+
+**Constraint enforcement order** (per parameter, per `ModuleParameterEvaluator.evaluate()`):
+1. Merge: `{spec.name: spec.default}` for all specs, then `update(injected)`.
+2. Required check: if `required=True` and resolved value is `None` → raise `AssemblyParameterError`.
+3. `allowed_values` check: if value not in list → raise `AssemblyParameterError`.
+4. `min_value` / `max_value` check (numeric values only): out-of-bounds → raise `AssemblyParameterError`.
+
+**`AssemblyParameterError(ValueError)`** — carries `module_id` and `param_name` attributes; message format: `[{module_id}] param '{param_name}': {reason}`.
+
+**Zero-param fast path:** Modules with `parameters: []` skip all evaluation overhead. `evaluate_field()` returns immediately when `isinstance(value, int)`.
+
+**Recipe count field expression grammar** (implemented in `evaluate_field()`):
+
+```
+expression  := term (('+' | '-') term)*
+term        := factor (('*' | '/') factor)*
+factor      := NUMBER | '(' expression ')'
+NUMBER      := integer or float literal (after {key} substitution)
+```
+
+**Expression evaluation rules:**
+- Substitution phase: all `{key}` tokens are replaced with their resolved numeric string representation before AST parsing. An unresolved key raises `AssemblyParameterError`.
+- AST safety phase: `ast.parse(expr, mode='eval')` followed by `ast.walk()` with explicit allow-list: `{ast.Expression, ast.BinOp, ast.UnaryOp, ast.Constant, ast.Add, ast.Sub, ast.Mult, ast.Div, ast.UAdd, ast.USub}`. Any other node type raises `ValueError("unsafe expression")`. `eval()` is never called on raw strings.
+- Coercion: result is always `int` (truncation via `int(...)`, not rounding).
+- Non-numeric substitution (e.g. a string-type param in arithmetic) raises `ValueError`.
+
+**Count field types:** `PopulationRecipeSpec.count`, `ResourceRecipeSpec.count`, and `BuildingRecipeSpec.count` accept `Union[int, str]`. String values are parameter template expressions resolved at assembly time. Template YAML (`WorldTemplateSpec`) must always use integer literals — a non-integer count in template context raises `ValueError` at expansion time.
+
 ### `WorldModuleSpec` (WORLD-MOD-001, WORLD-MOD-002)
 
 Frozen Pydantic model (`extra="forbid"`) representing a reusable structural world-building module.

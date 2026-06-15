@@ -1,0 +1,21 @@
+# STATE: ADDITIONAL
+schema_version: "worldcomposition.v1"
+world_id: "urban_political"
+name: "Urban Political"
+description: "Settlement-heavy world with faction relationships and trade pressure. A frontier village coexists with a separate merchant trading hub and is pressured by bandit road activity."
+provided_features:
+  - "settlement"
+  - "trade_hub"
+  - "trade_route"
+  - "faction_pressure"
+module_refs:
+  - module_id: "frontier_village_core"
+    order: 0
+  - module_id: "trading_company_hub"
+    order: 1
+    namespace: "trading"
+    parameters:
+      merchant_count: 6
+  - module_id: "bandit_road_trade_pressure"
+    order: 2
+generation_seed: 202

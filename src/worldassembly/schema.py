@@ -4,7 +4,7 @@ from __future__ import annotations
 from typing import Optional, Any, Dict, List
 from pydantic import BaseModel, Field, ConfigDict, field_validator, model_validator
 
-from src.worldbuilding.schema import RegionSpec, FactionSpec, PopulationSpec
+from src.worldbuilding.schema import RegionSpec, FactionSpec, PopulationSpec, QuestDefinition
 
 
 class ModuleRefSpec(BaseModel):
@@ -28,6 +28,7 @@ class WorldCompositionSpec(BaseModel):
     description: Optional[str] = Field(None, description="Detailed layout description")
 
     catalog_refs: List[str] = Field(default_factory=list, description="Associated static catalog paths relative to data/content/")
+    pack_refs: List[str] = Field(default_factory=list, description="Content pack IDs required by this composition (validated at assembly time via ContentPackManifest)")
     module_refs: List[ModuleRefSpec] = Field(default_factory=list, description="Modular components making up the composition")
     modules: Optional[List[str]] = Field(None, description="Shorthand list of module IDs")
     default_perspectives: List[str] = Field(default_factory=list, description="Default perspective IDs")
@@ -122,6 +123,7 @@ class ResolvedModuleContribution(BaseModel):
     relationship_refs: List[str] = Field(default_factory=list)
     biome_refs: List[str] = Field(default_factory=list)
     ecology_refs: List[str] = Field(default_factory=list)
+    quest_definitions: List[QuestDefinition] = Field(default_factory=list)
 
 
 class NormalizedWorldComposition(BaseModel):
@@ -158,12 +160,15 @@ class WorldCompositionNormalizer:
             # we dump it to a dictionary and populate NormalizedWorldComposition.
             data = composition.model_dump()
             data.pop("modules", None)
+            # pack_refs is a pre-assembly validation gate and is intentionally not
+            # carried into the normalized compilation context.
+            data.pop("pack_refs", None)
         elif isinstance(composition, dict):
             modules = composition.get("modules")
             module_refs = composition.get("module_refs")
             if modules is not None and module_refs is not None:
                 raise ValueError("Cannot specify both 'modules' shorthand and 'module_refs' structured format in composition.")
-            
+
             data = dict(composition)
             if modules is not None:
                 normalized_refs = []
@@ -177,6 +182,9 @@ class WorldCompositionNormalizer:
                     })
                 data["module_refs"] = normalized_refs
             data.pop("modules", None)
+            # pack_refs is a pre-assembly validation gate and is intentionally not
+            # carried into the normalized compilation context.
+            data.pop("pack_refs", None)
         else:
             raise TypeError(f"Expected WorldCompositionSpec or dict, got {type(composition)}")
 

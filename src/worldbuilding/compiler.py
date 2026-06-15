@@ -304,87 +304,51 @@ class WorldCompiler:
                     next_entity_id += 1
 
 
-        # 7. Compile quests and run post-compile validations
+        # 7. Compile quest_definitions (authoring blueprints) into seeded QuestState records
         compiled_quests: List[QuestState] = []
         warnings: List[str] = []
 
-        for quest_idx, q_data in enumerate(spec.quests):
-            qid = q_data.get("id", f"quest_{quest_idx}")
-            qkind_str = q_data.get("kind", "EXPLORE").upper()
-            qkind = get_quest_kind(qkind_str)
+        for quest_idx, q_def in enumerate(spec.quest_definitions):
+            qid = q_def.id
+            # Map QuestDefinition.type (authoring) → QuestKind (runtime enum)
+            qkind = get_quest_kind(q_def.type)
 
-            # Quest referential warnings
-            target_region = q_data.get("target_region_id")
-            if target_region and target_region not in regions:
-                warnings.append(f"Quest '{qid}' references unknown target region '{target_region}'")
+            # Validate required_location_tags against known region IDs
+            for loc_tag in q_def.required_location_tags:
+                if loc_tag not in regions:
+                    warnings.append(
+                        f"QuestDefinition '{qid}' required_location_tag '{loc_tag}' "
+                        f"does not match any region ID in this world"
+                    )
 
-            target_faction = q_data.get("target_faction")
-            if target_faction:
-                faction_ids = {f.id for f in spec.factions}
-                if target_faction not in faction_ids:
-                    warnings.append(f"Quest '{qid}' references unknown target faction '{target_faction}'")
-
-            target_role = q_data.get("target_role")
-            if target_role:
-                roles = {e.role for e in spec.entities}
-                if target_role not in roles:
-                    warnings.append(f"Quest '{qid}' references unknown target entity role '{target_role}'")
-
-            target_resource = q_data.get("target_resource_type")
-            if target_resource:
-                resource_types = {r.resource_type for r in spec.resources}
-                if target_resource not in resource_types:
-                    warnings.append(f"Quest '{qid}' references unknown resource type '{target_resource}'")
-
-            metadata = q_data.get("metadata", {})
-            if "target_position" in q_data:
-                metadata["target_position"] = q_data["target_position"]
-            if target_region:
-                metadata["target_region_id"] = target_region
-
-            reward_data = q_data.get("reward", {})
+            # Seed a minimal reward from reward_budget (procedural layer will refine)
             reward = RewardState(
-                xp=reward_data.get("xp", 0),
-                gold=reward_data.get("gold", 0),
-                items=reward_data.get("items", [])
+                xp=q_def.reward_budget,
+                gold=q_def.reward_budget // 2,
+                items=[]
             )
+
+            # Build metadata from procedural_hints and authoring tags
+            metadata: Dict[str, Any] = dict(q_def.procedural_hints)
+            if q_def.tags:
+                metadata["tags"] = list(q_def.tags)
+            if q_def.source_module:
+                metadata["source_module"] = q_def.source_module
+            if q_def.required_participant_tags:
+                metadata["required_participant_tags"] = list(q_def.required_participant_tags)
 
             q_state = QuestState(
                 id=qid,
                 kind=ProjectKind.QUEST,
                 quest_kind=qkind,
                 quest_status=QuestStatus.ACTIVE,
-                goal_value=float(q_data.get("goal_value", 1.0)),
+                goal_value=1.0,
                 current_value=0.0,
                 reward=reward,
-                name=q_data.get("name", qid),
+                name=qid,
                 metadata=metadata
             )
             compiled_quests.append(q_state)
-
-            # Stage 8: Strategic Setup (assign quest projects to matching entities)
-            assignee = q_data.get("assignee")
-            if assignee:
-                for ent in entities.values():
-                    match = False
-                    if str(ent.id) == str(assignee):
-                        match = True
-                    elif ent.kind == assignee:
-                        match = True
-                    elif ent.identity.role.name.lower() == assignee.lower():
-                        match = True
-
-                    if match:
-                        new_projects = dict(ent.strategic.projects)
-                        new_projects[qid] = q_state
-                        
-                        from dataclasses import replace
-                        new_strat = replace(
-                            ent.strategic,
-                            projects=new_projects,
-                            current_project_id=qid
-                        )
-                        entities[ent.id] = replace(ent, strategic=new_strat)
 
         # Assemble final AuthoritativeState
         state = AuthoritativeState(

@@ -1,5 +1,4 @@
 # STATE: LEGACY-EXPORT
-schema_version: "worldmodule.v1"
 module_id: "goblin_camp_conflict"
 module_type: "conflict"
 display_name: "Goblin Camp Conflict"
@@ -15,3 +14,4 @@ regions:
 factions: ["goblin_warband"]
 populations: ["goblin_raiding_party"]
 relationships: ["town_to_goblin_warband", "goblin_warband_to_town"]
+observability_tags: ["conflict", "faction_pressure"]
