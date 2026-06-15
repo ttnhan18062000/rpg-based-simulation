@@ -26,6 +26,7 @@ from src.content.resolver import (
     RelationshipResolver,
     PopulationRecipeResolver,
     ResolverError,
+    SocialDefaultsResolver,
 )
 from src.worldbuilding.recipe import PopulationRecipeSpec
 
@@ -208,6 +209,7 @@ class WorldAssemblyResolver:
         self.building_resolver = BuildingResolver(catalog_repo)
         self.relationship_resolver = RelationshipResolver(catalog_repo)
         self.population_recipe_resolver = PopulationRecipeResolver(catalog_repo)
+        self.perspective_resolver = SocialDefaultsResolver(catalog_repo)
 
     def assemble(self, composition: WorldCompositionSpec | dict) -> ResolvedWorldBundle:
         """
@@ -552,6 +554,12 @@ class WorldAssemblyResolver:
                     details={}
                 )
 
+        # Resolve perspectives declared in composition (WORLD-ASM-009: unknown ID raises ResolverError)
+        resolved_perspectives: Dict[str, Any] = {}
+        for persp_id in normalized_comp.default_perspectives:
+            persp_def = self.perspective_resolver.resolve_perspective(persp_id)
+            resolved_perspectives[persp_id] = persp_def.model_dump()
+
         # Ensure width and height cover all region bounds if not explicitly specified in global_parameters
         max_region_x = 100
         max_region_y = 100
@@ -637,6 +645,9 @@ class WorldAssemblyResolver:
 
         # Resolve CompileContext with the preserved raw population recipe overrides
         compile_context = self.profile_resolver.resolve(world_spec, population_recipes_dict)
+
+        for persp_id, persp_data in resolved_perspectives.items():
+            compile_context.register_perspective(persp_id, persp_data)
 
         return ResolvedWorldBundle(
             world_spec=world_spec,

@@ -74,6 +74,7 @@ Dict[int, EntityState]       → loaded into AuthoritativeState
 | `region_ownership` | `Dict[str, Faction]` | Region → owning Faction enum |
 | `legacy_factions` | `Dict[str, Faction]` | Dynamic faction_id → legacy Faction enum |
 | `legacy_roles` | `Dict[str, EntityRole]` | Dynamic role_id → legacy EntityRole enum |
+| `perspectives` | `Dict[str, Any]` | Resolved PerspectiveDefinition records (keyed by ID) from WorldCompositionSpec.default_perspectives |
 
 `CompileContext` is **not frozen** — the resolver populates it incrementally during module traversal. After resolution, it must not be modified.
 

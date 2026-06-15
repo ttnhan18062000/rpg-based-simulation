@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: engine
 authority: P1
 audience: agent
 ticket_id: TCK-20260614-WORLDSCEN-PERSPECTIVES
-phase: open
+phase: done
 date: 2026-06-14
 tags: [worldassembly, perspectives, compile-context, scenario]
 ---
@@ -15,7 +15,7 @@ tags: [worldassembly, perspectives, compile-context, scenario]
 Wire WorldCompositionSpec.default_perspectives into CompileContext
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -73,8 +73,23 @@ P2
 - Unit: `tests/unit/worldassembly/test_perspective_resolution.py` — known perspective resolves, unknown raises ResolverError, empty list produces empty dict
 - Integration: `dungeon_crawl` composition assembles with perspectives if catalog has the IDs
 
+## Implementation Notes
+- `CompileContext.perspectives` uses `Dict[str, Any]` (not `Dict[str, PerspectiveDefinition]`) to avoid a new `worldassembly.context → content.schema` coupling edge. Stored values are raw `model_dump()` dicts.
+- `register_perspective()` accepts both dict and model instances via `isinstance(resolved_def, dict)` guard — keeps the method safe for direct calls with either type.
+- Perspectives are resolved into a local `resolved_perspectives` dict before `CompileProfileResolver.resolve()` is called (which creates a fresh `CompileContext`). Registration happens after the call to avoid pre-call state loss (Risk 5 in investigation).
+- Import of `SocialDefaultsResolver` follows the same pattern as other resolver imports in `resolver.py`.
+- `test_v2_module_resolution_and_heuristics` in `test_assembly.py` was using `"hero_view"` (not a catalog ID) in `default_perspectives`. Changed to `"hero_guild_perspective"` — the only change to that test.
+- Pre-existing `test_cli_resolve_and_compile_integration` failure is unrelated to this ticket (CLI path resolution issue with module repo data path).
+- `from_dict()` uses `.get("perspectives", {})` — backward compat with contexts serialized before this ticket.
+- `to_dict()` uses `dict(self.perspectives)` — already plain dicts, no further transformation needed.
+
 ## Files Changed
-<!-- filled during implementation -->
+- `src/worldassembly/context.py` — added `perspectives` field, `register_perspective()`, updated `to_dict()` and `from_dict()`
+- `src/worldassembly/resolver.py` — imported `SocialDefaultsResolver`, instantiated `self.perspective_resolver`, added resolution block in `assemble()`
+- `tests/unit/worldassembly/test_assembly.py` — fixed `"hero_view"` → `"hero_guild_perspective"` in `test_v2_module_resolution_and_heuristics`
+- `tests/unit/worldassembly/test_perspective_resolution.py` — new: 7 tests covering all acceptance criteria
+- `docs/world/assembly_contract.md` — added `perspectives` row to WORLD-ASM-003 table
+- `docs/parity_ledger/substrate.yaml` — appended SUBSTRATE-NEW-004 entry
 
 ## Completion Summary
-<!-- filled during implementation -->
+Added `perspectives: Dict[str, Any]` to `CompileContext` with `register_perspective()` and `to_dict`/`from_dict` support. Wired `SocialDefaultsResolver` into `WorldAssemblyResolver.__init__` and `assemble()`. 7 new unit tests covering all acceptance criteria. SUBSTRATE-NEW-004 added to parity ledger. Unknown perspective ID raises `ResolverError`. AC4 (`dungeon_crawl.yaml`) deferred to TCK-20260614-WORLDDAT-COMPOSE — composition data not yet available. All 26 non-pre-existing tests pass; 1 pre-existing failure (`test_cli_resolve_and_compile_integration`, `plains_layout` not in content repo) predates this ticket and is unrelated.

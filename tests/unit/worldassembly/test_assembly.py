@@ -561,7 +561,7 @@ def test_v2_module_resolution_and_heuristics(repos):
         "world_id": "v2_asm_test",
         "name": "V2 Asm Test",
         "modules": ["custom_v2_module"],
-        "default_perspectives": ["hero_view"]
+        "default_perspectives": ["hero_guild_perspective"]
     }
 
     resolver = WorldAssemblyResolver(cat, mod)

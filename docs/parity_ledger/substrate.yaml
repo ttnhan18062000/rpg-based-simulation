@@ -3863,3 +3863,24 @@
     tests/integration/worldassembly/test_real_content_world_modules.py
   divergence_note: null
   support_boundary: "WorldModules — world setup preprocessing only, not tick-path."
+- id: SUBSTRATE-NEW-004
+  text: >
+    CompileContext.perspectives is populated during WorldAssemblyResolver.assemble()
+    by resolving each ID in WorldCompositionSpec.default_perspectives via
+    SocialDefaultsResolver.resolve_perspective(). An unknown perspective ID raises
+    ResolverError. An empty default_perspectives list produces an empty perspectives
+    dict. Resolved PerspectiveDefinition records are stored as model_dump() dicts
+    keyed by perspective ID. to_dict() includes "perspectives"; from_dict() handles
+    absent "perspectives" key with backward-compat default of {}.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/worldassembly/context.py::CompileContext.perspectives +
+    src/worldassembly/context.py::CompileContext.register_perspective +
+    src/worldassembly/resolver.py::WorldAssemblyResolver.assemble() +
+    src/content/resolver.py::SocialDefaultsResolver.resolve_perspective
+  proof_type: null
+  test_path: tests/unit/worldassembly/test_perspective_resolution.py
+  divergence_note: null
+  support_boundary: null
