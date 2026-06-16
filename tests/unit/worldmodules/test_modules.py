@@ -22,7 +22,7 @@ def test_reusable_module_loading(base_repo):
     assert m_layout.module_type == "terrain"
     assert m_layout.provides == ["baseline_layout"]
     assert len(m_layout.regions) == 1
-    assert m_layout.regions[0].id == "town_center"
+    assert m_layout.regions[0].id == "hometown"
 
     m_pop = base_repo.get_module("standard_villagers")
     assert m_pop is not None

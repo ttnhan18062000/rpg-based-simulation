@@ -1,5 +1,4 @@
 # STATE: REDESIGNED-CORE
-schema_version: "worldmodule.v1"
 module_id: "wolf_den_near_forest"
 module_type: "ecology"
 display_name: "Wolf Den Near Forest"
@@ -25,3 +24,4 @@ resources:
   wood_node: 8
   herb_patch: 6
   healing_flower_patch: 3
+observability_tags: ["ecology", "wilderness"]

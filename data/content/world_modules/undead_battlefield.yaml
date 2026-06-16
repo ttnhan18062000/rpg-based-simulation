@@ -1,5 +1,4 @@
 # STATE: ADDITIONAL
-schema_version: "worldmodule.v1"
 module_id: "undead_battlefield"
 module_type: "danger_zone"
 display_name: "Undead Battlefield"
@@ -17,3 +16,4 @@ populations: ["undead_battlefield_patrol"]
 resources:
   spirit_wisp: 2
 relationships: ["undead_to_living"]
+observability_tags: ["conflict", "danger_zone"]

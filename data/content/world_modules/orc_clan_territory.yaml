@@ -1,5 +1,4 @@
 # STATE: ADDITIONAL
-schema_version: "worldmodule.v1"
 module_id: "orc_clan_territory"
 module_type: "conflict"
 display_name: "Orc Clan Territory"
@@ -19,3 +18,4 @@ resources:
   iron_vein: 4
   wood_node: 6
 relationships: ["town_to_orc_clan", "orc_clan_to_town"]
+observability_tags: ["conflict"]

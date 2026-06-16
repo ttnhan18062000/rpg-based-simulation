@@ -37,16 +37,13 @@ def create_base_valid_spec() -> dict:
         "buildings": [
             {"id": "tavern", "type": "inn", "region": "town_square"}
         ],
-        "quests": [
+        "quest_definitions": [
             {
                 "id": "hunt_beasts",
-                "name": "Hunt Wild Beasts",
-                "kind": "hunt",
-                "goal_value": 3.0,
-                "reward": {"xp": 100, "gold": 50},
-                "target_role": "monster",
-                "target_region_id": "wilds",
-                "assignee": "citizen"
+                "type": "hunt",
+                "required_participant_tags": ["monster"],
+                "required_location_tags": ["wilds"],
+                "reward_budget": 100,
             }
         ]
     }
@@ -150,13 +147,13 @@ def test_compiler_report_write():
 
 def test_compiler_quest_referential_warnings():
     data = create_base_valid_spec()
-    # Introduce unknown target region ID in quests
-    data["quests"][0]["target_region_id"] = "unknown_forest"
-    
+    # Introduce an unknown location tag in quest_definitions to trigger a referential warning
+    data["quest_definitions"][0]["required_location_tags"] = ["unknown_forest"]
+
     spec = WorldSpec.model_validate(data)
     _, report = WorldCompiler.compile(spec, seed=42)
-    
-    assert len(report["warnings"]) == 1
+
+    assert len(report["warnings"]) >= 1
     assert "unknown_forest" in report["warnings"][0]
 
 

@@ -1,5 +1,4 @@
 # STATE: ADDITIONAL
-schema_version: "worldmodule.v1"
 module_id: "sunken_swamp_border"
 module_type: "conflict"
 display_name: "Sunken Swamp Border"
@@ -19,3 +18,4 @@ resources:
   wood_node: 4
   herb_patch: 3
 relationships: []
+observability_tags: ["conflict"]

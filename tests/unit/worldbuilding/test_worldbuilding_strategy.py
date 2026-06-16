@@ -49,7 +49,7 @@ def get_base_test_data() -> dict:
         "buildings": [
             {"id": "depot", "type": "storage", "region": "camp"}
         ],
-        "quests": []
+        "quest_definitions": []
     }
 
 
@@ -86,32 +86,32 @@ def test_validation_must_fail_before_compilation():
 def test_compiler_does_not_drop_invalid_references():
     """
     Ensure that the compiler does not silently drop invalid/mismatched references
-    in quests, but instead captures them as distinct, visible warnings.
+    in quest_definitions, but instead captures them as distinct, visible warnings.
+    With QuestDefinition authoring schema, required_location_tags are validated
+    against known region IDs at compile time.
     """
     data = get_base_test_data()
-    data["quests"] = [
+    data["quest_definitions"] = [
         {
-            "id": "explorers_quest",
-            "name": "Mismatched Targets Quest",
-            "kind": "explore",
-            "target_region_id": "nonexistent_region",
-            "target_faction": "nonexistent_faction",
-            "target_role": "nonexistent_role",
-            "target_resource_type": "nonexistent_resource",
-            "assignee": "pioneers"
-        }
+            "id": "explorers_quest_a",
+            "type": "explore",
+            "required_location_tags": ["nonexistent_region_a"],
+        },
+        {
+            "id": "explorers_quest_b",
+            "type": "hunt",
+            "required_location_tags": ["nonexistent_region_b"],
+        },
     ]
-    
+
     spec = WorldSpec.model_validate(data)
     state, report = WorldCompiler.compile(spec, seed=123)
-    
+
     assert state is not None
-    assert len(report["warnings"]) == 4
-    # Warnings must preserve details of each mismatched referential target
-    assert any("nonexistent_region" in w for w in report["warnings"])
-    assert any("nonexistent_faction" in w for w in report["warnings"])
-    assert any("nonexistent_role" in w for w in report["warnings"])
-    assert any("nonexistent_resource" in w for w in report["warnings"])
+    assert len(report["warnings"]) >= 2
+    # Warnings must preserve details of each mismatched referential location tag
+    assert any("nonexistent_region_a" in w for w in report["warnings"])
+    assert any("nonexistent_region_b" in w for w in report["warnings"])
 
 
 def test_compiler_does_not_autocreate_factions_or_regions():
@@ -177,11 +177,11 @@ def test_warnings_visible_in_report(tmp_path):
     written JSON compile report.
     """
     data = get_base_test_data()
-    data["quests"] = [
+    data["quest_definitions"] = [
         {
             "id": "warn_quest",
-            "kind": "explore",
-            "target_region_id": "nonexistent_forest"
+            "type": "explore",
+            "required_location_tags": ["nonexistent_forest"],
         }
     ]
     

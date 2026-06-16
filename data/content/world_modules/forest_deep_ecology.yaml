@@ -1,0 +1,19 @@
+# STATE: ADDITIONAL
+module_id: "forest_deep_ecology"
+module_type: "ecology"
+display_name: "Deep Forest Ecology"
+description: "A remote deep forest zone dominated by ancient woodland, wildlife, and warden stewardship. No settlements or built structures — ecology and biome refs only."
+version: "1.0.0"
+provides: ["deep_wilderness", "ecology_module"]
+observability_tags: ["ecology", "wilderness", "nature"]
+biomes: ["near_forest", "sacred_grove"]
+ecologies: ["wolf_den_ecology", "sacred_grove_ecology"]
+quest_definitions:
+  - id: "forest_survey"
+    type: "explore"
+    required_location_tags: ["wilderness"]
+    reward_budget: 80
+    procedural_hints:
+      difficulty: 1
+      escalation: false
+    tags: ["nature", "exploration"]

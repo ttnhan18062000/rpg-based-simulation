@@ -1,16 +1,30 @@
-# Compliance IDs: WORLD-GEN-003, WORLD-GEN-004
+# Compliance IDs: WORLD-GEN-003, WORLD-GEN-004, WORLD-GEN-006
 from __future__ import annotations
 
 import random
 import hashlib
+import yaml
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Optional, Any, Dict, List
 
 from src.content.repository import CatalogRepository
 from src.worldmodules.repository import WorldModuleRepository
 from src.worldgeneration.schema import GenerationIntentSpec
-from src.worldassembly.schema import ProvenanceManifest, ProvenanceRecord
+from src.worldassembly.schema import (
+    ProvenanceManifest,
+    ProvenanceRecord,
+    WorldCompositionSpec,
+    ModuleRefSpec,
+)
 from src.worldassembly.resolver import ResolvedWorldBundle
+
+
+class GenerationCompositionError(ValueError):
+    """
+    Raised when ProceduralCompositionGenerator detects an irresolvable conflict
+    between two or more selected modules (e.g. both claim the same exclusive feature).
+    """
 
 from src.worldbuilding.schema import (
     WorldSpec,
@@ -307,3 +321,182 @@ class WorldProceduralGenerator:
             assembly_report=assembly_report,
             validation_report=validation_report
         )
+
+
+class ProceduralCompositionGenerator:
+    """
+    Compliance ID: WORLD-GEN-006
+    Converts a GenerationIntentSpec into a WorldCompositionSpec YAML by scoring,
+    selecting, and dependency-resolving WorldModuleSpec candidates.
+
+    Selection rules:
+    1. Always include the top-scoring terrain module.
+    2. Include the top-scoring settlement module if intent.settlement_style != "none".
+    3. Fill remaining budget slots with the highest-scoring remaining modules.
+    4. Auto-add dependency modules required by selected modules (BFS).
+    5. Fail-fast if two selected modules claim the same `provides` string.
+
+    Output: `data/content/world_compositions/generated/{world_id}.yaml`
+    """
+
+    BUDGET: int = 6
+
+    def generate(
+        self,
+        intent: GenerationIntentSpec,
+        module_repo: WorldModuleRepository,
+    ) -> Path:
+        """
+        Execute the procedural composition pipeline.
+
+        Parameters
+        ----------
+        intent : GenerationIntentSpec
+            High-level generation parameters (seed, danger_level, settlement_style, etc.)
+        module_repo : WorldModuleRepository
+            Loaded repository of available WorldModuleSpec candidates.
+
+        Returns
+        -------
+        Path
+            Absolute path to the written WorldCompositionSpec YAML.
+
+        Raises
+        ------
+        GenerationCompositionError
+            If two selected modules claim the same feature in their `provides` list.
+        """
+        from src.worldgeneration.scorer import ModuleScorer
+
+        all_modules = module_repo.list_modules()
+
+        # Score all modules against the intent
+        scores = ModuleScorer.score(intent, all_modules)
+
+        # Sort deterministically: highest score first, module_id as tie-breaker
+        ranked = sorted(
+            all_modules,
+            key=lambda m: (-scores[m.module_id].score, m.module_id),
+        )
+
+        selected_ids: list[str] = []
+
+        # Rule 1: Always include the top-scoring terrain module
+        terrain_mods = [m for m in ranked if m.module_type == "terrain"]
+        if terrain_mods:
+            selected_ids.append(terrain_mods[0].module_id)
+
+        # Rule 2: Include the top-scoring settlement module when style != "none"
+        if intent.settlement_style != "none":
+            settlement_mods = [
+                m for m in ranked
+                if m.module_type == "settlement" and m.module_id not in selected_ids
+            ]
+            if settlement_mods:
+                selected_ids.append(settlement_mods[0].module_id)
+
+        # Rule 3: Fill remaining budget slots
+        # Skip settlement-type modules when settlement_style="none" — they have no place
+        for m in ranked:
+            if len(selected_ids) >= self.BUDGET:
+                break
+            if m.module_id in selected_ids:
+                continue
+            if m.module_type == "settlement" and intent.settlement_style == "none":
+                continue
+            selected_ids.append(m.module_id)
+
+        # Rule 4: Auto-add dependency modules (BFS)
+        mod_by_id = {m.module_id: m for m in all_modules}
+        visited: set[str] = set(selected_ids)
+        queue: list[str] = list(selected_ids)
+        while queue:
+            mid = queue.pop(0)
+            mod = mod_by_id.get(mid)
+            if mod is None:
+                continue
+            for req in (mod.requires or []):
+                if req not in visited:
+                    visited.add(req)
+                    selected_ids.append(req)
+                    queue.append(req)
+
+        # Rule 5: Conflict check — fail-fast on duplicate `provides` strings
+        feature_owners: dict[str, str] = {}
+        for mid in selected_ids:
+            mod = mod_by_id.get(mid)
+            if mod is None:
+                continue
+            for feature in (mod.provides or []):
+                if feature in feature_owners:
+                    raise GenerationCompositionError(
+                        f"Modules '{feature_owners[feature]}' and '{mid}' both claim"
+                        f" provided feature '{feature}'"
+                    )
+                feature_owners[feature] = mid
+
+
+        # Build WorldCompositionSpec
+        world_id = (
+            f"generated_{intent.settlement_style}"
+            f"_{int(intent.danger_level)}"
+            f"_{intent.seed}"
+        )
+
+        # Seed-based parameter sampling (TCK-20260614-WORLDGEN-SEED-PARAMS)
+        # RNG is initialized once with the intent seed and consumed in a fixed order:
+        # outer loop = selection-rank order of selected_ids,
+        # inner loop = parameter declaration order from ModuleParameterSpec list.
+        # This guarantees identical sequences for the same seed + same modules.
+        param_rng = random.Random(intent.seed)
+        module_refs = []
+        for i, mid in enumerate(selected_ids):
+            mod = mod_by_id.get(mid)
+            sampled_params: dict = {}
+            if mod is not None:
+                for param_spec in (mod.parameters or []):
+                    if param_spec.allowed_values:
+                        # Enum / allowed-values parameter: pick uniformly from declared list
+                        value = param_rng.choice(param_spec.allowed_values)
+                        sampled_params[param_spec.name] = value
+                    elif param_spec.min_value is not None and param_spec.max_value is not None:
+                        # Bounded numeric parameter
+                        if param_spec.type == "integer":
+                            value = param_rng.randint(
+                                int(param_spec.min_value), int(param_spec.max_value)
+                            )
+                        else:
+                            value = param_rng.uniform(
+                                float(param_spec.min_value), float(param_spec.max_value)
+                            )
+                        sampled_params[param_spec.name] = value
+                    else:
+                        # No bounds and no allowed_values: use declared default if present
+                        if param_spec.default is not None:
+                            sampled_params[param_spec.name] = param_spec.default
+                        # required params with no default and no bounds: left absent
+            module_refs.append(
+                ModuleRefSpec(module_id=mid, enabled=True, order=i, parameters=sampled_params)
+            )
+        composition = WorldCompositionSpec(
+            schema_version="worldcomposition.v1",
+            world_id=world_id,
+            name=f"Generated {intent.settlement_style} world (seed={intent.seed})",
+            module_refs=module_refs,
+            generation_seed=intent.seed,
+        )
+
+        # Write YAML to disk
+        output_dir = Path("data/content/world_compositions/generated")
+        output_dir.mkdir(parents=True, exist_ok=True)
+        output_path = output_dir / f"{world_id}.yaml"
+        output_path.write_text(
+            yaml.dump(
+                composition.model_dump(exclude_none=True),
+                default_flow_style=False,
+                sort_keys=False,
+                allow_unicode=True,
+            )
+        )
+
+        return output_path

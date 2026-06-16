@@ -163,10 +163,23 @@ def main() -> None:
     test_output = reviews_dir / "test_export.py"
     frontend_output = reviews_dir / "frontend_export.txt"
     docs_output = reviews_dir / "docs_export.txt"
+    tickets_todos_dir = workspace_root / "tickets" / "todos"
 
     print("Starting full project export...")
     print(f"Workspace Root: {workspace_root}")
     print(f"Output Directory: {reviews_dir}")
+
+    # 0. Export epic ticket folders — one output file per subfolder in tickets/todos/
+    if tickets_todos_dir.exists():
+        for epic_dir in sorted(tickets_todos_dir.iterdir()):
+            if epic_dir.is_dir():
+                epic_output = reviews_dir / f"tickets_{epic_dir.name}.txt"
+                export_directories(
+                    workspace_root,
+                    [epic_dir],
+                    epic_output,
+                    {".md"},
+                )
 
     # 1. Export Backend Sources + Dynamic/Static Content Catalog & Configurations + Infrastructure Context
     export_directories(

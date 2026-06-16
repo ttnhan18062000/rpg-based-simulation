@@ -1,5 +1,4 @@
 # STATE: REDESIGNED-CORE
-schema_version: "worldmodule.v1"
 module_id: "frontier_village_core"
 module_type: "settlement"
 display_name: "Frontier Village Core"
@@ -20,3 +19,5 @@ buildings:
   blacksmith: 1
   inn: 1
   healer_hut: 1
+relationships: ["town_to_merchants", "merchants_to_town"]
+observability_tags: ["settlement", "trade"]

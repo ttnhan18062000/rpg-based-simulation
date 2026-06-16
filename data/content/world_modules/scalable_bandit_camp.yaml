@@ -1,0 +1,30 @@
+# STATE: ADDITIONAL
+module_id: "scalable_bandit_camp"
+module_type: "conflict"
+display_name: "Scalable Bandit Camp"
+description: "A bandit encampment whose size and threat level scales with the danger_scale parameter. Used to calibrate faction pressure against trade routes and settlements."
+version: "1.0.0"
+provides: ["conflict", "faction_pressure"]
+observability_tags: ["hostile", "conflict", "danger_zone", "scalable"]
+parameters:
+  - name: "danger_scale"
+    type: "integer"
+    default: 2
+    min_value: 1
+    max_value: 5
+    description: "Scales bandit count and camp intensity. danger_scale * 3 = total bandit count."
+biomes: ["bandit_road"]
+ecologies: ["bandit_road_ecology"]
+regions:
+  - id: "bandit_road"
+    type: "wilderness"
+    grid_bounds: [50, 30, 85, 60]
+    terrain: "forest"
+    hazard_level: 2.0
+factions: ["bandit_company"]
+population_recipes:
+  - role: "scout"
+    count: "{danger_scale} * 3"
+    faction: "bandit_company"
+    spawn_region: "bandit_road"
+relationships: ["town_to_bandits", "bandits_to_merchants"]

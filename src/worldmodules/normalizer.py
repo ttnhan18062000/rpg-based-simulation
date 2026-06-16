@@ -8,6 +8,7 @@ from src.worldbuilding.recipe import (
     ResourceRecipeSpec,
     BuildingRecipeSpec,
 )
+from src.worldbuilding.schema import QuestDefinition
 
 
 class NormalizationError(ValueError):
@@ -18,7 +19,6 @@ class NormalizationError(ValueError):
 class NormalizedWorldModule:
     """Stable internal representation of a world module contribution."""
     module_id: str
-    schema_version: str
     module_type: str
     display_name: str
     description: Optional[str]
@@ -38,6 +38,7 @@ class NormalizedWorldModule:
     buildings: Dict[str, int]
     services: Dict[str, int]
     factions: List[str]
+    quest_definitions: Tuple[QuestDefinition, ...]
 
 
 def _normalize_ref_list(value: List[Any], *, field_name: str) -> Tuple[str, ...]:
@@ -133,7 +134,6 @@ class WorldModuleAuthoringNormalizer:
     def normalize(spec: WorldModuleSpec) -> NormalizedWorldModule:
         return NormalizedWorldModule(
             module_id=spec.module_id,
-            schema_version=spec.schema_version,
             module_type=spec.module_type,
             display_name=spec.display_name,
             description=spec.description,
@@ -153,4 +153,5 @@ class WorldModuleAuthoringNormalizer:
             buildings=normalize_count_map(spec.buildings, field_name="buildings"),
             services=normalize_count_map(spec.services, field_name="services"),
             factions=list(spec.factions),
+            quest_definitions=tuple(spec.quest_definitions),
         )

@@ -14,7 +14,12 @@ MODULE_MATRIX = [
     "old_mine_resource_loop",
     "bandit_road_trade_pressure",
     "moon_cult_ruins",
-    "undead_battlefield"
+    "undead_battlefield",
+    # TCK-20260614-WORLDDAT-NEWMODS: new modules demonstrating unified schema capabilities
+    "forest_deep_ecology",
+    "ruins_mystery_quest",
+    "trading_company_hub",
+    "scalable_bandit_camp",
 ]
 
 

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import yaml
 from pathlib import Path
-from typing import Optional, Any
+from typing import Optional, Any, Dict, List, Literal
 from pydantic import BaseModel, Field, model_validator, field_validator, ConfigDict, ValidationError
 
 class InvalidWorldSpecError(Exception):
@@ -91,6 +91,33 @@ class ValidationSpec(BaseModel):
     expected_min_entities: int = Field(1, ge=0, description="Ceiling check for combined entity populations")
     allow_overlapping_regions: bool = Field(False, description="Whether regional overlap is tolerated")
 
+class QuestDefinition(BaseModel):
+    """Authoring-time blueprint for a procedural quest seed. Not a runtime quest instance."""
+    model_config = ConfigDict(frozen=True)
+
+    id: str = Field(..., min_length=1, description="Unique identifier for this quest definition")
+    type: Literal["escort", "hunt", "fetch", "explore", "defend", "investigate"] = Field(
+        ..., description="Quest archetype category"
+    )
+    required_participant_tags: List[str] = Field(
+        default_factory=list,
+        description="Entity tags that must exist in the world (e.g. ['hostile', 'humanoid'])"
+    )
+    required_location_tags: List[str] = Field(
+        default_factory=list,
+        description="Region/biome tags required (e.g. ['wilderness', 'dungeon'])"
+    )
+    reward_budget: int = Field(100, ge=0, description="Relative reward weight for downstream generation")
+    procedural_hints: Dict[str, Any] = Field(
+        default_factory=dict,
+        description="Open-ended dict for procedural signals (difficulty, escalation, etc.)"
+    )
+    tags: List[str] = Field(default_factory=list, description="Freeform tags for filtering and module scoring")
+    source_module: Optional[str] = Field(
+        None, description="Set by assembly resolver at composition time; not authored directly"
+    )
+
+
 class WorldSpec(BaseModel):
     model_config = ConfigDict(frozen=True)
 
@@ -105,10 +132,20 @@ class WorldSpec(BaseModel):
     entities: list[PopulationSpec] = Field(default_factory=list)
     resources: list[ResourceNodeSpec] = Field(default_factory=list)
     buildings: list[BuildingSpec] = Field(default_factory=list)
-    quests: list[dict[str, Any]] = Field(default_factory=list)
+    quest_definitions: List[QuestDefinition] = Field(
+        default_factory=list,
+        description="Authoring-time quest blueprints contributed by modules and compositions"
+    )
     validation: ValidationSpec = Field(default_factory=ValidationSpec)
     budgets: Optional[BudgetSpec] = Field(None, description="Optional resource limits and budget controls")
 
+    @model_validator(mode="before")
+    @classmethod
+    def _migrate_quests_field(cls, values: Any) -> Any:
+        """Migrate legacy `quests` key to `quest_definitions` with no silent data loss."""
+        if isinstance(values, dict) and "quests" in values and "quest_definitions" not in values:
+            values["quest_definitions"] = values.pop("quests")
+        return values
 
     @field_validator("schema_version")
     @classmethod

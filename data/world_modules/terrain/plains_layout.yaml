@@ -15,7 +15,7 @@ parameters:
     min_value: 1
     max_value: 10
 regions:
-  - id: "town_center"
+  - id: "hometown"
     type: "town"
     grid_bounds: [1, 1, 8, 8]
     terrain: "GRASS"

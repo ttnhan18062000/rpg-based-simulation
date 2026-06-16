@@ -1,5 +1,4 @@
 # STATE: ADDITIONAL
-schema_version: "worldmodule.v1"
 module_id: "bandit_road_trade_pressure"
 module_type: "conflict"
 display_name: "Bandit Road Trade Pressure"
@@ -15,3 +14,4 @@ regions:
 factions: ["bandit_company", "merchant_league"]
 populations: ["bandit_ambush_group", "merchant_caravan"]
 relationships: ["town_to_bandits", "bandits_to_merchants"]
+observability_tags: ["conflict"]

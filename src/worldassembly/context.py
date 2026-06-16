@@ -29,6 +29,7 @@ class CompileContext:
         self.legacy_factions: Dict[str, Faction] = {}
         self.legacy_roles: Dict[str, EntityRole] = {}
         self.provenance: Optional[Any] = None
+        self.perspectives: Dict[str, Any] = {}
 
     def register_entity(self, key: str, profile: ResolvedEntityProfile) -> None:
         self.entities[key] = profile
@@ -51,6 +52,9 @@ class CompileContext:
     def register_legacy_role(self, role_str: str, role: Any) -> None:
         self.legacy_roles[role_str] = role
 
+    def register_perspective(self, perspective_id: str, resolved_def: Any) -> None:
+        self.perspectives[perspective_id] = resolved_def if isinstance(resolved_def, dict) else resolved_def.model_dump()
+
     def set_provenance(self, provenance: Any) -> None:
         self.provenance = provenance
 
@@ -63,6 +67,7 @@ class CompileContext:
             "region_ownership": {k: int(v) for k, v in self.region_ownership.items()},
             "legacy_factions": {k: int(v) for k, v in self.legacy_factions.items()},
             "legacy_roles": {k: int(v) for k, v in self.legacy_roles.items()},
+            "perspectives": dict(self.perspectives),
         }
 
     @classmethod
@@ -84,5 +89,7 @@ class CompileContext:
             ctx.legacy_factions[k] = Faction(v)
         for k, v in data.get("legacy_roles", {}).items():
             ctx.legacy_roles[k] = EntityRole(v)
-            
+        for k, v in data.get("perspectives", {}).items():
+            ctx.perspectives[k] = v
+
         return ctx

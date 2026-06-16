@@ -1,0 +1,183 @@
+schema_version: worldspec.v1
+world_id: dungeon_crawl
+name: Dungeon Crawl
+description: Quest-dense danger world with ruins and conflict modules. No settlement
+  — pure dungeon exploration with escalating bandit threat.
+topology:
+  width: 126
+  height: 121
+  coordinate_system: grid
+regions:
+- id: goblin_camp
+  type: wilderness
+  bounds:
+  - 95
+  - 20
+  - 125
+  - 55
+  terrain: forest
+  hazard_level: 3.0
+- id: old_mine
+  type: wilderness
+  bounds:
+  - 20
+  - 60
+  - 60
+  - 105
+  terrain: cave
+  hazard_level: 2.0
+- id: haunted_battlefield
+  type: wilderness
+  bounds:
+  - 60
+  - 80
+  - 100
+  - 120
+  terrain: ruin
+  hazard_level: 3.5
+- id: bandit_road
+  type: wilderness
+  bounds:
+  - 50
+  - 30
+  - 85
+  - 60
+  terrain: forest
+  hazard_level: 2.0
+factions:
+- id: hero_guild
+  type: defender
+- id: town_council
+  type: defender
+- id: neutral
+  type: neutral
+- id: wild_beast_pack
+  type: wild
+- id: goblin_warband
+  type: invader
+- id: merchant_league
+  type: neutral
+- id: bandit_company
+  type: invader
+- id: forest_wardens
+  type: defender
+- id: orc_clan
+  type: rival
+- id: dwarven_mine_clan
+  type: defender
+- id: moon_cult
+  type: invader
+- id: undead_remnants
+  type: invader
+- id: arcane_circle
+  type: neutral
+- id: swamp_tribe
+  type: rival
+- id: dragon_cult
+  type: invader
+- id: spirit_court
+  type: neutral
+entities:
+- id: goblin_raiding_party_goblin_scout
+  count: 2
+  role: scout
+  faction: goblin_warband
+  spawn_region: goblin_camp
+  archetype_id: goblin_scout
+- id: goblin_raiding_party_goblin_raider
+  count: 4
+  role: raider
+  faction: goblin_warband
+  spawn_region: goblin_camp
+  archetype_id: goblin_raider
+- id: goblin_raiding_party_goblin_archer
+  count: 2
+  role: scout
+  faction: goblin_warband
+  spawn_region: goblin_camp
+  archetype_id: goblin_archer
+- id: goblin_raiding_party_goblin_warlord
+  count: 1
+  role: leader
+  faction: goblin_warband
+  spawn_region: goblin_camp
+  archetype_id: goblin_warlord
+- id: old_mine_spider_cluster_cave_spider
+  count: 5
+  role: predator_hunter
+  faction: wild_beast_pack
+  spawn_region: old_mine
+  archetype_id: cave_spider
+- id: undead_battlefield_patrol_undead_sentinel
+  count: 6
+  role: sentinel
+  faction: undead_remnants
+  spawn_region: haunted_battlefield
+  archetype_id: undead_sentinel
+- id: pop_0
+  count: 12
+  role: scout
+  faction: bandit_company
+  spawn_region: bandit_road
+resources:
+- id: iron_vein_0
+  resource_type: iron_vein
+  count: 8
+  region: old_mine
+- id: crystal_outcrop_1
+  resource_type: crystal_outcrop
+  count: 4
+  region: old_mine
+- id: silver_vein_2
+  resource_type: silver_vein
+  count: 2
+  region: old_mine
+buildings:
+- id: mine_entrance_0
+  type: mine_entrance
+  region: old_mine
+quest_definitions:
+- id: mine_fetch_ore
+  type: fetch
+  required_participant_tags: []
+  required_location_tags:
+  - mine
+  - underground
+  reward_budget: 80
+  procedural_hints: {}
+  tags:
+  - resource
+  - economy
+  source_module: old_mine_resource_loop
+- id: ruins_first_contact
+  type: investigate
+  required_participant_tags:
+  - undead
+  required_location_tags:
+  - ruins
+  reward_budget: 120
+  procedural_hints:
+    difficulty: 2
+    escalation: false
+  tags:
+  - mystery
+  - ruins
+  source_module: ruins_mystery_quest
+- id: spirit_source_trace
+  type: investigate
+  required_participant_tags:
+  - spiritual
+  required_location_tags:
+  - ruins
+  reward_budget: 150
+  procedural_hints:
+    difficulty: 3
+    escalation: true
+  tags:
+  - mystery
+  - ruins
+  - spirit
+  source_module: ruins_mystery_quest
+validation:
+  expected_min_entities: 1
+  allow_overlapping_regions: false

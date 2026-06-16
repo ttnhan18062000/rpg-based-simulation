@@ -1,0 +1,124 @@
+schema_version: worldspec.v1
+world_id: wilderness_survival
+name: Wilderness Survival
+description: High danger ecology world with no settlement — survival challenge for
+  entities placed in a hostile natural environment.
+topology:
+  width: 256
+  height: 256
+  coordinate_system: grid
+regions:
+- id: haunted_battlefield
+  type: wilderness
+  bounds:
+  - 120
+  - 20
+  - 160
+  - 60
+  terrain: ruin
+  hazard_level: 4.0
+- id: near_forest
+  type: wilderness
+  bounds:
+  - 45
+  - 10
+  - 90
+  - 55
+  terrain: forest
+  hazard_level: 1.0
+- id: wolf_den
+  type: wilderness
+  bounds:
+  - 70
+  - 30
+  - 105
+  - 70
+  terrain: forest
+  hazard_level: 2.0
+factions:
+- id: hero_guild
+  type: defender
+- id: town_council
+  type: defender
+- id: neutral
+  type: neutral
+- id: wild_beast_pack
+  type: wild
+- id: goblin_warband
+  type: invader
+- id: merchant_league
+  type: neutral
+- id: bandit_company
+  type: invader
+- id: forest_wardens
+  type: defender
+- id: orc_clan
+  type: rival
+- id: dwarven_mine_clan
+  type: defender
+- id: moon_cult
+  type: invader
+- id: undead_remnants
+  type: invader
+- id: arcane_circle
+  type: neutral
+- id: swamp_tribe
+  type: rival
+- id: dragon_cult
+  type: invader
+- id: spirit_court
+  type: neutral
+entities:
+- id: undead_battlefield_patrol_undead_sentinel
+  count: 6
+  role: sentinel
+  faction: undead_remnants
+  spawn_region: haunted_battlefield
+  archetype_id: undead_sentinel
+- id: wolf_pack_small_hungry_wolf
+  count: 4
+  role: predator_hunter
+  faction: wild_beast_pack
+  spawn_region: wolf_den
+  archetype_id: hungry_wolf
+- id: wolf_pack_small_alpha_wolf
+  count: 1
+  role: alpha
+  faction: wild_beast_pack
+  spawn_region: wolf_den
+  archetype_id: alpha_wolf
+resources:
+- id: spirit_wisp_0
+  resource_type: spirit_wisp
+  count: 2
+  region: haunted_battlefield
+- id: wood_node_0
+  resource_type: wood_node
+  count: 8
+  region: near_forest
+- id: herb_patch_1
+  resource_type: herb_patch
+  count: 6
+  region: near_forest
+- id: healing_flower_patch_2
+  resource_type: healing_flower_patch
+  count: 3
+  region: near_forest
+buildings: []
+quest_definitions:
+- id: forest_survey
+  type: explore
+  required_participant_tags: []
+  required_location_tags:
+  - wilderness
+  reward_budget: 80
+  procedural_hints:
+    difficulty: 1
+    escalation: false
+  tags:
+  - nature
+  - exploration
+  source_module: forest_deep_ecology
+validation:
+  expected_min_entities: 1
+  allow_overlapping_regions: false

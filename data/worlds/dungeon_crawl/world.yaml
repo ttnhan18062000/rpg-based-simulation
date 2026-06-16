@@ -1,0 +1,24 @@
+# STATE: ADDITIONAL
+schema_version: "worldcomposition.v1"
+world_id: "dungeon_crawl"
+name: "Dungeon Crawl"
+description: "Quest-dense danger world with ruins and conflict modules. No settlement — pure dungeon exploration with escalating bandit threat."
+provided_features:
+  - "dungeon"
+  - "quest_seeding"
+  - "conflict"
+  - "faction_pressure"
+default_perspectives:
+  - "hero_guild_perspective"
+module_refs:
+  - module_id: "ruins_mystery_quest"
+    order: 0
+  - module_id: "goblin_camp_conflict"
+    order: 1
+  - module_id: "old_mine_resource_loop"
+    order: 2
+  - module_id: "scalable_bandit_camp"
+    order: 3
+    parameters:
+      danger_scale: 4
+generation_seed: 303

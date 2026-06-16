@@ -1,0 +1,35 @@
+schema_version: worldcomposition.v1
+world_id: generated_frontier_3_42
+name: Generated frontier world (seed=42)
+catalog_refs: []
+pack_refs: []
+module_refs:
+- module_id: frontier_village_core
+  enabled: true
+  order: 0
+  parameters: {}
+- module_id: old_mine_resource_loop
+  enabled: true
+  order: 1
+  parameters: {}
+- module_id: bandit_road_trade_pressure
+  enabled: true
+  order: 2
+  parameters: {}
+- module_id: goblin_camp_conflict
+  enabled: true
+  order: 3
+  parameters: {}
+- module_id: moon_cult_ruins
+  enabled: true
+  order: 4
+  parameters: {}
+- module_id: orc_clan_territory
+  enabled: true
+  order: 5
+  parameters: {}
+default_perspectives: []
+provided_features: []
+global_parameters: {}
+generation_seed: 42
+validation_profile: local_dev

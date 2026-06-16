@@ -1,5 +1,4 @@
 # STATE: ADDITIONAL
-schema_version: "worldmodule.v1"
 module_id: "moon_cult_ruins"
 module_type: "conflict"
 display_name: "Moon Cult Ruins"
@@ -18,3 +17,4 @@ resources:
   moon_resin_tree: 3
   crystal_outcrop: 4
 relationships: ["moon_cult_to_town"]
+observability_tags: ["conflict"]

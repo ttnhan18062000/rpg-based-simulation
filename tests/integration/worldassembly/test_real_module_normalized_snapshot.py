@@ -91,5 +91,5 @@ def test_snapshot_no_dict_in_any_refs_field(normalized_frontier):
 def test_snapshot_loaded_from_repository_not_synthetic(normalized_frontier):
     # Verify module_id matches exactly — proves data was loaded from real YAML, not constructed
     assert normalized_frontier.module_id == "frontier_village_core"
-    assert normalized_frontier.schema_version is not None
+    assert normalized_frontier.module_type != ""
     assert normalized_frontier.display_name != ""

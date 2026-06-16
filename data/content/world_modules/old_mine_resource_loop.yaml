@@ -1,5 +1,4 @@
 # STATE: ADDITIONAL
-schema_version: "worldmodule.v1"
 module_id: "old_mine_resource_loop"
 module_type: "economy"
 display_name: "Old Mine Resource Loop"
@@ -20,3 +19,12 @@ resources:
   silver_vein: 2
 buildings:
   mine_entrance: 1
+relationships: ["dwarves_to_goblins"]
+observability_tags: ["resource", "economy"]
+quest_definitions:
+  - id: mine_fetch_ore
+    type: fetch
+    required_participant_tags: []
+    required_location_tags: ["mine", "underground"]
+    reward_budget: 80
+    tags: ["resource", "economy"]
