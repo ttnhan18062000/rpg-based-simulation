@@ -3,7 +3,7 @@ status: authoritative
 layer: engine
 authority: P1
 audience: agent
-last_verified: 2026-06-12
+last_verified: 2026-06-16
 tags: [worldgeneration, engine, contract, determinism, procedural, pipeline]
 ---
 
@@ -15,7 +15,20 @@ tags: [worldgeneration, engine, contract, determinism, procedural, pipeline]
 
 ---
 
-## Pipeline Position
+## Two Generation Paths
+
+There are **two distinct generators** in `src/worldgeneration/`:
+
+| Generator | Class | Input | Output | Approach |
+|---|---|---|---|---|
+| **Composition-based** (primary, new) | `ProceduralCompositionGenerator` | `GenerationIntentSpec` + `WorldModuleRepository` | `WorldCompositionSpec` YAML in `data/content/world_compositions/generated/` | Scores and selects existing world modules, writes a composition YAML |
+| **Spec-based** (legacy, preserved) | `WorldProceduralGenerator` | `GenerationIntentSpec` + `CatalogRepository` | `ResolvedWorldBundle` | Builds a `WorldSpec` directly from catalog records (no modules) |
+
+The composition-based path is the **intended path for CLI-driven generation** and produces compositions that survive the full `WorldAssemblyResolver` → `WorldCompiler` pipeline. The spec-based path is preserved for lab experiments and internal tooling.
+
+---
+
+## Pipeline Position (Spec-based path)
 
 World generation is an **alternative entry path** to `WorldSpec` creation — it constructs a `WorldSpec` procedurally from a `GenerationIntentSpec` rather than loading one from YAML.
 
@@ -191,6 +204,76 @@ The `content_fingerprint` field encodes the triple `(generation_id, catalog_fing
 
 ---
 
+---
+
+## Composition-based Generator Contract (WORLD-GEN-005 through WORLD-GEN-008)
+
+### `ModuleScorer` (scorer.py — WORLD-GEN-005, WORLD-GEN-006)
+
+**Entry point:** `ModuleScorer.score(intent, modules) → Dict[str, ModuleScore]`
+
+Scores each `WorldModuleSpec` against a `GenerationIntentSpec` along four dimensions. Used by `ProceduralCompositionGenerator` to rank modules before selection.
+
+**`ModuleScore` dataclass** (frozen):
+- `module_id: str`
+- `score: float` — average of enabled dimensions, normalized to `[0.0, 1.0]`
+- `reasons: list[str]` — human-readable scoring rationale
+- `dimensions: dict[str, float]` — per-dimension scores
+
+**Required modules fast-path:** Any module listed in `intent.required_modules` is assigned `score = 1.0` unconditionally and skips dimensional scoring.
+
+**Scoring dimensions:**
+
+| Dimension | Key | Logic |
+|---|---|---|
+| Module type fit | `module_type` | `terrain` always → 0.9. `settlement` → 0.9 if style matches, 0.2 if `settlement_style="none"`. `conflict`/`danger_zone` → scales with `danger_level` ratio. |
+| Danger level fit | `danger_level` | Danger-type modules (type or `observability_tags` ∩ `{hostile, conflict, danger_zone}`) score proportional to `danger_level / DANGER_MAX`. Safe modules score inversely. |
+| Resource density | `resource_density` | Modules with non-empty `resource_recipes` score proportional to `resource_density`. |
+| Population scale | `population_scale` | Modules with non-empty `population_recipes` score proportional to `population_scale`. |
+
+**Tag field used:** `module.observability_tags` — NOT `module.tags` (which does not exist on `WorldModuleSpec`).
+
+---
+
+### `ProceduralCompositionGenerator` (generator.py — WORLD-GEN-007, WORLD-GEN-008)
+
+**Entry point:** `ProceduralCompositionGenerator(module_repo).generate(intent) → Path`
+
+Selects and assembles world modules into a `WorldCompositionSpec` YAML file.
+
+**Selection algorithm (5 rules, applied in order):**
+
+1. **Required modules** — all IDs in `intent.required_modules` are included unconditionally.
+2. **Terrain-first** — the highest-scoring `module_type == "terrain"` module is always selected first.
+3. **Settlement-conditional** — the highest-scoring `module_type == "settlement"` module is selected **only if** `intent.settlement_style != "none"`.
+4. **Budget fill** — remaining budget slots (default: 6 total) are filled by highest-score modules. Modules with `module_type == "settlement"` are skipped when `settlement_style="none"`.
+5. **BFS dependency resolution** — after selection, `requires` dependencies for each selected module are added via BFS with a visited set.
+
+**Conflict check:** After selection, if any two modules share a string in their `provides` list → raise `GenerationCompositionError(ValueError)`. This is a fail-fast policy — no partial resolution is returned.
+
+**`GenerationCompositionError(ValueError)`** — raised when two selected modules claim the same feature in `provides`. Not recoverable.
+
+**Seed-based parameter sampling (WORLD-GEN-008):**
+
+```python
+param_rng = random.Random(intent.seed)
+```
+
+For each selected module (in selection-rank order), for each parameter declaration (in declaration order):
+1. If `allowed_values` is set → `param_rng.choice(allowed_values)`
+2. Else if `type == "integer"` and bounds set → `param_rng.randint(min_value, max_value)`
+3. Else if `type == "float"` and bounds set → `param_rng.uniform(min_value, max_value)`
+4. Else → use `default`
+
+**Determinism:** Given identical `(intent, module_repo)` inputs, the generator produces the same `WorldCompositionSpec` YAML. `param_rng` is isolated from all other RNG state.
+
+**Output:**
+- File: `data/content/world_compositions/generated/{world_id}.yaml`
+- World ID format: `generated_{settlement_style}_{int(danger_level)}_{seed}`
+- The output YAML is a valid `WorldCompositionSpec` and can be fed directly to `WorldAssemblyResolver.assemble()`.
+
+---
+
 ## Compliance ID Index
 
 | ID | File | Description |
@@ -199,3 +282,7 @@ The `content_fingerprint` field encodes the triple `(generation_id, catalog_fing
 | WORLD-GEN-002 | src/worldgeneration/schema.py | Pydantic frozen model guarantee and default values |
 | WORLD-GEN-003 | src/worldgeneration/generator.py | `WorldProceduralGenerator` constructor and generate() entry point |
 | WORLD-GEN-004 | src/worldgeneration/generator.py | 7-phase generation pipeline and `ResolvedWorldBundle` output contract |
+| WORLD-GEN-005 | src/worldgeneration/scorer.py | `ModuleScorer.score()` entry point and `ModuleScore` dataclass |
+| WORLD-GEN-006 | src/worldgeneration/scorer.py | 4-dimension scoring logic; `observability_tags` for danger detection |
+| WORLD-GEN-007 | src/worldgeneration/generator.py | `ProceduralCompositionGenerator` 5-rule selection algorithm and conflict check |
+| WORLD-GEN-008 | src/worldgeneration/generator.py | Seed-based parameter sampling — `random.Random(intent.seed)`, declaration order |

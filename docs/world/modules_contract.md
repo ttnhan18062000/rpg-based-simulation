@@ -3,7 +3,7 @@ status: authoritative
 layer: engine
 authority: P1
 audience: agent
-last_verified: 2026-06-12
+last_verified: 2026-06-16
 tags: [worldmodules, engine, contract, pipeline, normalization, topology]
 ---
 
@@ -124,7 +124,12 @@ Frozen Pydantic model (`extra="forbid"`) representing a reusable structural worl
 | `population_recipes` | `List[PopulationRecipeSpec]` | Entity spawning recipes |
 | `resource_recipes` | `List[ResourceRecipeSpec]` | Resource node recipes |
 | `building_recipes` | `List[BuildingRecipeSpec]` | Building construct recipes |
-| `observability_tags` | `List[str]` | Structural audit tags |
+| `observability_tags` | `List[str]` | Structural audit tags — used by `ModuleScorer` for danger dimension detection |
+| `quest_definitions` | `List[QuestDefinition]` | Quest definitions contributed by this module; merged by `WorldAssemblyResolver` (see WORLD-ASM-011) |
+
+**IMPORTANT:** `provided_features` is NOT a field on `WorldModuleSpec` — it belongs to `WorldCompositionSpec` only. `extra="forbid"` will reject any YAML key not in the schema above.
+
+**Tag field note:** The tag field is `observability_tags`. There is no `tags` field on `WorldModuleSpec`.
 
 **Catalog reference fields** (normalized to tuples/dicts by `WorldModuleAuthoringNormalizer`; available in all modules alongside recipe fields):
 

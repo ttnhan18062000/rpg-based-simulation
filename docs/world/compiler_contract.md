@@ -3,7 +3,7 @@ status: authoritative
 layer: engine
 authority: P0
 audience: agent
-last_verified: 2026-06-12
+last_verified: 2026-06-16
 tags: [worldbuilding, compiler, engine, contract, schema]
 ---
 
@@ -55,6 +55,20 @@ AuthoritativeState
 - `List[PopulationSpec]` — entity population groups per region
 - `List[ResourceNodeSpec]` — resource node placements
 - `List[BuildingSpec]` — building placements
+- `quest_definitions: List[QuestDefinition]` — typed quest definitions (default `[]`). Populated by `WorldAssemblyResolver` when composing from modules (see WORLD-ASM-012); can also be authored directly in YAML. Legacy `quests:` key is migrated to `quest_definitions` via a `@model_validator(mode="before")`.
+
+**`QuestDefinition`** (frozen Pydantic model, defined in `src/worldbuilding/schema.py`):
+
+| Field | Type | Default | Description |
+|---|---|---|---|
+| `id` | `str` | required | Unique quest ID |
+| `type` | `Literal["escort","hunt","fetch","explore","defend","investigate"]` | required | Quest category |
+| `required_participant_tags` | `List[str]` | `[]` | Entity tag requirements |
+| `required_location_tags` | `List[str]` | `[]` | Region tag requirements |
+| `reward_budget` | `int` | `100` | Nominal reward value |
+| `procedural_hints` | `Dict[str, Any]` | `{}` | Freeform procedural hints |
+| `tags` | `List[str]` | `[]` | Searchable labels |
+| `source_module` | `Optional[str]` | `None` | Set by assembly; never authored in YAML |
 
 All sub-specs are validated by Pydantic at construction time. `InvalidWorldSpecError` is raised on schema violations.
 
@@ -141,7 +155,22 @@ After building a `WorldSpec` from recipes, `WorldValidator` is run before compil
 
 ## CLI Contract (cli.py — CLI-002, WORLD-070, WORLD-071, WORLD-072)
 
-The CLI (`cli.py`) provides a command-line interface to `WorldRepository` and `WorldValidator`. It is the entry point for operator-driven world management (list, validate, compile). It does not implement any business logic — it delegates to `WorldRepository` and `WorldValidator`.
+The CLI (`cli.py`) provides a command-line interface to `WorldRepository`, `WorldValidator`, and `ProceduralCompositionGenerator`. It is the entry point for operator-driven world management.
+
+**Subcommands:** `list`, `validate`, `compile`, `resolve`, `inspect`, `create-template`, `generate`.
+
+**`generate` subcommand** — procedurally generates a `WorldCompositionSpec` YAML from intent parameters:
+
+| Flag | Default | Description |
+|---|---|---|
+| `--danger-level` | `1.0` | Hazard scalar (float) |
+| `--settlement-style` | `"frontier"` | Settlement layout style; `"none"` skips settlement module selection |
+| `--seed` | `42` | RNG seed for deterministic generation |
+| `--terrain-style` | `"temperate"` | Climatic style label |
+| `--resource-density` | `0.5` | Resource node density scalar |
+| `--population-scale` | `1.0` | Population count scalar |
+
+Output: writes `data/content/world_compositions/generated/{world_id}.yaml`. World ID format: `generated_{settlement_style}_{int(danger_level)}_{seed}`.
 
 CLI-002 governs the CLI's operational contract (argument parsing, exit codes, error reporting format).
 

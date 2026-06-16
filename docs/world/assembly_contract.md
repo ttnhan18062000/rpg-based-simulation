@@ -3,7 +3,7 @@ status: authoritative
 layer: engine
 authority: P0
 audience: agent
-last_verified: 2026-06-12
+last_verified: 2026-06-16
 tags: [worldassembly, engine, contract, compilation, entity-spawning]
 ---
 
@@ -132,6 +132,69 @@ Profiles without `archetype_id` (e.g. town NPCs, synthetic entities) → `V2Enti
 
 ---
 
+## Pack Validation Contract (WORLD-ASM-011)
+
+`WorldCompositionSpec.pack_refs: List[str]` — optional list of named content pack IDs that must be present and enabled before assembly proceeds.
+
+**Validation sequence** (runs at start of `WorldAssemblyResolver.assemble()`, before module traversal):
+
+1. For each `pack_id` in `pack_refs`:
+   - Load the pack manifest (YAML file in the packs directory).
+   - If manifest is missing → raise `AssemblyPackError(f"Pack '{pack_id}' not found")`.
+   - If `manifest["enabled"] == False` → raise `AssemblyPackError(f"Pack '{pack_id}' is disabled")`.
+   - For each entry in `manifest["depends_on"]`: validate the dependency is also present and enabled.
+     - Missing dependency → `AssemblyPackError`.
+     - Disabled dependency → `AssemblyPackError`.
+2. If `pack_refs` is empty, this step is skipped entirely.
+
+**`AssemblyPackError(ValueError)`** — raised when a required pack is missing, disabled, or has unsatisfied dependencies. Not recoverable — assembly aborts.
+
+---
+
+## Quest Definitions Merge Contract (WORLD-ASM-012)
+
+`WorldModuleSpec.quest_definitions: List[QuestDefinition]` — each module may declare typed quest definitions. The resolver merges them into `WorldSpec.quest_definitions` during module traversal.
+
+**Merge rules** (executed in `resolve_module_contribution()` for each module):
+
+1. For each `QuestDefinition` in the module's `quest_definitions`:
+   - `source_module` is stamped with the current `module_id` via `qd.model_copy(update={"source_module": m_id})`.
+   - If the quest `id` already appears in the accumulated `quest_defs` dict → raise `AssemblyCollisionError` with both module IDs.
+   - Otherwise, add to the accumulator dict keyed by `id`.
+2. After all modules are traversed, `quest_defs.values()` is written to `WorldSpec.quest_definitions`.
+
+**`AssemblyCollisionError(ValueError)`** — raised when two modules contribute a quest with the same `id`. Not recoverable — assembly aborts.
+
+**`QuestDefinition` model** (defined in `src/worldbuilding/schema.py`, frozen Pydantic):
+
+| Field | Type | Default | Description |
+|---|---|---|---|
+| `id` | `str` | required | Unique quest identifier |
+| `type` | `Literal["escort","hunt","fetch","explore","defend","investigate"]` | required | Quest category |
+| `required_participant_tags` | `List[str]` | `[]` | Entity tag requirements for participants |
+| `required_location_tags` | `List[str]` | `[]` | Region/location tag requirements |
+| `reward_budget` | `int` | `100` | Nominal reward budget |
+| `procedural_hints` | `Dict[str, Any]` | `{}` | Freeform hints for procedural instantiation |
+| `tags` | `List[str]` | `[]` | Searchable labels |
+| `source_module` | `Optional[str]` | `None` | Set by assembly; never authored in YAML |
+
+**Access pattern:** After assembly, use `bundle.world_spec.quest_definitions` to read merged quest definitions. `AuthoritativeState` does not carry quest definitions directly.
+
+---
+
+## WorldAssemblyValidator Parametric Contract (WORLD-ASM-013)
+
+`WorldAssemblyValidator.validate(module, params)` runs pre-assembly validation on a module's recipe fields. For parametric recipe counts (e.g. `count: "{merchant_count}"`), it resolves the expression using the **module's default parameter values** rather than an empty dict.
+
+**Why:** Passing an empty param dict to `ModuleParameterEvaluator.evaluate_field()` for a parametric expression raises `AssemblyParameterError` because the substitution key is absent. The validator uses defaults so that template modules with no injected params can still be validated.
+
+```python
+default_param_vals = {p.name: p.default for p in module.parameters if p.default is not None}
+count = ModuleParameterEvaluator.evaluate_field(recipe.count, default_param_vals)
+```
+
+---
+
 ## Compliance ID Index
 
 | ID | File | Line | Description |
@@ -144,5 +207,8 @@ Profiles without `archetype_id` (e.g. town NPCs, synthetic entities) → `V2Enti
 | WORLD-ASM-008 | src/worldassembly/resolver.py | 1 | Resolver resolution sequence (topological sort + module traversal) |
 | WORLD-ASM-009 | src/worldassembly/resolver.py | 1 | Failure contract (ResolverError is fatal, no silent skips) |
 | WORLD-ASM-010 | src/worldassembly/resolver.py | 1 | ResolvedWorldBundle output contract |
+| WORLD-ASM-011 | src/worldassembly/resolver.py | 1 | pack_refs validation — AssemblyPackError on missing/disabled packs |
+| WORLD-ASM-012 | src/worldassembly/resolver.py | 1 | quest_definitions merge — source_module stamping and AssemblyCollisionError |
+| WORLD-ASM-013 | src/worldassembly/resolver.py | 1 | WorldAssemblyValidator parametric validation using module defaults |
 
 Note: WORLD-ASM-004 and WORLD-ASM-005 are not present in the current source — either retired or reserved.
