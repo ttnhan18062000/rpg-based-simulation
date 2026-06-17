@@ -5,7 +5,7 @@ authority: P1
 audience: developer
 ---
 
-# RPG Engine V2 Documentation
+# RPG Engine Documentation
 
 > **Browse all docs locally:** `make docs-serve` → [http://localhost:3000](http://localhost:3000)
 
@@ -26,7 +26,7 @@ The site has four sections accessible from the homepage:
 
 | Section | URL | What's in it |
 |---|---|---|
-| **Docs** | `/docs/` | Mechanics Bible, engine contracts, architecture ADRs, guidelines — sidebar grouped by layer |
+| **Docs** | `/docs/` | Mechanics Bible, engine contracts, architecture decisions, guidelines — sidebar grouped by layer |
 | **Tickets** | `/tickets/` | All ~657 closed tickets, full-text searchable |
 | **Artifacts** | `/artifacts/` | Investigation, plan, and test_plan files per ticket, grouped by ticket ID |
 | **Archive** | `/archive/` | Historical docs and design specs from earlier milestones |
@@ -67,7 +67,7 @@ last_verified: 2026-06-06  # required when status: authoritative
 **Ticket frontmatter** (files in `tickets/done/`):
 ```yaml
 ---
-ticket_id: TCK-20260606-PHASE28-FOO
+ticket_id: TCK-YYYYMMDD-FEATURE-NAME
 title: "Short title"
 status: DONE
 layer: engine
@@ -81,7 +81,7 @@ tags: []
 **Artifact frontmatter** (`stored_artifacts/*/investigation.md` etc.):
 ```yaml
 ---
-ticket_id: TCK-20260606-PHASE28-FOO
+ticket_id: TCK-YYYYMMDD-FEATURE-NAME
 artifact_type: investigation    # investigation | plan | test_plan
 layer: engine
 tags: []
@@ -128,14 +128,14 @@ Each entry is either a `doc` entry or a `ticket` entry (with `artifact_files` li
   ...
 
 - type: ticket
-  path: tickets/done/TCK-20260606-PHASE28-FOO.md
-  ticket_id: TCK-20260606-PHASE28-FOO
-  title: "Phase 28 Foo"
+  path: tickets/done/TCK-YYYYMMDD-FEATURE-NAME.md
+  ticket_id: TCK-YYYYMMDD-FEATURE-NAME
+  title: "Feature Name"
   date: "2026-06-06"
   artifact_files:
-    - stored_artifacts/TCK-20260606-PHASE28-FOO/investigation.md
-    - stored_artifacts/TCK-20260606-PHASE28-FOO/plan.md
-    - stored_artifacts/TCK-20260606-PHASE28-FOO/test_plan.md
+    - stored_artifacts/TCK-YYYYMMDD-FEATURE-NAME/investigation.md
+    - stored_artifacts/TCK-YYYYMMDD-FEATURE-NAME/plan.md
+    - stored_artifacts/TCK-YYYYMMDD-FEATURE-NAME/test_plan.md
   related_code_areas:
     - src/core/foo.py
 ```

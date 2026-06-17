@@ -16,9 +16,9 @@ This supersedes the earlier, narrower `docs/plans/release-spine-and-feature-pack
 
 ## Headline Finding
 
-**There is no faction/diplomacy/war system in V2 at all.** `docs/systems/grand_strategy.md` describes a legacy V1 system (`src/systems/strategy_system.py`, `src/core/world_state.py`) that does not exist anywhere in current `src/` — only `src/content_semantics/faction.py` remains, which is catalog data, not behavior. None of the three prior planning docs caught this; they assumed some macro-political layer existed. This is the single largest concrete gap found and should weigh heavily in prioritization.
+**There is no faction/diplomacy/war system in the current engine.** `docs/systems/grand_strategy.md` describes a legacy system (`src/systems/strategy_system.py`, `src/core/world_state.py`) that does not exist anywhere in current `src/` — only `src/content_semantics/faction.py` remains, which is catalog data, not behavior. None of the three prior planning docs caught this; they assumed some macro-political layer existed. This is the single largest concrete gap found and should weigh heavily in prioritization.
 
-**Direction note:** per explicit project direction, this and every other epic below is to be designed and built fresh against the current V2 architecture (domain ownership, authoritative mutation pipeline, typed durable state) — not ported, adapted, or kept compatible with any legacy V1 system or semantics. `grand_strategy.md` is cited only to establish that no macro-political layer currently exists, not as a design source. The legacy doc itself is a candidate for archival/removal once the fresh system replaces its conceptual territory, rather than being kept around as a compatibility reference.
+**Direction note:** per explicit project direction, this and every other epic below is to be designed and built fresh against the current architecture (domain ownership, authoritative mutation pipeline, typed durable state) — not ported, adapted, or kept compatible with any legacy system or semantics. `grand_strategy.md` is cited only to establish that no macro-political layer currently exists, not as a design source. The legacy doc itself is a candidate for archival/removal once the fresh system replaces its conceptual territory, rather than being kept around as a compatibility reference.
 
 ## Engine Maturity Snapshot
 
@@ -41,7 +41,7 @@ These are pre-existing, already-flagged issues found during the scan, not new pr
 | `COMB-133`/`COMB-134` empty ledger stubs ("Phase 8 owns:" / "Phase 9 owns:" with no content) | `parity_ledger/combat_movement.yaml`, **P0 missing** | Documentation gap, not behavior gap — but P0 per ledger rules |
 | `STRAT-164`/`STRAT-177`, `SOC-134` missing parity tests | `parity_ledger/strategic_cognition.yaml`, `social_narrative.yaml`, **P0 missing** | Test debt on otherwise-certified subsystems |
 | `RPG-INFRA-095` ID collision — one ID, two unrelated meanings in `logic_checklist_exhaustive.md` vs. parity ledger | infra fork | Documentation hygiene, could mislead future agents |
-| `docs/engine/known_limitations.md` is stale (Phase 5/6 vintage) | flagged independently by **3 of 5 forks** | At least one claim (blacksmith-only towns) is already contradicted by done work (`TCK-20260425-PH7-M3-RECOVERY`). Needs a refresh/retire pass before it misleads another investigation — this doc is exactly the kind of authoritative source CLAUDE.md's Context Scan rule tells agents to trust |
+| `docs/engine/known_limitations.md` is stale | flagged independently by **3 of 5 forks** | At least one claim (blacksmith-only towns) is already contradicted by done work (`TCK-20260425-PH7-M3-RECOVERY`). Needs a refresh/retire pass before it misleads another investigation — this doc is exactly the kind of authoritative source CLAUDE.md's Context Scan rule tells agents to trust |
 
 ## Candidate Epics
 
@@ -49,16 +49,16 @@ These are pre-existing, already-flagged issues found during the scan, not new pr
 
 | Epic | Current State | Gap | Why It Matters | Size |
 |---|---|---|---|---|
-| **Faction & Diplomacy System (fresh build)** | No V2 code exists (`src/content_semantics/faction.py` is data, not behavior); legacy V1 `grand_strategy.md` is reference-only for scope, not a design or porting source | War, alliance, siege, conquest, territory pressure — entire macro-political layer | Largest single gap found. No macro-RPG structure above the regional/entity level; blocks any "kingdom history" or multi-faction emergent story | **XL** |
+| **Faction & Diplomacy System (fresh build)** | No current engine code exists (`src/content_semantics/faction.py` is data, not behavior); legacy `grand_strategy.md` is reference-only for scope, not a design or porting source | War, alliance, siege, conquest, territory pressure — entire macro-political layer | Largest single gap found. No macro-RPG structure above the regional/entity level; blocks any "kingdom history" or multi-faction emergent story | **XL** |
 | **History / Chronicle Compiler** | Zero code; only scattered event logs | No event→episode→milestone→era compression. Can't answer "why did this happen" at any timescale beyond raw logs | Required for thousand-year-style simulation and for making completed runs legible to a human | **L** |
-| **Demographic / Cohort Population Model** | `SpawnService`/`ResourceEcologyService` exist (Phase 9) but are density/spawn-rate driven | No age-structured birth/death/migration cohorts | Needed for any long-horizon (century+) simulation; current model can't show population aging or generational change | **M** |
+| **Demographic / Cohort Population Model** | `SpawnService`/`ResourceEcologyService` exist but are density/spawn-rate driven | No age-structured birth/death/migration cohorts | Needed for any long-horizon (century+) simulation; current model can't show population aging or generational change | **M** |
 | **Culture / Myth Drift** | Individual-entity belief/rumor system exists (`belief_and_detour_contract.md`); nothing at culture scale | No culture-level value/taboo/myth distortion mechanism | Speculative, lowest priority of this group — depends on History Compiler existing first to have something to distort | **M**, defer |
 
 ### B. Social & Cognition (depth/agency gaps, not missing mechanics)
 
 | Epic | Current State | Gap | Why It Matters | Size |
 |---|---|---|---|---|
-| **Full Party Adventure Loop** | Recruit, contract appraisal, grudge/betrayal hooks exist (`cooperation_contract.md`, Phase 7) | No sustained multi-tick party lifecycle, class-compatibility scoring, fair reward-split, escort behavior | Social cohesion currently triggers parties but doesn't sustain them — caps emergent "adventuring party" stories | **M** |
+| **Full Party Adventure Loop** | Recruit, contract appraisal, grudge/betrayal hooks exist (see `cooperation_contract.md`) | No sustained multi-tick party lifecycle, class-compatibility scoring, fair reward-split, escort behavior | Social cohesion currently triggers parties but doesn't sustain them — caps emergent "adventuring party" stories | **M** |
 | **Active Information-Seeking / Belief Economy** | Passive leads, belief/trust/strategic-blocker system exists, but blockers are material-resource-only and leads are coordinate-only (no person/concept leads) | No deliberate "ask guide/merchant," no paid info, no contradiction-driven replanning | Entities are still effectively omniscient-by-passive-injection; this is what makes subjective cognition real | **M** |
 | **Personality → Long-Run Behavior Calibration** | OCEAN traits, mood, grudges all implemented and locally correct | No test/metric proves personality compounds into distinct long-run life-arcs vs. one-off route nudges | Same gap independently flagged by `feature_summary.md` — now confirmed via parity scan, not just assumed | **S–M** |
 | **Social Memory as Campaign Consequence** | Reputation/commitment solid within one run | Nothing persists betrayal/rescue/cooperation history across episodes | Blocked by — should be sequenced after — Persistent Campaign Runtime (section D) since there's no cross-episode state to write into yet | **M**, blocked |
@@ -70,7 +70,7 @@ These are pre-existing, already-flagged issues found during the scan, not new pr
 | **Resource Ecology Regeneration** | Nodes largely static/reset-on-reload; confirmed independently by 3 forks | No seasonal growth/depletion/cooldown loop | Scarcity pressure can't emerge organically — undercuts economy, quest generation, and faction conflict all at once | **S–M** |
 | **Macro-Economy Health Metrics** | Per-transaction conservation laws are solid (P0 mechanics); dynamic pricing exists for calamity/survival pressure (`TCK-20260503-PRICE-HARDENING`) | No inflation/gold-sink/dead-economy detection; reputation-based shop discounts still explicitly unsupported | Prevents the "infinite shop, frozen economy" failure mode flagged in `rpg_feature_direction.md` | **M** |
 | **Combat Ecology Extension (nemesis/grudge depth)** | Persistent grudges and tactical-avoidance of known foes already exist (`combat_and_progression.md` §5) — deeper than the planning docs assumed | Unverified whether it covers multi-year rivalry, retirement-from-fear, or is just single-run | First step is verification, not new build — likely a small extension once depth is confirmed | **S** |
-| **Progression Planner** | XP/leveling/evolution-points fully implemented (Phase 8) | No multi-episode skill/equipment/build-goal planning | Confirmed independently by two forks; progression is currently tick-local only | **M** |
+| **Progression Planner** | XP/leveling/evolution-points fully implemented | No multi-episode skill/equipment/build-goal planning | Confirmed independently by two forks; progression is currently tick-local only | **M** |
 
 ### D. Gameplay Loop / Product Surface (the "lab tooling → product" gap)
 
@@ -98,7 +98,7 @@ Still **zero code, zero docs** beyond the vision doc itself. `FeaturePackManifes
 1. **Cheap fixes first** — the P0 parity-ledger items (`COMB-006`, `COMB-133/134`, `STRAT-164/177`, `SOC-134`) are already-acknowledged debt under the project's own Authoritative Mechanics Rule; low cost, should not wait on epic prioritization.
 2. **`known_limitations.md` refresh** — cheap, and prevents future investigations (including this one's method) from citing stale claims.
 3. Among the epics, three look like natural anchors for "next big thing" because they unblock others:
-   - **Persistent Campaign Runtime** unblocks Social-Memory-as-Campaign-Consequence and gives Faction V2 / History Compiler somewhere to write consequences.
+   - **Persistent Campaign Runtime** unblocks Social-Memory-as-Campaign-Consequence and gives Faction System / History Compiler somewhere to write consequences.
    - **Resource Ecology Regeneration** unblocks Macro-Economy Health and Pressure-Driven Quest Generation (both want scarcity signals to react to).
    - **Faction & Diplomacy System (fresh build)** is the highest-ceiling single epic but also the largest (XL) — worth deciding deliberately rather than backing into it.
 

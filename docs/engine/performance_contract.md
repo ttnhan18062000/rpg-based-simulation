@@ -5,10 +5,10 @@ authority: P1
 audience: developer
 ---
 
-# V2 Engine Performance Contract
+# Engine Performance Contract
 
 ## 1. Purpose
-This contract defines how performance (TPS, Tick Cost) must be measured, reported, and certified in the V2 engine. It ensures that performance claims are honest, scoped, and reproducible.
+This contract defines how performance (TPS, Tick Cost) must be measured, reported, and certified. It ensures that performance claims are honest, scoped, and reproducible.
 
 ## 2. Primary Metrics
 

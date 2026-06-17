@@ -45,7 +45,7 @@ The schema governs the initial distribution of all populations, resources, and s
 ---
 
 ## 4. Kahn's Topological Sort Assembly
-To build complex worlds dynamically from multiple modular specs and template dependencies, the V2 Engine employs a deterministic declarative assembly pipeline.
+To build complex worlds dynamically from multiple modular specs and template dependencies, the engine employs a deterministic declarative assembly pipeline.
 
 ### Dependency Resolution
 *   **Dependency DAG**: Factions, regions, populations, and structures are modeled as nodes in a Directed Acyclic Graph (DAG), where edges represent structural and referential dependencies (e.g., population groups relying on faction definitions and target regions).
@@ -105,7 +105,7 @@ Validation rules are categorized into dynamic severity levels to allow flexible 
 ---
 
 ## 8. Sidecar Provenance Manifests & Telemetry Joins
-For complete traceability, every successfully compiled world state outputs a sidecar `provenance_manifest.json` file. This is the cornerstone of V2 observability.
+For complete traceability, every successfully compiled world state outputs a sidecar `provenance_manifest.json` file. This is the cornerstone of engine observability.
 
 ### Provenance Tracking
 *   **Sidecar Structure**: The provenance manifest contains detailed metadata maps tracking the origin of every compiled asset:
@@ -154,4 +154,4 @@ Defines items, structures, and regional ecologies:
 ---
 
 ## 📜 Compliance Status
-All chapters are currently **Certified Level 2 (Authoritative V2)**. This means the documentation matches the current source code implementation as of Tick 0 of the V2 Engine deployment, including full declarative assembly, context-aware compilers, and post-run observability joins.
+All chapters are currently **Certified Level 1 (Authoritative)**. Documentation matches the current source code implementation, including full declarative assembly, context-aware compilers, and post-run observability joins.

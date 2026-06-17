@@ -5,11 +5,11 @@ authority: P1
 audience: developer
 ---
 
-# Authoritative V2 Engine Optimization Invariants
+# Engine Optimization Invariants
 
 ## 1. Overview and Enforcement Philosophy
 
-To ensure that the performance hardening mechanisms in the V2 engine never compromise the bit-identical determinism of the simulation laws, all optimization features must adhere to strict architectural invariants. Violating any of these invariants constitutes an immediate test failure and blocks production deployment.
+To ensure that the performance hardening mechanisms never compromise the bit-identical determinism of the simulation laws, all optimization features must adhere to strict architectural invariants. Violating any of these invariants constitutes an immediate test failure and blocks production deployment.
 
 ```
 +-------------------------------------------------------------------------+

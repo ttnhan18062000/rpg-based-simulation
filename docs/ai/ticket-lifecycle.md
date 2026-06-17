@@ -9,7 +9,7 @@ audience: developer
 
 This document describes the complete flow from an implementation request to a closed ticket. It covers the `implement-ticket` workflow in detail, including gate behavior, failure recovery, and artifact layout.
 
-For a concrete example, this document traces the task of integrating relation projection into combat target classification, tracked as `TCK-20260606-PHASE28-RUNTIME-RELATION`.
+For a concrete example, this document traces the task of integrating relation projection into combat target classification, tracked as `TCK-20260606-COMBAT-RELATION`.
 
 ---
 
@@ -86,8 +86,8 @@ DONE
 
 **From a user prompt — use the skill (preferred):**
 ```
-/implement-ticket request="Implement Task 28.1 — relation projection into combat target classification"
-/implement-ticket ticket_id=TCK-20260606-PHASE28-RUNTIME-RELATION
+/implement-ticket request="relation projection into combat target classification"
+/implement-ticket ticket_id=TCK-20260606-COMBAT-RELATION
 /implement-ticket request="Fix off-by-one in region boundary check" tier=hotfix
 ```
 
@@ -96,12 +96,12 @@ DONE
 **From Claude's internal tools (when orchestrating):**
 ```js
 Workflow({ name: 'implement-ticket', args: {
-  request: 'Implement Task 28.1 — integrate relation projection into combat target classification'
+  request: 'integrate relation projection into combat target classification'
 }})
 
 // Resume after a gate failure:
 Workflow({ name: 'implement-ticket', args: {
-  ticket_id: 'TCK-20260606-PHASE28-RUNTIME-RELATION'
+  ticket_id: 'TCK-20260606-COMBAT-RELATION'
 }})
 ```
 
@@ -123,8 +123,8 @@ Workflow({ name: 'implement-ticket', args: {
 
 **Example output:**
 ```
-tickets/inprogress/TCK-20260606-PHASE28-RUNTIME-RELATION.md
-staging_artifacts/TCK-20260606-PHASE28-RUNTIME-RELATION/
+tickets/inprogress/TCK-20260606-COMBAT-RELATION.md
+staging_artifacts/TCK-20260606-COMBAT-RELATION/
 ```
 
 **Gate:** If conflicts are detected, the workflow returns `CONFLICTS_DETECTED` with a list. The user resolves (adjust scope, close duplicate, etc.) and re-runs.
@@ -297,7 +297,7 @@ The agent executes this via Bash and reports results.
 2. Move: `tickets/inprogress/{id}.md` → `tickets/done/{id}.md`
 3. Append `tickets/working_log.csv`:
    ```
-   2026-06-06T00:00:00Z,TCK-20260606-PHASE28-RUNTIME-RELATION,Phase 28 Relation Runtime,DONE,Added relation projection wrapper into combat target classification,stored_artifacts/TCK-20260606-PHASE28-RUNTIME-RELATION
+   2026-06-06T00:00:00Z,TCK-20260606-COMBAT-RELATION,Relation Projection,DONE,Added relation projection wrapper into combat target classification,stored_artifacts/TCK-20260606-COMBAT-RELATION
    ```
 4. Move: `staging_artifacts/{id}/` → `stored_artifacts/{id}/`
 5. Clean: `data/runs/*`, `reports/release_proof/*`

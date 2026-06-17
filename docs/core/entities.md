@@ -6,9 +6,9 @@ audience: developer
 last_verified: 2026-06-06
 ---
 
-# Entities & Factions: The Aspect-Oriented Model (v2)
+# Entities & Factions: The Aspect-Oriented Model
 
-In the WorldLoop RPG, every agent (Heroes, Mobs, NPCs) is an `Entity`. Following the **Resource-Safe Engine (v2)** architecture, entities are composed of discrete **Aspects** and governed by strict authoritative mutation laws.
+In the WorldLoop RPG, every agent (Heroes, Mobs, NPCs) is an `Entity`. Following the **Resource-Safe Engine** architecture, entities are composed of discrete **Aspects** and governed by strict authoritative mutation laws.
 
 ---
 
@@ -22,7 +22,7 @@ The `Entity` class (`src/core/entities/entity.py`) coordinates lifecycle events 
 - **`next_act_at`**: The absolute tick when the entity is next allowed to act.
 
 ### Authoritative Execution Laws
-1.  **Generation-Based Apply**: In v2, entities are never deep-cloned during a standard tick. Instead, they are updated through the `ApplyPath`, which creates the next "Generation" of the entity state. This ensures that shared references remain read-only for observers.
+1.  **Generation-Based Apply**: Entities are never deep-cloned during a standard tick. Instead, they are updated through the `ApplyPath`, which creates the next "Generation" of the entity state. This ensures that shared references remain read-only for observers.
 2.  **Phase-Locked Mutation**: Entities can only be mutated during the **RESOLUTION** phase of the kernel. Any attempt to modify a field during AI Deliberation results in a simulation halt.
 3.  **Shallow Packetization**: For AI workers, entities are wrapped in a `WorkerPacket` which provides a shallow, read-only view of the actor and its immediate surroundings.
 

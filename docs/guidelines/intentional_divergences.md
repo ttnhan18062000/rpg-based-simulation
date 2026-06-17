@@ -6,16 +6,6 @@ audience: developer
 ---
 
 # `src` Divergence Log
-<!-- VERIFIED v2: DIVERGENCE_LOG -->
-<!-- VERIFIED v2: UNSUPPORTED -->
-<!-- VERIFIED v2: deterministic -->
-<!-- VERIFIED v2: strategic -->
-<!-- VERIFIED v2: blocker -->
-<!-- VERIFIED v2: detour -->
-<!-- VERIFIED v2: social -->
-<!-- VERIFIED v2: progression -->
-<!-- VERIFIED v2: world -->
-<!-- VERIFIED v2: API -->
 
 This document is the canonical record of intentional behavior shifts in `src` compared to original `src`. Every divergence listed here must have a rationale and be classified according to the `src_principle.md` standards.
 
@@ -31,7 +21,7 @@ This document is the canonical record of intentional behavior shifts in `src` co
 | **RPG-CORE** | Lead Suppression | **Stabilized** | RATIFIED |
 | **RPG-CORE** | Attention Limits | **Bounded** | RATIFIED |
 | **RPG-CORE** | Action Style | **Hardened** | RATIFIED |
-| **World Assembly** | v2 Service Assembly | **Stabilized** | DEFERRED |
+| **World Assembly** | Service Assembly | **Stabilized** | DEFERRED |
 
 ---
 
@@ -64,7 +54,7 @@ This document is the canonical record of intentional behavior shifts in `src` co
 - **New Behavior**: `steel_sword` cost simplified to 1 `iron_ore`.
 - **Rationale**: **Intentional Gameplay Change**. Simplified specifically to support single-loop loop-integrity proof scenarios.
 - **Verification**: `docs/archive/engine_history/resource_exit_support_boundary.md`
-- **Note**: This divergence is restricted to the Phase 5/6 baseline scenarios and may be removed in later Phases.
+- **Note**: This divergence is restricted to single-loop baseline scenarios and may be removed later.
 
 ### 2.5 Proactive Strategic Redirection
 - **Subsystem**: AI / Strategic
@@ -84,7 +74,7 @@ This document is the canonical record of intentional behavior shifts in `src` co
 - **Subsystem**: Tactical AI
 - **Old Behavior**: Entities retreated at 25% HP.
 - **New Behavior**: Entities retreat at 20% HP.
-- **Rationale**: **Intentional Gameplay Change**. Aligns with V2's more aggressive hero-bias scenarios.
+- **Rationale**: **Intentional Gameplay Change**. Aligns with the engine's more aggressive hero-bias scenarios.
 - **Verification**: `tests/parity/test_tactical_parity.py`
 
 ### 2.8 Omitted Combat Variance/Evasion
@@ -98,7 +88,7 @@ This document is the canonical record of intentional behavior shifts in `src` co
 - **Subsystem**: Combat / Legality
 - **Old Behavior**: Ranged attacks often clipped corners; melee attacks could be initiated during "illegal" movement states (stale engagement).
 - **New Behavior**: `LegalityService` enforces strict Line-of-Sight and engagement-registry truth. Moves that would violate engagement-lock are rejected.
-- **Rationale**: **Contract Hardening**. Ensures V2 combat is spatially honest and prevents "ghost-swing" exploits.
+- **Rationale**: **Contract Hardening**. Ensures combat is spatially honest and prevents "ghost-swing" exploits.
 - **Verification**: `tests/test_legality.py`
 
 ### 2.10 Cognitive Boundedness (Attention & Detours)
@@ -117,7 +107,7 @@ This document is the canonical record of intentional behavior shifts in `src` co
 
 ### 2.12 Melee Adjacency (LEG-RPG-012)
 - **Subsystem**: RPG-CORE
-- **Rationale**: **Hardened**. V2 requires explicit spatial hash adjacency (Manhattan == 1) without legacy float "fudge factors".
+- **Rationale**: **Hardened**. Requires explicit spatial hash adjacency (Manhattan == 1) without legacy float "fudge factors".
 - **Verification**: `tests/parity/test_interaction_parity.py`
 
 ### 2.13 Ranged LoS (LEG-RPG-013)
@@ -145,13 +135,13 @@ This document is the canonical record of intentional behavior shifts in `src` co
 - **Rationale**: **Stabilized**. Proactively suppresses leads rejected 3 times to prevent loops.
 - **Verification**: `test_resource_intelligence_contract.py`
 
-### 2.19 v2 Service Assembly Gap (World Assembly)
+### 2.19 Service Assembly Gap (World Assembly)
 - **Subsystem**: World Assembly
-- **Old Behavior**: Not applicable — service assembly is a new V2 feature.
-- **New Behavior**: `WorldModuleAssemblyResolver.resolve_module_contribution()` validates and computes `service_refs: Dict[str, int]` for v2 modules, but `assemble()` does not consume it. `WorldSpec` has no `services` field. All current real modules are `worldmodule.v1` so `service_refs` is always empty at runtime.
+- **Old Behavior**: Not applicable — service assembly is a new feature.
+- **New Behavior**: `WorldModuleAssemblyResolver.resolve_module_contribution()` validates and computes `service_refs: Dict[str, int]` for `worldmodule.v2` modules, but `assemble()` does not consume it. `WorldSpec` has no `services` field. All current real modules are `worldmodule.v1` so `service_refs` is always empty at runtime.
 - **Rationale**: **Stabilized**. Service assembly is deferred until `ServiceNodeSpec` and `WorldSpec.services` are defined. Adding a half-wired loop before the output type exists would create dead code.
 - **Verification**: `tests/unit/worldassembly/test_resolver.py::test_v2_service_refs_assembly_is_documented_gap`
-- **Unblock condition**: Add `ServiceNodeSpec` to `worldbuilding/schema.py`, add `services: List[ServiceNodeSpec]` to `WorldSpec`, then add the v2 service merge loop in `assemble()` parallel to the building loop. Update `SUB-367` in `substrate.yaml` to `status: verified` and remove this entry.
+- **Unblock condition**: Add `ServiceNodeSpec` to `worldbuilding/schema.py`, add `services: List[ServiceNodeSpec]` to `WorldSpec`, then add the service merge loop in `assemble()` parallel to the building loop. Update `SUB-367` in `substrate.yaml` to `status: verified` and remove this entry.
 
 ### 2.18 Action Style (LEG-RPG-155)
 - **Subsystem**: AI / Tactical
@@ -162,22 +152,22 @@ This document is the canonical record of intentional behavior shifts in `src` co
 
 ## 3. Unsupported / Retired Behavior
 
-The following legacy behaviors have been intentionally omitted or retired in the V2 engine.
+The following legacy behaviors have been intentionally omitted or retired.
 
 | ID | Feature | Rationale | Status |
 | :--- | :--- | :--- | :--- |
-| **LEG-RPG-021** | Tactical Geometry Exploits | V2 enforces strict grid legality; diagonal "clipping" and pathing exploits are removed. | RETIRED |
+| **LEG-RPG-021** | Tactical Geometry Exploits | Strict grid legality is enforced; diagonal "clipping" and pathing exploits are removed. | RETIRED |
 | **LEG-RPG-031** | Legacy Guild Intel | Replaced by `StrategicIntelligenceSystem` and `LeadState` models. | RETIRED |
 | **LEG-RPG-033** | Generic Building Triggers | Replaced by explicit `InteractionSystem` channeling. | RETIRED |
-| **LEG-RPG-054** | Complex Turning Points | Social salience is simplified to salience-weighted life events in V2. | UNSUPPORTED |
+| **LEG-RPG-054** | Complex Turning Points | Social salience is simplified to salience-weighted life events. | UNSUPPORTED |
 | **LEG-RPG-058** | Territory Ownership | Factional territory is handled via regional influence rather than explicit tile ownership. | UNSUPPORTED |
 | **LEG-RPG-061** | Legacy XP Rewards | XP is now an atomic `RewardState` part of quest resolution, not direct combat emission. | UNSUPPORTED |
 | **LEG-RPG-130** | Luck-Based Crit | Critical hits are currently 100% deterministic or omitted to prioritize substrate stability. | UNSUPPORTED |
-| **LEG-RPG-153** | Combat Exhaustion | Simple stamina drain replaces complex exhaustion debuffs for Phase 5. | UNSUPPORTED |
+| **LEG-RPG-153** | Combat Exhaustion | Simple stamina drain replaces complex exhaustion debuffs. | UNSUPPORTED |
 | **LEG-RPG-158** | Backstab Logic | Flanking is handled via geometric bracketing; specific "backstab" facing checks are omitted. | UNSUPPORTED |
 
 > [!NOTE]
-> Items marked **UNSUPPORTED** are not currently present in the V2 hardening baseline. They may be restored once the core state machine is certified.
+> Items marked **UNSUPPORTED** are not currently present in the hardening baseline. They may be restored once the core state machine is certified.
 
 ---
 *Last updated: 2026-05-01 (legacy retirement pass).*
