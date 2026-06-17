@@ -5,9 +5,9 @@ authority: P1
 audience: developer
 ---
 
-# Project Architecture: The Resource-Safe Conductor (v2)
+# Project Architecture: The Resource-Safe Conductor
 
-This document provides a deep technical overview of the **Resource-Safe Simulation Engine** at the heart of the v2 RPG simulation. It defines the authoritative execution laws, deterministic guarantees, and resource-safety boundaries.
+This document provides a deep technical overview of the **Resource-Safe Simulation Engine** at the heart of the RPG simulation. It defines the authoritative execution laws, deterministic guarantees, and resource-safety boundaries.
 
 ---
 
@@ -33,7 +33,7 @@ graph TD
 
 ### The Threaded Concurrency Model
 
-The v2 engine isolates **Authoritative Mutation** from **Concurrent Deliberation** to ensure 100% determinism and resource safety:
+The engine isolates **Authoritative Mutation** from **Concurrent Deliberation** to ensure 100% determinism and resource safety:
 
 1.  **Simulation Thread (`Kernel`)**: The **Single-Writer**. Only this thread is allowed to produce and apply `AuthoritativeState` transitions.
 2.  **Web Thread (FastAPI)**: Serves the REST API. It reads immutable `AuthoritativeState` references. 
@@ -74,7 +74,7 @@ The engine is governed by three primary laws to ensure it survives pathological 
 
 ## 4. Determinism & Deterministic RNG
 
-The v2 kernel uses the **Seed-Domain-Identity** formula to ensure perfect replayability across all certified hardware.
+The kernel uses the **Seed-Domain-Identity** formula to ensure perfect replayability across all certified hardware.
 
 ### The RNG Formula
 The `DeterministicRNG` (using `xxhash`) generates sequences based on:
@@ -94,9 +94,9 @@ Throughput claims are never made in isolation. The engine certifies its performa
 
 ---
 
-## 6. Domain-Driven System Organization (v2.1)
+## 6. Domain-Driven System Organization
 
-In v2.1, the monolithic `src/systems/` directory was modularized into domain-specific packages to improve maintainability and prevent circular dependencies.
+The `src/systems/` directory is organized into domain-specific packages to improve maintainability and prevent circular dependencies.
 
 - **Strategic Systems** (`src/systems/strategic_systems/`): High-level intention and redirection logic.
 - **Social Systems** (`src/systems/social_systems/`): Relationship management and collective behavior.

@@ -6,9 +6,9 @@ audience: developer
 last_verified: 2026-06-06
 ---
 
-# Simulation Mechanics Bible (V2)
+# Simulation Mechanics Bible
 
-Welcome to the definitive reference for the V2 RPG Engine's simulation laws. This manual is designed for developers, modders, and curious users who want to understand the exact mathematical and logical frameworks that drive the world.
+Welcome to the definitive reference for the RPG Engine's simulation laws. This manual is designed for developers, modders, and curious users who want to understand the exact mathematical and logical frameworks that drive the world.
 
 ## Purpose
 Unlike the technical documentation in `engine/` or `core/`, which focuses on "how the code is structured," this manual focuses on **"how the simulation functions."** 
@@ -80,6 +80,6 @@ The following companion docs extend the Mechanics Bible chapters with formula de
 
 ## Compliance Status
 
-All Bible chapters are currently **Certified Level 1 (Authoritative)**. This means the documentation matches the current source code implementation as of Tick 0 of the V2 Engine deployment.
+All chapters are currently **Certified Level 1 (Authoritative)**. Documentation matches the current source code implementation.
 
 Sub-contracts are **Authoritative (P1)** as of 2026-06-13 and are verified against source code. They do not replace chapters — they extend them.
