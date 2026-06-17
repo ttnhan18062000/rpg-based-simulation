@@ -107,5 +107,5 @@ Liberation (influence ≥ +50) removes the stronghold and restores open town acc
 
 1. To fix sovereignty debuffs: populate the EntityUpdate fields in `apply_sovereignty_debuffs()` and add tests. Do not change the constants — they are already correct.
 2. To add a new faction type: extend the faction alignment check in taxation and town access lock. The influence threshold (±50) is configurable per-region in the build config.
-3. To add runtime border gating: add a movement pre-check in the movement resolution phase. This would be a significant behavior change — document in v2_intentional_divergences.md and update the adventure routing contract.
+3. To add runtime border gating: add a movement pre-check in the movement resolution phase. This would be a significant behavior change — document in intentional_divergences.md and update the adventure routing contract.
 4. Taxation amount (2.0 gold / 10.0 gold) is currently hardcoded. If configurable taxation is needed, move these constants to world config.

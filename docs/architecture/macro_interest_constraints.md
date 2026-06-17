@@ -5,9 +5,9 @@ authority: P1
 audience: developer
 ---
 
-# Macro-Interest Redesign: Foundational Constraints (Phase 0)
+# Macro-Interest Redesign: Foundational Constraints
 
-This document defines the architectural boundaries, canonical ownership, and update pathways for the "Macro-Interest" systems. Every feature implemented in Phase 1+ must adhere to these rules to prevent state duplication and hidden coupling.
+This document defines the architectural boundaries, canonical ownership, and update pathways for the "Macro-Interest" systems. Every new feature in this area must adhere to these rules to prevent state duplication and hidden coupling.
 
 ## 1. Canonical Vocabulary
 
@@ -65,4 +65,4 @@ To maintain behavioral realism and prevent data overload, all entity inspection 
 - **Bonds**: Only bonds with **intensity > 0.3** should be listed in the primary social summary, with dynamic labels (e.g., "Ally", "Nemesis").
 
 ---
-*Created as part of Phase 0 implementation. Approved by User on 2026-04-06.*
+*Approved by User on 2026-04-06.*

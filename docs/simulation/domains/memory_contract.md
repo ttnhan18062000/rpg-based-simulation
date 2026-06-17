@@ -9,7 +9,7 @@ last_verified: 2026-06-13
 # Memory Domain Contract
 
 **Source:** `src/domains/memory/` (phase.py, causal_service.py, spatial_service.py, temporal_service.py); `src/cognition/knowledge_model.py` (separate cognition layer — documented here for disambiguation only)  
-**Pipeline phase:** Phase 13 — MemoryUpdatePhase  
+**Pipeline phase:** the Memory Update stage (`MemoryUpdatePhase`)  
 **Authoritative status:** Entity memory update domain — updates causal lessons, spatial familiarity, and temporal urgency each tick. Operates on the entity list, not world state.
 
 ---
@@ -24,7 +24,7 @@ This domain is **not** the same as the cognition-layer knowledge model (`src/cog
 
 ## Engine Phase
 
-**Phase 13 — `MemoryUpdatePhase.run(entities, state, context)`**
+**Memory Update stage — `MemoryUpdatePhase.run(entities, state, context)`**
 
 Operates on the full entity list each tick, following the same per-entity iteration pattern as the perception domain. For each entity, three services are invoked in sequence:
 
@@ -174,7 +174,7 @@ All memory domain mutations use `dataclasses.replace` — the same read-phase di
 | **Motivation domain** | `TemporalModel.urgency` — updated by `TemporalPressureService` each tick — is read as an urgency dimension in `MotivationPressureSet`. High temporal urgency biases the motivation domain toward deadline-related route families. |
 | **Cognition layer (knowledge_model)** | The knowledge model is updated separately (by `KnowledgeModelService`, not by this domain). The memory domain reads entity cognition state that the knowledge model also reads, but they write to strictly non-overlapping fields. |
 | **Cooperation domain** | The cooperation domain reads `entity.timeline` (recent events) for help-need trigger detection. The memory domain reads the same event log for causal attribution triggering. Neither writes to the other's memory state. |
-| **Perception domain** | Both memory and perception operate on the entity list in a per-entity loop. Memory is Phase 13; perception runs at an earlier phase. Memory reads the state that perception has already populated for the current tick. |
+| **Perception domain** | Both memory and perception operate on the entity list in a per-entity loop. Memory runs after perception. Memory reads the state that perception has already populated for the current tick. |
 
 ---
 

@@ -5,7 +5,7 @@ authority: P1
 audience: developer
 ---
 
-# Bounded Cognition Decision Flow (Milestone 2)
+# Bounded Cognition Decision Flow
 
 This document formalizes the cognitive pipeline used by the `BoundedStrategicAppraisalService` to derive strategic outcomes from raw mental records.
 

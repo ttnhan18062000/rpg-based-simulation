@@ -17,7 +17,7 @@ last_verified: 2026-06-13
 
 The time domain provides `TemporalPressureService`, which converts an entity's deadlines, cooldowns, and stale-fact ratings into a per-key urgency map. This urgency map is consumed by the motivation domain to bias routing decisions toward time-sensitive actions.
 
-The time domain owns no entity lifecycle of its own — it is a pure read-pass utility that runs inside Phase 13 (alongside the memory update phase) on the entity's `cognition.subjective.time` state.
+The time domain owns no entity lifecycle of its own — it is a pure read-pass utility that runs inside the Memory Update stage (alongside memory) on the entity's `cognition.subjective.time` state.
 
 ---
 

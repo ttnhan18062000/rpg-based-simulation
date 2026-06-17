@@ -51,7 +51,7 @@ A camp is cleared when all its associated monsters are killed. On clear:
 - `region.trauma_score -= 10`
 - CAMP_CLEARED event broadcast (see [threat_and_consequences_contract.md](threat_and_consequences_contract.md))
 
-**Known gap:** Camp-to-raid position anchoring is incomplete. The raid spawns at a hardcoded position (0,0) rather than near the camp's actual location. This is noted in camp.py comments as a Phase 1 stub.
+**Known gap:** Camp-to-raid position anchoring is incomplete. The raid spawns at a hardcoded position (0,0) rather than near the camp's actual location. This is noted in camp.py comments as a stub pending implementation.
 
 ---
 

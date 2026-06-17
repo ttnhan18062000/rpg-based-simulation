@@ -1,4 +1,18 @@
 {
+  "permissions": {
+    "allow": [
+      "Write",
+      "Edit",
+      "Bash(git *)",
+      "Bash(sed *)",
+      "Bash(find *)",
+      "Bash(grep *)",
+      "Bash(mkdir *)",
+      "Bash(mv *)",
+      "Bash(rm *)",
+      "Bash(cp *)"
+    ]
+  },
   "hooks": {
     "PreToolUse": [
       {

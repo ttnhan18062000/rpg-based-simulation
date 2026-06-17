@@ -11,7 +11,7 @@ This document defines the supported system-entry surface for the V2 engine.
 
 ## 1. Unified Entrypoint
 - **Command**: `python3 -m src`
-- **Default Behavior**: Displays a placeholder for the `serve` mode. Full REST/WebSocket parity pending Milestone 5.
+- **Default Behavior**: Displays a placeholder for the `serve` mode. Full REST/WebSocket parity not yet implemented.
 
 ## 2. Subcommands
 | Subcommand | Status | Purpose |

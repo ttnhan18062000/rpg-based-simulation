@@ -3765,7 +3765,7 @@
   proof_type: null
   test_path: tests/unit/worldassembly/test_resolver.py::test_v2_service_refs_assembly_is_documented_gap
   divergence_note: Intentional deferral until ServiceNodeSpec and WorldSpec.services
-    are defined. See docs/guidelines/v2_intentional_divergences.md entry 2.19. All
+    are defined. See docs/guidelines/intentional_divergences.md entry 2.19. All
     current modules are worldmodule.v1 so runtime impact is zero.
   support_boundary: null
 - id: SUB-368

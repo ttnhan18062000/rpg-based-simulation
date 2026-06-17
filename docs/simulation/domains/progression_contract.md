@@ -9,7 +9,7 @@ last_verified: 2026-06-13
 # Progression Domain Contract
 
 **Source:** `src/domains/progression/` (phase.py, ledger.py, generator.py, resolver.py, selector.py, gaps.py, possession.py, interpretation.py, schema.py)  
-**Pipeline phase:** Phase 6 — ProgressionConversionPhase  
+**Pipeline phase:** the Progression Conversion stage (`ProgressionConversionPhase`)  
 **Authoritative status:** Tick orchestration domain — manages reward ledger tracking and conversion decisions. Level-up mechanics, stat recalculation, and skill unlocks live in `src/progression/leveling.py`, NOT here.
 
 ---
@@ -25,7 +25,7 @@ The progression subsystem is intentionally split across two locations:
 | `src/domains/progression/` | Tick orchestration, reward ledger tracking, possession evaluation, conversion option generation and selection |
 | `src/progression/leveling.py` | **Authoritative level-up mechanics**: XP threshold formula, level cap, AP grants per level, skill unlock thresholds, stat derivation, 6-phase stat recalc order |
 | `src/progression/skills.py` | Skill mechanics and skill application |
-| `src/progression/breakthroughs.py` | Breakthrough system (Phase 8 — not yet implemented) |
+| `src/progression/breakthroughs.py` | Breakthrough system (not yet implemented) |
 
 `ProgressionConversionPhase` reads the entity's current level but **never calls `leveling.py`** directly. Level-up processing runs separately via the engine's authoritative apply path after all domain phases have emitted their updates.
 
@@ -39,7 +39,7 @@ Each tick, for every active living entity, `ProgressionConversionPhase` evaluate
 
 ## Engine Phase
 
-**Phase 6 — `ProgressionConversionPhase.execute(state, update)`**
+**Progression Conversion stage — `ProgressionConversionPhase.execute(state, update)`**
 
 Eligibility check per entity:
 
@@ -187,10 +187,10 @@ For agents implementing or investigating level-up behaviour, the authoritative m
 | Domain / System | Relationship |
 |---|---|
 | **Motivation** | `GrowthGapEvaluator` calls `RoleFitEvaluator` (motivation domain) to assess equipment and skill fit against class doctrine; doctrine tags inform which gaps are prioritized |
-| **Adventure** | The entity's current project (set by adventure domain Phase 3) informs which equipment and skills are relevant this tick — gear aligned with the active route family scores higher in option generation |
+| **Adventure** | The entity's current project (set by the adventure domain's Adventure Decision stage) informs which equipment and skills are relevant this tick — gear aligned with the active route family scores higher in option generation |
 | **`src/progression/leveling.py`** | Authoritative level-up mechanics; runs separately via the engine apply path — this domain does NOT call it |
 | **`src/progression/skills.py`** | Skill mechanics consumed when `ALLOCATE_AP` options reference skill targets |
-| **`src/progression/breakthroughs.py`** | Phase 8 breakthrough system — not yet implemented; placeholder path only |
+| **`src/progression/breakthroughs.py`** | Breakthrough system — not yet implemented; placeholder path only |
 
 ---
 

@@ -87,7 +87,7 @@ InterpretedNeed:
 
 ## Connection to world-side motivation pressure
 
-`src/world/motivation/pressure_resolver.py` runs **before Phase 2** and produces a `MotivationPressureSet` (8 normalized pressure dimensions: survival, comfort, social, achievement, curiosity, safety, greed, purpose) from the entity's catalog `need_profile_id` and `drive_profile_id`.
+`src/world/motivation/pressure_resolver.py` runs **before the cognition step** and produces a `MotivationPressureSet` (8 normalized pressure dimensions: survival, comfort, social, achievement, curiosity, safety, greed, purpose) from the entity's catalog `need_profile_id` and `drive_profile_id`.
 
 These world-side pressures are NOT the same as interpreted needs. They are catalog-defined drive profiles, while interpreted needs are dynamically computed from the entity's current biological and equipment state. Both feed the motivation domain, which combines them into routing bias multipliers.
 
@@ -95,7 +95,7 @@ These world-side pressures are NOT the same as interpreted needs. They are catal
 
 ## Trace events — `trace_events.py`
 
-Five frozen trace events are emitted during Phase 2:
+Five frozen trace events are emitted during `SelfModelUpdatePhase`:
 
 | Event | When emitted | Key fields |
 |---|---|---|

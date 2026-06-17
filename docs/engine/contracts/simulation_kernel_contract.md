@@ -5,7 +5,7 @@ authority: P1
 audience: developer
 ---
 
-# Simulation Kernel Contract — Milestone 1
+# Simulation Kernel Contract
 
 ## 1. Purpose
 This contract defines the authoritative laws and deterministic semantics of the Resource-Safe Simulation Engine. It serves as the single source of truth for kernel behavior, state classification, and time progression.

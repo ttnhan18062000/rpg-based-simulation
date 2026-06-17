@@ -1,46 +1,39 @@
 ---
-status: historical
+status: active
 layer: engine
-authority: P2
+authority: P1
 audience: developer
 ---
 
-# Milestone 6 Replay Mode Matrix
+# Replay Mode Reference
 
-## Summary
-Replay richness is a mode-driven runtime cost. The Governor and ReplayManager enforce these boundaries to ensure resource safety.
+Replay richness is a mode-driven runtime cost. The governor and `ReplayManager` enforce these boundaries to ensure resource safety.
+
+## Mode Summary
 
 | Replay Mode | Capture Richness | Staging Window | Profile Constraint | Degradation |
 | :--- | :--- | :--- | :--- | :--- |
 | `OFF` | None | 0 KB | None | N/A |
-| `MINIMAL` | Auth Actions + Errors | 64 KB | All Classes | Non-auth traces first |
-| `DEBUG_WINDOW` | Full Component Traces | 1024 KB | Class A, B | Drop to MINIMAL on pressure |
-| `FORENSIC` | Byte-level detailed state | 4096 KB | Class A Only | Forbidden in SURVIVAL |
+| `MINIMAL` | Auth actions + errors | 64 KB | All classes | Non-auth traces first |
+| `DEBUG_WINDOW` | Full component traces | 1024 KB | Class A, B | Drop to MINIMAL on pressure |
+| `FORENSIC` | Byte-level detailed state | 4096 KB | Class A only | Forbidden in SURVIVAL |
 
 ## Mode Definitions
 
-### 1. OFF
-- No capture overhead. Replay subphase is skipped.
+### OFF
+No capture overhead. The replay subphase is skipped entirely.
 
-### 2. MINIMAL
-- Captures only `CRITICAL` work items and `Authoritative PERIODIC` items.
-- No payload data; headers only.
-- Lowest memory and IO footprint.
+### MINIMAL
+Captures only CRITICAL work items and authoritative PERIODIC items. No payload data — headers only. Lowest memory and IO footprint.
 
-### 3. DEBUG_WINDOWED (Standard)
-- Captures all `WorkItem` execution and Phase transitions.
-- Includes payloads for entity updates.
-- Maintains a sliding window for immediate forensics.
+### DEBUG_WINDOWED (Standard)
+Captures all work-item execution and phase transitions. Includes payloads for entity updates. Maintains a sliding window for immediate forensics.
 
-### 4. FORENSIC_SHORT_RUN
-- Highest fidelity capture.
-- Captures internal subsystem state diffs.
-- Only permitted on Class A hardware for short durations.
+### FORENSIC_SHORT_RUN
+Highest-fidelity capture. Captures internal subsystem state diffs. Only permitted on Class A hardware for short durations.
 
 ## Forbidden Behavior
-- **Memory Growth**: Replay mode MUST NOT override the `max_replay_buffer_kb` ceiling of the active profile.
-- **Authoritative Stalling**: Replay logic MUST NOT block kernel execution while waiting for sink availability.
-- **Invisible Backlog**: No in-memory accumulation beyond the declared staging window.
 
-## Regression Risk
-Failure to enforce these modes will lead to the same unbounded memory hazards present in the legacy engine.
+- **Memory Growth**: Replay mode must not override the `max_replay_buffer_kb` ceiling of the active profile.
+- **Authoritative Stalling**: Replay logic must not block kernel execution while waiting for sink availability.
+- **Invisible Backlog**: No in-memory accumulation beyond the declared staging window.

@@ -5,7 +5,7 @@ authority: P1
 audience: developer
 ---
 
-# Bounded Tactical Engagement Contract (Phase 8)
+# Bounded Tactical Engagement Contract
 
 This document defines the authoritative logic for local tactical decisions in the `src` engine.
 
@@ -34,6 +34,6 @@ Targets are selected from hostiles within the visibility radius using the follow
 - **Behavior**: Same as Retreat.
 
 ## 6. Known Exclusions
-- **Group Coordination**: Entities currently act as individuals (Group logic deferred to Phase 9).
+- **Group Coordination**: Entities currently act as individuals (group coordination not yet implemented).
 - **Cover Seeking**: Static obstacle awareness is currently unsupported.
 - **Kiting**: Ranged entities do not yet attempt to maintain maximum distance.

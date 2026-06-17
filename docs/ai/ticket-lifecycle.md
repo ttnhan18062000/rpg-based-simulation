@@ -9,7 +9,7 @@ audience: developer
 
 This document describes the complete flow from an implementation request to a closed ticket. It covers the `implement-ticket` workflow in detail, including gate behavior, failure recovery, and artifact layout.
 
-For a concrete example, this document traces **Phase 28 Task 28.1** — integrating relation projection into combat target classification — which is the one remaining incomplete task in the Phase 20–28 repair plan.
+For a concrete example, this document traces the task of integrating relation projection into combat target classification, tracked as `TCK-20260606-PHASE28-RUNTIME-RELATION`.
 
 ---
 
@@ -107,9 +107,9 @@ Workflow({ name: 'implement-ticket', args: {
 
 ---
 
-## Phase-by-Phase Detail
+## Step-by-Step Detail
 
-### Phase 1 — Scope
+### Scope
 
 **Agent:** `ticket-scoper`
 
@@ -121,7 +121,7 @@ Workflow({ name: 'implement-ticket', args: {
 - Produces the ticket at `tickets/inprogress/TCK-YYYYMMDD-SHORT-SCOPE.md`
 - Creates `staging_artifacts/{ticket_id}/`
 
-**Phase 28 example output:**
+**Example output:**
 ```
 tickets/inprogress/TCK-20260606-PHASE28-RUNTIME-RELATION.md
 staging_artifacts/TCK-20260606-PHASE28-RUNTIME-RELATION/
@@ -133,15 +133,15 @@ staging_artifacts/TCK-20260606-PHASE28-RUNTIME-RELATION/
 
 ---
 
-### Phase 2 — Investigate
+### Investigate
 
 **Agent:** `investigator`
 
 **What happens:**
-- Reads the ticket's "Related Code Areas" — for Phase 28: `src/content_semantics/relation.py`, `src/content_semantics/faction.py`, and the combat target selection component
+- Reads the ticket's "Related Code Areas" — for the example: `src/content_semantics/relation.py`, `src/content_semantics/faction.py`, and the combat target selection component
 - Reads `docs/mechanics/02_combat_laws.md` for the target classification law
 - Checks `docs/parity_ledger/combat_movement.yaml` for overlapping P0 entries
-- Searches `stored_artifacts/` for prior Phase 28 work
+- Searches `stored_artifacts/` for prior related work
 
 **Produces:**
 - `staging_artifacts/{id}/investigation.md` — current combat classification behavior at `file:line`, relation projection service interface, legacy fallback path, anti-drift hazards ("do not rewrite full combat system", "do not remove legacy enum fallback")
@@ -149,7 +149,7 @@ staging_artifacts/TCK-20260606-PHASE28-RUNTIME-RELATION/
 
 ---
 
-### Phase 3 — Plan
+### Plan
 
 **Agent:** `planner`
 
@@ -158,7 +158,7 @@ staging_artifacts/TCK-20260606-PHASE28-RUNTIME-RELATION/
 - Produces ordered steps that are narrow and each independently verifiable
 - Maps each step to the acceptance criteria in the ticket
 
-**Phase 28 example plan structure:**
+**Example plan structure:**
 ```
 Step 1 — Add compatibility wrapper around combat target classification
   Files: src/content_semantics/relation.py (or new wrapper module)
@@ -192,11 +192,11 @@ Step 5 — Legacy regression
 
 ---
 
-### Phase 4 — Architecture Review
+### Architecture Review
 
 **Agent:** `architecture-reviewer`
 
-**What it validates for Phase 28:**
+**What it validates for the example task:**
 - The wrapper must try clean projection first and fall back (not the reverse)
 - Legacy fallback path must remain — no deletion of `EntityRole.MONSTER` logic
 - Projection result must not be stored in `reason` strings or `metadata` — must be a typed return value
@@ -207,7 +207,7 @@ Step 5 — Legacy regression
 
 ---
 
-### Phase 5 — Implement
+### Implement
 
 **Agent:** `implementer`
 
@@ -232,11 +232,11 @@ Step 5 — Legacy regression
 
 ---
 
-### Phase 6 — Test
+### Test
 
 **Agent:** `test-scoper`
 
-**For Phase 28:**
+**For the example task:**
 - Maps `src/content_semantics/relation.py` → `tests/unit/content_semantics/`
 - Maps combat component → `tests/unit/combat/`
 - Expands to `tests/arena/` (transitive — arena tests depend on target classification)
@@ -253,24 +253,24 @@ The agent executes this via Bash and reports results.
 
 ---
 
-### Phase 7 — Parity
+### Parity
 
 **Agent:** `parity-updater`
 
-**For Phase 28:** `behavior_changed: true`, subsystem: `combat_movement`
+**For the example task:** `behavior_changed: true`, subsystem: `combat_movement`
 
 **Updates `docs/parity_ledger/combat_movement.yaml`:**
 - Finds the entry covering target classification (or adds a new one)
 - Sets `status: verified`, `v2_evidence: "src/content_semantics/relation.py::RelationProjectionWrapper"`, `test_path: "tests/unit/content_semantics/test_relation_wrapper.py::test_combat_target_uses_relation_projection_for_clean_data"`
-- If the legacy fallback is an intentional divergence from the Mechanics Bible: sets `status: divergent`, adds to `docs/guidelines/v2_intentional_divergences.md`
+- If the legacy fallback is an intentional divergence from the Mechanics Bible: sets `status: divergent`, adds to `docs/guidelines/intentional_divergences.md`
 
 ---
 
-### Phase 8 — Verify (Definition of Done)
+### Verify (Definition of Done)
 
 **Agent:** `done-checker`
 
-**11-condition table for Phase 28:**
+**11-condition table:**
 
 | Condition | Expected evidence |
 |---|---|
@@ -284,12 +284,12 @@ The agent executes this via Bash and reports results.
 | No undocumented decisions | Fallback-first vs. projection-first decision documented in plan |
 | Repo consistent | No leftover temp files |
 | data/runs/ cleaned | — |
-| No material gaps | Phase 28.2 (fallback reporting) also marked complete or flagged as follow-up |
+| No material gaps | All follow-up items (e.g. fallback reporting) marked complete or explicitly flagged |
 | **Agent monitoring** _(pre-marked PASS)_ | Written by workflow `writeMonitoring` after READY_TO_CLOSE |
 
 ---
 
-### Phase 9 — Finalize
+### Finalize
 
 **Inline (no dedicated agent):**
 

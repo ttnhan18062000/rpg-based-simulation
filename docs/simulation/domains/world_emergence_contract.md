@@ -9,7 +9,7 @@ last_verified: 2026-06-13
 # World Emergence Domain Contract
 
 **Source:** `src/domains/world_emergence/` (phase.py, aggregator.py, pressure_model.py, scarcity_model.py, opportunity_service.py, quest_seed_service.py, rumor_service.py, bridge.py)  
-**Pipeline phase:** Phase 8 — WorldEmergencePhase  
+**Pipeline phase:** the World Emergence stage (`WorldEmergencePhase`)  
 **Authoritative status:** World-level emergent event processing domain — translates regional pressure and event history into opportunities, quest seeds, and entity-facing signals. Does not directly execute any strategic or combat action.
 
 ---
@@ -22,7 +22,7 @@ The world emergence domain translates raw world state — event history, regiona
 
 ## Engine Phase
 
-**Phase 8 — `WorldEmergencePhase.execute(state, context)`**
+**World Emergence stage — `WorldEmergencePhase.execute(state, context)`**
 
 Runs every tick as a world-level phase — it processes the full world state rather than a per-entity iteration. The phase is a sequential seven-step pipeline:
 

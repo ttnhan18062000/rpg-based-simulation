@@ -194,7 +194,7 @@ These agents handle the pre-implementation and post-implementation phases of a d
 
 **Entry update rules:**
 - Behavior matches Mechanics Bible → `status: verified`, update `v2_evidence` and `test_path`
-- Intentional divergence → `status: divergent`, set `divergence_note`, add to `docs/guidelines/v2_intentional_divergences.md`
+- Intentional divergence → `status: divergent`, set `divergence_note`, add to `docs/guidelines/intentional_divergences.md`
 - New behavior with no entry → add with next available ID
 - P0 entries must have a non-null `test_path` pointing to a passing test
 

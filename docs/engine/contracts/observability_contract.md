@@ -5,7 +5,7 @@ authority: P1
 audience: developer
 ---
 
-# Observability Contract (Milestone 7)
+# Observability Contract
 
 ## Purpose
 This contract ensures the engine is inspectable without observability itself becoming a resource hazard. Adhering to these laws prevents "forensic bloat" and ensures diagnostics remain subordinate to the resource envelope.

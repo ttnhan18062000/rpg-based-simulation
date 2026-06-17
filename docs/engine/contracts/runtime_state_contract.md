@@ -5,10 +5,10 @@ authority: P1
 audience: developer
 ---
 
-# Runtime State Contract (M3) — Shape and Retention
+# Runtime State Contract — Shape and Retention
 
 ## 1. Purpose
-This document defines the structural laws for Milestone 3. It establishes the separation between hot-path models and non-authoritative concerns, and enforces bounded memory behavior for all long-lived containers.
+This document defines the structural laws for runtime state shape and retention. It establishes the separation between hot-path models and non-authoritative concerns, and enforces bounded memory behavior for all long-lived containers.
 
 ## 2. Model Categories
 The engine structurally separates models by their role to prevent bloat and high serialization costs.

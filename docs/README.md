@@ -88,7 +88,7 @@ tags: []
 ---
 ```
 
-**Archive frontmatter** (`docs/archive/`, `docs/specs/`, `docs/specs/`):
+**Archive frontmatter** (`docs/archive/`):
 ```yaml
 ---
 status: archive
@@ -171,7 +171,7 @@ Engine contracts: [engine/kernel.md](engine/kernel.md) · [engine/authoritative_
 
 ## Cognition Subsystem — `cognition/`
 
-Entity self-knowledge layer (Phase 2). Covers: self-assessment, capability estimation, knowledge assimilation, and need interpretation.
+Entity self-knowledge layer. Covers: self-assessment, capability estimation, knowledge assimilation, and need interpretation.
 
 | Doc | Contents |
 |---|---|

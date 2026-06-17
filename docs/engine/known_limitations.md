@@ -7,7 +7,7 @@ audience: developer
 
 # `src` Known Limitations
 
-This document records the current technical limitations, unsupported features, and runtime constraints of the `src` engine as of Phase 5. These items are candidates for the Phase 6 replacement ledger and future phase implementation.
+This document records the current technical limitations, unsupported features, and runtime constraints of the `src` engine.
 
 ## 1. Gameplay / Mechanics Limitations
 
@@ -35,4 +35,4 @@ This document records the current technical limitations, unsupported features, a
 - **Metric Granularity**: Some runtime signals (e.g., per-entity strategic bandwidth) are visible in the engine but not yet exported to the external Prometheus/Grafana baseline.
 
 ---
-*Last updated: 2026-04-21 as part of Phase 6 Milestone 1.*
+*Last updated: 2026-04-21.*

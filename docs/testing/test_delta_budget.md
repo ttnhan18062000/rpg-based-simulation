@@ -88,4 +88,4 @@ This budget is enforced by code review, not programmatically. The reviewer check
 
 - **Duplication rules:** `docs/testing/no_duplication_test_policy.md`
 - **Suite ownership:** `docs/testing/content_migration_test_ownership.md`
-- **Test classification:** `docs/testing/v2_test_taxonomy.md`
+- **Test classification:** `docs/testing/test_taxonomy.md`

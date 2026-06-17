@@ -10,7 +10,7 @@ tags: [domains, combat, engagement, contract]
 # Combat Engagement Domain Contract
 
 **Source:** `src/domains/combat_engagement/` (10 files)  
-**Pipeline phase:** Phase 4 — Pre-Combat Assessment  
+**Pipeline phase:** the Pre-Combat Assessment stage  
 **Authoritative status:** NOT authoritative — reads state, returns typed decision record.
 
 ---
@@ -73,7 +73,7 @@ None of these sub-services mutate state. Each receives `EntityState` or derived 
 
 ## Authoritative Pipeline Integration
 
-Phase 4 of the authoritative pipeline calls combat engagement assessment for entities that encounter other entities. The output `CombatPosture` is passed to downstream phases for tactical goal selection. The domain does not write back to `AuthoritativeState` — the pipeline applies the posture.
+The combat_engagement domain's Pre-Combat Assessment stage calls combat engagement assessment for entities that encounter other entities. The output `CombatPosture` is passed to later domain stages for tactical goal selection. The domain does not write back to `AuthoritativeState` — the authoritative pipeline applies the posture when resolving the resulting tactical action.
 
 ---
 

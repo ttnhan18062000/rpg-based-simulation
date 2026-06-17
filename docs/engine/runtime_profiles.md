@@ -5,7 +5,7 @@ authority: P1
 audience: developer
 ---
 
-# Runtime Profiles and Resource-Envelope Contract — Milestone 1
+# Runtime Profiles and Resource-Envelope Contract
 
 ## 1. Purpose
 This document defines the operational contract for bounded resource usage. Runtime profiles are first-class configuration objects that dictate the maximum resource "envelope" the engine is allowed to consume.
@@ -44,6 +44,6 @@ Profiles define the thresholds for switching between:
 - `SURVIVAL` (Authoritative only, minimal observability)
 
 ## 6. Non-Goals
-- Real-time governor logic (Implemented in Milestone 5).
+- Real-time governor logic.
 - Auto-scaling of workers.
 - Dynamic profile switching based on external load.

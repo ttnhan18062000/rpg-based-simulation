@@ -5,7 +5,7 @@ authority: P1
 audience: developer
 ---
 
-# Resource Governor Contract (Milestone 5)
+# Resource Governor Contract
 
 ## Purpose
 The Resource Governor is the engine's authoritative safety-control layer. It protects the simulation's resource envelope (CPU, Memory, Queue, Debt) by transitioning the engine through deterministic degradation modes.
@@ -39,5 +39,5 @@ The Resource Governor is the engine's authoritative safety-control layer. It pro
 
 ## Non-Goals
 - Real-time OS resource management (handled by external orchestrators).
-- Concurrency or worker-pool scaling (Milestone 6+).
+- Concurrency or worker-pool scaling.
 - Permanent persistence of signal history (Bounded window only).

@@ -22,7 +22,7 @@ last_verified: 2026-06-13
 ## Tier 1: Work Item Selection — `DeterministicScheduler.select_work()`
 
 **Location:** `src/engine/scheduler.py`
-**When:** Scheduling phase (Phase 3 of the 6-phase kernel loop)
+**When:** the Scheduling stage of the kernel's tick loop
 **Output:** Set of `WorkItem`s passed to worker threads
 
 Decides which entities produce work this tick. Three gates:

@@ -15,7 +15,7 @@ last_verified: 2026-06-13
 
 ## Purpose
 
-The social systems layer applies social outcomes to entity state. The cooperation and commitment domains (Phase 7, Phase 15) make decisions about social posture; this layer implements those decisions as durable state changes — trust updates, bond formation, contract lifecycle, reputation shifts, and party management.
+The social systems layer applies social outcomes to entity state. The cooperation and commitment domains make decisions about social posture; this layer implements those decisions as durable state changes — trust updates, bond formation, contract lifecycle, reputation shifts, and party management.
 
 **Caller/callee direction:** The cooperation domain (`src/domains/cooperation/`) produces `ContractState` and `BlockerState`. Social systems receive those outputs and apply them. Social systems do NOT call the domain — the domain calls social systems to execute decisions.
 

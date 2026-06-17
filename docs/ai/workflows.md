@@ -51,16 +51,16 @@ Workflow({ name: "workflow-name", args: { key: value } })
 **Usage:**
 ```
 /create-tickets source=docs/plans/another_repair_phase_20_28.md
-/create-tickets source=docs/plans/phase29.md structure=docs/plans/ticket_plan_structure.md
-/create-tickets source=docs/plans/phase29.md output=tickets/todos/phase29-repair/
-/create-tickets source=docs/plans/phase29.md epic_id=TCK-20260608-PHASE29-EPIC
+/create-tickets source=docs/plans/my_feature_plan.md structure=docs/plans/ticket_plan_structure.md
+/create-tickets source=docs/plans/my_feature_plan.md output=tickets/todos/my-feature/
+/create-tickets source=docs/plans/my_feature_plan.md epic_id=TCK-20260608-MY-FEATURE-EPIC
 ```
 
 **Typical full flow:**
 ```
-/create-tickets source=docs/plans/phase29.md structure=docs/plans/ticket_plan_structure.md
+/create-tickets source=docs/plans/my_feature_plan.md structure=docs/plans/ticket_plan_structure.md
         ↓  (review generated tickets, adjust if needed)
-/implement-epic folder=tickets/todos/phase29-repair/
+/implement-epic folder=tickets/todos/my-feature/
 ```
 
 **Artifacts produced:**

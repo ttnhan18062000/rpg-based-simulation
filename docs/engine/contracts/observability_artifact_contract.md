@@ -28,7 +28,7 @@ This document defines the supported operational surface (logs, metrics, reports,
 - **Release Proofs**: Located in `reports/release_proof/`.
 - **Manifest**: `release_report.md` provides a human-readable summary of conformance tests.
 - **Evidence**: `proofs_bundle.json` contains the machine-readable ground truth for all certification scenarios. It is populated via `CertificationResult.to_artifact_dict()` — never via `dataclasses.asdict()` on live state.
-- **Manifest snapshot**: `manifest_snapshot.json` is written to the proof output directory as a verbatim copy of the manifest used for the run (see `certification_contract_me.md` §9).
+- **Manifest snapshot**: `manifest_snapshot.json` is written to the proof output directory as a verbatim copy of the manifest used for the run (see `extended_certification_contract.md` §9).
 - **Evidence levels**: `proofs_bundle.json` entries reflect the `EvidenceLevel` used for the run:
   - `SUMMARY` (default): scalar metrics + entity/resource/region counts.
   - `COMPACT`: adds `entity_sample` (top 5) and `resource_snapshot` (top 5 by quantity).
@@ -36,5 +36,5 @@ This document defines the supported operational surface (logs, metrics, reports,
 - **`final_state` is never embedded**: Proof bundle entries always have `final_state: null`. Full state is written to a separate file only under `EvidenceLevel.FULL`.
 
 ## 5. Known Divergences
-- **Prometheus/Grafana**: V2 does not natively export to Prometheus in the Phase 10 baseline. Metrics are available via internal stats accessors and certification reports.
+- **Prometheus/Grafana**: V2 does not natively export to Prometheus in the current baseline. Metrics are available via internal stats accessors and certification reports.
 - **Log Context**: Some deep-level debug logs from third-party libraries may not contain the `tick` context.

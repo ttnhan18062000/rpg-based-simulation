@@ -11,7 +11,7 @@ This document serves as the final, consolidated rulebook for the Combat and Move
 
 ---
 
-## 1. Spatial and Timing Model (Milestone 1)
+## 1. Spatial and Timing Model
 
 ### Distance Metric
 - **Manhattan Distance**: All distance checks (weapon range, vision, movement) use $L_1$ distance ($|x_1 - x_2| + |y_1 - y_2|$).
@@ -23,7 +23,7 @@ This document serves as the final, consolidated rulebook for the Combat and Move
 
 ---
 
-## 2. Combat Interaction (Milestone 2)
+## 2. Combat Interaction
 
 ### Engagement State
 - **Orthogonal Engagement**: An entity is considered "engaged" if it is orthogonally adjacent to one or more hostiles.
@@ -38,7 +38,7 @@ This document serves as the final, consolidated rulebook for the Combat and Move
 
 ---
 
-## 3. Movement and Congestion (Milestone 3)
+## 3. Movement and Congestion
 
 ### Intention-Driven Movement
 - **MovementIntention**: Every move must carry an intention (e.g., `RETREAT`, `PURSUIT`, `GUARD`).
@@ -51,7 +51,7 @@ This document serves as the final, consolidated rulebook for the Combat and Move
 
 ---
 
-## 4. Tactical AI Heuristics (Milestone 4)
+## 4. Tactical AI Heuristics
 
 ### Tactical Roles
 - **Melee Striker**: Prioritizes closing to adjacency.
@@ -66,7 +66,7 @@ This document serves as the final, consolidated rulebook for the Combat and Move
 
 ---
 
-## 5. Fatigue and Consequences (Milestone 5)
+## 5. Fatigue and Consequences
 
 ### Stamina Pressure
 - **Exhaustion State**: Entities with < 15% stamina are marked as `EXHAUSTED`, suffering severe movement and attack penalties (e.g., -50% Speed).
@@ -77,7 +77,7 @@ This document serves as the final, consolidated rulebook for the Combat and Move
 
 ---
 
-## 6. Arena and Regression (Milestone 6)
+## 6. Arena and Regression
 
 ### Automation Harness
 - **Snapshot Support**: The `ArenaRunner` can execute scenarios from a deterministic starting state.
@@ -88,7 +88,7 @@ This document serves as the final, consolidated rulebook for the Combat and Move
 
 ---
 
-## 7. Observability and Rollout (Milestone 7)
+## 7. Observability and Rollout
 
 ### Structured Observability
 - **ActionReason Model**: Every action or intent update includes a structured `ActionReason` object.

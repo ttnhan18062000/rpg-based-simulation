@@ -9,7 +9,7 @@ last_verified: 2026-06-13
 # Emotion Domain Contract
 
 **Source:** `src/domains/emotion/` (emotion_service.py, habit_service.py, recovery_service.py, opportunity_cost.py)  
-**Pipeline phase:** Phase 16 — event-driven, NOT every-tick scheduled  
+**Pipeline phase:** event-driven, NOT every-tick scheduled  
 **Authoritative status:** Synchronous in-event callback pattern. Returns new immutable instances via `dataclasses.replace`. Does NOT produce `EntityUpdate` or route through the authoritative mutation pipeline.
 
 ---
@@ -33,7 +33,7 @@ This domain does not schedule or initiate actions. It responds to events and pro
 
 ## Engine Pipeline Phase
 
-**Phase 16 — event-driven**
+**Event-driven** (not a scheduled per-tick stage)
 
 Emotion updates are **not** driven by a scheduled per-tick phase runner. They are triggered by specific engine events via synchronous callbacks:
 
@@ -183,9 +183,9 @@ Updates are **not** routed through `EntityUpdate` or the authoritative mutation 
 
 | Domain / System | Direction | Detail |
 |---|---|---|
-| **Perception domain** (Phase 12) | Reads emotion outputs | `fear` and `curiosity` from `EmotionalModel` are read by `SignalSalienceEvaluator` to modulate threat and novelty salience |
+| **Perception domain** (Perception Update stage) | Reads emotion outputs | `fear` and `curiosity` from `EmotionalModel` are read by `SignalSalienceEvaluator` to modulate threat and novelty salience |
 | **Adventure domain** | Reads emotion outputs | `confidence` affects route scoring; `RecoveryReadinessService.is_ready_to_retry()` gates combat/high-risk route eligibility |
-| **Commitment domain** (Phase 15) | Reads emotion outputs | Near-death emotion state (fear, panic) informs survival abandonment classification |
+| **Commitment domain** (inline utility, see commitment_contract.md) | Reads emotion outputs | Near-death emotion state (fear, panic) informs survival abandonment classification |
 | **Engine event handlers** | Triggers | Engine fires event callbacks on specific game outcomes; emotion domain is called synchronously within those handlers |
 
 ---

@@ -55,7 +55,7 @@ The town layer participates in 9 of 17 authoritative pipeline phases:
 
 ---
 
-## Sabotage Pipeline (Phase 11 — `LEG-RPG-006`)
+## Sabotage Pipeline (`LEG-RPG-006`)
 
 **Entry point:** `SabotageAction.apply(entity, building_id, state) → Optional[StateUpdate]`
 
@@ -69,11 +69,11 @@ The town layer participates in 9 of 17 authoritative pipeline phases:
 - Returns `StateUpdate` with `BuildingUpdate(hp_delta=-damage)`
 - If `hp - damage ≤ 0`: building becomes non-functional (`functional=False`)
 
-**Applied by:** Phase 11 of the authoritative pipeline — not applied directly by `SabotageAction`.
+**Applied by:** the Sabotage Pipeline stage of the authoritative pipeline — not applied directly by `SabotageAction`.
 
 ---
 
-## Shop / Trade Flow (Phase 15 — `TOWN-166`)
+## Shop / Trade Flow (`TOWN-166`)
 
 **Entry point:** `ShopService.buy_item(entity, item_id, quantity, state) → Optional[StateUpdate]`
 
@@ -85,11 +85,11 @@ The town layer participates in 9 of 17 authoritative pipeline phases:
 
 **Compliance IDs in shop.py:** ECON-001 through ECON-012 (atomic conservation laws), COMBAT-083/084/085, SOC-012, STRAT-015/016/017/022/201, and others — these reference `docs/mechanics/03_economic_laws.md` for the underlying economic laws.
 
-**Trade legality:** Governed by `TOWN-166` (phase 15). Transactions that violate atomic conservation (items appear without cost deduction, or gold deducted without item transfer) are rejected by the pipeline.
+**Trade legality:** Governed by `TOWN-166`. Transactions that violate atomic conservation (items appear without cost deduction, or gold deducted without item transfer) are rejected by the pipeline.
 
 ---
 
-## Home Storage Lifecycle (Phase 9 / Phase 15)
+## Home Storage Lifecycle
 
 **Entry point:** `HomeStorageService.transfer_to_home(entity, item_id, quantity, state) → Optional[StateUpdate]`
 
@@ -106,7 +106,7 @@ The town layer participates in 9 of 17 authoritative pipeline phases:
 
 ---
 
-## Home Rest (Phase 12)
+## Home Rest
 
 **Entry point:** `HomeAction.rest(entity, state) → Optional[StateUpdate]`
 
@@ -148,4 +148,4 @@ Service kinds: `REST`, `HEAL_DEBT`, `QUEST`, `INTEL`, `TRADE`.
 | Shop | 800 |
 | Others | per BuildingRegistry template |
 
-A building whose `hp` is reduced to 0 or below via sabotage becomes non-functional (`functional=False`) and provides no services until repaired. Repair logic is governed by phase 12 (Town Governance — `TOWN-147`).
+A building whose `hp` is reduced to 0 or below via sabotage becomes non-functional (`functional=False`) and provides no services until repaired. Repair logic is governed by the Town Governance stage (`TOWN-147`).

@@ -13,7 +13,7 @@ This directory contains the authoritative records of simulation integrity, logic
 
 - **[Logic Checklist](checklist.md)**: The master exhaustive ledger of every gameplay law verified against V2.
 - **[Gap Analysis](gap_analysis.md)**: A live record of discrepancies where the code has not yet reached full compliance with the documented laws.
-- **[Divergence Log](../guidelines/v2_intentional_divergences.md)**: Detailed rationale for every intentional change from the legacy engine.
+- **[Divergence Log](../guidelines/intentional_divergences.md)**: Detailed rationale for every intentional change from the legacy engine.
 
 ## 🛡️ Certification Standards
 

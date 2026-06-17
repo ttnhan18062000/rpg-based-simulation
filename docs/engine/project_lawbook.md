@@ -8,7 +8,7 @@ audience: developer
 # Project Lawbook: Resource-Safe Simulation Engine
 
 ## Purpose
-The Project Lawbook is the canonical authority on the simulation engine's architectural invariants, resource laws, and maintenance requirements. It serves as the top-level index for all technical contracts established during Milestones 1-10.
+The Project Lawbook is the canonical authority on the simulation engine's architectural invariants, resource laws, and maintenance requirements. It serves as the top-level index for all technical contracts.
 
 ## Architectural Pillars
 
@@ -44,19 +44,19 @@ The Project Lawbook is the canonical authority on the simulation engine's archit
 - [Worker & Parallelism (Substrate)](../engine/worker_contract.md): Concurrency bounds and deterministic fallback.
 - [Certification & Resilience (Substrate)](../engine/certification_contract.md): Hardware labeling and honest-language reporting.
 
-### Technical Contracts (Phase 4: Gameplay Attachment)
-- [M1: Substrate Freeze](../engine/runtime_completion_contract_ma.md): Closing the repaired baseline.
-- [M2: Movement Slice](attach_gate1_movement_scope.md): First deterministic gameplay slice.
-- [M3: Optimization](../engine/performance_contract.md): Benchmark-driven performance.
-- [M4: Resource Slice](../engine/scheduler_test_matrix.md): Resource-node interaction.
-- [M5: Gameplay Surface](../engine/supported_gameplay_surface.md): Integrated certification.
+### Technical Contracts (Gameplay Attachment)
+- [Substrate Freeze](contracts/substrate_baseline_contract.md): Deterministic single-process baseline laws.
+- [Movement Slice](../archive/engine_contracts/attach_gate1_movement_scope.md): First deterministic gameplay slice (archived).
+- [Optimization](../engine/performance_contract.md): Benchmark-driven performance.
+- [Scheduler & Work Model](../engine/scheduler_contract.md): Resource-node interaction and scheduling laws.
+- [Gameplay Surface](../engine/supported_gameplay_surface.md): Integrated certification.
 
 ### Maintenance & Contribution
-- [Engineering Playbook (M10)](../engine/engineering_playbook.md): Extension templates and TDD workflow.
+- [Engineering Playbook](../engine/engineering_playbook.md): Extension templates and TDD workflow.
 - [Root Contributing Guide](../../CONTRIBUTING.md): Top-level safety guardrails.
-- [Divergence Log](attach_gate1_movement_scope.md): Canonical record of intentional parity shifts.
+- [Divergence Log](../guidelines/intentional_divergences.md): Canonical record of intentional parity shifts.
 
-## Release-Readiness (M10)
+## Release-Readiness
 This engine is certified for production deployment under the following conditions:
 1. **Conformance**: 100% pass rate in the Certification Harness for `CLASS_B` hardware.
 2. **Integrity**: Zero documentation drift detected by automated CI checks.

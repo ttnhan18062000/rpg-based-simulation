@@ -5,10 +5,10 @@ authority: P1
 audience: developer
 ---
 
-# Bounded Cognition — Milestone 1 Test Matrix
+# Bounded Cognition Test Matrix
 
 ## Golden-Value (Case A, B, C)
-Ensures exact compliance with the numeric derivations defined in the milestone contract.
+Ensures exact compliance with the numeric derivations defined in the bounded cognition contract.
 
 | Test Name | Input State | Case | Regression Purpose |
 | :--- | :--- | :--- | :--- |

@@ -8,7 +8,7 @@ audience: developer
 # Governance Logic: Authoritative Implementation
 
 ## 1. Authoritative Flow
-Governance logic is executed in **Phase 12: Town Governance** of the `AuthoritativeApplyPipeline`.
+Governance logic is executed in the **Town Governance** stage of the `AuthoritativeApplyPipeline`.
 
 ### 1.1 TownResolutionSystem
 The `TownResolutionSystem` is the primary resolver for:

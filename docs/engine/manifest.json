@@ -51,7 +51,7 @@
       "required_headers": ["Purpose", "Conformance Proof Taxonomy", "Hardware Classification Rules"]
     },
     {
-      "path": "docs/engine/certification_contract_me.md",
+      "path": "docs/engine/contracts/extended_certification_contract.md",
       "required_headers": ["Purpose", "Conformance Law", "Failure Taxonomy Law"]
     },
     {

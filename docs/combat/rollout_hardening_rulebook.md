@@ -5,7 +5,7 @@ authority: P1
 audience: developer
 ---
 
-# Rollout Hardening Rulebook (Milestone 7)
+# Rollout Hardening Rulebook
 
 ## 1. Overview
 The Rollout Hardening contract specifies how the Combat and Movement Overhaul systems can be safely enabled, disabled, or isolated. This ensures that the system can be stabilized without risky "all-or-nothing" deployments.
@@ -24,10 +24,10 @@ The overhaul is divided into four major feature families, controlled by `Simulat
 - **Default State**: All flags should default to `True` for the target release.
 - **Fail-Safe Reversion**: Disabling any `v2` flag MUST revert the logic to the `v1` implementation or a documented safe default.
 - **No Corruption**: Toggling flags during a simulation run is NOT guaranteed to be safe, but starting a new simulation with any combination of flags MUST be stable.
-- **Regression Linked**: Any major change to a `v2` system must be validated against the Milestone 6 Arena Regression suite before being considered "Stable".
+- **Regression Linked**: Any major change to a `v2` system must be validated against the Arena Regression suite before being considered "Stable".
 
 ## 4. Rollout Validation Criteria
 A feature family is considered "Release Ready" when:
-1. It is covered by 100% of its required Milestone-specific TDD tests.
+1. It is covered by 100% of its required TDD tests.
 2. It does not cause crashes in a 100-tick stress test.
-3. Its behavioral outcomes fall within the accepted envelopes defined in `docs/combat/arena_regression_test_matrix.md`.
+3. Its behavioral outcomes fall within the accepted envelopes defined in `docs/archive/combat/arena_regression_test_matrix.md`.

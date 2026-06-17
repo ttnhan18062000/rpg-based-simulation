@@ -305,42 +305,42 @@ Each checkbox below is derived from one original test. Keep the original test na
 
 #### `ai/test_tactical_milestone_4.py`
 
-- [x] `RPG-COMBAT-020` `test_reactive_cover_seeking`: Reactive cover seeking — Verify that actor seeks cover only when a ranged threat is visible.. <!-- SOURCE: src/engine/combat.py TEST: tests/integration/pipeline/test_combat_legality_matrix.py PROOF: integration -->
-- [x] `RPG-COMBAT-021` `test_chokepoint_holding`: Chokepoint holding — Verify that actor identifies and holds a 1-tile gap.. <!-- SOURCE: src/engine/movement.py TEST: tests/unit/movement/test_movement_congestion.py PROOF: integration -->
-- [x] `RPG-COMBAT-022` `test_cardinal_opposite_bracketing`: Cardinal opposite bracketing — Verify that two allies bracket a target from opposite sides.. <!-- SOURCE: src/engine/combat.py TEST: tests/integration/pipeline/test_combat_legality_matrix.py PROOF: integration -->
-- [ ] `RPG-COMBAT-023` `test_tactical_mode_integration_handler`: Tactical mode integration handler — Verify that CombatHandler respects the tactical target_pos..
+- [x] `RPG-COMBAT-020` `test_reactive_cover_seeking`: Reactive cover seeking — Verify that actor seeks cover only when a ranged threat is visible. <!-- SOURCE: src/engine/combat.py TEST: tests/integration/pipeline/test_combat_legality_matrix.py PROOF: integration -->
+- [x] `RPG-COMBAT-021` `test_chokepoint_holding`: Chokepoint holding — Verify that actor identifies and holds a 1-tile gap. <!-- SOURCE: src/engine/movement.py TEST: tests/unit/movement/test_movement_congestion.py PROOF: integration -->
+- [x] `RPG-COMBAT-022` `test_cardinal_opposite_bracketing`: Cardinal opposite bracketing — Verify that two allies bracket a target from opposite sides. <!-- SOURCE: src/engine/combat.py TEST: tests/integration/pipeline/test_combat_legality_matrix.py PROOF: integration -->
+- [ ] `RPG-COMBAT-023` `test_tactical_mode_integration_handler`: Tactical mode integration handler — Verify that CombatHandler respects the tactical target_pos.
 
 #### `arena/test_arena_harness_contract.py`
 
 - [x] `RPG-DATA-001` `test_arena_structural_determinism`: Arena structural determinism — Verify that the arena produced structurally identical ScenarioReports for the same seed. This validates that the simulation and its reporting layer use stable, deterministic logic. <!-- SOURCE: src/platform/rng.py TEST: tests/integration/kernel/test_long_run_determinism.py PROOF: longrun -->
-- [x] `RPG-INFRA-001` `test_arena_stop_condition_wipe`: Arena stop condition wipe — Verify that the arena correctly detects when one side is eliminated.. <!-- SOURCE: src/certification/harness.py TEST: tests/arena/test_arena_stop_conditions.py PROOF: integration -->
-- [x] `RPG-INFRA-002` `test_arena_stop_condition_timeout`: Arena stop condition timeout — Verify that the arena respects the max_ticks limit.. <!-- SOURCE: src/certification/harness.py TEST: tests/arena/test_arena_stop_conditions.py PROOF: integration -->
-- [x] `RPG-API-001` `test_arena_stop_condition_stall`: Arena stop condition stall — Verify that the arena correctly detects lack of activity (STALL) as a telemetry report.. <!-- SOURCE: src/api/presenters/state_presenter.py TEST: tests/api/test_rest_parity.py PROOF: integration -->
-- [x] `RPG-AUTH-009` `test_mutation_tripwire_during_decision`: Mutation tripwire during decision — Verify that any attempt to mutate entities during the decision phase raises a ReadOnlyError.. <!-- SOURCE: src/core/state.py TEST: tests/unit/core/test_authoritative_state_contract.py PROOF: unit -->
+- [x] `RPG-INFRA-001` `test_arena_stop_condition_wipe`: Arena stop condition wipe — Verify that the arena correctly detects when one side is eliminated. <!-- SOURCE: src/certification/harness.py TEST: tests/arena/test_arena_stop_conditions.py PROOF: integration -->
+- [x] `RPG-INFRA-002` `test_arena_stop_condition_timeout`: Arena stop condition timeout — Verify that the arena respects the max_ticks limit. <!-- SOURCE: src/certification/harness.py TEST: tests/arena/test_arena_stop_conditions.py PROOF: integration -->
+- [x] `RPG-API-001` `test_arena_stop_condition_stall`: Arena stop condition stall — Verify that the arena correctly detects lack of activity (STALL) as a telemetry report. <!-- SOURCE: src/api/presenters/state_presenter.py TEST: tests/api/test_rest_parity.py PROOF: integration -->
+- [x] `RPG-AUTH-009` `test_mutation_tripwire_during_decision`: Mutation tripwire during decision — Verify that any attempt to mutate entities during the decision phase raises a ReadOnlyError. <!-- SOURCE: src/core/state.py TEST: tests/unit/core/test_authoritative_state_contract.py PROOF: unit -->
 
 #### `arena/test_arena_minimal.py`
 
-- [x] `test_minimal_tick`: Minimal tick — Verify that we can run even 1 tick without hanging.. <!-- SOURCE: src/engine/kernel.py TEST: tests/integration/pipeline/test_phase_order_contract.py PROOF: integration -->
+- [x] `test_minimal_tick`: Minimal tick — Verify that we can run even 1 tick without hanging. <!-- SOURCE: src/engine/kernel.py TEST: tests/integration/pipeline/test_phase_order_contract.py PROOF: integration -->
 
 #### `arena/test_arena_watchdog.py`
 
 - [x] `RPG-INFRA-003` `test_watchdog_aborts_on_hang`: Watchdog aborts on hang — Verify that a tick hanging for > watchdog_timeout is aborted. <!-- SOURCE: src/engine/kernel.py TEST: tests/unit/strategic/test_strategic_hardening.py PROOF: unit -->
-- [ ] `RPG-INFRA-004` `test_watchdog_allows_fast_ticks`: Watchdog allows fast ticks — Verify that normal fast ticks are NOT aborted..
+- [ ] `RPG-INFRA-004` `test_watchdog_allows_fast_ticks`: Watchdog allows fast ticks — Verify that normal fast ticks are NOT aborted.
 
 #### `arena/test_core_scenario_regression.py`
 
-- [x] `test_regression_melee_mirror`: Regression melee mirror — Scenario 1v1-01: Symmetry Check.. <!-- SOURCE: src/engine/combat.py TEST: tests/integration/pipeline/test_combat_legality_matrix.py PROOF: integration -->
-- [x] `test_regression_kiting_open`: Regression kiting open — Scenario 1v1-02: Ranged vs Melee Open Field.. <!-- SOURCE: src/engine/combat.py TEST: tests/integration/pipeline/test_combat_legality_matrix.py PROOF: integration -->
-- [ ] `test_regression_elite_vs_swarm`: Regression elite vs swarm — Scenario 1vm-01: Elite vs Swarm..
+- [x] `test_regression_melee_mirror`: Regression melee mirror — Scenario 1v1-01: Symmetry Check. <!-- SOURCE: src/engine/combat.py TEST: tests/integration/pipeline/test_combat_legality_matrix.py PROOF: integration -->
+- [x] `test_regression_kiting_open`: Regression kiting open — Scenario 1v1-02: Ranged vs Melee Open Field. <!-- SOURCE: src/engine/combat.py TEST: tests/integration/pipeline/test_combat_legality_matrix.py PROOF: integration -->
+- [ ] `test_regression_elite_vs_swarm`: Regression elite vs swarm — Scenario 1vm-01: Elite vs Swarm.
 
 #### `arena/test_observability_audit.py`
 
-- [x] `RPG-API-002` `test_rejection_audit_aggregation`: Rejection audit aggregation — Verify that authoritative rejections are captured in ScenarioReport. [Milestone 7]. <!-- SOURCE: src/engine/pipeline.py TEST: tests/unit/kernel/test_replay_determinism.py PROOF: integration -->
-- [x] `RPG-API-003` `test_out_of_range_rejection`: Out of range rejection — Verify that combat out-of-range is explicitly rejected with structured reason. [Milestone 7]. <!-- SOURCE: src/engine/legality.py TEST: tests/unit/combat/test_phase5_combat_legality.py PROOF: integration -->
+- [x] `RPG-API-002` `test_rejection_audit_aggregation`: Rejection audit aggregation — Verify that authoritative rejections are captured in ScenarioReport. <!-- SOURCE: src/engine/pipeline.py TEST: tests/unit/kernel/test_replay_determinism.py PROOF: integration -->
+- [x] `RPG-API-003` `test_out_of_range_rejection`: Out of range rejection — Verify that combat out-of-range is explicitly rejected with structured reason. <!-- SOURCE: src/engine/legality.py TEST: tests/unit/combat/test_phase5_combat_legality.py PROOF: integration -->
 
 #### `arena/test_resource_isolation.py`
 
-- [x] `test_resource_isolation_bounded_growth`: Resource isolation bounded growth — Verify that memory does not show a strong linear leak over many iterations.. <!-- SOURCE: src/core/conservation.py TEST: tests/integration/kernel/test_resource_conservation.py PROOF: race -->
+- [x] `test_resource_isolation_bounded_growth`: Resource isolation bounded growth — Verify that memory does not show a strong linear leak over many iterations. <!-- SOURCE: src/core/conservation.py TEST: tests/integration/kernel/test_resource_conservation.py PROOF: race -->
 
 #### `combat/test_anti_stalemate.py`
 
@@ -349,25 +349,25 @@ Each checkbox below is derived from one original test. Keep the original test na
 
 #### `combat/test_anti_stalemate_milestone_2.py`
 
-- [x] `test_stalemate_detection_and_breaker`: Stalemate detection and breaker — Verify that 3 cycles of rhythmic oscillation trigger the stalemate breaker.. <!-- SOURCE: src/engine/movement.py TEST: tests/unit/movement/test_movement_congestion.py PROOF: integration -->
+- [x] `test_stalemate_detection_and_breaker`: Stalemate detection and breaker — Verify that 3 cycles of rhythmic oscillation trigger the stalemate breaker. <!-- SOURCE: src/engine/movement.py TEST: tests/unit/movement/test_movement_congestion.py PROOF: integration -->
 
 #### `combat/test_combat_context_milestone_2.py`
 
-- [x] `RPG-COMBAT-026` `test_high_ground_bonus`: High ground bonus — Verify High Ground bonus applies when attacker is on MOUNTAIN and defender is on FLOOR.. <!-- SOURCE: src/engine/world_dynamics.py TEST: tests/unit/world/test_local_environment_semantics.py PROOF: test -->
-- [x] `RPG-COMBAT-027` `test_flanking_bonus`: Flanking bonus — Verify Flanking bonus applies when defender is bracketed north/south.. <!-- SOURCE: src/engine/combat.py TEST: tests/integration/pipeline/test_combat_legality_matrix.py PROOF: integration -->
-- [x] `RPG-COMBAT-028` `test_moved_penalty`: Moved penalty — Verify Moved Recently penalty applies when attacker has moved this tick.. <!-- SOURCE: src/engine/combat.py TEST: tests/integration/pipeline/test_combat_legality_matrix.py PROOF: integration -->
-- [x] `RPG-COMBAT-029` `test_ranged_cover_bonus`: Ranged cover bonus — Verify Cover bonus applies against ranged attacks when adjacent to WALL.. <!-- SOURCE: src/engine/combat.py TEST: tests/integration/pipeline/test_combat_legality_matrix.py PROOF: integration -->
+- [x] `RPG-COMBAT-026` `test_high_ground_bonus`: High ground bonus — Verify High Ground bonus applies when attacker is on MOUNTAIN and defender is on FLOOR. <!-- SOURCE: src/engine/world_dynamics.py TEST: tests/unit/world/test_local_environment_semantics.py PROOF: test -->
+- [x] `RPG-COMBAT-027` `test_flanking_bonus`: Flanking bonus — Verify Flanking bonus applies when defender is bracketed north/south. <!-- SOURCE: src/engine/combat.py TEST: tests/integration/pipeline/test_combat_legality_matrix.py PROOF: integration -->
+- [x] `RPG-COMBAT-028` `test_moved_penalty`: Moved penalty — Verify Moved Recently penalty applies when attacker has moved this tick. <!-- SOURCE: src/engine/combat.py TEST: tests/integration/pipeline/test_combat_legality_matrix.py PROOF: integration -->
+- [x] `RPG-COMBAT-029` `test_ranged_cover_bonus`: Ranged cover bonus — Verify Cover bonus applies against ranged attacks when adjacent to WALL. <!-- SOURCE: src/engine/combat.py TEST: tests/integration/pipeline/test_combat_legality_matrix.py PROOF: integration -->
 
 #### `combat/test_combat_movement_rulebook.py`
 
-- [x] `RPG-COMBAT-030` `test_manhattan_distance`: Manhattan distance — Verify Manhattan distance calculation.. <!-- SOURCE: src/engine/legality.py TEST: tests/unit/combat/test_phase5_combat_legality.py PROOF: unit -->
-- [x] `RPG-COMBAT-031` `test_orthogonal_adjacency`: Orthogonal adjacency — Verify that only orthogonal tiles are adjacent.. <!-- SOURCE: src/engine/legality.py TEST: tests/unit/combat/test_phase5_combat_legality.py PROOF: unit -->
-- [x] `RPG-COMBAT-032` `test_check_range`: Check range — Verify range enforcement.. <!-- SOURCE: src/engine/combat.py TEST: tests/integration/pipeline/test_combat_legality_matrix.py PROOF: integration -->
-- [x] `RPG-COMBAT-033` `test_check_occupancy`: Check occupancy — Verify 1-unit-per-tile occupancy rule.. <!-- SOURCE: src/engine/legality.py TEST: tests/unit/combat/test_phase5_combat_legality.py PROOF: unit -->
-- [x] `RPG-COMBAT-034` `test_aoe_legality`: Aoe legality — Verify AoE impact constraints.. <!-- SOURCE: src/engine/kernel.py TEST: tests/unit/combat/test_phase5_combat_legality.py PROOF: test -->
-- [x] `RPG-COMBAT-035` `test_aoe_splash_radius`: Aoe splash radius — Verify entities affected by splash radius.. <!-- SOURCE: src/engine/combat.py TEST: tests/integration/pipeline/test_combat_legality_matrix.py PROOF: integration -->
-- [x] `RPG-COMBAT-036` `test_get_occupant_id`: Get occupant id — Verify occupant lookup.. <!-- SOURCE: src/engine/legality.py TEST: tests/unit/combat/test_phase5_combat_legality.py PROOF: unit -->
-- [x] `RPG-COMBAT-037` `test_check_targeting_legality`: Check targeting legality — Verify consolidated targeting rules (Range + LOS).. <!-- SOURCE: src/engine/combat.py TEST: tests/integration/pipeline/test_combat_legality_matrix.py PROOF: integration -->
+- [x] `RPG-COMBAT-030` `test_manhattan_distance`: Manhattan distance — Verify Manhattan distance calculation. <!-- SOURCE: src/engine/legality.py TEST: tests/unit/combat/test_phase5_combat_legality.py PROOF: unit -->
+- [x] `RPG-COMBAT-031` `test_orthogonal_adjacency`: Orthogonal adjacency — Verify that only orthogonal tiles are adjacent. <!-- SOURCE: src/engine/legality.py TEST: tests/unit/combat/test_phase5_combat_legality.py PROOF: unit -->
+- [x] `RPG-COMBAT-032` `test_check_range`: Check range — Verify range enforcement. <!-- SOURCE: src/engine/combat.py TEST: tests/integration/pipeline/test_combat_legality_matrix.py PROOF: integration -->
+- [x] `RPG-COMBAT-033` `test_check_occupancy`: Check occupancy — Verify 1-unit-per-tile occupancy rule. <!-- SOURCE: src/engine/legality.py TEST: tests/unit/combat/test_phase5_combat_legality.py PROOF: unit -->
+- [x] `RPG-COMBAT-034` `test_aoe_legality`: Aoe legality — Verify AoE impact constraints. <!-- SOURCE: src/engine/kernel.py TEST: tests/unit/combat/test_phase5_combat_legality.py PROOF: test -->
+- [x] `RPG-COMBAT-035` `test_aoe_splash_radius`: Aoe splash radius — Verify entities affected by splash radius. <!-- SOURCE: src/engine/combat.py TEST: tests/integration/pipeline/test_combat_legality_matrix.py PROOF: integration -->
+- [x] `RPG-COMBAT-036` `test_get_occupant_id`: Get occupant id — Verify occupant lookup. <!-- SOURCE: src/engine/legality.py TEST: tests/unit/combat/test_phase5_combat_legality.py PROOF: unit -->
+- [x] `RPG-COMBAT-037` `test_check_targeting_legality`: Check targeting legality — Verify consolidated targeting rules (Range + LOS). <!-- SOURCE: src/engine/combat.py TEST: tests/integration/pipeline/test_combat_legality_matrix.py PROOF: integration -->
 
 #### `combat/test_engagement_contract.py`
 
@@ -386,15 +386,15 @@ Each checkbox below is derived from one original test. Keep the original test na
 
 #### `combat/test_world_time_progression.py`
 
-- [x] `RPG-WORLD-009` `test_passive_progression_on_quiet_tick`: Passive progression on quiet tick — Verify that biological decay and lifecycle systems run even if entity doesn't act.. <!-- SOURCE: src/engine/rpg_depth.py TEST: tests/unit/core/test_rpg_depth.py PROOF: integration -->
-- [x] `RPG-SOC-010` `test_hero_lifecycle_on_quiet_tick`: Hero lifecycle on quiet tick — Verify that HeroLifecycle (e.g. proximity bonding) runs even if no entity acts.. <!-- SOURCE: src/systems/social_systems/contracts.py TEST: tests/unit/social/test_contract_lifecycle_phase7.py PROOF: integration -->
+- [x] `RPG-WORLD-009` `test_passive_progression_on_quiet_tick`: Passive progression on quiet tick — Verify that biological decay and lifecycle systems run even if entity doesn't act. <!-- SOURCE: src/engine/rpg_depth.py TEST: tests/unit/core/test_rpg_depth.py PROOF: integration -->
+- [x] `RPG-SOC-010` `test_hero_lifecycle_on_quiet_tick`: Hero lifecycle on quiet tick — Verify that HeroLifecycle (e.g. proximity bonding) runs even if no entity acts. <!-- SOURCE: src/systems/social_systems/contracts.py TEST: tests/unit/social/test_contract_lifecycle_phase7.py PROOF: integration -->
 
 #### `engine/test_quiet_tick_integrity.py`
 
-- [x] `RPG-WORLD-010` `test_scenario_1_dead_world_progression`: Scenario 1 dead world progression — Scenario 1: No living entities. Verify tick still increments and systems advance.. <!-- SOURCE: src/engine/rpg_depth.py TEST: tests/unit/core/test_rpg_depth.py PROOF: integration -->
-- [x] `RPG-WORLD-011` `test_scenario_2_sleeping_world_biological_decay`: Scenario 2 sleeping world biological decay — Scenario 2: All entities have high next_act_at. Verify biological decay hits.. <!-- SOURCE: src/engine/world_dynamics.py TEST: tests/integration/world/test_living_world_ph9.py PROOF: longrun -->
-- [x] `RPG-SOC-011` `test_scenario_3_stationary_world_proximity_bonding`: Scenario 3 stationary world proximity bonding — Scenario 3: Two heroes are stationary. Verify bonding occurs via HeroLifecycleSystem.. <!-- SOURCE: src/systems/social_systems/contracts.py TEST: tests/unit/social/test_contract_lifecycle_phase7.py PROOF: integration -->
-- [ ] `RPG-WORLD-012` `test_scenario_4_subsystem_advancement`: Scenario 4 subsystem advancement — Scenario 4: Verify that registered subsystems receive the tick signal even if no actions apply..
+- [x] `RPG-WORLD-010` `test_scenario_1_dead_world_progression`: Scenario 1 dead world progression — Scenario 1: No living entities. Verify tick still increments and systems advance. <!-- SOURCE: src/engine/rpg_depth.py TEST: tests/unit/core/test_rpg_depth.py PROOF: integration -->
+- [x] `RPG-WORLD-011` `test_scenario_2_sleeping_world_biological_decay`: Scenario 2 sleeping world biological decay — Scenario 2: All entities have high next_act_at. Verify biological decay hits. <!-- SOURCE: src/engine/world_dynamics.py TEST: tests/integration/world/test_living_world_ph9.py PROOF: longrun -->
+- [x] `RPG-SOC-011` `test_scenario_3_stationary_world_proximity_bonding`: Scenario 3 stationary world proximity bonding — Scenario 3: Two heroes are stationary. Verify bonding occurs via HeroLifecycleSystem. <!-- SOURCE: src/systems/social_systems/contracts.py TEST: tests/unit/social/test_contract_lifecycle_phase7.py PROOF: integration -->
+- [ ] `RPG-WORLD-012` `test_scenario_4_subsystem_advancement`: Scenario 4 subsystem advancement — Scenario 4: Verify that registered subsystems receive the tick signal even if no actions apply.
 
 #### `integration/ai/test_wind_pillar_navigation.py`
 
@@ -432,19 +432,19 @@ Each checkbox below is derived from one original test. Keep the original test na
 
 #### `integration/gameplay/test_toughness_decay.py`
 
-- [x] `RPG-PROG-009` `test_near_death_hardening`: Near death hardening — Verify that surviving at low HP increases Max HP.. <!-- SOURCE: src/engine/combat.py TEST: tests/integration/pipeline/test_combat_legality_matrix.py PROOF: integration -->
-- [ ] `RPG-PROG-010` `test_stat_decay_inactivity`: Stat decay inactivity — Verify that stat decay can be triggered..
-- [x] `RPG-PROG-011` `test_toughness_hardening_integration`: Toughness hardening integration — Integration test for the restored hardening logic in CombatAction.. <!-- SOURCE: src/engine/rpg_depth.py TEST: tests/unit/core/test_rpg_depth.py PROOF: integration -->
+- [x] `RPG-PROG-009` `test_near_death_hardening`: Near death hardening — Verify that surviving at low HP increases Max HP. <!-- SOURCE: src/engine/combat.py TEST: tests/integration/pipeline/test_combat_legality_matrix.py PROOF: integration -->
+- [ ] `RPG-PROG-010` `test_stat_decay_inactivity`: Stat decay inactivity — Verify that stat decay can be triggered.
+- [x] `RPG-PROG-011` `test_toughness_hardening_integration`: Toughness hardening integration — Integration test for the restored hardening logic in CombatAction. <!-- SOURCE: src/engine/rpg_depth.py TEST: tests/unit/core/test_rpg_depth.py PROOF: integration -->
 
 #### `test_building_unification.py`
 
 - [ ] `test_actor`: Actor.
-- [x] `RPG-SOC-012` `test_visit_guild_no_legacy_goals`: Visit guild no legacy goals — Verify that visiting the guild produces StrategicUpdate and PerceptionUpdate, but no string goals.. <!-- SOURCE: src/town/shop.py TEST: tests/unit/world/test_town_building_contract.py PROOF: integration -->
-- [x] `RPG-STRAT-015` `test_visit_blacksmith_blocker_emission`: Visit blacksmith blocker emission — Verify that visiting the blacksmith without materials generates a BlockerRecord, not a string state.. <!-- SOURCE: src/town/shop.py TEST: tests/unit/world/test_town_building_contract.py PROOF: integration -->
-- [x] `RPG-STRAT-016` `test_visit_class_hall_resolution`: Visit class hall resolution — Verify that learning a skill emits a strategic resolution for the corresponding capability blocker.. <!-- SOURCE: src/town/shop.py TEST: tests/unit/world/test_town_building_contract.py PROOF: integration -->
-- [x] `RPG-STRAT-017` `test_visit_blacksmith_crafting_resolution`: Visit blacksmith crafting resolution — Verify that crafting an item emits a strategic resolution for the material blocker.. <!-- SOURCE: src/town/shop.py TEST: tests/unit/world/test_town_building_contract.py PROOF: integration -->
-- [x] `RPG-RES-013` `test_visit_home_upgrade_resolution`: Visit home upgrade resolution — Verify that home storage upgrade emits a strategic resolution for home maintenance.. <!-- SOURCE: src/core/conservation.py TEST: tests/integration/kernel/test_resource_conservation.py PROOF: race -->
-- [x] `RPG-STRAT-018` `test_detour_suggestion_lifecycle_awareness`: Detour suggestion lifecycle awareness — Verify DetourSuggestionService ignores exhausted leads and prioritizes untested ones.. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
+- [x] `RPG-SOC-012` `test_visit_guild_no_legacy_goals`: Visit guild no legacy goals — Verify that visiting the guild produces StrategicUpdate and PerceptionUpdate, but no string goals. <!-- SOURCE: src/town/shop.py TEST: tests/unit/world/test_town_building_contract.py PROOF: integration -->
+- [x] `RPG-STRAT-015` `test_visit_blacksmith_blocker_emission`: Visit blacksmith blocker emission — Verify that visiting the blacksmith without materials generates a BlockerRecord, not a string state. <!-- SOURCE: src/town/shop.py TEST: tests/unit/world/test_town_building_contract.py PROOF: integration -->
+- [x] `RPG-STRAT-016` `test_visit_class_hall_resolution`: Visit class hall resolution — Verify that learning a skill emits a strategic resolution for the corresponding capability blocker. <!-- SOURCE: src/town/shop.py TEST: tests/unit/world/test_town_building_contract.py PROOF: integration -->
+- [x] `RPG-STRAT-017` `test_visit_blacksmith_crafting_resolution`: Visit blacksmith crafting resolution — Verify that crafting an item emits a strategic resolution for the material blocker. <!-- SOURCE: src/town/shop.py TEST: tests/unit/world/test_town_building_contract.py PROOF: integration -->
+- [x] `RPG-RES-013` `test_visit_home_upgrade_resolution`: Visit home upgrade resolution — Verify that home storage upgrade emits a strategic resolution for home maintenance. <!-- SOURCE: src/core/conservation.py TEST: tests/integration/kernel/test_resource_conservation.py PROOF: race -->
+- [x] `RPG-STRAT-018` `test_detour_suggestion_lifecycle_awareness`: Detour suggestion lifecycle awareness — Verify DetourSuggestionService ignores exhausted leads and prioritizes untested ones. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
 
 #### `unit/ai/test_routine_cycle.py`
 
@@ -461,21 +461,21 @@ Each checkbox below is derived from one original test. Keep the original test na
 
 #### `unit/core/gameplay/test_item_contracts.py`
 
-- [ ] `test_weapon_ranges_integrity`: Weapon ranges integrity — Verify that specific weapons have their intended ranges in the registry..
-- [x] `test_weapon_power_integrity`: Weapon power integrity — Verify that core progression weapons have their primary power correctly set.. <!-- SOURCE: src/engine/rpg_depth.py TEST: tests/unit/core/test_rpg_depth.py PROOF: integration -->
-- [ ] `test_registry_identity_integrity`: Registry identity integrity — Ensure all core items are successfully loaded and have consistent IDs..
+- [ ] `test_weapon_ranges_integrity`: Weapon ranges integrity — Verify that specific weapons have their intended ranges in the registry.
+- [x] `test_weapon_power_integrity`: Weapon power integrity — Verify that core progression weapons have their primary power correctly set. <!-- SOURCE: src/engine/rpg_depth.py TEST: tests/unit/core/test_rpg_depth.py PROOF: integration -->
+- [ ] `test_registry_identity_integrity`: Registry identity integrity — Ensure all core items are successfully loaded and have consistent IDs.
 
 #### `unit/systems/test_difficulty_scaling.py`
 
 - [ ] `test_tier1_is_baseline`: Tier1 is baseline.
-- [x] `test_tier4_has_higher_stats_than_tier1`: Tier4 has higher stats than tier1 — Same seed, same enemy tier - tier 4 difficulty should have higher HP/ATK.. <!-- SOURCE: src/engine/combat.py TEST: tests/integration/pipeline/test_combat_legality_matrix.py PROOF: integration -->
-- [x] `test_tier4_hp_significantly_higher`: Tier4 hp significantly higher — Tier 4 HP multiplier is 4.0x on base stats; with flat bonuses from traits/attributes the effective ratio will be lower but still substantial.. <!-- SOURCE: src/engine/combat.py TEST: tests/integration/pipeline/test_combat_legality_matrix.py PROOF: integration -->
-- [x] `test_difficulty_sets_level_range`: Difficulty sets level range — Entities in tier 3 should have level in [5, 10].. <!-- SOURCE: src/engine/combat.py TEST: tests/integration/pipeline/test_combat_legality_matrix.py PROOF: integration -->
-- [ ] `test_gold_scales_with_difficulty`: Gold scales with difficulty — Tier 4 gold multiplier is 4.0x..
+- [x] `test_tier4_has_higher_stats_than_tier1`: Tier4 has higher stats than tier1 — Same seed, same enemy tier - tier 4 difficulty should have higher HP/ATK. <!-- SOURCE: src/engine/combat.py TEST: tests/integration/pipeline/test_combat_legality_matrix.py PROOF: integration -->
+- [x] `test_tier4_hp_significantly_higher`: Tier4 hp significantly higher — Tier 4 HP multiplier is 4.0x on base stats; with flat bonuses from traits/attributes the effective ratio will be lower but still substantial. <!-- SOURCE: src/engine/combat.py TEST: tests/integration/pipeline/test_combat_legality_matrix.py PROOF: integration -->
+- [x] `test_difficulty_sets_level_range`: Difficulty sets level range — Entities in tier 3 should have level in [5, 10]. <!-- SOURCE: src/engine/combat.py TEST: tests/integration/pipeline/test_combat_legality_matrix.py PROOF: integration -->
+- [ ] `test_gold_scales_with_difficulty`: Gold scales with difficulty — Tier 4 gold multiplier is 4.0x.
 - [ ] `test_race_tier4_stronger_than_tier1`: Race tier4 stronger than tier1.
 - [x] `test_race_difficulty_tier_set`: Race difficulty tier set. <!-- SOURCE: src/engine/world_dynamics.py TEST: tests/integration/world/test_living_world_ph9.py PROOF: longrun -->
 - [x] `test_race_level_in_range`: Race level in range. <!-- SOURCE: src/engine/combat.py TEST: tests/integration/pipeline/test_combat_legality_matrix.py PROOF: integration -->
-- [ ] `test_all_races_scale`: All races scale — All four races should scale with difficulty..
+- [ ] `test_all_races_scale`: All races scale — All four races should scale with difficulty.
 - [x] `test_boss_diff_capped_at_4`: Boss diff capped at 4. <!-- SOURCE: src/engine/world_dynamics.py TEST: tests/integration/world/test_living_world_ph9.py PROOF: longrun -->
 - [x] `test_boss_diff_adds_one`: Boss diff adds one. <!-- SOURCE: src/engine/world_dynamics.py TEST: tests/integration/world/test_living_world_ph9.py PROOF: longrun -->
 - [x] `test_spawn_default_is_tier1`: Spawn default is tier1. <!-- SOURCE: src/engine/world_dynamics.py TEST: tests/integration/world/test_living_world_ph9.py PROOF: longrun -->
@@ -483,8 +483,8 @@ Each checkbox below is derived from one original test. Keep the original test na
 
 #### `unit/systems/test_toughness_decay.py`
 
-- [x] `test_near_death_hardening`: Near death hardening — Verify that surviving at low HP increases Max HP.. <!-- SOURCE: src/engine/combat.py TEST: tests/integration/pipeline/test_combat_legality_matrix.py PROOF: integration -->
-- [ ] `test_stat_decay_inactivity`: Stat decay inactivity — Verify that idling for 1000+ ticks triggers stat decay..
+- [x] `test_near_death_hardening`: Near death hardening — Verify that surviving at low HP increases Max HP. <!-- SOURCE: src/engine/combat.py TEST: tests/integration/pipeline/test_combat_legality_matrix.py PROOF: integration -->
+- [ ] `test_stat_decay_inactivity`: Stat decay inactivity — Verify that idling for 1000+ ticks triggers stat decay.
 
 ### Strategic mind / cognition / projects / blockers / leads
 
@@ -534,23 +534,23 @@ Each checkbox below is derived from one original test. Keep the original test na
 
 #### `ai/test_cognition_explainability.py`
 
-- [x] `test_overload_metadata_population`: Overload metadata population — Verify that primary_overload_source and last_overload_tick are correctly populated in replay.. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
-- [x] `test_personality_formula_impact`: Personality formula impact — Verify that personality archetypes and traits impact the capacity profile.. <!-- SOURCE: src/core/conservation.py TEST: tests/integration/kernel/test_resource_conservation.py PROOF: race -->
-- [x] `test_inspector_smoke_coverage`: Inspector smoke coverage — Smoke test to ensure EntityInspector (AIPresenter) doesn't crash with new fields.. <!-- SOURCE: src/api/presenters/state_presenter.py TEST: tests/api/test_rest_parity.py PROOF: integration -->
+- [x] `test_overload_metadata_population`: Overload metadata population — Verify that primary_overload_source and last_overload_tick are correctly populated in replay. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
+- [x] `test_personality_formula_impact`: Personality formula impact — Verify that personality archetypes and traits impact the capacity profile. <!-- SOURCE: src/core/conservation.py TEST: tests/integration/kernel/test_resource_conservation.py PROOF: race -->
+- [x] `test_inspector_smoke_coverage`: Inspector smoke coverage — Smoke test to ensure EntityInspector (AIPresenter) doesn't crash with new fields. <!-- SOURCE: src/api/presenters/state_presenter.py TEST: tests/api/test_rest_parity.py PROOF: integration -->
 
 #### `ai/test_cognition_integrity.py`
 
-- [x] `test_ui_contract_alignment`: Ui contract alignment — Verify that every field in bounded_cognition_ui_contract.md exists in Pydantic schemas.. <!-- SOURCE: src/systems/social_systems/contracts.py TEST: tests/unit/social/test_contract_lifecycle_phase7.py PROOF: integration -->
-- [x] `test_feature_spec_replay_alignment`: Feature spec replay alignment — Verify that replay fields mentioned in feature spec are present in recorder.. <!-- SOURCE: src/platform/rng.py TEST: tests/integration/kernel/test_long_run_determinism.py PROOF: longrun -->
-- [ ] `test_feature_spec_graph_export_alignment`: Feature spec graph export alignment — Verify that graph export fields mentioned in feature spec are present in exporter..
-- [ ] `test_test_matrix_existence`: Test matrix existence — Verify that all test modules mentioned in test_matrix.md actually exist..
+- [x] `test_ui_contract_alignment`: Ui contract alignment — Verify that every field in bounded_cognition_ui_contract.md exists in Pydantic schemas. <!-- SOURCE: src/systems/social_systems/contracts.py TEST: tests/unit/social/test_contract_lifecycle_phase7.py PROOF: integration -->
+- [x] `test_feature_spec_replay_alignment`: Feature spec replay alignment — Verify that replay fields mentioned in feature spec are present in recorder. <!-- SOURCE: src/platform/rng.py TEST: tests/integration/kernel/test_long_run_determinism.py PROOF: longrun -->
+- [ ] `test_feature_spec_graph_export_alignment`: Feature spec graph export alignment — Verify that graph export fields mentioned in feature spec are present in exporter.
+- [ ] `test_test_matrix_existence`: Test matrix existence — Verify that all test modules mentioned in test_matrix.md actually exist.
 - [x] `test_populated_artifact_consistency`: Populated artifact consistency — Verify that a live HeadlessRunner execution produces populated and consistent artifacts. [TRACK 1 HARDENING]. <!-- SOURCE: src/engine/rpg_depth.py TEST: tests/unit/core/test_rpg_depth.py PROOF: integration -->
 - [x] `test_truth_surface_parity`: Truth surface parity — Verify that Replay, API Schema, and Cognition Graph maintain strict parity. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
-- [ ] `test_documentation_alignment`: Documentation alignment — Verify that documented fields in intel_capacity_implementation_updated.md are real. [MILESTONE 8 PROOF].
+- [ ] `test_documentation_alignment`: Documentation alignment — Verify that documented fields in intel_capacity_implementation_updated.md are real.
 
 #### `ai/test_directive_mutation_thresholds.py`
 
-- [x] `test_directive_mutation_thresholds`: Directive mutation thresholds — Verify that directives only mutate after repeated thresholded events.. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
+- [x] `test_directive_mutation_thresholds`: Directive mutation thresholds — Verify that directives only mutate after repeated thresholded events. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
 
 #### `ai/test_event_interpretation.py`
 
@@ -574,105 +574,105 @@ Each checkbox below is derived from one original test. Keep the original test na
 
 #### `ai/test_source_trust_learning_loop.py`
 
-- [x] `test_source_trust_learning_loop`: Source trust learning loop — Prove that future weighting is affected by source trust after a learning event.. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
+- [x] `test_source_trust_learning_loop`: Source trust learning loop — Prove that future weighting is affected by source trust after a learning event. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
 
 #### `ai/test_uncertainty_resolution_loop.py`
 
-- [x] `test_uncertainty_resolution_loop`: Uncertainty resolution loop — Prove that proximity to a rumored zone resolves imprecise leads into precise targets.. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
+- [x] `test_uncertainty_resolution_loop`: Uncertainty resolution loop — Prove that proximity to a rumored zone resolves imprecise leads into precise targets. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
 
 #### `core/test_cognition_graph_exporter.py`
 
-- [x] `test_export_empty_strategy`: Export empty strategy — Verify export from an entity with no strategic state.. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
-- [x] `test_export_with_core_strategic_state`: Export with core strategic state — Verify export of directives, projects, and objectives.. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
-- [x] `test_export_determinism`: Export determinism — Verify that multiple exports from the same state are identical.. <!-- SOURCE: src/platform/rng.py TEST: tests/integration/kernel/test_long_run_determinism.py PROOF: longrun -->
-- [ ] `test_non_mutation`: Non mutation — Verify that exporter does not mutate the source entity..
+- [x] `test_export_empty_strategy`: Export empty strategy — Verify export from an entity with no strategic state. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
+- [x] `test_export_with_core_strategic_state`: Export with core strategic state — Verify export of directives, projects, and objectives. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
+- [x] `test_export_determinism`: Export determinism — Verify that multiple exports from the same state are identical. <!-- SOURCE: src/platform/rng.py TEST: tests/integration/kernel/test_long_run_determinism.py PROOF: longrun -->
+- [ ] `test_non_mutation`: Non mutation — Verify that exporter does not mutate the source entity.
 
 #### `core/test_strategy_models.py`
 
-- [x] `test_strategic_model_rebuild`: Strategic model rebuild — Verify pydantic model rebuild handles recursive refs.. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
+- [x] `test_strategic_model_rebuild`: Strategic model rebuild — Verify pydantic model rebuild handles recursive refs. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
 - [x] `test_directive_creation`: Directive creation. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
 - [x] `test_strategic_state_defaults`: Strategic state defaults. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
 - [x] `test_strategic_state_serialization`: Strategic state serialization. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
 
 #### `integration/strategy/test_cognition_graph_regression.py`
 
-- [x] `test_cognition_graph_deterministic_simulation`: Cognition graph deterministic simulation — Verify that a simulation produces a valid, repeatable cognition graph.. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
-- [ ] `test_graph_structural_invariants`: Graph structural invariants — Verify that the graph follows structural rules across ticks..
+- [x] `test_cognition_graph_deterministic_simulation`: Cognition graph deterministic simulation — Verify that a simulation produces a valid, repeatable cognition graph. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
+- [ ] `test_graph_structural_invariants`: Graph structural invariants — Verify that the graph follows structural rules across ticks.
 
 #### `integration/strategy/test_strategic_brain_integration.py`
 
-- [x] `test_strategic_pivot_on_regional_danger`: Strategic pivot on regional danger — Verify that heroes pivot from personal quests to regional stabilization during high-danger events.. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
-- [x] `test_scar_detection`: Scar detection — Verify that heroes sense nearby world trauma (scars) and investigate.. <!-- SOURCE: src/systems/social_systems/contracts.py TEST: tests/unit/social/test_contract_lifecycle_phase7.py PROOF: integration -->
-- [x] `test_near_death_triggers_survival_consequences`: Near death triggers survival consequences — Verify that a NEAR_DEATH event generates a concern and suspends the current project via applicator.. <!-- SOURCE: src/engine/combat.py TEST: tests/integration/pipeline/test_combat_legality_matrix.py PROOF: integration -->
-- [x] `test_betrayal_mutates_directives`: Betrayal mutates directives — Verify that a salient betrayal turning point adds an 'Avenge' directive.. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
-- [x] `test_divergent_home_response`: Divergent home response — Verify that only entities with place attachment react strongly to home damage.. <!-- SOURCE: src/engine/combat.py TEST: tests/integration/pipeline/test_combat_legality_matrix.py PROOF: integration -->
-- [x] `test_betrayal_trauma_affects_recruitment`: Betrayal trauma affects recruitment — Verify that a recent betrayal makes entities less willing to accept recruitment offers.. <!-- SOURCE: src/systems/social_systems/contracts.py TEST: tests/unit/social/test_contract_lifecycle_phase7.py PROOF: integration -->
+- [x] `test_strategic_pivot_on_regional_danger`: Strategic pivot on regional danger — Verify that heroes pivot from personal quests to regional stabilization during high-danger events. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
+- [x] `test_scar_detection`: Scar detection — Verify that heroes sense nearby world trauma (scars) and investigate. <!-- SOURCE: src/systems/social_systems/contracts.py TEST: tests/unit/social/test_contract_lifecycle_phase7.py PROOF: integration -->
+- [x] `test_near_death_triggers_survival_consequences`: Near death triggers survival consequences — Verify that a NEAR_DEATH event generates a concern and suspends the current project via applicator. <!-- SOURCE: src/engine/combat.py TEST: tests/integration/pipeline/test_combat_legality_matrix.py PROOF: integration -->
+- [x] `test_betrayal_mutates_directives`: Betrayal mutates directives — Verify that a salient betrayal turning point adds an 'Avenge' directive. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
+- [x] `test_divergent_home_response`: Divergent home response — Verify that only entities with place attachment react strongly to home damage. <!-- SOURCE: src/engine/combat.py TEST: tests/integration/pipeline/test_combat_legality_matrix.py PROOF: integration -->
+- [x] `test_betrayal_trauma_affects_recruitment`: Betrayal trauma affects recruitment — Verify that a recent betrayal makes entities less willing to accept recruitment offers. <!-- SOURCE: src/systems/social_systems/contracts.py TEST: tests/unit/social/test_contract_lifecycle_phase7.py PROOF: integration -->
 
 #### `integration/strategy/test_strategic_capacity_enforcement.py`
 
-- [ ] `test_budget_enforcement_truncation`: Budget enforcement truncation — Verify that candidate_zone_limit correctly truncates the pool AND preserves highest-scored zones..
-- [x] `test_source_trust_behavioral_impact`: Source trust behavioral impact — Verify that updating source trust results in different weighting in the next cycle. [MILESTONE 3]. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
-- [x] `test_overload_metrics_visibility`: Overload metrics visibility — Verify that primary_overload_source and metrics are populated when stressed.. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
+- [ ] `test_budget_enforcement_truncation`: Budget enforcement truncation — Verify that candidate_zone_limit correctly truncates the pool AND preserves highest-scored zones.
+- [x] `test_source_trust_behavioral_impact`: Source trust behavioral impact — Verify that updating source trust results in different weighting in the next cycle. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
+- [x] `test_overload_metrics_visibility`: Overload metrics visibility — Verify that primary_overload_source and metrics are populated when stressed. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
 
 #### `integration/strategy/test_strategic_continuity.py`
 
-- [x] `test_directive_mutation_salience_threshold`: Directive mutation salience threshold — Verify that only high-salience turning points trigger mutations.. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
-- [x] `test_directive_priority_strengthening`: Directive priority strengthening — Verify that repeated high-salience events strengthen directive priority.. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
+- [x] `test_directive_mutation_salience_threshold`: Directive mutation salience threshold — Verify that only high-salience turning points trigger mutations. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
+- [x] `test_directive_priority_strengthening`: Directive priority strengthening — Verify that repeated high-salience events strengthen directive priority. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
 
 #### `integration/strategy/test_strategic_continuity_hardening.py`
 
-- [x] `test_strategic_objective_continuity`: Strategic objective continuity — Prove that an existing objective is preserved if the project remains stable and no high blockers appear.. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
-- [x] `test_objective_resumption_aligns_with_tactical`: Objective resumption aligns with tactical — Verify that a resumed objective correctly drives goal selection.. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
+- [x] `test_strategic_objective_continuity`: Strategic objective continuity — Prove that an existing objective is preserved if the project remains stable and no high blockers appear. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
+- [x] `test_objective_resumption_aligns_with_tactical`: Objective resumption aligns with tactical — Verify that a resumed objective correctly drives goal selection. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
 
 #### `integration/strategy/test_strategic_determinism.py`
 
-- [x] `test_harness_determinism`: Harness determinism — Verify that two runs with the same seed produce byte-identical results.. <!-- SOURCE: src/platform/rng.py TEST: tests/integration/kernel/test_long_run_determinism.py PROOF: longrun -->
-- [x] `test_harness_non_determinism_different_seed`: Harness non determinism different seed — Verify that different seeds produce different outcomes (basic sanity check).. <!-- SOURCE: src/platform/rng.py TEST: tests/integration/kernel/test_long_run_determinism.py PROOF: longrun -->
+- [x] `test_harness_determinism`: Harness determinism — Verify that two runs with the same seed produce byte-identical results. <!-- SOURCE: src/platform/rng.py TEST: tests/integration/kernel/test_long_run_determinism.py PROOF: longrun -->
+- [x] `test_harness_non_determinism_different_seed`: Harness non determinism different seed — Verify that different seeds produce different outcomes (basic sanity check). <!-- SOURCE: src/platform/rng.py TEST: tests/integration/kernel/test_long_run_determinism.py PROOF: longrun -->
 
 #### `integration/strategy/test_strategic_explainability.py`
 
-- [x] `test_candidate_zone_enforcement`: Candidate zone enforcement — Verify that candidate_zone_limit is enforced and drops excess zones.. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
-- [ ] `test_ally_evaluation_enforcement`: Ally evaluation enforcement — Verify that ally_evaluation_limit caps contracts and offers evaluated..
-- [x] `test_overload_source_trauma`: Overload source trauma — Verify that heavy HP damage triggers 'trauma' as the primary overload source.. <!-- SOURCE: src/engine/combat.py TEST: tests/integration/pipeline/test_combat_legality_matrix.py PROOF: integration -->
-- [x] `test_switch_reason_transparency`: Switch reason transparency — Verify that a project switch provides a human-readable reason.. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
+- [x] `test_candidate_zone_enforcement`: Candidate zone enforcement — Verify that candidate_zone_limit is enforced and drops excess zones. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
+- [ ] `test_ally_evaluation_enforcement`: Ally evaluation enforcement — Verify that ally_evaluation_limit caps contracts and offers evaluated.
+- [x] `test_overload_source_trauma`: Overload source trauma — Verify that heavy HP damage triggers 'trauma' as the primary overload source. <!-- SOURCE: src/engine/combat.py TEST: tests/integration/pipeline/test_combat_legality_matrix.py PROOF: integration -->
+- [x] `test_switch_reason_transparency`: Switch reason transparency — Verify that a project switch provides a human-readable reason. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
 
 #### `integration/strategy/test_strategic_persistence.py`
 
-- [x] `test_persistence_boost_prevents_switching`: Persistence boost prevents switching — Verify that the persistence boost prevents switching to a slightly better project.. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
-- [x] `test_project_lock_prevents_switching`: Project lock prevents switching — Verify that project_lock_until strictly prevents any switches despite critical concerns.. <!-- SOURCE: src/engine/combat.py TEST: tests/integration/pipeline/test_combat_legality_matrix.py PROOF: integration -->
-- [x] `test_interruption_threshold_overridden_by_major_threat`: Interruption threshold overridden by major threat — Verify that a massive threat CAN overcome the interruption threshold.. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
-- [x] `test_strategic_pipeline_home_threat`: Strategic pipeline home threat — Verify the flow from life event through StrategicConsequenceService to project pivot.. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
+- [x] `test_persistence_boost_prevents_switching`: Persistence boost prevents switching — Verify that the persistence boost prevents switching to a slightly better project. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
+- [x] `test_project_lock_prevents_switching`: Project lock prevents switching — Verify that project_lock_until strictly prevents any switches despite critical concerns. <!-- SOURCE: src/engine/combat.py TEST: tests/integration/pipeline/test_combat_legality_matrix.py PROOF: integration -->
+- [x] `test_interruption_threshold_overridden_by_major_threat`: Interruption threshold overridden by major threat — Verify that a massive threat CAN overcome the interruption threshold. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
+- [x] `test_strategic_pipeline_home_threat`: Strategic pipeline home threat — Verify the flow from life event through StrategicConsequenceService to project pivot. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
 - [x] `test_resume_restores_valid_objective`: Resume restores valid objective — Verify that brain restores the last active objective when resuming a project. [Strategy M2]. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
 - [x] `test_resumed_objective_survives_cycle`: Resumed objective survives cycle — Verify that a restored objective doesn't immediately flip back to ProjectRecord.objectives[0] if it matches. [Strategy M2]. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
 
 #### `integration/strategy/test_strategic_replay_determinism.py`
 
-- [x] `test_world_strategic_registry_deep_isolation`: World strategic registry deep isolation — Verify that WorldStrategicRegistry.copy() performs a deep copy.. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
-- [x] `test_strategic_replay_graph_equality`: Strategic replay graph equality — Verify that replaying from a snapshot yields bit-identical cognition graphs.. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
-- [x] `test_lead_outcome_grounding_verification`: Lead outcome grounding verification — Verify that precise leads correctly ground into world entities.. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
+- [x] `test_world_strategic_registry_deep_isolation`: World strategic registry deep isolation — Verify that WorldStrategicRegistry.copy() performs a deep copy. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
+- [x] `test_strategic_replay_graph_equality`: Strategic replay graph equality — Verify that replaying from a snapshot yields bit-identical cognition graphs. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
+- [x] `test_lead_outcome_grounding_verification`: Lead outcome grounding verification — Verify that precise leads correctly ground into world entities. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
 
 #### `integration/strategy/test_strategic_resume_objective.py`
 
-- [x] `test_objective_resume_reliability`: Objective resume reliability — Verify that a suspended objective is resumed correctly.. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
+- [x] `test_objective_resume_reliability`: Objective resume reliability — Verify that a suspended objective is resumed correctly. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
 
 #### `integration/strategy/test_strategic_structural_integrity.py`
 
-- [x] `test_snapshot_strategic_isolation`: Snapshot strategic isolation — Verify that Snapshot.from_world deep-copies and freezes strategic state.. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
-- [x] `test_strategic_update_merging_identical_ids`: Strategic update merging identical ids — Verify that ActionSystem merges updates with identical IDs correctly.. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
-- [ ] `test_serialization_round_trip`: Serialization round trip — Verify that StrategicState survives full JSON serialization round-trip..
-- [x] `test_strategic_update_coercion_from_dict`: Strategic update coercion from dict — Verify that StrategicUpdate correctly coerces dicts to models (worker transport emulation).. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
+- [x] `test_snapshot_strategic_isolation`: Snapshot strategic isolation — Verify that Snapshot.from_world deep-copies and freezes strategic state. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
+- [x] `test_strategic_update_merging_identical_ids`: Strategic update merging identical ids — Verify that ActionSystem merges updates with identical IDs correctly. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
+- [ ] `test_serialization_round_trip`: Serialization round trip — Verify that StrategicState survives full JSON serialization round-trip.
+- [x] `test_strategic_update_coercion_from_dict`: Strategic update coercion from dict — Verify that StrategicUpdate correctly coerces dicts to models (worker transport emulation). <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
 
 #### `integration/strategy/test_strategic_transport.py`
 
-- [x] `test_strategic_update_multi_record_transport`: Strategic update multi record transport — Verify that a single proposal can carry multiple strategic updates.. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
-- [x] `test_strategic_update_repeated_id_last_one_wins`: Strategic update repeated id last one wins — Verify that repeated IDs in a single update follow last-one-wins semantics.. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
-- [x] `test_strategic_update_idempotency_over_ticks`: Strategic update idempotency over ticks — Verify that applying the same update multiple times is idempotent.. <!-- SOURCE: src/core/conservation.py TEST: tests/integration/kernel/test_resource_conservation.py PROOF: race -->
-- [x] `test_strategic_update_target_routing`: Strategic update target routing — Verify that strategic updates can be routed to a target entity.. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
+- [x] `test_strategic_update_multi_record_transport`: Strategic update multi record transport — Verify that a single proposal can carry multiple strategic updates. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
+- [x] `test_strategic_update_repeated_id_last_one_wins`: Strategic update repeated id last one wins — Verify that repeated IDs in a single update follow last-one-wins semantics. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
+- [x] `test_strategic_update_idempotency_over_ticks`: Strategic update idempotency over ticks — Verify that applying the same update multiple times is idempotent. <!-- SOURCE: src/core/conservation.py TEST: tests/integration/kernel/test_resource_conservation.py PROOF: race -->
+- [x] `test_strategic_update_target_routing`: Strategic update target routing — Verify that strategic updates can be routed to a target entity. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
 
 #### `integration/strategy/test_strategic_world_integration.py`
 
-- [x] `test_world_strategic_registry_persistence`: World strategic registry persistence — Verify that WorldStrategicRegistry is preserved in snapshots.. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
-- [x] `test_strategic_world_integration_system_pruning`: Strategic world integration system pruning — Verify that the system prunes expired world opportunities.. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
+- [x] `test_world_strategic_registry_persistence`: World strategic registry persistence — Verify that WorldStrategicRegistry is preserved in snapshots. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
+- [x] `test_strategic_world_integration_system_pruning`: Strategic world integration system pruning — Verify that the system prunes expired world opportunities. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
 - [x] `test_telemetry_strategic_metrics`: Telemetry strategic metrics — Verify that TelemetrySystem collects strategic metrics. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
 
 #### `unit/ai/strategy/test_strategic_biasing.py`
@@ -683,19 +683,19 @@ Each checkbox below is derived from one original test. Keep the original test na
 
 #### `unit/ai/strategy/test_strategic_uncertainty.py`
 
-- [x] `test_contradiction_degrades_certainty`: Contradiction degrades certainty — Verify that leads with contradictions lose certainty based on profile sensitivity. [MILESTONE 5]. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
-- [x] `test_hypothesis_impacted_by_contradiction`: Hypothesis impacted by contradiction — Verify that hypotheses lose confidence when supporting leads are contradicted. [MILESTONE 5]. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
+- [x] `test_contradiction_degrades_certainty`: Contradiction degrades certainty — Verify that leads with contradictions lose certainty based on profile sensitivity. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
+- [x] `test_hypothesis_impacted_by_contradiction`: Hypothesis impacted by contradiction — Verify that hypotheses lose confidence when supporting leads are contradicted. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
 
 #### `unit/strategy/test_strategic_services.py`
 
-- [x] `test_canonical_blocker_structure`: Canonical blocker structure — Verify that StrategicState has a blockers list and ObjectiveRecord uses IDs.. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
-- [x] `test_strategic_snapshot_isolation`: Strategic snapshot isolation — Verify that deep copying an entity results in a fully isolated strategic tree.. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
-- [x] `test_belief_decay_aoa_purity`: Belief decay aoa purity — Verify that BeliefService.decay_stale_beliefs returns an update and does not mutate in-place.. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
-- [x] `test_social_applicator_aoa_purity`: Social applicator aoa purity — Verify that SocialStateApplicator returns updates and does not mutate the world.. <!-- SOURCE: src/systems/social_systems/contracts.py TEST: tests/unit/social/test_contract_lifecycle_phase7.py PROOF: integration -->
+- [x] `test_canonical_blocker_structure`: Canonical blocker structure — Verify that StrategicState has a blockers list and ObjectiveRecord uses IDs. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
+- [x] `test_strategic_snapshot_isolation`: Strategic snapshot isolation — Verify that deep copying an entity results in a fully isolated strategic tree. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
+- [x] `test_belief_decay_aoa_purity`: Belief decay aoa purity — Verify that BeliefService.decay_stale_beliefs returns an update and does not mutate in-place. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
+- [x] `test_social_applicator_aoa_purity`: Social applicator aoa purity — Verify that SocialStateApplicator returns updates and does not mutate the world. <!-- SOURCE: src/systems/social_systems/contracts.py TEST: tests/unit/social/test_contract_lifecycle_phase7.py PROOF: integration -->
 - [x] `test_concern_generation_near_death`: Concern generation near death. <!-- SOURCE: src/engine/combat.py TEST: tests/integration/pipeline/test_combat_legality_matrix.py PROOF: integration -->
 - [x] `test_directive_mutation_near_death`: Directive mutation near death. <!-- SOURCE: src/engine/combat.py TEST: tests/integration/pipeline/test_combat_legality_matrix.py PROOF: integration -->
 - [x] `test_project_mutation_interruption`: Project mutation interruption. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
-- [x] `test_strategic_update_blocker_merging`: Strategic update blocker merging — Verify that ActionSystem merges blockers from StrategicUpdate correctly.. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
+- [x] `test_strategic_update_blocker_merging`: Strategic update blocker merging — Verify that ActionSystem merges blockers from StrategicUpdate correctly. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
 
 #### `unit/systems/test_strategy.py`
 
@@ -715,32 +715,32 @@ Each checkbox below is derived from one original test. Keep the original test na
 
 #### `ai/test_betrayal_social_consequence.py`
 
-- [x] `test_betrayal_social_consequence`: Betrayal social consequence — Verify that private betrayal trauma prevents recruitment even for reputable founders.. <!-- SOURCE: src/systems/social_systems/contracts.py TEST: tests/unit/social/test_contract_lifecycle_phase7.py PROOF: integration -->
+- [x] `test_betrayal_social_consequence`: Betrayal social consequence — Verify that private betrayal trauma prevents recruitment even for reputable founders. <!-- SOURCE: src/systems/social_systems/contracts.py TEST: tests/unit/social/test_contract_lifecycle_phase7.py PROOF: integration -->
 
 #### `ai/test_learning_social.py`
 
-- [x] `test_intel_confirmation_by_sight`: Intel confirmation by sight — Verify that seeing a person mentioned in a lead confirms it and boosts trust.. <!-- SOURCE: src/town/shop.py TEST: tests/unit/world/test_town_building_contract.py PROOF: integration -->
-- [x] `test_intel_refutation_by_exhaustion`: Intel refutation by exhaustion — Verify that failing to find a target refutes the lead and drops trust.. <!-- SOURCE: src/town/shop.py TEST: tests/unit/world/test_town_building_contract.py PROOF: integration -->
+- [x] `test_intel_confirmation_by_sight`: Intel confirmation by sight — Verify that seeing a person mentioned in a lead confirms it and boosts trust. <!-- SOURCE: src/town/shop.py TEST: tests/unit/world/test_town_building_contract.py PROOF: integration -->
+- [x] `test_intel_refutation_by_exhaustion`: Intel refutation by exhaustion — Verify that failing to find a target refutes the lead and drops trust. <!-- SOURCE: src/town/shop.py TEST: tests/unit/world/test_town_building_contract.py PROOF: integration -->
 
 #### `core/test_lived_models.py`
 
-- [x] `test_routine_profile_instantiation`: Routine profile instantiation — Verify RoutineProfile can be instantiated with hybrid scheduling.. <!-- SOURCE: src/cli/entry.py TEST: tests/cli/test_entry_parity.py PROOF: integration -->
-- [ ] `test_place_attachment_instantiation`: Place attachment instantiation — Verify PlaceAttachment can be instantiated and supports sentiment..
-- [x] `test_group_record_instantiation`: Group record instantiation — Verify GroupRecord supports shared tactical intent.. <!-- SOURCE: src/systems/social_systems/contracts.py TEST: tests/unit/social/test_contract_lifecycle_phase7.py PROOF: integration -->
-- [ ] `test_entity_integration`: Entity integration — Verify Entity and IdentityAspect absorb new Phase 3 fields..
-- [x] `test_world_state_registry`: World state registry — Verify GroupRegistry integration in WorldState.. <!-- SOURCE: src/engine/world_dynamics.py TEST: tests/integration/world/test_living_world_ph9.py PROOF: longrun -->
+- [x] `test_routine_profile_instantiation`: Routine profile instantiation — Verify RoutineProfile can be instantiated with hybrid scheduling. <!-- SOURCE: src/cli/entry.py TEST: tests/cli/test_entry_parity.py PROOF: integration -->
+- [ ] `test_place_attachment_instantiation`: Place attachment instantiation — Verify PlaceAttachment can be instantiated and supports sentiment.
+- [x] `test_group_record_instantiation`: Group record instantiation — Verify GroupRecord supports shared tactical intent. <!-- SOURCE: src/systems/social_systems/contracts.py TEST: tests/unit/social/test_contract_lifecycle_phase7.py PROOF: integration -->
+- [ ] `test_entity_integration`: Entity integration — Verify Entity and IdentityAspect absorb new fields.
+- [x] `test_world_state_registry`: World state registry — Verify GroupRegistry integration in WorldState. <!-- SOURCE: src/engine/world_dynamics.py TEST: tests/integration/world/test_living_world_ph9.py PROOF: longrun -->
 
 #### `integration/gameplay/test_social_meaning.py`
 
-- [x] `test_social_event_betrayal`: Social event betrayal — Verify that hitting an ally triggers a betrayal event and social bond shift.. <!-- SOURCE: src/systems/social_systems/contracts.py TEST: tests/unit/social/test_contract_lifecycle_phase7.py PROOF: integration -->
-- [x] `test_social_event_near_death_and_tp`: Social event near death and tp — Verify that a near-death experience creates a durable turning point.. <!-- SOURCE: src/engine/combat.py TEST: tests/integration/pipeline/test_combat_legality_matrix.py PROOF: integration -->
-- [x] `test_social_event_first_kill_milestone`: Social event first kill milestone — Verify that first kill increments reputation and notoriety.. <!-- SOURCE: src/engine/combat.py TEST: tests/integration/pipeline/test_combat_legality_matrix.py PROOF: integration -->
+- [x] `test_social_event_betrayal`: Social event betrayal — Verify that hitting an ally triggers a betrayal event and social bond shift. <!-- SOURCE: src/systems/social_systems/contracts.py TEST: tests/unit/social/test_contract_lifecycle_phase7.py PROOF: integration -->
+- [x] `test_social_event_near_death_and_tp`: Social event near death and tp — Verify that a near-death experience creates a durable turning point. <!-- SOURCE: src/engine/combat.py TEST: tests/integration/pipeline/test_combat_legality_matrix.py PROOF: integration -->
+- [x] `test_social_event_first_kill_milestone`: Social event first kill milestone — Verify that first kill increments reputation and notoriety. <!-- SOURCE: src/engine/combat.py TEST: tests/integration/pipeline/test_combat_legality_matrix.py PROOF: integration -->
 
 #### `test_phase_3_social_contracts.py`
 
-- [x] `test_recruitment_haggling_threshold`: Recruitment haggling threshold — Verify that candidates counter-offer when willingness is close to threshold.. <!-- SOURCE: src/systems/social_systems/contracts.py TEST: tests/unit/social/test_contract_lifecycle_phase7.py PROOF: integration -->
-- [x] `test_contract_outcome_consequences`: Contract outcome consequences — Verify that contract resolution returns correct intent updates for all members.. <!-- SOURCE: src/engine/kernel.py TEST: tests/p1_semantic_hardening.py PROOF: test -->
-- [x] `test_role_aware_tactical_biases`: Role aware tactical biases — Verify that utility biases change based on contract role.. <!-- SOURCE: src/systems/social_systems/contracts.py TEST: tests/unit/social/test_contract_lifecycle_phase7.py PROOF: integration -->
+- [x] `test_recruitment_haggling_threshold`: Recruitment haggling threshold — Verify that candidates counter-offer when willingness is close to threshold. <!-- SOURCE: src/systems/social_systems/contracts.py TEST: tests/unit/social/test_contract_lifecycle_phase7.py PROOF: integration -->
+- [x] `test_contract_outcome_consequences`: Contract outcome consequences — Verify that contract resolution returns correct intent updates for all members. <!-- SOURCE: src/engine/kernel.py TEST: tests/p1_semantic_hardening.py PROOF: test -->
+- [x] `test_role_aware_tactical_biases`: Role aware tactical biases — Verify that utility biases change based on contract role. <!-- SOURCE: src/systems/social_systems/contracts.py TEST: tests/unit/social/test_contract_lifecycle_phase7.py PROOF: integration -->
 
 #### `unit/ai/test_social.py`
 
@@ -749,13 +749,13 @@ Each checkbox below is derived from one original test. Keep the original test na
 
 #### `unit/ai/test_social_integration.py`
 
-- [x] `test_social_bias_on_goal_scoring`: Social bias on goal scoring — Verify that a high-trust bond increases SOCIAL goal score.. <!-- SOURCE: src/systems/social_systems/contracts.py TEST: tests/unit/social/test_contract_lifecycle_phase7.py PROOF: integration -->
-- [x] `test_reputation_impact_on_caution`: Reputation impact on caution — Verify low global reputation triggers defensive posture in cautious entities.. <!-- SOURCE: src/systems/social_systems/contracts.py TEST: tests/unit/social/test_contract_lifecycle_phase7.py PROOF: integration -->
+- [x] `test_social_bias_on_goal_scoring`: Social bias on goal scoring — Verify that a high-trust bond increases SOCIAL goal score. <!-- SOURCE: src/systems/social_systems/contracts.py TEST: tests/unit/social/test_contract_lifecycle_phase7.py PROOF: integration -->
+- [x] `test_reputation_impact_on_caution`: Reputation impact on caution — Verify low global reputation triggers defensive posture in cautious entities. <!-- SOURCE: src/systems/social_systems/contracts.py TEST: tests/unit/social/test_contract_lifecycle_phase7.py PROOF: integration -->
 
 #### `unit/core/gameplay/test_npc_contracts.py`
 
-- [x] `test_npc_loadout_integrity`: Npc loadout integrity — Verify that specific NPC tiers are assigned their canonical equipment.. <!-- SOURCE: src/engine/rpg_depth.py TEST: tests/unit/core/test_rpg_depth.py PROOF: integration -->
-- [ ] `test_npc_kind_mapping_integrity`: Npc kind mapping integrity — Verify that race/tier combinations map to the correct semantic kind name..
+- [x] `test_npc_loadout_integrity`: Npc loadout integrity — Verify that specific NPC tiers are assigned their canonical equipment. <!-- SOURCE: src/engine/rpg_depth.py TEST: tests/unit/core/test_rpg_depth.py PROOF: integration -->
+- [ ] `test_npc_kind_mapping_integrity`: Npc kind mapping integrity — Verify that race/tier combinations map to the correct semantic kind name.
 
 #### `unit/core/models/test_social_milestones.py`
 
@@ -769,12 +769,12 @@ Each checkbox below is derived from one original test. Keep the original test na
 
 #### `unit/strategy/test_social_reasoning_bounding.py`
 
-- [x] `test_recruitment_offer_bounding_stable`: Recruitment offer bounding stable — Stable entities produce consistent offers without noise.. <!-- SOURCE: src/systems/social_systems/contracts.py TEST: tests/unit/social/test_contract_lifecycle_phase7.py PROOF: integration -->
-- [x] `test_recruitment_offer_bounding_unstable`: Recruitment offer bounding unstable — Unstable entities produce noisy/perturbed offers.. <!-- SOURCE: src/systems/social_systems/contracts.py TEST: tests/unit/social/test_contract_lifecycle_phase7.py PROOF: integration -->
+- [x] `test_recruitment_offer_bounding_stable`: Recruitment offer bounding stable — Stable entities produce consistent offers without noise. <!-- SOURCE: src/systems/social_systems/contracts.py TEST: tests/unit/social/test_contract_lifecycle_phase7.py PROOF: integration -->
+- [x] `test_recruitment_offer_bounding_unstable`: Recruitment offer bounding unstable — Unstable entities produce noisy/perturbed offers. <!-- SOURCE: src/systems/social_systems/contracts.py TEST: tests/unit/social/test_contract_lifecycle_phase7.py PROOF: integration -->
 
 #### `unit/systems/test_familiarity_scaling.py`
 
-- [x] `test_cha_impacts_familiarity_gain`: Cha impacts familiarity gain — Verify that a hero with higher CHA gains familiarity faster.. <!-- SOURCE: src/systems/social_systems/contracts.py TEST: tests/unit/social/test_contract_lifecycle_phase7.py PROOF: integration -->
+- [x] `test_cha_impacts_familiarity_gain`: Cha impacts familiarity gain — Verify that a hero with higher CHA gains familiarity faster. <!-- SOURCE: src/systems/social_systems/contracts.py TEST: tests/unit/social/test_contract_lifecycle_phase7.py PROOF: integration -->
 
 ### Progression / classes / skills / attributes / rewards
 
@@ -791,11 +791,11 @@ Each checkbox below is derived from one original test. Keep the original test na
 
 #### `unit/core/aspects/test_progression.py`
 
-- [x] `test_undead_no_level_up`: Undead no level up — Undead should have a train_rate of 0.0 and never level up.. <!-- SOURCE: src/engine/rpg_depth.py TEST: tests/unit/core/test_rpg_depth.py PROOF: integration -->
-- [x] `test_milestone_level_up`: Milestone level up — Reaching a milestone like level 5 grants extra stats.. <!-- SOURCE: src/engine/rpg_depth.py TEST: tests/unit/core/test_rpg_depth.py PROOF: integration -->
-- [x] `test_veterancy_multipliers`: Veterancy multipliers — Veterancy Ranks should boost stats via StatsProxy.. <!-- SOURCE: src/engine/rpg_depth.py TEST: tests/unit/core/test_rpg_depth.py PROOF: integration -->
-- [x] `test_innate_talents_training`: Innate talents training — Talented attributes gain 2x points, weak attributes gain 0.5x.. <!-- SOURCE: src/engine/rpg_depth.py TEST: tests/unit/core/test_rpg_depth.py PROOF: integration -->
-- [x] `test_combat_veterancy_points`: Combat veterancy points — Combat yields veterancy points.. <!-- SOURCE: src/engine/combat.py TEST: tests/integration/pipeline/test_combat_legality_matrix.py PROOF: integration -->
+- [x] `test_undead_no_level_up`: Undead no level up — Undead should have a train_rate of 0.0 and never level up. <!-- SOURCE: src/engine/rpg_depth.py TEST: tests/unit/core/test_rpg_depth.py PROOF: integration -->
+- [x] `test_milestone_level_up`: Milestone level up — Reaching a milestone like level 5 grants extra stats. <!-- SOURCE: src/engine/rpg_depth.py TEST: tests/unit/core/test_rpg_depth.py PROOF: integration -->
+- [x] `test_veterancy_multipliers`: Veterancy multipliers — Veterancy Ranks should boost stats via StatsProxy. <!-- SOURCE: src/engine/rpg_depth.py TEST: tests/unit/core/test_rpg_depth.py PROOF: integration -->
+- [x] `test_innate_talents_training`: Innate talents training — Talented attributes gain 2x points, weak attributes gain 0.5x. <!-- SOURCE: src/engine/rpg_depth.py TEST: tests/unit/core/test_rpg_depth.py PROOF: integration -->
+- [x] `test_combat_veterancy_points`: Combat veterancy points — Combat yields veterancy points. <!-- SOURCE: src/engine/combat.py TEST: tests/integration/pipeline/test_combat_legality_matrix.py PROOF: integration -->
 
 #### `unit/core/aspects/test_skill_scaling.py`
 
@@ -805,9 +805,9 @@ Each checkbox below is derived from one original test. Keep the original test na
 
 #### `unit/core/gameplay/test_attribute_synergy.py`
 
-- [x] `test_luck_impacts_crit_rate_significantly`: Luck impacts crit rate significantly — Verify that Luck has a meaningful impact on critical hit rate.. <!-- SOURCE: src/engine/combat.py TEST: tests/integration/pipeline/test_combat_legality_matrix.py PROOF: integration -->
-- [x] `test_luck_impacts_loot_modifier`: Luck impacts loot modifier — Verify that Luck/Perception provides a loot rarity multiplier.. <!-- SOURCE: src/core/conservation.py TEST: tests/integration/kernel/test_resource_conservation.py PROOF: race -->
-- [ ] `test_per_based_hidden_discovery`: Per based hidden discovery — Verify that hidden entities are only visible with sufficient Perception..
+- [x] `test_luck_impacts_crit_rate_significantly`: Luck impacts crit rate significantly — Verify that Luck has a meaningful impact on critical hit rate. <!-- SOURCE: src/engine/combat.py TEST: tests/integration/pipeline/test_combat_legality_matrix.py PROOF: integration -->
+- [x] `test_luck_impacts_loot_modifier`: Luck impacts loot modifier — Verify that Luck/Perception provides a loot rarity multiplier. <!-- SOURCE: src/core/conservation.py TEST: tests/integration/kernel/test_resource_conservation.py PROOF: race -->
+- [ ] `test_per_based_hidden_discovery`: Per based hidden discovery — Verify that hidden entities are only visible with sufficient Perception.
 
 #### `unit/core/gameplay/test_breakthroughs.py`
 
@@ -816,8 +816,8 @@ Each checkbox below is derived from one original test. Keep the original test na
 
 #### `unit/core/gameplay/test_class_gear.py`
 
-- [x] `RPG-PROG-012` `test_warrior_prefers_defensive_gear`: Warrior prefers defensive gear — Verify that a Warrior weights defensive stats higher than a Mage.. <!-- SOURCE: src/engine/rpg_depth.py TEST: tests/unit/core/test_rpg_depth.py PROOF: integration -->
-- [x] `RPG-PROG-013` `test_hero_starting_gear_integrity`: Hero starting gear integrity — Verify that each hero class has the correct starting gear defined.. <!-- SOURCE: src/engine/rpg_depth.py TEST: tests/unit/core/test_rpg_depth.py PROOF: integration -->
+- [x] `RPG-PROG-012` `test_warrior_prefers_defensive_gear`: Warrior prefers defensive gear — Verify that a Warrior weights defensive stats higher than a Mage. <!-- SOURCE: src/engine/rpg_depth.py TEST: tests/unit/core/test_rpg_depth.py PROOF: integration -->
+- [x] `RPG-PROG-013` `test_hero_starting_gear_integrity`: Hero starting gear integrity — Verify that each hero class has the correct starting gear defined. <!-- SOURCE: src/engine/rpg_depth.py TEST: tests/unit/core/test_rpg_depth.py PROOF: integration -->
 
 ### World / entities / snapshot / determinism / engine authority
 
@@ -829,8 +829,8 @@ Each checkbox below is derived from one original test. Keep the original test na
 
 #### `integration/engine/test_determinism.py`
 
-- [x] `RPG-DATA-002` `test_simulation_determinism`: Simulation determinism — Verify that two identical simulations with the same seed produce the same result.. <!-- SOURCE: src/platform/rng.py TEST: tests/integration/kernel/test_long_run_determinism.py PROOF: longrun -->
-- [x] `RPG-DATA-003` `test_different_seeds_different_hashes`: Different seeds different hashes — Verify that different seeds produce different world states.. <!-- SOURCE: src/engine/world_dynamics.py TEST: tests/integration/world/test_living_world_ph9.py PROOF: longrun -->
+- [x] `RPG-DATA-002` `test_simulation_determinism`: Simulation determinism — Verify that two identical simulations with the same seed produce the same result. <!-- SOURCE: src/platform/rng.py TEST: tests/integration/kernel/test_long_run_determinism.py PROOF: longrun -->
+- [x] `RPG-DATA-003` `test_different_seeds_different_hashes`: Different seeds different hashes — Verify that different seeds produce different world states. <!-- SOURCE: src/engine/world_dynamics.py TEST: tests/integration/world/test_living_world_ph9.py PROOF: longrun -->
 
 #### `integration/engine/test_mutation_purity.py`
 
@@ -838,10 +838,10 @@ Each checkbox below is derived from one original test. Keep the original test na
 
 #### `integration/engine/test_snapshot_safety.py`
 
-- [x] `RPG-AUTH-014` `test_entity_deep_copy_isolation`: Entity deep copy isolation — Verify that Entity.copy() provides absolute isolation for nested mutable structures.. <!-- SOURCE: src/core/immutability.py TEST: tests/unit/core/test_authoritative_state_contract.py PROOF: negative -->
-- [x] `RPG-AUTH-015` `test_snapshot_actor_isolation`: Snapshot actor isolation — Verify that resolving an actor from a Snapshot ensures mutation safety.. <!-- SOURCE: src/core/immutability.py TEST: tests/unit/core/test_authoritative_state_contract.py PROOF: negative -->
-- [ ] `RPG-AUTH-016` `test_aspect_model_rebuild_integrity`: Aspect model rebuild integrity — Ensure that deep copies correctly initialize models and don't lose data..
-- [ ] `RPG-AUTH-017` `test_lived_structure_isolation`: Lived structure isolation — Verify isolation for Phase 3 routine and attachment structures..
+- [x] `RPG-AUTH-014` `test_entity_deep_copy_isolation`: Entity deep copy isolation — Verify that Entity.copy() provides absolute isolation for nested mutable structures. <!-- SOURCE: src/core/immutability.py TEST: tests/unit/core/test_authoritative_state_contract.py PROOF: negative -->
+- [x] `RPG-AUTH-015` `test_snapshot_actor_isolation`: Snapshot actor isolation — Verify that resolving an actor from a Snapshot ensures mutation safety. <!-- SOURCE: src/core/immutability.py TEST: tests/unit/core/test_authoritative_state_contract.py PROOF: negative -->
+- [ ] `RPG-AUTH-016` `test_aspect_model_rebuild_integrity`: Aspect model rebuild integrity — Ensure that deep copies correctly initialize models and don't lose data.
+- [ ] `RPG-AUTH-017` `test_lived_structure_isolation`: Lived structure isolation — Verify isolation for routine and attachment structures.
 
 #### `unit/core/entities/test_entity_serialization.py`
 
@@ -850,16 +850,16 @@ Each checkbox below is derived from one original test. Keep the original test na
 
 #### `unit/core/models/test_snapshot_purity.py`
 
-- [x] `RPG-AUTH-018` `test_simulation_model_collection_freeze_list`: Simulation model collection freeze list — Verify that lists in SimulationModel become immutable after freeze.. <!-- SOURCE: src/core/immutability.py TEST: tests/unit/core/test_authoritative_state_contract.py PROOF: unit -->
-- [x] `RPG-AUTH-019` `test_simulation_model_collection_freeze_dict`: Simulation model collection freeze dict — Verify that dicts in SimulationModel become immutable MappingProxy after freeze.. <!-- SOURCE: src/core/immutability.py TEST: tests/unit/core/test_authoritative_state_contract.py PROOF: unit -->
-- [x] `RPG-AUTH-020` `test_world_state_freeze_guards`: World state freeze guards — Verify that WorldState prevents mutations after freeze.. <!-- SOURCE: src/engine/world_dynamics.py TEST: tests/integration/world/test_living_world_ph9.py PROOF: longrun -->
-- [x] `RPG-AUTH-021` `test_snapshot_deep_purity`: Snapshot deep purity — Verify that Snapshot entities and their nested aspects are recursively frozen.. <!-- SOURCE: src/core/immutability.py TEST: tests/unit/core/test_authoritative_state_contract.py PROOF: negative -->
-- [x] `RPG-AUTH-022` `test_action_proposal_guard_integration`: Action proposal guard integration — Verify the ActionProposalGuard context manager properly freezes the snapshot.. <!-- SOURCE: src/engine/movement.py TEST: tests/unit/movement/test_movement_congestion.py PROOF: integration -->
+- [x] `RPG-AUTH-018` `test_simulation_model_collection_freeze_list`: Simulation model collection freeze list — Verify that lists in SimulationModel become immutable after freeze. <!-- SOURCE: src/core/immutability.py TEST: tests/unit/core/test_authoritative_state_contract.py PROOF: unit -->
+- [x] `RPG-AUTH-019` `test_simulation_model_collection_freeze_dict`: Simulation model collection freeze dict — Verify that dicts in SimulationModel become immutable MappingProxy after freeze. <!-- SOURCE: src/core/immutability.py TEST: tests/unit/core/test_authoritative_state_contract.py PROOF: unit -->
+- [x] `RPG-AUTH-020` `test_world_state_freeze_guards`: World state freeze guards — Verify that WorldState prevents mutations after freeze. <!-- SOURCE: src/engine/world_dynamics.py TEST: tests/integration/world/test_living_world_ph9.py PROOF: longrun -->
+- [x] `RPG-AUTH-021` `test_snapshot_deep_purity`: Snapshot deep purity — Verify that Snapshot entities and their nested aspects are recursively frozen. <!-- SOURCE: src/core/immutability.py TEST: tests/unit/core/test_authoritative_state_contract.py PROOF: negative -->
+- [x] `RPG-AUTH-022` `test_action_proposal_guard_integration`: Action proposal guard integration — Verify the ActionProposalGuard context manager properly freezes the snapshot. <!-- SOURCE: src/engine/movement.py TEST: tests/unit/movement/test_movement_congestion.py PROOF: integration -->
 
 #### `unit/core/test_deep_freeze.py`
 
-- [x] `RPG-AUTH-023` `test_deep_freeze_nested_collections`: Deep freeze nested collections — Verify that freeze() recursively converts nested collections to immutable types.. <!-- SOURCE: src/core/immutability.py TEST: tests/unit/core/test_authoritative_state_contract.py PROOF: unit -->
-- [x] `RPG-AUTH-024` `test_deep_freeze_idempotency`: Deep freeze idempotency — Verify that calling freeze() multiple times is safe.. <!-- SOURCE: src/core/immutability.py TEST: tests/unit/core/test_authoritative_state_contract.py PROOF: unit -->
+- [x] `RPG-AUTH-023` `test_deep_freeze_nested_collections`: Deep freeze nested collections — Verify that freeze() recursively converts nested collections to immutable types. <!-- SOURCE: src/core/immutability.py TEST: tests/unit/core/test_authoritative_state_contract.py PROOF: unit -->
+- [x] `RPG-AUTH-024` `test_deep_freeze_idempotency`: Deep freeze idempotency — Verify that calling freeze() multiple times is safe. <!-- SOURCE: src/core/immutability.py TEST: tests/unit/core/test_authoritative_state_contract.py PROOF: unit -->
 
 #### `unit/core/test_domain_invariants.py`
 
@@ -870,11 +870,11 @@ Each checkbox below is derived from one original test. Keep the original test na
 
 #### `unit/core/test_invariants.py`
 
-- [ ] `RPG-COMBAT-062` `test_speed_delay_invariants`: Speed delay invariants — Test that speed_delay never returns NaN or out-of-bounds values..
-- [ ] `RPG-COMBAT-063` `test_stats_invariants`: Stats invariants — AOA Stabilization: Test CombatAspect invariants (formerly Stats)..
-- [x] `RPG-COMBAT-064` `test_damage_calc_math`: Damage calc math — Test the core damage calculation logic in isolation.. <!-- SOURCE: src/engine/combat.py TEST: tests/integration/pipeline/test_combat_legality_matrix.py PROOF: integration -->
-- [x] `RPG-PROG-015` `test_recalc_level_consistency`: Recalc level consistency — Ensure level-based stat recalculation remains consistent across aspects.. <!-- SOURCE: src/engine/rpg_depth.py TEST: tests/unit/core/test_rpg_depth.py PROOF: integration -->
-- [x] `RPG-COMBAT-065` `test_combat_damage_invariants`: Combat damage invariants — Ensure HP reduction application doesn't cause overflow or invalid states.. <!-- SOURCE: src/engine/combat.py TEST: tests/integration/pipeline/test_combat_legality_matrix.py PROOF: integration -->
+- [ ] `RPG-COMBAT-062` `test_speed_delay_invariants`: Speed delay invariants — Test that speed_delay never returns NaN or out-of-bounds values.
+- [ ] `RPG-COMBAT-063` `test_stats_invariants`: Stats invariants — AOA Stabilization: Test CombatAspect invariants (formerly Stats).
+- [x] `RPG-COMBAT-064` `test_damage_calc_math`: Damage calc math — Test the core damage calculation logic in isolation. <!-- SOURCE: src/engine/combat.py TEST: tests/integration/pipeline/test_combat_legality_matrix.py PROOF: integration -->
+- [x] `RPG-PROG-015` `test_recalc_level_consistency`: Recalc level consistency — Ensure level-based stat recalculation remains consistent across aspects. <!-- SOURCE: src/engine/rpg_depth.py TEST: tests/unit/core/test_rpg_depth.py PROOF: integration -->
+- [x] `RPG-COMBAT-065` `test_combat_damage_invariants`: Combat damage invariants — Ensure HP reduction application doesn't cause overflow or invalid states. <!-- SOURCE: src/engine/combat.py TEST: tests/integration/pipeline/test_combat_legality_matrix.py PROOF: integration -->
 
 #### `unit/systems/test_calamity_evolution.py`
 
@@ -884,56 +884,56 @@ Each checkbox below is derived from one original test. Keep the original test na
 
 #### `ai/test_intel_capacity_regression.py`
 
-- [x] `RPG-DATA-004` `test_intel_capacity_replay_and_graph_export`: Intel capacity replay and graph export — Verify that cognitive metrics survive replay and graph export pipelines.. <!-- SOURCE: src/core/conservation.py TEST: tests/integration/kernel/test_resource_conservation.py PROOF: race -->
-- [x] `RPG-DATA-005` `test_intel_capacity_determinism`: Intel capacity determinism — Verify that identical seeds produce identical cognitive profiles and artifacts.. <!-- SOURCE: src/core/conservation.py TEST: tests/integration/kernel/test_resource_conservation.py PROOF: race -->
-- [x] `RPG-DATA-006` `test_intel_capacity_overload_injection`: Intel capacity overload injection — Inject extreme cognitive pressure and verify overload triggering in artifacts.. <!-- SOURCE: src/core/conservation.py TEST: tests/integration/kernel/test_resource_conservation.py PROOF: race -->
-- [x] `RPG-DATA-007` `test_intel_capacity_divergence_scenario`: Intel capacity divergence scenario — Verify that different attributes lead to differing usage artifacts.. <!-- SOURCE: src/core/conservation.py TEST: tests/integration/kernel/test_resource_conservation.py PROOF: race -->
-- [x] `RPG-DATA-008` `test_intel_capacity_detour_depth_hardbound`: Intel capacity detour depth hardbound — Verify that detour depth is capped in artifacts even under pressure.. <!-- SOURCE: src/core/conservation.py TEST: tests/integration/kernel/test_resource_conservation.py PROOF: race -->
+- [x] `RPG-DATA-004` `test_intel_capacity_replay_and_graph_export`: Intel capacity replay and graph export — Verify that cognitive metrics survive replay and graph export pipelines. <!-- SOURCE: src/core/conservation.py TEST: tests/integration/kernel/test_resource_conservation.py PROOF: race -->
+- [x] `RPG-DATA-005` `test_intel_capacity_determinism`: Intel capacity determinism — Verify that identical seeds produce identical cognitive profiles and artifacts. <!-- SOURCE: src/core/conservation.py TEST: tests/integration/kernel/test_resource_conservation.py PROOF: race -->
+- [x] `RPG-DATA-006` `test_intel_capacity_overload_injection`: Intel capacity overload injection — Inject extreme cognitive pressure and verify overload triggering in artifacts. <!-- SOURCE: src/core/conservation.py TEST: tests/integration/kernel/test_resource_conservation.py PROOF: race -->
+- [x] `RPG-DATA-007` `test_intel_capacity_divergence_scenario`: Intel capacity divergence scenario — Verify that different attributes lead to differing usage artifacts. <!-- SOURCE: src/core/conservation.py TEST: tests/integration/kernel/test_resource_conservation.py PROOF: race -->
+- [x] `RPG-DATA-008` `test_intel_capacity_detour_depth_hardbound`: Intel capacity detour depth hardbound — Verify that detour depth is capped in artifacts even under pressure. <!-- SOURCE: src/core/conservation.py TEST: tests/integration/kernel/test_resource_conservation.py PROOF: race -->
 
 #### `ai/test_intel_capacity_visibility.py`
 
-- [x] `RPG-API-006` `test_cognition_api_serialization`: Cognition api serialization — Verify that cognitive metrics are correctly serialized for the API.. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
-- [x] `RPG-INFRA-006` `test_cognition_inspector_rendering`: Cognition inspector rendering — Verify that the CLI inspector correctly renders cognitive data.. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
-- [x] `RPG-API-007` `test_cognition_empty_profile`: Cognition empty profile — Verify that inspector handles entities without cognitive profiles gracefully.. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
+- [x] `RPG-API-006` `test_cognition_api_serialization`: Cognition api serialization — Verify that cognitive metrics are correctly serialized for the API. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
+- [x] `RPG-INFRA-006` `test_cognition_inspector_rendering`: Cognition inspector rendering — Verify that the CLI inspector correctly renders cognitive data. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
+- [x] `RPG-API-007` `test_cognition_empty_profile`: Cognition empty profile — Verify that inspector handles entities without cognitive profiles gracefully. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
 
 #### `integration/strategy/test_building_to_strategy_pipeline.py`
 
 - [x] `RPG-DATA-009` `test_rng`: Rng. <!-- SOURCE: src/platform/rng.py TEST: tests/integration/kernel/test_long_run_determinism.py PROOF: longrun -->
 - [ ] `RPG-AUTH-027` `test_entity`: Entity.
-- [x] `RPG-STRAT-201` `test_guild_intel_to_strategy_visible_pipeline`: Guild intel to strategy visible pipeline — Verify that guild intel produces leads/zones that are visible in API schemas.. <!-- SOURCE: src/town/shop.py TEST: tests/unit/world/test_town_building_contract.py PROOF: integration -->
-- [x] `RPG-STRAT-022` `test_blacksmith_blocker_resolution_pipeline`: Blacksmith blocker resolution pipeline — Verify that blacksmith constraints produce blockers that are resolved by acquisition.. <!-- SOURCE: src/town/shop.py TEST: tests/unit/world/test_town_building_contract.py PROOF: integration -->
+- [x] `RPG-STRAT-201` `test_guild_intel_to_strategy_visible_pipeline`: Guild intel to strategy visible pipeline — Verify that guild intel produces leads/zones that are visible in API schemas. <!-- SOURCE: src/town/shop.py TEST: tests/unit/world/test_town_building_contract.py PROOF: integration -->
+- [x] `RPG-STRAT-022` `test_blacksmith_blocker_resolution_pipeline`: Blacksmith blocker resolution pipeline — Verify that blacksmith constraints produce blockers that are resolved by acquisition. <!-- SOURCE: src/town/shop.py TEST: tests/unit/world/test_town_building_contract.py PROOF: integration -->
 
 #### `integration/strategy/test_knowledge_continuity_stabilization.py`
 
-- [x] `RPG-STRAT-023` `test_milestone_3_lead_testing_and_persistence`: Milestone 3 lead testing and persistence — Verify that exhausted search marks leads as tested and persists them.. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
-- [x] `RPG-SOC-013` `test_milestone_4_social_filtering`: Milestone 4 social filtering — Verify that social candidate selection filters hostiles and uses debt.. <!-- SOURCE: src/systems/social_systems/contracts.py TEST: tests/unit/social/test_contract_lifecycle_phase7.py PROOF: integration -->
-- [x] `RPG-STRAT-024` `test_strategic_uncertainty_and_anti_cheating`: Strategic uncertainty and anti cheating — Verify that rumors have lower certainty and vague leads don't 'cheat' with perfect coords.. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
+- [x] `RPG-STRAT-023` `test_milestone_3_lead_testing_and_persistence`: Milestone 3 lead testing and persistence — Verify that exhausted search marks leads as tested and persists them. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
+- [x] `RPG-SOC-013` `test_milestone_4_social_filtering`: Milestone 4 social filtering — Verify that social candidate selection filters hostiles and uses debt. <!-- SOURCE: src/systems/social_systems/contracts.py TEST: tests/unit/social/test_contract_lifecycle_phase7.py PROOF: integration -->
+- [x] `RPG-STRAT-024` `test_strategic_uncertainty_and_anti_cheating`: Strategic uncertainty and anti cheating — Verify that rumors have lower certainty and vague leads don't 'cheat' with perfect coords. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
 
 #### `integration/strategy/test_lead_feedback_loops.py`
 
-- [x] `RPG-STRAT-025` `test_source_trust_recalibration`: Source trust recalibration — Verify that a 'False' lead outcome reduces source trust.. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
-- [x] `RPG-STRAT-026` `test_severe_failure_abandonment_impact`: Severe failure abandonment impact — Verify that a project switch/abandonment reflects in strategic drivers.. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
+- [x] `RPG-STRAT-025` `test_source_trust_recalibration`: Source trust recalibration — Verify that a 'False' lead outcome reduces source trust. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
+- [x] `RPG-STRAT-026` `test_severe_failure_abandonment_impact`: Severe failure abandonment impact — Verify that a project switch/abandonment reflects in strategic drivers. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
 
 #### `integration/strategy/test_strategy_observability_consistency.py`
 
 - [x] `RPG-DATA-010` `test_rng`: Rng. <!-- SOURCE: src/platform/rng.py TEST: tests/integration/kernel/test_long_run_determinism.py PROOF: longrun -->
 - [ ] `RPG-AUTH-028` `test_entity`: Entity.
-- [x] `RPG-API-008` `test_strategy_observability_consistency`: Strategy observability consistency — Verify that a strategic shift is consistently observable across all surfaces.. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
-- [x] `RPG-STRAT-027` `test_strategic_decision_driver_traceability`: Strategic decision driver traceability — Verify that DecisionDriver records flow from AIBrain to the entity state.. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
+- [x] `RPG-API-008` `test_strategy_observability_consistency`: Strategy observability consistency — Verify that a strategic shift is consistently observable across all surfaces. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
+- [x] `RPG-STRAT-027` `test_strategic_decision_driver_traceability`: Strategic decision driver traceability — Verify that DecisionDriver records flow from AIBrain to the entity state. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
 
 #### `movement/test_congestion_milestone_3.py`
 
-- [x] `RPG-COMBAT-066` `test_blocked_retreat_yield`: Blocked retreat yield — Verify high-priority RETREAT ally forces yield from lower-priority ally.. <!-- SOURCE: src/core/conservation.py TEST: tests/integration/kernel/test_resource_conservation.py PROOF: race -->
-- [x] `RPG-COMBAT-067` `test_oscillation_suppression`: Oscillation suppression — Verify A-B-A-B movement is suppressed after 2 cycles.. <!-- SOURCE: src/engine/movement.py TEST: tests/unit/movement/test_movement_congestion.py PROOF: integration -->
-- [x] `RPG-COMBAT-068` `test_reroute_hysteresis`: Reroute hysteresis — Verify minor reroutes are ignored to prevent flip-flopping.. <!-- SOURCE: src/engine/movement.py TEST: tests/unit/movement/test_movement_congestion.py PROOF: integration -->
-- [x] `RPG-COMBAT-069` `test_safe_sidestepping`: Safe sidestepping — Verify yielding entities do not sidestep closer to danger.. <!-- SOURCE: src/engine/movement.py TEST: tests/unit/movement/test_movement_congestion.py PROOF: integration -->
+- [x] `RPG-COMBAT-066` `test_blocked_retreat_yield`: Blocked retreat yield — Verify high-priority RETREAT ally forces yield from lower-priority ally. <!-- SOURCE: src/core/conservation.py TEST: tests/integration/kernel/test_resource_conservation.py PROOF: race -->
+- [x] `RPG-COMBAT-067` `test_oscillation_suppression`: Oscillation suppression — Verify A-B-A-B movement is suppressed after 2 cycles. <!-- SOURCE: src/engine/movement.py TEST: tests/unit/movement/test_movement_congestion.py PROOF: integration -->
+- [x] `RPG-COMBAT-068` `test_reroute_hysteresis`: Reroute hysteresis — Verify minor reroutes are ignored to prevent flip-flopping. <!-- SOURCE: src/engine/movement.py TEST: tests/unit/movement/test_movement_congestion.py PROOF: integration -->
+- [x] `RPG-COMBAT-069` `test_safe_sidestepping`: Safe sidestepping — Verify yielding entities do not sidestep closer to danger. <!-- SOURCE: src/engine/movement.py TEST: tests/unit/movement/test_movement_congestion.py PROOF: integration -->
 
 #### `unit/ai/strategy/test_recruitment_negotiation.py`
 
-- [x] `RPG-SOC-014` `test_recruitment_offer_generation`: Recruitment offer generation — Verify that a recruiter creates a reasonable offer based on greed and risk. [PHASE 4]. <!-- SOURCE: src/systems/social_systems/contracts.py TEST: tests/unit/social/test_contract_lifecycle_phase7.py PROOF: integration -->
-- [x] `RPG-SOC-015` `test_recruitment_offer_evaluation_acceptance`: Recruitment offer evaluation acceptance — Verify candidate accepts a fair offer from a trusted friend. [PHASE 4]. <!-- SOURCE: src/systems/social_systems/contracts.py TEST: tests/unit/social/test_contract_lifecycle_phase7.py PROOF: integration -->
-- [x] `RPG-SOC-016` `test_recruitment_offer_evaluation_acceptance`: Recruitment offer evaluation acceptance — Verify candidate accepts a fair offer from a trusted friend. [PHASE 4]. <!-- SOURCE: src/systems/social_systems/contracts.py TEST: tests/unit/social/test_contract_lifecycle_phase7.py PROOF: integration -->
-- [x] `RPG-SOC-017` `test_recruiter_evaluates_counter`: Recruiter evaluates counter — Verify recruiter accepts a counter-offer for an urgent project. [PHASE 4]. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
+- [x] `RPG-SOC-014` `test_recruitment_offer_generation`: Recruitment offer generation — Verify that a recruiter creates a reasonable offer based on greed and risk. <!-- SOURCE: src/systems/social_systems/contracts.py TEST: tests/unit/social/test_contract_lifecycle_phase7.py PROOF: integration -->
+- [x] `RPG-SOC-015` `test_recruitment_offer_evaluation_acceptance`: Recruitment offer evaluation acceptance — Verify candidate accepts a fair offer from a trusted friend. <!-- SOURCE: src/systems/social_systems/contracts.py TEST: tests/unit/social/test_contract_lifecycle_phase7.py PROOF: integration -->
+- [x] `RPG-SOC-016` `test_recruitment_offer_evaluation_acceptance`: Recruitment offer evaluation acceptance — Verify candidate accepts a fair offer from a trusted friend. <!-- SOURCE: src/systems/social_systems/contracts.py TEST: tests/unit/social/test_contract_lifecycle_phase7.py PROOF: integration -->
+- [x] `RPG-SOC-017` `test_recruiter_evaluates_counter`: Recruiter evaluates counter — Verify recruiter accepts a counter-offer for an urgent project. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
 
 #### `unit/ai/test_action_styles.py`
 
@@ -942,8 +942,8 @@ Each checkbox below is derived from one original test. Keep the original test na
 
 #### `unit/ai/test_ai_heuristics.py`
 
-- [ ] `RPG-STRAT-028` `test_ai_boredom_diversification`: Ai boredom diversification — Verify that an entity eventually shifts away from a repetitive goal due to boredom..
-- [x] `RPG-PROG-016` `test_life_stage_priority_shift`: Life stage priority shift — Verify level 1 and level 25 entities have different goal preferences.. <!-- SOURCE: src/engine/rpg_depth.py TEST: tests/unit/core/test_rpg_depth.py PROOF: integration -->
+- [ ] `RPG-STRAT-028` `test_ai_boredom_diversification`: Ai boredom diversification — Verify that an entity eventually shifts away from a repetitive goal due to boredom.
+- [x] `RPG-PROG-016` `test_life_stage_priority_shift`: Life stage priority shift — Verify level 1 and level 25 entities have different goal preferences. <!-- SOURCE: src/engine/rpg_depth.py TEST: tests/unit/core/test_rpg_depth.py PROOF: integration -->
 
 #### `unit/ai/test_attention.py`
 
@@ -967,9 +967,9 @@ Each checkbox below is derived from one original test. Keep the original test na
 
 #### `unit/ai/test_emotional_memory.py`
 
-- [x] `RPG-SOC-018` `test_locational_trauma_triggers_dread`: Locational trauma triggers dread — Verify entering a high-trauma region increments DREAD.. <!-- SOURCE: src/systems/social_systems/contracts.py TEST: tests/unit/social/test_contract_lifecycle_phase7.py PROOF: integration -->
-- [ ] `RPG-SOC-019` `test_emotional_bias_on_utility`: Emotional bias on utility — Verify DREAD increases FLEE utility and decreases EXPLORE utility..
-- [ ] `RPG-SOC-020` `test_emotional_decay`: Emotional decay — Verify emotions propose negative delta for decay..
+- [x] `RPG-SOC-018` `test_locational_trauma_triggers_dread`: Locational trauma triggers dread — Verify entering a high-trauma region increments DREAD. <!-- SOURCE: src/systems/social_systems/contracts.py TEST: tests/unit/social/test_contract_lifecycle_phase7.py PROOF: integration -->
+- [ ] `RPG-SOC-019` `test_emotional_bias_on_utility`: Emotional bias on utility — Verify DREAD increases FLEE utility and decreases EXPLORE utility.
+- [ ] `RPG-SOC-020` `test_emotional_decay`: Emotional decay — Verify emotions propose negative delta for decay.
 
 #### `unit/ai/test_emotions.py`
 
@@ -984,8 +984,8 @@ Each checkbox below is derived from one original test. Keep the original test na
 
 - [ ] `RPG-COMBAT-075` `test_flow_field_basic_navigation`: Flow field basic navigation.
 - [ ] `RPG-COMBAT-076` `test_flow_field_respects_terrain_cost`: Flow field respects terrain cost.
-- [ ] `RPG-COMBAT-077` `test_flow_field_smoothing_normalization`: Flow field smoothing normalization — Verify that get_vector returns a normalized Vector2..
-- [ ] `RPG-COMBAT-078` `test_flow_field_smoothing`: Flow field smoothing — Verify that get_vector uses neighbor averaging for smoother curves..
+- [ ] `RPG-COMBAT-077` `test_flow_field_smoothing_normalization`: Flow field smoothing normalization — Verify that get_vector returns a normalized Vector2.
+- [ ] `RPG-COMBAT-078` `test_flow_field_smoothing`: Flow field smoothing — Verify that get_vector uses neighbor averaging for smoother curves.
 - [ ] `RPG-INFRA-007` `test_cache_with_ttl`: Cache with ttl.
 
 #### `unit/ai/test_flow_fields_refinement.py`
@@ -1035,21 +1035,21 @@ Each checkbox below is derived from one original test. Keep the original test na
 
 #### `unit/combat/test_consequences.py`
 
-- [x] `RPG-COMBAT-086` `test_wound_infliction_massive_hit`: Wound infliction massive hit — Verify that damage > 25% max HP guarantees a wound.. <!-- SOURCE: src/engine/combat.py TEST: tests/integration/pipeline/test_combat_legality_matrix.py PROOF: integration -->
-- [x] `RPG-COMBAT-087` `test_wound_stat_impact`: Wound stat impact — Verify that wounds correctly reduce properties in CombatAspect.. <!-- SOURCE: src/engine/rpg_depth.py TEST: tests/unit/core/test_rpg_depth.py PROOF: integration -->
-- [x] `RPG-PROG-018` `test_scar_permanence`: Scar permanence — Verify that scars are permanent and identifiable.. <!-- SOURCE: src/engine/rpg_depth.py TEST: tests/unit/core/test_rpg_depth.py PROOF: integration -->
+- [x] `RPG-COMBAT-086` `test_wound_infliction_massive_hit`: Wound infliction massive hit — Verify that damage > 25% max HP guarantees a wound. <!-- SOURCE: src/engine/combat.py TEST: tests/integration/pipeline/test_combat_legality_matrix.py PROOF: integration -->
+- [x] `RPG-COMBAT-087` `test_wound_stat_impact`: Wound stat impact — Verify that wounds correctly reduce properties in CombatAspect. <!-- SOURCE: src/engine/rpg_depth.py TEST: tests/unit/core/test_rpg_depth.py PROOF: integration -->
+- [x] `RPG-PROG-018` `test_scar_permanence`: Scar permanence — Verify that scars are permanent and identifiable. <!-- SOURCE: src/engine/rpg_depth.py TEST: tests/unit/core/test_rpg_depth.py PROOF: integration -->
 
 #### `unit/combat/test_exhaustion.py`
 
-- [x] `RPG-RES-016` `test_stamina_drain_on_attack`: Stamina drain on attack — Verify that a basic attack drains stamina from the actor.. <!-- SOURCE: src/engine/rpg_depth.py TEST: tests/unit/core/test_rpg_depth.py PROOF: integration -->
-- [x] `RPG-RES-017` `test_exhaustion_penalty_application`: Exhaustion penalty application — Verify that ActionSystem applies fatigue effect when stamina is low.. <!-- SOURCE: src/engine/rpg_depth.py TEST: tests/unit/core/test_rpg_depth.py PROOF: integration -->
+- [x] `RPG-RES-016` `test_stamina_drain_on_attack`: Stamina drain on attack — Verify that a basic attack drains stamina from the actor. <!-- SOURCE: src/engine/rpg_depth.py TEST: tests/unit/core/test_rpg_depth.py PROOF: integration -->
+- [x] `RPG-RES-017` `test_exhaustion_penalty_application`: Exhaustion penalty application — Verify that ActionSystem applies fatigue effect when stamina is low. <!-- SOURCE: src/engine/rpg_depth.py TEST: tests/unit/core/test_rpg_depth.py PROOF: integration -->
 
 #### `unit/core/aspects/test_aoa_integrity.py`
 
-- [ ] `RPG-AUTH-030` `test_entity_field_integrity`: Entity field integrity — Ensure Entity model_fields contains only the ID, Kind, and Aspects..
-- [ ] `RPG-AUTH-031` `test_entity_property_locking`: Entity property locking — Ensure no forbidden legacy properties have been re-introduced as shims..
-- [ ] `RPG-AUTH-032` `test_aspect_model_purity`: Aspect model purity — Ensure aspects themselves stay clean of Cross-Aspect dependencies..
-- [ ] `RPG-AUTH-033` `test_mandatory_aspect_naming`: Mandatory aspect naming — Aspects must be named exactly as their type (lowercase)..
+- [ ] `RPG-AUTH-030` `test_entity_field_integrity`: Entity field integrity — Ensure Entity model_fields contains only the ID, Kind, and Aspects.
+- [ ] `RPG-AUTH-031` `test_entity_property_locking`: Entity property locking — Ensure no forbidden legacy properties have been re-introduced as shims.
+- [ ] `RPG-AUTH-032` `test_aspect_model_purity`: Aspect model purity — Ensure aspects themselves stay clean of Cross-Aspect dependencies.
+- [ ] `RPG-AUTH-033` `test_mandatory_aspect_naming`: Mandatory aspect naming — Aspects must be named exactly as their type (lowercase).
 
 #### `unit/core/aspects/test_evolution.py`
 
@@ -1066,7 +1066,7 @@ Each checkbox below is derived from one original test. Keep the original test na
 
 - [ ] `RPG-SOC-024` `test_personality_bias_logic`: Personality bias logic.
 - [x] `RPG-SOC-025` `test_social_appraisal_logic`: Social appraisal logic. <!-- SOURCE: src/core/strategic.py TEST: tests/unit/strategic/test_phase6_strategic_cognition.py PROOF: integration -->
-- [x] `RPG-SOC-026` `test_full_motive_pipeline_integration`: Full motive pipeline integration — Verifies that social and personality biases stack correctly.. <!-- SOURCE: src/core/conservation.py TEST: tests/integration/kernel/test_resource_conservation.py PROOF: race -->
+- [x] `RPG-SOC-026` `test_full_motive_pipeline_integration`: Full motive pipeline integration — Verifies that social and personality biases stack correctly. <!-- SOURCE: src/core/conservation.py TEST: tests/integration/kernel/test_resource_conservation.py PROOF: race -->
 
 #### `unit/core/logic/test_routine_service.py`
 
@@ -1092,13 +1092,13 @@ Each checkbox below is derived from one original test. Keep the original test na
 
 #### `unit/core/test_aoa_coercion.py`
 
-- [x] `RPG-AUTH-034` `test_vector2_coercion_during_freeze`: Vector2 coercion during freeze — CRITICAL ARCHITECTURAL VERIFICATION: Ensures that if a field expecting a SimulationModel subclass (like Vector2) contains a raw dict (e.g. from serialization drift), the freeze() logic authoritatively coerces it back to the proper object before applying proxies.. <!-- SOURCE: src/engine/combat.py TEST: tests/integration/pipeline/test_combat_legality_matrix.py PROOF: integration -->
+- [x] `RPG-AUTH-034` `test_vector2_coercion_during_freeze`: Vector2 coercion during freeze — CRITICAL ARCHITECTURAL VERIFICATION: Ensures that if a field expecting a SimulationModel subclass (like Vector2) contains a raw dict (e.g. from serialization drift), the freeze() logic authoritatively coerces it back to the proper object before applying proxies. <!-- SOURCE: src/engine/combat.py TEST: tests/integration/pipeline/test_combat_legality_matrix.py PROOF: integration -->
 
 #### `unit/core/test_depth_features.py`
 
-- [x] `RPG-RES-018` `test_well_rested_effect_application`: Well rested effect application — Verify that the Well-Rested buff correctly affects Max HP and XP mult.. <!-- SOURCE: src/engine/combat.py TEST: tests/integration/pipeline/test_combat_legality_matrix.py PROOF: integration -->
-- [x] `RPG-PROG-023` `test_attribute_synergy_xp_mult`: Attribute synergy xp mult — Verify that Wisdom/Intelligence correctly affects XP multiplier.. <!-- SOURCE: src/engine/rpg_depth.py TEST: tests/unit/core/test_rpg_depth.py PROOF: integration -->
-- [x] `RPG-PROG-024` `test_class_weighted_gear`: Class weighted gear — Verify that item power is correctly weighted for different classes.. <!-- SOURCE: src/engine/rpg_depth.py TEST: tests/unit/core/test_rpg_depth.py PROOF: integration -->
+- [x] `RPG-RES-018` `test_well_rested_effect_application`: Well rested effect application — Verify that the Well-Rested buff correctly affects Max HP and XP mult. <!-- SOURCE: src/engine/combat.py TEST: tests/integration/pipeline/test_combat_legality_matrix.py PROOF: integration -->
+- [x] `RPG-PROG-023` `test_attribute_synergy_xp_mult`: Attribute synergy xp mult — Verify that Wisdom/Intelligence correctly affects XP multiplier. <!-- SOURCE: src/engine/rpg_depth.py TEST: tests/unit/core/test_rpg_depth.py PROOF: integration -->
+- [x] `RPG-PROG-024` `test_class_weighted_gear`: Class weighted gear — Verify that item power is correctly weighted for different classes. <!-- SOURCE: src/engine/rpg_depth.py TEST: tests/unit/core/test_rpg_depth.py PROOF: integration -->
 
 #### `unit/core/test_eb_isolated.py`
 
@@ -1106,15 +1106,15 @@ Each checkbox below is derived from one original test. Keep the original test na
 
 #### `unit/core/test_performance_optimizations.py`
 
-- [ ] `RPG-DATA-022` `test_grid_bytearray_correctness`: Grid bytearray correctness — Verify Grid correctly stores and retrieves materials using bytearray and cache..
-- [x] `RPG-AUTH-035` `test_grid_copy_is_not_shared`: Grid copy is not shared — Verify Grid.copy() duplicates the bytearray data.. <!-- SOURCE: src/core/immutability.py TEST: tests/unit/core/test_authoritative_state_contract.py PROOF: negative -->
-- [x] `RPG-AUTH-036` `test_entity_copy_shallow_vs_refs`: Entity copy shallow vs refs — Verify Entity.copy() is shallow for aspects but produces a new Entity object.. <!-- SOURCE: src/core/immutability.py TEST: tests/unit/core/test_authoritative_state_contract.py PROOF: negative -->
-- [ ] `RPG-INFRA-008` `test_ai_worker_batch_processing_logic`: Ai worker batch processing logic — Verify AIWorkerDaemon correctly handles a batch of tasks..
+- [ ] `RPG-DATA-022` `test_grid_bytearray_correctness`: Grid bytearray correctness — Verify Grid correctly stores and retrieves materials using bytearray and cache.
+- [x] `RPG-AUTH-035` `test_grid_copy_is_not_shared`: Grid copy is not shared — Verify Grid.copy() duplicates the bytearray data. <!-- SOURCE: src/core/immutability.py TEST: tests/unit/core/test_authoritative_state_contract.py PROOF: negative -->
+- [x] `RPG-AUTH-036` `test_entity_copy_shallow_vs_refs`: Entity copy shallow vs refs — Verify Entity.copy() is shallow for aspects but produces a new Entity object. <!-- SOURCE: src/core/immutability.py TEST: tests/unit/core/test_authoritative_state_contract.py PROOF: negative -->
+- [ ] `RPG-INFRA-008` `test_ai_worker_batch_processing_logic`: Ai worker batch processing logic — Verify AIWorkerDaemon correctly handles a batch of tasks.
 
 #### `unit/systems/test_action_convergence.py`
 
-- [x] `RPG-RES-019` `test_loot_no_duplication`: Loot no duplication — Verify that items picked up by the system are not duplicated by AI updates.. <!-- SOURCE: src/core/conservation.py TEST: tests/integration/kernel/test_resource_conservation.py PROOF: race -->
-- [x] `RPG-RES-020` `test_corpse_loot_convergence`: Corpse loot convergence — Verify that corpse recovery is authoritatively handled by ActionSystem.. <!-- SOURCE: src/core/conservation.py TEST: tests/integration/kernel/test_resource_conservation.py PROOF: race -->
+- [x] `RPG-RES-019` `test_loot_no_duplication`: Loot no duplication — Verify that items picked up by the system are not duplicated by AI updates. <!-- SOURCE: src/core/conservation.py TEST: tests/integration/kernel/test_resource_conservation.py PROOF: race -->
+- [x] `RPG-RES-020` `test_corpse_loot_convergence`: Corpse loot convergence — Verify that corpse recovery is authoritatively handled by ActionSystem. <!-- SOURCE: src/core/conservation.py TEST: tests/integration/kernel/test_resource_conservation.py PROOF: race -->
 
 #### `unit/systems/test_dynamic_quests.py`
 
@@ -1123,8 +1123,8 @@ Each checkbox below is derived from one original test. Keep the original test na
 
 #### `unit/systems/test_evolution.py`
 
-- [x] `RPG-PROG-026` `test_entity_evolution_transformation`: Entity evolution transformation — Verify that a goblin evolves into a warrior/scout when hitting level cap.. <!-- SOURCE: src/engine/rpg_depth.py TEST: tests/unit/core/test_rpg_depth.py PROOF: integration -->
-- [x] `RPG-PROG-027` `test_evolution_equipment_refresh`: Evolution equipment refresh — Verify that evolution provides new equipment.. <!-- SOURCE: src/engine/rpg_depth.py TEST: tests/unit/core/test_rpg_depth.py PROOF: integration -->
+- [x] `RPG-PROG-026` `test_entity_evolution_transformation`: Entity evolution transformation — Verify that a goblin evolves into a warrior/scout when hitting level cap. <!-- SOURCE: src/engine/rpg_depth.py TEST: tests/unit/core/test_rpg_depth.py PROOF: integration -->
+- [x] `RPG-PROG-027` `test_evolution_equipment_refresh`: Evolution equipment refresh — Verify that evolution provides new equipment. <!-- SOURCE: src/engine/rpg_depth.py TEST: tests/unit/core/test_rpg_depth.py PROOF: integration -->
 
 #### `unit/systems/test_personality_ai.py`
 
@@ -3153,7 +3153,7 @@ These items are appended rather than replacing existing checklist items. They ar
 - [x] `RPG-PERF-016` O(1) Strategic Intelligence Lookups: Strategic loops must utilize pre-parsed coordinate caches and O(1) inventory count indexing to minimize compute churn. <!-- SOURCE: src/systems/strategic_systems/intelligence.py TEST: scripts/run_benchmarks.py PROOF: optimization -->
 - [x] `RPG-PERF-017` Spatial Metadata Propagation: Navigation systems must propagate `region_id` metadata through updates to bypass redundant spatial region scans during state application. <!-- SOURCE: src/engine/apply.py TEST: scripts/run_benchmarks.py PROOF: optimization -->
 
-## Z20. Performance Optimization Mechanisms (Milestone 3)
+## Z20. Performance Optimization Mechanisms
 
 - [x] `RPG-OPT-001` CandidateSelector Centralized Entity Filtering: Centralized candidate selection based on requested dirty domains and `force_full_scan`. <!-- SOURCE: src/engine/candidate_selector.py TEST: tests/unit/optimization/test_candidate_selector.py PROOF: optimization -->
 - [x] `RPG-OPT-002` Full-Scan Phase Compliance: Empty DirtySet cannot suppress work when `force_full_scan=True` across all authoritative pipeline phases. <!-- SOURCE: src/engine/pipeline.py TEST: tests/integration/optimization/test_force_full_scan_phase_compliance.py PROOF: integration -->

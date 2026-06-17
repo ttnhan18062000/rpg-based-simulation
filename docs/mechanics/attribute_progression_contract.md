@@ -119,9 +119,9 @@ AP spend is validated in the apply path with four gates:
 
 ### Derived Stat Recalculation Order
 
-`LevelingService.recalculate_combat_stats()` — 6 phases executed in strict order:
+`LevelingService.recalculate_combat_stats()` executes the following steps in strict order:
 
-**Phase 1 — Base from attributes:**
+**Step 1 — Base Attributes:**
 ```python
 max_hp    = base_hp + (vitality * 2) + int(endurance * 0.5)
 atk       = base_atk + int(strength * 0.5)
@@ -130,7 +130,7 @@ evasion   = base_evasion + (agility * 0.001)
 atk_range = 1  # default
 ```
 
-**Phase 2 — Equipment bonuses (non-broken slots only, `durability > 0`):**
+**Step 2 — Equipment Bonuses (non-broken slots only, `durability > 0`):**
 ```python
 atk       += item.properties["atk_bonus"]
 def_stat  += item.properties["def_bonus"]
@@ -140,26 +140,26 @@ atk_range  = MAIN_HAND.properties["range"]   # overrides default if present
 total_weight += item.weight
 ```
 
-**Phase 3 — Passive skill bonuses (`SkillKind.PASSIVE` only):**
+**Step 3 — Passive Skill Bonuses (`SkillKind.PASSIVE` only):**
 ```python
 # swift_reflexes:
 evasion += skill.power
 # other passives added as new skills registered
 ```
 
-**Phase 4 — Trait bonuses:**
+**Step 4 — Trait Bonuses:**
 ```python
 if "Tough" in traits:  max_hp  += 20
 if "Quick" in traits:  evasion += 0.02
 if "Strong" in traits: atk     += 3
 ```
 
-**Phase 5 — Movement cost:**
+**Step 5 — Movement Cost:**
 ```python
 move_cost = max(5.0, 10.0 + (total_weight / 5.0) - (agility * 0.1))
 ```
 
-**Phase 6 — Tactical role derivation (with hysteresis):**
+**Step 6 — Tactical Role Derivation (with hysteresis):**
 ```python
 scores = {VANGUARD: strength, SKIRMISHER: agility, PROTECTOR: vitality}
 new_role = max(scores, key=scores.get)
@@ -205,7 +205,7 @@ Biological pressures affect combat multipliers but do **not** alter base stat va
 | `fleet_foot` | +3 agility, +0.05 flat evasion |
 | `titan_grip` | +4 strength |
 
-**Current status:** `apply_bonuses()` is a placeholder — full synergy logic is **not yet implemented**. The Phase 8 placeholder comment in `src/progression/breakthroughs.py` confirms this is deferred work. Breakthroughs should not be cited as active gameplay mechanics until Phase 8 is complete. Agents extending this area must implement `apply_bonuses()` before relying on breakthrough effects.
+**Current status:** `apply_bonuses()` is a placeholder — full synergy logic is **not yet implemented**. A placeholder comment in `src/progression/breakthroughs.py` confirms this is deferred work. Breakthroughs should not be cited as active gameplay mechanics until `apply_bonuses()` is implemented. Agents extending this area must implement it before relying on breakthrough effects.
 
 ---
 
@@ -242,9 +242,9 @@ Progression evaluation runs in the **lifecycle systems phase** after combat reso
 | XP carry-over meets next threshold | Second level-up fires on next evaluation cycle, not in same call |
 | Attribute reaches cap (99) + AP spend attempted | Gate PROG-070 rejects; unspent AP unchanged |
 | Equipment breaks during combat | `durability <= 0` → stat contribution zeroed on next `recalculate_combat_stats()` call |
-| Passive skill (`swift_reflexes`) equipped before level-up | Evasion bonus applies in Phase 3 of recalc on the next stat recalculation |
+| Passive skill (`swift_reflexes`) equipped before level-up | Evasion bonus applies in Step 3 of recalc on the next stat recalculation |
 | Role score tie (e.g. VANGUARD and PROTECTOR equal) | `max()` returns first matched key — tie-breaking is implementation-defined by dict iteration order |
-| Breakthrough triggered at level-up | `apply_bonuses()` placeholder returns without applying bonuses — no effect until Phase 8 |
+| Breakthrough triggered at level-up | `apply_bonuses()` placeholder returns without applying bonuses — no effect until implemented |
 
 ---
 
@@ -268,28 +268,28 @@ IdentityUpdate(evolution_level_set=4, evolution_points_delta=4-523=-519, unspent
 ### Stat recalculation after leveling STR to 20 (vitality=15, agility=10, endurance=8)
 
 ```
-Phase 1 (base attrs):
+Step 1 (base attributes):
   max_hp = 80 + (15*2) + int(8*0.5) = 80 + 30 + 4 = 114
   atk = 10 + int(20*0.5) = 10 + 10 = 20
   def_stat = 5 + int(15*0.3) = 5 + 4 = 9
   evasion = 0.05 + (10*0.001) = 0.06
   atk_range = 1
 
-Phase 2 (equipment — iron sword MAIN_HAND durability=100, atk_bonus=5, range=1):
+Step 2 (equipment — iron sword MAIN_HAND durability=100, atk_bonus=5, range=1):
   atk += 5 → 25
   atk_range = 1 (no change from weapon range property)
   total_weight += 3.0
 
-Phase 3 (passives — swift_reflexes power=0.02):
+Step 3 (passives — swift_reflexes power=0.02):
   evasion += 0.02 → 0.08
 
-Phase 4 (traits — "Strong" present):
+Step 4 (traits — "Strong" present):
   atk += 3 → 28
 
-Phase 5 (movement cost):
+Step 5 (movement cost):
   move_cost = max(5.0, 10.0 + (3.0/5.0) - (10*0.1)) = max(5.0, 10.0 + 0.6 - 1.0) = max(5.0, 9.6) = 9.6
 
-Phase 6 (role — STR=20, AGI=10, VIT=15 → VANGUARD leads):
+Step 6 (role — STR=20, AGI=10, VIT=15 → VANGUARD leads):
   scores = {VANGUARD:20, SKIRMISHER:10, PROTECTOR:15}
   new_role = VANGUARD; if VANGUARD_score > current_role_score + 5 → switch
 ```
@@ -326,12 +326,12 @@ Phase 6 (role — STR=20, AGI=10, VIT=15 → VANGUARD leads):
 To add a new skill unlock:
 1. Add the level and skill ID to the conditional in `_execute_level_up` in `src/progression/leveling.py`
 2. Register the skill in the skill registry with correct `SkillKind` (PASSIVE or ACTIVE)
-3. If PASSIVE: add stat contribution logic to Phase 3 of `recalculate_combat_stats()`
+3. If PASSIVE: add stat contribution logic to Step 3 of `recalculate_combat_stats()`
 4. If ACTIVE: add to `SkillScalingService` with the correct type formula
 5. Add regression tests covering: unlock fires at correct level, stat contribution applies, scaling formula verified
 6. Update this doc and `01_entity_anatomy.md` if the skill changes progression gameplay
 
-To implement breakthroughs (Phase 8):
+To implement breakthroughs:
 1. Replace the placeholder in `BreakthroughService.apply_bonuses()` with actual attribute delta logic
 2. Hook `apply_bonuses()` into the level-up or event trigger path
 3. Add a `recalculate_combat_stats()` call after breakthrough application

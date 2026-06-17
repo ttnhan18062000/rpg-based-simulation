@@ -62,7 +62,7 @@ Timing instrumentation itself must stay bounded (< 1% of total tick time).
 - **Deep-Freeze Caching**: Shared world components that are immutable for the duration of a simulation tick should be cached in their "frozen" state to avoid redundant recursive traversals.
 - **Incremental GC**: The Kernel must utilize frame-pacing idle windows to perform shallow garbage collection (`gc.collect(0)`). This prevents the accumulation of short-lived objects into expensive generation 1/2 collections, smoothing the latency p95/p99 envelope.
 
-## 7. Adaptive Phase Budget Governor (Milestone 17)
+## 7. Adaptive Phase Budget Governor
 
 ### 7.1 Granular Sub-Phase Budgets
 Under system pressure or high work debt, the engine must not rely solely on macro concurrency limits. The `PhaseBudgetGovernor` monitors real-time sub-phase compute costs (e.g., Locomotion vs. Strategic Intelligence) and dynamically emits granular `PhaseBudgets`.

@@ -5,7 +5,7 @@ authority: P1
 audience: developer
 ---
 
-# Supported Gameplay Surface Matrix (Milestone 5)
+# Supported Gameplay Surface
 
 ## 1. Purpose
 This document defines the official support boundary for gameplay logic within `src`. It distinguishes between verified authoritative behaviors and excluded or experimental systems.

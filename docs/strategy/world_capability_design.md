@@ -5,20 +5,20 @@ authority: P1
 audience: developer
 ---
 
-# Spec: Phase 1 — World Capability Foundation Design Document
+# World Capability Foundation Design Document
 
-This design document outlines the technical implementation strategy for **Phase 1 — World Capability Foundation**. The objective is to establish a robust, performant, and TDD-backed layer that exposes structured options (opportunities, query providers, requirements) so that entities can intelligently plan their lifepaths in subsequent phases.
+This design document outlines the technical implementation strategy for the **World Capability Foundation**. The objective is to establish a robust, performant, and TDD-backed layer that exposes structured options (opportunities, query providers, requirements) so that entities can intelligently plan their lifepaths.
 
 ---
 
 ## 1. Context Exploration & System Comparison
 
 ### 1.1 Existing Entity Aspect Mappings
-We compare our planned Phase 1 components with the current architecture detailed in `docs/core/entity_base.md` and `docs/core/entity_aspect_relationship_diagram.mmd`:
+We compare our planned components with the current architecture detailed in `docs/archive/core/entity_base.md` and `docs/core/entity_aspect_relationship_diagram.mmd`:
 
 *   **State Aggregates**: Currently, the `EntityState` includes `StrategicComponent` (active projects, objectives, leads, blockers) and `SocialComponent` (trust, debt, contracts). However, these are purely *local mental state representations*.
 *   **The Mismatch**: Currently, the *World* (`AuthoritativeState`) does not expose structured options (e.g. "What resources can I harvest near me that will satisfy my blocker?"). The entity has to search the entire world manually or fall back to ad-hoc, hardcoded logic.
-*   **The Bridge**: Phase 1 introduces read-only *World Registries* and *State-Free Providers* (Requirement, Information, and Opportunity Providers). This decouples the entity's mental state from direct world-state scanning, routing all options through structured interface objects.
+*   **The Bridge**: This layer introduces read-only *World Registries* and *State-Free Providers* (Requirement, Information, and Opportunity Providers). This decouples the entity's mental state from direct world-state scanning, routing all options through structured interface objects.
 
 ---
 

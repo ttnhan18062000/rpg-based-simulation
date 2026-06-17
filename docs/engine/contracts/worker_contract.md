@@ -5,10 +5,10 @@ authority: P1
 audience: developer
 ---
 
-# Worker Contract (Milestone 8)
+# Worker Contract
 
 ## Purpose
-Milestone 8 introduces safe concurrency to the engine. This contract ensures that parallel execution improves throughput without introducing resource blowups (payload leakage) or semantic drift (determinism loss).
+This contract defines safe concurrency for the engine. This contract ensures that parallel execution improves throughput without introducing resource blowups (payload leakage) or semantic drift (determinism loss).
 
 ## 1. Payload Discipline (Compact Packets)
 - **Law**: A worker must never receive a clone of the entire world state.

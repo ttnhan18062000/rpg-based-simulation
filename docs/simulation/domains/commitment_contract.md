@@ -9,7 +9,7 @@ last_verified: 2026-06-13
 # Commitment Domain Contract
 
 **Source:** `src/domains/commitment/` (pressure.py, abandonment.py, impact.py, reputation.py)  
-**Pipeline phase:** Phase 15 — no phase.py; runs inline as scoring utilities called by the cooperation phase and the strategy system  
+**Pipeline phase:** no dedicated stage — runs inline as scoring utilities called by the Cooperation stage and the strategy system  
 **Authoritative status:** Scoring utility domain. Computes pressure and bias values consumed by callers. `ReputationUpdateService` is the one path that produces a durable state change (`PublicReputationProfile`), returned as a new immutable instance.
 
 ---
@@ -35,7 +35,7 @@ The domain does **not** own the commitment entries themselves (those live on `en
 
 ## Engine Pipeline Phase
 
-**Phase 15 — inline utility, no dedicated phase runner**
+**Inline utility — no dedicated stage runner**
 
 There is no `phase.py`. The four services are called inline by:
 
@@ -181,7 +181,7 @@ All other services return computed scalars or classification dicts — they prod
 |---|---|---|
 | **Cooperation domain** | Calls into commitment | Commitment pressure gates help-request eligibility; partner fit bias applies during party candidate scoring |
 | **Adventure domain** | Calls into commitment | Route bias from active commitments applied during route scoring; abandonment evaluator called on route-exit events |
-| **Emotion domain** (Phase 16) | Reads emotion outputs | Near-death emotion state (high fear/panic) contextually informs survival abandonment; `hp_ratio` is the formal signal, not direct emotion field reads |
+| **Emotion domain** (event-driven, see emotion_contract.md) | Reads emotion outputs | Near-death emotion state (high fear/panic) contextually informs survival abandonment; `hp_ratio` is the formal signal, not direct emotion field reads |
 | **Engine event handlers** | Calls into commitment | `ReputationUpdateService.process_witnessed_event()` called when social events (escort, betrayal, camp_clear) are witnessed |
 
 ---

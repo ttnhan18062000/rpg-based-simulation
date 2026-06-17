@@ -147,7 +147,7 @@ Computed in an if/elif chain — only the first matching branch applies per rout
 
 ## Lifecycle
 
-Adventure routing runs in the **Scheduling phase** (Phase 3) of the deterministic loop. Specifically: `StrategicWorldIntegrationSystem` emits opportunities → `AdventureRouteGenerator.generate()` builds candidates → `AdventureRouteScorer.score()` scores each → service layer selects top candidate → `ObjectiveIntentResolver.resolve()` maps to `ActionIntent`.
+Adventure routing runs in the kernel's **Scheduling** stage. Specifically: `StrategicWorldIntegrationSystem` emits opportunities → `AdventureRouteGenerator.generate()` builds candidates → `AdventureRouteScorer.score()` scores each → service layer selects top candidate → `ObjectiveIntentResolver.resolve()` maps to `ActionIntent`.
 
 ---
 

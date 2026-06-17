@@ -5,10 +5,10 @@ authority: P1
 audience: developer
 ---
 
-# Scheduler Contract (M4) — Deterministic Work Selection
+# Scheduler Contract — Deterministic Work Selection
 
 ## 1. Purpose
-This document defines the execution model for Milestone 4. It replaces naive "scan-everything" logic with a formal, deterministic scheduler that prioritizes consistency and semantic integrity.
+This document defines the execution model for the deterministic scheduler. It replaces naive "scan-everything" logic with a formal, deterministic scheduler that prioritizes consistency and semantic integrity.
 
 ## 2. Scheduler Scope
 - **Input**: Authoritative State, Work Definitions, and Runtime Profile.
@@ -16,7 +16,7 @@ This document defines the execution model for Milestone 4. It replaces naive "sc
 - **Ordering**: Structural boundaries by class, then class-local deterministic sorting.
 
 ## 3. Readiness-Driven Selection Semantics
-The scheduler selects entity work according to the readiness threshold (100.0) established in M2.
+The scheduler selects entity work according to the readiness threshold (100.0) established by the minimal kernel contract.
 - It does **not** redefine eligibility; it only selects eligible entities for the current execution window.
 
 ## 4. Work Boundaries & Ordering

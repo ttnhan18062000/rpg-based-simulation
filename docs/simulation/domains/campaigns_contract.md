@@ -10,7 +10,6 @@ tags: [domains, campaigns, lifecycle, analysis, contract]
 # Campaigns Domain Contract
 
 **Source:** `src/domains/campaigns/` (10 files + `__init__.py`)  
-**Pipeline phase:** Phase 9 — Campaign Lifecycle  
 **Authoritative status:** Analysis domain — NOT simulation state. Campaigns run the Kernel internally for analysis/testing; they are not a primary tick producer.
 
 ---

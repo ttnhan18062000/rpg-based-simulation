@@ -9,7 +9,7 @@ last_verified: 2026-06-13
 # How to Add a Requirement Test
 
 **Related docs:**
-- `docs/testing/v2_test_taxonomy.md` — marker definitions and enforcement rules
+- `docs/testing/test_taxonomy.md` — marker definitions and enforcement rules
 - `docs/testing/requirement_traceability.md` — the map to update after adding a test
 - `docs/testing/regression_policy.md` — which groups are hard gates; authority rules for P0 tests
 - `docs/parity_ledger/` — parity evidence entries (update if test proves a P0 law)
@@ -103,7 +103,7 @@ Avoid generic names like `test_resource_system` or `test_works`. The name is use
 
 ## 4. Taxonomy Marker
 
-Apply the correct marker from `docs/testing/v2_test_taxonomy.md`:
+Apply the correct marker from `docs/testing/test_taxonomy.md`:
 
 | Situation | Marker |
 |---|---|

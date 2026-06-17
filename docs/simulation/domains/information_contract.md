@@ -10,7 +10,7 @@ tags: [domains, information, belief, trust, contract]
 # Information Domain Contract
 
 **Source:** `src/domains/information/` (10 files)  
-**Pipeline phase:** Phase 5 — Information / Belief Processing  
+**Pipeline phase:** the Information / Belief Processing stage  
 **Authoritative status:** NOT authoritative — reads state, returns typed update records.
 
 ---
@@ -47,7 +47,7 @@ Compares a new `KnowledgeFact` against existing entity knowledge. Returns a cont
 Normalises raw information (cleans, deduplicates, standardises format) before assimilation. Input: raw data from perception or NPC interaction. Output: normalised `KnowledgeFact`.
 
 ### router.py — Information Router
-Routes an incoming information event to the appropriate processor (assimilation, contradiction, or trust update) based on the information kind and source. Single entry point for the Phase 5 pipeline call.
+Routes an incoming information event to the appropriate processor (assimilation, contradiction, or trust update) based on the information kind and source. Single entry point for the Information / Belief Processing pipeline call.
 
 ### bridge.py — Core Strategic Bridge
 Translates domain-level results into `src/core/strategic` types (`LeadState`, `BlockerState`). Keeps the domain decoupled from the core state schema.
@@ -78,7 +78,7 @@ Evaluates how new geographic or entity information impacts known routes and trav
 
 ## Authoritative Pipeline Integration
 
-Phase 5 calls `router.py` for each entity that received information events this tick. The router dispatches to assimilation, contradiction, and trust update services. Results are returned as typed records to the pipeline for application. The domain does not write to `AuthoritativeState`.
+The Information / Belief Processing stage calls `router.py` for each entity that received information events this tick. The router dispatches to assimilation, contradiction, and trust update services. Results are returned as typed records to the pipeline for application. The domain does not write to `AuthoritativeState`.
 
 ---
 

@@ -7,7 +7,7 @@ audience: developer
 
 # Substrate Truth Standard
 
-This document defines the authoritative truth levels and verification standards for the `src` substrate closure (Phase 7).
+This document defines the authoritative truth levels and verification standards for the `src` substrate.
 
 ## Truth Levels
 

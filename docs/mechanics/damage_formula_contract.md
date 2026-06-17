@@ -163,7 +163,7 @@ Hero rebirth:
 
 ## Lifecycle
 
-Damage resolution runs in **Phase 5 (Resolution)** of the 6-phase deterministic loop. `CombatResolutionSystem` processes all pending `ATTACK_TARGET` intents in the resolution phase. Results (HP updates, durability updates, wound updates, reward grants) are committed by the apply path in Phase 6.
+Damage resolution runs in the kernel's **Resolution** stage. `CombatResolutionSystem` processes all pending `ATTACK_TARGET` intents during that stage. Results (HP updates, durability updates, wound updates, reward grants) are committed by the apply path in the subsequent **Persistence** stage.
 
 ---
 

@@ -9,7 +9,7 @@ audience: developer
 
 **Status:** Active  
 **Last updated:** 2026-06-09  
-**Relates to:** docs/testing/content_migration_test_ownership.md, docs/testing/v2_test_taxonomy.md
+**Relates to:** docs/testing/content_migration_test_ownership.md, docs/testing/test_taxonomy.md
 
 This document defines six CI test lanes for targeted execution of content migration tests.
 Each lane maps to a set of pytest markers and a Makefile target.
