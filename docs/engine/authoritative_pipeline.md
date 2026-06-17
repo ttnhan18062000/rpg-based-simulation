@@ -36,11 +36,11 @@ The `AuthoritativeApplyPipeline` ensures that concurrent "intents" from workers 
 
 ---
 
-## Phase 1: Trust Boundary
+## Trust Boundary
 **Logic ID**: `RPG-AUTH-001`  
-**Responsibility**: Workers (LLMs/Systems) operate on snapshots and propose changes. This phase strips any "cheated" state changes (e.g., manually setting HP, adding Gold) and preserves only the core **Intents** (Navigation, Tasks, Interaction).
+**Responsibility**: Workers (LLMs/Systems) operate on snapshots and propose changes. This stage strips any "cheated" state changes (e.g., manually setting HP, adding Gold) and preserves only the core **Intents** (Navigation, Tasks, Interaction).
 
-## Phase 2: Actor Validity
+## Actor Validity
 **Logic ID**: `TOWN-001`  
 **Responsibility**: Enforces the status of the actor.
 - **Law**: Dead entities cannot move or act.
@@ -48,26 +48,26 @@ The `AuthoritativeApplyPipeline` ensures that concurrent "intents" from workers 
 - **Law**: Sleeping entities are blocked from submission.
 - **Auditability**: All rejections are recorded in `rejections_delta` for auditability.
 
-## Phase 5: Action Routing (Combat)
+## Action Routing (Combat)
 **Logic ID**: `TOWN-149`, `COMB-001`  
 **File**: `src/engine/pipeline_phases/actions.py`  
 **Responsibility**: Routes combat intents through `SimulationDomainLogic`.
 - **Causal Rule**: Uses "Sliding State". If Actor A kills Target T in this tick, Actor B (later in the queue) will see T as dead and cannot receive a kill reward.
 
-## 🏃 Phase 7: Locomotion Routing
+## 🏃 Locomotion Routing
 **Logic ID**: `COMB-046`  
 **File**: `src/engine/pipeline_phases/movement.py`  
 **Responsibility**: Resolves physical movement steps, terrain traversal costs, and dynamic collision avoidance.
-- **Spatial Locomotion Indexing**: To prevent O(N) entity collection scans during collision and proximity checks, the locomotion phase queries the spatial grid (`grid.get_entities_in_radius`) to evaluate local obstacles and adjacent entity interactions in O(K) time where K is local density.
+- **Spatial Locomotion Indexing**: To prevent O(N) entity collection scans during collision and proximity checks, this stage queries the spatial grid (`grid.get_entities_in_radius`) to evaluate local obstacles and adjacent entity interactions in O(K) time where K is local density.
 
-## 🗺️ Phase 13: Ecological Dynamics
+## 🗺️ Ecological Dynamics
 **Logic ID**: `INFRA-001`, `LEG-RPG-139`  
 **File**: `src/engine/world_dynamics.py`  
 **Responsibility**: Resolves macro-simulation laws.
 - **Trauma Law**: Deaths increase regional trauma.
 - **Sovereignty Law**: Influence shifts between Hero and Monster factions based on regional kills.
 
-## 🧠 Phase 16: Cognitive Refinement
+## 🧠 Cognitive Refinement
 **Logic ID**: `STRAT-002`  
 **File**: `src/systems/strategic_systems/intelligence.py`  
 **Responsibility**: Updates the character's internal mental model.

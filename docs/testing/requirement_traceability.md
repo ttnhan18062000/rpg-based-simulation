@@ -9,7 +9,7 @@ last_verified: 2026-06-13
 # Requirement Traceability Map
 
 **Related docs:**
-- `docs/testing/v2_test_taxonomy.md` — marker definitions and enforcement rules
+- `docs/testing/test_taxonomy.md` — marker definitions and enforcement rules
 - `docs/testing/regression_policy.md` — which groups are hard gates
 - `docs/testing/how_to_add_requirement_tests.md` — how to add a new requirement test
 - `docs/parity_ledger/` — P0 law parity evidence (one YAML file per subsystem)

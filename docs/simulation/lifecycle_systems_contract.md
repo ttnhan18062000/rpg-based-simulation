@@ -151,6 +151,6 @@ Genetics is a starting condition; evolution is earned progression. Both modify e
 ## Extension rules
 
 1. To add a new biological pressure type (e.g., thirst): add a field to `BiologicalUpdate`, add accumulation logic in `BiologicalSystem.update()`, add a damage condition, add need interpretation handling in `src/cognition/need_interpretation.py`. Applies to HERO and VILLAGER kinds only unless explicitly extended.
-2. To add a new genetic trait: extend `GeneticProfile` with a new multiplier field (default 1.0), extend `generate_profile_from_seed()` to compute it from the hash, extend `apply_genetic_profile()` to apply it. Multiplier range must stay 0.8–1.3 unless the trait is intentionally extreme (document in v2_intentional_divergences.md).
+2. To add a new genetic trait: extend `GeneticProfile` with a new multiplier field (default 1.0), extend `generate_profile_from_seed()` to compute it from the hash, extend `apply_genetic_profile()` to apply it. Multiplier range must stay 0.8–1.3 unless the trait is intentionally extreme (document in intentional_divergences.md).
 3. To add a new death trigger: add detection logic in `LifecycleSystem.resolve_lifecycle()` with a new `death_reason` string. Always process succession and influence shifts on death regardless of reason.
 4. Biological pressure accumulation must remain deterministic — never introduce randomness into hunger/sleep rates.

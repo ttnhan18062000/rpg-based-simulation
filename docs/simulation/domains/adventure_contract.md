@@ -9,7 +9,7 @@ last_verified: 2026-06-13
 # Adventure Domain Contract
 
 **Source:** `src/domains/adventure/` (generator.py, scoring.py, service.py, resolver.py, mapper.py, phase.py, schema.py)  
-**Pipeline phase:** Phase 3 — AdventureDecisionPhase  
+**Pipeline phase:** the Adventure Decision stage (`AdventureDecisionPhase`)  
 **Authoritative status:** Strategic routing domain — selects hero projects and objectives each tick. Does not execute combat or harvest actions directly.
 
 ---
@@ -22,7 +22,7 @@ The adventure domain implements **subjective route selection** for heroes. Each 
 
 ## Engine Phase
 
-**Phase 3 — `AdventureDecisionPhase.apply(state, context)`**
+**Adventure Decision stage — `AdventureDecisionPhase.apply(state, context)`**
 
 Runs every tick for all entities that satisfy the eligibility criteria:
 
@@ -184,7 +184,7 @@ No direct writes to `AuthoritativeState` occur inside `AdventureDecisionPhase`.
 | **Perception** | World signals and `exposed_world_signals` — the set of opportunities visible to the hero — are read from perception domain outputs |
 | **Cooperation** | Project locks originating from cooperative commitments (`lock_until_tick`) are respected; a hero in a cooperative lock is skipped entirely |
 | **World emergence** | Active opportunities (sourced by `world_emergence`) are the primary dynamic input to route generation |
-| **Strategy system** | The emitted `StrategicUpdate` (project + objective) is consumed by Phase 4+ tactical phases that decide immediate actions |
+| **Strategy system** | The emitted `StrategicUpdate` (project + objective) is consumed by later tactical stages that decide immediate actions |
 
 ---
 

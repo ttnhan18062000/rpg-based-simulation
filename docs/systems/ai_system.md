@@ -11,30 +11,30 @@ Following the **Resource-Safe Engineering** model, the AI system is strictly dec
 
 ---
 
-## 1. The 5-Phase Cognitive Cycle
+## 1. The Cognitive Cycle
 
 Every AI worker executes a single, deterministic cognitive cycle during the **PACKETIZATION** phase of the kernel. This cycle bridges long-term strategy with tactical execution.
 
-### Phase 1: Strategic Appraisal
+### Strategic Appraisal
 - **Input**: `MindAspect.strategic` state.
 - **Logic**: Evaluates the current **Project** (e.g., "Clear Bandit Camp") to derive the active **Objective** (e.g., "Attack Leader").
 - **Hysteresis**: Ensures goal continuity by protecting the current objective from low-impact fluctuations.
 
-### Phase 2: Sensory Filtering & Perception
+### Sensory Filtering & Perception
 - **Input**: `WorkerPacket` and local viewport.
 - **Selective Attention**: Filters the visible world into a prioritized "Attention Pool" based on **Saliency** (distance, threat level, faction).
 - **Perception Update**: Proposes updates to the entity's subjective `perception` memory.
 
-### Phase 3: Appraisal (Emotional Spike)
+### Emotional Appraisal
 - **Logic**: Derives real-time emotional states (`panic`, `bravery`, `dread`) from the attention pool and recent narrative memory.
 - **Grudges**: Identifies "Nemeses" in the current viewport to bias targeting.
 
-### Phase 4: Deliberation (Goal Scoring)
+### Deliberation (Goal Scoring)
 - **Input**: Utility AI Scorers + Personality Traits.
 - **Scoring**: Candidates are evaluated against the `GoalRegistry`. Utility scores are heavily biased by the active **Strategic Objective**.
 - **Pick**: Selection of the winning `AIState` (e.g., `HUNT`, `FLEE`, `GATHER`).
 
-### Phase 5: Output (Action Proposal)
+### Output (Action Proposal)
 - **Logic**: The mapping of the chosen state to a concrete `ActionProposal` via the `StateHandler`.
 - **Result Generation**: Produces a `WorkerResult` containing the tactical proposal and any proposed updates to the entity's mental state.
 

@@ -1,29 +1,37 @@
 ---
-status: historical
+status: active
 layer: engine
-authority: P2
+authority: P1
 audience: developer
 ---
 
-# Worker Bounds Matrix (Milestone 8)
+# Worker Bounds Reference
 
-| Bound Name | Purpose | Profile Source | Overflow/Violation Behavior |
+Defines the resource boundaries for the concurrent worker pool. Every bound is sourced from the active runtime profile and enforced by the engine at runtime.
+
+## Bound Summary
+
+| Bound Name | Purpose | Profile Source | Overflow / Violation Behavior |
 | :--- | :--- | :--- | :--- |
 | **Worker Count** | Limit parallel threads. | `max_worker_count` | `ThreadPool` size ceiling. |
-| **Queue Depth** | Bound the work backlog. | `max_queue_depth` | **Immediate Local Execution**. |
-| **Payload Scale** | Prevent RAM blowup. | `max_neighborhood_size`| Truncate distant neighbors. |
+| **Queue Depth** | Bound the work backlog. | `max_queue_depth` | **Immediate local execution.** |
+| **Payload Scale** | Prevent RAM blowup. | `max_neighborhood_size` | Truncate distant neighbors. |
 | **Tick Budget** | Limit overall latency. | `max_tick_budget_ms` | `ResourceGovernor` shedding. |
 
-## 1. Local Fallback Triggers
-1.  **Queue Saturated**: Submitting the $N+1$-th task where $N = max\_queue\_depth$.
-2.  **Resource Pressure**: Governor sets mode to `DEGRADED` or `SURVIVAL`. (Optimization to save thread context switching).
-3.  **Profile Disability**: `max_worker_count` set to 0.
+## Local Fallback Triggers
 
-## 2. Forbidden Behavior
+Workers fall back to local execution when:
+1. **Queue Saturated**: Submitting the (N+1)-th task where N = `max_queue_depth`.
+2. **Resource Pressure**: Governor sets mode to DEGRADED or SURVIVAL (optimization to reduce thread context switching).
+3. **Profile Disability**: `max_worker_count` set to 0.
+
+## Forbidden Behavior
+
 - **Authoritative Mutation**: Workers must never directly modify the `AuthoritativeState` instance.
 - **Global Locking**: Workers must not take locks on global registry or world objects.
-- **Side Effects**: Workers must not trigger IO, Replay, or external API calls. (Pure logic only).
+- **Side Effects**: Workers must not trigger IO, replay, or external API calls — pure logic only.
 
-## 3. Regression Risk
-- **Payload Leak**: If a worker receives a pointer to the whole world, `pickle` or serialization overhead will kill throughput.
+## Regression Risks
+
+- **Payload Leak**: If a worker receives a pointer to the whole world, pickle or serialization overhead kills throughput.
 - **Race Corruption**: If results are not sorted by ID, bit-identical determinism is lost.

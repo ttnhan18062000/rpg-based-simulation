@@ -9,10 +9,10 @@ audience: developer
 
 **Status:** Active  
 **Last updated:** 2026-06-09  
-**Relates to:** docs/testing/v2_test_taxonomy.md
+**Relates to:** docs/testing/test_taxonomy.md
 
 This document maps every major test suite to the behavior it owns, identifies duplicate
-coverage areas, and specifies where new Phase 29–34 tests belong.
+coverage areas, and specifies where new content-migration tests belong.
 
 ---
 
@@ -48,9 +48,9 @@ coverage areas, and specifies where new Phase 29–34 tests belong.
 
 ---
 
-## Phase 29–34 New Test Files — Suite Assignments
+## Content-Migration New Test Files — Suite Assignments
 
-| New test file (Phase 29–34) | Assigned suite | Reason |
+| New test file | Assigned suite | Reason |
 |---|---|---|
 | `tests/unit/content/test_migration_map_schema.py` | `tests/unit/content/` | Schema validation for migration_map.yaml |
 | `tests/integration/content/test_strict_world_matrix.py` | `tests/integration/content/` | Cumulative module load matrix (worldassembly marker) |
@@ -67,7 +67,7 @@ coverage areas, and specifies where new Phase 29–34 tests belong.
 | Behavior | Suites that overlap | Resolution |
 |---|---|---|
 | Basic catalog loads | `tests/unit/content/`, `tests/integration/worldassembly/test_real_content_world_modules.py` | Unit covers schema; integration covers real assembly. Not a problem — different scopes. |
-| Basic assembly works | `tests/integration/worldassembly/`, `tests/integration/content/test_strict_world_matrix.py` | Matrix adds cumulative module rows. Do NOT duplicate basic assembly assertions in matrix. See v2_test_taxonomy.md. |
+| Basic assembly works | `tests/integration/worldassembly/`, `tests/integration/content/test_strict_world_matrix.py` | Matrix adds cumulative module rows. Do NOT duplicate basic assembly assertions in matrix. See test_taxonomy.md. |
 | Registry bootstrapping | `tests/unit/core/` and `tests/unit/runtime/` | `unit/core` covers registry dataclasses; `unit/runtime/bootstrap.py` covers mode routing. Distinct scopes. |
 | Enemy definitions | `tests/unit/content/` (migration_map schema) and `tests/architecture/` (hardcoded guard) | Schema validates format; guard validates absence of new unlisted IDs. Complementary. |
 
@@ -89,6 +89,6 @@ Before creating a new test directory:
 
 1. Check this map — the behavior may already have an owner.
 2. If adding to an existing suite, verify the marker matches (see `pyproject.toml` markers).
-3. If creating a new suite, add it to this doc and to `v2_test_taxonomy.md`.
+3. If creating a new suite, add it to this doc and to `test_taxonomy.md`.
 4. Never add integration-scope tests to `tests/unit/`.
 5. Architecture tests must be static (no runtime simulation, no catalog load via network).

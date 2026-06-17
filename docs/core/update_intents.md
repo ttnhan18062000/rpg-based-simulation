@@ -72,7 +72,7 @@ Additional inline fields on `EntityUpdate` that affect dirtiness but are not sub
 | `ground_items_add_or_update` / `ground_items_remove` | `List[GroundItemState]` / `List[int]` | Dropped item lifecycle (add/update/remove by ID) |
 | `corpses_add_or_update` / `corpses_remove` | `List[CorpseState]` / `List[int]` | Corpse lifecycle |
 | `groups_add_or_update` / `groups_remove` | `List[GroupRecord]` / `List[int]` | Group lifecycle |
-| `home_storage_updates` | `Dict[int, InventoryUpdate]` | Home storage inventory per entity (milestone 5) |
+| `home_storage_updates` | `Dict[int, InventoryUpdate]` | Home storage inventory per entity |
 | `resource_updates` | `Dict[str, float]` | Global resource pool deltas |
 
 Additional `StateUpdate` fields that control pipeline behavior rather than intent content: `dirty_set`, `force_full_scan`, `entities_add`, `entities_remove`, `processed_transaction_ids`, `rejection_events`.
@@ -108,13 +108,13 @@ Workers must always emit `ResourceTransferIntent` for item and gold transfers. N
 
 ## Intent lifecycle
 
-### Phase 1 — Creation (read-only decision logic)
+### Creation (read-only decision logic)
 
 Workers receive `AuthoritativeState.to_readonly()` (state.py:1100–1146). This wraps all mutable collections in `ReadOnlyDict`, which raises `ReadOnlyError` on any mutation attempt. Decision logic (workers, pipeline phases, governance layer) produces `StateUpdate` fragments holding intent records but does not apply them.
 
 Workers are the canonical producers of `EntityUpdate` fragments. Pipeline orchestration phases (e.g., governance, scheduling) produce `StateUpdate` fields like `current_mode_set`, `current_policy_set`.
 
-### Phase 2 — Merge and compaction
+### Merge and compaction
 
 Sub-phase `StateUpdate` fragments are merged via `StateUpdate.merge_many()` (updates.py:884–1036, Logic ID: TOWN-204). This processes N updates in a single pass with minimal intermediate allocation:
 
@@ -125,7 +125,7 @@ Sub-phase `StateUpdate` fragments are merged via `StateUpdate.merge_many()` (upd
 
 `StateUpdate.compact()` (updates.py:1038–1046) then drops `EntityUpdate` entries where `EntityUpdate.is_noop()` returns `True`. This reduces the patch set reaching the apply path.
 
-### Phase 3 — Apply (authoritative path only)
+### Apply (authoritative path only)
 
 `ApplyPath.apply_generation()` (`src/engine/apply.py`) is the sole location where a `StateUpdate` is applied to produce a new `AuthoritativeState`. No other code path may apply intents to durable state.
 

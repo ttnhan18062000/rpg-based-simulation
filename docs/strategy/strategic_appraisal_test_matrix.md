@@ -5,7 +5,7 @@ authority: P1
 audience: developer
 ---
 
-# Strategic Appraisal Test Matrix (Milestone 2)
+# Strategic Appraisal Test Matrix
 
 This matrix documents the regression test coverage for the `BoundedStrategicAppraisalService`.
 

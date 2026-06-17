@@ -5,7 +5,7 @@ authority: P1
 audience: developer
 ---
 
-# Local Environment & World-Interaction Contract (Phase 8)
+# Local Environment & World-Interaction Contract
 
 This document defines the authoritative semantics for environment and building interactions in the `src` engine.
 
@@ -40,4 +40,4 @@ This document defines the authoritative semantics for environment and building i
 ## 4. Known Exclusions
 - **Dynamic Terrain**: Terrain cannot currently be modified during a simulation (Except for buildings via sabotage).
 - **Complex LoS**: Sophisticated raycasting is deferred; Manhattan-step is the current authoritative law.
-- **Atmospheric Effects**: Fog/Night effects are currently out of scope for Phase 8.
+- **Atmospheric Effects**: Fog/Night effects are currently out of scope.

@@ -1,21 +1,24 @@
 ---
-status: historical
+status: active
 layer: engine
-authority: P2
+authority: P1
 audience: developer
 ---
 
-# Milestone 8 Test Matrix
+# Worker Verification Surface
+
+Tests that pin the worker pool's determinism guarantees, bound enforcement, queue fallback behavior, and packet discipline.
 
 | Test Group | Input Condition | Expected Result | Regression Caught |
 | :--- | :--- | :--- | :--- |
-| **Worker Determinism** | Same Seed, Local vs Concurrent | Bit-identical `AuthoritativeState` | Race conditions / drift. |
+| **Worker Determinism** | Same seed, local vs concurrent | Bit-identical `AuthoritativeState` | Race conditions / drift. |
 | **Worker Bounds** | `max_worker_count=2` | No more than 2 threads active | Profile violation. |
 | **Queue Fallback** | `max_queue_depth=1` + 2 tasks | 1 task in pool, 1 executed locally | Queue blowup / stall. |
 | **Packet Discipline** | Entity A action | Packet contains A + neighbors (subset) | World-clone leakage. |
-| **Shutdown** | Call `shutdown()` while work inflight | All threads terminated, data captured | Hang or data loss on exit. |
+| **Shutdown** | Call `shutdown()` while work in-flight | All threads terminated, data captured | Hang or data loss on exit. |
 
-## Verification Command
+## Verification Commands
+
 ```bash
 pytest tests/engine/test_worker_determinism.py
 pytest tests/engine/test_worker_bounds.py

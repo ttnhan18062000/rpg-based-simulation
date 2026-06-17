@@ -8,7 +8,7 @@ last_verified: 2026-06-13
 
 # Cognition Subsystem
 
-`src/cognition/` implements the entity's internal cognitive architecture — the layer between raw world state and domain-level decisions. It is a standalone subsystem with its own phase (Phase 2) and its own bundle type (`SelfModelBundle`).
+`src/cognition/` implements the entity's internal cognitive architecture — the layer between raw world state and domain-level decisions. It is a standalone subsystem with its own pipeline step (`SelfModelUpdatePhase`) and its own bundle type (`SelfModelBundle`).
 
 ---
 
@@ -30,7 +30,7 @@ last_verified: 2026-06-13
 
 ## Subsystem files
 
-| File | Phase step | What it does |
+| File | Pipeline step | What it does |
 |---|---|---|
 | `self_model_phase.py` | Orchestrator | Runs the 4-step pipeline; dirty check; emits trace events |
 | `self_assessment.py` | Step 2 | Evaluates entity health, weaknesses, strengths, confidence, stress |
@@ -41,7 +41,7 @@ last_verified: 2026-06-13
 
 ---
 
-## Pipeline: Phase 2 — SelfModelUpdatePhase
+## Pipeline: SelfModelUpdatePhase
 
 Runs every tick for all alive/active entities:
 
@@ -69,8 +69,8 @@ Output: `SelfModelBundle` written to `entity.self_model` via `EntityUpdate(self_
 | `src/domains/adventure/` | `entity.self_model.capabilities` → route feasibility (can entity reach/fight?) |
 | `src/systems/strategic_systems/intelligence.py` | `entity.self_model` (full bundle) → blocker inference, project evaluation |
 | `src/strategy/` | `entity.self_model` → cognition capacity limits |
-| `src/world/motivation/pressure_resolver.py` | World-side, runs before Phase 2; provides need_profile/drive_profile that feed into need interpretation |
-| `src/world/perception/gate.py` | World-side, runs before Phase 12; determines which signals reach the entity |
+| `src/world/motivation/pressure_resolver.py` | World-side, runs before the cognition step; provides need_profile/drive_profile that feed into need interpretation |
+| `src/world/perception/gate.py` | World-side, runs before the perception gate step; determines which signals reach the entity |
 
 ---
 

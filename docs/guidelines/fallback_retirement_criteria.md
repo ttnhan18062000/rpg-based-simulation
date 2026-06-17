@@ -59,7 +59,7 @@ present (verified across strict matrix).
 
 ### 3. Core scenario matrix passes
 
-**Description:** All 8 scenarios in the catalog matrix (Phase 41.3) resolve without errors.
+**Description:** All 8 scenarios in the catalog matrix resolve without errors.
 Scenarios must load, template-validate, resolve perspectives, normalise initial conditions, and
 produce setup modifiers.
 

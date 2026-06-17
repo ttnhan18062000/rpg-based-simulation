@@ -44,7 +44,7 @@ The v2 engine isolates **Authoritative Mutation** from **Concurrent Deliberation
 
 ## 2. The 6-Phase Deterministic Kernel Loop
 
-Every tick executes exactly six phases in a strict, contract-enforced sequence. This "Law of Ticks" is frozen in **Milestone 1**.
+Every tick executes exactly six phases in a strict, contract-enforced sequence. This "Law of Ticks" is fixed and immutable.
 
 ### Phase Sequence & Contracts
 

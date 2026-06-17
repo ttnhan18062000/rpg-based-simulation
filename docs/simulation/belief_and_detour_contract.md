@@ -9,7 +9,7 @@ last_verified: 2026-06-13
 # Belief and Detour Contract
 
 **Source:** `src/systems/strategic_systems/belief.py`, `src/systems/strategic_systems/detour.py`, `src/systems/strategic_systems/redirection.py`
-**Related docs:** [intelligence_system_contract.md](intelligence_system_contract.md), [docs/specs/2026-05-27-belief-integration-design.md](../specs/2026-05-27-belief-integration-design.md) (design spec), [docs/strategy/bounded_cognition_contract.md](../strategy/bounded_cognition_contract.md)
+**Related docs:** [intelligence_system_contract.md](intelligence_system_contract.md), [docs/archive/specs/2026-05-27-belief-integration-design.md](../archive/specs/2026-05-27-belief-integration-design.md) (design spec, archived), [docs/strategy/bounded_cognition_contract.md](../strategy/bounded_cognition_contract.md)
 
 ---
 
@@ -75,7 +75,7 @@ Beliefs affect routing indirectly: `BeliefCycleSystem.estimate_threat(region_id)
 
 ### Design spec vs current implementation
 
-The design spec (`docs/specs/2026-05-27-belief-integration-design.md`) proposed:
+The design spec (`docs/archive/specs/2026-05-27-belief-integration-design.md`) proposed:
 - Belief clustering (grouping related beliefs into compound hypotheses) — **partially implemented** via `HypothesisState`, but automatic clustering logic is not wired
 - Social belief sharing (entities broadcast beliefs to nearby allies) — **not implemented**; only `process_rumor()` supports incoming rumors
 - Belief-driven quest generation — **not implemented**; current implementation feeds threat estimation only

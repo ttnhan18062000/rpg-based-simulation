@@ -5,7 +5,7 @@ authority: P1
 audience: developer
 ---
 
-# Authoritative Combat Contract (Phase 8)
+# Authoritative Combat Contract
 
 This document defines the explicit legality and outcome rules for combat interactions in the `src` engine.
 
@@ -45,6 +45,6 @@ Combat results are emitted as `CombatUpdate` objects with specific semantic kind
 - **Formula**: Same as standard attack.
 
 ## 5. Known Divergences / Exclusions
-- **Evasion**: Currently assume 100% hit rate in the contract baseline (RNG integration pending Milestone 3/4).
+- **Evasion**: Currently assume 100% hit rate in the contract baseline (RNG integration not yet implemented).
 - **LoS**: Line-of-sight obstructions are not yet enforced in the legality service.
 - **Critical Hits**: Not yet implemented.

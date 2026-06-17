@@ -54,8 +54,8 @@ During the **Advancement** phase, before the state is committed and persisted:
 
 ## ⚡ Concurrency & The Resolution Bottleneck
 
-- **Concurrent Collection**: Phase 3 is the only window for parallel execution. Workers analyze the world state in parallel using **Immutable Snapshots**.
-- **The Singular Bottleneck**: Phase 4 is the definitive point of truth. All proposals are sorted (by Class Priority, then Local Priority, then ID) to ensure bit-identical resolution regardless of worker execution order.
+- **Concurrent Collection**: the Deliberation phase is the only window for parallel execution. Workers analyze the world state in parallel using **Immutable Snapshots**.
+- **The Singular Bottleneck**: the Resolution phase is the definitive point of truth. All proposals are sorted (by Class Priority, then Local Priority, then ID) to ensure bit-identical resolution regardless of worker execution order.
 
 ---
 

@@ -90,9 +90,9 @@ Cross-links:
 
 ---
 
-## Generation Pipeline (7 Phases)
+## Generation Pipeline (7 Steps)
 
-### Phase 1 — Isolated RNG Initialisation
+### Step 1 — Isolated RNG Initialisation
 
 ```python
 rng = random.Random(intent.seed)
@@ -100,7 +100,7 @@ rng = random.Random(intent.seed)
 
 An **isolated** `random.Random` instance is created from `intent.seed`. All seed-controlled decisions use `rng` exclusively. The global `random` module state is never read or written during generation.
 
-### Phase 2 — Region Allocation
+### Step 2 — Region Allocation
 
 Three fixed regions are always generated:
 
@@ -112,7 +112,7 @@ Three fixed regions are always generated:
 
 Where `cx = width // 2`, `cy = height // 2`. Region bounds are clamped to `[0, width-1]` × `[0, height-1]`.
 
-### Phase 3 — Faction Mapping
+### Step 3 — Faction Mapping
 
 All factions from `catalog_repo.factions` are mapped to `FactionSpec`. Two roles are dynamically resolved:
 
@@ -121,7 +121,7 @@ All factions from `catalog_repo.factions` are mapped to `FactionSpec`. Two roles
 
 Faction selection is **not RNG-controlled** — it is deterministic by catalog content.
 
-### Phase 4 — Building Placement
+### Step 4 — Building Placement
 
 Catalog-driven. Priority order: `shop` → `blacksmith` → `inn`. If none of these exist in the catalog, the first 3 entries from `catalog_repo.buildings` are used. If the catalog is empty, `["shop", "blacksmith", "inn"]` are used as fallback type strings. All buildings are placed in `town_center`.
 
@@ -129,7 +129,7 @@ Building ID format: `bld_{type}_{index}` (e.g. `bld_shop_0`).
 
 Building selection is **not RNG-controlled** — catalog order is deterministic.
 
-### Phase 5 — Resource Spawning
+### Step 5 — Resource Spawning
 
 Resource nodes are distributed across `wilderness_forest` and `wilderness_hills` using the isolated RNG.
 
@@ -147,7 +147,7 @@ For each node: `resource_type` and `region` are chosen via `rng.choice()`. `coun
 
 Resource ID format: `res_node_{index}`.
 
-### Phase 6 — Population Allocation
+### Step 6 — Population Allocation
 
 ```
 citizen_count = max(5, int(15 × population_scale))
@@ -160,9 +160,9 @@ Two fixed population groups are always created:
 
 Population counts are **not RNG-controlled** — they are deterministic from `population_scale`.
 
-### Phase 7 — Assembly and Output
+### Step 7 — Assembly and Output
 
-1. `WorldSpec` is assembled from all phase outputs.
+1. `WorldSpec` is assembled from all step outputs.
 2. `WorldValidator.validate(world_spec, context=ValidationContext.GENERATED_WORLD)` is run. Failures are recorded in `validation_report` but **do not abort generation** (unlike the worldbuilding compiler which aborts on ERROR).
 3. A deterministic `ProvenanceManifest` is constructed:
    - `content_fingerprint = SHA-256(generation_id + catalog_fingerprint + str(seed))`
@@ -175,15 +175,15 @@ Population counts are **not RNG-controlled** — they are deterministic from `po
 ## Determinism Contract
 
 **Seed-controlled (fully deterministic):**
-- Resource type and region assignment (phases 5)
-- Resource count per node (phase 5)
+- Resource type and region assignment (step 5)
+- Resource count per node (step 5)
 - All `ProvenanceManifest` fields except `created_at`
 
 **Deterministic but NOT seed-controlled (catalog-order deterministic):**
-- Faction mapping (phase 3)
-- Building selection and placement (phase 4)
-- Population role/faction assignment (phase 6)
-- Population counts (phase 6)
+- Faction mapping (step 3)
+- Building selection and placement (step 4)
+- Population role/faction assignment (step 6)
+- Population counts (step 6)
 
 **Non-deterministic:**
 - `created_at` in `ProvenanceManifest` — wall-clock `datetime.now(timezone.utc)` at call time

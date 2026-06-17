@@ -9,7 +9,7 @@ last_verified: 2026-06-13
 # Regression Policy
 
 **Related docs:**
-- `docs/testing/v2_test_taxonomy.md` — marker definitions (`regression`, `v2_contract`, `differential`, etc.)
+- `docs/testing/test_taxonomy.md` — marker definitions (`regression`, `v2_contract`, `differential`, etc.)
 - `docs/testing/requirement_traceability.md` — which tests protect which requirements
 - `docs/testing/how_to_add_requirement_tests.md` — how to add a test after fixing a regression
 - `docs/performance/perf_baseline_policy.md` — numeric performance regression thresholds
@@ -63,7 +63,7 @@ These test groups are important but do not block merge on failure. Failures are 
 | Integration observability flows | `tests/integration/observability/` (phase20–28, warehouse, streams) | Exercising telemetry pipelines that are infrastructure-dependent |
 | Scenario tests | `tests/scenarios/`, `tests/certification/test_cert_long_run_stability.py` | Long-running; infrastructure-sensitive; failures are investigated but don't block fast iteration |
 | Performance perf suite (non-gate scenarios) | `tests/perf/test_perf_metropolis.py`, `test_perf_idle.py`, `test_perf_stress.py` | Benchmarks that measure but do not enforce thresholds (advisory only) |
-| World-assembly integration | `tests/integration/content/`, `tests/unit/worldassembly/` | Content pipeline; failures are tracked per `docs/testing/v2_test_taxonomy.md` `worldassembly` ownership |
+| World-assembly integration | `tests/integration/content/`, `tests/unit/worldassembly/` | Content pipeline; failures are tracked per `docs/testing/test_taxonomy.md` `worldassembly` ownership |
 
 ---
 
@@ -75,7 +75,7 @@ Use this decision tree when a test fails:
 Test fails after a code change
         │
         ├─ Was the behavior change intentional and planned?
-        │       ├─ YES → Is it documented in docs/guidelines/v2_intentional_divergences.md?
+        │       ├─ YES → Is it documented in docs/guidelines/intentional_divergences.md?
         │       │           ├─ YES → Update the test to match new behavior. Update parity ledger if P0.
         │       │           └─ NO  → Stop. Document the divergence first, then update the test.
         │       │
@@ -114,7 +114,7 @@ When a hard gate test fails, follow these steps in order:
 
 5. **Bisect the change.** Run `git log --oneline -20` and identify which commit introduced the failure. Does the commit message reference an intentional divergence?
 
-6. **Check for a filed divergence.** If the change was intentional, it must appear in `docs/guidelines/v2_intentional_divergences.md`. If it does not appear there, the change is unauthorized.
+6. **Check for a filed divergence.** If the change was intentional, it must appear in `docs/guidelines/intentional_divergences.md`. If it does not appear there, the change is unauthorized.
 
 7. **Decision:**
    - Code broke the law → revert or fix the code.
@@ -128,7 +128,7 @@ When a hard gate test fails, follow these steps in order:
 | Situation | Action |
 |---|---|
 | Test checks an implementation detail that was legitimately refactored with no behavior change | Update the test. The assertion should check the same invariant through the new interface. |
-| Test checks a behavior that was intentionally changed and the change is filed in `v2_intentional_divergences.md` | Update the test to assert the new behavior. Update parity ledger entry in the same session. |
+| Test checks a behavior that was intentionally changed and the change is filed in `intentional_divergences.md` | Update the test to assert the new behavior. Update parity ledger entry in the same session. |
 | Test checks a simulation law (P0) and the law was not intentionally changed | **Do not update the test.** Fix the code. |
 | Test has been flaky (non-deterministic failures) for more than one session | File a P1 issue, mark the test `@pytest.mark.xfail(strict=False, reason="flaky: <ticket>")`, and investigate root cause before removing the xfail. |
 | Test was written for a feature that has been removed | Move the test to `tests/scratch/` or delete with a comment in the commit message. Never silently delete a P0 test. |
@@ -140,7 +140,7 @@ When a hard gate test fails, follow these steps in order:
 A **P0 test** is any test that protects a P0 requirement (see `docs/testing/requirement_traceability.md` — authority column).
 
 **Rules:**
-- A P0 test can only be updated when there is a filed intentional divergence in `docs/guidelines/v2_intentional_divergences.md` that explicitly covers the behavior being changed.
+- A P0 test can only be updated when there is a filed intentional divergence in `docs/guidelines/intentional_divergences.md` that explicitly covers the behavior being changed.
 - The parity ledger entry for the affected subsystem (`docs/parity_ledger/`) must be updated in the same session — `status`, `v2_evidence`, and `divergence_note`.
 - The `docs/compliance/checklist.md` entry for the affected law must be updated if the proof path changes.
 - The ticket closing the change must list all three: divergence doc, parity ledger entry, and checklist item.

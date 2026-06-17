@@ -2074,7 +2074,7 @@
 - id: INFRA-192
   text: >
     CertificationHarness writes manifest_snapshot.json to <output_dir>/ after recording
-    the proof bundle (certification_contract_me.md §1). Source path is injectable via
+    the proof bundle (extended_certification_contract.md §1). Source path is injectable via
     manifest_path= constructor arg (default: docs/engine/manifest.json). If the manifest
     file is absent, a warning is logged and the run continues without writing the snapshot.
     Write failure is wrapped in try/except — non-fatal. File is written with Path.write_text()

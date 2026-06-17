@@ -5,7 +5,7 @@ authority: P1
 audience: developer
 ---
 
-# Observability Rulebook (Milestone 7)
+# Observability Rulebook
 
 ## 1. Overview
 This rulebook defines the authoritative contract for structured runtime observability within the Combat and Movement Overhaul. It specifies the categories of "reasons" that the system must expose when an action is proposed, rejected, or modified.

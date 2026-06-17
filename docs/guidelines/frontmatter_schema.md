@@ -32,8 +32,6 @@ the frontmatter overrides path inference.
 | `tickets/` | `ticket` |
 | `stored_artifacts/` | `artifact` |
 | `docs/archive/` | `archive` |
-| `docs/superpowers/` | `archive` |
-| `docs/specs/` | `archive` |
 | All other `docs/` | `doc` |
 | Anything else | `doc` (fallback) |
 
@@ -130,7 +128,7 @@ artifact_type: plan
 
 ### `archive` — Archived and retired documents
 
-Applies to files under `docs/archive/`, `docs/superpowers/`, and `docs/specs/`.
+Applies to files under `docs/archive/`.
 
 | Field | Required | Type | Valid Values |
 |---|---|---|---|

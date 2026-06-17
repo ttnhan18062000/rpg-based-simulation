@@ -10,7 +10,7 @@ audience: developer
 > [!NOTE]
 > **Compliance Status**: This system is 90% certified. See the [Gap Analysis](../compliance/gap_analysis.md) for known issues regarding hardcoded interruption thresholds and missing sovereignty transitions.
 
-The Strategic Cognition system (Phase 7) provides the simulation with **Long-Term Continuity**. It ensures that entities don't just react to their immediate surroundings, but follow persistent, motive-driven "projects" across hundreds of ticks.
+The Strategic Cognition system provides the simulation with **Long-Term Continuity**. It ensures that entities don't just react to their immediate surroundings, but follow persistent, motive-driven "projects" across hundreds of ticks.
 
 ---
 
@@ -37,7 +37,7 @@ Concrete, world-space tasks derived from the active project.
 
 ## 2. The Derivation Cycle
 
-Strategic reasoning happens in the **Strategic Derivation Phase** (Phase 0 of the Cognitive Pipeline):
+Strategic reasoning happens during the Cognitive Pipeline's **Strategic Derivation** stage:
 
 1.  **Project Selection**: If no project is active, the brain evaluates available opportunities (from the `StrategicWorldIntegrationSystem`) and personal directives to pick a new Project.
 2.  **Objective Derivation**: The active Project is passed to a `ProjectDerivationService` which analyzes the world state to pick the correct next `Objective`.
@@ -69,7 +69,7 @@ You can visualize these using the `tools/viz_strategy.html` utility to see a cha
 ## 5. Persistence & AOA Safety
 
 Strategic state is stored in the `StrategicState` model within the `MindAspect`. To ensure determinism and AOA (Authoritative Observable Atomic) compliance:
-- Mutations ONLY happen in Phase 4 (Resolution) via the `ActionSystem`.
+- Mutations ONLY happen during the Cognitive Pipeline's **Resolution** stage, via the `ActionSystem`.
 - High-level strategic choices are recorded in the `DecisionLog` for replayability.
 - The `freeze()` mechanism ensures that strategic choices during a tick are isolated from other concurrent workers.
 

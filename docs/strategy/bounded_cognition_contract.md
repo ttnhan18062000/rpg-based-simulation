@@ -5,7 +5,7 @@ authority: P1
 audience: developer
 ---
 
-# Bounded Cognition — Milestone 1 Contract
+# Bounded Cognition Contract
 
 ## Purpose
 This document defines the exact data contract and derivation rules for an entity's cognition capacity. This foundation is used to bound strategic reasoning and differentiate thinker quality across the simulation.

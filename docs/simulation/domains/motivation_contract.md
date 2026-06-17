@@ -29,7 +29,7 @@ It also evaluates equipment, skill, role, and quest tag overlap against a stored
 
 **No dedicated phase.** This domain is a library of scoring utilities:
 
-- `MotivationBiasService.compute_bias_multiplier()` is called inline by the adventure domain during route scoring (Phase 3) and by the cooperation domain during partner-fit scoring.
+- `MotivationBiasService.compute_bias_multiplier()` is called inline by the adventure domain during route scoring (its Adventure Decision stage) and by the cooperation domain during partner-fit scoring.
 - `DoctrineResolver.resolve()` is called by the commitment domain to apply class-specific abandonment rules.
 - `RoleFitEvaluator` is called by the progression domain's growth gap evaluator to assess what equipment or skills match the entity's role preference.
 
@@ -159,7 +159,7 @@ This resolver is **not** part of `src/domains/motivation/` — it lives in `src/
 
 | Domain / System | Relationship |
 |---|---|
-| **Adventure** | `MotivationBiasService.compute_bias_multiplier()` is called during route scoring (Phase 3); the returned multiplier is applied to the adventure score formula |
+| **Adventure** | `MotivationBiasService.compute_bias_multiplier()` is called during route scoring (the Adventure Decision stage); the returned multiplier is applied to the adventure score formula |
 | **Cooperation** | `MotivationBiasService` is called during partner-fit scoring; `DoctrineResolver` cooperation_bias values inform the cooperation domain's affinity calculation |
 | **Commitment** | `DoctrineResolver` outputs inform abandonment rules — class doctrine determines which routes a committed entity may abandon or sustain |
 | **Progression** | `RoleFitEvaluator` is called by the growth gap evaluator to assess whether available items or skills match the entity's role-fit preference |

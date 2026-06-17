@@ -38,7 +38,7 @@ Factions (Goblins, Wolves, Bandits, etc.) grow more hostile based on their proxi
 
 ---
 
-## 1.5 Regional Sovereignty & Taxation (Milestone 11/Phase 24)
+## 1.5 Regional Sovereignty & Taxation
 
 The world's regions dynamically shift between Hero and Monster control based on the **Influence Index**. This system drives macroscopic economics and tactical pressure.
 
@@ -110,9 +110,9 @@ In `WorldLoop._phase_cleanup()`, when a hero suffers **Permanent Death**:
 
 ---
 
-## 3.5 The Legend's Legacy: Succession and Inheritance [PHASE 4]
+## 3.5 The Legend's Legacy: Succession and Inheritance
 
-While Monuments provide global stat buffs, Phase 4 introduces **Direct Continuity** between specific individuals and their homes.
+While Monuments provide global stat buffs, this system introduces **Direct Continuity** between specific individuals and their homes.
 
 ### Successor and Heirloom Transfer
 - **Successor Assignment**: Upon the permanent death of a "Legend" (Tier 2 or Level 15+), a successor may be designated.

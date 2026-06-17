@@ -78,7 +78,7 @@ The adventure domain (`src/domains/adventure/`) reads capability estimates to sc
 
 ### Confidence decay
 
-Phase 2 does not implement active confidence decay — estimates are static until re-computed. The `last_updated_tick` field allows consumers to check freshness. Future phases may add decay logic.
+The subsystem does not implement active confidence decay — estimates are static until re-computed. The `last_updated_tick` field allows consumers to check freshness.
 
 ---
 
@@ -126,7 +126,7 @@ If a fact for the same subject+fact_type already exists, it is overwritten with 
 
 ### When knowledge is assimilated
 
-Only during Phase 2 (`SelfModelUpdatePhase.run()`) when `InformationResponse` events are detected in the tick's event log. If the entity received no information responses this tick, knowledge is unchanged (dirty check skips re-processing).
+Only when `SelfModelUpdatePhase.run()` detects `InformationResponse` events in the tick's event log. If the entity received no information responses this tick, knowledge is unchanged (dirty check skips re-processing).
 
 ### Trace events
 

@@ -73,9 +73,9 @@ Three information provider classes handle query-response flows rather than gener
 | `EntityInformationProvider` | Entity location and status facts (for scouting) |
 | `GuildInformationProvider` | Guild membership and quest facts |
 
-**Phase 1 stub:** `GuildInformationProvider` currently returns mock data. This is documented in the source as a Phase 1 placeholder — do not rely on its output for production logic.
+**Stub:** `GuildInformationProvider` currently returns mock data. This is documented in the source as a placeholder — do not rely on its output for production logic.
 
-Information providers feed the information domain (Phase 5), not the world_emergence opportunity pool directly. An entity asking "what is in region X?" goes through an information provider; an entity routing toward an opportunity goes through the resource or service provider.
+Information providers feed the information domain, not the world_emergence opportunity pool directly. An entity asking "what is in region X?" goes through an information provider; an entity routing toward an opportunity goes through the resource or service provider.
 
 ---
 
@@ -93,7 +93,7 @@ Opportunities that fail requirements are filtered out before reaching the advent
 
 ## Perception Gate — `src/world/perception/gate.py`
 
-The perception gate runs **before** the domain perception phase (Phase 12). It is a catalog-driven binary sense-channel filter.
+The perception gate runs **before** the perception domain's own attention/salience step. It is a catalog-driven binary sense-channel filter.
 
 ### Sense channels
 
@@ -108,7 +108,7 @@ score = sense_strength × signal_intensity × (1 / (1 + distance)) × terrain_mo
 
 Signals with `score < 0.2` are gated out — the entity cannot perceive them regardless of salience. Entities without a `sense_profile_id` in the catalog use a baseline humanoid profile (vision + hearing only).
 
-This gate determines WHICH signals reach an entity. The perception domain phase (Phase 12) then determines WHICH of the reachable signals the entity actually attends to (salience filtering).
+This gate determines WHICH signals reach an entity. The perception domain then determines WHICH of the reachable signals the entity actually attends to (salience filtering).
 
 ---
 
@@ -137,7 +137,7 @@ World state read →
   PerceptionGate              → filtered signals per entity
   MotivationPressureResolver  → MotivationPressureSet per entity
   RequirementsFilter          → prune ineligible opportunities
-→ Domain phases (adventure Phase 3 reads filtered opportunity pool)
+→ Domain logic (the adventure domain reads the filtered opportunity pool)
 ```
 
 ---
@@ -157,4 +157,4 @@ World state read →
 2. To add a new service affordance: add to the affordance dispatch table in `services.py`.
 3. To add a new sense channel: extend the catalog schema and `gate.py` scoring. Update the baseline humanoid profile.
 4. To add a new pressure dimension: extend `MotivationPressureSet` and update `MotivationPressureResolver`. Update all downstream consumers (motivation domain services) that read pressure dimensions by name.
-5. `GuildInformationProvider` must be replaced with real guild state reads before Phase 2 feature completion — do not build new logic on top of the mock.
+5. `GuildInformationProvider` must be replaced with real guild state reads before any new logic is built on top of the mock.

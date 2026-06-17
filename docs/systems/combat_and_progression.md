@@ -38,7 +38,7 @@ The weapon's `damage_type` field selects the calculator. Training action is `att
 
 ---
 
-## 2.5 Regional Conquest Debuffs (Milestone 11)
+## 2.5 Regional Conquest Debuffs
 
 Strategic control of a region directly impacts combat efficacy through the **Regional Conquest** system.
 
@@ -193,7 +193,7 @@ Entities select targets using a hierarchical priority:
 3.  **Nearest Enemy**: Heroes and mobs without threat/grudges target the closest hostile.
 
 ### 4.2 Mood & Fleeing
-The decision to retreat (`should_flee`) is sensitive to the entity's **Mood** (Milestone 10):
+The decision to retreat (`should_flee`) is sensitive to the entity's **Mood**:
 - **Base Threshold**: 15% - 20% HP.
 - **Despair (Low Mood)**: Threshold shifts **up** (retreats at ~30% HP).
 - **Fury (High Mood)**: Threshold shifts **down** (stays until ~5% HP).
@@ -205,7 +205,7 @@ The decision to retreat (`should_flee`) is sensitive to the entity's **Mood** (M
 
 ## 5. Nemesis System & Emotional Combat
 
-Milestone 10 introduces persistent psychological effects triggered by combat.
+The Mood system (see 4.2) introduces persistent psychological effects triggered by combat.
 
 ### 5.1 Grudges
 
@@ -237,7 +237,7 @@ Fame tracks a hero's prestige across the world. It is primarily earned by comple
 
 ---
 
-## Leveling System (epic-18 Phase A)
+## Leveling System
 
 Level-ups checked each tick in `WorldLoop._check_level_ups()`.
 
@@ -341,7 +341,7 @@ Live Calamities apply a **Calamity Aura** within a 15-tile radius via `world_loo
 
 ---
 
-## Veterancy & Innate Talents (epic-18 Phase B)
+## Veterancy & Innate Talents
 
 ### Veterancy Ranks
 Entities earn veterancy points in combat (+1 per hit dealt, +1 survived hit, +5 to +10 per kill). This grants multiplier bonuses over time.
@@ -357,7 +357,7 @@ Every entity generates with 2 random `talents` and 1 `weakness` across the 9 cor
 - **Talented** attributes train at `2.0x` speed.
 - **Weaknesses** train at `0.5x` speed.
 
-### Near-Death Hardening (Epic 18 Phase C)
+### Near-Death Hardening
 When an entity survives a hit with **HP ratio < 0.15**:
 - **Max HP permanently increases by +1**.
 - This simulates "hardening" through combat survival.
@@ -391,7 +391,7 @@ Skills are used via `USE_SKILL` action when:
 
 Skill damage uses `power` multiplier on base damage, skill-specific `damage_type` and `element`, and applies buff/debuff effects based on skill modifiers. See `attributes_and_classes.md` for skill details.
 
-### Status Effect Combos (Milestone 5)
+### Status Effect Combos
 Certain status effect combinations trigger reactive "Combos" when damage is applied:
 
 | Combo | Requirements | Effect |

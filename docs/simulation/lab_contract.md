@@ -10,10 +10,9 @@ tags: [lab, simulation, agentic, contract, scenario]
 # Agentic Simulation Lab Contract
 
 **Source:** `src/lab/` (18 files)  
-**Phase:** Phase 14 — Lab Session Lifecycle  
 **Authoritative status:** Shadow state — lab sessions are isolated from `AuthoritativeState`. Session data is stored in `data/lab_sessions/` (file-based), not in the simulation hash.
 
-For historical context only: `docs/observability/agentic_lab.md` (a phase report — not a contract).
+For historical context only: `docs/archive/observability/agentic_lab.md` (a historical report — not a contract).
 
 ---
 

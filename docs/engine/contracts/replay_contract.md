@@ -5,7 +5,7 @@ authority: P1
 audience: developer
 ---
 
-# Replay and Bounded Persistence Contract (Milestone 6)
+# Replay and Bounded Persistence Contract
 
 ## Purpose
 The Replay System provides a non-authoritative stream of simulation events for diagnostics and forensics. It must operate within strict resource boundaries to ensure that persistence overhead never destabilizes the simulation.
@@ -54,6 +54,6 @@ The Replay System provides a non-authoritative stream of simulation events for d
 - **Memory Safety**: The replay subsystem has a verifiable memory floor and ceiling.
 
 ## Non-Goals
-- Real-time streaming to remote sinks (Milestone 10+).
+- Real-time streaming to remote sinks.
 - Human-readable file formats (Compact binary preferred).
 - Replay-driven state restoration (Authoritative state restoration is separate).

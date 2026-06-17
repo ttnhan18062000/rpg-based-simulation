@@ -11,13 +11,13 @@ tags: [quests, lifecycle, rewards, contract, progression]
 
 **Source:** `src/quests/` (3 files: generator.py, service.py, templates.py)  
 **Core types:** `src/core/models/quests.py` — `QuestState`, `QuestKind`, `QuestStatus`, `RewardState`  
-**Authoritative pipeline:** Phase 14 — Objective Reward (`PROG-084`) delivers quest rewards and completion markers.
+**Authoritative pipeline:** the Objective Reward stage (`PROG-084`) delivers quest rewards and completion markers.
 
 ---
 
 ## Authoritative Status
 
-`QuestState` is a frozen dataclass stored on `EntityState` — it participates in the simulation state but is applied through the authoritative pipeline (phase 14). `QuestService` is stateless and does not directly mutate `AuthoritativeState`.
+`QuestState` is a frozen dataclass stored on `EntityState` — it participates in the simulation state but is applied through the authoritative pipeline's Objective Reward stage. `QuestService` is stateless and does not directly mutate `AuthoritativeState`.
 
 ---
 
@@ -44,7 +44,7 @@ tags: [quests, lifecycle, rewards, contract, progression]
 |---|---|---|
 | `ACTIVE` | 1 | Quest is in progress; progress updates are accepted |
 | `COMPLETED` | 2 | Goal reached (`current_value >= goal_value`); awaiting reward delivery |
-| `REWARD_PENDING` | 4 | Reward calculated; waiting for phase-14 delivery |
+| `REWARD_PENDING` | 4 | Reward calculated; waiting for delivery |
 | `REWARDED` | 3 | Reward delivered; quest is terminal |
 
 **Auto-completion rule:** When `QuestService.add_progress()` is called and `current_value + delta >= goal_value`, status transitions automatically to `COMPLETED`. No manual completion call required.
@@ -126,25 +126,25 @@ Subject selection from `subject_options` is deterministic (uses generator's RNG)
 
 ---
 
-## Phase 14 Integration (Authoritative Pipeline)
+## Objective Reward Integration (Authoritative Pipeline)
 
-Phase 14 — **Objective Reward** (`PROG-084`) is the only place quest rewards are applied to `AuthoritativeState`.
+The **Objective Reward** stage (`PROG-084`) is the only place quest rewards are applied to `AuthoritativeState`.
 
-**What phase 14 does:**
+**What this stage does:**
 1. Iterates entities whose `QuestState.quest_status == COMPLETED`.
 2. Delivers `RewardState` (XP → `EntityState.xp`, gold → entity inventory, items → entity inventory).
 3. Calls `QuestService.mark_rewarded(quest)` to produce the terminal `REWARDED` state.
 4. Applies the new `QuestState` to `AuthoritativeState`.
 
 **What the quest system does NOT do:**
-- It does not apply rewards directly — only phase 14 does.
+- It does not apply rewards directly — only the Objective Reward stage does.
 - It does not call `EntityState` mutators — `QuestService` is read-only logic.
 
 ---
 
 ## RewardState
 
-| Field | Type | Applied by phase 14 |
+| Field | Type | Applied by the Objective Reward stage |
 |---|---|---|
 | `xp` | `int` | Added to entity XP pool |
 | `gold` | `int` | Added to entity gold |

@@ -41,7 +41,7 @@ The `WorldGenerator` uses a **Voronoi-based Region Model** to partition the wild
 
 ---
 
-### Historical Consequences and Scars [PHASE 4]
+### Historical Consequences and Scars
 
 The WorldLoop simulation engine ensures that major events leave legible traces through the **RegionalConsequenceSystem**.
 
@@ -92,7 +92,7 @@ The Town center contains essential services for Hero progression.
 - **Grids and Navigation**: Authoritative coordinate resolution and Bilinear Flow Field pathfinding.
 - **World Objects**: Interactive nodes (Nodes, Chests, Buildings) with stateful persistence.
 - **World Eras and Seasons**: Time-based difficulty scaling and event-driven day/night cycles.
-- **Historical Consequences [PHASE 4]**: Persistent scars and regional danger levels that outlast single episodes.
+- **Historical Consequences**: Persistent scars and regional danger levels that outlast single episodes.
 
 ---
 

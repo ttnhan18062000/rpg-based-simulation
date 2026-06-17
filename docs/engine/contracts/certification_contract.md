@@ -5,7 +5,7 @@ authority: P1
 audience: developer
 ---
 
-# Certification Contract (Milestone 9)
+# Certification Contract
 
 ## Purpose
 The Certification Contract defines the formal proof requirements for an engine run. Every certified run must evaluate a named scenario against a specific profile and record the results in a structured, machine-readable evidence set.
@@ -46,6 +46,6 @@ Classification is binary and deterministic based on host resources at startup:
 
 ## 6. Non-Goals
 - No "Universal TPS" claims.
-- No storageIO classification in M9.
+- No storageIO classification.
 - No distributed cluster verification.
 - No modification of kernel laws for benchmark vanity.

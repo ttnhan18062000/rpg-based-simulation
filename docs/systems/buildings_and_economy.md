@@ -309,7 +309,7 @@ After fully healing in town (`RestingInTownHandler`):
 5. **Visit class hall** → can learn skills or breakthrough → `VISIT_CLASS_HALL`
 6. **Leave town** → nothing to do → `WANDER`
 
-### 8.2 Hero Trading (Milestone 5)
+### 8.2 Hero Trading
 Heroes resting in Town (Inn or Guild) will gift "spare" items to nearby allies.
 - **Spare Item**: An items in inventory that is objectively worse than the hero's current equipment.
 - **Recipient**: A nearby hero who would gain a significant stat upgrade from the item.

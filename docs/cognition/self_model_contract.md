@@ -30,7 +30,7 @@ SelfAwarenessComponent:
     perceived_strengths: Tuple[str, ...]    # ordered list of active strength labels
     confidence_level: float                 # 0.05–1.0
     stress_level: float                     # 0.0–1.0
-    uncertainty_level: float                # 0.1 base (Phase 2); later phases modulate
+    uncertainty_level: float                # 0.1 base; may be modulated by future extensions
     last_self_check_tick: int               # set by orchestrator after construction
 ```
 
@@ -118,5 +118,5 @@ The resulting `SelfModelBundle` is written to `entity.self_model` through the au
 
 1. To add a new weakness: add a threshold constant, add a detection block in `SelfAssessmentService.assess()`, update the stress/confidence composite formulas if the new weakness is critical-tier. Add it to `perceived_weaknesses` by label string (not enum — label strings are forward-compatible).
 2. To add a new condition dimension: add to `perceived_condition` dict with a normalised 0.0–1.0 value. Update downstream consumers that read `perceived_condition` by key.
-3. To modulate `uncertainty_level` beyond the 0.1 base: this is a Phase 3+ concern. Add the modifier in a new method on `SelfAssessmentService` rather than in `assess()`.
+3. To modulate `uncertainty_level` beyond the 0.1 base: add the modifier in a new method on `SelfAssessmentService` rather than in `assess()`.
 4. Never make `SelfAssessmentService` stateful — it must remain a pure function of entity state.

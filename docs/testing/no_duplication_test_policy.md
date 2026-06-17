@@ -9,9 +9,9 @@ audience: developer
 
 **Status:** Active  
 **Last updated:** 2026-06-09  
-**Relates to:** docs/testing/v2_test_taxonomy.md, docs/testing/content_migration_test_ownership.md
+**Relates to:** docs/testing/test_taxonomy.md, docs/testing/content_migration_test_ownership.md
 
-This document codifies rules that prevent test explosion as the Phase 29–34 resolver,
+This document codifies rules that prevent test explosion as the content-migration resolver,
 schema, adapter, and pipeline work continues. Violation of these rules results in
 redundant test maintenance burden and obscures real coverage gaps.
 
@@ -125,5 +125,5 @@ schema, not the tests.
 ## Cross-Reference
 
 - **What goes where:** `docs/testing/content_migration_test_ownership.md`
-- **Marker conventions:** `docs/testing/v2_test_taxonomy.md`
+- **Marker conventions:** `docs/testing/test_taxonomy.md`
 - **Per-phase budget for new tests:** `docs/testing/test_delta_budget.md`

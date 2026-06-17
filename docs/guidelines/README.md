@@ -12,7 +12,7 @@ Standards and conventions for developers contributing to the RPG Engine V2.
 ## 🗺️ Navigation
 
 - **[Design Patterns](design_patterns.md)**: Architectural spines (Aspects, Systems, Presenters).
-- **[Intentional Divergences](v2_intentional_divergences.md)**: Documented shifts from legacy behaviors.
+- **[Intentional Divergences](intentional_divergences.md)**: Documented shifts from legacy behaviors.
 - **[Architectural Conventions](../engine/architecture_reference.md)**: Technical implementation details for low-level systems.
 
 ## 🛠️ Contribution Rules

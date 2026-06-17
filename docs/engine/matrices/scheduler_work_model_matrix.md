@@ -1,39 +1,38 @@
 ---
-status: historical
+status: active
 layer: engine
-authority: P2
+authority: P1
 audience: developer
 ---
 
-# Milestone 4 Work Model Matrix
+# Scheduler Work Model Reference
 
-## 1. Purpose
-This document defines the properties and behavioral guarantees of each work class in the engine.
+Defines the properties and behavioral guarantees of each work class in the engine. Each work class has a distinct purpose, authoritative status, scheduling rule, and overflow policy.
+
+## Work Class Summary
 
 | Work Class | Purpose | Authoritative? | Due Rule | Execution Guarantee | Deferral Rule |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| `CRITICAL` | Core Sim Logic | YES | Readiness >= 100 | Mandatory | NON-DEFERRABLE |
-| `PERIODIC` | Cadence Tasks | YES | Tick % Cadence == 0 | Guaranteed | Deferrable (Limited) |
-| `OPPORTUNISTIC`| Enrichment | NO | Conditional | Best-effort | Deferrable / Droppable |
-| `DEFERRED` | Work Debt | YES/NO | Next Tick | Ordered Drain | Bounded |
+| `CRITICAL` | Core simulation logic | YES | Readiness >= 100 | Mandatory | NON-DEFERRABLE |
+| `PERIODIC` | Cadence tasks | YES | Tick % Cadence == 0 | Guaranteed | Deferrable (limited) |
+| `OPPORTUNISTIC` | Enrichment | NO | Conditional | Best-effort | Deferrable / droppable |
+| `DEFERRED` | Work debt | YES/NO | Next tick | Ordered drain | Bounded |
 
-## 2. Work Class Definitions
+## Work Class Definitions
 
 ### CRITICAL
-- **Authoritative**: YES. Essential for simulation progress.
-- **Bound/Debt**: Accumulates `work_lag` if delayed (though M4 errors if delayed).
-- **Regression Risk**: Simulation divergence or legal breach.
+Authoritative. Essential for simulation progress. Accumulates `work_lag` if delayed. The scheduler must raise an error if CRITICAL work cannot execute — deferral is forbidden.
 
 ### PERIODIC
-- **Authoritative**: YES (usually). Fixed cadence (e.g., economy, weather).
-- **Bound/Debt**: If postponed, execution must happen in the next tick with high priority.
-- **Regression Risk**: Stale world calculations.
+Authoritative (usually). Fixed cadence (e.g. economy, weather). If postponed, execution must happen in the next tick with high priority.
 
 ### OPPORTUNISTIC
-- **Authoritative**: NO. Used for diagnostics, visual proposals, or traces.
-- **Execution**: Only runs if there is remaining budget (profile-dependent).
-- **Regression Risk**: Missing observability or visual lag.
+Non-authoritative. Used for diagnostics, visual proposals, or traces. Runs only if there is remaining budget (profile-dependent).
 
-## 3. Overflow Behavior (Deferred Debt)
+### DEFERRED (Work Debt)
+Accumulated when prior-tick work overflowed. Drained in order on the next tick. Bounded by profile capacity — overflow is rejected, never silently discarded.
+
+## Overflow Behavior
+
 - **Policy**: `REJECT`.
-- **Reasoning**: If the work backlog becomes too large, the engine must technically fail rather than allow an unbounded shadow registry to grow.
+- **Reasoning**: If the work backlog becomes too large, the engine must fail rather than allow an unbounded shadow registry to grow.

@@ -110,7 +110,7 @@ Determined at: `src/core/conservation.py` line 91 — `node.kind == "LOOT"`.
 
 ## Lifecycle
 
-Runs during **Phase 5 (Resolution)** of the 6-phase deterministic loop (`kernel.md`). Specifically within the authoritative pipeline's resource-transfer resolution phase. The resolver is read-only relative to `WorldState`; mutations are returned as typed update objects and committed by the apply path (Phase 6 / Persistence).
+Runs during the kernel's **Resolution** stage (`kernel.md`). Specifically within the authoritative pipeline's resource-transfer resolution stage. The resolver is read-only relative to `WorldState`; mutations are returned as typed update objects and committed by the apply path during the subsequent **Persistence** stage.
 
 ---
 

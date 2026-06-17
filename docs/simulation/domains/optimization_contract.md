@@ -10,7 +10,7 @@ tags: [domains, optimization, performance, cache, degradation, feature-flags, co
 # Optimization Domain Contract
 
 **Source:** `src/domains/optimization/` (10 files)  
-**Pipeline phase:** Phase 10 — Feature rollout control; cross-cutting performance utilities  
+**Pipeline phase:** the Feature Rollout Control stage; cross-cutting performance utilities  
 **Authoritative status:** NOT authoritative — advisory performance utilities only. Does not own simulation state.
 
 ---
@@ -60,7 +60,7 @@ Monitors tick time pressure and enters degraded execution states to preserve fra
 
 ## FeatureFlagManager (`feature_flags.py`)
 
-Manages Phase 10 feature rollout modes. Controls which domain features are active in a given run.
+Manages feature rollout modes. Controls which domain features are active in a given run.
 
 ### FeatureMode Enum
 
@@ -78,8 +78,8 @@ Manages Phase 10 feature rollout modes. Controls which domain features are activ
 | `ENABLE_WORLD_CAPABILITY_LAYER` | World capability domain activation |
 | `ENABLE_SELF_MODEL_COGNITION` | Self-model cognition pipeline |
 | `ENABLE_ADVENTURE_ROUTING` | Adventure/route resolution |
-| `ENABLE_COMBAT_ENGAGEMENT` | combat_engagement domain (Phase 4) |
-| `ENABLE_BELIEF_ASSIMILATION` | information domain (Phase 5) |
+| `ENABLE_COMBAT_ENGAGEMENT` | combat_engagement domain (Pre-Combat Assessment stage) |
+| `ENABLE_BELIEF_ASSIMILATION` | information domain (Information / Belief Processing stage) |
 | `ENABLE_PROGRESSION_EVOLUTION` | progression domain |
 | `ENABLE_SOCIAL_COOPERATION` | cooperation domain |
 

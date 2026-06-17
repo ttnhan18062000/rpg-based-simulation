@@ -9,7 +9,7 @@ last_verified: 2026-06-13
 # Cooperation Domain Contract
 
 **Source:** `src/domains/cooperation/` (phase.py, contract_service.py, group_evaluator.py, partner_scoring.py, posture.py)  
-**Pipeline phase:** Phase 7 — CooperationPhase  
+**Pipeline phase:** the Cooperation stage (`CooperationPhase`)  
 **Authoritative status:** Cooperative posture decision domain — selects help-seeking posture and cooperation contracts. Does not execute resource transfers or social contracts directly.
 
 ---
@@ -22,7 +22,7 @@ The cooperation domain implements **cooperative posture selection** for entities
 
 ## Engine Phase
 
-**Phase 7 — `CooperationPhase.execute(state, context)`**
+**Cooperation stage — `CooperationPhase.execute(state, context)`**
 
 Runs every tick for all entities that have an active cooperation evaluation trigger. There is no hard entity filter by role — the phase evaluates all living, active entities.
 

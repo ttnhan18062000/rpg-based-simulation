@@ -9,7 +9,7 @@ last_verified: 2026-06-13
 # Perception Domain Contract
 
 **Source:** `src/domains/perception/` (phase.py, filter.py, salience.py, service.py) + `src/world/perception/gate.py`  
-**Pipeline phase:** Phase 12 — PerceptionUpdatePhase  
+**Pipeline phase:** the Perception Update stage (`PerceptionUpdatePhase`)  
 **Authoritative status:** Read-phase direct update — NOT a StateUpdate producer. Uses `dataclasses.replace` to overwrite `entity.cognition.subjective.perception` in-place per entity.
 
 ---
@@ -35,7 +35,7 @@ The domain does **not** own the world signals themselves, the sense gate, or the
 
 ## Engine Pipeline Phase
 
-**Phase 12 — PerceptionUpdatePhase.run()**
+**Perception Update stage — `PerceptionUpdatePhase.run()`**
 
 Entry point: `PerceptionUpdatePhase.run(entities, world_signals, tick)`.
 
@@ -43,7 +43,7 @@ Entry point: `PerceptionUpdatePhase.run(entities, world_signals, tick)`.
 - Skips entities where `entity.lifecycle.active is False` or `entity.combat.alive is False`.
 - Returns a new list of `EntityState` instances with `cognition.subjective.perception` replaced.
 
-**World-side prerequisite:** `PerceptionGate` (at `src/world/perception/gate.py`) runs **before** Phase 12. The gate performs catalog-driven binary sense-channel gating — only signals that pass the gate reach `world_signals` for Phase 12 to score. Phase 12 never re-evaluates gate eligibility.
+**World-side prerequisite:** `PerceptionGate` (at `src/world/perception/gate.py`) runs **before** the Perception Update stage. The gate performs catalog-driven binary sense-channel gating — only signals that pass the gate reach `world_signals` for the Perception Update stage to score. The Perception Update stage never re-evaluates gate eligibility.
 
 ---
 
@@ -121,7 +121,7 @@ All replacements use `dataclasses.replace` — the original entity is never muta
 
 ## World-Side Backing: PerceptionGate
 
-`src/world/perception/gate.py` — runs **before** Phase 12 in the engine loop.
+`src/world/perception/gate.py` — runs **before** the Perception Update stage in the engine loop.
 
 | Property | Detail |
 |---|---|
@@ -134,7 +134,7 @@ All replacements use `dataclasses.replace` — the original entity is never muta
 | Output | `PerceptionResult(perceived, confidence, signals_used, profile_source)` |
 | Mutation | None — read-only, deterministic |
 
-The gate is a binary filter. Phase 12 never sees signals that the gate blocked.
+The gate is a binary filter. The Perception Update stage never sees signals that the gate blocked.
 
 ---
 
@@ -187,8 +187,8 @@ This is the **read-phase direct update pattern**: the phase owns a narrow, bound
 
 | Domain / System | Direction | Detail |
 |---|---|---|
-| **PerceptionGate** (`src/world/perception/gate.py`) | Upstream prerequisite | Gate runs before Phase 12; filters which signals reach the salience evaluator |
-| **Emotion domain** (Phase 16) | Reads emotion outputs | `fear` and `curiosity` from `EmotionalModel` modulate salience scores and attention focus thresholds |
+| **PerceptionGate** (`src/world/perception/gate.py`) | Upstream prerequisite | Gate runs before the Perception Update stage; filters which signals reach the salience evaluator |
+| **Emotion domain** (event-driven, see emotion_contract.md) | Reads emotion outputs | `fear` and `curiosity` from `EmotionalModel` modulate salience scores and attention focus thresholds |
 | **Motivation / needs** | Reads motivation outputs | `dominant_need` drives attention focus tag selection |
 | **Adventure domain** | Feeds downstream | `perceived_opportunities` and `perceived_threats` become route candidates for adventure scoring |
 | **World emergence** | Feeds downstream | Aggregated entity percepts contribute to world pressure models |
@@ -212,7 +212,7 @@ This is the **read-phase direct update pattern**: the phase owns a narrow, bound
 
 ## Extension Rules
 
-- **New sense channel:** Add channel to the gate catalog and `_SENSE_TO_SIGNAL` mapping in `gate.py`; add a corresponding `sense_profile` schema field; update baseline defaults in `_BASELINE_SENSE`. Phase 12 does not need changes — it scores post-gate signals.
+- **New sense channel:** Add channel to the gate catalog and `_SENSE_TO_SIGNAL` mapping in `gate.py`; add a corresponding `sense_profile` schema field; update baseline defaults in `_BASELINE_SENSE`. The Perception Update stage does not need changes — it scores post-gate signals.
 - **New attention bias factor:** Extend `AttentionFocusService.get_attention_focus()` with the new condition and tags; update `SignalSalienceEvaluator.evaluate()` if the factor affects the score formula; add test cases for the new bias path.
 - **New signal kind:** Add a classification branch in `PerceptionFilterService.filter()` to route the new `signal.kind` into the appropriate typed container.
 - **Budget change:** `PerceptionBudget` fields (`max_perceived`, `max_ignored_to_record`) are configurable at `PerceptionUpdatePhase` construction time. Changing the default requires updating the constructor default and relevant tests.

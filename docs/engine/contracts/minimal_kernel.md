@@ -5,10 +5,10 @@ authority: P1
 audience: developer
 ---
 
-# Minimal Deterministic Kernel (M2) — Execution Specs
+# Minimal Deterministic Kernel — Execution Specs
 
 ## 1. Purpose
-This document defines the executable semantics for Milestone 2. It specifies how the single-thread kernel orchestrates ticks, manages time, and ensures deterministic state transitions.
+This document defines the executable semantics of the single-thread kernel: how it orchestrates ticks, manages time, and ensures deterministic state transitions.
 
 ## 2. Minimal Kernel Scope
 - **Single-Threaded**: All authoritative changes occur sequentially in one process.
@@ -49,7 +49,7 @@ It executes the frozen phase order:
 - **Isolation**: Checkpointing logic resides entirely outside the core state models.
 - **Stability**: Sequential runs with identical inputs produce identical SHA256 hashes.
 
-## 9. Non-Goals (M2)
+## 9. Non-Goals
 - Replay system or persistence.
 - Concurrency or worker dispatch.
 - Resource governor or adaptive degradation.
