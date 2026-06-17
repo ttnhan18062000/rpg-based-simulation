@@ -14,9 +14,9 @@ This document defines the controlled vocabulary for how open replacement rows ar
 | Category | Definition | Sufficiency Rule |
 | :--- | :--- | :--- |
 | **CHARACTERIZATION** | Analysis of existing behavior in old-`src`. | Sufficient for determining baseline expectations. |
-| **DIFFERENTIAL PARITY** | Comparison of bit-identical or semantic output between V1 and V2. | Sufficient for absolute logic preservation (e.g. Movement). |
-| **V2 CONTRACT** | Enforcement of behavior through Pydantic/Strict contracts in V2. | Sufficient for substrate and structural integrity. |
-| **REGRESSION** | Verification that bugfixes and edge cases from V1 still hold in V2. | Mandatory for hardened logic (M7/Part 5). |
+| **DIFFERENTIAL PARITY** | Comparison of bit-identical or semantic output between the legacy engine and the current engine. | Sufficient for absolute logic preservation (e.g. Movement). |
+| **V2 CONTRACT** | Enforcement of behavior through Pydantic/Strict contracts in the current engine. | Sufficient for substrate and structural integrity. |
+| **REGRESSION** | Verification that bugfixes and edge cases from the legacy engine still hold. | Mandatory for hardened logic. |
 | **LIFECYCLE/REPLAY** | Verification of persistence, determinism, and shutdown truth. | Sufficient for engine-substrate components. |
 | **CERTIFICATION** | Passing the `CertificationHarness` criteria for a scenario. | Sufficient for high-level functional support. |
 | **COMPATIBILITY** | Black-box validation of external interfaces (CLI, API). | Sufficient for SYS-COMPAT items. |

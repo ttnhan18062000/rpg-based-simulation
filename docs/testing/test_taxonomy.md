@@ -5,9 +5,9 @@ authority: P1
 audience: developer
 ---
 
-# V2 Test Taxonomy and Proof Standards
+# Test Taxonomy and Proof Standards
 
-To ensure the V2 RPG Engine is a truthful, deterministic port of the legacy `src`, all tests in the `tests/parity/` suite must adhere to this taxonomy.
+To ensure the engine is truthful and deterministic, all tests in the `tests/parity/` suite must adhere to this taxonomy.
 
 ## 1. Taxonomy Markers
 
@@ -16,7 +16,7 @@ To ensure the V2 RPG Engine is a truthful, deterministic port of the legacy `src
 - **Standard**: These tests should ideally run against the original `src` modules or use frozen output data (Oracles) to define the "Legacy Truth".
 
 ### `v2_contract`
-- **Purpose**: To define the behavior of new V2 components where no legacy parity is required (e.g., new engine substrate, improved observability).
+- **Purpose**: To define the behavior of engine components where no legacy parity is required (e.g., new engine substrate, improved observability).
 - **Standard**: Should focus on idempotency, immutability, and deterministic state transitions.
 
 ### `differential`
@@ -24,7 +24,7 @@ To ensure the V2 RPG Engine is a truthful, deterministic port of the legacy `src
 - **Standard**: Must use the same seeds and configurations. These are the strongest proof of parity.
 
 ### `intentional_divergence`
-- **Purpose**: To explicitly document where V2 behavior *must* differ from legacy (e.g., fixing a legacy non-deterministic bug).
+- **Purpose**: To explicitly document where current behavior *must* differ from legacy (e.g., fixing a legacy non-deterministic bug).
 - **Standard**: Must assert the difference. Requires an `id` argument (e.g., `@pytest.mark.intentional_divergence(id="COMB-001")`) mapping to the Parity Ledger.
 
 ### `regression`

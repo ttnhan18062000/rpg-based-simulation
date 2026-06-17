@@ -5,9 +5,9 @@ authority: P1
 audience: developer
 ---
 
-# V2 Infrastructure & Isolation Compatibility Contract
+# Infrastructure & Isolation Compatibility Contract
 
-This document defines the supported infrastructure surface and isolation guarantees for the V2 engine.
+This document defines the supported infrastructure surface and isolation guarantees for the engine.
 
 ## 1. Environment Variable Precedence
 The engine follows a strict configuration precedence order:
@@ -21,11 +21,11 @@ The engine follows a strict configuration precedence order:
 | :--- | :--- | :--- |
 | `BROKER_DISABLED=1` | Forces `max_worker_count=0` (Sequential execution). | **FULL**. Matches legacy in-process fallback. |
 | `RPG_MAX_WORKER_COUNT` | Sets the maximum number of concurrent workers. | **FULL**. Maps to `num_workers`. |
-| `RPG_MAX_RAM_MB` | Resource bound for profile validation. | **NEW**. V2-specific safety guard. |
+| `RPG_MAX_RAM_MB` | Resource bound for profile validation. | **NEW**. Engine-specific safety guard. |
 
 ## 3. Infrastructure Isolation
 - **Import-Time Safety**: The core engine (`src.engine.kernel`) is guaranteed to be importable without external infrastructure (RabbitMQ, Kafka, Postgres) present.
-- **Runtime Fallback**: V2 uses local `ThreadPoolExecutor` as the primary concurrent substrate, eliminating the mandatory requirement for external brokers in standard operation.
+- **Runtime Fallback**: The engine uses local `ThreadPoolExecutor` as the primary concurrent substrate, eliminating the mandatory requirement for external brokers in standard operation.
 - **Disabled-Mode Branching**: When `BROKER_DISABLED=1` is set, the engine bypasses thread pool initialization and executes all work packets synchronously in the kernel thread.
 
 ## 4. Divergences & Exclusions

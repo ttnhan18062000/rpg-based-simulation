@@ -5,18 +5,18 @@ authority: P1
 audience: developer
 ---
 
-# V2 Logic Verification Design
+# Logic Verification Design
 
 ## Purpose
 The purpose of this design is to establish a rigorous, evidence-based audit of the `src` engine and `tests` proof suite against the logic claims inherited from the original `src` (as documented in `legacy_checklist.md` and `legacy_checklist_marked.md`).
 
 ## Core Principles
 1. **Evidence-First**: Every claim of completion (`[x]`) must be backed by specific code locations and test cases.
-2. **V2 Alignment**: Verification must confirm that implementations obey V2 principles (singular apply path, determinism, boundedness, lifecycle safety).
+2. **Engine Alignment**: Verification must confirm that implementations obey engine principles (singular apply path, determinism, boundedness, lifecycle safety).
 3. **Transparency**: Gaps in proof (missing tests for implemented logic) must be explicitly flagged.
 
 ## Audit Methodology: Iterative Subsystem Audit
-We will proceed subsystem by subsystem, mapping each checklist item to its V2 implementation.
+We will proceed subsystem by subsystem, mapping each checklist item to its current implementation.
 
 ### 1. Verification Ledger (`legacy_checklist_verified.md`)
 A new file at the repository root will serve as the authoritative record of verification. It will mirror the structure of the marked checklist but include:

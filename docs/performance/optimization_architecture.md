@@ -5,11 +5,11 @@ authority: P1
 audience: developer
 ---
 
-# Authoritative V2 Engine Optimization Architecture
+# Engine Optimization Architecture
 
 ## 1. Overview and Design Philosophy
 
-The V2 RPG Simulation Engine is designed to run deterministic simulations at massive scale (10,000+ concurrent entities) while maintaining a strict 50ms compute latency budget and 2GB memory footprint. To achieve this without compromising the bit-identical determinism of the simulation laws, the engine implements a 5-layer optimization stack that systematically eliminates $O(N)$ full-world scans, avoids redundant object allocations, and precomputes structural application plans.
+The RPG Simulation Engine is designed to run deterministic simulations at massive scale (10,000+ concurrent entities) while maintaining a strict 50ms compute latency budget and 2GB memory footprint. To achieve this without compromising the bit-identical determinism of the simulation laws, the engine implements a 5-layer optimization stack that systematically eliminates $O(N)$ full-world scans, avoids redundant object allocations, and precomputes structural application plans.
 
 ```
 +-------------------------------------------------------------------------+
@@ -42,7 +42,7 @@ The V2 RPG Simulation Engine is designed to run deterministic simulations at mas
 
 ## 2. Layer 1: Candidate Selection & Narrowing
 
-In unoptimized simulations, systems iterate over all entities ($O(N)$) every tick to find valid actors for their domain. In the V2 engine, all systems must query the centralized `CandidateSelector`.
+In unoptimized simulations, systems iterate over all entities ($O(N)$) every tick to find valid actors for their domain. In the engine, all systems must query the centralized `CandidateSelector`.
 
 ### `CandidateSelector` and `ScanPolicy`
 The `CandidateSelector` enforces domain-specific filtering across 15 distinct simulation domains (e.g., `LOCOMOTION`, `STRATEGIC_INTELLIGENCE`, `BIOLOGICAL_MAINTENANCE`, `SOCIAL_ROUTINE`).

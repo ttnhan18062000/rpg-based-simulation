@@ -18,7 +18,7 @@ One record per workflow invocation.
 
 ```json
 {
-  "run_id": "TCK-20260607-PHASE28-RUNTIME-RELATION",
+  "run_id": "TCK-20260607-COMBAT-RELATION",
   "start_ts": "2026-06-07T10:00:00Z",
   "end_ts": "2026-06-07T10:48:30Z",
   "workflow": "implement-ticket",
@@ -71,7 +71,7 @@ One record per agent call within a workflow run. FK: `run_id → runs.run_id`.
 
 ```json
 {
-  "run_id": "TCK-20260607-PHASE28-RUNTIME-RELATION",
+  "run_id": "TCK-20260607-COMBAT-RELATION",
   "seq": 3,
   "ts": "2026-06-07T10:12:00Z",
   "phase": "Investigate",

@@ -5,11 +5,11 @@ authority: P1
 audience: developer
 ---
 
-# Authoritative V2 Engine Performance Baseline Policy
+# Engine Performance Baseline Policy
 
 ## 1. Purpose and Scope
 
-This document establishes the official engineering policy for performance baseline calibration, regression gating, and CI benchmarking across the V2 RPG simulation engine. All commits must pass these automated performance gates to prevent performance degradation and memory bloat.
+This document establishes the official engineering policy for performance baseline calibration, regression gating, and CI benchmarking across the RPG simulation engine. All commits must pass these automated performance gates to prevent performance degradation and memory bloat.
 
 ---
 
@@ -79,5 +79,5 @@ When simulation complexity increases (e.g., introducing a new subsystem or expan
    Commit the newly generated JSON baseline files and update the baseline revision timestamp in `docs/engine/performance_contract.md`.
    ```bash
    git add data/baselines/*.json
-   git commit -m "CHORE: Re-calibrate V2 performance baselines for Class B hardware targets"
+   git commit -m "CHORE: Re-calibrate performance baselines for Class B hardware targets"
    ```

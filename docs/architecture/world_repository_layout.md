@@ -5,7 +5,7 @@ authority: P1
 audience: developer
 ---
 
-# ADR-007: World Repository Layout and WorldCompositionSpec Discovery
+# World Repository Layout and WorldCompositionSpec Discovery
 
 ## Status
 ACCEPTED

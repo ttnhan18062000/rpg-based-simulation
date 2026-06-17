@@ -107,11 +107,11 @@ Apply the correct marker from `docs/testing/test_taxonomy.md`:
 
 | Situation | Marker |
 |---|---|
-| Test proves a new V2 invariant with no legacy equivalent | `@pytest.mark.v2_contract` |
-| Test proves V2 matches legacy behavior bit-for-bit | `@pytest.mark.differential` |
+| Test proves a new engine invariant with no legacy equivalent | `@pytest.mark.v2_contract` |
+| Test proves current behavior matches legacy bit-for-bit | `@pytest.mark.differential` |
 | Test documents legacy behavior as ground truth | `@pytest.mark.legacy_characterization` |
 | Test prevents recurrence of a specific bug | `@pytest.mark.regression` |
-| Test documents an intentional V2 departure from legacy | `@pytest.mark.intentional_divergence(id="<LEDGER-ID>")` |
+| Test documents an intentional departure from legacy | `@pytest.mark.intentional_divergence(id="<LEDGER-ID>")` |
 | Test is a high-level smoke run over full ticks | `@pytest.mark.certification` |
 
 Most new requirement tests will use `@pytest.mark.v2_contract`. Use `@pytest.mark.regression` when the test was written specifically to prevent a bug from recurring — include a comment linking to the ticket.

@@ -5,9 +5,9 @@ authority: P1
 audience: developer
 ---
 
-# V2 API, Protocol, and Transport Compatibility Contract
+# API, Protocol, and Transport Compatibility Contract
 
-This document defines the supported network and system interfaces for the V2 engine.
+This document defines the supported network and system interfaces for the engine.
 
 ## 1. REST API Parity
 - **Base Path**: `/api/v1`
@@ -32,9 +32,9 @@ This document defines the supported network and system interfaces for the V2 eng
 
 ## 4. Headless Execution
 - **CLI Mode**: Fully supported via `python3 -m src cli`.
-- **System Service**: V2 is designed to run as a headless system process using `uvicorn` or similar ASGI servers.
+- **System Service**: The engine is designed to run as a headless system process using `uvicorn` or similar ASGI servers.
 - **Non-Interactive**: All configuration is handled via CLI flags, Environment variables, or YAML files.
 
 ## 5. Known Divergences
-- **Frontend Serving**: V2 server currently does not mount the `frontend/dist` directory by default; it focuses on the API surface.
-- **Redis Dependency**: V2 removes the mandatory Redis requirement for WebSocket streaming, using an in-process `StateBroadcaster` (via `V2EngineManager` listeners).
+- **Frontend Serving**: The server currently does not mount the `frontend/dist` directory by default; it focuses on the API surface.
+- **Redis Dependency**: The engine removes the mandatory Redis requirement for WebSocket streaming, using an in-process `StateBroadcaster` (via `V2EngineManager` listeners).

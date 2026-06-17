@@ -99,7 +99,7 @@ We enforce stability through a multi-tiered test directory structure. Standard u
 tests/
 ├── unit/             # Fast, deterministic component and system-level tests
 ├── integration/      # Multi-module flow checks (API, WebSocket streaming, DB adapters)
-├── parity/           # Parity assertions comparing V2 Engine against legacy behaviors
+├── parity/           # Parity assertions comparing current engine against legacy behaviors
 ├── docs/             # Documentation integrity checks
 ├── performance/      # TPS profiles, memory regression checks, and GC monitors
 └── benchmarks/       # Micro-benchmarks for database insertions and spatial queries
@@ -116,7 +116,7 @@ tests/
 *   **Fast Run**: `pytest tests/unit/ -m "not slow"`
 
 #### 2. Parity & Differential Tests (`tests/parity/`)
-*   **Objective**: Ensure the newly implemented V2 architecture does not diverge from legacy execution laws unless explicitly intended.
+*   **Objective**: Ensure the current architecture does not diverge from legacy execution laws unless explicitly intended.
 *   **Rules**:
     *   Requires tagging with specific markers (`v2_contract`, `differential`, `intentional_divergence`).
     *   **Fast Run**: `pytest tests/parity/`

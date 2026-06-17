@@ -5,7 +5,7 @@ authority: P1
 audience: developer
 ---
 
-# ADR-006: World Data Refactor and World Assembly Boundaries
+# World Data Refactor and Assembly Boundaries
 
 ## Status
 ACCEPTED
