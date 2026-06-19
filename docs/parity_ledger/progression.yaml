@@ -1102,8 +1102,12 @@
   v2_evidence: >
     data/content/spawn_tables.yaml (classtable.v1 entry — hero: [WARRIOR, MAGE, ROGUE]),
     src/worldbuilding/compiler.py (_load_class_table() + rng.choice sub_id=14,
-    TCK-20260619-P0-ENTITY-INIT)
+    TCK-20260619-P0-ENTITY-INIT); sandbox_world (3 HERO via recipe + faction
+    villagers) and urban_political (3 HERO via hero_adventurers module) seeded
+    in TCK-20260619-E11A-HERO-AUTHORING;
+    tests/unit/entity/test_entity_archetypes.py::test_hero_archetypes_cover_combat_mage_rogue
+    verifies WARRIOR/MAGE/ROGUE class coverage for HERO entities
   proof_type: parity
-  test_path: tests/unit/entity/test_entity_initialization.py::test_class_id_non_novice_for_hero_role
+  test_path: tests/unit/entity/test_entity_archetypes.py::test_hero_archetypes_cover_combat_mage_rogue
   divergence_note: null
   support_boundary: null

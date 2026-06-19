@@ -22,6 +22,9 @@ class EntityInspectionSnapshot(BaseModel):
     recent_timeline_events: List[Dict[str, Any]] = Field(default_factory=list)
     latest_rejection_reason: Optional[str] = None
     latest_anomaly_flags: List[str] = Field(default_factory=list)
+    role: Optional[int] = None
+    class_id: Optional[str] = None
+    personality: Dict[str, Any] = Field(default_factory=dict)
 
 class EntityInspector:
     """Thread-safe inspector of single entities for real-time observability."""
@@ -114,7 +117,12 @@ class EntityInspector:
         current_goal = entity.strategic.current_objective_id
         current_target = str(entity.navigation.target) if entity.navigation.target else None
         current_action = entity.task.work_kind
-        
+
+        # 8. Identity extension: role, class_id, personality
+        identity_role = entity.identity.role
+        identity_class_id = entity.identity.class_id
+        personality_dict = entity.identity.personality.to_canonical_dict()
+
         return EntityInspectionSnapshot(
             entity_id=entity_id,
             exists=True,
@@ -131,5 +139,8 @@ class EntityInspector:
             strategic_summary=strategic_sum,
             recent_timeline_events=events,
             latest_rejection_reason=rejection_reason,
-            latest_anomaly_flags=anomaly_flags
+            latest_anomaly_flags=anomaly_flags,
+            role=identity_role,
+            class_id=identity_class_id,
+            personality=personality_dict,
         )

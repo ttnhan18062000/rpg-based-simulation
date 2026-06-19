@@ -42,6 +42,10 @@ entities:
     spawn_distribution:
       type: region_random
       region: woods
+  - role: hero
+    count: 3
+    faction: villagers
+    spawn_region: town_center
 resources:
 - resource_type: wood
   count: 10

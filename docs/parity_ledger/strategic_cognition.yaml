@@ -2385,3 +2385,20 @@
   test_path: tests/unit/strategic/test_opportunities.py::test_resource_opportunities_basic
   divergence_note: null
   support_boundary: null
+- id: STRAT-226
+  text: >-
+    AdventureRouteScorer applies a bravery/caution risk multiplier
+    (max(0.1, (1.0 + caution×0.8) - bravery×0.6)) that produces ≥2× combat_engage
+    rate differential between bottom and top bravery quartiles (measured 4.92× at
+    SEED=42, TICKS=400, 8 heroes).
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >-
+    src/domains/adventure/scoring.py line 103 — bravery coefficient 0.6, caution
+    coefficient 0.8, floor max(0.1,...) preserved; measured 4.92× ratio confirmed
+    by E11D investigation (TCK-20260619-E11D-SCORING-CAL).
+  proof_type: parity
+  test_path: tests/integration/scenarios/test_entity_differentiation.py::test_bravery_quartile_combat_rate_2x
+  divergence_note: null
+  support_boundary: null

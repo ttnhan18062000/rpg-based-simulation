@@ -142,6 +142,18 @@ Note: `caution` is a derived trait (`1.0 - bravery`); `curiosity` is read from `
 
 **Greed/industry elif ordering issue:** In one scoring branch the `greed` condition is listed before the `industry` condition using an `elif` chain. For certain family values that match both intents, the `industry` branch may be unreachable. This is a documented known behaviour — not yet corrected.
 
+#### Calibration Note (E11D, 2026-06-19)
+
+The bravery coefficient (`0.6`) and caution coefficient (`0.8`) are calibration-tested.
+Measured baseline: SEED=42, TICKS=400, 8 heroes → **4.92× combat_engage rate ratio**
+between bottom and top bravery quartiles (acceptance criterion: ≥2×).
+
+- At bravery=0.0 (caution=1.0): `risk_multiplier = 1.8` (maximum risk aversion)
+- At bravery=1.0 (caution=0.0): `risk_multiplier = 0.4` (minimum risk aversion, floor preserved)
+- The `max(0.1, …)` floor ensures survival-tier dominance is never zeroed out.
+
+Parity ledger entry: STRAT-226 (`docs/parity_ledger/strategic_cognition.yaml`).
+
 ---
 
 ## Decisions Made

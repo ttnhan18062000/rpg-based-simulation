@@ -1,10 +1,10 @@
 ---
-status: open
+status: historical
 layer: simulation
 authority: P1
 audience: agent
 ticket_id: TCK-20260619-E11-ENTITY-IDENTITY
-phase: open
+phase: done
 date: 2026-06-19
 tags: [entity-differentiation, personality, class-system, observability, behavioral-quality, epic, phase-1]
 ---
@@ -15,7 +15,7 @@ tags: [entity-differentiation, personality, class-system, observability, behavio
 Epic 1.1 · Entity Identity & Behavioral Differentiation
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 epic
@@ -51,8 +51,14 @@ Score: 9/10 · Effort: M · Source: `docs/audits/D05_entity_differentiation.md`
 - No two entities in the same world have identical personality vectors at tick 0
 
 ## Related Tickets
-- TCK-20260619-P0-ENTITY-INIT (prerequisite)
+- TCK-20260619-P0-ENTITY-INIT (prerequisite — DONE)
 - TCK-20260619-E12-BALANCE-BASELINE (unlocked by this epic)
+
+## Child Tickets (created 2026-06-19)
+- TCK-20260619-E11A-HERO-AUTHORING — Author HERO entities in world files (`tickets/todos/e11-entity-identity/`)
+- TCK-20260619-E11B-OBS-SNAPSHOT — Add personality snapshot to LIGHT observability mode
+- TCK-20260619-E11C-DIFF-HARNESS — Build 400-tick differentiation test harness
+- TCK-20260619-E11D-SCORING-CAL — Calibrate personality bias weights in adventure scoring
 
 ## Related Docs
 - `docs/audits/D05_entity_differentiation.md`
@@ -92,7 +98,18 @@ Per child ticket. Key test files:
   - `test_hero_archetypes_cover_combat_mage_rogue()` — HERO entities in world have at least one of each archetype class
 
 ## Files Changed
-_To be filled on completion._
+- `data/worlds/sandbox_world/world.yaml` — 3 HERO population entries added
+- `data/content/world_modules/hero_adventurers.yaml` — new module for urban_political HERO entities
+- `data/worlds/urban_political/world.yaml` — hero_adventurers module registered
+- `data/worlds/urban_political/resolved/` — regenerated after assembly
+- `src/observability/live/entity_inspector.py` — role/class_id/personality added to EntityInspectionSnapshot
+- `tests/unit/entity/test_entity_archetypes.py` — new: hero archetype coverage test
+- `tests/unit/observability/test_personality_snapshot.py` — new: LIGHT snapshot personality test
+- `tests/integration/scenarios/test_entity_differentiation.py` — new: 400-tick differentiation harness
+- `docs/parity_ledger/progression.yaml` — PROG-108 v2_evidence updated
+- `docs/parity_ledger/infrastructure.yaml` — INFRA-205 added
+- `docs/parity_ledger/strategic_cognition.yaml` — STRAT-226 added
+- `docs/simulation/domains/adventure_contract.md` — calibration baseline note added
 
 ## Completion Summary
-_To be filled on completion._
+All 4 child tickets DONE. HERO entities (WARRIOR/MAGE/ROGUE) authored in sandbox_world and urban_political. LIGHT observability extended with role/class_id/personality fields. 400-tick differentiation harness confirms all entities have distinct personality vectors and top-bravery-quartile entities take combat_engage routes at 4.92× the rate of bottom-quartile entities (≥2× AC met). No scoring coefficient changes were needed — existing bravery coeff=0.6 was already sufficient. Three new parity ledger entries added (PROG-108 updated, INFRA-205, STRAT-226). Epic 1.2 (E12-BALANCE-BASELINE) is now unlocked.

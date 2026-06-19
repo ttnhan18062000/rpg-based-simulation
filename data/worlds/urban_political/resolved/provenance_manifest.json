@@ -1,17 +1,18 @@
 {
-  "manifest_id": "prov_79577f21f55e2968",
+  "manifest_id": "prov_7a5872310868a09a",
   "world_id": "urban_political",
   "source_schema_version": "provenancemanifest.v1",
-  "catalog_fingerprint": "b1cec5dc8a96b2614a622544840330384aa0da562c0d706bfc28ef4f7713c198",
+  "catalog_fingerprint": "8c4b780927da8b24941d13564e64ef3bba0ac8188facb07463df90ce8e13185d",
   "module_fingerprints": {
     "frontier_village_core": "02aec5f9a179002864024c53bed0d2040d49c64b5191fd856c2d1a4ddc1af01f",
     "bandit_road_trade_pressure": "a04880b8821a4cf6246e5ce782ef1363f5f8cbc1d97f6bb40191c47c8149ce10",
+    "hero_adventurers": "1b1d1e2859fdd6b23262edba556718f6c506a72be8dc44cd84db74c68078b837",
     "trading_company_hub": "14b684b372fb7205d1bd6eb6211fafa7e4d17fde4c9f177cf4016b2cf7bc57f2"
   },
-  "composition_fingerprint": "15f485d06c61f7e85a091d52705ab4f0220521647075588f3a02a38a0aab56ff",
+  "composition_fingerprint": "21a6219e114d05997c3019cd688747828b0c3f72392d6c9bfa740c68061d591e",
   "resolver_version": "1.0.0",
-  "content_fingerprint": "79577f21f55e2968bc9b36562d4f3c05033220ef16965adb6af7339a69f5ee86",
-  "created_at": "2026-06-15T12:20:02.053583Z",
+  "content_fingerprint": "7a5872310868a09a0a81fb40e83c680ffe3b326054aadde87761d071e0df7955",
+  "created_at": "2026-06-19T16:34:27.799619Z",
   "records": {
     "hero_guild": {
       "element_id": "hero_guild",
@@ -539,6 +540,54 @@
         "relationship_model": "predatory_trade_ambush"
       },
       "details": {}
+    },
+    "pop_0": {
+      "element_id": "pop_0",
+      "element_type": "population",
+      "source_module": "hero_adventurers",
+      "recipe_type": "population",
+      "parameters": {},
+      "profiles": {
+        "role": "hero",
+        "faction": "hero_guild",
+        "stats_profile": null
+      },
+      "details": {
+        "count": 1,
+        "spawn_region": "hometown"
+      }
+    },
+    "pop_1": {
+      "element_id": "pop_1",
+      "element_type": "population",
+      "source_module": "hero_adventurers",
+      "recipe_type": "population",
+      "parameters": {},
+      "profiles": {
+        "role": "hero",
+        "faction": "hero_guild",
+        "stats_profile": null
+      },
+      "details": {
+        "count": 1,
+        "spawn_region": "hometown"
+      }
+    },
+    "pop_2": {
+      "element_id": "pop_2",
+      "element_type": "population",
+      "source_module": "hero_adventurers",
+      "recipe_type": "population",
+      "parameters": {},
+      "profiles": {
+        "role": "hero",
+        "faction": "hero_guild",
+        "stats_profile": null
+      },
+      "details": {
+        "count": 1,
+        "spawn_region": "hometown"
+      }
     },
     "trading_hometown": {
       "element_id": "trading_hometown",

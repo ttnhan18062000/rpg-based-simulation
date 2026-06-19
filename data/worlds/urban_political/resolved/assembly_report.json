@@ -2,6 +2,7 @@
   "sorted_module_ids": [
     "frontier_village_core",
     "bandit_road_trade_pressure",
+    "hero_adventurers",
     "trading_company_hub"
   ],
   "factions_resolved": [
@@ -23,8 +24,14 @@
     "spirit_court"
   ],
   "regions_count": 3,
-  "entities_count": 8,
+  "entities_count": 11,
   "catalog_validation": [
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Terrain 'grass' is active but never consumed by any downstream component",
+      "target": "grass"
+    },
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
@@ -42,12 +49,6 @@
       "rule_id": "CAT-DEAD-001",
       "message": "Terrain 'hill' is active but never consumed by any downstream component",
       "target": "hill"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'grass' is active but never consumed by any downstream component",
-      "target": "grass"
     },
     {
       "severity": "WARNING",
@@ -492,12 +493,19 @@
       "rule_id": "CAT-DEAD-001",
       "message": "Projection 'elite_goblin' is active but never consumed by any downstream component",
       "target": "elite_goblin"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Module 'hero_adventurers' is active but never consumed by any downstream component",
+      "target": "hero_adventurers"
     }
   ],
   "module_validation": {
     "frontier_village_core": [],
     "trading_company_hub": [],
-    "bandit_road_trade_pressure": []
+    "bandit_road_trade_pressure": [],
+    "hero_adventurers": []
   },
   "composition_validation": [],
   "world_validation": [
@@ -511,10 +519,16 @@
   "summary": {
     "status": "SUCCESS",
     "blocking_errors_count": 0,
-    "warnings_count": 79
+    "warnings_count": 80
   },
   "blocking_errors": [],
   "warnings": [
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Terrain 'grass' is active but never consumed by any downstream component",
+      "target": "grass"
+    },
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
@@ -532,12 +546,6 @@
       "rule_id": "CAT-DEAD-001",
       "message": "Terrain 'hill' is active but never consumed by any downstream component",
       "target": "hill"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'grass' is active but never consumed by any downstream component",
-      "target": "grass"
     },
     {
       "severity": "WARNING",
@@ -985,16 +993,23 @@
     },
     {
       "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Module 'hero_adventurers' is active but never consumed by any downstream component",
+      "target": "hero_adventurers"
+    },
+    {
+      "severity": "WARNING",
       "rule_id": "WORLD-WARN-001",
       "message": "World spec defines zero resource nodes.",
       "path": "resources"
     }
   ],
   "fingerprints": {
-    "catalog": "b1cec5dc8a96b2614a622544840330384aa0da562c0d706bfc28ef4f7713c198",
+    "catalog": "8c4b780927da8b24941d13564e64ef3bba0ac8188facb07463df90ce8e13185d",
     "modules": {
       "frontier_village_core": "02aec5f9a179002864024c53bed0d2040d49c64b5191fd856c2d1a4ddc1af01f",
       "bandit_road_trade_pressure": "a04880b8821a4cf6246e5ce782ef1363f5f8cbc1d97f6bb40191c47c8149ce10",
+      "hero_adventurers": "1b1d1e2859fdd6b23262edba556718f6c506a72be8dc44cd84db74c68078b837",
       "trading_company_hub": "14b684b372fb7205d1bd6eb6211fafa7e4d17fde4c9f177cf4016b2cf7bc57f2"
     }
   }

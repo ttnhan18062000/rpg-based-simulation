@@ -3,6 +3,12 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
+      "message": "Terrain 'grass' is active but never consumed by any downstream component",
+      "target": "grass"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
       "message": "Terrain 'floor' is active but never consumed by any downstream component",
       "target": "floor"
     },
@@ -17,12 +23,6 @@
       "rule_id": "CAT-DEAD-001",
       "message": "Terrain 'hill' is active but never consumed by any downstream component",
       "target": "hill"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'grass' is active but never consumed by any downstream component",
-      "target": "grass"
     },
     {
       "severity": "WARNING",
@@ -467,12 +467,19 @@
       "rule_id": "CAT-DEAD-001",
       "message": "Projection 'elite_goblin' is active but never consumed by any downstream component",
       "target": "elite_goblin"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Module 'hero_adventurers' is active but never consumed by any downstream component",
+      "target": "hero_adventurers"
     }
   ],
   "module_validation": {
     "frontier_village_core": [],
     "trading_company_hub": [],
-    "bandit_road_trade_pressure": []
+    "bandit_road_trade_pressure": [],
+    "hero_adventurers": []
   },
   "composition_validation": [],
   "world_validation": [

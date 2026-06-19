@@ -1,10 +1,10 @@
 ---
-status: open
+status: historical
 layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20260619-E11C-DIFF-HARNESS
-phase: open
+phase: done
 date: 2026-06-19
 tags: [entity-differentiation, test-harness, behavioral-quality, integration, phase-1]
 ---
@@ -15,7 +15,7 @@ tags: [entity-differentiation, test-harness, behavioral-quality, integration, ph
 E11-C · Build 400-tick differentiation test harness
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -71,7 +71,12 @@ No test currently verifies that entities with different personality vectors make
 - How to run N ticks programmatically? Look at existing integration test patterns.
 
 ## Implementation Notes
-Read existing integration tests in `tests/integration/` to understand how to run a world for N ticks. The route-kind histogram can be derived from the transaction_trace field on AuthoritativeState.
+- `entity.kind` is set to `pop_spec.role.lower()` in `compiler.py` line 317; hero detection uses `ent.kind.lower() == "hero"`.
+- `feature_flags` on `AuthoritativeState` is a `Dict[str, Any]`; pipeline.py reads it and applies via `FeatureFlagManager.set_flag_mode()`. Use `replace(initial_state, feature_flags={"ENABLE_COMBAT_ENGAGEMENT": "ON", "ENABLE_ADVENTURE_ROUTING": "ON"})`.
+- Route histogram uses per-tick `kernel.state` sampling of `current_project_id → projects[id].kind` inside the loop. `transaction_trace` is economic audit data (NOT goal-selection); `entity_timeline_store` has a 20-event cap and is also unsuitable.
+- `test_bravery_quartile_combat_rate_2x` runs xfail(strict=False) — both xfail and xpass are acceptable until E11D calibrates the bravery coefficient.
+- `test_no_identical_personality_vectors_at_spawn` passes strictly (0.46s): the seeded `DeterministicRNG` in the compiler produces distinct personality tuples for all 12 entities.
+- Kernel signature: `Kernel(profile, state, rng, flags={"no_replay": True})` — no `flags` keyword needed for the no_replay path (confirmed from kernel.py line 212).
 
 ## Test Summary
 `tests/integration/scenarios/test_entity_differentiation.py`:
@@ -79,7 +84,7 @@ Read existing integration tests in `tests/integration/` to understand how to run
 - `test_bravery_quartile_combat_rate_2x()` — xfail until E11D complete, then strict pass
 
 ## Files Changed
-_To be filled on completion._
+- `tests/integration/scenarios/test_entity_differentiation.py` (new) — 400-tick differentiation harness with two tests
 
 ## Completion Summary
-_To be filled on completion._
+Created `tests/integration/scenarios/test_entity_differentiation.py` with two tests. `test_no_identical_personality_vectors_at_spawn` (strict pass, 0.46s) compiles a 12-entity inline worldspec and asserts all personality tuples are distinct. `test_bravery_quartile_combat_rate_2x` (xfail strict=False) runs 400 ticks with ENABLE_COMBAT_ENGAGEMENT/ENABLE_ADVENTURE_ROUTING ON, samples per-entity project-kind histogram, and asserts top-bravery-quartile entities take combat_engage routes at ≥2× bottom-quartile rate — correctly XFAIL until E11D calibration. 112 scenario regression tests pass. No src/ changes.

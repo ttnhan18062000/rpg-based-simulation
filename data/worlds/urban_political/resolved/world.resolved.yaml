@@ -112,6 +112,21 @@ entities:
   faction: town_council
   spawn_region: bandit_road
   archetype_id: frontier_guard
+- id: pop_0
+  count: 1
+  role: hero
+  faction: hero_guild
+  spawn_region: hometown
+- id: pop_1
+  count: 1
+  role: hero
+  faction: hero_guild
+  spawn_region: hometown
+- id: pop_2
+  count: 1
+  role: hero
+  faction: hero_guild
+  spawn_region: hometown
 - id: trading_pop_0
   count: 6
   role: merchant

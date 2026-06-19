@@ -2318,3 +2318,19 @@
   test_path: null
   divergence_note: null
   support_boundary: "src/core/ — no upward imports to src/engine/ permitted."
+
+- id: INFRA-205
+  text: >
+    EntityInspectionSnapshot (LIGHT mode) exposes per-entity identity fields:
+    faction_id (Optional[int]), role (Optional[int]), class_id (Optional[str]),
+    and personality (Dict with keys greed, bravery, sociability, industry as float).
+    Populated by EntityInspector.inspect_entity() from entity.identity.*
+    via entity.identity.personality.to_canonical_dict().
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/observability/live/entity_inspector.py::EntityInspectionSnapshot
+  proof_type: parity
+  test_path: tests/unit/observability/test_personality_snapshot.py::test_light_snapshot_includes_personality
+  divergence_note: null
+  support_boundary: null
