@@ -61,6 +61,7 @@ Score: 7/10 · Effort: M · Source: `docs/audits/D15_entity_decision_inspection.
 - `docs/simulation/domains/campaigns_contract.md` (observability boundary reference)
 - `docs/parity_ledger/infrastructure.yaml` (observability tooling entries — add decision trace as `verified`)
 - New doc: `docs/observability/decision_trace_contract.md` (decision trace schema, index format, REST endpoints, LIGHT mode behavior)
+- `docs/plans/idea_cognition_graph_analytics_pipeline.md` (idea: wire `decision_trace.jsonl` into `ArtifactExporter` + `AnalyticsDatasetBuilder` Parquet tables so DuckDB can join traces against cognition features — define artifact type key `"decision_trace"` in this epic's writer so the analytics pipeline can reference it by name)
 
 ## Related Stored Artifacts
 - `stored_artifacts/TCK-20260618-AUDIT-D15/`

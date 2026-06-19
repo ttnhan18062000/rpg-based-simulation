@@ -64,6 +64,7 @@ Score: 8/10 · Effort: M · Source: `docs/audits/D04_balance_tuning.md`
 - `docs/plans/long_term_development_roadmap.md` § Epic 1.2
 - `docs/parity_ledger/strategic_cognition.yaml` (scoring formula entries — update blocker_penalty entry if changed)
 - `docs/parity_ledger/town_resource.yaml` (harvesting/crafting rate entries — add baseline measurement as `v2_evidence`)
+- `docs/plans/idea_cognition_graph_analytics_pipeline.md` (idea: wire `CognitionFeatureExtractor` into post-run pipeline before this epic's measurement pass; `blocker_add_count`, `unresolved_blocker_count`, and `max_blocker_age` from `cognition_features.jsonl` are direct evidence for/against `blocker_penalty = 2.0`; `StaleBlocker` pattern count is the causal signal the D04 measurement pass currently cannot access)
 
 ## Related Stored Artifacts
 - `stored_artifacts/TCK-20260618-AUDIT-EPIC/`
