@@ -3,7 +3,7 @@ status: authoritative
 layer: mechanics
 authority: P0
 audience: developer
-last_verified: 2026-06-06
+last_verified: 2026-06-19
 ---
 
 # Chapter 1: Entity Anatomy
@@ -73,8 +73,8 @@ The simulation tracks biological "Pressures" that degrade over time.
 ### Passive Decay Rates
 | Need | Decay (per tick) | Max Value | Penalty Threshold |
 | :--- | :--- | :--- | :--- |
-| **Hunger** | `+0.1` | 100.0 | **100.0**: Starvation (5 damage/tick) |
-| **Sleep Debt** | `+0.05` | 100.0 | **80.0**: Fatigue (-50% ATK/DEF) |
+| **Hunger** | `+0.1` | 100.0 | **95.0**: Starvation (+2 HP damage/tick) |
+| **Sleep Debt** | `+0.05` | 100.0 | **98.0**: Fatigue (+1 HP damage/tick) |
 | **Stamina** | `-1.0` (per move) | `Max_Stamina` | **< Exhaustion Threshold**: Exhausted state |
 
 ### Stamina Service

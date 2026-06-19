@@ -32,9 +32,10 @@ To prevent "Goal Flickering" (rapidly switching between two similar goals), enti
 Switch_Allowed = New_Goal_Score > (Current_Goal_Score + Interruption_Margin)
 
 # Where:
-Interruption_Margin = Profile_Resistance * 30.0
+Interruption_Margin = Profile_Resistance * resistance_multiplier
 ```
 *   **Profile Resistance**: A value (0.0 to 1.0) defined by the entity's personality or class.
+*   **resistance_multiplier**: A profile-defined constant (not a hard-coded 30.0); value varies by entity profile.
 *   **Emergency Bypass**: High-urgency "Danger" concerns (score > 80) ignore the interruption margin.
 
 ---

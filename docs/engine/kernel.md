@@ -9,20 +9,9 @@ audience: developer
 
 The `Kernel` is the heartbeat of the RPG V2 Engine. It orchestrates the deterministic, tick-based execution of all simulation systems.
 
-## The 6-Phase Kernel Loop
+## The 7-Phase Kernel Loop
 
-Every simulation "Tick" follows a strict 6-phase sequence to ensure determinism and prevent race conditions.
-
-| Phase | Name | Responsibility | Concurrency |
-| :--- | :--- | :--- | :--- |
-| 1 | **Initialization** | Prepare the tick context and snapshot state. | Synchronous |
-| 2 | **Governance** | Apply world-level laws (Time, Weather, Global Events). | Synchronous |
-| 3 | **Scheduling** | Determine which entities act in this tick (Cadence). | Synchronous |
-| 4 | **Deliberation** | Workers generate `StateUpdate` proposals based on state. | **Concurrent** |
-| 5 | **Resolution** | Refine proposals through the `AuthoritativeApplyPipeline`. | Synchronous |
-| 6 | **Persistence** | Commit the new state and emit telemetry events. | Synchronous |
-
----
+Every simulation "Tick" follows a strict 7-phase sequence to ensure determinism and prevent race conditions.
 
 ## The "Law of Ticks"
 
