@@ -2366,3 +2366,18 @@
   test_path: null
   divergence_note: null
   support_boundary: null
+- id: STRAT-225
+  text: AdventureDecisionPhase.apply() calls ResourceOpportunityProvider.get_opportunities(hero,
+    state) before AdventureRouteGenerator.generate(), passing the result as opportunities=
+    so the primary opportunity loop executes and GATHER_RESOURCE/BUY_UPGRADE route
+    families can be produced each tick.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: >-
+    src/domains/adventure/phase.py — ResourceOpportunityProvider imported at module
+    level; opportunities fetched per hero before generate() call (TCK-20260619-FIX-ADVENTURE-OPPORTUNITY-WIRING).
+  proof_type: parity
+  test_path: tests/unit/strategic/test_opportunities.py::test_resource_opportunities_basic
+  divergence_note: null
+  support_boundary: null

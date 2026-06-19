@@ -50,4 +50,4 @@ buildings:
 - building_type: tavern
   count: 2
   region: town_center
-quest_definitions: []
+quests: []

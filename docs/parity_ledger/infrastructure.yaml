@@ -2288,3 +2288,18 @@
   test_path: tests/unit/content/test_content_hotpath_guard.py
   divergence_note: null
   support_boundary: null
+- id: INFRA-203
+  text: PerformanceBudgets.reset() is called at the start of every tick (Kernel._phase_init),
+    ensuring provider_calls_total and requirements_evaluated_total are bounded per-tick
+    rather than per-run. Two sequential simulation runs in the same process each start
+    with provider_calls_total == 0.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >-
+    src/engine/kernel.py::Kernel._phase_init — PerformanceBudgets.reset() as first
+    call, before OccupancySnapshot and all domain phases (TCK-20260619-FIX-PERF-BUDGETS-RESET).
+  proof_type: parity
+  test_path: tests/unit/strategic/test_performance_budgets.py::test_per_tick_reset_prevents_cap_accumulation
+  divergence_note: null
+  support_boundary: null

@@ -1780,3 +1780,20 @@
   test_path: tests/unit/content/test_resolvers.py::TestPopulationRecipeResolver::test_case2_direct_archetype_id_returns_single_entity
   divergence_note: null
   support_boundary: null
+- id: TOWN-171
+  text: RequirementEvaluator.evaluate() for kind="near_service" calls TownNavigation.get_nearest_service(entity,
+    subject, state) and returns passed=True only if the nearest matching functional
+    building is within Euclidean distance <= 5.0 of the entity's position. When state
+    is None, returns passed=False with blocker_kind="too_far_from_service" without
+    raising.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >-
+    src/world/providers/requirements.py::RequirementEvaluator.evaluate (near_service
+    branch) — replaces "hometown" hardcode with real TownNavigation lookup
+    (TCK-20260619-FIX-NEAR-SERVICE-REGION).
+  proof_type: parity
+  test_path: tests/unit/strategic/test_requirements.py::test_near_service_passes_when_building_within_range
+  divergence_note: null
+  support_boundary: null

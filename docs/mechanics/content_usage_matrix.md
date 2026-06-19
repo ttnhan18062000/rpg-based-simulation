@@ -1,11 +1,3 @@
----
-status: authoritative
-layer: mechanics
-authority: P1
-audience: developer
-tags: [content, catalog, matrix, implementation-state]
----
-
 # Content Usage Matrix Report
 
 > [!IMPORTANT]
