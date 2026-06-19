@@ -62,8 +62,9 @@ Score: 9/10 · D01 score 22/25 (highest-leverage missing system) · Effort: M ·
 ## Related Docs
 - `docs/audits/D02_foundation_features.md` § Finding 5
 - `docs/audits/D01_rpg_feature_impact.md` § Resource Ecology Regeneration
-- `docs/mechanics/03_economic_laws.md` § 3 (Resource Harvesting)
-- `docs/world/ecology_and_calamity_contract.md`
+- `docs/mechanics/03_economic_laws.md` § 3 (Resource Harvesting — update with depletion/regen mechanics)
+- `docs/mechanics/05_world_evolution.md` (seasonal regen model ties into world-age phases; ecology-linked regen uses RegionalPressureModel documented here)
+- `docs/world/ecology_and_calamity_contract.md` (update to include ResourceEcologyService depletion/scarcity signals)
 - `docs/plans/long_term_development_roadmap.md` § Epic 2.1
 - `docs/parity_ledger/town_resource.yaml`
 

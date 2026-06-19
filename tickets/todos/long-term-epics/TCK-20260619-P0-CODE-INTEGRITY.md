@@ -64,6 +64,7 @@ Source: `docs/audits/D12_code_quality.md` F1, `docs/audits/D14_test_coverage.md`
 ## Related Docs
 - `docs/audits/D12_code_quality.md`
 - `docs/plans/long_term_development_roadmap.md` § P0-6
+- `docs/core/state.md` (Fix 2: update to document the import boundary rule — `state.py` must not import from `src/engine/`; this is a non-obvious architectural constraint being enforced here)
 - `docs/parity_ledger/substrate.yaml` (determinism — Fix 1 sort tiebreaker affects replay hash entries)
 - `docs/parity_ledger/infrastructure.yaml` (Fix 2 MovementPlanCache injection may affect infra entries)
 

@@ -55,6 +55,7 @@ Source: `docs/audits/D18_ci_release_pipeline.md` — F1 score 11/15 (zero test a
 ## Related Docs
 - `docs/audits/D18_ci_release_pipeline.md`
 - `docs/plans/long_term_development_roadmap.md` § P0-1
+- `docs/compliance/checklist.md` (update CI gate entry to DONE on completion)
 
 ## Related Stored Artifacts
 - `stored_artifacts/TCK-20260618-AUDIT-D18/`

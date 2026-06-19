@@ -72,6 +72,7 @@ Score: 9/10 · Effort: M · Source: `docs/audits/D07_content_coverage.md`
 ## Related Docs
 - `docs/audits/D07_content_coverage.md` (update content counts on completion)
 - `docs/mechanics/03_economic_laws.md` (update crafting recipe documentation if schema extended)
+- `docs/mechanics/06_worldbuilding_foundation.md` (new module types — `mountain_pass`, `river_crossing`, `nomadic_herd`, `settled_quarter` — must conform to declarative topology and integrity validation rules defined here)
 - `docs/plans/long_term_development_roadmap.md` § Epic 1.3
 - `docs/simulation/domains/world_emergence_contract.md` (quest extension pattern)
 - `docs/quests/quest_contract.md` (update if quest schema gains new fields)

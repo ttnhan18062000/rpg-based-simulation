@@ -62,10 +62,11 @@ Score: 8/10 · Effort: L · Source: `docs/plans/engine_future_epics_roadmap.md` 
 ## Related Docs
 - `docs/plans/engine_future_epics_roadmap.md` § A
 - `docs/plans/long_term_development_roadmap.md` § Epic 5.1
+- `docs/mechanics/05_world_evolution.md` (calamities, regional trauma, and ecology events are world-scale inputs to the chronicle; update to note ChronicleCompiler as their narrative consumer)
 - `docs/simulation/domains/campaigns_contract.md` (update to document ChronicleCompiler as post-run step)
 - `docs/parity_ledger/social_narrative.yaml` (narrative event compression entries — add as `verified`)
 - `docs/parity_ledger/world_dynamics.yaml` (era/milestone entries if world-scale events feed chronicle)
-- New doc: `docs/simulation/domains/chronicle_contract.md` (ChronicleCompiler pipeline, significance scoring, hierarchy, Chronicle.md schema)
+- New doc: `docs/simulation/domains/chronicle_contract.md` (ChronicleCompiler pipeline, significance scoring formula, hierarchy definitions, Chronicle.md schema, REST endpoints)
 
 ## Related Stored Artifacts
 - (none — fresh build)

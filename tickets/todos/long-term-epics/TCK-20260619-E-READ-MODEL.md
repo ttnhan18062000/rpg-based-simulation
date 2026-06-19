@@ -56,10 +56,11 @@ Source: `docs/plans/engine_future_epics_roadmap.md` § E.
 
 ## Related Docs
 - `docs/plans/engine_future_epics_roadmap.md` § E
-- `docs/guidelines/design_patterns.md` (presenter pattern)
-- `docs/core/state.md` (immutability law — read models must not expose raw state)
+- `docs/guidelines/design_patterns.md` (presenter pattern — update with ReadModelService as the canonical presenter implementation)
+- `docs/core/state.md` (immutability law — read models must not expose raw state; this doc defines what counts as a raw domain object)
+- `docs/engine/authoritative_mutation_pipeline_contract.md` (defines the read/write boundary — read models must only read state after the authoritative apply path, never bypass it)
 - `docs/parity_ledger/infrastructure.yaml` (add ReadModelService presenter contract as verified entry)
-- New doc: `docs/observability/read_model_service_contract.md` (ReadModelService schema, presenter rules, response shape definitions)
+- New doc: `docs/observability/read_model_service_contract.md` (ReadModelService schema, presenter rules, response shape definitions, API surface contract)
 
 ## Related Code Areas
 - `src/` (find existing REST API layer / FastAPI/Flask routes)

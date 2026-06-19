@@ -56,7 +56,8 @@ Score: 8/10 · Effort: M · Source: `docs/plans/engine_future_epics_roadmap.md` 
 - `docs/audits/D01_rpg_feature_impact.md` § Social Memory as Campaign Consequence
 - `docs/plans/engine_future_epics_roadmap.md` § B
 - `docs/plans/long_term_development_roadmap.md` § Epic 4.3
-- `docs/simulation/domains/social_systems_contract.md` (update with SocialMemoryRecord, cross-episode exporter/importer)
+- `docs/mechanics/04_strategic_cognition.md` (social memory feeds into scoring — legacy reputation affects route scoring weights; update scoring documentation if new reputation terms are added)
+- `docs/simulation/domains/social_systems_contract.md` (update with SocialMemoryRecord, cross-episode exporter/importer, consequence event types)
 - `docs/parity_ledger/social_narrative.yaml` (cross-episode reputation entries — add as `verified`)
 - New doc: `docs/simulation/domains/social_memory_contract.md` (SocialMemoryRecord schema, decay rates, faction memory model, consequence events)
 

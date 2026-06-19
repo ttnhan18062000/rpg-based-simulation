@@ -63,6 +63,8 @@ Note: `TCK-20260425-PH8-M2` (static level-scaled quest generation) and `TCK-2026
 ## Related Docs
 - `docs/audits/D07_content_coverage.md`
 - `docs/audits/D01_rpg_feature_impact.md` § Pressure-Driven Quest Generation
+- `docs/mechanics/03_economic_laws.md` (quest rewards are economic transactions — gold/XP awards must satisfy conservation laws; update if quest reward flow is new)
+- `docs/engine/authoritative_pipeline.md` (quest completion applies rewards through the authoritative mutation pipeline — verify phase insertion before implementing reward application)
 - `docs/simulation/domains/world_emergence_contract.md` (OpportunityType extension pattern — update with QuestOpportunity entry)
 - `docs/quests/quest_contract.md` (update with QuestOpportunity lifecycle, trigger families, and registry contract)
 - `docs/plans/long_term_development_roadmap.md` § Epic 2.3

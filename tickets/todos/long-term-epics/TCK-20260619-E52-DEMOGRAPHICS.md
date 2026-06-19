@@ -58,10 +58,12 @@ Score: 6/10 · Effort: M · Source: `docs/plans/engine_future_epics_roadmap.md` 
 ## Related Docs
 - `docs/plans/engine_future_epics_roadmap.md` § A
 - `docs/plans/long_term_development_roadmap.md` § Epic 5.2
+- `docs/mechanics/01_entity_anatomy.md` § Biological Pressures (entity age advancement affects biological stats — elder entities have higher mortality; verify aging mechanics against attribute definitions here)
+- `docs/mechanics/06_worldbuilding_foundation.md` (population distribution rules — `nomadic_herd` and `settled_quarter` modules from Epic 1.3 acquire demographic models here; must conform to topology rules)
+- `docs/mechanics/05_world_evolution.md` (add demographic cycle documentation; migration pressure ties into tick-to-day time and regional evolution)
 - `docs/world/ecology_and_calamity_contract.md` (update with PopulationCohort as demand signal to RegionalPressureModel)
-- `docs/mechanics/05_world_evolution.md` (add demographic cycle documentation)
 - `docs/parity_ledger/world_dynamics.yaml` (population/ecology entries — add cohort model as `verified`)
-- New doc: `docs/world/demographics_contract.md` (PopulationCohort model, birth/death cycle, migration pressure rules, age bracket thresholds)
+- New doc: `docs/world/demographics_contract.md` (PopulationCohort model, birth/death cycle, migration pressure rules, age bracket thresholds, density signal contract)
 
 ## Related Stored Artifacts
 - `stored_artifacts/TCK-20260613-DOC-WORLD-RUNTIME-SIMULATION/`

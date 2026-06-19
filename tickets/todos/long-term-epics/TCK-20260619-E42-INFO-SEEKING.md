@@ -57,6 +57,8 @@ Score: 8/10 · Effort: M · Source: `docs/plans/engine_future_epics_roadmap.md` 
 - `docs/audits/D01_rpg_feature_impact.md`
 - `docs/plans/engine_future_epics_roadmap.md` § B
 - `docs/plans/long_term_development_roadmap.md` § Epic 4.2
+- `docs/mechanics/04_strategic_cognition.md` (add `information_seeking` as a documented project kind driven by InformationNeed; update goal hierarchy section)
+- `docs/mechanics/03_economic_laws.md` (paid information transactions are economic exchanges — gold must transfer through authoritative mutation pipeline; verify conservation law coverage)
 - `docs/simulation/domains/belief_and_detour_contract.md` (update with InformationNeed, PERSON_LEAD, CONCEPT_LEAD, knowledge staleness decay)
 - `docs/simulation/domains/intelligence_system_contract.md` (update with InformationProvider archetypes and paid transaction contract)
 - `docs/parity_ledger/strategic_cognition.yaml` (leads / knowledge-seeking entries — update to `verified`)

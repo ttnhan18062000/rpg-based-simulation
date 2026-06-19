@@ -70,7 +70,9 @@ Source: `docs/audits/D17_documentation_currency.md`; `docs/plans/engine_future_e
 
 ## Related Code Areas
 - `src/engine/pipeline.py` (ground truth for phase count)
-- `docs/parity_ledger/substrate.yaml` (update entries affected by threshold changes)
+
+## Related Docs — Parity
+- `docs/parity_ledger/substrate.yaml` (update entries for any threshold changes made here — biological thresholds in `01_entity_anatomy.md` are verified against this)
 
 ## Assumptions / Open Questions
 - Count of phases in `pipeline.py`: read the file to get the current count before updating `authoritative_pipeline.md`

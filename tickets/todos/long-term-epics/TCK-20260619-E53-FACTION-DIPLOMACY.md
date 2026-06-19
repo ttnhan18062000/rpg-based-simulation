@@ -79,13 +79,15 @@ Child tickets: one child epic per phase (A, B, C, D), each decomposed into stand
 ## Related Docs
 - `docs/plans/engine_future_epics_roadmap.md` § A (Headline Finding + Section A)
 - `docs/plans/long_term_development_roadmap.md` § Epic 5.3
-- `docs/engine/governance_logic.md` (update when FactionDecisionPhase is added at governance layer)
+- `docs/mechanics/04_strategic_cognition.md` (FactionDecisionPhase produces entity-level directives that modify route scoring — update with faction directive scoring terms)
+- `docs/mechanics/02_combat_laws.md` (Phase C territorial war uses combat resolution for siege mechanics — faction squads must use standard damage formula; verify before implementing MilitaryConflictPhase)
 - `docs/mechanics/05_world_evolution.md` (add faction-driven evolution documentation)
 - `docs/mechanics/regional_sovereignty.md` (update sovereignty to include faction ownership transfer)
+- `docs/engine/governance_logic.md` (update when FactionDecisionPhase is added at governance layer)
 - `docs/systems/grand_strategy.md` (scope reference only — establishes absence, NOT design source; archive to `docs/archive/` after Phase A complete)
 - `docs/parity_ledger/world_dynamics.yaml` (faction/political entries — add as `verified`)
 - `docs/parity_ledger/substrate.yaml` (FactionState persistence entries)
-- New doc: `docs/systems/faction_contract.md` (V2 FactionState model, FactionDecisionPhase, diplomatic states, territorial rules)
+- New doc: `docs/systems/faction_contract.md` (V2 FactionState model, FactionDecisionPhase, diplomatic states, territorial rules, siege mechanics)
 
 ## Related Stored Artifacts
 - (none — fresh build)

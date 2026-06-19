@@ -55,9 +55,11 @@ Source: `docs/audits/D05_entity_differentiation.md` F1 (personality) and F2 (cla
 ## Related Docs
 - `docs/audits/D05_entity_differentiation.md`
 - `docs/plans/long_term_development_roadmap.md` § P0-4
+- `docs/mechanics/01_entity_anatomy.md` § Core Attributes (personality trait definitions and valid [0.0, 1.0] range — verify before seeding)
+- `docs/core/attributes_and_classes.md` (class definitions: WARRIOR, MAGE, ROGUE, WORKER, MERCHANT, BEAST, UNDEAD — verify class IDs before populating spawn_tables.yaml)
+- `docs/core/entities.md` (update if entity spawn behavior is documented here)
 - `docs/parity_ledger/substrate.yaml` (entity initialization / spawn — update entries for personality seeding)
 - `docs/parity_ledger/progression.yaml` (class_id assignment — update entries for non-NOVICE class spawn)
-- `docs/core/entities.md` (update if entity spawn behavior is documented here)
 
 ## Related Stored Artifacts
 - `stored_artifacts/TCK-20260619-AUDIT-D05/`

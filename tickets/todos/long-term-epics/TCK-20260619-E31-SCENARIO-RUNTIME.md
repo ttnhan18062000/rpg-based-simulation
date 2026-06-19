@@ -59,11 +59,12 @@ Score: 7/10 · Effort: M · Source: `docs/plans/engine_future_epics_roadmap.md` 
 
 ## Related Docs
 - `docs/plans/long_term_development_roadmap.md` § Epic 3.1
-- `docs/engine/kernel.md`
+- `docs/engine/kernel.md` (Kernel lifecycle — update to note ScenarioRuntimeService as the owning wrapper for production use)
 - `docs/engine/authoritative_mutation_pipeline_contract.md`
+- `docs/core/state.md` (checkpoint serializes full `AuthoritativeState` — immutability law must be preserved through serialize/restore cycle; read before designing checkpoint format)
 - `docs/simulation/domains/campaigns_contract.md` (update boundary table — ScenarioRuntimeService is a new concept separate from CampaignRunner)
 - `docs/parity_ledger/infrastructure.yaml` (checkpoint/replay entries — update to `verified` once checkpoint/restore implemented)
-- New doc: `docs/engine/scenario_runtime_contract.md` (ScenarioRuntimeService lifecycle, objective state machine, checkpoint format)
+- New doc: `docs/engine/scenario_runtime_contract.md` (ScenarioRuntimeService lifecycle, objective state machine, checkpoint format, REST API contract)
 
 ## Related Stored Artifacts
 - `stored_artifacts/TCK-20260612-DOMAINS-ARCH-MAP/`

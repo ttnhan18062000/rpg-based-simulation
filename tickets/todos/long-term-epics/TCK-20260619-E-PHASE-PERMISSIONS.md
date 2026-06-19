@@ -51,6 +51,7 @@ Source: `docs/plans/engine_future_epics_roadmap.md` § E; `docs/parity_ledger/in
 ## Related Docs
 - `docs/plans/engine_future_epics_roadmap.md` § E
 - `docs/parity_ledger/infrastructure.yaml`
+- `docs/engine/kernel.md` (6-phase loop definition — per-phase domain declarations are declared against the Kernel phases defined here; update kernel.md to show read/write domain tables per phase)
 - `docs/engine/authoritative_mutation_pipeline_contract.md`
 
 ## Related Code Areas

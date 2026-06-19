@@ -52,7 +52,9 @@ Source: `docs/plans/engine_future_epics_roadmap.md` § C (Combat Ecology Extensi
 
 ## Related Docs
 - `docs/plans/engine_future_epics_roadmap.md` § C
-- `docs/combat/` (combat_and_progression.md §5 grudge section)
+- `docs/combat/` (combat_and_progression.md §5 grudge section — primary investigation target)
+- `docs/mechanics/02_combat_laws.md` (fear_avoidance affects combat engagement decisions; if `fear_avoidance_project` produces tactical modifiers, verify they stay within combat law bounds)
+- `docs/mechanics/04_strategic_cognition.md` (fear_avoidance_project is a strategic goal type — document it in the goal hierarchy and scoring terms if it is new)
 - `docs/parity_ledger/combat_movement.yaml`
 
 ## Related Code Areas

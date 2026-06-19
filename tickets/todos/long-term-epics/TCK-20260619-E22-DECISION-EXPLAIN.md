@@ -57,9 +57,10 @@ Score: 7/10 · Effort: M · Source: `docs/audits/D15_entity_decision_inspection.
 ## Related Docs
 - `docs/audits/D15_entity_decision_inspection.md` (promote from gap-analysis to implemented after completion)
 - `docs/plans/long_term_development_roadmap.md` § Epic 2.2
+- `docs/engine/kernel.md` (cognition phase is where `execute_brain()` runs; decision trace writer is inserted here — update to note LIGHT mode trace output)
 - `docs/simulation/domains/campaigns_contract.md` (observability boundary reference)
 - `docs/parity_ledger/infrastructure.yaml` (observability tooling entries — add decision trace as `verified`)
-- New doc: `docs/observability/decision_trace_contract.md` (document the decision trace schema, index format, and REST endpoints)
+- New doc: `docs/observability/decision_trace_contract.md` (decision trace schema, index format, REST endpoints, LIGHT mode behavior)
 
 ## Related Stored Artifacts
 - `stored_artifacts/TCK-20260618-AUDIT-D15/`

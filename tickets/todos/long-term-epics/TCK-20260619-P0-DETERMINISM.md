@@ -58,6 +58,7 @@ Source: `docs/audits/D10_determinism.md` F3; confirmed via grep.
 - `docs/engine/contracts/deterministic_execution.md`
 - `docs/plans/long_term_development_roadmap.md` § P0-2
 - `docs/parity_ledger/substrate.yaml` (determinism — update any `missing`/`divergent` entries for bare-random rule to `verified`)
+- `docs/guidelines/design_patterns.md` (add convention entry: no bare `random.` calls in `src/` outside `src/platform/rng.py`)
 
 ## Related Stored Artifacts
 - `stored_artifacts/TCK-20260613-DOC-ENGINE-RUNTIME-DETAILS/`

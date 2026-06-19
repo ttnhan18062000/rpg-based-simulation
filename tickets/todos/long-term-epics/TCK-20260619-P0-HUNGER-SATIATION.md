@@ -55,6 +55,7 @@ Source: `docs/audits/D06_economic_cycle.md` F1; `docs/audits/D04_balance_tuning.
 ## Related Docs
 - `docs/audits/D06_economic_cycle.md`
 - `docs/audits/D04_balance_tuning.md`
+- `docs/mechanics/01_entity_anatomy.md` § Biological Pressures (hunger trigger threshold — verify against values being fixed in P0-5 before changing)
 - `docs/mechanics/03_economic_laws.md` § 3 (Resource Harvesting — update if satiation mechanic changes)
 - `docs/plans/long_term_development_roadmap.md` § P0-3
 - `docs/parity_ledger/town_resource.yaml` (resource node / harvesting entries — update status)

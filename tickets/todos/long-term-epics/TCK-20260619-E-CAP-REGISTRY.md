@@ -53,10 +53,11 @@ Source: `docs/plans/engine_future_epics_roadmap.md` § E.
 
 ## Related Docs
 - `docs/plans/engine_future_epics_roadmap.md` § E
-- `docs/engine/known_limitations.md`
-- `docs/compliance/checklist.md`
+- `docs/engine/known_limitations.md` (migrate unsupported claims into registry; simplify to human-readable-only on completion)
+- `docs/compliance/checklist.md` (update capability tracking entry once registry is live)
+- `docs/guidelines/design_patterns.md` (add capability registry as an architectural pattern: how to register and query capabilities; this prevents future capability-checking from scattering across files)
 - `docs/parity_ledger/infrastructure.yaml` (update capability registry entries to verified once the reader is wired)
-- New doc: `docs/engine/capability_registry.yaml` (create)
+- New doc: `docs/engine/capability_registry.yaml` (YAML manifest: capability_id, name, status, description, since_version, deprecated_reason)
 
 ## Related Code Areas
 - `src/engine/capability.py` (create)

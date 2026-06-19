@@ -70,7 +70,8 @@ Source: `docs/plans/engine_future_epics_roadmap.md` § Immediate Cheap Fixes; `d
 - `docs/parity_ledger/combat_movement.yaml`
 - `docs/parity_ledger/strategic_cognition.yaml`
 - `docs/parity_ledger/social_narrative.yaml`
-- `docs/mechanics/02_combat_laws.md` (authoritative combat formulas)
+- `docs/mechanics/02_combat_laws.md` (authoritative AoE legality and wound threshold formulas — COMB-006 and COMB-290 must match values here after fix)
+- `docs/mechanics/04_strategic_cognition.md` (STRAT-164 and STRAT-177 behaviors are documented here — tests must match this doc exactly)
 - `docs/guidelines/v2_intentional_divergences.md` (for COMB-290 if divergence is intentional)
 
 ## Related Stored Artifacts

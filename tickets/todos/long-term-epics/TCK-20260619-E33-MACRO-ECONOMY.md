@@ -59,12 +59,13 @@ Score: 7/10 · Effort: M · Source: `docs/plans/engine_future_epics_roadmap.md` 
 
 ## Related Docs
 - `docs/audits/D01_rpg_feature_impact.md` § Macro-Economy Health Metrics
-- `docs/mechanics/03_economic_laws.md` (add gold-sink mechanics section)
-- `docs/mechanics/regional_sovereignty.md` § 2 (Governance/Economic Control — update with health monitor)
+- `docs/mechanics/03_economic_laws.md` (add gold-sink mechanics section; atomic conservation laws must still hold after gold sinks are added)
+- `docs/mechanics/regional_sovereignty.md` § 2 (Governance/Economic Control — update with health monitor registration)
+- `docs/engine/governance_logic.md` (EconomyHealthMonitor runs as a governance phase step — update phase registration table when adding it)
 - `docs/plans/long_term_development_roadmap.md` § Epic 3.3
 - `docs/engine/known_limitations.md` (remove "reputation discounts unsupported" claim on completion)
 - `docs/parity_ledger/town_resource.yaml` (economic health monitoring entries — add as `verified`)
-- New doc: `docs/economy/macro_economy_contract.md` (EconomyHealthMonitor metrics, alert conditions, gold-sink triggers)
+- New doc: `docs/economy/macro_economy_contract.md` (EconomyHealthMonitor metrics, alert conditions, gold-sink triggers, reputation discount rules)
 
 ## Related Stored Artifacts
 - `stored_artifacts/TCK-20260425-PH6-M4-ECONOMY/`

@@ -65,9 +65,11 @@ Score: 9/10 · D01 score 20/25 · Effort: L · Source: `docs/plans/engine_future
 - `docs/audits/D01_rpg_feature_impact.md` § Persistent Campaign Runtime
 - `docs/plans/long_term_development_roadmap.md` § Epic 3.2
 - `docs/plans/engine_future_epics_roadmap.md` § D
+- `docs/core/state.md` (AuthoritativeState carry-forward rules — state transfer between episodes must respect immutability law; read before designing entity persistence)
+- `docs/engine/kernel.md` (CampaignOrchestrator drives ScenarioRuntimeService which wraps Kernel; update to show the orchestration hierarchy)
 - `docs/parity_ledger/substrate.yaml` (authoritative state persistence across episodes)
 - `docs/parity_ledger/social_narrative.yaml` (NarrativeLedger as social/narrative record)
-- New doc: `docs/simulation/domains/campaign_orchestrator_contract.md` (CampaignOrchestrator lifecycle, NarrativeLedger schema, episode handoff rules)
+- New doc: `docs/simulation/domains/campaign_orchestrator_contract.md` (CampaignOrchestrator lifecycle, NarrativeLedger schema, episode handoff rules, carry-forward rules)
 
 ## Related Stored Artifacts
 - `stored_artifacts/TCK-20260612-DOMAINS-ARCH-MAP/`

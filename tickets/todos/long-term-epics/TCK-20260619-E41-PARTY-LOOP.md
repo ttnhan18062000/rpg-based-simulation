@@ -60,9 +60,11 @@ Score: 8/10 · Effort: M · Source: `docs/audits/D01_rpg_feature_impact.md` § F
 - `docs/audits/D01_rpg_feature_impact.md` § Full Party Adventure Loop
 - `docs/plans/engine_future_epics_roadmap.md` § B
 - `docs/plans/long_term_development_roadmap.md` § Epic 4.1
+- `docs/mechanics/04_strategic_cognition.md` (party scoring — class synergy bonuses and escort behavior are route-scoring modifications; update with new scoring terms)
+- `docs/mechanics/02_combat_laws.md` (class synergy bonuses affect combat resolution outcomes; verify combat modifier ranges before adding synergy values)
 - `docs/simulation/domains/social_systems_contract.md` (update with PartyState, FairShareProtocol, escort behavior contract)
 - `docs/parity_ledger/social_narrative.yaml` (party/cooperation entries — update to `verified`)
-- New doc: `docs/simulation/domains/party_contract.md` (PartyState model, lifecycle, reward distribution, defection rules)
+- New doc: `docs/simulation/domains/party_contract.md` (PartyState model, lifecycle, reward distribution, defection rules, class synergy table)
 
 ## Related Stored Artifacts
 - `stored_artifacts/TCK-20260410-PH4-SOCIAL-CONTRACTS/`

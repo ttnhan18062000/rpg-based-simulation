@@ -56,7 +56,9 @@ Score: 9/10 · Effort: M · Source: `docs/audits/D05_entity_differentiation.md`
 
 ## Related Docs
 - `docs/audits/D05_entity_differentiation.md`
-- `docs/mechanics/04_strategic_cognition.md` (update personality bias weight documentation)
+- `docs/mechanics/01_entity_anatomy.md` § Core Attributes (OCEAN personality trait definitions, valid ranges — calibration must stay within ranges defined here)
+- `docs/mechanics/04_strategic_cognition.md` (update personality bias weight documentation; scoring formula references personality traits from 01)
+- `docs/core/attributes_and_classes.md` (class archetype definitions — HERO, WARRIOR, MAGE, ROGUE; verify IDs before authoring HERO entities)
 - `docs/plans/long_term_development_roadmap.md` § Epic 1.1
 - `docs/parity_ledger/strategic_cognition.yaml` (personality scoring entries — update to `verified`)
 - `docs/parity_ledger/progression.yaml` (class archetype assignment entries)
