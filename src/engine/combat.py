@@ -511,6 +511,9 @@ class CombatResolutionSystem:
             
             dist = LegalityServiceV2.get_manhattan_dist(target_pos, other_ent.navigation.position)
             if dist <= radius:
+                # COMB-006: radius application legality — only living, active entities are valid splash targets
+                if not other_ent.combat.alive or not other_ent.lifecycle.active:
+                    continue
                 if attacker.identity.faction == other_ent.identity.faction:
                     continue
 

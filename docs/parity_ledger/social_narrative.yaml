@@ -1414,13 +1414,19 @@
   divergence_note: null
   support_boundary: null
 - id: SOC-134
-  text: '`test_social_appraisal_with_narrative`: narrative-informed social appraisal'
-  status: missing
+  text: >
+    `test_social_appraisal_with_narrative`: public_reputation (a narrative signal accumulated
+    from world events) informs contract appraisal trust. Zero-reputation source falls below
+    the trust threshold (0.2) and is rejected; high-reputation source is accepted.
+  status: verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: null
-  proof_type: null
-  test_path: null
+  v2_evidence: >
+    src/systems/social_systems/appraisal.py appraise_contract — public_trust = source.social.public_reputation / 2.0;
+    trust_score = public_trust * 0.7 + history_trust * 0.3; < 0.2 → TOTAL_DISTRUST
+    (TCK-20260619-PARITY-P0-BUGS)
+  proof_type: parity
+  test_path: tests/unit/social/test_parity_soc_134.py::TestSocialAppraisalWithNarrative::test_social_appraisal_with_narrative
   divergence_note: null
   support_boundary: null
 - id: SOC-135

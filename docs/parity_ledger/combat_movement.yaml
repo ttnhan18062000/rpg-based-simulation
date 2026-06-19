@@ -54,12 +54,16 @@
   support_boundary: null
 - id: COMB-006
   text: AoE legality is split into impact-center legality and radius application.
-  status: missing
+    Impact-center is validated by verify_aoe_legality (range + LoS to center).
+    Radius application filters only living, active, enemy-faction entities within the radius.
+  status: verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: null
-  proof_type: null
-  test_path: null
+  v2_evidence: >
+    src/engine/combat.py resolve_aoe_attack — verify_aoe_legality for center; radius
+    loop guards alive/active before applying splash (TCK-20260619-PARITY-P0-BUGS)
+  proof_type: parity
+  test_path: tests/unit/combat/test_parity_comb_006.py::TestAoERadiusLegality::test_aoe_splash_skips_dead_entities
   divergence_note: null
   support_boundary: null
 - id: COMB-007
@@ -1382,24 +1386,32 @@
   divergence_note: null
   support_boundary: null
 - id: COMB-133
-  text: 'Phase 8 owns:'
-  status: missing
+  text: >
+    Phase 8 owns: (stub — pre-planned placeholder for Phase 8 combat milestone behaviors).
+    Combat milestone documentation currently ends at M7. Phase 8 combat behaviors are not yet defined.
+  status: unsupported
   priority: P0
   legacy_evidence: null
   v2_evidence: null
   proof_type: null
   test_path: null
-  divergence_note: null
+  divergence_note: >
+    Stub entry was created for a future Phase 8 combat milestone. No M8 combat milestone
+    documentation exists as of TCK-20260619-PARITY-P0-BUGS. Mark unsupported until M8 is scoped.
   support_boundary: null
 - id: COMB-134
-  text: 'Phase 9 owns:'
-  status: missing
+  text: >
+    Phase 9 owns: (stub — pre-planned placeholder for Phase 9 combat milestone behaviors).
+    Combat milestone documentation currently ends at M7. Phase 9 combat behaviors are not yet defined.
+  status: unsupported
   priority: P0
   legacy_evidence: null
   v2_evidence: null
   proof_type: null
   test_path: null
-  divergence_note: null
+  divergence_note: >
+    Stub entry was created for a future Phase 9 combat milestone. No M9 combat milestone
+    documentation exists as of TCK-20260619-PARITY-P0-BUGS. Mark unsupported until M9 is scoped.
   support_boundary: null
 - id: COMB-135
   text: "No Part 7 item should be left implicit under a generic bucket like \u201C\
@@ -2964,20 +2976,18 @@
   divergence_note: null
   support_boundary: null
 - id: COMB-290
-  text: Wound infliction threshold — damage > max_hp * 0.25 triggers a wound on surviving
-    defender. Chapter 02 (combat_laws.md) states this threshold as 40% of max HP;
-    source code combat.py uses 25%.
-  status: divergent
+  text: Wound infliction threshold — damage > max_hp * 0.25 (strict greater-than, 25%) triggers
+    a wound on a surviving defender. Applies only if defender is alive after the hit.
+  status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: '`src/engine/combat.py` `_get_wound_infliction()` — threshold `damage
-    > defender.combat.max_hp * 0.25`; test COMB-071 (`test_wound_infliction_massive_hit`)
-    verifies >25% source behavior'
+  v2_evidence: >
+    src/engine/combat.py _get_wound_infliction() line 583 — `damage > defender.combat.max_hp * 0.25 and alive`.
+    docs/mechanics/01_entity_anatomy.md Section 6 updated to match (TCK-20260619-PARITY-P0-BUGS).
+    docs/mechanics/02_combat_laws.md Section 5 added wound threshold (TCK-20260619-PARITY-P0-BUGS).
   proof_type: parity
-  test_path: '`tests_v2/parity/test_combat_parity.py::test_wound_infliction_massive_hit`'
-  divergence_note: 'Chapter 02 (02_combat_laws.md) documents wound threshold as 40%
-    of max HP. Source code (combat.py line 583, _get_wound_infliction) uses 0.25
-    (25%). Source is authoritative per CLAUDE.md and TCK-20260613-DOC-MECHANICS-SUBCONTRACTS
-    investigation. Chapter 02 must be corrected in a parity-repair ticket. Sub-contract
-    doc damage_formula_contract.md documents the source-authoritative 25% value.'
+  test_path: tests/unit/combat/test_combat_matrix.py
+  divergence_note: >
+    Previously divergent: Chapter 02 stated 40%, entity_anatomy stated 40%, code used 25%.
+    Resolved in TCK-20260619-PARITY-P0-BUGS: docs corrected to match source-authoritative 25% value.
   support_boundary: null

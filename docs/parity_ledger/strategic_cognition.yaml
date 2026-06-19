@@ -1753,13 +1753,15 @@
   divergence_note: null
   support_boundary: null
 - id: STRAT-164
-  text: '`test_trait_serialization`: trait serialization is preserved'
-  status: missing
+  text: '`test_trait_serialization`: TraitDefinition fields (id, display_name, description) are preserved through Pydantic validation when loaded from traits.yaml.'
+  status: verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: null
-  proof_type: null
-  test_path: null
+  v2_evidence: >
+    src/content/schema.py TraitDefinition(CatalogBaseDefinition) — Pydantic frozen model;
+    data/content/foundation/traits.yaml — source YAML (TCK-20260619-PARITY-P0-BUGS)
+  proof_type: parity
+  test_path: tests/unit/content/test_parity_trait_defs.py::TestTraitSerialization::test_trait_serialization
   divergence_note: null
   support_boundary: null
 - id: STRAT-165
@@ -1885,13 +1887,15 @@
   divergence_note: null
   support_boundary: null
 - id: STRAT-177
-  text: '`test_all_trait_types_have_definitions`: all trait types have definitions'
-  status: missing
+  text: '`test_all_trait_types_have_definitions`: every trait definition record in the catalog has a non-empty unique id; no duplicate trait ids exist.'
+  status: verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: null
-  proof_type: null
-  test_path: null
+  v2_evidence: >
+    data/content/foundation/traits.yaml loaded via CatalogRepository.traits dict;
+    all entries have non-empty, unique ids (TCK-20260619-PARITY-P0-BUGS)
+  proof_type: parity
+  test_path: tests/unit/content/test_parity_trait_defs.py::TestAllTraitTypesHaveDefinitions::test_all_trait_types_have_definitions
   divergence_note: null
   support_boundary: null
 - id: STRAT-178

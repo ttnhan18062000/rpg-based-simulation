@@ -67,7 +67,19 @@ Heroes are uniquely resilient compared to monsters or NPCs.
 
 ---
 
-## 5. Area of Effect (AoE) Logic
+## 5. Wound Infliction
+A **Wound** is inflicted on a surviving defender when a single hit deals damage **strictly greater than 25% of the defender's Max HP**.
+```python
+is_wound = damage > (defender.max_hp * 0.25) and defender.alive
+```
+- Wound type: `SLASH` for Hero attackers, `CRUSH` otherwise.
+- Wound severity: `damage / defender.max_hp` (proportional).
+- Wound penalty: −5 ATK, −5 DEF (applied as long as wound is active).
+- Permanent Scars: when a wound heals, it has a 30% chance to leave a scar (`scar_penalty = wound_penalty * 0.3`).
+
+---
+
+## 6. Area of Effect (AoE) Logic
 For skills with a `splash_radius`:
 1.  **Primary Target**: Receives 100% of the calculated skill damage.
 2.  **Splash Victims**: All other entities in the radius receive **50%** of the attacker's base ATK as damage.

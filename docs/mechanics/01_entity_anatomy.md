@@ -107,10 +107,10 @@ XP_Required = int(100 * (level ** 1.5))
 Massive hits cause lasting physical trauma.
 
 ### Wound Infliction
-A **Wound** is inflicted if a single hit deals damage greater than or equal to **40% of Max HP**.
+A **Wound** is inflicted if a single hit deals damage **strictly greater than 25% of Max HP** (on a surviving defender).
 ```python
-WOUND_THRESHOLD_RATIO = 0.40
-is_wound = damage >= (max_hp * WOUND_THRESHOLD_RATIO)
+WOUND_THRESHOLD_RATIO = 0.25
+is_wound = damage > (max_hp * WOUND_THRESHOLD_RATIO)  # strict >, only if defender survives
 ```
 
 ### Permanent Scars
