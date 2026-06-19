@@ -65,8 +65,8 @@ class ConversionDecisionService:
             final_score = base_score + modifier
             scored_options.append((opt, final_score))
 
-        # Sort based on final score descending
-        sorted_scored = sorted(scored_options, key=lambda pair: pair[1], reverse=True)
+        # Sort based on final score descending; kind.value as tiebreaker for determinism
+        sorted_scored = sorted(scored_options, key=lambda pair: (pair[1], pair[0].kind.value), reverse=True)
         
         selected_option = sorted_scored[0][0] if sorted_scored else None
         

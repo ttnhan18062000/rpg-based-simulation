@@ -25,7 +25,7 @@ from src.core.items import ItemRegistry as CoreItemRegistry, ItemKind, EquipSlot
 def cleanup_registries():
     """Automatically reset registries to default hardcoded fallback state after each test."""
     yield
-    seed_phase1_content(None)
+    seed_phase1_content(mode=RuntimeContentMode.LEGACY_FALLBACK)
 
 
 @pytest.fixture
@@ -419,7 +419,7 @@ def test_registry_bridge_seeding_catalog(mock_catalog_repo):
 
 def test_registry_bridge_fallback():
     """Test that seed_phase1_content falls back to legacy hardcoded seeding correctly."""
-    seed_phase1_content(None)
+    seed_phase1_content(None, mode=RuntimeContentMode.LEGACY_FALLBACK)
 
     # 1. Verify ItemRegistry
     assert ItemRegistry.contains("rusted_sword")
@@ -519,7 +519,7 @@ def test_seed_with_strict_mode_raises_if_unresolved_entities_exist():
 
 
 def test_seed_legacy_fallback_returns_none():
-    result = seed_phase1_content(None)
+    result = seed_phase1_content(None, mode=RuntimeContentMode.LEGACY_FALLBACK)
     assert result is None
 
 

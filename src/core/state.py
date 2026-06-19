@@ -1053,9 +1053,6 @@ class AuthoritativeState:
         object.__setattr__(self, "_spatial_grid_cache", None)
         object.__setattr__(self, "_region_list_cache", None)
         object.__setattr__(self, "_occupancy_map_cache", None)
-        if getattr(self, "movement_cache", None) is None:
-            from src.engine.movement_cache import MovementPlanCache
-            object.__setattr__(self, "movement_cache", MovementPlanCache())
         object.__setattr__(self, "transient_claims", None)
         object.__setattr__(self, "_node_map_cache", None)
         if getattr(self, "_active_nodes_grid", None) is None:

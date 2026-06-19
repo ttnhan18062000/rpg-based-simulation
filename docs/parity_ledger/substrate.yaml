@@ -4083,3 +4083,20 @@
   test_path: tests/unit/entity/test_entity_initialization.py::test_entity_personality_variance_at_spawn
   divergence_note: null
   support_boundary: null
+
+- id: SUB-371
+  text: ConversionOptionGenerator and PersonalityAwareSelector sort candidates by
+    (score DESC, kind.value DESC) so ties in score produce a canonical, deterministic
+    ordering across all Python runs and entity orderings.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/domains/progression/generator.py (key=lambda o: (o.score, o.kind.value),
+    TCK-20260619-P0-CODE-INTEGRITY) +
+    src/domains/progression/selector.py (key=lambda pair: (pair[1], pair[0].kind.value),
+    TCK-20260619-P0-CODE-INTEGRITY)
+  proof_type: parity
+  test_path: tests/unit/engine/test_sort_tiebreaker.py::TestGeneratorSortTiebreaker::test_sort_is_stable_on_tied_scores
+  divergence_note: null
+  support_boundary: null

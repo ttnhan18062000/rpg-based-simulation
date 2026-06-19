@@ -2303,3 +2303,18 @@
   test_path: tests/unit/strategic/test_performance_budgets.py::test_per_tick_reset_prevents_cap_accumulation
   divergence_note: null
   support_boundary: null
+
+- id: INFRA-204
+  text: AuthoritativeState (src/core/state.py) does not import from src/engine/ at
+    module or instance level; movement_cache defaults to None and is initialized by
+    the engine layer (kernel.py) before first tick use.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/core/state.py (lazy import block removed from __post_init__,
+    TCK-20260619-P0-CODE-INTEGRITY)
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: "src/core/ — no upward imports to src/engine/ permitted."
