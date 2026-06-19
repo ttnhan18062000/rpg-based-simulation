@@ -392,6 +392,8 @@ class Kernel:
             )
 
     def _phase_init(self) -> None:
+        from src.world.providers.requirements import PerformanceBudgets
+        PerformanceBudgets.reset()
         from src.engine.occupancy_snapshot import OccupancySnapshot
         object.__setattr__(self._state, "occupancy_snapshot", OccupancySnapshot.from_state(self._state))
         self._worker_manager.reset_tick_stats()

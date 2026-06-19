@@ -1,7 +1,9 @@
+import types
 import pytest
 from src.core.builder import V2EntityBuilder
 from src.core.models.inventory import ItemStack
-from src.world.providers.requirements import Requirement, RequirementEvaluator
+from src.core.state import BuildingState
+from src.world.providers.requirements import Requirement, RequirementEvaluator, PerformanceBudgets
 
 
 def test_has_gold_requirement():
@@ -52,3 +54,40 @@ def test_has_item_requirement():
     assert not res_fail_missing.passed
     assert res_fail_missing.blocker_kind == "missing_material"
     assert "ask_information" in res_fail_missing.suggested_resolution_tags
+
+
+def test_near_service_passes_when_building_within_range():
+    """Entity at (0,0) with blacksmith at (2,2): near_service returns passed=True."""
+    PerformanceBudgets.reset()
+    ent = V2EntityBuilder(1).kind("hero").build()
+
+    building = BuildingState(id=1, kind="blacksmith", position=(2.0, 2.0))
+    state = types.SimpleNamespace(buildings={1: building})
+
+    req = Requirement(kind="near_service", subject="blacksmith")
+    result = RequirementEvaluator.evaluate(ent, state, req)
+    assert result.passed
+
+
+def test_near_service_fails_when_building_out_of_range():
+    """Entity at (0,0) with blacksmith far away: near_service returns passed=False."""
+    PerformanceBudgets.reset()
+    ent = V2EntityBuilder(1).kind("hero").build()
+
+    building = BuildingState(id=1, kind="blacksmith", position=(100.0, 100.0))
+    state = types.SimpleNamespace(buildings={1: building})
+
+    req = Requirement(kind="near_service", subject="blacksmith")
+    result = RequirementEvaluator.evaluate(ent, state, req)
+    assert not result.passed
+    assert result.blocker_kind == "too_far_from_service"
+
+
+def test_near_service_returns_false_when_state_is_none():
+    """near_service with state=None must not raise and must return passed=False."""
+    PerformanceBudgets.reset()
+    ent = V2EntityBuilder(1).kind("hero").build()
+    req = Requirement(kind="near_service", subject="blacksmith")
+    result = RequirementEvaluator.evaluate(ent, None, req)
+    assert not result.passed
+    assert result.blocker_kind == "too_far_from_service"

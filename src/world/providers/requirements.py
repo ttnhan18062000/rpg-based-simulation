@@ -148,11 +148,13 @@ class RequirementEvaluator:
             # Check if entity is near a functioning service of the specified kind
             # We mock proximity validation for Phase 1 (requires location match in same region)
             near = False
-            # Check service registry or active buildings in region
-            current_region = getattr(entity.navigation, "region_id", None) or "hometown"
-            # In Phase 1 registries we set hometown blacksmith/shop. If entity is in hometown, it's near.
-            if current_region == "hometown":
-                near = True
+            if state is not None:
+                from src.town.town_navigation import TownNavigation
+                building = TownNavigation.get_nearest_service(entity, subject, state)
+                if building is not None:
+                    ex, ey = entity.position
+                    bx, by = building.position
+                    near = ((bx - ex)**2 + (by - ey)**2) ** 0.5 <= 5.0
 
             if near:
                 return RequirementResult(requirement, True)

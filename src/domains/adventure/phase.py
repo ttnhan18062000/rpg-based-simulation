@@ -14,6 +14,7 @@ from src.core.state import AuthoritativeState, EntityState
 from src.core.updates import StateUpdate, EntityUpdate, StrategicUpdate
 from src.domains.adventure.generator import AdventureRouteGenerator
 from src.domains.adventure.service import AdventureDecisionService
+from src.world.providers.resources import ResourceOpportunityProvider
 
 
 class AdventureDecisionPhase:
@@ -57,7 +58,8 @@ class AdventureDecisionPhase:
                         continue
 
             # 1. Generate candidate route options
-            candidates = AdventureRouteGenerator.generate(hero, state)
+            opportunities = ResourceOpportunityProvider.get_opportunities(hero, state)
+            candidates = AdventureRouteGenerator.generate(hero, state, opportunities=opportunities)
 
             # 2. Decide using service ( personality-biased scoring + project mapping )
             result = AdventureDecisionService.decide(hero, candidates, tick=tick)

@@ -46,6 +46,19 @@ def test_performance_budget_gate_enforcement():
     # 2. Test provider throttling
     PerformanceBudgets.reset()
     PerformanceBudgets.provider_calls_total = 501
-    
+
     opps = ResourceOpportunityProvider.get_opportunities(ent, None)
     assert len(opps) == 0
+
+
+def test_per_tick_reset_prevents_cap_accumulation():
+    """Reset once per simulated tick: counter stays at per-tick count, never accumulates."""
+    num_entities = 20
+
+    for _tick in range(2):
+        PerformanceBudgets.reset()
+        for _ in range(num_entities):
+            PerformanceBudgets.provider_calls_total += 1
+        # End of each tick: count equals entities this tick only
+        assert PerformanceBudgets.provider_calls_total == num_entities
+        assert PerformanceBudgets.provider_calls_total <= 500
