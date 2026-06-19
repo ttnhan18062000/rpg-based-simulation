@@ -1093,3 +1093,17 @@
   test_path: null
   divergence_note: null
   support_boundary: null
+- id: PROG-108
+  text: Entity class_id is assigned by role from spawn_tables.yaml at world compilation;
+    HERO-role entities receive a class from {WARRIOR, MAGE, ROGUE} rather than NOVICE.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    data/content/spawn_tables.yaml (classtable.v1 entry — hero: [WARRIOR, MAGE, ROGUE]),
+    src/worldbuilding/compiler.py (_load_class_table() + rng.choice sub_id=14,
+    TCK-20260619-P0-ENTITY-INIT)
+  proof_type: parity
+  test_path: tests/unit/entity/test_entity_initialization.py::test_class_id_non_novice_for_hero_role
+  divergence_note: null
+  support_boundary: null

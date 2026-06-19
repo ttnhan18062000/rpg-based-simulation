@@ -4069,3 +4069,17 @@
   test_path: tests/integration/kernel/test_phase2_determinism.py
   divergence_note: null
   support_boundary: "All of src/ — enforced by lint test."
+- id: SUB-370
+  text: PersonalityComponent traits (bravery, greed, industry, sociability) are seeded
+    per entity using DeterministicRNG sub-seeds at world compilation; no two entities
+    share an identical personality vector.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/worldbuilding/compiler.py (WorldCompiler.compile() — rng.get_float(Domain.WORLD,
+    0, entity_id, sub_id=10..13), TCK-20260619-P0-ENTITY-INIT)
+  proof_type: parity
+  test_path: tests/unit/entity/test_entity_initialization.py::test_entity_personality_variance_at_spawn
+  divergence_note: null
+  support_boundary: null

@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import json
 import time
+import yaml
+from pathlib import Path
 from typing import Optional, Any, Dict, List, Set
 
 from src.platform.rng import DeterministicRNG
@@ -13,7 +15,8 @@ from src.core.state import (
     EntityState,
     BuildingState,
     ResourceNodeState,
-    InventoryComponent
+    InventoryComponent,
+    PersonalityComponent,
 )
 from src.core.builder import V2EntityBuilder
 from src.core.enums import EntityRole, Faction
@@ -84,6 +87,22 @@ def get_quest_kind(kind_str: str) -> QuestKind:
     return QuestKind.EXPLORE
 
 
+_SPAWN_TABLES_PATH = Path(__file__).parent.parent.parent / "data" / "content" / "spawn_tables.yaml"
+
+
+def _load_class_table() -> Dict[str, List[str]]:
+    """Return role→[class_ids] from spawn_tables.yaml. Falls back to empty dict on error."""
+    try:
+        with open(_SPAWN_TABLES_PATH) as f:
+            entries = yaml.safe_load(f) or []
+        for entry in entries:
+            if entry.get("schema_version") == "classtable.v1":
+                return {k.lower(): v for k, v in entry.get("class_id_by_role", {}).items()}
+    except (OSError, yaml.YAMLError):
+        pass
+    return {}
+
+
 class WorldCompiler:
     """
     Deterministic World Compiler that transforms a validated WorldSpec into
@@ -111,8 +130,9 @@ class WorldCompiler:
         """
         start_time = time.perf_counter()
 
-        # 0. Initialize deterministic RNG
+        # 0. Initialize deterministic RNG and load class table
         rng = DeterministicRNG(seed)
+        class_table = _load_class_table()
 
         # 1. Compile map topology
         terrain: Dict[tuple[int, int], str] = {}
@@ -266,6 +286,19 @@ class WorldCompiler:
                         if hasattr(resolved, "legacy_faction") and resolved.legacy_faction is not None:
                             faction_enum = Faction(resolved.legacy_faction)
 
+                    # Seed personality deterministically from entity ID + world seed
+                    personality = PersonalityComponent(
+                        greed=rng.get_float(Domain.WORLD, 0, next_entity_id, sub_id=10),
+                        bravery=rng.get_float(Domain.WORLD, 0, next_entity_id, sub_id=11),
+                        sociability=rng.get_float(Domain.WORLD, 0, next_entity_id, sub_id=12),
+                        industry=rng.get_float(Domain.WORLD, 0, next_entity_id, sub_id=13),
+                    )
+
+                    # Assign class_id by role from spawn table; fall back to NOVICE
+                    role_key = pop_spec.role.lower()
+                    class_pool = class_table.get(role_key) or ["NOVICE"]
+                    ent_class_id = rng.choice(Domain.WORLD, 0, next_entity_id, class_pool, sub_id=14)
+
                     # Populate properties
                     ent_properties = {
                         "spawn_region": pop_spec.spawn_region,
@@ -286,6 +319,8 @@ class WorldCompiler:
                         .identity(
                             role=role_enum,
                             faction=faction_enum,
+                            class_id=ent_class_id,
+                            personality=personality,
                             properties=ent_properties
                         )
                         .combat(
