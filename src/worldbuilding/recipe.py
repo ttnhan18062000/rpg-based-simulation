@@ -1,7 +1,6 @@
 # Compliance IDs: WORLD-070, WORLD-071, WORLD-072
 from __future__ import annotations
 
-import random
 from typing import Optional, Any, Union
 from pydantic import BaseModel, Field, model_validator, ConfigDict
 
@@ -118,9 +117,6 @@ class WorldTemplateExpander:
         """
         Deterministic expansion of WorldTemplateSpec into WorldSpec.
         """
-        # Ensure repeatable stable generations using RNG initialized with seed
-        rng = random.Random(seed)
-
         # Base layout data mapping
         expanded_data = {
             "schema_version": "worldspec.v1",

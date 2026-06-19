@@ -15,6 +15,7 @@ from src.core.updates import StateUpdate, EntityUpdate
 from src.core.governance import PressureSignals, RuntimeMode
 from src.core.diagnostic import TraceEvent
 from src.core.lifecycle import LifecycleOutcome, ShutdownResult
+from src.core.enums import Domain
 
 from src.engine.executor import IWorkExecutor, LocalSequentialExecutor, ConcurrentExecutionAdapter
 from src.engine.cache_registry import CacheRegistry, CacheBudgetPolicy
@@ -116,8 +117,8 @@ class Kernel:
 
         self._run_id = run_id
         if self._run_id is None:
-            import random
-            self._run_id = f"run_{int(time.time())}_{random.randint(1000, 9999)}"
+            _run_suffix = self._rng.get_int(Domain.INIT, 0, 0, 1000, 9999)
+            self._run_id = f"run_{int(time.time())}_{_run_suffix}"
 
         self._artifact_repo = None
         if obs_mode != ObservabilityMode.OFF:

@@ -1,0 +1,57 @@
+name: Tests
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: test-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  fast:
+    name: Fast gate (PR + main)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Fast lanes
+        run: make lane-all-fast
+
+      - name: Expansion gate
+        run: make gate-expansion
+
+      - name: Doc integrity
+        run: pytest tests/docs/ -x -q
+
+  slow:
+    name: Legacy regression (main only)
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    needs: fast
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Legacy regression
+        run: make lane-legacy-regression

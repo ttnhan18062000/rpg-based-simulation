@@ -3808,18 +3808,21 @@
   support_boundary: "WorldBuilding compiler — world setup only, not tick-path."
 - id: SUBSTRATE-NEW-002
   text: >
-    WorldProceduralGenerator (WORLD-GEN-003/004) is fully deterministic: uses an
-    isolated random.Random(seed) instance — global random state is never read or
-    written. Same (intent, catalog_repo) inputs produce bit-identical WorldSpec,
-    CompileContext, and ProvenanceManifest (except created_at timestamp). Validation
-    failures (GENERATED_WORLD context) are reported but do NOT abort generation.
+    WorldProceduralGenerator (WORLD-GEN-003/004) is fully deterministic: uses a
+    DeterministicRNG(seed) instance (src/platform/rng.py) — global random state is
+    never read or written. Same (intent, catalog_repo) inputs produce bit-identical
+    WorldSpec, CompileContext, and ProvenanceManifest (except created_at timestamp).
+    Validation failures (GENERATED_WORLD context) are reported but do NOT abort generation.
   status: verified
   priority: P0
   legacy_evidence: null
   v2_evidence: >
     docs/world/generator_contract.md +
-    src/worldgeneration/generator.py:41 (rng = random.Random(intent.seed)) +
-    tests/unit/worldgeneration/test_generator.py
+    src/worldgeneration/generator.py:57 (rng = DeterministicRNG(intent.seed)) +
+    src/platform/rng.py (DeterministicRNG — only allowed RNG source) +
+    TCK-20260619-P0-DETERMINISM (replaced bare random.Random with DeterministicRNG) +
+    tests/unit/worldgeneration/test_generator.py +
+    tests/integration/kernel/test_phase2_determinism.py (lint gate: no bare random. in src/)
   proof_type: null
   test_path: tests/unit/worldgeneration/test_generator.py
   divergence_note: >
@@ -4023,22 +4026,46 @@
 - id: SUBSTRATE-NEW-011
   text: >
     ProceduralCompositionGenerator.generate() performs seed-based parameter sampling after
-    module selection. A fresh random.Random(intent.seed) (stdlib, not numpy) is initialized
-    per call. For each selected module in rank order, for each ModuleParameterSpec in
-    declaration order: (1) if allowed_values is non-empty → rng.choice(allowed_values);
-    (2) elif min_value and max_value are both set → rng.randint(int(min), int(max)) for
-    type="integer", rng.uniform(float(min), float(max)) otherwise; (3) else → use declared
-    default unchanged (no rng call). Required params with no default and no bounds are left
-    absent from the parameters dict. Same seed + same module selection order → identical
-    ModuleRefSpec.parameters on every call.
+    module selection. A fresh DeterministicRNG(intent.seed) (src/platform/rng.py) is
+    initialized per call as param_rng. For each selected module in rank order, for each
+    ModuleParameterSpec in declaration order: (1) if allowed_values is non-empty →
+    param_rng.choice(...); (2) elif min_value and max_value are both set →
+    param_rng.get_int(...) for type="integer", param_rng.get_float(...) otherwise;
+    (3) else → use declared default unchanged (no rng call). Required params with no
+    default and no bounds are left absent from the parameters dict.
+    Same seed + same module selection order → identical ModuleRefSpec.parameters on every call.
   status: verified
   priority: P1
   legacy_evidence: null
   v2_evidence: >
-    src/worldgeneration/generator.py (ProceduralCompositionGenerator.generate — param_rng
-    sampling loop) + src/worldmodules/schema.py (ModuleParameterSpec) +
-    src/worldassembly/schema.py (ModuleRefSpec.parameters)
+    src/worldgeneration/generator.py:452 (param_rng = DeterministicRNG(intent.seed)) +
+    src/worldmodules/schema.py (ModuleParameterSpec) +
+    src/worldassembly/schema.py (ModuleRefSpec.parameters) +
+    TCK-20260619-P0-DETERMINISM (replaced bare random.Random with DeterministicRNG)
   proof_type: null
   test_path: tests/unit/worldgeneration/test_seed_params.py
   divergence_note: null
   support_boundary: "WorldGeneration — seed-based parameter sampling only."
+- id: SUBSTRATE-NEW-012
+  text: >
+    No bare `import random` or `random.` calls are permitted in src/ outside
+    src/platform/rng.py. DeterministicRNG (src/platform/rng.py) is the only allowed
+    RNG source. A CI lint test enforces this: tests/integration/kernel/test_phase2_determinism.py
+    scans src/ at test time and fails if any bare random call is found.
+    Violation files prior to TCK-20260619-P0-DETERMINISM:
+    src/engine/kernel.py, src/worldbuilding/compiler.py,
+    src/worldbuilding/recipe.py, src/worldgeneration/generator.py — all fixed.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: >
+    src/platform/rng.py (DeterministicRNG — authoritative RNG) +
+    src/engine/kernel.py (bare random replaced, TCK-20260619-P0-DETERMINISM) +
+    src/worldbuilding/compiler.py (bare random replaced, TCK-20260619-P0-DETERMINISM) +
+    src/worldbuilding/recipe.py (bare random replaced, TCK-20260619-P0-DETERMINISM) +
+    src/worldgeneration/generator.py (bare random replaced, TCK-20260619-P0-DETERMINISM) +
+    tests/integration/kernel/test_phase2_determinism.py (lint gate test)
+  proof_type: null
+  test_path: tests/integration/kernel/test_phase2_determinism.py
+  divergence_note: null
+  support_boundary: "All of src/ — enforced by lint test."

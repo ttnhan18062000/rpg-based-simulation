@@ -1,13 +1,14 @@
 # Compliance IDs: WORLD-GEN-003, WORLD-GEN-004, WORLD-GEN-006
 from __future__ import annotations
 
-import random
 import hashlib
 import yaml
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional, Any, Dict, List
 
+from src.platform.rng import DeterministicRNG
+from src.core.enums import Domain
 from src.content.repository import CatalogRepository
 from src.worldmodules.repository import WorldModuleRepository
 from src.worldgeneration.schema import GenerationIntentSpec
@@ -53,7 +54,7 @@ class WorldProceduralGenerator:
         Main procedural pipeline compiling random distributions into stable spec formats.
         """
         # 1. Isolated deterministic RNG
-        rng = random.Random(intent.seed)
+        rng = DeterministicRNG(intent.seed)
         width, height = intent.target_world_size
 
         regions: Dict[str, RegionSpec] = {}
@@ -188,12 +189,12 @@ class WorldProceduralGenerator:
         resource_count = max(5, int(20 * intent.resource_density))
         for idx in range(resource_count):
             res_id = f"res_node_{idx}"
-            r_type = rng.choice(resource_types)
-            r_region = rng.choice(wild_regions)
+            r_type = rng.choice(Domain.WORLD, 0, idx, resource_types, sub_id=0)
+            r_region = rng.choice(Domain.WORLD, 0, idx, wild_regions, sub_id=1)
             resources.append(ResourceNodeSpec(
                 id=res_id,
                 resource_type=r_type,
-                count=rng.randint(5, 15),
+                count=rng.get_int(Domain.WORLD, 0, idx, 5, 15, sub_id=2),
                 region=r_region
             ))
             prov_records[res_id] = ProvenanceRecord(
@@ -444,31 +445,33 @@ class ProceduralCompositionGenerator:
         )
 
         # Seed-based parameter sampling (TCK-20260614-WORLDGEN-SEED-PARAMS)
-        # RNG is initialized once with the intent seed and consumed in a fixed order:
-        # outer loop = selection-rank order of selected_ids,
-        # inner loop = parameter declaration order from ModuleParameterSpec list.
+        # RNG is scoped by (module_index, parameter_index) via entity_id and sub_id.
+        # Outer loop = selection-rank order of selected_ids (entity_id = module index i),
+        # inner loop = parameter declaration order (sub_id = parameter index p_idx).
         # This guarantees identical sequences for the same seed + same modules.
-        param_rng = random.Random(intent.seed)
+        param_rng = DeterministicRNG(intent.seed)
         module_refs = []
         for i, mid in enumerate(selected_ids):
             mod = mod_by_id.get(mid)
             sampled_params: dict = {}
             if mod is not None:
-                for param_spec in (mod.parameters or []):
+                for p_idx, param_spec in enumerate(mod.parameters or []):
                     if param_spec.allowed_values:
                         # Enum / allowed-values parameter: pick uniformly from declared list
-                        value = param_rng.choice(param_spec.allowed_values)
+                        value = param_rng.choice(Domain.WORLD, 0, i, param_spec.allowed_values, sub_id=p_idx)
                         sampled_params[param_spec.name] = value
                     elif param_spec.min_value is not None and param_spec.max_value is not None:
                         # Bounded numeric parameter
                         if param_spec.type == "integer":
-                            value = param_rng.randint(
-                                int(param_spec.min_value), int(param_spec.max_value)
+                            value = param_rng.get_int(
+                                Domain.WORLD, 0, i,
+                                int(param_spec.min_value), int(param_spec.max_value),
+                                sub_id=p_idx
                             )
                         else:
-                            value = param_rng.uniform(
-                                float(param_spec.min_value), float(param_spec.max_value)
-                            )
+                            lo = float(param_spec.min_value)
+                            hi = float(param_spec.max_value)
+                            value = lo + param_rng.get_float(Domain.WORLD, 0, i, sub_id=p_idx) * (hi - lo)
                         sampled_params[param_spec.name] = value
                     else:
                         # No bounds and no allowed_values: use declared default if present

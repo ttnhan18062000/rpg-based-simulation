@@ -3,9 +3,10 @@ from __future__ import annotations
 
 import json
 import time
-import random
 from typing import Optional, Any, Dict, List, Set
 
+from src.platform.rng import DeterministicRNG
+from src.core.enums import Domain
 from src.core.state import (
     AuthoritativeState,
     RegionState,
@@ -110,8 +111,8 @@ class WorldCompiler:
         """
         start_time = time.perf_counter()
 
-        # 0. Initialize deterministic RNG using standard library random
-        rng = random.Random(seed)
+        # 0. Initialize deterministic RNG
+        rng = DeterministicRNG(seed)
 
         # 1. Compile map topology
         terrain: Dict[tuple[int, int], str] = {}
@@ -177,8 +178,8 @@ class WorldCompiler:
             region = regions.get(region_id)
             if region:
                 min_x, min_y, max_x, max_y = region.bounds
-                x = rng.randint(min_x, max_x)
-                y = rng.randint(min_y, max_y)
+                x = rng.get_int(Domain.WORLD, 0, next_resource_id, min_x, max_x, sub_id=0)
+                y = rng.get_int(Domain.WORLD, 0, next_resource_id, min_y, max_y, sub_id=1)
 
                 required_ticks = 10
                 if context is not None and res_spec.id in context.resources:
@@ -205,8 +206,8 @@ class WorldCompiler:
             region = regions.get(region_id)
             if region:
                 min_x, min_y, max_x, max_y = region.bounds
-                x = rng.randint(min_x, max_x)
-                y = rng.randint(min_y, max_y)
+                x = rng.get_int(Domain.WORLD, 0, next_building_id, min_x, max_x, sub_id=0)
+                y = rng.get_int(Domain.WORLD, 0, next_building_id, min_y, max_y, sub_id=1)
 
                 hp = 500
                 max_hp = 500
@@ -235,8 +236,8 @@ class WorldCompiler:
             if region:
                 min_x, min_y, max_x, max_y = region.bounds
                 for _ in range(pop_spec.count):
-                    x = rng.randint(min_x, max_x)
-                    y = rng.randint(min_y, max_y)
+                    x = rng.get_int(Domain.WORLD, 0, next_entity_id, min_x, max_x, sub_id=0)
+                    y = rng.get_int(Domain.WORLD, 0, next_entity_id, min_y, max_y, sub_id=1)
 
                     # Initialize core stats with legacy default parameters
                     hp = 100
