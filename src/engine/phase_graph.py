@@ -51,7 +51,7 @@ class PhaseDependencyGraph:
         "shop": PhaseMetadata("shop", {"inventory", "town"}, {"inventory", "resource_updates", "social"}),
         "resource_transactions": PhaseMetadata("resource_transactions", {"inventory", "strategic"}, {"inventory", "resource_updates"}),
         "evolution": PhaseMetadata("evolution", {"biological", "combat", "attributes", "inventory"}, {"identity", "attributes"}),
-        "strategic_intelligence": PhaseMetadata("strategic_intelligence", {"strategic", "combat", "biological"}, {"strategic", "task", "navigation"}),
+        "strategic_intelligence": PhaseMetadata("strategic_intelligence", {"strategic", "combat", "biological"}, {"strategic", "task", "navigation"}, must_run_every_tick=True),
         "near_death_hardening": PhaseMetadata("near_death_hardening", {"combat", "biological", "lifecycle"}, {"combat", "attributes"}),
         "occupancy_resolution": PhaseMetadata("occupancy_resolution", {"movement"}, {"movement", "navigation"}),
         "lifecycle": PhaseMetadata("lifecycle", {"all"}, {"all"}, must_run_every_tick=True),

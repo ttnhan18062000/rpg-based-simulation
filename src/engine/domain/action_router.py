@@ -29,8 +29,12 @@ class ActionRouter:
         Routes the action to the correct handler.
         """
         action = payload.get("action") if payload else None
-        
-        # 0. Readiness Check
+
+        # Survival actions (biological necessities) bypass combat readiness.
+        if action in ("SLEEP", "EAT", "REST"):
+            return CoreActions.execute_survival(entity, action, current_tick)
+
+        # 0. Readiness Check (combat/skill actions only)
         from src.engine.legality import LegalityServiceV2
         ready, r_reason = LegalityServiceV2.verify_readiness(entity)
         if not ready:
@@ -38,10 +42,7 @@ class ActionRouter:
                 entity_id=entity.id,
                 navigation=NavigationUpdate(failure_reason=r_reason)
             )}
-            
-        if action in ("SLEEP", "EAT", "REST"):
-            return CoreActions.execute_survival(entity, action, current_tick)
-        
+
         if action == "RECRUIT":
             return CoreActions.execute_recruit(entity, payload, current_tick, neighbor_view, context)
             

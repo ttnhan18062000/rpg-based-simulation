@@ -1174,6 +1174,26 @@ class StrategicIntelligenceSystem:
                     except ValueError:
                         pass
                 
+                # Hunger/fatigue: complete project when biological need is satisfied
+                if project.kind == "hunger" and entity.biological.hunger < 20.0:
+                    return StrategicUpdate(
+                        projects_add_or_update=[replace(project, status=ProjectStatus.COMPLETED)],
+                        current_project_id_set="",
+                        current_objective_id_set="",
+                        boredom_delta=boredom_upd,
+                        leads_add_or_update=memory_upd.leads_add_or_update,
+                        leads_remove=memory_upd.leads_remove
+                    )
+                if project.kind == "fatigue" and entity.biological.sleep_debt < 20.0:
+                    return StrategicUpdate(
+                        projects_add_or_update=[replace(project, status=ProjectStatus.COMPLETED)],
+                        current_project_id_set="",
+                        current_objective_id_set="",
+                        boredom_delta=boredom_upd,
+                        leads_add_or_update=memory_upd.leads_add_or_update,
+                        leads_remove=memory_upd.leads_remove
+                    )
+
                 # Milestone 8: Shop scarcity feedback
                 if project.kind == "shopping" and project.active_objective_id:
                      target_id_str = project.active_objective_id.split("_")[-1]

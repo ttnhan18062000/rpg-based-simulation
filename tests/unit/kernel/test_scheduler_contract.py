@@ -6,21 +6,48 @@ from src.core.builder import V2EntityBuilder
 
 
 def test_readiness_driven_selection():
-    """Verify that only entities at or above 100.0 readiness are selected."""
+    """
+    Brain tasks (ENTITY_BRAIN, idle ENTITY_ACT) bypass the readiness gate.
+    Only ENTITY_ACT with a payload or ENTITY_MOVE requires >= 100.0 readiness
+    (Action Readiness Law, COMB-266).
+    """
     e1 = V2EntityBuilder(1).combat(readiness=100.0).build()
     e2 = V2EntityBuilder(2).combat(readiness=99.9).build()
     e3 = V2EntityBuilder(3).combat(readiness=150.0).build()
-    
+
     state = AuthoritativeState(tick=1, seed=42, entities={1: e1, 2: e2, 3: e3})
-    
+
     scheduler = DeterministicScheduler()
     work, _ = scheduler.select_work(state)
-    
-    # Expect 2 entity actions (ID 1 and 3)
-    # Order should be Readiness DESC (3 then 1)
-    assert len(work) == 2
-    assert work[0].owner_id == 3
-    assert work[1].owner_id == 1
+
+    # All three selected as ENTITY_BRAIN (brain is never readiness-gated)
+    assert len(work) == 3
+    assert all(w.work_kind == "ENTITY_BRAIN" for w in work)
+    # Order: readiness DESC, then owner_id ASC
+    assert [w.owner_id for w in work] == [3, 1, 2]
+
+
+def test_action_readiness_gate():
+    """ENTITY_ACT with a non-empty payload requires 100.0 readiness."""
+    from dataclasses import replace as dc_replace
+    from src.core.state import TaskComponent
+
+    e_low = dc_replace(
+        V2EntityBuilder(4).combat(readiness=50.0).build(),
+        task=TaskComponent(work_kind="ENTITY_ACT", payload={"action": "ATTACK", "target_id": 99}),
+    )
+    e_full = dc_replace(
+        V2EntityBuilder(5).combat(readiness=100.0).build(),
+        task=TaskComponent(work_kind="ENTITY_ACT", payload={"action": "ATTACK", "target_id": 99}),
+    )
+
+    state = AuthoritativeState(tick=1, seed=42, entities={4: e_low, 5: e_full})
+
+    scheduler = DeterministicScheduler()
+    work, _ = scheduler.select_work(state)
+
+    assert len(work) == 1
+    assert work[0].owner_id == 5
 
 
 def test_deterministic_tiebreak():

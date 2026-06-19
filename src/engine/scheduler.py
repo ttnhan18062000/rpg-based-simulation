@@ -55,32 +55,44 @@ class DeterministicScheduler:
 
         critical_items: List[WorkItem] = []
         for ent in state.entities.values():
-            if ent.lifecycle.active and ent.combat.readiness >= 100.0:
-                # Milestone 7: Level of Detail Gating
-                if policy.lod_enabled:
-                    if not LODService.should_execute(state.tick, ent, focus_points):
-                        continue
+            if not ent.lifecycle.active:
+                continue
 
-                # Milestone 2: Hardened TaskComponent intent
-                work_kind = ent.task.work_kind
-                if work_kind not in ("ENTITY_ACT", "ENTITY_MOVE"):
+            # Milestone 2: Hardened TaskComponent intent
+            work_kind = ent.task.work_kind
+            if work_kind not in ("ENTITY_ACT", "ENTITY_MOVE"):
+                work_kind = "ENTITY_BRAIN"
+
+            # Milestone 3: Staggered Entity Execution
+            # Gating non-critical work items based on strategic cadence.
+            is_idle_act = (work_kind == "ENTITY_ACT" and not ent.task.payload)
+            is_brain = (work_kind == "ENTITY_BRAIN" or is_idle_act)
+
+            # Readiness gate: thinking (brain) is free; only actual actions/movement
+            # require 100.0 readiness (Action Readiness Law, COMB-266).
+            if not is_brain and ent.combat.readiness < 100.0:
+                continue
+
+            # Milestone 7: Level of Detail Gating
+            if policy.lod_enabled:
+                if not LODService.should_execute(state.tick, ent, focus_points):
+                    continue
+
+            if is_brain:
+                if not should_run(state.tick, ent.id, cadence.strategic_intelligence):
+                    continue
+                # Idle ENTITY_ACT must run brain, not a no-op action.
+                if is_idle_act:
                     work_kind = "ENTITY_BRAIN"
-                
-                # Milestone 3: Staggered Entity Execution
-                # Gating non-critical work items based on strategic cadence.
-                is_idle_act = (work_kind == "ENTITY_ACT" and not ent.task.payload)
-                if work_kind == "ENTITY_BRAIN" or is_idle_act:
-                    if not should_run(state.tick, ent.id, cadence.strategic_intelligence):
-                        continue
-                
-                critical_items.append(WorkItem(
-                    owner_id=ent.id,
-                    work_id=f"{state.tick}:{work_kind.lower()}:{ent.id}",
-                    work_class=WorkClass.CRITICAL,
-                    work_kind=work_kind,
-                    payload=ent.task.payload,
-                    readiness=ent.combat.readiness
-                ))
+
+            critical_items.append(WorkItem(
+                owner_id=ent.id,
+                work_id=f"{state.tick}:{work_kind.lower()}:{ent.id}",
+                work_class=WorkClass.CRITICAL,
+                work_kind=work_kind,
+                payload=ent.task.payload,
+                readiness=ent.combat.readiness
+            ))
         
         critical_items.sort(key=lambda x: (-x.readiness, x.owner_id))
         work_sequence.extend(critical_items)

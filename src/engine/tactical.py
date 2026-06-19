@@ -214,11 +214,19 @@ class TacticalDecisionSystem:
                         # Find the node or target position
                         target_pos = None
                         node_id = None
+                        building_id = None
                         try:
-                            node_id = int(obj.target)
-                            node = state.resource_nodes.get(node_id)
+                            candidate_id = int(obj.target)
+                            node = state.resource_nodes.get(candidate_id)
                             if node:
                                 target_pos = node.position
+                                node_id = candidate_id
+                            else:
+                                # Not a resource node — check buildings (e.g. HUNGER→tavern, FATIGUE→inn)
+                                building = state.buildings.get(candidate_id)
+                                if building:
+                                    target_pos = building.position
+                                    building_id = candidate_id
                         except ValueError:
                             # Not an int, try coordinate tuple
                             # Safe coordinate parse: "(x, y)" -> (float, float)
@@ -227,11 +235,10 @@ class TacticalDecisionSystem:
                                 target_pos = ast.literal_eval(obj.target)
                             except (ValueError, SyntaxError):
                                 target_pos = None
-                        
+
                         if target_pos:
                             dist = abs(target_pos[0] - entity.navigation.position[0]) + abs(target_pos[1] - entity.navigation.position[1])
-                            if dist < 1.0:
-                                # At target: Interact if node, or just hold
+                            if dist <= 1.0:
                                 if node_id is not None:
                                     from src.core.updates import InteractionUpdate
                                     return EntityUpdate(
@@ -242,17 +249,35 @@ class TacticalDecisionSystem:
                                         ),
                                         interaction=InteractionUpdate(target_node_id=node_id, progress_delta=1)
                                     )
+                                elif building_id is not None:
+                                    # At a building: dispatch survival action by project kind
+                                    proj_kind = getattr(project, "kind", "")
+                                    if proj_kind == "hunger":
+                                        return EntityUpdate(
+                                            entity_id=entity.id,
+                                            task=TaskUpdate(
+                                                work_kind_set="ENTITY_ACT",
+                                                payload_set={"action": "EAT", "target_id": building_id}
+                                            )
+                                        )
+                                    elif proj_kind == "fatigue":
+                                        return EntityUpdate(
+                                            entity_id=entity.id,
+                                            task=TaskUpdate(
+                                                work_kind_set="ENTITY_ACT",
+                                                payload_set={"action": "REST", "target_id": building_id}
+                                            )
+                                        )
+                                    else:
+                                        return EntityUpdate(entity_id=entity.id)
                                 else:
                                     return EntityUpdate(entity_id=entity.id)
                             else:
-                                # Move to it
+                                # Still en-route — update nav target and stay idle
+                                # so the brain re-evaluates on each cadence tick.
                                 return EntityUpdate(
                                     entity_id=entity.id,
                                     navigation=NavigationUpdate(target_set=target_pos, movement_mode_set=MovementMode.WANDER),
-                                    task=TaskUpdate(
-                                        work_kind_set="ENTITY_MOVE",
-                                        payload_set={"target_position": target_pos, "target_id": obj.target}
-                                    )
                                 )
             
             # 4.1 Role-Based Obligation (Phase 7)
