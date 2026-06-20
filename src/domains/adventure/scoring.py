@@ -9,10 +9,13 @@ Reads only subjective self-model aspects to protect information opacity.
 
 from __future__ import annotations
 import dataclasses
-from typing import Any, Dict, Optional
+from typing import TYPE_CHECKING, Any, Dict, Optional
 
 from src.core.state import EntityState, ResourceNodeState
 from src.domains.adventure.schema import RouteFamily, AdventureRouteOption
+
+if TYPE_CHECKING:
+    from src.core.models.quests import QuestOpportunity
 
 
 class AdventureRouteScorer:
@@ -26,6 +29,7 @@ class AdventureRouteScorer:
         entity: EntityState,
         route: AdventureRouteOption,
         resource_nodes: Optional[Dict[int, ResourceNodeState]] = None,
+        quest_registry: Optional[Dict[str, "QuestOpportunity"]] = None,
     ) -> AdventureRouteOption:
         """
         Calculate subjective score for the route option and return updated option.
@@ -93,6 +97,7 @@ class AdventureRouteScorer:
             RouteFamily.ASK_INFORMATION: ["information"],
             RouteFamily.SCOUT_LOCATION: ["information"],
             RouteFamily.FORM_PARTY: ["social"],
+            RouteFamily.QUEST_OPPORTUNITY: ["gold"],
         }
 
         matching_keys = family_needs.get(route.family, [])
@@ -113,6 +118,39 @@ class AdventureRouteScorer:
                 if target_node is not None and target_node.max_charges > 0:
                     depletion_fraction = target_node.remaining_charges / target_node.max_charges
                     benefit = benefit * depletion_fraction
+
+        # ── QUEST_OPPORTUNITY capability matching ─────────────────────────────
+        # HERO entities score quests proportional to their capability match.
+        # Non-HERO entities find quests half as attractive as generic harvesting.
+        if route.family == RouteFamily.QUEST_OPPORTUNITY:
+            from src.core.enums import EntityRole
+            is_hero = entity.identity.role == EntityRole.HERO
+
+            if is_hero:
+                capability_match = 0.0
+                opportunity = None
+                if quest_registry is not None and route.quest_id is not None:
+                    opportunity = quest_registry.get(route.quest_id)
+                if opportunity is not None and opportunity.objective_chain:
+                    entity_traits = {
+                        t.split(":")[0].lower()
+                        for t in (entity.identity.traits or set())
+                    }
+                    required_verbs = {
+                        token.split(":")[0].lower()
+                        for token in opportunity.objective_chain
+                    }
+                    if required_verbs:
+                        matched_count = len(entity_traits & required_verbs)
+                        ratio = matched_count / len(required_verbs)
+                        if ratio >= 1.0:
+                            capability_match = 1.0
+                        elif ratio > 0.0:
+                            capability_match = 0.5
+                benefit = benefit * (1.0 + capability_match)
+            else:
+                # Non-HERO entities find quest opportunities less attractive
+                benefit = benefit * 0.5
 
         # Risk penalty deflated by bravery, inflated by caution
         risk_multiplier = max(0.1, (1.0 + caution * 0.8) - bravery * 0.6)
@@ -136,6 +174,9 @@ class AdventureRouteScorer:
         elif route.family == RouteFamily.FORM_PARTY:
             # Sociable entities prefer parties
             personality_bias += sociability * 0.25
+        elif route.family == RouteFamily.QUEST_OPPORTUNITY:
+            # Greedy entities are drawn to quest rewards (gold, loot)
+            personality_bias += greed * 0.25
 
         # ── 5. Confidence Bonus ─────────────────────────────────────────────
         confidence_bonus = route.confidence * 0.15

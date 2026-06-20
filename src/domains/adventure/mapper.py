@@ -41,6 +41,7 @@ class RouteToProjectMapper:
         RouteFamily.SCOUT_LOCATION: (ProjectKind.EXPLORATION, ObjectiveKind.REACH_LOCATION),
         RouteFamily.FORM_PARTY: (ProjectKind.SOCIAL, ObjectiveKind.REACH_LOCATION),
         RouteFamily.RETURN_TOWN: (ProjectKind.TRAVEL, ObjectiveKind.RETURN_TOWN),
+        RouteFamily.QUEST_OPPORTUNITY: (ProjectKind.QUEST, ObjectiveKind.ACCEPT_QUEST),
     }
 
     @classmethod

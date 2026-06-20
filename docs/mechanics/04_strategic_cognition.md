@@ -146,6 +146,7 @@ Range: 0.1 (pure bravery) to 1.8 (pure caution). Default personality (bravery=0,
 | `ASK_INFORMATION`, `SCOUT_LOCATION` | `curiosity` | 0.25 |
 | `CRAFT_UPGRADE`, `GATHER_RESOURCE` | `industry` | 0.25 |
 | `FORM_PARTY` | `sociability` | 0.25 |
+| `QUEST_OPPORTUNITY` | `greed` | 0.25 |
 | `BUY_UPGRADE`, `COMBAT_ENGAGE`, `DEFER_WITH_REASON` | (none) | 0.0 |
 
 Only one family match applies per route. Maximum personality_bias = 0.25.
@@ -159,6 +160,41 @@ Only one family match applies per route. Maximum personality_bias = 0.25.
 **Design intent:** A route with _any_ blocker (missing item, inaccessible location) should be strongly deprioritized. The 2.0 magnitude exceeds the maximum personality_bias+confidence_bonus contribution (0.40), ensuring blocked routes are overridden by the highest-urgency unblocked routes.
 
 **Revisit trigger:** If `blocker_frequency > 0.05` is observed in E12C regression tests, reconsider whether 2.0 is too blunt for minor blockers (e.g., gold deficit < 5).
+
+### 6.7 QUEST_OPPORTUNITY — HERO Capability Matching
+
+`QUEST_OPPORTUNITY` routes use a capability-match multiplier on `benefit` based on entity role and trait alignment.
+
+**Source:** `src/domains/adventure/scoring.py` — `AdventureRouteScorer.score()` (TCK-20260619-E23D-HERO-MATCHING, 2026-06-20)
+
+#### Role-based benefit multiplier
+
+| Entity role | `capability_match` | `benefit` formula |
+|---|---|---|
+| `HERO` (full match) | 1.0 | `expected_benefit × 2.0` |
+| `HERO` (partial match) | 0.5 | `expected_benefit × 1.5` |
+| `HERO` (no match / no registry) | 0.0 | `expected_benefit × 1.0` |
+| Non-HERO | N/A | `expected_benefit × 0.5` |
+
+#### Capability match algorithm
+
+```
+entity_traits  = { token.split(":")[0].lower() for token in entity.identity.traits }
+required_verbs = { token.split(":")[0].lower() for token in quest.objective_chain }
+ratio          = len(entity_traits ∩ required_verbs) / len(required_verbs)
+
+capability_match = 1.0  if ratio >= 1.0
+                 = 0.5  if 0 < ratio < 1.0
+                 = 0.0  otherwise (no match, missing registry entry, or null quest_id)
+```
+
+Traits are compared by verb prefix only (first token before `:`). Token format: `"verb:target:count"`.
+
+**Guards (graceful fallback to 0.0):**
+- `quest_registry` is `None`
+- `route.quest_id` is `None`
+- `route.quest_id` not found in `quest_registry`
+- `objective_chain` is empty
 
 ### 6.6 Score Range Summary (Estimated, No Blockers)
 

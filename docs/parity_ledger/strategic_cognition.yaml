@@ -2427,3 +2427,22 @@
     tests/unit/domains/adventure/test_depletion_scoring.py
   divergence_note: null
   support_boundary: null
+- id: STRAT-228
+  text: >-
+    HERO entities score QUEST_OPPORTUNITY routes using capability matching
+    against objective_chain verb tokens. Full match yields benefit×2.0,
+    partial match benefit×1.5, no match benefit×1.0. Non-HERO entities
+    receive benefit×0.5 for quest routes. Greedy personality bias (greed×0.25)
+    applies to QUEST_OPPORTUNITY family for all entity types.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >-
+    src/domains/adventure/scoring.py — AdventureRouteScorer.score() QUEST_OPPORTUNITY
+    branch; src/domains/adventure/schema.py — RouteFamily.QUEST_OPPORTUNITY,
+    AdventureRouteOption.quest_id
+  proof_type: parity
+  test_path: >-
+    tests/unit/domains/adventure/test_hero_quest_scoring.py
+  divergence_note: null
+  support_boundary: null

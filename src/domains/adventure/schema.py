@@ -28,6 +28,7 @@ class RouteFamily(str, Enum):
     FORM_PARTY = "form_party"
     RETURN_TOWN = "return_town"
     DEFER_WITH_REASON = "defer_with_reason"
+    QUEST_OPPORTUNITY = "quest_opportunity"
 
 
 @dataclass(frozen=True, slots=True)
@@ -57,6 +58,7 @@ class AdventureRouteOption:
     source_opportunity_ids: Tuple[str, ...] = ()
     reason: Optional[str] = None
     target_node_id: Optional[int] = None
+    quest_id: Optional[str] = None
     # Intermediate scoring terms populated by AdventureRouteScorer (zero before scoring)
     urgency: float = 0.0
     benefit_score: float = 0.0
