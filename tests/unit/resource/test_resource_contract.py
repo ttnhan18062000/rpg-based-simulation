@@ -119,3 +119,44 @@ def test_law_of_availability_node_depleted():
     e_upd = refined.entity_updates[1]
     
     assert e_upd.interaction.reset == True
+
+
+# ─── TCK-20260619-E21A-NODE-SCHEMA: Schema extension tests ───────────────────
+
+def test_resource_node_regen_rate_field_exists():
+    """AC1: ResourceNodeState accepts regen_rate_per_tick kwarg."""
+    node = ResourceNodeState(
+        id=1, kind="IRON", position=(0, 0), yields_item="iron_ore",
+        remaining_charges=3, max_charges=5, required_ticks=10,
+        regen_rate_per_tick=2,
+    )
+    assert node.regen_rate_per_tick == 2
+
+
+def test_resource_node_regen_rate_in_canonical_dict():
+    """AC2: to_canonical_dict() includes regen_rate_per_tick with correct value."""
+    node = ResourceNodeState(
+        id=1, kind="IRON", position=(0, 0), yields_item="iron_ore",
+        remaining_charges=3, max_charges=5, required_ticks=10,
+        regen_rate_per_tick=2,
+    )
+    d = node.to_canonical_dict()
+    assert "regen_rate_per_tick" in d
+    assert d["regen_rate_per_tick"] == 2
+
+
+def test_resource_node_regen_rate_default_zero():
+    """AC3: regen_rate_per_tick defaults to 0 — no behavior change for existing callers."""
+    node = ResourceNodeState(
+        id=2, kind="WOOD", position=(1, 1), yields_item="wood",
+        remaining_charges=5, max_charges=5, required_ticks=5,
+    )
+    assert node.regen_rate_per_tick == 0
+    d = node.to_canonical_dict()
+    assert d["regen_rate_per_tick"] == 0
+
+
+def test_world_event_category_resource_recovered():
+    """AC4: WorldEventCategory.RESOURCE_RECOVERED is accessible and equals its string value."""
+    from src.domains.world_emergence.schema import WorldEventCategory
+    assert WorldEventCategory.RESOURCE_RECOVERED == "RESOURCE_RECOVERED"

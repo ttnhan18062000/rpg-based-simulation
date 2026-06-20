@@ -817,6 +817,7 @@ class ResourceNodeState:
     required_ticks: int
     respawn_cooldown: int = 100
     cooldown_remaining: int = 0
+    regen_rate_per_tick: int = 0  # charges regenerated per ecology tick (0 = no regen)
     _canonical_cache: Any = field(default=None, init=False, repr=False, compare=False)
     _readonly_cache: Any = field(default=None, init=False, repr=False, compare=False)
 
@@ -835,7 +836,8 @@ class ResourceNodeState:
             "max_charges": self.max_charges,
             "required_ticks": self.required_ticks,
             "respawn_cooldown": self.respawn_cooldown,
-            "cooldown_remaining": self.cooldown_remaining
+            "cooldown_remaining": self.cooldown_remaining,
+            "regen_rate_per_tick": self.regen_rate_per_tick,
         }
         object.__setattr__(self, "_canonical_cache", res)
         return res
