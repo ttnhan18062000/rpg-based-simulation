@@ -819,6 +819,17 @@ class CampUpdate:
 
 
 @dataclass(frozen=True, slots=True)
+class QuestOpportunityRewardIntent:
+    """
+    Signal that the named entity should receive the reward for the named
+    QuestOpportunity.  The actual reward amounts are read from
+    state.quest_registry[quest_id].reward_spec inside the enforce stage.
+    """
+    entity_id: int
+    quest_id: str
+
+
+@dataclass(frozen=True, slots=True)
 class StateUpdate:
     """
     A collection of authoritative changes to be applied to the world state.
@@ -866,29 +877,31 @@ class StateUpdate:
     quest_registry_add: List["QuestOpportunity"] = field(default_factory=list)
     quest_registry_remove: List[str] = field(default_factory=list)
     quest_status_updates: Dict[str, "QuestOpportunityStatus"] = field(default_factory=dict)
+    quest_opportunity_reward_intents: List["QuestOpportunityRewardIntent"] = field(default_factory=list)
 
     def is_noop(self) -> bool:
         """True if this update contains absolutely no changes."""
-        return (not self.entity_updates and not self.entities_add and not self.entities_remove and 
-                not self.nodes_add and not self.node_updates and not self.ground_items_add_or_update and 
-                not self.ground_items_remove and not self.corpses_add_or_update and 
-                not self.corpses_remove and not self.scars_add_or_update and 
-                not self.scars_remove and not self.chest_updates and 
-                not self.chest_add_or_update and not self.building_updates and 
-                not self.camp_updates and not self.world_updates and 
-                not self.resource_updates and not self.home_storage_updates and 
-                not self.periodic_updates and not self.work_debt_updates and 
-                not self.groups_add_or_update and not self.groups_remove and 
-                self.maturity_set is None and self.last_calamity_tick_set is None and 
-                self.rng_checkpoint is None and not self.transaction_trace and 
-                not self.rejections_delta and self.pressure_signals_set is None and 
+        return (not self.entity_updates and not self.entities_add and not self.entities_remove and
+                not self.nodes_add and not self.node_updates and not self.ground_items_add_or_update and
+                not self.ground_items_remove and not self.corpses_add_or_update and
+                not self.corpses_remove and not self.scars_add_or_update and
+                not self.scars_remove and not self.chest_updates and
+                not self.chest_add_or_update and not self.building_updates and
+                not self.camp_updates and not self.world_updates and
+                not self.resource_updates and not self.home_storage_updates and
+                not self.periodic_updates and not self.work_debt_updates and
+                not self.groups_add_or_update and not self.groups_remove and
+                self.maturity_set is None and self.last_calamity_tick_set is None and
+                self.rng_checkpoint is None and not self.transaction_trace and
+                not self.rejections_delta and self.pressure_signals_set is None and
                 self.current_mode_set is None and self.current_policy_set is None and
-                not self.rejection_events and 
-                not self.processed_transaction_ids and self.next_node_id_set is None and 
+                not self.rejection_events and
+                not self.processed_transaction_ids and self.next_node_id_set is None and
                 self.next_entity_id_set is None and not self.force_full_scan and
                 not self.sub_phase_costs and not self.metric_counters and
                 not self.world_events_add and not self.quest_registry_add and
-                not self.quest_registry_remove and not self.quest_status_updates)
+                not self.quest_registry_remove and not self.quest_status_updates and
+                not self.quest_opportunity_reward_intents)
     def merge(self, other: StateUpdate) -> StateUpdate:
         """Merge another StateUpdate into this one."""
         if not other or other.is_noop():
@@ -939,6 +952,7 @@ class StateUpdate:
         new_quest_registry_add = list(self.quest_registry_add)
         new_quest_registry_remove = list(self.quest_registry_remove)
         new_quest_status_updates = dict(self.quest_status_updates)
+        new_quest_opportunity_reward_intents = list(self.quest_opportunity_reward_intents)
 
         # Single values
         maturity = self.maturity_set
@@ -1002,6 +1016,7 @@ class StateUpdate:
             new_quest_registry_add.extend(other.quest_registry_add)
             new_quest_registry_remove.extend(other.quest_registry_remove)
             new_quest_status_updates.update(other.quest_status_updates)
+            new_quest_opportunity_reward_intents.extend(other.quest_opportunity_reward_intents)
 
             # Single values
             if other.maturity_set is not None: maturity = other.maturity_set
@@ -1059,6 +1074,7 @@ class StateUpdate:
             quest_registry_add=new_quest_registry_add,
             quest_registry_remove=new_quest_registry_remove,
             quest_status_updates=new_quest_status_updates,
+            quest_opportunity_reward_intents=new_quest_opportunity_reward_intents,
         )
 
     def compact(self) -> StateUpdate:

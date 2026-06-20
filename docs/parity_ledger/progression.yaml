@@ -32,12 +32,16 @@
 - id: PROG-004
   text: Combat and progression rewards update gold, XP, veterancy, effects, and consequences
     through authoritative updates.
-  status: legacy_verified
+  status: verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  v2_evidence: >-
+    Implementation proven via exhaustive checklist audit Phase 1-11;
+    src/engine/pipeline_phases/quest_opportunity_rewards.py::QuestOpportunityRewardSystem.enforce()
+    — quest reward path now emits ResourceTransferIntent(source_kind=QUEST) for gold+XP
+    through the authoritative pipeline (TCK-20260619-E23C-QUEST-REWARDS)
   proof_type: parity
-  test_path: null
+  test_path: tests/unit/quest/test_quest_rewards.py::test_quest_completion_is_authoritative
   divergence_note: null
   support_boundary: null
 - id: PROG-005
@@ -656,9 +660,14 @@
   status: verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: '`src/engine/combat_rewards.py` (`CombatRewardClassificationService.classify()`,
+  v2_evidence: >-
+    `src/engine/combat_rewards.py` (`CombatRewardClassificationService.classify()`,
     `RewardClassification.source` field), `src/engine/combat.py` (trace["REWARD_SOURCE"]
-    and full_trace["REWARD_SOURCE"] in resolve_attack and resolve_multi_attack)'
+    and full_trace["REWARD_SOURCE"] in resolve_attack and resolve_multi_attack);
+    src/engine/pipeline_phases/quest_opportunity_rewards.py::QuestOpportunityRewardSystem.enforce()
+    — emits WorldEvent(category=QUEST_COMPLETED) with entity_id, gold, xp payload,
+    providing a traceable event anchor for quest opportunity reward grants
+    (TCK-20260619-E23C-QUEST-REWARDS)
   proof_type: null
   test_path: '`tests/unit/combat/test_combat_rewards.py`'
   divergence_note: null
@@ -1110,4 +1119,21 @@
   proof_type: parity
   test_path: tests/unit/entity/test_entity_archetypes.py::test_hero_archetypes_cover_combat_mage_rogue
   divergence_note: null
+  support_boundary: null
+- id: PROG-109
+  text: Quest opportunity reward is applied through the authoritative ResourceTransferIntent
+    path with source_kind=QUEST
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >-
+    src/engine/pipeline_phases/quest_opportunity_rewards.py::QuestOpportunityRewardSystem.enforce()
+    — reads reward_spec from state.quest_registry, emits ResourceTransferIntent(source_kind=QUEST,
+    transaction_id="quest:{quest_id}:reward", gold_delta, reward_upd=RewardUpdate(xp_gain=...))
+    for gold+XP; zero-reward quests are removed immediately, non-zero-reward quests
+    defer removal until transaction confirmed via _emit_terminal_removals()
+    (TCK-20260619-E23C-QUEST-REWARDS)
+  proof_type: parity
+  test_path: tests/unit/quest/test_quest_rewards.py::test_quest_completion_adds_gold_and_xp
+  divergence_note: ''
   support_boundary: null

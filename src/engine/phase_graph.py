@@ -112,6 +112,17 @@ class PhaseDependencyGraph:
         if cadence_fired and phase.must_run_when_cadence_fires:
             return True
 
+        # 3c. Phase-specific triggers not captured by dirty domains.
+        # quest_rewards and resource_transactions must run whenever there are
+        # opportunity reward intents: quest_rewards produces resource_transfers
+        # from the intents, and resource_transactions must run to consume them
+        # (dirty_set is refreshed before quest_rewards, not after, so
+        # resource_transactions would otherwise see a stale clean dirty_set).
+        if phase_name in ("quest_rewards", "resource_transactions") and getattr(
+            update, "quest_opportunity_reward_intents", None
+        ):
+            return True
+
         # 4. Dirty set short-circuiting
         if update.dirty_set is None:
             return True

@@ -1608,9 +1608,16 @@
   status: verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  v2_evidence: >-
+    Implementation proven via exhaustive checklist audit Phase 1-11;
+    src/engine/pipeline_phases/quest_opportunity_rewards.py::QuestOpportunityRewardSystem.enforce()
+    — quest opportunity reward is gated through QuestRewardPhase.resolve(), which
+    reads from state.quest_registry and routes reward delivery through
+    ResourceTransferIntent rather than direct inventory mutation; quest removal
+    is also deferred until transaction confirmation, preventing standalone
+    completion bypasses (TCK-20260619-E23C-QUEST-REWARDS)
   proof_type: null
-  test_path: null
+  test_path: tests/unit/quest/test_quest_rewards.py::test_no_direct_entity_mutation_from_quest_opportunity
   divergence_note: null
   support_boundary: null
 - id: TOWN-155
@@ -1852,5 +1859,23 @@
     \ remaining + rate) at line 38"
   proof_type: parity
   test_path: tests/unit/world/test_resource_ecology.py::test_regen_capped_at_max_charges
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-176
+  text: "End-to-end depletion+recovery integration: RESOURCE_DEPLETED and RESOURCE_RECOVERED\
+    \ both appear in a 1000-tick ecology run; RegionalPressureModel and ScarcityModel\
+    \ both produce non-zero outputs when RESOURCE_DEPLETED events are present in\
+    \ the 100-tick window."
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: "src/world/ecology.py:process_ecology (RESOURCE_RECOVERED at line\
+    \ 44); src/engine/economy.py (RESOURCE_DEPLETED emitter); src/domains/world_emergence/models.py:\
+    \ RegionalPressureModel.evaluate (dep_cnt * 0.15 → res_intensity) and ScarcityModel.evaluate\
+    \ (depl * 0.25 → scarcity) consume RESOURCE_DEPLETED aggregates from 100-tick\
+    \ window"
+  proof_type: integration
+  test_path: "tests/integration/scenarios/test_resource_depletion.py::test_depletion_and_recovery_in_1000_tick_run;\
+    \ tests/integration/scenarios/test_resource_depletion.py::test_regional_scarcity_rises_after_depletion"
   divergence_note: null
   support_boundary: null
