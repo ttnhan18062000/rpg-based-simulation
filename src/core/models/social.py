@@ -27,6 +27,7 @@ class SocialComponent:
     debt_history: Dict[int, float] = field(default_factory=dict)        # EntityID -> Debt (Social/Gold)
     fear_history: Dict[int, float] = field(default_factory=dict)        # EntityID -> Fear Score
     grudge_history: Dict[int, float] = field(default_factory=dict)      # EntityID -> Grudge Score (Nemesis)
+    combat_loss_counts: Dict[int, int] = field(default_factory=dict)    # EntityID -> discrete defeat count (run-scoped)
     salience_history: Dict[int, float] = field(default_factory=dict)    # EntityID -> Interaction Salience
     
     # PH15 Recovery: First-class bonds

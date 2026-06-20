@@ -630,6 +630,7 @@ class EntityState:
                 "familiarity_history": {str(k): v for k, v in sorted(self.social.familiarity_history.items())},
                 "fear_history": {str(k): v for k, v in sorted(self.social.fear_history.items())},
                 "grudge_history": {str(k): v for k, v in sorted(self.social.grudge_history.items())},
+                "combat_loss_counts": {str(k): v for k, v in sorted(self.social.combat_loss_counts.items())},
                 "bonds": {str(k): asdict(v) for k, v in sorted(self.social.bonds.items())},
                 "betrayal_count": self.social.betrayal_count,
                 "public_reputation": self.social.public_reputation,

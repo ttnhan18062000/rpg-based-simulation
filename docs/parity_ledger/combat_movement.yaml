@@ -2991,3 +2991,23 @@
     Previously divergent: Chapter 02 stated 40%, entity_anatomy stated 40%, code used 25%.
     Resolved in TCK-20260619-PARITY-P0-BUGS: docs corrected to match source-authoritative 25% value.
   support_boundary: null
+- id: COMB-291
+  text: Grudge state (grudge_history, nemesis_ids, combat_loss_counts) is run-scoped only. Cross-episode persistence requires CampaignState (Epic 3.2), not yet implemented.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/core/models/social.py::SocialComponent — all fields on EntityState, no cross-run persistence
+  proof_type: architecture
+  test_path: tests/unit/combat/test_combat_ecology.py::test_grudge_scope_is_defined
+  divergence_note: null
+  support_boundary: null
+- id: COMB-292
+  text: Entity defeated by the same opponent >= 3 times selects CombatPosture.AVOID (fear_avoidance) instead of evaluating combat normally. Tracked via SocialComponent.combat_loss_counts.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/domains/combat_engagement/service.py::CombatEngagementDecisionService.evaluate — fear_avoidance short-circuit at combat_loss_counts >= 3
+  proof_type: unit
+  test_path: tests/unit/combat/test_combat_ecology.py::test_fear_avoidance_posture_at_loss_threshold
+  divergence_note: null
+  support_boundary: null

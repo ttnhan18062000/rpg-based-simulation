@@ -199,7 +199,8 @@ class CombatResolutionSystem:
         from src.core.updates import SocialUpdate, SocialBondUpdate
         social_upd = SocialUpdate(
             bond_updates=[SocialBondUpdate(target_id=attacker.id, sentiment_delta=-0.1, familiarity_delta=0.05)],
-            grudge_delta={attacker.id: damage / defender.combat.max_hp}
+            grudge_delta={attacker.id: damage / defender.combat.max_hp},
+            combat_loss_delta={attacker.id: 1} if not alive else {},
         )
 
         # 8. Generate Resource Intents
