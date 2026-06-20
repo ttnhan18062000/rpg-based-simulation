@@ -1,13 +1,13 @@
 ---
 audit_id: D04
 title: Balance & Tuning
-status: partial
+status: done
 date: 2026-06-20
 ticket: TCK-20260618-AUDIT-EPIC
 related_tickets: [TCK-20260619-E12A-BALANCE-MEASURE, TCK-20260619-E12B-BLOCKER-RECAL, TCK-20260619-E12C-BALANCE-TESTS]
 layer: simulation
 priority: P1
-tags: [balance, tuning, combat, hunger, economy, adventure-routing, blocker-penalty, audit-partial]
+tags: [balance, tuning, combat, hunger, economy, adventure-routing, blocker-penalty, audit-done]
 ---
 
 # D04 — Balance & Tuning
