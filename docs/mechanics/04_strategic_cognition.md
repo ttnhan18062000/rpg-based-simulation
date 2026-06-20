@@ -73,3 +73,79 @@ Entities do not see the entire world.
 *   **Perception Radius**: Usually 10.0 to 15.0 units.
 *   **Salience Filter**: Only entities or events within the perception radius are considered "Salient." Information outside this radius is either ignored or retrieved from Memory (Leads).
 *   **Info Decay**: Strategic leads lose certainty every 100 ticks. High-certainty leads become Medium, and so on, until the information is forgotten.
+
+---
+
+## 6. Adventure Route Scoring Constants
+
+**Source:** `src/domains/adventure/scoring.py` — `AdventureRouteScorer.score()`
+
+The adventure decision pipeline (enabled via `ENABLE_ADVENTURE_ROUTING`) scores every candidate route and selects the highest. The formula and all constants are documented here.
+
+### 6.1 Scoring Formula
+
+```
+score = urgency + benefit + personality_bias + confidence_bonus − risk_penalty − blocker_penalty
+score = max(0.0, score)   # clamped to non-negative; rounded to 4 decimal places
+```
+
+### 6.2 Formula Term Constants
+
+| Term | Formula | Constants | Max value |
+|---|---|---|---|
+| `urgency` | `max(need.urgency for matched needs)` | Depends on active need pressures | ~2.0 |
+| `benefit` | `route.expected_benefit` | World-defined per opportunity | — |
+| `personality_bias` | `trait × 0.25` (family-matched) | **Weight: 0.25** per trait | 0.25 |
+| `confidence_bonus` | `route.confidence × 0.15` | **Weight: 0.15** | 0.15 |
+| `risk_penalty` | `route.expected_risk × risk_multiplier × 0.5` | **Risk weight: 0.5**; multiplier below | — |
+| `blocker_penalty` | `2.0 if route.blockers else 0.0` | **Fixed: 2.0** (see §6.3) | 2.0 |
+
+### 6.3 Risk Multiplier
+
+```python
+risk_multiplier = max(0.1, (1.0 + caution × 0.8) − bravery × 0.6)
+```
+
+| Parameter | Coefficient | Effect |
+|---|---|---|
+| `caution` (= 1.0 − bravery) | 0.8 | Higher caution → higher risk multiplier → more conservative |
+| `bravery` | 0.6 | Higher bravery → lower risk multiplier → more risk-tolerant |
+| Floor | 0.1 | Prevents multiplier going negative (very high bravery edge case) |
+
+Range: 0.1 (pure bravery) to 1.8 (pure caution). Default personality (bravery=0, caution=1.0) → multiplier = 1.8.
+
+### 6.4 Personality Bias by Route Family
+
+| RouteFamily | Trait | Weight |
+|---|---|---|
+| `RECOVER` | `caution` | 0.25 |
+| `GATHER_RESOURCE`, `SELL_LOOT_FOR_GOLD`, `TAKE_EASY_QUEST` | `greed` | 0.25 |
+| `ASK_INFORMATION`, `SCOUT_LOCATION` | `curiosity` | 0.25 |
+| `CRAFT_UPGRADE`, `GATHER_RESOURCE` | `industry` | 0.25 |
+| `FORM_PARTY` | `sociability` | 0.25 |
+| `BUY_UPGRADE`, `COMBAT_ENGAGE`, `DEFER_WITH_REASON` | (none) | 0.0 |
+
+Only one family match applies per route. Maximum personality_bias = 0.25.
+
+### 6.5 blocker_penalty = 2.0 — Justification
+
+`blocker_penalty` is a **fixed constant**, not graduated by severity.
+
+**Rationale (E12A, 2026-06-20):** In 100-tick measurements with `ENABLE_ADVENTURE_ROUTING=ON` (urban_political, seed=42), `blocker_frequency = 0.0` — no blocked routes were scored because resource nodes are absent in the test world. The constant cannot be empirically refined until world content provides non-DEFER route candidates.
+
+**Design intent:** A route with _any_ blocker (missing item, inaccessible location) should be strongly deprioritized. The 2.0 magnitude exceeds the maximum personality_bias+confidence_bonus contribution (0.40), ensuring blocked routes are overridden by the highest-urgency unblocked routes.
+
+**Revisit trigger:** If `blocker_frequency > 0.05` is observed in E12C regression tests, reconsider whether 2.0 is too blunt for minor blockers (e.g., gold deficit < 5).
+
+### 6.6 Score Range Summary (Estimated, No Blockers)
+
+| Component | Min | Max |
+|---|---|---|
+| urgency | 0.0 | ~2.0 |
+| benefit | 0.0 | ~0.5 (typical opportunity) |
+| personality_bias | 0.0 | 0.25 |
+| confidence_bonus | 0.0 | 0.15 |
+| risk_penalty | 0.0 | ~0.9 (max_risk=1.0 × 1.8 × 0.5) |
+| **Total non-blocked** | 0.0 | ~2.9 |
+| blocker_penalty | 0.0 | 2.0 (fixed) |
+| **Total blocked** | clamped to 0 | ~0.9 |
