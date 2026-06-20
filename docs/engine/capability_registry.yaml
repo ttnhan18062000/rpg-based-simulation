@@ -1,0 +1,220 @@
+---
+# Capability Registry — machine-readable capability matrix for the RPG V2 Engine.
+# Human-readable notes remain in docs/engine/known_limitations.md.
+# Used by src/engine/capability.py; consumed by Feature Pack architecture (Epic 6.3).
+#
+# status values: OFFICIAL | SUPPORTED | EXPERIMENTAL | DEPRECATED | UNSUPPORTED
+# since_version: first milestone/phase where the capability was ratified (null if unknown)
+
+capabilities:
+
+  # ── OFFICIAL ──────────────────────────────────────────────────────────────────
+
+  - capability_id: deterministic_replay
+    name: Deterministic Replay
+    status: OFFICIAL
+    description: Tick execution is bit-identical given the same seed. Replay manifest is written atomically and verified on load.
+    since_version: "Phase 2"
+    deprecated_reason: null
+
+  - capability_id: entity_state
+    name: Entity State
+    status: OFFICIAL
+    description: EntityState with all typed components (AttributeComponent, CombatComponent, BiologicalComponent, IdentityComponent, PersonalityComponent, InteractionComponent, TaskComponent, StrategicState).
+    since_version: "Phase 1"
+    deprecated_reason: null
+
+  - capability_id: authoritative_pipeline
+    name: Authoritative Mutation Pipeline
+    status: OFFICIAL
+    description: 17-phase refinement sequence for authoritative world mutation. All durable state changes go through this pipeline. Defined in docs/engine/authoritative_pipeline.md.
+    since_version: "Phase 4"
+    deprecated_reason: null
+
+  - capability_id: kernel_loop
+    name: 6-Phase Kernel Loop
+    status: OFFICIAL
+    description: Deterministic 6-phase tick loop (INIT → SCHEDULING → COLLECTION → RESOLUTION → CLEANUP → ADVANCEMENT) plus non-authoritative PERSISTENCE hook.
+    since_version: "Phase 4"
+    deprecated_reason: null
+
+  - capability_id: combat_resolution
+    name: Combat Resolution
+    status: OFFICIAL
+    description: Full combat pipeline including damage formula, tactical modifiers, durability decay, and victory outcome determination. Defined in docs/mechanics/02_combat_laws.md.
+    since_version: "Phase 3"
+    deprecated_reason: null
+
+  - capability_id: combat_movement
+    name: Combat Movement
+    status: OFFICIAL
+    description: Entity movement with congestion handling, legality guards, and linear stepping. Supports yielding under high-density overlap.
+    since_version: "Phase 3"
+    deprecated_reason: null
+
+  - capability_id: resource_harvesting
+    name: Resource Harvesting
+    status: OFFICIAL
+    description: Resource node harvesting with atomic conservation. Defined in docs/mechanics/03_economic_laws.md.
+    since_version: "Phase 5"
+    deprecated_reason: null
+
+  - capability_id: town_resolution
+    name: Town Building Resolution
+    status: OFFICIAL
+    description: TownResolutionSystem supports Blacksmith (crafting), Inn (REST), and Tavern (EAT) building types.
+    since_version: "Phase 6"
+    deprecated_reason: null
+
+  - capability_id: strategic_cognition
+    name: Strategic Cognition
+    status: OFFICIAL
+    description: Full goal hierarchy with interruption resistance, lead tracking (coordinate-based), and knowledge management. Defined in docs/mechanics/04_strategic_cognition.md.
+    since_version: "Phase 4"
+    deprecated_reason: null
+
+  - capability_id: perception
+    name: Perception System
+    status: OFFICIAL
+    description: Salience filtering, attention focus, and signal budget clamping. Bounded cognition contract enforced.
+    since_version: "Phase 4"
+    deprecated_reason: null
+
+  - capability_id: world_generation
+    name: World Generation
+    status: OFFICIAL
+    description: Declarative world module system with composition, procedural generator, and integrity validation. 13 worldgen tickets completed.
+    since_version: "worldgen-module-epic"
+    deprecated_reason: null
+
+  - capability_id: world_composition
+    name: World Composition
+    status: OFFICIAL
+    description: WorldCompositionSpec, declarative topology, regional sovereignty, and distribution. Defined in docs/mechanics/06_worldbuilding_foundation.md.
+    since_version: "worldgen-module-epic"
+    deprecated_reason: null
+
+  - capability_id: xp_rewards
+    name: XP and Reward System
+    status: OFFICIAL
+    description: XP scaling, reward ledger, and conversion option generation. Defined in docs/mechanics/01_entity_anatomy.md.
+    since_version: "Phase 8"
+    deprecated_reason: null
+
+  - capability_id: observability_events
+    name: Observability Events
+    status: OFFICIAL
+    description: SimulationEvent extraction, JSONL output, hard law monitoring, and alert routing.
+    since_version: "Phase 7"
+    deprecated_reason: null
+
+  - capability_id: entity_identity
+    name: Entity Identity and Behavioral Differentiation
+    status: OFFICIAL
+    description: Full identity/personality system with hero authoring, observability snapshots, diff harness, and scoring calibration. Implemented in Epic 1.1.
+    since_version: "TCK-20260619-E11-ENTITY-IDENTITY"
+    deprecated_reason: null
+
+  - capability_id: phase_domain_permissions
+    name: Per-Phase Domain Permissions
+    status: OFFICIAL
+    description: Declarative read/write/emit domain declarations per engine phase. Enforced by architecture guard tests.
+    since_version: "TCK-20260619-E-PHASE-PERMISSIONS"
+    deprecated_reason: null
+
+  # ── SUPPORTED ─────────────────────────────────────────────────────────────────
+
+  - capability_id: crafting
+    name: Crafting System
+    status: SUPPORTED
+    description: Basic crafting recipes (8 active). gather→craft→item chain supported. Full recipe catalog expansion planned in Epic 1.3.
+    since_version: "Phase 5"
+    deprecated_reason: null
+
+  - capability_id: quest_generation
+    name: Quest Generation
+    status: SUPPORTED
+    description: Static quest generation with objective chains, reward specs, and faction associations. Pressure-driven generation planned in Epic 2.3.
+    since_version: "Phase 8"
+    deprecated_reason: null
+
+  - capability_id: skill_advancement
+    name: Skill Advancement
+    status: SUPPORTED
+    description: AP-based skill progression and equipment decisions via progression domain.
+    since_version: "Phase 8"
+    deprecated_reason: null
+
+  - capability_id: world_evolution
+    name: World Evolution
+    status: SUPPORTED
+    description: Regional trauma accumulation and basic ecology. Full resource ecology (Epic 2.1) and macro-economy (Epic 3.3) are planned.
+    since_version: "Phase 9"
+    deprecated_reason: null
+
+  - capability_id: worker_concurrency
+    name: Worker Concurrency
+    status: SUPPORTED
+    description: Thread-based BehaviorWorker execution. Bit-identical parity with sequential mode is only officially ratified for the Sequential executor.
+    since_version: "Phase 4"
+    deprecated_reason: null
+
+  # ── EXPERIMENTAL ──────────────────────────────────────────────────────────────
+
+  - capability_id: worker_concurrency_parity
+    name: Concurrent Worker Bit-Identical Parity
+    status: EXPERIMENTAL
+    description: Bit-identical deterministic parity for concurrent (Thread/Worker) execution vs Sequential mode. Under active ratification.
+    since_version: null
+    deprecated_reason: null
+
+  # ── UNSUPPORTED ───────────────────────────────────────────────────────────────
+
+  - capability_id: complex_resource_regen
+    name: Complex Resource Regeneration
+    status: UNSUPPORTED
+    description: Seasonal resource growth, depletion cooldowns. Resource nodes are static or reset on scenario reload. Planned in Epic 2.1.
+    since_version: null
+    deprecated_reason: null
+
+  - capability_id: guild_buildings
+    name: Guild and Class Hall Buildings
+    status: UNSUPPORTED
+    description: Guild halls, Class Halls, and other building types beyond Blacksmith/Inn/Tavern are not yet functionally integrated in TownResolutionSystem.
+    since_version: null
+    deprecated_reason: null
+
+  - capability_id: social_blocker_resolution
+    name: Social and Plot Blocker Resolution
+    status: UNSUPPORTED
+    description: StrategicIntelligenceSystem only resolves crafting blockers for Material resources. Social, capability, or plot-based blockers are unsupported.
+    since_version: null
+    deprecated_reason: null
+
+  - capability_id: person_based_leads
+    name: Person and Concept Based Leads
+    status: UNSUPPORTED
+    description: Strategic leads are restricted to coordinate-based locations. Person or concept-based leads are not yet modeled.
+    since_version: null
+    deprecated_reason: null
+
+  - capability_id: complex_pathfinding
+    name: Complex Pathfinding
+    status: UNSUPPORTED
+    description: Dynamic obstacle pathfinding. V2 currently uses linear stepping toward coordinates. Complex multi-step path planning is unsupported.
+    since_version: null
+    deprecated_reason: null
+
+  - capability_id: complex_social_contention
+    name: Complex Social Contention Resolution
+    status: UNSUPPORTED
+    description: Social negotiation or roll-off logic for resource contention. Contention is resolved by deterministic registration order only.
+    since_version: null
+    deprecated_reason: null
+
+  - capability_id: metric_export
+    name: Granular Metric Export
+    status: UNSUPPORTED
+    description: Per-entity strategic bandwidth and fine-grained metric export to external Prometheus/Grafana dashboards. Coarse metrics are available; per-entity signals are not exported.
+    since_version: null
+    deprecated_reason: null

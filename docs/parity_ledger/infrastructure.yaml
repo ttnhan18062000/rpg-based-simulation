@@ -2364,3 +2364,13 @@
   test_path: tests/architecture/test_phase_domain_permissions.py::test_each_authoritative_phase_declares_emit_domains
   divergence_note: null
   support_boundary: null
+- id: INFRA-209
+  text: Capability registry (docs/engine/capability_registry.yaml) exists with ≥20 entries; Python reader (src/engine/capability.py) correctly returns OFFICIAL/SUPPORTED/UNSUPPORTED status per capability_id.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: docs/engine/capability_registry.yaml + src/engine/capability.py::CapabilityRegistry
+  proof_type: architecture
+  test_path: tests/unit/engine/test_capability_registry.py::test_capability_reader_returns_correct_status
+  divergence_note: null
+  support_boundary: null

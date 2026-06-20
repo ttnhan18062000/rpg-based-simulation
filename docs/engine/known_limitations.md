@@ -9,6 +9,8 @@ audience: developer
 
 This document records the current technical limitations, unsupported features, and runtime constraints of the `src` engine.
 
+> **Machine-readable state:** For a queryable capability matrix, see `docs/engine/capability_registry.yaml` and `src/engine/capability.py`. This document keeps only human-readable context and notes.
+
 ## 1. Gameplay / Mechanics Limitations
 
 ### 1.1 Spatial / Navigation
