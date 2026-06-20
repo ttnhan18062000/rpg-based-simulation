@@ -1,10 +1,10 @@
 ---
-status: open
+status: historical
 layer: simulation
 authority: P1
 audience: agent
 ticket_id: TCK-20260619-E23A-QUEST-OPPORTUNITY
-phase: open
+phase: done
 date: 2026-06-20
 tags: [quest-generation, pressure-driven, opportunity-type, world-emergence, phase-2]
 ---
@@ -15,7 +15,7 @@ tags: [quest-generation, pressure-driven, opportunity-type, world-emergence, pha
 Epic 2.3A · QuestOpportunity Model + Generator
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -120,13 +120,28 @@ In `src/domains/world_emergence/phase.py` (or `services.py`): after aggregating 
 - `diplomatic_errand` stub: set `reward_spec={}` and `faction_source="stub"` — do not implement logic.
 - Do NOT import `QuestOpportunity` inside `execute_brain()` or any hot-path simulation code.
 
+### Implemented (2026-06-20)
+- Added `QuestOpportunity` frozen dataclass to `src/core/models/quests.py`.
+- Added `QuestOpportunityGenerator` to `src/domains/world_emergence/services.py` with `from_resource_depleted()`, `from_threat_signal()`, and `from_entity_need()` (stub → None).
+- Added `quest_opportunities: Tuple[QuestOpportunity, ...]` field to `WorldEmergenceResult` in `schema.py` (TYPE_CHECKING guard — no runtime circular import).
+- Wired step 5b into `WorldEmergencePhase.execute()`: iterates `recent_events`, calls generator for RESOURCE_DEPLETED and high-severity (≥0.5) ENTITY_DEATH/CAMP_RAID events.
+- Added missing `WorldEventCategory` import to `phase.py`.
+- 8 new tests added; 26 tests passing.
+- Parity entries WORLD-098 and WORLD-099 added to `docs/parity_ledger/world_dynamics.yaml`.
+
 ## Test Summary
 ```bash
-pytest tests/unit/quest/test_quest_generation.py -x -v
+pytest tests/unit/quest/test_quest_generation.py tests/unit/domains/world_emergence/ -x -v
+# 26 passed in 0.22s
 ```
 
 ## Files Changed
-_To be filled on completion._
+- `src/core/models/quests.py` — added `QuestOpportunity` dataclass
+- `src/domains/world_emergence/services.py` — added `QuestOpportunityGenerator`
+- `src/domains/world_emergence/schema.py` — added `quest_opportunities` field to `WorldEmergenceResult`
+- `src/domains/world_emergence/phase.py` — wired step 5b, added imports
+- `tests/unit/quest/test_quest_generation.py` — 8 new E23A tests
+- `docs/parity_ledger/world_dynamics.yaml` — WORLD-098, WORLD-099
 
 ## Completion Summary
-_To be filled on completion._
+Introduced the `QuestOpportunity` typed dataclass (`src/core/models/quests.py`) and `QuestOpportunityGenerator` service (`src/domains/world_emergence/services.py`) with three generator methods: `from_resource_depleted()` (resource_crisis opportunities), `from_threat_signal()` (threat_response opportunities for high-severity events), and `from_entity_need()` (stub returning None). Added `quest_opportunities: Tuple[QuestOpportunity, ...]` field to `WorldEmergenceResult` and wired step 5b into `WorldEmergencePhase.execute()` to populate it from raw `recent_events`. All ID generation is deterministic (no uuid). 8 new tests added; 26 total tests passing. Parity entries WORLD-098 and WORLD-099 added.

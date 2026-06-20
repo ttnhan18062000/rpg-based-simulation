@@ -974,3 +974,23 @@
   test_path: null
   divergence_note: null
   support_boundary: null
+- id: WORLD-098
+  text: QuestOpportunity is generated deterministically from RESOURCE_DEPLETED events via QuestOpportunityGenerator.from_resource_depleted().
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/domains/world_emergence/services.py (QuestOpportunityGenerator.from_resource_depleted); src/core/models/quests.py (QuestOpportunity)
+  proof_type: parity
+  test_path: tests/unit/quest/test_quest_generation.py::test_resource_crisis_quest_generated_on_depletion
+  divergence_note: null
+  support_boundary: null
+- id: WORLD-099
+  text: Same WorldEvent input + same tick + same seed → identical QuestOpportunity.id (determinism guarantee).
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/domains/world_emergence/services.py (QuestOpportunityGenerator.from_resource_depleted; id formula f"{kind}_{source_event_id}_{tick % 10000}")
+  proof_type: parity
+  test_path: tests/unit/quest/test_quest_generation.py::test_quest_generation_determinism
+  divergence_note: null
+  support_boundary: null

@@ -7,7 +7,10 @@ Phase 8 — World Emergence Typed Models and Schemas.
 from __future__ import annotations
 from enum import Enum
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Tuple, Sequence
+from typing import Dict, List, Optional, Tuple, Sequence, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from src.core.models.quests import QuestOpportunity
 
 class WorldEventCategory(str, Enum):
     ENTITY_DEATH = "ENTITY_DEATH"
@@ -113,3 +116,4 @@ class WorldEmergenceResult:
     quest_seeds: Tuple[QuestSeed, ...] = field(default_factory=tuple)
     rumor_seeds: Tuple[RumorSeed, ...] = field(default_factory=tuple)
     service_pressures: Tuple[ServicePressure, ...] = field(default_factory=tuple)
+    quest_opportunities: Tuple[QuestOpportunity, ...] = field(default_factory=tuple)

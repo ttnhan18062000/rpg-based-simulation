@@ -8,8 +8,10 @@ from __future__ import annotations
 import hashlib
 from typing import Tuple, Optional, Sequence
 from src.core.state import AuthoritativeState, EntityState
+from src.core.models.quests import QuestOpportunity
 from src.domains.world_emergence.schema import (
-    RegionalPressure, ResourceScarcitySignal, WorldOpportunityPressure, QuestSeed, RumorSeed, WorldEmergenceResult
+    RegionalPressure, ResourceScarcitySignal, WorldOpportunityPressure, QuestSeed, RumorSeed,
+    WorldEmergenceResult, WorldEvent, WorldEventCategory
 )
 
 class WorldOpportunityPressureService:
@@ -158,6 +160,102 @@ class RumorSeedService:
                 ))
 
         return tuple(seeds[:10])
+
+
+class QuestOpportunityGenerator:
+    """
+    Converts world pressure signals (WorldEvent objects) into typed QuestOpportunity objects.
+
+    All methods are read-only: they consume event data and return a new QuestOpportunity
+    or None. They do NOT write to quest_registry or any durable store — that is E23B's job.
+    All ID generation is deterministic: no uuid(), no time-based seeding.
+    """
+
+    # High-severity threshold for threat events to trigger a threat_response opportunity
+    _THREAT_SEVERITY_THRESHOLD: float = 0.5
+
+    # Threat event categories that qualify for threat_response opportunities
+    _THREAT_CATEGORIES: frozenset = frozenset({
+        WorldEventCategory.ENTITY_DEATH,
+        WorldEventCategory.CAMP_RAID,
+    })
+
+    @staticmethod
+    def from_resource_depleted(
+        event: WorldEvent,
+        tick: int,
+        seed: int,
+    ) -> Optional[QuestOpportunity]:
+        """Generate a resource_crisis opportunity from a RESOURCE_DEPLETED event."""
+        if event.category != WorldEventCategory.RESOURCE_DEPLETED:
+            return None
+
+        resource = event.subject or "unknown_resource"
+        region = event.region_id or "unknown_region"
+        source_event_id = f"{event.category.value}_{region}_{event.tick}"
+        opp_id = f"resource_crisis_{source_event_id}_{tick % 10000}"
+
+        # Objective: fetch a quantity of the depleted resource
+        quantity = max(1, int(event.severity * 3))
+        objective_chain: Tuple[str, ...] = (f"fetch:{resource}:{quantity}",)
+
+        # Reward scales with severity (mild depletion = modest reward)
+        gold = max(20, int(event.severity * 80))
+        xp = max(50, int(event.severity * 150))
+
+        return QuestOpportunity(
+            id=opp_id,
+            kind="resource_crisis",
+            trigger_condition=f"{resource} depleted in {region} at tick {event.tick}",
+            objective_chain=objective_chain,
+            reward_spec={"gold": gold, "xp": xp, "faction_rep": round(event.severity * 0.1, 3)},
+            faction_source=None,
+            expiry_ticks=200,
+            source_event_id=source_event_id,
+        )
+
+    @staticmethod
+    def from_threat_signal(
+        threat_event: WorldEvent,
+        tick: int,
+        seed: int,
+    ) -> Optional[QuestOpportunity]:
+        """Generate a threat_response opportunity from a high-severity threat event."""
+        if threat_event.category not in QuestOpportunityGenerator._THREAT_CATEGORIES:
+            return None
+        if threat_event.severity < QuestOpportunityGenerator._THREAT_SEVERITY_THRESHOLD:
+            return None
+
+        subject = threat_event.subject or "threat"
+        region = threat_event.region_id or "unknown_region"
+        source_event_id = f"{threat_event.category.value}_{region}_{threat_event.tick}"
+        opp_id = f"threat_response_{source_event_id}_{tick % 10000}"
+
+        objective_chain: Tuple[str, ...] = (f"eliminate:{subject}:1",)
+
+        gold = max(30, int(threat_event.severity * 120))
+        xp = max(80, int(threat_event.severity * 200))
+
+        return QuestOpportunity(
+            id=opp_id,
+            kind="threat_response",
+            trigger_condition=f"High-severity {threat_event.category.value} in {region} at tick {threat_event.tick}",
+            objective_chain=objective_chain,
+            reward_spec={"gold": gold, "xp": xp, "faction_rep": round(threat_event.severity * 0.15, 3)},
+            faction_source=None,
+            expiry_ticks=100,
+            source_event_id=source_event_id,
+        )
+
+    @staticmethod
+    def from_entity_need(
+        entity_id: int,
+        need_kind: str,
+        ticks_unsatisfied: int,
+        tick: int,
+    ) -> Optional[QuestOpportunity]:
+        """Stub — diplomatic_errand from long-unsatisfied entity need. Returns None until Phase 5."""
+        return None
 
 
 class WorldToEntitySignalBridge:
