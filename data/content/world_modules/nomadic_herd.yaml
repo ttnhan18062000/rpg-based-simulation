@@ -1,0 +1,36 @@
+module_id: "nomadic_herd"
+module_type: "population"
+display_name: "Nomadic Herd"
+description: "A migrating beast herd that roams the frontier, shifting region every 50 ticks. Provides animal loot drops (pelts, fangs, rations) and a tracking quest for hunters."
+version: "1.0.0"
+provides: ["nomadic_presence", "hunt_target"]
+observability_tags: ["population", "nomadic", "beast", "migration"]
+biomes: []
+ecologies: []
+regions:
+  - id: "near_forest"
+    type: "wilderness"
+    grid_bounds: [60, 130, 100, 170]
+    terrain: "plain"
+    hazard_level: 1.5
+  - id: "wolf_den"
+    type: "wilderness"
+    grid_bounds: [60, 170, 100, 210]
+    terrain: "forest"
+    hazard_level: 2.0
+factions: ["wild_beast_pack"]
+populations: ["wolf_pack_small"]
+resources: {}
+buildings: {}
+services: {}
+relationships: []
+quest_definitions:
+  - id: "track_nomadic_herd"
+    type: "hunt"
+    required_participant_tags: ["humanoid"]
+    required_location_tags: ["wilderness", "plain"]
+    reward_budget: 110
+    procedural_hints:
+      difficulty: 2
+      escalation: false
+    tags: ["nomadic", "population", "hunt", "beast"]

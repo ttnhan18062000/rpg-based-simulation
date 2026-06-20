@@ -20,6 +20,11 @@ MODULE_MATRIX = [
     "ruins_mystery_quest",
     "trading_company_hub",
     "scalable_bandit_camp",
+    # TCK-20260619-E13B-MODULE-TYPES: terrain and population module types
+    "mountain_pass",
+    "river_crossing",
+    "nomadic_herd",
+    "settled_quarter",
 ]
 
 

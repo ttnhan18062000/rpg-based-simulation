@@ -114,7 +114,7 @@ Foundation layer is well-populated and stable. No gaps here.
 
 | Category | Count | Notes |
 |---|---|---|
-| World modules | 14 | ⚠️ Skewed type distribution |
+| World modules | 19 | ✅ All 7 type slots populated (TCK-20260619-E13B) |
 | World compositions | 5 (+4 generated) | Thin for a simulation platform |
 
 **Module type distribution:**
@@ -126,8 +126,8 @@ Foundation layer is well-populated and stable. No gaps here.
 | danger_zone | 2 |
 | settlement | 2 |
 | economy | 1 |
-| **terrain** | **0** ❌ |
-| **population** | **0** ❌ |
+| **terrain** | **2** ✅ |
+| **population** | **2** ✅ |
 
 ---
 
@@ -159,7 +159,11 @@ confirms the underlying cause has been addressed.
 
 ---
 
-### F2 — No terrain or population world module types — Gap Risk: 10 / 15
+### F2 — No terrain or population world module types — Gap Risk: 10 / 15 — **RESOLVED**
+
+**Resolution:** TCK-20260619-E13B-MODULE-TYPES added 2 terrain modules (mountain_pass, river_crossing)
+and 2 population modules (nomadic_herd, settled_quarter) on 2026-06-20.
+Module type distribution now: terrain=2, population=2 (from 0/0).
 
 | Dimension | Score | Reason |
 |---|---|---|
@@ -168,9 +172,13 @@ confirms the underlying cause has been addressed.
 | RPG Essential | 1 | These module types are useful but not individually critical; their absence is felt collectively |
 | **Total** | **10** | |
 
-6 of 7 registered module types have at least one entry. `terrain` and `population` have zero.
+~~6 of 7 registered module types have at least one entry. `terrain` and `population` have zero.
 This limits world variety: current compositions are conflict + ecology + settlement only.
-A dungeon, mountain pass, or nomadic population module would each require a new type.
+A dungeon, mountain pass, or nomadic population module would each require a new type.~~
+
+**Post-resolution:** All 7 registered module types have at least one entry. mountain_pass and
+river_crossing cover altitude/traversal terrain. nomadic_herd covers migratory beast populations.
+settled_quarter covers dense service-hub populations with crafting access.
 
 ---
 
@@ -239,7 +247,7 @@ default to neutral posture, reducing faction conflict variety.
 | Finding | Description | Gap Risk |
 |---|---|---|
 | F1 | Quest definitions critically thin (4 total) — **RESOLVED: 34 total** | **15 / 15** |
-| F2 | No terrain or population module types | **10 / 15** |
+| F2 | No terrain or population module types — **RESOLVED: terrain=2, population=2** | **10 / 15** |
 | F3 | Crafting recipes thin (8 for 34 items) | **10 / 15** |
 | F4 | Entity archetype distribution skewed | **9 / 15** |
 | F5 | Scenarios frontier-concentrated | **9 / 15** |
