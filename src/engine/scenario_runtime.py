@@ -1,4 +1,4 @@
-# Compliance IDs: INFRA-118
+# Compliance IDs: INFRA-118, INFRA-214
 """
 ScenarioRuntimeService — controllable execution wrapper around the Kernel.
 
@@ -6,8 +6,13 @@ Owns the Kernel lifecycle for a single scenario run. Exposes start/pause/resume/
 step/abort so test harnesses and future REST layers can drive tick progression
 without embedding kernel construction details.
 
+E31B additions:
+  - ObjectiveEvaluator: pure static evaluator for victory_conditions.
+  - Stall detector on ScenarioRuntimeService: fires STALLED after STALL_THRESHOLD
+    consecutive ticks with zero kernel events.
+  - _evaluate_after_tick() wired into both _run_loop() and step().
+
 Out of scope (see sibling tickets):
-  E31B — ScenarioObjectiveFSM (victory condition evaluation)
   E31C — checkpoint / restore
   E31D — REST API
 """
@@ -18,6 +23,14 @@ from typing import TYPE_CHECKING, Optional
 
 if TYPE_CHECKING:
     from src.scenarios.schema import SimulationScenarioDefinition
+    from src.core.state import AuthoritativeState
+
+# ---------------------------------------------------------------------------
+# Module-level constants
+# ---------------------------------------------------------------------------
+
+STALL_THRESHOLD: int = 50
+"""Number of consecutive zero-event ticks before the stall detector fires STALLED."""
 
 
 class ScenarioObjectiveState(str, Enum):
@@ -28,6 +41,56 @@ class ScenarioObjectiveState(str, Enum):
     OBJECTIVE_FAILED = "OBJECTIVE_FAILED"
     STALLED = "STALLED"
     ABORTED = "ABORTED"
+
+
+class ObjectiveEvaluator:
+    """Pure static evaluator for scenario victory_conditions.
+
+    Reads world state — never mutates it. Accepts conditions as a list of
+    ``VictoryCondition`` objects or plain dicts (for test convenience); both
+    provide ``.kind`` / ``.value`` attributes or ``["kind"]`` / ``["value"]``
+    keys respectively.
+
+    Evaluation order: conditions are tested in list order; first match wins.
+    If ``conditions`` is ``None`` or empty, returns ``RUNNING`` immediately.
+    """
+
+    @staticmethod
+    def evaluate(
+        state: "AuthoritativeState",
+        conditions: "list | None",
+    ) -> ScenarioObjectiveState:
+        """Evaluate ``conditions`` against ``state`` and return the resulting state.
+
+        Args:
+            state: Current ``AuthoritativeState`` snapshot (read-only).
+            conditions: List of ``VictoryCondition`` objects or dicts, or ``None``.
+
+        Returns:
+            ``OBJECTIVE_MET``, ``OBJECTIVE_FAILED``, or ``RUNNING``.
+        """
+        if not conditions:
+            return ScenarioObjectiveState.RUNNING
+
+        for cond in conditions:
+            if isinstance(cond, dict):
+                kind = cond.get("kind")
+                value = cond.get("value")
+            else:
+                kind = getattr(cond, "kind", None)
+                value = getattr(cond, "value", None)
+
+            if kind == "tick_limit" and value is not None and state.tick >= value:
+                return ScenarioObjectiveState.OBJECTIVE_MET
+
+            if kind == "entity_count" and value is not None:
+                alive = sum(
+                    1 for e in state.entities.values() if e.combat.alive
+                )
+                if alive < value:
+                    return ScenarioObjectiveState.OBJECTIVE_FAILED
+
+        return ScenarioObjectiveState.RUNNING
 
 
 class ScenarioRuntimeService:
@@ -52,7 +115,15 @@ class ScenarioRuntimeService:
         svc2.abort()
     """
 
-    __slots__ = ("_spec", "_kernel", "_state", "_tick", "_paused")
+    __slots__ = (
+        "_spec",
+        "_kernel",
+        "_state",
+        "_tick",
+        "_paused",
+        "_stall_counter",
+        "_last_event_tick",
+    )
 
     def __init__(self, spec: SimulationScenarioDefinition) -> None:
         self._spec = spec
@@ -60,6 +131,8 @@ class ScenarioRuntimeService:
         self._state: ScenarioObjectiveState = ScenarioObjectiveState.RUNNING
         self._tick: int = 0
         self._paused: bool = False
+        self._stall_counter: int = 0
+        self._last_event_tick: int = 0
 
     # ── public API ─────────────────────────────────────────────────────────────
 
@@ -99,10 +172,20 @@ class ScenarioRuntimeService:
         """Advance exactly one tick.
 
         Builds the kernel on first call if not already started.
-        Raises RuntimeError if aborted.
+        Raises RuntimeError if already in a terminal state (ABORTED, OBJECTIVE_MET,
+        OBJECTIVE_FAILED, or STALLED).
         """
         if self._state == ScenarioObjectiveState.ABORTED:
             raise RuntimeError("Cannot step an aborted ScenarioRuntimeService.")
+        _OBJECTIVE_TERMINAL = (
+            ScenarioObjectiveState.OBJECTIVE_MET,
+            ScenarioObjectiveState.OBJECTIVE_FAILED,
+            ScenarioObjectiveState.STALLED,
+        )
+        if self._state in _OBJECTIVE_TERMINAL:
+            raise RuntimeError(
+                f"Cannot step a scenario in terminal state: {self._state}."
+            )
         if self._kernel is None:
             self._kernel = self._build_kernel()
         if self._paused:
@@ -110,6 +193,7 @@ class ScenarioRuntimeService:
             pass
         self._kernel.tick_once()
         self._tick += 1
+        self._evaluate_after_tick()
 
     def abort(self) -> None:
         """Shutdown the kernel and mark the scenario as ABORTED.
@@ -151,7 +235,7 @@ class ScenarioRuntimeService:
     # ── internal ───────────────────────────────────────────────────────────────
 
     def _run_loop(self, tick_limit: int) -> None:
-        """Run tick_once() until tick_limit is reached or paused/aborted."""
+        """Run tick_once() until tick_limit is reached or paused/aborted/terminal."""
         while (
             self._tick < tick_limit
             and not self._paused
@@ -159,6 +243,52 @@ class ScenarioRuntimeService:
         ):
             self._kernel.tick_once()
             self._tick += 1
+            self._evaluate_after_tick()
+
+    def _evaluate_after_tick(self) -> None:
+        """Evaluate objective conditions and the stall detector after each tick.
+
+        Called immediately after ``tick_once()`` and ``self._tick += 1`` in both
+        ``_run_loop()`` and ``step()``.  Mutates ``self._state`` if a terminal
+        condition is reached and sets ``self._paused = True`` to break
+        ``_run_loop()``.  Does **not** call ``kernel.shutdown()`` — callers use
+        ``abort()`` for cleanup (which calls shutdown idempotently).
+
+        Evaluation order (per investigation.md §Stall Detector):
+          1. Objective conditions — OBJECTIVE_MET / OBJECTIVE_FAILED take priority.
+          2. Stall detector — STALLED only fires when no objective condition fired.
+        """
+        # 1. Objective evaluation (takes priority over stall)
+        conditions = self._spec.victory_conditions
+        if conditions:
+            result = ObjectiveEvaluator.evaluate(
+                self._kernel.state,
+                list(conditions),
+            )
+            if result != ScenarioObjectiveState.RUNNING:
+                self._state = result
+                self._paused = True
+                return
+
+        # 2. Stall detector
+        # _current_tick_event_count is set by kernel.tick_once() to the count of
+        # SimulationEvent objects generated in that tick (kernel.py line 764).
+        # Any event > 0 resets the counter; zero events increment it.
+        # Simplification: all event kinds count — no filtering by category.
+        # Defensive int cast: in tests, mock kernels may expose a MagicMock attribute
+        # rather than a real int; int() normalises it safely.
+        try:
+            event_count = int(getattr(self._kernel, "_current_tick_event_count", 0))
+        except (TypeError, ValueError):
+            event_count = 0
+        if event_count > 0:
+            self._stall_counter = 0
+            self._last_event_tick = self._tick
+        else:
+            self._stall_counter += 1
+            if self._stall_counter > STALL_THRESHOLD:
+                self._state = ScenarioObjectiveState.STALLED
+                self._paused = True
 
     def _build_kernel(self):
         """Construct a minimal Kernel for this scenario spec."""

@@ -70,11 +70,16 @@ class TestScenarioObjectiveStateEnum:
 # ── AC1: start() runs N ticks ─────────────────────────────────────────────────
 
 class TestStart:
-    def test_start_runs_100_ticks_without_error(self):
+    def test_start_runs_ticks_without_error(self):
+        # E31B: stall detector fires after STALL_THRESHOLD (50) consecutive zero-event
+        # ticks. An empty-world scenario produces zero events per tick, so we cap at 50
+        # to complete before the stall fires. Use tick_limit=50 for this baseline test.
+        from src.engine.scenario_runtime import ScenarioObjectiveState, STALL_THRESHOLD
         svc = _make_service()
         try:
-            svc.start(tick_limit=100)
-            assert svc.tick == 100
+            svc.start(tick_limit=STALL_THRESHOLD)
+            assert svc.tick == STALL_THRESHOLD
+            assert svc.objective_state == ScenarioObjectiveState.RUNNING
         finally:
             svc.abort()
 

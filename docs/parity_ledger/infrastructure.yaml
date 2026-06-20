@@ -2417,12 +2417,12 @@
   support_boundary: null
 
 - id: INFRA-214
-  text: "ScenarioRuntimeService kernel lifecycle (Epic 3.1A): ScenarioRuntimeService owns a Kernel for one scenario run, exposing start/pause/resume/step/abort. Tick loop is synchronous; pause()/resume() are cooperative flag operations. abort() calls kernel.shutdown() to prevent QueueDrainWorker thread leaks. ScenarioObjectiveState enum (RUNNING/OBJECTIVE_MET/OBJECTIVE_FAILED/STALLED/ABORTED) tracks execution-level state. VictoryCondition schema added to SimulationScenarioDefinition (kinds: tick_limit, entity_count); evaluation deferred to E31B."
+  text: "ScenarioRuntimeService kernel lifecycle (Epic 3.1A+3.1B): ScenarioRuntimeService owns a Kernel for one scenario run, exposing start/pause/resume/step/abort. Tick loop is synchronous; pause()/resume() are cooperative flag operations. abort() calls kernel.shutdown() to prevent QueueDrainWorker thread leaks. ScenarioObjectiveState enum (RUNNING/OBJECTIVE_MET/OBJECTIVE_FAILED/STALLED/ABORTED) tracks execution-level state. VictoryCondition schema added to SimulationScenarioDefinition (kinds: tick_limit, entity_count). ObjectiveEvaluator (pure static, E31B) evaluates conditions after each tick: tick_limit fires OBJECTIVE_MET when state.tick >= value; entity_count fires OBJECTIVE_FAILED when alive entities (e.combat.alive) < value. Stall detector fires STALLED after STALL_THRESHOLD (50) consecutive zero-event ticks. Evaluation order: objective conditions before stall detector. _evaluate_after_tick() wired into both _run_loop() and step(); step() raises RuntimeError in any terminal state."
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: src/engine/scenario_runtime.py::ScenarioRuntimeService + src/engine/scenario_runtime.py::ScenarioObjectiveState + src/scenarios/schema.py::VictoryCondition
+  v2_evidence: src/engine/scenario_runtime.py::ScenarioRuntimeService + src/engine/scenario_runtime.py::ScenarioObjectiveState + src/engine/scenario_runtime.py::ObjectiveEvaluator + src/engine/scenario_runtime.py::STALL_THRESHOLD + src/scenarios/schema.py::VictoryCondition
   proof_type: feature
-  test_path: tests/unit/engine/test_scenario_runtime_service.py::TestStart::test_start_runs_100_ticks_without_error
+  test_path: tests/unit/engine/test_scenario_runtime_service.py::TestStart::test_start_runs_ticks_without_error + tests/integration/scenarios/test_scenario_runtime_service.py::TestObjectiveMet::test_scenario_reaches_objective_met
   divergence_note: null
   support_boundary: null
