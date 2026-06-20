@@ -24,3 +24,31 @@ resources:
   spirit_wisp: 2
 relationships: ["forest_wardens_to_wild_beasts"]
 observability_tags: ["ecology"]
+quest_definitions:
+  - id: "grove_escort_warden_patrol"
+    type: "escort"
+    required_participant_tags: ["humanoid"]
+    required_location_tags: ["wilderness", "forest"]
+    reward_budget: 100
+    procedural_hints:
+      difficulty: 1
+      escalation: false
+    tags: ["warden", "ecology", "escort"]
+  - id: "grove_defend_sacred_grove"
+    type: "defend"
+    required_participant_tags: ["humanoid"]
+    required_location_tags: ["wilderness", "forest"]
+    reward_budget: 120
+    procedural_hints:
+      difficulty: 2
+      escalation: true
+    tags: ["warden", "ecology", "defense"]
+  - id: "grove_investigate_spirit_disturbance"
+    type: "investigate"
+    required_participant_tags: ["spiritual"]
+    required_location_tags: ["wilderness", "forest"]
+    reward_budget: 150
+    procedural_hints:
+      difficulty: 3
+      escalation: true
+    tags: ["warden", "spirit", "mystery"]

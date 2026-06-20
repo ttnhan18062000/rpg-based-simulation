@@ -35,3 +35,31 @@ building_recipes:
     count: 1
     region: "hometown"
 relationships: ["town_to_merchants", "merchants_to_town"]
+quest_definitions:
+  - id: "trade_fetch_shipment_goods"
+    type: "fetch"
+    required_participant_tags: ["humanoid", "merchant_minded"]
+    required_location_tags: ["plain", "trade_route"]
+    reward_budget: 100
+    procedural_hints:
+      difficulty: 1
+      escalation: false
+    tags: ["trade", "economy", "supply"]
+  - id: "trade_escort_merchant_convoy"
+    type: "escort"
+    required_participant_tags: ["humanoid", "merchant_minded"]
+    required_location_tags: ["plain", "trade_route"]
+    reward_budget: 120
+    procedural_hints:
+      difficulty: 2
+      escalation: true
+    tags: ["trade", "economy", "escort"]
+  - id: "trade_investigate_sabotage"
+    type: "investigate"
+    required_participant_tags: ["humanoid", "merchant_minded"]
+    required_location_tags: ["plain", "trade_route"]
+    reward_budget: 150
+    procedural_hints:
+      difficulty: 2
+      escalation: false
+    tags: ["trade", "economy", "mystery"]

@@ -1,10 +1,10 @@
 ---
-status: open
+status: historical
 layer: simulation
 authority: P1
 audience: agent
 ticket_id: TCK-20260619-E13A-QUEST-DEFS
-phase: open
+phase: done
 date: 2026-06-20
 tags: [content, quest-definitions, world-modules, phase-1]
 ---
@@ -15,7 +15,7 @@ tags: [content, quest-definitions, world-modules, phase-1]
 Epic 1.3A · Quest Definitions Batch
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -99,6 +99,14 @@ Do NOT add `expiry_ticks` or `faction_association` — not in current schema.
 - After authoring, run: `python3 tools/knowledge_search.py query "quest definitions" --top-k 3` to check docs index.
 - Run `make knowledge-index-update` after any `docs/` changes.
 
+**Implemented 2026-06-20:** Added 30 quest definitions across 10 modules (3 per module).
+- Conflict modules (6): goblin_camp_conflict, bandit_road_trade_pressure, orc_clan_territory, scalable_bandit_camp, moon_cult_ruins, undead_battlefield
+- Ecology/settlement modules (4): wolf_den_near_forest, forest_warden_grove, frontier_village_core, trading_company_hub
+- Participant tags used: "humanoid", "opportunistic", "merchant_minded", "magic_sensitive", "beast", "undead", "spiritual"
+- Location tags used: "wilderness", "forest", "road", "plain", "cave", "ruins", "settlement", "trade_route"
+- Total quest definitions in repo: 34 (was 4)
+- D07_content_depth.md F1 finding updated to RESOLVED
+
 ## Test Summary
 Post-authoring validation:
 ```bash
@@ -108,7 +116,20 @@ pytest tests/integration/worldassembly/test_e2e_smoke.py -x -v
 Count check: `grep -r "type:" data/content/world_modules/ | grep -E "escort|hunt|fetch|explore|defend|investigate" | wc -l` should be ≥ 34.
 
 ## Files Changed
-_To be filled on completion._
+- `data/content/world_modules/goblin_camp_conflict.yaml` — added 3 quest_definitions
+- `data/content/world_modules/bandit_road_trade_pressure.yaml` — added 3 quest_definitions
+- `data/content/world_modules/orc_clan_territory.yaml` — added 3 quest_definitions
+- `data/content/world_modules/scalable_bandit_camp.yaml` — added 3 quest_definitions
+- `data/content/world_modules/moon_cult_ruins.yaml` — added 3 quest_definitions
+- `data/content/world_modules/undead_battlefield.yaml` — added 3 quest_definitions
+- `data/content/world_modules/wolf_den_near_forest.yaml` — added 3 quest_definitions
+- `data/content/world_modules/forest_warden_grove.yaml` — added 3 quest_definitions
+- `data/content/world_modules/frontier_village_core.yaml` — added 3 quest_definitions
+- `data/content/world_modules/trading_company_hub.yaml` — added 3 quest_definitions
+- `docs/audits/D07_content_depth.md` — updated F1 finding to RESOLVED, count 4→34
 
 ## Completion Summary
-_To be filled on completion._
+Added 30 quest definitions across 10 world modules (3 per module) using the QuestDefinition
+schema from TCK-20260614-WORLDMOD-QUEST-SCHEMA. Total repo quest definitions raised from 4 to 34.
+All 6 conflict modules now have quests. D07 audit F1 finding marked RESOLVED.
+Repository loads cleanly (15 modules). E2E smoke tests pass (4/4). Quest definition unit tests pass (24/24).

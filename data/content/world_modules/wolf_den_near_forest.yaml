@@ -25,3 +25,31 @@ resources:
   herb_patch: 6
   healing_flower_patch: 3
 observability_tags: ["ecology", "wilderness"]
+quest_definitions:
+  - id: "wolf_hunt_alpha_pack"
+    type: "hunt"
+    required_participant_tags: ["beast"]
+    required_location_tags: ["wilderness", "forest"]
+    reward_budget: 120
+    procedural_hints:
+      difficulty: 2
+      escalation: true
+    tags: ["wolf", "ecology", "bounty"]
+  - id: "wolf_explore_forest_trail"
+    type: "explore"
+    required_participant_tags: ["beast"]
+    required_location_tags: ["wilderness", "forest"]
+    reward_budget: 80
+    procedural_hints:
+      difficulty: 1
+      escalation: false
+    tags: ["wolf", "ecology", "exploration"]
+  - id: "wolf_fetch_herb_gathering"
+    type: "fetch"
+    required_participant_tags: []
+    required_location_tags: ["wilderness", "forest"]
+    reward_budget: 80
+    procedural_hints:
+      difficulty: 1
+      escalation: false
+    tags: ["wolf", "ecology", "resource"]

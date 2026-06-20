@@ -108,7 +108,7 @@ Foundation layer is well-populated and stable. No gaps here.
 | Perspectives | 6 | Thin — limits scenario setup variety |
 | Simulation scenarios | 8 | ⚠️ Thin; mostly one world |
 | World compositions | 5 | Thin |
-| Quest definitions | 4 | ❌ Critical gap |
+| Quest definitions | 34 | ✅ Resolved — TCK-20260619-E13A-QUEST-DEFS |
 
 ### Module Layer
 
@@ -133,7 +133,10 @@ Foundation layer is well-populated and stable. No gaps here.
 
 ## Key Findings
 
-### F1 — Quest definitions critically thin (4 across 14 modules) — Gap Risk: 15 / 15
+### F1 — Quest definitions critically thin (4 across 14 modules) — Gap Risk: 15 / 15 — **RESOLVED**
+
+**Resolution:** TCK-20260619-E13A-QUEST-DEFS added 30 quest definitions across 10 modules (2026-06-20).
+Total quest definitions: **34** across **13 of 15** world modules.
 
 | Dimension | Score | Reason |
 |---|---|---|
@@ -142,13 +145,17 @@ Foundation layer is well-populated and stable. No gaps here.
 | RPG Essential | 5 | Quests are the Tier-1 RPG system D01 rated highest (22/25) after Resource Ecology; without quests entities have goals only from strategic scoring, not narrative missions |
 | **Total** | **15** | |
 
-Only `forest_deep_ecology` (1), `old_mine_resource_loop` (1), and `ruins_mystery_quest` (2)
+~~Only `forest_deep_ecology` (1), `old_mine_resource_loop` (1), and `ruins_mystery_quest` (2)
 define quest content. The other 11 modules — including all 6 conflict modules — have no
 quest definitions. Conflict without a quest objective produces pure combat loops with no
-narrative structure.
+narrative structure.~~
+
+**Post-resolution:** 13 of 15 modules now define quest content. All 6 conflict modules have
+3 quests each. Settlement and ecology modules have 3 quests each. `hero_adventurers` and
+`sunken_swamp_border` are the only modules still without quest definitions (E13B scope).
 
 **Note:** D01 flagged "Quest & Objective Depth" as a Tier-1 gap (score 18/25). This count
-confirms the underlying cause: the authored quest catalog is nearly empty.
+confirms the underlying cause has been addressed.
 
 ---
 
@@ -231,7 +238,7 @@ default to neutral posture, reducing faction conflict variety.
 
 | Finding | Description | Gap Risk |
 |---|---|---|
-| F1 | Quest definitions critically thin (4 total) | **15 / 15** |
+| F1 | Quest definitions critically thin (4 total) — **RESOLVED: 34 total** | **15 / 15** |
 | F2 | No terrain or population module types | **10 / 15** |
 | F3 | Crafting recipes thin (8 for 34 items) | **10 / 15** |
 | F4 | Entity archetype distribution skewed | **9 / 15** |
@@ -271,6 +278,6 @@ These content categories are well-populated relative to current simulation scale
 
 ## Related Dimensions
 
-- **D01 (RPG Feature Impact)** — Quest Depth scored 18/25 (Tier 1 partial); confirmed here: only 4 quest definitions exist in the catalog. Resource Ecology Regeneration (top D01 gap, 22/25) also has no authored content — no resource regeneration cycle modules.
+- **D01 (RPG Feature Impact)** — Quest Depth scored 18/25 (Tier 1 partial); F1 resolved by TCK-20260619-E13A-QUEST-DEFS (34 quest definitions now in catalog). Resource Ecology Regeneration (top D01 gap, 22/25) also has no authored content — no resource regeneration cycle modules.
 - **D16 (Authoring DX)** — Adding new modules is workable (DX gap 7/15); the bottleneck is not the authoring tooling but the time investment to write quest-rich modules.
 - **D03 (Behavioral Emergence Quality)** — Content depth directly caps behavioral variety. With only 4 quests, entities cannot exhibit quest-driven narrative arcs. This dimension cannot be fully audited until F1 is addressed.

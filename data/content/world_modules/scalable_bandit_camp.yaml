@@ -28,3 +28,31 @@ population_recipes:
     faction: "bandit_company"
     spawn_region: "bandit_road"
 relationships: ["town_to_bandits", "bandits_to_merchants"]
+quest_definitions:
+  - id: "sbandit_hunt_camp_leader"
+    type: "hunt"
+    required_participant_tags: ["humanoid", "opportunistic"]
+    required_location_tags: ["wilderness", "forest"]
+    reward_budget: 150
+    procedural_hints:
+      difficulty: 3
+      escalation: true
+    tags: ["bandit", "conflict", "bounty"]
+  - id: "sbandit_fetch_stolen_cache"
+    type: "fetch"
+    required_participant_tags: ["humanoid", "opportunistic"]
+    required_location_tags: ["wilderness", "forest"]
+    reward_budget: 100
+    procedural_hints:
+      difficulty: 2
+      escalation: false
+    tags: ["bandit", "conflict", "loot"]
+  - id: "sbandit_defend_road_checkpoint"
+    type: "defend"
+    required_participant_tags: ["humanoid", "opportunistic"]
+    required_location_tags: ["wilderness", "forest"]
+    reward_budget: 120
+    procedural_hints:
+      difficulty: 2
+      escalation: true
+    tags: ["bandit", "conflict", "defense"]

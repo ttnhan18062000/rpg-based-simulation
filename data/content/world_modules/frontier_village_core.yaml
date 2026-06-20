@@ -21,3 +21,31 @@ buildings:
   healer_hut: 1
 relationships: ["town_to_merchants", "merchants_to_town"]
 observability_tags: ["settlement", "trade"]
+quest_definitions:
+  - id: "village_fetch_supply_run"
+    type: "fetch"
+    required_participant_tags: ["humanoid"]
+    required_location_tags: ["plain", "settlement"]
+    reward_budget: 80
+    procedural_hints:
+      difficulty: 1
+      escalation: false
+    tags: ["village", "settlement", "supply"]
+  - id: "village_escort_merchant_delivery"
+    type: "escort"
+    required_participant_tags: ["humanoid", "merchant_minded"]
+    required_location_tags: ["plain", "settlement"]
+    reward_budget: 100
+    procedural_hints:
+      difficulty: 1
+      escalation: false
+    tags: ["village", "settlement", "trade"]
+  - id: "village_defend_gate_assault"
+    type: "defend"
+    required_participant_tags: ["humanoid"]
+    required_location_tags: ["plain", "settlement"]
+    reward_budget: 120
+    procedural_hints:
+      difficulty: 2
+      escalation: true
+    tags: ["village", "settlement", "defense"]
