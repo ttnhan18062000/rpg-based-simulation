@@ -67,6 +67,14 @@ class AdventureRouteGenerator:
                     if item_count < req.quantity:
                         blockers.append(f"missing_item:{req.subject}:{req.quantity - item_count}")
 
+            # Extract integer node ID for GATHER_RESOURCE routes (used by depletion scorer)
+            target_node_id = None
+            if opp.kind == "gather_resource":
+                try:
+                    target_node_id = int(opp.target_id)
+                except (ValueError, TypeError):
+                    target_node_id = None
+
             opts.append(
                 AdventureRouteOption(
                     family=family,
@@ -77,7 +85,8 @@ class AdventureRouteGenerator:
                     requirements=opp.requirements,
                     blockers=tuple(blockers),
                     source_opportunity_ids=(opp.id,),
-                    reason=f"Backed by opportunity {opp.id} ({opp.subject})"
+                    reason=f"Backed by opportunity {opp.id} ({opp.subject})",
+                    target_node_id=target_node_id,
                 )
             )
 

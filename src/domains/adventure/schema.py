@@ -45,6 +45,7 @@ class AdventureRouteOption:
         blockers:               Active blocker reasons/strings if route is blocked
         source_opportunity_ids: Dynamic world options backing this route
         reason:                 Short descriptive reason for the option
+        target_node_id:         Integer node ID for GATHER_RESOURCE routes; None for all others
     """
     family: RouteFamily
     score: float
@@ -55,6 +56,7 @@ class AdventureRouteOption:
     blockers: Tuple[str, ...] = ()
     source_opportunity_ids: Tuple[str, ...] = ()
     reason: Optional[str] = None
+    target_node_id: Optional[int] = None
 
 
 @dataclass(frozen=True, slots=True)

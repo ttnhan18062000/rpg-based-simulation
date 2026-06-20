@@ -9,9 +9,9 @@ Reads only subjective self-model aspects to protect information opacity.
 
 from __future__ import annotations
 import dataclasses
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
-from src.core.state import EntityState
+from src.core.state import EntityState, ResourceNodeState
 from src.domains.adventure.schema import RouteFamily, AdventureRouteOption
 
 
@@ -22,7 +22,11 @@ class AdventureRouteScorer:
     """
 
     @staticmethod
-    def score(entity: EntityState, route: AdventureRouteOption) -> AdventureRouteOption:
+    def score(
+        entity: EntityState,
+        route: AdventureRouteOption,
+        resource_nodes: Optional[Dict[int, ResourceNodeState]] = None,
+    ) -> AdventureRouteOption:
         """
         Calculate subjective score for the route option and return updated option.
         Formula:
@@ -98,7 +102,18 @@ class AdventureRouteScorer:
 
         # ── 3. Expected Benefit & Risk Calculations ─────────────────────────
         benefit = route.expected_benefit
-        
+
+        # Depletion-aware scaling for GATHER_RESOURCE routes:
+        # benefit × (remaining_charges / max_charges) reduces attractiveness
+        # of partially-depleted nodes linearly toward 0 as charges approach 0.
+        if route.family == RouteFamily.GATHER_RESOURCE and resource_nodes is not None:
+            node_id = route.target_node_id
+            if node_id is not None:
+                target_node = resource_nodes.get(node_id)
+                if target_node is not None and target_node.max_charges > 0:
+                    depletion_fraction = target_node.remaining_charges / target_node.max_charges
+                    benefit = benefit * depletion_fraction
+
         # Risk penalty deflated by bravery, inflated by caution
         risk_multiplier = max(0.1, (1.0 + caution * 0.8) - bravery * 0.6)
         risk_penalty = route.expected_risk * risk_multiplier * 0.5

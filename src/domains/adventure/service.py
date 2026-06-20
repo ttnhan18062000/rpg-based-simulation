@@ -8,9 +8,9 @@ and constructs the final bridge state using RouteToProjectMapper.
 """
 
 from __future__ import annotations
-from typing import List, Tuple, Optional
+from typing import Any, Dict, List, Tuple, Optional
 
-from src.core.state import EntityState
+from src.core.state import EntityState, ResourceNodeState
 from src.domains.adventure.schema import (
     RouteFamily,
     AdventureRouteOption,
@@ -32,6 +32,7 @@ class AdventureDecisionService:
         entity: EntityState,
         candidates: List[AdventureRouteOption],
         tick: int = 0,
+        resource_nodes: Optional[Dict[int, ResourceNodeState]] = None,
     ) -> AdventureDecisionResult:
         """
         Evaluate candidates, score them using Personality biased heuristics,
@@ -67,7 +68,7 @@ class AdventureDecisionService:
         # 1. Score all candidates using AdventureRouteScorer
         scored_candidates: List[AdventureRouteOption] = []
         for cand in candidates:
-            scored = AdventureRouteScorer.score(entity, cand)
+            scored = AdventureRouteScorer.score(entity, cand, resource_nodes=resource_nodes)
             scored_candidates.append(scored)
 
         # 2. Separate into valid and blocked/rejected lists

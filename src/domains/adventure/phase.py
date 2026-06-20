@@ -62,7 +62,10 @@ class AdventureDecisionPhase:
             candidates = AdventureRouteGenerator.generate(hero, state, opportunities=opportunities)
 
             # 2. Decide using service ( personality-biased scoring + project mapping )
-            result = AdventureDecisionService.decide(hero, candidates, tick=tick)
+            result = AdventureDecisionService.decide(
+                hero, candidates, tick=tick,
+                resource_nodes=state.resource_nodes,
+            )
 
             # If no selection or deferred, do not update project
             if not result.selected or result.selected.family == RouteFamily_Defer_check(result.selected.family):

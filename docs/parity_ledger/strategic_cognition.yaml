@@ -2406,7 +2406,9 @@
   text: >-
     AdventureRouteScorer applies a fixed blocker_penalty = 2.0 to any route with
     non-empty blockers; personality_bias weight = 0.25 per family-matched trait;
-    confidence_bonus weight = 0.15; risk weight = 0.5 × risk_multiplier; all
+    confidence_bonus weight = 0.15; risk weight = 0.5 × risk_multiplier; for
+    GATHER_RESOURCE routes the benefit term is multiplied by depletion_fraction =
+    remaining_charges / max_charges (0.0 when empty, 1.0 when full); all
     constants documented in docs/mechanics/04_strategic_cognition.md §6.
   status: verified
   priority: P1
@@ -2415,9 +2417,13 @@
     src/domains/adventure/scoring.py AdventureRouteScorer.score() — blocker_penalty=2.0
     at L131, confidence_bonus coefficient 0.15 at L126, personality_bias weight
     0.25 at L111-123, risk weight 0.5 × max(0.1, (1.0+caution×0.8)-bravery×0.6)
-    at L103-104. E12A measurement: blocker_frequency=0.0 (< 5% keep-threshold) →
-    constant retained unchanged (TCK-20260619-E12B-BLOCKER-RECAL, 2026-06-20).
+    at L103-104. Depletion-fraction multiplier on benefit term for GATHER_RESOURCE
+    at L103-112 (TCK-20260619-E21C-SCORING-WIRE, 2026-06-20). E12A measurement:
+    blocker_frequency=0.0 (< 5% keep-threshold) → blocker constant retained
+    unchanged (TCK-20260619-E12B-BLOCKER-RECAL, 2026-06-20).
   proof_type: parity
-  test_path: tests/unit/domains/adventure/test_phase3_route_scoring.py
+  test_path: >-
+    tests/unit/domains/adventure/test_phase3_route_scoring.py;
+    tests/unit/domains/adventure/test_depletion_scoring.py
   divergence_note: null
   support_boundary: null

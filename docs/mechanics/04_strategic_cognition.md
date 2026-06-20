@@ -94,11 +94,34 @@ score = max(0.0, score)   # clamped to non-negative; rounded to 4 decimal places
 | Term | Formula | Constants | Max value |
 |---|---|---|---|
 | `urgency` | `max(need.urgency for matched needs)` | Depends on active need pressures | ~2.0 |
-| `benefit` | `route.expected_benefit` | World-defined per opportunity | — |
+| `benefit` | `route.expected_benefit × depletion_fraction` (GATHER_RESOURCE); `route.expected_benefit` (all others) | World-defined per opportunity; see §6.2.1 | — |
 | `personality_bias` | `trait × 0.25` (family-matched) | **Weight: 0.25** per trait | 0.25 |
 | `confidence_bonus` | `route.confidence × 0.15` | **Weight: 0.15** | 0.15 |
 | `risk_penalty` | `route.expected_risk × risk_multiplier × 0.5` | **Risk weight: 0.5**; multiplier below | — |
 | `blocker_penalty` | `2.0 if route.blockers else 0.0` | **Fixed: 2.0** (see §6.3) | 2.0 |
+
+#### §6.2.1 Depletion Fraction (GATHER_RESOURCE only)
+
+For `GATHER_RESOURCE` routes, the `benefit` term is scaled by a **depletion fraction** derived from the target resource node's charge state:
+
+```
+depletion_fraction = remaining_charges / max_charges
+benefit = route.expected_benefit × depletion_fraction
+```
+
+| Charge state | `depletion_fraction` | Effect on benefit |
+|---|---|---|
+| Full (`remaining == max`) | 1.0 | No reduction |
+| Half depleted | 0.5 | 50% reduction |
+| Empty (`remaining == 0`) | 0.0 | Benefit zeroed |
+
+**Guards:** Scaling is skipped (benefit used as-is) when:
+- `resource_nodes` is not available (backward-compatible path)
+- `route.target_node_id` is `None` (route not backed by a specific node)
+- The target node is not found in `resource_nodes`
+- `max_charges == 0` (division-by-zero guard)
+
+**Source:** `src/domains/adventure/scoring.py` — `AdventureRouteScorer.score()` (TCK-20260619-E21C-SCORING-WIRE, 2026-06-20)
 
 ### 6.3 Risk Multiplier
 

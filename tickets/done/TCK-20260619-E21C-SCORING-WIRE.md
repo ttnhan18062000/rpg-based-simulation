@@ -1,10 +1,10 @@
 ---
-status: open
+status: historical
 layer: simulation
 authority: P1
 audience: agent
 ticket_id: TCK-20260619-E21C-SCORING-WIRE
-phase: open
+phase: done
 date: 2026-06-20
 tags: [resource-ecology, adventure-scoring, cognition, phase-2]
 ---
@@ -15,7 +15,7 @@ tags: [resource-ecology, adventure-scoring, cognition, phase-2]
 Epic 2.1C · Depletion-Aware Adventure Route Scoring
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -80,26 +80,33 @@ score = urgency + benefit + personality_bias + confidence_bonus − risk_penalty
 - `tests/unit/domains/adventure/test_depletion_scoring.py` (new test file)
 
 ## Assumptions / Open Questions
-- Does `AdventureRouteScorer.score()` have access to `state.resource_nodes`, or does it receive a pre-computed route object? Inspect `src/domains/adventure/scoring.py` to find how `expected_benefit` is currently computed and what state is available.
-- Does the route object for `GATHER_RESOURCE` carry `target_node_id`? Verify field name in `src/domains/adventure/` schemas.
+- Does `AdventureRouteScorer.score()` have access to `state.resource_nodes`, or does it receive a pre-computed route object? **RESOLVED:** scorer receives `resource_nodes` as an optional parameter threaded from `AdventureDecisionPhase`.
+- Does the route object for `GATHER_RESOURCE` carry `target_node_id`? **RESOLVED:** added `target_node_id: Optional[int] = None` to `AdventureRouteOption`; set in generator from `opp.target_id`.
 
 ## Implementation Notes
-- If `state.resource_nodes` isn't directly available in `score()`, it may be passed as part of the `WorldSnapshot` or similar. Read the method signature before implementing.
-- Guard against `max_charges == 0` (division by zero) with `if target_node.max_charges > 0`.
-- Guard against missing node (`target_node is None`) — skip depletion scaling if node not found.
-- After implementation: update `docs/mechanics/04_strategic_cognition.md` §6.2 to document `depletion_fraction` modifier. Update parity ledger `docs/parity_ledger/strategic_cognition.yaml` STRAT-227 if it describes the `benefit` term.
-- Run `make knowledge-index-update` if docs/ changed.
+- Added `target_node_id: Optional[int] = None` to `AdventureRouteOption` (schema.py) — backward-compatible frozen dataclass addition.
+- Generator (`generator.py`) now sets `target_node_id = int(opp.target_id)` for `gather_resource` opportunities only.
+- `AdventureRouteScorer.score()` accepts optional `resource_nodes: Optional[Dict[int, ResourceNodeState]] = None`; applies `benefit *= depletion_fraction` for GATHER_RESOURCE when node found and `max_charges > 0`.
+- `AdventureDecisionService.decide()` gains matching optional `resource_nodes` parameter and threads it to scorer.
+- `AdventureDecisionPhase.apply()` passes `state.resource_nodes` to `decide()`.
+- All guards implemented: `resource_nodes is not None`, `node_id is not None`, `target_node is not None`, `max_charges > 0`.
+- `docs/mechanics/04_strategic_cognition.md` §6.2 updated with depletion_fraction table and §6.2.1 subsection.
+- STRAT-227 parity ledger updated with new v2_evidence and test_path.
 
 ## Test Summary
-New file `tests/unit/domains/adventure/test_depletion_scoring.py`:
-```bash
-pytest tests/unit/domains/adventure/test_depletion_scoring.py -x -v
-# Existing scoring tests must not regress
-pytest tests/unit/domains/adventure/test_phase3_route_scoring.py -x -v
-```
+- 6 new tests in `tests/unit/domains/adventure/test_depletion_scoring.py` — all passing
+- 7 existing tests in `tests/unit/domains/adventure/test_phase3_route_scoring.py` — all passing
+- Full adventure domain: 32/32 passing
 
 ## Files Changed
-_To be filled on completion._
+- `src/domains/adventure/schema.py` — added `target_node_id: Optional[int] = None` to `AdventureRouteOption`
+- `src/domains/adventure/generator.py` — set `target_node_id` from `opp.target_id` for `gather_resource`
+- `src/domains/adventure/scoring.py` — added `resource_nodes` param; depletion_fraction logic for GATHER_RESOURCE
+- `src/domains/adventure/service.py` — threaded `resource_nodes` through `decide()`
+- `src/domains/adventure/phase.py` — passes `state.resource_nodes` to `decide()`
+- `tests/unit/domains/adventure/test_depletion_scoring.py` — new test file (6 tests)
+- `docs/mechanics/04_strategic_cognition.md` — §6.2 updated, §6.2.1 added
+- `docs/parity_ledger/strategic_cognition.yaml` — STRAT-227 updated
 
 ## Completion Summary
-_To be filled on completion._
+Wired depletion-aware scoring into the adventure route pipeline. Added `target_node_id` to `AdventureRouteOption` schema and populated it in the generator for `gather_resource` opportunities. Extended `AdventureRouteScorer.score()` with an optional `resource_nodes` parameter that applies `benefit × (remaining_charges / max_charges)` for GATHER_RESOURCE routes, reducing routing attractiveness proportionally to node depletion. Threaded state through the phase→service→scorer call chain with backward-compatible defaults. All 6 AC tests pass; 32 adventure domain tests green; Mechanics Bible §6.2 and parity ledger STRAT-227 updated.
