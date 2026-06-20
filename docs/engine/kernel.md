@@ -85,3 +85,21 @@ Collects advisory `pressure_report()` from all owned subsystems (event recorder,
 - `warnings` — list of advisory strings
 
 `BehaviorWorker` threads (named `"behavior-normalization-worker"`) are joined with a 1-second timeout during shutdown. Non-stop generates `outcome = "PARTIAL"` and a warning entry.
+
+---
+
+## Phase Domain Permissions
+
+Each phase declares allowed read, write, and emit state domains. Declarations are in `src/engine/phase_domain_permissions.py` and enforced by `tests/architecture/test_phase_domain_permissions.py` (RPG-INFRA-155/156/157).
+
+| Phase | Read domains | Write domains | Emit domains |
+|---|---|---|---|
+| INIT | policy, platform, infra | policy, infra | — |
+| SCHEDULING | entity, policy | schedule | — |
+| COLLECTION | entity, schedule | proposals | — |
+| RESOLUTION | proposals, policy, entity | entity, world, policy, infra | events, replay |
+| CLEANUP | platform, infra | infra | — |
+| ADVANCEMENT | entity, lifecycle | lifecycle | events |
+| PERSISTENCE _(non-authoritative)_ | entity, world, events | replay | replay, events |
+
+**Key invariant:** RESOLUTION is the sole phase that declares `entity` and `world` write access. All other phases are structurally prohibited from directly writing authoritative entity/world state.

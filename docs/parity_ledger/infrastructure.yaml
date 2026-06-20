@@ -2334,3 +2334,33 @@
   test_path: tests/unit/observability/test_personality_snapshot.py::test_light_snapshot_includes_personality
   divergence_note: null
   support_boundary: null
+- id: INFRA-206
+  text: Each authoritative engine phase (INIT/SCHEDULING/COLLECTION/RESOLUTION/CLEANUP/ADVANCEMENT) declares allowed read domains via PHASE_READ_DOMAINS.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/engine/phase_domain_permissions.py::PHASE_READ_DOMAINS
+  proof_type: architecture
+  test_path: tests/architecture/test_phase_domain_permissions.py::test_each_authoritative_phase_declares_read_domains
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-207
+  text: Each authoritative engine phase declares allowed write/update domains via PHASE_WRITE_DOMAINS; RESOLUTION is the sole entity/world write phase.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/engine/phase_domain_permissions.py::PHASE_WRITE_DOMAINS
+  proof_type: architecture
+  test_path: tests/architecture/test_phase_domain_permissions.py::test_each_authoritative_phase_declares_write_domains
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-208
+  text: Each authoritative engine phase declares allowed emit/event domains via PHASE_EMIT_DOMAINS.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/engine/phase_domain_permissions.py::PHASE_EMIT_DOMAINS
+  proof_type: architecture
+  test_path: tests/architecture/test_phase_domain_permissions.py::test_each_authoritative_phase_declares_emit_domains
+  divergence_note: null
+  support_boundary: null
