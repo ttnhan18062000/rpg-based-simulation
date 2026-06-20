@@ -54,3 +54,124 @@
   ingredients: {spirit_essence: 1, crystal_shard: 1, wood: 1}
   required_service: "arcane_service"
   gold_cost: 75
+
+# STATE: ADDITIONAL
+# KEY CHAIN STEP 1: iron_ore (gather) → steel (refined material)
+- id: "smelt_iron_to_steel"
+  outputs: {steel: 1}
+  ingredients: {iron_ore: 3}
+  required_service: "blacksmith_service"
+  gold_cost: 20
+
+# STATE: ADDITIONAL
+# KEY CHAIN STEP 2: steel + ember_core → ember_axe (final crafted weapon)
+- id: "craft_ember_axe"
+  outputs: {ember_axe: 1}
+  ingredients: {steel: 1, ember_core: 1}
+  required_service: "blacksmith_service"
+  gold_cost: 55
+
+# STATE: ADDITIONAL
+- id: "craft_wooden_staff"
+  outputs: {wooden_staff: 1}
+  ingredients: {wood: 2}
+  required_service: "blacksmith_service"
+  gold_cost: 15
+
+# STATE: ADDITIONAL
+- id: "craft_basic_bow"
+  outputs: {basic_bow: 1}
+  ingredients: {wood: 2, beast_fang: 1}
+  required_service: "blacksmith_service"
+  gold_cost: 20
+
+# STATE: ADDITIONAL
+- id: "craft_apprentice_staff"
+  outputs: {apprentice_staff: 1}
+  ingredients: {wood: 1, crystal_shard: 1}
+  required_service: "arcane_service"
+  gold_cost: 35
+
+# STATE: ADDITIONAL
+- id: "craft_frost_focus"
+  outputs: {frost_focus: 1}
+  ingredients: {frost_shard: 2, crystal_shard: 1}
+  required_service: "arcane_service"
+  gold_cost: 65
+
+# STATE: ADDITIONAL
+- id: "craft_leather_armor"
+  outputs: {leather_armor: 1}
+  ingredients: {wolf_pelt: 2, wood: 1}
+  required_service: "blacksmith_service"
+  gold_cost: 30
+
+# STATE: ADDITIONAL
+- id: "craft_repair_kit"
+  outputs: {repair_kit: 1}
+  ingredients: {iron_ore: 1, wood: 1}
+  required_service: "blacksmith_service"
+  gold_cost: 25
+
+# STATE: ADDITIONAL
+- id: "craft_travel_ration"
+  outputs: {travel_ration: 1}
+  ingredients: {herb: 1, healing_flower: 1}
+  required_service: "healer_service"
+  gold_cost: 15
+
+# STATE: ADDITIONAL
+- id: "craft_healer_bundle"
+  outputs: {small_potion: 2}
+  ingredients: {healing_flower: 2, herb: 1}
+  required_service: "healer_service"
+  gold_cost: 20
+
+# STATE: ADDITIONAL
+- id: "craft_moon_elixir"
+  outputs: {small_potion: 2}
+  ingredients: {moon_resin: 1, herb: 2}
+  required_service: "healer_service"
+  gold_cost: 25
+
+# STATE: ADDITIONAL
+- id: "process_shadow_ichor"
+  outputs: {warding_charm: 1}
+  ingredients: {shadow_ichor: 1, herb: 1}
+  required_service: "healer_service"
+  gold_cost: 30
+
+# STATE: ADDITIONAL
+- id: "craft_from_goblin_tokens"
+  outputs: {small_potion: 1}
+  ingredients: {goblin_token: 3}
+  required_service: "general_store_service"
+  gold_cost: 5
+
+# STATE: ADDITIONAL
+- id: "trade_beast_fangs"
+  outputs: {travel_ration: 2}
+  ingredients: {beast_fang: 2}
+  required_service: "general_store_service"
+  gold_cost: 0
+
+# STATE: ADDITIONAL
+- id: "craft_spirit_ward"
+  outputs: {warding_charm: 1}
+  ingredients: {spirit_essence: 1, moon_resin: 1}
+  required_service: "arcane_service"
+  gold_cost: 40
+
+# STATE: ADDITIONAL
+- id: "craft_ancient_blade"
+  outputs: {silvered_blade: 1}
+  ingredients: {ancient_fragment: 2, iron_ore: 1}
+  required_service: "arcane_service"
+  gold_cost: 70
+
+# STATE: ADDITIONAL
+- id: "smelt_rusted_sword"
+  outputs: {iron_sword: 1}
+  ingredients: {rusted_sword: 1, iron_ore: 1}
+  required_service: "blacksmith_service"
+  gold_cost: 15

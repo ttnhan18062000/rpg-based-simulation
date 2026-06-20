@@ -1797,3 +1797,19 @@
   test_path: tests/unit/strategic/test_requirements.py::test_near_service_passes_when_building_within_range
   divergence_note: null
   support_boundary: null
+- id: TOWN-172
+  text: 'Crafting recipe catalog has ≥ 25 entries covering all service types (blacksmith,
+    healer, arcane, general_store) with a complete gather→craft chain: iron_ore → steel
+    → ember_axe.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >-
+    data/content/world/recipes.yaml (25 entries, TCK-20260619-E13C-RECIPES):
+    smelt_iron_to_steel (iron_ore×3 → steel) and craft_ember_axe (steel + ember_core
+    → ember_axe) establish the authoritative metal progression chain.
+    All 4 service types represented. All ingredient/output IDs verified against items.yaml.
+  proof_type: parity
+  test_path: tests/unit/content/test_recipe_catalog_expansion.py::test_gather_craft_chain_iron_to_steel
+  divergence_note: null
+  support_boundary: null

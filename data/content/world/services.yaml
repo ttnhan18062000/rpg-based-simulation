@@ -3,13 +3,18 @@
   display_name: "General Store Service"
   service_type: "trade"
   provided_items: ["small_potion", "travel_ration", "repair_kit"]
+  provided_recipes: ["craft_from_goblin_tokens", "trade_beast_fangs"]
   gold_cost: 10
 
 # STATE: ADDITIONAL
 - id: "blacksmith_service"
   display_name: "Blacksmith Service"
   service_type: "crafting"
-  provided_recipes: ["craft_iron_sword", "craft_hunter_blade", "craft_iron_shield", "craft_silvered_blade", "craft_venom_dagger"]
+  provided_recipes: [
+    "craft_iron_sword", "craft_hunter_blade", "craft_iron_shield", "craft_silvered_blade",
+    "craft_venom_dagger", "smelt_iron_to_steel", "craft_ember_axe", "craft_wooden_staff",
+    "craft_basic_bow", "craft_leather_armor", "craft_repair_kit", "smelt_rusted_sword"
+  ]
   gold_cost: 40
 
 # STATE: ADDITIONAL
@@ -24,6 +29,7 @@
   display_name: "Healer Service"
   service_type: "healing"
   provided_items: ["small_potion", "warding_charm"]
+  provided_recipes: ["craft_travel_ration", "craft_healer_bundle", "craft_moon_elixir", "process_shadow_ichor"]
   heal_amount: 50
   gold_cost: 25
 
@@ -49,4 +55,4 @@
 - id: "arcane_service"
   display_name: "Arcane Service"
   service_type: "magic"
-  provided_recipes: ["craft_spirit_lantern"]
+  provided_recipes: ["craft_spirit_lantern", "craft_apprentice_staff", "craft_frost_focus", "craft_spirit_ward", "craft_ancient_blade"]
