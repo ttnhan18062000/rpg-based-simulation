@@ -994,3 +994,33 @@
   test_path: tests/unit/quest/test_quest_generation.py::test_quest_generation_determinism
   divergence_note: null
   support_boundary: null
+- id: WORLD-100
+  text: AuthoritativeState.quest_registry (Dict[str, QuestOpportunity]) persists OFFERED and ACTIVE quests across ticks; COMPLETED/FAILED/EXPIRED quests are removed and not retained in the registry.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/core/state.py (AuthoritativeState.quest_registry field, to_readonly() ReadOnlyDict wrap); src/engine/apply.py (apply_generation new_quest_registry logic)
+  proof_type: parity
+  test_path: tests/unit/quest/test_quest_lifecycle.py::test_quest_registry_field_on_authoritative_state
+  divergence_note: null
+  support_boundary: null
+- id: WORLD-101
+  text: QuestOpportunity with status=OFFERED and tick > expiry_ticks is removed from quest_registry via authoritative expiry sweep (QuestLifecycleService.tick); expiry iterates sorted(registry.keys()) for determinism.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/domains/world_emergence/services.py (QuestLifecycleService.tick); src/engine/apply.py (quest_registry_remove apply path)
+  proof_type: parity
+  test_path: tests/unit/quest/test_quest_lifecycle.py::test_quest_expires_after_expiry_ticks
+  divergence_note: null
+  support_boundary: null
+- id: WORLD-102
+  text: QuestOpportunity objects produced by WorldEmergencePhase are added to quest_registry via StateUpdate.quest_registry_add through the authoritative apply path, keyed by QuestOpportunity.id; addition is idempotent (duplicate IDs are skipped).
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/domains/world_emergence/phase.py (execute() quest_registry_add=list(quest_opps)); src/engine/apply.py (idempotent add guard)
+  proof_type: parity
+  test_path: tests/unit/domains/world_emergence/test_quest_registry_wiring.py::test_world_emergence_populates_quest_registry
+  divergence_note: null
+  support_boundary: null

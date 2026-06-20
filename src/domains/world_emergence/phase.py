@@ -15,7 +15,7 @@ from src.domains.world_emergence.aggregators import WorldEventAggregator
 from src.domains.world_emergence.models import RegionalPressureModel, ScarcityModel, ServiceStatePressureModel
 from src.domains.world_emergence.services import (
     WorldOpportunityPressureService, DynamicQuestSeedService, RumorSeedService,
-    WorldToEntitySignalBridge, QuestOpportunityGenerator
+    WorldToEntitySignalBridge, QuestOpportunityGenerator, QuestLifecycleService
 )
 
 class WorldEmergencePhase:
@@ -71,6 +71,11 @@ class WorldEmergencePhase:
                 if opp is not None:
                     quest_opps.append(opp)
 
+        # 5c. Quest lifecycle: expire stale opportunities
+        lifecycle_upd = QuestLifecycleService.tick(state)
+        if not lifecycle_upd.is_noop():
+            update = update.merge(lifecycle_upd)
+
         # 6. Generate rumor seeds
         r_seeds = RumorSeedService.generate(pressures, scarcity, state)
         
@@ -123,5 +128,6 @@ class WorldEmergencePhase:
             update,
             entity_updates=new_entity_updates,
             world_updates=new_world_updates,
-            metric_counters=metric_counters
+            metric_counters=metric_counters,
+            quest_registry_add=list(quest_opps),
         ), result

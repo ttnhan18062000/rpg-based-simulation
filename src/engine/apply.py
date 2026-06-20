@@ -34,6 +34,7 @@ from src.core.state import (
     IdentityComponent, AptitudeComponent, EquipmentComponent, SocialComponent, ReadOnlyDict
 )
 from src.core.quests import QuestState, QuestStatus
+from src.core.models.quests import QuestOpportunity, QuestOpportunityStatus
 from src.engine.cadence import SystemCadence, should_run
 from src.core.inventory import InventoryService
 from src.core.enums import EntityRole, Faction, ReasonCode
@@ -312,6 +313,17 @@ class ApplyPath:
         merged_events = prior_events + update.world_events_add
         new_recent_world_events = merged_events[-WORLD_EVENT_WINDOW:]
 
+        new_quest_registry = dict(getattr(prior_state, "quest_registry", {}))
+        for opp in update.quest_registry_add:
+            if opp.id not in new_quest_registry:
+                new_quest_registry[opp.id] = opp
+        for quest_id in update.quest_registry_remove:
+            new_quest_registry.pop(quest_id, None)
+        for quest_id, new_status in update.quest_status_updates.items():
+            existing = new_quest_registry.get(quest_id)
+            if existing is not None:
+                new_quest_registry[quest_id] = replace(existing, status=new_status)
+
         new_state = AuthoritativeState(
             tick=tick,
             seed=prior_state.seed,
@@ -357,7 +369,8 @@ class ApplyPath:
             _index_misses=getattr(prior_state, "_index_misses", 0),
             _opt_profile=getattr(prior_state, "_opt_profile", None),
             _force_full_scan=getattr(prior_state, "_force_full_scan", False),
-            recent_world_events=new_recent_world_events
+            recent_world_events=new_recent_world_events,
+            quest_registry=new_quest_registry,
         )
 
         if not any_entity_changed and getattr(prior_state, "_readonly_entities_cache", None) is not None:

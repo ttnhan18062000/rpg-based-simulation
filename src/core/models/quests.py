@@ -17,6 +17,14 @@ class QuestStatus(Enum):
     REWARDED = 3
     REWARD_PENDING = 4
 
+class QuestOpportunityStatus(str, Enum):
+    OFFERED = "OFFERED"
+    ACTIVE = "ACTIVE"
+    PROGRESSED = "PROGRESSED"
+    COMPLETED = "COMPLETED"
+    FAILED = "FAILED"
+    EXPIRED = "EXPIRED"
+
 @dataclass(frozen=True, slots=True)
 class RewardState:
     xp: int = 0
@@ -71,3 +79,4 @@ class QuestOpportunity:
     faction_source: Optional[str]      # faction offering the quest; None = world event
     expiry_ticks: int                  # tick at which this opportunity expires if not taken
     source_event_id: Optional[str]     # ID of the WorldEvent that triggered this opportunity
+    status: QuestOpportunityStatus = QuestOpportunityStatus.OFFERED

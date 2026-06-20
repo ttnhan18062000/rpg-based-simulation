@@ -9,6 +9,7 @@ from types import MappingProxyType
 from typing import Dict, Any, Set, Optional, List, Tuple, ClassVar, TYPE_CHECKING
 if TYPE_CHECKING:
     from src.domains.world_emergence.schema import WorldEvent
+    from src.core.models.quests import QuestOpportunity, QuestOpportunityStatus
 from src.core.strategic import StrategicComponent
 from src.core.enums import Faction, EntityRole
 from src.core.movement_modes import MovementMode
@@ -1051,6 +1052,7 @@ class AuthoritativeState:
     information_source_profiles: List[Any] = field(default_factory=list, repr=False, compare=False)
     feature_flags: Dict[str, Any] = field(default_factory=dict, repr=False, compare=False)
     recent_world_events: List[WorldEvent] = field(default_factory=list)
+    quest_registry: Dict[str, "QuestOpportunity"] = field(default_factory=dict)
 
     def __post_init__(self):
         # M10 Law: Ensure cache is cleared on every new object creation (including replace)
@@ -1125,6 +1127,7 @@ class AuthoritativeState:
             regions=ReadOnlyDict(self.regions),
             local_scars=ReadOnlyDict(self.local_scars),
             home_storage=ReadOnlyDict(self.home_storage),
+            quest_registry=ReadOnlyDict(self.quest_registry),
             groups=shallow_freeze(self.groups),
             terrain=shallow_freeze(self.terrain),
             global_resources=shallow_freeze(self.global_resources),

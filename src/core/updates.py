@@ -14,6 +14,7 @@ if TYPE_CHECKING:
     )
     from src.engine.policy import GovernorPolicy
     from src.domains.world_emergence.schema import WorldEvent
+    from src.core.models.quests import QuestOpportunity, QuestOpportunityStatus
 from src.core.state import ItemStack, EquipSlot, AttributeComponent
 from src.core.movement_modes import MovementMode
 from src.core.enums import ReasonCode
@@ -862,6 +863,9 @@ class StateUpdate:
     sub_phase_costs: Dict[str, float] = field(default_factory=dict)
     metric_counters: Dict[str, int] = field(default_factory=dict)
     world_events_add: List[WorldEvent] = field(default_factory=list)
+    quest_registry_add: List["QuestOpportunity"] = field(default_factory=list)
+    quest_registry_remove: List[str] = field(default_factory=list)
+    quest_status_updates: Dict[str, "QuestOpportunityStatus"] = field(default_factory=dict)
 
     def is_noop(self) -> bool:
         """True if this update contains absolutely no changes."""
@@ -883,7 +887,8 @@ class StateUpdate:
                 not self.processed_transaction_ids and self.next_node_id_set is None and 
                 self.next_entity_id_set is None and not self.force_full_scan and
                 not self.sub_phase_costs and not self.metric_counters and
-                not self.world_events_add)
+                not self.world_events_add and not self.quest_registry_add and
+                not self.quest_registry_remove and not self.quest_status_updates)
     def merge(self, other: StateUpdate) -> StateUpdate:
         """Merge another StateUpdate into this one."""
         if not other or other.is_noop():
@@ -931,6 +936,9 @@ class StateUpdate:
         new_processed_ids = set(self.processed_transaction_ids)
         new_rejection_events = list(self.rejection_events)
         new_world_events_add = list(self.world_events_add)
+        new_quest_registry_add = list(self.quest_registry_add)
+        new_quest_registry_remove = list(self.quest_registry_remove)
+        new_quest_status_updates = dict(self.quest_status_updates)
 
         # Single values
         maturity = self.maturity_set
@@ -991,6 +999,9 @@ class StateUpdate:
             new_processed_ids.update(other.processed_transaction_ids)
             new_rejection_events.extend(other.rejection_events)
             new_world_events_add.extend(other.world_events_add)
+            new_quest_registry_add.extend(other.quest_registry_add)
+            new_quest_registry_remove.extend(other.quest_registry_remove)
+            new_quest_status_updates.update(other.quest_status_updates)
 
             # Single values
             if other.maturity_set is not None: maturity = other.maturity_set
@@ -1044,7 +1055,10 @@ class StateUpdate:
             dirty_set=dirty,
             sub_phase_costs=sub_costs,
             metric_counters=new_metric_counters,
-            world_events_add=new_world_events_add
+            world_events_add=new_world_events_add,
+            quest_registry_add=new_quest_registry_add,
+            quest_registry_remove=new_quest_registry_remove,
+            quest_status_updates=new_quest_status_updates,
         )
 
     def compact(self) -> StateUpdate:

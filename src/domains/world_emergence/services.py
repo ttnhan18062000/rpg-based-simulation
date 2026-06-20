@@ -258,6 +258,51 @@ class QuestOpportunityGenerator:
         return None
 
 
+class QuestLifecycleService:
+    """
+    World-level quest opportunity lifecycle management.
+    Expires OFFERED quests past their expiry_ticks via authoritative StateUpdate.
+    Never mutates state directly. Iterates sorted keys for determinism.
+    """
+
+    @staticmethod
+    def tick(state: "AuthoritativeState") -> "StateUpdate":
+        from src.core.updates import StateUpdate
+        from src.core.models.quests import QuestOpportunityStatus
+
+        registry = getattr(state, "quest_registry", {})
+        if not registry:
+            return StateUpdate()
+
+        to_remove: list[str] = []
+        events: list = []
+
+        for quest_id in sorted(registry.keys()):
+            opp = registry[quest_id]
+            if opp.status in (
+                QuestOpportunityStatus.COMPLETED,
+                QuestOpportunityStatus.FAILED,
+                QuestOpportunityStatus.EXPIRED,
+            ):
+                to_remove.append(quest_id)
+            elif state.tick > opp.expiry_ticks:
+                to_remove.append(quest_id)
+                events.append(WorldEvent(
+                    category=WorldEventCategory.QUEST_FAILED,
+                    tick=state.tick,
+                    subject=quest_id,
+                    severity=0.3,
+                ))
+
+        if not to_remove and not events:
+            return StateUpdate()
+
+        return StateUpdate(
+            quest_registry_remove=to_remove,
+            world_events_add=events,
+        )
+
+
 class WorldToEntitySignalBridge:
     """
     Bridges world emergence updates to local entity subjective structures.

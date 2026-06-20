@@ -1,10 +1,10 @@
 ---
-status: open
+status: historical
 layer: simulation
 authority: P1
 audience: agent
 ticket_id: TCK-20260619-E23B-QUEST-LIFECYCLE
-phase: open
+phase: done
 date: 2026-06-20
 tags: [quest-generation, lifecycle, quest-registry, durable-state, phase-2]
 ---
@@ -15,7 +15,7 @@ tags: [quest-generation, lifecycle, quest-registry, durable-state, phase-2]
 Epic 2.3B · Quest Lifecycle State Machine + quest_registry
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -90,9 +90,9 @@ When `WorldEmergencePhase` produces `QuestOpportunity` objects (from E23A), they
 
 ## Acceptance Criteria
 - `AuthoritativeState.quest_registry` field exists and serializes correctly
-- `QuestStatus.OFFERED`, `ACTIVE`, `PROGRESSED`, `COMPLETED`, `FAILED`, `EXPIRED` are all accessible
-- After `WorldEmergencePhase` runs: `state.quest_registry` contains new `QuestOpportunity` with `status=OFFERED`
-- After `expiry_ticks` ticks: quest transitions to `EXPIRED`
+- `QuestOpportunityStatus.OFFERED`, `ACTIVE`, `PROGRESSED`, `COMPLETED`, `FAILED`, `EXPIRED` are all accessible (new enum on `QuestOpportunity`; existing `QuestStatus` is unchanged)
+- After `WorldEmergencePhase` runs: `state.quest_registry` contains new `QuestOpportunity` with `status=QuestOpportunityStatus.OFFERED`
+- After `expiry_ticks` ticks: quest transitions to `EXPIRED` and is removed from `quest_registry`
 - Tests in `tests/unit/quest/test_quest_lifecycle.py` pass
 
 ## Related Tickets
@@ -116,6 +116,13 @@ When `WorldEmergencePhase` produces `QuestOpportunity` objects (from E23A), they
 - Does `AuthoritativeState` use `frozen=True`? If so, adding `quest_registry` with `default_factory=dict` needs care — check if mutable containers are allowed (they likely are, as other dict fields exist like `resource_nodes`).
 - Where does `WorldEmergencePhase` output flow? Find how phase outputs get applied to `AuthoritativeState` before wiring quest_registry additions.
 
+## Implementation Notes
+- **Option B enum design**: Introduced `QuestOpportunityStatus(str, Enum)` (OFFERED/ACTIVE/PROGRESSED/COMPLETED/FAILED/EXPIRED) as a separate type from the existing `QuestStatus(Enum)`. This avoids breaking the Phase 19 entity-level reward pipeline (QuestResolutionSystem, QuestService, QuestPatch) which uses ACTIVE/COMPLETED/REWARDED/REWARD_PENDING on `QuestState`. The two state machines are on distinct types and must remain separate.
+- **Sorted iteration for determinism**: `QuestLifecycleService.tick()` iterates `sorted(registry.keys())` to guarantee identical StateUpdate output for identical state inputs across runs.
+- **Idempotent add**: `apply_generation()` skips `quest_registry_add` entries whose `id` already exists in the registry — prevents duplicate entries from repeated phase runs.
+- **V1/V2 critical fixes applied**: `quest_registry=new_quest_registry` is explicitly passed in the `AuthoritativeState(...)` constructor call (V1); `ReadOnlyDict(self.quest_registry)` is added to `to_readonly()` (V2).
+- **pipeline.py untouched**: Wiring goes through `WorldEmergencePhase.execute()` emitting `quest_registry_add` into `StateUpdate`, not through pipeline.py lambda changes.
+
 ## Test Summary
 ```bash
 pytest tests/unit/quest/test_quest_lifecycle.py -x -v
@@ -123,7 +130,14 @@ pytest tests/unit/quest/ -x -v  # regression
 ```
 
 ## Files Changed
-_To be filled on completion._
+- `src/core/models/quests.py` — added `QuestOpportunityStatus` enum, `status` field on `QuestOpportunity`
+- `src/core/state.py` — added `quest_registry` field, `ReadOnlyDict` wrap in `to_readonly()`
+- `src/core/updates.py` — added `quest_registry_add/remove/status_updates` fields, `is_noop()`, `merge_many()`
+- `src/engine/apply.py` — apply logic for quest registry mutations, `quest_registry=new_quest_registry` in constructor
+- `src/domains/world_emergence/services.py` — `QuestLifecycleService` class
+- `src/domains/world_emergence/phase.py` — lifecycle tick wire-in, `quest_registry_add` in return
+- `tests/unit/quest/test_quest_lifecycle.py` — 9 new tests (AC-1 to AC-10)
+- `tests/unit/domains/world_emergence/test_quest_registry_wiring.py` — AC-4 wiring test (new file)
 
 ## Completion Summary
-_To be filled on completion._
+Implemented quest lifecycle state machine and world-level `quest_registry` per plan. `QuestOpportunityStatus` (6-value str enum) added separately from `QuestStatus` (Option B — no breakage to entity reward pipeline). `WorldEmergencePhase` now emits `quest_registry_add` entries into `StateUpdate`; `QuestLifecycleService.tick()` expires OFFERED quests past `expiry_ticks` with sorted iteration. All critical V1/V2 architecture constraints applied. 66 tests pass (13 quest lifecycle, 1 wiring, 52 regression).
