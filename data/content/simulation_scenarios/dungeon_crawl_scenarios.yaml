@@ -1,0 +1,19 @@
+# STATE: ADDITIONAL
+# Scenarios for dungeon_crawl world composition
+# TCK-20260619-E13D-SCENARIOS
+- id: "dungeon_crawl_delve"
+  world_composition: "dungeon_crawl"
+  focus_modules: ["ruins_mystery_quest", "goblin_camp_conflict"]
+  perspective: "hero_guild_perspective"
+  initial_conditions:
+    dungeon_threat_level: "medium"
+    ruin_access: "open"
+
+# STATE: ADDITIONAL
+- id: "dungeon_crawl_desperate_descent"
+  world_composition: "dungeon_crawl"
+  focus_modules: ["scalable_bandit_camp", "old_mine_resource_loop"]
+  perspective: "hero_guild_perspective"
+  initial_conditions:
+    dungeon_threat_level: "high"
+    bandit_danger_scale: 4

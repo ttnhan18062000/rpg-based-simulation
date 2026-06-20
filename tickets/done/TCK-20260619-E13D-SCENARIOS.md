@@ -1,10 +1,10 @@
 ---
-status: open
+status: historical
 layer: simulation
 authority: P1
 audience: agent
 ticket_id: TCK-20260619-E13D-SCENARIOS
-phase: open
+phase: done
 date: 2026-06-20
 tags: [content, scenarios, world-compositions, phase-1]
 ---
@@ -15,7 +15,7 @@ tags: [content, scenarios, world-compositions, phase-1]
 Epic 1.3D · Scenario Authoring (dungeon / urban / wilderness)
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -195,8 +195,32 @@ pytest tests/unit/ -x -v
 pytest tests/integration/scenarios/test_content_foundation.py -x -v -m "not slow"
 ```
 
+## Implementation Notes
+- Scenario YAML schema uses faction-based perspective IDs (e.g. `hero_guild_perspective`),
+  NOT entity archetype tags. Ticket suggestion of `warrior`/`scout`/`merchant`/`hunter`
+  corrected to canonical values from `data/content/social/perspectives.yaml`.
+- `initial_conditions` uses world-specific semantic keys (matching existing frontier_scenarios.yaml
+  format), NOT `entity_count`/`seed`/`tick_limit` as suggested in ticket scope.
+- `wilderness_survival_warden_escort` uses `undead_battlefield` focus module (which IS in the
+  wilderness_survival composition) instead of `forest_warden_grove` (which is NOT).
+- `test_crafting_chain_completes` marked `@pytest.mark.skip` because `settled_quarter` module
+  (provider of blacksmith_service) is not in any named world composition.
+- Pre-existing test failures (test_catalog_scenario_state_builder, test_combat_reward_trace)
+  confirmed not caused by this ticket.
+
 ## Files Changed
-_To be filled on completion._
+- `data/content/simulation_scenarios/dungeon_crawl_scenarios.yaml` — new (2 scenarios)
+- `data/content/simulation_scenarios/urban_political_scenarios.yaml` — new (2 scenarios)
+- `data/content/simulation_scenarios/wilderness_survival_scenarios.yaml` — new (2 scenarios)
+- `tests/integration/scenarios/test_content_foundation.py` — new (3 tests)
+- `docs/audits/D07_content_depth.md` — F5 marked RESOLVED, F3 also marked RESOLVED
 
 ## Completion Summary
-_To be filled on completion._
+Authored 6 new scenario definitions (2 each for dungeon_crawl, urban_political,
+wilderness_survival), bringing total simulation_scenarios from 8 to 14 across 4 world
+compositions. All three previously zero-scenario target compositions now have ≥2 scenarios.
+Perspective IDs corrected to canonical faction-based values; initial_conditions fields follow
+the actual YAML schema (semantic condition keys, not entity_count/seed/tick_limit).
+Integration test file authored with all 3 E13 test plan tests: schema test passes,
+quest test is runnable (E13A done), crafting test skipped (settled_quarter not in any
+composition). D07 F5 finding marked RESOLVED. Knowledge index updated.

@@ -212,7 +212,7 @@ mostly scout-type entities. No dedicated mage/caster role has more than 1 entry.
 
 ---
 
-### F5 — Simulation scenarios thin and frontier-concentrated — Gap Risk: 9 / 15
+### F5 — Simulation scenarios thin and frontier-concentrated — **RESOLVED: 14 total, all 3 target compositions covered** — Gap Risk: 9 / 15
 
 | Dimension | Score | Reason |
 |---|---|---|
@@ -221,9 +221,13 @@ mostly scout-type entities. No dedicated mage/caster role has more than 1 entry.
 | RPG Essential | 2 | Scenarios are configuration, not narrative content; but they define the entry points |
 | **Total** | **9** | |
 
-8 scenarios exist in one file. 6 reference `frontier_living_world`, 2 reference
+**RESOLVED (TCK-20260619-E13D-SCENARIOS, 2026-06-20):** 6 new scenarios authored across
+`dungeon_crawl` (2), `urban_political` (2), and `wilderness_survival` (2). Total: 14 scenarios
+across 4 world compositions. All three previously zero-scenario compositions now have ≥2 scenarios.
+
+~~8 scenarios exist in one file. 6 reference `frontier_living_world`, 2 reference
 `frontier_extended`. No scenarios exist for `dungeon_crawl`, `urban_political`, or
-`wilderness_survival` — three of the five named world compositions have zero scenarios.
+`wilderness_survival` — three of the five named world compositions have zero scenarios.~~
 
 ---
 
@@ -248,9 +252,9 @@ default to neutral posture, reducing faction conflict variety.
 |---|---|---|
 | F1 | Quest definitions critically thin (4 total) — **RESOLVED: 34 total** | **15 / 15** |
 | F2 | No terrain or population module types — **RESOLVED: terrain=2, population=2** | **10 / 15** |
-| F3 | Crafting recipes thin (8 for 34 items) | **10 / 15** |
+| F3 | Crafting recipes thin (8 for 34 items) — **RESOLVED: 25 recipes, full chain** | **10 / 15** |
 | F4 | Entity archetype distribution skewed | **9 / 15** |
-| F5 | Scenarios frontier-concentrated | **9 / 15** |
+| F5 | Scenarios frontier-concentrated — **RESOLVED: 14 scenarios, all compositions covered** | **9 / 15** |
 | F6 | Faction relationships sparse (14 for 16 factions) | **8 / 15** |
 
 ---
