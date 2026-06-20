@@ -79,12 +79,14 @@ Ticket must include: title, summary, scope, out of scope, acceptance criteria, r
 ### After Work
 
 - Finish ticket, move to `tickets/done/`.
+- **Delete the source file** from `tickets/todos/**/` if the ticket originated there (`rm tickets/todos/**/{ticket_id}.md`). Never leave a completed ticket in todos.
 - Append to the **bottom** of `tickets/working_log.csv` (never insert after the header).
 - **Standard/epic only:** Move staging artifacts to `stored_artifacts/`.
 - Update related docs.
 - Clean up: `rm -rf data/runs/* reports/release_proof/*`.
 - Verify no leftover staging/temp files remain.
 - If any files under `docs/` were created or modified: run `make knowledge-index-update` to keep the agent context search index current.
+- **Always stage `agent-monitoring/` (including `tools.jsonl`) in every commit** — the monitoring tools auto-update `tools.jsonl` on every run; never leave it as an unstaged modification.
 
 ### Commit Convention
 
