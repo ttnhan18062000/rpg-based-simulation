@@ -86,9 +86,57 @@ Defined in `src/domains/adventure/scoring.py:AdventureRouteScorer.score()`.
 - **execute_brain() is NOT touched** — route scoring is in the strategic pipeline phase,
   not the tactical cognition domain.
 
+## Tick Index Sidecar
+
+**Implemented by:** TCK-20260619-E22B-TICK-INDEX (Epic 2.2B)
+
+A sidecar file `decision_trace_index.json` is written alongside `decision_trace.jsonl` to
+enable O(1) random-access reads by tick number.
+
+### File Location
+
+```
+data/runs/{run_id}/decision_trace_index.json
+```
+
+### Format
+
+```json
+{"<tick>": <byte_offset>, ...}
+```
+
+- Keys are string representations of tick numbers (JSON requires string keys).
+- Values are integer byte offsets into `decision_trace.jsonl`.
+- Each offset points to the **first** line for that tick (index 0 of all entities at that tick).
+- Subsequent entities at the same tick are contiguous in the file and are traversed by
+  `lookup()` until the tick changes.
+
+Example:
+
+```json
+{"1": 0, "2": 234, "3": 512}
+```
+
+### Lifecycle
+
+- **During run (incremental):** `DecisionTraceIndex.append_entry(tick, offset)` is called from
+  `DecisionTraceWriter.write_trace()` after each flush. Only the first occurrence of a tick is
+  recorded. This keeps the sidecar valid after every write for crash recovery.
+- **At run end (rebuild):** `DecisionTraceIndex.rebuild()` is called from
+  `DecisionTraceWriter.close()` to produce a clean, complete index from the final file.
+- The sidecar is **not authoritative state** — it can be rebuilt at any time via `rebuild()`.
+
+### Implementation
+
+- **Class:** `src/observability/cognition/tick_index.py::DecisionTraceIndex`
+- **Wired by:** `src/observability/cognition/decision_trace_writer.py::DecisionTraceWriter`
+- **Lookup:** `DecisionTraceIndex.lookup(tick)` — used by REST API (E22C)
+- All I/O is non-fatal: exceptions are caught and logged; the run continues.
+
 ## Related
 
 - `docs/audits/D15_entity_decision_inspection.md` — Gap 1 addressed by this contract
 - `docs/audits/D01_rpg_feature_impact.md` — Decision Explanation Model [PARTIAL] → now LIGHT mode
-- TCK-20260619-E22B-TICK-INDEX — blocked on this; builds an index over this file
+- TCK-20260619-E22B-TICK-INDEX — builds the tick index sidecar (implemented)
+- TCK-20260619-E22C-REST-API — REST API that uses `lookup()` to serve per-tick queries
 - `src/domains/adventure/schema.py:AdventureRouteOption` — source data schema

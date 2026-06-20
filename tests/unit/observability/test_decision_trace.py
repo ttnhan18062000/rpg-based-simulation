@@ -292,3 +292,163 @@ def test_decision_trace_writer_does_not_import_engine_cognition():
         "decision_trace_writer.py must not import from engine.domain.cognition"
     )
     assert "import CognitionDomain" not in source
+
+
+# ---------------------------------------------------------------------------
+# Tick Index — Epic 2.2B
+# ---------------------------------------------------------------------------
+
+from src.observability.cognition.tick_index import DecisionTraceIndex  # noqa: E402
+
+
+def _build_trace_file(run_dir: str, entries: list[dict]) -> str:
+    """Write a decision_trace.jsonl from a list of dicts; return the path."""
+    ObservabilityConfig.set_override_mode(ObservabilityMode.LIGHT)
+    trace_path = os.path.join(run_dir, "decision_trace.jsonl")
+    with open(trace_path, "w", encoding="utf-8") as f:
+        for entry in entries:
+            f.write(json.dumps(entry) + "\n")
+    return trace_path
+
+
+def test_tick_index_o1_lookup():
+    """AC (named): lookup(tick) byte-seeks to the correct position and returns all entries."""
+    with tempfile.TemporaryDirectory() as run_dir:
+        entries = [
+            {"entity_id": 1, "tick": 1, "routes": []},
+            {"entity_id": 2, "tick": 1, "routes": []},
+            {"entity_id": 3, "tick": 2, "routes": []},
+            {"entity_id": 4, "tick": 2, "routes": []},
+            {"entity_id": 5, "tick": 3, "routes": []},
+        ]
+        _build_trace_file(run_dir, entries)
+
+        idx = DecisionTraceIndex(run_dir)
+        idx.rebuild()
+
+        # Verify tick 2 has correct offset (not 0)
+        index_path = os.path.join(run_dir, "decision_trace_index.json")
+        assert os.path.exists(index_path), "Index file must be created by rebuild()"
+        raw = json.load(open(index_path))
+        assert "2" in raw, "Tick 2 must be in the index"
+        tick2_offset = raw["2"]
+        assert tick2_offset > 0, "Tick 2 offset must be non-zero (not start of file)"
+
+        # lookup returns exactly the 2 entries for tick 2
+        result = idx.lookup(tick=2)
+        assert len(result) == 2, f"Expected 2 entries for tick 2, got {len(result)}"
+        assert all(r["tick"] == 2 for r in result)
+        entity_ids = {r["entity_id"] for r in result}
+        assert entity_ids == {3, 4}
+
+
+def test_tick_index_file_exists_after_close():
+    """AC: decision_trace_index.json exists alongside decision_trace.jsonl after writer.close()."""
+    ObservabilityConfig.set_override_mode(ObservabilityMode.LIGHT)
+    with tempfile.TemporaryDirectory() as run_dir:
+        writer = DecisionTraceWriter(run_dir=run_dir)
+        writer.write_trace(entity_id=1, tick=1, scored_routes=[_make_route()])
+        writer.write_trace(entity_id=2, tick=1, scored_routes=[_make_route()])
+        writer.write_trace(entity_id=3, tick=2, scored_routes=[_make_route()])
+        writer.close()
+
+        index_path = os.path.join(run_dir, "decision_trace_index.json")
+        assert os.path.exists(index_path), "decision_trace_index.json must exist after close()"
+
+        raw = json.load(open(index_path))
+        assert "1" in raw
+        assert "2" in raw
+        # String keys, int values
+        assert isinstance(raw["1"], int)
+        assert isinstance(raw["2"], int)
+        assert raw["1"] == 0  # first tick starts at byte 0
+
+
+def test_tick_index_format_correctness():
+    """Index format: string keys, int values; offsets point to correct lines."""
+    with tempfile.TemporaryDirectory() as run_dir:
+        line1 = json.dumps({"entity_id": 1, "tick": 1, "routes": []}) + "\n"
+        line2 = json.dumps({"entity_id": 2, "tick": 2, "routes": []}) + "\n"
+        trace_path = os.path.join(run_dir, "decision_trace.jsonl")
+        with open(trace_path, "w", encoding="utf-8") as f:
+            f.write(line1)
+            f.write(line2)
+
+        idx = DecisionTraceIndex(run_dir)
+        idx.rebuild()
+
+        raw = json.load(open(os.path.join(run_dir, "decision_trace_index.json")))
+        assert set(raw.keys()) == {"1", "2"}, "Keys must be string tick values"
+        assert raw["1"] == 0, "Tick 1 offset must be 0"
+        assert raw["2"] == len(line1.encode("utf-8")), f"Tick 2 offset must be {len(line1.encode('utf-8'))}"
+
+
+def test_tick_index_lookup_missing_tick():
+    """lookup() on an absent tick returns [] without error."""
+    with tempfile.TemporaryDirectory() as run_dir:
+        entries = [{"entity_id": 1, "tick": 5, "routes": []}]
+        _build_trace_file(run_dir, entries)
+
+        idx = DecisionTraceIndex(run_dir)
+        idx.rebuild()
+
+        result = idx.lookup(tick=99)
+        assert result == [], "Missing tick must return empty list"
+
+
+def test_tick_index_rebuild_idempotent():
+    """rebuild() called twice produces identical index."""
+    with tempfile.TemporaryDirectory() as run_dir:
+        entries = [
+            {"entity_id": 1, "tick": 1, "routes": []},
+            {"entity_id": 2, "tick": 2, "routes": []},
+        ]
+        _build_trace_file(run_dir, entries)
+
+        idx = DecisionTraceIndex(run_dir)
+        idx.rebuild()
+        index_after_first = dict(idx._index)
+
+        idx.rebuild()
+        index_after_second = dict(idx._index)
+
+        assert index_after_first == index_after_second, "rebuild() must be idempotent"
+
+
+def test_tick_index_load_from_disk():
+    """_load() correctly parses saved JSON — string keys converted to int."""
+    with tempfile.TemporaryDirectory() as run_dir:
+        index_path = os.path.join(run_dir, "decision_trace_index.json")
+        with open(index_path, "w", encoding="utf-8") as f:
+            json.dump({"3": 0, "7": 128, "12": 512}, f)
+
+        # Create a dummy trace file so lookup doesn't crash
+        trace_path = os.path.join(run_dir, "decision_trace.jsonl")
+        open(trace_path, "w").close()
+
+        idx = DecisionTraceIndex(run_dir)
+        idx._load()
+
+        assert idx._index == {3: 0, 7: 128, 12: 512}, (
+            "_load() must convert string keys to int"
+        )
+
+
+def test_tick_index_incremental_vs_rebuild():
+    """Incremental append_entry and full rebuild produce identical tick→offset mappings."""
+    ObservabilityConfig.set_override_mode(ObservabilityMode.LIGHT)
+    with tempfile.TemporaryDirectory() as run_dir:
+        writer = DecisionTraceWriter(run_dir=run_dir)
+        writer.write_trace(entity_id=1, tick=1, scored_routes=[_make_route()])
+        writer.write_trace(entity_id=2, tick=1, scored_routes=[_make_route()])
+        writer.write_trace(entity_id=3, tick=2, scored_routes=[_make_route()])
+        # Capture incremental index state before close()
+        incremental_index = dict(writer._index._index)
+
+        # close() calls rebuild() — should produce same result
+        writer.close()
+        rebuilt_index = dict(writer._index._index)
+
+        assert incremental_index == rebuilt_index, (
+            "Incremental index and full rebuild must agree on tick→offset mappings"
+        )

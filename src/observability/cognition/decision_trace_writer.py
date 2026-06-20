@@ -9,6 +9,9 @@ after scoring completes. Does NOT modify execute_brain() in any way.
 
 Module-level singleton pattern (parallel to ObservabilityConfig) allows
 injection from the Kernel without threading the writer through pipeline.refine().
+
+Epic 2.2B extension: maintains a DecisionTraceIndex sidecar updated
+incrementally on each write (crash recovery) and rebuilt on close (completeness).
 """
 from __future__ import annotations
 
@@ -18,6 +21,7 @@ import logging
 from typing import Any, List, Optional
 
 from src.observability.config import ObservabilityConfig
+from src.observability.cognition.tick_index import DecisionTraceIndex
 
 logger = logging.getLogger(__name__)
 
@@ -48,6 +52,7 @@ class DecisionTraceWriter:
     def __init__(self, run_dir: str) -> None:
         self._path = os.path.join(run_dir, "decision_trace.jsonl")
         self._file = None
+        self._index = DecisionTraceIndex(run_dir)
 
     def _ensure_open(self) -> None:
         if self._file is None:
@@ -75,6 +80,7 @@ class DecisionTraceWriter:
 
         try:
             self._ensure_open()
+            offset = self._file.tell()
             routes_payload = []
             for idx, r in enumerate(scored_routes[:5]):
                 routes_payload.append({
@@ -95,11 +101,13 @@ class DecisionTraceWriter:
             }
             self._file.write(json.dumps(entry) + "\n")
             self._file.flush()
+            # Incremental index update: record first offset for this tick (crash recovery).
+            self._index.append_entry(tick, offset)
         except Exception:
             logger.exception("DecisionTraceWriter.write_trace failed (non-fatal)")
 
     def close(self) -> None:
-        """Close the underlying file handle if open."""
+        """Close the underlying file handle and rebuild the tick index sidecar."""
         if self._file is not None:
             try:
                 self._file.close()
@@ -107,3 +115,9 @@ class DecisionTraceWriter:
                 logger.exception("DecisionTraceWriter.close failed (non-fatal)")
             finally:
                 self._file = None
+        # Rebuild the index from the completed file to ensure a clean, complete sidecar
+        # even if any incremental append_entry calls were missed during the run.
+        try:
+            self._index.rebuild()
+        except Exception:
+            logger.exception("DecisionTraceWriter.close index rebuild failed (non-fatal)")

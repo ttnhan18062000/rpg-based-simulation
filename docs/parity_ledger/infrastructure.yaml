@@ -2394,3 +2394,13 @@
   test_path: tests/unit/observability/test_decision_trace.py::test_decision_trace_written_in_light_mode
   divergence_note: null
   support_boundary: null
+- id: INFRA-212
+  text: "Decision trace tick-index sidecar (Epic 2.2B): DecisionTraceIndex maintains decision_trace_index.json mapping tick→first byte offset, enabling O(1) random-access reads by tick. Updated incrementally on each write_trace() call (crash recovery) and rebuilt on close(). Not authoritative state — rebuildable from JSONL."
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/observability/cognition/tick_index.py::DecisionTraceIndex + src/observability/cognition/decision_trace_writer.py::DecisionTraceWriter.write_trace + DecisionTraceWriter.close
+  proof_type: feature
+  test_path: tests/unit/observability/test_decision_trace.py::test_tick_index_o1_lookup
+  divergence_note: null
+  support_boundary: null
