@@ -1,10 +1,10 @@
 ---
-status: open
+status: historical
 layer: simulation
 authority: P1
 audience: agent
 ticket_id: TCK-20260619-E21B-REGEN-SERVICE
-phase: open
+phase: done
 date: 2026-06-20
 tags: [resource-ecology, regeneration, event-emitter, phase-2]
 ---
@@ -15,7 +15,7 @@ tags: [resource-ecology, regeneration, event-emitter, phase-2]
 Epic 2.1B · Depletion Emitter + Charge Regen Loop
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -100,11 +100,13 @@ In `data/content/world/` or wherever `ResourceNodeState` instances are initializ
 - Does `ResourceNodeUpdate` support `charges_set` (absolute) or only `charges_delta` (relative)? Check `src/core/updates.py`. Use whichever is available.
 
 ## Implementation Notes
-- Do not emit `RESOURCE_DEPLETED` more than once per depletion event (guard: only fire when `old_charges > 0 and new_charges == 0`).
-- Do not emit `RESOURCE_RECOVERED` more than once per recovery (guard: only fire when `was_depleted and new_charges > 0`).
-- `ResourceEcologyService` currently returns `StateUpdate(nodes_add=..., next_node_id_set=...)` — extend to also return `node_updates` and `events_add`.
-- Run `graphify update src/` after implementation.
-- Run `make knowledge-index-update` if any docs/ changed.
+- Added `world_events_add: List[WorldEvent]` field to `StateUpdate` (src/core/updates.py); updated `is_noop()` and `merge_many()`.
+- Added `recent_world_events: List[WorldEvent]` field to `AuthoritativeState` (src/core/state.py); wired rolling-window accumulation (500 events) in `ApplyPath.apply_generation()` (src/engine/apply.py L311–L360).
+- `RESOURCE_DEPLETED` emitter added to `src/engine/economy.py:_apply_world_effects()` — fires when `old_charges > 0 and new_charges <= 0` after accepted harvest; uses `region_id=None`.
+- Regen loop added to `ResourceEcologyService.process_ecology()` (src/world/ecology.py L27–L104) — skips nodes with `cooldown_remaining > 0`, `regen_rate_per_tick == 0`, or already at max; uses `charges_delta` (not `charges_set`); emits `RESOURCE_RECOVERED` on recovery from depleted.
+- Ecology-seeded nodes now get `regen_rate_per_tick=1` (src/world/ecology.py L96).
+- `ResourceNodeUpdate` uses `charges_delta` (relative), not `charges_set` — ticket pseudocode was corrected per investigation finding.
+- Tests written in `tests/unit/world/test_resource_ecology.py` (310 lines, Groups A–D).
 
 ## Test Summary
 See `staging_artifacts/TCK-20260619-E21-RESOURCE-ECOLOGY/test_plan.md` for full test list.
@@ -116,7 +118,15 @@ pytest tests/unit/resource/ -x -v  # regression
 ```
 
 ## Files Changed
-_To be filled on completion._
+- src/core/updates.py (added world_events_add field to StateUpdate; updated is_noop() and merge_many())
+- src/core/state.py (added recent_world_events field to AuthoritativeState)
+- src/engine/apply.py (wired rolling-window accumulation of world_events_add into recent_world_events)
+- src/engine/economy.py (added RESOURCE_DEPLETED emitter in _apply_world_effects())
+- src/world/ecology.py (added regen loop in process_ecology(); set regen_rate_per_tick=1 on seeded nodes)
+- tests/unit/world/test_resource_ecology.py (new file — 17 tests, Groups A-D)
+- docs/parity_ledger/town_resource.yaml (TOWN-137 updated; TOWN-173/174/175 added)
+- docs/world/ecology_and_calamity_contract.md (added Charge regeneration section)
+- docs/audits/D02_foundation_features.md (Finding 5 marked RESOLVED)
 
 ## Completion Summary
-_To be filled on completion._
+Implemented Epic 2.1B: wired RESOURCE_DEPLETED emitter (economy.py), charge regen loop (ecology.py), RESOURCE_RECOVERED emitter, and world event infrastructure (StateUpdate.world_events_add, AuthoritativeState.recent_world_events with 500-event rolling window). Ecology-seeded nodes now get regen_rate_per_tick=1. 17 tests pass in tests/unit/world/test_resource_ecology.py. Parity entries TOWN-137/173/174/175 verified. Docs updated.

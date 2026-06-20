@@ -864,9 +864,11 @@ Risk scores below use the 5-dimension Foundation Risk rubric (max 50).
 | Recurrence Risk | 4 | Every new API route risks repeating the gap |
 | **Total** | **20** | |
 
-### Finding 5: Resource Ecology Service — regeneration logic absent (Score: 19 / 50)
+### Finding 5: Resource Ecology Service — regeneration logic absent (Score: 19 / 50) — **RESOLVED: TCK-20260619-E21B-REGEN-SERVICE (2026-06-20)**
 
 `[P]` item 10.3 — `ResourceEcologyService` is wired and tick-live but regeneration cycles not implemented.
+
+**Status: DONE.** TCK-20260619-E21B-REGEN-SERVICE implemented the regen loop (`src/world/ecology.py:process_ecology()`), `RESOURCE_DEPLETED` emitter (`src/engine/economy.py:_apply_world_effects()`), `RESOURCE_RECOVERED` emitter, and `StateUpdate.world_events_add` / `AuthoritativeState.recent_world_events` infrastructure. 17 tests pass in `tests/unit/world/test_resource_ecology.py`. Parity entries TOWN-137/173/174/175 verified.
 
 | Dimension | Score | Reason |
 |---|---|---|

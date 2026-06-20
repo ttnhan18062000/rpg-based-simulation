@@ -6,7 +6,9 @@ from __future__ import annotations
 from enum import Enum, IntEnum, auto
 from dataclasses import dataclass, field, replace, InitVar, asdict
 from types import MappingProxyType
-from typing import Dict, Any, Set, Optional, List, Tuple, ClassVar
+from typing import Dict, Any, Set, Optional, List, Tuple, ClassVar, TYPE_CHECKING
+if TYPE_CHECKING:
+    from src.domains.world_emergence.schema import WorldEvent
 from src.core.strategic import StrategicComponent
 from src.core.enums import Faction, EntityRole
 from src.core.movement_modes import MovementMode
@@ -1048,6 +1050,7 @@ class AuthoritativeState:
     pending_information_responses: List[Dict[str, Any]] = field(default_factory=list, repr=False, compare=False)
     information_source_profiles: List[Any] = field(default_factory=list, repr=False, compare=False)
     feature_flags: Dict[str, Any] = field(default_factory=dict, repr=False, compare=False)
+    recent_world_events: List[WorldEvent] = field(default_factory=list)
 
     def __post_init__(self):
         # M10 Law: Ensure cache is cleared on every new object creation (including replace)

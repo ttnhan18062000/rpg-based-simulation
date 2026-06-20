@@ -42,7 +42,23 @@ For each region below target, a 50% roll determines whether a node seeds this cy
 | MOUNTAIN | IRON |
 | all others | STONE |
 
-Nodes are seeded at the region's default resource position. They start with full charges.
+Nodes are seeded at the region's default resource position. They start with full charges. Ecology-seeded nodes are assigned `regen_rate_per_tick=1` at creation. Pre-placed (compiler-seeded) nodes retain `regen_rate_per_tick=0` and do not regenerate.
+
+### Charge regeneration
+
+Each ecology cycle also regenerates charges on existing depleted or partially-depleted nodes. The regen loop runs **before** density seeding in `process_ecology()`.
+
+**Rules:**
+- A node is eligible if `regen_rate_per_tick > 0`, `remaining_charges < max_charges`, and `cooldown_remaining == 0`.
+- Nodes in cooldown (`cooldown_remaining > 0`) are skipped — the cooldown-recharge path in `world_dynamics.py` owns those nodes.
+- `charges_delta = min(max_charges, remaining_charges + regen_rate_per_tick) - remaining_charges` (always positive; capped at max).
+- With the default `regen_rate_per_tick=1` and `max_charges=5`, a fully depleted ecology-seeded node recovers in 5 ecology intervals (~1000 ticks).
+
+**Events emitted:**
+- `RESOURCE_DEPLETED` (`WorldEventCategory.RESOURCE_DEPLETED`): emitted by `economy.py:_apply_world_effects()` when an accepted harvest reduces a node's `remaining_charges` from `> 0` to `<= 0`. Guard: only fires once per depletion (`old_charges > 0 and new_charges <= 0`).
+- `RESOURCE_RECOVERED` (`WorldEventCategory.RESOURCE_RECOVERED`): emitted by `ecology.py:process_ecology()` when the regen loop brings a fully-depleted node (`remaining_charges == 0`) above zero. Guard: only fires when `was_depleted and delta > 0`.
+
+Both events are carried via `StateUpdate.world_events_add` and accumulated on `AuthoritativeState.recent_world_events` (rolling window of 500 events) by `ApplyPath.apply_generation()`. The `WorldEmergencePhase` in `pipeline.py` reads `recent_world_events` from state.
 
 ### Fauna respawn
 
@@ -99,7 +115,7 @@ Environment effects are applied as temporary per-tick modifiers — they do not 
 
 ## Mutation rules
 
-- Ecology writes new resource node records to world state (authoritative apply path via WorldObjectUpdate)
+- Ecology writes new resource node records and regen node updates to world state (authoritative apply path via `StateUpdate.nodes_add` and `StateUpdate.node_updates`)
 - Calamity spawns `world_boss` via the entity spawn path (authoritative)
 - Environment effects are in-tick modifiers only — no durable state written
 - Calamity intensity on regions is a durable world field updated via StateUpdate
@@ -108,6 +124,7 @@ Environment effects are applied as temporary per-tick modifiers — they do not 
 
 ## Regression tests
 
+- `tests/unit/world/test_resource_ecology.py` — regen loop (charges_delta, cap, cooldown guard, rate guard), RESOURCE_DEPLETED emitter, RESOURCE_RECOVERED emitter, parity guards (TCK-20260619-E21B)
 - `tests/integration/world/test_long_run_stability.py` — node replenishment cadence, biome mapping, minimum count
 - `tests/certification/test_cert_long_run_stability.py` — forced-interval trigger, world_boss spawn, intensity accumulation
 - `tests/unit/world/test_interaction_system.py` — hazard drain rates, MIASMA/FROST/HEAT effect application

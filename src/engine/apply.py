@@ -307,6 +307,11 @@ class ApplyPath:
 
         new_movement_count = sum(1 for u in update.entity_updates.values() if u.moved_this_tick)
 
+        WORLD_EVENT_WINDOW = 500
+        prior_events = getattr(prior_state, "recent_world_events", [])
+        merged_events = prior_events + update.world_events_add
+        new_recent_world_events = merged_events[-WORLD_EVENT_WINDOW:]
+
         new_state = AuthoritativeState(
             tick=tick,
             seed=prior_state.seed,
@@ -351,7 +356,8 @@ class ApplyPath:
             _index_hits=getattr(prior_state, "_index_hits", 0),
             _index_misses=getattr(prior_state, "_index_misses", 0),
             _opt_profile=getattr(prior_state, "_opt_profile", None),
-            _force_full_scan=getattr(prior_state, "_force_full_scan", False)
+            _force_full_scan=getattr(prior_state, "_force_full_scan", False),
+            recent_world_events=new_recent_world_events
         )
 
         if not any_entity_changed and getattr(prior_state, "_readonly_entities_cache", None) is not None:

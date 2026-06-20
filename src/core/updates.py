@@ -9,10 +9,11 @@ if TYPE_CHECKING:
     from src.core.quests import QuestStatus
     from src.core.strategic import (
         ConcernState, CandidateZone, HypothesisState, SourceTrustEntry,
-        CognitionProfile, BlockerState, LeadState, DirectiveState, ProjectState, 
+        CognitionProfile, BlockerState, LeadState, DirectiveState, ProjectState,
         ContractState, TurningPointState
     )
     from src.engine.policy import GovernorPolicy
+    from src.domains.world_emergence.schema import WorldEvent
 from src.core.state import ItemStack, EquipSlot, AttributeComponent
 from src.core.movement_modes import MovementMode
 from src.core.enums import ReasonCode
@@ -860,6 +861,7 @@ class StateUpdate:
     force_full_scan: bool = False
     sub_phase_costs: Dict[str, float] = field(default_factory=dict)
     metric_counters: Dict[str, int] = field(default_factory=dict)
+    world_events_add: List[WorldEvent] = field(default_factory=list)
 
     def is_noop(self) -> bool:
         """True if this update contains absolutely no changes."""
@@ -880,7 +882,8 @@ class StateUpdate:
                 not self.rejection_events and 
                 not self.processed_transaction_ids and self.next_node_id_set is None and 
                 self.next_entity_id_set is None and not self.force_full_scan and
-                not self.sub_phase_costs and not self.metric_counters)
+                not self.sub_phase_costs and not self.metric_counters and
+                not self.world_events_add)
     def merge(self, other: StateUpdate) -> StateUpdate:
         """Merge another StateUpdate into this one."""
         if not other or other.is_noop():
@@ -927,6 +930,7 @@ class StateUpdate:
         new_trace = list(self.transaction_trace)
         new_processed_ids = set(self.processed_transaction_ids)
         new_rejection_events = list(self.rejection_events)
+        new_world_events_add = list(self.world_events_add)
 
         # Single values
         maturity = self.maturity_set
@@ -986,6 +990,7 @@ class StateUpdate:
             new_trace.extend(other.transaction_trace)
             new_processed_ids.update(other.processed_transaction_ids)
             new_rejection_events.extend(other.rejection_events)
+            new_world_events_add.extend(other.world_events_add)
 
             # Single values
             if other.maturity_set is not None: maturity = other.maturity_set
@@ -1038,7 +1043,8 @@ class StateUpdate:
             current_policy_set=policy,
             dirty_set=dirty,
             sub_phase_costs=sub_costs,
-            metric_counters=new_metric_counters
+            metric_counters=new_metric_counters,
+            world_events_add=new_world_events_add
         )
 
     def compact(self) -> StateUpdate:

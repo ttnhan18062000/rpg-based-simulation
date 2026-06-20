@@ -1430,9 +1430,11 @@
   status: verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
-  proof_type: null
-  test_path: null
+  v2_evidence: "src/world/ecology.py:process_ecology (line 20) — regen loop increments\
+    \ remaining_charges by regen_rate_per_tick each ecology tick, capped at max_charges;\
+    \ deterministic per-tick delta emitted as ResourceNodeUpdate"
+  proof_type: parity
+  test_path: tests/unit/world/test_resource_ecology.py::test_regen_increments_charges_per_ecology_interval
   divergence_note: null
   support_boundary: null
 - id: TOWN-138
@@ -1811,5 +1813,44 @@
     All 4 service types represented. All ingredient/output IDs verified against items.yaml.
   proof_type: parity
   test_path: tests/unit/content/test_recipe_catalog_expansion.py::test_gather_craft_chain_iron_to_steel
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-173
+  text: "RESOURCE_DEPLETED WorldEvent is emitted when a harvest reduces node remaining_charges\
+    \ to 0 (guard: only when old_charges > 0)"
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: "src/engine/economy.py:_apply_world_effects — fires WorldEvent(RESOURCE_DEPLETED)\
+    \ at line 127 when new_charges <= 0 and node.remaining_charges > 0; deduplicated\
+    \ via depleted_nodes set per tick"
+  proof_type: parity
+  test_path: tests/unit/world/test_resource_ecology.py::test_depleted_event_emitted_when_last_charge_harvested
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-174
+  text: "RESOURCE_RECOVERED WorldEvent is emitted when ecology regen brings a fully-depleted\
+    \ node above 0 charges"
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: "src/world/ecology.py:process_ecology — fires WorldEvent(RESOURCE_RECOVERED)\
+    \ at line 45 when was_depleted (remaining_charges == 0) and delta > 0"
+  proof_type: parity
+  test_path: tests/unit/world/test_resource_ecology.py::test_recovered_event_emitted_when_depleted_node_regens
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-175
+  text: "Ecology regen loop caps at max_charges, skips nodes with cooldown_remaining\
+    \ > 0 or regen_rate_per_tick == 0"
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: "src/world/ecology.py:process_ecology — guards at lines 31/33/35:\
+    \ regen_rate_per_tick <= 0 skip (line 31), remaining_charges >= max_charges skip\
+    \ (line 33), cooldown_remaining > 0 skip (line 35); cap via min(max_charges,\
+    \ remaining + rate) at line 38"
+  proof_type: parity
+  test_path: tests/unit/world/test_resource_ecology.py::test_regen_capped_at_max_charges
   divergence_note: null
   support_boundary: null

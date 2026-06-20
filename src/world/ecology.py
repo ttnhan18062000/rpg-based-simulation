@@ -1,8 +1,9 @@
 # src/world/ecology.py
 from __future__ import annotations
 from typing import TYPE_CHECKING, List
-from src.core.updates import StateUpdate
+from src.core.updates import StateUpdate, ResourceNodeUpdate
 from src.core.enums import Domain
+from src.domains.world_emergence.schema import WorldEvent, WorldEventCategory
 
 if TYPE_CHECKING:
     from src.core.state import AuthoritativeState
@@ -22,9 +23,34 @@ class ResourceEcologyService:
         """
         if state.tick % ResourceEcologyService.ECOLOGY_INTERVAL != 0:
             return StateUpdate()
-            
+
+        regen_node_updates: dict = {}
+        regen_events: List[WorldEvent] = []
+
+        for node_id, node in state.resource_nodes.items():
+            if node.regen_rate_per_tick <= 0:
+                continue
+            if node.remaining_charges >= node.max_charges:
+                continue
+            if node.cooldown_remaining > 0:
+                continue
+            was_depleted = (node.remaining_charges == 0)
+            new_charges = min(node.max_charges, node.remaining_charges + node.regen_rate_per_tick)
+            delta = new_charges - node.remaining_charges
+            if delta <= 0:
+                continue
+            regen_node_updates[node_id] = ResourceNodeUpdate(node_id=node_id, charges_delta=delta)
+            if was_depleted:
+                regen_events.append(WorldEvent(
+                    category=WorldEventCategory.RESOURCE_RECOVERED,
+                    tick=state.tick,
+                    region_id=None,
+                    subject=str(node_id),
+                    severity=1.0,
+                ))
+
         nodes_add = []
-        
+
         # 1. Count nodes per region
         region_node_count = {r_id: 0 for r_id in state.regions}
         for node in state.resource_nodes.values():
@@ -66,11 +92,14 @@ class ResourceEcologyService:
                         yields_item=kind.lower() + "_ore" if kind != "WOOD" else "wood_log",
                         remaining_charges=5,
                         max_charges=5,
-                        required_ticks=10
+                        required_ticks=10,
+                        regen_rate_per_tick=1,
                     )
                     nodes_add.append(new_node)
                     
         return StateUpdate(
             nodes_add=nodes_add,
-            next_node_id_set=state.next_node_id + len(nodes_add) if nodes_add else None
+            next_node_id_set=state.next_node_id + len(nodes_add) if nodes_add else None,
+            node_updates=regen_node_updates,
+            world_events_add=regen_events,
         )
