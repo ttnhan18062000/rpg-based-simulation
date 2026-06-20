@@ -2374,3 +2374,13 @@
   test_path: tests/unit/engine/test_capability_registry.py::test_capability_reader_returns_correct_status
   divergence_note: null
   support_boundary: null
+- id: INFRA-210
+  text: All API read paths are shaped through ReadModelService / ReadModelCache / StatePresenter; no API route, ws handler, or server file imports AuthoritativeState or EntityState outside TYPE_CHECKING.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/api/read_model_service.py + src/api/read_model_cache.py + src/api/presenters/state_presenter.py
+  proof_type: architecture
+  test_path: tests/architecture/test_api_read_model_guard.py::test_no_api_route_directly_imports_authoritative_state
+  divergence_note: null
+  support_boundary: null

@@ -11,7 +11,6 @@ from fastapi.encoders import jsonable_encoder
 
 from src.api.dependencies import get_engine_manager
 from src.api.engine_manager import V2EngineManager
-from src.core.state import AuthoritativeState
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -124,12 +123,7 @@ async def stream_observe_ws(
     try:
         # Send initial event log if requested
         if entity_id is not None:
-            initial_events = []
-            state = manager._latest_state
-            if state and entity_id in state.entities:
-                entity = state.entities[entity_id]
-                if hasattr(entity, "timeline") and entity.timeline:
-                    initial_events = [ev.model_dump() for ev in entity.timeline]
+            initial_events = manager.get_entity_timeline_events(entity_id)
             await websocket.send_json(jsonable_encoder(initial_events))
 
         while True:
