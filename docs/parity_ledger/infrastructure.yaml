@@ -2404,3 +2404,14 @@
   test_path: tests/unit/observability/test_decision_trace.py::test_tick_index_o1_lookup
   divergence_note: null
   support_boundary: null
+
+- id: INFRA-213
+  text: "Decision trace REST API (Epic 2.2C): Three read-only endpoints expose decision_trace.jsonl data via DecisionTraceIndex — GET /entities/{id}/decisions?tick= (single-tick ranked routes), GET /entities/{id}/decisions/range?from=&to= (range, ≤100 ticks), GET /entities/{id}/decisions/summary (route-kind histogram). All responses shaped through DecisionPresenter; no raw domain models exposed."
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/api/routes/decisions.py::get_entity_decisions + get_entity_decisions_range + get_entity_decisions_summary + src/api/presenters/decisions.py::DecisionPresenter
+  proof_type: feature
+  test_path: tests/api/test_decision_api.py::test_decision_api_returns_score_breakdown
+  divergence_note: null
+  support_boundary: null
