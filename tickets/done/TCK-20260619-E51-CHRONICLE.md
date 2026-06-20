@@ -1,10 +1,10 @@
 ---
-status: open
+status: done
 layer: simulation
 authority: P1
 audience: agent
 ticket_id: TCK-20260619-E51-CHRONICLE
-phase: open
+phase: done
 date: 2026-06-19
 tags: [chronicle-compiler, history, narrative-ledger, event-compression, epic, phase-5]
 ---
@@ -15,7 +15,7 @@ tags: [chronicle-compiler, history, narrative-ledger, event-compression, epic, p
 Epic 5.1 · History / Chronicle Compiler
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 epic
@@ -58,6 +58,11 @@ Score: 8/10 · Effort: L · Source: `docs/plans/engine_future_epics_roadmap.md` 
 - TCK-20260619-E43-SOCIAL-MEMORY (prerequisite)
 - TCK-20260619-E53-FACTION-DIPLOMACY (unlocked: faction history feeds chronicles with wars/treaties)
 - TCK-20260619-E62-CULTURE-DRIFT (unlocked: uses chronicle data for cultural drift)
+- TCK-20260619-E51A-SIGNIFICANCE (child)
+- TCK-20260619-E51B-GROUPER (child)
+- TCK-20260619-E51C-NAMING (child)
+- TCK-20260619-E51D-RENDERER (child)
+- TCK-20260619-E51E-REST-API (child)
 
 ## Related Docs
 - `docs/plans/engine_future_epics_roadmap.md` § A
@@ -69,7 +74,7 @@ Score: 8/10 · Effort: L · Source: `docs/plans/engine_future_epics_roadmap.md` 
 - New doc: `docs/simulation/domains/chronicle_contract.md` (ChronicleCompiler pipeline, significance scoring formula, hierarchy definitions, Chronicle.md schema, REST endpoints)
 
 ## Related Stored Artifacts
-- (none — fresh build)
+- `staging_artifacts/TCK-20260619-E51-CHRONICLE/`
 
 ## Related Code Areas
 - `src/domains/campaigns/schema.py:L43` (CampaignEvent — input to ChronicleCompiler)
@@ -77,8 +82,8 @@ Score: 8/10 · Effort: L · Source: `docs/plans/engine_future_epics_roadmap.md` 
 - `src/observability/reporting/` (artifact output pattern)
 
 ## Assumptions / Open Questions
-- What constitutes a "significant event"? Define significance scoring criteria before implementing the grouping algorithm
-- How should "Chronicle names" be generated deterministically? Use entity names from IdentityComponent + event type + tick
+- What constitutes a "significant event"? → Answered in investigation.md: BASE_SIGNIFICANCE dict + CHRONICLE_THRESHOLD=0.5
+- How should "Chronicle names" be generated deterministically? → Use entity names from IdentityComponent + event type + tick (templates in E51C)
 
 ## Implementation Notes
 Post-run pipeline (not tick-live). Runs after campaign completes. The most complex deliverable is the grouping algorithm — implement a simple threshold-based grouper first, then iterate. Chronicle.md is structured Markdown with YAML frontmatter for machine parsing.
@@ -97,7 +102,14 @@ After implementation: create `docs/simulation/domains/chronicle_contract.md` doc
   - `test_chronicle_rest_endpoint_returns_structured_json()`
 
 ## Files Changed
-_To be filled on completion._
+- `tickets/todos/TCK-20260619-E51A-SIGNIFICANCE.md`
+- `tickets/todos/TCK-20260619-E51B-GROUPER.md`
+- `tickets/todos/TCK-20260619-E51C-NAMING.md`
+- `tickets/todos/TCK-20260619-E51D-RENDERER.md`
+- `tickets/todos/TCK-20260619-E51E-REST-API.md`
+- `staging_artifacts/TCK-20260619-E51-CHRONICLE/investigation.md`
+- `staging_artifacts/TCK-20260619-E51-CHRONICLE/plan.md`
+- `staging_artifacts/TCK-20260619-E51-CHRONICLE/test_plan.md`
 
 ## Completion Summary
-_To be filled on completion._
+EPIC_SCOPED. Staged 5 child tickets (E51A–E51E) covering the full ChronicleCompiler pipeline: significance scoring → grouping → naming → rendering → REST API. Staging artifacts written. Sequential implementation order enforced by ticket dependencies.

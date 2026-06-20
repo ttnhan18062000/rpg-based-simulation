@@ -193,3 +193,4 @@
 {"run_id":"TCK-20260619-E23-QUEST-GENERATION","start_ts":"2026-06-20T04:29:39Z","end_ts":"2026-06-20T04:29:39Z","workflow":"implement-epic","tier":"epic","final_status":"EPIC_SCOPED","agent_count":1}
 {"run_id":"run-e31-e32-e33-1781930542","start_ts":"2026-06-20T08:00:00Z","end_ts":"2026-06-20T09:30:00Z","workflow":"implement-epic","tier":"epic","final_status":"EPIC_SCOPED","agent_count":1}
 {"run_id":"run-e41-e42-e43-1781931344","start_ts":"2026-06-20T09:30:00Z","end_ts":"2026-06-20T11:00:00Z","workflow":"implement-epic","tier":"epic","final_status":"EPIC_SCOPED","agent_count":1}
+{"run_id":"epic-scope-phase5-e51e52e53","start_ts":"2026-06-20T13:00:00Z","end_ts":"2026-06-20T14:00:00Z","workflow":"implement-epic","tier":"epic","final_status":"EPIC_SCOPED","agent_count":1}
