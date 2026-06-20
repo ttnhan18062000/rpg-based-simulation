@@ -2384,3 +2384,13 @@
   test_path: tests/architecture/test_api_read_model_guard.py::test_no_api_route_directly_imports_authoritative_state
   divergence_note: null
   support_boundary: null
+- id: INFRA-211
+  text: "Decision trace writer (LIGHT+ mode): AdventureDecisionPhase writes per-entity scored route breakdown to decision_trace.jsonl after each strategic decision, capturing all 8 score-term fields (urgency, benefit, personality_bias, confidence_bonus, risk_penalty, blocker_penalty, score, selected). execute_brain() is not modified."
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/observability/cognition/decision_trace_writer.py::DecisionTraceWriter + src/domains/adventure/phase.py::AdventureDecisionPhase.apply + src/observability/config.py::OBS_DECISION_TRACE
+  proof_type: feature
+  test_path: tests/unit/observability/test_decision_trace.py::test_decision_trace_written_in_light_mode
+  divergence_note: null
+  support_boundary: null

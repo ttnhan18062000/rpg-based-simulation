@@ -8,7 +8,7 @@ scoring, target selection, and strategic alignment in the tick execution.
 """
 
 from __future__ import annotations
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Any
 
 from src.core.state import AuthoritativeState, EntityState
 from src.core.updates import StateUpdate, EntityUpdate, StrategicUpdate
@@ -26,6 +26,7 @@ class AdventureDecisionPhase:
     def apply(
         state: AuthoritativeState,
         context: Optional[dict] = None,
+        trace_writer: Optional[Any] = None,
     ) -> StateUpdate:
         """
         Evaluate eligible heroes on the current tick, execute subjective routing,
@@ -66,6 +67,16 @@ class AdventureDecisionPhase:
                 hero, candidates, tick=tick,
                 resource_nodes=state.resource_nodes,
             )
+
+            # 2a. Write decision trace if writer is available (LIGHT+ mode observability)
+            _writer = trace_writer
+            if _writer is None:
+                from src.observability.cognition.decision_trace_writer import get_active_writer
+                _writer = get_active_writer()
+            if _writer is not None:
+                scored_candidates = result.trace.get("scored_candidates", [])
+                if scored_candidates:
+                    _writer.write_trace(hero.id, tick, scored_candidates)
 
             # If no selection or deferred, do not update project
             if not result.selected or result.selected.family == RouteFamily_Defer_check(result.selected.family):

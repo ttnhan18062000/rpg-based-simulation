@@ -149,4 +149,13 @@ class AdventureRouteScorer:
         final_score = urgency + benefit + personality_bias + confidence_bonus - risk_penalty - blocker_penalty
         final_score = round(max(0.0, final_score), 4)
 
-        return dataclasses.replace(route, score=final_score)
+        return dataclasses.replace(
+            route,
+            score=final_score,
+            urgency=round(urgency, 4),
+            benefit_score=round(benefit, 4),
+            personality_bias=round(personality_bias, 4),
+            confidence_bonus=round(confidence_bonus, 4),
+            risk_penalty=round(risk_penalty, 4),
+            blocker_penalty=round(blocker_penalty, 4),
+        )

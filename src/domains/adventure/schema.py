@@ -57,6 +57,13 @@ class AdventureRouteOption:
     source_opportunity_ids: Tuple[str, ...] = ()
     reason: Optional[str] = None
     target_node_id: Optional[int] = None
+    # Intermediate scoring terms populated by AdventureRouteScorer (zero before scoring)
+    urgency: float = 0.0
+    benefit_score: float = 0.0
+    personality_bias: float = 0.0
+    confidence_bonus: float = 0.0
+    risk_penalty: float = 0.0
+    blocker_penalty: float = 0.0
 
 
 @dataclass(frozen=True, slots=True)

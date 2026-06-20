@@ -178,7 +178,7 @@ is no way for a developer to query it without writing Python.
 
 ## Gap Analysis
 
-### Gap 1 — No "why goal X was chosen" explanation — Impact: 15 / 15
+### Gap 1 — No "why goal X was chosen" explanation — Impact: 15 / 15 — **RESOLVED by TCK-20260619-E22A-TRACE-WRITER**
 
 | Dimension | Score | Reason |
 |---|---|---|
@@ -316,7 +316,7 @@ for all routine strategic decisions.
 | Anomaly search with tick range filter | ✅ Present | Low gap |
 | EntityTimelineStore (ring buffer, in-proc) | ✅ Present | Low gap in DEBUG mode; LIGHT=20 is shallow |
 | Dashboard entity inspection UI | ✅ Present | Good UX, click-to-inspect wired |
-| WHY goal was chosen (score comparison) | ❌ Missing | **Critical** — primary debuggability gap |
+| WHY goal was chosen (score comparison) | ✅ Implemented (LIGHT+) | TCK-20260619-E22A-TRACE-WRITER → `decision_trace.jsonl` |
 | Goal score history over ticks | ❌ Missing | High gap |
 | Entity state at tick N (reconstruction) | ❌ Missing | High gap |
 | Route trace / navigation WHY | ❌ Missing | High gap |

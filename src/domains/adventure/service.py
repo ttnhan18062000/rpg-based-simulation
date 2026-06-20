@@ -139,12 +139,14 @@ class AdventureDecisionService:
             proposed_project = proj
             proposed_objective = obj
 
-        # Build explainable trace trace record
+        # Build explainable trace record
         trace = {
             "candidate_count": len(candidates),
             "valid_count": len(valid_candidates),
             "blocked_count": len(blocked_candidates),
             "selected_score": selected.score if selected else 0.0,
+            # scored_candidates: consumed by DecisionTraceWriter in AdventureDecisionPhase
+            "scored_candidates": scored_candidates,
         }
 
         return AdventureDecisionResult(

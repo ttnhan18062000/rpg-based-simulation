@@ -45,7 +45,7 @@ class Kernel:
         "_current_signals", "_current_policy", "_current_work_items",
         "_source_packets", "_source_work_items", "_final_results", "_final_compute_ms",
         "_phase_costs", "_metrics", "_audit_mode", "_no_frame_pacing", "_no_replay", "_audit_dirty_set", "_perf_tracker", "_force_full_scan", "_current_update", "_cache_registry", "_cache_policy", "_opt_profile", "_event_listeners", "_event_recorder", "_entity_timeline_store",
-        "_run_id", "_artifact_repo", "_metric_recorder", "_current_tick_event_count", "_current_tick_violation_count", "_cognition_recorder",
+        "_run_id", "_artifact_repo", "_metric_recorder", "_current_tick_event_count", "_current_tick_violation_count", "_cognition_recorder", "_decision_trace_writer",
         "_workers_started", "_last_shutdown_report",
     )
 
@@ -230,6 +230,7 @@ class Kernel:
 
         self._metric_recorder = None
         self._cognition_recorder = None
+        self._decision_trace_writer = None
         if obs_mode != ObservabilityMode.OFF:
             from src.observability.reporting.metric_recorder import MetricWindowRecorder
             from src.observability.cognition.recorder import ObservabilityCognitionRecorder
@@ -243,6 +244,12 @@ class Kernel:
                 run_id=self._run_id,
                 run_dir=run_dir_str
             )
+            from src.observability.cognition.decision_trace_writer import (
+                DecisionTraceWriter,
+                set_active_writer,
+            )
+            self._decision_trace_writer = DecisionTraceWriter(run_dir=run_dir_str)
+            set_active_writer(self._decision_trace_writer)
 
         self._current_tick_event_count = 0
         self._current_tick_violation_count = 0
@@ -831,6 +838,14 @@ class Kernel:
 
         if hasattr(self, "_metric_recorder") and self._metric_recorder:
             self._metric_recorder.shutdown(self._state.tick)
+
+        if hasattr(self, "_decision_trace_writer") and self._decision_trace_writer:
+            try:
+                self._decision_trace_writer.close()
+            except Exception:
+                logger.exception("DecisionTraceWriter.close() failed during shutdown (non-fatal)")
+            from src.observability.cognition.decision_trace_writer import set_active_writer
+            set_active_writer(None)
 
         # Wire BehaviorWorker into shutdown: join any running behavior-normalization threads.
         import threading
