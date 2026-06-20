@@ -211,3 +211,4 @@
 {"run_id": "TCK-20260619-E23C-QUEST-REWARDS", "ticket_id": "TCK-20260619-E23C-QUEST-REWARDS", "ts": "2026-06-20T12:57:18Z", "phase": "implement", "status": "complete", "seq": 5}
 {"run_id":"TCK-20260619-E23C-QUEST-REWARDS","start_ts":"2026-06-20T12:47:02Z","end_ts":"2026-06-20T13:52:46Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":9}
 {"run_id":"TCK-20260619-E23D-HERO-MATCHING","start_ts":"2026-06-20T14:03:04Z","end_ts":"2026-06-20T14:15:13Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":9}
+{"run_id":"TCK-20260619-E31A-SCENARIO-SERVICE","start_ts":"2026-06-20T14:18:57Z","end_ts":"2026-06-20T14:41:12Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":9}

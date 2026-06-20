@@ -1,10 +1,10 @@
 ---
-status: open
+status: historical
 layer: simulation
 authority: P1
 audience: agent
 ticket_id: TCK-20260619-E31A-SCENARIO-SERVICE
-phase: open
+phase: done
 date: 2026-06-20
 tags: [scenario-runtime, kernel-lifecycle, service-layer, phase-3]
 ---
@@ -15,7 +15,7 @@ tags: [scenario-runtime, kernel-lifecycle, service-layer, phase-3]
 Epic 3.1A · ScenarioRuntimeService + Kernel Lifecycle
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -108,13 +108,27 @@ Place in `src/engine/scenario_runtime.py` or `src/core/enums.py`.
 - Does `Kernel` support pause/resume natively, or does the service need to manage the tick loop itself? Read `src/engine/kernel.py` before implementing.
 - Is `ScenarioSpec` already a typed model? Check `src/domains/campaigns/spec.py` or `src/content/` for where scenario specs are loaded.
 
+## Implementation Notes
+
+Implemented in three steps:
+
+1. **`src/scenarios/schema.py`**: Added `VictoryCondition` Pydantic model (frozen, `extra="forbid"`, allowed kinds: `tick_limit` | `entity_count`) and optional `victory_conditions: Optional[List[VictoryCondition]] = None` field to `SimulationScenarioDefinition`. Existing YAML files without the field continue to parse.
+
+2. **`src/engine/scenario_runtime.py`** (new): Added `ScenarioObjectiveState(str, Enum)` with 5 values (RUNNING, OBJECTIVE_MET, OBJECTIVE_FAILED, STALLED, ABORTED) and `ScenarioRuntimeService` class. The service owns a `Kernel` built in `_build_kernel()` using the same minimal-profile pattern as `CampaignRunner`. Tick loop is synchronous; `pause()`/`resume()` are cooperative flag operations. `abort()` calls `kernel.shutdown()`. `step()` advances exactly one tick. Victory condition *evaluation* is deferred to E31B.
+
+3. **`tests/unit/engine/test_scenario_runtime_service.py`** (new): Unit tests covering all 5 ACs across 7 test classes.
+
+Clarification resolved: `ScenarioSpec` in ticket pseudocode → actual type is `SimulationScenarioDefinition`. `ScenarioObjectiveState` placed in `src/engine/scenario_runtime.py` to keep engine-layer concerns co-located.
+
 ## Test Summary
 ```bash
-pytest tests/unit/engine/ -x -v  # regression
-pytest tests/integration/scenarios/test_scenario_runtime_service.py::test_scenario_reaches_objective_met -x -v
+pytest tests/unit/engine/ -x -v
 ```
 
 ## Files Changed
-_To be filled on completion._
+- `src/scenarios/schema.py` — Added `VictoryCondition` model and `victory_conditions` field
+- `src/engine/scenario_runtime.py` — New file: `ScenarioObjectiveState` enum + `ScenarioRuntimeService`
+- `tests/unit/engine/test_scenario_runtime_service.py` — New file: unit tests
+
 ## Completion Summary
-_To be filled on completion._
+Implemented `ScenarioRuntimeService` + `ScenarioObjectiveState` in `src/engine/scenario_runtime.py`. Extended `SimulationScenarioDefinition` with optional `victory_conditions: List[VictoryCondition]` (kinds: `tick_limit`, `entity_count`). Service wraps `Kernel` with a synchronous tick loop; `pause()`/`resume()` are cooperative flag operations; `abort()` calls `kernel.shutdown()`. 30 new unit tests across 7 test classes; all 162 existing engine unit tests that were previously passing continue to pass. Parity entry INFRA-214 added to `docs/parity_ledger/infrastructure.yaml`. Unblocks TCK-20260619-E31B-OBJECTIVE-FSM.

@@ -1,9 +1,11 @@
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+
+ALLOWED_VICTORY_CONDITION_KINDS: frozenset[str] = frozenset({"tick_limit", "entity_count"})
 
 ALLOWED_INITIAL_CONDITION_CATEGORIES = frozenset({
     "region_pressure",
@@ -15,6 +17,29 @@ ALLOWED_INITIAL_CONDITION_CATEGORIES = frozenset({
     "danger_level_override",
     "spawn_bias",
 })
+
+
+class VictoryCondition(BaseModel):
+    """
+    A single declarative victory/failure condition for a scenario.
+
+    Evaluation logic lives in E31B (ScenarioObjectiveFSM). This model is
+    schema-only — the service stores it and passes it downstream unchanged.
+    """
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    kind: str = Field(..., description="Condition kind: 'tick_limit' or 'entity_count'")
+    value: int = Field(..., ge=0)
+
+    @model_validator(mode="after")
+    def validate_kind(self) -> VictoryCondition:
+        if self.kind not in ALLOWED_VICTORY_CONDITION_KINDS:
+            raise ValueError(
+                f"Unknown victory_condition kind: {self.kind!r}. "
+                f"Allowed: {sorted(ALLOWED_VICTORY_CONDITION_KINDS)}"
+            )
+        return self
 
 
 class SimulationScenarioDefinition(BaseModel):
@@ -39,6 +64,7 @@ class SimulationScenarioDefinition(BaseModel):
     initial_conditions: Dict[str, Any] = Field(default_factory=dict)
     setup_tags: List[str] = Field(default_factory=list)
     template_id: Optional[str] = None
+    victory_conditions: Optional[List[VictoryCondition]] = None
 
     @model_validator(mode="after")
     def validate_initial_condition_keys(self) -> SimulationScenarioDefinition:
