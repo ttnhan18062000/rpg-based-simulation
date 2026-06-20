@@ -1,10 +1,10 @@
 ---
-status: open
+status: inprogress
 layer: simulation
 authority: P1
 audience: agent
 ticket_id: TCK-20260619-E12-BALANCE-BASELINE
-phase: open
+phase: scoped
 date: 2026-06-19
 tags: [balance, tuning, scoring, blocker-penalty, regression-tests, epic, phase-1]
 ---
@@ -15,7 +15,7 @@ tags: [balance, tuning, scoring, blocker-penalty, regression-tests, epic, phase-
 Epic 1.2 · Balance & Tuning Baseline
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 epic
@@ -32,7 +32,7 @@ Economic/crafting balance is unmeasurable because hunger dominates (D06 F1, fixe
 Score: 8/10 · Effort: M · Source: `docs/audits/D04_balance_tuning.md`
 
 ## Scope
-- **Prerequisites:** TCK-20260619-P0-HUNGER-SATIATION complete; TCK-20260619-P0-ENTITY-INIT complete
+- **Prerequisites:** TCK-20260619-P0-HUNGER-SATIATION complete ✓; TCK-20260619-P0-ENTITY-INIT complete ✓
 - Run D04 completion: 1000-tick `urban_political` runs measuring gold accumulation rate, harvesting frequency per entity-hour, quest completion rate, crafting conversion, combat attrition rate
 - Audit `blocker_penalty = 2.0` in `src/domains/adventure/scoring.py`: if max non-blocked score is ~2.65, 2.0 may be too severe — consider graduated penalty curve or tiered penalty by blocker severity
 - Audit hunger urgency vs. benefit calibration: does completing a food-provision opportunity score above the next hunger project?
@@ -53,9 +53,12 @@ Score: 8/10 · Effort: M · Source: `docs/audits/D04_balance_tuning.md`
 - At least one economic event (harvesting, crafting, or trade) observable per entity per 100-tick window in a 1000-tick `urban_political` run
 
 ## Related Tickets
-- TCK-20260619-P0-HUNGER-SATIATION (prerequisite)
-- TCK-20260619-P0-ENTITY-INIT (prerequisite)
-- TCK-20260619-E11-ENTITY-IDENTITY (prerequisite for personality-driven route differentiation measurement)
+- TCK-20260619-P0-HUNGER-SATIATION (prerequisite — DONE)
+- TCK-20260619-P0-ENTITY-INIT (prerequisite — DONE)
+- TCK-20260619-E11-ENTITY-IDENTITY (prerequisite for personality-driven route differentiation measurement — DONE)
+- **TCK-20260619-E12A-BALANCE-MEASURE** (child — measurement pass + metric collection)
+- **TCK-20260619-E12B-BLOCKER-RECAL** (child — blocker_penalty recalibration)
+- **TCK-20260619-E12C-BALANCE-TESTS** (child — balance regression test suite)
 
 ## Related Docs
 - `docs/audits/D04_balance_tuning.md` (promote status to `done` on completion)
@@ -64,34 +67,29 @@ Score: 8/10 · Effort: M · Source: `docs/audits/D04_balance_tuning.md`
 - `docs/plans/long_term_development_roadmap.md` § Epic 1.2
 - `docs/parity_ledger/strategic_cognition.yaml` (scoring formula entries — update blocker_penalty entry if changed)
 - `docs/parity_ledger/town_resource.yaml` (harvesting/crafting rate entries — add baseline measurement as `v2_evidence`)
-- `docs/plans/idea_cognition_graph_analytics_pipeline.md` (idea: wire `CognitionFeatureExtractor` into post-run pipeline before this epic's measurement pass; `blocker_add_count`, `unresolved_blocker_count`, and `max_blocker_age` from `cognition_features.jsonl` are direct evidence for/against `blocker_penalty = 2.0`; `StaleBlocker` pattern count is the causal signal the D04 measurement pass currently cannot access)
+- `docs/plans/idea_cognition_graph_analytics_pipeline.md` (idea: wire `CognitionFeatureExtractor` into post-run pipeline before this epic's measurement pass)
 
 ## Related Stored Artifacts
 - `stored_artifacts/TCK-20260618-AUDIT-EPIC/`
 
 ## Related Code Areas
-- `src/domains/adventure/scoring.py:L134` (scoring formula and constants)
-- `src/observability/` (metric_windows.jsonl output for balance measurement)
+- `src/domains/adventure/scoring.py:L131` (`blocker_penalty = 2.0` constant)
+- `src/observability/reporting/baseline_generator.py` (BaselineGenerator, BaselineThresholdSpec)
+- `src/observability/understanding/balance/engine.py` (BalanceDiagnosisEngine)
+- `src/observability/reporting/balance_envelope.py` (BalanceEnvelope)
 
 ## Assumptions / Open Questions
-- What is the realistic urgency range for non-hunger needs? Measure from run data before recalibrating blocker_penalty
-- Should blocker_penalty be a graduated function of blocker severity (minor=0.5, major=2.0) rather than a fixed constant?
+- What is the realistic urgency range for non-hunger needs? → answered by E12A measurement pass
+- Should blocker_penalty be a graduated function of blocker severity? → decided in E12B based on E12A data
 
 ## Implementation Notes
-Measurement-first approach: collect baselines before changing any constants. Use 1000-tick `urban_political` run with LIGHT observability. Only change constants after seeing the data. Document the reasoning in `docs/mechanics/04_strategic_cognition.md`.
-
-After implementation: if `blocker_penalty` or any scoring constant changes, update the corresponding `docs/parity_ledger/strategic_cognition.yaml` entry (`status: verified`, `v2_evidence` with new value and measurement rationale). Update `docs/mechanics/04_strategic_cognition.md` with all constant values and justification. Run `make knowledge-index-update` after all docs/ changes. Promote `docs/audits/D04_balance_tuning.md` status field from `partial` to `done`.
+See `staging_artifacts/TCK-20260619-E12-BALANCE-BASELINE/plan.md` for child ticket sequencing and implementation notes.
 
 ## Test Summary
-Balance regression tests are the primary deliverable. Each test asserts that a key ratio stays within an empirically-derived band, run against a reference seed.
-- New file `tests/integration/scenarios/test_balance_regression.py`:
-  - `test_harvesting_rate_in_band()` — 1000-tick `urban_political`; assert `0.1 < harvesting_events_per_entity_per_100_ticks < 0.5`
-  - `test_combat_attrition_urban_in_band()` — assert attrition rate stays below 60% at tick 1000
-  - `test_blocker_penalty_not_near_binary()` — if penalty changed: assert a route with one minor blocker can still outcompete an unblocked mediocre route
-  - `test_gold_accumulation_non_zero()` — assert at least one entity accumulates gold > 0 by tick 1000
+Regression tests are the primary deliverable of E12C. Each test asserts that a key ratio stays within an empirically-derived band (values locked by E12A run data), run against a reference seed.
 
 ## Files Changed
-_To be filled on completion._
+_To be filled when child tickets complete._
 
 ## Completion Summary
-_To be filled on completion._
+_Epic completes when E12A + E12B + E12C are all DONE._
