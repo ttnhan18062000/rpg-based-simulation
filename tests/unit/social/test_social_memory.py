@@ -831,3 +831,305 @@ def test_campaign_state_round_trip_with_faction_memory():
     assert restored_fsm.faction_id == "merchants"
     assert restored_fsm.entity_hostility == {1: 0.5, 2: 0.9}
     assert restored_fsm.episode_of_offense == {1: 0, 2: 1}
+
+
+# ---------------------------------------------------------------------------
+# E43E — Social Memory Consequence Events
+# TCK-20260619-E43E-CONSEQUENCE-EVENTS
+# ---------------------------------------------------------------------------
+
+
+# Helpers
+
+
+def _make_simple_campaign_state(
+    faction_id: str = "iron_guild",
+    entity_id: int = 10,
+    hostility: float = 0.0,
+    episode_of_offense: int = 0,
+    reputation: float = 0.0,
+    relationship_scores: dict | None = None,
+):
+    """Build a minimal CampaignState for consequence event tests."""
+    from src.domains.campaigns.state import CampaignState
+    from src.domains.campaigns.social_memory import FactionSocialMemory, SocialMemoryRecord
+
+    faction_mem = FactionSocialMemory(
+        faction_id=faction_id,
+        entity_hostility={entity_id: hostility} if hostility > 0.0 else {},
+        episode_of_offense={entity_id: episode_of_offense} if hostility > 0.0 else {},
+    )
+    social_record = SocialMemoryRecord(
+        entity_id=entity_id,
+        faction_reputation={"default": reputation} if reputation > 0.0 else {},
+        relationship_scores=relationship_scores or {},
+    )
+    return CampaignState(
+        campaign_id="test",
+        episode_index=1,
+        faction_social_memories={faction_id: faction_mem} if hostility > 0.0 else {},
+        social_memories={entity_id: social_record} if (reputation > 0.0 or relationship_scores) else {},
+    )
+
+
+class _FakeEntity:
+    """Minimal duck-typed entity for consequence event tests."""
+    def __init__(self, entity_id: int):
+        self.id = entity_id
+
+
+# ---------------------------------------------------------------------------
+# Acceptance criteria — TCK-20260619-E43E
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.v2_contract
+def test_known_traitor_event_fires_on_encounter():
+    """AC-1: KnownTraitorSpottedEvent fires when faction hostility >= 0.5.
+
+    Entity 10 has hostility 0.8 with iron_guild → KNOWN_TRAITOR_SPOTTED must fire.
+    """
+    from src.systems.social_systems.consequence_events import evaluate_social_consequence
+    from src.observability.events import KnownTraitorSpottedEvent, KNOWN_TRAITOR_SPOTTED
+
+    entity = _FakeEntity(10)
+    state = _make_simple_campaign_state(
+        faction_id="iron_guild",
+        entity_id=10,
+        hostility=0.8,
+        episode_of_offense=1,
+    )
+
+    events = evaluate_social_consequence(entity, "iron_guild", state, tick=50)
+
+    traitor_events = [e for e in events if e.event_type == KNOWN_TRAITOR_SPOTTED]
+    assert len(traitor_events) == 1
+    evt = traitor_events[0]
+    assert isinstance(evt, KnownTraitorSpottedEvent)
+    assert evt.entity_id == 10
+    assert evt.faction_id == "iron_guild"
+    assert evt.hostility_score == pytest.approx(0.8)
+    assert evt.tick == 50
+
+
+@pytest.mark.v2_contract
+def test_faction_memory_survives_episode_without_member_npcs():
+    """AC-2: KnownTraitorSpottedEvent fires even when no NPC members of the
+    faction are present — faction memory persists at campaign level (E43D).
+
+    This test exercises the scenario where:
+    - Episode 0: entity 10 betrayed iron_guild (hostility=1.0 stored).
+    - Entity 10 dies; all iron_guild members may also be absent next episode.
+    - Episode 1: CampaignState is re-loaded (checkpoint round-trip).
+    - KNOWN_TRAITOR_SPOTTED still fires on next encounter.
+    """
+    import json as json_module
+    from src.domains.campaigns.state import CampaignState
+    from src.domains.campaigns.social_memory import FactionSocialMemory
+    from src.systems.social_systems.consequence_events import evaluate_social_consequence
+    from src.observability.events import KNOWN_TRAITOR_SPOTTED
+
+    # Build state as if exported after episode 0
+    fsm = FactionSocialMemory(
+        faction_id="iron_guild",
+        entity_hostility={10: 1.0},
+        episode_of_offense={10: 0},
+    )
+    state = CampaignState(
+        campaign_id="survival-test",
+        episode_index=1,
+        faction_social_memories={"iron_guild": fsm},
+        # No social_memories for entity 10 — entity died last episode
+    )
+
+    # Simulate checkpoint round-trip
+    restored_state = CampaignState.from_dict(json_module.loads(json_module.dumps(state.to_dict())))
+
+    entity = _FakeEntity(10)
+    events = evaluate_social_consequence(entity, "iron_guild", restored_state, tick=5)
+
+    traitor_events = [e for e in events if e.event_type == KNOWN_TRAITOR_SPOTTED]
+    assert len(traitor_events) == 1
+    assert traitor_events[0].hostility_score == pytest.approx(1.0)
+
+
+@pytest.mark.v2_contract
+def test_all_three_event_kinds_importable():
+    """AC-3: LEGENDARY_ARRIVAL, KNOWN_TRAITOR_SPOTTED, OLD_DEBT_COLLECTED are
+    importable as string constants from src.observability.events.
+    """
+    from src.observability.events import (
+        LEGENDARY_ARRIVAL,
+        KNOWN_TRAITOR_SPOTTED,
+        OLD_DEBT_COLLECTED,
+    )
+    assert isinstance(LEGENDARY_ARRIVAL, str)
+    assert isinstance(KNOWN_TRAITOR_SPOTTED, str)
+    assert isinstance(OLD_DEBT_COLLECTED, str)
+    assert LEGENDARY_ARRIVAL == "LEGENDARY_ARRIVAL"
+    assert KNOWN_TRAITOR_SPOTTED == "KNOWN_TRAITOR_SPOTTED"
+    assert OLD_DEBT_COLLECTED == "OLD_DEBT_COLLECTED"
+
+
+# ---------------------------------------------------------------------------
+# Coverage tests — E43E evaluator
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.v2_contract
+def test_legendary_arrival_event_fires():
+    """LegendaryArrivalEvent fires when faction_reputation["default"] >= 0.9."""
+    from src.domains.campaigns.state import CampaignState
+    from src.domains.campaigns.social_memory import SocialMemoryRecord
+    from src.systems.social_systems.consequence_events import evaluate_social_consequence
+    from src.observability.events import LegendaryArrivalEvent, LEGENDARY_ARRIVAL
+
+    entity = _FakeEntity(7)
+    record = SocialMemoryRecord(
+        entity_id=7,
+        faction_reputation={"default": 0.95},
+    )
+    state = CampaignState(
+        campaign_id="legend-test",
+        episode_index=2,
+        social_memories={7: record},
+    )
+
+    events = evaluate_social_consequence(entity, "merchants_guild", state, tick=100)
+
+    legendary_events = [e for e in events if e.event_type == LEGENDARY_ARRIVAL]
+    assert len(legendary_events) == 1
+    evt = legendary_events[0]
+    assert isinstance(evt, LegendaryArrivalEvent)
+    assert evt.entity_id == 7
+    assert evt.faction_id == "merchants_guild"
+
+
+@pytest.mark.v2_contract
+def test_old_debt_collected_event_fires():
+    """OldDebtCollectedEvent fires when relationship_scores has a score >= 0.5."""
+    from src.domains.campaigns.state import CampaignState
+    from src.domains.campaigns.social_memory import SocialMemoryRecord
+    from src.systems.social_systems.consequence_events import evaluate_social_consequence
+    from src.observability.events import OldDebtCollectedEvent, OLD_DEBT_COLLECTED
+
+    entity = _FakeEntity(5)
+    record = SocialMemoryRecord(
+        entity_id=5,
+        relationship_scores={42: 0.7},  # owes entity 42 a social debt
+    )
+    state = CampaignState(
+        campaign_id="debt-test",
+        episode_index=1,
+        social_memories={5: record},
+    )
+
+    events = evaluate_social_consequence(entity, "shadow_guild", state, tick=20)
+
+    debt_events = [e for e in events if e.event_type == OLD_DEBT_COLLECTED]
+    assert len(debt_events) == 1
+    evt = debt_events[0]
+    assert isinstance(evt, OldDebtCollectedEvent)
+    assert evt.entity_id == 5
+    assert evt.debtor_id == 42
+    assert evt.relationship_score == pytest.approx(0.7)
+
+
+@pytest.mark.v2_contract
+def test_no_events_when_no_faction_memory():
+    """No events returned when campaign_state has no social memory for the faction or entity."""
+    from src.domains.campaigns.state import CampaignState
+    from src.systems.social_systems.consequence_events import evaluate_social_consequence
+
+    entity = _FakeEntity(99)
+    state = CampaignState(
+        campaign_id="empty-test",
+        episode_index=0,
+        # No faction_social_memories, no social_memories
+    )
+
+    events = evaluate_social_consequence(entity, "any_faction", state, tick=0)
+
+    assert isinstance(events, list)
+    assert len(events) == 0
+
+
+@pytest.mark.v2_contract
+def test_no_traitor_event_below_threshold():
+    """KnownTraitorSpottedEvent does NOT fire when entity_hostility < 0.5."""
+    from src.domains.campaigns.state import CampaignState
+    from src.domains.campaigns.social_memory import FactionSocialMemory
+    from src.systems.social_systems.consequence_events import evaluate_social_consequence
+    from src.observability.events import KNOWN_TRAITOR_SPOTTED
+
+    entity = _FakeEntity(3)
+    fsm = FactionSocialMemory(
+        faction_id="guild",
+        entity_hostility={3: 0.3},  # below threshold
+        episode_of_offense={3: 0},
+    )
+    state = CampaignState(
+        campaign_id="low-hostility-test",
+        episode_index=1,
+        faction_social_memories={"guild": fsm},
+    )
+
+    events = evaluate_social_consequence(entity, "guild", state, tick=10)
+
+    traitor_events = [e for e in events if e.event_type == KNOWN_TRAITOR_SPOTTED]
+    assert len(traitor_events) == 0
+
+
+@pytest.mark.v2_contract
+def test_evaluate_returns_list():
+    """evaluate_social_consequence always returns a list, never None."""
+    from src.domains.campaigns.state import CampaignState
+    from src.systems.social_systems.consequence_events import evaluate_social_consequence
+
+    entity = _FakeEntity(1)
+    state = CampaignState(campaign_id="t", episode_index=0)
+    result = evaluate_social_consequence(entity, "some_faction", state)
+    assert result is not None
+    assert isinstance(result, list)
+
+
+@pytest.mark.v2_contract
+def test_event_classes_are_simulation_events():
+    """All 3 consequence event classes are subclasses of SimulationEvent."""
+    from src.observability.events import (
+        SimulationEvent,
+        LegendaryArrivalEvent,
+        KnownTraitorSpottedEvent,
+        OldDebtCollectedEvent,
+    )
+    assert issubclass(LegendaryArrivalEvent, SimulationEvent)
+    assert issubclass(KnownTraitorSpottedEvent, SimulationEvent)
+    assert issubclass(OldDebtCollectedEvent, SimulationEvent)
+
+
+@pytest.mark.v2_contract
+def test_old_debt_only_one_event_per_encounter():
+    """OLD_DEBT_COLLECTED fires only once per encounter (first qualifying bond)."""
+    from src.domains.campaigns.state import CampaignState
+    from src.domains.campaigns.social_memory import SocialMemoryRecord
+    from src.systems.social_systems.consequence_events import evaluate_social_consequence
+    from src.observability.events import OLD_DEBT_COLLECTED
+
+    entity = _FakeEntity(5)
+    record = SocialMemoryRecord(
+        entity_id=5,
+        relationship_scores={10: 0.8, 20: 0.9, 30: 0.7},  # 3 qualifying bonds
+    )
+    from src.domains.campaigns.state import CampaignState
+    state = CampaignState(
+        campaign_id="multi-debt-test",
+        episode_index=2,
+        social_memories={5: record},
+    )
+
+    events = evaluate_social_consequence(entity, "any_faction", state, tick=0)
+    debt_events = [e for e in events if e.event_type == OLD_DEBT_COLLECTED]
+
+    # Only 1 OLD_DEBT_COLLECTED event per encounter (deterministic: lowest id first)
+    assert len(debt_events) == 1
+    assert debt_events[0].debtor_id == 10  # sorted: 10 < 20 < 30

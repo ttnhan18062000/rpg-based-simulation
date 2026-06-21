@@ -2569,3 +2569,39 @@
     tests/unit/social/test_social_memory.py -x -v
   divergence_note: null
   support_boundary: null
+- id: SOC-CROSS-EP-005
+  text: >
+    evaluate_social_consequence() is a pure, deterministic function that reads
+    cross-episode social memory from CampaignState and returns a list of
+    SimulationEvent instances when an entity encounter triggers one of three
+    consequence event kinds: KNOWN_TRAITOR_SPOTTED fires when faction_social_memories
+    entity_hostility >= 0.5 (traitor-level grudge persisted from a prior episode);
+    LEGENDARY_ARRIVAL fires when social_memories faction_reputation["default"] >= 0.9
+    (outstanding cross-episode reputation); OLD_DEBT_COLLECTED fires when
+    relationship_scores has a score >= 0.5 for any known entity (at most one per
+    encounter, first by sorted key for determinism). Function never mutates entity,
+    campaign_state, or any registry. Does not import from src.engine or src.core.state.
+    Events are SimulationEvent subclasses (Pydantic BaseModel) — not raw domain objects.
+    All three event kind string constants are importable directly from src.observability.events.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/observability/events.py (LEGENDARY_ARRIVAL, KNOWN_TRAITOR_SPOTTED, OLD_DEBT_COLLECTED
+    string constants; LegendaryArrivalEvent, KnownTraitorSpottedEvent, OldDebtCollectedEvent
+    — all SimulationEvent subclasses with event_category="social",
+    source_system="social_consequence_evaluator"). src/systems/social_systems/consequence_events.py
+    (evaluate_social_consequence(), LEGENDARY_REP_THRESHOLD=0.9, TRAITOR_HOSTILITY_THRESHOLD=0.5,
+    OLD_DEBT_SCORE_THRESHOLD=0.5; ordered: traitor -> legendary -> debt; one OLD_DEBT per
+    encounter). (TCK-20260619-E43E-CONSEQUENCE-EVENTS)
+  proof_type: parity
+  test_path: >
+    pytest tests/unit/social/test_social_memory.py::test_known_traitor_event_fires_on_encounter
+    tests/unit/social/test_social_memory.py::test_faction_memory_survives_episode_without_member_npcs
+    tests/unit/social/test_social_memory.py::test_all_three_event_kinds_importable
+    tests/unit/social/test_social_memory.py -x -v -m "not slow"
+  divergence_note: >
+    Ticket pseudocode specified hostility threshold > 3.0; actual field range is 0.0-1.0
+    so correct threshold is >= 0.5 (moderate hostility = traitor-level offense).
+    (TCK-20260619-E43E-CONSEQUENCE-EVENTS investigation.md)
+  support_boundary: null

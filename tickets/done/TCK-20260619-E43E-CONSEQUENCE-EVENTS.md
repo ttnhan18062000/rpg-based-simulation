@@ -1,5 +1,5 @@
 ---
-status: open
+status: done
 layer: social
 authority: P1
 audience: agent
@@ -15,7 +15,7 @@ tags: [social-memory, consequence-events, legendary-arrival, known-traitor, phas
 Epic 4.3E · Social Memory Consequence Events
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -79,6 +79,18 @@ pytest tests/unit/social/test_social_memory.py -x -v
 pytest tests/integration/scenarios/test_social_memory.py -x -v -m slow
 ```
 ## Files Changed
-_To be filled on completion._
+- `src/observability/events.py` — added `LEGENDARY_ARRIVAL`, `KNOWN_TRAITOR_SPOTTED`, `OLD_DEBT_COLLECTED` string constants and `LegendaryArrivalEvent`, `KnownTraitorSpottedEvent`, `OldDebtCollectedEvent` classes
+- `src/systems/social_systems/consequence_events.py` — new: `evaluate_social_consequence()` pure evaluator
+- `tests/unit/social/test_social_memory.py` — E43E test section (10 tests added)
+- `docs/parity_ledger/social_narrative.yaml` — added SOC-CROSS-EP-005 entry
+- `docs/simulation/domains/social_memory_contract.md` — new domain contract covering E43A–E43E
+
 ## Completion Summary
-_To be filled on completion._
+Implemented Epic 4.3E — Social Memory Consequence Events. Three consequence event kinds
+(LEGENDARY_ARRIVAL, KNOWN_TRAITOR_SPOTTED, OLD_DEBT_COLLECTED) added to events.py as
+string constants and typed SimulationEvent subclasses. Pure evaluator function
+evaluate_social_consequence() reads CampaignState cross-episode memory and returns
+events without mutating state. Thresholds: hostility >= 0.5 (traitor), rep >= 0.9
+(legendary), relationship_score >= 0.5 (debt). 56/56 tests pass including all 3
+acceptance criteria tests. Parity ledger updated (SOC-CROSS-EP-005). Domain contract
+created at docs/simulation/domains/social_memory_contract.md.
