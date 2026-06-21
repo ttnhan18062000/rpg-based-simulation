@@ -2417,11 +2417,11 @@
   support_boundary: null
 
 - id: INFRA-214
-  text: "ScenarioRuntimeService kernel lifecycle (Epic 3.1A+3.1B): ScenarioRuntimeService owns a Kernel for one scenario run, exposing start/pause/resume/step/abort. Tick loop is synchronous; pause()/resume() are cooperative flag operations. abort() calls kernel.shutdown() to prevent QueueDrainWorker thread leaks. ScenarioObjectiveState enum (RUNNING/OBJECTIVE_MET/OBJECTIVE_FAILED/STALLED/ABORTED) tracks execution-level state. VictoryCondition schema added to SimulationScenarioDefinition (kinds: tick_limit, entity_count). ObjectiveEvaluator (pure static, E31B) evaluates conditions after each tick: tick_limit fires OBJECTIVE_MET when state.tick >= value; entity_count fires OBJECTIVE_FAILED when alive entities (e.combat.alive) < value. Stall detector fires STALLED after STALL_THRESHOLD (50) consecutive zero-event ticks. Evaluation order: objective conditions before stall detector. _evaluate_after_tick() wired into both _run_loop() and step(); step() raises RuntimeError in any terminal state."
+  text: "ScenarioRuntimeService kernel lifecycle (Epic 3.1A+3.1B+3.2C): ScenarioRuntimeService owns a Kernel for one scenario run, exposing start/pause/resume/step/abort. Tick loop is synchronous; pause()/resume() are cooperative flag operations. abort() calls kernel.shutdown() to prevent QueueDrainWorker thread leaks. ScenarioObjectiveState enum (RUNNING/OBJECTIVE_MET/OBJECTIVE_FAILED/STALLED/ABORTED) tracks execution-level state. VictoryCondition schema added to SimulationScenarioDefinition (kinds: tick_limit, entity_count). ObjectiveEvaluator (pure static, E31B) evaluates conditions after each tick: tick_limit fires OBJECTIVE_MET when state.tick >= value; entity_count fires OBJECTIVE_FAILED when alive entities (e.combat.alive) < value. Stall detector fires STALLED after STALL_THRESHOLD (50) consecutive zero-event ticks. Evaluation order: objective conditions before stall detector. _evaluate_after_tick() wired into both _run_loop() and step(); step() raises RuntimeError in any terminal state. E32C additions: initial_state: Optional[AuthoritativeState] = None parameter on __init__ allows CampaignOrchestrator to inject carry-forward entity state before first tick; final_state property returns self._kernel.state (None before start); _build_kernel() seeds DeterministicRNG from initial_state.seed when provided (INFRA-101/102 determinism)."
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: src/engine/scenario_runtime.py::ScenarioRuntimeService + src/engine/scenario_runtime.py::ScenarioObjectiveState + src/engine/scenario_runtime.py::ObjectiveEvaluator + src/engine/scenario_runtime.py::STALL_THRESHOLD + src/scenarios/schema.py::VictoryCondition
+  v2_evidence: src/engine/scenario_runtime.py::ScenarioRuntimeService + src/engine/scenario_runtime.py::ScenarioObjectiveState + src/engine/scenario_runtime.py::ObjectiveEvaluator + src/engine/scenario_runtime.py::STALL_THRESHOLD + src/scenarios/schema.py::VictoryCondition + src/engine/scenario_runtime.py::ScenarioRuntimeService.final_state + src/engine/scenario_runtime.py::ScenarioRuntimeService._initial_state
   proof_type: feature
   test_path: tests/unit/engine/test_scenario_runtime_service.py::TestStart::test_start_runs_ticks_without_error + tests/integration/scenarios/test_scenario_runtime_service.py::TestObjectiveMet::test_scenario_reaches_objective_met
   divergence_note: null
@@ -2457,5 +2457,52 @@
     src/engine/scenario_registry.py + docs/engine/scenario_runtime_contract.md
   proof_type: feature
   test_path: tests/api/test_scenario_runtime_api.py::test_status_endpoint_returns_live_state
+  divergence_note: null
+  support_boundary: null
+
+- id: INFRA-217
+  text: "CampaignState data model (Epic 3.2B): Pure data model for multi-episode campaign persistence.
+    Six typed dataclasses — CampaignState (mutable container), EntityCarryForward (frozen),
+    FactionCarryForward (frozen), EpisodeSummary (frozen), WorldTimelineEntry (frozen),
+    NarrativeLedgerEntry (frozen). All implement to_dict()/from_dict() with sorted keys for
+    determinism. entity_id keys stringified in JSON and restored with int(). No engine imports.
+    Dead entities (alive=False) and destroyed factions (alive=False) are representable."
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/domains/campaigns/state.py::CampaignState + EntityCarryForward + FactionCarryForward + EpisodeSummary + WorldTimelineEntry + NarrativeLedgerEntry
+  proof_type: feature
+  test_path: tests/unit/campaigns/test_campaign_state.py::test_campaign_state_json_round_trip
+  divergence_note: null
+  support_boundary: null
+
+- id: INFRA-218
+  text: "CampaignOrchestrator multi-episode orchestration (Epic 3.2C): CampaignOrchestrator
+    drives a sequence of SimulationScenarioDefinitions defined by CampaignManifest. Each
+    run_episode() call: builds initial AuthoritativeState from persistent carry-forward data,
+    runs one ScenarioRuntimeService episode to terminal objective state, extracts carry-forward
+    via _advance_state(), appends EpisodeSummary to episode_history, increments episode_index.
+    EntityCarryForward extraction: level <- entity.identity.evolution_level; xp <-
+    entity.identity.evolution_points; alive <- entity.lifecycle.active (NOT combat.alive);
+    reputation <- entity.social.public_reputation; equipment keys are EquipSlot.name strings.
+    FactionCarryForward synthesis: faction_id = f'faction_{faction_int}'; alive = any entity
+    with that faction_int has lifecycle.active=True; tension=0.0 (E32D enriches).
+    Dead entities (alive=False) and destroyed factions (alive=False) excluded from next
+    episode's initial_state injection. Episode RNG seed = CampaignManifest.base_seed +
+    episode_index; both AuthoritativeState.seed and DeterministicRNG seeded identically
+    (INFRA-101/102). CarryForwardRules boolean dataclass enables per-category toggle.
+    CampaignManifest is distinct from analysis-domain CampaignSpec in schema.py."
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: "src/domains/campaigns/orchestrator.py::CampaignOrchestrator +
+    src/domains/campaigns/orchestrator.py::CampaignManifest +
+    src/domains/campaigns/orchestrator.py::CarryForwardRules +
+    src/engine/scenario_runtime.py::ScenarioRuntimeService.final_state +
+    src/engine/scenario_runtime.py::ScenarioRuntimeService._initial_state"
+  proof_type: feature
+  test_path: "tests/integration/scenarios/test_campaign_runtime.py::test_entity_state_persists_across_episodes +
+    tests/integration/scenarios/test_campaign_runtime.py::test_dead_faction_absent_in_episode_2 +
+    tests/integration/scenarios/test_campaign_runtime.py::test_episode_history_accumulates"
   divergence_note: null
   support_boundary: null

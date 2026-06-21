@@ -123,11 +123,17 @@ class ScenarioRuntimeService:
         "_paused",
         "_stall_counter",
         "_last_event_tick",
+        "_initial_state",
     )
 
-    def __init__(self, spec: SimulationScenarioDefinition) -> None:
+    def __init__(
+        self,
+        spec: "SimulationScenarioDefinition",
+        initial_state: Optional["AuthoritativeState"] = None,
+    ) -> None:
         self._spec = spec
         self._kernel = None
+        self._initial_state = initial_state
         self._state: ScenarioObjectiveState = ScenarioObjectiveState.RUNNING
         self._tick: int = 0
         self._paused: bool = False
@@ -232,6 +238,18 @@ class ScenarioRuntimeService:
             return 0
         return len(self._kernel.state.entities)
 
+    @property
+    def final_state(self) -> Optional["AuthoritativeState"]:
+        """Return the kernel's AuthoritativeState after a terminal episode.
+
+        Returns None if the kernel has not been started yet (episode not begun).
+        Available in all objective states including ABORTED — callers should
+        check objective_state before relying on the contents.
+        """
+        if self._kernel is None:
+            return None
+        return self._kernel.state
+
     # ── internal ───────────────────────────────────────────────────────────────
 
     def _run_loop(self, tick_limit: int) -> None:
@@ -291,7 +309,13 @@ class ScenarioRuntimeService:
                 self._paused = True
 
     def _build_kernel(self):
-        """Construct a minimal Kernel for this scenario spec."""
+        """Construct a minimal Kernel for this scenario spec.
+
+        If ``self._initial_state`` was provided at construction time, it is used
+        as the kernel's starting ``AuthoritativeState`` and its ``seed`` is also
+        forwarded to ``DeterministicRNG`` so that both state and RNG agree on the
+        episode seed (required for determinism — INFRA-101/102).
+        """
         from src.config.profiles import RuntimeProfile, HardwareClass
         from src.core.state import AuthoritativeState
         from src.platform.rng import DeterministicRNG
@@ -308,8 +332,12 @@ class ScenarioRuntimeService:
             max_observability_budget_percent=5.0,
             max_tick_budget_ms=200.0,
         )
-        state = AuthoritativeState(tick=0, seed=0)
-        rng = DeterministicRNG(base_seed=0)
+        if self._initial_state is not None:
+            state = self._initial_state
+            rng = DeterministicRNG(base_seed=self._initial_state.seed)
+        else:
+            state = AuthoritativeState(tick=0, seed=0)
+            rng = DeterministicRNG(base_seed=0)
         return Kernel(profile, state, rng, flags={"no_replay": True})
 
 
