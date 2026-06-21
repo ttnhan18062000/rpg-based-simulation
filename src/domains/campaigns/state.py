@@ -11,6 +11,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 
+from src.domains.campaigns.social_memory import SocialMemoryRecord
+
 
 @dataclass(frozen=True)
 class EntityCarryForward:
@@ -204,6 +206,10 @@ class CampaignState:
     persistent_factions: Dict[str, FactionCarryForward] = field(default_factory=dict)
     world_timeline: List[WorldTimelineEntry] = field(default_factory=list)
     narrative_ledger: List[NarrativeLedgerEntry] = field(default_factory=list)
+    social_memories: Dict[int, SocialMemoryRecord] = field(default_factory=dict)
+    # E43B: per-entity cross-episode social snapshots keyed by entity_id (int).
+    # Populated by SocialMemoryExporter at episode end; consumed by
+    # SocialMemoryImporter at episode start. Serialized with str(k) keys.
 
     def to_dict(self) -> dict:
         """Serialize to a JSON-safe dict. All dict keys sorted for determinism."""
@@ -221,6 +227,10 @@ class CampaignState:
             },
             "world_timeline": [e.to_dict() for e in self.world_timeline],
             "narrative_ledger": [e.to_dict() for e in self.narrative_ledger],
+            "social_memories": {
+                str(k): v.to_dict()
+                for k, v in sorted(self.social_memories.items())
+            },
         }
 
     @classmethod
@@ -246,4 +256,8 @@ class CampaignState:
             narrative_ledger=[
                 NarrativeLedgerEntry.from_dict(e) for e in d.get("narrative_ledger", [])
             ],
+            social_memories={
+                int(k): SocialMemoryRecord.from_dict(v)
+                for k, v in d.get("social_memories", {}).items()
+            },
         )

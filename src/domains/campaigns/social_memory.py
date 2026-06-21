@@ -1,11 +1,13 @@
 """
 src/domains/campaigns/social_memory.py
 ───────────────────────────────────────────────────────────────────────────────
-SocialMemoryRecord and InteractionRecord — the data layer for cross-episode
-social memory persistence (Epic 4.3).
+SocialMemoryRecord, InteractionRecord, SocialMemoryExporter, and
+SocialMemoryImporter — the data layer and hooks for cross-episode social
+memory persistence (Epic 4.3).
 
 Design constraints (same as state.py):
-  - MUST NOT import from src.engine or src.core.state.
+  - MUST NOT import from src.engine or src.core.state at module level.
+  - EntityState accessed via TYPE_CHECKING only (duck-typed at runtime).
   - All sub-records are frozen (immutable after construction).
   - to_dict() / from_dict() provide JSON-safe round-trip.
   - Dict keys that are int are serialized as str for JSON compatibility.
@@ -18,8 +20,11 @@ Stored in:    CampaignState.social_memories (Dict[int, SocialMemoryRecord]).
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Tuple
+from dataclasses import dataclass, field, replace as dc_replace
+from typing import TYPE_CHECKING, Dict, List, Optional, Tuple
+
+if TYPE_CHECKING:
+    from src.core.state import EntityState
 
 # ---------------------------------------------------------------------------
 # InteractionRecord
@@ -168,3 +173,118 @@ class SocialMemoryRecord:
             last_betrayal_tick=d.get("last_betrayal_tick"),
             last_cooperation_tick=d.get("last_cooperation_tick"),
         )
+
+
+# ---------------------------------------------------------------------------
+# SocialMemoryExporter
+# ---------------------------------------------------------------------------
+
+
+class SocialMemoryExporter:
+    """Reads an EntityState at episode end and produces a SocialMemoryRecord.
+
+    Pure read — does not mutate any live state. Called by
+    CampaignOrchestrator._extract_social_memories() for each entity in
+    the final AuthoritativeState.
+
+    Mapping decisions (E43B scope):
+      relationship_scores  ← entity.social.trust_history (entity_id → trust)
+      faction_reputation   ← {"default": entity.social.public_reputation}
+                             Per-faction breakdown deferred to later E43 child.
+      interaction_history  ← () — E43C will enrich from grudge/cooperation data.
+      last_betrayal_tick   ← None — E43C enriches.
+      last_cooperation_tick← None — E43C enriches.
+    """
+
+    @staticmethod
+    def export(entity: "EntityState", episode: int) -> SocialMemoryRecord:
+        """Snapshot entity social state into a SocialMemoryRecord.
+
+        Parameters
+        ----------
+        entity : EntityState
+            The entity whose social state is captured.
+        episode : int
+            Zero-based episode index in which this export occurs.
+
+        Returns
+        -------
+        SocialMemoryRecord
+            Frozen record suitable for storage in CampaignState.social_memories.
+        """
+        # relationship_scores: trust_history is the primary per-entity score.
+        relationship_scores: Dict[int, float] = dict(entity.social.trust_history)
+
+        # faction_reputation: public_reputation is the single unified score for
+        # this episode. Stored under "default" key as the E43B proxy for faction
+        # reputation. Per-faction breakdown left for a future E43 child ticket.
+        faction_reputation: Dict[str, float] = {
+            "default": entity.social.public_reputation,
+        }
+
+        return SocialMemoryRecord(
+            entity_id=entity.id,
+            interaction_history=(),   # E43C enriches this field
+            relationship_scores=relationship_scores,
+            faction_reputation=faction_reputation,
+            last_betrayal_tick=None,  # E43C enriches this field
+            last_cooperation_tick=None,  # E43C enriches this field
+        )
+
+
+# ---------------------------------------------------------------------------
+# SocialMemoryImporter
+# ---------------------------------------------------------------------------
+
+
+class SocialMemoryImporter:
+    """Applies a SocialMemoryRecord to an EntityState at episode start.
+
+    Returns a new EntityState (via dc_replace) with social fields seeded from
+    the record. Does NOT reset existing social state — merges additively so
+    that default construction state is preserved for fields not covered by the
+    record.
+
+    Called by CampaignOrchestrator._build_initial_state() for each alive entity
+    that has a record in CampaignState.social_memories.
+
+    Decay (E43C) is applied to the record before this importer is called;
+    E43B receives the record as-is (no decay at this tier).
+    """
+
+    @staticmethod
+    def apply(entity: "EntityState", record: SocialMemoryRecord) -> "EntityState":
+        """Merge social memory into the entity's social state for the new episode.
+
+        Parameters
+        ----------
+        entity : EntityState
+            The entity being initialised for the new episode. Should have
+            default/fresh SocialComponent (as produced by _build_initial_state).
+        record : SocialMemoryRecord
+            The social memory snapshot from the previous episode (possibly
+            decayed by E43C before reaching this call).
+
+        Returns
+        -------
+        EntityState
+            New EntityState instance with social fields seeded from the record.
+            The original ``entity`` is NOT mutated.
+        """
+        # Merge trust_history: additive — carry forward + existing (usually 0.0)
+        new_trust: Dict[int, float] = dict(entity.social.trust_history)
+        for eid, score in record.relationship_scores.items():
+            new_trust[eid] = new_trust.get(eid, 0.0) + score
+
+        # Reputation: only override if "default" key is present in the record.
+        new_reputation: float = entity.social.public_reputation
+        if "default" in record.faction_reputation:
+            new_reputation = record.faction_reputation["default"]
+
+        new_social = dc_replace(
+            entity.social,
+            trust_history=new_trust,
+            public_reputation=new_reputation,
+        )
+
+        return dc_replace(entity, social=new_social)

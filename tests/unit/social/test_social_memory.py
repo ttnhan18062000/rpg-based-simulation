@@ -1,7 +1,10 @@
 # tests/unit/social/test_social_memory.py
 """
-Unit tests for SocialMemoryRecord and InteractionRecord.
-Ticket: TCK-20260619-E43A-SOCIAL-MEM-MODEL
+Unit tests for SocialMemoryRecord, InteractionRecord, SocialMemoryExporter,
+and SocialMemoryImporter.
+
+Ticket: TCK-20260619-E43A-SOCIAL-MEM-MODEL (data model tests)
+Ticket: TCK-20260619-E43B-EXPORT-IMPORT (exporter/importer tests)
 
 Coverage:
   - Normal construction and defaults
@@ -9,14 +12,20 @@ Coverage:
   - Optional field handling (None → null → None)
   - Int key round-trip for relationship_scores
   - Deterministic key ordering in to_dict()
+  - Exporter reads entity social state correctly
+  - Importer applies trust and reputation additively
+  - Importer does not mutate original EntityState
 """
 
+import dataclasses
 import json
 import pytest
 
 from src.domains.campaigns.social_memory import (
     InteractionRecord,
     SocialMemoryRecord,
+    SocialMemoryExporter,
+    SocialMemoryImporter,
 )
 
 
@@ -228,3 +237,151 @@ def test_social_memory_record_is_immutable():
     rec = SocialMemoryRecord(entity_id=1)
     with pytest.raises((AttributeError, TypeError)):
         rec.entity_id = 999  # type: ignore[misc]
+
+
+# ---------------------------------------------------------------------------
+# SocialMemoryExporter — TCK-20260619-E43B-EXPORT-IMPORT
+# ---------------------------------------------------------------------------
+
+
+def _make_entity_with_social(
+    entity_id: int = 1,
+    trust_history: dict | None = None,
+    public_reputation: float = 1.0,
+    alive: bool = True,
+):
+    """Build a minimal EntityState with controlled social and lifecycle fields."""
+    from src.core.state import EntityState
+
+    base = EntityState(id=entity_id, kind="entity")
+    social = dataclasses.replace(
+        base.social,
+        trust_history=trust_history or {},
+        public_reputation=public_reputation,
+    )
+    lifecycle = dataclasses.replace(base.lifecycle, active=alive)
+    return dataclasses.replace(base, social=social, lifecycle=lifecycle)
+
+
+@pytest.mark.v2_contract
+def test_exporter_produces_record_from_entity_state():
+    """Exporter reads trust_history + public_reputation from entity social."""
+    entity = _make_entity_with_social(
+        entity_id=10,
+        trust_history={5: 0.7, 20: -0.3},
+        public_reputation=1.5,
+    )
+    record = SocialMemoryExporter.export(entity, episode=0)
+
+    assert record.entity_id == 10
+    assert record.relationship_scores == {5: 0.7, 20: -0.3}
+    assert record.faction_reputation == {"default": 1.5}
+    assert record.interaction_history == ()
+    assert record.last_betrayal_tick is None
+    assert record.last_cooperation_tick is None
+
+
+@pytest.mark.v2_contract
+def test_exporter_empty_social_state():
+    """Exporter handles entity with no trust history; produces default record."""
+    entity = _make_entity_with_social(entity_id=99)
+    record = SocialMemoryExporter.export(entity, episode=1)
+
+    assert record.entity_id == 99
+    assert record.relationship_scores == {}
+    assert record.faction_reputation == {"default": 1.0}  # EntityState default rep
+
+
+@pytest.mark.v2_contract
+def test_exporter_does_not_mutate_entity():
+    """Export must be a pure read — original entity.social must not change."""
+    entity = _make_entity_with_social(trust_history={7: 0.5}, public_reputation=1.2)
+    original_trust = dict(entity.social.trust_history)
+    original_rep = entity.social.public_reputation
+
+    SocialMemoryExporter.export(entity, episode=0)
+
+    assert entity.social.trust_history == original_trust
+    assert entity.social.public_reputation == original_rep
+
+
+# ---------------------------------------------------------------------------
+# SocialMemoryImporter — TCK-20260619-E43B-EXPORT-IMPORT
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.v2_contract
+def test_importer_applies_trust_history():
+    """Importer merges relationship_scores into entity trust_history."""
+    entity = _make_entity_with_social(entity_id=1)
+    record = SocialMemoryRecord(
+        entity_id=1,
+        relationship_scores={5: 0.8, 10: -0.4},
+    )
+    result = SocialMemoryImporter.apply(entity, record)
+
+    assert result.social.trust_history[5] == pytest.approx(0.8)
+    assert result.social.trust_history[10] == pytest.approx(-0.4)
+
+
+@pytest.mark.v2_contract
+def test_importer_applies_reputation():
+    """Importer seeds public_reputation from 'default' faction_reputation key."""
+    entity = _make_entity_with_social(entity_id=1, public_reputation=1.0)
+    record = SocialMemoryRecord(
+        entity_id=1,
+        faction_reputation={"default": 1.7},
+    )
+    result = SocialMemoryImporter.apply(entity, record)
+
+    assert result.social.public_reputation == pytest.approx(1.7)
+
+
+@pytest.mark.v2_contract
+def test_importer_no_default_reputation_leaves_original():
+    """If record has no 'default' key, public_reputation must be unchanged."""
+    entity = _make_entity_with_social(entity_id=1, public_reputation=1.3)
+    record = SocialMemoryRecord(
+        entity_id=1,
+        faction_reputation={"guild_a": 0.5},  # no "default" key
+    )
+    result = SocialMemoryImporter.apply(entity, record)
+
+    assert result.social.public_reputation == pytest.approx(1.3)
+
+
+@pytest.mark.v2_contract
+def test_importer_additive_merge_trust():
+    """Existing trust + carried trust must sum, not overwrite."""
+    entity = _make_entity_with_social(
+        entity_id=1,
+        trust_history={5: 0.3},  # entity already has trust for entity 5
+    )
+    record = SocialMemoryRecord(
+        entity_id=1,
+        relationship_scores={5: 0.5},  # carried: +0.5 for entity 5
+    )
+    result = SocialMemoryImporter.apply(entity, record)
+
+    # 0.3 (existing) + 0.5 (carried) = 0.8
+    assert result.social.trust_history[5] == pytest.approx(0.8)
+
+
+@pytest.mark.v2_contract
+def test_importer_returns_new_entity_state():
+    """Importer must return a new EntityState, not mutate the original."""
+    entity = _make_entity_with_social(entity_id=1, public_reputation=1.0)
+    record = SocialMemoryRecord(
+        entity_id=1,
+        relationship_scores={42: 0.9},
+        faction_reputation={"default": 1.5},
+    )
+    result = SocialMemoryImporter.apply(entity, record)
+
+    # Original must be unchanged
+    assert entity.social.public_reputation == pytest.approx(1.0)
+    assert 42 not in entity.social.trust_history
+    # Result must be a distinct object with the new values
+    assert result is not entity
+    assert result.social.public_reputation == pytest.approx(1.5)
+    assert result.social.trust_history[42] == pytest.approx(0.9)

@@ -1,10 +1,10 @@
 ---
-status: open
+status: active
 layer: social
 authority: P1
 audience: agent
 ticket_id: TCK-20260619-E43B-EXPORT-IMPORT
-phase: open
+phase: done
 date: 2026-06-20
 tags: [social-memory, exporter, importer, campaign-orchestrator, phase-4]
 ---
@@ -15,7 +15,7 @@ tags: [social-memory, exporter, importer, campaign-orchestrator, phase-4]
 Epic 4.3B · SocialMemoryExporter + Importer
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -81,6 +81,19 @@ Add `social_memories: Dict[int, SocialMemoryRecord] = field(default_factory=dict
 pytest tests/integration/scenarios/test_social_memory.py::test_reputation_transfer_across_episodes -x -v -m slow
 ```
 ## Files Changed
-_To be filled on completion._
+- `src/domains/campaigns/social_memory.py` — Added SocialMemoryExporter and SocialMemoryImporter classes; added TYPE_CHECKING import guard for EntityState; added dc_replace import.
+- `src/domains/campaigns/state.py` — Added `social_memories: Dict[int, SocialMemoryRecord]` field to CampaignState; added to_dict/from_dict serialization with str/int key conversion; imported SocialMemoryRecord.
+- `src/domains/campaigns/orchestrator.py` — Imported SocialMemoryExporter/Importer; added `_extract_social_memories()` method; wired export into `_advance_state()`; wired import into `_build_initial_state()`.
+- `tests/unit/social/test_social_memory.py` — Extended with 8 new unit tests covering Exporter and Importer (19 total, all pass).
+- `tests/integration/scenarios/test_social_memory.py` — New file; 2 @slow integration tests (all pass).
+- `docs/parity_ledger/social_narrative.yaml` — Added SOC-CROSS-EP-002 entry (verified).
+
 ## Completion Summary
-_To be filled on completion._
+SocialMemoryExporter and SocialMemoryImporter implemented in
+`src/domains/campaigns/social_memory.py`. Exporter reads trust_history and
+public_reputation from EntityState at episode end; Importer applies them
+additively to EntityState at episode start. CampaignState extended with
+`social_memories: Dict[int, SocialMemoryRecord]` field (serialized with
+str/int key conversion). Both hooks wired into CampaignOrchestrator.
+19 unit tests and 2 integration tests pass. Parity ledger SOC-CROSS-EP-002
+added. Unblocks E43C (decay).

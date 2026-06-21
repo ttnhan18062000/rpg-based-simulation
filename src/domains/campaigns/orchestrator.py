@@ -31,6 +31,11 @@ from src.domains.campaigns.state import (
     FactionCarryForward,
     NarrativeLedgerEntry,
 )
+from src.domains.campaigns.social_memory import (
+    SocialMemoryRecord,
+    SocialMemoryExporter,
+    SocialMemoryImporter,
+)
 
 
 # ── Narrative significance map ────────────────────────────────────────────────
@@ -162,11 +167,13 @@ class CampaignOrchestrator:
         entity_cfs = self._extract_entity_carry_forwards(final_state)
         faction_cfs = self._extract_faction_carry_forwards(final_state)
         narrative_entries = self._extract_narrative_entries(final_state, summary.episode_index)
+        social_memories = self._extract_social_memories(final_state, summary.episode_index)
 
         self._state.persistent_entities.update(entity_cfs)
         self._state.persistent_factions.update(faction_cfs)
         self._state.episode_history.append(summary)
         self._state.narrative_ledger.extend(narrative_entries)
+        self._state.social_memories.update(social_memories)
         self._state.episode_index += 1
 
     def _extract_entity_carry_forwards(
@@ -279,6 +286,24 @@ class CampaignOrchestrator:
 
         return entries
 
+    def _extract_social_memories(
+        self,
+        final_state: "AuthoritativeState",
+        episode_index: int,
+    ) -> Dict[int, SocialMemoryRecord]:
+        """Export social memory snapshots for all entities in the final state.
+
+        Calls SocialMemoryExporter.export() for each entity. Records are stored
+        in CampaignState.social_memories and consumed by the importer at the
+        start of the next episode.
+
+        Does not mutate CampaignState — returns a dict for the caller to update.
+        """
+        return {
+            entity_id: SocialMemoryExporter.export(entity, episode_index)
+            for entity_id, entity in final_state.entities.items()
+        }
+
     def _build_initial_state(self, episode_seed: int) -> "AuthoritativeState":
         """Construct an AuthoritativeState seeded with carry-forward entity data.
 
@@ -351,6 +376,15 @@ class CampaignOrchestrator:
                 equipment=equipment,
                 social=social,
             )
+
+        # Apply social memory import for entities that have a prior record.
+        # SocialMemoryImporter.apply() merges trust history and reputation
+        # additively — it does not overwrite fields set above.
+        for eid, entity in list(entities.items()):
+            if eid in self._state.social_memories:
+                entities[eid] = SocialMemoryImporter.apply(
+                    entity, self._state.social_memories[eid]
+                )
 
         return AuthoritativeState(tick=0, seed=episode_seed, entities=entities)
 

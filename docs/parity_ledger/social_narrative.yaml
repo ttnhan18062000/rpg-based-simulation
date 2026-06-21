@@ -2491,3 +2491,30 @@
     pytest tests/unit/social/test_social_memory.py -x -v
   divergence_note: null
   support_boundary: null
+- id: SOC-CROSS-EP-002
+  text: >
+    SocialMemoryExporter.export() reads entity.social.trust_history and
+    entity.social.public_reputation at episode end, producing a SocialMemoryRecord
+    stored in CampaignState.social_memories (Dict[int, SocialMemoryRecord]).
+    SocialMemoryImporter.apply() merges relationship_scores into trust_history
+    additively and seeds public_reputation from faction_reputation["default"]
+    at episode start. Both hooks are wired into CampaignOrchestrator._advance_state()
+    and _build_initial_state(). CampaignState.social_memories is serialized with
+    str(k)/int(k) key conversion and participates in the full to_dict/from_dict
+    round-trip. Pure read for export; dc_replace for import (no live mutation).
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/domains/campaigns/social_memory.py (SocialMemoryExporter, SocialMemoryImporter).
+    src/domains/campaigns/state.py (CampaignState.social_memories field).
+    src/domains/campaigns/orchestrator.py (_extract_social_memories, _build_initial_state
+    import hook). (TCK-20260619-E43B-EXPORT-IMPORT)
+  proof_type: parity
+  test_path: >
+    pytest tests/unit/social/test_social_memory.py tests/integration/scenarios/test_social_memory.py -x -v -m "not slow or slow"
+  divergence_note: >
+    faction_reputation is a single "default" key (public_reputation proxy) in E43B.
+    Per-faction detail deferred to a future E43 child ticket. Per Mechanics Bible
+    ch03 "E43 adds per-faction detail" note in EntityCarryForward.
+  support_boundary: null
