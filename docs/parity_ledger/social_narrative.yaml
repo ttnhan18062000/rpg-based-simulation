@@ -2626,3 +2626,26 @@
     pytest tests/unit/chronicle/test_chronicle_compiler.py -x -v
   divergence_note: null
   support_boundary: null
+- id: SOC-CHRON-002
+  text: >
+    ChronicleGrouper transforms flat NarrativeLedgerEntry lists into a four-level
+    ChronicleHierarchy (events → incidents → episodes → eras). Filtering: only
+    chronicle-worthy entries (EventSignificanceScorer.is_chronicle_worthy) pass
+    through. Incident grouping: entries within INCIDENT_TICK_WINDOW=50 ticks in the
+    same episode form one Incident; a new incident begins on episode change or tick
+    gap > 50. Episode grouping: one Episode per unique episode index. Era grouping:
+    ERA_EPISODE_MIN=3 episodes per era; remaining episodes form the last (possibly
+    smaller) era. Significance at each level = max significance of constituents.
+    Grouper is stateless and deterministic.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/domains/chronicle/grouper.py (ChronicleGrouper, Incident, Episode, Era,
+    ChronicleHierarchy). INCIDENT_TICK_WINDOW=50, ERA_EPISODE_MIN=3.
+    (TCK-20260619-E51B-GROUPER)
+  proof_type: parity
+  test_path: >
+    pytest tests/unit/chronicle/test_chronicle_compiler.py -x -v
+  divergence_note: null
+  support_boundary: null
