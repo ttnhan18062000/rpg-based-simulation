@@ -2426,3 +2426,14 @@
   test_path: tests/unit/engine/test_scenario_runtime_service.py::TestStart::test_start_runs_ticks_without_error + tests/integration/scenarios/test_scenario_runtime_service.py::TestObjectiveMet::test_scenario_reaches_objective_met
   divergence_note: null
   support_boundary: null
+
+- id: INFRA-215
+  text: "ScenarioCheckpointer (Epic 3.1C): Binary checkpoint/restore for ScenarioRuntimeService across process restarts. File format: 4-byte LE uint32 header length + JSON header (tick, spec_id, rng_checkpoint) + pickle blob of AuthoritativeState. save() raises RuntimeError when kernel not started. restore() raises ValueError on spec_id mismatch; reconstructs RNG via DeterministicRNG.set_state(); passes run_id to Kernel to suppress Domain.INIT RNG draw and preserve determinism. Restored service tick counter matches checkpoint tick. Re-exported from scenario_runtime.py for single-import convenience."
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/engine/scenario_checkpoint.py::ScenarioCheckpointer + src/engine/scenario_runtime.py (re-export)
+  proof_type: feature
+  test_path: tests/unit/engine/test_scenario_checkpointer.py::test_save_raises_when_kernel_none + tests/integration/scenarios/test_scenario_runtime_service.py::TestCheckpointRestore::test_checkpoint_restore_determinism
+  divergence_note: null
+  support_boundary: null

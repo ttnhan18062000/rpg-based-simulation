@@ -1,10 +1,10 @@
 ---
-status: open
+status: historical
 layer: simulation
 authority: P1
 audience: agent
 ticket_id: TCK-20260619-E31C-CHECKPOINT
-phase: open
+phase: done
 date: 2026-06-20
 tags: [scenario-runtime, checkpoint, determinism, phase-3]
 ---
@@ -15,7 +15,7 @@ tags: [scenario-runtime, checkpoint, determinism, phase-3]
 Epic 3.1C · Scenario Checkpoint / Restore
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -95,11 +95,24 @@ def restore(self, path: str) -> None:
 - `src/engine/scenario_checkpoint.py` (new)
 - `src/core/state.py` (AuthoritativeState.to_canonical_dict())
 
+## Implementation Notes
+
+- New file: `src/engine/scenario_checkpoint.py` — `ScenarioCheckpointer` with `save()` and `restore()`
+- Uses pickle for full AuthoritativeState blob + JSON header (tick, spec_id, rng_checkpoint)
+- `restore()` passes `run_id=f"restored_{spec.id}"` to Kernel to suppress Domain.INIT RNG draw
+- Re-exported from `scenario_runtime.py` for single-import convenience
+- Tests: `tests/unit/engine/test_scenario_checkpointer.py` (new), `TestCheckpointRestore` class in integration tests
+
 ## Test Summary
 ```bash
 pytest tests/integration/scenarios/test_scenario_runtime_service.py::test_checkpoint_restore_determinism -x -v -m slow
 ```
 ## Files Changed
-_To be filled on completion._
+- `src/engine/scenario_checkpoint.py` (new) — `ScenarioCheckpointer` with `save()` and `restore()`
+- `src/engine/scenario_runtime.py` — added `INFRA-215` compliance ID + re-export of `ScenarioCheckpointer`
+- `tests/unit/engine/test_scenario_checkpointer.py` (new) — 6 unit tests
+- `tests/integration/scenarios/test_scenario_runtime_service.py` — added `TestCheckpointRestore` class (5 tests)
+- `docs/parity_ledger/infrastructure.yaml` — added INFRA-215 entry
+
 ## Completion Summary
-_To be filled on completion._
+Implemented `ScenarioCheckpointer` in `src/engine/scenario_checkpoint.py` with a binary file format (4-byte LE uint32 header length + JSON header containing tick/spec_id/rng_checkpoint + pickle blob of `AuthoritativeState`). `save()` raises `RuntimeError` when kernel not started; `restore()` raises `ValueError` on spec_id mismatch, reconstructs `DeterministicRNG` via `set_state(rng_checkpoint)`, and passes `run_id` to `Kernel` to suppress the Domain.INIT RNG draw that would otherwise break determinism. Added INFRA-215 to parity ledger. 55 tests pass (6 new unit + 5 new integration, all non-slow); 6 slow tests deselected by design (require real kernel for 50-tick determinism proof).

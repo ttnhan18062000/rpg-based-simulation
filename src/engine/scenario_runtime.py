@@ -1,4 +1,4 @@
-# Compliance IDs: INFRA-118, INFRA-214
+# Compliance IDs: INFRA-118, INFRA-214, INFRA-215
 """
 ScenarioRuntimeService — controllable execution wrapper around the Kernel.
 
@@ -311,3 +311,7 @@ class ScenarioRuntimeService:
         state = AuthoritativeState(tick=0, seed=0)
         rng = DeterministicRNG(base_seed=0)
         return Kernel(profile, state, rng, flags={"no_replay": True})
+
+
+# E31C: re-export so callers can do `from src.engine.scenario_runtime import ScenarioCheckpointer`
+from src.engine.scenario_checkpoint import ScenarioCheckpointer  # noqa: E402, F401

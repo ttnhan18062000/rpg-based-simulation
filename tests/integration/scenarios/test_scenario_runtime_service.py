@@ -11,6 +11,7 @@ AC coverage:
 """
 from __future__ import annotations
 
+import json
 import pytest
 from unittest.mock import MagicMock
 
@@ -325,3 +326,108 @@ class TestTerminalStateGuards:
         svc.abort()
         with pytest.raises(RuntimeError, match="aborted"):
             svc.step()
+
+
+# ── E31C: checkpoint / restore ────────────────────────────────────────────────
+
+
+class TestCheckpointRestore:
+    """AC coverage for TCK-20260619-E31C-CHECKPOINT."""
+
+    @pytest.mark.slow
+    def test_checkpoint_restore_determinism(self, tmp_path):
+        """Checkpoint at tick 25, restore, run to tick 50 → hash-identical final state.
+
+        Uses CanonicalStateHasher.get_hash() with reason='certification' to compare
+        final state between a reference run and a checkpoint-restored run.
+        """
+        from src.engine.scenario_checkpoint import ScenarioCheckpointer
+        from src.engine.checkpoint import CanonicalStateHasher
+
+        spec = _make_spec()
+        checkpoint_path = tmp_path / "tick25.bin"
+
+        # --- Reference run: uninterrupted 0→50 ---
+        ref_svc = _make_service()
+        try:
+            ref_svc.start(tick_limit=50)
+            ref_hash = CanonicalStateHasher.get_hash(ref_svc._kernel.state)
+        finally:
+            ref_svc.abort()
+
+        # --- Checkpoint run: 0→25, save, restore, 25→50 ---
+        ckpt_svc = _make_service()
+        try:
+            ckpt_svc.start(tick_limit=25)
+            ScenarioCheckpointer.save(ckpt_svc, checkpoint_path)
+        finally:
+            ckpt_svc.abort()
+
+        restored_svc = ScenarioCheckpointer.restore(checkpoint_path, spec)
+        try:
+            restored_svc.start(tick_limit=50)
+            restored_hash = CanonicalStateHasher.get_hash(restored_svc._kernel.state)
+        finally:
+            restored_svc.abort()
+
+        assert ref_hash == restored_hash, (
+            f"Determinism broken: reference hash {ref_hash!r} != "
+            f"restored hash {restored_hash!r}"
+        )
+
+    def test_checkpoint_file_contains_rng_checkpoint(self, tmp_path):
+        """Checkpoint header contains rng_checkpoint field."""
+        import struct
+        from src.engine.scenario_checkpoint import ScenarioCheckpointer
+
+        svc = _make_service()
+        try:
+            svc.start(tick_limit=5)
+            path = tmp_path / "ckpt.bin"
+            ScenarioCheckpointer.save(svc, path)
+        finally:
+            svc.abort()
+
+        with path.open("rb") as f:
+            header_len = struct.unpack("<I", f.read(4))[0]
+            header = json.loads(f.read(header_len).decode("utf-8"))
+
+        assert "rng_checkpoint" in header
+
+    def test_restore_sets_service_tick(self, tmp_path):
+        """Restored service.tick matches the checkpoint tick."""
+        from src.engine.scenario_checkpoint import ScenarioCheckpointer
+
+        svc = _make_service()
+        try:
+            svc.start(tick_limit=10)
+            saved_tick = svc.tick
+            path = tmp_path / "ckpt.bin"
+            ScenarioCheckpointer.save(svc, path)
+        finally:
+            svc.abort()
+
+        restored = ScenarioCheckpointer.restore(path, _make_spec())
+        try:
+            assert restored.tick == saved_tick
+            assert restored._kernel.state.tick == saved_tick
+        finally:
+            restored.abort()
+
+    @pytest.mark.slow
+    def test_rng_checkpoint_populated_after_tick(self):
+        """state.rng_checkpoint is non-None after one real tick."""
+        svc = _make_service()
+        try:
+            svc.step()
+            assert svc._kernel.state.rng_checkpoint is not None
+        finally:
+            svc.abort()
+
+    def test_save_before_start_raises(self, tmp_path):
+        """save() on unstarted service raises RuntimeError."""
+        from src.engine.scenario_checkpoint import ScenarioCheckpointer
+
+        svc = _make_service()
+        with pytest.raises(RuntimeError, match="not been started"):
+            ScenarioCheckpointer.save(svc, tmp_path / "ckpt.bin")
