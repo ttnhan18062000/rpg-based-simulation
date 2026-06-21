@@ -176,6 +176,68 @@ class SocialMemoryRecord:
 
 
 # ---------------------------------------------------------------------------
+# SocialMemoryDecay
+# ---------------------------------------------------------------------------
+
+
+class SocialMemoryDecay:
+    """Applies per-episode score decay toward neutral for cross-episode social memory.
+
+    Grudges (negative scores) decay slower than friendships (positive scores),
+    reflecting that betrayal is harder to forget than cooperation.
+
+    Constants
+    ---------
+    FRIENDSHIP_DECAY : float
+        Fraction lost per episode for positive relationship scores.
+        0.40 → 40% loss per episode (half-life ≈ 3 episodes).
+    GRUDGE_DECAY : float
+        Fraction lost per episode for negative relationship scores.
+        0.10 → 10% loss per episode (half-life ≈ 7 episodes).
+    """
+
+    FRIENDSHIP_DECAY: float = 0.40
+    GRUDGE_DECAY: float = 0.10
+
+    @staticmethod
+    def apply_decay(record: SocialMemoryRecord) -> SocialMemoryRecord:
+        """Return a new SocialMemoryRecord with all scores decayed one episode.
+
+        Positive scores (friendships) decay by FRIENDSHIP_DECAY.
+        Negative scores (grudges) decay by GRUDGE_DECAY.
+        Faction reputation always decays by FRIENDSHIP_DECAY (neutral drift).
+
+        Parameters
+        ----------
+        record : SocialMemoryRecord
+            The record to decay. Not mutated.
+
+        Returns
+        -------
+        SocialMemoryRecord
+            New frozen record with decayed scores, rounded to 4 decimal places.
+        """
+        new_scores: Dict[int, float] = {}
+        for entity_id, score in record.relationship_scores.items():
+            decay_rate = (
+                SocialMemoryDecay.GRUDGE_DECAY if score < 0
+                else SocialMemoryDecay.FRIENDSHIP_DECAY
+            )
+            new_scores[entity_id] = round(score * (1.0 - decay_rate), 4)
+
+        new_faction_rep: Dict[str, float] = {
+            fid: round(score * (1.0 - SocialMemoryDecay.FRIENDSHIP_DECAY), 4)
+            for fid, score in record.faction_reputation.items()
+        }
+
+        return dc_replace(
+            record,
+            relationship_scores=new_scores,
+            faction_reputation=new_faction_rep,
+        )
+
+
+# ---------------------------------------------------------------------------
 # SocialMemoryExporter
 # ---------------------------------------------------------------------------
 
@@ -271,6 +333,10 @@ class SocialMemoryImporter:
             New EntityState instance with social fields seeded from the record.
             The original ``entity`` is NOT mutated.
         """
+        # Decay (E43C): apply score decay before merging, so cross-episode scores
+        # trend toward neutral. Grudges decay slower than friendships.
+        record = SocialMemoryDecay.apply_decay(record)
+
         # Merge trust_history: additive — carry forward + existing (usually 0.0)
         new_trust: Dict[int, float] = dict(entity.social.trust_history)
         for eid, score in record.relationship_scores.items():

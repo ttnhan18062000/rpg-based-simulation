@@ -1,10 +1,11 @@
 # tests/unit/social/test_social_memory.py
 """
 Unit tests for SocialMemoryRecord, InteractionRecord, SocialMemoryExporter,
-and SocialMemoryImporter.
+SocialMemoryImporter, and SocialMemoryDecay.
 
 Ticket: TCK-20260619-E43A-SOCIAL-MEM-MODEL (data model tests)
 Ticket: TCK-20260619-E43B-EXPORT-IMPORT (exporter/importer tests)
+Ticket: TCK-20260619-E43C-DECAY (decay mechanic tests)
 
 Coverage:
   - Normal construction and defaults
@@ -15,6 +16,12 @@ Coverage:
   - Exporter reads entity social state correctly
   - Importer applies trust and reputation additively
   - Importer does not mutate original EntityState
+  - Decay: friendship decays faster than grudge
+  - Decay: 3-episode compound decay matches AC values
+  - Decay: faction reputation decays at friendship rate
+  - Decay: zero scores stay zero; empty dicts safe
+  - Decay: returns new frozen record, does not mutate original
+  - Importer: decay applied before merge
 """
 
 import dataclasses
@@ -26,6 +33,7 @@ from src.domains.campaigns.social_memory import (
     SocialMemoryRecord,
     SocialMemoryExporter,
     SocialMemoryImporter,
+    SocialMemoryDecay,
 )
 
 
@@ -312,7 +320,12 @@ def test_exporter_does_not_mutate_entity():
 
 @pytest.mark.v2_contract
 def test_importer_applies_trust_history():
-    """Importer merges relationship_scores into entity trust_history."""
+    """Importer merges relationship_scores into entity trust_history (after E43C decay).
+
+    Decay is applied inside apply() before merging:
+      friendship 0.8 × (1 - 0.40) = 0.48
+      grudge    -0.4 × (1 - 0.10) = -0.36
+    """
     entity = _make_entity_with_social(entity_id=1)
     record = SocialMemoryRecord(
         entity_id=1,
@@ -320,13 +333,17 @@ def test_importer_applies_trust_history():
     )
     result = SocialMemoryImporter.apply(entity, record)
 
-    assert result.social.trust_history[5] == pytest.approx(0.8)
-    assert result.social.trust_history[10] == pytest.approx(-0.4)
+    assert result.social.trust_history[5] == pytest.approx(0.48)
+    assert result.social.trust_history[10] == pytest.approx(-0.36)
 
 
 @pytest.mark.v2_contract
 def test_importer_applies_reputation():
-    """Importer seeds public_reputation from 'default' faction_reputation key."""
+    """Importer seeds public_reputation from 'default' faction_reputation key (after E43C decay).
+
+    Faction reputation decays at FRIENDSHIP_DECAY rate:
+      1.7 × (1 - 0.40) = 1.02
+    """
     entity = _make_entity_with_social(entity_id=1, public_reputation=1.0)
     record = SocialMemoryRecord(
         entity_id=1,
@@ -334,7 +351,7 @@ def test_importer_applies_reputation():
     )
     result = SocialMemoryImporter.apply(entity, record)
 
-    assert result.social.public_reputation == pytest.approx(1.7)
+    assert result.social.public_reputation == pytest.approx(1.02)
 
 
 @pytest.mark.v2_contract
@@ -352,24 +369,33 @@ def test_importer_no_default_reputation_leaves_original():
 
 @pytest.mark.v2_contract
 def test_importer_additive_merge_trust():
-    """Existing trust + carried trust must sum, not overwrite."""
+    """Existing trust + carried trust must sum, not overwrite (after E43C decay).
+
+    Carried score 0.5 decays: 0.5 × (1 - 0.40) = 0.3
+    Existing entity trust 0.3 + decayed carried 0.3 = 0.6
+    """
     entity = _make_entity_with_social(
         entity_id=1,
         trust_history={5: 0.3},  # entity already has trust for entity 5
     )
     record = SocialMemoryRecord(
         entity_id=1,
-        relationship_scores={5: 0.5},  # carried: +0.5 for entity 5
+        relationship_scores={5: 0.5},  # carried: +0.5 for entity 5, decays to 0.3
     )
     result = SocialMemoryImporter.apply(entity, record)
 
-    # 0.3 (existing) + 0.5 (carried) = 0.8
-    assert result.social.trust_history[5] == pytest.approx(0.8)
+    # 0.3 (existing) + 0.3 (decayed carried: 0.5×0.6) = 0.6
+    assert result.social.trust_history[5] == pytest.approx(0.6)
 
 
 @pytest.mark.v2_contract
 def test_importer_returns_new_entity_state():
-    """Importer must return a new EntityState, not mutate the original."""
+    """Importer must return a new EntityState, not mutate the original.
+
+    Scores are decayed inside apply() before merging (E43C):
+      trust 0.9 × 0.6 = 0.54
+      rep   1.5 × 0.6 = 0.9
+    """
     entity = _make_entity_with_social(entity_id=1, public_reputation=1.0)
     record = SocialMemoryRecord(
         entity_id=1,
@@ -381,7 +407,124 @@ def test_importer_returns_new_entity_state():
     # Original must be unchanged
     assert entity.social.public_reputation == pytest.approx(1.0)
     assert 42 not in entity.social.trust_history
-    # Result must be a distinct object with the new values
+    # Result must be a distinct object with the decayed values
     assert result is not entity
-    assert result.social.public_reputation == pytest.approx(1.5)
-    assert result.social.trust_history[42] == pytest.approx(0.9)
+    assert result.social.public_reputation == pytest.approx(0.9)   # 1.5 × 0.6
+    assert result.social.trust_history[42] == pytest.approx(0.54)  # 0.9 × 0.6
+
+
+# ---------------------------------------------------------------------------
+# SocialMemoryDecay — TCK-20260619-E43C-DECAY
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.v2_contract
+def test_decay_friendship_reduces_score():
+    """Positive (friendship) score decays by FRIENDSHIP_DECAY (40%) per episode."""
+    record = SocialMemoryRecord(
+        entity_id=1,
+        relationship_scores={5: 1.0},
+    )
+    decayed = SocialMemoryDecay.apply_decay(record)
+    # 1.0 × (1 - 0.40) = 0.6
+    assert decayed.relationship_scores[5] == pytest.approx(0.6)
+
+
+@pytest.mark.v2_contract
+def test_decay_grudge_reduces_score_slower():
+    """Negative (grudge) score decays by GRUDGE_DECAY (10%) per episode — slower than friendship."""
+    record = SocialMemoryRecord(
+        entity_id=1,
+        relationship_scores={5: -1.0},
+    )
+    decayed = SocialMemoryDecay.apply_decay(record)
+    # -1.0 × (1 - 0.10) = -0.9
+    assert decayed.relationship_scores[5] == pytest.approx(-0.9)
+
+
+@pytest.mark.v2_contract
+def test_betrayal_decay_slower_than_cooperation():
+    """Ticket AC: after 3 decay applications, grudge retains more magnitude than friendship.
+
+    Starting friendship 1.0 → 1.0 × 0.6^3 = 0.216
+    Starting grudge   -1.0 → -1.0 × 0.9^3 = -0.729  (abs = 0.729)
+    """
+    record = SocialMemoryRecord(
+        entity_id=1,
+        relationship_scores={5: 1.0, 6: -1.0},
+    )
+    result = record
+    for _ in range(3):
+        result = SocialMemoryDecay.apply_decay(result)
+
+    assert result.relationship_scores[5] == pytest.approx(0.216, abs=1e-4)
+    assert result.relationship_scores[6] == pytest.approx(-0.729, abs=1e-4)
+    # Grudge absolute value is larger — slower decay confirmed
+    assert abs(result.relationship_scores[6]) > result.relationship_scores[5]
+
+
+@pytest.mark.v2_contract
+def test_decay_faction_reputation():
+    """Faction reputation decays at FRIENDSHIP_DECAY rate (neutral drift)."""
+    record = SocialMemoryRecord(
+        entity_id=1,
+        faction_reputation={"guild": 0.8},
+    )
+    decayed = SocialMemoryDecay.apply_decay(record)
+    # 0.8 × (1 - 0.40) = 0.48
+    assert decayed.faction_reputation["guild"] == pytest.approx(0.48)
+
+
+@pytest.mark.v2_contract
+def test_decay_zero_score_stays_zero():
+    """A zero relationship score stays zero after decay (no sign flip, no drift)."""
+    record = SocialMemoryRecord(
+        entity_id=1,
+        relationship_scores={5: 0.0},
+    )
+    decayed = SocialMemoryDecay.apply_decay(record)
+    assert decayed.relationship_scores[5] == pytest.approx(0.0)
+
+
+@pytest.mark.v2_contract
+def test_decay_returns_new_record():
+    """apply_decay must return a new frozen SocialMemoryRecord; original unchanged."""
+    record = SocialMemoryRecord(
+        entity_id=1,
+        relationship_scores={5: 0.8},
+        faction_reputation={"a": 0.5},
+    )
+    decayed = SocialMemoryDecay.apply_decay(record)
+
+    assert decayed is not record
+    # Original scores must not be mutated
+    assert record.relationship_scores[5] == pytest.approx(0.8)
+    assert record.faction_reputation["a"] == pytest.approx(0.5)
+    # Decayed record has new values
+    assert decayed.relationship_scores[5] == pytest.approx(0.48)
+    assert decayed.faction_reputation["a"] == pytest.approx(0.3)
+
+
+@pytest.mark.v2_contract
+def test_decay_preserves_empty_scores():
+    """apply_decay on a record with no scores/reputation must not raise."""
+    record = SocialMemoryRecord(entity_id=1)
+    decayed = SocialMemoryDecay.apply_decay(record)
+    assert decayed.relationship_scores == {}
+    assert decayed.faction_reputation == {}
+
+
+@pytest.mark.v2_contract
+def test_importer_applies_decay_before_merge():
+    """Importer applies E43C decay before merging scores into entity trust_history.
+
+    Record has friendship score 1.0; after decay → 0.6; merged with entity's 0.0 = 0.6.
+    """
+    entity = _make_entity_with_social(entity_id=1)  # empty trust_history
+    record = SocialMemoryRecord(
+        entity_id=1,
+        relationship_scores={99: 1.0},
+    )
+    result = SocialMemoryImporter.apply(entity, record)
+    # Decay applied: 1.0 × 0.6 = 0.6; no existing trust → final = 0.6
+    assert result.social.trust_history[99] == pytest.approx(0.6)

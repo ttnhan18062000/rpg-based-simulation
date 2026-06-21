@@ -2518,3 +2518,26 @@
     Per-faction detail deferred to a future E43 child ticket. Per Mechanics Bible
     ch03 "E43 adds per-faction detail" note in EntityCarryForward.
   support_boundary: null
+- id: SOC-CROSS-EP-003
+  text: >
+    SocialMemoryDecay.apply_decay() decays cross-episode relationship scores and
+    faction reputation toward neutral before each episode import. Positive scores
+    (friendships) decay at 40% per episode (half-life ≈ 3 episodes); negative scores
+    (grudges) decay at 10% per episode (half-life ≈ 7 episodes), making betrayal
+    harder to forget than cooperation. Faction reputation always decays at the
+    friendship rate. Decay is pure and deterministic: no randomness, no side effects;
+    uses round(..., 4) for bounded float precision. Applied inside
+    SocialMemoryImporter.apply() before merging scores, transparent to callers.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/domains/campaigns/social_memory.py (SocialMemoryDecay class, FRIENDSHIP_DECAY=0.40,
+    GRUDGE_DECAY=0.10, apply_decay(); SocialMemoryImporter.apply() calls apply_decay
+    before merge). (TCK-20260619-E43C-DECAY)
+  proof_type: parity
+  test_path: >
+    pytest tests/unit/social/test_social_memory.py::test_betrayal_decay_slower_than_cooperation
+    tests/unit/social/test_social_memory.py -x -v
+  divergence_note: null
+  support_boundary: null
