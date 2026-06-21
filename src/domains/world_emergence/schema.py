@@ -32,6 +32,8 @@ class WorldEventCategory(str, Enum):
     # E52A: Demographic cycle events
     POPULATION_BIRTH = "POPULATION_BIRTH"
     POPULATION_DEATH = "POPULATION_DEATH"
+    # E52B: Migration pressure
+    POPULATION_MIGRATION = "POPULATION_MIGRATION"
 
 @dataclass(frozen=True, slots=True)
 class WorldEvent:

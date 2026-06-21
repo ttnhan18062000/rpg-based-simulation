@@ -1,11 +1,16 @@
-# Tests for TCK-20260619-E52A-COHORT-MODEL
-# Covers: PopulationCohort model, DemographicCycleService birth/death cycle
+# Tests for TCK-20260619-E52A-COHORT-MODEL, TCK-20260619-E52B-MIGRATION
+# Covers: PopulationCohort model, DemographicCycleService birth/death cycle, migration pressure
 import pytest
 from dataclasses import replace
 
-from src.core.state import AuthoritativeState, RegionState
+from src.core.state import AuthoritativeState, RegionState, ResourceNodeState
 from src.core.updates import StateUpdate, WorldUpdate
-from src.domains.demographics.cohort import PopulationCohort, DemographicCycleService
+from src.domains.demographics.cohort import (
+    PopulationCohort,
+    DemographicCycleService,
+    compute_regional_scarcity,
+    find_adjacent_regions,
+)
 from src.domains.world_emergence.schema import WorldEventCategory
 
 
@@ -13,11 +18,15 @@ from src.domains.world_emergence.schema import WorldEventCategory
 # Helpers
 # ---------------------------------------------------------------------------
 
-def _make_region(region_id: str = "region1", cohorts: dict | None = None) -> RegionState:
+def _make_region(
+    region_id: str = "region1",
+    cohorts: dict | None = None,
+    bounds_: tuple = (0, 0, 100, 100),
+) -> RegionState:
     return RegionState(
         id=region_id,
-        name="Test Region",
-        bounds=(0, 0, 100, 100),
+        name=f"Region {region_id}",
+        bounds=bounds_,
         population_cohorts=cohorts or {},
     )
 
@@ -330,3 +339,267 @@ class TestWorldUpdateCohorts:
         upd_b = WorldUpdate(region_id="r1")  # no cohort set
         merged = upd_a.merge(upd_b)
         assert merged.population_cohorts_set["young"].count == 10
+
+
+# ---------------------------------------------------------------------------
+# E52B: compute_regional_scarcity
+# ---------------------------------------------------------------------------
+
+def _make_node(
+    node_id: int,
+    position: tuple,
+    remaining_charges: int,
+    max_charges: int = 5,
+) -> "ResourceNodeState":
+    from src.core.state import ResourceNodeState
+    return ResourceNodeState(
+        id=node_id,
+        kind="WOOD",
+        position=position,
+        yields_item="wood_log",
+        remaining_charges=remaining_charges,
+        max_charges=max_charges,
+        required_ticks=10,
+    )
+
+
+def _make_state_with_nodes(regions: dict, resource_nodes: dict | None = None) -> AuthoritativeState:
+    return AuthoritativeState(
+        tick=0,
+        seed=42,
+        regions=regions,
+        resource_nodes=resource_nodes or {},
+    )
+
+
+class TestComputeRegionalScarcity:
+    def test_no_nodes_returns_1_0(self):
+        """Zero resource nodes in region → scarcity = 1.0."""
+        region = _make_region("r1", bounds_=(0, 0, 100, 100))
+        state = _make_state_with_nodes({"r1": region})
+        assert compute_regional_scarcity("r1", state) == pytest.approx(1.0)
+
+    def test_full_nodes_returns_0_0(self):
+        """All nodes at full charges → scarcity = 0.0."""
+        region = _make_region("r1", bounds_=(0, 0, 100, 100))
+        node = _make_node(1, (50.0, 50.0), remaining_charges=5, max_charges=5)
+        state = _make_state_with_nodes({"r1": region}, {1: node})
+        assert compute_regional_scarcity("r1", state) == pytest.approx(0.0)
+
+    def test_depleted_node_returns_1_0(self):
+        """Single depleted node (remaining=0) → scarcity = 1.0."""
+        region = _make_region("r1", bounds_=(0, 0, 100, 100))
+        node = _make_node(1, (50.0, 50.0), remaining_charges=0, max_charges=5)
+        state = _make_state_with_nodes({"r1": region}, {1: node})
+        assert compute_regional_scarcity("r1", state) == pytest.approx(1.0)
+
+    def test_partial_depletion(self):
+        """Node at 2/5 charges → mean ratio = 0.4 → scarcity = 0.6."""
+        region = _make_region("r1", bounds_=(0, 0, 100, 100))
+        node = _make_node(1, (50.0, 50.0), remaining_charges=2, max_charges=5)
+        state = _make_state_with_nodes({"r1": region}, {1: node})
+        assert compute_regional_scarcity("r1", state) == pytest.approx(0.6)
+
+    def test_node_outside_region_excluded(self):
+        """Node outside region bounds is not counted → scarcity = 1.0."""
+        region = _make_region("r1", bounds_=(0, 0, 100, 100))
+        node = _make_node(1, (200.0, 200.0), remaining_charges=5, max_charges=5)
+        state = _make_state_with_nodes({"r1": region}, {1: node})
+        assert compute_regional_scarcity("r1", state) == pytest.approx(1.0)
+
+    def test_unknown_region_returns_1_0(self):
+        """Non-existent region_id → scarcity = 1.0."""
+        state = _make_state_with_nodes({})
+        assert compute_regional_scarcity("missing", state) == pytest.approx(1.0)
+
+
+# ---------------------------------------------------------------------------
+# E52B: find_adjacent_regions
+# ---------------------------------------------------------------------------
+
+class TestFindAdjacentRegions:
+    def test_no_regions_returns_empty(self):
+        state = _make_state_with_nodes({})
+        assert find_adjacent_regions("r1", state) == []
+
+    def test_single_region_no_neighbours(self):
+        region = _make_region("r1", bounds_=(0, 0, 100, 100))
+        state = _make_state_with_nodes({"r1": region})
+        assert find_adjacent_regions("r1", state) == []
+
+    def test_two_adjacent_regions(self):
+        """r1 and r2 share a vertical edge at x=100."""
+        r1 = _make_region("r1", bounds_=(0, 0, 100, 100))
+        r2 = _make_region("r2", bounds_=(100, 0, 200, 100))
+        state = _make_state_with_nodes({"r1": r1, "r2": r2})
+        result = find_adjacent_regions("r1", state)
+        assert len(result) == 1
+        assert result[0].id == "r2"
+
+    def test_two_non_adjacent_regions(self):
+        """r1 and r2 have a gap between them — not adjacent."""
+        r1 = _make_region("r1", bounds_=(0, 0, 100, 100))
+        r2 = _make_region("r2", bounds_=(200, 0, 300, 100))
+        state = _make_state_with_nodes({"r1": r1, "r2": r2})
+        assert find_adjacent_regions("r1", state) == []
+
+    def test_results_sorted_by_id(self):
+        """Multiple adjacent regions are returned sorted by id."""
+        r1 = _make_region("r1", bounds_=(100, 0, 200, 100))
+        r2 = _make_region("r2", bounds_=(200, 0, 300, 100))  # right of r1
+        r3 = _make_region("r3", bounds_=(0, 0, 100, 100))   # left of r1
+        state = _make_state_with_nodes({"r1": r1, "r2": r2, "r3": r3})
+        result = find_adjacent_regions("r1", state)
+        ids = [r.id for r in result]
+        assert ids == sorted(ids)
+        assert set(ids) == {"r2", "r3"}
+
+    def test_corner_touch_not_adjacent(self):
+        """Regions that only touch at a corner are NOT adjacent (no shared edge)."""
+        r1 = _make_region("r1", bounds_=(0, 0, 100, 100))
+        r2 = _make_region("r2", bounds_=(100, 100, 200, 200))
+        state = _make_state_with_nodes({"r1": r1, "r2": r2})
+        assert find_adjacent_regions("r1", state) == []
+
+    def test_horizontal_adjacency(self):
+        """r1 (bottom) and r2 (top) share a horizontal edge at y=100."""
+        r1 = _make_region("r1", bounds_=(0, 0, 100, 100))
+        r2 = _make_region("r2", bounds_=(0, 100, 100, 200))
+        state = _make_state_with_nodes({"r1": r1, "r2": r2})
+        result = find_adjacent_regions("r1", state)
+        assert len(result) == 1
+        assert result[0].id == "r2"
+
+
+# ---------------------------------------------------------------------------
+# E52B: Migration pressure — DemographicCycleService integration
+# ---------------------------------------------------------------------------
+
+class TestMigrationPressure:
+    def test_migration_pressure_triggers_on_scarcity_threshold(self):
+        """
+        Acceptance criterion: test_migration_pressure_triggers_on_scarcity_threshold.
+        r1 has scarcity=1.0 (depleted node), migration_threshold=0.7 → migration fires.
+        r2 is adjacent with full node (scarcity=0.0) → receives emigrants.
+        young cohort count=100 → 30 emigrate.
+        """
+        cohort = PopulationCohort(bracket="young", count=100, birth_rate=0.0, mortality_rate=0.0,
+                                  migration_threshold=0.7)
+        r1 = _make_region("r1", cohorts={"young": cohort}, bounds_=(0, 0, 100, 100))
+        r2 = _make_region("r2", bounds_=(100, 0, 200, 100))
+
+        depleted = _make_node(1, (50.0, 50.0), remaining_charges=0, max_charges=5)
+        full = _make_node(2, (150.0, 50.0), remaining_charges=5, max_charges=5)
+        state = _make_state_with_nodes({"r1": r1, "r2": r2}, {1: depleted, 2: full})
+
+        result = DemographicCycleService.process_demographics(state, tick=200)
+
+        assert "r1" in result.world_updates
+        assert "r2" in result.world_updates
+        assert result.world_updates["r1"].population_cohorts_set["young"].count == 70
+        assert result.world_updates["r2"].population_cohorts_set["young"].count == 30
+
+        mig_events = [e for e in result.world_events_add
+                      if e.category == WorldEventCategory.POPULATION_MIGRATION]
+        assert len(mig_events) == 1
+        assert mig_events[0].region_id == "r1"
+
+    def test_no_migration_below_threshold(self):
+        """Scarcity below threshold → no migration updates."""
+        cohort = PopulationCohort(bracket="young", count=100, birth_rate=0.0, mortality_rate=0.0,
+                                  migration_threshold=0.7)
+        r1 = _make_region("r1", cohorts={"young": cohort}, bounds_=(0, 0, 100, 100))
+        r2 = _make_region("r2", bounds_=(100, 0, 200, 100))
+
+        # Full resource node → scarcity 0.0 (below 0.7 threshold)
+        full = _make_node(1, (50.0, 50.0), remaining_charges=5, max_charges=5)
+        state = _make_state_with_nodes({"r1": r1, "r2": r2}, {1: full})
+
+        result = DemographicCycleService.process_demographics(state, tick=200)
+
+        # No birth/death (rates=0.0), no migration (scarcity=0.0 < 0.7)
+        assert result.is_noop()
+
+    def test_no_migration_no_adjacent(self):
+        """Scarcity > threshold but no adjacent regions → no migration."""
+        cohort = PopulationCohort(bracket="young", count=100, birth_rate=0.0, mortality_rate=0.0,
+                                  migration_threshold=0.7)
+        r1 = _make_region("r1", cohorts={"young": cohort}, bounds_=(0, 0, 100, 100))
+        depleted = _make_node(1, (50.0, 50.0), remaining_charges=0, max_charges=5)
+        state = _make_state_with_nodes({"r1": r1}, {1: depleted})
+
+        result = DemographicCycleService.process_demographics(state, tick=200)
+
+        # No migration (isolated region), no birth/death (rates=0.0)
+        assert result.is_noop()
+
+    def test_migration_emigrant_count_30pct(self):
+        """count=100 → emigrant_count = int(100 * 0.30) = 30."""
+        cohort = PopulationCohort(bracket="adult", count=100, birth_rate=0.0, mortality_rate=0.0,
+                                  migration_threshold=0.7)
+        r1 = _make_region("r1", cohorts={"adult": cohort}, bounds_=(0, 0, 100, 100))
+        r2 = _make_region("r2", bounds_=(100, 0, 200, 100))
+
+        depleted = _make_node(1, (50.0, 50.0), remaining_charges=0, max_charges=5)
+        full = _make_node(2, (150.0, 50.0), remaining_charges=5, max_charges=5)
+        state = _make_state_with_nodes({"r1": r1, "r2": r2}, {1: depleted, 2: full})
+
+        result = DemographicCycleService.process_demographics(state, tick=200)
+
+        assert result.world_updates["r1"].population_cohorts_set["adult"].count == 70
+        assert result.world_updates["r2"].population_cohorts_set["adult"].count == 30
+
+    def test_migration_emigrant_count_min_1(self):
+        """count=1, 30% → int(0.3)=0 → clamped to max(1, 0)=1."""
+        cohort = PopulationCohort(bracket="young", count=1, birth_rate=0.0, mortality_rate=0.0,
+                                  migration_threshold=0.7)
+        r1 = _make_region("r1", cohorts={"young": cohort}, bounds_=(0, 0, 100, 100))
+        r2 = _make_region("r2", bounds_=(100, 0, 200, 100))
+
+        depleted = _make_node(1, (50.0, 50.0), remaining_charges=0, max_charges=5)
+        full = _make_node(2, (150.0, 50.0), remaining_charges=5, max_charges=5)
+        state = _make_state_with_nodes({"r1": r1, "r2": r2}, {1: depleted, 2: full})
+
+        result = DemographicCycleService.process_demographics(state, tick=200)
+
+        assert result.world_updates["r1"].population_cohorts_set["young"].count == 0
+        assert result.world_updates["r2"].population_cohorts_set["young"].count == 1
+
+    def test_migration_picks_lowest_scarcity_target(self):
+        """When two adjacent regions have different scarcity, migrants go to lower-scarcity one."""
+        cohort = PopulationCohort(bracket="young", count=100, birth_rate=0.0, mortality_rate=0.0,
+                                  migration_threshold=0.7)
+        r1 = _make_region("r1", cohorts={"young": cohort}, bounds_=(0, 0, 100, 100))
+        # r2: partial node (scarcity=0.6)
+        r2 = _make_region("r2", bounds_=(100, 0, 200, 100))
+        # r3: full node (scarcity=0.0) — adjacent via r1 top
+        r3 = _make_region("r3", bounds_=(0, 100, 100, 200))
+
+        depleted = _make_node(1, (50.0, 50.0), remaining_charges=0, max_charges=5)
+        partial = _make_node(2, (150.0, 50.0), remaining_charges=2, max_charges=5)  # 0.6 ratio → scarcity 0.4
+        full = _make_node(3, (50.0, 150.0), remaining_charges=5, max_charges=5)     # scarcity 0.0
+        state = _make_state_with_nodes(
+            {"r1": r1, "r2": r2, "r3": r3},
+            {1: depleted, 2: partial, 3: full},
+        )
+
+        result = DemographicCycleService.process_demographics(state, tick=200)
+
+        # r3 has lower scarcity (0.0 < 0.4), so migrants go to r3
+        assert "r3" in result.world_updates
+        assert result.world_updates["r3"].population_cohorts_set["young"].count == 30
+        # r2 receives no migrants
+        assert "r2" not in result.world_updates
+
+    def test_migration_off_cycle_no_op(self):
+        """Migration does not fire on off-cycle ticks."""
+        cohort = PopulationCohort(bracket="young", count=100, birth_rate=0.0, mortality_rate=0.0,
+                                  migration_threshold=0.7)
+        r1 = _make_region("r1", cohorts={"young": cohort}, bounds_=(0, 0, 100, 100))
+        r2 = _make_region("r2", bounds_=(100, 0, 200, 100))
+        depleted = _make_node(1, (50.0, 50.0), remaining_charges=0, max_charges=5)
+        state = _make_state_with_nodes({"r1": r1, "r2": r2}, {1: depleted})
+
+        result = DemographicCycleService.process_demographics(state, tick=199)
+
+        assert result.is_noop()

@@ -1024,3 +1024,30 @@
   test_path: tests/unit/domains/world_emergence/test_quest_registry_wiring.py::test_world_emergence_populates_quest_registry
   divergence_note: null
   support_boundary: null
+- id: WORLD-DEMO-001
+  text: 'When regional scarcity > cohort.migration_threshold (default 0.7), 30% of
+    that cohort (min 1) emigrates to the lowest-scarcity adjacent region; migration
+    is deterministic (sorted by region id as tiebreaker).'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: 'src/domains/demographics/cohort.py (_check_migration, compute_regional_scarcity,
+    find_adjacent_regions); DemographicCycleService.process_demographics() runs migration
+    pass after birth/death at COHORT_INTERVAL multiples'
+  proof_type: parity
+  test_path: tests/unit/world/test_demographics.py::TestMigrationPressure::test_migration_pressure_triggers_on_scarcity_threshold
+  divergence_note: null
+  support_boundary: null
+- id: WORLD-DEMO-002
+  text: 'Migration emits a POPULATION_MIGRATION WorldEvent per cohort movement. Source
+    region count is reduced by emigrant_count (floored at 0). Target region count
+    is increased (new bracket created if absent).'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: 'src/domains/demographics/cohort.py (_check_migration WorldEvent emission);
+    src/domains/world_emergence/schema.py (WorldEventCategory.POPULATION_MIGRATION)'
+  proof_type: parity
+  test_path: tests/integration/scenarios/test_demographics.py::test_cohort_migrates_on_scarcity
+  divergence_note: null
+  support_boundary: null
