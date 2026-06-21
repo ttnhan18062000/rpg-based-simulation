@@ -1,5 +1,5 @@
 ---
-status: open
+status: done
 layer: simulation
 authority: P1
 audience: agent
@@ -15,7 +15,7 @@ tags: [chronicle, rest-api, phase-5]
 Epic 5.1E · Chronicle REST Endpoints
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -68,6 +68,12 @@ After E51E: create `docs/simulation/domains/chronicle_contract.md` documenting C
 pytest tests/api/test_chronicle_api.py -x -v
 ```
 ## Files Changed
-_To be filled on completion._
+- `src/api/presenters/chronicle.py` (new) — Pydantic presenter models: ChronicleEraPresenter, ChronicleEpisodePresenter, ChronicleMilestonePresenter, ChronicleResponse, ErasSummaryResponse
+- `src/api/routes/chronicle.py` (new) — FastAPI router with registry pattern; GET /chronicle/{campaign_id} + GET /chronicle/{campaign_id}/eras/{era_id}/summary
+- `src/api/server.py` (modified) — registered chronicle router
+- `tests/api/test_chronicle_api.py` (new) — 7 tests, all pass
+- `docs/simulation/domains/chronicle_contract.md` (new) — full pipeline + schema + REST docs
+- `docs/parity_ledger/social_narrative.yaml` (modified) — added SOC-CHRON-004, SOC-CHRON-005
+
 ## Completion Summary
-_To be filled on completion._
+Implemented Chronicle REST API (E51E). Two GET endpoints: full chronicle (eras/episodes/named_milestones) and era summary with milestone names. Registry pattern (same as campaigns.py). All responses shaped through Pydantic presenter layer — no raw domain models. 7 tests pass (including both AC-required tests). Chronicle contract doc created. Parity ledger updated with SOC-CHRON-004 and SOC-CHRON-005.

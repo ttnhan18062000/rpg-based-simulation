@@ -2673,3 +2673,50 @@
     pytest tests/unit/chronicle/test_chronicle_compiler.py -x -v
   divergence_note: null
   support_boundary: null
+- id: SOC-CHRON-004
+  text: >
+    ChronicleRenderer.render_json() produces a chronicle.json dict with keys:
+    campaign_id (str), eras (list), episodes (list), named_milestones (list).
+    Era objects: {id, ordinal, name, significance, episode_ids}. Episode objects:
+    {id, index, significance, incident_ids}. Milestone objects: {name, tick, episode,
+    event_type, significance, entry_id}. Era dominant_event_type = most-frequent
+    event_type across all entries in that era; alphabetical tie-breaking for
+    determinism. ChronicleCompiler.compile() chains grouper → renderer → file writes
+    (Chronicle.md + chronicle.json); returns (markdown_str, json_dict) for testability.
+    (TCK-20260619-E51D-RENDERER)
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/domains/chronicle/renderer.py (ChronicleRenderer.render_json, render_markdown,
+    _dominant_event_type). src/domains/chronicle/compiler.py (ChronicleCompiler.compile).
+    (TCK-20260619-E51D-RENDERER)
+  proof_type: parity
+  test_path: >
+    pytest tests/unit/chronicle/test_chronicle_compiler.py -x -v
+  divergence_note: null
+  support_boundary: null
+- id: SOC-CHRON-005
+  text: >
+    Chronicle REST API exposes chronicle.json data at two endpoints:
+    GET /api/v1/chronicle/{campaign_id} → full ChronicleResponse (campaign_id, eras[],
+    episodes[], named_milestones[]). GET /api/v1/chronicle/{campaign_id}/eras/{era_id}/summary
+    → ErasSummaryResponse (era_id, name, milestone_count, named_milestones: [str]).
+    Data is served from an in-process registry dict (_CHRONICLE_REGISTRY) populated by
+    register_chronicle(). No raw domain models in responses — all shaped via Pydantic
+    presenter models. Era milestone membership: all named_milestones whose episode index
+    falls within the era's episode_ids set. Returns 404 if campaign or era not registered.
+    (TCK-20260619-E51E-REST-API)
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/api/routes/chronicle.py (get_chronicle, get_era_summary, register_chronicle,
+    _CHRONICLE_REGISTRY). src/api/presenters/chronicle.py (ChronicleResponse,
+    ErasSummaryResponse, ChronicleEraPresenter, ChronicleEpisodePresenter,
+    ChronicleMilestonePresenter). (TCK-20260619-E51E-REST-API)
+  proof_type: parity
+  test_path: >
+    pytest tests/api/test_chronicle_api.py -x -v
+  divergence_note: null
+  support_boundary: null
