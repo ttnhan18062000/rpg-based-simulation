@@ -77,6 +77,9 @@ def create_v2_app(profile: RuntimeProfile) -> FastAPI:
     from src.api.routes import scenarios
     app.include_router(scenarios.router, prefix="/api/v1")
 
+    from src.api.routes import campaigns
+    app.include_router(campaigns.router, prefix="/api/v1")
+
     from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
     from fastapi import Response
 

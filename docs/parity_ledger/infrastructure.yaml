@@ -2506,3 +2506,28 @@
     tests/integration/scenarios/test_campaign_runtime.py::test_episode_history_accumulates"
   divergence_note: null
   support_boundary: null
+- id: INFRA-219
+  text: "Campaign History REST Endpoint (Epic 3.2E): GET /api/v1/campaigns/{id}/history
+    exposes NarrativeLedger via REST. Route module (src/api/routes/campaigns.py) holds a
+    module-level _CAMPAIGN_REGISTRY (dict[str, CampaignState]); register_campaign() wires
+    orchestrator state for access. Handler filters via NarrativeLedger.query(event_type,
+    min_significance, episode) — all three query params optional and combinable. All
+    responses shaped through CampaignHistoryResponse / NarrativeLedgerEntryPresenter
+    (src/api/presenters/campaigns.py); no raw domain models exposed from API. Returns
+    HTTP 404 for unknown campaign IDs. Router registered in create_v2_app() with
+    prefix='/api/v1'. NarrativeLedger is a pure read facade — wraps CampaignState.narrative_ledger
+    at access time; does not own or mutate the list."
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: "src/api/routes/campaigns.py::get_campaign_history +
+    src/api/presenters/campaigns.py::CampaignHistoryResponse +
+    src/api/presenters/campaigns.py::NarrativeLedgerEntryPresenter +
+    src/domains/campaigns/narrative_ledger.py::NarrativeLedger.query +
+    src/api/server.py::create_v2_app"
+  proof_type: feature
+  test_path: "tests/api/test_campaign_history_api.py::test_campaign_history_endpoint_returns_narrative_ledger +
+    tests/api/test_campaign_history_api.py::test_campaign_history_404_unknown_campaign +
+    tests/api/test_campaign_history_api.py::test_campaign_history_combined_filters"
+  divergence_note: null
+  support_boundary: null

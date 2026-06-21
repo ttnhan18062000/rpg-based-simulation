@@ -94,9 +94,36 @@ Campaigns **may not** share `AuthoritativeState` with the primary simulation —
 
 ---
 
+## REST API (E32E)
+
+The multi-episode `CampaignOrchestrator` (E32C) exposes its `NarrativeLedger`
+via REST:
+
+```
+GET /api/v1/campaigns/{id}/history
+    ?event_type=entity_death
+    &min_significance=0.5
+    &episode=1
+→ { campaign_id, entry_count, entries: [{episode, tick, event_type, subject_id, payload, significance, entry_id}] }
+```
+
+See `docs/simulation/domains/campaign_orchestrator_contract.md` for the full
+orchestrator lifecycle, NarrativeLedger schema, carry-forward rules, and REST
+endpoint contract.
+
+| Component | File | Role |
+|---|---|---|
+| Route | `src/api/routes/campaigns.py` | `GET /api/v1/campaigns/{id}/history` |
+| Presenter | `src/api/presenters/campaigns.py` | `CampaignHistoryResponse`, `NarrativeLedgerEntryPresenter` |
+| Service | `src/domains/campaigns/narrative_ledger.py` | `NarrativeLedger.query()` |
+| State | `src/domains/campaigns/state.py` | `CampaignState.narrative_ledger` |
+
+---
+
 ## Constraints
 
 - Campaigns must not write to shared `AuthoritativeState` — each run creates an isolated state.
 - `DeterministicRNG` must be the only source of randomness inside a campaign run.
 - Sub-analysers must not re-run Kernel ticks — they receive the tick log only.
 - Must not import from other domain packages except through `src/core/` types.
+- REST responses must go through the presenter layer — no raw domain models from API.
