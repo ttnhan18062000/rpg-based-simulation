@@ -184,3 +184,86 @@ class LifecycleEvent(SimulationEvent):
             act = data.get("action")
             data["message"] = f"Entity {ent} lifecycle state changed: {act}"
         super().__init__(**data)
+
+
+# ---------------------------------------------------------------------------
+# Economy health alert events (TCK-20260619-E33B-ALERTS-REST)
+# ---------------------------------------------------------------------------
+
+class DeflationRiskEvent(SimulationEvent):
+    """Emitted when macro-economy Gini coefficient indicates deflation risk.
+
+    Deferred: threshold depends on transaction_velocity which is stub=0.0 in E33B.
+    Defined here for completeness; not yet emitted by EconomyHealthMonitor.
+    """
+    gini_coefficient: float
+    event_type: str = "DEFLATION_RISK"
+    event_category: EventCategory = "economy"
+    severity: EventSeverity = "WARNING"
+    source_system: str = "economy_health_monitor"
+    message: str = ""
+
+    def __init__(self, **data: Any) -> None:
+        if "message" not in data:
+            gini = data.get("gini_coefficient", 0.0)
+            region = data.get("region_id")
+            region_str = f" in region {region}" if region else ""
+            data["message"] = f"Deflation risk detected{region_str}: gini={gini:.4f}"
+        super().__init__(**data)
+
+
+class InflationSpiralEvent(SimulationEvent):
+    """Emitted when Gini coefficient exceeds INFLATION_SPIRAL_GINI_THRESHOLD (0.7)."""
+    gini_coefficient: float
+    event_type: str = "INFLATION_SPIRAL"
+    event_category: EventCategory = "economy"
+    severity: EventSeverity = "WARNING"
+    source_system: str = "economy_health_monitor"
+    message: str = ""
+
+    def __init__(self, **data: Any) -> None:
+        if "message" not in data:
+            gini = data.get("gini_coefficient", 0.0)
+            region = data.get("region_id")
+            region_str = f" in region {region}" if region else ""
+            data["message"] = f"Inflation spiral detected{region_str}: gini={gini:.4f}"
+        super().__init__(**data)
+
+
+class EconomicCollapseEvent(SimulationEvent):
+    """Emitted when a region has zero economic activity for ≥200 ticks.
+
+    Deferred: requires transaction_velocity which is stub=0.0 in E33B.
+    Defined here for completeness; not yet emitted by EconomyHealthMonitor.
+    """
+    gini_coefficient: float
+    event_type: str = "ECONOMIC_COLLAPSE"
+    event_category: EventCategory = "economy"
+    severity: EventSeverity = "CRITICAL"
+    source_system: str = "economy_health_monitor"
+    message: str = ""
+
+    def __init__(self, **data: Any) -> None:
+        if "message" not in data:
+            region = data.get("region_id")
+            region_str = f" in region {region}" if region else ""
+            data["message"] = f"Economic collapse detected{region_str}: zero transactions sustained"
+        super().__init__(**data)
+
+
+class GoldHoardingEvent(SimulationEvent):
+    """Emitted when Gini coefficient exceeds GOLD_HOARDING_GINI_THRESHOLD (0.8)."""
+    gini_coefficient: float
+    event_type: str = "GOLD_HOARDING"
+    event_category: EventCategory = "economy"
+    severity: EventSeverity = "WARNING"
+    source_system: str = "economy_health_monitor"
+    message: str = ""
+
+    def __init__(self, **data: Any) -> None:
+        if "message" not in data:
+            gini = data.get("gini_coefficient", 0.0)
+            region = data.get("region_id")
+            region_str = f" in region {region}" if region else ""
+            data["message"] = f"Gold hoarding detected{region_str}: gini={gini:.4f}"
+        super().__init__(**data)

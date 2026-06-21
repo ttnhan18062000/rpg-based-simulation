@@ -388,11 +388,22 @@ class Kernel:
 
             # Economy health snapshot (E33A) — read-only, fires every WINDOW_SIZE ticks
             # Must be called BEFORE record_tick to ensure snapshot is in accumulator before flush
+            # Alert dispatch (E33B) — emits SimulationEvent alerts via _event_listeners
             try:
                 from src.economy.health_monitor import EconomyHealthMonitor
                 economy_snapshot = EconomyHealthMonitor.sample(self._state, self._state.tick)
                 if economy_snapshot is not None:
                     self._metric_recorder.record_economy_snapshot(economy_snapshot)
+                    # Evaluate and dispatch economy alerts (E33B)
+                    alerts = EconomyHealthMonitor.check_alerts(
+                        economy_snapshot, tick=self._state.tick
+                    )
+                    if alerts and self._event_listeners:
+                        for cb in self._event_listeners:
+                            try:
+                                cb(alerts)
+                            except Exception:
+                                pass
             except Exception:
                 logger.exception("Failed to sample EconomyHealthMonitor")
 

@@ -1,7 +1,12 @@
 from __future__ import annotations
-from typing import Optional
+from typing import List, Optional
 from pydantic import BaseModel
 from src.core.state import AuthoritativeState
+from src.observability.events import (
+    SimulationEvent,
+    InflationSpiralEvent,
+    GoldHoardingEvent,
+)
 
 
 class EconomyHealthSnapshot(BaseModel):
@@ -14,6 +19,36 @@ class EconomyHealthSnapshot(BaseModel):
 
 class EconomyHealthMonitor:
     WINDOW_SIZE: int = 100        # ticks per sampling window
+    INFLATION_SPIRAL_GINI_THRESHOLD: float = 0.7
+    GOLD_HOARDING_GINI_THRESHOLD: float = 0.8
+
+    @staticmethod
+    def check_alerts(
+        snapshot: EconomyHealthSnapshot,
+        tick: int,
+        region_id: Optional[str] = None,
+    ) -> List[SimulationEvent]:
+        """Evaluate alert conditions on a snapshot.
+
+        Returns a (possibly empty) list of SimulationEvent alert instances.
+        ECONOMIC_COLLAPSE and DEFLATION_RISK are deferred to E33C (transaction_velocity
+        is stub=0.0 in E33B and cannot reliably distinguish collapse from stub).
+        """
+        alerts: List[SimulationEvent] = []
+        gini = snapshot.gini_coefficient
+        if gini > EconomyHealthMonitor.GOLD_HOARDING_GINI_THRESHOLD:
+            alerts.append(GoldHoardingEvent(
+                tick=tick,
+                gini_coefficient=gini,
+                region_id=region_id,
+            ))
+        elif gini > EconomyHealthMonitor.INFLATION_SPIRAL_GINI_THRESHOLD:
+            alerts.append(InflationSpiralEvent(
+                tick=tick,
+                gini_coefficient=gini,
+                region_id=region_id,
+            ))
+        return alerts
 
     @staticmethod
     def sample(state: AuthoritativeState, tick: int) -> Optional[EconomyHealthSnapshot]:

@@ -1891,8 +1891,31 @@
   v2_evidence: >
     src/economy/health_monitor.py — EconomyHealthMonitor.sample() reads
     e.inventory.gold and e.combat.alive; never writes to state; result passed via
-    MetricWindowRecorder into metric_windows.jsonl
+    MetricWindowRecorder into metric_windows.jsonl. check_alerts() (E33B) also
+    reads snapshot read-only and returns new SimulationEvent instances without
+    mutating state.
   proof_type: parity
   test_path: tests/unit/economy/test_economy_health_monitor.py::test_gini_coefficient_computed_correctly
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-178
+  text: >
+    EconomyHealthMonitor.check_alerts() emits SimulationEvent alert instances
+    (INFLATION_SPIRAL when gini>0.7, GOLD_HOARDING when gini>0.8) via kernel
+    _event_listeners callbacks at WINDOW_SIZE tick boundaries. Alerts are not
+    stored in AuthoritativeState; ECONOMIC_COLLAPSE and DEFLATION_RISK are
+    defined but deferred to E33C (transaction_velocity is stub=0.0).
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/economy/health_monitor.py:EconomyHealthMonitor.check_alerts() L25-54;
+    src/engine/kernel.py — alert dispatch inside existing metric_recorder block
+    (PERSISTENCE phase hook); src/observability/events.py — InflationSpiralEvent,
+    GoldHoardingEvent, DeflationRiskEvent, EconomicCollapseEvent subclasses.
+  proof_type: parity
+  test_path: >
+    tests/unit/economy/test_economy_alerts.py::test_inflation_spiral_fires_above_gini_threshold;
+    tests/integration/scenarios/test_macro_economy.py::test_inflation_spiral_alert_emitted
   divergence_note: null
   support_boundary: null
