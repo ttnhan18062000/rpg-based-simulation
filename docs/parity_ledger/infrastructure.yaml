@@ -2434,6 +2434,28 @@
   legacy_evidence: null
   v2_evidence: src/engine/scenario_checkpoint.py::ScenarioCheckpointer + src/engine/scenario_runtime.py (re-export)
   proof_type: feature
-  test_path: tests/unit/engine/test_scenario_checkpointer.py::test_save_raises_when_kernel_none + tests/integration/scenarios/test_scenario_runtime_service.py::TestCheckpointRestore::test_checkpoint_restore_determinism
+  test_path: >-
+    tests/unit/engine/test_scenario_checkpointer.py::test_save_raises_when_kernel_none +
+    tests/integration/scenarios/test_scenario_runtime_service.py::TestCheckpointRestore::test_checkpoint_restore_determinism +
+    tests/api/test_scenario_runtime_api.py::test_checkpoint_endpoint_returns_path_and_tick
+  divergence_note: null
+  support_boundary: null
+
+- id: INFRA-216
+  text: "Scenario Runtime REST API (Epic 3.1D): Three HTTP endpoints — GET /api/v1/scenarios/{id}/status
+    (returns tick/objective_state/alive_entity_count/key_metrics), POST /api/v1/scenarios/{id}/checkpoint
+    (body: {name}, returns {path, tick}), POST /api/v1/scenarios/{id}/restore/{checkpoint_name}
+    (body: {spec_path} optional, returns {tick, objective_state}). ScenarioPresenter shapes all
+    responses; no raw domain objects returned (INFRA-134, INFRA-135). key_metrics always {} (INFRA-136).
+    Scenario registry (src/engine/scenario_registry.py) maps scenario IDs to live ScenarioRuntimeService
+    instances. Restore re-registers restored service under same scenario_id."
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >-
+    src/api/routes/scenarios.py + src/api/presenters/scenarios.py +
+    src/engine/scenario_registry.py + docs/engine/scenario_runtime_contract.md
+  proof_type: feature
+  test_path: tests/api/test_scenario_runtime_api.py::test_status_endpoint_returns_live_state
   divergence_note: null
   support_boundary: null
