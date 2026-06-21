@@ -121,10 +121,11 @@ class ApplyPlanBuilder:
                     wth = r_upd.weather_set if r_upd.weather_set is not None else reg.weather
                     mods = list(set([m for m in reg.active_modifiers if m not in r_upd.modifiers_remove] + r_upd.modifiers_add))
                     prc = r_upd.price_modifiers_set if r_upd.price_modifiers_set is not None else reg.price_modifiers
+                    pop_cohorts = r_upd.population_cohorts_set if r_upd.population_cohorts_set is not None else reg.population_cohorts
                     new_regions[r_id] = replace(reg, hazard_level=haz, suppression_active=sup, calamity_intensity=cal,
                                                 trauma_score=tra, retaliation_pressure=ret, influence=inf,
                                                 owner_faction_id=own, kind=knd, weather=wth, active_modifiers=mods,
-                                                price_modifiers=prc)
+                                                price_modifiers=prc, population_cohorts=pop_cohorts)
         plan.world_collection_changes["regions"] = new_regions
 
         # Nodes

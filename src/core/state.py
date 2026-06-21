@@ -222,6 +222,8 @@ class RegionState:
     weather: str = "CLEAR"
     active_modifiers: List[str] = field(default_factory=list)
     price_modifiers: Dict[str, float] = field(default_factory=dict) # ItemKind -> Multiplier
+    # E52A: Per-region demographic cohorts keyed by age bracket ("young"|"adult"|"elder")
+    population_cohorts: Dict[str, Any] = field(default_factory=dict)
     _canonical_cache: Any = field(default=None, init=False, repr=False, compare=False)
 
     def to_canonical_dict(self) -> Dict[str, Any]:
@@ -242,7 +244,8 @@ class RegionState:
             "influence": self.influence,
             "weather": self.weather,
             "active_modifiers": sorted(list(self.active_modifiers)),
-            "price_modifiers": dict(sorted(self.price_modifiers.items()))
+            "price_modifiers": dict(sorted(self.price_modifiers.items())),
+            "population_cohorts": dict(sorted(self.population_cohorts.items())),
         }
         object.__setattr__(self, "_canonical_cache", res)
         return res

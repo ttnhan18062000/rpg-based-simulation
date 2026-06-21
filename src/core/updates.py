@@ -761,12 +761,14 @@ class WorldUpdate:
     modifiers_add: List[str] = field(default_factory=list)
     modifiers_remove: List[str] = field(default_factory=list)
     price_modifiers_set: Optional[Dict[str, float]] = None
-    
+    # E52A: Per-region demographic cohort state (Dict[bracket, PopulationCohort])
+    population_cohorts_set: Optional[Dict[str, Any]] = None
+
     def merge(self, other: WorldUpdate) -> WorldUpdate:
         """Merges another WorldUpdate into this one, summing deltas and preferring non-None sets."""
         if self.region_id != other.region_id:
             raise ValueError("Cannot merge WorldUpdates for different regions")
-            
+
         return replace(self,
             hazard_level_set=other.hazard_level_set if other.hazard_level_set is not None else self.hazard_level_set,
             suppression_set=other.suppression_set if other.suppression_set is not None else self.suppression_set,
@@ -781,7 +783,8 @@ class WorldUpdate:
             weather_set=other.weather_set if other.weather_set is not None else self.weather_set,
             modifiers_add=list(set(self.modifiers_add + other.modifiers_add)),
             modifiers_remove=list(set(self.modifiers_remove + other.modifiers_remove)),
-            price_modifiers_set=other.price_modifiers_set if other.price_modifiers_set is not None else self.price_modifiers_set
+            price_modifiers_set=other.price_modifiers_set if other.price_modifiers_set is not None else self.price_modifiers_set,
+            population_cohorts_set=other.population_cohorts_set if other.population_cohorts_set is not None else self.population_cohorts_set,
         )
 
 

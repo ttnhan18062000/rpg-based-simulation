@@ -29,6 +29,9 @@ class WorldEventCategory(str, Enum):
     RUMOR_CONFIRMED = "RUMOR_CONFIRMED"
     RUMOR_CONTRADICTED = "RUMOR_CONTRADICTED"
     PARTY_ABANDONED = "PARTY_ABANDONED"
+    # E52A: Demographic cycle events
+    POPULATION_BIRTH = "POPULATION_BIRTH"
+    POPULATION_DEATH = "POPULATION_DEATH"
 
 @dataclass(frozen=True, slots=True)
 class WorldEvent:

@@ -135,7 +135,11 @@ class WorldDynamicsSystem:
             # 3.6 Process Camps (Persistent Encampments)
             from src.world.camp import CampService
             camp_state_update = CampService.process_camps(state, generator)
-            
+
+            # 3.7 Demographic Birth/Death Cycle (E52A)
+            from src.domains.demographics.cohort import DemographicCycleService
+            demo_update = DemographicCycleService.process_demographics(state, state.tick)
+
             update = update.replace(
                 maturity_set=calamity_update.maturity_set if calamity_update.maturity_set is not None else update.maturity_set,
                 last_calamity_tick_set=calamity_update.last_calamity_tick_set if calamity_update.last_calamity_tick_set is not None else update.last_calamity_tick_set,
@@ -145,6 +149,9 @@ class WorldDynamicsSystem:
                 next_node_id_set=ecology_update.next_node_id_set or update.next_node_id_set,
                 next_entity_id_set=generator._last_id + 1 if (generator._last_id + 1) > state.next_entity_id else None
             )
+            # Merge demographic world_updates into the main update
+            if not demo_update.is_noop():
+                update = update.merge(demo_update)
 
 
         # 4. Regional Transformations (Type Shifting)

@@ -247,3 +247,4 @@
 {"run_id":"TCK-20260619-E51C-NAMING","start_ts":"2026-06-22T00:00:00Z","end_ts":"2026-06-22T00:00:00Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":1}
 {"run_id":"run-e51d-renderer-20260622","start_ts":"2026-06-22T17:45:00Z","end_ts":"2026-06-22T18:06:02Z","workflow":"implement-ticket","tier":"standard","final_status":"success","agent_count":1,"ticket_id":"TCK-20260619-E51D-RENDERER"}
 {"run_id":"run-e51e-rest-api-20260622","start_ts":"2026-06-22T18:10:00Z","end_ts":"2026-06-22T18:35:00Z","workflow":"implement-ticket","tier":"standard","final_status":"success","agent_count":1,"ticket_id":"TCK-20260619-E51E-REST-API"}
+{"run_id":"TCK-20260619-E52A-COHORT-MODEL-run1","start_ts":"2026-06-22T00:00:00Z","end_ts":"2026-06-22T01:00:00Z","workflow":"implement-ticket","tier":"standard","final_status":"success","agent_count":1}

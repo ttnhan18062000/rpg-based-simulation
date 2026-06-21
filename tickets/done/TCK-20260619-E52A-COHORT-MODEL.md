@@ -1,10 +1,10 @@
 ---
-status: open
+status: done
 layer: world
 authority: P1
 audience: agent
 ticket_id: TCK-20260619-E52A-COHORT-MODEL
-phase: open
+phase: done
 date: 2026-06-20
 tags: [demographics, population-cohort, birth-death, region-state, phase-5]
 ---
@@ -15,7 +15,7 @@ tags: [demographics, population-cohort, birth-death, region-state, phase-5]
 Epic 5.2A · PopulationCohort Model + Birth/Death Cycle
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -91,6 +91,14 @@ Wire `DemographicCycleService.tick()` into world dynamics phase (same tier as `R
 pytest tests/unit/world/test_demographics.py -x -v
 ```
 ## Files Changed
-_To be filled on completion._
+- `src/domains/demographics/__init__.py` (new — package marker)
+- `src/domains/demographics/cohort.py` (new — PopulationCohort + DemographicCycleService)
+- `src/core/state.py` — RegionState: added `population_cohorts: Dict[str, Any]` field + canonical_dict entry
+- `src/core/updates.py` — WorldUpdate: added `population_cohorts_set: Optional[Dict[str, Any]]` field + merge support
+- `src/engine/apply_plan.py` — region replace block: added `population_cohorts=pop_cohorts`
+- `src/engine/world_dynamics.py` — added step 3.7 DemographicCycleService wiring
+- `src/domains/world_emergence/schema.py` — WorldEventCategory: added POPULATION_BIRTH, POPULATION_DEATH
+- `tests/unit/world/test_demographics.py` (new — 25 tests, all passing)
+
 ## Completion Summary
-_To be filled on completion._
+Implemented PopulationCohort durable model (frozen dataclass with bracket/count/birth_rate/mortality_rate/migration_threshold) and DemographicCycleService with 200-tick birth/death cycle. Added population_cohorts field to RegionState with empty-dict default (backward compatible). Extended WorldUpdate with population_cohorts_set for the apply pipeline. Wired DemographicCycleService into world_dynamics.py as step 3.7. Added POPULATION_BIRTH/POPULATION_DEATH WorldEventCategory values for observability. All 25 new tests pass; 155 existing world tests pass with no regressions. Acceptance criteria test_cohort_birth_generates_spawn_event and test_cohort_death_reduces_count both confirmed passing.
