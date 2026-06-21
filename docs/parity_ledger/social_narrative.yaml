@@ -2370,3 +2370,22 @@
     pytest tests/integration/scenarios/test_campaign_runtime.py::test_narrative_ledger_populated_with_cross_episode_events -x -v -m slow
   divergence_note: null
   support_boundary: null
+- id: SOC-227
+  text: >
+    GroupRecord carries lifecycle fields (formation_tick, escort_target_id,
+    grievance_log, reward_pool, last_leadership_check_tick, dissolution_tick)
+    that survive across ticks and are serialized in to_canonical_dict().
+    grievance_log is Tuple[str, ...] on the instance and emitted as list for
+    JSON serializability. All fields have safe immutable defaults for backward
+    compatibility with existing callers.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/core/state.py GroupRecord class body (formation_tick..dissolution_tick
+    fields before _canonical_cache); to_canonical_dict() emits all six keys
+    flat at the top level. (TCK-20260619-E41A-GROUP-LIFECYCLE)
+  proof_type: parity
+  test_path: tests/unit/social/test_group_lifecycle_fields.py
+  divergence_note: null
+  support_boundary: null

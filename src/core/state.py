@@ -523,6 +523,12 @@ class GroupRecord:
     agi_apt: float = 1.0
     vit_apt: float = 1.0
     end_apt: float = 1.0
+    formation_tick: int = 0
+    escort_target_id: Optional[int] = None
+    grievance_log: Tuple[str, ...] = ()
+    reward_pool: int = 0
+    last_leadership_check_tick: int = 0
+    dissolution_tick: Optional[int] = None
     _canonical_cache: Any = field(default=None, init=False, repr=False, compare=False)
 
     def to_canonical_dict(self) -> Dict[str, Any]:
@@ -544,7 +550,13 @@ class GroupRecord:
                 "agi": self.agi_apt,
                 "vit": self.vit_apt,
                 "end": self.end_apt
-            }
+            },
+            "formation_tick": self.formation_tick,
+            "escort_target_id": self.escort_target_id,
+            "grievance_log": list(self.grievance_log),
+            "reward_pool": self.reward_pool,
+            "last_leadership_check_tick": self.last_leadership_check_tick,
+            "dissolution_tick": self.dissolution_tick,
         }
         object.__setattr__(self, "_canonical_cache", res)
         return res

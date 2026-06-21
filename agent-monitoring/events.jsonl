@@ -798,3 +798,4 @@
 {"seq":7,"phase":"Parity","agent":"parity-updater","status":"ok","summary":"TOWN-016 v2_evidence updated; TOWN-181 added (reputation discount, DEV-001 divergence note)","ts":"2026-06-21T05:45:03Z","tool_call_count":1,"run_id":"TCK-20260619-E33D-REP-DISCOUNTS"}
 {"seq":8,"phase":"Verify","agent":"done-checker","status":"ok","summary":"READY_TO_CLOSE \u2014 all 12 DoD conditions satisfied after data/runs/ cleanup","ts":"2026-06-21T05:40:11Z","tool_call_count":18,"run_id":"TCK-20260619-E33D-REP-DISCOUNTS"}
 {"seq":9,"phase":"Finalize","agent":"finalizer","status":"ok","summary":"Ticket moved to done; todos source removed; working_log appended; staging artifacts migrated; knowledge index updated","ts":"2026-06-21T05:43:06Z","tool_call_count":12,"run_id":"TCK-20260619-E33D-REP-DISCOUNTS"}
+{"run_id":"TCK-20260619-E41A-GROUP-LIFECYCLE","ts":"2026-06-21T05:59:27Z","seq":1,"agent":"finalizer","phase":"Finalize","status":"ok","summary":"Ticket finalized and moved to done"}
