@@ -10,6 +10,7 @@ from typing import Dict, Any, Set, Optional, List, Tuple, ClassVar, TYPE_CHECKIN
 if TYPE_CHECKING:
     from src.domains.world_emergence.schema import WorldEvent
     from src.core.models.quests import QuestOpportunity, QuestOpportunityStatus
+    from src.domains.information.providers import InformationProviderState
 from src.core.strategic import StrategicComponent
 from src.core.enums import Faction, EntityRole
 from src.core.movement_modes import MovementMode
@@ -1065,6 +1066,8 @@ class AuthoritativeState:
     feature_flags: Dict[str, Any] = field(default_factory=dict, repr=False, compare=False)
     recent_world_events: List[WorldEvent] = field(default_factory=list)
     quest_registry: Dict[str, "QuestOpportunity"] = field(default_factory=dict)
+    # Epic 4.2B: Durable registry of entities classified as information providers.
+    information_providers: Dict[int, "InformationProviderState"] = field(default_factory=dict)
 
     def __post_init__(self):
         # M10 Law: Ensure cache is cleared on every new object creation (including replace)
@@ -1140,6 +1143,7 @@ class AuthoritativeState:
             local_scars=ReadOnlyDict(self.local_scars),
             home_storage=ReadOnlyDict(self.home_storage),
             quest_registry=ReadOnlyDict(self.quest_registry),
+            information_providers=ReadOnlyDict(self.information_providers),
             groups=shallow_freeze(self.groups),
             terrain=shallow_freeze(self.terrain),
             global_resources=shallow_freeze(self.global_resources),

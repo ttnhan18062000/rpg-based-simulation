@@ -4100,3 +4100,22 @@
   test_path: tests/unit/engine/test_sort_tiebreaker.py::TestGeneratorSortTiebreaker::test_sort_is_stable_on_tied_scores
   divergence_note: null
   support_boundary: null
+
+- id: SUB-372
+  text: >
+    InformationProviderState is a frozen typed record registered in
+    AuthoritativeState.information_providers (Dict[int, InformationProviderState]).
+    to_canonical_dict() produces a deterministic dict with all fields.
+    to_readonly() wraps the dict in ReadOnlyDict.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/domains/information/providers.py (InformationProviderState,
+    InformationProviderArchetype, TCK-20260619-E42B-INFO-PROVIDER) +
+    src/core/state.py (AuthoritativeState.information_providers field +
+    to_readonly() ReadOnlyDict wrap, TCK-20260619-E42B-INFO-PROVIDER)
+  proof_type: parity
+  test_path: tests/unit/cognition/test_information_seeking.py::TestInformationProviderState::test_information_provider_registered_in_authoritative_state
+  divergence_note: null
+  support_boundary: null

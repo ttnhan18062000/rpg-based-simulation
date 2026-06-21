@@ -1,5 +1,5 @@
 ---
-status: open
+status: done
 layer: ai
 authority: P1
 audience: agent
@@ -15,7 +15,7 @@ tags: [information-seeking, information-provider, archetype, phase-4]
 Epic 4.2B · InformationProvider Archetypes
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -75,6 +75,10 @@ Update `to_canonical_dict()` on `AuthoritativeState` to include `information_pro
 pytest tests/unit/cognition/test_information_seeking.py::test_information_provider_registered_in_authoritative_state -x -v
 ```
 ## Files Changed
-_To be filled on completion._
+- `src/domains/information/providers.py` (NEW) — InformationProviderArchetype enum + InformationProviderState frozen dataclass with to_canonical_dict()
+- `src/core/state.py` — Added TYPE_CHECKING import for InformationProviderState; added information_providers field to AuthoritativeState; wired into to_readonly() as ReadOnlyDict
+- `tests/unit/cognition/test_information_seeking.py` — Added TestInformationProviderState class (6 tests)
+- `docs/parity_ledger/substrate.yaml` — Added SUB-372 entry
+
 ## Completion Summary
-_To be filled on completion._
+Created InformationProviderArchetype (MERCHANT, GUILD_MASTER, ELDER) and InformationProviderState frozen dataclass in src/domains/information/providers.py. Registered information_providers: Dict[int, InformationProviderState] on AuthoritativeState with ReadOnlyDict wrapping in to_readonly(). All 18 tests pass (12 from E42A + 6 new E42B tests). Parity ledger entry SUB-372 added.

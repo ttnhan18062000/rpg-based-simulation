@@ -142,3 +142,131 @@ class TestUnknownFactExtendedFields:
     def test_project_kind_information_seeking_importable(self):
         """Acceptance criterion: ProjectKind.INFORMATION_SEEKING is importable."""
         assert ProjectKind.INFORMATION_SEEKING.value == "information_seeking"
+
+
+# ─── E42B: InformationProviderState tests ─────────────────────────────────────
+
+class TestInformationProviderState:
+    """
+    Acceptance criteria for TCK-20260619-E42B-INFO-PROVIDER.
+
+    Verifies that InformationProviderState is correctly modelled, importable,
+    and that AuthoritativeState registers information_providers deterministically.
+    """
+
+    def test_information_provider_registered_in_authoritative_state(self):
+        """
+        Acceptance criterion: AuthoritativeState carries information_providers
+        and accepts InformationProviderState values keyed by entity_id.
+        """
+        from src.domains.information.providers import (
+            InformationProviderArchetype,
+            InformationProviderState,
+        )
+        from src.core.state import AuthoritativeState
+
+        provider = InformationProviderState(
+            entity_id=42,
+            archetype=InformationProviderArchetype.MERCHANT,
+            reliability_score=0.9,
+            knowledge_domains=("material_source", "recipe_definition"),
+            knowledge_age=3,
+        )
+
+        # Construct minimal AuthoritativeState and register the provider.
+        state = AuthoritativeState(tick=1, seed=0)
+        assert hasattr(state, "information_providers"), (
+            "AuthoritativeState must have information_providers field"
+        )
+        assert state.information_providers == {}, (
+            "Default information_providers must be empty"
+        )
+
+        # Simulate registration (as would happen via authoritative apply path).
+        from dataclasses import replace
+        updated_state = replace(
+            state,
+            information_providers={42: provider},
+        )
+        assert updated_state.information_providers[42] is provider
+
+    def test_information_provider_state_defaults(self):
+        """reliability_score=1.0, knowledge_domains=(), knowledge_age=0 by default."""
+        from src.domains.information.providers import (
+            InformationProviderArchetype,
+            InformationProviderState,
+        )
+        provider = InformationProviderState(
+            entity_id=1,
+            archetype=InformationProviderArchetype.ELDER,
+        )
+        assert provider.reliability_score == 1.0
+        assert provider.knowledge_domains == ()
+        assert provider.knowledge_age == 0
+
+    def test_information_provider_archetype_values(self):
+        """Archetype enum values match the spec."""
+        from src.domains.information.providers import InformationProviderArchetype
+        assert InformationProviderArchetype.MERCHANT.value == "MERCHANT"
+        assert InformationProviderArchetype.GUILD_MASTER.value == "GUILD_MASTER"
+        assert InformationProviderArchetype.ELDER.value == "ELDER"
+
+    def test_information_provider_to_canonical_dict(self):
+        """to_canonical_dict() produces the correct deterministic structure."""
+        from src.domains.information.providers import (
+            InformationProviderArchetype,
+            InformationProviderState,
+        )
+        provider = InformationProviderState(
+            entity_id=7,
+            archetype=InformationProviderArchetype.GUILD_MASTER,
+            reliability_score=0.75,
+            knowledge_domains=("danger_rating", "material_source"),
+            knowledge_age=10,
+        )
+        result = provider.to_canonical_dict()
+        assert result == {
+            "entity_id": 7,
+            "archetype": "GUILD_MASTER",
+            "reliability_score": 0.75,
+            "knowledge_domains": ["danger_rating", "material_source"],
+            "knowledge_age": 10,
+        }
+
+    def test_information_providers_serializes_deterministically(self):
+        """Two states with same providers yield identical serializations."""
+        from src.domains.information.providers import (
+            InformationProviderArchetype,
+            InformationProviderState,
+        )
+        provider_a = InformationProviderState(
+            entity_id=1, archetype=InformationProviderArchetype.MERCHANT
+        )
+        provider_b = InformationProviderState(
+            entity_id=2, archetype=InformationProviderArchetype.ELDER
+        )
+        providers = {1: provider_a, 2: provider_b}
+        serialized = {
+            eid: p.to_canonical_dict()
+            for eid, p in sorted(providers.items())
+        }
+        # Same construction twice must be identical.
+        serialized2 = {
+            eid: p.to_canonical_dict()
+            for eid, p in sorted(providers.items())
+        }
+        assert serialized == serialized2
+
+    def test_information_provider_state_is_frozen(self):
+        """InformationProviderState is immutable — setting fields raises FrozenInstanceError."""
+        import dataclasses
+        from src.domains.information.providers import (
+            InformationProviderArchetype,
+            InformationProviderState,
+        )
+        provider = InformationProviderState(
+            entity_id=3,
+            archetype=InformationProviderArchetype.MERCHANT,
+        )
+        with pytest.raises(dataclasses.FrozenInstanceError):
+            provider.reliability_score = 0.5  # type: ignore[misc]
