@@ -1998,3 +1998,31 @@
     Discount applied universally based on public_reputation. Declared as DEV-001
     in TCK-20260619-E33D-REP-DISCOUNTS plan. See docs/guidelines/v2_intentional_divergences.md.
   support_boundary: null
+- id: TOWN-182
+  text: >
+    Paid information transactions deduct gold via ResourceTransferIntent
+    (source_kind="INFORMATION_PURCHASE") through the authoritative
+    ResourceTransactionResolver. Gold cost = int(10 / max(0.1, reliability_score)).
+    Conservation law (Chapter 03) applies: gold is never destroyed, only
+    transferred. The resolver rejects intents where entity gold < gold_cost.
+    LeadState certainty is derived from provider reliability: PRECISE (>=0.8),
+    APPROXIMATE (0.5–0.8), VAGUE (<0.5). Project removal and lead delivery are
+    contingent on transaction acceptance via strategic_upd.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/engine/pipeline_phases/paid_information.py — PaidInformationTransactionSystem;
+    src/core/conservation.py L255 — INFORMATION_PURCHASE added to fee resolver branch;
+    src/engine/pipeline.py — paid_information phase registered before resource_transactions;
+    src/domains/information/providers.py — InformationProviderState.reliability_score.
+  proof_type: parity
+  test_path: >
+    tests/unit/cognition/test_information_seeking.py::TestPaidInformationTransaction::test_paid_transaction_transfers_gold_and_lead;
+    tests/unit/cognition/test_information_seeking.py::TestPaidInformationTransaction::test_vague_lead_for_low_reliability;
+    tests/unit/cognition/test_information_seeking.py::TestPaidInformationTransaction::test_transaction_cost_formula_high_reliability
+  divergence_note: >
+    Ticket specified LeadCertainty.EXACT for reliability>=0.8 but the canonical
+    enum in src/core/strategic.py uses PRECISE (not EXACT). Implementation uses
+    PRECISE to maintain enum consistency. Ticket EXACT intent is equivalent.
+  support_boundary: null

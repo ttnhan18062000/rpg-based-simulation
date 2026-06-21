@@ -252,7 +252,7 @@ class ResourceTransactionResolver:
             )
 
         # VERIFIED v2: authoritative_side_effects
-        if intent.source_kind in ("TOWN_SERVICE", "TAX", "REPAIR_FEE", "SERVICE_FEE"):
+        if intent.source_kind in ("TOWN_SERVICE", "TAX", "REPAIR_FEE", "SERVICE_FEE", "INFORMATION_PURCHASE"):
              if target_inventory.gold < intent.gold_cost:
                  return TransactionResult(accepted=False, reason=ReasonCode.ACTION_EXHAUSTION)
                  

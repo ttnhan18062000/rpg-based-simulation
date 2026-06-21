@@ -270,3 +270,219 @@ class TestInformationProviderState:
         )
         with pytest.raises(dataclasses.FrozenInstanceError):
             provider.reliability_score = 0.5  # type: ignore[misc]
+
+
+# ─── E42C: PaidInformationTransaction tests ───────────────────────────────────
+
+class TestPaidInformationTransaction:
+    """
+    Acceptance criteria for TCK-20260619-E42C-PAID-TRANSACTION.
+
+    Verifies that PaidInformationTransactionSystem:
+      - Emits ResourceTransferIntent(source_kind="INFORMATION_PURCHASE") for
+        seekers adjacent to a registered InformationProvider.
+      - Computes gold_cost correctly from reliability_score.
+      - Derives LeadCertainty from reliability tier.
+      - Places the LeadState and project removal in strategic_upd (contingent).
+      - Skips entities with no INFORMATION_SEEKING project.
+      - Skips when no provider is registered.
+      - Skips self-provision.
+    """
+
+    # ── helpers ───────────────────────────────────────────────────────────────
+
+    @staticmethod
+    def _make_seeker(entity_id: int, gold: int = 50, subject: str = "moon_resin.source"):
+        """Build an EntityState with an active INFORMATION_SEEKING project."""
+        from src.core.strategic import (
+            ObjectiveKind, ObjectiveState, ObjectiveStatus,
+            ProjectKind, ProjectStatus, ProjectState,
+        )
+        obj_id = f"ask_{subject}_10"
+        proj_id = f"info_seek_{subject}_10"
+        objective = ObjectiveState(
+            id=obj_id,
+            kind=ObjectiveKind.ASK_INFORMATION,
+            target=subject,
+            status=ObjectiveStatus.ACTIVE,
+        )
+        project = ProjectState(
+            id=proj_id,
+            kind=ProjectKind.INFORMATION_SEEKING,
+            status=ProjectStatus.ACTIVE,
+            objectives=[objective],
+            active_objective_id=obj_id,
+            created_tick=10,
+        )
+        b = V2EntityBuilder(entity_id)
+        b.inventory(gold=gold)
+        b.strategic(projects={proj_id: project})
+        return b.build()
+
+    @staticmethod
+    def _make_provider(entity_id: int, reliability: float = 0.9):
+        """Build an InformationProviderState."""
+        from src.domains.information.providers import (
+            InformationProviderArchetype,
+            InformationProviderState,
+        )
+        return InformationProviderState(
+            entity_id=entity_id,
+            archetype=InformationProviderArchetype.MERCHANT,
+            reliability_score=reliability,
+        )
+
+    @staticmethod
+    def _make_state(entities: dict, providers: dict):
+        """Build a minimal AuthoritativeState with given entities and providers."""
+        from src.core.state import AuthoritativeState
+        from dataclasses import replace
+        state = AuthoritativeState(tick=10, seed=0)
+        state = replace(state, entities=entities, information_providers=providers)
+        return state
+
+    # ── normal flow ───────────────────────────────────────────────────────────
+
+    def test_paid_transaction_transfers_gold_and_lead(self):
+        """
+        Acceptance criterion: seeker with INFORMATION_SEEKING project + provider
+        with reliability=0.9 → ResourceTransferIntent with INFORMATION_PURCHASE
+        source_kind and a PRECISE LeadState in strategic_upd.
+        """
+        from src.engine.pipeline_phases.paid_information import PaidInformationTransactionSystem
+        from src.core.strategic import LeadCertainty
+        from src.core.updates import StateUpdate
+
+        seeker = self._make_seeker(entity_id=1, gold=50)
+        provider = self._make_provider(entity_id=2, reliability=0.9)
+        state = self._make_state(
+            entities={1: seeker},
+            providers={2: provider},
+        )
+        update = PaidInformationTransactionSystem.enforce(state, StateUpdate())
+
+        assert 1 in update.entity_updates
+        ent_upd = update.entity_updates[1]
+        assert len(ent_upd.resource_transfers) == 1
+
+        intent = ent_upd.resource_transfers[0]
+        assert intent.source_kind == "INFORMATION_PURCHASE"
+        assert intent.gold_cost > 0
+        assert intent.strategic_upd is not None
+        assert len(intent.strategic_upd.leads_add_or_update) == 1
+
+        lead = intent.strategic_upd.leads_add_or_update[0]
+        assert lead.certainty == LeadCertainty.PRECISE
+        assert "moon_resin.source" in lead.subject
+
+        # project removal is included
+        assert len(intent.strategic_upd.projects_remove) == 1
+
+    def test_vague_lead_for_low_reliability(self):
+        """Provider reliability=0.4 → VAGUE lead."""
+        from src.engine.pipeline_phases.paid_information import PaidInformationTransactionSystem
+        from src.core.strategic import LeadCertainty
+        from src.core.updates import StateUpdate
+
+        seeker = self._make_seeker(entity_id=1, gold=200)
+        provider = self._make_provider(entity_id=2, reliability=0.4)
+        state = self._make_state(entities={1: seeker}, providers={2: provider})
+        update = PaidInformationTransactionSystem.enforce(state, StateUpdate())
+
+        intent = update.entity_updates[1].resource_transfers[0]
+        lead = intent.strategic_upd.leads_add_or_update[0]
+        assert lead.certainty == LeadCertainty.VAGUE
+
+    def test_approximate_lead_for_mid_reliability(self):
+        """Provider reliability=0.65 → APPROXIMATE lead."""
+        from src.engine.pipeline_phases.paid_information import PaidInformationTransactionSystem
+        from src.core.strategic import LeadCertainty
+        from src.core.updates import StateUpdate
+
+        seeker = self._make_seeker(entity_id=1, gold=50)
+        provider = self._make_provider(entity_id=2, reliability=0.65)
+        state = self._make_state(entities={1: seeker}, providers={2: provider})
+        update = PaidInformationTransactionSystem.enforce(state, StateUpdate())
+
+        intent = update.entity_updates[1].resource_transfers[0]
+        lead = intent.strategic_upd.leads_add_or_update[0]
+        assert lead.certainty == LeadCertainty.APPROXIMATE
+
+    def test_transaction_cost_formula_high_reliability(self):
+        """reliability=1.0 → cost=10 (10 / 1.0 = 10)."""
+        from src.engine.pipeline_phases.paid_information import PaidInformationTransactionSystem
+        from src.core.updates import StateUpdate
+
+        seeker = self._make_seeker(entity_id=1, gold=50)
+        provider = self._make_provider(entity_id=2, reliability=1.0)
+        state = self._make_state(entities={1: seeker}, providers={2: provider})
+        update = PaidInformationTransactionSystem.enforce(state, StateUpdate())
+
+        intent = update.entity_updates[1].resource_transfers[0]
+        assert intent.gold_cost == 10
+
+    def test_transaction_cost_formula_low_reliability(self):
+        """reliability=0.1 → cost=100 (10 / 0.1 = 100)."""
+        from src.engine.pipeline_phases.paid_information import PaidInformationTransactionSystem
+        from src.core.updates import StateUpdate
+
+        seeker = self._make_seeker(entity_id=1, gold=200)
+        provider = self._make_provider(entity_id=2, reliability=0.1)
+        state = self._make_state(entities={1: seeker}, providers={2: provider})
+        update = PaidInformationTransactionSystem.enforce(state, StateUpdate())
+
+        intent = update.entity_updates[1].resource_transfers[0]
+        assert intent.gold_cost == 100
+
+    def test_lead_subject_matches_project_objective(self):
+        """LeadState.subject matches the ASK_INFORMATION objective target."""
+        from src.engine.pipeline_phases.paid_information import PaidInformationTransactionSystem
+        from src.core.updates import StateUpdate
+
+        seeker = self._make_seeker(entity_id=1, gold=50, subject="quest.cave_location")
+        provider = self._make_provider(entity_id=2, reliability=0.9)
+        state = self._make_state(entities={1: seeker}, providers={2: provider})
+        update = PaidInformationTransactionSystem.enforce(state, StateUpdate())
+
+        intent = update.entity_updates[1].resource_transfers[0]
+        lead = intent.strategic_upd.leads_add_or_update[0]
+        assert lead.subject == "quest.cave_location"
+
+    # ── edge cases ────────────────────────────────────────────────────────────
+
+    def test_no_provider_no_intent(self):
+        """No provider registered → no intent emitted."""
+        from src.engine.pipeline_phases.paid_information import PaidInformationTransactionSystem
+        from src.core.updates import StateUpdate
+
+        seeker = self._make_seeker(entity_id=1, gold=50)
+        state = self._make_state(entities={1: seeker}, providers={})
+        update = PaidInformationTransactionSystem.enforce(state, StateUpdate())
+
+        assert 1 not in update.entity_updates or not update.entity_updates[1].resource_transfers
+
+    def test_no_seeking_project_no_intent(self):
+        """Entity with no INFORMATION_SEEKING project → no intent emitted."""
+        from src.engine.pipeline_phases.paid_information import PaidInformationTransactionSystem
+        from src.core.updates import StateUpdate
+
+        b = V2EntityBuilder(1)
+        b.inventory(gold=50)
+        entity = b.build()
+        provider = self._make_provider(entity_id=2, reliability=0.9)
+        state = self._make_state(entities={1: entity}, providers={2: provider})
+        update = PaidInformationTransactionSystem.enforce(state, StateUpdate())
+
+        assert 1 not in update.entity_updates or not update.entity_updates[1].resource_transfers
+
+    def test_seeker_is_own_provider_skipped(self):
+        """Provider entity_id == seeker entity_id → no self-transaction."""
+        from src.engine.pipeline_phases.paid_information import PaidInformationTransactionSystem
+        from src.core.updates import StateUpdate
+
+        seeker = self._make_seeker(entity_id=5, gold=50)
+        provider = self._make_provider(entity_id=5, reliability=0.9)
+        state = self._make_state(entities={5: seeker}, providers={5: provider})
+        update = PaidInformationTransactionSystem.enforce(state, StateUpdate())
+
+        assert 5 not in update.entity_updates or not update.entity_updates[5].resource_transfers

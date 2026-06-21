@@ -225,6 +225,11 @@ class AuthoritativeApplyPipeline:
         update = update.replace(dirty_set=dirty_builder.build())
         update = run_phase("quest_rewards", update, lambda u: AuthoritativeApplyPipeline._resolve_quest_rewards(state, u))
         update = run_phase("shop", update, lambda u: ShopSystem.enforce(state, u))
+
+        # E42C: Paid information transactions — inject intents before resolver runs.
+        from src.engine.pipeline_phases.paid_information import PaidInformationTransactionSystem
+        update = run_phase("paid_information", update, lambda u: PaidInformationTransactionSystem.enforce(state, u))
+
         update = run_phase("resource_transactions", update, lambda u: AuthoritativeApplyPipeline._resolve_resource_transactions(state, u))
         # Refresh dirty set to capture reward_upd set by resource_transactions (XP rewards)
         dirty_builder.mark_from_update(state, update)
