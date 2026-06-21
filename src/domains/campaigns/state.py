@@ -140,32 +140,50 @@ class WorldTimelineEntry:
 
 @dataclass(frozen=True)
 class NarrativeLedgerEntry:
-    """Minimal stub for a significant cross-episode narrative event.
+    """Structured record of a significant cross-episode narrative event.
 
-    E32D (NarrativeLedger) will extend this type with additional fields.
-    Do not add narrative logic in E32B.
+    Implemented by E32D (NarrativeLedger). Populated in
+    CampaignOrchestrator._advance_state() from AuthoritativeState.recent_world_events.
 
-    entry_id        — unique string key for deduplication
+    episode         — 0-based index of the episode in which the event occurred
     tick            — simulation tick at which the event was recorded
-    episode_index   — episode in which the event was recorded
+    event_type      — "quest_completed" | "entity_death" | "faction_shift" | "calamity"
+    subject_id      — entity/faction/node id (empty string if unavailable)
+    payload         — event-specific numeric data (may be empty dict)
+    significance    — 0.0–1.0 relevance weight
+                      (quest_completed=0.7, entity_death=0.5, faction_shift=0.9)
+    entry_id        — deterministic dedup key; format: "{episode}:{tick}:{event_type}:{subject_id}"
+                      defaults to "" for legacy records loaded from prior checkpoints
     """
-    entry_id: str
+    episode: int
     tick: int
-    episode_index: int
+    event_type: str       # "quest_completed" | "entity_death" | "faction_shift" | "calamity"
+    subject_id: str       # entity/faction/node id (empty string if unavailable)
+    payload: dict         # event-specific numeric data
+    significance: float   # 0.0-1.0 relevance weight
+    entry_id: str = ""    # deterministic dedup key (optional; empty for legacy records)
 
     def to_dict(self) -> dict:
         return {
-            "entry_id": self.entry_id,
+            "episode": self.episode,
             "tick": self.tick,
-            "episode_index": self.episode_index,
+            "event_type": self.event_type,
+            "subject_id": self.subject_id,
+            "payload": self.payload,
+            "significance": self.significance,
+            "entry_id": self.entry_id,
         }
 
     @classmethod
     def from_dict(cls, d: dict) -> "NarrativeLedgerEntry":
         return cls(
-            entry_id=d["entry_id"],
+            episode=d["episode"],
             tick=d["tick"],
-            episode_index=d["episode_index"],
+            event_type=d["event_type"],
+            subject_id=d.get("subject_id", ""),
+            payload=d.get("payload", {}),
+            significance=d.get("significance", 0.0),
+            entry_id=d.get("entry_id", ""),
         )
 
 

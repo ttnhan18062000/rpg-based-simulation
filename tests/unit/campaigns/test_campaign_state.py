@@ -57,7 +57,11 @@ def _make_campaign_state() -> CampaignState:
     dead_faction = _make_faction("faction_2", alive=False)
     episode = EpisodeSummary(episode_index=0, completed_tick=500)
     timeline_entry = WorldTimelineEntry(tick=250, episode_index=0, description="calamity:drought")
-    ledger_entry = NarrativeLedgerEntry(entry_id="evt-001", tick=100, episode_index=0)
+    ledger_entry = NarrativeLedgerEntry(
+        episode=0, tick=100, event_type="entity_death",
+        subject_id="entity_42", payload={"damage": 50.0}, significance=0.5,
+        entry_id="0:100:entity_death:entity_42",
+    )
 
     return CampaignState(
         campaign_id="campaign-abc",
@@ -173,9 +177,25 @@ def test_world_timeline_entry_round_trip():
 # ---------------------------------------------------------------------------
 
 def test_narrative_ledger_entry_round_trip():
-    entry = NarrativeLedgerEntry(entry_id="evt-xyz", tick=50, episode_index=0)
+    entry = NarrativeLedgerEntry(
+        episode=1,
+        tick=50,
+        event_type="quest_completed",
+        subject_id="quest_main_01",
+        payload={"xp_reward": 200.0},
+        significance=0.7,
+        entry_id="1:50:quest_completed:quest_main_01",
+    )
     restored = NarrativeLedgerEntry.from_dict(entry.to_dict())
     assert restored == entry
+    # Verify all fields survive round-trip
+    assert restored.episode == 1
+    assert restored.tick == 50
+    assert restored.event_type == "quest_completed"
+    assert restored.subject_id == "quest_main_01"
+    assert restored.payload == {"xp_reward": 200.0}
+    assert restored.significance == pytest.approx(0.7)
+    assert restored.entry_id == "1:50:quest_completed:quest_main_01"
 
 
 # ---------------------------------------------------------------------------

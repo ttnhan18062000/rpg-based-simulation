@@ -29,8 +29,22 @@ from src.domains.campaigns.state import (
     EntityCarryForward,
     EpisodeSummary,
     FactionCarryForward,
+    NarrativeLedgerEntry,
 )
 
+
+# ── Narrative significance map ────────────────────────────────────────────────
+# Maps WorldEventCategory.value → (event_type, significance).
+# Only categories listed here produce NarrativeLedgerEntry records.
+# significance scale: quest_completed=0.7, entity_death=0.5, faction_shift=0.9
+_SIGNIFICANCE_MAP: Dict[str, tuple] = {
+    "ENTITY_DEATH":    ("entity_death",    0.5),
+    "QUEST_COMPLETED": ("quest_completed", 0.7),
+    "CAMP_CLEARED":    ("faction_shift",   0.9),
+    "CAMP_RAID":       ("faction_shift",   0.6),
+    "PARTY_ABANDONED": ("entity_death",    0.4),
+    "QUEST_FAILED":    ("quest_completed", 0.3),
+}
 
 # ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -147,10 +161,12 @@ class CampaignOrchestrator:
         """Update CampaignState from completed episode's final kernel state."""
         entity_cfs = self._extract_entity_carry_forwards(final_state)
         faction_cfs = self._extract_faction_carry_forwards(final_state)
+        narrative_entries = self._extract_narrative_entries(final_state, summary.episode_index)
 
         self._state.persistent_entities.update(entity_cfs)
         self._state.persistent_factions.update(faction_cfs)
         self._state.episode_history.append(summary)
+        self._state.narrative_ledger.extend(narrative_entries)
         self._state.episode_index += 1
 
     def _extract_entity_carry_forwards(
@@ -222,6 +238,46 @@ class CampaignOrchestrator:
             )
             for fac_int, alive in faction_alive.items()
         }
+
+    def _extract_narrative_entries(
+        self,
+        final_state: "AuthoritativeState",
+        episode_index: int,
+    ) -> List[NarrativeLedgerEntry]:
+        """Convert AuthoritativeState.recent_world_events to NarrativeLedgerEntry records.
+
+        Only WorldEvent categories present in _SIGNIFICANCE_MAP are recorded.
+        Each entry receives a deterministic entry_id for deduplication:
+            "{episode_index}:{tick}:{event_type}:{subject_id}"
+
+        Does not mutate CampaignState — returns a list for the caller to extend.
+        """
+        entries: List[NarrativeLedgerEntry] = []
+        world_events = getattr(final_state, "recent_world_events", [])
+
+        for world_event in world_events:
+            # Resolve category to string key robustly (handles enum or raw string).
+            cat = world_event.category
+            key = cat.value if hasattr(cat, "value") else str(cat)
+
+            if key not in _SIGNIFICANCE_MAP:
+                continue
+
+            event_type, significance = _SIGNIFICANCE_MAP[key]
+            subject_id = world_event.subject or ""
+            entry_id = f"{episode_index}:{world_event.tick}:{event_type}:{subject_id}"
+
+            entries.append(NarrativeLedgerEntry(
+                episode=episode_index,
+                tick=world_event.tick,
+                event_type=event_type,
+                subject_id=subject_id,
+                payload=dict(world_event.payload) if world_event.payload else {},
+                significance=significance,
+                entry_id=entry_id,
+            ))
+
+        return entries
 
     def _build_initial_state(self, episode_seed: int) -> "AuthoritativeState":
         """Construct an AuthoritativeState seeded with carry-forward entity data.

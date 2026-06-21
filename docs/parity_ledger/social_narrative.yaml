@@ -2348,3 +2348,25 @@
   test_path: null
   divergence_note: null
   support_boundary: null
+- id: SOC-226
+  text: >
+    NarrativeLedger records significant campaign events (entity_death, quest_completed,
+    faction_shift) across episodes. CampaignOrchestrator._advance_state() extracts
+    NarrativeLedgerEntry records from AuthoritativeState.recent_world_events using
+    _SIGNIFICANCE_MAP. NarrativeLedger.query() filters by event_type, episode, and
+    min_significance. NarrativeLedger.to_jsonl() exports all entries as JSONL.
+    Gates E43 (Social Memory) and E51 (Chronicle).
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/domains/campaigns/narrative_ledger.py (NarrativeLedger service);
+    src/domains/campaigns/state.py (NarrativeLedgerEntry 7-field frozen dataclass);
+    src/domains/campaigns/orchestrator.py (_extract_narrative_entries, _SIGNIFICANCE_MAP,
+    _advance_state wiring). (TCK-20260619-E32D-NARRATIVE-LEDGER)
+  proof_type: parity
+  test_path: >
+    pytest tests/unit/campaigns/test_narrative_ledger.py -x -v;
+    pytest tests/integration/scenarios/test_campaign_runtime.py::test_narrative_ledger_populated_with_cross_episode_events -x -v -m slow
+  divergence_note: null
+  support_boundary: null
