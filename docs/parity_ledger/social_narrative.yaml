@@ -2605,3 +2605,24 @@
     so correct threshold is >= 0.5 (moderate hostility = traitor-level offense).
     (TCK-20260619-E43E-CONSEQUENCE-EVENTS investigation.md)
   support_boundary: null
+- id: SOC-CHRON-001
+  text: >
+    EventSignificanceScorer classifies NarrativeLedgerEntry objects for Chronicle
+    inclusion. score() returns BASE_SIGNIFICANCE.get(event_type, 0.1) + hero_bonus
+    (0.3 if payload["entity_role"]=="HERO"), capped at 1.0. is_chronicle_worthy()
+    returns True when score >= CHRONICLE_THRESHOLD (0.5). Known event type weights:
+    entity_death=0.5, faction_destroyed=0.9, quest_completed=0.7, calamity=0.85,
+    LEGENDARY_ARRIVAL=0.75, KNOWN_TRAITOR_SPOTTED=0.6, betrayal_desertion=0.7,
+    INFLATION_SPIRAL=0.5. Hero death scores 0.8 (entity_death 0.5 + 0.3 hero_bonus).
+    Unknown types default to 0.1 (below threshold). Scorer is stateless and deterministic.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/domains/chronicle/significance.py (EventSignificanceScorer, BASE_SIGNIFICANCE,
+    CHRONICLE_THRESHOLD). (TCK-20260619-E51A-SIGNIFICANCE)
+  proof_type: parity
+  test_path: >
+    pytest tests/unit/chronicle/test_chronicle_compiler.py -x -v
+  divergence_note: null
+  support_boundary: null
