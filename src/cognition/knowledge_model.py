@@ -130,6 +130,29 @@ class KnowledgeModelService:
         )
 
 
+_STALENESS_DECAY_RATE: float = 0.0001
+"""Certainty halves over 10 000 ticks (LEG-RPG-150 read-time staleness)."""
+
+
+def effective_certainty(fact: "KnowledgeFact", current_tick: int) -> float:
+    """
+    Compute the effective certainty of a KnowledgeFact at read time,
+    applying exponential-style staleness decay without mutating the frozen record.
+
+    Formula (E42D):
+        elapsed = max(0, current_tick - fact.recorded_tick)
+        decay_factor = max(0.1, 1.0 - elapsed * _STALENESS_DECAY_RATE)
+        effective = fact.certainty * decay_factor
+
+    At tick 0 delta: no decay.
+    At tick 5000 delta: decay_factor = 0.5, so effective = certainty * 0.5.
+    At tick 10000+ delta: decay_factor floored at 0.1.
+    """
+    elapsed = max(0, current_tick - fact.recorded_tick)
+    decay_factor = max(0.1, 1.0 - elapsed * _STALENESS_DECAY_RATE)
+    return fact.certainty * decay_factor
+
+
 def _lead_certainty_to_float(certainty: object) -> float:
     """Convert LeadCertainty enum or float to a 0..1 float."""
     if certainty is None:

@@ -486,3 +486,333 @@ class TestPaidInformationTransaction:
         update = PaidInformationTransactionSystem.enforce(state, StateUpdate())
 
         assert 5 not in update.entity_updates or not update.entity_updates[5].resource_transfers
+
+
+# ─── E42D: LeadContradictionSystem + effective_certainty tests ────────────────
+
+class TestLeadContradiction:
+    """
+    Acceptance criteria for TCK-20260619-E42D-CONTRADICTION.
+
+    Verifies:
+      - belief_contradiction event fires when a lead's resource node is depleted.
+      - LeadState is marked FAILURE with incremented failure_count.
+      - Provider reliability decrements by 0.1 in information_providers_update.
+      - An UnknownFact (priority=0.7) is regenerated for replanning.
+      - No contradiction when node has remaining charges.
+      - Floor: provider reliability never drops below 0.1.
+    """
+
+    # ── helpers ───────────────────────────────────────────────────────────────
+
+    @staticmethod
+    def _make_entity_with_lead(
+        entity_id: int,
+        lead_id: str = "lead_resin",
+        subject: str = "moon_resin",
+        lead_kind: str = "location",
+        certainty=None,
+        provider_id: int = 99,
+    ):
+        """Build entity with a single non-exhausted lead."""
+        from src.core.strategic import LeadCertainty, LeadState, StrategicComponent
+        from src.core.builder import V2EntityBuilder
+
+        if certainty is None:
+            certainty = LeadCertainty.APPROXIMATE
+
+        lead = LeadState(
+            id=lead_id,
+            kind=lead_kind,
+            subject=subject,
+            detail="north_ruin",
+            certainty=certainty,
+            source_entity_id=provider_id,
+            discovered_tick=0,
+        )
+        sc = StrategicComponent(leads={lead_id: lead})
+        b = V2EntityBuilder(entity_id)
+        b.replace_strategic(sc)
+        return b.build()
+
+    @staticmethod
+    def _make_resource_node(node_id: int, yields_item: str, remaining_charges: int):
+        """Build a minimal ResourceNodeState."""
+        from src.core.state import ResourceNodeState
+        return ResourceNodeState(
+            id=node_id,
+            kind="herb",
+            position=(10.0, 10.0),
+            yields_item=yields_item,
+            remaining_charges=remaining_charges,
+            max_charges=5,
+            required_ticks=1,
+        )
+
+    @staticmethod
+    def _make_provider(entity_id: int, reliability: float = 0.8):
+        from src.domains.information.providers import (
+            InformationProviderArchetype,
+            InformationProviderState,
+        )
+        return InformationProviderState(
+            entity_id=entity_id,
+            archetype=InformationProviderArchetype.MERCHANT,
+            reliability_score=reliability,
+        )
+
+    @staticmethod
+    def _make_state(entities: dict, resource_nodes: dict = None, providers: dict = None):
+        from src.core.state import AuthoritativeState
+        from dataclasses import replace as dc_replace
+        state = AuthoritativeState(tick=10, seed=0)
+        kwargs: dict = {"entities": entities}
+        if resource_nodes is not None:
+            kwargs["resource_nodes"] = resource_nodes
+        if providers is not None:
+            kwargs["information_providers"] = providers
+        return dc_replace(state, **kwargs)
+
+    # ── acceptance tests ──────────────────────────────────────────────────────
+
+    def test_belief_contradiction_fires_on_depleted_lead(self):
+        """
+        Acceptance criterion: entity with a location lead for 'moon_resin'
+        pointing to a depleted resource node (remaining_charges=0) → a
+        belief_contradiction SimulationEvent is returned and the LeadState
+        is marked FAILURE / EXHAUSTED.
+        """
+        from src.engine.pipeline_phases.lead_contradiction import LeadContradictionSystem
+        from src.core.updates import StateUpdate
+        from src.core.strategic import LeadCertainty
+
+        entity = self._make_entity_with_lead(
+            entity_id=1,
+            subject="moon_resin",
+            lead_kind="location",
+            provider_id=99,
+        )
+        depleted_node = self._make_resource_node(
+            node_id=10, yields_item="moon_resin", remaining_charges=0
+        )
+        provider = self._make_provider(entity_id=99, reliability=0.8)
+        state = self._make_state(
+            entities={1: entity},
+            resource_nodes={10: depleted_node},
+            providers={99: provider},
+        )
+
+        updated_state_update, events = LeadContradictionSystem.enforce(state, StateUpdate())
+
+        # Event was emitted
+        assert len(events) == 1
+        evt = events[0]
+        assert evt.event_type == "belief_contradiction"
+        assert evt.entity_id == 1
+        assert evt.payload["lead_id"] == "lead_resin"
+        assert evt.payload["subject"] == "moon_resin"
+
+        # Lead is marked FAILURE / EXHAUSTED
+        assert 1 in updated_state_update.entity_updates
+        ent_upd = updated_state_update.entity_updates[1]
+        assert ent_upd.strategic is not None
+        leads_upd = ent_upd.strategic.leads_add_or_update
+        assert len(leads_upd) == 1
+        updated_lead = leads_upd[0]
+        assert updated_lead.test_outcome == "FAILURE"
+        assert updated_lead.certainty == LeadCertainty.EXHAUSTED
+        assert updated_lead.failure_count == 1
+        assert updated_lead.tested is True
+
+    def test_contradiction_updates_provider_reliability(self):
+        """Provider reliability decrements by 0.1 in information_providers_update."""
+        from src.engine.pipeline_phases.lead_contradiction import LeadContradictionSystem
+        from src.core.updates import StateUpdate
+
+        entity = self._make_entity_with_lead(entity_id=1, subject="moon_resin", provider_id=99)
+        depleted_node = self._make_resource_node(10, "moon_resin", 0)
+        provider = self._make_provider(entity_id=99, reliability=0.8)
+        state = self._make_state(
+            entities={1: entity},
+            resource_nodes={10: depleted_node},
+            providers={99: provider},
+        )
+
+        updated, _ = LeadContradictionSystem.enforce(state, StateUpdate())
+
+        assert 99 in updated.information_providers_update
+        new_provider = updated.information_providers_update[99]
+        assert abs(new_provider.reliability_score - 0.7) < 1e-6
+
+    def test_provider_reliability_floor_at_0_1(self):
+        """Provider with reliability=0.1 stays at 0.1 after contradiction."""
+        from src.engine.pipeline_phases.lead_contradiction import LeadContradictionSystem
+        from src.core.updates import StateUpdate
+
+        entity = self._make_entity_with_lead(entity_id=1, subject="moon_resin", provider_id=99)
+        depleted_node = self._make_resource_node(10, "moon_resin", 0)
+        provider = self._make_provider(entity_id=99, reliability=0.1)
+        state = self._make_state(
+            entities={1: entity},
+            resource_nodes={10: depleted_node},
+            providers={99: provider},
+        )
+
+        updated, events = LeadContradictionSystem.enforce(state, StateUpdate())
+
+        assert len(events) == 1
+        new_provider = updated.information_providers_update[99]
+        assert new_provider.reliability_score >= 0.1
+
+    def test_contradiction_regenerates_unknown_fact(self):
+        """An UnknownFact(priority=0.7) is placed on the entity's knowledge for replanning."""
+        from src.engine.pipeline_phases.lead_contradiction import LeadContradictionSystem
+        from src.core.updates import StateUpdate
+
+        entity = self._make_entity_with_lead(entity_id=1, subject="moon_resin", provider_id=99)
+        depleted_node = self._make_resource_node(10, "moon_resin", 0)
+        provider = self._make_provider(entity_id=99, reliability=0.8)
+        state = self._make_state(
+            entities={1: entity},
+            resource_nodes={10: depleted_node},
+            providers={99: provider},
+        )
+
+        updated, _ = LeadContradictionSystem.enforce(state, StateUpdate())
+
+        ent_upd = updated.entity_updates[1]
+        assert ent_upd.self_model_bundle_set is not None
+        unknowns = ent_upd.self_model_bundle_set.knowledge.unknowns
+        assert "moon_resin" in unknowns
+        uf = unknowns["moon_resin"]
+        assert uf.priority == 0.7
+        assert uf.reason == "lead_contradicted"
+
+    def test_alive_lead_no_contradiction(self):
+        """Resource node with remaining_charges > 0 → no contradiction, no events."""
+        from src.engine.pipeline_phases.lead_contradiction import LeadContradictionSystem
+        from src.core.updates import StateUpdate
+
+        entity = self._make_entity_with_lead(entity_id=1, subject="moon_resin", provider_id=99)
+        live_node = self._make_resource_node(10, "moon_resin", remaining_charges=3)
+        provider = self._make_provider(entity_id=99, reliability=0.8)
+        state = self._make_state(
+            entities={1: entity},
+            resource_nodes={10: live_node},
+            providers={99: provider},
+        )
+
+        updated, events = LeadContradictionSystem.enforce(state, StateUpdate())
+
+        assert len(events) == 0
+        assert 1 not in updated.entity_updates or updated.entity_updates.get(1) is None or \
+            not updated.entity_updates[1].strategic or \
+            not updated.entity_updates[1].strategic.leads_add_or_update
+
+    def test_no_leads_no_contradiction(self):
+        """Entity with no leads → no updates emitted."""
+        from src.engine.pipeline_phases.lead_contradiction import LeadContradictionSystem
+        from src.core.updates import StateUpdate
+        from src.core.builder import V2EntityBuilder
+
+        b = V2EntityBuilder(1)
+        entity = b.build()
+        state = self._make_state(entities={1: entity})
+
+        updated, events = LeadContradictionSystem.enforce(state, StateUpdate())
+
+        assert len(events) == 0
+        assert not updated.entity_updates
+
+    def test_already_exhausted_lead_skipped(self):
+        """EXHAUSTED leads are not re-contradicted."""
+        from src.engine.pipeline_phases.lead_contradiction import LeadContradictionSystem
+        from src.core.updates import StateUpdate
+        from src.core.strategic import LeadCertainty
+
+        entity = self._make_entity_with_lead(
+            entity_id=1,
+            subject="moon_resin",
+            certainty=LeadCertainty.EXHAUSTED,
+            provider_id=99,
+        )
+        depleted_node = self._make_resource_node(10, "moon_resin", 0)
+        state = self._make_state(entities={1: entity}, resource_nodes={10: depleted_node})
+
+        updated, events = LeadContradictionSystem.enforce(state, StateUpdate())
+
+        assert len(events) == 0
+
+
+# ─── E42D: KnowledgeFact staleness decay tests ────────────────────────────────
+
+class TestKnowledgeStalenessDecay:
+    """
+    Tests for effective_certainty() in src/cognition/knowledge_model.py.
+
+    Verifies staleness decay formula:
+        effective = certainty * max(0.1, 1.0 - elapsed * 0.0001)
+    """
+
+    def test_lead_staleness_decay_reduces_confidence(self):
+        """
+        Acceptance criterion: effective_certainty < 0.5 at tick 5001 for
+        a KnowledgeFact with certainty=1.0 recorded at tick 0.
+        """
+        from src.core.self_model import KnowledgeFact
+        from src.cognition.knowledge_model import effective_certainty
+
+        fact = KnowledgeFact(
+            subject="moon_resin",
+            fact_type="resource_source",
+            certainty=1.0,
+            recorded_tick=0,
+        )
+        result = effective_certainty(fact, current_tick=5001)
+        assert result < 0.5, f"expected < 0.5, got {result}"
+
+    def test_staleness_decay_at_tick_zero_delta(self):
+        """current_tick == recorded_tick → effective_certainty == certainty (no decay)."""
+        from src.core.self_model import KnowledgeFact
+        from src.cognition.knowledge_model import effective_certainty
+
+        fact = KnowledgeFact(
+            subject="iron", fact_type="resource_source", certainty=0.8, recorded_tick=100
+        )
+        result = effective_certainty(fact, current_tick=100)
+        assert abs(result - 0.8) < 1e-9
+
+    def test_staleness_decay_minimum_0_1(self):
+        """At very large tick delta the floor is certainty * 0.1."""
+        from src.core.self_model import KnowledgeFact
+        from src.cognition.knowledge_model import effective_certainty
+
+        fact = KnowledgeFact(
+            subject="iron", fact_type="resource_source", certainty=1.0, recorded_tick=0
+        )
+        # At tick=20000 decay_factor would be -1.0 without floor → floored at 0.1
+        result = effective_certainty(fact, current_tick=20000)
+        assert result >= 0.1 - 1e-9
+
+    def test_staleness_exact_halfway_tick(self):
+        """At tick 5000 (elapsed=5000): decay_factor = max(0.1, 0.5) = 0.5 → exactly 0.5."""
+        from src.core.self_model import KnowledgeFact
+        from src.cognition.knowledge_model import effective_certainty
+
+        fact = KnowledgeFact(
+            subject="iron", fact_type="resource_source", certainty=1.0, recorded_tick=0
+        )
+        result = effective_certainty(fact, current_tick=5000)
+        assert abs(result - 0.5) < 1e-9
+
+    def test_staleness_partial_certainty(self):
+        """Decay applies to initial certainty, not just 1.0."""
+        from src.core.self_model import KnowledgeFact
+        from src.cognition.knowledge_model import effective_certainty
+
+        fact = KnowledgeFact(
+            subject="x", fact_type="y", certainty=0.6, recorded_tick=0
+        )
+        # elapsed=2000 → decay_factor = max(0.1, 0.8) = 0.8
+        result = effective_certainty(fact, current_tick=2000)
+        assert abs(result - 0.48) < 1e-9

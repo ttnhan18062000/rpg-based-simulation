@@ -2464,3 +2464,40 @@
     tests/unit/cognition/test_information_seeking.py::TestInformationNeedDetectorNormalFlow::test_unknown_fact_generates_seeking_project
   divergence_note: null
   support_boundary: null
+- id: STRAT-230
+  text: >-
+    When an entity's lead destination is inconsistent with world state (depleted
+    resource node, dead person target), the lead is marked FAILURE/EXHAUSTED,
+    the originating provider's reliability_score is decremented by 0.1 (floored
+    at 0.1) via StateUpdate.information_providers_update, an UnknownFact
+    (priority=0.7) is regenerated for replanning, and a belief_contradiction
+    SimulationEvent is emitted. (E42D)
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >-
+    src/engine/pipeline_phases/lead_contradiction.py — LeadContradictionSystem.enforce();
+    src/core/updates.py — StateUpdate.information_providers_update field;
+    src/cognition/knowledge_model.py — effective_certainty() staleness decay utility
+  proof_type: parity
+  test_path: >-
+    tests/unit/cognition/test_information_seeking.py::TestLeadContradiction::test_belief_contradiction_fires_on_depleted_lead
+  divergence_note: null
+  support_boundary: null
+- id: STRAT-231
+  text: >-
+    KnowledgeFact certainty decays at read time using the formula:
+    effective_certainty = certainty * max(0.1, 1.0 - elapsed * 0.0001).
+    The KnowledgeFact record is never mutated (frozen). Certainty halves over
+    10 000 elapsed ticks; floor at 0.1 * original certainty. (E42D)
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >-
+    src/cognition/knowledge_model.py — effective_certainty() function with
+    _STALENESS_DECAY_RATE = 0.0001
+  proof_type: parity
+  test_path: >-
+    tests/unit/cognition/test_information_seeking.py::TestKnowledgeStalenessDecay::test_lead_staleness_decay_reduces_confidence
+  divergence_note: null
+  support_boundary: null

@@ -15,6 +15,7 @@ if TYPE_CHECKING:
     from src.engine.policy import GovernorPolicy
     from src.domains.world_emergence.schema import WorldEvent
     from src.core.models.quests import QuestOpportunity, QuestOpportunityStatus
+    from src.domains.information.providers import InformationProviderState
 from src.core.state import ItemStack, EquipSlot, AttributeComponent
 from src.core.movement_modes import MovementMode
 from src.core.enums import ReasonCode
@@ -878,6 +879,8 @@ class StateUpdate:
     quest_registry_remove: List[str] = field(default_factory=list)
     quest_status_updates: Dict[str, "QuestOpportunityStatus"] = field(default_factory=dict)
     quest_opportunity_reward_intents: List["QuestOpportunityRewardIntent"] = field(default_factory=list)
+    # E42D: provider reliability updates keyed by entity_id
+    information_providers_update: Dict[int, "InformationProviderState"] = field(default_factory=dict)
 
     def is_noop(self) -> bool:
         """True if this update contains absolutely no changes."""
@@ -901,7 +904,8 @@ class StateUpdate:
                 not self.sub_phase_costs and not self.metric_counters and
                 not self.world_events_add and not self.quest_registry_add and
                 not self.quest_registry_remove and not self.quest_status_updates and
-                not self.quest_opportunity_reward_intents)
+                not self.quest_opportunity_reward_intents and
+                not self.information_providers_update)
     def merge(self, other: StateUpdate) -> StateUpdate:
         """Merge another StateUpdate into this one."""
         if not other or other.is_noop():
@@ -953,6 +957,7 @@ class StateUpdate:
         new_quest_registry_remove = list(self.quest_registry_remove)
         new_quest_status_updates = dict(self.quest_status_updates)
         new_quest_opportunity_reward_intents = list(self.quest_opportunity_reward_intents)
+        new_information_providers_update = dict(self.information_providers_update)
 
         # Single values
         maturity = self.maturity_set
@@ -1017,6 +1022,7 @@ class StateUpdate:
             new_quest_registry_remove.extend(other.quest_registry_remove)
             new_quest_status_updates.update(other.quest_status_updates)
             new_quest_opportunity_reward_intents.extend(other.quest_opportunity_reward_intents)
+            new_information_providers_update.update(other.information_providers_update)
 
             # Single values
             if other.maturity_set is not None: maturity = other.maturity_set
@@ -1075,6 +1081,7 @@ class StateUpdate:
             quest_registry_remove=new_quest_registry_remove,
             quest_status_updates=new_quest_status_updates,
             quest_opportunity_reward_intents=new_quest_opportunity_reward_intents,
+            information_providers_update=new_information_providers_update,
         )
 
     def compact(self) -> StateUpdate:
