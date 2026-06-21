@@ -169,12 +169,21 @@
   support_boundary: null
 - id: TOWN-016
   text: Shop visits resolve bounded buy/sell behavior using inventory/gold truth.
+    Reputation discount (TOWN-181) is applied symmetrically in both proposal and
+    enforcement layers before the gold_cost validation guard.
   status: verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: '`src/engine/shop.py` (`ShopSystem.enforce`)'
+  v2_evidence: >
+    `src/engine/shop.py` (`ShopSystem.enforce`) — enforcement guard now applies
+    `apply_reputation_discount(legal_total, entity.social.public_reputation)` before
+    the gold_cost < legal_total check; `src/town/shop.py` (`ShopService.buy_item`)
+    — proposal layer applies same discount after DynamicPriceService; both layers
+    import from `src/systems/economy_systems/reputation_discount.py` (TCK-20260619-E33D-REP-DISCOUNTS).
   proof_type: parity
-  test_path: '`tests_v2/parity/test_town_resolution_parity.py` (covers shop scenarios)'
+  test_path: >
+    `tests_v2/parity/test_town_resolution_parity.py` (covers shop scenarios);
+    `tests/integration/scenarios/test_macro_economy.py::test_reputation_discount_applies`
   divergence_note: null
   support_boundary: null
 - id: TOWN-017
@@ -1964,4 +1973,28 @@
     tests/unit/economy/test_gold_sink.py::test_conservation_resolver_handles_repair_fee_rejected;
     tests/integration/scenarios/test_macro_economy.py::test_gold_sink_reduces_accumulation_rate
   divergence_note: null
+  support_boundary: null
+- id: TOWN-181
+  text: >
+    Shop purchases apply a reputation-based discount: up to 20% off at maximum
+    public_reputation (2.0), scaling linearly from 0% at rep=0.0, floored to
+    1 gold minimum. Applied symmetrically in proposal layer (ShopService.buy_item)
+    and enforcement layer (ShopSystem.enforce) to ensure discounted intents pass
+    the gold_cost validation guard. Faction cross-check deferred (DEV-001).
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/systems/economy_systems/reputation_discount.py — apply_reputation_discount()
+    pure function; src/town/shop.py::ShopService.buy_item — proposal layer wiring;
+    src/engine/shop.py::ShopSystem.enforce — enforcement layer wiring;
+    docs/mechanics/03_economic_laws.md §4.1 — formula documented.
+  proof_type: parity
+  test_path: >
+    tests/integration/scenarios/test_macro_economy.py::test_reputation_discount_applies
+  divergence_note: >
+    Faction-scoped discount gating (ticket pseudocode had faction_id != shop_faction
+    guard) not implemented — no per-faction reputation dict on SocialComponent.
+    Discount applied universally based on public_reputation. Declared as DEV-001
+    in TCK-20260619-E33D-REP-DISCOUNTS plan. See docs/guidelines/v2_intentional_divergences.md.
   support_boundary: null

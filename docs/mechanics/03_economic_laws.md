@@ -81,6 +81,27 @@ Trading with shops (Buildings) is governed by liquidity and stock availability.
 *   **Cost**: `Price = Item_Base_Value * Market_Multiplier`.
 *   **Outcome**: Gold is transferred from Entity to Building; Item is transferred from Building to Entity.
 
+#### §4.1 Reputation Discount
+
+Entities with positive public reputation receive a proportional discount at all shops.
+
+**Formula:**
+
+    entity_rep  = clamp(public_reputation, 0.0, 2.0) / 2.0   # normalized [0, 1]
+    discount    = entity_rep × 0.20                            # up to 20% at max rep
+    discounted  = floor(base_cost × (1 − discount))
+    final_cost  = max(1, discounted)                           # floor: never free
+
+**Notes:**
+- `public_reputation` sourced from `SocialComponent.public_reputation` (range 0.0–2.0, default 1.0).
+- At default reputation (1.0): 10% discount.
+- At maximum reputation (2.0): 20% discount.
+- At zero or negative reputation: 0% discount (no penalty, no bonus).
+- Faction cross-check is not applied in this release (DEV-001). Discount is universal across all shops.
+- Conservation law satisfied: buyer pays less, shop receives less; net world gold unchanged.
+
+**Reference:** TCK-20260619-E33D-REP-DISCOUNTS, `src/systems/economy_systems/reputation_discount.py`.
+
 ### Selling to Shops
 *   **Rule**: The building must have enough **Gold (Liquidity)** to pay the entity.
 *   **Benefit**: `Price = Item_Base_Value * 0.5 * Market_Multiplier`.

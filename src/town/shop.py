@@ -5,6 +5,7 @@ from src.core.state import AuthoritativeState, EntityState, BuildingState, ItemS
 from src.core.updates import StateUpdate, EntityUpdate, InventoryUpdate
 from src.core.items import ItemRegistry
 from src.core.inventory import InventoryService
+from src.systems.economy_systems.reputation_discount import apply_reputation_discount
 
 class ShopService:
     """Manages buying and selling of items at town shops."""
@@ -34,6 +35,7 @@ class ShopService:
         from src.systems.economy import DynamicPriceService
         unit_price = DynamicPriceService.calculate_buy_price(item_def.value, state)
         total_cost = unit_price * quantity
+        total_cost = apply_reputation_discount(total_cost, entity.social.public_reputation)
         price_multiplier = unit_price / item_def.value if item_def.value > 0 else 1.0
         
         if entity.inventory.gold < total_cost:

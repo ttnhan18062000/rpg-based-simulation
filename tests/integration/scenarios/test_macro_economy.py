@@ -1,9 +1,10 @@
-"""Integration tests for macro-economy alert emission (Epic 3.3B) and gold sink
-mechanisms (Epic 3.3C).
+"""Integration tests for macro-economy alert emission (Epic 3.3B), gold sink
+mechanisms (Epic 3.3C), and reputation-based shop discounts (Epic 3.3D).
 
 Tickets:
-  TCK-20260619-E33B-ALERTS-REST — AC: 2000-tick run emits ≥1 INFLATION_SPIRAL event.
-  TCK-20260619-E33C-GOLD-SINK   — AC: gold sink transfers accepted in 200-tick run.
+  TCK-20260619-E33B-ALERTS-REST  — AC: 2000-tick run emits ≥1 INFLATION_SPIRAL event.
+  TCK-20260619-E33C-GOLD-SINK    — AC: gold sink transfers accepted in 200-tick run.
+  TCK-20260619-E33D-REP-DISCOUNTS — AC: reputation discount applied at shop buy.
 """
 from __future__ import annotations
 
@@ -12,6 +13,7 @@ from dataclasses import replace
 from typing import List
 
 from src.observability.events import SimulationEvent, InflationSpiralEvent, GoldHoardingEvent
+from src.systems.economy_systems.reputation_discount import apply_reputation_discount
 
 SEED = 42
 
@@ -181,3 +183,60 @@ def test_gold_sink_reduces_accumulation_rate():
         f"metric_gold_sink_ticks should be >= 1 after 200 ticks with inflation, "
         f"got {sink_ticks}. Check GoldSinkSystem.apply() is called in pipeline."
     )
+
+
+# ---------------------------------------------------------------------------
+# Epic 3.3D — Reputation-Based Shop Discounts (TCK-20260619-E33D-REP-DISCOUNTS)
+# ---------------------------------------------------------------------------
+
+def test_reputation_discount_applies():
+    """apply_reputation_discount() produces correct discounts across the full rep range.
+
+    Acceptance criteria (from ticket):
+    - Entity with public_reputation=1.6 pays 16% less  (AC: "0.8 on 0–1 scale → 16% off")
+    - Entity with neutral reputation (1.0) pays 10% less (default discount at midpoint)
+    - Entity with rep=0.0 pays full price (no discount)
+    - Floor guard: base_cost=1 never drops to 0 regardless of reputation
+    - Over-range clamp: rep > 2.0 is clamped to 2.0 (max 20% discount)
+
+    Conservation invariant: discounted_cost <= base_cost at all times (buyer never pays more).
+    No gold is created: discount reduces gold_cost only, net world gold unchanged.
+    """
+    # AC: high rep → 16% discount
+    # public_reputation=1.6 → entity_rep=1.6/2.0=0.8 → discount=0.8*0.20=0.16
+    # int(100 * (1 - 0.16)) = int(84.0) = 84
+    assert apply_reputation_discount(100, 1.6) == 84, (
+        "rep=1.6 should give 16% discount: int(100*(1-0.16))=84"
+    )
+
+    # Neutral rep → 10% discount (default public_reputation=1.0 gives 10% off)
+    # entity_rep=1.0/2.0=0.5 → discount=0.5*0.20=0.10 → int(100*0.90)=90
+    assert apply_reputation_discount(100, 1.0) == 90, (
+        "rep=1.0 should give 10% discount: int(100*(1-0.10))=90"
+    )
+
+    # Zero rep → no discount
+    assert apply_reputation_discount(100, 0.0) == 100, (
+        "rep=0.0 should give 0% discount: full price"
+    )
+
+    # Floor guard: base_cost=1 with max rep must not drop to 0
+    assert apply_reputation_discount(1, 2.0) == 1, (
+        "Floor guard: max(1, int(1*(1-0.20)))=max(1,0)=1; must not be 0"
+    )
+
+    # Over-range clamp: rep=3.0 clamped to 2.0 → same as max (20% discount)
+    assert apply_reputation_discount(100, 3.0) == 80, (
+        "rep=3.0 should clamp to 2.0 → 20% discount: int(100*0.80)=80"
+    )
+
+    # Negative rep → clamped to 0 → no discount
+    assert apply_reputation_discount(100, -0.5) == 100, (
+        "Negative rep clamped to 0.0 → no discount"
+    )
+
+    # Conservation invariant: discounted cost never exceeds base cost
+    for rep in [0.0, 0.5, 1.0, 1.5, 2.0, 2.5]:
+        result = apply_reputation_discount(100, rep)
+        assert result <= 100, f"rep={rep}: discounted cost {result} exceeded base 100 (conservation violation)"
+        assert result >= 1, f"rep={rep}: discounted cost {result} fell below floor 1"

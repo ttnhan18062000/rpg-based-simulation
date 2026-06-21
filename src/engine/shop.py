@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, Dict
 from dataclasses import replace
 
 from src.core.updates import EntityUpdate
+from src.systems.economy_systems.reputation_discount import apply_reputation_discount
 
 if TYPE_CHECKING:
     from src.core.state import AuthoritativeState, EntityState
@@ -78,8 +79,8 @@ class ShopSystem:
                         # Re-calculate Truth
                         legal_price = DynamicPriceService.calculate_buy_price(item_def.value, state)
                         quantity = sum(s.quantity for s in intent.items_add)
-                        legal_total = legal_price * quantity
-                        
+                        legal_total = apply_reputation_discount(legal_price * quantity, entity.social.public_reputation)
+
                         if intent.gold_cost < legal_total:
                             # Price too low! Possible exploit or stale simulation.
                             from src.core.enums import ReasonCode

@@ -170,4 +170,16 @@ The following legacy behaviors have been intentionally omitted or retired.
 > Items marked **UNSUPPORTED** are not currently present in the hardening baseline. They may be restored once the core state machine is certified.
 
 ---
-*Last updated: 2026-05-01 (legacy retirement pass).*
+
+## 5. Economy Divergences
+
+### DEV-001 — Faction-Scoped Discount Gating (TCK-20260619-E33D-REP-DISCOUNTS)
+- **Subsystem**: Economy / Shop Pricing
+- **Original Design Intent**: The ticket pseudocode specified `if faction_id != shop_faction: return base_price` — discounts only applied when the buyer's faction matched the shop's faction.
+- **Actual Behavior**: Discount is applied universally based on `entity.social.public_reputation` only. No per-faction gating is performed.
+- **Rationale**: **Bounded** — `SocialComponent` has no `faction_rep: Dict[str, float]` field. Adding one is a schema change outside the scope of this ticket. Faction-scoped discounts are deferred to a future ticket.
+- **Verification**: `tests/integration/scenarios/test_macro_economy.py::test_reputation_discount_applies`
+- **Status**: ACTIVE (faction-gating deferred)
+
+---
+*Last updated: 2026-06-21 (DEV-001 reputation discount gating).*

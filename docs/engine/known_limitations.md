@@ -25,6 +25,10 @@ This document records the current technical limitations, unsupported features, a
 - **Material-Only Blockers**: The `StrategicIntelligenceSystem` only recognizes and resolves crafting blockers for "Material" resources. Social, capability, or plot-based blockers are unsupported.
 - **Location-Only Leads**: Strategic leads are restricted to coordinate-based locations. Concept or person-based leads are not yet modeled in the supported slice.
 
+### 1.4 Commerce Limitations
+
+- **Reputation-based shop discounts** — Previously unsupported. **Now implemented** as of TCK-20260619-E33D-REP-DISCOUNTS. Formula and mechanics: see `docs/mechanics/03_economic_laws.md §4.1`. Faction-scoped discounts remain out of scope (no per-faction reputation dict on `SocialComponent` — DEV-001).
+
 ## 2. Runtime / Performance Constraints
 
 ### 2.1 Execution Modes
