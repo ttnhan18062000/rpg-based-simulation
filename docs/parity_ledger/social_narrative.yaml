@@ -2389,3 +2389,27 @@
   test_path: tests/unit/social/test_group_lifecycle_fields.py
   divergence_note: null
   support_boundary: null
+- id: SOC-228
+  text: >
+    PartyLifecycleService.check_leadership() evaluates sociability-based leadership
+    election every LEADERSHIP_CHECK_INTERVAL (100) ticks. If the highest-sociability
+    member exceeds the current leader's sociability by >= 0.2, the new leader is
+    elected (lowest entity id as tiebreaker). A LeadershipChangedEvent (category=social,
+    event_type=leadership_changed) is emitted with old_leader_id, new_leader_id,
+    group_id, and morale payload. Sociability is read from
+    entity.identity.personality.sociability. No election fires when the interval
+    has not elapsed.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/systems/social_systems/party_lifecycle.py (PartyLifecycleService.check_leadership);
+    src/observability/events.py (LeadershipChangedEvent);
+    src/engine/pipeline_phases/groups.py (GroupPhase.resolve wires lifecycle pass).
+    (TCK-20260619-E41B-LEADERSHIP)
+  proof_type: parity
+  test_path: >
+    pytest tests/unit/social/test_party_lifecycle.py::test_leadership_election_picks_highest_sociability -x -v;
+    pytest tests/unit/social/test_party_lifecycle.py -x -v
+  divergence_note: null
+  support_boundary: null

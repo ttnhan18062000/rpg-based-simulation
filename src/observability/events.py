@@ -267,3 +267,33 @@ class GoldHoardingEvent(SimulationEvent):
             region_str = f" in region {region}" if region else ""
             data["message"] = f"Gold hoarding detected{region_str}: gini={gini:.4f}"
         super().__init__(**data)
+
+
+# ---------------------------------------------------------------------------
+# Party lifecycle events (TCK-20260619-E41B-LEADERSHIP)
+# ---------------------------------------------------------------------------
+
+class LeadershipChangedEvent(SimulationEvent):
+    """Emitted when party leadership changes due to sociability-based election.
+
+    Logic ID: SOC-228 (Leadership election emits LeadershipChangedEvent on transition)
+    """
+    group_id: int
+    old_leader_id: int
+    new_leader_id: int
+    morale_delta: float = 0.1
+    event_type: str = "leadership_changed"
+    event_category: EventCategory = "social"
+    severity: EventSeverity = "INFO"
+    source_system: str = "party_lifecycle_service"
+    message: str = ""
+
+    def __init__(self, **data: Any) -> None:
+        if "message" not in data or not data["message"]:
+            g = data.get("group_id")
+            old = data.get("old_leader_id")
+            new = data.get("new_leader_id")
+            data["message"] = (
+                f"Group {g} leadership transferred from entity {old} to entity {new}"
+            )
+        super().__init__(**data)
