@@ -213,3 +213,4 @@
 {"run_id":"TCK-20260619-E23D-HERO-MATCHING","start_ts":"2026-06-20T14:03:04Z","end_ts":"2026-06-20T14:15:13Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":9}
 {"run_id":"TCK-20260619-E31A-SCENARIO-SERVICE","start_ts":"2026-06-20T14:18:57Z","end_ts":"2026-06-20T14:41:12Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":9}
 {"run_id": "TCK-20260619-E31B-OBJECTIVE-FSM", "ticket_id": "TCK-20260619-E31B-OBJECTIVE-FSM", "ts": "2026-06-20T14:55:52Z", "seq": 5, "status": "completed", "tier": "standard", "agent": "claude-sonnet-4-6", "summary": "Implemented ObjectiveEvaluator, stall detector (STALL_THRESHOLD=50), and _evaluate_after_tick() wired into _run_loop() and step(); 67 tests pass."}
+{"run_id":"TCK-20260619-E31B-OBJECTIVE-FSM","start_ts":"2026-06-20T14:48:05Z","end_ts":"2026-06-21T01:22:10Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":9}
