@@ -232,3 +232,4 @@
 {"run_id":"run-E41B-LEADERSHIP-20260621","start_ts":"2026-06-21T06:00:00Z","end_ts":"2026-06-21T06:30:00Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":1}
 {"run_id":"TCK-20260619-E41C-20260621-001","start_ts":"2026-06-21T06:45:00Z","end_ts":"2026-06-21T07:00:00Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":1}
 {"run_id":"E41D-20260621-001","start_ts":"2026-06-21T07:30:00Z","end_ts":"2026-06-21T08:00:00Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":1}
+{"run_id":"TCK-20260619-E42A-INFO-NEED-run-001","start_ts":"2026-06-21T09:00:00Z","end_ts":"2026-06-21T09:20:00Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":1}

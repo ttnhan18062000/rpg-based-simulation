@@ -126,6 +126,7 @@ class ProjectKind(str, Enum):
     TRAINING = "training"
     HARVESTING = "harvesting"
     INFORMATION = "information"
+    INFORMATION_SEEKING = "information_seeking"
     TRAVEL = "travel"
 
 
