@@ -2,15 +2,16 @@
 # src/domains/demographics/cohort.py
 # Epic 5.2A: PopulationCohort durable model + DemographicCycleService birth/death cycle.
 # Epic 5.2B: Migration pressure + cohort movement.
-# TCK-20260619-E52A-COHORT-MODEL, TCK-20260619-E52B-MIGRATION
+# Epic 5.2C: Age bracket classification + elder stat modifiers.
+# TCK-20260619-E52A-COHORT-MODEL, TCK-20260619-E52B-MIGRATION, TCK-20260619-E52C-AGE-ADVANCEMENT
 from __future__ import annotations
 
 from dataclasses import dataclass, replace
-from typing import TYPE_CHECKING, Dict, List, Tuple
+from typing import TYPE_CHECKING, Dict, List, Optional, Tuple
 
 if TYPE_CHECKING:
-    from src.core.state import AuthoritativeState, RegionState
-    from src.core.updates import StateUpdate, WorldUpdate
+    from src.core.state import AuthoritativeState, AttributeComponent, RegionState
+    from src.core.updates import EntityUpdate, StateUpdate, WorldUpdate
 
 
 @dataclass(frozen=True, slots=True)
@@ -40,6 +41,69 @@ class PopulationCohort:
     birth_rate: float = 0.02          # births per 200-tick cycle as fraction of count
     mortality_rate: float = 0.01      # deaths per 200-tick cycle as fraction of count
     migration_threshold: float = 0.7  # scarcity above this → emigrate (E52B)
+
+
+# ---------------------------------------------------------------------------
+# E52C: Age bracket classification + elder attribute modifiers
+# ---------------------------------------------------------------------------
+
+def get_age_bracket(age_ticks: int) -> str:
+    """
+    Return the age bracket for an entity given its current age in ticks.
+
+    Bracket thresholds (spec: TCK-20260619-E52C-AGE-ADVANCEMENT §Scope):
+        age_ticks < 3000  → "young"
+        age_ticks < 7000  → "adult"
+        age_ticks ≥ 7000  → "elder"
+
+    Pure function — deterministic, no state.
+    """
+    if age_ticks < 3000:
+        return "young"
+    if age_ticks < 7000:
+        return "adult"
+    return "elder"
+
+
+def compute_elder_attribute_update(
+    entity_id: int,
+    attrs: "AttributeComponent",
+    age_ticks: int,
+) -> "Optional[EntityUpdate]":
+    """
+    Compute elder-tier attribute modifiers for one entity.
+
+    Returns None for non-elder entities (age_ticks < 7000).
+    Returns an EntityUpdate containing an AttributeUpdate for elder entities.
+
+    Modifier mapping (Mechanics Bible §1, Chapter 01 — attributes scale 1–99):
+      combat_effectiveness *= 0.7
+          → strength_delta = -int(attrs.strength * 0.3)
+          → agility_delta  = -int(attrs.agility  * 0.3)
+      mortality_rate *= 2.0  (increased biological mortality pressure)
+          → vitality_delta  = -int(attrs.vitality  * 0.5)
+          → endurance_delta = -int(attrs.endurance * 0.5)
+      knowledge_reputation_weight *= 1.3
+          → wisdom_delta   = int(attrs.wisdom   * 0.3)
+          → charisma_delta = int(attrs.charisma * 0.3)
+
+    All deltas are integer-rounded (truncation toward zero), keeping attributes
+    within the 1–99 mechanic range enforced by the apply pipeline.
+    """
+    from src.core.updates import AttributeUpdate, EntityUpdate
+
+    if get_age_bracket(age_ticks) != "elder":
+        return None
+
+    attr_update = AttributeUpdate(
+        strength_delta=-int(attrs.strength * 0.3),
+        agility_delta=-int(attrs.agility * 0.3),
+        vitality_delta=-int(attrs.vitality * 0.5),
+        endurance_delta=-int(attrs.endurance * 0.5),
+        wisdom_delta=int(attrs.wisdom * 0.3),
+        charisma_delta=int(attrs.charisma * 0.3),
+    )
+    return EntityUpdate(entity_id=entity_id, attributes=attr_update)
 
 
 # ---------------------------------------------------------------------------

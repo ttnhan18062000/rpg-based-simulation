@@ -1,5 +1,5 @@
 ---
-status: open
+status: done
 layer: world
 authority: P1
 audience: agent
@@ -15,7 +15,7 @@ tags: [demographics, age-advancement, elder, biological-modifier, phase-5]
 Epic 5.2C · Entity Age Bracket Advancement + Elder Modifiers
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -71,6 +71,9 @@ pytest tests/unit/world/test_demographics.py::test_age_bracket_returns_correct_b
 pytest tests/unit/world/test_demographics.py::test_elder_modifier_reduces_combat_effectiveness -x -v
 ```
 ## Files Changed
-_To be filled on completion._
+- `src/domains/demographics/cohort.py` — Added `get_age_bracket()` and `compute_elder_attribute_update()`; updated imports (Optional, AttributeComponent, EntityUpdate)
+- `tests/unit/world/test_demographics.py` — Added 6 E52C tests: `test_age_bracket_returns_correct_bracket`, `test_elder_modifier_reduces_combat_effectiveness`, `test_non_elder_returns_none`, `test_elder_knowledge_bonus_positive`, `test_elder_mortality_modifier_reduces_vitality_endurance`, `test_elder_modifier_entity_id_preserved`
+- `docs/parity_ledger/world_dynamics.yaml` — Added WORLD-DEMO-003 (bracket classification) and WORLD-DEMO-004 (elder modifiers)
+
 ## Completion Summary
-_To be filled on completion._
+Implemented Epic 5.2C. Added `get_age_bracket(age_ticks)` pure function with thresholds (young < 3000, adult 3000–6999, elder ≥ 7000) and `compute_elder_attribute_update()` which returns an `EntityUpdate` carrying an `AttributeUpdate` for elder entities (STR/AGI −30%, VIT/END −50%, WIS/CHA +30%). Both acceptance criteria pass. 51/51 unit tests and 2/2 integration tests pass. Parity ledger updated with WORLD-DEMO-003 and WORLD-DEMO-004.

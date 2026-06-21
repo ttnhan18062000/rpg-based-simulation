@@ -1,15 +1,18 @@
-# Tests for TCK-20260619-E52A-COHORT-MODEL, TCK-20260619-E52B-MIGRATION
-# Covers: PopulationCohort model, DemographicCycleService birth/death cycle, migration pressure
+# Tests for TCK-20260619-E52A-COHORT-MODEL, TCK-20260619-E52B-MIGRATION, TCK-20260619-E52C-AGE-ADVANCEMENT
+# Covers: PopulationCohort model, DemographicCycleService birth/death cycle, migration pressure,
+#         age bracket classification, elder attribute modifiers
 import pytest
 from dataclasses import replace
 
-from src.core.state import AuthoritativeState, RegionState, ResourceNodeState
-from src.core.updates import StateUpdate, WorldUpdate
+from src.core.state import AuthoritativeState, AttributeComponent, RegionState, ResourceNodeState
+from src.core.updates import AttributeUpdate, EntityUpdate, StateUpdate, WorldUpdate
 from src.domains.demographics.cohort import (
     PopulationCohort,
     DemographicCycleService,
+    compute_elder_attribute_update,
     compute_regional_scarcity,
     find_adjacent_regions,
+    get_age_bracket,
 )
 from src.domains.world_emergence.schema import WorldEventCategory
 
@@ -603,3 +606,101 @@ class TestMigrationPressure:
         result = DemographicCycleService.process_demographics(state, tick=199)
 
         assert result.is_noop()
+
+
+# ---------------------------------------------------------------------------
+# E52C: Age bracket classification — acceptance criterion
+# ---------------------------------------------------------------------------
+
+def test_age_bracket_returns_correct_bracket():
+    """
+    Acceptance criterion: test_age_bracket_returns_correct_bracket
+    Boundary conditions for get_age_bracket:
+      age_ticks < 3000  → "young"
+      3000 ≤ age_ticks < 7000 → "adult"
+      age_ticks ≥ 7000 → "elder"
+    """
+    # Young bracket
+    assert get_age_bracket(0) == "young"
+    assert get_age_bracket(1) == "young"
+    assert get_age_bracket(2999) == "young"
+
+    # Adult bracket
+    assert get_age_bracket(3000) == "adult"
+    assert get_age_bracket(5000) == "adult"
+    assert get_age_bracket(6999) == "adult"
+
+    # Elder bracket
+    assert get_age_bracket(7000) == "elder"
+    assert get_age_bracket(10000) == "elder"
+    assert get_age_bracket(99999) == "elder"
+
+
+# ---------------------------------------------------------------------------
+# E52C: Elder modifier via AttributeUpdate — acceptance criterion
+# ---------------------------------------------------------------------------
+
+def test_elder_modifier_reduces_combat_effectiveness():
+    """
+    Acceptance criterion: test_elder_modifier_reduces_combat_effectiveness
+    An elder entity (age_ticks=7000) with strength=10, agility=10 receives
+    negative strength_delta and agility_delta in the returned EntityUpdate.
+    Modifiers are applied via AttributeUpdate — no direct mutation of frozen state.
+    """
+    attrs = AttributeComponent(strength=10, agility=10)
+    result = compute_elder_attribute_update(entity_id=42, attrs=attrs, age_ticks=7000)
+
+    assert result is not None
+    assert isinstance(result, EntityUpdate)
+    assert result.entity_id == 42
+    assert result.attributes is not None
+    assert isinstance(result.attributes, AttributeUpdate)
+    # combat_effectiveness *= 0.7 → STR and AGI reduced by 30%
+    assert result.attributes.strength_delta < 0
+    assert result.attributes.agility_delta < 0
+    # Expected: -int(10 * 0.3) = -3
+    assert result.attributes.strength_delta == -3
+    assert result.attributes.agility_delta == -3
+
+
+def test_non_elder_returns_none():
+    """Non-elder entities (age_ticks < 7000) produce no modifier."""
+    attrs = AttributeComponent(strength=10, agility=10)
+    assert compute_elder_attribute_update(entity_id=1, attrs=attrs, age_ticks=0) is None
+    assert compute_elder_attribute_update(entity_id=1, attrs=attrs, age_ticks=2999) is None
+    assert compute_elder_attribute_update(entity_id=1, attrs=attrs, age_ticks=6999) is None
+
+
+def test_elder_knowledge_bonus_positive():
+    """Elder entity knowledge bonus: wisdom_delta > 0, charisma_delta > 0."""
+    attrs = AttributeComponent(wisdom=10, charisma=10)
+    result = compute_elder_attribute_update(entity_id=7, attrs=attrs, age_ticks=7000)
+
+    assert result is not None
+    # knowledge_reputation_weight *= 1.3 → WIS and CHA +30%
+    assert result.attributes.wisdom_delta > 0
+    assert result.attributes.charisma_delta > 0
+    # Expected: int(10 * 0.3) = 3
+    assert result.attributes.wisdom_delta == 3
+    assert result.attributes.charisma_delta == 3
+
+
+def test_elder_mortality_modifier_reduces_vitality_endurance():
+    """Elder mortality_rate *= 2.0 → vitality and endurance reduced by 50%."""
+    attrs = AttributeComponent(vitality=10, endurance=10)
+    result = compute_elder_attribute_update(entity_id=5, attrs=attrs, age_ticks=9000)
+
+    assert result is not None
+    assert result.attributes.vitality_delta < 0
+    assert result.attributes.endurance_delta < 0
+    # Expected: -int(10 * 0.5) = -5
+    assert result.attributes.vitality_delta == -5
+    assert result.attributes.endurance_delta == -5
+
+
+def test_elder_modifier_entity_id_preserved():
+    """The EntityUpdate carries the correct entity_id."""
+    attrs = AttributeComponent()
+    result = compute_elder_attribute_update(entity_id=999, attrs=attrs, age_ticks=7000)
+    assert result is not None
+    assert result.entity_id == 999
