@@ -10,6 +10,7 @@ from src.core.state import AuthoritativeState
 from src.domains.world_emergence.schema import (
     WorldEventAggregate, RegionalPressure, ResourceScarcitySignal, ServicePressure, WorldEventCategory
 )
+from src.domains.demographics.cohort import compute_population_density
 
 class RegionalPressureModel:
     """
@@ -101,14 +102,19 @@ class RegionalPressureModel:
                         dep_cnt += agg.count
 
             if harv_cnt > 0 or dep_cnt > 0:
-                res_intensity = min(1.0, harv_cnt * 0.05 + dep_cnt * 0.15)
+                # E52D: population density demand signal — high-population regions
+                # consume more resources, amplifying base resource pressure.
+                # demand_multiplier = 1.0 + (population_density * 0.5)
+                # (spec: TCK-20260619-E52D-DENSITY-SIGNAL §Scope)
+                demand_multiplier = 1.0 + (compute_population_density(reg_state) * 0.5)
+                res_intensity = min(1.0, (harv_cnt * 0.05 + dep_cnt * 0.15) * demand_multiplier)
                 pressures.append(RegionalPressure(
                     region_id=r_id,
                     pressure_kind="resource",
                     intensity=res_intensity,
                     confidence=0.9,
-                    source_aggregates=(f"harvested:{harv_cnt}", f"depleted:{dep_cnt}"),
-                    reason=f"{harv_cnt} harvests, {dep_cnt} depleted nodes"
+                    source_aggregates=(f"harvested:{harv_cnt}", f"depleted:{dep_cnt}", f"density_mult:{demand_multiplier:.3f}"),
+                    reason=f"{harv_cnt} harvests, {dep_cnt} depleted nodes (demand_multiplier={demand_multiplier:.3f})"
                 ))
 
             # 3. Camp pressure

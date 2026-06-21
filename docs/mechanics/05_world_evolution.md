@@ -77,7 +77,44 @@ Regions can physically transform their "Kind" over long periods.
 
 ---
 
-## 5. Calamities & World Threats
+## 5. Demographic Cohort Cycle
+
+Each region tracks an abstract population divided into three age brackets: `young`, `adult`, and `elder`. The demographic cycle runs every **200 ticks** (`DemographicCycleService.COHORT_INTERVAL`).
+
+### Birth/Death Law
+```
+net_change = int(cohort.count * birth_rate) - int(cohort.count * mortality_rate)
+new_count  = max(0, cohort.count + net_change)
+```
+Default rates: `birth_rate = 0.02`, `mortality_rate = 0.01` → net +1% per 200 ticks.
+
+### Migration Law
+When `scarcity(region) > cohort.migration_threshold` (default 0.7), **30%** of that cohort (min 1) emigrates to the lowest-scarcity adjacent region. Adjacency requires a shared boundary edge with non-degenerate overlap on the other axis.
+
+### Age Bracket Thresholds (Entity-Level)
+| `age_ticks` range | Bracket | Modifier |
+|---|---|---|
+| < 3000 | young | none |
+| 3000–6999 | adult | none |
+| ≥ 7000 | elder | STR/AGI −30%, VIT/END −50%, WIS/CHA +30% |
+
+### Population Density Demand Signal (E52D)
+High-population regions amplify resource demand pressure in `RegionalPressureModel`:
+
+```
+population_density = total_cohort_count / max(1, region_area)
+demand_multiplier  = 1.0 + (population_density * 0.5)
+resource_pressure_intensity = min(1.0, base_intensity * demand_multiplier)
+```
+
+This closes the demographic feedback loop: population growth → density increase → resource pressure increase → scarcity increase → migration or constraint.
+
+**Source:** `src/domains/demographics/cohort.py`, `src/domains/world_emergence/models.py`
+**Contract:** `docs/world/demographics_contract.md`
+
+---
+
+## 6. Calamities & World Threats
 When the global `Maturity` and regional `Trauma` scores are sufficiently high, the simulation triggers "Macro Events."
 *   **Boss Spawns**: Unique, high-threat entities appear in traumatized regions.
 *   **Raids**: Faction-based attacks on town centers or resource hubs.

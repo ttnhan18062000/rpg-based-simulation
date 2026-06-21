@@ -1,6 +1,7 @@
 # Tests for TCK-20260619-E52A-COHORT-MODEL, TCK-20260619-E52B-MIGRATION, TCK-20260619-E52C-AGE-ADVANCEMENT
+# TCK-20260619-E52D-DENSITY-SIGNAL
 # Covers: PopulationCohort model, DemographicCycleService birth/death cycle, migration pressure,
-#         age bracket classification, elder attribute modifiers
+#         age bracket classification, elder attribute modifiers, population density signal
 import pytest
 from dataclasses import replace
 
@@ -10,6 +11,7 @@ from src.domains.demographics.cohort import (
     PopulationCohort,
     DemographicCycleService,
     compute_elder_attribute_update,
+    compute_population_density,
     compute_regional_scarcity,
     find_adjacent_regions,
     get_age_bracket,
@@ -704,3 +706,77 @@ def test_elder_modifier_entity_id_preserved():
     result = compute_elder_attribute_update(entity_id=999, attrs=attrs, age_ticks=7000)
     assert result is not None
     assert result.entity_id == 999
+
+
+# ---------------------------------------------------------------------------
+# E52D: compute_population_density — TC-D5-01 through TC-D5-04
+# ---------------------------------------------------------------------------
+
+class TestComputePopulationDensity:
+    """Tests for compute_population_density() pure function.
+
+    Spec ref: TCK-20260619-E52D-DENSITY-SIGNAL §Scope
+    """
+
+    def _make_region(self, cohorts: dict | None = None, bounds: tuple = (0, 0, 100, 100)) -> RegionState:
+        return RegionState(
+            id="r1",
+            name="Region r1",
+            bounds=bounds,
+            population_cohorts=cohorts or {},
+        )
+
+    def test_no_cohorts_returns_zero(self):
+        """TC-D5-01: region with no cohorts → density = 0.0"""
+        region = self._make_region(cohorts={})
+        assert compute_population_density(region) == 0.0
+
+    def test_single_bracket_density(self):
+        """TC-D5-02: single bracket count=100, area=100×100=10000 → density=0.01"""
+        cohort = PopulationCohort(bracket="adult", count=100)
+        region = self._make_region(cohorts={"adult": cohort}, bounds=(0, 0, 100, 100))
+        result = compute_population_density(region)
+        assert result == pytest.approx(0.01)
+
+    def test_all_brackets_summed(self):
+        """TC-D5-03: young=50 + adult=100 + elder=25 = 175 total; area=100×100=10000 → density=0.0175"""
+        cohorts = {
+            "young": PopulationCohort(bracket="young", count=50),
+            "adult": PopulationCohort(bracket="adult", count=100),
+            "elder": PopulationCohort(bracket="elder", count=25),
+        }
+        region = self._make_region(cohorts=cohorts, bounds=(0, 0, 100, 100))
+        result = compute_population_density(region)
+        assert result == pytest.approx(0.0175)
+
+    def test_degenerate_zero_area_no_division_error(self):
+        """TC-D5-04: bounds=(0,0,0,0) → area=0 → clamped to max(1,0)=1 → no ZeroDivisionError"""
+        cohort = PopulationCohort(bracket="young", count=10)
+        region = self._make_region(cohorts={"young": cohort}, bounds=(0, 0, 0, 0))
+        result = compute_population_density(region)
+        # area=0 → max(1,0)=1 → density = 10 / 1 = 10.0
+        assert result == pytest.approx(10.0)
+
+    def test_high_pop_higher_density_than_low_pop(self):
+        """Higher population count → higher density (same area)."""
+        high_cohort = PopulationCohort(bracket="adult", count=500)
+        low_cohort = PopulationCohort(bracket="adult", count=10)
+        high_region = self._make_region(cohorts={"adult": high_cohort}, bounds=(0, 0, 100, 100))
+        low_region = self._make_region(cohorts={"adult": low_cohort}, bounds=(0, 0, 100, 100))
+        assert compute_population_density(high_region) > compute_population_density(low_region)
+
+    def test_demand_multiplier_formula(self):
+        """demand_multiplier = 1.0 + (density * 0.5); zero pop → multiplier = 1.0."""
+        zero_cohort = PopulationCohort(bracket="adult", count=0)
+        region_zero = self._make_region(cohorts={"adult": zero_cohort})
+        density_zero = compute_population_density(region_zero)
+        assert density_zero == 0.0
+        multiplier_zero = 1.0 + (density_zero * 0.5)
+        assert multiplier_zero == pytest.approx(1.0)
+
+        # non-zero pop → multiplier > 1.0
+        pop_cohort = PopulationCohort(bracket="adult", count=200)
+        region_pop = self._make_region(cohorts={"adult": pop_cohort}, bounds=(0, 0, 100, 100))
+        density_pop = compute_population_density(region_pop)
+        multiplier_pop = 1.0 + (density_pop * 0.5)
+        assert multiplier_pop > 1.0

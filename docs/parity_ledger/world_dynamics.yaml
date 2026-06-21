@@ -1077,3 +1077,19 @@
   test_path: tests/unit/world/test_demographics.py::test_elder_modifier_reduces_combat_effectiveness
   divergence_note: null
   support_boundary: null
+- id: WORLD-DEMO-005
+  text: 'Population density feeds into RegionalPressureModel as a demand signal.
+    demand_multiplier = 1.0 + (population_density * 0.5), where population_density
+    = total_cohort_count / max(1, region_area). Applied to resource pressure intensity:
+    res_intensity = min(1.0, base_intensity * demand_multiplier). Zero-population
+    regions receive demand_multiplier = 1.0 (no amplification).'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: 'src/domains/demographics/cohort.py (compute_population_density);
+    src/domains/world_emergence/models.py (RegionalPressureModel.evaluate — resource
+    pressure section)'
+  proof_type: parity
+  test_path: tests/integration/scenarios/test_demographics.py::test_high_population_region_higher_resource_demand
+  divergence_note: null
+  support_boundary: null

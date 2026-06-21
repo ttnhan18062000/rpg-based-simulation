@@ -1,15 +1,20 @@
-"""Integration tests for Epic 5.2B — Migration Pressure + Cohort Movement.
+"""Integration tests for Epic 5.2B–E52D — Migration Pressure + Cohort Movement + Density Signal.
 
-Ticket: TCK-20260619-E52B-MIGRATION
-AC: test_cohort_migrates_on_scarcity
+Tickets: TCK-20260619-E52B-MIGRATION, TCK-20260619-E52D-DENSITY-SIGNAL
+AC: test_cohort_migrates_on_scarcity, test_2000_tick_run_produces_cohort_demographic_change
 """
 from __future__ import annotations
 
 import pytest
 
 from src.core.state import AuthoritativeState, RegionState, ResourceNodeState
-from src.domains.demographics.cohort import PopulationCohort, DemographicCycleService
-from src.domains.world_emergence.schema import WorldEventCategory
+from src.domains.demographics.cohort import (
+    PopulationCohort,
+    DemographicCycleService,
+    compute_population_density,
+)
+from src.domains.world_emergence.schema import WorldEventCategory, WorldEventAggregate
+from src.domains.world_emergence.models import RegionalPressureModel
 
 
 # ---------------------------------------------------------------------------
@@ -130,3 +135,152 @@ def test_cohort_migrates_picks_lower_scarcity_target():
 
     # r2 gets no migrants
     assert "r2" not in result.world_updates
+
+
+# ---------------------------------------------------------------------------
+# E52D: Density signal integration tests
+# ---------------------------------------------------------------------------
+
+@pytest.mark.slow
+def test_2000_tick_run_produces_cohort_demographic_change():
+    """
+    AC test: TCK-20260619-E52D-DENSITY-SIGNAL
+
+    Runs DemographicCycleService for 2000 ticks (10 cycles at COHORT_INTERVAL=200).
+    Region has birth_rate > mortality_rate so population grows each cycle.
+
+    Verifies:
+    1. Cohort count changes over 2000 ticks (demographic cycle is active).
+    2. A high-population region produces demand_multiplier > 1.0 via
+       compute_population_density() → reflecting density signal is wired.
+    3. A zero-population region produces demand_multiplier == 1.0.
+    """
+    from dataclasses import replace as dc_replace
+
+    # Set up region with growing population
+    cohort = PopulationCohort(
+        bracket="adult",
+        count=1000,
+        birth_rate=0.05,    # 5% births per cycle
+        mortality_rate=0.01, # 1% deaths per cycle → net +4% per cycle
+        migration_threshold=1.1,  # above 1.0 — no migration fires
+    )
+    r_growing = _make_region("r_growing", cohorts={"adult": cohort}, bounds_=(0, 0, 100, 100))
+    r_empty = _make_region("r_empty", cohorts={}, bounds_=(200, 0, 300, 100))
+
+    state = _make_state({"r_growing": r_growing, "r_empty": r_empty})
+
+    # Advance 2000 ticks (10 full COHORT_INTERVAL cycles)
+    current_state = state
+    for tick in range(1, 2001):
+        result = DemographicCycleService.process_demographics(current_state, tick=tick)
+        if not result.is_noop():
+            # Apply cohort updates to state so next cycle sees updated counts
+            new_regions = dict(current_state.regions)
+            for rid, wu in result.world_updates.items():
+                if wu.population_cohorts_set is not None and rid in new_regions:
+                    new_regions[rid] = dc_replace(
+                        new_regions[rid],
+                        population_cohorts=wu.population_cohorts_set,
+                    )
+            current_state = dc_replace(current_state, tick=tick, regions=new_regions)
+
+    # 1. Growing cohort has changed count (grown over 10 cycles)
+    final_count = current_state.regions["r_growing"].population_cohorts["adult"].count
+    assert final_count > 1000, f"Expected growth beyond 1000, got {final_count}"
+
+    # 2. High-population region density > 0 → demand_multiplier > 1.0
+    density_growing = compute_population_density(current_state.regions["r_growing"])
+    assert density_growing > 0.0, "Growing region must have positive density"
+    demand_multiplier_growing = 1.0 + (density_growing * 0.5)
+    assert demand_multiplier_growing > 1.0, (
+        f"High-population region demand_multiplier must exceed 1.0, got {demand_multiplier_growing}"
+    )
+
+    # 3. Empty region density == 0 → demand_multiplier == 1.0
+    density_empty = compute_population_density(current_state.regions["r_empty"])
+    assert density_empty == 0.0
+    demand_multiplier_empty = 1.0 + (density_empty * 0.5)
+    assert demand_multiplier_empty == pytest.approx(1.0)
+
+
+@pytest.mark.slow
+def test_high_population_region_higher_resource_demand():
+    """
+    AC test: high-population region generates measurably higher resource pressure
+    than zero-population region via RegionalPressureModel.
+
+    Both regions have identical harvesting activity.
+    High-pop region → demand_multiplier > 1.0 → higher resource pressure intensity.
+    Zero-pop region → demand_multiplier == 1.0 → baseline resource pressure intensity.
+    """
+    from src.domains.world_emergence.schema import WorldEventAggregate, WorldEventCategory
+
+    cohort = PopulationCohort(bracket="adult", count=2000)
+    r_high_pop = _make_region("r_high", cohorts={"adult": cohort}, bounds_=(0, 0, 100, 100))
+    r_zero_pop = _make_region("r_zero", cohorts={}, bounds_=(200, 0, 300, 100))
+
+    state = _make_state({"r_high": r_high_pop, "r_zero": r_zero_pop})
+
+    # Both regions have identical harvesting activity (5 harvests, 1 depletion)
+    aggregates = (
+        WorldEventAggregate(
+            region_id="r_high",
+            category=WorldEventCategory.RESOURCE_HARVESTED,
+            subject="wood",
+            count=5,
+            severity_sum=1.0,
+            first_tick=1,
+            last_tick=100,
+        ),
+        WorldEventAggregate(
+            region_id="r_high",
+            category=WorldEventCategory.RESOURCE_DEPLETED,
+            subject="wood",
+            count=1,
+            severity_sum=1.0,
+            first_tick=50,
+            last_tick=100,
+        ),
+        WorldEventAggregate(
+            region_id="r_zero",
+            category=WorldEventCategory.RESOURCE_HARVESTED,
+            subject="wood",
+            count=5,
+            severity_sum=1.0,
+            first_tick=1,
+            last_tick=100,
+        ),
+        WorldEventAggregate(
+            region_id="r_zero",
+            category=WorldEventCategory.RESOURCE_DEPLETED,
+            subject="wood",
+            count=1,
+            severity_sum=1.0,
+            first_tick=50,
+            last_tick=100,
+        ),
+    )
+
+    pressures = RegionalPressureModel.evaluate(state, aggregates)
+
+    high_resource = next(
+        (p for p in pressures if p.region_id == "r_high" and p.pressure_kind == "resource"),
+        None,
+    )
+    zero_resource = next(
+        (p for p in pressures if p.region_id == "r_zero" and p.pressure_kind == "resource"),
+        None,
+    )
+
+    assert high_resource is not None, "r_high must have a resource pressure"
+    assert zero_resource is not None, "r_zero must have a resource pressure"
+
+    assert high_resource.intensity > zero_resource.intensity, (
+        f"High-pop region resource intensity ({high_resource.intensity:.4f}) must exceed "
+        f"zero-pop region ({zero_resource.intensity:.4f})"
+    )
+    # Verify density_mult is recorded in source_aggregates
+    assert any("density_mult" in s for s in high_resource.source_aggregates), (
+        "density_mult must appear in source_aggregates for traceability"
+    )

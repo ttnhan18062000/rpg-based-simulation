@@ -131,6 +131,44 @@ Environment effects are applied as temporary per-tick modifiers — they do not 
 
 ---
 
+## Population Density Demand Signal (E52D)
+
+The population density signal is the feedback path from the demographic cohort model into the regional pressure system. It is computed by `RegionalPressureModel.evaluate()` in `src/domains/world_emergence/models.py`.
+
+### Formula
+
+```
+population_density = total_cohort_count / max(1, region_area)
+demand_multiplier  = 1.0 + (population_density * 0.5)
+```
+
+where `region_area = (xmax - xmin) * (ymax - ymin)` derived from `RegionState.bounds`.
+
+### Effect
+
+Multiplied against the base resource pressure intensity whenever a region has harvesting or depletion events:
+
+```
+res_intensity = min(1.0, (harv_cnt * 0.05 + dep_cnt * 0.15) * demand_multiplier)
+```
+
+### Traceability
+
+The `demand_multiplier` value is recorded in `RegionalPressure.source_aggregates` as `density_mult:<value>` and in `reason` for observability.
+
+### Zero-population behaviour
+
+If a region has no cohorts (empty `population_cohorts` dict), `compute_population_density()` returns `0.0`, and `demand_multiplier` is exactly `1.0` (no amplification). This is backward-compatible with regions that have not yet received demographic data.
+
+### Source
+
+- `src/domains/demographics/cohort.py` — `compute_population_density(region)`
+- `src/domains/world_emergence/models.py` — `RegionalPressureModel.evaluate()` resource pressure section
+- Parity ledger entry: `WORLD-DEMO-005` in `docs/parity_ledger/world_dynamics.yaml`
+- Full contract: `docs/world/demographics_contract.md`
+
+---
+
 ## Extension rules
 
 1. To add a new biome type: extend the biome-to-node mapping table in `ecology.py`. Minimum count guarantee must still hold.

@@ -107,6 +107,37 @@ def compute_elder_attribute_update(
 
 
 # ---------------------------------------------------------------------------
+# E52D: Population density signal — pure function, no side effects
+# ---------------------------------------------------------------------------
+
+def compute_population_density(region: "RegionState") -> float:
+    """
+    Compute abstract population density for a region.
+
+    density = total_population / max(1, area)
+
+    where:
+      total_population = sum of count across all cohort brackets
+      area = (xmax - xmin) * (ymax - ymin) derived from region.bounds
+
+    Returns 0.0 when the region has no cohorts.
+
+    Used by RegionalPressureModel to derive demand_multiplier:
+      demand_multiplier = 1.0 + (density * 0.5)
+
+    Pure function — no side effects, deterministic.
+
+    Spec ref: TCK-20260619-E52D-DENSITY-SIGNAL §Scope
+    """
+    total_pop = sum(c.count for c in region.population_cohorts.values())
+    if total_pop == 0:
+        return 0.0
+    xmin, ymin, xmax, ymax = region.bounds
+    area = (xmax - xmin) * (ymax - ymin)
+    return total_pop / max(1, area)
+
+
+# ---------------------------------------------------------------------------
 # E52B: Migration helpers — pure functions, no side effects
 # ---------------------------------------------------------------------------
 
