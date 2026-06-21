@@ -39,6 +39,38 @@ Resources exist in the world as `ResourceNodes`.
     *   **Loot Nodes** (e.g., Treasure Chest): Are **fully consumed** on the first successful interaction.
 *   **Depletion**: Once charges reach 0, the node is removed from the world and enters a regeneration phase (if applicable).
 
+### 3.1 Resource Regeneration
+
+Regenerating nodes carry a `regen_rate_per_tick` field (integer ≥ 0). Nodes with
+`regen_rate_per_tick > 0` are processed by the **Resource Ecology Service** on a
+fixed cadence:
+
+| Constant | Value | Meaning |
+| :--- | :--- | :--- |
+| `ECOLOGY_INTERVAL` | **200 ticks** | Number of ticks between ecology checks |
+| `regen_rate_per_tick` | per-node field | Charges restored per ecology interval |
+
+**Regen rules** (applied at each ecology tick):
+1. Skip if `regen_rate_per_tick <= 0`.
+2. Skip if `remaining_charges >= max_charges` (already full).
+3. Skip if `cooldown_remaining > 0`.
+4. Otherwise: `new_charges = min(max_charges, remaining_charges + regen_rate_per_tick)`.
+
+**Events emitted** (via `StateUpdate.world_events_add` → `recent_world_events`):
+
+| Event | When |
+| :--- | :--- |
+| `RESOURCE_DEPLETED` | A harvest reduces `remaining_charges` to 0 (emitted once per tick via dedup set). |
+| `RESOURCE_RECOVERED` | Ecology regen brings a fully-depleted node (`remaining_charges == 0`) above 0 charges for the first time. |
+
+**Depletion-aware adventure scoring** (from Epic 2.1C): `GATHER_RESOURCE` route
+benefit is scaled by `remaining_charges / max_charges` at decision time, so agents
+naturally deprioritize exhausted nodes. See `docs/mechanics/04_strategic_cognition.md` §6.2.
+
+*Sources: `src/world/ecology.py` (`ResourceEcologyService.process_ecology`),
+`src/engine/economy.py` (RESOURCE_DEPLETED emitter),
+`src/domains/world_emergence/schema.py` (`WorldEventCategory`).*
+
 ---
 
 ## 4. Commerce: The Market Law

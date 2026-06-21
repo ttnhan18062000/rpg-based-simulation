@@ -760,3 +760,11 @@
 {"run_id":"TCK-20260619-E32E-REST-HISTORY","seq":4,"ts":"2026-06-21T03:57:00Z","phase":"TEST","agent":"claude-sonnet-4-6","summary":"7/7 tests pass in tests/api/test_campaign_history_api.py. Pre-existing QueueDrainWorker leak in test_scenario_runtime_api confirmed unrelated.","status":"ok"}
 {"run_id":"TCK-20260619-E32E-REST-HISTORY","seq":5,"ts":"2026-06-21T03:58:00Z","phase":"PARITY","agent":"claude-sonnet-4-6","summary":"Added INFRA-219 to docs/parity_ledger/infrastructure.yaml. Status=verified, priority=P1.","status":"ok"}
 {"run_id":"TCK-20260619-E32E-REST-HISTORY","seq":6,"ts":"2026-06-21T03:59:00Z","phase":"FINALIZE","agent":"claude-sonnet-4-6","summary":"Ticket moved to done, todos source deleted, working_log appended, staging moved to stored_artifacts, knowledge-index-update run (3 files re-embedded). All AC met.","status":"ok"}
+{"run_id": "TCK-20260619-E33A-HEALTH-MONITOR", "ts": "2026-06-21T04:15:54Z", "event": "file_created", "detail": "src/economy/__init__.py"}
+{"run_id": "TCK-20260619-E33A-HEALTH-MONITOR", "ts": "2026-06-21T04:15:54Z", "event": "file_created", "detail": "src/economy/health_monitor.py"}
+{"run_id": "TCK-20260619-E33A-HEALTH-MONITOR", "ts": "2026-06-21T04:15:54Z", "event": "file_modified", "detail": "src/observability/reporting/metric_recorder.py \u2014 MetricWindowRecord economy fields, accumulator snapshot, flush emission, public passthrough"}
+{"run_id": "TCK-20260619-E33A-HEALTH-MONITOR", "ts": "2026-06-21T04:15:54Z", "event": "file_modified", "detail": "src/engine/kernel.py \u2014 EconomyHealthMonitor.sample() wired before record_tick"}
+{"run_id": "TCK-20260619-E33A-HEALTH-MONITOR", "ts": "2026-06-21T04:15:54Z", "event": "file_created", "detail": "tests/unit/economy/__init__.py"}
+{"run_id": "TCK-20260619-E33A-HEALTH-MONITOR", "ts": "2026-06-21T04:15:54Z", "event": "file_created", "detail": "tests/unit/economy/test_economy_health_monitor.py \u2014 TC-01 through TC-09"}
+{"run_id": "TCK-20260619-E33A-HEALTH-MONITOR", "ts": "2026-06-21T04:15:54Z", "event": "file_modified", "detail": "docs/parity_ledger/town_resource.yaml \u2014 TOWN-177 appended"}
+{"run_id": "TCK-20260619-E33A-HEALTH-MONITOR", "ts": "2026-06-21T04:15:54Z", "event": "tests_passed", "detail": "8/8 unit tests pass (TC-01\u2013TC-08); 8/8 determinism certification tests pass"}

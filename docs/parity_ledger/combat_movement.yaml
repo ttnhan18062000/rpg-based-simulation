@@ -2992,11 +2992,13 @@
     Resolved in TCK-20260619-PARITY-P0-BUGS: docs corrected to match source-authoritative 25% value.
   support_boundary: null
 - id: COMB-291
-  text: Grudge state (grudge_history, nemesis_ids, combat_loss_counts) is run-scoped only. Cross-episode persistence requires CampaignState (Epic 3.2), not yet implemented.
+  text: Grudge state (grudge_history, nemesis_ids, combat_loss_counts) is run-scoped only. Cross-episode persistence is now available via CampaignState.persistent_entities (EntityCarryForward) introduced in TCK-20260619-E32B-CAMPAIGN-STATE; grudge carry-forward is E32C scope.
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: src/core/models/social.py::SocialComponent — all fields on EntityState, no cross-run persistence
+  v2_evidence: >-
+    src/core/models/social.py::SocialComponent — all fields on EntityState, no cross-run persistence within a single run;
+    src/domains/campaigns/state.py::EntityCarryForward — cross-episode carry-forward model now exists (E32B)
   proof_type: architecture
   test_path: tests/unit/combat/test_combat_ecology.py::test_grudge_scope_is_defined
   divergence_note: null

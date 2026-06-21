@@ -1879,3 +1879,20 @@
     \ tests/integration/scenarios/test_resource_depletion.py::test_regional_scarcity_rises_after_depletion"
   divergence_note: null
   support_boundary: null
+- id: TOWN-177
+  text: >
+    EconomyHealthMonitor samples gold distribution read-only once per WINDOW_SIZE
+    ticks and writes EconomyHealthSnapshot (gini_coefficient, transaction_velocity,
+    avg_price_index) into metric_windows.jsonl economy fields without mutating
+    AuthoritativeState.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/economy/health_monitor.py — EconomyHealthMonitor.sample() reads
+    e.inventory.gold and e.combat.alive; never writes to state; result passed via
+    MetricWindowRecorder into metric_windows.jsonl
+  proof_type: parity
+  test_path: tests/unit/economy/test_economy_health_monitor.py::test_gini_coefficient_computed_correctly
+  divergence_note: null
+  support_boundary: null

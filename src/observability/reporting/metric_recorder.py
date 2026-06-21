@@ -47,6 +47,11 @@ class MetricWindowRecord(BaseModel):
     event_stream_publish_ms_avg: Optional[float] = 0.0
     behavior_queue_push_ms_avg: Optional[float] = 0.0
 
+    # Economy health extension (E33A)
+    economy_gini_coefficient: Optional[float] = None
+    economy_transaction_velocity: Optional[float] = None
+    economy_avg_price_index_json: Optional[str] = None  # JSON-encoded dict
+
 
 class MetricWindowAccumulator:
     """
@@ -81,6 +86,9 @@ class MetricWindowAccumulator:
         self._phase_timings: Dict[str, List[float]] = {}
         self._phase_event_counts: Dict[str, List[int]] = {}
         self._phase_budget_statuses: Dict[str, List[str]] = {}
+
+        # Economy health snapshot storage (E33A) — at most one per window boundary
+        self._economy_snapshot: Optional[Any] = None
 
     def record_profile_metrics(
         self,
@@ -187,6 +195,10 @@ class MetricWindowAccumulator:
         self._event_count += event_count_delta
         self._hard_law_violation_count += violation_count_delta
 
+    def record_economy_snapshot(self, snapshot: Any) -> None:
+        """Store the most recent economy health snapshot (one per window boundary)."""
+        self._economy_snapshot = snapshot
+
     def _calculate_p95(self, values: List[float]) -> float:
         """
         Deterministic windowed 95th percentile using linear interpolation.
@@ -267,6 +279,16 @@ class MetricWindowAccumulator:
         event_stream_publish_avg = sum(self._event_stream_publish) / ticks if self._event_stream_publish else 0.0
         behavior_queue_push_avg = sum(self._behavior_queue_push) / ticks if self._behavior_queue_push else 0.0
 
+        # Economy health fields (E33A)
+        eco_gini = None
+        eco_velocity = None
+        eco_price_json = None
+        if self._economy_snapshot is not None:
+            eco_gini = self._economy_snapshot.gini_coefficient
+            eco_velocity = self._economy_snapshot.transaction_velocity
+            eco_price_json = json.dumps(self._economy_snapshot.avg_price_index)
+        self._economy_snapshot = None  # reset for next window
+
         return MetricWindowRecord(
             run_id=self.run_id,
             window_start_tick=self.window_start_tick,
@@ -295,7 +317,10 @@ class MetricWindowAccumulator:
             observability_overhead_ms_avg=obs_overhead_avg,
             event_emission_ms_avg=event_emission_avg,
             event_stream_publish_ms_avg=event_stream_publish_avg,
-            behavior_queue_push_ms_avg=behavior_queue_push_avg
+            behavior_queue_push_ms_avg=behavior_queue_push_avg,
+            economy_gini_coefficient=eco_gini,
+            economy_transaction_velocity=eco_velocity,
+            economy_avg_price_index_json=eco_price_json,
         )
 
 
@@ -378,6 +403,12 @@ class MetricWindowRecorder:
             behavior_queue_push_ms
         )
 
+
+    def record_economy_snapshot(self, snapshot: Any) -> None:
+        """Pass an EconomyHealthSnapshot to the current accumulator window."""
+        if not self.enabled:
+            return
+        self._accumulator.record_economy_snapshot(snapshot)
 
     def _flush_window(self, end_tick: int) -> None:
         """

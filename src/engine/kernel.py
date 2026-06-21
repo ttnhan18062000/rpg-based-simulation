@@ -386,6 +386,16 @@ class Kernel:
                 logger.exception("Failed to extract WorldMetrics")
                 world_metrics = None
 
+            # Economy health snapshot (E33A) — read-only, fires every WINDOW_SIZE ticks
+            # Must be called BEFORE record_tick to ensure snapshot is in accumulator before flush
+            try:
+                from src.economy.health_monitor import EconomyHealthMonitor
+                economy_snapshot = EconomyHealthMonitor.sample(self._state, self._state.tick)
+                if economy_snapshot is not None:
+                    self._metric_recorder.record_economy_snapshot(economy_snapshot)
+            except Exception:
+                logger.exception("Failed to sample EconomyHealthMonitor")
+
             signals = self._status.signal_history[-1] if self._status.signal_history else None
             event_count = getattr(self, "_current_tick_event_count", 0)
             violation_count = getattr(self, "_current_tick_violation_count", 0)

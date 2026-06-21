@@ -1,10 +1,10 @@
 ---
-status: open
+status: done
 layer: economy
 authority: P1
 audience: agent
 ticket_id: TCK-20260619-E33A-HEALTH-MONITOR
-phase: open
+phase: done
 date: 2026-06-20
 tags: [macro-economy, health-monitor, gini, governance, phase-3]
 ---
@@ -15,7 +15,7 @@ tags: [macro-economy, health-monitor, gini, governance, phase-3]
 Epic 3.3A · EconomyHealthMonitor + Metrics
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -87,11 +87,36 @@ Write snapshots to `metric_windows.jsonl` in run directory.
 - `src/engine/economy_health_monitor.py` (new)
 - `src/engine/` governance phase files
 
+## Implementation Notes
+
+Implemented per plan.md exactly. Key decisions:
+
+- Created `src/economy/` package (new directory) with `__init__.py` + `health_monitor.py`.
+- `EconomyHealthSnapshot` is a Pydantic `BaseModel`; `EconomyHealthMonitor` is a pure static-method class with `WINDOW_SIZE=100`.
+- Gold read from `e.inventory.gold` (authoritative scalar); liveness from `e.combat.alive` — both per investigation findings (corrected from ticket pseudocode which used `gold_coin` item scan and `e.is_alive`).
+- Gini formula: `(2*sum((i+1)*v for i,v in enumerate(sorted(values)))) / (n*sum(values)) - (n+1)/n`; returns 0.0 for empty/zero-sum.
+- `MetricWindowRecord` extended with 3 optional fields (`economy_gini_coefficient`, `economy_transaction_velocity`, `economy_avg_price_index_json`) — strictly additive, None defaults.
+- `MetricWindowAccumulator` gains `self._economy_snapshot = None` in `__init__` and `record_economy_snapshot(snapshot)` method; `flush()` reads snapshot, serialises price index via existing `json` import, then resets `_economy_snapshot = None`.
+- `MetricWindowRecorder` gains public passthrough `record_economy_snapshot(snapshot)`.
+- Kernel wires `EconomyHealthMonitor.sample()` BEFORE `record_tick()` inside the existing `if self._metric_recorder:` block, via lazy import + try/except guard.
+- `transaction_velocity` and `avg_price_index` are stubs (0.0 and {}) per scope — both marked with structured TODO comments.
+- 8 unit tests (TC-01–TC-08) all pass; TC-09 (`@pytest.mark.slow`) is present for integration validation.
+- TOWN-177 appended to `docs/parity_ledger/town_resource.yaml` with `status: verified`.
+
 ## Test Summary
 ```bash
-pytest tests/unit/economy/test_economy_health_monitor.py::test_gini_coefficient_computed_correctly -x -v
+pytest tests/unit/economy/test_economy_health_monitor.py -x -v -m "not slow"
+# 8 passed, 1 deselected (TC-09 is @pytest.mark.slow)
 ```
+
 ## Files Changed
-_To be filled on completion._
+- `src/economy/__init__.py` (created)
+- `src/economy/health_monitor.py` (created)
+- `src/observability/reporting/metric_recorder.py` (modified — MetricWindowRecord fields, accumulator snapshot storage, flush economy output, public passthrough)
+- `src/engine/kernel.py` (modified — EconomyHealthMonitor.sample() wired before record_tick)
+- `tests/unit/economy/__init__.py` (created)
+- `tests/unit/economy/test_economy_health_monitor.py` (created — TC-01 through TC-09)
+- `docs/parity_ledger/town_resource.yaml` (modified — TOWN-177 appended)
+
 ## Completion Summary
-_To be filled on completion._
+EconomyHealthMonitor implemented as read-only observability: samples alive-entity gold distribution every 100 ticks, computes Gini coefficient, and emits economy fields into metric_windows.jsonl via the existing MetricWindowRecorder pipeline without mutating AuthoritativeState. All 8 non-slow unit tests pass; 8 determinism certification tests pass.
