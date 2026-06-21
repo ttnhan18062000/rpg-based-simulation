@@ -2413,3 +2413,29 @@
     pytest tests/unit/social/test_party_lifecycle.py -x -v
   divergence_note: null
   support_boundary: null
+- id: SOC-229
+  text: >
+    FairShareProtocol distributes quest reward gold proportionally to recorded
+    contribution weights (contribution_log). If the log is empty, equal weights
+    apply (1.0 per member). Rounding remainders go to the leader so that
+    sum(shares.values()) == quest_reward always (conservation law). Gold is
+    delivered via ResourceTransferIntent(source_kind=QUEST, transfer_kind=PARTY_REWARD_SHARE)
+    per member — never by direct gold mutation. Class-synergy multipliers in
+    AdventureRouteScorer: WARRIOR+MAGE pair in group.roles → HUNT_WEAK_ENEMY
+    final_score×1.15; EntityRole.HERO entity → QUEST_OPPORTUNITY final_score×1.10.
+    Synergy is applied only when a group context is passed to score().
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/systems/social_systems/reward_distribution.py (compute_fair_share,
+    build_reward_transfer_intents); src/domains/adventure/scoring.py
+    (AdventureRouteScorer.score — group param + synergy block §8).
+    (TCK-20260619-E41C-REWARD-DIST)
+  proof_type: parity
+  test_path: >
+    pytest tests/unit/social/test_party_lifecycle.py::test_fair_share_protocol_distributes_by_contribution -x -v;
+    pytest tests/unit/social/test_party_lifecycle.py::test_class_synergy_bonus_applied_to_combat_routes -x -v;
+    pytest tests/unit/social/test_party_lifecycle.py -x -v
+  divergence_note: null
+  support_boundary: null

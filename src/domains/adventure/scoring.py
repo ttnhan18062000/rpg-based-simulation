@@ -16,6 +16,7 @@ from src.domains.adventure.schema import RouteFamily, AdventureRouteOption
 
 if TYPE_CHECKING:
     from src.core.models.quests import QuestOpportunity
+    from src.core.state import GroupRecord
 
 
 class AdventureRouteScorer:
@@ -30,11 +31,16 @@ class AdventureRouteScorer:
         route: AdventureRouteOption,
         resource_nodes: Optional[Dict[int, ResourceNodeState]] = None,
         quest_registry: Optional[Dict[str, "QuestOpportunity"]] = None,
+        group: Optional["GroupRecord"] = None,
     ) -> AdventureRouteOption:
         """
         Calculate subjective score for the route option and return updated option.
         Formula:
             score = urgency + benefit + personality_bias + confidence_bonus - risk_penalty - blocker_penalty
+
+        Optional group context enables class-synergy multipliers (SOC-229):
+          - WARRIOR + MAGE both present in group.roles → HUNT_WEAK_ENEMY score ×1.15
+          - Entity is EntityRole.HERO                 → QUEST_OPPORTUNITY score ×1.10
         """
         # ── 1. Fetch Personality Traits (Robust Range Normalisation) ─────────
         def get_trait(trait_name: str) -> float:
@@ -189,6 +195,27 @@ class AdventureRouteScorer:
         # ── 7. Calculate Final Score ─────────────────────────────────────────
         final_score = urgency + benefit + personality_bias + confidence_bonus - risk_penalty - blocker_penalty
         final_score = round(max(0.0, final_score), 4)
+
+        # ── 8. Class-Synergy Multipliers (SOC-229) ───────────────────────────
+        # Applied only when group context is provided.  Read-only — no mutation.
+        if group is not None:
+            from src.core.enums import EntityRole
+            roles_set = set(group.roles.values())
+
+            # WARRIOR + MAGE pair: boost combat (HUNT_WEAK_ENEMY) routes by 15 %
+            if (
+                route.family == RouteFamily.HUNT_WEAK_ENEMY
+                and "WARRIOR" in roles_set
+                and "MAGE" in roles_set
+            ):
+                final_score = round(final_score * 1.15, 4)
+
+            # HERO entity: boost quest-opportunity routes by 10 %
+            if (
+                route.family == RouteFamily.QUEST_OPPORTUNITY
+                and entity.identity.role == EntityRole.HERO
+            ):
+                final_score = round(final_score * 1.10, 4)
 
         return dataclasses.replace(
             route,
