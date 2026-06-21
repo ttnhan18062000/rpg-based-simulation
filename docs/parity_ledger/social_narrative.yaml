@@ -2470,3 +2470,24 @@
     pytest tests/unit/social/test_party_lifecycle.py -x -v
   divergence_note: null
   support_boundary: null
+- id: SOC-CROSS-EP-001
+  text: >
+    SocialMemoryRecord provides a durable, serializable cross-episode snapshot
+    of per-entity social state. InteractionRecord captures individual social
+    events (helped, betrayed, traded, fought_alongside, conflict) with episode,
+    tick, magnitude, and optional other_entity_id / faction_id. Both records are
+    frozen dataclasses with to_dict() / from_dict() JSON round-trip. Dict keys
+    (int entity_ids) are str-converted for JSON compatibility and restored to int
+    on deserialization. Dict key ordering is deterministic (sorted). Populated
+    by E43B SocialMemoryExporter; consumed by E43B SocialMemoryImporter.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/domains/campaigns/social_memory.py (InteractionRecord, SocialMemoryRecord,
+    to_dict, from_dict). (TCK-20260619-E43A-SOCIAL-MEM-MODEL)
+  proof_type: parity
+  test_path: >
+    pytest tests/unit/social/test_social_memory.py -x -v
+  divergence_note: null
+  support_boundary: null

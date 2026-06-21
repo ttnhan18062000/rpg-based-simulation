@@ -1,5 +1,5 @@
 ---
-status: open
+status: done
 layer: social
 authority: P1
 audience: agent
@@ -15,7 +15,7 @@ tags: [social-memory, datamodel, cross-episode, phase-4]
 Epic 4.3A · SocialMemoryRecord Model
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -74,6 +74,17 @@ python3 -c "from src.domains.campaigns.social_memory import SocialMemoryRecord; 
 pytest tests/unit/social/test_social_memory.py::test_social_memory_record_serializes_to_campaign_state -x -v
 ```
 ## Files Changed
-_To be filled on completion._
+- `src/domains/campaigns/social_memory.py` — new; InteractionRecord and SocialMemoryRecord dataclasses with to_dict/from_dict
+- `tests/unit/social/test_social_memory.py` — new; 11 tests covering normal flow, edge cases, round-trip, determinism, immutability
+- `docs/parity_ledger/social_narrative.yaml` — appended entry SOC-CROSS-EP-001 (verified)
+
+## Test Summary
+pytest tests/unit/social/test_social_memory.py -x -v → 11 passed
+
 ## Completion Summary
-_To be filled on completion._
+Implemented `InteractionRecord` and `SocialMemoryRecord` as frozen dataclasses in
+`src/domains/campaigns/social_memory.py`. Both have `to_dict()` / `from_dict()` for
+JSON round-trip persistence in CampaignState. Int entity_id keys are str-converted
+for JSON compatibility. Dict key ordering is sorted for determinism. Parity ledger
+entry SOC-CROSS-EP-001 added as verified. Ticket acceptance criterion
+`test_social_memory_record_serializes_to_campaign_state` passes. Blocks E43B–E43E.
