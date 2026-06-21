@@ -208,3 +208,35 @@ Traits are compared by verb prefix only (first token before `:`). Token format: 
 | **Total non-blocked** | 0.0 | ~2.9 |
 | blocker_penalty | 0.0 | 2.0 (fixed) |
 | **Total blocked** | clamped to 0 | ~0.9 |
+
+---
+
+### 6.8 Class-Synergy Multipliers (SOC-229)
+
+Applied in `AdventureRouteScorer.score()` block §8 when a `GroupRecord` context is passed. Read-only; no mutation.
+
+| Condition | Route | Effect |
+|---|---|---|
+| WARRIOR + MAGE both in `group.roles` | `HUNT_WEAK_ENEMY` | `final_score × 1.15` |
+| Entity is `EntityRole.HERO` | `QUEST_OPPORTUNITY` | `final_score × 1.10` |
+
+**Source:** `src/domains/adventure/scoring.py` (TCK-20260619-E41C-REWARD-DIST, 2026-06-20)
+
+---
+
+### 6.9 Escort Route Scoring (SOC-230)
+
+Applied in `AdventureRouteScorer.score()` block §9 when a group has `escort_target_id` set and the scored entity is **not** the escort target.
+
+| Route family | Adjustment | Rationale |
+|---|---|---|
+| `PROTECT_TARGET` | `+3.0` (additive) | High-urgency — protecting the target overrides most other goals |
+| `OWN_SURVIVAL` | `−1.0` (floored at 0.0) | Deprioritise self-preservation when escort duty is active |
+
+The escort target entity itself receives no adjustment (it cannot protect itself via this route).
+
+**New RouteFamily members:**
+- `PROTECT_TARGET = "protect_target"` — guarding or covering the escort target.
+- `OWN_SURVIVAL = "own_survival"` — self-preservation actions (retreat, heal, flee).
+
+**Source:** `src/domains/adventure/schema.py` (RouteFamily), `src/domains/adventure/scoring.py` §9 (TCK-20260619-E41D-DEFECTION-ESCORT, 2026-06-21)

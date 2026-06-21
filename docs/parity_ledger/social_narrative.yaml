@@ -2439,3 +2439,34 @@
     pytest tests/unit/social/test_party_lifecycle.py -x -v
   divergence_note: null
   support_boundary: null
+- id: SOC-230
+  text: >
+    PartyLifecycleService.check_defection() fires when an entity's group has
+    grievance_log length >= DEFECTION_GRIEVANCE_THRESHOLD (3). On defection:
+    the entity is removed from group.member_ids via a new GroupRecord (immutable
+    replace); a BetrayalDesertionEvent (event_type=betrayal_desertion,
+    event_category=social, severity=WARNING) is emitted; an EntityUpdate applies
+    notoriety_delta=2.0 to the defecting entity. If the group drops to <= 1
+    member after defection, dissolution_tick is set to the current tick.
+    AdventureRouteScorer.score() adds a +3.0 bonus to PROTECT_TARGET routes
+    and subtracts 1.0 from OWN_SURVIVAL routes when group.escort_target_id is
+    set and the entity is not the escort target. RouteFamily gains two new
+    members: PROTECT_TARGET and OWN_SURVIVAL. GroupPhase.resolve() runs a
+    defection pass (one defection per group per tick) after the leadership pass.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/systems/social_systems/party_lifecycle.py (PartyLifecycleService.check_defection);
+    src/observability/events.py (BetrayalDesertionEvent);
+    src/domains/adventure/scoring.py (AdventureRouteScorer.score §9 escort block);
+    src/domains/adventure/schema.py (RouteFamily.PROTECT_TARGET, RouteFamily.OWN_SURVIVAL);
+    src/engine/pipeline_phases/groups.py (GroupPhase defection pass).
+    (TCK-20260619-E41D-DEFECTION-ESCORT)
+  proof_type: parity
+  test_path: >
+    pytest tests/unit/social/test_party_lifecycle.py::test_betrayal_desertion_fires_on_high_grievance -x -v;
+    pytest tests/unit/social/test_party_lifecycle.py::test_escort_target_route_scores_above_survival -x -v;
+    pytest tests/unit/social/test_party_lifecycle.py -x -v
+  divergence_note: null
+  support_boundary: null

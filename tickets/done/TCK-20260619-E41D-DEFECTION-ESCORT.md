@@ -1,5 +1,5 @@
 ---
-status: open
+status: done
 layer: social
 authority: P1
 audience: agent
@@ -15,7 +15,7 @@ tags: [party, defection, betrayal, escort, route-scoring, phase-4]
 Epic 4.1D · Defection Mechanics + Escort Behavior
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -79,6 +79,15 @@ pytest tests/unit/social/test_party_lifecycle.py -x -v
 pytest tests/integration/scenarios/test_party_lifecycle.py -x -v -m slow
 ```
 ## Files Changed
-_To be filled on completion._
+- `src/domains/adventure/schema.py` (MODIFIED) — RouteFamily gains PROTECT_TARGET, OWN_SURVIVAL
+- `src/observability/events.py` (MODIFIED) — BetrayalDesertionEvent added (SOC-230)
+- `src/systems/social_systems/party_lifecycle.py` (MODIFIED) — check_defection() added (SOC-230)
+- `src/domains/adventure/scoring.py` (MODIFIED) — escort scoring block §9 added (SOC-230)
+- `src/engine/pipeline_phases/groups.py` (MODIFIED) — defection pass wired after leadership pass
+- `tests/unit/social/test_party_lifecycle.py` (MODIFIED) — 6 new E41D tests appended
+- `docs/parity_ledger/social_narrative.yaml` (MODIFIED) — SOC-230 entry added
+- `docs/simulation/domains/party_contract.md` (NEW) — Full party lifecycle contract doc
+- `docs/mechanics/04_strategic_cognition.md` (MODIFIED) — §6.8 class synergy, §6.9 escort scoring
+
 ## Completion Summary
-_To be filled on completion._
+Defection mechanics implemented in PartyLifecycleService.check_defection(): fires when grievance_log length >= 3, removes entity from group.member_ids (immutable replace pattern), emits BetrayalDesertionEvent, applies notoriety_delta=2.0 to defecting entity via EntityUpdate, sets dissolution_tick when group drops to <= 1 member. Escort route scoring added to AdventureRouteScorer.score() block §9: PROTECT_TARGET gets +3.0 bonus, OWN_SURVIVAL gets -1.0 penalty (floored to 0), skipped for escort target itself. GroupPhase.resolve() wires defection pass (at most one defection per group per tick) after leadership pass. All 18 unit tests pass. SOC-230 parity ledger entry added. party_contract.md doc created. knowledge-index-update run.

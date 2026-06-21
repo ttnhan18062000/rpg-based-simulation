@@ -1,17 +1,24 @@
-# Compliance IDs: SOC-228
+# Compliance IDs: SOC-228, SOC-230
 """
-PartyLifecycleService — periodic leadership election for active party groups.
+PartyLifecycleService — periodic leadership election and defection for active party groups.
 
-Ticket: TCK-20260619-E41B-LEADERSHIP
-Logic ID: SOC-228
+Ticket: TCK-20260619-E41B-LEADERSHIP (check_leadership)
+Ticket: TCK-20260619-E41D-DEFECTION-ESCORT (check_defection)
+Logic IDs: SOC-228, SOC-230
 
-Election rule:
+Election rule (SOC-228):
   Runs every LEADERSHIP_CHECK_INTERVAL ticks per group.
   If the best-sociability member's sociability exceeds the current leader's
   sociability by >= 0.2, the member with the highest sociability (lowest id
   as tiebreaker) is elected leader and a LeadershipChangedEvent is emitted.
 
-All state changes are returned as a new GroupRecord (immutable dataclass
+Defection rule (SOC-230):
+  An entity defects when len(group.grievance_log) >= DEFECTION_GRIEVANCE_THRESHOLD (3).
+  On defection: entity is removed from group.member_ids; a BetrayalDesertionEvent is
+  emitted; entity notoriety increases by 2.0 via EntityUpdate.social.
+  If the group drops to <= 1 member after defection, dissolution_tick is set.
+
+All state changes are returned as typed records/updates (immutable dataclass
 replace pattern) — never written directly to AuthoritativeState.
 """
 from __future__ import annotations
@@ -21,7 +28,8 @@ from typing import TYPE_CHECKING, List, Optional, Tuple
 
 if TYPE_CHECKING:
     from src.core.state import GroupRecord, EntityState
-    from src.observability.events import LeadershipChangedEvent
+    from src.core.updates import EntityUpdate
+    from src.observability.events import LeadershipChangedEvent, BetrayalDesertionEvent
 
 
 class PartyLifecycleService:
@@ -109,3 +117,67 @@ class PartyLifecycleService:
 
         # No election — just update the check tick
         return (replace(group, last_leadership_check_tick=tick), None)
+
+    # ------------------------------------------------------------------
+    # Defection check (SOC-230)
+    # ------------------------------------------------------------------
+
+    DEFECTION_GRIEVANCE_THRESHOLD: int = 3  # unresolved grievances required to defect
+
+    @staticmethod
+    def check_defection(
+        group: "GroupRecord",
+        entity: "EntityState",
+        tick: int,
+    ) -> "Tuple[Optional[GroupRecord], Optional[BetrayalDesertionEvent], Optional[EntityUpdate]]":
+        """
+        Evaluate whether *entity* defects from *group* this tick.
+
+        Args:
+            group:  The active GroupRecord to evaluate.
+            entity: The candidate entity (must be in group.member_ids).
+            tick:   Current simulation tick.
+
+        Returns:
+            (None, None, None)
+                — Defection threshold not met; entity stays.
+            (updated_group, event, entity_update)
+                — Entity defects: updated group (member removed), BetrayalDesertionEvent,
+                  and EntityUpdate applying notoriety_delta=2.0 to the defecting entity.
+
+        Contract:
+            - Does NOT mutate group or entity.
+            - Deterministic: pure function of inputs.
+            - If group drops to <= 1 member after defection, dissolution_tick is set.
+            - Entity must be in group.member_ids; behaviour is undefined otherwise.
+        """
+        if len(group.grievance_log) < PartyLifecycleService.DEFECTION_GRIEVANCE_THRESHOLD:
+            return (None, None, None)
+
+        from src.observability.events import BetrayalDesertionEvent
+        from src.core.updates import EntityUpdate, SocialUpdate
+
+        new_members = group.member_ids - {entity.id}
+        dissolution = tick if len(new_members) <= 1 else group.dissolution_tick
+
+        updated_group = replace(
+            group,
+            member_ids=new_members,
+            dissolution_tick=dissolution,
+            last_updated_tick=tick,
+        )
+
+        event = BetrayalDesertionEvent.create(
+            tick=tick,
+            group_id=group.id,
+            entity_id=entity.id,
+            grievance_count=len(group.grievance_log),
+            remaining_member_ids=sorted(new_members),
+        )
+
+        entity_update = EntityUpdate(
+            entity_id=entity.id,
+            social=SocialUpdate(notoriety_delta=2.0),
+        )
+
+        return (updated_group, event, entity_update)

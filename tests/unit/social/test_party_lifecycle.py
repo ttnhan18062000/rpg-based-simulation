@@ -387,3 +387,249 @@ def test_hero_synergy_bonus_applied_to_quest_routes():
     scored_with_group = AdventureRouteScorer.score(entity, route, group=group_ctx)
 
     assert scored_with_group.score == pytest.approx(base_score * 1.10, rel=1e-4)
+
+
+# ===========================================================================
+# TCK-20260619-E41D-DEFECTION-ESCORT — Defection Mechanics + Escort Behavior
+# ===========================================================================
+
+from src.systems.social_systems.party_lifecycle import PartyLifecycleService as _PLS
+from src.observability.events import BetrayalDesertionEvent
+from src.domains.adventure.schema import RouteFamily
+
+
+# ---------------------------------------------------------------------------
+# AC1 — Betrayal desertion fires when grievance_log length >= 3
+# ---------------------------------------------------------------------------
+
+def test_betrayal_desertion_fires_on_high_grievance():
+    """
+    AC1: Entity 11 in a group with 3 unresolved grievances defects.
+    Returns updated_group (11 removed), BetrayalDesertionEvent, EntityUpdate.
+    """
+    group = _group(
+        leader_id=10,
+        member_ids={10, 11},
+        grievance_log=("g1", "g2", "g3"),
+    )
+    member = _entity(11, sociability=0.5)
+    tick = 50
+
+    updated_group, event, entity_upd = _PLS.check_defection(group, member, tick)
+
+    assert updated_group is not None, "Expected updated GroupRecord on defection"
+    assert 11 not in updated_group.member_ids, "Defecting entity should be removed from members"
+    assert updated_group.last_updated_tick == tick
+
+    assert event is not None, "Expected a BetrayalDesertionEvent"
+    assert isinstance(event, BetrayalDesertionEvent)
+    assert event.event_type == "betrayal_desertion"
+    assert event.event_category == "social"
+    assert event.entity_id == 11
+    assert event.group_id == group.id
+    assert event.grievance_count == 3
+
+    assert entity_upd is not None, "Expected EntityUpdate with notoriety penalty"
+    assert entity_upd.entity_id == 11
+    assert entity_upd.social is not None
+    assert entity_upd.social.notoriety_delta == pytest.approx(2.0)
+
+
+# ---------------------------------------------------------------------------
+# AC2 — No defection when grievance count < threshold
+# ---------------------------------------------------------------------------
+
+def test_betrayal_desertion_no_fire_below_threshold():
+    """
+    AC2: 2 grievances (threshold is 3) → no defection, all returns None.
+    """
+    group = _group(
+        leader_id=10,
+        member_ids={10, 11},
+        grievance_log=("g1", "g2"),
+    )
+    member = _entity(11, sociability=0.5)
+
+    updated_group, event, entity_upd = _PLS.check_defection(group, member, tick=50)
+
+    assert updated_group is None
+    assert event is None
+    assert entity_upd is None
+
+
+# ---------------------------------------------------------------------------
+# AC3 — Dissolution tick set when group drops to <= 1 member
+# ---------------------------------------------------------------------------
+
+def test_betrayal_desertion_dissolution_on_single_member():
+    """
+    AC3: 2-member group — one defects. Remaining group has 1 member,
+    so dissolution_tick must be set.
+    """
+    group = _group(
+        leader_id=10,
+        member_ids={10, 11},
+        grievance_log=("g1", "g2", "g3"),
+    )
+    member = _entity(11, sociability=0.5)
+    tick = 75
+
+    updated_group, _, _ = _PLS.check_defection(group, member, tick)
+
+    assert updated_group is not None
+    assert updated_group.dissolution_tick == tick, (
+        "dissolution_tick must be set when only 1 member remains"
+    )
+
+
+# ---------------------------------------------------------------------------
+# AC4 — Escort target route scores above OWN_SURVIVAL route
+# ---------------------------------------------------------------------------
+
+def test_escort_target_route_scores_above_survival():
+    """
+    AC4: Non-target member in group with escort_target_id set.
+    PROTECT_TARGET score must exceed OWN_SURVIVAL score.
+    Delta: +3.0 vs -1.0 → PROTECT_TARGET is at least 4 points higher.
+    """
+    from src.core.builder import V2EntityBuilder
+    from src.core.enums import EntityRole, Faction
+
+    entity = (
+        V2EntityBuilder(11)
+        .kind("hero")
+        .location(0, 0)
+        .identity(role=EntityRole.HERO, faction=Faction.HERO_GUILD)
+        .combat(hp=100, max_hp=100, alive=True, readiness=100.0)
+        .inventory(gold=0)
+        .build()
+    )
+
+    group_with_escort = _group(
+        leader_id=10,
+        member_ids={10, 11},
+        escort_target_id=10,  # entity 11 is NOT the target → escort rules apply
+    )
+
+    protect_route = AdventureRouteOption(
+        family=RouteFamily.PROTECT_TARGET,
+        score=0.0,
+        confidence=0.7,
+        expected_benefit=0.5,
+        expected_risk=0.1,
+    )
+    survival_route = AdventureRouteOption(
+        family=RouteFamily.OWN_SURVIVAL,
+        score=0.0,
+        confidence=0.7,
+        expected_benefit=0.5,
+        expected_risk=0.1,
+    )
+
+    scored_protect = AdventureRouteScorer.score(entity, protect_route, group=group_with_escort)
+    scored_survival = AdventureRouteScorer.score(entity, survival_route, group=group_with_escort)
+
+    assert scored_protect.score > scored_survival.score, (
+        f"PROTECT_TARGET ({scored_protect.score}) should score above "
+        f"OWN_SURVIVAL ({scored_survival.score}) when escorting"
+    )
+    # PROTECT_TARGET gets +3.0 bonus; OWN_SURVIVAL gets -1.0 (floored to 0.0).
+    # Since the base score for both routes is identical, the gap is at least 3.0
+    # (the PROTECT_TARGET bonus alone), and OWN_SURVIVAL can never be negative.
+    assert scored_protect.score - scored_survival.score >= 3.0
+
+
+# ---------------------------------------------------------------------------
+# AC5 — Escort scoring skipped for the escort target itself
+# ---------------------------------------------------------------------------
+
+def test_escort_scoring_skipped_for_escort_target_itself():
+    """
+    AC5: Entity IS the escort target → no escort bonus/penalty applied.
+    PROTECT_TARGET and OWN_SURVIVAL scores should be equal (same route params).
+    """
+    from src.core.builder import V2EntityBuilder
+    from src.core.enums import EntityRole, Faction
+
+    target_entity = (
+        V2EntityBuilder(10)
+        .kind("hero")
+        .location(0, 0)
+        .identity(role=EntityRole.HERO, faction=Faction.HERO_GUILD)
+        .combat(hp=100, max_hp=100, alive=True, readiness=100.0)
+        .inventory(gold=0)
+        .build()
+    )
+
+    group_with_escort = _group(
+        leader_id=10,
+        member_ids={10, 11},
+        escort_target_id=10,  # entity 10 IS the target
+    )
+
+    protect_route = AdventureRouteOption(
+        family=RouteFamily.PROTECT_TARGET,
+        score=0.0,
+        confidence=0.7,
+        expected_benefit=0.5,
+        expected_risk=0.1,
+    )
+    survival_route = AdventureRouteOption(
+        family=RouteFamily.OWN_SURVIVAL,
+        score=0.0,
+        confidence=0.7,
+        expected_benefit=0.5,
+        expected_risk=0.1,
+    )
+
+    scored_protect = AdventureRouteScorer.score(target_entity, protect_route, group=group_with_escort)
+    scored_survival = AdventureRouteScorer.score(target_entity, survival_route, group=group_with_escort)
+
+    # Same base params → same score; no escort modifier applied
+    assert scored_protect.score == pytest.approx(scored_survival.score, abs=0.001), (
+        "Target entity must not receive escort scoring adjustments"
+    )
+
+
+# ---------------------------------------------------------------------------
+# AC6 — Escort scoring skipped when no escort_target_id set
+# ---------------------------------------------------------------------------
+
+def test_escort_scoring_skipped_when_no_escort_target():
+    """
+    AC6: Group exists but escort_target_id = None → no bonus/penalty on PROTECT_TARGET.
+    """
+    from src.core.builder import V2EntityBuilder
+    from src.core.enums import EntityRole, Faction
+
+    entity = (
+        V2EntityBuilder(11)
+        .kind("hero")
+        .location(0, 0)
+        .identity(role=EntityRole.HERO, faction=Faction.HERO_GUILD)
+        .combat(hp=100, max_hp=100, alive=True, readiness=100.0)
+        .inventory(gold=0)
+        .build()
+    )
+
+    group_no_escort = _group(
+        leader_id=10,
+        member_ids={10, 11},
+        escort_target_id=None,
+    )
+
+    protect_route = AdventureRouteOption(
+        family=RouteFamily.PROTECT_TARGET,
+        score=0.0,
+        confidence=0.7,
+        expected_benefit=0.5,
+        expected_risk=0.1,
+    )
+
+    # Score with group (no escort) vs without group — should be the same
+    scored_with_group = AdventureRouteScorer.score(entity, protect_route, group=group_no_escort)
+    scored_no_group = AdventureRouteScorer.score(entity, protect_route, group=None)
+
+    assert scored_with_group.score == pytest.approx(scored_no_group.score, abs=0.001), (
+        "No escort bonus should apply when escort_target_id is None"
+    )

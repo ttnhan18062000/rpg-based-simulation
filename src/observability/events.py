@@ -297,3 +297,48 @@ class LeadershipChangedEvent(SimulationEvent):
                 f"Group {g} leadership transferred from entity {old} to entity {new}"
             )
         super().__init__(**data)
+
+
+class BetrayalDesertionEvent(SimulationEvent):
+    """Emitted when a party member defects due to accumulated grievances.
+
+    Logic ID: SOC-230 (Defection fires betrayal_desertion when grievance_log >= 3)
+    """
+    group_id: int
+    grievance_count: int
+    event_type: str = "betrayal_desertion"
+    event_category: EventCategory = "social"
+    severity: EventSeverity = "WARNING"
+    source_system: str = "party_lifecycle_service"
+    message: str = ""
+
+    def __init__(self, **data: Any) -> None:
+        if "message" not in data or not data["message"]:
+            eid = data.get("entity_id")
+            g = data.get("group_id")
+            gc = data.get("grievance_count", 0)
+            data["message"] = (
+                f"Entity {eid} defected from group {g} after {gc} unresolved grievances"
+            )
+        super().__init__(**data)
+
+    @classmethod
+    def create(
+        cls,
+        tick: int,
+        group_id: int,
+        entity_id: int,
+        grievance_count: int,
+        remaining_member_ids: List[int],
+    ) -> "BetrayalDesertionEvent":
+        return cls(
+            tick=tick,
+            group_id=group_id,
+            entity_id=entity_id,
+            grievance_count=grievance_count,
+            related_entity_ids=remaining_member_ids,
+            payload={
+                "grievance_count": grievance_count,
+                "remaining_members": remaining_member_ids,
+            },
+        )

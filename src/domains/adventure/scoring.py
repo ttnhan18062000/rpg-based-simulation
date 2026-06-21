@@ -217,6 +217,19 @@ class AdventureRouteScorer:
             ):
                 final_score = round(final_score * 1.10, 4)
 
+        # ── 9. Escort Scoring (SOC-230) ──────────────────────────────────────────
+        # Applies when: group context present, group has an escort_target_id set,
+        # and this entity is NOT the escort target (targets don't protect themselves).
+        if (
+            group is not None
+            and group.escort_target_id is not None
+            and entity.id != group.escort_target_id
+        ):
+            if route.family == RouteFamily.PROTECT_TARGET:
+                final_score = round(final_score + 3.0, 4)
+            elif route.family == RouteFamily.OWN_SURVIVAL:
+                final_score = round(max(0.0, final_score - 1.0), 4)
+
         return dataclasses.replace(
             route,
             score=final_score,

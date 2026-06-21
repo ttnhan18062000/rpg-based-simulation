@@ -29,6 +29,8 @@ class RouteFamily(str, Enum):
     RETURN_TOWN = "return_town"
     DEFER_WITH_REASON = "defer_with_reason"
     QUEST_OPPORTUNITY = "quest_opportunity"
+    PROTECT_TARGET = "protect_target"   # E41D: escort urgency route
+    OWN_SURVIVAL = "own_survival"       # E41D: self-preservation (deprioritised when escorting)
 
 
 @dataclass(frozen=True, slots=True)
