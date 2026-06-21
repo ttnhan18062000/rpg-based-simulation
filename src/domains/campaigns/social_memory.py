@@ -26,6 +26,178 @@ from typing import TYPE_CHECKING, Dict, List, Optional, Tuple
 if TYPE_CHECKING:
     from src.core.state import EntityState
 
+
+# ---------------------------------------------------------------------------
+# FactionSocialMemory
+# ---------------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class FactionSocialMemory:
+    """Collective faction-level hostility record.
+
+    Persists across episodes regardless of whether individual faction members
+    survive. The faction-as-collective holds the grudge (E43D).
+
+    Fields
+    ------
+    faction_id : str
+        The faction that holds this collective memory.
+    entity_hostility : Dict[int, float]
+        entity_id → hostility score (0.0–1.0). Reflects how hostile the
+        faction is toward a specific offending entity. Updated to max of
+        existing vs new score when new offenses arrive.
+    episode_of_offense : Dict[int, int]
+        entity_id → zero-based episode index in which the first offense
+        from that entity was recorded. Allows downstream (E43E) to measure
+        how long ago the offense occurred.
+    """
+
+    faction_id: str
+    entity_hostility: Dict[int, float] = field(default_factory=dict)
+    episode_of_offense: Dict[int, int] = field(default_factory=dict)
+
+    # ------------------------------------------------------------------
+    # Functional update
+    # ------------------------------------------------------------------
+
+    def with_offense(
+        self, entity_id: int, hostility: float, episode: int
+    ) -> "FactionSocialMemory":
+        """Return a new FactionSocialMemory with the given offense recorded.
+
+        Hostility is updated to max(existing, new). Episode of first offense
+        is kept as-is if already present (first-offense semantics).
+
+        Parameters
+        ----------
+        entity_id : int
+            The offending entity.
+        hostility : float
+            Strength of this offense (0.0–1.0).
+        episode : int
+            Zero-based episode index in which this offense occurred.
+
+        Returns
+        -------
+        FactionSocialMemory
+            New frozen record; original is not mutated.
+        """
+        new_hostility = dict(self.entity_hostility)
+        existing = new_hostility.get(entity_id, 0.0)
+        new_hostility[entity_id] = max(existing, hostility)
+
+        new_episode = dict(self.episode_of_offense)
+        new_episode.setdefault(entity_id, episode)  # preserve first-offense episode
+
+        return FactionSocialMemory(
+            faction_id=self.faction_id,
+            entity_hostility=new_hostility,
+            episode_of_offense=new_episode,
+        )
+
+    # ------------------------------------------------------------------
+    # Serialization
+    # ------------------------------------------------------------------
+
+    def to_dict(self) -> dict:
+        """Serialize to a JSON-safe dict. Int entity_id keys as str; sorted for determinism."""
+        return {
+            "faction_id": self.faction_id,
+            "entity_hostility": {
+                str(k): v for k, v in sorted(self.entity_hostility.items())
+            },
+            "episode_of_offense": {
+                str(k): v for k, v in sorted(self.episode_of_offense.items())
+            },
+        }
+
+    @classmethod
+    def from_dict(cls, d: dict) -> "FactionSocialMemory":
+        """Reconstruct from a dict produced by to_dict(). Inverse of to_dict()."""
+        return cls(
+            faction_id=d["faction_id"],
+            entity_hostility={
+                int(k): v for k, v in d.get("entity_hostility", {}).items()
+            },
+            episode_of_offense={
+                int(k): v for k, v in d.get("episode_of_offense", {}).items()
+            },
+        )
+
+
+# ---------------------------------------------------------------------------
+# FactionSocialMemoryExporter
+# ---------------------------------------------------------------------------
+
+# Offense event kinds that register faction-level hostility.
+FACTION_OFFENSE_KINDS = frozenset({"betrayal", "attack"})
+
+
+class FactionSocialMemoryExporter:
+    """Builds FactionSocialMemory records from a list of social event dicts.
+
+    Pure function — no IO, no live state mutation. Called by
+    CampaignOrchestrator at episode end with the list of events parsed from
+    social_events.jsonl (or equivalent).
+
+    Expected event dict shape
+    -------------------------
+    {
+        "kind"      : str   — "betrayal" | "attack" | ...
+        "faction_id": str   — the offended faction
+        "entity_id" : int   — the offending entity
+        "magnitude" : float — offense strength 0.0–1.0 (default 1.0)
+        "episode"   : int   — episode index (default 0)
+    }
+
+    Only "betrayal" and "attack" kinds are treated as offenses.
+    Events missing faction_id or entity_id are silently skipped.
+    """
+
+    @staticmethod
+    def build_from_events(
+        events: List[dict],
+        existing: Optional[Dict[str, "FactionSocialMemory"]] = None,
+    ) -> Dict[str, "FactionSocialMemory"]:
+        """Construct or update FactionSocialMemory records from event dicts.
+
+        Parameters
+        ----------
+        events : List[dict]
+            Social events for this episode.
+        existing : Optional[Dict[str, FactionSocialMemory]]
+            Pre-existing faction memory records from CampaignState (carried
+            forward from prior episodes). If None, starts from scratch.
+
+        Returns
+        -------
+        Dict[str, FactionSocialMemory]
+            Updated faction_id → FactionSocialMemory mapping.
+        """
+        result: Dict[str, FactionSocialMemory] = dict(existing or {})
+
+        for event in events:
+            kind = event.get("kind", "")
+            if kind not in FACTION_OFFENSE_KINDS:
+                continue
+
+            faction_id: Optional[str] = event.get("faction_id")
+            entity_id_raw = event.get("entity_id")
+            if faction_id is None or entity_id_raw is None:
+                continue
+
+            entity_id = int(entity_id_raw)
+            magnitude = float(event.get("magnitude", 1.0))
+            episode = int(event.get("episode", 0))
+
+            record = result.get(
+                faction_id, FactionSocialMemory(faction_id=faction_id)
+            )
+            result[faction_id] = record.with_offense(entity_id, magnitude, episode)
+
+        return result
+
 # ---------------------------------------------------------------------------
 # InteractionRecord
 # ---------------------------------------------------------------------------

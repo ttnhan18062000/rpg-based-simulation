@@ -2518,6 +2518,34 @@
     Per-faction detail deferred to a future E43 child ticket. Per Mechanics Bible
     ch03 "E43 adds per-faction detail" note in EntityCarryForward.
   support_boundary: null
+- id: SOC-CROSS-EP-004
+  text: >
+    FactionSocialMemory provides a collective faction-level hostility record
+    that persists across episodes regardless of whether individual faction members
+    survive. entity_hostility (Dict[int, float]) tracks per-entity offense scores
+    (max of all observed offenses); episode_of_offense (Dict[int, int]) tracks the
+    first episode the offense was recorded. FactionSocialMemoryExporter.build_from_events()
+    is a pure function processing social event dicts with kind "betrayal" or "attack"
+    and a faction_id. Max-hostility semantics: existing scores are never lowered.
+    First-offense episode semantics: episode_of_offense is set only on first occurrence.
+    CampaignState.faction_social_memories (Dict[str, FactionSocialMemory]) is
+    serialized with str-keyed to_dict/from_dict, sorted for determinism.
+    int entity_id keys are str-converted for JSON and restored to int on read.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/domains/campaigns/social_memory.py (FactionSocialMemory, FactionSocialMemoryExporter,
+    FACTION_OFFENSE_KINDS; with_offense() max-hostility + first-episode semantics;
+    to_dict/from_dict with sorted str keys). src/domains/campaigns/state.py
+    (CampaignState.faction_social_memories field, to_dict/from_dict wiring).
+    (TCK-20260619-E43D-FACTION-MEMORY)
+  proof_type: parity
+  test_path: >
+    pytest tests/unit/social/test_social_memory.py::test_faction_hostility_persists_after_key_member_death -x -v;
+    pytest tests/unit/social/test_social_memory.py -x -v -m "not slow"
+  divergence_note: null
+  support_boundary: null
 - id: SOC-CROSS-EP-003
   text: >
     SocialMemoryDecay.apply_decay() decays cross-episode relationship scores and

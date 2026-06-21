@@ -11,7 +11,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 
-from src.domains.campaigns.social_memory import SocialMemoryRecord
+from src.domains.campaigns.social_memory import FactionSocialMemory, SocialMemoryRecord
 
 
 @dataclass(frozen=True)
@@ -210,6 +210,10 @@ class CampaignState:
     # E43B: per-entity cross-episode social snapshots keyed by entity_id (int).
     # Populated by SocialMemoryExporter at episode end; consumed by
     # SocialMemoryImporter at episode start. Serialized with str(k) keys.
+    faction_social_memories: Dict[str, FactionSocialMemory] = field(default_factory=dict)
+    # E43D: collective faction-level hostility records keyed by faction_id (str).
+    # Populated by FactionSocialMemoryExporter at episode end. Persists across
+    # episodes regardless of whether individual faction members survive.
 
     def to_dict(self) -> dict:
         """Serialize to a JSON-safe dict. All dict keys sorted for determinism."""
@@ -230,6 +234,10 @@ class CampaignState:
             "social_memories": {
                 str(k): v.to_dict()
                 for k, v in sorted(self.social_memories.items())
+            },
+            "faction_social_memories": {
+                k: v.to_dict()
+                for k, v in sorted(self.faction_social_memories.items())
             },
         }
 
@@ -259,5 +267,9 @@ class CampaignState:
             social_memories={
                 int(k): SocialMemoryRecord.from_dict(v)
                 for k, v in d.get("social_memories", {}).items()
+            },
+            faction_social_memories={
+                k: FactionSocialMemory.from_dict(v)
+                for k, v in d.get("faction_social_memories", {}).items()
             },
         )

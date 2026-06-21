@@ -1,5 +1,5 @@
 ---
-status: open
+status: done
 layer: social
 authority: P1
 audience: agent
@@ -15,7 +15,7 @@ tags: [social-memory, faction-memory, collective-hostility, phase-4]
 Epic 4.3D · Faction Memory (Collective Hostility)
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -69,6 +69,10 @@ Add `faction_social_memories: Dict[str, FactionSocialMemory] = field(default_fac
 pytest tests/unit/social/test_social_memory.py::test_faction_hostility_persists_after_key_member_death -x -v
 ```
 ## Files Changed
-_To be filled on completion._
+- `src/domains/campaigns/social_memory.py` — added `FactionSocialMemory` (frozen dataclass with `with_offense()`, `to_dict()`, `from_dict()`), `FactionSocialMemoryExporter` (pure static method `build_from_events()`), `FACTION_OFFENSE_KINDS` constant
+- `src/domains/campaigns/state.py` — added `faction_social_memories: Dict[str, FactionSocialMemory]` field to `CampaignState`; extended `to_dict()` and `from_dict()` to serialize/deserialize it
+- `tests/unit/social/test_social_memory.py` — added 19 new tests covering FactionSocialMemory construction, immutability, round-trip, key conventions, with_offense semantics; FactionSocialMemoryExporter event handling; CampaignState integration; AC test `test_faction_hostility_persists_after_key_member_death`
+- `docs/parity_ledger/social_narrative.yaml` — added entry SOC-CROSS-EP-004
+
 ## Completion Summary
-_To be filled on completion._
+Implemented `FactionSocialMemory` as a frozen dataclass in `src/domains/campaigns/social_memory.py` with `entity_hostility` (max-hostility semantics) and `episode_of_offense` (first-offense semantics) fields. Int keys are str-converted for JSON, sorted for determinism. `FactionSocialMemoryExporter.build_from_events()` processes social event dicts, recognizing "betrayal" and "attack" offense kinds, and merges into existing faction memories. Added `faction_social_memories: Dict[str, FactionSocialMemory]` to `CampaignState` with full to_dict/from_dict round-trip. All 46 tests pass (27 pre-existing + 19 new). SOC-CROSS-EP-004 added to parity ledger.

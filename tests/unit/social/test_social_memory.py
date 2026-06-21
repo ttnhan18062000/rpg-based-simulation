@@ -34,6 +34,8 @@ from src.domains.campaigns.social_memory import (
     SocialMemoryExporter,
     SocialMemoryImporter,
     SocialMemoryDecay,
+    FactionSocialMemory,
+    FactionSocialMemoryExporter,
 )
 
 
@@ -528,3 +530,304 @@ def test_importer_applies_decay_before_merge():
     result = SocialMemoryImporter.apply(entity, record)
     # Decay applied: 1.0 × 0.6 = 0.6; no existing trust → final = 0.6
     assert result.social.trust_history[99] == pytest.approx(0.6)
+
+
+# ---------------------------------------------------------------------------
+# FactionSocialMemory — TCK-20260619-E43D-FACTION-MEMORY
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.v2_contract
+def test_faction_social_memory_default_empty():
+    """FactionSocialMemory constructs with empty hostility and episode dicts."""
+    rec = FactionSocialMemory(faction_id="iron_guild")
+    assert rec.faction_id == "iron_guild"
+    assert rec.entity_hostility == {}
+    assert rec.episode_of_offense == {}
+
+
+@pytest.mark.v2_contract
+def test_faction_social_memory_is_immutable():
+    """FactionSocialMemory must be frozen (immutable after construction)."""
+    rec = FactionSocialMemory(faction_id="iron_guild")
+    with pytest.raises((AttributeError, TypeError)):
+        rec.faction_id = "other"  # type: ignore[misc]
+
+
+@pytest.mark.v2_contract
+def test_faction_social_memory_round_trip():
+    """to_dict() / from_dict() must be a lossless round-trip through JSON."""
+    rec = FactionSocialMemory(
+        faction_id="shadow_thieves",
+        entity_hostility={10: 0.9, 20: 0.3},
+        episode_of_offense={10: 1, 20: 2},
+    )
+    raw = json.dumps(rec.to_dict())
+    restored = FactionSocialMemory.from_dict(json.loads(raw))
+    assert restored == rec
+    assert restored.faction_id == "shadow_thieves"
+    assert restored.entity_hostility == {10: 0.9, 20: 0.3}
+    assert restored.episode_of_offense == {10: 1, 20: 2}
+
+
+@pytest.mark.v2_contract
+def test_faction_social_memory_int_keys_as_str_in_dict():
+    """entity_hostility and episode_of_offense keys are str in serialized form, int after restore."""
+    rec = FactionSocialMemory(
+        faction_id="thieves_guild",
+        entity_hostility={5: 0.7},
+        episode_of_offense={5: 0},
+    )
+    d = rec.to_dict()
+    # Serialized keys must be strings
+    assert all(isinstance(k, str) for k in d["entity_hostility"])
+    assert all(isinstance(k, str) for k in d["episode_of_offense"])
+    # Restored keys must be ints
+    restored = FactionSocialMemory.from_dict(d)
+    assert all(isinstance(k, int) for k in restored.entity_hostility)
+    assert all(isinstance(k, int) for k in restored.episode_of_offense)
+
+
+@pytest.mark.v2_contract
+def test_faction_social_memory_sorted_keys():
+    """to_dict() must produce sorted dict keys for determinism."""
+    rec = FactionSocialMemory(
+        faction_id="merchants",
+        entity_hostility={300: 0.1, 100: 0.9, 200: 0.5},
+        episode_of_offense={300: 2, 100: 0, 200: 1},
+    )
+    d = rec.to_dict()
+    hostility_keys = list(d["entity_hostility"].keys())
+    assert hostility_keys == sorted(hostility_keys), "entity_hostility keys not sorted"
+    episode_keys = list(d["episode_of_offense"].keys())
+    assert episode_keys == sorted(episode_keys), "episode_of_offense keys not sorted"
+
+
+@pytest.mark.v2_contract
+def test_faction_social_memory_with_offense_adds_new_entity():
+    """with_offense() adds a new entity when not already present."""
+    rec = FactionSocialMemory(faction_id="iron_guild")
+    updated = rec.with_offense(entity_id=7, hostility=0.8, episode=1)
+    assert updated.entity_hostility[7] == pytest.approx(0.8)
+    assert updated.episode_of_offense[7] == 1
+
+
+@pytest.mark.v2_contract
+def test_faction_social_memory_with_offense_keeps_max_hostility():
+    """with_offense() keeps max(existing, new) hostility — higher offense wins."""
+    rec = FactionSocialMemory(
+        faction_id="iron_guild",
+        entity_hostility={7: 0.5},
+        episode_of_offense={7: 0},
+    )
+    # Lower hostility — existing (0.5) should win
+    updated_lower = rec.with_offense(entity_id=7, hostility=0.3, episode=2)
+    assert updated_lower.entity_hostility[7] == pytest.approx(0.5)
+
+    # Higher hostility — new (0.9) should win
+    updated_higher = rec.with_offense(entity_id=7, hostility=0.9, episode=2)
+    assert updated_higher.entity_hostility[7] == pytest.approx(0.9)
+
+
+@pytest.mark.v2_contract
+def test_faction_social_memory_with_offense_preserves_first_episode():
+    """with_offense() keeps the episode of first offense, not the latest."""
+    rec = FactionSocialMemory(
+        faction_id="iron_guild",
+        entity_hostility={7: 0.5},
+        episode_of_offense={7: 1},  # first offense at episode 1
+    )
+    updated = rec.with_offense(entity_id=7, hostility=0.9, episode=3)
+    # Episode of first offense must remain 1
+    assert updated.episode_of_offense[7] == 1
+
+
+@pytest.mark.v2_contract
+def test_faction_social_memory_with_offense_does_not_mutate():
+    """with_offense() returns a new record; original is unchanged."""
+    rec = FactionSocialMemory(faction_id="iron_guild")
+    updated = rec.with_offense(entity_id=7, hostility=0.8, episode=0)
+    assert rec.entity_hostility == {}
+    assert updated is not rec
+
+
+# ---------------------------------------------------------------------------
+# FactionSocialMemoryExporter — TCK-20260619-E43D-FACTION-MEMORY
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.v2_contract
+def test_exporter_builds_from_betrayal_events():
+    """Betrayal events → entity_hostility populated for the offended faction."""
+    events = [
+        {"kind": "betrayal", "faction_id": "iron_guild", "entity_id": 10, "magnitude": 0.8, "episode": 0},
+    ]
+    result = FactionSocialMemoryExporter.build_from_events(events)
+    assert "iron_guild" in result
+    assert result["iron_guild"].entity_hostility[10] == pytest.approx(0.8)
+    assert result["iron_guild"].episode_of_offense[10] == 0
+
+
+@pytest.mark.v2_contract
+def test_exporter_builds_from_attack_events():
+    """Attack events → entity_hostility populated for the offended faction."""
+    events = [
+        {"kind": "attack", "faction_id": "merchants", "entity_id": 5, "magnitude": 0.6, "episode": 1},
+    ]
+    result = FactionSocialMemoryExporter.build_from_events(events)
+    assert "merchants" in result
+    assert result["merchants"].entity_hostility[5] == pytest.approx(0.6)
+
+
+@pytest.mark.v2_contract
+def test_exporter_ignores_non_offense_events():
+    """Non-offense events ('helped', 'traded') must not create faction memory entries."""
+    events = [
+        {"kind": "helped", "faction_id": "iron_guild", "entity_id": 1, "magnitude": 0.9, "episode": 0},
+        {"kind": "traded", "faction_id": "merchants", "entity_id": 2, "magnitude": 0.5, "episode": 0},
+    ]
+    result = FactionSocialMemoryExporter.build_from_events(events)
+    assert result == {}
+
+
+@pytest.mark.v2_contract
+def test_exporter_max_hostility_on_multiple_events():
+    """Multiple events for same entity/faction → max hostility is kept."""
+    events = [
+        {"kind": "betrayal", "faction_id": "iron_guild", "entity_id": 10, "magnitude": 0.5, "episode": 0},
+        {"kind": "attack",   "faction_id": "iron_guild", "entity_id": 10, "magnitude": 0.9, "episode": 0},
+        {"kind": "betrayal", "faction_id": "iron_guild", "entity_id": 10, "magnitude": 0.3, "episode": 0},
+    ]
+    result = FactionSocialMemoryExporter.build_from_events(events)
+    # Max of 0.5, 0.9, 0.3 = 0.9
+    assert result["iron_guild"].entity_hostility[10] == pytest.approx(0.9)
+
+
+@pytest.mark.v2_contract
+def test_exporter_records_episode_of_first_offense():
+    """Episode index of first offense is retained when the same entity appears again."""
+    events = [
+        {"kind": "betrayal", "faction_id": "iron_guild", "entity_id": 10, "magnitude": 0.5, "episode": 1},
+        {"kind": "attack",   "faction_id": "iron_guild", "entity_id": 10, "magnitude": 0.9, "episode": 3},
+    ]
+    result = FactionSocialMemoryExporter.build_from_events(events)
+    assert result["iron_guild"].episode_of_offense[10] == 1  # first episode, not 3
+
+
+@pytest.mark.v2_contract
+def test_exporter_skips_events_without_faction_or_entity():
+    """Events missing faction_id or entity_id are silently skipped."""
+    events = [
+        {"kind": "betrayal", "entity_id": 10, "magnitude": 0.8, "episode": 0},  # no faction_id
+        {"kind": "attack", "faction_id": "iron_guild", "magnitude": 0.7, "episode": 0},  # no entity_id
+    ]
+    result = FactionSocialMemoryExporter.build_from_events(events)
+    assert result == {}
+
+
+@pytest.mark.v2_contract
+def test_exporter_merges_into_existing_records():
+    """build_from_events merges new events into existing faction memory records."""
+    existing = {
+        "iron_guild": FactionSocialMemory(
+            faction_id="iron_guild",
+            entity_hostility={5: 0.4},
+            episode_of_offense={5: 0},
+        )
+    }
+    events = [
+        {"kind": "betrayal", "faction_id": "iron_guild", "entity_id": 99, "magnitude": 0.7, "episode": 1},
+    ]
+    result = FactionSocialMemoryExporter.build_from_events(events, existing=existing)
+    # Original entity 5 must still be present
+    assert result["iron_guild"].entity_hostility[5] == pytest.approx(0.4)
+    # New entity 99 must be added
+    assert result["iron_guild"].entity_hostility[99] == pytest.approx(0.7)
+
+
+# ---------------------------------------------------------------------------
+# Acceptance criterion — TCK-20260619-E43D-FACTION-MEMORY
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.v2_contract
+def test_faction_hostility_persists_after_key_member_death():
+    """Ticket AC: FactionSocialMemory persists even when all faction members are dead.
+
+    This simulates the scenario where:
+      - Episode 0: entity 10 (faction member) betrays the iron_guild.
+      - End of episode 0: FactionSocialMemory is exported and stored in CampaignState.
+      - Entity 10 dies during the episode and has no SocialMemoryRecord.
+      - Episode 1: CampaignState is round-tripped (simulating checkpoint/reload).
+      - The faction's collective grudge against entity 10 is still present.
+    """
+    from src.domains.campaigns.state import CampaignState
+
+    # Step 1: Build faction social memories from episode 0 events
+    events = [
+        {"kind": "betrayal", "faction_id": "iron_guild", "entity_id": 10,
+         "magnitude": 1.0, "episode": 0},
+    ]
+    faction_memories = FactionSocialMemoryExporter.build_from_events(events)
+
+    # Step 2: Store in CampaignState — no SocialMemoryRecord for entity 10 (dead)
+    state = CampaignState(
+        campaign_id="test-campaign",
+        episode_index=1,
+        faction_social_memories=faction_memories,
+        # social_memories is empty — entity 10 is dead, no per-entity record
+    )
+    assert 10 not in state.social_memories  # entity is dead — no per-entity record
+
+    # Step 3: Simulate checkpoint: serialize → deserialize (episode boundary)
+    checkpoint = state.to_dict()
+    restored = CampaignState.from_dict(checkpoint)
+
+    # Step 4: The faction's collective grudge persists regardless of member mortality
+    assert "iron_guild" in restored.faction_social_memories
+    iron_guild_memory = restored.faction_social_memories["iron_guild"]
+    assert 10 in iron_guild_memory.entity_hostility
+    assert iron_guild_memory.entity_hostility[10] == pytest.approx(1.0)
+    assert iron_guild_memory.episode_of_offense[10] == 0
+
+
+# ---------------------------------------------------------------------------
+# CampaignState — faction_social_memories field (TCK-20260619-E43D)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.v2_contract
+def test_campaign_state_faction_social_memories_default_empty():
+    """New CampaignState has empty faction_social_memories by default."""
+    from src.domains.campaigns.state import CampaignState
+
+    state = CampaignState(campaign_id="test", episode_index=0)
+    assert state.faction_social_memories == {}
+
+
+@pytest.mark.v2_contract
+def test_campaign_state_round_trip_with_faction_memory():
+    """CampaignState.to_dict/from_dict preserves faction_social_memories faithfully."""
+    import json as json_module
+    from src.domains.campaigns.state import CampaignState
+
+    fsm = FactionSocialMemory(
+        faction_id="merchants",
+        entity_hostility={1: 0.5, 2: 0.9},
+        episode_of_offense={1: 0, 2: 1},
+    )
+    state = CampaignState(
+        campaign_id="round-trip-test",
+        episode_index=2,
+        faction_social_memories={"merchants": fsm},
+    )
+
+    # Serialize through JSON (simulates checkpoint write/read)
+    raw = json_module.dumps(state.to_dict())
+    restored = CampaignState.from_dict(json_module.loads(raw))
+
+    assert "merchants" in restored.faction_social_memories
+    restored_fsm = restored.faction_social_memories["merchants"]
+    assert restored_fsm.faction_id == "merchants"
+    assert restored_fsm.entity_hostility == {1: 0.5, 2: 0.9}
+    assert restored_fsm.episode_of_offense == {1: 0, 2: 1}
