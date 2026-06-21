@@ -200,7 +200,12 @@ class AuthoritativeApplyPipeline:
         # --- Phase 5: Governance & Ecology ---
         t_start = time.perf_counter_ns()
         update = run_phase("town_resolution", update, lambda u: TownResolutionSystem.resolve(state, u, cadence=cadence))
-        
+
+        # Gold Sink (E33C): inject fee/tax intents on INFLATION_SPIRAL windows.
+        # Runs after town_resolution so shop-service context is already resolved.
+        from src.engine.gold_sink import GoldSinkSystem
+        update = run_phase("gold_sink", update, lambda u: GoldSinkSystem.apply(state, u, cadence))
+
         generator = EntityGenerator(state.seed + state.tick)
         generator._last_id = state.next_entity_id - 1
         update = run_phase("world_dynamics", update, lambda u: WorldDynamicsSystem.resolve_dynamics(state, u, generator, cadence=cadence))

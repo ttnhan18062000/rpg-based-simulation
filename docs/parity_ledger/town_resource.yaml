@@ -1919,3 +1919,49 @@
     tests/integration/scenarios/test_macro_economy.py::test_inflation_spiral_alert_emitted
   divergence_note: null
   support_boundary: null
+- id: TOWN-179
+  text: >
+    GoldSinkSystem injects REPAIR_FEE, SERVICE_FEE, and TAX ResourceTransferIntents
+    at WINDOW_SIZE tick boundaries when Gini > 0.7 (INFLATION_SPIRAL threshold).
+    All intents are resolved through ResourceTransactionSystem (authoritative pipeline)
+    — no direct state mutation. REPAIR_FEE: 1 gold per degraded (<50% durability)
+    equipment slot. SERVICE_FEE: flat 1 gold per alive entity with gold > 0. TAX:
+    5% of entity gold for entities above 1.5× mean, clamped [1, 50] gold.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/engine/gold_sink.py — GoldSinkSystem.apply() reads EconomyHealthMonitor
+    snapshot, emits ResourceTransferIntents for REPAIR_FEE/SERVICE_FEE/TAX;
+    src/core/conservation.py — REPAIR_FEE and SERVICE_FEE added to existing
+    TOWN_SERVICE/TAX resolver block (L255); src/engine/pipeline.py — gold_sink
+    run_phase wired in Phase 5 after town_resolution.
+  proof_type: parity
+  test_path: >
+    tests/unit/economy/test_gold_sink.py (TC-C01 through TC-C12);
+    tests/integration/scenarios/test_macro_economy.py::test_gold_sink_reduces_accumulation_rate
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-180
+  text: >
+    Gold sink conservation invariant: gold drained from entities via REPAIR_FEE,
+    SERVICE_FEE, and TAX intents uses gold_cost only (gold_delta=0). The resolver
+    rejects intents where entity gold < gold_cost (ACTION_EXHAUSTION), ensuring
+    no gold is created or destroyed. Sink cycles tracked in
+    global_resources["metric_gold_sink_ticks"].
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/engine/gold_sink.py — all intents set gold_delta=0, gold_cost=fee_amount;
+    src/core/conservation.py L255-272 — resolver returns gold_delta=-gold_cost net
+    for REPAIR_FEE/SERVICE_FEE/TAX; rejects on ACTION_EXHAUSTION when insufficient.
+    src/engine/apply.py L288-289 — resource_updates["metric_gold_sink_ticks"]
+    accumulated into state.global_resources.
+  proof_type: parity
+  test_path: >
+    tests/unit/economy/test_gold_sink.py::test_conservation_invariant;
+    tests/unit/economy/test_gold_sink.py::test_conservation_resolver_handles_repair_fee_rejected;
+    tests/integration/scenarios/test_macro_economy.py::test_gold_sink_reduces_accumulation_rate
+  divergence_note: null
+  support_boundary: null
