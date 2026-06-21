@@ -39,6 +39,23 @@ class LeadCertainty(str, Enum):
     EXHAUSTED = "EXHAUSTED"  # Tested and failed
 
 
+class LeadKind(str, Enum):
+    """
+    Formal classification of what a lead points to.
+
+    All values are lowercase strings so existing code that compares
+    lead.kind == "location" continues to work without modification
+    (LeadKind inherits from str).
+
+    Logic ID: E42E-001
+    """
+    LOCATION = "location"   # Geographical position or resource node
+    OBJECT = "object"       # A specific item or artefact
+    EVENT = "event"         # A world event (regional trauma, calamity)
+    PERSON = "person"       # A specific entity (by entity_id in subject)
+    CONCEPT = "concept"     # Domain knowledge (e.g. "alchemy_recipe")
+
+
 class ContractStatus(str, Enum):
     """Lifecycle status of a social contract."""
     OFFERED = "OFFERED"
@@ -188,7 +205,7 @@ class BlockerState:
 class LeadState:
     """Uncertain clue or pointer to a strategic opportunity."""
     id: str
-    kind: str  # 'location', 'object', 'event', 'person'
+    kind: LeadKind  # VERIFIED v2: LeadKind enum (E42E-001)
     subject: str
     detail: str = ""
     discovered_tick: int = 0

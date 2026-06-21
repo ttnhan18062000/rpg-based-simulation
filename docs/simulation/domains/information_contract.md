@@ -3,7 +3,7 @@ status: authoritative
 layer: ai
 authority: P1
 audience: agent
-last_verified: 2026-06-12
+last_verified: 2026-06-21
 tags: [domains, information, belief, trust, contract]
 ---
 
@@ -82,8 +82,41 @@ The Information / Belief Processing stage calls `router.py` for each entity that
 
 ---
 
+## Lead Kind Classification (E42E)
+
+`LeadState.kind` is now the formal `LeadKind(str, Enum)` defined in `src/core/strategic.py`.
+All five kinds and their routing behaviour:
+
+| Kind | Value | Routing | Target |
+|---|---|---|---|
+| `LOCATION` | `"location"` | `REACH_LOCATION` | `lead.detail` or `lead.subject` |
+| `OBJECT` | `"object"` | `INVESTIGATE` | `lead.subject` |
+| `EVENT` | `"event"` | `INVESTIGATE` | `lead.subject` |
+| `PERSON` | `"person"` | `INVESTIGATE` | `lead.subject` (entity_id string) |
+| `CONCEPT` | `"concept"` | `ASK_INFORMATION` | `lead.subject` (domain string) |
+
+### PERSON Lead Routing
+Entity navigates toward the entity identified by `lead.subject` (a numeric entity_id string).
+On arrival: if the entity is alive → test outcome SUCCESS.
+If the entity is dead or absent → `belief_contradiction` event (handled by `LeadContradictionSystem`).
+Routing is resolved by `LeadRoutingSystem.resolve_objective_kind()` in `src/engine/domain/lead_routing.py`.
+
+### CONCEPT Lead Routing
+Entity seeks an `InformationProvider` whose `knowledge_domains` includes the concept domain string.
+Standard paid transaction (E42C) handles the query on arrival.
+`lead.subject` is the domain key (e.g. `"alchemy_recipe"`, `"regional_danger"`).
+Routing produces `ObjectiveKind.ASK_INFORMATION` — wires directly into `PaidInformationTransactionSystem`.
+
+### Backward Compatibility
+`LeadKind` inherits from `str`, so all existing code comparing `lead.kind == "location"` continues
+to work without modification. Construction with raw strings like `kind="location"` also remains valid.
+
+---
+
 ## Constraints
 
 - Must not import from other domain packages.
 - Trust values must always be clamped to `[0.0, 1.0]` — never store raw deltas.
 - `KnowledgeFact` and `SourceTrustEntry` are immutable core types — return new instances, do not mutate.
+- `LeadState.kind` must be one of the `LeadKind` enum values — raw string assignment is tolerated for
+  backward compatibility but new code must use `LeadKind` enum members.

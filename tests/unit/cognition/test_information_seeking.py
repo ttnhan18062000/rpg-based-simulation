@@ -816,3 +816,191 @@ class TestKnowledgeStalenessDecay:
         # elapsed=2000 → decay_factor = max(0.1, 0.8) = 0.8
         result = effective_certainty(fact, current_tick=2000)
         assert abs(result - 0.48) < 1e-9
+
+
+# ─── TCK-20260619-E42E: LeadKind enum + PERSON/CONCEPT routing ────────────────
+
+
+class TestLeadKindEnum:
+    """
+    TCK-20260619-E42E acceptance criterion:
+      test_person_and_concept_lead_types_accepted
+    """
+
+    def test_person_and_concept_lead_types_accepted(self):
+        """LeadKind.PERSON and LeadKind.CONCEPT can be constructed and compared."""
+        from src.core.strategic import LeadKind, LeadState, LeadCertainty
+
+        person_lead = LeadState(
+            id="lead_person_42",
+            kind=LeadKind.PERSON,
+            subject="42",
+            detail="",
+            certainty=LeadCertainty.VAGUE,
+        )
+        concept_lead = LeadState(
+            id="lead_concept_alchemy",
+            kind=LeadKind.CONCEPT,
+            subject="alchemy_recipe",
+            detail="",
+            certainty=LeadCertainty.APPROXIMATE,
+        )
+
+        # String-compatibility check (LeadKind is str, Enum)
+        assert person_lead.kind == "person"
+        assert concept_lead.kind == "concept"
+
+        # Type check
+        assert isinstance(person_lead.kind, LeadKind)
+        assert isinstance(concept_lead.kind, LeadKind)
+
+        # All five values exist and are unique
+        kinds = list(LeadKind)
+        assert len(kinds) == 5
+        values = {k.value for k in kinds}
+        assert values == {"location", "object", "event", "person", "concept"}
+
+    def test_lead_kind_existing_values_unchanged(self):
+        """LOCATION, OBJECT, EVENT values are string-equal to their raw strings."""
+        from src.core.strategic import LeadKind
+
+        assert LeadKind.LOCATION == "location"
+        assert LeadKind.OBJECT == "object"
+        assert LeadKind.EVENT == "event"
+
+    def test_lead_state_raw_string_kind_still_accepted(self):
+        """LeadState constructed with raw string kind= still works (backward compat)."""
+        from src.core.strategic import LeadState, LeadCertainty
+
+        # Raw strings are still accepted because LeadKind(str, Enum) members
+        # compare equal to their string values, and pydantic/dataclasses allow
+        # passing compatible str values.  This guards against regression.
+        lead = LeadState(
+            id="legacy_lead",
+            kind="location",  # type: ignore[arg-type]  # legacy callsite
+            subject="iron_ore",
+            certainty=LeadCertainty.VAGUE,
+        )
+        assert lead.kind == "location"
+        assert lead.kind == LeadKind.LOCATION if hasattr(lead.kind, 'value') else lead.kind == "location"
+
+
+class TestLeadRoutingSystem:
+    """
+    TCK-20260619-E42E acceptance criterion:
+      test_person_lead_routes_entity_to_provider
+    """
+
+    def test_person_lead_routes_entity_to_provider(self):
+        """PERSON lead resolves to INVESTIGATE objective targeting the entity_id."""
+        from src.core.strategic import LeadKind, LeadState, LeadCertainty, ObjectiveKind
+        from src.engine.domain.lead_routing import LeadRoutingSystem
+
+        lead = LeadState(
+            id="lead_person_42",
+            kind=LeadKind.PERSON,
+            subject="42",
+            detail="",
+            certainty=LeadCertainty.VAGUE,
+        )
+        obj_kind, target = LeadRoutingSystem.resolve_objective_kind(lead)
+
+        assert obj_kind == ObjectiveKind.INVESTIGATE
+        assert target == "42"
+
+    def test_concept_lead_routes_to_information_provider(self):
+        """CONCEPT lead resolves to ASK_INFORMATION objective with the concept as target."""
+        from src.core.strategic import LeadKind, LeadState, LeadCertainty, ObjectiveKind
+        from src.engine.domain.lead_routing import LeadRoutingSystem
+
+        lead = LeadState(
+            id="lead_concept_alchemy",
+            kind=LeadKind.CONCEPT,
+            subject="alchemy_recipe",
+            certainty=LeadCertainty.APPROXIMATE,
+        )
+        obj_kind, target = LeadRoutingSystem.resolve_objective_kind(lead)
+
+        assert obj_kind == ObjectiveKind.ASK_INFORMATION
+        assert target == "alchemy_recipe"
+
+    def test_location_lead_routing_unchanged(self):
+        """LOCATION lead resolves to REACH_LOCATION, using detail when present."""
+        from src.core.strategic import LeadKind, LeadState, LeadCertainty, ObjectiveKind
+        from src.engine.domain.lead_routing import LeadRoutingSystem
+
+        lead_with_detail = LeadState(
+            id="lead_loc",
+            kind=LeadKind.LOCATION,
+            subject="iron_ore",
+            detail="north_mine",
+            certainty=LeadCertainty.PRECISE,
+        )
+        obj_kind, target = LeadRoutingSystem.resolve_objective_kind(lead_with_detail)
+        assert obj_kind == ObjectiveKind.REACH_LOCATION
+        assert target == "north_mine"
+
+        lead_no_detail = LeadState(
+            id="lead_loc2",
+            kind=LeadKind.LOCATION,
+            subject="iron_ore",
+            detail="",
+            certainty=LeadCertainty.VAGUE,
+        )
+        obj_kind2, target2 = LeadRoutingSystem.resolve_objective_kind(lead_no_detail)
+        assert obj_kind2 == ObjectiveKind.REACH_LOCATION
+        assert target2 == "iron_ore"
+
+    def test_object_and_event_leads_route_to_investigate(self):
+        """OBJECT and EVENT leads fall through to INVESTIGATE."""
+        from src.core.strategic import LeadKind, LeadState, LeadCertainty, ObjectiveKind
+        from src.engine.domain.lead_routing import LeadRoutingSystem
+
+        for kind in (LeadKind.OBJECT, LeadKind.EVENT):
+            lead = LeadState(
+                id=f"lead_{kind.value}",
+                kind=kind,
+                subject="mystery_artifact",
+                certainty=LeadCertainty.VAGUE,
+            )
+            obj_kind, target = LeadRoutingSystem.resolve_objective_kind(lead)
+            assert obj_kind == ObjectiveKind.INVESTIGATE
+            assert target == "mystery_artifact"
+
+    def test_detour_system_wires_person_lead_objective(self):
+        """DetourSuggestionSystem._infer_objective_kind returns 'investigate' for PERSON lead."""
+        from src.core.strategic import (
+            LeadKind, LeadState, LeadCertainty, BlockerState, BlockerKind
+        )
+        from src.systems.strategic_systems.detour import DetourSuggestionSystem
+
+        person_lead = LeadState(
+            id="lead_person",
+            kind=LeadKind.PERSON,
+            subject="99",
+            certainty=LeadCertainty.VAGUE,
+        )
+        blocker = BlockerState(
+            id="b1", kind=BlockerKind.SOCIAL, subject="ally", severity=0.5
+        )
+        result = DetourSuggestionSystem._infer_objective_kind(blocker, person_lead)
+        assert result == "investigate"
+
+    def test_detour_system_wires_concept_lead_objective(self):
+        """DetourSuggestionSystem._infer_objective_kind returns 'ask_information' for CONCEPT lead."""
+        from src.core.strategic import (
+            LeadKind, LeadState, LeadCertainty, BlockerState, BlockerKind
+        )
+        from src.systems.strategic_systems.detour import DetourSuggestionSystem
+
+        concept_lead = LeadState(
+            id="lead_concept",
+            kind=LeadKind.CONCEPT,
+            subject="potion_recipe",
+            certainty=LeadCertainty.APPROXIMATE,
+        )
+        blocker = BlockerState(
+            id="b1", kind=BlockerKind.CAPABILITY, subject="crafting", severity=0.5
+        )
+        result = DetourSuggestionSystem._infer_objective_kind(blocker, concept_lead)
+        assert result == "ask_information"

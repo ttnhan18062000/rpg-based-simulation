@@ -15,10 +15,11 @@ from typing import List, Optional
 
 from src.core.state import EntityState
 from src.core.strategic import (
-    BlockerState, LeadState, LeadCertainty, ObjectiveState, ObjectiveStatus,
+    BlockerState, LeadKind, LeadState, LeadCertainty, ObjectiveState, ObjectiveStatus,
     CognitionProfile
 )
 from src.core.updates import StrategicUpdate
+from src.engine.domain.lead_routing import LeadRoutingSystem
 
 
 class DetourSuggestionResult:
@@ -97,7 +98,11 @@ class DetourSuggestionSystem:
 
                 objective_kind = DetourSuggestionSystem._infer_objective_kind(blocker, lead)
 
-                target = lead.detail if lead.kind == "location" and lead.detail else lead.subject
+                # PERSON and CONCEPT leads use LeadRoutingSystem for target resolution
+                if lead.kind in (LeadKind.PERSON, LeadKind.CONCEPT):
+                    _, target = LeadRoutingSystem.resolve_objective_kind(lead)
+                else:
+                    target = lead.detail if lead.kind == "location" and lead.detail else lead.subject
 
                 suggestions.append(DetourSuggestionResult(
                     blocker_id=blocker.id,
@@ -285,7 +290,16 @@ class DetourSuggestionSystem:
 
     @staticmethod
     def _infer_objective_kind(blocker: BlockerState, lead: LeadState) -> str:
-        """Infer the right objective kind from a blocker+lead pair."""
+        """Infer the right objective kind from a blocker+lead pair.
+
+        PERSON and CONCEPT leads are routed via LeadRoutingSystem regardless
+        of blocker kind (Logic ID: E42E-002).
+        """
+        # PERSON and CONCEPT leads have their own routing logic (E42E)
+        if lead.kind == LeadKind.PERSON or lead.kind == LeadKind.CONCEPT:
+            obj_kind, _ = LeadRoutingSystem.resolve_objective_kind(lead)
+            return obj_kind.value
+
         if blocker.kind == "material":
             if lead.kind == "location":
                 return "reach_location"

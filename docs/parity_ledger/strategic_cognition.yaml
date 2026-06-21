@@ -2501,3 +2501,36 @@
     tests/unit/cognition/test_information_seeking.py::TestKnowledgeStalenessDecay::test_lead_staleness_decay_reduces_confidence
   divergence_note: null
   support_boundary: null
+- id: STRAT-232
+  text: >-
+    LeadState.kind is a formal LeadKind(str, Enum) with five values:
+    LOCATION, OBJECT, EVENT, PERSON, CONCEPT. All values are lowercase strings
+    preserving backward compatibility with raw string comparisons. (E42E)
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >-
+    src/core/strategic.py — LeadKind enum (E42E-001);
+    LeadState.kind field migrated from str to LeadKind
+  proof_type: parity
+  test_path: >-
+    tests/unit/cognition/test_information_seeking.py::TestLeadKindEnum::test_person_and_concept_lead_types_accepted
+  divergence_note: null
+  support_boundary: null
+- id: STRAT-233
+  text: >-
+    PERSON leads route to ObjectiveKind.INVESTIGATE with the target entity_id
+    string. CONCEPT leads route to ObjectiveKind.ASK_INFORMATION with the
+    concept domain string. Routing is resolved by LeadRoutingSystem in
+    src/engine/domain/lead_routing.py, wired into DetourSuggestionSystem. (E42E)
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >-
+    src/engine/domain/lead_routing.py — LeadRoutingSystem.resolve_objective_kind() (E42E-002);
+    src/systems/strategic_systems/detour.py — _infer_objective_kind() delegates PERSON/CONCEPT
+  proof_type: parity
+  test_path: >-
+    tests/unit/cognition/test_information_seeking.py::TestLeadRoutingSystem::test_person_lead_routes_entity_to_provider
+  divergence_note: null
+  support_boundary: null
