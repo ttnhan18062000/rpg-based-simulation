@@ -1,7 +1,7 @@
 """
 src/domains/campaigns/runner.py
 ───────────────────────────────────────────────────────────────────────────────
-Phase 9 — Campaign Runner.
+Phase 9 — Simulation Analysis Runner.
 """
 
 import time
@@ -26,7 +26,7 @@ from src.engine.kernel import Kernel
 from src.core.builder import V2EntityBuilder
 
 
-class CampaignRunner:
+class SimulationAnalysisRunner:
     def __init__(self):
         self.classifier = LifeArcClassifier()
         self.behavior_detector = BehaviorChangeProofDetector()

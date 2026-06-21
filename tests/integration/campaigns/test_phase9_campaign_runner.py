@@ -1,5 +1,5 @@
 from src.domains.campaigns.spec import CampaignSpecLoader
-from src.domains.campaigns.runner import CampaignRunner
+from src.domains.campaigns.runner import SimulationAnalysisRunner
 
 
 def test_campaign_runner_executes_small_campaign():
@@ -25,7 +25,7 @@ forbidden_behavior:
   - action_after_death
 """
     spec = CampaignSpecLoader.load_from_yaml(yaml_content)
-    runner = CampaignRunner()
+    runner = SimulationAnalysisRunner()
     result = runner.run(spec)
     
     assert result.campaign_id == "small_test_campaign"
@@ -51,7 +51,7 @@ forbidden_behavior:
   - action_after_death
 """
     spec = CampaignSpecLoader.load_from_yaml(yaml_content)
-    runner = CampaignRunner()
+    runner = SimulationAnalysisRunner()
     result = runner.run(spec)
     
     assert len(result.entity_arc_reports) == 2
@@ -74,7 +74,7 @@ forbidden_behavior:
   - action_after_death
 """
     spec = CampaignSpecLoader.load_from_yaml(yaml_content)
-    runner = CampaignRunner()
+    runner = SimulationAnalysisRunner()
     res1 = runner.run(spec)
     res2 = runner.run(spec)
     

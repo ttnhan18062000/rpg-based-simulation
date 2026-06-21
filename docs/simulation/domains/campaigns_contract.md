@@ -23,13 +23,13 @@ The campaigns domain orchestrates **multi-tick simulation runs** for analytical 
 ## Campaign Lifecycle
 
 ```
-CampaignSpec → CampaignRunner → [Kernel ticks × N] → CampaignResult
+CampaignSpec → SimulationAnalysisRunner → [Kernel ticks × N] → CampaignResult
 ```
 
 | State | Description |
 |---|---|
 | **Created** | `CampaignSpec` constructed with `ActorDistribution`, tick budget, scenario parameters |
-| **Running** | `CampaignRunner` executes Kernel ticks using `DeterministicRNG` (same seed → same result) |
+| **Running** | `SimulationAnalysisRunner` executes Kernel ticks using `DeterministicRNG` (same seed → same result) |
 | **Analysing** | Sub-analysers run after final tick: arc classification, behaviour change detection, diversity scoring, forbidden-behaviour detection |
 | **Done** | `CampaignResult` produced: `EntityArcReport` per actor, `WorldArcReport`, scorecard |
 
@@ -74,7 +74,7 @@ All sub-analysers receive the tick event log and return typed result records —
 
 ## Determinism Contract
 
-`CampaignRunner` uses `DeterministicRNG` seeded from `CampaignSpec`. Given the same `CampaignSpec` (same seed, same world composition, same actor distribution), the `CampaignResult` must be bit-identical. This is enforced by:
+`SimulationAnalysisRunner` uses `DeterministicRNG` seeded from `CampaignSpec`. Given the same `CampaignSpec` (same seed, same world composition, same actor distribution), the `CampaignResult` must be bit-identical. This is enforced by:
 1. All randomness sourced from `DeterministicRNG`
 2. Kernel ticks run in single-threaded mode during campaign runs
 3. `ActorDistribution` and spec fields are frozen — no external mutation
@@ -88,7 +88,7 @@ All sub-analysers receive the tick event log and return typed result records —
 | Runs Kernel | Yes (internally, bounded) | Yes (primary loop) |
 | Produces AuthoritativeState | Shadow only (not persisted) | Persisted |
 | Purpose | Analysis / regression | Live simulation |
-| Entry point | `CampaignRunner.run()` | `Kernel.tick_once()` |
+| Entry point | `SimulationAnalysisRunner.run()` | `Kernel.tick_once()` |
 
 Campaigns **may not** share `AuthoritativeState` with the primary simulation — they operate on their own isolated state instances.
 
