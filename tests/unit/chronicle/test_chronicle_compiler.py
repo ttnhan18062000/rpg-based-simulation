@@ -1,7 +1,8 @@
 """
 tests/unit/chronicle/test_chronicle_compiler.py
 ────────────────────────────────────────────────────────────────────────────────
-Unit tests for EventSignificanceScorer (E51A) and ChronicleGrouper (E51B).
+Unit tests for EventSignificanceScorer (E51A), ChronicleGrouper (E51B),
+ChronicleNamer (E51C), and ChronicleRenderer (E51D).
 
 Covers:
   E51A — EventSignificanceScorer:
@@ -19,12 +20,26 @@ Covers:
   - TC-10: below-threshold events are excluded from the hierarchy
   - TC-11: era boundary every ERA_EPISODE_MIN episodes
   - TC-12: empty input returns empty hierarchy
+
+  E51C — ChronicleNamer (TC-13 through TC-18): see existing tests below.
+
+  E51D — ChronicleRenderer:
+  - TC-R1: render_markdown returns string with valid YAML frontmatter delimiters
+  - TC-R2: render_markdown includes era name headings (## level)
+  - TC-R3: render_markdown includes episode headings (### level)
+  - TC-R4: render_markdown includes milestone bullet points
+  - TC-R5: render_json returns dict with top-level eras, episodes, named_milestones keys
+  - TC-R6: render_json named_milestones contains required fields
+  - TC-R7: render_markdown on empty hierarchy produces valid minimal output
+  - TC-R8: render_json on empty hierarchy returns empty arrays
+  - TC-R9: test_chronicle_json_matches_structured_schema (named AC from ticket)
 """
 import pytest
 
 from src.domains.campaigns.state import NarrativeLedgerEntry
 from src.domains.chronicle.grouper import ChronicleGrouper
 from src.domains.chronicle.naming import ChronicleNamer
+from src.domains.chronicle.renderer import ChronicleRenderer
 from src.domains.chronicle.significance import (
     BASE_SIGNIFICANCE,
     CHRONICLE_THRESHOLD,
@@ -370,3 +385,191 @@ def test_subject_id_not_integer_fallback():
     assert name == "The Death of test-subject", (
         f"Non-numeric subject_id should use raw string, got {name!r}"
     )
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# E51D — ChronicleRenderer tests
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def _make_simple_hierarchy():
+    """Return a ChronicleHierarchy with 2 eras, 6 episodes, multiple incidents."""
+    entries = []
+    # 6 episodes × 1 worthy event each → 6 episodes → 2 eras (ERA_EPISODE_MIN=3)
+    for ep in range(6):
+        entries.append(_make_entry("calamity", episode=ep, tick=10 + ep))
+    grouper = ChronicleGrouper()
+    return grouper.group(entries)
+
+
+# ── TC-R1 ─────────────────────────────────────────────────────────────────────
+
+def test_render_markdown_has_yaml_frontmatter():
+    """TC-R1 (AC-1): render_markdown starts with YAML --- delimiters and required keys."""
+    hierarchy = _make_simple_hierarchy()
+    md = ChronicleRenderer.render_markdown(hierarchy, campaign_id="test-campaign")
+
+    lines = md.splitlines()
+    assert lines[0] == "---", "First line must be YAML opening delimiter"
+    # Find closing ---
+    close_idx = lines.index("---", 1)
+    frontmatter_block = "\n".join(lines[1:close_idx])
+    assert "campaign_id:" in frontmatter_block
+    assert "total_episodes:" in frontmatter_block
+    assert "era_count:" in frontmatter_block
+
+
+# ── TC-R2 ─────────────────────────────────────────────────────────────────────
+
+def test_render_markdown_includes_era_headings():
+    """TC-R2 (AC-1): render_markdown includes ## era name headings."""
+    hierarchy = _make_simple_hierarchy()
+    md = ChronicleRenderer.render_markdown(hierarchy, campaign_id="alpha")
+
+    era_headings = [line for line in md.splitlines() if line.startswith("## ")]
+    assert len(era_headings) == len(hierarchy.eras), (
+        f"Expected {len(hierarchy.eras)} era headings, got {len(era_headings)}"
+    )
+
+
+# ── TC-R3 ─────────────────────────────────────────────────────────────────────
+
+def test_render_markdown_includes_episode_headings():
+    """TC-R3 (AC-1): render_markdown includes ### Episode N headings."""
+    hierarchy = _make_simple_hierarchy()
+    md = ChronicleRenderer.render_markdown(hierarchy, campaign_id="alpha")
+
+    episode_headings = [line for line in md.splitlines() if line.startswith("### Episode")]
+    assert len(episode_headings) == len(hierarchy.episodes), (
+        f"Expected {len(hierarchy.episodes)} episode headings, got {len(episode_headings)}"
+    )
+
+
+# ── TC-R4 ─────────────────────────────────────────────────────────────────────
+
+def test_render_markdown_includes_milestone_bullets():
+    """TC-R4 (AC-1): render_markdown includes - **Milestone** (Tick N) bullet lines."""
+    hierarchy = _make_simple_hierarchy()
+    md = ChronicleRenderer.render_markdown(hierarchy, campaign_id="alpha")
+
+    bullet_lines = [line for line in md.splitlines() if line.startswith("- **")]
+    # Each worthy event in hierarchy.events should produce one bullet
+    assert len(bullet_lines) == len(hierarchy.events), (
+        f"Expected {len(hierarchy.events)} bullet lines, got {len(bullet_lines)}"
+    )
+    for line in bullet_lines:
+        assert "(Tick " in line, f"Bullet line should include tick: {line!r}"
+
+
+# ── TC-R5 ─────────────────────────────────────────────────────────────────────
+
+def test_render_json_has_required_top_level_keys():
+    """TC-R5 (AC-2): render_json returns dict with eras, episodes, named_milestones keys."""
+    hierarchy = _make_simple_hierarchy()
+    data = ChronicleRenderer.render_json(hierarchy, campaign_id="alpha")
+
+    assert "eras" in data
+    assert "episodes" in data
+    assert "named_milestones" in data
+    assert data["campaign_id"] == "alpha"
+    assert isinstance(data["eras"], list)
+    assert isinstance(data["episodes"], list)
+    assert isinstance(data["named_milestones"], list)
+
+
+# ── TC-R6 ─────────────────────────────────────────────────────────────────────
+
+def test_render_json_named_milestones_have_required_fields():
+    """TC-R6 (AC-2): each named_milestone in chronicle.json has name, tick, episode,
+    event_type, significance fields."""
+    hierarchy = _make_simple_hierarchy()
+    data = ChronicleRenderer.render_json(hierarchy, campaign_id="alpha")
+
+    assert len(data["named_milestones"]) > 0, "Named milestones should be non-empty"
+    for milestone in data["named_milestones"]:
+        assert "name" in milestone, f"Missing 'name': {milestone}"
+        assert "tick" in milestone, f"Missing 'tick': {milestone}"
+        assert "episode" in milestone, f"Missing 'episode': {milestone}"
+        assert "event_type" in milestone, f"Missing 'event_type': {milestone}"
+        assert "significance" in milestone, f"Missing 'significance': {milestone}"
+
+
+# ── TC-R7 ─────────────────────────────────────────────────────────────────────
+
+def test_render_markdown_empty_hierarchy():
+    """TC-R7 (AC-1): Empty hierarchy renders valid YAML frontmatter with 0 counts."""
+    grouper = ChronicleGrouper()
+    empty_hierarchy = grouper.group([])
+
+    md = ChronicleRenderer.render_markdown(empty_hierarchy, campaign_id="empty-campaign")
+
+    lines = md.splitlines()
+    assert lines[0] == "---"
+    assert "total_episodes: 0" in md
+    assert "era_count: 0" in md
+    # title line still present
+    assert "# Chronicle of empty-campaign" in md
+
+
+# ── TC-R8 ─────────────────────────────────────────────────────────────────────
+
+def test_render_json_empty_hierarchy():
+    """TC-R8 (AC-2): Empty hierarchy produces empty arrays for all three keys."""
+    grouper = ChronicleGrouper()
+    empty_hierarchy = grouper.group([])
+
+    data = ChronicleRenderer.render_json(empty_hierarchy, campaign_id="empty")
+
+    assert data["eras"] == []
+    assert data["episodes"] == []
+    assert data["named_milestones"] == []
+
+
+# ── TC-R9 ─────────────────────────────────────────────────────────────────────
+
+def test_chronicle_json_matches_structured_schema():
+    """TC-R9 (AC-2): Named acceptance-criteria test — chronicle.json schema is valid.
+
+    Verifies:
+    - eras[] have: id, ordinal, name, significance, episode_ids
+    - episodes[] have: id, index, significance, incident_ids
+    - named_milestones[] have: name, tick, episode, event_type, significance, entry_id
+    """
+    entries = []
+    for ep in range(3):
+        for t in range(2):
+            entries.append(_make_entry("quest_completed", episode=ep, tick=10 + t * 20,
+                                       subject_id=str(ep * 10 + t)))
+    grouper = ChronicleGrouper()
+    hierarchy = grouper.group(entries)
+    entity_names = {0: "Aldric", 1: "Bren", 10: "Celara", 11: "Daro", 20: "Elara", 21: "Faun"}
+
+    data = ChronicleRenderer.render_json(hierarchy, campaign_id="schema-test",
+                                          entity_names=entity_names)
+
+    # Validate eras schema
+    for era in data["eras"]:
+        assert "id" in era
+        assert "ordinal" in era
+        assert "name" in era
+        assert isinstance(era["name"], str) and era["name"]
+        assert "significance" in era
+        assert "episode_ids" in era
+        assert isinstance(era["episode_ids"], list)
+
+    # Validate episodes schema
+    for episode in data["episodes"]:
+        assert "id" in episode
+        assert "index" in episode
+        assert "significance" in episode
+        assert "incident_ids" in episode
+        assert isinstance(episode["incident_ids"], list)
+
+    # Validate named_milestones schema
+    for milestone in data["named_milestones"]:
+        assert "name" in milestone
+        assert isinstance(milestone["name"], str) and milestone["name"]
+        assert "tick" in milestone
+        assert "episode" in milestone
+        assert "event_type" in milestone
+        assert "significance" in milestone
+        assert "entry_id" in milestone

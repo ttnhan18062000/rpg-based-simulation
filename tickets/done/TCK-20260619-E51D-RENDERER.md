@@ -1,5 +1,5 @@
 ---
-status: open
+status: done
 layer: simulation
 authority: P1
 audience: agent
@@ -15,7 +15,7 @@ tags: [chronicle, markdown-renderer, chronicle-json, output, phase-5]
 Epic 5.1D · Chronicle.md + chronicle.json Generator
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -84,6 +84,15 @@ pytest tests/unit/chronicle/test_chronicle_compiler.py -x -v
 pytest tests/integration/scenarios/test_campaign_chronicle.py -x -v -m slow
 ```
 ## Files Changed
-_To be filled on completion._
+- `src/domains/chronicle/renderer.py` (new) — ChronicleRenderer with render_markdown() and render_json()
+- `src/domains/chronicle/compiler.py` (new) — ChronicleCompiler.compile() entry point
+- `src/domains/chronicle/__init__.py` (updated) — export ChronicleRenderer, ChronicleCompiler
+- `tests/unit/chronicle/test_chronicle_compiler.py` (updated) — TC-R1 through TC-R9 (9 new renderer tests)
+- `tests/integration/scenarios/test_campaign_chronicle.py` (new) — TC-I1 full end-to-end compile() test
+
 ## Completion Summary
-_To be filled on completion._
+Implemented ChronicleRenderer (render_markdown, render_json) and ChronicleCompiler.compile()
+end-to-end pipeline. render_markdown produces Chronicle.md with valid YAML frontmatter,
+era/episode/milestone sections. render_json produces chronicle.json with eras[], episodes[],
+named_milestones[] arrays. ChronicleCompiler chains grouper → renderer → file writes.
+All 27 unit tests pass; integration test (slow) passes. All three ACs satisfied.
