@@ -2649,3 +2649,27 @@
     pytest tests/unit/chronicle/test_chronicle_compiler.py -x -v
   divergence_note: null
   support_boundary: null
+- id: SOC-CHRON-003
+  text: >
+    ChronicleNamer produces human-readable deterministic names for milestones and eras.
+    name_milestone(entry, entity_names) resolves subject via safe int-cast of subject_id
+    (raw-string fallback if non-numeric or absent in entity_names), then applies
+    TEMPLATES[event_type] with {subject} and {tick} substitution; unknown event types
+    fall back to the bare subject name. name_era(era_index, dominant_event_type) maps
+    dominant_event_type to ERA_NAMES (entity_death to "The Age of Conflict",
+    faction_destroyed to "The Age of Collapse", calamity to "The Age of Calamity") with
+    "Era {era_index+1}" as the 1-based fallback for unknown types. Both functions are
+    pure — no state, no RNG — deterministic across runs with same inputs.
+    (TCK-20260619-E51C-NAMING)
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/domains/chronicle/naming.py (ChronicleNamer.TEMPLATES, ChronicleNamer.ERA_NAMES,
+    ChronicleNamer.name_milestone, ChronicleNamer.name_era).
+    (TCK-20260619-E51C-NAMING)
+  proof_type: parity
+  test_path: >
+    pytest tests/unit/chronicle/test_chronicle_compiler.py -x -v
+  divergence_note: null
+  support_boundary: null

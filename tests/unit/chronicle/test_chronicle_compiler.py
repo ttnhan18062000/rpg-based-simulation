@@ -24,6 +24,7 @@ import pytest
 
 from src.domains.campaigns.state import NarrativeLedgerEntry
 from src.domains.chronicle.grouper import ChronicleGrouper
+from src.domains.chronicle.naming import ChronicleNamer
 from src.domains.chronicle.significance import (
     BASE_SIGNIFICANCE,
     CHRONICLE_THRESHOLD,
@@ -267,3 +268,105 @@ def test_empty_input_returns_empty_hierarchy():
     assert len(hierarchy.incidents) == 0
     assert len(hierarchy.episodes) == 0
     assert len(hierarchy.eras) == 0
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# E51C — ChronicleNamer tests
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# ── TC-13 ─────────────────────────────────────────────────────────────────────
+
+def test_milestone_naming_deterministic():
+    """TC-13 (AC-1): Same NarrativeLedgerEntry returns identical name on every call."""
+    entry = _make_entry("entity_death", episode=0, tick=42, subject_id="1")
+    entity_names = {1: "Aldric"}
+
+    name_first = ChronicleNamer.name_milestone(entry, entity_names)
+    name_second = ChronicleNamer.name_milestone(entry, entity_names)
+    name_third = ChronicleNamer.name_milestone(entry, entity_names)
+
+    assert name_first == name_second == name_third, (
+        "name_milestone must be deterministic — same entry must always produce the same name"
+    )
+    assert name_first == "The Death of Aldric"
+
+
+# ── TC-14 ─────────────────────────────────────────────────────────────────────
+
+def test_known_event_type_templates():
+    """TC-14: Each TEMPLATES key produces the expected human-readable name."""
+    entity_names = {7: "Ironhold", 9: "Thornwood Guild"}
+
+    cases = [
+        ("entity_death", "7", 10, "The Death of Ironhold"),
+        ("faction_destroyed", "7", 20, "The Fall of Ironhold"),
+        ("quest_completed", "9", 30, "The Quest of Thornwood Guild"),
+        ("WAR_DECLARED", "7", 40, "The Ironhold War Declaration"),
+        ("TERRITORY_TRANSFERRED", "7", 50, "The Fall of Ironhold"),
+        ("ALLIANCE_FORMED", "9", 60, "The Alliance with Thornwood Guild"),
+    ]
+
+    for event_type, subject_id, tick, expected in cases:
+        entry = _make_entry(event_type, episode=0, tick=tick, subject_id=subject_id)
+        name = ChronicleNamer.name_milestone(entry, entity_names)
+        assert name == expected, (
+            f"event_type={event_type!r}: expected {expected!r}, got {name!r}"
+        )
+
+
+# ── TC-15 ─────────────────────────────────────────────────────────────────────
+
+def test_unknown_event_type_falls_back_to_subject():
+    """TC-15: Unknown event_type returns the resolved subject name directly."""
+    entry = _make_entry("some_unknown_event", episode=0, tick=5, subject_id="3")
+    entity_names = {3: "Goblin King"}
+
+    name = ChronicleNamer.name_milestone(entry, entity_names)
+
+    assert name == "Goblin King", (
+        f"Unknown event_type should fall back to subject name, got {name!r}"
+    )
+
+
+# ── TC-16 ─────────────────────────────────────────────────────────────────────
+
+def test_era_naming_matches_dominant_type():
+    """TC-16 (AC-2): Known dominant types → age names; unknown → 'Era N' (1-based)."""
+    assert ChronicleNamer.name_era(0, "entity_death") == "The Age of Conflict"
+    assert ChronicleNamer.name_era(1, "faction_destroyed") == "The Age of Collapse"
+    assert ChronicleNamer.name_era(2, "calamity") == "The Age of Calamity"
+
+    # unknown dominant type → 1-based fallback
+    assert ChronicleNamer.name_era(0, "quest_completed") == "Era 1"
+    assert ChronicleNamer.name_era(4, "ALLIANCE_FORMED") == "Era 5"
+    assert ChronicleNamer.name_era(9, "unknown_event") == "Era 10"
+
+
+# ── TC-17 ─────────────────────────────────────────────────────────────────────
+
+def test_calamity_includes_tick_not_subject():
+    """TC-17: calamity template embeds tick value, not subject name."""
+    entry = _make_entry("calamity", episode=0, tick=999, subject_id="5")
+    entity_names = {5: "Great Flood"}
+
+    name = ChronicleNamer.name_milestone(entry, entity_names)
+
+    assert "999" in name, f"calamity name should contain the tick, got {name!r}"
+    assert name == "The Calamity at Tick 999"
+    # subject should not appear in the calamity template output
+    assert "Great Flood" not in name
+
+
+# ── TC-18 ─────────────────────────────────────────────────────────────────────
+
+def test_subject_id_not_integer_fallback():
+    """TC-18: Non-numeric subject_id uses the raw string as subject."""
+    entry = _make_entry("entity_death", episode=0, tick=10, subject_id="test-subject")
+    entity_names = {1: "Aldric"}  # key 1 doesn't match "test-subject"
+
+    name = ChronicleNamer.name_milestone(entry, entity_names)
+
+    # Should fall back to the raw subject_id string
+    assert name == "The Death of test-subject", (
+        f"Non-numeric subject_id should use raw string, got {name!r}"
+    )

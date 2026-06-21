@@ -1,5 +1,5 @@
 ---
-status: open
+status: done
 layer: simulation
 authority: P1
 audience: agent
@@ -15,7 +15,7 @@ tags: [chronicle, naming, named-milestones, deterministic, phase-5]
 Epic 5.1C · Named Entity and Milestone Assignment
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -82,6 +82,15 @@ Names are pure functions of input — deterministic across runs with same Narrat
 pytest tests/unit/chronicle/test_chronicle_compiler.py::test_milestone_naming_deterministic -x -v
 ```
 ## Files Changed
-_To be filled on completion._
+- `src/domains/chronicle/naming.py` (new) — ChronicleNamer with TEMPLATES, ERA_NAMES, name_milestone(), name_era()
+- `src/domains/chronicle/__init__.py` (updated) — exports ChronicleNamer
+- `tests/unit/chronicle/test_chronicle_compiler.py` (updated) — TC-13 through TC-18 added (18 total pass)
+- `docs/parity_ledger/social_narrative.yaml` (updated) — SOC-CHRON-003 entry added
+
 ## Completion Summary
-_To be filled on completion._
+Created `src/domains/chronicle/naming.py` with `ChronicleNamer`: a stateless, deterministic
+namer for chronicle milestones and eras. `name_milestone()` resolves subject via safe int-cast
+of subject_id (raw-string fallback), applies TEMPLATES[event_type] substitution with {subject}
+and {tick}; unknown event types return bare subject name. `name_era()` maps dominant_event_type
+to ERA_NAMES with "Era N" (1-based) fallback. 6 new tests (TC-13 through TC-18) added — all
+18 tests pass. SOC-CHRON-003 parity ledger entry added.
