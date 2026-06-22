@@ -148,7 +148,7 @@ coordinate-only — concepts/persons/rumors not yet modeled (see Active Info-See
 
 ---
 
-### Resource Ecology Regeneration `[MISSING]`
+### Resource Ecology Regeneration `[PARTIAL]`
 
 | Dimension | Score | Reason |
 |---|---|---|
@@ -159,9 +159,11 @@ coordinate-only — concepts/persons/rumors not yet modeled (see Active Info-See
 | Absence Penalty | 5 | Without it: economy never stresses, quests have no organic demand, world pressure is static, faction conflict has nothing to fight over, long-run simulation produces a flat dead world |
 | **Total** | **22 / 25** | |
 
-**Status:** Nodes are static or reset on scenario reload (confirmed in `known_limitations.md`
-and roadmap investigation). This is the single highest-leverage missing system in the
-engine by score.
+**Status (updated 2026-06-22):** Basic per-tick regeneration implemented by E21B
+(`ResourceNodeRegenerationService` in `src/domains/economy/`), with seasonal multipliers
+and scarcity tracking. This removes the fully-static node limitation. Remaining gaps:
+density-dependent regeneration rates, complex multi-stage ecological cycles, and
+long-run pressure gradients across linked regions are not yet modeled.
 
 **Key dynamic:** Resource regeneration is the **heartbeat of the simulation world**.
 Without it, the economy satisfies all demand trivially — there is no scarcity to drive
@@ -186,10 +188,12 @@ Emergence regional signals actually vary between runs.
 | Absence Penalty | 3 | World is static between entity actions; entities react but the world doesn't evolve |
 | **Total** | **19 / 25** | |
 
-**Status:** Regional trauma and sovereignty are solid. Ecology systems exist
-(`WorldEmergencePhase` evaluates `RegionalPressureModel`, `ScarcityModel`,
-`ServiceStatePressureModel`). Missing: no complex regeneration, no long-run ecological
-cycles, no demographic pressure.
+**Status (updated 2026-06-22):** Regional trauma and sovereignty are solid. Ecology systems
+exist (`WorldEmergencePhase` evaluates `RegionalPressureModel`, `ScarcityModel`,
+`ServiceStatePressureModel`). Basic resource regeneration added (E21B).
+Demographic pressure added (E52A–E52D: `DemographicCycleService`, cohort birth/death/
+migration). Remaining gaps: complex regeneration cycles and long-run ecological dynamics
+(seasonal multi-region pressure propagation).
 
 ---
 
@@ -216,7 +220,7 @@ pressure. With Resource Ecology Regeneration, this ceiling rises to 4–5.
 
 ---
 
-### Persistent Campaign Runtime `[MISSING]`
+### Persistent Campaign Runtime `[EXISTING]`
 
 | Dimension | Score | Reason |
 |---|---|---|
@@ -227,11 +231,13 @@ pressure. With Resource Ecology Regeneration, this ceiling rises to 4–5.
 | Absence Penalty | 4 | Each run is isolated and amnesiac; no compound history; real RPG continuity impossible |
 | **Total** | **20 / 25** | |
 
-**Status:** Zero code for this concept. `CampaignRunner` in `src/domains/campaigns/` is
-an **analysis tool** — it creates isolated `AuthoritativeState`, injects synthetic
-`quest_completed` events every ~50 ticks for arc classification, wraps the Kernel, then
-scorecard-evaluates the result. It shares no code surface with a real persistent campaign
-runtime. The naming is a collision risk for future tickets.
+**Status (updated 2026-06-22):** Implemented across E43A–E43E and E41B–E41D.
+`CampaignState` (`src/domains/campaigns/state.py`) holds `narrative_ledger`,
+`social_memories`, `faction_social_memories`, and `region_cultures`.
+`CampaignOrchestrator._advance_state()` (`src/domains/campaigns/orchestrator.py`)
+runs at every episode boundary, wiring entity carry-forward, social memory
+decay/import, and narrative ledger harvesting. `CampaignRunner` remains an
+analysis-only harness (separate from the runtime).
 
 ---
 
@@ -292,8 +298,12 @@ it is for determinism hashing only, not scenario save/resume.
 | Absence Penalty | 3 | Entities become effectively omniscient; decision variance collapses but sim runs |
 | **Total** | **18 / 25** | |
 
-**Confirmed gaps:** Blockers are material-resource-only. Leads are coordinate-only.
-No person/concept/rumor leads. No paid information economy.
+**Status (updated 2026-06-22):** E42A–E42E closed all confirmed gaps. Blockers now
+include non-material types (`UnknownFact` + `InformationNeedDetector`); leads include
+`LeadKind.PERSON` and `LeadKind.CONCEPT`; `PaidInformationTransactionSystem` implements
+the gold-cost info economy; `LeadContradictionSystem` handles contradiction-driven
+replanning. `InformationProviderArchetype` (MERCHANT, GUILD_MASTER, ELDER) models
+town NPCs as differentiated sources.
 
 ---
 
@@ -336,7 +346,7 @@ No person/concept/rumor leads. No paid information economy.
 
 ---
 
-### Active Information-Seeking / Belief Economy `[PARTIAL]`
+### Active Information-Seeking / Belief Economy `[EXISTING]`
 
 | Dimension | Score | Reason |
 |---|---|---|
@@ -347,8 +357,12 @@ No person/concept/rumor leads. No paid information economy.
 | Absence Penalty | 3 | Entities are currently passive about information — they receive it but never seek it; subjective cognition is real but shallow |
 | **Total** | **18 / 25** | |
 
-**Confirmed gap:** Strategic blockers are material-only; leads are coordinate-only.
-No paid-information routes, no person/concept leads, no contradiction-driven replanning.
+**Status (updated 2026-06-22):** Implemented by E42A–E42E. `InformationNeedDetector`
+generates seeking projects; `PaidInformationTransactionSystem` charges gold per
+`LeadCertainty` tier; `LeadContradictionSystem` tracks contradicting leads and decays
+certainty; `LeadKind` enum (LOCATION, OBJECT, EVENT, PERSON, CONCEPT) covers all lead
+types; `LeadRoutingSystem` resolves the best provider per `InformationProviderArchetype`.
+All prior confirmed gaps are closed.
 
 ---
 
@@ -365,7 +379,7 @@ No paid-information routes, no person/concept leads, no contradiction-driven rep
 
 ---
 
-### Narrative Consequence Layer `[MISSING]`
+### Narrative Consequence Layer `[PARTIAL]`
 
 | Dimension | Score | Reason |
 |---|---|---|
@@ -376,12 +390,17 @@ No paid-information routes, no person/concept leads, no contradiction-driven rep
 | Absence Penalty | 2 | Simulation runs correctly; just doesn't feel like an RPG |
 | **Total** | **17 / 25** | |
 
-**Note:** High emergence ceiling at low trigger rate. Depends on Persistent Campaign
-Runtime to have somewhere to write those consequences.
+**Status (updated 2026-06-22):** Partially implemented. `SocialMemoryRecord`
+(E43A–E43E) carries grudge/friendship marks cross-episode, providing a consequence
+through-line for social betrayal and alliance. `BetrayalDesertionEvent` (E41D) emits
+the canonical betrayal consequence signal. `ChronicleCompiler` (E51A–E51E) names and
+structures narrative events into ledger entries consumed by `CampaignOrchestrator`.
+Remaining gap: real-time "grief/rage → motivation urgency" feedback loop and nemesis
+formation from chronicle events are not yet modeled.
 
 ---
 
-### Social Memory as Campaign Consequence `[MISSING — BLOCKED]`
+### Social Memory as Campaign Consequence `[EXISTING]`
 
 | Dimension | Score | Reason |
 |---|---|---|
@@ -392,7 +411,12 @@ Runtime to have somewhere to write those consequences.
 | Absence Penalty | 3 | Each episode social state is cold-start; no compound trust history |
 | **Total** | **17 / 25** | |
 
-**Blocked by:** Persistent Campaign Runtime.
+**Status (updated 2026-06-22):** Implemented by E43A–E43E. `SocialMemoryRecord`
+(typed, serializable) carries entity-pair trust marks across episodes. `SocialMemoryDecay`
+applies half-life erosion. `SocialMemoryExporter` / `SocialMemoryImporter` are wired
+into `CampaignOrchestrator._advance_state()`. `FactionSocialMemory` extends the
+pattern to faction-pair relationships. The original blocker (Persistent Campaign Runtime)
+was resolved by the same epic.
 
 ---
 
@@ -473,7 +497,7 @@ goals (see Progression Planner below).
 
 ---
 
-### History / Chronicle Compiler `[MISSING]`
+### History / Chronicle Compiler `[EXISTING]`
 
 | Dimension | Score | Reason |
 |---|---|---|
@@ -484,8 +508,12 @@ goals (see Progression Planner below).
 | Absence Penalty | 2 | Simulation runs fine; long runs produce unreadable raw event logs; thousand-year simulation is uninterpretable without this |
 | **Total** | **13 / 25** | |
 
-**Note:** Low score does not mean low importance for the long-horizon vision — required
-for thousand-year simulation to produce anything useful.
+**Status (updated 2026-06-22):** Implemented by E51A–E51E. `EventSignificanceScorer`
+scores raw events (threshold 0.5 for chronicle inclusion); `ChronicleGrouper` bins events
+into incidents/episodes/eras; `ChronicleNamer` generates RPG-flavored names from templates
+(`naming.py`); `ChronicleRenderer` formats for API output; `ChronicleCompiler` orchestrates
+the pipeline. `NarrativeLedger` in `CampaignState` persists the output across episodes.
+REST endpoint at `GET /chronicle/{world_id}` exposes the full chronicle.
 
 ---
 
@@ -500,9 +528,12 @@ for thousand-year simulation to produce anything useful.
 | Absence Penalty | 2 | Parties form but don't sustain; social RPG depth is limited |
 | **Total** | **15 / 25** | |
 
-**Confirmed gap:** Recruit, contract appraisal, grudge/betrayal hooks exist. No sustained
-multi-tick party lifecycle, class-compatibility scoring, fair reward-split, or escort
-behavior. Parties trigger but do not sustain.
+**Status (updated 2026-06-22):** Partially complete. E41B added `PartyLifecycleService`
+with leadership election (`LeadershipChangedEvent`). E41C added `FairShareProtocol` and
+`build_reward_transfer_intents` for equitable loot distribution. E41D added
+`check_defection`, `PROTECT_TARGET` and `OWN_SURVIVAL` `RouteFamily` entries, and
+`BetrayalDesertionEvent` for escort + defection scenarios. Remaining gap: class-compatibility
+scoring (party composition optimization) is not yet implemented.
 
 ---
 
@@ -539,7 +570,7 @@ they compound into distinct long-run life arcs vs. one-off route nudges.
 
 ---
 
-### Demographic / Cohort Population Model `[MISSING]`
+### Demographic / Cohort Population Model `[EXISTING]`
 
 | Dimension | Score | Reason |
 |---|---|---|
@@ -549,6 +580,13 @@ they compound into distinct long-run life arcs vs. one-off route nudges.
 | Emergence Ceiling | 4 | Population cycles, generational knowledge loss, baby boom after war, demographic collapse |
 | Absence Penalty | 1 | Only matters in 100+ year simulations |
 | **Total** | **14 / 25** | |
+
+**Status (updated 2026-06-22):** Implemented by E52A–E52D. `PopulationCohort` typed
+dataclass (age_band, count, mortality_rate, birth_rate, migration_pressure); cadence-gated
+`DemographicCycleService` in world_dynamics tick pipeline; `PopulationMigrationService`
+moves cohorts across regions; age-band advancement advances cohorts each cycle. Density
+signal (`DensitySignal`) feeds into `RegionalPressureModel`. `CohortModel` carries forward
+in `CampaignState` via E52B migration artifacts.
 
 ---
 
@@ -662,10 +700,10 @@ Not RPG features — scored separately. Listed for completeness.
 | 1 | Adventure Decision System | `[E]` | 24 | Foundation |
 | 2 | Motivation & Goal System | `[E]` | 24 | Foundation |
 | 3 | Cognition / Knowledge / Self-Model | `[E]` | 23 | Foundation |
-| **4** | **Resource Ecology Regeneration** | **`[M]`** | **22** | **Foundation GAP** |
+| **4** | **Resource Ecology Regeneration** | **`[P]`** | **22** | **Foundation (partial)** |
 | 5 | World Evolution System | `[P]` | 19 | Foundation/High |
 | 6 | Economy / Resources / Crafting | `[E]` | 20 | High |
-| 7 | Persistent Campaign Runtime | `[M]` | 20 | High GAP |
+| 7 | Persistent Campaign Runtime | `[E]` | 20 | High |
 | 8 | Faction & Diplomacy System | `[M]` | 20 | High GAP |
 | 9 | Scenario Runtime Service | `[M]` | 19 | High GAP |
 | 10 | Spatial / Movement System | `[E]` | 18 | High |
@@ -673,20 +711,20 @@ Not RPG features — scored separately. Listed for completeness.
 | 12 | Perception / Attention System | `[E]` | 18 | High |
 | 13 | Memory System | `[E]` | 18 | High |
 | 14 | Social / Cooperation / Reputation | `[E]` | 18 | High |
-| 15 | Active Information-Seeking | `[P]` | 18 | High GAP |
+| 15 | Active Information-Seeking | `[E]` | 18 | High |
 | 16 | Combat System | `[E]` | 17 | High |
 | 17 | Emotion / Mood System | `[E]` | 17 | High |
-| 18 | Narrative Consequence Layer | `[M]` | 17 | High GAP |
-| 19 | Social Memory as Campaign Consequence | `[M]` | 17 | High GAP (blocked) |
+| 18 | Narrative Consequence Layer | `[P]` | 17 | High (partial) |
+| 19 | Social Memory as Campaign Consequence | `[E]` | 17 | High |
 | 20 | Macro-Economy Health Metrics | `[M]` | 16 | High GAP |
 | 21 | Pressure-Driven Quest Generation | `[M]` | 16 | High GAP |
 | 22 | Full Party Adventure Loop | `[P]` | 15 | Depth |
 | 23 | Decision Explanation Model | `[P]` | 15 | Depth (tooling) |
 | 24 | Personality Long-Run Calibration | `[P]` | 14 | Depth |
-| 25 | Demographic / Cohort Population Model | `[M]` | 14 | Depth (long-horizon) |
+| 25 | Demographic / Cohort Population Model | `[E]` | 14 | Depth |
 | 26 | Progression / Rewards | `[E]` | 13 | Depth |
 | 27 | Commitment / Reputation Labels | `[E]` | 13 | Depth |
-| 28 | History / Chronicle Compiler | `[M]` | 13 | Depth |
+| 28 | History / Chronicle Compiler | `[E]` | 13 | Depth |
 | 29 | Combat Ecology Extension | `[P]` | 13 | Depth |
 | 30 | Progression Planner | `[M]` | 13 | Depth |
 | 31 | Behavior Scorecard | `[E]` | 10 | Tooling |
@@ -698,34 +736,39 @@ Not RPG features — scored separately. Listed for completeness.
 
 ## Key Findings
 
-### Finding 1: One missing Tier-1 system — Resource Ecology Regeneration
-The only missing system in Tier 1 (score 22/25). Its absence prevents the economy from
-ever generating real pressure. No scarcity → no migration → no faction conflict → no
-organic quest demand. The engine's motivation → adventure-decision pipeline receives
-stable, flat signals instead of dynamic pressure gradients.
-**This is the single highest-leverage missing piece to implement first.**
+### Finding 1: Resource Ecology Regeneration is now partial — complex cycles remain
+Previously the only missing Tier-1 system (score 22/25). E21B implemented basic per-tick
+regeneration with seasonal multipliers, resolving the fully-static node limitation.
+Remaining gap: density-dependent rates, multi-stage ecological cycles, and cross-region
+pressure propagation. Economy pressure is now possible but long-run ecological dynamics
+are still thin.
 
-### Finding 2: Three missing Tier-2 systems form the product gap
-Persistent Campaign Runtime, Faction & Diplomacy, and Scenario Runtime Service (scores
-19–20) represent the distance between "lab tooling" and "an RPG simulation product."
-None of the high-ceiling social/narrative/historical emergence features can be built
-until Persistent Campaign Runtime exists — there is no cross-episode state container.
+### Finding 2: Two missing Tier-2 systems remain the product gap (updated 2026-06-22)
+Faction & Diplomacy and Scenario Runtime Service (scores 19–20) are the remaining distance
+between "lab tooling" and "an RPG simulation product." Persistent Campaign Runtime
+(previously in this list) was implemented by E43A–E43E + E41B–E41D — the cross-episode
+state container now exists. Social Memory, Chronicle Compiler, and Demographic Model are
+all DONE; Narrative Consequence Layer is now partial.
 
-### Finding 3: Cascade structure determines priority more than score alone
-Resource Ecology Regeneration unblocks Macro-Economy Health Metrics and Pressure-Driven
-Quest Generation simultaneously. Persistent Campaign Runtime unblocks Social Memory as
-Campaign Consequence and Narrative Consequence Layer. Read score alongside unblocked
-cascade, not in isolation.
+### Finding 3: Cascade unlocks confirm the implementation sequence (updated 2026-06-22)
+Resource Ecology Regeneration (partial) unblocks Macro-Economy Health Metrics and
+Pressure-Driven Quest Generation. Persistent Campaign Runtime (now DONE) has already
+unblocked Social Memory (DONE), Narrative Consequence Layer (now partial), History
+Compiler (DONE), Demographic Model (DONE), and Progression Planner (scoped in E61).
+The next major cascade unlock is Faction & Diplomacy — it feeds quest generation,
+combat motivation, economy disruption, and world evolution simultaneously.
 
-### Finding 4: High-scoring existing systems are depth-limited by missing dependents
-Economy/Resources (score 20) has emergence ceiling 3 because Resource Ecology doesn't
-exist. Information/Belief (score 18) is capped because Active Info-Seeking is missing.
-Foundation systems are good — they are waiting for the pressure systems that animate them.
+### Finding 4: Active Info-Seeking gap is closed; remaining depth gaps are ecology + faction
+Economy/Resources (score 20) still has emergence ceiling 3 because complex ecological
+cycles aren't modeled yet. Information/Belief (score 18) gap is now closed — Active
+Info-Seeking (E42A–E) is fully implemented. The remaining limiting dependency for deep
+behavioral emergence is Faction & Diplomacy (E53A–D, scoped but not implemented).
 
-### Finding 5: CampaignRunner naming is an active risk
-`src/domains/campaigns/runner.py` is an analysis harness, not a persistent campaign
-runtime. Future tickets assuming they can build cross-episode state on top of it will
-discover the mismatch late. Should be renamed before the Persistent Campaign Runtime epic.
+### Finding 5: CampaignRunner / CampaignOrchestrator split is now established
+`CampaignRunner` remains the analysis harness (`src/domains/campaigns/runner.py`);
+`CampaignOrchestrator` is the authoritative persistent runtime
+(`src/domains/campaigns/orchestrator.py`). The naming risk flagged here is resolved —
+the two classes serve distinct roles in the same package.
 
 ---
 
@@ -735,11 +778,18 @@ discover the mismatch late. Should be renamed before the Persistent Campaign Run
 |---|---|---|
 | Immediate | P0 parity hotfixes (`COMB-006`, `COMB-133/134`, `STRAT-164/177`, `SOC-134`) | Pre-existing debt; independent of all epics |
 | Immediate | Refresh `known_limitations.md` | Stale since 2026-04-21; misleads investigation agents |
-| Immediate | Rename `CampaignRunner` → `AnalysisCampaignRunner` | Prevents naming collision |
-| Epic 1 | Resource Ecology Regeneration (S–M) | Highest missing score; unblocks economy, quests, faction simultaneously |
-| Epic 2 | Scenario Runtime Service (M) | Defines product-shaped execution loop |
-| Epic 3 | Persistent Campaign Runtime (L) | Unblocks Social Memory, Narrative Consequence, Faction consequence container |
-| Decide | Faction & Diplomacy System (XL) | Highest ceiling; largest build; deserves deliberate scoping |
+| ~~Immediate~~ | ~~Rename `CampaignRunner` → `AnalysisCampaignRunner`~~ | **RESOLVED** — `CampaignOrchestrator` is now the persistent runtime; `CampaignRunner` retains the analysis role. Both names are now unambiguous. |
+| Epic 1 | Resource Ecology Regeneration — complete complex cycles (M) | Basic regen done (E21B); density-dependent cycles + cross-region propagation still missing |
+| Epic 2 | Faction & Diplomacy System (XL) — **SCOPED** (E53A–D in `tickets/todos/E53A–D/`) | Highest ceiling; largest remaining gap; child tickets ready for implementation |
+| Epic 3 | Scenario Runtime Service (M) | Defines product-shaped execution loop; still zero code |
+| Done | Persistent Campaign Runtime | **IMPLEMENTED** — E43A–E43E + E41B–E41D |
+| Done | Social Memory as Campaign Consequence | **IMPLEMENTED** — E43A–E43E |
+| Done | History / Chronicle Compiler | **IMPLEMENTED** — E51A–E51E |
+| Done | Demographic / Cohort Population Model | **IMPLEMENTED** — E52A–E52D |
+| Done | Active Information-Seeking / Belief Economy | **IMPLEMENTED** — E42A–E42E |
+| Scoped | Progression Planner | E61A–D in `tickets/todos/E61-PROGRESSION/` |
+| Scoped | Culture / Myth Drift | E62A–D in `tickets/todos/E62-CULTURE-DRIFT/` |
+| Deferred | Pluggable Feature Pack Architecture | E63A–D scoped but gate-blocked until E53 is implemented |
 
 ---
 

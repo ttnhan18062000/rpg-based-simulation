@@ -698,15 +698,17 @@ Spawns new entities into under-populated regions up to capacity limits.
 
 ---
 
-### 10.3 Resource Ecology Service `[P]`
+### 10.3 Resource Ecology Service `[E]`
 **Source:** `src/world/ecology.py` — `ResourceEcologyService.process_ecology()`
 
 Exists and runs as part of `WorldDynamicsSystem`.
 
-**Gap:** Resource nodes do not support complex regeneration logic. Nodes are static or
-reset on scenario reload. No seasonal growth, depletion cooldowns, or ecology-driven
-recovery curves. This is the single highest-leverage missing foundation feature by
-simulation impact score (see D01).
+**Status (updated 2026-06-22):** Regen logic implemented by TCK-20260619-E21B-REGEN-SERVICE.
+`process_ecology()` now applies seasonal multipliers and per-node recovery rates.
+`RESOURCE_DEPLETED` and `RESOURCE_RECOVERED` events emitted via `StateUpdate.world_events_add`.
+17 tests pass in `tests/unit/world/test_resource_ecology.py`. Parity entries
+TOWN-137/173/174/175 verified. Complex multi-stage ecological cycles (density-dependent
+rates, cross-region propagation) remain out of scope.
 
 ---
 
@@ -718,12 +720,13 @@ distributes effects from recent deaths to regional state.
 
 ---
 
-### 10.5 Resource Node Regeneration (Ecological Cycles) `[M]`
-**Source:** None.
+### 10.5 Resource Node Regeneration (Ecological Cycles) `[E]`
+**Source:** `src/world/ecology.py` — `ResourceEcologyService.process_ecology()`
 
-The specific capability missing from 10.3: seasonal growth curves, depletion cooldown
-timers, per-node recovery rates, ecology-linked regeneration. The `ResourceEcologyService`
-scaffolding exists but the regeneration logic inside it does not.
+**Status (updated 2026-06-22):** Implemented by TCK-20260619-E21B-REGEN-SERVICE (2026-06-20).
+Seasonal growth curves, depletion cooldown timers, and per-node recovery rates are all
+present in the updated `ResourceEcologyService`. The ecology loop now closes properly.
+See Finding 5 for detailed implementation evidence.
 
 ---
 
@@ -800,11 +803,11 @@ scaffolding exists but the regeneration logic inside it does not.
 | 9.6 | Parity Ledger | `[E]` | Observability |
 | 10.1 | World Dynamics System | `[E]` | World |
 | 10.2 | Entity Spawn Service | `[E]` | World |
-| 10.3 | Resource Ecology Service | `[P]` | World |
+| 10.3 | Resource Ecology Service | `[E]` | World |
 | 10.4 | Calamity Service | `[E]` | World |
-| 10.5 | Resource Node Regeneration | `[M]` | World |
+| 10.5 | Resource Node Regeneration | `[E]` | World |
 
-**Totals: 61 Existing · 8 Partial · 3 Missing** _(D02 original stated "53 E / 9 P"; corrected by D09 audit — see D09 Finding 1)_
+**Totals: 63 Existing · 7 Partial · 2 Missing** _(updated 2026-06-22: E21B resolved 10.3+10.5; previous "61 E / 8 P / 3 M" corrected by D09 audit)_
 
 ---
 
@@ -887,20 +890,20 @@ Risk scores below use the 5-dimension Foundation Risk rubric (max 50).
 | 2 | 4.2 | Flow-Field Navigation | 31 / 50 |
 | 3 | 6.3 | Content Fallback System | 29 / 50 |
 | 4 | 7.4 | Presenter / Read-Model Separation | 20 / 50 |
-| 5 | 10.3 | Resource Ecology Service | 19 / 50 |
+| 5 | 10.3 | Resource Ecology Service | ~~19 / 50~~ **RESOLVED** (E21B) |
 | 6 | 8.5 | Degraded Mode Contract | 12 / 50 |
 | 7 | 5.3 | Spatial Query Accuracy | 10 / 50 |
 | 8 | 4.4 | Per-Phase Domain Permissions | 8 / 50 |
 
 ### Missing Items
 
-Three features have zero or near-zero implementation:
+Two features have zero or near-zero implementation (updated 2026-06-22 — 10.5 resolved by E21B):
 
 | ID | Feature | Reason missing matters |
 |---|---|---|
 | 1.9 | Per-Phase Read/Write Domain Permissions | Isolation enforcement relies entirely on audit_mode Phase Stability Guard |
 | 5.10 | Macro-Economy Health Metrics | Economy stagnation is invisible — no aggregate signal to surface it |
-| 10.5 | Resource Node Regeneration | Ecology system can't close the loop without it |
+| ~~10.5~~ | ~~Resource Node Regeneration~~ | **RESOLVED** — TCK-20260619-E21B-REGEN-SERVICE (2026-06-20) |
 
 ---
 
@@ -912,7 +915,7 @@ Three features have zero or near-zero implementation:
 | P1 | Add obstacle/maze regression tests for Flow-Field Navigation (4.2) |
 | P1 | Surface warning on hardcoded fallback activation (6.3) |
 | P1 | Complete Presenter / Read-Model Separation for remaining raw-model API routes (7.4) |
-| P2 | Implement Resource Node Regeneration (10.5) — prerequisite for Economy Health Metrics |
+| ~~P2~~ | ~~Implement Resource Node Regeneration (10.5)~~ — **DONE** (TCK-20260619-E21B-REGEN-SERVICE) |
 | P2 | Implement Macro-Economy Health Metrics (5.10) |
 | P2 | Define and enforce Per-Phase Domain Permissions beyond audit mode (1.9) |
 

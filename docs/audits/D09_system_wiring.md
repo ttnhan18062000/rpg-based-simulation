@@ -272,6 +272,18 @@ infrastructure) — these domain-phase systems were out of D02's scope, but they
 - `CampService.process_camps()`
 - `TransformationService.get_potential_transformation()`
 - `EnvironmentService` (hazard drain, weather multipliers)
+- `DemographicCycleService` (added E52A — cadence-gated population cohort cycle)
+
+**Additional pipeline phases added since this audit (2026-06-22):**
+- `PaidInformationTransactionSystem` (E42C — Phase 6 in `pipeline.py:refine()`)
+- `LeadContradictionSystem` (E42D — wired into authoritative pipeline)
+- `ResourceNodeRegenerationService` (E21B — in `ResourceEcologyService.process_ecology()`)
+
+**Episode-boundary systems in `CampaignOrchestrator._advance_state()` (not tick-live):**
+- `SocialMemoryExporter` / `SocialMemoryImporter` (E43B)
+- `ChronicleCompiler` (E51 — compiles NarrativeLedger at episode end)
+- `ProgressionPlanExporter` / `ProgressionPlanImporter` (E61B — scoped, not yet implemented)
+- `CultureDriftExporter` / `CultureDriftImporter` (E62B — scoped, not yet implemented)
 
 There is no domain-level inventory equivalent to D02. This is the most significant
 gap this audit reveals: the domain-phase layer is invisible to current audit coverage.
