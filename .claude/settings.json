@@ -40,7 +40,11 @@
       "Bash(tmux *)",
       "Bash(pkill *)",
       "Bash(docker *)",
-      "Bash(timeout *)"
+      "Bash(timeout *)",
+      "Bash(rm -rf data/runs*)",
+      "Bash(rm -rf reports/release_proof*)",
+      "Bash(rm -rf data/runs/*)",
+      "Bash(rm -rf reports/release_proof/*)"
     ]
   },
   "hooks": {
