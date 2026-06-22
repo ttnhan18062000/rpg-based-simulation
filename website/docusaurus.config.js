@@ -34,6 +34,17 @@ const config = {
         showLastUpdateAuthor: true,
       },
     ],
+    [
+      '@docusaurus/plugin-content-docs',
+      {
+        id: 'agent-monitoring',
+        path: '../agent-monitoring/retro',
+        routeBasePath: 'agent-monitoring',
+        sidebarPath: require.resolve('./sidebars-agent-monitoring.js'),
+        showLastUpdateTime: true,
+        showLastUpdateAuthor: true,
+      },
+    ],
   ],
 
   themes: [
@@ -41,7 +52,7 @@ const config = {
       require.resolve('@easyops-cn/docusaurus-search-local'),
       {
         hashed: false,
-        docsRouteBasePath: ['docs', 'tickets', 'artifacts'],
+        docsRouteBasePath: ['docs', 'tickets', 'artifacts', 'agent-monitoring'],
         indexBlog: false,
       },
     ],
@@ -73,6 +84,7 @@ const config = {
         { to: '/tickets/', label: 'Tickets', position: 'left' },
         { to: '/artifacts/', label: 'Artifacts', position: 'left' },
         { to: '/docs/archive/', label: 'Archive', position: 'left' },
+        { to: '/agent-monitoring/', label: 'Agent Monitoring', position: 'left' },
       ],
     },
   },
