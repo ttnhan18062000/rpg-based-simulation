@@ -249,6 +249,7 @@ task.md
 # graphify-out/.graphify_root
 # graphify-out/.graphify_python
 graphify-out/*
+src/graphify-out/
 
 # Knowledge search index (local only — rebuild with: make knowledge-index)
 knowledge-index/
