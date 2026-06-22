@@ -1806,13 +1806,28 @@
   audience: developer
   tags: []
 - type: doc
-  path: docs/systems/grand_strategy.md
-  title: Grand Strategy System
-  status: active
+  path: docs/archive/grand_strategy_v1.md
+  title: Grand Strategy System (V1 — Archived)
+  status: archived
   layer: systems
   authority: P1
   audience: developer
-  tags: []
+  tags: [archived, v1, faction, grand-strategy]
+- type: doc
+  path: docs/systems/faction_contract.md
+  title: Faction System Contract (V2 Authoritative)
+  status: authoritative
+  layer: strategy
+  authority: P1
+  audience: developer
+  related_code_areas:
+    - src/core/state.py
+    - src/engine/faction_decision.py
+    - src/domains/faction/
+    - src/engine/military_conflict.py
+    - src/domains/campaigns/orchestrator.py
+    - src/domains/chronicle/
+  tags: [faction, diplomacy, war, chronicle, narrative-ledger, v2]
 - type: doc
   path: docs/systems/mechanics.md
   title: 'Gameplay Mechanics: Formulas & Progression'

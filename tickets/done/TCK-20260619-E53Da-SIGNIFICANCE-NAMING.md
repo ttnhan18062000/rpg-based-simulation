@@ -1,10 +1,10 @@
 ---
-status: open
+status: historical
 layer: simulation
 authority: P1
 audience: agent
 ticket_id: TCK-20260619-E53Da-SIGNIFICANCE-NAMING
-phase: open
+phase: done
 date: 2026-06-22
 tags: [faction, chronicle, significance, naming, narrative-ledger, phase-5]
 ---
@@ -15,7 +15,7 @@ tags: [faction, chronicle, significance, naming, narrative-ledger, phase-5]
 Epic 5.3Da · Chronicle Faction Event Significance + Namer Template Fix
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -168,9 +168,15 @@ Each entry requires `v2_evidence` pointing to `src/domains/chronicle/significanc
 - `template.format(**fmt_vars)` with extra keys raises `KeyError` only if the template string uses an unknown key — using `str.format_map` with a defaultdict or pre-filtering fmt_vars is safer; prefer `str.format_map(collections.defaultdict(str, fmt_vars))` to avoid KeyError on templates with unexpected fields.
 
 ## Implementation Notes
-- The uppercase→lowercase rename in TEMPLATES is safe because no current code path produces `NarrativeLedgerEntry` with `event_type="WAR_DECLARED"` (uppercase). E53Bd, the first writer, uses lowercase. Document this in the commit message.
-- `territory_transferred` significance is 0.85 (from E53Cc, the implementing ticket), not 0.9 (from E53D epic spec). The implementing ticket is authoritative; the epic spec was approximate.
-- After modifying `significance.py` and `naming.py`, run `graphify update .` to keep the knowledge graph current.
+- Added 6 faction event types to BASE_SIGNIFICANCE (war_declared=0.95, siege_begins=0.80, territory_transferred=0.85, alliance_formed=0.80, peace_treaty=0.75, betrayal=0.85).
+- Renamed TEMPLATES uppercase keys (WAR_DECLARED→war_declared, TERRITORY_TRANSFERRED→territory_transferred, ALLIANCE_FORMED→alliance_formed) to match E53Bd lowercase emission. Safe: no code path emits uppercase event_type strings.
+- Upgraded dual-faction templates to use {source_faction}/{target_faction}; added peace_treaty, betrayal, siege_begins templates.
+- Added ERA_NAMES: war_declared→"The Age of War", alliance_formed→"The Age of Alliances", territory_transferred→"The Age of Conquest".
+- Extended name_milestone() with faction_names/region_names optional params; switched to format_map(defaultdict(str)) to avoid KeyError on templates with unknown keys.
+- Updated TC-14 in test_chronicle_compiler.py to use lowercase template keys and dual-faction/region expected values.
+- Created tests/unit/chronicle/test_significance.py (9 tests) and tests/unit/chronicle/test_naming.py (15 tests).
+- Updated SOC-CHRON-001 and SOC-CHRON-003 in social_narrative.yaml; added SOC-FAC-001..006.
+- territory_transferred significance is 0.85 (from E53Cc, implementing ticket), not 0.9 (epic spec approximation).
 
 ## Test Summary
 ```bash
@@ -180,7 +186,12 @@ pytest tests/unit/chronicle/ -x -v
 ```
 
 ## Files Changed
-_To be filled on completion._
+- src/domains/chronicle/significance.py — added 6 faction event types to BASE_SIGNIFICANCE
+- src/domains/chronicle/naming.py — fixed TEMPLATES case, added dual-faction/region templates, ERA_NAMES, extended name_milestone() signature with faction_names/region_names, switched to format_map(defaultdict)
+- tests/unit/chronicle/test_chronicle_compiler.py — updated TC-14 for lowercase keys and faction/region cases
+- tests/unit/chronicle/test_significance.py (new) — 9 tests for faction significance values
+- tests/unit/chronicle/test_naming.py (new) — 15 tests for faction naming templates
+- docs/parity_ledger/social_narrative.yaml — updated SOC-CHRON-001 and SOC-CHRON-003; added SOC-FAC-001..006
 
 ## Completion Summary
-_To be filled on completion._
+Added 6 faction event types (war_declared, siege_begins, territory_transferred, alliance_formed, peace_treaty, betrayal) to EventSignificanceScorer.BASE_SIGNIFICANCE; fixed TEMPLATES uppercase→lowercase keys to match E53Bd lowercase emission; upgraded name_milestone() with dual-faction colon-pair resolution and region_names support; 51 tests passing.

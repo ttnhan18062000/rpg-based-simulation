@@ -1,6 +1,7 @@
 # Faction System Contract
 
-**Status**: DRAFT — E53Ba complete (DiplomaticState enum + migration). Pending E53Bb–Bd for full diplomacy coverage.
+**Status**: AUTHORITATIVE — E53A–E53D complete. Last verified: 2026-06-23.
+Replaces: `docs/archive/grand_strategy_v1.md`.
 
 **Tickets**: E53Aa (FactionState), E53Ab (FactionDecisionPhase), E53Ac (directive propagation),
 E53Ad (tension update), E53Ba (DiplomaticState enum), E53Bb–Bd (diplomacy actions), E53C (war).
@@ -211,7 +212,83 @@ Each WAR faction drains `military_strength` by `0.001/tick` (flat, deduped per f
 
 ---
 
+## NarrativeLedger Integration (E53Bd / E53Cc / E53Db)
+
+All faction WorldEvents are harvested by `CampaignOrchestrator._extract_narrative_entries()` into
+`NarrativeLedgerEntry` records. Only categories present in `_SIGNIFICANCE_MAP` are recorded.
+
+### Significance values (authoritative — all verified)
+
+| event_type | significance | WorldEventCategory | Source ticket |
+|---|---|---|---|
+| `war_declared` | 0.95 | `FACTION_WAR_DECLARED` | E53Bd |
+| `alliance_formed` | 0.80 | `FACTION_ALLIANCE_FORMED` | E53Bd |
+| `peace_treaty` | 0.75 | `FACTION_PEACE_TREATY` | E53Bd |
+| `territory_transferred` | 0.85 | `TERRITORY_TRANSFERRED` | E53Cc |
+| `war_ended_exhaustion` | 0.80 | `WAR_ENDED_EXHAUSTION` | E53Cd |
+| `siege_begins` | 0.80 | `SIEGE_BEGINS` | E53Db |
+| `betrayal` | 0.85 | `BETRAYAL` | E53Db |
+
+Chronicle threshold: `CHRONICLE_THRESHOLD = 0.5` — all 7 faction event types exceed this.
+
+### SIEGE_BEGINS emission
+
+Emitted by `MilitaryConflictPhase.execute()` in `src/engine/military_conflict.py` on the first tick
+a siege is established on a region (`reg.siege_state is None` before the update).
+`WorldEvent.subject = contested_region_id` (enables `ChronicleNamer` region template: `"The Siege of {region_name}"`).
+
+### BETRAYAL emission
+
+Detected by `events_from_transitions(betrayal_updates=[...])` in `src/domains/faction/diplomatic_state_machine.py`.
+`betrayal_updates` contains `FactionUpdate` records that move a relation from `ALLIED` → `HOSTILE`
+(via `DiplomaticActionHandler._handle_betrayal()`). `WorldEvent.subject = ":".join(sorted([betrayer_id, betrayed_id]))`.
+
+---
+
+## Chronicle Integration (E53Da / E53Dc)
+
+### ChronicleNamer templates for faction events
+
+Defined in `src/domains/chronicle/naming.py`:
+
+| event_type | Template | subject format |
+|---|---|---|
+| `war_declared` | `The {source_faction} War against {target_faction}` | `"fid_a:fid_b"` |
+| `alliance_formed` | `The {source_faction}–{target_faction} Alliance` | `"fid_a:fid_b"` |
+| `peace_treaty` | `The Peace of {source_faction} and {target_faction}` | `"fid_a:fid_b"` |
+| `betrayal` | `The Betrayal of {source_faction} by {target_faction}` | `"fid_a:fid_b"` |
+| `territory_transferred` | `The Conquest of {region_name}` | `region_id` |
+| `siege_begins` | `The Siege of {region_name}` | `region_id` |
+
+For dual-faction templates, `subject_id` encodes the sorted pair `"sorted_fid_a:sorted_fid_b"`.
+`source_faction`/`target_faction` are resolved via `faction_names` dict (fallback to raw ID).
+
+### Era names for faction events
+
+| event_type | ERA_NAMES value |
+|---|---|
+| `war_declared` | `"The Age of War"` |
+| `alliance_formed` | `"The Age of Alliances"` |
+| `territory_transferred` | `"The Age of Conquest"` |
+
+### ChronicleCompiler.compile() params (E53Dc)
+
+```python
+compiler.compile(
+    campaign_state,
+    output_dir="...",
+    entity_names={int: str},    # entity id → display name
+    faction_names={str: str},   # faction_id → display name
+    region_names={str: str},    # region_id → display name
+)
+```
+
+Both `faction_names` and `region_names` default to `None` (backward-compatible).
+
+---
+
 ## Parity Ledger
 
-See `docs/parity_ledger/faction.yaml` (FAC-001 through FAC-011, FACTION-TENSION-001) and
-`docs/parity_ledger/strategic_cognition.yaml` (FACTION-DIR-001).
+- `docs/parity_ledger/social_narrative.yaml` — SOC-FAC-001 through SOC-FAC-010, SOC-CHRON-001 through SOC-CHRON-006
+- `docs/parity_ledger/faction.yaml` — FAC-001 through FAC-011, FACTION-TENSION-001
+- `docs/parity_ledger/strategic_cognition.yaml` — FACTION-DIR-001

@@ -41,6 +41,8 @@ class ChronicleCompiler:
         campaign_state: CampaignState,
         output_dir: str,
         entity_names: dict[int, str] | None = None,
+        faction_names: dict[str, str] | None = None,
+        region_names: dict[str, str] | None = None,
     ) -> tuple[str, dict]:
         """Run the full chronicle pipeline and write output files.
 
@@ -56,7 +58,8 @@ class ChronicleCompiler:
             output_dir: Directory path where Chronicle.md and chronicle.json are
                         written. Directory must already exist.
             entity_names: Optional mapping of int entity id → display name.
-                          Passed through to ChronicleNamer for milestone titles.
+            faction_names: Optional mapping of faction_id → display name (E53Dc).
+            region_names: Optional mapping of region_id → display name (E53Dc).
 
         Returns:
             Tuple of (markdown_str, json_dict) — the rendered outputs. Files are
@@ -65,7 +68,6 @@ class ChronicleCompiler:
         Raises:
             OSError: If output_dir is not writable.
         """
-        names = entity_names or {}
         campaign_id = campaign_state.campaign_id
 
         # Step 1 + 2: load + group
@@ -75,10 +77,14 @@ class ChronicleCompiler:
         )
 
         # Step 3: render markdown
-        md_str = ChronicleRenderer.render_markdown(hierarchy, campaign_id, names)
+        md_str = ChronicleRenderer.render_markdown(
+            hierarchy, campaign_id, entity_names, faction_names, region_names
+        )
 
         # Step 4: render json
-        json_dict = ChronicleRenderer.render_json(hierarchy, campaign_id, names)
+        json_dict = ChronicleRenderer.render_json(
+            hierarchy, campaign_id, entity_names, faction_names, region_names
+        )
 
         # Step 5: write files
         self._write_markdown(output_dir, md_str)

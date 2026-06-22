@@ -28,6 +28,13 @@ BASE_SIGNIFICANCE: dict[str, float] = {
     "KNOWN_TRAITOR_SPOTTED": 0.6,
     "betrayal_desertion": 0.7,
     "INFLATION_SPIRAL": 0.5,
+    # Faction war / diplomatic events (E53D)
+    "war_declared":          0.95,
+    "siege_begins":          0.80,
+    "territory_transferred": 0.85,
+    "alliance_formed":       0.80,
+    "peace_treaty":          0.75,
+    "betrayal":              0.85,
 }
 
 # Events scoring at or above this threshold appear in the chronicle.

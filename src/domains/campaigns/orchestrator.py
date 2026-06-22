@@ -57,6 +57,9 @@ _SIGNIFICANCE_MAP: Dict[str, tuple] = {
     "TERRITORY_TRANSFERRED": ("territory_transferred", 0.85),
     # E53Cd: War exhaustion peace resolution
     "WAR_ENDED_EXHAUSTION": ("war_ended_exhaustion", 0.80),
+    # E53Db: Siege onset and betrayal
+    "SIEGE_BEGINS": ("siege_begins", 0.80),
+    "BETRAYAL":     ("betrayal",     0.85),
 }
 
 # ── Types ─────────────────────────────────────────────────────────────────────

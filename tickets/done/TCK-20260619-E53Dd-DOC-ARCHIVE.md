@@ -1,11 +1,11 @@
 ---
-status: open
+status: done
 layer: strategy
 authority: P1
 audience: agent
 ticket_id: TCK-20260619-E53Dd-DOC-ARCHIVE
-phase: open
-date: 2026-06-22
+phase: done
+date: 2026-06-23
 tags: [faction, docs, archive, faction-contract, grand-strategy, knowledge-index, phase-5]
 ---
 
@@ -15,7 +15,7 @@ tags: [faction, docs, archive, faction-contract, grand-strategy, knowledge-index
 Epic 5.3Dd · Grand Strategy Doc Archive + V2 Faction Contract
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -217,7 +217,13 @@ pytest tests/unit/docs/test_doc_archive.py -x -v
 ```
 
 ## Files Changed
-_To be filled on completion._
+- `docs/archive/grand_strategy_v1.md` — moved from docs/systems/; added ARCHIVED deprecation header
+- `docs/systems/grand_strategy.md` — removed (moved to archive)
+- `docs/systems/faction_contract.md` — status updated to AUTHORITATIVE; NarrativeLedger Integration, Chronicle Integration, and updated Parity Ledger sections added (E53Da/E53Db/E53Dc coverage)
+- `tests/unit/docs/test_doc_archive.py` — 3 new doc archive tests (new file)
+- `tests/unit/docs/__init__.py` — new empty init (new directory)
+- `docs/REGISTRY.yaml` — grand_strategy.md entry updated to archive path; faction_contract.md entry added as authoritative
+- `.cache/knowledge_index/` — regenerated via `make knowledge-index-update`
 
 ## Completion Summary
-_To be filled on completion._
+grand_strategy.md archived at docs/archive/grand_strategy_v1.md with deprecation notice. faction_contract.md promoted to AUTHORITATIVE with E53D chronicle/NarrativeLedger sections. Knowledge index regenerated (8 files re-embedded). 3 archive tests pass.

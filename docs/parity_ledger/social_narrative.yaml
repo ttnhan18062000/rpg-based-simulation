@@ -2613,17 +2613,20 @@
     returns True when score >= CHRONICLE_THRESHOLD (0.5). Known event type weights:
     entity_death=0.5, faction_destroyed=0.9, quest_completed=0.7, calamity=0.85,
     LEGENDARY_ARRIVAL=0.75, KNOWN_TRAITOR_SPOTTED=0.6, betrayal_desertion=0.7,
-    INFLATION_SPIRAL=0.5. Hero death scores 0.8 (entity_death 0.5 + 0.3 hero_bonus).
-    Unknown types default to 0.1 (below threshold). Scorer is stateless and deterministic.
+    INFLATION_SPIRAL=0.5. Faction war/diplomatic weights (E53Da): war_declared=0.95,
+    siege_begins=0.80, territory_transferred=0.85, alliance_formed=0.80,
+    peace_treaty=0.75, betrayal=0.85. Hero death scores 0.8 (entity_death 0.5 + 0.3
+    hero_bonus). Unknown types default to 0.1 (below threshold). Scorer is stateless
+    and deterministic.
   status: verified
   priority: P1
   legacy_evidence: null
   v2_evidence: >
     src/domains/chronicle/significance.py (EventSignificanceScorer, BASE_SIGNIFICANCE,
-    CHRONICLE_THRESHOLD). (TCK-20260619-E51A-SIGNIFICANCE)
+    CHRONICLE_THRESHOLD). (TCK-20260619-E51A-SIGNIFICANCE, TCK-20260619-E53Da-SIGNIFICANCE-NAMING)
   proof_type: parity
   test_path: >
-    pytest tests/unit/chronicle/test_chronicle_compiler.py -x -v
+    pytest tests/unit/chronicle/test_significance.py tests/unit/chronicle/test_chronicle_compiler.py -x -v
   divergence_note: null
   support_boundary: null
 - id: SOC-CHRON-002
@@ -2652,25 +2655,29 @@
 - id: SOC-CHRON-003
   text: >
     ChronicleNamer produces human-readable deterministic names for milestones and eras.
-    name_milestone(entry, entity_names) resolves subject via safe int-cast of subject_id
-    (raw-string fallback if non-numeric or absent in entity_names), then applies
-    TEMPLATES[event_type] with {subject} and {tick} substitution; unknown event types
-    fall back to the bare subject name. name_era(era_index, dominant_event_type) maps
-    dominant_event_type to ERA_NAMES (entity_death to "The Age of Conflict",
-    faction_destroyed to "The Age of Collapse", calamity to "The Age of Calamity") with
-    "Era {era_index+1}" as the 1-based fallback for unknown types. Both functions are
-    pure — no state, no RNG — deterministic across runs with same inputs.
-    (TCK-20260619-E51C-NAMING)
+    name_milestone(entry, entity_names, faction_names=None, region_names=None) resolves
+    subject as follows: if subject_id contains ":" → split on first ":" into source_id /
+    target_id, resolve each via faction_names (fallback to raw ID) → {source_faction} /
+    {target_faction}; elif template uses {region_name} → resolve via region_names (fallback
+    to raw subject_id); else → safe int-cast of subject_id against entity_names (raw-string
+    fallback). Template applied via format_map(defaultdict(str, ...)) to avoid KeyError on
+    extra or missing keys. TEMPLATES keys are lowercase (E53Da: renamed from uppercase to
+    match E53Bd lowercase emission). Faction templates: war_declared, territory_transferred,
+    alliance_formed, peace_treaty, betrayal, siege_begins. Faction era names: war_declared
+    → "The Age of War", alliance_formed → "The Age of Alliances", territory_transferred →
+    "The Age of Conquest". name_era fallback: "Era {era_index+1}" (1-based) for unknown
+    types. Both functions are pure — no state, no RNG — deterministic across runs with same
+    inputs. (TCK-20260619-E51C-NAMING, TCK-20260619-E53Da-SIGNIFICANCE-NAMING)
   status: verified
   priority: P1
   legacy_evidence: null
   v2_evidence: >
     src/domains/chronicle/naming.py (ChronicleNamer.TEMPLATES, ChronicleNamer.ERA_NAMES,
     ChronicleNamer.name_milestone, ChronicleNamer.name_era).
-    (TCK-20260619-E51C-NAMING)
+    (TCK-20260619-E51C-NAMING, TCK-20260619-E53Da-SIGNIFICANCE-NAMING)
   proof_type: parity
   test_path: >
-    pytest tests/unit/chronicle/test_chronicle_compiler.py -x -v
+    pytest tests/unit/chronicle/test_naming.py tests/unit/chronicle/test_chronicle_compiler.py -x -v
   divergence_note: null
   support_boundary: null
 - id: SOC-CHRON-004
@@ -2718,5 +2725,123 @@
   proof_type: parity
   test_path: >
     pytest tests/api/test_chronicle_api.py -x -v
+  divergence_note: null
+  support_boundary: null
+- id: SOC-CHRON-006
+  text: >
+    ChronicleCompiler.compile() and ChronicleRenderer.render_markdown/render_json accept
+    faction_names: dict[str, str] and region_names: dict[str, str] optional params (E53Dc).
+    These are threaded to ChronicleNamer.name_milestone() enabling faction/region display name
+    resolution in named milestones. Backward-compatible — both params default to None.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/domains/chronicle/compiler.py (ChronicleCompiler.compile faction_names/region_names params).
+    src/domains/chronicle/renderer.py (render_markdown/render_json faction_names/region_names threaded
+    to name_milestone). (TCK-20260619-E53Dc-COMPILER-INTEGRATION)
+  proof_type: parity
+  test_path: >
+    pytest tests/unit/chronicle/test_faction_chronicle.py -x -v
+  divergence_note: null
+  support_boundary: null
+- id: SOC-FAC-001
+  text: war_declared events score 0.95 in EventSignificanceScorer (above CHRONICLE_THRESHOLD=0.5).
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/domains/chronicle/significance.py (BASE_SIGNIFICANCE["war_declared"]=0.95). (TCK-20260619-E53Da-SIGNIFICANCE-NAMING)
+  proof_type: parity
+  test_path: tests/unit/chronicle/test_significance.py::test_war_declared_scores_0_95
+  divergence_note: null
+  support_boundary: null
+- id: SOC-FAC-002
+  text: alliance_formed events score 0.80 in EventSignificanceScorer.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/domains/chronicle/significance.py (BASE_SIGNIFICANCE["alliance_formed"]=0.80). (TCK-20260619-E53Da-SIGNIFICANCE-NAMING)
+  proof_type: parity
+  test_path: tests/unit/chronicle/test_significance.py::test_alliance_formed_scores_0_80
+  divergence_note: null
+  support_boundary: null
+- id: SOC-FAC-003
+  text: peace_treaty events score 0.75 in EventSignificanceScorer.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/domains/chronicle/significance.py (BASE_SIGNIFICANCE["peace_treaty"]=0.75). (TCK-20260619-E53Da-SIGNIFICANCE-NAMING)
+  proof_type: parity
+  test_path: tests/unit/chronicle/test_significance.py::test_peace_treaty_scores_0_75
+  divergence_note: null
+  support_boundary: null
+- id: SOC-FAC-004
+  text: betrayal events score 0.85 in EventSignificanceScorer.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/domains/chronicle/significance.py (BASE_SIGNIFICANCE["betrayal"]=0.85). (TCK-20260619-E53Da-SIGNIFICANCE-NAMING)
+  proof_type: parity
+  test_path: tests/unit/chronicle/test_significance.py::test_betrayal_scores_0_85
+  divergence_note: null
+  support_boundary: null
+- id: SOC-FAC-005
+  text: territory_transferred events score 0.85 in EventSignificanceScorer. Note: 0.85 (not 0.9) — implementing ticket E53Cc is authoritative over epic spec.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/domains/chronicle/significance.py (BASE_SIGNIFICANCE["territory_transferred"]=0.85). (TCK-20260619-E53Da-SIGNIFICANCE-NAMING)
+  proof_type: parity
+  test_path: tests/unit/chronicle/test_significance.py::test_territory_transferred_scores_0_85
+  divergence_note: null
+  support_boundary: null
+- id: SOC-FAC-006
+  text: siege_begins events score 0.80 in EventSignificanceScorer.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/domains/chronicle/significance.py (BASE_SIGNIFICANCE["siege_begins"]=0.80). (TCK-20260619-E53Da-SIGNIFICANCE-NAMING)
+  proof_type: parity
+  test_path: tests/unit/chronicle/test_significance.py::test_siege_begins_scores_0_80
+  divergence_note: null
+  support_boundary: null
+- id: SOC-FAC-007
+  text: MilitaryConflictPhase emits a SIEGE_BEGINS WorldEvent with subject=region_id on the first tick a siege is established.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/engine/military_conflict.py (inside `if reg.siege_state is None:` block, appends WorldEvent(category=SIEGE_BEGINS, subject=contested_region_id)). (TCK-20260619-E53Db-SIEGE-BETRAYAL-LEDGER)
+  proof_type: parity
+  test_path: tests/unit/faction/test_siege_ledger.py::test_siege_begins_emitted_on_first_siege_tick
+  divergence_note: null
+  support_boundary: null
+- id: SOC-FAC-008
+  text: events_from_transitions() emits BETRAYAL WorldEvent when betrayal_updates contain an ALLIED→HOSTILE transition.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/domains/faction/diplomatic_state_machine.py (betrayal_updates optional param; loop detects ALLIED prior→HOSTILE new, sorted subject pair). (TCK-20260619-E53Db-SIEGE-BETRAYAL-LEDGER)
+  proof_type: parity
+  test_path: tests/unit/faction/test_betrayal_ledger.py::test_betrayal_emitted_when_allied_faction_transitions_hostile
+  divergence_note: null
+  support_boundary: null
+- id: SOC-FAC-009
+  text: CampaignOrchestrator._extract_narrative_entries converts SIEGE_BEGINS WorldEvent to a NarrativeLedgerEntry with event_type="siege_begins", significance=0.80, subject_id=region_id.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/domains/campaigns/orchestrator.py (_SIGNIFICANCE_MAP["SIEGE_BEGINS"]=("siege_begins",0.80); generic _extract_narrative_entries reads world_event.subject as subject_id). (TCK-20260619-E53Db-SIEGE-BETRAYAL-LEDGER)
+  proof_type: parity
+  test_path: tests/unit/faction/test_siege_ledger.py::test_orchestrator_converts_siege_begins_to_ledger_entry
+  divergence_note: null
+  support_boundary: null
+- id: SOC-FAC-010
+  text: CampaignOrchestrator._extract_narrative_entries converts BETRAYAL WorldEvent to a NarrativeLedgerEntry with event_type="betrayal", significance=0.85, subject_id=sorted faction pair.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/domains/campaigns/orchestrator.py (_SIGNIFICANCE_MAP["BETRAYAL"]=("betrayal",0.85); generic _extract_narrative_entries reads world_event.subject as subject_id). (TCK-20260619-E53Db-SIEGE-BETRAYAL-LEDGER)
+  proof_type: parity
+  test_path: tests/unit/faction/test_betrayal_ledger.py::test_orchestrator_converts_betrayal_to_ledger_entry
   divergence_note: null
   support_boundary: null

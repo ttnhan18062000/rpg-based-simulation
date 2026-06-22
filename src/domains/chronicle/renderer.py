@@ -64,6 +64,8 @@ class ChronicleRenderer:
         hierarchy: ChronicleHierarchy,
         campaign_id: str,
         entity_names: dict[int, str] | None = None,
+        faction_names: dict[str, str] | None = None,
+        region_names: dict[str, str] | None = None,
     ) -> str:
         """Produce Chronicle.md: YAML frontmatter + Era/Episode/Incident sections.
 
@@ -87,7 +89,8 @@ class ChronicleRenderer:
             hierarchy: ChronicleHierarchy produced by ChronicleGrouper.group().
             campaign_id: Stable identifier for this campaign (used in heading).
             entity_names: Optional mapping of int entity id → display name.
-                          Passed to ChronicleNamer for subject resolution.
+            faction_names: Optional mapping of faction_id → display name (E53Dc).
+            region_names: Optional mapping of region_id → display name (E53Dc).
 
         Returns:
             Deterministic Markdown string. Always begins with "---" YAML block.
@@ -111,7 +114,9 @@ class ChronicleRenderer:
                 lines.append(f"### Episode {episode.index + 1}")
                 for incident in episode.incidents:
                     for entry in incident.entries:
-                        milestone_name = ChronicleNamer.name_milestone(entry, names)
+                        milestone_name = ChronicleNamer.name_milestone(
+                            entry, names, faction_names=faction_names, region_names=region_names
+                        )
                         lines.append(f"- **{milestone_name}** (Tick {entry.tick})")
 
         return "\n".join(lines)
@@ -121,6 +126,8 @@ class ChronicleRenderer:
         hierarchy: ChronicleHierarchy,
         campaign_id: str,
         entity_names: dict[int, str] | None = None,
+        faction_names: dict[str, str] | None = None,
+        region_names: dict[str, str] | None = None,
     ) -> dict:
         """Produce chronicle.json: full structured JSON dict for REST.
 
@@ -192,7 +199,9 @@ class ChronicleRenderer:
 
         milestones_out: list[dict] = []
         for event in hierarchy.events:
-            milestone_name = ChronicleNamer.name_milestone(event, names)
+            milestone_name = ChronicleNamer.name_milestone(
+                event, names, faction_names=faction_names, region_names=region_names
+            )
             milestones_out.append({
                 "name": milestone_name,
                 "tick": event.tick,

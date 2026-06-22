@@ -312,20 +312,43 @@ def test_known_event_type_templates():
     """TC-14: Each TEMPLATES key produces the expected human-readable name."""
     entity_names = {7: "Ironhold", 9: "Thornwood Guild"}
 
-    cases = [
-        ("entity_death", "7", 10, "The Death of Ironhold"),
+    # Entity-based templates (subject_id is an integer entity key)
+    entity_cases = [
+        ("entity_death",      "7", 10, "The Death of Ironhold"),
         ("faction_destroyed", "7", 20, "The Fall of Ironhold"),
-        ("quest_completed", "9", 30, "The Quest of Thornwood Guild"),
-        ("WAR_DECLARED", "7", 40, "The Ironhold War Declaration"),
-        ("TERRITORY_TRANSFERRED", "7", 50, "The Fall of Ironhold"),
-        ("ALLIANCE_FORMED", "9", 60, "The Alliance with Thornwood Guild"),
+        ("quest_completed",   "9", 30, "The Quest of Thornwood Guild"),
     ]
-
-    for event_type, subject_id, tick, expected in cases:
+    for event_type, subject_id, tick, expected in entity_cases:
         entry = _make_entry(event_type, episode=0, tick=tick, subject_id=subject_id)
         name = ChronicleNamer.name_milestone(entry, entity_names)
         assert name == expected, (
-            f"event_type={event_type!r}: expected {expected!r}, got {name!r}"
+            f"entity case event_type={event_type!r}: expected {expected!r}, got {name!r}"
+        )
+
+    # Faction dual-colon templates (subject_id is "ALPHA:BETA" — raw IDs used as display names)
+    faction_cases = [
+        ("war_declared",   "ALPHA:BETA", 40, "The ALPHA War against BETA"),
+        ("alliance_formed", "ALPHA:BETA", 60, "The ALPHA–BETA Alliance"),
+        ("peace_treaty",   "ALPHA:BETA", 70, "The Peace of ALPHA and BETA"),
+        ("betrayal",       "ALPHA:BETA", 80, "The Betrayal of ALPHA by BETA"),
+    ]
+    for event_type, subject_id, tick, expected in faction_cases:
+        entry = _make_entry(event_type, episode=0, tick=tick, subject_id=subject_id)
+        name = ChronicleNamer.name_milestone(entry, entity_names)
+        assert name == expected, (
+            f"faction case event_type={event_type!r}: expected {expected!r}, got {name!r}"
+        )
+
+    # Region templates (subject_id is a region string, no colon)
+    region_cases = [
+        ("territory_transferred", "border_region",  50, "The Conquest of border_region"),
+        ("siege_begins",          "fortress_north",  90, "The Siege of fortress_north"),
+    ]
+    for event_type, subject_id, tick, expected in region_cases:
+        entry = _make_entry(event_type, episode=0, tick=tick, subject_id=subject_id)
+        name = ChronicleNamer.name_milestone(entry, entity_names)
+        assert name == expected, (
+            f"region case event_type={event_type!r}: expected {expected!r}, got {name!r}"
         )
 
 

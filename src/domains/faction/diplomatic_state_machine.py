@@ -13,7 +13,7 @@ Pair tension proxy: max(a.tension_level, b.tension_level).
 """
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Dict, List, Tuple
+from typing import TYPE_CHECKING, Dict, List, Optional, Tuple
 
 if TYPE_CHECKING:
     from src.core.state import FactionState
@@ -87,8 +87,9 @@ def events_from_transitions(
     alliance_updates: List[FactionUpdate],
     prior_factions: Dict[str, "FactionState"],
     tick: int,
+    betrayal_updates: Optional[List[FactionUpdate]] = None,
 ) -> list:
-    """Build WorldEvent list from transition and alliance update batches (E53Bd).
+    """Build WorldEvent list from transition and alliance update batches (E53Bd/E53Db).
 
     Deduplicates by pair — emits exactly one WorldEvent per faction pair per call.
     subject format: ":".join(sorted([fid_a, fid_b])) for narrative ledger dedup.
@@ -100,6 +101,7 @@ def events_from_transitions(
         alliance_updates:   FactionUpdates from DiplomaticActionHandler alliance path.
         prior_factions:     Faction map BEFORE updates applied (for WAR→NEUTRAL detection).
         tick:               Current simulation tick.
+        betrayal_updates:   FactionUpdates from DiplomaticActionHandler betrayal path (E53Db).
 
     Returns:
         List of WorldEvent objects (no src.engine imports required).
@@ -148,6 +150,29 @@ def events_from_transitions(
                 subject = ":".join(sorted([upd.faction_id, other_fid]))
                 events.append(WorldEvent(
                     category=WorldEventCategory.FACTION_ALLIANCE_FORMED,
+                    tick=tick,
+                    subject=subject,
+                ))
+
+    seen_betrayal_pairs: set = set()
+    for upd in (betrayal_updates or []):
+        for other_fid, new_state in upd.diplomatic_relations_set.items():
+            if new_state == DiplomaticState.HOSTILE:
+                prior_fs = prior_factions.get(upd.faction_id)
+                if prior_fs is None:
+                    continue
+                prior_rel = prior_fs.diplomatic_relations.get(
+                    other_fid, DiplomaticState.NEUTRAL
+                )
+                if prior_rel != DiplomaticState.ALLIED:
+                    continue
+                pair = frozenset([upd.faction_id, other_fid])
+                if pair in seen_betrayal_pairs:
+                    continue
+                seen_betrayal_pairs.add(pair)
+                subject = ":".join(sorted([upd.faction_id, other_fid]))
+                events.append(WorldEvent(
+                    category=WorldEventCategory.BETRAYAL,
                     tick=tick,
                     subject=subject,
                 ))

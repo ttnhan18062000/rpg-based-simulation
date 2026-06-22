@@ -1,9 +1,11 @@
 ---
-status: active
+status: archived
 layer: systems
 authority: P1
 audience: developer
 ---
+
+> **ARCHIVED (2026-06-23):** This document describes the V1 StrategySystem (`src/systems/strategy_system.py`, `src/core/world_state.py`) which was replaced by the V2 Faction & Diplomacy System (Epic 5.3). See `docs/systems/faction_contract.md` for the authoritative V2 reference.
 
 # Grand Strategy System
 

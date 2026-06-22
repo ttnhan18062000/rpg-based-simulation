@@ -1,11 +1,11 @@
 ---
-status: open
+status: done
 layer: simulation
 authority: P1
 audience: agent
 ticket_id: TCK-20260619-E53Dc-COMPILER-INTEGRATION
-phase: open
-date: 2026-06-22
+phase: done
+date: 2026-06-23
 tags: [faction, chronicle, integration-test, compiler, named-milestones, phase-5]
 ---
 
@@ -15,7 +15,7 @@ tags: [faction, chronicle, integration-test, compiler, named-milestones, phase-5
 Epic 5.3Dc · ChronicleCompiler Faction Event Integration Tests
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -142,7 +142,10 @@ pytest tests/unit/chronicle/ -x -v
 ```
 
 ## Files Changed
-_To be filled on completion._
+- `src/domains/chronicle/compiler.py` — added `faction_names` and `region_names` params to `compile()`; threaded to renderer calls
+- `src/domains/chronicle/renderer.py` — added `faction_names`/`region_names` params to `render_markdown()` and `render_json()`; passed to `ChronicleNamer.name_milestone()`
+- `tests/unit/chronicle/test_faction_chronicle.py` — 5 new integration tests (new file)
+- `docs/parity_ledger/social_narrative.yaml` — added SOC-CHRON-006
 
 ## Completion Summary
-_To be filled on completion._
+ChronicleCompiler now resolves faction and region display names in named milestones via optional `faction_names`/`region_names` params threaded through the compiler → renderer → namer chain. 5 new integration tests; 56 chronicle tests passing, zero regressions.

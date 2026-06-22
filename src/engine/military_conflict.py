@@ -288,6 +288,11 @@ class MilitaryConflictPhase:
                             started_tick=state.tick,
                         ),
                     ))
+                    world_events.append(WorldEvent(
+                        category=WorldEventCategory.SIEGE_BEGINS,
+                        tick=state.tick,
+                        subject=contested_region_id,
+                    ))
 
                 # Siege degradation: -5% service_availability, +5% siege_progress per tick
                 wu = wu.merge(WorldUpdate(

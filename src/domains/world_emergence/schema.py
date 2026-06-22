@@ -42,6 +42,9 @@ class WorldEventCategory(str, Enum):
     TERRITORY_TRANSFERRED = "TERRITORY_TRANSFERRED"
     # E53Cd: War exhaustion peace resolution
     WAR_ENDED_EXHAUSTION = "WAR_ENDED_EXHAUSTION"
+    # E53Db: Siege onset and betrayal
+    SIEGE_BEGINS = "SIEGE_BEGINS"
+    BETRAYAL = "BETRAYAL"
 
 @dataclass(frozen=True, slots=True)
 class WorldEvent:

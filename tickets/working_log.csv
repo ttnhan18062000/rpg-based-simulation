@@ -763,3 +763,7 @@ TCK-20260619-E53Ca-CONFLICT-PHASE,2026-06-22,DONE,standard,feature,Epic 5.3Ca Mi
 TCK-20260619-E53Cb-SIEGE-MODEL,2026-06-23,DONE,standard,feature,Epic 5.3Cb Squad Commitment + Siege State Model
 TCK-20260619-E53Cc-TERRITORY-TRANSFER,2026-06-23,DONE,standard,feature,Epic 5.3Cc Territory Transfer via Authoritative Pipeline + Integration Test
 TCK-20260619-E53Cd-WAR-EXHAUSTION,2026-06-23,DONE,standard,feature,Epic 5.3Cd War Exhaustion + Peace Triggers
+2026-06-22T18:16:00Z,TCK-20260619-E53Da-SIGNIFICANCE-NAMING,Epic 5.3Da · Chronicle Faction Event Significance + Namer Template Fix,DONE,Added 6 faction event types to EventSignificanceScorer and fixed TEMPLATES uppercase→lowercase in ChronicleNamer with dual-faction resolution,stored_artifacts/TCK-20260619-E53Da-SIGNIFICANCE-NAMING
+TCK-20260619-E53Db-SIEGE-BETRAYAL-LEDGER,2026-06-23,DONE,standard,E53Db wiring SIEGE_BEGINS and BETRAYAL WorldEvents into NarrativeLedger pipeline; 14 new tests
+TCK-20260619-E53Dc-COMPILER-INTEGRATION,2026-06-23,DONE,standard,ChronicleCompiler faction/region name params + 5 integration tests
+TCK-20260619-E53Dd-DOC-ARCHIVE,2026-06-23,DONE,standard,Archive grand_strategy.md + update faction_contract.md + 3 doc tests
