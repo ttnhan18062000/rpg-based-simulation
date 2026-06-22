@@ -44,3 +44,20 @@
   test_path: tests/unit/faction/test_faction_decision_phase.py
   divergence_note: null
   support_boundary: null
+- id: FACTION-TENSION-001
+  text: >
+    FactionAwarenessService.compute_tension_updates() emits FactionUpdate(tension_delta=+0.1)
+    for each RESOURCE_DEPLETED WorldEvent whose region_id is in a faction's territory.
+    Tension is capped at [0.0, 1.0] by apply.py (authoritative path). Uses
+    state.recent_world_events (last-tick window — one-tick lag inherent). (E53Ad)
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/engine/faction_decision.py — FactionAwarenessService.compute_tension_updates();
+    src/engine/pipeline.py — faction_awareness run_phase block;
+    src/engine/apply.py:345 — tension clamped max(0.0, min(1.0, ...))
+  proof_type: parity
+  test_path: tests/unit/faction/test_faction_awareness.py
+  divergence_note: null
+  support_boundary: null

@@ -164,10 +164,36 @@ class AuthoritativeApplyPipeline:
         update = run_phase("blacksmith", update, lambda u: BlacksmithSystem.enforce(state, u))
         costs["contracts_production"] = (time.perf_counter_ns() - t_start) / 1e6
 
+        # --- Enhanced RPG Phase 8b: Faction Decision (runs before adventure routing) ---
+        # Must run every tick (no cadence gate) so faction_directives is stable input for scoring.
+        t_start = time.perf_counter_ns()
+        from src.engine.faction_decision import FactionDecisionPhase, FactionAwarenessService
+        faction_directives: list = FactionDecisionPhase.execute(state, policy=None)
+        costs["faction_decision"] = (time.perf_counter_ns() - t_start) / 1e6
+
+        # --- Enhanced RPG Phase 8c: Faction Awareness (tension from last-tick resource events) ---
+        # recent_world_events reflects last tick's window — one-tick lag is inherent (state frozen).
+        t_start = time.perf_counter_ns()
+        from src.core.updates import StateUpdate as _SU_fa
+        _recent_events = getattr(state, "recent_world_events", [])
+        update = run_phase(
+            "faction_awareness", update,
+            lambda u: _SU_fa(faction_updates=FactionAwarenessService.compute_tension_updates(state, _recent_events)),
+        )
+        costs["faction_awareness"] = (time.perf_counter_ns() - t_start) / 1e6
+
         # --- Enhanced RPG Phase 3: Adventure Routing ---
         t_start = time.perf_counter_ns()
         from src.domains.adventure.phase import AdventureDecisionPhase
-        update = run_phase("adventure_decision", update, lambda u: AdventureDecisionPhase.apply(state), "ENABLE_ADVENTURE_ROUTING")
+        update = run_phase(
+            "adventure_decision", update,
+            lambda u: AdventureDecisionPhase.apply(
+                state,
+                faction_directives=faction_directives,
+                factions=state.factions,
+            ),
+            "ENABLE_ADVENTURE_ROUTING",
+        )
         costs["adventure_decision"] = (time.perf_counter_ns() - t_start) / 1e6
 
         # --- Phase 3: Action & Movement Routing ---
@@ -217,14 +243,6 @@ class AuthoritativeApplyPipeline:
         recent_world_events = getattr(state, "recent_world_events", [])
         update = run_phase("world_emergence", update, lambda u: WorldEmergencePhase.execute(state, u, recent_world_events)[0], "ENABLE_WORLD_EMERGENCE")
         costs["world_emergence"] = (time.perf_counter_ns() - t_start) / 1e6
-
-        # --- Enhanced RPG Phase 8b: Faction Decision ---
-        t_start = time.perf_counter_ns()
-        faction_directives: list = []
-        if should_run(state.tick, None, cadence.faction_decision):
-            from src.engine.faction_decision import FactionDecisionPhase
-            faction_directives = FactionDecisionPhase.execute(state, policy=None)
-        costs["faction_decision"] = (time.perf_counter_ns() - t_start) / 1e6
 
         # --- Phase 6: Economy & Evolution ---
         # Refresh dirty set to capture resource_transfers added by town_resolution and world_dynamics

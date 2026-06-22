@@ -26,12 +26,13 @@ def replace(obj: Any, **changes: Any) -> Any:
     return res
 
 from src.core.state import (
-    AuthoritativeState, EntityState, InventoryComponent, CorpseState, 
-    InteractionComponent, BiologicalComponent, LifecycleComponent, 
+    AuthoritativeState, EntityState, InventoryComponent, CorpseState,
+    InteractionComponent, BiologicalComponent, LifecycleComponent,
     NavigationComponent, TaskComponent, StrategicComponent, StaminaComponent, CombatComponent,
     RegionState, ResourceNodeState, BuildingState, CampState, GroupRecord,
-    GroundItemState, ChestState, LocalScarState, IntentResult, AttributeComponent, 
-    IdentityComponent, AptitudeComponent, EquipmentComponent, SocialComponent, ReadOnlyDict
+    GroundItemState, ChestState, LocalScarState, IntentResult, AttributeComponent,
+    IdentityComponent, AptitudeComponent, EquipmentComponent, SocialComponent, ReadOnlyDict,
+    FactionState
 )
 from src.core.quests import QuestState, QuestStatus
 from src.core.models.quests import QuestOpportunity, QuestOpportunityStatus
@@ -324,6 +325,31 @@ class ApplyPath:
             if existing is not None:
                 new_quest_registry[quest_id] = replace(existing, status=new_status)
 
+        # Epic 5.3Aa: Apply faction updates to durable factions dict
+        new_factions = dict(getattr(prior_state, "factions", {}))
+        for fu in update.faction_updates:
+            if fu.is_noop():
+                continue
+            existing = new_factions.get(fu.faction_id)
+            if existing is None:
+                existing = FactionState(faction_id=fu.faction_id)
+            new_tension = existing.tension_level + fu.tension_delta
+            new_ms = fu.military_strength_set if fu.military_strength_set is not None else existing.military_strength
+            new_territory = (set(existing.territory) | set(fu.territory_add)) - set(fu.territory_remove)
+            new_resources = dict(existing.resources)
+            for k, v in fu.resources_delta.items():
+                new_resources[k] = new_resources.get(k, 0) + v
+            new_relations = {**existing.diplomatic_relations, **fu.diplomatic_relations_set}
+            new_doctrines = fu.active_doctrines_set if fu.active_doctrines_set is not None else existing.active_doctrines
+            new_factions[fu.faction_id] = replace(existing,
+                tension_level=max(0.0, min(1.0, new_tension)),
+                military_strength=new_ms,
+                territory=tuple(sorted(new_territory)),
+                resources=new_resources,
+                diplomatic_relations=new_relations,
+                active_doctrines=new_doctrines,
+            )
+
         new_state = AuthoritativeState(
             tick=tick,
             seed=prior_state.seed,
@@ -371,6 +397,7 @@ class ApplyPath:
             _force_full_scan=getattr(prior_state, "_force_full_scan", False),
             recent_world_events=new_recent_world_events,
             quest_registry=new_quest_registry,
+            factions=new_factions,
         )
 
         if not any_entity_changed and getattr(prior_state, "_readonly_entities_cache", None) is not None:

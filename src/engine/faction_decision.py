@@ -1,24 +1,24 @@
 """FactionDecisionPhase — read-only domain phase that emits transient FactionDirective structs.
+FactionAwarenessService — reads recent world events and produces FactionUpdate tension deltas.
 
-Runs cadenced inside AuthoritativeApplyPipeline.refine() (E53Ab).
+Runs inside AuthoritativeApplyPipeline.refine() before adventure_decision (E53Ac).
 Directives are NEVER persisted in AuthoritativeState — they are transient per-tick scratch
 consumed within the same refine() call by E53Ac (directive propagation).
 """
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Optional, Sequence
 
 if TYPE_CHECKING:
     from src.core.state import AuthoritativeState
     from src.engine.policy import GovernorPolicy
 
-# ---------------------------------------------------------------------------
-# Directive kind constants (plain strings — NOT IntEnum, to keep E53B/C extensible)
-# ---------------------------------------------------------------------------
-DEFEND_BORDER: str = "DEFEND_BORDER"
-TRADE_ROUTE: str = "TRADE_ROUTE"
-COMMISSION_QUEST: str = "COMMISSION_QUEST"
+# Directive kind constants live in faction_constants to avoid circular imports
+# with scoring.py (which also imports these).
+from src.engine.faction_constants import DEFEND_BORDER, TRADE_ROUTE, COMMISSION_QUEST
+from src.domains.world_emergence.schema import WorldEventCategory, WorldEvent
+from src.core.updates import FactionUpdate
 
 
 # ---------------------------------------------------------------------------
@@ -104,3 +104,43 @@ class FactionDecisionPhase:
                 )
 
         return directives
+
+
+# ---------------------------------------------------------------------------
+# FactionAwarenessService — tension updates from world events
+# ---------------------------------------------------------------------------
+class FactionAwarenessService:
+    """Observes recent WorldEvents and produces FactionUpdate tension deltas.
+
+    Uses ``state.recent_world_events`` which contains the PREVIOUS tick's event
+    window (inherent one-tick lag — state is frozen at tick entry, same as all
+    WorldEmergencePhase signal propagation).
+
+    Cap (min 0.0, max 1.0) is enforced by the authoritative apply-path, not here.
+    """
+
+    @staticmethod
+    def compute_tension_updates(
+        state: AuthoritativeState,
+        recent_events: Sequence[WorldEvent],
+    ) -> list[FactionUpdate]:
+        """Return one FactionUpdate(tension_delta=+0.1) per faction per RESOURCE_DEPLETED event
+        that occurred in that faction's territory.
+
+        Args:
+            state:         Current authoritative world state (read-only).
+            recent_events: Bounded window of recent WorldEvents from state.
+
+        Returns:
+            List of FactionUpdate records (may be empty).
+        """
+        updates: list[FactionUpdate] = []
+        for event in recent_events:
+            if event.category != WorldEventCategory.RESOURCE_DEPLETED:
+                continue
+            if event.region_id is None:
+                continue
+            for faction_id, fs in state.factions.items():
+                if event.region_id in fs.territory:
+                    updates.append(FactionUpdate(faction_id=faction_id, tension_delta=0.1))
+        return updates

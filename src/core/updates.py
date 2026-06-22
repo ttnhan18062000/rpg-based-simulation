@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field, replace
-from typing import Dict, Any, Optional, TYPE_CHECKING, List
+from typing import Dict, Any, Optional, TYPE_CHECKING, List, Tuple
 if TYPE_CHECKING:
     from src.core.state import GroupRecord, ItemStack, EquipSlot, AttributeComponent, LocalScarState, ChestState, EntityState, GroundItemState, CorpseState, WoundState, ScarState
     from src.core.quests import QuestStatus
@@ -834,6 +834,30 @@ class QuestOpportunityRewardIntent:
 
 
 @dataclass(frozen=True, slots=True)
+class FactionUpdate:
+    """Typed mutation record for a single faction's durable state (E53Aa)."""
+    faction_id: str
+    tension_delta: float = 0.0
+    military_strength_set: Optional[float] = None
+    territory_add: Tuple[str, ...] = ()
+    territory_remove: Tuple[str, ...] = ()
+    resources_delta: Dict[str, int] = field(default_factory=dict)
+    diplomatic_relations_set: Dict[str, str] = field(default_factory=dict)
+    active_doctrines_set: Optional[Tuple[str, ...]] = None
+
+    def is_noop(self) -> bool:
+        return (
+            self.tension_delta == 0.0
+            and self.military_strength_set is None
+            and not self.territory_add
+            and not self.territory_remove
+            and not self.resources_delta
+            and not self.diplomatic_relations_set
+            and self.active_doctrines_set is None
+        )
+
+
+@dataclass(frozen=True, slots=True)
 class StateUpdate:
     """
     A collection of authoritative changes to be applied to the world state.
@@ -884,6 +908,8 @@ class StateUpdate:
     quest_opportunity_reward_intents: List["QuestOpportunityRewardIntent"] = field(default_factory=list)
     # E42D: provider reliability updates keyed by entity_id
     information_providers_update: Dict[int, "InformationProviderState"] = field(default_factory=dict)
+    # E53Aa: Faction durable-state mutation records
+    faction_updates: List[FactionUpdate] = field(default_factory=list)
 
     def is_noop(self) -> bool:
         """True if this update contains absolutely no changes."""
@@ -908,7 +934,8 @@ class StateUpdate:
                 not self.world_events_add and not self.quest_registry_add and
                 not self.quest_registry_remove and not self.quest_status_updates and
                 not self.quest_opportunity_reward_intents and
-                not self.information_providers_update)
+                not self.information_providers_update and
+                not self.faction_updates)
     def merge(self, other: StateUpdate) -> StateUpdate:
         """Merge another StateUpdate into this one."""
         if not other or other.is_noop():
@@ -961,6 +988,7 @@ class StateUpdate:
         new_quest_status_updates = dict(self.quest_status_updates)
         new_quest_opportunity_reward_intents = list(self.quest_opportunity_reward_intents)
         new_information_providers_update = dict(self.information_providers_update)
+        new_faction_updates = list(self.faction_updates)
 
         # Single values
         maturity = self.maturity_set
@@ -1026,6 +1054,9 @@ class StateUpdate:
             new_quest_status_updates.update(other.quest_status_updates)
             new_quest_opportunity_reward_intents.extend(other.quest_opportunity_reward_intents)
             new_information_providers_update.update(other.information_providers_update)
+            new_faction_updates.extend(
+                fu for fu in other.faction_updates if not fu.is_noop()
+            )
 
             # Single values
             if other.maturity_set is not None: maturity = other.maturity_set
@@ -1085,6 +1116,7 @@ class StateUpdate:
             quest_status_updates=new_quest_status_updates,
             quest_opportunity_reward_intents=new_quest_opportunity_reward_intents,
             information_providers_update=new_information_providers_update,
+            faction_updates=new_faction_updates,
         )
 
     def compact(self) -> StateUpdate:

@@ -2534,3 +2534,24 @@
     tests/unit/cognition/test_information_seeking.py::TestLeadRoutingSystem::test_person_lead_routes_entity_to_provider
   divergence_note: null
   support_boundary: null
+- id: FACTION-DIR-001
+  text: >-
+    AdventureRouteScorer.score() applies faction directive urgency adjustments when
+    faction_directives is non-None: GUARD+HUNT_WEAK_ENEMY+DEFEND_BORDER → +2.0 urgency;
+    SHOPKEEPER+trade-routes+allied diplomatic_relations → +1.5 urgency;
+    HERO+QUEST_OPPORTUNITY+COMMISSION_QUEST → +3.0 urgency. (E53Ac)
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >-
+    src/domains/adventure/scoring.py — AdventureRouteScorer.score() §2b faction directive block;
+    src/engine/faction_constants.py — DEFEND_BORDER, TRADE_ROUTE, COMMISSION_QUEST;
+    src/engine/faction_decision.py — FactionDecisionPhase.execute() directive emission rules
+  proof_type: parity
+  test_path: >-
+    tests/unit/faction/test_faction_directive_propagation.py
+  divergence_note: >-
+    Urgency deltas (+2.0, +1.5, +3.0) can push total urgency above the prior ~2.0 ceiling.
+    This is intentional: faction pressure is designed to override individual need urgency.
+    HUNT_WEAK_ENEMY used as patrol proxy (no PATROL RouteFamily exists).
+  support_boundary: null

@@ -4119,3 +4119,7 @@
   test_path: tests/unit/cognition/test_information_seeking.py::TestInformationProviderState::test_information_provider_registered_in_authoritative_state
   divergence_note: null
   support_boundary: null
+
+# NOTE: Faction authoritative-world-object parity is tracked in a dedicated file.
+# See docs/parity_ledger/faction.yaml for FAC-001 (FactionState durable model in
+# AuthoritativeState) and FAC-002 (tension clamping), added by TCK-20260619-E53Aa-FACTION-STATE.

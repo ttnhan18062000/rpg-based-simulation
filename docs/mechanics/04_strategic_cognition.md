@@ -240,3 +240,29 @@ The escort target entity itself receives no adjustment (it cannot protect itself
 - `OWN_SURVIVAL = "own_survival"` — self-preservation actions (retreat, heal, flee).
 
 **Source:** `src/domains/adventure/schema.py` (RouteFamily), `src/domains/adventure/scoring.py` §9 (TCK-20260619-E41D-DEFECTION-ESCORT, 2026-06-21)
+
+---
+
+### 6.10 Faction Directive Urgency Scoring (E53Ac)
+
+Applied in `AdventureRouteScorer.score()` block §2b when `faction_directives` is non-None.
+`FactionDecisionPhase.execute()` runs every tick before `AdventureDecisionPhase` in the pipeline,
+producing a `list[FactionDirective]` that is passed through to the scorer.
+
+| Entity role | Route family | Condition | Urgency delta |
+|---|---|---|---|
+| `GUARD` | `HUNT_WEAK_ENEMY` | Any `DEFEND_BORDER` directive in faction_directives | `+2.0` |
+| `SHOPKEEPER` | `GATHER_RESOURCE`, `SELL_LOOT_FOR_GOLD` | Any faction has `diplomatic_relations[*] == "allied"` | `+1.5` |
+| `HERO` | `QUEST_OPPORTUNITY` | Any `COMMISSION_QUEST` directive in faction_directives | `+3.0` |
+
+These are additive urgency boosts on top of the need-urgency baseline. Final scores above 1.0
+are valid and expected when faction pressure compounds with active needs.
+
+`HUNT_WEAK_ENEMY` serves as the patrol proxy for GUARD entities because no `PATROL` RouteFamily
+exists. See `docs/guidelines/v2_intentional_divergences.md` for rationale.
+
+**Parity reference:** `docs/parity_ledger/strategic_cognition.yaml` (FACTION-DIR-001)
+
+**Source:** `src/domains/adventure/scoring.py` §2b, `src/engine/faction_decision.py`,
+`src/engine/faction_constants.py` (TCK-20260619-E53Ac-DIRECTIVE-PROP, 2026-06-22)
+

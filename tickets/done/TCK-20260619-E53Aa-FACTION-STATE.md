@@ -1,10 +1,10 @@
 ---
-status: open
+status: historical
 layer: strategy
 authority: P1
 audience: agent
 ticket_id: TCK-20260619-E53Aa-FACTION-STATE
-phase: open
+phase: done
 date: 2026-06-22
 tags: [faction, faction-state, authoritative-state, core-model, phase-5]
 ---
@@ -15,7 +15,7 @@ tags: [faction, faction-state, authoritative-state, core-model, phase-5]
 Epic 5.3Aa · FactionState Durable Model + AuthoritativeState Field
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -122,6 +122,20 @@ Update `StateUpdate.merge()` to merge faction_updates lists.
 - Follow the exact pattern used by E52A for `RegionState.population_cohorts`: add field, update `to_canonical_dict`, update `apply_plan.py`.
 - `StateUpdate.merge()` must handle `faction_updates` list concatenation; verify `is_noop()` is updated accordingly.
 
+### Completed Implementation (2026-06-22)
+
+**Step 1 — FactionState** (`src/core/state.py`): Added `FactionState` frozen dataclass with `slots=True` after `GroupRecord.to_canonical_dict()`. Includes `to_canonical_dict()` with sorted dicts and `object.__setattr__` cache bypass, and `from_dict()` with `tuple()` coercion for territory and active_doctrines.
+
+**Step 2 — AuthoritativeState.factions** (`src/core/state.py`): Added `factions: Dict[str, "FactionState"] = field(default_factory=dict)` after `information_providers`. Updated `to_readonly()` to wrap `factions` with `ReadOnlyDict`.
+
+**Step 3 — FactionUpdate** (`src/core/updates.py`): Added `FactionUpdate` frozen dataclass before `StateUpdate` with `is_noop()` checking all 7 semantic fields. Added `Tuple` to the typing imports.
+
+**Step 4 — StateUpdate.faction_updates** (`src/core/updates.py`): Added `faction_updates: List[FactionUpdate]` field. Updated `is_noop()` to check `not self.faction_updates`. Updated `merge_many()`: init `new_faction_updates`, extend with noop-filtered entries from each other, pass in `replace()` call.
+
+**Step 5 — apply.py** (`src/engine/apply.py`): Added `FactionState` to top-level imports. Added faction update resolution block before `AuthoritativeState(...)` constructor, using `getattr` guard for replay safety. Applied: tension clamped to [0.0, 1.0], territory set-union/difference, resources accumulated, relations overwritten, doctrines replaced. Passed `factions=new_factions` explicitly to the constructor.
+
+**Step 6 — Tests** (`tests/unit/faction/`): Created `__init__.py` and `test_faction_state.py` with 10 tests. All 10 pass; all 13 regression tests pass.
+
 ## Test Summary
 ```bash
 pytest tests/unit/faction/ -x -v
@@ -129,7 +143,13 @@ pytest tests/unit/core/test_state.py -x -v
 ```
 
 ## Files Changed
-_To be filled on completion._
+- `src/core/state.py` — Added `FactionState` dataclass; added `factions` field to `AuthoritativeState`; updated `to_readonly()`
+- `src/core/updates.py` — Added `Tuple` import; added `FactionUpdate` dataclass; added `faction_updates` field to `StateUpdate`; updated `is_noop()` and `merge_many()`
+- `src/engine/apply.py` — Added `FactionState` import; added faction update resolution block; added `factions=new_factions` to `AuthoritativeState()` constructor
+- `tests/unit/faction/__init__.py` — New (empty)
+- `tests/unit/faction/test_faction_state.py` — New, 10 tests
+- `docs/parity_ledger/faction.yaml` — New; parity entries FAC-001 and FAC-002
+- `docs/parity_ledger/substrate.yaml` — Updated with faction state reference
 
 ## Completion Summary
-_To be filled on completion._
+FactionState frozen dataclass added to state.py (after GroupRecord); factions: Dict[str, FactionState] field on AuthoritativeState with ReadOnlyDict wrapping in to_readonly(); FactionUpdate frozen dataclass in updates.py with is_noop(); faction_updates added to StateUpdate with merge_many() noop filtering; apply.py computes new_factions from FactionUpdate list and passes factions=new_factions to AuthoritativeState constructor; 10 new tests in tests/unit/faction/; parity entries FAC-001 and FAC-002 created in docs/parity_ledger/faction.yaml.

@@ -42,6 +42,8 @@ class RouteToProjectMapper:
         RouteFamily.FORM_PARTY: (ProjectKind.SOCIAL, ObjectiveKind.REACH_LOCATION),
         RouteFamily.RETURN_TOWN: (ProjectKind.TRAVEL, ObjectiveKind.RETURN_TOWN),
         RouteFamily.QUEST_OPPORTUNITY: (ProjectKind.QUEST, ObjectiveKind.ACCEPT_QUEST),
+        RouteFamily.PROTECT_TARGET: (ProjectKind.SOCIAL, ObjectiveKind.REACH_LOCATION),
+        RouteFamily.OWN_SURVIVAL: (ProjectKind.RECOVERY, ObjectiveKind.REACH_SERVICE),
     }
 
     @classmethod

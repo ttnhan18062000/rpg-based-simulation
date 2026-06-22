@@ -1,10 +1,10 @@
 ---
-status: open
+status: historical
 layer: strategy
 authority: P1
 audience: agent
 ticket_id: TCK-20260619-E53Ac-DIRECTIVE-PROP
-phase: open
+phase: done
 date: 2026-06-22
 tags: [faction, directive-propagation, adventure-scoring, entity-scoring, phase-5]
 ---
@@ -15,7 +15,7 @@ tags: [faction, directive-propagation, adventure-scoring, entity-scoring, phase-
 Epic 5.3Ac · Faction Directive Propagation to Entity Scoring
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -109,7 +109,22 @@ pytest tests/unit/adventure/test_scoring.py -x -v  # regression guard
 ```
 
 ## Files Changed
-_To be filled on completion._
+- `src/engine/faction_constants.py` — new; DEFEND_BORDER, TRADE_ROUTE, COMMISSION_QUEST constants
+- `src/engine/faction_decision.py` — import constants from faction_constants; updated module docstring
+- `src/engine/pipeline.py` — moved faction_decision before adventure_decision; removed cadence guard; threaded faction_directives+factions through apply() call
+- `src/domains/adventure/phase.py` — added faction_directives/factions params; fixed pre-existing RouteFamily_Defer_check bug; added RouteFamily import
+- `src/domains/adventure/service.py` — added faction_directives/factions params; passes to scorer
+- `src/domains/adventure/scoring.py` — added faction_constants import; added faction_directives/factions params; inserted §2b urgency adjustment block
+- `src/domains/adventure/mapper.py` — added PROTECT_TARGET/OWN_SURVIVAL mappings (pre-existing gap)
+- `tests/unit/faction/test_faction_directive_propagation.py` — new; 8 tests
+- `tests/unit/domains/adventure/test_phase3_route_families.py` — updated RouteFamily count to 16
+- `docs/systems/faction_contract.md` — new
+- `docs/mechanics/04_strategic_cognition.md` — added §6.10 faction directive scoring
+- `docs/parity_ledger/strategic_cognition.yaml` — added FACTION-DIR-001
 
 ## Completion Summary
-_To be filled on completion._
+Extended AdventureRouteScorer to consume FactionDirective list from FactionDecisionPhase.
+Moved faction_decision before adventure_decision in pipeline (removed cadence gate for determinism).
+Extracted directive-kind constants to faction_constants.py to prevent circular imports.
+GUARD+HUNT_WEAK_ENEMY gets +2.0 urgency on DEFEND_BORDER; SHOPKEEPER+trade gets +1.5 on allied relations; HERO+QUEST_OPPORTUNITY gets +3.0 on COMMISSION_QUEST.
+All 8 directive propagation tests and 40 adventure domain tests pass.

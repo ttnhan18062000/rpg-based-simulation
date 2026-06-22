@@ -13,6 +13,7 @@ from typing import Dict, List, Optional, Any
 from src.core.state import AuthoritativeState, EntityState
 from src.core.updates import StateUpdate, EntityUpdate, StrategicUpdate
 from src.domains.adventure.generator import AdventureRouteGenerator
+from src.domains.adventure.schema import RouteFamily
 from src.domains.adventure.service import AdventureDecisionService
 from src.world.providers.resources import ResourceOpportunityProvider
 
@@ -27,6 +28,8 @@ class AdventureDecisionPhase:
         state: AuthoritativeState,
         context: Optional[dict] = None,
         trace_writer: Optional[Any] = None,
+        faction_directives: Optional[list] = None,
+        factions: Optional[Any] = None,
     ) -> StateUpdate:
         """
         Evaluate eligible heroes on the current tick, execute subjective routing,
@@ -66,6 +69,8 @@ class AdventureDecisionPhase:
             result = AdventureDecisionService.decide(
                 hero, candidates, tick=tick,
                 resource_nodes=state.resource_nodes,
+                faction_directives=faction_directives,
+                factions=factions,
             )
 
             # 2a. Write decision trace if writer is available (LIGHT+ mode observability)
@@ -79,7 +84,7 @@ class AdventureDecisionPhase:
                     _writer.write_trace(hero.id, tick, scored_candidates)
 
             # If no selection or deferred, do not update project
-            if not result.selected or result.selected.family == RouteFamily_Defer_check(result.selected.family):
+            if not result.selected or result.selected.family == RouteFamily.DEFER_WITH_REASON:
                 continue
 
             # 3. Create strategic updates for the committed choice
@@ -113,9 +118,3 @@ class AdventureDecisionPhase:
             update = StateUpdate(entity_updates=entity_updates)
 
         return update
-
-
-def RouteFamily_Defer_check(val: Any) -> Any:
-    # Safe checks for RouteFamily deferral
-    from src.domains.adventure.schema import RouteFamily
-    return RouteFamily.DEFER_WITH_REASON

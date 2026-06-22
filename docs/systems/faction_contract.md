@@ -1,0 +1,133 @@
+# Faction System Contract
+
+**Status**: DRAFT — pending E53Ad (tension update from events) for full coverage.
+
+**Tickets**: E53Aa (FactionState), E53Ab (FactionDecisionPhase), E53Ac (directive propagation),
+E53Ad (tension update), E53B (diplomacy), E53C (war).
+
+---
+
+## FactionState Schema
+
+Defined in `src/core/state.py`. Field on `AuthoritativeState.factions: Dict[str, FactionState]`.
+
+```
+FactionState(frozen=True, slots=True)
+  faction_id:            str                    — catalog-registered faction ID
+  territory:             Tuple[str, ...]        — region IDs controlled by this faction
+  resources:             Dict[str, int]         — resource stockpiles
+  diplomatic_relations:  Dict[str, str]         — other faction_id → relation string
+  active_doctrines:      Tuple[str, ...]        — active doctrine IDs
+  military_strength:     float  (default 1.0)  — relative military power [0.0, ∞)
+  tension_level:         float  (default 0.0)  — internal/external tension [0.0, 1.0]
+```
+
+**Mutation path**: `FactionUpdate` records accumulated in `StateUpdate.faction_updates`,
+applied by `apply.py`. Never mutated in-place.
+
+---
+
+## FactionUpdate Schema
+
+Defined in `src/core/updates.py`.
+
+```
+FactionUpdate(frozen=True, slots=True)
+  faction_id:                str
+  tension_delta:             float = 0.0       — clamped to keep tension in [0.0, 1.0]
+  military_strength_set:     Optional[float]   — set absolute value if provided
+  territory_add:             Tuple[str, ...]   — regions to add
+  territory_remove:          Tuple[str, ...]   — regions to remove
+  resources_delta:           Dict[str, int]    — accumulates per region
+  diplomatic_relations_set:  Dict[str, str]    — overwrites matching keys
+  active_doctrines_set:      Optional[Tuple[str, ...]]
+```
+
+---
+
+## FactionDirective Schema
+
+Defined in `src/engine/faction_decision.py`. **Transient** — never persisted.
+
+```
+FactionDirective(frozen=True, slots=True)
+  faction_id:      str
+  directive_kind:  str   — one of: DEFEND_BORDER | TRADE_ROUTE | COMMISSION_QUEST
+  target_faction:  Optional[str]
+  target_region:   Optional[str]
+  priority:        float = 1.0
+  created_tick:    int   = 0
+```
+
+---
+
+## Directive Kinds
+
+Constants defined in `src/engine/faction_constants.py`.
+
+| Constant | Value | Emission condition |
+|---|---|---|
+| `DEFEND_BORDER` | `"DEFEND_BORDER"` | `tension_level > 0.5` AND `territory` non-empty |
+| `TRADE_ROUTE` | `"TRADE_ROUTE"` | `military_strength > 0.7` AND `tension_level < 0.3` |
+| `COMMISSION_QUEST` | `"COMMISSION_QUEST"` | `territory` non-empty (unconditional secondary) |
+
+`DEFEND_BORDER` and `TRADE_ROUTE` are mutually exclusive per faction per tick (if/elif).
+`COMMISSION_QUEST` is always emitted when territory is non-empty regardless of tension.
+
+---
+
+## Tension Mechanics
+
+- `tension_level` is a float clamped to `[0.0, 1.0]` by the apply-path (`apply.py:345`).
+- **RESOURCE_DEPLETED → +0.1 per event** (E53Ad): `FactionAwarenessService.compute_tension_updates()`
+  scans `state.recent_world_events` for `WorldEventCategory.RESOURCE_DEPLETED` events whose
+  `region_id` is in the faction's `territory`. Emits one `FactionUpdate(tension_delta=+0.1)`
+  per matching event per faction. Multiple events in the same tick are additive; final
+  tension is capped at 1.0 by the apply-path.
+  **One-tick lag**: `state.recent_world_events` contains the previous tick's event window
+  (state is frozen at tick entry — same lag as all WorldEmergencePhase signals).
+- Decreases from: `FactionUpdate.tension_delta` with negative value (E53B+).
+- Threshold effects: `> 0.5` triggers `DEFEND_BORDER` directive.
+
+---
+
+## Directive Propagation to Entity Scoring (E53Ac)
+
+`FactionDecisionPhase.execute()` runs every tick before `AdventureDecisionPhase` in the
+pipeline. Its output (`list[FactionDirective]`) is passed as `faction_directives` parameter
+through `AdventureDecisionPhase.apply()` → `AdventureDecisionService.decide()` →
+`AdventureRouteScorer.score()`.
+
+### Urgency Adjustments
+
+| Entity role | Route family | Condition | Urgency delta |
+|---|---|---|---|
+| `GUARD` | `HUNT_WEAK_ENEMY` | Any `DEFEND_BORDER` directive exists | `+2.0` |
+| `SHOPKEEPER` | `GATHER_RESOURCE`, `SELL_LOOT_FOR_GOLD` | Any faction has `diplomatic_relations[*] == "allied"` | `+1.5` |
+| `HERO` | `QUEST_OPPORTUNITY` | Any `COMMISSION_QUEST` directive exists | `+3.0` |
+
+Notes:
+- If `faction_directives=None`, no adjustment is applied (backward-compatible default).
+- `HUNT_WEAK_ENEMY` is used as the patrol proxy because `RouteFamily.PATROL` does not exist.
+  This is an intentional design choice documented in `docs/guidelines/v2_intentional_divergences.md`.
+- Urgency deltas are additive on top of the need-urgency calculation. Final scores above 1.0
+  are expected and correct when multiple urgency sources compound.
+
+---
+
+## Pipeline Position
+
+```
+pipeline.py:refine()
+  ...
+  [Phase 8b] FactionDecisionPhase.execute(state) → faction_directives  (every tick)
+  [Phase 3]  AdventureDecisionPhase.apply(state, faction_directives=..., factions=...)
+  ...
+```
+
+---
+
+## Parity Ledger
+
+See `docs/parity_ledger/faction.yaml` (FAC-001, FAC-002, FAC-003) and
+`docs/parity_ledger/strategic_cognition.yaml` (FACTION-DIR-001).

@@ -33,6 +33,8 @@ class AdventureDecisionService:
         candidates: List[AdventureRouteOption],
         tick: int = 0,
         resource_nodes: Optional[Dict[int, ResourceNodeState]] = None,
+        faction_directives: Optional[list] = None,
+        factions: Optional[Any] = None,
     ) -> AdventureDecisionResult:
         """
         Evaluate candidates, score them using Personality biased heuristics,
@@ -68,7 +70,12 @@ class AdventureDecisionService:
         # 1. Score all candidates using AdventureRouteScorer
         scored_candidates: List[AdventureRouteOption] = []
         for cand in candidates:
-            scored = AdventureRouteScorer.score(entity, cand, resource_nodes=resource_nodes)
+            scored = AdventureRouteScorer.score(
+                entity, cand,
+                resource_nodes=resource_nodes,
+                faction_directives=faction_directives,
+                factions=factions,
+            )
             scored_candidates.append(scored)
 
         # 2. Separate into valid and blocked/rejected lists

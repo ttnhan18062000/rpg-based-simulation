@@ -567,6 +567,46 @@ class GroupRecord:
 
 
 @dataclass(frozen=True, slots=True)
+class FactionState:
+    """Authoritative durable state for a named faction (E53 family)."""
+    faction_id: str
+    territory: Tuple[str, ...] = ()           # region_ids controlled
+    resources: Dict[str, int] = field(default_factory=dict)
+    diplomatic_relations: Dict[str, str] = field(default_factory=dict)
+    active_doctrines: Tuple[str, ...] = ()
+    military_strength: float = 1.0
+    tension_level: float = 0.0
+    _canonical_cache: Any = field(default=None, init=False, repr=False, compare=False)
+
+    def to_canonical_dict(self) -> Dict[str, Any]:
+        if self._canonical_cache is not None:
+            return self._canonical_cache
+        res: Dict[str, Any] = {
+            "faction_id": self.faction_id,
+            "territory": list(self.territory),
+            "resources": dict(sorted(self.resources.items())),
+            "diplomatic_relations": dict(sorted(self.diplomatic_relations.items())),
+            "active_doctrines": list(self.active_doctrines),
+            "military_strength": self.military_strength,
+            "tension_level": self.tension_level,
+        }
+        object.__setattr__(self, "_canonical_cache", res)
+        return res
+
+    @classmethod
+    def from_dict(cls, d: dict) -> "FactionState":
+        return cls(
+            faction_id=d["faction_id"],
+            territory=tuple(d.get("territory", [])),
+            resources=dict(d.get("resources", {})),
+            diplomatic_relations=dict(d.get("diplomatic_relations", {})),
+            active_doctrines=tuple(d.get("active_doctrines", [])),
+            military_strength=float(d.get("military_strength", 1.0)),
+            tension_level=float(d.get("tension_level", 0.0)),
+        )
+
+
+@dataclass(frozen=True, slots=True)
 class EquipmentComponent:
     """Currently equipped items per slot."""
     slots: Dict[EquipSlot, str | None] = field(default_factory=dict)
@@ -1071,6 +1111,8 @@ class AuthoritativeState:
     quest_registry: Dict[str, "QuestOpportunity"] = field(default_factory=dict)
     # Epic 4.2B: Durable registry of entities classified as information providers.
     information_providers: Dict[int, "InformationProviderState"] = field(default_factory=dict)
+    # Epic 5.3: Durable faction-level state (E53Aa)
+    factions: Dict[str, "FactionState"] = field(default_factory=dict)
 
     def __post_init__(self):
         # M10 Law: Ensure cache is cleared on every new object creation (including replace)
@@ -1147,6 +1189,7 @@ class AuthoritativeState:
             home_storage=ReadOnlyDict(self.home_storage),
             quest_registry=ReadOnlyDict(self.quest_registry),
             information_providers=ReadOnlyDict(self.information_providers),
+            factions=ReadOnlyDict(self.factions),
             groups=shallow_freeze(self.groups),
             terrain=shallow_freeze(self.terrain),
             global_resources=shallow_freeze(self.global_resources),

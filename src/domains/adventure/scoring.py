@@ -13,10 +13,12 @@ from typing import TYPE_CHECKING, Any, Dict, Optional
 
 from src.core.state import EntityState, ResourceNodeState
 from src.domains.adventure.schema import RouteFamily, AdventureRouteOption
+from src.engine.faction_constants import DEFEND_BORDER, TRADE_ROUTE, COMMISSION_QUEST
 
 if TYPE_CHECKING:
     from src.core.models.quests import QuestOpportunity
     from src.core.state import GroupRecord
+    from src.engine.faction_decision import FactionDirective
 
 
 class AdventureRouteScorer:
@@ -32,6 +34,8 @@ class AdventureRouteScorer:
         resource_nodes: Optional[Dict[int, ResourceNodeState]] = None,
         quest_registry: Optional[Dict[str, "QuestOpportunity"]] = None,
         group: Optional["GroupRecord"] = None,
+        faction_directives: Optional[list] = None,
+        factions: Optional[Any] = None,
     ) -> AdventureRouteOption:
         """
         Calculate subjective score for the route option and return updated option.
@@ -110,6 +114,27 @@ class AdventureRouteScorer:
         for key in matching_keys:
             if key in needs:
                 urgency = max(urgency, needs[key].urgency)
+
+        # ── 2b. Faction Directive Urgency Adjustments ─────────────────────────
+        # Additive boosts applied when directives are provided (None = no boost).
+        if faction_directives is not None:
+            from src.core.enums import EntityRole as _ER
+            # GUARD + patrol (HUNT_WEAK_ENEMY): boost when any DEFEND_BORDER active
+            if entity.identity.role == _ER.GUARD and route.family == RouteFamily.HUNT_WEAK_ENEMY:
+                if any(d.directive_kind == DEFEND_BORDER for d in faction_directives):
+                    urgency += 2.0
+            # SHOPKEEPER + trade routes: boost when any faction has allied relations
+            if (
+                entity.identity.role == _ER.SHOPKEEPER
+                and route.family in (RouteFamily.GATHER_RESOURCE, RouteFamily.SELL_LOOT_FOR_GOLD)
+                and factions is not None
+                and any("allied" in fs.diplomatic_relations.values() for fs in factions.values())
+            ):
+                urgency += 1.5
+            # HERO + quest: boost when any COMMISSION_QUEST directive active
+            if entity.identity.role == _ER.HERO and route.family == RouteFamily.QUEST_OPPORTUNITY:
+                if any(d.directive_kind == COMMISSION_QUEST for d in faction_directives):
+                    urgency += 3.0
 
         # ── 3. Expected Benefit & Risk Calculations ─────────────────────────
         benefit = route.expected_benefit

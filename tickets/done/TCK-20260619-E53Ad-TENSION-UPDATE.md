@@ -1,10 +1,10 @@
 ---
-status: open
+status: historical
 layer: strategy
 authority: P1
 audience: agent
 ticket_id: TCK-20260619-E53Ad-TENSION-UPDATE
-phase: open
+phase: done
 date: 2026-06-22
 tags: [faction, faction-tension, resource-depleted, world-event, authoritative-path, phase-5]
 ---
@@ -15,7 +15,7 @@ tags: [faction, faction-tension, resource-depleted, world-event, authoritative-p
 Epic 5.3Ad · Faction Awareness — Tension Update from RESOURCE_DEPLETED Events
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -115,7 +115,11 @@ pytest tests/unit/engine/test_economy.py -x -v  # regression guard
 ```
 
 ## Files Changed
-_To be filled on completion._
+- `src/engine/faction_decision.py` — added FactionAwarenessService class; module-level imports for WorldEventCategory, FactionUpdate
+- `src/engine/pipeline.py` — added faction_awareness run_phase block after faction_decision
+- `docs/systems/faction_contract.md` — updated Tension Mechanics with +0.1/RESOURCE_DEPLETED rule and one-tick lag note
+- `docs/parity_ledger/faction.yaml` — added FACTION-TENSION-001
+- `tests/unit/faction/test_faction_awareness.py` — new; 7 tests all passing
 
 ## Completion Summary
-_To be filled on completion._
+FactionAwarenessService added to faction_decision.py: scans recent_world_events for RESOURCE_DEPLETED events in faction territory, emits FactionUpdate(tension_delta=+0.1) per match. Wired as faction_awareness run_phase in pipeline.py. Cap at 1.0 enforced by existing apply-path. 7 new tests pass, 36 total faction tests pass.
