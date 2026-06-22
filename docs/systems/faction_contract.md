@@ -1,9 +1,9 @@
 # Faction System Contract
 
-**Status**: DRAFT — pending E53Ad (tension update from events) for full coverage.
+**Status**: DRAFT — E53Ba complete (DiplomaticState enum + migration). Pending E53Bb–Bd for full diplomacy coverage.
 
 **Tickets**: E53Aa (FactionState), E53Ab (FactionDecisionPhase), E53Ac (directive propagation),
-E53Ad (tension update), E53B (diplomacy), E53C (war).
+E53Ad (tension update), E53Ba (DiplomaticState enum), E53Bb–Bd (diplomacy actions), E53C (war).
 
 ---
 
@@ -16,7 +16,7 @@ FactionState(frozen=True, slots=True)
   faction_id:            str                    — catalog-registered faction ID
   territory:             Tuple[str, ...]        — region IDs controlled by this faction
   resources:             Dict[str, int]         — resource stockpiles
-  diplomatic_relations:  Dict[str, str]         — other faction_id → relation string
+  diplomatic_relations:  Dict[str, DiplomaticState]  — other faction_id → typed relation (E53Ba)
   active_doctrines:      Tuple[str, ...]        — active doctrine IDs
   military_strength:     float  (default 1.0)  — relative military power [0.0, ∞)
   tension_level:         float  (default 0.0)  — internal/external tension [0.0, 1.0]
@@ -39,9 +39,30 @@ FactionUpdate(frozen=True, slots=True)
   territory_add:             Tuple[str, ...]   — regions to add
   territory_remove:          Tuple[str, ...]   — regions to remove
   resources_delta:           Dict[str, int]    — accumulates per region
-  diplomatic_relations_set:  Dict[str, str]    — overwrites matching keys
+  diplomatic_relations_set:  Dict[str, DiplomaticState]  — overwrites matching keys (E53Ba)
   active_doctrines_set:      Optional[Tuple[str, ...]]
 ```
+
+---
+
+## DiplomaticState Enum (E53Ba)
+
+Defined in `src/core/enums.py` as `DiplomaticState(str, Enum)`.
+
+| Value | Meaning |
+|---|---|
+| `NEUTRAL` | No active relationship |
+| `TENSE` | Strained relations; war risk elevated |
+| `HOSTILE` | Active antagonism; combat likely |
+| `WAR` | Declared war state |
+| `ALLIED` | Mutual cooperation pact |
+| `VASSAL` | Subordinate relationship |
+
+**Serialization**: `FactionState.to_canonical_dict()` emits plain string values (`"ALLIED"`, etc.) for JSON
+compatibility. `FactionState.from_dict()` coerces strings back via `DiplomaticState(v)`. The apply-path
+(`src/engine/apply.py`) also coerces any raw string values during merge for robustness.
+
+**Absence = NEUTRAL**: absence of a key in `diplomatic_relations` implies NEUTRAL — do not populate all pairs at construction.
 
 ---
 
@@ -103,7 +124,7 @@ through `AdventureDecisionPhase.apply()` → `AdventureDecisionService.decide()`
 | Entity role | Route family | Condition | Urgency delta |
 |---|---|---|---|
 | `GUARD` | `HUNT_WEAK_ENEMY` | Any `DEFEND_BORDER` directive exists | `+2.0` |
-| `SHOPKEEPER` | `GATHER_RESOURCE`, `SELL_LOOT_FOR_GOLD` | Any faction has `diplomatic_relations[*] == "allied"` | `+1.5` |
+| `SHOPKEEPER` | `GATHER_RESOURCE`, `SELL_LOOT_FOR_GOLD` | Any faction has `diplomatic_relations[*] == DiplomaticState.ALLIED` | `+1.5` |
 | `HERO` | `QUEST_OPPORTUNITY` | Any `COMMISSION_QUEST` directive exists | `+3.0` |
 
 Notes:
@@ -120,14 +141,40 @@ Notes:
 ```
 pipeline.py:refine()
   ...
-  [Phase 8b] FactionDecisionPhase.execute(state) → faction_directives  (every tick)
-  [Phase 3]  AdventureDecisionPhase.apply(state, faction_directives=..., factions=...)
+  [Phase 8b]  FactionDecisionPhase.execute(state) → faction_directives  (every tick)
+  [Phase 8c]  FactionAwarenessService.compute_tension_updates(state, events) → faction_updates
+  [Phase 8d]  compute_transitions(factions) → transition_updates            (E53Bc)
+              compute_common_enemy_pairs(factions) → alliance proposals      (E53Bc)
+              events_from_transitions(...) → WorldEvent list                 (E53Bd)
+              run_phase("diplomatic_transitions", ..., world_events_add=...) (E53Bd)
+  [Phase 3]   AdventureDecisionPhase.apply(state, faction_directives=..., factions=...)
   ...
 ```
 
 ---
 
+## Diplomatic WorldEvent Emission (E53Bd)
+
+Phase 8d emits `WorldEvent` objects into `StateUpdate.world_events_add` for the following transitions:
+
+| Transition | WorldEventCategory | significance |
+|---|---|---|
+| HOSTILE → WAR | `FACTION_WAR_DECLARED` | 0.95 |
+| WAR → NEUTRAL (exhaustion) | `FACTION_PEACE_TREATY` | 0.75 |
+| Alliance proposal accepted | `FACTION_ALLIANCE_FORMED` | 0.80 |
+
+`WorldEvent.subject` encodes the faction pair as `":".join(sorted([fid_a, fid_b]))` for deterministic
+narrative ledger deduplication. One event is emitted per pair per tick.
+
+`CampaignOrchestrator._extract_narrative_entries()` maps these via `_SIGNIFICANCE_MAP` to
+`NarrativeLedgerEntry` records with `event_type` values: `war_declared`, `peace_treaty`, `alliance_formed`.
+
+**Known deferral (E53Da):** Chronicle `naming.py` uses uppercase event type keys (`WAR_DECLARED`) while
+`_SIGNIFICANCE_MAP` emits lowercase (`war_declared`). Alignment is tracked in the E53Da ticket.
+
+---
+
 ## Parity Ledger
 
-See `docs/parity_ledger/faction.yaml` (FAC-001, FAC-002, FAC-003) and
+See `docs/parity_ledger/faction.yaml` (FAC-001 through FAC-007, FACTION-TENSION-001) and
 `docs/parity_ledger/strategic_cognition.yaml` (FACTION-DIR-001).

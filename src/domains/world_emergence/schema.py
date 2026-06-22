@@ -34,6 +34,10 @@ class WorldEventCategory(str, Enum):
     POPULATION_DEATH = "POPULATION_DEATH"
     # E52B: Migration pressure
     POPULATION_MIGRATION = "POPULATION_MIGRATION"
+    # E53Bd: Diplomatic transition events
+    FACTION_WAR_DECLARED = "FACTION_WAR_DECLARED"
+    FACTION_ALLIANCE_FORMED = "FACTION_ALLIANCE_FORMED"
+    FACTION_PEACE_TREATY = "FACTION_PEACE_TREATY"
 
 @dataclass(frozen=True, slots=True)
 class WorldEvent:

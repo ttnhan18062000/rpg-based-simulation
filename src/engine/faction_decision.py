@@ -41,6 +41,58 @@ class FactionDirective:
 
 
 # ---------------------------------------------------------------------------
+# Diplomatic action subtypes of FactionDirective (E53Bb)
+# All new fields carry defaults so subclass __init__ ordering is valid.
+# Callers always supply from_faction/to_faction/terms as keyword args.
+# ---------------------------------------------------------------------------
+
+@dataclass(frozen=True, slots=True)
+class TreatyOffer(FactionDirective):
+    """Proposed treaty between factions. Handler is a no-op if accepted=False."""
+    from_faction: str = ""
+    to_faction: str = ""
+    terms: str = ""         # "non_aggression" | "trade" | "alliance" | "vassal"
+    accepted: bool = False
+
+
+@dataclass(frozen=True, slots=True)
+class TradeAgreement(FactionDirective):
+    """Confirmed trade agreement → both factions NEUTRAL, tension -0.15."""
+    from_faction: str = ""
+    to_faction: str = ""
+
+
+@dataclass(frozen=True, slots=True)
+class NonAggressionPact(FactionDirective):
+    """Non-aggression pact → both factions NEUTRAL, no tension change."""
+    from_faction: str = ""
+    to_faction: str = ""
+
+
+@dataclass(frozen=True, slots=True)
+class AllianceProposal(FactionDirective):
+    """Alliance or vassal proposal.
+
+    If proposer_strength >= target_strength * 2.0: target becomes VASSAL.
+    Otherwise: both become ALLIED.
+    """
+    from_faction: str = ""
+    to_faction: str = ""
+    proposer_strength: float = 1.0
+
+
+@dataclass(frozen=True, slots=True)
+class Betrayal(FactionDirective):
+    """Break an ALLIED relation. Guard: only valid when current relation is ALLIED.
+
+    Result: both factions set to HOSTILE; betrayed faction receives tension_delta +0.3.
+    Returns empty list if current relation is not ALLIED.
+    """
+    from_faction: str = ""
+    to_faction: str = ""
+
+
+# ---------------------------------------------------------------------------
 # FactionDecisionPhase — stateless domain phase
 # ---------------------------------------------------------------------------
 class FactionDecisionPhase:

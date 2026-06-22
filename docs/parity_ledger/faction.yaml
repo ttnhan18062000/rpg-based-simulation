@@ -61,3 +61,81 @@
   test_path: tests/unit/faction/test_faction_awareness.py
   divergence_note: null
   support_boundary: null
+
+- id: FAC-004
+  text: >
+    FactionState.diplomatic_relations is Dict[str, DiplomaticState] (typed str-enum).
+    to_canonical_dict() serializes values to plain strings; from_dict() coerces string
+    values back to DiplomaticState. FactionUpdate.diplomatic_relations_set uses the
+    same typed dict. Apply path merges with per-value coercion. (E53Ba)
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/core/enums.py (DiplomaticState(str, Enum));
+    src/core/state.py (FactionState.diplomatic_relations, to_canonical_dict, from_dict);
+    src/core/updates.py (FactionUpdate.diplomatic_relations_set);
+    src/engine/apply.py (DiplomaticState coercion in merge)
+  proof_type: parity
+  test_path: tests/unit/faction/test_diplomacy.py
+  divergence_note: null
+  support_boundary: null
+
+- id: FAC-005
+  text: >
+    DiplomaticActionHandler.handle() dispatches diplomatic action subtypes
+    (TreatyOffer, TradeAgreement, NonAggressionPact, AllianceProposal, Betrayal)
+    to per-type pure handlers that return FactionUpdate lists encoding relation changes.
+    AllianceProposal uses proposer_strength vs target_strength*2 threshold for VASSAL.
+    Betrayal guard: returns [] unless current relation is ALLIED. (E53Bb)
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/engine/faction_decision.py (TreatyOffer/TradeAgreement/NonAggressionPact/AllianceProposal/Betrayal);
+    src/domains/faction/diplomatic_actions.py (DiplomaticActionHandler.handle);
+    src/core/updates.py (FactionUpdate.diplomatic_relations_set)
+  proof_type: parity
+  test_path: tests/unit/faction/test_diplomacy.py
+  divergence_note: null
+  support_boundary: null
+
+- id: FAC-006
+  text: >
+    DiplomaticStateMachine.compute_transitions() evaluates all lexicographic faction pairs
+    each tick, applying one transition per pair in priority order: WAR→NEUTRAL (both ms<0.3)
+    > HOSTILE→WAR (aggressor ms > defender*1.2) > TENSE→HOSTILE (tension>0.7 or shared territory)
+    > NEUTRAL→TENSE (tension>0.4). ALLIED and VASSAL suppress all transitions.
+    Pipeline Phase 8d applies results via run_phase("diplomatic_transitions"). (E53Bc)
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/domains/faction/diplomatic_state_machine.py (compute_transitions, compute_common_enemy_pairs);
+    src/engine/pipeline.py (Phase 8d diplomatic_transitions run_phase block)
+  proof_type: parity
+  test_path: tests/unit/faction/test_diplomacy.py
+  divergence_note: null
+  support_boundary: null
+
+- id: FAC-007
+  text: >
+    Diplomatic state transitions emit WorldEvents: HOSTILE→WAR emits FACTION_WAR_DECLARED
+    (significance=0.95), WAR→NEUTRAL emits FACTION_PEACE_TREATY (significance=0.75),
+    AllianceProposal resolution emits FACTION_ALLIANCE_FORMED (significance=0.80).
+    WorldEvent.subject encodes faction pair as ":".join(sorted([fid_a, fid_b])).
+    CampaignOrchestrator._extract_narrative_entries() maps these to NarrativeLedgerEntry
+    via _SIGNIFICANCE_MAP. Known deferral: E53Da will align Chronicle naming.py keys
+    (currently uppercase FACTION_WAR_DECLARED vs lowercase war_declared event_type). (E53Bd)
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/domains/world_emergence/schema.py (WorldEventCategory.FACTION_WAR_DECLARED/ALLIANCE_FORMED/PEACE_TREATY);
+    src/domains/faction/diplomatic_state_machine.py (events_from_transitions);
+    src/engine/pipeline.py (Phase 8d world_events_add);
+    src/domains/campaigns/orchestrator.py (_SIGNIFICANCE_MAP, _extract_narrative_entries)
+  proof_type: parity
+  test_path: tests/unit/faction/test_diplomacy.py
+  divergence_note: null
+  support_boundary: null

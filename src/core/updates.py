@@ -18,7 +18,7 @@ if TYPE_CHECKING:
     from src.domains.information.providers import InformationProviderState
 from src.core.state import ItemStack, EquipSlot, AttributeComponent
 from src.core.movement_modes import MovementMode
-from src.core.enums import ReasonCode
+from src.core.enums import ReasonCode, DiplomaticState
 from src.core.update_models.inventory import InventoryUpdate
 from src.core.update_models.quests import QuestUpdate
 from src.core.update_models.resources import ResourceTransferIntent
@@ -842,7 +842,7 @@ class FactionUpdate:
     territory_add: Tuple[str, ...] = ()
     territory_remove: Tuple[str, ...] = ()
     resources_delta: Dict[str, int] = field(default_factory=dict)
-    diplomatic_relations_set: Dict[str, str] = field(default_factory=dict)
+    diplomatic_relations_set: Dict[str, DiplomaticState] = field(default_factory=dict)
     active_doctrines_set: Optional[Tuple[str, ...]] = None
 
     def is_noop(self) -> bool:

@@ -1,10 +1,10 @@
 ---
-status: open
+status: done
 layer: strategy
 authority: P1
 audience: agent
 ticket_id: TCK-20260619-E53Bc-STATE-MACHINE
-phase: open
+phase: done
 date: 2026-06-22
 tags: [faction, diplomacy, state-machine, transitions, governance, phase-5]
 ---
@@ -15,7 +15,7 @@ tags: [faction, diplomacy, state-machine, transitions, governance, phase-5]
 Epic 5.3Bc · Diplomatic State Machine Transitions + FactionDecisionPhase Integration
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -127,7 +127,9 @@ pytest tests/unit/faction/test_diplomacy.py -x -v
 ```
 
 ## Files Changed
-_To be filled on completion._
+- `src/domains/faction/diplomatic_state_machine.py` — new (compute_transitions + compute_common_enemy_pairs)
+- `src/engine/pipeline.py` — Phase 8d: diplomatic_transitions run_phase block
+- `tests/unit/faction/test_diplomacy.py` — 6 new E53Bc tests
 
 ## Completion Summary
-_To be filled on completion._
+DiplomaticStateMachine implemented in src/domains/faction/ (no src.engine imports). compute_transitions() evaluates lexicographic faction pairs with single-step priority ordering; ALLIED/VASSAL suppresses transitions. Pipeline Phase 8d wires transitions + common-enemy alliance generation. 57 faction tests pass.

@@ -1,10 +1,10 @@
 ---
-status: open
+status: done
 layer: strategy
 authority: P1
 audience: agent
 ticket_id: TCK-20260619-E53Bb-DIPLO-ACTIONS
-phase: open
+phase: done
 date: 2026-06-22
 tags: [faction, diplomacy, diplomatic-actions, faction-directive, phase-5]
 ---
@@ -15,7 +15,7 @@ tags: [faction, diplomacy, diplomatic-actions, faction-directive, phase-5]
 Epic 5.3Bb · Diplomatic Action Types + Handler
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -130,7 +130,11 @@ pytest tests/unit/faction/test_diplomacy.py -x -v
 ```
 
 ## Files Changed
-_To be filled on completion._
+- `src/engine/faction_decision.py` — added TreatyOffer, TradeAgreement, NonAggressionPact, AllianceProposal, Betrayal (frozen slotted FactionDirective subtypes)
+- `src/domains/faction/__init__.py` — new (module registration)
+- `src/domains/faction/diplomatic_actions.py` — new (DiplomaticActionHandler.handle() pure dispatcher)
+- `tests/unit/faction/test_diplomacy.py` — 7 new E53Bb tests
+- `docs/parity_ledger/faction.yaml` — added FAC-005
 
 ## Completion Summary
-_To be filled on completion._
+Five diplomatic action dataclasses added as frozen/slotted FactionDirective subtypes (all new fields carry defaults to satisfy Python slots inheritance ordering). DiplomaticActionHandler in src/domains/faction/diplomatic_actions.py dispatches by type to pure handlers returning FactionUpdate lists. All 15 test_diplomacy.py tests pass.

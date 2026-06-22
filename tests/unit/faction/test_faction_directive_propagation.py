@@ -65,13 +65,13 @@ def test_guard_patrol_urgency_boosted_by_faction_directive():
 
 def test_merchant_trade_urgency_boosted_by_allied_region_gather():
     """SHOPKEEPER + GATHER_RESOURCE + allied diplomatic_relations → score delta +1.5."""
-    from src.core.enums import EntityRole
+    from src.core.enums import EntityRole, DiplomaticState
     from src.domains.adventure.schema import RouteFamily
     from src.core.state import FactionState
 
     entity = _make_entity(EntityRole.SHOPKEEPER)
     route = _make_route(RouteFamily.GATHER_RESOURCE)
-    fs = FactionState(faction_id="f1", diplomatic_relations={"f2": "allied"})
+    fs = FactionState(faction_id="f1", diplomatic_relations={"f2": DiplomaticState.ALLIED})
     factions = {"f1": fs}
 
     baseline = _score(entity, route, faction_directives=None)
@@ -82,13 +82,13 @@ def test_merchant_trade_urgency_boosted_by_allied_region_gather():
 
 def test_merchant_trade_urgency_boosted_by_allied_region_sell():
     """SHOPKEEPER + SELL_LOOT_FOR_GOLD + allied diplomatic_relations → score delta +1.5."""
-    from src.core.enums import EntityRole
+    from src.core.enums import EntityRole, DiplomaticState
     from src.domains.adventure.schema import RouteFamily
     from src.core.state import FactionState
 
     entity = _make_entity(EntityRole.SHOPKEEPER)
     route = _make_route(RouteFamily.SELL_LOOT_FOR_GOLD)
-    fs = FactionState(faction_id="f1", diplomatic_relations={"f2": "allied"})
+    fs = FactionState(faction_id="f1", diplomatic_relations={"f2": DiplomaticState.ALLIED})
     factions = {"f1": fs}
 
     baseline = _score(entity, route, faction_directives=None)
@@ -149,13 +149,13 @@ def test_guard_no_boost_without_defend_border_directive():
 
 def test_shopkeeper_no_boost_without_allied_faction():
     """SHOPKEEPER + GATHER_RESOURCE + only hostile relations → no boost."""
-    from src.core.enums import EntityRole
+    from src.core.enums import EntityRole, DiplomaticState
     from src.domains.adventure.schema import RouteFamily
     from src.core.state import FactionState
 
     entity = _make_entity(EntityRole.SHOPKEEPER)
     route = _make_route(RouteFamily.GATHER_RESOURCE)
-    fs = FactionState(faction_id="f1", diplomatic_relations={"f2": "hostile"})
+    fs = FactionState(faction_id="f1", diplomatic_relations={"f2": DiplomaticState.HOSTILE})
     factions = {"f1": fs}
 
     result = _score(entity, route, faction_directives=[], factions=factions)

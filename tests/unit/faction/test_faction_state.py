@@ -5,12 +5,13 @@ import pytest
 
 def test_faction_state_serialization_round_trip():
     from src.core.state import FactionState
+    from src.core.enums import DiplomaticState
 
     fs = FactionState(
         faction_id="hero_guild",
         territory=("region_north", "region_east"),
         resources={"gold": 100, "iron": 50},
-        diplomatic_relations={"monster_horde": "hostile", "town_council": "allied"},
+        diplomatic_relations={"monster_horde": DiplomaticState.HOSTILE, "town_council": DiplomaticState.ALLIED},
         active_doctrines=("doctrine_raid", "doctrine_defend"),
         military_strength=2.5,
         tension_level=0.3,
@@ -123,6 +124,7 @@ def test_faction_update_military_strength_set():
 
 def test_faction_update_is_noop():
     from src.core.updates import FactionUpdate
+    from src.core.enums import DiplomaticState
 
     noop = FactionUpdate(faction_id="hero_guild")
     assert noop.is_noop()
@@ -134,7 +136,7 @@ def test_faction_update_is_noop():
     assert not FactionUpdate(faction_id="x", territory_add=("r1",)).is_noop()
     assert not FactionUpdate(faction_id="x", territory_remove=("r1",)).is_noop()
     assert not FactionUpdate(faction_id="x", resources_delta={"gold": 1}).is_noop()
-    assert not FactionUpdate(faction_id="x", diplomatic_relations_set={"y": "hostile"}).is_noop()
+    assert not FactionUpdate(faction_id="x", diplomatic_relations_set={"y": DiplomaticState.HOSTILE}).is_noop()
     assert not FactionUpdate(faction_id="x", active_doctrines_set=()).is_noop()
 
 

@@ -182,6 +182,36 @@ class AuthoritativeApplyPipeline:
         )
         costs["faction_awareness"] = (time.perf_counter_ns() - t_start) / 1e6
 
+        # --- Enhanced RPG Phase 8d: Diplomatic State Machine + Alliance Generation (E53Bc/Bd) ---
+        t_start = time.perf_counter_ns()
+        from src.domains.faction.diplomatic_state_machine import (
+            compute_transitions, compute_common_enemy_pairs, events_from_transitions,
+        )
+        _diplo_transition_updates = compute_transitions(state.factions)
+        _diplo_alliance_updates: list = []
+        # Alliance generation: factions with a common hostile enemy get an AllianceProposal
+        if state.factions:
+            from src.engine.faction_decision import AllianceProposal
+            from src.domains.faction.diplomatic_actions import handle as _diplo_handle
+            for _fa_id, _fb_id, _ps in compute_common_enemy_pairs(state.factions):
+                _diplo_alliance_updates.extend(_diplo_handle(
+                    AllianceProposal(
+                        faction_id=_fa_id, directive_kind="ALLIANCE_PROPOSAL",
+                        from_faction=_fa_id, to_faction=_fb_id, proposer_strength=_ps,
+                    ),
+                    state.factions,
+                ))
+        _diplo_updates = _diplo_transition_updates + _diplo_alliance_updates
+        _diplo_world_events = events_from_transitions(
+            _diplo_transition_updates, _diplo_alliance_updates, state.factions, state.tick,
+        )
+        from src.core.updates import StateUpdate as _SU_dt
+        update = run_phase(
+            "diplomatic_transitions", update,
+            lambda u: _SU_dt(faction_updates=_diplo_updates, world_events_add=_diplo_world_events),
+        )
+        costs["diplomatic_transitions"] = (time.perf_counter_ns() - t_start) / 1e6
+
         # --- Enhanced RPG Phase 3: Adventure Routing ---
         t_start = time.perf_counter_ns()
         from src.domains.adventure.phase import AdventureDecisionPhase

@@ -11,6 +11,15 @@ class EntityRole(IntEnum):
     WORKER = 4
     GUARD = 5
 
+class DiplomaticState(str, Enum):
+    """Typed diplomatic relationship state between two factions (E53Ba)."""
+    NEUTRAL = "NEUTRAL"
+    TENSE = "TENSE"
+    HOSTILE = "HOSTILE"
+    WAR = "WAR"
+    ALLIED = "ALLIED"
+    VASSAL = "VASSAL"
+
 @unique
 class Faction(IntEnum):
     HERO_GUILD = 0

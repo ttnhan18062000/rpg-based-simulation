@@ -38,7 +38,7 @@ from src.core.quests import QuestState, QuestStatus
 from src.core.models.quests import QuestOpportunity, QuestOpportunityStatus
 from src.engine.cadence import SystemCadence, should_run
 from src.core.inventory import InventoryService
-from src.core.enums import EntityRole, Faction, ReasonCode
+from src.core.enums import EntityRole, Faction, ReasonCode, DiplomaticState
 from src.core.movement_modes import MovementMode
 from src.core.updates import StateUpdate, EntityUpdate, SocialUpdate, StrategicUpdate, StaminaUpdate, NavigationUpdate
 from src.engine.legality import LegalityServiceV2
@@ -339,7 +339,10 @@ class ApplyPath:
             new_resources = dict(existing.resources)
             for k, v in fu.resources_delta.items():
                 new_resources[k] = new_resources.get(k, 0) + v
-            new_relations = {**existing.diplomatic_relations, **fu.diplomatic_relations_set}
+            new_relations = {
+                k: DiplomaticState(v) if not isinstance(v, DiplomaticState) else v
+                for k, v in {**existing.diplomatic_relations, **fu.diplomatic_relations_set}.items()
+            }
             new_doctrines = fu.active_doctrines_set if fu.active_doctrines_set is not None else existing.active_doctrines
             new_factions[fu.faction_id] = replace(existing,
                 tension_level=max(0.0, min(1.0, new_tension)),

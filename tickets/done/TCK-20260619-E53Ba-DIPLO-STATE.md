@@ -1,10 +1,10 @@
 ---
-status: open
+status: done
 layer: strategy
 authority: P1
 audience: agent
 ticket_id: TCK-20260619-E53Ba-DIPLO-STATE
-phase: open
+phase: done
 date: 2026-06-22
 tags: [faction, diplomacy, diplomatic-state, enum, core-model, phase-5]
 ---
@@ -15,7 +15,7 @@ tags: [faction, diplomacy, diplomatic-state, enum, core-model, phase-5]
 Epic 5.3Ba · DiplomaticState Enum + FactionState Migration
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -109,7 +109,16 @@ pytest tests/unit/core/test_state.py -x -v
 ```
 
 ## Files Changed
-_To be filled on completion._
+- `src/core/enums.py` — added `DiplomaticState(str, Enum)` after EntityRole
+- `src/core/state.py` — `FactionState.diplomatic_relations: Dict[str, DiplomaticState]`; updated `to_canonical_dict()` and `from_dict()`
+- `src/core/updates.py` — `FactionUpdate.diplomatic_relations_set: Dict[str, DiplomaticState]`
+- `src/engine/apply.py` — added `DiplomaticState` coercion in faction merge
+- `src/domains/adventure/scoring.py` — fixed `"allied"` → `DiplomaticState.ALLIED` (migration regression fix)
+- `tests/unit/faction/test_faction_state.py` — updated raw strings to typed enum values
+- `tests/unit/faction/test_faction_directive_propagation.py` — updated raw strings to typed enum values
+- `tests/unit/faction/test_diplomacy.py` — new (8 tests)
+- `docs/systems/faction_contract.md` — updated schema + added DiplomaticState section
+- `docs/parity_ledger/faction.yaml` — added FAC-004
 
 ## Completion Summary
-_To be filled on completion._
+DiplomaticState(str, Enum) added to src/core/enums.py with 6 members (NEUTRAL, TENSE, HOSTILE, WAR, ALLIED, VASSAL). FactionState.diplomatic_relations and FactionUpdate.diplomatic_relations_set migrated to typed Dict[str, DiplomaticState]. Serialization round-trips via .value (to JSON) and DiplomaticState(v) (from JSON). Apply path coerces raw strings for robustness. scoring.py ALLIED check fixed from lowercase "allied" to DiplomaticState.ALLIED. All 26 tests pass.

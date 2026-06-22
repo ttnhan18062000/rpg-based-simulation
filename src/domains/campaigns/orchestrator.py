@@ -48,7 +48,11 @@ _SIGNIFICANCE_MAP: Dict[str, tuple] = {
     "CAMP_CLEARED":    ("faction_shift",   0.9),
     "CAMP_RAID":       ("faction_shift",   0.6),
     "PARTY_ABANDONED": ("entity_death",    0.4),
-    "QUEST_FAILED":    ("quest_completed", 0.3),
+    "QUEST_FAILED":          ("quest_completed", 0.3),
+    # E53Bd: Diplomatic transition events
+    "FACTION_WAR_DECLARED":  ("war_declared",   0.95),
+    "FACTION_ALLIANCE_FORMED": ("alliance_formed", 0.80),
+    "FACTION_PEACE_TREATY":  ("peace_treaty",   0.75),
 }
 
 # ── Types ─────────────────────────────────────────────────────────────────────

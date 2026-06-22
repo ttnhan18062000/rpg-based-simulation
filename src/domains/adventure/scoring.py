@@ -14,6 +14,7 @@ from typing import TYPE_CHECKING, Any, Dict, Optional
 from src.core.state import EntityState, ResourceNodeState
 from src.domains.adventure.schema import RouteFamily, AdventureRouteOption
 from src.engine.faction_constants import DEFEND_BORDER, TRADE_ROUTE, COMMISSION_QUEST
+from src.core.enums import DiplomaticState
 
 if TYPE_CHECKING:
     from src.core.models.quests import QuestOpportunity
@@ -128,7 +129,7 @@ class AdventureRouteScorer:
                 entity.identity.role == _ER.SHOPKEEPER
                 and route.family in (RouteFamily.GATHER_RESOURCE, RouteFamily.SELL_LOOT_FOR_GOLD)
                 and factions is not None
-                and any("allied" in fs.diplomatic_relations.values() for fs in factions.values())
+                and any(DiplomaticState.ALLIED in fs.diplomatic_relations.values() for fs in factions.values())
             ):
                 urgency += 1.5
             # HERO + quest: boost when any COMMISSION_QUEST directive active

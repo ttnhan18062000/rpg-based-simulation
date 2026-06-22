@@ -755,3 +755,7 @@ TCK-20260619-E11A-HERO-AUTHORING,feature,done,2026-06-19,simulation,standard,"Au
 2026-06-22T00:00:00Z,TCK-20260619-E53Ab-DECISION-PHASE,Epic 5.3Ab · FactionDecisionPhase + FactionDirective,DONE,FactionDecisionPhase wired into pipeline.py with transient FactionDirective list; 11 new tests pass,stored_artifacts/TCK-20260619-E53Ab-DECISION-PHASE
 2026-06-22T00:00:00Z,TCK-20260619-E53Ac-DIRECTIVE-PROP,Epic 5.3Ac · Faction Directive Propagation to Entity Scoring,DONE,"AdventureRouteScorer extended with faction directive urgency boosts (+2.0/+1.5/+3.0); pipeline reordered; faction_constants.py extracted; 8 new tests pass + 40 adventure regression tests pass",stored_artifacts/TCK-20260619-E53Ac-DIRECTIVE-PROP
 2026-06-22T00:00:00Z,TCK-20260619-E53Ad-TENSION-UPDATE,Epic 5.3Ad · Faction Awareness — Tension Update from RESOURCE_DEPLETED Events,DONE,"FactionAwarenessService added; wired as faction_awareness run_phase; 7 new tests pass",stored_artifacts/TCK-20260619-E53Ad-TENSION-UPDATE
+TCK-20260619-E53Ba-DIPLO-STATE,2026-06-22,DONE,standard,feature,Epic 5.3Ba · DiplomaticState Enum + FactionState Migration
+TCK-20260619-E53Bb-DIPLO-ACTIONS,2026-06-22,DONE,standard,feature,Epic 5.3Bb · Diplomatic Action Types + Handler
+TCK-20260619-E53Bc-STATE-MACHINE,2026-06-22,DONE,standard,feature,Epic 5.3Bc · Diplomatic State Machine Transitions + FactionDecisionPhase Integration
+TCK-20260619-E53Bd-LEDGER-WIRING,2026-06-22,DONE,standard,feature,Epic 5.3Bd NarrativeLedger Wiring for Diplomatic Events
