@@ -218,6 +218,14 @@ class AuthoritativeApplyPipeline:
         update = run_phase("world_emergence", update, lambda u: WorldEmergencePhase.execute(state, u, recent_world_events)[0], "ENABLE_WORLD_EMERGENCE")
         costs["world_emergence"] = (time.perf_counter_ns() - t_start) / 1e6
 
+        # --- Enhanced RPG Phase 8b: Faction Decision ---
+        t_start = time.perf_counter_ns()
+        faction_directives: list = []
+        if should_run(state.tick, None, cadence.faction_decision):
+            from src.engine.faction_decision import FactionDecisionPhase
+            faction_directives = FactionDecisionPhase.execute(state, policy=None)
+        costs["faction_decision"] = (time.perf_counter_ns() - t_start) / 1e6
+
         # --- Phase 6: Economy & Evolution ---
         # Refresh dirty set to capture resource_transfers added by town_resolution and world_dynamics
         t_start = time.perf_counter_ns()

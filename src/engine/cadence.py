@@ -26,6 +26,7 @@ class SystemCadence(BaseModel):
     concern_evaluation: int = Field(10, ge=1)
     detour_suggestion: int = Field(10, ge=1)
     social_memory: int = Field(10, ge=1)
+    faction_decision: int = Field(10, ge=1)
 
     # World / Environmental (Very Slow)
     world_dynamics: int = Field(50, ge=1)

@@ -1,0 +1,46 @@
+- id: FAC-001
+  text: >
+    AuthoritativeState.factions persists FactionState records across ticks via
+    typed FactionUpdate apply-path
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/core/state.py (FactionState dataclass, AuthoritativeState.factions field,
+    to_readonly() wrapping) + src/core/updates.py (FactionUpdate frozen dataclass,
+    StateUpdate.faction_updates field, is_noop/merge_many wiring) +
+    src/engine/apply.py (factions=new_factions threading,
+    TCK-20260619-E53Aa-FACTION-STATE)
+  proof_type: parity
+  test_path: tests/unit/faction/test_faction_state.py
+  divergence_note: null
+  support_boundary: null
+
+- id: FAC-002
+  text: >
+    FactionUpdate.tension_delta accumulates into FactionState.tension_level,
+    clamped to [0.0, 1.0]
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: >
+    src/engine/apply.py (tension clamp logic, TCK-20260619-E53Aa-FACTION-STATE)
+  proof_type: parity
+  test_path: tests/unit/faction/test_faction_state.py::test_faction_update_apply_tension_delta
+  divergence_note: null
+  support_boundary: null
+
+- id: FAC-003
+  text: >
+    FactionDecisionPhase reads state.factions each decision tick and emits
+    transient FactionDirective list; directives are not persisted in AuthoritativeState
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: >
+    src/engine/faction_decision.py + src/engine/pipeline.py (faction_decision inline block,
+    TCK-20260619-E53Ab-DECISION-PHASE)
+  proof_type: parity
+  test_path: tests/unit/faction/test_faction_decision_phase.py
+  divergence_note: null
+  support_boundary: null

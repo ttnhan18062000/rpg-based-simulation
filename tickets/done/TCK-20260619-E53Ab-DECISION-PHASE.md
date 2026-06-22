@@ -1,10 +1,10 @@
 ---
-status: open
+status: historical
 layer: strategy
 authority: P1
 audience: agent
 ticket_id: TCK-20260619-E53Ab-DECISION-PHASE
-phase: open
+phase: done
 date: 2026-06-22
 tags: [faction, faction-decision-phase, faction-directive, engine-phase, phase-5]
 ---
@@ -15,7 +15,7 @@ tags: [faction, faction-decision-phase, faction-directive, engine-phase, phase-5
 Epic 5.3Ab · FactionDecisionPhase + FactionDirective
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -110,13 +110,25 @@ Decide the exact wiring point by reading `src/engine/kernel.py` tick loop and `s
 - Keep `faction_decision.py` import-clean: no module-level imports of `src.core.state` beyond `TYPE_CHECKING` — consistent with the import discipline in `social_memory.py`.
 - The FactionDirective list produced here feeds directly into E53Ac (directive propagation). Pass it as a parameter to the scoring layer in the same tick; do not store it anywhere durable.
 
+### Implemented (E53Ab)
+- Added `faction_decision: int = Field(10, ge=1)` to `SystemCadence` in `src/engine/cadence.py` (Strategic/Cognition section, after `social_memory`).
+- Created `src/engine/faction_decision.py` with `FactionDirective` (frozen dataclass, slots=True), string constants `DEFEND_BORDER`/`TRADE_ROUTE`/`COMMISSION_QUEST`, and `FactionDecisionPhase.execute()`.
+- Wired inline block into `src/engine/pipeline.py:refine()` after `costs["world_emergence"]`, using `should_run(state.tick, None, cadence.faction_decision)` with `policy=None`.
+- `faction_directives` is a local variable in `refine()` — transient, not in StateUpdate or AuthoritativeState.
+- Added parity ledger entry FAC-003 in `docs/parity_ledger/faction.yaml`.
+- 11 tests written and passing (8 primary + 3 anti-drift guards).
+
 ## Test Summary
 ```bash
 pytest tests/unit/faction/test_faction_decision_phase.py -x -v
 ```
 
 ## Files Changed
-_To be filled on completion._
+- `src/engine/cadence.py` — added `faction_decision: int = Field(10, ge=1)` to SystemCadence
+- `src/engine/faction_decision.py` — new file: `FactionDirective` frozen dataclass (slots=True), string constants DEFEND_BORDER/TRADE_ROUTE/COMMISSION_QUEST, `FactionDecisionPhase.execute()`
+- `src/engine/pipeline.py` — wired inline faction_decision cadence-gated block in `refine()` between world_emergence and Phase 6; `faction_directives` stored as transient local variable (never enters StateUpdate)
+- `docs/parity_ledger/faction.yaml` — added FAC-003 entry (verified)
+- `tests/unit/faction/test_faction_decision_phase.py` — 11 new tests (8 primary + 3 anti-drift guards)
 
 ## Completion Summary
-_To be filled on completion._
+FactionDirective frozen dataclass and FactionDecisionPhase.execute() created in src/engine/faction_decision.py (DEFEND_BORDER/TRADE_ROUTE/COMMISSION_QUEST logic); faction_decision cadence (default 10) added to SystemCadence in cadence.py; wired inline in pipeline.py:refine() between world_emergence and Phase 6 as cadence-gated local variable (never enters StateUpdate); 11 new tests in tests/unit/faction/test_faction_decision_phase.py; FAC-003 added to docs/parity_ledger/faction.yaml. All 28 tests pass (11 new + 17 regression). Architecture guards pass.
