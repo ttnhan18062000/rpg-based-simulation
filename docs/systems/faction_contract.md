@@ -147,6 +147,19 @@ pipeline.py:refine()
               compute_common_enemy_pairs(factions) → alliance proposals      (E53Bc)
               events_from_transitions(...) → WorldEvent list                 (E53Bd)
               run_phase("diplomatic_transitions", ..., world_events_add=...) (E53Bd)
+  [Phase 8e]  MilitaryConflictPhase.execute(state) → StateUpdate            (E53Ca–Cd)
+              ├─ Orphan siege cleanup (WAR→NEUTRAL, siege_state_clear)       (E53Cd)
+              ├─ get_war_pairs() → List[(fid_a, fid_b)]                      (E53Ca)
+              ├─ War exhaustion drain: FactionUpdate(military_strength_set)  (E53Cd)
+              ├─ WAR_ENDED_EXHAUSTION WorldEvent at ms < 0.3 crossing        (E53Cd)
+              └─ Per WAR pair:
+                 ├─ TERRITORY_TRANSFERRED: WorldUpdate(siege_state_clear) +  (E53Cc)
+                 │  FactionUpdate(territory_add/remove) + WorldEvent
+                 ├─ Siege initiation: WorldUpdate(siege_state_set)           (E53Cb)
+                 ├─ Siege degradation: service_availability_delta=-0.05,     (E53Cb)
+                 │  siege_progress_delta=+0.05
+                 ├─ Defender reinforcement (≥3 GUARD): +0.02/-0.02 offset    (E53Cb)
+                 └─ Squad commitment: GroupRecord(roles=FACTION_SQUAD)       (E53Cb)
   [Phase 3]   AdventureDecisionPhase.apply(state, faction_directives=..., factions=...)
   ...
 ```
@@ -174,7 +187,31 @@ narrative ledger deduplication. One event is emitted per pair per tick.
 
 ---
 
+## Military Conflict WorldEvent Emission (E53Ca–Cd)
+
+Phase 8e (`MilitaryConflictPhase`) emits additional `WorldEvent` objects:
+
+| Event | WorldEventCategory | significance | subject format |
+|---|---|---|---|
+| Siege complete → ownership transfer | `TERRITORY_TRANSFERRED` | 0.85 | `"{attacker}:{defender}:{region_id}"` |
+| War exhaustion crosses 0.3 threshold | `WAR_ENDED_EXHAUSTION` | 0.80 | `"{fid_a}:{fid_b}"` |
+
+### SiegeState lifecycle
+
+1. **Initiation** (tick 1 of WAR): `WorldUpdate.siege_state_set = SiegeState(attacker, defender, progress=0.0, started_tick)` on the contested region.
+2. **Degradation** (each tick): `service_availability_delta=-0.05`, `siege_progress_delta=+0.05`. Defender reinforcement (≥3 GUARD entities) applies `+0.02` offset to both.
+3. **Transfer** (tick where `siege_progress >= 1.0`): `siege_state_clear=True`, `service_availability_delta=+1.0`, `FactionUpdate(territory_add/remove)`, `TERRITORY_TRANSFERRED` WorldEvent.
+4. **Orphan cleanup** (any tick where siege exists but factions are no longer at WAR): `siege_state_clear=True`, `service_availability_delta=+1.0`.
+
+**Note on `RegionState.owner_faction_id`:** This field is `Optional[int]` and is NOT updated during territory transfer. The authoritative ownership record is `FactionState.territory: Tuple[str, ...]`. The int/str type mismatch is a known limitation (FAC-010).
+
+### War exhaustion
+
+Each WAR faction drains `military_strength` by `0.001/tick` (flat, deduped per faction). When `military_strength` crosses below `0.3`, `WAR_ENDED_EXHAUSTION` is emitted. The autonomous `WAR→NEUTRAL` transition fires via Phase 8d `DiplomaticStateMachine.compute_transitions()` when both faction `military_strength < 0.3` on the prior state.
+
+---
+
 ## Parity Ledger
 
-See `docs/parity_ledger/faction.yaml` (FAC-001 through FAC-007, FACTION-TENSION-001) and
+See `docs/parity_ledger/faction.yaml` (FAC-001 through FAC-011, FACTION-TENSION-001) and
 `docs/parity_ledger/strategic_cognition.yaml` (FACTION-DIR-001).

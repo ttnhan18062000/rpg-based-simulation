@@ -38,6 +38,10 @@ class WorldEventCategory(str, Enum):
     FACTION_WAR_DECLARED = "FACTION_WAR_DECLARED"
     FACTION_ALLIANCE_FORMED = "FACTION_ALLIANCE_FORMED"
     FACTION_PEACE_TREATY = "FACTION_PEACE_TREATY"
+    # E53Cc: Territory transfer via siege completion
+    TERRITORY_TRANSFERRED = "TERRITORY_TRANSFERRED"
+    # E53Cd: War exhaustion peace resolution
+    WAR_ENDED_EXHAUSTION = "WAR_ENDED_EXHAUSTION"
 
 @dataclass(frozen=True, slots=True)
 class WorldEvent:

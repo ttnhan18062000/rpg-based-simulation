@@ -122,10 +122,22 @@ class ApplyPlanBuilder:
                     mods = list(set([m for m in reg.active_modifiers if m not in r_upd.modifiers_remove] + r_upd.modifiers_add))
                     prc = r_upd.price_modifiers_set if r_upd.price_modifiers_set is not None else reg.price_modifiers
                     pop_cohorts = r_upd.population_cohorts_set if r_upd.population_cohorts_set is not None else reg.population_cohorts
+                    # E53Cb: siege mechanics — clamp service_availability, apply siege_state mutations
+                    svc_avail = max(0.0, min(1.0, reg.service_availability + r_upd.service_availability_delta))
+                    if r_upd.siege_state_clear:
+                        siege = None
+                    elif r_upd.siege_state_set is not None:
+                        siege = r_upd.siege_state_set
+                    else:
+                        siege = reg.siege_state
+                    if siege is not None and r_upd.siege_progress_delta != 0.0:
+                        new_progress = max(0.0, min(1.0, siege.siege_progress + r_upd.siege_progress_delta))
+                        siege = replace(siege, siege_progress=new_progress)
                     new_regions[r_id] = replace(reg, hazard_level=haz, suppression_active=sup, calamity_intensity=cal,
                                                 trauma_score=tra, retaliation_pressure=ret, influence=inf,
                                                 owner_faction_id=own, kind=knd, weather=wth, active_modifiers=mods,
-                                                price_modifiers=prc, population_cohorts=pop_cohorts)
+                                                price_modifiers=prc, population_cohorts=pop_cohorts,
+                                                siege_state=siege, service_availability=svc_avail)
         plan.world_collection_changes["regions"] = new_regions
 
         # Nodes

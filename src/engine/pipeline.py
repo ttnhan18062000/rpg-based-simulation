@@ -212,6 +212,16 @@ class AuthoritativeApplyPipeline:
         )
         costs["diplomatic_transitions"] = (time.perf_counter_ns() - t_start) / 1e6
 
+        # --- Enhanced RPG Phase 8e: Military Conflict Phase (E53Ca) ---
+        t_start = time.perf_counter_ns()
+        from src.engine.military_conflict import MilitaryConflictPhase
+        from src.core.updates import StateUpdate as _SU_mc
+        update = run_phase(
+            "military_conflict", update,
+            lambda u: MilitaryConflictPhase.execute(state),
+        )
+        costs["military_conflict"] = (time.perf_counter_ns() - t_start) / 1e6
+
         # --- Enhanced RPG Phase 3: Adventure Routing ---
         t_start = time.perf_counter_ns()
         from src.domains.adventure.phase import AdventureDecisionPhase

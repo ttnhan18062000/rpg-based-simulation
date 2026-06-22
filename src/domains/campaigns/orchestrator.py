@@ -53,6 +53,10 @@ _SIGNIFICANCE_MAP: Dict[str, tuple] = {
     "FACTION_WAR_DECLARED":  ("war_declared",   0.95),
     "FACTION_ALLIANCE_FORMED": ("alliance_formed", 0.80),
     "FACTION_PEACE_TREATY":  ("peace_treaty",   0.75),
+    # E53Cc: Territory transfer event
+    "TERRITORY_TRANSFERRED": ("territory_transferred", 0.85),
+    # E53Cd: War exhaustion peace resolution
+    "WAR_ENDED_EXHAUSTION": ("war_ended_exhaustion", 0.80),
 }
 
 # ── Types ─────────────────────────────────────────────────────────────────────

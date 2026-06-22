@@ -205,6 +205,36 @@ class LocalScarState:
 
 
 @dataclass(frozen=True, slots=True)
+class SiegeState:
+    """Durable state of an active siege on a region (E53Cb).
+
+    Survives across ticks. Stored on RegionState.siege_state.
+    Transfer to attacker triggers when siege_progress >= 1.0 (handled in E53Cc).
+    """
+    attacker_faction_id: str
+    defender_faction_id: str
+    siege_progress: float  # 0.0 to 1.0; transfer triggers at >= 1.0
+    started_tick: int
+
+    def to_canonical_dict(self) -> dict:
+        return {
+            "attacker_faction_id": self.attacker_faction_id,
+            "defender_faction_id": self.defender_faction_id,
+            "siege_progress": self.siege_progress,
+            "started_tick": self.started_tick,
+        }
+
+    @classmethod
+    def from_dict(cls, d: dict) -> "SiegeState":
+        return cls(
+            attacker_faction_id=d["attacker_faction_id"],
+            defender_faction_id=d["defender_faction_id"],
+            siege_progress=float(d["siege_progress"]),
+            started_tick=int(d["started_tick"]),
+        )
+
+
+@dataclass(frozen=True, slots=True)
 class RegionState:
     """Regional attributes and world dynamic markers."""
     id: str
@@ -224,6 +254,9 @@ class RegionState:
     price_modifiers: Dict[str, float] = field(default_factory=dict) # ItemKind -> Multiplier
     # E52A: Per-region demographic cohorts keyed by age bracket ("young"|"adult"|"elder")
     population_cohorts: Dict[str, Any] = field(default_factory=dict)
+    # E53Cb: Siege mechanics
+    siege_state: Optional["SiegeState"] = None
+    service_availability: float = 1.0  # 0.0 to 1.0; degraded by active siege
     _canonical_cache: Any = field(default=None, init=False, repr=False, compare=False)
 
     def to_canonical_dict(self) -> Dict[str, Any]:
@@ -246,6 +279,8 @@ class RegionState:
             "active_modifiers": sorted(list(self.active_modifiers)),
             "price_modifiers": dict(sorted(self.price_modifiers.items())),
             "population_cohorts": dict(sorted(self.population_cohorts.items())),
+            "siege_state": self.siege_state.to_canonical_dict() if self.siege_state is not None else None,
+            "service_availability": self.service_availability,
         }
         object.__setattr__(self, "_canonical_cache", res)
         return res
