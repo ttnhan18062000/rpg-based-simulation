@@ -1093,3 +1093,49 @@
   test_path: tests/integration/scenarios/test_demographics.py::test_high_population_region_higher_resource_demand
   divergence_note: null
   support_boundary: null
+- id: WORLD-CULT-001
+  text: 'CultureState is derived only from ChronicleHierarchy events at episode
+    boundary (CultureDriftExporter called from _advance_state() only) — never
+    mutated during the tick loop. Four axes (fatalism, hero_veneration,
+    resource_scarcity_memory, faction_conflict_exposure) each normalised to [0.0, 1.0]
+    via min(1.0, raw_sum / 3.0).'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: 'src/domains/culture/deriver.py (CultureDeriver.derive); src/domains/culture/exporter.py
+    (CultureDriftExporter.export called from _advance_state() in orchestrator.py
+    after narrative_ledger.extend())'
+  proof_type: parity
+  test_path: tests/unit/culture/test_culture_deriver.py::test_deriver_calamity_raises_fatalism
+  divergence_note: null
+  support_boundary: null
+- id: WORLD-CULT-002
+  text: 'Cultural bias overlay is transient — CulturalBiasApplicator.compute_culture_delta()
+    returns a float additive delta bounded to [-0.5, 1.0] that is added to
+    MotivationBiasService result; it never writes to entity durable state
+    (MotivationModel, ValuePreferenceProfile, EntityState).'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: 'src/domains/culture/applicator.py (CulturalBiasApplicator.compute_culture_delta
+    — returns float only); src/domains/motivation/service.py (culture_values optional
+    param — reads CulturalBiasApplicator result, never mutates entity)'
+  proof_type: parity
+  test_path: tests/unit/culture/test_culture_applicator.py::test_zero_culture_produces_zero_delta
+  divergence_note: null
+  support_boundary: null
+- id: WORLD-CULT-003
+  text: 'Two regions with different narrative histories produce measurably different
+    mean motivation multipliers for the same route tag after 5 synthetic episodes.
+    Specifically: calamity_region.fatalism > hero_region.fatalism + 0.3, and
+    caution-tag delta for calamity_region exceeds hero_region by at least 0.1.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: 'src/domains/culture/deriver.py + src/domains/culture/applicator.py;
+    acceptance test verifies measurable axis divergence and behavioral delta divergence
+    between calamity-history and hero-history regions'
+  proof_type: parity
+  test_path: tests/integration/culture/test_culture_drift_acceptance.py::test_two_regions_diverge_after_5_episodes
+  divergence_note: null
+  support_boundary: null

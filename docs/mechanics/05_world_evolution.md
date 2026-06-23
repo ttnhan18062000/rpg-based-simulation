@@ -119,3 +119,54 @@ When the global `Maturity` and regional `Trauma` scores are sufficiently high, t
 *   **Boss Spawns**: Unique, high-threat entities appear in traumatized regions.
 *   **Raids**: Faction-based attacks on town centers or resource hubs.
 *   **Threat Evolution**: Monsters in high-hazard regions evolve to higher `Evolution Levels`, becoming deadlier and granting better rewards.
+
+---
+
+## 7. Cultural Drift (E62)
+
+Over long campaigns, regional cultures develop distinct values driven by their accumulated
+narrative history. Culture drift is a **long-horizon** mechanism — it operates at episode
+boundaries, not per tick.
+
+### Axis Definitions
+
+| Axis | Derivation source | Motivation effect |
+|---|---|---|
+| `fatalism` | `calamity` events + entity_death with cause="calamity" | +caution, −pride |
+| `hero_veneration` | entity_death where entity_role="HERO" | +loyalty, +pride |
+| `resource_scarcity_memory` | `INFLATION_SPIRAL` events | +survival |
+| `faction_conflict_exposure` | `war_declared`, `territory_transferred`, `faction_destroyed` | +caution, −loyalty |
+
+All axes are floats in [0.0, 1.0]. Normalisation: `axis = min(1.0, raw_sum / 3.0)`.
+Three high-significance events saturate an axis.
+
+### Derivation Trigger
+
+`CultureDriftExporter.export()` is called from `CampaignOrchestrator._advance_state()`
+at every episode boundary, after the narrative ledger has been updated for that episode.
+It calls `ChronicleGrouper().group(narrative_ledger)` to group all accumulated entries,
+then `CultureDeriver.derive(hierarchy)` to produce `Dict[str, CultureState]`.
+
+### Persistence
+
+`CultureState` per region is stored as `CultureCarryForward` in
+`CampaignState.region_cultures: Dict[str, CultureCarryForward]`. Regions without events
+in a given episode keep their prior culture snapshot unchanged until the next derivation.
+
+### Motivation Overlay
+
+`CulturalBiasApplicator.compute_culture_delta(culture, tags) -> float` returns an
+additive delta layered onto `MotivationBiasService.compute_bias_multiplier()` result.
+
+- Axes below `CULTURE_ACTIVATION_THRESHOLD = 0.3` produce no effect.
+- Final delta is bounded: `max(-0.5, min(1.0, delta))`.
+- The overlay is **transient** — it never modifies the entity's durable `MotivationModel`.
+
+### Acceptance Signal
+
+> In a 5-episode campaign, the `caution` tag motivation delta for a region with 3 calamity
+> events exceeds that of a region with 3 hero deaths by at least 0.1.
+
+**Sources:** `src/domains/culture/`
+**Contract:** `docs/world/culture_drift_contract.md`
+**Parity:** WORLD-CULT-001, WORLD-CULT-002, WORLD-CULT-003

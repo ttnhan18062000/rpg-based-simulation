@@ -15,7 +15,7 @@ tags: [culture-drift, parity, acceptance-test, docs, phase-6]
 Epic 6.2D · Parity Ledger, 5-Episode Acceptance Test, and Doc Finalization
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -139,7 +139,13 @@ with a Culture Drift section, and run `make knowledge-index-update`.
 - Run `pytest tests/unit/campaigns/` to confirm CampaignState backward compat still holds
 
 ## Files Changed
-_To be filled on completion._
+- `docs/parity_ledger/world_dynamics.yaml` (modified — WORLD-CULT-001/002/003 added)
+- `docs/mechanics/05_world_evolution.md` (modified — Section 7 Cultural Drift)
+- `tests/integration/culture/__init__.py` (new)
+- `tests/integration/culture/test_culture_drift_acceptance.py` (new — 2 acceptance tests)
 
 ## Completion Summary
-_To be filled on completion._
+Three WORLD-CULT parity entries (verified, P1) added to world_dynamics.yaml.
+Section 7 Cultural Drift added to 05_world_evolution.md. 5-episode acceptance
+test proves >0.3 axis divergence and >0.1 caution-tag behavioral delta between
+calamity and hero regions. Knowledge index updated. 127 tests pass.
