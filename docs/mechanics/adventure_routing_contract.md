@@ -255,7 +255,7 @@ score = urgency + benefit + bias + confidence_bonus - risk_penalty - 2.0
 
 ## Extension Rules
 
-To add a new RouteFamily:
+To add a new RouteFamily (source-level change, modifies src/):
 1. Add the enum value to `RouteFamily` in `src/domains/adventure/schema.py`
 2. Add a `kind_map` entry in `AdventureRouteGenerator.generate()` if driven by opportunities
 3. Add a `family_needs` entry in `AdventureRouteScorer` if need urgency should apply
@@ -263,3 +263,18 @@ To add a new RouteFamily:
 5. Add objective resolution mapping in `ObjectiveIntentResolver.resolve()` if needed
 6. Update this doc and `04_strategic_cognition.md` if the new family represents a meaningful strategic direction
 7. Add regression tests covering: family appears in candidate set, scores correctly with and without blockers, fallback still fires if only family is blocked
+
+### Feature Pack Extension Path (E63 — no src/ modification required)
+
+When adding a RouteFamily via a **feature pack**, do NOT follow steps 1–7 above.
+Instead, use the `FeatureRegistry` pattern defined in
+`docs/architecture/feature_pack_architecture.md`:
+
+1. Declare the new family in a `FeaturePackManifest` YAML (`content/packs/{name}/manifest.yaml`)
+2. Implement generator + scorer classes in a Python module outside `src/`
+3. Register via `extension_points[].domain = adventure_routing` in the manifest
+4. `FeaturePackLoader` bootstraps the registry from existing `RouteFamily` enum values,
+   then registers pack-contributed entries at scenario init — no source edit needed
+
+The source-level enum extension path remains valid for first-party core additions.
+The feature pack path is for opt-in / add-on / community extensions.
