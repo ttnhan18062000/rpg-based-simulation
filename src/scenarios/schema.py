@@ -4,6 +4,8 @@ from typing import Any, Dict, List, Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from src.domains.feature_packs.profile import RuntimeProfile
+
 
 ALLOWED_VICTORY_CONDITION_KINDS: frozenset[str] = frozenset({"tick_limit", "entity_count"})
 
@@ -65,6 +67,9 @@ class SimulationScenarioDefinition(BaseModel):
     setup_tags: List[str] = Field(default_factory=list)
     template_id: Optional[str] = None
     victory_conditions: Optional[List[VictoryCondition]] = None
+    runtime_profile: Optional["RuntimeProfile"] = None
+    # E63B: optional feature pack selection for this scenario run.
+    # When None, the implicit profile is RuntimeProfile(active_pack_names=["base"]).
 
     @model_validator(mode="after")
     def validate_initial_condition_keys(self) -> SimulationScenarioDefinition:

@@ -15,7 +15,7 @@ tags: [feature-packs, manifest, runtime-profile, compatibility-resolver, phase-6
 Epic 6.3B · FeaturePackManifest + RuntimeProfile + CompatibilityResolver Models
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -73,7 +73,15 @@ Implement the core data models for the pluggable feature pack system:
   resolver circular dependency error, resolver missing-pack error
 
 ## Files Changed
-_To be filled on completion._
+- `src/domains/feature_packs/__init__.py` (new)
+- `src/domains/feature_packs/manifest.py` (new — FeaturePackManifest, ExtensionPoint, CompatibilityResolver)
+- `src/domains/feature_packs/profile.py` (new — RuntimeProfile)
+- `src/scenarios/schema.py` (modified — runtime_profile Optional[RuntimeProfile] field)
+- `tests/unit/feature_packs/__init__.py` (new)
+- `tests/unit/feature_packs/test_manifest.py` (new — 14 tests)
 
 ## Completion Summary
-_To be filled on completion._
+FeaturePackManifest Pydantic model with YAML round-trip. RuntimeProfile for active pack
+selection. CompatibilityResolver with Kahn's BFS topological sort, conflict detection, and
+cycle detection. SimulationScenarioDefinition extended with optional runtime_profile.
+63 tests pass (14 new + 49 existing scenario tests).

@@ -776,3 +776,4 @@ TCK-20260619-E62B-CULTURE-DERIVER,2026-06-23,DONE,standard,CultureDeriver + Cult
 TCK-20260619-E62C-MOTIVATION-OVERLAY,2026-06-23,DONE,standard,CulturalBiasApplicator + MotivationBiasService culture_values param + culture_drift_contract.md + 15 tests
 TCK-20260619-E62D-PARITY-VERIFY,2026-06-23,DONE,standard,WORLD-CULT-001/002/003 parity entries + Section 7 world_evolution.md + 5-episode acceptance test
 TCK-20260619-E63A-GATE-VERIFY,2026-06-23,DONE,standard,Gate verified SATISFIED (7 route families + 4 world extensions + E53/E61/E62 done); feature_pack_architecture.md created
+TCK-20260619-E63B-MANIFEST-MODEL,2026-06-23,DONE,standard,FeaturePackManifest + RuntimeProfile + CompatibilityResolver models + SimulationScenarioDefinition.runtime_profile + 14 tests
