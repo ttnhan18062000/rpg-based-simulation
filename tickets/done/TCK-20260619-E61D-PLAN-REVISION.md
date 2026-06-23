@@ -15,7 +15,7 @@ tags: [progression-planner, plan-revision, blocker-detection, narrative-ledger, 
 Epic 6.1D · PlanRevisionService + Initial Plan Generation
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -153,7 +153,12 @@ Wire into `CampaignOrchestrator._prepare_next_episode()` after `ProgressionPlanI
     plan revised; narrative_ledger contains plan_revision entry
 
 ## Files Changed
-_To be filled on completion._
+- `src/domains/campaigns/plan_revision.py` (new — PlanRevisionService with generate_initial_plan + detect_and_revise)
+- `src/domains/campaigns/orchestrator.py` (extended _build_initial_state — initial plan generation + detect_and_revise + ledger dedup)
+- `tests/unit/campaigns/test_plan_revision.py` (new — 10 tests)
+- `tests/integration/campaigns/test_progression_planner_three_episode.py` (new — 1 integration test)
+- `docs/simulation/domains/progression_planner_contract.md` (extended — Plan Revision Rules + Initial Plan Generation sections; PROG-113 reference)
+- `docs/parity_ledger/progression.yaml` (PROG-113)
 
 ## Completion Summary
-_To be filled on completion._
+PlanRevisionService implemented with level-bracket initial plan generation (1-4→craft_upgrade, 5-9→quest_opportunity, 10+→gather_resource) and trigger-based revision (mentor_dead, item_unavailable). Goal-queue rotation moves blocked head to tail; plan_revision NarrativeLedgerEntry emitted with significance=0.6. Wired into orchestrator._build_initial_state() after ProgressionPlanImporter. 10/10 unit tests + 1/1 integration test pass; 96/96 campaign tests total. PROG-113 verified.

@@ -15,7 +15,7 @@ tags: [progression-planner, adventure-scoring, route-family, plan-advance-bonus]
 Epic 6.1C · AdventureRouteScorer Plan-Advance Bonus
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -116,7 +116,13 @@ non-empty and the head goal is in "pending" or "in_progress" status.
   - `test_existing_warrior_mage_bonus_still_applies`: group bonus regression guard
 
 ## Files Changed
-_To be filled on completion._
+- `src/domains/adventure/schema.py` (modified — plan_advance_bonus field on AdventureRouteOption)
+- `src/domains/adventure/scoring.py` (modified — TYPE_CHECKING import, progression_plan param, section 4b, final score, replace call)
+- `tests/unit/domains/adventure/test_scoring_plan_bonus.py` (new — 8 tests)
+- `docs/simulation/domains/progression_planner_contract.md` (new — authoritative contract)
+- `docs/parity_ledger/progression.yaml` (PROG-112)
 
 ## Completion Summary
-_To be filled on completion._
+AdventureRouteScorer.score() gains +1.5 plan-advance bonus when route family matches head BuildGoal.
+AdventureRouteOption.plan_advance_bonus audit field added. progression_planner_contract.md written.
+8/8 new tests pass; 48/48 adventure unit tests pass (no regressions). PROG-112 verified.

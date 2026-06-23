@@ -15,7 +15,7 @@ tags: [progression-planner, campaign-state, data-model, multi-episode]
 Epic 6.1A · ProgressionPlan Model + CampaignState Field
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -102,7 +102,12 @@ field to `CampaignState` with full `to_dict()` / `from_dict()` serialization sup
   - `test_campaign_state_missing_plans_key_backward_compat`: from_dict on dict without "progression_plans" key returns empty dict
 
 ## Files Changed
-_To be filled on completion._
+- `src/domains/campaigns/progression_plan.py` (new — BuildGoal, MilestoneCheck, RevisionTrigger, ProgressionPlan)
+- `src/domains/campaigns/state.py` (modified — import + progression_plans field + to_dict/from_dict)
+- `tests/unit/campaigns/test_progression_plan.py` (new — 4 tests)
+- `docs/parity_ledger/progression.yaml` (modified — PROG-110)
 
 ## Completion Summary
-_To be filled on completion._
+ProgressionPlan frozen dataclass (and BuildGoal, MilestoneCheck, RevisionTrigger) implemented in new
+`progression_plan.py`. CampaignState.progression_plans field added with full serialization mirroring the
+social_memories pattern. All 4 AC tests pass. PROG-110 added to progression parity ledger.

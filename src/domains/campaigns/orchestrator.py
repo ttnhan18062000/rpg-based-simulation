@@ -31,6 +31,12 @@ from src.domains.campaigns.state import (
     FactionCarryForward,
     NarrativeLedgerEntry,
 )
+from src.domains.campaigns.plan_revision import PlanRevisionService
+from src.domains.campaigns.progression_plan import (
+    ProgressionPlan,
+    ProgressionPlanExporter,
+    ProgressionPlanImporter,
+)
 from src.domains.campaigns.social_memory import (
     SocialMemoryRecord,
     SocialMemoryExporter,
@@ -180,11 +186,18 @@ class CampaignOrchestrator:
         narrative_entries = self._extract_narrative_entries(final_state, summary.episode_index)
         social_memories = self._extract_social_memories(final_state, summary.episode_index)
 
+        progression_plans = self._export_progression_plans(entity_cfs)
+
         self._state.persistent_entities.update(entity_cfs)
         self._state.persistent_factions.update(faction_cfs)
         self._state.episode_history.append(summary)
         self._state.narrative_ledger.extend(narrative_entries)
         self._state.social_memories.update(social_memories)
+        self._state.progression_plans.update(progression_plans)
+        # Remove plans for entities that died this episode.
+        dead_ids = [eid for eid, cf in entity_cfs.items() if not cf.alive]
+        for eid in dead_ids:
+            self._state.progression_plans.pop(eid, None)
         self._state.episode_index += 1
 
     def _extract_entity_carry_forwards(
@@ -297,6 +310,23 @@ class CampaignOrchestrator:
 
         return entries
 
+    def _export_progression_plans(
+        self,
+        entity_cfs: Dict[int, "EntityCarryForward"],
+    ) -> Dict[int, ProgressionPlan]:
+        """Export ProgressionPlans for alive entities at episode end.
+
+        Dead entities have their plans dropped (handled in _advance_state caller).
+        Returns only plans for alive entities that have an existing plan.
+        """
+        result: Dict[int, ProgressionPlan] = {}
+        for entity_id, cf in entity_cfs.items():
+            current_plan = self._state.progression_plans.get(entity_id)
+            exported = ProgressionPlanExporter.export(entity_id, current_plan, cf.alive)
+            if exported is not None:
+                result[entity_id] = exported
+        return result
+
     def _extract_social_memories(
         self,
         final_state: "AuthoritativeState",
@@ -396,6 +426,42 @@ class CampaignOrchestrator:
                 entities[eid] = SocialMemoryImporter.apply(
                     entity, self._state.social_memories[eid]
                 )
+
+        # Apply progression plan import: update milestone achieved flags based
+        # on carried entity level. Updates CampaignState.progression_plans in-place.
+        new_episode_index = self._state.episode_index
+        for eid, cf in alive_carry_forwards.items():
+            if eid in self._state.progression_plans:
+                updated = ProgressionPlanImporter.import_plan(
+                    eid,
+                    self._state.progression_plans[eid],
+                    new_episode_index,
+                    cf.level,
+                )
+                self._state.progression_plans[eid] = updated
+
+        # Generate initial plans for alive entities that have none yet.
+        for eid, cf in alive_carry_forwards.items():
+            if eid not in self._state.progression_plans:
+                self._state.progression_plans[eid] = PlanRevisionService.generate_initial_plan(
+                    eid, cf, new_episode_index
+                )
+
+        # Detect and apply trigger-based plan revisions (mentor dead, item unavailable).
+        # Emits plan_revision NarrativeLedgerEntry when a trigger fires.
+        existing_entry_ids = {e.entry_id for e in self._state.narrative_ledger}
+        for eid, cf in alive_carry_forwards.items():
+            if eid not in self._state.progression_plans:
+                continue
+            sm = self._state.social_memories.get(eid)
+            plan = self._state.progression_plans[eid]
+            revised, ledger_entry = PlanRevisionService.detect_and_revise(
+                eid, plan, cf, sm, new_episode_index, self._state.persistent_entities
+            )
+            self._state.progression_plans[eid] = revised
+            if ledger_entry is not None and ledger_entry.entry_id not in existing_entry_ids:
+                self._state.narrative_ledger.append(ledger_entry)
+                existing_entry_ids.add(ledger_entry.entry_id)
 
         return AuthoritativeState(tick=0, seed=episode_seed, entities=entities)
 

@@ -15,7 +15,7 @@ tags: [progression-planner, campaign-orchestrator, episode-boundary, export-impo
 Epic 6.1B · ProgressionPlanExporter + Importer (Episode Boundary Wiring)
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -109,7 +109,15 @@ pattern established by E43B.
   - `test_orchestrator_exports_plan_at_episode_end`: integration test verifying CampaignState.progression_plans populated after advance
 
 ## Files Changed
-_To be filled on completion._
+- `src/domains/campaigns/progression_plan.py` (extended — ProgressionPlanExporter + ProgressionPlanImporter)
+- `src/domains/campaigns/orchestrator.py` (wired — imports, _export_progression_plans helper, _advance_state + _build_initial_state hooks)
+- `tests/unit/campaigns/test_progression_plan_exporter.py` (new — 3 tests)
+- `tests/unit/campaigns/test_progression_plan_importer.py` (new — 3 tests)
+- `tests/unit/campaigns/test_orchestrator_plan_wiring.py` (new — 1 integration test)
+- `docs/parity_ledger/progression.yaml` (PROG-111)
 
 ## Completion Summary
-_To be filled on completion._
+ProgressionPlanExporter and ProgressionPlanImporter added to progression_plan.py.
+Wired into CampaignOrchestrator: _advance_state() exports plans (alive entities kept, dead dropped);
+_build_initial_state() imports plans (milestone achieved flags updated from entity level).
+7 new tests all pass. PROG-111 added to progression parity ledger.

@@ -11,6 +11,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 
+from src.domains.campaigns.progression_plan import ProgressionPlan
 from src.domains.campaigns.social_memory import FactionSocialMemory, SocialMemoryRecord
 
 
@@ -214,6 +215,10 @@ class CampaignState:
     # E43D: collective faction-level hostility records keyed by faction_id (str).
     # Populated by FactionSocialMemoryExporter at episode end. Persists across
     # episodes regardless of whether individual faction members survive.
+    progression_plans: Dict[int, ProgressionPlan] = field(default_factory=dict)
+    # E61B: long-term build-goal plans keyed by entity_id (int).
+    # Populated by ProgressionPlanExporter at episode end; consumed by
+    # ProgressionPlanImporter at episode start. Serialized with str(k) keys.
 
     def to_dict(self) -> dict:
         """Serialize to a JSON-safe dict. All dict keys sorted for determinism."""
@@ -238,6 +243,10 @@ class CampaignState:
             "faction_social_memories": {
                 k: v.to_dict()
                 for k, v in sorted(self.faction_social_memories.items())
+            },
+            "progression_plans": {
+                str(k): v.to_dict()
+                for k, v in sorted(self.progression_plans.items())
             },
         }
 
@@ -271,5 +280,9 @@ class CampaignState:
             faction_social_memories={
                 k: FactionSocialMemory.from_dict(v)
                 for k, v in d.get("faction_social_memories", {}).items()
+            },
+            progression_plans={
+                int(k): ProgressionPlan.from_dict(v)
+                for k, v in d.get("progression_plans", {}).items()
             },
         )

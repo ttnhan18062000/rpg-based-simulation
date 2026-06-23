@@ -1137,3 +1137,66 @@
   test_path: tests/unit/quest/test_quest_rewards.py::test_quest_completion_adds_gold_and_xp
   divergence_note: ''
   support_boundary: null
+- id: PROG-110
+  text: ProgressionPlan model serializes and deserializes with full round-trip fidelity
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >-
+    src/domains/campaigns/progression_plan.py — ProgressionPlan, BuildGoal,
+    MilestoneCheck, RevisionTrigger frozen dataclasses with to_dict()/from_dict();
+    CampaignState.progression_plans: Dict[int, ProgressionPlan] field with
+    str(k)/int(k) JSON key convention (TCK-20260619-E61A-PLAN-MODEL)
+  proof_type: parity
+  test_path: tests/unit/campaigns/test_progression_plan.py
+  divergence_note: null
+  support_boundary: null
+- id: PROG-111
+  text: ProgressionPlan is exported at episode end and imported at episode start; dead entity plans are dropped
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >-
+    src/domains/campaigns/progression_plan.py — ProgressionPlanExporter.export()
+    returns None for dead entities; ProgressionPlanImporter.import_plan() updates
+    MilestoneCheck.achieved flags based on carried entity level.
+    CampaignOrchestrator._advance_state() calls _export_progression_plans() and
+    drops dead entity plans; _build_initial_state() calls import_plan() for each
+    entity with a plan (TCK-20260619-E61B-PLAN-EXPORTER)
+  proof_type: parity
+  test_path: tests/unit/campaigns/test_progression_plan_exporter.py, tests/unit/campaigns/test_progression_plan_importer.py, tests/unit/campaigns/test_orchestrator_plan_wiring.py
+  divergence_note: null
+  support_boundary: null
+- id: PROG-112
+  text: Routes matching the head BuildGoal target_route_family receive a +1.5 plan-advance bonus
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >-
+    src/domains/adventure/scoring.py — AdventureRouteScorer.score() section 4b;
+    plan_advance_bonus=1.5 when route.family.value == head_goal.target_route_family
+    and head_goal.status in ("pending", "in_progress") and goal_queue non-empty.
+    AdventureRouteOption.plan_advance_bonus audit field. Cap min(bonus, 3.0).
+    (TCK-20260619-E61C-PLAN-SCORER)
+  proof_type: parity
+  test_path: tests/unit/domains/adventure/test_scoring_plan_bonus.py
+  divergence_note: null
+  support_boundary: null
+- id: PROG-113
+  text: PlanRevisionService detects mentor-dead and item-unavailable blockers, rotates goal_queue, and emits plan_revision NarrativeLedgerEntry
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >-
+    src/domains/campaigns/plan_revision.py — PlanRevisionService.generate_initial_plan()
+    uses level brackets (1-4→craft_upgrade, 5-9→quest_opportunity, 10+→gather_resource);
+    detect_and_revise() fires mentor_dead trigger when positive-score entity is dead
+    in persistent_entities; fires item_unavailable when target_item_id absent from
+    carry_forward.equipment; rotates goal_queue (blocked head to tail) and emits
+    NarrativeLedgerEntry(event_type="plan_revision", significance=0.6).
+    Wired in CampaignOrchestrator._build_initial_state() after ProgressionPlanImporter.
+    (TCK-20260619-E61D-PLAN-REVISION)
+  proof_type: parity
+  test_path: tests/unit/campaigns/test_plan_revision.py, tests/integration/campaigns/test_progression_planner_three_episode.py
+  divergence_note: null
+  support_boundary: null

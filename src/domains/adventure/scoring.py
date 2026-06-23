@@ -19,6 +19,7 @@ from src.core.enums import DiplomaticState
 if TYPE_CHECKING:
     from src.core.models.quests import QuestOpportunity
     from src.core.state import GroupRecord
+    from src.domains.campaigns.progression_plan import ProgressionPlan
     from src.engine.faction_decision import FactionDirective
 
 
@@ -37,6 +38,7 @@ class AdventureRouteScorer:
         group: Optional["GroupRecord"] = None,
         faction_directives: Optional[list] = None,
         factions: Optional[Any] = None,
+        progression_plan: Optional["ProgressionPlan"] = None,
     ) -> AdventureRouteOption:
         """
         Calculate subjective score for the route option and return updated option.
@@ -210,6 +212,17 @@ class AdventureRouteScorer:
             # Greedy entities are drawn to quest rewards (gold, loot)
             personality_bias += greed * 0.25
 
+        # ── 4b. Plan-Advance Bonus ──────────────────────────────────────────
+        # +1.5 flat bonus when this route's family matches the head BuildGoal's
+        # target_route_family and that goal is pending or in_progress.
+        plan_advance_bonus = 0.0
+        if progression_plan is not None and progression_plan.goal_queue:
+            head_goal = progression_plan.goal_queue[0]
+            if head_goal.status in ("pending", "in_progress"):
+                if route.family.value == head_goal.target_route_family:
+                    plan_advance_bonus = 1.5
+        plan_advance_bonus = min(plan_advance_bonus, 3.0)
+
         # ── 5. Confidence Bonus ─────────────────────────────────────────────
         confidence_bonus = route.confidence * 0.15
 
@@ -219,7 +232,7 @@ class AdventureRouteScorer:
             blocker_penalty = 2.0  # massive penalty for blocked routes
 
         # ── 7. Calculate Final Score ─────────────────────────────────────────
-        final_score = urgency + benefit + personality_bias + confidence_bonus - risk_penalty - blocker_penalty
+        final_score = urgency + benefit + personality_bias + plan_advance_bonus + confidence_bonus - risk_penalty - blocker_penalty
         final_score = round(max(0.0, final_score), 4)
 
         # ── 8. Class-Synergy Multipliers (SOC-229) ───────────────────────────
@@ -262,6 +275,7 @@ class AdventureRouteScorer:
             urgency=round(urgency, 4),
             benefit_score=round(benefit, 4),
             personality_bias=round(personality_bias, 4),
+            plan_advance_bonus=round(plan_advance_bonus, 4),
             confidence_bonus=round(confidence_bonus, 4),
             risk_penalty=round(risk_penalty, 4),
             blocker_penalty=round(blocker_penalty, 4),

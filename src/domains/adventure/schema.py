@@ -68,6 +68,7 @@ class AdventureRouteOption:
     confidence_bonus: float = 0.0
     risk_penalty: float = 0.0
     blocker_penalty: float = 0.0
+    plan_advance_bonus: float = 0.0
 
 
 @dataclass(frozen=True, slots=True)
