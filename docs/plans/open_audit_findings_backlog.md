@@ -73,20 +73,12 @@ Source: D05 (Entity Differentiation), audit update section in `engine_future_epi
 
 ### 1E — Dead Code Removal
 
-Source: D11 (Dead Code & Orphaned Modules). 9 orphaned `src/` directories, ~36 files,
-~2,955 lines of unreachable V1 code.
-
-**Safe deletion order** (to avoid breaking cross-imports):
-
-1. `src/views/runtime/actions/` — no inbound imports
-2. `src/town/` and `src/quests/` — co-dependent, delete together (10 + N files)
-3. `src/entities/` (4 files) — name-collides with live `WorldAssemblyResolver` / `EntityArchetypeResolver`; confirm no collision before deletion
-4. `src/content_semantics/` — only `faction.py` is relevant; verify it is truly orphaned before deletion
-5. `src/ai/` — **last** and requires parity ledger audit first: files carry compliance IDs `SOC-142`, `COMB-093–099`, `STRAT-166–174`; confirm those ledger entries have passing `test_path` alternatives before deleting
-
-> Note: `src/ai/goals/scorers.py` implements the V1 `GoalScorer` subclass pattern that
-> `docs/guidelines/design_patterns.md` still documents as the V2 extension point (see 2B
-> below). Both must be cleaned up together to avoid confusing future agents.
+> **INVALID (2026-06-23):** Investigation during TCK-20260623-DEAD-CODE-REMOVAL confirmed
+> that all 9 directories have live engine importers — they are not dead code. `src/quests/`
+> and `src/progression/` are imported top-level by `src/engine/apply.py`. `src/ai/` is
+> imported by `intelligence.py`. `src/content_semantics/` is imported by 10+ engine files.
+> No deletions will occur. See `stored_artifacts/TCK-20260623-DEAD-CODE-REMOVAL/investigation.md`
+> for full importer evidence.
 
 ### 1F — CI / Release Pipeline
 
@@ -99,13 +91,18 @@ Source: D18 (CI / Release Pipeline Completeness). P0 — no test automation at m
 
 ### 1G — Type Checker
 
+> **RESOLVED by TCK-20260623-TYPE-CHECKER (2026-06-23).**
+> Parity ledger entry: `INFRA-TYPE-001`. See `docs/audits/D13_type_safety.md` F1/F2/F3 for full resolution notes.
+> Note: mypy CI step uses `continue-on-error: true` on first pass; remove once baseline
+> error count is documented in a follow-up ticket.
+
 Source: D13 (Type Safety & Validation Boundary). F1 is the highest-risk finding.
 
-| Finding | Fix |
-|---|---|
-| No `mypy` / `pyright` configured anywhere — 455 `Any` usages, 186 missing return annotations, zero automated enforcement | Add `[tool.mypy]` to `pyproject.toml` with `strict = false` initially; add `make typecheck` target; wire into `test.yml` (see 1F above). |
-| `api/server.py` — 18 route handlers with no `response_model=` | Add `response_model=` to FastAPI route decorators so shape regressions are caught at startup. |
-| `api/engine_manager.py` — `get_state()` / `get_full_snapshot()` / `get_entities_paged()` / `get_entity()` return `Dict[str, Any]` | Define typed response models and wire `response_model=` into routes. |
+| Finding | Fix | Status |
+|---|---|---|
+| No `mypy` / `pyright` configured anywhere — 455 `Any` usages, 186 missing return annotations, zero automated enforcement | Add `[tool.mypy]` to `pyproject.toml` with `strict = false` initially; add `make typecheck-py` target; wire into `test.yml` (see 1F above). | **DONE** |
+| `api/server.py` — 18 route handlers with no `response_model=` | Add `response_model=` to FastAPI route decorators so shape regressions are caught at startup. | **DONE** (13/18; 5 raw-Response routes excluded by design) |
+| `api/engine_manager.py` — `get_state()` / `get_full_snapshot()` / `get_entities_paged()` / `get_entity()` return `Dict[str, Any]` | Define typed response models and wire `response_model=` into routes. | **DONE** (`src/api/schemas.py` created; `WorldStateResponse`, `EntityPageResponse`, `EntityDetailResponse` wired) |
 
 ---
 

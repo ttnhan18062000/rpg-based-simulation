@@ -1,4 +1,4 @@
-.PHONY: help install install-py install-fe build dev serve stop clean lint profile-api memray-profile docs-serve docs-build docs-registry docs-artifacts knowledge-index knowledge-index-update search-server search-server-docker search-server-stop search-server-logs install-hooks eval-search mcp-server-test world-list world-validate world-compile world-resolve world-inspect world-template sim sim-debug sim-quick sim-world sim-sweep check-resources export-run retention-plan retention-clean warehouse-init warehouse-ingest
+.PHONY: help install install-py install-fe build dev serve stop clean lint profile-api memray-profile docs-serve docs-build docs-registry docs-artifacts knowledge-index knowledge-index-update search-server search-server-docker search-server-stop search-server-logs install-hooks eval-search mcp-server-test world-list world-validate world-compile world-resolve world-inspect world-template sim sim-debug sim-quick sim-world sim-sweep check-resources export-run retention-plan retention-clean warehouse-init warehouse-ingest typecheck-py
 
 # Default
 help: ## Show available commands
@@ -203,6 +203,9 @@ lint: ## Run linters (frontend)
 
 typecheck: ## Run TypeScript type checking
 	cd frontend && npx tsc --noEmit
+
+typecheck-py: ## Run Python type checking via mypy (src/ only, informational first pass)
+	python3 -m mypy src/ --config-file pyproject.toml --no-error-summary || true
 
 # ── Documentation Site ───────────────────────────────────
 

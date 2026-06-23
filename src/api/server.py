@@ -2,7 +2,7 @@ from __future__ import annotations
 import time
 import logging
 from contextlib import asynccontextmanager
-from typing import AsyncIterator
+from typing import Any, AsyncIterator, Dict, Optional
 
 from fastapi import FastAPI, Request, Depends
 from fastapi.middleware.cors import CORSMiddleware
@@ -11,6 +11,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 
 from src.api.dependencies import set_engine_manager, get_engine_manager
 from src.api.engine_manager import V2EngineManager
+from src.api.schemas import WorldStateResponse, EntityPageResponse, EntityDetailResponse
 from src.config.profiles import RuntimeProfile
 
 logger = logging.getLogger(__name__)
@@ -99,7 +100,7 @@ def create_v2_app(profile: RuntimeProfile) -> FastAPI:
             logger.exception("Failed to generate metrics")
             return Response(content=f"# Error: {e}", status_code=500, media_type="text/plain")
 
-    @app.get("/health")
+    @app.get("/health", response_model=Dict[str, Any])
     async def health_check():
         return {"status": "ok", "version": "v2", "timestamp": time.time()}
 
@@ -137,14 +138,14 @@ def create_v2_app(profile: RuntimeProfile) -> FastAPI:
             raise HTTPException(status_code=404, detail=f"Entity {entity_id} not found or engine idle")
         return snapshot
 
-    @app.get("/api/v1/state")
+    @app.get("/api/v1/state", response_model=Dict[str, Any])
     async def get_state(manager: V2EngineManager = Depends(get_engine_manager)):
         state = manager.get_state()
         if not state:
             return {"error": "State not available"}
         return state
 
-    @app.get("/api/v1/inspect")
+    @app.get("/api/v1/inspect", response_model=Dict[str, Any])
     async def inspect_state(manager: V2EngineManager = Depends(get_engine_manager)):
         """Complete state view (Deprecated: Use granular endpoints for large worlds)."""
         snapshot = manager.get_full_snapshot()
@@ -152,7 +153,7 @@ def create_v2_app(profile: RuntimeProfile) -> FastAPI:
             return {"error": "State not available"}
         return snapshot
 
-    @app.get("/api/v1/entities")
+    @app.get("/api/v1/entities", response_model=Dict[str, Any])
     async def get_entities(
         offset: int = 0, 
         limit: int = 100, 
@@ -161,7 +162,7 @@ def create_v2_app(profile: RuntimeProfile) -> FastAPI:
         """Paged entity retrieval."""
         return manager.get_entities_paged(offset, limit)
 
-    @app.get("/api/v1/entities/{entity_id}")
+    @app.get("/api/v1/entities/{entity_id}", response_model=Optional[Dict[str, Any]])
     async def get_entity(
         entity_id: int, 
         manager: V2EngineManager = Depends(get_engine_manager)
@@ -172,17 +173,17 @@ def create_v2_app(profile: RuntimeProfile) -> FastAPI:
             return {"error": f"Entity {entity_id} not found"}
         return entity
 
-    @app.post("/api/v1/control/pause")
+    @app.post("/api/v1/control/pause", response_model=Dict[str, Any])
     async def pause_sim(manager: V2EngineManager = Depends(get_engine_manager)):
         manager.pause()
         return {"status": "paused"}
 
-    @app.post("/api/v1/control/resume")
+    @app.post("/api/v1/control/resume", response_model=Dict[str, Any])
     async def resume_sim(manager: V2EngineManager = Depends(get_engine_manager)):
         manager.resume()
         return {"status": "resumed"}
 
-    @app.post("/api/v1/test/publish_event")
+    @app.post("/api/v1/test/publish_event", response_model=Dict[str, Any])
     async def publish_test_event(event_data: dict):
         from src.observability.events import SimulationEvent
         from src.observability.live.event_publisher import LiveEventPublisher
@@ -204,7 +205,7 @@ def create_v2_app(profile: RuntimeProfile) -> FastAPI:
         LiveEventPublisher.get_instance().publish(event)
         return {"status": "published"}
 
-    @app.get("/api/v1/observability/live/health")
+    @app.get("/api/v1/observability/live/health", response_model=Dict[str, Any])
     async def get_live_health():
         try:
             manager = get_engine_manager()
@@ -215,7 +216,7 @@ def create_v2_app(profile: RuntimeProfile) -> FastAPI:
         counter = LiveAnomalyCounter.get_instance()
         return counter.calculate_health(manager)
 
-    @app.get("/api/v1/observability/live/stream-health")
+    @app.get("/api/v1/observability/live/stream-health", response_model=Dict[str, Any])
     async def get_stream_health():
         from src.observability.stream.factory import get_event_stream_adapter
         adapter = get_event_stream_adapter()

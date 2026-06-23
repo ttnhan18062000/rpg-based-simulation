@@ -35,6 +35,15 @@ jobs:
       - name: Doc integrity
         run: pytest tests/docs/ -x -q
 
+      - name: Install mypy
+        run: pip install mypy
+
+      # mypy runs informational on first pass. Remove continue-on-error once
+      # baseline error count is documented in follow-up ticket (open_audit_findings_backlog §1G).
+      - name: Type check (informational)
+        run: python3 -m mypy src/ --config-file pyproject.toml --no-error-summary || true
+        continue-on-error: true
+
   slow:
     name: Legacy regression (main only)
     runs-on: ubuntu-latest

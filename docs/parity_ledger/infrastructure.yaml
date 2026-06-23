@@ -2555,3 +2555,26 @@
   v2_evidence: "content/packs/demo_escort_pack/manifest.yaml + src/domains/feature_packs/loader.py"
   test_path: "tests/unit/feature_packs/test_loader.py::test_load_demo_escort_pack_registers_escort_dignitary"
   divergence_note: null
+
+- id: INFRA-TYPE-001
+  text: >
+    mypy type checking gate is configured for src/ (excluding V1 modules:
+    src/ai/, src/town/, src/quests/, src/entities/, src/progression/).
+    The gate runs on every PR via CI (continue-on-error on first pass).
+    Response model annotations are present on all actionable inline routes
+    in server.py (13 of 18; 5 excluded due to raw Response/Redirect/HTML types).
+    src/api/schemas.py created with typed TypedDict response schemas for
+    the 4 highest-risk engine_manager routes.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    [tool.mypy] section in pyproject.toml; make typecheck-py target in Makefile;
+    mypy step in .github/workflows/test.yml (continue-on-error first pass);
+    response_model= on 13 inline routes in src/api/server.py;
+    src/api/schemas.py created with WorldStateResponse, EntityPageResponse,
+    EntityDetailResponse TypedDict schemas.
+  proof_type: null
+  test_path: make typecheck-py
+  divergence_note: null
+  support_boundary: null
