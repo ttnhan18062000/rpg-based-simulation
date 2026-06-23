@@ -1038,3 +1038,4 @@
 {"run_id": "TCK-20260623-TYPE-CHECKER", "ts": "2026-06-23T14:36:28Z", "event": "response_model_added", "detail": "response_model= added to 10 of 18 inline routes in server.py; 5 raw-Response excluded, 3 BaseModel routes excluded"}
 {"run_id": "TCK-20260623-TYPE-CHECKER", "ts": "2026-06-23T14:36:28Z", "event": "parity_ledger_updated", "detail": "INFRA-TYPE-001 appended to docs/parity_ledger/infrastructure.yaml"}
 {"run_id": "TCK-20260623-TYPE-CHECKER", "ts": "2026-06-23T14:36:28Z", "event": "tests_passed", "detail": "68 API tests passed; pre-existing WS async error unrelated to changes"}
+{"run_id":"TCK-20260623-FIX-WORLDASSEMBLY","seq":1,"phase":"Finalize","agent":"implement-ticket","status":"ok","summary":"Fixed river terrain ref (terrain.yaml) + quest type field (smoke test fixture); 180 integration tests pass","ts":"2026-06-23T22:41:39Z"}

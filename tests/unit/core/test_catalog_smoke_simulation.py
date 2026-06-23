@@ -58,16 +58,13 @@ def create_smoke_spec() -> dict:
         "buildings": [
             {"id": "tavern", "type": "inn", "region": "hometown"}
         ],
-        "quests": [
+        "quest_definitions": [
             {
                 "id": "hunt_beasts",
-                "name": "Hunt Wild Beasts",
-                "kind": "hunt",
-                "goal_value": 3.0,
-                "reward": {"xp": 100, "gold": 50},
-                "target_role": "raider",
-                "target_region_id": "near_forest",
-                "assignee": "citizen"
+                "type": "hunt",
+                "required_participant_tags": ["hostile"],
+                "required_location_tags": ["wilderness"],
+                "reward_budget": 100
             }
         ]
     }
