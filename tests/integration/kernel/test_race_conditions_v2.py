@@ -1,6 +1,6 @@
 import pytest
 from dataclasses import replace
-from src.core.state import AuthoritativeState, EntityState, IdentityComponent, CombatComponent, ResourceNodeState, ItemStack, StrategicComponent, InventoryComponent, ItemKind
+from src.core.state import AuthoritativeState, EntityState, IdentityComponent, CombatComponent, ResourceNodeState, ItemStack, GroundItemState, StrategicComponent, InventoryComponent, ItemKind
 from src.core.enums import EntityRole, ReasonCode
 from src.engine.pipeline import AuthoritativeApplyPipeline
 from src.core.updates import StateUpdate, EntityUpdate, ResourceTransferIntent
@@ -59,7 +59,7 @@ def test_race_condition_ground_item_lock():
     e2 = create_mock_entity(2, pos=(1,1))
     
     # Ground item 100
-    state = AuthoritativeState(tick=1, seed=1, entities={1: e1, 2: e2}, ground_items={100: ItemStack("gold_coin", 50)})
+    state = AuthoritativeState(tick=1, seed=1, entities={1: e1, 2: e2}, ground_items={100: GroundItemState(id=100, item_id="gold_coin", quantity=50, position=(5.0, 5.0))})
     
     intent1 = ResourceTransferIntent(source_id=100, source_kind="GROUND_ITEM", items_add=[ItemStack("gold_coin", 50)])
     intent2 = ResourceTransferIntent(source_id=100, source_kind="GROUND_ITEM", items_add=[ItemStack("gold_coin", 50)])
