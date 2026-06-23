@@ -1501,13 +1501,14 @@
   support_boundary: null
 - id: SOC-142
   text: '`test_bravery_modifiers`: bravery modifiers'
-  status: verified
+  status: legacy_verified
   priority: P0
   legacy_evidence: null
   v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
   proof_type: null
   test_path: null
-  divergence_note: null
+  divergence_note: "src/ai/personality.py is live code — not a V1 orphan. No dedicated\
+    \ V2 test maps to this behavior; test_path intentionally null."
   support_boundary: null
 - id: SOC-143
   text: '`test_cooperation_recruitment_logic`: cooperation in recruitment/social choice

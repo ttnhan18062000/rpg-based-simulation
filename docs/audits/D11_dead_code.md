@@ -252,3 +252,23 @@ then `src/quests/` + `src/town/` together; then `src/entities/`, `src/progressio
 - **D12 (Pattern Consistency)** — F3 there identified `design_patterns.md` as documenting V1 GoalScorer/StateHandler patterns. D11 confirms those patterns are not just in the doc but in live orphaned code in `src/ai/`. Both findings share the same P1 cleanup action.
 - **D09 (System Wiring)** — D09 confirmed all 61 `[E]` features have live code paths. D11 maps the complementary surface: what exists but is never reached. Together they give a complete wiring picture.
 - **D17 (Documentation Currency)** — `design_patterns.md` describes `GoalScorer` as a live extension point. D11 confirms the underlying code (`src/ai/goals/base.py`, `scorers.py`) still exists but is orphaned. A developer following the doc would write code against a dead pattern.
+
+---
+
+## Post-Audit Correction (2026-06-23)
+
+**Investigation ticket:** TCK-20260623-DEAD-CODE-REMOVAL
+**Finding:** The audit's "zero importer" classification is incorrect for all directories.
+
+Confirmed live importers found during investigation:
+
+| Directory | Live Importer | Import Type |
+|---|---|---|
+| `src/content_semantics/` | `src/engine/legality.py`, `src/engine/combat_rewards.py`, `src/worldassembly/resolver.py`, 7+ others | top-level |
+| `src/entities/` | `src/worldassembly/resolver.py`, 5 test files | top-level |
+| `src/quests/` | `src/engine/apply.py` (QuestService) | top-level |
+| `src/ai/` | `src/systems/strategic_systems/intelligence.py` (GoalRegistry, ScoreModifierSystem) | top-level |
+| `src/town/` | `src/world/providers/requirements.py` (TownNavigation), 8 test files | lazy/test |
+| `src/progression/` | `src/engine/apply.py` (LevelingService, VeterancyService) | top-level |
+
+**Conclusion:** These directories are active infrastructure, not V1 orphans. The "dead code" label was incorrect. No deletions are warranted. Parity ledger entries COMB-093–099, STRAT-166–174, and SOC-142 updated to `legacy_verified` to reflect that the described behaviors exist in live (not deleted) code with no dedicated V2 test path.

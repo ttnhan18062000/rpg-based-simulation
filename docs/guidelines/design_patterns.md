@@ -74,8 +74,6 @@ class QuestGoal(GoalScorer):
 register_goal(QuestGoal())
 ```
 
-3. Add a `StateHandler` in `ai/states.py` for the new state.
-
 ### Design Decisions
 
 - **Classes over functions:** Allow properties (`name`, `target_state`), inheritance, and cached state across ticks.
@@ -200,40 +198,12 @@ effective_atk = base_atk * mods.atk_mult
 
 ---
 
-## 5. AI State Machine — Strategy Pattern
-
-**Location:** `src/ai/states.py`
-
-### Pattern
-
-Each AI state is a `StateHandler` subclass registered in `STATE_HANDLERS`. The `AIBrain` looks up the handler for the entity's current state and delegates execution.
-
-```python
-STATE_HANDLERS: dict[AIState, StateHandler] = {
-    AIState.IDLE: IdleHandler(),
-    AIState.WANDER: WanderHandler(),
-    AIState.HUNT: HuntHandler(),
-    AIState.COMBAT: CombatHandler(),
-    # ... 18 total states
-}
-```
-
-### How to Add a New AI State
-
-1. Add the enum value in `src/core/enums.py`
-2. Create a `StateHandler` subclass in `src/ai/states.py`
-3. Register it in `STATE_HANDLERS`
-4. (Optional) Create a `GoalScorer` that maps to the new state
-
----
-
-## 6. Pattern Summary
+## 5. Pattern Summary
 
 | Pattern | Location | Open/Closed Principle |
 |---------|----------|----------------------|
 | **Plugin** (Goal Scorers) | `ai/goals/` | Add goal = add class + register. No existing code modified. |
 | **Strategy** (Damage Calc) | `actions/damage.py` | Add damage type = add subclass + register. No if/else. |
-| **Strategy** (State Handlers) | `ai/states.py` | Add AI state = add handler + register. |
 | **Builder** (Entity) | `core/entity_builder.py` | Fluent API absorbs new features without parameter explosion. |
 | **Typed Dataclass** (Traits) | `core/traits.py` | Type-safe aggregation. Add field = add to dataclass + aggregator. |
 
@@ -324,8 +294,6 @@ src/
 │   ├── combat.py             # CombatAction (uses DamageCalculator strategy)
 │   └── damage.py             # DamageCalculator ABC + subclasses + registry
 ├── ai/
-│   ├── brain.py              # AIBrain (hybrid: GoalEvaluator + StateHandler)
-│   ├── goal_evaluator.py     # Backward-compat shim → ai/goals/
 │   └── goals/
 │       ├── __init__.py       # Package init, auto-registers all goals
 │       ├── base.py           # GoalScorer ABC, GoalScore, GoalEvaluator, GOAL_REGISTRY

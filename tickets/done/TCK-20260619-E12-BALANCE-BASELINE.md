@@ -1,10 +1,10 @@
 ---
-status: inprogress
+status: done
 layer: simulation
 authority: P1
 audience: agent
 ticket_id: TCK-20260619-E12-BALANCE-BASELINE
-phase: scoped
+phase: done
 date: 2026-06-19
 tags: [balance, tuning, scoring, blocker-penalty, regression-tests, epic, phase-1]
 ---
@@ -15,7 +15,7 @@ tags: [balance, tuning, scoring, blocker-penalty, regression-tests, epic, phase-
 Epic 1.2 · Balance & Tuning Baseline
 
 ## Status
-INPROGRESS
+DONE (EPIC_SCOPED)
 
 ## Tier
 epic
