@@ -1011,3 +1011,4 @@
 {"run_id": "f8cbef73", "ticket_id": "TCK-20260619-E61C-PLAN-SCORER", "ts": "2026-06-23T00:00:00Z", "event": "DONE", "detail": "+1.5 plan-advance bonus in AdventureRouteScorer; 8/8 tests pass; PROG-112 added; contract doc written"}
 {"run_id": "a53b989c", "ticket_id": "TCK-20260619-E61D-PLAN-REVISION", "ts": "2026-06-23T00:00:00Z", "event": "DONE", "detail": "PlanRevisionService + 11 tests (10 unit + 1 integration); PROG-113 verified; contract extended"}
 {"run_id": "EPIC-bba99faa", "ticket_id": "TCK-20260619-E61-PROGRESSION", "ts": "2026-06-23T00:00:00Z", "event": "DONE", "detail": "4/4 child tickets DONE: E61A (model), E61B (exporter/importer), E61C (scorer +1.5 bonus), E61D (plan revision service)"}
+{"run_id":"TCK-20260619-E62A-CULTURE-MODEL","ts":"2026-06-23T01:02:38Z","agent":"implement-ticket","phase":"finalize","seq":1,"status":"ok","summary":"New src/domains/culture/model.py; CampaignState region_cultures field; 5 unit tests; 22 pass"}

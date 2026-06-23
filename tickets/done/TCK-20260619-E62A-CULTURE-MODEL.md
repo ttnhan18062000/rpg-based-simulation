@@ -15,7 +15,7 @@ tags: [culture-drift, model, campaign-state, phase-6]
 Epic 6.2A · CultureState Model + CampaignState Field
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -109,7 +109,13 @@ serialization/deserialization support.
 - Existing `tests/unit/campaigns/test_campaign_state.py` must pass unmodified
 
 ## Files Changed
-_To be filled on completion._
+- `src/domains/culture/__init__.py` (new)
+- `src/domains/culture/model.py` (new — CultureState, CultureCarryForward)
+- `src/domains/campaigns/state.py` (modified — import + region_cultures field + serialization)
+- `tests/unit/culture/__init__.py` (new)
+- `tests/unit/culture/test_culture_model.py` (new — 5 tests)
 
 ## Completion Summary
-_To be filled on completion._
+CultureState (4 axes, frozen+slots) and CultureCarryForward defined in new
+src/domains/culture/ domain. CampaignState.region_cultures field added with
+full to_dict/from_dict round-trip. 22 tests pass (5 new + 17 existing).

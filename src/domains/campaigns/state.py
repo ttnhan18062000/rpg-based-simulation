@@ -13,6 +13,7 @@ from typing import Any, Dict, List, Optional
 
 from src.domains.campaigns.progression_plan import ProgressionPlan
 from src.domains.campaigns.social_memory import FactionSocialMemory, SocialMemoryRecord
+from src.domains.culture.model import CultureCarryForward
 
 
 @dataclass(frozen=True)
@@ -219,6 +220,10 @@ class CampaignState:
     # E61B: long-term build-goal plans keyed by entity_id (int).
     # Populated by ProgressionPlanExporter at episode end; consumed by
     # ProgressionPlanImporter at episode start. Serialized with str(k) keys.
+    region_cultures: Dict[str, CultureCarryForward] = field(default_factory=dict)
+    # E62A: per-region cultural axis snapshots keyed by region_id (str).
+    # Populated by CultureDriftExporter at episode end; consumed by
+    # CultureDriftImporter at episode start. Derived from ChronicleHierarchy.
 
     def to_dict(self) -> dict:
         """Serialize to a JSON-safe dict. All dict keys sorted for determinism."""
@@ -247,6 +252,10 @@ class CampaignState:
             "progression_plans": {
                 str(k): v.to_dict()
                 for k, v in sorted(self.progression_plans.items())
+            },
+            "region_cultures": {
+                k: v.to_dict()
+                for k, v in sorted(self.region_cultures.items())
             },
         }
 
@@ -284,5 +293,9 @@ class CampaignState:
             progression_plans={
                 int(k): ProgressionPlan.from_dict(v)
                 for k, v in d.get("progression_plans", {}).items()
+            },
+            region_cultures={
+                k: CultureCarryForward.from_dict(v)
+                for k, v in d.get("region_cultures", {}).items()
             },
         )
