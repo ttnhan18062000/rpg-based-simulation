@@ -787,3 +787,4 @@ TCK-20260623-FIX-TEST-TEARDOWN,2026-06-24,hotfix,bug,testing,DONE,Fix FallbackRe
 TCK-20260623-FIX-OBS-QUEUE,2026-06-24,standard,bug,observability,DONE,Fix observability queue thread leak SIGABRT,tests/unit/kernel/test_replay_contract.py tests/perf/test_concurrency_parity.py tests/integration/kernel/test_milestone_a_closure.py
 TCK-20260623-FIX-RUNTIME-MODE,2026-06-24,hotfix,bug,core,DONE,Fix RuntimeContentMode.V2 removed - replace with CATALOG_WITH_COMPATIBILITY,tests/unit/core/test_registry_adapters.py
 TCK-20260623-FIX-INVENTORY-DEFAULTS,2026-06-24,standard,bug,economy,DONE,Fix inventory slot defaults - doc update only,docs/core/items_and_inventory.md
+TCK-20260623-FIX-ENTITY-ID,2026-06-24,standard,bug,engine,DONE,Fix entity ID KeyError - pipeline phases wipe entity_updates via fresh StateUpdate,src/engine/pipeline.py

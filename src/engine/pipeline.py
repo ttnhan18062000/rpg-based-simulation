@@ -178,7 +178,7 @@ class AuthoritativeApplyPipeline:
         _recent_events = getattr(state, "recent_world_events", [])
         update = run_phase(
             "faction_awareness", update,
-            lambda u: _SU_fa(faction_updates=FactionAwarenessService.compute_tension_updates(state, _recent_events)),
+            lambda u: u.merge(_SU_fa(faction_updates=FactionAwarenessService.compute_tension_updates(state, _recent_events))),
         )
         costs["faction_awareness"] = (time.perf_counter_ns() - t_start) / 1e6
 
@@ -208,7 +208,7 @@ class AuthoritativeApplyPipeline:
         from src.core.updates import StateUpdate as _SU_dt
         update = run_phase(
             "diplomatic_transitions", update,
-            lambda u: _SU_dt(faction_updates=_diplo_updates, world_events_add=_diplo_world_events),
+            lambda u: u.merge(_SU_dt(faction_updates=_diplo_updates, world_events_add=_diplo_world_events)),
         )
         costs["diplomatic_transitions"] = (time.perf_counter_ns() - t_start) / 1e6
 
@@ -218,7 +218,7 @@ class AuthoritativeApplyPipeline:
         from src.core.updates import StateUpdate as _SU_mc
         update = run_phase(
             "military_conflict", update,
-            lambda u: MilitaryConflictPhase.execute(state),
+            lambda u: u.merge(MilitaryConflictPhase.execute(state)),
         )
         costs["military_conflict"] = (time.perf_counter_ns() - t_start) / 1e6
 
