@@ -172,4 +172,5 @@ def test_generated_world_catalog_smoke_simulation(repos):
         assert kernel.state.tick == 5
     finally:
         # Restore registries to legacy fallback defaults
-        seed_phase1_content(None)
+        from src.core.modes import RuntimeContentMode
+        seed_phase1_content(None, mode=RuntimeContentMode.LEGACY_FALLBACK)

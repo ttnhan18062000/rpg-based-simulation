@@ -1,6 +1,7 @@
 import pytest
 from src.content.repository import CatalogRepository
 from src.core.registries import seed_phase1_content
+from src.core.modes import RuntimeContentMode
 from src.worldbuilding.schema import WorldSpec
 from src.worldbuilding.compiler import WorldCompiler
 from src.engine.kernel import Kernel
@@ -12,7 +13,7 @@ from src.platform.rng import DeterministicRNG
 def cleanup_registries():
     """Automatically reset registries to default hardcoded fallback state after each test."""
     yield
-    seed_phase1_content(None)
+    seed_phase1_content(None, mode=RuntimeContentMode.LEGACY_FALLBACK)
 
 
 def get_test_profile():

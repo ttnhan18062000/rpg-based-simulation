@@ -1040,3 +1040,4 @@
 {"run_id": "TCK-20260623-TYPE-CHECKER", "ts": "2026-06-23T14:36:28Z", "event": "tests_passed", "detail": "68 API tests passed; pre-existing WS async error unrelated to changes"}
 {"run_id":"TCK-20260623-FIX-WORLDASSEMBLY","seq":1,"phase":"Finalize","agent":"implement-ticket","status":"ok","summary":"Fixed river terrain ref (terrain.yaml) + quest type field (smoke test fixture); 180 integration tests pass","ts":"2026-06-23T22:41:39Z"}
 {"run_id":"TCK-20260623-FIX-KERNEL-PHASES","seq":1,"phase":"Finalize","agent":"implement-ticket","status":"ok","summary":"Fixed phase source inspection + GroundItemState fixture; 134 kernel tests pass","ts":"2026-06-23T22:55:17Z"}
+{"run_id":"TCK-20260623-FIX-TEST-TEARDOWN","seq":1,"phase":"Finalize","agent":"implement-ticket","status":"ok","summary":"Fixed 6 seed_phase1_content(None) teardown calls; 180 unit/core tests pass, FallbackRestrictedError cascade eliminated","ts":"2026-06-23T23:03:04Z"}

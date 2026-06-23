@@ -10,13 +10,14 @@ from src.core.registries import (
     RegionRegistry
 )
 from src.core.items import ItemRegistry as CoreItemRegistry
+from src.core.modes import RuntimeContentMode
 
 
 @pytest.fixture(autouse=True)
 def cleanup_registries():
     """Automatically reset registries to default hardcoded fallback state after each test."""
     yield
-    seed_phase1_content(None)
+    seed_phase1_content(None, mode=RuntimeContentMode.LEGACY_FALLBACK)
 
 
 def get_registry_snapshots():
@@ -35,7 +36,7 @@ def get_registry_snapshots():
 def test_production_catalog_parity():
     """Verify that catalog-backed content and legacy hardcoded content are semantically equivalent."""
     # 1. Capture legacy hardcoded state
-    seed_phase1_content(None)
+    seed_phase1_content(None, mode=RuntimeContentMode.LEGACY_FALLBACK)
     legacy = get_registry_snapshots()
 
     # 2. Capture catalog-backed state

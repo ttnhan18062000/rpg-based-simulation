@@ -1,13 +1,14 @@
 import pytest
 from src.content.repository import CatalogRepository
 from src.core.registries import seed_phase1_content, ItemRegistry, ResourceRegistry, EnemyRegistry, RecipeRegistry, RegionRegistry, ServiceRegistry
+from src.core.modes import RuntimeContentMode
 
 
 @pytest.fixture(autouse=True)
 def cleanup_registries():
     """Automatically reset registries to default hardcoded fallback state after each test."""
     yield
-    seed_phase1_content(None)
+    seed_phase1_content(None, mode=RuntimeContentMode.LEGACY_FALLBACK)
 
 
 def test_production_catalog_cross_references():
