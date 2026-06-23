@@ -157,9 +157,9 @@ The pinnacle of gear, primarily obtained from World Boss kills.
 
 ```python
 @dataclass
-class Inventory:
+class InventoryComponent:
     items: list[str]              # Item IDs in the bag
-    max_slots: int = 8            # Maximum bag items
+    max_slots: int = 16           # Maximum bag items (V2 default, per TOWN-013)
     max_weight: float = 20.0      # Maximum total weight
     weapon: str | None = None     # Equipped weapon
     armor: str | None = None      # Equipped armor
