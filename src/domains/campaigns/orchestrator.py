@@ -198,6 +198,11 @@ class CampaignOrchestrator:
         dead_ids = [eid for eid, cf in entity_cfs.items() if not cf.alive]
         for eid in dead_ids:
             self._state.progression_plans.pop(eid, None)
+        # E62B: derive and persist culture drift at episode boundary.
+        from src.domains.culture.exporter import CultureDriftExporter
+        from src.domains.chronicle.grouper import ChronicleGrouper
+        _hierarchy = ChronicleGrouper().group(list(self._state.narrative_ledger))
+        CultureDriftExporter.export(self._state, _hierarchy, summary.episode_index)
         self._state.episode_index += 1
 
     def _extract_entity_carry_forwards(

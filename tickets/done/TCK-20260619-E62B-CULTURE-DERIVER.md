@@ -15,7 +15,7 @@ tags: [culture-drift, chronicle, deriver, exporter, importer, phase-6]
 Epic 6.2B · CultureDeriver + Episode-Boundary Exporter/Importer
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -148,7 +148,13 @@ the culture map at episode start for downstream use).
   existing tests must pass; add `test_advance_state_runs_culture_exporter`
 
 ## Files Changed
-_To be filled on completion._
+- `src/domains/culture/deriver.py` (new — CultureDeriver.derive())
+- `src/domains/culture/exporter.py` (new — CultureDriftExporter + CultureDriftImporter)
+- `src/domains/campaigns/orchestrator.py` (modified — _advance_state() wiring)
+- `tests/unit/culture/test_culture_deriver.py` (new — 9 tests)
+- `tests/unit/culture/test_culture_exporter.py` (new — 6 tests)
 
 ## Completion Summary
-_To be filled on completion._
+CultureDeriver derives 4-axis CultureState per region from ChronicleHierarchy events.
+CultureDriftExporter wired into _advance_state() after narrative_ledger extension.
+CultureDriftImporter provides thin lookup for E62C. 110 tests pass.
