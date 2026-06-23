@@ -1,10 +1,10 @@
 ---
-status: open
+status: done
 layer: architecture
 authority: P1
 audience: agent
 ticket_id: TCK-20260619-E63C-REGISTRY-LOADER
-phase: open
+phase: done
 date: 2026-06-22
 tags: [feature-packs, registry, loader, demo-pack, phase-6]
 ---
@@ -15,7 +15,7 @@ tags: [feature-packs, registry, loader, demo-pack, phase-6]
 Epic 6.3C · FeatureRegistry + FeaturePackLoader + Demo Pack
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -73,7 +73,19 @@ without modifying any file in `src/engine/` or `src/domains/`.
 - `tests/unit/feature_packs/test_loader.py`: discover/load fixture, skip-inactive-pack, register-extension
 
 ## Files Changed
-_To be filled on completion._
+- `src/domains/feature_packs/registry.py` (new) — FeatureRegistry[T] generic
+- `src/domains/feature_packs/loader.py` (new) — FeaturePackLoader
+- `content/__init__.py` (new) — package marker
+- `content/packs/__init__.py` (new) — package marker
+- `content/packs/demo_escort_pack/__init__.py` (new) — package marker
+- `content/packs/demo_escort_pack/manifest.yaml` (new) — demo pack manifest
+- `content/packs/demo_escort_pack/generator.py` (new) — EscortDignitaryGenerator
+- `tests/unit/feature_packs/test_registry.py` (new) — 9 registry tests
+- `tests/unit/feature_packs/test_loader.py` (new) — 7 loader tests
+- `docs/parity_ledger/infrastructure.yaml` (modified) — INFRA-PACK-001/002/003 added
 
 ## Completion Summary
-_To be filled on completion._
+FeatureRegistry[T] and FeaturePackLoader implemented. demo_escort_pack registers
+ESCORT_DIGNITARY in the adventure_routing domain via manifest without touching
+src/engine/ or src/domains/. list_all() merges canonical RouteFamily values with
+pack-registered keys. All 30 tests pass (14 from E63B + 16 new).

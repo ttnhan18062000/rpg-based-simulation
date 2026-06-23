@@ -2531,3 +2531,27 @@
     tests/api/test_campaign_history_api.py::test_campaign_history_combined_filters"
   divergence_note: null
   support_boundary: null
+
+- id: INFRA-PACK-001
+  text: "FeatureRegistry.list_all() returns canonical enum values before pack-registered keys; both groups sorted alphabetically."
+  status: verified
+  priority: P1
+  v2_evidence: "src/domains/feature_packs/registry.py::FeatureRegistry.list_all"
+  test_path: "tests/unit/feature_packs/test_registry.py::test_list_all_with_enum_class_canonical_first"
+  divergence_note: null
+
+- id: INFRA-PACK-002
+  text: "FeaturePackLoader skips packs whose name is absent from RuntimeProfile.active_pack_names."
+  status: verified
+  priority: P1
+  v2_evidence: "src/domains/feature_packs/loader.py::FeaturePackLoader.load"
+  test_path: "tests/unit/feature_packs/test_loader.py::test_load_skips_pack_not_in_active_names"
+  divergence_note: null
+
+- id: INFRA-PACK-003
+  text: "Demo escort pack registers ESCORT_DIGNITARY in adventure_routing domain without modifying src/engine/ or src/domains/."
+  status: verified
+  priority: P1
+  v2_evidence: "content/packs/demo_escort_pack/manifest.yaml + src/domains/feature_packs/loader.py"
+  test_path: "tests/unit/feature_packs/test_loader.py::test_load_demo_escort_pack_registers_escort_dignitary"
+  divergence_note: null

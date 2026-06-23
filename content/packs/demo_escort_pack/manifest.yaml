@@ -1,0 +1,9 @@
+name: demo_escort_pack
+version: "1.0.0"
+requires: []
+extension_points:
+  - domain: adventure_routing
+    class_path: content.packs.demo_escort_pack.generator:EscortDignitaryGenerator
+    registry_key: ESCORT_DIGNITARY
+balance_specs:
+  - escort_caution_check
