@@ -1,10 +1,10 @@
 ---
-status: open
+status: done
 layer: architecture
 authority: P1
 audience: agent
 ticket_id: TCK-20260619-E63D-BALANCE-PARITY
-phase: open
+phase: done
 date: 2026-06-22
 tags: [feature-packs, balance-spec, parity, docs, phase-6]
 ---
@@ -15,7 +15,7 @@ tags: [feature-packs, balance-spec, parity, docs, phase-6]
 Epic 6.3D · BalanceExperimentSpec + Parity Ledger + Integration Test + Docs
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -74,7 +74,16 @@ finalize `docs/architecture/feature_pack_architecture.md`.
   balance evaluation
 
 ## Files Changed
-_To be filled on completion._
+- `src/domains/feature_packs/balance_spec.py` (new) — BalanceExperimentSpec + BalanceExperimentRunner + ExperimentResult
+- `tests/unit/feature_packs/test_balance_spec.py` (new) — 12 unit tests
+- `tests/integration/feature_packs/test_demo_escort_pack.py` (new) — 3 integration tests
+- `tests/integration/feature_packs/__init__.py` (new) — package marker
+- `docs/architecture/feature_pack_architecture.md` (modified) — Balance Experiment Harness section + BalanceExperimentRunner in Integration Points table
+- `docs/parity_ledger/infrastructure.yaml` (modified) — INFRA-PACK-001/002/003 (added in E63C, noted here)
+- knowledge index updated via `make knowledge-index-update`
 
 ## Completion Summary
-_To be filled on completion._
+BalanceExperimentSpec (Pydantic, frozen) and pure BalanceExperimentRunner implemented.
+Runner resolves dot-path into pre-computed metric snapshot; returns ExperimentResult(passed, measured, spec).
+Integration tests confirm ESCORT_DIGNITARY lives under content/packs/ (not src/) and passes balance evaluation.
+Architecture doc finalized with balance harness section. All 45 feature_packs tests pass (30 unit + 15 new).

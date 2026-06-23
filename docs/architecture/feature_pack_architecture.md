@@ -193,6 +193,54 @@ of truth for base game behavior. Packs extend — they do not replace.
 | `FeatureRegistry[T]` | `src/domains/feature_packs/registry.py` | Dict-based extension registry (E63C) |
 | `FeaturePackLoader` | `src/domains/feature_packs/loader.py` | Discovers, resolves, loads packs (E63C) |
 | `BalanceExperimentSpec` | `src/domains/feature_packs/balance_spec.py` | Declarative balance harness (E63D) |
+| `BalanceExperimentRunner` | `src/domains/feature_packs/balance_spec.py` | Pure evaluator against metric snapshot (E63D) |
+
+---
+
+## Balance Experiment Harness (E63D)
+
+`BalanceExperimentSpec` and `BalanceExperimentRunner` provide a lightweight,
+CI-safe balance acceptance harness for feature packs.
+
+### BalanceExperimentSpec
+
+```yaml
+metric_path: "route_distribution.ESCORT_DIGNITARY"
+baseline_pack: demo_escort_pack
+threshold: 0.1
+tolerance: 0.05
+```
+
+| Field | Type | Meaning |
+|---|---|---|
+| `metric_path` | `str` | Dot-path into the metric snapshot dict |
+| `baseline_pack` | `str` | Pack whose metrics are under evaluation (label only) |
+| `threshold` | `float ≥ 0` | Minimum acceptable metric value |
+| `tolerance` | `float ≥ 0` | Allowed slack below threshold: pass iff `measured ≥ threshold - tolerance` |
+
+### BalanceExperimentRunner
+
+```python
+snapshot = {"route_distribution": {"ESCORT_DIGNITARY": 0.30}}
+spec = BalanceExperimentSpec(
+    metric_path="route_distribution.ESCORT_DIGNITARY",
+    baseline_pack="demo_escort_pack",
+    threshold=0.1,
+)
+result = BalanceExperimentRunner.run(spec, snapshot)
+assert result.passed
+```
+
+- **Pure**: accepts a pre-computed `snapshot` dict; never launches a live simulation run.
+- **Raises `KeyError`** if `metric_path` does not resolve in `snapshot`.
+- **Raises `TypeError`** if the resolved value is not numeric.
+- Returns `ExperimentResult(passed, measured, spec)`.
+
+### Acceptance signal for demo_escort_pack
+
+A pack-contributed route type is considered balance-verified when:
+1. `FeaturePackLoader.load()` registers it in the target domain's `FeatureRegistry`.
+2. A `BalanceExperimentSpec` with `threshold ≥ 0.1` passes against a representative metric snapshot.
 
 ---
 
