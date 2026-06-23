@@ -15,7 +15,7 @@ tags: [culture-drift, motivation, doctrine, bias, phase-6]
 Epic 6.2C · Cultural Bias Overlay on MotivationBiasService
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -141,7 +141,15 @@ regions receive measurably different motivation multipliers.
   - `test_compute_bias_multiplier_with_culture_zero_axes_unchanged`
 
 ## Files Changed
-_To be filled on completion._
+- `src/domains/culture/applicator.py` (new — CulturalBiasApplicator)
+- `src/domains/motivation/service.py` (modified — optional culture_values param)
+- `docs/world/culture_drift_contract.md` (new — full system contract)
+- `tests/unit/culture/test_culture_applicator.py` (new — 11 tests)
+- `tests/unit/motivation/__init__.py` (new)
+- `tests/unit/motivation/test_motivation_bias_culture.py` (new — 4 tests)
 
 ## Completion Summary
-_To be filled on completion._
+CulturalBiasApplicator computes additive tag-level delta from CultureState axes.
+MotivationBiasService.compute_bias_multiplier() extended with backward-compatible
+optional culture_values param. culture_drift_contract.md created and indexed.
+121 tests pass (15 new).

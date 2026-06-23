@@ -773,3 +773,4 @@ TCK-20260619-E61C-PLAN-SCORER,2026-06-23,DONE,standard,plan-advance bonus +1.5 i
 TCK-20260619-E61D-PLAN-REVISION,2026-06-23,DONE,standard,PlanRevisionService (initial plan gen + mentor_dead/item_unavailable triggers + queue rotation + ledger entry) + 11 tests
 TCK-20260619-E62A-CULTURE-MODEL,2026-06-23,DONE,standard,E62A CultureState model + CampaignState region_cultures field
 TCK-20260619-E62B-CULTURE-DERIVER,2026-06-23,DONE,standard,CultureDeriver + CultureDriftExporter/Importer + _advance_state() wiring + 15 new tests
+TCK-20260619-E62C-MOTIVATION-OVERLAY,2026-06-23,DONE,standard,CulturalBiasApplicator + MotivationBiasService culture_values param + culture_drift_contract.md + 15 tests
