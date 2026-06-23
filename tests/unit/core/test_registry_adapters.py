@@ -225,8 +225,8 @@ def test_item_adapter_uses_explicit_use_kind():
     item.class_fit = ["warrior"]
     repo.items["test_item"] = item
 
-    # Strict catalog-backed mode (mode=RuntimeContentMode.V2)
-    adapter = CatalogToItemRegistryAdapter(repo, mode=RuntimeContentMode.V2)
+    # Strict catalog-backed mode (mode=RuntimeContentMode.CATALOG_WITH_COMPATIBILITY)
+    adapter = CatalogToItemRegistryAdapter(repo, mode=RuntimeContentMode.CATALOG_WITH_COMPATIBILITY)
     adapted, _ = adapter.adapt()
     assert adapted["test_item"].use_kind == "custom_use_kind"
 
@@ -238,7 +238,7 @@ def test_item_adapter_uses_explicit_class_fit():
     item.class_fit = ["ranger", "rogue"]
     repo.items["test_item"] = item
 
-    adapter = CatalogToItemRegistryAdapter(repo, mode=RuntimeContentMode.V2)
+    adapter = CatalogToItemRegistryAdapter(repo, mode=RuntimeContentMode.CATALOG_WITH_COMPATIBILITY)
     adapted, _ = adapter.adapt()
     assert adapted["test_item"].class_fit == ("ranger", "rogue")
 
@@ -250,7 +250,7 @@ def test_resource_adapter_uses_explicit_legacy_id():
     res.metadata = {"source_region_tags": ["forest"]}
     repo.resources["wood_node"] = res
 
-    adapter = CatalogToResourceRegistryAdapter(repo, mode=RuntimeContentMode.V2)
+    adapter = CatalogToResourceRegistryAdapter(repo, mode=RuntimeContentMode.CATALOG_WITH_COMPATIBILITY)
     adapted, _ = adapter.adapt()
     assert "custom_node_wood" in adapted
     assert adapted["custom_node_wood"].yield_item == "wood"
@@ -262,7 +262,7 @@ def test_service_adapter_does_not_inject_default_service_in_catalog_mode():
     service.affordances = ["buy"]
     repo.services["trade_service"] = service
 
-    adapter = CatalogToServiceRegistryAdapter(repo, catalog_mode=True, mode=RuntimeContentMode.V2)
+    adapter = CatalogToServiceRegistryAdapter(repo, catalog_mode=True, mode=RuntimeContentMode.CATALOG_WITH_COMPATIBILITY)
     adapted, _ = adapter.adapt()
     # Should NOT contain hometown services
     assert "shop_hometown" not in adapted
@@ -283,5 +283,5 @@ def test_fallback_usage_reported_in_legacy_mode():
     registries.fallback_usage_reported = False
 
     # Seed without catalog repo -> triggers fallback legacy backup mode
-    seed_phase1_content(catalog_repo=None)
+    seed_phase1_content(catalog_repo=None, mode=RuntimeContentMode.LEGACY_FALLBACK)
     assert registries.fallback_usage_reported is True
