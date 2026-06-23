@@ -167,9 +167,12 @@ def test_milestone_a_baseline_isolation():
 
     start_tick = kernel.state.tick
 
-    kernel.tick_once()
+    try:
+        kernel.tick_once()
 
-    assert kernel.state.tick == start_tick + 1
-    assert not mock_manager.execute_batch.called, (
-        "WorkerManager was touched during Milestone A baseline run!"
-    )
+        assert kernel.state.tick == start_tick + 1
+        assert not mock_manager.execute_batch.called, (
+            "WorkerManager was touched during Milestone A baseline run!"
+        )
+    finally:
+        kernel.shutdown()

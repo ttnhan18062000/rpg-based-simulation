@@ -37,15 +37,18 @@ def test_replay_is_non_authoritative(tmp_path):
     replay._sink.persist_chunk = MagicMock(side_effect=IOError("Disk Full"))
     
     kernel = Kernel(profile=profile, state=state, rng=MagicMock(), replay=replay)
-    
+
     # 3. Execute ticks
     # Even if the sink fails, tick_once should complete normally
-    for i in range(5):
-        kernel.tick_once()
-        
-    assert kernel.state.tick == 5
-    # Manifest marked as failed but kernel continues
-    assert replay._sink.persist_chunk.called
+    try:
+        for i in range(5):
+            kernel.tick_once()
+
+        assert kernel.state.tick == 5
+        # Manifest marked as failed but kernel continues
+        assert replay._sink.persist_chunk.called
+    finally:
+        kernel.shutdown()
 
 
 def test_replay_order_preservation(tmp_path):

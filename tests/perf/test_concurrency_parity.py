@@ -20,33 +20,37 @@ def run_parity_check(initial_state, seed=42, ticks=100, workers=4):
     # 1. Run Local Sequential
     local_executor = LocalSequentialExecutor()
     kernel_loc = Kernel(
-        SimulationProfile, 
-        initial_state, 
-        DeterministicRNG(seed), 
+        SimulationProfile,
+        initial_state,
+        DeterministicRNG(seed),
         executor=local_executor,
         flags={"audit_mode": True, "no_frame_pacing": True, "no_replay": True}
     )
-    for _ in range(ticks):
-        kernel_loc.tick_once()
-    
-    hash_loc = StateFingerprinter.get_fingerprint(kernel_loc._state)['state_hash']
-    
+    try:
+        for _ in range(ticks):
+            kernel_loc.tick_once()
+        hash_loc = StateFingerprinter.get_fingerprint(kernel_loc._state)['state_hash']
+    finally:
+        kernel_loc.shutdown()
+
     # 2. Run Concurrent
     worker_manager = WorkerManager(max_workers=workers)
     concurrent_executor = ConcurrentExecutionAdapter(worker_manager)
     kernel_con = Kernel(
-        SimulationProfile, 
-        initial_state, 
-        DeterministicRNG(seed), 
+        SimulationProfile,
+        initial_state,
+        DeterministicRNG(seed),
         executor=concurrent_executor,
         flags={"audit_mode": True, "no_frame_pacing": True, "no_replay": True}
     )
-    for _ in range(ticks):
-        kernel_con.tick_once()
-        
-    hash_con = StateFingerprinter.get_fingerprint(kernel_con._state)['state_hash']
-    worker_manager.shutdown()
-    
+    try:
+        for _ in range(ticks):
+            kernel_con.tick_once()
+        hash_con = StateFingerprinter.get_fingerprint(kernel_con._state)['state_hash']
+    finally:
+        kernel_con.shutdown()
+        worker_manager.shutdown()
+
     return hash_loc, hash_con
 
 @pytest.mark.perf
