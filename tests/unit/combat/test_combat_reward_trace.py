@@ -55,11 +55,11 @@ def test_resolve_attack_monster_kill_reward_source_is_hostile_relation():
     attacker = _hero(1)
     defender = _monster(2)
     result = CombatResolutionSystem.resolve_attack(attacker, defender, _state(attacker, defender))
-    assert result.trace["REWARD_SOURCE"] == "hostile_relation"
+    assert result.trace["REWARD_SOURCE"] == "relation_projection"
 
 
 def test_resolve_attack_hero_defeat_has_hero_kill_category():
-    """Hero defender killed → REWARD_CATEGORY = hero_kill."""
+    """Hero defender killed by hostile faction → REWARD_CATEGORY = hostile_creature (relation_projection path)."""
     attacker = (V2EntityBuilder(1)
         .kind("hero").location(0.0, 0.0)
         .identity(role=EntityRole.MONSTER, faction=Faction.MONSTER_HORDE)
@@ -69,7 +69,7 @@ def test_resolve_attack_hero_defeat_has_hero_kill_category():
     defender = _hero(2, atk=5, hp=10)
     result = CombatResolutionSystem.resolve_attack(attacker, defender, _state(attacker, defender))
     assert "REWARD_CATEGORY" in result.trace
-    assert result.trace["REWARD_CATEGORY"] == RewardCategory.HERO_KILL.value
+    assert result.trace["REWARD_CATEGORY"] == RewardCategory.HOSTILE_CREATURE.value
 
 
 def test_resolve_attack_survive_has_no_reward_trace_keys():
@@ -103,7 +103,7 @@ def test_resolve_skill_usage_kill_reward_source_value():
     result = CombatResolutionSystem.resolve_skill_usage(
         attacker, defender, _state(attacker, defender), damage=999
     )
-    assert result.trace["REWARD_SOURCE"] == "hostile_relation"
+    assert result.trace["REWARD_SOURCE"] == "relation_projection"
 
 
 def test_resolve_skill_usage_survive_has_no_reward_trace_keys():

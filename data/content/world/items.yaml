@@ -39,6 +39,14 @@
   materials: ["iron_ore", "wood"]
 
 # STATE: LEGACY-EXPORT
+- id: "steel_sword"
+  display_name: "Steel Sword"
+  categories: ["weapon", "melee"]
+  rarity: "UNCOMMON"
+  base_value: 144
+  materials: ["iron_ore", "wood"]
+
+# STATE: LEGACY-EXPORT
 - id: "hunter_blade"
   display_name: "Hunter Blade"
   categories: ["weapon", "melee"]
