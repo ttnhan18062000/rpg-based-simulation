@@ -316,3 +316,4 @@
 {"run_id":"TCK-20260624-FIX-SPAWN-SCHEMA","start_ts":"2026-06-24T10:05:04Z","end_ts":"2026-06-24T10:25:00Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":1}
 {"run_id":"TCK-20260624-FIX-WORLDASSEMBLY-TESTS","start_ts":"2026-06-24T10:05:04Z","end_ts":"2026-06-24T10:25:00Z","workflow":"implement-ticket","tier":"hotfix","final_status":"DONE","agent_count":1}
 {"run_id":"TCK-20260624-FIX-SLOW-MARKERS","start_ts":"2026-06-24T10:05:04Z","end_ts":"2026-06-24T12:21:19Z","workflow":"implement-ticket","tier":"hotfix","final_status":"DONE","agent_count":1}
+{"run_id":"TCK-20260624-FIX-CERT-GATE","start_ts":"2026-06-24T10:05:04Z","end_ts":"2026-06-24T10:15:00Z","workflow":"implement-ticket","tier":"hotfix","final_status":"DONE","agent_count":1}

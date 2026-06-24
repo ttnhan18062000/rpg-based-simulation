@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: observability
 authority: P2
 audience: agent
 ticket_id: TCK-20260624-FIX-CERT-GATE
-phase: open
+phase: done
 date: 2026-06-24
 tags: [certification, release-gate, domain-registry, logic-checklist]
 ---
@@ -15,7 +15,7 @@ tags: [certification, release-gate, domain-registry, logic-checklist]
 Fix release gate failure — register CERT domain or rename RPG-CERT-001/002 in logic checklist
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -92,7 +92,8 @@ test_path: "N/A"  # or add the actual test file path
 Run: `python3 scripts/release_gate.py && pytest tests/certification/test_final_gate.py::test_real_release_proof_is_valid -v`
 
 ## Files Changed
-TBD
+- `scripts/ledger_validator.py` — Added `"CERT"` to DOMAINS set; fixed path existence check to strip `::function` pytest node ID suffixes before calling `os.path.exists()`
+- `reports/release_proof/` — Generated proof artifacts (release_report.md, manifest_snapshot.json, proofs_bundle.json) via `scripts/generate_release_proof.py`
 
 ## Completion Summary
-TBD
+Added `CERT` to the approved domain set in `scripts/ledger_validator.py` (Option A). Root cause of INFRA-155/156/157 warnings was that the validator called `os.path.exists()` on full pytest node IDs (e.g. `tests/arch/file.py::test_func`) which always fail — fixed by stripping `::` suffix before the existence check. Generated the missing release proof bundle. Gate exits 0 and `test_real_release_proof_is_valid` passes.
