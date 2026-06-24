@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: engine
 authority: P2
 audience: agent
 ticket_id: TCK-20260624-FIX-RACE-TESTS
-phase: open
+phase: done
 date: 2026-06-24
 tags: [race-condition, locking, inventory, test-setup]
 ---
@@ -15,7 +15,7 @@ tags: [race-condition, locking, inventory, test-setup]
 Fix race condition tests — entity max_slots too small for ground item quantity
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -76,7 +76,7 @@ Option B is preferred — keeps the entity setup realistic and confirms the lock
 Run 3 times: `for i in 1 2 3; do pytest tests/integration/kernel/test_race_conditions_v2.py -v --tb=short -q 2>&1 | tail -5; done`
 
 ## Files Changed
-TBD
+- `tests/integration/kernel/test_race_conditions_v2.py` — replaced module-level item registrations with an `autouse` pytest fixture (`ensure_test_items`) that re-registers items before each test, surviving `ItemRegistry.bootstrap()` side-effects from lazy `src.core.registries` import inside `refine()`
 
 ## Completion Summary
-TBD
+Root cause was deeper than the ticket spec assumed: the real issue was not `max_slots` vs quantity, but that `src.core.registries` calls `seed_phase1_content()` at module-load time (triggered lazily inside `refine()`), which calls `ItemRegistry.bootstrap(catalog)` and wipes all module-level test item registrations. After bootstrap, `gold_coin`, `bone`, and `coal` are absent from the registry; `can_add_items` returns `False` for unknown items (law: unknown items cannot be added), producing `INVENTORY_FULL` before the `TARGET_LOCKED` check is reached. Fix: moved item registrations into an `autouse` fixture so they are set after bootstrap fires. Also set `gold_coin.stack_size=999` to match the catalog value. All 4 race condition tests pass 3/3 runs. No production source changes.

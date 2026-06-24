@@ -320,3 +320,4 @@
 {"run_id":"TCK-20260624-FIX-WORKER-SHUTDOWN","start_ts":"2026-06-24T10:05:04Z","end_ts":"2026-06-24T10:15:00Z","workflow":"implement-ticket","tier":"hotfix","final_status":"DONE","agent_count":1}
 {"run_id":"TCK-20260624-FIX-TOOLS-SERVER","start_ts":"2026-06-24T10:05:04Z","end_ts":"2026-06-24T10:30:00Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":1}
 {"run_id":"TCK-20260624-FIX-STRATEGIC-TESTS","start_ts":"2026-06-24T10:05:04Z","end_ts":"2026-06-24T10:25:00Z","workflow":"implement-ticket","tier":"hotfix","final_status":"DONE","agent_count":1}
+{"run_id":"TCK-20260624-FIX-RACE-TESTS","start_ts":"2026-06-24T10:05:04Z","end_ts":"2026-06-24T15:45:41Z","workflow":"implement-ticket","tier":"hotfix","final_status":"DONE","agent_count":1}
