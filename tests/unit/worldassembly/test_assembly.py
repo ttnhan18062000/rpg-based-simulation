@@ -241,8 +241,8 @@ def test_cli_resolve_and_compile_integration(repos):
             "topology_height": 100
         },
         "module_refs": [
-            {"module_id": "plains_layout", "enabled": True, "order": 0},
-            {"module_id": "standard_villagers", "enabled": True, "order": 1}
+            {"module_id": "frontier_village_core", "enabled": True, "order": 0},
+            {"module_id": "scalable_bandit_camp", "enabled": True, "order": 1}
         ]
     }
 

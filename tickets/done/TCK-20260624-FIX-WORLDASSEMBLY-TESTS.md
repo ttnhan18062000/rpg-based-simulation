@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: world
 authority: P1
 audience: agent
 ticket_id: TCK-20260624-FIX-WORLDASSEMBLY-TESTS
-phase: open
+phase: done
 date: 2026-06-24
 tags: [worldassembly, test-data, quest-schema, world-modules, integration]
 ---
@@ -15,7 +15,7 @@ tags: [worldassembly, test-data, quest-schema, world-modules, integration]
 Fix WorldAssembly / worldbuilding integration test failures — test data gaps
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -82,7 +82,8 @@ Fix #1 (CLI module resolution) — easiest approach: change the test to use modu
 Run: `pytest tests/unit/worldassembly/test_assembly.py::test_cli_resolve_and_compile_integration tests/integration/worldbuilding/test_world_compile_to_state.py tests/integration/world/test_long_run_stability.py --tb=short -v`
 
 ## Files Changed
-TBD
+- `tests/unit/worldassembly/test_assembly.py` — `test_cli_resolve_and_compile_integration`: replaced `plains_layout`/`standard_villagers` module refs (only in `data/world_modules/`, not `data/content/world_modules/`) with `frontier_village_core`/`scalable_bandit_camp` which exist in `data/content/world_modules/` and fit within 100x100 topology
+- `tests/integration/worldbuilding/test_world_compile_to_state.py` — added `"type": "fetch"` to `create_base_integration_spec()` quest dict; rewrote `test_compiled_world_quest_warning_validation` invalid quest to use `required_location_tags` with 4 nonexistent tags (actual compiler warning mechanism) instead of nonexistent `target_*` fields that the compiler never validates
 
 ## Completion Summary
-TBD
+3 targeted tests now pass (50/50 in worldassembly/worldbuilding suites, no regressions). `test_long_run_stability` is an independent pre-existing performance timeout (tick compute 225ms+ vs 20ms budget on persistence phase) — not related to quest type field.
