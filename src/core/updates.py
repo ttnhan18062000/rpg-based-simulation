@@ -13,9 +13,7 @@ if TYPE_CHECKING:
         ContractState, TurningPointState
     )
     from src.engine.policy import GovernorPolicy
-    from src.domains.world_emergence.schema import WorldEvent
     from src.core.models.quests import QuestOpportunity, QuestOpportunityStatus
-    from src.domains.information.providers import InformationProviderState
 from src.core.state import ItemStack, EquipSlot, AttributeComponent
 from src.core.movement_modes import MovementMode
 from src.core.enums import ReasonCode, DiplomaticState
@@ -910,7 +908,7 @@ class StateUpdate:
     force_full_scan: bool = False
     sub_phase_costs: Dict[str, float] = field(default_factory=dict)
     metric_counters: Dict[str, int] = field(default_factory=dict)
-    world_events_add: List[WorldEvent] = field(default_factory=list)
+    world_events_add: List["WorldEvent"] = field(default_factory=list)
     quest_registry_add: List["QuestOpportunity"] = field(default_factory=list)
     quest_registry_remove: List[str] = field(default_factory=list)
     quest_status_updates: Dict[str, "QuestOpportunityStatus"] = field(default_factory=dict)

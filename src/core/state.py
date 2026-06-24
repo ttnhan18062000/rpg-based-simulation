@@ -8,9 +8,7 @@ from dataclasses import dataclass, field, replace, InitVar, asdict
 from types import MappingProxyType
 from typing import Dict, Any, Set, Optional, List, Tuple, ClassVar, TYPE_CHECKING
 if TYPE_CHECKING:
-    from src.domains.world_emergence.schema import WorldEvent
     from src.core.models.quests import QuestOpportunity, QuestOpportunityStatus
-    from src.domains.information.providers import InformationProviderState
 from src.core.strategic import StrategicComponent
 from src.core.enums import Faction, EntityRole, DiplomaticState
 from src.core.movement_modes import MovementMode
@@ -1142,7 +1140,7 @@ class AuthoritativeState:
     pending_information_responses: List[Dict[str, Any]] = field(default_factory=list, repr=False, compare=False)
     information_source_profiles: List[Any] = field(default_factory=list, repr=False, compare=False)
     feature_flags: Dict[str, Any] = field(default_factory=dict, repr=False, compare=False)
-    recent_world_events: List[WorldEvent] = field(default_factory=list)
+    recent_world_events: List["WorldEvent"] = field(default_factory=list)
     quest_registry: Dict[str, "QuestOpportunity"] = field(default_factory=dict)
     # Epic 4.2B: Durable registry of entities classified as information providers.
     information_providers: Dict[int, "InformationProviderState"] = field(default_factory=dict)

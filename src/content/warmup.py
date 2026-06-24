@@ -27,19 +27,25 @@ class ContentWarmupService:
     def warmup(repo: Optional[CatalogRepository] = None) -> None:
         """Force-load all content singletons.
 
-        If *repo* is provided it is installed into the faction semantics singleton
-        directly (useful when the caller already holds a loaded repo). Otherwise
-        the singleton is triggered via its factory, which calls load_all() itself.
+        If *repo* is provided it is installed into all consumer singletons directly
+        (useful when the caller already holds a loaded repo). Otherwise a catalog is
+        loaded once and shared across all consumers so that no load_all() call can
+        occur from inside tick_once() (WORLD-CAT-004).
         """
         from src.content_semantics.faction import (
-            get_faction_semantics_service,
             configure_faction_semantics_service,
         )
+        from src.engine.behavior_consumers import configure_behavior_consumers
 
         if repo is not None:
             configure_faction_semantics_service(repo)
+            configure_behavior_consumers(repo)
         else:
-            get_faction_semantics_service()
+            # Load content once and share across all consumers (WORLD-CAT-004).
+            _repo = CatalogRepository(ContentPathConfig().content_root)
+            _repo.load_all()
+            configure_faction_semantics_service(_repo)
+            configure_behavior_consumers(_repo)
 
     @staticmethod
     def is_warm() -> bool:
@@ -59,4 +65,6 @@ class ContentWarmupService:
             "Do not call it in production code."
         )
         from src.content_semantics.faction import reset_faction_semantics_service
+        from src.engine.behavior_consumers import reset_behavior_consumers
         reset_faction_semantics_service()
+        reset_behavior_consumers()
