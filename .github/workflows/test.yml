@@ -9,18 +9,6 @@ concurrency:
   group: test-${{ github.ref }}
   cancel-in-progress: true
 
-# Shared setup used by every job
-x-setup: &setup
-  steps:
-    - uses: actions/checkout@v4
-    - name: Set up Python 3.13
-      uses: actions/setup-python@v5
-      with:
-        python-version: "3.13"
-        cache: pip
-    - name: Install dependencies
-      run: pip install -r requirements.txt
-
 jobs:
   # ── Unit: core engine + world layer ──────────────────────────────────────
   unit-core-world:
