@@ -318,10 +318,12 @@ class TestTransactionRejectionReasons:
 
     def test_insufficient_gold_records_reason(self, entity_with_inventory):
         state = entity_with_inventory
-        # Entity has 50 gold, trying to buy something for 100
+        # Entity has 50 gold, trying to buy something for 100.
+        # Uses small_potion (in content catalog) so ItemRegistry.get() resolves
+        # correctly even if bootstrap has replaced the default registry.
         intent = ResourceTransferIntent(
             source_id=301, source_kind="SHOP_BUY",
-            items_add=[ItemStack("healing_potion", 1)],
+            items_add=[ItemStack("small_potion", 1)],
             gold_cost=100,
             transfer_kind="BUY"
         )
@@ -329,7 +331,7 @@ class TestTransactionRejectionReasons:
         from src.core.state import BuildingState, InventoryComponent
         shop = BuildingState(
             id=301, kind="shop", position=(0, 0),
-            inventory=InventoryComponent(items=[ItemStack("healing_potion", 1)])
+            inventory=InventoryComponent(items=[ItemStack("small_potion", 1)])
         )
         state = replace(state, buildings={301: shop})
         
