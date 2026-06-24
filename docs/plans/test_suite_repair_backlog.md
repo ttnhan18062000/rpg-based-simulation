@@ -295,24 +295,31 @@ ValueError: Schema validation errors found: {'spawn_tables.yaml': "2 validation 
 
 ## Recommended Implementation Order
 
+Investigation complete 2026-06-24. Key decisions reached:
+- **Race conditions:** test setup bug (max_slots=10 vs quantity=50), NOT a locking bug — the locking code is correct
+- **Economy drift:** all 5 tests written pre-`TCK-20260619-E33D-REP-DISCOUNTS`; implementation is correct, update tests
+- **Thread leak teardown ERRORs:** caused by 7 MagicMock tests leaking Kernel instances — fix MOCK-SERIAL to clear both categories
+- **Performance:** mixed — 1 real regression (AdventureDecisionPhase 3x over budget), rest are ad-hoc thresholds with no sampling rigor → update tests
+- **No true duplicate tests** — parallel unit/integration structures only; `test_faction_war_declared_event_in_narrative_ledger` appears in 2 chronicle files but is not blocking
+
 ```
 Phase 1 — P1 (unblock green-suite guarantee)
-  1. TCK-...-FIX-SPAWN-TABLE-SCHEMA     (hotfix, ~30 min)
-  2. TCK-...-FIX-THREAD-LEAKS           (standard, blocks QueueDrainWorker sentinel)
-  3. TCK-...-FIX-MOCK-SERIAL            (standard, blocks kernel contract guards)
-  4. TCK-...-FIX-ECONOMY-DRIFT          (standard, then re-check worldbuilding cascade)
-  5. TCK-...-FIX-WORLDASSEMBLY-INTEGRATION  (standard, run after cat 3+4 land)
+  1. TCK-20260624-FIX-MOCK-SERIAL        (standard) — fixes 7 tests + clears 5 teardown ERRORs
+  2. TCK-20260624-FIX-ECONOMY-TESTS      (hotfix)   — update 5-6 assertions post-rep-discount
+  3. TCK-20260624-FIX-SPAWN-SCHEMA       (standard) — ClassTableDefinition for class_id_by_role
+  4. TCK-20260624-FIX-WORLDASSEMBLY-TESTS (hotfix)  — test data: module IDs + quest type field
 
 Phase 2 — P2 infra + cert
-  6. TCK-...-FIX-TIMEOUT-SLOW           (hotfix markers + investigate pause/CLI)
-  7. TCK-...-FIX-CERT-GATE              (standard, depends on phase 2 certs passing)
-  8. TCK-...-FIX-WORKER-HARDEN          (hotfix)
-  9. TCK-...-FIX-TOOLS-TESTS            (standard)
+  5. TCK-20260624-FIX-SLOW-MARKERS       (hotfix)   — @pytest.mark.slow for cert + CLI tests
+  6. TCK-20260624-FIX-CERT-GATE          (hotfix)   — register CERT domain in release_gate.py
+  7. TCK-20260624-FIX-WORKER-SHUTDOWN    (hotfix)   — add kernel.shutdown() in test_worker_harden.py
+  8. TCK-20260624-FIX-TOOLS-SERVER       (standard) — exit codes, .mcp.json, lifespan timing
 
 Phase 3 — P2 gameplay + perf
-  10. TCK-...-FIX-STRATEGIC-PROGRESSION  (standard)
-  11. TCK-...-FIX-RACE-LOCKS             (standard)
-  12. TCK-...-FIX-PERF-BUDGETS           (standard, environment-sensitive — do last)
+  9. TCK-20260624-FIX-STRATEGIC-TESTS    (hotfix)   — ServiceRegistry + ItemRegistry fixtures
+  10. TCK-20260624-FIX-RACE-TESTS         (hotfix)   — max_slots fix in test entity setup
+  11. TCK-20260624-PERF-GUARD-INFRA       (standard) — NEW: perf_baselines.json + perf_budget fixture + perf_guard CLI
+  12. TCK-20260624-FIX-PERF-BUDGETS       (standard) — depends on PERF-GUARD-INFRA; fix AdventureDecisionPhase + migrate tests to new fixture
 ```
 
 ---
