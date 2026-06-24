@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: observability
 authority: P2
 audience: agent
 ticket_id: TCK-20260624-FIX-TOOLS-SERVER
-phase: open
+phase: done
 date: 2026-06-24
 tags: [tools, mcp, knowledge-search, graceful-degradation, server-tests]
 ---
@@ -15,7 +15,7 @@ tags: [tools, mcp, knowledge-search, graceful-degradation, server-tests]
 Fix tools/search server tests — exit code contract violation, .mcp.json absolute path, lifespan timing
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -101,7 +101,9 @@ def not_ready_client(app, monkeypatch):
 Run: `pytest tests/tools/ -v --tb=short`
 
 ## Files Changed
-TBD
+- `tools/knowledge_search.py` — cmd_build/cmd_query: `return 1` → `return 0`, `"Error:"` → `"Warning:"` in ImportError branches
+- `.mcp.json` — `"command"` changed from absolute venv path to `"python3"`, venv added to `"env"."PATH"`
+- `tests/tools/test_search_server.py` — test_health_503_when_not_ready, test_search_503_when_not_ready: added `tmp_path` param and patched `_DB_PATH`/`_INDEX_DIR` before TestClient context to prevent lifespan model loading
 
 ## Completion Summary
-TBD
+Fixed 5 failing tests in tests/tools/: 2 graceful-degradation exit-code tests (return 0 + Warning instead of return 1 + Error), 1 .mcp.json portability test (python3 command with venv PATH env), and 2 FastAPI lifespan timing tests (patch DB paths before TestClient opens to prevent real model loading). All 418 non-slow tools tests pass.

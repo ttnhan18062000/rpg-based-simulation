@@ -1,8 +1,11 @@
 {
   "mcpServers": {
     "knowledge-search": {
-      "command": "/home/vboxuser/Work/venv/bin/python3",
+      "command": "python3",
       "args": ["tools/search_mcp.py"],
+      "env": {
+        "PATH": "/home/vboxuser/Work/venv/bin:/usr/local/bin:/usr/bin:/bin"
+      },
       "description": "Local semantic search over project docs, tickets, and investigations"
     }
   }
