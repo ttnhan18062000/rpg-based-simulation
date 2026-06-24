@@ -328,8 +328,13 @@ class ReplayManager:
         """
         with self._inflight_lock:
             inflight = self._inflight_count
-        max_f = self._max_pending_flushes
-        if max_f <= 0:
+        if budget is None:
+            max_f = DEFAULT_REPLAY_BUDGET.max_inflight_chunks
+        elif budget.max_inflight_chunks is not None:
+            max_f = budget.max_inflight_chunks
+        else:
+            max_f = None
+        if not max_f or max_f <= 0:
             return SubsystemPressureReport(
                 subsystem="replay",
                 current_usage=float(inflight),

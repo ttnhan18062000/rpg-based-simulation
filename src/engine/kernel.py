@@ -642,6 +642,9 @@ class Kernel:
             from src.core.updates import StateUpdate
             update = StateUpdate()
             
+        from dataclasses import replace as _dc_replace
+        update = _dc_replace(update, rng_checkpoint=self._rng.get_state())
+
         prior_state = self._state
         self._state = ApplyPath.apply_generation(
             self._state, 
