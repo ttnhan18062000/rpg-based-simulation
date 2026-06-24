@@ -313,3 +313,4 @@
 {"run_id":"FOLDER-tickets/todos/test-repairs","ticket_id":"FOLDER-tickets/todos/test-repairs","start_ts":"2026-06-24T06:13:40Z","end_ts":"2026-06-24T06:13:40Z","workflow":"implement-epic","tier":"standard","final_status":"DONE","agent_count":13}
 {"run_id":"TCK-20260624-FIX-MOCK-SERIAL","start_ts":"2026-06-24T10:05:04Z","end_ts":"2026-06-24T10:35:00Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":1}
 {"run_id":"TCK-20260624-FIX-ECONOMY-TESTS","start_ts":"2026-06-24T10:05:04Z","end_ts":"2026-06-24T11:45:21Z","workflow":"implement-ticket","tier":"hotfix","final_status":"DONE","agent_count":1}
+{"run_id":"TCK-20260624-FIX-SPAWN-SCHEMA","start_ts":"2026-06-24T10:05:04Z","end_ts":"2026-06-24T10:25:00Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":1}

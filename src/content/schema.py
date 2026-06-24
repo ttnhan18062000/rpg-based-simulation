@@ -273,6 +273,11 @@ class SpawnTableDefinition(CatalogBaseDefinition):
     spawn_weights: Dict[str, float] = Field(..., description="Mapping of role id to spawning weight factor")
 
 
+class ClassTableDefinition(CatalogBaseDefinition):
+    """Schema for class assignment tables mapping entity roles to eligible class IDs."""
+    class_id_by_role: Dict[str, List[str]] = Field(..., description="Mapping of role id to list of eligible class IDs")
+
+
 class DefaultCompileProfile(CatalogBaseDefinition):
     """Schema for global world compilation fallbacks and constraints."""
     default_entity_hp: int = Field(100, gt=0)
