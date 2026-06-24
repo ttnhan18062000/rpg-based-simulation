@@ -1,3 +1,4 @@
+import time
 import pytest
 from src.engine.kernel import Kernel
 from src.core.state import AuthoritativeState, EntityState
@@ -10,8 +11,8 @@ from src.core.builder import V2EntityBuilder
 def test_neighbor_view_sorting():
     """Prove that neighbor views are deterministic and sorted by entity_id."""
     profile = RuntimeProfile(
-        name="test", 
-        hardware_class="class_a", 
+        name="test",
+        hardware_class="class_a",
         max_ram_mb=1024,
         max_cpu_percent=100.0,
         max_worker_count=4,
@@ -31,21 +32,24 @@ def test_neighbor_view_sorting():
     state = AuthoritativeState(tick=1, seed=42, entities=entities)
     rng = DeterministicRNG(42)
     kernel = Kernel(profile, state, rng)
-    
-    view = kernel._get_deterministic_neighbor_view(entities[10], radius=10.0)
-    
-    # Expected: [5, 20] (Sorted by ID)
-    assert len(view) == 2
-    assert view[0][0] == 5
-    assert view[1][0] == 20
-    assert view[0][1].id == 5
-    assert view[1][1].id == 20
+
+    try:
+        view = kernel._get_deterministic_neighbor_view(entities[10], radius=10.0)
+
+        # Expected: [5, 20] (Sorted by ID)
+        assert len(view) == 2
+        assert view[0][0] == 5
+        assert view[1][0] == 20
+        assert view[0][1].id == 5
+        assert view[1][1].id == 20
+    finally:
+        kernel.shutdown(timeout_s=1.0)
 
 def test_duplicate_entity_update_rejection():
     """Prove that Milestone D prohibits multiple authoritative results for the same entity."""
     profile = RuntimeProfile(
-        name="test", 
-        hardware_class="class_a", 
+        name="test",
+        hardware_class="class_a",
         max_ram_mb=1024,
         max_cpu_percent=100.0,
         max_worker_count=4,
@@ -58,37 +62,40 @@ def test_duplicate_entity_update_rejection():
         1: V2EntityBuilder(1).location(0, 0).build()
     })
     rng = DeterministicRNG(42)
-    kernel = Kernel(profile, state, rng)
-    
-    from src.core.worker_protocol import WorkerResult, ResultStatus
-    from src.core.updates import EntityUpdate
-    
-    # Simulate two results for Entity 1
-    res1 = WorkerResult(
-        source_packet_id="1:0", 
-        work_id="1:1:ACT", 
-        entity_id=1, 
-        work_class=WorkClass.CRITICAL,
-        update=EntityUpdate(entity_id=1)
-    )
-    res2 = WorkerResult(
-        source_packet_id="1:1", 
-        work_id="1:1:ACT2", 
-        entity_id=1, 
-        work_class=WorkClass.PERIODIC,
-        update=EntityUpdate(entity_id=1)
-    )
-    
-    kernel._final_results = [res1, res2]
-    
-    with pytest.raises(ProtocolViolationError, match="Duplicate authoritative result"):
-        kernel._phase_resolution()
+    kernel = Kernel(profile, state, rng, flags={"audit_mode": True})  # disable throttle
+
+    try:
+        from src.core.worker_protocol import WorkerResult, ResultStatus
+        from src.core.updates import EntityUpdate
+
+        # Simulate two results for Entity 1
+        res1 = WorkerResult(
+            source_packet_id="1:0",
+            work_id="1:1:ACT",
+            entity_id=1,
+            work_class=WorkClass.CRITICAL,
+            update=EntityUpdate(entity_id=1)
+        )
+        res2 = WorkerResult(
+            source_packet_id="1:1",
+            work_id="1:1:ACT2",
+            entity_id=1,
+            work_class=WorkClass.PERIODIC,
+            update=EntityUpdate(entity_id=1)
+        )
+
+        kernel._final_results = [res1, res2]
+
+        with pytest.raises(ProtocolViolationError, match="Duplicate authoritative result"):
+            kernel._phase_resolution()
+    finally:
+        kernel.shutdown(timeout_s=1.0)
 
 def test_priority_sorted_results():
     """Prove that outcomes are sorted by Class > Local > ID before application."""
     profile = RuntimeProfile(
-        name="test", 
-        hardware_class="class_a", 
+        name="test",
+        hardware_class="class_a",
         max_ram_mb=1024,
         max_cpu_percent=100.0,
         max_worker_count=4,
@@ -99,31 +106,34 @@ def test_priority_sorted_results():
     )
     state = AuthoritativeState(tick=1, seed=42, entities={})
     rng = DeterministicRNG(42)
-    kernel = Kernel(profile, state, rng)
-    
-    from src.core.worker_protocol import WorkerResult
-    from src.core.updates import EntityUpdate
-    
-    # 1. PERIODIC (10)
-    # 2. CRITICAL (0) (Later ID)
-    # 3. CRITICAL (0) (Earlier ID)
-    res_p = WorkerResult(
-        source_packet_id="1:0", work_id="w1", entity_id=10, work_class=WorkClass.PERIODIC,
-        class_priority=10, update=EntityUpdate(entity_id=10)
-    )
-    res_c_later = WorkerResult(
-        source_packet_id="1:1", work_id="w2", entity_id=20, work_class=WorkClass.CRITICAL,
-        class_priority=0, update=EntityUpdate(entity_id=20)
-    )
-    res_c_earlier = WorkerResult(
-        source_packet_id="1:2", work_id="w3", entity_id=5, work_class=WorkClass.CRITICAL,
-        class_priority=0, update=EntityUpdate(entity_id=5)
-    )
-    
-    kernel._final_results = [res_p, res_c_later, res_c_earlier]
-    kernel._phase_resolution() # Triggers sort
-    
-    # Expected order: res_c_earlier, res_c_later, res_p
-    assert kernel._final_results[0].entity_id == 5
-    assert kernel._final_results[1].entity_id == 20
-    assert kernel._final_results[2].entity_id == 10
+    kernel = Kernel(profile, state, rng, flags={"audit_mode": True})  # disable throttle
+
+    try:
+        from src.core.worker_protocol import WorkerResult
+        from src.core.updates import EntityUpdate
+
+        # 1. PERIODIC (10)
+        # 2. CRITICAL (0) (Later ID)
+        # 3. CRITICAL (0) (Earlier ID)
+        res_p = WorkerResult(
+            source_packet_id="1:0", work_id="w1", entity_id=10, work_class=WorkClass.PERIODIC,
+            class_priority=10, update=EntityUpdate(entity_id=10)
+        )
+        res_c_later = WorkerResult(
+            source_packet_id="1:1", work_id="w2", entity_id=20, work_class=WorkClass.CRITICAL,
+            class_priority=0, update=EntityUpdate(entity_id=20)
+        )
+        res_c_earlier = WorkerResult(
+            source_packet_id="1:2", work_id="w3", entity_id=5, work_class=WorkClass.CRITICAL,
+            class_priority=0, update=EntityUpdate(entity_id=5)
+        )
+
+        kernel._final_results = [res_p, res_c_later, res_c_earlier]
+        kernel._phase_resolution() # Triggers sort
+
+        # Expected order: res_c_earlier, res_c_later, res_p
+        assert kernel._final_results[0].entity_id == 5
+        assert kernel._final_results[1].entity_id == 20
+        assert kernel._final_results[2].entity_id == 10
+    finally:
+        kernel.shutdown(timeout_s=1.0)
