@@ -44,13 +44,17 @@ def test_kernel_tick_execution_order():
     )
     state = AuthoritativeState(tick=0, seed=1)
     rng = MagicMock(spec=DeterministicRNG)
-    
+    rng.get_state.return_value = None
+
     kernel = Kernel(profile, state, rng)
-    kernel.tick_once()
-    
-    # Assert side effects of the phases
-    assert kernel.state.tick == 1
-    assert kernel.state.world_time == 1
-    # Check that status was updated in CLEANUP/ADVANCEMENT
-    assert len(kernel.status.signal_history) == 1
-    assert kernel.status.signal_history[-1].tick_compute_ms > 0
+    try:
+        kernel.tick_once()
+
+        # Assert side effects of the phases
+        assert kernel.state.tick == 1
+        assert kernel.state.world_time == 1
+        # Check that status was updated in CLEANUP/ADVANCEMENT
+        assert len(kernel.status.signal_history) == 1
+        assert kernel.status.signal_history[-1].tick_compute_ms > 0
+    finally:
+        kernel.shutdown(timeout_s=1.0)

@@ -36,7 +36,9 @@ def test_replay_is_non_authoritative(tmp_path):
     # Monkeypatch the sink to raise an error
     replay._sink.persist_chunk = MagicMock(side_effect=IOError("Disk Full"))
     
-    kernel = Kernel(profile=profile, state=state, rng=MagicMock(), replay=replay)
+    rng = MagicMock()
+    rng.get_state.return_value = None
+    kernel = Kernel(profile=profile, state=state, rng=rng, replay=replay)
 
     # 3. Execute ticks
     # Even if the sink fails, tick_once should complete normally

@@ -311,3 +311,4 @@
 {"run_id":"TCK-20260623-FIX-ARENA","ticket_id":"TCK-20260623-FIX-ARENA","start_ts":"2026-06-24T06:00:52Z","end_ts":"2026-06-24T06:00:52Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":1}
 {"run_id":"TCK-20260623-FIX-BEHAVIORAL-MISC","ticket_id":"TCK-20260623-FIX-BEHAVIORAL-MISC","start_ts":"2026-06-24T06:03:15Z","end_ts":"2026-06-24T06:03:15Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":1}
 {"run_id":"FOLDER-tickets/todos/test-repairs","ticket_id":"FOLDER-tickets/todos/test-repairs","start_ts":"2026-06-24T06:13:40Z","end_ts":"2026-06-24T06:13:40Z","workflow":"implement-epic","tier":"standard","final_status":"DONE","agent_count":13}
+{"run_id":"TCK-20260624-FIX-MOCK-SERIAL","start_ts":"2026-06-24T10:05:04Z","end_ts":"2026-06-24T10:35:00Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":1}

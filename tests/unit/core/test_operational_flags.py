@@ -69,6 +69,7 @@ def test_flags_cannot_alter_authoritative_semantics():
     )
     state = AuthoritativeState(tick=0, seed=42)
     rng = MagicMock(spec=DeterministicRNG)
+    rng.get_state.return_value = None
 
     k1 = Kernel(profile=profile, state=state, rng=rng, flags={"FLAG_A": True})
     k2 = Kernel(profile=profile, state=state, rng=rng, flags={"FLAG_B": True})
