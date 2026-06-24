@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20260624-PERF-GUARD-INFRA
-phase: open
+phase: done
 date: 2026-06-24
 tags: [performance, infrastructure, baseline, perf-guard, memory, fixture]
 ---
@@ -15,7 +15,7 @@ tags: [performance, infrastructure, baseline, perf-guard, memory, fixture]
 Implement dynamic performance guard infrastructure (perf_baselines.json + perf_budget fixture + perf_guard CLI)
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -204,12 +204,12 @@ Run: `pytest tests/unit/perf/test_perf_guard.py -v`
 Run: `python3 tools/perf_guard.py measure --test tests/perf/test_phase3_adventure_decision_budget.py::test_phase3_adventure_decision_perf_budget`
 
 ## Files Changed
-- `perf_baselines.json` (new)
-- `tests/perf/conftest.py` (new or extended)
-- `tests/unit/perf/test_perf_guard.py` (new)
-- `tools/perf_guard.py` (new)
-- `Makefile` (add `perf-measure` target)
-- `docs/testing/v2_test_taxonomy.md` (add perf-test authoring section)
+- `perf_baselines.json` (new) — repo root, schema v1, empty entries
+- `tests/perf/conftest.py` (extended) — added `_snapshot_rss_kb`, `PerfBudget`, `_perf_baselines`, `perf_budget` fixtures; existing `perf_harness`/`perf_reporter`/`perf_report_dir` unchanged
+- `tests/unit/perf/test_perf_guard.py` (new) — 6 unit tests; all pass
+- `tools/perf_guard.py` (new) — `measure` + `show` subcommands with `PerfMeasurePlugin`
+- `Makefile` (modified) — added `perf-measure` target + `.PHONY` entry
+- `docs/testing/test_taxonomy.md` (extended) — added Section 4 "Performance Test Authoring"
 
 ## Completion Summary
-TBD
+All six components delivered. 6/6 unit tests pass. Existing perf test collection unaffected (60/71 collected, 11 deselected by markers). `perf_baselines.json` starts empty — TCK-20260624-FIX-PERF-BUDGETS will populate entries after measuring migrated tests. Staging artifacts moved to `stored_artifacts/`.

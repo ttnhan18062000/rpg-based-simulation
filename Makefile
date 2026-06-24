@@ -1,4 +1,4 @@
-.PHONY: help install install-py install-fe build dev serve stop clean lint profile-api memray-profile docs-serve docs-build docs-registry docs-artifacts knowledge-index knowledge-index-update search-server search-server-docker search-server-stop search-server-logs install-hooks eval-search mcp-server-test world-list world-validate world-compile world-resolve world-inspect world-template sim sim-debug sim-quick sim-world sim-sweep check-resources export-run retention-plan retention-clean warehouse-init warehouse-ingest typecheck-py
+.PHONY: help install install-py install-fe build dev serve stop clean lint profile-api memray-profile docs-serve docs-build docs-registry docs-artifacts knowledge-index knowledge-index-update search-server search-server-docker search-server-stop search-server-logs install-hooks eval-search mcp-server-test world-list world-validate world-compile world-resolve world-inspect world-template sim sim-debug sim-quick sim-world sim-sweep check-resources export-run retention-plan retention-clean warehouse-init warehouse-ingest typecheck-py perf-measure
 
 # Default
 help: ## Show available commands
@@ -149,6 +149,9 @@ test-quick: ## Run fast tests only (skip slow integration)
 
 test-cov: ## Run tests with coverage report (V2)
 	python3 -m pytest tests_v2/ -v --tb=short --cov=src_v2 --cov-report=term-missing
+
+perf-measure: ## Re-measure perf tests and print proposed perf_baselines.json diff
+	python3 tools/perf_guard.py measure
 
 # ── Migration CI Lanes ────────────────────────────────────
 # Targeted test lanes for content migration work. Each lane selects a
