@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: strategy
 authority: P2
 audience: agent
 ticket_id: TCK-20260624-FIX-STRATEGIC-TESTS
-phase: open
+phase: done
 date: 2026-06-24
 tags: [strategic, progression, test-setup, service-registry, item-registry]
 ---
@@ -15,7 +15,7 @@ tags: [strategic, progression, test-setup, service-registry, item-registry]
 Fix 3 strategic/progression tests with missing test fixtures and setup
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -92,7 +92,9 @@ ItemRegistry.register("iron_plate", ItemDefinition(weight=12.0, slot=EquipSlot.T
 Run: `pytest tests/unit/strategic/test_opportunities.py::test_service_opportunities_basic tests/unit/strategic/test_strategic_hardening.py::test_interaction_interrupted_by_damage tests/unit/progression/test_rpg_advancement.py::test_equipment_stat_injection_move_cost -v --tb=short`
 
 ## Files Changed
-TBD
+- `tests/unit/strategic/test_opportunities.py` — added `minimal_service_registry` fixture (bootstraps ServiceRegistry with only shop+RecipeRegistry empty); applied to `test_service_opportunities_basic`
+- `tests/unit/strategic/test_strategic_hardening.py` — changed `yields_item="WOOD"` to `yields_item="wood"` in ResourceNodeState so the item exists in catalog-bootstrapped CoreItemRegistry
+- `tests/unit/progression/test_rpg_advancement.py` — added inline guard to register `iron_plate` in `CoreItemRegistry` if missing (catalog bootstrap omits it)
 
 ## Completion Summary
-TBD
+All 3 tests now pass in isolation and when run together in full-suite collection order. Root cause was catalog bootstrap (`seed_phase1_content()` triggered on import of `src.core.registries`) wiping items `"WOOD"` and `iron_plate` from `CoreItemRegistry`, plus craft opportunities from the full recipe catalog filling the top-5 slots before `buy_item`. No production source files were modified.

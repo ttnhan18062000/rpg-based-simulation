@@ -19,7 +19,7 @@ def test_interaction_interrupted_by_damage():
     ent = replace_interaction(ent, 5)
     
     from src.core.state import ResourceNodeState
-    node = ResourceNodeState(id=100, kind="WOOD", position=(0,0), yields_item="WOOD", required_ticks=10, remaining_charges=10, max_charges=10)
+    node = ResourceNodeState(id=100, kind="WOOD", position=(0,0), yields_item="wood", required_ticks=10, remaining_charges=10, max_charges=10)
     state = AuthoritativeState(tick=10, seed=42, entities={1: ent}, resource_nodes={100: node})
     
     # 1. Action without damage: progress continues
