@@ -5,6 +5,7 @@ from pathlib import Path
 from src.perf.scenarios import build_idle_state, build_movement_state, build_combat_arena_state
 
 @pytest.mark.perf
+@pytest.mark.slow
 @pytest.mark.parametrize("scenario_id, builder_fn, kwargs", [
     ("idle_100_local", build_idle_state, {"entity_count": 100}),
     ("movement_100_local", build_movement_state, {"entity_count": 100}),

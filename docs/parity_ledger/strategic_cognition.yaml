@@ -2389,9 +2389,12 @@
   legacy_evidence: null
   v2_evidence: >-
     src/domains/adventure/phase.py — ResourceOpportunityProvider imported at module
-    level; opportunities fetched per hero before generate() call (TCK-20260619-FIX-ADVENTURE-OPPORTUNITY-WIRING).
+    level; opportunities fetched per hero before generate() call
+    (TCK-20260619-FIX-ADVENTURE-OPPORTUNITY-WIRING). Decision trace writer import
+    hoisted to module level in TCK-20260624-FIX-PERF-BUDGETS, eliminating O(n)
+    Pydantic model construction overhead (472ms → <5ms for 100 entities).
   proof_type: parity
-  test_path: tests/unit/strategic/test_opportunities.py::test_resource_opportunities_basic
+  test_path: tests/perf/test_phase3_adventure_decision_budget.py::test_phase3_adventure_decision_perf_budget
   divergence_note: null
   support_boundary: null
 - id: STRAT-226

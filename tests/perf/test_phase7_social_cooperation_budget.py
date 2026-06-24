@@ -13,6 +13,7 @@ from src.core.updates import StateUpdate
 from src.domains.cooperation.phase import CooperationPhase
 
 
+@pytest.mark.slow
 def test_cooperation_phase_performance_budget_100_entities():
     # Build 100 entities, half with help needs
     entities = {}

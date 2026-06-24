@@ -16,6 +16,7 @@ from src.domains.adventure.generator import AdventureRouteGenerator
 from src.domains.adventure.schema import RouteFamily
 from src.domains.adventure.service import AdventureDecisionService
 from src.world.providers.resources import ResourceOpportunityProvider
+from src.observability.cognition.decision_trace_writer import get_active_writer as _get_active_writer
 
 
 class AdventureDecisionPhase:
@@ -51,6 +52,11 @@ class AdventureDecisionPhase:
 
         entity_updates: Dict[int, EntityUpdate] = {}
 
+        # Resolve the trace writer once before the entity loop — the lazy import
+        # of observability.cognition triggers expensive Pydantic model construction
+        # on first access, making it O(n) if left inside the loop.
+        _resolved_writer = trace_writer if trace_writer is not None else _get_active_writer()
+
         for hero in heroes:
             # Check strategic plan lock status
             strat = hero.strategic
@@ -74,10 +80,7 @@ class AdventureDecisionPhase:
             )
 
             # 2a. Write decision trace if writer is available (LIGHT+ mode observability)
-            _writer = trace_writer
-            if _writer is None:
-                from src.observability.cognition.decision_trace_writer import get_active_writer
-                _writer = get_active_writer()
+            _writer = _resolved_writer
             if _writer is not None:
                 scored_candidates = result.trace.get("scored_candidates", [])
                 if scored_candidates:

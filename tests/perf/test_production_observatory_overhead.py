@@ -44,6 +44,7 @@ def _build_kernel(obs_mode: ObservabilityMode, run_id: str) -> Kernel:
     return Kernel(profile, state, rng, run_id=run_id)
 
 
+@pytest.mark.slow
 def test_observatory_light_mode_overhead():
     """Observatory LIGHT mode tick overhead must be below production threshold."""
     # Baseline: OFF

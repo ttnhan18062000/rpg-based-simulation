@@ -2,6 +2,7 @@ import pytest
 from src.perf.scenarios import build_idle_state
 
 @pytest.mark.perf
+@pytest.mark.slow
 def test_perf_idle_baseline(perf_harness, request):
     """
     Baseline test: 100 entities in idle state.

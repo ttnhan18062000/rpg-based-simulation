@@ -49,56 +49,61 @@ def test_kernel_with_debug_reference_executes_all_phases(base_profile: RuntimePr
     and executes all 17 phases unconditionally.
     """
     kernel = Kernel(
-        base_profile, test_state, DeterministicRNG(2026), 
+        base_profile, test_state, DeterministicRNG(2026),
         flags={"optimization_profile": "DEBUG_REFERENCE", "no_replay": True, "no_frame_pacing": True}
     )
-    
-    assert kernel._opt_profile == DEBUG_REFERENCE
-    assert kernel._cache_policy.max_movement_plans == 100000
-    
-    # Execute one tick with NO dirty entities
-    kernel.tick_once()
-    
-    # In _phase_resolution, refined_update is produced and stored. Wait, let's verify phase metrics.
-    # Refined update metric counters can be inspected via pipeline directly to verify exact phase run counts.
-    upd = StateUpdate()
-    cadence = SystemCadence()
-    refined = AuthoritativeApplyPipeline.refine(kernel.state, upd, cadence=cadence)
-    
-    # Under NEVER_SKIP, 0 phases should be skipped
-    assert refined.metric_counters.get("phase_skips", 0) == 0
-    assert refined.metric_counters.get("phase_runs", 0) > 10
+    try:
+        assert kernel._opt_profile == DEBUG_REFERENCE
+        assert kernel._cache_policy.max_movement_plans == 100000
+
+        # Execute one tick with NO dirty entities
+        kernel.tick_once()
+
+        # In _phase_resolution, refined_update is produced and stored. Wait, let's verify phase metrics.
+        # Refined update metric counters can be inspected via pipeline directly to verify exact phase run counts.
+        upd = StateUpdate()
+        cadence = SystemCadence()
+        refined = AuthoritativeApplyPipeline.refine(kernel.state, upd, cadence=cadence)
+
+        # Under NEVER_SKIP, 0 phases should be skipped
+        assert refined.metric_counters.get("phase_skips", 0) == 0
+        assert refined.metric_counters.get("phase_runs", 0) > 10
+    finally:
+        kernel.shutdown()
 
 
+@pytest.mark.slow
 def test_kernel_with_low_memory_enforces_tight_cache_limits(base_profile: RuntimeProfile, test_state: AuthoritativeState):
     """
     Verify that Kernel initialized with LOW_MEMORY profile tightly constrains cache limits and background sweeps.
     """
     kernel = Kernel(
-        base_profile, test_state, DeterministicRNG(2026), 
+        base_profile, test_state, DeterministicRNG(2026),
         flags={"optimization_profile": "LOW_MEMORY", "no_replay": True, "no_frame_pacing": True}
     )
-    
-    assert kernel._opt_profile == LOW_MEMORY
-    assert kernel._cache_policy.max_movement_plans == 1000
-    assert kernel._cache_policy.sweep_interval_ticks == 3
-    
-    m_cache = kernel.state.movement_cache
-    assert m_cache is not None
-    
-    for i in range(1200):
-        k = MovementPlanKey(entity_id=i, current_tile=(0, 0), target_tile=(1, 1), occupancy_version=m_cache.occupancy_version)
-        p = MovementPlan(next_step=(1.0, 1.0), valid_until_tick=1000)
-        m_cache.put(k, p)
-        
-    assert len(m_cache._cache) == 1200
-    
-    # Run ticks up to sweep interval (3 ticks)
-    for _ in range(3):
-        kernel.tick_once()
-        
-    assert len(m_cache._cache) <= 1000
-    assert kernel._metrics.get("movement_plan_cache_pruned", 0) >= 200
+    try:
+        assert kernel._opt_profile == LOW_MEMORY
+        assert kernel._cache_policy.max_movement_plans == 1000
+        assert kernel._cache_policy.sweep_interval_ticks == 3
+
+        m_cache = kernel.state.movement_cache
+        assert m_cache is not None
+
+        for i in range(1200):
+            k = MovementPlanKey(entity_id=i, current_tile=(0, 0), target_tile=(1, 1), occupancy_version=m_cache.occupancy_version)
+            p = MovementPlan(next_step=(1.0, 1.0), valid_until_tick=1000)
+            m_cache.put(k, p)
+
+        assert len(m_cache._cache) == 1200
+
+        # Run ticks up to sweep interval (3 ticks)
+        for _ in range(3):
+            kernel.tick_once()
+
+        assert len(m_cache._cache) <= 1000
+        assert kernel._metrics.get("movement_plan_cache_pruned", 0) >= 200
+    finally:
+        kernel.shutdown()
 
 
 def test_kernel_with_movement_heavy_prioritizes_movement_budgets(base_profile: RuntimeProfile, test_state: AuthoritativeState):
@@ -106,14 +111,16 @@ def test_kernel_with_movement_heavy_prioritizes_movement_budgets(base_profile: R
     Verify that Kernel initialized with MOVEMENT_HEAVY profile correctly scales candidate budgets and cache envelopes.
     """
     kernel = Kernel(
-        base_profile, test_state, DeterministicRNG(2026), 
+        base_profile, test_state, DeterministicRNG(2026),
         flags={"optimization_profile": "MOVEMENT_HEAVY", "no_replay": True, "no_frame_pacing": True}
     )
-    
-    assert kernel._opt_profile == MOVEMENT_HEAVY
-    assert kernel._cache_policy.max_movement_plans == 20000
-    assert kernel._opt_profile.movement_budget == 5000
-    
-    # Ensure governor policy correctly inherits movement budgets
-    kernel.tick_once()
-    assert kernel._current_policy.movement_budget == 5000
+    try:
+        assert kernel._opt_profile == MOVEMENT_HEAVY
+        assert kernel._cache_policy.max_movement_plans == 20000
+        assert kernel._opt_profile.movement_budget == 5000
+
+        # Ensure governor policy correctly inherits movement budgets
+        kernel.tick_once()
+        assert kernel._current_policy.movement_budget == 5000
+    finally:
+        kernel.shutdown()

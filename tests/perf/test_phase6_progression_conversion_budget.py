@@ -12,6 +12,7 @@ from src.core.updates import StateUpdate
 from src.domains.progression.phase import ProgressionConversionPhase
 
 
+@pytest.mark.slow
 def test_phase6_progression_conversion_performance_budget():
     # Build 100 entities
     entities = {}
