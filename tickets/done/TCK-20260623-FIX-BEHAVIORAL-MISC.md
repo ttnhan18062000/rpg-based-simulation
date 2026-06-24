@@ -1,10 +1,10 @@
 ---
-status: open
+status: done
 layer: simulation
 authority: P2
 audience: agent
 ticket_id: TCK-20260623-FIX-BEHAVIORAL-MISC
-phase: open
+phase: done
 date: 2026-06-23
 tags: [test-repair, ci-gate, rejection-audit, hunger, pipeline, P2]
 ---
@@ -15,7 +15,7 @@ tags: [test-repair, ci-gate, rejection-audit, hunger, pipeline, P2]
 Fix remaining behavioral regression tests — CI gate / rejection audit / hunger (~4 failures)
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -115,14 +115,24 @@ when phase eligibility conditions are evaluated).
 - Did rejection audit events change name? Check `src/engine/pipeline_phases/` for audit event emission
 
 ## Implementation Notes
-Do NOT start this ticket until FIX-WORLDASSEMBLY, FIX-KERNEL-PHASES, and FIX-INVENTORY-DEFAULTS
-are committed. Re-run the 4 test targets and update this ticket's scope to reflect what still fails.
+All 4 failures resolved as cascades after P0/P1 tickets landed. No code changes needed in
+this ticket.
+
+- CI gate WARNING→PASS: resolved by TCK-20260623-FIX-CONTENT-REGISTRY (content families now
+  registered, warmup no longer hits hot-path violations that inflated run cost)
+- Rejection audit events: resolved by TCK-20260623-FIX-DOCS-INTEGRITY (kernel phase pipeline
+  contract corrected; audit emission now reaches the correct phase)
+- Hunger satiation: resolved by TCK-20260623-FIX-WORLDASSEMBLY + FIX-INVENTORY-DEFAULTS
+  (food nodes present, inventory defaults allow pickup)
+- Phase skip parity: resolved by TCK-20260623-FIX-KERNEL-PHASES (phase eligibility logic
+  restored to reference behavior)
 
 ## Test Summary
-Run (after prerequisites): `pytest tests/integration/observability/test_scenario_level_report_flow.py tests/integration/pipeline/test_rejection_audit.py tests/integration/scenarios/test_hunger_satiation.py tests/integration/optimization/test_phase_skip_parity.py --tb=short`
+Run: `pytest tests/integration/observability/test_scenario_level_report_flow.py::test_cli_gate_scenario_level_flow tests/integration/pipeline/test_rejection_audit.py::test_rejection_audit_aggregation tests/integration/scenarios/test_hunger_satiation.py::test_hunger_satiation_resolves_in_food_world tests/integration/optimization/test_phase_skip_parity.py::test_phase_skip_parity --tb=short`
+Result: 4 passed
 
 ## Files Changed
-_To be filled during implementation._
+None — all failures resolved by prior tickets.
 
 ## Completion Summary
-_To be filled on completion._
+All 4 acceptance criteria met via cascade resolution. Zero code changes in this ticket.
