@@ -30,6 +30,7 @@ def harness(cert_profile: RuntimeProfile) -> LongRunStabilityHarness:
 
 
 @pytest.mark.certification
+@pytest.mark.slow
 @pytest.mark.extra_slow
 def test_long_run_pure_stability(harness: LongRunStabilityHarness, tmp_path: Path):
     """
@@ -62,6 +63,7 @@ def test_long_run_pure_stability(harness: LongRunStabilityHarness, tmp_path: Pat
 
 
 @pytest.mark.certification
+@pytest.mark.slow
 @pytest.mark.extra_slow
 def test_long_run_runtime_stability(harness: LongRunStabilityHarness):
     """
@@ -88,6 +90,7 @@ def test_long_run_runtime_stability(harness: LongRunStabilityHarness):
 
 
 @pytest.mark.certification
+@pytest.mark.slow
 @pytest.mark.extra_slow
 def test_long_run_determinism_parity(harness: LongRunStabilityHarness):
     """
