@@ -7,6 +7,15 @@
         "PATH": "/home/vboxuser/Work/venv/bin:/usr/local/bin:/usr/bin:/bin"
       },
       "description": "Local semantic search over project docs, tickets, and investigations"
+    },
+    "github": {
+      "command": "docker",
+      "args": [
+        "run", "-i", "--rm",
+        "-e", "GITHUB_PERSONAL_ACCESS_TOKEN",
+        "ghcr.io/github/github-mcp-server"
+      ],
+      "description": "GitHub API — workflow runs, PRs, issues, logs"
     }
   }
 }
