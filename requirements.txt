@@ -9,8 +9,10 @@ httpx==0.28.1
 hypothesis==6.124.7
 idna==3.11
 iniconfig==2.3.0
+msgpack==1.1.2
 packaging==26.0
 pluggy==1.6.0
+pyarrow==24.0.0
 prometheus-client==0.24.1
 psutil==7.0.0
 pydantic==2.12.5
