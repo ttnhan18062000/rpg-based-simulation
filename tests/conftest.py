@@ -1,6 +1,25 @@
 import pytest
 import os
 import signal
+from src.core.items import ItemRegistry
+
+# Step 1: Capture hardcoded defaults BEFORE bootstrap.
+_PRE_BOOTSTRAP_ITEMS = dict(ItemRegistry._items)
+_PRE_BOOTSTRAP_BACKUP = dict(ItemRegistry._backup_items)
+
+# Step 2: Trigger bootstrap so catalog items (small_potion, etc.) are loaded.
+import src.core.registries  # noqa: E402, F401
+
+# Step 3: Capture post-bootstrap registry (full catalog).
+_POST_BOOTSTRAP_ITEMS = dict(ItemRegistry._items)
+_POST_BOOTSTRAP_BACKUP = dict(ItemRegistry._backup_items)
+
+# Step 4: Build canonical test state = full catalog PLUS pre-bootstrap weights/values
+# for items that exist in both. This ensures catalog-only items (small_potion) are
+# always present, while hardcoded items (iron_ore) retain their original properties
+# (e.g. weight=2.0) that many tests depend on.
+_CANONICAL_ITEMS: dict = {**_POST_BOOTSTRAP_ITEMS, **_PRE_BOOTSTRAP_ITEMS}
+_CANONICAL_BACKUP: dict = {**_POST_BOOTSTRAP_BACKUP, **_PRE_BOOTSTRAP_BACKUP}
 
 try:
     import resource
@@ -104,6 +123,28 @@ def pytest_collection_modifyitems(config, items):
         # We raise a UsageError during collection to stop the run early
         # and provide a clear list of all non-compliant tests.
         raise pytest.UsageError("\n" + "\n".join(errors))
+
+
+def _restore_canonical_registry() -> None:
+    """Restore ItemRegistry to the canonical test state."""
+    ItemRegistry._items = dict(_CANONICAL_ITEMS)
+    ItemRegistry._backup_items = dict(_CANONICAL_BACKUP)
+
+
+@pytest.fixture(autouse=True)
+def _reset_item_registry():
+    """Restore ItemRegistry to canonical test state before and after each test.
+
+    AuthoritativeApplyPipeline.refine() calls ItemRegistry.bootstrap(catalog)
+    on every run, which overwrites pre-bootstrap weights/values (e.g. iron_ore
+    weight 2.0→1.0, value 1→12). The canonical state is the full catalog with
+    pre-bootstrap values applied for items that exist in both, so:
+    - catalog-only items (small_potion, wolf_pelt, ...) are always present
+    - hardcoded items (iron_ore, wood, ...) keep their original properties
+    """
+    _restore_canonical_registry()
+    yield
+    _restore_canonical_registry()
 
 
 @pytest.fixture(scope="session", autouse=True)

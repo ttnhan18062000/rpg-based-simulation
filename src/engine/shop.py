@@ -62,23 +62,25 @@ class ShopSystem:
                     continue # Shop is sabotaged and non-functional
                 
                 # Phase E5.6: Price Hardening (Law of Value)
-                # Ensure proposed buy prices are not lower than dynamic Truth
-                from src.systems.economy import DynamicPriceService
-                from src.core.items import ItemRegistry
-                
+                # Ensure proposed buy prices are not lower than dynamic Truth.
+                # Use MarketSystem.calculate_price so the enforced floor matches what
+                # clients compute — DynamicPriceService uses item_def.value which diverges
+                # from MarketSystem's hardcoded base table after catalog bootstrap.
+                from src.systems.market import MarketSystem
+
                 sanitized_transfers = []
                 for intent in existing_upd.resource_transfers:
                     if intent.source_kind == "SHOP_BUY":
                         if not intent.items_add:
                             continue
                         item_id = intent.items_add[0].item_id
-                        item_def = ItemRegistry.get(item_id)
-                        if not item_def:
-                            continue # Invalid item
-                            
-                        # Re-calculate Truth
-                        legal_price = DynamicPriceService.calculate_buy_price(item_def.value, state)
+                        intent_building = state.buildings.get(intent.source_id) or building
+                        if not intent_building:
+                            continue
+
+                        # Re-calculate Truth using the same pricing path clients use
                         quantity = sum(s.quantity for s in intent.items_add)
+                        legal_price = MarketSystem.calculate_price(state, intent_building, item_id, is_buy=True)
                         legal_total = apply_reputation_discount(legal_price * quantity, entity.social.public_reputation)
 
                         if intent.gold_cost < legal_total:

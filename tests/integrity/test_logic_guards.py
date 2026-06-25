@@ -70,10 +70,12 @@ def _run_integrated_loop(profile, seed=42, ticks=100):
         DeterministicRNG(seed),
     )
 
-    for _ in range(ticks):
-        kernel.tick_once()
-
-    return kernel.state
+    try:
+        for _ in range(ticks):
+            kernel.tick_once()
+        return kernel.state
+    finally:
+        kernel.shutdown()
 
 
 def test_world_init_determinism():
@@ -237,10 +239,12 @@ def test_full_tick_determinism(integrity_profile):
             DeterministicRNG(seed),
         )
 
-        kernel.tick_once()
-
-        comparable_state = _strip_runtime_observability(kernel.state)
-        return comparable_state.fingerprint()
+        try:
+            kernel.tick_once()
+            comparable_state = _strip_runtime_observability(kernel.state)
+            return comparable_state.fingerprint()
+        finally:
+            kernel.shutdown()
 
     f1 = run_one_tick(42)
     f2 = run_one_tick(42)
@@ -297,14 +301,17 @@ def test_resolution_phase_ordering_integrity(integrity_profile):
 
     first_sword_tick = None
 
-    for _ in range(100):
-        kernel.tick_once()
+    try:
+        for _ in range(100):
+            kernel.tick_once()
 
-        hero = kernel.state.entities[1]
-        item_ids = {item.item_id for item in hero.inventory.items}
+            hero = kernel.state.entities[1]
+            item_ids = {item.item_id for item in hero.inventory.items}
 
-        if "steel_sword" in item_ids and first_sword_tick is None:
-            first_sword_tick = kernel.state.tick
+            if "steel_sword" in item_ids and first_sword_tick is None:
+                first_sword_tick = kernel.state.tick
+    finally:
+        kernel.shutdown()
 
     hero = kernel.state.entities[1]
     items = {item.item_id: item.quantity for item in hero.inventory.items}

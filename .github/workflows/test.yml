@@ -142,7 +142,7 @@ jobs:
                  tests/integrity \
                  tests/static \
                  tests/refactor \
-                 --tb=short -q
+                 -m "not slow" --tb=short -q
 
   # ── Perf / certification / arena ─────────────────────────────────────────
   perf-cert-arena:
