@@ -302,7 +302,6 @@ class CombatPatch(ComponentPatch):
                 atk=new_combat.atk + u_com.atk_delta,
                 def_stat=new_combat.def_stat + u_com.def_delta,
                 speed=new_combat.speed + u_com.speed_delta,
-                latest_result=u_com
             )
         if self.readiness_delta != 0.0:
             new_combat = replace(new_combat, readiness=max(0.0, min(100.0, new_combat.readiness + self.readiness_delta)))

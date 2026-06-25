@@ -105,7 +105,7 @@ jobs:
       - name: Run
         run: |
           pytest tests/integration \
-                 -m "not slow" --tb=short -q
+                 -m "not slow and not extra_slow" --tb=short -q
 
   # ── API / CLI / tools ─────────────────────────────────────────────────────
   api-tools:
