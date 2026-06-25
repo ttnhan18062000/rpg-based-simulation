@@ -226,13 +226,13 @@ class ScenarioLabOrchestrator:
                             run_id=run_id
                         )
 
-                    # Ticks execution
-                    for _ in range(experiment_spec.run.ticks):
-                        kernel.tick_once()
-
-                    kernel.shutdown()
-                    run_success = True
-                    completed_count += 1
+                    try:
+                        for _ in range(experiment_spec.run.ticks):
+                            kernel.tick_once()
+                        run_success = True
+                        completed_count += 1
+                    finally:
+                        kernel.shutdown()
                 except Exception as e:
                     failed_count += 1
                     logger.exception(f"Simulation execution failed on seed {seed}: {e}")

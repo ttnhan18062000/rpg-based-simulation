@@ -38,18 +38,19 @@ class TestSubstrateFreezeM1:
         """Verify that the Kernel maintains its 6-phase authoritative tick loop."""
         profile, state, rng = mock_kernel_deps
         kernel = Kernel(profile, state, rng)
-        
-        # We check the TickPhase enum for the expected order
-        expected_phases = [
-            TickPhase.INIT,
-            TickPhase.SCHEDULING,
-            TickPhase.COLLECTION,
-            TickPhase.RESOLUTION,
-            TickPhase.CLEANUP,
-            TickPhase.ADVANCEMENT,
-            TickPhase.PERSISTENCE
-        ]
-        assert list(TickPhase) == expected_phases
+        try:
+            expected_phases = [
+                TickPhase.INIT,
+                TickPhase.SCHEDULING,
+                TickPhase.COLLECTION,
+                TickPhase.RESOLUTION,
+                TickPhase.CLEANUP,
+                TickPhase.ADVANCEMENT,
+                TickPhase.PERSISTENCE
+            ]
+            assert list(TickPhase) == expected_phases
+        finally:
+            kernel.shutdown()
 
     @patch("src.config.validator.ProfileValidator")
     def test_apply_path_singular_authority(self, mock_validator, mock_kernel_deps):
@@ -59,12 +60,15 @@ class TestSubstrateFreezeM1:
         profile.max_work_debt = 1000
         
         kernel = Kernel(profile, state, rng)
-        
-        # Law: Kernel must use ApplyPath for world advancement
-        # We verify by checking if ApplyPath is used in tick_once for state mutation
-        with patch.object(ApplyPath, 'apply_generation', wraps=ApplyPath.apply_generation) as mock_apply:
-            kernel.tick_once()
-            assert mock_apply.called
+        try:
+            with patch.object(ApplyPath, 'apply_generation', wraps=ApplyPath.apply_generation) as mock_apply:
+                kernel.tick_once()
+                assert mock_apply.called
+        finally:
+            try:
+                kernel.shutdown()
+            except Exception:
+                kernel._worker_manager.shutdown()
 
     def test_pressure_signals_schema_lock(self):
         """Verify that PressureSignals fields remain disaggregated and frozen."""

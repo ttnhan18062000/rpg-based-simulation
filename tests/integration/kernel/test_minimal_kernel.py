@@ -20,14 +20,16 @@ def test_tick_advancement():
     state = AuthoritativeState(tick=0, seed=42, world_time=100)
     rng = DeterministicRNG(42)
     kernel = Kernel(profile, state, rng)
-    
-    kernel.tick_once()
-    assert kernel.state.tick == 1
-    assert kernel.state.world_time == 101
-    
-    kernel.tick_once()
-    assert kernel.state.tick == 2
-    assert kernel.state.world_time == 102
+    try:
+        kernel.tick_once()
+        assert kernel.state.tick == 1
+        assert kernel.state.world_time == 101
+
+        kernel.tick_once()
+        assert kernel.state.tick == 2
+        assert kernel.state.world_time == 102
+    finally:
+        kernel.shutdown()
 
 
 def test_quiet_tick_validity():
@@ -49,7 +51,9 @@ def test_quiet_tick_validity():
     state = AuthoritativeState(tick=10, seed=1, world_time=500, entities={})
     rng = DeterministicRNG(1)
     kernel = Kernel(profile, state, rng)
-    
-    kernel.tick_once()
-    assert kernel.state.tick == 11
-    assert kernel.state.world_time == 501
+    try:
+        kernel.tick_once()
+        assert kernel.state.tick == 11
+        assert kernel.state.world_time == 501
+    finally:
+        kernel.shutdown()

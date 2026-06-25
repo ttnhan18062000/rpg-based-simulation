@@ -32,12 +32,11 @@ def test_debt_drainage_desimulation():
     
     # Kernel with local executor
     kernel = Kernel(profile, state=state, rng=rng, executor=LocalSequentialExecutor())
-    
-    # Run one tick
-    kernel.tick_once()
-    
-    # Verify debt was drained
-    assert kernel.state.work_debt["KERNEL"] == 6, f"Expected debt 6, got {kernel.state.work_debt['KERNEL']}"
+    try:
+        kernel.tick_once()
+        assert kernel.state.work_debt["KERNEL"] == 6, f"Expected debt 6, got {kernel.state.work_debt['KERNEL']}"
+    finally:
+        kernel.shutdown()
 
 def test_drain_debt_zero():
     """Verify debt doesn't go negative if drain exceeds debt."""
@@ -56,7 +55,8 @@ def test_drain_debt_zero():
     rng = DeterministicRNG(base_seed=42)
     
     kernel = Kernel(profile, state=state, rng=rng, executor=LocalSequentialExecutor())
-    
-    kernel.tick_once()
-    
-    assert kernel.state.work_debt["KERNEL"] == 0
+    try:
+        kernel.tick_once()
+        assert kernel.state.work_debt["KERNEL"] == 0
+    finally:
+        kernel.shutdown()

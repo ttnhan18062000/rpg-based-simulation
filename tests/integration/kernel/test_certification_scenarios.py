@@ -37,61 +37,59 @@ def test_rejection_tracking_certification():
     
     rng = DeterministicRNG(42)
     kernel = Kernel(profile, state, rng)
-    
-    # Force an occupancy conflict: Both move to (2,2)
-    update = StateUpdate(
-        entity_updates={
-            1: EntityUpdate(
-                entity_id=1,
-                navigation=NavigationUpdate(target_set=(2.0, 2.0))
-            ),
-            2: EntityUpdate(
-                entity_id=2,
-                navigation=NavigationUpdate(target_set=(2.0, 2.0))
-            )
-        }
-    )
-    
-    # Inject update into kernel via refined apply
-    from src.engine.pipeline import AuthoritativeApplyPipeline
-    refined = AuthoritativeApplyPipeline.refine(kernel._state, update)
-    print(f"Refined rejections_delta: {refined.rejections_delta}")
-    
-    from src.engine.apply import ApplyPath
-    kernel._state = ApplyPath.apply_generation(kernel._state, refined, next_tick=1)
-    
-    # Check registry
-    registry = kernel._state.rejection_registry
-    print(f"Rejection Registry: {registry}")
-    assert registry.get("idempotency_violation", 0) > 0 or registry.get("OCCUPANCY_VIOLATION", 0) > 0 or registry.get("OCCUPANCY_CONFLICT", 0) > 0
-    
-    # Verify Readiness rejection
-    # Entity 1 has 0 readiness, tries to act
-    kernel._state = AuthoritativeState(
-        tick=1, seed=42,
-        entities={
-            1: V2EntityBuilder(1).kind("hero").location(2.0, 2.0).combat(readiness=0.0).lifecycle(active=True).build()
-        }
-    )
-    
-    from src.core.updates import TaskUpdate
-    update = StateUpdate(
-        entity_updates={
-            1: EntityUpdate(
-                entity_id=1,
-                task=TaskUpdate(
-                    work_kind_set="ENTITY_ACT", 
-                    payload_set={"action": "ATTACK", "target_id": 2}
+    try:
+        # Force an occupancy conflict: Both move to (2,2)
+        update = StateUpdate(
+            entity_updates={
+                1: EntityUpdate(
+                    entity_id=1,
+                    navigation=NavigationUpdate(target_set=(2.0, 2.0))
+                ),
+                2: EntityUpdate(
+                    entity_id=2,
+                    navigation=NavigationUpdate(target_set=(2.0, 2.0))
                 )
-            )
-        }
-    )
-    refined = AuthoritativeApplyPipeline.refine(kernel._state, update)
-    kernel._state = ApplyPath.apply_generation(kernel._state, refined, next_tick=2)
-    
-    registry = kernel._state.rejection_registry
-    print(f"Rejection Registry after act: {registry}")
-    assert registry.get("INSUFFICIENT_READINESS", 0) > 0
+            }
+        )
+
+        from src.engine.pipeline import AuthoritativeApplyPipeline
+        refined = AuthoritativeApplyPipeline.refine(kernel._state, update)
+        print(f"Refined rejections_delta: {refined.rejections_delta}")
+
+        from src.engine.apply import ApplyPath
+        kernel._state = ApplyPath.apply_generation(kernel._state, refined, next_tick=1)
+
+        registry = kernel._state.rejection_registry
+        print(f"Rejection Registry: {registry}")
+        assert registry.get("idempotency_violation", 0) > 0 or registry.get("OCCUPANCY_VIOLATION", 0) > 0 or registry.get("OCCUPANCY_CONFLICT", 0) > 0
+
+        kernel._state = AuthoritativeState(
+            tick=1, seed=42,
+            entities={
+                1: V2EntityBuilder(1).kind("hero").location(2.0, 2.0).combat(readiness=0.0).lifecycle(active=True).build()
+            }
+        )
+
+        from src.core.updates import TaskUpdate
+        update = StateUpdate(
+            entity_updates={
+                1: EntityUpdate(
+                    entity_id=1,
+                    task=TaskUpdate(
+                        work_kind_set="ENTITY_ACT",
+                        payload_set={"action": "ATTACK", "target_id": 2}
+                    )
+                )
+            }
+        )
+        refined = AuthoritativeApplyPipeline.refine(kernel._state, update)
+        kernel._state = ApplyPath.apply_generation(kernel._state, refined, next_tick=2)
+
+        registry = kernel._state.rejection_registry
+        print(f"Rejection Registry after act: {registry}")
+        assert registry.get("INSUFFICIENT_READINESS", 0) > 0
+    finally:
+        kernel.shutdown()
 
 def test_final_certification_report_generation():
     """

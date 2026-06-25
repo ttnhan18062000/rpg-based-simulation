@@ -33,12 +33,12 @@ def test_reproducibility():
         })
         rng = DeterministicRNG(42)
         kernel = Kernel(profile, state, rng)
-        
-        # Run 10 ticks
-        for _ in range(10):
-            kernel.tick_once()
-            
-        hashes.append(CanonicalStateHasher.get_hash(kernel._state))
+        try:
+            for _ in range(10):
+                kernel.tick_once()
+            hashes.append(CanonicalStateHasher.get_hash(kernel._state))
+        finally:
+            kernel.shutdown()
         
     # All hashes must be identical
     assert len(set(hashes)) == 1
@@ -107,16 +107,20 @@ def test_local_vs_concurrent_equivalence():
     
     # 1. Run with LocalSequentialExecutor
     kernel_local = Kernel(profile, initial_state, DeterministicRNG(42), executor=LocalSequentialExecutor())
-    for _ in range(5):
-        kernel_local.tick_once()
-    hash_local = CanonicalStateHasher.get_hash(kernel_local._state)
-    
+    try:
+        for _ in range(5):
+            kernel_local.tick_once()
+        hash_local = CanonicalStateHasher.get_hash(kernel_local._state)
+    finally:
+        kernel_local.shutdown()
+
     # 2. Run with ConcurrentExecutionAdapter (Single worker)
-    # Note: ConcurrentExecutionAdapter uses Kernel's worker manager
     kernel_concurrent = Kernel(profile, initial_state, DeterministicRNG(42))
-    # By default, kernel with max_worker_count=1 uses ConcurrentExecutionAdapter
-    for _ in range(5):
-        kernel_concurrent.tick_once()
-    hash_concurrent = CanonicalStateHasher.get_hash(kernel_concurrent._state)
-    
+    try:
+        for _ in range(5):
+            kernel_concurrent.tick_once()
+        hash_concurrent = CanonicalStateHasher.get_hash(kernel_concurrent._state)
+    finally:
+        kernel_concurrent.shutdown()
+
     assert hash_local == hash_concurrent, "DIVERGENCE: Local and Concurrent paths produced different hashes!"
