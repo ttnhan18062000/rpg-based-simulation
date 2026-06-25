@@ -8,7 +8,7 @@ from src.core.state import AuthoritativeState
 from src.platform.rng import DeterministicRNG
 from src.engine.kernel import Kernel
 from src.systems.world_systems.generator import EntityGenerator
-from src.engine.movement_cache import MovementPlanKey, MovementPlan
+from src.engine.movement_cache import MovementPlanCache, MovementPlanKey, MovementPlan
 from src.engine.cache_registry import CacheBudgetPolicy
 
 
@@ -36,7 +36,7 @@ def metropolis_state() -> AuthoritativeState:
         from dataclasses import replace
         e = replace(e, id=i)
         entities[i] = e
-    return AuthoritativeState(tick=1, seed=101, entities=entities)
+    return AuthoritativeState(tick=1, seed=101, entities=entities, movement_cache=MovementPlanCache())
 
 
 @pytest.mark.slow

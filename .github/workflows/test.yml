@@ -211,6 +211,6 @@ jobs:
       - run: pip install -r requirements.txt
       - name: Slow tests
         run: |
-          pytest tests/ -m "slow or extra_slow" --tb=short -q
+          pytest tests/ -m "slow or extra_slow" --resource-budget large --tb=short -q
       - name: Legacy regression
         run: make lane-legacy-regression

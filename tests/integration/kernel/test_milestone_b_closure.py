@@ -41,7 +41,7 @@ def test_milestone_b_operational_gate(mb_profile, initial_state):
     Verify: Signal Truth, Elasticity, and Hysteresis.
     """
     from src.platform.rng import DeterministicRNG
-    rng = MagicMock(spec=DeterministicRNG)
+    rng = DeterministicRNG(1)
     kernel = Kernel(mb_profile, initial_state, rng)
     try:
         # Mock RSS to be low (100MB)
@@ -61,12 +61,13 @@ def test_milestone_b_operational_gate(mb_profile, initial_state):
 
         from unittest.mock import patch
 
-        # Each call to perf_counter_ns advances by 4ms. Across 31 phase timestamps per tick,
-        # total compute time is exactly 124ms (perfectly between 100ms DEGRADED and 150ms SURVIVAL).
+        # Each call to perf_counter_ns advances by 2ms. With the current kernel phase
+        # instrumentation (~63 call sites per tick), total compute is ~126ms —
+        # between the DEGRADED threshold (100ms) and the SURVIVAL threshold (150ms).
         def time_gen():
             t = 0
             while True:
-                t += 4_000_000
+                t += 2_000_000
                 yield t
 
         with patch('time.perf_counter_ns', side_effect=time_gen()):
@@ -121,7 +122,7 @@ def test_milestone_b_operational_gate(mb_profile, initial_state):
 def test_milestone_b_memory_survival_gate(mb_profile, initial_state):
     """Verify SURVIVAL mode escalation via Memory pressure."""
     from src.platform.rng import DeterministicRNG
-    rng = MagicMock(spec=DeterministicRNG)
+    rng = DeterministicRNG(1)
     kernel = Kernel(mb_profile, initial_state, rng)
     try:
         # Mock memory collector to report critical overload (> 1000MB)

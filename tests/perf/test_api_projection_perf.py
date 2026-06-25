@@ -42,4 +42,4 @@ def test_api_projection_performance_benchmark():
         assert speedup >= 3.0, f"Expected at least 3x speedup, got {speedup:.2f}x"
         assert metrics["hits"] > 0
     finally:
-        manager.shutdown()
+        manager.stop()

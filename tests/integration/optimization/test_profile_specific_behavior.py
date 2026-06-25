@@ -10,7 +10,7 @@ from src.core.state import AuthoritativeState
 from src.platform.rng import DeterministicRNG
 from src.engine.kernel import Kernel
 from src.systems.world_systems.generator import EntityGenerator
-from src.engine.movement_cache import MovementPlanKey, MovementPlan
+from src.engine.movement_cache import MovementPlanCache, MovementPlanKey, MovementPlan
 from src.core.updates import StateUpdate
 from src.engine.pipeline import AuthoritativeApplyPipeline
 from src.engine.cadence import SystemCadence
@@ -40,7 +40,7 @@ def test_state() -> AuthoritativeState:
         from dataclasses import replace
         e = replace(e, id=i)
         entities[i] = e
-    return AuthoritativeState(tick=1, seed=2026, entities=entities)
+    return AuthoritativeState(tick=1, seed=2026, entities=entities, movement_cache=MovementPlanCache())
 
 
 def test_kernel_with_debug_reference_executes_all_phases(base_profile: RuntimeProfile, test_state: AuthoritativeState):
