@@ -82,12 +82,14 @@ Source: D05 (Entity Differentiation), audit update section in `engine_future_epi
 
 ### 1F — CI / Release Pipeline
 
+> **RESOLVED (2026-06-25).** `.github/workflows/test.yml` added with 8 parallel domain jobs (unit, integration, perf, certification, docs, tools, integrity, worldbuilding) plus a slow-regression job (`-m "slow or extra_slow" --resource-budget large`) gated to PRs targeting `main`. `mypy` step also wired. Parity ledger entry: `INFRA-CI-001` (to be created in follow-up cleanup). See commit `146e5f31`.
+
 Source: D18 (CI / Release Pipeline Completeness). P0 — no test automation at merge time.
 
-| Finding | Fix |
-|---|---|
-| No `test.yml` exists — only `deploy-docs.yml` runs on push | Add `.github/workflows/test.yml`: `make lane-all-fast` + `make gate-expansion` + `pytest tests/docs/` on every PR; `make lane-legacy-regression` on `main` push only. Estimated <30 lines of YAML. |
-| All certification harness runs require local invocation | Wire `CertificationHarness CLASS_B` into `test.yml` on `main` push. |
+| Finding | Fix | Status |
+|---|---|---|
+| No `test.yml` exists — only `deploy-docs.yml` runs on push | Add `.github/workflows/test.yml`: 8 parallel domain jobs + slow-regression job on PRs targeting main. | **DONE** |
+| All certification harness runs require local invocation | Slow-regression job runs `pytest tests/ -m "slow or extra_slow" --resource-budget large` on PRs to main. | **DONE** |
 
 ### 1G — Type Checker
 

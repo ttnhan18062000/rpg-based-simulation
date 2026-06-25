@@ -65,14 +65,13 @@ Everything else can be parallelized around this spine.
 
 ### P0-1 · CI Test Automation
 **Score: 10 · Effort: S · Source: D18**
+> **DONE (2026-06-25).** `.github/workflows/test.yml` added: 8 parallel domain jobs on every PR + slow-regression job (`--resource-budget large`) gated to PRs targeting `main`. `mypy` step included. See commits `146e5f31`–`63c290dd`.
 
 **What:** A single `test.yml` GitHub Actions workflow that runs `make lane-all-fast` + `make gate-expansion` + `pytest tests/docs/` on every PR. `make lane-legacy-regression` on `main` push only (slow path).
 
-**Why now:** Every merge since the repo existed has been unvalidated. The Makefile gate infrastructure is mature and correct — `lane-architecture`, `gate-expansion`, certification harness all exist. The gap is the wrapper. Without CI, every phase below is building on sand: a merge could silently break any assumption we're about to validate.
-
 **Scope:** ~30 lines of YAML. Wire to existing Makefile targets. No new test logic.
 
-**Acceptance signal:** A PR that breaks an architecture guard is rejected by CI before review.
+**Acceptance signal:** ✓ A PR that breaks an architecture guard is rejected by CI before review.
 
 ---
 
