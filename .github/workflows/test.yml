@@ -190,11 +190,11 @@ jobs:
         run: python3 -m mypy src/ --config-file pyproject.toml --no-error-summary || true
         continue-on-error: true
 
-  # ── Slow regression (main only, needs all fast jobs) ─────────────────────
+  # ── Slow regression (main + PRs targeting main) ──────────────────────────
   slow:
-    name: "Slow regression (main only)"
+    name: "Slow regression"
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' || github.base_ref == 'main'
     needs:
       - unit-core-world
       - unit-gameplay
@@ -211,6 +211,6 @@ jobs:
       - run: pip install -r requirements.txt
       - name: Slow tests
         run: |
-          pytest tests/ -m "slow" --tb=short -q
+          pytest tests/ -m "slow or extra_slow" --tb=short -q
       - name: Legacy regression
         run: make lane-legacy-regression
