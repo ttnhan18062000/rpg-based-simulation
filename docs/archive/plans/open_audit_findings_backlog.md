@@ -1,11 +1,12 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P1
 audience: agent
 tags: [audit, backlog, cheap-fixes, doc-debt, ci, dead-code, product-surface, roadmap]
 date: 2026-06-23
 updated: 2026-06-26
+closed: 2026-06-26
 source: docs/audits/audit_dimensions.md
 ---
 
