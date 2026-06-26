@@ -184,6 +184,8 @@ settled_quarter covers dense service-hub populations with crafting access.
 
 ### F3 — Crafting recipes thin (8 entries) — Gap Risk: 10 / 15
 
+> **RESOLVED: TCK-20260619-E13C-RECIPES (2026-06-20):** iron_ore→steel→ember_axe chain + expanded recipe catalog added.
+
 | Dimension | Score | Reason |
 |---|---|---|
 | Scenario Impact | 3 | Crafting system is live (D09 confirmed) but 8 recipes limits economic loop variety |

@@ -112,6 +112,8 @@ Each finding: **Variety Gap × Lifespan Gap × System Silence** (max 15/15, wors
 
 ### F1 — Survival-Only Route Selection: Economic and Crafting Pipeline Still Silent
 
+> **RESOLVED: TCK-20260619-E21-RESOURCE-ECOLOGY (2026-06-20):** Resource ecology regeneration implemented; food-kind nodes added to worlds; hunger urgency resolves after harvest.
+
 **Score: 12/15** (Variety Gap=4, Lifespan Gap=4, System Silence=4)
 
 Despite RC1 fix wiring `ResourceOpportunityProvider` into `AdventureDecisionPhase`, only biological survival routes are selected across all 1,000 ticks:

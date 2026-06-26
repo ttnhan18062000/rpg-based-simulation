@@ -98,6 +98,8 @@ Every entity receives identical scoring weights. The only source of score variat
 
 ### F1 — Personality Traits Not Initialized: All Zero Across All Entities
 
+> **RESOLVED: TCK-20260619-P0-ENTITY-INIT (2026-06-19):** WorldCompiler.compile() now seeds PersonalityComponent per entity using DeterministicRNG sub-seeds.
+
 **Severity: Critical**
 
 `WorldCompiler.compile()` produces `PersonalityComponent(greed=0.0, bravery=0.0, sociability=0.0, industry=0.0)` for every entity in both seeds. The `PersonalityComponent` dataclass is instantiated with zero defaults and never seeded with randomized values during world compilation.
@@ -111,6 +113,8 @@ The OCEAN personality system (`TCK-20260407-PHASE1-PERSONALITY`) is implemented 
 ---
 
 ### F2 — Class System Not Populating: All Entities Are NOVICE
+
+> **RESOLVED: TCK-20260619-P0-ENTITY-INIT (2026-06-19):** Class assignments now read from data/content/spawn_tables.yaml; entities spawn with role-appropriate classes.
 
 **Severity: High**
 

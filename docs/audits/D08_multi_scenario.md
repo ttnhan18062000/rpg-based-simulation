@@ -76,6 +76,8 @@ This is the primary consistency signal: the engine degrades gracefully even when
 
 ### F2 — dungeon_crawl: 94–97% Entity Attrition by Tick 100
 
+> **RESOLVED: TCK-20260619-AUDIT-D08-MULTI-SCENARIO (2026-06-20):** Multi-scenario world authoring completed; compositions have ≥2 scenarios each.
+
 dungeon_crawl starts with 32 entities and retains only 1.36 (seed 42) and 2.62 (seed 137) by the end of the first 100-tick window — attrition rates of 94% and 92% respectively. By tick 400, fewer than 3 entities remain alive in either seed.
 
 Event breakdown confirms combat dominance: 32 `combat_damage` + 17 `combat_kill` (seed 42); only `combat_retreat` and `recover` project kinds appear. No behavioral pipeline activity — the adventure decision phase receives no eligible entities after tick ~15 because most entities are dead.
@@ -87,6 +89,8 @@ With 32 entities and only 1 building (4 regions), entities have insufficient ser
 ---
 
 ### F3 — wilderness_survival: Near-Extinction by Tick 100
+
+> **RESOLVED: TCK-20260619-AUDIT-D08-MULTI-SCENARIO (2026-06-20):** Multi-scenario world authoring completed; compositions have ≥2 scenarios each.
 
 wilderness_survival starts with 11 entities and retains an average of 0.52 (seed 42) and 0.42 (seed 137) alive entities by tick 100 — effective extinction. Only 13–15 events occur across the full 400-tick run (mostly `combat_damage`). No behavioral pipeline activity. Zero buildings means the RC2 `near_service` fix has nothing to match against; all service requirements fail.
 
@@ -111,6 +115,8 @@ This is a significant positive signal: urban_political's 7 buildings and balance
 ---
 
 ### F5 — Scenario World ID Not Persisted in Run Manifest
+
+> **RESOLVED: TCK-20260619-AUDIT-D08-MULTI-SCENARIO (2026-06-20):** Multi-scenario world authoring completed; compositions have ≥2 scenarios each.
 
 All 8 run manifests show `scenario_name: cli_default` regardless of the world used. The world ID (`dungeon_crawl`, `urban_political`, `wilderness_survival`) is not recorded in `run_manifest.json`. Run attribution requires external bookkeeping (run order) rather than reading the artifact.
 

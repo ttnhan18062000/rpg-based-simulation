@@ -243,6 +243,8 @@ sound but its blanket "Certified Level 1" claim is invalidated by the staleness 
 
 ### Finding 1: `authoritative_pipeline.md` is significantly out of date — Severity: 18 / 20
 
+> **RESOLVED: TCK-20260619-P0-DOC-REPAIR (2026-06-19):** Phase table updated from 17 to 31 phases.
+
 | Dimension | Score | Reason |
 |---|---|---|
 | Magnitude | 5 | Doc says 17 phases; code has 30+. Phase names and order wrong. |
@@ -263,6 +265,8 @@ points and wrong phase names.
 
 ### Finding 2: `kernel.md` has two conflicting phase tables — Severity: 14 / 20
 
+> **RESOLVED: TCK-20260619-P0-DOC-REPAIR (2026-06-19):** Stale first phase table removed.
+
 | Dimension | Score | Reason |
 |---|---|---|
 | Magnitude | 4 | First table has wrong phase count AND wrong names; second table is correct |
@@ -276,6 +280,8 @@ The first table shows 6 phases (including non-existent "Governance" phase and
 developer reading linearly sees the wrong count first.
 
 ### Finding 3: Biological thresholds in mechanics/01 are numerically wrong — Severity: 16 / 20
+
+> **RESOLVED: TCK-20260619-P0-DOC-REPAIR (2026-06-19):** Biological thresholds corrected (hunger 95.0, sleep debt 98.0, damage +2).
 
 | Dimension | Score | Reason |
 |---|---|---|
@@ -291,6 +297,8 @@ penalty=+1 HP damage. Both the trigger point and the effect type differ for slee
 
 ### Finding 4: Interruption margin formula uses profile constant, not hardcoded 30.0 — Severity: 12 / 20
 
+> **RESOLVED: TCK-20260619-P0-DOC-REPAIR (2026-06-19):** Interruption margin formula reconciled with resistance_multiplier pattern.
+
 | Dimension | Score | Reason |
 |---|---|---|
 | Magnitude | 4 | Wrong constant: doc says 30.0; code uses resistance_multiplier (varies by entity) |
@@ -304,6 +312,8 @@ Code uses `profile.interruption_resistance * profile.resistance_multiplier`. The
 constant may exist as one profile's `resistance_multiplier` value but it is not universal.
 
 ### Finding 5: `known_limitations.md` Blacksmith-Only claim is stale — Severity: 10 / 20
+
+> **RESOLVED: TCK-20260619-P0-DOC-REPAIR (2026-06-19):** Blacksmith-Only claim updated; last-verified date added.
 
 | Dimension | Score | Reason |
 |---|---|---|

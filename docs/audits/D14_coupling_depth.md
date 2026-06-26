@@ -175,6 +175,8 @@ is tighter — it depends on a specific engine internal rather than the kernel b
 
 ### F1 — `memory` → `time` prohibited cross-domain import — Risk: 7 / 15
 
+> **RESOLVED: TCK-20260619-P0-CODE-INTEGRITY (2026-06-19):** TemporalPressureService injected via pipeline orchestrator; direct cross-domain import removed.
+
 | Dimension | Score | Reason |
 |---|---|---|
 | Contract Breach | 5 | Explicit prohibited pattern: "A domain must not import from another domain package" |
@@ -192,6 +194,8 @@ engine's pipeline orchestrator — the same way all other cross-domain services 
 ---
 
 ### F2 — `core` → `engine` upward lazy imports — Risk: 10 / 15
+
+> **RESOLVED: TCK-20260619-P0-CODE-INTEGRITY (2026-06-19):** MovementPlanCache construction moved to pipeline bootstrap; injected into AuthoritativeState as dependency.
 
 | Dimension | Score | Reason |
 |---|---|---|

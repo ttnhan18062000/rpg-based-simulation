@@ -86,6 +86,8 @@ Code investigation following the run-sim phase confirmed four compounding struct
 
 ### RC1 — Dead pipeline link: `AdventureDecisionPhase` never calls `ResourceOpportunityProvider` (PRIMARY)
 
+> **RESOLVED: TCK-20260619-RC1 (2026-06-19):** AdventureDecisionPhase now passes opportunities= to generate(); primary route loop executes every tick.
+
 **Files:** `src/domains/adventure/phase.py:60`, `src/domains/adventure/generator.py:47-48`
 
 ```python
@@ -118,6 +120,8 @@ No project update is written. No tactical action is queued. The engine produces 
 
 ### RC2 — `near_service` requirement hardcoded to `"hometown"`, always fails in sandbox_world (COMPOUNDING)
 
+> **RESOLVED: TCK-20260619-RC1 (2026-06-19):** region_id == "hometown" hardcode removed; requirement checks actual region.
+
 **File:** `src/world/providers/requirements.py:152-158`
 
 ```python
@@ -131,6 +135,8 @@ if current_region == "hometown":
 `ResourceOpportunityProvider` attaches `Requirement(kind="near_service", subject=current_region)` to every resource opportunity (line 76). This means every generated opportunity would be blocked by the requirement evaluator, even if RC1 were fixed.
 
 ### RC3 — `PerformanceBudgets` class-level counter: would cap opportunity provision at tick ~25 (COMPOUNDING)
+
+> **RESOLVED: TCK-20260619-RC1 (2026-06-19):** provider_calls_total reset each tick; opportunity provider no longer exhausts at tick ~25.
 
 **File:** `src/world/providers/resources.py:34-35`, `src/world/providers/requirements.py:24-36`
 

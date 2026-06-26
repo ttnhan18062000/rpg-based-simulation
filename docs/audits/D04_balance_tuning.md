@@ -53,6 +53,8 @@ score = urgency + benefit + personality_bias + confidence_bonus − risk_penalty
 
 **Key imbalance observed**: The 2.0 blocker penalty exceeds the maximum achievable non-blocked score (urgency ~2.0 + benefit ~0.5 + confidence_bonus 0.15 = ~2.65) by a very small margin. A barely-blocked route and an unblocked mediocre route score comparably. This creates a near-binary filter: blocked routes are near-universally rejected regardless of their urgency or benefit.
 
+> **RESOLVED (by design, 2026-06-19, TCK-20260619-E12B-BLOCKER-RECAL):** blocker_freq measured at 0.0% in all tested worlds; penalty kept at 2.0; docs/mechanics/04_strategic_cognition.md §6 updated with scoring constants; STRAT-227 parity entry added.
+
 ---
 
 ### 2. Combat Balance

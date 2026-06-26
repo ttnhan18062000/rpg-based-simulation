@@ -67,6 +67,8 @@ Key established patterns:
 
 ### F1 — Unstable sorts on simulation path — Priority: 10 / 15
 
+> **RESOLVED: TCK-20260619-P0-CODE-INTEGRITY (2026-06-19):** entity_id tiebreaker added to all sorted(candidates, key=...) calls in generator.py and selector.py.
+
 | Dimension | Score | Reason |
 |---|---|---|
 | Adoption Gap | 3 | 8 sites in non-test code; 3 on potential simulation paths |
@@ -118,6 +120,8 @@ Two violations of established patterns:
 ---
 
 ### F3 — `design_patterns.md` describes V1 patterns, not V2 — Priority: 8 / 15
+
+> **RESOLVED: TCK-20260626-FIX-DESIGN-PATTERNS (2026-06-26):** design_patterns.md rewritten to document 4 V2 extension patterns; V1 patterns archived under legacy section.
 
 | Dimension | Score | Reason |
 |---|---|---|

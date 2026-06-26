@@ -79,6 +79,8 @@ direct imports from `tests/`. Orphan files do import from each other and from `s
 
 ### F1 — src/ai/: V1 GoalScorer system is live dead code with compliance IDs — Priority: 12 / 15
 
+> **CONFIRMED INVALID (2026-06-23, TCK-20260623-DEAD-CODE-REMOVAL):** All 9 directories have live engine importers — src/ai/ imported by intelligence.py, src/quests/ and src/progression/ imported by src/engine/apply.py, src/content_semantics/ imported by 10+ engine files. No deletions occurred.
+
 | Dimension | Score | Reason |
 |---|---|---|
 | Confusion Risk | 5 | `src/ai/goals/scorers.py` is structurally identical to what a developer would write following `design_patterns.md` (D12 F3) — the file exists, imports succeed, classes are coherent |
@@ -114,6 +116,8 @@ a note.
 
 ### F2 — src/town/: V1 building system is the largest orphan cluster — Priority: 11 / 15
 
+> **CONFIRMED INVALID (2026-06-23, TCK-20260623-DEAD-CODE-REMOVAL):** All 9 directories have live engine importers — src/ai/ imported by intelligence.py, src/quests/ and src/progression/ imported by src/engine/apply.py, src/content_semantics/ imported by 10+ engine files. No deletions occurred.
+
 | Dimension | Score | Reason |
 |---|---|---|
 | Confusion Risk | 4 | `src/town/blacksmith.py`, `src/town/shop.py` etc. look like live game systems; a developer implementing building interactions might reach for these before checking `src/systems/economy_systems/` |
@@ -135,6 +139,8 @@ The `src/systems/economy_systems/` directory provides the live equivalents:
 
 ### F3 — src/entities/: V1 archetype factory superseded by WorldAssemblyResolver — Priority: 9 / 15
 
+> **CONFIRMED INVALID (2026-06-23, TCK-20260623-DEAD-CODE-REMOVAL):** All 9 directories have live engine importers — src/ai/ imported by intelligence.py, src/quests/ and src/progression/ imported by src/engine/apply.py, src/content_semantics/ imported by 10+ engine files. No deletions occurred.
+
 | Dimension | Score | Reason |
 |---|---|---|
 | Confusion Risk | 4 | `archetype_factory.py` and `identity_resolver.py` are exactly what a developer would look for when working on entity creation — but `src/worldassembly/resolver.py` and `src/content/resolver.py` are the live implementations |
@@ -154,6 +160,8 @@ The name collision between `src/entities/identity_resolver.py` and live resolver
 
 ### F4 — src/progression/: V1 leveling services orphaned — Priority: 7 / 15
 
+> **CONFIRMED INVALID (2026-06-23, TCK-20260623-DEAD-CODE-REMOVAL):** All 9 directories have live engine importers — src/ai/ imported by intelligence.py, src/quests/ and src/progression/ imported by src/engine/apply.py, src/content_semantics/ imported by 10+ engine files. No deletions occurred.
+
 | Dimension | Score | Reason |
 |---|---|---|
 | Confusion Risk | 3 | `BreakthroughService`, `EvolutionService`, `LevelingService` — same domain as `src/domains/progression/phase.py` which is live |
@@ -168,6 +176,8 @@ simultaneously with no import relationship.
 ---
 
 ### F5 — src/content_semantics/: V1 faction semantic helpers orphaned — Priority: 7 / 15
+
+> **CONFIRMED INVALID (2026-06-23, TCK-20260623-DEAD-CODE-REMOVAL):** All 9 directories have live engine importers — src/ai/ imported by intelligence.py, src/quests/ and src/progression/ imported by src/engine/apply.py, src/content_semantics/ imported by 10+ engine files. No deletions occurred.
 
 | Dimension | Score | Reason |
 |---|---|---|
@@ -184,6 +194,8 @@ catalog system.
 ---
 
 ### F6 — src/quests/, src/actions/, src/runtime/, src/views/ — Priority: 4 / 15 each
+
+> **CONFIRMED INVALID (2026-06-23, TCK-20260623-DEAD-CODE-REMOVAL):** All 9 directories have live engine importers — src/ai/ imported by intelligence.py, src/quests/ and src/progression/ imported by src/engine/apply.py, src/content_semantics/ imported by 10+ engine files. No deletions occurred.
 
 Small clusters, lower confusion risk:
 

@@ -260,6 +260,8 @@ system that does not exist in current `src/`. Fresh build required.
 
 ### Scenario Runtime Service `[MISSING]`
 
+> **RESOLVED: TCK-20260619-E31-SCENARIO-RUNTIME (2026-06-20):** ScenarioRuntimeService implemented with objective FSM, pause/resume/checkpoint, and REST API.
+
 | Dimension | Score | Reason |
 |---|---|---|
 | Trigger Rate | 4 | Objective evaluation runs frequently; active scenario state shapes signals every tick |
@@ -538,6 +540,8 @@ scoring (party composition optimization) is not yet implemented.
 ---
 
 ### Decision Explanation Model `[PARTIAL]`
+
+> **RESOLVED: TCK-20260619-E22-DECISION-EXPLAIN (2026-06-20):** Decision trace promoted to first-class durable object; REST API at /api/v1/observability/cognition/{entity_id}/tick/{n} implemented; tick index and LIGHT-mode capture added.
 
 | Dimension | Score | Reason |
 |---|---|---|

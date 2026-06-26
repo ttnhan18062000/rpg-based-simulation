@@ -207,6 +207,8 @@ of existing data to a queryable API, not new logic." (D01 §Decision Explanation
 
 ### Gap 2 — No entity state reconstruction for tick N — Impact: 12 / 15
 
+> **RESOLVED: TCK-20260619-E22-DECISION-EXPLAIN (2026-06-20):** Decision trace promoted to first-class durable object; REST API at /api/v1/observability/cognition/{entity_id}/tick/{n} implemented; tick index and LIGHT-mode capture added.
+
 | Dimension | Score | Reason |
 |---|---|---|
 | Debug Time Cost | 4 | Must cross-reference event streams manually to reconstruct what the entity knew at tick N |
@@ -227,6 +229,8 @@ event messages manually to reconstruct what the entity knew. No single call answ
 
 ### Gap 3 — Cognition snapshots not queryable via API — Impact: 10 / 15
 
+> **RESOLVED: TCK-20260619-E22-DECISION-EXPLAIN (2026-06-20):** Decision trace promoted to first-class durable object; REST API at /api/v1/observability/cognition/{entity_id}/tick/{n} implemented; tick index and LIGHT-mode capture added.
+
 | Dimension | Score | Reason |
 |---|---|---|
 | Debug Time Cost | 4 | Must shell into the run directory and grep JSONL files manually |
@@ -243,6 +247,8 @@ a query layer — cognition snapshots need the same treatment.
 ---
 
 ### Gap 4 — Route trace not preserved — Impact: 12 / 15
+
+> **RESOLVED: TCK-20260619-E22-DECISION-EXPLAIN (2026-06-20):** Decision trace promoted to first-class durable object; REST API at /api/v1/observability/cognition/{entity_id}/tick/{n} implemented; tick index and LIGHT-mode capture added.
 
 | Dimension | Score | Reason |
 |---|---|---|
@@ -262,6 +268,8 @@ without adding custom logging. The engine computes the path cost but throws it a
 
 ### Gap 5 — BehaviorTimeline not accessible via API — Impact: 8 / 15
 
+> **RESOLVED: TCK-20260619-E22-DECISION-EXPLAIN (2026-06-20):** Decision trace promoted to first-class durable object; REST API at /api/v1/observability/cognition/{entity_id}/tick/{n} implemented; tick index and LIGHT-mode capture added.
+
 | Dimension | Score | Reason |
 |---|---|---|
 | Debug Time Cost | 3 | Readable via Python in tests; only blocked for external tooling / dashboards |
@@ -276,6 +284,8 @@ invisible to external tools, dashboards, or CLI queries.
 ---
 
 ### Gap 6 — Default mode (LIGHT) severely limits cognition capture — Impact: 7 / 15
+
+> **RESOLVED: TCK-20260619-E22-DECISION-EXPLAIN (2026-06-20):** Decision trace promoted to first-class durable object; REST API at /api/v1/observability/cognition/{entity_id}/tick/{n} implemented; tick index and LIGHT-mode capture added.
 
 | Dimension | Score | Reason |
 |---|---|---|

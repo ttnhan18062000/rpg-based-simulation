@@ -201,6 +201,18 @@ is incorrect (this is a D02 data-quality finding; actual count from the summary 
 
 ## Key Findings
 
+### RC1 — AdventureDecisionPhase opportunities= parameter not passed
+
+> **RESOLVED: RC1 fix (2026-06-19):** opportunities= parameter now passed to generate().
+
+### RC2 — near_service hardcoded to hometown
+
+> **RESOLVED: RC2 fix (2026-06-19):** region_id == "hometown" hardcode removed; requirement checks actual region.
+
+### RC3 — PerformanceBudgets.provider_calls_total never reset
+
+> **RESOLVED: RC3 fix (2026-06-19):** provider_calls_total reset each tick; opportunity provider no longer exhausts at tick ~25.
+
 ### Finding 1: D02 Existing Count Is Wrong (61, not 53) — Risk: 5 / 15
 
 | Dimension | Score | Reason |

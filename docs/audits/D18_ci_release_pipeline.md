@@ -100,6 +100,8 @@ None of these targets are invoked by any GitHub Actions workflow. They are devel
 
 ### F1 — No CI test runner: all 3,292 tests are local-only — Priority: 11 / 15
 
+> **RESOLVED (2026-06-25):** .github/workflows/test.yml added with 8 parallel domain jobs + slow-regression job (--resource-budget large) gated to PRs targeting main. mypy step included.
+
 | Dimension | Score | Reason |
 |---|---|---|
 | Gate Coverage | 5 | Zero tests run in CI; the entire test surface is invisible at merge time |
@@ -134,6 +136,8 @@ jobs:
 ---
 
 ### F2 — Release-readiness conditions are manual (all three unverified in CI) — Priority: 10 / 15
+
+> **RESOLVED (2026-06-25):** Slow-regression job runs pytest tests/ -m "slow or extra_slow" --resource-budget large on PRs to main.
 
 | Dimension | Score | Reason |
 |---|---|---|
