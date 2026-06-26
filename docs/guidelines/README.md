@@ -11,7 +11,7 @@ Standards and conventions for developers contributing to the RPG Engine V2.
 
 ## 🗺️ Navigation
 
-- **[Design Patterns](design_patterns.md)**: Architectural spines (Aspects, Systems, Presenters).
+- **[Design Patterns](design_patterns.md)**: V2 extension patterns — Domain Phase, typed update records, presenter/read-model layer, and feature pack registration.
 - **[Intentional Divergences](intentional_divergences.md)**: Documented shifts from legacy behaviors.
 - **[Architectural Conventions](../engine/architecture_reference.md)**: Technical implementation details for low-level systems.
 
