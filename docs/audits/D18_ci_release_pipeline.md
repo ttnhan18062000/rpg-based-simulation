@@ -159,6 +159,8 @@ project and they never run automatically.
 
 ### F3 — Static architecture gate not in CI — Priority: 7 / 15
 
+> **RESOLVED (2026-06-25):** `test.yml` `arch-docs` job runs `tests/architecture tests/docs tests/integrity tests/static tests/refactor`; `migration-lanes` job runs `make lane-all-fast` (includes lane-architecture). Architecture violations are now caught at PR level.
+
 | Dimension | Score | Reason |
 |---|---|---|
 | Gate Coverage | 3 | `make lane-architecture` exists with good static guards; not connected to CI |
@@ -174,6 +176,8 @@ effectively advisory.
 ---
 
 ### F4 — Content expansion gate not in CI — Priority: 5 / 15
+
+> **RESOLVED (2026-06-25):** `migration-lanes` job in `test.yml` explicitly runs `make gate-expansion`. ContentUsageMatrix drift now caught at PR open.
 
 | Dimension | Score | Reason |
 |---|---|---|
@@ -208,11 +212,11 @@ release conditions, reports should be archived as CI artifacts tied to the commi
 
 | Finding | Description | Priority Score |
 |---|---|---|
-| F1 | No CI test runner — entire test suite is local-only | **11 / 15** |
-| F2 | All 3 release-readiness conditions are manually enforced | **10 / 15** |
-| F3 | Static architecture gate (`lane-architecture`) not in CI | **7 / 15** |
-| F4 | Content expansion gate (`gate-expansion`) not in CI | **5 / 15** |
-| F5 | Release reports are ephemeral; no CI artifact upload | **5 / 15** |
+| F1 | No CI test runner — entire test suite is local-only | **11 / 15** — RESOLVED (2026-06-25) |
+| F2 | All 3 release-readiness conditions are manually enforced | **10 / 15** — RESOLVED (2026-06-25) |
+| F3 | Static architecture gate (`lane-architecture`) not in CI | **7 / 15** — RESOLVED (2026-06-25) |
+| F4 | Content expansion gate (`gate-expansion`) not in CI | **5 / 15** — RESOLVED (2026-06-25) |
+| F5 | Release reports are ephemeral; no CI artifact upload | **5 / 15** — open |
 
 ---
 

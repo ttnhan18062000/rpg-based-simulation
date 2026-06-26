@@ -162,7 +162,9 @@ Seed 137 having 4.8× more rejections than seed 42 (926 vs 194) is consistent wi
 
 ### F1 — Behavioral Stasis: Onset by Tick 20
 
-**Score: 15/15** (Variety Gap=5, Lifespan Gap=5, System Silence=5)
+> **RESOLVED: TCK-20260619-RC1 (2026-06-19):** Behavioral stasis eliminated. D06 1,000-tick run confirmed 240–253 events per run with last event at tick 997/999; pipeline active from tick ~201 onward.
+
+**Score: 15/15** (Variety Gap=5, Lifespan Gap=5, System Silence=5) *(pre-fix observation)*
 
 **Root cause confirmed: RC1 (dead pipeline link).**
 
@@ -179,7 +181,9 @@ The stasis is mechanically explained: healthy entities with no perceived weaknes
 
 ### F2 — Zero Output from Economy, Quest, and Resource Systems
 
-**Score: 12/15** (Variety Gap=5, Lifespan Gap=5, System Silence=4)
+> **RESOLVED: TCK-20260619-RC1, TCK-20260619-E21-RESOURCE-ECOLOGY (2026-06-19/20):** urban_political runs now produce `town_return`, `harvesting`, and `combat_engage` routes (D08 F4). Food-kind resource nodes added; hunger satiation no longer permanently suppresses economic goals (D06 F1 resolved).
+
+**Score: 12/15** (Variety Gap=5, Lifespan Gap=5, System Silence=4) *(pre-fix observation)*
 
 **Root cause confirmed: RC1 + RC2.**
 

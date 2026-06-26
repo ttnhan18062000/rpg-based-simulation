@@ -322,6 +322,8 @@ is incorrect (this is a D02 data-quality finding; actual count from the summary 
 
 ### Finding 1: D02 Existing Count Is Wrong (61, not 53) — Risk: 5 / 15
 
+> **RESOLVED (2026-06-26):** D02 totals line updated to **71 E · 1 P · 0 M** (8 additional items promoted from `[P]`/`[M]` to `[E]` during audit marker standardization; previous "53 Existing" count was doubly wrong — both undercounted and out of date). Count discrepancy eliminated.
+
 | Dimension | Score | Reason |
 |---|---|---|
 | Affected Scope | 1 | Documentation error only — no live behavior affected |

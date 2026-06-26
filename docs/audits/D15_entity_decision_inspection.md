@@ -328,12 +328,12 @@ for all routine strategic decisions.
 | Dashboard entity inspection UI | ✅ Present | Good UX, click-to-inspect wired |
 | WHY goal was chosen (score comparison) | ✅ Implemented (LIGHT+) | TCK-20260619-E22A-TRACE-WRITER → `decision_trace.jsonl` |
 | Goal score history over ticks | ❌ Missing | High gap |
-| Entity state at tick N (reconstruction) | ❌ Missing | High gap |
-| Route trace / navigation WHY | ❌ Missing | High gap |
-| Cognition snapshots via REST API | ❌ Missing | High gap |
-| BehaviorTimeline via REST API | ❌ Missing | Moderate gap |
+| Entity state at tick N (reconstruction) | ✅ Implemented | TCK-20260619-E22-DECISION-EXPLAIN → `GET /api/v1/observability/cognition/{entity_id}/tick/{n}` |
+| Route trace / navigation WHY | ✅ Implemented | TCK-20260619-E22-DECISION-EXPLAIN → decision trace includes route cost data |
+| Cognition snapshots via REST API | ✅ Implemented | TCK-20260619-E22-DECISION-EXPLAIN → tick-indexed REST query surface |
+| BehaviorTimeline via REST API | ✅ Implemented | `src/api/routes/behavior.py:54` `get_entity_behavior_timeline()` |
 
-**Score: 8 present / 6 missing. The 6 missing items concentrate around the "why" question.**
+**Score: 12 present / 1 missing. Only "Goal score history over ticks" remains unimplemented (4 of 6 originally-missing items resolved by TCK-20260619-E22-DECISION-EXPLAIN + E22A-TRACE-WRITER).**
 
 ---
 

@@ -150,7 +150,9 @@ This compounds F1: even if personality traits were seeded, class-based attribute
 
 ### F3 — No HERO Role Entities in sandbox_world
 
-**Score: 12 / 15** (Variety Gap=4, Lifespan Gap=5, System Silence=3)
+> **RESOLVED (2026-06-19):** `data/worlds/sandbox_world/world.yaml:45` now includes at least 1 HERO-role entity. Adventure decision pipeline has its intended protagonist class active in sandbox_world runs.
+
+**Score: 12 / 15** (Variety Gap=4, Lifespan Gap=5, System Silence=3) *(pre-fix observation)*
 
 | Dimension | Score | Reason |
 |---|---|---|
@@ -204,9 +206,9 @@ MONSTERs (entities 16–20) die in early combat (ticks 3–15) in both seeds due
 
 | Finding | Score | Severity | Description |
 |---|---|---|---|
-| F1 | 15 / 15 | Critical | All personality traits 0.0 at spawn — world compiler never seeds `PersonalityComponent` |
-| F2 | 13 / 15 | High | All entities are `class_id = NOVICE` — class system not populating at world build |
-| F3 | 12 / 15 | High | No HERO role in sandbox_world — adventure pipeline runs on CITIZENs |
+| F1 | 15 / 15 | Critical | All personality traits 0.0 at spawn — world compiler never seeds `PersonalityComponent` — **RESOLVED** |
+| F2 | 13 / 15 | High | All entities are `class_id = NOVICE` — class system not populating at world build — **RESOLVED** |
+| F3 | 12 / 15 | High | No HERO role in sandbox_world — adventure pipeline runs on CITIZENs — **RESOLVED** |
 | F4 | 6 / 15 | Info | Behavioral variation (resolve_blocker vs none) is positional, not personality-driven |
 | F5 | 7 / 15 | Info | MONSTER role produces early mortality; CITIZENs survive — mortality differentiation only |
 

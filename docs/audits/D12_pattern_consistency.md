@@ -149,6 +149,8 @@ about which patterns to follow (D12).
 
 ### F4 — 3 of 8 domain phases missing typed return annotations — Priority: 7 / 15
 
+> **RESOLVED (verified 2026-06-27):** All 3 previously-unannotated phases now have typed `execute()` returns: `world_emergence/phase.py` → `tuple[StateUpdate, WorldEmergenceResult]`; `perception/phase.py` → `List[EntityState]`; `memory/phase.py` → `List[EntityState]`. All 8 domain phases are now annotated.
+
 | Dimension | Score | Reason |
 |---|---|---|
 | Adoption Gap | 3 | 3/8 domain phases (world_emergence, perception, memory) lack typed `-> ReturnType` annotation on execute() |
