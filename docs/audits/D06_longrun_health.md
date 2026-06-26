@@ -1,36 +1,28 @@
 ---
-audit_id: D06
-title: Long-Run Simulation Health
-status: done
-date: 2026-06-19
-ticket: TCK-20260619-AUDIT-D06-LONGRUN
+status: active
 layer: simulation
-priority: P1
-tags: [long-run, performance, attrition, behavioral-continuity, rejection-cascade, ecology]
+authority: P1
+audience: agent
+tags: [audit, long-run, performance, attrition, behavioral-continuity, rejection-cascade, ecology]
 ---
 
 # D06 — Long-Run Simulation Health
 
 ## Dimension Profile
 
-| Field | Value |
+| Axis | Value |
 |---|---|
-| Audit ID | D06 |
-| Method | run-sim |
-| Priority | 9 |
-| Scope | `data/runs/`, `engine/`, `domains/adventure/`, `world/providers/` |
-| Seeds | 42, 137 |
-| Ticks | 1,000 each |
-| Observability | LIGHT |
-| RC Fixes Applied | RC1 (phase.py), RC2 (requirements.py), RC3 (kernel.py) |
+| **Group** | A — Simulation Quality |
+| **State** | `done` |
+| **Impact** | 4 / 5 |
+| **Interest** | 5 / 5 |
+| **Priority** | 9 |
+| **Method** | run-sim |
+| **Audit date** | 2026-06-19 |
 
-## What this dimension answers
+**What this dimension answers:** Does the simulation remain healthy, performant, and behaviorally active across 1,000 ticks — or do entities stagnate, the world deplete, or the engine degrade? This is the first long-run observation after the RC1/RC2/RC3 fixes. D03 confirmed behavioral stasis onset by tick 20 under the broken pipeline. This audit confirms the RC fixes restored behavioral activity while revealing new systemic gaps at the 1,000-tick scale.
 
-Does the simulation remain healthy, performant, and behaviorally active across 1,000 ticks — or do entities stagnate, the world deplete, or the engine degrade?
-
-This is the first long-run observation after the RC1/RC2/RC3 fixes. D03 confirmed behavioral stasis onset by tick 20 under the broken pipeline. This audit confirms the RC fixes restored behavioral activity while revealing new systemic gaps at the 1,000-tick scale.
-
-## Related Dimensions
+**Related dimensions:**
 
 | Dimension | Relationship |
 |---|---|

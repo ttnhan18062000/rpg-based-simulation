@@ -1,36 +1,55 @@
 ---
-audit_id: D04
-title: Balance & Tuning
-status: done
-date: 2026-06-20
-ticket: TCK-20260618-AUDIT-EPIC
-related_tickets: [TCK-20260619-E12A-BALANCE-MEASURE, TCK-20260619-E12B-BLOCKER-RECAL, TCK-20260619-E12C-BALANCE-TESTS]
+status: active
 layer: simulation
-priority: P1
-tags: [balance, tuning, combat, hunger, economy, adventure-routing, blocker-penalty, audit-done]
+authority: P1
+audience: agent
+tags: [audit, balance, tuning, combat, hunger, economy, adventure-routing, blocker-penalty, audit-done]
 ---
 
 # D04 — Balance & Tuning
 
 ## Dimension Profile
 
-| Field | Value |
+| Axis | Value |
 |---|---|
-| Audit ID | D04 |
-| Method | run-sim (cross-audit inference) |
-| Priority | 7 |
-| Status | **partial** — combat and hunger balance observed; economic balance blocked |
-| Data sources | D03, D05, D06, D08 run data; `src/domains/adventure/scoring.py` code-read |
+| **Group** | A — Simulation Quality |
+| **State** | `partial` |
+| **Impact** | 4 / 5 |
+| **Interest** | 3 / 5 |
+| **Priority** | 7 |
+| **Method** | run-sim (cross-audit inference) |
+| **Audit date** | 2026-06-20 |
 
-## What this dimension answers
+**What this dimension answers:** Are the numerical constants that govern the simulation — combat damage, need urgency thresholds, scoring weights, penalty magnitudes — calibrated to produce interesting dynamics? Or are they skewed to the point that one system overwhelms all others?
 
-Are the numerical constants that govern the simulation — combat damage, need urgency thresholds, scoring weights, penalty magnitudes — calibrated to produce interesting dynamics? Or are they skewed to the point that one system overwhelms all others?
+**Related dimensions:**
+
+| Dimension | Relationship |
+|---|---|
+| D03 (Behavioral Emergence) | RC1/RC2/RC3 root causes confirmed there; fixes unlocked partial economic measurement |
+| D05 (Entity Differentiation) | Personality bias and class differentiation contribute to scoring variety; both resolved by P0 fixes |
+| D06 (Long-Run Health) | F1 (hunger dominance) was the original D04 block; D06 run data confirmed survival-only routing |
+| D08 (Multi-Scenario Consistency) | urban_political confirmed as best measurement world; dungeon/wilderness produce attrition-only data |
+
+---
 
 ## Why This Is Partial
 
 D04 was blocked at audit start by RC1/RC2/RC3 (zero behavioral output). After those were fixed, D06 revealed a new blocker: hunger urgency permanently outscores all economic goals (D06 F1). With entities trapped in hunger cycling, crafting/trade/gold balance cannot be measured. Economic tuning analysis requires hunger satiation to be resolved first.
 
 This document captures all balance observations derivable from cross-audit data. The blocked sections are explicitly marked.
+
+---
+
+## Scoring Method — Balance Impact Score
+
+Each observation is scored on three dimensions. Maximum: 15. Higher score = higher urgency to address.
+
+| Dimension | 1 | 3 | 5 |
+|---|---|---|---|
+| **Simulation Effect** | Cosmetic variation; run quality unaffected | Behavioral pattern skewed; one system dominates | Run produces degenerate outcomes or permanent stagnation |
+| **Measurement Confidence** | Directly measured with run data | Observable from run metrics but imprecise | Cannot measure — blocked by upstream prerequisite |
+| **Fix Urgency** | Deferrable — acceptable as-is | Should address before extended test runs | Blocks all balance validation; must fix first |
 
 ---
 
@@ -55,6 +74,14 @@ score = urgency + benefit + personality_bias + confidence_bonus − risk_penalty
 
 > **RESOLVED (by design, 2026-06-19, TCK-20260619-E12B-BLOCKER-RECAL):** blocker_freq measured at 0.0% in all tested worlds; penalty kept at 2.0; docs/mechanics/04_strategic_cognition.md §6 updated with scoring constants; STRAT-227 parity entry added.
 
+**Score: 7 / 15**
+
+| Dimension | Score | Reason |
+|---|---|---|
+| Simulation Effect | 1 | Blocker penalty never fires — `blocker_frequency = 0.0` across all measured runs |
+| Measurement Confidence | 4 | Directly measured: `blocker_freq = 0.0` in controlled urban_political run |
+| Fix Urgency | 2 | Cannot calibrate until pipeline produces blocked routes; deferred (see §7) |
+
 ---
 
 ### 2. Combat Balance
@@ -74,6 +101,14 @@ Combat damage formula is not directly readable from run-sim data at LIGHT observ
 
 **Balance finding**: The 4× range in attrition rates across worlds suggests world content parameters (spawn density, faction distribution, region constraints) are the primary balance lever, not per-combat constants. The engine's combat pipeline is stable; the authoring layer is uncalibrated.
 
+**Score: 8 / 15**
+
+| Dimension | Score | Reason |
+|---|---|---|
+| Simulation Effect | 3 | 5–97% attrition range across worlds indicates content misalignment; per-engagement formula is mechanically correct |
+| Measurement Confidence | 3 | Attrition rate observable via run data; combat formula constants not directly traceable from LIGHT mode |
+| Fix Urgency | 2 | Engine constants are stable; world authoring (spawn density, faction distribution) is the calibration lever |
+
 ---
 
 ### 3. Hunger Calibration
@@ -90,6 +125,14 @@ Either way, hunger urgency (~1.0–2.0 estimated) permanently outscores economic
 
 **Balance finding (blocked for fix):** Until hunger satiation is restored (either by adding a food resource node or calibrating the need urgency threshold), all scoring balance observations are hunger-dominated and not representative of intended gameplay.
 
+**Pre-fix Score: 13 / 15 — RESOLVED by P0-HUNGER-SATIATION**
+
+| Dimension | Score | Reason |
+|---|---|---|
+| Simulation Effect | 5 | Hunger urgency permanently outscored all economic goals; entities never advanced beyond survival tier |
+| Measurement Confidence | 3 | Observed via project kind distribution; exact urgency values not directly traceable from LIGHT mode |
+| Fix Urgency | 5 | Blocked all economic balance analysis; highest-urgency balance gap at time of discovery |
+
 ---
 
 ### 4. Rejection Cascade Rate
@@ -104,6 +147,14 @@ Either way, hunger urgency (~1.0–2.0 estimated) permanently outscores economic
 The 650× jump in rejection rate after RC1 fix is not a sign the fix is wrong — it means the opportunity pipeline is now running at full volume and many requirements fail legitimately (near_service, inventory_space, has_item). However, the absence of any backoff or cooldown means every requirement evaluation failure is retried the next tick indefinitely.
 
 **Balance finding**: Rejection accumulation is a design gap rather than a numerical constant issue. The fix is architectural (stale-project timeout, requirement cooldown) not numerical.
+
+**Score: 10 / 15**
+
+| Dimension | Score | Reason |
+|---|---|---|
+| Simulation Effect | 2 | Diagnostic noise issue; no simulation correctness impact at current tick counts |
+| Measurement Confidence | 5 | Directly observable: 650/tick rate, seed-consistent, cumulative counter confirmed |
+| Fix Urgency | 3 | Becomes memory concern at 5,000+ ticks; architectural fix needed (stale-project timeout) |
 
 ---
 
@@ -123,6 +174,14 @@ These systems are implemented and wired (D09 confirmed wiring), but behavioral p
 1. Hunger satiation gap fixed (allows entities to pursue economic goals)
 2. Personality traits initialized (allows personality-driven route differentiation)
 3. HERO role entities in test worlds (intended economic actor class)
+
+**Score: 15 / 15 (pre-E12A block assessment)**
+
+| Dimension | Score | Reason |
+|---|---|---|
+| Simulation Effect | 5 | Zero economic output across all runs — entity behavior limited to survival-only tier |
+| Measurement Confidence | 5 | Confirmed blocked: root causes identified and traced to source in §6.2 |
+| Fix Urgency | 5 | Blocks all crafting, trade, and quest balance analysis |
 
 ---
 
@@ -153,14 +212,46 @@ After completing P0-HUNGER-SATIATION and P0-ENTITY-INIT, a controlled measuremen
 **Root Cause 1 — Adventure routing disabled by default:**  
 `ENABLE_ADVENTURE_ROUTING` in `src/domains/optimization/feature_flags.py` defaults to `FeatureMode.OFF`. The entire adventure decision pipeline (route generation → scoring → blocker_penalty → strategic update) is inactive in all default simulation runs. This makes the `blocker_penalty = 2.0` constant effectively dead code in production.
 
+**Score: 15 / 15**
+
+| Dimension | Score | Reason |
+|---|---|---|
+| Simulation Effect | 5 | Entire adventure decision pipeline inactive in all default simulation runs |
+| Measurement Confidence | 5 | Confirmed: `ENABLE_ADVENTURE_ROUTING` flag defaults to `FeatureMode.OFF` in `feature_flags.py` |
+| Fix Urgency | 5 | Must be enabled (or test harness must set explicitly) for any economic balance measurement |
+
 **Root Cause 2 — urban_political has zero resource nodes:**  
 `len(state.resource_nodes) == 0` after WorldCompiler.compile(). `ResourceOpportunityProvider.get_opportunities()` iterates over `state.resource_nodes` — with zero nodes, it always returns `[]`. The earlier D08 observation of "3 harvesting events in urban_political seed 137" was from a different schema or run context. The current world.yaml compiles to no nodes.
+
+**Score: 15 / 15**
+
+| Dimension | Score | Reason |
+|---|---|---|
+| Simulation Effect | 5 | No resource opportunities possible; `ResourceOpportunityProvider.get_opportunities()` always returns `[]` |
+| Measurement Confidence | 5 | Confirmed: `len(state.resource_nodes) == 0` after `WorldCompiler.compile()` |
+| Fix Urgency | 5 | Blocks all economic measurement for urban_political world |
 
 **Root Cause 3 — Entity navigation.region_id is None:**  
 All 30 entities have `navigation.region_id = None` after compilation. The opportunity provider uses `region_id` for node matching. Even if nodes existed, region-based filtering would fail for all entities.
 
+**Score: 13 / 15**
+
+| Dimension | Score | Reason |
+|---|---|---|
+| Simulation Effect | 4 | Even with resource nodes, region-based filtering fails for all 30 entities |
+| Measurement Confidence | 5 | Confirmed: `navigation.region_id = None` for all entities after compilation |
+| Fix Urgency | 4 | Compounds with RC2; both must be fixed together for economic measurement to work |
+
 **Root Cause 4 — All 30 scored routes are DEFER_WITH_REASON:**  
 With zero opportunities generated, `AdventureRouteGenerator.generate()` produces a single DEFER route per entity. No real routes are evaluated, so the blocker_penalty and urgency calibration are untestable.
+
+**Score: 10 / 15**
+
+| Dimension | Score | Reason |
+|---|---|---|
+| Simulation Effect | 3 | Consequence of RC1–RC3; scoring formula untestable while all routes DEFER |
+| Measurement Confidence | 5 | Confirmed: 30 routes scored, all DEFER_WITH_REASON across 100-tick run |
+| Fix Urgency | 2 | Resolved automatically when RC1–RC3 are fixed; not a separate fix target |
 
 #### 6.3 Original Block vs. New Blocks
 
@@ -197,17 +288,21 @@ These are scoping/wiring issues, not numerical calibration issues. The `blocker_
 
 ## Key Observations Summary
 
-| Area | Status | Finding |
-|---|---|---|
-| Scoring formula structure | Observed | 2.0 blocker penalty is near-binary; never fires (all routes DEFER) in current config |
-| Combat lethality | Observed | Consistent per-engagement; world content (spawn density) drives 5–97% attrition range |
-| Hunger calibration | ✓ Resolved | P0-HUNGER-SATIATION fixed; urgency no longer permanently dominant |
-| Personality bias | ✓ Resolved | E11 done; personality traits now seeded and active |
-| Rejection cascade | Observed | 650/tick post-RC1-fix; no cooldown/backoff mechanism |
-| Economic balance | **Blocked (new)** | Adventure routing OFF by default; urban_political has 0 resource nodes; region_id=None |
-| Quest balance | **Blocked** | Zero quest completions; depends on economic pipeline unblocking |
-| Crafting balance | **Blocked** | Same |
-| blocker_penalty = 2.0 | Kept as-is | Cannot calibrate — never fires; see §7 for justification |
+| Area | Status | Score | Finding |
+|---|---|---|---|
+| Scoring formula structure | Observed | 7 / 15 | 2.0 blocker penalty is near-binary; never fires (all routes DEFER) in current config |
+| Combat lethality | Observed | 8 / 15 | Consistent per-engagement; world content (spawn density) drives 5–97% attrition range |
+| Hunger calibration | ✓ Resolved | 13 / 15 (pre-fix) | P0-HUNGER-SATIATION fixed; urgency no longer permanently dominant |
+| Personality bias | ✓ Resolved | — | E11 done; personality traits now seeded and active |
+| Rejection cascade | Observed | 10 / 15 | 650/tick post-RC1-fix; no cooldown/backoff mechanism |
+| Economic balance | **Blocked (new)** | 15 / 15 | Adventure routing OFF; urban_political has 0 resource nodes; region_id=None |
+| RC1 — routing OFF | **Blocked** | 15 / 15 | `ENABLE_ADVENTURE_ROUTING` defaults to `FeatureMode.OFF` |
+| RC2 — no resource nodes | **Blocked** | 15 / 15 | `len(state.resource_nodes) == 0` after compile |
+| RC3 — region_id=None | **Blocked** | 13 / 15 | All 30 entities have `navigation.region_id = None` after compilation |
+| RC4 — all routes DEFER | **Blocked** | 10 / 15 | Consequence of RC1–RC3; resolved when those are fixed |
+| Quest balance | **Blocked** | — | Zero quest completions; depends on economic pipeline unblocking |
+| Crafting balance | **Blocked** | — | Same |
+| blocker_penalty = 2.0 | Kept as-is | 7 / 15 | Cannot calibrate — never fires; see §7 for justification |
 
 ---
 

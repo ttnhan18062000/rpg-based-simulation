@@ -1,33 +1,28 @@
 ---
-audit_id: D05
-title: Entity Differentiation
-status: done
-date: 2026-06-19
-ticket: TCK-20260619-AUDIT-D05-ENTITY-DIFF
+status: active
 layer: simulation
-priority: P1
-tags: [entity-differentiation, personality, class, role, behavioral-arcs, audit-blocker]
+authority: P1
+audience: agent
+tags: [audit, entity-differentiation, personality, class, role, behavioral-arcs, audit-blocker]
 ---
 
 # D05 — Entity Differentiation
 
 ## Dimension Profile
 
-| Field | Value |
+| Axis | Value |
 |---|---|
-| Audit ID | D05 |
-| Method | run-sim + code-read |
-| Priority | 8 |
-| Scope | `src/domains/adventure/scoring.py`, `src/worldbuilding/compiler.py`, `data/worlds/sandbox_world/`, `data/content/` |
-| Seeds | 42, 137 |
-| Ticks | 400 each (covers 200-tick dead zone + 200 ticks of active behavior) |
-| Observability | LIGHT + direct state inspection at tick 0 |
+| **Group** | A — Simulation Quality |
+| **State** | `done` |
+| **Impact** | 4 / 5 |
+| **Interest** | 4 / 5 |
+| **Priority** | 8 |
+| **Method** | run-sim + code-read |
+| **Audit date** | 2026-06-19 |
 
-## What this dimension answers
+**What this dimension answers:** Do entity role (HERO/MONSTER/CITIZEN/WORKER/GUARD/SHOPKEEPER) and personality traits (bravery, greed, industry, sociability — OCEAN-derived) produce observably different behavioral arcs across entities and seeds?
 
-Do entity role (HERO/MONSTER/CITIZEN/WORKER/GUARD/SHOPKEEPER) and personality traits (bravery, greed, industry, sociability — OCEAN-derived) produce observably different behavioral arcs across entities and seeds?
-
-## Related Dimensions
+**Related dimensions:**
 
 | Dimension | Relationship |
 |---|---|
@@ -94,11 +89,32 @@ Every entity receives identical scoring weights. The only source of score variat
 
 ---
 
+## Scoring Method — Emergence Gap Score
+
+Each finding is scored as: **Variety Gap + Lifespan Gap + System Silence** (max 15, worst).
+Uses the same rubric as D03/D06 — entity differentiation is a specialisation of behavioral emergence.
+
+| Axis | 1 | 2 | 3 | 4 | 5 |
+|---|---|---|---|---|---|
+| **Variety Gap** | Many behavioral kinds observed per role/class | 3–4 distinct behavioral patterns | 2 behavioral patterns | 1 pattern, minimal variety | Zero variety — all entities behaviorally identical |
+| **Lifespan Gap** | Differentiation active for full run | Active for 75%+ of ticks | Active for 50%+ | Active for <25% | Structural absence — differentiation never activates |
+| **System Silence** | Multiple differentiation systems active | 2–3 systems producing varied output | 1 system marginally active | 1 system active but contribution = 0 | All differentiation systems silent or contributing zero |
+
+---
+
 ## Findings
 
 ### F1 — Personality Traits Not Initialized: All Zero Across All Entities
 
 > **RESOLVED: TCK-20260619-P0-ENTITY-INIT (2026-06-19):** WorldCompiler.compile() now seeds PersonalityComponent per entity using DeterministicRNG sub-seeds.
+
+**Score: 15 / 15** (Variety Gap=5, Lifespan Gap=5, System Silence=5)
+
+| Dimension | Score | Reason |
+|---|---|---|
+| Variety Gap | 5 | Zero personality-driven variety — all entities receive identical scoring weights every tick |
+| Lifespan Gap | 5 | Structural absence across the full run; applies from tick 0 through tick 400 |
+| System Silence | 5 | Personality bias term contributes 0.0 for all non-RECOVER route families for all entities |
 
 **Severity: Critical**
 
@@ -116,6 +132,14 @@ The OCEAN personality system (`TCK-20260407-PHASE1-PERSONALITY`) is implemented 
 
 > **RESOLVED: TCK-20260619-P0-ENTITY-INIT (2026-06-19):** Class assignments now read from data/content/spawn_tables.yaml; entities spawn with role-appropriate classes.
 
+**Score: 13 / 15** (Variety Gap=4, Lifespan Gap=5, System Silence=4)
+
+| Dimension | Score | Reason |
+|---|---|---|
+| Variety Gap | 4 | No class-based attribute differentiation; all entities share NOVICE stats and derived caution/risk multipliers |
+| Lifespan Gap | 5 | Structural absence — class_id = NOVICE for full run across all seeds |
+| System Silence | 4 | Class system exists but produces no score variation; compounds F1's personality absence |
+
 **Severity: High**
 
 Every entity — CITIZEN and MONSTER alike — has `class_id = NOVICE`. No warrior, mage, rogue, ranger, or any other class is assigned. The class field exists on `IdentityComponent` and likely drives attribute differentiation (STR, INT, DEX, etc.), but the world compiler never assigns non-NOVICE classes.
@@ -125,6 +149,14 @@ This compounds F1: even if personality traits were seeded, class-based attribute
 ---
 
 ### F3 — No HERO Role Entities in sandbox_world
+
+**Score: 12 / 15** (Variety Gap=4, Lifespan Gap=5, System Silence=3)
+
+| Dimension | Score | Reason |
+|---|---|---|
+| Variety Gap | 4 | Hero-class adventure routing logic never executes as designed; protagonist behavioral arc absent |
+| Lifespan Gap | 5 | Structural absence — no HERO entities present in either seed |
+| System Silence | 3 | Pipeline runs correctly on CITIZENs; wrong actor class, not a dead pipeline |
 
 **Severity: High**
 
@@ -136,6 +168,14 @@ The six entity roles are: HERO (0), SHOPKEEPER (1), MONSTER (2), CITIZEN (3), WO
 
 ### F4 — Observed Behavioral Variation is Positional, Not Personality-Driven
 
+**Score: 6 / 15** (Variety Gap=2, Lifespan Gap=2, System Silence=2)
+
+| Dimension | Score | Reason |
+|---|---|---|
+| Variety Gap | 2 | Some variation observable (resolve_blocker vs hunger-only groups) but caused by spawn position, not character design |
+| Lifespan Gap | 2 | Positional variation is limited to early ticks before entities settle into uniform hunger cycling |
+| System Silence | 2 | near_service requirement system is active and producing the variation — just not personality-driven |
+
 **Severity: Informational**
 
 The `resolve_blocker` project pattern varies between entities (some get it, others do not) and varies between seeds (different entities in each group). After eliminating personality as the cause (F1), the remaining explanation is spatial: entities positioned within 5.0 units of a functional building pass the `near_service` requirement check (RC2 fix) and never generate a `too_far_from_service` blocker. Entities further from buildings fail it, generate a blocker, and spawn a `resolve_blocker` detour project.
@@ -146,6 +186,14 @@ This is spatial variation, not behavioral differentiation driven by character de
 
 ### F5 — Role-Based Mortality Differentiation (Structural, Not Behavioral)
 
+**Score: 7 / 15** (Variety Gap=2, Lifespan Gap=2, System Silence=3)
+
+| Dimension | Score | Reason |
+|---|---|---|
+| Variety Gap | 2 | Mortality differentiation (who lives/dies) is observable; no behavioral arc divergence among survivors |
+| Lifespan Gap | 2 | Only affects early ticks (3–15) when MONSTERs die in combat |
+| System Silence | 3 | Combat system active and producing role-based outcomes; adventure pipeline still produces uniform results for survivors |
+
 **Severity: Low / Informational**
 
 MONSTERs (entities 16–20) die in early combat (ticks 3–15) in both seeds due to their distant spawn position and combat adjacency. CITIZENs survive. This IS a form of role differentiation — but it is mortality-based (who lives vs who dies) rather than behavioral-arc-based (how different roles pursue different goals while alive). There is no observable behavioral divergence among the entities that survive.
@@ -154,13 +202,13 @@ MONSTERs (entities 16–20) die in early combat (ticks 3–15) in both seeds due
 
 ## Key Findings Summary
 
-| Finding | Severity | Description |
-|---|---|---|
-| F1 | Critical | All personality traits 0.0 at spawn — world compiler never seeds `PersonalityComponent` |
-| F2 | High | All entities are `class_id = NOVICE` — class system not populating at world build |
-| F3 | High | No HERO role in sandbox_world — adventure pipeline runs on CITIZENs |
-| F4 | Info | Behavioral variation (resolve_blocker vs none) is positional, not personality-driven |
-| F5 | Info | MONSTER role produces early mortality; CITIZENs survive — mortality differentiation only |
+| Finding | Score | Severity | Description |
+|---|---|---|---|
+| F1 | 15 / 15 | Critical | All personality traits 0.0 at spawn — world compiler never seeds `PersonalityComponent` |
+| F2 | 13 / 15 | High | All entities are `class_id = NOVICE` — class system not populating at world build |
+| F3 | 12 / 15 | High | No HERO role in sandbox_world — adventure pipeline runs on CITIZENs |
+| F4 | 6 / 15 | Info | Behavioral variation (resolve_blocker vs none) is positional, not personality-driven |
+| F5 | 7 / 15 | Info | MONSTER role produces early mortality; CITIZENs survive — mortality differentiation only |
 
 **Net result**: Zero personality-driven or class-driven behavioral differentiation is observable in the current simulation. All CITIZENs are functionally identical. The system architecture (OCEAN traits, class attributes, scoring formula) is correctly designed — the gap is entirely in initialization.
 

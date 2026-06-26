@@ -63,6 +63,16 @@ Higher score = higher priority to address.
 | **Detection Risk** | Caught by existing tests | Only visible in special modes (audit/cert) | Invisible in all standard runs |
 | **Impact if Unresolved** | Cosmetic / minor correctness | Behavioral gap, non-critical | Silent incorrect behavior or non-determinism |
 
+### Section Wiring Health Scoring
+
+Each classification section receives a Section Wiring Health Score summarising how much wiring concern exists within that section. Higher score = greater wiring gap concern.
+
+| Dimension | 1 | 3 | 5 |
+|---|---|---|---|
+| **Tick-Live Coverage** | All features `tick-live`; full live-run presence | Mix of statuses; some `startup-live` or `design-pattern` | Any `ci-only` or `tick-live (cond)` feature present — invisible in standard runs |
+| **Finding Exposure** | No findings reference this section | Finding with Risk ≤9/15 involves a feature in this section | Finding with Risk ≥10/15 directly targets a feature in this section |
+| **Wiring Confidence** | All features traced to a specific source line or call site | Most features traced; 1–2 rely on structural inference | Key features traced to module or pattern only — no line-level evidence |
+
 ---
 
 ## Classification Table
@@ -83,6 +93,14 @@ is incorrect (this is a D02 data-quality finding; actual count from the summary 
 | 1.6 | Level of Detail System | `tick-live` | `scheduler.py:44` — `LODService.should_execute()` inside `select_work()` |
 | 1.7 | Governance / Eligibility Gating | `tick-live` | `_phase_init()` → `self._governor.evaluate()` every tick |
 
+**Section Wiring Health Score: 3 / 15** (Tick-Live Coverage=1, Finding Exposure=1, Wiring Confidence=1)
+
+| Dimension | Score | Reason |
+|---|---|---|
+| Tick-Live Coverage | 1 | All 7 features `tick-live`; every feature active in every standard run |
+| Finding Exposure | 1 | No findings reference Section 1 features |
+| Wiring Confidence | 1 | All features traced to specific method calls in `kernel.py` and `scheduler.py` |
+
 ### Section 2: State Architecture
 
 | ID | Feature | Wiring | Evidence |
@@ -93,6 +111,14 @@ is incorrect (this is a D02 data-quality finding; actual count from the summary 
 | 2.4 | Canonical State Hashing | `tick-live` | `fingerprint()` called in `_phase_resolution()` replay emit; `CanonicalStateHasher.get_hash()` in `_phase_persistence()` (policy-gated) |
 | 2.5 | Auth vs Non-Auth Partitioning | `design-pattern` | Enforced by architecture tests and `HardLawMonitor`; no single runtime callable |
 | 2.6 | State Serialization | `tick-live` | Used by `ReplayManager` for async write of `TraceEvent` payloads each tick |
+
+**Section Wiring Health Score: 6 / 15** (Tick-Live Coverage=2, Finding Exposure=3, Wiring Confidence=1)
+
+| Dimension | Score | Reason |
+|---|---|---|
+| Tick-Live Coverage | 2 | 5 features `tick-live`, 1 `design-pattern` (2.5 Auth/Non-Auth partitioning — enforced by tests, not a callable) |
+| Finding Exposure | 3 | Finding 6 (Risk 8/15 ≤9) targets 2.4: `CanonicalStateHasher.get_hash()` is conditionally active — recorded as `"SKIPPED"` in standard non-audit runs |
+| Wiring Confidence | 1 | All features traced to specific call sites in `kernel.py` and `apply.py` |
 
 ### Section 3: Mutation Architecture
 
@@ -106,6 +132,14 @@ is incorrect (this is a D02 data-quality finding; actual count from the summary 
 | 3.6 | Phase Stability Guard | `tick-live (cond)` | `_guard_stability()` called in `_tick_once_inner()` but **only when `audit_mode=True`**; inactive in normal live runs |
 | 3.7 | Resource Conservation Law | `tick-live` | `ResourceTransactionPhase.resolve()` wired as pipeline "resource_transactions" phase |
 
+**Section Wiring Health Score: 10 / 15** (Tick-Live Coverage=4, Finding Exposure=5, Wiring Confidence=1)
+
+| Dimension | Score | Reason |
+|---|---|---|
+| Tick-Live Coverage | 4 | 6 features `tick-live`, 1 `tick-live (cond)` (3.6 Phase Stability Guard — active only when `audit_mode=True`; invisible in standard live runs) |
+| Finding Exposure | 5 | Finding 5 (Risk 11/15 ≥10) directly targets 3.6: Phase Stability Guard is audit-mode only; isolation breaches invisible in standard live runs |
+| Wiring Confidence | 1 | All features traced to specific call sites; conditional guard is explicitly confirmed in `_tick_once_inner()` |
+
 ### Section 4: Spatial & Navigation
 
 | ID | Feature | Wiring | Evidence |
@@ -115,6 +149,14 @@ is incorrect (this is a D02 data-quality finding; actual count from the summary 
 | 4.4 | Movement System | `tick-live` | `MovementActions.execute_move()` via `domain_logic.execute_move()` during collection |
 | 4.5 | Movement Plan Cache | `tick-live` | Registered with `CacheRegistry`; `invalidate_for_dirty()` called each tick; evicted in `_phase_cleanup()` |
 | 4.6 | Occupancy Snapshot | `tick-live` | `OccupancySnapshot.from_state()` in `_phase_init()` every tick; also checked in `pipeline.py:63` |
+
+**Section Wiring Health Score: 3 / 15** (Tick-Live Coverage=1, Finding Exposure=1, Wiring Confidence=1)
+
+| Dimension | Score | Reason |
+|---|---|---|
+| Tick-Live Coverage | 1 | All 5 features `tick-live`; full live-run presence |
+| Finding Exposure | 1 | No findings reference Section 4 features |
+| Wiring Confidence | 1 | All features traced to specific call sites in `apply.py`, `domain_logic`, and `_phase_init()` |
 
 ### Section 5: Mathematical & Formula Systems
 
@@ -128,6 +170,14 @@ is incorrect (this is a D02 data-quality finding; actual count from the summary 
 | 5.7 | XP / Reward Classification Math | `tick-live` | `EvolutionSystem.evaluate()` wired as pipeline "evolution" phase |
 | 5.8 | Parameter Expression Evaluator | `startup-live` | `ModuleParameterEvaluator` in `worldmodules/evaluator.py` during procedural world generation |
 | 5.9 | Module Scoring System | `startup-live` | `ModuleScorer` called by `ProceduralCompositionGenerator` during world creation |
+
+**Section Wiring Health Score: 4 / 15** (Tick-Live Coverage=2, Finding Exposure=1, Wiring Confidence=1)
+
+| Dimension | Score | Reason |
+|---|---|---|
+| Tick-Live Coverage | 2 | 6 features `tick-live`, 2 `startup-live` (5.8 Parameter Evaluator and 5.9 Module Scorer run during world creation only; expected for world-gen context) |
+| Finding Exposure | 1 | No findings reference Section 5 features |
+| Wiring Confidence | 1 | All features traced to specific call sites; startup-live status explicitly confirmed via world creation pipeline |
 
 ### Section 6: Entity & Content Modelling
 
@@ -146,6 +196,14 @@ is incorrect (this is a D02 data-quality finding; actual count from the summary 
 | 6.12 | World Building Compiler | `startup-live` | `WorldBuildingCompiler` compiles `WorldSpec` YAML during world initialization |
 | 6.13 | Procedural World Generator | `startup-live` | `ProceduralCompositionGenerator` 5-stage pipeline runs during world creation |
 
+**Section Wiring Health Score: 6 / 15** (Tick-Live Coverage=4, Finding Exposure=1, Wiring Confidence=1)
+
+| Dimension | Score | Reason |
+|---|---|---|
+| Tick-Live Coverage | 4 | 2 features `tick-live`, 8 `startup-live`, 2 `design-pattern`; 10 of 12 features are non-tick-live — expected given this section covers world assembly and content infrastructure |
+| Finding Exposure | 1 | No findings reference Section 6 features directly; Finding 3 is a meta-finding about audit scope gaps, not a wiring failure in these features |
+| Wiring Confidence | 1 | All features traced to specific services (`WorldAssembly`, `ContentWarmupService`, `EntitySpawner`, etc.) |
+
 ### Section 7: Domain Architecture
 
 | ID | Feature | Wiring | Evidence |
@@ -153,6 +211,14 @@ is incorrect (this is a D02 data-quality finding; actual count from the summary 
 | 7.1 | Domain Ownership Boundaries | `design-pattern` | Documentation + architecture tests; no single runtime callable |
 | 7.2 | No Cross-Domain Import Rule | `ci-only` | Architecture test (`test_domain_isolation`) enforces; no runtime check |
 | 7.3 | Feature Flag Gating Model | `tick-live` | `FeatureFlagManager` instantiated at start of every `pipeline.py:refine()` call |
+
+**Section Wiring Health Score: 7 / 15** (Tick-Live Coverage=5, Finding Exposure=1, Wiring Confidence=1)
+
+| Dimension | Score | Reason |
+|---|---|---|
+| Tick-Live Coverage | 5 | 7.2 No-Cross-Domain-Import Rule is `ci-only` (enforced by architecture test only; no live runtime check); 7.1 is `design-pattern` |
+| Finding Exposure | 1 | No findings directly target Section 7 features; `ci-only` status of 7.2 is by design, not a wiring gap |
+| Wiring Confidence | 1 | All features evidenced; ci-only and design-pattern statuses are definitively classified |
 
 ### Section 8: Scheduling & Budget Infrastructure
 
@@ -162,6 +228,14 @@ is incorrect (this is a D02 data-quality finding; actual count from the summary 
 | 8.2 | Entity / Provider Budget | `tick-live` | `governor.evaluate()` in `_phase_init()` every tick |
 | 8.3 | Cache Registry | `tick-live` | `sweep_caches()` in `_phase_cleanup()` every `sweep_interval_ticks` ticks |
 | 8.4 | Movement Plan Cache | `tick-live` | **Duplicate of 4.5** — same `movement_cache.py`. Confirmed tick-live. |
+
+**Section Wiring Health Score: 3 / 15** (Tick-Live Coverage=1, Finding Exposure=1, Wiring Confidence=1)
+
+| Dimension | Score | Reason |
+|---|---|---|
+| Tick-Live Coverage | 1 | All 4 features `tick-live`; 8.4 is a confirmed duplicate of 4.5 but still tick-live |
+| Finding Exposure | 1 | No findings reference Section 8 features |
+| Wiring Confidence | 1 | All features traced to specific call sites in `_tick_once_inner()`, `governor.evaluate()`, and `_phase_cleanup()` |
 
 ### Section 9: Observability & Replay Infrastructure
 
@@ -174,6 +248,14 @@ is incorrect (this is a D02 data-quality finding; actual count from the summary 
 | 9.5 | Certification Harness | `ci-only` | Only invoked by the certification workflow; not reachable from a standard live sim run |
 | 9.6 | Parity Ledger | `ci-only` | Documentation artifact checked by CI `test_path` entries; no live runtime component |
 
+**Section Wiring Health Score: 7 / 15** (Tick-Live Coverage=5, Finding Exposure=1, Wiring Confidence=1)
+
+| Dimension | Score | Reason |
+|---|---|---|
+| Tick-Live Coverage | 5 | 9.5 (Certification Harness) and 9.6 (Parity Ledger) are `ci-only` by design — not reachable from a live simulation run |
+| Finding Exposure | 1 | No findings directly target Section 9 features; the `ci-only` statuses are intentional classifications, not wiring gaps |
+| Wiring Confidence | 1 | All features evidenced; ci-only status explicitly confirmed via workflow and CI pipeline analysis |
+
 ### Section 10: World Dynamics Foundation
 
 | ID | Feature | Wiring | Evidence |
@@ -181,6 +263,14 @@ is incorrect (this is a D02 data-quality finding; actual count from the summary 
 | 10.1 | World Dynamics System | `tick-live` | `WorldDynamicsSystem.resolve_dynamics()` wired as pipeline "world_dynamics" phase |
 | 10.2 | Entity Spawn Service | `tick-live` | `SpawnService.process_spawns()` cadence-gated in `world_dynamics` |
 | 10.4 | Calamity Service | `tick-live` | `CalamityService.process_world_dynamics()` cadence-gated in `world_dynamics` |
+
+**Section Wiring Health Score: 3 / 15** (Tick-Live Coverage=1, Finding Exposure=1, Wiring Confidence=1)
+
+| Dimension | Score | Reason |
+|---|---|---|
+| Tick-Live Coverage | 1 | All 3 features `tick-live`; cadence-gated features still run on live ticks |
+| Finding Exposure | 1 | No findings reference Section 10 features |
+| Wiring Confidence | 1 | All features traced to `WorldDynamicsSystem.resolve_dynamics()` and its cadence-gated subsystems |
 
 ---
 
@@ -196,6 +286,23 @@ is incorrect (this is a D02 data-quality finding; actual count from the summary 
 | **Total** | **61** | (D02 summary states "53" — see Finding 1) |
 
 **No `[E]` feature in D02 is unreachable or test-only.** Every feature has a live code path.
+
+---
+
+## Section Wiring Health Summary
+
+| Section | Score | Key Concern |
+|---|---|---|
+| §3 Mutation Architecture | **10 / 15** | 3.6 Phase Stability Guard is `tick-live (cond)` only; Finding 5 (Risk 11/15) targets it |
+| §7 Domain Architecture | **7 / 15** | 7.2 No-Cross-Domain Import is `ci-only` by design; no live runtime enforcement |
+| §9 Observability & Replay | **7 / 15** | 9.5 Certification Harness and 9.6 Parity Ledger are `ci-only` by design |
+| §2 State Architecture | **6 / 15** | 2.4 Canonical hash conditionally active in standard runs; Finding 6 (Risk 8/15) |
+| §6 Entity & Content Modelling | **6 / 15** | 10 of 12 features are `startup-live` or `design-pattern`; expected for world assembly scope |
+| §5 Math & Formula Systems | **4 / 15** | 5.8 and 5.9 are `startup-live` (module evaluation and scoring); expected for world-gen context |
+| §1 Kernel & Execution | **3 / 15** | All 7 features `tick-live`; fully clean |
+| §4 Spatial & Navigation | **3 / 15** | All 5 features `tick-live`; fully clean |
+| §8 Scheduling & Budget | **3 / 15** | All 4 features `tick-live` (8.4 duplicate confirmed); fully clean |
+| §10 World Dynamics | **3 / 15** | All 3 features `tick-live`; fully clean |
 
 ---
 

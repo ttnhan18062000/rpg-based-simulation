@@ -1,32 +1,28 @@
 ---
-audit_id: D08
-title: Multi-Scenario Consistency
-status: done
-date: 2026-06-19
-ticket: TCK-20260619-AUDIT-D08-MULTI-SCENARIO
+status: active
 layer: simulation
-priority: P2
-tags: [multi-scenario, consistency, cross-world, attrition, content-balance]
+authority: P1
+audience: agent
+tags: [audit, multi-scenario, consistency, cross-world, attrition, content-balance]
 ---
 
 # D08 — Multi-Scenario Consistency
 
 ## Dimension Profile
 
-| Field | Value |
+| Axis | Value |
 |---|---|
-| Audit ID | D08 |
-| Method | run-sim |
-| Priority | 5 |
-| Scope | `data/worlds/` — sandbox_world, dungeon_crawl, urban_political, wilderness_survival |
-| Seeds | 42, 137 per world |
-| Ticks | 400 each (8 runs total; sandbox_world data carried from D03/D05/D06) |
+| **Group** | A — Simulation Quality |
+| **State** | `done` |
+| **Impact** | 3 / 5 |
+| **Interest** | 2 / 5 |
+| **Priority** | 5 |
+| **Method** | run-sim |
+| **Audit date** | 2026-06-19 |
 
-## What this dimension answers
+**What this dimension answers:** Does simulation quality — behavioral activity, entity survival, engine stability — hold consistently across different world configurations and seeds? Or do some worlds crash, collapse, or produce qualitatively different (worse) outcomes?
 
-Does simulation quality — behavioral activity, entity survival, engine stability — hold consistently across different world configurations and seeds? Or do some worlds crash, collapse, or produce qualitatively different (worse) outcomes?
-
-## Related Dimensions
+**Related dimensions:**
 
 | Dimension | Relationship |
 |---|---|
@@ -64,6 +60,18 @@ All 8 runs complete with `LifecycleOutcome.SUCCESS`, governor NORMAL throughout,
 
 ---
 
+## Scoring Method — Cross-World Quality Gap Score
+
+Behavioral gap findings are scored on three dimensions. Maximum: 15 (worst). Positive findings (F1, F4) are not scored.
+
+| Axis | 1 | 2 | 3 | 4 | 5 |
+|---|---|---|---|---|---|
+| **Entity Survival** | >70% alive at tick 100 | 50–70% survival | 20–50% survival | 5–20% survival | <5% — near-extinction |
+| **Behavioral Pipeline** | Full pipeline active from tick 201 | Active for 50%+ of run | Active for <50% of run | Delayed activation | Never activates |
+| **Architecture Fit** | World fully compatible with all systems | Minor tuning needed | Content-layer mismatch (density, nodes) | Design-level gap; requires world restructure | Architecture incompatibility blocks entire sim class |
+
+---
+
 ## Findings
 
 ### F1 — Engine Stability Consistent Across All Worlds (Positive)
@@ -78,6 +86,14 @@ This is the primary consistency signal: the engine degrades gracefully even when
 
 > **RESOLVED: TCK-20260619-AUDIT-D08-MULTI-SCENARIO (2026-06-20):** Multi-scenario world authoring completed; compositions have ≥2 scenarios each.
 
+**Score: 14 / 15** (Entity Survival=5, Behavioral Pipeline=5, Architecture Fit=4)
+
+| Dimension | Score | Reason |
+|---|---|---|
+| Entity Survival | 5 | 3–6% survival at tick 100 — only 1–2 entities remain out of 32 |
+| Behavioral Pipeline | 5 | Adventure pipeline never activates — all entities dead before tick ~15 post-combat |
+| Architecture Fit | 4 | 32 entities + 1 building configuration produces combat extinction; needs population reduction or health regen |
+
 dungeon_crawl starts with 32 entities and retains only 1.36 (seed 42) and 2.62 (seed 137) by the end of the first 100-tick window — attrition rates of 94% and 92% respectively. By tick 400, fewer than 3 entities remain alive in either seed.
 
 Event breakdown confirms combat dominance: 32 `combat_damage` + 17 `combat_kill` (seed 42); only `combat_retreat` and `recover` project kinds appear. No behavioral pipeline activity — the adventure decision phase receives no eligible entities after tick ~15 because most entities are dead.
@@ -91,6 +107,14 @@ With 32 entities and only 1 building (4 regions), entities have insufficient ser
 ### F3 — wilderness_survival: Near-Extinction by Tick 100
 
 > **RESOLVED: TCK-20260619-AUDIT-D08-MULTI-SCENARIO (2026-06-20):** Multi-scenario world authoring completed; compositions have ≥2 scenarios each.
+
+**Score: 14 / 15** (Entity Survival=5, Behavioral Pipeline=5, Architecture Fit=4)
+
+| Dimension | Score | Reason |
+|---|---|---|
+| Entity Survival | 5 | <5% survival at tick 100 — effective extinction (0.42–0.52 alive avg) |
+| Behavioral Pipeline | 5 | No behavioral pipeline activity — entities die before adventure routing activates |
+| Architecture Fit | 4 | 0 buildings means no `near_service` requirement can ever pass; incompatible with current service architecture |
 
 wilderness_survival starts with 11 entities and retains an average of 0.52 (seed 42) and 0.42 (seed 137) alive entities by tick 100 — effective extinction. Only 13–15 events occur across the full 400-tick run (mostly `combat_damage`). No behavioral pipeline activity. Zero buildings means the RC2 `near_service` fix has nothing to match against; all service requirements fail.
 
@@ -118,6 +142,14 @@ This is a significant positive signal: urban_political's 7 buildings and balance
 
 > **RESOLVED: TCK-20260619-AUDIT-D08-MULTI-SCENARIO (2026-06-20):** Multi-scenario world authoring completed; compositions have ≥2 scenarios each.
 
+**Score: 4 / 15** (Entity Survival=1, Behavioral Pipeline=1, Architecture Fit=2)
+
+| Dimension | Score | Reason |
+|---|---|---|
+| Entity Survival | 1 | Not a survival issue — observability gap only |
+| Behavioral Pipeline | 1 | Not a pipeline issue — metadata gap only |
+| Architecture Fit | 2 | Missing `world_id` in run manifest; minor traceability gap, easy single-field fix |
+
 All 8 run manifests show `scenario_name: cli_default` regardless of the world used. The world ID (`dungeon_crawl`, `urban_political`, `wilderness_survival`) is not recorded in `run_manifest.json`. Run attribution requires external bookkeeping (run order) rather than reading the artifact.
 
 This is a minor observability gap: post-hoc analysis of runs cannot identify the world from the artifact alone. A `world_id` field in `run_manifest.json` would resolve it.
@@ -141,13 +173,13 @@ This is a minor observability gap: post-hoc analysis of runs cannot identify the
 
 ## Key Findings Summary
 
-| Finding | Severity | Description |
+| Finding | Score | Description |
 |---|---|---|
 | F1 | — (Positive) | All 8 runs complete — engine stability is fully consistent across worlds |
-| F2 | High | dungeon_crawl: 94–97% attrition by tick 100; only 1–2 survivors; unplayable |
-| F3 | Medium | wilderness_survival: near-extinction; 0 buildings makes service-requirement pipeline inert |
+| F2 | 14 / 15 | dungeon_crawl: 94–97% attrition by tick 100; only 1–2 survivors; behavioral pipeline never activates |
+| F3 | 14 / 15 | wilderness_survival: near-extinction; 0 buildings makes service-requirement pipeline inert |
 | F4 | — (Positive) | urban_political: `town_return` + `harvesting` emerge; best-functioning world config |
-| F5 | Low | World ID not recorded in run_manifest.json; run attribution requires external tracking |
+| F5 | 4 / 15 | World ID not recorded in run_manifest.json; minor traceability gap |
 
 ---
 

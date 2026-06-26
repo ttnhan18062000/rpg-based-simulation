@@ -65,9 +65,29 @@ each 1–10. Maximum: 50. Higher score = higher priority to close the gap.
 | **Runtime Impact** | Cosmetic or debug-only effect | Behavioral degradation, non-critical | Incorrect simulation state or silent non-determinism |
 | **Recurrence Risk** | Rare edge case | Hit under realistic scenarios | Triggered on every production run |
 
+### Group Health Scoring — per-section summary
+
+Each major section (§1–§10) receives a group-level score on three dimensions. Maximum: 15.
+Applied once per group rather than per individual feature. Higher score = higher priority
+to address the section's remaining gaps.
+
+| Dimension | 1 | 3 | 5 |
+|---|---|---|---|
+| **Completeness Gap** | All items `[E]` — no gaps in this group | One `[P]` item with a confirmed minor gap | One or more `[M]` items, or two or more `[P]` items, or any `[P]` carrying an active P0 parity defect |
+| **Impact if Gaps Persist** | Gaps are cosmetic, debug-only, or rare edge cases | Gaps affect production scenarios or cause behavioral skew | Gaps cause silent correctness failures, P0 parity bugs, or block dependent feature work |
+| **Test Shield** | All gaps regression-protected by tests at the boundary | Partial or fragile coverage; some gap behaviors lack regression tests | Regression-blind — one or more gaps could silently break on refactor with no failing test |
+
 ---
 
 ## 1. Kernel & Execution
+
+**Group Score: 11 / 15** — 1 `[P]` (1.8 worker concurrency parity), 1 `[M]` (1.9 per-phase permissions)
+
+| Dimension | Score | Reason |
+|---|---|---|
+| Completeness Gap | 5 | One `[M]` (1.9 not implemented) and one `[P]` (1.8 parity unverified) in this group |
+| Impact if Gaps Persist | 3 | 1.9 weakens phase isolation enforcement; 1.8 only affects certified concurrent runs |
+| Test Shield | 3 | 1.9 is structurally untestable (unimplemented); 1.8 has functional tests but no replay-fidelity cert |
 
 ### 1.1 Deterministic Tick Loop `[E]`
 **Source:** `src/engine/kernel.py` — `Kernel.tick_once()`, `_tick_once_inner()`
@@ -151,6 +171,14 @@ are not.
 
 ## 2. State Architecture
 
+**Group Score: 3 / 15** — All 6 items `[E]`; no gaps.
+
+| Dimension | Score | Reason |
+|---|---|---|
+| Completeness Gap | 1 | All 6 items `[E]` — no gaps in this group |
+| Impact if Gaps Persist | 1 | No `[P]` or `[M]` items; no gap impact |
+| Test Shield | 1 | No gaps to protect; all behaviors covered at the implementation boundary |
+
 ### 2.1 Authoritative State Model `[E]`
 **Source:** `src/core/state.py` — `AuthoritativeState`
 
@@ -202,6 +230,14 @@ Enforced by convention and architecture tests.
 ---
 
 ## 3. Mutation Architecture
+
+**Group Score: 3 / 15** — All 7 items `[E]`; no gaps.
+
+| Dimension | Score | Reason |
+|---|---|---|
+| Completeness Gap | 1 | All 7 items `[E]` — no gaps in this group |
+| Impact if Gaps Persist | 1 | No `[P]` or `[M]` items; no gap impact |
+| Test Shield | 1 | No gaps to protect; all behaviors covered at the implementation boundary |
 
 ### 3.1 Typed Result Records Pattern `[E]`
 **Source:** `src/core/updates.py` — `StateUpdate`, typed sub-update models.
@@ -262,6 +298,14 @@ All harvest, trade, crafting, and loot operations must go through this.
 ---
 
 ## 4. Spatial & Navigation
+
+**Group Score: 14 / 15** — 2 `[P]` items including an active P0 parity defect (4.7)
+
+| Dimension | Score | Reason |
+|---|---|---|
+| Completeness Gap | 5 | Two `[P]` items; 4.7 carries active P0 parity defect `COMB-006` (incorrect AoE adjudication) |
+| Impact if Gaps Persist | 5 | 4.7 silently produces wrong AoE combat outcomes on every AoE engagement |
+| Test Shield | 4 | 4.7 parity test exists but is marked `divergent`; 4.3 has no obstacle-maze regression tests |
 
 ### 4.1 Spatial Grid / Cell-Based Indexing `[E]`
 **Source:** `src/engine/spatial.py` — `SpatialGrid`
@@ -327,6 +371,14 @@ not at radius are incorrectly adjudicated.
 ---
 
 ## 5. Mathematical & Formula Systems
+
+**Group Score: 11 / 15** — 1 `[P]` (5.4 wound threshold P1 divergence), 1 `[M]` (5.10 macro-economy metrics)
+
+| Dimension | Score | Reason |
+|---|---|---|
+| Completeness Gap | 5 | One `[P]` with P1 parity divergence (5.4) and one `[M]` (5.10 — not implemented) |
+| Impact if Gaps Persist | 3 | 5.4 may produce incorrect wound outcomes; 5.10 is an observability gap only, not a correctness risk |
+| Test Shield | 3 | 5.4 parity entry marked `divergent`; 5.10 has no tests (nothing to test until implemented) |
 
 ### 5.1 Combat Damage Formula `[E]`
 **Source:** `src/engine/combat.py` — `CombatResolutionSystem.calculate_damage()`
@@ -416,6 +468,14 @@ correctness but cannot detect aggregate failure modes.
 ---
 
 ## 6. Entity & Content Modelling
+
+**Group Score: 9 / 15** — 1 `[P]` (6.6 hardcoded content fallbacks)
+
+| Dimension | Score | Reason |
+|---|---|---|
+| Completeness Gap | 2 | One `[P]` item with a moderate but non-critical gap |
+| Impact if Gaps Persist | 4 | Silent wrong entity types in fallback mode; affects world assembly, entity spawning, and quest generation |
+| Test Shield | 3 | `FallbackRestrictedError` tests have teardown errors observed in D10; coverage is fragile |
 
 ### 6.1 Entity Anatomy Model `[E]`
 **Source:** `src/core/state.py` (EntityState), `docs/mechanics/01_entity_anatomy.md`
@@ -539,6 +599,14 @@ building compiler.
 
 ## 7. Domain Architecture
 
+**Group Score: 7 / 15** — 1 `[P]` (7.4 presenter / read-model separation)
+
+| Dimension | Score | Reason |
+|---|---|---|
+| Completeness Gap | 2 | One `[P]` item; API presenter pattern partially implemented |
+| Impact if Gaps Persist | 3 | Architecture violation creates coupling risk; no runtime failure currently |
+| Test Shield | 2 | Architecture tests exist for some routes; not complete across all API endpoints |
+
 ### 7.1 Domain Ownership Boundaries `[E]`
 **Source:** `docs/simulation/domains/domain_ownership_map.md`
 
@@ -575,6 +643,14 @@ own projection logic without a unified presenter layer.
 ---
 
 ## 8. Scheduling & Budget Infrastructure
+
+**Group Score: 6 / 15** — 1 `[P]` (8.5 degraded mode contract)
+
+| Dimension | Score | Reason |
+|---|---|---|
+| Completeness Gap | 2 | One `[P]` item; `DegradationLevel` enum exists but broker behavior is undefined |
+| Impact if Gaps Persist | 2 | Degraded mode edge case; simulation continues without degradation broker semantics |
+| Test Shield | 2 | `DegradationLevel` enum is present; recovery behavior and broker semantics untested |
 
 ### 8.1 Tick Budget Allocation `[E]`
 **Source:** `src/engine/kernel.py` — phase cost tracking. `src/config/profiles.py`,
@@ -622,6 +698,14 @@ brokers are absent are undocumented and unimplemented.
 ---
 
 ## 9. Observability & Replay Infrastructure
+
+**Group Score: 3 / 15** — All 6 items `[E]`; no gaps.
+
+| Dimension | Score | Reason |
+|---|---|---|
+| Completeness Gap | 1 | All 6 items `[E]` — no gaps in this group |
+| Impact if Gaps Persist | 1 | No `[P]` or `[M]` items; no gap impact |
+| Test Shield | 1 | No gaps to protect; all behaviors covered at the implementation boundary |
 
 ### 9.1 Typed Event Emission Pipeline `[E]`
 **Source:** `src/engine/replay_manager.py` — `ReplayManager.emit()`
@@ -681,6 +765,14 @@ Machine-readable ledger of every verifiable simulation law. P0 entries require a
 ---
 
 ## 10. World Dynamics Foundation
+
+**Group Score: 3 / 15** — All 5 items `[E]` (updated 2026-06-22: E21B resolved 10.3 + 10.5); no remaining gaps.
+
+| Dimension | Score | Reason |
+|---|---|---|
+| Completeness Gap | 1 | All 5 items `[E]` — 10.3 and 10.5 resolved by TCK-20260619-E21B-REGEN-SERVICE |
+| Impact if Gaps Persist | 1 | No remaining `[P]` or `[M]` items; no gap impact |
+| Test Shield | 1 | 17 tests pass in `tests/unit/world/test_resource_ecology.py`; parity entries verified |
 
 ### 10.1 World Dynamics System `[E]`
 **Source:** `src/engine/world_dynamics.py` — `WorldDynamicsSystem.resolve_dynamics()`
@@ -808,6 +900,25 @@ See Finding 5 for detailed implementation evidence.
 | 10.5 | Resource Node Regeneration | `[E]` | World |
 
 **Totals: 63 Existing · 7 Partial · 2 Missing** _(updated 2026-06-22: E21B resolved 10.3+10.5; previous "61 E / 8 P / 3 M" corrected by D09 audit)_
+
+---
+
+## Group Health Summary
+
+| Group | Items | `[P]`/`[M]` | Score |
+|---|---|---|---|
+| §4 Spatial & Navigation | 7 | 2 `[P]` (incl. P0 parity defect) | **14 / 15** |
+| §1 Kernel & Execution | 9 | 1 `[P]`, 1 `[M]` | **11 / 15** |
+| §5 Mathematical & Formula | 10 | 1 `[P]`, 1 `[M]` | **11 / 15** |
+| §6 Entity & Content Modelling | 13 | 1 `[P]` | 9 / 15 |
+| §7 Domain Architecture | 4 | 1 `[P]` | 7 / 15 |
+| §8 Scheduling & Budget | 5 | 1 `[P]` | 6 / 15 |
+| §2 State Architecture | 6 | 0 | 3 / 15 |
+| §3 Mutation Architecture | 7 | 0 | 3 / 15 |
+| §9 Observability & Replay | 6 | 0 | 3 / 15 |
+| §10 World Dynamics | 5 | 0 | 3 / 15 |
+
+**Highest-priority group: §4 Spatial & Navigation (14/15)** — active P0 parity defect `COMB-006` in AoE legality.
 
 ---
 

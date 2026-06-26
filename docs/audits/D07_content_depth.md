@@ -46,6 +46,16 @@ in this category limits simulation quality.
 | **Entry Count** | 15+ entries — workable variety | 6–14 entries — some repetition | ≤ 5 entries — too thin to produce variety |
 | **RPG Essential** | Supporting / optional content type | Active gameplay category | Core RPG mechanic per D01 Tier 1 or 2 |
 
+### Layer Content Health Scoring
+
+Each content layer receives a Layer Content Health Score summarising the current depth concern within that layer. Higher score = more urgency to expand content in this layer.
+
+| Dimension | 1 | 3 | 5 |
+|---|---|---|---|
+| **Thin Category Count** | All categories ≥12 entries; no variety gaps | 1–2 categories at 6–11 entries | 3+ categories at ≤10 entries, or any category with ≤5 entries |
+| **Active Gap Findings** | No open Gap Risk findings for this layer | Open finding(s) with Gap Risk ≤9/15 | Open finding(s) with Gap Risk ≥10/15 in this layer |
+| **RPG Simulation Leverage** | Supporting / infrastructural layer; thin content barely noticed | Active gameplay layer; gaps reduce session variety | Core RPG layer; gaps prevent entire simulation scenario classes |
+
 ---
 
 ## Catalog Snapshot
@@ -68,6 +78,14 @@ _(Excludes procedurally generated compositions in `data/content/world_compositio
 
 Foundation layer is well-populated and stable. No gaps here.
 
+**Layer Content Health Score: 3 / 15** (Thin Category Count=1, Active Gap Findings=1, RPG Simulation Leverage=1)
+
+| Dimension | Score | Reason |
+|---|---|---|
+| Thin Category Count | 1 | All 7 categories ≥11 entries; lowest is Elements=11; no variety gaps |
+| Active Gap Findings | 1 | No open Gap Risk findings reference this layer |
+| RPG Simulation Leverage | 1 | Foundation is a supporting/infrastructural layer; its content is fixed by mechanics, not authored variety |
+
 ### Layer 2 — Entity
 
 | Category | Count | Notes |
@@ -85,6 +103,14 @@ Foundation layer is well-populated and stable. No gaps here.
 | Need profiles | 6 | Thin |
 | Sense profiles | 6 | Thin |
 
+**Layer Content Health Score: 11 / 15** (Thin Category Count=4, Active Gap Findings=3, RPG Simulation Leverage=4)
+
+| Dimension | Score | Reason |
+|---|---|---|
+| Thin Category Count | 4 | 5 sub-categories at ≤8 entries (body models=8, cognition=7, drive=7, need=6, sense=6); 3+ categories at ≤10 entries |
+| Active Gap Findings | 3 | F4 (archetype distribution skewed, Gap Risk 9/15) is open; score ≤9/15 |
+| RPG Simulation Leverage | 4 | Entity variety directly determines behavioral richness and personality differentiation (D05 scope); thin cognition/drive profiles constrain AI behavioral range |
+
 ### Layer 3 — World
 
 | Category | Count | Notes |
@@ -99,6 +125,14 @@ Foundation layer is well-populated and stable. No gaps here.
 | Services | 8 | Workable |
 | Recipes (crafting) | 8 | Thin — limits crafting system value |
 
+**Layer Content Health Score: 7 / 15** (Thin Category Count=3, Active Gap Findings=1, RPG Simulation Leverage=3)
+
+| Dimension | Score | Reason |
+|---|---|---|
+| Thin Category Count | 3 | 4 categories at ≤9 entries (buildings=9, ecologies=9, terrain=9, services=8); 3+ at ≤10 |
+| Active Gap Findings | 1 | F3 (recipes) RESOLVED; no open findings remain for this layer |
+| RPG Simulation Leverage | 3 | World content drives encounter variety and economic opportunities; gaps reduce session depth but don't block scenario classes |
+
 ### Layer 4 — Social & Scenario
 
 | Category | Count | Notes |
@@ -109,6 +143,14 @@ Foundation layer is well-populated and stable. No gaps here.
 | Simulation scenarios | 8 | ⚠️ Thin; mostly one world |
 | World compositions | 5 | Thin |
 | Quest definitions | 34 | ✅ Resolved — TCK-20260619-E13A-QUEST-DEFS |
+
+**Layer Content Health Score: 12 / 15** (Thin Category Count=4, Active Gap Findings=3, RPG Simulation Leverage=5)
+
+| Dimension | Score | Reason |
+|---|---|---|
+| Thin Category Count | 4 | World compositions=5 authored (≤5 entries threshold); perspectives=6 thin; two categories at ≤6 |
+| Active Gap Findings | 3 | F6 (faction relationships 14/16 factions, Gap Risk 8/15) is open; F1 and F5 RESOLVED |
+| RPG Simulation Leverage | 5 | Quests, scenarios, factions, and compositions are the Tier-1 RPG experience layer; this layer directly determines simulation replayability and narrative variety |
 
 ### Module Layer
 
@@ -128,6 +170,26 @@ Foundation layer is well-populated and stable. No gaps here.
 | economy | 1 |
 | **terrain** | **2** ✅ |
 | **population** | **2** ✅ |
+
+**Layer Content Health Score: 6 / 15** (Thin Category Count=3, Active Gap Findings=1, RPG Simulation Leverage=2)
+
+| Dimension | Score | Reason |
+|---|---|---|
+| Thin Category Count | 3 | World compositions=5 authored (thin); +4 generated brings total to 9 but authored variety is still limited |
+| Active Gap Findings | 1 | F2 (terrain/population module types) RESOLVED; no open findings |
+| RPG Simulation Leverage | 2 | Module layer is infrastructure for world generation; gaps here limit scenario assembly variety but don't directly remove RPG mechanics |
+
+---
+
+## Layer Content Health Summary
+
+| Layer | Score | Key Concerns |
+|---|---|---|
+| Layer 4 — Social & Scenario | **12 / 15** | World compositions thin (5 authored); faction relationships sparse (F6 open); highest RPG leverage |
+| Layer 2 — Entity | **11 / 15** | 5 thin sub-categories (body models=8, cognition=7, drive=7, need=6, sense=6); archetype skew (F4 open) |
+| Layer 3 — World | **7 / 15** | 4 sub-categories ≤9 entries (buildings, ecologies, terrain, services); F3 resolved |
+| Module Layer | **6 / 15** | World compositions thin (5 authored + 4 generated); F2 resolved; all 7 module types covered |
+| Layer 1 — Foundation | **3 / 15** | All categories well-populated; fully stable; no open findings |
 
 ---
 

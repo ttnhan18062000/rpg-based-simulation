@@ -1,35 +1,28 @@
 ---
-audit_id: D03
-title: Behavioral Emergence Quality
-status: done
-date: 2026-06-18
-ticket: TCK-20260618-AUDIT-D03-BEHAVIOR
+status: active
 layer: simulation
-priority: P0
-tags: [behavioral-emergence, simulation-quality, stasis, rejections, quest-system, economy, root-cause-confirmed]
+authority: P1
+audience: agent
+tags: [audit, behavioral-emergence, simulation-quality, stasis, rejections, quest-system, economy, root-cause-confirmed]
 ---
 
 # D03 — Behavioral Emergence Quality
 
 ## Dimension Profile
 
-| Field | Value |
+| Axis | Value |
 |---|---|
-| Audit ID | D03 |
-| Method | run-sim + code-read |
-| Priority | 1 |
-| Scope | `data/runs/`, `data/worlds/sandbox_world/`, `engine/`, `domains/adventure/`, `world/providers/` |
-| Seeds | 42, 137 |
-| Ticks | 200 each |
-| Observability | LIGHT |
+| **Group** | A — Simulation Quality |
+| **State** | `done` |
+| **Impact** | 5 / 5 |
+| **Interest** | 5 / 5 |
+| **Priority** | 10 |
+| **Method** | run-sim + code-read |
+| **Audit date** | 2026-06-18 |
 
-## What this dimension answers
+**What this dimension answers:** Do entities in the simulation behave like RPG characters — pursuing goals, completing quests, using resources, trading, fighting — or do they fall into a repetitive loop of rejected actions? This audit extended into code-read investigation after run-sim data revealed stasis. The root causes of the stasis are now confirmed at the source level.
 
-Do entities in the simulation behave like RPG characters — pursuing goals, completing quests, using resources, trading, fighting — or do they fall into a repetitive loop of rejected actions?
-
-This audit extended into code-read investigation after run-sim data revealed stasis. The root causes of the stasis are now confirmed at the source level.
-
-## Related Dimensions
+**Related dimensions:**
 
 | Dimension | Relationship |
 |---|---|
