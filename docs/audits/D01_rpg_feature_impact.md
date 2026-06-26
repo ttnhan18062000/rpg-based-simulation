@@ -25,7 +25,7 @@ which are missing — and how much does each one actually matter to simulation b
 Scores are grounded in simulation dynamics, not design ambition.
 
 **Related dimensions:** D03 (Behavioral Emergence Quality) — verifies whether the
-`[EXISTING]` features actually produce the emergent behavior the scores predict.
+`[E]` features actually produce the emergent behavior the scores predict.
 D06 (Long-Run Simulation Health) — tests whether missing Tier-1/2 systems cause
 the world to stagnate over long runs. D05 (Entity Differentiation) — verifies
 personality/OCEAN scoring produces distinct arcs at scale.
@@ -47,8 +47,8 @@ Five dimensions, each scored 1–5. Maximum possible: 25.
 **Composition Multiplier** (not a scored dimension): some features unlock or amplify
 multiple other features when enabled. Noted separately where it applies.
 
-**Status labels:** `[EXISTING]` — implemented and verified in current src.
-`[PARTIAL]` — partially implemented, gaps confirmed. `[MISSING]` — zero or near-zero code.
+**Status labels:** `[E]` Existing — implemented and verified in current src.
+`[P]` Partial — partially implemented, gaps confirmed. `[M]` Missing — zero or near-zero code.
 
 ---
 
@@ -86,7 +86,7 @@ Simulation breaks, stagnates, or produces meaningless output without these.
 
 ---
 
-### Adventure Decision System `[EXISTING]`
+### Adventure Decision System `[E]`
 
 | Dimension | Score | Reason |
 |---|---|---|
@@ -109,7 +109,7 @@ this system's output directly.
 
 ---
 
-### Motivation & Goal System `[EXISTING]`
+### Motivation & Goal System `[E]`
 
 | Dimension | Score | Reason |
 |---|---|---|
@@ -128,7 +128,7 @@ simulation. Without this, all routes look equally attractive and behavior flatte
 
 ---
 
-### Cognition / Knowledge / Self-Model `[EXISTING]`
+### Cognition / Knowledge / Self-Model `[E]`
 
 | Dimension | Score | Reason |
 |---|---|---|
@@ -148,7 +148,7 @@ coordinate-only — concepts/persons/rumors not yet modeled (see Active Info-See
 
 ---
 
-### Resource Ecology Regeneration `[PARTIAL]`
+### Resource Ecology Regeneration `[P]`
 
 | Dimension | Score | Reason |
 |---|---|---|
@@ -177,7 +177,7 @@ Emergence regional signals actually vary between runs.
 
 ---
 
-### World Evolution System `[PARTIAL]`
+### World Evolution System `[P]`
 
 | Dimension | Score | Reason |
 |---|---|---|
@@ -204,7 +204,7 @@ shallower but it doesn't stop running.
 
 ---
 
-### Economy / Resources / Crafting `[EXISTING]`
+### Economy / Resources / Crafting `[E]`
 
 | Dimension | Score | Reason |
 |---|---|---|
@@ -220,7 +220,7 @@ pressure. With Resource Ecology Regeneration, this ceiling rises to 4–5.
 
 ---
 
-### Persistent Campaign Runtime `[EXISTING]`
+### Persistent Campaign Runtime `[E]`
 
 | Dimension | Score | Reason |
 |---|---|---|
@@ -241,7 +241,7 @@ analysis-only harness (separate from the runtime).
 
 ---
 
-### Faction & Diplomacy System `[MISSING]`
+### Faction & Diplomacy System `[M]`
 
 | Dimension | Score | Reason |
 |---|---|---|
@@ -258,7 +258,7 @@ system that does not exist in current `src/`. Fresh build required.
 
 ---
 
-### Scenario Runtime Service `[MISSING]`
+### Scenario Runtime Service `[E]`
 
 > **RESOLVED: TCK-20260619-E31-SCENARIO-RUNTIME (2026-06-20):** ScenarioRuntimeService implemented with objective FSM, pause/resume/checkpoint, and REST API.
 
@@ -271,12 +271,11 @@ system that does not exist in current `src/`. Fresh build required.
 | Absence Penalty | 4 | Can only run open-ended lab experiments; no bounded scenario with objectives, outcomes, or resumable state |
 | **Total** | **19 / 25** | |
 
-**Status:** Zero code. Checkpoint infrastructure exists (`src/engine/checkpoint.py`) but
-it is for determinism hashing only, not scenario save/resume.
+**Status (updated 2026-06-20):** Implemented by TCK-20260619-E31-SCENARIO-RUNTIME. `ScenarioRuntimeService` provides objective FSM, pause/resume/checkpoint, and REST API. Checkpoint infrastructure in `src/engine/checkpoint.py` extended beyond determinism hashing to support full scenario save/resume.
 
 ---
 
-### Spatial / Movement System `[EXISTING]`
+### Spatial / Movement System `[E]`
 
 | Dimension | Score | Reason |
 |---|---|---|
@@ -289,7 +288,7 @@ it is for determinism hashing only, not scenario save/resume.
 
 ---
 
-### Information / Belief System `[PARTIAL]`
+### Information / Belief System `[E]`
 
 | Dimension | Score | Reason |
 |---|---|---|
@@ -309,7 +308,7 @@ town NPCs as differentiated sources.
 
 ---
 
-### Perception / Attention System `[EXISTING]`
+### Perception / Attention System `[E]`
 
 | Dimension | Score | Reason |
 |---|---|---|
@@ -322,7 +321,7 @@ town NPCs as differentiated sources.
 
 ---
 
-### Memory System (Causal / Spatial / Temporal) `[EXISTING]`
+### Memory System (Causal / Spatial / Temporal) `[E]`
 
 | Dimension | Score | Reason |
 |---|---|---|
@@ -335,7 +334,7 @@ town NPCs as differentiated sources.
 
 ---
 
-### Social / Cooperation / Reputation System `[EXISTING]`
+### Social / Cooperation / Reputation System `[E]`
 
 | Dimension | Score | Reason |
 |---|---|---|
@@ -348,7 +347,7 @@ town NPCs as differentiated sources.
 
 ---
 
-### Active Information-Seeking / Belief Economy `[EXISTING]`
+### Active Information-Seeking / Belief Economy `[E]`
 
 | Dimension | Score | Reason |
 |---|---|---|
@@ -368,7 +367,7 @@ All prior confirmed gaps are closed.
 
 ---
 
-### Emotion / Mood System `[EXISTING]`
+### Emotion / Mood System `[E]`
 
 | Dimension | Score | Reason |
 |---|---|---|
@@ -381,7 +380,7 @@ All prior confirmed gaps are closed.
 
 ---
 
-### Narrative Consequence Layer `[PARTIAL]`
+### Narrative Consequence Layer `[P]`
 
 | Dimension | Score | Reason |
 |---|---|---|
@@ -402,7 +401,7 @@ formation from chronicle events are not yet modeled.
 
 ---
 
-### Social Memory as Campaign Consequence `[EXISTING]`
+### Social Memory as Campaign Consequence `[E]`
 
 | Dimension | Score | Reason |
 |---|---|---|
@@ -422,7 +421,7 @@ was resolved by the same epic.
 
 ---
 
-### Macro-Economy Health Metrics `[MISSING]`
+### Macro-Economy Health Metrics `[E]`
 
 | Dimension | Score | Reason |
 |---|---|---|
@@ -433,9 +432,11 @@ was resolved by the same epic.
 | Absence Penalty | 4 | Economy can silently die — "infinite shop" and "gold inflation" failure modes are invisible without this |
 | **Total** | **16 / 25** | |
 
+**Status (updated 2026-06-26):** Implemented. `GoldSinkSystem` (`src/engine/gold_sink.py`) tracks Gini index and gold drain; `economy_health_monitor` events in `src/observability/events.py`; REST endpoint `GET /economy/health` in `src/api/routes/economy.py`.
+
 ---
 
-### Pressure-Driven Quest Generation `[MISSING]`
+### Pressure-Driven Quest Generation `[M]`
 
 | Dimension | Score | Reason |
 |---|---|---|
@@ -451,7 +452,7 @@ trigger source — this epic doesn't start from zero.
 
 ---
 
-### Combat System `[EXISTING]`
+### Combat System `[E]`
 
 | Dimension | Score | Reason |
 |---|---|---|
@@ -470,7 +471,7 @@ These add important dimensions. The simulation is viable without them but shallo
 
 ---
 
-### Progression / Rewards `[EXISTING]`
+### Progression / Rewards `[E]`
 
 | Dimension | Score | Reason |
 |---|---|---|
@@ -486,7 +487,7 @@ goals (see Progression Planner below).
 
 ---
 
-### Commitment / Reputation Labels `[EXISTING]`
+### Commitment / Reputation Labels `[E]`
 
 | Dimension | Score | Reason |
 |---|---|---|
@@ -499,7 +500,7 @@ goals (see Progression Planner below).
 
 ---
 
-### History / Chronicle Compiler `[EXISTING]`
+### History / Chronicle Compiler `[E]`
 
 | Dimension | Score | Reason |
 |---|---|---|
@@ -519,7 +520,7 @@ REST endpoint at `GET /chronicle/{world_id}` exposes the full chronicle.
 
 ---
 
-### Full Party Adventure Loop `[PARTIAL]`
+### Full Party Adventure Loop `[P]`
 
 | Dimension | Score | Reason |
 |---|---|---|
@@ -539,7 +540,7 @@ scoring (party composition optimization) is not yet implemented.
 
 ---
 
-### Decision Explanation Model `[PARTIAL]`
+### Decision Explanation Model `[E]`
 
 > **RESOLVED: TCK-20260619-E22-DECISION-EXPLAIN (2026-06-20):** Decision trace promoted to first-class durable object; REST API at /api/v1/observability/cognition/{entity_id}/tick/{n} implemented; tick index and LIGHT-mode capture added.
 
@@ -558,7 +559,7 @@ not new logic.
 
 ---
 
-### Personality → Long-Run Behavior Calibration `[PARTIAL]`
+### Personality → Long-Run Behavior Calibration `[P]`
 
 | Dimension | Score | Reason |
 |---|---|---|
@@ -574,7 +575,7 @@ they compound into distinct long-run life arcs vs. one-off route nudges.
 
 ---
 
-### Demographic / Cohort Population Model `[EXISTING]`
+### Demographic / Cohort Population Model `[E]`
 
 | Dimension | Score | Reason |
 |---|---|---|
@@ -594,7 +595,7 @@ in `CampaignState` via E52B migration artifacts.
 
 ---
 
-### Progression Planner `[MISSING]`
+### Progression Planner `[E]`
 
 | Dimension | Score | Reason |
 |---|---|---|
@@ -605,9 +606,11 @@ in `CampaignState` via E52B migration artifacts.
 | Absence Penalty | 2 | Progression is tick-local; no long-term character trajectory |
 | **Total** | **13 / 25** | |
 
+**Status (updated 2026-06-26):** Implemented. `ProgressionPlan`, `BuildGoal`, `MilestoneCheck`, `RevisionTrigger` frozen dataclasses in `src/domains/campaigns/progression_plan.py` with `ProgressionPlanExporter` / `ProgressionPlanImporter` for cross-episode persistence.
+
 ---
 
-### Combat Ecology Extension `[PARTIAL]`
+### Combat Ecology Extension `[P]`
 
 | Dimension | Score | Reason |
 |---|---|---|
@@ -626,7 +629,7 @@ in `CampaignState` via E52B migration artifacts.
 
 ---
 
-### Behavior Scorecard `[EXISTING]`
+### Behavior Scorecard `[E]`
 
 | Dimension | Score | Reason |
 |---|---|---|
@@ -639,7 +642,7 @@ in `CampaignState` via E52B migration artifacts.
 
 ---
 
-### Long-Horizon Regression Suite `[PARTIAL]`
+### Long-Horizon Regression Suite `[P]`
 
 | Dimension | Score | Reason |
 |---|---|---|
@@ -652,7 +655,7 @@ in `CampaignState` via E52B migration artifacts.
 
 ---
 
-### Capability / Support Registry `[MISSING]`
+### Capability / Support Registry `[E]`
 
 | Dimension | Score | Reason |
 |---|---|---|
@@ -663,9 +666,11 @@ in `CampaignState` via E52B migration artifacts.
 | Absence Penalty | 2 | Feature status is ambiguous; pluggable-pack work cannot safely start |
 | **Total** | **7 / 25** | |
 
+**Status (updated 2026-06-26):** Implemented. `CapabilityRegistry` in `src/engine/capability.py` with `is_supported()`, `get_status()`, `all_capabilities()`, `capabilities_by_status()`.
+
 ---
 
-### Pluggable Feature Pack Architecture `[MISSING]`
+### Pluggable Feature Pack Architecture `[E]`
 
 | Dimension | Score | Reason |
 |---|---|---|
@@ -674,10 +679,9 @@ in `CampaignState` via E52B migration artifacts.
 | Cascade Width | 5 | Meta-architecture — enables swapping race/combat/economy/time-scale models |
 | Emergence Ceiling | 1 | Enables emergence from swappable systems but is not itself emergent |
 | Absence Penalty | 1 | Zero code; nothing depends on it yet |
-| **Total** | **13 / 25 in principle — 0 in practice** | |
+| **Total** | **13 / 25** | |
 
-**Note:** Score of 13/25 only applies once Persistent Campaign Runtime, Scenario Runtime,
-and Capability Registry exist. Build the anchor epics first.
+**Status (updated 2026-06-26):** Implemented. `FeatureRegistry` (generic, enum-backed) in `src/domains/feature_packs/registry.py` with `register()`, `lookup()`, `list_all()`. Full feature pack system present: `balance_spec.py`, `profile.py`, `manifest.py`, `loader.py`. Anchor prerequisites (Persistent Campaign Runtime, Scenario Runtime, Capability Registry) all now `[E]`.
 
 ---
 
@@ -687,13 +691,13 @@ Not RPG features — scored separately. Listed for completeness.
 
 | System | Status | Notes |
 |---|---|---|
-| Simulation Kernel (tick loop, phases, determinism) | `[EXISTING]` | `infrastructure.yaml` 100% verified |
-| Authoritative Mutation Pipeline | `[EXISTING]` | Mature; single-mutation-point law enforced |
-| Observability (events, WebSocket, anomalies) | `[EXISTING]` | Strong coverage |
-| Replay & Determinism | `[EXISTING]` | Canonical state hashing in `src/engine/checkpoint.py` |
-| Granular Phase Permissions (INFRA-155/156) | `[PARTIAL]` | Only 2 unchecked items remain |
-| Unified Read Model Service | `[MISSING]` | APIs fragmented; no single presenter layer |
-| Performance / Resource Budgeting | `[EXISTING]` | Budget tests pass; hardware class contracts verified |
+| Simulation Kernel (tick loop, phases, determinism) | `[E]` | `infrastructure.yaml` 100% verified |
+| Authoritative Mutation Pipeline | `[E]` | Mature; single-mutation-point law enforced |
+| Observability (events, WebSocket, anomalies) | `[E]` | Strong coverage |
+| Replay & Determinism | `[E]` | Canonical state hashing in `src/engine/checkpoint.py` |
+| Granular Phase Permissions (INFRA-155/156) | `[E]` | Implemented in `src/engine/phase_domain_permissions.py` — full `PHASE_READ_DOMAINS`/`PHASE_WRITE_DOMAINS` tables (updated 2026-06-26) |
+| Unified Read Model Service | `[E]` | Implemented in `src/api/presenters/` — 6 dedicated presenter files (updated 2026-06-26) |
+| Performance / Resource Budgeting | `[E]` | Budget tests pass; hardware class contracts verified |
 
 ---
 
@@ -709,9 +713,9 @@ Not RPG features — scored separately. Listed for completeness.
 | 6 | Economy / Resources / Crafting | `[E]` | 20 | High |
 | 7 | Persistent Campaign Runtime | `[E]` | 20 | High |
 | 8 | Faction & Diplomacy System | `[M]` | 20 | High GAP |
-| 9 | Scenario Runtime Service | `[M]` | 19 | High GAP |
+| 9 | Scenario Runtime Service | `[E]` | 19 | High |
 | 10 | Spatial / Movement System | `[E]` | 18 | High |
-| 11 | Information / Belief System | `[P]` | 18 | High |
+| 11 | Information / Belief System | `[E]` | 18 | High |
 | 12 | Perception / Attention System | `[E]` | 18 | High |
 | 13 | Memory System | `[E]` | 18 | High |
 | 14 | Social / Cooperation / Reputation | `[E]` | 18 | High |
@@ -720,21 +724,21 @@ Not RPG features — scored separately. Listed for completeness.
 | 17 | Emotion / Mood System | `[E]` | 17 | High |
 | 18 | Narrative Consequence Layer | `[P]` | 17 | High (partial) |
 | 19 | Social Memory as Campaign Consequence | `[E]` | 17 | High |
-| 20 | Macro-Economy Health Metrics | `[M]` | 16 | High GAP |
+| 20 | Macro-Economy Health Metrics | `[E]` | 16 | High |
 | 21 | Pressure-Driven Quest Generation | `[M]` | 16 | High GAP |
 | 22 | Full Party Adventure Loop | `[P]` | 15 | Depth |
-| 23 | Decision Explanation Model | `[P]` | 15 | Depth (tooling) |
+| 23 | Decision Explanation Model | `[E]` | 15 | Depth (tooling) |
 | 24 | Personality Long-Run Calibration | `[P]` | 14 | Depth |
 | 25 | Demographic / Cohort Population Model | `[E]` | 14 | Depth |
 | 26 | Progression / Rewards | `[E]` | 13 | Depth |
 | 27 | Commitment / Reputation Labels | `[E]` | 13 | Depth |
 | 28 | History / Chronicle Compiler | `[E]` | 13 | Depth |
 | 29 | Combat Ecology Extension | `[P]` | 13 | Depth |
-| 30 | Progression Planner | `[M]` | 13 | Depth |
+| 30 | Progression Planner | `[E]` | 13 | Depth |
 | 31 | Behavior Scorecard | `[E]` | 10 | Tooling |
 | 32 | Long-Horizon Regression Suite | `[P]` | 10 | Tooling |
-| 33 | Capability / Support Registry | `[M]` | 7 | Infra prerequisite |
-| 34 | Pluggable Feature Pack Architecture | `[M]` | 0→13 | Big bet (deferred) |
+| 33 | Capability / Support Registry | `[E]` | 7 | Infra prerequisite |
+| 34 | Pluggable Feature Pack Architecture | `[E]` | 13 | Architecture |
 
 ---
 
@@ -747,20 +751,11 @@ Remaining gap: density-dependent rates, multi-stage ecological cycles, and cross
 pressure propagation. Economy pressure is now possible but long-run ecological dynamics
 are still thin.
 
-### Finding 2: Two missing Tier-2 systems remain the product gap (updated 2026-06-22)
-Faction & Diplomacy and Scenario Runtime Service (scores 19–20) are the remaining distance
-between "lab tooling" and "an RPG simulation product." Persistent Campaign Runtime
-(previously in this list) was implemented by E43A–E43E + E41B–E41D — the cross-episode
-state container now exists. Social Memory, Chronicle Compiler, and Demographic Model are
-all DONE; Narrative Consequence Layer is now partial.
+### Finding 2: One missing Tier-2 system remains the product gap (updated 2026-06-26)
+Faction & Diplomacy (score 20) is the remaining distance between "lab tooling" and "an RPG simulation product." Scenario Runtime Service (TCK-20260619-E31, score 19) is now DONE. Persistent Campaign Runtime was implemented by E43A–E43E + E41B–E41D. Social Memory, Chronicle Compiler, Demographic Model, Progression Planner, Capability Registry, and Feature Pack Architecture are all DONE; Narrative Consequence Layer is now partial.
 
-### Finding 3: Cascade unlocks confirm the implementation sequence (updated 2026-06-22)
-Resource Ecology Regeneration (partial) unblocks Macro-Economy Health Metrics and
-Pressure-Driven Quest Generation. Persistent Campaign Runtime (now DONE) has already
-unblocked Social Memory (DONE), Narrative Consequence Layer (now partial), History
-Compiler (DONE), Demographic Model (DONE), and Progression Planner (scoped in E61).
-The next major cascade unlock is Faction & Diplomacy — it feeds quest generation,
-combat motivation, economy disruption, and world evolution simultaneously.
+### Finding 3: Cascade unlocks confirm the implementation sequence (updated 2026-06-26)
+Resource Ecology Regeneration (partial) still gates Pressure-Driven Quest Generation at full depth. Macro-Economy Health Metrics is now DONE (GoldSinkSystem + REST endpoint). Persistent Campaign Runtime (DONE) has unblocked Social Memory (DONE), Narrative Consequence Layer (partial), History Compiler (DONE), Demographic Model (DONE), and Progression Planner (now DONE). The next major cascade unlock is Faction & Diplomacy — it feeds quest generation, combat motivation, economy disruption, and world evolution simultaneously.
 
 ### Finding 4: Active Info-Seeking gap is closed; remaining depth gaps are ecology + faction
 Economy/Resources (score 20) still has emergence ceiling 3 because complex ecological
@@ -785,28 +780,29 @@ the two classes serve distinct roles in the same package.
 | ~~Immediate~~ | ~~Rename `CampaignRunner` → `AnalysisCampaignRunner`~~ | **RESOLVED** — `CampaignOrchestrator` is now the persistent runtime; `CampaignRunner` retains the analysis role. Both names are now unambiguous. |
 | Epic 1 | Resource Ecology Regeneration — complete complex cycles (M) | Basic regen done (E21B); density-dependent cycles + cross-region propagation still missing |
 | Epic 2 | Faction & Diplomacy System (XL) — **SCOPED** (E53A–D in `tickets/todos/E53A–D/`) | Highest ceiling; largest remaining gap; child tickets ready for implementation |
-| Epic 3 | Scenario Runtime Service (M) | Defines product-shaped execution loop; still zero code |
+| ~~Epic 3~~ | ~~Scenario Runtime Service (M)~~ | **IMPLEMENTED** — TCK-20260619-E31-SCENARIO-RUNTIME (2026-06-20) |
 | Done | Persistent Campaign Runtime | **IMPLEMENTED** — E43A–E43E + E41B–E41D |
 | Done | Social Memory as Campaign Consequence | **IMPLEMENTED** — E43A–E43E |
 | Done | History / Chronicle Compiler | **IMPLEMENTED** — E51A–E51E |
 | Done | Demographic / Cohort Population Model | **IMPLEMENTED** — E52A–E52D |
 | Done | Active Information-Seeking / Belief Economy | **IMPLEMENTED** — E42A–E42E |
-| Scoped | Progression Planner | E61A–D in `tickets/todos/E61-PROGRESSION/` |
+| Done | Progression Planner | **IMPLEMENTED** — `src/domains/campaigns/progression_plan.py` (updated 2026-06-26) |
+| Done | Macro-Economy Health Metrics | **IMPLEMENTED** — `GoldSinkSystem` + `GET /economy/health` (updated 2026-06-26) |
+| Done | Capability / Support Registry | **IMPLEMENTED** — `src/engine/capability.py` (updated 2026-06-26) |
+| Done | Pluggable Feature Pack Architecture | **IMPLEMENTED** — `src/domains/feature_packs/` (updated 2026-06-26) |
 | Scoped | Culture / Myth Drift | E62A–D in `tickets/todos/E62-CULTURE-DRIFT/` |
-| Deferred | Pluggable Feature Pack Architecture | E63A–D scoped but gate-blocked until E53 is implemented |
 
 ---
 
 ## Related Dimensions
 
-- **D03 (Behavioral Emergence Quality)** — verifies whether `[EXISTING]` features produce
+- **D03 (Behavioral Emergence Quality)** — verifies whether `[E]` features produce
   the emergent behavior their scores predict; directly validates the Tier 1 and Tier 2 ratings here
 - **D05 (Entity Differentiation)** — verifies personality/OCEAN scoring produces
   observably distinct long-run arcs at scale; tests the emergence ceiling claims
 - **D06 (Long-Run Simulation Health)** — tests whether missing Tier-1/2 systems
   (Resource Ecology, Campaign Runtime) cause the world to stagnate past 1000 ticks
-- **D09 (System Wiring)** — confirmed all `[EXISTING]` features here are live-wired;
+- **D09 (System Wiring)** — confirmed all `[E]` features here are live-wired;
   also revealed 20+ domain-phase systems absent from D01's feature inventory
-- **D10 (Test Coverage)** — `[PARTIAL]` features scored highest on Absence Penalty
+- **D10 (Test Coverage)** — `[P]` features scored highest on Absence Penalty
   are the regression-risk targets
-| Defer | Pluggable Feature Pack Architecture (XL) | Score is 0 at current state; prerequisites not yet built |
