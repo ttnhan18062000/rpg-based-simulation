@@ -490,6 +490,20 @@
   - gates
   - local-only
 - type: doc
+  path: docs/audits/D19_domain_phase_inventory.md
+  title: D19 — Domain-Phase Inventory
+  status: active
+  layer: architecture
+  authority: P1
+  audience: agent
+  tags:
+  - audit
+  - domain-phases
+  - pipeline
+  - feature-inventory
+  - wiring
+  - domain-layer
+- type: doc
   path: docs/audits/audit_dimensions.md
   title: Engine Audit — Dimension Index
   status: active

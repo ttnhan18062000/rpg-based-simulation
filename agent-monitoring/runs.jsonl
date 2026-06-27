@@ -330,3 +330,5 @@
 {"run_id":"TCK-20260627-P0B-URBAN-RESOURCE-NODES","start_ts":"2026-06-26T21:28:09Z","end_ts":"2026-06-26T21:41:12Z","workflow":"implement-ticket","tier":"hotfix","final_status":"DONE","agent_count":9}
 {"run_id":"TCK-20260627-P0C-ENTITY-REGION-ASSIGN","start_ts":"2026-06-27T01:06:43Z","end_ts":"2026-06-27T03:28:41Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":9}
 {"run_id":"TCK-20260627-P1A-REJECTION-BACKOFF","start_ts":"2026-06-27T00:00:00Z","end_ts":"2026-06-27T03:56:12Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":9}
+{"run_id":"TCK-20260627-P1B-QUEST-ACTIVATION","start_ts":"2026-06-27T03:58:34Z","end_ts":"2026-06-27T04:09:42Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":9}
+{"run_id":"TCK-20260627-P1E-DOMAIN-INVENTORY","start_ts":"2026-06-27T04:13:01Z","end_ts":"2026-06-27T04:20:46Z","workflow":"implement-ticket","tier":"hotfix","final_status":"DONE","agent_count":9}
