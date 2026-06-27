@@ -45,7 +45,7 @@ class Kernel:
         "_current_signals", "_current_policy", "_current_work_items",
         "_source_packets", "_source_work_items", "_final_results", "_final_compute_ms",
         "_phase_costs", "_metrics", "_audit_mode", "_no_frame_pacing", "_no_replay", "_audit_dirty_set", "_perf_tracker", "_force_full_scan", "_current_update", "_cache_registry", "_cache_policy", "_opt_profile", "_event_listeners", "_event_recorder", "_entity_timeline_store",
-        "_run_id", "_artifact_repo", "_metric_recorder", "_current_tick_event_count", "_current_tick_violation_count", "_cognition_recorder", "_decision_trace_writer",
+        "_run_id", "_artifact_repo", "_metric_recorder", "_current_tick_event_count", "_current_tick_violation_count", "_cognition_recorder", "_decision_trace_writer", "_personality_recorder",
         "_workers_started", "_last_shutdown_report",
     )
 
@@ -231,6 +231,7 @@ class Kernel:
         self._metric_recorder = None
         self._cognition_recorder = None
         self._decision_trace_writer = None
+        self._personality_recorder = None
         if obs_mode != ObservabilityMode.OFF:
             from src.observability.reporting.metric_recorder import MetricWindowRecorder
             from src.observability.cognition.recorder import ObservabilityCognitionRecorder
@@ -250,6 +251,11 @@ class Kernel:
             )
             self._decision_trace_writer = DecisionTraceWriter(run_dir=run_dir_str)
             set_active_writer(self._decision_trace_writer)
+            from src.observability.personality.recorder import PersonalitySnapshotRecorder
+            self._personality_recorder = PersonalitySnapshotRecorder(
+                run_id=self._run_id,
+                run_dir=run_dir_str
+            )
 
         self._current_tick_event_count = 0
         self._current_tick_violation_count = 0
@@ -833,6 +839,16 @@ class Kernel:
                 )
             except Exception:
                 logger.exception("Failed to record strategic cognition snapshot in Kernel")
+
+        # 6. Record per-entity personality snapshots post-commit
+        if getattr(self, "_personality_recorder", None) is not None:
+            try:
+                self._personality_recorder.record_tick(
+                    state=self._state,
+                    tick=tick,
+                )
+            except Exception:
+                logger.exception("Failed to record personality snapshot in Kernel")
 
     def _guard_stability(self, phase_name: str, start_fingerprint: Dict[str, Any]) -> None:
         from src.core.protocol_validator import ProtocolViolationError

@@ -2698,3 +2698,79 @@
   test_path: tests/unit/lab/
   divergence_note: null
   support_boundary: null
+- id: INFRA-226
+  text: >
+    ComponentPatch.merge() return type narrowed from Any to Self (typing.Self,
+    Python 3.11+). All concrete subclasses (KindPatch, LifecyclePatch,
+    BiologicalPatch, InteractionPatch, IdentityPatch, NavigationPatch,
+    CombatPatch, StaminaPatch, InventoryPatch, EquipmentPatch, StrategicPatch,
+    QuestPatch, SocialPatch, TaskPatch, AttributePatch, RewardPatch, WoundPatch)
+    already had properly typed concrete overrides; the base class abstract
+    declaration is the only site changed. Annotation-only — no behavior change.
+    (TCK-20260627-P2J-PATCHES-TYPE, D13 F5)
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: >
+    src/engine/patches.py::ComponentPatch.merge (Self return annotation) +
+    tests/unit/optimization/test_component_patches.py
+  proof_type: null
+  test_path: tests/unit/optimization/test_component_patches.py
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-227
+  text: >
+    CI artifact upload: the `slow` job in `.github/workflows/test.yml` archives
+    `reports/certification/` as a GitHub Actions artifact named
+    `certification-report-<sha>` using `actions/upload-artifact@v4` with
+    `if: always()` and 30-day retention. Resolves D18 F5 — certification
+    evidence is now preserved per commit SHA, not lost after local cleanup.
+    (TCK-20260627-P2M-CI-ARTIFACTS)
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: .github/workflows/test.yml::slow job upload-artifact step
+  proof_type: null
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-228
+  text: >
+    GracefulDegradationManager.resolve_content_source() selects catalog entries
+    cheapest-first via CatalogRepository.get_lowest_cost_for_type() in degraded
+    mode; raises CatalogMissError when strict=True and catalog is absent; returns
+    {} when strict=False and catalog is absent.  Module-level default
+    runtime_content_source in src/core/registries.py changed from
+    "legacy_hardcoded" to None. Resolves D02 §6.6 [P].
+    (TCK-20260627-P2N-DEGRADED-FALLBACK)
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/domains/optimization/degradation.py::GracefulDegradationManager.resolve_content_source +
+    src/content/repository.py::CatalogRepository.get_lowest_cost_for_type +
+    src/core/registries.py::runtime_content_source (default=None)
+  proof_type: null
+  test_path: tests/unit/core/test_degraded_fallback.py::test_resolve_content_source_degraded_uses_catalog
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-229
+  text: >
+    PersonalitySnapshotRecorder emits per-entity personality snapshots to
+    entity_personality_snapshots.jsonl in LIGHT+ mode on active_project_kind
+    change (first observation always emits); in DEBUG mode emits every tick.
+    Each record contains: run_id, entity_id, tick, role, class_id, personality
+    (greed/bravery/sociability/industry), active_project_kind.
+    Entities without a strategic component are skipped. Resolves D05 P2
+    recommendation. (TCK-20260627-P2O-ENTITY-PERSONALITY-OBS)
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: >
+    src/observability/personality/recorder.py::PersonalitySnapshotRecorder +
+    src/engine/kernel.py::Kernel.__init__ (_personality_recorder slot) +
+    src/engine/kernel.py::Kernel._post_tick (step 6)
+  proof_type: null
+  test_path: tests/unit/observability/test_entity_personality_snapshot.py
+  divergence_note: null
+  support_boundary: null

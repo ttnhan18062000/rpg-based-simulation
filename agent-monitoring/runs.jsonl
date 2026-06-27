@@ -347,3 +347,7 @@
 {"run_id":"TCK-20260627-P2G-KERNEL-FACADE","start_ts":"2026-06-27T11:31:29Z","end_ts":"2026-06-27T12:20:22Z","workflow":"implement-ticket","tier":"hotfix","final_status":"DONE","agent_count":9}
 {"run_id":"TCK-20260627-P2H-TIMELINE-APPEND","start_ts":"2026-06-27T12:33:42Z","end_ts":"2026-06-27T12:40:55Z","workflow":"implement-ticket","tier":"hotfix","final_status":"DONE","agent_count":9}
 {"run_id":"TCK-20260627-P2I-WORKFLOW-TYPES","start_ts":"2026-06-27T12:53:47Z","end_ts":"2026-06-27T13:10:49Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":9}
+{"run_id":"TCK-20260627-P2J-PATCHES-TYPE","start_ts":"2026-06-27T13:12:05Z","end_ts":"2026-06-27T13:19:52Z","workflow":"implement-ticket","tier":"hotfix","final_status":"DONE","agent_count":9}
+{"run_id":"TCK-20260627-P2M-CI-ARTIFACTS","start_ts":"2026-06-27T13:22:04Z","end_ts":"2026-06-27T13:24:44Z","workflow":"implement-ticket","tier":"hotfix","final_status":"DONE","agent_count":9}
+{"run_id":"TCK-20260627-P2N-DEGRADED-FALLBACK","start_ts":"2026-06-27T13:34:38Z","end_ts":"2026-06-27T13:48:52Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":9}
+{"run_id":"TCK-20260627-P2O-ENTITY-PERSONALITY-OBS","start_ts":"2026-06-27T13:52:46Z","end_ts":"2026-06-27T14:03:45Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":9}
