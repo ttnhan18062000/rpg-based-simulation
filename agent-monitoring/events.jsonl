@@ -1258,3 +1258,12 @@
 {"run_id":"TCK-20260627-P2H-TIMELINE-APPEND","seq":7,"phase":"Parity","agent":"parity-updater","status":"ok","summary":"Added INFRA-224 to infrastructure.yaml; no behavior change, routing pattern documented as verified","ts":"2026-06-27T12:38:12Z","tool_call_count":3}
 {"run_id":"TCK-20260627-P2H-TIMELINE-APPEND","seq":8,"phase":"Verify","agent":"done-checker","status":"ok","summary":"READY_TO_CLOSE \u2014 all DoD conditions met","ts":"2026-06-27T12:39:02Z","tool_call_count":2}
 {"run_id":"TCK-20260627-P2H-TIMELINE-APPEND","seq":9,"phase":"Finalize","agent":"finalizer","status":"ok","summary":"Ticket moved to done, todos source deleted, working_log appended, knowledge index updated","ts":"2026-06-27T12:40:55Z","tool_call_count":6}
+{"run_id":"TCK-20260627-P2I-WORKFLOW-TYPES","seq":1,"phase":"Scope","agent":"ticket-scoper","status":"ok","summary":"Loaded ticket, tier=standard","ts":"2026-06-27T12:53:47Z"}
+{"run_id":"TCK-20260627-P2I-WORKFLOW-TYPES","seq":2,"phase":"Investigate","agent":"investigator","status":"ok","summary":"Identified 7 run() return shapes, no callers need changes","ts":"2026-06-27T13:09:59Z"}
+{"run_id":"TCK-20260627-P2I-WORKFLOW-TYPES","seq":3,"phase":"Plan","agent":"planner","status":"ok","summary":"Plan produced: results.py + 7 annotations","ts":"2026-06-27T13:09:59Z"}
+{"run_id":"TCK-20260627-P2I-WORKFLOW-TYPES","seq":4,"phase":"Review","agent":"architecture-reviewer","status":"ok","summary":"APPROVED","ts":"2026-06-27T13:09:59Z"}
+{"run_id":"TCK-20260627-P2I-WORKFLOW-TYPES","seq":5,"phase":"Implement","agent":"implementer","status":"ok","summary":"Created src/lab/results.py; updated 7 run() signatures in workflows.py","ts":"2026-06-27T13:09:59Z"}
+{"run_id":"TCK-20260627-P2I-WORKFLOW-TYPES","seq":6,"phase":"Test","agent":"test-scoper","status":"ok","summary":"210 passed (150 unit + 60 integration)","ts":"2026-06-27T13:09:59Z"}
+{"run_id":"TCK-20260627-P2I-WORKFLOW-TYPES","seq":7,"phase":"Parity","agent":"parity-updater","status":"ok","summary":"Added INFRA-225 to infrastructure.yaml","ts":"2026-06-27T13:09:59Z"}
+{"run_id":"TCK-20260627-P2I-WORKFLOW-TYPES","seq":8,"phase":"Verify","agent":"done-checker","status":"ok","summary":"READY_TO_CLOSE \u2014 12/12 DoD conditions met","ts":"2026-06-27T13:09:59Z"}
+{"run_id":"TCK-20260627-P2I-WORKFLOW-TYPES","seq":9,"phase":"Finalize","agent":"finalizer","status":"ok","summary":"Ticket moved to done, artifacts stored, log appended","ts":"2026-06-27T13:09:59Z"}

@@ -2675,3 +2675,26 @@
   test_path: tests/unit/observability/test_entity_timeline.py
   divergence_note: null
   support_boundary: null
+- id: INFRA-225
+  text: >
+    All 7 lab Workflow.run() methods in src/lab/workflows.py return specific
+    TypedDict types defined in src/lab/results.py — no dict[str, Any] or
+    Dict[str, Any] in run() return positions. Workflows with BLOCKED/READY
+    branching use Union[BlockedWorkflowResult, <Workflow>ReadyResult] with
+    Literal-tagged status fields enabling mypy narrowing. GenerateSimulationSetup
+    and UpdateSimulationKnowledge return flat TypedDicts (no BLOCKED path).
+    Callers remain backward-compatible: TypedDicts support dict-key access at
+    runtime. (TCK-20260627-P2I-WORKFLOW-TYPES, D13 F4)
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: >
+    src/lab/results.py (BlockedWorkflowResult, GenerateSimulationSetupResult,
+    PrepareSimulationExecutionResult, RegisterSimulationResultResult,
+    CompactSimulationDataResult, InvestigateSimulationResultResult,
+    ProposeSimulationEnhancementsResult, UpdateSimulationKnowledgeResult) +
+    src/lab/workflows.py (all 7 run() signatures annotated with result types)
+  proof_type: null
+  test_path: tests/unit/lab/
+  divergence_note: null
+  support_boundary: null
