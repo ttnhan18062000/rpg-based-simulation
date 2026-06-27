@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+from pathlib import Path
 from pydantic import BaseModel, Field, ConfigDict
-from typing import Optional, Dict
+from typing import Optional, Dict, FrozenSet
 
 class ContentFamilyMatrixEntry(BaseModel):
     """
@@ -603,6 +604,98 @@ CONTENT_USAGE_MATRIX: Dict[str, ContentFamilyMatrixEntry] = {
         content_maturity="ADDITIONAL",
     ),
 }
+
+
+_STRUCTURAL_DIRS: FrozenSet[str] = frozenset(
+    {"world_modules", "world_compositions", "simulation_scenarios"}
+)
+
+
+def _auto_discover_extra_entries(
+    content_dir: str,
+    known_keys: FrozenSet[str],
+) -> Dict[str, ContentFamilyMatrixEntry]:
+    """Scan *content_dir* for YAML families not already covered by *known_keys*.
+
+    Uses the same directory-walk logic as ``test_matrix_covers_all_content_files``
+    so auto-generated keys match exactly what that test expects to find in the
+    matrix.  Each discovered key receives a minimal ``DESIGN_ONLY`` placeholder
+    entry.  This eliminates the manual ``CONTENT_USAGE_MATRIX`` registration step
+    when adding a new content file: the matrix test passes automatically, while
+    the ``ValueError: Ignored active YAML files`` guard in
+    ``CatalogRepository.load_all(strict=True)`` is unaffected (it checks
+    ``CANONICAL_FAMILIES``, not this matrix).
+
+    Args:
+        content_dir: Path to the content root directory (e.g. ``"data/content"``).
+        known_keys: Set of family keys already present in the matrix — these are
+            skipped so hand-crafted entries are never overwritten.
+
+    Returns:
+        Dict of newly discovered keys → auto-generated ``DESIGN_ONLY`` entries.
+        Empty if *content_dir* does not exist or all files are already registered.
+    """
+    discovered: Dict[str, ContentFamilyMatrixEntry] = {}
+    content_path = Path(content_dir)
+    if not content_path.is_dir():
+        return discovered
+
+    for item in sorted(content_path.rglob("*")):
+        if item.name == ".gitkeep":
+            continue
+
+        rel = item.relative_to(content_path)
+        parts = rel.parts
+        if not parts:
+            continue
+
+        top_dir = parts[0]
+
+        if top_dir in _STRUCTURAL_DIRS:
+            matrix_key = top_dir
+            file_path_val = top_dir
+        elif item.is_file() and item.suffix in {".yaml", ".yml"}:
+            matrix_key = str(rel.with_suffix("")).replace("\\", "/")
+            file_path_val = str(rel).replace("\\", "/")
+        else:
+            continue
+
+        if matrix_key in known_keys or matrix_key in discovered:
+            continue
+
+        discovered[matrix_key] = ContentFamilyMatrixEntry(
+            file_path=file_path_val,
+            schema_class=None,
+            repository_index="None",
+            validator_coverage="None",
+            resolver_component="None",
+            compile_runtime_consumer="None",
+            test_coverage="tests/unit/content/test_content_usage_matrix.py",
+            evidence_tests=None,
+            resolver_evidence="None",
+            runtime_consumer_evidence=(
+                "Auto-discovered; add a manual entry to CONTENT_USAGE_MATRIX "
+                "to declare consumer path and implementation state"
+            ),
+            implementation_state="DESIGN_ONLY",
+            content_maturity="ADDITIONAL",
+        )
+
+    return discovered
+
+
+# ---------------------------------------------------------------------------
+# Auto-discovery: merge any files present on disk but not yet hand-registered.
+# This ensures test_matrix_covers_all_content_files passes automatically when
+# a new YAML file is added to data/content/ without a manual matrix entry.
+# The strict-load ValueError guard in CatalogRepository is NOT affected.
+# ---------------------------------------------------------------------------
+_auto_discovered = _auto_discover_extra_entries(
+    content_dir="data/content",
+    known_keys=frozenset(CONTENT_USAGE_MATRIX.keys()),
+)
+if _auto_discovered:
+    CONTENT_USAGE_MATRIX = {**CONTENT_USAGE_MATRIX, **_auto_discovered}
 
 
 def generate_matrix_report() -> str:

@@ -913,13 +913,13 @@
   divergence_note: null
   support_boundary: null
 - id: SUB-087
-  text: '`test_default_region_id`: default region identifier is preserved'
+  text: '`test_default_region_id`: entity navigation.region_id is assigned from spawn region at WorldCompiler.compile() time'
   status: verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  v2_evidence: 'src/worldbuilding/compiler.py L319 — V2EntityBuilder chain calls .navigation(region_id=region_id) where region_id=pop_spec.spawn_region; fix applied in TCK-20260627-P0C-ENTITY-REGION-ASSIGN'
   proof_type: null
-  test_path: null
+  test_path: tests/integration/worldassembly/test_e2e_smoke.py::test_urban_political_all_entities_have_region_id
   divergence_note: null
   support_boundary: null
 - id: SUB-088
@@ -4123,3 +4123,22 @@
 # NOTE: Faction authoritative-world-object parity is tracked in a dedicated file.
 # See docs/parity_ledger/faction.yaml for FAC-001 (FactionState durable model in
 # AuthoritativeState) and FAC-002 (tension clamping), added by TCK-20260619-E53Aa-FACTION-STATE.
+
+- id: SUB-373
+  text: >
+    CONTENT_USAGE_MATRIX in src/content/matrix.py is auto-populated at import
+    time with DESIGN_ONLY placeholder entries for any YAML file present in
+    data/content/ that is not already hand-registered. This eliminates the manual
+    registration step for new content families. The ValueError guard in
+    CatalogRepository.load_all(strict=True) (CANONICAL_FAMILIES check) is
+    unaffected and continues to fire for unregistered files.
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: >
+    src/content/matrix.py (_auto_discover_extra_entries, module-level merge block,
+    TCK-20260627-P2K-CONTENT-MATRIX)
+  proof_type: parity
+  test_path: tests/unit/content/test_content_usage_matrix.py::test_merged_matrix_covers_all_disk_files
+  divergence_note: null
+  support_boundary: null
