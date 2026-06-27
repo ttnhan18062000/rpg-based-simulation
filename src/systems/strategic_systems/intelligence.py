@@ -1,5 +1,5 @@
 # Compliance IDs: PERF-016, STRAT-021
-# Compliance IDs: SOC-045, SOC-136, STRAT-002, STRAT-003, STRAT-004, STRAT-005, STRAT-011, STRAT-050, STRAT-072, STRAT-079, STRAT-141, STRAT-148, STRAT-149, STRAT-184, STRAT-185, STRAT-186, STRAT-187, STRAT-189, STRAT-190, STRAT-196, STRAT-197, STRAT-198, STRAT-199, STRAT-200, STRAT-213, STRAT-217, STRAT-218, SUB-024
+# Compliance IDs: SOC-045, SOC-136, STRAT-002, STRAT-003, STRAT-004, STRAT-005, STRAT-011, STRAT-050, STRAT-072, STRAT-079, STRAT-141, STRAT-148, STRAT-149, STRAT-184, STRAT-185, STRAT-186, STRAT-187, STRAT-189, STRAT-190, STRAT-196, STRAT-197, STRAT-198, STRAT-199, STRAT-200, STRAT-213, STRAT-217, STRAT-218, STRAT-234, SUB-024
 # Compliance IDs: SOC-045, SOC-136, STRAT-050, STRAT-072, STRAT-079, STRAT-141, STRAT-148, STRAT-149, SUB-024
 """
 Strategic Intelligence System.
@@ -19,6 +19,12 @@ import ast
 import logging
 
 logger = logging.getLogger(__name__)
+
+# Maximum consecutive intent failures before a stale project is abandoned.
+# Rationale: D06 F3 observed 550K rejections/tick-1000 from projects that never
+# make progress. N=20 caps per-project retry depth while still allowing transient
+# failures to self-resolve. STRAT-234.
+_MAX_CONSECUTIVE_REJECTIONS: int = 20
 
 if TYPE_CHECKING:
     from src.engine.cadence import SystemCadence
@@ -1143,8 +1149,22 @@ class StrategicIntelligenceSystem:
         if strat.current_project_id:
             project = strat.projects.get(strat.current_project_id)
             if project and project.status == ProjectStatus.ACTIVE:
-                # If project has failed too many times, abandon it
-                if project.failure_count >= 3:
+                # Rejection backoff (STRAT-234 / TCK-20260627-P1A-REJECTION-BACKOFF):
+                # Track consecutive ticks where every intent this entity emitted was
+                # rejected.  When the counter reaches _MAX_CONSECUTIVE_REJECTIONS the
+                # project is abandoned to stop the ~650-rejection/tick cascade observed
+                # in D06 F3.  An empty results list (cadence skip / idle tick) does not
+                # change the counter in either direction.
+                _intent_results = entity.identity.latest_intent_results
+                if _intent_results:
+                    _any_accepted = any(r.accepted for r in _intent_results)
+                    if not _any_accepted:
+                        project = replace(project, failure_count=project.failure_count + 1)
+                    elif project.failure_count > 0:
+                        project = replace(project, failure_count=0)
+
+                # If project has failed too many consecutive times, abandon it.
+                if project.failure_count >= _MAX_CONSECUTIVE_REJECTIONS:
                     abandoned = replace(project, status=ProjectStatus.ABANDONED)
                     # Frustration penalty (Phase 6 spec)
                     boredom_upd[project.kind] = boredom_upd.get(project.kind, 0.0) + 0.5
@@ -1153,6 +1173,20 @@ class StrategicIntelligenceSystem:
                         current_project_id_set="",
                         current_objective_id_set="",
                         boredom_delta=boredom_upd,
+                        leads_add_or_update=memory_upd.leads_add_or_update,
+                        leads_remove=memory_upd.leads_remove
+                    )
+
+                # Persist the updated failure_count when below the abandonment threshold.
+                # Only return early when the entity has no unresolved blockers: if blockers
+                # exist the entity still has a detour path (strategic progress is possible)
+                # and the function must continue to the detour-suggestion section.
+                # When blockers exist the increment is deferred to the next evaluation
+                # where no blocker is active — acceptable because the cascade scenario
+                # involves truly stuck entities that never generate actionable blockers.
+                if project is not strat.projects.get(strat.current_project_id) and not strat.blockers:
+                    return StrategicUpdate(
+                        projects_add_or_update=[project],
                         leads_add_or_update=memory_upd.leads_add_or_update,
                         leads_remove=memory_upd.leads_remove
                     )

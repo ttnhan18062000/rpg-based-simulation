@@ -2567,3 +2567,27 @@
     This is intentional: faction pressure is designed to override individual need urgency.
     HUNT_WEAK_ENEMY used as patrol proxy (no PATROL RouteFamily exists).
   support_boundary: null
+- id: STRAT-234
+  text: >-
+    A stale project that receives consecutive tick-level intent rejections is abandoned
+    after _MAX_CONSECUTIVE_REJECTIONS (currently 20) consecutive ticks where every intent
+    emitted was rejected. The failure_count field on ProjectState is incremented on each
+    all-rejected tick and reset to 0 on any accepted intent. Early return is suppressed when
+    the entity has unresolved blockers (a detour path still exists). This prevents the
+    ~650-rejection/tick cascade observed in D06 F3 from accumulating to 550K by tick 1,000.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >-
+    src/systems/strategic_systems/intelligence.py — _MAX_CONSECUTIVE_REJECTIONS=20 constant;
+    evaluate_strategic_intent() rejection backoff block (TCK-20260627-P1A-REJECTION-BACKOFF).
+    ProjectState.failure_count field at src/core/strategic.py:L253.
+  proof_type: parity
+  test_path: >-
+    tests/unit/strategic/test_rejection_backoff.py::TestProjectAbandonmentAtThreshold::test_abandons_at_max_consecutive_rejections
+  divergence_note: >-
+    Early return for sub-threshold failure_count updates is skipped when strat.blockers is
+    non-empty. In that case the increment is deferred to the next evaluation with no active
+    blockers. This is intentional: entities with an actionable blocker (e.g. inventory full)
+    still have a detour path and should not be prematurely abandoned.
+  support_boundary: null
