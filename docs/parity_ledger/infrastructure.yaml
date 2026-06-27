@@ -2385,13 +2385,13 @@
   divergence_note: null
   support_boundary: null
 - id: INFRA-211
-  text: "Decision trace writer (LIGHT+ mode): AdventureDecisionPhase writes per-entity scored route breakdown to decision_trace.jsonl after each strategic decision, capturing all 8 score-term fields (urgency, benefit, personality_bias, confidence_bonus, risk_penalty, blocker_penalty, score, selected). execute_brain() is not modified."
+  text: "Decision trace writer (LIGHT+ mode): AdventureDecisionPhase writes per-entity scored route breakdown to decision_trace.jsonl after each strategic decision, capturing all 8 score-term fields (urgency, benefit, personality_bias, confidence_bonus, risk_penalty, blocker_penalty, score, selected) plus runner_up_scores (ranks 2–3) and source_goal_score (winner). Routes are sorted descending by score before serialization. A per-entity goal-score cache (top-3) is maintained and exposed to EntityInspectionSnapshot via get_latest_goal_scores(). execute_brain() is not modified."
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: src/observability/cognition/decision_trace_writer.py::DecisionTraceWriter + src/domains/adventure/phase.py::AdventureDecisionPhase.apply + src/observability/config.py::OBS_DECISION_TRACE
+  v2_evidence: "src/observability/cognition/decision_trace_writer.py::DecisionTraceWriter.write_trace + DecisionTraceWriter.get_latest_goal_scores + src/domains/adventure/phase.py::AdventureDecisionPhase.apply + src/observability/live/entity_inspector.py::EntityInspectionSnapshot.goal_scores + src/observability/config.py::OBS_DECISION_TRACE"
   proof_type: feature
-  test_path: tests/unit/observability/test_decision_trace.py::test_decision_trace_written_in_light_mode
+  test_path: tests/unit/observability/test_decision_trace.py::test_decision_trace_runner_up_scores_present
   divergence_note: null
   support_boundary: null
 - id: INFRA-212
@@ -2573,6 +2573,27 @@
   test_path: "tests/unit/feature_packs/test_loader.py::test_load_demo_escort_pack_registers_escort_dignitary"
   divergence_note: null
 
+- id: INFRA-221
+  text: >
+    All 10 Phase 10 feature flags in FeatureFlagManager default to FeatureMode.OFF.
+    Balance and behavioural scenarios must explicitly enable flags via
+    set_flag_mode() or the overrides constructor argument. The sentinel test
+    test_adventure_routing_defaults_off() guards the ENABLE_ADVENTURE_ROUTING
+    default and will fail with instructions if the default is changed without
+    re-running tools/balance_measure.py to establish a new baseline.
+    Per-scenario parametrized assertions added in TCK-20260627-P2E-FEATURE-FLAG-TEST:
+    all 14 loaded scenario definitions verified to have all 10 flags OFF by default,
+    flag stability across instances confirmed, and the opt-in override mechanism
+    verified for all hero_guild_perspective adventure-routing scenarios.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: "src/domains/optimization/feature_flags.py:13-24 (FeatureFlagManager.__init__ defaults)"
+  proof_type: null
+  test_path: "tests/integration/scenarios/test_balance_regression.py::test_adventure_routing_defaults_off | tests/integration/test_scenario_feature_flag_defaults.py"
+  divergence_note: "DEV-002 in docs/guidelines/intentional_divergences.md (TCK-20260627-P0A-ADVENTURE-FLAG)"
+  support_boundary: null
+
 - id: INFRA-TYPE-001
   text: >
     mypy type checking gate is configured for src/ (excluding V1 modules:
@@ -2593,5 +2614,64 @@
     EntityDetailResponse TypedDict schemas.
   proof_type: null
   test_path: make typecheck-py
+  divergence_note: null
+  support_boundary: null
+
+- id: INFRA-222
+  text: >
+    Gross isolation guard (_guard_gross_isolation) runs unconditionally in standard
+    (non-audit) mode after Scheduling and Collection phases. Checks len(state.entities)
+    and state.tick only — two O(1) integer reads. Raises ProtocolViolationError on
+    entity count change or mid-phase tick advancement. Field-level mutations within
+    existing entities require audit_mode=True for detection.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: "src/engine/kernel.py:_guard_gross_isolation() + _tick_once_inner() lightweight guard block"
+  proof_type: null
+  test_path: "tests/unit/core/test_engine_integrity.py::test_gross_isolation_guard_triggers_on_tick_change,tests/unit/core/test_engine_integrity.py::test_gross_isolation_guard_triggers_on_entity_count_change,tests/unit/core/test_engine_integrity.py::test_gross_isolation_guard_silent_on_clean_state"
+  divergence_note: null
+  support_boundary: null
+
+- id: INFRA-223
+  text: >
+    _phase_persistence() sets TICK_END.hash conditionally: SHA-256 canonical hash when
+    replay_allowed AND (audit_mode OR replay_richness=="FULL"); sentinel string "SKIPPED"
+    when replay_allowed=True but replay_richness!="FULL" and audit_mode=False (DEGRADED
+    mode); no TICK_END event at all when replay_allowed=False (SURVIVAL mode). NORMAL and
+    CONSTRAINED modes use replay_richness="FULL" and therefore compute the canonical hash
+    every tick. StateFingerprinter (MD5) is emitted in REFINED_UPDATE events whenever
+    replay_allowed=True but covers a narrower domain than CanonicalStateHasher (excludes
+    buildings, corpses, ground_items, chests, home_storage, camps, tile indices, work_debt,
+    rng_checkpoint). Shutdown always emits the final canonical SHA-256 regardless of mode.
+    Documented in docs/engine/known_limitations.md §2.4 and docs/engine/kernel.md.
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: >
+    src/engine/kernel.py::Kernel._phase_persistence (tick_hash gate) +
+    src/engine/policy.py::GovernorPolicy.from_mode (replay_richness by mode) +
+    src/replay/fingerprint.py::StateFingerprinter +
+    docs/engine/known_limitations.md §2.4 (TCK-20260627-P2F-CANON-HASH-DOC)
+  proof_type: null
+  test_path: tests/integration/kernel/test_determinism_suite.py
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-224
+  text: >
+    Entity timeline backward-compatibility append is routed through
+    EntityTimelineStore.record_to_entity() — kernel.py does not call
+    entity.timeline.append() directly. The method encapsulates the hasattr guard
+    and is the authorised emission point for the legacy entity.timeline path.
+    (TCK-20260627-P2H-TIMELINE-APPEND)
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: >
+    src/observability/entity_timeline.py::EntityTimelineStore.record_to_entity +
+    src/engine/kernel.py::Kernel._phase_emit_events (calls record_to_entity, not
+    entity.timeline.append directly)
+  proof_type: null
+  test_path: tests/unit/observability/test_entity_timeline.py
   divergence_note: null
   support_boundary: null

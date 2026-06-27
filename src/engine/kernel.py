@@ -304,19 +304,30 @@ class Kernel:
         if self._audit_mode:
             start_fingerprint = self._state.fingerprint()
 
+        # Lightweight gross isolation sentinel — active in all run modes.
+        # Two integer reads: O(1), negligible overhead on all hardware classes.
+        # Detects entity-count changes and mid-phase tick advancement only.
+        # Field-level mutations within existing entities require audit_mode=True.
+        _gross_entity_count = len(self._state.entities)
+        _gross_tick = self._state.tick
+
         self._phase_scheduling()
         t2 = time.perf_counter_ns()
         self._phase_costs["scheduling"] = (t2 - t1) / 1e6
-        
+
         if self._audit_mode and start_fingerprint:
             self._guard_stability("Scheduling", start_fingerprint)
-            
+        if not self._audit_mode:
+            self._guard_gross_isolation("Scheduling", _gross_entity_count, _gross_tick)
+
         self._phase_collection()
         t3 = time.perf_counter_ns()
         self._phase_costs["collection"] = (t3 - t2) / 1e6
-        
+
         if self._audit_mode and start_fingerprint:
             self._guard_stability("Collection", start_fingerprint)
+        if not self._audit_mode:
+            self._guard_gross_isolation("Collection", _gross_entity_count, _gross_tick)
             
         self._phase_resolution()
         t4 = time.perf_counter_ns()
@@ -797,11 +808,11 @@ class Kernel:
             self._event_recorder.record(event)
             self._entity_timeline_store.record(event)
 
-            # Fallback for backwards compatibility with legacy tests/code accessing entity.timeline
+            # Route entity.timeline update through EntityTimelineStore to avoid direct mutation
             if event.entity_id is not None:
                 entity = self._state.entities.get(event.entity_id)
-                if entity and hasattr(entity, "timeline") and entity.timeline is not None:
-                    entity.timeline.append(event)
+                if entity:
+                    self._entity_timeline_store.record_to_entity(event, entity)
 
         # 4. Notify any external event listeners
         if generated_events and hasattr(self, "_event_listeners"):
@@ -831,6 +842,30 @@ class Kernel:
                  f"Isolation Breach: Authoritative state mutated during {phase_name} phase. "
                  f"Expected hash {start_fingerprint['state_hash']}, got {current['state_hash']}"
              )
+
+    def _guard_gross_isolation(self, phase_name: str, expected_entity_count: int, expected_tick: int) -> None:
+        """Lightweight isolation guard active in all run modes (non-audit).
+
+        Checks entity count and tick number only — a proxy for gross isolation breaches:
+        entity creation or deletion mid-phase, or tick advancement outside the
+        authoritative pipeline. Field-level mutations within existing entities are NOT
+        detected here; full detection requires audit_mode=True.
+        """
+        from src.core.protocol_validator import ProtocolViolationError
+        current_count = len(self._state.entities)
+        current_tick = self._state.tick
+        if current_count != expected_entity_count:
+            raise ProtocolViolationError(
+                f"Gross Isolation Breach: entity count changed during {phase_name} phase "
+                f"(expected {expected_entity_count}, got {current_count}). "
+                f"Full isolation enforcement requires audit_mode=True."
+            )
+        if current_tick != expected_tick:
+            raise ProtocolViolationError(
+                f"Gross Isolation Breach: tick advanced during {phase_name} phase "
+                f"(expected {expected_tick}, got {current_tick}). "
+                f"Full isolation enforcement requires audit_mode=True."
+            )
 
     def _phase_persistence(self) -> None:
         tick_hash = "SKIPPED"
@@ -988,9 +1023,20 @@ class Kernel:
         return self._state
 
     def _get_deterministic_neighbor_view(
-        self, 
-        subject: EntityState, 
+        self,
+        subject: EntityState,
         radius: float
     ) -> List[tuple[int, EntityState]]:
         from src.engine.domain_logic import SimulationDomainLogic
         return SimulationDomainLogic.get_neighbor_view(self._state, subject, radius)
+
+    @staticmethod
+    def get_world_indexes(state: Any, dirty: Optional[Any] = None) -> Any:
+        """Return spatial world indexes for *state*, delegating to WorldIndexService.
+
+        Observability code must call this method rather than importing
+        WorldIndexService directly.  Kernel is the stable boundary for engine-internal
+        services (D14 F3 — coupling-depth audit).
+        """
+        from src.engine.world_index import WorldIndexService
+        return WorldIndexService.get_indexes(state, dirty)

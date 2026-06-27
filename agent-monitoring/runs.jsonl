@@ -338,3 +338,11 @@
 {"run_id":"TCK-20260627-P2A-SPAWN-LOCK-COND","start_ts":"2026-06-27T05:33:25Z","end_ts":"2026-06-27T05:49:20Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":9}
 {"run_id":"TCK-20260627-P2B-SPAWN-CADENCE","start_ts":"2026-06-27T05:51:11Z","end_ts":"2026-06-27T06:03:21Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":9}
 {"run_id":"TCK-20260627-P2K-CONTENT-MATRIX","start_ts":"2026-06-27T06:06:14Z","end_ts":"2026-06-27T06:35:42Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":9}
+{"run_id":"TCK-20260627-P2L-CONTENT-GUIDE","start_ts":"2026-06-27T06:39:32Z","end_ts":"2026-06-27T06:45:42Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":9}
+{"run_id":"TCK-20260627-P2C-ARCHETYPE-DIST","start_ts":"2026-06-27T07:22:48Z","end_ts":"2026-06-27T07:34:55Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":9}
+{"run_id":"TCK-20260627-P2D-FACTION-RELS","start_ts":"2026-06-27T07:36:17Z","end_ts":"2026-06-27T07:44:32Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":9}
+{"run_id":"TCK-20260627-P1I-WORLD-BALANCE-FIX","start_ts":"2026-06-27T07:46:27Z","end_ts":"2026-06-27T07:55:42Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":9}
+{"run_id":"TCK-20260627-P2E-FEATURE-FLAG-TEST","start_ts":"2026-06-27T08:14:01Z","end_ts":"2026-06-27T08:21:21Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":9}
+{"run_id":"TCK-20260627-P2F-CANON-HASH-DOC","start_ts":"2026-06-27T08:23:45Z","end_ts":"2026-06-27T08:30:40Z","workflow":"implement-ticket","tier":"hotfix","final_status":"DONE","agent_count":9}
+{"run_id":"TCK-20260627-P2G-KERNEL-FACADE","start_ts":"2026-06-27T11:31:29Z","end_ts":"2026-06-27T12:20:22Z","workflow":"implement-ticket","tier":"hotfix","final_status":"DONE","agent_count":9}
+{"run_id":"TCK-20260627-P2H-TIMELINE-APPEND","start_ts":"2026-06-27T12:33:42Z","end_ts":"2026-06-27T12:40:55Z","workflow":"implement-ticket","tier":"hotfix","final_status":"DONE","agent_count":9}
