@@ -1,4 +1,4 @@
-.PHONY: help install install-py install-fe build dev serve stop clean lint profile-api memray-profile docs-serve docs-build docs-registry docs-artifacts knowledge-index knowledge-index-update search-server search-server-docker search-server-stop search-server-logs install-hooks eval-search mcp-server-test world-list world-validate world-compile world-resolve world-inspect world-template sim sim-debug sim-quick sim-world sim-sweep check-resources export-run retention-plan retention-clean warehouse-init warehouse-ingest typecheck-py perf-measure
+.PHONY: help install install-py install-fe build dev serve stop clean lint profile-api memray-profile docs-serve docs-build docs-registry docs-artifacts knowledge-index knowledge-index-update search-server search-server-docker search-server-stop search-server-logs install-hooks eval-search mcp-server-test world-list world-validate world-compile world-resolve world-inspect world-template catalog-list sim sim-debug sim-quick sim-world sim-sweep check-resources export-run retention-plan retention-clean warehouse-init warehouse-ingest typecheck-py perf-measure
 
 # Default
 help: ## Show available commands
@@ -89,6 +89,9 @@ world-inspect: ## Inspect structural metrics of a world definition (WORLD=sandbo
 world-template: ## Bootstrap a starter world template (WORLD=my_world)
 	python3 -m src.worldbuilding.cli create-template $(WORLD)
 
+catalog-list: ## List catalog IDs by type (biomes, ecologies, populations, factions, regions)
+	python3 tools/catalog_list.py
+
 # ── Simulation CLI ───────────────────────────────────────
 # Override TICKS, SEED, or WORLD to customise any run.
 # Dynamic observability backpressure (NORMAL→PRESSURE→DEGRADED→SURVIVAL) is
@@ -105,8 +108,8 @@ cli: ## Run headless simulation (200 ticks, seed 42) — legacy alias for sim
 sim: ## Run headless simulation (TICKS=200 SEED=42 WORLD=sandbox_world)
 	python3 -m src cli --ticks $(TICKS) --seed $(SEED) $(if $(filter-out sandbox_world,$(WORLD)),--world $(WORLD),)
 
-sim-debug: ## Run simulation with verbose DEBUG logging (TICKS=200 SEED=42)
-	python3 -m src cli --ticks $(TICKS) --seed $(SEED) --log-level DEBUG
+sim-debug: ## Run simulation with DEBUG observability + verbose logging (TICKS=200 SEED=42)
+	SIM_OBS_MODE=DEBUG python3 -m src cli --ticks $(TICKS) --seed $(SEED) --log-level DEBUG
 
 sim-quick: ## Quick 20-tick smoke test (WARNING-level logs only)
 	python3 -m src cli --ticks 20 --seed $(SEED) --log-level WARNING
