@@ -1138,4 +1138,119 @@
   proof_type: parity
   test_path: tests/integration/culture/test_culture_drift_acceptance.py::test_two_regions_diverge_after_5_episodes
   divergence_note: null
+- id: WORLD-103
+  text: 'SpawnService two-tier cadence: before late_spawn_threshold_tick (default 500)
+    spawn base_spawn_batch_size (default 1) entities per below-density region per
+    50-tick interval; at or after the threshold spawn late_spawn_batch_size (default 2)
+    per region per interval to compensate late-run combat attrition. Batch is always
+    capped by the density deficit (target_count - current_count) so target is never
+    exceeded. Batch index 0 uses original RNG keys (preserving early-game determinism);
+    subsequent batch entries use suffixed keys (e.g. "{r_id}_b1"). Implemented in
+    TCK-20260627-P2B-SPAWN-CADENCE.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: 'src/world/spawn.py L34-45 (batch_size selection by tick); L58-82
+    (batch loop with indexed RNG keys); src/world/spawn_config.py (SpawnConfig
+    dataclass with base_spawn_batch_size=1, late_spawn_threshold_tick=500,
+    late_spawn_batch_size=2; DEFAULT_SPAWN_CONFIG instance)'
+  proof_type: parity
+  test_path: tests/unit/world/test_spawn_cadence.py::TestLateGameCadence::test_late_game_spawns_two_per_region_at_threshold
+  divergence_note: null
+  support_boundary: null
+
+- id: WORLD-104
+  text: >
+    Regional resource scarcity pressure propagates to adjacent regions (E21E). After
+    per-region resource pressure is computed, RegionalPressureModel.propagate_cross_region()
+    adds PROPAGATION_FACTOR (0.30) × neighbor resource intensity to each adjacent region's
+    resource pressure. Two regions are adjacent when their bounding boxes are within
+    ADJACENCY_GAP (50 units) of each other. Propagated pressure is bidirectional and
+    capped at 1.0. Regions with no native resource pressure that receive spread from
+    neighbours get a new resource pressure entry at confidence=0.65.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/domains/world_emergence/models.py — RegionalPressureModel.ADJACENCY_GAP=50.0,
+    PROPAGATION_FACTOR=0.30; _are_adjacent(); propagate_cross_region().
+    src/domains/world_emergence/phase.py — step 2b calls propagate_cross_region after
+    RegionalPressureModel.evaluate(). Verified by TCK-20260628-E21E-CROSS-REGION-PRESSURE.
+  proof_type: parity
+  test_path: tests/unit/domains/world_emergence/test_phase8_regional_pressure_model.py::test_propagate_cross_region_adjacent_regions_receive_spread
+  divergence_note: >
+    New mechanic added by TCK-20260628-E21E-CROSS-REGION-PRESSURE. No prior behavior
+    existed — resource pressure was evaluated per-region in isolation.
+  support_boundary: null
+  support_boundary: null
+
+- id: WORLD-105
+  text: >
+    Seasonal calamity pressure propagation (E52E): every SEASONAL_PROPAGATION_INTERVAL=500
+    ticks, each region with calamity_intensity >= PROPAGATION_THRESHOLD=0.10 spreads
+    intensity to adjacent regions (adjacency defined by RegionalPressureModel._are_adjacent,
+    ADJACENCY_GAP=50 units). Propagated amount = source.calamity_intensity * PROPAGATION_FACTOR=0.15,
+    capped at 1.0. Per-neighbor update takes the maximum proposed value across all source
+    regions (prevents runaway amplification). Source region is never self-updated. Wired into
+    WorldDynamicsSystem step 3.8 under the world_dynamics cadence gate.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/world/calamity.py — CalamityPressurePropagator.propagate_seasonal().
+    src/engine/world_dynamics.py — step 3.8 seasonal_update merge.
+    Reuses RegionalPressureModel._are_adjacent() from src/domains/world_emergence/models.py.
+    Verified by TCK-20260628-E52E-SEASONAL-PROPAGATION.
+  proof_type: parity
+  test_path: tests/unit/world/test_calamity_pressure_propagator.py::test_adjacent_region_receives_propagated_intensity
+  divergence_note: >
+    New mechanic added by TCK-20260628-E52E-SEASONAL-PROPAGATION. No prior calamity
+    intensity propagation between regions existed.
+  support_boundary: null
+
+- id: WORLD-106
+  text: >
+    Trauma region concern injection (E52F): when an active, alive entity has
+    navigation.region_id pointing to a region with trauma_score > TRAUMA_CONCERN_THRESHOLD=0.5,
+    a ConcernState(kind=DANGER, id="regional_trauma_{region_id}") is injected into
+    entity.strategic.concerns via StrategicUpdate.concerns_add_or_update in WorldDynamicsSystem
+    step 2.3. Urgency = min(1.0, trauma_score / URGENCY_SCALE=50.0). Concern appears on the
+    same tick that trauma crosses the threshold, satisfying the <100-tick requirement.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/domains/world_emergence/services.py — TraumaRegionConcernBridge.inject_concerns().
+    src/engine/world_dynamics.py — step 2.3 TraumaRegionConcernBridge wiring.
+    Verified by TCK-20260628-E52F-TRAUMA-MOTIVATION.
+  proof_type: parity
+  test_path: tests/unit/domains/world_emergence/test_phase8_trauma_concern_bridge.py::test_concern_appears_within_one_tick_of_threshold_crossing
+  divergence_note: >
+    New mechanic added by TCK-20260628-E52F-TRAUMA-MOTIVATION. Previously, trauma only
+    indirectly produced entity motivation effects through hazard_level escalation at
+    trauma_score > 50, requiring ~3500 ticks to reach hazard_level > 0.7.
+  support_boundary: null
+
+- id: WORLD-107
+  text: >
+    Sovereignty shift WorldEvent (E52G): when a region's influence crosses +100 (HERO_GUILD takeover)
+    or -100 (MONSTER_HORDE takeover), a WorldEvent(category=SOVEREIGNTY_SHIFT, severity=0.9) is
+    emitted into StateUpdate.world_events_add. The event carries region_id, subject (new owner
+    faction name), tick, and payload={"influence": <current>, "prev_owner": <prior>}.
+    Events are flushed into recent_world_events via the authoritative apply pipeline, making
+    sovereignty shifts observable in WorldEmergencePhase.execute() subsequent ticks.
+    No event is emitted when the region is already owned by the winning faction.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/domains/world_emergence/schema.py — WorldEventCategory.SOVEREIGNTY_SHIFT added.
+    src/engine/world_dynamics.py — step 2.2 collects sovereignty_events; step 2.2b flushes
+    them via update.replace(world_events_add=...). Verified by TCK-20260628-E52G-SOVEREIGNTY-EVENTS.
+  proof_type: parity
+  test_path: tests/unit/world/test_sovereignty_events.py::test_sovereignty_shift_event_emitted_on_hero_takeover
+  divergence_note: >
+    New mechanic added by TCK-20260628-E52G-SOVEREIGNTY-EVENTS. Previously, ownership changes
+    produced WorldUpdate.owner_faction_id_set but no WorldEvent was emitted — shifts were
+    invisible to the WorldEmergencePhase and agent observability systems.
   support_boundary: null

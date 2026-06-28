@@ -2846,3 +2846,68 @@
   test_path: tests/unit/faction/test_betrayal_ledger.py::test_orchestrator_converts_betrayal_to_ledger_entry
   divergence_note: null
   support_boundary: null
+- id: SOC-ABAND-TYPE-01
+  text: AbandonmentEvaluator.evaluate_abandonment() returns a typed AbandonmentClassification dataclass (frozen) with fields is_betrayal:bool, penalty:float, category:AbandonmentCategory enum (SURVIVAL/GREEDY_DESERTION/VOLUNTARY_QUIT). No untyped Dict[str,Any] at call sites.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/domains/commitment/abandonment.py — AbandonmentCategory(str,Enum) + AbandonmentClassification(frozen=True dataclass); evaluate_abandonment() annotated -> AbandonmentClassification. (TCK-20260627-P1F-ABANDONMENT-TYPE)
+  proof_type: parity
+  test_path: tests/unit/domains/commitment/test_phase15_abandonment_evaluator.py::test_evaluate_abandonment_returns_typed_classification
+  divergence_note: null
+  support_boundary: null
+
+- id: SOC-231
+  text: >
+    Grief/rage urgency (E43F): when an entity's ally dies in episode N (entity_death
+    NarrativeLedgerEntry, ally trust_score ≥ ALLY_TRUST_THRESHOLD=0.30 in SocialMemoryRecord),
+    a GriefUrgencyModifier is created in CampaignState.grief_urgencies keyed by the
+    grieving entity's id. Urgency = min(1.0, trust_score × 0.8). Each episode boundary,
+    urgency decays by decay_per_episode=0.25; modifier removed when urgency ≤ 0.
+    At the start of each episode, GriefUrgencyImporter.apply() injects the modifier
+    as a ConcernState(kind=SOCIAL_THREAT, id="grief_ally_{dead_id}") into
+    entity.strategic.concerns, making grief urgency visible in the decision trace.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/domains/campaigns/state.py — GriefUrgencyModifier frozen dataclass;
+    CampaignState.grief_urgencies: Dict[int, GriefUrgencyModifier].
+    src/domains/campaigns/grief_urgency.py — GriefUrgencyImporter.apply().
+    src/domains/campaigns/orchestrator.py — _advance_grief_urgencies() detects + decays;
+    episode-start loop applies GriefUrgencyImporter. Verified by TCK-20260628-E43F-GRIEF-URGENCY.
+  proof_type: parity
+  test_path: tests/unit/campaigns/test_grief_urgency.py::test_grief_importer_injects_social_threat_concern
+  divergence_note: >
+    New mechanic added by TCK-20260628-E43F-GRIEF-URGENCY. No prior behavior existed —
+    ally deaths had no feedback into entity motivation state.
+  support_boundary: null
+
+- id: SOC-232
+  text: >
+    Nemesis relation (E43G): when a protagonist entity has 2+ NarrativeLedgerEntry records
+    of negative interaction kinds ("betrayed" or "conflict") against the same antagonist
+    across distinct episodes in SocialMemoryRecord.interaction_history, a NemesisRelation
+    frozen dataclass is created in CampaignState.nemesis_relations keyed by
+    "{protagonist_id}:{antagonist_id}". Strength = min(1.0, antagonism_count × 0.4).
+    At episode start, NemesisRelationImporter.apply() injects a BlockerState(kind=SOCIAL,
+    subject=str(antagonist_id)) into entity.strategic.blockers. The FORM_PARTY route
+    generator blocks party formation (adds blockers=("nemesis_block",)) if any candidate
+    entity's id is in the protagonist's SOCIAL nemesis blocker set, resulting in a 2.0
+    scoring penalty via AdventureRouteScorer.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/domains/campaigns/state.py — NemesisRelation frozen dataclass;
+    CampaignState.nemesis_relations: Dict[str, NemesisRelation].
+    src/domains/campaigns/grief_urgency.py — NemesisRelationImporter.apply().
+    src/domains/campaigns/orchestrator.py — _advance_nemesis_relations() detects from
+    SocialMemoryRecord.interaction_history; episode-start loop applies NemesisRelationImporter.
+    src/domains/adventure/generator.py — FORM_PARTY route checks SOCIAL blockers for nemesis_ids.
+    Verified by TCK-20260628-E43G-NEMESIS-RELATION.
+  proof_type: parity
+  test_path: tests/unit/campaigns/test_grief_urgency.py::test_nemesis_detection_creates_relation_at_two_episodes
+  divergence_note: >
+    New mechanic added by TCK-20260628-E43G-NEMESIS-RELATION. No prior nemesis tracking existed.
+  support_boundary: null

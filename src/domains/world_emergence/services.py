@@ -6,13 +6,14 @@ Phase 8 — Opportunity, Quest/Rumor Seeds, and Exposure Bridge.
 
 from __future__ import annotations
 import hashlib
-from typing import Tuple, Optional, Sequence
+from typing import Dict, Tuple, Optional, Sequence
 from src.core.state import AuthoritativeState, EntityState
 from src.core.models.quests import QuestOpportunity
 from src.domains.world_emergence.schema import (
     RegionalPressure, ResourceScarcitySignal, WorldOpportunityPressure, QuestSeed, RumorSeed,
     WorldEmergenceResult, WorldEvent, WorldEventCategory
 )
+from src.core.updates import StrategicUpdate
 
 class WorldOpportunityPressureService:
     """
@@ -379,3 +380,54 @@ class WorldToEntitySignalBridge:
                 })
 
         return exposures
+
+
+class TraumaRegionConcernBridge:
+    """Direct trauma_score → DANGER ConcernState injection for entities in traumatized regions (E52F).
+
+    Fires in WorldDynamicsSystem step 2.3 so the concern appears in entity.strategic.concerns
+    within the same world_dynamics tick that trauma crosses the threshold — well within 100 ticks.
+    """
+
+    TRAUMA_CONCERN_THRESHOLD: float = 0.5   # raw trauma_score minimum (any region with ≥1 death)
+    URGENCY_SCALE: float = 50.0             # trauma_score at which urgency reaches 1.0
+
+    @staticmethod
+    def inject_concerns(
+        state: AuthoritativeState,
+        current_tick: int,
+    ) -> Dict[int, StrategicUpdate]:
+        """Return a dict of entity_id → StrategicUpdate for entities in traumatized regions.
+
+        Returns an empty dict when no regions exceed the threshold or no entities are present.
+        Only active, alive entities with a valid navigation.region_id are processed.
+        """
+        from src.core.strategic import ConcernState, ConcernKind
+
+        threshold = TraumaRegionConcernBridge.TRAUMA_CONCERN_THRESHOLD
+        scale = TraumaRegionConcernBridge.URGENCY_SCALE
+        updates: Dict[int, StrategicUpdate] = {}
+
+        for entity in state.entities.values():
+            if not getattr(entity.lifecycle, "active", True):
+                continue
+            if not entity.combat.alive:
+                continue
+            region_id = getattr(entity.navigation, "region_id", None)
+            if not region_id:
+                continue
+            region = state.regions.get(region_id)
+            if region is None or region.trauma_score <= threshold:
+                continue
+
+            urgency = min(1.0, region.trauma_score / scale)
+            concern = ConcernState(
+                id=f"regional_trauma_{region_id}",
+                kind=ConcernKind.DANGER,
+                source=f"trauma_{region_id}",
+                urgency=urgency,
+                created_tick=current_tick,
+            )
+            updates[entity.id] = StrategicUpdate(concerns_add_or_update=[concern])
+
+        return updates

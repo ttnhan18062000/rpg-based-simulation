@@ -1,10 +1,10 @@
 ---
-status: active
+status: done
 layer: world
 authority: P1
 audience: agent
 ticket_id: TCK-20260628-E-WORLD-EVOLUTION
-phase: open
+phase: done
 date: 2026-06-28
 tags: [epic, world-evolution, ecology, trauma, sovereignty, p3, deferred, blocked]
 ---
@@ -15,7 +15,7 @@ tags: [epic, world-evolution, ecology, trauma, sovereignty, p3, deferred, blocke
 Epic: World Evolution System — seasonal multi-region pressure propagation and long-run ecological dynamics
 
 ## Status
-BLOCKED
+DONE — E52E (seasonal propagation), E52F (trauma motivation), E52G (sovereignty events)
 
 ## Tier
 epic
@@ -86,9 +86,38 @@ baseline for this system. Capture:
   targeted fixes, vs. needing content authoring (more calamity triggers in world YAMLs).
 
 ## Implementation Notes
+**Scope investigation (2026-06-28):**
+- Block resolved: TCK-20260628-E-LONGRUN-REGRESSION DONE; 5k harness + baseline committed.
+- Calamity trigger: tick mod 5000 == 0, min gap 2000, intensity > 0.3.
+  In a 5k run, calamity fires exactly at tick 5000 if intensity threshold is met.
+- `RESOURCE_DEPLETED`/`RESOURCE_RECOVERED` world events tracked on rolling 500-event window.
+- `WorldEmergencePhase` in pipeline.py reads `recent_world_events` from state.
+- Ecology sources: `src/world/ecology.py`, `src/world/calamity.py`, `src/world/environment.py`.
+- Contract: `docs/world/ecology_and_calamity_contract.md` (last verified 2026-06-13).
+- **Gap 1**: Seasonal multi-region pressure propagation not implemented — calamity in region A
+  does not propagate pressure signals to adjacent regions via topology.
+- **Gap 2**: Regional trauma→entity motivation feedback not validated at 5k scale — the path
+  exists (trauma → threat urgency) but whether it's producing measurable entity behavior
+  change has not been confirmed at 5k ticks.
+- **Gap 3**: Sovereignty boundary shift events: sovereignty tracking exists in
+  `src/world/sovereignty/` but at 5k ticks no shift events were observed in baseline data.
+
+**Recommended child tickets (implement in order):**
+1. E52E-SEASONAL-PROPAGATION: Implement seasonal multi-region pressure propagation — calamity/
+   ecological stress in one region propagates pressure signals to adjacent regions based on
+   `runtime_regions.yaml` topology adjacency data.
+2. E52F-TRAUMA-MOTIVATION: Validate and fix trauma→entity motivation feedback at 5k scale.
+   Add test asserting that regional trauma > 0.5 produces measurable threat urgency in entities
+   present in that region within 100 ticks.
+3. E52G-SOVEREIGNTY-EVENTS: Confirm sovereignty boundary shift events fire at ≥ 5k ticks
+   and are observable via recent_world_events. May require content authoring (more calamity
+   triggers in world YAMLs) rather than code changes.
 
 ## Test Summary
+E52E: 8 tests (seasonal propagation). E52F: 9 tests (trauma concern injection). E52G: 5 tests (sovereignty shift events). All pass; 260 combined world+emergence tests pass.
 
 ## Files Changed
+See child tickets TCK-20260628-E52E-SEASONAL-PROPAGATION, TCK-20260628-E52F-TRAUMA-MOTIVATION, TCK-20260628-E52G-SOVEREIGNTY-EVENTS.
 
 ## Completion Summary
+All 3 acceptance criteria met: seasonal calamity propagation (E52E), direct trauma→DANGER concern in <1 tick (E52F), sovereignty shift WorldEvents observable in recent_world_events (E52G). Parity ledger entries WORLD-105, WORLD-106, WORLD-107 added.

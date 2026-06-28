@@ -45,6 +45,8 @@ class WorldEventCategory(str, Enum):
     # E53Db: Siege onset and betrayal
     SIEGE_BEGINS = "SIEGE_BEGINS"
     BETRAYAL = "BETRAYAL"
+    # E52G: Sovereignty boundary shift (ownership change via influence threshold)
+    SOVEREIGNTY_SHIFT = "SOVEREIGNTY_SHIFT"
 
 @dataclass(frozen=True, slots=True)
 class WorldEvent:

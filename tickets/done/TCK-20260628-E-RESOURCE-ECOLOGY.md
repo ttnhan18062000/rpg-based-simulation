@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: economy
 authority: P1
 audience: agent
 ticket_id: TCK-20260628-E-RESOURCE-ECOLOGY
-phase: open
+phase: scoped
 date: 2026-06-28
 tags: [epic, resource-ecology, regeneration, economy, p3, deferred, blocked]
 ---
@@ -15,7 +15,7 @@ tags: [epic, resource-ecology, regeneration, economy, p3, deferred, blocked]
 Epic: Resource Ecology Regeneration — complete complex regeneration cycles
 
 ## Status
-BLOCKED
+SCOPED (epic — awaiting child tickets)
 
 ## Tier
 epic
@@ -89,9 +89,38 @@ failure modes.
 - The 5k-tick run is the primary scoping input. Do not estimate complexity until it runs.
 
 ## Implementation Notes
+**Scope investigation (2026-06-28):**
+- Block resolved: TCK-20260628-E-LONGRUN-REGRESSION DONE; 5k harness + baseline committed.
+- 5k baseline shows: alive_avg=11.34, gold_avg=457.32, quest_active_count=0.0 (50 samples, seed=42).
+- `ecology.py` runs every 200 ticks. Full depletion recovery: 5 ecology cycles = ~1000 ticks.
+- **Critical gap**: Compiler-seeded nodes have `regen_rate_per_tick=0` — they DO NOT regenerate.
+  Only ecology-seeded nodes regen. Most world nodes are compiler-seeded → permanent depletion.
+- `RESOURCE_DEPLETED` / `RESOURCE_RECOVERED` events already wired via `StateUpdate.world_events_add`.
+- `WorldEmergencePhase` in pipeline.py reads `recent_world_events` (rolling 500-event window).
+- Calamity fires at tick mod 5000 == 0 if intensity > 0.3 — would have fired at end of 5k run.
+- No density-dependent regen, no multi-stage cycles, no cross-region propagation yet.
+
+**Recommended child tickets (implement in order):**
+1. E21C-COMPILER-REGEN: Set `regen_rate_per_tick=1` on compiler-seeded nodes (or make configurable
+   per world spec) so they participate in ecology cycles. This is the single highest-impact fix —
+   without it, all compiler-seeded nodes permanently deplete with no recovery.
+2. E21D-DENSITY-REGEN: Density-dependent regen rate modifier (entities in region → slower regen).
+   Requires E21C first so regen is active.
+3. E21E-CROSS-REGION-PRESSURE: Cross-region scarcity propagation from `RegionalPressureModel`.
+   Gated on E21C and E21D to ensure baseline regen is working.
 
 ## Test Summary
+- E21C: compiler regen tests (TCK-20260628-E21C-COMPILER-REGEN)
+- E21D: 25 ecology tests including 8 new density-regen tests
+- E21E: 240 world + world_emergence tests including 10 new cross-region propagation tests
 
 ## Files Changed
+All changes are in child tickets (E21C, E21D, E21E).
 
 ## Completion Summary
+All 3 child tickets complete:
+- E21C-COMPILER-REGEN: compiler-seeded nodes now have regen_rate_per_tick=1 (was 0)
+- E21D-DENSITY-REGEN: density-dependent regen (1.0→0.25 based on entity count per region)
+- E21E-CROSS-REGION-PRESSURE: resource scarcity propagates 30% to adjacent regions
+Parity ledger: TOWN-186, TOWN-187, WORLD-104 updated/added.
+Epic DONE 2026-06-28.

@@ -25,6 +25,15 @@ class EntityInspectionSnapshot(BaseModel):
     role: Optional[int] = None
     class_id: Optional[str] = None
     personality: Dict[str, Any] = Field(default_factory=dict)
+    # Top-3 goal scores from the last adventure routing decision (winner + runner-ups).
+    # Each entry: {"goal_id": str, "score": float, "rank": int}.
+    # Empty when no decision trace writer is active or no tick has run yet.
+    goal_scores: List[Dict[str, Any]] = Field(default_factory=list)
+    # Narrative modifier summary extracted from runtime strategic state (E43H).
+    # {"grief_concerns": [{"concern_id", "dead_ally_id", "urgency"},...],
+    #  "nemesis_blockers": [{"blocker_id", "antagonist_id", "severity"},...]}.
+    # Populated from entity.strategic.concerns/blockers by NarrativeModifierExtractor.
+    narrative_modifiers: Dict[str, Any] = Field(default_factory=dict)
 
 class EntityInspector:
     """Thread-safe inspector of single entities for real-time observability."""
@@ -123,6 +132,22 @@ class EntityInspector:
         identity_class_id = entity.identity.class_id
         personality_dict = entity.identity.personality.to_canonical_dict()
 
+        # 9. Goal scores — top-3 from the last adventure routing tick (winner + runner-ups).
+        # Pulled from the run-scoped DecisionTraceWriter cache; empty if no writer is active.
+        goal_scores: List[Dict[str, Any]] = []
+        try:
+            from src.observability.cognition.decision_trace_writer import get_active_writer
+            _writer = get_active_writer()
+            if _writer is not None:
+                goal_scores = _writer.get_latest_goal_scores(entity_id)
+        except Exception:
+            pass
+
+        # 10. Narrative modifiers (E43H) — grief urgency concerns and nemesis blockers.
+        # Extracted from runtime strategic state (injected by GriefUrgencyImporter /
+        # NemesisRelationImporter at episode start).
+        narrative_modifiers: Dict[str, Any] = EntityInspector._extract_narrative_modifiers(entity)
+
         return EntityInspectionSnapshot(
             entity_id=entity_id,
             exists=True,
@@ -143,4 +168,44 @@ class EntityInspector:
             role=identity_role,
             class_id=identity_class_id,
             personality=personality_dict,
+            goal_scores=goal_scores,
+            narrative_modifiers=narrative_modifiers,
         )
+
+    @staticmethod
+    def _extract_narrative_modifiers(entity: Any) -> Dict[str, Any]:
+        """Extract grief urgency concerns and nemesis blockers from runtime strategic state."""
+        grief_concerns: List[Dict[str, Any]] = []
+        nemesis_blockers: List[Dict[str, Any]] = []
+        try:
+            from src.core.strategic import ConcernKind, BlockerKind
+            strat = getattr(entity, "strategic", None)
+            if strat is None:
+                return {"grief_concerns": [], "nemesis_blockers": []}
+            for concern_id, concern in strat.concerns.items():
+                if (
+                    concern_id.startswith("grief_ally_")
+                    and getattr(concern, "kind", None) == ConcernKind.SOCIAL_THREAT
+                ):
+                    try:
+                        dead_ally_id = int(concern_id.removeprefix("grief_ally_"))
+                    except ValueError:
+                        dead_ally_id = -1
+                    grief_concerns.append({
+                        "concern_id": concern_id,
+                        "dead_ally_id": dead_ally_id,
+                        "urgency": round(getattr(concern, "urgency", 0.0), 4),
+                    })
+            for blocker_id, blocker in strat.blockers.items():
+                if (
+                    getattr(blocker, "kind", None) == BlockerKind.SOCIAL
+                    and getattr(blocker, "subject", "").isdigit()
+                ):
+                    nemesis_blockers.append({
+                        "blocker_id": blocker_id,
+                        "antagonist_id": int(blocker.subject),
+                        "severity": round(getattr(blocker, "severity", 0.0), 4),
+                    })
+        except Exception:
+            pass
+        return {"grief_concerns": grief_concerns, "nemesis_blockers": nemesis_blockers}
