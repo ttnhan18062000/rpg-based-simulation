@@ -859,3 +859,5 @@ TCK-20260628-E52E-SEASONAL-PROPAGATION,2026-06-28,done,world,Seasonal calamity p
 TCK-20260628-E52F-TRAUMA-MOTIVATION,2026-06-28,done,world,Trauma→motivation: TraumaRegionConcernBridge; 9 tests; 255 world+emergence tests pass
 TCK-20260628-E52G-SOVEREIGNTY-EVENTS,2026-06-28,done,world,Sovereignty shift events — SOVEREIGNTY_SHIFT WorldEventCategory; 5 tests; 260 world tests pass
 TCK-20260628-E-WORLD-EVOLUTION,2026-06-28,done,world,Epic: World Evolution closed — E52E+E52F+E52G all done; 22 new tests; WORLD-105/106/107 parity
+TCK-20260628-SIMQ-INVESTIGATION,2026-06-28,inprogress,simulation,Simulation Quality Scoring Module investigation — 10-pillar design + docs/plans/sim_quality_scoring_module.md
+TCK-20260628-SIMQ-EPIC,2026-06-28,inprogress,simulation,Simulation Quality Scoring Module — epic opened; 7 child tickets created in tickets/todos/simq/
