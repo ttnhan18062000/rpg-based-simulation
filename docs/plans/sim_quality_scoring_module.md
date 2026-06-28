@@ -64,7 +64,7 @@ producing emergent output. It does not score correctness, performance, or conten
 ┌──────────────────────────────────────────────────────────────┐
 │                   Observability Layer                        │
 │  EventBus (SimulationEvent) → BoundedObservabilityQueue      │
-│  → events.jsonl  → replay chunks  → telemetry bridge         │
+│  → simulation_events.jsonl  → replay chunks  → telemetry bridge  │
 └───────────────────────────┬──────────────────────────────────┘
                             │ ObservabilityEventEnvelope stream
                             ▼ (subscriber, non-blocking)
@@ -211,7 +211,7 @@ are they effectively omniscient robots with flat decision distributions?
 without any entity action to refresh it.
 
 **Traceability:** A low Cognition score → find worst_events tagged `knowledge_decay` or
-`zero_knowledge_decision` → look up event_id in events.jsonl → identify which entity and
+`zero_knowledge_decision` → look up event_id in simulation_events.jsonl → identify which entity and
 which tick → cross-reference with cognition_graph_snapshots.jsonl.
 
 ---
@@ -668,7 +668,7 @@ The "troubleshoot a bad pillar" workflow:
 2. QualityReport.pillars["economy"].worst_events[:5]
    → ScoreRecord(tick=200, event_id="abc123", delta=-20.0, tags=["zero_harvest"])
      ↓
-3. Cross-reference event_id "abc123" in data/runs/{run_id}/events.jsonl
+3. Cross-reference event_id "abc123" in data/runs/{run_id}/simulation_events.jsonl
    → Full SimulationEvent with entity_id, region_id, tick context
      ↓
 4. Cross-reference entity_id at tick 200 in cognition_graph_snapshots.jsonl
@@ -679,7 +679,7 @@ The "troubleshoot a bad pillar" workflow:
 ```
 
 This path requires no new infrastructure beyond `quality_scores.jsonl`.
-All cross-reference targets already exist: `events.jsonl`, `cognition_graph_snapshots.jsonl`,
+All cross-reference targets already exist: `simulation_events.jsonl`, `cognition_graph_snapshots.jsonl`,
 `world.yaml`.
 
 ---

@@ -49,9 +49,11 @@ for all 22 entries in the §6 Scenario Registry.
 - `tests/simulation_quality/test_pillar_accumulator.py`
 - `tests/simulation_quality/test_quality_report.py`
 - `tests/simulation_quality/test_persistence.py`
+- `tests/simulation_quality/test_feed.py` — `QualityFeedAdapter` modes
 
 ### Integration tests
 - `tests/simulation_quality/test_quality_hub_integration.py`
+- `tests/simulation_quality/test_broker_feed_integration.py` (skipped without Redis)
 
 ### Regression tests
 - `tests/simulation_quality/test_grade_regression.py`
@@ -71,12 +73,16 @@ for all 22 entries in the §6 Scenario Registry.
 - [ ] Conflict boundary tests: verify an event_type that belongs to another pillar returns `None` from this scorer
 
 ### Integration
-- [ ] `on_event()` routes event to correct scorer(s) and updates correct accumulator
-- [ ] Scorer exception does not propagate; subsequent scorers in same `on_event()` call continue
+- [ ] `on_envelope()` routes event to correct scorer(s) and updates correct accumulator
+- [ ] Scorer exception does not propagate; subsequent scorers in same `on_envelope()` call continue
 - [ ] `QUALITY_SCORING_DISABLED=1` causes zero accumulator updates and zero file writes
 - [ ] Loop detection: 200-tick window with >70% same tag fires `loop_detected` flag
-- [ ] `quality_scores.jsonl` contains correct records after 100 `on_event()` calls
+- [ ] `quality_scores.jsonl` contains correct records after 100 `on_envelope()` calls
 - [ ] `quality_report.json` schema is correct after `write_report()` call
+- [ ] `InProcessQualityFeed`: hub receives envelopes via drain callback (INPROCESS mode)
+- [ ] `BrokerQualityFeed`: hub receives envelopes via `RedisStreamConsumer` (BROKER mode,
+  skipped if `REDIS_AVAILABLE` not set); duplicate `event_id` scored exactly once
+- [ ] `QUALITY_FEED_MODE=broker` + no Redis → graceful WARNING, hub still starts (no events scored)
 
 ### Regression anchors
 - [ ] `sandbox_world` seed=42, 100 ticks: each pillar grade documented (may be F for known broken systems — document, don't fix here)

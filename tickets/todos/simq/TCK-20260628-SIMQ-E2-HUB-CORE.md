@@ -37,14 +37,26 @@ These two scorers were chosen first because they cover the highest-signal scenar
 - `src/simulation_quality/scorers/base.py` — `PillarScorer` abstract base class:
   `score(envelope: ObservabilityEventEnvelope, context: ScoringContext) -> ScoreRecord | None`
 - `src/simulation_quality/quality_hub.py` — `QualityHub`:
+  - Constructor takes `feed: QualityFeedAdapter` (dependency injection — not hardwired to drain)
   - `SCORER_REGISTRY: dict[str, list[PillarScorer]]` — event_type to scorer mapping
-  - `on_event(envelope)` — route, score, accumulate, persist, catch exceptions
+  - `on_envelope(envelope)` — route, score, accumulate, persist, catch exceptions
   - `QUALITY_SCORING_DISABLED` env var check at construction time
   - `build_context()` — assembles `ScoringContext` from current accumulator state
   - `get_pillar_score(pillar: PillarId) -> float` (read-only query)
   - `get_pillar_grade(pillar: PillarId) -> str` (read-only query)
   - `get_quality_report() -> QualityReport` (read-only query)
-  - Subscription registration in `BoundedObservabilityQueue` drain callback
+  - `start()` / `stop()` — delegates to `feed.start(self)` / `feed.stop()`
+- `src/simulation_quality/feed.py` additions (building on E1 ABC + InProcess):
+  - `BrokerQualityFeed` — wraps `RedisStreamConsumer` from `src/observability/stream/consumer.py`;
+    calls `hub.on_envelope()` from the consumer callback; reads `QUALITY_BROKER_URL`,
+    `QUALITY_STREAM_NAME`, `QUALITY_CONSUMER_GROUP` from env; skip gracefully if Redis unavailable
+  - `build_feed_from_env()` factory extended: returns `BrokerQualityFeed` when
+    `QUALITY_FEED_MODE=broker`
+- `src/simulation_quality/worker.py` — `QualityWorker` entry point for separate-process mode:
+  - Instantiates `BrokerQualityFeed` + `QualityHub` + `QualityPersistence`
+  - Runs consumer loop until SIGTERM
+  - Serves `GET /health` on `QUALITY_WORKER_PORT` (default 8082)
+  - Intended invocation: `python -m src.simulation_quality.worker`
 - `src/simulation_quality/scorers/agency.py` — `AgencyScorer`:
   All scoring rules from contract §5 AGENCY & ACTION
   Scenarios covered: SQ-01, SQ-02 (primary), SQ-12 (secondary via action signal)
@@ -57,12 +69,18 @@ These two scorers were chosen first because they cover the highest-signal scenar
 - REST API (E5)
 
 ## Acceptance Criteria
-- [ ] `QualityHub` subscribes to `BoundedObservabilityQueue` drain callback without
-  modifying the queue's existing behavior
-- [ ] `QualityHub.on_event()` catches all scorer exceptions and logs them at WARNING;
+- [ ] `QualityHub.__init__` takes a `feed: QualityFeedAdapter` parameter; does NOT
+  directly reference `BoundedObservabilityQueue` or `RedisStreamConsumer`
+- [ ] `QualityHub.on_envelope()` catches all scorer exceptions and logs them at WARNING;
   simulation never receives the exception
 - [ ] `QUALITY_SCORING_DISABLED=1` causes `QualityHub` to return immediately from
-  `on_event()` without scoring or writing
+  `on_envelope()` without scoring or writing
+- [ ] `InProcessQualityFeed.start(hub)` registers drain callback; simulation behavior unchanged
+- [ ] `BrokerQualityFeed.start(hub)` creates a `RedisStreamConsumer` and begins consuming;
+  skips gracefully (logs WARNING, sets health status "unavailable") if Redis is not reachable
+- [ ] `BrokerQualityFeed` mode passes `QUALITY_FEED_MODE=broker` integration test
+  (skipped automatically when `REDIS_AVAILABLE` is not set in CI)
+- [ ] `worker.py` starts without error and exits cleanly on SIGTERM
 - [ ] `AgencyScorer` covers all rules in contract §5 AGENCY & ACTION table
 - [ ] `AgencyScorer` returns `None` for event_types not in its registry
 - [ ] `CombatScorer` covers all rules in contract §5 COMBAT table
@@ -70,7 +88,7 @@ These two scorers were chosen first because they cover the highest-signal scenar
 - [ ] Loop detection: `DEFER_WITH_REASON` at >70% of 200-tick window fires
   `loop_detected:entity_stasis` in AGENCY accumulator
 - [ ] Unit tests: all scoring rules (positive + negative + null + time-gated + tag)
-- [ ] Integration test: end-to-end `on_event()` → accumulator update → persistence write
+- [ ] Integration test: end-to-end `on_envelope()` → accumulator update → persistence write
 - [ ] Integration test: scorer exception does not propagate; other scorers continue
 - [ ] Integration test: disable env var → no accumulator update, no persistence write
 
@@ -94,9 +112,15 @@ scorers self-register by declaring which event_types they handle in their `EVENT
 class attribute. `QualityHub.__init__` builds the registry by iterating all registered
 scorers.
 
-Do NOT import any domain module from `src/domains/` or `src/engine/` in any scorer.
-The only permitted import from outside `src/simulation_quality/` is
-`ObservabilityEventEnvelope` from `src/observability/events.py`.
+Do NOT import any domain module from `src/domains/` or `src/engine/` in any scorer or
+in `QualityHub`. The only permitted import from outside `src/simulation_quality/` is
+`ObservabilityEventEnvelope` from `src/observability/events.py` and
+`RedisStreamConsumer` from `src/observability/stream/consumer.py` (in `BrokerQualityFeed`
+only — not in `QualityHub` itself).
 
-Verify subscription against the existing `QueueDrainWorker` pattern in
+`BrokerQualityFeed` uses `RedisStreamConsumer` from M36 (already built). Review
+`src/observability/stream/consumer.py` for the consumer group callback interface before
+implementing.
+
+`InProcessQualityFeed.start()` must verify the `QueueDrainWorker` subscription API in
 `src/observability/queue.py` before implementing — do not create a new drain thread.

@@ -53,15 +53,22 @@ prerequisite for all subsequent scorer and hub implementation.
   `ScoringContext` frozen dataclass
 - `src/simulation_quality/pillar_accumulator.py` — `PillarAccumulator` (thread-safe
   `raw_score`, `event_count`, `negative_count`, `worst_events` bounded list,
-  `window_buffer` deque, `loop_flags` set, `add()`, `snapshot()`)
+  `window_buffer` deque, `loop_flags` set, `_seen_event_ids: set[str]` for dedup,
+  `add()` silently drops duplicate `event_id`, `snapshot()`)
 - `src/simulation_quality/quality_report.py` — `QualityReport` dataclass,
   `QualityReportBuilder.build()` from accumulator snapshots, grade assignment using
   thresholds from `ScoringWeights`, overall_score computation
 - `src/simulation_quality/persistence.py` — `QualityPersistence`: writes
   `quality_scores.jsonl` (non-blocking append), writes `quality_report.json` at run end
+- `src/simulation_quality/feed.py` — `QualityFeedAdapter` ABC (`start()`, `stop()`,
+  `health()`), `InProcessQualityFeed` (registers drain callback on
+  `BoundedObservabilityQueue`), `QualityFeedMode` enum (`INPROCESS` | `BROKER`),
+  `build_feed_from_env()` factory (reads `QUALITY_FEED_MODE`)
 
 ## Out of Scope
-- QualityHub subscriber wiring (E2)
+- `QualityHub` subscriber wiring (E2)
+- `BrokerQualityFeed` implementation (E2 — wraps RedisStreamConsumer from M36)
+- `worker.py` separate-process entry point (E2)
 - Any pillar scorer logic (E2–E4)
 - REST API routes (E5)
 
@@ -75,14 +82,22 @@ prerequisite for all subsequent scorer and hub implementation.
 - [ ] `PillarAccumulator.worst_events` never exceeds `MAX_WORST_EVENTS` (read from config)
 - [ ] `PillarAccumulator.window_buffer` is `deque(maxlen=W)` where W is from config
 - [ ] `PillarAccumulator` is thread-safe: `add()` uses a lock
+- [ ] `PillarAccumulator.add()` silently drops records whose `event_id` is already in
+  `_seen_event_ids`; the seen-set is per-accumulator and not bounded (event_ids are UUIDs)
 - [ ] `QualityReport.build()` reads grade thresholds from `ScoringWeights`, not from constants
 - [ ] `QualityReport.build()` produces correct normalized scores and health grades
 - [ ] `QualityPersistence` writes to `data/runs/{run_id}/quality_scores.jsonl`
 - [ ] `QualityPersistence` writes to `data/runs/{run_id}/quality_report.json`
 - [ ] All persistence writes are non-blocking (async or fire-and-forget)
+- [ ] `QualityFeedAdapter` ABC has `start()`, `stop()`, `health()` with correct signatures
+- [ ] `InProcessQualityFeed` registers its drain callback without modifying existing queue behavior
+- [ ] `build_feed_from_env()` returns `InProcessQualityFeed` when `QUALITY_FEED_MODE` is
+  unset or `inprocess`; raises `ValueError` for unknown values
 - [ ] Unit tests for: `ScoringWeights` load + validation, `PillarAccumulator.add()`,
   `worst_events` ceiling, `window_buffer` overflow, `QualityReport.build()` grade assignment,
-  `QualityPersistence` file output, config missing-key raises at startup not silently at score time
+  `QualityPersistence` file output, config missing-key raises at startup not silently at score
+  time, `PillarAccumulator` dedup (same event_id twice → scored once), `build_feed_from_env()`
+  mode selection
 
 ## Related Tickets
 - Parent: TCK-20260628-SIMQ-EPIC

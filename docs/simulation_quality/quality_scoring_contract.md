@@ -64,18 +64,27 @@ performance (that is `perf_baseline_policy.md`), or content quality (human judgm
 │                   Observability Layer                           │
 │  EventBus → ObservabilityEventEnvelope                          │
 │  → BoundedObservabilityQueue → QueueDrainWorker                 │
-│  → events.jsonl  │  replay chunks  │  telemetry bridge          │
-└───────────────────────────┬─────────────────────────────────────┘
-                            │ ObservabilityEventEnvelope (drain callback)
-                            ▼ [QUALITY SUBSCRIBER — non-blocking]
+│  → simulation_events.jsonl  │  replay chunks  │  telemetry bridge  │
+└──────────┬──────────────────────────────────┬────────────────────┘
+           │ INPROCESS mode                   │ BROKER mode
+           │ drain callback                   │ RedisStreamConsumer
+           ▼                                  ▼
+┌──────────────────────────────────────────────────────────────────┐
+│                    QualityFeedAdapter (ABC)                      │
+│   InProcessQualityFeed          BrokerQualityFeed                │
+│   (drain worker thread)         (separate process / thread)      │
+└───────────────────────────┬──────────────────────────────────────┘
+                            │ ObservabilityEventEnvelope
+                            ▼ [non-blocking in both modes]
 ┌─────────────────────────────────────────────────────────────────┐
 │             Simulation Quality Layer  [THIS MODULE]             │
 │                                                                 │
-│   QualityHub                                                    │
+│   QualityHub  (feed-mode-agnostic)                              │
 │   ├── ScoringWeights (loaded from config/simulation_quality/)  │
 │   ├── SCORER_REGISTRY: {event_type → [PillarScorer]}           │
 │   ├── 10 × PillarScorer.score(envelope, context, weights)      │
 │   ├── 10 × PillarAccumulator (raw_score, window, worst_events) │
+│   │        + event_id deduplication (broker at-least-once safe) │
 │   ├── Persistence → quality_scores.jsonl                        │
 │   └── QualityReport.build() → quality_report.json              │
 │                                                                 │
@@ -104,15 +113,15 @@ constraints. Violations block merge.
 
 ### 3.1 Zero Simulation Impact
 
-The simulation loop must never block, wait, or slow down for quality scoring.
+The simulation loop must never block, wait, or slow down for quality scoring — in either feed mode.
 
-- The `QualityHub` subscriber is called **from the queue drain callback** of the existing
-  `BoundedObservabilityQueue` drain worker — not from inside `kernel.tick_once()`.
-- The simulation produces events and moves on. Scoring happens asynchronously in the
-  drain worker thread, completely decoupled from tick cadence.
-- If scoring is slower than the event production rate, score records are dropped (same
-  policy as the existing observability queue's drop-on-overflow behavior). **Dropped
-  records are logged at WARNING level but never cause an exception.**
+- **INPROCESS mode:** `QualityHub.on_envelope()` is called from the `BoundedObservabilityQueue`
+  drain worker thread — not from inside `kernel.tick_once()`. The simulation produces events
+  and moves on.
+- **BROKER mode:** `QualityHub.on_envelope()` is called from the `BrokerQualityFeed` consumer
+  thread or subprocess. The simulation has zero awareness of the quality layer.
+- In both modes, if scoring is slower than the event production rate, score records are
+  dropped. **Dropped records are logged at WARNING level but never cause an exception.**
 
 ### 3.2 Overhead Budget
 
@@ -135,21 +144,67 @@ entirely. When disabled:
 
 This is the production safety valve. Scoring is never a prerequisite for the simulation.
 
-### 3.4 Separate-Process Readiness
+### 3.4 Dual Feed Mode
 
-The module is designed so that scoring can be promoted to a separate process without
-architecture changes. The contract:
+The module supports two feed modes selected at startup. The `QualityHub` and all scorers
+are identical in both modes — only the event delivery mechanism changes.
 
-- `QualityHub` consumes only `ObservabilityEventEnvelope` objects (pure data, serializable)
-- Score records are written to `quality_scores.jsonl` (durable, appendable)
-- A future `QualityWorker` process can read `events.jsonl` from disk and produce the
-  same `quality_scores.jsonl` without touching the simulation process at all
-- No shared mutable state exists between the simulation and the quality layer
+#### Mode selection
 
-**When to promote:** If quality scoring overhead exceeds 5% of total drain worker time
-in a sustained run (measured by E6 performance tests), move `QualityHub` to a
-`QualityWorker` subprocess reading from `events.jsonl`. The scorer code is unchanged;
-only the feed mechanism changes.
+Set `QUALITY_FEED_MODE` environment variable (default: `inprocess`):
+
+| Value | Class | Delivery mechanism |
+|---|---|---|
+| `inprocess` | `InProcessQualityFeed` | Drain callback in `BoundedObservabilityQueue` worker thread |
+| `broker` | `BrokerQualityFeed` | `RedisStreamConsumer` — separate thread or subprocess |
+
+Additional env vars for broker mode:
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `QUALITY_BROKER_URL` | `redis://localhost:6379` | Redis connection URL |
+| `QUALITY_STREAM_NAME` | `sim:events` | Redis stream key to consume from |
+| `QUALITY_CONSUMER_GROUP` | `quality_scoring` | Consumer group name |
+
+#### `QualityFeedAdapter` interface
+
+```python
+class QualityFeedAdapter(ABC):
+    def start(self, hub: QualityHub) -> None: ...  # begin delivering envelopes to hub.on_envelope()
+    def stop(self) -> None: ...                    # graceful shutdown
+    def health(self) -> dict: ...                  # status, lag, dropped_count
+```
+
+`InProcessQualityFeed.start()` registers a drain callback on `BoundedObservabilityQueue`.
+`BrokerQualityFeed.start()` instantiates a `RedisStreamConsumer` (from `src/observability/stream/consumer.py`)
+and calls `hub.on_envelope()` from its callback. No other code changes — `RedisStreamConsumer`
+is already built (M36).
+
+#### Idempotency (broker at-least-once delivery)
+
+Redis Streams delivers at-least-once on consumer group retry. `PillarAccumulator.add()`
+tracks a `_seen_event_ids: set[str]` and silently drops duplicate `event_id` values.
+This is a no-op cost in INPROCESS mode (no duplicates possible) and required correctness
+in BROKER mode.
+
+#### Separate process (BROKER mode)
+
+`BrokerQualityFeed` can run the `RedisStreamConsumer` in a dedicated subprocess via
+`src/simulation_quality/worker.py`. This fully isolates quality scoring memory and CPU
+from the simulation process. The subprocess connects to Redis independently; the
+simulation process has no reference to it.
+
+```
+[simulation process]           [quality worker process]
+  engine + observability  →  Redis Stream  →  BrokerQualityFeed
+                                               → QualityHub
+                                               → quality_scores.jsonl
+                                               → quality_report.json
+                                               → GET /api/v1/quality/*
+```
+
+The REST API in BROKER mode is served from the worker process on a configurable port
+(`QUALITY_WORKER_PORT`, default: `8082`).
 
 ---
 
@@ -167,7 +222,7 @@ class ScoreRecord:
     pillar: PillarId        # which pillar scored this event
     delta: float            # positive = healthy signal; negative = degenerate signal
     reason: str             # human-readable explanation (not stored state — traceability only)
-    event_type: str         # original event_type for cross-reference with events.jsonl
+    event_type: str         # original event_type for cross-reference with simulation_events.jsonl
     entity_id: int | None   # source entity if applicable
     region_id: str | None   # source region if applicable
     tags: tuple[str, ...]   # diagnostic tags e.g. ("stagnation", "zero_harvest", "loop_detected")
@@ -408,7 +463,7 @@ decisions — or are they behaving as effectively omniscient agents with flat di
 **Traceability path:**
 ```
 grade F → worst_events[0]: tag="omniscience_collapse", tick=200
-  → events.jsonl at tick 200: belief_updated events per entity?
+  → simulation_events.jsonl at tick 200: belief_updated events per entity?
   → cognition_graph_snapshots.jsonl: lead certainty distribution at tick 200
   → ENABLE_BELIEF_ASSIMILATION flag status
 ```
@@ -448,7 +503,7 @@ PP-15 (`movement_routing`), PP-30 (`strategic_intelligence`)
 **Traceability path:**
 ```
 grade F → worst_events: tag="rejection_cascade_sustained", tick range 200–800
-  → events.jsonl: adventure_decision events per entity in that range
+  → simulation_events.jsonl: adventure_decision events per entity in that range
   → Check ENABLE_ADVENTURE_ROUTING flag (defaults OFF — must be ON)
   → Check entity navigation.region_id (must not be None)
   → Check resource_nodes count in world state
@@ -921,7 +976,7 @@ Profiles are defined in `src/simulation_quality/profiles.py` — not in world.ya
 ### 8.1 Event Routing
 
 ```
-QualityHub.on_event(envelope: ObservabilityEventEnvelope):
+QualityHub.on_envelope(envelope: ObservabilityEventEnvelope):
     if QUALITY_SCORING_DISABLED: return
     scorers = SCORER_REGISTRY.get(envelope.event_type, [])
     for scorer in scorers:
@@ -982,7 +1037,7 @@ Step 1: QualityReport → identify low-grade pillar (e.g., ECONOMY grade F)
 Step 2: pillar.worst_events[:5]
   → ScoreRecord(tick=200, event_id="abc123", delta=-20.0, tags=["zero_harvest"])
 
-Step 3: Cross-reference event_id in data/runs/{run_id}/events.jsonl
+Step 3: Cross-reference event_id in data/runs/{run_id}/simulation_events.jsonl
   → SimulationEvent(entity_id=7, region_id="hometown", tick=200, event_type="adventure_decision")
 
 Step 4 (entity-level): Cross-reference entity_id=7 in cognition_graph_snapshots.jsonl
@@ -1047,8 +1102,8 @@ Required tests for every scoring rule in every scorer:
 
 | Test | What to verify |
 |---|---|
-| Event routed to correct scorer | `on_event()` with known event_type produces ScoreRecord in correct pillar |
-| Accumulator updated | raw_score, event_count, worst_events updated after `on_event()` |
+| Event routed to correct scorer | `on_envelope()` with known event_type produces ScoreRecord in correct pillar |
+| Accumulator updated | raw_score, event_count, worst_events updated after `on_envelope()` |
 | Persistence writes | quality_scores.jsonl receives the record |
 | Error isolation | Scorer exception does not propagate; other scorers continue |
 | Disable mechanism | `QUALITY_SCORING_DISABLED=1` prevents any scoring; simulation unaffected |
@@ -1124,7 +1179,7 @@ For each scenario in §6 Scenario Registry:
 
 ### Traceability
 
-- [ ] Every `ScoreRecord` in `worst_events` has a valid `event_id` that cross-references `events.jsonl`
+- [ ] Every `ScoreRecord` in `worst_events` has a valid `event_id` that cross-references `simulation_events.jsonl`
 - [ ] Every low-grade pillar has at least one worst_event with a tag matching §5
 - [ ] The traceability path in §9 is validated by an integration test
 
