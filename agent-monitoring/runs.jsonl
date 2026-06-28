@@ -355,3 +355,5 @@
 {"run_id":"TCK-20260627-P3B-OBS-MODE-REMAP","start_ts":"2026-06-27T17:32:24Z","end_ts":"2026-06-27T17:39:11Z","workflow":"implement-ticket","tier":"hotfix","final_status":"DONE","agent_count":9}
 {"run_id":"TCK-20260627-P3C-DOC-CURRENCY","start_ts":"2026-06-27T18:03:15Z","end_ts":"2026-06-27T18:18:13Z","workflow":"implement-ticket","tier":"hotfix","final_status":"DONE","agent_count":9}
 {"run_id":"TCK-20260627-P3D-CATALOG-BROWSER","start_ts":"2026-06-27T18:36:17Z","end_ts":"2026-06-27T18:42:18Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":9}
+{"run_id":"TCK-20260627-P3A-DEFERRED-EPICS","start_ts":"2026-06-27T19:28:33Z","end_ts":"2026-06-27T19:35:42Z","workflow":"implement-ticket","tier":"epic","final_status":"DONE","agent_count":9}
+{"run_id":"FOLDER-tickets-todos-audit-fixes-","start_ts":"2026-06-26T21:15:31Z","end_ts":"2026-06-28T01:43:43Z","workflow":"implement-epic","tier":"epic","final_status":"DONE","agent_count":30}
