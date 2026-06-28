@@ -3,7 +3,7 @@ status: authoritative
 layer: mechanics
 authority: P0
 audience: developer
-last_verified: 2026-06-06
+last_verified: 2026-06-27
 ---
 
 # Chapter 4: Strategic Cognition
@@ -50,11 +50,14 @@ A `Lead` is a stored piece of information about a resource or location.
 *   **Certainty**: High, Medium, or Low. Certainty decays over time if the information is not refreshed.
 
 ### Blockers (Problems)
-A `Blocker` is a reason why a goal cannot be achieved.
-*   **Access**: A path is blocked or a location is unreachable.
-*   **Material**: Missing items or gold for a recipe.
-*   **Inventory**: No more physical space to carry items.
-*   **Congestion**: Too many entities in a small area.
+A `Blocker` is a reason why a goal cannot be achieved. The `BlockerKind` enum (`src/core/strategic.py`) defines the authoritative set of blocker kinds:
+
+*   **`access`**: A path is blocked, a location is unreachable, or navigation is oscillating. Congestion (too many entities in an area) is also reported as `kind="access"` with `subject="congestion"`.
+*   **`material`**: Missing items, resource node unavailable, out-of-stock, or liquidity exhausted.
+*   **`inventory`**: No more physical space (slot or weight capacity exceeded).
+*   **`capability`**: Action or navigation is blocked due to entity capability limits (e.g., entity cannot perform the required action type).
+*   **`social`**: Goal blocked by social relationship constraints.
+*   **`group`**: Goal blocked by group composition or group-level requirements.
 
 ---
 
@@ -70,9 +73,9 @@ Strategic goals are broken down into a multi-step hierarchy.
 
 ## 5. Perception & Salience
 Entities do not see the entire world.
-*   **Perception Radius**: Usually 10.0 to 15.0 units.
+*   **Perception Radius**: **10.0 units** — all perception and neighbor-view calls use `radius=10.0` consistently (`src/engine/domain_logic.py`, `src/engine/domain/view.py`, `src/systems/strategic_systems/intelligence.py`). A 15.0-unit radius appears only in cooperation candidate search (`src/domains/cooperation/providers.py`) and is not a perception radius.
 *   **Salience Filter**: Only entities or events within the perception radius are considered "Salient." Information outside this radius is either ignored or retrieved from Memory (Leads).
-*   **Info Decay**: Strategic leads lose certainty every 100 ticks. High-certainty leads become Medium, and so on, until the information is forgotten.
+*   **Info Decay**: Strategic leads lose certainty after **50 ticks** without refresh (default `stale_threshold=50` in `BeliefCycleSystem.decay_stale_beliefs`, `src/systems/strategic_systems/belief.py:47`). Leads demote from APPROXIMATE → VAGUE → EXHAUSTED. PRECISE leads (direct observations) do not decay.
 
 ---
 
@@ -95,7 +98,7 @@ score = max(0.0, score)   # clamped to non-negative; rounded to 4 decimal places
 |---|---|---|---|
 | `urgency` | `max(need.urgency for matched needs)` | Depends on active need pressures | ~2.0 |
 | `benefit` | `route.expected_benefit × depletion_fraction` (GATHER_RESOURCE); `route.expected_benefit` (all others) | World-defined per opportunity; see §6.2.1 | — |
-| `personality_bias` | `trait × 0.25` (family-matched) | **Weight: 0.25** per trait | 0.25 |
+| `personality_bias` | `trait × weight` (family-matched; see §6.4) | **Weight varies by trait** (greed: 0.50, sociability: 0.40, others: 0.25) | 0.50 |
 | `confidence_bonus` | `route.confidence × 0.15` | **Weight: 0.15** | 0.15 |
 | `risk_penalty` | `route.expected_risk × risk_multiplier × 0.5` | **Risk weight: 0.5**; multiplier below | — |
 | `blocker_penalty` | `2.0 if route.blockers else 0.0` | **Fixed: 2.0** (see §6.3) | 2.0 |
@@ -142,14 +145,19 @@ Range: 0.1 (pure bravery) to 1.8 (pure caution). Default personality (bravery=0,
 | RouteFamily | Trait | Weight |
 |---|---|---|
 | `RECOVER` | `caution` | 0.25 |
-| `GATHER_RESOURCE`, `SELL_LOOT_FOR_GOLD`, `TAKE_EASY_QUEST` | `greed` | 0.25 |
+| `GATHER_RESOURCE`, `SELL_LOOT_FOR_GOLD`, `TAKE_EASY_QUEST` | `greed` | **0.50** |
 | `ASK_INFORMATION`, `SCOUT_LOCATION` | `curiosity` | 0.25 |
 | `CRAFT_UPGRADE`, `GATHER_RESOURCE` | `industry` | 0.25 |
-| `FORM_PARTY` | `sociability` | 0.25 |
-| `QUEST_OPPORTUNITY` | `greed` | 0.25 |
+| `FORM_PARTY` | `sociability` | **0.40** |
+| `QUEST_OPPORTUNITY` | `greed` | **0.50** |
 | `BUY_UPGRADE`, `COMBAT_ENGAGE`, `DEFER_WITH_REASON` | (none) | 0.0 |
 
-Only one family match applies per route. Maximum personality_bias = 0.25.
+Only one family match applies per route. Maximum personality_bias = 0.50 (greed routes).
+
+**Calibration history:** Weights were raised from a uniform 0.25 (E11C, 2026-06-28) after the
+E11B 1k-tick personality audit showed greed and sociability had Δ<0.05 effect on route
+selection. Bravery already exerts strong influence via risk_multiplier (multiplicative path)
+and was not changed.
 
 ### 6.5 blocker_penalty = 2.0 — Justification
 
@@ -157,7 +165,7 @@ Only one family match applies per route. Maximum personality_bias = 0.25.
 
 **Rationale (E12A, 2026-06-20):** In 100-tick measurements with `ENABLE_ADVENTURE_ROUTING=ON` (urban_political, seed=42), `blocker_frequency = 0.0` — no blocked routes were scored because resource nodes are absent in the test world. The constant cannot be empirically refined until world content provides non-DEFER route candidates.
 
-**Design intent:** A route with _any_ blocker (missing item, inaccessible location) should be strongly deprioritized. The 2.0 magnitude exceeds the maximum personality_bias+confidence_bonus contribution (0.40), ensuring blocked routes are overridden by the highest-urgency unblocked routes.
+**Design intent:** A route with _any_ blocker (missing item, inaccessible location) should be strongly deprioritized. The 2.0 magnitude exceeds the maximum personality_bias+confidence_bonus contribution (0.65 post-E11C), ensuring blocked routes are overridden by the highest-urgency unblocked routes.
 
 **Revisit trigger:** If `blocker_frequency > 0.05` is observed in E12C regression tests, reconsider whether 2.0 is too blunt for minor blockers (e.g., gold deficit < 5).
 

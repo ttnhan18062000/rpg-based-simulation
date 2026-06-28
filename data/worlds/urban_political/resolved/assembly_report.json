@@ -263,12 +263,6 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Faction 'neutral' is active but never consumed by any downstream component",
-      "target": "neutral"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
       "message": "Perspective 'hero_guild_perspective' is active but never consumed by any downstream component",
       "target": "hero_guild_perspective"
     },
@@ -323,12 +317,6 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Building 'watchtower' is active but never consumed by any downstream component",
-      "target": "watchtower"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
       "message": "Building 'shrine' is active but never consumed by any downstream component",
       "target": "shrine"
     },
@@ -353,6 +341,18 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
+      "message": "Region 'nomadic_herd_range' is active but never consumed by any downstream component",
+      "target": "nomadic_herd_range"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Region 'settled_quarter_district' is active but never consumed by any downstream component",
+      "target": "settled_quarter_district"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
       "message": "Recipe 'craft_small_potion' is active but never consumed by any downstream component",
       "target": "craft_small_potion"
     },
@@ -371,86 +371,8 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Resource 'frost_shard_cluster' is active but never consumed by any downstream component",
-      "target": "frost_shard_cluster"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
-      "message": "Item 'rusted_sword' is active but never consumed by any downstream component",
-      "target": "rusted_sword"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
-      "message": "Item 'wooden_staff' is active but never consumed by any downstream component",
-      "target": "wooden_staff"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
-      "message": "Item 'basic_bow' is active but never consumed by any downstream component",
-      "target": "basic_bow"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
-      "message": "Item 'leather_armor' is active but never consumed by any downstream component",
-      "target": "leather_armor"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
-      "message": "Item 'apprentice_staff' is active but never consumed by any downstream component",
-      "target": "apprentice_staff"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
-      "message": "Item 'herb' is active but never consumed by any downstream component",
-      "target": "herb"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
-      "message": "Item 'ember_axe' is active but never consumed by any downstream component",
-      "target": "ember_axe"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
-      "message": "Item 'frost_focus' is active but never consumed by any downstream component",
-      "target": "frost_focus"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
-      "message": "Item 'steel' is active but never consumed by any downstream component",
-      "target": "steel"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
-      "message": "Item 'ember_core' is active but never consumed by any downstream component",
-      "target": "ember_core"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
-      "message": "Item 'frost_shard' is active but never consumed by any downstream component",
-      "target": "frost_shard"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
-      "message": "Item 'shadow_ichor' is active but never consumed by any downstream component",
-      "target": "shadow_ichor"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
-      "message": "Biome 'frozen_peak' is active but never consumed by any downstream component",
-      "target": "frozen_peak"
+      "message": "Item 'steel_sword' is active but never consumed by any downstream component",
+      "target": "steel_sword"
     },
     {
       "severity": "WARNING",
@@ -497,8 +419,32 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
+      "message": "Module 'mountain_pass' is active but never consumed by any downstream component",
+      "target": "mountain_pass"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Module 'settled_quarter' is active but never consumed by any downstream component",
+      "target": "settled_quarter"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
       "message": "Module 'hero_adventurers' is active but never consumed by any downstream component",
       "target": "hero_adventurers"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Module 'river_crossing' is active but never consumed by any downstream component",
+      "target": "river_crossing"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Module 'nomadic_herd' is active but never consumed by any downstream component",
+      "target": "nomadic_herd"
     }
   ],
   "module_validation": {
@@ -508,18 +454,11 @@
     "hero_adventurers": []
   },
   "composition_validation": [],
-  "world_validation": [
-    {
-      "severity": "WARNING",
-      "rule_id": "WORLD-WARN-001",
-      "message": "World spec defines zero resource nodes.",
-      "path": "resources"
-    }
-  ],
+  "world_validation": [],
   "summary": {
     "status": "SUCCESS",
     "blocking_errors_count": 0,
-    "warnings_count": 80
+    "warnings_count": 70
   },
   "blocking_errors": [],
   "warnings": [
@@ -760,12 +699,6 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Faction 'neutral' is active but never consumed by any downstream component",
-      "target": "neutral"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
       "message": "Perspective 'hero_guild_perspective' is active but never consumed by any downstream component",
       "target": "hero_guild_perspective"
     },
@@ -820,12 +753,6 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Building 'watchtower' is active but never consumed by any downstream component",
-      "target": "watchtower"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
       "message": "Building 'shrine' is active but never consumed by any downstream component",
       "target": "shrine"
     },
@@ -850,6 +777,18 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
+      "message": "Region 'nomadic_herd_range' is active but never consumed by any downstream component",
+      "target": "nomadic_herd_range"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Region 'settled_quarter_district' is active but never consumed by any downstream component",
+      "target": "settled_quarter_district"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
       "message": "Recipe 'craft_small_potion' is active but never consumed by any downstream component",
       "target": "craft_small_potion"
     },
@@ -868,86 +807,8 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Resource 'frost_shard_cluster' is active but never consumed by any downstream component",
-      "target": "frost_shard_cluster"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
-      "message": "Item 'rusted_sword' is active but never consumed by any downstream component",
-      "target": "rusted_sword"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
-      "message": "Item 'wooden_staff' is active but never consumed by any downstream component",
-      "target": "wooden_staff"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
-      "message": "Item 'basic_bow' is active but never consumed by any downstream component",
-      "target": "basic_bow"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
-      "message": "Item 'leather_armor' is active but never consumed by any downstream component",
-      "target": "leather_armor"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
-      "message": "Item 'apprentice_staff' is active but never consumed by any downstream component",
-      "target": "apprentice_staff"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
-      "message": "Item 'herb' is active but never consumed by any downstream component",
-      "target": "herb"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
-      "message": "Item 'ember_axe' is active but never consumed by any downstream component",
-      "target": "ember_axe"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
-      "message": "Item 'frost_focus' is active but never consumed by any downstream component",
-      "target": "frost_focus"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
-      "message": "Item 'steel' is active but never consumed by any downstream component",
-      "target": "steel"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
-      "message": "Item 'ember_core' is active but never consumed by any downstream component",
-      "target": "ember_core"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
-      "message": "Item 'frost_shard' is active but never consumed by any downstream component",
-      "target": "frost_shard"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
-      "message": "Item 'shadow_ichor' is active but never consumed by any downstream component",
-      "target": "shadow_ichor"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
-      "message": "Biome 'frozen_peak' is active but never consumed by any downstream component",
-      "target": "frozen_peak"
+      "message": "Item 'steel_sword' is active but never consumed by any downstream component",
+      "target": "steel_sword"
     },
     {
       "severity": "WARNING",
@@ -994,23 +855,41 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
+      "message": "Module 'mountain_pass' is active but never consumed by any downstream component",
+      "target": "mountain_pass"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Module 'settled_quarter' is active but never consumed by any downstream component",
+      "target": "settled_quarter"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
       "message": "Module 'hero_adventurers' is active but never consumed by any downstream component",
       "target": "hero_adventurers"
     },
     {
       "severity": "WARNING",
-      "rule_id": "WORLD-WARN-001",
-      "message": "World spec defines zero resource nodes.",
-      "path": "resources"
+      "rule_id": "CAT-DEAD-001",
+      "message": "Module 'river_crossing' is active but never consumed by any downstream component",
+      "target": "river_crossing"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Module 'nomadic_herd' is active but never consumed by any downstream component",
+      "target": "nomadic_herd"
     }
   ],
   "fingerprints": {
-    "catalog": "8c4b780927da8b24941d13564e64ef3bba0ac8188facb07463df90ce8e13185d",
+    "catalog": "b4d4d93bff4c75990cd0ce2fac479355be152b5e19042c1c7b1e463f15824c3b",
     "modules": {
-      "frontier_village_core": "02aec5f9a179002864024c53bed0d2040d49c64b5191fd856c2d1a4ddc1af01f",
-      "bandit_road_trade_pressure": "a04880b8821a4cf6246e5ce782ef1363f5f8cbc1d97f6bb40191c47c8149ce10",
+      "frontier_village_core": "c11d5cfa898492816ce36af0962a2d3bb5a976db28b312baec6708347982d456",
+      "bandit_road_trade_pressure": "1407b0db8a8f534c5151073b6369991eaa1a8d356f948407ec92e1555fa66205",
       "hero_adventurers": "1b1d1e2859fdd6b23262edba556718f6c506a72be8dc44cd84db74c68078b837",
-      "trading_company_hub": "14b684b372fb7205d1bd6eb6211fafa7e4d17fde4c9f177cf4016b2cf7bc57f2"
+      "trading_company_hub": "c5b44695b59c5d0ed516348106be54c17a4e5ea105d582ed968adf31bfcff819"
     }
   }
 }

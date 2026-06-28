@@ -5,8 +5,8 @@ Phase 8 — Pressures and Scarcity Models.
 """
 
 from __future__ import annotations
-from typing import Tuple, Sequence, Dict
-from src.core.state import AuthoritativeState
+from typing import Tuple, Sequence, Dict, List
+from src.core.state import AuthoritativeState, RegionState
 from src.domains.world_emergence.schema import (
     WorldEventAggregate, RegionalPressure, ResourceScarcitySignal, ServicePressure, WorldEventCategory
 )
@@ -144,6 +144,95 @@ class RegionalPressureModel:
                 ))
 
         return tuple(pressures)
+
+    # E21E constants
+    ADJACENCY_GAP: float = 50.0      # regions within 50 units are considered adjacent
+    PROPAGATION_FACTOR: float = 0.30  # fraction of neighbor resource pressure that bleeds across
+
+    @staticmethod
+    def _are_adjacent(r1: RegionState, r2: RegionState) -> bool:
+        """True if the two regions' bounding boxes are within ADJACENCY_GAP units of each other."""
+        gap = RegionalPressureModel.ADJACENCY_GAP
+        x1min, y1min, x1max, y1max = r1.bounds
+        x2min, y2min, x2max, y2max = r2.bounds
+        hdist = max(0.0, max(x1min, x2min) - min(x1max, x2max))
+        vdist = max(0.0, max(y1min, y2min) - min(y1max, y2max))
+        return hdist <= gap and vdist <= gap
+
+    @staticmethod
+    def propagate_cross_region(
+        pressures: Tuple[RegionalPressure, ...],
+        state: AuthoritativeState,
+    ) -> Tuple[RegionalPressure, ...]:
+        """
+        Propagate resource scarcity pressure between adjacent regions (E21E).
+
+        Each region with nonzero resource pressure bleeds PROPAGATION_FACTOR × its
+        intensity to every adjacent region, creating a scarcity gradient that drives
+        entity migration away from resource-depleted areas.
+        """
+        factor = RegionalPressureModel.PROPAGATION_FACTOR
+
+        # Partition: resource pressure entries vs everything else
+        resource_by_region: Dict[str, RegionalPressure] = {}
+        other: List[RegionalPressure] = []
+        for p in pressures:
+            if p.pressure_kind == "resource":
+                resource_by_region[p.region_id] = p
+            else:
+                other.append(p)
+
+        if not resource_by_region or len(state.regions) < 2:
+            return pressures
+
+        # Accumulate spread: how much each region receives from neighbours
+        spread_in: Dict[str, float] = {r_id: 0.0 for r_id in state.regions}
+        region_list = list(state.regions.values())
+        for i, r1 in enumerate(region_list):
+            for r2 in region_list[i + 1:]:
+                if RegionalPressureModel._are_adjacent(r1, r2):
+                    p1 = resource_by_region[r1.id].intensity if r1.id in resource_by_region else 0.0
+                    p2 = resource_by_region[r2.id].intensity if r2.id in resource_by_region else 0.0
+                    spread_in[r2.id] += p1 * factor
+                    spread_in[r1.id] += p2 * factor
+
+        # Rebuild resource pressure entries with propagated component merged in
+        all_affected = set(resource_by_region.keys()) | {
+            r_id for r_id, v in spread_in.items() if v > 0.0
+        }
+        updated_resource: List[RegionalPressure] = []
+        for r_id in sorted(all_affected):
+            spread = min(1.0, spread_in.get(r_id, 0.0))
+            orig = resource_by_region.get(r_id)
+            if orig:
+                new_intensity = min(1.0, orig.intensity + spread)
+                src = list(orig.source_aggregates)
+                if spread > 0.0:
+                    src.append(f"cross_region_spread:{spread:.3f}")
+                reason = orig.reason
+                if spread > 0.0:
+                    reason += f"; +{spread:.3f} from adjacent-region scarcity"
+                updated_resource.append(RegionalPressure(
+                    region_id=r_id,
+                    pressure_kind="resource",
+                    intensity=new_intensity,
+                    confidence=min(orig.confidence, 0.75) if spread > 0.0 else orig.confidence,
+                    source_aggregates=tuple(src),
+                    reason=reason,
+                ))
+            else:
+                # Region got pressure purely through propagation from neighbours
+                if spread > 0.0:
+                    updated_resource.append(RegionalPressure(
+                        region_id=r_id,
+                        pressure_kind="resource",
+                        intensity=spread,
+                        confidence=0.65,
+                        source_aggregates=(f"cross_region_spread:{spread:.3f}",),
+                        reason=f"{spread:.3f} resource pressure propagated from adjacent regions",
+                    ))
+
+        return tuple(other + updated_resource)
 
 
 class ScarcityModel:

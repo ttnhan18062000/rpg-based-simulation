@@ -633,3 +633,54 @@ def test_escort_scoring_skipped_when_no_escort_target():
     assert scored_with_group.score == pytest.approx(scored_no_group.score, abs=0.001), (
         "No escort bonus should apply when escort_target_id is None"
     )
+
+
+# ---------------------------------------------------------------------------
+# E41G — composition_score adjusts defection threshold (SOC-232)
+# ---------------------------------------------------------------------------
+
+def test_effective_threshold_zero_composition():
+    """composition_score=0.0 → threshold stays at 3 (baseline)."""
+    group = _group(last_leadership_check_tick=0)
+    # GroupRecord.composition_score defaults to 0.0
+    assert PartyLifecycleService.effective_defection_threshold(group) == 3
+
+
+def test_effective_threshold_high_composition():
+    """composition_score=1.0 → threshold rises to 5 (max bonus=2)."""
+    from dataclasses import replace as dc_replace
+    group = dc_replace(_group(), composition_score=1.0)
+    assert PartyLifecycleService.effective_defection_threshold(group) == 5
+
+
+def test_effective_threshold_half_composition():
+    """composition_score=0.5 → threshold=4 (+1 grievance)."""
+    from dataclasses import replace as dc_replace
+    group = dc_replace(_group(), composition_score=0.5)
+    assert PartyLifecycleService.effective_defection_threshold(group) == 4
+
+
+def test_high_composition_prevents_defection_at_threshold_3():
+    """A high-composition group (score=1.0) does NOT defect with only 3 grievances."""
+    from dataclasses import replace as dc_replace
+    group = dc_replace(
+        _group(grievance_log=("g1", "g2", "g3"), member_ids={10, 11}),
+        composition_score=1.0,
+    )
+    entity = _entity(11, sociability=0.5)
+    result, event, update = PartyLifecycleService.check_defection(group, entity, tick=100)
+    assert result is None and event is None, (
+        "High-composition group should NOT defect at grievance_count=3 "
+        "(effective threshold=5)"
+    )
+
+
+def test_low_composition_defects_at_threshold_3():
+    """A zero-composition group defects when grievance_log reaches 3."""
+    group = _group(grievance_log=("g1", "g2", "g3"), member_ids={10, 11})
+    # composition_score defaults to 0.0
+    entity = _entity(11, sociability=0.5)
+    result, event, update = PartyLifecycleService.check_defection(group, entity, tick=100)
+    assert result is not None and event is not None, (
+        "Zero-composition group SHOULD defect at grievance_count=3 (threshold=3)"
+    )

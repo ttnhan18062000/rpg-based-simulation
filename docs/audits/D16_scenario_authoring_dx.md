@@ -128,6 +128,8 @@ template_id: "raider_conflict"               # optional — triggers template va
 
 ### Task 3 — Add a new content pack (new directory/family) — DX Gap: 12 / 15
 
+> **Ticket:** TCK-20260627-P2K-CONTENT-MATRIX
+
 | Dimension | Score | Reason |
 |---|---|---|
 | Discovery Friction | 5 | `ContentUsageMatrix` update requirement is documented nowhere for authors — discovered only when `test_matrix_covers_all_content_files` fails in CI |
@@ -184,8 +186,8 @@ YAML scaffold. The main gap is discoverability: no authoring guide points to it.
 
 | Gap | Description |
 |---|---|
-| No content author guide | No single-page "how to add a module/scenario" document exists. `modules_contract.md` is a technical contract, not a walkthrough. |
-| No catalog ID browser | No way to list valid biome/ecology/population/faction IDs without running assembly code. |
+| No content author guide | No single-page "how to add a module/scenario" document exists. `modules_contract.md` is a technical contract, not a walkthrough. **Ticket:** TCK-20260627-P2L-CONTENT-GUIDE |
+| No catalog ID browser | No way to list valid biome/ecology/population/faction IDs without running assembly code. **Ticket:** TCK-20260627-P3D-CATALOG-BROWSER |
 | ContentUsageMatrix is manual | New content families must be manually registered; no validation at authoring time. |
 | Allowed initial_conditions undocumented | The 8 allowed keys are only in `src/scenarios/schema.py`. |
 | Scenario templates undiscovered | 10 scenario templates exist in `src/scenarios/templates.py` with useful structural constraints; no docs link to them. |

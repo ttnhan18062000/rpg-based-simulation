@@ -125,6 +125,21 @@ class PartyLifecycleService:
     DEFECTION_GRIEVANCE_THRESHOLD: int = 3  # unresolved grievances required to defect
 
     @staticmethod
+    def effective_defection_threshold(group: "GroupRecord") -> int:
+        """
+        Compute the effective defection threshold for this group.
+
+        High-composition parties (composition_score > 0) receive a bonus of
+        0–2 extra grievances, sustaining them longer before dissolution (SOC-232).
+
+        composition_score = 0.0  → threshold = 3  (baseline)
+        composition_score = 0.5  → threshold = 4  (+1 grievance)
+        composition_score = 1.0  → threshold = 5  (+2 grievances)
+        """
+        bonus = round(group.composition_score * 2)
+        return PartyLifecycleService.DEFECTION_GRIEVANCE_THRESHOLD + bonus
+
+    @staticmethod
     def check_defection(
         group: "GroupRecord",
         entity: "EntityState",
@@ -151,7 +166,8 @@ class PartyLifecycleService:
             - If group drops to <= 1 member after defection, dissolution_tick is set.
             - Entity must be in group.member_ids; behaviour is undefined otherwise.
         """
-        if len(group.grievance_log) < PartyLifecycleService.DEFECTION_GRIEVANCE_THRESHOLD:
+        threshold = PartyLifecycleService.effective_defection_threshold(group)
+        if len(group.grievance_log) < threshold:
             return (None, None, None)
 
         from src.observability.events import BetrayalDesertionEvent

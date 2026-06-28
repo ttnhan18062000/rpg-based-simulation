@@ -1,7 +1,7 @@
 # Compliance IDs: PERF-015
 from __future__ import annotations
 from dataclasses import dataclass, field
-from typing import Dict, Any, List, Optional, TYPE_CHECKING
+from typing import Dict, Any, List, Optional, Self, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from src.core.state import EntityState, IntentResult
@@ -26,7 +26,7 @@ class ComponentPatch:
         """Returns True if this patch contains absolutely no changes."""
         raise NotImplementedError
 
-    def merge(self, other: Any) -> Any:
+    def merge(self, other: Self) -> Self:
         """Merges another patch of the same type into this one."""
         raise NotImplementedError
 

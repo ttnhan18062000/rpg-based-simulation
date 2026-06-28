@@ -350,7 +350,7 @@ but was not updated after that ticket completed.
 | **P1** | `docs/mechanics/01_entity_anatomy.md` | Fix hunger threshold (95.0 / +2 dmg) and sleep debt threshold (98.0 / +1 dmg; HP penalty, not ATK/DEF multiplier) |
 | **P1** | `docs/engine/known_limitations.md` | Remove Blacksmith-Only claim; document actual building types supported |
 | **P1** | `docs/mechanics/04_strategic_cognition.md` | Fix interruption margin: replace `30.0` with `resistance_multiplier` (profile-defined) |
-| P2 | `docs/mechanics/02_combat_laws.md` | Confirm Cover and Bond Synergy constants match `COVER_REDUCTION` and `BOND_SYNERGY_BONUS` values |
+| P2 — **Ticket: TCK-20260627-P3C-DOC-CURRENCY** | `docs/mechanics/02_combat_laws.md` | Confirm Cover and Bond Synergy constants match `COVER_REDUCTION` and `BOND_SYNERGY_BONUS` values |
 | P2 | `docs/mechanics/03_economic_laws.md` | Verify inventory slot/weight defaults against `InventoryComponent` source |
 | P2 | `docs/mechanics/04_strategic_cognition.md` | Audit all 4 uncertain claims (goal tiers, blocker types, perception radius, info decay interval) |
 | P2 | `docs/mechanics/06_worldbuilding_foundation.md` | Update self-certification claim — not all chapters are currently accurate |

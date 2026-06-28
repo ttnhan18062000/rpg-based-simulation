@@ -566,6 +566,7 @@ class GroupRecord:
     reward_pool: int = 0
     last_leadership_check_tick: int = 0
     dissolution_tick: Optional[int] = None
+    composition_score: float = 0.0  # PartyCompositionScorer result at formation (SOC-232)
     _canonical_cache: Any = field(default=None, init=False, repr=False, compare=False)
 
     def to_canonical_dict(self) -> Dict[str, Any]:
@@ -594,6 +595,7 @@ class GroupRecord:
             "reward_pool": self.reward_pool,
             "last_leadership_check_tick": self.last_leadership_check_tick,
             "dissolution_tick": self.dissolution_tick,
+            "composition_score": self.composition_score,
         }
         object.__setattr__(self, "_canonical_cache", res)
         return res

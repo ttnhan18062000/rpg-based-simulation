@@ -512,6 +512,9 @@ definitions. `ContentRepository` manages the loaded catalog at runtime.
 ---
 
 ### 6.6 Hardcoded Fallback Paths `[P]`
+
+> **Ticket:** TCK-20260627-P2N-DEGRADED-FALLBACK
+
 **Source:** `src/core/registries.py` — `runtime_content_source = "legacy_hardcoded"`
 `src/core/modes.py` — `HardcodedFallbackForbiddenError`
 
@@ -520,6 +523,15 @@ Silent fallback to hardcoded seed maps when content catalog is missing or incomp
 **Risk:** Silent in non-strict modes. Missing catalog entries become old hardcoded values
 instead of validation errors. Content types with no fallback entry fail at runtime, not
 at authoring time.
+
+**Status (updated 2026-06-27):** Resolved by TCK-20260627-P2N-DEGRADED-FALLBACK.
+Module-level default `runtime_content_source` changed from `"legacy_hardcoded"` to `None`
+(`src/core/registries.py:541`).  `GracefulDegradationManager.resolve_content_source()` added
+to `src/domains/optimization/degradation.py` — selects from catalog (lowest-cost via
+`CatalogRepository.get_lowest_cost_for_type()`) in degraded mode; raises `CatalogMissError`
+in strict mode when catalog is absent.  Full fallback retirement remains gated on
+`docs/guidelines/fallback_retirement_criteria.md` (all 9 criteria MET; retirement proceeds
+to TCK-20260610-FALLBACK-RESTRICT-MODES). Parity entry: INFRA-028.
 
 ---
 

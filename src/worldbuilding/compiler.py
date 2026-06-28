@@ -213,7 +213,8 @@ class WorldCompiler:
                     remaining_charges=res_spec.count,
                     max_charges=res_spec.count,
                     required_ticks=required_ticks,
-                    cooldown_remaining=0
+                    cooldown_remaining=0,
+                    regen_rate_per_tick=res_spec.regen_rate,
                 )
                 next_resource_id += 1
 
@@ -316,6 +317,7 @@ class WorldCompiler:
                         V2EntityBuilder(next_entity_id)
                         .kind(pop_spec.role.lower())
                         .location(float(x), float(y))
+                        .navigation(region_id=region_id)
                         .identity(
                             role=role_enum,
                             faction=faction_enum,

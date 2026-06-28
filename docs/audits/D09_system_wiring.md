@@ -355,6 +355,8 @@ but active in audit and certification runs — this is intentional by design.
 
 ### Finding 3: Live Domain-Phase Systems Not in D02 Inventory — Risk: 13 / 15
 
+> **Ticket:** TCK-20260627-P1E-DOMAIN-INVENTORY
+
 | Dimension | Score | Reason |
 |---|---|---|
 | Affected Scope | 5 | 20+ systems across combat, economy, strategy, world domains all invisible to audit coverage |
@@ -411,6 +413,8 @@ gap this audit reveals: the domain-phase layer is invisible to current audit cov
 
 ### Finding 4: Feature-Gated Phases May Not Run in All Scenarios — Risk: 9 / 15
 
+> **Ticket:** TCK-20260627-P2E-FEATURE-FLAG-TEST
+
 | Dimension | Score | Reason |
 |---|---|---|
 | Affected Scope | 4 | 8 phases across self-model, belief, cooperation, combat, world domains |
@@ -430,6 +434,8 @@ or `feature_flags` state attribute overrides them.
 
 ### Finding 5: Phase Stability Guard Is Audit-Mode Only — Risk: 11 / 15
 
+> **Ticket:** TCK-20260627-P1G-STABILITY-GUARD
+
 | Dimension | Score | Reason |
 |---|---|---|
 | Affected Scope | 3 | Affects all phases — any phase can commit an isolation breach invisibly |
@@ -445,6 +451,8 @@ This means isolation breaches would be invisible in standard live runs. The cert
 harness is the only live detection path.
 
 ### Finding 6: Canonical State Hashing Conditionally Active — Risk: 8 / 15
+
+> **Ticket:** TCK-20260627-P2F-CANON-HASH-DOC
 
 | Dimension | Score | Reason |
 |---|---|---|

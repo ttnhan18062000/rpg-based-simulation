@@ -17,6 +17,78 @@ from src.domains.culture.model import CultureCarryForward
 
 
 @dataclass(frozen=True)
+class NemesisRelation:
+    """Typed record of a recurring antagonistic relationship between two entities.
+
+    Stored in CampaignState.nemesis_relations keyed by "{protagonist_id}:{antagonist_id}".
+    Formed when the same antagonist appears in 2+ negative interaction history entries
+    (kind "betrayed" or "conflict") from different episodes in the protagonist's
+    SocialMemoryRecord. Injects a BlockerState into the protagonist's strategic.blockers
+    at episode start, causing FORM_PARTY routes to be blocked when the antagonist is a
+    candidate (see GriefUrgencyImporter and generator.py FORM_PARTY logic).
+    """
+    protagonist_id: int    # entity experiencing the nemesis relationship
+    antagonist_id: int     # entity who is the nemesis
+    formation_episode: int # episode when nemesis was formally recognized
+    antagonism_count: int  # number of distinct episodes with negative interactions
+    strength: float        # 0.0–1.0; min(1.0, antagonism_count * 0.4)
+
+    def to_dict(self) -> dict:
+        return {
+            "protagonist_id": self.protagonist_id,
+            "antagonist_id": self.antagonist_id,
+            "formation_episode": self.formation_episode,
+            "antagonism_count": self.antagonism_count,
+            "strength": round(self.strength, 6),
+        }
+
+    @classmethod
+    def from_dict(cls, d: dict) -> "NemesisRelation":
+        return cls(
+            protagonist_id=d["protagonist_id"],
+            antagonist_id=d["antagonist_id"],
+            formation_episode=d["formation_episode"],
+            antagonism_count=d["antagonism_count"],
+            strength=d["strength"],
+        )
+
+
+@dataclass(frozen=True)
+class GriefUrgencyModifier:
+    """Timed urgency modifier injected at episode start for entities who lost allies.
+
+    Stored in CampaignState.grief_urgencies (keyed by grieving entity_id).
+    Decays by decay_per_episode each episode; removed when urgency ≤ 0.
+    Injected as a ConcernState(kind=SOCIAL_THREAT) into entity.strategic.concerns
+    by GriefUrgencyImporter at the start of each episode.
+    """
+    entity_id: int          # entity that is grieving
+    dead_ally_id: int       # entity whose death caused the grief
+    episode: int            # episode when grief was created
+    urgency: float          # 0.0–1.0 current urgency strength
+    decay_per_episode: float = 0.25  # subtracted each episode boundary
+
+    def to_dict(self) -> dict:
+        return {
+            "entity_id": self.entity_id,
+            "dead_ally_id": self.dead_ally_id,
+            "episode": self.episode,
+            "urgency": round(self.urgency, 6),
+            "decay_per_episode": self.decay_per_episode,
+        }
+
+    @classmethod
+    def from_dict(cls, d: dict) -> "GriefUrgencyModifier":
+        return cls(
+            entity_id=d["entity_id"],
+            dead_ally_id=d["dead_ally_id"],
+            episode=d["episode"],
+            urgency=d["urgency"],
+            decay_per_episode=d.get("decay_per_episode", 0.25),
+        )
+
+
+@dataclass(frozen=True)
 class EntityCarryForward:
     """Immutable snapshot of one entity's carry-forward state between episodes.
 
@@ -224,6 +296,15 @@ class CampaignState:
     # E62A: per-region cultural axis snapshots keyed by region_id (str).
     # Populated by CultureDriftExporter at episode end; consumed by
     # CultureDriftImporter at episode start. Derived from ChronicleHierarchy.
+    grief_urgencies: Dict[int, GriefUrgencyModifier] = field(default_factory=dict)
+    # E43F: timed grief/rage urgency modifiers keyed by grieving entity_id (int).
+    # Detected at episode end (entity_death + ally social memory check);
+    # injected as SOCIAL_THREAT ConcernState at episode start via GriefUrgencyImporter.
+    nemesis_relations: Dict[str, NemesisRelation] = field(default_factory=dict)
+    # E43G: nemesis relation records keyed by "{protagonist_id}:{antagonist_id}".
+    # Detected at episode end (2+ negative interaction episodes from SocialMemoryRecord);
+    # protagonist receives a BlockerState(SOCIAL) at episode start blocking FORM_PARTY
+    # routes when the antagonist is among candidates (via GriefUrgencyImporter).
 
     def to_dict(self) -> dict:
         """Serialize to a JSON-safe dict. All dict keys sorted for determinism."""
@@ -256,6 +337,14 @@ class CampaignState:
             "region_cultures": {
                 k: v.to_dict()
                 for k, v in sorted(self.region_cultures.items())
+            },
+            "grief_urgencies": {
+                str(k): v.to_dict()
+                for k, v in sorted(self.grief_urgencies.items())
+            },
+            "nemesis_relations": {
+                k: v.to_dict()
+                for k, v in sorted(self.nemesis_relations.items())
             },
         }
 
@@ -297,5 +386,13 @@ class CampaignState:
             region_cultures={
                 k: CultureCarryForward.from_dict(v)
                 for k, v in d.get("region_cultures", {}).items()
+            },
+            grief_urgencies={
+                int(k): GriefUrgencyModifier.from_dict(v)
+                for k, v in d.get("grief_urgencies", {}).items()
+            },
+            nemesis_relations={
+                k: NemesisRelation.from_dict(v)
+                for k, v in d.get("nemesis_relations", {}).items()
             },
         )

@@ -2774,3 +2774,41 @@
   test_path: tests/unit/observability/test_entity_personality_snapshot.py
   divergence_note: null
   support_boundary: null
+- id: INFRA-230
+  text: >
+    `RunManifest.world_id`: Every run manifest must record the world composition
+    ID used for the run. Field defaults to "unknown" when no world spec is
+    provided (cli_default mode). Populated at Kernel.__init__() from the
+    world_id parameter; passed from CLI (entry.py) and lab orchestrator
+    (orchestrator.py). Resolves D08 F5. (TCK-20260627-P2P-RUN-MANIFEST-WORLDID)
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: >
+    src/observability/reporting/artifact_repository.py::RunManifest.world_id +
+    src/engine/kernel.py::Kernel.__init__ (world_id param + manifest construction) +
+    src/cli/entry.py::run_simulation (world_id passed to Kernel) +
+    src/lab/orchestrator.py::LabOrchestrator.run (world_id=scenario_spec.world_id)
+  proof_type: null
+  test_path: tests/unit/observability/test_run_artifact_repository.py::test_run_manifest_world_id_default,test_run_manifest_world_id_explicit,test_manifest_world_id_persists_via_repo
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-231
+  text: >
+    Lab orchestrator `STANDARD` mode maps to `ObservabilityMode.NORMAL` (not LIGHT).
+    `ScenarioLabOrchestrator._resolve_obs_mode("STANDARD")` must return
+    `ObservabilityMode.NORMAL` so developers stepping up from LIGHTWEIGHT/MINIMAL
+    receive genuinely richer output (OBS_BEHAVIOR_NORMALIZATION enabled).
+    Resolves D03 F5. (TCK-20260627-P3B-OBS-MODE-REMAP)
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: >
+    src/lab/orchestrator.py::ScenarioLabOrchestrator._resolve_obs_mode
+    (STANDARD -> ObservabilityMode.NORMAL mapping) +
+    src/observability/config.py::ObservabilityMode.NORMAL
+    (OBS_BEHAVIOR_NORMALIZATION=True distinguishes NORMAL from LIGHT)
+  proof_type: null
+  test_path: tests/unit/lab/test_scenario_lab_orchestrator.py::test_standard_obs_mode_resolves_to_normal,test_obs_mode_mapping_full_table
+  divergence_note: null
+  support_boundary: null

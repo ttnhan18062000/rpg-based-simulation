@@ -169,3 +169,29 @@ def test_helper_enum_mappers():
     assert get_quest_kind("hunt") == QuestKind.HUNT
     assert get_quest_kind("gather") == QuestKind.GATHER
     assert get_quest_kind("explore") == QuestKind.EXPLORE
+
+
+def test_compiler_resource_node_regen_rate():
+    """Compiler-seeded nodes default to regen_rate_per_tick=1 (TOWN-186)."""
+    data = create_base_valid_spec()
+    spec = WorldSpec.model_validate(data)
+    state, _ = WorldCompiler.compile(spec, seed=42)
+
+    node = list(state.resource_nodes.values())[0]
+    assert node.regen_rate_per_tick == 1, (
+        "Compiler-seeded nodes must default to regen_rate_per_tick=1 so ecology "
+        "cycles can restore depleted charges (TCK-20260628-E21C-COMPILER-REGEN)"
+    )
+
+
+def test_compiler_resource_node_explicit_zero_regen():
+    """regen_rate: 0 in spec produces a static (non-regenerating) node."""
+    data = create_base_valid_spec()
+    data["resources"] = [
+        {"id": "static_ore", "resource_type": "ore", "count": 3, "region": "wilds", "regen_rate": 0}
+    ]
+    spec = WorldSpec.model_validate(data)
+    state, _ = WorldCompiler.compile(spec, seed=42)
+
+    node = list(state.resource_nodes.values())[0]
+    assert node.regen_rate_per_tick == 0

@@ -228,4 +228,7 @@ MONSTERs (entities 16–20) die in early combat (ticks 3–15) in both seeds due
 `data/worlds/sandbox_world/world.yaml` should include at least 2–3 entities with `role = HERO` so the adventure decision pipeline has intended protagonists. This also enables testing the full strategic cognition chain (D19 gap).
 
 **P2 — Add per-entity personality observability**
+
+> **Ticket:** TCK-20260627-P2O-ENTITY-PERSONALITY-OBS
+
 LIGHT observability mode does not surface per-entity personality traits or scoring weights. A lightweight entity snapshot (role, class, personality vector, active_project_kind) at tick N would make D05-type analysis routine rather than requiring direct state introspection. This connects to D15 findings.

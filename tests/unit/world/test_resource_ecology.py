@@ -3,7 +3,7 @@
 import pytest
 from dataclasses import replace
 
-from src.core.state import AuthoritativeState, ResourceNodeState, InventoryComponent, ItemStack
+from src.core.state import AuthoritativeState, ResourceNodeState, InventoryComponent, ItemStack, RegionState
 from src.core.updates import StateUpdate, EntityUpdate, ResourceTransferIntent, ResourceNodeUpdate
 from src.domains.world_emergence.schema import WorldEvent, WorldEventCategory
 from src.engine.pipeline import AuthoritativeApplyPipeline
@@ -308,3 +308,86 @@ def test_recent_world_events_on_authoritative_state():
     result = getattr(state, "recent_world_events", [])
     assert result is state.recent_world_events
     assert len(result) == 1
+
+
+# ---------------------------------------------------------------------------
+# Group E — Density-dependent regen (E21D)
+# ---------------------------------------------------------------------------
+
+def test_density_modifier_zero_entities():
+    assert ResourceEcologyService._density_modifier(0) == 1.0
+
+
+def test_density_modifier_at_half_cap():
+    # 8 entities, cap=16: 1.0 - (8/16) * (1.0 - 0.25) = 0.625
+    assert ResourceEcologyService._density_modifier(8) == 0.625
+
+
+def test_density_modifier_at_cap():
+    assert ResourceEcologyService._density_modifier(16) == 0.25
+
+
+def test_density_modifier_above_cap_clamps_to_floor():
+    assert ResourceEcologyService._density_modifier(32) == 0.25
+
+
+def _ecology_tick_state_with_region(tick: int, nodes: dict, entities: dict = None) -> AuthoritativeState:
+    """State with a single region covering (0,0)-(100,100) for density tests."""
+    region = RegionState(id="forest_1", name="Forest", bounds=(0, 0, 100, 100))
+    return AuthoritativeState(
+        tick=tick,
+        seed=42,
+        resource_nodes=nodes,
+        regions={"forest_1": region},
+        entities=entities or {},
+    )
+
+
+def test_empty_region_regens_at_full_rate():
+    """No entities → density_mod=1.0 → effective_regen = regen_rate_per_tick."""
+    node = _make_node(node_id=5, remaining_charges=0, max_charges=10, regen_rate_per_tick=4)
+    state = _ecology_tick_state_with_region(tick=200, nodes={5: node}, entities={})
+    result = ResourceEcologyService.process_ecology(state, _FakeGenerator())
+    assert 5 in result.node_updates
+    assert result.node_updates[5].charges_delta == 4
+
+
+def test_crowded_region_reduces_effective_regen():
+    """16 entities in region → density_mod=0.25 → effective_regen = max(1, round(4*0.25)) = 1."""
+    node = _make_node(node_id=5, remaining_charges=0, max_charges=10, regen_rate_per_tick=4)
+    entities = {
+        i: V2EntityBuilder(i).location(float(i * 5), float(i * 3)).combat(hp=10, max_hp=10).build()
+        for i in range(1, 17)  # 16 entities
+    }
+    state = _ecology_tick_state_with_region(tick=200, nodes={5: node}, entities=entities)
+    result = ResourceEcologyService.process_ecology(state, _FakeGenerator())
+    assert 5 in result.node_updates
+    # density_mod=0.25 → effective_regen = max(1, round(4 * 0.25)) = 1 (< 4)
+    assert result.node_updates[5].charges_delta == 1
+
+
+def test_partial_density_reduces_regen_proportionally():
+    """8 entities → density_mod=0.625 → effective_regen = max(1, round(8*0.625)) = 5."""
+    node = _make_node(node_id=5, remaining_charges=0, max_charges=20, regen_rate_per_tick=8)
+    entities = {
+        i: V2EntityBuilder(i).location(float(i * 5), float(i * 3)).combat(hp=10, max_hp=10).build()
+        for i in range(1, 9)  # 8 entities
+    }
+    state = _ecology_tick_state_with_region(tick=200, nodes={5: node}, entities=entities)
+    result = ResourceEcologyService.process_ecology(state, _FakeGenerator())
+    assert 5 in result.node_updates
+    # density_mod=0.625 → effective_regen = max(1, round(8 * 0.625)) = 5
+    assert result.node_updates[5].charges_delta == 5
+
+
+def test_effective_regen_never_below_one():
+    """Even at max density, effective_regen >= 1 (min floor)."""
+    node = _make_node(node_id=5, remaining_charges=0, max_charges=10, regen_rate_per_tick=1)
+    entities = {
+        i: V2EntityBuilder(i).location(float(i * 3), float(i * 3)).combat(hp=10, max_hp=10).build()
+        for i in range(1, 33)  # 32 entities, well above cap
+    }
+    state = _ecology_tick_state_with_region(tick=200, nodes={5: node}, entities=entities)
+    result = ResourceEcologyService.process_ecology(state, _FakeGenerator())
+    assert 5 in result.node_updates
+    assert result.node_updates[5].charges_delta >= 1

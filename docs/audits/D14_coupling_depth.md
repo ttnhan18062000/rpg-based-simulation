@@ -229,6 +229,8 @@ core updates type to an engine policy concept.
 
 ### F3 — `hard_law_monitor` → `WorldIndexService` (tighter-than-needed engine coupling) — Risk: 8 / 15
 
+> **Ticket:** TCK-20260627-P2G-KERNEL-FACADE
+
 | Dimension | Score | Reason |
 |---|---|---|
 | Contract Breach | 2 | Observability→engine coupling is expected; importing a concrete internal service (not Kernel) is tighter |

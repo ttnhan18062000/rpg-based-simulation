@@ -13,9 +13,44 @@ class ResourceEcologyService:
     """
     Handles regional resource replenishment (Nodes, Chests).
     """
-    
-    ECOLOGY_INTERVAL = 200 # Ticks between ecology checks
-    
+
+    ECOLOGY_INTERVAL = 200  # Ticks between ecology checks
+
+    # Density-dependent regen (E21D, 2026-06-28):
+    # At DENSITY_CAP or more alive entities in a region, regen is reduced to DENSITY_FLOOR.
+    # Interpolates linearly between 1.0 (zero entities) and DENSITY_FLOOR (≥ DENSITY_CAP).
+    DENSITY_CAP: int = 16    # entity count at which regen hits the floor
+    DENSITY_FLOOR: float = 0.25  # minimum regen multiplier (25% at saturation)
+
+    @staticmethod
+    def _region_entity_counts(state: "AuthoritativeState") -> dict[str, int]:
+        """Count alive entities per region (O(N) over entities, called once per cycle)."""
+        from src.engine.legality import LegalityServiceV2
+        counts: dict[str, int] = {}
+        for entity in state.entities.values():
+            if not (entity.combat.alive and entity.lifecycle.active):
+                continue
+            region = LegalityServiceV2.get_region_for_position(entity.navigation.position, state)
+            if region is not None:
+                counts[region.id] = counts.get(region.id, 0) + 1
+        return counts
+
+    @staticmethod
+    def _density_modifier(entity_count: int) -> float:
+        """
+        Linear density modifier: 1.0 at 0 entities, DENSITY_FLOOR at ≥ DENSITY_CAP.
+
+        High-entity-density regions regenerate slower, creating scarcity pressure
+        that drives migration and territorial conflict (E21D AC).
+        """
+        cap = ResourceEcologyService.DENSITY_CAP
+        floor = ResourceEcologyService.DENSITY_FLOOR
+        if entity_count <= 0:
+            return 1.0
+        if entity_count >= cap:
+            return floor
+        return round(1.0 - (entity_count / cap) * (1.0 - floor), 6)
+
     @staticmethod
     def process_ecology(state: AuthoritativeState, generator: EntityGenerator) -> StateUpdate:
         """
@@ -27,6 +62,10 @@ class ResourceEcologyService:
         regen_node_updates: dict = {}
         regen_events: List[WorldEvent] = []
 
+        # Build entity-count-per-region map for density-dependent regen (E21D).
+        from src.engine.legality import LegalityServiceV2
+        region_entity_counts = ResourceEcologyService._region_entity_counts(state)
+
         for node_id, node in state.resource_nodes.items():
             if node.regen_rate_per_tick <= 0:
                 continue
@@ -35,7 +74,14 @@ class ResourceEcologyService:
             if node.cooldown_remaining > 0:
                 continue
             was_depleted = (node.remaining_charges == 0)
-            new_charges = min(node.max_charges, node.remaining_charges + node.regen_rate_per_tick)
+
+            # Apply density modifier: nodes in crowded regions regen slower.
+            region = LegalityServiceV2.get_region_for_position(node.position, state)
+            entity_count = region_entity_counts.get(region.id, 0) if region else 0
+            density_mod = ResourceEcologyService._density_modifier(entity_count)
+            effective_regen = max(1, round(node.regen_rate_per_tick * density_mod))
+
+            new_charges = min(node.max_charges, node.remaining_charges + effective_regen)
             delta = new_charges - node.remaining_charges
             if delta <= 0:
                 continue

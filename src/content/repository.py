@@ -595,6 +595,32 @@ class CatalogRepository:
             deprecated_map[cat_name] = [item_id for item_id, obj in registry.items() if obj.deprecated]
         return deprecated_map
 
+    def get_lowest_cost_for_type(self, content_type: str) -> Dict[str, Any]:
+        """Return catalog entries for content_type, ordered cheapest-first.
+
+        Used in degraded mode to prefer the lowest-cost catalog entries over
+        static hardcoded defaults.  Returns all loaded entries for the type,
+        sorted by their natural cost field.  Returns an empty dict if the
+        content_type is unrecognised or the index has no loaded entries.
+
+        Supported content_type values:
+          'items'     — sorted ascending by ItemDefinition.base_value
+          'resources' — sorted: entries with no required_tool first, then
+                        alphabetically by record id
+        """
+        if content_type == "items":
+            return dict(
+                sorted(self.items.items(), key=lambda kv: kv[1].base_value)
+            )
+        if content_type == "resources":
+            return dict(
+                sorted(
+                    self.resources.items(),
+                    key=lambda kv: (kv[1].required_tool is not None, kv[0]),
+                )
+            )
+        return {}
+
     @property
     def fingerprint(self) -> str:
         return self._fingerprint

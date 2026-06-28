@@ -3,7 +3,7 @@ status: authoritative
 layer: mechanics
 authority: P0
 audience: developer
-last_verified: 2026-06-06
+last_verified: 2026-06-27
 ---
 
 # Chapter 2: Combat Laws

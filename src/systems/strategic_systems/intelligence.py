@@ -1263,9 +1263,9 @@ class StrategicIntelligenceSystem:
                             status=ProjectStatus.ACTIVE,
                             objectives=[obj],
                             active_objective_id=obj.id,
-                            lock_until_tick=current_tick + 20,
+                            lock_until_tick=min(current_tick + 20, current_tick + 50),  # cap at 50 ticks
                             created_tick=current_tick,
-                            score=best.score + 50.0 
+                            score=best.score + 50.0
                         )
                         detour_up = StrategicIntelligenceSystem.evaluate_project_switch(entity, detour_proj, current_tick)
                         if detour_up:
@@ -1337,7 +1337,7 @@ class StrategicIntelligenceSystem:
                 status=ProjectStatus.ACTIVE,
                 objectives=[obj],
                 active_objective_id=obj.id,
-                lock_until_tick=current_tick + 10,
+                lock_until_tick=min(current_tick + 10, current_tick + 50),  # cap at 50 ticks
                 created_tick=current_tick,
                 score=best_candidate.utility
             )

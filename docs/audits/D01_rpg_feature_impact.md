@@ -150,6 +150,8 @@ coordinate-only — concepts/persons/rumors not yet modeled (see Active Info-See
 
 ### Resource Ecology Regeneration `[P]`
 
+> **Ticket:** TCK-20260627-P3A-DEFERRED-EPICS
+
 | Dimension | Score | Reason |
 |---|---|---|
 | Trigger Rate | 3 | Periodic regional tick (not every entity tick, but world-scale regular) |
@@ -178,6 +180,8 @@ Emergence regional signals actually vary between runs.
 ---
 
 ### World Evolution System `[P]`
+
+> **Ticket:** TCK-20260627-P3A-DEFERRED-EPICS
 
 | Dimension | Score | Reason |
 |---|---|---|
@@ -241,7 +245,9 @@ analysis-only harness (separate from the runtime).
 
 ---
 
-### Faction & Diplomacy System `[M]`
+### Faction & Diplomacy System `[E]`
+
+> **RESOLVED (2026-06-23):** TCK-20260619-E53-FACTION-DIPLOMACY — all 16 child tickets (E53Aa–E53Dd) fully implemented; `docs/systems/faction_contract.md` is authoritative.
 
 | Dimension | Score | Reason |
 |---|---|---|
@@ -252,9 +258,7 @@ analysis-only harness (separate from the runtime).
 | Absence Penalty | 3 | Simulation runs cleanly but is purely individual-scale; no macro-RPG structure above the regional level |
 | **Total** | **20 / 25** | |
 
-**Status:** Zero engine code. `src/content_semantics/faction.py` is catalog data only
-(type labels, affiliation metadata). `docs/systems/grand_strategy.md` describes a legacy
-system that does not exist in current `src/`. Fresh build required.
+**Status (as of 2026-06-23 — IMPLEMENTED):** FactionState model, FactionDecisionPhase, DiplomaticStateMachine (5 transitions), MilitaryConflictPhase, SiegeState, territory transfer via authoritative pipeline, NarrativeLedger wiring for diplomatic/war events, and ChronicleCompiler faction integration are all implemented and tested. `docs/systems/faction_contract.md` is the authoritative reference. `docs/archive/grand_strategy_v1.md` archived.
 
 ---
 
@@ -382,6 +386,8 @@ All prior confirmed gaps are closed.
 
 ### Narrative Consequence Layer `[P]`
 
+> **Ticket:** TCK-20260627-P3A-DEFERRED-EPICS
+
 | Dimension | Score | Reason |
 |---|---|---|
 | Trigger Rate | 1 | Milestone events only (death, betrayal, rescue, conquest) |
@@ -436,7 +442,9 @@ was resolved by the same epic.
 
 ---
 
-### Pressure-Driven Quest Generation `[M]`
+### Pressure-Driven Quest Generation `[E]`
+
+> **RESOLVED (2026-06-20):** TCK-20260619-E23-QUEST-GENERATION — all 4 child tickets (E23A–E23D) fully implemented: `QuestOpportunityGenerator.from_resource_depleted()` / `from_threat_signal()` in `src/domains/world_emergence/services.py`; `quest_registry` in `AuthoritativeState`; reward distribution in `pipeline_phases/quest_opportunity_rewards.py`; `QUEST_OPPORTUNITY` RouteFamily wired in `AdventureRouteScorer`.
 
 | Dimension | Score | Reason |
 |---|---|---|
@@ -447,8 +455,11 @@ was resolved by the same epic.
 | Absence Penalty | 3 | Current quests are 5 hardcoded `QuestKind` enum values with static templates; world pressure creates no new quest demand |
 | **Total** | **16 / 25** | |
 
-**Reuse opportunity:** `OpportunityType` in world_emergence is the confirmed reusable
-trigger source — this epic doesn't start from zero.
+**Implementation:** `QuestOpportunityGenerator` produces typed `QuestOpportunity` records from
+`RESOURCE_DEPLETED` and threat-signal world events. The generator is wired into
+`WorldEmergencePhase` step 5b. `QuestOpportunityStatus` lifecycle and `quest_registry`
+in `AuthoritativeState` handle offer/accept/expire/complete transitions. Reward delivery
+uses the authoritative `ResourceTransferIntent` path with `WorldEvent` emission.
 
 ---
 
@@ -522,6 +533,8 @@ REST endpoint at `GET /chronicle/{world_id}` exposes the full chronicle.
 
 ### Full Party Adventure Loop `[P]`
 
+> **Ticket:** TCK-20260627-P3A-DEFERRED-EPICS
+
 | Dimension | Score | Reason |
 |---|---|---|
 | Trigger Rate | 3 | Party lifecycle events: formation, cohesion checks, reward splits, dissolution |
@@ -560,6 +573,8 @@ not new logic.
 ---
 
 ### Personality → Long-Run Behavior Calibration `[P]`
+
+> **Ticket:** TCK-20260627-P3A-DEFERRED-EPICS
 
 | Dimension | Score | Reason |
 |---|---|---|
@@ -612,6 +627,8 @@ in `CampaignState` via E52B migration artifacts.
 
 ### Combat Ecology Extension `[P]`
 
+> **Ticket:** TCK-20260627-P3A-DEFERRED-EPICS
+
 | Dimension | Score | Reason |
 |---|---|---|
 | Trigger Rate | 2 | Only triggered when recurring antagonist relationship exists |
@@ -643,6 +660,8 @@ in `CampaignState` via E52B migration artifacts.
 ---
 
 ### Long-Horizon Regression Suite `[P]`
+
+> **Ticket:** TCK-20260627-P3A-DEFERRED-EPICS
 
 | Dimension | Score | Reason |
 |---|---|---|
@@ -712,7 +731,7 @@ Not RPG features — scored separately. Listed for completeness.
 | 5 | World Evolution System | `[P]` | 19 | Foundation/High |
 | 6 | Economy / Resources / Crafting | `[E]` | 20 | High |
 | 7 | Persistent Campaign Runtime | `[E]` | 20 | High |
-| 8 | Faction & Diplomacy System | `[M]` | 20 | High GAP |
+| 8 | Faction & Diplomacy System | `[E]` | 20 | High |
 | 9 | Scenario Runtime Service | `[E]` | 19 | High |
 | 10 | Spatial / Movement System | `[E]` | 18 | High |
 | 11 | Information / Belief System | `[E]` | 18 | High |
@@ -725,7 +744,7 @@ Not RPG features — scored separately. Listed for completeness.
 | 18 | Narrative Consequence Layer | `[P]` | 17 | High (partial) |
 | 19 | Social Memory as Campaign Consequence | `[E]` | 17 | High |
 | 20 | Macro-Economy Health Metrics | `[E]` | 16 | High |
-| 21 | Pressure-Driven Quest Generation | `[M]` | 16 | High GAP |
+| 21 | Pressure-Driven Quest Generation | `[E]` | 16 | High |
 | 22 | Full Party Adventure Loop | `[P]` | 15 | Depth |
 | 23 | Decision Explanation Model | `[E]` | 15 | Depth (tooling) |
 | 24 | Personality Long-Run Calibration | `[P]` | 14 | Depth |
@@ -751,17 +770,18 @@ Remaining gap: density-dependent rates, multi-stage ecological cycles, and cross
 pressure propagation. Economy pressure is now possible but long-run ecological dynamics
 are still thin.
 
-### Finding 2: One missing Tier-2 system remains the product gap (updated 2026-06-26)
-Faction & Diplomacy (score 20) is the remaining distance between "lab tooling" and "an RPG simulation product." Scenario Runtime Service (TCK-20260619-E31, score 19) is now DONE. Persistent Campaign Runtime was implemented by E43A–E43E + E41B–E41D. Social Memory, Chronicle Compiler, Demographic Model, Progression Planner, Capability Registry, and Feature Pack Architecture are all DONE; Narrative Consequence Layer is now partial.
+### Finding 2: No missing Tier-1 or Tier-2 systems remain (updated 2026-06-27)
+Both previously-missing Tier-2 systems are now DONE: Faction & Diplomacy (E53Aa–E53Dd, 2026-06-23) and Pressure-Driven Quest Generation (E23A–E23D, 2026-06-20). Scenario Runtime Service, Persistent Campaign Runtime, Social Memory, Chronicle Compiler, Demographic Model, Progression Planner, Capability Registry, and Feature Pack Architecture are all DONE. The remaining gaps are all `[P]` (partial) systems: Resource Ecology Regeneration, World Evolution, Narrative Consequence Layer, Full Party Adventure Loop, Personality Long-Run Calibration, and Combat Ecology Extension.
 
-### Finding 3: Cascade unlocks confirm the implementation sequence (updated 2026-06-26)
-Resource Ecology Regeneration (partial) still gates Pressure-Driven Quest Generation at full depth. Macro-Economy Health Metrics is now DONE (GoldSinkSystem + REST endpoint). Persistent Campaign Runtime (DONE) has unblocked Social Memory (DONE), Narrative Consequence Layer (partial), History Compiler (DONE), Demographic Model (DONE), and Progression Planner (now DONE). The next major cascade unlock is Faction & Diplomacy — it feeds quest generation, combat motivation, economy disruption, and world evolution simultaneously.
+### Finding 3: Cascade unlocks — all core Tier-2 systems are now implemented (updated 2026-06-27)
+Resource Ecology Regeneration (partial) still limits the depth of ecological feedback cycles. Macro-Economy Health Metrics is DONE (GoldSinkSystem + REST endpoint). Faction & Diplomacy (E53A–D) is DONE, unlocking faction-flavoured quest generation, combat motivation, and history chronicle faction events. Pressure-Driven Quest Generation (E23A–D) is DONE — `QuestOpportunityGenerator` produces quests from `RESOURCE_DEPLETED` and threat-signal world events, completing the world-state → quest → entity behavior feedback loop. The remaining cascade gaps are in the `[P]` partial systems.
 
-### Finding 4: Active Info-Seeking gap is closed; remaining depth gaps are ecology + faction
+### Finding 4: Active Info-Seeking gap is closed; remaining depth gaps are in ecology and narrative
 Economy/Resources (score 20) still has emergence ceiling 3 because complex ecological
 cycles aren't modeled yet. Information/Belief (score 18) gap is now closed — Active
-Info-Seeking (E42A–E) is fully implemented. The remaining limiting dependency for deep
-behavioral emergence is Faction & Diplomacy (E53A–D, scoped but not implemented).
+Info-Seeking (E42A–E) is fully implemented. Faction & Diplomacy (E53A–D) and
+Pressure-Driven Quest Generation (E23A–D) are both fully implemented (2026-06-23 / 2026-06-20).
+No `[M]` items remain across all 34 assessed systems.
 
 ### Finding 5: CampaignRunner / CampaignOrchestrator split is now established
 `CampaignRunner` remains the analysis harness (`src/domains/campaigns/runner.py`);
@@ -779,8 +799,9 @@ the two classes serve distinct roles in the same package.
 | Immediate | Refresh `known_limitations.md` | Stale since 2026-04-21; misleads investigation agents |
 | ~~Immediate~~ | ~~Rename `CampaignRunner` → `AnalysisCampaignRunner`~~ | **RESOLVED** — `CampaignOrchestrator` is now the persistent runtime; `CampaignRunner` retains the analysis role. Both names are now unambiguous. |
 | Epic 1 | Resource Ecology Regeneration — complete complex cycles (M) | Basic regen done (E21B); density-dependent cycles + cross-region propagation still missing |
-| Epic 2 | Faction & Diplomacy System (XL) — **SCOPED** (E53A–D in `tickets/todos/E53A–D/`) | Highest ceiling; largest remaining gap; child tickets ready for implementation |
+| ~~Epic 2~~ | ~~Faction & Diplomacy System (XL)~~ | **IMPLEMENTED** — TCK-20260619-E53-FACTION-DIPLOMACY + all 16 child tickets (E53Aa–E53Dd) completed 2026-06-23; see `docs/systems/faction_contract.md` |
 | ~~Epic 3~~ | ~~Scenario Runtime Service (M)~~ | **IMPLEMENTED** — TCK-20260619-E31-SCENARIO-RUNTIME (2026-06-20) |
+| ~~Epic 4~~ | ~~Pressure-Driven Quest Generation (M)~~ | **IMPLEMENTED** — TCK-20260619-E23-QUEST-GENERATION + all 4 child tickets (E23A–E23D) completed 2026-06-20; `QuestOpportunityGenerator` wired in `WorldEmergencePhase` |
 | Done | Persistent Campaign Runtime | **IMPLEMENTED** — E43A–E43E + E41B–E41D |
 | Done | Social Memory as Campaign Consequence | **IMPLEMENTED** — E43A–E43E |
 | Done | History / Chronicle Compiler | **IMPLEMENTED** — E51A–E51E |

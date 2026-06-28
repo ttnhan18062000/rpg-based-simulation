@@ -176,6 +176,12 @@ lane-strict-matrix: ## [medium] Cumulative world module matrix (end-to-end conte
 lane-legacy-regression: ## [slow] Arena, certification, legacy compat regression tests
 	python3 -m pytest tests/ -m "legacy_compat" -v --tb=short
 
+regression-baseline: ## Generate/refresh 5k-tick behavioral regression baseline (commit the result)
+	python3 tools/generate_regression_baseline.py
+
+personality-audit: ## Run 1k-tick personality→behavior calibration audit (OCEAN trait vs behavioral diversity)
+	python3 tools/personality_audit.py $(if $(TICKS),--ticks $(TICKS),) $(if $(SEED),--seed $(SEED),) $(if $(WORLD),--world $(WORLD),)
+
 lane-architecture: ## [fast] Static architecture guards (no simulation, no catalog load)
 	python3 -m pytest tests/ -m "architecture" -v --tb=short
 

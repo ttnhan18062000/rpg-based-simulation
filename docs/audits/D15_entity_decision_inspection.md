@@ -327,7 +327,7 @@ for all routine strategic decisions.
 | EntityTimelineStore (ring buffer, in-proc) | ✅ Present | Low gap in DEBUG mode; LIGHT=20 is shallow |
 | Dashboard entity inspection UI | ✅ Present | Good UX, click-to-inspect wired |
 | WHY goal was chosen (score comparison) | ✅ Implemented (LIGHT+) | TCK-20260619-E22A-TRACE-WRITER → `decision_trace.jsonl` |
-| Goal score history over ticks | ❌ Missing | High gap |
+| Goal score history over ticks | ❌ Missing — **Ticket:** TCK-20260627-P1H-GOAL-RUNNERUP | High gap |
 | Entity state at tick N (reconstruction) | ✅ Implemented | TCK-20260619-E22-DECISION-EXPLAIN → `GET /api/v1/observability/cognition/{entity_id}/tick/{n}` |
 | Route trace / navigation WHY | ✅ Implemented | TCK-20260619-E22-DECISION-EXPLAIN → decision trace includes route cost data |
 | Cognition snapshots via REST API | ✅ Implemented | TCK-20260619-E22-DECISION-EXPLAIN → tick-indexed REST query surface |

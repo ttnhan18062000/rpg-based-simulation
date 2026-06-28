@@ -1,18 +1,18 @@
 {
-  "manifest_id": "prov_7a5872310868a09a",
+  "manifest_id": "prov_78e7f21211a76745",
   "world_id": "urban_political",
   "source_schema_version": "provenancemanifest.v1",
-  "catalog_fingerprint": "8c4b780927da8b24941d13564e64ef3bba0ac8188facb07463df90ce8e13185d",
+  "catalog_fingerprint": "b4d4d93bff4c75990cd0ce2fac479355be152b5e19042c1c7b1e463f15824c3b",
   "module_fingerprints": {
-    "frontier_village_core": "02aec5f9a179002864024c53bed0d2040d49c64b5191fd856c2d1a4ddc1af01f",
-    "bandit_road_trade_pressure": "a04880b8821a4cf6246e5ce782ef1363f5f8cbc1d97f6bb40191c47c8149ce10",
+    "frontier_village_core": "c11d5cfa898492816ce36af0962a2d3bb5a976db28b312baec6708347982d456",
+    "bandit_road_trade_pressure": "1407b0db8a8f534c5151073b6369991eaa1a8d356f948407ec92e1555fa66205",
     "hero_adventurers": "1b1d1e2859fdd6b23262edba556718f6c506a72be8dc44cd84db74c68078b837",
-    "trading_company_hub": "14b684b372fb7205d1bd6eb6211fafa7e4d17fde4c9f177cf4016b2cf7bc57f2"
+    "trading_company_hub": "c5b44695b59c5d0ed516348106be54c17a4e5ea105d582ed968adf31bfcff819"
   },
   "composition_fingerprint": "21a6219e114d05997c3019cd688747828b0c3f72392d6c9bfa740c68061d591e",
   "resolver_version": "1.0.0",
-  "content_fingerprint": "7a5872310868a09a0a81fb40e83c680ffe3b326054aadde87761d071e0df7955",
-  "created_at": "2026-06-19T16:34:27.799619Z",
+  "content_fingerprint": "78e7f21211a767453067f1726c4ca0ce51a321637b04f5daa06afb2f035779f3",
+  "created_at": "2026-06-26T21:38:00.269243Z",
   "records": {
     "hero_guild": {
       "element_id": "hero_guild",
@@ -325,6 +325,34 @@
         "population_recipe_source": "frontier_village_population"
       }
     },
+    "res_0": {
+      "element_id": "res_0",
+      "element_type": "resource",
+      "source_module": "frontier_village_core",
+      "recipe_type": "resource",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "wood_node"
+      },
+      "details": {
+        "count": 8,
+        "region": "hometown"
+      }
+    },
+    "res_1": {
+      "element_id": "res_1",
+      "element_type": "resource",
+      "source_module": "frontier_village_core",
+      "recipe_type": "resource",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "herb_patch"
+      },
+      "details": {
+        "count": 5,
+        "region": "hometown"
+      }
+    },
     "town_hall_0": {
       "element_id": "town_hall_0",
       "element_type": "building",
@@ -419,6 +447,60 @@
         "relationship_model": "trade_positive"
       },
       "details": {}
+    },
+    "quest_village_fetch_supply_run": {
+      "element_id": "quest_village_fetch_supply_run",
+      "element_type": "quest_definition",
+      "source_module": "frontier_village_core",
+      "recipe_type": "quest_definition",
+      "parameters": {},
+      "profiles": {
+        "quest_type": "fetch"
+      },
+      "details": {
+        "tags": [
+          "village",
+          "settlement",
+          "supply"
+        ],
+        "reward_budget": 80
+      }
+    },
+    "quest_village_escort_merchant_delivery": {
+      "element_id": "quest_village_escort_merchant_delivery",
+      "element_type": "quest_definition",
+      "source_module": "frontier_village_core",
+      "recipe_type": "quest_definition",
+      "parameters": {},
+      "profiles": {
+        "quest_type": "escort"
+      },
+      "details": {
+        "tags": [
+          "village",
+          "settlement",
+          "trade"
+        ],
+        "reward_budget": 100
+      }
+    },
+    "quest_village_defend_gate_assault": {
+      "element_id": "quest_village_defend_gate_assault",
+      "element_type": "quest_definition",
+      "source_module": "frontier_village_core",
+      "recipe_type": "quest_definition",
+      "parameters": {},
+      "profiles": {
+        "quest_type": "defend"
+      },
+      "details": {
+        "tags": [
+          "village",
+          "settlement",
+          "defense"
+        ],
+        "reward_budget": 120
+      }
     },
     "bandit_road": {
       "element_id": "bandit_road",
@@ -541,6 +623,60 @@
       },
       "details": {}
     },
+    "quest_bandit_escort_merchant_caravan": {
+      "element_id": "quest_bandit_escort_merchant_caravan",
+      "element_type": "quest_definition",
+      "source_module": "bandit_road_trade_pressure",
+      "recipe_type": "quest_definition",
+      "parameters": {},
+      "profiles": {
+        "quest_type": "escort"
+      },
+      "details": {
+        "tags": [
+          "bandit",
+          "trade",
+          "escort"
+        ],
+        "reward_budget": 120
+      }
+    },
+    "quest_bandit_hunt_road_captain": {
+      "element_id": "quest_bandit_hunt_road_captain",
+      "element_type": "quest_definition",
+      "source_module": "bandit_road_trade_pressure",
+      "recipe_type": "quest_definition",
+      "parameters": {},
+      "profiles": {
+        "quest_type": "hunt"
+      },
+      "details": {
+        "tags": [
+          "bandit",
+          "conflict",
+          "bounty"
+        ],
+        "reward_budget": 150
+      }
+    },
+    "quest_bandit_investigate_ambush_source": {
+      "element_id": "quest_bandit_investigate_ambush_source",
+      "element_type": "quest_definition",
+      "source_module": "bandit_road_trade_pressure",
+      "recipe_type": "quest_definition",
+      "parameters": {},
+      "profiles": {
+        "quest_type": "investigate"
+      },
+      "details": {
+        "tags": [
+          "bandit",
+          "conflict",
+          "mystery"
+        ],
+        "reward_budget": 100
+      }
+    },
     "pop_0": {
       "element_id": "pop_0",
       "element_type": "population",
@@ -632,6 +768,22 @@
         "spawn_region": "trading_hometown"
       }
     },
+    "trading_res_0": {
+      "element_id": "trading_res_0",
+      "element_type": "resource",
+      "source_module": "trading_company_hub",
+      "recipe_type": "resource",
+      "parameters": {
+        "merchant_count": 6
+      },
+      "profiles": {
+        "resource_type": "iron_vein"
+      },
+      "details": {
+        "count": 6,
+        "region": "trading_hometown"
+      }
+    },
     "trading_bld_0": {
       "element_id": "trading_bld_0",
       "element_type": "building",
@@ -660,6 +812,66 @@
       },
       "details": {
         "region": "trading_hometown"
+      }
+    },
+    "quest_trade_fetch_shipment_goods": {
+      "element_id": "quest_trade_fetch_shipment_goods",
+      "element_type": "quest_definition",
+      "source_module": "trading_company_hub",
+      "recipe_type": "quest_definition",
+      "parameters": {
+        "merchant_count": 6
+      },
+      "profiles": {
+        "quest_type": "fetch"
+      },
+      "details": {
+        "tags": [
+          "trade",
+          "economy",
+          "supply"
+        ],
+        "reward_budget": 100
+      }
+    },
+    "quest_trade_escort_merchant_convoy": {
+      "element_id": "quest_trade_escort_merchant_convoy",
+      "element_type": "quest_definition",
+      "source_module": "trading_company_hub",
+      "recipe_type": "quest_definition",
+      "parameters": {
+        "merchant_count": 6
+      },
+      "profiles": {
+        "quest_type": "escort"
+      },
+      "details": {
+        "tags": [
+          "trade",
+          "economy",
+          "escort"
+        ],
+        "reward_budget": 120
+      }
+    },
+    "quest_trade_investigate_sabotage": {
+      "element_id": "quest_trade_investigate_sabotage",
+      "element_type": "quest_definition",
+      "source_module": "trading_company_hub",
+      "recipe_type": "quest_definition",
+      "parameters": {
+        "merchant_count": 6
+      },
+      "profiles": {
+        "quest_type": "investigate"
+      },
+      "details": {
+        "tags": [
+          "trade",
+          "economy",
+          "mystery"
+        ],
+        "reward_budget": 150
       }
     }
   }

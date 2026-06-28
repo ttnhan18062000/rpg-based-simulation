@@ -15,8 +15,31 @@ from src.core.updates import StateUpdate, EntityUpdate, StrategicUpdate
 from src.domains.adventure.generator import AdventureRouteGenerator
 from src.domains.adventure.schema import RouteFamily
 from src.domains.adventure.service import AdventureDecisionService
+from src.engine.spatial_query import SpatialQueryService
 from src.world.providers.resources import ResourceOpportunityProvider
 from src.observability.cognition.decision_trace_writer import get_active_writer as _get_active_writer
+
+
+def _threat_resolved(hero: EntityState, state: AuthoritativeState) -> bool:
+    """
+    Return True when the triggering threat for a survival lock is no longer active:
+    entity HP has recovered above 80% AND no hostile entity is within interaction radius.
+
+    Used as an early-release condition for strategic project locks on COMBAT_RETREAT /
+    RECOVER projects so that entities are not held idle after the threat passes.
+    """
+    hp_ratio = hero.combat.hp / max(1, hero.combat.max_hp)
+    if hp_ratio <= 0.8:
+        return False
+    nearby_ids = SpatialQueryService.nearby_entities(state, hero.navigation.position, radius=10.0)
+    has_hostile = any(
+        eid != hero.id
+        and (e := state.entities.get(eid)) is not None
+        and e.combat.alive
+        and e.identity.faction != hero.identity.faction
+        for eid in nearby_ids
+    )
+    return not has_hostile
 
 
 class AdventureDecisionPhase:
@@ -64,7 +87,9 @@ class AdventureDecisionPhase:
                 active_proj = strat.projects.get(strat.current_project_id)
                 if active_proj:
                     # If project lock hasn't expired, skip evaluating routing decisions
-                    if tick < active_proj.lock_until_tick:
+                    # unless the triggering threat has been resolved (HP > 80%, no hostile
+                    # in vicinity) — early-release prevents cascading dead time post-combat.
+                    if tick < active_proj.lock_until_tick and not _threat_resolved(hero, state):
                         continue
 
             # 1. Generate candidate route options

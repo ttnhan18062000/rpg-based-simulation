@@ -8,6 +8,7 @@ from src.core.state import (
     EntityState, CombatComponent, InventoryComponent, NavigationComponent,
     TaskComponent, IdentityComponent, AuthoritativeState, StrategicComponent
 )
+from src.core.strategic import ConcernState, ConcernKind, BlockerState, BlockerKind
 
 def test_entity_inspector_idle():
     # 1. Test when manager is None
@@ -176,3 +177,120 @@ def test_entity_inspector_dead_entity():
     assert snapshot.exists
     assert not snapshot.alive
     assert snapshot.combat_summary["hp"] == 0
+
+
+# ---------------------------------------------------------------------------
+# E43H — narrative_modifiers extraction (grief urgency + nemesis blockers)
+# ---------------------------------------------------------------------------
+
+def _simple_entity(eid: int = 1, strategic: "StrategicComponent | None" = None) -> "EntityState":
+    return EntityState(
+        id=eid,
+        kind="worker",
+        combat=CombatComponent(hp=80, max_hp=80, tactical_role="VANGUARD", alive=True),
+        inventory=InventoryComponent(gold=0, max_slots=10),
+        navigation=NavigationComponent(position=(0.0, 0.0), target=None, region_id="r1"),
+        task=TaskComponent(work_kind="IDLE", payload={}),
+        identity=IdentityComponent(faction=1, role=0, evolution_level=1, class_id="worker"),
+        strategic=strategic or StrategicComponent(),
+    )
+
+
+def _dummy_manager(entity: "EntityState") -> object:
+    from src.observability.entity_timeline import EntityTimelineStore
+    state = AuthoritativeState(tick=1, seed=42, entities={entity.id: entity})
+
+    class _K:
+        entity_timeline_store = EntityTimelineStore(mode=ObservabilityMode.LIGHT)
+
+    class _M:
+        latest_state = state
+        kernel = _K()
+
+    return _M()
+
+
+def test_narrative_modifiers_empty_when_no_grief_or_nemesis():
+    entity = _simple_entity(1)
+    snap = EntityInspector.inspect_entity(_dummy_manager(entity), 1)
+    assert snap.narrative_modifiers["grief_concerns"] == []
+    assert snap.narrative_modifiers["nemesis_blockers"] == []
+
+
+def test_narrative_modifiers_grief_concern_extracted():
+    concern = ConcernState(
+        id="grief_ally_42",
+        kind=ConcernKind.SOCIAL_THREAT,
+        source="ally_42_died_ep0",
+        urgency=0.6,
+        created_tick=0,
+    )
+    strat = StrategicComponent(concerns={"grief_ally_42": concern})
+    entity = _simple_entity(1, strat)
+    snap = EntityInspector.inspect_entity(_dummy_manager(entity), 1)
+
+    grief = snap.narrative_modifiers["grief_concerns"]
+    assert len(grief) == 1
+    assert grief[0]["concern_id"] == "grief_ally_42"
+    assert grief[0]["dead_ally_id"] == 42
+    assert grief[0]["urgency"] == pytest.approx(0.6)
+    assert snap.narrative_modifiers["nemesis_blockers"] == []
+
+
+def test_narrative_modifiers_nemesis_blocker_extracted():
+    blocker = BlockerState(
+        id="nemesis_9",
+        kind=BlockerKind.SOCIAL,
+        subject="9",
+        severity=0.8,
+    )
+    strat = StrategicComponent(blockers={"nemesis_9": blocker})
+    entity = _simple_entity(1, strat)
+    snap = EntityInspector.inspect_entity(_dummy_manager(entity), 1)
+
+    nemesis = snap.narrative_modifiers["nemesis_blockers"]
+    assert len(nemesis) == 1
+    assert nemesis[0]["blocker_id"] == "nemesis_9"
+    assert nemesis[0]["antagonist_id"] == 9
+    assert nemesis[0]["severity"] == pytest.approx(0.8)
+    assert snap.narrative_modifiers["grief_concerns"] == []
+
+
+def test_narrative_modifiers_non_narrative_blockers_excluded():
+    material_blocker = BlockerState(
+        id="need_iron",
+        kind=BlockerKind.MATERIAL,
+        subject="iron_ore",
+        severity=0.5,
+    )
+    strat = StrategicComponent(blockers={"need_iron": material_blocker})
+    entity = _simple_entity(1, strat)
+    snap = EntityInspector.inspect_entity(_dummy_manager(entity), 1)
+    assert snap.narrative_modifiers["nemesis_blockers"] == []
+
+
+def test_narrative_modifiers_both_grief_and_nemesis():
+    concern = ConcernState(
+        id="grief_ally_7",
+        kind=ConcernKind.SOCIAL_THREAT,
+        source="ally_7_died_ep1",
+        urgency=0.35,
+        created_tick=10,
+    )
+    blocker = BlockerState(
+        id="nemesis_5",
+        kind=BlockerKind.SOCIAL,
+        subject="5",
+        severity=0.4,
+    )
+    strat = StrategicComponent(
+        concerns={"grief_ally_7": concern},
+        blockers={"nemesis_5": blocker},
+    )
+    entity = _simple_entity(1, strat)
+    snap = EntityInspector.inspect_entity(_dummy_manager(entity), 1)
+
+    assert len(snap.narrative_modifiers["grief_concerns"]) == 1
+    assert snap.narrative_modifiers["grief_concerns"][0]["dead_ally_id"] == 7
+    assert len(snap.narrative_modifiers["nemesis_blockers"]) == 1
+    assert snap.narrative_modifiers["nemesis_blockers"][0]["antagonist_id"] == 5

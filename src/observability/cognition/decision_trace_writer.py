@@ -18,7 +18,7 @@ from __future__ import annotations
 import json
 import os
 import logging
-from typing import Any, List, Optional
+from typing import Any, Dict, List, Optional
 
 from src.observability.config import ObservabilityConfig
 from src.observability.cognition.tick_index import DecisionTraceIndex
@@ -53,6 +53,9 @@ class DecisionTraceWriter:
         self._path = os.path.join(run_dir, "decision_trace.jsonl")
         self._file = None
         self._index = DecisionTraceIndex(run_dir)
+        # Cache of top-3 goal scores per entity from the most recent write_trace() call.
+        # Schema: {entity_id: [{"goal_id": str, "score": float, "rank": int}, ...]}
+        self._latest_goal_scores: Dict[int, List[Dict[str, Any]]] = {}
 
     def _ensure_open(self) -> None:
         if self._file is None:
@@ -81,8 +84,29 @@ class DecisionTraceWriter:
         try:
             self._ensure_open()
             offset = self._file.tell()
+
+            # Sort descending by score so winner is always at index 0.
+            sorted_routes = sorted(scored_routes, key=lambda r: r.score, reverse=True)
+
+            # Build top-3 goal-score list (winner + up to 2 runner-ups).
+            top3 = sorted_routes[:3]
+            goal_scores_list: List[Dict[str, Any]] = [
+                {
+                    "goal_id": r.family.value if hasattr(r.family, "value") else str(r.family),
+                    "score": r.score,
+                    "rank": i + 1,
+                }
+                for i, r in enumerate(top3)
+            ]
+            # Cache for EntityInspector queries between ticks.
+            self._latest_goal_scores[entity_id] = goal_scores_list
+
+            source_goal_score: Optional[float] = sorted_routes[0].score if sorted_routes else None
+            # Runner-up scores are ranks 2 and 3 only (winner is captured in source_goal_score).
+            runner_up_scores = goal_scores_list[1:]
+
             routes_payload = []
-            for idx, r in enumerate(scored_routes[:5]):
+            for idx, r in enumerate(sorted_routes[:5]):
                 routes_payload.append({
                     "route_kind": r.family.value if hasattr(r.family, "value") else str(r.family),
                     "score": r.score,
@@ -97,6 +121,8 @@ class DecisionTraceWriter:
             entry = {
                 "entity_id": entity_id,
                 "tick": tick,
+                "source_goal_score": source_goal_score,
+                "runner_up_scores": runner_up_scores,
                 "routes": routes_payload,
             }
             self._file.write(json.dumps(entry) + "\n")
@@ -105,6 +131,14 @@ class DecisionTraceWriter:
             self._index.append_entry(tick, offset)
         except Exception:
             logger.exception("DecisionTraceWriter.write_trace failed (non-fatal)")
+
+    def get_latest_goal_scores(self, entity_id: int) -> List[Dict[str, Any]]:
+        """
+        Return the top-3 goal scores from the most recent write_trace() call for
+        the given entity.  Each entry: {"goal_id": str, "score": float, "rank": int}.
+        Returns [] if no tick has been written yet for this entity.
+        """
+        return self._latest_goal_scores.get(entity_id, [])
 
     def close(self) -> None:
         """Close the underlying file handle and rebuild the tick index sidecar."""

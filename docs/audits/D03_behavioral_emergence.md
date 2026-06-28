@@ -203,6 +203,8 @@ Combat did fire early (5 `combat_damage` events, seed 42 ticks 3-7), confirming 
 
 ### F3 — Rejection Cascade: Cumulative 194–926 Rejections per Run
 
+> **Ticket:** TCK-20260627-P1A-REJECTION-BACKOFF
+
 **Score: 9/15** (Variety Gap=3, Lifespan Gap=3, System Silence=3) *(revised down from 11/15 — cause is now understood, not a deeper systemic failure)*
 
 **Root cause confirmed: RC4 (stale spawn-projects retrying forever).**
@@ -222,6 +224,8 @@ This is a consequence, not an additional root cause. Once RC1 is fixed and entit
 
 ### F4 — Entity Attrition Without Replenishment
 
+> **Ticket:** TCK-20260627-P2B-SPAWN-CADENCE
+
 **Score: 7/15** (Variety Gap=3, Lifespan Gap=2, System Silence=4)
 
 5 of 20 entities die within the first ~15 ticks (count stabilises at 15). No entity is spawned, recruited, or replaced at any point in either 200-tick run.
@@ -231,6 +235,8 @@ For a 200-tick evaluation window this is manageable, but D06 (long-run health) m
 ---
 
 ### F5 — `ObservabilityMode` Naming Mismatch: STANDARD ≠ Richer Data
+
+> **Ticket:** TCK-20260627-P3B-OBS-MODE-REMAP
 
 **Score: 8/15** (Variety Gap=3, Lifespan Gap=3, System Silence=2)
 

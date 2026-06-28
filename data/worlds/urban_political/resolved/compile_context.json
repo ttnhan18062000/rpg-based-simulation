@@ -386,7 +386,23 @@
       "owner_faction": null
     }
   },
-  "resources": {},
+  "resources": {
+    "res_0": {
+      "required_ticks": 10,
+      "resource_type": "wood_node",
+      "yield_policy": null
+    },
+    "res_1": {
+      "required_ticks": 8,
+      "resource_type": "herb_patch",
+      "yield_policy": null
+    },
+    "trading_res_0": {
+      "required_ticks": 15,
+      "resource_type": "iron_vein",
+      "yield_policy": null
+    }
+  },
   "factions": {
     "hero_guild": {
       "starting_gold": 1000.0

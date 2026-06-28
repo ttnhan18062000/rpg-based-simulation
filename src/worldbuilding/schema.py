@@ -68,6 +68,7 @@ class ResourceNodeSpec(BaseModel):
     resource_type: str = Field(..., min_length=1, description="Resource item type spawned")
     count: int = Field(..., gt=0, description="Total resource charges / stock available")
     region: str = Field(..., min_length=1, description="Region where this node resides")
+    regen_rate: int = Field(1, ge=0, description="Charges regenerated per ecology cycle (0 = static node)")
 
 class BuildingSpec(BaseModel):
     model_config = ConfigDict(frozen=True)

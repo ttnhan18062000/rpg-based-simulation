@@ -204,6 +204,8 @@ response shape on every call.
 
 ### F4 — lab/workflows.py: all 7 Workflow.run() methods return dict[str, Any] — Priority: 7 / 15
 
+> **Ticket:** TCK-20260627-P2I-WORKFLOW-TYPES
+
 | Dimension | Score | Reason |
 |---|---|---|
 | Boundary Criticality | 2 | Lab/workflows is not on the live simulation path; results are consumed by platform scenarios and tests |
@@ -229,6 +231,8 @@ keys, but the untyped interface makes refactoring fragile.
 ---
 
 ### F5 — engine/patches.py: merge() returns Any — Priority: 6 / 15
+
+> **Ticket:** TCK-20260627-P2J-PATCHES-TYPE
 
 | Dimension | Score | Reason |
 |---|---|---|

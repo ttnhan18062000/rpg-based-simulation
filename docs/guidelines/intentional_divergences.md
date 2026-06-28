@@ -181,5 +181,15 @@ The following legacy behaviors have been intentionally omitted or retired.
 - **Verification**: `tests/integration/scenarios/test_macro_economy.py::test_reputation_discount_applies`
 - **Status**: ACTIVE (faction-gating deferred)
 
+### DEV-002 — Feature Flag Default Policy: All Phase 10 Flags Default to OFF (TCK-20260627-P0A-ADVENTURE-FLAG)
+- **Subsystem**: Engine / Feature Rollout
+- **Situation**: `FeatureFlagManager` (line 13–24 in `src/domains/optimization/feature_flags.py`) initialises all 10 Phase 10 flags to `FeatureMode.OFF`. The audit (D04 §6.1, D06 F1/F4) raised this as a P0 blocker because balance and behavioural measurements were collected against a simulation with the adventure decision pipeline disabled.
+- **Decision**: Keep all 10 flags as `FeatureMode.OFF` by default. The OFF default is an intentional gated-rollout policy enforced by a sentinel test (`test_adventure_routing_defaults_off()` in `tests/integration/scenarios/test_balance_regression.py`).
+- **Rationale**: **Stabilized** — Changing the default to `ON` requires re-running `tools/balance_measure.py` to regenerate E12A baseline constants and updating `ATTRITION_CAP`, `ECONOMIC_GOLD_FLOOR`, and `BLOCKER_FREQUENCY_E12A` in `test_balance_regression.py`. That re-baselining is a distinct workstream. The OFF default is not a bug; it is a deliberate rollout gate that prevents unreviewed pipeline changes from silently affecting all simulation runs.
+- **Required action for scenario/test authors**: Any scenario or test that exercises a flag-gated pipeline must explicitly enable the flag via `FeatureFlagManager.set_flag_mode()` or the `overrides` constructor argument. See `_build_kernel(enable_routing=True)` in `test_balance_regression.py` as the canonical example.
+- **Unblock condition**: After `tools/balance_measure.py` is re-run with a specific flag `ON` and new baseline constants are established and committed, that flag's default may be changed to `ON` and this entry updated or removed.
+- **Verification**: `tests/integration/scenarios/test_balance_regression.py::test_adventure_routing_defaults_off`
+- **Status**: ACTIVE
+
 ---
-*Last updated: 2026-06-21 (DEV-001 reputation discount gating).*
+*Last updated: 2026-06-27 (DEV-002 feature flag default policy, TCK-20260627-P0A-ADVENTURE-FLAG).*

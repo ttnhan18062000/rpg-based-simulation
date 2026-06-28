@@ -165,3 +165,65 @@ def test_route_scoring_is_deterministic():
     s2 = AdventureRouteScorer.score(entity, route)
     
     assert s1 == s2
+
+
+# ---------------------------------------------------------------------------
+# E11C weight calibration tests (TCK-20260628-E11C-WEIGHT-TUNING)
+# ---------------------------------------------------------------------------
+
+def test_greed_weight_is_0_50_on_gather_route():
+    """greed=1.0 entity on GATHER_RESOURCE: personality_bias == 0.50 (E11C calibration)."""
+    entity = _entity(personality={"greed": 100})  # greed=1.0 after /100 normalization
+    route = AdventureRouteOption(
+        family=RouteFamily.GATHER_RESOURCE, score=0.0, confidence=0.0,
+        expected_benefit=0.0, expected_risk=0.0,
+    )
+    result = AdventureRouteScorer.score(entity, route)
+    assert result.personality_bias == pytest.approx(0.50, abs=1e-4), (
+        f"Expected greed weight 0.50, got personality_bias={result.personality_bias}"
+    )
+
+
+def test_greed_weight_is_0_50_on_quest_route():
+    """greed=1.0 entity on QUEST_OPPORTUNITY: personality_bias == 0.50 (E11C calibration)."""
+    entity = _entity(personality={"greed": 100})
+    route = AdventureRouteOption(
+        family=RouteFamily.QUEST_OPPORTUNITY, score=0.0, confidence=0.0,
+        expected_benefit=0.0, expected_risk=0.0,
+    )
+    result = AdventureRouteScorer.score(entity, route)
+    assert result.personality_bias == pytest.approx(0.50, abs=1e-4), (
+        f"Expected greed weight 0.50 on QUEST_OPPORTUNITY, got {result.personality_bias}"
+    )
+
+
+def test_sociability_weight_is_0_40_on_form_party_route():
+    """sociability=1.0 entity on FORM_PARTY: personality_bias == 0.40 (E11C calibration)."""
+    entity = _entity(personality={"sociability": 100})
+    route = AdventureRouteOption(
+        family=RouteFamily.FORM_PARTY, score=0.0, confidence=0.0,
+        expected_benefit=0.0, expected_risk=0.0,
+    )
+    result = AdventureRouteScorer.score(entity, route)
+    assert result.personality_bias == pytest.approx(0.40, abs=1e-4), (
+        f"Expected sociability weight 0.40 on FORM_PARTY, got {result.personality_bias}"
+    )
+
+
+def test_greedy_advantage_gap_over_normal_entity_doubled():
+    """
+    E11C regression: greedy entity's score advantage over a neutral entity on gold
+    routes should be at least 0.40 (previously capped at 0.20 with old 0.25 weight).
+    """
+    entity_greedy = _entity(personality={"greed": 100})   # greed=1.0
+    entity_neutral = _entity(personality={"greed": 0})    # greed=0.0
+    route = AdventureRouteOption(
+        family=RouteFamily.GATHER_RESOURCE, score=0.0, confidence=0.0,
+        expected_benefit=0.0, expected_risk=0.0,
+    )
+    s_greedy = AdventureRouteScorer.score(entity_greedy, route)
+    s_neutral = AdventureRouteScorer.score(entity_neutral, route)
+    gap = s_greedy.score - s_neutral.score
+    assert gap >= 0.40, (
+        f"Expected greedy advantage gap ≥ 0.40 (E11C target), got {gap:.4f}"
+    )

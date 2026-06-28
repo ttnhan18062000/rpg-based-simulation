@@ -189,10 +189,19 @@ This is a minor observability gap: post-hoc analysis of runs cannot identify the
 sandbox_world produces only hunger cycling. urban_political produces `town_return`, `harvesting`, and `combat_engage` — enough behavioral variety to audit balance and personality differentiation meaningfully.
 
 **P1 — Balance dungeon_crawl entity count or add health regeneration**
+
+> **Ticket:** TCK-20260627-P1I-WORLD-BALANCE-FIX
+
 32 entities in 4 regions with 1 building is a combat extinction configuration. Reduce initial entity count to 10–12 or add health regeneration mechanics to give the dungeon crawl world a functional lifecycle.
 
 **P1 — Add at least one building to wilderness_survival**
+
+> **Ticket:** TCK-20260627-P1I-WORLD-BALANCE-FIX
+
 0 buildings means no `near_service` requirement can ever pass. Adding a camp or outpost building would allow the opportunity pipeline to generate service-dependent routes even in the wilderness theme.
 
 **P2 — Add `world_id` to `run_manifest.json`**
+
+> **Ticket:** TCK-20260627-P2P-RUN-MANIFEST-WORLDID
+
 Record the world ID used for each run in the manifest so stored artifacts are self-describing.

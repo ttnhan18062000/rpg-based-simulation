@@ -195,6 +195,8 @@ Wiring this gate into CI would make the D16 drift failure immediate on PR open.
 
 ### F5 — Release reports are ephemeral with no CI artifact upload — Priority: 5 / 15
 
+> **Ticket:** TCK-20260627-P2M-CI-ARTIFACTS
+
 | Dimension | Score | Reason |
 |---|---|---|
 | Gate Coverage | 2 | `reports/certification/` and `reports/release_proof/` exist locally; no CI artifact upload step |

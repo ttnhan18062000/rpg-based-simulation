@@ -2026,3 +2026,97 @@
     enum in src/core/strategic.py uses PRECISE (not EXACT). Implementation uses
     PRECISE to maintain enum consistency. Ticket EXACT intent is equivalent.
   support_boundary: null
+- id: TOWN-183
+  text: >
+    urban_political world compiles with >= 3 resource nodes. frontier_village_core
+    module contributes wood_node (8 charges, hometown) and herb_patch (5 charges,
+    hometown) via resource_recipes. trading_company_hub module contributes iron_vein
+    (6 charges, trading_hometown when namespace=trading) via resource_recipes.
+    ResourceOpportunityProvider.get_opportunities() iterates state.resource_nodes;
+    zero nodes blocks all economic opportunity generation regardless of routing.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    data/content/world_modules/frontier_village_core.yaml — resource_recipes: wood_node/herb_patch;
+    data/content/world_modules/trading_company_hub.yaml — resource_recipes: iron_vein;
+    data/worlds/urban_political/world_compile_report.json — resource_node_count: 3.
+  proof_type: parity
+  test_path: >
+    tests/integration/worldassembly/test_e2e_smoke.py::test_smoke_urban_political_compiles_to_authoritative_state
+    (asserts report["resource_node_count"] >= 3 and len(state.resource_nodes) >= 3)
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-184
+  text: >
+    InventoryComponent defaults: max_slots=16, max_weight=50.0 kg. Entities cannot carry
+    more than 16 distinct item types or exceed 50.0 kg total carry weight.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/core/models/inventory.py:44-45 — max_slots: int = 16, max_weight: float = 50.0.
+    Verified by TCK-20260627-P3C-DOC-CURRENCY; docs/mechanics/03_economic_laws.md corrected
+    from 100.0 kg to 50.0 kg.
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-185
+  text: >
+    Selling price = Item_Base_Value * 0.5 (static 50%). Dynamic selling prices are
+    out of scope (E5.6). DynamicPriceService.calculate_sell_price applies no market
+    multiplier. ShopSystem.get_sell_price applies a regional trauma surcharge
+    (1.0 + region_trauma / 10.0) to its own item base table, separate path.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/systems/economy_systems/economy.py:56 — return max(1, int(base_value * 0.5)).
+    src/engine/shop.py:139-140 — modifier = 1.0 + (region_trauma / 10.0).
+    Verified by TCK-20260627-P3C-DOC-CURRENCY; docs/mechanics/03_economic_laws.md
+    corrected to remove Market_Multiplier reference.
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: TOWN-186
+  text: >
+    Compiler-seeded resource nodes have regen_rate_per_tick=1 by default (from
+    ResourceNodeSpec.regen_rate default=1), enabling ecology-cycle charge regeneration.
+    World authors may set regen_rate: 0 for intentionally static (non-regenerating) nodes.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/worldbuilding/schema.py — ResourceNodeSpec.regen_rate: int = Field(1, ge=0);
+    src/worldbuilding/compiler.py — ResourceNodeState(regen_rate_per_tick=res_spec.regen_rate).
+    Verified by TCK-20260628-E21C-COMPILER-REGEN.
+  proof_type: parity
+  test_path: tests/unit/worldbuilding/test_compiler.py::test_compiler_resource_node_regen_rate
+  divergence_note: >
+    Prior to TCK-20260628-E21C-COMPILER-REGEN, compiler-seeded nodes had regen_rate_per_tick=0
+    (permanent depletion). This was an unintentional gap — not a design decision.
+  support_boundary: null
+
+- id: TOWN-187
+  text: >
+    Resource regeneration is density-dependent: nodes in heavily populated regions regenerate
+    slower, creating scarcity pressure that drives entity migration and territorial competition.
+    effective_regen = max(1, round(regen_rate_per_tick * density_mod)) where
+    density_mod = max(0.25, 1.0 - entity_count/16 * 0.75) (linear from 1.0 at 0 entities
+    to 0.25 at ≥16 entities). Effective regen is always at least 1 charge per ecology cycle.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/world/ecology.py — ResourceEcologyService.DENSITY_CAP=16, DENSITY_FLOOR=0.25;
+    _density_modifier(entity_count) → linear interpolation; process_ecology() calls
+    _region_entity_counts(state) once per cycle and applies density_mod per node.
+    Verified by TCK-20260628-E21D-DENSITY-REGEN.
+  proof_type: parity
+  test_path: tests/unit/world/test_resource_ecology.py::test_crowded_region_reduces_effective_regen
+  divergence_note: >
+    New mechanic introduced in TCK-20260628-E21D-DENSITY-REGEN. No prior behavior existed —
+    regen was flat (regen_rate_per_tick per cycle regardless of entity density).
+  support_boundary: null

@@ -2417,22 +2417,24 @@
 - id: STRAT-227
   text: >-
     AdventureRouteScorer applies a fixed blocker_penalty = 2.0 to any route with
-    non-empty blockers; personality_bias weight = 0.25 per family-matched trait;
+    non-empty blockers; personality_bias weights: greed=0.50 (GATHER_RESOURCE,
+    SELL_LOOT_FOR_GOLD, TAKE_EASY_QUEST, QUEST_OPPORTUNITY), sociability=0.40
+    (FORM_PARTY), caution/curiosity/industry=0.25 (their respective families);
     confidence_bonus weight = 0.15; risk weight = 0.5 × risk_multiplier; for
     GATHER_RESOURCE routes the benefit term is multiplied by depletion_fraction =
     remaining_charges / max_charges (0.0 when empty, 1.0 when full); all
-    constants documented in docs/mechanics/04_strategic_cognition.md §6.
+    constants documented in docs/mechanics/04_strategic_cognition.md §6.4.
   status: verified
   priority: P1
   legacy_evidence: null
   v2_evidence: >-
-    src/domains/adventure/scoring.py AdventureRouteScorer.score() — blocker_penalty=2.0
-    at L131, confidence_bonus coefficient 0.15 at L126, personality_bias weight
-    0.25 at L111-123, risk weight 0.5 × max(0.1, (1.0+caution×0.8)-bravery×0.6)
-    at L103-104. Depletion-fraction multiplier on benefit term for GATHER_RESOURCE
-    at L103-112 (TCK-20260619-E21C-SCORING-WIRE, 2026-06-20). E12A measurement:
-    blocker_frequency=0.0 (< 5% keep-threshold) → blocker constant retained
-    unchanged (TCK-20260619-E12B-BLOCKER-RECAL, 2026-06-20).
+    src/domains/adventure/scoring.py AdventureRouteScorer.score() — blocker_penalty=2.0,
+    confidence_bonus=0.15, greed weight=0.50, sociability weight=0.40, other trait
+    weights=0.25 (E11C calibration, TCK-20260628-E11C-WEIGHT-TUNING, 2026-06-28).
+    Weights raised from uniform 0.25 after E11B audit showed greed/sociability Δ<0.05.
+    Depletion-fraction multiplier on benefit term for GATHER_RESOURCE
+    (TCK-20260619-E21C-SCORING-WIRE, 2026-06-20). E12A measurement:
+    blocker_frequency=0.0 → blocker constant retained (TCK-20260619-E12B-BLOCKER-RECAL).
   proof_type: parity
   test_path: >-
     tests/unit/domains/adventure/test_phase3_route_scoring.py;
@@ -2444,8 +2446,8 @@
     HERO entities score QUEST_OPPORTUNITY routes using capability matching
     against objective_chain verb tokens. Full match yields benefit×2.0,
     partial match benefit×1.5, no match benefit×1.0. Non-HERO entities
-    receive benefit×0.5 for quest routes. Greedy personality bias (greed×0.25)
-    applies to QUEST_OPPORTUNITY family for all entity types.
+    receive benefit×0.5 for quest routes. Greedy personality bias (greed×0.50)
+    applies to QUEST_OPPORTUNITY family for all entity types (E11C, 2026-06-28).
   status: verified
   priority: P1
   legacy_evidence: null
@@ -2567,6 +2569,30 @@
     This is intentional: faction pressure is designed to override individual need urgency.
     HUNT_WEAK_ENEMY used as patrol proxy (no PATROL RouteFamily exists).
   support_boundary: null
+- id: STRAT-235
+  text: >-
+    QuestGenerationSystem.quest_to_project() creates the first (active) objective with
+    ObjectiveStatus.ACTIVE, not UNRESOLVED. The StrategicIntelligenceSystem.fused_strategic_pass()
+    only processes objectives with status==ACTIVE for blocker resolution and navigation;
+    an UNRESOLVED first objective causes the quest project to be silently inert.
+    Material blockers on an entity produce at least one resource_expedition quest template
+    via generate_from_blockers(), and the resulting ProjectState is accepted by
+    evaluate_project_switch() when it outscores the current project. (TCK-20260627-P1B-QUEST-ACTIVATION)
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >-
+    src/systems/world_systems/quests.py — quest_to_project(): first objective uses
+    ObjectiveStatus.ACTIVE (index-0), remaining objectives use UNRESOLVED (index>0);
+    src/systems/strategic_systems/intelligence.py — fused_strategic_pass() active_obj
+    check at L396 requires ObjectiveStatus.ACTIVE; evaluate_project_switch() at L881
+    used to validate project acceptance.
+  proof_type: parity
+  test_path: >-
+    tests/unit/systems/test_quest_activation_pathway.py::TestQuestToProject::test_first_objective_has_active_status;
+    tests/unit/systems/test_quest_activation_pathway.py::TestQuestActivationPathwayEndToEnd::test_quest_project_accepted_by_evaluate_project_switch
+  divergence_note: null
+  support_boundary: null
 - id: STRAT-234
   text: >-
     A stale project that receives consecutive tick-level intent rejections is abandoned
@@ -2590,4 +2616,78 @@
     non-empty. In that case the increment is deferred to the next evaluation with no active
     blockers. This is intentional: entities with an actionable blocker (e.g. inventory full)
     still have a detour path and should not be prematurely abandoned.
+  support_boundary: null
+- id: STRAT-236
+  text: >-
+    Project lock (lock_until_tick) has a conditional early-release path: when HP ratio
+    > 0.8 AND no alive hostile entity of a different faction is within radius 10.0,
+    the lock is bypassed in AdventureDecisionPhase even before lock_until_tick expires.
+    This prevents cascading 10-tick relocks from creating >50-tick dead windows after
+    combat (D06 F2 — 200-tick activation delay). All lock assignments are capped at
+    current_tick + 50 ticks maximum.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >-
+    src/domains/adventure/phase.py — _threat_resolved() helper and conditional lock check
+    (TCK-20260627-P2A-SPAWN-LOCK-COND). src/domains/adventure/mapper.py:L101,
+    src/systems/strategic_systems/intelligence.py:L1266,L1340 — cap via min(N, tick+50).
+  proof_type: parity
+  test_path: >-
+    tests/unit/systems/test_spawn_lock_condition.py::TestLockEarlyRelease::test_lock_released_when_hp_high_and_no_hostiles
+  divergence_note: null
+  support_boundary: null
+- id: STRAT-237
+  text: >
+    BlockerKind enum defines 6 authoritative blocker categories: MATERIAL, CAPABILITY,
+    ACCESS, SOCIAL, GROUP, and inventory (string literal used in intelligence.py for
+    capacity failures). Congestion is reported as kind="access" with subject="congestion",
+    not a separate kind. Doc had listed "Inventory, Congestion" as if they were distinct
+    named kinds separate from "Access".
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/core/strategic.py:95-101 — BlockerKind enum (MATERIAL, CAPABILITY, ACCESS, SOCIAL, GROUP).
+    src/systems/strategic_systems/intelligence.py:92,104,118,125 — kind values in use.
+    Verified by TCK-20260627-P3C-DOC-CURRENCY; docs/mechanics/04_strategic_cognition.md
+    corrected to list actual kinds.
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: STRAT-238
+  text: >
+    Perception radius is 10.0 units for all neighbor-view and spatial perception calls.
+    The 15.0-unit radius in cooperation/providers.py is a candidate-selection radius,
+    not a perception radius. Doc claimed "10.0 to 15.0 units".
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/engine/domain_logic.py:70 — radius: float = 10.0 (default).
+    src/engine/domain/view.py:18 — radius: float = 10.0 (default).
+    src/domains/cooperation/providers.py:27 — spatial_radius: float = 15.0 (cooperation only).
+    Verified by TCK-20260627-P3C-DOC-CURRENCY; docs/mechanics/04_strategic_cognition.md
+    corrected to 10.0.
+  proof_type: parity
+  test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: STRAT-239
+  text: >
+    Belief/lead staleness threshold is 50 ticks (default stale_threshold parameter in
+    BeliefCycleSystem.decay_stale_beliefs). APPROXIMATE leads demote to VAGUE; VAGUE
+    leads demote to EXHAUSTED. PRECISE leads do not decay. Doc claimed "every 100 ticks".
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/systems/strategic_systems/belief.py:47 — stale_threshold: int = 50 (default).
+    Verified by TCK-20260627-P3C-DOC-CURRENCY; docs/mechanics/04_strategic_cognition.md
+    corrected from 100 to 50 ticks.
+  proof_type: parity
+  test_path: >-
+    tests/unit/cognition/test_information_seeking.py::TestKnowledgeStalenessDecay::test_lead_staleness_decay_reduces_confidence
+  divergence_note: null
   support_boundary: null

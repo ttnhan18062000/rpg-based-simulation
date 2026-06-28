@@ -146,3 +146,11 @@
   tags: ["settlement", "services", "trade", "crafting"]
   danger_level: 0
   controlling_faction: "merchant_league"
+
+# TCK-20260627-P1I-WORLD-BALANCE-FIX: wilderness_survival shelter region
+- id: "survivor_outpost"
+  display_name: "Survivor Outpost"
+  biome: "near_forest"
+  tags: ["shelter", "wilderness", "survival"]
+  danger_level: 0
+  controlling_faction: "neutral"

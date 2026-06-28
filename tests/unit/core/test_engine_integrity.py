@@ -167,3 +167,81 @@ def test_isolation_guard_trigger(base_state):
         assert "Isolation Breach" in str(excinfo.value)
     finally:
         kernel.shutdown()
+
+
+def test_gross_isolation_guard_triggers_on_tick_change(base_state):
+    """
+    Lightweight gross isolation guard (standard mode) detects tick advancement mid-phase.
+
+    Covers: TCK-20260627-P1G-STABILITY-GUARD acceptance criterion — gross guard raises on
+    tick mutation in standard (non-audit) mode.
+    """
+    profile = get_test_profile()
+    rng = DeterministicRNG(base_state.seed)
+    # Standard run — no audit_mode
+    kernel = Kernel(profile, base_state, rng)
+    try:
+        from src.core.protocol_validator import ProtocolViolationError
+        expected_count = len(kernel._state.entities)
+        expected_tick = kernel._state.tick
+
+        # Simulate a phase advancing the tick outside the authoritative pipeline
+        object.__setattr__(kernel._state, "tick", expected_tick + 1)
+
+        with pytest.raises(ProtocolViolationError) as excinfo:
+            kernel._guard_gross_isolation("TestPhase", expected_count, expected_tick)
+
+        assert "Gross Isolation Breach" in str(excinfo.value)
+        assert "tick" in str(excinfo.value)
+    finally:
+        kernel.shutdown()
+
+
+def test_gross_isolation_guard_triggers_on_entity_count_change(base_state):
+    """
+    Lightweight gross isolation guard (standard mode) detects entity creation mid-phase.
+
+    Covers: TCK-20260627-P1G-STABILITY-GUARD acceptance criterion — gross guard raises on
+    entity count change in standard (non-audit) mode.
+    """
+    profile = get_test_profile()
+    rng = DeterministicRNG(base_state.seed)
+    kernel = Kernel(profile, base_state, rng)
+    try:
+        from src.core.protocol_validator import ProtocolViolationError
+        original_entities = dict(kernel._state.entities)
+        expected_count = len(original_entities)
+        expected_tick = kernel._state.tick
+
+        # Simulate an entity being added outside the authoritative pipeline
+        mutated_entities = dict(original_entities)
+        mutated_entities[9999] = None  # sentinel — only count matters for this guard
+        object.__setattr__(kernel._state, "entities", mutated_entities)
+
+        try:
+            with pytest.raises(ProtocolViolationError) as excinfo:
+                kernel._guard_gross_isolation("TestPhase", expected_count, expected_tick)
+
+            assert "Gross Isolation Breach" in str(excinfo.value)
+            assert "entity count" in str(excinfo.value)
+        finally:
+            # Restore valid entities so shutdown's CanonicalStateHasher does not fail
+            object.__setattr__(kernel._state, "entities", original_entities)
+    finally:
+        kernel.shutdown()
+
+
+def test_gross_isolation_guard_silent_on_clean_state(base_state):
+    """
+    Gross isolation guard does not fire when state is clean (no mid-phase mutation).
+    """
+    profile = get_test_profile()
+    rng = DeterministicRNG(base_state.seed)
+    kernel = Kernel(profile, base_state, rng)
+    try:
+        expected_count = len(kernel._state.entities)
+        expected_tick = kernel._state.tick
+        # Should not raise — state is unchanged
+        kernel._guard_gross_isolation("CleanPhase", expected_count, expected_tick)
+    finally:
+        kernel.shutdown()

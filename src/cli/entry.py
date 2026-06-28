@@ -242,7 +242,7 @@ def _run_cli(args):
             buffer_capacity_kb=profile.max_replay_buffer_kb
         )
     
-    kernel = Kernel(profile=profile, state=state, rng=rng, replay=replay_manager)
+    kernel = Kernel(profile=profile, state=state, rng=rng, replay=replay_manager, world_id=world_id)
     
     print(f"V2 Simulation Started: seed={seed}, entities={len(state.entities)}, ticks={ticks}")
     if args.replay:

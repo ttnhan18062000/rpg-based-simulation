@@ -333,10 +333,10 @@ def test_generated_composition_determinism(repos, tmp_path, monkeypatch):
 def test_wilderness_survival_composition(repos):
     """wilderness_survival loads, assembles, and compiles without error.
 
-    This is a no-settlement ecology world using forest_deep_ecology,
-    wolf_den_near_forest, and undead_battlefield. Verifies that module_refs
-    structured form and provided_features are valid, and that the full
-    pipeline (load → assemble → compile) succeeds.
+    Uses forest_deep_ecology, wolf_den_near_forest, undead_battlefield, and
+    survivor_camp_shelter (adds healer_hut for near_service compatibility).
+    Verifies that module_refs structured form and provided_features are valid,
+    and that the full pipeline (load → assemble → compile) succeeds.
     """
     import yaml
     from src.worldbuilding.compiler import WorldCompiler
@@ -351,7 +351,7 @@ def test_wilderness_survival_composition(repos):
     spec = WorldCompositionSpec.model_validate(raw)
     assert spec.world_id == "wilderness_survival"
     assert spec.schema_version == "worldcomposition.v1"
-    assert len(spec.module_refs) == 3
+    assert len(spec.module_refs) == 4
     assert "deep_wilderness" in spec.provided_features
     assert "survival" in spec.provided_features
 
@@ -424,9 +424,10 @@ def test_urban_political_composition(repos):
 def test_dungeon_crawl_composition(repos):
     """dungeon_crawl loads, assembles, and compiles; world_spec has >= 2 quest_definitions.
 
-    Uses ruins_mystery_quest (2 quests), goblin_camp_conflict, old_mine_resource_loop (1 quest),
-    and scalable_bandit_camp with danger_scale=4. No settlement modules. Verifies quest seeding
-    integration and default_perspectives pass-through.
+    Uses ruins_mystery_quest (2 quests) and scalable_bandit_camp with danger_scale=2
+    (6 bandits). goblin_camp_conflict and old_mine_resource_loop removed to reduce
+    entity count from 32 to 12 (TCK-20260627-P1I-WORLD-BALANCE-FIX).
+    Verifies quest seeding integration and default_perspectives pass-through.
     """
     import yaml
     from src.worldbuilding.compiler import WorldCompiler
@@ -441,14 +442,14 @@ def test_dungeon_crawl_composition(repos):
     spec = WorldCompositionSpec.model_validate(raw)
     assert spec.world_id == "dungeon_crawl"
     assert spec.schema_version == "worldcomposition.v1"
-    assert len(spec.module_refs) == 4
+    assert len(spec.module_refs) == 2
     assert "dungeon" in spec.provided_features
     assert "quest_seeding" in spec.provided_features
     assert "hero_guild_perspective" in spec.default_perspectives
 
     # Verify danger_scale parameter injection on scalable_bandit_camp ref
     bandit_ref = next(r for r in spec.module_refs if r.module_id == "scalable_bandit_camp")
-    assert bandit_ref.parameters.get("danger_scale") == 4
+    assert bandit_ref.parameters.get("danger_scale") == 2
 
     resolver = WorldAssemblyResolver(cat, mod)
     bundle = resolver.assemble(spec)

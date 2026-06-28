@@ -263,6 +263,8 @@ loop: entities cannot pursue "gather resources → craft gear → upgrade" progr
 
 ### F4 — Entity archetype distribution skewed — Gap Risk: 9 / 15
 
+> **Ticket:** TCK-20260627-P2C-ARCHETYPE-DIST
+
 | Dimension | Score | Reason |
 |---|---|---|
 | Scenario Impact | 3 | 4 scout archetypes and only 1 each of most other roles means encounters repeat quickly |
@@ -296,6 +298,8 @@ across 4 world compositions. All three previously zero-scenario compositions now
 ---
 
 ### F6 — Faction relationships incomplete for faction count — Gap Risk: 8 / 15
+
+> **Ticket:** TCK-20260627-P2D-FACTION-RELS
 
 | Dimension | Score | Reason |
 |---|---|---|

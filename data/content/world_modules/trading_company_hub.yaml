@@ -34,6 +34,10 @@ building_recipes:
   - building_type: "inn"
     count: 1
     region: "hometown"
+resource_recipes:
+  - resource_type: "iron_vein"
+    count: 6
+    region: "hometown"
 relationships: ["town_to_merchants", "merchants_to_town"]
 quest_definitions:
   - id: "trade_fetch_shipment_goods"

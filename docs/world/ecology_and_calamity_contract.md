@@ -42,7 +42,7 @@ For each region below target, a 50% roll determines whether a node seeds this cy
 | MOUNTAIN | IRON |
 | all others | STONE |
 
-Nodes are seeded at the region's default resource position. They start with full charges. Ecology-seeded nodes are assigned `regen_rate_per_tick=1` at creation. Pre-placed (compiler-seeded) nodes retain `regen_rate_per_tick=0` and do not regenerate.
+Nodes are seeded at the region's default resource position. They start with full charges. Ecology-seeded nodes are assigned `regen_rate_per_tick=1` at creation. Compiler-seeded nodes also default to `regen_rate_per_tick=1` (via `ResourceNodeSpec.regen_rate` default=1, wired in `compiler.py`). World authors may set `regen_rate: 0` in the world spec for intentionally static (non-regenerating) nodes.
 
 ### Charge regeneration
 

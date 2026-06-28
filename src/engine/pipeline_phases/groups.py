@@ -114,7 +114,7 @@ class GroupPhase:
 
             # Only run defection on groups that still have multiple members
             # and whose grievance_log is at threshold or above.
-            if len(group.grievance_log) < PartyLifecycleService.DEFECTION_GRIEVANCE_THRESHOLD:
+            if len(group.grievance_log) < PartyLifecycleService.effective_defection_threshold(group):
                 continue
 
             # Collect live members eligible to defect (those present in state.entities)

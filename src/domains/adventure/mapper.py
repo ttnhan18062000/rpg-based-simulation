@@ -98,7 +98,7 @@ class RouteToProjectMapper:
             kind=p_kind,
             status=ProjectStatus.ACTIVE,
             score=1.0,
-            lock_until_tick=tick + 10,  # default strategic project lock duration
+            lock_until_tick=min(tick + 10, tick + 50),  # cap: no lock exceeds 50 ticks
             objectives=[obj],
             active_objective_id=objective_id,
             created_tick=tick,

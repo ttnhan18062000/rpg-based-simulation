@@ -9,6 +9,7 @@ tags: [decision-trace, observability, schema, adventure-routing, phase-2]
 # Decision Trace Contract — `decision_trace.jsonl`
 
 **Implemented by:** TCK-20260619-E22A-TRACE-WRITER (Epic 2.2A)
+**Extended by:** TCK-20260627-P1H-GOAL-RUNNERUP — runner-up scores and goal-score cache
 
 ## Overview
 
@@ -49,6 +50,15 @@ Controlled by `OBS_DECISION_TRACE` flag in `ObservabilityConfig`.
 {
   "entity_id": <int>,
   "tick": <int>,
+  "source_goal_score": <float|null>,   // Winner's score (rank 1); null if no candidates
+  "runner_up_scores": [                // Ranks 2 and 3 (empty if fewer than 2 candidates)
+    {
+      "goal_id": <string>,             // RouteFamily value of the alternative route
+      "score": <float>,                // Its computed score
+      "rank": <int>                    // 2 or 3
+    },
+    ...
+  ],
   "routes": [
     {
       "route_kind": <string>,        // RouteFamily value, e.g. "gather_resource"
@@ -68,6 +78,7 @@ Controlled by `OBS_DECISION_TRACE` flag in `ObservabilityConfig`.
 
 - `routes` contains at most 5 entries, sorted by descending score (winner first).
 - `selected: true` marks the route actually committed to a strategic project.
+- `runner_up_scores` gives a compact summary of why the winner was chosen over alternatives.
 - All float fields are rounded to 4 decimal places.
 
 ## Score Formula
@@ -133,6 +144,17 @@ Example:
 - **Lookup:** `DecisionTraceIndex.lookup(tick)` — used by REST API (E22C)
 - All I/O is non-fatal: exceptions are caught and logged; the run continues.
 
+## Goal Score Cache (EntityInspector integration)
+
+`DecisionTraceWriter` maintains an in-memory cache of the top-3 goal scores per entity
+(the last tick written). `EntityInspectionSnapshot.goal_scores` is populated from this
+cache via `get_active_writer().get_latest_goal_scores(entity_id)`.
+
+Each `goal_scores` entry: `{"goal_id": str, "score": float, "rank": int}`.
+
+The cache is non-durable and non-authoritative — it holds the **most recent tick's** data
+only. The full history is in `decision_trace.jsonl`.
+
 ## Related
 
 - `docs/audits/D15_entity_decision_inspection.md` — Gap 1 addressed by this contract
@@ -140,3 +162,4 @@ Example:
 - TCK-20260619-E22B-TICK-INDEX — builds the tick index sidecar (implemented)
 - TCK-20260619-E22C-REST-API — REST API that uses `lookup()` to serve per-tick queries
 - `src/domains/adventure/schema.py:AdventureRouteOption` — source data schema
+- `src/observability/live/entity_inspector.py:EntityInspectionSnapshot` — `goal_scores` field

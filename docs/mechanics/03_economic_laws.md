@@ -3,7 +3,7 @@ status: authoritative
 layer: mechanics
 authority: P0
 audience: developer
-last_verified: 2026-06-06
+last_verified: 2026-06-27
 ---
 
 # Chapter 3: Economic Laws
@@ -26,7 +26,7 @@ Entities are constrained by physical limits. Inventory management is a core surv
 | Constraint | Law | Failure Outcome |
 | :--- | :--- | :--- |
 | **Slot Limit** | Default: **16 slots**. Each unique item type occupies 1 slot. | `INVENTORY_FULL` (Action Aborted) |
-| **Weight Limit** | Default: **100.0 kg**. Sum of all item weights. | `INVENTORY_FULL` (Action Aborted) |
+| **Weight Limit** | Default: **50.0 kg**. Sum of all item weights. | `INVENTORY_FULL` (Action Aborted) |
 | **Mobility** | Movement Cost scales with total inventory weight. | Increased Stamina drain per move. |
 
 ---
@@ -104,7 +104,7 @@ Entities with positive public reputation receive a proportional discount at all 
 
 ### Selling to Shops
 *   **Rule**: The building must have enough **Gold (Liquidity)** to pay the entity.
-*   **Benefit**: `Price = Item_Base_Value * 0.5 * Market_Multiplier`.
+*   **Benefit**: `Price = Item_Base_Value * 0.5` (static 50% of base value). Dynamic selling prices are out of scope (E5.6). In `ShopSystem.get_sell_price`, a regional trauma surcharge is applied: `price = base * (1.0 + region_trauma / 10.0)`, but this multiplies the item's pre-defined base value directly (not the 50% DynamicPriceService path).
 *   **Outcome**: Item is transferred from Entity to Building; Gold is transferred from Building to Entity.
 
 ---

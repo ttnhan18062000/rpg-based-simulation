@@ -137,6 +137,8 @@ Either way, hunger urgency (~1.0–2.0 estimated) permanently outscores economic
 
 ### 4. Rejection Cascade Rate
 
+> **Ticket:** TCK-20260627-P1A-REJECTION-BACKOFF
+
 **Data source:** D06, D05.
 
 | Phase | Rejection rate | Cause |
@@ -209,7 +211,10 @@ After completing P0-HUNGER-SATIATION and P0-ENTITY-INIT, a controlled measuremen
 
 #### 6.2 Root Causes (NEW — different from original D04 block)
 
-**Root Cause 1 — Adventure routing disabled by default:**  
+**Root Cause 1 — Adventure routing disabled by default:**
+
+> **Ticket:** TCK-20260627-P0A-ADVENTURE-FLAG
+
 `ENABLE_ADVENTURE_ROUTING` in `src/domains/optimization/feature_flags.py` defaults to `FeatureMode.OFF`. The entire adventure decision pipeline (route generation → scoring → blocker_penalty → strategic update) is inactive in all default simulation runs. This makes the `blocker_penalty = 2.0` constant effectively dead code in production.
 
 **Score: 15 / 15**
@@ -220,7 +225,10 @@ After completing P0-HUNGER-SATIATION and P0-ENTITY-INIT, a controlled measuremen
 | Measurement Confidence | 5 | Confirmed: `ENABLE_ADVENTURE_ROUTING` flag defaults to `FeatureMode.OFF` in `feature_flags.py` |
 | Fix Urgency | 5 | Must be enabled (or test harness must set explicitly) for any economic balance measurement |
 
-**Root Cause 2 — urban_political has zero resource nodes:**  
+**Root Cause 2 — urban_political has zero resource nodes:**
+
+> **Ticket:** TCK-20260627-P0B-URBAN-RESOURCE-NODES
+
 `len(state.resource_nodes) == 0` after WorldCompiler.compile(). `ResourceOpportunityProvider.get_opportunities()` iterates over `state.resource_nodes` — with zero nodes, it always returns `[]`. The earlier D08 observation of "3 harvesting events in urban_political seed 137" was from a different schema or run context. The current world.yaml compiles to no nodes.
 
 **Score: 15 / 15**
@@ -231,7 +239,10 @@ After completing P0-HUNGER-SATIATION and P0-ENTITY-INIT, a controlled measuremen
 | Measurement Confidence | 5 | Confirmed: `len(state.resource_nodes) == 0` after `WorldCompiler.compile()` |
 | Fix Urgency | 5 | Blocks all economic measurement for urban_political world |
 
-**Root Cause 3 — Entity navigation.region_id is None:**  
+**Root Cause 3 — Entity navigation.region_id is None:**
+
+> **Ticket:** TCK-20260627-P0C-ENTITY-REGION-ASSIGN
+
 All 30 entities have `navigation.region_id = None` after compilation. The opportunity provider uses `region_id` for node matching. Even if nodes existed, region-based filtering would fail for all entities.
 
 **Score: 13 / 15**

@@ -97,6 +97,8 @@ execution where ties in candidate scoring could resolve differently across repla
 
 ### F2 — `commitment/abandonment.py` returns untyped dict with mechanical fields — Priority: 9 / 15
 
+> **Ticket:** TCK-20260627-P1F-ABANDONMENT-TYPE
+
 | Dimension | Score | Reason |
 |---|---|---|
 | Adoption Gap | 2 | Isolated to `commitment/abandonment.py` (3 return sites) |
@@ -178,6 +180,8 @@ a behavioral one.
 ---
 
 ### F5 — `kernel.py:770` direct `entity.timeline.append()` mutation — Priority: 6 / 15
+
+> **Ticket:** TCK-20260627-P2H-TIMELINE-APPEND
 
 | Dimension | Score | Reason |
 |---|---|---|

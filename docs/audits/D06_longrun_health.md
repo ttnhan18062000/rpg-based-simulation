@@ -129,6 +129,8 @@ The route generator's primary path receives opportunities from `ResourceOpportun
 
 ### F2 — 200-Tick Activation Delay
 
+> **Ticket:** TCK-20260627-P2A-SPAWN-LOCK-COND
+
 **Score: 7/15** (Variety Gap=5, Lifespan Gap=2, System Silence=5)
 
 Ticks 101–200 produce zero behavioral events in both seeds, identical to D03 observations pre-fix. The RC1 fix has no effect on this window. Events resume at tick ~201.
@@ -140,6 +142,8 @@ This is not a bug — initial locks prevent jitter during a combat crisis. Howev
 ---
 
 ### F3 — Rejection Cascade: 500K–550K Cumulative by Tick 1,000
+
+> **Ticket:** TCK-20260627-P1A-REJECTION-BACKOFF
 
 **Score: 11/15** (Variety Gap=4, Lifespan Gap=4, System Silence=3)
 
@@ -158,6 +162,8 @@ The monotonic increase confirms no cooldown, stale-project expiry, or backoff me
 
 ### F4 — Quest System Never Activates
 
+> **Ticket:** TCK-20260627-P1B-QUEST-ACTIVATION
+
 **Score: 15/15** (Variety Gap=5, Lifespan Gap=5, System Silence=5)
 
 `quest_active_count = 0.0` and `quest_completed_count = 0.0` across all 1,000 ticks in both seeds. The 240–253 `quest_event` entries in `simulation_events.jsonl` are project status transitions (`proj_hunger_N updated to status started`), not formal quest activations from the `QuestSystem`.
@@ -169,6 +175,8 @@ This confirms the system architecture is correct but the behavioral precondition
 ---
 
 ### F5 — Late-Run Attrition Exceeds Spawn Rate
+
+> **Ticket:** TCK-20260627-P2B-SPAWN-CADENCE
 
 **Score: 9/15** (Variety Gap=3, Lifespan Gap=3, System Silence=4)
 

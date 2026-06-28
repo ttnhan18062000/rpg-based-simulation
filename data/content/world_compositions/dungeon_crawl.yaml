@@ -13,12 +13,8 @@ default_perspectives:
 module_refs:
   - module_id: "ruins_mystery_quest"
     order: 0
-  - module_id: "goblin_camp_conflict"
-    order: 1
-  - module_id: "old_mine_resource_loop"
-    order: 2
   - module_id: "scalable_bandit_camp"
-    order: 3
+    order: 1
     parameters:
-      danger_scale: 4
+      danger_scale: 2
 generation_seed: 303

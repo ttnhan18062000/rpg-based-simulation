@@ -20,7 +20,14 @@ buildings:
   inn: 1
   healer_hut: 1
 relationships: ["town_to_merchants", "merchants_to_town"]
-observability_tags: ["settlement", "trade"]
+resource_recipes:
+  - resource_type: "wood_node"
+    count: 8
+    region: "hometown"
+  - resource_type: "herb_patch"
+    count: 5
+    region: "hometown"
+observability_tags: ["settlement", "trade", "resource"]
 quest_definitions:
   - id: "village_fetch_supply_run"
     type: "fetch"

@@ -452,3 +452,140 @@ def test_tick_index_incremental_vs_rebuild():
         assert incremental_index == rebuilt_index, (
             "Incremental index and full rebuild must agree on tick→offset mappings"
         )
+
+
+# ---------------------------------------------------------------------------
+# Runner-up scores — TCK-20260627-P1H-GOAL-RUNNERUP
+# ---------------------------------------------------------------------------
+
+def test_decision_trace_runner_up_scores_present():
+    """AC: decision_trace.jsonl entry has runner_up_scores with rank/goal_id/score."""
+    ObservabilityConfig.set_override_mode(ObservabilityMode.LIGHT)
+
+    with tempfile.TemporaryDirectory() as run_dir:
+        writer = DecisionTraceWriter(run_dir=run_dir)
+        routes = [
+            _make_route(family=RouteFamily.GATHER_RESOURCE, score=0.9),
+            _make_route(family=RouteFamily.RECOVER, score=0.6),
+            _make_route(family=RouteFamily.TRAIN_SKILL, score=0.4),
+            _make_route(family=RouteFamily.SELL_LOOT_FOR_GOLD, score=0.2),
+            _make_route(family=RouteFamily.RETURN_TOWN, score=0.1),
+        ]
+        writer.write_trace(entity_id=1, tick=1, scored_routes=routes)
+        writer.close()
+
+        record = json.loads(open(os.path.join(run_dir, "decision_trace.jsonl")).read())
+        assert "runner_up_scores" in record, "runner_up_scores must be present"
+        runner_ups = record["runner_up_scores"]
+        assert len(runner_ups) == 2, f"Expected 2 runner-up entries, got {len(runner_ups)}"
+        for entry in runner_ups:
+            assert "goal_id" in entry
+            assert "score" in entry
+            assert "rank" in entry
+        ranks = [e["rank"] for e in runner_ups]
+        assert ranks == [2, 3], f"Runner-up ranks must be [2, 3], got {ranks}"
+
+
+def test_decision_trace_source_goal_score_present():
+    """AC: decision_trace.jsonl entry has source_goal_score equal to winner's score."""
+    ObservabilityConfig.set_override_mode(ObservabilityMode.LIGHT)
+
+    with tempfile.TemporaryDirectory() as run_dir:
+        writer = DecisionTraceWriter(run_dir=run_dir)
+        writer.write_trace(entity_id=1, tick=1, scored_routes=[_make_route(score=0.77)])
+        writer.close()
+
+        record = json.loads(open(os.path.join(run_dir, "decision_trace.jsonl")).read())
+        assert "source_goal_score" in record, "source_goal_score must be present"
+        assert record["source_goal_score"] == pytest.approx(0.77)
+
+
+def test_decision_trace_runner_up_fewer_than_3():
+    """Graceful truncation: 2 candidates → runner_up_scores has 1 entry (rank 2)."""
+    ObservabilityConfig.set_override_mode(ObservabilityMode.LIGHT)
+
+    with tempfile.TemporaryDirectory() as run_dir:
+        writer = DecisionTraceWriter(run_dir=run_dir)
+        routes = [
+            _make_route(family=RouteFamily.GATHER_RESOURCE, score=0.8),
+            _make_route(family=RouteFamily.RECOVER, score=0.4),
+        ]
+        writer.write_trace(entity_id=1, tick=1, scored_routes=routes)
+        writer.close()
+
+        record = json.loads(open(os.path.join(run_dir, "decision_trace.jsonl")).read())
+        runner_ups = record["runner_up_scores"]
+        assert len(runner_ups) == 1, f"Expected 1 runner-up for 2 candidates, got {len(runner_ups)}"
+        assert runner_ups[0]["rank"] == 2
+
+
+def test_decision_trace_runner_up_single_candidate():
+    """Graceful truncation: 1 candidate → runner_up_scores is empty list."""
+    ObservabilityConfig.set_override_mode(ObservabilityMode.LIGHT)
+
+    with tempfile.TemporaryDirectory() as run_dir:
+        writer = DecisionTraceWriter(run_dir=run_dir)
+        writer.write_trace(entity_id=1, tick=1, scored_routes=[_make_route(score=0.5)])
+        writer.close()
+
+        record = json.loads(open(os.path.join(run_dir, "decision_trace.jsonl")).read())
+        assert record["runner_up_scores"] == [], "Single candidate must yield empty runner_up_scores"
+
+
+def test_decision_trace_routes_sorted_descending():
+    """Routes list must be sorted descending by score even if input is unsorted."""
+    ObservabilityConfig.set_override_mode(ObservabilityMode.LIGHT)
+
+    with tempfile.TemporaryDirectory() as run_dir:
+        writer = DecisionTraceWriter(run_dir=run_dir)
+        # Pass in non-descending order
+        routes = [
+            _make_route(family=RouteFamily.RETURN_TOWN, score=0.3),
+            _make_route(family=RouteFamily.GATHER_RESOURCE, score=0.9),
+            _make_route(family=RouteFamily.RECOVER, score=0.6),
+        ]
+        writer.write_trace(entity_id=1, tick=1, scored_routes=routes)
+        writer.close()
+
+        record = json.loads(open(os.path.join(run_dir, "decision_trace.jsonl")).read())
+        scores = [r["score"] for r in record["routes"]]
+        assert scores == sorted(scores, reverse=True), f"Routes must be sorted descending: {scores}"
+        assert record["routes"][0]["selected"] is True, "First route (winner) must have selected=True"
+        assert record["routes"][0]["score"] == pytest.approx(0.9), "Winner must be highest scorer"
+
+
+def test_entity_inspection_snapshot_has_goal_scores_field():
+    """EntityInspectionSnapshot must have a goal_scores field defaulting to []."""
+    from src.observability.live.entity_inspector import EntityInspectionSnapshot
+
+    snapshot = EntityInspectionSnapshot(entity_id=1, exists=False)
+    assert hasattr(snapshot, "goal_scores"), "EntityInspectionSnapshot must have goal_scores"
+    assert snapshot.goal_scores == [], "goal_scores must default to empty list"
+
+
+def test_decision_trace_writer_caches_goal_scores():
+    """writer.get_latest_goal_scores() returns top-3 after write_trace()."""
+    ObservabilityConfig.set_override_mode(ObservabilityMode.LIGHT)
+
+    with tempfile.TemporaryDirectory() as run_dir:
+        writer = DecisionTraceWriter(run_dir=run_dir)
+        routes = [
+            _make_route(family=RouteFamily.GATHER_RESOURCE, score=0.9),
+            _make_route(family=RouteFamily.RECOVER, score=0.6),
+            _make_route(family=RouteFamily.TRAIN_SKILL, score=0.4),
+            _make_route(family=RouteFamily.SELL_LOOT_FOR_GOLD, score=0.2),
+            _make_route(family=RouteFamily.RETURN_TOWN, score=0.1),
+        ]
+        writer.write_trace(entity_id=7, tick=3, scored_routes=routes)
+
+        cached = writer.get_latest_goal_scores(7)
+        assert len(cached) == 3, f"Cache must hold top-3 entries, got {len(cached)}"
+        assert cached[0]["rank"] == 1
+        assert cached[0]["goal_id"] == RouteFamily.GATHER_RESOURCE.value
+        assert cached[1]["rank"] == 2
+        assert cached[2]["rank"] == 3
+
+        # Unknown entity returns empty
+        assert writer.get_latest_goal_scores(999) == []
+
+        writer.close()

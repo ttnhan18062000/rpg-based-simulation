@@ -86,6 +86,8 @@ markers = [
     "content_pack: content pack format validation and expansion gate tests",
     "architecture: static architecture guard tests (no runtime, no catalog load)",
     "e2e_golden: golden artifact fixture tests validating schema compatibility with real engine output",
+    "scenario_flags: per-scenario feature flag default and configuration assertions",
+    "feature_flag_default: feature flag default value and stability assertions",
 ]
 
 [tool.mypy]

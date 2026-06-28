@@ -42,6 +42,11 @@ from src.domains.campaigns.social_memory import (
     SocialMemoryExporter,
     SocialMemoryImporter,
 )
+from src.domains.campaigns.grief_urgency import (
+    GriefUrgencyImporter, ALLY_TRUST_THRESHOLD,
+    NemesisRelationImporter, NEMESIS_EPISODE_COUNT, NEMESIS_INTERACTION_KINDS,
+)
+from src.domains.campaigns.state import GriefUrgencyModifier, NemesisRelation
 
 
 # ── Narrative significance map ────────────────────────────────────────────────
@@ -194,6 +199,10 @@ class CampaignOrchestrator:
         self._state.narrative_ledger.extend(narrative_entries)
         self._state.social_memories.update(social_memories)
         self._state.progression_plans.update(progression_plans)
+        # E43F: grief urgency — detect new grief from entity_death entries, decay existing.
+        self._advance_grief_urgencies(narrative_entries, summary.episode_index)
+        # E43G: nemesis relations — scan social memories for repeated antagonism.
+        self._advance_nemesis_relations(summary.episode_index)
         # Remove plans for entities that died this episode.
         dead_ids = [eid for eid, cf in entity_cfs.items() if not cf.alive]
         for eid in dead_ids:
@@ -204,6 +213,90 @@ class CampaignOrchestrator:
         _hierarchy = ChronicleGrouper().group(list(self._state.narrative_ledger))
         CultureDriftExporter.export(self._state, _hierarchy, summary.episode_index)
         self._state.episode_index += 1
+
+    def _advance_grief_urgencies(
+        self,
+        new_entries: List[NarrativeLedgerEntry],
+        episode_index: int,
+    ) -> None:
+        """Detect new grief from entity_death events and decay existing modifiers (E43F).
+
+        1. Decay all existing grief_urgencies by decay_per_episode; remove when ≤ 0.
+        2. For each new entity_death entry, find alive entities with trust_score > threshold
+           toward the dead entity → create GriefUrgencyModifier for that entity.
+           New entries overwrite decayed ones (fresh grief is never diminished).
+        """
+        # Step 1 — decay existing grief
+        decayed: Dict[int, GriefUrgencyModifier] = {}
+        for eid, gum in self._state.grief_urgencies.items():
+            new_urgency = round(gum.urgency - gum.decay_per_episode, 6)
+            if new_urgency > 0.0:
+                decayed[eid] = GriefUrgencyModifier(
+                    entity_id=eid,
+                    dead_ally_id=gum.dead_ally_id,
+                    episode=gum.episode,
+                    urgency=new_urgency,
+                    decay_per_episode=gum.decay_per_episode,
+                )
+
+        # Step 2 — detect new grief from entity_death entries
+        for entry in new_entries:
+            if entry.event_type != "entity_death":
+                continue
+            try:
+                dead_id = int(entry.subject_id)
+            except (ValueError, TypeError):
+                continue
+            for eid, mem in self._state.social_memories.items():
+                trust = mem.relationship_scores.get(dead_id, 0.0)
+                if trust >= ALLY_TRUST_THRESHOLD:
+                    urgency = round(min(1.0, trust * 0.8), 6)
+                    decayed[eid] = GriefUrgencyModifier(
+                        entity_id=eid,
+                        dead_ally_id=dead_id,
+                        episode=episode_index,
+                        urgency=urgency,
+                    )
+
+        self._state.grief_urgencies = decayed
+
+    def _advance_nemesis_relations(self, episode_index: int) -> None:
+        """Detect nemesis relations from cumulative social memory interaction history (E43G).
+
+        For each entity's SocialMemoryRecord, count distinct episodes where a negative
+        interaction (kind in NEMESIS_INTERACTION_KINDS) occurred with the same other entity.
+        If count >= NEMESIS_EPISODE_COUNT, add/update a NemesisRelation.
+
+        Existing nemesis relations are retained unless the interaction count drops
+        (which cannot happen — interaction_history is append-only). New relations
+        are added; updated relations refresh strength and antagonism_count.
+        """
+        from collections import defaultdict
+
+        new_relations: Dict[str, NemesisRelation] = dict(self._state.nemesis_relations)
+
+        for eid, mem in self._state.social_memories.items():
+            # Count distinct episodes per other_entity for negative interactions
+            antagonism_episodes: Dict[int, set] = defaultdict(set)
+            for rec in mem.interaction_history:
+                if rec.kind in NEMESIS_INTERACTION_KINDS and rec.other_entity_id is not None:
+                    antagonism_episodes[rec.other_entity_id].add(rec.episode)
+
+            for antagonist_id, episodes in antagonism_episodes.items():
+                count = len(episodes)
+                if count >= NEMESIS_EPISODE_COUNT:
+                    key = f"{eid}:{antagonist_id}"
+                    strength = round(min(1.0, count * 0.4), 6)
+                    new_relations[key] = NemesisRelation(
+                        protagonist_id=eid,
+                        antagonist_id=antagonist_id,
+                        formation_episode=new_relations[key].formation_episode
+                            if key in new_relations else episode_index,
+                        antagonism_count=count,
+                        strength=strength,
+                    )
+
+        self._state.nemesis_relations = new_relations
 
     def _extract_entity_carry_forwards(
         self,
@@ -431,6 +524,22 @@ class CampaignOrchestrator:
                 entities[eid] = SocialMemoryImporter.apply(
                     entity, self._state.social_memories[eid]
                 )
+
+        # Apply grief urgency modifiers (E43F): inject SOCIAL_THREAT concern for
+        # entities grieving a dead ally from a prior episode.
+        for eid, entity in list(entities.items()):
+            if eid in self._state.grief_urgencies:
+                entities[eid] = GriefUrgencyImporter.apply(
+                    entity, self._state.grief_urgencies[eid]
+                )
+
+        # Apply nemesis relation blockers (E43G): inject SOCIAL BlockerState for
+        # each nemesis relation where the entity is the protagonist, so that the
+        # FORM_PARTY route generator can block party formation with the antagonist.
+        for relation in self._state.nemesis_relations.values():
+            eid = relation.protagonist_id
+            if eid in entities:
+                entities[eid] = NemesisRelationImporter.apply(entities[eid], relation)
 
         # Apply progression plan import: update milestone achieved flags based
         # on carried entity level. Updates CampaignState.progression_plans in-place.

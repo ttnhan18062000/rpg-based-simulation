@@ -193,24 +193,21 @@ class AdventureRouteScorer:
         # ── 4. Personality Biases ───────────────────────────────────────────
         personality_bias = 0.0
 
+        # Weight calibration (E11C, 2026-06-28): greed and sociability raised from
+        # 0.25 to 0.50/0.40 after E11B audit showed Δ<0.05 at uniform 0.25.
+        # Bravery already exerts strong influence via risk_multiplier (multiplicative).
         if route.family == RouteFamily.RECOVER:
-            # Cautious entities prefer recovery
             personality_bias += caution * 0.25
         elif route.family in (RouteFamily.GATHER_RESOURCE, RouteFamily.SELL_LOOT_FOR_GOLD, RouteFamily.TAKE_EASY_QUEST):
-            # Greedy entities prefer gold/loot routes
-            personality_bias += greed * 0.25
+            personality_bias += greed * 0.50
         elif route.family in (RouteFamily.ASK_INFORMATION, RouteFamily.SCOUT_LOCATION):
-            # Curious entities prefer information/scouting
             personality_bias += curiosity * 0.25
         elif route.family in (RouteFamily.CRAFT_UPGRADE, RouteFamily.GATHER_RESOURCE):
-            # Industrious entities prefer craft/gather
             personality_bias += industry * 0.25
         elif route.family == RouteFamily.FORM_PARTY:
-            # Sociable entities prefer parties
-            personality_bias += sociability * 0.25
+            personality_bias += sociability * 0.40
         elif route.family == RouteFamily.QUEST_OPPORTUNITY:
-            # Greedy entities are drawn to quest rewards (gold, loot)
-            personality_bias += greed * 0.25
+            personality_bias += greed * 0.50
 
         # ── 4b. Plan-Advance Bonus ──────────────────────────────────────────
         # +1.5 flat bonus when this route's family matches the head BuildGoal's

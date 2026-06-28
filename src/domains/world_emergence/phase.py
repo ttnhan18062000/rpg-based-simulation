@@ -46,7 +46,9 @@ class WorldEmergencePhase:
         
         # 2. Evaluate regional pressures
         pressures = RegionalPressureModel.evaluate(state, aggregates)
-        
+        # 2b. Cross-region scarcity propagation (E21E)
+        pressures = RegionalPressureModel.propagate_cross_region(pressures, state)
+
         # 3. Evaluate resource scarcity
         scarcity = ScarcityModel.evaluate(state, aggregates)
         

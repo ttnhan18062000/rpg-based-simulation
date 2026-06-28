@@ -69,7 +69,8 @@ class Kernel:
         compile_report_path: Optional[str] = None,
         runtime_content_source: Optional[str] = None,
         catalog_fingerprint: Optional[str] = None,
-        module_fingerprints: Optional[Dict[str, str]] = None
+        module_fingerprints: Optional[Dict[str, str]] = None,
+        world_id: Optional[str] = None
     ) -> None:
         self._stopped = False
         self._profile = profile
@@ -158,6 +159,7 @@ class Kernel:
                 started_at=datetime.now(timezone.utc).isoformat(),
                 ticks_requested=profile.cadence.max_ticks if hasattr(profile, "cadence") and hasattr(profile.cadence, "max_ticks") else 100,
                 status="CREATED",
+                world_id=world_id or "unknown",
                 resolved_world_path=resolved_world_path,
                 compile_context_path=compile_context_path,
                 provenance_manifest_path=provenance_manifest_path,
