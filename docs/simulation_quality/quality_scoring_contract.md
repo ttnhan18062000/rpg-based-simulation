@@ -279,10 +279,19 @@ and cross-run comparison. Raw score is retained for full transparency.
 | **D** | −1.0 to −0.5 | Degraded — significant degenerate signals present |
 | **F** | < −1.0 | Degenerate — subsystem broken, absent, or in permanent failure mode |
 
-**Threshold calibration:** Initial thresholds are estimates. They are defined as named
-constants in `pillars.py` (`GRADE_THRESHOLDS: dict[str, float]`) and **must not be
-hardcoded inline** in any scorer or accumulator. Thresholds are tuned in ticket
-TCK-20260628-SIMQ-E7-CALIBRATE after baseline runs on canonical worlds.
+**Threshold calibration status (2026-06-29):** Current thresholds are initial estimates
+as specified above. They are loaded from `config/simulation_quality/grade_thresholds.yaml`
+and **must not be hardcoded inline** in any scorer or accumulator.
+
+Calibration was attempted in TCK-20260628-SIMQ-E7-CALIBRATE via `tools/calibrate_simq.py`.
+A blocking gap was discovered: the engine's `EventRecorder` emits internal event types
+(`quest_event`, `StrategicConcernRaised`, `InvariantViolation`) that do not match the
+normalized event type vocabulary in §5 (`action_executed`, `combat_initiated`, etc.).
+Zero events were scored in a 100-tick baseline run. See parity ledger entry
+`SIMQ-CALIBRATED-001` (status: `missing`).
+
+**Prerequisite for calibration:** A separate ticket must align engine `EventRecorder`
+output event_type names with the §5 scorer vocabulary before threshold tuning can proceed.
 
 ### 4.6 Overall Quality Score
 
