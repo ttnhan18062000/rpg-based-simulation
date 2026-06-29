@@ -861,3 +861,4 @@ TCK-20260628-E52G-SOVEREIGNTY-EVENTS,2026-06-28,done,world,Sovereignty shift eve
 TCK-20260628-E-WORLD-EVOLUTION,2026-06-28,done,world,Epic: World Evolution closed — E52E+E52F+E52G all done; 22 new tests; WORLD-105/106/107 parity
 TCK-20260628-SIMQ-INVESTIGATION,2026-06-28,inprogress,simulation,Simulation Quality Scoring Module investigation — 10-pillar design + docs/plans/sim_quality_scoring_module.md
 TCK-20260628-SIMQ-EPIC,2026-06-28,inprogress,simulation,Simulation Quality Scoring Module — epic opened; 7 child tickets created in tickets/todos/simq/
+TCK-20260628-SIMQ-E1-FOUNDATION,2026-06-29,done,simulation,Core models and data layer for simulation quality scoring — 10 pillars, ScoringWeights, PillarAccumulator, QualityReport, QualityPersistence, InProcessQualityFeed; 54 tests pass

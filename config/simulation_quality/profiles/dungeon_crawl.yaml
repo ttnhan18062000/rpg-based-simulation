@@ -1,0 +1,5 @@
+pillar_weights:
+  COMBAT: 2.0
+  FACTION: 0.1
+  SOCIAL: 0.5
+  INFORMATION: 0.5

@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: simulation
 authority: P1
 audience: agent
 ticket_id: TCK-20260628-SIMQ-E1-FOUNDATION
-phase: open
+phase: done
 date: 2026-06-28
 tags: [simulation-quality, scoring, models, data-layer]
 ---
@@ -15,7 +15,7 @@ tags: [simulation-quality, scoring, models, data-layer]
 Simulation Quality Scoring — Core Models & Data Layer
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -116,3 +116,17 @@ E7-CALIBRATE. Mark them with a comment noting they are pre-calibration estimates
 mutable `worst_events` list directly. Return a frozen copy.
 
 `ScoringContext.pillar_scores` must be a `Mapping` (read-only), never a mutable dict.
+
+### Implementation (2026-06-29)
+
+All 10 steps from plan.md implemented:
+- Config YAMLs created: scoring_weights.yaml (10 pillars, all rule keys), grade_thresholds.yaml, detection_params.yaml, plus 3 profiles (default, dungeon_crawl, urban_political)
+- `src/simulation_quality/` package created with: `__init__.py`, `pillars.py`, `score_record.py`, `weights.py`, `pillar_accumulator.py`, `quality_report.py`, `persistence.py`, `feed.py`
+- `src/observability/queue.py` modified: `quality_fn` optional param added to `QueueDrainWorker.__init__()` and called in `_run()`; all existing behavior preserved
+- `ScoringWeights` uses Pydantic v2 with `ConfigDict(frozen=True)`; `__getitem__` does flat lookup across pillar sections; `int_param()` looks up time_gates; `pillar_weight()` returns profile overrides
+- `PillarAccumulator` is thread-safe with `threading.Lock`; dedup via `_seen_event_ids`; `worst_events` capped at `max_worst_events`; `window_buffer` is `deque(maxlen=window_size)`; loop detection implemented
+- `QualityPersistence` writes atomically to `quality_report.json` via tmp-then-rename; JSONL append for `quality_scores.jsonl`
+- `InProcessQualityFeed` creates its own QueueDrainWorker with `quality_fn=hub.on_envelope` on the global queue (separate from EventRecorder's worker); `BrokerQualityFeed` is a stub raising NotImplementedError
+- 54 unit tests in `tests/simulation_quality/`: all pass
+
+Deviations from plan: None.

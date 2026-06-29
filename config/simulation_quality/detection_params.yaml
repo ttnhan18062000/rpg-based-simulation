@@ -1,0 +1,26 @@
+loop_threshold: 0.70
+window_size: 200
+max_worst_events: 100
+time_gates:
+  stasis_gate_ticks: 5
+  zero_harvest_after_tick: 100
+  zero_crafting_after_tick: 200
+  zero_trade_after_tick: 300
+  zero_combat_by_tick: 200
+  zero_diplomacy_by_tick: 200
+  zero_quests_after_tick: 200
+  zero_chronicle_after_tick: 300
+  zero_emergence_by_tick: 500
+  zero_spawn_cadence_check: 0
+  early_extinction_before_tick: 10
+  attrition_50pct_by_tick: 100
+  attrition_90pct_by_tick: 200
+  faction_monopoly_by_tick: 500
+  faction_early_extinction_by_tick: 50
+  war_without_conflict_window: 50
+  belief_dormant_window: 100
+  progression_frozen_by_tick: 200
+  xp_plateau_by_tick: 50
+  stagnation_window: 100
+  scenario_stall_default: 100
+  loop_sustained_window: 100
