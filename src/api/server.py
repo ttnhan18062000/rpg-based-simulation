@@ -41,6 +41,17 @@ def create_v2_app(profile: RuntimeProfile) -> FastAPI:
             pass
         LiveAnomalyCounter.reset_instance()
         
+        # Write quality_report.json at run-end alongside other run artifacts
+        from src.api.dependencies import get_quality_hub, get_quality_persistence
+        _hub = get_quality_hub()
+        _persistence = get_quality_persistence()
+        if _hub is not None and _persistence is not None:
+            try:
+                _report = _hub.get_quality_report()
+                _persistence.write_report(_report)
+            except Exception as _exc:
+                logger.warning("quality report write failed at shutdown: %s", _exc)
+
         manager.stop()
         logger.info("V2 API server shutting down.")
 
@@ -86,6 +97,9 @@ def create_v2_app(profile: RuntimeProfile) -> FastAPI:
 
     from src.api.routes import economy
     app.include_router(economy.router, prefix="/api/v1")
+
+    from src.simulation_quality.api import routes as quality_routes
+    app.include_router(quality_routes.router, prefix="/api/v1")
 
     from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
     from fastapi import Response

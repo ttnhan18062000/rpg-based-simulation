@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: simulation
 authority: P1
 audience: agent
 ticket_id: TCK-20260628-SIMQ-E3-SCORERS-A
-phase: open
+phase: done
 date: 2026-06-28
 tags: [simulation-quality, scoring, cognition, faction, economy, progression]
 ---
@@ -15,7 +15,7 @@ tags: [simulation-quality, scoring, cognition, faction, economy, progression]
 Simulation Quality Scoring — Scorers Batch A (Cognition, Faction, Economy, Progression)
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -85,3 +85,23 @@ finalizing the scorer.
 from `FactionDecisionPhase.execute()` and `FactionAwarenessService` before registering
 event_types. If these events are not currently emitted, the scorer must document this as
 a prerequisite (event emission, not scoring logic, is the gap).
+
+## Implementation Notes
+Implemented CognitionScorer (belief updates, divergence detection, dormancy, omniscience collapse), FactionScorer (diplomacy, alliances, territory, faction extinction), EconomyScorer (all economy events; ecology_cycle_completed intentionally excluded per SQ-08 conflict note), ProgressionScorer (XP scaling, level milestones, all plateau types). All scorers follow no-numeric-literals rule.
+
+## Test Summary
+60 new tests passing. Tests cover all positive, negative, time-gated, null-return, and tag cases for all four scorers. Ecology exclusion test explicitly verifies event_type not in EconomyScorer.EVENT_TYPES.
+
+## Files Changed
+- `src/simulation_quality/scorers/cognition.py` (new)
+- `src/simulation_quality/scorers/faction.py` (new)
+- `src/simulation_quality/scorers/economy.py` (new)
+- `src/simulation_quality/scorers/progression.py` (new)
+- `tests/simulation_quality/test_cognition_scorer.py` (new)
+- `tests/simulation_quality/test_faction_scorer.py` (new)
+- `tests/simulation_quality/test_economy_scorer.py` (new)
+- `tests/simulation_quality/test_progression_scorer.py` (new)
+- `docs/parity_ledger/infrastructure.yaml` (INFRA-240 through INFRA-243)
+
+## Completion Summary
+Four pillar scorers implemented covering all §5 contract rules for COGNITION, FACTION, ECONOMY (ecology excluded per SQ-08), and PROGRESSION. All 60 tests pass. No imports from engine/domains/systems.

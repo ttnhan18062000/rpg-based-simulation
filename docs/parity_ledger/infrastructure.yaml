@@ -2875,3 +2875,216 @@
   test_path: tests/simulation_quality/test_accumulator.py::test_duplicate_event_id_scored_once
   divergence_note: null
   support_boundary: null
+- id: INFRA-236
+  text: "QualityHub.on_envelope() routes ObservabilityEventEnvelope to registered PillarScorers
+    via SCORER_REGISTRY (event_type → list[PillarScorer]); catches all scorer exceptions
+    at WARNING; QUALITY_SCORING_DISABLED=1 short-circuits immediately."
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/simulation_quality/quality_hub.py::QualityHub.on_envelope (disabled check,
+    registry lookup, try/except per scorer); src/simulation_quality/scorers/base.py::PillarScorer
+  proof_type: null
+  test_path: tests/simulation_quality/test_quality_hub_integration.py
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-237
+  text: "AgencyScorer covers all contract §5 AGENCY & ACTION rules: action_taken,
+    route_novelty, commitment_complete, project_done, navigation_active, defer_idle,
+    stasis_N (time-gated), rejection_cascade, rejection_cascade_sustained, project_cycle,
+    population_stasis. All deltas from ScoringWeights; no numeric literals."
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/simulation_quality/scorers/agency.py::AgencyScorer.score;
+    config/simulation_quality/scoring_weights.yaml AGENCY section
+  proof_type: null
+  test_path: tests/simulation_quality/test_agency_scorer.py
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-238
+  text: "CombatScorer covers all contract §5 COMBAT rules: combat_active, combat_resolved,
+    survival_tension, tactical_variety (per unique modifier), attrition, early_extinction
+    (time-gated), attrition_spiral, extinction_degenerate, combat_dormant, combat_hard_law.
+    All deltas from ScoringWeights."
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/simulation_quality/scorers/combat.py::CombatScorer.score;
+    config/simulation_quality/scoring_weights.yaml COMBAT section
+  proof_type: null
+  test_path: tests/simulation_quality/test_combat_scorer.py
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-239
+  text: "BrokerQualityFeed.start() creates RedisStreamConsumer, wraps SimulationEvent
+    → ObservabilityEventEnvelope via from_simulation_event(), calls hub.on_envelope()
+    from a daemon thread; skips gracefully (health=unavailable) when Redis unreachable."
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/simulation_quality/feed.py::BrokerQualityFeed.start (connect check, _consume_loop
+    thread, ObservabilityEventEnvelope.from_simulation_event conversion)
+  proof_type: null
+  test_path: tests/simulation_quality/test_feed.py::test_broker_feed_skips_gracefully_when_redis_unavailable
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-240
+  text: "CognitionScorer covers all contract §5 COGNITION rules: belief_active, subjective_divergence,
+    knowledge_sharpening, cognition_replan, self_model_active, zero_knowledge_decision,
+    knowledge_rot, goal_lock_no_cognition, belief_system_dormant, omniscience_collapse."
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/simulation_quality/scorers/cognition.py::CognitionScorer.score
+  proof_type: null
+  test_path: tests/simulation_quality/test_cognition_scorer.py
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-241
+  text: "FactionScorer covers all contract §5 FACTION & MILITARY rules; does NOT score
+    entity-level combat events (those are CombatScorer). Verified ecology and combat
+    event_type exclusion."
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/simulation_quality/scorers/faction.py::FactionScorer.score
+  proof_type: null
+  test_path: tests/simulation_quality/test_faction_scorer.py
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-242
+  text: "EconomyScorer covers §5 ECONOMY rules; ecology_cycle_completed intentionally
+    excluded (owned by WorldDynamicsScorer per SQ-08 conflict note). Verified by test
+    TestEcologyExclusion."
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/simulation_quality/scorers/economy.py::EconomyScorer.EVENT_TYPES
+    (ecology_cycle_completed absent); EconomyScorer.score returns None for that event
+  proof_type: null
+  test_path: tests/simulation_quality/test_economy_scorer.py::TestEcologyExclusion::test_ecology_cycle_not_scored
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-243
+  text: "ProgressionScorer covers all contract §5 PROGRESSION rules including XP-per-10
+    scaling, level cap detection, all plateau types (xp_freeze, skill_silence, xp_rate_zero,
+    trait_rate_zero)."
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/simulation_quality/scorers/progression.py::ProgressionScorer.score
+  proof_type: null
+  test_path: tests/simulation_quality/test_progression_scorer.py
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-244
+  text: "SocialScorer covers all contract §5 SOCIAL rules: cooperation, group forming/enforcement,
+    contracts (accepted/honored/complete/broken/expired), reputation shifting and flat,
+    relationship_depth. alliance_formed intentionally excluded (FactionScorer owns it)."
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/simulation_quality/scorers/social.py::SocialScorer.score
+  proof_type: null
+  test_path: tests/simulation_quality/test_social_scorer.py::TestAllianceExclusion::test_alliance_formed_not_in_event_types
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-245
+  text: "InformationScorer covers all contract §5 INFORMATION & BELIEF rules: belief_active,
+    intel_quality_up/intel_complexity, knowledge_economy_active/dormant, info_has_impact,
+    belief_pipeline_deaf, subjective_divergence, omniscience_collapse, paid_info_memory_failure.
+    paid_information_transaction scored here (not in EconomyScorer) per SQ-16."
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/simulation_quality/scorers/information.py::InformationScorer.score
+  proof_type: null
+  test_path: tests/simulation_quality/test_information_scorer.py
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-246
+  text: "WorldDynamicsScorer owns ecology_cycle_completed (not EconomyScorer) per SQ-08
+    conflict note. Covers calamity, boss/raid spawning, region transform/trauma/ownership,
+    ecology, spawn cadence, demographics, camp construction, hazard. threat_evolved and
+    node_recharged intentionally return None (no delta defined)."
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/simulation_quality/scorers/world_dynamics.py::WorldDynamicsScorer.EVENT_TYPES
+  proof_type: null
+  test_path: tests/simulation_quality/test_world_dynamics_scorer.py::TestEcologyOwnership
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-247
+  text: "NarrativeScorer covers all contract §5 NARRATIVE rules: quest lifecycle (active/
+    resolved/failed/dormant), chronicle history (history_forming/history_silent), emergence,
+    scenario objectives, hero_death_unrecorded. chronicle_entry_created emitted as disk
+    JSONL only (not event bus) is a known gap documented in scorer docstring."
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/simulation_quality/scorers/narrative.py::NarrativeScorer.score
+  proof_type: null
+  test_path: tests/simulation_quality/test_narrative_scorer.py
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-248
+  text: "Quality REST API (5 endpoints) registered at /api/v1/quality/. All handlers
+    have response_model=Dict[str,Any] per D13 F2 requirement. Disabled-state returns
+    {enabled:false} when QUALITY_SCORING_DISABLED=1. 404 on unknown pillar_id."
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/simulation_quality/api/routes.py
+  proof_type: null
+  test_path: tests/simulation_quality/test_api_routes.py
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-249
+  text: "quality_report.json written at server shutdown in api/server.py lifespan
+    teardown, immediately before manager.stop(). Uses get_quality_hub()+get_quality_persistence()
+    injected via src/api/dependencies.py. Failure is WARNING-logged only (never crashes shutdown)."
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/api/server.py (lifespan teardown, lines ~44-52)
+  proof_type: null
+  test_path: tests/simulation_quality/test_api_routes.py
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-250
+  text: "Full SimQ test suite: 284 tests total (4 skipped: 2 grade regression anchors UNKNOWN,
+    2 broker tests without REDIS_AVAILABLE). Coverage: all 10 scorer unit test files,
+    hub integration, feed integration, regression anchors, performance (timeit), 22-scenario
+    coverage table (SQ-01 through SQ-22). Performance limits: scorer < 0.1ms, report < 50ms,
+    worst_events ≤ 100, window_buffer ≤ 200."
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: tests/simulation_quality/
+  proof_type: null
+  test_path: tests/simulation_quality/test_scenario_coverage.py
+  divergence_note: null
+  support_boundary: null
+- id: SIMQ-CALIBRATED-001
+  text: "Grade thresholds in grade_thresholds.yaml (S=2.0 A=0.5 B=0.0 C=-0.5 D=-1.0) are
+    initial estimates. Calibration run attempted: engine emits event types (quest_event,
+    StrategicConcernRaised, InvariantViolation) that do not match scorer EVENT_TYPES
+    (action_executed, combat_initiated, etc.). Zero events scored in 100-tick baseline run.
+    Thresholds cannot be calibrated until engine event type names are aligned with scorer
+    contract. See tools/calibrate_simq.py for the calibration runner. File a separate
+    investigation ticket for event type alignment."
+  status: missing
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: "tools/calibrate_simq.py; data/calibration/sandbox_world_seed42_100t/quality_report.json"
+  proof_type: null
+  test_path: null
+  divergence_note: "Calibration blocked: engine JSONL event types do not match contract §5 event_types"
+  support_boundary: null

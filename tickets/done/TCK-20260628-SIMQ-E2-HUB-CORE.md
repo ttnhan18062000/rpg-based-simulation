@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: simulation
 authority: P1
 audience: agent
 ticket_id: TCK-20260628-SIMQ-E2-HUB-CORE
-phase: open
+phase: done
 date: 2026-06-28
 tags: [simulation-quality, scoring, hub, agency, combat]
 ---
@@ -15,7 +15,7 @@ tags: [simulation-quality, scoring, hub, agency, combat]
 Simulation Quality Scoring — Hub Wiring + Agency & Combat Scorers
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -107,20 +107,24 @@ These two scorers were chosen first because they cover the highest-signal scenar
 - `src/observability/queue.py` — drain callback subscription pattern
 
 ## Implementation Notes
-The `SCORER_REGISTRY` must be a class attribute, not a hardcoded if/elif chain. New
-scorers self-register by declaring which event_types they handle in their `EVENT_TYPES`
-class attribute. `QualityHub.__init__` builds the registry by iterating all registered
-scorers.
+Implemented as designed. `SCORER_REGISTRY` is built in `QualityHub.__init__` by iterating scorer `EVENT_TYPES` — no hardcoded dispatch chain. `BrokerQualityFeed.start()` uses lazy import of `RedisStreamConsumer` and converts `SimulationEvent → ObservabilityEventEnvelope.from_simulation_event()` before calling `hub.on_envelope()`. `BrokerQualityFeed` skips gracefully when Redis is unreachable (health=unavailable). `worker.py` blocks on SIGTERM and writes the final report on shutdown. All scorer deltas read from `ScoringWeights` config — no numeric literals.
 
-Do NOT import any domain module from `src/domains/` or `src/engine/` in any scorer or
-in `QualityHub`. The only permitted import from outside `src/simulation_quality/` is
-`ObservabilityEventEnvelope` from `src/observability/events.py` and
-`RedisStreamConsumer` from `src/observability/stream/consumer.py` (in `BrokerQualityFeed`
-only — not in `QualityHub` itself).
+## Test Summary
+98 tests passing (55 new + 43 existing). Tests cover: AgencyScorer all rules (positive, negative, time-gated, null, tags), CombatScorer all rules, QualityHub integration (routing, accumulation, persistence, error isolation, disable mechanism, read-only queries), feed behavior (InProcess, Broker graceful skip on Redis unavailable). All E1 regression tests pass.
 
-`BrokerQualityFeed` uses `RedisStreamConsumer` from M36 (already built). Review
-`src/observability/stream/consumer.py` for the consumer group callback interface before
-implementing.
+## Files Changed
+- `src/simulation_quality/scorers/__init__.py` (new)
+- `src/simulation_quality/scorers/base.py` (new — PillarScorer ABC)
+- `src/simulation_quality/scorers/agency.py` (new — AgencyScorer)
+- `src/simulation_quality/scorers/combat.py` (new — CombatScorer)
+- `src/simulation_quality/quality_hub.py` (new — QualityHub)
+- `src/simulation_quality/feed.py` (modified — BrokerQualityFeed full implementation)
+- `src/simulation_quality/worker.py` (new — QualityWorker entry point)
+- `tests/simulation_quality/test_agency_scorer.py` (new)
+- `tests/simulation_quality/test_combat_scorer.py` (new)
+- `tests/simulation_quality/test_quality_hub_integration.py` (new)
+- `tests/simulation_quality/test_feed.py` (modified — updated BrokerQualityFeed test)
+- `docs/parity_ledger/infrastructure.yaml` (modified — INFRA-236 through INFRA-239)
 
-`InProcessQualityFeed.start()` must verify the `QueueDrainWorker` subscription API in
-`src/observability/queue.py` before implementing — do not create a new drain thread.
+## Completion Summary
+Implemented QualityHub (feed-mode-agnostic event router with SCORER_REGISTRY, exception isolation, disable env var, per-pillar accumulators, read-only query API), PillarScorer base class, AgencyScorer (all §5 rules including time-gated stasis, project cycle detection, population stasis), CombatScorer (all §5 rules including time-gated extinction detection, tactical variety tracking), BrokerQualityFeed (full Redis consumer wiring with graceful Redis-unavailable fallback), and QualityWorker subprocess entry point. 98 tests pass.

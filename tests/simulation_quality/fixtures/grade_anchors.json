@@ -1,0 +1,36 @@
+{
+  "_note": "Regression anchors generated from canonical scenario runs. Update by running: python3 tools/generate_grade_anchors.py",
+  "_instructions": "If a pillar grade moves by more than one letter from the anchor, the test fails. Known-broken systems may anchor at F.",
+  "sandbox_world": {
+    "seed": 42,
+    "ticks": 100,
+    "pillars": {
+      "AGENCY": "UNKNOWN",
+      "COMBAT": "UNKNOWN",
+      "ECONOMY": "UNKNOWN",
+      "COGNITION": "UNKNOWN",
+      "FACTION": "UNKNOWN",
+      "PROGRESSION": "UNKNOWN",
+      "SOCIAL": "UNKNOWN",
+      "INFORMATION": "UNKNOWN",
+      "WORLD": "UNKNOWN",
+      "NARRATIVE": "UNKNOWN"
+    }
+  },
+  "urban_political": {
+    "seed": 42,
+    "ticks": 100,
+    "pillars": {
+      "AGENCY": "UNKNOWN",
+      "COMBAT": "UNKNOWN",
+      "ECONOMY": "UNKNOWN",
+      "COGNITION": "UNKNOWN",
+      "FACTION": "UNKNOWN",
+      "PROGRESSION": "UNKNOWN",
+      "SOCIAL": "UNKNOWN",
+      "INFORMATION": "UNKNOWN",
+      "WORLD": "UNKNOWN",
+      "NARRATIVE": "UNKNOWN"
+    }
+  }
+}

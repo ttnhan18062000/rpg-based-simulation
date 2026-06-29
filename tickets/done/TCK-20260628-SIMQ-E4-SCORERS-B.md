@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: simulation
 authority: P1
 audience: agent
 ticket_id: TCK-20260628-SIMQ-E4-SCORERS-B
-phase: open
+phase: done
 date: 2026-06-28
 tags: [simulation-quality, scoring, social, information, world-dynamics, narrative]
 ---
@@ -15,7 +15,7 @@ tags: [simulation-quality, scoring, social, information, world-dynamics, narrati
 Simulation Quality Scoring — Scorers Batch B (Social, Information, World Dynamics, Narrative)
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -88,3 +88,23 @@ content library. The `zero_quest_starts` penalty after tick 200 is a valid score
 the world actually has quest definitions. The scorer should check `context` for quest
 definition count if available, or document that the penalty fires unconditionally and
 requires the traceability path (§5 NARRATIVE) to diagnose false positives from empty quest config.
+
+## Implementation Notes
+Implemented SocialScorer (cooperation, groups, contracts, reputation), InformationScorer (beliefs, intel, paid info, divergence), WorldDynamicsScorer (calamity/boss/raid/ecology/trauma/demographics), NarrativeScorer (quests, chronicles, scenarios, hero death). All scorers use config key names from YAML — no numeric literals. ecology_cycle_completed verified as WorldDynamicsScorer-only. Weight key discrepancies found and corrected against detection_params.yaml (e.g. zero_quests_after_tick, zero_chronicle_after_tick).
+
+## Test Summary
+70 tests passing. Ecology ownership conflict (SQ-08) tested by cross-class assertion in test_world_dynamics_scorer.py. Alliance exclusion tested in test_social_scorer.py. All dormancy gates, one-shot flags, and null returns covered.
+
+## Files Changed
+- `src/simulation_quality/scorers/social.py` (new)
+- `src/simulation_quality/scorers/information.py` (new)
+- `src/simulation_quality/scorers/world_dynamics.py` (new)
+- `src/simulation_quality/scorers/narrative.py` (new)
+- `tests/simulation_quality/test_social_scorer.py` (new)
+- `tests/simulation_quality/test_information_scorer.py` (new)
+- `tests/simulation_quality/test_world_dynamics_scorer.py` (new)
+- `tests/simulation_quality/test_narrative_scorer.py` (new)
+- `docs/parity_ledger/infrastructure.yaml` (INFRA-244 through INFRA-247)
+
+## Completion Summary
+All four §5 pillar scorers for Batch B implemented and tested. ecology_cycle_completed correctly routed to WorldDynamicsScorer. chronicle_entry_created bus-gap documented. All 70 tests pass.

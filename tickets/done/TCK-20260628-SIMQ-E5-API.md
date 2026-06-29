@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: simulation
 authority: P1
 audience: agent
 ticket_id: TCK-20260628-SIMQ-E5-API
-phase: open
+phase: done
 date: 2026-06-28
 tags: [simulation-quality, scoring, api, rest]
 ---
@@ -15,7 +15,7 @@ tags: [simulation-quality, scoring, api, rest]
 Simulation Quality Scoring — REST API & Post-Run Artifact Generation
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -79,3 +79,20 @@ required by the acceptance criteria and addresses the D13 F2 finding proactively
 For post-run artifact timing: locate where `manifest.json` is written for replay
 (observability_artifact_contract.md §3) and add `QualityPersistence.write_report()`
 immediately after. This ensures both artifacts are written at the same lifecycle point.
+
+## Implementation Notes
+Created src/simulation_quality/api/routes.py with 5 endpoints; response_model= on all handlers per D13 F2. Added set/get_quality_hub and set/get_quality_persistence to src/api/dependencies.py. Router included in server.py. quality_report.json written at lifespan teardown via write_report(). Coupling rule preserved: simulation_quality only imports from fastapi and api.dependencies.
+
+## Test Summary
+14 integration tests covering all 5 endpoints: enabled responses, disabled state, 404 for unknown pillar, alert detection for D/F grade and loop_detected, full report shape.
+
+## Files Changed
+- `src/simulation_quality/api/__init__.py` (new)
+- `src/simulation_quality/api/routes.py` (new)
+- `src/api/dependencies.py` (set/get_quality_hub, set/get_quality_persistence added)
+- `src/api/server.py` (router include + write_report at shutdown)
+- `tests/simulation_quality/test_api_routes.py` (new)
+- `docs/parity_ledger/infrastructure.yaml` (INFRA-248 through INFRA-249)
+
+## Completion Summary
+5 REST endpoints live at /api/v1/quality/{status,pillars,pillars/{id},alerts,report}. All endpoints have response_model= per D13 F2 requirement. quality_report.json written at shutdown. All 14 tests pass.

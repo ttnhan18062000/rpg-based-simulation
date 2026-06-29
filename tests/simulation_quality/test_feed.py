@@ -80,11 +80,14 @@ def test_inprocess_feed_health_when_stopped():
     assert health["status"] == "STOPPED"
 
 
-def test_broker_feed_start_raises_not_implemented():
+def test_broker_feed_skips_gracefully_when_redis_unavailable():
     hub = _MockHub()
-    feed = BrokerQualityFeed()
-    with pytest.raises(NotImplementedError):
-        feed.start(hub)
+    feed = BrokerQualityFeed(broker_url="redis://127.0.0.1:19999")
+    # Should not raise — sets health to "unavailable" when Redis is not reachable
+    feed.start(hub)
+    health = feed.health()
+    assert health["mode"] == "broker"
+    assert health["status"] == "unavailable"
 
 
 def test_broker_feed_stop_is_noop():
