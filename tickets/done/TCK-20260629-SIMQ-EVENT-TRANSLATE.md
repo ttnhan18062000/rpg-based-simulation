@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: simulation
 authority: P0
 audience: agent
 ticket_id: TCK-20260629-SIMQ-EVENT-TRANSLATE
-phase: open
+phase: done
 date: 2026-06-29
 tags: [simq, observability, event-gap, calibration]
 ---
@@ -15,7 +15,7 @@ tags: [simq, observability, event-gap, calibration]
 SimQ: Event Type Translation Table — Remap Engine Events to Contract Vocabulary
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -110,3 +110,10 @@ traceability.
 - Conditional mappings (quest status, lifecycle action) require a two-step lookup:
   type → callable that takes env and returns contract type string
 - No try/except around translation — if payload is malformed, fall through to original type
+
+## Files Changed
+- `src/simulation_quality/quality_hub.py` — added `_TRANSLATE_SIMPLE`, `_TRANSLATE_CONDITIONAL`, `_translate()` staticmethod; call in `on_envelope()`
+- `tests/simulation_quality/test_quality_hub_event_translation.py` (new) — 34 tests for all mappings
+
+## Completion Summary
+Translation table implemented in QualityHub._translate(). All 16 engine→contract mappings covered. Calibration now scores NARRATIVE=A (16 events) and overall=B from 100-tick baseline. 34 tests passing. Parity entry SIMQ-CALIBRATED-001 updated with partial status and test_path.

@@ -1,9 +1,10 @@
 from __future__ import annotations
+import dataclasses
 import logging
 import os
 import threading
 from collections import Counter
-from typing import Any, Optional
+from typing import Any, Callable, Optional
 
 from src.observability.events import ObservabilityEventEnvelope
 from src.simulation_quality.pillar_accumulator import PillarAccumulator
@@ -14,6 +15,61 @@ from src.simulation_quality.scorers.base import PillarScorer
 from src.simulation_quality.weights import ScoringWeights
 
 logger = logging.getLogger(__name__)
+
+# Direct one-to-one engine event_type → contract event_type remaps.
+_TRANSLATE_SIMPLE: dict[str, str] = {
+    "combat_kill":              "entity_killed",
+    "gold_transaction":         "gold_transferred",
+    "StrategicObjectiveChanged": "strategic_goal_changed",
+    "StrategicConcernRaised":   "strategic_goal_changed",
+    "StrategicDetourCreated":   "project_started",
+    "StrategicLeadExhausted":   "knowledge_default_fallback",
+}
+
+
+def _translate_quest_event(env: ObservabilityEventEnvelope) -> str:
+    status = (env.payload or {}).get("status", "started")
+    if status == "completed":
+        return "quest_completed"
+    if status == "failed":
+        return "quest_failed"
+    return "quest_started"
+
+
+def _translate_lifecycle(env: ObservabilityEventEnvelope) -> str:
+    action = (env.payload or {}).get("action", "")
+    if action == "level_up":
+        return "level_up"
+    if action in ("despawn", "death"):
+        return "entity_killed"
+    return env.event_type  # no translation
+
+
+def _translate_strategic_project(env: ObservabilityEventEnvelope) -> str:
+    reason = str((env.payload or {}).get("reason", "")).lower()
+    if "complet" in reason:
+        return "project_completed"
+    if "abandon" in reason:
+        return "project_abandoned"
+    return "project_started"
+
+
+def _translate_invariant(env: ObservabilityEventEnvelope) -> str:
+    law_id = str((env.payload or {}).get("law_id", "")).upper()
+    if law_id.startswith("COMBAT"):
+        return "combat_hard_law_violation"
+    if law_id.startswith("CONSERVATION"):
+        return "conservation_law_violated"
+    return env.event_type  # unknown violation — no translation
+
+
+# Payload-conditional translators keyed by engine event_type.
+_TRANSLATE_CONDITIONAL: dict[str, Callable[[ObservabilityEventEnvelope], str]] = {
+    "quest_event":             _translate_quest_event,
+    "lifecycle":               _translate_lifecycle,
+    "StrategicProjectChanged": _translate_strategic_project,
+    "InvariantViolation":      _translate_invariant,
+}
 
 
 class QualityHub:
@@ -44,9 +100,33 @@ class QualityHub:
             pid: PillarAccumulator(pid, weights) for pid in PillarId
         }
 
+    @staticmethod
+    def _translate(env: ObservabilityEventEnvelope) -> ObservabilityEventEnvelope:
+        """Remap engine event_type to contract vocabulary before scorer dispatch.
+
+        Original event_type is preserved in payload["_original_event_type"] for traceability.
+        Returns the original envelope unchanged when no mapping applies.
+        """
+        original = env.event_type
+        if original in _TRANSLATE_SIMPLE:
+            contract_type = _TRANSLATE_SIMPLE[original]
+        elif original in _TRANSLATE_CONDITIONAL:
+            contract_type = _TRANSLATE_CONDITIONAL[original](env)
+        else:
+            return env
+
+        if contract_type == original:
+            return env
+
+        new_payload = dict(env.payload) if env.payload else {}
+        new_payload["_original_event_type"] = original
+        return dataclasses.replace(env, event_type=contract_type, payload=new_payload)
+
     def on_envelope(self, envelope: ObservabilityEventEnvelope) -> None:
         if self._disabled:
             return
+
+        envelope = self._translate(envelope)
 
         with self._lock:
             if envelope.tick > self._tick:

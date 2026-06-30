@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: simulation
 authority: P1
 audience: agent
 ticket_id: TCK-20260629-SIMQ-EMIT-STATE-DIFF
-phase: open
+phase: done
 date: 2026-06-29
 tags: [simq, observability, event-gap, event-extractor]
 ---
@@ -15,7 +15,7 @@ tags: [simq, observability, event-gap, event-extractor]
 SimQ: Extend EventExtractor with State-Diff Events for COMBAT, PROGRESSION, ECONOMY Pillars
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -115,3 +115,10 @@ Extend `src/observability/event_extractor.py` to detect and emit:
 - `attrition_threshold_crossed` requires run-level state — EventExtractor is currently
   stateless. Add a thin `EventExtractorState` accumulator passed alongside, or use a
   class-level counter (document trade-off in implementation notes)
+
+## Files Changed
+- `src/observability/event_extractor.py` — added _NEAR_DEATH_THRESHOLD; emit combat_initiated, near_death_survival, xp_granted, level_up, demographic_birth, demographic_mortality, resource_node_depleted, resource_node_regenerated
+- `tests/unit/observability/test_event_extractor_simq.py` (new) — 21 tests
+
+## Completion Summary
+Extended EventExtractor.extract() with 8 new SimQ contract event types derivable from state diff. 21 new tests passing. No regressions in 301 SimQ tests.

@@ -3074,17 +3074,18 @@
   support_boundary: null
 - id: SIMQ-CALIBRATED-001
   text: "Grade thresholds in grade_thresholds.yaml (S=2.0 A=0.5 B=0.0 C=-0.5 D=-1.0) are
-    initial estimates. Calibration run attempted: engine emits event types (quest_event,
-    StrategicConcernRaised, InvariantViolation) that do not match scorer EVENT_TYPES
-    (action_executed, combat_initiated, etc.). Zero events scored in 100-tick baseline run.
-    Thresholds cannot be calibrated until engine event type names are aligned with scorer
-    contract. See tools/calibrate_simq.py for the calibration runner. File a separate
-    investigation ticket for event type alignment."
+    initial estimates. Calibration progressively operational: QualityHub._translate() remaps
+    engine event types (TCK-20260629-SIMQ-EVENT-TRANSLATE); EventExtractor emits 8 state-diff
+    events (combat_initiated, near_death_survival, xp_granted, level_up, resource_node_depleted,
+    resource_node_regenerated, demographic_birth, demographic_mortality — TCK-20260629-SIMQ-EMIT-STATE-DIFF);
+    route_selected and action_executed from EntityUpdate.property_updates (TCK-20260629-SIMQ-EMIT-AGENCY).
+    100-tick baseline: NARRATIVE=A, AGENCY/LIFECYCLE/COMBAT partially active. Full calibration
+    requires remaining EMIT tickets (COGNITION, WORLD, ECONOMY, SOCIAL-FACTION, NARRATIVE)."
   status: missing
   priority: P1
   legacy_evidence: null
-  v2_evidence: "tools/calibrate_simq.py; data/calibration/sandbox_world_seed42_100t/quality_report.json"
+  v2_evidence: "src/simulation_quality/quality_hub.py:_translate(); src/observability/event_extractor.py (SimQ events); tools/calibrate_simq.py; data/calibration/sandbox_world_seed42_100t/quality_report.json"
   proof_type: null
-  test_path: null
-  divergence_note: "Calibration blocked: engine JSONL event types do not match contract §5 event_types"
+  test_path: "tests/simulation_quality/test_quality_hub_event_translation.py; tests/unit/observability/test_event_extractor_simq.py; tests/unit/observability/test_event_extractor_agency.py"
+  divergence_note: "Partial: NARRATIVE=A via translation; LIFECYCLE/COMBAT/AGENCY active; 5 pillars still blocked on remaining EMIT tickets"
   support_boundary: null
