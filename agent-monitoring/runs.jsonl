@@ -415,3 +415,4 @@
 {"run_id":"TCK-20260630-SIMQ-TRANSLATE","start_ts":"2026-06-30T16:50:47Z","end_ts":"2026-06-30T16:50:47Z","workflow":"implement-ticket","tier":"hotfix","final_status":"DONE","agent_count":6}
 {"run_id":"TCK-20260630-SIMQ-TIMEGATE","start_ts":"2026-06-30T17:24:38Z","end_ts":"2026-06-30T17:24:38Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":9}
 {"run_id":"TCK-20260630-SIMQ-ANCHORS","start_ts":"2026-06-30T17:41:17Z","end_ts":"2026-06-30T17:41:17Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":9}
+{"run_id":"FOLDER-tickets-todos-simq-audit-","start_ts":"2026-06-30T16:20:20Z","end_ts":"2026-06-30T17:42:12Z","workflow":"implement-epic","tier":"epic","final_status":"DONE","agent_count":5}
