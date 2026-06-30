@@ -3,9 +3,14 @@
 Usage:
     python3 tools/calibrate_simq.py --ticks 100 --seed 42 --name sandbox_world
     python3 tools/calibrate_simq.py --ticks 500 --seed 137 --name urban_political
+    python3 tools/calibrate_simq.py --ticks 200 --seed 42 --name dungeon_crawl --profile dungeon_crawl
 
 Runs the engine for N ticks, then replays simulation_events.jsonl through QualityHub.
 Writes quality_report.json to data/calibration/{name}_seed{seed}_{ticks}t/.
+
+When --name matches a compiled world under data/worlds/{name}/resolved/world.resolved.yaml,
+that WorldSpec is loaded and compiled via WorldCompiler.compile() before the simulation run.
+If no resolved spec exists, a generic hero + goblins scenario is used.
 
 After running all 8 canonical scenarios, analyze normalized_score distributions and
 update config/simulation_quality/grade_thresholds.yaml accordingly.
@@ -24,13 +29,25 @@ logger = logging.getLogger("calibrate_simq")
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 
-def _load_weights():
+def _resolve_profile(name: str) -> str:
+    """Return the profile name to use for the given world name.
+
+    Defaults to ``name`` if a matching profile file exists under
+    ``config/simulation_quality/profiles/``, otherwise ``'default'``.
+    """
+    profile_path = os.path.join(
+        "config", "simulation_quality", "profiles", f"{name}.yaml"
+    )
+    return name if os.path.exists(profile_path) else "default"
+
+
+def _load_weights(profile: str = "default"):
     from src.simulation_quality.weights import ScoringWeights
     return ScoringWeights.load(
         weights_path="config/simulation_quality/scoring_weights.yaml",
         grade_path="config/simulation_quality/grade_thresholds.yaml",
         detection_path="config/simulation_quality/detection_params.yaml",
-        profile="default",
+        profile=profile,
     )
 
 
@@ -65,8 +82,47 @@ def _build_hub(weights, run_dir: str, run_id: str):
     return hub, persistence
 
 
-def _run_engine(seed: int, ticks: int, entity_count: int = 10) -> tuple[str, float]:
-    """Drive the kernel tick_once() N times; return (run_dir, elapsed_sec)."""
+def _load_world_state(name: str, seed: int):
+    """Load and compile a WorldSpec for the given world name.
+
+    Looks for ``data/worlds/{name}/resolved/world.resolved.yaml``.
+    Returns ``(AuthoritativeState, compile_report)`` on success, or
+    ``(None, None)`` if the world is not found or compilation fails.
+    """
+    resolved_path = os.path.join("data", "worlds", name, "resolved", "world.resolved.yaml")
+    if not os.path.exists(resolved_path):
+        logger.info("No resolved world spec found for '%s' at %s — using generic simulation", name, resolved_path)
+        return None, None
+
+    try:
+        import yaml
+        from src.worldbuilding.schema import WorldSpec
+        from src.worldbuilding.compiler import WorldCompiler
+
+        with open(resolved_path, encoding="utf-8") as fh:
+            raw = yaml.safe_load(fh)
+        spec = WorldSpec(**raw)
+        state, report = WorldCompiler.compile(spec, seed)
+        logger.info(
+            "Loaded world '%s': %d entities, %d regions, %d resource nodes",
+            name,
+            report["entity_count"],
+            report["region_count"],
+            report["resource_node_count"],
+        )
+        return state, report
+    except Exception as exc:
+        logger.warning("Failed to load/compile world '%s': %s — falling back to generic simulation", name, exc)
+        return None, None
+
+
+def _run_engine(name: str, seed: int, ticks: int, entity_count: int = 10) -> tuple[str, float]:
+    """Drive the kernel tick_once() N times; return (run_dir, elapsed_sec, run_id).
+
+    If a compiled world spec exists for ``name``, loads it via WorldCompiler and
+    injects the resulting AuthoritativeState into the Kernel.  Falls back to a
+    generic hero + goblins scenario when no world is found.
+    """
     from src.engine.kernel import Kernel
     from src.core.state import AuthoritativeState
     from src.platform.rng import DeterministicRNG
@@ -74,16 +130,25 @@ def _run_engine(seed: int, ticks: int, entity_count: int = 10) -> tuple[str, flo
     from src.config.profiles import PROD_SMALL
 
     rng = DeterministicRNG(seed)
-    gen = EntityGenerator(seed)
 
-    entities = {}
-    hero = gen.spawn_hero((64.0, 64.0))
-    entities[hero.id] = hero
-    for i in range(entity_count - 1):
-        monster = gen.spawn_goblin((60.0 + i, 60.0 + i))
-        entities[monster.id] = monster
+    # Attempt to load a compiled world spec
+    state, compile_report = _load_world_state(name, seed)
 
-    state = AuthoritativeState(tick=0, seed=seed, entities=entities)
+    if state is None:
+        # Generic fallback: hero + staggered goblins
+        # Goblins are placed in a 5-wide grid starting at (20, 20), well clear of
+        # the hero at (64, 64) — avoids LAW-OCCUPANCY-COLLISION.
+        gen = EntityGenerator(seed)
+        entities = {}
+        hero = gen.spawn_hero((64.0, 64.0))
+        entities[hero.id] = hero
+        for i in range(entity_count - 1):
+            gx = 20.0 + (i % 5) * 8.0
+            gy = 20.0 + (i // 5) * 8.0
+            monster = gen.spawn_goblin((gx, gy))
+            entities[monster.id] = monster
+        state = AuthoritativeState(tick=0, seed=seed, entities=entities)
+
     kernel = Kernel(profile=PROD_SMALL, state=state, rng=rng)
 
     run_id = getattr(kernel, "_run_id", None)
@@ -142,17 +207,39 @@ def main():
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--name", type=str, default="generic")
     parser.add_argument("--entities", type=int, default=10)
+    parser.add_argument(
+        "--profile",
+        type=str,
+        default=None,
+        help=(
+            "Quality scoring profile name (maps to "
+            "config/simulation_quality/profiles/{profile}.yaml). "
+            "Defaults to --name if a matching profile exists, else 'default'."
+        ),
+    )
+    parser.add_argument(
+        "--output",
+        type=str,
+        default=None,
+        help="Override the calibration output directory (default: data/calibration/{name}_seed{seed}_{ticks}t).",
+    )
     args = parser.parse_args()
 
+    # Resolve profile: explicit > name-based > default
+    if args.profile is not None:
+        profile = args.profile
+    else:
+        profile = _resolve_profile(args.name)
+
     run_tag = f"{args.name}_seed{args.seed}_{args.ticks}t"
-    cal_dir = os.path.join("data", "calibration", run_tag)
+    cal_dir = args.output if args.output else os.path.join("data", "calibration", run_tag)
     os.makedirs(cal_dir, exist_ok=True)
 
-    print(f"[calibrate_simq] Running engine: {run_tag} entities={args.entities}")
-    engine_run_dir, elapsed, run_id = _run_engine(args.seed, args.ticks, args.entities)
+    print(f"[calibrate_simq] Running engine: {run_tag} entities={args.entities} profile={profile}")
+    engine_run_dir, elapsed, run_id = _run_engine(args.name, args.seed, args.ticks, args.entities)
     print(f"[calibrate_simq] Engine done in {elapsed:.2f}s. JSONL at: {engine_run_dir}")
 
-    weights = _load_weights()
+    weights = _load_weights(profile)
     hub, persistence = _build_hub(weights, cal_dir, run_id or run_tag)
 
     event_count = _replay_jsonl_through_hub(engine_run_dir, hub)
@@ -163,7 +250,7 @@ def main():
     persistence.shutdown()
 
     print(f"\n=== Quality Report: {run_tag} ===")
-    print(f"  ticks={args.ticks} events={event_count} elapsed={elapsed:.2f}s")
+    print(f"  ticks={args.ticks} events={event_count} elapsed={elapsed:.2f}s profile={profile}")
     print(f"  overall_grade={report.overall_grade} overall_score={report.overall_score:.4f}")
     print("\n  Pillar breakdown:")
     for pillar_id, snap in sorted(report.pillars.items()):

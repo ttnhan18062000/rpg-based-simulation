@@ -1,9 +1,9 @@
 {
-  "run_id": "run_1782834581_5169",
-  "tick_count": 57,
-  "overall_score": 0.4140350877192982,
+  "run_id": "run_1782836914_5169",
+  "tick_count": 198,
+  "overall_score": 0.15899738121960344,
   "overall_grade": "B",
-  "generated_at": "2026-06-30T15:50:05.042419+00:00",
+  "generated_at": "2026-06-30T16:29:01.275713+00:00",
   "pillars": {
     "COGNITION": {
       "raw_score": 0.0,
@@ -26,10 +26,10 @@
       "worst_events": []
     },
     "COMBAT": {
-      "raw_score": 52.0,
-      "normalized_score": 0.9122807017543859,
-      "grade": "A",
-      "event_count": 26,
+      "raw_score": 50.0,
+      "normalized_score": 0.25252525252525254,
+      "grade": "B",
+      "event_count": 25,
       "negative_count": 0,
       "loop_detected": true,
       "loop_flags": [
@@ -58,10 +58,10 @@
       "worst_events": []
     },
     "PROGRESSION": {
-      "raw_score": 24.0,
-      "normalized_score": 0.42105263157894735,
+      "raw_score": 36.0,
+      "normalized_score": 0.18181818181818182,
       "grade": "B",
-      "event_count": 8,
+      "event_count": 12,
       "negative_count": 0,
       "loop_detected": true,
       "loop_flags": [
@@ -90,20 +90,22 @@
       "worst_events": []
     },
     "WORLD": {
-      "raw_score": 0.0,
-      "normalized_score": 0.0,
-      "grade": "C",
-      "event_count": 0,
+      "raw_score": 124.0,
+      "normalized_score": 0.6262626262626263,
+      "grade": "A",
+      "event_count": 122,
       "negative_count": 0,
-      "loop_detected": false,
-      "loop_flags": [],
+      "loop_detected": true,
+      "loop_flags": [
+        "hazard_active"
+      ],
       "worst_events": []
     },
     "NARRATIVE": {
-      "raw_score": 160.0,
-      "normalized_score": 2.807017543859649,
-      "grade": "S",
-      "event_count": 32,
+      "raw_score": 165.0,
+      "normalized_score": 0.8333333333333334,
+      "grade": "A",
+      "event_count": 33,
       "negative_count": 0,
       "loop_detected": true,
       "loop_flags": [

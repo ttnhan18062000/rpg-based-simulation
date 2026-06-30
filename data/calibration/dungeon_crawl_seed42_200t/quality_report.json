@@ -1,9 +1,9 @@
 {
-  "run_id": "run_1782833929_5169",
-  "tick_count": 57,
-  "overall_score": 0.2070175438596491,
+  "run_id": "run_1782836876_5169",
+  "tick_count": 172,
+  "overall_score": 0.33350370559672887,
   "overall_grade": "B",
-  "generated_at": "2026-06-30T15:39:12.456225+00:00",
+  "generated_at": "2026-06-30T16:28:25.152702+00:00",
   "pillars": {
     "COGNITION": {
       "raw_score": 0.0,
@@ -26,16 +26,30 @@
       "worst_events": []
     },
     "COMBAT": {
-      "raw_score": 26.0,
-      "normalized_score": 0.45614035087719296,
-      "grade": "B",
-      "event_count": 13,
-      "negative_count": 0,
+      "raw_score": 127.0,
+      "normalized_score": 0.7383720930232558,
+      "grade": "A",
+      "event_count": 65,
+      "negative_count": 1,
       "loop_detected": true,
       "loop_flags": [
         "combat_active"
       ],
-      "worst_events": []
+      "worst_events": [
+        {
+          "tick": 172,
+          "event_id": "6db8f8d79da74c7b92ffb9846eb387f4",
+          "pillar": "COMBAT",
+          "delta": -1.0,
+          "reason": "entity killed in combat",
+          "event_type": "entity_killed",
+          "entity_id": 9,
+          "region_id": null,
+          "tags": [
+            "attrition"
+          ]
+        }
+      ]
     },
     "FACTION": {
       "raw_score": 0.0,
@@ -58,10 +72,10 @@
       "worst_events": []
     },
     "PROGRESSION": {
-      "raw_score": 12.0,
-      "normalized_score": 0.21052631578947367,
-      "grade": "B",
-      "event_count": 4,
+      "raw_score": 96.0,
+      "normalized_score": 0.5581395348837209,
+      "grade": "A",
+      "event_count": 32,
       "negative_count": 0,
       "loop_detected": true,
       "loop_flags": [
@@ -90,20 +104,22 @@
       "worst_events": []
     },
     "WORLD": {
-      "raw_score": 0.0,
-      "normalized_score": 0.0,
-      "grade": "C",
-      "event_count": 0,
+      "raw_score": 152.0,
+      "normalized_score": 0.8837209302325582,
+      "grade": "A",
+      "event_count": 146,
       "negative_count": 0,
-      "loop_detected": false,
-      "loop_flags": [],
+      "loop_detected": true,
+      "loop_flags": [
+        "hazard_active"
+      ],
       "worst_events": []
     },
     "NARRATIVE": {
-      "raw_score": 80.0,
-      "normalized_score": 1.4035087719298245,
-      "grade": "A",
-      "event_count": 16,
+      "raw_score": 20.0,
+      "normalized_score": 0.11627906976744186,
+      "grade": "B",
+      "event_count": 4,
       "negative_count": 0,
       "loop_detected": true,
       "loop_flags": [
