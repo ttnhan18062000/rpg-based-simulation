@@ -79,7 +79,9 @@ Ticket must include: title, summary, scope, out of scope, acceptance criteria, r
 ### After Work
 
 - Finish ticket, move to `tickets/done/`.
-- **Delete the source file** from `tickets/todos/**/` if the ticket originated there (`rm tickets/todos/**/{ticket_id}.md`). Never leave a completed ticket in todos.
+- If the ticket originated in a `tickets/todos/{folder}/` subfolder:
+  - Delete the source file from the subfolder (`rm tickets/todos/{folder}/{ticket_id}.md`).
+  - When **all** tickets in the folder are done, move the **entire folder** to `tickets/done/{folder}/` — this preserves `SEQUENCE.md` and any folder-level metadata (`mv tickets/todos/{folder}/ tickets/done/{folder}/`). Never leave a completed folder's skeleton in `tickets/todos/`.
 - Append to the **bottom** of `tickets/working_log.csv` (never insert after the header).
 - **Standard/epic only:** Move staging artifacts to `stored_artifacts/`.
 - Update related docs.
