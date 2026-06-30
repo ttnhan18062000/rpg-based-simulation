@@ -29,7 +29,7 @@ python3 -m src cli --seed 42 --ticks 1000 --entities 50
 OBS_MODE=DEBUG python3 -m src cli --ticks 100 --seed 42   # full observability
 ```
 
-See [how to run simulations](docs/observability/how_to_run_simulation.md) for world seeding, observability flags, and data paths.
+See [docs/guides/simulation.md](docs/guides/simulation.md) for world authoring, CLI flags, and artifact paths. Full CLI reference: [docs/observability/how_to_run_simulation.md](docs/observability/how_to_run_simulation.md).
 
 ---
 
@@ -79,6 +79,7 @@ Full-text search works across all four sections. Every page shows a status badge
 
 | Area | Location |
 |---|---|
+| **Developer guides** (how-to, quickstarts) | [`docs/guides/`](docs/guides/) |
 | Mechanics Bible (simulation laws and formulas) | [`docs/mechanics/`](docs/mechanics/) |
 | Engine contracts and kernel spec | [`docs/engine/`](docs/engine/) |
 | Core state, entities, attributes | [`docs/core/`](docs/core/) |

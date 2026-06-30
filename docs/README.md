@@ -194,6 +194,22 @@ Claude Code subagents, workflows, and skills for the development and simulation 
 
 ---
 
+## Developer Guides — `guides/`
+
+Practical how-to guides for working with each major subsystem. These are starting points, not contracts — each links to the authoritative spec for full detail.
+
+| Guide | What it covers |
+|---|---|
+| [guides/simulation.md](guides/simulation.md) | World authoring, CLI flags, run artifacts, determinism guarantee |
+| [guides/observability.md](guides/observability.md) | Event bus, backpressure modes, decision traces, hard-law monitor |
+| [guides/testing.md](guides/testing.md) | Test layout, markers, CI gates, P0 authority, regression triage |
+| [guides/simulation_quality.md](guides/simulation_quality.md) | SimQ pillars, grades, REST API, feed modes, configuration |
+| [content/authoring_guide.md](content/authoring_guide.md) | World modules, compositions, scenarios — quickstart, sharp edges, FAQ |
+| [strategy/bounded_cognition_tuning_guide.md](strategy/bounded_cognition_tuning_guide.md) | Tuning AI cognition parameters, archetype defaults, troubleshooting |
+| [agent-monitoring/retro-guide.md](agent-monitoring/retro-guide.md) | Agent retrospectives, monitoring queries, gate failure patterns |
+
+---
+
 ## Verification
 
 All documentation is verified against source code via `tests/docs/`. Run:
