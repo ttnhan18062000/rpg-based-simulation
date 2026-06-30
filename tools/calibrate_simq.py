@@ -149,6 +149,36 @@ def _run_engine(name: str, seed: int, ticks: int, entity_count: int = 10) -> tup
             entities[monster.id] = monster
         state = AuthoritativeState(tick=0, seed=seed, entities=entities)
 
+    # Inject feature-flag overrides from environment variables.
+    # Recognized env vars: ENABLE_ADVENTURE_ROUTING, ENABLE_COMBAT_ENGAGEMENT,
+    # ENABLE_SOCIAL_COOPERATION, ENABLE_WORLD_EMERGENCE, ENABLE_BELIEF_ASSIMILATION,
+    # ENABLE_PROGRESSION_EVOLUTION, ENABLE_LIFE_ARC_CAMPAIGNS, etc.
+    # Set to "ON", "SHADOW", "STRICT", or any truthy string to enable.
+    # Example: ENABLE_ADVENTURE_ROUTING=ON python3 tools/calibrate_simq.py ...
+    from src.domains.optimization.feature_flags import FeatureMode
+    _KNOWN_FLAGS = [
+        "ENABLE_WORLD_CAPABILITY_LAYER", "ENABLE_SELF_MODEL_COGNITION",
+        "ENABLE_ADVENTURE_ROUTING", "ENABLE_COMBAT_ENGAGEMENT",
+        "ENABLE_BELIEF_ASSIMILATION", "ENABLE_PROGRESSION_EVOLUTION",
+        "ENABLE_SOCIAL_COOPERATION", "ENABLE_WORLD_EMERGENCE",
+        "ENABLE_LIFE_ARC_CAMPAIGNS", "ENABLE_ENHANCED_TRACE_EVENTS",
+    ]
+    env_flag_overrides = {}
+    for flag in _KNOWN_FLAGS:
+        env_val = os.environ.get(flag, "").strip().upper()
+        if env_val in ("ON", "TRUE", "1", "YES", "STRICT"):
+            mode = FeatureMode.STRICT if env_val == "STRICT" else FeatureMode.ON
+            env_flag_overrides[flag] = mode
+            logger.info("Feature flag override from env: %s=%s", flag, mode)
+        elif env_val == "SHADOW":
+            env_flag_overrides[flag] = FeatureMode.SHADOW
+            logger.info("Feature flag override from env: %s=SHADOW", flag)
+    if env_flag_overrides:
+        existing = dict(getattr(state, "feature_flags", None) or {})
+        existing.update(env_flag_overrides)
+        from dataclasses import replace as dc_replace
+        state = dc_replace(state, feature_flags=existing)
+
     kernel = Kernel(profile=PROD_SMALL, state=state, rng=rng)
 
     run_id = getattr(kernel, "_run_id", None)

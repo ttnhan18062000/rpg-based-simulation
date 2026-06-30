@@ -1,0 +1,32 @@
+# STATE: ADDITIONAL
+# TCK-20260630-SIMQ-ROUTING-TEST
+# Minimal composition that enables all 10 SimQ pillars.
+# ENABLE_ADVENTURE_ROUTING must be ON at calibration time (passed via env or state.feature_flags).
+schema_version: "worldcomposition.v1"
+world_id: "simq_routing_test"
+name: "SimQ Routing Test"
+description: >
+  Minimal world for SimQ 10-pillar calibration.
+  Combines a frontier village (economy, social, information, faction), an old mine
+  (extra resource nodes and faction pressure), a goblin conflict (combat, faction
+  diplomacy), and hero adventurers (agency, progression).
+  ENABLE_ADVENTURE_ROUTING must be ON for route_selected / action_executed events.
+provided_features:
+  - "settlement"
+  - "trade_route"
+  - "resource_loop"
+  - "faction_pressure"
+  - "conflict"
+  - "ecology_module"
+  - "hero_presence"
+  - "adventure_routing"
+module_refs:
+  - module_id: "frontier_village_core"
+    order: 0
+  - module_id: "old_mine_resource_loop"
+    order: 1
+  - module_id: "goblin_camp_conflict"
+    order: 2
+  - module_id: "hero_adventurers"
+    order: 3
+generation_seed: 42

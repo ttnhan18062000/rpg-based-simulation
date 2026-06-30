@@ -1547,3 +1547,9 @@
 {"run_id":"TCK-20260630-SIMQ-CALFIX","seq":7,"phase":"Parity","agent":"parity-updater","status":"ok","summary":"No parity entries affected (tooling change only)","ts":"2026-06-30T16:29:55Z"}
 {"run_id":"TCK-20260630-SIMQ-CALFIX","seq":8,"phase":"Verify","agent":"done-checker","status":"ok","summary":"DoD READY_TO_CLOSE \u2014 all ACs verified","ts":"2026-06-30T16:29:55Z"}
 {"run_id":"TCK-20260630-SIMQ-CALFIX","seq":9,"phase":"Finalize","agent":"finalizer","status":"ok","summary":"Ticket finalized and moved to done","ts":"2026-06-30T16:29:55Z"}
+{"run_id":"TCK-20260630-SIMQ-ROUTING-TEST","seq":1,"phase":"Scope","agent":"ticket-scoper","status":"ok","summary":"Loaded hotfix ticket TCK-20260630-SIMQ-ROUTING-TEST","ts":"2026-06-30T16:36:52Z"}
+{"run_id":"TCK-20260630-SIMQ-ROUTING-TEST","seq":2,"phase":"Implement","agent":"implementer","status":"ok","summary":"Created simq_routing_test world (30 entities, 7 quests), quality profile, brave trait, env-var flag injection in calibrate_simq.py","ts":"2026-06-30T16:36:52Z"}
+{"run_id":"TCK-20260630-SIMQ-ROUTING-TEST","seq":3,"phase":"Test","agent":"test-scoper","status":"ok","summary":"All 43 worldassembly integration tests passed; world compiles cleanly","ts":"2026-06-30T16:36:52Z"}
+{"run_id":"TCK-20260630-SIMQ-ROUTING-TEST","seq":4,"phase":"Parity","agent":"parity-updater","status":"ok","summary":"No parity entries affected \u2014 new world files and catalog data only; no engine behavior changed","ts":"2026-06-30T16:36:52Z"}
+{"run_id":"TCK-20260630-SIMQ-ROUTING-TEST","seq":5,"phase":"Verify","agent":"done-checker","status":"ok","summary":"DoD READY_TO_CLOSE: world compiles, 5/10 pillars active (AGENCY confirmed via ENABLE_ADVENTURE_ROUTING), calibration recorded","ts":"2026-06-30T16:36:52Z"}
+{"run_id":"TCK-20260630-SIMQ-ROUTING-TEST","seq":6,"phase":"Finalize","agent":"finalizer","status":"ok","summary":"Ticket finalized and moved to done","ts":"2026-06-30T16:36:52Z"}

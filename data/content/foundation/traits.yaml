@@ -40,6 +40,11 @@
   description: "Tends to exploit high-reward openings when risk is acceptable."
 
 # STATE: ADDITIONAL
+- id: "brave"
+  display_name: "Brave"
+  description: "Resists fear pressure; maintains action under threat."
+
+# STATE: ADDITIONAL
 - id: "disciplined"
   display_name: "Disciplined"
   description: "Better at maintaining duty/role under pressure."
