@@ -3024,15 +3024,19 @@
 - id: INFRA-247
   text: "NarrativeScorer covers all contract §5 NARRATIVE rules: quest lifecycle (active/
     resolved/failed/dormant), chronicle history (history_forming/history_silent), emergence,
-    scenario objectives, hero_death_unrecorded. chronicle_entry_created emitted as disk
-    JSONL only (not event bus) is a known gap documented in scorer docstring."
+    scenario objectives, hero_death_unrecorded. chronicle_entry_created gap resolved:
+    TCK-20260629-SIMQ-EMIT-NARRATIVE wires chronicle_entry_created to event bus via
+    CampaignOrchestrator._emit_chronicle_events()."
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: src/simulation_quality/scorers/narrative.py::NarrativeScorer.score
+  v2_evidence: "src/simulation_quality/scorers/narrative.py::NarrativeScorer.score;
+    TCK-20260629-SIMQ-EMIT-NARRATIVE wires chronicle_entry_created to event bus via
+    CampaignOrchestrator._emit_chronicle_events(). Tested in
+    tests/unit/campaigns/test_narrative_ledger.py (TC-D16..TC-D19)."
   proof_type: null
-  test_path: tests/simulation_quality/test_narrative_scorer.py
-  divergence_note: null
+  test_path: "tests/simulation_quality/test_narrative_scorer.py; tests/unit/campaigns/test_narrative_ledger.py"
+  divergence_note: ""
   support_boundary: null
 - id: INFRA-248
   text: "Quality REST API (5 endpoints) registered at /api/v1/quality/. All handlers
@@ -3096,8 +3100,15 @@
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: "TCK-20260629-SIMQ-EMIT-SOCIAL-FACTION implements SOCIAL (6 new + 3 bug fix) and FACTION (7 new) pillar emission. Blocked gaps documented in test_event_extractor_social_faction.py gap tests S-23, S-24, F-23, F-24. Translation mappings: leadership_changed, betrayal_desertion, alliance_formed added to quality_hub.py. Tests: tests/unit/observability/test_event_extractor_social_faction.py (53 tests). src/observability/event_extractor.py; src/simulation_quality/quality_hub.py; src/observability/events.py (faction EventCategory)."
+  v2_evidence: "TCK-20260629-SIMQ-EMIT-SOCIAL-FACTION implements SOCIAL (6 new + 3 bug fix) and FACTION (7 new) pillar emission. Blocked gaps documented in test_event_extractor_social_faction.py gap tests S-23, S-24, F-23, F-24. Translation mappings: leadership_changed, betrayal_desertion, alliance_formed added to quality_hub.py. Tests: tests/unit/observability/test_event_extractor_social_faction.py (53 tests). src/observability/event_extractor.py; src/simulation_quality/quality_hub.py; src/observability/events.py (faction EventCategory).
+    TCK-20260629-SIMQ-EMIT-NARRATIVE implements NARRATIVE pillar (7 new emission hooks):
+    chronicle_entry_created (CampaignOrchestrator._emit_chronicle_events()),
+    world_emergence_event + narrative_milestone (EventExtractor from world_events_add — war/boss/sovereignty),
+    hero_death_unrecorded (EventExtractor entity diff active→inactive for kind=hero),
+    scenario_stalled + scenario_objective_completed (ScenarioRuntimeService event_recorder injection).
+    Gap: scenario_objective_progressed (binary ObjectiveEvaluator — no partial progress).
+    Tests: tests/unit/observability/test_event_extractor_narrative.py (N-01..N-18, 2 gap skips)."
   proof_type: null
   test_path: "tests/simulation_quality/test_quality_hub_event_translation.py; tests/unit/observability/test_event_extractor_simq.py; tests/unit/observability/test_event_extractor_agency.py; tests/unit/observability/test_event_extractor_social_faction.py"
-  divergence_note: "SOCIAL and FACTION pillars now emitting. 4 gaps remain blocked (architecture limitations): alliance_proposed, resource_seized, contract_milestone_completed, social_memory_created — documented in gap tests."
+  divergence_note: "SOCIAL and FACTION pillars now emitting. 4 gaps remain blocked (architecture limitations): alliance_proposed, resource_seized, contract_milestone_completed, social_memory_created — documented in gap tests. NARRATIVE pillar now emitting (TCK-20260629-SIMQ-EMIT-NARRATIVE): chronicle_entry_created (orchestrator), world_emergence_event + narrative_milestone (EventExtractor from world_events_add), hero_death_unrecorded (EventExtractor entity diff), scenario_stalled + scenario_objective_completed (ScenarioRuntimeService injection). Gap: scenario_objective_progressed (binary ObjectiveEvaluator — no partial progress concept). Tests: tests/unit/observability/test_event_extractor_narrative.py (N-01..N-18)."
   support_boundary: null

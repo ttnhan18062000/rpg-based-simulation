@@ -15,9 +15,12 @@ Design constraints:
 from __future__ import annotations
 
 import json
-from typing import List, Optional
+from typing import TYPE_CHECKING, List, Optional
 
 from src.domains.campaigns.state import NarrativeLedgerEntry
+
+if TYPE_CHECKING:
+    from src.observability.event_recorder import EventRecorder
 
 
 class NarrativeLedger:
@@ -35,8 +38,13 @@ class NarrativeLedger:
         ledger.to_jsonl("/path/to/output.jsonl")
     """
 
-    def __init__(self, entries: Optional[List[NarrativeLedgerEntry]] = None) -> None:
+    def __init__(
+        self,
+        entries: Optional[List[NarrativeLedgerEntry]] = None,
+        event_recorder: Optional["EventRecorder"] = None,
+    ) -> None:
         self._entries: List[NarrativeLedgerEntry] = list(entries or [])
+        self._event_recorder = event_recorder
 
     # ── write ──────────────────────────────────────────────────────────────────
 
@@ -47,8 +55,36 @@ class NarrativeLedger:
         list. For campaign-level recording, use
         ``CampaignState.narrative_ledger.extend(entries)`` via the orchestrator.
         This method is intended for construction-time or test use.
+        Does NOT emit to the event recorder — use ``emit_chronicle_event()`` for that.
         """
         self._entries.append(entry)
+
+    def emit_chronicle_event(self, entry: NarrativeLedgerEntry, tick: int) -> None:
+        """Append entry to the in-memory list and emit chronicle_entry_created to the event bus.
+
+        This is the authoritative call site for wired narrative ledger recording.
+        ``record()`` remains for construction-time / test use and does NOT emit.
+        When ``event_recorder`` is None, behaves identically to ``record()``.
+        """
+        self._entries.append(entry)
+        if self._event_recorder is not None:
+            from src.observability.events import SimulationEvent  # local import avoids circular
+            self._event_recorder.record(SimulationEvent(
+                event_type="chronicle_entry_created",
+                event_category="lifecycle",
+                tick=tick,
+                entity_id=None,
+                severity="INFO",
+                source_system="narrative_ledger",
+                message="",
+                payload={
+                    "entry_id": entry.entry_id,
+                    "event_type": entry.event_type,
+                    "significance": entry.significance,
+                    "episode": entry.episode,
+                    "subject_id": entry.subject_id,
+                },
+            ))
 
     # ── query ──────────────────────────────────────────────────────────────────
 

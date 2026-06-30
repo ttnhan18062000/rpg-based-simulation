@@ -24,6 +24,7 @@ from typing import TYPE_CHECKING, Optional
 if TYPE_CHECKING:
     from src.scenarios.schema import SimulationScenarioDefinition
     from src.core.state import AuthoritativeState
+    from src.observability.event_recorder import EventRecorder
 
 # ---------------------------------------------------------------------------
 # Module-level constants
@@ -124,16 +125,19 @@ class ScenarioRuntimeService:
         "_stall_counter",
         "_last_event_tick",
         "_initial_state",
+        "_event_recorder",
     )
 
     def __init__(
         self,
         spec: "SimulationScenarioDefinition",
         initial_state: Optional["AuthoritativeState"] = None,
+        event_recorder: Optional["EventRecorder"] = None,
     ) -> None:
         self._spec = spec
         self._kernel = None
         self._initial_state = initial_state
+        self._event_recorder = event_recorder
         self._state: ScenarioObjectiveState = ScenarioObjectiveState.RUNNING
         self._tick: int = 0
         self._paused: bool = False
@@ -286,6 +290,21 @@ class ScenarioRuntimeService:
             if result != ScenarioObjectiveState.RUNNING:
                 self._state = result
                 self._paused = True
+                if self._event_recorder is not None:
+                    from src.observability.events import SimulationEvent
+                    self._event_recorder.record(SimulationEvent(
+                        event_type="scenario_objective_completed",
+                        event_category="infrastructure",
+                        tick=self._tick,
+                        entity_id=None,
+                        severity="INFO",
+                        source_system="scenario_runtime",
+                        message="",
+                        payload={
+                            "scenario_id": getattr(self._spec, "id", ""),
+                            "outcome": result.name,
+                        },
+                    ))
                 return
 
         # 2. Stall detector
@@ -307,6 +326,22 @@ class ScenarioRuntimeService:
             if self._stall_counter > STALL_THRESHOLD:
                 self._state = ScenarioObjectiveState.STALLED
                 self._paused = True
+                if self._event_recorder is not None:
+                    from src.observability.events import SimulationEvent
+                    self._event_recorder.record(SimulationEvent(
+                        event_type="scenario_stalled",
+                        event_category="infrastructure",
+                        tick=self._tick,
+                        entity_id=None,
+                        severity="WARNING",
+                        source_system="scenario_runtime",
+                        message="",
+                        payload={
+                            "scenario_id": getattr(self._spec, "id", ""),
+                            "stall_counter": self._stall_counter,
+                            "last_event_tick": self._last_event_tick,
+                        },
+                    ))
 
     def _build_kernel(self):
         """Construct a minimal Kernel for this scenario spec.

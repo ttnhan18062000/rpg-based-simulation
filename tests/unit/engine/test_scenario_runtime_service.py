@@ -331,3 +331,128 @@ class TestVictoryConditionsSchema:
         restored = SimulationScenarioDefinition(**data)
         assert restored.victory_conditions[0].kind == "tick_limit"
         assert restored.victory_conditions[0].value == 100
+
+
+# ── TCK-20260629-SIMQ-EMIT-NARRATIVE: S-01..S-05 ─────────────────────────────
+# event_recorder injection into ScenarioRuntimeService
+
+def _make_mock_kernel(event_count: int = 0):
+    """Return a mock kernel with a controlled _current_tick_event_count."""
+    k = MagicMock()
+    k._current_tick_event_count = event_count
+    k.state = MagicMock()
+    k.state.entities = {}
+    k.state.tick = 0
+    return k
+
+
+class TestScenarioRuntimeServiceEventRecorder:
+    """S-01..S-05: event_recorder injection into ScenarioRuntimeService."""
+
+    def test_scenario_stalled_emits_event_when_recorder_injected(self):
+        """S-01: When stall threshold crossed and recorder is provided, scenario_stalled is emitted."""
+        from src.engine.scenario_runtime import (
+            ScenarioRuntimeService, ScenarioObjectiveState, STALL_THRESHOLD,
+        )
+
+        mock_recorder = MagicMock()
+        # No victory conditions → ObjectiveEvaluator returns RUNNING immediately,
+        # so stall detector runs.
+        spec = _make_spec()
+        svc = ScenarioRuntimeService(spec, event_recorder=mock_recorder)
+
+        # Mock kernel with zero events so stall counter increments.
+        # state.tick=0 means tick_limit condition (not present) doesn't trigger.
+        mock_kernel = _make_mock_kernel(event_count=0)
+        mock_kernel.state.tick = 0
+        svc._kernel = mock_kernel
+
+        # Pre-load stall counter to STALL_THRESHOLD so one more call tips it over.
+        svc._stall_counter = STALL_THRESHOLD
+
+        svc._evaluate_after_tick()
+
+        assert svc.objective_state == ScenarioObjectiveState.STALLED
+        assert mock_recorder.record.called
+        emitted = mock_recorder.record.call_args[0][0]
+        assert emitted.event_type == "scenario_stalled"
+        assert emitted.payload["scenario_id"] == "test_scenario"
+
+    def test_scenario_objective_met_emits_completed_event(self):
+        """S-02: When OBJECTIVE_MET, scenario_objective_completed is emitted with outcome=OBJECTIVE_MET."""
+        from src.engine.scenario_runtime import (
+            ScenarioRuntimeService, ScenarioObjectiveState,
+        )
+
+        mock_recorder = MagicMock()
+        # tick_limit=1 means state.tick >= 1 → OBJECTIVE_MET
+        spec = _make_spec(victory_conditions=[{"kind": "tick_limit", "value": 1}])
+        svc = ScenarioRuntimeService(spec, event_recorder=mock_recorder)
+
+        mock_kernel = _make_mock_kernel(event_count=1)
+        mock_kernel.state.tick = 1  # ObjectiveEvaluator reads kernel.state.tick
+        svc._kernel = mock_kernel
+        svc._tick = 1
+
+        svc._evaluate_after_tick()
+
+        assert svc.objective_state == ScenarioObjectiveState.OBJECTIVE_MET
+        assert mock_recorder.record.called
+        emitted = mock_recorder.record.call_args[0][0]
+        assert emitted.event_type == "scenario_objective_completed"
+        assert emitted.payload["outcome"] == "OBJECTIVE_MET"
+
+    def test_scenario_objective_failed_emits_completed_event_with_failed_outcome(self):
+        """S-03: When OBJECTIVE_FAILED, scenario_objective_completed with outcome=OBJECTIVE_FAILED is emitted."""
+        from src.engine.scenario_runtime import (
+            ScenarioRuntimeService, ScenarioObjectiveState,
+        )
+
+        mock_recorder = MagicMock()
+        # entity_count=1 condition: alive < 1 → OBJECTIVE_FAILED
+        # ObjectiveEvaluator checks: alive = sum(1 for e in state.entities.values() if e.combat.alive)
+        spec = _make_spec(victory_conditions=[{"kind": "entity_count", "value": 1}])
+        svc = ScenarioRuntimeService(spec, event_recorder=mock_recorder)
+
+        # Mock kernel with empty entities dict → alive count = 0 < 1 → OBJECTIVE_FAILED
+        mock_kernel = _make_mock_kernel(event_count=0)
+        mock_kernel.state.entities = {}  # empty → zero alive
+        mock_kernel.state.tick = 0
+        svc._kernel = mock_kernel
+        svc._tick = 5
+
+        svc._evaluate_after_tick()
+
+        assert svc.objective_state == ScenarioObjectiveState.OBJECTIVE_FAILED
+        assert mock_recorder.record.called
+        emitted = mock_recorder.record.call_args[0][0]
+        assert emitted.event_type == "scenario_objective_completed"
+        assert emitted.payload["outcome"] == "OBJECTIVE_FAILED"
+
+    def test_no_event_when_recorder_none(self):
+        """S-04: None-safe — no AttributeError when no recorder provided; existing call sites unchanged."""
+        from src.engine.scenario_runtime import ScenarioRuntimeService, ScenarioObjectiveState
+
+        spec = _make_spec(victory_conditions=[{"kind": "tick_limit", "value": 1}])
+        svc = ScenarioRuntimeService(spec)  # no event_recorder
+
+        mock_kernel = _make_mock_kernel(event_count=1)
+        mock_kernel.state.tick = 1  # ObjectiveEvaluator reads kernel.state.tick
+        svc._kernel = mock_kernel
+        svc._tick = 1
+
+        # Must not raise AttributeError
+        svc._evaluate_after_tick()
+        assert svc.objective_state == ScenarioObjectiveState.OBJECTIVE_MET
+
+    def test_scenario_objective_progressed_gap(self):
+        """S-05: Gap test — scenario_objective_progressed requires partial progress tracking.
+
+        ObjectiveEvaluator returns only binary RUNNING/OBJECTIVE_MET/OBJECTIVE_FAILED.
+        There is no partial-progress concept in the current schema, so this event
+        cannot be emitted without a schema change to ObjectiveEvaluator.
+        """
+        pytest.skip(
+            "scenario_objective_progressed: binary ObjectiveEvaluator only — "
+            "no partial progress concept exists in current schema (D6)."
+        )

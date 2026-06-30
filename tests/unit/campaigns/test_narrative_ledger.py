@@ -395,3 +395,79 @@ def test_narrative_ledger_query_no_match():
     assert ledger.query(event_type="quest_completed") == []
     assert ledger.query(episode=5) == []
     assert ledger.query(min_significance=1.0) == []
+
+
+# ── TC-D16: emit_chronicle_event() emits when recorder is provided ────────────
+
+
+def test_record_emits_chronicle_entry_created_when_recorder_provided():
+    """TC-D16: emit_chronicle_event() with event_recorder set calls recorder.record() once."""
+    mock_recorder = MagicMock()
+    ledger = NarrativeLedger(entries=[], event_recorder=mock_recorder)
+    entry = _make_entry(episode=1, tick=5, event_type="entity_death", subject_id="hero_1")
+
+    ledger.emit_chronicle_event(entry, tick=5)
+
+    assert mock_recorder.record.called
+    assert mock_recorder.record.call_count == 1
+    assert len(ledger) == 1
+
+
+# ── TC-D17: emit_chronicle_event() is None-safe ───────────────────────────────
+
+
+def test_record_no_emission_when_recorder_none():
+    """TC-D17: emit_chronicle_event() with event_recorder=None appends entry without error."""
+    ledger = NarrativeLedger(entries=[], event_recorder=None)
+    entry = _make_entry()
+
+    # Must not raise AttributeError or any other exception
+    ledger.emit_chronicle_event(entry, tick=3)
+
+    assert len(ledger) == 1
+
+
+# ── TC-D18: chronicle_entry payload contains NarrativeLedgerEntry fields ──────
+
+
+def test_chronicle_entry_payload_contains_entry_fields():
+    """TC-D18: Emitted chronicle_entry_created payload has entry_id, event_type, significance, episode."""
+    mock_recorder = MagicMock()
+    ledger = NarrativeLedger(entries=[], event_recorder=mock_recorder)
+    entry = _make_entry(
+        episode=2,
+        tick=15,
+        event_type="quest_completed",
+        subject_id="quest_main",
+        significance=0.7,
+        entry_id="2:15:quest_completed:quest_main",
+    )
+
+    ledger.emit_chronicle_event(entry, tick=15)
+
+    call_args = mock_recorder.record.call_args
+    assert call_args is not None
+    emitted_event = call_args[0][0]
+    assert emitted_event.event_type == "chronicle_entry_created"
+    payload = emitted_event.payload
+    assert payload["entry_id"] == "2:15:quest_completed:quest_main"
+    assert payload["event_type"] == "quest_completed"
+    assert payload["significance"] == pytest.approx(0.7)
+    assert payload["episode"] == 2
+    assert payload["subject_id"] == "quest_main"
+
+
+# ── TC-D19: query() does not trigger event_recorder ──────────────────────────
+
+
+def test_recorder_not_called_on_query():
+    """TC-D19: query() does not call event_recorder regardless of recorder presence."""
+    mock_recorder = MagicMock()
+    entries = [_make_entry(event_type="entity_death", episode=0)]
+    ledger = NarrativeLedger(entries=entries, event_recorder=mock_recorder)
+
+    _ = ledger.query(event_type="entity_death")
+    _ = ledger.query(episode=0)
+    _ = ledger.query(min_significance=0.1)
+
+    assert not mock_recorder.record.called

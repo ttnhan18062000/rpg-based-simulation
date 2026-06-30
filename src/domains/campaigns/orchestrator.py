@@ -23,6 +23,7 @@ from typing import TYPE_CHECKING, Dict, List, Optional
 if TYPE_CHECKING:
     from src.core.state import AuthoritativeState
     from src.scenarios.schema import SimulationScenarioDefinition
+    from src.observability.event_recorder import EventRecorder
 
 from src.domains.campaigns.state import (
     CampaignState,
@@ -130,8 +131,13 @@ class CampaignOrchestrator:
         assert len(orchestrator.state.episode_history) == 2
     """
 
-    def __init__(self, manifest: CampaignManifest) -> None:
+    def __init__(
+        self,
+        manifest: CampaignManifest,
+        event_recorder: Optional["EventRecorder"] = None,
+    ) -> None:
         self._manifest = manifest
+        self._event_recorder = event_recorder
         self._state = CampaignState(
             campaign_id=manifest.id,
             episode_index=0,
@@ -197,6 +203,7 @@ class CampaignOrchestrator:
         self._state.persistent_factions.update(faction_cfs)
         self._state.episode_history.append(summary)
         self._state.narrative_ledger.extend(narrative_entries)
+        self._emit_chronicle_events(narrative_entries, tick=getattr(summary, "completed_tick", 0))
         self._state.social_memories.update(social_memories)
         self._state.progression_plans.update(progression_plans)
         # E43F: grief urgency — detect new grief from entity_death entries, decay existing.
@@ -297,6 +304,36 @@ class CampaignOrchestrator:
                     )
 
         self._state.nemesis_relations = new_relations
+
+    def _emit_chronicle_events(
+        self,
+        entries: List[NarrativeLedgerEntry],
+        tick: int,
+    ) -> None:
+        """Emit chronicle_entry_created to the event bus for each new ledger entry.
+
+        No-op when event_recorder is None (production default when no recorder injected).
+        """
+        if self._event_recorder is None:
+            return
+        from src.observability.events import SimulationEvent
+        for entry in entries:
+            self._event_recorder.record(SimulationEvent(
+                event_type="chronicle_entry_created",
+                event_category="lifecycle",
+                tick=tick,
+                entity_id=None,
+                severity="INFO",
+                source_system="campaign_orchestrator",
+                message="",
+                payload={
+                    "entry_id": entry.entry_id,
+                    "event_type": entry.event_type,
+                    "significance": entry.significance,
+                    "episode": entry.episode,
+                    "subject_id": entry.subject_id,
+                },
+            ))
 
     def _extract_entity_carry_forwards(
         self,
@@ -575,6 +612,7 @@ class CampaignOrchestrator:
             self._state.progression_plans[eid] = revised
             if ledger_entry is not None and ledger_entry.entry_id not in existing_entry_ids:
                 self._state.narrative_ledger.append(ledger_entry)
+                self._emit_chronicle_events([ledger_entry], tick=0)
                 existing_entry_ids.add(ledger_entry.entry_id)
 
         return AuthoritativeState(tick=0, seed=episode_seed, entities=entities)

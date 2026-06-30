@@ -113,6 +113,19 @@ class EventExtractor:
                     killer_id=killer_id
                 ))
 
+                # NARRATIVE: hero_death_unrecorded — hero-kind entity deactivated this tick (D4)
+                if getattr(entity, "kind", None) == "hero":
+                    events.append(SimulationEvent(
+                        event_type="hero_death_unrecorded",
+                        event_category="lifecycle",
+                        tick=tick,
+                        entity_id=eid,
+                        severity="WARNING",
+                        source_system="event_extractor",
+                        message="",
+                        payload={"entity_id": eid},
+                    ))
+
             # Combat initiated — entity was at full HP prior tick, now taking damage
             if (entity.lifecycle.active
                     and prior_ent.combat.hp == prior_ent.combat.max_hp
@@ -488,6 +501,17 @@ class EventExtractor:
                     source_system="event_extractor", message="",
                     payload={"kind": kind},
                 ))
+                # NARRATIVE: narrative_milestone — boss spawn (D2, D5 from plan/UQ-1)
+                events.append(SimulationEvent(
+                    event_type="narrative_milestone",
+                    event_category="lifecycle",
+                    tick=tick,
+                    entity_id=getattr(new_ent, "id", None),
+                    severity="WARNING",
+                    source_system="event_extractor",
+                    message="",
+                    payload={"milestone": "first_boss_spawned", "kind": kind},
+                ))
             elif kind == "goblin_raider":
                 events.append(SimulationEvent(
                     event_type="raid_party_spawned", event_category="lifecycle",
@@ -572,6 +596,52 @@ class EventExtractor:
                     payload={
                         "subject": str(getattr(we, "subject", "")),
                         "category": str(cat),
+                    },
+                ))
+
+            # NARRATIVE: world_emergence_event — one per WorldEvent in world_events_add (D1)
+            events.append(SimulationEvent(
+                event_type="world_emergence_event",
+                event_category="lifecycle",
+                tick=tick,
+                entity_id=None,
+                severity="INFO",
+                source_system="event_extractor",
+                message="",
+                payload={
+                    "category": str(cat) if cat else "",
+                    "region_id": str(getattr(we, "region_id", "") or ""),
+                    "subject": str(getattr(we, "subject", "") or ""),
+                },
+            ))
+
+            # NARRATIVE: narrative_milestone — war and sovereignty (D2)
+            if cat == WorldEventCategory.FACTION_WAR_DECLARED:
+                events.append(SimulationEvent(
+                    event_type="narrative_milestone",
+                    event_category="lifecycle",
+                    tick=tick,
+                    entity_id=None,
+                    severity="WARNING",
+                    source_system="event_extractor",
+                    message="",
+                    payload={
+                        "milestone": "first_war",
+                        "subject": str(getattr(we, "subject", "") or ""),
+                    },
+                ))
+            elif cat == WorldEventCategory.SOVEREIGNTY_SHIFT:
+                events.append(SimulationEvent(
+                    event_type="narrative_milestone",
+                    event_category="lifecycle",
+                    tick=tick,
+                    entity_id=None,
+                    severity="WARNING",
+                    source_system="event_extractor",
+                    message="",
+                    payload={
+                        "milestone": "first_sovereignty_transfer",
+                        "region_id": str(getattr(we, "region_id", "") or ""),
                     },
                 ))
 
