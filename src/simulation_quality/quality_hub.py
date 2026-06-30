@@ -24,6 +24,8 @@ _TRANSLATE_SIMPLE: dict[str, str] = {
     "StrategicConcernRaised":   "strategic_goal_changed",
     "StrategicDetourCreated":   "project_started",
     "StrategicLeadExhausted":   "knowledge_default_fallback",
+    "leadership_changed":       "diplomatic_transition",
+    "alliance_formed":          "alliance_accepted",
 }
 
 
@@ -63,12 +65,20 @@ def _translate_invariant(env: ObservabilityEventEnvelope) -> str:
     return env.event_type  # unknown violation — no translation
 
 
+def _translate_betrayal_desertion(env: ObservabilityEventEnvelope) -> str:
+    """Betrayal maps to faction_tension_delta if faction context, else contract_lapsed."""
+    if (env.payload or {}).get("faction_id"):
+        return "faction_tension_delta"
+    return "contract_lapsed"
+
+
 # Payload-conditional translators keyed by engine event_type.
 _TRANSLATE_CONDITIONAL: dict[str, Callable[[ObservabilityEventEnvelope], str]] = {
     "quest_event":             _translate_quest_event,
     "lifecycle":               _translate_lifecycle,
     "StrategicProjectChanged": _translate_strategic_project,
     "InvariantViolation":      _translate_invariant,
+    "betrayal_desertion":      _translate_betrayal_desertion,
 }
 
 

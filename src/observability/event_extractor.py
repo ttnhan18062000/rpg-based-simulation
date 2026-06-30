@@ -4,6 +4,7 @@ import logging
 from typing import Any, List, Optional
 from src.core.state import AuthoritativeState
 from src.core.updates import StateUpdate
+from src.domains.world_emergence.schema import WorldEventCategory
 from src.observability.config import ObservabilityConfig, ObservabilityMode
 from src.observability.events import (
     SimulationEvent, CombatDamageEvent, CombatKillEvent,
@@ -214,6 +215,16 @@ class EventExtractor:
                         payload={"subject": subject},
                     ))
 
+                # Social: cooperation_event (PP-05)
+                if prop.get("last_cooperation_decision") is not None:
+                    events.append(SimulationEvent(
+                        event_type="cooperation_event", event_category="social",
+                        tick=tick, entity_id=eid, severity="INFO",
+                        source_system="event_extractor", message="",
+                        payload={"entity_id": eid,
+                                 "decision": str(prop["last_cooperation_decision"])},
+                    ))
+
                 # Economy + Information events from intent_results (resource_transfers cleared by PP-27)
                 _GOLD_SINK_KINDS = frozenset(("REPAIR_FEE", "SERVICE_FEE", "TAX"))
                 for ir in (getattr(e_upd_ext, "intent_results", None) or []):
@@ -318,6 +329,22 @@ class EventExtractor:
                         payload={"prior_group_id": str(prior_group)},
                     ))
 
+            # Social: reputation_delta (PP-18, significant public reputation change)
+            if hasattr(entity, "social") and hasattr(prior_ent, "social"):
+                curr_rep = getattr(entity.social, "public_reputation", None)
+                prior_rep = getattr(prior_ent.social, "public_reputation", None)
+                if isinstance(curr_rep, (int, float)) and isinstance(prior_rep, (int, float)):
+                    delta = curr_rep - prior_rep
+                else:
+                    delta = 0.0
+                if isinstance(delta, (int, float)) and abs(delta) > 0.05:
+                    events.append(SimulationEvent(
+                        event_type="reputation_delta", event_category="social",
+                        tick=tick, entity_id=eid, severity="INFO",
+                        source_system="event_extractor", message="",
+                        payload={"entity_id": eid, "delta": round(delta, 6)},
+                    ))
+
             # Social: contract lifecycle events (PP-35 contracts state diff)
             if hasattr(entity, "strategic") and hasattr(prior_ent, "strategic"):
                 curr_contracts = getattr(entity.strategic, "contracts", None) or {}
@@ -325,6 +352,15 @@ class EventExtractor:
                 for cid, cs in curr_contracts.items():
                     prior_cs = prior_contracts.get(cid)
                     if prior_cs is None:
+                        new_status = getattr(getattr(cs, "status", None), "name",
+                                             str(getattr(cs, "status", "")))
+                        if new_status == "OFFERED":
+                            events.append(SimulationEvent(
+                                event_type="contract_offer_created", event_category="social",
+                                tick=tick, entity_id=eid, severity="INFO",
+                                source_system="event_extractor", message="",
+                                payload={"contract_id": cid},
+                            ))
                         continue
                     curr_status = getattr(getattr(cs, "status", None), "name", str(getattr(cs, "status", "")))
                     prior_status = getattr(getattr(prior_cs, "status", None), "name", str(getattr(prior_cs, "status", "")))
@@ -337,7 +373,7 @@ class EventExtractor:
                             source_system="event_extractor", message="",
                             payload={"contract_id": cid},
                         ))
-                    elif curr_status == "COMPLETED":
+                    elif curr_status == "FULFILLED":
                         events.append(SimulationEvent(
                             event_type="contract_completed", event_category="social",
                             tick=tick, entity_id=eid, severity="INFO",
@@ -345,8 +381,29 @@ class EventExtractor:
                             payload={"contract_id": cid},
                         ))
                     elif curr_status == "EXPIRED":
+                        if prior_status == "ACTIVE":
+                            events.append(SimulationEvent(
+                                event_type="contract_lapsed", event_category="social",
+                                tick=tick, entity_id=eid, severity="INFO",
+                                source_system="event_extractor", message="",
+                                payload={"contract_id": cid},
+                            ))
+                        elif prior_status == "OFFERED":
+                            events.append(SimulationEvent(
+                                event_type="contract_expired_offer", event_category="social",
+                                tick=tick, entity_id=eid, severity="INFO",
+                                source_system="event_extractor", message="",
+                                payload={"contract_id": cid},
+                            ))
+                # PP-36: contract_expired_offer from reap path (contract removed entirely)
+                for cid, prior_cs in prior_contracts.items():
+                    if cid in curr_contracts:
+                        continue
+                    prior_status = getattr(getattr(prior_cs, "status", None), "name",
+                                           str(getattr(prior_cs, "status", "")))
+                    if prior_status == "OFFERED":
                         events.append(SimulationEvent(
-                            event_type="contract_lapsed", event_category="social",
+                            event_type="contract_expired_offer", event_category="social",
                             tick=tick, entity_id=eid, severity="INFO",
                             source_system="event_extractor", message="",
                             payload={"contract_id": cid},
@@ -438,5 +495,116 @@ class EventExtractor:
                     source_system="event_extractor", message="",
                     payload={"kind": kind},
                 ))
+
+        # Faction events from FactionUpdate records (PP-08/09/10/11)
+        _seen_diplo_pairs: set = set()
+        _faction_upds = getattr(update, "faction_updates", None)
+        if not isinstance(_faction_upds, (list, tuple)):
+            _faction_upds = ()
+        for upd in _faction_upds:
+            fid = upd.faction_id
+
+            # FACTION: diplomatic_transition (PP-10) — one event per ordered pair
+            for other_fid, new_state in (upd.diplomatic_relations_set or {}).items():
+                pair = frozenset({fid, other_fid})
+                if pair not in _seen_diplo_pairs:
+                    _seen_diplo_pairs.add(pair)
+                    state_name = getattr(new_state, "name", str(new_state))
+                    events.append(SimulationEvent(
+                        event_type="diplomatic_transition", event_category="faction",
+                        tick=tick, entity_id=None, severity="INFO",
+                        source_system="event_extractor", message="",
+                        payload={
+                            "faction_id": fid,
+                            "target_faction_id": other_fid,
+                            "new_state": state_name,
+                        },
+                    ))
+                    # FACTION: alliance_accepted (PP-08/10) — when new state is ALLIED
+                    if state_name == "ALLIED":
+                        events.append(SimulationEvent(
+                            event_type="alliance_accepted", event_category="faction",
+                            tick=tick, entity_id=None, severity="INFO",
+                            source_system="event_extractor", message="",
+                            payload={"faction_id": fid, "partner_id": other_fid},
+                        ))
+
+            # FACTION: territory_ownership_changed (PP-11)
+            for region_id in (upd.territory_add or ()):
+                events.append(SimulationEvent(
+                    event_type="territory_ownership_changed", event_category="faction",
+                    tick=tick, entity_id=None, severity="WARNING",
+                    source_system="event_extractor", message="",
+                    payload={"faction_id": fid, "region_id": region_id},
+                ))
+
+            # FACTION: faction_tension_delta (PP-09) — any non-zero delta
+            if getattr(upd, "tension_delta", 0.0) != 0.0:
+                events.append(SimulationEvent(
+                    event_type="faction_tension_delta", event_category="faction",
+                    tick=tick, entity_id=None, severity="INFO",
+                    source_system="event_extractor", message="",
+                    payload={"faction_id": fid, "delta": upd.tension_delta},
+                ))
+
+        # Faction events from WorldEvent domain objects (PP-10/11)
+        _MILITARY_RESOLVED = frozenset({
+            WorldEventCategory.TERRITORY_TRANSFERRED,
+            WorldEventCategory.WAR_ENDED_EXHAUSTION,
+        })
+        _world_evts = getattr(update, "world_events_add", None)
+        if not isinstance(_world_evts, (list, tuple)):
+            _world_evts = ()
+        for we in _world_evts:
+            cat = getattr(we, "category", None)
+            if cat == WorldEventCategory.FACTION_WAR_DECLARED:
+                events.append(SimulationEvent(
+                    event_type="war_declared", event_category="faction",
+                    tick=tick, entity_id=None, severity="CRITICAL",
+                    source_system="event_extractor", message="",
+                    payload={"faction_pair": str(getattr(we, "subject", ""))},
+                ))
+            elif cat in _MILITARY_RESOLVED:
+                events.append(SimulationEvent(
+                    event_type="military_conflict_resolved", event_category="faction",
+                    tick=tick, entity_id=None, severity="WARNING",
+                    source_system="event_extractor", message="",
+                    payload={
+                        "subject": str(getattr(we, "subject", "")),
+                        "category": str(cat),
+                    },
+                ))
+
+        # FACTION: faction_extinct (PP-08/PP-33) — only when faction state changed this tick
+        _faction_upd_list = getattr(update, "faction_updates", None)
+        if isinstance(_faction_upd_list, list) and _faction_upd_list:
+            _living_faction_ids: set = set()
+            for _ent in (getattr(current_state, "entities", {}) or {}).values():
+                _hp = getattr(_ent, "hp", None)
+                _fac = getattr(getattr(_ent, "identity", None), "faction", None)
+                _hp_alive = _hp is None or (isinstance(_hp, (int, float)) and _hp > 0)
+                if _fac is not None and _hp_alive:
+                    _living_faction_ids.add(str(_fac))
+
+            for _fid, _fstate in (getattr(current_state, "factions", {}) or {}).items():
+                if str(_fid) in _living_faction_ids:
+                    continue
+                _prior_living = any(
+                    getattr(getattr(_pe, "identity", None), "faction", None) is not None
+                    and str(getattr(getattr(_pe, "identity", None), "faction", "")) == str(_fid)
+                    and (
+                        (lambda _h: _h is None or (isinstance(_h, (int, float)) and _h > 0))(
+                            getattr(_pe, "hp", None)
+                        )
+                    )
+                    for _pe in (getattr(prior_state, "entities", {}) or {}).values()
+                )
+                if _prior_living:
+                    events.append(SimulationEvent(
+                        event_type="faction_extinct", event_category="faction",
+                        tick=tick, entity_id=None, severity="WARNING",
+                        source_system="event_extractor", message="",
+                        payload={"faction_id": str(_fid)},
+                    ))
 
         return events

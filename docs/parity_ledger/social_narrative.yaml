@@ -2911,3 +2911,92 @@
   divergence_note: >
     New mechanic added by TCK-20260628-E43G-NEMESIS-RELATION. No prior nemesis tracking existed.
   support_boundary: null
+
+- id: SOC-233
+  text: >
+    SimQ entity-loop social emission: EventExtractor emits cooperation_event when
+    entity.strategic.property_updates contains a decision/cooperation indicator, and
+    reputation_delta when public_reputation changes by >= 0.05 between ticks.
+    Both events emitted from the entity resolution loop in event_extractor.py.
+    Covered by TCK-20260629-SIMQ-EMIT-SOCIAL-FACTION.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/observability/event_extractor.py (cooperation_event emit block;
+    reputation_delta emit block with REPUTATION_DELTA_THRESHOLD=0.05 guard).
+    (TCK-20260629-SIMQ-EMIT-SOCIAL-FACTION)
+  proof_type: null
+  test_path: >
+    tests/unit/observability/test_event_extractor_social_faction.py::test_cooperation_event_emitted_when_decision_in_property_updates;
+    tests/unit/observability/test_event_extractor_social_faction.py::test_reputation_delta_emitted_on_significant_change
+  divergence_note: null
+  support_boundary: null
+
+- id: SOC-234
+  text: >
+    SimQ contract event fixes: contract_completed now emits only on FULFILLED enum
+    status (prior bug emitted on the string "completed"); contract_lapsed narrowed
+    to active→expired transitions only (not offered→expired, which routes to
+    contract_expired_offer instead); contract_expired_offer is a new event type
+    emitted when an offered contract transitions to expired or is reaped without
+    being accepted. Covered by TCK-20260629-SIMQ-EMIT-SOCIAL-FACTION.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/observability/event_extractor.py (contract_completed: status == ContractStatus.FULFILLED;
+    contract_lapsed: prior==ACTIVE and new==EXPIRED; contract_expired_offer: prior==OFFERED
+    and new==EXPIRED or reap-removed). (TCK-20260629-SIMQ-EMIT-SOCIAL-FACTION)
+  proof_type: null
+  test_path: >
+    tests/unit/observability/test_event_extractor_social_faction.py::test_contract_completed_on_fulfilled_status;
+    tests/unit/observability/test_event_extractor_social_faction.py::test_contract_lapsed_not_on_offered_to_expired;
+    tests/unit/observability/test_event_extractor_social_faction.py::test_contract_expired_offer_on_offered_to_expired;
+    tests/unit/observability/test_event_extractor_social_faction.py::test_contract_completed_fires_for_fulfilled_not_completed_name
+  divergence_note: null
+  support_boundary: null
+
+- id: SOC-235
+  text: >
+    SimQ faction-loop emission: EventExtractor emits diplomatic_transition
+    (with frozenset dedup to suppress symmetric duplicates per faction pair),
+    alliance_accepted (ALLIED state newly set), territory_ownership_changed
+    (territory added to faction), and faction_tension_delta (nonzero tension
+    change) from the faction_updates loop. war_declared and
+    military_conflict_resolved are emitted from the world_events_add loop.
+    faction_extinct fires when a faction has no living entities remaining.
+    EventCategory Literal extended with "faction". Translation mappings added
+    to quality_hub.py: leadership_changed→diplomatic_transition,
+    alliance_formed→alliance_accepted, betrayal_desertion→conditional
+    (faction_tension_delta or contract_lapsed).
+    Covered by TCK-20260629-SIMQ-EMIT-SOCIAL-FACTION.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/observability/event_extractor.py (faction_updates loop: diplomatic_transition
+    with frozenset dedup set; alliance_accepted guard; territory_ownership_changed;
+    faction_tension_delta; world_events_add loop: war_declared, military_conflict_resolved;
+    entity-scan: faction_extinct). src/observability/events.py (EventCategory Literal
+    += "faction"). src/simulation_quality/quality_hub.py (TRANSLATION_MAP additions:
+    leadership_changed, alliance_formed, betrayal_desertion).
+    (TCK-20260629-SIMQ-EMIT-SOCIAL-FACTION)
+  proof_type: null
+  test_path: >
+    tests/unit/observability/test_event_extractor_social_faction.py::test_diplomatic_transition_emitted_from_faction_update;
+    tests/unit/observability/test_event_extractor_social_faction.py::test_diplomatic_transition_deduped_per_pair;
+    tests/unit/observability/test_event_extractor_social_faction.py::test_alliance_accepted_emitted_when_allied_state_set;
+    tests/unit/observability/test_event_extractor_social_faction.py::test_war_declared_emitted_from_world_events_add;
+    tests/unit/observability/test_event_extractor_social_faction.py::test_military_conflict_resolved_on_territory_transferred;
+    tests/unit/observability/test_event_extractor_social_faction.py::test_territory_ownership_changed_on_territory_add;
+    tests/unit/observability/test_event_extractor_social_faction.py::test_faction_tension_delta_on_nonzero_tension_delta;
+    tests/unit/observability/test_event_extractor_social_faction.py::test_faction_extinct_emitted_when_no_living_entities;
+    tests/simulation_quality/test_quality_hub_event_translation.py
+  divergence_note: >
+    4 gaps remain blocked by architecture limitations (no corresponding authoritative
+    state surfaces): alliance_proposed (faction_directives not in StateUpdate),
+    resource_seized (no distinct WorldEvent), contract_milestone_completed (no
+    milestone field), social_memory_created (transient timeline buffer only).
+    Documented in gap tests S-23, S-24, F-23, F-24 in test_event_extractor_social_faction.py.
+  support_boundary: null

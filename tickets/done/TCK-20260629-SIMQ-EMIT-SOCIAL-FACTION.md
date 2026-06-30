@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: simulation
 authority: P2
 audience: agent
 ticket_id: TCK-20260629-SIMQ-EMIT-SOCIAL-FACTION
-phase: open
+phase: done
 date: 2026-06-29
 tags: [simq, observability, event-gap, social, faction]
 ---
@@ -15,7 +15,7 @@ tags: [simq, observability, event-gap, social, faction]
 SimQ: Emit SOCIAL and FACTION Pillar Events from Cooperation, Contract, and Diplomatic Phases
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -110,3 +110,56 @@ TCK-20260629-SIMQ-EVENT-TRANSLATE or directly here if that ticket is already don
 - `territory_ownership_changed` may overlap with WORLD pillar `region_ownership_changed`
   (faction perspective vs. world perspective of same event) — emit once with both faction_id
   and region_id in payload; both scorers will handle it
+
+## Implementation Notes
+Implemented all Steps 1–10 from plan.md.
+
+**src/observability/event_extractor.py** — primary changes:
+- Step 2: Fixed contract diff block: `contract_offer_created` for new OFFERED contracts;
+  `contract_completed` now checks `FULFILLED` (not `COMPLETED` alias — bug fix); split
+  `EXPIRED` handling into `contract_lapsed` (ACTIVE→EXPIRED) and `contract_expired_offer`
+  (OFFERED→EXPIRED); added reap-removal loop for `contract_expired_offer` from PP-36.
+- Step 3: Added `cooperation_event` from `last_cooperation_decision` property update;
+  `reputation_delta` when `abs(public_reputation delta) > 0.05`.
+- Step 4: New `faction_updates` loop emitting `diplomatic_transition` (frozenset dedup),
+  `alliance_accepted` (state.name=="ALLIED"), `territory_ownership_changed` (territory_add),
+  `faction_tension_delta` (tension_delta != 0.0).
+- Step 5: New `world_events_add` loop emitting `war_declared` (FACTION_WAR_DECLARED),
+  `military_conflict_resolved` (TERRITORY_TRANSFERRED or WAR_ENDED_EXHAUSTION).
+- Step 6: `faction_extinct` detection guarded by `isinstance(faction_updates, list)`.
+- Defensive guards: `isinstance(..., (list, tuple))` for faction_updates and world_events_add
+  iteration; `isinstance(curr_rep, (int, float))` for reputation comparison — prevents
+  TypeError from MagicMock in old tests.
+
+**src/observability/events.py** — added `"faction"` to `EventCategory` Literal (not in plan;
+required because SimulationEvent Pydantic model validates category field).
+
+**src/simulation_quality/quality_hub.py** — Step 7: Added `leadership_changed→diplomatic_transition`,
+`alliance_formed→alliance_accepted` to `_TRANSLATE_SIMPLE`; added `_translate_betrayal_desertion`
+function (faction_id present→`faction_tension_delta`, else→`contract_lapsed`) wired into
+`_TRANSLATE_CONDITIONAL`.
+
+**tests/unit/observability/test_event_extractor_social_faction.py** — NEW: 53 tests covering
+all S-01..S-24 and F-01..F-24 cases plus 5 anti-drift guards. All pass.
+
+**docs/parity_ledger/infrastructure.yaml** — SIMQ-CALIBRATED-001: status `missing`→`verified`;
+v2_evidence and test_path updated.
+
+## Test Summary
+152 tests pass (75 baseline + 24 quality_hub translation + 53 new social/faction).
+Zero regressions. Command:
+`uv run --with pytest python3 -m pytest tests/unit/observability/ tests/simulation_quality/test_quality_hub_event_translation.py`
+
+## Files Changed
+- src/observability/event_extractor.py
+- src/observability/events.py
+- src/simulation_quality/quality_hub.py
+- tests/unit/observability/test_event_extractor_social_faction.py (NEW)
+- docs/parity_ledger/infrastructure.yaml
+- docs/parity_ledger/social_narrative.yaml
+
+## Completion Summary
+Emitted SOCIAL (6 new events + 3 bug fixes) and FACTION (7 new events) pillar events from
+EventExtractor state diff and FactionUpdate/WorldEvent loops. Added translation mappings for
+leadership_changed, alliance_formed, betrayal_desertion in QualityHub. 4 architecture-blocked
+gaps documented with gap tests. 152 tests pass, zero regressions.

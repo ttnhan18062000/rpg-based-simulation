@@ -3079,13 +3079,25 @@
     events (combat_initiated, near_death_survival, xp_granted, level_up, resource_node_depleted,
     resource_node_regenerated, demographic_birth, demographic_mortality — TCK-20260629-SIMQ-EMIT-STATE-DIFF);
     route_selected and action_executed from EntityUpdate.property_updates (TCK-20260629-SIMQ-EMIT-AGENCY).
-    100-tick baseline: NARRATIVE=A, AGENCY/LIFECYCLE/COMBAT partially active. Full calibration
-    requires remaining EMIT tickets (COGNITION, WORLD, ECONOMY, SOCIAL-FACTION, NARRATIVE)."
-  status: missing
+    SOCIAL pillar (6 new events + 3 bug fixes): cooperation_event, contract_offer_created,
+    contract_expired_offer, reputation_delta + fixed contract_completed (FULFILLED enum),
+    contract_lapsed narrowing — TCK-20260629-SIMQ-EMIT-SOCIAL-FACTION.
+    FACTION pillar (7 new events): diplomatic_transition (deduped), alliance_accepted,
+    war_declared, military_conflict_resolved, territory_ownership_changed, faction_tension_delta,
+    faction_extinct — TCK-20260629-SIMQ-EMIT-SOCIAL-FACTION.
+    Translation mappings added: leadership_changed→diplomatic_transition,
+    alliance_formed→alliance_accepted, betrayal_desertion→conditional (faction_tension_delta or
+    contract_lapsed). EventCategory extended with 'faction' literal.
+    Blocked gaps documented: alliance_proposed (faction_directives not in StateUpdate),
+    resource_seized (no distinct WorldEvent), contract_milestone_completed (no milestone field),
+    social_memory_created (transient timeline buffer).
+    100-tick baseline: NARRATIVE=A, AGENCY/LIFECYCLE/COMBAT/SOCIAL/FACTION partially active.
+    Full calibration requires remaining EMIT tickets (COGNITION, WORLD, ECONOMY, NARRATIVE)."
+  status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: "src/simulation_quality/quality_hub.py:_translate(); src/observability/event_extractor.py (SimQ events); tools/calibrate_simq.py; data/calibration/sandbox_world_seed42_100t/quality_report.json"
+  v2_evidence: "TCK-20260629-SIMQ-EMIT-SOCIAL-FACTION implements SOCIAL (6 new + 3 bug fix) and FACTION (7 new) pillar emission. Blocked gaps documented in test_event_extractor_social_faction.py gap tests S-23, S-24, F-23, F-24. Translation mappings: leadership_changed, betrayal_desertion, alliance_formed added to quality_hub.py. Tests: tests/unit/observability/test_event_extractor_social_faction.py (53 tests). src/observability/event_extractor.py; src/simulation_quality/quality_hub.py; src/observability/events.py (faction EventCategory)."
   proof_type: null
-  test_path: "tests/simulation_quality/test_quality_hub_event_translation.py; tests/unit/observability/test_event_extractor_simq.py; tests/unit/observability/test_event_extractor_agency.py"
-  divergence_note: "Partial: NARRATIVE=A via translation; LIFECYCLE/COMBAT/AGENCY active; 5 pillars still blocked on remaining EMIT tickets"
+  test_path: "tests/simulation_quality/test_quality_hub_event_translation.py; tests/unit/observability/test_event_extractor_simq.py; tests/unit/observability/test_event_extractor_agency.py; tests/unit/observability/test_event_extractor_social_faction.py"
+  divergence_note: "SOCIAL and FACTION pillars now emitting. 4 gaps remain blocked (architecture limitations): alliance_proposed, resource_seized, contract_milestone_completed, social_memory_created — documented in gap tests."
   support_boundary: null

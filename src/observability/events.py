@@ -43,7 +43,7 @@ class ObservabilityEventEnvelope:
 
 EventCategory = Literal[
     "movement", "combat", "resource", "economy", "inventory",
-    "quest", "strategy", "social", "lifecycle", "region",
+    "quest", "strategy", "social", "lifecycle", "region", "faction",
     "infrastructure", "hard_law", "anomaly"
 ]
 
