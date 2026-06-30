@@ -443,19 +443,30 @@ The TCK-20260630-WORLD-QUEST-LOCATION fix eliminated 28 compile warnings by vali
 
 ### Revised blocker assessment after re-evaluation
 
-| Blocker | Before | After |
+| Blocker | Status |
+|---|---|
+| P0-A ENABLE_ADVENTURE_ROUTING | **RESOLVED** — TCK-20260627-P0A-ADVENTURE-FLAG. Option B: all Phase 10 flags remain OFF by default; documented in `known_limitations.md §1.5` and `intentional_divergences.md DEV-002`. AGENCY=B achievable via env-var inject (confirmed by simq_routing_test). |
+| P0-B urban_political resource nodes | **RESOLVED** — TCK-20260627-P0B-URBAN-RESOURCE-NODES + confirmed in compile report (3 nodes). |
+| P0-C entity navigation.region_id None | **RESOLVED** — TCK-20260627-P0C-ENTITY-REGION-ASSIGN. Entity region assignment fixed at compile. |
+| P1-B quest activation | **RESOLVED** — TCK-20260627-P1B-QUEST-ACTIVATION. quest_to_project() bug fixed; 12-test suite added. |
+| 7 SimQ emit tickets | **ALL DONE** — SIMQ-EMIT-STATE-DIFF, AGENCY, COGNITION, WORLD, ECONOMY, SOCIAL-FACTION, NARRATIVE all committed (2026-06-29/30). |
+| 5-pillar C ceiling | **Remaining** — 27 specific event types still have no engine emitter (see `event_type_coverage.md §3`). The emit tickets wired the event_extractor for events already in the engine's data flow; the §3 gaps require new signal paths in deeper engine subsystems (progression tracking, cognitive state diffing, ecology cycle detection). No tickets exist for these yet. |
+
+### Genuine remaining work
+
+**One body of work remains:** the 27 engine emission gaps listed in `docs/simulation_quality/event_type_coverage.md §3`. Scoring infrastructure (scorers, registry, thresholds) is complete for all 27. What's missing is the upstream signal — a new `emit()` call in the right engine subsystem when the event occurs.
+
+Grouped by effort and pillar:
+
+| Group | Gaps | Pillar impact |
 |---|---|---|
-| P0-A ENABLE_ADVENTURE_ROUTING | Blocking AGENCY and all economic measurement | Confirmed blocking. simq_routing_test (env-var inject) demonstrates AGENCY=B is achievable once fixed. |
-| P0-B urban_political resource nodes | Blocking economic measurement for urban_political | **RESOLVED** — 3 resource nodes confirmed in compile report. |
-| P0-C entity navigation.region_id None | Blocking entity-region matching | Still open — no fix committed. Affects ResourceOpportunityProvider region filtering. |
-| 5-pillar C ceiling | Unclear if calibration or engine gap | **Confirmed engine-structural** — 27 emission gaps. No fix path short of engine emitter work. |
+| PROGRESSION signals | skill_unlocked, trait_expressed, pillar_trait_unlocked, progression_conversion_applied, progression_plateau_detected | PROGRESSION: C→B/A in combat-active worlds |
+| INFORMATION / COGNITION signals | lead_certainty_updated, lead_contradiction_resolved, paid_info_changed_goal, belief_stale, decision_diverged_by_belief; decision_divergence_detected | INFORMATION: C→B; COGNITION: marginal gain |
+| WORLD dynamics signals | ecology_cycle_completed, spawn_cadence_fired, camp_constructed, threat_evolved, node_recharged | WORLD: already A/B; ecology worlds gain more |
+| AGENCY tracking signals | defer_with_reason, commitment_abandoned, rejection_cascade_tick, route_family_first_use | AGENCY: richer signal when routing ON |
+| Misc small gaps | paid_info_transaction (ECONOMY), conservation_law_verified (ECONOMY), alliance_proposed (FACTION), resource_seized (FACTION), social_memory_created (SOCIAL), contract_milestone_completed (SOCIAL), scenario_objective_progressed (NARRATIVE) | ECONOMY/FACTION/SOCIAL/NARRATIVE: marginal gains |
 
-### Next highest-value actions (ranked by grade impact)
-
-1. **P0-A** — fix `ENABLE_ADVENTURE_ROUTING` default. Moves AGENCY from C→B or higher across all worlds. Unblocks economic and quest measurement (P1-B chain).
-2. **P0-C** — fix entity `navigation.region_id` assignment at compile time. Unblocks `ResourceOpportunityProvider` region filtering. Required for ECONOMY to move off C even after P0-A.
-3. **P1-B** — quest activation (depends on P0-A). Required for NARRATIVE to show `quest_completed` events, currently 0 across all runs.
-4. **Engine emitter work** — add any 1–2 emitters from §3 of `event_type_coverage.md` to move a 5th pillar off C (e.g., `paid_info_transaction` for ECONOMY, `social_memory_created` for SOCIAL).
+Tickets created: `tickets/todos/simq-emit/` (5 tickets, 2026-07-01).
 
 ---
 
@@ -505,21 +516,15 @@ The TCK-20260630-WORLD-QUEST-LOCATION fix eliminated 28 compile warnings by vali
 
 Tickets should be created in this sequence to avoid blocked work:
 
-1. **D20-G1 + D20-G3** (TCK-20260630-SIMQ-WIRE-KERNEL) — **DONE**
-2. **D20-G2** (TCK-20260630-SIMQ-WIRE-SERVER) — **DONE**
-3. **D20-F5** (TCK-20260630-SIMQ-RECALIBRATE + TCK-20260630-SIMQ-CALFIX) — **DONE**
-4. **P0-B** — **RESOLVED** (resource nodes present, confirmed 2026-07-01)
-5. **P0-A** — next highest priority. Change `ENABLE_ADVENTURE_ROUTING` default to `ON` or mandate injection in all calibration/test runs. Unblocks AGENCY and the entire economic measurement chain.
-6. **P0-C** — entity `navigation.region_id` assignment at compile time. Can be tackled in parallel with P0-A.
-7. **After P0-A+C:** P1-A (rejection cascade) — prevents memory issue invalidating long-run tests
-8. **P1-B** (quest activation) — depends on P0-A
-9. **P1-F, P1-G, P1-H** — independent refactors, can run in parallel
-10. **P2-A, P2-B** — simulation health fixes (early lock expiry, spawn cadence); P2-B confirmed by wilderness_survival 101-tick termination
-11. **P2-C, P2-D** — content authoring (independent, no code deps)
-12. **P2-E through P2-N** — architectural/typing/DX cleanup sprint
-13. **P1-C, P1-D** — new feature epics (Faction & Diplomacy, Pressure-Driven Quests)
-14. **P3 items** — post-stabilization pass
-15. **Engine emitter work** — add missing emitters from `event_type_coverage.md §3` to unlock the 5 C-ceiling pillars
+All original P0–P3 items, all D20 gaps, all SimQ emit tickets, and all P3-A child epics are **DONE** as of 2026-07-01. The full sequence was completed; what remains is a single body of follow-on work:
+
+**Remaining:** Engine emission gaps (`tickets/todos/simq-emit/`, 5 tickets created 2026-07-01)
+
+1. `TCK-20260701-SIMQ-EMIT-PROGRESSION` — 5 progression signal events
+2. `TCK-20260701-SIMQ-EMIT-INFORMATION2` — 5 information/cognition signal events
+3. `TCK-20260701-SIMQ-EMIT-WORLD2` — 5 world dynamics signal events
+4. `TCK-20260701-SIMQ-EMIT-AGENCY2` — 4 agency tracking events
+5. `TCK-20260701-SIMQ-EMIT-SOCIAL2` — 7 misc gaps (ECONOMY ×2, FACTION ×2, SOCIAL ×2, NARRATIVE ×1)
 
 ---
 

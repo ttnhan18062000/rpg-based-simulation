@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: simulation
 authority: P1
 audience: agent
 ticket_id: TCK-20260628-SIMQ-EPIC
-phase: open
+phase: done
 date: 2026-06-28
 tags: [simulation-quality, scoring, pillars, epic, major-feature]
 ---
@@ -15,7 +15,7 @@ tags: [simulation-quality, scoring, pillars, epic, major-feature]
 Simulation Quality Scoring Module — Implementation Epic
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 epic
@@ -122,4 +122,8 @@ Delegated to TCK-20260628-SIMQ-E6-TESTS. See §11 of the contract for full taxon
 - Child tickets: see Related Tickets above
 
 ## Completion Summary
-Pending. Epic closes when all 7 child tickets are done and §12 acceptance criteria pass.
+All 7 child tickets done (E1–E7). D20 integration gaps resolved (WIRE-KERNEL, WIRE-SERVER,
+RECALIBRATE, CALFIX). SimQ audit tickets done (TRANSLATE, TIMEGATE, ANCHORS, ROUTING-TEST,
+EVENT-COVERAGE). 13-run calibration corpus established. Remaining work (engine emission
+gaps §3 of event_type_coverage.md) tracked in tickets/todos/simq-emit/ (5 tickets,
+TCK-20260701-SIMQ-EMIT-*).
