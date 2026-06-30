@@ -35,6 +35,8 @@ def _env(event_type: str, payload: dict | None = None) -> ObservabilityEventEnve
     ("StrategicConcernRaised",    "strategic_goal_changed"),
     ("StrategicDetourCreated",    "project_started"),
     ("StrategicLeadExhausted",    "knowledge_default_fallback"),
+    ("leadership_changed",        "diplomatic_transition"),
+    ("alliance_formed",           "alliance_accepted"),
 ])
 def test_simple_translation(engine_type: str, contract_type: str) -> None:
     env = _env(engine_type)
@@ -109,6 +111,21 @@ def test_invariant_conservation_law() -> None:
 def test_invariant_unknown_no_translation() -> None:
     result = QualityHub._translate(_env("InvariantViolation", {"law_id": "UNKNOWN-LAW"}))
     assert result.event_type == "InvariantViolation"
+
+
+# ── Pass-through for unknown types ───────────────────────────────────────────
+
+# ── betrayal_desertion conditional translations ──────────────────────────────
+
+def test_betrayal_desertion_with_faction_routes_to_tension_delta() -> None:
+    result = QualityHub._translate(_env("betrayal_desertion", {"faction_id": "faction_a"}))
+    assert result.event_type == "faction_tension_delta"
+    assert result.payload.get("_original_event_type") == "betrayal_desertion"
+
+def test_betrayal_desertion_without_faction_routes_to_contract_lapsed() -> None:
+    result = QualityHub._translate(_env("betrayal_desertion", {}))
+    assert result.event_type == "contract_lapsed"
+    assert result.payload.get("_original_event_type") == "betrayal_desertion"
 
 
 # ── Pass-through for unknown types ───────────────────────────────────────────
