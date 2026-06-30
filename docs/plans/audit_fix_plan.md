@@ -110,11 +110,10 @@ Requires a new epic ticket. See D01 acceptance criteria for completeness thresho
 
 ---
 
-### P1-E: Domain-phase layer has no audit inventory (D09 Finding 3)
+### P1-E: Domain-phase layer has no audit inventory (D09 Finding 3) — **RESOLVED**
 
 **Source:** D09 Finding 3 — Risk 13/15  
-**Finding:** `pipeline.py` wires 20+ live domain phases not in D02's feature inventory. D02 scoped to "technical enabling capabilities" — the entire domain-phase layer (combat engagement, adventure decision, cooperation, lifecycle, world emergence, etc.) is invisible to current audit coverage. This is the largest structural gap the D09 audit revealed.  
-**Action:** Create a D02-equivalent inventory document (`docs/audits/D19_domain_phase_inventory.md`) that lists every domain phase in `pipeline.py:refine()` and `world_dynamics.py:resolve_dynamics()`, their wiring status, and acceptance criteria. This is a documentation task, not an implementation task.
+**Resolution:** `docs/audits/D19_domain_phase_inventory.md` created (TCK-20260627-P1E-DOMAIN-INVENTORY). All domain phases in `pipeline.py:refine()` and `world_dynamics.py:resolve_dynamics()` inventoried with wiring status and phase anchors. Used by all SimQ scorers as grounding reference.
 
 ---
 
@@ -260,11 +259,10 @@ Update all callers. Add parity test that `evaluate_abandonment()` returns a type
 
 ---
 
-### P2-L: No content author guide
+### P2-L: No content author guide — **RESOLVED**
 
 **Source:** D16 Structural Gap  
-**Finding:** No single-page walkthrough for adding a module, composition, or scenario exists. `modules_contract.md` is a technical contract. Critical rules (`observability_tags` not `tags`, no `provided_features`, catalog ID constraints) are only discoverable by reading source or failing validation.  
-**Fix:** Write `docs/guides/content_authoring.md` covering: step-by-step for adding a world module, allowed module types, valid `initial_conditions` keys, available `make` targets, common sharp edges (catalog ID validation, ContentUsageMatrix).
+**Resolution:** `docs/guides/content_authoring.md` created (2026-06-30). Covers step-by-step module/composition/scenario authoring, allowed module types, valid `initial_conditions` keys, `make` targets, and sharp edges (catalog ID validation, ContentUsageMatrix). Moved from `docs/content/authoring_guide.md`.
 
 ---
 
@@ -334,6 +332,60 @@ These are partially implemented and tracked at the D01 level. Each may spawn its
 
 ---
 
+---
+
+## D20 — Simulation Quality Integration Gaps
+
+**Source:** D20 audit (2026-06-30) — `docs/audits/D20_simq_integration.md`  
+**Date found:** 2026-06-30
+
+All three gaps are independent but together cause zero events to reach the SimQ hub in
+every run. They block the calibration tool and any production use of SimQ.
+
+### D20-G1: quality_fn slot never populated at kernel init — **P1**
+
+**File:** `src/observability/queue.py:97`, `src/observability/event_recorder.py:95–99`,
+`src/engine/kernel.py:226`  
+**Finding:** `QueueDrainWorker` has a `quality_fn: Optional[Callable]` slot for feeding
+events to the hub on each drain. EventRecorder creates this worker but never passes a
+`quality_fn`. The integration slot exists; it is just not connected.  
+**Ticket:** `TCK-20260630-SIMQ-WIRE-KERNEL` (standard)
+
+---
+
+### D20-G2: set_quality_hub() never called from server or CLI — **P1**
+
+**File:** `src/api/dependencies.py:22–24`, `src/api/server.py`  
+**Finding:** `set_quality_hub()` is defined but called nowhere. `get_quality_hub()`
+always returns `None`. REST quality endpoints silently return disabled-hub responses
+for the entire lifetime of any server process.  
+**Ticket:** `TCK-20260630-SIMQ-WIRE-SERVER` (hotfix)
+
+---
+
+### D20-G3: InProcessQualityFeed creates competing consumer — **P1**
+
+**File:** `src/simulation_quality/feed.py:33–61`  
+**Finding:** `InProcessQualityFeed` creates a second `QueueDrainWorker` on the same
+global observability queue as EventRecorder's worker. Both race to drain items.
+EventRecorder's worker (started first at kernel init) wins the race; `hub.on_envelope()`
+is never called. Result: `tick_count=0`, all pillar `event_count=0`, all grades C across
+all seeds verified in D20.  
+**Ticket:** `TCK-20260630-SIMQ-WIRE-KERNEL` (same ticket as G1 — G3 is the cleanup after G1 is fixed)
+
+---
+
+### D20-F5: Calibration blocked until G1 is fixed — **P1**
+
+**Dependency:** Blocked on `TCK-20260630-SIMQ-WIRE-KERNEL`  
+**Finding:** `tools/calibrate_simq.py` and the grade thresholds in
+`config/simulation_quality/grade_thresholds.yaml` were calibrated against zero-signal runs
+(E7 pre-dates the D20 wiring discovery). Thresholds are placeholder estimates, not real
+percentile values.  
+**Ticket:** `TCK-20260630-SIMQ-RECALIBRATE` (hotfix, blocked on WIRE-KERNEL)
+
+---
+
 ## Summary Table
 
 | ID | Source | Priority | Type | Effort |
@@ -345,7 +397,7 @@ These are partially implemented and tracked at the D01 level. Each may spawn its
 | P1-B | D06 F4 | **P1** | Engine | M — quest activation preconditions |
 | P1-C | D01 §Faction | **P1** | Feature | XL — new epic ticket |
 | P1-D | D01 §Quest | **P1** | Feature | L — extend QuestGenerator |
-| P1-E | D09 F3 | **P1** | Docs | S — write D19 domain-phase inventory |
+| P1-E | D09 F3 | **P1** | Docs | **RESOLVED** — D19 exists |
 | P1-F | D12 F2 | **P1** | Refactor | S — AbandonmentClassification dataclass |
 | P1-G | D09 F5 | **P1** | Docs/Engine | S — document audit-mode guard scope |
 | P1-H | D15 Gap 1 | **P1** | Observability | S — top-3 runner-up scores in trace |
@@ -360,13 +412,17 @@ These are partially implemented and tracked at the D01 level. Each may spawn its
 | P2-I | D13 F4 | **P2** | Typing | S — WorkflowResult TypedDicts |
 | P2-J | D13 F5 | **P2** | Typing | XS — narrow patches.py merge() return |
 | P2-K | D16 Task 3 | **P2** | DX | S — auto-generate or validate ContentUsageMatrix |
-| P2-L | D16 Gap | **P2** | Docs | M — write content authoring guide |
+| P2-L | D16 Gap | **P2** | Docs | **RESOLVED** — docs/guides/content_authoring.md exists |
 | P2-M | D18 F5 | **P2** | CI | XS — upload-artifact in slow CI job |
 | P2-N | D02 §6.6 | **P2** | Engine | S — catalog-driven degraded fallback |
 | P3-A | D01 [P] items | **P3** | Feature | varies — see individual epics |
 | P3-B | D03 F5 | **P3** | DX | XS — remap STANDARD lab mode |
 | P3-C | D17 P2 | **P3** | Docs | S — verify 4 uncertain claims |
 | P3-D | D16 | **P3** | DX | S — catalog browser + template docs |
+| D20-G1 | D20 | **P1** | Engine | S — pass quality_fn to EventRecorder (TCK-20260630-SIMQ-WIRE-KERNEL) |
+| D20-G2 | D20 | **P1** | API | XS — call set_quality_hub() in server lifespan (TCK-20260630-SIMQ-WIRE-SERVER) |
+| D20-G3 | D20 | **P1** | Engine | S — remove InProcessQualityFeed competing consumer (TCK-20260630-SIMQ-WIRE-KERNEL) |
+| D20-F5 | D20 | **P1** | Tooling | S — re-run calibration after G1 fix (TCK-20260630-SIMQ-RECALIBRATE) |
 
 **Effort legend:** XS ≤ 1h · S = 2–4h · M = 1–2 days · L = 3–5 days · XL = epic
 
@@ -376,16 +432,19 @@ These are partially implemented and tracked at the D01 level. Each may spawn its
 
 Tickets should be created in this sequence to avoid blocked work:
 
-1. **P0 block first:** P0-A → P0-B → P0-C (each is a prerequisite for meaningful economic measurement)
-2. **After P0:** P1-A (rejection cascade) — prevents memory issue that would invalidate all long-run tests
-3. **P1-B** (quest activation) — depends on P0-A
-4. **P1-E** (domain inventory doc) — unblocks audit visibility before writing more engine tests
-5. **P1-F, P1-G, P1-H** — can run in parallel (independent refactors)
-6. **P2-A, P2-B** — simulation health fixes, can run after P0 are cleared
-7. **P2-C, P2-D** — content authoring (independent, no code deps)
-8. **P2-E through P2-N** — architectural/typing/DX cleanup sprint
-9. **P1-C, P1-D** — new feature epics (Faction & Diplomacy, Pressure-Driven Quests)
-10. **P3 items** — post-stabilization pass
+1. **D20-G1 + D20-G3** (TCK-20260630-SIMQ-WIRE-KERNEL) — unblocks SimQ and calibration
+2. **D20-G2** (TCK-20260630-SIMQ-WIRE-SERVER) — parallel with G1, independent
+3. **D20-F5** (TCK-20260630-SIMQ-RECALIBRATE) — blocked on G1
+4. **P0 block:** P0-A → P0-B → P0-C (each is a prerequisite for meaningful economic measurement)
+5. **After P0:** P1-A (rejection cascade) — prevents memory issue invalidating long-run tests
+6. **P1-B** (quest activation) — depends on P0-A
+7. **P1-E** — already RESOLVED (D19 exists)
+8. **P1-F, P1-G, P1-H** — can run in parallel (independent refactors)
+9. **P2-A, P2-B** — simulation health fixes, can run after P0 are cleared
+10. **P2-C, P2-D** — content authoring (independent, no code deps)
+11. **P2-E through P2-N** — architectural/typing/DX cleanup sprint
+12. **P1-C, P1-D** — new feature epics (Faction & Diplomacy, Pressure-Driven Quests)
+13. **P3 items** — post-stabilization pass
 
 ---
 
@@ -397,6 +456,7 @@ Tickets should be created in this sequence to avoid blocked work:
 - `docs/audits/D09_system_wiring.md` — P1-E/G, P2-E/F
 - `docs/audits/D12_pattern_consistency.md` — P1-F, P2-H
 - `docs/audits/D13_type_safety.md` — P2-I/J
+- `docs/audits/D20_simq_integration.md` — D20-G1/G2/G3/F5
 - `docs/audits/D14_coupling_depth.md` — P2-G
 - `docs/audits/D15_entity_decision_inspection.md` — P1-H
 - `docs/audits/D16_scenario_authoring_dx.md` — P2-K/L, P3-D

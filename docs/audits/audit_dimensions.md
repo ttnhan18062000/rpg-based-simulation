@@ -106,6 +106,7 @@ Sorted by priority (Impact + Interest) descending.
 | D06 | Long-Run Simulation Health | Simulation Quality | `done` | 4 | 5 | 9 | run-sim | [D06](D06_longrun_health.md) |
 | D09 | System Wiring & Integration | Codebase | `done` | 4 | 4 | 8 | code-read | [D09](D09_system_wiring.md) |
 | D15 | Entity Decision Inspection Tooling | Developer Tooling | `done` | 4 | 5 | 9 | review | [D15](D15_entity_decision_inspection.md) |
+| D20 | Simulation Quality Module Integration | Simulation Quality | `done` | 4 | 5 | 9 | run-sim + code-read | [D20](D20_simq_integration.md) |
 | D05 | Entity Differentiation | Simulation Quality | `done` | 4 | 4 | 8 | run-sim | [D05](D05_entity_differentiation.md) |
 | D04 | Balance & Tuning | Simulation Quality | `partial` | 4 | 3 | 7 | run-sim | [D04](D04_balance_tuning.md) |
 | D07 | Content Depth & Variety | Simulation Quality | `done` | 4 | 3 | 7 | count | [D07](D07_content_depth.md) |
@@ -141,6 +142,7 @@ They inform all downstream dimensions and serve as the factual foundation for pr
 |---|---|---|---|---|---|
 | D03 | Behavioral Emergence Quality | 10 | `done` | run-sim | Do entities behave like RPG characters, or do they loop? |
 | D06 | Long-Run Simulation Health | 9 | `done` | run-sim | Does the world stay alive past 1000 ticks? |
+| D20 | Simulation Quality Module Integration | 9 | `done` | run-sim + code-read | Is SimQ actually receiving events and scoring live runs? |
 | D05 | Entity Differentiation | 8 | `done` | run-sim | Do classes and personalities produce observably different arcs? |
 | D04 | Balance & Tuning | 7 | `partial` | run-sim | Are numerical constants calibrated to produce interesting dynamics? |
 | D07 | Content Depth & Variety | 7 | `done` | count | Is there enough authored content to populate interesting runs? |

@@ -62,13 +62,18 @@ All criteria in §12 must pass before this epic closes.
 - TCK-20260628-SIMQ-INVESTIGATION — investigation, pillar design, plan docs
 
 ### Child tickets (implementation sequence)
-- TCK-20260628-SIMQ-E1-FOUNDATION — Core models & data layer
-- TCK-20260628-SIMQ-E2-HUB-CORE — Hub wiring + Agency & Combat scorers
-- TCK-20260628-SIMQ-E3-SCORERS-A — Cognition, Faction, Economy, Progression scorers
-- TCK-20260628-SIMQ-E4-SCORERS-B — Social, Information, World Dynamics, Narrative scorers
-- TCK-20260628-SIMQ-E5-API — REST API + post-run artifact generation
-- TCK-20260628-SIMQ-E6-TESTS — Full test suite
-- TCK-20260628-SIMQ-E7-CALIBRATE — Calibration & grade threshold tuning
+- TCK-20260628-SIMQ-E1-FOUNDATION — Core models & data layer ✓ done
+- TCK-20260628-SIMQ-E2-HUB-CORE — Hub wiring + Agency & Combat scorers ✓ done
+- TCK-20260628-SIMQ-E3-SCORERS-A — Cognition, Faction, Economy, Progression scorers ✓ done
+- TCK-20260628-SIMQ-E4-SCORERS-B — Social, Information, World Dynamics, Narrative scorers ✓ done
+- TCK-20260628-SIMQ-E5-API — REST API + post-run artifact generation ✓ done
+- TCK-20260628-SIMQ-E6-TESTS — Full test suite ✓ done
+- TCK-20260628-SIMQ-E7-CALIBRATE — Calibration & grade threshold tuning ✓ done (re-run pending TCK-20260630-SIMQ-RECALIBRATE)
+
+### Integration gap tickets (D20 audit findings — blocking full acceptance)
+- TCK-20260630-SIMQ-WIRE-KERNEL — Wire quality_fn into kernel event pipeline (G1 + G3, **P1**)
+- TCK-20260630-SIMQ-WIRE-SERVER — Wire set_quality_hub() into server lifespan (G2, **P1**)
+- TCK-20260630-SIMQ-RECALIBRATE — Re-run calibration with live event data (blocked on WIRE-KERNEL)
 
 ### Upstream dependencies
 - TCK-20260519-SIM-OBS-PHASE2 — Observability event bus (subscription infrastructure)

@@ -9,9 +9,11 @@ tags: [simulation-quality, scoring, pillars, major-feature, architecture, design
 # Simulation Quality Scoring Module — Feature Design
 
 **Ticket:** TCK-20260628-SIMQ-INVESTIGATION  
-**Status:** Investigation complete. Implementation pending.  
+**Status:** Implementation complete (E1–E7 done). Integration wiring gap discovered by D20 audit —
+see TCK-20260630-SIMQ-WIRE-KERNEL and TCK-20260630-SIMQ-WIRE-SERVER.  
+**Archived:** 2026-06-30 — module built; this document is the historical design reference.  
 **Related:** `docs/audits/D19_domain_phase_inventory.md`, `docs/audits/D01_rpg_feature_impact.md`,
-`docs/engine/contracts/rpg_refinement_pillars.md`
+`docs/audits/D20_simq_integration.md`, `docs/engine/contracts/rpg_refinement_pillars.md`
 
 ---
 
