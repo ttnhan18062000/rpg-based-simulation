@@ -1,36 +1,107 @@
 {
-  "_note": "Regression anchors generated from canonical scenario runs. Update by running: python3 tools/generate_grade_anchors.py",
-  "_instructions": "If a pillar grade moves by more than one letter from the anchor, the test fails. Known-broken systems may anchor at F.",
-  "sandbox_world": {
-    "seed": 42,
-    "ticks": 100,
-    "pillars": {
-      "AGENCY": "UNKNOWN",
-      "COMBAT": "UNKNOWN",
-      "ECONOMY": "UNKNOWN",
-      "COGNITION": "UNKNOWN",
-      "FACTION": "UNKNOWN",
-      "PROGRESSION": "UNKNOWN",
-      "SOCIAL": "UNKNOWN",
-      "INFORMATION": "UNKNOWN",
-      "WORLD": "UNKNOWN",
-      "NARRATIVE": "UNKNOWN"
-    }
+  "_note": "Empirical grade anchors committed from calibration runs. Update by re-running calibration and editing grades here. See docs/simulation_quality/quality_scoring_contract.md \u00a711.3.",
+  "_instructions": "If a pillar grade moves by more than one letter from the anchor, the regression test fails. Band: anchor=B accepts A/B/C, fails D or S. To update: re-run calibration, confirm new grades, edit this file, commit.",
+  "_grade_order": [
+    "D",
+    "C",
+    "B",
+    "A",
+    "S"
+  ],
+  "sandbox_world_seed42_200t": {
+    "COMBAT": "B",
+    "NARRATIVE": "A",
+    "PROGRESSION": "B",
+    "AGENCY": "C",
+    "COGNITION": "C",
+    "ECONOMY": "C",
+    "FACTION": "C",
+    "INFORMATION": "C",
+    "SOCIAL": "C",
+    "WORLD": "C"
   },
-  "urban_political": {
-    "seed": 42,
-    "ticks": 100,
-    "pillars": {
-      "AGENCY": "UNKNOWN",
-      "COMBAT": "UNKNOWN",
-      "ECONOMY": "UNKNOWN",
-      "COGNITION": "UNKNOWN",
-      "FACTION": "UNKNOWN",
-      "PROGRESSION": "UNKNOWN",
-      "SOCIAL": "UNKNOWN",
-      "INFORMATION": "UNKNOWN",
-      "WORLD": "UNKNOWN",
-      "NARRATIVE": "UNKNOWN"
-    }
+  "sandbox_world_seed137_200t": {
+    "COMBAT": "B",
+    "NARRATIVE": "A",
+    "PROGRESSION": "C",
+    "AGENCY": "C",
+    "COGNITION": "C",
+    "ECONOMY": "C",
+    "FACTION": "C",
+    "INFORMATION": "C",
+    "SOCIAL": "C",
+    "WORLD": "C"
+  },
+  "sandbox_world_seed999_200t": {
+    "COMBAT": "B",
+    "NARRATIVE": "A",
+    "PROGRESSION": "C",
+    "AGENCY": "C",
+    "COGNITION": "C",
+    "ECONOMY": "C",
+    "FACTION": "C",
+    "INFORMATION": "C",
+    "SOCIAL": "C",
+    "WORLD": "C"
+  },
+  "dungeon_crawl_seed42_200t": {
+    "COMBAT": "A",
+    "NARRATIVE": "B",
+    "PROGRESSION": "A",
+    "AGENCY": "C",
+    "COGNITION": "C",
+    "ECONOMY": "C",
+    "FACTION": "C",
+    "INFORMATION": "C",
+    "SOCIAL": "C",
+    "WORLD": "A"
+  },
+  "urban_political_seed42_200t": {
+    "COMBAT": "B",
+    "NARRATIVE": "A",
+    "PROGRESSION": "B",
+    "AGENCY": "C",
+    "COGNITION": "C",
+    "ECONOMY": "C",
+    "FACTION": "C",
+    "INFORMATION": "C",
+    "SOCIAL": "C",
+    "WORLD": "A"
+  },
+  "simq_routing_test_seed42_500t": {
+    "COMBAT": "B",
+    "NARRATIVE": "A",
+    "PROGRESSION": "B",
+    "AGENCY": "B",
+    "COGNITION": "C",
+    "ECONOMY": "C",
+    "FACTION": "C",
+    "INFORMATION": "C",
+    "SOCIAL": "C",
+    "WORLD": "B"
+  },
+  "dungeon_crawl_seed42_1000t": {
+    "COMBAT": "B",
+    "NARRATIVE": "B",
+    "PROGRESSION": "B",
+    "AGENCY": "C",
+    "COGNITION": "C",
+    "ECONOMY": "C",
+    "FACTION": "C",
+    "INFORMATION": "C",
+    "SOCIAL": "C",
+    "WORLD": "B"
+  },
+  "sandbox_world_seed42_1000t": {
+    "COMBAT": "B",
+    "NARRATIVE": "A",
+    "PROGRESSION": "B",
+    "AGENCY": "C",
+    "COGNITION": "C",
+    "ECONOMY": "C",
+    "FACTION": "C",
+    "INFORMATION": "C",
+    "SOCIAL": "C",
+    "WORLD": "B"
   }
 }
