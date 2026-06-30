@@ -43,11 +43,11 @@ Record the decision in `docs/guidelines/v2_intentional_divergences.md` and updat
 
 ---
 
-### P0-B: `urban_political` world has zero resource nodes after compile
+### P0-B: `urban_political` world has zero resource nodes after compile — **RESOLVED**
 
 **Source:** D04 §6.2  
-**Finding:** `len(state.resource_nodes) == 0` after `WorldCompiler.compile()` for urban_political. `ResourceOpportunityProvider.get_opportunities()` iterates over `state.resource_nodes` — zero nodes means zero opportunities regardless of routing being enabled.  
-**Fix:** Add ≥3 resource nodes to `data/worlds/urban_political/world.yaml` with `region_id` values matching the world's regions (`hometown`, `bandit_road`, `trading_hometown`). Verify with `make world-compile WORLD=urban_political` and assert `len(state.resource_nodes) >= 3`.
+**Finding:** `len(state.resource_nodes) == 0` after `WorldCompiler.compile()` for urban_political.  
+**Resolution (2026-07-01):** `data/worlds/urban_political/world_compile_report.json` now shows `resource_node_count: 3`, `warnings: []`. Fixed during the worldgen epic (world content authoring pass). P0-B is no longer a blocker.
 
 ---
 
@@ -383,12 +383,88 @@ goblin spawn staggered, `--profile` arg added. Deep audit tracked in `docs/plans
 
 ---
 
+---
+
+## SimQ Re-evaluation — 2026-07-01
+
+**Trigger:** Three world-data tickets completed (TCK-20260630-WORLD-QUEST-LOCATION, TCK-20260630-WORLD-DEPLOY-MODULES, TCK-20260630-WORLD-TEST-MATRIX). Calibration corpus expanded from 8 to 13 runs.
+
+### Changes that informed this re-evaluation
+
+| Ticket | Change | Impact on SimQ |
+|---|---|---|
+| TCK-20260630-WORLD-QUEST-LOCATION | Compiler now matches `required_location_tags` against `region.type` + `region.tags`; 28 compile warnings → 0 | Removes false validation failures at compile time; no direct runtime grade change (quests fire via P1-B path, not location-tag block) |
+| TCK-20260630-WORLD-DEPLOY-MODULES | 5 new compiled worlds deployed; calibration corpus now 13 runs | Provides empirical grade data across more world types and entity counts |
+| TCK-20260630-WORLD-TEST-MATRIX | MODULE_MATRIX 15 → 20; all modules covered by integration tests | Test coverage gap closed; no grade change |
+
+### Current calibration corpus (13 runs)
+
+| World | Seed | Ticks | COMBAT | NARRATIVE | PROGRESSION | AGENCY | COGNITION | ECONOMY | FACTION | INFO | SOCIAL | WORLD |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| sandbox_world | 42 | 200 | B | A | B | C | C | C | C | C | C | C |
+| sandbox_world | 137 | 200 | B | A | C | C | C | C | C | C | C | C |
+| sandbox_world | 999 | 200 | B | A | C | C | C | C | C | C | C | C |
+| sandbox_world | 42 | 1000 | B | A | B | C | C | C | C | C | C | B |
+| dungeon_crawl | 42 | 200 | A | B | A | C | C | C | C | C | C | A |
+| dungeon_crawl | 42 | 1000 | B | B | B | C | C | C | C | C | C | B |
+| urban_political | 42 | 200 | B | A | B | C | C | C | C | C | C | A |
+| simq_routing_test | 42 | 500 | B | A | B | **B** | C | C | C | C | C | B |
+| frontier_extended | 42 | 159† | A | A | A | C | C | C | C | C | C | A |
+| frontier_living_world | 42 | 159† | A | A | A | C | C | C | C | C | C | A |
+| swamp_border_world | 42 | 200 | B | A | B | C | C | C | C | C | C | B |
+| highland_traverse | 42 | 164 | B | B | B | C | C | C | C | C | C | B |
+| wilderness_survival | 42 | 101‡ | B | C | B | C | C | C | C | C | C | A |
+
+†Early termination — large entity count (56/46) accelerates combat attrition. See P2-B.  
+‡Early termination — only 11 entities; survivor_camp_shelter now included (combat-heavy). Confirms P2-B at small scale.
+
+### Findings
+
+**Finding 1: Systemic C ceiling on 5 pillars is confirmed engine-structural.**  
+COGNITION, ECONOMY, FACTION, INFORMATION, and SOCIAL are uniformly C across all 13 runs — across every world type, every seed, every tick count. This is not a calibration or content problem. It is 100% attributable to the 27 engine emission gaps documented in `docs/simulation_quality/event_type_coverage.md §3`. These pillars have complete scoring infrastructure but no upstream event emitters in the engine. No world content change, calibration run, or tuning will move these grades until the engine emits the missing event types. Tracking as a standing structural gap — not a new finding, confirmed.
+
+**Finding 2: P0-A (ENABLE_ADVENTURE_ROUTING) is the sole confirmed blocker for AGENCY.**  
+AGENCY is C in all 12 default-mode runs and B only in simq_routing_test (where `ENABLE_ADVENTURE_ROUTING=ON` is injected via env var). No world content, tick count, or entity density changes this pattern. Fixing P0-A (change default or mandate env-var in calibration harness) is a direct, confirmed path to AGENCY ≥ B.
+
+**Finding 3: P0-B is RESOLVED.**  
+`urban_political` now has `resource_node_count: 3` in its compile report (fixed during worldgen epic). P0-B is no longer blocking economic measurement for that world. Updated above.
+
+**Finding 4: WORLD grade reflects ecology complexity, not entity count.**  
+sandbox_world (2 regions, 10 nodes, 0 quests) scores WORLD=C despite high resource density. dungeon_crawl, frontier_extended, urban_political, and wilderness_survival all score WORLD=A. The differentiator is ecology events: hazard_drain, region_trauma_delta, raid_party_spawned. Worlds with ecology/danger modules score higher. sandbox_world has none. This is expected behavior, not a gap.
+
+**Finding 5: NARRATIVE = C is a short-run / low-entity signal, not a gap in wilderness_survival.**  
+wilderness_survival terminates at tick 101 with 11 entities. NARRATIVE is C because quest_started events require living entities pursuing quest objectives; with rapid attrition the narrative event rate is too low to cross the B threshold. NARRATIVE=C here confirms P2-B (entity attrition outpaces spawning) rather than indicating a narrative system gap.
+
+**Finding 6: Larger multi-module worlds show COMBAT=A and PROGRESSION=A.**  
+frontier_extended (56 entities, 10 regions) and frontier_living_world (46 entities, 7 regions) both score COMBAT=A and PROGRESSION=A at 200 ticks. These are currently the highest-activity worlds in the corpus. They also terminate early (tick 159) — confirming P2-B applies at higher entity counts too.
+
+**Finding 7: Quest location fix has no grade impact (correct).**  
+The TCK-20260630-WORLD-QUEST-LOCATION fix eliminated 28 compile warnings by validating `required_location_tags` against `region.type`/`region.tags` instead of `region.id`. This fix was compile-time validation only — the runtime quest activation path (P1-B) is not gated by this validation. quest_completed grades remain 0 across all worlds, as expected until P0-A and P1-B are addressed.
+
+### Revised blocker assessment after re-evaluation
+
+| Blocker | Before | After |
+|---|---|---|
+| P0-A ENABLE_ADVENTURE_ROUTING | Blocking AGENCY and all economic measurement | Confirmed blocking. simq_routing_test (env-var inject) demonstrates AGENCY=B is achievable once fixed. |
+| P0-B urban_political resource nodes | Blocking economic measurement for urban_political | **RESOLVED** — 3 resource nodes confirmed in compile report. |
+| P0-C entity navigation.region_id None | Blocking entity-region matching | Still open — no fix committed. Affects ResourceOpportunityProvider region filtering. |
+| 5-pillar C ceiling | Unclear if calibration or engine gap | **Confirmed engine-structural** — 27 emission gaps. No fix path short of engine emitter work. |
+
+### Next highest-value actions (ranked by grade impact)
+
+1. **P0-A** — fix `ENABLE_ADVENTURE_ROUTING` default. Moves AGENCY from C→B or higher across all worlds. Unblocks economic and quest measurement (P1-B chain).
+2. **P0-C** — fix entity `navigation.region_id` assignment at compile time. Unblocks `ResourceOpportunityProvider` region filtering. Required for ECONOMY to move off C even after P0-A.
+3. **P1-B** — quest activation (depends on P0-A). Required for NARRATIVE to show `quest_completed` events, currently 0 across all runs.
+4. **Engine emitter work** — add any 1–2 emitters from §3 of `event_type_coverage.md` to move a 5th pillar off C (e.g., `paid_info_transaction` for ECONOMY, `social_memory_created` for SOCIAL).
+
+---
+
 ## Summary Table
 
 | ID | Source | Priority | Type | Effort |
 |---|---|---|---|---|
 | P0-A | D04 §6.1 | **P0** | Configuration | XS — change default or document policy |
-| P0-B | D04 §6.2 | **P0** | Content | S — add resource nodes to world YAML |
+| P0-B | D04 §6.2 | **P0** | Content | **RESOLVED** — 3 resource nodes confirmed (2026-07-01) |
 | P0-C | D04 §6.3 | **P0** | Engine | S — WorldCompiler entity region assignment |
 | P1-A | D03 F3 / D06 F3 | **P1** | Engine | M — stale-project expiry on ProjectState |
 | P1-B | D06 F4 | **P1** | Engine | M — quest activation preconditions |
@@ -429,19 +505,21 @@ goblin spawn staggered, `--profile` arg added. Deep audit tracked in `docs/plans
 
 Tickets should be created in this sequence to avoid blocked work:
 
-1. **D20-G1 + D20-G3** (TCK-20260630-SIMQ-WIRE-KERNEL) — unblocks SimQ and calibration
-2. **D20-G2** (TCK-20260630-SIMQ-WIRE-SERVER) — parallel with G1, independent
-3. **D20-F5** (TCK-20260630-SIMQ-RECALIBRATE) — blocked on G1
-4. **P0 block:** P0-A → P0-B → P0-C (each is a prerequisite for meaningful economic measurement)
-5. **After P0:** P1-A (rejection cascade) — prevents memory issue invalidating long-run tests
-6. **P1-B** (quest activation) — depends on P0-A
-7. **P1-E** — already RESOLVED (D19 exists)
-8. **P1-F, P1-G, P1-H** — can run in parallel (independent refactors)
-9. **P2-A, P2-B** — simulation health fixes, can run after P0 are cleared
-10. **P2-C, P2-D** — content authoring (independent, no code deps)
-11. **P2-E through P2-N** — architectural/typing/DX cleanup sprint
-12. **P1-C, P1-D** — new feature epics (Faction & Diplomacy, Pressure-Driven Quests)
-13. **P3 items** — post-stabilization pass
+1. **D20-G1 + D20-G3** (TCK-20260630-SIMQ-WIRE-KERNEL) — **DONE**
+2. **D20-G2** (TCK-20260630-SIMQ-WIRE-SERVER) — **DONE**
+3. **D20-F5** (TCK-20260630-SIMQ-RECALIBRATE + TCK-20260630-SIMQ-CALFIX) — **DONE**
+4. **P0-B** — **RESOLVED** (resource nodes present, confirmed 2026-07-01)
+5. **P0-A** — next highest priority. Change `ENABLE_ADVENTURE_ROUTING` default to `ON` or mandate injection in all calibration/test runs. Unblocks AGENCY and the entire economic measurement chain.
+6. **P0-C** — entity `navigation.region_id` assignment at compile time. Can be tackled in parallel with P0-A.
+7. **After P0-A+C:** P1-A (rejection cascade) — prevents memory issue invalidating long-run tests
+8. **P1-B** (quest activation) — depends on P0-A
+9. **P1-F, P1-G, P1-H** — independent refactors, can run in parallel
+10. **P2-A, P2-B** — simulation health fixes (early lock expiry, spawn cadence); P2-B confirmed by wilderness_survival 101-tick termination
+11. **P2-C, P2-D** — content authoring (independent, no code deps)
+12. **P2-E through P2-N** — architectural/typing/DX cleanup sprint
+13. **P1-C, P1-D** — new feature epics (Faction & Diplomacy, Pressure-Driven Quests)
+14. **P3 items** — post-stabilization pass
+15. **Engine emitter work** — add missing emitters from `event_type_coverage.md §3` to unlock the 5 C-ceiling pillars
 
 ---
 
