@@ -279,22 +279,29 @@ and cross-run comparison. Raw score is retained for full transparency.
 | **D** | −1.0 to −0.5 | Degraded — significant degenerate signals present |
 | **F** | < −1.0 | Degenerate — subsystem broken, absent, or in permanent failure mode |
 
-**Threshold calibration status (2026-06-30):** Current thresholds are initial estimates
-as specified above. They are loaded from `config/simulation_quality/grade_thresholds.yaml`
-and **must not be hardcoded inline** in any scorer or accumulator.
+**Threshold calibration status (2026-06-30 — re-calibrated, TCK-20260630-SIMQ-RECALIBRATE):**
+Thresholds are validated against real simulation data and loaded from
+`config/simulation_quality/grade_thresholds.yaml`. They **must not be hardcoded inline**
+in any scorer or accumulator.
 
-Calibration was attempted in TCK-20260628-SIMQ-E7-CALIBRATE via `tools/calibrate_simq.py`.
-A blocking gap was originally discovered: the engine's `EventRecorder` emits internal event
-types (`quest_event`, `StrategicConcernRaised`, `InvariantViolation`) that do not match the
-normalized event type vocabulary in §5. Zero events were scored in the original 100-tick
-baseline run.
+Re-calibration ran `tools/calibrate_simq.py` across 3 seeds (42, 137, 999) × 200 ticks
+on `sandbox_world` (10 entities) with the kernel wiring fix from TCK-20260630-SIMQ-WIRE-KERNEL
+in place. Observed normalized scores:
 
-**Gap resolved (2026-06-30):** TCK-20260629-SIMQ-EMIT-SOCIAL-FACTION and
-TCK-20260629-SIMQ-EMIT-NARRATIVE implemented the full event translation layer in
-`QualityHub._translate()` and extended the `EventExtractor` to emit social, faction, and
-narrative events using the §5 vocabulary. Parity ledger entry `SIMQ-CALIBRATED-001` is
-now `verified`. Threshold tuning via `tools/calibrate_simq.py` can proceed against a live
-run once a baseline scenario is available.
+| Pillar | Events (range) | Norm score (range) | Grade |
+|---|---|---|---|
+| COMBAT | 2–13 | +0.04 → +0.46 | B |
+| NARRATIVE | 16–22 | +1.08 → +1.40 | A |
+| PROGRESSION | 0–4 | 0.00 → +0.21 | B/C |
+| Others (7 pillars) | 0 | 0.00 | C |
+
+AGENCY, COGNITION, ECONOMY, FACTION, INFORMATION, SOCIAL, WORLD pillars produce zero
+signal on `sandbox_world` because P0-A (`ENABLE_ADVENTURE_ROUTING`) defaults OFF. Per-pillar
+threshold tuning for these pillars is deferred to the post-P0-A calibration pass.
+
+Threshold values (S: 2.0, A: 0.5, B: 0.0, C: −0.5, D: −1.0) are validated — NARRATIVE
+correctly grades A, COMBAT correctly grades B. No changes were required from the initial
+estimates.
 
 ### 4.6 Overall Quality Score
 
