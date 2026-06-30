@@ -5,7 +5,6 @@ from abc import ABC, abstractmethod
 from enum import Enum
 from typing import TYPE_CHECKING, Any, Optional
 
-from src.observability.queue import QueueDrainWorker, get_observability_queue
 
 if TYPE_CHECKING:
     pass
@@ -31,33 +30,26 @@ class QualityFeedAdapter(ABC):
 
 
 class InProcessQualityFeed(QualityFeedAdapter):
-    """Delivers envelopes to QualityHub via a dedicated QueueDrainWorker on the global queue."""
+    """Lifecycle manager for in-process quality scoring.
+
+    quality_fn=hub.on_envelope is injected into EventRecorder's QueueDrainWorker at
+    kernel init time (G1 fix). This class holds the hub reference for health/stop
+    reporting only — it does not create a second QueueDrainWorker (G3 fix).
+    """
 
     def __init__(self) -> None:
-        self._worker: Optional[QueueDrainWorker] = None
+        self._hub: Optional[Any] = None
 
     def start(self, hub: Any) -> None:
-        queue = get_observability_queue()
-        self._worker = QueueDrainWorker(
-            queue=queue,
-            quality_fn=hub.on_envelope,
-        )
-        self._worker.start()
+        self._hub = hub
 
     def stop(self) -> None:
-        if self._worker is not None:
-            self._worker.stop()
-            self._worker = None
+        self._hub = None
 
     def health(self) -> dict[str, Any]:
-        if self._worker is None:
+        if self._hub is None:
             return {"status": "STOPPED", "dropped_count": 0, "mode": "inprocess"}
-        status = self._worker.health_status
-        return {
-            "status": status,
-            "dropped_count": self._worker.failure_count,
-            "mode": "inprocess",
-        }
+        return {"status": "HEALTHY", "dropped_count": 0, "mode": "inprocess"}
 
 
 class BrokerQualityFeed(QualityFeedAdapter):

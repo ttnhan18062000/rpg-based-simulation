@@ -52,26 +52,24 @@ def test_build_feed_raises_for_unknown_mode(monkeypatch):
         build_feed_from_env()
 
 
-def test_inprocess_feed_start_stop_no_thread_leak():
+def test_inprocess_feed_start_stores_hub_reference():
     hub = _MockHub()
     feed = InProcessQualityFeed()
     feed.start(hub)
-    assert feed._worker is not None
-    assert feed._worker.is_alive()
+    assert feed._hub is hub
     feed.stop()
-    assert feed._worker is None
+    assert feed._hub is None
 
 
 def test_inprocess_feed_health_reports_status():
     hub = _MockHub()
     feed = InProcessQualityFeed()
     feed.start(hub)
-    try:
-        health = feed.health()
-        assert "status" in health
-        assert health["mode"] == "inprocess"
-    finally:
-        feed.stop()
+    health = feed.health()
+    assert "status" in health
+    assert health["mode"] == "inprocess"
+    assert health["status"] == "HEALTHY"
+    feed.stop()
 
 
 def test_inprocess_feed_health_when_stopped():

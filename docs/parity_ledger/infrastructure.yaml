@@ -2825,7 +2825,7 @@
     src/observability/queue.py::QueueDrainWorker.__init__ (quality_fn param) +
     src/observability/queue.py::QueueDrainWorker._run (quality_fn call with exception guard)
   proof_type: null
-  test_path: tests/simulation_quality/test_feed.py::test_inprocess_feed_start_stop,test_inprocess_feed_quality_fn_called
+  test_path: tests/unit/observability/test_event_recorder_quality_fn.py::test_event_recorder_quality_fn_called_on_drain
   divergence_note: null
   support_boundary: null
 - id: INFRA-233
@@ -3051,15 +3051,20 @@
   divergence_note: null
   support_boundary: null
 - id: INFRA-249
-  text: "quality_report.json written at server shutdown in api/server.py lifespan
-    teardown, immediately before manager.stop(). Uses get_quality_hub()+get_quality_persistence()
-    injected via src/api/dependencies.py. Failure is WARNING-logged only (never crashes shutdown)."
+  text: >
+    Kernel.__init__ constructs QualityHub and passes hub.on_envelope as quality_fn to
+    EventRecorder's QueueDrainWorker when obs_mode != OFF and QUALITY_SCORING_DISABLED
+    is unset. InProcessQualityFeed.start() is a lifecycle-only registrar — it does not
+    create a second QueueDrainWorker. quality_report.json written at Kernel.shutdown()
+    via QualityPersistence.write_report(). (TCK-20260630-SIMQ-WIRE-KERNEL)
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: src/api/server.py (lifespan teardown, lines ~44-52)
+  v2_evidence: >
+    src/engine/kernel.py (SimQ hub construction block in __init__ + shutdown()) +
+    src/simulation_quality/feed.py::InProcessQualityFeed (lifecycle-only after G3 fix)
   proof_type: null
-  test_path: tests/simulation_quality/test_api_routes.py
+  test_path: tests/simulation_quality/test_kernel_simq_integration.py::test_20_tick_run_produces_nonzero_tick_count
   divergence_note: null
   support_boundary: null
 - id: INFRA-250

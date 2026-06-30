@@ -47,6 +47,7 @@ class Kernel:
         "_phase_costs", "_metrics", "_audit_mode", "_no_frame_pacing", "_no_replay", "_audit_dirty_set", "_perf_tracker", "_force_full_scan", "_current_update", "_cache_registry", "_cache_policy", "_opt_profile", "_event_listeners", "_event_recorder", "_entity_timeline_store",
         "_run_id", "_artifact_repo", "_metric_recorder", "_current_tick_event_count", "_current_tick_violation_count", "_cognition_recorder", "_decision_trace_writer", "_personality_recorder",
         "_workers_started", "_last_shutdown_report",
+        "_quality_hub", "_quality_feed",
     )
 
     def __init__(
@@ -223,11 +224,48 @@ class Kernel:
         elif hasattr(self._replay, "_run_dir"):
             run_dir_str = str(self._replay._run_dir)
 
+        # Build SimQ hub before EventRecorder so quality_fn is wired at worker construction.
+        self._quality_hub = None
+        self._quality_feed = None
+        _quality_fn = None
+        if obs_mode != ObservabilityMode.OFF:
+            from src.simulation_quality.feed import build_feed_from_env
+            _feed = build_feed_from_env()
+            if _feed is not None:
+                from src.simulation_quality.weights import ScoringWeights
+                from src.simulation_quality.quality_hub import QualityHub
+                from src.simulation_quality.persistence import QualityPersistence
+                from src.simulation_quality.scorers import build_all_scorers
+                try:
+                    _q_profile = os.environ.get("QUALITY_PROFILE", "default")
+                    _weights = ScoringWeights.load(
+                        "config/simulation_quality/scoring_weights.yaml",
+                        "config/simulation_quality/grade_thresholds.yaml",
+                        "config/simulation_quality/detection_params.yaml",
+                        _q_profile,
+                    )
+                    _q_run_dir = run_dir_str or f"data/runs/{self._run_id}"
+                    _hub = QualityHub(
+                        scorers=build_all_scorers(_weights),
+                        weights=_weights,
+                        persistence=QualityPersistence(_q_run_dir),
+                        run_id=self._run_id,
+                    )
+                    _quality_fn = _hub.on_envelope
+                    self._quality_hub = _hub
+                    self._quality_feed = _feed
+                except Exception:
+                    logger.warning("SimQ hub construction failed (non-fatal) — quality scoring disabled for this run")
+
         self._event_recorder = EventRecorder(
             run_dir=run_dir_str,
             max_events=5000,
-            enabled=(obs_mode != ObservabilityMode.OFF)
+            enabled=(obs_mode != ObservabilityMode.OFF),
+            quality_fn=_quality_fn,
         )
+
+        if self._quality_feed is not None and self._quality_hub is not None:
+            self._quality_feed.start(self._quality_hub)
         self._entity_timeline_store = EntityTimelineStore(mode=obs_mode)
 
         self._metric_recorder = None
@@ -276,6 +314,11 @@ class Kernel:
             ContentWarmupService.warmup()
         except Exception as _warmup_err:
             logger.warning("ContentWarmupService.warmup() failed (non-fatal): %s", _warmup_err)
+
+    @property
+    def quality_hub(self):
+        """Read-only access to the QualityHub instance (None if SimQ is disabled)."""
+        return self._quality_hub
 
     def validate(self, flags: Optional[Dict[str, bool]] = None) -> None:
         from src.config.validator import ProfileValidator
@@ -908,6 +951,22 @@ class Kernel:
         workers_stopped = 0
 
         self._worker_manager.shutdown()
+
+        if hasattr(self, "_quality_feed") and self._quality_feed is not None:
+            try:
+                self._quality_feed.stop()
+            except Exception:
+                logger.warning("SimQ feed stop failed (non-fatal)")
+
+        if hasattr(self, "_quality_hub") and self._quality_hub is not None:
+            try:
+                _quality_report = self._quality_hub.get_quality_report()
+                _persistence = getattr(self._quality_hub, "_persistence", None)
+                if _persistence is not None:
+                    _persistence.write_report(_quality_report)
+                    _persistence.shutdown()
+            except Exception:
+                logger.warning("SimQ final report write failed during shutdown (non-fatal)")
 
         if hasattr(self, "_event_recorder") and self._event_recorder:
             self._event_recorder.shutdown()
