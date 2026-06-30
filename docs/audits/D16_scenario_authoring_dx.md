@@ -212,7 +212,7 @@ YAML scaffold. The main gap is discoverability: no authoring guide points to it.
 | Priority | Action |
 |---|---|
 | **P1** | Auto-detect unregistered content families in `make world-validate` output (or auto-update `ContentUsageMatrix`) |
-| **P1** | Write a content author guide (`docs/content/authoring_guide.md`): steps to add a module, composition, scenario; list of allowed module types, initial_condition categories, and make targets |
+| **P1** | Write a content author guide (`docs/guides/content_authoring.md`): steps to add a module, composition, scenario; list of allowed module types, initial_condition categories, and make targets |
 | P2 | Add `make catalog-list` or `make content-browse` to list available catalog IDs by type (biomes, ecologies, populations, factions) |
 | P2 | Add `make scenario-new ID=<id> TEMPLATE=<template_id>` scaffold command for simulation scenarios |
 | P2 | Document the 10 scenario templates in the authoring guide with example YAMLs |

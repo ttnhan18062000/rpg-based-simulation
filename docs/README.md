@@ -204,9 +204,9 @@ Practical how-to guides for working with each major subsystem. These are startin
 | [guides/observability.md](guides/observability.md) | Event bus, backpressure modes, decision traces, hard-law monitor |
 | [guides/testing.md](guides/testing.md) | Test layout, markers, CI gates, P0 authority, regression triage |
 | [guides/simulation_quality.md](guides/simulation_quality.md) | SimQ pillars, grades, REST API, feed modes, configuration |
-| [content/authoring_guide.md](content/authoring_guide.md) | World modules, compositions, scenarios — quickstart, sharp edges, FAQ |
-| [strategy/bounded_cognition_tuning_guide.md](strategy/bounded_cognition_tuning_guide.md) | Tuning AI cognition parameters, archetype defaults, troubleshooting |
-| [agent-monitoring/retro-guide.md](agent-monitoring/retro-guide.md) | Agent retrospectives, monitoring queries, gate failure patterns |
+| [guides/content_authoring.md](guides/content_authoring.md) | World modules, compositions, scenarios — quickstart, sharp edges, FAQ |
+| [guides/bounded_cognition_tuning.md](guides/bounded_cognition_tuning.md) | Tuning AI cognition parameters, archetype defaults, troubleshooting |
+| [guides/agent_monitoring.md](guides/agent_monitoring.md) | Agent retrospectives, monitoring queries, gate failure patterns |
 
 ---
 

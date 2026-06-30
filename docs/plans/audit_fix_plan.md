@@ -264,7 +264,7 @@ Update all callers. Add parity test that `evaluate_abandonment()` returns a type
 
 **Source:** D16 Structural Gap  
 **Finding:** No single-page walkthrough for adding a module, composition, or scenario exists. `modules_contract.md` is a technical contract. Critical rules (`observability_tags` not `tags`, no `provided_features`, catalog ID constraints) are only discoverable by reading source or failing validation.  
-**Fix:** Write `docs/content/authoring_guide.md` covering: step-by-step for adding a world module, allowed module types, valid `initial_conditions` keys, available `make` targets, common sharp edges (catalog ID validation, ContentUsageMatrix).
+**Fix:** Write `docs/guides/content_authoring.md` covering: step-by-step for adding a world module, allowed module types, valid `initial_conditions` keys, available `make` targets, common sharp edges (catalog ID validation, ContentUsageMatrix).
 
 ---
 
