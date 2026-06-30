@@ -9,7 +9,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import HTMLResponse, RedirectResponse
 
-from src.api.dependencies import set_engine_manager, get_engine_manager
+from src.api.dependencies import (
+    set_engine_manager, get_engine_manager,
+    set_quality_hub, set_quality_persistence,
+)
 from src.api.engine_manager import V2EngineManager
 from src.api.schemas import WorldStateResponse, EntityPageResponse, EntityDetailResponse
 from src.config.profiles import RuntimeProfile
@@ -24,7 +27,13 @@ def create_v2_app(profile: RuntimeProfile) -> FastAPI:
         manager = V2EngineManager(profile)
         set_engine_manager(manager)
         manager.start()
-        
+
+        # G2 fix: wire quality hub into dependency container after kernel is ready
+        _k = manager.kernel
+        if _k is not None and _k.quality_hub is not None:
+            set_quality_hub(_k.quality_hub)
+            set_quality_persistence(getattr(_k.quality_hub, "_persistence", None))
+
         # Register LiveAnomalyCounter as subscriber to publisher
         from src.observability.live.event_publisher import LiveEventPublisher
         from src.observability.live.anomaly_counter import LiveAnomalyCounter
