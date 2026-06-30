@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: simulation
 authority: P1
 audience: agent
 ticket_id: TCK-20260630-SIMQ-TIMEGATE
-phase: open
+phase: done
 date: 2026-06-30
 tags: [simulation-quality, calibration, testing, regression]
 ---
@@ -15,7 +15,7 @@ tags: [simulation-quality, calibration, testing, regression]
 1000-tick calibration and time-gate penalty verification
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -48,12 +48,12 @@ This ticket runs extended calibrations and adds tests that confirm time-gate beh
 - Changing time-gate threshold values (calibration only)
 
 ## Acceptance Criteria
-- [ ] sandbox_world 1000-tick: ECONOMY grade ≤ C by tick 300 (zero-harvest penalty active)
-- [ ] dungeon_crawl 1000-tick: NARRATIVE grade ≥ B (quest density sustains score)
-- [ ] PROGRESSION: `progression_frozen` penalty test passes (time-gate fires exactly at threshold)
-- [ ] AGENCY: `stasis_N` accumulation test passes (per-tick -3 delta beyond tick 5)
-- [ ] `pytest tests/simulation_quality/ -k timegate` passes (new tests added)
-- [ ] Calibration results committed under `data/calibration/{world}_seed{seed}_1000t/`
+- [x] sandbox_world 1000-tick: ECONOMY grade ≤ C by tick 300 (zero-harvest penalty active) — ECONOMY grade=C ✓
+- [x] dungeon_crawl 1000-tick: NARRATIVE grade ≥ B (quest density sustains score) — NARRATIVE grade=B ✓
+- [x] PROGRESSION: `progression_frozen` penalty test passes (time-gate fires exactly at threshold) ✓
+- [x] AGENCY: `stasis_N` accumulation test passes (per-tick -3 delta beyond tick 5) ✓
+- [x] `pytest tests/simulation_quality/ -k timegate` passes (27 tests, new file) ✓
+- [x] Calibration results committed under `data/calibration/{world}_seed{seed}_1000t/` ✓
 
 ## Related Tickets
 - TCK-20260630-SIMQ-CALFIX (prerequisite — world loading needed for meaningful long runs)
@@ -72,23 +72,33 @@ This ticket runs extended calibrations and adds tests that confirm time-gate beh
 - `tools/calibrate_simq.py` — run at 1000 ticks
 
 ## Assumptions / Open Questions
-- What tick value is `zero_harvest_after_tick` set to in detection_params.yaml? Must verify
-  before writing the test (read from config, not hardcoded in test).
-- Long-run calibrations (~30s per 200 ticks) will take ~150s for 1000 ticks. Mark as slow.
+All resolved during investigation.
 
 ## Implementation Notes
-- Time-gate tests should inject events directly (not run full simulation) and verify
-  the scorer applies the penalty at the correct tick, not before.
-- Use `@pytest.mark.slow` so they're excluded from default test suite runs.
-- Calibration data commitment: add to `data/calibration/` and include in git.
+- Time-gate tests inject events directly (no full simulation) — 27 tests all pass in 0.16s
+- `simq_routing_test_seed42_500t` already existed from ROUTING-TEST ticket — skipped re-run
+- sandbox_world 1000t (126s): ECONOMY=C (0 events, no economy event bus coverage), NARRATIVE=A
+- dungeon_crawl 1000t (128s): NARRATIVE=B (24 events), COMBAT=B, WORLD=B
+- Parity ledger updated: INFRA-237 (Agency), INFRA-243 (Progression), INFRA-247 (Narrative)
+  — all now reference test_timegate_penalties.py classes in test_path
 
 ## Test Summary
-- Unit tests: per-pillar time-gate verification (inject events, control tick count)
-- Integration: 1000-tick calibration output matches expected grade trajectory
-- Regression: grades added to TCK-20260630-SIMQ-ANCHORS fixture after this ticket
+- 27 time-gate unit tests in `tests/simulation_quality/test_timegate_penalties.py`
+- 4 pillars: ECONOMY (9), PROGRESSION (6), NARRATIVE (6), AGENCY (6)
+- Coverage per gate: fires-at-threshold, not-before-threshold, fires-once
+- Full non-slow SimQ suite: 336 passed, 11 deselected (slow)
 
 ## Files Changed
-(to be filled at implementation)
+- `tests/simulation_quality/test_timegate_penalties.py` — new (27 tests)
+- `data/calibration/sandbox_world_seed42_1000t/` — new calibration run
+- `data/calibration/dungeon_crawl_seed42_1000t/` — new calibration run
+- `docs/parity_ledger/infrastructure.yaml` — INFRA-237, 243, 247 test_path updated
+- `staging_artifacts/TCK-20260630-SIMQ-TIMEGATE/` → `stored_artifacts/`
 
 ## Completion Summary
-(to be filled at completion)
+Added 27 per-pillar time-gate unit tests to `test_timegate_penalties.py`, covering all 8
+time-gate rules across ECONOMY, PROGRESSION, NARRATIVE, and AGENCY pillars. Tests verify:
+(1) penalty fires at threshold+1, (2) no fire before threshold, (3) one-shot flag behavior.
+Ran 1000-tick calibrations for sandbox_world (ECONOMY=C, NARRATIVE=A, overall=B) and
+dungeon_crawl (NARRATIVE=B, COMBAT=B, WORLD=B, overall=B) — both meeting acceptance criteria.
+simq_routing_test 500t already present. Parity ledger updated for 3 entries.

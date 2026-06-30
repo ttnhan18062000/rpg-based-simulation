@@ -1,0 +1,160 @@
+{
+  "run_id": "run_1782839808_5169",
+  "tick_count": 968,
+  "overall_score": 0.06663223140495868,
+  "overall_grade": "B",
+  "generated_at": "2026-06-30T17:18:55.447569+00:00",
+  "pillars": {
+    "COGNITION": {
+      "raw_score": 0.0,
+      "normalized_score": 0.0,
+      "grade": "C",
+      "event_count": 0,
+      "negative_count": 0,
+      "loop_detected": false,
+      "loop_flags": [],
+      "worst_events": []
+    },
+    "AGENCY": {
+      "raw_score": 0.0,
+      "normalized_score": 0.0,
+      "grade": "C",
+      "event_count": 0,
+      "negative_count": 0,
+      "loop_detected": false,
+      "loop_flags": [],
+      "worst_events": []
+    },
+    "COMBAT": {
+      "raw_score": 30.0,
+      "normalized_score": 0.030991735537190084,
+      "grade": "B",
+      "event_count": 25,
+      "negative_count": 2,
+      "loop_detected": true,
+      "loop_flags": [
+        "combat_active",
+        "combat_dormant"
+      ],
+      "worst_events": [
+        {
+          "tick": 683,
+          "event_id": "6ace22602d0f41a798f76468b108be51",
+          "pillar": "COMBAT",
+          "delta": -15.0,
+          "reason": "zero combat events in hostile world by tick threshold",
+          "event_type": "combat_initiated",
+          "entity_id": 8,
+          "region_id": null,
+          "tags": [
+            "combat_dormant"
+          ]
+        },
+        {
+          "tick": 745,
+          "event_id": "553727317d8d46ed8276e66045634861",
+          "pillar": "COMBAT",
+          "delta": -1.0,
+          "reason": "entity killed in combat",
+          "event_type": "entity_killed",
+          "entity_id": 7,
+          "region_id": null,
+          "tags": [
+            "attrition"
+          ]
+        }
+      ]
+    },
+    "FACTION": {
+      "raw_score": 0.0,
+      "normalized_score": 0.0,
+      "grade": "C",
+      "event_count": 0,
+      "negative_count": 0,
+      "loop_detected": false,
+      "loop_flags": [],
+      "worst_events": []
+    },
+    "ECONOMY": {
+      "raw_score": 0.0,
+      "normalized_score": 0.0,
+      "grade": "C",
+      "event_count": 0,
+      "negative_count": 0,
+      "loop_detected": false,
+      "loop_flags": [],
+      "worst_events": []
+    },
+    "PROGRESSION": {
+      "raw_score": 33.0,
+      "normalized_score": 0.03409090909090909,
+      "grade": "B",
+      "event_count": 11,
+      "negative_count": 0,
+      "loop_detected": true,
+      "loop_flags": [
+        "survival_experience"
+      ],
+      "worst_events": []
+    },
+    "SOCIAL": {
+      "raw_score": 0.0,
+      "normalized_score": 0.0,
+      "grade": "C",
+      "event_count": 0,
+      "negative_count": 0,
+      "loop_detected": false,
+      "loop_flags": [],
+      "worst_events": []
+    },
+    "INFORMATION": {
+      "raw_score": 0.0,
+      "normalized_score": 0.0,
+      "grade": "C",
+      "event_count": 0,
+      "negative_count": 0,
+      "loop_detected": false,
+      "loop_flags": [],
+      "worst_events": []
+    },
+    "WORLD": {
+      "raw_score": 12.0,
+      "normalized_score": 0.012396694214876033,
+      "grade": "B",
+      "event_count": 3,
+      "negative_count": 0,
+      "loop_detected": true,
+      "loop_flags": [
+        "raid_active"
+      ],
+      "worst_events": []
+    },
+    "NARRATIVE": {
+      "raw_score": 570.0,
+      "normalized_score": 0.5888429752066116,
+      "grade": "A",
+      "event_count": 119,
+      "negative_count": 1,
+      "loop_detected": true,
+      "loop_flags": [
+        "quest_active",
+        "quest_system_dormant"
+      ],
+      "worst_events": [
+        {
+          "tick": 271,
+          "event_id": "33cc367f916d4eb19943a32aa9ddd0d9",
+          "pillar": "NARRATIVE",
+          "delta": -20.0,
+          "reason": "zero quest starts in run after tick gate (unconditional: fires even if quest config is empty \u2014 check \u00a75 NARRATIVE traceability)",
+          "event_type": "quest_started",
+          "entity_id": 10,
+          "region_id": null,
+          "tags": [
+            "quest_system_dormant"
+          ]
+        }
+      ]
+    }
+  }
+}

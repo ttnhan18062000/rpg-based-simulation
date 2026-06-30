@@ -2901,7 +2901,7 @@
     src/simulation_quality/scorers/agency.py::AgencyScorer.score;
     config/simulation_quality/scoring_weights.yaml AGENCY section
   proof_type: null
-  test_path: tests/simulation_quality/test_agency_scorer.py
+  test_path: "tests/simulation_quality/test_agency_scorer.py; tests/simulation_quality/test_timegate_penalties.py::TestAgencyTimegate"
   divergence_note: null
   support_boundary: null
 - id: INFRA-238
@@ -2980,7 +2980,7 @@
   legacy_evidence: null
   v2_evidence: src/simulation_quality/scorers/progression.py::ProgressionScorer.score
   proof_type: null
-  test_path: tests/simulation_quality/test_progression_scorer.py
+  test_path: "tests/simulation_quality/test_progression_scorer.py; tests/simulation_quality/test_timegate_penalties.py::TestProgressionTimegate"
   divergence_note: null
   support_boundary: null
 - id: INFRA-244
@@ -3035,7 +3035,7 @@
     CampaignOrchestrator._emit_chronicle_events(). Tested in
     tests/unit/campaigns/test_narrative_ledger.py (TC-D16..TC-D19)."
   proof_type: null
-  test_path: "tests/simulation_quality/test_narrative_scorer.py; tests/unit/campaigns/test_narrative_ledger.py"
+  test_path: "tests/simulation_quality/test_narrative_scorer.py; tests/unit/campaigns/test_narrative_ledger.py; tests/simulation_quality/test_timegate_penalties.py::TestNarrativeTimegate"
   divergence_note: null
   support_boundary: null
 - id: INFRA-248
