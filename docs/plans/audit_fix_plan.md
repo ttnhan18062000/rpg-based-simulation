@@ -334,36 +334,34 @@ These are partially implemented and tracked at the D01 level. Each may spawn its
 
 ---
 
-## D20 — Simulation Quality Integration Gaps
+## D20 — Simulation Quality Integration Gaps — **ALL RESOLVED (2026-06-30)**
 
 **Source:** D20 audit (2026-06-30) — `docs/audits/D20_simq_integration.md`  
-**Date found:** 2026-06-30
+**Date found:** 2026-06-30  
+**Resolved:** 2026-06-30 — TCK-20260630-SIMQ-WIRE-KERNEL, TCK-20260630-SIMQ-WIRE-SERVER, TCK-20260630-SIMQ-RECALIBRATE all done.
 
-All three gaps are independent but together cause zero events to reach the SimQ hub in
-every run. They block the calibration tool and any production use of SimQ.
-
-### D20-G1: quality_fn slot never populated at kernel init — **P1**
+### D20-G1: quality_fn slot never populated at kernel init — **RESOLVED**
 
 **File:** `src/observability/queue.py:97`, `src/observability/event_recorder.py:95–99`,
 `src/engine/kernel.py:226`  
 **Finding:** `QueueDrainWorker` has a `quality_fn: Optional[Callable]` slot for feeding
 events to the hub on each drain. EventRecorder creates this worker but never passes a
 `quality_fn`. The integration slot exists; it is just not connected.  
-**Ticket:** `TCK-20260630-SIMQ-WIRE-KERNEL` (standard)
+**Ticket:** `TCK-20260630-SIMQ-WIRE-KERNEL` (standard) — **DONE**
 
 ---
 
-### D20-G2: set_quality_hub() never called from server or CLI — **P1**
+### D20-G2: set_quality_hub() never called from server or CLI — **RESOLVED**
 
 **File:** `src/api/dependencies.py:22–24`, `src/api/server.py`  
 **Finding:** `set_quality_hub()` is defined but called nowhere. `get_quality_hub()`
 always returns `None`. REST quality endpoints silently return disabled-hub responses
 for the entire lifetime of any server process.  
-**Ticket:** `TCK-20260630-SIMQ-WIRE-SERVER` (hotfix)
+**Ticket:** `TCK-20260630-SIMQ-WIRE-SERVER` (hotfix) — **DONE**
 
 ---
 
-### D20-G3: InProcessQualityFeed creates competing consumer — **P1**
+### D20-G3: InProcessQualityFeed creates competing consumer — **RESOLVED**
 
 **File:** `src/simulation_quality/feed.py:33–61`  
 **Finding:** `InProcessQualityFeed` creates a second `QueueDrainWorker` on the same
@@ -371,18 +369,17 @@ global observability queue as EventRecorder's worker. Both race to drain items.
 EventRecorder's worker (started first at kernel init) wins the race; `hub.on_envelope()`
 is never called. Result: `tick_count=0`, all pillar `event_count=0`, all grades C across
 all seeds verified in D20.  
-**Ticket:** `TCK-20260630-SIMQ-WIRE-KERNEL` (same ticket as G1 — G3 is the cleanup after G1 is fixed)
+**Ticket:** `TCK-20260630-SIMQ-WIRE-KERNEL` (same ticket as G1 — G3 is the cleanup after G1 is fixed) — **DONE**
 
 ---
 
-### D20-F5: Calibration blocked until G1 is fixed — **P1**
+### D20-F5: Calibration blocked until G1 is fixed — **RESOLVED**
 
-**Dependency:** Blocked on `TCK-20260630-SIMQ-WIRE-KERNEL`  
-**Finding:** `tools/calibrate_simq.py` and the grade thresholds in
-`config/simulation_quality/grade_thresholds.yaml` were calibrated against zero-signal runs
-(E7 pre-dates the D20 wiring discovery). Thresholds are placeholder estimates, not real
-percentile values.  
-**Ticket:** `TCK-20260630-SIMQ-RECALIBRATE` (hotfix, blocked on WIRE-KERNEL)
+**Finding:** `tools/calibrate_simq.py` calibrated against zero-signal runs. Thresholds were
+placeholder estimates. Also: `--name` arg ignored (all worlds ran same generic sim).  
+**Ticket:** `TCK-20260630-SIMQ-RECALIBRATE` (hotfix) — **DONE**  
+**Follow-on:** `TCK-20260630-SIMQ-CALFIX` (standard) — **DONE** — world loading fixed,
+goblin spawn staggered, `--profile` arg added. Deep audit tracked in `docs/plans/archive/simq_deep_audit_plan.md`.
 
 ---
 
@@ -419,10 +416,10 @@ percentile values.
 | P3-B | D03 F5 | **P3** | DX | XS — remap STANDARD lab mode |
 | P3-C | D17 P2 | **P3** | Docs | S — verify 4 uncertain claims |
 | P3-D | D16 | **P3** | DX | S — catalog browser + template docs |
-| D20-G1 | D20 | **P1** | Engine | S — pass quality_fn to EventRecorder (TCK-20260630-SIMQ-WIRE-KERNEL) |
-| D20-G2 | D20 | **P1** | API | XS — call set_quality_hub() in server lifespan (TCK-20260630-SIMQ-WIRE-SERVER) |
-| D20-G3 | D20 | **P1** | Engine | S — remove InProcessQualityFeed competing consumer (TCK-20260630-SIMQ-WIRE-KERNEL) |
-| D20-F5 | D20 | **P1** | Tooling | S — re-run calibration after G1 fix (TCK-20260630-SIMQ-RECALIBRATE) |
+| D20-G1 | D20 | **P1** | Engine | **RESOLVED** — TCK-20260630-SIMQ-WIRE-KERNEL (2026-06-30) |
+| D20-G2 | D20 | **P1** | API | **RESOLVED** — TCK-20260630-SIMQ-WIRE-SERVER (2026-06-30) |
+| D20-G3 | D20 | **P1** | Engine | **RESOLVED** — TCK-20260630-SIMQ-WIRE-KERNEL (2026-06-30) |
+| D20-F5 | D20 | **P1** | Tooling | **RESOLVED** — TCK-20260630-SIMQ-RECALIBRATE + TCK-20260630-SIMQ-CALFIX (2026-06-30/07-01) |
 
 **Effort legend:** XS ≤ 1h · S = 2–4h · M = 1–2 days · L = 3–5 days · XL = epic
 

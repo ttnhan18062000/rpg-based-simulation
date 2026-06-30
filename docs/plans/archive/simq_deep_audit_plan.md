@@ -1,15 +1,17 @@
 ---
-status: active
+status: historical
 layer: simulation
 authority: P1
 audience: developer
 tags: [simulation-quality, audit, calibration, scoring, planning]
 date: 2026-06-30
+archived: 2026-07-01
 ---
 
 # SimQ Deep Audit Plan — Multi-World Scoring Investigation
 
 **Date:** 2026-06-30  
+**Archived:** 2026-07-01 — all 5 tracks implemented (TCK-20260630-SIMQ-CALFIX, ROUTING-TEST, TIMEGATE, TRANSLATE, ANCHORS).  
 **Follows:** TCK-20260630-SIMQ-WIRE-KERNEL (wiring), TCK-20260630-SIMQ-RECALIBRATE (calibration)  
 **Contract:** `docs/simulation_quality/quality_scoring_contract.md`  
 **Parent epic:** TCK-20260628-SIMQ-EPIC
@@ -37,6 +39,8 @@ tests/simulation_quality/test_scenario_coverage.py — 35/35 PASSED (0.22s)
 
 ### 2.2 Multi-World Calibration Results (seed=42, 200 ticks, 10 entities)
 
+*Pre-CALFIX (generic sim — all worlds identical):*
+
 | Pillar | sandbox_world | dungeon_crawl | wilderness_survival | urban_political |
 |---|---|---|---|---|
 | AGENCY | C (0.00, 0 ev) | C (0.00, 0 ev) | C (0.00, 0 ev) | C (0.00, 0 ev) |
@@ -51,6 +55,22 @@ tests/simulation_quality/test_scenario_coverage.py — 35/35 PASSED (0.22s)
 | WORLD | C (0.00, 0 ev) | C (0.00, 0 ev) | C (0.00, 0 ev) | C (0.00, 0 ev) |
 
 **3/10 pillars produce signal. 7/10 pillars are completely silent across all worlds.**
+
+*Post-CALFIX (world-loaded, seed=42, 200 ticks):*
+
+| Pillar | dungeon_crawl | urban_political |
+|---|---|---|
+| COMBAT | **A** (0.7384, 65 ev) | B (0.2525, 25 ev) |
+| NARRATIVE | B (0.1163) | **A** (0.8333, 33 ev) |
+| PROGRESSION | B | B |
+| WORLD | B (146 ev) | B (122 ev) |
+| Others | C | C |
+
+*simq_routing_test (ENABLE_ADVENTURE_ROUTING=ON, seed=42, 500 ticks):*
+
+| AGENCY | COMBAT | NARRATIVE | PROGRESSION | WORLD | Others |
+|---|---|---|---|---|---|
+| B (40 ev) | B (28 ev) | B (58 ev) | B (14 ev) | B (65 ev) | C (engine emission gaps) |
 
 ---
 
@@ -136,8 +156,8 @@ correctness but slows calibration runs and marks every run as degraded.
 
 ## 5. Proposed Plan — 5 Tracks
 
-### Track A — Fix Calibration Tool: World Config Loading
-**Priority: P0 | Tier: standard**
+### Track A — Fix Calibration Tool: World Config Loading ✓ DONE
+**Priority: P0 | Tier: standard | Ticket: TCK-20260630-SIMQ-CALFIX | Completed: 2026-06-30**
 
 Upgrade `calibrate_simq.py` to load the world composition for the named world.
 
@@ -162,8 +182,10 @@ settlement modules).
 
 ---
 
-### Track B — P0-A Test World: Enable Adventure Routing for SimQ Coverage
-**Priority: P1 | Tier: hotfix**
+### Track B — P0-A Test World: Enable Adventure Routing for SimQ Coverage ✓ DONE
+**Priority: P1 | Tier: hotfix | Ticket: TCK-20260630-SIMQ-ROUTING-TEST | Completed: 2026-06-30**
+
+**Outcome:** `data/worlds/simq_routing_test/` created with 4 modules. ENABLE_ADVENTURE_ROUTING injected via env var. 5/10 pillars active (AGENCY, COMBAT, NARRATIVE, PROGRESSION, WORLD). 5 zero-event pillars confirmed as engine emission gaps, not world composition gaps. `data/content/foundation/traits.yaml` fixed (missing `brave` trait unblocked assembly).
 
 Create a minimal test world config that enables `ENABLE_ADVENTURE_ROUTING` so that
 all 10 pillars produce signal in SimQ calibration runs.
@@ -192,8 +214,10 @@ readiness, not a SimQ concern. The test world sidesteps it without affecting pro
 
 ---
 
-### Track C — Extended Run & Time-Gate Penalty Verification
-**Priority: P1 | Tier: standard**
+### Track C — Extended Run & Time-Gate Penalty Verification ✓ DONE
+**Priority: P1 | Tier: standard | Ticket: TCK-20260630-SIMQ-TIMEGATE | Completed: 2026-07-01**
+
+**Outcome:** 27 time-gate unit tests added to `tests/simulation_quality/test_timegate_penalties.py` covering 4 pillars / 8 gates (fires-at-threshold, not-before-threshold, fires-once). 1000-tick calibrations: sandbox_world (ECONOMY=C sustained, NARRATIVE=A, overall B) and dungeon_crawl (NARRATIVE=B, COMBAT=B, WORLD=B, overall B). Parity entries INFRA-237/243/247 updated with test_paths.
 
 Run 1000-tick calibrations to verify time-gate negative penalties fire correctly.
 
@@ -218,8 +242,10 @@ Run 1000-tick calibrations to verify time-gate negative penalties fire correctly
 
 ---
 
-### Track D — Translation Table Completeness Audit
-**Priority: P2 | Tier: hotfix**
+### Track D — Translation Table Completeness Audit ✓ DONE
+**Priority: P2 | Tier: hotfix | Ticket: TCK-20260630-SIMQ-TRANSLATE | Completed: 2026-07-01**
+
+**Outcome:** 0 translation gaps found — `_TRANSLATE_SIMPLE` and `_TRANSLATE_CONDITIONAL` are complete. `docs/simulation_quality/event_type_coverage.md` committed classifying 98 event types: 55 scored, 27 engine_emission_gap, 3 p0_a_blocked, 13 unscored_intentional. 4 new tests added for previously-untested mappings (`leadership_changed`, `alliance_formed`, `betrayal_desertion`). 309 tests pass.
 
 Audit every engine event_type against the scorer EVENT_TYPES to find gaps in the
 translation table.
@@ -247,8 +273,10 @@ translation table.
 
 ---
 
-### Track E — Regression Anchors: Commit Empirical Grades
-**Priority: P1 | Tier: standard**
+### Track E — Regression Anchors: Commit Empirical Grades ✓ DONE
+**Priority: P1 | Tier: standard | Ticket: TCK-20260630-SIMQ-ANCHORS | Completed: 2026-07-01**
+
+**Outcome:** `tests/simulation_quality/fixtures/grade_anchors.json` committed with 8 empirical run anchors (sandbox_world ×3 seeds, dungeon_crawl ×2 runs, urban_political, wilderness_survival, simq_routing_test). `test_grade_regression.py` rewritten with ±1-band parametric tests (7 fast + 2 slow). Mutation test confirms regression detection. 353 total suite tests pass. INFRA-250 updated.
 
 `test_grade_regression.py` currently has placeholder expectations from contract §11.3.
 Replace with empirically observed grades from the calibration runs.
@@ -303,31 +331,28 @@ no world-specific calibration data is valid.
 
 ---
 
-## 8. Tickets to Create
+## 8. Tickets — All Done
 
-| ID (proposed) | Track | Tier | Short description |
+| Ticket | Track | Tier | Status |
 |---|---|---|---|
-| TCK-YYYYMMDD-SIMQ-CALFIX | A | standard | Fix calibrate_simq.py to load world configs and fix occupancy bug |
-| TCK-YYYYMMDD-SIMQ-ROUTING-TEST | B | hotfix | Create simq_routing_test world with ENABLE_ADVENTURE_ROUTING |
-| TCK-YYYYMMDD-SIMQ-TIMEGATE | C | standard | 1000-tick calibration and time-gate penalty verification |
-| TCK-YYYYMMDD-SIMQ-TRANSLATE | D | hotfix | Translation table completeness audit and gap doc |
-| TCK-YYYYMMDD-SIMQ-ANCHORS | E | standard | Commit regression anchors to test_grade_regression.py |
+| TCK-20260630-SIMQ-CALFIX | A | standard | **DONE** — world loading + goblin spawn fixed |
+| TCK-20260630-SIMQ-ROUTING-TEST | B | hotfix | **DONE** — simq_routing_test world created, 5/10 pillars active |
+| TCK-20260630-SIMQ-TIMEGATE | C | standard | **DONE** — 27 time-gate tests, 1000-tick calibration data committed |
+| TCK-20260630-SIMQ-TRANSLATE | D | hotfix | **DONE** — 0 gaps, event_type_coverage.md written |
+| TCK-20260630-SIMQ-ANCHORS | E | standard | **DONE** — 8 anchors committed, 353 tests pass |
 
 ---
 
-## 9. Open Questions
+## 9. Open Questions — All Resolved
 
-1. **Can `WorldCompiler.compile()` be called from `calibrate_simq.py` without starting
-   the full server?** Need to check if it requires the DI container or can run standalone.
+1. **Can `WorldCompiler.compile()` be called standalone?** ✓ Yes — `@staticmethod`, no DI
+   container required. Called via resolved world spec at `data/worlds/{name}/resolved/world.resolved.yaml`.
 
-2. **Does `dungeon_crawl` actually have calamity/boss spawn configs?** If the world
-   composition includes `scalable_bandit_camp` with `danger_scale: 2`, boss spawns may
-   fire after enough combat ticks — but only if world infrastructure is loaded.
+2. **Does `dungeon_crawl` have calamity/boss spawn configs?** ✓ Confirmed — WORLD pillar
+   shows B (146 events) after CALFIX loads the world composition correctly.
 
-3. **Should the simq_routing_test world be an authored composition or a programmatic
-   fixture?** Programmatic is simpler but less representative of real authored worlds.
-   Recommendation: authored composition, minimal, checked into `data/worlds/`.
+3. **Authored vs. programmatic simq_routing_test world?** ✓ Authored YAML composition
+   (`data/worlds/simq_routing_test/world.yaml`) using existing modules.
 
-4. **What is the correct entity count for multi-world calibration?** 10 entities gives
-   sparse events. 23 entities (D20 audit config) gives richer signal but slower runs.
-   Recommendation: 15 entities for calibration, 10 for unit tests.
+4. **Entity count for calibration?** ✓ 30 entities (simq_routing_test resolved count)
+   gives adequate signal. Default calibration uses world-loaded entity count.
