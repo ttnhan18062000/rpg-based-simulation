@@ -246,6 +246,31 @@ If any command fails, print "WARNING: batch monitoring write failed: <error>" bu
   { label: 'batch-monitoring-write' }
 )
 
+// ─── Folder cleanup (folder mode, all tickets done) ───────────────────────────
+
+if (batchStatus === 'DONE' && folder) {
+  const folderName = folder.replace(/\/$/, '').replace(/^.*\//, '')
+  await agent(
+    `Move the completed tickets/todos folder to tickets/done/. This is bookkeeping — do NOT fail the workflow if anything goes wrong.
+
+The folder "${folder}" had all tickets implemented successfully. Move the entire folder (including SEQUENCE.md and any non-ticket metadata files) to its done archive:
+
+Step 1 — check that all TCK-*.md files in the folder are already in tickets/done/:
+  Run: ls "${folder}"
+  Run: ls tickets/done/
+  If any TCK-*.md file is NOT in tickets/done/ as a matching ticket ID, print "SKIPPED: unfinished tickets still in folder" and return "done" without moving.
+
+Step 2 — if all tickets are done, move the whole folder:
+  Run: mv "${folder.replace(/\/$/, '')}" "tickets/done/${folderName}"
+  Print "Moved ${folder} → tickets/done/${folderName}/"
+
+Step 3 — if the folder no longer exists (already moved in a prior run), print "SKIPPED: folder not found" and return "done".
+
+Return "done".`,
+    { label: 'folder-cleanup' }
+  )
+}
+
 // ─── Phase 3: Report ──────────────────────────────────────────────────────────
 
 phase('Report')

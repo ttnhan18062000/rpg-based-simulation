@@ -626,8 +626,17 @@ Complete these steps in order:
 
 2. Move the ticket: tickets/inprogress/${tid}.md → tickets/done/${tid}.md
 
-3. Remove the todos source file if one exists:
-${ticketInfo.todos_source_path ? `   Run: rm "${ticketInfo.todos_source_path}"` : '   No todos source path recorded — skip.'}
+3. Remove the todos source file and clean up the parent folder if applicable:
+${ticketInfo.todos_source_path ? `
+   a. Run: rm "${ticketInfo.todos_source_path}"
+   b. Determine the parent directory (dirname of "${ticketInfo.todos_source_path}").
+      If it is a subfolder of tickets/todos/ (i.e. the path has the form tickets/todos/FOLDER/TCK-*.md):
+      - Run: ls <parent-dir>/
+      - If no TCK-*.md files remain (folder is empty or has only SEQUENCE.md / non-ticket files):
+        Run: mv <parent-dir>/ tickets/done/<FOLDER>/
+        This preserves SEQUENCE.md and any folder-level metadata in the done archive.
+      - If other TCK-*.md files still exist in the folder: skip — the folder is not complete yet.
+      If the source was directly in tickets/todos/ (no subfolder): skip the folder step.` : '   No todos source path recorded — skip.'}
 
 4. Append to tickets/working_log.csv (one new row, comma-separated):
    Format: timestamp,ticket_id,title,status,summary,artifacts_path
@@ -638,11 +647,12 @@ ${ticketInfo.todos_source_path ? `   Run: rm "${ticketInfo.todos_source_path}"` 
    - summary: one sentence of what was implemented
    - artifacts_path: ${tier !== 'hotfix' ? `stored_artifacts/${tid}` : 'none (hotfix — no staging artifacts)'}
 
-5. ${tier !== 'hotfix' ? `Move staging_artifacts/${tid}/ → stored_artifacts/${tid}/` : 'Hotfix: no staging artifacts to move.'}
+5. ${tier !== 'hotfix' ? `Move staging_artifacts/${tid}/ → stored_artifacts/${tid}/
+   This step is mandatory for standard/epic tickets. Do not skip it — leftover staging dirs accumulate as debt.` : 'Hotfix: no staging artifacts to move. Delete staging_artifacts/${tid}/ if it was accidentally created (rm -rf staging_artifacts/${tid}/).'}
 
 6. Clean data/runs/* and reports/release_proof/* only if they contain artifacts from this work session (check modification times before deleting).
 
-7. Verify no leftover staging files remain under staging_artifacts/.
+7. Verify: (a) no leftover files remain under staging_artifacts/${tid}/, (b) stored_artifacts/${tid}/ exists with expected contents (standard/epic only).
 
 Report each step: DONE / SKIPPED (reason).`,
   { label: 'finalize' }

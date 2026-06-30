@@ -56,7 +56,7 @@ If the input is a natural language sentence, treat it as `request`.
 6. **Test** — run scoped pytest (gate)
 7. **Parity** — update parity ledger
 8. **Verify** — Definition-of-Done checklist (gate)
-9. **Finalize** — move ticket, remove todos source file, append working_log, migrate artifacts
+9. **Finalize** — move ticket to `tickets/done/`; remove todos source file (then move the entire parent `tickets/todos/{folder}/` to `tickets/done/{folder}/` if no other TCK-*.md files remain); append working_log; move `staging_artifacts/{tid}/` → `stored_artifacts/{tid}/`
 
 Hotfix tier skips phases 2–4.
 
