@@ -1,0 +1,14 @@
+# STATE: ADDITIONAL
+schema_version: "worldcomposition.v1"
+world_id: "highland_traverse"
+name: "Highland Traverse"
+description: "Terrain-focused traversal world covering mountain pass and river crossing routes, with a nomadic beast herd and a settled quarter providing services."
+modules:
+  - "mountain_pass"
+  - "river_crossing"
+  - "nomadic_herd"
+  - "settled_quarter"
+default_perspectives:
+  - "hero_guild_perspective"
+  - "wild_beast_pack_perspective"
+generation_seed: 91

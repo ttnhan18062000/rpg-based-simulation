@@ -3,8 +3,8 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'sand' is active but never consumed by any downstream component",
-      "target": "sand"
+      "message": "Terrain 'floor' is active but never consumed by any downstream component",
+      "target": "floor"
     },
     {
       "severity": "WARNING",
@@ -15,8 +15,8 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'floor' is active but never consumed by any downstream component",
-      "target": "floor"
+      "message": "Terrain 'sand' is active but never consumed by any downstream component",
+      "target": "sand"
     },
     {
       "severity": "WARNING",
@@ -554,10 +554,9 @@
     }
   ],
   "module_validation": {
-    "forest_deep_ecology": [],
+    "frontier_village_core": [],
     "wolf_den_near_forest": [],
-    "undead_battlefield": [],
-    "survivor_camp_shelter": []
+    "sunken_swamp_border": []
   },
   "composition_validation": [],
   "world_validation": []

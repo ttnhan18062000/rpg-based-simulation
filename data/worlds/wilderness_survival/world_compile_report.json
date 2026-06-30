@@ -1,12 +1,12 @@
 {
   "world_id": "wilderness_survival",
-  "seed": 101,
+  "seed": 42,
   "entity_count": 11,
-  "region_count": 3,
+  "region_count": 4,
   "resource_node_count": 4,
-  "building_count": 0,
+  "building_count": 1,
   "quest_count": 7,
   "warnings": [],
-  "compile_duration_ms": 16.412909997598035,
-  "state_hash": "a27e87442542de597f48ba52b360cee9"
+  "compile_duration_ms": 22.31975199902081,
+  "state_hash": "26098262c321d95c62ca02a8fee5df62"
 }

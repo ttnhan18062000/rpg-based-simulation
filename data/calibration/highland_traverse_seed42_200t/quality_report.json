@@ -1,9 +1,9 @@
 {
-  "run_id": "run_1782845435_5169",
-  "tick_count": 101,
-  "overall_score": 0.12871287128712872,
+  "run_id": "run_1782845401_5169",
+  "tick_count": 164,
+  "overall_score": 0.06829268292682926,
   "overall_grade": "B",
-  "generated_at": "2026-06-30T18:50:57.348448+00:00",
+  "generated_at": "2026-06-30T18:50:26.371712+00:00",
   "pillars": {
     "COGNITION": {
       "raw_score": 0.0,
@@ -26,24 +26,76 @@
       "worst_events": []
     },
     "COMBAT": {
-      "raw_score": 43.0,
-      "normalized_score": 0.42574257425742573,
+      "raw_score": 10.0,
+      "normalized_score": 0.06097560975609756,
       "grade": "B",
-      "event_count": 23,
-      "negative_count": 1,
+      "event_count": 17,
+      "negative_count": 5,
       "loop_detected": true,
       "loop_flags": [
         "combat_active"
       ],
       "worst_events": [
         {
-          "tick": 11,
-          "event_id": "57d769e01a434b8ca6ef5093a26559c9",
+          "tick": 6,
+          "event_id": "88e22baa284a4d0bbb2387c735e05658",
+          "pillar": "COMBAT",
+          "delta": -10.0,
+          "reason": "entity death before tick threshold (early extinction)",
+          "event_type": "entity_killed",
+          "entity_id": 1,
+          "region_id": null,
+          "tags": [
+            "early_extinction"
+          ]
+        },
+        {
+          "tick": 6,
+          "event_id": "0c909692774745d99027bf8643951d12",
           "pillar": "COMBAT",
           "delta": -1.0,
           "reason": "entity killed in combat",
           "event_type": "entity_killed",
-          "entity_id": 7,
+          "entity_id": 2,
+          "region_id": null,
+          "tags": [
+            "attrition"
+          ]
+        },
+        {
+          "tick": 6,
+          "event_id": "da68d287f84845abb5fe7ba9c05bd671",
+          "pillar": "COMBAT",
+          "delta": -1.0,
+          "reason": "entity killed in combat",
+          "event_type": "entity_killed",
+          "entity_id": 3,
+          "region_id": null,
+          "tags": [
+            "attrition"
+          ]
+        },
+        {
+          "tick": 6,
+          "event_id": "f8c4b04f79fa43978c641c334b5bb4b0",
+          "pillar": "COMBAT",
+          "delta": -1.0,
+          "reason": "entity killed in combat",
+          "event_type": "entity_killed",
+          "entity_id": 4,
+          "region_id": null,
+          "tags": [
+            "attrition"
+          ]
+        },
+        {
+          "tick": 6,
+          "event_id": "73c13dccf1d442e6a299a46969405f9b",
+          "pillar": "COMBAT",
+          "delta": -1.0,
+          "reason": "entity killed in combat",
+          "event_type": "entity_killed",
+          "entity_id": 5,
           "region_id": null,
           "tags": [
             "attrition"
@@ -72,10 +124,10 @@
       "worst_events": []
     },
     "PROGRESSION": {
-      "raw_score": 33.0,
-      "normalized_score": 0.32673267326732675,
+      "raw_score": 18.0,
+      "normalized_score": 0.10975609756097561,
       "grade": "B",
-      "event_count": 11,
+      "event_count": 6,
       "negative_count": 0,
       "loop_detected": true,
       "loop_flags": [
@@ -104,10 +156,10 @@
       "worst_events": []
     },
     "WORLD": {
-      "raw_score": 54.0,
-      "normalized_score": 0.5346534653465347,
-      "grade": "A",
-      "event_count": 51,
+      "raw_score": 39.0,
+      "normalized_score": 0.23780487804878048,
+      "grade": "B",
+      "event_count": 37,
       "negative_count": 0,
       "loop_detected": true,
       "loop_flags": [
@@ -116,13 +168,15 @@
       "worst_events": []
     },
     "NARRATIVE": {
-      "raw_score": 0.0,
-      "normalized_score": 0.0,
-      "grade": "C",
-      "event_count": 0,
+      "raw_score": 45.0,
+      "normalized_score": 0.27439024390243905,
+      "grade": "B",
+      "event_count": 9,
       "negative_count": 0,
-      "loop_detected": false,
-      "loop_flags": [],
+      "loop_detected": true,
+      "loop_flags": [
+        "quest_active"
+      ],
       "worst_events": []
     }
   }

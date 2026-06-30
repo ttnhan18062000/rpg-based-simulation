@@ -17,4 +17,6 @@ module_refs:
     order: 1
   - module_id: "undead_battlefield"
     order: 2
+  - module_id: "survivor_camp_shelter"
+    order: 3
 generation_seed: 101

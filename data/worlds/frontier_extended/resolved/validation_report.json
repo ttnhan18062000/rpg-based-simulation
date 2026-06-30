@@ -3,18 +3,6 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'sand' is active but never consumed by any downstream component",
-      "target": "sand"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'hill' is active but never consumed by any downstream component",
-      "target": "hill"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
       "message": "Terrain 'floor' is active but never consumed by any downstream component",
       "target": "floor"
     },
@@ -23,6 +11,18 @@
       "rule_id": "CAT-DEAD-001",
       "message": "Terrain 'grass' is active but never consumed by any downstream component",
       "target": "grass"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Terrain 'sand' is active but never consumed by any downstream component",
+      "target": "sand"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Terrain 'hill' is active but never consumed by any downstream component",
+      "target": "hill"
     },
     {
       "severity": "WARNING",
@@ -554,10 +554,14 @@
     }
   ],
   "module_validation": {
-    "forest_deep_ecology": [],
+    "frontier_village_core": [],
     "wolf_den_near_forest": [],
+    "goblin_camp_conflict": [],
+    "old_mine_resource_loop": [],
+    "bandit_road_trade_pressure": [],
     "undead_battlefield": [],
-    "survivor_camp_shelter": []
+    "orc_clan_territory": [],
+    "forest_warden_grove": []
   },
   "composition_validation": [],
   "world_validation": []

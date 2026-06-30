@@ -1,0 +1,19 @@
+# STATE: ADDITIONAL
+schema_version: "worldcomposition.v1"
+world_id: "frontier_extended"
+name: "Frontier Extended"
+description: "Expanded frontier world adding orc clan territory and forest warden grove to the base composition."
+modules:
+  - "frontier_village_core"
+  - "wolf_den_near_forest"
+  - "goblin_camp_conflict"
+  - "old_mine_resource_loop"
+  - "bandit_road_trade_pressure"
+  - "undead_battlefield"
+  - "orc_clan_territory"
+  - "forest_warden_grove"
+default_perspectives:
+  - "hero_guild_perspective"
+  - "wild_beast_pack_perspective"
+  - "goblin_warband_perspective"
+generation_seed: 43

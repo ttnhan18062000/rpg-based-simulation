@@ -1,0 +1,14 @@
+# STATE: ADDITIONAL
+schema_version: "worldcomposition.v1"
+world_id: "swamp_border_world"
+name: "Swamp Border World"
+description: "Frontier settlement with an adjacent sunken swamp inhabited by lizardfolk tribes and swamp trolls."
+modules:
+  - "frontier_village_core"
+  - "wolf_den_near_forest"
+  - "sunken_swamp_border"
+default_perspectives:
+  - "hero_guild_perspective"
+  - "wild_beast_pack_perspective"
+  - "swamp_tribe_perspective"
+generation_seed: 77

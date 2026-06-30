@@ -1,18 +1,17 @@
 {
-  "manifest_id": "prov_0508a173b4a1a7c8",
-  "world_id": "wilderness_survival",
+  "manifest_id": "prov_1a123c0eee2700f2",
+  "world_id": "swamp_border_world",
   "source_schema_version": "provenancemanifest.v1",
   "catalog_fingerprint": "3529ebbe985937cfa0e2bf3066657f19d7112f21620e16d31e6bf661d5305f46",
   "module_fingerprints": {
-    "forest_deep_ecology": "6baaf90058bc583806e9644af7e4fc5313fcf8964e8d8c6aa1f015834387ac65",
-    "survivor_camp_shelter": "0a3665001e6467e9d2946f638a23150bbf6305a48a139ac60b6e3b03699b6fa8",
-    "undead_battlefield": "0d1daa592a5fa30bf11c363017769c8234287c33aed53a8319da3a38858fa67d",
+    "frontier_village_core": "ac2da4bc478c24180e4b53f1267959956c00bbf473d6b119dc270633b2c322f3",
+    "sunken_swamp_border": "d0c4b3e980f9daa3cb07ed37937a886eaf00fefdd02f7a41b2925596fb2418e5",
     "wolf_den_near_forest": "b95456ea741bcd26f54e54f965a0cb57c0b37dca9d8d75ad77e7fcf65d88ff16"
   },
-  "composition_fingerprint": "ef41f54ac72d6d067b93803b077c76807c93d6cde7a35c7e1c3077459e90c42c",
+  "composition_fingerprint": "9552f7054e25077b32bcc868ba60b7587984a134d78757e99b4347abf7360bf6",
   "resolver_version": "1.0.0",
-  "content_fingerprint": "0508a173b4a1a7c80ee1064b321a9538719db3ac62b7f82c0119155b72031fb7",
-  "created_at": "2026-06-30T18:47:04.531368Z",
+  "content_fingerprint": "1a123c0eee2700f2a8623d6e8de458bced4402efd100978bc06774ee6407d4fe",
+  "created_at": "2026-06-30T18:47:22.235212Z",
   "records": {
     "hero_guild": {
       "element_id": "hero_guild",
@@ -206,153 +205,284 @@
         "description": "Spirit faction protecting sacred or haunted territories."
       }
     },
-    "quest_forest_survey": {
-      "element_id": "quest_forest_survey",
-      "element_type": "quest_definition",
-      "source_module": "forest_deep_ecology",
-      "recipe_type": "quest_definition",
-      "parameters": {},
-      "profiles": {
-        "quest_type": "explore"
-      },
-      "details": {
-        "tags": [
-          "nature",
-          "exploration"
-        ],
-        "reward_budget": 80
-      }
-    },
-    "survivor_outpost": {
-      "element_id": "survivor_outpost",
+    "hometown": {
+      "element_id": "hometown",
       "element_type": "region",
-      "source_module": "survivor_camp_shelter",
+      "source_module": "frontier_village_core",
       "recipe_type": "region",
       "parameters": {},
       "profiles": {
-        "biome": "near_forest"
+        "biome": "frontier_village"
       },
       "details": {
         "bounds": [
-          30,
-          30,
-          60,
-          60
+          10,
+          10,
+          40,
+          40
         ],
-        "terrain": "forest",
-        "hazard_level": 0.5,
-        "ecology_source": []
+        "terrain": "plain",
+        "hazard_level": 0.0,
+        "ecology_source": [
+          "frontier_village_ecology"
+        ]
+      }
+    },
+    "frontier_village_population_village_worker": {
+      "element_id": "frontier_village_population_village_worker",
+      "element_type": "population",
+      "source_module": "frontier_village_core",
+      "recipe_type": "population_recipe",
+      "parameters": {},
+      "profiles": {
+        "role": "worker",
+        "faction": "town_council",
+        "stats_profile": "commoner_base",
+        "inventory_profile": "hero_pocket",
+        "cognition_profile": "practical_humanoid",
+        "compatibility_projection": {
+          "legacy_engine_role": "WORKER",
+          "legacy_engine_bucket": "TOWN_COUNCIL"
+        }
+      },
+      "details": {
+        "count": 8,
+        "spawn_region": "hometown",
+        "archetype_source": "village_worker",
+        "population_recipe_source": "frontier_village_population"
+      }
+    },
+    "frontier_village_population_frontier_guard": {
+      "element_id": "frontier_village_population_frontier_guard",
+      "element_type": "population",
+      "source_module": "frontier_village_core",
+      "recipe_type": "population_recipe",
+      "parameters": {},
+      "profiles": {
+        "role": "guard",
+        "faction": "town_council",
+        "stats_profile": "frontier_guard_base",
+        "inventory_profile": "guard_basic_kit",
+        "cognition_profile": "disciplined_guard",
+        "compatibility_projection": {
+          "legacy_engine_role": "GUARD",
+          "legacy_engine_bucket": "TOWN_COUNCIL"
+        }
+      },
+      "details": {
+        "count": 3,
+        "spawn_region": "hometown",
+        "archetype_source": "frontier_guard",
+        "population_recipe_source": "frontier_village_population"
+      }
+    },
+    "frontier_village_population_traveling_merchant": {
+      "element_id": "frontier_village_population_traveling_merchant",
+      "element_type": "population",
+      "source_module": "frontier_village_core",
+      "recipe_type": "population_recipe",
+      "parameters": {},
+      "profiles": {
+        "role": "merchant",
+        "faction": "merchant_league",
+        "stats_profile": "merchant_base",
+        "inventory_profile": "merchant_trade_pack",
+        "cognition_profile": "trade_pragmatist",
+        "compatibility_projection": {
+          "legacy_engine_role": "SHOPKEEPER",
+          "legacy_engine_bucket": "NEUTRAL"
+        }
+      },
+      "details": {
+        "count": 1,
+        "spawn_region": "hometown",
+        "archetype_source": "traveling_merchant",
+        "population_recipe_source": "frontier_village_population"
+      }
+    },
+    "frontier_village_population_village_blacksmith": {
+      "element_id": "frontier_village_population_village_blacksmith",
+      "element_type": "population",
+      "source_module": "frontier_village_core",
+      "recipe_type": "population_recipe",
+      "parameters": {},
+      "profiles": {
+        "role": "blacksmith",
+        "faction": "town_council",
+        "stats_profile": "artisan_base",
+        "inventory_profile": "blacksmith_toolkit",
+        "cognition_profile": "practical_humanoid",
+        "compatibility_projection": {
+          "legacy_engine_role": "WORKER",
+          "legacy_engine_bucket": "TOWN_COUNCIL"
+        }
+      },
+      "details": {
+        "count": 1,
+        "spawn_region": "hometown",
+        "archetype_source": "village_blacksmith",
+        "population_recipe_source": "frontier_village_population"
+      }
+    },
+    "res_0": {
+      "element_id": "res_0",
+      "element_type": "resource",
+      "source_module": "frontier_village_core",
+      "recipe_type": "resource",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "wood_node"
+      },
+      "details": {
+        "count": 8,
+        "region": "hometown"
+      }
+    },
+    "res_1": {
+      "element_id": "res_1",
+      "element_type": "resource",
+      "source_module": "frontier_village_core",
+      "recipe_type": "resource",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "herb_patch"
+      },
+      "details": {
+        "count": 5,
+        "region": "hometown"
+      }
+    },
+    "town_hall_0": {
+      "element_id": "town_hall_0",
+      "element_type": "building",
+      "source_module": "frontier_village_core",
+      "recipe_type": "building_layout",
+      "parameters": {},
+      "profiles": {
+        "building_type": "town_hall"
+      },
+      "details": {
+        "region": "hometown"
+      }
+    },
+    "shop_0": {
+      "element_id": "shop_0",
+      "element_type": "building",
+      "source_module": "frontier_village_core",
+      "recipe_type": "building_layout",
+      "parameters": {},
+      "profiles": {
+        "building_type": "shop"
+      },
+      "details": {
+        "region": "hometown"
+      }
+    },
+    "blacksmith_0": {
+      "element_id": "blacksmith_0",
+      "element_type": "building",
+      "source_module": "frontier_village_core",
+      "recipe_type": "building_layout",
+      "parameters": {},
+      "profiles": {
+        "building_type": "blacksmith"
+      },
+      "details": {
+        "region": "hometown"
+      }
+    },
+    "inn_0": {
+      "element_id": "inn_0",
+      "element_type": "building",
+      "source_module": "frontier_village_core",
+      "recipe_type": "building_layout",
+      "parameters": {},
+      "profiles": {
+        "building_type": "inn"
+      },
+      "details": {
+        "region": "hometown"
       }
     },
     "healer_hut_0": {
       "element_id": "healer_hut_0",
       "element_type": "building",
-      "source_module": "survivor_camp_shelter",
+      "source_module": "frontier_village_core",
       "recipe_type": "building_layout",
       "parameters": {},
       "profiles": {
         "building_type": "healer_hut"
       },
       "details": {
-        "region": "survivor_outpost"
+        "region": "hometown"
       }
     },
-    "haunted_battlefield": {
-      "element_id": "haunted_battlefield",
-      "element_type": "region",
-      "source_module": "undead_battlefield",
-      "recipe_type": "region",
-      "parameters": {},
-      "profiles": {
-        "biome": "haunted_battlefield"
-      },
-      "details": {
-        "bounds": [
-          120,
-          20,
-          160,
-          60
-        ],
-        "terrain": "ruin",
-        "hazard_level": 4.0,
-        "ecology_source": [
-          "haunted_battlefield_ecology"
-        ]
-      }
-    },
-    "undead_battlefield_patrol_undead_sentinel": {
-      "element_id": "undead_battlefield_patrol_undead_sentinel",
-      "element_type": "population",
-      "source_module": "undead_battlefield",
-      "recipe_type": "population_recipe",
-      "parameters": {},
-      "profiles": {
-        "role": "sentinel",
-        "faction": "undead_remnants",
-        "stats_profile": "undead_sentinel_base",
-        "inventory_profile": "undead_empty",
-        "cognition_profile": "undead_fixated",
-        "compatibility_projection": {
-          "legacy_engine_role": "MONSTER",
-          "legacy_engine_bucket": "MONSTER_HORDE"
-        }
-      },
-      "details": {
-        "count": 6,
-        "spawn_region": "haunted_battlefield",
-        "archetype_source": "undead_sentinel",
-        "population_recipe_source": "undead_battlefield_patrol"
-      }
-    },
-    "undead_battlefield__spirit_wisp_0": {
-      "element_id": "undead_battlefield__spirit_wisp_0",
-      "element_type": "resource",
-      "source_module": "undead_battlefield",
-      "recipe_type": "resource_layout",
-      "parameters": {},
-      "profiles": {
-        "resource_type": "spirit_wisp"
-      },
-      "details": {
-        "count": 2,
-        "region": "haunted_battlefield"
-      }
-    },
-    "rel_undead_to_living": {
-      "element_id": "rel_undead_to_living",
+    "rel_town_to_merchants": {
+      "element_id": "rel_town_to_merchants",
       "element_type": "faction",
-      "source_module": "undead_battlefield",
+      "source_module": "frontier_village_core",
       "recipe_type": "relationship",
       "parameters": {},
       "profiles": {
-        "source_faction": "undead_remnants",
-        "target_faction": "town_council",
-        "relationship_model": "purpose_bound_hostility"
+        "source_faction": "town_council",
+        "target_faction": "merchant_league",
+        "relationship_model": "trade_positive"
       },
       "details": {}
     },
-    "quest_undead_investigate_risen_source": {
-      "element_id": "quest_undead_investigate_risen_source",
+    "rel_merchants_to_town": {
+      "element_id": "rel_merchants_to_town",
+      "element_type": "faction",
+      "source_module": "frontier_village_core",
+      "recipe_type": "relationship",
+      "parameters": {},
+      "profiles": {
+        "source_faction": "merchant_league",
+        "target_faction": "town_council",
+        "relationship_model": "trade_positive"
+      },
+      "details": {}
+    },
+    "quest_village_fetch_supply_run": {
+      "element_id": "quest_village_fetch_supply_run",
       "element_type": "quest_definition",
-      "source_module": "undead_battlefield",
+      "source_module": "frontier_village_core",
       "recipe_type": "quest_definition",
       "parameters": {},
       "profiles": {
-        "quest_type": "investigate"
+        "quest_type": "fetch"
       },
       "details": {
         "tags": [
-          "undead",
-          "mystery",
-          "ruins"
+          "village",
+          "settlement",
+          "supply"
         ],
-        "reward_budget": 150
+        "reward_budget": 80
       }
     },
-    "quest_undead_defend_survivor_camp": {
-      "element_id": "quest_undead_defend_survivor_camp",
+    "quest_village_escort_merchant_delivery": {
+      "element_id": "quest_village_escort_merchant_delivery",
       "element_type": "quest_definition",
-      "source_module": "undead_battlefield",
+      "source_module": "frontier_village_core",
+      "recipe_type": "quest_definition",
+      "parameters": {},
+      "profiles": {
+        "quest_type": "escort"
+      },
+      "details": {
+        "tags": [
+          "village",
+          "settlement",
+          "trade"
+        ],
+        "reward_budget": 100
+      }
+    },
+    "quest_village_defend_gate_assault": {
+      "element_id": "quest_village_defend_gate_assault",
+      "element_type": "quest_definition",
+      "source_module": "frontier_village_core",
       "recipe_type": "quest_definition",
       "parameters": {},
       "profiles": {
@@ -360,29 +490,132 @@
       },
       "details": {
         "tags": [
-          "undead",
-          "defense",
-          "ruins"
+          "village",
+          "settlement",
+          "defense"
         ],
-        "reward_budget": 200
+        "reward_budget": 120
       }
     },
-    "quest_undead_hunt_wraith_patrol": {
-      "element_id": "quest_undead_hunt_wraith_patrol",
-      "element_type": "quest_definition",
-      "source_module": "undead_battlefield",
-      "recipe_type": "quest_definition",
+    "swamp_border_territory": {
+      "element_id": "swamp_border_territory",
+      "element_type": "region",
+      "source_module": "sunken_swamp_border",
+      "recipe_type": "region",
       "parameters": {},
       "profiles": {
-        "quest_type": "hunt"
+        "biome": "sunken_swamp"
       },
       "details": {
-        "tags": [
-          "undead",
-          "spirit",
-          "bounty"
+        "bounds": [
+          180,
+          80,
+          220,
+          120
         ],
-        "reward_budget": 180
+        "terrain": "swamp",
+        "hazard_level": 2.5,
+        "ecology_source": []
+      }
+    },
+    "swamp_tribe_patrol_lizardfolk_scout": {
+      "element_id": "swamp_tribe_patrol_lizardfolk_scout",
+      "element_type": "population",
+      "source_module": "sunken_swamp_border",
+      "recipe_type": "population_recipe",
+      "parameters": {},
+      "profiles": {
+        "role": "scout",
+        "faction": "swamp_tribe",
+        "stats_profile": "bandit_scout_base",
+        "inventory_profile": "empty_animal_inventory",
+        "cognition_profile": "instinctive_animal",
+        "compatibility_projection": {
+          "legacy_engine_role": "GUARD",
+          "legacy_engine_bucket": "MONSTER_HORDE"
+        }
+      },
+      "details": {
+        "count": 3,
+        "spawn_region": "swamp_border_territory",
+        "archetype_source": "lizardfolk_scout",
+        "population_recipe_source": "swamp_tribe_patrol"
+      }
+    },
+    "swamp_tribe_patrol_lizardfolk_shaman": {
+      "element_id": "swamp_tribe_patrol_lizardfolk_shaman",
+      "element_type": "population",
+      "source_module": "sunken_swamp_border",
+      "recipe_type": "population_recipe",
+      "parameters": {},
+      "profiles": {
+        "role": "shaman",
+        "faction": "swamp_tribe",
+        "stats_profile": "apprentice_mage_base",
+        "inventory_profile": "mage_satchel",
+        "cognition_profile": "practical_humanoid",
+        "compatibility_projection": {
+          "legacy_engine_role": "HERO",
+          "legacy_engine_bucket": "MONSTER_HORDE"
+        }
+      },
+      "details": {
+        "count": 1,
+        "spawn_region": "swamp_border_territory",
+        "archetype_source": "lizardfolk_shaman",
+        "population_recipe_source": "swamp_tribe_patrol"
+      }
+    },
+    "swamp_ambush_party_lizardfolk_scout": {
+      "element_id": "swamp_ambush_party_lizardfolk_scout",
+      "element_type": "population",
+      "source_module": "sunken_swamp_border",
+      "recipe_type": "population_recipe",
+      "parameters": {},
+      "profiles": {
+        "role": "scout",
+        "faction": "swamp_tribe",
+        "stats_profile": "bandit_scout_base",
+        "inventory_profile": "empty_animal_inventory",
+        "cognition_profile": "instinctive_animal",
+        "compatibility_projection": {
+          "legacy_engine_role": "GUARD",
+          "legacy_engine_bucket": "MONSTER_HORDE"
+        }
+      },
+      "details": {
+        "count": 4,
+        "spawn_region": "swamp_border_territory",
+        "archetype_source": "lizardfolk_scout",
+        "population_recipe_source": "swamp_ambush_party"
+      }
+    },
+    "sunken_swamp_border__wood_node_0": {
+      "element_id": "sunken_swamp_border__wood_node_0",
+      "element_type": "resource",
+      "source_module": "sunken_swamp_border",
+      "recipe_type": "resource_layout",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "wood_node"
+      },
+      "details": {
+        "count": 4,
+        "region": "swamp_border_territory"
+      }
+    },
+    "sunken_swamp_border__herb_patch_1": {
+      "element_id": "sunken_swamp_border__herb_patch_1",
+      "element_type": "resource",
+      "source_module": "sunken_swamp_border",
+      "recipe_type": "resource_layout",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "herb_patch"
+      },
+      "details": {
+        "count": 3,
+        "region": "swamp_border_territory"
       }
     },
     "near_forest": {

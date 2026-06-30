@@ -1,9 +1,9 @@
 {
   "sorted_module_ids": [
-    "forest_deep_ecology",
-    "survivor_camp_shelter",
-    "undead_battlefield",
-    "wolf_den_near_forest"
+    "mountain_pass",
+    "nomadic_herd",
+    "river_crossing",
+    "settled_quarter"
   ],
   "factions_resolved": [
     "hero_guild",
@@ -23,14 +23,20 @@
     "dragon_cult",
     "spirit_court"
   ],
-  "regions_count": 4,
-  "entities_count": 3,
+  "regions_count": 5,
+  "entities_count": 6,
   "catalog_validation": [
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
       "message": "Terrain 'sand' is active but never consumed by any downstream component",
       "target": "sand"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Terrain 'grass' is active but never consumed by any downstream component",
+      "target": "grass"
     },
     {
       "severity": "WARNING",
@@ -43,12 +49,6 @@
       "rule_id": "CAT-DEAD-001",
       "message": "Terrain 'floor' is active but never consumed by any downstream component",
       "target": "floor"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'grass' is active but never consumed by any downstream component",
-      "target": "grass"
     },
     {
       "severity": "WARNING",
@@ -580,10 +580,10 @@
     }
   ],
   "module_validation": {
-    "forest_deep_ecology": [],
-    "wolf_den_near_forest": [],
-    "undead_battlefield": [],
-    "survivor_camp_shelter": []
+    "mountain_pass": [],
+    "river_crossing": [],
+    "nomadic_herd": [],
+    "settled_quarter": []
   },
   "composition_validation": [],
   "world_validation": [],
@@ -603,6 +603,12 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
+      "message": "Terrain 'grass' is active but never consumed by any downstream component",
+      "target": "grass"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
       "message": "Terrain 'hill' is active but never consumed by any downstream component",
       "target": "hill"
     },
@@ -611,12 +617,6 @@
       "rule_id": "CAT-DEAD-001",
       "message": "Terrain 'floor' is active but never consumed by any downstream component",
       "target": "floor"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'grass' is active but never consumed by any downstream component",
-      "target": "grass"
     },
     {
       "severity": "WARNING",
@@ -1150,10 +1150,10 @@
   "fingerprints": {
     "catalog": "3529ebbe985937cfa0e2bf3066657f19d7112f21620e16d31e6bf661d5305f46",
     "modules": {
-      "forest_deep_ecology": "6baaf90058bc583806e9644af7e4fc5313fcf8964e8d8c6aa1f015834387ac65",
-      "survivor_camp_shelter": "0a3665001e6467e9d2946f638a23150bbf6305a48a139ac60b6e3b03699b6fa8",
-      "undead_battlefield": "0d1daa592a5fa30bf11c363017769c8234287c33aed53a8319da3a38858fa67d",
-      "wolf_den_near_forest": "b95456ea741bcd26f54e54f965a0cb57c0b37dca9d8d75ad77e7fcf65d88ff16"
+      "mountain_pass": "25529e16619ae519dde6e77d9aade020940ab0b7e78e58b7755be29562d561e6",
+      "nomadic_herd": "b1c2eb716e68c4d23676274fa86fe41687fa5d7cb72068b9e413aa7f79a0ef7b",
+      "river_crossing": "31b408206c2116cc3c7162e49d97e4b690bbe3f3adf689f3d44aed6a2ab16e56",
+      "settled_quarter": "afdc3b0cc332b6c34089ab6b230285362afc955ef46f5e8c3b48e680528ccbb4"
     }
   }
 }
