@@ -42,7 +42,7 @@ def create_base_valid_spec() -> dict:
                 "id": "hunt_beasts",
                 "type": "hunt",
                 "required_participant_tags": ["monster"],
-                "required_location_tags": ["wilds"],
+                "required_location_tags": ["wilderness"],  # matches region type='wilderness'
                 "reward_budget": 100,
             }
         ]
@@ -195,3 +195,73 @@ def test_compiler_resource_node_explicit_zero_regen():
 
     node = list(state.resource_nodes.values())[0]
     assert node.regen_rate_per_tick == 0
+
+
+def test_quest_location_tag_matches_region_type():
+    """required_location_tag that equals a region's type produces zero warnings (TCK-20260630-WORLD-QUEST-LOCATION)."""
+    data = create_base_valid_spec()
+    # Quest needs 'wilderness' — region 'wilds' has type='wilderness'
+    data["quest_definitions"] = [
+        {
+            "id": "survey_wilds",
+            "type": "explore",
+            "required_location_tags": ["wilderness"],
+            "reward_budget": 80,
+        }
+    ]
+    spec = WorldSpec.model_validate(data)
+    _, report = WorldCompiler.compile(spec, seed=42)
+    assert report["warnings"] == [], (
+        "Quest tag 'wilderness' should be satisfied by region with type='wilderness'"
+    )
+
+
+def test_quest_location_tag_matches_region_explicit_tag():
+    """required_location_tag matched against region.tags (not just type) produces zero warnings (TCK-20260630-WORLD-QUEST-LOCATION)."""
+    data = create_base_valid_spec()
+    # Add mine region with explicit tags
+    data["regions"] = [
+        {"id": "old_mine", "type": "wilderness", "bounds": [0, 0, 20, 20], "terrain": "cave",
+         "tags": ["mine", "underground"]},
+    ]
+    data["entities"] = [
+        {"id": "spider_group", "count": 3, "role": "monster", "faction": "monsters", "spawn_region": "old_mine"}
+    ]
+    data["resources"] = [
+        {"id": "iron_vein", "resource_type": "ore", "count": 5, "region": "old_mine"}
+    ]
+    data["buildings"] = []
+    data["factions"] = [{"id": "monsters", "type": "hostile"}]
+    data["quest_definitions"] = [
+        {
+            "id": "mine_fetch_ore",
+            "type": "fetch",
+            "required_location_tags": ["mine", "underground"],
+            "reward_budget": 80,
+        }
+    ]
+    spec = WorldSpec.model_validate(data)
+    _, report = WorldCompiler.compile(spec, seed=42)
+    assert report["warnings"] == [], (
+        "Quest tags 'mine' and 'underground' should be satisfied by region with tags=['mine','underground']"
+    )
+
+
+def test_quest_location_tag_warns_on_genuine_mismatch():
+    """Quest with a required_location_tag that matches no region type or tag still warns (regression guard, TCK-20260630-WORLD-QUEST-LOCATION)."""
+    data = create_base_valid_spec()
+    # Base spec has regions 'town_square' (type=town) and 'wilds' (type=wilderness), no tags
+    data["quest_definitions"] = [
+        {
+            "id": "find_settlement",
+            "type": "explore",
+            "required_location_tags": ["settlement"],  # no region has type='settlement' or tag='settlement'
+            "reward_budget": 80,
+        }
+    ]
+    spec = WorldSpec.model_validate(data)
+    _, report = WorldCompiler.compile(spec, seed=42)
+    assert len(report["warnings"]) >= 1, "Should warn when tag matches no region type or tags"
+    assert "settlement" in report["warnings"][0], (
+        "Warning message should name the unmatched tag"
+    )

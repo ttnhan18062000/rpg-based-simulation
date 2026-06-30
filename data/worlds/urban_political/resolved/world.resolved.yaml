@@ -18,6 +18,9 @@ regions:
   - 40
   terrain: plain
   hazard_level: 0.0
+  tags:
+  - plain
+  - settlement
 - id: bandit_road
   type: road
   bounds:
@@ -27,6 +30,8 @@ regions:
   - 60
   terrain: road
   hazard_level: 2.0
+  tags:
+  - wilderness
 - id: trading_hometown
   type: town
   bounds:
@@ -36,6 +41,9 @@ regions:
   - 45
   terrain: plain
   hazard_level: 0.5
+  tags:
+  - plain
+  - trade_route
 factions:
 - id: hero_guild
   type: defender
@@ -137,14 +145,17 @@ resources:
   resource_type: wood_node
   count: 8
   region: hometown
+  regen_rate: 1
 - id: res_1
   resource_type: herb_patch
   count: 5
   region: hometown
+  regen_rate: 1
 - id: trading_res_0
   resource_type: iron_vein
   count: 6
   region: trading_hometown
+  regen_rate: 1
 buildings:
 - id: town_hall_0
   type: town_hall

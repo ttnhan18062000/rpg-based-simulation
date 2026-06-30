@@ -12,11 +12,13 @@ regions:
     grid_bounds: [40, 70, 80, 120]
     terrain: "forest"
     hazard_level: 1.5
+    tags: [forest]
   - id: "deep_forest"
     type: "wilderness"
     grid_bounds: [0, 70, 40, 120]
     terrain: "forest"
     hazard_level: 2.0
+    tags: [forest]
 factions: ["forest_wardens", "spirit_court"]
 populations: ["forest_warden_patrol", "sacred_grove_guardians"]
 resources:

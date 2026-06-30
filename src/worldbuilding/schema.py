@@ -32,6 +32,7 @@ class RegionSpec(BaseModel):
     bounds: tuple[int, int, int, int] = Field(..., description="Bounds of the region as [min_x, min_y, max_x, max_y]")
     terrain: Optional[str] = Field("GRASS", description="Ecological terrain type of the region")
     hazard_level: Optional[float] = Field(0.0, description="Hazard difficulty factor of the region")
+    tags: List[str] = Field(default_factory=list, description="Semantic labels for quest routing (e.g. mine, forest, ruins, settlement)")
 
     @model_validator(mode="after")
     def validate_bounds(self) -> RegionSpec:

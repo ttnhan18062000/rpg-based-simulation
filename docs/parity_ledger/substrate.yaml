@@ -3947,20 +3947,31 @@
     procedural_hints (Dict[str,Any]), tags (List[str]), source_module (Optional[str]).
     A model_validator(mode="before") migrates legacy YAML with quests: key to
     quest_definitions: with no silent data loss. The compiler iterates quest_definitions
-    and validates required_location_tags against known region IDs, emitting warnings
-    for unresolvable tags. src/quests/ runtime system is unchanged.
+    and validates required_location_tags against the semantic tag pool built from all
+    regions: each region contributes its type field (coarse category e.g. wilderness, road,
+    town) and any explicit tags (subtypes e.g. mine, forest, ruins, settlement). A warning
+    is emitted only when a tag matches neither any region type nor any region explicit tag.
+    RegionSpec carries tags: List[str] = [] for this purpose; RegionRecipeSpec carries the
+    same field so module YAML authors can annotate regions during authoring.
+    src/quests/ runtime system is unchanged.
   status: verified
   priority: P1
   legacy_evidence: null
   v2_evidence: >
-    src/worldbuilding/schema.py (QuestDefinition, WorldSpec.quest_definitions,
+    src/worldbuilding/schema.py (RegionSpec.tags, QuestDefinition, WorldSpec.quest_definitions,
     _migrate_quests_field validator) +
-    src/worldbuilding/compiler.py (quest_definitions loop) +
+    src/worldbuilding/recipe.py (RegionRecipeSpec.tags, expanded_data propagation) +
+    src/worldbuilding/compiler.py (tag_pool build from spec.regions + quest_definitions loop) +
+    src/worldassembly/resolver.py (RegionSpec construction propagates tags from RegionRecipeSpec) +
     src/worldbuilding/cli.py (quest_definitions display) +
-    src/worldbuilding/recipe.py (expanded_data quest_definitions key)
+    data/content/world_modules/ (regions annotated with tags where type alone is insufficient)
   proof_type: null
-  test_path: tests/unit/worldbuilding/test_quest_definition.py
-  divergence_note: null
+  test_path: >
+    tests/unit/worldbuilding/test_quest_definition.py +
+    tests/unit/worldbuilding/test_world_compiler.py::test_quest_location_tag_matches_region_type +
+    tests/unit/worldbuilding/test_world_compiler.py::test_quest_location_tag_matches_region_explicit_tag +
+    tests/unit/worldbuilding/test_world_compiler.py::test_quest_location_tag_warns_on_genuine_mismatch
+  divergence_note: "TCK-20260630-WORLD-QUEST-LOCATION: fixed compiler to match against region.type + region.tags instead of region.id; all four compiled worlds now have zero quest location warnings."
   support_boundary: "WorldBuilding authoring layer — world setup only, not tick-path."
 - id: SUBSTRATE-NEW-008
   text: >

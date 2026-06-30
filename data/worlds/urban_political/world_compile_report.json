@@ -1,31 +1,12 @@
 {
   "world_id": "urban_political",
-  "seed": 42,
+  "seed": 202,
   "entity_count": 30,
   "region_count": 3,
   "resource_node_count": 3,
   "building_count": 7,
   "quest_count": 9,
-  "warnings": [
-    "QuestDefinition 'village_fetch_supply_run' required_location_tag 'plain' does not match any region ID in this world",
-    "QuestDefinition 'village_fetch_supply_run' required_location_tag 'settlement' does not match any region ID in this world",
-    "QuestDefinition 'village_escort_merchant_delivery' required_location_tag 'plain' does not match any region ID in this world",
-    "QuestDefinition 'village_escort_merchant_delivery' required_location_tag 'settlement' does not match any region ID in this world",
-    "QuestDefinition 'village_defend_gate_assault' required_location_tag 'plain' does not match any region ID in this world",
-    "QuestDefinition 'village_defend_gate_assault' required_location_tag 'settlement' does not match any region ID in this world",
-    "QuestDefinition 'bandit_escort_merchant_caravan' required_location_tag 'road' does not match any region ID in this world",
-    "QuestDefinition 'bandit_escort_merchant_caravan' required_location_tag 'wilderness' does not match any region ID in this world",
-    "QuestDefinition 'bandit_hunt_road_captain' required_location_tag 'road' does not match any region ID in this world",
-    "QuestDefinition 'bandit_hunt_road_captain' required_location_tag 'wilderness' does not match any region ID in this world",
-    "QuestDefinition 'bandit_investigate_ambush_source' required_location_tag 'road' does not match any region ID in this world",
-    "QuestDefinition 'bandit_investigate_ambush_source' required_location_tag 'wilderness' does not match any region ID in this world",
-    "QuestDefinition 'trade_fetch_shipment_goods' required_location_tag 'plain' does not match any region ID in this world",
-    "QuestDefinition 'trade_fetch_shipment_goods' required_location_tag 'trade_route' does not match any region ID in this world",
-    "QuestDefinition 'trade_escort_merchant_convoy' required_location_tag 'plain' does not match any region ID in this world",
-    "QuestDefinition 'trade_escort_merchant_convoy' required_location_tag 'trade_route' does not match any region ID in this world",
-    "QuestDefinition 'trade_investigate_sabotage' required_location_tag 'plain' does not match any region ID in this world",
-    "QuestDefinition 'trade_investigate_sabotage' required_location_tag 'trade_route' does not match any region ID in this world"
-  ],
-  "compile_duration_ms": 16.443795000668615,
-  "state_hash": "a1192dcbafccb16e77a950e74e9fa066"
+  "warnings": [],
+  "compile_duration_ms": 10.352395001973491,
+  "state_hash": "1231e82297f79b746c7ed214346ab3d7"
 }

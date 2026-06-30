@@ -17,6 +17,8 @@ regions:
   - 60
   terrain: ruin
   hazard_level: 4.0
+  tags:
+  - ruins
 - id: near_forest
   type: wilderness
   bounds:
@@ -26,6 +28,8 @@ regions:
   - 55
   terrain: forest
   hazard_level: 1.0
+  tags:
+  - forest
 - id: wolf_den
   type: wilderness
   bounds:
@@ -35,6 +39,8 @@ regions:
   - 70
   terrain: forest
   hazard_level: 2.0
+  tags:
+  - forest
 factions:
 - id: hero_guild
   type: defender
@@ -88,22 +94,26 @@ entities:
   spawn_region: wolf_den
   archetype_id: alpha_wolf
 resources:
-- id: spirit_wisp_0
+- id: undead_battlefield__spirit_wisp_0
   resource_type: spirit_wisp
   count: 2
   region: haunted_battlefield
-- id: wood_node_0
+  regen_rate: 1
+- id: wolf_den_near_forest__wood_node_0
   resource_type: wood_node
   count: 8
   region: near_forest
-- id: herb_patch_1
+  regen_rate: 1
+- id: wolf_den_near_forest__herb_patch_1
   resource_type: herb_patch
   count: 6
   region: near_forest
-- id: healing_flower_patch_2
+  regen_rate: 1
+- id: wolf_den_near_forest__healing_flower_patch_2
   resource_type: healing_flower_patch
   count: 3
   region: near_forest
+  regen_rate: 1
 buildings: []
 quest_definitions:
 - id: forest_survey
@@ -119,6 +129,101 @@ quest_definitions:
   - nature
   - exploration
   source_module: forest_deep_ecology
+- id: undead_investigate_risen_source
+  type: investigate
+  required_participant_tags:
+  - undead
+  required_location_tags:
+  - ruins
+  - wilderness
+  reward_budget: 150
+  procedural_hints:
+    difficulty: 3
+    escalation: true
+  tags:
+  - undead
+  - mystery
+  - ruins
+  source_module: undead_battlefield
+- id: undead_defend_survivor_camp
+  type: defend
+  required_participant_tags:
+  - undead
+  required_location_tags:
+  - ruins
+  - wilderness
+  reward_budget: 200
+  procedural_hints:
+    difficulty: 4
+    escalation: true
+  tags:
+  - undead
+  - defense
+  - ruins
+  source_module: undead_battlefield
+- id: undead_hunt_wraith_patrol
+  type: hunt
+  required_participant_tags:
+  - spiritual
+  required_location_tags:
+  - ruins
+  - wilderness
+  reward_budget: 180
+  procedural_hints:
+    difficulty: 4
+    escalation: false
+  tags:
+  - undead
+  - spirit
+  - bounty
+  source_module: undead_battlefield
+- id: wolf_hunt_alpha_pack
+  type: hunt
+  required_participant_tags:
+  - beast
+  required_location_tags:
+  - wilderness
+  - forest
+  reward_budget: 120
+  procedural_hints:
+    difficulty: 2
+    escalation: true
+  tags:
+  - wolf
+  - ecology
+  - bounty
+  source_module: wolf_den_near_forest
+- id: wolf_explore_forest_trail
+  type: explore
+  required_participant_tags:
+  - beast
+  required_location_tags:
+  - wilderness
+  - forest
+  reward_budget: 80
+  procedural_hints:
+    difficulty: 1
+    escalation: false
+  tags:
+  - wolf
+  - ecology
+  - exploration
+  source_module: wolf_den_near_forest
+- id: wolf_fetch_herb_gathering
+  type: fetch
+  required_participant_tags: []
+  required_location_tags:
+  - wilderness
+  - forest
+  reward_budget: 80
+  procedural_hints:
+    difficulty: 1
+    escalation: false
+  tags:
+  - wolf
+  - ecology
+  - resource
+  source_module: wolf_den_near_forest
 validation:
   expected_min_entities: 1
   allow_overlapping_regions: false

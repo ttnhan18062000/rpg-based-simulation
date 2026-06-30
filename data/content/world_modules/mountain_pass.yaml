@@ -13,6 +13,7 @@ regions:
     grid_bounds: [80, 80, 120, 120]
     terrain: "mountain"
     hazard_level: 2.5
+    tags: [mountain]
 factions: []
 populations: []
 resources:

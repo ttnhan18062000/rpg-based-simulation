@@ -11,6 +11,7 @@ regions:
     grid_bounds: [20, 60, 60, 105]
     terrain: "cave"
     hazard_level: 2.0
+    tags: [mine, underground]
 factions: ["dwarven_mine_clan", "wild_beast_pack"]
 populations: ["old_mine_spider_cluster"]
 resources:

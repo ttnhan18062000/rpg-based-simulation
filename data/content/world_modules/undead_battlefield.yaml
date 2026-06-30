@@ -11,6 +11,7 @@ regions:
     grid_bounds: [120, 20, 160, 60]
     terrain: "ruin"
     hazard_level: 4.0
+    tags: [ruins]
 factions: ["undead_remnants", "spirit_court"]
 populations: ["undead_battlefield_patrol"]
 resources:

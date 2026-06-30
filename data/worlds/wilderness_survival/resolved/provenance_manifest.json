@@ -1,17 +1,17 @@
 {
-  "manifest_id": "prov_04585026bea5f287",
+  "manifest_id": "prov_2df823e286d23c49",
   "world_id": "wilderness_survival",
   "source_schema_version": "provenancemanifest.v1",
-  "catalog_fingerprint": "b1cec5dc8a96b2614a622544840330384aa0da562c0d706bfc28ef4f7713c198",
+  "catalog_fingerprint": "3529ebbe985937cfa0e2bf3066657f19d7112f21620e16d31e6bf661d5305f46",
   "module_fingerprints": {
     "forest_deep_ecology": "6baaf90058bc583806e9644af7e4fc5313fcf8964e8d8c6aa1f015834387ac65",
-    "undead_battlefield": "3c7e1a61bb0114907f765c55b6a6ff0fada0cd99f4627943b55116d6d6c7e38c",
-    "wolf_den_near_forest": "b21f5bf50ac28d2b7a7ee7525de72a9560cc229a39bd28c9a36231d4a54b6749"
+    "undead_battlefield": "0d1daa592a5fa30bf11c363017769c8234287c33aed53a8319da3a38858fa67d",
+    "wolf_den_near_forest": "b95456ea741bcd26f54e54f965a0cb57c0b37dca9d8d75ad77e7fcf65d88ff16"
   },
   "composition_fingerprint": "394484809f85fbeee407d9387569d85cac949f2b227f66bf32e9641156a534cd",
   "resolver_version": "1.0.0",
-  "content_fingerprint": "04585026bea5f2879ace45aa2cfbefa73f67b43c339a3d2138302820fbb0da6b",
-  "created_at": "2026-06-15T12:20:01.150537Z",
+  "content_fingerprint": "2df823e286d23c49624a0ef0942b59b0f5403fa2b37361f623533047c35217b4",
+  "created_at": "2026-06-30T18:18:40.960275Z",
   "records": {
     "hero_guild": {
       "element_id": "hero_guild",
@@ -269,8 +269,8 @@
         "population_recipe_source": "undead_battlefield_patrol"
       }
     },
-    "spirit_wisp_0": {
-      "element_id": "spirit_wisp_0",
+    "undead_battlefield__spirit_wisp_0": {
+      "element_id": "undead_battlefield__spirit_wisp_0",
       "element_type": "resource",
       "source_module": "undead_battlefield",
       "recipe_type": "resource_layout",
@@ -295,6 +295,60 @@
         "relationship_model": "purpose_bound_hostility"
       },
       "details": {}
+    },
+    "quest_undead_investigate_risen_source": {
+      "element_id": "quest_undead_investigate_risen_source",
+      "element_type": "quest_definition",
+      "source_module": "undead_battlefield",
+      "recipe_type": "quest_definition",
+      "parameters": {},
+      "profiles": {
+        "quest_type": "investigate"
+      },
+      "details": {
+        "tags": [
+          "undead",
+          "mystery",
+          "ruins"
+        ],
+        "reward_budget": 150
+      }
+    },
+    "quest_undead_defend_survivor_camp": {
+      "element_id": "quest_undead_defend_survivor_camp",
+      "element_type": "quest_definition",
+      "source_module": "undead_battlefield",
+      "recipe_type": "quest_definition",
+      "parameters": {},
+      "profiles": {
+        "quest_type": "defend"
+      },
+      "details": {
+        "tags": [
+          "undead",
+          "defense",
+          "ruins"
+        ],
+        "reward_budget": 200
+      }
+    },
+    "quest_undead_hunt_wraith_patrol": {
+      "element_id": "quest_undead_hunt_wraith_patrol",
+      "element_type": "quest_definition",
+      "source_module": "undead_battlefield",
+      "recipe_type": "quest_definition",
+      "parameters": {},
+      "profiles": {
+        "quest_type": "hunt"
+      },
+      "details": {
+        "tags": [
+          "undead",
+          "spirit",
+          "bounty"
+        ],
+        "reward_budget": 180
+      }
     },
     "near_forest": {
       "element_id": "near_forest",
@@ -390,8 +444,8 @@
         "population_recipe_source": "wolf_pack_small"
       }
     },
-    "wood_node_0": {
-      "element_id": "wood_node_0",
+    "wolf_den_near_forest__wood_node_0": {
+      "element_id": "wolf_den_near_forest__wood_node_0",
       "element_type": "resource",
       "source_module": "wolf_den_near_forest",
       "recipe_type": "resource_layout",
@@ -404,8 +458,8 @@
         "region": "near_forest"
       }
     },
-    "herb_patch_1": {
-      "element_id": "herb_patch_1",
+    "wolf_den_near_forest__herb_patch_1": {
+      "element_id": "wolf_den_near_forest__herb_patch_1",
       "element_type": "resource",
       "source_module": "wolf_den_near_forest",
       "recipe_type": "resource_layout",
@@ -418,8 +472,8 @@
         "region": "near_forest"
       }
     },
-    "healing_flower_patch_2": {
-      "element_id": "healing_flower_patch_2",
+    "wolf_den_near_forest__healing_flower_patch_2": {
+      "element_id": "wolf_den_near_forest__healing_flower_patch_2",
       "element_type": "resource",
       "source_module": "wolf_den_near_forest",
       "recipe_type": "resource_layout",
@@ -457,6 +511,60 @@
         "relationship_model": "territorial_animal"
       },
       "details": {}
+    },
+    "quest_wolf_hunt_alpha_pack": {
+      "element_id": "quest_wolf_hunt_alpha_pack",
+      "element_type": "quest_definition",
+      "source_module": "wolf_den_near_forest",
+      "recipe_type": "quest_definition",
+      "parameters": {},
+      "profiles": {
+        "quest_type": "hunt"
+      },
+      "details": {
+        "tags": [
+          "wolf",
+          "ecology",
+          "bounty"
+        ],
+        "reward_budget": 120
+      }
+    },
+    "quest_wolf_explore_forest_trail": {
+      "element_id": "quest_wolf_explore_forest_trail",
+      "element_type": "quest_definition",
+      "source_module": "wolf_den_near_forest",
+      "recipe_type": "quest_definition",
+      "parameters": {},
+      "profiles": {
+        "quest_type": "explore"
+      },
+      "details": {
+        "tags": [
+          "wolf",
+          "ecology",
+          "exploration"
+        ],
+        "reward_budget": 80
+      }
+    },
+    "quest_wolf_fetch_herb_gathering": {
+      "element_id": "quest_wolf_fetch_herb_gathering",
+      "element_type": "quest_definition",
+      "source_module": "wolf_den_near_forest",
+      "recipe_type": "quest_definition",
+      "parameters": {},
+      "profiles": {
+        "quest_type": "fetch"
+      },
+      "details": {
+        "tags": [
+          "wolf",
+          "ecology",
+          "resource"
+        ],
+        "reward_budget": 80
+      }
     }
   }
 }

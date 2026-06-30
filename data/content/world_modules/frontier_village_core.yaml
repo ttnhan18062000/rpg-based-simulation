@@ -11,6 +11,7 @@ regions:
     grid_bounds: [10, 10, 40, 40]
     terrain: "plain"
     hazard_level: 0.0
+    tags: [plain, settlement]
 factions: ["town_council", "merchant_league"]
 populations: ["frontier_village_population"]
 buildings:

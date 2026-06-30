@@ -1,7 +1,7 @@
 # Compliance IDs: WORLD-070, WORLD-071, WORLD-072
 from __future__ import annotations
 
-from typing import Optional, Any, Union
+from typing import Optional, Any, List, Union
 from pydantic import BaseModel, Field, model_validator, ConfigDict
 
 from src.worldbuilding.schema import TopologySpec, FactionSpec, WorldSpec, InvalidWorldSpecError
@@ -16,6 +16,7 @@ class RegionRecipeSpec(BaseModel):
     grid_bounds: tuple[int, int, int, int] = Field(..., description="Bounds as [min_x, min_y, max_x, max_y]")
     terrain: Optional[str] = Field("GRASS", description="Terrain type")
     hazard_level: Optional[float] = Field(0.0, description="Hazard difficulty rating")
+    tags: List[str] = Field(default_factory=list, description="Semantic labels for quest routing (e.g. mine, forest, ruins, settlement)")
 
     @model_validator(mode="after")
     def validate_bounds(self) -> RegionRecipeSpec:
@@ -154,7 +155,8 @@ class WorldTemplateExpander:
                 "type": reg.type,
                 "bounds": reg.grid_bounds,
                 "terrain": reg.terrain or "GRASS",
-                "hazard_level": reg.hazard_level or 0.0
+                "hazard_level": reg.hazard_level or 0.0,
+                "tags": list(reg.tags),
             })
 
         # 2. Map Factions

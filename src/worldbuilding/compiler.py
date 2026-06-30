@@ -346,17 +346,29 @@ class WorldCompiler:
         compiled_quests: List[QuestState] = []
         warnings: List[str] = []
 
+        # Build a pool of all semantic location labels reachable in this world.
+        # Use spec.regions (RegionSpec list) — regions dict holds RegionState (runtime
+        # objects with a 'kind' field) which has already lost the original type string
+        # and the explicit tags list. RegionSpec.type + RegionSpec.tags are the
+        # authoritative location vocabulary at compile time.
+        tag_pool: set = set()
+        for r_spec in spec.regions:
+            if r_spec.type:
+                tag_pool.add(r_spec.type)
+            for t in getattr(r_spec, "tags", []):
+                tag_pool.add(t)
+
         for quest_idx, q_def in enumerate(spec.quest_definitions):
             qid = q_def.id
             # Map QuestDefinition.type (authoring) → QuestKind (runtime enum)
             qkind = get_quest_kind(q_def.type)
 
-            # Validate required_location_tags against known region IDs
+            # Validate required_location_tags against region types and explicit tags
             for loc_tag in q_def.required_location_tags:
-                if loc_tag not in regions:
+                if loc_tag not in tag_pool:
                     warnings.append(
                         f"QuestDefinition '{qid}' required_location_tag '{loc_tag}' "
-                        f"does not match any region ID in this world"
+                        f"does not match any region type or tag in this world"
                     )
 
             # Seed a minimal reward from reward_budget (procedural layer will refine)

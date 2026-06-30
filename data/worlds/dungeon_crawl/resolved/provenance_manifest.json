@@ -1,18 +1,18 @@
 {
-  "manifest_id": "prov_5911f4d502f29a65",
+  "manifest_id": "prov_cb6c6ef5a43ddb0c",
   "world_id": "dungeon_crawl",
   "source_schema_version": "provenancemanifest.v1",
-  "catalog_fingerprint": "b1cec5dc8a96b2614a622544840330384aa0da562c0d706bfc28ef4f7713c198",
+  "catalog_fingerprint": "3529ebbe985937cfa0e2bf3066657f19d7112f21620e16d31e6bf661d5305f46",
   "module_fingerprints": {
-    "goblin_camp_conflict": "16b4aab9db55e27cb59f021557518381207fbf8b4e4550843506a9c827ca844d",
-    "old_mine_resource_loop": "3307ee93b187d56a00220a71eb6bb4ead096f20ff267e9d53dbbd9d891d041c3",
-    "ruins_mystery_quest": "1c575fb0e1ccaf17174ed443232ed10e76a88b565d2fc0a29f5e5f4292f474c4",
-    "scalable_bandit_camp": "0979c5a0acbd4f01d01e042edf44bf3eb03f1c439fac9fa19b78e9fde10daea3"
+    "goblin_camp_conflict": "36e0a62287420b3a3ab01ce4396ce507e998bbecbc6ed4c0beb37c346d933daf",
+    "old_mine_resource_loop": "dbef38a7d0c2261e24948cd9dded020279386c10e0084872a2df9963bb9cc677",
+    "ruins_mystery_quest": "4edea387d1854eff4a6cce55d4e815d0699ba1b007395a53ad58cc06eb04274a",
+    "scalable_bandit_camp": "adb4c823c87cb7c9ed2fa31ea66eee3269d24ba47b31fb8791e45cdd6f7d5193"
   },
   "composition_fingerprint": "c0e71e80cccf525173f1dfb281ef32054fff398fbd2a67ba682bcc4cd2199d5e",
   "resolver_version": "1.0.0",
-  "content_fingerprint": "5911f4d502f29a6527006b27e26a55e4be9b72a6392b5c442d09843885e3129e",
-  "created_at": "2026-06-15T12:20:03.189654Z",
+  "content_fingerprint": "cb6c6ef5a43ddb0cf3d5c56d498067216f033a743bc6c7beb4d6357d8f9f1a4e",
+  "created_at": "2026-06-30T18:18:39.082118Z",
   "records": {
     "hero_guild": {
       "element_id": "hero_guild",
@@ -351,6 +351,60 @@
       },
       "details": {}
     },
+    "quest_goblin_hunt_warlord": {
+      "element_id": "quest_goblin_hunt_warlord",
+      "element_type": "quest_definition",
+      "source_module": "goblin_camp_conflict",
+      "recipe_type": "quest_definition",
+      "parameters": {},
+      "profiles": {
+        "quest_type": "hunt"
+      },
+      "details": {
+        "tags": [
+          "goblin",
+          "conflict",
+          "bounty"
+        ],
+        "reward_budget": 150
+      }
+    },
+    "quest_goblin_fetch_stolen_goods": {
+      "element_id": "quest_goblin_fetch_stolen_goods",
+      "element_type": "quest_definition",
+      "source_module": "goblin_camp_conflict",
+      "recipe_type": "quest_definition",
+      "parameters": {},
+      "profiles": {
+        "quest_type": "fetch"
+      },
+      "details": {
+        "tags": [
+          "goblin",
+          "conflict",
+          "loot"
+        ],
+        "reward_budget": 100
+      }
+    },
+    "quest_goblin_defend_village_perimeter": {
+      "element_id": "quest_goblin_defend_village_perimeter",
+      "element_type": "quest_definition",
+      "source_module": "goblin_camp_conflict",
+      "recipe_type": "quest_definition",
+      "parameters": {},
+      "profiles": {
+        "quest_type": "defend"
+      },
+      "details": {
+        "tags": [
+          "goblin",
+          "conflict",
+          "defense"
+        ],
+        "reward_budget": 120
+      }
+    },
     "old_mine": {
       "element_id": "old_mine",
       "element_type": "region",
@@ -398,8 +452,8 @@
         "population_recipe_source": "old_mine_spider_cluster"
       }
     },
-    "iron_vein_0": {
-      "element_id": "iron_vein_0",
+    "old_mine_resource_loop__iron_vein_0": {
+      "element_id": "old_mine_resource_loop__iron_vein_0",
       "element_type": "resource",
       "source_module": "old_mine_resource_loop",
       "recipe_type": "resource_layout",
@@ -412,8 +466,8 @@
         "region": "old_mine"
       }
     },
-    "crystal_outcrop_1": {
-      "element_id": "crystal_outcrop_1",
+    "old_mine_resource_loop__crystal_outcrop_1": {
+      "element_id": "old_mine_resource_loop__crystal_outcrop_1",
       "element_type": "resource",
       "source_module": "old_mine_resource_loop",
       "recipe_type": "resource_layout",
@@ -426,8 +480,8 @@
         "region": "old_mine"
       }
     },
-    "silver_vein_2": {
-      "element_id": "silver_vein_2",
+    "old_mine_resource_loop__silver_vein_2": {
+      "element_id": "old_mine_resource_loop__silver_vein_2",
       "element_type": "resource",
       "source_module": "old_mine_resource_loop",
       "recipe_type": "resource_layout",
@@ -637,6 +691,66 @@
         "relationship_model": "predatory_trade_ambush"
       },
       "details": {}
+    },
+    "quest_sbandit_hunt_camp_leader": {
+      "element_id": "quest_sbandit_hunt_camp_leader",
+      "element_type": "quest_definition",
+      "source_module": "scalable_bandit_camp",
+      "recipe_type": "quest_definition",
+      "parameters": {
+        "danger_scale": 4
+      },
+      "profiles": {
+        "quest_type": "hunt"
+      },
+      "details": {
+        "tags": [
+          "bandit",
+          "conflict",
+          "bounty"
+        ],
+        "reward_budget": 150
+      }
+    },
+    "quest_sbandit_fetch_stolen_cache": {
+      "element_id": "quest_sbandit_fetch_stolen_cache",
+      "element_type": "quest_definition",
+      "source_module": "scalable_bandit_camp",
+      "recipe_type": "quest_definition",
+      "parameters": {
+        "danger_scale": 4
+      },
+      "profiles": {
+        "quest_type": "fetch"
+      },
+      "details": {
+        "tags": [
+          "bandit",
+          "conflict",
+          "loot"
+        ],
+        "reward_budget": 100
+      }
+    },
+    "quest_sbandit_defend_road_checkpoint": {
+      "element_id": "quest_sbandit_defend_road_checkpoint",
+      "element_type": "quest_definition",
+      "source_module": "scalable_bandit_camp",
+      "recipe_type": "quest_definition",
+      "parameters": {
+        "danger_scale": 4
+      },
+      "profiles": {
+        "quest_type": "defend"
+      },
+      "details": {
+        "tags": [
+          "bandit",
+          "conflict",
+          "defense"
+        ],
+        "reward_budget": 120
+      }
     }
   }
 }

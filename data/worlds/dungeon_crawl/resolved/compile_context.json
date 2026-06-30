@@ -238,17 +238,17 @@
     }
   },
   "resources": {
-    "iron_vein_0": {
+    "old_mine_resource_loop__iron_vein_0": {
       "required_ticks": 15,
       "resource_type": "iron_vein",
       "yield_policy": null
     },
-    "crystal_outcrop_1": {
+    "old_mine_resource_loop__crystal_outcrop_1": {
       "required_ticks": 18,
       "resource_type": "crystal_outcrop",
       "yield_policy": null
     },
-    "silver_vein_2": {
+    "old_mine_resource_loop__silver_vein_2": {
       "required_ticks": 18,
       "resource_type": "silver_vein",
       "yield_policy": null

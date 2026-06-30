@@ -29,8 +29,8 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'grass' is active but never consumed by any downstream component",
-      "target": "grass"
+      "message": "Terrain 'hill' is active but never consumed by any downstream component",
+      "target": "hill"
     },
     {
       "severity": "WARNING",
@@ -41,8 +41,8 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'hill' is active but never consumed by any downstream component",
-      "target": "hill"
+      "message": "Terrain 'grass' is active but never consumed by any downstream component",
+      "target": "grass"
     },
     {
       "severity": "WARNING",
@@ -245,12 +245,6 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Race 'dwarf' is active but never consumed by any downstream component",
-      "target": "dwarf"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
       "message": "Race 'slime' is active but never consumed by any downstream component",
       "target": "slime"
     },
@@ -259,12 +253,6 @@
       "rule_id": "CAT-DEAD-001",
       "message": "Role 'shopkeeper' is active but never consumed by any downstream component",
       "target": "shopkeeper"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
-      "message": "Faction 'neutral' is active but never consumed by any downstream component",
-      "target": "neutral"
     },
     {
       "severity": "WARNING",
@@ -305,14 +293,128 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Stat_profile 'monster_base' is active but never consumed by any downstream component",
-      "target": "monster_base"
+      "message": "Faction_relationship 'bandits_to_town' is active but never consumed by any downstream component",
+      "target": "bandits_to_town"
     },
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Skill_profile 'warrior_skills' is active but never consumed by any downstream component",
-      "target": "warrior_skills"
+      "message": "Faction_relationship 'hero_guild_to_goblin' is active but never consumed by any downstream component",
+      "target": "hero_guild_to_goblin"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'goblin_to_hero_guild' is active but never consumed by any downstream component",
+      "target": "goblin_to_hero_guild"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'orc_to_goblin' is active but never consumed by any downstream component",
+      "target": "orc_to_goblin"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'goblin_to_orc' is active but never consumed by any downstream component",
+      "target": "goblin_to_orc"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'dwarves_to_orc' is active but never consumed by any downstream component",
+      "target": "dwarves_to_orc"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'orc_to_dwarves' is active but never consumed by any downstream component",
+      "target": "orc_to_dwarves"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'dragon_cult_to_town' is active but never consumed by any downstream component",
+      "target": "dragon_cult_to_town"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'town_to_dragon_cult' is active but never consumed by any downstream component",
+      "target": "town_to_dragon_cult"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'moon_cult_to_arcane' is active but never consumed by any downstream component",
+      "target": "moon_cult_to_arcane"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'arcane_to_moon_cult' is active but never consumed by any downstream component",
+      "target": "arcane_to_moon_cult"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'undead_to_forest' is active but never consumed by any downstream component",
+      "target": "undead_to_forest"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'forest_to_undead' is active but never consumed by any downstream component",
+      "target": "forest_to_undead"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'hero_to_town' is active but never consumed by any downstream component",
+      "target": "hero_to_town"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'town_to_hero' is active but never consumed by any downstream component",
+      "target": "town_to_hero"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'arcane_to_dwarves' is active but never consumed by any downstream component",
+      "target": "arcane_to_dwarves"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'dwarves_to_arcane' is active but never consumed by any downstream component",
+      "target": "dwarves_to_arcane"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'swamp_tribe_to_town' is active but never consumed by any downstream component",
+      "target": "swamp_tribe_to_town"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'spirit_court_to_forest' is active but never consumed by any downstream component",
+      "target": "spirit_court_to_forest"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'forest_to_spirit_court' is active but never consumed by any downstream component",
+      "target": "forest_to_spirit_court"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Stat_profile 'monster_base' is active but never consumed by any downstream component",
+      "target": "monster_base"
     },
     {
       "severity": "WARNING",
@@ -323,8 +425,50 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Building 'watchtower' is active but never consumed by any downstream component",
-      "target": "watchtower"
+      "message": "Archetype 'town_healer' is active but never consumed by any downstream component",
+      "target": "town_healer"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Archetype 'forest_druid' is active but never consumed by any downstream component",
+      "target": "forest_druid"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Archetype 'arcane_mage' is active but never consumed by any downstream component",
+      "target": "arcane_mage"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Archetype 'moon_cult_sorcerer' is active but never consumed by any downstream component",
+      "target": "moon_cult_sorcerer"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Archetype 'orc_warchief' is active but never consumed by any downstream component",
+      "target": "orc_warchief"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Archetype 'dwarven_hunter' is active but never consumed by any downstream component",
+      "target": "dwarven_hunter"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Archetype 'adventurer_hero' is active but never consumed by any downstream component",
+      "target": "adventurer_hero"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Archetype 'bandit_cutpurse' is active but never consumed by any downstream component",
+      "target": "bandit_cutpurse"
     },
     {
       "severity": "WARNING",
@@ -353,6 +497,18 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
+      "message": "Region 'nomadic_herd_range' is active but never consumed by any downstream component",
+      "target": "nomadic_herd_range"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Region 'settled_quarter_district' is active but never consumed by any downstream component",
+      "target": "settled_quarter_district"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
       "message": "Recipe 'craft_small_potion' is active but never consumed by any downstream component",
       "target": "craft_small_potion"
     },
@@ -371,86 +527,8 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Resource 'frost_shard_cluster' is active but never consumed by any downstream component",
-      "target": "frost_shard_cluster"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
-      "message": "Item 'rusted_sword' is active but never consumed by any downstream component",
-      "target": "rusted_sword"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
-      "message": "Item 'wooden_staff' is active but never consumed by any downstream component",
-      "target": "wooden_staff"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
-      "message": "Item 'basic_bow' is active but never consumed by any downstream component",
-      "target": "basic_bow"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
-      "message": "Item 'leather_armor' is active but never consumed by any downstream component",
-      "target": "leather_armor"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
-      "message": "Item 'apprentice_staff' is active but never consumed by any downstream component",
-      "target": "apprentice_staff"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
-      "message": "Item 'herb' is active but never consumed by any downstream component",
-      "target": "herb"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
-      "message": "Item 'ember_axe' is active but never consumed by any downstream component",
-      "target": "ember_axe"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
-      "message": "Item 'frost_focus' is active but never consumed by any downstream component",
-      "target": "frost_focus"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
-      "message": "Item 'steel' is active but never consumed by any downstream component",
-      "target": "steel"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
-      "message": "Item 'ember_core' is active but never consumed by any downstream component",
-      "target": "ember_core"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
-      "message": "Item 'frost_shard' is active but never consumed by any downstream component",
-      "target": "frost_shard"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
-      "message": "Item 'shadow_ichor' is active but never consumed by any downstream component",
-      "target": "shadow_ichor"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
-      "message": "Biome 'frozen_peak' is active but never consumed by any downstream component",
-      "target": "frozen_peak"
+      "message": "Item 'steel_sword' is active but never consumed by any downstream component",
+      "target": "steel_sword"
     },
     {
       "severity": "WARNING",
@@ -493,6 +571,36 @@
       "rule_id": "CAT-DEAD-001",
       "message": "Projection 'elite_goblin' is active but never consumed by any downstream component",
       "target": "elite_goblin"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Module 'mountain_pass' is active but never consumed by any downstream component",
+      "target": "mountain_pass"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Module 'settled_quarter' is active but never consumed by any downstream component",
+      "target": "settled_quarter"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Module 'hero_adventurers' is active but never consumed by any downstream component",
+      "target": "hero_adventurers"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Module 'river_crossing' is active but never consumed by any downstream component",
+      "target": "river_crossing"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Module 'nomadic_herd' is active but never consumed by any downstream component",
+      "target": "nomadic_herd"
     }
   ],
   "module_validation": {
@@ -506,15 +614,15 @@
   "summary": {
     "status": "SUCCESS",
     "blocking_errors_count": 0,
-    "warnings_count": 78
+    "warnings_count": 96
   },
   "blocking_errors": [],
   "warnings": [
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'grass' is active but never consumed by any downstream component",
-      "target": "grass"
+      "message": "Terrain 'hill' is active but never consumed by any downstream component",
+      "target": "hill"
     },
     {
       "severity": "WARNING",
@@ -525,8 +633,8 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'hill' is active but never consumed by any downstream component",
-      "target": "hill"
+      "message": "Terrain 'grass' is active but never consumed by any downstream component",
+      "target": "grass"
     },
     {
       "severity": "WARNING",
@@ -729,12 +837,6 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Race 'dwarf' is active but never consumed by any downstream component",
-      "target": "dwarf"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
       "message": "Race 'slime' is active but never consumed by any downstream component",
       "target": "slime"
     },
@@ -743,12 +845,6 @@
       "rule_id": "CAT-DEAD-001",
       "message": "Role 'shopkeeper' is active but never consumed by any downstream component",
       "target": "shopkeeper"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
-      "message": "Faction 'neutral' is active but never consumed by any downstream component",
-      "target": "neutral"
     },
     {
       "severity": "WARNING",
@@ -789,14 +885,128 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Stat_profile 'monster_base' is active but never consumed by any downstream component",
-      "target": "monster_base"
+      "message": "Faction_relationship 'bandits_to_town' is active but never consumed by any downstream component",
+      "target": "bandits_to_town"
     },
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Skill_profile 'warrior_skills' is active but never consumed by any downstream component",
-      "target": "warrior_skills"
+      "message": "Faction_relationship 'hero_guild_to_goblin' is active but never consumed by any downstream component",
+      "target": "hero_guild_to_goblin"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'goblin_to_hero_guild' is active but never consumed by any downstream component",
+      "target": "goblin_to_hero_guild"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'orc_to_goblin' is active but never consumed by any downstream component",
+      "target": "orc_to_goblin"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'goblin_to_orc' is active but never consumed by any downstream component",
+      "target": "goblin_to_orc"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'dwarves_to_orc' is active but never consumed by any downstream component",
+      "target": "dwarves_to_orc"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'orc_to_dwarves' is active but never consumed by any downstream component",
+      "target": "orc_to_dwarves"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'dragon_cult_to_town' is active but never consumed by any downstream component",
+      "target": "dragon_cult_to_town"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'town_to_dragon_cult' is active but never consumed by any downstream component",
+      "target": "town_to_dragon_cult"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'moon_cult_to_arcane' is active but never consumed by any downstream component",
+      "target": "moon_cult_to_arcane"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'arcane_to_moon_cult' is active but never consumed by any downstream component",
+      "target": "arcane_to_moon_cult"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'undead_to_forest' is active but never consumed by any downstream component",
+      "target": "undead_to_forest"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'forest_to_undead' is active but never consumed by any downstream component",
+      "target": "forest_to_undead"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'hero_to_town' is active but never consumed by any downstream component",
+      "target": "hero_to_town"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'town_to_hero' is active but never consumed by any downstream component",
+      "target": "town_to_hero"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'arcane_to_dwarves' is active but never consumed by any downstream component",
+      "target": "arcane_to_dwarves"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'dwarves_to_arcane' is active but never consumed by any downstream component",
+      "target": "dwarves_to_arcane"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'swamp_tribe_to_town' is active but never consumed by any downstream component",
+      "target": "swamp_tribe_to_town"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'spirit_court_to_forest' is active but never consumed by any downstream component",
+      "target": "spirit_court_to_forest"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Faction_relationship 'forest_to_spirit_court' is active but never consumed by any downstream component",
+      "target": "forest_to_spirit_court"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Stat_profile 'monster_base' is active but never consumed by any downstream component",
+      "target": "monster_base"
     },
     {
       "severity": "WARNING",
@@ -807,8 +1017,50 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Building 'watchtower' is active but never consumed by any downstream component",
-      "target": "watchtower"
+      "message": "Archetype 'town_healer' is active but never consumed by any downstream component",
+      "target": "town_healer"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Archetype 'forest_druid' is active but never consumed by any downstream component",
+      "target": "forest_druid"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Archetype 'arcane_mage' is active but never consumed by any downstream component",
+      "target": "arcane_mage"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Archetype 'moon_cult_sorcerer' is active but never consumed by any downstream component",
+      "target": "moon_cult_sorcerer"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Archetype 'orc_warchief' is active but never consumed by any downstream component",
+      "target": "orc_warchief"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Archetype 'dwarven_hunter' is active but never consumed by any downstream component",
+      "target": "dwarven_hunter"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Archetype 'adventurer_hero' is active but never consumed by any downstream component",
+      "target": "adventurer_hero"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Archetype 'bandit_cutpurse' is active but never consumed by any downstream component",
+      "target": "bandit_cutpurse"
     },
     {
       "severity": "WARNING",
@@ -837,6 +1089,18 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
+      "message": "Region 'nomadic_herd_range' is active but never consumed by any downstream component",
+      "target": "nomadic_herd_range"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Region 'settled_quarter_district' is active but never consumed by any downstream component",
+      "target": "settled_quarter_district"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
       "message": "Recipe 'craft_small_potion' is active but never consumed by any downstream component",
       "target": "craft_small_potion"
     },
@@ -855,86 +1119,8 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Resource 'frost_shard_cluster' is active but never consumed by any downstream component",
-      "target": "frost_shard_cluster"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
-      "message": "Item 'rusted_sword' is active but never consumed by any downstream component",
-      "target": "rusted_sword"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
-      "message": "Item 'wooden_staff' is active but never consumed by any downstream component",
-      "target": "wooden_staff"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
-      "message": "Item 'basic_bow' is active but never consumed by any downstream component",
-      "target": "basic_bow"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
-      "message": "Item 'leather_armor' is active but never consumed by any downstream component",
-      "target": "leather_armor"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
-      "message": "Item 'apprentice_staff' is active but never consumed by any downstream component",
-      "target": "apprentice_staff"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
-      "message": "Item 'herb' is active but never consumed by any downstream component",
-      "target": "herb"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
-      "message": "Item 'ember_axe' is active but never consumed by any downstream component",
-      "target": "ember_axe"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
-      "message": "Item 'frost_focus' is active but never consumed by any downstream component",
-      "target": "frost_focus"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
-      "message": "Item 'steel' is active but never consumed by any downstream component",
-      "target": "steel"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
-      "message": "Item 'ember_core' is active but never consumed by any downstream component",
-      "target": "ember_core"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
-      "message": "Item 'frost_shard' is active but never consumed by any downstream component",
-      "target": "frost_shard"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
-      "message": "Item 'shadow_ichor' is active but never consumed by any downstream component",
-      "target": "shadow_ichor"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
-      "message": "Biome 'frozen_peak' is active but never consumed by any downstream component",
-      "target": "frozen_peak"
+      "message": "Item 'steel_sword' is active but never consumed by any downstream component",
+      "target": "steel_sword"
     },
     {
       "severity": "WARNING",
@@ -977,15 +1163,45 @@
       "rule_id": "CAT-DEAD-001",
       "message": "Projection 'elite_goblin' is active but never consumed by any downstream component",
       "target": "elite_goblin"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Module 'mountain_pass' is active but never consumed by any downstream component",
+      "target": "mountain_pass"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Module 'settled_quarter' is active but never consumed by any downstream component",
+      "target": "settled_quarter"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Module 'hero_adventurers' is active but never consumed by any downstream component",
+      "target": "hero_adventurers"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Module 'river_crossing' is active but never consumed by any downstream component",
+      "target": "river_crossing"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Module 'nomadic_herd' is active but never consumed by any downstream component",
+      "target": "nomadic_herd"
     }
   ],
   "fingerprints": {
-    "catalog": "b1cec5dc8a96b2614a622544840330384aa0da562c0d706bfc28ef4f7713c198",
+    "catalog": "3529ebbe985937cfa0e2bf3066657f19d7112f21620e16d31e6bf661d5305f46",
     "modules": {
-      "goblin_camp_conflict": "16b4aab9db55e27cb59f021557518381207fbf8b4e4550843506a9c827ca844d",
-      "old_mine_resource_loop": "3307ee93b187d56a00220a71eb6bb4ead096f20ff267e9d53dbbd9d891d041c3",
-      "ruins_mystery_quest": "1c575fb0e1ccaf17174ed443232ed10e76a88b565d2fc0a29f5e5f4292f474c4",
-      "scalable_bandit_camp": "0979c5a0acbd4f01d01e042edf44bf3eb03f1c439fac9fa19b78e9fde10daea3"
+      "goblin_camp_conflict": "36e0a62287420b3a3ab01ce4396ce507e998bbecbc6ed4c0beb37c346d933daf",
+      "old_mine_resource_loop": "dbef38a7d0c2261e24948cd9dded020279386c10e0084872a2df9963bb9cc677",
+      "ruins_mystery_quest": "4edea387d1854eff4a6cce55d4e815d0699ba1b007395a53ad58cc06eb04274a",
+      "scalable_bandit_camp": "adb4c823c87cb7c9ed2fa31ea66eee3269d24ba47b31fb8791e45cdd6f7d5193"
     }
   }
 }

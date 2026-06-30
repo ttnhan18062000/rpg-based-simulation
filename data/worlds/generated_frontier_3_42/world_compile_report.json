@@ -3,13 +3,10 @@
   "seed": 42,
   "entity_count": 44,
   "region_count": 6,
-  "resource_node_count": 7,
+  "resource_node_count": 9,
   "building_count": 6,
-  "quest_count": 1,
-  "warnings": [
-    "QuestDefinition 'mine_fetch_ore' required_location_tag 'mine' does not match any region ID in this world",
-    "QuestDefinition 'mine_fetch_ore' required_location_tag 'underground' does not match any region ID in this world"
-  ],
-  "compile_duration_ms": 21.504689000721555,
-  "state_hash": "b8d40803a17564d5ab3d72ec48d6650d"
+  "quest_count": 16,
+  "warnings": [],
+  "compile_duration_ms": 16.65726999999606,
+  "state_hash": "246f83827c267823591d1e7fd9262ce0"
 }

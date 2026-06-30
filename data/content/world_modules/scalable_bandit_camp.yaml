@@ -21,6 +21,7 @@ regions:
     grid_bounds: [50, 30, 85, 60]
     terrain: "forest"
     hazard_level: 2.0
+    tags: [forest]
 factions: ["bandit_company"]
 population_recipes:
   - role: "scout"
