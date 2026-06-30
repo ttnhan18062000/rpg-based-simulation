@@ -25,6 +25,12 @@ MODULE_MATRIX = [
     "river_crossing",
     "nomadic_herd",
     "settled_quarter",
+    # TCK-20260630-WORLD-TEST-MATRIX: previously untested modules
+    "hero_adventurers",
+    "orc_clan_territory",
+    "forest_warden_grove",
+    "sunken_swamp_border",
+    "survivor_camp_shelter",
 ]
 
 

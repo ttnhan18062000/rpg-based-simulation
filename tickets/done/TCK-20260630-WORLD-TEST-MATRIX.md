@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: world
 authority: P1
 audience: agent
 ticket_id: TCK-20260630-WORLD-TEST-MATRIX
-phase: open
+phase: done
 date: 2026-06-30
 tags: [world, testing, modules, integration]
 ---
@@ -15,7 +15,7 @@ tags: [world, testing, modules, integration]
 Add 5 missing modules to integration test MODULE_MATRIX
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -56,9 +56,9 @@ If any of these have schema drift or normalization failures, no test catches it.
 - Changing module schemas or data
 
 ## Acceptance Criteria
-- [ ] `MODULE_MATRIX` contains all 20 module IDs
-- [ ] `pytest tests/integration/worldassembly/test_real_content_world_modules.py` passes
-- [ ] No module silently skipped or ignored
+- [x] `MODULE_MATRIX` contains all 20 module IDs
+- [x] `pytest tests/integration/worldassembly/test_real_content_world_modules.py` passes
+- [x] No module silently skipped or ignored
 
 ## Related Tickets
 - TCK-20260630-WORLD-DEPLOY-MODULES (modules must exist before being tested)
@@ -89,7 +89,7 @@ If any of these have schema drift or normalization failures, no test catches it.
 - `pytest tests/integration/worldassembly/test_real_content_world_modules.py` — all pass
 
 ## Files Changed
-(to be filled at implementation)
+- `tests/integration/worldassembly/test_real_content_world_modules.py` — added 5 modules to MODULE_MATRIX (lines 29-33)
 
 ## Completion Summary
-(to be filled at completion)
+Added hero_adventurers, orc_clan_territory, forest_warden_grove, sunken_swamp_border, survivor_camp_shelter to MODULE_MATRIX. hero_adventurers has no regions field — verified test assertions handle empty list correctly (0 == 0). All 5 tests pass (5/5). MODULE_MATRIX now covers all 20 modules.
