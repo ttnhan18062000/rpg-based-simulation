@@ -13,7 +13,7 @@ tags: [audit, simulation-quality, simq, integration, observability, event-bus]
 | Axis | Value |
 |---|---|
 | **Group** | A — Simulation Quality |
-| **State** | `done` (emission gaps resolved; kernel wiring unresolved — see §Finding Updates) |
+| **State** | `done` (kernel wiring resolved 2026-06-30; 24/27 emission gaps resolved 2026-07-01; 3 blocked on infrastructure) |
 | **Impact** | 4 / 5 |
 | **Interest** | 5 / 5 |
 | **Priority** | 9 |
@@ -207,13 +207,18 @@ event bridge is missing.
 
 | # | Finding | Severity | Status |
 |---|---|---|---|
-| F1 | `QueueDrainWorker.quality_fn` slot exists but is never populated at kernel init | High | **Open** — TCK-20260701-SIMQ-KERNEL-WIRE |
-| F2 | `set_quality_hub()` is never called; REST quality endpoints always return hub=None path | High | **Open** — TCK-20260701-SIMQ-KERNEL-WIRE |
-| F3 | `InProcessQualityFeed` creates a competing consumer that races against EventRecorder | Medium | **Open** — TCK-20260701-SIMQ-KERNEL-WIRE |
-| F4 | Zero events scored across both 200-tick seeds — SimQ produces no actionable signal | High | **Partially resolved** — 24 of 27 emission gaps closed; hub wiring (G1) still blocks live scoring |
-| F5 | Threshold calibration (`tools/calibrate_simq.py`) remains blocked until F1 is fixed | Medium | **Open** — blocked by F1 |
+| F1 | `QueueDrainWorker.quality_fn` slot exists but is never populated at kernel init | High | **RESOLVED** — TCK-20260630-SIMQ-WIRE-KERNEL (2026-06-30) |
+| F2 | `set_quality_hub()` is never called; REST quality endpoints always return hub=None path | High | **RESOLVED** — TCK-20260630-SIMQ-WIRE-SERVER (2026-06-30) |
+| F3 | `InProcessQualityFeed` creates a competing consumer that races against EventRecorder | Medium | **RESOLVED** — TCK-20260630-SIMQ-WIRE-KERNEL (2026-06-30) |
+| F4 | Zero events scored across both 200-tick seeds — SimQ produces no actionable signal | High | **Partially resolved** — 24 of 27 emission gaps closed; hub wiring resolved; 3 events blocked on infrastructure |
+| F5 | Threshold calibration (`tools/calibrate_simq.py`) remains blocked until F1 is fixed | Medium | **UNBLOCKED** — F1 resolved; calibration can proceed once emission coverage is sufficient |
 
 ### §Finding Updates — 2026-07-01
+
+**Kernel wiring (F1/F2/F3): RESOLVED on 2026-06-30.**
+- G1 (`quality_fn` at kernel init) — fixed by `TCK-20260630-SIMQ-WIRE-KERNEL`: `quality_fn=hub.on_envelope` passed to `QueueDrainWorker` in `Kernel.__init__` (`src/engine/kernel.py:264`)
+- G2 (`set_quality_hub` in server lifespan) — fixed by `TCK-20260630-SIMQ-WIRE-SERVER`: `set_quality_hub(_k.quality_hub)` called after manager start (`src/api/server.py:34`)
+- G3 (`InProcessQualityFeed` competing consumer) — fixed by `TCK-20260630-SIMQ-WIRE-KERNEL`: `InProcessQualityFeed` refactored to lifecycle-only; no longer creates a second `QueueDrainWorker`
 
 **Emission gap progress:** 24 of 27 engine emission gaps resolved by the simq-emit epic:
 - `TCK-20260701-SIMQ-EMIT-AGENCY2` — 4 AGENCY events (`defer_with_reason`, `route_family_first_use`, `commitment_abandoned`, `rejection_cascade_tick`)
@@ -226,5 +231,3 @@ event bridge is missing.
 - `social_memory_created` — SocialMemoryExporter has no event recorder (TCK-20260701-SIMQ-EMIT-SOCIAL-MEM)
 - `contract_milestone_completed` — ContractState has no milestones field (TCK-20260701-SIMQ-EMIT-CONTRACT-MILESTONE)
 - `camp_constructed` — CampService has no event recorder (TCK-20260701-SIMQ-EMIT-CAMP)
-
-**Kernel wiring gap (F1/F2/F3) remains unresolved.** Even with all emitters in place, SimQ still scores 0 because `QueueDrainWorker.quality_fn` is never set and `InProcessQualityFeed` creates a competing consumer. Fix tracked in `TCK-20260701-SIMQ-KERNEL-WIRE`.

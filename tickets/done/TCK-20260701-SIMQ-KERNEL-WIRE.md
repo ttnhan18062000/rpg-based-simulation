@@ -1,10 +1,10 @@
 ---
-status: active
+status: closed
 layer: observability
 authority: P0
 audience: agent
 ticket_id: TCK-20260701-SIMQ-KERNEL-WIRE
-phase: open
+phase: done
 date: 2026-07-01
 tags: [simq, kernel, wiring, observability, integration]
 ---
@@ -15,7 +15,7 @@ tags: [simq, kernel, wiring, observability, integration]
 Wire SimQ hub into Kernel startup and server lifespan (G1 / G2 / G3 fix)
 
 ## Status
-OPEN
+DONE — DUPLICATE / CREATED IN ERROR
 
 ## Tier
 standard
@@ -112,4 +112,8 @@ scores are 0, and `tools/calibrate_simq.py` is blocked.
 (to be filled at implementation)
 
 ## Completion Summary
-(to be filled at completion)
+**Ticket created in error.** All three gaps (G1/G2/G3) were already resolved on 2026-06-30:
+- G1 + G3: `TCK-20260630-SIMQ-WIRE-KERNEL` — `quality_fn=hub.on_envelope` wired into `QueueDrainWorker`; `InProcessQualityFeed` refactored to not create a competing consumer
+- G2: `TCK-20260630-SIMQ-WIRE-SERVER` — `set_quality_hub()` called in server lifespan
+
+The D20 audit was written before those fixes and was not updated when the fixes landed. This ticket was created against stale audit text. No implementation required. Closing as duplicate.
