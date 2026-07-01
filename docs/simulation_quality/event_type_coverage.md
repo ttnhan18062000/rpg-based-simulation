@@ -11,18 +11,18 @@
 
 | Category | Count | Notes |
 |---|---|---|
-| scored | 80 | +1 `social_memory_created` (TCK-20260701-SIMQ-EMIT-SOCIAL-MEM) |
+| scored | 81 | +1 `contract_milestone_completed` (TCK-20260701-SIMQ-EMIT-CONTRACT-MILESTONE) |
 | translation_gap | 0 | — |
-| engine_emission_gap | 1 | `contract_milestone_completed` — ContractState has no milestones field |
+| engine_emission_gap | 0 | — |
 | no_engine_path | 1 | `camp_constructed` — no dynamic camp construction in simulation; scorer entry is premature |
 | p0_a_blocked | 3 | Unchanged — campaign/scenario gate |
 | unscored_intentional | 13 | Unchanged |
 
-**Last updated:** 2026-07-01 (TCK-20260701-SIMQ-EMIT-SOCIAL-MEM)
+**Last updated:** 2026-07-01 (TCK-20260701-SIMQ-EMIT-CONTRACT-MILESTONE)
 
 **Translation table status:** Complete. All 8 `_TRANSLATE_SIMPLE` and 5 `_TRANSLATE_CONDITIONAL` entries in `quality_hub.py` are correct. No translation table gaps found.
 
-**Remaining gaps:** 1 event without engine emission (`contract_milestone_completed` — ContractState has no milestones field). 1 scorer entry has no viable engine path (`camp_constructed` — camps are pre-placed at world generation). See §3.8–§3.9.
+**Remaining gaps:** 0 engine emission gaps. 1 scorer entry has no viable engine path (`camp_constructed` — camps are pre-placed at world generation, no dynamic construction mechanic). See §3.9.
 
 ---
 
@@ -94,6 +94,7 @@ All events below are emitted by the engine and reach at least one pillar scorer,
 | `hazard_drain_applied` | event_extractor | WorldDynamicsScorer | 322 | combat_upd.outcome_kind=="HAZARD" |
 | `lead_certainty_changed` | event_extractor | CognitionScorer | 0 | Strategic lead certainty state diff; see §3 note on `lead_certainty_updated` |
 | `social_memory_created` | event_extractor | SocialScorer | 0 | trust_history new entry or delta ≥ 0.3; once per (entity_id, other_entity_id) per run — TCK-20260701-SIMQ-EMIT-SOCIAL-MEM |
+| `contract_milestone_completed` | event_extractor | SocialScorer | 0 | ACTIVE contract at 25%/50%/75% of duration; once per (contract_id, milestone) per run; attributed to source_id — TCK-20260701-SIMQ-EMIT-CONTRACT-MILESTONE |
 | `group_joined` | event_extractor | SocialScorer | 0 | Entity joins a group |
 | `group_expelled` | event_extractor | SocialScorer | 0 | Entity leaves a group |
 | `reputation_delta` | event_extractor | SocialScorer | 0 | public_reputation delta > 0.05 |
@@ -233,10 +234,12 @@ All previously listed gaps resolved by TCK-20260701-SIMQ-EMIT-FACTION-ECONOMY.
 
 ### §3.8 Social (SocialScorer)
 
-| contract_type | resolved by / notes |
+All gaps resolved.
+
+| contract_type | resolved by |
 |---|---|
-| `social_memory_created` | **Resolved** — `EventExtractor` on `trust_history` delta (new entry or Δ ≥ 0.3, once per pair per run). TCK-20260701-SIMQ-EMIT-SOCIAL-MEM. |
-| `contract_milestone_completed` | **Design-blocked.** `ContractState` (`src/core/strategic.py`) has no milestone concept. Adding a field is straightforward, but nothing in the contracts pipeline produces milestones — there is no defined trigger for LOAN, PROTECTION, or MERCHANT contracts. Requires design work (which ContractKinds, what triggers) + new pipeline phase before an emitter can be written. TCK-20260701-SIMQ-EMIT-CONTRACT-MILESTONE. |
+| `social_memory_created` | `EventExtractor` — `trust_history` delta (new entry or Δ ≥ 0.3, once per pair per run). TCK-20260701-SIMQ-EMIT-SOCIAL-MEM. |
+| `contract_milestone_completed` | `EventExtractor` — time-gated: 25%/50%/75% of `(expiry_tick − created_tick)` elapsed for ACTIVE contracts; no schema change needed. Once per `(contract_id, label)` per run, attributed to `source_id`. TCK-20260701-SIMQ-EMIT-CONTRACT-MILESTONE. |
 
 ### §3.9 World Dynamics (WorldDynamicsScorer)
 
@@ -295,5 +298,5 @@ Events emitted by the engine that are deliberately NOT routed to any scorer. No 
 - When adding a new `event_type` to `event_extractor.py` or any domain emitter, check this table first.
 - If the event should be scored, either: (a) use contract vocabulary directly, or (b) add a `_TRANSLATE_SIMPLE` / `_TRANSLATE_CONDITIONAL` entry to `quality_hub.py` and update this table.
 - Engine emission gap events (§3) are the primary expansion surface for future SimQ coverage.
-- Remaining §3 gaps: `contract_milestone_completed` (§3.8) requires schema extension (milestones field on ContractState). `camp_constructed` (§3.9) has no viable engine path — camps are pre-placed, not dynamically constructed. `social_memory_created` resolved and moved to §1.1.
+- All engine emission gaps are resolved. Only `camp_constructed` (§3.9) has no viable engine path — camps are pre-placed at world generation, not dynamically constructed during simulation.
 - Run `make knowledge-index-update` after any change to docs in this directory.

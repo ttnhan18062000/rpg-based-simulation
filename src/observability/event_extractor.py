@@ -51,8 +51,11 @@ class EventExtractor:
     _emitted_stale_leads: dict[int, set[str]] = {}
     # Social memory: (entity_id, other_entity_id) pairs already emitted this run
     _emitted_social_memory: set[tuple[int, int]] = set()
+    # Contract milestones: "{contract_id}:{label}" keys already emitted this run
+    _emitted_contract_milestones: set[str] = set()
 
     _SOCIAL_MEMORY_THRESHOLD = 0.3  # minimum trust_history delta to emit
+    _CONTRACT_MILESTONE_THRESHOLDS = ((0.25, "25%"), (0.50, "50%"), (0.75, "75%"))
 
     @classmethod
     def reset_run_state(cls) -> None:
@@ -62,6 +65,7 @@ class EventExtractor:
         cls._emitted_plateau.clear()
         cls._emitted_stale_leads.clear()
         cls._emitted_social_memory.clear()
+        cls._emitted_contract_milestones.clear()
 
     @staticmethod
     def extract(
@@ -604,6 +608,40 @@ class EventExtractor:
                             source_system="event_extractor", message="",
                             payload={"contract_id": cid},
                         ))
+
+                # Contract milestones: time-gated progress signals for ACTIVE duration
+                # contracts. Uses (contract_id, label) gate so each milestone fires
+                # exactly once per run regardless of which entity processes the contract.
+                for cid, cs in curr_contracts.items():
+                    cs_status = getattr(getattr(cs, "status", None), "name",
+                                        str(getattr(cs, "status", "")))
+                    if cs_status != "ACTIVE":
+                        continue
+                    expiry = getattr(cs, "expiry_tick", -1)
+                    created = getattr(cs, "created_tick", 0)
+                    if not isinstance(expiry, int) or not isinstance(created, int):
+                        continue
+                    if expiry <= 0 or expiry <= created:
+                        continue
+                    elapsed = tick - created
+                    if elapsed <= 0:
+                        continue
+                    progress = elapsed / (expiry - created)
+                    source_id = getattr(cs, "source_id", eid)
+                    for threshold, label in EventExtractor._CONTRACT_MILESTONE_THRESHOLDS:
+                        gate_key = f"{cid}:{label}"
+                        if gate_key in EventExtractor._emitted_contract_milestones:
+                            continue
+                        if progress >= threshold:
+                            EventExtractor._emitted_contract_milestones.add(gate_key)
+                            events.append(SimulationEvent(
+                                event_type="contract_milestone_completed",
+                                event_category="social",
+                                tick=tick, entity_id=source_id, severity="INFO",
+                                source_system="event_extractor", message="",
+                                payload={"contract_id": cid, "milestone": label,
+                                         "kind": str(getattr(cs, "kind", ""))},
+                            ))
 
             # Quest progress lifecycle events
             prior_projects = prior_ent.strategic.projects

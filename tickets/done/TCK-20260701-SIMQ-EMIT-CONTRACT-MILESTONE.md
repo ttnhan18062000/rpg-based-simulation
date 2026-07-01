@@ -1,10 +1,10 @@
 ---
-status: blocked
+status: done
 layer: simulation
 authority: P2
 audience: agent
 ticket_id: TCK-20260701-SIMQ-EMIT-CONTRACT-MILESTONE
-phase: open
+phase: done
 date: 2026-07-01
 tags: [simq, event-emission, social, contract, scoring, schema]
 ---
@@ -15,7 +15,7 @@ tags: [simq, event-emission, social, contract, scoring, schema]
 Wire contract_milestone_completed emitter: add milestones field to ContractState
 
 ## Status
-BLOCKED — pending design (see Implementation Notes)
+DONE
 
 ## Tier
 standard
@@ -116,7 +116,15 @@ Adding `milestones_completed: frozenset[str]` to ContractState is technically st
 - Unit: payload includes contract_id and milestone_id
 
 ## Files Changed
-(to be filled at implementation)
+- `src/observability/event_extractor.py` — added `_emitted_contract_milestones` class var and `_CONTRACT_MILESTONE_THRESHOLDS`; extended `reset_run_state()`; added time-gated milestone emitter block inside strategic.contracts loop
+- `tests/unit/observability/test_event_extractor_contract_milestone.py` — 12 new tests
+- `docs/simulation_quality/event_type_coverage.md` — moved `contract_milestone_completed` from §3.8 to §1.1; summary count 80→81; all engine_emission_gaps now 0
+- `docs/parity_ledger/social_narrative.yaml` — added SOC-238
+- `docs/audits/D20_simq_integration.md` — updated F4 to RESOLVED
 
 ## Completion Summary
-(to be filled at completion)
+No schema change to ContractState required. EventExtractor diffs existing `created_tick` and
+`expiry_tick` fields per ACTIVE contract per tick; emits `contract_milestone_completed` at 25%,
+50%, and 75% of duration. Gate keyed on `"{contract_id}:{label}"` (not entity_id) ensures each
+milestone fires exactly once per run regardless of how many entities hold the contract. Event
+attributed to `contract.source_id`. 12 tests pass; 1096 total tests pass.

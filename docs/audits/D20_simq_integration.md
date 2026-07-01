@@ -210,7 +210,7 @@ event bridge is missing.
 | F1 | `QueueDrainWorker.quality_fn` slot exists but is never populated at kernel init | High | **RESOLVED** — TCK-20260630-SIMQ-WIRE-KERNEL (2026-06-30) |
 | F2 | `set_quality_hub()` is never called; REST quality endpoints always return hub=None path | High | **RESOLVED** — TCK-20260630-SIMQ-WIRE-SERVER (2026-06-30) |
 | F3 | `InProcessQualityFeed` creates a competing consumer that races against EventRecorder | Medium | **RESOLVED** — TCK-20260630-SIMQ-WIRE-KERNEL (2026-06-30) |
-| F4 | Zero events scored across both 200-tick seeds — SimQ produces no actionable signal | High | **Substantially resolved** — hub wired; 79 event types emitted; 2 gaps remain (`social_memory_created` wrong emit location, `contract_milestone_completed` schema gap); `camp_constructed` has no engine path |
+| F4 | Zero events scored across both 200-tick seeds — SimQ produces no actionable signal | High | **Resolved** — hub wired; 81 event types emitted; all engine emission gaps closed; `camp_constructed` has no viable engine path (scorer entry premature) |
 | F5 | Threshold calibration (`tools/calibrate_simq.py`) remains blocked until F1 is fixed | Medium | **UNBLOCKED** — F1 resolved; calibration can proceed |
 
 ### §Finding Updates — 2026-07-01
@@ -229,5 +229,5 @@ event bridge is missing.
 
 **Remaining gaps — premise corrections (2026-07-01):**
 - `social_memory_created` — prior premise wrong. `SocialMemoryExporter` is campaign-layer only (called at episode end). Correct emit: `EventExtractor` on `trust_history` delta — no infrastructure change needed. TCK-20260701-SIMQ-EMIT-SOCIAL-MEM scope updated.
-- `contract_milestone_completed` — schema gap confirmed. `ContractState` has no milestone concept AND the contracts pipeline (`pipeline_phases/contracts.py`) has no milestone trigger logic. This is a gameplay feature (design → schema → pipeline → emitter), not a wiring gap. Ticket marked BLOCKED pending design. TCK-20260701-SIMQ-EMIT-CONTRACT-MILESTONE.
+- `contract_milestone_completed` — **resolved**. No schema change needed. EventExtractor emits at 25%/50%/75% of ACTIVE contract duration using existing `created_tick`/`expiry_tick` fields. Gate: once per `(contract_id, milestone)` per run. TCK-20260701-SIMQ-EMIT-CONTRACT-MILESTONE DONE.
 - `camp_constructed` — prior premise wrong. `StateUpdate` has no `camps_add`; camps are pre-placed at world generation. No dynamic camp construction occurs in simulation. No event recorder can fix this — the mechanic doesn't exist. TCK-20260701-SIMQ-EMIT-CAMP closed.

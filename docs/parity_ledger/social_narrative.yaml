@@ -3031,6 +3031,27 @@
   divergence_note: null
   support_boundary: null
 
+- id: SOC-238
+  text: >
+    contract_milestone_completed is emitted from EventExtractor for ACTIVE contracts with a
+    defined duration (expiry_tick > created_tick > 0) at 25%, 50%, and 75% of elapsed
+    duration. Gate: once per (contract_id, milestone_label) per run via
+    _emitted_contract_milestones set. Event is attributed to contract.source_id.
+    No schema change to ContractState required. (TCK-20260701-SIMQ-EMIT-CONTRACT-MILESTONE)
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/observability/event_extractor.py — contract_milestone_completed block inside
+    strategic.contracts loop; isinstance guards on expiry_tick/created_tick;
+    progress = elapsed / (expiry - created); thresholds (0.25, 0.50, 0.75);
+    _emitted_contract_milestones class-level set gate; reset in reset_run_state().
+  proof_type: parity
+  test_path: >-
+    tests/unit/observability/test_event_extractor_contract_milestone.py
+  divergence_note: null
+  support_boundary: null
+
 - id: SOC-237
   text: >
     social_memory_created is emitted from EventExtractor when entity.social.trust_history
