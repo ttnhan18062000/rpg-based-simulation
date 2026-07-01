@@ -19,6 +19,11 @@ import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 
+# Use locally cached HuggingFace models — avoids SSL cert failures on networks
+# where the system Python cert bundle doesn't trust the HF CDN issuer.
+os.environ.setdefault("HF_HUB_OFFLINE", "1")
+os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")
+
 # ── Import knowledge_search from sibling file ─────────────────────────────────
 _TOOLS_DIR = Path(__file__).parent
 _KS_PATH = _TOOLS_DIR / "knowledge_search.py"

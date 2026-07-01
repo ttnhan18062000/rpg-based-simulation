@@ -33,6 +33,11 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
+# Use locally cached HuggingFace models after first download — avoids SSL cert
+# failures on networks where the system Python bundle doesn't trust the HF CDN.
+os.environ.setdefault("HF_HUB_OFFLINE", "1")
+os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")
+
 _DEFAULT_DB = Path("knowledge-index/knowledge.db")
 _MANIFEST_PATH = Path("knowledge-index/manifest.json")
 _CACHE_PATH = Path("knowledge-index/embeddings_cache.pkl")

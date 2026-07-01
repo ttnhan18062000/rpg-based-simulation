@@ -32,6 +32,8 @@ dev = [
     "memray>=1.0.0",
     "mypy",
 ]
+# torch must be installed separately from the CPU wheel before this extra:
+#   pip install torch --index-url https://download.pytorch.org/whl/cpu
 knowledge = [
     "sentence-transformers>=2.7.0",
     "sqlite-vec>=0.1.1",

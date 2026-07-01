@@ -250,10 +250,14 @@ agent-monitoring-query: ## Query agent monitoring records (pass ARGS="--agent in
 
 knowledge-index: ## Build local semantic knowledge index (developer env only — not CI)
 	@echo "Building knowledge index (requires: pip install -e '.[knowledge]')..."
-	python3 tools/knowledge_search.py build
+	SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt SSL_CERT_DIR=/etc/ssl/certs \
+	  $(shell for py in .venv/bin/python3 /home/vboxuser/Work/venv/bin/python3 python3; do [ -x "$$py" ] && echo "$$py" && break; done) \
+	  tools/knowledge_search.py build
 
 knowledge-index-update: ## Incremental reindex — only re-embeds changed/new files (fast)
-	python3 tools/knowledge_search.py build --incremental
+	SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt SSL_CERT_DIR=/etc/ssl/certs \
+	  $(shell for py in .venv/bin/python3 /home/vboxuser/Work/venv/bin/python3 python3; do [ -x "$$py" ] && echo "$$py" && break; done) \
+	  tools/knowledge_search.py build --incremental
 
 search-server-docker: ## PRIMARY — start knowledge search server in Docker (persistent, survives terminal close)
 	docker compose -f tools/search/docker-compose.yml up -d --build
@@ -275,10 +279,11 @@ install-hooks: ## Install git hooks (post-commit incremental reindex when docs/ 
 	@echo "[hooks] post-commit hook installed"
 
 eval-search: ## Run search quality evaluation — Recall@5, MRR@10 (requires knowledge-index)
-	python3 tools/eval_search.py
+	$(shell for py in .venv/bin/python3 /home/vboxuser/Work/venv/bin/python3 python3; do [ -x "$$py" ] && echo "$$py" && break; done) tools/eval_search.py
 
 mcp-server-test: ## Smoke-test MCP search_docs tool via --test mode (no MCP client needed)
-	@echo '{"query": "damage formula", "top_k": 3}' | python3 tools/search_mcp.py --test
+	@echo '{"query": "damage formula", "top_k": 3}' | \
+	  $(shell for py in .venv/bin/python3 /home/vboxuser/Work/venv/bin/python3 python3; do [ -x "$$py" ] && echo "$$py" && break; done) tools/search_mcp.py --test
 
 # ── Cleanup ──────────────────────────────────────────────
 
