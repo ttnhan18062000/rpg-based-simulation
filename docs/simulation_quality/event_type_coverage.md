@@ -13,15 +13,16 @@
 |---|---|---|
 | scored | 79 | +24 from simq-emit epic (AGENCY2 +4, LEAD-BELIEFS +6, PROGRESSION +5, FACTION-ECONOMY +5, WORLD-DYNAMICS +4) |
 | translation_gap | 0 | — |
-| engine_emission_gap | 3 | Down from 27; 3 remain blocked on infrastructure |
+| engine_emission_gap | 2 | `social_memory_created` (wrong emit location); `contract_milestone_completed` (schema gap) |
+| no_engine_path | 1 | `camp_constructed` — no dynamic camp construction in simulation; scorer entry is premature |
 | p0_a_blocked | 3 | Unchanged — campaign/scenario gate |
 | unscored_intentional | 13 | Unchanged |
 
-**Last updated:** 2026-07-01 (TCK-20260701-SIMQ-EMIT-WORLD-DYNAMICS)
+**Last updated:** 2026-07-01 (premise correction for §3.8–§3.9)
 
 **Translation table status:** Complete. All 8 `_TRANSLATE_SIMPLE` and 5 `_TRANSLATE_CONDITIONAL` entries in `quality_hub.py` are correct. No translation table gaps found.
 
-**Gaps found:** 3 entries remain in SCORER_REGISTRY without engine emission (`social_memory_created`, `contract_milestone_completed`, `camp_constructed`), all blocked by missing infrastructure. See §3.8–§3.9.
+**Remaining gaps:** 2 events in SCORER_REGISTRY without engine emission (`social_memory_created`, `contract_milestone_completed`). 1 scorer entry has no viable engine path (`camp_constructed` — camps are pre-placed at world generation; no dynamic construction mechanic exists). See §3.8–§3.9.
 
 ---
 
@@ -231,16 +232,14 @@ All previously listed gaps resolved by TCK-20260701-SIMQ-EMIT-FACTION-ECONOMY.
 
 ### §3.8 Social (SocialScorer)
 
-**Blocked — missing infrastructure.** No change from prior survey.
-
 | contract_type | notes |
 |---|---|
-| `social_memory_created` | SocialMemoryExporter.export() has no event recorder; requires interface change |
-| `contract_milestone_completed` | ContractState has no milestones field; requires schema extension |
+| `social_memory_created` | **Wrong emit location in prior analysis.** `SocialMemoryExporter.export()` is campaign-gated (called at episode end by `CampaignOrchestrator`). Correct approach: emit from `EventExtractor` on `entity.social.trust_history` delta — no infrastructure change needed. TCK-20260701-SIMQ-EMIT-SOCIAL-MEM scope updated. |
+| `contract_milestone_completed` | **Schema gap.** `ContractState` tracks lifecycle (OFFERED → ACTIVE → FULFILLED/EXPIRED) but has no milestone concept. Requires adding `milestones_completed: frozenset[str]` to `ContractState` and updating the apply pipeline. TCK-20260701-SIMQ-EMIT-CONTRACT-MILESTONE. |
 
 ### §3.9 World Dynamics (WorldDynamicsScorer)
 
-Partially resolved by TCK-20260701-SIMQ-EMIT-WORLD-DYNAMICS; one item remains blocked.
+Resolved by TCK-20260701-SIMQ-EMIT-WORLD-DYNAMICS. One item reclassified as `no_engine_path` (not a wiring gap).
 
 | contract_type | resolved by / notes |
 |---|---|
@@ -248,7 +247,7 @@ Partially resolved by TCK-20260701-SIMQ-EMIT-WORLD-DYNAMICS; one item remains bl
 | `spawn_cadence_fired` | `event_extractor.py` — tick % 50 + non-boss entities_add |
 | `threat_evolved` | `event_extractor.py` — trauma_score crossing 25/50/75/100 thresholds |
 | `node_recharged` | `event_extractor.py` — resource_node quantity 0 → >0 |
-| `camp_constructed` | **Blocked** — CampService/camp.py has no event recorder; requires interface change |
+| `camp_constructed` | **No engine path.** `StateUpdate` has no `camps_add` field. `CampService` only evolves existing camps (maturity, raids). Camps are pre-placed at world generation — no dynamic construction occurs during simulation ticks. Implementing this event requires adding a camp placement mechanic first. TCK-20260701-SIMQ-EMIT-CAMP closed. |
 
 ---
 
@@ -295,5 +294,5 @@ Events emitted by the engine that are deliberately NOT routed to any scorer. No 
 - When adding a new `event_type` to `event_extractor.py` or any domain emitter, check this table first.
 - If the event should be scored, either: (a) use contract vocabulary directly, or (b) add a `_TRANSLATE_SIMPLE` / `_TRANSLATE_CONDITIONAL` entry to `quality_hub.py` and update this table.
 - Engine emission gap events (§3) are the primary expansion surface for future SimQ coverage.
-- Remaining §3 gaps: `social_memory_created`, `contract_milestone_completed` (§3.8) and `camp_constructed` (§3.9) are blocked on missing infrastructure (no event recorder on SocialMemoryExporter/CampService, no milestones field on ContractState).
+- Remaining §3 gaps: `social_memory_created` (§3.8) should be emitted from EventExtractor on `trust_history` delta — no infrastructure needed, wrong emit location was assumed; `contract_milestone_completed` (§3.8) requires schema extension (milestones field on ContractState). `camp_constructed` (§3.9) has no viable engine path — camps are pre-placed, not dynamically constructed.
 - Run `make knowledge-index-update` after any change to docs in this directory.

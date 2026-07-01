@@ -210,8 +210,8 @@ event bridge is missing.
 | F1 | `QueueDrainWorker.quality_fn` slot exists but is never populated at kernel init | High | **RESOLVED** — TCK-20260630-SIMQ-WIRE-KERNEL (2026-06-30) |
 | F2 | `set_quality_hub()` is never called; REST quality endpoints always return hub=None path | High | **RESOLVED** — TCK-20260630-SIMQ-WIRE-SERVER (2026-06-30) |
 | F3 | `InProcessQualityFeed` creates a competing consumer that races against EventRecorder | Medium | **RESOLVED** — TCK-20260630-SIMQ-WIRE-KERNEL (2026-06-30) |
-| F4 | Zero events scored across both 200-tick seeds — SimQ produces no actionable signal | High | **Partially resolved** — 24 of 27 emission gaps closed; hub wiring resolved; 3 events blocked on infrastructure |
-| F5 | Threshold calibration (`tools/calibrate_simq.py`) remains blocked until F1 is fixed | Medium | **UNBLOCKED** — F1 resolved; calibration can proceed once emission coverage is sufficient |
+| F4 | Zero events scored across both 200-tick seeds — SimQ produces no actionable signal | High | **Substantially resolved** — hub wired; 79 event types emitted; 2 gaps remain (`social_memory_created` wrong emit location, `contract_milestone_completed` schema gap); `camp_constructed` has no engine path |
+| F5 | Threshold calibration (`tools/calibrate_simq.py`) remains blocked until F1 is fixed | Medium | **UNBLOCKED** — F1 resolved; calibration can proceed |
 
 ### §Finding Updates — 2026-07-01
 
@@ -227,7 +227,7 @@ event bridge is missing.
 - `TCK-20260701-SIMQ-EMIT-FACTION-ECONOMY` — 5 FACTION/ECONOMY/NARRATIVE events
 - `TCK-20260701-SIMQ-EMIT-WORLD-DYNAMICS` — 4 WORLD DYNAMICS events
 
-**3 emission gaps remain blocked** on missing infrastructure:
-- `social_memory_created` — SocialMemoryExporter has no event recorder (TCK-20260701-SIMQ-EMIT-SOCIAL-MEM)
-- `contract_milestone_completed` — ContractState has no milestones field (TCK-20260701-SIMQ-EMIT-CONTRACT-MILESTONE)
-- `camp_constructed` — CampService has no event recorder (TCK-20260701-SIMQ-EMIT-CAMP)
+**Remaining gaps — premise corrections (2026-07-01):**
+- `social_memory_created` — prior premise wrong. `SocialMemoryExporter` is campaign-layer only (called at episode end). Correct emit: `EventExtractor` on `trust_history` delta — no infrastructure change needed. TCK-20260701-SIMQ-EMIT-SOCIAL-MEM scope updated.
+- `contract_milestone_completed` — premise correct. `ContractState` has no milestones field. Schema extension required. TCK-20260701-SIMQ-EMIT-CONTRACT-MILESTONE kept.
+- `camp_constructed` — prior premise wrong. `StateUpdate` has no `camps_add`; camps are pre-placed at world generation. No dynamic camp construction occurs in simulation. No event recorder can fix this — the mechanic doesn't exist. TCK-20260701-SIMQ-EMIT-CAMP closed.

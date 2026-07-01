@@ -1,10 +1,10 @@
 ---
-status: active
+status: closed
 layer: simulation
 authority: P2
 audience: agent
 ticket_id: TCK-20260701-SIMQ-EMIT-CAMP
-phase: open
+phase: done
 date: 2026-07-01
 tags: [simq, event-emission, world-dynamics, camp, scoring, infrastructure]
 ---
@@ -15,7 +15,7 @@ tags: [simq, event-emission, world-dynamics, camp, scoring, infrastructure]
 Wire camp_constructed emitter: add event recorder to CampService
 
 ## Status
-OPEN
+DONE — CLOSED, WRONG PREMISE
 
 ## Tier
 standard
@@ -90,4 +90,19 @@ This was identified during `TCK-20260701-SIMQ-EMIT-WORLD-DYNAMICS` and left bloc
 (to be filled at implementation)
 
 ## Completion Summary
-(to be filled at completion)
+**Closed — premise incorrect, no viable engine path.**
+
+Investigation (2026-07-01) found:
+- `StateUpdate` has no `camps_add` field — only `camp_updates: Dict[str, CampUpdate]`
+- `CampUpdate` only supports: `maturity_delta`, `active_set`, `last_raid_tick_set` — no construction
+- `CampService.process_camps()` only evolves existing camps (maturity, monster spawns, raids)
+- Camps are pre-placed at world generation; no dynamic camp construction occurs during simulation ticks
+
+The ticket assumed "CampService has no event recorder" but the real issue is deeper: there is
+no camp construction mechanic in the simulation at all. Adding an event recorder to CampService
+would not fix this — the code path that creates new camps does not exist.
+
+Implementing `camp_constructed` requires first adding a camp placement mechanic (new entity
+action, world event, or pipeline phase that creates `CampState` entries dynamically). That is a
+gameplay feature, not a SimQ wiring task. Closing this ticket; if camp placement is added in the
+future, create a new SimQ emit ticket at that time.
