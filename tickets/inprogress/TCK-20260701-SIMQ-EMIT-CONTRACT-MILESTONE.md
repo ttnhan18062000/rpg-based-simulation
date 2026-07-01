@@ -1,5 +1,5 @@
 ---
-status: active
+status: blocked
 layer: simulation
 authority: P2
 audience: agent
@@ -15,7 +15,7 @@ tags: [simq, event-emission, social, contract, scoring, schema]
 Wire contract_milestone_completed emitter: add milestones field to ContractState
 
 ## Status
-OPEN
+BLOCKED — pending design (see Implementation Notes)
 
 ## Tier
 standard
@@ -75,12 +75,40 @@ concept before an emitter can be written.
 - `src/observability/event_extractor.py` — where contract events are emitted
 - `src/engine/pipeline_phases/` — PP-35 active_contracts phase
 
+## Implementation Notes — Investigation (2026-07-01)
+
+**ContractState** (`src/core/strategic.py:177`) is `@dataclass(frozen=True, slots=True)`.
+Fields: `id`, `kind`, `source_id`, `target_id`, `terms: Dict[str, Any]`, `expiry_tick`,
+`status`, `created_tick`, `negotiation_count`. No milestone field; no partial-completion concept.
+
+**Contracts pipeline** (`src/engine/pipeline_phases/contracts.py`) only handles lifecycle at
+expiry tick: ACTIVE → FULFILLED (duration honored) and OFFERED/COUNTERED → EXPIRED. There is
+no intermediate milestone evaluation. `SocialContractSystem.transition_contract()` handles status
+transitions but has no milestone concept either.
+
+**Why this is design-blocked, not just schema-blocked:**
+Adding `milestones_completed: frozenset[str]` to ContractState is technically straightforward
+(frozen+slots dataclasses support new fields with defaults). But nothing in the pipeline
+*produces* milestones — there is no trigger for what constitutes a milestone for any
+`ContractKind`:
+- LOAN: partial repayment installments? Not tracked.
+- PROTECTION: periodic interval survived? Not tracked.
+- MERCHANT: per-trade count toward a quota? Not tracked.
+- POSITION_SWAP / RECRUITMENT: single-step contracts; milestone concept doesn't apply.
+
+**Prerequisites before implementation:**
+1. Design decision: which ContractKinds support milestones and what event triggers one.
+2. A new pipeline phase (or extension to `ContractLifecyclePhase`) that evaluates milestone
+   conditions per tick and writes `milestones_completed` updates via `StrategicUpdate`.
+3. Only then: add field to ContractState + emitter in EventExtractor.
+
+**This is a gameplay feature, not a wiring gap.**
+
 ## Assumptions / Open Questions
-- ContractState may already have partial tracking under a different name (e.g.
-  `fulfilled_obligations`, `completed_phases`). Check before adding a new field.
-- Milestone IDs may not exist in the current schema — clarify whether milestones
-  are string IDs or ordinal integers.
-- If ContractState is frozen/immutable, the update must go through StateUpdate.
+- Which ContractKinds should have milestones? LOAN and PROTECTION are the best candidates;
+  POSITION_SWAP and RECRUITMENT are single-step and have no milestone concept.
+- What state drives milestone detection? LOAN may use a repayment tick list; PROTECTION may
+  use a periodic tick gate (every N ticks active = one milestone).
 
 ## Test Summary
 - Unit: prior ContractState has no milestones → current has one → event fires

@@ -1,10 +1,10 @@
 ---
-status: active
+status: done
 layer: simulation
 authority: P1
 audience: agent
 ticket_id: TCK-20260701-SIMQ-EMIT-SOCIAL-MEM
-phase: open
+phase: done
 date: 2026-07-01
 tags: [simq, event-emission, social, scoring, infrastructure]
 ---
@@ -15,7 +15,7 @@ tags: [simq, event-emission, social, scoring, infrastructure]
 Wire social_memory_created emitter: add event recorder to SocialMemoryExporter
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -95,7 +95,13 @@ in `event_extractor.py`, exactly like `cooperation_event` and `reputation_delta`
 - Unit: payload contains `other_entity_id` and `score`
 
 ## Files Changed
-(to be filled at implementation)
+- `src/observability/event_extractor.py` — added `_emitted_social_memory` class var and `_SOCIAL_MEMORY_THRESHOLD`; extended `reset_run_state()`; added trust_history diff emitter block after `reputation_delta`
+- `tests/unit/observability/test_event_extractor_social_memory.py` — 10 new tests
+- `docs/simulation_quality/event_type_coverage.md` — moved `social_memory_created` from §3.8 to §1.1; summary count 79→80
+- `docs/parity_ledger/social_narrative.yaml` — added SOC-237
 
 ## Completion Summary
-(to be filled at completion)
+Emitter added to EventExtractor: diffs `entity.social.trust_history` against prior state per
+entity per tick. Emits `social_memory_created` (category=social) when a new other_entity_id
+appears or an existing score changes by ≥ 0.3. Once-per-(entity_id, other_entity_id) gate
+prevents per-tick spam. 10 tests pass; 1084 total tests pass.

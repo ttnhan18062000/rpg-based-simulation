@@ -3030,3 +3030,22 @@
     tests/unit/observability/test_event_extractor_faction_economy.py::TestConservationLawVerified
   divergence_note: null
   support_boundary: null
+
+- id: SOC-237
+  text: >
+    social_memory_created is emitted from EventExtractor when entity.social.trust_history
+    gains a new other_entity_id key or an existing entry changes by ≥ 0.3. Emitted at most
+    once per (entity_id, other_entity_id) pair per run via _emitted_social_memory gate.
+    (TCK-20260701-SIMQ-EMIT-SOCIAL-MEM)
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/observability/event_extractor.py — social_memory_created block after reputation_delta
+    block, inside social section; compares curr_trust vs prior_trust per entity per tick;
+    _emitted_social_memory class-level set gate; reset in reset_run_state().
+  proof_type: parity
+  test_path: >-
+    tests/unit/observability/test_event_extractor_social_memory.py
+  divergence_note: null
+  support_boundary: null

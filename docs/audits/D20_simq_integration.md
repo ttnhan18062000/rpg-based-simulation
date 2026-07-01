@@ -229,5 +229,5 @@ event bridge is missing.
 
 **Remaining gaps — premise corrections (2026-07-01):**
 - `social_memory_created` — prior premise wrong. `SocialMemoryExporter` is campaign-layer only (called at episode end). Correct emit: `EventExtractor` on `trust_history` delta — no infrastructure change needed. TCK-20260701-SIMQ-EMIT-SOCIAL-MEM scope updated.
-- `contract_milestone_completed` — premise correct. `ContractState` has no milestones field. Schema extension required. TCK-20260701-SIMQ-EMIT-CONTRACT-MILESTONE kept.
+- `contract_milestone_completed` — schema gap confirmed. `ContractState` has no milestone concept AND the contracts pipeline (`pipeline_phases/contracts.py`) has no milestone trigger logic. This is a gameplay feature (design → schema → pipeline → emitter), not a wiring gap. Ticket marked BLOCKED pending design. TCK-20260701-SIMQ-EMIT-CONTRACT-MILESTONE.
 - `camp_constructed` — prior premise wrong. `StateUpdate` has no `camps_add`; camps are pre-placed at world generation. No dynamic camp construction occurs in simulation. No event recorder can fix this — the mechanic doesn't exist. TCK-20260701-SIMQ-EMIT-CAMP closed.

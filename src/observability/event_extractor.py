@@ -49,6 +49,10 @@ class EventExtractor:
     _emitted_plateau: set[int] = set()
     # Leads already emitted as stale this run: entity_id → set of lead_ids
     _emitted_stale_leads: dict[int, set[str]] = {}
+    # Social memory: (entity_id, other_entity_id) pairs already emitted this run
+    _emitted_social_memory: set[tuple[int, int]] = set()
+
+    _SOCIAL_MEMORY_THRESHOLD = 0.3  # minimum trust_history delta to emit
 
     @classmethod
     def reset_run_state(cls) -> None:
@@ -57,6 +61,7 @@ class EventExtractor:
         cls._last_xp_tick.clear()
         cls._emitted_plateau.clear()
         cls._emitted_stale_leads.clear()
+        cls._emitted_social_memory.clear()
 
     @staticmethod
     def extract(
@@ -510,6 +515,31 @@ class EventExtractor:
                         source_system="event_extractor", message="",
                         payload={"entity_id": eid, "delta": round(delta, 6)},
                     ))
+
+                # Social: social_memory_created — new or significantly shifted trust entry
+                curr_trust = getattr(entity.social, "trust_history", None) or {}
+                prior_trust = getattr(prior_ent.social, "trust_history", None) or {}
+                for other_id, curr_score in curr_trust.items():
+                    pair = (eid, other_id)
+                    if pair in EventExtractor._emitted_social_memory:
+                        continue
+                    prior_score = prior_trust.get(other_id)
+                    is_new = prior_score is None
+                    is_significant = (
+                        not is_new
+                        and isinstance(curr_score, (int, float))
+                        and isinstance(prior_score, (int, float))
+                        and abs(curr_score - prior_score) >= EventExtractor._SOCIAL_MEMORY_THRESHOLD
+                    )
+                    if is_new or is_significant:
+                        EventExtractor._emitted_social_memory.add(pair)
+                        events.append(SimulationEvent(
+                            event_type="social_memory_created", event_category="social",
+                            tick=tick, entity_id=eid, severity="INFO",
+                            source_system="event_extractor", message="",
+                            payload={"other_entity_id": other_id,
+                                     "score": round(float(curr_score), 6)},
+                        ))
 
             # Social: contract lifecycle events (PP-35 contracts state diff)
             if hasattr(entity, "strategic") and hasattr(prior_ent, "strategic"):
