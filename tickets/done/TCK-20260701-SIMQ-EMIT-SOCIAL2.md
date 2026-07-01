@@ -1,21 +1,21 @@
 ---
-status: active
+status: done
 layer: simulation
 authority: P2
 audience: agent
-ticket_id: TCK-20260701-SIMQ-EMIT-SOCIAL2
+ticket_id: TCK-20260701-SIMQ-EMIT-FACTION-ECONOMY
 phase: open
 date: 2026-07-01
 tags: [simq, event-emission, social, faction, economy, narrative, scoring]
 ---
 
-# TCK-20260701-SIMQ-EMIT-SOCIAL2
+# TCK-20260701-SIMQ-EMIT-FACTION-ECONOMY
 
 ## Title
 SimQ: Emit remaining SOCIAL, FACTION, ECONOMY, and NARRATIVE gap events
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -131,7 +131,15 @@ Missing events by pillar:
 - Integration: 500-tick urban_political run produces > 0 conservation_law_verified events
 
 ## Files Changed
-(to be filled at implementation)
+- `src/observability/event_extractor.py` — paid_info_transaction, conservation_law_verified, alliance_proposed, resource_seized emitters
+- `src/engine/scenario_runtime.py` — scenario_objective_progressed emitter
+- `tests/unit/observability/test_event_extractor_faction_economy.py` — 12 unit tests
+- `docs/parity_ledger/social_narrative.yaml` — updated SOC-235 divergence_note; added SOC-236; fixed pre-existing YAML error
+- `docs/simulation_quality/event_type_coverage.md` — §3.4, §3.5, §3.7 gaps marked resolved; §3.8 remains blocked
 
 ## Completion Summary
-(to be filled at completion)
+5 emitters implemented: paid_info_transaction, conservation_law_verified, alliance_proposed,
+resource_seized (event_extractor.py), scenario_objective_progressed (scenario_runtime.py).
+social_memory_created and contract_milestone_completed remain blocked — SocialMemoryExporter
+has no event recorder; ContractState has no milestones field. 12 unit tests pass; 1060 total pass.
+Fixed pre-existing YAML parse error in social_narrative.yaml line 2790.

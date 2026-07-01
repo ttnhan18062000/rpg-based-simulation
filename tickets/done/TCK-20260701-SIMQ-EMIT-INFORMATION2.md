@@ -1,21 +1,21 @@
 ---
-status: active
+status: done
 layer: simulation
 authority: P1
 audience: agent
-ticket_id: TCK-20260701-SIMQ-EMIT-INFORMATION2
+ticket_id: TCK-20260701-SIMQ-EMIT-LEAD-BELIEFS
 phase: open
 date: 2026-07-01
 tags: [simq, event-emission, information, cognition, scoring]
 ---
 
-# TCK-20260701-SIMQ-EMIT-INFORMATION2
+# TCK-20260701-SIMQ-EMIT-LEAD-BELIEFS
 
 ## Title
 SimQ: Emit INFORMATION and COGNITION deep-signal events from engine
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -118,7 +118,17 @@ COGNITION gap (§3.2):
   the baseline `belief_assimilated` / `lead_certainty_changed`
 
 ## Files Changed
-(to be filled at implementation)
+- `src/observability/event_extractor.py` — 6 new emitters + class-level tracking dicts + reset_run_state()
+- `src/engine/pipeline_phases/lead_contradiction.py` — added lead_contradiction_resolved emit
+- `config/simulation_quality/detection_params.yaml` — belief_stale_threshold: 50
+- `tests/unit/observability/test_event_extractor_information2.py` — 14 new unit tests
+- `tests/unit/cognition/test_information_seeking.py` — updated 2 assertions for lead_contradiction_resolved
+- `docs/parity_ledger/strategic_cognition.yaml` — updated STRAT-230; added STRAT-240, STRAT-241, STRAT-242
+- `docs/simulation_quality/event_type_coverage.md` — §3.2, §3.3 gaps marked resolved
 
 ## Completion Summary
-(to be filled at completion)
+All 6 emitters implemented in event_extractor.py (lead_certainty_updated, belief_stale,
+paid_info_changed_goal, decision_diverged_by_belief, decision_divergence_detected) and
+lead_contradiction_resolved added to lead_contradiction.py. 14 unit tests pass; 723 total
+observability+cognition tests pass. Parity ledger updated with STRAT-240–242. Coverage
+doc updated for §3.2–§3.3. Staleness threshold in detection_params.yaml.

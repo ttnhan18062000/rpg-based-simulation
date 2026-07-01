@@ -2484,8 +2484,9 @@
     resource node, dead person target), the lead is marked FAILURE/EXHAUSTED,
     the originating provider's reliability_score is decremented by 0.1 (floored
     at 0.1) via StateUpdate.information_providers_update, an UnknownFact
-    (priority=0.7) is regenerated for replanning, and a belief_contradiction
-    SimulationEvent is emitted. (E42D)
+    (priority=0.7) is regenerated for replanning, a belief_contradiction
+    SimulationEvent is emitted, and a lead_contradiction_resolved SimulationEvent
+    is emitted for the resolved lead. (E42D; TCK-20260701-SIMQ-EMIT-LEAD-BELIEFS)
   status: verified
   priority: P1
   legacy_evidence: null
@@ -2495,7 +2496,8 @@
     src/cognition/knowledge_model.py — effective_certainty() staleness decay utility
   proof_type: parity
   test_path: >-
-    tests/unit/cognition/test_information_seeking.py::TestLeadContradiction::test_belief_contradiction_fires_on_depleted_lead
+    tests/unit/cognition/test_information_seeking.py::TestLeadContradiction::test_belief_contradiction_fires_on_depleted_lead;
+    tests/unit/cognition/test_information_seeking.py::TestLeadContradiction
   divergence_note: null
   support_boundary: null
 - id: STRAT-231
@@ -2689,5 +2691,60 @@
   proof_type: parity
   test_path: >-
     tests/unit/cognition/test_information_seeking.py::TestKnowledgeStalenessDecay::test_lead_staleness_decay_reduces_confidence
+  divergence_note: null
+  support_boundary: null
+- id: STRAT-240
+  text: >
+    When a lead's certainty enum changes between ticks (e.g. VAGUE→APPROXIMATE or
+    PRECISE→VAGUE), EventExtractor emits a lead_certainty_updated SimulationEvent
+    with payload certainty_delta = new_float - old_float. No event fires when
+    certainty is unchanged. (TCK-20260701-SIMQ-EMIT-LEAD-BELIEFS)
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/observability/event_extractor.py — lead_certainty_updated block;
+    _CERTAINTY_FLOAT = {PRECISE:1.0, APPROXIMATE:0.5, VAGUE:0.25, EXHAUSTED:0.0}
+  proof_type: parity
+  test_path: >-
+    tests/unit/observability/test_event_extractor_information2.py::TestLeadCertaintyUpdated
+  divergence_note: null
+  support_boundary: null
+- id: STRAT-241
+  text: >
+    When an entity holds a VAGUE or APPROXIMATE lead whose age (tick - discovered_tick)
+    exceeds _BELIEF_STALE_TICKS (50), EventExtractor emits a belief_stale SimulationEvent.
+    The event fires at most once per lead per run (deduplicated via _emitted_stale_leads).
+    PRECISE and EXHAUSTED leads are not checked. (TCK-20260701-SIMQ-EMIT-LEAD-BELIEFS)
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/observability/event_extractor.py — belief_stale block; _BELIEF_STALE_TICKS = 50;
+    _emitted_stale_leads class-level dict reset in reset_run_state().
+    config/simulation_quality/detection_params.yaml — belief_stale_threshold: 50
+  proof_type: parity
+  test_path: >-
+    tests/unit/observability/test_event_extractor_information2.py::TestBeliefStale
+  divergence_note: null
+  support_boundary: null
+- id: STRAT-242
+  text: >
+    When an entity with VAGUE leads is pursuing a non-information project,
+    EventExtractor emits decision_diverged_by_belief. When a DANGER concern with
+    urgency > 0.7 coexists with a non-survival project (harvesting, exploration,
+    social, crafting), EventExtractor emits decision_divergence_detected.
+    Neither event fires without the requisite lead/concern state.
+    (TCK-20260701-SIMQ-EMIT-LEAD-BELIEFS)
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/observability/event_extractor.py — decision_diverged_by_belief and
+    decision_divergence_detected blocks; _NON_SURVIVAL_PROJECT_KINDS frozenset constant.
+  proof_type: parity
+  test_path: >-
+    tests/unit/observability/test_event_extractor_information2.py::TestDecisionDivergedByBelief;
+    tests/unit/observability/test_event_extractor_information2.py::TestDecisionDivergenceDetected
   divergence_note: null
   support_boundary: null

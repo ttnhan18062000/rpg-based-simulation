@@ -1,5 +1,5 @@
 ---
-status: active
+status: done
 layer: simulation
 authority: P1
 audience: agent
@@ -15,7 +15,7 @@ tags: [simq, event-emission, progression, scoring]
 SimQ: Emit PROGRESSION pillar signal events from engine
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -111,7 +111,13 @@ Missing events (from `docs/simulation_quality/event_type_coverage.md §3.6`):
 - Regression: existing 141 worldassembly + progression tests pass
 
 ## Files Changed
-(to be filled at implementation)
+- `src/observability/event_extractor.py` — 5 new emitters; fixed event_category lifecycle; plateau default 0
+- `tests/unit/observability/test_event_extractor_progression.py` — 18 new unit tests
+- `docs/parity_ledger/progression.yaml` — added PROG-114, PROG-115, PROG-116
+- `docs/simulation_quality/event_type_coverage.md` — §3.6 gaps marked resolved
 
 ## Completion Summary
-(to be filled at completion)
+All 5 PROGRESSION emitters implemented in event_extractor.py. Fixed event_category='progression'
+→ 'lifecycle' (only valid enum values accepted by SimulationEvent). Fixed plateau silence
+detection to default to tick 0 (not current tick) for entities with no prior XP history.
+18 unit tests pass; 1048 total tests pass.

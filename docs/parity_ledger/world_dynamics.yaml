@@ -1254,3 +1254,48 @@
     produced WorldUpdate.owner_faction_id_set but no WorldEvent was emitted — shifts were
     invisible to the WorldEmergencePhase and agent observability systems.
   support_boundary: null
+- id: WORLD-108
+  text: >
+    ecology_cycle_completed is emitted once per region at every tick divisible by 200,
+    signalling the completion of a full ecological turnover cycle. Detected in
+    EventExtractor by tick % 200 == 0 over current_state.regions. No world domain
+    change is required. (TCK-20260701-SIMQ-EMIT-WORLD-DYNAMICS)
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/observability/event_extractor.py — ecology_cycle_completed block;
+    tick % 200 == 0 guard iterating current_state.regions.
+  proof_type: parity
+  test_path: >-
+    tests/unit/observability/test_event_extractor_world_dynamics.py::TestEcologyCycleCompleted
+  divergence_note: null
+  support_boundary: null
+- id: WORLD-109
+  text: >
+    spawn_cadence_fired is emitted when tick % 50 == 0 and StateUpdate.entities_add
+    contains at least one non-excluded entity kind (world_boss, ancient_sentinel,
+    goblin_raider are excluded as non-cadence spawns).
+    node_recharged is emitted when a resource node's remaining_charges transitions
+    from 0 to > 0 (complements resource_node_regenerated which is unscored).
+    threat_evolved is emitted when world_update.trauma_delta > 0 and
+    prior_trauma + trauma_delta crosses a threshold in {25, 50, 75, 100}.
+    camp_constructed remains blocked — CampService has no event recorder.
+    (TCK-20260701-SIMQ-EMIT-WORLD-DYNAMICS)
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/observability/event_extractor.py — spawn_cadence_fired block (tick%50,
+    kind exclusion set); node_recharged block inside resource_node_regenerated guard
+    (remaining_charges 0→>0 only); threat_evolved block with threshold crossing logic
+    in world_updates loop with try/except for MagicMock safety.
+  proof_type: parity
+  test_path: >-
+    tests/unit/observability/test_event_extractor_world_dynamics.py::TestSpawnCadrenceFired;
+    tests/unit/observability/test_event_extractor_world_dynamics.py::TestNodeRecharged;
+    tests/unit/observability/test_event_extractor_world_dynamics.py::TestThreatEvolved
+  divergence_note: >
+    camp_constructed blocked: CampService (src/world/camp.py) has no event recorder
+    interface; adding it requires an interface change tracked as a future ticket.
+  support_boundary: null

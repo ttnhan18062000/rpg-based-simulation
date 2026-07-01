@@ -1200,3 +1200,58 @@
   test_path: tests/unit/campaigns/test_plan_revision.py, tests/integration/campaigns/test_progression_planner_three_episode.py
   divergence_note: null
   support_boundary: null
+- id: PROG-114
+  text: >
+    When an entity gains a skill not previously in learned_skills, EventExtractor emits
+    skill_unlocked (event_category=lifecycle) with payload skill_id. One event per newly
+    added skill per tick. (TCK-20260701-SIMQ-EMIT-PROGRESSION)
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/observability/event_extractor.py — skill_unlocked block; set diff on
+    _curr_id.learned_skills vs _prior_id.learned_skills.
+  proof_type: parity
+  test_path: >-
+    tests/unit/observability/test_event_extractor_progression.py::TestSkillUnlocked
+  divergence_note: null
+  support_boundary: null
+- id: PROG-115
+  text: >
+    When an entity gains a trait not previously in traits, EventExtractor emits
+    trait_expressed (event_category=lifecycle) with payload trait_id.
+    When an entity gains a breakthrough not in active_breakthroughs, emits
+    pillar_trait_unlocked with payload trait_id. (TCK-20260701-SIMQ-EMIT-PROGRESSION)
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/observability/event_extractor.py — trait_expressed and pillar_trait_unlocked blocks;
+    set diff on identity.traits and identity.active_breakthroughs.
+  proof_type: parity
+  test_path: >-
+    tests/unit/observability/test_event_extractor_progression.py::TestTraitExpressed;
+    tests/unit/observability/test_event_extractor_progression.py::TestPillarTraitUnlocked
+  divergence_note: null
+  support_boundary: null
+- id: PROG-116
+  text: >
+    When unspent_ap decreases between ticks, EventExtractor emits
+    progression_conversion_applied (event_category=lifecycle) with payload ap_spent.
+    When evolution_points is unchanged for > _XP_PLATEAU_TICKS (50) ticks
+    (measured from run start if no XP was ever granted), EventExtractor emits
+    progression_plateau_detected once per entity per run.
+    (TCK-20260701-SIMQ-EMIT-PROGRESSION)
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/observability/event_extractor.py — progression_conversion_applied and
+    progression_plateau_detected blocks; _XP_PLATEAU_TICKS = 50;
+    _emitted_plateau set and _last_xp_tick dict reset in reset_run_state().
+  proof_type: parity
+  test_path: >-
+    tests/unit/observability/test_event_extractor_progression.py::TestProgressionConversionApplied;
+    tests/unit/observability/test_event_extractor_progression.py::TestProgressionPlateauDetected
+  divergence_note: null
+  support_boundary: null

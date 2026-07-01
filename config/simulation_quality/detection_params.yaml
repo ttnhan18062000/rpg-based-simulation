@@ -1,4 +1,5 @@
 loop_threshold: 0.70
+belief_stale_threshold: 50
 window_size: 200
 max_worst_events: 100
 time_gates:

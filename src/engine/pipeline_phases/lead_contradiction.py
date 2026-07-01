@@ -232,6 +232,22 @@ class LeadContradictionSystem:
                     },
                 )
                 events.append(event)
+                # lead_contradiction_resolved: fires after contradiction is processed —
+                # lead marked exhausted, replanning triggered (InformationScorer signal)
+                events.append(SimulationEvent(
+                    event_type="lead_contradiction_resolved",
+                    event_category="strategy",
+                    tick=state.tick,
+                    severity="INFO",
+                    source_system="lead_contradiction_system",
+                    message="",
+                    entity_id=entity.id,
+                    payload={
+                        "lead_id": lead_id,
+                        "subject": lead.subject,
+                        "failure_count": failed_lead.failure_count,
+                    },
+                ))
 
                 _log.debug(
                     "LeadContradictionSystem: entity=%d lead=%s subject=%s "

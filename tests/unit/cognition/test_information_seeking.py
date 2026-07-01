@@ -604,8 +604,8 @@ class TestLeadContradiction:
 
         updated_state_update, events = LeadContradictionSystem.enforce(state, StateUpdate())
 
-        # Event was emitted
-        assert len(events) == 1
+        # Two events emitted: belief_contradiction + lead_contradiction_resolved
+        assert len(events) == 2
         evt = events[0]
         assert evt.event_type == "belief_contradiction"
         assert evt.entity_id == 1
@@ -660,7 +660,7 @@ class TestLeadContradiction:
 
         updated, events = LeadContradictionSystem.enforce(state, StateUpdate())
 
-        assert len(events) == 1
+        assert len(events) == 2  # belief_contradiction + lead_contradiction_resolved
         new_provider = updated.information_providers_update[99]
         assert new_provider.reliability_score >= 0.1
 

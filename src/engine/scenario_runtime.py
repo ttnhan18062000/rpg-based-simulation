@@ -306,6 +306,24 @@ class ScenarioRuntimeService:
                         },
                     ))
                 return
+            # scenario_objective_progressed: fires every tick while objective is still RUNNING
+            # to signal forward progress (intermediate signal distinct from scenario_objective_completed)
+            if self._event_recorder is not None and self._tick > 0:
+                from src.observability.events import SimulationEvent
+                self._event_recorder.record(SimulationEvent(
+                    event_type="scenario_objective_progressed",
+                    event_category="infrastructure",
+                    tick=self._tick,
+                    entity_id=None,
+                    severity="INFO",
+                    source_system="scenario_runtime",
+                    message="",
+                    payload={
+                        "scenario_id": getattr(self._spec, "id", ""),
+                        "progress_fraction": self._tick / max(1, getattr(self._spec, "tick_limit", 500)),
+                        "tick": self._tick,
+                    },
+                ))
 
         # 2. Stall detector
         # _current_tick_event_count is set by kernel.tick_once() to the count of

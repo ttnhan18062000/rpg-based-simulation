@@ -2787,7 +2787,7 @@
   divergence_note: null
   support_boundary: null
 - id: SOC-FAC-005
-  text: territory_transferred events score 0.85 in EventSignificanceScorer. Note: 0.85 (not 0.9) — implementing ticket E53Cc is authoritative over epic spec.
+  text: "territory_transferred events score 0.85 in EventSignificanceScorer. Note: 0.85 (not 0.9) — implementing ticket E53Cc is authoritative over epic spec."
   status: verified
   priority: P1
   legacy_evidence: null
@@ -2994,9 +2994,39 @@
     tests/unit/observability/test_event_extractor_social_faction.py::test_faction_extinct_emitted_when_no_living_entities;
     tests/simulation_quality/test_quality_hub_event_translation.py
   divergence_note: >
-    4 gaps remain blocked by architecture limitations (no corresponding authoritative
-    state surfaces): alliance_proposed (faction_directives not in StateUpdate),
-    resource_seized (no distinct WorldEvent), contract_milestone_completed (no
-    milestone field), social_memory_created (transient timeline buffer only).
-    Documented in gap tests S-23, S-24, F-23, F-24 in test_event_extractor_social_faction.py.
+    2 gaps resolved (alliance_proposed, resource_seized) by TCK-20260701-SIMQ-EMIT-FACTION-ECONOMY
+    — see SOC-236. 2 gaps remain blocked: contract_milestone_completed (no milestone field on
+    ContractState), social_memory_created (SocialMemoryExporter has no event recorder).
+  support_boundary: null
+- id: SOC-236
+  text: >
+    alliance_proposed is emitted inside the alliance_accepted guard when the prior
+    diplomatic relation (prior_state.factions[fid].diplomatic_relations[other_fid].name)
+    was NEUTRAL or HOSTILE, confirming a transition rather than a reinforcement.
+    resource_seized is emitted for each region in territory_add when tension_delta > 0,
+    indicating conflict-driven annexation rather than peaceful transfer.
+    paid_info_transaction is emitted (event_category=economy) as a second emit alongside
+    paid_information_transaction when source_kind == INFORMATION_PURCHASE.
+    conservation_law_verified is emitted at tick % 50 == 0 when at least one economy
+    event was emitted in the current extraction pass.
+    scenario_objective_progressed is emitted by ScenarioRuntimeService every tick
+    while the objective is still RUNNING (distinct from scenario_objective_completed).
+    (TCK-20260701-SIMQ-EMIT-FACTION-ECONOMY)
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/observability/event_extractor.py — alliance_proposed block inside alliance_accepted
+    guard; resource_seized block inside territory_add loop with tension_delta guard;
+    paid_info_transaction second emit in INFORMATION_PURCHASE branch;
+    conservation_law_verified block at tick % 50 with economy_event_types guard.
+    src/engine/scenario_runtime.py — scenario_objective_progressed emit in
+    _evaluate_after_tick() when result == RUNNING.
+  proof_type: parity
+  test_path: >-
+    tests/unit/observability/test_event_extractor_faction_economy.py::TestAllianceProposed;
+    tests/unit/observability/test_event_extractor_faction_economy.py::TestResourceSeized;
+    tests/unit/observability/test_event_extractor_faction_economy.py::TestPaidInfoTransaction;
+    tests/unit/observability/test_event_extractor_faction_economy.py::TestConservationLawVerified
+  divergence_note: null
   support_boundary: null

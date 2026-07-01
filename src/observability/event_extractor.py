@@ -18,6 +18,23 @@ logger = logging.getLogger(__name__)
 
 _NEAR_DEATH_THRESHOLD = 0.2
 
+# LeadCertainty enum value → float for band-crossing delta computation (lead_certainty_updated)
+_CERTAINTY_FLOAT: dict[str, float] = {
+    "PRECISE": 1.0, "APPROXIMATE": 0.5, "VAGUE": 0.25, "EXHAUSTED": 0.0,
+}
+
+# Ticks without certainty change before a lead is considered stale (belief_stale)
+_BELIEF_STALE_TICKS = 50
+
+# How many ticks without XP before progression_plateau_detected fires (xp_rate_zero)
+_XP_PLATEAU_TICKS = 50
+
+# Project kinds inconsistent with a high-urgency DANGER concern (decision_divergence_detected)
+_NON_SURVIVAL_PROJECT_KINDS = frozenset(("harvesting", "exploration", "social", "crafting"))
+
+# Spawn interval (must match SpawnService.SPAWN_INTERVAL)
+_SPAWN_INTERVAL = 50
+
 
 class EventExtractor:
     """Extracts curated low-volume SimulationEvents from state changes and committed updates."""
@@ -26,10 +43,20 @@ class EventExtractor:
     # NOT durable state — must be cleared at run start via reset_run_state().
     _seen_routing_families: dict[int, set[str]] = {}
 
+    # Progression: entity_id → last tick XP was granted (for plateau detection)
+    _last_xp_tick: dict[int, int] = {}
+    # Entities already emitted progression_plateau this run
+    _emitted_plateau: set[int] = set()
+    # Leads already emitted as stale this run: entity_id → set of lead_ids
+    _emitted_stale_leads: dict[int, set[str]] = {}
+
     @classmethod
     def reset_run_state(cls) -> None:
         """Clear transient per-run state. Call at run start and in test teardown."""
         cls._seen_routing_families.clear()
+        cls._last_xp_tick.clear()
+        cls._emitted_plateau.clear()
+        cls._emitted_stale_leads.clear()
 
     @staticmethod
     def extract(
@@ -320,12 +347,30 @@ class EventExtractor:
                             payload={"mechanism": src_kind},
                         ))
                     elif src_kind == "INFORMATION_PURCHASE":
+                        _info_src = str(getattr(ir, "source_id", ""))
                         events.append(SimulationEvent(
                             event_type="paid_information_transaction", event_category="economy",
                             tick=tick, entity_id=eid, severity="INFO",
                             source_system="event_extractor", message="",
-                            payload={"source_id": str(getattr(ir, "source_id", ""))},
+                            payload={"source_id": _info_src},
                         ))
+                        # Economy pillar: distinct from paid_information_transaction (INFORMATION scorer)
+                        events.append(SimulationEvent(
+                            event_type="paid_info_transaction", event_category="economy",
+                            tick=tick, entity_id=eid, severity="INFO",
+                            source_system="event_extractor", message="",
+                            payload={"source_id": _info_src},
+                        ))
+                        # paid_info_changed_goal: fires when info purchase correlates with project switch
+                        if (prior_ent is not None
+                                and hasattr(entity, "strategic") and hasattr(prior_ent, "strategic")
+                                and entity.strategic.current_project_id != prior_ent.strategic.current_project_id):
+                            events.append(SimulationEvent(
+                                event_type="paid_info_changed_goal", event_category="strategy",
+                                tick=tick, entity_id=eid, severity="INFO",
+                                source_system="event_extractor", message="",
+                                payload={"source_id": _info_src},
+                            ))
 
                 # World: hazard_drain_applied (WorldDynamicsSystem sets outcome_kind="HAZARD")
                 combat_upd = getattr(e_upd_ext, "combat", None)
@@ -340,9 +385,11 @@ class EventExtractor:
                         ))
 
             # Cognition: lead_certainty_changed (PP-30 side effect — state diff)
+            # Information: lead_certainty_updated (band-crossing), belief_stale, decision signals
             if hasattr(entity, "strategic") and hasattr(prior_ent, "strategic"):
                 curr_leads = getattr(entity.strategic, "leads", None) or {}
                 prior_leads = getattr(prior_ent.strategic, "leads", None) or {}
+                _stale_emitted = EventExtractor._emitted_stale_leads.setdefault(eid, set())
                 for lid, lead in curr_leads.items():
                     prior_lead = prior_leads.get(lid)
                     if prior_lead is not None and lead.certainty != prior_lead.certainty:
@@ -356,6 +403,78 @@ class EventExtractor:
                                 "to_certainty": str(lead.certainty),
                             },
                         ))
+                        # Information: lead_certainty_updated — distinct from lead_certainty_changed;
+                        # carries float delta so InformationScorer can score direction and magnitude.
+                        _prior_cv = _CERTAINTY_FLOAT.get(getattr(prior_lead.certainty, "value", str(prior_lead.certainty)), 0.0)
+                        _curr_cv = _CERTAINTY_FLOAT.get(getattr(lead.certainty, "value", str(lead.certainty)), 0.0)
+                        events.append(SimulationEvent(
+                            event_type="lead_certainty_updated", event_category="strategy",
+                            tick=tick, entity_id=eid, severity="INFO",
+                            source_system="event_extractor", message="",
+                            payload={
+                                "lead_id": lid,
+                                "certainty_delta": round(_curr_cv - _prior_cv, 4),
+                                "lead_active": entity.strategic.current_project_id is not None,
+                            },
+                        ))
+                    # belief_stale: lead dormant for > threshold ticks without certainty update
+                    # Uses discovered_tick as staleness proxy (last_updated_tick not tracked on LeadState)
+                    _cert_str = getattr(lead.certainty, "value", str(lead.certainty))
+                    _discovered = getattr(lead, "discovered_tick", tick)
+                    try:
+                        _age = tick - int(_discovered)
+                    except (TypeError, ValueError):
+                        _age = 0
+                    if (lid not in _stale_emitted
+                            and _cert_str in ("VAGUE", "EXHAUSTED")
+                            and _age > _BELIEF_STALE_TICKS):
+                        _stale_emitted.add(lid)
+                        events.append(SimulationEvent(
+                            event_type="belief_stale", event_category="strategy",
+                            tick=tick, entity_id=eid, severity="INFO",
+                            source_system="event_extractor", message="",
+                            payload={"lead_id": lid, "certainty": _cert_str},
+                        ))
+
+                # decision_diverged_by_belief: entity pursuing non-information project while
+                # holding VAGUE/EXHAUSTED leads — indicates stale belief driving sub-optimal choice
+                _curr_proj_id = entity.strategic.current_project_id
+                _has_vague_lead = any(
+                    getattr(l.certainty, "value", str(l.certainty)) in ("VAGUE", "EXHAUSTED")
+                    for l in curr_leads.values()
+                )
+                if _curr_proj_id and _has_vague_lead:
+                    _curr_proj = entity.strategic.projects.get(_curr_proj_id)
+                    _proj_kind = getattr(getattr(_curr_proj, "kind", None), "value",
+                                         str(getattr(_curr_proj, "kind", ""))) if _curr_proj else ""
+                    if _proj_kind and _proj_kind not in ("information", "information_seeking"):
+                        events.append(SimulationEvent(
+                            event_type="decision_diverged_by_belief", event_category="strategy",
+                            tick=tick, entity_id=eid, severity="INFO",
+                            source_system="event_extractor", message="",
+                            payload={"project_kind": _proj_kind},
+                        ))
+
+                # decision_divergence_detected (COGNITION): active project kind inconsistent with
+                # top-urgency concern — e.g., harvesting while DANGER concern is critical
+                _concerns = getattr(entity.strategic, "concerns", None) or {}
+                if _curr_proj_id and _concerns:
+                    _top_concern = max(_concerns.values(), key=lambda c: getattr(c, "urgency", 0.0), default=None)
+                    _top_urgency = getattr(_top_concern, "urgency", 0.0)
+                    _top_kind = getattr(getattr(_top_concern, "kind", None), "value",
+                                        str(getattr(_top_concern, "kind", ""))) if _top_concern else ""
+                    if _top_urgency > 0.7 and _top_kind == "danger":
+                        _curr_proj2 = entity.strategic.projects.get(_curr_proj_id)
+                        _pk2 = getattr(getattr(_curr_proj2, "kind", None), "value",
+                                       str(getattr(_curr_proj2, "kind", ""))) if _curr_proj2 else ""
+                        if _pk2 in _NON_SURVIVAL_PROJECT_KINDS:
+                            events.append(SimulationEvent(
+                                event_type="decision_divergence_detected", event_category="strategy",
+                                tick=tick, entity_id=eid, severity="INFO",
+                                source_system="event_extractor", message="",
+                                payload={"project_kind": _pk2, "concern_kind": _top_kind,
+                                         "concern_urgency": round(_top_urgency, 4)},
+                            ))
 
             # Social: group_joined / group_expelled (PP-34 group membership state diff)
             curr_group = getattr(entity, "group_id", None)
@@ -497,6 +616,78 @@ class EventExtractor:
                                 },
                             ))
 
+            # Progression: skill_unlocked, trait_expressed, pillar_trait_unlocked,
+            # progression_conversion_applied, progression_plateau_detected
+            if hasattr(entity, "identity") and hasattr(prior_ent, "identity"):
+                _curr_id = entity.identity
+                _prior_id = prior_ent.identity
+                _curr_skills = getattr(_curr_id, "learned_skills", None) or frozenset()
+                _prior_skills = getattr(_prior_id, "learned_skills", None) or frozenset()
+                for _sk in (set(_curr_skills) - set(_prior_skills)):
+                    events.append(SimulationEvent(
+                        event_type="skill_unlocked", event_category="lifecycle",
+                        tick=tick, entity_id=eid, severity="INFO",
+                        source_system="event_extractor", message="",
+                        payload={"skill_id": _sk, "tick": tick},
+                    ))
+
+                _curr_traits = getattr(_curr_id, "traits", None) or frozenset()
+                _prior_traits = getattr(_prior_id, "traits", None) or frozenset()
+                for _tr in (set(_curr_traits) - set(_prior_traits)):
+                    events.append(SimulationEvent(
+                        event_type="trait_expressed", event_category="lifecycle",
+                        tick=tick, entity_id=eid, severity="INFO",
+                        source_system="event_extractor", message="",
+                        payload={"trait_id": _tr, "tick": tick},
+                    ))
+
+                _curr_breaks = getattr(_curr_id, "active_breakthroughs", None) or frozenset()
+                _prior_breaks = getattr(_prior_id, "active_breakthroughs", None) or frozenset()
+                for _bt in (set(_curr_breaks) - set(_prior_breaks)):
+                    events.append(SimulationEvent(
+                        event_type="pillar_trait_unlocked", event_category="lifecycle",
+                        tick=tick, entity_id=eid, severity="INFO",
+                        source_system="event_extractor", message="",
+                        payload={"trait_id": _bt, "tick": tick},
+                    ))
+
+                # progression_conversion_applied: unspent_ap decreased = AP converted to permanent stat
+                _curr_ap = getattr(_curr_id, "unspent_ap", 0)
+                _prior_ap = getattr(_prior_id, "unspent_ap", 0)
+                if isinstance(_curr_ap, int) and isinstance(_prior_ap, int) and _curr_ap < _prior_ap:
+                    events.append(SimulationEvent(
+                        event_type="progression_conversion_applied", event_category="lifecycle",
+                        tick=tick, entity_id=eid, severity="INFO",
+                        source_system="event_extractor", message="",
+                        payload={"ap_spent": _prior_ap - _curr_ap, "tick": tick},
+                    ))
+
+                # progression_plateau_detected: XP rate dropped to zero or skill silence
+                _curr_xp = getattr(_curr_id, "evolution_points", 0)
+                _prior_xp = getattr(_prior_id, "evolution_points", 0)
+                if _curr_xp != _prior_xp:
+                    EventExtractor._last_xp_tick[eid] = tick
+                elif eid not in EventExtractor._emitted_plateau:
+                    _since = tick - EventExtractor._last_xp_tick.get(eid, 0)
+                    if _since > _XP_PLATEAU_TICKS:
+                        EventExtractor._emitted_plateau.add(eid)
+                        events.append(SimulationEvent(
+                            event_type="progression_plateau_detected", event_category="lifecycle",
+                            tick=tick, entity_id=eid, severity="INFO",
+                            source_system="event_extractor", message="",
+                            payload={"type": "xp_rate_zero", "ticks_since_xp": _since},
+                        ))
+                    elif (getattr(_curr_id, "evolution_level", 1) >= 5
+                            and not set(_curr_skills)):
+                        EventExtractor._emitted_plateau.add(eid)
+                        events.append(SimulationEvent(
+                            event_type="progression_plateau_detected", event_category="lifecycle",
+                            tick=tick, entity_id=eid, severity="INFO",
+                            source_system="event_extractor", message="",
+                            payload={"type": "skill_silence",
+                                     "level": getattr(_curr_id, "evolution_level", 1)},
+                        ))
+
         # Agency: rejection_cascade_tick — post-entity-loop population aggregate.
         # Count all rejected intent results across entities in this tick's updates.
         _total_rejections = 0
@@ -541,6 +732,57 @@ class EventExtractor:
                         source_system="event_extractor", message="",
                         payload={"node_id": node_id, "charges": node.remaining_charges, "max_charges": node.max_charges},
                     ))
+                    # World: node_recharged — distinct from resource_node_regenerated (scored by WorldDynamicsScorer)
+                    # Only on 0→>0 transition (node_recharged is the scored event; resource_node_regenerated is unscored_intentional)
+                    events.append(SimulationEvent(
+                        event_type="node_recharged", event_category="resource",
+                        tick=tick, entity_id=None, severity="INFO",
+                        source_system="event_extractor", message="",
+                        payload={"node_id": node_id, "charges": node.remaining_charges},
+                    ))
+
+        # World: ecology_cycle_completed — fires once per region per ecology interval (every 200 ticks)
+        # ResourceEcologyService.ECOLOGY_INTERVAL == 200
+        if tick % 200 == 0 and hasattr(current_state, "regions"):
+            for _r_id, _region in (current_state.regions or {}).items():
+                events.append(SimulationEvent(
+                    event_type="ecology_cycle_completed", event_category="region",
+                    tick=tick, entity_id=None, severity="INFO",
+                    source_system="event_extractor", message="",
+                    payload={"region_id": _r_id,
+                             "cycle_type": getattr(_region, "kind", "unknown"),
+                             "net_pressure_delta": 0.0},
+                ))
+
+        # World: spawn_cadence_fired — detects spawn batch committed on cadence tick
+        if tick % _SPAWN_INTERVAL == 0:
+            _spawned_monsters = [
+                e for e in (getattr(update, "entities_add", None) or [])
+                if getattr(e, "kind", None) not in (None, "world_boss", "ancient_sentinel", "goblin_raider")
+            ]
+            if _spawned_monsters:
+                events.append(SimulationEvent(
+                    event_type="spawn_cadence_fired", event_category="lifecycle",
+                    tick=tick, entity_id=None, severity="INFO",
+                    source_system="event_extractor", message="",
+                    payload={"spawned_count": len(_spawned_monsters), "tick": tick},
+                ))
+
+        # Economy: conservation_law_verified — throttled (1 per 50 ticks) to avoid noise
+        # Fires when economy transactions occurred this tick, implying the conservation law was checked
+        if tick % 50 == 0:
+            _has_economy_tx = any(
+                e.event_type in ("resource_harvested", "item_crafted", "shop_transaction",
+                                 "paid_information_transaction", "gold_sink_fired")
+                for e in events
+            )
+            if _has_economy_tx:
+                events.append(SimulationEvent(
+                    event_type="conservation_law_verified", event_category="economy",
+                    tick=tick, entity_id=None, severity="INFO",
+                    source_system="event_extractor", message="",
+                    payload={"tick": tick},
+                ))
 
         # World dynamics events — from StateUpdate world_updates and entities_add
         for rid, w_upd in (getattr(update, "world_updates", None) or {}).items():
@@ -551,6 +793,26 @@ class EventExtractor:
                     source_system="event_extractor", message="",
                     payload={"region_id": rid, "delta": w_upd.trauma_delta},
                 ))
+            # World: threat_evolved — trauma crossing major thresholds (25, 50, 75, 100) signals tier shift
+            _prior_region = getattr(prior_state, "regions", {}).get(rid) if prior_state else None
+            if _prior_region is not None:
+                try:
+                    _prior_trauma = float(getattr(_prior_region, "trauma_score", 0.0))
+                    _trauma_delta = float(getattr(w_upd, "trauma_delta", 0.0))
+                    _new_trauma = _prior_trauma + _trauma_delta
+                    for _threshold in (25.0, 50.0, 75.0, 100.0):
+                        if _prior_trauma < _threshold <= _new_trauma:
+                            events.append(SimulationEvent(
+                                event_type="threat_evolved", event_category="region",
+                                tick=tick, entity_id=None, severity="WARNING",
+                                source_system="event_extractor", message="",
+                                payload={"region_id": rid, "threshold": _threshold,
+                                         "prior_trauma": round(_prior_trauma, 2),
+                                         "new_trauma": round(_new_trauma, 2)},
+                            ))
+                            break
+                except (TypeError, ValueError):
+                    pass
             if getattr(w_upd, "owner_faction_id_set", None) is not None:
                 events.append(SimulationEvent(
                     event_type="region_ownership_changed", event_category="region",
@@ -629,6 +891,20 @@ class EventExtractor:
                     ))
                     # FACTION: alliance_accepted (PP-08/10) — when new state is ALLIED
                     if state_name == "ALLIED":
+                        # alliance_proposed: fires when prior state was NEUTRAL/HOSTILE (proposal preceded acceptance)
+                        _prior_factions = getattr(prior_state, "factions", {}) or {}
+                        _prior_faction_st = _prior_factions.get(fid)
+                        _prior_diplo = (getattr(_prior_faction_st, "diplomatic_relations", {}) or {}) if _prior_faction_st else {}
+                        _prior_rel = getattr(_prior_diplo.get(other_fid), "name",
+                                             str(_prior_diplo.get(other_fid, "NEUTRAL")))
+                        if _prior_rel in ("NEUTRAL", "HOSTILE"):
+                            events.append(SimulationEvent(
+                                event_type="alliance_proposed", event_category="faction",
+                                tick=tick, entity_id=None, severity="INFO",
+                                source_system="event_extractor", message="",
+                                payload={"proposing_faction": fid, "target_faction": other_fid,
+                                         "prior_state": _prior_rel, "tick": tick},
+                            ))
                         events.append(SimulationEvent(
                             event_type="alliance_accepted", event_category="faction",
                             tick=tick, entity_id=None, severity="INFO",
@@ -644,6 +920,14 @@ class EventExtractor:
                     source_system="event_extractor", message="",
                     payload={"faction_id": fid, "region_id": region_id},
                 ))
+                # FACTION: resource_seized — territory transfer driven by faction conflict
+                if getattr(upd, "tension_delta", 0.0) > 0:
+                    events.append(SimulationEvent(
+                        event_type="resource_seized", event_category="faction",
+                        tick=tick, entity_id=None, severity="WARNING",
+                        source_system="event_extractor", message="",
+                        payload={"faction_id": fid, "region_id": region_id, "tick": tick},
+                    ))
 
             # FACTION: faction_tension_delta (PP-09) — any non-zero delta
             if getattr(upd, "tension_delta", 0.0) != 0.0:

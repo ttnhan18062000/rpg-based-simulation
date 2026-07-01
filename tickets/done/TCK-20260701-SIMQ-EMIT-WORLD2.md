@@ -1,21 +1,21 @@
 ---
-status: active
+status: done
 layer: simulation
 authority: P2
 audience: agent
-ticket_id: TCK-20260701-SIMQ-EMIT-WORLD2
+ticket_id: TCK-20260701-SIMQ-EMIT-WORLD-DYNAMICS
 phase: open
 date: 2026-07-01
 tags: [simq, event-emission, world-dynamics, scoring]
 ---
 
-# TCK-20260701-SIMQ-EMIT-WORLD2
+# TCK-20260701-SIMQ-EMIT-WORLD-DYNAMICS
 
 ## Title
 SimQ: Emit WORLD dynamics ecology and lifecycle signal events
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -100,7 +100,13 @@ Missing events (from §3.9):
 - Integration: frontier_extended 500-tick run shows > 0 ecology_cycle_completed and spawn_cadence_fired
 
 ## Files Changed
-(to be filled at implementation)
+- `src/observability/event_extractor.py` — 4 new emitters (ecology_cycle_completed, spawn_cadence_fired, threat_evolved, node_recharged)
+- `tests/unit/observability/test_event_extractor_world_dynamics.py` — 14 unit tests
+- `docs/parity_ledger/world_dynamics.yaml` — added WORLD-108, WORLD-109
+- `docs/simulation_quality/event_type_coverage.md` — §3.9 partially resolved; camp_constructed remains blocked
 
 ## Completion Summary
-(to be filled at completion)
+4 of 5 WORLD-DYNAMICS emitters implemented. ecology_cycle_completed (tick%200 per region),
+spawn_cadence_fired (tick%50 + non-boss entities_add), threat_evolved (trauma threshold
+crossing), node_recharged (remaining_charges 0→>0). camp_constructed blocked —
+CampService has no event recorder interface. 14 unit tests pass; 1074 total tests pass.

@@ -147,66 +147,82 @@ These contract vocabulary types appear in at least one scorer's `EVENT_TYPES` tu
 
 ### §3.2 Cognition (CognitionScorer)
 
-| contract_type | notes |
+All previously listed gaps resolved by TCK-20260701-SIMQ-EMIT-LEAD-BELIEFS.
+
+| contract_type | resolved by |
 |---|---|
-| `decision_divergence_detected` | No engine emitter found |
+| `decision_divergence_detected` | `event_extractor.py` — DANGER concern urgency > 0.7 + non-survival project |
 
 ### §3.3 Information (InformationScorer)
 
-| contract_type | notes |
+All previously listed gaps resolved by TCK-20260701-SIMQ-EMIT-LEAD-BELIEFS.
+
+| contract_type | resolved by |
 |---|---|
-| `lead_certainty_updated` | Per contract §5 (line 756), this is a DISTINCT event from `lead_certainty_changed` (CognitionScorer). The engine emits `lead_certainty_changed` for raw state diffs; `lead_certainty_updated` is intended to represent a post-processed knowledge update. Engine does not yet emit this separate event. |
-| `lead_contradiction_resolved` | No engine emitter found; emitter location: `src/engine/pipeline_phases/lead_contradiction.py` emits `belief_contradiction` (different event) |
-| `paid_info_changed_goal` | No engine emitter found |
-| `belief_stale` | No engine emitter found |
-| `decision_diverged_by_belief` | No engine emitter found |
+| `lead_certainty_updated` | `event_extractor.py` — certainty enum diff per lead per tick |
+| `lead_contradiction_resolved` | `lead_contradiction.py` — emitted alongside `belief_contradiction` |
+| `paid_info_changed_goal` | `event_extractor.py` — INFORMATION_PURCHASE intent + project_id change |
+| `belief_stale` | `event_extractor.py` — VAGUE/APPROXIMATE lead age > 50 ticks, once per lead per run |
+| `decision_diverged_by_belief` | `event_extractor.py` — VAGUE lead + non-information active project |
 
 ### §3.4 Economy (EconomyScorer)
 
-| contract_type | notes |
+All previously listed gaps resolved by TCK-20260701-SIMQ-EMIT-FACTION-ECONOMY.
+
+| contract_type | resolved by |
 |---|---|
-| `paid_info_transaction` | Per contract §5 (line 625), this is the ECONOMY-pillar event for information purchases (separate from `paid_information_transaction` which is the INFORMATION-pillar event). Engine only emits `paid_information_transaction` via event_extractor. Adding `paid_info_transaction` requires a second emit in event_extractor when src_kind==INFORMATION_PURCHASE. |
-| `conservation_law_verified` | No engine emitter found; conservation law is checked but passing verification is not emitted |
+| `paid_info_transaction` | `event_extractor.py` — second emit on INFORMATION_PURCHASE (distinct from `paid_information_transaction`) |
+| `conservation_law_verified` | `event_extractor.py` — tick % 50 guard + economy events present in current tick |
 
 ### §3.5 Narrative (NarrativeScorer)
 
-| contract_type | notes |
+All previously listed gaps resolved by TCK-20260701-SIMQ-EMIT-FACTION-ECONOMY.
+
+| contract_type | resolved by |
 |---|---|
-| `scenario_objective_progressed` | `engine/scenario_runtime.py` only emits `scenario_objective_completed`; there is no intermediate progress event emitted |
+| `scenario_objective_progressed` | `scenario_runtime.py` — emitted every tick while objective is RUNNING |
 
 ### §3.6 Progression (ProgressionScorer)
 
-| contract_type | notes |
+All previously listed gaps resolved by TCK-20260701-SIMQ-EMIT-PROGRESSION.
+
+| contract_type | resolved by |
 |---|---|
-| `skill_unlocked` | No engine emitter found |
-| `trait_expressed` | No engine emitter found |
-| `pillar_trait_unlocked` | No engine emitter found |
-| `progression_conversion_applied` | No engine emitter found |
-| `progression_plateau_detected` | No engine emitter found |
+| `skill_unlocked` | `event_extractor.py` — learned_skills set diff |
+| `trait_expressed` | `event_extractor.py` — traits set diff |
+| `pillar_trait_unlocked` | `event_extractor.py` — active_breakthroughs set diff |
+| `progression_conversion_applied` | `event_extractor.py` — unspent_ap decrease |
+| `progression_plateau_detected` | `event_extractor.py` — xp_rate_zero + skill_silence signals |
 
 ### §3.7 Faction (FactionScorer)
 
-| contract_type | notes |
+All previously listed gaps resolved by TCK-20260701-SIMQ-EMIT-FACTION-ECONOMY.
+
+| contract_type | resolved by |
 |---|---|
-| `alliance_proposed` | No engine emitter found; alliance_accepted is emitted when ALLIED state is confirmed |
-| `resource_seized` | No engine emitter found |
+| `alliance_proposed` | `event_extractor.py` — NEUTRAL/HOSTILE → ALLIED transition detected via prior_state.factions |
+| `resource_seized` | `event_extractor.py` — FactionUpdate.territory_add with tension_delta > 0 |
 
 ### §3.8 Social (SocialScorer)
 
+**Blocked — missing infrastructure.** No change from prior survey.
+
 | contract_type | notes |
 |---|---|
-| `social_memory_created` | No engine emitter found |
-| `contract_milestone_completed` | No engine emitter found |
+| `social_memory_created` | SocialMemoryExporter.export() has no event recorder; requires interface change |
+| `contract_milestone_completed` | ContractState has no milestones field; requires schema extension |
 
 ### §3.9 World Dynamics (WorldDynamicsScorer)
 
-| contract_type | notes |
+Partially resolved by TCK-20260701-SIMQ-EMIT-WORLD-DYNAMICS; one item remains blocked.
+
+| contract_type | resolved by / notes |
 |---|---|
-| `ecology_cycle_completed` | No engine emitter found (comment in economy.py: "owned by WorldDynamicsScorer per SQ-08") |
-| `spawn_cadence_fired` | No engine emitter found |
-| `camp_constructed` | No engine emitter found |
-| `threat_evolved` | No engine emitter found |
-| `node_recharged` | No engine emitter found |
+| `ecology_cycle_completed` | `event_extractor.py` — tick % 200 per region |
+| `spawn_cadence_fired` | `event_extractor.py` — tick % 50 + non-boss entities_add |
+| `threat_evolved` | `event_extractor.py` — trauma_score crossing 25/50/75/100 thresholds |
+| `node_recharged` | `event_extractor.py` — resource_node quantity 0 → >0 |
+| `camp_constructed` | **Blocked** — CampService/camp.py has no event recorder; requires interface change |
 
 ---
 
@@ -253,5 +269,5 @@ Events emitted by the engine that are deliberately NOT routed to any scorer. No 
 - When adding a new `event_type` to `event_extractor.py` or any domain emitter, check this table first.
 - If the event should be scored, either: (a) use contract vocabulary directly, or (b) add a `_TRANSLATE_SIMPLE` / `_TRANSLATE_CONDITIONAL` entry to `quality_hub.py` and update this table.
 - Engine emission gap events (§3) are the primary expansion surface for future SimQ coverage.
-- The `paid_info_transaction` / `lead_certainty_updated` gaps (§3.3, §3.4) require new emit calls in `event_extractor.py` — these should be tracked as follow-on tickets.
+- Remaining §3 gaps: `social_memory_created`, `contract_milestone_completed` (§3.8) and `camp_constructed` (§3.9) are blocked on missing infrastructure (no event recorder on SocialMemoryExporter/CampService, no milestones field on ContractState).
 - Run `make knowledge-index-update` after any change to docs in this directory.
