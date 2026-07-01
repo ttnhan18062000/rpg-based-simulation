@@ -111,8 +111,18 @@ class AdventureDecisionPhase:
                 if scored_candidates:
                     _writer.write_trace(hero.id, tick, scored_candidates)
 
-            # If no selection or deferred, do not update project
+            # If no selection or deferred, do not update project.
+            # On explicit DEFER_WITH_REASON, write a minimal EntityUpdate so that
+            # event_extractor.py can emit defer_with_reason (reads "last_defer_reason").
             if not result.selected or result.selected.family == RouteFamily.DEFER_WITH_REASON:
+                if result.selected and result.selected.family == RouteFamily.DEFER_WITH_REASON:
+                    entity_updates[hero.id] = EntityUpdate(
+                        entity_id=hero.id,
+                        property_updates={
+                            "last_defer_reason": result.selected.reason or "unknown",
+                            "last_defer_tick": tick,
+                        },
+                    )
                 continue
 
             # 3. Create strategic updates for the committed choice

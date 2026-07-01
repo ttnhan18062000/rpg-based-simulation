@@ -147,6 +147,40 @@ class TestRejectionCascade:
         assert rec is None
 
 
+class TestNewEventTypes:
+    def test_scorer_handles_defer_with_reason_event(self, scorer: AgencyScorer, scoring_weights: ScoringWeights) -> None:
+        """E-1: defer_with_reason → ScoreRecord with AGENCY pillar and negative delta (defer_idle weight)."""
+        rec = scorer.score(_env("defer_with_reason"), _ctx(tick=100, window_tags={"defer_idle": 3, "action_taken": 1}))
+        assert rec is not None
+        assert rec.pillar == PillarId.AGENCY
+        assert rec.delta == scoring_weights["defer_idle"]
+        assert "defer_idle" in rec.tags
+
+    def test_scorer_handles_commitment_abandoned_returns_none(self, scorer: AgencyScorer) -> None:
+        """E-2: commitment_abandoned → None (scorer intentionally no-ops; contract must stay stable)."""
+        rec = scorer.score(_env("commitment_abandoned", payload={"category": "voluntary_quit", "penalty": 0.2}), _ctx())
+        assert rec is None
+
+    def test_scorer_handles_rejection_cascade_tick_at_500(self, scorer: AgencyScorer, scoring_weights: ScoringWeights) -> None:
+        """E-3: rejection_cascade_tick count=501 → rejection_cascade_sustained ScoreRecord."""
+        rec = scorer.score(_env("rejection_cascade_tick", payload={"count": 501}), _ctx())
+        assert rec is not None
+        assert "rejection_cascade_sustained" in rec.tags
+
+    def test_scorer_handles_rejection_cascade_tick_at_100(self, scorer: AgencyScorer, scoring_weights: ScoringWeights) -> None:
+        """E-4: rejection_cascade_tick count=150 → rejection_cascade ScoreRecord."""
+        rec = scorer.score(_env("rejection_cascade_tick", payload={"count": 150}), _ctx())
+        assert rec is not None
+        assert "rejection_cascade" in rec.tags
+
+    def test_scorer_handles_route_family_first_use(self, scorer: AgencyScorer, scoring_weights: ScoringWeights) -> None:
+        """E-5: route_family_first_use → ScoreRecord with route_novelty and entropy_reward tags."""
+        rec = scorer.score(_env("route_family_first_use", payload={"family": "recover", "entity_id": 1}), _ctx())
+        assert rec is not None
+        assert "route_novelty" in rec.tags
+        assert "entropy_reward" in rec.tags
+
+
 class TestProjectCycle:
     def test_cycle_fires_on_immediate_restart(self, scorer: AgencyScorer, scoring_weights: ScoringWeights) -> None:
         scorer.score(_env("project_abandoned", entity_id=5, payload={"project_type": "gather"}), _ctx())

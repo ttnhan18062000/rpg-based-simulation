@@ -143,12 +143,7 @@ These contract vocabulary types appear in at least one scorer's `EVENT_TYPES` tu
 
 ### §3.1 Agency (AgencyScorer)
 
-| contract_type | notes |
-|---|---|
-| `defer_with_reason` | Defined in `src/domains/adventure/schema.py` as DEFER_WITH_REASON; engine currently embeds this in the `route_selected` payload.family field rather than emitting it as a separate event |
-| `commitment_abandoned` | No engine emitter found |
-| `rejection_cascade_tick` | No engine emitter found |
-| `route_family_first_use` | No engine emitter found; expected to fire once per novel routing family per entity |
+> All AGENCY pillar events are now emitted. See §2 for covered events.
 
 ### §3.2 Cognition (CognitionScorer)
 

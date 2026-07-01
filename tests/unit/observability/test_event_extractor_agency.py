@@ -122,16 +122,15 @@ def test_both_route_and_action_emitted_together():
 
 # ── defer gap documentation ───────────────────────────────────────────────────
 
-def test_defer_gap_no_update_means_no_agency_event():
-    """DEFER_WITH_REASON causes 'continue' in AdventureDecisionPhase — no EntityUpdate created.
-    Neither route_selected nor action_executed can be emitted without a routing property.
-    This test documents the gap: defer_with_reason events require phase-level hooks."""
+def test_defer_without_property_produces_no_event():
+    """When an EntityUpdate exists but has no last_defer_reason key, no defer_with_reason
+    is emitted. Confirms the emitter only fires when the property is explicitly present."""
     e = _entity()
     state = _state({1: e})
-    # No entity_update for this entity = DEFER happened or entity was skipped
+    eu = MagicMock()
+    eu.property_updates = {}
+    eu.combat_upd = None
     u = MagicMock()
-    u.entity_updates = {}
+    u.entity_updates = {1: eu}
     events = EventExtractor.extract(state, state, u, ObservabilityMode.NORMAL)
-    assert "route_selected" not in _types(events)
-    assert "action_executed" not in _types(events)
     assert "defer_with_reason" not in _types(events)

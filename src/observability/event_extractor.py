@@ -3,13 +3,16 @@ import time
 import logging
 from typing import Any, List, Optional
 from src.core.state import AuthoritativeState
+from src.core.strategic import ProjectStatus
 from src.core.updates import StateUpdate
+from src.domains.commitment.abandonment import AbandonmentEvaluator, AbandonmentCategory
 from src.domains.world_emergence.schema import WorldEventCategory
 from src.observability.config import ObservabilityConfig, ObservabilityMode
 from src.observability.events import (
     SimulationEvent, CombatDamageEvent, CombatKillEvent,
     GoldTransactionEvent, QuestEvent, MovementEvent, LifecycleEvent
 )
+from src.systems.strategic_systems.intelligence import _MAX_CONSECUTIVE_REJECTIONS
 
 logger = logging.getLogger(__name__)
 
@@ -18,6 +21,16 @@ _NEAR_DEATH_THRESHOLD = 0.2
 
 class EventExtractor:
     """Extracts curated low-volume SimulationEvents from state changes and committed updates."""
+
+    # Per-run tracking for route novelty: entity_id → set of seen family strings.
+    # NOT durable state — must be cleared at run start via reset_run_state().
+    _seen_routing_families: dict[int, set[str]] = {}
+
+    @classmethod
+    def reset_run_state(cls) -> None:
+        """Clear transient per-run state. Call at run start and in test teardown."""
+        cls._seen_routing_families.clear()
+
     @staticmethod
     def extract(
         prior_state: AuthoritativeState,
@@ -201,6 +214,27 @@ class EventExtractor:
                         tick=tick, entity_id=eid, severity="INFO",
                         source_system="event_extractor", message="",
                         payload={"family": routing_family},
+                    ))
+                    # Agency: route_family_first_use (once per novel family per entity per run)
+                    seen = EventExtractor._seen_routing_families.setdefault(eid, set())
+                    if routing_family not in seen:
+                        seen.add(routing_family)
+                        events.append(SimulationEvent(
+                            event_type="route_family_first_use", event_category="strategy",
+                            tick=tick, entity_id=eid, severity="INFO",
+                            source_system="event_extractor", message="",
+                            payload={"entity_id": eid, "family": routing_family, "tick": tick},
+                        ))
+
+                # Agency: defer_with_reason — property set by phase.py on DEFER_WITH_REASON path.
+                # Key "last_defer_reason" must match phase.py property_updates key exactly.
+                defer_reason = prop.get("last_defer_reason")
+                if defer_reason:
+                    events.append(SimulationEvent(
+                        event_type="defer_with_reason", event_category="strategy",
+                        tick=tick, entity_id=eid, severity="INFO",
+                        source_system="event_extractor", message="",
+                        payload={"entity_id": eid, "reason": defer_reason, "tick": tick},
                     ))
 
                 # Cognition: self_model_updated (PP-03)
@@ -437,6 +471,55 @@ class EventExtractor:
                         tick=tick, timestamp=now, entity_id=eid,
                         quest_id=qid, status=str(qstate.status)
                     ))
+                    # Agency: commitment_abandoned (behavioral classification, not just
+                    # status change — coexists with the QuestEvent above which becomes
+                    # project_abandoned via _TRANSLATE_CONDITIONAL in quality_hub.py)
+                    if (getattr(prior_qstate, "status", None) != ProjectStatus.ABANDONED
+                            and getattr(qstate, "status", None) == ProjectStatus.ABANDONED):
+                        _hp = getattr(getattr(entity, "combat", None), "hp", 100)
+                        _max_hp = getattr(getattr(entity, "combat", None), "max_hp", 100)
+                        _classification = AbandonmentEvaluator.evaluate_abandonment(
+                            _hp, _max_hp,
+                            is_party_in_combat=False,   # Q1: default; see plan decisions
+                            is_greed_driven=False,       # Q1: default; see plan decisions
+                        )
+                        if _classification.category != AbandonmentCategory.SURVIVAL:
+                            events.append(SimulationEvent(
+                                event_type="commitment_abandoned", event_category="strategy",
+                                tick=tick, entity_id=eid, severity="INFO",
+                                source_system="event_extractor", message="",
+                                payload={
+                                    "entity_id": eid,
+                                    "project_id": qid,
+                                    "category": _classification.category.value,
+                                    "penalty": _classification.penalty,
+                                    "tick": tick,
+                                },
+                            ))
+
+        # Agency: rejection_cascade_tick — post-entity-loop population aggregate.
+        # Count all rejected intent results across entities in this tick's updates.
+        _total_rejections = 0
+        _reason_counts: dict[str, int] = {}
+        _all_upd = getattr(update, "entity_updates", {}) or {}
+        for _e_upd in _all_upd.values():
+            for _ir in (getattr(_e_upd, "intent_results", None) or []):
+                if not getattr(_ir, "accepted", True):
+                    _total_rejections += 1
+                    _r = getattr(_ir, "reason", None) or "unknown"
+                    _reason_counts[_r] = _reason_counts.get(_r, 0) + 1
+        if _total_rejections >= _MAX_CONSECUTIVE_REJECTIONS:
+            _dominant = max(_reason_counts, key=_reason_counts.__getitem__) if _reason_counts else "unknown"
+            events.append(SimulationEvent(
+                event_type="rejection_cascade_tick", event_category="strategy",
+                tick=tick, entity_id=None, severity="WARNING",
+                source_system="event_extractor", message="",
+                payload={
+                    "count": _total_rejections,
+                    "tick": tick,
+                    "dominant_failure_reason": _dominant,
+                },
+            ))
 
         # Resource node depletion and regeneration
         if hasattr(current_state, "resource_nodes") and hasattr(prior_state, "resource_nodes"):

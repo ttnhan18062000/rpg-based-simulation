@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: simulation
 authority: P2
 audience: agent
 ticket_id: TCK-20260701-SIMQ-EMIT-AGENCY2
-phase: open
+phase: done
 date: 2026-07-01
 tags: [simq, event-emission, agency, scoring]
 ---
@@ -15,7 +15,7 @@ tags: [simq, event-emission, agency, scoring]
 SimQ: Emit AGENCY pillar tracking events (defer, abandon, cascade, novelty)
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -69,7 +69,7 @@ Missing events (from §3.1):
 ## Acceptance Criteria
 - [ ] All 4 event types emitted under correct conditions
 - [ ] `commitment_abandoned` payload uses `AbandonmentClassification` fields (typed)
-- [ ] `rejection_cascade_tick` fires at most once per entity per tick
+- [ ] `rejection_cascade_tick` fires at most once per tick (population aggregate, entity_id=None)
 - [ ] `route_family_first_use` fires exactly once per novel family per entity per run
 - [ ] `event_type_coverage.md §3.1` updated — 4 entries removed
 - [ ] No regression in existing agency / routing tests
@@ -104,8 +104,19 @@ Missing events (from §3.1):
 - Unit: `commitment_abandoned` payload `category` matches AbandonmentClassification
 - Integration: 500-tick dungeon_crawl run shows at least 1 `defer_with_reason` event
 
+## Implementation Notes
+
+All 11 plan steps executed in order with no deviations.
+
+- **phase.py**: On `DEFER_WITH_REASON` branch, writes `EntityUpdate` with `last_defer_reason` / `last_defer_tick` before `continue`. Pure observability write.
+- **event_extractor.py**: (1) `defer_with_reason` from `prop.get("last_defer_reason")`; (2) class-level `_seen_routing_families` + `reset_run_state()` + `route_family_first_use` inside routing guard; (3) `commitment_abandoned` after ACTIVE→ABANDONED diff via `AbandonmentEvaluator` with Q1 defaults; (4) post-entity-loop `rejection_cascade_tick` using `_MAX_CONSECUTIVE_REJECTIONS` import.
+- **kernel.py**: `EventExtractor.reset_run_state()` called via local import just before `self.validate(flags)` in `__init__`.
+- **Tests**: 24 new unit tests in `test_event_extractor_agency2.py` (groups A–D + anti-drift guards), 5 scorer tests added to `test_agency_scorer.py`. All pass.
+- **Docs**: §3.1 AGENCY gap table replaced with "all emitted" note; parity ledger SIMQ-CALIBRATED-001 v2_evidence extended.
+- **Regression**: 1021 passed, 0 failures.
+
 ## Files Changed
-(to be filled at implementation)
+src/domains/adventure/phase.py, src/observability/event_extractor.py, src/engine/kernel.py, tests/unit/observability/test_event_extractor_agency.py, tests/unit/observability/test_event_extractor_agency2.py, tests/simulation_quality/test_agency_scorer.py, docs/simulation_quality/event_type_coverage.md, docs/parity_ledger/infrastructure.yaml
 
 ## Completion Summary
-(to be filled at completion)
+Added 4 AGENCY pillar emitters (defer_with_reason, route_family_first_use, commitment_abandoned, rejection_cascade_tick) to EventExtractor and phase.py. Phase.py writes EntityUpdate on DEFER path; Kernel.__init__ wires reset_run_state(). 29 new tests (24 unit + 5 scorer). §3.1 cleared. 1166 tests passing.

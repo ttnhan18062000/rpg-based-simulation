@@ -305,6 +305,9 @@ class Kernel:
         self._workers_started = 1 if (obs_mode != ObservabilityMode.OFF) else 0
         self._last_shutdown_report = None
 
+        from src.observability.event_extractor import EventExtractor
+        EventExtractor.reset_run_state()
+
         self.validate(flags)
 
         # WORLD-CAT-004: warm all content singletons before the first tick so that
