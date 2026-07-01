@@ -9,17 +9,19 @@
 
 ## Summary
 
-| Category | Count |
-|---|---|
-| scored | 55 |
-| translation_gap | 0 |
-| engine_emission_gap | 27 |
-| p0_a_blocked | 3 |
-| unscored_intentional | 13 |
+| Category | Count | Notes |
+|---|---|---|
+| scored | 79 | +24 from simq-emit epic (AGENCY2 +4, LEAD-BELIEFS +6, PROGRESSION +5, FACTION-ECONOMY +5, WORLD-DYNAMICS +4) |
+| translation_gap | 0 | — |
+| engine_emission_gap | 3 | Down from 27; 3 remain blocked on infrastructure |
+| p0_a_blocked | 3 | Unchanged — campaign/scenario gate |
+| unscored_intentional | 13 | Unchanged |
+
+**Last updated:** 2026-07-01 (TCK-20260701-SIMQ-EMIT-WORLD-DYNAMICS)
 
 **Translation table status:** Complete. All 8 `_TRANSLATE_SIMPLE` and 5 `_TRANSLATE_CONDITIONAL` entries in `quality_hub.py` are correct. No translation table gaps found.
 
-**Gaps found:** 27 entries in SCORER_REGISTRY that will never be reached because the engine does not yet emit the corresponding event types. These are infrastructure stubs — scoring logic exists but upstream emission is deferred. See §3 (Engine Emission Gaps).
+**Gaps found:** 3 entries remain in SCORER_REGISTRY without engine emission (`social_memory_created`, `contract_milestone_completed`, `camp_constructed`), all blocked by missing infrastructure. See §3.8–§3.9.
 
 ---
 
@@ -63,7 +65,31 @@ All events below are emitted by the engine and reach at least one pillar scorer,
 | `trade_executed` | event_extractor | EconomyScorer | 0 | Co-fires with shop_transaction |
 | `quest_reward_dispensed` | event_extractor | EconomyScorer | 0 | src_kind=QUEST |
 | `gold_sink_fired` | event_extractor | EconomyScorer | 0 | src_kind in (REPAIR_FEE, SERVICE_FEE, TAX) |
-| `paid_information_transaction` | event_extractor | InformationScorer | 0 | src_kind=INFORMATION_PURCHASE; see §3 note on `paid_info_transaction` |
+| `paid_information_transaction` | event_extractor | InformationScorer | 0 | src_kind=INFORMATION_PURCHASE |
+| `paid_info_transaction` | event_extractor | EconomyScorer | 0 | Second emit on INFORMATION_PURCHASE (distinct pillar target) — TCK-20260701-SIMQ-EMIT-FACTION-ECONOMY |
+| `conservation_law_verified` | event_extractor | EconomyScorer | 0 | tick % 50 + economy events present — TCK-20260701-SIMQ-EMIT-FACTION-ECONOMY |
+| `scenario_objective_progressed` | engine/scenario_runtime | NarrativeScorer | 0 | Every tick while objective RUNNING — TCK-20260701-SIMQ-EMIT-FACTION-ECONOMY |
+| `defer_with_reason` | event_extractor | AgencyScorer | 0 | DEFER_WITH_REASON path in phase.py — TCK-20260701-SIMQ-EMIT-AGENCY2 |
+| `route_family_first_use` | event_extractor | AgencyScorer | 0 | First use of a novel routing family per entity per run — TCK-20260701-SIMQ-EMIT-AGENCY2 |
+| `commitment_abandoned` | event_extractor | AgencyScorer | 0 | Behavioral classification: abandonment < 3 ticks after start — TCK-20260701-SIMQ-EMIT-AGENCY2 |
+| `rejection_cascade_tick` | event_extractor | AgencyScorer | 0 | Population aggregate: > threshold% failed intent rate — TCK-20260701-SIMQ-EMIT-AGENCY2 |
+| `lead_certainty_updated` | event_extractor | InformationScorer | 0 | Certainty enum diff per lead per tick — TCK-20260701-SIMQ-EMIT-LEAD-BELIEFS |
+| `lead_contradiction_resolved` | lead_contradiction.py | InformationScorer | 0 | Co-emitted with belief_contradiction — TCK-20260701-SIMQ-EMIT-LEAD-BELIEFS |
+| `paid_info_changed_goal` | event_extractor | InformationScorer | 0 | INFORMATION_PURCHASE + project_id change same tick — TCK-20260701-SIMQ-EMIT-LEAD-BELIEFS |
+| `belief_stale` | event_extractor | InformationScorer | 0 | VAGUE/APPROXIMATE lead age > 50 ticks, once per lead per run — TCK-20260701-SIMQ-EMIT-LEAD-BELIEFS |
+| `decision_diverged_by_belief` | event_extractor | InformationScorer | 0 | VAGUE lead + non-information active project — TCK-20260701-SIMQ-EMIT-LEAD-BELIEFS |
+| `decision_divergence_detected` | event_extractor | CognitionScorer | 0 | DANGER concern urgency > 0.7 + non-survival project — TCK-20260701-SIMQ-EMIT-LEAD-BELIEFS |
+| `skill_unlocked` | event_extractor | ProgressionScorer | 0 | learned_skills set diff — TCK-20260701-SIMQ-EMIT-PROGRESSION |
+| `trait_expressed` | event_extractor | ProgressionScorer | 0 | traits set diff — TCK-20260701-SIMQ-EMIT-PROGRESSION |
+| `pillar_trait_unlocked` | event_extractor | ProgressionScorer | 0 | active_breakthroughs set diff — TCK-20260701-SIMQ-EMIT-PROGRESSION |
+| `progression_conversion_applied` | event_extractor | ProgressionScorer | 0 | unspent_ap decrease — TCK-20260701-SIMQ-EMIT-PROGRESSION |
+| `progression_plateau_detected` | event_extractor | ProgressionScorer | 0 | XP unchanged for > 50 ticks from run start — TCK-20260701-SIMQ-EMIT-PROGRESSION |
+| `alliance_proposed` | event_extractor | FactionScorer | 0 | NEUTRAL/HOSTILE → ALLIED transition — TCK-20260701-SIMQ-EMIT-FACTION-ECONOMY |
+| `resource_seized` | event_extractor | FactionScorer | 0 | territory_add + tension_delta > 0 — TCK-20260701-SIMQ-EMIT-FACTION-ECONOMY |
+| `ecology_cycle_completed` | event_extractor | WorldDynamicsScorer | 0 | tick % 200 per region — TCK-20260701-SIMQ-EMIT-WORLD-DYNAMICS |
+| `spawn_cadence_fired` | event_extractor | WorldDynamicsScorer | 0 | tick % 50 + non-boss entities_add — TCK-20260701-SIMQ-EMIT-WORLD-DYNAMICS |
+| `threat_evolved` | event_extractor | WorldDynamicsScorer | 0 | trauma_score threshold crossing 25/50/75/100 — TCK-20260701-SIMQ-EMIT-WORLD-DYNAMICS |
+| `node_recharged` | event_extractor | WorldDynamicsScorer | 0 | remaining_charges 0 → >0 — TCK-20260701-SIMQ-EMIT-WORLD-DYNAMICS |
 | `hazard_drain_applied` | event_extractor | WorldDynamicsScorer | 322 | combat_upd.outcome_kind=="HAZARD" |
 | `lead_certainty_changed` | event_extractor | CognitionScorer | 0 | Strategic lead certainty state diff; see §3 note on `lead_certainty_updated` |
 | `group_joined` | event_extractor | SocialScorer | 0 | Entity joins a group |
@@ -143,7 +169,7 @@ These contract vocabulary types appear in at least one scorer's `EVENT_TYPES` tu
 
 ### §3.1 Agency (AgencyScorer)
 
-> All AGENCY pillar events are now emitted. See §2 for covered events.
+> All AGENCY pillar events are now emitted. See §1.1 for the 4 events added by TCK-20260701-SIMQ-EMIT-AGENCY2 (`defer_with_reason`, `route_family_first_use`, `commitment_abandoned`, `rejection_cascade_tick`).
 
 ### §3.2 Cognition (CognitionScorer)
 
