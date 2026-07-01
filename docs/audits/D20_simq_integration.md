@@ -13,12 +13,12 @@ tags: [audit, simulation-quality, simq, integration, observability, event-bus]
 | Axis | Value |
 |---|---|
 | **Group** | A — Simulation Quality |
-| **State** | `done` (kernel wiring resolved 2026-06-30; 24/27 emission gaps resolved 2026-07-01; 3 blocked on infrastructure) |
+| **State** | `done` (all gaps resolved; 81/82 event types emitted; re-run verified 2026-07-01) |
 | **Impact** | 4 / 5 |
 | **Interest** | 5 / 5 |
 | **Priority** | 9 |
 | **Method** | run-sim + code-read |
-| **Audit date** | 2026-06-30 |
+| **Audit date** | 2026-06-30 (original); 2026-07-01 (re-run after fixes) |
 
 **What this dimension answers:** Is the SimQ module actually receiving events and scoring
 live simulation runs — or is it built but disconnected? This audit exercises the full path
@@ -48,45 +48,73 @@ mode across two deterministic seeds.
 
 ---
 
-## Observed Results
+## Observed Results — Original Run (2026-06-30, pre-fix)
 
-Both seeds completed 200 ticks without error. Final state hashes were stable and
-deterministic. The simulation engine ran correctly.
+Both seeds completed 200 ticks without error. The simulation engine ran correctly, but the
+SimQ hub received zero events due to the wiring gap (G1).
 
 | Metric | Seed 42 | Seed 137 |
 |---|---|---|
 | Outcome | SUCCESS | SUCCESS |
 | Elapsed | 11.02s | 10.86s |
-| Entity count | 23 | 23 |
 | Final state hash | `9b42f891…` | `69572fb8…` |
-| Hard law violations | 0 | 0 |
-| Feed dropped events | 0 | 0 |
 | **SimQ tick count** | **0** | **0** |
 | **Total events scored** | **0** | **0** |
 
-### Pillar scores — Seed 42
-
-| Pillar | Raw score | Normalized | Grade | Event count |
-|---|---|---|---|---|
-| COGNITION | 0.0 | 0.0 | C | 0 |
-| AGENCY | 0.0 | 0.0 | C | 0 |
-| COMBAT | 0.0 | 0.0 | C | 0 |
-| FACTION | 0.0 | 0.0 | C | 0 |
-| ECONOMY | 0.0 | 0.0 | C | 0 |
-| PROGRESSION | 0.0 | 0.0 | C | 0 |
-| SOCIAL | 0.0 | 0.0 | C | 0 |
-| INFORMATION | 0.0 | 0.0 | C | 0 |
-| WORLD | 0.0 | 0.0 | C | 0 |
-| NARRATIVE | 0.0 | 0.0 | C | 0 |
-
-Results for seed 137 were identical. All grades C (normalized score = 0.0) — not from
-degenerate behavior, but from zero events reaching the hub.
+All 10 pillar grades: C (0.0). Not from degenerate behavior — zero events reached the hub.
 
 ---
 
-## Root Cause: Integration Bridge Not Connected
+## Verified Re-Run Results — 2026-07-01 (all fixes applied)
 
-The SimQ module infrastructure is fully built and tested in isolation. The failure is
+Same world, seeds, and tick count. All three kernel wiring gaps resolved; 81 event types
+emitted. Final state hashes are bit-identical to the original run — determinism confirmed.
+
+| Metric | Seed 42 | Seed 137 |
+|---|---|---|
+| Run ID | `run_1782900226_5169` | `run_1782900239_2781` |
+| Outcome | SUCCESS | SUCCESS |
+| Elapsed | 10.99s | 11.00s |
+| Tick count | 200 | 200 |
+| Final state hash | `9b42f891…` ✓ | `69572fb8…` ✓ |
+| Hard law violations | 0 | 0 |
+| Overall score | 0.0355 | 0.0380 |
+| Overall grade | **B** | **B** |
+
+### Pillar scores — Seed 42
+
+| Pillar | Raw score | Normalized | Grade | Events | Negatives | Loop flags |
+|---|---|---|---|---|---|---|
+| COGNITION | 0.0 | 0.0 | C | 0 | 0 | — |
+| AGENCY | 0.0 | 0.0 | C | 0 | 0 | — |
+| COMBAT | 6.0 | 0.030 | B | 15 | 5 | `combat_active` |
+| FACTION | 0.0 | 0.0 | C | 0 | 0 | — |
+| ECONOMY | 0.0 | 0.0 | C | 0 | 0 | — |
+| PROGRESSION | 7.0 | 0.035 | B | 6 | 1 | `survival_experience` |
+| SOCIAL | 0.0 | 0.0 | C | 0 | 0 | — |
+| INFORMATION | 0.0 | 0.0 | C | 0 | 0 | — |
+| WORLD | 43.0 | 0.215 | B | 38 | 0 | `hazard_active` |
+| NARRATIVE | 15.0 | 0.075 | B | 3 | 0 | `quest_active` |
+
+Seed 137 is near-identical: COMBAT/PROGRESSION/WORLD scores match exactly; NARRATIVE slightly
+higher (raw=20.0, 4 events). Overall grade B for both.
+
+### Notable worst events — Seed 42
+
+| Tick | Pillar | Event type | Delta | Reason |
+|---|---|---|---|---|
+| 8 | COMBAT | `entity_killed` | −10 | early_extinction: entity 16 dead before tick threshold |
+| 8 | COMBAT | `entity_killed` | −1 × 4 | attrition: entities 17–20 killed at tick 8 |
+| 51 | PROGRESSION | `progression_plateau_detected` | −8 | entity 1 XP rate dropped to zero after tick gate |
+
+---
+
+## Root Cause: Integration Bridge Not Connected *(Historical — resolved 2026-06-30)*
+
+> This section documents the original wiring failure. All three gaps are now resolved.
+> See §Finding Updates for the fix tickets.
+
+The SimQ module infrastructure was fully built and tested in isolation. The failure was
 a wiring gap in the event delivery path.
 
 ### How the path is designed to work
@@ -129,7 +157,9 @@ is no execution path where the hub is registered with the server-side dependency
 
 ---
 
-## Recommended Fix
+## Recommended Fix *(Historical — all fixes applied 2026-06-30)*
+
+> Kept for traceability. These changes are in the codebase.
 
 **Minimal wiring (G1 only — addresses in-process and CLI paths):**
 
@@ -166,40 +196,76 @@ mode path (`BrokerQualityFeed`) is unaffected as it uses a separate Redis stream
 
 ---
 
-## What SimQ Would Show Once Wired
+## What SimQ Actually Shows (Verified 2026-07-01)
 
-Based on D06 observations (quest_event, combat_damage, entity lifecycle events flowing
-across 200-tick runs), a wired 200-tick run on sandbox_world would surface:
+### Pillars with signal in sandbox_world (200 ticks)
 
-- **COMBAT**: positive signal from `combat_active` and `combat_resolved` events — expected B or A
-- **AGENCY**: positive from `action_executed` and project completions — expected A
-- **ECONOMY**: likely B/C — sandbox_world has minimal trade and zero gold flow in D06
-- **FACTION**: likely C/D — no faction diplomacy observed in sandbox_world
-- **COGNITION/SOCIAL/NARRATIVE**: insufficient events in 200 ticks for sandbox_world to leave the zero-score zone without time-gate negatives activating
+**WORLD — B (0.215 normalized, 38 events)**
+Primary driver: `hazard_drain_applied` (confirmed `calibration_hits=322` in event_type_coverage).
+`region_trauma_delta` also contributes. Loop detection fires on `hazard_active` before run end,
+suppressing further events. WORLD is the richest pillar in combat-heavy sandbox_world.
 
-Calibration with a richer world composition over 500–1000 ticks is required to establish
-meaningful grade baselines. Threshold calibration (`tools/calibrate_simq.py`) is unblocked
-once G1 is fixed.
+**COMBAT — B (0.030 normalized, 15 events, 5 negative)**
+`combat_initiated` and `near_death_survival` fire; `entity_killed` events fire with penalties.
+Hard early attrition at tick 8: 5 monster-type entities die, triggering `early_extinction` (−10).
+Loop detection flags `combat_active`. COMBAT scores positively but the early-extinction penalty
+significantly depresses the grade. This points to a sandbox_world combat balance issue (too many
+weak entities die in the first 10 ticks).
+
+**PROGRESSION — B (0.035 normalized, 6 events, 1 negative)**
+New emitters confirmed active: `progression_plateau_detected` fires at tick 51 for entity 1
+(XP rate dropped to zero after tick gate, −8 penalty). `survival_experience` loop detected.
+PROGRESSION is functional but the plateau penalty is the dominant signal in a 200-tick sandbox run.
+
+**NARRATIVE — B (0.075 normalized, 3–4 events)**
+`quest_active` loop detected early. Loop detection suppresses events after threshold,
+explaining the drop from the 57-tick calibration run (16 events before loop fired) to the
+200-tick run (3–4 events — loop fired earlier in the window). The signal is real but the
+world doesn't advance quest state fast enough to escape loop detection.
+
+### Pillars scoring zero in sandbox_world
+
+| Pillar | Root cause |
+|---|---|
+| AGENCY | `route_selected`/`action_executed` not emitting — sandbox_world entities appear not to change routing family or the diff condition isn't met within 200 ticks |
+| COGNITION | `self_model_bundle_set` and `last_assimilated_tick` signals absent — no information economy in sandbox |
+| ECONOMY | No trades, harvesting, or shop transactions in sandbox_world (pure combat scenario) |
+| SOCIAL | `trust_history` not updated — no cooperation or social interaction observed |
+| FACTION | No faction diplomacy in sandbox_world; no tension, alliance, or territory events |
+| INFORMATION | `lead_certainty_updated`, `belief_stale` and related events require active information-seeking behavior absent in sandbox |
+
+### Calibration implications
+
+Sandbox_world is a combat-only scenario and is a poor calibration environment for 6 of 10
+pillars. Calibration requires richer world compositions:
+- **AGENCY/COGNITION/INFORMATION**: `simq_routing_test` or strategy-heavy worlds
+- **ECONOMY**: `dungeon_crawl` (resource nodes) or `urban_political` (trade/shops)
+- **SOCIAL/FACTION**: `urban_political` or multi-faction worlds with diplomacy
+
+Loop detection window sizes (`hazard_active`, `quest_active`) appear too tight for 200-tick
+sandbox_world runs — events that should score are suppressed after ~40 ticks. Threshold
+calibration (`tools/calibrate_simq.py`) is now unblocked and should be run against the full
+calibration corpus to adjust window sizes per world type.
 
 ---
 
-## Module Health (Independent of Integration Gap)
+## Module Health (as of 2026-07-01)
 
-The SimQ module itself is well-built:
+All integration gaps resolved. Module is fully wired and producing live scores.
 
 | Component | Status |
 |---|---|
-| 10 pillar scorers | Implemented, unit-tested |
-| QualityHub | Implemented with thread-safe accumulators |
-| PillarAccumulator | Sliding window, loop detection, worst-event tracking |
-| QualityPersistence | Write-through to `data/runs/` |
-| REST API (5 endpoints) | Implemented; returns `{"enabled": false}` when disabled |
+| 10 pillar scorers | Implemented, unit-tested, live |
+| QualityHub | Wired — `quality_fn=hub.on_envelope` at `kernel.py:264` |
+| PillarAccumulator | Sliding window, loop detection, worst-event tracking — active |
+| QualityPersistence | Write-through to `data/runs/` — verified by re-run |
+| REST API (5 endpoints) | `set_quality_hub()` called at server startup (`server.py:34`) — live |
 | Event translation layer | `_TRANSLATE_SIMPLE` + `_TRANSLATE_CONDITIONAL` in quality_hub.py |
-| EventExtractor emissions | 79 of 82 scored event types now emitted (24 gaps resolved by simq-emit epic: AGENCY2 +4, LEAD-BELIEFS +6, PROGRESSION +5, FACTION-ECONOMY +5, WORLD-DYNAMICS +4). 3 remain blocked on infrastructure. |
-| Parity ledger | SIMQ-CALIBRATED-001 marked `verified` |
+| EventExtractor emissions | **81 of 82** scored event types emitted (2 newly added this session: `social_memory_created`, `contract_milestone_completed`). 1 has no engine path (`camp_constructed` — no dynamic camp construction in simulation). |
+| Parity ledger | SOC-237, SOC-238 added and marked `verified` |
+| Kernel→hub bridge | **RESOLVED** — `InProcessQualityFeed` refactored; no competing consumer |
 
-The module passes its tests and the API routes respond correctly. Only the kernel→hub
-event bridge is missing.
+The module is fully operational. Remaining work: calibration corpus runs across non-sandbox worlds.
 
 ---
 
@@ -231,3 +297,15 @@ event bridge is missing.
 - `social_memory_created` — prior premise wrong. `SocialMemoryExporter` is campaign-layer only (called at episode end). Correct emit: `EventExtractor` on `trust_history` delta — no infrastructure change needed. TCK-20260701-SIMQ-EMIT-SOCIAL-MEM scope updated.
 - `contract_milestone_completed` — **resolved**. No schema change needed. EventExtractor emits at 25%/50%/75% of ACTIVE contract duration using existing `created_tick`/`expiry_tick` fields. Gate: once per `(contract_id, milestone)` per run. TCK-20260701-SIMQ-EMIT-CONTRACT-MILESTONE DONE.
 - `camp_constructed` — prior premise wrong. `StateUpdate` has no `camps_add`; camps are pre-placed at world generation. No dynamic camp construction occurs in simulation. No event recorder can fix this — the mechanic doesn't exist. TCK-20260701-SIMQ-EMIT-CAMP closed.
+
+---
+
+## Actionable Next Steps (as of 2026-07-01)
+
+| Priority | Action | Rationale |
+|---|---|---|
+| P1 | Run `tools/calibrate_simq.py` against `dungeon_crawl` and `urban_political` worlds | sandbox_world is combat-only; 6 pillars are blind to it. Calibration baselines require richer scenarios. |
+| P1 | Investigate AGENCY zero-score — confirm whether `route_family_first_use` / `action_executed` conditions are hit in any world | These emitters were added by TCK-20260701-SIMQ-EMIT-AGENCY2 but fire zero events in sandbox_world. May be legitimate (no routing changes in combat-only scenario) or a diff condition bug. |
+| P2 | Tune loop detection window for `hazard_active` and `quest_active` | Loop detection suppresses events after ~40 ticks in a 200-tick run; events that should score are silenced. Window sizes need world-type calibration. |
+| P2 | Investigate `early_extinction` penalty at tick 8 — sandbox_world entities 16–20 are weak | 5 monster-type entities die in the first 10 ticks, triggering the `early_extinction` −10 COMBAT penalty. This may be intentional world design or a spawn/balance bug. |
+| P3 | Add `camp_constructed` to the "no engine path" exclusion list in event_type_coverage.md | Already documented; formally remove it from the 82-event scored set if the mechanic is not planned. |
