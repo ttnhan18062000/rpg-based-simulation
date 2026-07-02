@@ -451,3 +451,4 @@
 {"run_id":"TCK-20260702-PLANS-IDEA-REFRESH","start_ts":"2026-07-02T14:43:00Z","end_ts":"2026-07-02T14:43:00Z","workflow":"implement-ticket","tier":"hotfix","final_status":"DONE","agent_count":1}
 {"run_id":"TCK-20260702-SIMQ-UPLIFT-GRADE-DECAY","start_ts":"2026-07-02T11:13:55Z","end_ts":"2026-07-02T15:26:59Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":9}
 {"run_id": "TCK-20260702-SIMQ-UPLIFT-DUNGEON-ECON-COG", "seq": 5, "ts": "2026-07-02T15:46:55Z", "ticket_id": "TCK-20260702-SIMQ-UPLIFT-DUNGEON-ECON-COG", "phase": "implement", "tier": "standard", "status": "complete", "summary": "Documentation-only: DA annotation for dungeon_crawl ECONOMY=C/COGNITION=C archetype-intentional; 4 parity ledger entries annotated; 0 regressions"}
+{"run_id":"FOLDER-tickets-todos-simq-uplift-","start_ts":"2026-07-02T18:12:02+07:00","end_ts":"2026-07-02T16:00:55Z","workflow":"implement-epic","tier":"epic","final_status":"DONE","agent_count":3}
