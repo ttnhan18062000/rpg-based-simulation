@@ -10,13 +10,13 @@ tags: [idea, agent-infrastructure, determinism, gates, enforcement, observabilit
 
 # Idea: Deterministic Gate Substrate for Agent Workflows
 
-> **Maturity: IDEA** — Not scheduled. Raised directly from [`docs/ai/agent_infrastructure_audit.md`](../ai/agent_infrastructure_audit.md) (2026-07-03 score: 8.0/10, lowest category "Determinism of judged gates" at 6.5). Consider before scaling agent-workflow autonomy further (e.g. CI-triggered `implement-ticket` runs).
+> **Maturity: IDEA** — Not scheduled. Raised directly from [`docs/ai/agent_infrastructure_audit.md`](../../ai/agent_infrastructure_audit.md) (2026-07-03 score: 8.0/10, lowest category "Determinism of judged gates" at 6.5). Consider before scaling agent-workflow autonomy further (e.g. CI-triggered `implement-ticket` runs).
 
 ---
 
 ## Problem
 
-The `implement-ticket` pipeline is structurally sound — 9 phases, hard gates, resumable failure states (see [`docs/ai/workflows.md`](../ai/workflows.md)) — but the gates that actually decide whether work is safe to land are pure LLM judgment with almost no deterministic backstop:
+The `implement-ticket` pipeline is structurally sound — 9 phases, hard gates, resumable failure states (see [`docs/ai/workflows.md`](../../ai/workflows.md)) — but the gates that actually decide whether work is safe to land are pure LLM judgment with almost no deterministic backstop:
 
 1. **`architecture-reviewer`** renders `APPROVED` / `NEEDS_CHANGES` / `BLOCKED` by reading a plan and reasoning about durable-state rules, API boundaries, and Mechanics Bible compliance — no static check confirms the verdict.
 2. **`done-checker`** verifies all 11 Definition-of-Done conditions by reading files and judging — several of these (working_log.csv entry exists, staging artifacts exist, `data/runs/` cleaned) are trivially machine-checkable but aren't machine-checked.
