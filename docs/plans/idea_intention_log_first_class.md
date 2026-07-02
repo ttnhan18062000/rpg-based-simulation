@@ -12,6 +12,8 @@ tags: [idea, cognition, observability, decision-trace, ring-buffer, strategic-ai
 
 > **Maturity: IDEA** — Not scheduled. Consider before or alongside E43 Social Memory.
 
+> **Status note (2026-07-02):** the write side ("Core concept" below) shipped as E22 — `decision_trace.jsonl`, tick-index sidecar, REST endpoints (`docs/observability/decision_trace_contract.md`). Remaining live scope is the read side: ring buffer, Chronicle surprise signal, social-memory annotation, plus audit item P1-H. Before scheduling any of it, read the SimQ interaction and process-isolation constraints in `docs/plans/observability_process_isolation.md` §4 — the ring buffer is a behavior-feedback feature (durable cognitive state, anchor recalibration required). The shipped writer's hot-path IO violation is remediated by `TCK-20260702-OBSISO-TRACE-ASYNC`.
+
 ---
 
 ## Problem
