@@ -1,9 +1,9 @@
 {
-  "run_id": "run_1782966415_5169",
+  "run_id": "run_1783000403_5169",
   "tick_count": 401,
-  "overall_score": 0.14743361376777836,
+  "overall_score": 0.2891608867129063,
   "overall_grade": "B",
-  "generated_at": "2026-07-02T04:27:49.467895+00:00",
+  "generated_at": "2026-07-02T13:54:17.496965+00:00",
   "pillars": {
     "COGNITION": {
       "raw_score": 0.0,
@@ -27,8 +27,8 @@
     },
     "COMBAT": {
       "raw_score": 127.0,
-      "normalized_score": 0.3167082294264339,
-      "grade": "B",
+      "normalized_score": 0.7383720930232558,
+      "grade": "A",
       "event_count": 65,
       "negative_count": 1,
       "loop_detected": true,
@@ -38,7 +38,7 @@
       "worst_events": [
         {
           "tick": 172,
-          "event_id": "8a9bc8712a114d3aa1acf8dfffc85282",
+          "event_id": "edae4e3f1eed4d5aae05382660e95037",
           "pillar": "COMBAT",
           "delta": -1.0,
           "reason": "entity killed in combat",
@@ -73,8 +73,8 @@
     },
     "PROGRESSION": {
       "raw_score": 88.0,
-      "normalized_score": 0.2194513715710723,
-      "grade": "B",
+      "normalized_score": 0.5146198830409356,
+      "grade": "A",
       "event_count": 33,
       "negative_count": 1,
       "loop_detected": true,
@@ -84,7 +84,7 @@
       "worst_events": [
         {
           "tick": 51,
-          "event_id": "8462889863dd4e01a77d472d6e20ba36",
+          "event_id": "c95d07cbc96f45df9fd571059b076b93",
           "pillar": "PROGRESSION",
           "delta": -8.0,
           "reason": "XP gain rate dropped to zero after tick gate",
@@ -119,7 +119,7 @@
     },
     "WORLD": {
       "raw_score": 176.0,
-      "normalized_score": 0.4389027431421446,
+      "normalized_score": 0.44,
       "grade": "B",
       "event_count": 154,
       "negative_count": 0,
@@ -131,7 +131,7 @@
     },
     "NARRATIVE": {
       "raw_score": 20.0,
-      "normalized_score": 0.04987531172069826,
+      "normalized_score": 0.2,
       "grade": "B",
       "event_count": 4,
       "negative_count": 0,

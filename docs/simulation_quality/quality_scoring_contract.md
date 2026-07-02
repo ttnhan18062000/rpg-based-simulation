@@ -254,19 +254,47 @@ Per pillar, maintained by `QualityHub`:
 raw_score:           float        — running sum of all deltas
 event_count:         int          — total scored events
 negative_count:      int          — events with delta < 0
+last_event_tick:     int          — tick of the most recent scored event (0 if no events)
 worst_events:        list[ScoreRecord]  — top MAX_WORST_EVENTS by abs(delta), negative only
 window_buffer:       deque[ScoreRecord] — sliding window (maxlen=W=200)
 loop_flags:          set[str]     — active loop detection tags
 ```
 
+`last_event_tick` is updated on every non-duplicate `add()` call as
+`self.last_event_tick = max(self.last_event_tick, record.tick)`. It is exposed via
+`snapshot()` and used only at report-build time. It never affects loop detection or
+simulation behavior.
+
 ### 4.4 Normalized Score
 
-```
-normalized_score = raw_score / max(1, current_tick)
+```python
+floor_tick      = max(1, current_tick // 4)
+effective_denom = max(floor_tick, last_event_tick)  if last_event_tick > 0
+                  else current_tick
+normalized_score = raw_score / effective_denom
+
+# last_event_tick: tick of the most recent scored event for this pillar
+#                  (tracked by PillarAccumulator; 0 if no events ever fired)
+# floor_tick:      25% of run duration — prevents S-grade inflation from
+#                  initialization-burst pillars (e.g., AGENCY events all at tick 1)
+# Falls back to current_tick only for pillars with zero scored events (raw_score always 0.0)
 ```
 
-Makes short and long runs comparable. This is the value used for grade assignment
-and cross-run comparison. Raw score is retained for full transparency.
+This is the value used for grade assignment and cross-run comparison.
+Raw score is retained for full transparency.
+
+**Rationale (TCK-20260702-SIMQ-UPLIFT-GRADE-DECAY):** The original formula divided by
+`current_tick`, which caused grade decay for pillars whose events completed early in the
+run (H2 artifact: same 127.0 COMBAT raw_score earned A at 200t but B at 401t). The fix
+caps the denominator at `last_event_tick` so idle post-event ticks do not dilute the
+grade. The floor (`current_tick // 4`) prevents the inverse pathology: pillars with
+initialization bursts at tick 1 would otherwise receive S grades (40/1 = 40.0 >> S
+threshold of 2.0). Example: AGENCY fires all events at tick 1 in simq_routing_test;
+floor=100 at 401t produces norm=40/100=0.40 → B, which is the correct pre-fix grade
+and appropriate for initialization-burst behavior. The floor value of 4 (25% of run
+duration) is architectural — it represents the minimum activity window required to
+sustain a meaningful grade. Any change to this divisor must update both this section
+and `src/simulation_quality/quality_report.py` simultaneously.
 
 ### 4.5 Health Grades
 

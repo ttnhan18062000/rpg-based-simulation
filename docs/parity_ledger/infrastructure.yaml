@@ -3205,3 +3205,28 @@
   test_path: tests/unit/domains/cooperation/test_cooperation_phase.py
   divergence_note: null
   support_boundary: null
+
+- id: INFRA-255
+  text: >
+    normalized_score uses max(floor_tick, last_event_tick) as divisor for all pillars,
+    where floor_tick = max(1, current_tick // 4) and last_event_tick is the tick of the
+    most recent scored event tracked by PillarAccumulator. Falls back to current_tick
+    when last_event_tick == 0 (no events scored). Idle post-event ticks do not dilute
+    grades; initialization-burst pillars are damped by the floor.
+    (TCK-20260702-SIMQ-UPLIFT-GRADE-DECAY)
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/simulation_quality/quality_report.py (QualityReportBuilder.build):
+    floor_tick = max(1, effective_tick // 4);
+    effective_denominator = max(floor_tick, last_event_tick) if last_event_tick > 0 else effective_tick.
+    src/simulation_quality/pillar_accumulator.py: last_event_tick field tracked in add().
+  proof_type: parity
+  test_path: tests/simulation_quality/test_report.py::test_combat_grade_stable_across_tick_counts_for_same_activity
+  divergence_note: >
+    Introduced by TCK-20260702-SIMQ-UPLIFT-GRADE-DECAY. Prior formula divided by current_tick;
+    same raw_score received B at 401t vs A at 200t (H2 dilution artifact). Floor prevents
+    S-inflation for initialization-burst pillars (AGENCY fires all events at tick 1).
+    Rationale class: Bug Fix / Bounded.
+  support_boundary: null

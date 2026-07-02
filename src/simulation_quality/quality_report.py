@@ -98,7 +98,10 @@ class QualityReportBuilder:
 
         for pillar_id, acc in accumulators.items():
             snap = acc.snapshot()
-            normalized_score = snap["raw_score"] / effective_tick
+            last_event_tick = snap.get("last_event_tick", 0)
+            floor_tick = max(1, effective_tick // 4)
+            effective_denominator = max(floor_tick, last_event_tick) if last_event_tick > 0 else effective_tick
+            normalized_score = snap["raw_score"] / effective_denominator
             grade = _assign_grade(normalized_score, weights.grade_thresholds)
             pillar_weight = weights.pillar_weight(pillar_id.value)
 

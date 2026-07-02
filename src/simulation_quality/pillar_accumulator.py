@@ -38,12 +38,14 @@ class PillarAccumulator:
         self.loop_flags: set[str] = set()
         self._seen_event_ids: set[str] = set()
         self._lock = threading.Lock()
+        self.last_event_tick: int = 0
 
     def add(self, record: ScoreRecord) -> None:
         with self._lock:
             if record.event_id in self._seen_event_ids:
                 return
             self._seen_event_ids.add(record.event_id)
+            self.last_event_tick = max(self.last_event_tick, record.tick)
             self.raw_score += record.delta
             self.event_count += 1
             if record.delta < 0:
@@ -74,6 +76,7 @@ class PillarAccumulator:
                 "raw_score": self.raw_score,
                 "event_count": self.event_count,
                 "negative_count": self.negative_count,
+                "last_event_tick": self.last_event_tick,
                 "worst_events": tuple(self.worst_events),
                 "window_buffer": tuple(self.window_buffer),
                 "loop_flags": frozenset(self.loop_flags),

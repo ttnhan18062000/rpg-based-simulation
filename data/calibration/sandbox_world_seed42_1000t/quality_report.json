@@ -1,9 +1,9 @@
 {
-  "run_id": "run_1782955799_5169",
+  "run_id": "run_1783001090_5169",
   "tick_count": 1000,
-  "overall_score": 0.0777,
+  "overall_score": 0.07627108649364542,
   "overall_grade": "B",
-  "generated_at": "2026-07-02T01:31:50.839242+00:00",
+  "generated_at": "2026-07-02T14:06:38.035572+00:00",
   "pillars": {
     "COGNITION": {
       "raw_score": 42.0,
@@ -28,11 +28,11 @@
       "worst_events": []
     },
     "COMBAT": {
-      "raw_score": 52.0,
-      "normalized_score": 0.052,
+      "raw_score": 54.0,
+      "normalized_score": 0.054,
       "grade": "B",
-      "event_count": 45,
-      "negative_count": 8,
+      "event_count": 40,
+      "negative_count": 4,
       "loop_detected": true,
       "loop_flags": [
         "combat_active",
@@ -41,7 +41,7 @@
       "worst_events": [
         {
           "tick": 665,
-          "event_id": "abfe1f267e6341b782085e38277bfcb8",
+          "event_id": "3e7ed9e3115945b1a61e81dd6f2d7bb9",
           "pillar": "COMBAT",
           "delta": -15.0,
           "reason": "zero combat events in hostile world by tick threshold",
@@ -53,47 +53,8 @@
           ]
         },
         {
-          "tick": 958,
-          "event_id": "3ce3e1a05ddf4bd382ad489ffed67edd",
-          "pillar": "COMBAT",
-          "delta": -1.0,
-          "reason": "entity killed in combat",
-          "event_type": "entity_killed",
-          "entity_id": 14,
-          "region_id": null,
-          "tags": [
-            "attrition"
-          ]
-        },
-        {
-          "tick": 964,
-          "event_id": "86d208e67bab48fe8743b0124cdd4e6d",
-          "pillar": "COMBAT",
-          "delta": -1.0,
-          "reason": "entity killed in combat",
-          "event_type": "entity_killed",
-          "entity_id": 18,
-          "region_id": null,
-          "tags": [
-            "attrition"
-          ]
-        },
-        {
-          "tick": 965,
-          "event_id": "39afc07b20e4463f86aab8934b0331c4",
-          "pillar": "COMBAT",
-          "delta": -1.0,
-          "reason": "entity killed in combat",
-          "event_type": "entity_killed",
-          "entity_id": 16,
-          "region_id": null,
-          "tags": [
-            "attrition"
-          ]
-        },
-        {
           "tick": 1000,
-          "event_id": "8504c6da9fc14ba58e9505ddaa8f654d",
+          "event_id": "8b1f5c0b864048288702561500f9c7a4",
           "pillar": "COMBAT",
           "delta": -1.0,
           "reason": "entity killed in combat",
@@ -106,7 +67,7 @@
         },
         {
           "tick": 1000,
-          "event_id": "148c37be2e4949fdb8089ffb05cbbd6f",
+          "event_id": "61dedec1202c484eb1de237d7af3b33f",
           "pillar": "COMBAT",
           "delta": -1.0,
           "reason": "entity killed in combat",
@@ -119,25 +80,12 @@
         },
         {
           "tick": 1000,
-          "event_id": "b79de9bb20f14d6da1cbdb1421726cd7",
+          "event_id": "0924bd46d67e40a383a8ba5081dd3f05",
           "pillar": "COMBAT",
           "delta": -1.0,
           "reason": "entity killed in combat",
           "event_type": "entity_killed",
           "entity_id": 8,
-          "region_id": null,
-          "tags": [
-            "attrition"
-          ]
-        },
-        {
-          "tick": 1000,
-          "event_id": "79726bf9c0b34a2e92eb3ab0eb92c6a7",
-          "pillar": "COMBAT",
-          "delta": -1.0,
-          "reason": "entity killed in combat",
-          "event_type": "entity_killed",
-          "entity_id": 10,
           "region_id": null,
           "tags": [
             "attrition"
@@ -157,7 +105,7 @@
     },
     "ECONOMY": {
       "raw_score": 48.0,
-      "normalized_score": 0.048,
+      "normalized_score": 0.05327413984461709,
       "grade": "B",
       "event_count": 24,
       "negative_count": 0,
@@ -169,7 +117,7 @@
     },
     "PROGRESSION": {
       "raw_score": 43.0,
-      "normalized_score": 0.043,
+      "normalized_score": 0.0433031218529708,
       "grade": "B",
       "event_count": 18,
       "negative_count": 1,
@@ -181,7 +129,7 @@
       "worst_events": [
         {
           "tick": 51,
-          "event_id": "bed37806c3d1438ab062b6dee7a6254a",
+          "event_id": "ef88b05bdb1047a5ad7770bca5f26296",
           "pillar": "PROGRESSION",
           "delta": -8.0,
           "reason": "XP gain rate dropped to zero after tick gate",
@@ -215,10 +163,10 @@
       "worst_events": []
     },
     "WORLD": {
-      "raw_score": 57.0,
-      "normalized_score": 0.057,
+      "raw_score": 59.0,
+      "normalized_score": 0.059,
       "grade": "B",
-      "event_count": 18,
+      "event_count": 19,
       "negative_count": 0,
       "loop_detected": true,
       "loop_flags": [
@@ -227,10 +175,10 @@
       "worst_events": []
     },
     "NARRATIVE": {
-      "raw_score": 535.0,
-      "normalized_score": 0.535,
+      "raw_score": 505.0,
+      "normalized_score": 0.5111336032388664,
       "grade": "A",
-      "event_count": 107,
+      "event_count": 101,
       "negative_count": 0,
       "loop_detected": true,
       "loop_flags": [

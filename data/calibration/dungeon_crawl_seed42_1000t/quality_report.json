@@ -1,9 +1,9 @@
 {
-  "run_id": "run_1782961470_5169",
+  "run_id": "run_1783000981_5169",
   "tick_count": 1000,
-  "overall_score": 0.07604395604395604,
+  "overall_score": 0.18895137251412555,
   "overall_grade": "B",
-  "generated_at": "2026-07-02T03:06:18.163805+00:00",
+  "generated_at": "2026-07-02T14:04:49.571717+00:00",
   "pillars": {
     "COGNITION": {
       "raw_score": 0.0,
@@ -27,8 +27,8 @@
     },
     "COMBAT": {
       "raw_score": 127.0,
-      "normalized_score": 0.127,
-      "grade": "B",
+      "normalized_score": 0.508,
+      "grade": "A",
       "event_count": 65,
       "negative_count": 1,
       "loop_detected": true,
@@ -38,7 +38,7 @@
       "worst_events": [
         {
           "tick": 172,
-          "event_id": "6aa098acd9d8416b9006e30c7e03316a",
+          "event_id": "79bd781e6e08427f8fe28229aaeeefbb",
           "pillar": "COMBAT",
           "delta": -1.0,
           "reason": "entity killed in combat",
@@ -73,7 +73,7 @@
     },
     "PROGRESSION": {
       "raw_score": 88.0,
-      "normalized_score": 0.088,
+      "normalized_score": 0.352,
       "grade": "B",
       "event_count": 33,
       "negative_count": 1,
@@ -84,7 +84,7 @@
       "worst_events": [
         {
           "tick": 51,
-          "event_id": "e81623d621cd484c983c0621671b5ae0",
+          "event_id": "4fdf199cb41d40e49f29cac21ef54d8c",
           "pillar": "PROGRESSION",
           "delta": -8.0,
           "reason": "XP gain rate dropped to zero after tick gate",
@@ -131,7 +131,7 @@
     },
     "NARRATIVE": {
       "raw_score": 120.0,
-      "normalized_score": 0.12,
+      "normalized_score": 0.1214574898785425,
       "grade": "B",
       "event_count": 24,
       "negative_count": 0,

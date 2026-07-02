@@ -3027,3 +3027,23 @@
   test_path: tests/unit/combat/test_combat_ecology.py::test_fear_avoidance_posture_at_loss_threshold
   divergence_note: null
   support_boundary: null
+
+- id: COMB-293
+  text: >
+    COMBAT pillar grade stability across tick counts — see INFRA-255 (infrastructure.yaml)
+    for the cross-pillar normalized_score formula. COMBAT-specific: raw_score stays at 127.0
+    after tick 172 in dungeon_crawl seed42; post-fix grade holds A at any run length where
+    floor_tick < 172 (i.e., current_tick < 688). At 1000t (floor=250 > 172): denominator
+    is 250, norm=0.508 → A (barely above threshold). At 2000t (floor=500 > 172): denominator
+    is 500, norm=0.254 → B (floor-proportional dilution at very long runs is correct behavior).
+    (TCK-20260702-SIMQ-UPLIFT-GRADE-DECAY)
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: "see INFRA-255 in infrastructure.yaml"
+  proof_type: parity
+  test_path: tests/simulation_quality/test_report.py::test_combat_grade_stable_across_tick_counts_for_same_activity
+  divergence_note: >
+    Secondary ref — primary entry is INFRA-255 in infrastructure.yaml.
+    Prior formula divided by current_tick; same COMBAT activity received B at 401t vs A at 200t.
+  support_boundary: null

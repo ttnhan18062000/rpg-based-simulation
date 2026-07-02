@@ -1,9 +1,9 @@
 {
-  "run_id": "run_1782955744_2781",
+  "run_id": "run_1783000203_2781",
   "tick_count": 200,
-  "overall_score": 0.05550000000000001,
+  "overall_score": 0.044651288941972726,
   "overall_grade": "B",
-  "generated_at": "2026-07-02T01:29:27.277101+00:00",
+  "generated_at": "2026-07-02T13:50:26.012956+00:00",
   "pillars": {
     "COGNITION": {
       "raw_score": 0.0,
@@ -57,7 +57,7 @@
     },
     "PROGRESSION": {
       "raw_score": -8.0,
-      "normalized_score": -0.04,
+      "normalized_score": -0.1568627450980392,
       "grade": "C",
       "event_count": 1,
       "negative_count": 1,
@@ -68,7 +68,7 @@
       "worst_events": [
         {
           "tick": 51,
-          "event_id": "98408b7105654b0a9e90cd5a9a1fe4eb",
+          "event_id": "dd6e532b0ad045af878294e6b5bf81bd",
           "pillar": "PROGRESSION",
           "delta": -8.0,
           "reason": "XP gain rate dropped to zero after tick gate",
@@ -115,7 +115,7 @@
     },
     "NARRATIVE": {
       "raw_score": 110.0,
-      "normalized_score": 0.55,
+      "normalized_score": 0.5583756345177665,
       "grade": "A",
       "event_count": 22,
       "negative_count": 0,

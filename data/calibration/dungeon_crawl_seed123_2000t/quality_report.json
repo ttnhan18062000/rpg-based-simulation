@@ -1,9 +1,9 @@
 {
-  "run_id": "run_1782967556_2994",
+  "run_id": "run_1783001988_2994",
   "tick_count": 2000,
-  "overall_score": 0.060054945054945054,
+  "overall_score": 0.06221898170401246,
   "overall_grade": "B",
-  "generated_at": "2026-07-02T04:49:34.129931+00:00",
+  "generated_at": "2026-07-02T14:23:25.164394+00:00",
   "pillars": {
     "COGNITION": {
       "raw_score": 0.0,
@@ -27,7 +27,7 @@
     },
     "COMBAT": {
       "raw_score": 137.0,
-      "normalized_score": 0.0685,
+      "normalized_score": 0.0701844262295082,
       "grade": "B",
       "event_count": 73,
       "negative_count": 3,
@@ -38,7 +38,7 @@
       "worst_events": [
         {
           "tick": 19,
-          "event_id": "4dfa267d6fbc48c98d97574ed2ac3f8b",
+          "event_id": "2f9eaaf598684d7b80a7488204c2092b",
           "pillar": "COMBAT",
           "delta": -1.0,
           "reason": "entity killed in combat",
@@ -51,7 +51,7 @@
         },
         {
           "tick": 1551,
-          "event_id": "5096415b1d9e408380f5aef318b6f55c",
+          "event_id": "e0436fa6dab24057b6f19beac366a909",
           "pillar": "COMBAT",
           "delta": -1.0,
           "reason": "entity killed in combat",
@@ -64,7 +64,7 @@
         },
         {
           "tick": 1551,
-          "event_id": "ec81a75c1e5e4a85a302de89026c4b1b",
+          "event_id": "55d5426e3c01419896b245e711647a6d",
           "pillar": "COMBAT",
           "delta": -1.0,
           "reason": "entity killed in combat",
@@ -99,7 +99,7 @@
     },
     "PROGRESSION": {
       "raw_score": 94.0,
-      "normalized_score": 0.047,
+      "normalized_score": 0.06135770234986945,
       "grade": "B",
       "event_count": 35,
       "negative_count": 1,
@@ -110,7 +110,7 @@
       "worst_events": [
         {
           "tick": 51,
-          "event_id": "8f49560b77114cb1b51a88045ff68162",
+          "event_id": "1e7cf66ffddd4128988f0e9363cc8de2",
           "pillar": "PROGRESSION",
           "delta": -8.0,
           "reason": "XP gain rate dropped to zero after tick gate",
@@ -157,7 +157,7 @@
     },
     "NARRATIVE": {
       "raw_score": 410.0,
-      "normalized_score": 0.205,
+      "normalized_score": 0.20696617869762746,
       "grade": "B",
       "event_count": 82,
       "negative_count": 0,

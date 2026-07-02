@@ -135,3 +135,61 @@ def test_accumulator_respects_injected_loop_threshold(scoring_weights):
     for i in range(40):
         acc.add(_make_record(f"y{i}", 1.0, tags=("other_tag",)))
     assert "hot_tag" in acc.loop_flags
+
+
+# ---------------------------------------------------------------------------
+# T-ACC-01 through T-ACC-05: last_event_tick tracking
+# ---------------------------------------------------------------------------
+
+def _make_record_at_tick(event_id: str, tick: int, delta: float) -> ScoreRecord:
+    return ScoreRecord(
+        tick=tick,
+        event_id=event_id,
+        pillar=PillarId.COMBAT,
+        delta=delta,
+        reason="test",
+        event_type="test_event",
+        entity_id=None,
+        region_id=None,
+        tags=(),
+    )
+
+
+def test_last_event_tick_zero_on_construction(scoring_weights):
+    """T-ACC-01: last_event_tick is 0 on empty accumulator."""
+    acc = PillarAccumulator(PillarId.COMBAT, weights=scoring_weights)
+    assert acc.last_event_tick == 0
+
+
+def test_last_event_tick_set_on_first_add(scoring_weights):
+    """T-ACC-02: last_event_tick equals the tick of the first added event."""
+    acc = PillarAccumulator(PillarId.COMBAT, weights=scoring_weights)
+    acc.add(_make_record_at_tick("e1", tick=57, delta=2.0))
+    assert acc.last_event_tick == 57
+
+
+def test_last_event_tick_is_max_across_multiple_events(scoring_weights):
+    """T-ACC-03: last_event_tick equals the maximum tick across all added events."""
+    acc = PillarAccumulator(PillarId.COMBAT, weights=scoring_weights)
+    acc.add(_make_record_at_tick("e1", tick=10, delta=1.0))
+    acc.add(_make_record_at_tick("e2", tick=172, delta=2.0))
+    acc.add(_make_record_at_tick("e3", tick=50, delta=1.0))
+    assert acc.last_event_tick == 172
+
+
+def test_last_event_tick_not_updated_by_duplicate_event(scoring_weights):
+    """T-ACC-04: Duplicate event_id must not advance last_event_tick."""
+    acc = PillarAccumulator(PillarId.COMBAT, weights=scoring_weights)
+    acc.add(_make_record_at_tick("e1", tick=10, delta=1.0))
+    # Same event_id but later tick — must be ignored
+    acc.add(_make_record_at_tick("e1", tick=999, delta=1.0))
+    assert acc.last_event_tick == 10
+
+
+def test_last_event_tick_present_in_snapshot(scoring_weights):
+    """T-ACC-05: last_event_tick appears in snapshot() dict."""
+    acc = PillarAccumulator(PillarId.COMBAT, weights=scoring_weights)
+    acc.add(_make_record_at_tick("e1", tick=42, delta=1.0))
+    snap = acc.snapshot()
+    assert "last_event_tick" in snap
+    assert snap["last_event_tick"] == 42

@@ -1311,3 +1311,24 @@
     evolves existing camps (maturity, raids) — there is no dynamic construction
     mechanic to emit from. Not pending/future work; confirmed by TCK-20260701-SIMQ-EMIT-CAMP.
   support_boundary: null
+
+- id: WORLD-110
+  text: >
+    WORLD pillar grade stability under normalized_score formula change — see INFRA-255
+    (infrastructure.yaml) for the cross-pillar formula. WORLD-specific: dungeon_crawl seed42
+    500t has last_event_tick=400 (dense ecology cycling throughout run); floor=401//4=100;
+    400 > 100 so last_event_tick wins; norm=176/400=0.440 → B. Grade is correct — WORLD was
+    genuinely active up to tick 400 and B at 0.440 reflects its event density fairly.
+    WORLD does not receive S-inflation because its events fire continuously throughout the run.
+    (TCK-20260702-SIMQ-UPLIFT-GRADE-DECAY)
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: "see INFRA-255 in infrastructure.yaml"
+  proof_type: parity
+  test_path: tests/simulation_quality/test_report.py::test_active_throughout_run_behavior_unchanged
+  divergence_note: >
+    Secondary ref — primary entry is INFRA-255 in infrastructure.yaml.
+    WORLD holds B post-fix as expected; the formula change does not affect pillars
+    that are active throughout the run (last_event_tick ≈ current_tick >> floor).
+  support_boundary: null

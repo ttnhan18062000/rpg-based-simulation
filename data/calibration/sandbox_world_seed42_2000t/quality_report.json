@@ -1,13 +1,13 @@
 {
-  "run_id": "run_1782968001_5169",
+  "run_id": "run_1783002430_5169",
   "tick_count": 2000,
-  "overall_score": 0.0538,
+  "overall_score": 0.07386692849882277,
   "overall_grade": "B",
-  "generated_at": "2026-07-02T04:56:56.803748+00:00",
+  "generated_at": "2026-07-02T14:30:46.939861+00:00",
   "pillars": {
     "COGNITION": {
       "raw_score": 48.0,
-      "normalized_score": 0.024,
+      "normalized_score": 0.04795204795204795,
       "grade": "B",
       "event_count": 8,
       "negative_count": 0,
@@ -29,7 +29,7 @@
     },
     "COMBAT": {
       "raw_score": 56.0,
-      "normalized_score": 0.028,
+      "normalized_score": 0.028688524590163935,
       "grade": "B",
       "event_count": 53,
       "negative_count": 12,
@@ -41,7 +41,7 @@
       "worst_events": [
         {
           "tick": 665,
-          "event_id": "a9a2ee45adc149bb9f3c649948ea1368",
+          "event_id": "97b6f3bb4c654dccb15863368f788b87",
           "pillar": "COMBAT",
           "delta": -15.0,
           "reason": "zero combat events in hostile world by tick threshold",
@@ -53,21 +53,8 @@
           ]
         },
         {
-          "tick": 957,
-          "event_id": "931d908ce1e546dcb643a97aee6e89c2",
-          "pillar": "COMBAT",
-          "delta": -1.0,
-          "reason": "entity killed in combat",
-          "event_type": "entity_killed",
-          "entity_id": 5,
-          "region_id": null,
-          "tags": [
-            "attrition"
-          ]
-        },
-        {
           "tick": 958,
-          "event_id": "244c2069f07b48269522fbea60165e33",
+          "event_id": "2b78fdce59ac4972a2536f764eeee000",
           "pillar": "COMBAT",
           "delta": -1.0,
           "reason": "entity killed in combat",
@@ -80,7 +67,7 @@
         },
         {
           "tick": 964,
-          "event_id": "36c69cfd59064cac8eca6cbcbc1e3fea",
+          "event_id": "94d26d6be18c4878b36f35898e23610f",
           "pillar": "COMBAT",
           "delta": -1.0,
           "reason": "entity killed in combat",
@@ -93,7 +80,7 @@
         },
         {
           "tick": 965,
-          "event_id": "cd37bbeef3a84484bba0de61b0695e72",
+          "event_id": "76ea4713e82348278c999a7787a64c4d",
           "pillar": "COMBAT",
           "delta": -1.0,
           "reason": "entity killed in combat",
@@ -106,7 +93,7 @@
         },
         {
           "tick": 1000,
-          "event_id": "bbcfdeb6c71049f1bf8cce371bcb005e",
+          "event_id": "0d0f23c071244227b952086cd9530a24",
           "pillar": "COMBAT",
           "delta": -1.0,
           "reason": "entity killed in combat",
@@ -119,7 +106,7 @@
         },
         {
           "tick": 1000,
-          "event_id": "cb1bbc0f719b4007bc4d2d436c1d85ab",
+          "event_id": "3d4aab855a5449a09fb3b1c036321867",
           "pillar": "COMBAT",
           "delta": -1.0,
           "reason": "entity killed in combat",
@@ -132,7 +119,7 @@
         },
         {
           "tick": 1000,
-          "event_id": "6a23739343534c018f7c85f5a38cf818",
+          "event_id": "bc222745462942f6afa5027ee28998b9",
           "pillar": "COMBAT",
           "delta": -1.0,
           "reason": "entity killed in combat",
@@ -145,7 +132,7 @@
         },
         {
           "tick": 1000,
-          "event_id": "9efac26b1347462c9cf969a2fbbc55dd",
+          "event_id": "3bbda5ff31b84aeea98ea751d8b3980b",
           "pillar": "COMBAT",
           "delta": -1.0,
           "reason": "entity killed in combat",
@@ -158,7 +145,7 @@
         },
         {
           "tick": 1001,
-          "event_id": "de0def38779f497891b690e5bb536df7",
+          "event_id": "b19b87f6a7c646aab9f0fa59e8fe1839",
           "pillar": "COMBAT",
           "delta": -1.0,
           "reason": "entity killed in combat",
@@ -171,7 +158,7 @@
         },
         {
           "tick": 1003,
-          "event_id": "c0f19ee40a914882a6a03500d48da926",
+          "event_id": "0ae6056f84594f39937d9808f6559eb3",
           "pillar": "COMBAT",
           "delta": -1.0,
           "reason": "entity killed in combat",
@@ -183,13 +170,26 @@
           ]
         },
         {
-          "tick": 1542,
-          "event_id": "69bdcbc3bbce4b9a930fd8649acb3631",
+          "tick": 1546,
+          "event_id": "ebc86702320443d5a5786f6e42053236",
           "pillar": "COMBAT",
           "delta": -1.0,
           "reason": "entity killed in combat",
           "event_type": "entity_killed",
-          "entity_id": 19,
+          "entity_id": 20,
+          "region_id": null,
+          "tags": [
+            "attrition"
+          ]
+        },
+        {
+          "tick": 1550,
+          "event_id": "b6baeefbb52c48c3aba390ade62d5640",
+          "pillar": "COMBAT",
+          "delta": -1.0,
+          "reason": "entity killed in combat",
+          "event_type": "entity_killed",
+          "entity_id": 21,
           "region_id": null,
           "tags": [
             "attrition"
@@ -209,7 +209,7 @@
     },
     "ECONOMY": {
       "raw_score": 48.0,
-      "normalized_score": 0.024,
+      "normalized_score": 0.05327413984461709,
       "grade": "B",
       "event_count": 24,
       "negative_count": 0,
@@ -221,7 +221,7 @@
     },
     "PROGRESSION": {
       "raw_score": 49.0,
-      "normalized_score": 0.0245,
+      "normalized_score": 0.03200522534291313,
       "grade": "B",
       "event_count": 20,
       "negative_count": 1,
@@ -233,7 +233,7 @@
       "worst_events": [
         {
           "tick": 51,
-          "event_id": "f52f63ede6754e99adf753857bcc67ce",
+          "event_id": "e7459753836a4d048f64cdb35ce0f34e",
           "pillar": "PROGRESSION",
           "delta": -8.0,
           "reason": "XP gain rate dropped to zero after tick gate",
@@ -279,10 +279,10 @@
       "worst_events": []
     },
     "NARRATIVE": {
-      "raw_score": 745.0,
-      "normalized_score": 0.3725,
-      "grade": "B",
-      "event_count": 149,
+      "raw_score": 980.0,
+      "normalized_score": 0.5117493472584856,
+      "grade": "A",
+      "event_count": 196,
       "negative_count": 0,
       "loop_detected": true,
       "loop_flags": [

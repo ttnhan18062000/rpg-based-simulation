@@ -1,13 +1,13 @@
 {
-  "run_id": "run_1782966277_2994",
+  "run_id": "simq_routing_test_seed123_500t",
   "tick_count": 401,
-  "overall_score": 0.14912718204488778,
+  "overall_score": 0.35853350515463916,
   "overall_grade": "B",
-  "generated_at": "2026-07-02T04:25:32.067969+00:00",
+  "generated_at": "2026-07-02T14:02:54.573618+00:00",
   "pillars": {
     "COGNITION": {
       "raw_score": 18.0,
-      "normalized_score": 0.04488778054862843,
+      "normalized_score": 0.18,
       "grade": "B",
       "event_count": 3,
       "negative_count": 0,
@@ -19,8 +19,8 @@
     },
     "AGENCY": {
       "raw_score": 137.0,
-      "normalized_score": 0.341645885286783,
-      "grade": "B",
+      "normalized_score": 1.37,
+      "grade": "A",
       "event_count": 74,
       "negative_count": 8,
       "loop_detected": true,
@@ -138,8 +138,8 @@
     },
     "COMBAT": {
       "raw_score": 56.0,
-      "normalized_score": 0.1396508728179551,
-      "grade": "B",
+      "normalized_score": 0.56,
+      "grade": "A",
       "event_count": 28,
       "negative_count": 0,
       "loop_detected": true,
@@ -170,7 +170,7 @@
     },
     "PROGRESSION": {
       "raw_score": 34.0,
-      "normalized_score": 0.08478802992518704,
+      "normalized_score": 0.34,
       "grade": "B",
       "event_count": 15,
       "negative_count": 1,
@@ -216,7 +216,7 @@
     },
     "WORLD": {
       "raw_score": 83.0,
-      "normalized_score": 0.20698254364089774,
+      "normalized_score": 0.2075,
       "grade": "B",
       "event_count": 69,
       "negative_count": 0,
@@ -228,7 +228,7 @@
     },
     "NARRATIVE": {
       "raw_score": 270.0,
-      "normalized_score": 0.6733167082294265,
+      "normalized_score": 0.9278350515463918,
       "grade": "A",
       "event_count": 54,
       "negative_count": 0,
