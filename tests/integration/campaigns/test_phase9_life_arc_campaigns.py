@@ -1,6 +1,6 @@
 from src.domains.campaigns.schema import CampaignEvent
 from src.domains.campaigns.spec import CampaignSpecLoader
-from src.domains.campaigns.runner import CampaignRunner
+from src.domains.campaigns.runner import SimulationAnalysisRunner
 
 
 def test_scenario_life_arc_campaigns():
@@ -54,7 +54,7 @@ forbidden_behavior:
         CampaignEvent("e4_1", 5, 4, "movement", "scout_location", {}),
     ]
 
-    runner = CampaignRunner()
+    runner = SimulationAnalysisRunner()
     result = runner.run(spec, injected_events=injected_events)
 
     # Assert correct entities classified
@@ -96,7 +96,7 @@ forbidden_behavior:
         CampaignEvent("e2", 5, 1, "movement", "scout_location", {}),
     ]
 
-    runner = CampaignRunner()
+    runner = SimulationAnalysisRunner()
     result = runner.run(spec, injected_events=injected_events)
 
     # Assert forbidden behavior detected

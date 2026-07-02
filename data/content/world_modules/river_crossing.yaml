@@ -1,0 +1,33 @@
+module_id: "river_crossing"
+module_type: "terrain"
+display_name: "River Crossing"
+description: "A river ford connecting two land regions. Freshwater herb growth lines the banks. Movement across the ford incurs a water crossing penalty. Neutral terrain — no faction pressure."
+version: "1.0.0"
+provides: ["river_passage", "water_terrain"]
+observability_tags: ["terrain", "river", "water", "traversal"]
+biomes: ["near_forest"]
+ecologies: []
+regions:
+  - id: "river_ford"
+    type: "wilderness"
+    grid_bounds: [130, 30, 160, 70]
+    terrain: "river"
+    hazard_level: 1.0
+factions: []
+populations: []
+resources:
+  herb_patch: 3
+buildings:
+  watchtower: 1
+services: {}
+relationships: []
+quest_definitions:
+  - id: "survey_river_route"
+    type: "explore"
+    required_participant_tags: ["humanoid"]
+    required_location_tags: ["wilderness", "river"]
+    reward_budget: 80
+    procedural_hints:
+      difficulty: 1
+      escalation: false
+    tags: ["river", "terrain", "scouting"]

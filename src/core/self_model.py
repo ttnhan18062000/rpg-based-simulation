@@ -67,6 +67,8 @@ class UnknownFact:
     subject: str            # e.g. "material.moon_resin.source"
     reason: str             # why this is unknown ("provider_partial", "never_queried", etc.)
     recorded_tick: int = 0
+    priority: float = 0.0   # 0.0–1.0; >0.5 triggers information-seeking project generation
+    seeking_project_id: Optional[str] = None  # ID of the project created to resolve this unknown
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -193,6 +195,8 @@ class KnowledgeModelComponent:
                 k: {
                     "reason": v.reason,
                     "recorded_tick": v.recorded_tick,
+                    "priority": round(v.priority, 4),
+                    "seeking_project_id": v.seeking_project_id,
                 }
                 for k, v in sorted(self.unknowns.items())
             },

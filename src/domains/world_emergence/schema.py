@@ -7,13 +7,17 @@ Phase 8 — World Emergence Typed Models and Schemas.
 from __future__ import annotations
 from enum import Enum
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Tuple, Sequence
+from typing import Dict, List, Optional, Tuple, Sequence, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from src.core.models.quests import QuestOpportunity
 
 class WorldEventCategory(str, Enum):
     ENTITY_DEATH = "ENTITY_DEATH"
     NEAR_DEATH = "NEAR_DEATH"
     RESOURCE_HARVESTED = "RESOURCE_HARVESTED"
     RESOURCE_DEPLETED = "RESOURCE_DEPLETED"
+    RESOURCE_RECOVERED = "RESOURCE_RECOVERED"
     QUEST_COMPLETED = "QUEST_COMPLETED"
     QUEST_FAILED = "QUEST_FAILED"
     CAMP_CLEARED = "CAMP_CLEARED"
@@ -25,6 +29,24 @@ class WorldEventCategory(str, Enum):
     RUMOR_CONFIRMED = "RUMOR_CONFIRMED"
     RUMOR_CONTRADICTED = "RUMOR_CONTRADICTED"
     PARTY_ABANDONED = "PARTY_ABANDONED"
+    # E52A: Demographic cycle events
+    POPULATION_BIRTH = "POPULATION_BIRTH"
+    POPULATION_DEATH = "POPULATION_DEATH"
+    # E52B: Migration pressure
+    POPULATION_MIGRATION = "POPULATION_MIGRATION"
+    # E53Bd: Diplomatic transition events
+    FACTION_WAR_DECLARED = "FACTION_WAR_DECLARED"
+    FACTION_ALLIANCE_FORMED = "FACTION_ALLIANCE_FORMED"
+    FACTION_PEACE_TREATY = "FACTION_PEACE_TREATY"
+    # E53Cc: Territory transfer via siege completion
+    TERRITORY_TRANSFERRED = "TERRITORY_TRANSFERRED"
+    # E53Cd: War exhaustion peace resolution
+    WAR_ENDED_EXHAUSTION = "WAR_ENDED_EXHAUSTION"
+    # E53Db: Siege onset and betrayal
+    SIEGE_BEGINS = "SIEGE_BEGINS"
+    BETRAYAL = "BETRAYAL"
+    # E52G: Sovereignty boundary shift (ownership change via influence threshold)
+    SOVEREIGNTY_SHIFT = "SOVEREIGNTY_SHIFT"
 
 @dataclass(frozen=True, slots=True)
 class WorldEvent:
@@ -112,3 +134,4 @@ class WorldEmergenceResult:
     quest_seeds: Tuple[QuestSeed, ...] = field(default_factory=tuple)
     rumor_seeds: Tuple[RumorSeed, ...] = field(default_factory=tuple)
     service_pressures: Tuple[ServicePressure, ...] = field(default_factory=tuple)
+    quest_opportunities: Tuple[QuestOpportunity, ...] = field(default_factory=tuple)

@@ -80,6 +80,6 @@ The following companion docs extend the Mechanics Bible chapters with formula de
 
 ## Compliance Status
 
-All chapters are currently **Certified Level 1 (Authoritative)**. Documentation matches the current source code implementation.
+Chapters 01–04 and 06 are **Certified Level 1 (Authoritative)** as of 2026-06-27. Chapter 05 is **Partially Verified** — structural mechanics confirmed, 2 numeric constants unverified against source (resource respawn interval, trauma delta per death). See `06_worldbuilding_foundation.md §Compliance Status` for the per-chapter table.
 
 Sub-contracts are **Authoritative (P1)** as of 2026-06-13 and are verified against source code. They do not replace chapters — they extend them.

@@ -6,7 +6,7 @@ import threading
 import yaml
 import hashlib
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Any, Type, TypeVar
+from typing import Dict, List, Optional, Any, Type, TypeVar, Union
 from pydantic import BaseModel
 
 
@@ -52,6 +52,7 @@ from src.content.schema import (
     ServiceProfileDefinition,
     TerrainDefinition,
     SpawnTableDefinition,
+    ClassTableDefinition,
     DefaultCompileProfile,
     ItemDefinition,
     RecipeDefinition,
@@ -71,6 +72,7 @@ class ContentFamilySpec:
     repository_index: str
     required: bool = True
     state_policy: str = "active"
+    schema_version_map: Optional[Dict[str, Type[BaseModel]]] = None
 
 
 @dataclass
@@ -130,7 +132,8 @@ CANONICAL_FAMILIES: List[ContentFamilySpec] = [
 
     # 6. Defaults & Legacy
     ContentFamilySpec("defaults", "defaults.yaml", DefaultCompileProfile, "defaults", required=False),
-    ContentFamilySpec("spawn_tables", "spawn_tables.yaml", SpawnTableDefinition, "spawn_tables", required=False),
+    ContentFamilySpec("spawn_tables", "spawn_tables.yaml", SpawnTableDefinition, "spawn_tables", required=False,
+                      schema_version_map={"spawntabledefinition.v1": SpawnTableDefinition, "classtable.v1": ClassTableDefinition}),
 
     # 7. Compatibility
     ContentFamilySpec("compatibility.legacy_enemy_projection", "compatibility/legacy_enemy_projection.yaml", LegacyEnemyProjectionDefinition, "legacy_enemy_projections", required=False, state_policy="compatibility"),
@@ -143,6 +146,15 @@ from src.content.paths import ContentPathConfig
 # (WorldModuleRepository, composition loader, ScenarioLabOrchestrator). Files in these
 # directories must not be reported as "ignored" by strict mode.
 NON_CATALOG_DIRS: frozenset = frozenset({"world_modules", "world_compositions", "simulation_scenarios"})
+
+# Individual YAML files that are DESIGN_ONLY (schema=None in content_usage_matrix.md) and are
+# intentionally not validated by CatalogRepository. These are human/tooling reference files,
+# not runtime catalog records. Paths are relative to data/content/.
+NON_CATALOG_FILES: frozenset = frozenset({
+    "compatibility/migration_map.yaml",
+    "packs/swamp_border_pack.yaml",
+    "packs/frontier_extended_pack.yaml",
+})
 
 
 class CatalogRepository:
@@ -198,6 +210,7 @@ class CatalogRepository:
         
         # Legacy Spawns/Defaults
         self.spawn_tables: Dict[str, SpawnTableDefinition] = {}
+        self.class_tables: Dict[str, ClassTableDefinition] = {}
         self.defaults: Dict[str, DefaultCompileProfile] = {}
         
         # Compatibility Projection
@@ -296,13 +309,37 @@ class CatalogRepository:
                         continue
 
                     try:
-                        validated = spec.schema(**item)
+                        if spec.schema_version_map and "schema_version" in item:
+                            item_schema = spec.schema_version_map.get(item["schema_version"], spec.schema)
+                        else:
+                            item_schema = spec.schema
+                        validated = item_schema(**item)
                         results[def_id] = validated
                     except Exception as e:
                         schema_errors[spec.path] = str(e)
                         continue
 
-                setattr(self, spec.repository_index, results)
+                # When schema_version_map is active, route records to secondary indices by type
+                if spec.schema_version_map:
+                    primary_results = {}
+                    secondary_buckets: Dict[str, Dict[str, BaseModel]] = {}
+                    for schema_cls in spec.schema_version_map.values():
+                        if schema_cls is not spec.schema:
+                            # Derive secondary index name: class name lowercased, strip "Definition", pluralise
+                            idx_name = schema_cls.__name__.lower().replace("definition", "") + "s"
+                            secondary_buckets[idx_name] = {}
+                    for rec_id, obj in results.items():
+                        if isinstance(obj, spec.schema):
+                            primary_results[rec_id] = obj
+                        else:
+                            idx_name = type(obj).__name__.lower().replace("definition", "") + "s"
+                            secondary_buckets.setdefault(idx_name, {})[rec_id] = obj
+                    setattr(self, spec.repository_index, primary_results)
+                    for idx_name, bucket in secondary_buckets.items():
+                        if hasattr(self, idx_name):
+                            setattr(self, idx_name, bucket)
+                else:
+                    setattr(self, spec.repository_index, results)
                 record_counts[spec.family] = len(results)
 
         # Detect ignored files
@@ -316,6 +353,8 @@ class CatalogRepository:
                         rel_path = os.path.relpath(full_path, self.content_dir)
                         rel_path = rel_path.replace(os.sep, "/")
                         if rel_path.split("/")[0] in NON_CATALOG_DIRS:
+                            continue
+                        if rel_path in NON_CATALOG_FILES:
                             continue
                         if rel_path not in registered_paths:
                             ignored_files.append(rel_path)
@@ -464,6 +503,9 @@ class CatalogRepository:
     def get_spawn_table(self, def_id: str) -> Optional[SpawnTableDefinition]:
         return self.spawn_tables.get(def_id)
 
+    def get_class_table(self, def_id: str) -> Optional[ClassTableDefinition]:
+        return self.class_tables.get(def_id)
+
     def get_default_profile(self, def_id: str) -> Optional[DefaultCompileProfile]:
         return self.defaults.get(def_id)
 
@@ -505,6 +547,7 @@ class CatalogRepository:
             "biome": self.biomes,
             "ecology": self.ecologies,
             "spawn_table": self.spawn_tables,
+            "class_table": self.class_tables,
             "defaults": self.defaults,
             "legacy_enemy_projection": self.legacy_enemy_projections,
         }
@@ -545,11 +588,38 @@ class CatalogRepository:
             ("biome", self.biomes),
             ("ecology", self.ecologies),
             ("spawn_table", self.spawn_tables),
+            ("class_table", self.class_tables),
             ("defaults", self.defaults),
             ("legacy_enemy_projection", self.legacy_enemy_projections),
         ]:
             deprecated_map[cat_name] = [item_id for item_id, obj in registry.items() if obj.deprecated]
         return deprecated_map
+
+    def get_lowest_cost_for_type(self, content_type: str) -> Dict[str, Any]:
+        """Return catalog entries for content_type, ordered cheapest-first.
+
+        Used in degraded mode to prefer the lowest-cost catalog entries over
+        static hardcoded defaults.  Returns all loaded entries for the type,
+        sorted by their natural cost field.  Returns an empty dict if the
+        content_type is unrecognised or the index has no loaded entries.
+
+        Supported content_type values:
+          'items'     — sorted ascending by ItemDefinition.base_value
+          'resources' — sorted: entries with no required_tool first, then
+                        alphabetically by record id
+        """
+        if content_type == "items":
+            return dict(
+                sorted(self.items.items(), key=lambda kv: kv[1].base_value)
+            )
+        if content_type == "resources":
+            return dict(
+                sorted(
+                    self.resources.items(),
+                    key=lambda kv: (kv[1].required_tool is not None, kv[0]),
+                )
+            )
+        return {}
 
     @property
     def fingerprint(self) -> str:

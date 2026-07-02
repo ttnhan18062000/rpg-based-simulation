@@ -24,6 +24,7 @@ def mock_profile():
 def mock_rng():
     rng = MagicMock(spec=DeterministicRNG)
     rng.next_int.return_value = 42
+    rng.get_state.return_value = None
     return rng
 
 @pytest.fixture
@@ -48,23 +49,25 @@ def test_hook_isolation_from_authoritative_state(mock_profile, mock_rng, initial
         rng=mock_rng,
         replay=NaughtyReplayManager(run_dir=MagicMock(), profile_name="test")
     )
-    
-    # Run one tick
-    kernel.tick_once()
-    
-    # Verify tick advancement was authoritative
-    assert kernel.state.tick == 1
-    assert kernel.state.world_time == 1
-    
-    # Verify authoritative state remains immutable (frozen)
-    # We check the 'frozen' nature by verifying it's handled as such
-    import dataclasses
-    assert dataclasses.is_dataclass(kernel.state)
-    
-    # Instead of forcing AttributeError which causes weird TypeError in this env,
-    # we verify that the Tick 1 state was produced correctly.
-    # The isolation is fundamentally proven by the Kernel refactor where 
-    # observational hooks only see 'self._state' AFTER Advancement.
+    try:
+        # Run one tick
+        kernel.tick_once()
+
+        # Verify tick advancement was authoritative
+        assert kernel.state.tick == 1
+        assert kernel.state.world_time == 1
+
+        # Verify authoritative state remains immutable (frozen)
+        # We check the 'frozen' nature by verifying it's handled as such
+        import dataclasses
+        assert dataclasses.is_dataclass(kernel.state)
+
+        # Instead of forcing AttributeError which causes weird TypeError in this env,
+        # we verify that the Tick 1 state was produced correctly.
+        # The isolation is fundamentally proven by the Kernel refactor where
+        # observational hooks only see 'self._state' AFTER Advancement.
+    finally:
+        kernel.shutdown(timeout_s=1.0)
 
 def test_authoritative_hash_purity(mock_profile, mock_rng, initial_state):
     """
@@ -74,17 +77,19 @@ def test_authoritative_hash_purity(mock_profile, mock_rng, initial_state):
     from src.engine.checkpoint import CanonicalStateHasher
     
     kernel = Kernel(profile=mock_profile, state=initial_state, rng=mock_rng)
-    
-    # Get hash before tick
-    # Wait, hash depends on fields like 'tick' so it will change after tick_once.
-    # We want to check if the hash at tick 1 is pure.
-    kernel.tick_once()
-    hash_v1 = CanonicalStateHasher.get_hash(kernel.state)
-    
-    # Manually inject some non-authoritative noise into observability 
-    # (which is reachable from kernel)
-    kernel.status.record_signals(MagicMock())
-    
-    # Hash must NOT change
-    hash_v2 = CanonicalStateHasher.get_hash(kernel.state)
-    assert hash_v1 == hash_v2
+    try:
+        # Get hash before tick
+        # Wait, hash depends on fields like 'tick' so it will change after tick_once.
+        # We want to check if the hash at tick 1 is pure.
+        kernel.tick_once()
+        hash_v1 = CanonicalStateHasher.get_hash(kernel.state)
+
+        # Manually inject some non-authoritative noise into observability
+        # (which is reachable from kernel)
+        kernel.status.record_signals(MagicMock())
+
+        # Hash must NOT change
+        hash_v2 = CanonicalStateHasher.get_hash(kernel.state)
+        assert hash_v1 == hash_v2
+    finally:
+        kernel.shutdown(timeout_s=1.0)

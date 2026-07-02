@@ -2,6 +2,7 @@ import pytest
 from src.perf.scenarios import build_mixed_state
 
 @pytest.mark.perf
+@pytest.mark.slow
 def test_perf_mixed_stress(perf_harness, request):
     """
     Stress test: 200 entities with mixed work (Heroes, Monsters, Resource Nodes).

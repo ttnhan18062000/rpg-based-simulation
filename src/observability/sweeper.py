@@ -202,12 +202,12 @@ class ScenarioSweeper:
                         run_id=spec.run_id
                     )
 
-                    # Tick once up to spec ticks
-                    for _ in range(spec.ticks):
-                        kernel.tick_once()
-
-                    kernel.shutdown()
-                    run_success = True
+                    try:
+                        for _ in range(spec.ticks):
+                            kernel.tick_once()
+                        run_success = True
+                    finally:
+                        kernel.shutdown()
 
                 except Exception as e:
                     err_msg = f"Simulation error on seed {spec.seed}: {str(e)}"

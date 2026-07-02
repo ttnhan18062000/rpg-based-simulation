@@ -15,6 +15,7 @@ from src.core.updates import StateUpdate, EntityUpdate
 from src.core.governance import PressureSignals, RuntimeMode
 from src.core.diagnostic import TraceEvent
 from src.core.lifecycle import LifecycleOutcome, ShutdownResult
+from src.core.enums import Domain
 
 from src.engine.executor import IWorkExecutor, LocalSequentialExecutor, ConcurrentExecutionAdapter
 from src.engine.cache_registry import CacheRegistry, CacheBudgetPolicy
@@ -44,8 +45,9 @@ class Kernel:
         "_current_signals", "_current_policy", "_current_work_items",
         "_source_packets", "_source_work_items", "_final_results", "_final_compute_ms",
         "_phase_costs", "_metrics", "_audit_mode", "_no_frame_pacing", "_no_replay", "_audit_dirty_set", "_perf_tracker", "_force_full_scan", "_current_update", "_cache_registry", "_cache_policy", "_opt_profile", "_event_listeners", "_event_recorder", "_entity_timeline_store",
-        "_run_id", "_artifact_repo", "_metric_recorder", "_current_tick_event_count", "_current_tick_violation_count", "_cognition_recorder",
+        "_run_id", "_artifact_repo", "_metric_recorder", "_current_tick_event_count", "_current_tick_violation_count", "_cognition_recorder", "_decision_trace_writer", "_personality_recorder",
         "_workers_started", "_last_shutdown_report",
+        "_quality_hub", "_quality_feed",
     )
 
     def __init__(
@@ -68,7 +70,8 @@ class Kernel:
         compile_report_path: Optional[str] = None,
         runtime_content_source: Optional[str] = None,
         catalog_fingerprint: Optional[str] = None,
-        module_fingerprints: Optional[Dict[str, str]] = None
+        module_fingerprints: Optional[Dict[str, str]] = None,
+        world_id: Optional[str] = None
     ) -> None:
         self._stopped = False
         self._profile = profile
@@ -116,8 +119,8 @@ class Kernel:
 
         self._run_id = run_id
         if self._run_id is None:
-            import random
-            self._run_id = f"run_{int(time.time())}_{random.randint(1000, 9999)}"
+            _run_suffix = self._rng.get_int(Domain.INIT, 0, 0, 1000, 9999)
+            self._run_id = f"run_{int(time.time())}_{_run_suffix}"
 
         self._artifact_repo = None
         if obs_mode != ObservabilityMode.OFF:
@@ -157,6 +160,7 @@ class Kernel:
                 started_at=datetime.now(timezone.utc).isoformat(),
                 ticks_requested=profile.cadence.max_ticks if hasattr(profile, "cadence") and hasattr(profile.cadence, "max_ticks") else 100,
                 status="CREATED",
+                world_id=world_id or "unknown",
                 resolved_world_path=resolved_world_path,
                 compile_context_path=compile_context_path,
                 provenance_manifest_path=provenance_manifest_path,
@@ -220,15 +224,54 @@ class Kernel:
         elif hasattr(self._replay, "_run_dir"):
             run_dir_str = str(self._replay._run_dir)
 
+        # Build SimQ hub before EventRecorder so quality_fn is wired at worker construction.
+        self._quality_hub = None
+        self._quality_feed = None
+        _quality_fn = None
+        if obs_mode != ObservabilityMode.OFF:
+            from src.simulation_quality.feed import build_feed_from_env
+            _feed = build_feed_from_env()
+            if _feed is not None:
+                from src.simulation_quality.weights import ScoringWeights
+                from src.simulation_quality.quality_hub import QualityHub
+                from src.simulation_quality.persistence import QualityPersistence
+                from src.simulation_quality.scorers import build_all_scorers
+                try:
+                    _q_profile = os.environ.get("QUALITY_PROFILE", "default")
+                    _weights = ScoringWeights.load(
+                        "config/simulation_quality/scoring_weights.yaml",
+                        "config/simulation_quality/grade_thresholds.yaml",
+                        "config/simulation_quality/detection_params.yaml",
+                        _q_profile,
+                    )
+                    _q_run_dir = run_dir_str or f"data/runs/{self._run_id}"
+                    _hub = QualityHub(
+                        scorers=build_all_scorers(_weights),
+                        weights=_weights,
+                        persistence=QualityPersistence(_q_run_dir),
+                        run_id=self._run_id,
+                    )
+                    _quality_fn = _hub.on_envelope
+                    self._quality_hub = _hub
+                    self._quality_feed = _feed
+                except Exception:
+                    logger.warning("SimQ hub construction failed (non-fatal) — quality scoring disabled for this run")
+
         self._event_recorder = EventRecorder(
             run_dir=run_dir_str,
             max_events=5000,
-            enabled=(obs_mode != ObservabilityMode.OFF)
+            enabled=(obs_mode != ObservabilityMode.OFF),
+            quality_fn=_quality_fn,
         )
+
+        if self._quality_feed is not None and self._quality_hub is not None:
+            self._quality_feed.start(self._quality_hub)
         self._entity_timeline_store = EntityTimelineStore(mode=obs_mode)
 
         self._metric_recorder = None
         self._cognition_recorder = None
+        self._decision_trace_writer = None
+        self._personality_recorder = None
         if obs_mode != ObservabilityMode.OFF:
             from src.observability.reporting.metric_recorder import MetricWindowRecorder
             from src.observability.cognition.recorder import ObservabilityCognitionRecorder
@@ -242,6 +285,17 @@ class Kernel:
                 run_id=self._run_id,
                 run_dir=run_dir_str
             )
+            from src.observability.cognition.decision_trace_writer import (
+                DecisionTraceWriter,
+                set_active_writer,
+            )
+            self._decision_trace_writer = DecisionTraceWriter(run_dir=run_dir_str)
+            set_active_writer(self._decision_trace_writer)
+            from src.observability.personality.recorder import PersonalitySnapshotRecorder
+            self._personality_recorder = PersonalitySnapshotRecorder(
+                run_id=self._run_id,
+                run_dir=run_dir_str
+            )
 
         self._current_tick_event_count = 0
         self._current_tick_violation_count = 0
@@ -250,6 +304,9 @@ class Kernel:
         # 1 = EventRecorder._worker (QueueDrainWorker), started when obs is enabled.
         self._workers_started = 1 if (obs_mode != ObservabilityMode.OFF) else 0
         self._last_shutdown_report = None
+
+        from src.observability.event_extractor import EventExtractor
+        EventExtractor.reset_run_state()
 
         self.validate(flags)
 
@@ -260,6 +317,11 @@ class Kernel:
             ContentWarmupService.warmup()
         except Exception as _warmup_err:
             logger.warning("ContentWarmupService.warmup() failed (non-fatal): %s", _warmup_err)
+
+    @property
+    def quality_hub(self):
+        """Read-only access to the QualityHub instance (None if SimQ is disabled)."""
+        return self._quality_hub
 
     def validate(self, flags: Optional[Dict[str, bool]] = None) -> None:
         from src.config.validator import ProfileValidator
@@ -296,19 +358,30 @@ class Kernel:
         if self._audit_mode:
             start_fingerprint = self._state.fingerprint()
 
+        # Lightweight gross isolation sentinel — active in all run modes.
+        # Two integer reads: O(1), negligible overhead on all hardware classes.
+        # Detects entity-count changes and mid-phase tick advancement only.
+        # Field-level mutations within existing entities require audit_mode=True.
+        _gross_entity_count = len(self._state.entities)
+        _gross_tick = self._state.tick
+
         self._phase_scheduling()
         t2 = time.perf_counter_ns()
         self._phase_costs["scheduling"] = (t2 - t1) / 1e6
-        
+
         if self._audit_mode and start_fingerprint:
             self._guard_stability("Scheduling", start_fingerprint)
-            
+        if not self._audit_mode:
+            self._guard_gross_isolation("Scheduling", _gross_entity_count, _gross_tick)
+
         self._phase_collection()
         t3 = time.perf_counter_ns()
         self._phase_costs["collection"] = (t3 - t2) / 1e6
-        
+
         if self._audit_mode and start_fingerprint:
             self._guard_stability("Collection", start_fingerprint)
+        if not self._audit_mode:
+            self._guard_gross_isolation("Collection", _gross_entity_count, _gross_tick)
             
         self._phase_resolution()
         t4 = time.perf_counter_ns()
@@ -378,6 +451,27 @@ class Kernel:
                 logger.exception("Failed to extract WorldMetrics")
                 world_metrics = None
 
+            # Economy health snapshot (E33A) — read-only, fires every WINDOW_SIZE ticks
+            # Must be called BEFORE record_tick to ensure snapshot is in accumulator before flush
+            # Alert dispatch (E33B) — emits SimulationEvent alerts via _event_listeners
+            try:
+                from src.economy.health_monitor import EconomyHealthMonitor
+                economy_snapshot = EconomyHealthMonitor.sample(self._state, self._state.tick)
+                if economy_snapshot is not None:
+                    self._metric_recorder.record_economy_snapshot(economy_snapshot)
+                    # Evaluate and dispatch economy alerts (E33B)
+                    alerts = EconomyHealthMonitor.check_alerts(
+                        economy_snapshot, tick=self._state.tick
+                    )
+                    if alerts and self._event_listeners:
+                        for cb in self._event_listeners:
+                            try:
+                                cb(alerts)
+                            except Exception:
+                                pass
+            except Exception:
+                logger.exception("Failed to sample EconomyHealthMonitor")
+
             signals = self._status.signal_history[-1] if self._status.signal_history else None
             event_count = getattr(self, "_current_tick_event_count", 0)
             violation_count = getattr(self, "_current_tick_violation_count", 0)
@@ -392,6 +486,8 @@ class Kernel:
             )
 
     def _phase_init(self) -> None:
+        from src.world.providers.requirements import PerformanceBudgets
+        PerformanceBudgets.reset()
         from src.engine.occupancy_snapshot import OccupancySnapshot
         object.__setattr__(self._state, "occupancy_snapshot", OccupancySnapshot.from_state(self._state))
         self._worker_manager.reset_tick_stats()
@@ -611,6 +707,9 @@ class Kernel:
             from src.core.updates import StateUpdate
             update = StateUpdate()
             
+        from dataclasses import replace as _dc_replace
+        update = _dc_replace(update, rng_checkpoint=self._rng.get_state())
+
         prior_state = self._state
         self._state = ApplyPath.apply_generation(
             self._state, 
@@ -763,11 +862,11 @@ class Kernel:
             self._event_recorder.record(event)
             self._entity_timeline_store.record(event)
 
-            # Fallback for backwards compatibility with legacy tests/code accessing entity.timeline
+            # Route entity.timeline update through EntityTimelineStore to avoid direct mutation
             if event.entity_id is not None:
                 entity = self._state.entities.get(event.entity_id)
-                if entity and hasattr(entity, "timeline") and entity.timeline is not None:
-                    entity.timeline.append(event)
+                if entity:
+                    self._entity_timeline_store.record_to_entity(event, entity)
 
         # 4. Notify any external event listeners
         if generated_events and hasattr(self, "_event_listeners"):
@@ -789,6 +888,16 @@ class Kernel:
             except Exception:
                 logger.exception("Failed to record strategic cognition snapshot in Kernel")
 
+        # 6. Record per-entity personality snapshots post-commit
+        if getattr(self, "_personality_recorder", None) is not None:
+            try:
+                self._personality_recorder.record_tick(
+                    state=self._state,
+                    tick=tick,
+                )
+            except Exception:
+                logger.exception("Failed to record personality snapshot in Kernel")
+
     def _guard_stability(self, phase_name: str, start_fingerprint: Dict[str, Any]) -> None:
         from src.core.protocol_validator import ProtocolViolationError
         current = self._state.fingerprint()
@@ -797,6 +906,30 @@ class Kernel:
                  f"Isolation Breach: Authoritative state mutated during {phase_name} phase. "
                  f"Expected hash {start_fingerprint['state_hash']}, got {current['state_hash']}"
              )
+
+    def _guard_gross_isolation(self, phase_name: str, expected_entity_count: int, expected_tick: int) -> None:
+        """Lightweight isolation guard active in all run modes (non-audit).
+
+        Checks entity count and tick number only — a proxy for gross isolation breaches:
+        entity creation or deletion mid-phase, or tick advancement outside the
+        authoritative pipeline. Field-level mutations within existing entities are NOT
+        detected here; full detection requires audit_mode=True.
+        """
+        from src.core.protocol_validator import ProtocolViolationError
+        current_count = len(self._state.entities)
+        current_tick = self._state.tick
+        if current_count != expected_entity_count:
+            raise ProtocolViolationError(
+                f"Gross Isolation Breach: entity count changed during {phase_name} phase "
+                f"(expected {expected_entity_count}, got {current_count}). "
+                f"Full isolation enforcement requires audit_mode=True."
+            )
+        if current_tick != expected_tick:
+            raise ProtocolViolationError(
+                f"Gross Isolation Breach: tick advanced during {phase_name} phase "
+                f"(expected {expected_tick}, got {current_tick}). "
+                f"Full isolation enforcement requires audit_mode=True."
+            )
 
     def _phase_persistence(self) -> None:
         tick_hash = "SKIPPED"
@@ -822,12 +955,36 @@ class Kernel:
 
         self._worker_manager.shutdown()
 
+        if hasattr(self, "_quality_feed") and self._quality_feed is not None:
+            try:
+                self._quality_feed.stop()
+            except Exception:
+                logger.warning("SimQ feed stop failed (non-fatal)")
+
+        if hasattr(self, "_quality_hub") and self._quality_hub is not None:
+            try:
+                _quality_report = self._quality_hub.get_quality_report()
+                _persistence = getattr(self._quality_hub, "_persistence", None)
+                if _persistence is not None:
+                    _persistence.write_report(_quality_report)
+                    _persistence.shutdown()
+            except Exception:
+                logger.warning("SimQ final report write failed during shutdown (non-fatal)")
+
         if hasattr(self, "_event_recorder") and self._event_recorder:
             self._event_recorder.shutdown()
             workers_stopped += 1
 
         if hasattr(self, "_metric_recorder") and self._metric_recorder:
             self._metric_recorder.shutdown(self._state.tick)
+
+        if hasattr(self, "_decision_trace_writer") and self._decision_trace_writer:
+            try:
+                self._decision_trace_writer.close()
+            except Exception:
+                logger.exception("DecisionTraceWriter.close() failed during shutdown (non-fatal)")
+            from src.observability.cognition.decision_trace_writer import set_active_writer
+            set_active_writer(None)
 
         # Wire BehaviorWorker into shutdown: join any running behavior-normalization threads.
         import threading
@@ -946,9 +1103,20 @@ class Kernel:
         return self._state
 
     def _get_deterministic_neighbor_view(
-        self, 
-        subject: EntityState, 
+        self,
+        subject: EntityState,
         radius: float
     ) -> List[tuple[int, EntityState]]:
         from src.engine.domain_logic import SimulationDomainLogic
         return SimulationDomainLogic.get_neighbor_view(self._state, subject, radius)
+
+    @staticmethod
+    def get_world_indexes(state: Any, dirty: Optional[Any] = None) -> Any:
+        """Return spatial world indexes for *state*, delegating to WorldIndexService.
+
+        Observability code must call this method rather than importing
+        WorldIndexService directly.  Kernel is the stable boundary for engine-internal
+        services (D14 F3 — coupling-depth audit).
+        """
+        from src.engine.world_index import WorldIndexService
+        return WorldIndexService.get_indexes(state, dirty)

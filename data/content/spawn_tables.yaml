@@ -5,3 +5,14 @@
   spawn_weights:
     "monster": 0.8
     "worker": 0.2
+
+- id: "default_class_table"
+  display_name: "Default Class Assignments by Role"
+  schema_version: "classtable.v1"
+  class_id_by_role:
+    hero: ["WARRIOR", "MAGE", "ROGUE"]
+    monster: ["NOVICE"]
+    citizen: ["NOVICE"]
+    worker: ["NOVICE"]
+    guard: ["WARRIOR"]
+    shopkeeper: ["NOVICE"]

@@ -67,6 +67,15 @@ class EntityTimelineStore:
                     export[eid] = [ev.model_dump() for ev in self._timelines[eid]]
         return export
 
+    def record_to_entity(self, event: SimulationEvent, entity: Any) -> None:
+        """Appends event to the entity's own timeline deque if present.
+
+        This is the authorised routing point for the legacy entity.timeline
+        compatibility path — callers must not append to entity.timeline directly.
+        """
+        if hasattr(entity, "timeline") and entity.timeline is not None:
+            entity.timeline.append(event)
+
     def clear(self) -> None:
         """Clears all timelines and counters."""
         with self._lock:

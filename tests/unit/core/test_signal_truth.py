@@ -31,6 +31,7 @@ def test_signal_truth_peak_utilization(mock_profile, initial_state):
     """Verify that worker_utilization captures PEAK pressure, not idle state."""
     from src.platform.rng import DeterministicRNG
     rng = MagicMock(spec=DeterministicRNG)
+    rng.get_state.return_value = None
 
     kernel = Kernel(mock_profile, initial_state, rng)
     try:
@@ -63,6 +64,7 @@ def test_signal_truth_rolling_compute_average(mock_profile, initial_state):
     from src.platform.rng import DeterministicRNG
     from src.core.governance import PressureSignals
     rng = MagicMock(spec=DeterministicRNG)
+    rng.get_state.return_value = None
 
     kernel = Kernel(mock_profile, initial_state, rng)
     try:
@@ -88,6 +90,7 @@ def test_signal_truth_windowed_memory_trend(mock_profile, initial_state):
     """Verify that memory trend reflects slope over 5 samples."""
     from src.platform.rng import DeterministicRNG
     rng = MagicMock(spec=DeterministicRNG)
+    rng.get_state.return_value = None
 
     kernel = Kernel(mock_profile, initial_state, rng)
     try:
@@ -111,6 +114,7 @@ def test_signal_truth_dropped_work(mock_profile, initial_state):
     from src.platform.rng import DeterministicRNG
     from src.engine.scheduler import PeriodicDefinition
     rng = MagicMock(spec=DeterministicRNG)
+    rng.get_state.return_value = None
 
     periodic_defs = [
         PeriodicDefinition(subsystem_id="opt_task", work_kind="OPT", cadence=1, is_authoritative=False)

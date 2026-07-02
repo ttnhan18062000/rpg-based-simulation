@@ -33,6 +33,7 @@ def mb_profile():
 def initial_state():
     return AuthoritativeState(tick=0, seed=1)
 
+@pytest.mark.slow
 def test_milestone_b_operational_gate(mb_profile, initial_state):
     """
     Unified Certification Gate for Milestone B.
@@ -40,93 +41,99 @@ def test_milestone_b_operational_gate(mb_profile, initial_state):
     Verify: Signal Truth, Elasticity, and Hysteresis.
     """
     from src.platform.rng import DeterministicRNG
-    rng = MagicMock(spec=DeterministicRNG)
+    rng = DeterministicRNG(1)
     kernel = Kernel(mb_profile, initial_state, rng)
-    
-    # Mock RSS to be low (100MB)
-    kernel._collector._process.memory_info = MagicMock(return_value=MagicMock(rss=100 * 1024 * 1024))
-    
-    # ---------------------------------------------------------
-    # Phase 1: Normal Stabilization
-    # ---------------------------------------------------------
-    for i in range(5):
-        kernel.tick_once()
-        assert kernel.status.current_mode == RuntimeMode.NORMAL
-        
-    # ---------------------------------------------------------
-    # Phase 2 & 3: Saturation + Immediate Escalation
-    # ---------------------------------------------------------
-    # We simulate 5 ticks of high compute pressure (150ms)
-    
-    from unittest.mock import patch
-    
-    # Each call to perf_counter_ns advances by 4ms. Across 31 phase timestamps per tick,
-    # total compute time is exactly 124ms (perfectly between 100ms DEGRADED and 150ms SURVIVAL).
-    def time_gen():
-        t = 0
-        while True:
-            t += 4_000_000
-            yield t
-    
-    with patch('time.perf_counter_ns', side_effect=time_gen()):
-        # Ticks 5-9: Normal -> DEGRADED
-        for i in range(10):
-            kernel.tick_once()
-            if kernel.status.current_mode == RuntimeMode.DEGRADED:
-                break
-            
-    assert kernel.status.current_mode == RuntimeMode.DEGRADED
-    
-    # ---------------------------------------------------------
-    # Phase 4: Elastic Concurrency (Policy Verification)
-    # ---------------------------------------------------------
-    # In DEGRADED mode, verify worker pool uses only 50% capacity (2 workers)
-    
-    from src.core.work import WorkClass
-    packets = [
-        WorkerPacket(packet_id=f"p{i}", work_id=f"w:{i}", tick=0, world_time=0, seed=i, 
-                     work_class=WorkClass.CRITICAL,
-                     subject=(V2EntityBuilder(i+1)
-                              .kind("TEST")
-                              .location(0.0, 0.0)
-                              .build()), 
-                     neighbor_view=[], work_kind="TEST", payload={})
-        for i in range(10)
-    ]
-    
-    kernel._worker_manager.reset_tick_stats()
-    kernel._worker_manager.reset_tick_stats()
-    kernel._worker_manager.execute_batch(packets, default_simulation_worker, concurrency_limit=kernel._current_policy.concurrency_limit)
-    
-    # Peak workers in DEGRADED should be capped at 2 (50% of 4)
-    assert kernel._worker_manager.get_stats()["peak_workers"] <= 2
-    
-    # ---------------------------------------------------------
-    # Phase 5: Hysteresis-Gated Recovery
-    # ---------------------------------------------------------
-    # We stop the patch (ending pressure) and verify recovery to NORMAL.
-    # We need 10 ticks (dwell) + 5 ticks (confidence)
-    
-    for i in range(25):
-        kernel.tick_once()
-        if kernel.status.current_mode == RuntimeMode.NORMAL:
-            break
-            
-    assert kernel.status.current_mode == RuntimeMode.NORMAL
+    try:
+        # Mock RSS to be low (100MB)
+        kernel._collector._process.memory_info = MagicMock(return_value=MagicMock(rss=100 * 1024 * 1024))
 
+        # ---------------------------------------------------------
+        # Phase 1: Normal Stabilization
+        # ---------------------------------------------------------
+        for i in range(5):
+            kernel.tick_once()
+            assert kernel.status.current_mode == RuntimeMode.NORMAL
+
+        # ---------------------------------------------------------
+        # Phase 2 & 3: Saturation + Immediate Escalation
+        # ---------------------------------------------------------
+        # We simulate 5 ticks of high compute pressure (150ms)
+
+        from unittest.mock import patch
+
+        # Each call to perf_counter_ns advances by 2ms. With the current kernel phase
+        # instrumentation (~63 call sites per tick), total compute is ~126ms —
+        # between the DEGRADED threshold (100ms) and the SURVIVAL threshold (150ms).
+        def time_gen():
+            t = 0
+            while True:
+                t += 2_000_000
+                yield t
+
+        with patch('time.perf_counter_ns', side_effect=time_gen()):
+            # Ticks 5-9: Normal -> DEGRADED
+            for i in range(10):
+                kernel.tick_once()
+                if kernel.status.current_mode == RuntimeMode.DEGRADED:
+                    break
+
+        assert kernel.status.current_mode == RuntimeMode.DEGRADED
+
+        # ---------------------------------------------------------
+        # Phase 4: Elastic Concurrency (Policy Verification)
+        # ---------------------------------------------------------
+        # In DEGRADED mode, verify worker pool uses only 50% capacity (2 workers)
+
+        from src.core.work import WorkClass
+        packets = [
+            WorkerPacket(packet_id=f"p{i}", work_id=f"w:{i}", tick=0, world_time=0, seed=i,
+                         work_class=WorkClass.CRITICAL,
+                         subject=(V2EntityBuilder(i+1)
+                                  .kind("TEST")
+                                  .location(0.0, 0.0)
+                                  .build()),
+                         neighbor_view=[], work_kind="TEST", payload={})
+            for i in range(10)
+        ]
+
+        kernel._worker_manager.reset_tick_stats()
+        kernel._worker_manager.reset_tick_stats()
+        kernel._worker_manager.execute_batch(packets, default_simulation_worker, concurrency_limit=kernel._current_policy.concurrency_limit)
+
+        # Peak workers in DEGRADED should be capped at 2 (50% of 4)
+        assert kernel._worker_manager.get_stats()["peak_workers"] <= 2
+
+        # ---------------------------------------------------------
+        # Phase 5: Hysteresis-Gated Recovery
+        # ---------------------------------------------------------
+        # We stop the patch (ending pressure) and verify recovery to NORMAL.
+        # We need 10 ticks (dwell) + 5 ticks (confidence)
+
+        for i in range(25):
+            kernel.tick_once()
+            if kernel.status.current_mode == RuntimeMode.NORMAL:
+                break
+
+        assert kernel.status.current_mode == RuntimeMode.NORMAL
+    finally:
+        kernel.shutdown()
+
+@pytest.mark.slow
 def test_milestone_b_memory_survival_gate(mb_profile, initial_state):
     """Verify SURVIVAL mode escalation via Memory pressure."""
     from src.platform.rng import DeterministicRNG
-    rng = MagicMock(spec=DeterministicRNG)
+    rng = DeterministicRNG(1)
     kernel = Kernel(mb_profile, initial_state, rng)
-    
-    # Mock memory collector to report critical overload (> 1000MB)
-    kernel._collector._process.memory_info = MagicMock(return_value=MagicMock(rss=1100 * 1024 * 1024))
-    
-    kernel.tick_once()
-    assert kernel.status.current_mode == RuntimeMode.SURVIVAL
-    
-    # Verify Policy in SURVIVAL: Concurrency Limit = 0.25 (1 worker)
-    # Even if we have 100 entities, strictly 1 at a time.
-    # Note: Kernel advancement records the signal.
-    assert kernel.status.signal_history[-1].active_workers <= 1
+    try:
+        # Mock memory collector to report critical overload (> 1000MB)
+        kernel._collector._process.memory_info = MagicMock(return_value=MagicMock(rss=1100 * 1024 * 1024))
+
+        kernel.tick_once()
+        assert kernel.status.current_mode == RuntimeMode.SURVIVAL
+
+        # Verify Policy in SURVIVAL: Concurrency Limit = 0.25 (1 worker)
+        # Even if we have 100 entities, strictly 1 at a time.
+        # Note: Kernel advancement records the signal.
+        assert kernel.status.signal_history[-1].active_workers <= 1
+    finally:
+        kernel.shutdown()

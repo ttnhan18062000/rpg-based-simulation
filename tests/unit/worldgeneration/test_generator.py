@@ -166,10 +166,13 @@ def test_generated_world_catalog_smoke_simulation(repos):
         )
         rng = DeterministicRNG(state.seed)
         kernel = Kernel(profile, state, rng, flags={"audit_mode": True})
-        for _ in range(5):
-            kernel.tick_once()
-            
-        assert kernel.state.tick == 5
+        try:
+            for _ in range(5):
+                kernel.tick_once()
+            assert kernel.state.tick == 5
+        finally:
+            kernel.shutdown()
     finally:
         # Restore registries to legacy fallback defaults
-        seed_phase1_content(None)
+        from src.core.modes import RuntimeContentMode
+        seed_phase1_content(None, mode=RuntimeContentMode.LEGACY_FALLBACK)

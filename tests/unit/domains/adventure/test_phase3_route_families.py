@@ -14,7 +14,7 @@ def test_route_family_definitions_are_unique():
     """Verify all RouteFamily enum values are unique strings."""
     values = [e.value for e in RouteFamily]
     assert len(values) == len(set(values))
-    assert len(values) == 13
+    assert len(values) == 16  # updated: PROTECT_TARGET + OWN_SURVIVAL added (E41D)
 
 
 def test_route_family_has_project_mapping():

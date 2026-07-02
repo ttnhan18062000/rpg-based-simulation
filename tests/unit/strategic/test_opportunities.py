@@ -12,6 +12,25 @@ from dataclasses import dataclass
 class MockState:
     resource_nodes: dict
 
+
+@pytest.fixture(autouse=False)
+def minimal_service_registry():
+    """Bootstrap ServiceRegistry with only a shop (buy affordance) at hometown and
+    clear RecipeRegistry so craft opportunities do not crowd out buy_item in the top-5."""
+    from src.core.registries import ServiceRegistry, ServiceDef, RecipeRegistry
+    original_services = dict(ServiceRegistry._services)
+    original_recipes = dict(RecipeRegistry._recipes)
+
+    ServiceRegistry.bootstrap({
+        "shop_hometown": ServiceDef("shop_hometown", "hometown", ("buy", "sell")),
+    })
+    RecipeRegistry.bootstrap({})
+
+    yield
+
+    ServiceRegistry.bootstrap(original_services)
+    RecipeRegistry.bootstrap(original_recipes)
+
 def test_resource_opportunities_basic():
     """Verify ResourceOpportunityProvider returns sorted, capped resource opportunities."""
     # Build entity in region near_forest where wood and herb are available
@@ -70,7 +89,7 @@ def test_resource_opportunities_with_blocker():
     assert iron_opp.estimated_reward == 50.0
 
 
-def test_service_opportunities_basic():
+def test_service_opportunities_basic(minimal_service_registry):
     """Verify ServiceOpportunityProvider returns town service options."""
     ent = (V2EntityBuilder(1)
         .kind("hero")

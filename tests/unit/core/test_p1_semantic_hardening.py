@@ -251,11 +251,10 @@ def test_stamina_drain():
     state = AuthoritativeState(tick=1, seed=1, entities={1: h1, 2: m1})
     
     from src.engine.domain_logic import SimulationDomainLogic
-    from src.core.updates import TaskUpdate
-    
+    from src.core.state import TaskComponent
+
     payload = {"action": "ATTACK", "target_id": 2}
-    task_upd = TaskUpdate(work_kind_set="ENTITY_ACT", payload_set=payload)
-    h1 = replace(h1, task=task_upd)
+    h1 = replace(h1, task=TaskComponent(work_kind="ENTITY_ACT", payload=payload))
     
     updates = SimulationDomainLogic.execute_action(h1, payload, 1, context=state)
     attacker_up = updates[1]

@@ -41,7 +41,7 @@ If the input is ambiguous (no prefix), treat as a folder path if it contains `/`
 | **Implement** | Run implement-ticket pipeline for each pending ticket in order; stop on first gate failure |
 | **Report** | Summarise: DONE count, gate failures, remaining tickets |
 
-After the Implement phase, write the batch monitoring record (the block at the bottom of the Implement phase in the JS) before moving to Report.
+After the Implement phase, write the batch monitoring record (the block at the bottom of the Implement phase in the JS). Then, if `batchStatus === 'DONE'` and mode is `folder`, move the entire `tickets/todos/{folder}/` to `tickets/done/{folder}/` — this preserves SEQUENCE.md and any folder-level metadata. Then move to Report.
 
 ## Notes
 

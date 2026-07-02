@@ -1,6 +1,6 @@
 import time
 from src.domains.campaigns.spec import CampaignSpecLoader
-from src.domains.campaigns.runner import CampaignRunner
+from src.domains.campaigns.runner import SimulationAnalysisRunner
 from src.domains.campaigns.schema import CampaignEvent
 
 
@@ -35,7 +35,7 @@ forbidden_behavior:
                 details={"target": "beast"}
             ))
 
-    runner = CampaignRunner()
+    runner = SimulationAnalysisRunner()
     
     t0 = time.perf_counter_ns()
     result = runner.run(spec, injected_events=injected_events)

@@ -1,0 +1,236 @@
+- id: FAC-001
+  text: >
+    AuthoritativeState.factions persists FactionState records across ticks via
+    typed FactionUpdate apply-path
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/core/state.py (FactionState dataclass, AuthoritativeState.factions field,
+    to_readonly() wrapping) + src/core/updates.py (FactionUpdate frozen dataclass,
+    StateUpdate.faction_updates field, is_noop/merge_many wiring) +
+    src/engine/apply.py (factions=new_factions threading,
+    TCK-20260619-E53Aa-FACTION-STATE)
+  proof_type: parity
+  test_path: tests/unit/faction/test_faction_state.py
+  divergence_note: null
+  support_boundary: null
+
+- id: FAC-002
+  text: >
+    FactionUpdate.tension_delta accumulates into FactionState.tension_level,
+    clamped to [0.0, 1.0]
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: >
+    src/engine/apply.py (tension clamp logic, TCK-20260619-E53Aa-FACTION-STATE)
+  proof_type: parity
+  test_path: tests/unit/faction/test_faction_state.py::test_faction_update_apply_tension_delta
+  divergence_note: null
+  support_boundary: null
+
+- id: FAC-003
+  text: >
+    FactionDecisionPhase reads state.factions each decision tick and emits
+    transient FactionDirective list; directives are not persisted in AuthoritativeState
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: >
+    src/engine/faction_decision.py + src/engine/pipeline.py (faction_decision inline block,
+    TCK-20260619-E53Ab-DECISION-PHASE)
+  proof_type: parity
+  test_path: tests/unit/faction/test_faction_decision_phase.py
+  divergence_note: null
+  support_boundary: null
+- id: FACTION-TENSION-001
+  text: >
+    FactionAwarenessService.compute_tension_updates() emits FactionUpdate(tension_delta=+0.1)
+    for each RESOURCE_DEPLETED WorldEvent whose region_id is in a faction's territory.
+    Tension is capped at [0.0, 1.0] by apply.py (authoritative path). Uses
+    state.recent_world_events (last-tick window — one-tick lag inherent). (E53Ad)
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/engine/faction_decision.py — FactionAwarenessService.compute_tension_updates();
+    src/engine/pipeline.py — faction_awareness run_phase block;
+    src/engine/apply.py:345 — tension clamped max(0.0, min(1.0, ...))
+  proof_type: parity
+  test_path: tests/unit/faction/test_faction_awareness.py
+  divergence_note: null
+  support_boundary: null
+
+- id: FAC-004
+  text: >
+    FactionState.diplomatic_relations is Dict[str, DiplomaticState] (typed str-enum).
+    to_canonical_dict() serializes values to plain strings; from_dict() coerces string
+    values back to DiplomaticState. FactionUpdate.diplomatic_relations_set uses the
+    same typed dict. Apply path merges with per-value coercion. (E53Ba)
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/core/enums.py (DiplomaticState(str, Enum));
+    src/core/state.py (FactionState.diplomatic_relations, to_canonical_dict, from_dict);
+    src/core/updates.py (FactionUpdate.diplomatic_relations_set);
+    src/engine/apply.py (DiplomaticState coercion in merge)
+  proof_type: parity
+  test_path: tests/unit/faction/test_diplomacy.py
+  divergence_note: null
+  support_boundary: null
+
+- id: FAC-005
+  text: >
+    DiplomaticActionHandler.handle() dispatches diplomatic action subtypes
+    (TreatyOffer, TradeAgreement, NonAggressionPact, AllianceProposal, Betrayal)
+    to per-type pure handlers that return FactionUpdate lists encoding relation changes.
+    AllianceProposal uses proposer_strength vs target_strength*2 threshold for VASSAL.
+    Betrayal guard: returns [] unless current relation is ALLIED. (E53Bb)
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/engine/faction_decision.py (TreatyOffer/TradeAgreement/NonAggressionPact/AllianceProposal/Betrayal);
+    src/domains/faction/diplomatic_actions.py (DiplomaticActionHandler.handle);
+    src/core/updates.py (FactionUpdate.diplomatic_relations_set)
+  proof_type: parity
+  test_path: tests/unit/faction/test_diplomacy.py
+  divergence_note: null
+  support_boundary: null
+
+- id: FAC-006
+  text: >
+    DiplomaticStateMachine.compute_transitions() evaluates all lexicographic faction pairs
+    each tick, applying one transition per pair in priority order: WAR→NEUTRAL (both ms<0.3)
+    > HOSTILE→WAR (aggressor ms > defender*1.2) > TENSE→HOSTILE (tension>0.7 or shared territory)
+    > NEUTRAL→TENSE (tension>0.4). ALLIED and VASSAL suppress all transitions.
+    Pipeline Phase 8d applies results via run_phase("diplomatic_transitions"). (E53Bc)
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/domains/faction/diplomatic_state_machine.py (compute_transitions, compute_common_enemy_pairs);
+    src/engine/pipeline.py (Phase 8d diplomatic_transitions run_phase block)
+  proof_type: parity
+  test_path: tests/unit/faction/test_diplomacy.py
+  divergence_note: null
+  support_boundary: null
+
+- id: FAC-007
+  text: >
+    Diplomatic state transitions emit WorldEvents: HOSTILE→WAR emits FACTION_WAR_DECLARED
+    (significance=0.95), WAR→NEUTRAL emits FACTION_PEACE_TREATY (significance=0.75),
+    AllianceProposal resolution emits FACTION_ALLIANCE_FORMED (significance=0.80).
+    WorldEvent.subject encodes faction pair as ":".join(sorted([fid_a, fid_b])).
+    CampaignOrchestrator._extract_narrative_entries() maps these to NarrativeLedgerEntry
+    via _SIGNIFICANCE_MAP. Known deferral: E53Da will align Chronicle naming.py keys
+    (currently uppercase FACTION_WAR_DECLARED vs lowercase war_declared event_type). (E53Bd)
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/domains/world_emergence/schema.py (WorldEventCategory.FACTION_WAR_DECLARED/ALLIANCE_FORMED/PEACE_TREATY);
+    src/domains/faction/diplomatic_state_machine.py (events_from_transitions);
+    src/engine/pipeline.py (Phase 8d world_events_add);
+    src/domains/campaigns/orchestrator.py (_SIGNIFICANCE_MAP, _extract_narrative_entries)
+  proof_type: parity
+  test_path: tests/unit/faction/test_diplomacy.py
+  divergence_note: null
+  support_boundary: null
+
+- id: FAC-008
+  text: >
+    MilitaryConflictPhase (Phase 8e) detects all WAR faction pairs each tick via
+    get_war_pairs() returning lexicographic (fid_a, fid_b) pairs. On first tick
+    with no active siege, emits WorldUpdate.siege_state_set=SiegeState(...) for
+    the defender's territory. Each tick with active WAR emits
+    service_availability_delta=-0.05 and siege_progress_delta=+0.05; if ≥ 3
+    GUARD entities defend the contested region, emits service_availability_delta=+0.02
+    and siege_progress_delta=-0.02 as reinforcement offset. (E53Ca/Cb)
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/engine/military_conflict.py (MilitaryConflictPhase.get_war_pairs, execute,
+    _find_contested_region, _find_guard_entities_in_region);
+    src/engine/pipeline.py (Phase 8e military_conflict run_phase block)
+  proof_type: parity
+  test_path: tests/unit/faction/test_siege_model.py
+  divergence_note: null
+  support_boundary: null
+
+- id: FAC-009
+  text: >
+    SiegeState is a frozen dataclass (slots=True) on RegionState.siege_state.
+    RegionState.service_availability (float, default 1.0) tracks degraded service
+    level during siege. WorldUpdate fields service_availability_delta, siege_state_set,
+    siege_state_clear, siege_progress_delta drive siege apply-path mutations.
+    apply_plan clamps service_availability to [0.0, 1.0] and siege_progress to [0.0, 1.0].
+    siege_state_clear takes priority over siege_state_set for clearing. (E53Cb)
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/core/state.py (SiegeState, RegionState.siege_state, RegionState.service_availability);
+    src/core/updates.py (WorldUpdate.siege_state_set, siege_state_clear, siege_progress_delta,
+    service_availability_delta, merge());
+    src/engine/apply_plan.py (region apply block lines 125-140)
+  proof_type: parity
+  test_path: tests/unit/faction/test_siege_model.py
+  divergence_note: null
+  support_boundary: null
+
+- id: FAC-010
+  text: >
+    When RegionState.siege_state.siege_progress >= 1.0 (clamped by apply_plan from previous
+    tick), MilitaryConflictPhase.execute() emits: WorldUpdate(siege_state_clear=True,
+    service_availability_delta=+1.0) to restore the region; FactionUpdate(territory_add)
+    for the attacker and FactionUpdate(territory_remove) for the defender; WorldEvent
+    TERRITORY_TRANSFERRED with subject="{attacker}:{defender}:{region_id}" (significance=0.85).
+    No siege degradation delta is emitted on the transfer tick.
+    RegionState.owner_faction_id (Optional[int]) is NOT set during transfer — the int/str
+    type mismatch with FactionState.faction_id:str is a known limitation; authoritative
+    ownership is tracked via FactionState.territory. (E53Cc)
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/engine/military_conflict.py (execute — territory transfer block);
+    src/domains/world_emergence/schema.py (WorldEventCategory.TERRITORY_TRANSFERRED);
+    src/domains/campaigns/orchestrator.py (_SIGNIFICANCE_MAP["TERRITORY_TRANSFERRED"]);
+    src/engine/apply.py (lines 328-354, territory_add/remove application)
+  proof_type: parity
+  test_path: tests/unit/faction/test_territory_transfer.py; tests/integration/scenarios/test_faction_campaign.py
+  divergence_note: >
+    RegionState.owner_faction_id not updated on transfer (int vs str type mismatch).
+    Authoritative ownership via FactionState.territory only.
+  support_boundary: null
+
+- id: FAC-011
+  text: >
+    MilitaryConflictPhase.execute() drains military_strength by 0.001/tick for each faction
+    currently at WAR (deduplicated per faction, regardless of number of WAR pairs).
+    When drain would push a faction from >= 0.3 to < 0.3, a WAR_ENDED_EXHAUSTION WorldEvent
+    is emitted (significance=0.80) with subject="{fid_a}:{fid_b}".
+    The autonomous WAR→NEUTRAL transition fires via DiplomaticStateMachine.compute_transitions()
+    (Phase 8d) when both factions have military_strength < 0.3 on the prior state.
+    Orphaned siege_state (region under siege but factions no longer at WAR) is cleared by
+    emitting WorldUpdate(siege_state_clear=True, service_availability_delta=+1.0) at the
+    top of execute() each tick. (E53Cd)
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/engine/military_conflict.py (exhaustion drain loop, orphan cleanup, WAR_ENDED_EXHAUSTION);
+    src/domains/world_emergence/schema.py (WorldEventCategory.WAR_ENDED_EXHAUSTION);
+    src/domains/campaigns/orchestrator.py (_SIGNIFICANCE_MAP["WAR_ENDED_EXHAUSTION"]);
+    src/domains/faction/diplomatic_state_machine.py (compute_transitions WAR→NEUTRAL rule)
+  proof_type: parity
+  test_path: tests/unit/faction/test_war_exhaustion.py; tests/integration/scenarios/test_faction_campaign.py::test_war_exhaustion_ends_conflict
+  divergence_note: >
+    SEEK_PEACE directive (transient FactionDirective) is not implemented — FactionDirective
+    cannot flow through StateUpdate. The autonomous Phase 8d WAR→NEUTRAL rule covers the
+    same outcome when both factions hit < 0.3.
+  support_boundary: null

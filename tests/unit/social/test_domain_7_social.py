@@ -14,6 +14,7 @@ from src.systems.world_systems.groups import GroupSystem
 from src.engine.tactical import TacticalDecisionSystem
 from src.engine.domain_logic import SimulationDomainLogic
 from src.core.builder import V2EntityBuilder
+from src.core.enums import Faction
 
 def test_appraisal_traits():
     # Base candidate (neutral)
@@ -105,7 +106,7 @@ def test_tactical_trust_obedience():
     # Leader and Member
     leader = (V2EntityBuilder(10).kind("human")
         .location(10, 10)
-        .identity(faction="A")
+        .identity(faction=Faction.HERO_GUILD)
         .task(work_kind="ENTITY_ACT", payload={"target_id": 99})
         .combat(readiness=100.0)
         .build()
@@ -114,13 +115,13 @@ def test_tactical_trust_obedience():
     member = (V2EntityBuilder(1)
         .kind("human")
         .location(1, 1)
-        .identity(faction="A")
+        .identity(faction=Faction.HERO_GUILD)
         .social(bonds={10: SocialBond(target_id=10, sentiment=-1.0)})
         .combat(readiness=100.0, tactical_role="VANGUARD")
         .build()
     )
-    hostile = V2EntityBuilder(99).kind("monster").location(2, 2).identity(faction="B").combat(hp=100).combat(readiness=100.0).build()
-    hostile_close = V2EntityBuilder(98).kind("monster").location(1.5, 1.5).identity(faction="B").combat(hp=100).combat(readiness=100.0).build()
+    hostile = V2EntityBuilder(99).kind("monster").location(2, 2).identity(faction=Faction.MONSTER_HORDE).combat(hp=100).combat(readiness=100.0).build()
+    hostile_close = V2EntityBuilder(98).kind("monster").location(1.5, 1.5).identity(faction=Faction.MONSTER_HORDE).combat(hp=100).combat(readiness=100.0).build()
     
     group = GroupRecord(id=100, leader_id=10, member_ids={1, 10}, shared_target_id=99, anchor=(5,5))
     state = AuthoritativeState(tick=1, seed=1, entities={1: member, 10: leader, 99: hostile, 98: hostile_close}, groups={100: group})

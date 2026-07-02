@@ -51,7 +51,7 @@ class PhaseDependencyGraph:
         "shop": PhaseMetadata("shop", {"inventory", "town"}, {"inventory", "resource_updates", "social"}),
         "resource_transactions": PhaseMetadata("resource_transactions", {"inventory", "strategic"}, {"inventory", "resource_updates"}),
         "evolution": PhaseMetadata("evolution", {"biological", "combat", "attributes", "inventory"}, {"identity", "attributes"}),
-        "strategic_intelligence": PhaseMetadata("strategic_intelligence", {"strategic", "combat", "biological"}, {"strategic", "task", "navigation"}),
+        "strategic_intelligence": PhaseMetadata("strategic_intelligence", {"strategic", "combat", "biological"}, {"strategic", "task", "navigation"}, must_run_every_tick=True),
         "near_death_hardening": PhaseMetadata("near_death_hardening", {"combat", "biological", "lifecycle"}, {"combat", "attributes"}),
         "occupancy_resolution": PhaseMetadata("occupancy_resolution", {"movement"}, {"movement", "navigation"}),
         "lifecycle": PhaseMetadata("lifecycle", {"all"}, {"all"}, must_run_every_tick=True),
@@ -110,6 +110,17 @@ class PhaseDependencyGraph:
 
         # 3b. If cadence fires and phase bypasses dirty check, run immediately
         if cadence_fired and phase.must_run_when_cadence_fires:
+            return True
+
+        # 3c. Phase-specific triggers not captured by dirty domains.
+        # quest_rewards and resource_transactions must run whenever there are
+        # opportunity reward intents: quest_rewards produces resource_transfers
+        # from the intents, and resource_transactions must run to consume them
+        # (dirty_set is refreshed before quest_rewards, not after, so
+        # resource_transactions would otherwise see a stale clean dirty_set).
+        if phase_name in ("quest_rewards", "resource_transactions") and getattr(
+            update, "quest_opportunity_reward_intents", None
+        ):
             return True
 
         # 4. Dirty set short-circuiting

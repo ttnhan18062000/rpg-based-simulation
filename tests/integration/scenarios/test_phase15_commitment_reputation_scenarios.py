@@ -37,7 +37,7 @@ def test_abandoning_party_changes_future_partner_selection():
     eval_res = AbandonmentEvaluator.evaluate_abandonment(
         hp=90, max_hp=100, is_party_in_combat=True, is_greed_driven=True
     )
-    assert eval_res["is_betrayal"] is True
+    assert eval_res.is_betrayal is True
     
     # Process betrayal event to update public reputation
     profile = PublicReputationProfile(labels={"reliable": 0.6})

@@ -1,0 +1,18 @@
+# Calibration: 2026-06-30 | TCK-20260630-SIMQ-RECALIBRATE
+# World: sandbox_world | Seeds: 42, 137, 999 | Ticks: 200 | Entities: 10
+#
+# Observed normalized scores per seed (3-run offline replay via calibrate_simq.py):
+#   COMBAT:     +0.04, +0.04, +0.46  (2–13 events/run) → grades B
+#   NARRATIVE:  +1.08, +1.14, +1.40  (16–22 events/run) → grades A
+#   PROGRESSION: +0.00, +0.00, +0.21  (0–4 events/run) → grades B/C
+#   AGENCY/COGNITION/ECONOMY/FACTION/INFORMATION/SOCIAL/WORLD: 0 events
+#     → P0-A (ENABLE_ADVENTURE_ROUTING) must be resolved before these pillars
+#       produce signal on sandbox_world. Defer pillar-level tuning to post-P0-A pass.
+#
+# Thresholds validated: NARRATIVE correctly lands A, COMBAT correctly lands B.
+# No threshold changes required from initial estimates — they are proportionally sound.
+S: 2.0
+A: 0.5
+B: 0.0
+C: -0.5
+D: -1.0

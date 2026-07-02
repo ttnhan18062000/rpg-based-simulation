@@ -7,6 +7,16 @@ from pathlib import Path
 from typing import Optional, Any, Dict, List
 from unittest.mock import MagicMock
 
+from src.lab.results import (
+    GenerateSimulationSetupResult,
+    PrepareSimulationExecutionResult,
+    RegisterSimulationResultResult,
+    CompactSimulationDataResult,
+    InvestigateSimulationResultResult,
+    ProposeSimulationEnhancementsResult,
+    UpdateSimulationKnowledgeResult,
+)
+
 # Core package imports
 from src.lab.session import LabSessionStore, LabSessionError, LabSessionManifest
 from src.lab.request import WorkflowRequest
@@ -85,7 +95,7 @@ class GenerateSimulationSetupWorkflow:
         sessions_dir = self.workspace_root / "data" / "lab_sessions"
         self.session_store = LabSessionStore(sessions_dir)
 
-    def run(self, session_id: str, request: WorkflowRequest, limits: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    def run(self, session_id: str, request: WorkflowRequest, limits: Optional[Dict[str, Any]] = None) -> GenerateSimulationSetupResult:
         logger.info(f"Running GenerateSimulationSetupWorkflow for session '{session_id}' in mode '{request.mode}'")
         
         # 1. Access lab session
@@ -594,7 +604,7 @@ class PrepareSimulationExecutionWorkflow:
         sessions_dir = self.workspace_root / "data" / "lab_sessions"
         self.session_store = LabSessionStore(sessions_dir)
 
-    def run(self, session_id: str, request: WorkflowRequest) -> Dict[str, Any]:
+    def run(self, session_id: str, request: WorkflowRequest) -> PrepareSimulationExecutionResult:
         logger.info(f"Running PrepareSimulationExecutionWorkflow for session '{session_id}'")
         
         # 1. Resolve targeted paths safely
@@ -868,7 +878,7 @@ class RegisterSimulationResultWorkflow:
         lab_runs_dir = self.workspace_root / "data" / "lab_runs"
         self.result_store = LabResultStore(lab_runs_dir)
 
-    def run(self, session_id: str, request: WorkflowRequest) -> dict[str, Any]:
+    def run(self, session_id: str, request: WorkflowRequest) -> RegisterSimulationResultResult:
         logger.info(f"Running RegisterSimulationResultWorkflow for session '{session_id}'")
         
         # 1. Access lab session
@@ -1117,7 +1127,7 @@ class CompactSimulationDataWorkflow:
         lab_runs_dir = self.workspace_root / "data" / "lab_runs"
         self.result_store = LabResultStore(lab_runs_dir)
 
-    def run(self, session_id: str, request: WorkflowRequest) -> dict[str, Any]:
+    def run(self, session_id: str, request: WorkflowRequest) -> CompactSimulationDataResult:
         logger.info(f"Running CompactSimulationDataWorkflow for session '{session_id}'")
         
         # 1. Access lab session
@@ -1572,7 +1582,7 @@ class InvestigateSimulationResultWorkflow:
         lab_runs_dir = self.workspace_root / "data" / "lab_runs"
         self.result_store = LabResultStore(lab_runs_dir)
 
-    def run(self, session_id: str, request: WorkflowRequest) -> dict[str, Any]:
+    def run(self, session_id: str, request: WorkflowRequest) -> InvestigateSimulationResultResult:
         logger.info(f"Running InvestigateSimulationResultWorkflow for session '{session_id}'")
         
         # 1. Access lab session
@@ -2062,7 +2072,7 @@ class ProposeSimulationEnhancementsWorkflow:
         lab_runs_dir = self.workspace_root / "data" / "lab_runs"
         self.result_store = LabResultStore(lab_runs_dir)
 
-    def run(self, session_id: str, request: WorkflowRequest) -> dict[str, Any]:
+    def run(self, session_id: str, request: WorkflowRequest) -> ProposeSimulationEnhancementsResult:
         logger.info(f"Running ProposeSimulationEnhancementsWorkflow for session '{session_id}'")
         
         # 1. Access session and confirm stage
@@ -2323,7 +2333,7 @@ class UpdateSimulationKnowledgeWorkflow:
         self.session_store = LabSessionStore(sessions_dir)
         self.knowledge_root = self.workspace_root / "data" / "lab_knowledge"
 
-    def run(self, session_id: str, request: WorkflowRequest) -> dict[str, Any]:
+    def run(self, session_id: str, request: WorkflowRequest) -> UpdateSimulationKnowledgeResult:
         logger.info(f"Running UpdateSimulationKnowledgeWorkflow for session '{session_id}'")
         from src.lab.audit import LabAuditTrail
         trail = LabAuditTrail(self.workspace_root)

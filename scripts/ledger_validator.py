@@ -5,7 +5,7 @@ import sys
 
 # Approved domain prefixes for RPG Engine V2
 DOMAINS = {
-    "AUTH", "COMBAT", "WORLD", "STRAT", "SOC", "PROG", "RES", "ECON", "DATA", "INFRA", "API", "MED", "CLI", "GOV", "PERF", "OPT"
+    "AUTH", "COMBAT", "WORLD", "STRAT", "SOC", "PROG", "RES", "ECON", "DATA", "INFRA", "API", "MED", "CLI", "GOV", "PERF", "OPT", "CERT"
 }
 
 def validate_ledger(file_path):
@@ -77,9 +77,13 @@ def validate_ledger(file_path):
                 if tag_match:
                     tags[tag] = tag_match.group(1)
             
-            if "SOURCE" in tags and not os.path.exists(tags["SOURCE"]):
+            # Strip pytest node ID suffix (::test_name) before checking file existence
+            source_path = tags["SOURCE"].split("::")[0] if "SOURCE" in tags else None
+            test_path = tags["TEST"].split("::")[0] if "TEST" in tags else None
+
+            if source_path and not os.path.exists(source_path):
                 warnings.append(f"Line {line_num}: Source path '{tags['SOURCE']}' for '{item_id}' does not exist.")
-            if "TEST" in tags and not os.path.exists(tags["TEST"]):
+            if test_path and not os.path.exists(test_path):
                 warnings.append(f"Line {line_num}: Test path '{tags['TEST']}' for '{item_id}' does not exist.")
 
     # Report results

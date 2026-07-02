@@ -3,7 +3,7 @@ status: authoritative
 layer: mechanics
 authority: P0
 audience: developer
-last_verified: 2026-06-06
+last_verified: 2026-06-27
 ---
 
 # Chapter 6: Worldbuilding Foundation
@@ -154,4 +154,14 @@ Defines items, structures, and regional ecologies:
 ---
 
 ## 📜 Compliance Status
-All chapters are currently **Certified Level 1 (Authoritative)**. Documentation matches the current source code implementation, including full declarative assembly, context-aware compilers, and post-run observability joins.
+
+| Chapter | Status | Last Action |
+|---|---|---|
+| 01 Entity Anatomy | Verified | Corrected: hunger threshold 95.0/+2dmg, sleep debt 98.0/+1dmg (TCK-20260619-P0-DOC-REPAIR) |
+| 02 Combat Laws | Verified | Confirmed: COVER_REDUCTION=0.30, BOND_SYNERGY_BONUS=0.10 (TCK-20260627-P3C-DOC-CURRENCY) |
+| 03 Economic Laws | Verified | Corrected: weight limit 50.0 kg, selling formula static 50% (TCK-20260627-P3C-DOC-CURRENCY) |
+| 04 Strategic Cognition | Verified | Corrected: interruption formula uses resistance_multiplier (TCK-20260619-P0-DOC-REPAIR); blocker kinds, perception radius 10.0, info decay 50 ticks (TCK-20260627-P3C-DOC-CURRENCY) |
+| 05 World Evolution | Partially verified | 2 uncertain claims remain: resource respawn interval, trauma delta per death (not traced to source) |
+| 06 Worldbuilding Foundation | Verified | Structural claims confirmed (TCK-20260619-P0-DOC-REPAIR, TCK-20260627-P3C-DOC-CURRENCY) |
+
+Chapters 01–04 and 06 are **Certified Level 1 (Authoritative)** as of 2026-06-27. Chapter 05 is **Partially Verified** — structural mechanics confirmed, 2 numeric constants unverified against source.

@@ -61,18 +61,24 @@ def test_simulation_seed_stability(test_profile):
     rng_a = DeterministicRNG(42)
     kernel_a = Kernel(test_profile, initial_state, rng_a)
     fingerprints_a = []
-    for _ in range(5):
-        kernel_a.tick_once()
-        fingerprints_a.append(kernel_a.state.fingerprint()["state_hash"])
-        
+    try:
+        for _ in range(5):
+            kernel_a.tick_once()
+            fingerprints_a.append(kernel_a.state.fingerprint()["state_hash"])
+    finally:
+        kernel_a.shutdown()
+
     # Run B
     rng_b = DeterministicRNG(42)
     kernel_b = Kernel(test_profile, initial_state, rng_b)
     fingerprints_b = []
-    for _ in range(5):
-        kernel_b.tick_once()
-        fingerprints_b.append(kernel_b.state.fingerprint()["state_hash"])
-        
+    try:
+        for _ in range(5):
+            kernel_b.tick_once()
+            fingerprints_b.append(kernel_b.state.fingerprint()["state_hash"])
+    finally:
+        kernel_b.shutdown()
+
     assert fingerprints_a == fingerprints_b, "Simulation diverged with identical seeds!"
     assert len(set(fingerprints_a)) == 5, "Simulation did not progress (hashes are identical across ticks)"
 
@@ -85,16 +91,20 @@ def test_simulation_seed_divergence(test_profile):
     
     rng_a = DeterministicRNG(42)
     kernel_a = Kernel(test_profile, state_a, rng_a)
-    
+    try:
+        kernel_a.tick_once()
+        hash_a = kernel_a.state.fingerprint()["state_hash"]
+    finally:
+        kernel_a.shutdown()
+
     rng_b = DeterministicRNG(99)
     kernel_b = Kernel(test_profile, state_b, rng_b)
-    
-    kernel_a.tick_once()
-    kernel_b.tick_once()
-    
-    hash_a = kernel_a.state.fingerprint()["state_hash"]
-    hash_b = kernel_b.state.fingerprint()["state_hash"]
-    
+    try:
+        kernel_b.tick_once()
+        hash_b = kernel_b.state.fingerprint()["state_hash"]
+    finally:
+        kernel_b.shutdown()
+
     assert hash_a != hash_b, "Different seeds produced identical fingerprints!"
 
 def test_simulation_domain_separation(test_profile):
@@ -118,27 +128,30 @@ def test_simulation_domain_separation(test_profile):
     state_a = AuthoritativeState(tick=0, seed=42, entities={1: hero})
     rng_a = DeterministicRNG(42)
     kernel_a = Kernel(test_profile, state_a, rng_a)
-    kernel_a.tick_once()
-    
-    hero_a = kernel_a.state.entities[1]
-    
+    try:
+        kernel_a.tick_once()
+        hero_a = kernel_a.state.entities[1]
+    finally:
+        kernel_a.shutdown()
+
     # 2. Run with same hero + unrelated monster far away
     monster = (
         V2EntityBuilder(2)
         .kind("monster")
-        .location(100.0, 100.0) # Far away to avoid interaction
+        .location(100.0, 100.0)
         .identity(faction=Faction.MONSTER_HORDE)
         .combat(hp=100, alive=True, readiness=100.0)
         .lifecycle(active=True)
         .build()
     )
-    
+
     state_b = AuthoritativeState(tick=0, seed=42, entities={1: hero, 2: monster})
     rng_b = DeterministicRNG(42)
     kernel_b = Kernel(test_profile, state_b, rng_b)
-    kernel_b.tick_once()
-    
-    hero_b = kernel_b.state.entities[1]
-    
-    # The hero's RNG sequence should be IDENTICAL because we use composite seeds (Domain, Tick, EntityID)
+    try:
+        kernel_b.tick_once()
+        hero_b = kernel_b.state.entities[1]
+    finally:
+        kernel_b.shutdown()
+
     assert hero_a.navigation.position == hero_b.navigation.position, "Hero movement changed by unrelated entity spawn!"

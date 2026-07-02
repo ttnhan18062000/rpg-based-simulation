@@ -98,8 +98,10 @@ def test_smoke_wilderness_survival_compiles_to_authoritative_state(repos):
     """
     wilderness_survival assembles and compiles to a non-empty AuthoritativeState.
 
-    Verifies the full resolve → compile path for the no-settlement ecology
-    world (forest_deep_ecology + wolf_den_near_forest + undead_battlefield).
+    Verifies the full resolve → compile path for the ecology world using
+    forest_deep_ecology + wolf_den_near_forest + undead_battlefield +
+    survivor_camp_shelter (healer_hut added for near_service compatibility,
+    TCK-20260627-P1I-WORLD-BALANCE-FIX).
     """
     state, report = _compile_composition("wilderness_survival", repos)
 
@@ -133,6 +135,33 @@ def test_smoke_urban_political_compiles_to_authoritative_state(repos):
         f"urban_political must spawn at least one entity, got {report['entity_count']}"
     )
     assert len(state.entities) > 0
+    # TCK-20260627-P0B-URBAN-RESOURCE-NODES: urban_political must have >= 3 resource nodes
+    assert report["resource_node_count"] >= 3, (
+        f"urban_political must have >= 3 resource nodes after compile, "
+        f"got {report['resource_node_count']} — ResourceOpportunityProvider requires nodes to function"
+    )
+    assert len(state.resource_nodes) >= 3
+
+
+def test_urban_political_all_entities_have_region_id(repos):
+    """
+    TCK-20260627-P0C-ENTITY-REGION-ASSIGN: After WorldCompiler.compile(), every entity
+    spawned from urban_political must have navigation.region_id assigned (non-None).
+
+    ResourceOpportunityProvider uses region_id for node matching — a None region_id
+    causes every entity to fail resource filtering regardless of node availability.
+    """
+    state, _ = _compile_composition("urban_political", repos)
+
+    missing = [
+        eid
+        for eid, e in state.entities.items()
+        if e.navigation.region_id is None
+    ]
+    assert missing == [], (
+        f"{len(missing)} entities have navigation.region_id=None after compile: {missing}. "
+        f"WorldCompiler.compile() must assign region_id from spawn region at assembly time."
+    )
 
 
 # ---------------------------------------------------------------------------

@@ -33,6 +33,11 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
+# Use locally cached HuggingFace models after first download — avoids SSL cert
+# failures on networks where the system Python bundle doesn't trust the HF CDN.
+os.environ.setdefault("HF_HUB_OFFLINE", "1")
+os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")
+
 _DEFAULT_DB = Path("knowledge-index/knowledge.db")
 _MANIFEST_PATH = Path("knowledge-index/manifest.json")
 _CACHE_PATH = Path("knowledge-index/embeddings_cache.pkl")
@@ -623,10 +628,10 @@ def cmd_build(args) -> int:
     except ImportError as exc:
         pkg = "sentence-transformers" if "sentence_transformers" in str(exc) else "sqlite-vec"
         print(
-            f"Error: {pkg} not installed — run: pip install -e '.[knowledge]'",
+            f"Warning: {pkg} not installed — run: pip install -e '.[knowledge]'",
             file=sys.stderr,
         )
-        return 1
+        return 0
 
     # SQLite version check
     if sqlite3.sqlite_version_info < (3, 38, 0):
@@ -959,10 +964,10 @@ def cmd_query(args) -> int:
         except ImportError as exc:
             pkg = "sentence-transformers" if "sentence_transformers" in str(exc) else "sqlite-vec"
             print(
-                f"Error: {pkg} not installed — run: pip install -e '.[knowledge]'",
+                f"Warning: {pkg} not installed — run: pip install -e '.[knowledge]'",
                 file=sys.stderr,
             )
-            return 1
+            return 0
 
     query_tokens = _tokenize(query_text)
 

@@ -64,25 +64,7 @@ KNOWN_HARDCODED_BASELINE: FrozenSet[Tuple[str, str]] = frozenset({
     ("small_potion", "item"),    # migration_map tracks (small_potion, recipe); this is the item entry
     ("travel_ration", "item"),
     ("repair_kit", "item"),
-    # Enemies — base world creature not projected through legacy_enemy_projection.yaml
-    ("rat", "enemy"),
-    # Recipes — craftable outputs not yet tracked in migration_map
-    ("iron_sword", "recipe"),
-    ("hunter_blade", "recipe"),
-    # Services — hometown base services; IDs are not "legacy" (they have always been these IDs)
-    ("shop_hometown", "service"),
-    ("blacksmith_hometown", "service"),
-    ("guide_hometown", "service"),
-    ("guild_hometown", "service"),
-    ("inn_hometown", "service"),
-    # Regions — base world regions; IDs have not changed (no migration needed)
-    ("hometown", "region"),
-    ("near_forest", "region"),
-    ("old_mine", "region"),
-    ("wolf_den", "region"),
-    ("north_ruin", "region"),
-    ("goblin_camp", "region"),
-    ("moon_cave", "region"),
+    # Enemies — base world creatures; entries below now tracked via migration_map.yaml
 })
 
 

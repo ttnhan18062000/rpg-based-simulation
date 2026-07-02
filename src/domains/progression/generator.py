@@ -90,6 +90,6 @@ class ConversionOptionGenerator:
             reason="Do nothing, keep gold and resources for later."
         ))
 
-        # Sort options descending by score
-        sorted_options = sorted(options, key=lambda o: o.score, reverse=True)
+        # Sort options descending by score; kind.value as tiebreaker for determinism
+        sorted_options = sorted(options, key=lambda o: (o.score, o.kind.value), reverse=True)
         return tuple(sorted_options[:10])  # Cap results count at 10

@@ -3,7 +3,9 @@ import os
 import shutil
 import json
 from pathlib import Path
+import pytest
 
+@pytest.mark.slow
 def test_cli_basic_execution():
     """Verify that python -m src cli runs and produces output."""
     replay_dir = "data/test_cli_basic"
@@ -17,8 +19,8 @@ def test_cli_basic_execution():
         "--ticks", "20",
         "--replay", replay_dir
     ]
-    
-    result = subprocess.run(cmd, capture_output=True, text=True)
+
+    result = subprocess.run(cmd, capture_output=True, text=True, timeout=90)
     assert result.returncode == 0
     assert "V2 Simulation Started" in result.stdout
     assert "Final State Hash" in result.stdout

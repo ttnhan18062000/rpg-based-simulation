@@ -192,11 +192,7 @@ class WorldRepository:
                                 raw_dict = yaml.safe_load(f)
                             
                             schema_ver = raw_dict.get("schema_version", "")
-                            if "worldtemplate" in schema_ver:
-                                from src.worldbuilding.recipe import WorldTemplateSpec
-                                spec = WorldTemplateSpec.model_validate(raw_dict)
-                                status_str = "TEMPLATE"
-                            elif "worldcomposition" in schema_ver:
+                            if "worldcomposition" in schema_ver:
                                 from src.worldassembly.schema import WorldCompositionSpec
                                 try:
                                     spec = WorldCompositionSpec.model_validate(raw_dict)

@@ -10,6 +10,7 @@ regions:
     grid_bounds: [100, 70, 130, 110]
     terrain: "cave"
     hazard_level: 4.0
+    tags: [cave]
 factions: ["moon_cult", "arcane_circle"]
 populations:
   - "moon_cult_apprentice_circle"
@@ -18,3 +19,31 @@ resources:
   crystal_outcrop: 4
 relationships: ["moon_cult_to_town"]
 observability_tags: ["conflict"]
+quest_definitions:
+  - id: "mcult_investigate_ritual_site"
+    type: "investigate"
+    required_participant_tags: ["humanoid", "magic_sensitive"]
+    required_location_tags: ["cave", "wilderness"]
+    reward_budget: 150
+    procedural_hints:
+      difficulty: 3
+      escalation: true
+    tags: ["cult", "arcane", "mystery"]
+  - id: "mcult_explore_cave_network"
+    type: "explore"
+    required_participant_tags: ["humanoid", "magic_sensitive"]
+    required_location_tags: ["cave", "wilderness"]
+    reward_budget: 120
+    procedural_hints:
+      difficulty: 3
+      escalation: false
+    tags: ["cult", "arcane", "exploration"]
+  - id: "mcult_defend_arcane_circle"
+    type: "defend"
+    required_participant_tags: ["humanoid", "magic_sensitive"]
+    required_location_tags: ["cave", "wilderness"]
+    reward_budget: 200
+    procedural_hints:
+      difficulty: 4
+      escalation: true
+    tags: ["cult", "arcane", "defense"]

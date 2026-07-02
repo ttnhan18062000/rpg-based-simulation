@@ -3,7 +3,7 @@ status: authoritative
 layer: systems
 authority: P1
 audience: agent
-last_verified: 2026-06-12
+last_verified: 2026-06-20
 tags: [quests, lifecycle, rewards, contract, progression]
 ---
 
@@ -139,6 +139,37 @@ The **Objective Reward** stage (`PROG-084`) is the only place quest rewards are 
 **What the quest system does NOT do:**
 - It does not apply rewards directly — only the Objective Reward stage does.
 - It does not call `EntityState` mutators — `QuestService` is read-only logic.
+
+---
+
+## Quest Opportunity Reward Integration (E23C — Pressure-Generated Quests)
+
+`QuestOpportunity` entries in `state.quest_registry` (world-level registry, not entity projects) use a separate reward path implemented in E23C.
+
+**Source:** `src/engine/pipeline_phases/quest_opportunity_rewards.py` — `QuestOpportunityRewardSystem`  
+**Intent type:** `QuestOpportunityRewardIntent` (field `quest_opportunity_reward_intents` on `StateUpdate`)  
+**Parity entry:** `PROG-109`
+
+**Lifecycle for opportunity quests:**
+
+```
+QuestOpportunityStatus.COMPLETED → QuestOpportunityRewardIntent emitted
+    → ResourceTransferIntent(source_kind=QUEST, reward_upd=RewardUpdate(xp_gain=...))
+    → WorldEvent(category=QUEST_COMPLETED)
+    → registry removal deferred until transaction confirmed in processed_transaction_ids
+```
+
+**Key distinctions from entity-project quest rewards (PROG-084):**
+
+| | Entity-project quests (PROG-084) | Opportunity quests (E23C) |
+|---|---|---|
+| Status enum | `QuestStatus` (int) on `QuestState` | `QuestOpportunityStatus` (str) on `QuestOpportunity` |
+| Storage | `entity.strategic.projects` | `state.quest_registry` |
+| XP field | `RewardState.xp` | `RewardUpdate(xp_gain=...)` via `reward_upd` |
+| Registry removal | N/A | Deferred until `transaction_id` confirmed |
+| Faction rep | Delivered | Stubbed (Phase 5 future work) |
+
+**Caller contract:** The reward mechanism is wired in `QuestRewardPhase.resolve()`. The caller supplies `entity_id` and `quest_id` via `QuestOpportunityRewardIntent`. Multi-entity targeting (Phase 4 / E23D HERO matching) is out of scope for E23C.
 
 ---
 

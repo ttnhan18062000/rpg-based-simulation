@@ -113,6 +113,56 @@ def test_schema_version_validation(base_dir):
     with pytest.raises(ValueError, match="Unsupported artifact schema version"):
         repo.read_manifest("run_3")
 
+def test_run_manifest_world_id_default():
+    """RunManifest without world_id must serialize world_id as 'unknown'."""
+    manifest = RunManifest(
+        run_id="run_wid_default",
+        scenario_name="cli_default",
+        scenario_type="mixed_sandbox",
+        seed=0,
+        observability_mode="LIGHT",
+        started_at="2026-06-27T00:00:00Z",
+        ticks_requested=10
+    )
+    dumped = manifest.model_dump()
+    assert "world_id" in dumped
+    assert dumped["world_id"] == "unknown"
+
+
+def test_run_manifest_world_id_explicit():
+    """RunManifest with world_id='dungeon_crawl' must round-trip that value."""
+    manifest = RunManifest(
+        run_id="run_wid_explicit",
+        scenario_name="cli_default",
+        scenario_type="mixed_sandbox",
+        seed=0,
+        observability_mode="LIGHT",
+        started_at="2026-06-27T00:00:00Z",
+        ticks_requested=10,
+        world_id="dungeon_crawl"
+    )
+    dumped = manifest.model_dump()
+    assert dumped["world_id"] == "dungeon_crawl"
+
+
+def test_manifest_world_id_persists_via_repo(base_dir):
+    """world_id must survive a write/read round-trip through RunArtifactRepository."""
+    repo = RunArtifactRepository(base_dir=base_dir)
+    manifest = RunManifest(
+        run_id="run_wid_repo",
+        scenario_name="cli_default",
+        scenario_type="mixed_sandbox",
+        seed=0,
+        observability_mode="LIGHT",
+        started_at="2026-06-27T00:00:00Z",
+        ticks_requested=10,
+        world_id="urban_political"
+    )
+    repo.create_run("run_wid_repo", manifest)
+    read_back = repo.read_manifest("run_wid_repo")
+    assert read_back.world_id == "urban_political"
+
+
 def test_list_runs(base_dir):
     repo = RunArtifactRepository(base_dir=base_dir)
     manifest_1 = RunManifest(

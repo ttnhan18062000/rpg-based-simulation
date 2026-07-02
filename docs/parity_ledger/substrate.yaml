@@ -913,13 +913,13 @@
   divergence_note: null
   support_boundary: null
 - id: SUB-087
-  text: '`test_default_region_id`: default region identifier is preserved'
+  text: '`test_default_region_id`: entity navigation.region_id is assigned from spawn region at WorldCompiler.compile() time'
   status: verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  v2_evidence: 'src/worldbuilding/compiler.py L319 — V2EntityBuilder chain calls .navigation(region_id=region_id) where region_id=pop_spec.spawn_region; fix applied in TCK-20260627-P0C-ENTITY-REGION-ASSIGN'
   proof_type: null
-  test_path: null
+  test_path: tests/integration/worldassembly/test_e2e_smoke.py::test_urban_political_all_entities_have_region_id
   divergence_note: null
   support_boundary: null
 - id: SUB-088
@@ -3808,18 +3808,21 @@
   support_boundary: "WorldBuilding compiler — world setup only, not tick-path."
 - id: SUBSTRATE-NEW-002
   text: >
-    WorldProceduralGenerator (WORLD-GEN-003/004) is fully deterministic: uses an
-    isolated random.Random(seed) instance — global random state is never read or
-    written. Same (intent, catalog_repo) inputs produce bit-identical WorldSpec,
-    CompileContext, and ProvenanceManifest (except created_at timestamp). Validation
-    failures (GENERATED_WORLD context) are reported but do NOT abort generation.
+    WorldProceduralGenerator (WORLD-GEN-003/004) is fully deterministic: uses a
+    DeterministicRNG(seed) instance (src/platform/rng.py) — global random state is
+    never read or written. Same (intent, catalog_repo) inputs produce bit-identical
+    WorldSpec, CompileContext, and ProvenanceManifest (except created_at timestamp).
+    Validation failures (GENERATED_WORLD context) are reported but do NOT abort generation.
   status: verified
   priority: P0
   legacy_evidence: null
   v2_evidence: >
     docs/world/generator_contract.md +
-    src/worldgeneration/generator.py:41 (rng = random.Random(intent.seed)) +
-    tests/unit/worldgeneration/test_generator.py
+    src/worldgeneration/generator.py:57 (rng = DeterministicRNG(intent.seed)) +
+    src/platform/rng.py (DeterministicRNG — only allowed RNG source) +
+    TCK-20260619-P0-DETERMINISM (replaced bare random.Random with DeterministicRNG) +
+    tests/unit/worldgeneration/test_generator.py +
+    tests/integration/kernel/test_phase2_determinism.py (lint gate: no bare random. in src/)
   proof_type: null
   test_path: tests/unit/worldgeneration/test_generator.py
   divergence_note: >
@@ -3944,20 +3947,31 @@
     procedural_hints (Dict[str,Any]), tags (List[str]), source_module (Optional[str]).
     A model_validator(mode="before") migrates legacy YAML with quests: key to
     quest_definitions: with no silent data loss. The compiler iterates quest_definitions
-    and validates required_location_tags against known region IDs, emitting warnings
-    for unresolvable tags. src/quests/ runtime system is unchanged.
+    and validates required_location_tags against the semantic tag pool built from all
+    regions: each region contributes its type field (coarse category e.g. wilderness, road,
+    town) and any explicit tags (subtypes e.g. mine, forest, ruins, settlement). A warning
+    is emitted only when a tag matches neither any region type nor any region explicit tag.
+    RegionSpec carries tags: List[str] = [] for this purpose; RegionRecipeSpec carries the
+    same field so module YAML authors can annotate regions during authoring.
+    src/quests/ runtime system is unchanged.
   status: verified
   priority: P1
   legacy_evidence: null
   v2_evidence: >
-    src/worldbuilding/schema.py (QuestDefinition, WorldSpec.quest_definitions,
+    src/worldbuilding/schema.py (RegionSpec.tags, QuestDefinition, WorldSpec.quest_definitions,
     _migrate_quests_field validator) +
-    src/worldbuilding/compiler.py (quest_definitions loop) +
+    src/worldbuilding/recipe.py (RegionRecipeSpec.tags, expanded_data propagation) +
+    src/worldbuilding/compiler.py (tag_pool build from spec.regions + quest_definitions loop) +
+    src/worldassembly/resolver.py (RegionSpec construction propagates tags from RegionRecipeSpec) +
     src/worldbuilding/cli.py (quest_definitions display) +
-    src/worldbuilding/recipe.py (expanded_data quest_definitions key)
+    data/content/world_modules/ (regions annotated with tags where type alone is insufficient)
   proof_type: null
-  test_path: tests/unit/worldbuilding/test_quest_definition.py
-  divergence_note: null
+  test_path: >
+    tests/unit/worldbuilding/test_quest_definition.py +
+    tests/unit/worldbuilding/test_world_compiler.py::test_quest_location_tag_matches_region_type +
+    tests/unit/worldbuilding/test_world_compiler.py::test_quest_location_tag_matches_region_explicit_tag +
+    tests/unit/worldbuilding/test_world_compiler.py::test_quest_location_tag_warns_on_genuine_mismatch
+  divergence_note: "TCK-20260630-WORLD-QUEST-LOCATION: fixed compiler to match against region.type + region.tags instead of region.id; all four compiled worlds now have zero quest location warnings."
   support_boundary: "WorldBuilding authoring layer — world setup only, not tick-path."
 - id: SUBSTRATE-NEW-008
   text: >
@@ -4023,22 +4037,119 @@
 - id: SUBSTRATE-NEW-011
   text: >
     ProceduralCompositionGenerator.generate() performs seed-based parameter sampling after
-    module selection. A fresh random.Random(intent.seed) (stdlib, not numpy) is initialized
-    per call. For each selected module in rank order, for each ModuleParameterSpec in
-    declaration order: (1) if allowed_values is non-empty → rng.choice(allowed_values);
-    (2) elif min_value and max_value are both set → rng.randint(int(min), int(max)) for
-    type="integer", rng.uniform(float(min), float(max)) otherwise; (3) else → use declared
-    default unchanged (no rng call). Required params with no default and no bounds are left
-    absent from the parameters dict. Same seed + same module selection order → identical
-    ModuleRefSpec.parameters on every call.
+    module selection. A fresh DeterministicRNG(intent.seed) (src/platform/rng.py) is
+    initialized per call as param_rng. For each selected module in rank order, for each
+    ModuleParameterSpec in declaration order: (1) if allowed_values is non-empty →
+    param_rng.choice(...); (2) elif min_value and max_value are both set →
+    param_rng.get_int(...) for type="integer", param_rng.get_float(...) otherwise;
+    (3) else → use declared default unchanged (no rng call). Required params with no
+    default and no bounds are left absent from the parameters dict.
+    Same seed + same module selection order → identical ModuleRefSpec.parameters on every call.
   status: verified
   priority: P1
   legacy_evidence: null
   v2_evidence: >
-    src/worldgeneration/generator.py (ProceduralCompositionGenerator.generate — param_rng
-    sampling loop) + src/worldmodules/schema.py (ModuleParameterSpec) +
-    src/worldassembly/schema.py (ModuleRefSpec.parameters)
+    src/worldgeneration/generator.py:452 (param_rng = DeterministicRNG(intent.seed)) +
+    src/worldmodules/schema.py (ModuleParameterSpec) +
+    src/worldassembly/schema.py (ModuleRefSpec.parameters) +
+    TCK-20260619-P0-DETERMINISM (replaced bare random.Random with DeterministicRNG)
   proof_type: null
   test_path: tests/unit/worldgeneration/test_seed_params.py
   divergence_note: null
   support_boundary: "WorldGeneration — seed-based parameter sampling only."
+- id: SUBSTRATE-NEW-012
+  text: >
+    No bare `import random` or `random.` calls are permitted in src/ outside
+    src/platform/rng.py. DeterministicRNG (src/platform/rng.py) is the only allowed
+    RNG source. A CI lint test enforces this: tests/integration/kernel/test_phase2_determinism.py
+    scans src/ at test time and fails if any bare random call is found.
+    Violation files prior to TCK-20260619-P0-DETERMINISM:
+    src/engine/kernel.py, src/worldbuilding/compiler.py,
+    src/worldbuilding/recipe.py, src/worldgeneration/generator.py — all fixed.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: >
+    src/platform/rng.py (DeterministicRNG — authoritative RNG) +
+    src/engine/kernel.py (bare random replaced, TCK-20260619-P0-DETERMINISM) +
+    src/worldbuilding/compiler.py (bare random replaced, TCK-20260619-P0-DETERMINISM) +
+    src/worldbuilding/recipe.py (bare random replaced, TCK-20260619-P0-DETERMINISM) +
+    src/worldgeneration/generator.py (bare random replaced, TCK-20260619-P0-DETERMINISM) +
+    tests/integration/kernel/test_phase2_determinism.py (lint gate test)
+  proof_type: null
+  test_path: tests/integration/kernel/test_phase2_determinism.py
+  divergence_note: null
+  support_boundary: "All of src/ — enforced by lint test."
+- id: SUB-370
+  text: PersonalityComponent traits (bravery, greed, industry, sociability) are seeded
+    per entity using DeterministicRNG sub-seeds at world compilation; no two entities
+    share an identical personality vector.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/worldbuilding/compiler.py (WorldCompiler.compile() — rng.get_float(Domain.WORLD,
+    0, entity_id, sub_id=10..13), TCK-20260619-P0-ENTITY-INIT)
+  proof_type: parity
+  test_path: tests/unit/entity/test_entity_initialization.py::test_entity_personality_variance_at_spawn
+  divergence_note: null
+  support_boundary: null
+
+- id: SUB-371
+  text: ConversionOptionGenerator and PersonalityAwareSelector sort candidates by
+    (score DESC, kind.value DESC) so ties in score produce a canonical, deterministic
+    ordering across all Python runs and entity orderings.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/domains/progression/generator.py (key=lambda o: (o.score, o.kind.value),
+    TCK-20260619-P0-CODE-INTEGRITY) +
+    src/domains/progression/selector.py (key=lambda pair: (pair[1], pair[0].kind.value),
+    TCK-20260619-P0-CODE-INTEGRITY)
+  proof_type: parity
+  test_path: tests/unit/engine/test_sort_tiebreaker.py::TestGeneratorSortTiebreaker::test_sort_is_stable_on_tied_scores
+  divergence_note: null
+  support_boundary: null
+
+- id: SUB-372
+  text: >
+    InformationProviderState is a frozen typed record registered in
+    AuthoritativeState.information_providers (Dict[int, InformationProviderState]).
+    to_canonical_dict() produces a deterministic dict with all fields.
+    to_readonly() wraps the dict in ReadOnlyDict.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/domains/information/providers.py (InformationProviderState,
+    InformationProviderArchetype, TCK-20260619-E42B-INFO-PROVIDER) +
+    src/core/state.py (AuthoritativeState.information_providers field +
+    to_readonly() ReadOnlyDict wrap, TCK-20260619-E42B-INFO-PROVIDER)
+  proof_type: parity
+  test_path: tests/unit/cognition/test_information_seeking.py::TestInformationProviderState::test_information_provider_registered_in_authoritative_state
+  divergence_note: null
+  support_boundary: null
+
+# NOTE: Faction authoritative-world-object parity is tracked in a dedicated file.
+# See docs/parity_ledger/faction.yaml for FAC-001 (FactionState durable model in
+# AuthoritativeState) and FAC-002 (tension clamping), added by TCK-20260619-E53Aa-FACTION-STATE.
+
+- id: SUB-373
+  text: >
+    CONTENT_USAGE_MATRIX in src/content/matrix.py is auto-populated at import
+    time with DESIGN_ONLY placeholder entries for any YAML file present in
+    data/content/ that is not already hand-registered. This eliminates the manual
+    registration step for new content families. The ValueError guard in
+    CatalogRepository.load_all(strict=True) (CANONICAL_FAMILIES check) is
+    unaffected and continues to fire for unregistered files.
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: >
+    src/content/matrix.py (_auto_discover_extra_entries, module-level merge block,
+    TCK-20260627-P2K-CONTENT-MATRIX)
+  proof_type: parity
+  test_path: tests/unit/content/test_content_usage_matrix.py::test_merged_matrix_covers_all_disk_files
+  divergence_note: null
+  support_boundary: null

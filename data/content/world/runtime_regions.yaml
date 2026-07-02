@@ -117,3 +117,40 @@
   tags: ["swamp", "border", "lizardfolk"]
   danger_level: 3
   controlling_faction: "swamp_tribe"
+
+# TCK-20260619-E13B-MODULE-TYPES: terrain and population module regions
+- id: "mountain_pass_zone"
+  display_name: "Mountain Pass Zone"
+  biome: "frozen_peak"
+  tags: ["mountain", "cold", "traversal", "wilderness"]
+  danger_level: 3
+  controlling_faction: "neutral"
+
+- id: "river_ford"
+  display_name: "River Ford Crossing"
+  biome: "near_forest"
+  tags: ["river", "water", "traversal", "wilderness"]
+  danger_level: 1
+  controlling_faction: "neutral"
+
+- id: "nomadic_herd_range"
+  display_name: "Nomadic Herd Range"
+  biome: "near_forest"
+  tags: ["plain", "nomadic", "beast", "wilderness"]
+  danger_level: 2
+  controlling_faction: "wild_beast_pack"
+
+- id: "settled_quarter_district"
+  display_name: "Settled Quarter District"
+  biome: "frontier_village"
+  tags: ["settlement", "services", "trade", "crafting"]
+  danger_level: 0
+  controlling_faction: "merchant_league"
+
+# TCK-20260627-P1I-WORLD-BALANCE-FIX: wilderness_survival shelter region
+- id: "survivor_outpost"
+  display_name: "Survivor Outpost"
+  biome: "near_forest"
+  tags: ["shelter", "wilderness", "survival"]
+  danger_level: 0
+  controlling_faction: "neutral"

@@ -51,3 +51,9 @@
   display_name: "Volcanic Ground"
   move_cost_multiplier: 1.4
   hazard_multiplier: 1.8
+
+# STATE: ADDITIONAL
+- id: "river"
+  display_name: "River"
+  move_cost_multiplier: 1.8
+  hazard_multiplier: 1.4

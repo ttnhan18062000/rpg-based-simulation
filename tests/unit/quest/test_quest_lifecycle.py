@@ -112,3 +112,138 @@ def test_no_double_completion(base_entity, active_quest):
     # Verify no extra XP gained
     assert entity2.identity.evolution_points == xp_after_1
     assert entity2.strategic.projects["q1"].quest_status == QuestStatus.REWARDED
+
+
+# ─── E23B New Tests ──────────────────────────────────────────────────────────
+
+from src.core.models.quests import QuestOpportunity, QuestOpportunityStatus
+from src.domains.world_emergence.services import QuestLifecycleService
+
+
+def _make_opp(opp_id: str, expiry_ticks: int, status: QuestOpportunityStatus = QuestOpportunityStatus.OFFERED) -> QuestOpportunity:
+    return QuestOpportunity(
+        id=opp_id,
+        kind="resource_crisis",
+        trigger_condition="test trigger",
+        objective_chain=("fetch:iron_ore:1",),
+        reward_spec={"gold": 10, "xp": 50},
+        faction_source=None,
+        expiry_ticks=expiry_ticks,
+        source_event_id="ev_test",
+        status=status,
+    )
+
+
+def test_quest_registry_field_on_authoritative_state():
+    """AC-1: quest_registry field exists on AuthoritativeState and is immutable."""
+    state = AuthoritativeState(tick=0, seed=42)
+    assert hasattr(state, "quest_registry")
+    assert state.quest_registry == {}
+
+    opp = _make_opp("opp1", expiry_ticks=100)
+    new_state = replace(state, quest_registry={"opp1": opp})
+    assert new_state.quest_registry["opp1"] == opp
+    assert state.quest_registry == {}
+    assert state.quest_registry is not new_state.quest_registry
+
+
+def test_quest_opportunity_status_enum_values():
+    """AC-2: QuestOpportunityStatus has all six expected values."""
+    assert QuestOpportunityStatus.OFFERED
+    assert QuestOpportunityStatus.ACTIVE
+    assert QuestOpportunityStatus.PROGRESSED
+    assert QuestOpportunityStatus.COMPLETED
+    assert QuestOpportunityStatus.FAILED
+    assert QuestOpportunityStatus.EXPIRED
+    assert isinstance(QuestOpportunityStatus.OFFERED.value, str)
+
+
+def test_quest_opportunity_defaults_to_offered():
+    """AC-3: QuestOpportunity.status defaults to OFFERED when not specified."""
+    opp = QuestOpportunity(
+        id="rc_ev1_42",
+        kind="resource_crisis",
+        trigger_condition="iron depleted in north at tick 5",
+        objective_chain=("fetch:iron_ore:3",),
+        reward_spec={"gold": 10, "xp": 50},
+        faction_source=None,
+        expiry_ticks=100,
+        source_event_id="ev1",
+    )
+    assert opp.status == QuestOpportunityStatus.OFFERED
+
+
+def test_quest_expires_after_expiry_ticks():
+    """AC-5: OFFERED quest past expiry_ticks is removed and an event is emitted."""
+    opp = _make_opp("opp1", expiry_ticks=10)
+    state = AuthoritativeState(tick=11, seed=0, quest_registry={"opp1": opp})
+
+    upd = QuestLifecycleService.tick(state)
+
+    assert "opp1" in upd.quest_registry_remove
+    assert len(upd.world_events_add) == 1
+
+    new_state = ApplyPath.apply_generation(state, upd, next_tick=11)
+    assert new_state.quest_registry == {}
+
+
+def test_quest_not_expired_before_expiry_ticks():
+    """AC-6: Quest still OFFERED before expiry_ticks — lifecycle tick is noop."""
+    opp = _make_opp("opp1", expiry_ticks=10)
+    state = AuthoritativeState(tick=9, seed=0, quest_registry={"opp1": opp})
+
+    upd = QuestLifecycleService.tick(state)
+
+    assert upd.quest_registry_remove == []
+    assert upd.is_noop()
+
+
+def test_quest_offered_to_active_transition():
+    """AC-7: OFFERED → ACTIVE transition is authoritative via StateUpdate."""
+    opp = _make_opp("opp1", expiry_ticks=100)
+    state = AuthoritativeState(tick=1, seed=0, quest_registry={"opp1": opp})
+
+    upd = StateUpdate(quest_status_updates={"opp1": QuestOpportunityStatus.ACTIVE})
+    new_state = ApplyPath.apply_generation(state, upd)
+
+    assert new_state.quest_registry["opp1"].status == QuestOpportunityStatus.ACTIVE
+
+
+def test_quest_registry_add_is_idempotent():
+    """AC-8: Adding an existing quest id is a no-op (idempotent by id)."""
+    opp = _make_opp("opp1", expiry_ticks=100)
+    state = AuthoritativeState(tick=1, seed=0, quest_registry={"opp1": opp})
+
+    modified_opp = replace(opp, kind="threat_response")
+    upd = StateUpdate(quest_registry_add=[modified_opp])
+    new_state = ApplyPath.apply_generation(state, upd)
+
+    assert len(new_state.quest_registry) == 1
+    assert new_state.quest_registry["opp1"].kind == "resource_crisis"
+
+
+def test_expiry_sweep_deterministic_order():
+    """AC-9: Expiry sweep produces the same removal list in sorted order on repeated calls."""
+    registry = {
+        "opp_c": _make_opp("opp_c", expiry_ticks=5),
+        "opp_a": _make_opp("opp_a", expiry_ticks=3),
+        "opp_b": _make_opp("opp_b", expiry_ticks=4),
+    }
+    state = AuthoritativeState(tick=20, seed=0, quest_registry=registry)
+
+    upd1 = QuestLifecycleService.tick(state)
+    upd2 = QuestLifecycleService.tick(state)
+
+    assert upd1.quest_registry_remove == upd2.quest_registry_remove
+    assert upd1.quest_registry_remove == sorted(upd1.quest_registry_remove)
+
+
+def test_entity_quest_status_unaffected_by_e23b():
+    """AC-10: Existing QuestStatus enum (REWARDED, REWARD_PENDING) is unchanged."""
+    from src.core.models.quests import QuestStatus as QS
+    assert QS.REWARDED
+    assert QS.REWARD_PENDING
+    assert QS.ACTIVE
+    assert QS.COMPLETED
+    assert QS.REWARDED.value == 3
+    assert QS.REWARD_PENDING.value == 4

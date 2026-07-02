@@ -1,9 +1,19 @@
 {
   "mcpServers": {
     "knowledge-search": {
-      "command": "/home/vboxuser/Work/venv/bin/python3",
-      "args": ["tools/search_mcp.py"],
+      "command": "bash",
+      "args": ["tools/start_search_mcp.sh"],
+      "env": {},
       "description": "Local semantic search over project docs, tickets, and investigations"
+    },
+    "github": {
+      "command": "docker",
+      "args": [
+        "run", "-i", "--rm",
+        "--env-file", ".env",
+        "ghcr.io/github/github-mcp-server"
+      ],
+      "description": "GitHub API — workflow runs, PRs, issues, logs"
     }
   }
 }

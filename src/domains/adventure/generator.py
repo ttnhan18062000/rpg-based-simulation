@@ -67,6 +67,14 @@ class AdventureRouteGenerator:
                     if item_count < req.quantity:
                         blockers.append(f"missing_item:{req.subject}:{req.quantity - item_count}")
 
+            # Extract integer node ID for GATHER_RESOURCE routes (used by depletion scorer)
+            target_node_id = None
+            if opp.kind == "gather_resource":
+                try:
+                    target_node_id = int(opp.target_id)
+                except (ValueError, TypeError):
+                    target_node_id = None
+
             opts.append(
                 AdventureRouteOption(
                     family=family,
@@ -77,7 +85,8 @@ class AdventureRouteGenerator:
                     requirements=opp.requirements,
                     blockers=tuple(blockers),
                     source_opportunity_ids=(opp.id,),
-                    reason=f"Backed by opportunity {opp.id} ({opp.subject})"
+                    reason=f"Backed by opportunity {opp.id} ({opp.subject})",
+                    target_node_id=target_node_id,
                 )
             )
 
@@ -112,7 +121,47 @@ class AdventureRouteGenerator:
                     )
                 )
 
-        # 3. Add default Defer route if empty or fallback is needed
+        # 3. Party formation route when entity is sociable and allied candidates exist (SOC-231)
+        if state is not None and hasattr(state, "entities") and RouteFamily.FORM_PARTY not in seen_families:
+            personality = getattr(entity.identity, "personality", None)
+            sociability = getattr(personality, "sociability", 0.0) if personality else 0.0
+            if sociability >= 0.2:
+                from src.core.enums import EntityRole
+                from src.systems.social_systems.party_composition import PartyCompositionScorer
+                candidates = [
+                    e for e in state.entities.values()
+                    if e.id != entity.id
+                    and getattr(e.identity, "role", EntityRole.MONSTER) != EntityRole.MONSTER
+                    and getattr(e, "is_alive", True)
+                ]
+                if candidates:
+                    comp_score = PartyCompositionScorer.score(candidates[:8])
+                    # E43G: block FORM_PARTY if any candidate is a nemesis.
+                    from src.core.strategic import BlockerKind
+                    nemesis_ids = {
+                        int(b.subject)
+                        for b in entity.strategic.blockers.values()
+                        if b.kind == BlockerKind.SOCIAL and b.subject.isdigit()
+                    }
+                    nemesis_in_candidates = any(c.id in nemesis_ids for c in candidates)
+                    route_blockers = ("nemesis_block",) if nemesis_in_candidates else ()
+                    opts.append(
+                        AdventureRouteOption(
+                            family=RouteFamily.FORM_PARTY,
+                            score=0.0,
+                            confidence=min(1.0, sociability + 0.3),
+                            expected_benefit=max(0.3, comp_score),
+                            expected_risk=0.1,
+                            blockers=route_blockers,
+                            reason=(
+                                f"Party formation: {len(candidates)} candidates, "
+                                f"comp_score={comp_score:.2f}"
+                                + (" [nemesis block]" if route_blockers else "")
+                            ),
+                        )
+                    )
+
+        # 4. Add default Defer route if empty or fallback is needed
         if not opts:
             opts.append(
                 AdventureRouteOption(

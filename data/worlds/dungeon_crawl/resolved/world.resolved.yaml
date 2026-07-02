@@ -17,6 +17,8 @@ regions:
   - 55
   terrain: forest
   hazard_level: 3.0
+  tags:
+  - forest
 - id: old_mine
   type: wilderness
   bounds:
@@ -26,6 +28,9 @@ regions:
   - 105
   terrain: cave
   hazard_level: 2.0
+  tags:
+  - mine
+  - underground
 - id: haunted_battlefield
   type: wilderness
   bounds:
@@ -35,6 +40,8 @@ regions:
   - 120
   terrain: ruin
   hazard_level: 3.5
+  tags:
+  - ruins
 - id: bandit_road
   type: wilderness
   bounds:
@@ -44,6 +51,8 @@ regions:
   - 60
   terrain: forest
   hazard_level: 2.0
+  tags:
+  - forest
 factions:
 - id: hero_guild
   type: defender
@@ -120,23 +129,77 @@ entities:
   faction: bandit_company
   spawn_region: bandit_road
 resources:
-- id: iron_vein_0
+- id: old_mine_resource_loop__iron_vein_0
   resource_type: iron_vein
   count: 8
   region: old_mine
-- id: crystal_outcrop_1
+  regen_rate: 1
+- id: old_mine_resource_loop__crystal_outcrop_1
   resource_type: crystal_outcrop
   count: 4
   region: old_mine
-- id: silver_vein_2
+  regen_rate: 1
+- id: old_mine_resource_loop__silver_vein_2
   resource_type: silver_vein
   count: 2
   region: old_mine
+  regen_rate: 1
 buildings:
 - id: mine_entrance_0
   type: mine_entrance
   region: old_mine
 quest_definitions:
+- id: goblin_hunt_warlord
+  type: hunt
+  required_participant_tags:
+  - humanoid
+  - opportunistic
+  required_location_tags:
+  - wilderness
+  - forest
+  reward_budget: 150
+  procedural_hints:
+    difficulty: 3
+    escalation: true
+  tags:
+  - goblin
+  - conflict
+  - bounty
+  source_module: goblin_camp_conflict
+- id: goblin_fetch_stolen_goods
+  type: fetch
+  required_participant_tags:
+  - humanoid
+  - opportunistic
+  required_location_tags:
+  - wilderness
+  - forest
+  reward_budget: 100
+  procedural_hints:
+    difficulty: 2
+    escalation: false
+  tags:
+  - goblin
+  - conflict
+  - loot
+  source_module: goblin_camp_conflict
+- id: goblin_defend_village_perimeter
+  type: defend
+  required_participant_tags:
+  - humanoid
+  - opportunistic
+  required_location_tags:
+  - wilderness
+  - forest
+  reward_budget: 120
+  procedural_hints:
+    difficulty: 2
+    escalation: true
+  tags:
+  - goblin
+  - conflict
+  - defense
+  source_module: goblin_camp_conflict
 - id: mine_fetch_ore
   type: fetch
   required_participant_tags: []
@@ -178,6 +241,57 @@ quest_definitions:
   - ruins
   - spirit
   source_module: ruins_mystery_quest
+- id: sbandit_hunt_camp_leader
+  type: hunt
+  required_participant_tags:
+  - humanoid
+  - opportunistic
+  required_location_tags:
+  - wilderness
+  - forest
+  reward_budget: 150
+  procedural_hints:
+    difficulty: 3
+    escalation: true
+  tags:
+  - bandit
+  - conflict
+  - bounty
+  source_module: scalable_bandit_camp
+- id: sbandit_fetch_stolen_cache
+  type: fetch
+  required_participant_tags:
+  - humanoid
+  - opportunistic
+  required_location_tags:
+  - wilderness
+  - forest
+  reward_budget: 100
+  procedural_hints:
+    difficulty: 2
+    escalation: false
+  tags:
+  - bandit
+  - conflict
+  - loot
+  source_module: scalable_bandit_camp
+- id: sbandit_defend_road_checkpoint
+  type: defend
+  required_participant_tags:
+  - humanoid
+  - opportunistic
+  required_location_tags:
+  - wilderness
+  - forest
+  reward_budget: 120
+  procedural_hints:
+    difficulty: 2
+    escalation: true
+  tags:
+  - bandit
+  - conflict
+  - defense
+  source_module: scalable_bandit_camp
 validation:
   expected_min_entities: 1
   allow_overlapping_regions: false

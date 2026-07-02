@@ -91,9 +91,13 @@ class TestHealth:
         assert body["chunks"] == 1
         assert body["model"] == "all-MiniLM-L6-v2"
 
-    def test_health_503_when_not_ready(self, monkeypatch):
+    def test_health_503_when_not_ready(self, tmp_path, monkeypatch):
         not_ready = _AppState(ready=False)
+        # Patch _APP_STATE and _DB_PATH BEFORE opening TestClient so the lifespan
+        # startup sees ready=False and a missing DB (degraded mode), never loading the model.
         monkeypatch.setattr(_mod, "_APP_STATE", not_ready)
+        monkeypatch.setattr(_mod, "_DB_PATH", tmp_path / "nonexistent.db")
+        monkeypatch.setattr(_mod, "_INDEX_DIR", tmp_path / "nonexistent-dir")
         with TestClient(app, raise_server_exceptions=False) as c:
             resp = c.get("/api/health")
         assert resp.status_code == 503
@@ -126,9 +130,13 @@ class TestSearch:
         resp = client.post("/api/search", json={"top_k": 5})
         assert resp.status_code == 422
 
-    def test_search_503_when_not_ready(self, monkeypatch):
+    def test_search_503_when_not_ready(self, tmp_path, monkeypatch):
         not_ready = _AppState(ready=False)
+        # Patch _APP_STATE and _DB_PATH BEFORE opening TestClient so the lifespan
+        # startup sees ready=False and a missing DB (degraded mode), never loading the model.
         monkeypatch.setattr(_mod, "_APP_STATE", not_ready)
+        monkeypatch.setattr(_mod, "_DB_PATH", tmp_path / "nonexistent.db")
+        monkeypatch.setattr(_mod, "_INDEX_DIR", tmp_path / "nonexistent-dir")
         with TestClient(app, raise_server_exceptions=False) as c:
             resp = c.post("/api/search", json={"query": "test"})
         assert resp.status_code == 503

@@ -75,9 +75,9 @@ def test_final_kernel_law_compliance():
 
     # Also verify the tick_once orchestrator calls them (simple source check)
     import inspect
-    source = inspect.getsource(Kernel.tick_once)
+    source = inspect.getsource(Kernel._tick_once_inner)
     for phase in mandated_phases:
-        assert phase in source, f"Kernel.tick_once does not orchestrate mandated phase: {phase}"
+        assert phase in source, f"Kernel._tick_once_inner does not orchestrate mandated phase: {phase}"
 
 
 def test_milestone_a_baseline_isolation():
@@ -167,9 +167,12 @@ def test_milestone_a_baseline_isolation():
 
     start_tick = kernel.state.tick
 
-    kernel.tick_once()
+    try:
+        kernel.tick_once()
 
-    assert kernel.state.tick == start_tick + 1
-    assert not mock_manager.execute_batch.called, (
-        "WorkerManager was touched during Milestone A baseline run!"
-    )
+        assert kernel.state.tick == start_tick + 1
+        assert not mock_manager.execute_batch.called, (
+            "WorkerManager was touched during Milestone A baseline run!"
+        )
+    finally:
+        kernel.shutdown()

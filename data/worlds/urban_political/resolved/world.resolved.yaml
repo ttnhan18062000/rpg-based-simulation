@@ -18,6 +18,9 @@ regions:
   - 40
   terrain: plain
   hazard_level: 0.0
+  tags:
+  - plain
+  - settlement
 - id: bandit_road
   type: road
   bounds:
@@ -27,6 +30,8 @@ regions:
   - 60
   terrain: road
   hazard_level: 2.0
+  tags:
+  - wilderness
 - id: trading_hometown
   type: town
   bounds:
@@ -36,6 +41,9 @@ regions:
   - 45
   terrain: plain
   hazard_level: 0.5
+  tags:
+  - plain
+  - trade_route
 factions:
 - id: hero_guild
   type: defender
@@ -112,12 +120,42 @@ entities:
   faction: town_council
   spawn_region: bandit_road
   archetype_id: frontier_guard
+- id: pop_0
+  count: 1
+  role: hero
+  faction: hero_guild
+  spawn_region: hometown
+- id: pop_1
+  count: 1
+  role: hero
+  faction: hero_guild
+  spawn_region: hometown
+- id: pop_2
+  count: 1
+  role: hero
+  faction: hero_guild
+  spawn_region: hometown
 - id: trading_pop_0
   count: 6
   role: merchant
   faction: merchant_league
   spawn_region: trading_hometown
-resources: []
+resources:
+- id: res_0
+  resource_type: wood_node
+  count: 8
+  region: hometown
+  regen_rate: 1
+- id: res_1
+  resource_type: herb_patch
+  count: 5
+  region: hometown
+  regen_rate: 1
+- id: trading_res_0
+  resource_type: iron_vein
+  count: 6
+  region: trading_hometown
+  regen_rate: 1
 buildings:
 - id: town_hall_0
   type: town_hall
@@ -140,7 +178,158 @@ buildings:
 - id: trading_bld_1
   type: inn
   region: trading_hometown
-quest_definitions: []
+quest_definitions:
+- id: village_fetch_supply_run
+  type: fetch
+  required_participant_tags:
+  - humanoid
+  required_location_tags:
+  - plain
+  - settlement
+  reward_budget: 80
+  procedural_hints:
+    difficulty: 1
+    escalation: false
+  tags:
+  - village
+  - settlement
+  - supply
+  source_module: frontier_village_core
+- id: village_escort_merchant_delivery
+  type: escort
+  required_participant_tags:
+  - humanoid
+  - merchant_minded
+  required_location_tags:
+  - plain
+  - settlement
+  reward_budget: 100
+  procedural_hints:
+    difficulty: 1
+    escalation: false
+  tags:
+  - village
+  - settlement
+  - trade
+  source_module: frontier_village_core
+- id: village_defend_gate_assault
+  type: defend
+  required_participant_tags:
+  - humanoid
+  required_location_tags:
+  - plain
+  - settlement
+  reward_budget: 120
+  procedural_hints:
+    difficulty: 2
+    escalation: true
+  tags:
+  - village
+  - settlement
+  - defense
+  source_module: frontier_village_core
+- id: bandit_escort_merchant_caravan
+  type: escort
+  required_participant_tags:
+  - humanoid
+  - merchant_minded
+  required_location_tags:
+  - road
+  - wilderness
+  reward_budget: 120
+  procedural_hints:
+    difficulty: 2
+    escalation: true
+  tags:
+  - bandit
+  - trade
+  - escort
+  source_module: bandit_road_trade_pressure
+- id: bandit_hunt_road_captain
+  type: hunt
+  required_participant_tags:
+  - humanoid
+  - opportunistic
+  required_location_tags:
+  - road
+  - wilderness
+  reward_budget: 150
+  procedural_hints:
+    difficulty: 3
+    escalation: false
+  tags:
+  - bandit
+  - conflict
+  - bounty
+  source_module: bandit_road_trade_pressure
+- id: bandit_investigate_ambush_source
+  type: investigate
+  required_participant_tags:
+  - humanoid
+  - opportunistic
+  required_location_tags:
+  - road
+  - wilderness
+  reward_budget: 100
+  procedural_hints:
+    difficulty: 2
+    escalation: false
+  tags:
+  - bandit
+  - conflict
+  - mystery
+  source_module: bandit_road_trade_pressure
+- id: trade_fetch_shipment_goods
+  type: fetch
+  required_participant_tags:
+  - humanoid
+  - merchant_minded
+  required_location_tags:
+  - plain
+  - trade_route
+  reward_budget: 100
+  procedural_hints:
+    difficulty: 1
+    escalation: false
+  tags:
+  - trade
+  - economy
+  - supply
+  source_module: trading_company_hub
+- id: trade_escort_merchant_convoy
+  type: escort
+  required_participant_tags:
+  - humanoid
+  - merchant_minded
+  required_location_tags:
+  - plain
+  - trade_route
+  reward_budget: 120
+  procedural_hints:
+    difficulty: 2
+    escalation: true
+  tags:
+  - trade
+  - economy
+  - escort
+  source_module: trading_company_hub
+- id: trade_investigate_sabotage
+  type: investigate
+  required_participant_tags:
+  - humanoid
+  - merchant_minded
+  required_location_tags:
+  - plain
+  - trade_route
+  reward_budget: 150
+  procedural_hints:
+    difficulty: 2
+    escalation: false
+  tags:
+  - trade
+  - economy
+  - mystery
+  source_module: trading_company_hub
 validation:
   expected_min_entities: 1
   allow_overlapping_regions: false

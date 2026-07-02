@@ -9,20 +9,9 @@ audience: developer
 
 The `Kernel` is the heartbeat of the RPG V2 Engine. It orchestrates the deterministic, tick-based execution of all simulation systems.
 
-## The 6-Phase Kernel Loop
+## The 7-Phase Kernel Loop
 
-Every simulation "Tick" follows a strict 6-phase sequence to ensure determinism and prevent race conditions.
-
-| Phase | Name | Responsibility | Concurrency |
-| :--- | :--- | :--- | :--- |
-| 1 | **Initialization** | Prepare the tick context and snapshot state. | Synchronous |
-| 2 | **Governance** | Apply world-level laws (Time, Weather, Global Events). | Synchronous |
-| 3 | **Scheduling** | Determine which entities act in this tick (Cadence). | Synchronous |
-| 4 | **Deliberation** | Workers generate `StateUpdate` proposals based on state. | **Concurrent** |
-| 5 | **Resolution** | Refine proposals through the `AuthoritativeApplyPipeline`. | Synchronous |
-| 6 | **Persistence** | Commit the new state and emit telemetry events. | Synchronous |
-
----
+Every simulation "Tick" follows a strict 7-phase sequence to ensure determinism and prevent race conditions.
 
 ## The "Law of Ticks"
 
@@ -40,10 +29,19 @@ Every simulation "Tick" follows a strict 6-phase sequence to ensure determinism 
 ---
 
 ## 🛡️ The "Stability Guard" Law
-When running in `audit_mode`, the Kernel enforces strict isolation.
-- **Fingerprinting**: At the start of the tick, a SHA-256 fingerprint of the entire world is captured.
-- **Verification**: After non-mutating phases (Scheduling, Collection), the fingerprint is re-verified.
+
+The Kernel enforces a two-tier isolation model for read-only phases (Scheduling, Collection):
+
+**Tier 1 — Gross Isolation Guard (all run modes)**
+`_guard_gross_isolation()` runs unconditionally in standard (non-audit) mode after each read-only phase. It checks `len(state.entities)` and `state.tick` — two O(1) integer reads with negligible overhead. Detects entity creation/deletion mid-phase and tick advancement outside the authoritative pipeline. Field-level mutations within existing entities are **not** detected.
+
+**Tier 2 — Full Stability Guard (audit_mode=True only)**
+`_guard_stability()` is active only when `Kernel` is initialized with `audit_mode=True` (used in certification scenarios). It:
+- **Fingerprints**: At the start of the tick, a SHA-256 fingerprint of the entire world is captured.
+- **Verifies**: After non-mutating phases (Scheduling, Collection), the fingerprint is re-verified.
 - **Halt Law**: If the hash changes during a read-only phase, the Kernel triggers an **Immediate Halt** to prevent state corruption and identify "leakage" in system logic.
+
+**Detection coverage summary:** See `docs/engine/known_limitations.md` §2.3 for the full violation-type matrix. Isolation breaches that change only entity field values (not count or tick) are invisible in standard runs — `audit_mode=True` is required for complete enforcement.
 
 ## 🛡️ The "Hard Law Compliance Guard" Law
 During the **Advancement** phase, before the state is committed and persisted:
@@ -96,3 +94,49 @@ Collects advisory `pressure_report()` from all owned subsystems (event recorder,
 - `warnings` — list of advisory strings
 
 `BehaviorWorker` threads (named `"behavior-normalization-worker"`) are joined with a 1-second timeout during shutdown. Non-stop generates `outcome = "PARTIAL"` and a warning entry.
+
+---
+
+## State Hashing in Phase 7 (Persistence)
+
+Phase 7 emits a `TICK_END` replay event whose `hash` field is either a SHA-256 canonical
+hash or the sentinel string `"SKIPPED"`, depending on the active `GovernorPolicy`:
+
+```
+NORMAL / CONSTRAINED  →  replay_richness = "FULL"   →  TICK_END.hash = SHA-256
+DEGRADED              →  replay_richness = "MINIMAL" →  TICK_END.hash = "SKIPPED"
+SURVIVAL              →  replay_allowed  = False      →  no TICK_END event
+```
+
+The **canonical hash** (`CanonicalStateHasher.get_hash()`) is a full SHA-256 over all
+authoritative state fields — entities, regions, resources, buildings, groups, RNG
+checkpoint, and more. It is the complete determinism proof. In NORMAL and CONSTRAINED
+modes it runs every tick.
+
+The **lightweight fingerprint** (`StateFingerprinter.get_fingerprint()`) is an MD5 over
+the most gameplay-visible state (entities, strategic state, resources, regions, groups).
+It is emitted in `REFINED_UPDATE` events in all replay-enabled modes (NORMAL, CONSTRAINED,
+DEGRADED). It is NOT a complete determinism proof — buildings, corpses, ground items,
+chests, home storage, camps, tile indices, work debt, and the RNG checkpoint are excluded.
+
+**Shutdown always emits the final canonical hash** regardless of runtime mode.
+
+See `docs/engine/known_limitations.md §2.4` for the mode-by-mode table and the full list
+of fingerprint domain gaps. See `docs/engine/deterministic_execution.md` for the
+determinism contract and divergence detection tools.
+
+## Phase Domain Permissions
+
+Each phase declares allowed read, write, and emit state domains. Declarations are in `src/engine/phase_domain_permissions.py` and enforced by `tests/architecture/test_phase_domain_permissions.py` (RPG-INFRA-155/156/157).
+
+| Phase | Read domains | Write domains | Emit domains |
+|---|---|---|---|
+| INIT | policy, platform, infra | policy, infra | — |
+| SCHEDULING | entity, policy | schedule | — |
+| COLLECTION | entity, schedule | proposals | — |
+| RESOLUTION | proposals, policy, entity | entity, world, policy, infra | events, replay |
+| CLEANUP | platform, infra | infra | — |
+| ADVANCEMENT | entity, lifecycle | lifecycle | events |
+| PERSISTENCE _(non-authoritative)_ | entity, world, events | replay | replay, events |
+
+**Key invariant:** RESOLUTION is the sole phase that declares `entity` and `world` write access. All other phases are structurally prohibited from directly writing authoritative entity/world state.

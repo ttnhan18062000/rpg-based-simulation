@@ -15,6 +15,9 @@ regions:
   - 40
   terrain: plain
   hazard_level: 0.0
+  tags:
+  - plain
+  - settlement
 - id: bandit_road
   type: road
   bounds:
@@ -24,6 +27,8 @@ regions:
   - 60
   terrain: road
   hazard_level: 2.0
+  tags:
+  - wilderness
 - id: goblin_camp
   type: wilderness
   bounds:
@@ -33,6 +38,8 @@ regions:
   - 55
   terrain: forest
   hazard_level: 3.0
+  tags:
+  - forest
 - id: moon_cave
   type: wilderness
   bounds:
@@ -42,6 +49,8 @@ regions:
   - 110
   terrain: cave
   hazard_level: 4.0
+  tags:
+  - cave
 - id: old_mine
   type: wilderness
   bounds:
@@ -51,6 +60,9 @@ regions:
   - 105
   terrain: cave
   hazard_level: 2.0
+  tags:
+  - mine
+  - underground
 - id: orc_stronghold
   type: wilderness
   bounds:
@@ -60,6 +72,7 @@ regions:
   - 100
   terrain: plain
   hazard_level: 3.0
+  tags: []
 factions:
 - id: hero_guild
   type: defender
@@ -179,34 +192,51 @@ entities:
   spawn_region: orc_stronghold
   archetype_id: orc_brute
 resources:
+- id: res_0
+  resource_type: wood_node
+  count: 8
+  region: hometown
+  regen_rate: 1
+- id: res_1
+  resource_type: herb_patch
+  count: 5
+  region: hometown
+  regen_rate: 1
 - id: moon_cult_ruins__moon_resin_tree_0
   resource_type: moon_resin_tree
   count: 3
   region: moon_cave
+  regen_rate: 1
 - id: moon_cult_ruins__crystal_outcrop_1
   resource_type: crystal_outcrop
   count: 4
   region: moon_cave
+  regen_rate: 1
 - id: old_mine_resource_loop__iron_vein_0
   resource_type: iron_vein
   count: 8
   region: old_mine
+  regen_rate: 1
 - id: old_mine_resource_loop__crystal_outcrop_1
   resource_type: crystal_outcrop
   count: 4
   region: old_mine
+  regen_rate: 1
 - id: old_mine_resource_loop__silver_vein_2
   resource_type: silver_vein
   count: 2
   region: old_mine
+  regen_rate: 1
 - id: orc_clan_territory__iron_vein_0
   resource_type: iron_vein
   count: 4
   region: orc_stronghold
+  regen_rate: 1
 - id: orc_clan_territory__wood_node_1
   resource_type: wood_node
   count: 6
   region: orc_stronghold
+  regen_rate: 1
 buildings:
 - id: town_hall_0
   type: town_hall
@@ -227,6 +257,208 @@ buildings:
   type: mine_entrance
   region: old_mine
 quest_definitions:
+- id: village_fetch_supply_run
+  type: fetch
+  required_participant_tags:
+  - humanoid
+  required_location_tags:
+  - plain
+  - settlement
+  reward_budget: 80
+  procedural_hints:
+    difficulty: 1
+    escalation: false
+  tags:
+  - village
+  - settlement
+  - supply
+  source_module: frontier_village_core
+- id: village_escort_merchant_delivery
+  type: escort
+  required_participant_tags:
+  - humanoid
+  - merchant_minded
+  required_location_tags:
+  - plain
+  - settlement
+  reward_budget: 100
+  procedural_hints:
+    difficulty: 1
+    escalation: false
+  tags:
+  - village
+  - settlement
+  - trade
+  source_module: frontier_village_core
+- id: village_defend_gate_assault
+  type: defend
+  required_participant_tags:
+  - humanoid
+  required_location_tags:
+  - plain
+  - settlement
+  reward_budget: 120
+  procedural_hints:
+    difficulty: 2
+    escalation: true
+  tags:
+  - village
+  - settlement
+  - defense
+  source_module: frontier_village_core
+- id: bandit_escort_merchant_caravan
+  type: escort
+  required_participant_tags:
+  - humanoid
+  - merchant_minded
+  required_location_tags:
+  - road
+  - wilderness
+  reward_budget: 120
+  procedural_hints:
+    difficulty: 2
+    escalation: true
+  tags:
+  - bandit
+  - trade
+  - escort
+  source_module: bandit_road_trade_pressure
+- id: bandit_hunt_road_captain
+  type: hunt
+  required_participant_tags:
+  - humanoid
+  - opportunistic
+  required_location_tags:
+  - road
+  - wilderness
+  reward_budget: 150
+  procedural_hints:
+    difficulty: 3
+    escalation: false
+  tags:
+  - bandit
+  - conflict
+  - bounty
+  source_module: bandit_road_trade_pressure
+- id: bandit_investigate_ambush_source
+  type: investigate
+  required_participant_tags:
+  - humanoid
+  - opportunistic
+  required_location_tags:
+  - road
+  - wilderness
+  reward_budget: 100
+  procedural_hints:
+    difficulty: 2
+    escalation: false
+  tags:
+  - bandit
+  - conflict
+  - mystery
+  source_module: bandit_road_trade_pressure
+- id: goblin_hunt_warlord
+  type: hunt
+  required_participant_tags:
+  - humanoid
+  - opportunistic
+  required_location_tags:
+  - wilderness
+  - forest
+  reward_budget: 150
+  procedural_hints:
+    difficulty: 3
+    escalation: true
+  tags:
+  - goblin
+  - conflict
+  - bounty
+  source_module: goblin_camp_conflict
+- id: goblin_fetch_stolen_goods
+  type: fetch
+  required_participant_tags:
+  - humanoid
+  - opportunistic
+  required_location_tags:
+  - wilderness
+  - forest
+  reward_budget: 100
+  procedural_hints:
+    difficulty: 2
+    escalation: false
+  tags:
+  - goblin
+  - conflict
+  - loot
+  source_module: goblin_camp_conflict
+- id: goblin_defend_village_perimeter
+  type: defend
+  required_participant_tags:
+  - humanoid
+  - opportunistic
+  required_location_tags:
+  - wilderness
+  - forest
+  reward_budget: 120
+  procedural_hints:
+    difficulty: 2
+    escalation: true
+  tags:
+  - goblin
+  - conflict
+  - defense
+  source_module: goblin_camp_conflict
+- id: mcult_investigate_ritual_site
+  type: investigate
+  required_participant_tags:
+  - humanoid
+  - magic_sensitive
+  required_location_tags:
+  - cave
+  - wilderness
+  reward_budget: 150
+  procedural_hints:
+    difficulty: 3
+    escalation: true
+  tags:
+  - cult
+  - arcane
+  - mystery
+  source_module: moon_cult_ruins
+- id: mcult_explore_cave_network
+  type: explore
+  required_participant_tags:
+  - humanoid
+  - magic_sensitive
+  required_location_tags:
+  - cave
+  - wilderness
+  reward_budget: 120
+  procedural_hints:
+    difficulty: 3
+    escalation: false
+  tags:
+  - cult
+  - arcane
+  - exploration
+  source_module: moon_cult_ruins
+- id: mcult_defend_arcane_circle
+  type: defend
+  required_participant_tags:
+  - humanoid
+  - magic_sensitive
+  required_location_tags:
+  - cave
+  - wilderness
+  reward_budget: 200
+  procedural_hints:
+    difficulty: 4
+    escalation: true
+  tags:
+  - cult
+  - arcane
+  - defense
+  source_module: moon_cult_ruins
 - id: mine_fetch_ore
   type: fetch
   required_participant_tags: []
@@ -239,6 +471,54 @@ quest_definitions:
   - resource
   - economy
   source_module: old_mine_resource_loop
+- id: orc_hunt_patrol_warband
+  type: hunt
+  required_participant_tags:
+  - humanoid
+  required_location_tags:
+  - wilderness
+  - plain
+  reward_budget: 150
+  procedural_hints:
+    difficulty: 3
+    escalation: true
+  tags:
+  - orc
+  - conflict
+  - bounty
+  source_module: orc_clan_territory
+- id: orc_escort_settler_convoy
+  type: escort
+  required_participant_tags:
+  - humanoid
+  required_location_tags:
+  - wilderness
+  - plain
+  reward_budget: 120
+  procedural_hints:
+    difficulty: 2
+    escalation: true
+  tags:
+  - orc
+  - conflict
+  - escort
+  source_module: orc_clan_territory
+- id: orc_investigate_expansion_signs
+  type: investigate
+  required_participant_tags:
+  - humanoid
+  required_location_tags:
+  - wilderness
+  - plain
+  reward_budget: 100
+  procedural_hints:
+    difficulty: 2
+    escalation: false
+  tags:
+  - orc
+  - conflict
+  - territory
+  source_module: orc_clan_territory
 validation:
   expected_min_entities: 1
   allow_overlapping_regions: false

@@ -18,6 +18,7 @@ from src.lab.repository import (
 from src.worldbuilding.schema import WorldSpec, InvalidWorldSpecError
 from src.worldbuilding.repository import WorldRepository
 from src.lab.orchestrator import ScenarioLabOrchestrator
+from src.observability.config import ObservabilityConfig, ObservabilityMode
 
 
 @pytest.fixture
@@ -223,3 +224,31 @@ def test_orchestrator_does_not_overwrite_existing_lab_run(mock_repos, valid_spec
 
     with pytest.raises(FileExistsError):
         orchestrator.run_lab("test_experiment", "lab_run_123")
+
+
+# TCK-20260627-P3B-OBS-MODE-REMAP: STANDARD mode must resolve to NORMAL, not LIGHT
+def test_standard_obs_mode_resolves_to_normal(mock_repos):
+    """STANDARD lab mode must map to ObservabilityMode.NORMAL to provide richer output than LIGHT.
+
+    D03 F5 identified that STANDARD was silently mapped to LIGHT, making it useless
+    as a diagnostic step-up. This test guards against regression to the old mapping.
+    """
+    world_repo, scenario_repo, experiment_repo, lab_run_repo = mock_repos
+    orchestrator = ScenarioLabOrchestrator(world_repo, scenario_repo, experiment_repo, lab_run_repo)
+
+    assert orchestrator._resolve_obs_mode("STANDARD") == ObservabilityMode.NORMAL, (
+        "STANDARD must resolve to NORMAL, not LIGHT (D03 F5 regression guard)"
+    )
+
+
+def test_obs_mode_mapping_full_table(mock_repos):
+    """All lab mode strings must resolve to their expected engine ObservabilityMode values."""
+    world_repo, scenario_repo, experiment_repo, lab_run_repo = mock_repos
+    orchestrator = ScenarioLabOrchestrator(world_repo, scenario_repo, experiment_repo, lab_run_repo)
+
+    assert orchestrator._resolve_obs_mode("LIGHTWEIGHT") == ObservabilityMode.LIGHT
+    assert orchestrator._resolve_obs_mode("MINIMAL") == ObservabilityMode.LIGHT
+    assert orchestrator._resolve_obs_mode("STANDARD") == ObservabilityMode.NORMAL
+    assert orchestrator._resolve_obs_mode("LONG_RUN") == ObservabilityMode.LONG_RUN
+    # Unknown mode falls back to LIGHT
+    assert orchestrator._resolve_obs_mode("UNKNOWN") == ObservabilityMode.LIGHT

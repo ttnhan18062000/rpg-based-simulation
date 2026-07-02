@@ -101,24 +101,31 @@
       "skill_profile_id": "predator_skills"
     }
   },
-  "buildings": {},
+  "buildings": {
+    "healer_hut_0": {
+      "hp": 450,
+      "max_hp": 450,
+      "service_profile_id": "healer_service",
+      "owner_faction": null
+    }
+  },
   "resources": {
-    "spirit_wisp_0": {
+    "undead_battlefield__spirit_wisp_0": {
       "required_ticks": 25,
       "resource_type": "spirit_wisp",
       "yield_policy": null
     },
-    "wood_node_0": {
+    "wolf_den_near_forest__wood_node_0": {
       "required_ticks": 10,
       "resource_type": "wood_node",
       "yield_policy": null
     },
-    "herb_patch_1": {
+    "wolf_den_near_forest__herb_patch_1": {
       "required_ticks": 8,
       "resource_type": "herb_patch",
       "yield_policy": null
     },
-    "healing_flower_patch_2": {
+    "wolf_den_near_forest__healing_flower_patch_2": {
       "required_ticks": 12,
       "resource_type": "healing_flower_patch",
       "yield_policy": null

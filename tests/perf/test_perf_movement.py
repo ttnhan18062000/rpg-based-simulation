@@ -4,6 +4,7 @@ from src.perf.profiles import PERF_PROFILES
 from src.perf.scenarios import build_movement_state
 
 @pytest.mark.perf
+@pytest.mark.slow
 @pytest.mark.parametrize("entity_count", [100, 500, 1000, 5000])
 def test_perf_movement(entity_count, perf_report_dir):
     profile = PERF_PROFILES["PERF_2GB_LOCAL"]

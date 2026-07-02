@@ -6,9 +6,11 @@ from __future__ import annotations
 from enum import Enum, IntEnum, auto
 from dataclasses import dataclass, field, replace, InitVar, asdict
 from types import MappingProxyType
-from typing import Dict, Any, Set, Optional, List, Tuple, ClassVar
+from typing import Dict, Any, Set, Optional, List, Tuple, ClassVar, TYPE_CHECKING
+if TYPE_CHECKING:
+    from src.core.models.quests import QuestOpportunity, QuestOpportunityStatus
 from src.core.strategic import StrategicComponent
-from src.core.enums import Faction, EntityRole
+from src.core.enums import Faction, EntityRole, DiplomaticState
 from src.core.movement_modes import MovementMode
 from src.core.governance import RuntimeMode
 from src.core.models.inventory import ItemKind, EquipSlot, ItemStack, InventoryComponent
@@ -201,6 +203,36 @@ class LocalScarState:
 
 
 @dataclass(frozen=True, slots=True)
+class SiegeState:
+    """Durable state of an active siege on a region (E53Cb).
+
+    Survives across ticks. Stored on RegionState.siege_state.
+    Transfer to attacker triggers when siege_progress >= 1.0 (handled in E53Cc).
+    """
+    attacker_faction_id: str
+    defender_faction_id: str
+    siege_progress: float  # 0.0 to 1.0; transfer triggers at >= 1.0
+    started_tick: int
+
+    def to_canonical_dict(self) -> dict:
+        return {
+            "attacker_faction_id": self.attacker_faction_id,
+            "defender_faction_id": self.defender_faction_id,
+            "siege_progress": self.siege_progress,
+            "started_tick": self.started_tick,
+        }
+
+    @classmethod
+    def from_dict(cls, d: dict) -> "SiegeState":
+        return cls(
+            attacker_faction_id=d["attacker_faction_id"],
+            defender_faction_id=d["defender_faction_id"],
+            siege_progress=float(d["siege_progress"]),
+            started_tick=int(d["started_tick"]),
+        )
+
+
+@dataclass(frozen=True, slots=True)
 class RegionState:
     """Regional attributes and world dynamic markers."""
     id: str
@@ -208,6 +240,7 @@ class RegionState:
     bounds: tuple[int, int, int, int] # x_min, y_min, x_max, y_max
     kind: str = "FOREST"
     hazard_level: float = 0.0      # 0.0 to 1.0, affects HP/Readiness drain
+    hazard_kind: str = "PHYSICAL"  # Semantic hazard type; matched against FactionDefinition.hazard_immunities
     suppression_active: bool = False # Prevents certain worker actions
     calamity_intensity: float = 0.0  # Scales regional hazards
     trauma_score: float = 0.0      # Persistent regional 'scar' value
@@ -218,6 +251,11 @@ class RegionState:
     weather: str = "CLEAR"
     active_modifiers: List[str] = field(default_factory=list)
     price_modifiers: Dict[str, float] = field(default_factory=dict) # ItemKind -> Multiplier
+    # E52A: Per-region demographic cohorts keyed by age bracket ("young"|"adult"|"elder")
+    population_cohorts: Dict[str, Any] = field(default_factory=dict)
+    # E53Cb: Siege mechanics
+    siege_state: Optional["SiegeState"] = None
+    service_availability: float = 1.0  # 0.0 to 1.0; degraded by active siege
     _canonical_cache: Any = field(default=None, init=False, repr=False, compare=False)
 
     def to_canonical_dict(self) -> Dict[str, Any]:
@@ -229,6 +267,7 @@ class RegionState:
             "bounds": self.bounds,
             "kind": self.kind,
             "hazard_level": self.hazard_level,
+            "hazard_kind": self.hazard_kind,
             "suppression_active": self.suppression_active,
             "calamity_intensity": self.calamity_intensity,
             "trauma_score": self.trauma_score,
@@ -238,7 +277,10 @@ class RegionState:
             "influence": self.influence,
             "weather": self.weather,
             "active_modifiers": sorted(list(self.active_modifiers)),
-            "price_modifiers": dict(sorted(self.price_modifiers.items()))
+            "price_modifiers": dict(sorted(self.price_modifiers.items())),
+            "population_cohorts": dict(sorted(self.population_cohorts.items())),
+            "siege_state": self.siege_state.to_canonical_dict() if self.siege_state is not None else None,
+            "service_availability": self.service_availability,
         }
         object.__setattr__(self, "_canonical_cache", res)
         return res
@@ -520,6 +562,13 @@ class GroupRecord:
     agi_apt: float = 1.0
     vit_apt: float = 1.0
     end_apt: float = 1.0
+    formation_tick: int = 0
+    escort_target_id: Optional[int] = None
+    grievance_log: Tuple[str, ...] = ()
+    reward_pool: int = 0
+    last_leadership_check_tick: int = 0
+    dissolution_tick: Optional[int] = None
+    composition_score: float = 0.0  # PartyCompositionScorer result at formation (SOC-232)
     _canonical_cache: Any = field(default=None, init=False, repr=False, compare=False)
 
     def to_canonical_dict(self) -> Dict[str, Any]:
@@ -541,10 +590,57 @@ class GroupRecord:
                 "agi": self.agi_apt,
                 "vit": self.vit_apt,
                 "end": self.end_apt
-            }
+            },
+            "formation_tick": self.formation_tick,
+            "escort_target_id": self.escort_target_id,
+            "grievance_log": list(self.grievance_log),
+            "reward_pool": self.reward_pool,
+            "last_leadership_check_tick": self.last_leadership_check_tick,
+            "dissolution_tick": self.dissolution_tick,
+            "composition_score": self.composition_score,
         }
         object.__setattr__(self, "_canonical_cache", res)
         return res
+
+
+@dataclass(frozen=True, slots=True)
+class FactionState:
+    """Authoritative durable state for a named faction (E53 family)."""
+    faction_id: str
+    territory: Tuple[str, ...] = ()           # region_ids controlled
+    resources: Dict[str, int] = field(default_factory=dict)
+    diplomatic_relations: Dict[str, DiplomaticState] = field(default_factory=dict)
+    active_doctrines: Tuple[str, ...] = ()
+    military_strength: float = 1.0
+    tension_level: float = 0.0
+    _canonical_cache: Any = field(default=None, init=False, repr=False, compare=False)
+
+    def to_canonical_dict(self) -> Dict[str, Any]:
+        if self._canonical_cache is not None:
+            return self._canonical_cache
+        res: Dict[str, Any] = {
+            "faction_id": self.faction_id,
+            "territory": list(self.territory),
+            "resources": dict(sorted(self.resources.items())),
+            "diplomatic_relations": {k: v.value for k, v in sorted(self.diplomatic_relations.items())},
+            "active_doctrines": list(self.active_doctrines),
+            "military_strength": self.military_strength,
+            "tension_level": self.tension_level,
+        }
+        object.__setattr__(self, "_canonical_cache", res)
+        return res
+
+    @classmethod
+    def from_dict(cls, d: dict) -> "FactionState":
+        return cls(
+            faction_id=d["faction_id"],
+            territory=tuple(d.get("territory", [])),
+            resources=dict(d.get("resources", {})),
+            diplomatic_relations={k: DiplomaticState(v) for k, v in d.get("diplomatic_relations", {}).items()},
+            active_doctrines=tuple(d.get("active_doctrines", [])),
+            military_strength=float(d.get("military_strength", 1.0)),
+            tension_level=float(d.get("tension_level", 0.0)),
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -630,6 +726,7 @@ class EntityState:
                 "familiarity_history": {str(k): v for k, v in sorted(self.social.familiarity_history.items())},
                 "fear_history": {str(k): v for k, v in sorted(self.social.fear_history.items())},
                 "grudge_history": {str(k): v for k, v in sorted(self.social.grudge_history.items())},
+                "combat_loss_counts": {str(k): v for k, v in sorted(self.social.combat_loss_counts.items())},
                 "bonds": {str(k): asdict(v) for k, v in sorted(self.social.bonds.items())},
                 "betrayal_count": self.social.betrayal_count,
                 "public_reputation": self.social.public_reputation,
@@ -816,6 +913,7 @@ class ResourceNodeState:
     required_ticks: int
     respawn_cooldown: int = 100
     cooldown_remaining: int = 0
+    regen_rate_per_tick: int = 0  # charges regenerated per ecology tick (0 = no regen)
     _canonical_cache: Any = field(default=None, init=False, repr=False, compare=False)
     _readonly_cache: Any = field(default=None, init=False, repr=False, compare=False)
 
@@ -834,7 +932,8 @@ class ResourceNodeState:
             "max_charges": self.max_charges,
             "required_ticks": self.required_ticks,
             "respawn_cooldown": self.respawn_cooldown,
-            "cooldown_remaining": self.cooldown_remaining
+            "cooldown_remaining": self.cooldown_remaining,
+            "regen_rate_per_tick": self.regen_rate_per_tick,
         }
         object.__setattr__(self, "_canonical_cache", res)
         return res
@@ -1045,6 +1144,12 @@ class AuthoritativeState:
     pending_information_responses: List[Dict[str, Any]] = field(default_factory=list, repr=False, compare=False)
     information_source_profiles: List[Any] = field(default_factory=list, repr=False, compare=False)
     feature_flags: Dict[str, Any] = field(default_factory=dict, repr=False, compare=False)
+    recent_world_events: List["WorldEvent"] = field(default_factory=list)
+    quest_registry: Dict[str, "QuestOpportunity"] = field(default_factory=dict)
+    # Epic 4.2B: Durable registry of entities classified as information providers.
+    information_providers: Dict[int, "InformationProviderState"] = field(default_factory=dict)
+    # Epic 5.3: Durable faction-level state (E53Aa)
+    factions: Dict[str, "FactionState"] = field(default_factory=dict)
 
     def __post_init__(self):
         # M10 Law: Ensure cache is cleared on every new object creation (including replace)
@@ -1053,9 +1158,6 @@ class AuthoritativeState:
         object.__setattr__(self, "_spatial_grid_cache", None)
         object.__setattr__(self, "_region_list_cache", None)
         object.__setattr__(self, "_occupancy_map_cache", None)
-        if getattr(self, "movement_cache", None) is None:
-            from src.engine.movement_cache import MovementPlanCache
-            object.__setattr__(self, "movement_cache", MovementPlanCache())
         object.__setattr__(self, "transient_claims", None)
         object.__setattr__(self, "_node_map_cache", None)
         if getattr(self, "_active_nodes_grid", None) is None:
@@ -1122,6 +1224,9 @@ class AuthoritativeState:
             regions=ReadOnlyDict(self.regions),
             local_scars=ReadOnlyDict(self.local_scars),
             home_storage=ReadOnlyDict(self.home_storage),
+            quest_registry=ReadOnlyDict(self.quest_registry),
+            information_providers=ReadOnlyDict(self.information_providers),
+            factions=ReadOnlyDict(self.factions),
             groups=shallow_freeze(self.groups),
             terrain=shallow_freeze(self.terrain),
             global_resources=shallow_freeze(self.global_resources),

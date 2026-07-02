@@ -158,6 +158,40 @@ def test_repository_index_rebuild(tmp_path):
         saved_index = json.load(f)
     assert saved_index["worlds"]["w1"]["status"] == "VALIDATED"
 
+def test_repository_index_rebuild_classifies_composition_worlds(tmp_path):
+    """
+    Regression guard: rebuild_index() must classify worldcomposition.v1 worlds as
+    COMPOSITION and worldspec.v1 worlds as VALIDATED after the worldtemplate.v1
+    branch was removed (TCK-20260701-WORLDTEMPLATE-REMOVE).
+    """
+    repo = WorldRepository(tmp_path)
+
+    # worldspec.v1 world
+    w1_dir = tmp_path / "w1"
+    w1_dir.mkdir()
+    with open(w1_dir / "world.yaml", "w") as f:
+        yaml.safe_dump(create_valid_world_dict("w1", "World One"), f)
+
+    # worldcomposition.v1 world
+    w2_dir = tmp_path / "w2_composition"
+    w2_dir.mkdir()
+    composition_data = {
+        "schema_version": "worldcomposition.v1",
+        "world_id": "w2_composition",
+        "name": "Composition World",
+        "module_refs": []
+    }
+    with open(w2_dir / "world.yaml", "w") as f:
+        yaml.safe_dump(composition_data, f)
+
+    index_data = repo.rebuild_index()
+
+    assert index_data["worlds"]["w1"]["status"] == "VALIDATED"
+    assert index_data["worlds"]["w1"]["schema_version"] == "worldspec.v1"
+
+    assert index_data["worlds"]["w2_composition"]["status"] == "COMPOSITION"
+    assert index_data["worlds"]["w2_composition"]["schema_version"] == "worldcomposition.v1"
+
 def test_repository_save_world(tmp_path):
     repo = WorldRepository(tmp_path)
     

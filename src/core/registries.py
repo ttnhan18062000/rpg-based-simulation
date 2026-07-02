@@ -538,7 +538,7 @@ class ArchetypeToEnemyRegistryAdapter:
         return enemies
 
 
-runtime_content_source: str = "legacy_hardcoded"
+runtime_content_source: Optional[str] = None
 catalog_fingerprint: Optional[str] = None
 fallback_usage_reported: bool = False
 

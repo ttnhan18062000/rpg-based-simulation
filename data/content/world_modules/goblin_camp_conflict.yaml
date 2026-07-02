@@ -11,7 +11,37 @@ regions:
     grid_bounds: [95, 20, 125, 55]
     terrain: "forest"
     hazard_level: 3.0
+    hazard_kind: "NATURAL_TERRAIN"
+    tags: [forest]
 factions: ["goblin_warband"]
 populations: ["goblin_raiding_party"]
 relationships: ["town_to_goblin_warband", "goblin_warband_to_town"]
 observability_tags: ["conflict", "faction_pressure"]
+quest_definitions:
+  - id: "goblin_hunt_warlord"
+    type: "hunt"
+    required_participant_tags: ["humanoid", "opportunistic"]
+    required_location_tags: ["wilderness", "forest"]
+    reward_budget: 150
+    procedural_hints:
+      difficulty: 3
+      escalation: true
+    tags: ["goblin", "conflict", "bounty"]
+  - id: "goblin_fetch_stolen_goods"
+    type: "fetch"
+    required_participant_tags: ["humanoid", "opportunistic"]
+    required_location_tags: ["wilderness", "forest"]
+    reward_budget: 100
+    procedural_hints:
+      difficulty: 2
+      escalation: false
+    tags: ["goblin", "conflict", "loot"]
+  - id: "goblin_defend_village_perimeter"
+    type: "defend"
+    required_participant_tags: ["humanoid", "opportunistic"]
+    required_location_tags: ["wilderness", "forest"]
+    reward_budget: 120
+    procedural_hints:
+      difficulty: 2
+      escalation: true
+    tags: ["goblin", "conflict", "defense"]

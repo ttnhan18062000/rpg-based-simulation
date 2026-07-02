@@ -202,6 +202,17 @@ class V2EngineManager:
                 return None
             return self._read_cache.get_entity_dto(self._latest_state.entities[entity_id])
 
+    def get_entity_timeline_events(self, entity_id: int) -> List[Dict[str, Any]]:
+        """Returns serialized timeline events for an entity, or [] if not found."""
+        with self._state_lock:
+            if not self._latest_state or entity_id not in self._latest_state.entities:
+                return []
+            entity = self._latest_state.entities[entity_id]
+            timeline = getattr(entity, "timeline", None)
+            if not timeline:
+                return []
+            return [ev.model_dump() for ev in timeline]
+
     @property
     def latest_state(self) -> Optional[AuthoritativeState]:
         """Thread-safe access to the latest completed tick state."""

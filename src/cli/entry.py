@@ -208,26 +208,11 @@ def _run_cli(args):
     # Load and compile the custom world spec using WorldRepository and WorldCompiler
     from src.worldbuilding.repository import WorldRepository
     from src.worldbuilding.compiler import WorldCompiler
-    from src.worldbuilding.recipe import WorldTemplateSpec, WorldTemplateExpander
-    import yaml
-    
+
     logging.info(f"Loading and compiling world specification: {world_id}...")
     repo = WorldRepository("data/worlds")
-    world_dir = repo.worlds_dir / world_id
-    yaml_path = world_dir / "world.yaml"
-    if not yaml_path.exists():
-        raise FileNotFoundError(f"World spec not found at: {yaml_path}")
-        
-    with open(yaml_path, "r", encoding="utf-8") as f:
-        raw_data = yaml.safe_load(f)
-        
-    schema_version = raw_data.get("schema_version", "")
-    if "worldtemplate" in schema_version:
-        template = WorldTemplateSpec.model_validate(raw_data)
-        spec = WorldTemplateExpander.expand(template, seed=seed)
-    else:
-        spec = repo.load_world(world_id)
-        
+    spec = repo.load_world(world_id)
+
     state, compile_report = WorldCompiler.compile(spec, seed=seed)
     logging.info(f"World successfully compiled! Entities spawned: {compile_report['entity_count']}, Hash: {compile_report['state_hash']}")
     
@@ -242,7 +227,7 @@ def _run_cli(args):
             buffer_capacity_kb=profile.max_replay_buffer_kb
         )
     
-    kernel = Kernel(profile=profile, state=state, rng=rng, replay=replay_manager)
+    kernel = Kernel(profile=profile, state=state, rng=rng, replay=replay_manager, world_id=world_id)
     
     print(f"V2 Simulation Started: seed={seed}, entities={len(state.entities)}, ticks={ticks}")
     if args.replay:

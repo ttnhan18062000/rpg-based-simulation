@@ -237,6 +237,84 @@
       "inventory_profile_id": "guard_basic_kit",
       "skill_profile_id": "guard_skills"
     },
+    "pop_0": {
+      "legacy_role": 0,
+      "legacy_faction": 0,
+      "hp": 100,
+      "max_hp": 100,
+      "atk": 10,
+      "def": 0,
+      "attack_range": 1,
+      "readiness": 100.0,
+      "inventory_seed": null,
+      "cognition_seed": null,
+      "archetype_id": null,
+      "race_id": null,
+      "role_id": null,
+      "faction_id": null,
+      "traits": [],
+      "themes": [],
+      "stat_profile_id": null,
+      "combat_profile_id": null,
+      "cognition_profile_id": null,
+      "drive_profile_id": null,
+      "need_profile_id": null,
+      "sense_profile_id": null,
+      "inventory_profile_id": null,
+      "skill_profile_id": null
+    },
+    "pop_1": {
+      "legacy_role": 0,
+      "legacy_faction": 0,
+      "hp": 100,
+      "max_hp": 100,
+      "atk": 10,
+      "def": 0,
+      "attack_range": 1,
+      "readiness": 100.0,
+      "inventory_seed": null,
+      "cognition_seed": null,
+      "archetype_id": null,
+      "race_id": null,
+      "role_id": null,
+      "faction_id": null,
+      "traits": [],
+      "themes": [],
+      "stat_profile_id": null,
+      "combat_profile_id": null,
+      "cognition_profile_id": null,
+      "drive_profile_id": null,
+      "need_profile_id": null,
+      "sense_profile_id": null,
+      "inventory_profile_id": null,
+      "skill_profile_id": null
+    },
+    "pop_2": {
+      "legacy_role": 0,
+      "legacy_faction": 0,
+      "hp": 100,
+      "max_hp": 100,
+      "atk": 10,
+      "def": 0,
+      "attack_range": 1,
+      "readiness": 100.0,
+      "inventory_seed": null,
+      "cognition_seed": null,
+      "archetype_id": null,
+      "race_id": null,
+      "role_id": null,
+      "faction_id": null,
+      "traits": [],
+      "themes": [],
+      "stat_profile_id": null,
+      "combat_profile_id": null,
+      "cognition_profile_id": null,
+      "drive_profile_id": null,
+      "need_profile_id": null,
+      "sense_profile_id": null,
+      "inventory_profile_id": null,
+      "skill_profile_id": null
+    },
     "trading_pop_0": {
       "legacy_role": 1,
       "legacy_faction": 3,
@@ -308,7 +386,23 @@
       "owner_faction": null
     }
   },
-  "resources": {},
+  "resources": {
+    "res_0": {
+      "required_ticks": 10,
+      "resource_type": "wood_node",
+      "yield_policy": null
+    },
+    "res_1": {
+      "required_ticks": 8,
+      "resource_type": "herb_patch",
+      "yield_policy": null
+    },
+    "trading_res_0": {
+      "required_ticks": 15,
+      "resource_type": "iron_vein",
+      "yield_policy": null
+    }
+  },
   "factions": {
     "hero_guild": {
       "starting_gold": 1000.0
@@ -366,14 +460,16 @@
   "legacy_factions": {
     "town_council": 2,
     "merchant_league": 3,
-    "bandit_company": 1
+    "bandit_company": 1,
+    "hero_guild": 0
   },
   "legacy_roles": {
     "worker": 4,
     "guard": 5,
     "merchant": 1,
     "blacksmith": 4,
-    "scout": 5
+    "scout": 5,
+    "hero": 0
   },
   "perspectives": {}
 }

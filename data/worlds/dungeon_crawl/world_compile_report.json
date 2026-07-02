@@ -1,17 +1,12 @@
 {
   "world_id": "dungeon_crawl",
-  "seed": 42,
+  "seed": 303,
   "entity_count": 32,
   "region_count": 4,
   "resource_node_count": 3,
   "building_count": 1,
-  "quest_count": 3,
-  "warnings": [
-    "QuestDefinition 'mine_fetch_ore' required_location_tag 'mine' does not match any region ID in this world",
-    "QuestDefinition 'mine_fetch_ore' required_location_tag 'underground' does not match any region ID in this world",
-    "QuestDefinition 'ruins_first_contact' required_location_tag 'ruins' does not match any region ID in this world",
-    "QuestDefinition 'spirit_source_trace' required_location_tag 'ruins' does not match any region ID in this world"
-  ],
-  "compile_duration_ms": 14.197530996170826,
-  "state_hash": "8b27e05550e2f5414bd096ab9c9cfc1d"
+  "quest_count": 9,
+  "warnings": [],
+  "compile_duration_ms": 17.393993002770003,
+  "state_hash": "dac7c0a73743a45be531f0d0e72b2afd"
 }

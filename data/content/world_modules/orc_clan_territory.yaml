@@ -19,3 +19,31 @@ resources:
   wood_node: 6
 relationships: ["town_to_orc_clan", "orc_clan_to_town"]
 observability_tags: ["conflict"]
+quest_definitions:
+  - id: "orc_hunt_patrol_warband"
+    type: "hunt"
+    required_participant_tags: ["humanoid"]
+    required_location_tags: ["wilderness", "plain"]
+    reward_budget: 150
+    procedural_hints:
+      difficulty: 3
+      escalation: true
+    tags: ["orc", "conflict", "bounty"]
+  - id: "orc_escort_settler_convoy"
+    type: "escort"
+    required_participant_tags: ["humanoid"]
+    required_location_tags: ["wilderness", "plain"]
+    reward_budget: 120
+    procedural_hints:
+      difficulty: 2
+      escalation: true
+    tags: ["orc", "conflict", "escort"]
+  - id: "orc_investigate_expansion_signs"
+    type: "investigate"
+    required_participant_tags: ["humanoid"]
+    required_location_tags: ["wilderness", "plain"]
+    reward_budget: 100
+    procedural_hints:
+      difficulty: 2
+      escalation: false
+    tags: ["orc", "conflict", "territory"]

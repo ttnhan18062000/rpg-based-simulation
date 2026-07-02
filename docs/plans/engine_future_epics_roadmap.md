@@ -105,3 +105,42 @@ Still **zero code, zero docs** beyond the vision doc itself. `FeaturePackManifes
 ## Open Decisions
 
 This investigation deliberately stops short of picking the next epic — that's a call for you, not something to infer from gap size alone.
+
+---
+
+## Engine Audit Update — 2026-06-19
+
+The 18-dimension audit programme (`TCK-20260618-AUDIT-EPIC`) completed on 2026-06-19. Key findings that update or confirm entries above:
+
+### Critical Bugs Found and Fixed (RC1/RC2/RC3)
+
+Three wiring bugs caused total behavioral stasis in the simulation before any epic work begins. These are **now fixed** but are recorded here because they explain audit run data and because any future investigation of behavioral quality should verify they remain fixed:
+
+- **RC1** (`adventure/phase.py:60`): `AdventureDecisionPhase` never passed `opportunities=` to `AdventureRouteGenerator.generate()`. Primary route loop executed zero times every tick.
+- **RC2** (`world/providers/requirements.py:154`): `near_service` requirement hardcoded to `if region_id == "hometown"` — always failed in non-hometown worlds.
+- **RC3** (`world/providers/requirements.py`): `PerformanceBudgets.provider_calls_total` (class-level counter) never reset between ticks — exhausted at tick ~25, after which opportunity provider returned empty lists.
+
+### Confirmed and Sharpened Gaps (by epic section)
+
+**Section B — Personality → Long-Run Behavior Calibration:**
+Audit D05 confirms this is NOT a calibration problem — it is a **complete initialization absence**. `WorldCompiler.compile()` produces `PersonalityComponent(greed=0.0, bravery=0.0, sociability=0.0, industry=0.0)` for every entity. The OCEAN system and scoring formula are correctly implemented; the world compiler never seeds non-zero values. The fix is in `WorldCompiler` entity spawn, not in the scoring formula.
+
+**Section C — Resource Ecology Regeneration:**
+Audit D06 confirms this gap is now also blocking hunger satiation. No food-kind resource node exists in any tested world — entities generate hunger projects indefinitely (every ~30 ticks) but hunger urgency never resolves. This means hunger permanently outscores all economic goals, making economic/crafting balance measurement impossible until either food nodes or hunger threshold calibration is fixed.
+
+**Section D — Decision Explanation Model:**
+Audit D15 confirms: route trace computed every tick in `execute_brain()` but discarded at tick boundary. Rich `cognition_graph_snapshots.jsonl` exist per run but only in DEBUG/CERTIFICATION mode, with no REST query API and no tick indexing. Promoting existing computed data to a queryable API would close the P0 gap without new simulation logic.
+
+### New Findings Not Previously in Roadmap
+
+**CI / Test Pipeline — Zero automation (D18):**
+No `test.yml` exists. Every push to `main` runs only `deploy-docs.yml` (mkdocs deploy). All certification harness, architecture guards, and regression tests require local invocation. The fix is a single `test.yml` calling `make lane-all-fast` + `make gate-expansion` + `pytest tests/docs/`. This belongs in section E as a **cheap fix**, not an epic.
+
+**Dead Code Cleanup — 9 orphaned src/ directories (D11):**
+`src/ai/`, `src/town/` (10 files), `src/entities/` (4 files), `src/views/runtime/actions/`, `src/quests/`, `src/content_semantics/`, `src/systems/` and two others — 36 files, ~2,955 lines of unreachable V1 code. `src/ai/goals/scorers.py` implements the V1 GoalScorer pattern that `design_patterns.md` still documents as the extension point (D12 joint finding). Safe deletion order: views/runtime/actions/ → town/quests/ → entities/ → ai/ (after parity ledger audit for SOC/STRAT compliance IDs). This is a **cheap-fix cluster**, not an epic.
+
+**World Content Authoring Gap (D08):**
+Multi-scenario audit found 94% entity attrition in `dungeon_crawl` (32 entities, 1 building, 4 regions) and near-extinction in `wilderness_survival` (0 buildings). Engine handles both correctly; the world content authoring layer is uncalibrated. Urban_political (7 buildings, 27 entities) is the only world producing economic activity (`harvesting`, `town_return`). New world content for balanced dungeon/wilderness scenarios should accompany any content-depth epic (section C/D).
+
+**Scoring Formula Imbalance (D04):**
+`blocker_penalty = 2.0` (fixed) vs. max achievable non-blocked score ~2.65. Any route with a single minor blocker scores near zero regardless of urgency. Consider a graduated penalty before quest generation epic (section D) — otherwise quests with any blocker condition will be systematically excluded from entity consideration.

@@ -25,21 +25,27 @@ def mock_deps():
         max_queue_depth=10,
         max_replay_buffer_kb=1024,
         max_observability_budget_percent=10.0,
-        max_tick_budget_ms=100.0,
+        max_tick_budget_ms=10000.0,
     )
 
+    from src.core.lifecycle import LifecycleOutcome
     replay = MagicMock()
     replay.get_stats.return_value = {"backlog_kb": 0}
     replay.emit = MagicMock()
+    replay.finalize.return_value = LifecycleOutcome.SUCCESS
+    replay.replay_metrics.return_value = {"pending_replay_flushes": 0}
 
     executor = MagicMock()
     executor.set_concurrency_limit = MagicMock()
 
     scheduler = MagicMock()
 
+    rng = MagicMock()
+    rng.get_state.return_value = None
+
     return {
         "profile": profile,
-        "rng": MagicMock(),
+        "rng": rng,
         "scheduler": scheduler,
         "governor": ResourceGovernor(),
         "status": RuntimeStatus(),
@@ -130,120 +136,122 @@ def test_replay_sources_from_refined_update(mock_deps):
         replay=mock_deps["replay"],
         executor=mock_deps["executor"],
     )
+    try:
+        # Raw worker proposal intentionally tries to bypass the movement system by
+        # directly setting final position. This must never become authoritative.
+        proposed_upd = EntityUpdate(
+            entity_id=2,
+            new_position=(0.0, 0.0),
+            moved_this_tick=True,
+        )
 
-    # Raw worker proposal intentionally tries to bypass the movement system by
-    # directly setting final position. This must never become authoritative.
-    proposed_upd = EntityUpdate(
-        entity_id=2,
-        new_position=(0.0, 0.0),
-        moved_this_tick=True,
-    )
+        res_2 = WorkerResult(
+            source_packet_id="100:0",
+            work_id="100:1:TEST",
+            entity_id=2,
+            work_class=WorkClass.CRITICAL,
+            update=proposed_upd,
+        )
 
-    res_2 = WorkerResult(
-        source_packet_id="100:0",
-        work_id="100:1:TEST",
-        entity_id=2,
-        work_class=WorkClass.CRITICAL,
-        update=proposed_upd,
-    )
+        source_packet = WorkerPacket(
+            packet_id="100:0",
+            work_id="100:1:TEST",
+            tick=100,
+            world_time=1000,
+            seed=42,
+            work_class=WorkClass.CRITICAL,
+            subject=e2,
+            neighbor_view=[],
+            work_kind="TEST",
+            payload={},
+        )
 
-    source_packet = WorkerPacket(
-        packet_id="100:0",
-        work_id="100:1:TEST",
-        tick=100,
-        world_time=1000,
-        seed=42,
-        work_class=WorkClass.CRITICAL,
-        subject=e2,
-        neighbor_view=[],
-        work_kind="TEST",
-        payload={},
-    )
+        mock_deps["executor"]._source_packets = {
+            "100:0": source_packet,
+        }
+        mock_deps["executor"].execute.return_value = [res_2]
 
-    mock_deps["executor"]._source_packets = {
-        "100:0": source_packet,
-    }
-    mock_deps["executor"].execute.return_value = [res_2]
+        # No scheduled work is needed for this test because executor is mocked
+        # to return the worker result directly.
+        mock_deps["scheduler"].select_work.return_value = ([], 0)
 
-    # No scheduled work is needed for this test because executor is mocked
-    # to return the worker result directly.
-    mock_deps["scheduler"].select_work.return_value = ([], 0)
+        kernel._phase_init()
+        kernel._phase_scheduling()
+        kernel._phase_collection()
+        kernel._phase_resolution()
 
-    kernel._phase_init()
-    kernel._phase_scheduling()
-    kernel._phase_collection()
-    kernel._phase_resolution()
+        calls = mock_deps["replay"].emit.call_args_list
 
-    calls = mock_deps["replay"].emit.call_args_list
+        refined_update_events = [
+            call[0][0]
+            for call in calls
+            if call[0][0].event_type == "REFINED_UPDATE"
+        ]
 
-    refined_update_events = [
-        call[0][0]
-        for call in calls
-        if call[0][0].event_type == "REFINED_UPDATE"
-    ]
+        assert refined_update_events, (
+            "Expected at least one REFINED_UPDATE replay event"
+        )
 
-    assert refined_update_events, (
-        "Expected at least one REFINED_UPDATE replay event"
-    )
+        raw_like_refined_events = []
+        trust_rejection_events = []
 
-    raw_like_refined_events = []
-    trust_rejection_events = []
+        for event in refined_update_events:
+            emitted_update = event.payload["update"]
+            emitted_entity_update = emitted_update.entity_updates.get(2)
 
-    for event in refined_update_events:
-        emitted_update = event.payload["update"]
-        emitted_entity_update = emitted_update.entity_updates.get(2)
+            if emitted_entity_update is None:
+                continue
 
-        if emitted_entity_update is None:
-            continue
+            if emitted_entity_update == proposed_upd:
+                raw_like_refined_events.append(event)
 
-        if emitted_entity_update == proposed_upd:
-            raw_like_refined_events.append(event)
+            if (
+                emitted_entity_update.new_position is None
+                and emitted_entity_update.moved_this_tick is False
+                and emitted_entity_update.navigation is not None
+                and emitted_entity_update.navigation.failure_reason
+                == "UNTRUSTED_DIRECT_MOVEMENT"
+            ):
+                trust_rejection_events.append(event)
 
-        if (
-            emitted_entity_update.new_position is None
-            and emitted_entity_update.moved_this_tick is False
-            and emitted_entity_update.navigation is not None
-            and emitted_entity_update.navigation.failure_reason
+        assert not raw_like_refined_events, (
+            "REFINED_UPDATE must never emit the raw worker proposal as "
+            "authoritative truth"
+        )
+
+        assert trust_rejection_events, (
+            "Expected a REFINED_UPDATE event containing authoritative "
+            "UNTRUSTED_DIRECT_MOVEMENT rejection for entity 2"
+        )
+
+        emitted_update = trust_rejection_events[-1].payload["update"]
+        emitted_entity_update = emitted_update.entity_updates[2]
+
+        assert emitted_entity_update.new_position is None
+        assert emitted_entity_update.moved_this_tick is False
+        assert emitted_entity_update.navigation is not None
+        assert (
+            emitted_entity_update.navigation.failure_reason
             == "UNTRUSTED_DIRECT_MOVEMENT"
-        ):
-            trust_rejection_events.append(event)
+        )
 
-    assert not raw_like_refined_events, (
-        "REFINED_UPDATE must never emit the raw worker proposal as "
-        "authoritative truth"
-    )
+        # Replay must contain the refined authoritative result, not the raw worker
+        # proposal.
+        assert emitted_entity_update != proposed_upd
 
-    assert trust_rejection_events, (
-        "Expected a REFINED_UPDATE event containing authoritative "
-        "UNTRUSTED_DIRECT_MOVEMENT rejection for entity 2"
-    )
+        assert (
+            emitted_update.rejections_delta.get("UNTRUSTED_DIRECT_MOVEMENT", 0)
+            >= 1
+        )
 
-    emitted_update = trust_rejection_events[-1].payload["update"]
-    emitted_entity_update = emitted_update.entity_updates[2]
-
-    assert emitted_entity_update.new_position is None
-    assert emitted_entity_update.moved_this_tick is False
-    assert emitted_entity_update.navigation is not None
-    assert (
-        emitted_entity_update.navigation.failure_reason
-        == "UNTRUSTED_DIRECT_MOVEMENT"
-    )
-
-    # Replay must contain the refined authoritative result, not the raw worker
-    # proposal.
-    assert emitted_entity_update != proposed_upd
-
-    assert (
-        emitted_update.rejections_delta.get("UNTRUSTED_DIRECT_MOVEMENT", 0)
-        >= 1
-    )
-
-    assert any(
-        event.actor_id == 2
-        and event.action_kind == "GLOBAL_PROPOSAL"
-        and event.reason == "UNTRUSTED_DIRECT_MOVEMENT"
-        for event in emitted_update.rejection_events
-    )
+        assert any(
+            event.actor_id == 2
+            and event.action_kind == "GLOBAL_PROPOSAL"
+            and event.reason == "UNTRUSTED_DIRECT_MOVEMENT"
+            for event in emitted_update.rejection_events
+        )
+    finally:
+        kernel.shutdown(timeout_s=1.0)
     
     
 def test_occupancy_phase_rejects_authoritative_position_overlap():

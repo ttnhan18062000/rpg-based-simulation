@@ -32,6 +32,8 @@ class RegionSpec(BaseModel):
     bounds: tuple[int, int, int, int] = Field(..., description="Bounds of the region as [min_x, min_y, max_x, max_y]")
     terrain: Optional[str] = Field("GRASS", description="Ecological terrain type of the region")
     hazard_level: Optional[float] = Field(0.0, description="Hazard difficulty factor of the region")
+    hazard_kind: Optional[str] = Field("PHYSICAL", description="Semantic type of this region's passive hazard drain (e.g. 'PHYSICAL', 'NATURAL_TERRAIN', 'TOXIC_GAS').")
+    tags: List[str] = Field(default_factory=list, description="Semantic labels for quest routing (e.g. mine, forest, ruins, settlement)")
 
     @model_validator(mode="after")
     def validate_bounds(self) -> RegionSpec:
@@ -68,6 +70,7 @@ class ResourceNodeSpec(BaseModel):
     resource_type: str = Field(..., min_length=1, description="Resource item type spawned")
     count: int = Field(..., gt=0, description="Total resource charges / stock available")
     region: str = Field(..., min_length=1, description="Region where this node resides")
+    regen_rate: int = Field(1, ge=0, description="Charges regenerated per ecology cycle (0 = static node)")
 
 class BuildingSpec(BaseModel):
     model_config = ConfigDict(frozen=True)

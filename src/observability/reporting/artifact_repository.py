@@ -20,6 +20,7 @@ class RunManifest(BaseModel):
     status: str = "CREATED"  # CREATED, RUNNING, COMPLETED, FAILED, ANALYZED
     artifact_schema_version: str = "observability_artifact_v1"
     failure_reason: Optional[str] = None
+    world_id: str = "unknown"
 
     # Resolved world assembly sidecar artifacts (Phase 10)
     resolved_world_path: Optional[str] = None

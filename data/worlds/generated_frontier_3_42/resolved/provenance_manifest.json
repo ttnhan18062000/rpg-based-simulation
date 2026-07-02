@@ -1,20 +1,20 @@
 {
-  "manifest_id": "prov_bcc48c333a02e988",
+  "manifest_id": "prov_35a0ca25ce2ad77f",
   "world_id": "generated_frontier_3_42",
   "source_schema_version": "provenancemanifest.v1",
-  "catalog_fingerprint": "b1cec5dc8a96b2614a622544840330384aa0da562c0d706bfc28ef4f7713c198",
+  "catalog_fingerprint": "3529ebbe985937cfa0e2bf3066657f19d7112f21620e16d31e6bf661d5305f46",
   "module_fingerprints": {
-    "frontier_village_core": "02aec5f9a179002864024c53bed0d2040d49c64b5191fd856c2d1a4ddc1af01f",
-    "bandit_road_trade_pressure": "a04880b8821a4cf6246e5ce782ef1363f5f8cbc1d97f6bb40191c47c8149ce10",
-    "goblin_camp_conflict": "16b4aab9db55e27cb59f021557518381207fbf8b4e4550843506a9c827ca844d",
-    "moon_cult_ruins": "321ed919a2b0c188508fc4633c17b879eace814079eaaf32d4a1d9b1cb051bf2",
-    "old_mine_resource_loop": "3307ee93b187d56a00220a71eb6bb4ead096f20ff267e9d53dbbd9d891d041c3",
-    "orc_clan_territory": "c84817355311dbbf0c45442696ddd9d0f443fc1296d54e454c916c2b5a81d9dc"
+    "frontier_village_core": "ac2da4bc478c24180e4b53f1267959956c00bbf473d6b119dc270633b2c322f3",
+    "bandit_road_trade_pressure": "14f4161782ab617ee6da3a54afa2487d2eefd2cc63ff66899e08f87bc2993161",
+    "goblin_camp_conflict": "36e0a62287420b3a3ab01ce4396ce507e998bbecbc6ed4c0beb37c346d933daf",
+    "moon_cult_ruins": "2df69af1a6804ec21579ec0a7a4d4b3dde2878c40e28fe9b80355e7b63e2e02e",
+    "old_mine_resource_loop": "dbef38a7d0c2261e24948cd9dded020279386c10e0084872a2df9963bb9cc677",
+    "orc_clan_territory": "7162ce4798b527bebb9026704fae3e07dca324d0a63408efd1e8324a9e35811a"
   },
   "composition_fingerprint": "21ca13659706104be4deb8262598dc01c31b55a1710244f55d24e0cd26b79bbb",
   "resolver_version": "1.0.0",
-  "content_fingerprint": "bcc48c333a02e9882809a561a91f05e2b3b48a38f93630bc746c80cbe3f7c831",
-  "created_at": "2026-06-15T12:24:11.153307Z",
+  "content_fingerprint": "35a0ca25ce2ad77f45767f6986df2223d3aff3eb94c97f4639e699edba9dc33b",
+  "created_at": "2026-06-30T18:18:41.909839Z",
   "records": {
     "hero_guild": {
       "element_id": "hero_guild",
@@ -327,6 +327,34 @@
         "population_recipe_source": "frontier_village_population"
       }
     },
+    "res_0": {
+      "element_id": "res_0",
+      "element_type": "resource",
+      "source_module": "frontier_village_core",
+      "recipe_type": "resource",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "wood_node"
+      },
+      "details": {
+        "count": 8,
+        "region": "hometown"
+      }
+    },
+    "res_1": {
+      "element_id": "res_1",
+      "element_type": "resource",
+      "source_module": "frontier_village_core",
+      "recipe_type": "resource",
+      "parameters": {},
+      "profiles": {
+        "resource_type": "herb_patch"
+      },
+      "details": {
+        "count": 5,
+        "region": "hometown"
+      }
+    },
     "town_hall_0": {
       "element_id": "town_hall_0",
       "element_type": "building",
@@ -417,6 +445,60 @@
         "relationship_model": "trade_positive"
       },
       "details": {}
+    },
+    "quest_village_fetch_supply_run": {
+      "element_id": "quest_village_fetch_supply_run",
+      "element_type": "quest_definition",
+      "source_module": "frontier_village_core",
+      "recipe_type": "quest_definition",
+      "parameters": {},
+      "profiles": {
+        "quest_type": "fetch"
+      },
+      "details": {
+        "tags": [
+          "village",
+          "settlement",
+          "supply"
+        ],
+        "reward_budget": 80
+      }
+    },
+    "quest_village_escort_merchant_delivery": {
+      "element_id": "quest_village_escort_merchant_delivery",
+      "element_type": "quest_definition",
+      "source_module": "frontier_village_core",
+      "recipe_type": "quest_definition",
+      "parameters": {},
+      "profiles": {
+        "quest_type": "escort"
+      },
+      "details": {
+        "tags": [
+          "village",
+          "settlement",
+          "trade"
+        ],
+        "reward_budget": 100
+      }
+    },
+    "quest_village_defend_gate_assault": {
+      "element_id": "quest_village_defend_gate_assault",
+      "element_type": "quest_definition",
+      "source_module": "frontier_village_core",
+      "recipe_type": "quest_definition",
+      "parameters": {},
+      "profiles": {
+        "quest_type": "defend"
+      },
+      "details": {
+        "tags": [
+          "village",
+          "settlement",
+          "defense"
+        ],
+        "reward_budget": 120
+      }
     },
     "bandit_road": {
       "element_id": "bandit_road",
@@ -538,6 +620,60 @@
         "relationship_model": "predatory_trade_ambush"
       },
       "details": {}
+    },
+    "quest_bandit_escort_merchant_caravan": {
+      "element_id": "quest_bandit_escort_merchant_caravan",
+      "element_type": "quest_definition",
+      "source_module": "bandit_road_trade_pressure",
+      "recipe_type": "quest_definition",
+      "parameters": {},
+      "profiles": {
+        "quest_type": "escort"
+      },
+      "details": {
+        "tags": [
+          "bandit",
+          "trade",
+          "escort"
+        ],
+        "reward_budget": 120
+      }
+    },
+    "quest_bandit_hunt_road_captain": {
+      "element_id": "quest_bandit_hunt_road_captain",
+      "element_type": "quest_definition",
+      "source_module": "bandit_road_trade_pressure",
+      "recipe_type": "quest_definition",
+      "parameters": {},
+      "profiles": {
+        "quest_type": "hunt"
+      },
+      "details": {
+        "tags": [
+          "bandit",
+          "conflict",
+          "bounty"
+        ],
+        "reward_budget": 150
+      }
+    },
+    "quest_bandit_investigate_ambush_source": {
+      "element_id": "quest_bandit_investigate_ambush_source",
+      "element_type": "quest_definition",
+      "source_module": "bandit_road_trade_pressure",
+      "recipe_type": "quest_definition",
+      "parameters": {},
+      "profiles": {
+        "quest_type": "investigate"
+      },
+      "details": {
+        "tags": [
+          "bandit",
+          "conflict",
+          "mystery"
+        ],
+        "reward_budget": 100
+      }
     },
     "goblin_camp": {
       "element_id": "goblin_camp",
@@ -684,6 +820,60 @@
       },
       "details": {}
     },
+    "quest_goblin_hunt_warlord": {
+      "element_id": "quest_goblin_hunt_warlord",
+      "element_type": "quest_definition",
+      "source_module": "goblin_camp_conflict",
+      "recipe_type": "quest_definition",
+      "parameters": {},
+      "profiles": {
+        "quest_type": "hunt"
+      },
+      "details": {
+        "tags": [
+          "goblin",
+          "conflict",
+          "bounty"
+        ],
+        "reward_budget": 150
+      }
+    },
+    "quest_goblin_fetch_stolen_goods": {
+      "element_id": "quest_goblin_fetch_stolen_goods",
+      "element_type": "quest_definition",
+      "source_module": "goblin_camp_conflict",
+      "recipe_type": "quest_definition",
+      "parameters": {},
+      "profiles": {
+        "quest_type": "fetch"
+      },
+      "details": {
+        "tags": [
+          "goblin",
+          "conflict",
+          "loot"
+        ],
+        "reward_budget": 100
+      }
+    },
+    "quest_goblin_defend_village_perimeter": {
+      "element_id": "quest_goblin_defend_village_perimeter",
+      "element_type": "quest_definition",
+      "source_module": "goblin_camp_conflict",
+      "recipe_type": "quest_definition",
+      "parameters": {},
+      "profiles": {
+        "quest_type": "defend"
+      },
+      "details": {
+        "tags": [
+          "goblin",
+          "conflict",
+          "defense"
+        ],
+        "reward_budget": 120
+      }
+    },
     "moon_cave": {
       "element_id": "moon_cave",
       "element_type": "region",
@@ -769,6 +959,60 @@
         "relationship_model": "hidden_conflict"
       },
       "details": {}
+    },
+    "quest_mcult_investigate_ritual_site": {
+      "element_id": "quest_mcult_investigate_ritual_site",
+      "element_type": "quest_definition",
+      "source_module": "moon_cult_ruins",
+      "recipe_type": "quest_definition",
+      "parameters": {},
+      "profiles": {
+        "quest_type": "investigate"
+      },
+      "details": {
+        "tags": [
+          "cult",
+          "arcane",
+          "mystery"
+        ],
+        "reward_budget": 150
+      }
+    },
+    "quest_mcult_explore_cave_network": {
+      "element_id": "quest_mcult_explore_cave_network",
+      "element_type": "quest_definition",
+      "source_module": "moon_cult_ruins",
+      "recipe_type": "quest_definition",
+      "parameters": {},
+      "profiles": {
+        "quest_type": "explore"
+      },
+      "details": {
+        "tags": [
+          "cult",
+          "arcane",
+          "exploration"
+        ],
+        "reward_budget": 120
+      }
+    },
+    "quest_mcult_defend_arcane_circle": {
+      "element_id": "quest_mcult_defend_arcane_circle",
+      "element_type": "quest_definition",
+      "source_module": "moon_cult_ruins",
+      "recipe_type": "quest_definition",
+      "parameters": {},
+      "profiles": {
+        "quest_type": "defend"
+      },
+      "details": {
+        "tags": [
+          "cult",
+          "arcane",
+          "defense"
+        ],
+        "reward_budget": 200
+      }
     },
     "old_mine": {
       "element_id": "old_mine",
@@ -1002,6 +1246,60 @@
         "relationship_model": "territorial_raider"
       },
       "details": {}
+    },
+    "quest_orc_hunt_patrol_warband": {
+      "element_id": "quest_orc_hunt_patrol_warband",
+      "element_type": "quest_definition",
+      "source_module": "orc_clan_territory",
+      "recipe_type": "quest_definition",
+      "parameters": {},
+      "profiles": {
+        "quest_type": "hunt"
+      },
+      "details": {
+        "tags": [
+          "orc",
+          "conflict",
+          "bounty"
+        ],
+        "reward_budget": 150
+      }
+    },
+    "quest_orc_escort_settler_convoy": {
+      "element_id": "quest_orc_escort_settler_convoy",
+      "element_type": "quest_definition",
+      "source_module": "orc_clan_territory",
+      "recipe_type": "quest_definition",
+      "parameters": {},
+      "profiles": {
+        "quest_type": "escort"
+      },
+      "details": {
+        "tags": [
+          "orc",
+          "conflict",
+          "escort"
+        ],
+        "reward_budget": 120
+      }
+    },
+    "quest_orc_investigate_expansion_signs": {
+      "element_id": "quest_orc_investigate_expansion_signs",
+      "element_type": "quest_definition",
+      "source_module": "orc_clan_territory",
+      "recipe_type": "quest_definition",
+      "parameters": {},
+      "profiles": {
+        "quest_type": "investigate"
+      },
+      "details": {
+        "tags": [
+          "orc",
+          "conflict",
+          "territory"
+        ],
+        "reward_budget": 100
+      }
     }
   }
 }

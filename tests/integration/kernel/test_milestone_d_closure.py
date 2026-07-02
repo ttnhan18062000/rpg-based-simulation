@@ -157,14 +157,15 @@ def test_high_pressure_determinism_equivalence():
         DeterministicRNG(seed),
         flags={"audit_mode": True},
     )
-
-    for tick in range(ticks_to_run):
-        kernel_local._scheduler.select_work = MagicMock(
-            return_value=(build_work_for_tick(tick), 0)
-        )
-        kernel_local.tick_once()
-
-    final_state_local = kernel_local.state
+    try:
+        for tick in range(ticks_to_run):
+            kernel_local._scheduler.select_work = MagicMock(
+                return_value=(build_work_for_tick(tick), 0)
+            )
+            kernel_local.tick_once()
+        final_state_local = kernel_local.state
+    finally:
+        kernel_local.shutdown()
 
     # ---------------------------------------------------------------------
     # 2. Run concurrent execution with noisy completion timing.
@@ -181,32 +182,23 @@ def test_high_pressure_determinism_equivalence():
     original_execute = kernel_concurrent._worker_manager.execute_batch
 
     def chaotic_execute(packets, worker_fn, **kwargs):
-        """
-        Inject timing noise while keeping real worker logic.
-
-        The authoritative result must remain identical regardless of worker
-        completion order.
-        """
-
         def noisy_worker_wrapper(packet):
             time.sleep(random.uniform(0.001, 0.01))
             return default_simulation_worker(packet)
-
-        return original_execute(
-            packets,
-            noisy_worker_wrapper,
-            **kwargs,
-        )
+        return original_execute(packets, noisy_worker_wrapper, **kwargs)
 
     kernel_concurrent._worker_manager.execute_batch = chaotic_execute
 
-    for tick in range(ticks_to_run):
-        kernel_concurrent._scheduler.select_work = MagicMock(
-            return_value=(build_work_for_tick(tick), 0)
-        )
-        kernel_concurrent.tick_once()
-
-    final_state_concurrent = kernel_concurrent.state
+    try:
+        for tick in range(ticks_to_run):
+            kernel_concurrent._scheduler.select_work = MagicMock(
+                return_value=(build_work_for_tick(tick), 0)
+            )
+            kernel_concurrent.tick_once()
+        final_state_concurrent = kernel_concurrent.state
+        worker_stats = kernel_concurrent._worker_manager.get_stats()
+    finally:
+        kernel_concurrent.shutdown()
 
     # ---------------------------------------------------------------------
     # 3. Certification: deterministic equivalence.
@@ -262,8 +254,6 @@ def test_high_pressure_determinism_equivalence():
     # ---------------------------------------------------------------------
     # 4. Sanity check: the test actually exercised concurrent workers.
     # ---------------------------------------------------------------------
-    worker_stats = kernel_concurrent._worker_manager.get_stats()
-
     assert worker_stats.get("peak_workers", 0) >= 1
     
     
@@ -276,11 +266,13 @@ def test_neighbor_view_bit_identical():
     }
     state = AuthoritativeState(tick=1, seed=42, entities=entities)
     kernel = Kernel(profile, state, DeterministicRNG(42))
-    
-    subject = entities[5]
-    view = kernel._get_deterministic_neighbor_view(subject, radius=20.0)
-    neighbor_ids = [eid for eid, estate in view]
-    assert neighbor_ids == [1, 10, 20]
+    try:
+        subject = entities[5]
+        view = kernel._get_deterministic_neighbor_view(subject, radius=20.0)
+        neighbor_ids = [eid for eid, estate in view]
+        assert neighbor_ids == [1, 10, 20]
+    finally:
+        kernel.shutdown()
 
 
 def test_entity_move_work_can_drive_authoritative_movement_progress():
@@ -340,28 +332,27 @@ def test_entity_move_work_can_drive_authoritative_movement_progress():
         DeterministicRNG(42),
         flags={"audit_mode": True},
     )
+    try:
+        target = (100.0, 100.0)
 
-    target = (100.0, 100.0)
-
-    kernel._scheduler.select_work = MagicMock(
-        return_value=(
-            [
-                WorkItem(
-                    owner_id=2,
-                    work_id="t0:w2",
-                    work_class=WorkClass.CRITICAL,
-                    work_kind="ENTITY_MOVE",
-                    payload={"target_position": target},
-                )
-            ],
-            0,
+        kernel._scheduler.select_work = MagicMock(
+            return_value=(
+                [
+                    WorkItem(
+                        owner_id=2,
+                        work_id="t0:w2",
+                        work_class=WorkClass.CRITICAL,
+                        work_kind="ENTITY_MOVE",
+                        payload={"target_position": target},
+                    )
+                ],
+                0,
+            )
         )
-    )
 
-    initial_position = kernel.state.entities[2].navigation.position
-
-    kernel.tick_once()
-
-    final_entity = kernel.state.entities[2]
-
-    assert final_entity.navigation.position != initial_position
+        initial_position = kernel.state.entities[2].navigation.position
+        kernel.tick_once()
+        final_entity = kernel.state.entities[2]
+        assert final_entity.navigation.position != initial_position
+    finally:
+        kernel.shutdown()

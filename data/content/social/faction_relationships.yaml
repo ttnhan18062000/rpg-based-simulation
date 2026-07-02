@@ -149,3 +149,213 @@
     trust: "none"
     fear: "none"
     ancient_grudge: "medium"
+
+# STATE: ADDITIONAL
+- id: "bandits_to_town"
+  source_faction: "bandit_company"
+  target_faction: "town_council"
+  relationship_model: "outlaw_settlement_hostility"
+  axes:
+    hostility: "high"
+    trust: "none"
+    fear: "medium"
+    resource_competition: "high"
+
+# STATE: ADDITIONAL
+- id: "hero_guild_to_goblin"
+  source_faction: "hero_guild"
+  target_faction: "goblin_warband"
+  relationship_model: "defender_raider_conflict"
+  axes:
+    hostility: "high"
+    trust: "none"
+    resource_competition: "medium"
+
+# STATE: ADDITIONAL
+- id: "goblin_to_hero_guild"
+  source_faction: "goblin_warband"
+  target_faction: "hero_guild"
+  relationship_model: "threat_avoidance"
+  axes:
+    hostility: "high"
+    fear: "high"
+    trust: "none"
+
+# STATE: ADDITIONAL
+- id: "orc_to_goblin"
+  source_faction: "orc_clan"
+  target_faction: "goblin_warband"
+  relationship_model: "dominance_raider_rivalry"
+  axes:
+    hostility: "high"
+    trust: "none"
+    territorial_conflict: "medium"
+
+# STATE: ADDITIONAL
+- id: "goblin_to_orc"
+  source_faction: "goblin_warband"
+  target_faction: "orc_clan"
+  relationship_model: "weaker_rival_fear"
+  axes:
+    hostility: "medium"
+    fear: "high"
+    trust: "none"
+    territorial_conflict: "low"
+
+# STATE: ADDITIONAL
+- id: "dwarves_to_orc"
+  source_faction: "dwarven_mine_clan"
+  target_faction: "orc_clan"
+  relationship_model: "ancient_border_hostility"
+  axes:
+    hostility: "high"
+    trust: "none"
+    territorial_conflict: "high"
+    resource_competition: "medium"
+
+# STATE: ADDITIONAL
+- id: "orc_to_dwarves"
+  source_faction: "orc_clan"
+  target_faction: "dwarven_mine_clan"
+  relationship_model: "resource_territory_conflict"
+  axes:
+    hostility: "high"
+    trust: "none"
+    territorial_conflict: "high"
+    resource_competition: "high"
+
+# STATE: ADDITIONAL
+- id: "dragon_cult_to_town"
+  source_faction: "dragon_cult"
+  target_faction: "town_council"
+  relationship_model: "expansionist_threat"
+  axes:
+    hostility: "high"
+    fear: "none"
+    trust: "none"
+    territorial_conflict: "high"
+
+# STATE: ADDITIONAL
+- id: "town_to_dragon_cult"
+  source_faction: "town_council"
+  target_faction: "dragon_cult"
+  relationship_model: "existential_threat_response"
+  axes:
+    hostility: "high"
+    fear: "high"
+    trust: "none"
+    resource_competition: "medium"
+
+# STATE: ADDITIONAL
+- id: "moon_cult_to_arcane"
+  source_faction: "moon_cult"
+  target_faction: "arcane_circle"
+  relationship_model: "arcane_ideological_conflict"
+  axes:
+    hostility: "high"
+    trust: "none"
+    religious_conflict: "high"
+    resource_competition: "medium"
+
+# STATE: ADDITIONAL
+- id: "arcane_to_moon_cult"
+  source_faction: "arcane_circle"
+  target_faction: "moon_cult"
+  relationship_model: "research_rivalry"
+  axes:
+    hostility: "medium"
+    trust: "low"
+    resource_competition: "medium"
+
+# STATE: ADDITIONAL
+- id: "undead_to_forest"
+  source_faction: "undead_remnants"
+  target_faction: "forest_wardens"
+  relationship_model: "corruption_expansion"
+  axes:
+    hostility: "high"
+    trust: "none"
+    territorial_conflict: "high"
+    ancient_grudge: "low"
+
+# STATE: ADDITIONAL
+- id: "forest_to_undead"
+  source_faction: "forest_wardens"
+  target_faction: "undead_remnants"
+  relationship_model: "purge_corrupted"
+  axes:
+    hostility: "high"
+    trust: "none"
+    territorial_conflict: "high"
+    respect: "none"
+
+# STATE: ADDITIONAL
+- id: "hero_to_town"
+  source_faction: "hero_guild"
+  target_faction: "town_council"
+  relationship_model: "protector_patron"
+  axes:
+    hostility: "none"
+    trust: "high"
+    trade_affinity: "medium"
+
+# STATE: ADDITIONAL
+- id: "town_to_hero"
+  source_faction: "town_council"
+  target_faction: "hero_guild"
+  relationship_model: "patron_employer"
+  axes:
+    hostility: "none"
+    trust: "high"
+    trade_affinity: "medium"
+
+# STATE: ADDITIONAL
+- id: "arcane_to_dwarves"
+  source_faction: "arcane_circle"
+  target_faction: "dwarven_mine_clan"
+  relationship_model: "reagent_trade_alliance"
+  axes:
+    hostility: "none"
+    trust: "medium"
+    trade_affinity: "high"
+
+# STATE: ADDITIONAL
+- id: "dwarves_to_arcane"
+  source_faction: "dwarven_mine_clan"
+  target_faction: "arcane_circle"
+  relationship_model: "crystal_trade_partner"
+  axes:
+    hostility: "none"
+    trust: "medium"
+    trade_affinity: "high"
+
+# STATE: ADDITIONAL
+- id: "swamp_tribe_to_town"
+  source_faction: "swamp_tribe"
+  target_faction: "town_council"
+  relationship_model: "territorial_defensive_hostility"
+  axes:
+    hostility: "high"
+    trust: "none"
+    fear: "low"
+    territorial_conflict: "high"
+
+# STATE: ADDITIONAL
+- id: "spirit_court_to_forest"
+  source_faction: "spirit_court"
+  target_faction: "forest_wardens"
+  relationship_model: "spiritual_kinship_alliance"
+  axes:
+    hostility: "none"
+    trust: "high"
+    respect: "high"
+
+# STATE: ADDITIONAL
+- id: "forest_to_spirit_court"
+  source_faction: "forest_wardens"
+  target_faction: "spirit_court"
+  relationship_model: "guardian_spiritual_ally"
+  axes:
+    hostility: "none"
+    trust: "high"
+    respect: "high"

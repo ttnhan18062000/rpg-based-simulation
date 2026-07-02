@@ -12,11 +12,15 @@ regions:
     grid_bounds: [45, 10, 90, 55]
     terrain: "forest"
     hazard_level: 1.0
+    hazard_kind: "NATURAL_TERRAIN"
+    tags: [forest]
   - id: "wolf_den"
     type: "wilderness"
     grid_bounds: [70, 30, 105, 70]
     terrain: "forest"
     hazard_level: 2.0
+    hazard_kind: "NATURAL_TERRAIN"
+    tags: [forest]
 factions: ["wild_beast_pack"]
 populations: ["wolf_pack_small"]
 relationships: ["town_to_wild_beasts", "wild_beasts_to_town"]
@@ -25,3 +29,31 @@ resources:
   herb_patch: 6
   healing_flower_patch: 3
 observability_tags: ["ecology", "wilderness"]
+quest_definitions:
+  - id: "wolf_hunt_alpha_pack"
+    type: "hunt"
+    required_participant_tags: ["beast"]
+    required_location_tags: ["wilderness", "forest"]
+    reward_budget: 120
+    procedural_hints:
+      difficulty: 2
+      escalation: true
+    tags: ["wolf", "ecology", "bounty"]
+  - id: "wolf_explore_forest_trail"
+    type: "explore"
+    required_participant_tags: ["beast"]
+    required_location_tags: ["wilderness", "forest"]
+    reward_budget: 80
+    procedural_hints:
+      difficulty: 1
+      escalation: false
+    tags: ["wolf", "ecology", "exploration"]
+  - id: "wolf_fetch_herb_gathering"
+    type: "fetch"
+    required_participant_tags: []
+    required_location_tags: ["wilderness", "forest"]
+    reward_budget: 80
+    procedural_hints:
+      difficulty: 1
+      escalation: false
+    tags: ["wolf", "ecology", "resource"]

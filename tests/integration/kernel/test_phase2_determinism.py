@@ -87,6 +87,18 @@ class TestRNGBoundaryEnforcement:
         violations = self._scan_for_bare_random(root, exclude_files=set())
         assert violations == [], f"Bare random usage found:\n" + "\n".join(violations)
 
+    def test_no_bare_random_in_worldbuilding(self):
+        """Law: Worldbuilding modules must not import random directly (TCK-20260619-P0-DETERMINISM)."""
+        root = Path("src/worldbuilding")
+        violations = self._scan_for_bare_random(root, exclude_files=set())
+        assert violations == [], f"Bare random usage found:\n" + "\n".join(violations)
+
+    def test_no_bare_random_in_worldgeneration(self):
+        """Law: World generation modules must not import random directly (TCK-20260619-P0-DETERMINISM)."""
+        root = Path("src/worldgeneration")
+        violations = self._scan_for_bare_random(root, exclude_files=set())
+        assert violations == [], f"Bare random usage found:\n" + "\n".join(violations)
+
     # Logic ID: INFRA-003
 
     def test_rng_module_is_only_random_user(self):

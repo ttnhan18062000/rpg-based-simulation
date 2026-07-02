@@ -28,6 +28,9 @@ class RouteFamily(str, Enum):
     FORM_PARTY = "form_party"
     RETURN_TOWN = "return_town"
     DEFER_WITH_REASON = "defer_with_reason"
+    QUEST_OPPORTUNITY = "quest_opportunity"
+    PROTECT_TARGET = "protect_target"   # E41D: escort urgency route
+    OWN_SURVIVAL = "own_survival"       # E41D: self-preservation (deprioritised when escorting)
 
 
 @dataclass(frozen=True, slots=True)
@@ -45,6 +48,7 @@ class AdventureRouteOption:
         blockers:               Active blocker reasons/strings if route is blocked
         source_opportunity_ids: Dynamic world options backing this route
         reason:                 Short descriptive reason for the option
+        target_node_id:         Integer node ID for GATHER_RESOURCE routes; None for all others
     """
     family: RouteFamily
     score: float
@@ -55,6 +59,16 @@ class AdventureRouteOption:
     blockers: Tuple[str, ...] = ()
     source_opportunity_ids: Tuple[str, ...] = ()
     reason: Optional[str] = None
+    target_node_id: Optional[int] = None
+    quest_id: Optional[str] = None
+    # Intermediate scoring terms populated by AdventureRouteScorer (zero before scoring)
+    urgency: float = 0.0
+    benefit_score: float = 0.0
+    personality_bias: float = 0.0
+    confidence_bonus: float = 0.0
+    risk_penalty: float = 0.0
+    blocker_penalty: float = 0.0
+    plan_advance_bonus: float = 0.0
 
 
 @dataclass(frozen=True, slots=True)

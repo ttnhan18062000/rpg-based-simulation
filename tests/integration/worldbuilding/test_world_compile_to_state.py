@@ -40,6 +40,7 @@ def create_base_integration_spec() -> dict:
             {
                 "id": "collect_wood",
                 "name": "Gather Wood",
+                "type": "fetch",
                 "kind": "gather",
                 "goal_value": 10.0,
                 "reward": {"xp": 50, "gold": 25},
@@ -93,26 +94,27 @@ def test_compiled_world_quest_warning_validation():
     raw_spec["quests"].append({
         "id": "invalid_quest_1",
         "name": "Invalid Quest 1",
-        "kind": "explore",
-        "target_region_id": "nonexistent_region",
-        "target_faction": "nonexistent_faction",
-        "target_role": "nonexistent_role",
-        "target_resource_type": "nonexistent_resource",
-        "assignee": "worker"
+        "type": "explore",
+        "required_location_tags": [
+            "nonexistent_region",
+            "nonexistent_biome",
+            "nonexistent_terrain",
+            "nonexistent_zone"
+        ]
     })
-    
+
     spec = WorldSpec.model_validate(raw_spec)
     state, report = WorldCompiler.compile(spec, seed=42)
-    
+
     # Compilation must succeed
     assert state is not None
-    
-    # Warnings must contain detail about each invalid reference
+
+    # Warnings must contain detail about each invalid location tag reference
     warnings = report["warnings"]
     assert len(warnings) == 4
-    
+
     # Assert specific warning details exist
     assert any("nonexistent_region" in w for w in warnings)
-    assert any("nonexistent_faction" in w for w in warnings)
-    assert any("nonexistent_role" in w for w in warnings)
-    assert any("nonexistent_resource" in w for w in warnings)
+    assert any("nonexistent_biome" in w for w in warnings)
+    assert any("nonexistent_terrain" in w for w in warnings)
+    assert any("nonexistent_zone" in w for w in warnings)

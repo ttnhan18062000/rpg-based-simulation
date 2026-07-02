@@ -307,3 +307,123 @@
   inventory_profile: "empty_animal_inventory"
   traits: ["large_body", "regenerating", "territorial"]
   themes: ["swamp"]
+
+# STATE: ADDITIONAL — TCK-20260627-P2C-ARCHETYPE-DIST: underrepresented role expansion
+- id: "town_healer"
+  display_name: "Town Healer"
+  race: "human"
+  faction: "town_council"
+  role: "healer"
+  stat_profile: "healer_base"
+  combat_profile: "basic_melee"
+  cognition_profile: "practical_humanoid"
+  drive_profile: "cautious_commoner"
+  inventory_profile: "mage_satchel"
+  skill_profile: "mage_skills"
+  traits: ["humanoid", "tool_user", "social_humanoid", "magic_sensitive"]
+  themes: ["village", "frontier"]
+
+# STATE: ADDITIONAL
+- id: "forest_druid"
+  display_name: "Forest Druid"
+  race: "elf"
+  faction: "forest_wardens"
+  role: "healer"
+  stat_profile: "healer_base"
+  combat_profile: "arcane_bolt"
+  cognition_profile: "arcane_scholar"
+  drive_profile: "disciplined_protector"
+  inventory_profile: "mage_satchel"
+  skill_profile: "mage_skills"
+  traits: ["humanoid", "tool_user", "magic_sensitive", "disciplined"]
+  themes: ["forest", "sacred"]
+
+# STATE: ADDITIONAL
+- id: "arcane_mage"
+  display_name: "Arcane Mage"
+  race: "human"
+  faction: "arcane_circle"
+  role: "mage"
+  stat_profile: "apprentice_mage_base"
+  combat_profile: "arcane_bolt"
+  cognition_profile: "arcane_scholar"
+  drive_profile: "ritual_fixated"
+  inventory_profile: "mage_satchel"
+  skill_profile: "mage_skills"
+  traits: ["humanoid", "tool_user", "magic_sensitive", "disciplined"]
+  themes: ["arcane", "ruin"]
+
+# STATE: ADDITIONAL
+- id: "moon_cult_sorcerer"
+  display_name: "Moon Cult Sorcerer"
+  race: "human"
+  faction: "moon_cult"
+  role: "mage"
+  stat_profile: "apprentice_mage_base"
+  combat_profile: "arcane_bolt"
+  cognition_profile: "arcane_scholar"
+  drive_profile: "ritual_fixated"
+  inventory_profile: "mage_satchel"
+  skill_profile: "mage_skills"
+  traits: ["humanoid", "tool_user", "magic_sensitive"]
+  themes: ["moon", "arcane", "corrupted"]
+
+# STATE: ADDITIONAL
+- id: "orc_warchief"
+  display_name: "Orc Warchief"
+  race: "orc"
+  faction: "orc_clan"
+  role: "leader"
+  stat_profile: "warlord_base"
+  combat_profile: "brute_crush"
+  cognition_profile: "opportunistic_humanoid"
+  drive_profile: "disciplined_protector"
+  inventory_profile: "boss_hoard_token"
+  skill_profile: "warrior_skills"
+  traits: ["humanoid", "tool_user", "large_body", "leader", "disciplined"]
+  themes: ["orc", "frontier"]
+
+# STATE: ADDITIONAL
+- id: "dwarven_hunter"
+  display_name: "Dwarven Hunter"
+  race: "dwarf"
+  faction: "dwarven_mine_clan"
+  role: "hunter"
+  stat_profile: "ranger_base"
+  combat_profile: "ranged_archer"
+  cognition_profile: "practical_humanoid"
+  drive_profile: "disciplined_protector"
+  inventory_profile: "ranger_pack"
+  skill_profile: "rogue_skills"
+  traits: ["humanoid", "tool_user", "disciplined", "ranged_attacker"]
+  themes: ["dwarven", "mine", "mountain"]
+
+# STATE: ADDITIONAL — TCK-20260628-E-PARTY-LOOP: HERO-role archetype for multi-hero orchestration
+- id: "adventurer_hero"
+  display_name: "Adventurer Hero"
+  race: "human"
+  faction: "hero_guild"
+  role: "hero"
+  stat_profile: "frontier_guard_base"
+  combat_profile: "guard_disciplined"
+  cognition_profile: "practical_humanoid"
+  drive_profile: "disciplined_protector"
+  inventory_profile: "hero_pocket"
+  skill_profile: "warrior_skills"
+  traits: ["humanoid", "tool_user", "social_humanoid", "brave", "disciplined"]
+  themes: ["frontier", "village"]
+
+# STATE: ADDITIONAL
+- id: "bandit_cutpurse"
+  display_name: "Bandit Cutpurse"
+  race: "human"
+  faction: "bandit_company"
+  role: "hunter"
+  stat_profile: "bandit_scout_base"
+  combat_profile: "opportunist_raider"
+  cognition_profile: "opportunistic_humanoid"
+  drive_profile: "opportunistic_raider"
+  inventory_profile: "goblin_looter_pouch"
+  skill_profile: "rogue_skills"
+  traits: ["humanoid", "tool_user", "opportunistic", "small_body"]
+  themes: ["bandit", "frontier"]

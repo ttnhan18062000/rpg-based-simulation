@@ -37,6 +37,7 @@
   common_races: ["wolf", "spider", "slime"]
   themes: ["forest", "wolf_den"]
   legacy_engine_bucket: "MONSTER_HORDE"
+  hazard_immunities: ["NATURAL_TERRAIN"]
 
 # STATE: LEGACY-EXPORT
 - id: "goblin_warband"
@@ -47,6 +48,7 @@
   common_races: ["goblin"]
   themes: ["goblin", "frontier"]
   legacy_engine_bucket: "MONSTER_HORDE"
+  hazard_immunities: ["NATURAL_TERRAIN"]
 
 # STATE: ADDITIONAL
 - id: "merchant_league"

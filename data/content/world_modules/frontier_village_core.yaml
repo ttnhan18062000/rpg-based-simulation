@@ -11,6 +11,7 @@ regions:
     grid_bounds: [10, 10, 40, 40]
     terrain: "plain"
     hazard_level: 0.0
+    tags: [plain, settlement]
 factions: ["town_council", "merchant_league"]
 populations: ["frontier_village_population"]
 buildings:
@@ -20,4 +21,39 @@ buildings:
   inn: 1
   healer_hut: 1
 relationships: ["town_to_merchants", "merchants_to_town"]
-observability_tags: ["settlement", "trade"]
+resource_recipes:
+  - resource_type: "wood_node"
+    count: 8
+    region: "hometown"
+  - resource_type: "herb_patch"
+    count: 5
+    region: "hometown"
+observability_tags: ["settlement", "trade", "resource"]
+quest_definitions:
+  - id: "village_fetch_supply_run"
+    type: "fetch"
+    required_participant_tags: ["humanoid"]
+    required_location_tags: ["plain", "settlement"]
+    reward_budget: 80
+    procedural_hints:
+      difficulty: 1
+      escalation: false
+    tags: ["village", "settlement", "supply"]
+  - id: "village_escort_merchant_delivery"
+    type: "escort"
+    required_participant_tags: ["humanoid", "merchant_minded"]
+    required_location_tags: ["plain", "settlement"]
+    reward_budget: 100
+    procedural_hints:
+      difficulty: 1
+      escalation: false
+    tags: ["village", "settlement", "trade"]
+  - id: "village_defend_gate_assault"
+    type: "defend"
+    required_participant_tags: ["humanoid"]
+    required_location_tags: ["plain", "settlement"]
+    reward_budget: 120
+    procedural_hints:
+      difficulty: 2
+      escalation: true
+    tags: ["village", "settlement", "defense"]

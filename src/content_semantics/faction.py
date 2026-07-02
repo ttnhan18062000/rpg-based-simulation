@@ -115,6 +115,11 @@ class FactionSemanticsService:
         defn = self.repo.get_faction(faction_id)
         return defn.influence_role if defn else "non_combatant"
 
+    def get_hazard_immunities(self, faction_id: str) -> frozenset[str]:
+        """Returns the set of hazard_kind values this faction's members endure without harm."""
+        defn = self.repo.get_faction(faction_id)
+        return frozenset(defn.hazard_immunities) if defn else frozenset()
+
     def is_hostile(self, faction_a: str, faction_b: str) -> bool:
         """
         Determines if two factions are actively hostile.

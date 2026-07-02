@@ -514,6 +514,16 @@
     }
   },
   "resources": {
+    "res_0": {
+      "required_ticks": 10,
+      "resource_type": "wood_node",
+      "yield_policy": null
+    },
+    "res_1": {
+      "required_ticks": 8,
+      "resource_type": "herb_patch",
+      "yield_policy": null
+    },
     "moon_cult_ruins__moon_resin_tree_0": {
       "required_ticks": 20,
       "resource_type": "moon_resin_tree",

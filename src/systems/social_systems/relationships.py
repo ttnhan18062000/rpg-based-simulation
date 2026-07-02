@@ -70,6 +70,10 @@ class RelationshipService:
         for rid, delta in update.place_attachment_delta.items():
             new_places[rid] = max(0.0, min(1.0, new_places.get(rid, 0.0) + delta))
 
+        new_combat_loss = dict(social.combat_loss_counts)
+        for eid, count in update.combat_loss_delta.items():
+            new_combat_loss[eid] = new_combat_loss.get(eid, 0) + count
+
         return replace(
             social,
             trust_history=new_trust,
@@ -81,6 +85,7 @@ class RelationshipService:
             bonds=new_bonds,
             nemesis_ids=new_nemesis,
             place_attachment=new_places,
+            combat_loss_counts=new_combat_loss,
             betrayal_count=social.betrayal_count + update.betrayal_increment,
             betrayal_records=new_betrayals,
             # Logic ID: SOC-193 (Public reputation and private relationship are separate)

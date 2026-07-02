@@ -2998,9 +2998,9 @@ These items are appended rather than replacing existing checklist items. They ar
 
 ## Z12. Phase guard, authorization, and mutation boundary law
 
-- [ ] `RPG-INFRA-155` Each engine phase declares allowed read domains.
-- [ ] `RPG-INFRA-156` Each engine phase declares allowed write/update domains.
-- [ ] `RPG-INFRA-157` Each engine phase declares allowed emit/event domains.
+- [x] `RPG-INFRA-155` Each engine phase declares allowed read domains. <!-- SOURCE: src/engine/phase_domain_permissions.py TEST: tests/architecture/test_phase_domain_permissions.py::test_each_authoritative_phase_declares_read_domains PROOF: architecture -->
+- [x] `RPG-INFRA-156` Each engine phase declares allowed write/update domains. <!-- SOURCE: src/engine/phase_domain_permissions.py TEST: tests/architecture/test_phase_domain_permissions.py::test_each_authoritative_phase_declares_write_domains PROOF: architecture -->
+- [x] `RPG-INFRA-157` Each engine phase declares allowed emit/event domains. <!-- SOURCE: src/engine/phase_domain_permissions.py TEST: tests/architecture/test_phase_domain_permissions.py::test_each_authoritative_phase_declares_emit_domains PROOF: architecture -->
 - [ ] `RPG-INFRA-158` Unauthorized read is detected or explicitly allowed.
 - [ ] `RPG-INFRA-159` Unauthorized write is rejected.
 - [ ] `RPG-INFRA-160` Unauthorized emit is rejected or flagged.

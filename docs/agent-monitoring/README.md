@@ -31,7 +31,7 @@ Observability layer for the Claude Code AI agent workflow. Tracks workflow runs 
 | Doc | Contents |
 |---|---|
 | [schema.md](schema.md) | Full field reference for runs.jsonl, events.jsonl, and tools.jsonl |
-| [retro-guide.md](retro-guide.md) | How to run the weekly retro loop |
+| [../guides/agent_monitoring.md](../guides/agent_monitoring.md) | How to run the weekly retro loop |
 | [agent-monitoring/README.md](../../agent-monitoring/README.md) | Quick-reference schema and data files |
 
 ## Quick Start

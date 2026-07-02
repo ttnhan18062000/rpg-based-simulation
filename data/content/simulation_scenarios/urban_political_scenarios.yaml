@@ -1,0 +1,19 @@
+# STATE: ADDITIONAL
+# Scenarios for urban_political world composition
+# TCK-20260619-E13D-SCENARIOS
+- id: "urban_political_trade_war"
+  world_composition: "urban_political"
+  focus_modules: ["trading_company_hub", "bandit_road_trade_pressure"]
+  perspective: "merchant_league_perspective"
+  initial_conditions:
+    trade_route_pressure: "high"
+    bandit_activity: "medium"
+
+# STATE: ADDITIONAL
+- id: "urban_political_faction_struggle"
+  world_composition: "urban_political"
+  focus_modules: ["frontier_village_core", "bandit_road_trade_pressure"]
+  perspective: "hero_guild_perspective"
+  initial_conditions:
+    bandit_activity: "high"
+    town_guard_strength: "medium"

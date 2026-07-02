@@ -1,0 +1,22 @@
+# STATE: ADDITIONAL
+module_id: "hero_adventurers"
+module_type: "settlement"
+display_name: "Hero Adventurers"
+description: "A group of wandering heroes who have established a base in the settlement. Provides WARRIOR, MAGE, and ROGUE class entities for the hero_guild faction."
+version: "1.0.0"
+provides: ["hero_presence"]
+observability_tags: ["combat", "adventurer"]
+factions: ["hero_guild"]
+population_recipes:
+  - role: "hero"
+    count: 1
+    faction: "hero_guild"
+    spawn_region: "hometown"
+  - role: "hero"
+    count: 1
+    faction: "hero_guild"
+    spawn_region: "hometown"
+  - role: "hero"
+    count: 1
+    faction: "hero_guild"
+    spawn_region: "hometown"

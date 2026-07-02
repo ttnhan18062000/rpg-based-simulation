@@ -8,7 +8,6 @@ def _make_normalized_module(**kwargs) -> NormalizedWorldModule:
     """Build a minimal NormalizedWorldModule for testing."""
     defaults = dict(
         module_id="test_module",
-        schema_version="worldmodule.v2",
         module_type="terrain",
         display_name="Test Module",
         description=None,
@@ -28,6 +27,7 @@ def _make_normalized_module(**kwargs) -> NormalizedWorldModule:
         buildings={},
         services={},
         factions=[],
+        quest_definitions=[],
     )
     defaults.update(kwargs)
     return NormalizedWorldModule(**defaults)

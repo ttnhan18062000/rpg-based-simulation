@@ -130,15 +130,21 @@ class QuestGenerationSystem:
 
     @staticmethod
     def quest_to_project(quest: QuestTemplate, current_tick: int) -> ProjectState:
-        """Convert a quest template to a strategic project."""
+        """Convert a quest template to a strategic project.
+
+        The first objective (which becomes active_objective_id) is created with
+        ObjectiveStatus.ACTIVE so that StrategicIntelligenceSystem.fused_strategic_pass()
+        can drive navigation and blocker resolution for it. Remaining objectives stay
+        UNRESOLVED until the previous one resolves.
+        """
         objectives = [
             ObjectiveState(
                 id=obj.id,
                 kind=obj.kind,
                 target=obj.target,
-                status=ObjectiveStatus.UNRESOLVED
+                status=ObjectiveStatus.ACTIVE if i == 0 else ObjectiveStatus.UNRESOLVED
             )
-            for obj in quest.objectives
+            for i, obj in enumerate(quest.objectives)
         ]
 
         return ProjectState(

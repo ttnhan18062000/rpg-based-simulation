@@ -29,17 +29,14 @@ def test_cli_gate_scenario_level_flow(tmp_path):
     # 1. Execute sequential sweep
     ScenarioSweeper.run_sweep(config)
 
-    # 2. Generate baseline
-    BaselineGenerator.generate_baseline(sweep_id, base_dir=output_dir)
-    baseline_path = os.path.join(output_dir, sweep_id, "baseline.json")
-
-    # 3. Write anomalies.json for the runs to avoid warning triggers
+    # 2. Write deterministic metric fixtures BEFORE baseline generation so that
+    #    the baseline thresholds are derived from the same values the comparison
+    #    will see — avoids WARNING when actual tick-compute varies with system load.
     records = RunSetArtifactRepository(base_dir=output_dir).read_run_index(sweep_id)
     for r in records:
         run_dir = os.path.join(output_dir, sweep_id, "runs", r.run_id)
         with open(os.path.join(run_dir, "anomalies.json"), "w") as f:
             json.dump([], f)
-        # Populate metric_windows.jsonl fully
         mw_path = os.path.join(run_dir, "metric_windows.jsonl")
         with open(mw_path, "w") as f:
             f.write(json.dumps({
@@ -47,6 +44,10 @@ def test_cli_gate_scenario_level_flow(tmp_path):
                 "memory_rss_bytes_max": 500.0,
                 "event_count": 2
             }) + "\n")
+
+    # 3. Generate baseline from the fixture data written above
+    BaselineGenerator.generate_baseline(sweep_id, base_dir=output_dir)
+    baseline_path = os.path.join(output_dir, sweep_id, "baseline.json")
 
     # Mock repository base directory during CLI subcommand execution
     original_init = RunSetArtifactRepository.__init__

@@ -307,6 +307,10 @@ class GroupSystem:
                         role = member.combat.tactical_role if member.combat.tactical_role else "VANGUARD"
                         roles[m_id] = role
 
+                    from src.systems.social_systems.party_composition import PartyCompositionScorer
+                    member_entities = [state.entities[mid] for mid in new_group_members if mid in state.entities]
+                    comp_score = PartyCompositionScorer.score(member_entities)
+
                     new_group = GroupRecord(
                         id=new_g_id,
                         leader_id=leader_id,
@@ -314,7 +318,8 @@ class GroupSystem:
                         anchor=(anchor_x, anchor_y),
                         contract_id=active_contract_id,
                         roles=roles,
-                        last_updated_tick=state.tick
+                        last_updated_tick=state.tick,
+                        composition_score=comp_score,
                     )
                     groups_add_or_update.append(new_group)
                     

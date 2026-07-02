@@ -277,6 +277,18 @@ def test_equipment_stat_injection_move_cost():
     assert derived["move_cost"] == pytest.approx(9.5)
 
     from src.core.state import EquipmentComponent, EquipSlot
+    from src.core.items import ItemRegistry as CoreItemRegistry, ItemDefinition, ItemKind
+
+    # Ensure iron_plate is registered regardless of which seed order ran before this test.
+    # The catalog bootstrap (triggered by test collection order) may omit iron_plate;
+    # register it directly so the weight (12.0) contributes to move_cost as expected.
+    if CoreItemRegistry.get("iron_plate") is None:
+        existing = dict(CoreItemRegistry._items)
+        existing["iron_plate"] = ItemDefinition(
+            id="iron_plate", name="Iron Plate", kind=ItemKind.ARMOR, weight=12.0,
+            stack_size=1, properties={"def_bonus": 15, "slot": EquipSlot.TORSO}
+        )
+        CoreItemRegistry._items = existing
 
     plate_equip = EquipmentComponent(slots={EquipSlot.TORSO: "iron_plate"})
 

@@ -154,6 +154,7 @@ class FactionDefinition(CatalogBaseDefinition):
     legacy_engine_bucket: str = Field(..., description="Legacy Faction enum name mapping")
     common_races: List[str] = Field(default_factory=list)
     themes: List[str] = Field(default_factory=list)
+    hazard_immunities: List[str] = Field(default_factory=list, description="Hazard-kind tags this faction's members endure without harm (e.g. 'NATURAL_TERRAIN', 'CHAOS_CORRUPTION').")
 
     @field_validator("legacy_engine_bucket")
     @classmethod
@@ -271,6 +272,11 @@ class TerrainDefinition(CatalogBaseDefinition):
 class SpawnTableDefinition(CatalogBaseDefinition):
     """Schema for structural population spawning weights."""
     spawn_weights: Dict[str, float] = Field(..., description="Mapping of role id to spawning weight factor")
+
+
+class ClassTableDefinition(CatalogBaseDefinition):
+    """Schema for class assignment tables mapping entity roles to eligible class IDs."""
+    class_id_by_role: Dict[str, List[str]] = Field(..., description="Mapping of role id to list of eligible class IDs")
 
 
 class DefaultCompileProfile(CatalogBaseDefinition):

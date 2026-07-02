@@ -116,6 +116,10 @@ class ActionRoutingPhase:
             if not action:
                 continue
 
+            # Survival actions (EAT/REST/SLEEP) bypass combat readiness —
+            # biological necessity is never gated by combat cooldown.
+            is_survival = action in ("EAT", "REST", "SLEEP")
+
             working_entity = working_entities.get(eid, entity)
 
             legal, reason = LegalityServiceV2.verify_action_legality(
@@ -137,22 +141,23 @@ class ActionRoutingPhase:
                 update = replace(update, entity_updates=refined_entity_updates, rejection_events=new_rejection_events, rejections_delta=new_rejections_delta)
                 continue
 
-            ready, r_reason = LegalityServiceV2.verify_readiness(working_entity)
-            if not ready:
-                reason_value = r_reason.value if hasattr(r_reason, "value") else str(r_reason)
-                failed_task = replace(task_upd, payload_set={**payload, "outcome": "FAILURE", "reason": reason_value})
-                new_rejection_events = list(update.rejection_events)
-                new_rejections_delta = dict(update.rejections_delta)
-                new_rejections_delta[reason_value] = new_rejections_delta.get(reason_value, 0) + 1
-                new_rejection_events.append(RejectionEvent(
-                    tick=state.tick, actor_id=eid, action_kind=action, reason=r_reason,
-                    target_id=payload.get("target_id") or payload.get("target_pos")
-                ))
-                refined_entity_updates[eid] = replace(ent_upd, task=failed_task, strategic=StrategicUpdate(
-                    blockers_add_or_update=[BlockerState(id=f"blocker_nav_{reason_value}", kind="capability", subject=reason_value)]
-                ))
-                update = replace(update, entity_updates=refined_entity_updates, rejection_events=new_rejection_events, rejections_delta=new_rejections_delta)
-                continue
+            if not is_survival:
+                ready, r_reason = LegalityServiceV2.verify_readiness(working_entity)
+                if not ready:
+                    reason_value = r_reason.value if hasattr(r_reason, "value") else str(r_reason)
+                    failed_task = replace(task_upd, payload_set={**payload, "outcome": "FAILURE", "reason": reason_value})
+                    new_rejection_events = list(update.rejection_events)
+                    new_rejections_delta = dict(update.rejections_delta)
+                    new_rejections_delta[reason_value] = new_rejections_delta.get(reason_value, 0) + 1
+                    new_rejection_events.append(RejectionEvent(
+                        tick=state.tick, actor_id=eid, action_kind=action, reason=r_reason,
+                        target_id=payload.get("target_id") or payload.get("target_pos")
+                    ))
+                    refined_entity_updates[eid] = replace(ent_upd, task=failed_task, strategic=StrategicUpdate(
+                        blockers_add_or_update=[BlockerState(id=f"blocker_nav_{reason_value}", kind="capability", subject=reason_value)]
+                    ))
+                    update = replace(update, entity_updates=refined_entity_updates, rejection_events=new_rejection_events, rejections_delta=new_rejections_delta)
+                    continue
 
             action_updates = SimulationDomainLogic.execute_action(
                 working_entity, payload=payload, current_tick=state.tick,
@@ -182,7 +187,12 @@ class ActionRoutingPhase:
                 update = replace(update, rejection_events=new_rejection_events, rejections_delta=new_rejections_delta)
 
             reason_value = failure_reason.value if hasattr(failure_reason, "value") else failure_reason
-            annotated_task = replace(task_upd, payload_set={**payload, "outcome": outcome, **({"reason": reason_value} if reason_value else {})})
+            # Survival actions reset the task to idle on success so the brain
+            # can re-evaluate on the next cadence tick (entity stays near tavern).
+            if is_survival and outcome == "SUCCESS":
+                annotated_task = replace(task_upd, payload_set={})
+            else:
+                annotated_task = replace(task_upd, payload_set={**payload, "outcome": outcome, **({"reason": reason_value} if reason_value else {})})
 
             for action_eid, action_upd in action_updates.items():
                 existing_upd = refined_entity_updates.get(action_eid, EntityUpdate(entity_id=action_eid))

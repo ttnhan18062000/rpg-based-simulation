@@ -1,0 +1,44 @@
+module_id: "settled_quarter"
+module_type: "population"
+display_name: "Settled Quarter"
+description: "A dense population quarter with high service availability: healer, blacksmith, merchant shop, and inn. Aligned with the merchant_league. Enables crafting loops and supply chain quests."
+version: "1.0.0"
+provides: ["service_hub", "crafting_access", "settled_population"]
+observability_tags: ["population", "settlement", "services", "crafting"]
+biomes: ["frontier_village"]
+ecologies: []
+regions:
+  - id: "hometown"
+    type: "settlement"
+    grid_bounds: [170, 80, 210, 120]
+    terrain: "plain"
+    hazard_level: 0.0
+factions: ["merchant_league"]
+populations: ["frontier_village_population"]
+resources: {}
+buildings:
+  blacksmith: 1
+  healer_hut: 1
+  inn: 1
+  shop: 1
+services: {}
+relationships: []
+quest_definitions:
+  - id: "fetch_settlement_supplies"
+    type: "fetch"
+    required_participant_tags: ["humanoid", "merchant_minded"]
+    required_location_tags: ["settlement", "plain"]
+    reward_budget: 90
+    procedural_hints:
+      difficulty: 1
+      escalation: false
+    tags: ["settlement", "population", "supply", "trade"]
+  - id: "escort_settled_trader"
+    type: "escort"
+    required_participant_tags: ["humanoid", "merchant_minded"]
+    required_location_tags: ["settlement", "plain"]
+    reward_budget: 110
+    procedural_hints:
+      difficulty: 2
+      escalation: false
+    tags: ["settlement", "population", "escort", "trade"]

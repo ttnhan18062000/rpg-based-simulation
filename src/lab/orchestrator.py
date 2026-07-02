@@ -46,6 +46,22 @@ class ScenarioLabOrchestrator:
         self.experiment_repo = experiment_repo
         self.lab_run_repo = lab_run_repo
 
+    @staticmethod
+    def _resolve_obs_mode(mode_str: str) -> ObservabilityMode:
+        """Map a lab-level observability mode string to the engine ObservabilityMode enum.
+
+        STANDARD maps to NORMAL (not LIGHT) so developers switching to STANDARD
+        receive genuinely richer output (OBS_BEHAVIOR_NORMALIZATION enabled).
+        See D03 F5 and TCK-20260627-P3B-OBS-MODE-REMAP.
+        """
+        mapping = {
+            "LIGHTWEIGHT": ObservabilityMode.LIGHT,
+            "MINIMAL": ObservabilityMode.LIGHT,
+            "STANDARD": ObservabilityMode.NORMAL,
+            "LONG_RUN": ObservabilityMode.LONG_RUN,
+        }
+        return mapping.get(mode_str, ObservabilityMode.LIGHT)
+
     def run_lab(
         self,
         experiment_id: str,
@@ -144,13 +160,7 @@ class ScenarioLabOrchestrator:
 
         # 10. Sequential execution of simulation run matrix
         original_mode = ObservabilityConfig.get_mode()
-        obs_mode_mapping = {
-            "LIGHTWEIGHT": ObservabilityMode.LIGHT,
-            "MINIMAL": ObservabilityMode.LIGHT,
-            "STANDARD": ObservabilityMode.LIGHT,
-            "LONG_RUN": ObservabilityMode.LONG_RUN
-        }
-        target_obs_mode = obs_mode_mapping.get(experiment_spec.observability.mode, ObservabilityMode.LIGHT)
+        target_obs_mode = self._resolve_obs_mode(experiment_spec.observability.mode)
         ObservabilityConfig.set_override_mode(target_obs_mode)
 
         try:
@@ -211,6 +221,7 @@ class ScenarioLabOrchestrator:
                             state=initial_state,
                             rng=rng,
                             run_id=run_id,
+                            world_id=scenario_spec.world_id,
                             resolved_world_path=str(resolved_world_path),
                             compile_context_path=str(compile_context_path),
                             provenance_manifest_path=str(provenance_manifest_path),
@@ -223,16 +234,17 @@ class ScenarioLabOrchestrator:
                             profile=profile,
                             state=initial_state,
                             rng=rng,
-                            run_id=run_id
+                            run_id=run_id,
+                            world_id=scenario_spec.world_id
                         )
 
-                    # Ticks execution
-                    for _ in range(experiment_spec.run.ticks):
-                        kernel.tick_once()
-
-                    kernel.shutdown()
-                    run_success = True
-                    completed_count += 1
+                    try:
+                        for _ in range(experiment_spec.run.ticks):
+                            kernel.tick_once()
+                        run_success = True
+                        completed_count += 1
+                    finally:
+                        kernel.shutdown()
                 except Exception as e:
                     failed_count += 1
                     logger.exception(f"Simulation execution failed on seed {seed}: {e}")

@@ -45,16 +45,22 @@ def test_1000_tick_determinism():
     # Run 1
     rng1 = DeterministicRNG(12345)
     kernel1 = Kernel(profile, initial_state, rng1)
-    for _ in range(1000):
-        kernel1.tick_once()
-    hash1 = CanonicalStateHasher.get_hash(kernel1.state)
-    
+    try:
+        for _ in range(1000):
+            kernel1.tick_once()
+        hash1 = CanonicalStateHasher.get_hash(kernel1.state)
+    finally:
+        kernel1.shutdown()
+
     # Run 2
     rng2 = DeterministicRNG(12345)
     kernel2 = Kernel(profile, initial_state, rng2)
-    for _ in range(1000):
-        kernel2.tick_once()
-    hash2 = CanonicalStateHasher.get_hash(kernel2.state)
-    
+    try:
+        for _ in range(1000):
+            kernel2.tick_once()
+        hash2 = CanonicalStateHasher.get_hash(kernel2.state)
+    finally:
+        kernel2.shutdown()
+
     assert hash1 == hash2, "DIVERGENCE: Long-run hashes did not match!"
     print(f"Final Hash (1000 ticks): {hash1}")

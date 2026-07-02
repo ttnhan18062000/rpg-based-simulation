@@ -7,7 +7,7 @@ from typing import Any, Dict, List, Optional, Set, Tuple
 from src.core.state import AuthoritativeState
 from src.core.dirty import DirtySet
 from src.observability.config import ObservabilityConfig, ObservabilityMode
-from src.engine.world_index import WorldIndexService
+from src.engine.kernel import Kernel
 
 logger = logging.getLogger(__name__)
 
@@ -151,7 +151,7 @@ class HardLawMonitor:
                 pass
 
         # Query spatial grid index (O(1) cached lookup or quick O(N) rebuild scoped to current tick)
-        indexes = WorldIndexService.get_indexes(state, dirty_set)
+        indexes = Kernel.get_world_indexes(state, dirty_set)
         
         reported_tiles: Set[Tuple[int, int]] = set()
         

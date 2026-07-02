@@ -20,6 +20,7 @@ def _entity(e_id):
     return b.build()
 
 
+@pytest.mark.slow
 def test_phase2_self_model_perf_budget_and_dirty_check():
     """
     Verify that updating 100 entities is well within performance budgets,

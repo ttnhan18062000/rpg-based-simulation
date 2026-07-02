@@ -1,10 +1,12 @@
 import pytest
 from dataclasses import replace
-from src.core.state import AuthoritativeState, EntityState, CombatComponent, InventoryComponent, SocialComponent, IdentityComponent, BiologicalComponent, LifecycleComponent, StrategicComponent
+from src.core.state import AuthoritativeState, EntityState, CombatComponent, InventoryComponent, SocialComponent, IdentityComponent, BiologicalComponent, LifecycleComponent, StrategicComponent, IntentResult
 from src.core.strategic import LeadState, LeadCertainty, ProjectState, ProjectStatus, ObjectiveState, ObjectiveStatus
 from src.systems.strategic import StrategicIntelligenceSystem
+from src.systems.strategic_systems.intelligence import _MAX_CONSECUTIVE_REJECTIONS
 from src.core.enums import EntityRole, Faction
 from src.core.builder import V2EntityBuilder
+from src.engine.apply import replace as fast_replace
 
 def create_mock_entity(eid: int):
     from src.core.builder import V2EntityBuilder
@@ -69,20 +71,25 @@ def test_project_abandonment():
         A project merely existing in `strategic.projects` is not enough.
         It must be the active/current project.
 
+        The abandonment threshold is _MAX_CONSECUTIVE_REJECTIONS (currently 20).
+        Abandonment is only triggered when latest_intent_results contains at least
+        one failure and the cumulative failure_count reaches the threshold.
+
     Fraud this catches:
         - abandoned-project logic exists but only scans all projects incorrectly
         - failed projects are ignored even when they are current
         - boredom/frustration penalty is not emitted when abandonment happens
         - test accidentally inserts a failed project but forgets to make it current
     """
+    # Set failure_count one below threshold so one more rejection triggers abandonment.
     proj = ProjectState(
         id="p1",
         kind="quest",
         status=ProjectStatus.ACTIVE,
-        failure_count=3,
+        failure_count=_MAX_CONSECUTIVE_REJECTIONS - 1,
     )
 
-    entity = (
+    base_entity = (
         V2EntityBuilder(1)
         .kind("hero")
         .location(0, 0)
@@ -94,13 +101,22 @@ def test_project_abandonment():
         .build()
     )
 
+    # Inject a rejected intent result so the backoff counter increments.
+    rejected = IntentResult(
+        transaction_id=None, accepted=False, reason="INTERACTION_RESET",
+        source_kind="NODE", source_id=1,
+    )
+    new_id = fast_replace(base_entity.identity, latest_intent_results=(rejected,))
+    entity = fast_replace(base_entity, identity=new_id)
+
     state = AuthoritativeState(tick=100, seed=42)
 
     # Guard assertions:
     # These prove the setup reaches the exact branch this test wants to verify.
     assert entity.strategic.current_project_id == "p1"
     assert entity.strategic.projects["p1"].status == ProjectStatus.ACTIVE
-    assert entity.strategic.projects["p1"].failure_count >= 3
+    assert entity.strategic.projects["p1"].failure_count >= _MAX_CONSECUTIVE_REJECTIONS - 1
+    assert any(not r.accepted for r in entity.identity.latest_intent_results)
 
     update = StrategicIntelligenceSystem.evaluate_strategic_intent(
         state,

@@ -1,0 +1,12 @@
+{
+  "world_id": "frontier_extended",
+  "seed": 42,
+  "entity_count": 56,
+  "region_count": 10,
+  "resource_node_count": 13,
+  "building_count": 6,
+  "quest_count": 22,
+  "warnings": [],
+  "compile_duration_ms": 22.02280100027565,
+  "state_hash": "82adc46339dd61310dd14426299b0d79"
+}

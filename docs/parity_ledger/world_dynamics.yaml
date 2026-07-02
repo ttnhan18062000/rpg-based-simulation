@@ -288,9 +288,14 @@
   priority: P0
   legacy_evidence: EnvironmentService handles hazard_level and calamity_intensity
     scaling.
-  v2_evidence: src/engine/world_dynamics.py
+  v2_evidence: src/world/environment.py::EnvironmentService.calculate_hazard_drain resolves
+    the entity's catalog faction id (get_faction_id_str) and, via
+    FactionSemanticsService.get_hazard_immunities, exempts entities whose faction endures
+    the region's hazard_kind (RegionState.hazard_kind) from drain; all other entities take
+    the unchanged hazard_level/calamity_intensity-scaled drain. See
+    src/engine/world_dynamics.py for the per-tick call site.
   proof_type: parity
-  test_path: tests_v2/parity/test_parity_regional_sovereignty.py
+  test_path: tests/unit/world/test_regional_consequences.py
   divergence_note: null
   support_boundary: null
 - id: WORLD-060
@@ -298,9 +303,14 @@
   status: verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: src/engine/world_dynamics.py
+  v2_evidence: src/world/environment.py::EnvironmentService.calculate_hazard_drain — drain
+    is hazard_level * (1.0 + calamity_intensity) * 10, scaled by MIASMA, EXCEPT an entity
+    whose resolved faction (FactionDefinition.hazard_immunities) declares endurance to the
+    region's hazard_kind (RegionState.hazard_kind), which takes zero drain unconditionally.
+    Endurance is faction-declared, not derived from hostility-to-hero or from a legacy
+    faction bucket (TCK-20260701-HAZARD-NATIVE-IMMUNITY).
   proof_type: parity
-  test_path: tests_v2/parity/test_parity_regional_sovereignty.py
+  test_path: tests/unit/world/test_regional_consequences.py
   divergence_note: null
   support_boundary: null
 - id: WORLD-061
@@ -973,4 +983,352 @@
   proof_type: null
   test_path: null
   divergence_note: null
+  support_boundary: null
+- id: WORLD-098
+  text: QuestOpportunity is generated deterministically from RESOURCE_DEPLETED events via QuestOpportunityGenerator.from_resource_depleted().
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/domains/world_emergence/services.py (QuestOpportunityGenerator.from_resource_depleted); src/core/models/quests.py (QuestOpportunity)
+  proof_type: parity
+  test_path: tests/unit/quest/test_quest_generation.py::test_resource_crisis_quest_generated_on_depletion
+  divergence_note: null
+  support_boundary: null
+- id: WORLD-099
+  text: Same WorldEvent input + same tick + same seed → identical QuestOpportunity.id (determinism guarantee).
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/domains/world_emergence/services.py (QuestOpportunityGenerator.from_resource_depleted; id formula f"{kind}_{source_event_id}_{tick % 10000}")
+  proof_type: parity
+  test_path: tests/unit/quest/test_quest_generation.py::test_quest_generation_determinism
+  divergence_note: null
+  support_boundary: null
+- id: WORLD-100
+  text: AuthoritativeState.quest_registry (Dict[str, QuestOpportunity]) persists OFFERED and ACTIVE quests across ticks; COMPLETED/FAILED/EXPIRED quests are removed and not retained in the registry.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/core/state.py (AuthoritativeState.quest_registry field, to_readonly() ReadOnlyDict wrap); src/engine/apply.py (apply_generation new_quest_registry logic)
+  proof_type: parity
+  test_path: tests/unit/quest/test_quest_lifecycle.py::test_quest_registry_field_on_authoritative_state
+  divergence_note: null
+  support_boundary: null
+- id: WORLD-101
+  text: QuestOpportunity with status=OFFERED and tick > expiry_ticks is removed from quest_registry via authoritative expiry sweep (QuestLifecycleService.tick); expiry iterates sorted(registry.keys()) for determinism.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/domains/world_emergence/services.py (QuestLifecycleService.tick); src/engine/apply.py (quest_registry_remove apply path)
+  proof_type: parity
+  test_path: tests/unit/quest/test_quest_lifecycle.py::test_quest_expires_after_expiry_ticks
+  divergence_note: null
+  support_boundary: null
+- id: WORLD-102
+  text: QuestOpportunity objects produced by WorldEmergencePhase are added to quest_registry via StateUpdate.quest_registry_add through the authoritative apply path, keyed by QuestOpportunity.id; addition is idempotent (duplicate IDs are skipped).
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/domains/world_emergence/phase.py (execute() quest_registry_add=list(quest_opps)); src/engine/apply.py (idempotent add guard)
+  proof_type: parity
+  test_path: tests/unit/domains/world_emergence/test_quest_registry_wiring.py::test_world_emergence_populates_quest_registry
+  divergence_note: null
+  support_boundary: null
+- id: WORLD-DEMO-001
+  text: 'When regional scarcity > cohort.migration_threshold (default 0.7), 30% of
+    that cohort (min 1) emigrates to the lowest-scarcity adjacent region; migration
+    is deterministic (sorted by region id as tiebreaker).'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: 'src/domains/demographics/cohort.py (_check_migration, compute_regional_scarcity,
+    find_adjacent_regions); DemographicCycleService.process_demographics() runs migration
+    pass after birth/death at COHORT_INTERVAL multiples'
+  proof_type: parity
+  test_path: tests/unit/world/test_demographics.py::TestMigrationPressure::test_migration_pressure_triggers_on_scarcity_threshold
+  divergence_note: null
+  support_boundary: null
+- id: WORLD-DEMO-002
+  text: 'Migration emits a POPULATION_MIGRATION WorldEvent per cohort movement. Source
+    region count is reduced by emigrant_count (floored at 0). Target region count
+    is increased (new bracket created if absent).'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: 'src/domains/demographics/cohort.py (_check_migration WorldEvent emission);
+    src/domains/world_emergence/schema.py (WorldEventCategory.POPULATION_MIGRATION)'
+  proof_type: parity
+  test_path: tests/integration/scenarios/test_demographics.py::test_cohort_migrates_on_scarcity
+  divergence_note: null
+  support_boundary: null
+- id: WORLD-DEMO-003
+  text: 'get_age_bracket(age_ticks) returns "young" for age_ticks < 3000, "adult"
+    for 3000 ≤ age_ticks < 7000, and "elder" for age_ticks ≥ 7000. Pure deterministic
+    function with no side effects.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: 'src/domains/demographics/cohort.py (get_age_bracket)'
+  proof_type: parity
+  test_path: tests/unit/world/test_demographics.py::test_age_bracket_returns_correct_bracket
+  divergence_note: null
+  support_boundary: null
+- id: WORLD-DEMO-004
+  text: 'Elder entities (age_ticks ≥ 7000) receive attribute modifiers via AttributeUpdate:
+    combat_effectiveness *= 0.7 (STR/AGI -30%), mortality_rate *= 2.0 (VIT/END -50%),
+    knowledge_reputation_weight *= 1.3 (WIS/CHA +30%). Applied via compute_elder_attribute_update
+    — never via direct mutation of frozen EntityState.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: 'src/domains/demographics/cohort.py (compute_elder_attribute_update);
+    src/core/updates.py (AttributeUpdate, EntityUpdate)'
+  proof_type: parity
+  test_path: tests/unit/world/test_demographics.py::test_elder_modifier_reduces_combat_effectiveness
+  divergence_note: null
+  support_boundary: null
+- id: WORLD-DEMO-005
+  text: 'Population density feeds into RegionalPressureModel as a demand signal.
+    demand_multiplier = 1.0 + (population_density * 0.5), where population_density
+    = total_cohort_count / max(1, region_area). Applied to resource pressure intensity:
+    res_intensity = min(1.0, base_intensity * demand_multiplier). Zero-population
+    regions receive demand_multiplier = 1.0 (no amplification).'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: 'src/domains/demographics/cohort.py (compute_population_density);
+    src/domains/world_emergence/models.py (RegionalPressureModel.evaluate — resource
+    pressure section)'
+  proof_type: parity
+  test_path: tests/integration/scenarios/test_demographics.py::test_high_population_region_higher_resource_demand
+  divergence_note: null
+  support_boundary: null
+- id: WORLD-CULT-001
+  text: 'CultureState is derived only from ChronicleHierarchy events at episode
+    boundary (CultureDriftExporter called from _advance_state() only) — never
+    mutated during the tick loop. Four axes (fatalism, hero_veneration,
+    resource_scarcity_memory, faction_conflict_exposure) each normalised to [0.0, 1.0]
+    via min(1.0, raw_sum / 3.0).'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: 'src/domains/culture/deriver.py (CultureDeriver.derive); src/domains/culture/exporter.py
+    (CultureDriftExporter.export called from _advance_state() in orchestrator.py
+    after narrative_ledger.extend())'
+  proof_type: parity
+  test_path: tests/unit/culture/test_culture_deriver.py::test_deriver_calamity_raises_fatalism
+  divergence_note: null
+  support_boundary: null
+- id: WORLD-CULT-002
+  text: 'Cultural bias overlay is transient — CulturalBiasApplicator.compute_culture_delta()
+    returns a float additive delta bounded to [-0.5, 1.0] that is added to
+    MotivationBiasService result; it never writes to entity durable state
+    (MotivationModel, ValuePreferenceProfile, EntityState).'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: 'src/domains/culture/applicator.py (CulturalBiasApplicator.compute_culture_delta
+    — returns float only); src/domains/motivation/service.py (culture_values optional
+    param — reads CulturalBiasApplicator result, never mutates entity)'
+  proof_type: parity
+  test_path: tests/unit/culture/test_culture_applicator.py::test_zero_culture_produces_zero_delta
+  divergence_note: null
+  support_boundary: null
+- id: WORLD-CULT-003
+  text: 'Two regions with different narrative histories produce measurably different
+    mean motivation multipliers for the same route tag after 5 synthetic episodes.
+    Specifically: calamity_region.fatalism > hero_region.fatalism + 0.3, and
+    caution-tag delta for calamity_region exceeds hero_region by at least 0.1.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: 'src/domains/culture/deriver.py + src/domains/culture/applicator.py;
+    acceptance test verifies measurable axis divergence and behavioral delta divergence
+    between calamity-history and hero-history regions'
+  proof_type: parity
+  test_path: tests/integration/culture/test_culture_drift_acceptance.py::test_two_regions_diverge_after_5_episodes
+  divergence_note: null
+- id: WORLD-103
+  text: 'SpawnService two-tier cadence: before late_spawn_threshold_tick (default 500)
+    spawn base_spawn_batch_size (default 1) entities per below-density region per
+    50-tick interval; at or after the threshold spawn late_spawn_batch_size (default 2)
+    per region per interval to compensate late-run combat attrition. Batch is always
+    capped by the density deficit (target_count - current_count) so target is never
+    exceeded. Batch index 0 uses original RNG keys (preserving early-game determinism);
+    subsequent batch entries use suffixed keys (e.g. "{r_id}_b1"). Implemented in
+    TCK-20260627-P2B-SPAWN-CADENCE.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: 'src/world/spawn.py L34-45 (batch_size selection by tick); L58-82
+    (batch loop with indexed RNG keys); src/world/spawn_config.py (SpawnConfig
+    dataclass with base_spawn_batch_size=1, late_spawn_threshold_tick=500,
+    late_spawn_batch_size=2; DEFAULT_SPAWN_CONFIG instance)'
+  proof_type: parity
+  test_path: tests/unit/world/test_spawn_cadence.py::TestLateGameCadence::test_late_game_spawns_two_per_region_at_threshold
+  divergence_note: null
+  support_boundary: null
+
+- id: WORLD-104
+  text: >
+    Regional resource scarcity pressure propagates to adjacent regions (E21E). After
+    per-region resource pressure is computed, RegionalPressureModel.propagate_cross_region()
+    adds PROPAGATION_FACTOR (0.30) × neighbor resource intensity to each adjacent region's
+    resource pressure. Two regions are adjacent when their bounding boxes are within
+    ADJACENCY_GAP (50 units) of each other. Propagated pressure is bidirectional and
+    capped at 1.0. Regions with no native resource pressure that receive spread from
+    neighbours get a new resource pressure entry at confidence=0.65.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/domains/world_emergence/models.py — RegionalPressureModel.ADJACENCY_GAP=50.0,
+    PROPAGATION_FACTOR=0.30; _are_adjacent(); propagate_cross_region().
+    src/domains/world_emergence/phase.py — step 2b calls propagate_cross_region after
+    RegionalPressureModel.evaluate(). Verified by TCK-20260628-E21E-CROSS-REGION-PRESSURE.
+  proof_type: parity
+  test_path: tests/unit/domains/world_emergence/test_phase8_regional_pressure_model.py::test_propagate_cross_region_adjacent_regions_receive_spread
+  divergence_note: >
+    New mechanic added by TCK-20260628-E21E-CROSS-REGION-PRESSURE. No prior behavior
+    existed — resource pressure was evaluated per-region in isolation.
+  support_boundary: null
+  support_boundary: null
+
+- id: WORLD-105
+  text: >
+    Seasonal calamity pressure propagation (E52E): every SEASONAL_PROPAGATION_INTERVAL=500
+    ticks, each region with calamity_intensity >= PROPAGATION_THRESHOLD=0.10 spreads
+    intensity to adjacent regions (adjacency defined by RegionalPressureModel._are_adjacent,
+    ADJACENCY_GAP=50 units). Propagated amount = source.calamity_intensity * PROPAGATION_FACTOR=0.15,
+    capped at 1.0. Per-neighbor update takes the maximum proposed value across all source
+    regions (prevents runaway amplification). Source region is never self-updated. Wired into
+    WorldDynamicsSystem step 3.8 under the world_dynamics cadence gate.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/world/calamity.py — CalamityPressurePropagator.propagate_seasonal().
+    src/engine/world_dynamics.py — step 3.8 seasonal_update merge.
+    Reuses RegionalPressureModel._are_adjacent() from src/domains/world_emergence/models.py.
+    Verified by TCK-20260628-E52E-SEASONAL-PROPAGATION.
+  proof_type: parity
+  test_path: tests/unit/world/test_calamity_pressure_propagator.py::test_adjacent_region_receives_propagated_intensity
+  divergence_note: >
+    New mechanic added by TCK-20260628-E52E-SEASONAL-PROPAGATION. No prior calamity
+    intensity propagation between regions existed.
+  support_boundary: null
+
+- id: WORLD-106
+  text: >
+    Trauma region concern injection (E52F): when an active, alive entity has
+    navigation.region_id pointing to a region with trauma_score > TRAUMA_CONCERN_THRESHOLD=0.5,
+    a ConcernState(kind=DANGER, id="regional_trauma_{region_id}") is injected into
+    entity.strategic.concerns via StrategicUpdate.concerns_add_or_update in WorldDynamicsSystem
+    step 2.3. Urgency = min(1.0, trauma_score / URGENCY_SCALE=50.0). Concern appears on the
+    same tick that trauma crosses the threshold, satisfying the <100-tick requirement.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/domains/world_emergence/services.py — TraumaRegionConcernBridge.inject_concerns().
+    src/engine/world_dynamics.py — step 2.3 TraumaRegionConcernBridge wiring.
+    Verified by TCK-20260628-E52F-TRAUMA-MOTIVATION.
+  proof_type: parity
+  test_path: tests/unit/domains/world_emergence/test_phase8_trauma_concern_bridge.py::test_concern_appears_within_one_tick_of_threshold_crossing
+  divergence_note: >
+    New mechanic added by TCK-20260628-E52F-TRAUMA-MOTIVATION. Previously, trauma only
+    indirectly produced entity motivation effects through hazard_level escalation at
+    trauma_score > 50, requiring ~3500 ticks to reach hazard_level > 0.7.
+  support_boundary: null
+
+- id: WORLD-107
+  text: >
+    Sovereignty shift WorldEvent (E52G): when a region's influence crosses +100 (HERO_GUILD takeover)
+    or -100 (MONSTER_HORDE takeover), a WorldEvent(category=SOVEREIGNTY_SHIFT, severity=0.9) is
+    emitted into StateUpdate.world_events_add. The event carries region_id, subject (new owner
+    faction name), tick, and payload={"influence": <current>, "prev_owner": <prior>}.
+    Events are flushed into recent_world_events via the authoritative apply pipeline, making
+    sovereignty shifts observable in WorldEmergencePhase.execute() subsequent ticks.
+    No event is emitted when the region is already owned by the winning faction.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/domains/world_emergence/schema.py — WorldEventCategory.SOVEREIGNTY_SHIFT added.
+    src/engine/world_dynamics.py — step 2.2 collects sovereignty_events; step 2.2b flushes
+    them via update.replace(world_events_add=...). Verified by TCK-20260628-E52G-SOVEREIGNTY-EVENTS.
+  proof_type: parity
+  test_path: tests/unit/world/test_sovereignty_events.py::test_sovereignty_shift_event_emitted_on_hero_takeover
+  divergence_note: >
+    New mechanic added by TCK-20260628-E52G-SOVEREIGNTY-EVENTS. Previously, ownership changes
+    produced WorldUpdate.owner_faction_id_set but no WorldEvent was emitted — shifts were
+    invisible to the WorldEmergencePhase and agent observability systems.
+  support_boundary: null
+- id: WORLD-108
+  text: >
+    ecology_cycle_completed is emitted once per region at every tick divisible by 200,
+    signalling the completion of a full ecological turnover cycle. Detected in
+    EventExtractor by tick % 200 == 0 over current_state.regions. No world domain
+    change is required. (TCK-20260701-SIMQ-EMIT-WORLD-DYNAMICS)
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/observability/event_extractor.py — ecology_cycle_completed block;
+    tick % 200 == 0 guard iterating current_state.regions.
+  proof_type: parity
+  test_path: >-
+    tests/unit/observability/test_event_extractor_world_dynamics.py::TestEcologyCycleCompleted
+  divergence_note: null
+  support_boundary: null
+- id: WORLD-109
+  text: >
+    spawn_cadence_fired is emitted when tick % 50 == 0 and StateUpdate.entities_add
+    contains at least one non-excluded entity kind (world_boss, ancient_sentinel,
+    goblin_raider are excluded as non-cadence spawns).
+    node_recharged is emitted when a resource node's remaining_charges transitions
+    from 0 to > 0 (complements resource_node_regenerated which is unscored).
+    threat_evolved is emitted when world_update.trauma_delta > 0 and
+    prior_trauma + trauma_delta crosses a threshold in {25, 50, 75, 100}.
+    camp_constructed remains blocked — CampService has no event recorder.
+    (TCK-20260701-SIMQ-EMIT-WORLD-DYNAMICS)
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/observability/event_extractor.py — spawn_cadence_fired block (tick%50,
+    kind exclusion set); node_recharged block inside resource_node_regenerated guard
+    (remaining_charges 0→>0 only); threat_evolved block with threshold crossing logic
+    in world_updates loop with try/except for MagicMock safety.
+  proof_type: parity
+  test_path: >-
+    tests/unit/observability/test_event_extractor_world_dynamics.py::TestSpawnCadrenceFired;
+    tests/unit/observability/test_event_extractor_world_dynamics.py::TestNodeRecharged;
+    tests/unit/observability/test_event_extractor_world_dynamics.py::TestThreatEvolved
+  divergence_note: >
+    camp_constructed has no viable engine path under the current camp lifecycle model:
+    camps are pre-placed at world generation and CampService (src/world/camp.py) only
+    evolves existing camps (maturity, raids) — there is no dynamic construction
+    mechanic to emit from. Not pending/future work; confirmed by TCK-20260701-SIMQ-EMIT-CAMP.
+  support_boundary: null
+
+- id: WORLD-110
+  text: >
+    WORLD pillar grade stability under normalized_score formula change — see INFRA-255
+    (infrastructure.yaml) for the cross-pillar formula. WORLD-specific: dungeon_crawl seed42
+    500t has last_event_tick=400 (dense ecology cycling throughout run); floor=401//4=100;
+    400 > 100 so last_event_tick wins; norm=176/400=0.440 → B. Grade is correct — WORLD was
+    genuinely active up to tick 400 and B at 0.440 reflects its event density fairly.
+    WORLD does not receive S-inflation because its events fire continuously throughout the run.
+    (TCK-20260702-SIMQ-UPLIFT-GRADE-DECAY)
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: "see INFRA-255 in infrastructure.yaml"
+  proof_type: parity
+  test_path: tests/simulation_quality/test_report.py::test_active_throughout_run_behavior_unchanged
+  divergence_note: >
+    Secondary ref — primary entry is INFRA-255 in infrastructure.yaml.
+    WORLD holds B post-fix as expected; the formula change does not affect pillars
+    that are active throughout the run (last_event_tick ≈ current_tick >> floor).
   support_boundary: null

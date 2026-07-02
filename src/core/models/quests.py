@@ -1,7 +1,7 @@
 from __future__ import annotations
 from dataclasses import dataclass, field
 from enum import Enum, auto
-from typing import Optional, Dict, Any, List, TYPE_CHECKING
+from typing import Optional, Dict, Any, List, Tuple, TYPE_CHECKING
 from src.core.strategic import ProjectState
 
 class QuestKind(Enum):
@@ -16,6 +16,14 @@ class QuestStatus(Enum):
     COMPLETED = 2
     REWARDED = 3
     REWARD_PENDING = 4
+
+class QuestOpportunityStatus(str, Enum):
+    OFFERED = "OFFERED"
+    ACTIVE = "ACTIVE"
+    PROGRESSED = "PROGRESSED"
+    COMPLETED = "COMPLETED"
+    FAILED = "FAILED"
+    EXPIRED = "EXPIRED"
 
 @dataclass(frozen=True, slots=True)
 class RewardState:
@@ -52,3 +60,23 @@ class QuestState(ProjectState):
     @property
     def is_finished(self) -> bool:
         return self.current_value >= self.goal_value
+
+
+@dataclass(frozen=True, slots=True)
+class QuestOpportunity:
+    """
+    A world-level quest opportunity derived from pressure signals (RESOURCE_DEPLETED,
+    high-severity threat events). Read-only — never written to quest_registry here.
+    Lifecycle registration is E23B's responsibility.
+
+    id: deterministic — f"{kind}_{source_event_id}_{tick % 10000}"
+    """
+    id: str
+    kind: str                          # "resource_crisis" | "threat_response" | "diplomatic_errand"
+    trigger_condition: str             # human-readable description of the triggering condition
+    objective_chain: Tuple[str, ...]   # ordered objective tokens e.g. ("fetch:iron_ore:3",)
+    reward_spec: Dict[str, Any]        # {"gold": int, "xp": int, "faction_rep": float}
+    faction_source: Optional[str]      # faction offering the quest; None = world event
+    expiry_ticks: int                  # tick at which this opportunity expires if not taken
+    source_event_id: Optional[str]     # ID of the WorldEvent that triggered this opportunity
+    status: QuestOpportunityStatus = QuestOpportunityStatus.OFFERED

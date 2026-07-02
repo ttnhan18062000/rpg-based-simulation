@@ -45,7 +45,8 @@ def test_hardcoded_content_regression_guard():
     without having a corresponding definition in the content catalog or being explicitly allowlisted.
     """
     # 1. Force load the legacy hardcoded seed maps
-    seed_phase1_content(catalog_repo=None, required=False)
+    from src.core.modes import RuntimeContentMode
+    seed_phase1_content(catalog_repo=None, required=False, mode=RuntimeContentMode.LEGACY_FALLBACK)
 
     # 2. Load the content catalog repository
     catalog_repo = CatalogRepository("data/content")

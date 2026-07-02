@@ -3,16 +3,20 @@ from __future__ import annotations
 
 import json
 import time
-import random
+import yaml
+from pathlib import Path
 from typing import Optional, Any, Dict, List, Set
 
+from src.platform.rng import DeterministicRNG
+from src.core.enums import Domain
 from src.core.state import (
     AuthoritativeState,
     RegionState,
     EntityState,
     BuildingState,
     ResourceNodeState,
-    InventoryComponent
+    InventoryComponent,
+    PersonalityComponent,
 )
 from src.core.builder import V2EntityBuilder
 from src.core.enums import EntityRole, Faction
@@ -83,6 +87,22 @@ def get_quest_kind(kind_str: str) -> QuestKind:
     return QuestKind.EXPLORE
 
 
+_SPAWN_TABLES_PATH = Path(__file__).parent.parent.parent / "data" / "content" / "spawn_tables.yaml"
+
+
+def _load_class_table() -> Dict[str, List[str]]:
+    """Return role→[class_ids] from spawn_tables.yaml. Falls back to empty dict on error."""
+    try:
+        with open(_SPAWN_TABLES_PATH) as f:
+            entries = yaml.safe_load(f) or []
+        for entry in entries:
+            if entry.get("schema_version") == "classtable.v1":
+                return {k.lower(): v for k, v in entry.get("class_id_by_role", {}).items()}
+    except (OSError, yaml.YAMLError):
+        pass
+    return {}
+
+
 class WorldCompiler:
     """
     Deterministic World Compiler that transforms a validated WorldSpec into
@@ -110,8 +130,9 @@ class WorldCompiler:
         """
         start_time = time.perf_counter()
 
-        # 0. Initialize deterministic RNG using standard library random
-        rng = random.Random(seed)
+        # 0. Initialize deterministic RNG and load class table
+        rng = DeterministicRNG(seed)
+        class_table = _load_class_table()
 
         # 1. Compile map topology
         terrain: Dict[tuple[int, int], str] = {}
@@ -147,7 +168,8 @@ class WorldCompiler:
                 kind=r_spec.type.upper(),
                 influence=100.0 if r_spec.type == "town" else 0.0,
                 owner_faction_id=owner_faction,
-                hazard_level=getattr(r_spec, "hazard_level", 0.0)
+                hazard_level=getattr(r_spec, "hazard_level", 0.0),
+                hazard_kind=getattr(r_spec, "hazard_kind", "PHYSICAL")
             )
 
         # 3. Compile factions (Initialize starting vaults in global_resources)
@@ -177,8 +199,8 @@ class WorldCompiler:
             region = regions.get(region_id)
             if region:
                 min_x, min_y, max_x, max_y = region.bounds
-                x = rng.randint(min_x, max_x)
-                y = rng.randint(min_y, max_y)
+                x = rng.get_int(Domain.WORLD, 0, next_resource_id, min_x, max_x, sub_id=0)
+                y = rng.get_int(Domain.WORLD, 0, next_resource_id, min_y, max_y, sub_id=1)
 
                 required_ticks = 10
                 if context is not None and res_spec.id in context.resources:
@@ -192,7 +214,8 @@ class WorldCompiler:
                     remaining_charges=res_spec.count,
                     max_charges=res_spec.count,
                     required_ticks=required_ticks,
-                    cooldown_remaining=0
+                    cooldown_remaining=0,
+                    regen_rate_per_tick=res_spec.regen_rate,
                 )
                 next_resource_id += 1
 
@@ -205,8 +228,8 @@ class WorldCompiler:
             region = regions.get(region_id)
             if region:
                 min_x, min_y, max_x, max_y = region.bounds
-                x = rng.randint(min_x, max_x)
-                y = rng.randint(min_y, max_y)
+                x = rng.get_int(Domain.WORLD, 0, next_building_id, min_x, max_x, sub_id=0)
+                y = rng.get_int(Domain.WORLD, 0, next_building_id, min_y, max_y, sub_id=1)
 
                 hp = 500
                 max_hp = 500
@@ -235,8 +258,8 @@ class WorldCompiler:
             if region:
                 min_x, min_y, max_x, max_y = region.bounds
                 for _ in range(pop_spec.count):
-                    x = rng.randint(min_x, max_x)
-                    y = rng.randint(min_y, max_y)
+                    x = rng.get_int(Domain.WORLD, 0, next_entity_id, min_x, max_x, sub_id=0)
+                    y = rng.get_int(Domain.WORLD, 0, next_entity_id, min_y, max_y, sub_id=1)
 
                     # Initialize core stats with legacy default parameters
                     hp = 100
@@ -265,6 +288,19 @@ class WorldCompiler:
                         if hasattr(resolved, "legacy_faction") and resolved.legacy_faction is not None:
                             faction_enum = Faction(resolved.legacy_faction)
 
+                    # Seed personality deterministically from entity ID + world seed
+                    personality = PersonalityComponent(
+                        greed=rng.get_float(Domain.WORLD, 0, next_entity_id, sub_id=10),
+                        bravery=rng.get_float(Domain.WORLD, 0, next_entity_id, sub_id=11),
+                        sociability=rng.get_float(Domain.WORLD, 0, next_entity_id, sub_id=12),
+                        industry=rng.get_float(Domain.WORLD, 0, next_entity_id, sub_id=13),
+                    )
+
+                    # Assign class_id by role from spawn table; fall back to NOVICE
+                    role_key = pop_spec.role.lower()
+                    class_pool = class_table.get(role_key) or ["NOVICE"]
+                    ent_class_id = rng.choice(Domain.WORLD, 0, next_entity_id, class_pool, sub_id=14)
+
                     # Populate properties
                     ent_properties = {
                         "spawn_region": pop_spec.spawn_region,
@@ -282,9 +318,12 @@ class WorldCompiler:
                         V2EntityBuilder(next_entity_id)
                         .kind(pop_spec.role.lower())
                         .location(float(x), float(y))
+                        .navigation(region_id=region_id)
                         .identity(
                             role=role_enum,
                             faction=faction_enum,
+                            class_id=ent_class_id,
+                            personality=personality,
                             properties=ent_properties
                         )
                         .combat(
@@ -308,17 +347,29 @@ class WorldCompiler:
         compiled_quests: List[QuestState] = []
         warnings: List[str] = []
 
+        # Build a pool of all semantic location labels reachable in this world.
+        # Use spec.regions (RegionSpec list) — regions dict holds RegionState (runtime
+        # objects with a 'kind' field) which has already lost the original type string
+        # and the explicit tags list. RegionSpec.type + RegionSpec.tags are the
+        # authoritative location vocabulary at compile time.
+        tag_pool: set = set()
+        for r_spec in spec.regions:
+            if r_spec.type:
+                tag_pool.add(r_spec.type)
+            for t in getattr(r_spec, "tags", []):
+                tag_pool.add(t)
+
         for quest_idx, q_def in enumerate(spec.quest_definitions):
             qid = q_def.id
             # Map QuestDefinition.type (authoring) → QuestKind (runtime enum)
             qkind = get_quest_kind(q_def.type)
 
-            # Validate required_location_tags against known region IDs
+            # Validate required_location_tags against region types and explicit tags
             for loc_tag in q_def.required_location_tags:
-                if loc_tag not in regions:
+                if loc_tag not in tag_pool:
                     warnings.append(
                         f"QuestDefinition '{qid}' required_location_tag '{loc_tag}' "
-                        f"does not match any region ID in this world"
+                        f"does not match any region type or tag in this world"
                     )
 
             # Seed a minimal reward from reward_budget (procedural layer will refine)

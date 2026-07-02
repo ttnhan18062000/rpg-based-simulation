@@ -34,10 +34,31 @@ class CombatEngagementDecisionService:
         """
         Evaluate target and actor condition to choose the optimal posture.
         """
+        # Fear avoidance: entity that has been defeated by this target >= 3 times avoids engagement.
+        if actor.social.combat_loss_counts.get(target.id, 0) >= 3:
+            opponent_est = OpponentPerceptionService.estimate(actor, target, memory)
+            self_est = SelfCombatEstimateService.estimate(actor)
+            from src.domains.combat_engagement.schema import CombatPosture, EngagementRiskEvaluation
+            risk_eval = EngagementRiskEvaluation(
+                win_confidence=0.0, death_risk=1.0, uncertainty_penalty=0.0,
+                objective_value=0.0, personality_bias=0.0, emotional_bias=0.0,
+                risk_score=1.0, value_score=0.0, acceptable=False,
+                reasons=("fear_avoidance",),
+            )
+            return CombatEngagementDecisionResult(
+                actor_id=actor.id,
+                target_id=target.id,
+                posture=CombatPosture.AVOID,
+                risk_evaluation=risk_eval,
+                opponent_estimate=opponent_est,
+                self_estimate=self_est,
+                reason="fear_avoidance: defeated by this opponent 3+ times",
+            )
+
         opponent_est = OpponentPerceptionService.estimate(actor, target, memory)
         self_est = SelfCombatEstimateService.estimate(actor)
         risk_eval = EngagementRiskEvaluator.evaluate(actor, opponent_est, self_est, objective_pressure)
-        
+
         return CombatPostureSelector.select(
             actor_id=actor.id,
             target_id=target.id,

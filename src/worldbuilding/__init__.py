@@ -25,9 +25,7 @@ from src.worldbuilding.recipe import (
     RegionRecipeSpec,
     PopulationRecipeSpec,
     ResourceRecipeSpec,
-    BuildingRecipeSpec,
-    WorldTemplateSpec,
-    WorldTemplateExpander
+    BuildingRecipeSpec
 )
 
 __all__ = [
@@ -50,9 +48,7 @@ __all__ = [
     "RegionRecipeSpec",
     "PopulationRecipeSpec",
     "ResourceRecipeSpec",
-    "BuildingRecipeSpec",
-    "WorldTemplateSpec",
-    "WorldTemplateExpander"
+    "BuildingRecipeSpec"
 ]
 
 

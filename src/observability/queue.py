@@ -94,11 +94,13 @@ class QueueDrainWorker:
         queue: BoundedObservabilityQueue,
         file_write_fn: Optional[Callable[[ObservabilityEventEnvelope], None]] = None,
         stream_publish_fn: Optional[Callable[[ObservabilityEventEnvelope], None]] = None,
+        quality_fn: Optional[Callable[[ObservabilityEventEnvelope], None]] = None,
         interval_sec: float = 0.01
     ) -> None:
         self.queue = queue
         self.file_write_fn = file_write_fn
         self.stream_publish_fn = stream_publish_fn
+        self.quality_fn = quality_fn
         self.interval_sec = interval_sec
         self.running = False
         self._thread: Optional[threading.Thread] = None
@@ -136,6 +138,12 @@ class QueueDrainWorker:
                     if self.stream_publish_fn:
                         try:
                             self.stream_publish_fn(env)
+                        except Exception:
+                            self.failure_count += 1
+                            self.health_status = "DEGRADED"
+                    if self.quality_fn:
+                        try:
+                            self.quality_fn(env)
                         except Exception:
                             self.failure_count += 1
                             self.health_status = "DEGRADED"

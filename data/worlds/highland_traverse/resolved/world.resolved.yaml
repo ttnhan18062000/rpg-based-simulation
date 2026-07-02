@@ -1,0 +1,269 @@
+schema_version: worldspec.v1
+world_id: highland_traverse
+name: Highland Traverse
+description: Terrain-focused traversal world covering mountain pass and river crossing
+  routes, with a nomadic beast herd and a settled quarter providing services.
+topology:
+  width: 211
+  height: 211
+  coordinate_system: grid
+regions:
+- id: mountain_pass_zone
+  type: wilderness
+  bounds:
+  - 80
+  - 80
+  - 120
+  - 120
+  terrain: mountain
+  hazard_level: 2.5
+  tags:
+  - mountain
+- id: near_forest
+  type: wilderness
+  bounds:
+  - 60
+  - 130
+  - 100
+  - 170
+  terrain: plain
+  hazard_level: 1.5
+  tags:
+  - plain
+- id: wolf_den
+  type: wilderness
+  bounds:
+  - 60
+  - 170
+  - 100
+  - 210
+  terrain: forest
+  hazard_level: 2.0
+  tags: []
+- id: river_ford
+  type: wilderness
+  bounds:
+  - 130
+  - 30
+  - 160
+  - 70
+  terrain: river
+  hazard_level: 1.0
+  tags: []
+- id: hometown
+  type: settlement
+  bounds:
+  - 170
+  - 80
+  - 210
+  - 120
+  terrain: plain
+  hazard_level: 0.0
+  tags: []
+factions:
+- id: hero_guild
+  type: defender
+- id: town_council
+  type: defender
+- id: neutral
+  type: neutral
+- id: wild_beast_pack
+  type: wild
+- id: goblin_warband
+  type: invader
+- id: merchant_league
+  type: neutral
+- id: bandit_company
+  type: invader
+- id: forest_wardens
+  type: defender
+- id: orc_clan
+  type: rival
+- id: dwarven_mine_clan
+  type: defender
+- id: moon_cult
+  type: invader
+- id: undead_remnants
+  type: invader
+- id: arcane_circle
+  type: neutral
+- id: swamp_tribe
+  type: rival
+- id: dragon_cult
+  type: invader
+- id: spirit_court
+  type: neutral
+entities:
+- id: wolf_pack_small_hungry_wolf
+  count: 4
+  role: predator_hunter
+  faction: wild_beast_pack
+  spawn_region: wolf_den
+  archetype_id: hungry_wolf
+- id: wolf_pack_small_alpha_wolf
+  count: 1
+  role: alpha
+  faction: wild_beast_pack
+  spawn_region: wolf_den
+  archetype_id: alpha_wolf
+- id: frontier_village_population_village_worker
+  count: 8
+  role: worker
+  faction: town_council
+  spawn_region: hometown
+  archetype_id: village_worker
+- id: frontier_village_population_frontier_guard
+  count: 3
+  role: guard
+  faction: town_council
+  spawn_region: hometown
+  archetype_id: frontier_guard
+- id: frontier_village_population_traveling_merchant
+  count: 1
+  role: merchant
+  faction: merchant_league
+  spawn_region: hometown
+  archetype_id: traveling_merchant
+- id: frontier_village_population_village_blacksmith
+  count: 1
+  role: blacksmith
+  faction: town_council
+  spawn_region: hometown
+  archetype_id: village_blacksmith
+resources:
+- id: mountain_pass__iron_vein_0
+  resource_type: iron_vein
+  count: 4
+  region: mountain_pass_zone
+  regen_rate: 1
+- id: mountain_pass__frost_shard_cluster_1
+  resource_type: frost_shard_cluster
+  count: 2
+  region: mountain_pass_zone
+  regen_rate: 1
+- id: river_crossing__herb_patch_0
+  resource_type: herb_patch
+  count: 3
+  region: river_ford
+  regen_rate: 1
+buildings:
+- id: watchtower_0
+  type: watchtower
+  region: river_ford
+- id: blacksmith_0
+  type: blacksmith
+  region: hometown
+- id: healer_hut_0
+  type: healer_hut
+  region: hometown
+- id: inn_0
+  type: inn
+  region: hometown
+- id: shop_0
+  type: shop
+  region: hometown
+quest_definitions:
+- id: explore_mountain_route
+  type: explore
+  required_participant_tags:
+  - humanoid
+  required_location_tags:
+  - mountain
+  - wilderness
+  reward_budget: 90
+  procedural_hints:
+    difficulty: 2
+    escalation: false
+  tags:
+  - mountain
+  - terrain
+  - exploration
+  source_module: mountain_pass
+- id: hunt_mountain_predator
+  type: hunt
+  required_participant_tags:
+  - humanoid
+  required_location_tags:
+  - mountain
+  - wilderness
+  reward_budget: 130
+  procedural_hints:
+    difficulty: 3
+    escalation: true
+  tags:
+  - mountain
+  - terrain
+  - combat
+  source_module: mountain_pass
+- id: track_nomadic_herd
+  type: hunt
+  required_participant_tags:
+  - humanoid
+  required_location_tags:
+  - wilderness
+  - plain
+  reward_budget: 110
+  procedural_hints:
+    difficulty: 2
+    escalation: false
+  tags:
+  - nomadic
+  - population
+  - hunt
+  - beast
+  source_module: nomadic_herd
+- id: survey_river_route
+  type: explore
+  required_participant_tags:
+  - humanoid
+  required_location_tags:
+  - wilderness
+  - river
+  reward_budget: 80
+  procedural_hints:
+    difficulty: 1
+    escalation: false
+  tags:
+  - river
+  - terrain
+  - scouting
+  source_module: river_crossing
+- id: fetch_settlement_supplies
+  type: fetch
+  required_participant_tags:
+  - humanoid
+  - merchant_minded
+  required_location_tags:
+  - settlement
+  - plain
+  reward_budget: 90
+  procedural_hints:
+    difficulty: 1
+    escalation: false
+  tags:
+  - settlement
+  - population
+  - supply
+  - trade
+  source_module: settled_quarter
+- id: escort_settled_trader
+  type: escort
+  required_participant_tags:
+  - humanoid
+  - merchant_minded
+  required_location_tags:
+  - settlement
+  - plain
+  reward_budget: 110
+  procedural_hints:
+    difficulty: 2
+    escalation: false
+  tags:
+  - settlement
+  - population
+  - escort
+  - trade
+  source_module: settled_quarter
+validation:
+  expected_min_entities: 1
+  allow_overlapping_regions: false

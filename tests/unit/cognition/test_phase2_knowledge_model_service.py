@@ -24,7 +24,8 @@ from src.cognition.knowledge_model import KnowledgeModelService
 @pytest.fixture(autouse=True, scope="module")
 def seed_registries():
     from src.core.registries import seed_phase1_content
-    seed_phase1_content(None)
+    from src.core.modes import RuntimeContentMode
+    seed_phase1_content(mode=RuntimeContentMode.LEGACY_FALLBACK)
 
 def _entity(unknowns=None, facts=None):
     from src.core.self_model import KnowledgeFact as EntityFact

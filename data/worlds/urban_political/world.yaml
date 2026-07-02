@@ -18,4 +18,6 @@ module_refs:
       merchant_count: 6
   - module_id: "bandit_road_trade_pressure"
     order: 2
+  - module_id: "hero_adventurers"
+    order: 3
 generation_seed: 202

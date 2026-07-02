@@ -30,7 +30,10 @@ dev = [
     "httpx>=0.27.0",
     "hypothesis>=6.0.0",
     "memray>=1.0.0",
+    "mypy",
 ]
+# torch must be installed separately from the CPU wheel before this extra:
+#   pip install torch --index-url https://download.pytorch.org/whl/cpu
 knowledge = [
     "sentence-transformers>=2.7.0",
     "sqlite-vec>=0.1.1",
@@ -85,4 +88,20 @@ markers = [
     "content_pack: content pack format validation and expansion gate tests",
     "architecture: static architecture guard tests (no runtime, no catalog load)",
     "e2e_golden: golden artifact fixture tests validating schema compatibility with real engine output",
+    "scenario_flags: per-scenario feature flag default and configuration assertions",
+    "feature_flag_default: feature flag default value and stability assertions",
+]
+
+[tool.mypy]
+python_version = "3.11"
+strict = false
+ignore_missing_imports = true
+warn_return_any = true
+warn_unused_ignores = true
+exclude = [
+    "src/ai/",
+    "src/town/",
+    "src/quests/",
+    "src/entities/",
+    "src/progression/",
 ]

@@ -1,1 +1,0 @@
-{"run_id": "integration_run_01", "window_start_tick": 1, "window_end_tick": 100, "tick_compute_ms_avg": 1.5, "tick_compute_ms_p95": 2.0, "memory_rss_bytes_avg": 500000.0, "memory_rss_bytes_max": 600000.0, "alive_entities_avg": 2.0, "gold_total_avg": 10.0, "event_count": 10, "hard_law_violation_count": 0}

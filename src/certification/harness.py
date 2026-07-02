@@ -172,19 +172,22 @@ class CertificationHarness:
             logger.info(f"Scenario {scenario_id}: executing 2nd run for reproducibility proof.")
             # Fresh state, fresh RNG with same seed
             kernel2 = Kernel(self._profile, initial_state, DeterministicRNG(initial_state.seed), flags={"audit_mode": True})
-            for t in range(1, ticks + 1):
-                # Phase 9 Fix: Reproducibility must respect the same stop conditions
-                alive_factions = {e.identity.faction for e in kernel2.state.entities.values() if e.combat.alive}
-                if len(alive_factions) <= 1 and t > 1:
-                    break
-                    
-                kernel2.tick_once()
-            # We don't necessarily need a clean shutdown for the 2nd run's hash,
-            # but we use the state hash directly for performance.
-            from src.engine.checkpoint import CanonicalHashScheduler, HashMode
-            secondary_hash = CanonicalHashScheduler().compute_hash(
-                kernel2.state, tick=kernel2.state.tick, mode=HashMode.FULL, reason="certification"
-            )
+            try:
+                for t in range(1, ticks + 1):
+                    # Phase 9 Fix: Reproducibility must respect the same stop conditions
+                    alive_factions = {e.identity.faction for e in kernel2.state.entities.values() if e.combat.alive}
+                    if len(alive_factions) <= 1 and t > 1:
+                        break
+
+                    kernel2.tick_once()
+                # We don't necessarily need a clean shutdown for the 2nd run's hash,
+                # but we use the state hash directly for performance.
+                from src.engine.checkpoint import CanonicalHashScheduler, HashMode
+                secondary_hash = CanonicalHashScheduler().compute_hash(
+                    kernel2.state, tick=kernel2.state.tick, mode=HashMode.FULL, reason="certification"
+                )
+            finally:
+                kernel2.shutdown(timeout_s=expectations.shutdown_timeout_s)
 
         # 5. Evaluate Conformance
             
@@ -293,20 +296,23 @@ class CertificationHarness:
         profile_dict = self._profile.model_dump()
         profile_dict["max_worker_count"] = 0 # Forced sequential
         baseline_profile = RuntimeProfile(**profile_dict)
-        
-        kernel = Kernel(baseline_profile, state, DeterministicRNG(state.seed), flags={"audit_mode": True})
-        for t in range(1, ticks + 1):
-            # Phase 9 Fix: Baseline must respect the same stop conditions as the subject run
-            alive_factions = {e.identity.faction for e in kernel.state.entities.values() if e.combat.alive}
-            if len(alive_factions) <= 1 and t > 1:
-                break
 
-            kernel.tick_once()
-            
-        from src.engine.checkpoint import CanonicalHashScheduler, HashMode
-        return CanonicalHashScheduler().compute_hash(
-            kernel.state, tick=kernel.state.tick, mode=HashMode.FULL, reason="certification"
-        )
+        kernel = Kernel(baseline_profile, state, DeterministicRNG(state.seed), flags={"audit_mode": True})
+        try:
+            for t in range(1, ticks + 1):
+                # Phase 9 Fix: Baseline must respect the same stop conditions as the subject run
+                alive_factions = {e.identity.faction for e in kernel.state.entities.values() if e.combat.alive}
+                if len(alive_factions) <= 1 and t > 1:
+                    break
+
+                kernel.tick_once()
+
+            from src.engine.checkpoint import CanonicalHashScheduler, HashMode
+            return CanonicalHashScheduler().compute_hash(
+                kernel.state, tick=kernel.state.tick, mode=HashMode.FULL, reason="certification"
+            )
+        finally:
+            kernel.shutdown(timeout_s=0.0)
 
 
 if __name__ == "__main__":

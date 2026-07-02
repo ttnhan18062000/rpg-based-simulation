@@ -8,6 +8,7 @@ from src.core.enums import ReasonCode
 from src.core.state import IntentResult, ItemStack
 from src.core.updates import EntityUpdate, StateUpdate, InventoryUpdate, RejectionEvent, ResourceTransferIntent, ChestUpdate
 from src.core.inventory import InventoryService
+from src.domains.world_emergence.schema import WorldEvent, WorldEventCategory
 
 if TYPE_CHECKING:
     from src.core.state import AuthoritativeState, EntityState
@@ -37,6 +38,9 @@ class ResourceTransactionSystem:
         new_rejection_events = list(update.rejection_events)
         processed_ids = set(update.processed_transaction_ids)
         new_resource_updates = dict(update.resource_updates)
+
+        world_events: list[WorldEvent] = []
+        depleted_nodes: set[int] = set()
 
         # In-tick reservations to prevent double-spending/double-harvesting
         # Format: (kind, id) -> quantity_consumed
@@ -109,10 +113,26 @@ class ResourceTransactionSystem:
                             # Apply world side effects
                             # Logic ID: TOWN-014 (Inventory additions and world removals are authoritative side effects)
                             ResourceTransactionSystem._apply_world_effects(
-                                result, e_id, new_node_updates, new_building_updates, 
+                                result, e_id, new_node_updates, new_building_updates,
                                 new_home_storage_updates, new_ground_items_remove, new_corpses_remove, reservations
                             )
-                            
+
+                            if result.node_update:
+                                node_id = result.node_update.node_id
+                                node = state.resource_nodes.get(node_id)
+                                if node and node_id not in depleted_nodes:
+                                    accumulated_delta = new_node_updates[node_id].charges_delta
+                                    new_charges = node.remaining_charges + accumulated_delta
+                                    if node.remaining_charges > 0 and new_charges <= 0:
+                                        world_events.append(WorldEvent(
+                                            category=WorldEventCategory.RESOURCE_DEPLETED,
+                                            tick=state.tick,
+                                            region_id=None,
+                                            subject=str(node_id),
+                                            severity=1.0,
+                                        ))
+                                        depleted_nodes.add(node_id)
+
                             # Global metrics tracking (PH10 Parity)
                             for item in result.inventory_update.items_add if result.inventory_update else []:
                                 m_key = f"metric_total_{item.item_id.lower()}"
@@ -180,10 +200,26 @@ class ResourceTransactionSystem:
                             ent_upd = ResourceTransactionSystem._merge_contingent_updates(ent_upd, res)
                             
                             ResourceTransactionSystem._apply_world_effects(
-                                res, e_id, new_node_updates, new_building_updates, 
+                                res, e_id, new_node_updates, new_building_updates,
                                 new_home_storage_updates, new_ground_items_remove, new_corpses_remove, reservations
                             )
-                            
+
+                            if res.node_update:
+                                node_id = res.node_update.node_id
+                                node = state.resource_nodes.get(node_id)
+                                if node and node_id not in depleted_nodes:
+                                    accumulated_delta = new_node_updates[node_id].charges_delta
+                                    new_charges = node.remaining_charges + accumulated_delta
+                                    if node.remaining_charges > 0 and new_charges <= 0:
+                                        world_events.append(WorldEvent(
+                                            category=WorldEventCategory.RESOURCE_DEPLETED,
+                                            tick=state.tick,
+                                            region_id=None,
+                                            subject=str(node_id),
+                                            severity=1.0,
+                                        ))
+                                        depleted_nodes.add(node_id)
+
                             # Global metrics tracking (PH10 Parity)
                             for item in res.inventory_update.items_add if res.inventory_update else []:
                                 m_key = f"metric_total_{item.item_id.lower()}"
@@ -237,6 +273,8 @@ class ResourceTransactionSystem:
                 intent_results=final_intent_results,
                 resource_transfers=[] # Clear intents after resolution (RPG-ECON-501)
             )
+        existing_world_events = list(update.world_events_add)
+        existing_world_events.extend(world_events)
         return replace(update,
             entity_updates=refined_entity_updates,
             node_updates=new_node_updates,
@@ -248,7 +286,8 @@ class ResourceTransactionSystem:
             corpses_remove=new_corpses_remove,
             transaction_trace=new_trace,
             rejection_events=new_rejection_events,
-            processed_transaction_ids=list(processed_ids.union(in_tick_processed_ids))
+            processed_transaction_ids=list(processed_ids.union(in_tick_processed_ids)),
+            world_events_add=existing_world_events
         )
 
     @staticmethod

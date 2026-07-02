@@ -46,6 +46,7 @@ class ObservabilityConfig:
             "OBS_INSIGHT_GENERATION": False,
             "OBS_WAREHOUSE_INGEST": False,
             "OBS_DASHBOARD_EXPORT": False,
+            "OBS_DECISION_TRACE": False,
         },
         ObservabilityMode.LIGHT: {
             "OBS_RUNTIME_PROFILING": True,
@@ -64,6 +65,7 @@ class ObservabilityConfig:
             "OBS_INSIGHT_GENERATION": False,
             "OBS_WAREHOUSE_INGEST": False,
             "OBS_DASHBOARD_EXPORT": False,
+            "OBS_DECISION_TRACE": True,
         },
         ObservabilityMode.NORMAL: {
             "OBS_RUNTIME_PROFILING": True,
@@ -82,6 +84,7 @@ class ObservabilityConfig:
             "OBS_INSIGHT_GENERATION": False,
             "OBS_WAREHOUSE_INGEST": True,
             "OBS_DASHBOARD_EXPORT": False,
+            "OBS_DECISION_TRACE": True,
         },
         ObservabilityMode.FULL: {
             "OBS_RUNTIME_PROFILING": True,
@@ -100,6 +103,7 @@ class ObservabilityConfig:
             "OBS_INSIGHT_GENERATION": True,
             "OBS_WAREHOUSE_INGEST": True,
             "OBS_DASHBOARD_EXPORT": False,
+            "OBS_DECISION_TRACE": True,
         },
         ObservabilityMode.RESEARCH: {
             "OBS_RUNTIME_PROFILING": True,
@@ -118,6 +122,7 @@ class ObservabilityConfig:
             "OBS_INSIGHT_GENERATION": True,
             "OBS_WAREHOUSE_INGEST": True,
             "OBS_DASHBOARD_EXPORT": False,
+            "OBS_DECISION_TRACE": True,
         },
         ObservabilityMode.DEBUG: {
             "OBS_RUNTIME_PROFILING": True,
@@ -136,6 +141,7 @@ class ObservabilityConfig:
             "OBS_INSIGHT_GENERATION": True,
             "OBS_WAREHOUSE_INGEST": True,
             "OBS_DASHBOARD_EXPORT": True,
+            "OBS_DECISION_TRACE": True,
         },
         ObservabilityMode.CERTIFICATION: {
             "OBS_RUNTIME_PROFILING": True,
@@ -154,6 +160,7 @@ class ObservabilityConfig:
             "OBS_INSIGHT_GENERATION": False,
             "OBS_WAREHOUSE_INGEST": True,
             "OBS_DASHBOARD_EXPORT": False,
+            "OBS_DECISION_TRACE": True,
         },
         ObservabilityMode.LONG_RUN: {
             "OBS_RUNTIME_PROFILING": True,
@@ -172,6 +179,7 @@ class ObservabilityConfig:
             "OBS_INSIGHT_GENERATION": False,
             "OBS_WAREHOUSE_INGEST": True,
             "OBS_DASHBOARD_EXPORT": False,
+            "OBS_DECISION_TRACE": True,
         },
     }
 
@@ -279,6 +287,10 @@ class ObservabilityConfig:
     @classmethod
     def is_dashboard_export_enabled(cls) -> bool:
         return cls.get_flag("OBS_DASHBOARD_EXPORT")
+
+    @classmethod
+    def is_decision_trace_enabled(cls) -> bool:
+        return cls.get_flag("OBS_DECISION_TRACE")
 
     @classmethod
     def get_mode(cls) -> ObservabilityMode:

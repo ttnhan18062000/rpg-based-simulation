@@ -42,7 +42,8 @@ def test_shutdown_timeout_logic(basic_profile, tmp_path):
     
     # Mock ReplayManager to simulate slow finalize
     mock_replay = MagicMock()
-    
+    mock_replay.replay_metrics.return_value = {"pending_flushes": 0, "pending_replay_flushes": 0}
+
     kernel = Kernel(profile=basic_profile, state=state, rng=rng, replay=mock_replay)
     
     kernel.shutdown(timeout_s=0.1)

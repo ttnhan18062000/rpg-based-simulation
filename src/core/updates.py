@@ -3,19 +3,20 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field, replace
-from typing import Dict, Any, Optional, TYPE_CHECKING, List
+from typing import Dict, Any, Optional, TYPE_CHECKING, List, Tuple
 if TYPE_CHECKING:
     from src.core.state import GroupRecord, ItemStack, EquipSlot, AttributeComponent, LocalScarState, ChestState, EntityState, GroundItemState, CorpseState, WoundState, ScarState
     from src.core.quests import QuestStatus
     from src.core.strategic import (
         ConcernState, CandidateZone, HypothesisState, SourceTrustEntry,
-        CognitionProfile, BlockerState, LeadState, DirectiveState, ProjectState, 
+        CognitionProfile, BlockerState, LeadState, DirectiveState, ProjectState,
         ContractState, TurningPointState
     )
     from src.engine.policy import GovernorPolicy
+    from src.core.models.quests import QuestOpportunity, QuestOpportunityStatus
 from src.core.state import ItemStack, EquipSlot, AttributeComponent
 from src.core.movement_modes import MovementMode
-from src.core.enums import ReasonCode
+from src.core.enums import ReasonCode, DiplomaticState
 from src.core.update_models.inventory import InventoryUpdate
 from src.core.update_models.quests import QuestUpdate
 from src.core.update_models.resources import ResourceTransferIntent
@@ -293,6 +294,7 @@ class SocialUpdate:
     # Domain 4 Hardening
     nemesis_promotion: List[int] = field(default_factory=list) # EntityIDs to add to nemesis_ids
     place_attachment_delta: Dict[str, float] = field(default_factory=dict) # RegionID -> Delta
+    combat_loss_delta: Dict[int, int] = field(default_factory=dict) # EntityID -> +1 per defeat by that entity
     
     contracts_add: List[ContractState] = field(default_factory=list)
     contracts_remove: List[str] = field(default_factory=list) # IDs
@@ -304,8 +306,8 @@ class SocialUpdate:
                 not self.betrayal_records_add and self.reputation_set is None and 
                 self.heroism_delta == 0.0 and self.notoriety_delta == 0.0 and 
                 self.last_offer_tick_set is None and not self.rejection_increment and 
-                not self.nemesis_promotion and not self.place_attachment_delta and 
-                not self.contracts_add and not self.contracts_remove)
+                not self.nemesis_promotion and not self.place_attachment_delta and
+                not self.combat_loss_delta and not self.contracts_add and not self.contracts_remove)
 
     def merge(self, other: SocialUpdate) -> SocialUpdate:
         """Merges another SocialUpdate into this one."""
@@ -325,6 +327,10 @@ class SocialUpdate:
         for k, v in other.place_attachment_delta.items():
             new_places[k] = new_places.get(k, 0.0) + v
 
+        new_combat_loss = dict(self.combat_loss_delta)
+        for k, v in other.combat_loss_delta.items():
+            new_combat_loss[k] = new_combat_loss.get(k, 0) + v
+
         return SocialUpdate(
             bond_updates=self.bond_updates + other.bond_updates,
             trust_delta=new_trust,
@@ -342,6 +348,7 @@ class SocialUpdate:
             rejection_increment={**self.rejection_increment, **other.rejection_increment},
             nemesis_promotion=self.nemesis_promotion + other.nemesis_promotion,
             place_attachment_delta=new_places,
+            combat_loss_delta=new_combat_loss,
             contracts_add=self.contracts_add + other.contracts_add,
             contracts_remove=self.contracts_remove + other.contracts_remove
         )
@@ -752,12 +759,19 @@ class WorldUpdate:
     modifiers_add: List[str] = field(default_factory=list)
     modifiers_remove: List[str] = field(default_factory=list)
     price_modifiers_set: Optional[Dict[str, float]] = None
-    
+    # E52A: Per-region demographic cohort state (Dict[bracket, PopulationCohort])
+    population_cohorts_set: Optional[Dict[str, Any]] = None
+    # E53Cb: Siege mechanics
+    service_availability_delta: float = 0.0
+    siege_state_set: Optional[Any] = None   # Optional[SiegeState] — Any to avoid circular import
+    siege_state_clear: bool = False          # True = remove existing siege_state (None is no-op sentinel)
+    siege_progress_delta: float = 0.0
+
     def merge(self, other: WorldUpdate) -> WorldUpdate:
         """Merges another WorldUpdate into this one, summing deltas and preferring non-None sets."""
         if self.region_id != other.region_id:
             raise ValueError("Cannot merge WorldUpdates for different regions")
-            
+
         return replace(self,
             hazard_level_set=other.hazard_level_set if other.hazard_level_set is not None else self.hazard_level_set,
             suppression_set=other.suppression_set if other.suppression_set is not None else self.suppression_set,
@@ -772,7 +786,12 @@ class WorldUpdate:
             weather_set=other.weather_set if other.weather_set is not None else self.weather_set,
             modifiers_add=list(set(self.modifiers_add + other.modifiers_add)),
             modifiers_remove=list(set(self.modifiers_remove + other.modifiers_remove)),
-            price_modifiers_set=other.price_modifiers_set if other.price_modifiers_set is not None else self.price_modifiers_set
+            price_modifiers_set=other.price_modifiers_set if other.price_modifiers_set is not None else self.price_modifiers_set,
+            population_cohorts_set=other.population_cohorts_set if other.population_cohorts_set is not None else self.population_cohorts_set,
+            service_availability_delta=self.service_availability_delta + other.service_availability_delta,
+            siege_state_set=other.siege_state_set if other.siege_state_set is not None else self.siege_state_set,
+            siege_state_clear=self.siege_state_clear or other.siege_state_clear,
+            siege_progress_delta=self.siege_progress_delta + other.siege_progress_delta,
         )
 
 
@@ -808,6 +827,41 @@ class CampUpdate:
             last_raid_tick_set=other.last_raid_tick_set if other.last_raid_tick_set is not None else self.last_raid_tick_set
         )
 
+
+
+@dataclass(frozen=True, slots=True)
+class QuestOpportunityRewardIntent:
+    """
+    Signal that the named entity should receive the reward for the named
+    QuestOpportunity.  The actual reward amounts are read from
+    state.quest_registry[quest_id].reward_spec inside the enforce stage.
+    """
+    entity_id: int
+    quest_id: str
+
+
+@dataclass(frozen=True, slots=True)
+class FactionUpdate:
+    """Typed mutation record for a single faction's durable state (E53Aa)."""
+    faction_id: str
+    tension_delta: float = 0.0
+    military_strength_set: Optional[float] = None
+    territory_add: Tuple[str, ...] = ()
+    territory_remove: Tuple[str, ...] = ()
+    resources_delta: Dict[str, int] = field(default_factory=dict)
+    diplomatic_relations_set: Dict[str, DiplomaticState] = field(default_factory=dict)
+    active_doctrines_set: Optional[Tuple[str, ...]] = None
+
+    def is_noop(self) -> bool:
+        return (
+            self.tension_delta == 0.0
+            and self.military_strength_set is None
+            and not self.territory_add
+            and not self.territory_remove
+            and not self.resources_delta
+            and not self.diplomatic_relations_set
+            and self.active_doctrines_set is None
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -854,27 +908,41 @@ class StateUpdate:
     force_full_scan: bool = False
     sub_phase_costs: Dict[str, float] = field(default_factory=dict)
     metric_counters: Dict[str, int] = field(default_factory=dict)
+    world_events_add: List["WorldEvent"] = field(default_factory=list)
+    quest_registry_add: List["QuestOpportunity"] = field(default_factory=list)
+    quest_registry_remove: List[str] = field(default_factory=list)
+    quest_status_updates: Dict[str, "QuestOpportunityStatus"] = field(default_factory=dict)
+    quest_opportunity_reward_intents: List["QuestOpportunityRewardIntent"] = field(default_factory=list)
+    # E42D: provider reliability updates keyed by entity_id
+    information_providers_update: Dict[int, "InformationProviderState"] = field(default_factory=dict)
+    # E53Aa: Faction durable-state mutation records
+    faction_updates: List[FactionUpdate] = field(default_factory=list)
 
     def is_noop(self) -> bool:
         """True if this update contains absolutely no changes."""
-        return (not self.entity_updates and not self.entities_add and not self.entities_remove and 
-                not self.nodes_add and not self.node_updates and not self.ground_items_add_or_update and 
-                not self.ground_items_remove and not self.corpses_add_or_update and 
-                not self.corpses_remove and not self.scars_add_or_update and 
-                not self.scars_remove and not self.chest_updates and 
-                not self.chest_add_or_update and not self.building_updates and 
-                not self.camp_updates and not self.world_updates and 
-                not self.resource_updates and not self.home_storage_updates and 
-                not self.periodic_updates and not self.work_debt_updates and 
-                not self.groups_add_or_update and not self.groups_remove and 
-                self.maturity_set is None and self.last_calamity_tick_set is None and 
-                self.rng_checkpoint is None and not self.transaction_trace and 
-                not self.rejections_delta and self.pressure_signals_set is None and 
+        return (not self.entity_updates and not self.entities_add and not self.entities_remove and
+                not self.nodes_add and not self.node_updates and not self.ground_items_add_or_update and
+                not self.ground_items_remove and not self.corpses_add_or_update and
+                not self.corpses_remove and not self.scars_add_or_update and
+                not self.scars_remove and not self.chest_updates and
+                not self.chest_add_or_update and not self.building_updates and
+                not self.camp_updates and not self.world_updates and
+                not self.resource_updates and not self.home_storage_updates and
+                not self.periodic_updates and not self.work_debt_updates and
+                not self.groups_add_or_update and not self.groups_remove and
+                self.maturity_set is None and self.last_calamity_tick_set is None and
+                self.rng_checkpoint is None and not self.transaction_trace and
+                not self.rejections_delta and self.pressure_signals_set is None and
                 self.current_mode_set is None and self.current_policy_set is None and
-                not self.rejection_events and 
-                not self.processed_transaction_ids and self.next_node_id_set is None and 
+                not self.rejection_events and
+                not self.processed_transaction_ids and self.next_node_id_set is None and
                 self.next_entity_id_set is None and not self.force_full_scan and
-                not self.sub_phase_costs and not self.metric_counters)
+                not self.sub_phase_costs and not self.metric_counters and
+                not self.world_events_add and not self.quest_registry_add and
+                not self.quest_registry_remove and not self.quest_status_updates and
+                not self.quest_opportunity_reward_intents and
+                not self.information_providers_update and
+                not self.faction_updates)
     def merge(self, other: StateUpdate) -> StateUpdate:
         """Merge another StateUpdate into this one."""
         if not other or other.is_noop():
@@ -921,6 +989,13 @@ class StateUpdate:
         new_trace = list(self.transaction_trace)
         new_processed_ids = set(self.processed_transaction_ids)
         new_rejection_events = list(self.rejection_events)
+        new_world_events_add = list(self.world_events_add)
+        new_quest_registry_add = list(self.quest_registry_add)
+        new_quest_registry_remove = list(self.quest_registry_remove)
+        new_quest_status_updates = dict(self.quest_status_updates)
+        new_quest_opportunity_reward_intents = list(self.quest_opportunity_reward_intents)
+        new_information_providers_update = dict(self.information_providers_update)
+        new_faction_updates = list(self.faction_updates)
 
         # Single values
         maturity = self.maturity_set
@@ -980,6 +1055,15 @@ class StateUpdate:
             new_trace.extend(other.transaction_trace)
             new_processed_ids.update(other.processed_transaction_ids)
             new_rejection_events.extend(other.rejection_events)
+            new_world_events_add.extend(other.world_events_add)
+            new_quest_registry_add.extend(other.quest_registry_add)
+            new_quest_registry_remove.extend(other.quest_registry_remove)
+            new_quest_status_updates.update(other.quest_status_updates)
+            new_quest_opportunity_reward_intents.extend(other.quest_opportunity_reward_intents)
+            new_information_providers_update.update(other.information_providers_update)
+            new_faction_updates.extend(
+                fu for fu in other.faction_updates if not fu.is_noop()
+            )
 
             # Single values
             if other.maturity_set is not None: maturity = other.maturity_set
@@ -1032,7 +1116,14 @@ class StateUpdate:
             current_policy_set=policy,
             dirty_set=dirty,
             sub_phase_costs=sub_costs,
-            metric_counters=new_metric_counters
+            metric_counters=new_metric_counters,
+            world_events_add=new_world_events_add,
+            quest_registry_add=new_quest_registry_add,
+            quest_registry_remove=new_quest_registry_remove,
+            quest_status_updates=new_quest_status_updates,
+            quest_opportunity_reward_intents=new_quest_opportunity_reward_intents,
+            information_providers_update=new_information_providers_update,
+            faction_updates=new_faction_updates,
         )
 
     def compact(self) -> StateUpdate:

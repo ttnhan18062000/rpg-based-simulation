@@ -26,17 +26,19 @@ def replace(obj: Any, **changes: Any) -> Any:
     return res
 
 from src.core.state import (
-    AuthoritativeState, EntityState, InventoryComponent, CorpseState, 
-    InteractionComponent, BiologicalComponent, LifecycleComponent, 
+    AuthoritativeState, EntityState, InventoryComponent, CorpseState,
+    InteractionComponent, BiologicalComponent, LifecycleComponent,
     NavigationComponent, TaskComponent, StrategicComponent, StaminaComponent, CombatComponent,
     RegionState, ResourceNodeState, BuildingState, CampState, GroupRecord,
-    GroundItemState, ChestState, LocalScarState, IntentResult, AttributeComponent, 
-    IdentityComponent, AptitudeComponent, EquipmentComponent, SocialComponent, ReadOnlyDict
+    GroundItemState, ChestState, LocalScarState, IntentResult, AttributeComponent,
+    IdentityComponent, AptitudeComponent, EquipmentComponent, SocialComponent, ReadOnlyDict,
+    FactionState
 )
 from src.core.quests import QuestState, QuestStatus
+from src.core.models.quests import QuestOpportunity, QuestOpportunityStatus
 from src.engine.cadence import SystemCadence, should_run
 from src.core.inventory import InventoryService
-from src.core.enums import EntityRole, Faction, ReasonCode
+from src.core.enums import EntityRole, Faction, ReasonCode, DiplomaticState
 from src.core.movement_modes import MovementMode
 from src.core.updates import StateUpdate, EntityUpdate, SocialUpdate, StrategicUpdate, StaminaUpdate, NavigationUpdate
 from src.engine.legality import LegalityServiceV2
@@ -307,6 +309,50 @@ class ApplyPath:
 
         new_movement_count = sum(1 for u in update.entity_updates.values() if u.moved_this_tick)
 
+        WORLD_EVENT_WINDOW = 500
+        prior_events = getattr(prior_state, "recent_world_events", [])
+        merged_events = prior_events + update.world_events_add
+        new_recent_world_events = merged_events[-WORLD_EVENT_WINDOW:]
+
+        new_quest_registry = dict(getattr(prior_state, "quest_registry", {}))
+        for opp in update.quest_registry_add:
+            if opp.id not in new_quest_registry:
+                new_quest_registry[opp.id] = opp
+        for quest_id in update.quest_registry_remove:
+            new_quest_registry.pop(quest_id, None)
+        for quest_id, new_status in update.quest_status_updates.items():
+            existing = new_quest_registry.get(quest_id)
+            if existing is not None:
+                new_quest_registry[quest_id] = replace(existing, status=new_status)
+
+        # Epic 5.3Aa: Apply faction updates to durable factions dict
+        new_factions = dict(getattr(prior_state, "factions", {}))
+        for fu in update.faction_updates:
+            if fu.is_noop():
+                continue
+            existing = new_factions.get(fu.faction_id)
+            if existing is None:
+                existing = FactionState(faction_id=fu.faction_id)
+            new_tension = existing.tension_level + fu.tension_delta
+            new_ms = fu.military_strength_set if fu.military_strength_set is not None else existing.military_strength
+            new_territory = (set(existing.territory) | set(fu.territory_add)) - set(fu.territory_remove)
+            new_resources = dict(existing.resources)
+            for k, v in fu.resources_delta.items():
+                new_resources[k] = new_resources.get(k, 0) + v
+            new_relations = {
+                k: DiplomaticState(v) if not isinstance(v, DiplomaticState) else v
+                for k, v in {**existing.diplomatic_relations, **fu.diplomatic_relations_set}.items()
+            }
+            new_doctrines = fu.active_doctrines_set if fu.active_doctrines_set is not None else existing.active_doctrines
+            new_factions[fu.faction_id] = replace(existing,
+                tension_level=max(0.0, min(1.0, new_tension)),
+                military_strength=new_ms,
+                territory=tuple(sorted(new_territory)),
+                resources=new_resources,
+                diplomatic_relations=new_relations,
+                active_doctrines=new_doctrines,
+            )
+
         new_state = AuthoritativeState(
             tick=tick,
             seed=prior_state.seed,
@@ -351,7 +397,14 @@ class ApplyPath:
             _index_hits=getattr(prior_state, "_index_hits", 0),
             _index_misses=getattr(prior_state, "_index_misses", 0),
             _opt_profile=getattr(prior_state, "_opt_profile", None),
-            _force_full_scan=getattr(prior_state, "_force_full_scan", False)
+            _force_full_scan=getattr(prior_state, "_force_full_scan", False),
+            recent_world_events=new_recent_world_events,
+            quest_registry=new_quest_registry,
+            factions=new_factions,
+            # Carry feature_flags across ticks so per-profile overrides injected at
+            # engine start (e.g. ENABLE_SOCIAL_COOPERATION=ON) are not silently lost
+            # when apply_generation reconstructs AuthoritativeState each tick.
+            feature_flags=dict(getattr(prior_state, "feature_flags", None) or {}),
         )
 
         if not any_entity_changed and getattr(prior_state, "_readonly_entities_cache", None) is not None:

@@ -98,7 +98,7 @@ class WorldAssemblyValidator:
                 name=module.display_name,
                 topology=TopologySpec(width=width, height=height, coordinate_system="grid"),
                 regions=[
-                    RegionSpec(id=r.id, type=r.type, bounds=r.grid_bounds, terrain=r.terrain, hazard_level=r.hazard_level)
+                    RegionSpec(id=r.id, type=r.type, bounds=r.grid_bounds, terrain=r.terrain, hazard_level=r.hazard_level, tags=list(getattr(r, "tags", [])))
                     for r in module.regions
                 ],
                 factions=list(factions.values()),
@@ -780,7 +780,9 @@ class WorldAssemblyResolver:
                 type=reg.type,
                 bounds=reg.grid_bounds,
                 terrain=reg.terrain,
-                hazard_level=reg.hazard_level
+                hazard_level=reg.hazard_level,
+                hazard_kind=getattr(reg, "hazard_kind", "PHYSICAL"),
+                tags=list(getattr(reg, "tags", [])),
             ))
 
         # 2. Resolve Factions

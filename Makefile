@@ -1,4 +1,4 @@
-.PHONY: help install install-py install-fe build dev serve stop clean lint profile-api memray-profile docs-serve docs-build docs-registry docs-artifacts knowledge-index knowledge-index-update search-server search-server-docker search-server-stop search-server-logs install-hooks eval-search mcp-server-test world-list world-validate world-compile world-resolve world-inspect world-template sim sim-debug sim-quick sim-world sim-sweep check-resources export-run retention-plan retention-clean warehouse-init warehouse-ingest
+.PHONY: help install install-py install-fe build dev serve stop clean lint profile-api memray-profile docs-serve docs-build docs-registry docs-artifacts knowledge-index knowledge-index-update search-server search-server-docker search-server-stop search-server-logs install-hooks eval-search evaluate evaluate-full mcp-server-test world-list world-validate world-compile world-resolve world-inspect world-template catalog-list sim sim-debug sim-quick sim-world sim-sweep check-resources export-run retention-plan retention-clean warehouse-init warehouse-ingest typecheck-py perf-measure
 
 # Default
 help: ## Show available commands
@@ -89,6 +89,9 @@ world-inspect: ## Inspect structural metrics of a world definition (WORLD=sandbo
 world-template: ## Bootstrap a starter world template (WORLD=my_world)
 	python3 -m src.worldbuilding.cli create-template $(WORLD)
 
+catalog-list: ## List catalog IDs by type (biomes, ecologies, populations, factions, regions)
+	python3 tools/catalog_list.py
+
 # ── Simulation CLI ───────────────────────────────────────
 # Override TICKS, SEED, or WORLD to customise any run.
 # Dynamic observability backpressure (NORMAL→PRESSURE→DEGRADED→SURVIVAL) is
@@ -105,8 +108,8 @@ cli: ## Run headless simulation (200 ticks, seed 42) — legacy alias for sim
 sim: ## Run headless simulation (TICKS=200 SEED=42 WORLD=sandbox_world)
 	python3 -m src cli --ticks $(TICKS) --seed $(SEED) $(if $(filter-out sandbox_world,$(WORLD)),--world $(WORLD),)
 
-sim-debug: ## Run simulation with verbose DEBUG logging (TICKS=200 SEED=42)
-	python3 -m src cli --ticks $(TICKS) --seed $(SEED) --log-level DEBUG
+sim-debug: ## Run simulation with DEBUG observability + verbose logging (TICKS=200 SEED=42)
+	SIM_OBS_MODE=DEBUG python3 -m src cli --ticks $(TICKS) --seed $(SEED) --log-level DEBUG
 
 sim-quick: ## Quick 20-tick smoke test (WARNING-level logs only)
 	python3 -m src cli --ticks 20 --seed $(SEED) --log-level WARNING
@@ -150,6 +153,9 @@ test-quick: ## Run fast tests only (skip slow integration)
 test-cov: ## Run tests with coverage report (V2)
 	python3 -m pytest tests_v2/ -v --tb=short --cov=src_v2 --cov-report=term-missing
 
+perf-measure: ## Re-measure perf tests and print proposed perf_baselines.json diff
+	python3 tools/perf_guard.py measure
+
 # ── Migration CI Lanes ────────────────────────────────────
 # Targeted test lanes for content migration work. Each lane selects a
 # focused subset of the suite using pytest -m markers.
@@ -169,6 +175,12 @@ lane-strict-matrix: ## [medium] Cumulative world module matrix (end-to-end conte
 
 lane-legacy-regression: ## [slow] Arena, certification, legacy compat regression tests
 	python3 -m pytest tests/ -m "legacy_compat" -v --tb=short
+
+regression-baseline: ## Generate/refresh 5k-tick behavioral regression baseline (commit the result)
+	python3 tools/generate_regression_baseline.py
+
+personality-audit: ## Run 1k-tick personality→behavior calibration audit (OCEAN trait vs behavioral diversity)
+	python3 tools/personality_audit.py $(if $(TICKS),--ticks $(TICKS),) $(if $(SEED),--seed $(SEED),) $(if $(WORLD),--world $(WORLD),)
 
 lane-architecture: ## [fast] Static architecture guards (no simulation, no catalog load)
 	python3 -m pytest tests/ -m "architecture" -v --tb=short
@@ -204,6 +216,9 @@ lint: ## Run linters (frontend)
 typecheck: ## Run TypeScript type checking
 	cd frontend && npx tsc --noEmit
 
+typecheck-py: ## Run Python type checking via mypy (src/ only, informational first pass)
+	python3 -m mypy src/ --config-file pyproject.toml --no-error-summary || true
+
 # ── Documentation Site ───────────────────────────────────
 
 docs-artifacts: ## Generate stored_artifacts index pages
@@ -235,10 +250,14 @@ agent-monitoring-query: ## Query agent monitoring records (pass ARGS="--agent in
 
 knowledge-index: ## Build local semantic knowledge index (developer env only — not CI)
 	@echo "Building knowledge index (requires: pip install -e '.[knowledge]')..."
-	python3 tools/knowledge_search.py build
+	SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt SSL_CERT_DIR=/etc/ssl/certs \
+	  $(shell for py in .venv/bin/python3 /home/vboxuser/Work/venv/bin/python3 python3; do [ -x "$$py" ] && echo "$$py" && break; done) \
+	  tools/knowledge_search.py build
 
 knowledge-index-update: ## Incremental reindex — only re-embeds changed/new files (fast)
-	python3 tools/knowledge_search.py build --incremental
+	SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt SSL_CERT_DIR=/etc/ssl/certs \
+	  $(shell for py in .venv/bin/python3 /home/vboxuser/Work/venv/bin/python3 python3; do [ -x "$$py" ] && echo "$$py" && break; done) \
+	  tools/knowledge_search.py build --incremental
 
 search-server-docker: ## PRIMARY — start knowledge search server in Docker (persistent, survives terminal close)
 	docker compose -f tools/search/docker-compose.yml up -d --build
@@ -260,10 +279,19 @@ install-hooks: ## Install git hooks (post-commit incremental reindex when docs/ 
 	@echo "[hooks] post-commit hook installed"
 
 eval-search: ## Run search quality evaluation — Recall@5, MRR@10 (requires knowledge-index)
-	python3 tools/eval_search.py
+	$(shell for py in .venv/bin/python3 /home/vboxuser/Work/venv/bin/python3 python3; do [ -x "$$py" ] && echo "$$py" && break; done) tools/eval_search.py
+
+PYTHON := $(shell for py in .venv/bin/python3 /home/vboxuser/Work/venv/bin/python3 python3; do [ -x "$$py" ] && echo "$$py" && break; done)
+
+evaluate: ## Diff current calibration data against grade anchors (no engine re-run)
+	$(PYTHON) tools/evaluate_simq.py --dry-run
+
+evaluate-full: ## Re-run engine for all fast (≤500t) scenarios and diff against grade anchors
+	$(PYTHON) tools/evaluate_simq.py
 
 mcp-server-test: ## Smoke-test MCP search_docs tool via --test mode (no MCP client needed)
-	@echo '{"query": "damage formula", "top_k": 3}' | python3 tools/search_mcp.py --test
+	@echo '{"query": "damage formula", "top_k": 3}' | \
+	  $(shell for py in .venv/bin/python3 /home/vboxuser/Work/venv/bin/python3 python3; do [ -x "$$py" ] && echo "$$py" && break; done) tools/search_mcp.py --test
 
 # ── Cleanup ──────────────────────────────────────────────
 

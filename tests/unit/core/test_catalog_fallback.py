@@ -6,18 +6,19 @@ import pytest
 from src.content.repository import CatalogRepository
 from src.content.validator import CatalogValidationError
 from src.core.registries import seed_phase1_content, runtime_content_source, catalog_fingerprint
+from src.core.modes import RuntimeContentMode
 
 
 @pytest.fixture(autouse=True)
 def cleanup_registries():
     """Automatically reset registries to default hardcoded fallback state after each test."""
     yield
-    seed_phase1_content(None)
+    seed_phase1_content(None, mode=RuntimeContentMode.LEGACY_FALLBACK)
 
 
 def test_optional_fallback_mode():
     """Verify optional mode (required=False) falls back cleanly when catalog_repo is None."""
-    seed_phase1_content(catalog_repo=None, required=False)
+    seed_phase1_content(catalog_repo=None, required=False, mode=RuntimeContentMode.LEGACY_FALLBACK)
     
     from src.core.registries import runtime_content_source, catalog_fingerprint
     assert runtime_content_source == "legacy_hardcoded"

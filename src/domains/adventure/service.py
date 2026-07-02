@@ -8,9 +8,9 @@ and constructs the final bridge state using RouteToProjectMapper.
 """
 
 from __future__ import annotations
-from typing import List, Tuple, Optional
+from typing import Any, Dict, List, Tuple, Optional
 
-from src.core.state import EntityState
+from src.core.state import EntityState, ResourceNodeState
 from src.domains.adventure.schema import (
     RouteFamily,
     AdventureRouteOption,
@@ -32,6 +32,9 @@ class AdventureDecisionService:
         entity: EntityState,
         candidates: List[AdventureRouteOption],
         tick: int = 0,
+        resource_nodes: Optional[Dict[int, ResourceNodeState]] = None,
+        faction_directives: Optional[list] = None,
+        factions: Optional[Any] = None,
     ) -> AdventureDecisionResult:
         """
         Evaluate candidates, score them using Personality biased heuristics,
@@ -67,7 +70,12 @@ class AdventureDecisionService:
         # 1. Score all candidates using AdventureRouteScorer
         scored_candidates: List[AdventureRouteOption] = []
         for cand in candidates:
-            scored = AdventureRouteScorer.score(entity, cand)
+            scored = AdventureRouteScorer.score(
+                entity, cand,
+                resource_nodes=resource_nodes,
+                faction_directives=faction_directives,
+                factions=factions,
+            )
             scored_candidates.append(scored)
 
         # 2. Separate into valid and blocked/rejected lists
@@ -138,12 +146,14 @@ class AdventureDecisionService:
             proposed_project = proj
             proposed_objective = obj
 
-        # Build explainable trace trace record
+        # Build explainable trace record
         trace = {
             "candidate_count": len(candidates),
             "valid_count": len(valid_candidates),
             "blocked_count": len(blocked_candidates),
             "selected_score": selected.score if selected else 0.0,
+            # scored_candidates: consumed by DecisionTraceWriter in AdventureDecisionPhase
+            "scored_candidates": scored_candidates,
         }
 
         return AdventureDecisionResult(

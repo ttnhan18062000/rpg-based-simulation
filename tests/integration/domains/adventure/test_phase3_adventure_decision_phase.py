@@ -47,9 +47,11 @@ def _state(entities) -> AuthoritativeState:
 
 
 def test_filters_out_locked_projects():
-    # Build entity with a locked strategic project
+    # Build entity with a locked strategic project.
+    # HP is set low (40/100 = 0.4) so the threat-resolution early-release condition does
+    # NOT trigger — the lock must be respected while the entity is still in danger.
     b = V2EntityBuilder(1)
-    b.replace_combat(CombatComponent(hp=100, max_hp=100, atk=10, def_stat=2))
+    b.replace_combat(CombatComponent(hp=40, max_hp=100, atk=10, def_stat=2))
     b.replace_biological(BiologicalComponent(hunger=0.0, sleep_debt=0.0))
     p = PersonalityComponent(greed=0.5, bravery=0.5, sociability=0.5, industry=0.5)
     b.identity(evolution_level=1, personality=p)

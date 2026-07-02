@@ -164,10 +164,76 @@ class AuthoritativeApplyPipeline:
         update = run_phase("blacksmith", update, lambda u: BlacksmithSystem.enforce(state, u))
         costs["contracts_production"] = (time.perf_counter_ns() - t_start) / 1e6
 
+        # --- Enhanced RPG Phase 8b: Faction Decision (runs before adventure routing) ---
+        # Must run every tick (no cadence gate) so faction_directives is stable input for scoring.
+        t_start = time.perf_counter_ns()
+        from src.engine.faction_decision import FactionDecisionPhase, FactionAwarenessService
+        faction_directives: list = FactionDecisionPhase.execute(state, policy=None)
+        costs["faction_decision"] = (time.perf_counter_ns() - t_start) / 1e6
+
+        # --- Enhanced RPG Phase 8c: Faction Awareness (tension from last-tick resource events) ---
+        # recent_world_events reflects last tick's window — one-tick lag is inherent (state frozen).
+        t_start = time.perf_counter_ns()
+        from src.core.updates import StateUpdate as _SU_fa
+        _recent_events = getattr(state, "recent_world_events", [])
+        update = run_phase(
+            "faction_awareness", update,
+            lambda u: u.merge(_SU_fa(faction_updates=FactionAwarenessService.compute_tension_updates(state, _recent_events))),
+        )
+        costs["faction_awareness"] = (time.perf_counter_ns() - t_start) / 1e6
+
+        # --- Enhanced RPG Phase 8d: Diplomatic State Machine + Alliance Generation (E53Bc/Bd) ---
+        t_start = time.perf_counter_ns()
+        from src.domains.faction.diplomatic_state_machine import (
+            compute_transitions, compute_common_enemy_pairs, events_from_transitions,
+        )
+        _diplo_transition_updates = compute_transitions(state.factions)
+        _diplo_alliance_updates: list = []
+        # Alliance generation: factions with a common hostile enemy get an AllianceProposal
+        if state.factions:
+            from src.engine.faction_decision import AllianceProposal
+            from src.domains.faction.diplomatic_actions import handle as _diplo_handle
+            for _fa_id, _fb_id, _ps in compute_common_enemy_pairs(state.factions):
+                _diplo_alliance_updates.extend(_diplo_handle(
+                    AllianceProposal(
+                        faction_id=_fa_id, directive_kind="ALLIANCE_PROPOSAL",
+                        from_faction=_fa_id, to_faction=_fb_id, proposer_strength=_ps,
+                    ),
+                    state.factions,
+                ))
+        _diplo_updates = _diplo_transition_updates + _diplo_alliance_updates
+        _diplo_world_events = events_from_transitions(
+            _diplo_transition_updates, _diplo_alliance_updates, state.factions, state.tick,
+        )
+        from src.core.updates import StateUpdate as _SU_dt
+        update = run_phase(
+            "diplomatic_transitions", update,
+            lambda u: u.merge(_SU_dt(faction_updates=_diplo_updates, world_events_add=_diplo_world_events)),
+        )
+        costs["diplomatic_transitions"] = (time.perf_counter_ns() - t_start) / 1e6
+
+        # --- Enhanced RPG Phase 8e: Military Conflict Phase (E53Ca) ---
+        t_start = time.perf_counter_ns()
+        from src.engine.military_conflict import MilitaryConflictPhase
+        from src.core.updates import StateUpdate as _SU_mc
+        update = run_phase(
+            "military_conflict", update,
+            lambda u: u.merge(MilitaryConflictPhase.execute(state)),
+        )
+        costs["military_conflict"] = (time.perf_counter_ns() - t_start) / 1e6
+
         # --- Enhanced RPG Phase 3: Adventure Routing ---
         t_start = time.perf_counter_ns()
         from src.domains.adventure.phase import AdventureDecisionPhase
-        update = run_phase("adventure_decision", update, lambda u: AdventureDecisionPhase.apply(state), "ENABLE_ADVENTURE_ROUTING")
+        update = run_phase(
+            "adventure_decision", update,
+            lambda u: AdventureDecisionPhase.apply(
+                state,
+                faction_directives=faction_directives,
+                factions=state.factions,
+            ),
+            "ENABLE_ADVENTURE_ROUTING",
+        )
         costs["adventure_decision"] = (time.perf_counter_ns() - t_start) / 1e6
 
         # --- Phase 3: Action & Movement Routing ---
@@ -200,7 +266,12 @@ class AuthoritativeApplyPipeline:
         # --- Phase 5: Governance & Ecology ---
         t_start = time.perf_counter_ns()
         update = run_phase("town_resolution", update, lambda u: TownResolutionSystem.resolve(state, u, cadence=cadence))
-        
+
+        # Gold Sink (E33C): inject fee/tax intents on INFLATION_SPIRAL windows.
+        # Runs after town_resolution so shop-service context is already resolved.
+        from src.engine.gold_sink import GoldSinkSystem
+        update = run_phase("gold_sink", update, lambda u: GoldSinkSystem.apply(state, u, cadence))
+
         generator = EntityGenerator(state.seed + state.tick)
         generator._last_id = state.next_entity_id - 1
         update = run_phase("world_dynamics", update, lambda u: WorldDynamicsSystem.resolve_dynamics(state, u, generator, cadence=cadence))
@@ -220,6 +291,11 @@ class AuthoritativeApplyPipeline:
         update = update.replace(dirty_set=dirty_builder.build())
         update = run_phase("quest_rewards", update, lambda u: AuthoritativeApplyPipeline._resolve_quest_rewards(state, u))
         update = run_phase("shop", update, lambda u: ShopSystem.enforce(state, u))
+
+        # E42C: Paid information transactions — inject intents before resolver runs.
+        from src.engine.pipeline_phases.paid_information import PaidInformationTransactionSystem
+        update = run_phase("paid_information", update, lambda u: PaidInformationTransactionSystem.enforce(state, u))
+
         update = run_phase("resource_transactions", update, lambda u: AuthoritativeApplyPipeline._resolve_resource_transactions(state, u))
         # Refresh dirty set to capture reward_upd set by resource_transactions (XP rewards)
         dirty_builder.mark_from_update(state, update)

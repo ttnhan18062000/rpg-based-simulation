@@ -1,14 +1,104 @@
 {
   "worlds": {
+    "urban_political": {
+      "world_id": "urban_political",
+      "name": "Urban Political",
+      "path": "urban_political/world.yaml",
+      "schema_version": "worldcomposition.v1",
+      "tags": [],
+      "created_at": "2026-07-02T00:59:39.041768",
+      "updated_at": "2026-07-02T00:59:39.041768",
+      "status": "COMPOSITION"
+    },
+    "highland_traverse": {
+      "world_id": "highland_traverse",
+      "name": "Highland Traverse",
+      "path": "highland_traverse/world.yaml",
+      "schema_version": "worldcomposition.v1",
+      "tags": [],
+      "created_at": "2026-07-02T00:59:39.043057",
+      "updated_at": "2026-07-02T00:59:39.043057",
+      "status": "COMPOSITION"
+    },
+    "dungeon_crawl": {
+      "world_id": "dungeon_crawl",
+      "name": "Dungeon Crawl",
+      "path": "dungeon_crawl/world.yaml",
+      "schema_version": "worldcomposition.v1",
+      "tags": [],
+      "created_at": "2026-07-02T00:59:39.045324",
+      "updated_at": "2026-07-02T00:59:39.045324",
+      "status": "COMPOSITION"
+    },
+    "simq_routing_test": {
+      "world_id": "simq_routing_test",
+      "name": "SimQ Routing Test",
+      "path": "simq_routing_test/world.yaml",
+      "schema_version": "worldcomposition.v1",
+      "tags": [],
+      "created_at": "2026-07-02T00:59:39.046975",
+      "updated_at": "2026-07-02T00:59:39.046975",
+      "status": "COMPOSITION"
+    },
+    "frontier_extended": {
+      "world_id": "frontier_extended",
+      "name": "Frontier Extended",
+      "path": "frontier_extended/world.yaml",
+      "schema_version": "worldcomposition.v1",
+      "tags": [],
+      "created_at": "2026-07-02T00:59:39.048335",
+      "updated_at": "2026-07-02T00:59:39.048335",
+      "status": "COMPOSITION"
+    },
+    "swamp_border_world": {
+      "world_id": "swamp_border_world",
+      "name": "Swamp Border World",
+      "path": "swamp_border_world/world.yaml",
+      "schema_version": "worldcomposition.v1",
+      "tags": [],
+      "created_at": "2026-07-02T00:59:39.049279",
+      "updated_at": "2026-07-02T00:59:39.049279",
+      "status": "COMPOSITION"
+    },
     "sandbox_world": {
       "world_id": "sandbox_world",
       "name": "Dev Sandbox",
       "path": "sandbox_world/world.yaml",
-      "schema_version": "worldtemplate.v1",
+      "schema_version": "worldcomposition.v1",
       "tags": [],
       "created_at": "2026-05-23T15:47:38.022954",
-      "updated_at": "2026-06-14T23:10:44.675162",
-      "status": "TEMPLATE"
+      "updated_at": "2026-07-02T00:59:39.049927",
+      "status": "COMPOSITION"
+    },
+    "frontier_living_world": {
+      "world_id": "frontier_living_world",
+      "name": "Frontier Living World",
+      "path": "frontier_living_world/world.yaml",
+      "schema_version": "worldcomposition.v1",
+      "tags": [],
+      "created_at": "2026-07-02T00:59:39.050748",
+      "updated_at": "2026-07-02T00:59:39.050748",
+      "status": "COMPOSITION"
+    },
+    "wilderness_survival": {
+      "world_id": "wilderness_survival",
+      "name": "Wilderness Survival",
+      "path": "wilderness_survival/world.yaml",
+      "schema_version": "worldcomposition.v1",
+      "tags": [],
+      "created_at": "2026-07-02T00:59:39.052001",
+      "updated_at": "2026-07-02T00:59:39.052001",
+      "status": "COMPOSITION"
+    },
+    "generated_frontier_3_42": {
+      "world_id": "generated_frontier_3_42",
+      "name": "Generated frontier world (seed=42)",
+      "path": "generated_frontier_3_42/world.yaml",
+      "schema_version": "worldcomposition.v1",
+      "tags": [],
+      "created_at": "2026-07-02T00:59:39.054159",
+      "updated_at": "2026-07-02T00:59:39.054159",
+      "status": "COMPOSITION"
     }
   }
 }

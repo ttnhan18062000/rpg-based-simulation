@@ -507,6 +507,7 @@ class V2EntityBuilder:
         notoriety_score: Optional[float] = None,
         last_offer_tick: Optional[int] = None,
         rejection_count: Optional[Dict[int, int]] = None,
+        combat_loss_counts: Optional[Dict[int, int]] = None,
     ) -> V2EntityBuilder:
         current = self._social_to_dict()
 
@@ -527,6 +528,7 @@ class V2EntityBuilder:
             "notoriety_score": notoriety_score,
             "last_offer_tick": last_offer_tick,
             "rejection_count": _copy_dict(rejection_count) if rejection_count is not None else None,
+            "combat_loss_counts": _copy_dict(combat_loss_counts) if combat_loss_counts is not None else None,
         }
 
         for key, value in updates.items():

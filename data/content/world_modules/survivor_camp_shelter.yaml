@@ -1,0 +1,16 @@
+# STATE: ADDITIONAL
+module_id: "survivor_camp_shelter"
+module_type: "settlement"
+display_name: "Survivor Camp Shelter"
+description: "A minimal wilderness outpost providing basic healing services to surviving entities. Enables the near_service requirement in hostile ecology worlds."
+version: "1.0.0"
+provides: ["shelter", "survival"]
+observability_tags: ["shelter", "wilderness", "healing"]
+regions:
+  - id: "survivor_outpost"
+    type: "wilderness"
+    grid_bounds: [30, 30, 60, 60]
+    terrain: "forest"
+    hazard_level: 0.5
+buildings:
+  healer_hut: 1

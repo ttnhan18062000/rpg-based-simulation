@@ -32,12 +32,16 @@
 - id: PROG-004
   text: Combat and progression rewards update gold, XP, veterancy, effects, and consequences
     through authoritative updates.
-  status: legacy_verified
+  status: verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  v2_evidence: >-
+    Implementation proven via exhaustive checklist audit Phase 1-11;
+    src/engine/pipeline_phases/quest_opportunity_rewards.py::QuestOpportunityRewardSystem.enforce()
+    — quest reward path now emits ResourceTransferIntent(source_kind=QUEST) for gold+XP
+    through the authoritative pipeline (TCK-20260619-E23C-QUEST-REWARDS)
   proof_type: parity
-  test_path: null
+  test_path: tests/unit/quest/test_quest_rewards.py::test_quest_completion_is_authoritative
   divergence_note: null
   support_boundary: null
 - id: PROG-005
@@ -656,9 +660,14 @@
   status: verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: '`src/engine/combat_rewards.py` (`CombatRewardClassificationService.classify()`,
+  v2_evidence: >-
+    `src/engine/combat_rewards.py` (`CombatRewardClassificationService.classify()`,
     `RewardClassification.source` field), `src/engine/combat.py` (trace["REWARD_SOURCE"]
-    and full_trace["REWARD_SOURCE"] in resolve_attack and resolve_multi_attack)'
+    and full_trace["REWARD_SOURCE"] in resolve_attack and resolve_multi_attack);
+    src/engine/pipeline_phases/quest_opportunity_rewards.py::QuestOpportunityRewardSystem.enforce()
+    — emits WorldEvent(category=QUEST_COMPLETED) with entity_id, gold, xp payload,
+    providing a traceable event anchor for quest opportunity reward grants
+    (TCK-20260619-E23C-QUEST-REWARDS)
   proof_type: null
   test_path: '`tests/unit/combat/test_combat_rewards.py`'
   divergence_note: null
@@ -1091,5 +1100,162 @@
   v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
   proof_type: parity
   test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: PROG-108
+  text: Entity class_id is assigned by role from spawn_tables.yaml at world compilation;
+    HERO-role entities receive a class from {WARRIOR, MAGE, ROGUE} rather than NOVICE.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    data/content/spawn_tables.yaml (classtable.v1 entry — hero: [WARRIOR, MAGE, ROGUE]),
+    src/worldbuilding/compiler.py (_load_class_table() + rng.choice sub_id=14,
+    TCK-20260619-P0-ENTITY-INIT); urban_political (3 HERO via hero_adventurers module)
+    seeded in TCK-20260619-E11A-HERO-AUTHORING (sandbox_world previously seeded 3 HERO
+    via worldtemplate.v1 recipe + faction villagers, but no longer does — migrated to
+    worldcomposition.v1 modules frontier_village_core + wolf_den_near_forest by
+    TCK-20260701-SANDBOX-WORLDCOMP-MIGRATE, which have no HERO population; the
+    mechanism proof below is unaffected);
+    tests/unit/entity/test_entity_archetypes.py::test_hero_archetypes_cover_combat_mage_rogue
+    verifies WARRIOR/MAGE/ROGUE class coverage for HERO entities via a dedicated
+    synthetic fixture, independent of any specific world
+  proof_type: parity
+  test_path: tests/unit/entity/test_entity_archetypes.py::test_hero_archetypes_cover_combat_mage_rogue
+  divergence_note: null
+  support_boundary: null
+- id: PROG-109
+  text: Quest opportunity reward is applied through the authoritative ResourceTransferIntent
+    path with source_kind=QUEST
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >-
+    src/engine/pipeline_phases/quest_opportunity_rewards.py::QuestOpportunityRewardSystem.enforce()
+    — reads reward_spec from state.quest_registry, emits ResourceTransferIntent(source_kind=QUEST,
+    transaction_id="quest:{quest_id}:reward", gold_delta, reward_upd=RewardUpdate(xp_gain=...))
+    for gold+XP; zero-reward quests are removed immediately, non-zero-reward quests
+    defer removal until transaction confirmed via _emit_terminal_removals()
+    (TCK-20260619-E23C-QUEST-REWARDS)
+  proof_type: parity
+  test_path: tests/unit/quest/test_quest_rewards.py::test_quest_completion_adds_gold_and_xp
+  divergence_note: ''
+  support_boundary: null
+- id: PROG-110
+  text: ProgressionPlan model serializes and deserializes with full round-trip fidelity
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >-
+    src/domains/campaigns/progression_plan.py — ProgressionPlan, BuildGoal,
+    MilestoneCheck, RevisionTrigger frozen dataclasses with to_dict()/from_dict();
+    CampaignState.progression_plans: Dict[int, ProgressionPlan] field with
+    str(k)/int(k) JSON key convention (TCK-20260619-E61A-PLAN-MODEL)
+  proof_type: parity
+  test_path: tests/unit/campaigns/test_progression_plan.py
+  divergence_note: null
+  support_boundary: null
+- id: PROG-111
+  text: ProgressionPlan is exported at episode end and imported at episode start; dead entity plans are dropped
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >-
+    src/domains/campaigns/progression_plan.py — ProgressionPlanExporter.export()
+    returns None for dead entities; ProgressionPlanImporter.import_plan() updates
+    MilestoneCheck.achieved flags based on carried entity level.
+    CampaignOrchestrator._advance_state() calls _export_progression_plans() and
+    drops dead entity plans; _build_initial_state() calls import_plan() for each
+    entity with a plan (TCK-20260619-E61B-PLAN-EXPORTER)
+  proof_type: parity
+  test_path: tests/unit/campaigns/test_progression_plan_exporter.py, tests/unit/campaigns/test_progression_plan_importer.py, tests/unit/campaigns/test_orchestrator_plan_wiring.py
+  divergence_note: null
+  support_boundary: null
+- id: PROG-112
+  text: Routes matching the head BuildGoal target_route_family receive a +1.5 plan-advance bonus
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >-
+    src/domains/adventure/scoring.py — AdventureRouteScorer.score() section 4b;
+    plan_advance_bonus=1.5 when route.family.value == head_goal.target_route_family
+    and head_goal.status in ("pending", "in_progress") and goal_queue non-empty.
+    AdventureRouteOption.plan_advance_bonus audit field. Cap min(bonus, 3.0).
+    (TCK-20260619-E61C-PLAN-SCORER)
+  proof_type: parity
+  test_path: tests/unit/domains/adventure/test_scoring_plan_bonus.py
+  divergence_note: null
+  support_boundary: null
+- id: PROG-113
+  text: PlanRevisionService detects mentor-dead and item-unavailable blockers, rotates goal_queue, and emits plan_revision NarrativeLedgerEntry
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >-
+    src/domains/campaigns/plan_revision.py — PlanRevisionService.generate_initial_plan()
+    uses level brackets (1-4→craft_upgrade, 5-9→quest_opportunity, 10+→gather_resource);
+    detect_and_revise() fires mentor_dead trigger when positive-score entity is dead
+    in persistent_entities; fires item_unavailable when target_item_id absent from
+    carry_forward.equipment; rotates goal_queue (blocked head to tail) and emits
+    NarrativeLedgerEntry(event_type="plan_revision", significance=0.6).
+    Wired in CampaignOrchestrator._build_initial_state() after ProgressionPlanImporter.
+    (TCK-20260619-E61D-PLAN-REVISION)
+  proof_type: parity
+  test_path: tests/unit/campaigns/test_plan_revision.py, tests/integration/campaigns/test_progression_planner_three_episode.py
+  divergence_note: null
+  support_boundary: null
+- id: PROG-114
+  text: >
+    When an entity gains a skill not previously in learned_skills, EventExtractor emits
+    skill_unlocked (event_category=lifecycle) with payload skill_id. One event per newly
+    added skill per tick. (TCK-20260701-SIMQ-EMIT-PROGRESSION)
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/observability/event_extractor.py — skill_unlocked block; set diff on
+    _curr_id.learned_skills vs _prior_id.learned_skills.
+  proof_type: parity
+  test_path: >-
+    tests/unit/observability/test_event_extractor_progression.py::TestSkillUnlocked
+  divergence_note: null
+  support_boundary: null
+- id: PROG-115
+  text: >
+    When an entity gains a trait not previously in traits, EventExtractor emits
+    trait_expressed (event_category=lifecycle) with payload trait_id.
+    When an entity gains a breakthrough not in active_breakthroughs, emits
+    pillar_trait_unlocked with payload trait_id. (TCK-20260701-SIMQ-EMIT-PROGRESSION)
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/observability/event_extractor.py — trait_expressed and pillar_trait_unlocked blocks;
+    set diff on identity.traits and identity.active_breakthroughs.
+  proof_type: parity
+  test_path: >-
+    tests/unit/observability/test_event_extractor_progression.py::TestTraitExpressed;
+    tests/unit/observability/test_event_extractor_progression.py::TestPillarTraitUnlocked
+  divergence_note: null
+  support_boundary: null
+- id: PROG-116
+  text: >
+    When unspent_ap decreases between ticks, EventExtractor emits
+    progression_conversion_applied (event_category=lifecycle) with payload ap_spent.
+    When evolution_points is unchanged for > _XP_PLATEAU_TICKS (50) ticks
+    (measured from run start if no XP was ever granted), EventExtractor emits
+    progression_plateau_detected once per entity per run.
+    (TCK-20260701-SIMQ-EMIT-PROGRESSION)
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/observability/event_extractor.py — progression_conversion_applied and
+    progression_plateau_detected blocks; _XP_PLATEAU_TICKS = 50;
+    _emitted_plateau set and _last_xp_tick dict reset in reset_run_state().
+  proof_type: parity
+  test_path: >-
+    tests/unit/observability/test_event_extractor_progression.py::TestProgressionConversionApplied;
+    tests/unit/observability/test_event_extractor_progression.py::TestProgressionPlateauDetected
   divergence_note: null
   support_boundary: null

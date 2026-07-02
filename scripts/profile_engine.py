@@ -67,11 +67,14 @@ class ProfilingHarness:
         profiler = cProfile.Profile()
         profiler.enable()
 
-        for t in range(ticks):
-            kernel.tick_once()
-            if self._is_scenario_completed(scenario_name, kernel._state):
-                print(f"[*] Scenario {scenario_name.upper()} successfully completed early at tick {t + 1}/{ticks}")
-                break
+        try:
+            for t in range(ticks):
+                kernel.tick_once()
+                if self._is_scenario_completed(scenario_name, kernel._state):
+                    print(f"[*] Scenario {scenario_name.upper()} successfully completed early at tick {t + 1}/{ticks}")
+                    break
+        finally:
+            kernel.shutdown()
 
         profiler.disable()
         profiler.dump_stats(profile_path)

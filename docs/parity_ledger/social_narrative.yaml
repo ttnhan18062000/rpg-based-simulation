@@ -1414,13 +1414,19 @@
   divergence_note: null
   support_boundary: null
 - id: SOC-134
-  text: '`test_social_appraisal_with_narrative`: narrative-informed social appraisal'
-  status: missing
+  text: >
+    `test_social_appraisal_with_narrative`: public_reputation (a narrative signal accumulated
+    from world events) informs contract appraisal trust. Zero-reputation source falls below
+    the trust threshold (0.2) and is rejected; high-reputation source is accepted.
+  status: verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: null
-  proof_type: null
-  test_path: null
+  v2_evidence: >
+    src/systems/social_systems/appraisal.py appraise_contract — public_trust = source.social.public_reputation / 2.0;
+    trust_score = public_trust * 0.7 + history_trust * 0.3; < 0.2 → TOTAL_DISTRUST
+    (TCK-20260619-PARITY-P0-BUGS)
+  proof_type: parity
+  test_path: tests/unit/social/test_parity_soc_134.py::TestSocialAppraisalWithNarrative::test_social_appraisal_with_narrative
   divergence_note: null
   support_boundary: null
 - id: SOC-135
@@ -1495,13 +1501,14 @@
   support_boundary: null
 - id: SOC-142
   text: '`test_bravery_modifiers`: bravery modifiers'
-  status: verified
+  status: legacy_verified
   priority: P0
   legacy_evidence: null
   v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
   proof_type: null
   test_path: null
-  divergence_note: null
+  divergence_note: "src/ai/personality.py is live code — not a V1 orphan. No dedicated\
+    \ V2 test maps to this behavior; test_path intentionally null."
   support_boundary: null
 - id: SOC-143
   text: '`test_cooperation_recruitment_logic`: cooperation in recruitment/social choice
@@ -2340,5 +2347,740 @@
   v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
   proof_type: null
   test_path: null
+  divergence_note: null
+  support_boundary: null
+- id: SOC-226
+  text: >
+    NarrativeLedger records significant campaign events (entity_death, quest_completed,
+    faction_shift) across episodes. CampaignOrchestrator._advance_state() extracts
+    NarrativeLedgerEntry records from AuthoritativeState.recent_world_events using
+    _SIGNIFICANCE_MAP. NarrativeLedger.query() filters by event_type, episode, and
+    min_significance. NarrativeLedger.to_jsonl() exports all entries as JSONL.
+    Gates E43 (Social Memory) and E51 (Chronicle).
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/domains/campaigns/narrative_ledger.py (NarrativeLedger service);
+    src/domains/campaigns/state.py (NarrativeLedgerEntry 7-field frozen dataclass);
+    src/domains/campaigns/orchestrator.py (_extract_narrative_entries, _SIGNIFICANCE_MAP,
+    _advance_state wiring). (TCK-20260619-E32D-NARRATIVE-LEDGER)
+  proof_type: parity
+  test_path: >
+    pytest tests/unit/campaigns/test_narrative_ledger.py -x -v;
+    pytest tests/integration/scenarios/test_campaign_runtime.py::test_narrative_ledger_populated_with_cross_episode_events -x -v -m slow
+  divergence_note: null
+  support_boundary: null
+- id: SOC-227
+  text: >
+    GroupRecord carries lifecycle fields (formation_tick, escort_target_id,
+    grievance_log, reward_pool, last_leadership_check_tick, dissolution_tick)
+    that survive across ticks and are serialized in to_canonical_dict().
+    grievance_log is Tuple[str, ...] on the instance and emitted as list for
+    JSON serializability. All fields have safe immutable defaults for backward
+    compatibility with existing callers.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/core/state.py GroupRecord class body (formation_tick..dissolution_tick
+    fields before _canonical_cache); to_canonical_dict() emits all six keys
+    flat at the top level. (TCK-20260619-E41A-GROUP-LIFECYCLE)
+  proof_type: parity
+  test_path: tests/unit/social/test_group_lifecycle_fields.py
+  divergence_note: null
+  support_boundary: null
+- id: SOC-228
+  text: >
+    PartyLifecycleService.check_leadership() evaluates sociability-based leadership
+    election every LEADERSHIP_CHECK_INTERVAL (100) ticks. If the highest-sociability
+    member exceeds the current leader's sociability by >= 0.2, the new leader is
+    elected (lowest entity id as tiebreaker). A LeadershipChangedEvent (category=social,
+    event_type=leadership_changed) is emitted with old_leader_id, new_leader_id,
+    group_id, and morale payload. Sociability is read from
+    entity.identity.personality.sociability. No election fires when the interval
+    has not elapsed.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/systems/social_systems/party_lifecycle.py (PartyLifecycleService.check_leadership);
+    src/observability/events.py (LeadershipChangedEvent);
+    src/engine/pipeline_phases/groups.py (GroupPhase.resolve wires lifecycle pass).
+    (TCK-20260619-E41B-LEADERSHIP)
+  proof_type: parity
+  test_path: >
+    pytest tests/unit/social/test_party_lifecycle.py::test_leadership_election_picks_highest_sociability -x -v;
+    pytest tests/unit/social/test_party_lifecycle.py -x -v
+  divergence_note: null
+  support_boundary: null
+- id: SOC-229
+  text: >
+    FairShareProtocol distributes quest reward gold proportionally to recorded
+    contribution weights (contribution_log). If the log is empty, equal weights
+    apply (1.0 per member). Rounding remainders go to the leader so that
+    sum(shares.values()) == quest_reward always (conservation law). Gold is
+    delivered via ResourceTransferIntent(source_kind=QUEST, transfer_kind=PARTY_REWARD_SHARE)
+    per member — never by direct gold mutation. Class-synergy multipliers in
+    AdventureRouteScorer: WARRIOR+MAGE pair in group.roles → HUNT_WEAK_ENEMY
+    final_score×1.15; EntityRole.HERO entity → QUEST_OPPORTUNITY final_score×1.10.
+    Synergy is applied only when a group context is passed to score().
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/systems/social_systems/reward_distribution.py (compute_fair_share,
+    build_reward_transfer_intents); src/domains/adventure/scoring.py
+    (AdventureRouteScorer.score — group param + synergy block §8).
+    (TCK-20260619-E41C-REWARD-DIST)
+  proof_type: parity
+  test_path: >
+    pytest tests/unit/social/test_party_lifecycle.py::test_fair_share_protocol_distributes_by_contribution -x -v;
+    pytest tests/unit/social/test_party_lifecycle.py::test_class_synergy_bonus_applied_to_combat_routes -x -v;
+    pytest tests/unit/social/test_party_lifecycle.py -x -v
+  divergence_note: null
+  support_boundary: null
+- id: SOC-230
+  text: >
+    PartyLifecycleService.check_defection() fires when an entity's group has
+    grievance_log length >= DEFECTION_GRIEVANCE_THRESHOLD (3). On defection:
+    the entity is removed from group.member_ids via a new GroupRecord (immutable
+    replace); a BetrayalDesertionEvent (event_type=betrayal_desertion,
+    event_category=social, severity=WARNING) is emitted; an EntityUpdate applies
+    notoriety_delta=2.0 to the defecting entity. If the group drops to <= 1
+    member after defection, dissolution_tick is set to the current tick.
+    AdventureRouteScorer.score() adds a +3.0 bonus to PROTECT_TARGET routes
+    and subtracts 1.0 from OWN_SURVIVAL routes when group.escort_target_id is
+    set and the entity is not the escort target. RouteFamily gains two new
+    members: PROTECT_TARGET and OWN_SURVIVAL. GroupPhase.resolve() runs a
+    defection pass (one defection per group per tick) after the leadership pass.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/systems/social_systems/party_lifecycle.py (PartyLifecycleService.check_defection);
+    src/observability/events.py (BetrayalDesertionEvent);
+    src/domains/adventure/scoring.py (AdventureRouteScorer.score §9 escort block);
+    src/domains/adventure/schema.py (RouteFamily.PROTECT_TARGET, RouteFamily.OWN_SURVIVAL);
+    src/engine/pipeline_phases/groups.py (GroupPhase defection pass).
+    (TCK-20260619-E41D-DEFECTION-ESCORT)
+  proof_type: parity
+  test_path: >
+    pytest tests/unit/social/test_party_lifecycle.py::test_betrayal_desertion_fires_on_high_grievance -x -v;
+    pytest tests/unit/social/test_party_lifecycle.py::test_escort_target_route_scores_above_survival -x -v;
+    pytest tests/unit/social/test_party_lifecycle.py -x -v
+  divergence_note: null
+  support_boundary: null
+- id: SOC-CROSS-EP-001
+  text: >
+    SocialMemoryRecord provides a durable, serializable cross-episode snapshot
+    of per-entity social state. InteractionRecord captures individual social
+    events (helped, betrayed, traded, fought_alongside, conflict) with episode,
+    tick, magnitude, and optional other_entity_id / faction_id. Both records are
+    frozen dataclasses with to_dict() / from_dict() JSON round-trip. Dict keys
+    (int entity_ids) are str-converted for JSON compatibility and restored to int
+    on deserialization. Dict key ordering is deterministic (sorted). Populated
+    by E43B SocialMemoryExporter; consumed by E43B SocialMemoryImporter.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/domains/campaigns/social_memory.py (InteractionRecord, SocialMemoryRecord,
+    to_dict, from_dict). (TCK-20260619-E43A-SOCIAL-MEM-MODEL)
+  proof_type: parity
+  test_path: >
+    pytest tests/unit/social/test_social_memory.py -x -v
+  divergence_note: null
+  support_boundary: null
+- id: SOC-CROSS-EP-002
+  text: >
+    SocialMemoryExporter.export() reads entity.social.trust_history and
+    entity.social.public_reputation at episode end, producing a SocialMemoryRecord
+    stored in CampaignState.social_memories (Dict[int, SocialMemoryRecord]).
+    SocialMemoryImporter.apply() merges relationship_scores into trust_history
+    additively and seeds public_reputation from faction_reputation["default"]
+    at episode start. Both hooks are wired into CampaignOrchestrator._advance_state()
+    and _build_initial_state(). CampaignState.social_memories is serialized with
+    str(k)/int(k) key conversion and participates in the full to_dict/from_dict
+    round-trip. Pure read for export; dc_replace for import (no live mutation).
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/domains/campaigns/social_memory.py (SocialMemoryExporter, SocialMemoryImporter).
+    src/domains/campaigns/state.py (CampaignState.social_memories field).
+    src/domains/campaigns/orchestrator.py (_extract_social_memories, _build_initial_state
+    import hook). (TCK-20260619-E43B-EXPORT-IMPORT)
+  proof_type: parity
+  test_path: >
+    pytest tests/unit/social/test_social_memory.py tests/integration/scenarios/test_social_memory.py -x -v -m "not slow or slow"
+  divergence_note: >
+    faction_reputation is a single "default" key (public_reputation proxy) in E43B.
+    Per-faction detail deferred to a future E43 child ticket. Per Mechanics Bible
+    ch03 "E43 adds per-faction detail" note in EntityCarryForward.
+  support_boundary: null
+- id: SOC-CROSS-EP-004
+  text: >
+    FactionSocialMemory provides a collective faction-level hostility record
+    that persists across episodes regardless of whether individual faction members
+    survive. entity_hostility (Dict[int, float]) tracks per-entity offense scores
+    (max of all observed offenses); episode_of_offense (Dict[int, int]) tracks the
+    first episode the offense was recorded. FactionSocialMemoryExporter.build_from_events()
+    is a pure function processing social event dicts with kind "betrayal" or "attack"
+    and a faction_id. Max-hostility semantics: existing scores are never lowered.
+    First-offense episode semantics: episode_of_offense is set only on first occurrence.
+    CampaignState.faction_social_memories (Dict[str, FactionSocialMemory]) is
+    serialized with str-keyed to_dict/from_dict, sorted for determinism.
+    int entity_id keys are str-converted for JSON and restored to int on read.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/domains/campaigns/social_memory.py (FactionSocialMemory, FactionSocialMemoryExporter,
+    FACTION_OFFENSE_KINDS; with_offense() max-hostility + first-episode semantics;
+    to_dict/from_dict with sorted str keys). src/domains/campaigns/state.py
+    (CampaignState.faction_social_memories field, to_dict/from_dict wiring).
+    (TCK-20260619-E43D-FACTION-MEMORY)
+  proof_type: parity
+  test_path: >
+    pytest tests/unit/social/test_social_memory.py::test_faction_hostility_persists_after_key_member_death -x -v;
+    pytest tests/unit/social/test_social_memory.py -x -v -m "not slow"
+  divergence_note: null
+  support_boundary: null
+- id: SOC-CROSS-EP-003
+  text: >
+    SocialMemoryDecay.apply_decay() decays cross-episode relationship scores and
+    faction reputation toward neutral before each episode import. Positive scores
+    (friendships) decay at 40% per episode (half-life ≈ 3 episodes); negative scores
+    (grudges) decay at 10% per episode (half-life ≈ 7 episodes), making betrayal
+    harder to forget than cooperation. Faction reputation always decays at the
+    friendship rate. Decay is pure and deterministic: no randomness, no side effects;
+    uses round(..., 4) for bounded float precision. Applied inside
+    SocialMemoryImporter.apply() before merging scores, transparent to callers.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/domains/campaigns/social_memory.py (SocialMemoryDecay class, FRIENDSHIP_DECAY=0.40,
+    GRUDGE_DECAY=0.10, apply_decay(); SocialMemoryImporter.apply() calls apply_decay
+    before merge). (TCK-20260619-E43C-DECAY)
+  proof_type: parity
+  test_path: >
+    pytest tests/unit/social/test_social_memory.py::test_betrayal_decay_slower_than_cooperation
+    tests/unit/social/test_social_memory.py -x -v
+  divergence_note: null
+  support_boundary: null
+- id: SOC-CROSS-EP-005
+  text: >
+    evaluate_social_consequence() is a pure, deterministic function that reads
+    cross-episode social memory from CampaignState and returns a list of
+    SimulationEvent instances when an entity encounter triggers one of three
+    consequence event kinds: KNOWN_TRAITOR_SPOTTED fires when faction_social_memories
+    entity_hostility >= 0.5 (traitor-level grudge persisted from a prior episode);
+    LEGENDARY_ARRIVAL fires when social_memories faction_reputation["default"] >= 0.9
+    (outstanding cross-episode reputation); OLD_DEBT_COLLECTED fires when
+    relationship_scores has a score >= 0.5 for any known entity (at most one per
+    encounter, first by sorted key for determinism). Function never mutates entity,
+    campaign_state, or any registry. Does not import from src.engine or src.core.state.
+    Events are SimulationEvent subclasses (Pydantic BaseModel) — not raw domain objects.
+    All three event kind string constants are importable directly from src.observability.events.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/observability/events.py (LEGENDARY_ARRIVAL, KNOWN_TRAITOR_SPOTTED, OLD_DEBT_COLLECTED
+    string constants; LegendaryArrivalEvent, KnownTraitorSpottedEvent, OldDebtCollectedEvent
+    — all SimulationEvent subclasses with event_category="social",
+    source_system="social_consequence_evaluator"). src/systems/social_systems/consequence_events.py
+    (evaluate_social_consequence(), LEGENDARY_REP_THRESHOLD=0.9, TRAITOR_HOSTILITY_THRESHOLD=0.5,
+    OLD_DEBT_SCORE_THRESHOLD=0.5; ordered: traitor -> legendary -> debt; one OLD_DEBT per
+    encounter). (TCK-20260619-E43E-CONSEQUENCE-EVENTS)
+  proof_type: parity
+  test_path: >
+    pytest tests/unit/social/test_social_memory.py::test_known_traitor_event_fires_on_encounter
+    tests/unit/social/test_social_memory.py::test_faction_memory_survives_episode_without_member_npcs
+    tests/unit/social/test_social_memory.py::test_all_three_event_kinds_importable
+    tests/unit/social/test_social_memory.py -x -v -m "not slow"
+  divergence_note: >
+    Ticket pseudocode specified hostility threshold > 3.0; actual field range is 0.0-1.0
+    so correct threshold is >= 0.5 (moderate hostility = traitor-level offense).
+    (TCK-20260619-E43E-CONSEQUENCE-EVENTS investigation.md)
+  support_boundary: null
+- id: SOC-CHRON-001
+  text: >
+    EventSignificanceScorer classifies NarrativeLedgerEntry objects for Chronicle
+    inclusion. score() returns BASE_SIGNIFICANCE.get(event_type, 0.1) + hero_bonus
+    (0.3 if payload["entity_role"]=="HERO"), capped at 1.0. is_chronicle_worthy()
+    returns True when score >= CHRONICLE_THRESHOLD (0.5). Known event type weights:
+    entity_death=0.5, faction_destroyed=0.9, quest_completed=0.7, calamity=0.85,
+    LEGENDARY_ARRIVAL=0.75, KNOWN_TRAITOR_SPOTTED=0.6, betrayal_desertion=0.7,
+    INFLATION_SPIRAL=0.5. Faction war/diplomatic weights (E53Da): war_declared=0.95,
+    siege_begins=0.80, territory_transferred=0.85, alliance_formed=0.80,
+    peace_treaty=0.75, betrayal=0.85. Hero death scores 0.8 (entity_death 0.5 + 0.3
+    hero_bonus). Unknown types default to 0.1 (below threshold). Scorer is stateless
+    and deterministic.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/domains/chronicle/significance.py (EventSignificanceScorer, BASE_SIGNIFICANCE,
+    CHRONICLE_THRESHOLD). (TCK-20260619-E51A-SIGNIFICANCE, TCK-20260619-E53Da-SIGNIFICANCE-NAMING)
+  proof_type: parity
+  test_path: >
+    pytest tests/unit/chronicle/test_significance.py tests/unit/chronicle/test_chronicle_compiler.py -x -v
+  divergence_note: null
+  support_boundary: null
+- id: SOC-CHRON-002
+  text: >
+    ChronicleGrouper transforms flat NarrativeLedgerEntry lists into a four-level
+    ChronicleHierarchy (events → incidents → episodes → eras). Filtering: only
+    chronicle-worthy entries (EventSignificanceScorer.is_chronicle_worthy) pass
+    through. Incident grouping: entries within INCIDENT_TICK_WINDOW=50 ticks in the
+    same episode form one Incident; a new incident begins on episode change or tick
+    gap > 50. Episode grouping: one Episode per unique episode index. Era grouping:
+    ERA_EPISODE_MIN=3 episodes per era; remaining episodes form the last (possibly
+    smaller) era. Significance at each level = max significance of constituents.
+    Grouper is stateless and deterministic.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/domains/chronicle/grouper.py (ChronicleGrouper, Incident, Episode, Era,
+    ChronicleHierarchy). INCIDENT_TICK_WINDOW=50, ERA_EPISODE_MIN=3.
+    (TCK-20260619-E51B-GROUPER)
+  proof_type: parity
+  test_path: >
+    pytest tests/unit/chronicle/test_chronicle_compiler.py -x -v
+  divergence_note: null
+  support_boundary: null
+- id: SOC-CHRON-003
+  text: >
+    ChronicleNamer produces human-readable deterministic names for milestones and eras.
+    name_milestone(entry, entity_names, faction_names=None, region_names=None) resolves
+    subject as follows: if subject_id contains ":" → split on first ":" into source_id /
+    target_id, resolve each via faction_names (fallback to raw ID) → {source_faction} /
+    {target_faction}; elif template uses {region_name} → resolve via region_names (fallback
+    to raw subject_id); else → safe int-cast of subject_id against entity_names (raw-string
+    fallback). Template applied via format_map(defaultdict(str, ...)) to avoid KeyError on
+    extra or missing keys. TEMPLATES keys are lowercase (E53Da: renamed from uppercase to
+    match E53Bd lowercase emission). Faction templates: war_declared, territory_transferred,
+    alliance_formed, peace_treaty, betrayal, siege_begins. Faction era names: war_declared
+    → "The Age of War", alliance_formed → "The Age of Alliances", territory_transferred →
+    "The Age of Conquest". name_era fallback: "Era {era_index+1}" (1-based) for unknown
+    types. Both functions are pure — no state, no RNG — deterministic across runs with same
+    inputs. (TCK-20260619-E51C-NAMING, TCK-20260619-E53Da-SIGNIFICANCE-NAMING)
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/domains/chronicle/naming.py (ChronicleNamer.TEMPLATES, ChronicleNamer.ERA_NAMES,
+    ChronicleNamer.name_milestone, ChronicleNamer.name_era).
+    (TCK-20260619-E51C-NAMING, TCK-20260619-E53Da-SIGNIFICANCE-NAMING)
+  proof_type: parity
+  test_path: >
+    pytest tests/unit/chronicle/test_naming.py tests/unit/chronicle/test_chronicle_compiler.py -x -v
+  divergence_note: null
+  support_boundary: null
+- id: SOC-CHRON-004
+  text: >
+    ChronicleRenderer.render_json() produces a chronicle.json dict with keys:
+    campaign_id (str), eras (list), episodes (list), named_milestones (list).
+    Era objects: {id, ordinal, name, significance, episode_ids}. Episode objects:
+    {id, index, significance, incident_ids}. Milestone objects: {name, tick, episode,
+    event_type, significance, entry_id}. Era dominant_event_type = most-frequent
+    event_type across all entries in that era; alphabetical tie-breaking for
+    determinism. ChronicleCompiler.compile() chains grouper → renderer → file writes
+    (Chronicle.md + chronicle.json); returns (markdown_str, json_dict) for testability.
+    (TCK-20260619-E51D-RENDERER)
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/domains/chronicle/renderer.py (ChronicleRenderer.render_json, render_markdown,
+    _dominant_event_type). src/domains/chronicle/compiler.py (ChronicleCompiler.compile).
+    (TCK-20260619-E51D-RENDERER)
+  proof_type: parity
+  test_path: >
+    pytest tests/unit/chronicle/test_chronicle_compiler.py -x -v
+  divergence_note: null
+  support_boundary: null
+- id: SOC-CHRON-005
+  text: >
+    Chronicle REST API exposes chronicle.json data at two endpoints:
+    GET /api/v1/chronicle/{campaign_id} → full ChronicleResponse (campaign_id, eras[],
+    episodes[], named_milestones[]). GET /api/v1/chronicle/{campaign_id}/eras/{era_id}/summary
+    → ErasSummaryResponse (era_id, name, milestone_count, named_milestones: [str]).
+    Data is served from an in-process registry dict (_CHRONICLE_REGISTRY) populated by
+    register_chronicle(). No raw domain models in responses — all shaped via Pydantic
+    presenter models. Era milestone membership: all named_milestones whose episode index
+    falls within the era's episode_ids set. Returns 404 if campaign or era not registered.
+    (TCK-20260619-E51E-REST-API)
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/api/routes/chronicle.py (get_chronicle, get_era_summary, register_chronicle,
+    _CHRONICLE_REGISTRY). src/api/presenters/chronicle.py (ChronicleResponse,
+    ErasSummaryResponse, ChronicleEraPresenter, ChronicleEpisodePresenter,
+    ChronicleMilestonePresenter). (TCK-20260619-E51E-REST-API)
+  proof_type: parity
+  test_path: >
+    pytest tests/api/test_chronicle_api.py -x -v
+  divergence_note: null
+  support_boundary: null
+- id: SOC-CHRON-006
+  text: >
+    ChronicleCompiler.compile() and ChronicleRenderer.render_markdown/render_json accept
+    faction_names: dict[str, str] and region_names: dict[str, str] optional params (E53Dc).
+    These are threaded to ChronicleNamer.name_milestone() enabling faction/region display name
+    resolution in named milestones. Backward-compatible — both params default to None.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/domains/chronicle/compiler.py (ChronicleCompiler.compile faction_names/region_names params).
+    src/domains/chronicle/renderer.py (render_markdown/render_json faction_names/region_names threaded
+    to name_milestone). (TCK-20260619-E53Dc-COMPILER-INTEGRATION)
+  proof_type: parity
+  test_path: >
+    pytest tests/unit/chronicle/test_faction_chronicle.py -x -v
+  divergence_note: null
+  support_boundary: null
+- id: SOC-FAC-001
+  text: war_declared events score 0.95 in EventSignificanceScorer (above CHRONICLE_THRESHOLD=0.5).
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/domains/chronicle/significance.py (BASE_SIGNIFICANCE["war_declared"]=0.95). (TCK-20260619-E53Da-SIGNIFICANCE-NAMING)
+  proof_type: parity
+  test_path: tests/unit/chronicle/test_significance.py::test_war_declared_scores_0_95
+  divergence_note: null
+  support_boundary: null
+- id: SOC-FAC-002
+  text: alliance_formed events score 0.80 in EventSignificanceScorer.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/domains/chronicle/significance.py (BASE_SIGNIFICANCE["alliance_formed"]=0.80). (TCK-20260619-E53Da-SIGNIFICANCE-NAMING)
+  proof_type: parity
+  test_path: tests/unit/chronicle/test_significance.py::test_alliance_formed_scores_0_80
+  divergence_note: null
+  support_boundary: null
+- id: SOC-FAC-003
+  text: peace_treaty events score 0.75 in EventSignificanceScorer.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/domains/chronicle/significance.py (BASE_SIGNIFICANCE["peace_treaty"]=0.75). (TCK-20260619-E53Da-SIGNIFICANCE-NAMING)
+  proof_type: parity
+  test_path: tests/unit/chronicle/test_significance.py::test_peace_treaty_scores_0_75
+  divergence_note: null
+  support_boundary: null
+- id: SOC-FAC-004
+  text: betrayal events score 0.85 in EventSignificanceScorer.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/domains/chronicle/significance.py (BASE_SIGNIFICANCE["betrayal"]=0.85). (TCK-20260619-E53Da-SIGNIFICANCE-NAMING)
+  proof_type: parity
+  test_path: tests/unit/chronicle/test_significance.py::test_betrayal_scores_0_85
+  divergence_note: null
+  support_boundary: null
+- id: SOC-FAC-005
+  text: "territory_transferred events score 0.85 in EventSignificanceScorer. Note: 0.85 (not 0.9) — implementing ticket E53Cc is authoritative over epic spec."
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/domains/chronicle/significance.py (BASE_SIGNIFICANCE["territory_transferred"]=0.85). (TCK-20260619-E53Da-SIGNIFICANCE-NAMING)
+  proof_type: parity
+  test_path: tests/unit/chronicle/test_significance.py::test_territory_transferred_scores_0_85
+  divergence_note: null
+  support_boundary: null
+- id: SOC-FAC-006
+  text: siege_begins events score 0.80 in EventSignificanceScorer.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/domains/chronicle/significance.py (BASE_SIGNIFICANCE["siege_begins"]=0.80). (TCK-20260619-E53Da-SIGNIFICANCE-NAMING)
+  proof_type: parity
+  test_path: tests/unit/chronicle/test_significance.py::test_siege_begins_scores_0_80
+  divergence_note: null
+  support_boundary: null
+- id: SOC-FAC-007
+  text: MilitaryConflictPhase emits a SIEGE_BEGINS WorldEvent with subject=region_id on the first tick a siege is established.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/engine/military_conflict.py (inside `if reg.siege_state is None:` block, appends WorldEvent(category=SIEGE_BEGINS, subject=contested_region_id)). (TCK-20260619-E53Db-SIEGE-BETRAYAL-LEDGER)
+  proof_type: parity
+  test_path: tests/unit/faction/test_siege_ledger.py::test_siege_begins_emitted_on_first_siege_tick
+  divergence_note: null
+  support_boundary: null
+- id: SOC-FAC-008
+  text: events_from_transitions() emits BETRAYAL WorldEvent when betrayal_updates contain an ALLIED→HOSTILE transition.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/domains/faction/diplomatic_state_machine.py (betrayal_updates optional param; loop detects ALLIED prior→HOSTILE new, sorted subject pair). (TCK-20260619-E53Db-SIEGE-BETRAYAL-LEDGER)
+  proof_type: parity
+  test_path: tests/unit/faction/test_betrayal_ledger.py::test_betrayal_emitted_when_allied_faction_transitions_hostile
+  divergence_note: null
+  support_boundary: null
+- id: SOC-FAC-009
+  text: CampaignOrchestrator._extract_narrative_entries converts SIEGE_BEGINS WorldEvent to a NarrativeLedgerEntry with event_type="siege_begins", significance=0.80, subject_id=region_id.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/domains/campaigns/orchestrator.py (_SIGNIFICANCE_MAP["SIEGE_BEGINS"]=("siege_begins",0.80); generic _extract_narrative_entries reads world_event.subject as subject_id). (TCK-20260619-E53Db-SIEGE-BETRAYAL-LEDGER)
+  proof_type: parity
+  test_path: tests/unit/faction/test_siege_ledger.py::test_orchestrator_converts_siege_begins_to_ledger_entry
+  divergence_note: null
+  support_boundary: null
+- id: SOC-FAC-010
+  text: CampaignOrchestrator._extract_narrative_entries converts BETRAYAL WorldEvent to a NarrativeLedgerEntry with event_type="betrayal", significance=0.85, subject_id=sorted faction pair.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/domains/campaigns/orchestrator.py (_SIGNIFICANCE_MAP["BETRAYAL"]=("betrayal",0.85); generic _extract_narrative_entries reads world_event.subject as subject_id). (TCK-20260619-E53Db-SIEGE-BETRAYAL-LEDGER)
+  proof_type: parity
+  test_path: tests/unit/faction/test_betrayal_ledger.py::test_orchestrator_converts_betrayal_to_ledger_entry
+  divergence_note: null
+  support_boundary: null
+- id: SOC-ABAND-TYPE-01
+  text: AbandonmentEvaluator.evaluate_abandonment() returns a typed AbandonmentClassification dataclass (frozen) with fields is_betrayal:bool, penalty:float, category:AbandonmentCategory enum (SURVIVAL/GREEDY_DESERTION/VOLUNTARY_QUIT). No untyped Dict[str,Any] at call sites.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/domains/commitment/abandonment.py — AbandonmentCategory(str,Enum) + AbandonmentClassification(frozen=True dataclass); evaluate_abandonment() annotated -> AbandonmentClassification. (TCK-20260627-P1F-ABANDONMENT-TYPE)
+  proof_type: parity
+  test_path: tests/unit/domains/commitment/test_phase15_abandonment_evaluator.py::test_evaluate_abandonment_returns_typed_classification
+  divergence_note: null
+  support_boundary: null
+
+- id: SOC-231
+  text: >
+    Grief/rage urgency (E43F): when an entity's ally dies in episode N (entity_death
+    NarrativeLedgerEntry, ally trust_score ≥ ALLY_TRUST_THRESHOLD=0.30 in SocialMemoryRecord),
+    a GriefUrgencyModifier is created in CampaignState.grief_urgencies keyed by the
+    grieving entity's id. Urgency = min(1.0, trust_score × 0.8). Each episode boundary,
+    urgency decays by decay_per_episode=0.25; modifier removed when urgency ≤ 0.
+    At the start of each episode, GriefUrgencyImporter.apply() injects the modifier
+    as a ConcernState(kind=SOCIAL_THREAT, id="grief_ally_{dead_id}") into
+    entity.strategic.concerns, making grief urgency visible in the decision trace.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/domains/campaigns/state.py — GriefUrgencyModifier frozen dataclass;
+    CampaignState.grief_urgencies: Dict[int, GriefUrgencyModifier].
+    src/domains/campaigns/grief_urgency.py — GriefUrgencyImporter.apply().
+    src/domains/campaigns/orchestrator.py — _advance_grief_urgencies() detects + decays;
+    episode-start loop applies GriefUrgencyImporter. Verified by TCK-20260628-E43F-GRIEF-URGENCY.
+  proof_type: parity
+  test_path: tests/unit/campaigns/test_grief_urgency.py::test_grief_importer_injects_social_threat_concern
+  divergence_note: >
+    New mechanic added by TCK-20260628-E43F-GRIEF-URGENCY. No prior behavior existed —
+    ally deaths had no feedback into entity motivation state.
+  support_boundary: null
+
+- id: SOC-232
+  text: >
+    Nemesis relation (E43G): when a protagonist entity has 2+ NarrativeLedgerEntry records
+    of negative interaction kinds ("betrayed" or "conflict") against the same antagonist
+    across distinct episodes in SocialMemoryRecord.interaction_history, a NemesisRelation
+    frozen dataclass is created in CampaignState.nemesis_relations keyed by
+    "{protagonist_id}:{antagonist_id}". Strength = min(1.0, antagonism_count × 0.4).
+    At episode start, NemesisRelationImporter.apply() injects a BlockerState(kind=SOCIAL,
+    subject=str(antagonist_id)) into entity.strategic.blockers. The FORM_PARTY route
+    generator blocks party formation (adds blockers=("nemesis_block",)) if any candidate
+    entity's id is in the protagonist's SOCIAL nemesis blocker set, resulting in a 2.0
+    scoring penalty via AdventureRouteScorer.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/domains/campaigns/state.py — NemesisRelation frozen dataclass;
+    CampaignState.nemesis_relations: Dict[str, NemesisRelation].
+    src/domains/campaigns/grief_urgency.py — NemesisRelationImporter.apply().
+    src/domains/campaigns/orchestrator.py — _advance_nemesis_relations() detects from
+    SocialMemoryRecord.interaction_history; episode-start loop applies NemesisRelationImporter.
+    src/domains/adventure/generator.py — FORM_PARTY route checks SOCIAL blockers for nemesis_ids.
+    Verified by TCK-20260628-E43G-NEMESIS-RELATION.
+  proof_type: parity
+  test_path: tests/unit/campaigns/test_grief_urgency.py::test_nemesis_detection_creates_relation_at_two_episodes
+  divergence_note: >
+    New mechanic added by TCK-20260628-E43G-NEMESIS-RELATION. No prior nemesis tracking existed.
+  support_boundary: null
+
+- id: SOC-233
+  text: >
+    SimQ entity-loop social emission: EventExtractor emits cooperation_event when
+    entity.strategic.property_updates contains a decision/cooperation indicator, and
+    reputation_delta when public_reputation changes by >= 0.05 between ticks.
+    Both events emitted from the entity resolution loop in event_extractor.py.
+    Covered by TCK-20260629-SIMQ-EMIT-SOCIAL-FACTION.
+    UPLIFT (TCK-20260702-SIMQ-UPLIFT-SOCIAL-ZERO): cooperation_event now fires in
+    calibration runs — CooperationPhase bug fixed (stores posture string in
+    property_updates, not raw CooperationDecisionResult object); feature flag
+    ENABLE_SOCIAL_COOPERATION injected via _load_profile_feature_flags() in
+    calibrate_simq.py; apply_generation() bug fixed (feature_flags no longer
+    dropped on tick reconstruction). urban_political_seed42_500t: 1891 SOCIAL
+    events, grade S.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/observability/event_extractor.py (cooperation_event emit block;
+    reputation_delta emit block with REPUTATION_DELTA_THRESHOLD=0.05 guard).
+    src/domains/cooperation/phase.py (CooperationPhase.resolve — property_updates
+    now stores posture string value, not raw CooperationDecisionResult).
+    src/engine/apply.py (apply_generation — feature_flags preserved on
+    AuthoritativeState tick reconstruction).
+    config/simulation_quality/profiles/urban_political.yaml (feature_flags:
+    {ENABLE_SOCIAL_COOPERATION: "ON"}).
+    (TCK-20260629-SIMQ-EMIT-SOCIAL-FACTION, TCK-20260702-SIMQ-UPLIFT-SOCIAL-ZERO)
+  proof_type: parity
+  test_path: >
+    tests/unit/observability/test_event_extractor_social_faction.py::test_cooperation_event_emitted_when_decision_in_property_updates;
+    tests/unit/observability/test_event_extractor_social_faction.py::test_reputation_delta_emitted_on_significant_change;
+    tests/unit/domains/cooperation/test_cooperation_phase.py
+  divergence_note: null
+  support_boundary: null
+
+- id: SOC-234
+  text: >
+    SimQ contract event fixes: contract_completed now emits only on FULFILLED enum
+    status (prior bug emitted on the string "completed"); contract_lapsed narrowed
+    to active→expired transitions only (not offered→expired, which routes to
+    contract_expired_offer instead); contract_expired_offer is a new event type
+    emitted when an offered contract transitions to expired or is reaped without
+    being accepted. Covered by TCK-20260629-SIMQ-EMIT-SOCIAL-FACTION.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/observability/event_extractor.py (contract_completed: status == ContractStatus.FULFILLED;
+    contract_lapsed: prior==ACTIVE and new==EXPIRED; contract_expired_offer: prior==OFFERED
+    and new==EXPIRED or reap-removed). (TCK-20260629-SIMQ-EMIT-SOCIAL-FACTION)
+  proof_type: null
+  test_path: >
+    tests/unit/observability/test_event_extractor_social_faction.py::test_contract_completed_on_fulfilled_status;
+    tests/unit/observability/test_event_extractor_social_faction.py::test_contract_lapsed_not_on_offered_to_expired;
+    tests/unit/observability/test_event_extractor_social_faction.py::test_contract_expired_offer_on_offered_to_expired;
+    tests/unit/observability/test_event_extractor_social_faction.py::test_contract_completed_fires_for_fulfilled_not_completed_name
+  divergence_note: null
+  support_boundary: null
+
+- id: SOC-235
+  text: >
+    SimQ faction-loop emission: EventExtractor emits diplomatic_transition
+    (with frozenset dedup to suppress symmetric duplicates per faction pair),
+    alliance_accepted (ALLIED state newly set), territory_ownership_changed
+    (territory added to faction), and faction_tension_delta (nonzero tension
+    change) from the faction_updates loop. war_declared and
+    military_conflict_resolved are emitted from the world_events_add loop.
+    faction_extinct fires when a faction has no living entities remaining.
+    EventCategory Literal extended with "faction". Translation mappings added
+    to quality_hub.py: leadership_changed→diplomatic_transition,
+    alliance_formed→alliance_accepted, betrayal_desertion→conditional
+    (faction_tension_delta or contract_lapsed).
+    Covered by TCK-20260629-SIMQ-EMIT-SOCIAL-FACTION.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/observability/event_extractor.py (faction_updates loop: diplomatic_transition
+    with frozenset dedup set; alliance_accepted guard; territory_ownership_changed;
+    faction_tension_delta; world_events_add loop: war_declared, military_conflict_resolved;
+    entity-scan: faction_extinct). src/observability/events.py (EventCategory Literal
+    += "faction"). src/simulation_quality/quality_hub.py (TRANSLATION_MAP additions:
+    leadership_changed, alliance_formed, betrayal_desertion).
+    (TCK-20260629-SIMQ-EMIT-SOCIAL-FACTION)
+  proof_type: null
+  test_path: >
+    tests/unit/observability/test_event_extractor_social_faction.py::test_diplomatic_transition_emitted_from_faction_update;
+    tests/unit/observability/test_event_extractor_social_faction.py::test_diplomatic_transition_deduped_per_pair;
+    tests/unit/observability/test_event_extractor_social_faction.py::test_alliance_accepted_emitted_when_allied_state_set;
+    tests/unit/observability/test_event_extractor_social_faction.py::test_war_declared_emitted_from_world_events_add;
+    tests/unit/observability/test_event_extractor_social_faction.py::test_military_conflict_resolved_on_territory_transferred;
+    tests/unit/observability/test_event_extractor_social_faction.py::test_territory_ownership_changed_on_territory_add;
+    tests/unit/observability/test_event_extractor_social_faction.py::test_faction_tension_delta_on_nonzero_tension_delta;
+    tests/unit/observability/test_event_extractor_social_faction.py::test_faction_extinct_emitted_when_no_living_entities;
+    tests/simulation_quality/test_quality_hub_event_translation.py
+  divergence_note: >
+    2 gaps resolved (alliance_proposed, resource_seized) by TCK-20260701-SIMQ-EMIT-FACTION-ECONOMY
+    — see SOC-236. 2 gaps remain blocked: contract_milestone_completed (no milestone field on
+    ContractState), social_memory_created (SocialMemoryExporter has no event recorder).
+  support_boundary: null
+- id: SOC-236
+  text: >
+    alliance_proposed is emitted inside the alliance_accepted guard when the prior
+    diplomatic relation (prior_state.factions[fid].diplomatic_relations[other_fid].name)
+    was NEUTRAL or HOSTILE, confirming a transition rather than a reinforcement.
+    resource_seized is emitted for each region in territory_add when tension_delta > 0,
+    indicating conflict-driven annexation rather than peaceful transfer.
+    paid_info_transaction is emitted (event_category=economy) as a second emit alongside
+    paid_information_transaction when source_kind == INFORMATION_PURCHASE.
+    conservation_law_verified is emitted at tick % 50 == 0 when at least one economy
+    event was emitted in the current extraction pass.
+    scenario_objective_progressed is emitted by ScenarioRuntimeService every tick
+    while the objective is still RUNNING (distinct from scenario_objective_completed).
+    (TCK-20260701-SIMQ-EMIT-FACTION-ECONOMY)
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/observability/event_extractor.py — alliance_proposed block inside alliance_accepted
+    guard; resource_seized block inside territory_add loop with tension_delta guard;
+    paid_info_transaction second emit in INFORMATION_PURCHASE branch;
+    conservation_law_verified block at tick % 50 with economy_event_types guard.
+    src/engine/scenario_runtime.py — scenario_objective_progressed emit in
+    _evaluate_after_tick() when result == RUNNING.
+  proof_type: parity
+  test_path: >-
+    tests/unit/observability/test_event_extractor_faction_economy.py::TestAllianceProposed;
+    tests/unit/observability/test_event_extractor_faction_economy.py::TestResourceSeized;
+    tests/unit/observability/test_event_extractor_faction_economy.py::TestPaidInfoTransaction;
+    tests/unit/observability/test_event_extractor_faction_economy.py::TestConservationLawVerified
+  divergence_note: null
+  support_boundary: null
+
+- id: SOC-238
+  text: >
+    contract_milestone_completed is emitted from EventExtractor for ACTIVE contracts with a
+    defined duration (expiry_tick > created_tick > 0) at 25%, 50%, and 75% of elapsed
+    duration. Gate: once per (contract_id, milestone_label) per run via
+    _emitted_contract_milestones set. Event is attributed to contract.source_id.
+    No schema change to ContractState required. (TCK-20260701-SIMQ-EMIT-CONTRACT-MILESTONE)
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/observability/event_extractor.py — contract_milestone_completed block inside
+    strategic.contracts loop; isinstance guards on expiry_tick/created_tick;
+    progress = elapsed / (expiry - created); thresholds (0.25, 0.50, 0.75);
+    _emitted_contract_milestones class-level set gate; reset in reset_run_state().
+  proof_type: parity
+  test_path: >-
+    tests/unit/observability/test_event_extractor_contract_milestone.py
+  divergence_note: null
+  support_boundary: null
+
+- id: SOC-237
+  text: >
+    social_memory_created is emitted from EventExtractor when entity.social.trust_history
+    gains a new other_entity_id key or an existing entry changes by ≥ 0.3. Emitted at most
+    once per (entity_id, other_entity_id) pair per run via _emitted_social_memory gate.
+    (TCK-20260701-SIMQ-EMIT-SOCIAL-MEM)
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/observability/event_extractor.py — social_memory_created block after reputation_delta
+    block, inside social section; compares curr_trust vs prior_trust per entity per tick;
+    _emitted_social_memory class-level set gate; reset in reset_run_state().
+  proof_type: parity
+  test_path: >-
+    tests/unit/observability/test_event_extractor_social_memory.py
   divergence_note: null
   support_boundary: null

@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from src.engine.quests import QuestResolutionSystem
+from src.engine.pipeline_phases.quest_opportunity_rewards import QuestOpportunityRewardSystem
 
 if TYPE_CHECKING:
     from src.core.state import AuthoritativeState
@@ -22,4 +23,6 @@ class QuestRewardPhase:
         """
         Enforce quest rewards.
         """
-        return QuestResolutionSystem.enforce(state, update)
+        update = QuestResolutionSystem.enforce(state, update)
+        update = QuestOpportunityRewardSystem.enforce(state, update)
+        return update

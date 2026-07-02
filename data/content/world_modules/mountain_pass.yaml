@@ -1,0 +1,43 @@
+module_id: "mountain_pass"
+module_type: "terrain"
+display_name: "Mountain Pass"
+description: "A high-altitude mountain pass with iron ore deposits and ancient relics. Traversal imposes stamina drain on entities lacking cold resistance. Neutral terrain — no faction pressure."
+version: "1.0.0"
+provides: ["mountain_traversal", "cold_terrain"]
+observability_tags: ["terrain", "mountain", "cold", "traversal"]
+biomes: ["frozen_peak"]
+ecologies: []
+regions:
+  - id: "mountain_pass_zone"
+    type: "wilderness"
+    grid_bounds: [80, 80, 120, 120]
+    terrain: "mountain"
+    hazard_level: 2.5
+    tags: [mountain]
+factions: []
+populations: []
+resources:
+  iron_vein: 4
+  frost_shard_cluster: 2
+buildings: {}
+services: {}
+relationships: []
+quest_definitions:
+  - id: "explore_mountain_route"
+    type: "explore"
+    required_participant_tags: ["humanoid"]
+    required_location_tags: ["mountain", "wilderness"]
+    reward_budget: 90
+    procedural_hints:
+      difficulty: 2
+      escalation: false
+    tags: ["mountain", "terrain", "exploration"]
+  - id: "hunt_mountain_predator"
+    type: "hunt"
+    required_participant_tags: ["humanoid"]
+    required_location_tags: ["mountain", "wilderness"]
+    reward_budget: 130
+    procedural_hints:
+      difficulty: 3
+      escalation: true
+    tags: ["mountain", "terrain", "combat"]

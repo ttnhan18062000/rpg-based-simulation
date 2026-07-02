@@ -7,9 +7,16 @@ from src.core.governance import RuntimeMode
 
 @pytest.fixture
 def base_state():
-    # Ensure ItemRegistry has what we need
-    # We already updated healing_potion in items.py to value=100
-    
+    # Ensure healing_potion (value=100) is always in ItemRegistry regardless of
+    # whether ItemRegistry.bootstrap() has been called by another test.
+    # bootstrap() replaces _items with catalog content which omits healing_potion;
+    # re-registering here makes these pricing tests order-independent.
+    ItemRegistry._items["healing_potion"] = ItemDefinition(
+        id="healing_potion", name="Healing Potion",
+        kind=ItemKind.CONSUMABLE, weight=0.5, value=100,
+        properties={"heal_amount": 50}
+    )
+
     shop = BuildingState(
         id=101, kind="shop", position=(0.0, 0.0), hp=100, functional=True
     )
@@ -18,9 +25,10 @@ def base_state():
         .kind("hero")
         .location(0.5, 0.5)
         .inventory(gold=1000)
+        .social(public_reputation=0.0)  # no reputation discount — test raw pricing
         .build()
     )
-    
+
     return AuthoritativeState(
         tick=1, seed=42,
         entities={1: entity},

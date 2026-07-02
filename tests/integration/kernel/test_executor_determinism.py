@@ -51,21 +51,27 @@ def test_sequential_vs_concurrent_determinism(test_profile):
     produces bit-identical results (INFRA-104, INFRA-132).
     """
     initial_state = make_test_state(42)
-    
+
     # 1. Sequential Run
     rng_seq = DeterministicRNG(42)
     kernel_seq = Kernel(test_profile, initial_state, rng_seq, executor=LocalSequentialExecutor())
-    kernel_seq.tick_once()
-    hash_seq = kernel_seq.state.fingerprint()["state_hash"]
-    
+    try:
+        kernel_seq.tick_once()
+        hash_seq = kernel_seq.state.fingerprint()["state_hash"]
+    finally:
+        kernel_seq.shutdown()
+
     # 2. Concurrent Run
     concurrent_profile = test_profile.model_copy(update={"max_worker_count": 4})
     rng_con = DeterministicRNG(42)
     # Kernel automatically creates ConcurrentExecutionAdapter if max_worker_count > 0
-    kernel_con = Kernel(concurrent_profile, initial_state, rng_con) 
-    kernel_con.tick_once()
-    hash_con = kernel_con.state.fingerprint()["state_hash"]
-    
+    kernel_con = Kernel(concurrent_profile, initial_state, rng_con)
+    try:
+        kernel_con.tick_once()
+        hash_con = kernel_con.state.fingerprint()["state_hash"]
+    finally:
+        kernel_con.shutdown()
+
     assert hash_seq == hash_con, "Sequential and Concurrent execution diverged!"
 
 def test_concurrency_limit_stability(test_profile):
@@ -73,19 +79,25 @@ def test_concurrency_limit_stability(test_profile):
     Proves that changing the concurrency limit does not change the result (INFRA-105).
     """
     initial_state = make_test_state(42)
-    
+
     # Run 1: 1 worker
     profile1 = test_profile.model_copy(update={"max_worker_count": 1})
     rng1 = DeterministicRNG(42)
     kernel1 = Kernel(profile1, initial_state, rng1)
-    kernel1.tick_once()
-    hash1 = kernel1.state.fingerprint()["state_hash"]
-    
+    try:
+        kernel1.tick_once()
+        hash1 = kernel1.state.fingerprint()["state_hash"]
+    finally:
+        kernel1.shutdown()
+
     # Run 2: 4 workers
     profile2 = test_profile.model_copy(update={"max_worker_count": 4})
     rng2 = DeterministicRNG(42)
     kernel2 = Kernel(profile2, initial_state, rng2)
-    kernel2.tick_once()
-    hash2 = kernel2.state.fingerprint()["state_hash"]
-    
+    try:
+        kernel2.tick_once()
+        hash2 = kernel2.state.fingerprint()["state_hash"]
+    finally:
+        kernel2.shutdown()
+
     assert hash1 == hash2, "Concurrency level changed the simulation outcome!"

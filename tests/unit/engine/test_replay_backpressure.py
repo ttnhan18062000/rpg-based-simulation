@@ -90,19 +90,21 @@ class TestInflightCountTracking:
 
 class TestPressureReport:
     def test_pressure_ok_below_80pct(self, tmp_path):
+        from src.config.optimization_profiles import SubsystemBudget
         mgr = _make_replay_manager(tmp_path, max_pending_flushes=10)
         with mgr._inflight_lock:
             mgr._inflight_count = 7  # 70% — below 80%
-        report = mgr.pressure_report()
+        report = mgr.pressure_report(budget=SubsystemBudget(subsystem="replay", max_inflight_chunks=10))
         assert report.pressure_state == "OK"
         assert report.subsystem == "replay"
         assert report.budget == 10.0
 
     def test_pressure_warn_above_80pct(self, tmp_path):
+        from src.config.optimization_profiles import SubsystemBudget
         mgr = _make_replay_manager(tmp_path, max_pending_flushes=10)
         with mgr._inflight_lock:
             mgr._inflight_count = 9  # 90%
-        report = mgr.pressure_report()
+        report = mgr.pressure_report(budget=SubsystemBudget(subsystem="replay", max_inflight_chunks=10))
         assert report.pressure_state == "WARN"
         assert report.degradation_action is not None
 
@@ -121,8 +123,9 @@ class TestPressureReport:
         assert report.pressure_state == "DEGRADED"
 
     def test_pressure_zero_max_returns_ok_unlimited(self, tmp_path):
+        from src.config.optimization_profiles import SubsystemBudget
         mgr = _make_replay_manager(tmp_path, max_pending_flushes=0)
-        report = mgr.pressure_report()
+        report = mgr.pressure_report(budget=SubsystemBudget(subsystem="replay"))
         assert report.pressure_state == "OK"
         assert report.budget is None
 

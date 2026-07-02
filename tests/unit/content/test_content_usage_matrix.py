@@ -1,7 +1,12 @@
 import os
+import tempfile
 from pathlib import Path
 import pytest
-from src.content.matrix import CONTENT_USAGE_MATRIX, generate_matrix_report
+from src.content.matrix import (
+    CONTENT_USAGE_MATRIX,
+    _auto_discover_extra_entries,
+    generate_matrix_report,
+)
 
 VALID_IMPLEMENTATION_STATES = {
     "LOADED_ONLY",
@@ -292,5 +297,111 @@ def test_implementation_state_values_are_valid():
             f"'{key}' has unknown implementation_state '{entry.implementation_state}'"
         )
 
+
+# ---------------------------------------------------------------------------
+# Auto-discovery regression tests (TCK-20260627-P2K-CONTENT-MATRIX)
+# ---------------------------------------------------------------------------
+
+def test_auto_discover_returns_design_only_for_unknown_file():
+    """Auto-discovered entries must be DESIGN_ONLY with valid state/maturity."""
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        subdir = Path(tmp_dir) / "custom_pack"
+        subdir.mkdir()
+        (subdir / "items.yaml").write_text("- id: test_item\n", encoding="utf-8")
+
+        discovered = _auto_discover_extra_entries(tmp_dir, frozenset())
+
+    assert "custom_pack/items" in discovered
+    entry = discovered["custom_pack/items"]
+    assert entry.implementation_state == "DESIGN_ONLY"
+    assert entry.content_maturity in VALID_MATURITY_STATES
+    # Fields required to be non-None by test_matrix_validation_and_states must
+    # be present as strings (not Python None)
+    assert entry.validator_coverage is not None
+    assert entry.resolver_component is not None
+    assert entry.compile_runtime_consumer is not None
+    # schema_class is allowed to be None for DESIGN_ONLY entries
+    assert entry.schema_class is None
+
+
+def test_auto_discover_skips_known_keys():
+    """Auto-discovery must not overwrite or duplicate already-registered keys."""
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        subdir = Path(tmp_dir) / "foundation"
+        subdir.mkdir()
+        (subdir / "materials.yaml").write_text("- id: stone\n", encoding="utf-8")
+
+        known = frozenset({"foundation/materials"})
+        discovered = _auto_discover_extra_entries(tmp_dir, known)
+
+    assert "foundation/materials" not in discovered
+
+
+def test_auto_discover_skips_gitkeep():
+    """Gitkeep placeholder files must be ignored during auto-discovery."""
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        (Path(tmp_dir) / ".gitkeep").write_text("", encoding="utf-8")
+        discovered = _auto_discover_extra_entries(tmp_dir, frozenset())
+
+    assert not any(".gitkeep" in k for k in discovered)
+
+
+def test_auto_discover_graceful_on_missing_dir():
+    """Auto-discovery must return an empty dict when content_dir does not exist."""
+    result = _auto_discover_extra_entries(
+        "/nonexistent/path/that/does/not/exist", frozenset()
+    )
+    assert result == {}
+
+
+def test_auto_discover_no_duplicates_for_current_content():
+    """Running auto-discover against real data/content/ with all current keys must produce no new entries.
+
+    This confirms every file currently on disk is already hand-registered in
+    CONTENT_USAGE_MATRIX — no accidental gaps from the existing content set.
+    """
+    discovered = _auto_discover_extra_entries(
+        content_dir="data/content",
+        known_keys=frozenset(CONTENT_USAGE_MATRIX.keys()),
+    )
+    # All current files are already covered by the hand-crafted matrix entries
+    # plus any previously auto-discovered entries merged at import time.
+    assert discovered == {}, (
+        f"Unexpected files on disk not registered in CONTENT_USAGE_MATRIX: "
+        f"{sorted(discovered.keys())}"
+    )
+
+
+def test_merged_matrix_covers_all_disk_files():
+    """The live CONTENT_USAGE_MATRIX (after auto-discovery merge) must cover every
+    file currently present under data/content/.
+
+    This is a direct post-implementation regression guard for the DX fix: adding
+    a new YAML to data/content/ must not require a manual CONTENT_USAGE_MATRIX edit.
+    """
+    content_dir = Path("data/content")
+    if not content_dir.is_dir():
+        pytest.skip("data/content/ not present in this environment")
+
+    structural_dirs = {"world_modules", "world_compositions", "simulation_scenarios"}
+    scanned_families = set()
+    for item in content_dir.rglob("*"):
+        if item.name == ".gitkeep":
+            continue
+        rel = item.relative_to(content_dir)
+        parts = rel.parts
+        if not parts:
+            continue
+        top_dir = parts[0]
+        if top_dir in structural_dirs:
+            scanned_families.add(top_dir)
+        elif item.is_file() and item.suffix in {".yaml", ".yml"}:
+            scanned_families.add(str(rel.with_suffix("")))
+
+    missing = scanned_families - set(CONTENT_USAGE_MATRIX.keys())
+    assert not missing, (
+        f"Files on disk not covered by CONTENT_USAGE_MATRIX after auto-discovery: "
+        f"{sorted(missing)}"
+    )
 
 

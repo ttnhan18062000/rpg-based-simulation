@@ -114,12 +114,12 @@ def test_concurrency_determinism_equivalence():
         DeterministicRNG(42),
         flags={"audit_mode": True}
     )
-    kernel_local._scheduler.select_work = MagicMock(
-        return_value=(work_items, 0)
-    )
-
-    kernel_local.tick_once()
-    final_state_local = kernel_local._state
+    kernel_local._scheduler.select_work = MagicMock(return_value=(work_items, 0))
+    try:
+        kernel_local.tick_once()
+        final_state_local = kernel_local._state
+    finally:
+        kernel_local.shutdown()
 
     kernel_concurrent = Kernel(
         profile_concurrent,
@@ -127,12 +127,12 @@ def test_concurrency_determinism_equivalence():
         DeterministicRNG(42),
         flags={"audit_mode": True}
     )
-    kernel_concurrent._scheduler.select_work = MagicMock(
-        return_value=(work_items, 0)
-    )
-
-    kernel_concurrent.tick_once()
-    final_state_concurrent = kernel_concurrent._state
+    kernel_concurrent._scheduler.select_work = MagicMock(return_value=(work_items, 0))
+    try:
+        kernel_concurrent.tick_once()
+        final_state_concurrent = kernel_concurrent._state
+    finally:
+        kernel_concurrent.shutdown()
 
     assert final_state_local.tick == final_state_concurrent.tick
 

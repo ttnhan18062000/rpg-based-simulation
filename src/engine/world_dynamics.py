@@ -62,7 +62,9 @@ class WorldDynamicsSystem:
         # 2.2 Ownership & Calamity Progression
         from src.world.influence import _region_owner_faction_id_str
         from src.content_semantics.faction import get_faction_semantics_service as _get_sem
+        from src.domains.world_emergence.schema import WorldEvent, WorldEventCategory
         _sem = _get_sem()
+        sovereignty_events = []
         for r_id, region in state.regions.items():
             w_upd = update.world_updates.get(r_id)
 
@@ -76,22 +78,51 @@ class WorldDynamicsSystem:
             owner_fid = _region_owner_faction_id_str(region.owner_faction_id)
 
             # Ownership Law: Threshold of 100/-100 for control
+            new_owner = None
             if current_influence >= 100.0 and (owner_fid is None or not _sem.is_protector(owner_fid)):
                 world_upd = replace(world_upd, owner_faction_id_set=Faction.HERO_GUILD)
+                new_owner = "HERO_GUILD"
                 changed = True
             elif current_influence <= -100.0 and (owner_fid is None or not _sem.is_invader(owner_fid)):
                 world_upd = replace(world_upd, owner_faction_id_set=Faction.MONSTER_HORDE)
+                new_owner = "MONSTER_HORDE"
                 changed = True
-            
+
+            # Emit SOVEREIGNTY_SHIFT event when ownership actually changes (E52G)
+            if new_owner is not None and new_owner != owner_fid:
+                sovereignty_events.append(WorldEvent(
+                    category=WorldEventCategory.SOVEREIGNTY_SHIFT,
+                    tick=state.tick,
+                    region_id=r_id,
+                    subject=new_owner,
+                    severity=0.9,
+                    payload={"influence": round(current_influence, 2), "prev_owner": owner_fid or "none"},
+                ))
+
             # Hazard scaling (LEG-RPG-139)
             if current_trauma > 50.0:
                 new_hazard = min(1.0, region.hazard_level + 0.01)
                 if new_hazard > region.hazard_level:
                     world_upd = replace(world_upd, hazard_level_set=new_hazard)
                     changed = True
-            
+
             if changed or w_upd:
                 update.world_updates[r_id] = world_upd
+
+        # 2.2b Flush sovereignty events into world_events_add (E52G)
+        if sovereignty_events:
+            update = update.replace(
+                world_events_add=list(update.world_events_add) + sovereignty_events
+            )
+
+        # 2.3 Trauma region → DANGER concern injection (E52F)
+        from src.domains.world_emergence.services import TraumaRegionConcernBridge
+        trauma_strat_updates = TraumaRegionConcernBridge.inject_concerns(state, state.tick)
+        if trauma_strat_updates:
+            for eid, strat_upd in trauma_strat_updates.items():
+                e_upd = update.entity_updates.get(eid, EntityUpdate(entity_id=eid))
+                merged_strategic = e_upd.strategic.merge(strat_upd) if e_upd.strategic is not None else strat_upd
+                update.entity_updates[eid] = replace(e_upd, strategic=merged_strategic)
 
         # 3. Process Macro World Dynamics (Calamity Spawns, Maturity)
         from src.engine.cadence import SystemCadence as DefaultCadence, should_run
@@ -135,7 +166,11 @@ class WorldDynamicsSystem:
             # 3.6 Process Camps (Persistent Encampments)
             from src.world.camp import CampService
             camp_state_update = CampService.process_camps(state, generator)
-            
+
+            # 3.7 Demographic Birth/Death Cycle (E52A)
+            from src.domains.demographics.cohort import DemographicCycleService
+            demo_update = DemographicCycleService.process_demographics(state, state.tick)
+
             update = update.replace(
                 maturity_set=calamity_update.maturity_set if calamity_update.maturity_set is not None else update.maturity_set,
                 last_calamity_tick_set=calamity_update.last_calamity_tick_set if calamity_update.last_calamity_tick_set is not None else update.last_calamity_tick_set,
@@ -145,7 +180,15 @@ class WorldDynamicsSystem:
                 next_node_id_set=ecology_update.next_node_id_set or update.next_node_id_set,
                 next_entity_id_set=generator._last_id + 1 if (generator._last_id + 1) > state.next_entity_id else None
             )
+            # Merge demographic world_updates into the main update
+            if not demo_update.is_noop():
+                update = update.merge(demo_update)
 
+            # 3.8 Seasonal calamity pressure propagation (E52E)
+            from src.world.calamity import CalamityPressurePropagator
+            seasonal_update = CalamityPressurePropagator.propagate_seasonal(state)
+            if not seasonal_update.is_noop():
+                update = update.merge(seasonal_update)
 
         # 4. Regional Transformations (Type Shifting)
         from src.world.transformation import TransformationService

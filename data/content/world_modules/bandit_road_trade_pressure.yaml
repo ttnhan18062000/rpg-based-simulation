@@ -11,7 +11,36 @@ regions:
     grid_bounds: [40, 40, 100, 60]
     terrain: "road"
     hazard_level: 2.0
+    tags: [wilderness]
 factions: ["bandit_company", "merchant_league"]
 populations: ["bandit_ambush_group", "merchant_caravan"]
 relationships: ["town_to_bandits", "bandits_to_merchants"]
 observability_tags: ["conflict"]
+quest_definitions:
+  - id: "bandit_escort_merchant_caravan"
+    type: "escort"
+    required_participant_tags: ["humanoid", "merchant_minded"]
+    required_location_tags: ["road", "wilderness"]
+    reward_budget: 120
+    procedural_hints:
+      difficulty: 2
+      escalation: true
+    tags: ["bandit", "trade", "escort"]
+  - id: "bandit_hunt_road_captain"
+    type: "hunt"
+    required_participant_tags: ["humanoid", "opportunistic"]
+    required_location_tags: ["road", "wilderness"]
+    reward_budget: 150
+    procedural_hints:
+      difficulty: 3
+      escalation: false
+    tags: ["bandit", "conflict", "bounty"]
+  - id: "bandit_investigate_ambush_source"
+    type: "investigate"
+    required_participant_tags: ["humanoid", "opportunistic"]
+    required_location_tags: ["road", "wilderness"]
+    reward_budget: 100
+    procedural_hints:
+      difficulty: 2
+      escalation: false
+    tags: ["bandit", "conflict", "mystery"]

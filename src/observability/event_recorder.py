@@ -3,7 +3,7 @@ import os
 import json
 import logging
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional
 from src.observability.events import SimulationEvent
 from src.config.optimization_profiles import SubsystemBudget, SubsystemPressureReport, DEFAULT_OBSERVABILITY_BUDGET
 
@@ -61,6 +61,7 @@ class EventRecorder:
         max_events: int = 5000,
         enabled: bool = True,
         budget: SubsystemBudget | None = None,
+        quality_fn: Optional[Callable] = None,
     ) -> None:
         self.enabled = enabled
         self.max_events = max_events
@@ -99,7 +100,8 @@ class EventRecorder:
         self._worker = QueueDrainWorker(
             queue=self.queue,
             file_write_fn=self._write_envelope_to_file,
-            stream_publish_fn=self._publish_envelope_to_stream
+            stream_publish_fn=self._publish_envelope_to_stream,
+            quality_fn=quality_fn,
         )
         if self.enabled:
             self._worker.start()

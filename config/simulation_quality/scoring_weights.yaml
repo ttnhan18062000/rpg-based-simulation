@@ -1,0 +1,159 @@
+COGNITION:
+  belief_active: 2.0
+  subjective_divergence: 5.0
+  knowledge_sharpening: 1.0
+  cognition_replan: 3.0
+  zero_knowledge_decision: -2.0
+  knowledge_rot: -3.0
+  goal_lock_no_cognition: -2.0
+  self_model_active: 1.0
+  belief_system_dormant: -15.0
+  omniscience_collapse: -20.0
+
+AGENCY:
+  action_taken: 1.0
+  route_novelty: 3.0
+  commitment_complete: 4.0
+  project_done: 3.0
+  navigation_active: 1.0
+  defer_idle: -1.0
+  stasis_per_tick: -3.0
+  rejection_cascade: -5.0
+  rejection_cascade_sustained: -15.0
+  project_cycle: -2.0
+  entropy_reward: 2.0
+  population_stasis: -25.0
+
+COMBAT:
+  combat_active: 2.0
+  combat_resolved: 3.0
+  survival_tension: 2.0
+  tactical_variety: 1.0
+  attrition: -1.0
+  early_extinction: -10.0
+  attrition_spiral: -20.0
+  extinction_degenerate: -50.0
+  combat_dormant: -15.0
+  combat_unresolved: -8.0
+  combat_hard_law: -30.0
+
+FACTION:
+  diplomacy_active: 5.0
+  coalition_forming: 4.0
+  alliance_formed: 6.0
+  military_active: 3.0
+  territory_shifted: 6.0
+  economic_military_coupling: 2.0
+  tension_active: 2.0
+  diplomacy_dormant: -20.0
+  faction_monopoly: -15.0
+  faction_conquest_degenerate: -40.0
+  war_without_conflict: -10.0
+  faction_early_extinction: -8.0
+  all_factions_neutral: -25.0
+  tension_oscillation: -5.0
+
+ECONOMY:
+  harvest_active: 3.0
+  crafting_active: 4.0
+  trade_active: 3.0
+  gold_flow: 1.0
+  quest_economy_coupling: 3.0
+  scarcity_active: 1.0
+  ecology_cycling: 2.0
+  conservation_valid: 1.0
+  inflation_controlled: 2.0
+  knowledge_economy_active: 2.0
+  zero_harvest: -20.0
+  zero_crafting: -15.0
+  zero_trade: -15.0
+  ecology_broken: -25.0
+  conservation_violated: -50.0
+  gold_frozen: -5.0
+  monetary_paralysis: -10.0
+  ecology_cadence_broken: -10.0
+
+PROGRESSION:
+  xp_active: 1.0
+  level_milestone: 8.0
+  skill_growth: 5.0
+  genetic_determinism_active: 2.0
+  pillar_trait_milestone: 15.0
+  soft_skill_evolution: 4.0
+  survival_experience: 3.0
+  progression_frozen: -10.0
+  skill_system_silent: -5.0
+  all_level_1: -30.0
+  xp_plateau: -8.0
+  trait_system_silent: -10.0
+  level_cap_reached: -1.0
+
+SOCIAL:
+  cooperation_active: 4.0
+  group_forming: 2.0
+  contract_honored: 3.0
+  contract_complete: 6.0
+  reputation_shifting: 2.0
+  relationship_depth: 2.0
+  group_enforcement: 1.0
+  negotiation_active: 2.0
+  offer_dead: -1.0
+  contract_broken: -3.0
+  cooperation_dormant: -15.0
+  social_structure_static: -8.0
+  reputation_flat: -10.0
+  social_isolation: -2.0
+
+INFORMATION:
+  belief_active: 2.0
+  intel_quality_up: 2.0
+  knowledge_economy_active: 3.0
+  info_has_impact: 5.0
+  intel_complexity: 4.0
+  subjective_divergence: 6.0
+  knowledge_rot: -2.0
+  belief_pipeline_deaf: -1.0
+  knowledge_economy_dormant: -10.0
+  belief_system_silent: -15.0
+  omniscience_collapse: -20.0
+  paid_info_memory_failure: -5.0
+
+WORLD:
+  calamity_active: 8.0
+  boss_active: 6.0
+  raid_active: 4.0
+  world_evolving: 6.0
+  trauma_feedback: 2.0
+  political_change: 5.0
+  ecology_cycling: 3.0
+  world_repopulating: 2.0
+  demographics_active: 2.0
+  natural_lifecycle: 1.0
+  persistent_structure: 1.0
+  hazard_active: 1.0
+  calamity_dormant: -8.0
+  world_depopulating: -10.0
+  world_static: -6.0
+  ecology_broken: -20.0
+  trauma_hazard_broken: -5.0
+  demographics_dormant: -8.0
+  boss_spawn_blocked: -6.0
+  trauma_accumulation_broken: -8.0
+
+NARRATIVE:
+  quest_active: 5.0
+  quest_resolved: 10.0
+  quest_failed: -2.0
+  history_forming: 4.0
+  emergence_active: 6.0
+  milestone_war: 8.0
+  milestone_boss_kill: 8.0
+  milestone_sovereignty: 6.0
+  scenario_advancing: 4.0
+  scenario_resolved: 15.0
+  scenario_stalled: -10.0
+  quest_system_dormant: -20.0
+  history_silent: -15.0
+  emergence_dormant: -10.0
+  quest_retry_loop: -6.0
+  hero_death_unrecorded: -1.0

@@ -29,42 +29,44 @@ def test_kernel_authoritative_phase_sequence():
     
     # Create kernel
     kernel = Kernel(profile, state, rng)
-    
-    # 2. Setup patchers
-    from unittest.mock import patch
-    
-    with patch.object(Kernel, '_phase_init') as m_init, \
-         patch.object(Kernel, '_phase_scheduling') as m_sched, \
-         patch.object(Kernel, '_phase_collection') as m_coll, \
-         patch.object(Kernel, '_phase_resolution') as m_res, \
-         patch.object(Kernel, '_phase_cleanup') as m_clean, \
-         patch.object(Kernel, '_phase_advancement') as m_adv, \
-         patch.object(Kernel, '_phase_persistence') as m_persist:
-        
-        # 3. Execution
-        kernel.tick_once()
-        
-        # 4. Proof of Order
-        manager = MagicMock()
-        manager.attach_mock(m_init, "_phase_init")
-        manager.attach_mock(m_sched, "_phase_scheduling")
-        manager.attach_mock(m_coll, "_phase_collection")
-        manager.attach_mock(m_res, "_phase_resolution")
-        manager.attach_mock(m_clean, "_phase_cleanup")
-        manager.attach_mock(m_adv, "_phase_advancement")
-        manager.attach_mock(m_persist, "_phase_persistence")
-        
-        # Trigger second time to capture logic
-        kernel.tick_once()
-        
-        expected_calls = [
-            call._phase_init(),
-            call._phase_scheduling(),
-            call._phase_collection(),
-            call._phase_resolution(),
-            call._phase_cleanup(),
-            call._phase_advancement(),
-            call._phase_persistence()
-        ]
-        
-        assert manager.mock_calls == expected_calls, f"Phase sequence drift detected! Actual: {manager.mock_calls}"
+    try:
+        # 2. Setup patchers
+        from unittest.mock import patch
+
+        with patch.object(Kernel, '_phase_init') as m_init, \
+             patch.object(Kernel, '_phase_scheduling') as m_sched, \
+             patch.object(Kernel, '_phase_collection') as m_coll, \
+             patch.object(Kernel, '_phase_resolution') as m_res, \
+             patch.object(Kernel, '_phase_cleanup') as m_clean, \
+             patch.object(Kernel, '_phase_advancement') as m_adv, \
+             patch.object(Kernel, '_phase_persistence') as m_persist:
+
+            # 3. Execution
+            kernel.tick_once()
+
+            # 4. Proof of Order
+            manager = MagicMock()
+            manager.attach_mock(m_init, "_phase_init")
+            manager.attach_mock(m_sched, "_phase_scheduling")
+            manager.attach_mock(m_coll, "_phase_collection")
+            manager.attach_mock(m_res, "_phase_resolution")
+            manager.attach_mock(m_clean, "_phase_cleanup")
+            manager.attach_mock(m_adv, "_phase_advancement")
+            manager.attach_mock(m_persist, "_phase_persistence")
+
+            # Trigger second time to capture logic
+            kernel.tick_once()
+
+            expected_calls = [
+                call._phase_init(),
+                call._phase_scheduling(),
+                call._phase_collection(),
+                call._phase_resolution(),
+                call._phase_cleanup(),
+                call._phase_advancement(),
+                call._phase_persistence()
+            ]
+
+            assert manager.mock_calls == expected_calls, f"Phase sequence drift detected! Actual: {manager.mock_calls}"
+    finally:
+        kernel.shutdown()
