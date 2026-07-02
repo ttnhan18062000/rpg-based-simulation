@@ -18,7 +18,8 @@ This document is the single reference for setting up and operating the local con
 |---|---|---|
 | Docker Engine | 24+ | Required for `make search-server-docker` (primary) |
 | Python | 3.11+ | For index build and CLI fallback |
-| `pip install -r requirements.txt` | — | Installs `sentence-transformers`, `sqlite-vec`, `rank_bm25`, `fastapi`, `uvicorn` |
+| `pip install -r requirements.txt` | — | Core app deps: `fastapi`, `uvicorn`, etc. Installed by CI too. |
+| `pip install -r requirements-knowledge.txt` | — | Knowledge-search stack: `torch`, `sentence-transformers`, `sqlite-vec`, `rank_bm25`. Local agent tooling only — CI never installs this. |
 
 First-time model download: `all-MiniLM-L6-v2` (~22 MB) is downloaded automatically on first `make knowledge-index`. Subsequent builds use the local cache.
 
@@ -29,8 +30,12 @@ First-time model download: `all-MiniLM-L6-v2` (~22 MB) is downloaded automatical
 Run these once after cloning or after a clean checkout.
 
 ```bash
-# 1. Install Python dependencies
+# 1. Install core Python dependencies
 pip install -r requirements.txt
+
+# 1b. Install the knowledge-search stack (torch must come from the CPU wheel index)
+pip install torch --index-url https://download.pytorch.org/whl/cpu
+pip install -r requirements-knowledge.txt
 
 # 2. Build the full knowledge index (tickets + investigations + docs/)
 #    Expected: ~3,000–4,000 chunks; takes 3–5 minutes on first run (model download included)

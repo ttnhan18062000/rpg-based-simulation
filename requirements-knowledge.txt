@@ -1,0 +1,12 @@
+# Local agent working-environment tooling only (tools/knowledge_search.py, search_mcp.py,
+# search_server.py). Not required by the engine, API, or CI test suite — see
+# requirements.txt and docs/guidelines/agent_working_environment.md.
+#
+# torch must be installed first, from the CPU-only wheel index (not resolvable from
+# public PyPI as a plain `pip install`):
+#   pip install torch --index-url https://download.pytorch.org/whl/cpu
+# All environments for this project use CPU-only PyTorch (no CUDA/GPU).
+torch==2.12.1+cpu
+sentence-transformers==5.6.0
+sqlite-vec==0.1.9
+rank-bm25==0.2.2
