@@ -315,7 +315,7 @@ Default weight = 1.0 for all pillars. Weights are configurable via `QualityProfi
 
 ### 4.7 Loop and Stagnation Detection
 
-Each `PillarAccumulator` maintains a 200-tick sliding window. Loop detection fires when:
+Each `PillarAccumulator` maintains a sliding window (default: 200 scored events). Loop detection fires when:
 
 ```
 tag_frequency(tag, window) / window_size > LOOP_THRESHOLD   (default: 0.70)
@@ -329,6 +329,22 @@ When a loop is detected for a tag:
 
 Loop detection does **not** add an extra score penalty — the underlying negative deltas
 already drive the score down. Loop flags are purely diagnostic.
+
+**Important:** The window counts **scored events**, not ticks. At typical 200-tick event densities
+(47–287 scored events observed across sandbox_world and dungeon_crawl), the window rarely fills —
+meaning loop detection remains dormant in most calibration runs. This is expected and correct;
+loop flags are a real-time signal for long running sessions, not a short-run calibration metric.
+
+**CLI sweep tooling:** `tools/calibrate_simq.py` accepts `--window-size INT` and
+`--loop-threshold FLOAT` to override these values for a single run without mutating
+`detection_params.yaml`. These flags are intended for diagnostic sweeps only.
+
+**Confirmed values (TCK-20260701-SIMQ-LOOP-WINDOW-TUNE, 2026-07-02):**
+Sweep across window_size ∈ {100, 150, 200, 300} on sandbox_world (47 events/200t) and
+dungeon_crawl (287 events/200t) at seed 42 showed zero grade change across all window sizes.
+Decision: **200/0.70 confirmed correct, no change.** The low event density means the window
+never fills in 200-tick runs; the threshold is irrelevant until event volume is substantially
+higher (≥ window_size events per pillar per run).
 
 ### 4.8 Data-Driven Scoring Weights
 

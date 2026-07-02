@@ -1,9 +1,9 @@
 {
-  "run_id": "run_1782955705_5169",
+  "run_id": "run_1782960615_5169",
   "tick_count": 200,
   "overall_score": 0.0905,
   "overall_grade": "B",
-  "generated_at": "2026-07-02T01:28:48.395186+00:00",
+  "generated_at": "2026-07-02T02:50:37.693188+00:00",
   "pillars": {
     "COGNITION": {
       "raw_score": 0.0,
@@ -68,7 +68,7 @@
       "worst_events": [
         {
           "tick": 51,
-          "event_id": "20b2d49fc42c4b56ae50a573dda23674",
+          "event_id": "08381520629e4b02aff6b3636bbd357a",
           "pillar": "PROGRESSION",
           "delta": -8.0,
           "reason": "XP gain rate dropped to zero after tick gate",

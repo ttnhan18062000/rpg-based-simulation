@@ -3127,3 +3127,18 @@
   test_path: "tests/simulation_quality/test_quality_hub_event_translation.py; tests/unit/observability/test_event_extractor_simq.py; tests/unit/observability/test_event_extractor_agency.py; tests/unit/observability/test_event_extractor_agency2.py; tests/unit/observability/test_event_extractor_social_faction.py; tests/unit/observability/test_event_extractor_narrative.py; tests/unit/engine/test_scenario_runtime_service.py"
   divergence_note: "SOCIAL and FACTION pillars now emitting. 4 gaps remain blocked (architecture limitations): alliance_proposed, resource_seized, contract_milestone_completed, social_memory_created — documented in gap tests. NARRATIVE pillar now emitting (TCK-20260629-SIMQ-EMIT-NARRATIVE): chronicle_entry_created (orchestrator), world_emergence_event + narrative_milestone (EventExtractor from world_events_add), hero_death_unrecorded (EventExtractor entity diff), scenario_stalled + scenario_objective_completed (ScenarioRuntimeService injection). Gap: scenario_objective_progressed (binary ObjectiveEvaluator — no partial progress concept). Tests: tests/unit/observability/test_event_extractor_narrative.py (N-01..N-18). TCK-20260630-SIMQ-TRANSLATE: full translation table audit confirmed 0 gaps in _TRANSLATE_SIMPLE/_TRANSLATE_CONDITIONAL; 4 new tests added for previously untested entries (leadership_changed, alliance_formed, betrayal_desertion x2); 27 engine_emission_gaps documented in docs/simulation_quality/event_type_coverage.md."
   support_boundary: null
+- id: INFRA-251
+  text: "calibrate_simq.py --window-size and --loop-threshold CLI flags override detection_params.yaml
+    window_size/loop_threshold for the current run only. ScoringWeights is patched via model_copy()
+    after _load_weights(); the YAML source is never mutated. Confirmed by 2026-07-02 sweep:
+    window_size in {100,150,200,300} produces identical grades on sandbox_world and dungeon_crawl
+    at 200 ticks — 200/0.70 defaults are correct."
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: "tools/calibrate_simq.py::main() — model_copy patch after _load_weights(); sweep
+    data 2026-07-02 (TCK-20260701-SIMQ-LOOP-WINDOW-TUNE)"
+  proof_type: null
+  test_path: tests/simulation_quality/test_accumulator.py::test_accumulator_respects_injected_window_size
+  divergence_note: null
+  support_boundary: null

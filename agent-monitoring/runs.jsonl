@@ -438,3 +438,4 @@
 {"run_id":"TCK-20260701-HAZARD-NATIVE-IMMUNITY-REDESIGN","start_ts":"2026-07-01T17:16:22Z","end_ts":"2026-07-01T18:18:43Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":10}
 {"run_id":"FOLDER-tickets-todos-worldtemplate-deprecation","start_ts":"2026-07-01T16:24:47Z","end_ts":"2026-07-01T18:23:32Z","workflow":"implement-epic","tier":"epic","final_status":"DONE","agent_count":3}
 {"run_id":"TCK-20260701-SANDBOX-MONSTER-BALANCE","start_ts":"2026-07-01T14:59:16Z","end_ts":"2026-07-02T01:40:39Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":15}
+{"run_id":"TCK-20260701-SIMQ-LOOP-WINDOW-TUNE","start_ts":"2026-07-02T02:25:51Z","end_ts":"2026-07-02T02:59:33Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":9}

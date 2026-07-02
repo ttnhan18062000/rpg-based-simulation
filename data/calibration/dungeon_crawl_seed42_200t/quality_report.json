@@ -1,9 +1,9 @@
 {
-  "run_id": "run_1782836876_5169",
-  "tick_count": 172,
-  "overall_score": 0.33350370559672887,
+  "run_id": "run_1782960916_5169",
+  "tick_count": 200,
+  "overall_score": 0.289010989010989,
   "overall_grade": "B",
-  "generated_at": "2026-06-30T16:28:25.152702+00:00",
+  "generated_at": "2026-07-02T02:55:38.181625+00:00",
   "pillars": {
     "COGNITION": {
       "raw_score": 0.0,
@@ -27,7 +27,7 @@
     },
     "COMBAT": {
       "raw_score": 127.0,
-      "normalized_score": 0.7383720930232558,
+      "normalized_score": 0.635,
       "grade": "A",
       "event_count": 65,
       "negative_count": 1,
@@ -38,7 +38,7 @@
       "worst_events": [
         {
           "tick": 172,
-          "event_id": "6db8f8d79da74c7b92ffb9846eb387f4",
+          "event_id": "f12159513ee8454fb2fffdf66fda6735",
           "pillar": "COMBAT",
           "delta": -1.0,
           "reason": "entity killed in combat",
@@ -72,16 +72,30 @@
       "worst_events": []
     },
     "PROGRESSION": {
-      "raw_score": 96.0,
-      "normalized_score": 0.5581395348837209,
-      "grade": "A",
-      "event_count": 32,
-      "negative_count": 0,
+      "raw_score": 88.0,
+      "normalized_score": 0.44,
+      "grade": "B",
+      "event_count": 33,
+      "negative_count": 1,
       "loop_detected": true,
       "loop_flags": [
         "survival_experience"
       ],
-      "worst_events": []
+      "worst_events": [
+        {
+          "tick": 51,
+          "event_id": "f05977db40c84f87946bb5705a6ca15e",
+          "pillar": "PROGRESSION",
+          "delta": -8.0,
+          "reason": "XP gain rate dropped to zero after tick gate",
+          "event_type": "progression_plateau_detected",
+          "entity_id": 9,
+          "region_id": null,
+          "tags": [
+            "xp_plateau"
+          ]
+        }
+      ]
     },
     "SOCIAL": {
       "raw_score": 0.0,
@@ -104,10 +118,10 @@
       "worst_events": []
     },
     "WORLD": {
-      "raw_score": 152.0,
-      "normalized_score": 0.8837209302325582,
+      "raw_score": 164.0,
+      "normalized_score": 0.82,
       "grade": "A",
-      "event_count": 146,
+      "event_count": 150,
       "negative_count": 0,
       "loop_detected": true,
       "loop_flags": [
@@ -117,7 +131,7 @@
     },
     "NARRATIVE": {
       "raw_score": 20.0,
-      "normalized_score": 0.11627906976744186,
+      "normalized_score": 0.1,
       "grade": "B",
       "event_count": 4,
       "negative_count": 0,

@@ -112,3 +112,26 @@ def test_snapshot_worst_events_is_immutable_copy(scoring_weights):
     original_len = len(snap["worst_events"])
     acc.add(_make_record("e2", -3.0))
     assert len(snap["worst_events"]) == original_len
+
+
+def test_accumulator_respects_injected_window_size(scoring_weights):
+    patched = scoring_weights.model_copy(
+        update={"detection": scoring_weights.detection.model_copy(update={"window_size": 50})}
+    )
+    acc = PillarAccumulator(PillarId.ECONOMY, weights=patched)
+    for i in range(100):
+        acc.add(_make_record(f"e{i}", 1.0))
+    assert len(acc.window_buffer) <= 50
+
+
+def test_accumulator_respects_injected_loop_threshold(scoring_weights):
+    patched = scoring_weights.model_copy(
+        update={"detection": scoring_weights.detection.model_copy(update={"loop_threshold": 0.50})}
+    )
+    acc = PillarAccumulator(PillarId.ECONOMY, weights=patched)
+    # 60 events tagged "x" out of 100 total = 60% — above 0.50, below 0.70
+    for i in range(60):
+        acc.add(_make_record(f"x{i}", 1.0, tags=("hot_tag",)))
+    for i in range(40):
+        acc.add(_make_record(f"y{i}", 1.0, tags=("other_tag",)))
+    assert "hot_tag" in acc.loop_flags

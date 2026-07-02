@@ -253,6 +253,26 @@ def main():
         default=None,
         help="Override the calibration output directory (default: data/calibration/{name}_seed{seed}_{ticks}t).",
     )
+    parser.add_argument(
+        "--window-size",
+        type=int,
+        default=None,
+        dest="window_size",
+        help=(
+            "Override detection_params.yaml window_size for this run only. "
+            "Does not mutate the YAML. Intended for sweep analysis."
+        ),
+    )
+    parser.add_argument(
+        "--loop-threshold",
+        type=float,
+        default=None,
+        dest="loop_threshold",
+        help=(
+            "Override detection_params.yaml loop_threshold for this run only. "
+            "Does not mutate the YAML. Intended for sweep analysis."
+        ),
+    )
     args = parser.parse_args()
 
     # Resolve profile: explicit > name-based > default
@@ -270,6 +290,14 @@ def main():
     print(f"[calibrate_simq] Engine done in {elapsed:.2f}s. JSONL at: {engine_run_dir}")
 
     weights = _load_weights(profile)
+    if args.window_size is not None or args.loop_threshold is not None:
+        patched_detection = weights.detection.model_copy(update={
+            k: v for k, v in {
+                "window_size": args.window_size,
+                "loop_threshold": args.loop_threshold,
+            }.items() if v is not None
+        })
+        weights = weights.model_copy(update={"detection": patched_detection})
     hub, persistence = _build_hub(weights, cal_dir, run_id or run_tag)
 
     event_count = _replay_jsonl_through_hub(engine_run_dir, hub)
@@ -280,7 +308,10 @@ def main():
     persistence.shutdown()
 
     print(f"\n=== Quality Report: {run_tag} ===")
-    print(f"  ticks={args.ticks} events={event_count} elapsed={elapsed:.2f}s profile={profile}")
+    print(
+        f"  ticks={args.ticks} events={event_count} elapsed={elapsed:.2f}s profile={profile}"
+        f" window_size={weights.detection.window_size} loop_threshold={weights.detection.loop_threshold}"
+    )
     print(f"  overall_grade={report.overall_grade} overall_score={report.overall_score:.4f}")
     print("\n  Pillar breakdown:")
     for pillar_id, snap in sorted(report.pillars.items()):
