@@ -1,0 +1,145 @@
+{
+  "run_id": "run_1782966877_1673",
+  "tick_count": 1000,
+  "overall_score": 0.0757142857142857,
+  "overall_grade": "B",
+  "generated_at": "2026-07-02T04:36:25.239724+00:00",
+  "pillars": {
+    "COGNITION": {
+      "raw_score": 0.0,
+      "normalized_score": 0.0,
+      "grade": "C",
+      "event_count": 0,
+      "negative_count": 0,
+      "loop_detected": false,
+      "loop_flags": [],
+      "worst_events": []
+    },
+    "AGENCY": {
+      "raw_score": 0.0,
+      "normalized_score": 0.0,
+      "grade": "C",
+      "event_count": 0,
+      "negative_count": 0,
+      "loop_detected": false,
+      "loop_flags": [],
+      "worst_events": []
+    },
+    "COMBAT": {
+      "raw_score": 127.0,
+      "normalized_score": 0.127,
+      "grade": "B",
+      "event_count": 65,
+      "negative_count": 1,
+      "loop_detected": true,
+      "loop_flags": [
+        "combat_active"
+      ],
+      "worst_events": [
+        {
+          "tick": 33,
+          "event_id": "209cc306d875404e8394fc709d21c8f0",
+          "pillar": "COMBAT",
+          "delta": -1.0,
+          "reason": "entity killed in combat",
+          "event_type": "entity_killed",
+          "entity_id": 18,
+          "region_id": null,
+          "tags": [
+            "attrition"
+          ]
+        }
+      ]
+    },
+    "FACTION": {
+      "raw_score": 0.0,
+      "normalized_score": 0.0,
+      "grade": "C",
+      "event_count": 0,
+      "negative_count": 0,
+      "loop_detected": false,
+      "loop_flags": [],
+      "worst_events": []
+    },
+    "ECONOMY": {
+      "raw_score": 0.0,
+      "normalized_score": 0.0,
+      "grade": "C",
+      "event_count": 0,
+      "negative_count": 0,
+      "loop_detected": false,
+      "loop_flags": [],
+      "worst_events": []
+    },
+    "PROGRESSION": {
+      "raw_score": 88.0,
+      "normalized_score": 0.088,
+      "grade": "B",
+      "event_count": 33,
+      "negative_count": 1,
+      "loop_detected": true,
+      "loop_flags": [
+        "survival_experience"
+      ],
+      "worst_events": [
+        {
+          "tick": 51,
+          "event_id": "dd99a58e76bc4d419cbdfb5dc8e652a2",
+          "pillar": "PROGRESSION",
+          "delta": -8.0,
+          "reason": "XP gain rate dropped to zero after tick gate",
+          "event_type": "progression_plateau_detected",
+          "entity_id": 1,
+          "region_id": null,
+          "tags": [
+            "xp_plateau"
+          ]
+        }
+      ]
+    },
+    "SOCIAL": {
+      "raw_score": 0.0,
+      "normalized_score": 0.0,
+      "grade": "C",
+      "event_count": 0,
+      "negative_count": 0,
+      "loop_detected": false,
+      "loop_flags": [],
+      "worst_events": []
+    },
+    "INFORMATION": {
+      "raw_score": 0.0,
+      "normalized_score": 0.0,
+      "grade": "C",
+      "event_count": 0,
+      "negative_count": 0,
+      "loop_detected": false,
+      "loop_flags": [],
+      "worst_events": []
+    },
+    "WORLD": {
+      "raw_score": 227.0,
+      "normalized_score": 0.227,
+      "grade": "B",
+      "event_count": 170,
+      "negative_count": 0,
+      "loop_detected": true,
+      "loop_flags": [
+        "hazard_active"
+      ],
+      "worst_events": []
+    },
+    "NARRATIVE": {
+      "raw_score": 120.0,
+      "normalized_score": 0.12,
+      "grade": "B",
+      "event_count": 24,
+      "negative_count": 0,
+      "loop_detected": true,
+      "loop_flags": [
+        "quest_active"
+      ],
+      "worst_events": []
+    }
+  }
+}

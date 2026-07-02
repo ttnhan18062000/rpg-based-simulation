@@ -1,0 +1,163 @@
+{
+  "run_id": "run_1782967104_2994",
+  "tick_count": 1000,
+  "overall_score": 0.08597222222222223,
+  "overall_grade": "B",
+  "generated_at": "2026-07-02T04:40:14.409055+00:00",
+  "pillars": {
+    "COGNITION": {
+      "raw_score": 42.0,
+      "normalized_score": 0.042,
+      "grade": "B",
+      "event_count": 7,
+      "negative_count": 0,
+      "loop_detected": true,
+      "loop_flags": [
+        "subjective_divergence"
+      ],
+      "worst_events": []
+    },
+    "AGENCY": {
+      "raw_score": 0.0,
+      "normalized_score": 0.0,
+      "grade": "C",
+      "event_count": 0,
+      "negative_count": 0,
+      "loop_detected": false,
+      "loop_flags": [],
+      "worst_events": []
+    },
+    "COMBAT": {
+      "raw_score": 125.0,
+      "normalized_score": 0.125,
+      "grade": "B",
+      "event_count": 64,
+      "negative_count": 1,
+      "loop_detected": true,
+      "loop_flags": [
+        "combat_active"
+      ],
+      "worst_events": [
+        {
+          "tick": 987,
+          "event_id": "d0e8f9769cd7416abb990bbc4bcac9e6",
+          "pillar": "COMBAT",
+          "delta": -1.0,
+          "reason": "entity killed in combat",
+          "event_type": "entity_killed",
+          "entity_id": 23,
+          "region_id": null,
+          "tags": [
+            "attrition"
+          ]
+        }
+      ]
+    },
+    "FACTION": {
+      "raw_score": 0.0,
+      "normalized_score": 0.0,
+      "grade": "C",
+      "event_count": 0,
+      "negative_count": 0,
+      "loop_detected": false,
+      "loop_flags": [],
+      "worst_events": []
+    },
+    "ECONOMY": {
+      "raw_score": 92.0,
+      "normalized_score": 0.092,
+      "grade": "B",
+      "event_count": 46,
+      "negative_count": 0,
+      "loop_detected": true,
+      "loop_flags": [
+        "inflation_controlled"
+      ],
+      "worst_events": []
+    },
+    "PROGRESSION": {
+      "raw_score": 82.0,
+      "normalized_score": 0.082,
+      "grade": "B",
+      "event_count": 31,
+      "negative_count": 1,
+      "loop_detected": true,
+      "loop_flags": [
+        "survival_experience"
+      ],
+      "worst_events": [
+        {
+          "tick": 51,
+          "event_id": "e2cf537536b2415f964a6d4b7590f7ca",
+          "pillar": "PROGRESSION",
+          "delta": -8.0,
+          "reason": "XP gain rate dropped to zero after tick gate",
+          "event_type": "progression_plateau_detected",
+          "entity_id": 2,
+          "region_id": null,
+          "tags": [
+            "xp_plateau"
+          ]
+        }
+      ]
+    },
+    "SOCIAL": {
+      "raw_score": 0.0,
+      "normalized_score": 0.0,
+      "grade": "C",
+      "event_count": 0,
+      "negative_count": 0,
+      "loop_detected": false,
+      "loop_flags": [],
+      "worst_events": []
+    },
+    "INFORMATION": {
+      "raw_score": 0.0,
+      "normalized_score": 0.0,
+      "grade": "C",
+      "event_count": 0,
+      "negative_count": 0,
+      "loop_detected": false,
+      "loop_flags": [],
+      "worst_events": []
+    },
+    "WORLD": {
+      "raw_score": 225.0,
+      "normalized_score": 0.225,
+      "grade": "B",
+      "event_count": 182,
+      "negative_count": 0,
+      "loop_detected": true,
+      "loop_flags": [
+        "hazard_active"
+      ],
+      "worst_events": []
+    },
+    "NARRATIVE": {
+      "raw_score": 404.0,
+      "normalized_score": 0.404,
+      "grade": "B",
+      "event_count": 82,
+      "negative_count": 1,
+      "loop_detected": true,
+      "loop_flags": [
+        "quest_active"
+      ],
+      "worst_events": [
+        {
+          "tick": 987,
+          "event_id": "baf61e9b2c23446c90a95fc7b45031b9",
+          "pillar": "NARRATIVE",
+          "delta": -1.0,
+          "reason": "hero died but no chronicle entry or narrative event emitted",
+          "event_type": "hero_death_unrecorded",
+          "entity_id": 23,
+          "region_id": null,
+          "tags": [
+            "hero_death_unrecorded"
+          ]
+        }
+      ]
+    }
+  }
+}

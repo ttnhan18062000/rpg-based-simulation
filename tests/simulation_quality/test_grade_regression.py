@@ -45,11 +45,35 @@ FAST_ANCHOR_KEYS = [
     "dungeon_crawl_seed42_200t",
     "urban_political_seed42_200t",
     "simq_routing_test_seed42_500t",
+    # new — simq_routing_test additional seeds
+    "simq_routing_test_seed123_500t",
+    "simq_routing_test_seed456_500t",
+    # new — dungeon_crawl 500t
+    "dungeon_crawl_seed42_500t",
+    "dungeon_crawl_seed123_500t",
+    "dungeon_crawl_seed456_500t",
+    # new — urban_political 500t
+    "urban_political_seed42_500t",
+    "urban_political_seed123_500t",
+    "urban_political_seed456_500t",
 ]
 
 SLOW_ANCHOR_KEYS = [
     "dungeon_crawl_seed42_1000t",
     "sandbox_world_seed42_1000t",
+    # new — dungeon_crawl 1000t
+    "dungeon_crawl_seed123_1000t",
+    "dungeon_crawl_seed456_1000t",
+    # new — urban_political 1000t
+    "urban_political_seed42_1000t",
+    "urban_political_seed123_1000t",
+    "urban_political_seed456_1000t",
+    # new — dungeon_crawl 2000t
+    "dungeon_crawl_seed42_2000t",
+    "dungeon_crawl_seed123_2000t",
+    "dungeon_crawl_seed456_2000t",
+    # new — sandbox_world 2000t
+    "sandbox_world_seed42_2000t",
 ]
 
 MINIMUM_FAST_ANCHORS = set(FAST_ANCHOR_KEYS)

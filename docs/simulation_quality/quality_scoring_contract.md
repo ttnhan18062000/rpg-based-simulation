@@ -1182,6 +1182,29 @@ For each scenario in §6 Scenario Registry:
 - The test verifies the correct pillar scores it (not a different one)
 - The test verifies the correct polarity (positive for healthy, negative for degenerate)
 
+### 11.6 Standing Evaluation Harness
+
+`tools/evaluate_simq.py` — compares calibration grades against `tests/simulation_quality/fixtures/grade_anchors.json` using the same ±1 band tolerance as the regression tests.
+
+**Invocation:**
+
+| Command | What it does |
+|---|---|
+| `make evaluate` | Dry-run: reads existing `data/calibration/` reports, diffs against anchors. Fast — no engine re-run. |
+| `make evaluate-full` | Re-runs engine for all 14 fast anchor scenarios (≤500t), then diffs. Use after significant engine changes. |
+| `python3 tools/evaluate_simq.py --scenario dungeon_crawl_seed42_200t --dry-run` | Check a single scenario without re-running the engine. |
+
+**Output:** Aligned table with columns `run_key / pillar / anchor / actual / status`. REGRESS rows are marked with `<<`.
+
+**Exit codes:** 0 = all PASS (MISSING is a warning, not error); 1 = at least one REGRESS; 2 = setup error (anchor file missing or invalid JSON).
+
+**Anchor update workflow (after an intentional scoring change):**
+1. Re-run calibration: `python3 tools/calibrate_simq.py --name <world> --seed <N> --ticks <T>`
+2. Inspect new grades in `data/calibration/<run_key>/quality_report.json`
+3. Edit `tests/simulation_quality/fixtures/grade_anchors.json` with new grades
+4. Run `make evaluate` to confirm all PASS
+5. Commit calibration data, fixture, and any doc/ledger updates together
+
 ---
 
 ## 12. Acceptance Criteria

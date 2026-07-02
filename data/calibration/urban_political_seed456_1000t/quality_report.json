@@ -1,0 +1,173 @@
+{
+  "run_id": "run_1782967217_1673",
+  "tick_count": 1000,
+  "overall_score": 0.07421296296296295,
+  "overall_grade": "B",
+  "generated_at": "2026-07-02T04:42:08.757041+00:00",
+  "pillars": {
+    "COGNITION": {
+      "raw_score": 0.0,
+      "normalized_score": 0.0,
+      "grade": "C",
+      "event_count": 0,
+      "negative_count": 0,
+      "loop_detected": false,
+      "loop_flags": [],
+      "worst_events": []
+    },
+    "AGENCY": {
+      "raw_score": 0.0,
+      "normalized_score": 0.0,
+      "grade": "C",
+      "event_count": 0,
+      "negative_count": 0,
+      "loop_detected": false,
+      "loop_flags": [],
+      "worst_events": []
+    },
+    "COMBAT": {
+      "raw_score": 105.0,
+      "normalized_score": 0.105,
+      "grade": "B",
+      "event_count": 57,
+      "negative_count": 3,
+      "loop_detected": true,
+      "loop_flags": [
+        "combat_active"
+      ],
+      "worst_events": [
+        {
+          "tick": 1000,
+          "event_id": "56dff2dc19624f8db196a9ded8f1f8eb",
+          "pillar": "COMBAT",
+          "delta": -1.0,
+          "reason": "entity killed in combat",
+          "event_type": "entity_killed",
+          "entity_id": 5,
+          "region_id": null,
+          "tags": [
+            "attrition"
+          ]
+        },
+        {
+          "tick": 1000,
+          "event_id": "bfff09d4ca534475bc89bf8ff0af00a6",
+          "pillar": "COMBAT",
+          "delta": -1.0,
+          "reason": "entity killed in combat",
+          "event_type": "entity_killed",
+          "entity_id": 11,
+          "region_id": null,
+          "tags": [
+            "attrition"
+          ]
+        },
+        {
+          "tick": 1000,
+          "event_id": "689d006f2760498a9f2a82b743f6a08b",
+          "pillar": "COMBAT",
+          "delta": -1.0,
+          "reason": "entity killed in combat",
+          "event_type": "entity_killed",
+          "entity_id": 13,
+          "region_id": null,
+          "tags": [
+            "attrition"
+          ]
+        }
+      ]
+    },
+    "FACTION": {
+      "raw_score": 0.0,
+      "normalized_score": 0.0,
+      "grade": "C",
+      "event_count": 0,
+      "negative_count": 0,
+      "loop_detected": false,
+      "loop_flags": [],
+      "worst_events": []
+    },
+    "ECONOMY": {
+      "raw_score": 48.0,
+      "normalized_score": 0.048,
+      "grade": "B",
+      "event_count": 24,
+      "negative_count": 0,
+      "loop_detected": true,
+      "loop_flags": [
+        "inflation_controlled"
+      ],
+      "worst_events": []
+    },
+    "PROGRESSION": {
+      "raw_score": 76.0,
+      "normalized_score": 0.076,
+      "grade": "B",
+      "event_count": 29,
+      "negative_count": 1,
+      "loop_detected": true,
+      "loop_flags": [
+        "survival_experience"
+      ],
+      "worst_events": [
+        {
+          "tick": 51,
+          "event_id": "537679ac11034718983bb5cc17fbb6f9",
+          "pillar": "PROGRESSION",
+          "delta": -8.0,
+          "reason": "XP gain rate dropped to zero after tick gate",
+          "event_type": "progression_plateau_detected",
+          "entity_id": 1,
+          "region_id": null,
+          "tags": [
+            "xp_plateau"
+          ]
+        }
+      ]
+    },
+    "SOCIAL": {
+      "raw_score": 0.0,
+      "normalized_score": 0.0,
+      "grade": "C",
+      "event_count": 0,
+      "negative_count": 0,
+      "loop_detected": false,
+      "loop_flags": [],
+      "worst_events": []
+    },
+    "INFORMATION": {
+      "raw_score": 0.0,
+      "normalized_score": 0.0,
+      "grade": "C",
+      "event_count": 0,
+      "negative_count": 0,
+      "loop_detected": false,
+      "loop_flags": [],
+      "worst_events": []
+    },
+    "WORLD": {
+      "raw_score": 252.0,
+      "normalized_score": 0.252,
+      "grade": "B",
+      "event_count": 208,
+      "negative_count": 0,
+      "loop_detected": true,
+      "loop_flags": [
+        "hazard_active"
+      ],
+      "worst_events": []
+    },
+    "NARRATIVE": {
+      "raw_score": 370.0,
+      "normalized_score": 0.37,
+      "grade": "B",
+      "event_count": 74,
+      "negative_count": 0,
+      "loop_detected": true,
+      "loop_flags": [
+        "quest_active"
+      ],
+      "worst_events": []
+    }
+  }
+}

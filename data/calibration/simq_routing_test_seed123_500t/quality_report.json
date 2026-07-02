@@ -1,0 +1,242 @@
+{
+  "run_id": "run_1782966277_2994",
+  "tick_count": 401,
+  "overall_score": 0.14912718204488778,
+  "overall_grade": "B",
+  "generated_at": "2026-07-02T04:25:32.067969+00:00",
+  "pillars": {
+    "COGNITION": {
+      "raw_score": 18.0,
+      "normalized_score": 0.04488778054862843,
+      "grade": "B",
+      "event_count": 3,
+      "negative_count": 0,
+      "loop_detected": true,
+      "loop_flags": [
+        "subjective_divergence"
+      ],
+      "worst_events": []
+    },
+    "AGENCY": {
+      "raw_score": 137.0,
+      "normalized_score": 0.341645885286783,
+      "grade": "B",
+      "event_count": 74,
+      "negative_count": 8,
+      "loop_detected": true,
+      "loop_flags": [
+        "navigation_active"
+      ],
+      "worst_events": [
+        {
+          "tick": 1,
+          "event_id": "0e68b244513f4da68f2b07c7341389af",
+          "pillar": "AGENCY",
+          "delta": -7.0,
+          "reason": "entity deferred action",
+          "event_type": "defer_with_reason",
+          "entity_id": 30,
+          "region_id": null,
+          "tags": [
+            "defer_idle",
+            "stasis_N"
+          ]
+        },
+        {
+          "tick": 1,
+          "event_id": "ded9091a27094607abdde102d5a34004",
+          "pillar": "AGENCY",
+          "delta": -4.0,
+          "reason": "entity deferred action",
+          "event_type": "defer_with_reason",
+          "entity_id": 26,
+          "region_id": null,
+          "tags": [
+            "defer_idle",
+            "stasis_N"
+          ]
+        },
+        {
+          "tick": 1,
+          "event_id": "8198e332bada496ca5c1500f9f2fd11a",
+          "pillar": "AGENCY",
+          "delta": -1.0,
+          "reason": "entity deferred action",
+          "event_type": "defer_with_reason",
+          "entity_id": 2,
+          "region_id": null,
+          "tags": [
+            "defer_idle"
+          ]
+        },
+        {
+          "tick": 1,
+          "event_id": "46054e5607424adbaf29df8d1ec8700b",
+          "pillar": "AGENCY",
+          "delta": -1.0,
+          "reason": "entity deferred action",
+          "event_type": "defer_with_reason",
+          "entity_id": 4,
+          "region_id": null,
+          "tags": [
+            "defer_idle"
+          ]
+        },
+        {
+          "tick": 1,
+          "event_id": "399602c4f1e24eb1bb7457db8805d382",
+          "pillar": "AGENCY",
+          "delta": -1.0,
+          "reason": "entity deferred action",
+          "event_type": "defer_with_reason",
+          "entity_id": 13,
+          "region_id": null,
+          "tags": [
+            "defer_idle"
+          ]
+        },
+        {
+          "tick": 1,
+          "event_id": "575e01239eb04432bdbdeb6e955f9277",
+          "pillar": "AGENCY",
+          "delta": -1.0,
+          "reason": "entity deferred action",
+          "event_type": "defer_with_reason",
+          "entity_id": 15,
+          "region_id": null,
+          "tags": [
+            "defer_idle"
+          ]
+        },
+        {
+          "tick": 1,
+          "event_id": "0f47ee26717741278a91af851d6cd6d6",
+          "pillar": "AGENCY",
+          "delta": -1.0,
+          "reason": "entity deferred action",
+          "event_type": "defer_with_reason",
+          "entity_id": 17,
+          "region_id": null,
+          "tags": [
+            "defer_idle"
+          ]
+        },
+        {
+          "tick": 1,
+          "event_id": "a52f20a6b7a244499dec21ee30495866",
+          "pillar": "AGENCY",
+          "delta": -1.0,
+          "reason": "entity deferred action",
+          "event_type": "defer_with_reason",
+          "entity_id": 21,
+          "region_id": null,
+          "tags": [
+            "defer_idle"
+          ]
+        }
+      ]
+    },
+    "COMBAT": {
+      "raw_score": 56.0,
+      "normalized_score": 0.1396508728179551,
+      "grade": "B",
+      "event_count": 28,
+      "negative_count": 0,
+      "loop_detected": true,
+      "loop_flags": [
+        "combat_active"
+      ],
+      "worst_events": []
+    },
+    "FACTION": {
+      "raw_score": 0.0,
+      "normalized_score": 0.0,
+      "grade": "C",
+      "event_count": 0,
+      "negative_count": 0,
+      "loop_detected": false,
+      "loop_flags": [],
+      "worst_events": []
+    },
+    "ECONOMY": {
+      "raw_score": 0.0,
+      "normalized_score": 0.0,
+      "grade": "C",
+      "event_count": 0,
+      "negative_count": 0,
+      "loop_detected": false,
+      "loop_flags": [],
+      "worst_events": []
+    },
+    "PROGRESSION": {
+      "raw_score": 34.0,
+      "normalized_score": 0.08478802992518704,
+      "grade": "B",
+      "event_count": 15,
+      "negative_count": 1,
+      "loop_detected": true,
+      "loop_flags": [
+        "survival_experience"
+      ],
+      "worst_events": [
+        {
+          "tick": 51,
+          "event_id": "f1ac0c678f6543d7bd63d687bf219cdf",
+          "pillar": "PROGRESSION",
+          "delta": -8.0,
+          "reason": "XP gain rate dropped to zero after tick gate",
+          "event_type": "progression_plateau_detected",
+          "entity_id": 1,
+          "region_id": null,
+          "tags": [
+            "xp_plateau"
+          ]
+        }
+      ]
+    },
+    "SOCIAL": {
+      "raw_score": 0.0,
+      "normalized_score": 0.0,
+      "grade": "C",
+      "event_count": 0,
+      "negative_count": 0,
+      "loop_detected": false,
+      "loop_flags": [],
+      "worst_events": []
+    },
+    "INFORMATION": {
+      "raw_score": 0.0,
+      "normalized_score": 0.0,
+      "grade": "C",
+      "event_count": 0,
+      "negative_count": 0,
+      "loop_detected": false,
+      "loop_flags": [],
+      "worst_events": []
+    },
+    "WORLD": {
+      "raw_score": 83.0,
+      "normalized_score": 0.20698254364089774,
+      "grade": "B",
+      "event_count": 69,
+      "negative_count": 0,
+      "loop_detected": true,
+      "loop_flags": [
+        "hazard_active"
+      ],
+      "worst_events": []
+    },
+    "NARRATIVE": {
+      "raw_score": 270.0,
+      "normalized_score": 0.6733167082294265,
+      "grade": "A",
+      "event_count": 54,
+      "negative_count": 0,
+      "loop_detected": true,
+      "loop_flags": [
+        "quest_active"
+      ],
+      "worst_events": []
+    }
+  }
+}

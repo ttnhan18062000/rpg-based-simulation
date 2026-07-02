@@ -1,0 +1,133 @@
+{
+  "run_id": "run_1782966990_5169",
+  "tick_count": 1000,
+  "overall_score": 0.0765,
+  "overall_grade": "B",
+  "generated_at": "2026-07-02T04:38:20.279356+00:00",
+  "pillars": {
+    "COGNITION": {
+      "raw_score": 0.0,
+      "normalized_score": 0.0,
+      "grade": "C",
+      "event_count": 0,
+      "negative_count": 0,
+      "loop_detected": false,
+      "loop_flags": [],
+      "worst_events": []
+    },
+    "AGENCY": {
+      "raw_score": 0.0,
+      "normalized_score": 0.0,
+      "grade": "C",
+      "event_count": 0,
+      "negative_count": 0,
+      "loop_detected": false,
+      "loop_flags": [],
+      "worst_events": []
+    },
+    "COMBAT": {
+      "raw_score": 124.0,
+      "normalized_score": 0.124,
+      "grade": "B",
+      "event_count": 62,
+      "negative_count": 0,
+      "loop_detected": true,
+      "loop_flags": [
+        "combat_active"
+      ],
+      "worst_events": []
+    },
+    "FACTION": {
+      "raw_score": 0.0,
+      "normalized_score": 0.0,
+      "grade": "C",
+      "event_count": 0,
+      "negative_count": 0,
+      "loop_detected": false,
+      "loop_flags": [],
+      "worst_events": []
+    },
+    "ECONOMY": {
+      "raw_score": 48.0,
+      "normalized_score": 0.048,
+      "grade": "B",
+      "event_count": 24,
+      "negative_count": 0,
+      "loop_detected": true,
+      "loop_flags": [
+        "inflation_controlled"
+      ],
+      "worst_events": []
+    },
+    "PROGRESSION": {
+      "raw_score": 82.0,
+      "normalized_score": 0.082,
+      "grade": "B",
+      "event_count": 31,
+      "negative_count": 1,
+      "loop_detected": true,
+      "loop_flags": [
+        "survival_experience"
+      ],
+      "worst_events": [
+        {
+          "tick": 51,
+          "event_id": "6e9a9b7052324b07a18239b212d3be74",
+          "pillar": "PROGRESSION",
+          "delta": -8.0,
+          "reason": "XP gain rate dropped to zero after tick gate",
+          "event_type": "progression_plateau_detected",
+          "entity_id": 4,
+          "region_id": null,
+          "tags": [
+            "xp_plateau"
+          ]
+        }
+      ]
+    },
+    "SOCIAL": {
+      "raw_score": 0.0,
+      "normalized_score": 0.0,
+      "grade": "C",
+      "event_count": 0,
+      "negative_count": 0,
+      "loop_detected": false,
+      "loop_flags": [],
+      "worst_events": []
+    },
+    "INFORMATION": {
+      "raw_score": 0.0,
+      "normalized_score": 0.0,
+      "grade": "C",
+      "event_count": 0,
+      "negative_count": 0,
+      "loop_detected": false,
+      "loop_flags": [],
+      "worst_events": []
+    },
+    "WORLD": {
+      "raw_score": 190.0,
+      "normalized_score": 0.19,
+      "grade": "B",
+      "event_count": 147,
+      "negative_count": 0,
+      "loop_detected": true,
+      "loop_flags": [
+        "hazard_active"
+      ],
+      "worst_events": []
+    },
+    "NARRATIVE": {
+      "raw_score": 445.0,
+      "normalized_score": 0.445,
+      "grade": "B",
+      "event_count": 89,
+      "negative_count": 0,
+      "loop_detected": true,
+      "loop_flags": [
+        "quest_active"
+      ],
+      "worst_events": []
+    }
+  }
+}

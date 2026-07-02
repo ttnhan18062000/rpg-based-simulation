@@ -367,6 +367,45 @@ dominate a small window that fills faster at low event diversity — not because
 small. The 200/0.70 defaults are confirmed correct for the current event density regime. At
 significantly higher event volumes (long runs, larger worlds), re-evaluation is warranted.
 
+### Multi-seed / multi-tick matrix (2026-07-02, TCK-20260702-SIMQ-EVAL-MATRIX)
+
+Corpus expanded from 8 anchor entries (all seed=42 point estimates, except sandbox_world seeds 137
+and 999) to 25 anchor entries covering 3 seeds × 3–4 tick counts across signal-producing worlds.
+
+**Corpus before / after:**
+
+| | Before | After |
+|---|---|---|
+| Total anchor entries | 8 | 25 |
+| Seeds covered per world | 1 (seed42 only, with exceptions) | 3 (seeds 42, 123, 456) |
+| Tick counts per world | 1–2 | 2–3 |
+| FAST_ANCHOR_KEYS | 6 | 14 |
+| SLOW_ANCHOR_KEYS | 2 | 11 |
+
+**Per-world stability conclusions:**
+
+- **dungeon_crawl:** Perfectly stable. COMBAT/NARRATIVE/PROGRESSION/WORLD all hold B across seeds
+  42, 123, 456 at 500t, 1000t, and 2000t. No COMBAT grade drift observed at 2000t.
+- **urban_political:** Mildly variable at 500t (NARRATIVE B/A, WORLD B/A depending on seed).
+  Stable at 1000t — all active pillars normalise to B. ECONOMY activates at 1000t for all seeds
+  (duration effect, not noise). COGNITION borderline (B only for seed123 at 1000t).
+- **simq_routing_test:** Highly stable. NARRATIVE=A and AGENCY=B confirmed across all three seeds
+  with ENABLE_ADVENTURE_ROUTING=ON. COGNITION seed-variable (C for seed42, B for seeds 123/456).
+- **sandbox_world:** COGNITION and ECONOMY plateau at B at 2000t — no upgrade to A observed.
+  NARRATIVE drops A→B from 1000t to 2000t (scoring-window dilution at low event density, not
+  a regression).
+
+**OQ1 resolution:** urban_political NARRATIVE at 1000t converges to B across all seeds. The 500t
+seed123 NARRATIVE=A was a window-composition burst artefact.
+
+**OQ2 resolution:** sandbox_world COGNITION=B and ECONOMY=B at 2000t — both plateau; confirmed
+B-ceiling in default mode.
+
+**AC6 — AGENCY:** Confirmed ≥ B for simq_routing_test seeds 42, 123, and 456 with
+ENABLE_ADVENTURE_ROUTING=ON. All three seeds: AGENCY=B.
+
+Full grade distribution tables: `docs/simulation_quality/eval_matrix_results.md`.
+
 ---
 
 ## Module Health (as of 2026-07-02)

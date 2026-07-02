@@ -3072,19 +3072,36 @@
     Coverage: all 10 scorer unit test files, hub integration, feed integration, regression
     anchors (populated, TCK-20260630-SIMQ-ANCHORS), performance (timeit), 22-scenario
     coverage table (SQ-01 through SQ-22). Performance limits: scorer < 0.1ms, report < 50ms,
-    worst_events ≤ 100, window_buffer ≤ 200. Grade regression anchors: 8 run keys committed
-    to tests/simulation_quality/fixtures/grade_anchors.json (6 fast 200t/500t, 2 slow 1000t).
+    worst_events ≤ 100, window_buffer ≤ 200. Grade regression anchors: 25 run keys committed
+    to tests/simulation_quality/fixtures/grade_anchors.json (14 fast ≤500t, 11 slow ≥1000t).
     Parametric band-tolerance tests (±1 letter) against data/calibration/ reports."
   status: verified
   priority: P1
   legacy_evidence: null
   v2_evidence: "tests/simulation_quality/ (353 tests collected). TCK-20260630-SIMQ-ANCHORS
     populated grade_anchors.json with 8 empirical calibration run anchors; rewrote
-    test_grade_regression.py as parametric band-tolerance tests reading calibration reports."
+    test_grade_regression.py as parametric band-tolerance tests reading calibration reports.
+    TCK-20260702-SIMQ-EVAL-MATRIX expanded corpus to 25 entries (14 fast, 11 slow) via
+    multi-seed/multi-tick matrix: dungeon_crawl×{42,123,456}×{500t,1000t,2000t},
+    urban_political×{42,123,456}×{500t,1000t}, simq_routing_test×{123,456}×{500t}
+    (ENABLE_ADVENTURE_ROUTING=ON), sandbox_world×{42}×{2000t}. All 26 regression tests pass."
   proof_type: null
   test_path: "tests/simulation_quality/test_scenario_coverage.py;
     tests/simulation_quality/test_grade_regression.py::test_grade_within_anchor_band;
     tests/simulation_quality/test_grade_regression.py::test_grade_anchor_file_exists_and_valid"
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-252
+  text: "tools/evaluate_simq.py standing harness: --dry-run diffs existing data/calibration/
+    reports against grade_anchors.json (25 entries); full mode re-runs calibrate_simq.py
+    for all fast anchor scenarios. Exit 0=all pass, 1=regress, 2=setup error.
+    make evaluate (dry-run) and make evaluate-full targets added to Makefile."
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: "tools/evaluate_simq.py::main(); Makefile evaluate/evaluate-full targets. TCK-20260702-SIMQ-EVAL-HARNESS 2026-07-02."
+  proof_type: null
+  test_path: "tests/simulation_quality/test_evaluate_harness.py"
   divergence_note: null
   support_boundary: null
 - id: SIMQ-CALIBRATED-001

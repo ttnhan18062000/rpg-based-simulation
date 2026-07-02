@@ -1,4 +1,4 @@
-.PHONY: help install install-py install-fe build dev serve stop clean lint profile-api memray-profile docs-serve docs-build docs-registry docs-artifacts knowledge-index knowledge-index-update search-server search-server-docker search-server-stop search-server-logs install-hooks eval-search mcp-server-test world-list world-validate world-compile world-resolve world-inspect world-template catalog-list sim sim-debug sim-quick sim-world sim-sweep check-resources export-run retention-plan retention-clean warehouse-init warehouse-ingest typecheck-py perf-measure
+.PHONY: help install install-py install-fe build dev serve stop clean lint profile-api memray-profile docs-serve docs-build docs-registry docs-artifacts knowledge-index knowledge-index-update search-server search-server-docker search-server-stop search-server-logs install-hooks eval-search evaluate evaluate-full mcp-server-test world-list world-validate world-compile world-resolve world-inspect world-template catalog-list sim sim-debug sim-quick sim-world sim-sweep check-resources export-run retention-plan retention-clean warehouse-init warehouse-ingest typecheck-py perf-measure
 
 # Default
 help: ## Show available commands
@@ -280,6 +280,14 @@ install-hooks: ## Install git hooks (post-commit incremental reindex when docs/ 
 
 eval-search: ## Run search quality evaluation — Recall@5, MRR@10 (requires knowledge-index)
 	$(shell for py in .venv/bin/python3 /home/vboxuser/Work/venv/bin/python3 python3; do [ -x "$$py" ] && echo "$$py" && break; done) tools/eval_search.py
+
+PYTHON := $(shell for py in .venv/bin/python3 /home/vboxuser/Work/venv/bin/python3 python3; do [ -x "$$py" ] && echo "$$py" && break; done)
+
+evaluate: ## Diff current calibration data against grade anchors (no engine re-run)
+	$(PYTHON) tools/evaluate_simq.py --dry-run
+
+evaluate-full: ## Re-run engine for all fast (≤500t) scenarios and diff against grade anchors
+	$(PYTHON) tools/evaluate_simq.py
 
 mcp-server-test: ## Smoke-test MCP search_docs tool via --test mode (no MCP client needed)
 	@echo '{"query": "damage formula", "top_k": 3}' | \
