@@ -98,6 +98,22 @@ across all tick counts (unchanged — it was genuinely active throughout at last
 NARRATIVE holds B. The "A→B decay" pattern described in earlier analysis is fully resolved at 500t
 and 1000t. dungeon_crawl remains the most deterministic world in the corpus.
 
+**Archetype Note (TCK-20260702-SIMQ-UPLIFT-DUNGEON-ECON-COG):** ECONOMY=C and COGNITION=C
+are archetype-correct for dungeon_crawl and are not bugs or gaps. Two root causes:
+
+- **ECONOMY**: `gold_sink_fired` (the only active ECONOMY event path globally) requires
+  `GoldSinkSystem` to detect Gini > 0.7 (`INFLATION_SPIRAL_GINI_THRESHOLD` in
+  `src/economy/health_monitor.py`). dungeon_crawl's 7 entity groups are all combat/creature
+  archetypes (goblin, spider, undead, bandit) — symmetric combat looting keeps the Gini
+  coefficient well below 0.7. No merchant NPC and no service buildings exist.
+- **COGNITION**: `decision_divergence_detected` fires when "DANGER concern urgency > 0.7 AND
+  non-survival project" (`src/systems/event_extractor/phase.py`). dungeon_crawl entities are
+  permanently in combat/survival mode — the non-survival project condition is never satisfied.
+
+*Anti-drift:* If a merchant NPC, service building, or entity with a non-combat behavioral
+profile (e.g., dungeon guide, treasure hunter) is added to dungeon_crawl, re-run calibration
+and reassess these grades.
+
 ---
 
 ### urban_political

@@ -66,7 +66,7 @@ All events below are emitted by the engine and reach at least one pillar scorer,
 | `shop_transaction` | event_extractor | EconomyScorer | 0 | src_kind=SHOP_BUY or SHOP_SELL |
 | `trade_executed` | event_extractor | EconomyScorer | 0 | Co-fires with shop_transaction |
 | `quest_reward_dispensed` | event_extractor | EconomyScorer | 0 | src_kind=QUEST |
-| `gold_sink_fired` | event_extractor | EconomyScorer | 0 | src_kind in (REPAIR_FEE, SERVICE_FEE, TAX) |
+| `gold_sink_fired` | event_extractor | EconomyScorer | 0 | src_kind in (REPAIR_FEE, SERVICE_FEE, TAX) (archetype-blocked in dungeon_crawl — see eval_matrix_results.md DA note) |
 | `paid_information_transaction` | event_extractor | InformationScorer | 0 | src_kind=INFORMATION_PURCHASE |
 | `paid_info_transaction` | event_extractor | EconomyScorer | 0 | Second emit on INFORMATION_PURCHASE (distinct pillar target) — TCK-20260701-SIMQ-EMIT-FACTION-ECONOMY |
 | `conservation_law_verified` | event_extractor | EconomyScorer | 0 | tick % 50 + economy events present — TCK-20260701-SIMQ-EMIT-FACTION-ECONOMY |
@@ -80,7 +80,7 @@ All events below are emitted by the engine and reach at least one pillar scorer,
 | `paid_info_changed_goal` | event_extractor | InformationScorer | 0 | INFORMATION_PURCHASE + project_id change same tick — TCK-20260701-SIMQ-EMIT-LEAD-BELIEFS |
 | `belief_stale` | event_extractor | InformationScorer | 0 | VAGUE/APPROXIMATE lead age > 50 ticks, once per lead per run — TCK-20260701-SIMQ-EMIT-LEAD-BELIEFS |
 | `decision_diverged_by_belief` | event_extractor | InformationScorer | 0 | VAGUE lead + non-information active project — TCK-20260701-SIMQ-EMIT-LEAD-BELIEFS |
-| `decision_divergence_detected` | event_extractor | CognitionScorer | 0 | DANGER concern urgency > 0.7 + non-survival project — TCK-20260701-SIMQ-EMIT-LEAD-BELIEFS |
+| `decision_divergence_detected` | event_extractor | CognitionScorer | 0 | DANGER concern urgency > 0.7 + non-survival project — TCK-20260701-SIMQ-EMIT-LEAD-BELIEFS (archetype-blocked in dungeon_crawl — see eval_matrix_results.md DA note) |
 | `skill_unlocked` | event_extractor | ProgressionScorer | 0 | learned_skills set diff — TCK-20260701-SIMQ-EMIT-PROGRESSION |
 | `trait_expressed` | event_extractor | ProgressionScorer | 0 | traits set diff — TCK-20260701-SIMQ-EMIT-PROGRESSION |
 | `pillar_trait_unlocked` | event_extractor | ProgressionScorer | 0 | active_breakthroughs set diff — TCK-20260701-SIMQ-EMIT-PROGRESSION |

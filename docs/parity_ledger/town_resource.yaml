@@ -1843,7 +1843,7 @@
   proof_type: parity
   test_path: tests/unit/world/test_resource_ecology.py::test_depleted_event_emitted_when_last_charge_harvested
   divergence_note: null
-  support_boundary: null
+  support_boundary: "archetype-blocked in dungeon_crawl: no entity has a harvesting behavioral profile; 3 resource nodes exist as world dressing only (behavioral_profile: null on all entity groups)"
 - id: TOWN-174
   text: "RESOURCE_RECOVERED WorldEvent is emitted when ecology regen brings a fully-depleted\
     \ node above 0 charges"
@@ -1927,7 +1927,7 @@
     tests/unit/economy/test_economy_alerts.py::test_inflation_spiral_fires_above_gini_threshold;
     tests/integration/scenarios/test_macro_economy.py::test_inflation_spiral_alert_emitted
   divergence_note: null
-  support_boundary: null
+  support_boundary: "archetype-blocked in dungeon_crawl: symmetric combat looting keeps Gini well below INFLATION_SPIRAL_GINI_THRESHOLD (0.7); no merchant NPC accumulates disproportionate gold"
 - id: TOWN-179
   text: >
     GoldSinkSystem injects REPAIR_FEE, SERVICE_FEE, and TAX ResourceTransferIntents
@@ -1950,7 +1950,7 @@
     tests/unit/economy/test_gold_sink.py (TC-C01 through TC-C12);
     tests/integration/scenarios/test_macro_economy.py::test_gold_sink_reduces_accumulation_rate
   divergence_note: null
-  support_boundary: null
+  support_boundary: "archetype-blocked in dungeon_crawl: gold_sink_fired calibration_hits=0 across all runs; no service buildings (blacksmith/inn/healer_hut) and no traveling_merchant entity exist in this world archetype"
 - id: TOWN-180
   text: >
     Gold sink conservation invariant: gold drained from entities via REPAIR_FEE,
@@ -1973,7 +1973,7 @@
     tests/unit/economy/test_gold_sink.py::test_conservation_resolver_handles_repair_fee_rejected;
     tests/integration/scenarios/test_macro_economy.py::test_gold_sink_reduces_accumulation_rate
   divergence_note: null
-  support_boundary: null
+  support_boundary: "archetype-blocked in dungeon_crawl: upstream gold_sink_fired trigger archetype-blocked (see TOWN-179); conservation invariant vacuously holds (no gold sink transactions occur)"
 - id: TOWN-181
   text: >
     Shop purchases apply a reputation-based discount: up to 20% off at maximum

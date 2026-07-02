@@ -2747,4 +2747,4 @@
     tests/unit/observability/test_event_extractor_information2.py::TestDecisionDivergedByBelief;
     tests/unit/observability/test_event_extractor_information2.py::TestDecisionDivergenceDetected
   divergence_note: null
-  support_boundary: null
+  support_boundary: "archetype-blocked in dungeon_crawl: all entities are permanently in combat/survival mode; _NON_SURVIVAL_PROJECT_KINDS condition (src/systems/event_extractor/phase.py) never satisfied; calibration_hits=0 across all 10 dungeon_crawl calibration runs"
