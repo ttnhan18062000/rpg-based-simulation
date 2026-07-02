@@ -13,12 +13,12 @@ tags: [audit, simulation-quality, simq, integration, observability, event-bus]
 | Axis | Value |
 |---|---|
 | **Group** | A — Simulation Quality |
-| **State** | `done` (all gaps resolved; 81/82 event types emitted; re-run verified 2026-07-01; calibration corpus refreshed 2026-07-02; all P1/P2 action items closed) |
+| **State** | `done` (all gaps resolved; 81/82 event types emitted; re-run verified 2026-07-01; calibration corpus refreshed 2026-07-02; all P1/P2 action items closed; simq-uplift batch 2026-07-02: SOCIAL activated, grade formula fixed, DA decisions documented — see §SimQ Uplift below) |
 | **Impact** | 4 / 5 |
 | **Interest** | 5 / 5 |
 | **Priority** | 9 |
 | **Method** | run-sim + code-read |
-| **Audit date** | 2026-06-30 (original); 2026-07-01 (re-run after fixes); 2026-07-02 (calibration corpus refresh + loop-detection sweep) |
+| **Audit date** | 2026-06-30 (original); 2026-07-01 (re-run after fixes); 2026-07-02 (calibration corpus refresh + loop-detection sweep); 2026-07-02 (simq-uplift batch) |
 
 **What this dimension answers:** Is the SimQ module actually receiving events and scoring
 live simulation runs — or is it built but disconnected? This audit exercises the full path
@@ -461,6 +461,38 @@ The module is fully operational. All P1/P2 action items from the 2026-07-01 re-r
 - `social_memory_created` — prior premise wrong. `SocialMemoryExporter` is campaign-layer only (called at episode end). Correct emit: `EventExtractor` on `trust_history` delta — no infrastructure change needed. TCK-20260701-SIMQ-EMIT-SOCIAL-MEM scope updated.
 - `contract_milestone_completed` — **resolved**. No schema change needed. EventExtractor emits at 25%/50%/75% of ACTIVE contract duration using existing `created_tick`/`expiry_tick` fields. Gate: once per `(contract_id, milestone)` per run. TCK-20260701-SIMQ-EMIT-CONTRACT-MILESTONE DONE.
 - `camp_constructed` — prior premise wrong. `StateUpdate` has no `camps_add`; camps are pre-placed at world generation. No dynamic camp construction occurs in simulation. No event recorder can fix this — the mechanic doesn't exist. TCK-20260701-SIMQ-EMIT-CAMP closed.
+
+---
+
+## SimQ Uplift Batch (2026-07-02)
+
+Three tickets completed after the calibration corpus refresh:
+
+| Ticket | What changed | Outcome |
+|---|---|---|
+| TCK-20260702-SIMQ-UPLIFT-SOCIAL-ZERO | SOCIAL pillar activated via `ENABLE_SOCIAL_COOPERATION=ON` in `urban_political` calibration profile; fixed `apply_generation()` dropping `feature_flags` each tick (silent bug); fixed `CooperationPhase` storing non-serializable object in `property_updates` | SOCIAL grade C→S in urban_political (1657 cooperation events/500t); 0 regressions |
+| TCK-20260702-SIMQ-UPLIFT-GRADE-DECAY | Fixed normalized_score formula: replaced `raw_score / tick_count` with `raw_score / max(floor_tick, last_event_tick)` where `floor_tick = current_tick // 4`; eliminates tick-dilution artifact for quiet post-event ticks | 24 of 25 anchor grades updated; COMBAT/PROGRESSION now hold A at 500t and 1000t for dungeon_crawl; 0 regressions |
+| TCK-20260702-SIMQ-UPLIFT-DUNGEON-ECON-COG | DA decision documented: ECONOMY=C and COGNITION=C in dungeon_crawl are archetype-correct (no merchant NPCs → Gini < 0.7; all entities in survival mode → non-survival project condition never satisfied); 5 parity ledger entries annotated | Documentation only; 0 regressions |
+
+**Current grade distribution (30 calibration runs, 2026-07-02):**
+
+| Pillar | S | A | B | C | Status |
+|---|---|---|---|---|---|
+| COMBAT | — | 12 | 16 | 2 | Healthy |
+| NARRATIVE | — | 14 | 15 | 1 | Healthy |
+| PROGRESSION | — | 7 | 20 | 3 | Healthy |
+| WORLD | — | 6 | 24 | 0 | Healthy |
+| SOCIAL | 7 | — | — | 23 | Urban_political=S; all others C (ENABLE_SOCIAL_COOPERATION=OFF) |
+| ECONOMY | — | — | 5 | 25 | Activates at urban_political 1000t+ |
+| COGNITION | — | — | 5 | 25 | Activates at urban_political/sandbox seed123 |
+| AGENCY | — | 2 | 1 | 27 | Gated by ENABLE_ADVENTURE_ROUTING (P0-A) |
+| FACTION | — | — | — | 30 | Structurally zero — WorldCompiler does not seed FactionState tension |
+| INFORMATION | — | — | — | 30 | Dual-gate: ENABLE_BELIEF_ASSIMILATION=OFF + no information_source_profiles |
+
+**Open follow-up work:**
+- FACTION activation: WorldCompiler extension + world spec seeding (follow-up batch)
+- INFORMATION activation: flag enable + InformationSourceProfile seeding (follow-up batch)
+- AGENCY P0-A: ENABLE_ADVENTURE_ROUTING global rollout decision (architectural)
 
 ---
 

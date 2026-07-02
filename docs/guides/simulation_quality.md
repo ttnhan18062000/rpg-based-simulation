@@ -86,7 +86,18 @@ All five endpoints return `{"enabled": false}` when disabled.
 
 ## Grade scale
 
-Grades are assigned per pillar using the **normalized score** = `raw_score / max(1, tick_count)`.
+Grades are assigned per pillar using the **normalized score** computed as:
+
+```
+floor_tick       = max(1, current_tick // 4)
+effective_denom  = max(floor_tick, last_event_tick)  # if any events fired
+normalized_score = raw_score / effective_denom
+```
+
+This formula (introduced TCK-20260702-SIMQ-UPLIFT-GRADE-DECAY) prevents tick-dilution artifacts:
+early-burst pillars use `last_event_tick` as denominator instead of the full run length.
+The `floor_tick` guard (`current_tick // 4`) prevents S-grade inflation when all events cluster
+at tick 1. See `docs/simulation_quality/quality_scoring_contract.md` §4.4 for the authoritative spec.
 
 | Grade | Normalized score | Meaning |
 |---|---|---|
