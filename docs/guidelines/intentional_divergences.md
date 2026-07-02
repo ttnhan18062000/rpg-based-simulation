@@ -22,6 +22,8 @@ This document is the canonical record of intentional behavior shifts in `src` co
 | **RPG-CORE** | Attention Limits | **Bounded** | RATIFIED |
 | **RPG-CORE** | Action Style | **Hardened** | RATIFIED |
 | **World Assembly** | Service Assembly | **Stabilized** | DEFERRED |
+| **World / Environment** | Hazard-Kind Faction Endurance | **Bug Fix** | RATIFIED |
+| **World / Authoring** | Worldtemplate.v1 Schema Removal | **Unified** | RATIFIED |
 
 ---
 
@@ -147,6 +149,67 @@ This document is the canonical record of intentional behavior shifts in `src` co
 - **Subsystem**: AI / Tactical
 - **Rationale**: **Hardened**. Maps `ActionStyle` enums to hard logic gates instead of fuzzy floats.
 - **Verification**: `tests/parity/test_movement_parity.py`
+
+### 2.20 Hazard-Kind Faction Endurance (TCK-20260701-HAZARD-NATIVE-IMMUNITY)
+- **Subsystem**: World / Environment
+- **Old Behavior**: `EnvironmentService.calculate_hazard_drain(region, entity)` accepted an
+  `entity` parameter but never read it — every entity standing in a region took identical
+  passive HP drain based solely on `region.hazard_level`/`calamity_intensity`, regardless of
+  whether the entity was native to that habitat. This caused monsters spawned in their own
+  high-hazard home region (e.g. `wolf_den`, `hazard_level: 2.0`) to die from their own
+  region's hazard within a handful of ticks.
+- **New Behavior**: Regions carry a `hazard_kind` tag (`RegionState.hazard_kind`, default
+  `"PHYSICAL"`); factions declare which hazard kinds their members endure via
+  `FactionDefinition.hazard_immunities` (default `[]`). `calculate_hazard_drain` resolves the
+  entity's catalog faction id (`get_faction_id_str`) and, if that faction's
+  `hazard_immunities` includes the region's `hazard_kind`
+  (`FactionSemanticsService.get_hazard_immunities`), returns zero drain; otherwise the drain
+  formula is unchanged. Endurance is declared per faction per hazard kind, never inferred
+  from hostility-to-hero or from a legacy `Faction` enum bucket — a hazard kind nobody has
+  declared endurance for (e.g. a synthetic `"TOXIC_GAS"`) drains every faction present
+  equally, including two mutually hostile ones fighting in it together.
+- **Rationale**: **Bug Fix**. The `entity` parameter's presence in the original signature,
+  unused, is read as evidence a native-exemption was always intended but never wired up. An
+  earlier implementation pass gated the exemption on
+  `entity.identity.faction == Faction.MONSTER_HORDE and region.kind == "WILDERNESS"`; that
+  design was rejected mid-review because it re-derived "endurance" from "is hostile to hero"
+  (a coarse legacy-faction-bucket coupling), which could never model a hazard that hurts two
+  mutually hostile factions equally. The typed-hazard-kind/typed-faction-endurance design
+  fixes that coupling directly.
+- **Verification**: `tests/unit/world/test_regional_consequences.py` (native/hostile/
+  zero-hazard/shared-hazard/synthetic-fiend/default-no-regression cases),
+  `tests/unit/content_semantics/test_semantics.py::test_get_hazard_immunities`,
+  `tests/unit/content/test_catalog.py::test_faction_definition_hazard_immunities_field`,
+  `tests/unit/content/test_catalog.py::test_faction_catalog_loads_with_hazard_immunities_authored`
+- **Note**: `data/worlds/sandbox_world/`'s compiled artifacts have been recompiled by
+  `TCK-20260701-SANDBOX-MONSTER-BALANCE` (done) — the exemption is now live in the committed
+  artifacts (state hash `836b45e8913b46862240c6ba80f177f6` at seed 42), confirmed by a 200-tick
+  empirical re-run showing 0/5 `wild_beast_pack` monster deaths and zero `hazard_drain_applied`
+  events against them, both seed 42 and seed 137.
+
+### 2.21 Worldtemplate.v1 Schema Removal (TCK-20260701-WORLDTEMPLATE-REMOVE)
+- **Subsystem**: World / Authoring
+- **Old Behavior**: `worldtemplate.v1` existed as a second world-authoring schema alongside
+  `worldcomposition.v1`, using population "recipes" procedurally expanded by
+  `WorldTemplateExpander`. Its compile path never resolved entity stats from the catalog —
+  `WorldCompiler.compile()` was always called with `context=None` for this schema, so every
+  entity (monster or citizen) received identical flat stat defaults.
+- **New Behavior**: The schema is removed entirely — `WorldTemplateSpec`/
+  `WorldTemplateExpander` and their CLI branches (`src/worldbuilding/cli.py`,
+  `src/worldbuilding/repository.py`, `src/cli/entry.py`) are deleted. `create-template` is
+  repointed to scaffold a minimal `worldcomposition.v1` file instead of a `worldtemplate.v1`
+  one, keeping the documented bootstrap workflow (`docs/guides/simulation.md`) intact.
+  `worldspec.v1`/`WorldSpec` (the compiler's internal canonical spec type, distinct from the
+  removed authoring schema) and `worldcomposition.v1`'s resolution logic
+  (`WorldAssemblyResolver`, the shared `*RecipeSpec` classes in `recipe.py`) are unchanged.
+- **Rationale**: **Unified**. `sandbox_world` was the sole remaining `worldtemplate.v1` world
+  (migrated by `TCK-20260701-SANDBOX-WORLDCOMP-MIGRATE`); every other world already used
+  `worldcomposition.v1`, which provides equal-or-better capability via module reuse and
+  resolves real catalog-driven stats. Patching the stat-resolution gap in a pipeline with a
+  single remaining consumer was less sound than retiring it.
+- **Verification**: `tests/cli/test_world_cli.py`, `tests/unit/worldbuilding/
+  test_world_repository.py` (added regression coverage); `tests/unit/worldbuilding/
+  test_world_recipes.py` deleted (tested only the removed expansion path).
 
 ---
 

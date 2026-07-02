@@ -13,7 +13,6 @@ from src.worldbuilding.repository import WorldRepository, WorldRepositoryError
 from src.worldbuilding.schema import WorldSpec, InvalidWorldSpecError, load_world_spec_from_yaml
 from src.worldbuilding.validator import WorldValidator
 from src.worldbuilding.compiler import WorldCompiler
-from src.worldbuilding.recipe import WorldTemplateSpec, WorldTemplateExpander
 from src.content.repository import CatalogRepository
 from src.content.paths import ContentPathConfig
 from src.worldmodules.repository import WorldModuleRepository
@@ -97,15 +96,7 @@ def handle_validate(args) -> int:
         with open(yaml_path, "r", encoding="utf-8") as f:
             raw_data = yaml.safe_load(f)
 
-        # Check if the file is a recipe template or a standard world spec
-        schema_version = raw_data.get("schema_version", "")
-        if "worldtemplate" in schema_version:
-            print(f"Loading and expanding template recipes for world '{world_id}'...")
-            template = WorldTemplateSpec.model_validate(raw_data)
-            # Expand using standard seed for validation dry-run
-            spec = WorldTemplateExpander.expand(template, seed=42)
-        else:
-            spec = repo.load_world(world_id)
+        spec = repo.load_world(world_id)
 
         validator = WorldValidator()
         issues = validator.validate(spec, raw_data=raw_data, strict=strict)
@@ -243,16 +234,10 @@ def handle_compile(args) -> int:
         with open(yaml_path, "r", encoding="utf-8") as f:
             raw_data = yaml.safe_load(f)
 
-        # Check if template needs expansion first
         schema_version = raw_data.get("schema_version", "")
         is_composition = "worldcomposition" in schema_version
 
-        if "worldtemplate" in schema_version:
-            print(f"Expanding recipe template '{world_id}' with seed {seed}...")
-            template = WorldTemplateSpec.model_validate(raw_data)
-            spec = WorldTemplateExpander.expand(template, seed=seed)
-            context = None
-        elif is_composition or from_resolved:
+        if is_composition or from_resolved:
             resolved_world_path = world_dir / "resolved" / "world.resolved.yaml"
             compile_context_path = world_dir / "resolved" / "compile_context.json"
             
@@ -333,35 +318,18 @@ def handle_inspect(args) -> int:
         with open(yaml_path, "r", encoding="utf-8") as f:
             raw_data = yaml.safe_load(f)
 
-        schema_version = raw_data.get("schema_version", "")
-        is_template = "worldtemplate" in schema_version
-
-        if is_template:
-            template = WorldTemplateSpec.model_validate(raw_data)
-            print_colored(f"=== World Template Inspector: {template.world_id} ===", COLOR_BOLD)
-            print(f"Name:             {template.name}")
-            print(f"Description:      {template.description or 'N/A'}")
-            print(f"Type:             Procedural Recipe Template")
-            print(f"Topology Size:    {template.topology.width}x{template.topology.height} ({template.topology.coordinate_system})")
-            print(f"Region Recipes:   {len(template.regions)}")
-            print(f"Factions:         {len(template.factions)}")
-            print(f"Populations Rcp:  {len(template.entities.populations)}")
-            print(f"Resource Recipes: {len(template.resources)}")
-            print(f"Building Recipes: {len(template.buildings)}")
-            print(f"Quests Defined:   {len(template.quests)}")
-        else:
-            spec = repo.load_world(world_id)
-            print_colored(f"=== World Spec Inspector: {spec.world_id} ===", COLOR_BOLD)
-            print(f"Name:             {spec.name}")
-            print(f"Description:      {spec.description or 'N/A'}")
-            print(f"Type:             Static World Specification")
-            print(f"Topology Size:    {spec.topology.width}x{spec.topology.height} ({spec.topology.coordinate_system})")
-            print(f"Regions Count:    {len(spec.regions)}")
-            print(f"Factions Count:   {len(spec.factions)}")
-            print(f"Entities Count:   {sum(ent.count for ent in spec.entities)} total in {len(spec.entities)} population groups")
-            print(f"Resource Nodes:   {len(spec.resources)}")
-            print(f"Buildings Count:  {len(spec.buildings)}")
-            print(f"Quests Defined:   {len(spec.quest_definitions)}")
+        spec = repo.load_world(world_id)
+        print_colored(f"=== World Spec Inspector: {spec.world_id} ===", COLOR_BOLD)
+        print(f"Name:             {spec.name}")
+        print(f"Description:      {spec.description or 'N/A'}")
+        print(f"Type:             Static World Specification")
+        print(f"Topology Size:    {spec.topology.width}x{spec.topology.height} ({spec.topology.coordinate_system})")
+        print(f"Regions Count:    {len(spec.regions)}")
+        print(f"Factions Count:   {len(spec.factions)}")
+        print(f"Entities Count:   {sum(ent.count for ent in spec.entities)} total in {len(spec.entities)} population groups")
+        print(f"Resource Nodes:   {len(spec.resources)}")
+        print(f"Buildings Count:  {len(spec.buildings)}")
+        print(f"Quests Defined:   {len(spec.quest_definitions)}")
 
         return 0
 
@@ -371,14 +339,14 @@ def handle_inspect(args) -> int:
 
 
 def handle_create_template(args) -> int:
-    """Bootstraps a starter recipe template yaml file under the specified world_id."""
+    """Bootstraps a minimal worldcomposition.v1 stub yaml file under the specified world_id."""
     template_name = args.template_name
     world_id = args.world_id
 
     try:
         repo = WorldRepository("data/worlds")
         world_dir = repo.worlds_dir / world_id
-        
+
         # Check safe naming
         import re
         if not re.match(r"^[a-zA-Z0-9_-]+$", world_id):
@@ -393,71 +361,17 @@ def handle_create_template(args) -> int:
 
         os.makedirs(world_dir, exist_ok=True)
 
-        # Starter recipe template YAML contents
+        # Minimal worldcomposition.v1 scaffold; module_refs is left empty for the
+        # author to populate with real module IDs from content/world_modules/.
         starter_yaml = {
-            "schema_version": "worldtemplate.v1",
+            "schema_version": "worldcomposition.v1",
             "world_id": world_id,
             "name": template_name,
-            "description": f"Starter boilerplate recipe template for world {world_id}.",
-            "topology": {
-                "width": 128,
-                "height": 128,
-                "coordinate_system": "grid"
-            },
-            "regions": [
-                {
-                    "id": "town_center",
-                    "type": "town",
-                    "grid_bounds": [10, 10, 40, 40],
-                    "terrain": "GRASS",
-                    "hazard_level": 0.0
-                },
-                {
-                    "id": "woods",
-                    "type": "wilderness",
-                    "grid_bounds": [50, 50, 110, 110],
-                    "terrain": "FOREST",
-                    "hazard_level": 1.5
-                }
-            ],
-            "factions": [
-                {"id": "villagers", "type": "civilian"},
-                {"id": "monsters", "type": "hostile"}
-            ],
-            "entities": {
-                "populations": [
-                    {
-                        "role": "citizen",
-                        "count": 15,
-                        "faction": "villagers",
-                        "spawn_region": "town_center"
-                    },
-                    {
-                        "role": "monster",
-                        "count": 5,
-                        "faction": "monsters",
-                        "spawn_distribution": {
-                            "type": "region_random",
-                            "region": "woods"
-                        }
-                    }
-                ]
-            },
-            "resources": [
-                {
-                    "resource_type": "wood",
-                    "count": 10,
-                    "region": "woods"
-                }
-            ],
-            "buildings": [
-                {
-                    "building_type": "tavern",
-                    "count": 2,
-                    "region": "town_center"
-                }
-            ],
-            "quests": []
+            "description": f"Starter composition stub for world {world_id}.",
+            "module_refs": [],
+            "provided_features": [],
+            "generation_seed": 42,
+            "validation_profile": "local_dev"
         }
 
         with open(yaml_path, "w", encoding="utf-8") as f:
@@ -466,7 +380,7 @@ def handle_create_template(args) -> int:
         # Force register/update manifest index
         repo.rebuild_index()
 
-        print_colored(f"Successfully bootstrapped template world '{world_id}'!", COLOR_GREEN)
+        print_colored(f"Successfully bootstrapped composition stub world '{world_id}'!", COLOR_GREEN)
         print(f"  Configuration file: {yaml_path}")
         print(f"  Index registered:   True")
         return 0

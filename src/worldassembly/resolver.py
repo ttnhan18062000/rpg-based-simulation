@@ -781,6 +781,7 @@ class WorldAssemblyResolver:
                 bounds=reg.grid_bounds,
                 terrain=reg.terrain,
                 hazard_level=reg.hazard_level,
+                hazard_kind=getattr(reg, "hazard_kind", "PHYSICAL"),
                 tags=list(getattr(reg, "tags", [])),
             ))
 

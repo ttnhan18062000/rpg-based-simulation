@@ -12,12 +12,14 @@ regions:
     grid_bounds: [45, 10, 90, 55]
     terrain: "forest"
     hazard_level: 1.0
+    hazard_kind: "NATURAL_TERRAIN"
     tags: [forest]
   - id: "wolf_den"
     type: "wilderness"
     grid_bounds: [70, 30, 105, 70]
     terrain: "forest"
     hazard_level: 2.0
+    hazard_kind: "NATURAL_TERRAIN"
     tags: [forest]
 factions: ["wild_beast_pack"]
 populations: ["wolf_pack_small"]

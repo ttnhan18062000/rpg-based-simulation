@@ -17,14 +17,27 @@ class EnvironmentService:
         """
         Calculates the HP/Readiness drain for an entity in a region.
         Scales with hazard_level and calamity_intensity.
+
+        Entities whose faction declares endurance (FactionDefinition.hazard_immunities)
+        for this region's hazard_kind take zero drain, regardless of hostility to any
+        other faction present. A hazard_kind nobody is flagged as enduring affects every
+        faction equally, including mutually hostile ones.
+        # NOTE: If race-level hazard_immunities is ever added to RaceDefinition, this
+        # resolution must be revisited to union faction- and race-level endurance sets.
         """
+        from src.content_semantics.faction import get_faction_id_str, get_faction_semantics_service
+
+        faction_id = get_faction_id_str(entity)
+        if region.hazard_kind in get_faction_semantics_service().get_hazard_immunities(faction_id):
+            return 0
+
         # Formula: hazard_level * (1.0 + calamity_intensity)
         # Scaled to integer for HP damage
         base_drain = region.hazard_level * (1.0 + region.calamity_intensity)
-        
+
         if "MIASMA" in region.active_modifiers:
             base_drain *= 1.5
-            
+
         return int(base_drain * 10.0) # Scale by 10 for meaningful impact
 
     @staticmethod

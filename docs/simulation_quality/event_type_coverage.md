@@ -54,8 +54,8 @@ All events below are emitted by the engine and reach at least one pillar scorer,
 | `near_death_survival` | event_extractor | CombatScorer, ProgressionScorer | 164 | HP crosses below 20% threshold |
 | `xp_granted` | event_extractor | ProgressionScorer | 0 | Fires on identity.evolution_points delta |
 | `level_up` | event_extractor | ProgressionScorer | 0 | Direct path; also reachable via `lifecycle` translation |
-| `route_selected` | event_extractor | AgencyScorer | 20 | Fires when entity.last_routing_family changes |
-| `action_executed` | event_extractor | AgencyScorer | 20 | Co-fires with route_selected |
+| `route_selected` | event_extractor | AgencyScorer | 20 | Fires when entity.last_routing_family changes. The 20 hits are entirely from `simq_routing_test` (`ENABLE_ADVENTURE_ROUTING=ON`); zero in every other calibration world because the flag defaults `OFF` and `AdventureDecisionPhase` never runs — see `docs/plans/audit_fix_plan.md` P0-A |
+| `action_executed` | event_extractor | AgencyScorer | 20 | Co-fires with route_selected; same `ENABLE_ADVENTURE_ROUTING` gate — 0 hits outside `simq_routing_test` |
 | `self_model_updated` | event_extractor | CognitionScorer | 0 | Fires on self_model_bundle_set |
 | `belief_assimilated` | event_extractor | InformationScorer | 0 | Fires on last_assimilated_tick == current_tick |
 | `belief_updated` | event_extractor | CognitionScorer | 0 | Co-fires with belief_assimilated |
@@ -71,7 +71,7 @@ All events below are emitted by the engine and reach at least one pillar scorer,
 | `conservation_law_verified` | event_extractor | EconomyScorer | 0 | tick % 50 + economy events present — TCK-20260701-SIMQ-EMIT-FACTION-ECONOMY |
 | `scenario_objective_progressed` | engine/scenario_runtime | NarrativeScorer | 0 | Every tick while objective RUNNING — TCK-20260701-SIMQ-EMIT-FACTION-ECONOMY |
 | `defer_with_reason` | event_extractor | AgencyScorer | 0 | DEFER_WITH_REASON path in phase.py — TCK-20260701-SIMQ-EMIT-AGENCY2 |
-| `route_family_first_use` | event_extractor | AgencyScorer | 0 | First use of a novel routing family per entity per run — TCK-20260701-SIMQ-EMIT-AGENCY2 |
+| `route_family_first_use` | event_extractor | AgencyScorer | 0 | First use of a novel routing family per entity per run — TCK-20260701-SIMQ-EMIT-AGENCY2. Gated by the same `ENABLE_ADVENTURE_ROUTING` flag as route_selected/action_executed (defaults `OFF`); 0 in all default-mode worlds. Also 0 in the existing `simq_routing_test_seed42_500t` calibration artifact because that run predates this emitter (TCK-20260630-SIMQ-ROUTING-TEST ran before TCK-20260701-SIMQ-EMIT-AGENCY2 added it) — not yet recalibrated, tracked under P0-A follow-up, not a new gap |
 | `commitment_abandoned` | event_extractor | AgencyScorer | 0 | Behavioral classification: abandonment < 3 ticks after start — TCK-20260701-SIMQ-EMIT-AGENCY2 |
 | `rejection_cascade_tick` | event_extractor | AgencyScorer | 0 | Population aggregate: > threshold% failed intent rate — TCK-20260701-SIMQ-EMIT-AGENCY2 |
 | `lead_certainty_updated` | event_extractor | InformationScorer | 0 | Certainty enum diff per lead per tick — TCK-20260701-SIMQ-EMIT-LEAD-BELIEFS |

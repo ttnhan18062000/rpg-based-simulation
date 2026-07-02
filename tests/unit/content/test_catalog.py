@@ -248,6 +248,46 @@ def test_schema_metadata_nested_field_allowed():
     assert mat.design_notes == "This is allowed"
 
 
+def test_faction_definition_hazard_immunities_field():
+    """FactionDefinition.hazard_immunities round-trips and defaults to empty list."""
+    faction = FactionDefinition(
+        id="fiend_lords",
+        alignment_bucket="invader",
+        influence_role="challenger",
+        legacy_engine_bucket="MONSTER_HORDE",
+        hazard_immunities=["CHAOS_CORRUPTION"],
+    )
+    assert faction.hazard_immunities == ["CHAOS_CORRUPTION"]
+
+    # Field omitted entirely -> defaults to empty list, does not break loading.
+    faction_default = FactionDefinition(
+        id="plain_faction",
+        alignment_bucket="neutral",
+        influence_role="non_combatant",
+        legacy_engine_bucket="NEUTRAL",
+    )
+    assert faction_default.hazard_immunities == []
+
+
+def test_faction_catalog_loads_with_hazard_immunities_authored():
+    """The full real catalog (with hazard_immunities authored on some factions) still loads."""
+    repo = CatalogRepository("data/content")
+    repo.load_all()
+
+    wild_beast_pack = repo.get_faction("wild_beast_pack")
+    assert wild_beast_pack is not None
+    assert wild_beast_pack.hazard_immunities == ["NATURAL_TERRAIN"]
+
+    goblin_warband = repo.get_faction("goblin_warband")
+    assert goblin_warband is not None
+    assert goblin_warband.hazard_immunities == ["NATURAL_TERRAIN"]
+
+    # A faction without the field authored must still default safely to empty.
+    hero_guild = repo.get_faction("hero_guild")
+    assert hero_guild is not None
+    assert hero_guild.hazard_immunities == []
+
+
 def test_schema_compatibility_model_fail_closed():
     """Verify that compatibility models also raise ValidationError when unknown top-level fields are supplied."""
     from pydantic import ValidationError

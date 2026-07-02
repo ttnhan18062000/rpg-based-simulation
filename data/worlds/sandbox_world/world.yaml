@@ -1,57 +1,8 @@
-schema_version: worldtemplate.v1
-world_id: sandbox_world
-name: Dev Sandbox
-description: Starter boilerplate recipe template for world sandbox_world.
-topology:
-  width: 128
-  height: 128
-  coordinate_system: grid
-regions:
-- id: town_center
-  type: town
-  grid_bounds:
-  - 10
-  - 10
-  - 40
-  - 40
-  terrain: GRASS
-  hazard_level: 0.0
-- id: woods
-  type: wilderness
-  grid_bounds:
-  - 50
-  - 50
-  - 110
-  - 110
-  terrain: FOREST
-  hazard_level: 1.5
-factions:
-- id: villagers
-  type: civilian
-- id: monsters
-  type: hostile
-entities:
-  populations:
-  - role: citizen
-    count: 15
-    faction: villagers
-    spawn_region: town_center
-  - role: monster
-    count: 5
-    faction: monsters
-    spawn_distribution:
-      type: region_random
-      region: woods
-  - role: hero
-    count: 3
-    faction: villagers
-    spawn_region: town_center
-resources:
-- resource_type: wood
-  count: 10
-  region: woods
-buildings:
-- building_type: tavern
-  count: 2
-  region: town_center
-quests: []
+schema_version: "worldcomposition.v1"
+world_id: "sandbox_world"
+name: "Dev Sandbox"
+description: "Starter sandbox world for development and SimQ calibration — frontier settlement with an adjacent wolf-den wilderness."
+modules:
+  - "frontier_village_core"
+  - "wolf_den_near_forest"
+generation_seed: 42

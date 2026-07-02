@@ -154,6 +154,7 @@ class FactionDefinition(CatalogBaseDefinition):
     legacy_engine_bucket: str = Field(..., description="Legacy Faction enum name mapping")
     common_races: List[str] = Field(default_factory=list)
     themes: List[str] = Field(default_factory=list)
+    hazard_immunities: List[str] = Field(default_factory=list, description="Hazard-kind tags this faction's members endure without harm (e.g. 'NATURAL_TERRAIN', 'CHAOS_CORRUPTION').")
 
     @field_validator("legacy_engine_bucket")
     @classmethod

@@ -168,7 +168,8 @@ class WorldCompiler:
                 kind=r_spec.type.upper(),
                 influence=100.0 if r_spec.type == "town" else 0.0,
                 owner_faction_id=owner_faction,
-                hazard_level=getattr(r_spec, "hazard_level", 0.0)
+                hazard_level=getattr(r_spec, "hazard_level", 0.0),
+                hazard_kind=getattr(r_spec, "hazard_kind", "PHYSICAL")
             )
 
         # 3. Compile factions (Initialize starting vaults in global_resources)

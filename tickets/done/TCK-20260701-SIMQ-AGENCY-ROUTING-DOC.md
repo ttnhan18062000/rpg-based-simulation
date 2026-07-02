@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: simulation
 authority: P2
 audience: agent
 ticket_id: TCK-20260701-SIMQ-AGENCY-ROUTING-DOC
-phase: open
+phase: done
 date: 2026-07-01
 tags: [simq, agency, documentation, feature-flag]
 ---
@@ -15,7 +15,7 @@ tags: [simq, agency, documentation, feature-flag]
 Close out AGENCY zero-score investigation: confirmed non-bug, same root cause as P0-A
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -102,13 +102,52 @@ This ticket is documentation-only: there is no code fix here distinct from resol
   that's incidental validation, not new scope.
 
 ## Implementation Notes
-(to be filled at implementation)
+Context scan (mandatory): `mcp__knowledge-search__search_docs` for "AGENCY zero-score route_selected
+action_executed ENABLE_ADVENTURE_ROUTING feature flag" and `graphify query` for the same topic
+confirmed the D19/mechanics/TCK-20260627-P0A-ADVENTURE-FLAG chain — P0-A decision (Option B: all 10
+Phase 10 flags stay OFF by default) is already recorded in `known_limitations.md` §1.5 and
+`v2_intentional_divergences.md`. No conflicting or duplicate work found.
+
+Three doc edits made (all doc-only, no source touched):
+1. `docs/audits/D20_simq_integration.md` — Actionable Next Steps P1 AGENCY row rewritten from
+   "Investigate AGENCY zero-score" to a resolved entry explaining the `last_routing_family` →
+   `AdventureDecisionPhase` → `ENABLE_ADVENTURE_ROUTING` chain, cross-referencing P0-A and this ticket.
+2. `docs/simulation_quality/event_type_coverage.md` §1.1 — `route_selected`/`action_executed` notes
+   now state the 20 calibration_hits come entirely from `simq_routing_test` (flag forced ON) and are
+   0 elsewhere because the flag defaults OFF. `route_family_first_use` note extended to explain its
+   0 hits even in `simq_routing_test`: that calibration artifact (TCK-20260630-SIMQ-ROUTING-TEST) was
+   captured before the emitter existed (TCK-20260701-SIMQ-EMIT-AGENCY2 added it later) — not
+   recalibrated yet, tracked as a P0-A follow-up rather than a new gap.
+3. `docs/plans/audit_fix_plan.md` — added a cross-reference line inside the P0-A entry (after the
+   "Record the decision..." sentence) pointing to the D20 audit conclusion and this ticket. This
+   satisfies acceptance criterion 4 (P0-A entry cross-links back to this finding); the ticket's
+   "## Scope" section only listed 2 files but the acceptance criteria required a 3rd — treated the
+   acceptance criteria as controlling since it is more specific/complete.
+
+Parity check: searched all `docs/parity_ledger/*.yaml` for `route_selected`, `action_executed`,
+`route_family_first_use`, `ENABLE_ADVENTURE_ROUTING`. Found 3 entries in `infrastructure.yaml`
+(`INFRA-221`, `INFRA-250`, `SIMQ-CALIBRATED-001`) — all already `status: verified`, already describe
+the emitters as correct and the flag as the gating mechanism, `test_path`s are current. No parity
+ledger edit needed; nothing stale found. `strategic_cognition.yaml` has no AGENCY-routing entries.
 
 ## Test Summary
-(to be filled at implementation)
+No code changed — no test run applicable. Doc-only ticket; source files unmodified (verified via
+`git status --porcelain` before finalize — only the 3 docs files + this ticket file +
+`agent-monitoring/tools.jsonl` show as changed).
 
 ## Files Changed
-(to be filled at implementation)
+- `docs/audits/D20_simq_integration.md` (modified)
+- `docs/simulation_quality/event_type_coverage.md` (modified)
+- `docs/plans/audit_fix_plan.md` (modified)
+- `tickets/inprogress/TCK-20260701-SIMQ-AGENCY-ROUTING-DOC.md` → `tickets/done/TCK-20260701-SIMQ-AGENCY-ROUTING-DOC.md` (this file)
 
 ## Completion Summary
-(to be filled at completion)
+Closed out the AGENCY zero-score investigation as a confirmed non-bug. Updated 3 docs to make the
+`ENABLE_ADVENTURE_ROUTING` gate the explicit, cross-linked explanation everywhere the zero-score
+previously read as an open question: `D20_simq_integration.md` (Actionable Next Steps P1 row
+resolved), `event_type_coverage.md` (§1.1 notes for `route_selected`/`action_executed`/
+`route_family_first_use`), and `audit_fix_plan.md` (P0-A entry cross-links back to the D20 finding
+and this ticket). No source code touched. No behavior changed — parity ledger checked
+(`infrastructure.yaml` INFRA-221/INFRA-250/SIMQ-CALIBRATED-001), all already accurate, no edits
+needed. `make knowledge-index-update` run to re-embed the 3 changed docs. All 4 acceptance criteria
+met.

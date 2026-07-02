@@ -1,9 +1,9 @@
 {
-  "run_id": "run_1782832364_8996",
-  "tick_count": 96,
-  "overall_score": 0.11875,
+  "run_id": "run_1782955771_8996",
+  "tick_count": 200,
+  "overall_score": 0.08249999999999999,
   "overall_grade": "B",
-  "generated_at": "2026-06-30T15:13:12.922711+00:00",
+  "generated_at": "2026-07-02T01:29:54.039316+00:00",
   "pillars": {
     "COGNITION": {
       "raw_score": 0.0,
@@ -27,7 +27,7 @@
     },
     "COMBAT": {
       "raw_score": 4.0,
-      "normalized_score": 0.041666666666666664,
+      "normalized_score": 0.02,
       "grade": "B",
       "event_count": 2,
       "negative_count": 0,
@@ -58,14 +58,30 @@
       "worst_events": []
     },
     "PROGRESSION": {
-      "raw_score": 0.0,
-      "normalized_score": 0.0,
+      "raw_score": -5.0,
+      "normalized_score": -0.025,
       "grade": "C",
-      "event_count": 0,
-      "negative_count": 0,
-      "loop_detected": false,
-      "loop_flags": [],
-      "worst_events": []
+      "event_count": 2,
+      "negative_count": 1,
+      "loop_detected": true,
+      "loop_flags": [
+        "survival_experience"
+      ],
+      "worst_events": [
+        {
+          "tick": 51,
+          "event_id": "bdbaad41e25b4cb5a826ec5627dbf6f2",
+          "pillar": "PROGRESSION",
+          "delta": -8.0,
+          "reason": "XP gain rate dropped to zero after tick gate",
+          "event_type": "progression_plateau_detected",
+          "entity_id": 1,
+          "region_id": null,
+          "tags": [
+            "xp_plateau"
+          ]
+        }
+      ]
     },
     "SOCIAL": {
       "raw_score": 0.0,
@@ -88,20 +104,22 @@
       "worst_events": []
     },
     "WORLD": {
-      "raw_score": 0.0,
-      "normalized_score": 0.0,
-      "grade": "C",
-      "event_count": 0,
+      "raw_score": 21.0,
+      "normalized_score": 0.105,
+      "grade": "B",
+      "event_count": 14,
       "negative_count": 0,
-      "loop_detected": false,
-      "loop_flags": [],
+      "loop_detected": true,
+      "loop_flags": [
+        "hazard_active"
+      ],
       "worst_events": []
     },
     "NARRATIVE": {
-      "raw_score": 110.0,
-      "normalized_score": 1.1458333333333333,
+      "raw_score": 145.0,
+      "normalized_score": 0.725,
       "grade": "A",
-      "event_count": 22,
+      "event_count": 29,
       "negative_count": 0,
       "loop_detected": true,
       "loop_flags": [

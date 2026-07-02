@@ -1,18 +1,20 @@
 {
-  "run_id": "run_1782839808_5169",
-  "tick_count": 968,
-  "overall_score": 0.06663223140495868,
+  "run_id": "run_1782955799_5169",
+  "tick_count": 1000,
+  "overall_score": 0.0777,
   "overall_grade": "B",
-  "generated_at": "2026-06-30T17:18:55.447569+00:00",
+  "generated_at": "2026-07-02T01:31:50.839242+00:00",
   "pillars": {
     "COGNITION": {
-      "raw_score": 0.0,
-      "normalized_score": 0.0,
-      "grade": "C",
-      "event_count": 0,
+      "raw_score": 42.0,
+      "normalized_score": 0.042,
+      "grade": "B",
+      "event_count": 7,
       "negative_count": 0,
-      "loop_detected": false,
-      "loop_flags": [],
+      "loop_detected": true,
+      "loop_flags": [
+        "subjective_divergence"
+      ],
       "worst_events": []
     },
     "AGENCY": {
@@ -26,11 +28,11 @@
       "worst_events": []
     },
     "COMBAT": {
-      "raw_score": 30.0,
-      "normalized_score": 0.030991735537190084,
+      "raw_score": 52.0,
+      "normalized_score": 0.052,
       "grade": "B",
-      "event_count": 25,
-      "negative_count": 2,
+      "event_count": 45,
+      "negative_count": 8,
       "loop_detected": true,
       "loop_flags": [
         "combat_active",
@@ -38,26 +40,104 @@
       ],
       "worst_events": [
         {
-          "tick": 683,
-          "event_id": "6ace22602d0f41a798f76468b108be51",
+          "tick": 665,
+          "event_id": "abfe1f267e6341b782085e38277bfcb8",
           "pillar": "COMBAT",
           "delta": -15.0,
           "reason": "zero combat events in hostile world by tick threshold",
           "event_type": "combat_initiated",
-          "entity_id": 8,
+          "entity_id": 15,
           "region_id": null,
           "tags": [
             "combat_dormant"
           ]
         },
         {
-          "tick": 745,
-          "event_id": "553727317d8d46ed8276e66045634861",
+          "tick": 958,
+          "event_id": "3ce3e1a05ddf4bd382ad489ffed67edd",
           "pillar": "COMBAT",
           "delta": -1.0,
           "reason": "entity killed in combat",
           "event_type": "entity_killed",
-          "entity_id": 7,
+          "entity_id": 14,
+          "region_id": null,
+          "tags": [
+            "attrition"
+          ]
+        },
+        {
+          "tick": 964,
+          "event_id": "86d208e67bab48fe8743b0124cdd4e6d",
+          "pillar": "COMBAT",
+          "delta": -1.0,
+          "reason": "entity killed in combat",
+          "event_type": "entity_killed",
+          "entity_id": 18,
+          "region_id": null,
+          "tags": [
+            "attrition"
+          ]
+        },
+        {
+          "tick": 965,
+          "event_id": "39afc07b20e4463f86aab8934b0331c4",
+          "pillar": "COMBAT",
+          "delta": -1.0,
+          "reason": "entity killed in combat",
+          "event_type": "entity_killed",
+          "entity_id": 16,
+          "region_id": null,
+          "tags": [
+            "attrition"
+          ]
+        },
+        {
+          "tick": 1000,
+          "event_id": "8504c6da9fc14ba58e9505ddaa8f654d",
+          "pillar": "COMBAT",
+          "delta": -1.0,
+          "reason": "entity killed in combat",
+          "event_type": "entity_killed",
+          "entity_id": 1,
+          "region_id": null,
+          "tags": [
+            "attrition"
+          ]
+        },
+        {
+          "tick": 1000,
+          "event_id": "148c37be2e4949fdb8089ffb05cbbd6f",
+          "pillar": "COMBAT",
+          "delta": -1.0,
+          "reason": "entity killed in combat",
+          "event_type": "entity_killed",
+          "entity_id": 4,
+          "region_id": null,
+          "tags": [
+            "attrition"
+          ]
+        },
+        {
+          "tick": 1000,
+          "event_id": "b79de9bb20f14d6da1cbdb1421726cd7",
+          "pillar": "COMBAT",
+          "delta": -1.0,
+          "reason": "entity killed in combat",
+          "event_type": "entity_killed",
+          "entity_id": 8,
+          "region_id": null,
+          "tags": [
+            "attrition"
+          ]
+        },
+        {
+          "tick": 1000,
+          "event_id": "79726bf9c0b34a2e92eb3ab0eb92c6a7",
+          "pillar": "COMBAT",
+          "delta": -1.0,
+          "reason": "entity killed in combat",
+          "event_type": "entity_killed",
+          "entity_id": 10,
           "region_id": null,
           "tags": [
             "attrition"
@@ -76,26 +156,43 @@
       "worst_events": []
     },
     "ECONOMY": {
-      "raw_score": 0.0,
-      "normalized_score": 0.0,
-      "grade": "C",
-      "event_count": 0,
-      "negative_count": 0,
-      "loop_detected": false,
-      "loop_flags": [],
-      "worst_events": []
-    },
-    "PROGRESSION": {
-      "raw_score": 33.0,
-      "normalized_score": 0.03409090909090909,
+      "raw_score": 48.0,
+      "normalized_score": 0.048,
       "grade": "B",
-      "event_count": 11,
+      "event_count": 24,
       "negative_count": 0,
       "loop_detected": true,
       "loop_flags": [
-        "survival_experience"
+        "inflation_controlled"
       ],
       "worst_events": []
+    },
+    "PROGRESSION": {
+      "raw_score": 43.0,
+      "normalized_score": 0.043,
+      "grade": "B",
+      "event_count": 18,
+      "negative_count": 1,
+      "loop_detected": true,
+      "loop_flags": [
+        "survival_experience",
+        "xp_plateau"
+      ],
+      "worst_events": [
+        {
+          "tick": 51,
+          "event_id": "bed37806c3d1438ab062b6dee7a6254a",
+          "pillar": "PROGRESSION",
+          "delta": -8.0,
+          "reason": "XP gain rate dropped to zero after tick gate",
+          "event_type": "progression_plateau_detected",
+          "entity_id": 1,
+          "region_id": null,
+          "tags": [
+            "xp_plateau"
+          ]
+        }
+      ]
     },
     "SOCIAL": {
       "raw_score": 0.0,
@@ -118,43 +215,28 @@
       "worst_events": []
     },
     "WORLD": {
-      "raw_score": 12.0,
-      "normalized_score": 0.012396694214876033,
+      "raw_score": 57.0,
+      "normalized_score": 0.057,
       "grade": "B",
-      "event_count": 3,
+      "event_count": 18,
       "negative_count": 0,
       "loop_detected": true,
       "loop_flags": [
-        "raid_active"
+        "ecology_cycling"
       ],
       "worst_events": []
     },
     "NARRATIVE": {
-      "raw_score": 570.0,
-      "normalized_score": 0.5888429752066116,
+      "raw_score": 535.0,
+      "normalized_score": 0.535,
       "grade": "A",
-      "event_count": 119,
-      "negative_count": 1,
+      "event_count": 107,
+      "negative_count": 0,
       "loop_detected": true,
       "loop_flags": [
-        "quest_active",
-        "quest_system_dormant"
+        "quest_active"
       ],
-      "worst_events": [
-        {
-          "tick": 271,
-          "event_id": "33cc367f916d4eb19943a32aa9ddd0d9",
-          "pillar": "NARRATIVE",
-          "delta": -20.0,
-          "reason": "zero quest starts in run after tick gate (unconditional: fires even if quest config is empty \u2014 check \u00a75 NARRATIVE traceability)",
-          "event_type": "quest_started",
-          "entity_id": 10,
-          "region_id": null,
-          "tags": [
-            "quest_system_dormant"
-          ]
-        }
-      ]
+      "worst_events": []
     }
   }
 }

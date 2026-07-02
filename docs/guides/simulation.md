@@ -33,8 +33,8 @@ Key entry points:
 Worlds are declared as YAML specs and compiled once before any simulation run.
 
 ```bash
-# Bootstrap a starter world template
-python3 -m src.worldbuilding.cli create-template my_world
+# Bootstrap a starter worldcomposition.v1 stub (populate module_refs afterward)
+python3 -m src.worldbuilding.cli create-template "My World" my_world
 
 # Validate before compiling
 python3 -m src.worldbuilding.cli validate my_world

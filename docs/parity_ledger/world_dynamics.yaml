@@ -288,9 +288,14 @@
   priority: P0
   legacy_evidence: EnvironmentService handles hazard_level and calamity_intensity
     scaling.
-  v2_evidence: src/engine/world_dynamics.py
+  v2_evidence: src/world/environment.py::EnvironmentService.calculate_hazard_drain resolves
+    the entity's catalog faction id (get_faction_id_str) and, via
+    FactionSemanticsService.get_hazard_immunities, exempts entities whose faction endures
+    the region's hazard_kind (RegionState.hazard_kind) from drain; all other entities take
+    the unchanged hazard_level/calamity_intensity-scaled drain. See
+    src/engine/world_dynamics.py for the per-tick call site.
   proof_type: parity
-  test_path: tests_v2/parity/test_parity_regional_sovereignty.py
+  test_path: tests/unit/world/test_regional_consequences.py
   divergence_note: null
   support_boundary: null
 - id: WORLD-060
@@ -298,9 +303,14 @@
   status: verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: src/engine/world_dynamics.py
+  v2_evidence: src/world/environment.py::EnvironmentService.calculate_hazard_drain — drain
+    is hazard_level * (1.0 + calamity_intensity) * 10, scaled by MIASMA, EXCEPT an entity
+    whose resolved faction (FactionDefinition.hazard_immunities) declares endurance to the
+    region's hazard_kind (RegionState.hazard_kind), which takes zero drain unconditionally.
+    Endurance is faction-declared, not derived from hostility-to-hero or from a legacy
+    faction bucket (TCK-20260701-HAZARD-NATIVE-IMMUNITY).
   proof_type: parity
-  test_path: tests_v2/parity/test_parity_regional_sovereignty.py
+  test_path: tests/unit/world/test_regional_consequences.py
   divergence_note: null
   support_boundary: null
 - id: WORLD-061
@@ -1296,6 +1306,8 @@
     tests/unit/observability/test_event_extractor_world_dynamics.py::TestNodeRecharged;
     tests/unit/observability/test_event_extractor_world_dynamics.py::TestThreatEvolved
   divergence_note: >
-    camp_constructed blocked: CampService (src/world/camp.py) has no event recorder
-    interface; adding it requires an interface change tracked as a future ticket.
+    camp_constructed has no viable engine path under the current camp lifecycle model:
+    camps are pre-placed at world generation and CampService (src/world/camp.py) only
+    evolves existing camps (maturity, raids) — there is no dynamic construction
+    mechanic to emit from. Not pending/future work; confirmed by TCK-20260701-SIMQ-EMIT-CAMP.
   support_boundary: null

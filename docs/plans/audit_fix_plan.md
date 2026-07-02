@@ -41,6 +41,8 @@ Each item below maps to a source audit finding and carries enough context for a 
 
 Record the decision in `docs/guidelines/v2_intentional_divergences.md` and update `ENABLE_ADVENTURE_ROUTING` parity ledger entry.
 
+**Cross-reference:** `docs/audits/D20_simq_integration.md` Actionable Next Steps (AGENCY row) confirms this flag is the sole root cause of AGENCY pillar zero-scores in sandbox_world and all other default-mode SimQ calibration worlds — not an AgencyScorer or EventExtractor defect (TCK-20260701-SIMQ-AGENCY-ROUTING-DOC).
+
 ---
 
 ### P0-B: `urban_political` world has zero resource nodes after compile — **RESOLVED**
@@ -462,7 +464,7 @@ Grouped by effort and pillar:
 |---|---|---|
 | PROGRESSION signals | skill_unlocked, trait_expressed, pillar_trait_unlocked, progression_conversion_applied, progression_plateau_detected | PROGRESSION: C→B/A in combat-active worlds |
 | INFORMATION / COGNITION signals | lead_certainty_updated, lead_contradiction_resolved, paid_info_changed_goal, belief_stale, decision_diverged_by_belief; decision_divergence_detected | INFORMATION: C→B; COGNITION: marginal gain |
-| WORLD dynamics signals | ecology_cycle_completed, spawn_cadence_fired, camp_constructed, threat_evolved, node_recharged | WORLD: already A/B; ecology worlds gain more |
+| WORLD dynamics signals | ecology_cycle_completed, spawn_cadence_fired, threat_evolved, node_recharged (camp_constructed excluded — no viable engine path, not an emitter gap; see `event_type_coverage.md` §3.9) | WORLD: already A/B; ecology worlds gain more |
 | AGENCY tracking signals | defer_with_reason, commitment_abandoned, rejection_cascade_tick, route_family_first_use | AGENCY: richer signal when routing ON |
 | Misc small gaps | paid_info_transaction (ECONOMY), conservation_law_verified (ECONOMY), alliance_proposed (FACTION), resource_seized (FACTION), social_memory_created (SOCIAL), contract_milestone_completed (SOCIAL), scenario_objective_progressed (NARRATIVE) | ECONOMY/FACTION/SOCIAL/NARRATIVE: marginal gains |
 

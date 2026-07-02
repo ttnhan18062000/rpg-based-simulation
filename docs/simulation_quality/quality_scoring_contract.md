@@ -802,8 +802,11 @@ WD-14 (`camp lifecycle`), WD-15 (`demographics`)
 **Event types scored:** `calamity_spawned`, `boss_spawned`, `raid_party_spawned`,
 `region_transformed`, `region_trauma_delta`, `region_ownership_changed`,
 `ecology_cycle_completed`, `spawn_cadence_fired`, `demographic_birth`,
-`demographic_mortality`, `camp_constructed`, `hazard_drain_applied`,
+`demographic_mortality`, `camp_constructed`†, `hazard_drain_applied`,
 `threat_evolved`, `node_recharged`
+
+†`camp_constructed` is registered, not currently emittable — see
+`event_type_coverage.md` §3.9.
 
 | Signal | Delta | Tag |
 |---|---|---|

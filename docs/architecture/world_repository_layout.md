@@ -25,9 +25,17 @@ data/worlds/<world_id>/world.yaml
 ```
 
 The file's top-level `schema_version` field can be one of:
-- `worldspec.v1`: Legacy direct specification (compiler-ready).
-- `worldtemplate.v1`: Legacy template requiring procedural expansion.
+- `worldspec.v1`: Standalone direct-authoring schema, and also the compiler's canonical
+  internal spec type — every `worldcomposition.v1` world's resolved output
+  (`resolved/world.resolved.yaml`) is itself tagged `schema_version: worldspec.v1` before
+  being passed to `WorldCompiler.compile()`. It is not purely internal-only; it remains a
+  valid standalone authoring schema for directly-specified worlds.
 - `worldcomposition.v1`: New module-based composition manifest.
+
+> `worldtemplate.v1` (legacy recipe template requiring procedural expansion via
+> `WorldTemplateExpander`) was removed by `TCK-20260701-WORLDTEMPLATE-REMOVE` (2026-07-01).
+> Its single remaining consumer (`sandbox_world`) was migrated to `worldcomposition.v1` by
+> `TCK-20260701-SANDBOX-WORLDCOMP-MIGRATE` first.
 
 ### 2. Discovered Artifact Output Separation
 To prevent pollution of the source file, a composition source (`worldcomposition.v1`) is NEVER passed directly to the `WorldCompiler`. Instead, the `WorldAssemblyResolver` processes the composition and outputs a fully resolved compiler-ready specification and its supporting sidecars.
@@ -43,4 +51,4 @@ data/worlds/<world_id>/resolved/compile_report.json     # Final compiler output 
 ```
 
 ### 3. Backwards Compatibility
-All existing tools, scripts, and tests that load `worldspec.v1` and `worldtemplate.v1` from `data/worlds/<world_id>/world.yaml` must remain fully supported and unaltered. When a direct compile request is made for a scenario whose source is `worldcomposition.v1`, the repository loader will direct the caller to locate the compiler input from the `resolved/world.resolved.yaml` artifact instead of the source `world.yaml`.
+All existing tools, scripts, and tests that load `worldspec.v1` from `data/worlds/<world_id>/world.yaml` must remain fully supported and unaltered. When a direct compile request is made for a scenario whose source is `worldcomposition.v1`, the repository loader will direct the caller to locate the compiler input from the `resolved/world.resolved.yaml` artifact instead of the source `world.yaml`.

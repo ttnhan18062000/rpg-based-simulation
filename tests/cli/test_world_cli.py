@@ -225,7 +225,7 @@ def test_cli_inspect_outputs_spec_details(temp_repo, capsys):
 
 def test_cli_create_template_bootstraps_correctly(temp_repo, capsys, tmp_path):
     """
-    Verify that create-template boots a robust YAML file and successfully validates it.
+    Verify that create-template boots a minimal, valid worldcomposition.v1 stub YAML file.
     """
     with patch("src.worldbuilding.cli.WorldRepository", return_value=temp_repo):
         args = MockedArgs(
@@ -235,25 +235,42 @@ def test_cli_create_template_bootstraps_correctly(temp_repo, capsys, tmp_path):
         )
         from src.worldbuilding.cli import handle_create_template
         code = handle_create_template(args)
-        
+
         assert code == 0
         captured = capsys.readouterr()
-        assert "Successfully bootstrapped template world" in captured.out
-        
+        assert "Successfully bootstrapped composition stub world" in captured.out
+
         # Verify the file was written
         yaml_path = tmp_path / "town_sandbox" / "world.yaml"
         assert yaml_path.is_file()
-        
+
         with open(yaml_path, "r", encoding="utf-8") as f:
             raw = yaml.safe_load(f)
-            
+
         assert raw["world_id"] == "town_sandbox"
         assert raw["name"] == "Starter Town Sandbox"
-        assert raw["schema_version"] == "worldtemplate.v1"
-        assert len(raw["regions"]) == 2
-        
-        # Verify that the bootstrapped template is successfully validated by validate subcommand!
-        args_val = MockedArgs(command="validate", world_id="town_sandbox", strict=False)
-        from src.worldbuilding.cli import handle_validate
-        code_val = handle_validate(args_val)
-        assert code_val == 0
+        assert raw["schema_version"] == "worldcomposition.v1"
+        assert raw["module_refs"] == []
+
+        # Verify the bootstrapped stub round-trips through WorldCompositionSpec without error.
+        from src.worldassembly.schema import WorldCompositionSpec
+        composition = WorldCompositionSpec.model_validate(raw)
+        assert composition.world_id == "town_sandbox"
+
+
+def test_cli_create_template_rejects_existing_world(temp_repo, capsys):
+    """
+    Verify that create-template refuses to overwrite an already-existing world.yaml.
+    """
+    with patch("src.worldbuilding.cli.WorldRepository", return_value=temp_repo):
+        args = MockedArgs(
+            command="create-template",
+            template_name="Duplicate Attempt",
+            world_id="valid_zone"
+        )
+        from src.worldbuilding.cli import handle_create_template
+        code = handle_create_template(args)
+
+        assert code == 1
+        captured = capsys.readouterr()
+        assert "already exists" in captured.out

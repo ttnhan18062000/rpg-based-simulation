@@ -1,9 +1,9 @@
 {
-  "run_id": "run_1782832231_5169",
-  "tick_count": 57,
-  "overall_score": 0.2070175438596491,
+  "run_id": "run_1782955705_5169",
+  "tick_count": 200,
+  "overall_score": 0.0905,
   "overall_grade": "B",
-  "generated_at": "2026-06-30T15:10:55.059890+00:00",
+  "generated_at": "2026-07-02T01:28:48.395186+00:00",
   "pillars": {
     "COGNITION": {
       "raw_score": 0.0,
@@ -26,15 +26,13 @@
       "worst_events": []
     },
     "COMBAT": {
-      "raw_score": 26.0,
-      "normalized_score": 0.45614035087719296,
-      "grade": "B",
-      "event_count": 13,
+      "raw_score": 0.0,
+      "normalized_score": 0.0,
+      "grade": "C",
+      "event_count": 0,
       "negative_count": 0,
-      "loop_detected": true,
-      "loop_flags": [
-        "combat_active"
-      ],
+      "loop_detected": false,
+      "loop_flags": [],
       "worst_events": []
     },
     "FACTION": {
@@ -58,16 +56,30 @@
       "worst_events": []
     },
     "PROGRESSION": {
-      "raw_score": 12.0,
-      "normalized_score": 0.21052631578947367,
-      "grade": "B",
-      "event_count": 4,
-      "negative_count": 0,
+      "raw_score": -8.0,
+      "normalized_score": -0.04,
+      "grade": "C",
+      "event_count": 1,
+      "negative_count": 1,
       "loop_detected": true,
       "loop_flags": [
-        "survival_experience"
+        "xp_plateau"
       ],
-      "worst_events": []
+      "worst_events": [
+        {
+          "tick": 51,
+          "event_id": "20b2d49fc42c4b56ae50a573dda23674",
+          "pillar": "PROGRESSION",
+          "delta": -8.0,
+          "reason": "XP gain rate dropped to zero after tick gate",
+          "event_type": "progression_plateau_detected",
+          "entity_id": 1,
+          "region_id": null,
+          "tags": [
+            "xp_plateau"
+          ]
+        }
+      ]
     },
     "SOCIAL": {
       "raw_score": 0.0,
@@ -90,20 +102,22 @@
       "worst_events": []
     },
     "WORLD": {
-      "raw_score": 0.0,
-      "normalized_score": 0.0,
-      "grade": "C",
-      "event_count": 0,
+      "raw_score": 9.0,
+      "normalized_score": 0.045,
+      "grade": "B",
+      "event_count": 3,
       "negative_count": 0,
-      "loop_detected": false,
-      "loop_flags": [],
+      "loop_detected": true,
+      "loop_flags": [
+        "ecology_cycling"
+      ],
       "worst_events": []
     },
     "NARRATIVE": {
-      "raw_score": 80.0,
-      "normalized_score": 1.4035087719298245,
+      "raw_score": 180.0,
+      "normalized_score": 0.9,
       "grade": "A",
-      "event_count": 16,
+      "event_count": 36,
       "negative_count": 0,
       "loop_detected": true,
       "loop_flags": [

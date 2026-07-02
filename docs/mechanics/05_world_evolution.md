@@ -31,6 +31,10 @@ Regions are not static. They react to the violence and activity within their bor
 2.  **Threshold**: If `Trauma Score > 50.0`, the region enters an unstable state.
 3.  **Hazard Scaling**: Unstable regions gain **+0.01** `Hazard Level` per world cycle.
 
+> For how per-entity Hazard Level drain is actually resolved against an entity standing in
+> the region (including faction-based endurance to a region's hazard kind), see
+> [§3 Regional Sovereignty — Hazard Impacts](#hazard-impacts) below.
+
 ---
 
 ## 3. Regional Sovereignty
@@ -53,6 +57,40 @@ As `Hazard Level` (0.0 to 1.0) increases, entities within the region suffer:
 *   **Passive HP Drain**: Health is lost every tick based on the hazard's intensity.
 *   **Environmental Fatigue**: Sleep Debt increases by **+1.0** (extra exhaustion) due to extreme conditions.
 *   **Suppression**: If a region is "Suppressed," entities lose **-5.0 Readiness** per tick, significantly slowing down their action frequency.
+
+#### Native Endurance to a Region's Hazard Kind
+Every region carries a `hazard_kind` tag (e.g. `"PHYSICAL"` — the default, `"NATURAL_TERRAIN"`,
+`"TOXIC_GAS"`) describing *what kind* of hazard its passive drain represents. Separately, a
+faction's catalog definition may declare `hazard_immunities` — the set of `hazard_kind` values
+its members endure without harm (e.g. `wild_beast_pack` and `goblin_warband` both declare
+`hazard_immunities: ["NATURAL_TERRAIN"]`, since wolves and goblins are native to their own
+forest habitats).
+
+When computing Passive HP Drain for an entity, `EnvironmentService.calculate_hazard_drain`
+resolves the entity's catalog faction id and checks it against the region's `hazard_kind`:
+if the entity's faction endures that hazard kind, drain is **zero**; otherwise the drain
+formula above applies unchanged. This endurance check is **unconditional** — it applies before
+and independent of `calamity_intensity` scaling or the `MIASMA` modifier, and it does not
+consult hostility relationships between factions.
+
+This means endurance is strictly a property a faction declares for itself, never an inference
+from being hostile (or not) to another faction. A hazard kind that no faction present has
+declared endurance for hurts **every** faction standing in it equally — for example, if a hero
+party and a wolf pack fight each other inside a `"TOXIC_GAS"` region, both sides take full,
+unmitigated drain, because neither faction lists `"TOXIC_GAS"` in its `hazard_immunities`. A
+faction being bucketed as hostile-to-heroes (e.g. `legacy_engine_bucket: "MONSTER_HORDE"`)
+confers no hazard endurance by itself.
+
+`RegionState.hazard_kind` defaults to `"PHYSICAL"` and `FactionDefinition.hazard_immunities`
+defaults to an empty list, so this mechanism is fully opt-in per content: existing regions and
+factions with neither field authored behave exactly as before (full, unmitigated drain for
+every entity). Content must explicitly author both a region's `hazard_kind` and a faction's
+matching `hazard_immunities` entry for the exemption to take effect.
+
+> **Compiled-instance staleness note**: `data/worlds/sandbox_world/`'s compiled/resolved
+> artifacts are generated ahead-of-time from the source catalog and do not pick up this
+> mechanism's effect until they are recompiled — that recompile is the responsibility of
+> `TCK-20260701-SANDBOX-MONSTER-BALANCE`, not this chapter's authoring change.
 
 ---
 

@@ -53,6 +53,20 @@ To ensure the engine is truthful and deterministic, all tests in the `tests/pari
 
 **Strict matrix tests** may verify scenario-specific assembly constraints (e.g., per-scenario region counts, population distributions) but must not re-assert basic "assembly produces a valid WorldSpec" or "catalog loads without error."
 
+**Process guard — adding a new content field to a `worldspec.v1` schema (e.g. `RegionSpec`):**
+When a field is added to a `worldspec.v1` schema class, it must also be added to the
+corresponding `worldcomposition.v1` recipe schema (`src/worldbuilding/recipe.py`) and forwarded
+in `WorldAssemblyResolver.resolve_module_contribution()` (`src/worldassembly/resolver.py`) — these
+are two separate, easy-to-miss authoring paths. Unit tests that construct schema objects directly
+(e.g. `RegionState(...)`, `RegionSpec(...)`) do **not** exercise this gap; only a real
+module-loading pipeline test does (module YAML → `WorldModuleAuthoringNormalizer.normalize()` →
+`WorldAssemblyResolver.resolve_module_contribution()` → resolved spec, as in
+`test_real_content_world_modules.py::test_hazard_kind_survives_module_pipeline`). A ticket that
+adds a content field should run `tests/integration/worldassembly/test_real_content_world_modules.py`
+(the `MODULE_MATRIX` covers all real `data/content/world_modules/*.yaml` files) as part of its own
+test plan, not just its new unit tests. See TCK-20260701-HAZARD-KIND-RESOLVER-GAP for the
+incident this guards against.
+
 ## 2. Enforcement
 All tests in `tests/parity/` are subject to automated collection-time enforcement. A test will NOT run unless it has at least one of these markers.
 

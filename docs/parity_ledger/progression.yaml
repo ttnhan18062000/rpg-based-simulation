@@ -1111,11 +1111,15 @@
   v2_evidence: >
     data/content/spawn_tables.yaml (classtable.v1 entry — hero: [WARRIOR, MAGE, ROGUE]),
     src/worldbuilding/compiler.py (_load_class_table() + rng.choice sub_id=14,
-    TCK-20260619-P0-ENTITY-INIT); sandbox_world (3 HERO via recipe + faction
-    villagers) and urban_political (3 HERO via hero_adventurers module) seeded
-    in TCK-20260619-E11A-HERO-AUTHORING;
+    TCK-20260619-P0-ENTITY-INIT); urban_political (3 HERO via hero_adventurers module)
+    seeded in TCK-20260619-E11A-HERO-AUTHORING (sandbox_world previously seeded 3 HERO
+    via worldtemplate.v1 recipe + faction villagers, but no longer does — migrated to
+    worldcomposition.v1 modules frontier_village_core + wolf_den_near_forest by
+    TCK-20260701-SANDBOX-WORLDCOMP-MIGRATE, which have no HERO population; the
+    mechanism proof below is unaffected);
     tests/unit/entity/test_entity_archetypes.py::test_hero_archetypes_cover_combat_mage_rogue
-    verifies WARRIOR/MAGE/ROGUE class coverage for HERO entities
+    verifies WARRIOR/MAGE/ROGUE class coverage for HERO entities via a dedicated
+    synthetic fixture, independent of any specific world
   proof_type: parity
   test_path: tests/unit/entity/test_entity_archetypes.py::test_hero_archetypes_cover_combat_mage_rogue
   divergence_note: null

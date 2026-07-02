@@ -9,19 +9,7 @@
     "S"
   ],
   "sandbox_world_seed42_200t": {
-    "COMBAT": "B",
-    "NARRATIVE": "A",
-    "PROGRESSION": "B",
-    "AGENCY": "C",
-    "COGNITION": "C",
-    "ECONOMY": "C",
-    "FACTION": "C",
-    "INFORMATION": "C",
-    "SOCIAL": "C",
-    "WORLD": "C"
-  },
-  "sandbox_world_seed137_200t": {
-    "COMBAT": "B",
+    "COMBAT": "C",
     "NARRATIVE": "A",
     "PROGRESSION": "C",
     "AGENCY": "C",
@@ -30,7 +18,19 @@
     "FACTION": "C",
     "INFORMATION": "C",
     "SOCIAL": "C",
-    "WORLD": "C"
+    "WORLD": "B"
+  },
+  "sandbox_world_seed137_200t": {
+    "COMBAT": "C",
+    "NARRATIVE": "A",
+    "PROGRESSION": "C",
+    "AGENCY": "C",
+    "COGNITION": "C",
+    "ECONOMY": "C",
+    "FACTION": "C",
+    "INFORMATION": "C",
+    "SOCIAL": "C",
+    "WORLD": "B"
   },
   "sandbox_world_seed999_200t": {
     "COMBAT": "B",
@@ -42,7 +42,7 @@
     "FACTION": "C",
     "INFORMATION": "C",
     "SOCIAL": "C",
-    "WORLD": "C"
+    "WORLD": "B"
   },
   "dungeon_crawl_seed42_200t": {
     "COMBAT": "A",
@@ -97,8 +97,8 @@
     "NARRATIVE": "A",
     "PROGRESSION": "B",
     "AGENCY": "C",
-    "COGNITION": "C",
-    "ECONOMY": "C",
+    "COGNITION": "B",
+    "ECONOMY": "B",
     "FACTION": "C",
     "INFORMATION": "C",
     "SOCIAL": "C",

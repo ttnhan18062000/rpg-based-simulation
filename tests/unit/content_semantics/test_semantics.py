@@ -35,6 +35,14 @@ def test_faction_semantics(base_repo):
     assert service.is_neutral("neutral") is True
 
 
+def test_get_hazard_immunities(base_repo):
+    service = FactionSemanticsService(base_repo)
+
+    assert service.get_hazard_immunities("wild_beast_pack") == frozenset({"NATURAL_TERRAIN"})
+    assert service.get_hazard_immunities("hero_guild") == frozenset()
+    assert service.get_hazard_immunities("nonexistent_faction") == frozenset()
+
+
 def test_role_semantics(base_repo):
     service = RoleSemanticsService(base_repo)
 

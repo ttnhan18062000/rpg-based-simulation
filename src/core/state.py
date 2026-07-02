@@ -240,6 +240,7 @@ class RegionState:
     bounds: tuple[int, int, int, int] # x_min, y_min, x_max, y_max
     kind: str = "FOREST"
     hazard_level: float = 0.0      # 0.0 to 1.0, affects HP/Readiness drain
+    hazard_kind: str = "PHYSICAL"  # Semantic hazard type; matched against FactionDefinition.hazard_immunities
     suppression_active: bool = False # Prevents certain worker actions
     calamity_intensity: float = 0.0  # Scales regional hazards
     trauma_score: float = 0.0      # Persistent regional 'scar' value
@@ -266,6 +267,7 @@ class RegionState:
             "bounds": self.bounds,
             "kind": self.kind,
             "hazard_level": self.hazard_level,
+            "hazard_kind": self.hazard_kind,
             "suppression_active": self.suppression_active,
             "calamity_intensity": self.calamity_intensity,
             "trauma_score": self.trauma_score,

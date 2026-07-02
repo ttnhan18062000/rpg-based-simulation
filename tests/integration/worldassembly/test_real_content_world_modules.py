@@ -110,6 +110,39 @@ def test_real_world_modules_resolve_contributions(repos):
         assert len(contribution.building_refs) == len(normalized.buildings)
 
 
+def test_hazard_kind_survives_module_pipeline(repos):
+    """TCK-20260701-HAZARD-KIND-RESOLVER-GAP regression: hazard_kind authored in a real
+    module's YAML must survive the full worldcomposition.v1 pipeline (module YAML ->
+    WorldModuleAuthoringNormalizer.normalize() -> WorldAssemblyResolver.resolve_module_contribution()
+    -> resolved RegionSpec), not just direct object construction. Prior to this fix,
+    RegionRecipeSpec had no hazard_kind field at all (extra="forbid" rejected the YAML
+    outright), and even after adding the field, the resolver silently dropped it back to
+    the "PHYSICAL" default instead of forwarding the authored value.
+    """
+    cat, mod = repos
+    resolver = WorldAssemblyResolver(cat, mod)
+
+    module_id = "wolf_den_near_forest"
+    spec = mod.get_module(module_id)
+    normalized = WorldModuleAuthoringNormalizer.normalize(spec)
+
+    # The raw module YAML authors hazard_kind="NATURAL_TERRAIN" for both regions.
+    normalized_kinds = {r.id: getattr(r, "hazard_kind", None) for r in normalized.regions}
+    assert normalized_kinds == {"near_forest": "NATURAL_TERRAIN", "wolf_den": "NATURAL_TERRAIN"}
+
+    contribution = resolver.resolve_module_contribution(normalized)
+    resolved_kinds = {r.id: r.hazard_kind for r in contribution.regions}
+    assert resolved_kinds == {"near_forest": "NATURAL_TERRAIN", "wolf_den": "NATURAL_TERRAIN"}
+
+    # A module that does not author hazard_kind must still resolve, defaulting to PHYSICAL
+    # (i.e. the field is optional end-to-end, not just at the RegionRecipeSpec layer).
+    default_module_id = "frontier_village_core"
+    default_spec = mod.get_module(default_module_id)
+    default_normalized = WorldModuleAuthoringNormalizer.normalize(default_spec)
+    default_contribution = resolver.resolve_module_contribution(default_normalized)
+    assert all(r.hazard_kind == "PHYSICAL" for r in default_contribution.regions)
+
+
 def test_real_world_modules_reference_graph_edges_exist(repos):
     """Verify that references and relationships in modules build typed reference edges correctly."""
     cat, mod = repos

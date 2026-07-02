@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: simulation
 authority: P3
 audience: agent
 ticket_id: TCK-20260701-SIMQ-CAMP-PARITY-CLEANUP
-phase: open
+phase: done
 date: 2026-07-01
 tags: [simq, parity-ledger, documentation, camp_constructed]
 ---
@@ -15,7 +15,7 @@ tags: [simq, parity-ledger, documentation, camp_constructed]
 Update stale parity-ledger language for camp_constructed (still says "blocked", not "no engine path")
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -65,10 +65,10 @@ intentionally retained for if/when a camp-construction mechanic is ever added).
 - Any change to `event_type_coverage.md` (already correct)
 
 ## Acceptance Criteria
-- [ ] `world_dynamics.yaml` WORLD-109 divergence_note no longer implies pending/future work
-- [ ] `quality_scoring_contract.md` WORLD dynamics event list caveats `camp_constructed`
-- [ ] No source or test files changed
-- [ ] Cross-check `docs/plans/audit_fix_plan.md:465` (WORLD dynamics signals list) for the
+- [x] `world_dynamics.yaml` WORLD-109 divergence_note no longer implies pending/future work
+- [x] `quality_scoring_contract.md` WORLD dynamics event list caveats `camp_constructed`
+- [x] No source or test files changed
+- [x] Cross-check `docs/plans/audit_fix_plan.md:465` (WORLD dynamics signals list) for the
       same stale framing and correct if present
 
 ## Related Tickets
@@ -94,13 +94,39 @@ intentionally retained for if/when a camp-construction mechanic is ever added).
 - None — this is a low-ambiguity doc-consistency fix.
 
 ## Implementation Notes
-(to be filled at implementation)
+1. `docs/parity_ledger/world_dynamics.yaml` WORLD-109 `divergence_note` rewritten: removed
+   "blocked ... tracked as a future ticket" framing. New note states camp_constructed has no
+   viable engine path under the current camp lifecycle model (camps pre-placed at world
+   generation; CampService only evolves existing camps — maturity, raids; no dynamic
+   construction mechanic to emit from), and cites `TCK-20260701-SIMQ-EMIT-CAMP` as the
+   confirming source. `status`/`priority`/all other fields left unchanged.
+2. `docs/simulation_quality/quality_scoring_contract.md` (~line 805): added a `†` marker on
+   `camp_constructed` in the WORLD dynamics "Event types scored" list plus a footnote:
+   "`camp_constructed` is registered, not currently emittable — see
+   `event_type_coverage.md` §3.9." Entry itself was not removed from the list.
+3. `docs/plans/audit_fix_plan.md:467` cross-check found the same stale implication: the
+   "WORLD dynamics signals" row in the "Genuine remaining work" table listed
+   `camp_constructed` alongside genuine missing-emitter gaps (ecology_cycle_completed,
+   spawn_cadence_fired, threat_evolved, node_recharged), implying it just needs an `emit()`
+   call like the others. Removed it from that gap grouping and added an inline note that it's
+   excluded — no viable engine path, not an emitter gap — with a pointer to
+   `event_type_coverage.md` §3.9.
+4. `src/simulation_quality/scorers/world_dynamics.py` and its test were not touched, per
+   scope — the scorer branch is intentionally retained.
+5. `docs/simulation_quality/event_type_coverage.md` was not touched — already correct.
 
 ## Test Summary
-(to be filled at implementation)
+No code changed — no test run applicable. Doc-only hotfix.
 
 ## Files Changed
-(to be filled at implementation)
+- `docs/parity_ledger/world_dynamics.yaml` (WORLD-109 divergence_note)
+- `docs/simulation_quality/quality_scoring_contract.md` (WORLD dynamics event list footnote)
+- `docs/plans/audit_fix_plan.md` (line ~467, WORLD dynamics signals row)
 
 ## Completion Summary
-(to be filled at completion)
+Corrected three stale "camp_constructed blocked / future ticket" doc references to match the
+final conclusion from `TCK-20260701-SIMQ-EMIT-CAMP`: no viable engine path exists under the
+current camp lifecycle model, and none is planned. Parity ledger WORLD-109, the quality
+scoring contract's WORLD event list, and the audit fix plan's remaining-work table are now
+consistent with `event_type_coverage.md` §3.9, which was already correct. No source, test, or
+scorer changes — doc-only hotfix.
