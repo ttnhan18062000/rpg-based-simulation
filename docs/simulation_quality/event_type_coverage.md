@@ -3,7 +3,8 @@
 **Status:** Certified Level 1 — Authoritative  
 **Ticket:** TCK-20260630-SIMQ-TRANSLATE  
 **Date:** 2026-06-30  
-**Audit base:** calibration runs in `data/calibration/` (sandbox_world seeds 42/137/999 200t, dungeon_crawl 200t, urban_political 200t, wilderness_survival 200t, simq_routing_test 500t)
+**Audit base:** calibration runs in `data/calibration/` (sandbox_world seeds 42/137/999 200t, dungeon_crawl 200t, urban_political 200t, wilderness_survival 200t, simq_routing_test 500t)  
+**Last updated:** 2026-07-02 (TCK-20260702-SIMQ-UPLIFT-SOCIAL-ZERO — cooperation events activated via ENABLE_SOCIAL_COOPERATION=ON in urban_political profile)
 
 ---
 
@@ -59,7 +60,7 @@ All events below are emitted by the engine and reach at least one pillar scorer,
 | `self_model_updated` | event_extractor | CognitionScorer | 0 | Fires on self_model_bundle_set |
 | `belief_assimilated` | event_extractor | InformationScorer | 0 | Fires on last_assimilated_tick == current_tick |
 | `belief_updated` | event_extractor | CognitionScorer | 0 | Co-fires with belief_assimilated |
-| `cooperation_event` | event_extractor | SocialScorer | 0 | Fires on last_cooperation_decision |
+| `cooperation_event` | event_extractor | SocialScorer | 1657 | Fires on last_cooperation_decision; 1657 hits in urban_political_seed42_500t with ENABLE_SOCIAL_COOPERATION=ON (TCK-20260702-SIMQ-UPLIFT-SOCIAL-ZERO) |
 | `resource_harvested` | event_extractor | EconomyScorer | 0 | src_kind=NODE in intent_results |
 | `item_crafted` | event_extractor | EconomyScorer | 0 | src_kind=CRAFTING |
 | `shop_transaction` | event_extractor | EconomyScorer | 0 | src_kind=SHOP_BUY or SHOP_SELL |
@@ -102,7 +103,7 @@ All events below are emitted by the engine and reach at least one pillar scorer,
 | `contract_offer_accepted` | event_extractor | SocialScorer | 0 | OFFERED → ACTIVE transition |
 | `contract_completed` | event_extractor | SocialScorer | 0 | Contract reaches FULFILLED |
 | `contract_lapsed` | event_extractor | SocialScorer | 0 | ACTIVE → EXPIRED |
-| `contract_expired_offer` | event_extractor | SocialScorer | 0 | OFFERED → EXPIRED or contract removed |
+| `contract_expired_offer` | event_extractor | SocialScorer | 234 | OFFERED → EXPIRED or contract removed; 234 hits in urban_political_seed42_500t with ENABLE_SOCIAL_COOPERATION=ON (TCK-20260702-SIMQ-UPLIFT-SOCIAL-ZERO) |
 | `resource_node_depleted` | event_extractor | EconomyScorer | 0 | Node remaining_charges drops to 0 |
 | `region_trauma_delta` | event_extractor | WorldDynamicsScorer | 11 | Non-zero trauma_delta on world_updates |
 | `region_ownership_changed` | event_extractor | WorldDynamicsScorer | 0 | owner_faction_id_set changes |

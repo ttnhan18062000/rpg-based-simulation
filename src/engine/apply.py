@@ -401,6 +401,10 @@ class ApplyPath:
             recent_world_events=new_recent_world_events,
             quest_registry=new_quest_registry,
             factions=new_factions,
+            # Carry feature_flags across ticks so per-profile overrides injected at
+            # engine start (e.g. ENABLE_SOCIAL_COOPERATION=ON) are not silently lost
+            # when apply_generation reconstructs AuthoritativeState each tick.
+            feature_flags=dict(getattr(prior_state, "feature_flags", None) or {}),
         )
 
         if not any_entity_changed and getattr(prior_state, "_readonly_entities_cache", None) is not None:

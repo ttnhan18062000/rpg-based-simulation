@@ -3,3 +3,6 @@ pillar_weights:
   ECONOMY: 1.5
   SOCIAL: 1.5
   COMBAT: 0.3
+
+feature_flags:
+  ENABLE_SOCIAL_COOPERATION: "ON"

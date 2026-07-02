@@ -3142,7 +3142,7 @@
       cleared. EventExtractor now emits all AGENCY pillar events."
   proof_type: null
   test_path: "tests/simulation_quality/test_quality_hub_event_translation.py; tests/unit/observability/test_event_extractor_simq.py; tests/unit/observability/test_event_extractor_agency.py; tests/unit/observability/test_event_extractor_agency2.py; tests/unit/observability/test_event_extractor_social_faction.py; tests/unit/observability/test_event_extractor_narrative.py; tests/unit/engine/test_scenario_runtime_service.py"
-  divergence_note: "SOCIAL and FACTION pillars now emitting. 4 gaps remain blocked (architecture limitations): alliance_proposed, resource_seized, contract_milestone_completed, social_memory_created — documented in gap tests. NARRATIVE pillar now emitting (TCK-20260629-SIMQ-EMIT-NARRATIVE): chronicle_entry_created (orchestrator), world_emergence_event + narrative_milestone (EventExtractor from world_events_add), hero_death_unrecorded (EventExtractor entity diff), scenario_stalled + scenario_objective_completed (ScenarioRuntimeService injection). Gap: scenario_objective_progressed (binary ObjectiveEvaluator — no partial progress concept). Tests: tests/unit/observability/test_event_extractor_narrative.py (N-01..N-18). TCK-20260630-SIMQ-TRANSLATE: full translation table audit confirmed 0 gaps in _TRANSLATE_SIMPLE/_TRANSLATE_CONDITIONAL; 4 new tests added for previously untested entries (leadership_changed, alliance_formed, betrayal_desertion x2); 27 engine_emission_gaps documented in docs/simulation_quality/event_type_coverage.md."
+  divergence_note: "SOCIAL and FACTION pillars now emitting. 2 remaining architecture gaps: alliance_proposed, resource_seized — documented in gap tests. contract_milestone_completed resolved by TCK-20260701-SIMQ-EMIT-CONTRACT-MILESTONE (SOC-238). social_memory_created resolved by TCK-20260701-SIMQ-EMIT-SOCIAL-MEM (SOC-237). NARRATIVE pillar now emitting (TCK-20260629-SIMQ-EMIT-NARRATIVE): chronicle_entry_created (orchestrator), world_emergence_event + narrative_milestone (EventExtractor from world_events_add), hero_death_unrecorded (EventExtractor entity diff), scenario_stalled + scenario_objective_completed (ScenarioRuntimeService injection). Gap: scenario_objective_progressed (binary ObjectiveEvaluator — no partial progress concept). Tests: tests/unit/observability/test_event_extractor_narrative.py (N-01..N-18). TCK-20260630-SIMQ-TRANSLATE: full translation table audit confirmed 0 gaps in _TRANSLATE_SIMPLE/_TRANSLATE_CONDITIONAL; 4 new tests added for previously untested entries (leadership_changed, alliance_formed, betrayal_desertion x2); 27 engine_emission_gaps documented in docs/simulation_quality/event_type_coverage.md. UPLIFT (TCK-20260702-SIMQ-UPLIFT-SOCIAL-ZERO): SOCIAL pillar now activates in urban_political calibration — 1891 events, grade S."
   support_boundary: null
 - id: INFRA-251
   text: "calibrate_simq.py --window-size and --loop-threshold CLI flags override detection_params.yaml
@@ -3157,5 +3157,51 @@
     data 2026-07-02 (TCK-20260701-SIMQ-LOOP-WINDOW-TUNE)"
   proof_type: null
   test_path: tests/simulation_quality/test_accumulator.py::test_accumulator_respects_injected_window_size
+  divergence_note: null
+  support_boundary: null
+
+- id: INFRA-253
+  text: >
+    calibrate_simq.py supports profile-level feature flag injection via
+    _load_profile_feature_flags(). The function reads the optional feature_flags:
+    mapping from the profile YAML (e.g. config/simulation_quality/profiles/urban_political.yaml)
+    and injects each key/value pair into os.environ before engine startup. This allows
+    calibration profiles to activate domain-specific feature flags (e.g.
+    ENABLE_SOCIAL_COOPERATION: "ON") without modifying the global environment or
+    scoring weights. Flag injection is idempotent across runs in the same process.
+    (TCK-20260702-SIMQ-UPLIFT-SOCIAL-ZERO)
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    tools/calibrate_simq.py::_load_profile_feature_flags (reads feature_flags key
+    from profile YAML dict, injects into os.environ before engine startup).
+    config/simulation_quality/profiles/urban_political.yaml (feature_flags:
+    {ENABLE_SOCIAL_COOPERATION: "ON"}).
+    (TCK-20260702-SIMQ-UPLIFT-SOCIAL-ZERO)
+  proof_type: parity
+  test_path: tests/unit/domains/cooperation/test_cooperation_phase.py
+  divergence_note: null
+  support_boundary: null
+
+- id: INFRA-254
+  text: >
+    apply_generation() in src/engine/apply.py preserves AuthoritativeState.feature_flags
+    across tick reconstruction. Prior bug: feature_flags were silently dropped when
+    apply_generation() rebuilt AuthoritativeState from the resolved tick output,
+    causing ENABLE_SOCIAL_COOPERATION and other injected flags to disappear after
+    tick 0. Fix: feature_flags are carried forward from the prior state in the
+    reconstructed AuthoritativeState. Determinism unaffected — feature_flags are
+    read-only config, not durable gameplay state.
+    (TCK-20260702-SIMQ-UPLIFT-SOCIAL-ZERO)
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/engine/apply.py::apply_generation (feature_flags=prior_state.feature_flags
+    carried into reconstructed AuthoritativeState).
+    (TCK-20260702-SIMQ-UPLIFT-SOCIAL-ZERO)
+  proof_type: parity
+  test_path: tests/unit/domains/cooperation/test_cooperation_phase.py
   divergence_note: null
   support_boundary: null

@@ -41,6 +41,29 @@ def _resolve_profile(name: str) -> str:
     return name if os.path.exists(profile_path) else "default"
 
 
+def _load_profile_feature_flags(profile: str) -> dict:
+    """Read the optional ``feature_flags:`` block from a scoring profile YAML.
+
+    Returns a dict mapping flag name → string value (e.g. ``{"ENABLE_SOCIAL_COOPERATION": "ON"}``).
+    Returns an empty dict if the profile file does not exist or has no ``feature_flags:`` key.
+    This allows per-scenario calibration profiles to activate feature flags without requiring
+    the caller to export env vars manually.
+    """
+    profile_path = os.path.join(
+        "config", "simulation_quality", "profiles", f"{profile}.yaml"
+    )
+    if not os.path.exists(profile_path):
+        return {}
+    try:
+        import yaml
+        with open(profile_path, encoding="utf-8") as fh:
+            raw = yaml.safe_load(fh) or {}
+        return {str(k): str(v) for k, v in (raw.get("feature_flags") or {}).items()}
+    except Exception as exc:
+        logger.warning("Could not read feature_flags from profile '%s': %s", profile, exc)
+        return {}
+
+
 def _load_weights(profile: str = "default"):
     from src.simulation_quality.weights import ScoringWeights
     return ScoringWeights.load(
@@ -116,12 +139,17 @@ def _load_world_state(name: str, seed: int):
         return None, None
 
 
-def _run_engine(name: str, seed: int, ticks: int, entity_count: int = 10) -> tuple[str, float]:
+def _run_engine(name: str, seed: int, ticks: int, entity_count: int = 10, extra_flags: dict | None = None) -> tuple[str, float]:
     """Drive the kernel tick_once() N times; return (run_dir, elapsed_sec, run_id).
 
     If a compiled world spec exists for ``name``, loads it via WorldCompiler and
     injects the resulting AuthoritativeState into the Kernel.  Falls back to a
     generic hero + goblins scenario when no world is found.
+
+    ``extra_flags`` is an optional dict of flag-name → string-value pairs loaded
+    from the calibration profile YAML's ``feature_flags:`` block.  These are applied
+    before env-var overrides so that environment variables can still override profile
+    defaults.
     """
     from src.engine.kernel import Kernel
     from src.core.state import AuthoritativeState
@@ -149,11 +177,11 @@ def _run_engine(name: str, seed: int, ticks: int, entity_count: int = 10) -> tup
             entities[monster.id] = monster
         state = AuthoritativeState(tick=0, seed=seed, entities=entities)
 
-    # Inject feature-flag overrides from environment variables.
-    # Recognized env vars: ENABLE_ADVENTURE_ROUTING, ENABLE_COMBAT_ENGAGEMENT,
+    # Inject feature-flag overrides from the calibration profile YAML and environment variables.
+    # Recognized flags: ENABLE_ADVENTURE_ROUTING, ENABLE_COMBAT_ENGAGEMENT,
     # ENABLE_SOCIAL_COOPERATION, ENABLE_WORLD_EMERGENCE, ENABLE_BELIEF_ASSIMILATION,
     # ENABLE_PROGRESSION_EVOLUTION, ENABLE_LIFE_ARC_CAMPAIGNS, etc.
-    # Set to "ON", "SHADOW", "STRICT", or any truthy string to enable.
+    # Profile YAML feature_flags are applied first; env vars override profile values.
     # Example: ENABLE_ADVENTURE_ROUTING=ON python3 tools/calibrate_simq.py ...
     from src.domains.optimization.feature_flags import FeatureMode
     _KNOWN_FLAGS = [
@@ -163,19 +191,37 @@ def _run_engine(name: str, seed: int, ticks: int, entity_count: int = 10) -> tup
         "ENABLE_SOCIAL_COOPERATION", "ENABLE_WORLD_EMERGENCE",
         "ENABLE_LIFE_ARC_CAMPAIGNS", "ENABLE_ENHANCED_TRACE_EVENTS",
     ]
-    env_flag_overrides = {}
+
+    def _parse_flag_value(raw: str) -> FeatureMode | None:
+        val = raw.strip().upper()
+        if val in ("ON", "TRUE", "1", "YES"):
+            return FeatureMode.ON
+        if val == "STRICT":
+            return FeatureMode.STRICT
+        if val == "SHADOW":
+            return FeatureMode.SHADOW
+        return None
+
+    combined_flag_overrides: dict = {}
+
+    # 1. Apply profile-level feature_flags (lower priority)
+    for flag, raw_val in (extra_flags or {}).items():
+        mode = _parse_flag_value(raw_val)
+        if mode is not None:
+            combined_flag_overrides[flag] = mode
+            logger.info("Feature flag override from profile YAML: %s=%s", flag, mode)
+
+    # 2. Apply env-var overrides (higher priority — can override profile)
     for flag in _KNOWN_FLAGS:
         env_val = os.environ.get(flag, "").strip().upper()
-        if env_val in ("ON", "TRUE", "1", "YES", "STRICT"):
-            mode = FeatureMode.STRICT if env_val == "STRICT" else FeatureMode.ON
-            env_flag_overrides[flag] = mode
+        mode = _parse_flag_value(env_val)
+        if mode is not None:
+            combined_flag_overrides[flag] = mode
             logger.info("Feature flag override from env: %s=%s", flag, mode)
-        elif env_val == "SHADOW":
-            env_flag_overrides[flag] = FeatureMode.SHADOW
-            logger.info("Feature flag override from env: %s=SHADOW", flag)
-    if env_flag_overrides:
+
+    if combined_flag_overrides:
         existing = dict(getattr(state, "feature_flags", None) or {})
-        existing.update(env_flag_overrides)
+        existing.update(combined_flag_overrides)
         from dataclasses import replace as dc_replace
         state = dc_replace(state, feature_flags=existing)
 
@@ -285,8 +331,13 @@ def main():
     cal_dir = args.output if args.output else os.path.join("data", "calibration", run_tag)
     os.makedirs(cal_dir, exist_ok=True)
 
+    # Load feature_flags from the resolved profile YAML (e.g. urban_political.yaml)
+    profile_feature_flags = _load_profile_feature_flags(profile)
+    if profile_feature_flags:
+        print(f"[calibrate_simq] Profile feature flags: {profile_feature_flags}")
+
     print(f"[calibrate_simq] Running engine: {run_tag} entities={args.entities} profile={profile}")
-    engine_run_dir, elapsed, run_id = _run_engine(args.name, args.seed, args.ticks, args.entities)
+    engine_run_dir, elapsed, run_id = _run_engine(args.name, args.seed, args.ticks, args.entities, extra_flags=profile_feature_flags)
     print(f"[calibrate_simq] Engine done in {elapsed:.2f}s. JSONL at: {engine_run_dir}")
 
     weights = _load_weights(profile)

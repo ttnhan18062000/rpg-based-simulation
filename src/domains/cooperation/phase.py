@@ -129,10 +129,15 @@ class CooperationPhase:
             entity_up = new_entity_updates.get(entity_id, EntityUpdate(entity_id=entity_id))
             merged_up = entity_up.merge(resolved_up)
             
-            # Feed property updates
+            # Feed property updates.
+            # Store a JSON-serializable sentinel (the posture string) rather than the raw
+            # CooperationDecisionResult object, which would break canonical state hashing
+            # when property_updates are merged into entity.identity.properties.
+            # EventExtractor only checks `is not None` on this key (line 302), so any
+            # truthy value is sufficient to trigger cooperation_event emission.
             prop_up = dict(merged_up.property_updates)
-            prop_up["last_cooperation_decision"] = decision
-            
+            prop_up["last_cooperation_decision"] = decision.selected_posture.value if hasattr(decision.selected_posture, "value") else str(decision.selected_posture)
+
             new_entity_updates[entity_id] = replace(merged_up, property_updates=prop_up)
 
         # 6. Evaluate party cohesion for active groups in this tick
