@@ -20,6 +20,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from src.core.enums import EntityRole
 from src.observability.config import ObservabilityConfig, ObservabilityMode
 from src.observability.cognition.decision_trace_writer import (
     DecisionTraceWriter,
@@ -238,6 +239,7 @@ def test_adventure_decision_phase_wires_writer():
 
     # Build a minimal state with one hero that has active lifecycle
     hero = MagicMock()
+    hero.identity.role = EntityRole.HERO
     hero.combat.alive = True
     hero.lifecycle.active = True
     hero.strategic.current_project_id = None

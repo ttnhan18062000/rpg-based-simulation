@@ -2748,3 +2748,25 @@
     tests/unit/observability/test_event_extractor_information2.py::TestDecisionDivergenceDetected
   divergence_note: null
   support_boundary: "archetype-blocked in dungeon_crawl: all entities are permanently in combat/survival mode; _NON_SURVIVAL_PROJECT_KINDS condition (src/systems/event_extractor/phase.py) never satisfied; calibration_hits=0 across all 10 dungeon_crawl calibration runs"
+- id: STRAT-243
+  text: >
+    AdventureDecisionPhase.apply() eligibility filter enforces all four documented
+    criteria: Role = EntityRole.HERO (0), combat.alive = True, lifecycle.active = True,
+    and project-lock gating. Non-hero entities (monsters, shopkeepers, citizens, workers,
+    guards) are never routed through hero decision-making, even if alive and active.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/domains/adventure/phase.py:73-76 — heroes list comprehension now includes
+    `e.identity.role == EntityRole.HERO` alongside alive/active checks
+    (TCK-20260703-ADVENTURE-ELIGIBILITY-ROLE-FILTER). Previously the role criterion was
+    documented in the phase docstring and docs/simulation/domains/adventure_contract.md
+    but not enforced in code — any alive/active entity of any role was eligible, which
+    let non-hero entities (e.g. hostiles built without an explicit role) get routed as
+    if they were heroes.
+  proof_type: parity
+  test_path: >-
+    tests/unit/systems/test_spawn_lock_condition.py::TestLockHeldWhenThreatActive
+  divergence_note: null
+  support_boundary: null

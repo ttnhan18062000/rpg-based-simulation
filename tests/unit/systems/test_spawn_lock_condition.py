@@ -15,7 +15,7 @@ import pytest
 from dataclasses import replace
 
 from src.core.builder import V2EntityBuilder
-from src.core.enums import Faction
+from src.core.enums import EntityRole, Faction
 from src.core.state import (
     AuthoritativeState,
     CombatComponent,
@@ -113,7 +113,7 @@ def _make_hostile(entity_id: int = 99, position=(0.0, 0.0), hp: int = 100) -> ob
     b = V2EntityBuilder(entity_id)
     b.replace_combat(CombatComponent(hp=hp, max_hp=100, atk=10, def_stat=2, alive=True))
     b.location(*position)
-    b.identity(faction=Faction.MONSTER_HORDE)
+    b.identity(role=EntityRole.MONSTER, faction=Faction.MONSTER_HORDE)
     return b.build()
 
 

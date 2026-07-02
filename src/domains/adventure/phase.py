@@ -11,6 +11,7 @@ from __future__ import annotations
 from typing import Dict, List, Optional, Any
 
 from src.core.state import AuthoritativeState, EntityState
+from src.core.enums import EntityRole
 from src.core.updates import StateUpdate, EntityUpdate, StrategicUpdate
 from src.domains.adventure.generator import AdventureRouteGenerator
 from src.domains.adventure.schema import RouteFamily
@@ -69,7 +70,10 @@ class AdventureDecisionPhase:
         tick = state.tick
 
         # Avoid processing if no heroes exist
-        heroes = [e for e in state.entities.values() if e.combat.alive and e.lifecycle.active]
+        heroes = [
+            e for e in state.entities.values()
+            if e.identity.role == EntityRole.HERO and e.combat.alive and e.lifecycle.active
+        ]
         if not heroes:
             return update
 

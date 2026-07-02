@@ -62,6 +62,7 @@ jobs:
                  tests/unit/tactical \
                  tests/unit/campaigns \
                  tests/unit/scenarios \
+                 tests/unit/systems \
                  -m "not slow" --tb=short -q
 
   # ── Unit: infra / observability / domains ─────────────────────────────────
@@ -124,6 +125,20 @@ jobs:
                  tests/logging \
                  tests/engine \
                  tests/observability \
+                 -m "not slow" --tb=short -q
+
+  # ── Simulation quality (SimQ scoring module) ──────────────────────────────
+  simulation-quality:
+    name: "Simulation quality"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.13", cache: pip }
+      - run: pip install -r requirements.txt
+      - name: Run
+        run: |
+          pytest tests/simulation_quality \
                  -m "not slow" --tb=short -q
 
   # ── Architecture / docs / static guards ──────────────────────────────────
@@ -201,6 +216,7 @@ jobs:
       - unit-infra
       - integration
       - api-tools
+      - simulation-quality
       - arch-docs
       - perf-cert-arena
       - migration-lanes

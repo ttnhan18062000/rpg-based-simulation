@@ -3,7 +3,7 @@ status: active
 layer: simulation
 authority: P1
 audience: agent
-last_verified: 2026-06-13
+last_verified: 2026-07-03
 ---
 
 # Adventure Domain Contract
