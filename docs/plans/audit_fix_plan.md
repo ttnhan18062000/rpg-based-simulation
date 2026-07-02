@@ -407,7 +407,7 @@ goblin spawn staggered, `--profile` arg added. Deep audit tracked in `docs/plans
 | sandbox_world | 137 | 200 | B | A | C | C | C | C | C | C | C | C |
 | sandbox_world | 999 | 200 | B | A | C | C | C | C | C | C | C | C |
 | sandbox_world | 42 | 1000 | B | A | B | C | C | C | C | C | C | B |
-| dungeon_crawl | 42 | 200 | A | B | A | C | C | C | C | C | C | A |
+| dungeon_crawl | 42 | 200 | A | B | B* | C | C | C | C | C | C | A |
 | dungeon_crawl | 42 | 1000 | B | B | B | C | C | C | C | C | C | B |
 | urban_political | 42 | 200 | B | A | B | C | C | C | C | C | C | A |
 | simq_routing_test | 42 | 500 | B | A | B | **B** | C | C | C | C | C | B |
@@ -418,7 +418,8 @@ goblin spawn staggered, `--profile` arg added. Deep audit tracked in `docs/plans
 | wilderness_survival | 42 | 101‡ | B | C | B | C | C | C | C | C | C | A |
 
 †Early termination — large entity count (56/46) accelerates combat attrition. See P2-B.  
-‡Early termination — only 11 entities; survivor_camp_shelter now included (combat-heavy). Confirms P2-B at small scale.
+‡Early termination — only 11 entities; survivor_camp_shelter now included (combat-heavy). Confirms P2-B at small scale.  
+\*Refreshed 2026-07-02 (TCK-20260701-SIMQ-CALIBRATE-REFRESH): dungeon_crawl/urban_political re-run post-emit-epic. PROGRESSION dropped A→B in dungeon_crawl 200t — new progression emitters add both positive and negative deltas net-reducing normalized score. grade_anchors.json updated to B. All other refreshed grades unchanged from prior corpus.
 
 ### Findings
 

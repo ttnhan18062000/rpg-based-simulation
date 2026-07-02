@@ -1,9 +1,9 @@
 {
-  "run_id": "run_1782836914_5169",
-  "tick_count": 198,
-  "overall_score": 0.15899738121960344,
+  "run_id": "run_1782961441_5169",
+  "tick_count": 200,
+  "overall_score": 0.15787037037037036,
   "overall_grade": "B",
-  "generated_at": "2026-06-30T16:29:01.275713+00:00",
+  "generated_at": "2026-07-02T03:04:24.378509+00:00",
   "pillars": {
     "COGNITION": {
       "raw_score": 0.0,
@@ -27,7 +27,7 @@
     },
     "COMBAT": {
       "raw_score": 50.0,
-      "normalized_score": 0.25252525252525254,
+      "normalized_score": 0.25,
       "grade": "B",
       "event_count": 25,
       "negative_count": 0,
@@ -58,16 +58,30 @@
       "worst_events": []
     },
     "PROGRESSION": {
-      "raw_score": 36.0,
-      "normalized_score": 0.18181818181818182,
+      "raw_score": 28.0,
+      "normalized_score": 0.14,
       "grade": "B",
-      "event_count": 12,
-      "negative_count": 0,
+      "event_count": 13,
+      "negative_count": 1,
       "loop_detected": true,
       "loop_flags": [
         "survival_experience"
       ],
-      "worst_events": []
+      "worst_events": [
+        {
+          "tick": 51,
+          "event_id": "1570a87206234d3b8c52a09e85123859",
+          "pillar": "PROGRESSION",
+          "delta": -8.0,
+          "reason": "XP gain rate dropped to zero after tick gate",
+          "event_type": "progression_plateau_detected",
+          "entity_id": 4,
+          "region_id": null,
+          "tags": [
+            "xp_plateau"
+          ]
+        }
+      ]
     },
     "SOCIAL": {
       "raw_score": 0.0,
@@ -90,10 +104,10 @@
       "worst_events": []
     },
     "WORLD": {
-      "raw_score": 124.0,
-      "normalized_score": 0.6262626262626263,
+      "raw_score": 133.0,
+      "normalized_score": 0.665,
       "grade": "A",
-      "event_count": 122,
+      "event_count": 125,
       "negative_count": 0,
       "loop_detected": true,
       "loop_flags": [
@@ -103,7 +117,7 @@
     },
     "NARRATIVE": {
       "raw_score": 165.0,
-      "normalized_score": 0.8333333333333334,
+      "normalized_score": 0.825,
       "grade": "A",
       "event_count": 33,
       "negative_count": 0,

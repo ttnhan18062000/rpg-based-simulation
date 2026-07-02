@@ -84,7 +84,7 @@ All events below are emitted by the engine and reach at least one pillar scorer,
 | `trait_expressed` | event_extractor | ProgressionScorer | 0 | traits set diff — TCK-20260701-SIMQ-EMIT-PROGRESSION |
 | `pillar_trait_unlocked` | event_extractor | ProgressionScorer | 0 | active_breakthroughs set diff — TCK-20260701-SIMQ-EMIT-PROGRESSION |
 | `progression_conversion_applied` | event_extractor | ProgressionScorer | 0 | unspent_ap decrease — TCK-20260701-SIMQ-EMIT-PROGRESSION |
-| `progression_plateau_detected` | event_extractor | ProgressionScorer | 0 | XP unchanged for > 50 ticks from run start — TCK-20260701-SIMQ-EMIT-PROGRESSION |
+| `progression_plateau_detected` | event_extractor | ProgressionScorer | 18 | XP unchanged for > 50 ticks from run start — TCK-20260701-SIMQ-EMIT-PROGRESSION; calibration_hits updated 2026-07-02 (TCK-20260701-SIMQ-CALIBRATE-REFRESH) |
 | `alliance_proposed` | event_extractor | FactionScorer | 0 | NEUTRAL/HOSTILE → ALLIED transition — TCK-20260701-SIMQ-EMIT-FACTION-ECONOMY |
 | `resource_seized` | event_extractor | FactionScorer | 0 | territory_add + tension_delta > 0 — TCK-20260701-SIMQ-EMIT-FACTION-ECONOMY |
 | `ecology_cycle_completed` | event_extractor | WorldDynamicsScorer | 0 | tick % 200 per region — TCK-20260701-SIMQ-EMIT-WORLD-DYNAMICS |
