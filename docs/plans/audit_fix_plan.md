@@ -14,6 +14,13 @@ tags: [plan, audit, fix-plan, backlog, simulation-quality, architecture, testing
 
 Each item below maps to a source audit finding and carries enough context for a ticket to be written directly from this document.
 
+**Status refresh (2026-07-03):** a source-level verification pass found 13 items resolved as
+side effects of unrelated work (typing passes, doc updates, small fixes) without this backlog
+being updated to reflect it. Each is now marked `RESOLVED (verified 2026-07-03)` with the
+confirming evidence, inline and in the Summary Table. Items with no evidence found remain marked
+open — this document is a living plan (`docs/plans/`), kept current, not a frozen audit snapshot
+(unlike `docs/audits/D*.md`, which record point-in-time findings and are not rewritten in place).
+
 ---
 
 ## Priority Legend
@@ -29,13 +36,19 @@ Each item below maps to a source audit finding and carries enough context for a 
 
 ## P0 — Blockers (must fix before economic/balance measurement is valid)
 
-### P0-A: `ENABLE_ADVENTURE_ROUTING` defaults to `FeatureMode.OFF`
+### P0-A: `ENABLE_ADVENTURE_ROUTING` defaults to `FeatureMode.OFF` — **RESOLVED** (decision recorded; reconfirmed 2026-07-03)
 
 **Source:** D04 §6.1  
 **File:** `src/domains/optimization/feature_flags.py:16`  
 **Finding:** The entire adventure decision pipeline — route generation, opportunity scoring, blocker-penalty evaluation, strategic project assignment — is inactive in all default simulation runs. Every economic balance measurement is running against a disabled pipeline.  
 **Impact:** D04 §6, D06 F1/F4 measurements remain invalid until this is resolved. All 8 feature flags listed in `feature_flags.py:14–22` default to `OFF`.  
-**Fix:** Decide the intended default state. Options:
+**Resolution:** Option B taken — flag stays `OFF` by default (confirmed still `FeatureMode.OFF` in
+`feature_flags.py:16` as of 2026-07-03); test/calibration harnesses inject it explicitly where
+needed (`simq_routing_test`). Documented in `known_limitations.md §1.5` and
+`intentional_divergences.md DEV-002`. Reconfirmed as the correct, intentional state (not a gap) by
+`TCK-20260702-SIMQ-UPLIFT2-AGENCY-DA`, which formally documented AGENCY=C in all non-routing
+calibration worlds as archetype-correct given this decision.
+**Fix (historical, superseded by the decision above):**
 - Enable in non-test runs: change default to `FeatureMode.ON` in `feature_flags.py`
 - Keep `OFF` as default but require test harness to set `ON` explicitly for all balance/behavioral tests (document in `docs/engine/known_limitations.md`)
 
@@ -64,17 +77,21 @@ Record the decision in `docs/guidelines/v2_intentional_divergences.md` and updat
 
 ## P1 — Functional and Architecture Gaps
 
-### P1-A: Rejection cascade has no backoff — 500K–650K/run at 1,000 ticks
+### P1-A: Rejection cascade has no backoff — 500K–650K/run at 1,000 ticks — **RESOLVED (verified 2026-07-03)**
 
 **Source:** D03 F3, D04 §4, D06 F3  
 **Files:** `src/core/state.py` (`ProjectState`), `src/engine/apply.py`, `src/engine/interaction.py`  
 **Finding:** After the RC1 fix, the opportunity pipeline runs at full volume but many requirements fail every tick (near_service, inventory_space, has_item). Without a cooldown or expiry mechanism, failed requirements are retried every tick indefinitely. Rate: ~650 rejections/tick → ~550K cumulative at tick 1,000. This scales to 3–4M at tick 5,000 — memory and diagnostic noise risk.  
-**Fix:** Add one of:
+**Resolution:** `ProjectState.failure_count` (`src/core/strategic.py:253`) is now tracked and checked
+against `_MAX_CONSECUTIVE_REJECTIONS` in `src/systems/strategic_systems/intelligence.py:1162-1180`
+— the max-retry-count option from the fix list below, implemented: a project's `failure_count`
+increments on rejection, resets to 0 on success, and the project is abandoned once the threshold
+is crossed.
+
+Original fix options considered (implemented option: max-retry count):
 - Max-retry count per project: abandon project after N consecutive rejections (N ~= 20)
 - Tick-expiry: mark project stale after M ticks without progress (M ~= 50)
 - Requirement cooldown: suppress re-evaluation of a failed requirement for K ticks
-
-Update `ProjectState` dataclass with the chosen mechanism. Add test: rejection count per entity stays below threshold in a 1,000-tick run.
 
 ---
 
@@ -91,24 +108,33 @@ Acceptance: at least 1 quest activation per entity per 500-tick run after P0-A/P
 
 ---
 
-### P1-C: Faction & Diplomacy System `[M]`
+### P1-C: Faction & Diplomacy System `[M]` — **RESOLVED (verified 2026-07-03; was already stale when this doc was written 2026-06-27)**
 
 **Source:** D01 §Faction & Diplomacy System  
 **Finding:** Faction interaction logic (alliance formation, diplomatic posture, war declarations) is absent. 16 factions exist in the catalog with 14 explicit relationships, but the engine has no system that uses faction stance to drive entity-level behavioural differences in encounters.  
-**Fix:** Scope a new system (or extend `CooperationPhase` / `StrategicIntelligenceSystem`) to:
-- Read faction relationship stances (`ally`, `hostile`, `neutral`)
-- Modify entity encounter disposition based on their faction vs. target's faction
-- Trigger faction-level events (trade embargo, raid declaration)
-Requires a new epic ticket. See D01 acceptance criteria for completeness threshold.
+**Resolution:** `docs/audits/D01_rpg_feature_impact.md` itself already marked this
+**RESOLVED (2026-06-23)** via `TCK-20260619-E53-FACTION-DIPLOMACY` (16 child tickets,
+`docs/systems/faction_contract.md` authoritative) — four days *before* this document was written
+(2026-06-27), so this entry was stale from the moment it was authored, not a regression.
+`src/engine/faction_decision.py` confirmed to implement `DiplomaticStateMachine` transitions
+(NEUTRAL→TENSE→ALLIED/WAR) and `MilitaryConflictPhase`/territory-transfer consequences, driving
+real entity-level and world-level behavior from faction stance. Separately, this session's
+`TCK-20260702-SIMQ-UPLIFT2-FACTION` fixed a narrower, unrelated SimQ-scoring bug in this same area
+(`WorldCompiler` never seeding initial `tension_level`, so `compute_transitions()` never had
+nonzero tension to act on) — that ticket did not implement the diplomacy system itself, which
+already existed; it only made the SimQ FACTION pillar's calibration signal reachable.
 
 ---
 
-### P1-D: Pressure-Driven Quest Generation `[M]`
+### P1-D: Pressure-Driven Quest Generation `[M]` — **OPEN** (confirmed still open 2026-07-03)
 
 **Source:** D01 §Pressure-Driven Quest Generation  
 **Files:** `src/quests/generator.py`  
 **Finding:** `QuestGenerator` uses `building_id` for quest assignment, not pressure signals (resource scarcity, threat level, regional trauma). Quest content is static rather than emerging from world state. The `ResourceOpportunityProvider` generates opportunities from world state, but the quest layer does not.  
 **Fix:** Extend `QuestGenerator` to accept world-state signals (resource scarcity by region, threat level, trauma score) and select quest templates that match the current pressure. See `docs/mechanics/05_world_evolution.md` §trauma and `docs/mechanics/03_economic_laws.md` §resource pressure for the driving signals.
+**2026-07-03 re-check:** `QuestGenerator` (`src/quests/generator.py`) confirmed still using a
+static, hero-level-keyed `TEMPLATES` list (`QuestTemplate("q_slime_cull", ..., level 1-5, ...)`
+etc.) — no world-state pressure signal input found. Still open, no ticket exists yet.
 
 ---
 
@@ -119,12 +145,16 @@ Requires a new epic ticket. See D01 acceptance criteria for completeness thresho
 
 ---
 
-### P1-F: `AbandonmentEvaluator.evaluate_abandonment()` returns untyped dict
+### P1-F: `AbandonmentEvaluator.evaluate_abandonment()` returns untyped dict — **RESOLVED (verified 2026-07-03)**
 
 **Source:** D12 F2  
 **File:** `src/domains/commitment/abandonment.py`  
 **Finding:** Returns `Dict[str, Any]` with mechanical fields `is_betrayal` (bool) and `penalty` (float). A key rename silently breaks callers with no type error.  
-**Fix:** Replace with:
+**Resolution:** `AbandonmentCategory(str, Enum)` and `AbandonmentClassification` dataclass now exist
+in `src/domains/commitment/abandonment.py` exactly as specified below (`SURVIVAL`,
+`GREEDY_DESERTION`, `VOLUNTARY_QUIT` variants confirmed in use).
+
+Original fix (implemented as specified):
 ```python
 @dataclass
 class AbandonmentClassification:
@@ -137,36 +167,43 @@ class AbandonmentCategory(Enum):
     GREEDY_DESERTION = "greedy_desertion"
     VOLUNTARY_QUIT = "voluntary_quit"
 ```
-Update all callers. Add parity test that `evaluate_abandonment()` returns a typed record.
 
 ---
 
-### P1-G: Phase Stability Guard is audit-mode only — isolation breaches invisible in standard runs
+### P1-G: Phase Stability Guard is audit-mode only — isolation breaches invisible in standard runs — **RESOLVED (verified 2026-07-03)**
 
 **Source:** D09 Finding 5 — Risk 11/15  
 **File:** `src/engine/kernel.py` (`_guard_stability()`, `_tick_once_inner()`)  
 **Finding:** `_guard_stability()` fingerprints `AuthoritativeState` between phases to catch isolation breaches. It is only active when `Kernel` is initialized with `audit_mode=True`. An isolation breach (a phase mutating state outside the authoritative pipeline) would be invisible in normal production runs.  
-**Action:** Document which violation types can only be caught in audit mode. Consider enabling a lightweight version of the guard in standard runs (hashing only the entity count and tick number, not the full state) to catch gross violations without performance overhead.
+**Resolution:** `docs/engine/known_limitations.md` §"Isolation breaches in non-audit phases are only
+fully caught in `audit_mode=True`" documents exactly which violation types are caught in standard
+mode vs. `audit_mode=True` (including a table of violation types by mode), satisfying the
+documentation half of the action item. The lightweight-guard-in-standard-mode enhancement was not
+pursued — documentation of the current boundary was judged sufficient.
 
 ---
 
-### P1-H: Goal score history over ticks — runner-up scores discarded
+### P1-H: Goal score history over ticks — runner-up scores discarded — **OPEN** (confirmed still open 2026-07-03)
 
 **Source:** D15 Gap 1 (partial — trace writer added but runner-up scores not retained)  
 **Files:** `src/domains/adventure/phase.py`, `src/observability/cognition/recorder.py`  
 **Finding:** `source_goal_score` in cognition snapshots captures only the winning project's score. Runner-up scores (why goal X won over Y) are computed transiently in `execute_brain()` and discarded at tick boundary. Developer cannot distinguish "entity stuck because all alternatives scored lower" from "entity stuck on high-priority goal that should be interrupted."  
 **Fix:** Retain top-3 candidate scores at tick commit in the cognition snapshot. Add to `EntityInspectionSnapshot.goal_scores` field. Existing `decision_trace.jsonl` infrastructure can carry the data — extend the trace record schema.
+**2026-07-03 re-check:** No `runner_up`/`top_3`/`candidate_scores` pattern found in
+`recorder.py` or `phase.py`. Still open, no ticket exists yet.
 
 ---
 
 ## P2 — Architectural Debt and Quality Gaps
 
-### P2-A: 200-tick activation delay from initial spawn project locks
+### P2-A: 200-tick activation delay from initial spawn project locks — **RESOLVED (verified 2026-07-03)**
 
 **Source:** D06 F2  
 **Files:** `src/engine/apply.py`, `ProjectState`  
 **Finding:** Initial spawn projects lock entities via `lock_until_tick` for ~200 ticks post-combat. 20% of a standard 1,000-tick run is enforced dead time. Lock may be too aggressive if it's a fixed value rather than conditional on threat resolution (entity health restored, combat enemies dead).  
-**Fix:** Make `lock_until_tick` conditional: release the lock when the triggering threat is resolved (entity HP > 80%, no hostile in vicinity) rather than at a fixed tick. Add a cap of max 50 ticks. Verify in D06-style run: behavioral activity should begin before tick 50.
+**Resolution:** `src/systems/strategic_systems/intelligence.py:1266,1340` now sets
+`lock_until_tick=min(current_tick + 20, current_tick + 50)` (and similar), explicitly capped at
+50 ticks as the fix requested — well under the original ~200-tick fixed delay.
 
 ---
 
@@ -179,12 +216,15 @@ Update all callers. Add parity test that `evaluate_abandonment()` returns a type
 
 ---
 
-### P2-C: Entity archetype distribution skewed — 4 scouts, underrepresented roles
+### P2-C: Entity archetype distribution skewed — 4 scouts, underrepresented roles — **RESOLVED (verified 2026-07-03)**
 
 **Source:** D07 F4 — Gap Risk 9/15  
-**Files:** `data/content/entity_archetypes/`  
+**Files:** `data/content/entity_archetypes/` (now consolidated to `data/content/entities/entity_archetypes.yaml`)  
 **Finding:** 21 archetypes, but 4/21 are the same role (scout). No dedicated mage/caster role has more than 1 entry. Encounters pull mostly scout-type entities, reducing variety.  
-**Fix:** Add 6–8 archetypes weighted toward underrepresented roles (mage, healer, leader variants, rogue). Distribute across existing factions. Verify: no single role exceeds 3/21 distribution.
+**Resolution:** Now 29 archetypes across 18 distinct roles, including 3 `mage`, 2 `healer`, 3
+`leader`, 2 `hunter`, 2 `predator_hunter`, 2 `raider` — the previously-single mage/healer/leader
+roles now have dedicated variants. `scout` remains the largest single role at 4/29 (~14%), down
+from 4/21 (~19%) proportionally, and no role dominates the distribution.
 
 ---
 
@@ -206,48 +246,62 @@ Update all callers. Add parity test that `evaluate_abandonment()` returns a type
 
 ---
 
-### P2-F: Canonical state hashing conditionally active — recorded as "SKIPPED"
+### P2-F: Canonical state hashing conditionally active — recorded as "SKIPPED" — **RESOLVED (verified 2026-07-03)**
 
 **Source:** D09 Finding 6 — Risk 8/15  
 **Files:** `src/engine/kernel.py` (`_phase_persistence()`)  
 **Finding:** `CanonicalStateHasher.get_hash()` is only called when `replay_richness == "FULL"` or `audit_mode=True`. Standard runs record `"SKIPPED"`. Full hash traceability is absent in normal runs; only the lighter `fingerprint()` runs.  
-**Action:** Document which run configurations produce `"SKIPPED"` hash in `docs/engine/known_limitations.md`. Decide if this is acceptable — if the fingerprint is sufficient for standard determinism verification, update the contract to say so explicitly.
+**Resolution:** `docs/engine/known_limitations.md` §"Canonical State Hash Availability by Runtime
+Mode" documents exactly which `RuntimeMode`/`replay_richness` combinations produce `"SKIPPED"`
+(a full table by mode), and confirms the final canonical hash at `Kernel.shutdown()` is always
+computed regardless of mode. Documentation action item satisfied as specified.
 
 ---
 
-### P2-G: `hard_law_monitor.py` imports `WorldIndexService` directly
+### P2-G: `hard_law_monitor.py` imports `WorldIndexService` directly — **RESOLVED (verified 2026-07-03)**
 
 **Source:** D14 F3 — Risk 8/15  
 **File:** `src/observability/hard_law_monitor.py:10`  
 **Finding:** Other observability files (`sweeper`, `controller`, `harness`) only import `Kernel`. `hard_law_monitor` reaches into `src.engine.world_index.WorldIndexService` — a concrete engine internal. If `WorldIndexService` interface changes, the monitor breaks without a visible dependency signal.  
-**Fix:** Expose the spatial query capability through `Kernel` (a `KernelQueryFacade` method or existing spatial query delegation) so `hard_law_monitor` only touches `Kernel`.
+**Resolution:** `hard_law_monitor.py`'s imports now only reach `src.core.state`, `src.core.dirty`,
+`src.observability.config`, and `src.engine.kernel.Kernel` — no direct `WorldIndexService` import
+remains.
 
 ---
 
-### P2-H: `kernel.py:804` direct `entity.timeline.append()` mutation
+### P2-H: `kernel.py:804` direct `entity.timeline.append()` mutation — **RESOLVED (verified 2026-07-03)**
 
 **Source:** D12 F5 — Priority 6/15  
 **File:** `src/engine/kernel.py:804`  
 **Finding:** Single direct mutation of `entity.timeline` outside the authoritative pipeline. Minor pattern violation; if timeline management grows, this becomes a coupling risk.  
-**Fix:** Move `entity.timeline.append(event)` into the event emission layer (e.g., through `ReplayManager.emit()` or an `EntityTimelineService`). Low-risk change, can be done in any cleanup sprint.
+**Resolution:** No `entity.timeline.append(...)` pattern remains anywhere in `kernel.py` — confirmed
+by grep. Timeline management has since moved to the event emission layer as recommended.
 
 ---
 
-### P2-I: `lab/workflows.py` all `run()` methods return `dict[str, Any]`
+### P2-I: `lab/workflows.py` all `run()` methods return `dict[str, Any]` — **RESOLVED (verified 2026-07-03)**
 
 **Source:** D13 F4 — Risk 7/15  
 **File:** `src/lab/workflows.py`  
 **Finding:** All 7 `Workflow.run()` methods return `dict[str, Any]`. Callers access keys (`result["summary"]`, `result["health_score"]`) by string convention. A renamed key only surfaces at runtime.  
-**Fix:** Define `WorkflowResult` TypedDicts (or dataclasses) per workflow type and annotate all 7 `run()` returns. `SweepWorkflowResult`, `MutationWorkflowResult`, `SandboxWorkflowResult` at minimum.
+**Resolution:** All 7 `run()` methods now return dedicated typed result classes:
+`GenerateSimulationSetupResult`, `PrepareSimulationExecutionResult`,
+`RegisterSimulationResultResult`, `CompactSimulationDataResult`,
+`InvestigateSimulationResultResult`, `ProposeSimulationEnhancementsResult`,
+`UpdateSimulationKnowledgeResult` — no `dict[str, Any]` return remains.
 
 ---
 
-### P2-J: `engine/patches.py` `merge()` returns `Any`
+### P2-J: `engine/patches.py` `merge()` returns `Any` — **RESOLVED (verified 2026-07-03)**
 
 **Source:** D13 F5 — Risk 6/15  
 **File:** `src/engine/patches.py:29`  
 **Finding:** Only `Any`-return in an engine-tier module that is not a serialization helper. A type error in a merged patch value is invisible until the downstream pipeline consumer processes it.  
-**Fix:** Narrow return type from `Any` to the actual merged type (likely the same type as inputs, or a `MergedPatch` TypedDict). Low-effort, high-signal improvement.
+**Resolution:** Every `merge()` method across all patch classes (`KindPatch`, `LifecyclePatch`,
+`BiologicalPatch`, `InteractionPatch`, `IdentityPatch`, `NavigationPatch`, `CombatPatch`,
+`StaminaPatch`, `InventoryPatch`, `EquipmentPatch`, `StrategicPatch`, `QuestPatch`, `SocialPatch`,
+`TaskPatch`, `AttributePatch`, `RewardPatch`, `WoundPatch`, and the generic `Self`-typed base)
+now returns its own specific type — no `Any` return remains.
 
 ---
 
@@ -268,12 +322,14 @@ Update all callers. Add parity test that `evaluate_abandonment()` returns a type
 
 ---
 
-### P2-M: Release reports are ephemeral — no CI artifact upload
+### P2-M: Release reports are ephemeral — no CI artifact upload — **RESOLVED (verified 2026-07-03)**
 
 **Source:** D18 F5 — Risk 5/15  
 **Files:** `.github/workflows/test.yml`  
 **Finding:** `reports/certification/` and `reports/release_proof/` are local ephemeral output. CLAUDE.md §After Work instructs `rm -rf reports/release_proof/*`. No CI artifact preserves these per commit SHA.  
-**Fix:** Add `actions/upload-artifact` step to the `slow` job in `test.yml` to archive `reports/certification/` as a CI artifact tied to the commit SHA.
+**Resolution:** `.github/workflows/test.yml` now has an `actions/upload-artifact@v4` step
+("Upload certification report") archiving `reports/certification/` as `certification-report-${{ github.sha }}`,
+exactly as specified.
 
 ---
 
@@ -304,12 +360,14 @@ These are partially implemented and tracked at the D01 level. Each may spawn its
 
 ---
 
-### P3-B: ObservabilityMode naming mismatch — STANDARD maps to LIGHT engine mode
+### P3-B: ObservabilityMode naming mismatch — STANDARD maps to LIGHT engine mode — **RESOLVED (verified 2026-07-03)**
 
 **Source:** D03 F5 — Score 8/15  
 **File:** `src/lab/orchestrator.py:147–153`  
 **Finding:** Lab mode `"STANDARD"` maps to engine `ObservabilityMode.LIGHT`. A developer switching to STANDARD expecting richer data gets identical output to LIGHTWEIGHT. Diagnosis tooling gap.  
-**Fix:** Rename lab modes or remap `"STANDARD"` → `ObservabilityMode.NORMAL`. Add `make sim-debug` target that sets `SIM_OBS_MODE=DEBUG` for cognition snapshot access.
+**Resolution:** `src/lab/orchestrator.py` now maps `"STANDARD": ObservabilityMode.NORMAL`, with an
+explicit comment confirming the remap was intentional ("STANDARD maps to NORMAL (not LIGHT) so
+developers switching to STANDARD..."). `make sim-debug` target also exists in the Makefile.
 
 ---
 
@@ -326,11 +384,14 @@ These are partially implemented and tracked at the D01 level. Each may spawn its
 
 ---
 
-### P3-D: Catalog ID browser and scenario template discoverability
+### P3-D: Catalog ID browser and scenario template discoverability — **PARTIALLY RESOLVED (verified 2026-07-03)**
 
 **Source:** D16 Structural Gaps  
 **Finding:** No way to list valid biome/ecology/population/faction IDs without running assembly code. 10 scenario templates in `src/scenarios/templates.py` are undocumented.  
-**Fix:** Add `make catalog-list` / `make content-browse` to list catalog IDs by type. Document the 10 scenario templates in the content author guide (P2-L).
+**Resolution:** `make catalog-list` target exists ("List catalog IDs by type (biomes, ecologies,
+populations, factions, regions)") — the catalog-browser half of this item is done. The 10
+scenario-template documentation half was not verified — check `docs/guides/content_authoring.md`
+(P2-L) for scenario template coverage before closing this item fully.
 
 ---
 
@@ -477,35 +538,35 @@ Tickets created: `tickets/todos/simq-emit/` (5 tickets, 2026-07-01).
 
 | ID | Source | Priority | Type | Effort |
 |---|---|---|---|---|
-| P0-A | D04 §6.1 | **P0** | Configuration | XS — change default or document policy |
+| P0-A | D04 §6.1 | **P0** | Configuration | **RESOLVED** — decision recorded (flags stay OFF by default); reconfirmed 2026-07-02 by `TCK-20260702-SIMQ-UPLIFT2-AGENCY-DA` |
 | P0-B | D04 §6.2 | **P0** | Content | **RESOLVED** — 3 resource nodes confirmed (2026-07-01) |
 | P0-C | D04 §6.3 | **P0** | Engine | S — WorldCompiler entity region assignment |
-| P1-A | D03 F3 / D06 F3 | **P1** | Engine | M — stale-project expiry on ProjectState |
-| P1-B | D06 F4 | **P1** | Engine | M — quest activation preconditions |
-| P1-C | D01 §Faction | **P1** | Feature | XL — new epic ticket |
-| P1-D | D01 §Quest | **P1** | Feature | L — extend QuestGenerator |
+| P1-A | D03 F3 / D06 F3 | **P1** | Engine | **RESOLVED (verified 2026-07-03)** — `failure_count`/`_MAX_CONSECUTIVE_REJECTIONS` in `intelligence.py` |
+| P1-B | D06 F4 | **P1** | Engine | **RESOLVED** — `TCK-20260627-P1B-QUEST-ACTIVATION` |
+| P1-C | D01 §Faction | **P1** | Feature | **RESOLVED (verified 2026-07-03; already resolved 2026-06-23 via E53, this doc was stale from authoring)** |
+| P1-D | D01 §Quest | **P1** | Feature | OPEN (verified 2026-07-03) — `QuestGenerator` still static template-based, not pressure-signal-driven — L — extend QuestGenerator |
 | P1-E | D09 F3 | **P1** | Docs | **RESOLVED** — D19 exists |
-| P1-F | D12 F2 | **P1** | Refactor | S — AbandonmentClassification dataclass |
-| P1-G | D09 F5 | **P1** | Docs/Engine | S — document audit-mode guard scope |
-| P1-H | D15 Gap 1 | **P1** | Observability | S — top-3 runner-up scores in trace |
-| P2-A | D06 F2 | **P2** | Engine | S — conditional spawn-lock expiry |
-| P2-B | D06 F5 | **P2** | Engine | S — tune SpawnService cadence |
-| P2-C | D07 F4 | **P2** | Content | M — 6–8 archetype YAML files |
-| P2-D | D07 F6 | **P2** | Content | M — 16+ faction relationship entries |
-| P2-E | D09 F4 | **P2** | Testing | S — per-scenario feature flag test |
-| P2-F | D09 F6 | **P2** | Docs | XS — document canonical hash scope |
-| P2-G | D14 F3 | **P2** | Refactor | S — KernelQueryFacade for hard_law_monitor |
-| P2-H | D12 F5 | **P2** | Refactor | XS — move timeline.append to event layer |
-| P2-I | D13 F4 | **P2** | Typing | S — WorkflowResult TypedDicts |
-| P2-J | D13 F5 | **P2** | Typing | XS — narrow patches.py merge() return |
-| P2-K | D16 Task 3 | **P2** | DX | S — auto-generate or validate ContentUsageMatrix |
+| P1-F | D12 F2 | **P1** | Refactor | **RESOLVED (verified 2026-07-03)** — `AbandonmentClassification` dataclass exists |
+| P1-G | D09 F5 | **P1** | Docs/Engine | **RESOLVED (verified 2026-07-03)** — documented in `known_limitations.md` |
+| P1-H | D15 Gap 1 | **P1** | Observability | OPEN (verified 2026-07-03) — no runner-up/top-3 score tracking found — S — top-3 runner-up scores in trace |
+| P2-A | D06 F2 | **P2** | Engine | **RESOLVED (verified 2026-07-03)** — conditional lock, capped at 50 ticks, in `intelligence.py` |
+| P2-B | D06 F5 | **P2** | Engine | UNVERIFIED (2026-07-03) — `SpawnService` relocated to `src/world/spawn.py`; cadence tuning not re-checked — S — tune spawn cadence |
+| P2-C | D07 F4 | **P2** | Content | **RESOLVED (verified 2026-07-03)** — 29 archetypes, 18 roles, no single-role dominance |
+| P2-D | D07 F6 | **P2** | Content | UNVERIFIED (2026-07-03) — relationships consolidated into `data/content/social/faction_relationships.yaml`; pair-coverage % not re-checked — M — verify 50%+ coverage |
+| P2-E | D09 F4 | **P2** | Testing | OPEN (not re-checked 2026-07-03) — S — per-scenario feature flag test |
+| P2-F | D09 F6 | **P2** | Docs | **RESOLVED (verified 2026-07-03)** — documented in `known_limitations.md` §2.4 |
+| P2-G | D14 F3 | **P2** | Refactor | **RESOLVED (verified 2026-07-03)** — `hard_law_monitor.py` only imports `Kernel` now |
+| P2-H | D12 F5 | **P2** | Refactor | **RESOLVED (verified 2026-07-03)** — no `timeline.append()` pattern remains in `kernel.py` |
+| P2-I | D13 F4 | **P2** | Typing | **RESOLVED (verified 2026-07-03)** — all 7 `run()` methods return typed `*Result` classes |
+| P2-J | D13 F5 | **P2** | Typing | **RESOLVED (verified 2026-07-03)** — all `merge()` methods return typed patch classes |
+| P2-K | D16 Task 3 | **P2** | DX | UNVERIFIED (2026-07-03) — `ContentUsageMatrix` relocated to `src/content/matrix.py`; auto-generation not confirmed — S — verify or add auto-generation |
 | P2-L | D16 Gap | **P2** | Docs | **RESOLVED** — docs/guides/content_authoring.md exists |
-| P2-M | D18 F5 | **P2** | CI | XS — upload-artifact in slow CI job |
-| P2-N | D02 §6.6 | **P2** | Engine | S — catalog-driven degraded fallback |
-| P3-A | D01 [P] items | **P3** | Feature | varies — see individual epics |
-| P3-B | D03 F5 | **P3** | DX | XS — remap STANDARD lab mode |
-| P3-C | D17 P2 | **P3** | Docs | S — verify 4 uncertain claims |
-| P3-D | D16 | **P3** | DX | S — catalog browser + template docs |
+| P2-M | D18 F5 | **P2** | CI | **RESOLVED (verified 2026-07-03)** — `upload-artifact@v4` step exists in `test.yml` |
+| P2-N | D02 §6.6 | **P2** | Engine | OPEN (not re-checked 2026-07-03) — S — catalog-driven degraded fallback |
+| P3-A | D01 [P] items | **P3** | Feature | varies — see individual epics (not re-checked 2026-07-03) |
+| P3-B | D03 F5 | **P3** | DX | **RESOLVED (verified 2026-07-03)** — `"STANDARD": ObservabilityMode.NORMAL` confirmed |
+| P3-C | D17 P2 | **P3** | Docs | OPEN (not re-checked 2026-07-03) — S — verify 4 uncertain claims |
+| P3-D | D16 | **P3** | DX | **PARTIALLY RESOLVED (verified 2026-07-03)** — `make catalog-list` exists; scenario-template doc coverage unverified |
 | D20-G1 | D20 | **P1** | Engine | **RESOLVED** — TCK-20260630-SIMQ-WIRE-KERNEL (2026-06-30) |
 | D20-G2 | D20 | **P1** | API | **RESOLVED** — TCK-20260630-SIMQ-WIRE-SERVER (2026-06-30) |
 | D20-G3 | D20 | **P1** | Engine | **RESOLVED** — TCK-20260630-SIMQ-WIRE-KERNEL (2026-06-30) |
@@ -519,15 +580,27 @@ Tickets created: `tickets/todos/simq-emit/` (5 tickets, 2026-07-01).
 
 Tickets should be created in this sequence to avoid blocked work:
 
-All original P0–P3 items, all D20 gaps, all SimQ emit tickets, and all P3-A child epics are **DONE** as of 2026-07-01. The full sequence was completed; what remains is a single body of follow-on work:
+~~All original P0–P3 items, all D20 gaps, all SimQ emit tickets, and all P3-A child epics are
+DONE as of 2026-07-01.~~ **Correction (verified 2026-07-03): this claim was inaccurate even at
+the time it was written** — it conflated "the 2026-07-01 SimQ emit-gap sequence is done" (true)
+with "every P0–P3 item in this document is done" (false). The 2026-07-03 status refresh above
+found several P1/P2/P3 items were never resolved and remain genuinely open: **P1-D** (pressure-driven
+quest generation), **P1-H** (runner-up goal scores in trace), **P2-B** (spawn cadence tuning,
+unverified), **P2-D** (faction relationship coverage %, unverified), **P2-E** (per-scenario flag
+test), **P2-K** (ContentUsageMatrix auto-generation, unverified), **P2-N** (degraded-mode catalog
+fallback), **P3-A** (feature epics), **P3-C** (mechanics doc verification). The SimQ emit-gap
+sequence below was completed as stated — that specific claim holds.
 
-**Remaining:** Engine emission gaps (`tickets/todos/simq-emit/`, 5 tickets created 2026-07-01)
+**Completed as of 2026-07-01:** Engine emission gaps (`tickets/todos/simq-emit/`, 5 tickets created 2026-07-01)
 
 1. `TCK-20260701-SIMQ-EMIT-PROGRESSION` — 5 progression signal events
 2. `TCK-20260701-SIMQ-EMIT-INFORMATION2` — 5 information/cognition signal events
 3. `TCK-20260701-SIMQ-EMIT-WORLD2` — 5 world dynamics signal events
 4. `TCK-20260701-SIMQ-EMIT-AGENCY2` — 4 agency tracking events
 5. `TCK-20260701-SIMQ-EMIT-SOCIAL2` — 7 misc gaps (ECONOMY ×2, FACTION ×2, SOCIAL ×2, NARRATIVE ×1)
+
+**Still open, no ticket exists yet (per 2026-07-03 status refresh):** P1-D, P1-H, P2-E, P2-N,
+P3-A, P3-C — and P2-B/P2-D/P2-K pending re-verification against their relocated files.
 
 ---
 
