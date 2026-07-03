@@ -460,3 +460,4 @@
 {"run_id":"TCK-20260702-SIMQ-UPLIFT2-INFORMATION","start_ts":"2026-07-03T06:38:21Z","end_ts":"2026-07-03T09:19:00Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":11}
 {"run_id":"FOLDER-tickets-todos-simq-uplift-2","start_ts":"2026-07-02T17:40:16Z","end_ts":"2026-07-03T09:23:09Z","workflow":"implement-epic","tier":"epic","final_status":"DONE","agent_count":3}
 {"run_id":"TCK-20260703-SIMQ-INFORMATION-BELIEF-TRIGGER","start_ts":"2026-07-03T09:27:20Z","end_ts":"2026-07-03T13:56:01Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":19}
+{"run_id":"TCK-20260703-SIMQ-UPLIFT3-FAST-CALIBRATE","start_ts":"2026-07-03T15:12:15Z","end_ts":"2026-07-03T16:45:41Z","workflow":"implement-ticket","tier":"hotfix","final_status":"DONE","agent_count":1}

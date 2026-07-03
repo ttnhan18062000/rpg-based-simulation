@@ -225,7 +225,11 @@ def _run_engine(name: str, seed: int, ticks: int, entity_count: int = 10, extra_
         from dataclasses import replace as dc_replace
         state = dc_replace(state, feature_flags=existing)
 
-    kernel = Kernel(profile=PROD_SMALL, state=state, rng=rng)
+    # no_frame_pacing disables the kernel's tick-rate sleep (which pads each tick to
+    # max_tick_budget_ms for real-time pacing). Calibration runs are offline/batch, not
+    # real-time, so this sleep only slows down the run without affecting simulation logic.
+    # Same fix as tests/regression/test_behavioral_5k.py (TCK-20260628-E-LONGRUN-REGRESSION).
+    kernel = Kernel(profile=PROD_SMALL, state=state, rng=rng, flags={"no_frame_pacing": True})
 
     run_id = getattr(kernel, "_run_id", None)
     start = time.perf_counter()
