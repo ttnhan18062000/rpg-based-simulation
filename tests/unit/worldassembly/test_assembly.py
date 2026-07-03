@@ -141,6 +141,90 @@ def test_faction_tension_overrides_out_of_range_raises(repos):
         resolver.assemble(composition)
 
 
+def test_resolver_passes_information_source_profiles_from_composition(repos):
+    """A composition declaring information_source_profiles entries lands on the resolved
+    WorldSpec's information_source_profiles, all fields round-tripped unchanged
+    (TCK-20260702-SIMQ-UPLIFT2-INFORMATION)."""
+    cat, mod = repos
+    from src.worldassembly.schema import InformationSourceProfileSpec
+
+    composition = WorldCompositionSpec(
+        schema_version="worldcomposition.v1",
+        world_id="information_profiles_test",
+        name="Information Profiles Test",
+        module_refs=[
+            ModuleRefSpec(module_id="plains_layout", enabled=True, order=0),
+        ],
+        information_source_profiles=[
+            InformationSourceProfileSpec(
+                source_id="town_notice_board",
+                source_kind="guide",
+                knowledge_scopes=["regional_danger", "common_resource_sources"],
+                accuracy=0.4,
+                freshness=0.6,
+                bias=0.1,
+                cost_gold=0,
+                max_answers_per_query=2,
+            ),
+            InformationSourceProfileSpec(
+                source_id="traveling_merchant_rumors",
+                source_kind="traveler",
+                knowledge_scopes=["common_resource_sources", "recipe_requirements"],
+                accuracy=0.65,
+                freshness=0.8,
+                bias=0.2,
+                cost_gold=5,
+                max_answers_per_query=3,
+            ),
+        ],
+    )
+
+    resolver = WorldAssemblyResolver(cat, mod)
+    bundle = resolver.assemble(composition)
+
+    profiles = bundle.world_spec.information_source_profiles
+    assert len(profiles) == 2
+    by_id = {p.source_id: p for p in profiles}
+
+    board = by_id["town_notice_board"]
+    assert board.source_kind == "guide"
+    assert board.knowledge_scopes == ["regional_danger", "common_resource_sources"]
+    assert board.accuracy == 0.4
+    assert board.freshness == 0.6
+    assert board.bias == 0.1
+    assert board.cost_gold == 0
+    assert board.max_answers_per_query == 2
+
+    merchant = by_id["traveling_merchant_rumors"]
+    assert merchant.source_kind == "traveler"
+    assert merchant.knowledge_scopes == ["common_resource_sources", "recipe_requirements"]
+    assert merchant.accuracy == 0.65
+    assert merchant.freshness == 0.8
+    assert merchant.bias == 0.2
+    assert merchant.cost_gold == 5
+    assert merchant.max_answers_per_query == 3
+
+
+def test_resolver_no_information_source_profiles_declared_yields_empty_list(repos):
+    """A composition with no information_source_profiles key resolves to an empty list
+    (regression guard — every world other than urban_political must be unaffected)."""
+    cat, mod = repos
+
+    composition = WorldCompositionSpec(
+        schema_version="worldcomposition.v1",
+        world_id="no_information_profiles_test",
+        name="No Information Profiles Test",
+        module_refs=[
+            ModuleRefSpec(module_id="plains_layout", enabled=True, order=0),
+        ],
+    )
+
+    resolver = WorldAssemblyResolver(cat, mod)
+    bundle = resolver.assemble(composition)
+
+    assert bundle.world_spec.information_source_profiles == []
+
+
 def test_id_collision_prevention(repos):
     """Verify duplicate IDs across merged layouts raise structural errors."""
     cat, mod = repos
@@ -629,6 +713,36 @@ def test_composition_normalization_shorthand_and_mixed(repos):
     )
     normalized_overrides = WorldCompositionNormalizer.normalize(overrides_spec)
     assert normalized_overrides.faction_tension_overrides == {"faction_x": 0.5}
+
+    # 5. information_source_profiles mirrors through unset (default []) and set unchanged
+    from src.worldassembly.schema import InformationSourceProfileSpec
+
+    no_profiles_spec = WorldCompositionSpec(
+        schema_version="worldcomposition.v1",
+        world_id="no_information_profiles_world",
+        name="No Information Profiles World",
+        module_refs=[],
+    )
+    normalized_no_profiles = WorldCompositionNormalizer.normalize(no_profiles_spec)
+    assert normalized_no_profiles.information_source_profiles == []
+
+    profiles_spec = WorldCompositionSpec(
+        schema_version="worldcomposition.v1",
+        world_id="information_profiles_world",
+        name="Information Profiles World",
+        module_refs=[],
+        information_source_profiles=[
+            InformationSourceProfileSpec(
+                source_id="town_notice_board",
+                source_kind="guide",
+                accuracy=0.4,
+                freshness=0.6,
+            ),
+        ],
+    )
+    normalized_profiles = WorldCompositionNormalizer.normalize(profiles_spec)
+    assert len(normalized_profiles.information_source_profiles) == 1
+    assert normalized_profiles.information_source_profiles[0].source_id == "town_notice_board"
 
 
 def test_v2_module_resolution_and_heuristics(repos):

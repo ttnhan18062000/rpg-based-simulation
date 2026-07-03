@@ -54,6 +54,24 @@ class FactionSpec(BaseModel):
         description="Starting tension_level seeded into FactionState at compile time (mechanics range [0.0, 1.0])"
     )
 
+class InformationSourceProfileSpec(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
+    source_id: str = Field(..., min_length=1, description="Identifier looked up via state.entities.get(source_id) for proximity cost; a non-entity string is valid and yields dist_cost=0.0 (no proximity penalty)")
+    source_kind: Literal["guide", "guild", "blacksmith", "traveler"] = Field(
+        ..., description="Must match an existing InformationSourceKind value (src/domains/information/schema.py) — no new kinds may be introduced here"
+    )
+    knowledge_scopes: List[str] = Field(
+        default_factory=list,
+        description="Matched against InformationQueryRouter.matches_scope()'s hard-coded vocabulary (common_resource_sources, recipe_requirements, regional_danger) — free-form here by design; the router's vocabulary is not re-validated at schema level (out of this ticket's scope to couple schema to router internals)"
+    )
+    accuracy: float = Field(..., ge=0.0, le=1.0)
+    freshness: float = Field(..., ge=0.0, le=1.0)
+    bias: float = Field(0.0, description="No documented bound in the domain dataclass; left unconstrained")
+    cost_gold: int = Field(0, ge=0)
+    max_answers_per_query: int = Field(3, ge=1)
+
+
 class PopulationSpec(BaseModel):
     model_config = ConfigDict(frozen=True)
 
@@ -136,6 +154,7 @@ class WorldSpec(BaseModel):
     topology: TopologySpec
     regions: list[RegionSpec] = Field(default_factory=list)
     factions: list[FactionSpec] = Field(default_factory=list)
+    information_source_profiles: List[InformationSourceProfileSpec] = Field(default_factory=list)
     entities: list[PopulationSpec] = Field(default_factory=list)
     resources: list[ResourceNodeSpec] = Field(default_factory=list)
     buildings: list[BuildingSpec] = Field(default_factory=list)

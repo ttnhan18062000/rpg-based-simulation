@@ -6,3 +6,4 @@ pillar_weights:
 
 feature_flags:
   ENABLE_SOCIAL_COOPERATION: "ON"
+  ENABLE_BELIEF_ASSIMILATION: "ON"

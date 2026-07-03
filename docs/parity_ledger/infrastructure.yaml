@@ -3012,11 +3012,58 @@
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: src/simulation_quality/scorers/information.py::InformationScorer.score
+  v2_evidence: >
+    src/simulation_quality/scorers/information.py::InformationScorer.score. Compile-time
+    construction of information_source_profiles (not scorer logic) is covered by INFRA-256 —
+    see WorldCompiler.compile()/WorldAssemblyResolver.assemble().
   proof_type: null
   test_path: tests/simulation_quality/test_information_scorer.py
   divergence_note: null
   support_boundary: null
+- id: INFRA-256
+  text: >
+    information_source_profiles compile-time plumbing: InformationSourceProfile is constructed
+    from WorldSpec.information_source_profiles at world-compile time
+    (WorldCompiler.compile()), sourced from a composition-level
+    information_source_profiles declaration (WorldAssemblyResolver.assemble(); no global
+    catalog exists for this content, unlike factions — see plan.md UQ-1 resolution,
+    TCK-20260702-SIMQ-UPLIFT2-INFORMATION). Closes the "compiler never constructs the field"
+    gap where AuthoritativeState.information_source_profiles was permanently [] for every
+    compiled world. Scaffolding only: InformationBeliefPhase's trigger branches
+    (pending_information_responses, self_model.knowledge.unknowns) remain unreachable
+    independent of this fix — belief_assimilated/lead_certainty_updated calibration_hits stay
+    at 0 pending TCK-20260703-SIMQ-INFORMATION-BELIEF-TRIGGER. Pillar is NOT active; only the
+    compile-time data pathway is verified. Recalibrated 2026-07-03 across all 7
+    urban_political_* scenarios (200t/500t/1000t, seeds 42/123/456): confirmed
+    information_source_profiles compiles with 2 entries and ENABLE_BELIEF_ASSIMILATION=ON in
+    every run, and confirmed belief_assimilated/lead_certainty_updated calibration_hits remain
+    0 in every run (expected, not a regression). dungeon_crawl spot-checked (seed123, 1000t)
+    for 0 leakage — INFORMATION stayed C, 0 events.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/worldbuilding/schema.py::InformationSourceProfileSpec,
+    src/worldbuilding/schema.py::WorldSpec.information_source_profiles;
+    src/worldassembly/schema.py::WorldCompositionSpec.information_source_profiles,
+    NormalizedWorldComposition.information_source_profiles;
+    src/worldassembly/resolver.py (WorldAssemblyResolver.assemble() passthrough);
+    src/worldbuilding/compiler.py (WorldCompiler.compile() InformationSourceProfile
+    construction + AuthoritativeState(information_source_profiles=...) seeding)
+  proof_type: parity
+  test_path: "tests/unit/worldbuilding/test_world_compiler.py; tests/unit/worldassembly/test_assembly.py"
+  divergence_note: "Pillar remains functionally inactive — see TCK-20260703-SIMQ-INFORMATION-BELIEF-TRIGGER for the deferred trigger-wiring gap that will complete pillar activation."
+  support_boundary: >
+    belief_assimilated and lead_certainty_updated are emitted only from
+    InformationBeliefPhase.apply() (src/domains/information/phase.py), gated behind
+    ENABLE_BELIEF_ASSIMILATION (now ON for urban_political). Even with the flag ON and
+    information_source_profiles seeded, both of apply()'s trigger branches are unreachable:
+    Branch A requires state.pending_information_responses, which has zero writers anywhere in
+    src/; Branch B requires self_model.knowledge.unknowns, but SelfModelUpdatePhase.apply()
+    hardcodes events=[], so the assimilation loop that would populate it never runs.
+    INFORMATION=C is therefore expected (not archetype-blocked, but trigger-unreachable) in
+    every calibration world including urban_political, pending
+    TCK-20260703-SIMQ-INFORMATION-BELIEF-TRIGGER.
 - id: INFRA-246
   text: "WorldDynamicsScorer owns ecology_cycle_completed (not EconomyScorer) per SQ-08
     conflict note. Covers calamity, boss/raid spawning, region transform/trauma/ownership,

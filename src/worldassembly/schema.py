@@ -4,7 +4,7 @@ from __future__ import annotations
 from typing import Optional, Any, Dict, List
 from pydantic import BaseModel, Field, ConfigDict, field_validator, model_validator
 
-from src.worldbuilding.schema import RegionSpec, FactionSpec, PopulationSpec, QuestDefinition
+from src.worldbuilding.schema import RegionSpec, FactionSpec, PopulationSpec, QuestDefinition, InformationSourceProfileSpec
 
 
 class ModuleRefSpec(BaseModel):
@@ -40,6 +40,10 @@ class WorldCompositionSpec(BaseModel):
     faction_tension_overrides: Dict[str, float] = Field(
         default_factory=dict,
         description="Per-faction initial_tension_level overrides scoped to this composition only. Keys must be catalog-registered faction IDs already present after module merge."
+    )
+    information_source_profiles: List[InformationSourceProfileSpec] = Field(
+        default_factory=list,
+        description="Information sources declared directly on this composition (no global catalog exists for this content — see UQ-1 resolution in plan.md). Scoped to this composition only."
     )
 
     @model_validator(mode="before")
@@ -150,6 +154,10 @@ class NormalizedWorldComposition(BaseModel):
     faction_tension_overrides: Dict[str, float] = Field(
         default_factory=dict,
         description="Per-faction initial_tension_level overrides scoped to this composition only. Keys must be catalog-registered faction IDs already present after module merge."
+    )
+    information_source_profiles: List[InformationSourceProfileSpec] = Field(
+        default_factory=list,
+        description="Information sources declared directly on this composition (no global catalog exists for this content — see UQ-1 resolution in plan.md). Scoped to this composition only."
     )
 
     @field_validator("schema_version")

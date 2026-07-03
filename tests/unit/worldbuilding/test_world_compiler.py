@@ -198,6 +198,105 @@ def test_compiler_no_factions_declared_yields_empty_factions_dict():
     assert state.factions == {}
 
 
+def test_compiler_seeds_information_source_profiles_from_spec():
+    """WorldCompiler.compile() constructs InformationSourceProfile domain objects from
+    spec.information_source_profiles and passes them into AuthoritativeState
+    (TCK-20260702-SIMQ-UPLIFT2-INFORMATION)."""
+    from src.domains.information.schema import InformationSourceProfile
+
+    data = create_base_valid_spec()
+    data["entities"] = []
+    data["information_source_profiles"] = [
+        {
+            "source_id": "town_notice_board",
+            "source_kind": "guide",
+            "knowledge_scopes": ["regional_danger", "common_resource_sources"],
+            "accuracy": 0.4,
+            "freshness": 0.6,
+            "bias": 0.1,
+            "cost_gold": 0,
+            "max_answers_per_query": 2,
+        },
+        {
+            "source_id": "traveling_merchant_rumors",
+            "source_kind": "traveler",
+            "knowledge_scopes": ["common_resource_sources", "recipe_requirements"],
+            "accuracy": 0.65,
+            "freshness": 0.8,
+            "bias": 0.2,
+            "cost_gold": 5,
+            "max_answers_per_query": 3,
+        },
+    ]
+    spec = WorldSpec.model_validate(data)
+
+    state, _ = WorldCompiler.compile(spec, seed=42)
+
+    assert len(state.information_source_profiles) == 2
+    by_id = {p.source_id: p for p in state.information_source_profiles}
+
+    board = by_id["town_notice_board"]
+    assert isinstance(board, InformationSourceProfile)
+    assert board.source_kind == "guide"
+    assert board.knowledge_scopes == ("regional_danger", "common_resource_sources")
+    assert board.accuracy == 0.4
+    assert board.freshness == 0.6
+    assert board.bias == 0.1
+    assert board.cost_gold == 0
+    assert board.max_answers_per_query == 2
+
+    merchant = by_id["traveling_merchant_rumors"]
+    assert merchant.source_kind == "traveler"
+    assert merchant.knowledge_scopes == ("common_resource_sources", "recipe_requirements")
+    assert merchant.accuracy == 0.65
+    assert merchant.freshness == 0.8
+    assert merchant.bias == 0.2
+    assert merchant.cost_gold == 5
+    assert merchant.max_answers_per_query == 3
+
+
+def test_compiler_no_information_sources_declared_yields_empty_list():
+    """spec.information_source_profiles == [] compiles to state.information_source_profiles == []
+    (schema-level regression guard, mirrors test_compiler_no_factions_declared_yields_empty_factions_dict)."""
+    data = create_base_valid_spec()
+    data["entities"] = []
+    spec = WorldSpec.model_validate(data)
+
+    state, _ = WorldCompiler.compile(spec, seed=42)
+
+    assert state.information_source_profiles == []
+
+
+def test_urban_political_resolved_world_seeds_two_information_sources():
+    """urban_political's resolved world spec compiles with the two corrected
+    InformationSourceProfile entries (TCK-20260702-SIMQ-UPLIFT2-INFORMATION)."""
+    from src.worldbuilding.schema import load_world_spec_from_yaml
+
+    spec = load_world_spec_from_yaml("data/worlds/urban_political/resolved/world.resolved.yaml")
+    state, _ = WorldCompiler.compile(spec, seed=42)
+
+    assert len(state.information_source_profiles) == 2
+    by_id = {p.source_id: p for p in state.information_source_profiles}
+
+    board = by_id["town_notice_board"]
+    assert board.source_kind == "guide"
+    assert board.knowledge_scopes == ("regional_danger", "common_resource_sources")
+    assert board.accuracy == 0.4
+    assert board.freshness == 0.6
+    assert board.bias == 0.1
+    assert board.cost_gold == 0
+    assert board.max_answers_per_query == 2
+
+    merchant = by_id["traveling_merchant_rumors"]
+    assert merchant.source_kind == "traveler"
+    assert merchant.knowledge_scopes == ("common_resource_sources", "recipe_requirements")
+    assert merchant.accuracy == 0.65
+    assert merchant.freshness == 0.8
+    assert merchant.bias == 0.2
+    assert merchant.cost_gold == 5
+    assert merchant.max_answers_per_query == 3
+
+
 def test_urban_political_resolved_world_seeds_bandit_town_council_tension():
     """urban_political's resolved world spec compiles with bandit_company/town_council at
     tension_level=0.5 via composition-level faction_tension_overrides (TCK-20260702-SIMQ-UPLIFT2-FACTION)."""

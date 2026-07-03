@@ -670,6 +670,7 @@ class WorldAssemblyResolver:
             topology=TopologySpec(width=width, height=height, coordinate_system="grid"),
             regions=list(regions.values()),
             factions=list(factions.values()),
+            information_source_profiles=list(normalized_comp.information_source_profiles),
             entities=list(entities.values()),
             resources=list(resources.values()),
             buildings=list(buildings.values()),

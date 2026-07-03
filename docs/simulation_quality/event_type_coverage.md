@@ -4,7 +4,9 @@
 **Ticket:** TCK-20260630-SIMQ-TRANSLATE  
 **Date:** 2026-06-30  
 **Audit base:** calibration runs in `data/calibration/` (sandbox_world seeds 42/137/999 200t, dungeon_crawl 200t, urban_political 200t, wilderness_survival 200t, simq_routing_test 500t)  
-**Last updated:** 2026-07-03 (TCK-20260702-SIMQ-UPLIFT2-FACTION — `diplomatic_transition` calibration_hits 0→29 confirmed across all 7 `urban_political_*` recalibration runs after `initial_tension_level` seeding)
+**Last updated:** 2026-07-03 (TCK-20260702-SIMQ-UPLIFT2-INFORMATION — `information_source_profiles` compile-time plumbing shipped and recalibrated across all 7 `urban_political_*` runs; `AuthoritativeState.information_source_profiles` now compiles with 2 entries (`town_notice_board`, `traveling_merchant_rumors`) and `ENABLE_BELIEF_ASSIMILATION=ON` is injected, but `belief_assimilated`/`lead_certainty_updated` calibration_hits remain 0 in every run — `InformationBeliefPhase`'s trigger branches are unreachable regardless of this scaffolding; see `docs/plans/idea_information_belief_trigger_wiring.md` and follow-up `TCK-20260703-SIMQ-INFORMATION-BELIEF-TRIGGER`)
+
+**Previously updated:** 2026-07-03 (TCK-20260702-SIMQ-UPLIFT2-FACTION — `diplomatic_transition` calibration_hits 0→29 confirmed across all 7 `urban_political_*` recalibration runs after `initial_tension_level` seeding)
 
 ---
 
@@ -58,7 +60,7 @@ All events below are emitted by the engine and reach at least one pillar scorer,
 | `route_selected` | event_extractor | AgencyScorer | 20 | Fires when entity.last_routing_family changes. The 20 hits are entirely from `simq_routing_test` (`ENABLE_ADVENTURE_ROUTING=ON`); zero in every other calibration world because the flag defaults `OFF` and `AdventureDecisionPhase` never runs — see `docs/plans/audit_fix_plan.md` P0-A (archetype-intentional zero hits in default worlds — see `eval_matrix_results.md` AGENCY Cross-World Design Note) |
 | `action_executed` | event_extractor | AgencyScorer | 20 | Co-fires with route_selected; same `ENABLE_ADVENTURE_ROUTING` gate — 0 hits outside `simq_routing_test` (archetype-intentional zero hits in default worlds — see `eval_matrix_results.md` AGENCY Cross-World Design Note) |
 | `self_model_updated` | event_extractor | CognitionScorer | 0 | Fires on self_model_bundle_set |
-| `belief_assimilated` | event_extractor | InformationScorer | 0 | Fires on last_assimilated_tick == current_tick |
+| `belief_assimilated` | event_extractor | InformationScorer | 0 | Fires on last_assimilated_tick == current_tick. `information_source_profiles` now compiles non-empty (2 entries) and `ENABLE_BELIEF_ASSIMILATION=ON` for `urban_political` (TCK-20260702-SIMQ-UPLIFT2-INFORMATION), but `InformationBeliefPhase`'s Branch A trigger (`state.pending_information_responses`) has zero writers in `src/` — still 0 hits across all 7 recalibrated runs. See `docs/plans/idea_information_belief_trigger_wiring.md`, follow-up `TCK-20260703-SIMQ-INFORMATION-BELIEF-TRIGGER` |
 | `belief_updated` | event_extractor | CognitionScorer | 0 | Co-fires with belief_assimilated |
 | `cooperation_event` | event_extractor | SocialScorer | 1657 | Fires on last_cooperation_decision; 1657 hits in urban_political_seed42_500t with ENABLE_SOCIAL_COOPERATION=ON (TCK-20260702-SIMQ-UPLIFT-SOCIAL-ZERO) |
 | `resource_harvested` | event_extractor | EconomyScorer | 0 | src_kind=NODE in intent_results |
@@ -67,7 +69,7 @@ All events below are emitted by the engine and reach at least one pillar scorer,
 | `trade_executed` | event_extractor | EconomyScorer | 0 | Co-fires with shop_transaction |
 | `quest_reward_dispensed` | event_extractor | EconomyScorer | 0 | src_kind=QUEST |
 | `gold_sink_fired` | event_extractor | EconomyScorer | 0 | src_kind in (REPAIR_FEE, SERVICE_FEE, TAX) (archetype-blocked in dungeon_crawl — see eval_matrix_results.md DA note) |
-| `paid_information_transaction` | event_extractor | InformationScorer | 0 | src_kind=INFORMATION_PURCHASE |
+| `paid_information_transaction` | event_extractor | InformationScorer | 0 | src_kind=INFORMATION_PURCHASE. Requires an active `INFORMATION_SEEKING` project, which only the orphaned `InformationNeedDetector.detect_and_generate()` / `GuildAction.visit()` (zero callers) ever create — still 0 hits post-TCK-20260702-SIMQ-UPLIFT2-INFORMATION recalibration. Deferred to `TCK-20260703-SIMQ-INFORMATION-BELIEF-TRIGGER` |
 | `paid_info_transaction` | event_extractor | EconomyScorer | 0 | Second emit on INFORMATION_PURCHASE (distinct pillar target) — TCK-20260701-SIMQ-EMIT-FACTION-ECONOMY |
 | `conservation_law_verified` | event_extractor | EconomyScorer | 0 | tick % 50 + economy events present — TCK-20260701-SIMQ-EMIT-FACTION-ECONOMY |
 | `scenario_objective_progressed` | engine/scenario_runtime | NarrativeScorer | 0 | Every tick while objective RUNNING — TCK-20260701-SIMQ-EMIT-FACTION-ECONOMY |
@@ -75,11 +77,11 @@ All events below are emitted by the engine and reach at least one pillar scorer,
 | `route_family_first_use` | event_extractor | AgencyScorer | 0 | First use of a novel routing family per entity per run — TCK-20260701-SIMQ-EMIT-AGENCY2. Gated by the same `ENABLE_ADVENTURE_ROUTING` flag as route_selected/action_executed (defaults `OFF`); 0 in all default-mode worlds (archetype-intentional zero hits — see `eval_matrix_results.md` AGENCY Cross-World Design Note). Also 0 in the existing `simq_routing_test_seed42_500t` calibration artifact because that run predates this emitter (TCK-20260630-SIMQ-ROUTING-TEST ran before TCK-20260701-SIMQ-EMIT-AGENCY2 added it) — not yet recalibrated, tracked under P0-A follow-up, not a new gap |
 | `commitment_abandoned` | event_extractor | AgencyScorer | 0 | Behavioral classification: abandonment < 3 ticks after start — TCK-20260701-SIMQ-EMIT-AGENCY2 |
 | `rejection_cascade_tick` | event_extractor | AgencyScorer | 0 | Population aggregate: > threshold% failed intent rate — TCK-20260701-SIMQ-EMIT-AGENCY2 |
-| `lead_certainty_updated` | event_extractor | InformationScorer | 0 | Certainty enum diff per lead per tick — TCK-20260701-SIMQ-EMIT-LEAD-BELIEFS |
-| `lead_contradiction_resolved` | lead_contradiction.py | InformationScorer | 0 | Co-emitted with belief_contradiction — TCK-20260701-SIMQ-EMIT-LEAD-BELIEFS |
-| `paid_info_changed_goal` | event_extractor | InformationScorer | 0 | INFORMATION_PURCHASE + project_id change same tick — TCK-20260701-SIMQ-EMIT-LEAD-BELIEFS |
-| `belief_stale` | event_extractor | InformationScorer | 0 | VAGUE/APPROXIMATE lead age > 50 ticks, once per lead per run — TCK-20260701-SIMQ-EMIT-LEAD-BELIEFS |
-| `decision_diverged_by_belief` | event_extractor | InformationScorer | 0 | VAGUE lead + non-information active project — TCK-20260701-SIMQ-EMIT-LEAD-BELIEFS |
+| `lead_certainty_updated` | event_extractor | InformationScorer | 0 | Certainty enum diff per lead per tick — TCK-20260701-SIMQ-EMIT-LEAD-BELIEFS. Still 0 post-TCK-20260702-SIMQ-UPLIFT2-INFORMATION recalibration — no code path creates the leads whose certainty this would diff; deferred to `TCK-20260703-SIMQ-INFORMATION-BELIEF-TRIGGER` |
+| `lead_contradiction_resolved` | lead_contradiction.py | InformationScorer | 0 | Co-emitted with belief_contradiction — TCK-20260701-SIMQ-EMIT-LEAD-BELIEFS. Still 0 post-TCK-20260702-SIMQ-UPLIFT2-INFORMATION recalibration; same deferred-trigger gap as `lead_certainty_updated` |
+| `paid_info_changed_goal` | event_extractor | InformationScorer | 0 | INFORMATION_PURCHASE + project_id change same tick — TCK-20260701-SIMQ-EMIT-LEAD-BELIEFS. Still 0 post-TCK-20260702-SIMQ-UPLIFT2-INFORMATION recalibration; same deferred-trigger gap |
+| `belief_stale` | event_extractor | InformationScorer | 0 | VAGUE/APPROXIMATE lead age > 50 ticks, once per lead per run — TCK-20260701-SIMQ-EMIT-LEAD-BELIEFS. Still 0 post-TCK-20260702-SIMQ-UPLIFT2-INFORMATION recalibration; same deferred-trigger gap |
+| `decision_diverged_by_belief` | event_extractor | InformationScorer | 0 | VAGUE lead + non-information active project — TCK-20260701-SIMQ-EMIT-LEAD-BELIEFS. Still 0 post-TCK-20260702-SIMQ-UPLIFT2-INFORMATION recalibration; same deferred-trigger gap |
 | `decision_divergence_detected` | event_extractor | CognitionScorer | 0 | DANGER concern urgency > 0.7 + non-survival project — TCK-20260701-SIMQ-EMIT-LEAD-BELIEFS (archetype-blocked in dungeon_crawl — see eval_matrix_results.md DA note) |
 | `skill_unlocked` | event_extractor | ProgressionScorer | 0 | learned_skills set diff — TCK-20260701-SIMQ-EMIT-PROGRESSION |
 | `trait_expressed` | event_extractor | ProgressionScorer | 0 | traits set diff — TCK-20260701-SIMQ-EMIT-PROGRESSION |
@@ -93,7 +95,7 @@ All events below are emitted by the engine and reach at least one pillar scorer,
 | `threat_evolved` | event_extractor | WorldDynamicsScorer | 0 | trauma_score threshold crossing 25/50/75/100 — TCK-20260701-SIMQ-EMIT-WORLD-DYNAMICS |
 | `node_recharged` | event_extractor | WorldDynamicsScorer | 0 | remaining_charges 0 → >0 — TCK-20260701-SIMQ-EMIT-WORLD-DYNAMICS |
 | `hazard_drain_applied` | event_extractor | WorldDynamicsScorer | 322 | combat_upd.outcome_kind=="HAZARD" |
-| `lead_certainty_changed` | event_extractor | CognitionScorer | 0 | Strategic lead certainty state diff; see §3 note on `lead_certainty_updated` |
+| `lead_certainty_changed` | event_extractor | CognitionScorer | 0 | Strategic lead certainty state diff; see §3 note on `lead_certainty_updated`. Still 0 post-TCK-20260702-SIMQ-UPLIFT2-INFORMATION recalibration; same deferred-trigger gap |
 | `social_memory_created` | event_extractor | SocialScorer | 0 | trust_history new entry or delta ≥ 0.3; once per (entity_id, other_entity_id) per run — TCK-20260701-SIMQ-EMIT-SOCIAL-MEM |
 | `contract_milestone_completed` | event_extractor | SocialScorer | 0 | ACTIVE contract at 25%/50%/75% of duration; once per (contract_id, milestone) per run; attributed to source_id — TCK-20260701-SIMQ-EMIT-CONTRACT-MILESTONE |
 | `group_joined` | event_extractor | SocialScorer | 0 | Entity joins a group |

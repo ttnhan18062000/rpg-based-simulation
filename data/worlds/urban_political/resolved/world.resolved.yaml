@@ -96,6 +96,27 @@ factions:
 - id: spirit_court
   type: neutral
   initial_tension_level: 0.0
+information_source_profiles:
+- source_id: town_notice_board
+  source_kind: guide
+  knowledge_scopes:
+  - regional_danger
+  - common_resource_sources
+  accuracy: 0.4
+  freshness: 0.6
+  bias: 0.1
+  cost_gold: 0
+  max_answers_per_query: 2
+- source_id: traveling_merchant_rumors
+  source_kind: traveler
+  knowledge_scopes:
+  - common_resource_sources
+  - recipe_requirements
+  accuracy: 0.65
+  freshness: 0.8
+  bias: 0.2
+  cost_gold: 5
+  max_answers_per_query: 3
 entities:
 - id: frontier_village_population_village_worker
   count: 8

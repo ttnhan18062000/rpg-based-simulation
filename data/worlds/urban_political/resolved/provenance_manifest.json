@@ -9,10 +9,10 @@
     "hero_adventurers": "1b1d1e2859fdd6b23262edba556718f6c506a72be8dc44cd84db74c68078b837",
     "trading_company_hub": "17173ce113422262689a5efa95ed7b0b4e6e26d14cad3e8d829ecdbf417fd63d"
   },
-  "composition_fingerprint": "de8c38bdfa5ff906eedb4088086f3e0af355829449c86a4a1a33f3914db59bc0",
+  "composition_fingerprint": "d3d45b42ddfd3aa988b0132856753877dda128157a8a898c715d19152ac200c5",
   "resolver_version": "1.0.0",
   "content_fingerprint": "07669c1efc0b7ec30e9d7c8c12b718a7cea058689833a53d38a65252639aaf5a",
-  "created_at": "2026-07-03T01:16:04.856996Z",
+  "created_at": "2026-07-03T07:53:53.897647Z",
   "records": {
     "hero_guild": {
       "element_id": "hero_guild",

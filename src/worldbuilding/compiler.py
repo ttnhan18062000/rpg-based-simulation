@@ -25,6 +25,7 @@ from src.replay.fingerprint import StateFingerprinter
 from src.worldbuilding.schema import WorldSpec
 from src.core.quests import QuestState, QuestStatus, QuestKind, RewardState
 from src.core.strategic import ProjectKind
+from src.domains.information.schema import InformationSourceProfile
 
 
 def get_role_enum(role_str: str, catalog_repo: Optional[Any] = None, context: Optional[Any] = None) -> EntityRole:
@@ -408,6 +409,20 @@ class WorldCompiler:
             )
             compiled_quests.append(q_state)
 
+        information_source_profiles: List[InformationSourceProfile] = [
+            InformationSourceProfile(
+                source_id=p.source_id,
+                source_kind=p.source_kind,
+                knowledge_scopes=tuple(p.knowledge_scopes),
+                accuracy=p.accuracy,
+                freshness=p.freshness,
+                bias=p.bias,
+                cost_gold=p.cost_gold,
+                max_answers_per_query=p.max_answers_per_query,
+            )
+            for p in spec.information_source_profiles
+        ]
+
         # Assemble final AuthoritativeState
         state = AuthoritativeState(
             tick=0,
@@ -421,7 +436,8 @@ class WorldCompiler:
             blocked_tiles=blocked_tiles,
             town_tiles=town_tiles,
             town_entity_ids=town_entity_ids,
-            factions=factions
+            factions=factions,
+            information_source_profiles=information_source_profiles
         )
 
         # Calculate fingerprint state hash
