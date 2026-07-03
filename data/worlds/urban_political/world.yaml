@@ -21,3 +21,6 @@ module_refs:
   - module_id: "hero_adventurers"
     order: 3
 generation_seed: 202
+faction_tension_overrides:
+  bandit_company: 0.5
+  town_council: 0.5

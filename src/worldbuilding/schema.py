@@ -49,6 +49,10 @@ class FactionSpec(BaseModel):
 
     id: str = Field(..., min_length=1, description="Unique identifier for the faction")
     type: str = Field(..., min_length=1, description="Architectural or behavior type of the faction")
+    initial_tension_level: float = Field(
+        0.0, ge=0.0, le=1.0,
+        description="Starting tension_level seeded into FactionState at compile time (mechanics range [0.0, 1.0])"
+    )
 
 class PopulationSpec(BaseModel):
     model_config = ConfigDict(frozen=True)

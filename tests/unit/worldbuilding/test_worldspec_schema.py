@@ -6,7 +6,8 @@ from pydantic import ValidationError
 from src.worldbuilding.schema import (
     load_world_spec_from_yaml,
     InvalidWorldSpecError,
-    WorldSpec
+    WorldSpec,
+    FactionSpec,
 )
 
 # Helper function to write a temporary yaml specification
@@ -191,6 +192,23 @@ def test_empty_yaml_raises_custom_error(tmp_path):
     with pytest.raises(InvalidWorldSpecError) as exc_info:
         load_world_spec_from_yaml(spec_path)
     assert "empty" in str(exc_info.value).lower()
+
+def test_faction_spec_initial_tension_level_defaults_to_zero():
+    spec = FactionSpec(id="x", type="civilian")
+    assert spec.initial_tension_level == 0.0
+
+
+def test_faction_spec_initial_tension_level_round_trips():
+    spec = FactionSpec(id="x", type="civilian", initial_tension_level=0.5)
+    assert spec.initial_tension_level == 0.5
+
+
+def test_faction_spec_initial_tension_level_out_of_range_rejected():
+    with pytest.raises(ValidationError):
+        FactionSpec(id="x", type="civilian", initial_tension_level=1.5)
+    with pytest.raises(ValidationError):
+        FactionSpec(id="x", type="civilian", initial_tension_level=-0.1)
+
 
 def test_schema_no_side_effects(tmp_path):
     # Verify that parsing the schema creates a read-only WorldSpec and touches no engine states

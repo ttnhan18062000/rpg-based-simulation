@@ -37,6 +37,10 @@ class WorldCompositionSpec(BaseModel):
     global_parameters: Dict[str, Any] = Field(default_factory=dict, description="Global configuration variables")
     generation_seed: int = Field(42, description="Seed for deterministic procedural resolution")
     validation_profile: str = Field("local_dev", description="Validation profile budget category (e.g. local_dev, ci)")
+    faction_tension_overrides: Dict[str, float] = Field(
+        default_factory=dict,
+        description="Per-faction initial_tension_level overrides scoped to this composition only. Keys must be catalog-registered faction IDs already present after module merge."
+    )
 
     @model_validator(mode="before")
     @classmethod
@@ -143,6 +147,10 @@ class NormalizedWorldComposition(BaseModel):
     global_parameters: Dict[str, Any] = Field(default_factory=dict, description="Global configuration variables")
     generation_seed: int = Field(42, description="Seed for deterministic procedural resolution")
     validation_profile: str = Field("local_dev", description="Validation profile budget category (e.g. local_dev, ci)")
+    faction_tension_overrides: Dict[str, float] = Field(
+        default_factory=dict,
+        description="Per-faction initial_tension_level overrides scoped to this composition only. Keys must be catalog-registered faction IDs already present after module merge."
+    )
 
     @field_validator("schema_version")
     @classmethod

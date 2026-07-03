@@ -17,6 +17,7 @@ from src.core.state import (
     ResourceNodeState,
     InventoryComponent,
     PersonalityComponent,
+    FactionState,
 )
 from src.core.builder import V2EntityBuilder
 from src.core.enums import EntityRole, Faction
@@ -174,10 +175,11 @@ class WorldCompiler:
 
         # 3. Compile factions (Initialize starting vaults in global_resources)
         global_resources: Dict[str, float] = {}
+        factions: Dict[str, FactionState] = {}
         for f_spec in spec.factions:
             faction_enum = get_faction_enum(f_spec.id, context=context)
             starting_gold = 1000.0
-            
+
             # Context-backed Faction starting gold override
             if context is not None and f_spec.id in context.factions:
                 starting_gold = context.factions[f_spec.id].starting_gold
@@ -190,6 +192,11 @@ class WorldCompiler:
                 global_resources["faction_town_council_gold"] = starting_gold
             else:
                 global_resources[f"faction_{f_spec.id.lower()}_gold"] = starting_gold
+
+            factions[f_spec.id] = FactionState(
+                faction_id=f_spec.id,
+                tension_level=f_spec.initial_tension_level,
+            )
 
         # 4. Compile resources
         resource_nodes: Dict[int, ResourceNodeState] = {}
@@ -413,7 +420,8 @@ class WorldCompiler:
             global_resources=global_resources,
             blocked_tiles=blocked_tiles,
             town_tiles=town_tiles,
-            town_entity_ids=town_entity_ids
+            town_entity_ids=town_entity_ids,
+            factions=factions
         )
 
         # Calculate fingerprint state hash

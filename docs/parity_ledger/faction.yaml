@@ -10,7 +10,9 @@
     to_readonly() wrapping) + src/core/updates.py (FactionUpdate frozen dataclass,
     StateUpdate.faction_updates field, is_noop/merge_many wiring) +
     src/engine/apply.py (factions=new_factions threading,
-    TCK-20260619-E53Aa-FACTION-STATE)
+    TCK-20260619-E53Aa-FACTION-STATE). Compile-time construction of the initial
+    factions dict (not just apply-path persistence of subsequent updates) is covered
+    by FAC-012 — see WorldCompiler.compile()/WorldAssemblyResolver.assemble().
   proof_type: parity
   test_path: tests/unit/faction/test_faction_state.py
   divergence_note: null
@@ -233,4 +235,49 @@
     SEEK_PEACE directive (transient FactionDirective) is not implemented — FactionDirective
     cannot flow through StateUpdate. The autonomous Phase 8d WAR→NEUTRAL rule covers the
     same outcome when both factions hit < 0.3.
+  support_boundary: null
+
+- id: FAC-012
+  text: >
+    FactionState is constructed with tension_level seeded from
+    WorldSpec.factions[].initial_tension_level at world-compile time
+    (WorldCompiler.compile()), sourced either from the catalog default (0.0) or a
+    composition-level faction_tension_overrides entry
+    (WorldAssemblyResolver.assemble()). Closes the "no bootstrap" gap where
+    AuthoritativeState.factions was permanently seeded at tension_level=0.0 for every
+    compiled world, which meant compute_transitions()'s pair_tension > 0.4 threshold
+    could never fire and diplomatic_transition/faction_tension_delta had 0
+    calibration_hits (TCK-20260702-SIMQ-UPLIFT2-FACTION).
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/worldbuilding/schema.py::FactionSpec.initial_tension_level (bounded [0.0, 1.0]);
+    src/worldassembly/schema.py::WorldCompositionSpec.faction_tension_overrides +
+    NormalizedWorldComposition.faction_tension_overrides (mirrored, required for
+    WorldCompositionNormalizer.normalize() to not raise ValidationError on every
+    composition); src/worldbuilding/compiler.py::WorldCompiler.compile() (step 3 —
+    builds one FactionState per FactionSpec in spec.factions, seeding
+    tension_level=f_spec.initial_tension_level, passed into the single
+    AuthoritativeState(...) constructor call); src/worldassembly/resolver.py::
+    WorldAssemblyResolver.assemble() (applies normalized_comp.faction_tension_overrides
+    onto the merged factions dict after module/catalog merge, before WorldSpec(...)
+    construction, via FactionSpec.model_validate(...) full reconstruction — not
+    .model_copy(update=...), which would bypass Pydantic v2 field validators);
+    data/worlds/urban_political/world.yaml (faction_tension_overrides:
+    {bandit_company: 0.5, town_council: 0.5})
+  proof_type: parity
+  test_path: >
+    tests/unit/worldbuilding/test_worldspec_schema.py::test_faction_spec_initial_tension_level_defaults_to_zero,
+    test_faction_spec_initial_tension_level_round_trips,
+    test_faction_spec_initial_tension_level_out_of_range_rejected;
+    tests/unit/worldbuilding/test_world_compiler.py::test_compiler_seeds_faction_tension_from_spec,
+    test_compiler_seeds_full_faction_roster_at_zero_tension_by_default,
+    test_compiler_no_factions_declared_yields_empty_factions_dict;
+    tests/unit/worldassembly/test_assembly.py::test_faction_tension_overrides_applied_after_merge,
+    test_no_faction_tension_overrides_matches_current_behavior,
+    test_faction_tension_overrides_unknown_faction_raises,
+    test_faction_tension_overrides_out_of_range_raises;
+    tests/unit/faction/test_diplomacy.py::test_urban_political_seeded_tension_fires_tense_transition
+  divergence_note: null
   support_boundary: null

@@ -157,6 +157,59 @@ def test_compiler_quest_referential_warnings():
     assert "unknown_forest" in report["warnings"][0]
 
 
+def test_compiler_seeds_faction_tension_from_spec():
+    """WorldCompiler.compile() seeds FactionState.tension_level from FactionSpec.initial_tension_level (TCK-20260702-SIMQ-UPLIFT2-FACTION)."""
+    data = create_base_valid_spec()
+    data["factions"] = [
+        {"id": "a", "type": "x", "initial_tension_level": 0.5},
+        {"id": "b", "type": "y"},
+    ]
+    data["entities"] = []
+    spec = WorldSpec.model_validate(data)
+
+    state, _ = WorldCompiler.compile(spec, seed=42)
+
+    assert set(state.factions.keys()) == {"a", "b"}
+    assert state.factions["a"].tension_level == 0.5
+    assert state.factions["b"].tension_level == 0.0
+
+
+def test_compiler_seeds_full_faction_roster_at_zero_tension_by_default():
+    """Every declared FactionSpec produces a FactionState entry even with no initial_tension_level set."""
+    data = create_base_valid_spec()
+    data["entities"] = []
+    spec = WorldSpec.model_validate(data)
+
+    state, _ = WorldCompiler.compile(spec, seed=42)
+
+    assert set(state.factions.keys()) == {"villagers", "monsters"}
+    assert all(f.tension_level == 0.0 for f in state.factions.values())
+
+
+def test_compiler_no_factions_declared_yields_empty_factions_dict():
+    """spec.factions == [] compiles to state.factions == {} (schema-level regression guard)."""
+    data = create_base_valid_spec()
+    data["factions"] = []
+    data["entities"] = []
+    spec = WorldSpec.model_validate(data)
+
+    state, _ = WorldCompiler.compile(spec, seed=42)
+
+    assert state.factions == {}
+
+
+def test_urban_political_resolved_world_seeds_bandit_town_council_tension():
+    """urban_political's resolved world spec compiles with bandit_company/town_council at
+    tension_level=0.5 via composition-level faction_tension_overrides (TCK-20260702-SIMQ-UPLIFT2-FACTION)."""
+    from src.worldbuilding.schema import load_world_spec_from_yaml
+
+    spec = load_world_spec_from_yaml("data/worlds/urban_political/resolved/world.resolved.yaml")
+    state, _ = WorldCompiler.compile(spec, seed=42)
+
+    assert state.factions["bandit_company"].tension_level == 0.5
+    assert state.factions["town_council"].tension_level == 0.5
+
+
 def test_helper_enum_mappers():
     assert get_role_enum("hero") == EntityRole.HERO
     assert get_role_enum("worker") == EntityRole.WORKER

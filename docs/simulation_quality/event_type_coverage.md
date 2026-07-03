@@ -4,7 +4,7 @@
 **Ticket:** TCK-20260630-SIMQ-TRANSLATE  
 **Date:** 2026-06-30  
 **Audit base:** calibration runs in `data/calibration/` (sandbox_world seeds 42/137/999 200t, dungeon_crawl 200t, urban_political 200t, wilderness_survival 200t, simq_routing_test 500t)  
-**Last updated:** 2026-07-02 (TCK-20260702-SIMQ-UPLIFT-SOCIAL-ZERO — cooperation events activated via ENABLE_SOCIAL_COOPERATION=ON in urban_political profile)
+**Last updated:** 2026-07-03 (TCK-20260702-SIMQ-UPLIFT2-FACTION — `diplomatic_transition` calibration_hits 0→29 confirmed across all 7 `urban_political_*` recalibration runs after `initial_tension_level` seeding)
 
 ---
 
@@ -55,8 +55,8 @@ All events below are emitted by the engine and reach at least one pillar scorer,
 | `near_death_survival` | event_extractor | CombatScorer, ProgressionScorer | 164 | HP crosses below 20% threshold |
 | `xp_granted` | event_extractor | ProgressionScorer | 0 | Fires on identity.evolution_points delta |
 | `level_up` | event_extractor | ProgressionScorer | 0 | Direct path; also reachable via `lifecycle` translation |
-| `route_selected` | event_extractor | AgencyScorer | 20 | Fires when entity.last_routing_family changes. The 20 hits are entirely from `simq_routing_test` (`ENABLE_ADVENTURE_ROUTING=ON`); zero in every other calibration world because the flag defaults `OFF` and `AdventureDecisionPhase` never runs — see `docs/plans/audit_fix_plan.md` P0-A |
-| `action_executed` | event_extractor | AgencyScorer | 20 | Co-fires with route_selected; same `ENABLE_ADVENTURE_ROUTING` gate — 0 hits outside `simq_routing_test` |
+| `route_selected` | event_extractor | AgencyScorer | 20 | Fires when entity.last_routing_family changes. The 20 hits are entirely from `simq_routing_test` (`ENABLE_ADVENTURE_ROUTING=ON`); zero in every other calibration world because the flag defaults `OFF` and `AdventureDecisionPhase` never runs — see `docs/plans/audit_fix_plan.md` P0-A (archetype-intentional zero hits in default worlds — see `eval_matrix_results.md` AGENCY Cross-World Design Note) |
+| `action_executed` | event_extractor | AgencyScorer | 20 | Co-fires with route_selected; same `ENABLE_ADVENTURE_ROUTING` gate — 0 hits outside `simq_routing_test` (archetype-intentional zero hits in default worlds — see `eval_matrix_results.md` AGENCY Cross-World Design Note) |
 | `self_model_updated` | event_extractor | CognitionScorer | 0 | Fires on self_model_bundle_set |
 | `belief_assimilated` | event_extractor | InformationScorer | 0 | Fires on last_assimilated_tick == current_tick |
 | `belief_updated` | event_extractor | CognitionScorer | 0 | Co-fires with belief_assimilated |
@@ -72,7 +72,7 @@ All events below are emitted by the engine and reach at least one pillar scorer,
 | `conservation_law_verified` | event_extractor | EconomyScorer | 0 | tick % 50 + economy events present — TCK-20260701-SIMQ-EMIT-FACTION-ECONOMY |
 | `scenario_objective_progressed` | engine/scenario_runtime | NarrativeScorer | 0 | Every tick while objective RUNNING — TCK-20260701-SIMQ-EMIT-FACTION-ECONOMY |
 | `defer_with_reason` | event_extractor | AgencyScorer | 0 | DEFER_WITH_REASON path in phase.py — TCK-20260701-SIMQ-EMIT-AGENCY2 |
-| `route_family_first_use` | event_extractor | AgencyScorer | 0 | First use of a novel routing family per entity per run — TCK-20260701-SIMQ-EMIT-AGENCY2. Gated by the same `ENABLE_ADVENTURE_ROUTING` flag as route_selected/action_executed (defaults `OFF`); 0 in all default-mode worlds. Also 0 in the existing `simq_routing_test_seed42_500t` calibration artifact because that run predates this emitter (TCK-20260630-SIMQ-ROUTING-TEST ran before TCK-20260701-SIMQ-EMIT-AGENCY2 added it) — not yet recalibrated, tracked under P0-A follow-up, not a new gap |
+| `route_family_first_use` | event_extractor | AgencyScorer | 0 | First use of a novel routing family per entity per run — TCK-20260701-SIMQ-EMIT-AGENCY2. Gated by the same `ENABLE_ADVENTURE_ROUTING` flag as route_selected/action_executed (defaults `OFF`); 0 in all default-mode worlds (archetype-intentional zero hits — see `eval_matrix_results.md` AGENCY Cross-World Design Note). Also 0 in the existing `simq_routing_test_seed42_500t` calibration artifact because that run predates this emitter (TCK-20260630-SIMQ-ROUTING-TEST ran before TCK-20260701-SIMQ-EMIT-AGENCY2 added it) — not yet recalibrated, tracked under P0-A follow-up, not a new gap |
 | `commitment_abandoned` | event_extractor | AgencyScorer | 0 | Behavioral classification: abandonment < 3 ticks after start — TCK-20260701-SIMQ-EMIT-AGENCY2 |
 | `rejection_cascade_tick` | event_extractor | AgencyScorer | 0 | Population aggregate: > threshold% failed intent rate — TCK-20260701-SIMQ-EMIT-AGENCY2 |
 | `lead_certainty_updated` | event_extractor | InformationScorer | 0 | Certainty enum diff per lead per tick — TCK-20260701-SIMQ-EMIT-LEAD-BELIEFS |
@@ -112,10 +112,10 @@ All events below are emitted by the engine and reach at least one pillar scorer,
 | `boss_spawned` | event_extractor | WorldDynamicsScorer | 0 | world-boss-gated: entity kind in (world_boss, ancient_sentinel) |
 | `narrative_milestone` | event_extractor | NarrativeScorer | 0 | Co-emitted on boss_spawned, war_declared, sovereignty_shift |
 | `raid_party_spawned` | event_extractor | WorldDynamicsScorer | 0 | goblin-raider-gated: entity kind == goblin_raider |
-| `diplomatic_transition` | event_extractor | FactionScorer | 0 | Direct emit on faction diplomatic_relations_set change |
+| `diplomatic_transition` | event_extractor | FactionScorer | 29 | Direct emit on faction diplomatic_relations_set change; 29 hits confirmed in all 7 `urban_political_*` calibration runs (200t/500t/1000t, seeds 42/123/456) after `bandit_company`/`town_council` seeded to `initial_tension_level=0.5` via `faction_tension_overrides` (TCK-20260702-SIMQ-UPLIFT2-FACTION); 0 in `dungeon_crawl`/`frontier_extended` (no override declared) |
 | `alliance_accepted` | event_extractor | FactionScorer | 0 | Direct emit when new_state == ALLIED |
 | `territory_ownership_changed` | event_extractor | FactionScorer | 0 | faction.territory_add |
-| `faction_tension_delta` | event_extractor | FactionScorer | 0 | Non-zero tension_delta on faction update |
+| `faction_tension_delta` | event_extractor | FactionScorer | 0 | Non-zero tension_delta on faction update; still 0 post-TCK-20260702-SIMQ-UPLIFT2-FACTION recalibration — `initial_tension_level` seeding is a compile-time value, not an ongoing per-tick `tension_delta` on a `FactionUpdate`, so this emitter is not exercised by the fix; `diplomatic_transition` (AC-4) is the confirmed non-zero path |
 | `war_declared` | event_extractor | FactionScorer | 0 | WorldEvent category == FACTION_WAR_DECLARED |
 | `military_conflict_resolved` | event_extractor | FactionScorer | 0 | WorldEvent in (TERRITORY_TRANSFERRED, WAR_ENDED_EXHAUSTION) |
 | `world_emergence_event` | event_extractor | NarrativeScorer | 0 | Every WorldEvent in world_events_add |

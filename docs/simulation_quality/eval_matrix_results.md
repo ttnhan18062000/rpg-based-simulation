@@ -258,6 +258,40 @@ Without this flag, AGENCY=C (as seen in dungeon_crawl and urban_political defaul
 
 ---
 
+## AGENCY — Cross-World Design Note
+
+**Archetype decision (TCK-20260702-SIMQ-UPLIFT2-AGENCY-DA):** AGENCY=C in every calibration
+world except `simq_routing_test` is **archetype-correct** and requires no remediation.
+
+**Root cause:** All three AGENCY key events (`route_selected`, `action_executed`,
+`route_family_first_use`) are emitted only from `AdventureDecisionPhase`
+(`src/domains/adventure/phase.py`). This phase is invoked through `run_phase("adventure_decision",
+..., "ENABLE_ADVENTURE_ROUTING")` in `src/engine/pipeline.py`, and `ENABLE_ADVENTURE_ROUTING`
+defaults to `FeatureMode.OFF` (`src/domains/optimization/feature_flags.py:16`). When the flag is
+OFF, `run_phase` short-circuits before `AdventureDecisionPhase.apply()` runs, so zero
+`route_selected`, `action_executed`, or `route_family_first_use` events are ever produced —
+`AgencyScorer` (`src/simulation_quality/scorers/agency.py`) has nothing to score and every
+default-mode world grades AGENCY=C across all seeds and tick counts (dungeon_crawl, urban_political,
+sandbox_world, and the six confirmed zero-pillar worlds in the section below).
+
+`simq_routing_test` is the one calibration world that forces `ENABLE_ADVENTURE_ROUTING=ON`
+(see the `simq_routing_test` section above): AGENCY confirms A in 2 of 3 seeds and B in 1,
+demonstrating the scorer and emitters are wired correctly and activate as designed once the
+routing gate is open (see AC6 — AGENCY Confirmation, above).
+
+`AdventureDecisionPhase` is opt-in by world archetype, not a global default — it represents a
+distinct "routing-capable" archetype rather than a baseline behavior every world is expected to
+exhibit. AGENCY=C in non-routing worlds is therefore the correct grade, mirroring the dungeon_crawl
+ECONOMY/COGNITION archetype pattern documented above (TCK-20260702-SIMQ-UPLIFT-DUNGEON-ECON-COG):
+structurally inactive by design, not by bug.
+
+**Anti-drift:** If any calibration world other than `simq_routing_test` enables
+`ENABLE_ADVENTURE_ROUTING`, AGENCY will activate for that world and its grade anchors in
+`tests/simulation_quality/fixtures/grade_anchors.json` must be recalibrated and updated — the C
+anchors currently recorded for that world's AGENCY pillar assume the flag stays OFF.
+
+---
+
 ## Zero-Pillar World Confirmation
 
 Six confirmed zero-active-pillar worlds not included in this matrix:

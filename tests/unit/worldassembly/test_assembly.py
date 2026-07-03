@@ -56,6 +56,91 @@ def test_structural_world_assembly_resolver(repos):
     assert "standard_villagers" in prov.module_fingerprints
 
 
+def test_faction_tension_overrides_applied_after_merge(repos):
+    """A composition-level faction_tension_overrides entry lands on the resolved WorldSpec's
+    matching FactionSpec.initial_tension_level; all other factions stay at 0.0 (TCK-20260702-SIMQ-UPLIFT2-FACTION)."""
+    cat, mod = repos
+
+    composition = WorldCompositionSpec(
+        schema_version="worldcomposition.v1",
+        world_id="tension_override_test",
+        name="Tension Override Test",
+        module_refs=[
+            ModuleRefSpec(module_id="plains_layout", enabled=True, order=0),
+        ],
+        faction_tension_overrides={"bandit_company": 0.5},
+    )
+
+    resolver = WorldAssemblyResolver(cat, mod)
+    bundle = resolver.assemble(composition)
+
+    factions_by_id = {f.id: f for f in bundle.world_spec.factions}
+    assert factions_by_id["bandit_company"].initial_tension_level == 0.5
+    other_factions = [f for fid, f in factions_by_id.items() if fid != "bandit_company"]
+    assert other_factions, "expected other catalog factions to be present for regression comparison"
+    assert all(f.initial_tension_level == 0.0 for f in other_factions)
+
+
+def test_no_faction_tension_overrides_matches_current_behavior(repos):
+    """A composition with no faction_tension_overrides key resolves every faction to
+    initial_tension_level == 0.0 (regression guard — other worlds unaffected)."""
+    cat, mod = repos
+
+    composition = WorldCompositionSpec(
+        schema_version="worldcomposition.v1",
+        world_id="no_tension_override_test",
+        name="No Tension Override Test",
+        module_refs=[
+            ModuleRefSpec(module_id="plains_layout", enabled=True, order=0),
+        ],
+    )
+
+    resolver = WorldAssemblyResolver(cat, mod)
+    bundle = resolver.assemble(composition)
+
+    assert all(f.initial_tension_level == 0.0 for f in bundle.world_spec.factions)
+
+
+def test_faction_tension_overrides_unknown_faction_raises(repos):
+    """faction_tension_overrides referencing a faction ID absent after merge raises ValueError."""
+    cat, mod = repos
+
+    composition = WorldCompositionSpec(
+        schema_version="worldcomposition.v1",
+        world_id="tension_override_unknown_test",
+        name="Tension Override Unknown Test",
+        module_refs=[
+            ModuleRefSpec(module_id="plains_layout", enabled=True, order=0),
+        ],
+        faction_tension_overrides={"nonexistent_faction": 0.5},
+    )
+
+    resolver = WorldAssemblyResolver(cat, mod)
+    with pytest.raises(ValueError) as exc_info:
+        resolver.assemble(composition)
+    assert "nonexistent_faction" in str(exc_info.value)
+
+
+def test_faction_tension_overrides_out_of_range_raises(repos):
+    """An out-of-range faction_tension_overrides value raises ValidationError via FactionSpec.model_validate."""
+    from pydantic import ValidationError
+    cat, mod = repos
+
+    composition = WorldCompositionSpec(
+        schema_version="worldcomposition.v1",
+        world_id="tension_override_oor_test",
+        name="Tension Override Out Of Range Test",
+        module_refs=[
+            ModuleRefSpec(module_id="plains_layout", enabled=True, order=0),
+        ],
+        faction_tension_overrides={"bandit_company": 1.5},
+    )
+
+    resolver = WorldAssemblyResolver(cat, mod)
+    with pytest.raises(ValidationError):
+        resolver.assemble(composition)
+
+
 def test_id_collision_prevention(repos):
     """Verify duplicate IDs across merged layouts raise structural errors."""
     cat, mod = repos
@@ -524,6 +609,26 @@ def test_composition_normalization_shorthand_and_mixed(repos):
     from pydantic import ValidationError
     with pytest.raises(ValidationError):
         WorldCompositionNormalizer.normalize(unknown_dict)
+
+    # 4. faction_tension_overrides mirrors through unset (default {}) and set unchanged
+    no_overrides_spec = WorldCompositionSpec(
+        schema_version="worldcomposition.v1",
+        world_id="no_overrides_world",
+        name="No Overrides World",
+        module_refs=[],
+    )
+    normalized_no_overrides = WorldCompositionNormalizer.normalize(no_overrides_spec)
+    assert normalized_no_overrides.faction_tension_overrides == {}
+
+    overrides_spec = WorldCompositionSpec(
+        schema_version="worldcomposition.v1",
+        world_id="overrides_world",
+        name="Overrides World",
+        module_refs=[],
+        faction_tension_overrides={"faction_x": 0.5},
+    )
+    normalized_overrides = WorldCompositionNormalizer.normalize(overrides_spec)
+    assert normalized_overrides.faction_tension_overrides == {"faction_x": 0.5}
 
 
 def test_v2_module_resolution_and_heuristics(repos):

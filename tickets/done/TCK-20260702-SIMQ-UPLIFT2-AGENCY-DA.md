@@ -1,10 +1,10 @@
 ---
-status: open
+status: historical
 layer: simulation
 authority: P1
 audience: agent
 ticket_id: TCK-20260702-SIMQ-UPLIFT2-AGENCY-DA
-phase: open
+phase: done
 date: 2026-07-02
 tags: [simulation_quality, agency, documentation, parity]
 ---
@@ -15,7 +15,7 @@ tags: [simulation_quality, agency, documentation, parity]
 Document AGENCY=C as design-intentional across non-routing calibration worlds
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -104,12 +104,69 @@ Anti-drift note: if a new calibration world enables `ENABLE_ADVENTURE_ROUTING`, 
 in the DA annotation as a routing-capable archetype and its AGENCY grades must be calibrated separately
 from the "routing-inactive" majority.
 
+**Implementation (2026-07-02):**
+
+- Context search confirmed: `search_docs` surfaced `docs/audits/D19_domain_phase_inventory.md`
+  §10, `docs/simulation/domains/adventure_contract.md`, and `docs/mechanics/adventure_routing_contract.md`
+  as the relevant background on Adventure Routing; `graphify query` traversal did not surface a
+  direct AgencyScorer→AdventureDecisionPhase edge, so the gate mechanism was confirmed directly via
+  `src/engine/pipeline.py` (the `adventure_decision` phase is wrapped in
+  `run_phase(..., "ENABLE_ADVENTURE_ROUTING")`, which short-circuits before
+  `AdventureDecisionPhase.apply()` runs when the flag is OFF) and
+  `src/domains/optimization/feature_flags.py:16` (`ENABLE_ADVENTURE_ROUTING: FeatureMode.OFF`).
+- Added a `## AGENCY — Cross-World Design Note` section to `eval_matrix_results.md` (after the
+  existing "AC6 — AGENCY Confirmation" section) covering root cause, the `simq_routing_test`
+  counter-example, and the anti-drift note, mirroring the dungeon_crawl ECONOMY/COGNITION DA
+  pattern from `stored_artifacts/TCK-20260702-SIMQ-UPLIFT-DUNGEON-ECON-COG/`.
+- UQ-1 resolved: no AGENCY/route_selected/action_executed/route_family_first_use entries exist in
+  `docs/parity_ledger/strategic_cognition.yaml` (confirmed via grep — zero matches). The relevant
+  entries are in `docs/parity_ledger/infrastructure.yaml`: `INFRA-237` (AgencyScorer contract
+  coverage) and `SIMQ-CALIBRATED-001` (mentions `route_selected`/`action_executed` emission
+  wiring directly). Both had `support_boundary: null`; both populated with archetype-block notes
+  citing the `ENABLE_ADVENTURE_ROUTING` gate and cross-referencing the new eval_matrix_results.md
+  DA note. No new parity entries were created, per UQ-1 guidance.
+- Added archetype-intentional cross-reference notes to the `route_selected`, `action_executed`,
+  and `route_family_first_use` rows in `event_type_coverage.md` (these rows already documented the
+  `ENABLE_ADVENTURE_ROUTING` gate and zero-hit counts from prior tickets, but did not cross-reference
+  the archetype-intentional DA framing — added a parenthetical pointing to the new
+  eval_matrix_results.md AGENCY Cross-World Design Note, mirroring the `gold_sink_fired` /
+  `decision_divergence_detected` dungeon_crawl DA cross-references already in the file).
+- `make evaluate --dry-run` (via `.venv/bin/python3 tools/evaluate_simq.py --dry-run`): 250 pillars
+  checked, 0 regressions, 0 missing, exit 0.
+- `make knowledge-index-update`: incremental update, 2 files re-embedded (eval_matrix_results.md,
+  event_type_coverage.md), 1829 unchanged from cache, exit 0.
+- No code changes. No new parity ledger entries. No world spec, grade anchor, or scoring weight
+  changes.
+
 ## Test Summary
 - No code tests needed (documentation only).
 - `make evaluate --dry-run` must pass after any doc changes.
 
 ## Files Changed
-(to be filled during implementation)
+- `docs/simulation_quality/eval_matrix_results.md` — added `## AGENCY — Cross-World Design Note`
+  section (after "AC6 — AGENCY Confirmation") documenting AGENCY=C as archetype-correct in
+  non-routing calibration worlds, the `simq_routing_test` counter-example, and the anti-drift
+  note tied to `ENABLE_ADVENTURE_ROUTING`.
+- `docs/parity_ledger/infrastructure.yaml` — populated `support_boundary` (previously `null`) on
+  `INFRA-237` (AgencyScorer contract coverage) and `SIMQ-CALIBRATED-001` (`route_selected`/
+  `action_executed` emission wiring) with archetype-block notes citing the
+  `ENABLE_ADVENTURE_ROUTING` gate.
+- `docs/simulation_quality/event_type_coverage.md` — added archetype-intentional cross-reference
+  notes to the `route_selected`, `action_executed`, and `route_family_first_use` rows, pointing to
+  the new eval_matrix_results.md AGENCY Cross-World Design Note.
 
 ## Completion Summary
-(to be filled on done)
+Documented AGENCY=C in 27/30 calibration runs as design-intentional rather than a defect: the
+`AdventureDecisionPhase` (and the `AgencyScorer` events it gates — `route_selected`,
+`action_executed`, `route_family_first_use`) is opt-in per world archetype via
+`ENABLE_ADVENTURE_ROUTING` (default OFF), so zero-hit AGENCY events in non-routing worlds are
+expected, not a bug. Confirmed the gate mechanism directly in `src/engine/pipeline.py`
+(`adventure_decision` phase wrapped in `run_phase(..., "ENABLE_ADVENTURE_ROUTING")`) and
+`src/domains/optimization/feature_flags.py:16`. Added a DA annotation to
+`eval_matrix_results.md`, resolved UQ-1 by confirming no AGENCY/route_* entries exist in
+`strategic_cognition.yaml` (only in `infrastructure.yaml`), and populated `support_boundary` notes
+on `INFRA-237` and `SIMQ-CALIBRATED-001`. Cross-referenced the same framing into
+`event_type_coverage.md`, mirroring the dungeon_crawl ECONOMY/COGNITION DA pattern from
+`stored_artifacts/TCK-20260702-SIMQ-UPLIFT-DUNGEON-ECON-COG/`. No code changes; no new parity
+ledger entries created. Verification: `make evaluate --dry-run` — 250 pillars checked, 0
+regressions, 0 missing, exit 0; `make knowledge-index-update` — 2 files re-embedded, exit 0.
