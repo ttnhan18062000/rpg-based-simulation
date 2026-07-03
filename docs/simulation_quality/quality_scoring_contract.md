@@ -696,9 +696,9 @@ PP-20 (`town_resolution`), WD-05 (node cooldown/recharge), WD-10 (`resource ecol
 ```
 grade F → worst_events: tag="zero_harvest", persists from tick 100 onward
   → Check ENABLE_ADVENTURE_ROUTING (must be ON for entities to route to resource nodes)
-  → Check len(state.resource_nodes) after WorldCompiler.compile() (D04 found 0 in urban_political)
-  → Check entity navigation.region_id (D04 found all None after compile)
-  → These three root causes (from D04 §6.2) are the most common zero-harvest causes
+  → Check len(state.resource_nodes) after WorldCompiler.compile() (D04 found 0 in urban_political — RESOLVED, confirmed 3 nodes as of 2026-07-01, TCK-20260627-P0B-URBAN-RESOURCE-NODES)
+  → Check entity navigation.region_id (D04 found all None after compile — RESOLVED, TCK-20260627-P0C-ENTITY-REGION-ASSIGN; reconfirmed 2026-07-03 via TCK-20260703-SIMQ-UPLIFT3-DUAL-GATE-AUDIT: compiler.py always sets a real value now)
+  → These two root causes (from D04 §6.2) are historical zero-harvest causes, both fixed — retained here as a diagnostic path in case of regression, not as an open gap
 ```
 
 ---

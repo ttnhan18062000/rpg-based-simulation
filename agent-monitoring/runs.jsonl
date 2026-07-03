@@ -462,3 +462,4 @@
 {"run_id":"TCK-20260703-SIMQ-INFORMATION-BELIEF-TRIGGER","start_ts":"2026-07-03T09:27:20Z","end_ts":"2026-07-03T13:56:01Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":19}
 {"run_id":"TCK-20260703-SIMQ-UPLIFT3-FAST-CALIBRATE","start_ts":"2026-07-03T15:12:15Z","end_ts":"2026-07-03T16:45:41Z","workflow":"implement-ticket","tier":"hotfix","final_status":"DONE","agent_count":1}
 {"run_id":"TCK-20260703-SIMQ-UPLIFT3-PLAYBOOK-DOC","start_ts":"2026-07-03T16:47:28Z","end_ts":"2026-07-03T16:52:00Z","workflow":"implement-ticket","tier":"hotfix","final_status":"DONE","agent_count":4}
+{"run_id":"TCK-20260703-SIMQ-UPLIFT3-DUAL-GATE-AUDIT","start_ts":"2026-07-03T16:51:40Z","end_ts":"2026-07-03T16:58:27Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":5}

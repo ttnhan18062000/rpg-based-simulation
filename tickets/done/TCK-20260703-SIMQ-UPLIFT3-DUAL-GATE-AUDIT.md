@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: simulation
 authority: P1
 audience: agent
 ticket_id: TCK-20260703-SIMQ-UPLIFT3-DUAL-GATE-AUDIT
-phase: open
+phase: done
 date: 2026-07-03
 tags: [simulation_quality, economy, social, investigation, worldbuilding]
 ---
@@ -15,7 +15,7 @@ tags: [simulation_quality, economy, social, investigation, worldbuilding]
 Investigate whether ECONOMY (and any other still-C pillar) shares the "compiler never seeds the field" bug class found for FACTION and INFORMATION
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -76,15 +76,22 @@ already this batch.
   class than FACTION/INFORMATION)
 
 ## Acceptance Criteria
-- [ ] ECONOMY's scorer-read `AuthoritativeState` fields enumerated with file:line references
-- [ ] Each field checked against `WorldCompiler.compile()`'s constructor call for actual
-      construction (not silent default)
-- [ ] A clear verdict per field: "compiler-seeded correctly" or "silently defaults, matches the
-      FACTION/INFORMATION bug class" — no ambiguous findings
-- [ ] If a bug is found: a recommended follow-up ticket scope is written (not implemented)
-- [ ] If no bug is found: the existing "structural gap" diagnosis in `docs/audits/D20_simq_integration.md`
-      and `docs/plans/audit_fix_plan.md` is explicitly reconfirmed with this investigation's evidence,
-      not just left as an old, unverified claim
+- [x] ECONOMY's scorer-read fields enumerated with file:line references — finding: `EconomyScorer`
+      reads zero `AuthoritativeState` fields directly; it is 100% event-driven
+      (`ObservabilityEventEnvelope.event_type`/`.payload`), so the investigation instead traced the
+      11 backing event-emitting phases and their `AuthoritativeState` dependencies
+- [x] Each dependency checked against `WorldCompiler.compile()`'s constructor call — `resource_nodes`,
+      `buildings`, `entities` (with real `navigation.region_id`), `global_resources` all confirmed
+      genuinely constructed with spec-derived values, not silently defaulted
+- [x] Clear verdict: **no bug found** — ECONOMY does not share the FACTION/INFORMATION bug class
+- [x] N/A — no bug found, no follow-up ticket needed
+- [x] Existing "structural/duration gap" diagnosis reconfirmed with fresh evidence: calibration data
+      shows ECONOMY activating at 1000t+ with no code change (duration signature), the opposite of
+      FACTION/INFORMATION's permanent-zero-until-fixed signature. SOCIAL's non-`urban_political` C
+      grades also reconfirmed as pure feature-flag gating (`ENABLE_SOCIAL_COOPERATION`), not a
+      bootstrap/compiler gap — `CooperationPhase` creates its own first records from live
+      proximity/personality conditions rather than requiring pre-existing state, unlike FACTION's
+      closed loop.
 
 ## Related Tickets
 - TCK-20260702-SIMQ-UPLIFT2-FACTION (done) — first instance of this bug class
@@ -114,13 +121,46 @@ already this batch.
   not assume a single unified fix if evidence points to multiple independent gaps.
 
 ## Implementation Notes
-(to be filled during investigation)
+Investigation found `EconomyScorer` (`src/simulation_quality/scorers/economy.py:41-140`) reads no
+`AuthoritativeState` fields at all — the ticket's own premise (trade ledgers, shop transaction
+records, conservation counters, Gini inputs as durable-state fields) was inaccurate; these don't
+exist on `AuthoritativeState`. Retargeted the investigation to trace ECONOMY's 11 backing event
+types to their emitting phases (`blacksmith`, `town_resolution`, `gold_sink`, `quest_rewards`,
+`shop`, `paid_information`, `resource_transactions`) — all run unconditionally in
+`src/engine/pipeline.py:164-299`, no feature-flag gate. Checked every `AuthoritativeState` field
+these phases depend on against `WorldCompiler.compile()`'s single constructor call
+(`compiler.py:455-470`): `resource_nodes`, `buildings`, `entities` (real `navigation.region_id`),
+`global_resources` — all genuinely spec-derived, none silently defaulting. This directly refuted a
+stale claim in `docs/simulation_quality/quality_scoring_contract.md:699-700` (citing D04's original
+"resource_nodes=0"/"region_id=None" findings as if still current) — both were fixed in the
+worldgen epic (`TCK-20260627-P0B-URBAN-RESOURCE-NODES`, `TCK-20260627-P0C-ENTITY-REGION-ASSIGN`)
+and are now corrected in place with resolution references.
+
+For SOCIAL: confirmed `CooperationPhase` is flag-gated (`ENABLE_SOCIAL_COOPERATION`,
+`pipeline.py:158`) and — the decisive check distinguishing it from FACTION's bug class — confirmed
+it bootstraps its own first records from live proximity/personality conditions
+(`state.groups={}` at compile time is a harmless starting condition, not a closed loop requiring
+pre-existing state to update). Calibration evidence (1657 `cooperation_event` hits once the flag
+flips ON) confirms the mechanism works correctly once enabled.
+
+Verdict: no matching bug found in either pillar. Existing "structural gap"/feature-flag diagnoses
+reconfirmed with fresh, direct evidence rather than left as unverified inherited claims.
 
 ## Test Summary
-(to be filled during investigation — likely N/A if no code changes result)
+No code changes — investigation-only ticket, findings are the deliverable. No tests required.
 
 ## Files Changed
-(to be filled during investigation — likely just investigation.md/docs updates)
+- `staging_artifacts/TCK-20260703-SIMQ-UPLIFT3-DUAL-GATE-AUDIT/investigation.md` — full findings
+- `docs/simulation_quality/quality_scoring_contract.md` — corrected a stale D04-era claim (lines
+  ~699-700) that `resource_nodes`/`region_id` were still broken; both are resolved, now noted as
+  such with ticket references
 
 ## Completion Summary
-(to be filled on done)
+Investigated whether ECONOMY (and re-confirmed SOCIAL) share the FACTION/INFORMATION
+"compiler-never-seeds-the-field" bug class. Verdict: no. `EconomyScorer` is purely event-driven
+(reads no `AuthoritativeState` fields); its backing phases run unconditionally and their state
+dependencies are all genuinely compiler-constructed. ECONOMY's C ceiling is a duration effect
+(activates at 1000t+, confirmed by calibration data), not a compiler bug. SOCIAL's non-`urban_political`
+C grades are confirmed pure feature-flag gating with no bootstrap gap. Corrected one stale doc claim
+found along the way. No follow-up ticket created — the existing diagnoses stand, now with fresh
+evidence instead of inherited assumption.
