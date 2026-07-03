@@ -127,11 +127,11 @@ and reassess these grades.
 | PROGRESSION | B | B | B | stable |
 | WORLD | B | B | A | seed456 elevated to A |
 | SOCIAL | S | S | S | SOCIAL=S all seeds (ENABLE_SOCIAL_COOPERATION active; high event density) |
-| AGENCY | C | C | C | stable |
-| COGNITION | C | C | C | stable |
+| AGENCY | C | C | C | stable — gated by `ENABLE_ADVENTURE_ROUTING=OFF`, archetype-correct (see AGENCY Cross-World Design Note below) |
+| COGNITION | B | B | B | C→B (SimQ Uplift Batch 2, 2026-07-03): `belief_updated` single-fire event, co-scored by `CognitionScorer` |
 | ECONOMY | C | C | C | stable |
-| FACTION | C | C | C | stable |
-| INFORMATION | C | C | C | stable |
+| FACTION | A | A | A | C→A (SimQ Uplift Batch 2, TCK-20260702-SIMQ-UPLIFT2-FACTION): `bandit_company`/`town_council` seeded at `tension_level=0.5`, 29 `diplomatic_transition` hits/run |
+| INFORMATION | B | B | B | C→B (SimQ Uplift Batch 2, TCK-20260703-SIMQ-INFORMATION-BELIEF-TRIGGER): `pending_information_responses` seed + kernel tick-alignment fix, `belief_assimilated` calibration_hits=1/run |
 
 #### 1000t (seeds 42 / 123 / 456)
 
@@ -143,10 +143,10 @@ and reassess these grades.
 | WORLD | B | B | B | stable |
 | ECONOMY | B | B | B | all three seeds activated at 1000t |
 | SOCIAL | S | S | S | SOCIAL=S all seeds (high event density throughout 1000t run) |
-| COGNITION | C | B | C | seed123 only |
-| AGENCY | C | C | C | stable |
-| FACTION | C | C | C | stable |
-| INFORMATION | C | C | C | stable |
+| COGNITION | B | B | B | seed42/seed456 C→B (SimQ Uplift Batch 2); seed123 already B (unchanged) |
+| AGENCY | C | C | C | stable — gated by `ENABLE_ADVENTURE_ROUTING=OFF`, archetype-correct |
+| FACTION | A | A | A | C→A (SimQ Uplift Batch 2) — same mechanism as 500t, tension seed persists across tick lengths |
+| INFORMATION | B | B | B | C→B (SimQ Uplift Batch 2) — single-fire `belief_assimilated` at tick 0, unaffected by run length |
 
 **Stability analysis (urban_political, post-D2 fix):** SOCIAL now grades S across all seeds at
 both 500t and 1000t — `ENABLE_SOCIAL_COOPERATION=ON` produces high contract/cooperation event
@@ -154,7 +154,15 @@ density throughout the run; last_event_tick ≈ current_tick so the floor does n
 correct (normalized score >> 2.0). NARRATIVE and COMBAT show some seed-dependent variation (B↔A)
 at 500t due to the formula now using last_event_tick; this is genuine quality signal, not noise.
 At 1000t, NARRATIVE normalizes to B across all seeds. ECONOMY activates at 1000t for all three
-seeds (C→B), confirming duration effect. COGNITION shows transient signal only in seed123 at 1000t.
+seeds (C→B), confirming duration effect. **SimQ Uplift Batch 2 (2026-07-02/03):** FACTION moved
+C→A at both 500t and 1000t (compile-time `tension_level` seeding survives across tick lengths
+since it's read live every tick from durable `FactionState`, unlike the two single-fire cases
+below); INFORMATION moved C→B at both durations (a single `belief_assimilated` fire at tick 0 —
+weight-scaled by tick count, crosses the C/B threshold regardless of run length, but does not
+grow with additional ticks); COGNITION moved C→B in 6 of 7 scenarios as a side effect of
+`belief_updated` also being scored by `CognitionScorer` (seed123 at 1000t was already B before
+this batch, from a separate transient signal). AGENCY remains C — unaffected by this batch;
+see the AGENCY Cross-World Design Note below for why that is archetype-correct, not a gap.
 
 ---
 

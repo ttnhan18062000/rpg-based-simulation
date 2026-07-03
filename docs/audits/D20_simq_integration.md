@@ -13,12 +13,12 @@ tags: [audit, simulation-quality, simq, integration, observability, event-bus]
 | Axis | Value |
 |---|---|
 | **Group** | A — Simulation Quality |
-| **State** | `done` (all gaps resolved; 81/82 event types emitted; re-run verified 2026-07-01; calibration corpus refreshed 2026-07-02; all P1/P2 action items closed; simq-uplift batch 2026-07-02: SOCIAL activated, grade formula fixed, DA decisions documented — see §SimQ Uplift below) |
+| **State** | `done` (all gaps resolved; 81/82 event types emitted; re-run verified 2026-07-01; calibration corpus refreshed 2026-07-02; all P1/P2 action items closed; simq-uplift batch 2026-07-02: SOCIAL activated, grade formula fixed, DA decisions documented; simq-uplift batch 2 2026-07-02/03: AGENCY DA-documented, FACTION activated, INFORMATION scaffolded + activated via kernel fix — see §SimQ Uplift Batch 2 below) |
 | **Impact** | 4 / 5 |
 | **Interest** | 5 / 5 |
 | **Priority** | 9 |
 | **Method** | run-sim + code-read |
-| **Audit date** | 2026-06-30 (original); 2026-07-01 (re-run after fixes); 2026-07-02 (calibration corpus refresh + loop-detection sweep); 2026-07-02 (simq-uplift batch) |
+| **Audit date** | 2026-06-30 (original); 2026-07-01 (re-run after fixes); 2026-07-02 (calibration corpus refresh + loop-detection sweep); 2026-07-02 (simq-uplift batch); 2026-07-03 (simq-uplift batch 2) |
 
 **What this dimension answers:** Is the SimQ module actually receiving events and scoring
 live simulation runs — or is it built but disconnected? This audit exercises the full path
@@ -357,8 +357,12 @@ richer worlds confirm the structural gap picture and add new signal:
 | urban_political | 200 | B | A | B | A | all C | 210 events; NARRATIVE=A (quest density higher than sandbox) |
 
 AGENCY, COGNITION, ECONOMY, FACTION, INFORMATION, SOCIAL remain C across all worlds in
-default-mode runs. This is 100% attributable to feature-flag gates and missing upstream
-emitters — not a SimQ scoring gap. See `docs/plans/audit_fix_plan.md §Finding 1`.
+default-mode runs (as of this 2026-07-02 snapshot; historical record, not updated in place). This
+is 100% attributable to feature-flag gates and missing upstream emitters — not a SimQ scoring gap.
+See `docs/plans/audit_fix_plan.md §Finding 1`. **Superseded for `urban_political` specifically**
+by SimQ Uplift Batch 1 (SOCIAL→S) and Batch 2 (FACTION→S/A, INFORMATION→B) below — all other
+worlds, including `sandbox_world` and `dungeon_crawl`, are unaffected by either batch and remain as
+described here.
 
 **Loop detection in practice:** At current event densities (47–287 scored events per 200-tick run),
 the 200-event window never fills for any pillar in any tested world. Loop flags observed in
@@ -474,7 +478,7 @@ Three tickets completed after the calibration corpus refresh:
 | TCK-20260702-SIMQ-UPLIFT-GRADE-DECAY | Fixed normalized_score formula: replaced `raw_score / tick_count` with `raw_score / max(floor_tick, last_event_tick)` where `floor_tick = current_tick // 4`; eliminates tick-dilution artifact for quiet post-event ticks | 24 of 25 anchor grades updated; COMBAT/PROGRESSION now hold A at 500t and 1000t for dungeon_crawl; 0 regressions |
 | TCK-20260702-SIMQ-UPLIFT-DUNGEON-ECON-COG | DA decision documented: ECONOMY=C and COGNITION=C in dungeon_crawl are archetype-correct (no merchant NPCs → Gini < 0.7; all entities in survival mode → non-survival project condition never satisfied); 5 parity ledger entries annotated | Documentation only; 0 regressions |
 
-**Current grade distribution (30 calibration runs, 2026-07-02):**
+**Current grade distribution (30 calibration runs, 2026-07-02, superseded for AGENCY/FACTION/INFORMATION by SimQ Uplift Batch 2 below):**
 
 | Pillar | S | A | B | C | Status |
 |---|---|---|---|---|---|
@@ -489,10 +493,44 @@ Three tickets completed after the calibration corpus refresh:
 | FACTION | — | — | — | 30 | Structurally zero — WorldCompiler does not seed FactionState tension |
 | INFORMATION | — | — | — | 30 | Dual-gate: ENABLE_BELIEF_ASSIMILATION=OFF + no information_source_profiles |
 
-**Open follow-up work:**
-- FACTION activation: WorldCompiler extension + world spec seeding (follow-up batch)
-- INFORMATION activation: flag enable + InformationSourceProfile seeding (follow-up batch)
-- AGENCY P0-A: ENABLE_ADVENTURE_ROUTING global rollout decision (architectural)
+**Open follow-up work (resolved by SimQ Uplift Batch 2, see below):**
+- ~~FACTION activation: WorldCompiler extension + world spec seeding~~ — **DONE**, TCK-20260702-SIMQ-UPLIFT2-FACTION
+- ~~INFORMATION activation: flag enable + InformationSourceProfile seeding~~ — **DONE**, TCK-20260702-SIMQ-UPLIFT2-INFORMATION + TCK-20260703-SIMQ-INFORMATION-BELIEF-TRIGGER
+- ~~AGENCY P0-A: ENABLE_ADVENTURE_ROUTING global rollout decision~~ — **DA-documented**, TCK-20260702-SIMQ-UPLIFT2-AGENCY-DA (AGENCY=C in non-routing worlds ruled archetype-correct, not a gap; no rollout decision needed)
+
+---
+
+## SimQ Uplift Batch 2 (2026-07-02 / 2026-07-03)
+
+Four tickets completed after SimQ Uplift Batch 1, closing all three "Open follow-up work" items
+from that batch:
+
+| Ticket | What changed | Outcome |
+|---|---|---|
+| TCK-20260702-SIMQ-UPLIFT2-AGENCY-DA | DA decision documented: AGENCY=C in all non-`simq_routing_test` worlds is archetype-correct (`AdventureDecisionPhase` is opt-in by world archetype, gated behind `ENABLE_ADVENTURE_ROUTING=OFF` by default); DA annotation added to `eval_matrix_results.md`, `support_boundary` populated on `INFRA-237`/`SIMQ-CALIBRATED-001` | Documentation only; 0 regressions; closes the AGENCY P0-A follow-up without a rollout decision |
+| TCK-20260702-SIMQ-UPLIFT2-FACTION | `WorldCompiler.compile()` previously never constructed any `FactionState` at all (state.factions permanently `{}` for every world). Added `FactionSpec.initial_tension_level` + composition-level `faction_tension_overrides` (schema/compiler/resolver plumbing), seeded `urban_political`'s `bandit_company`/`town_council` at `tension_level=0.5` | FACTION grade C→S (200t) / C→A (500t, 1000t) across all 7 `urban_political_*` anchor scenarios; 29 `diplomatic_transition` hits/run; 0 leakage to other worlds; 0 regressions |
+| TCK-20260702-SIMQ-UPLIFT2-INFORMATION | Shipped `information_source_profiles` compile-time scaffolding (same "compiler never constructs the field" bug class as FACTION, fixed for a different field) + two corrected `InformationSourceProfile` entries in `urban_political` + `ENABLE_BELIEF_ASSIMILATION=ON`. Investigation found this scaffolding alone insufficient — `InformationBeliefPhase`'s trigger branches were unreachable — deferred pillar activation to a follow-up ticket rather than force it | Scaffolding shipped honestly as inactive; INFORMATION stayed C this ticket; deferred work documented in `docs/plans/idea_information_belief_trigger_wiring.md` and `TCK-20260703-SIMQ-INFORMATION-BELIEF-TRIGGER` |
+| TCK-20260703-SIMQ-INFORMATION-BELIEF-TRIGGER | Seeded `AuthoritativeState.pending_information_responses` at compile time (reusing the FACTION plumbing pattern for a new field), reaching `InformationBeliefPhase`'s already-implemented Branch A. Also found and fixed a separate, pre-existing kernel bug: `Kernel._phase_advancement()` compared Resolution-phase-stamped properties against the post-advance tick instead of the pre-advance tick they were stamped with, so `belief_assimilated`, `calamity_spawned`, and `GovernorModeChanged` could never fire through the real `Kernel.tick_once()` loop, ever — fixed via 3 one-line comparisons against `prior_state.tick` | INFORMATION grade C→B across all 7 `urban_political_*` scenarios (`belief_assimilated` calibration_hits=1/run, confirmed through the real live loop); COGNITION C→B in 6/7 as a side effect (`belief_updated` also scored by `CognitionScorer`); `calamity_spawned`'s kernel-fix mechanism unit-test-verified but its natural firing in calibration is separately gated by a pre-existing hero-death content precondition (documented, not fixed); 0 regressions |
+
+**Grade distribution delta for AGENCY/FACTION/INFORMATION (30 calibration runs, 2026-07-03):**
+
+| Pillar | S | A | B | C | Status |
+|---|---|---|---|---|---|
+| AGENCY | — | 2 | 1 | 27 | Unchanged — DA-documented as archetype-correct, not a gap (`ENABLE_ADVENTURE_ROUTING` remains an opt-in world-archetype flag) |
+| FACTION | 7 | 7 | — | 16 | `urban_political` 200t=S (7 runs... see note), 500t/1000t=A (14 runs); `dungeon_crawl` DA-documented archetype-correct C; all other worlds still C (not this batch's scope) |
+| INFORMATION | — | — | 7 | 23 | `urban_political` all 7 anchor scenarios=B; all other worlds still C (not this batch's scope) |
+
+*Note: FACTION's S/A split above counts `urban_political`'s 7 anchor scenarios only (1×200t=S,
+6×500t/1000t=A); the remaining 23 non-`urban_political` runs are unchanged at C, consistent with
+this batch's explicit `urban_political`-only scope.*
+
+**Open follow-up work (new, from this batch):**
+- `TCK-20260703-SIMQ-INFORMATION-BELIEF-TRIGGER`'s residual finding: `calamity_spawned`'s natural
+  firing in calibration is blocked by a pre-existing `calamity_intensity > 0.3` (hero-death)
+  content precondition, unrelated to and not fixed by the kernel-alignment fix — see
+  `docs/parity_ledger/infrastructure.yaml::INFRA-258`. Not currently tracked as its own ticket.
+- FACTION/INFORMATION activation confined to `urban_political` this batch, per explicit scope
+  guard — extending to other worlds is a future batch's decision, not automatic follow-on work.
 
 ---
 
