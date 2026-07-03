@@ -72,6 +72,30 @@ class InformationSourceProfileSpec(BaseModel):
     max_answers_per_query: int = Field(3, ge=1)
 
 
+class PendingInformationResponseSpec(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
+    target_population_id: str = Field(
+        ..., min_length=1,
+        description="References an existing PopulationSpec.id (post-merge population key, "
+                    "e.g. 'pop_0'). Compiler resolves this to the actor_id of the first "
+                    "compiled entity whose properties['population_id'] matches — the same "
+                    "addressing mechanism already used for per-population profile overrides "
+                    "(compiler.py context.entities lookup). Not a raw entity ID: compiled "
+                    "entity IDs are positional and not stably addressable from world content."
+    )
+    subject: str = Field(..., min_length=1, description="Matches InformationQuery.subject / KnowledgeFact.subject")
+    query_kind: str = Field(..., min_length=1, description="Matches InformationQuery.kind (e.g. 'material_source' | 'recipe_definition' | 'danger_rating')")
+    source_id: str = Field(..., min_length=1, description="Free-text provenance label for the normalized response; not validated against information_source_profiles")
+    answer_kind: Literal["KNOWN_FACT", "PARTIAL_LEAD", "RUMOR", "CONTRADICTION"] = Field(
+        ..., description="Matches InformationResponseNormalizer.normalize()'s branching. 'UNKNOWN' is intentionally excluded here — it produces no KnowledgeFact/LeadState and is not a meaningful thing to author as static compile-time content"
+    )
+    certainty: float = Field(1.0, ge=0.0, le=1.0)
+    details: Dict[str, Any] = Field(default_factory=dict)
+    reason: Optional[str] = Field(None, description="Only meaningful when answer_kind produces an UnknownFact; unused for KNOWN_FACT/PARTIAL_LEAD/RUMOR/CONTRADICTION but accepted for schema symmetry with the raw_response dict shape")
+    cost_paid: int = Field(0, ge=0)
+
+
 class PopulationSpec(BaseModel):
     model_config = ConfigDict(frozen=True)
 
@@ -155,6 +179,7 @@ class WorldSpec(BaseModel):
     regions: list[RegionSpec] = Field(default_factory=list)
     factions: list[FactionSpec] = Field(default_factory=list)
     information_source_profiles: List[InformationSourceProfileSpec] = Field(default_factory=list)
+    pending_information_responses: List[PendingInformationResponseSpec] = Field(default_factory=list)
     entities: list[PopulationSpec] = Field(default_factory=list)
     resources: list[ResourceNodeSpec] = Field(default_factory=list)
     buildings: list[BuildingSpec] = Field(default_factory=list)

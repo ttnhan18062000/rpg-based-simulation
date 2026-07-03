@@ -41,3 +41,14 @@ information_source_profiles:
     bias: 0.2
     cost_gold: 5
     max_answers_per_query: 3
+pending_information_responses:
+  - target_population_id: "pop_0"
+    subject: "bandit_road_danger"
+    query_kind: "danger_rating"
+    source_id: "town_notice_board"
+    answer_kind: "KNOWN_FACT"
+    certainty: 0.8
+    details:
+      danger_level: "elevated"
+      region: "bandit_road"
+    cost_paid: 0

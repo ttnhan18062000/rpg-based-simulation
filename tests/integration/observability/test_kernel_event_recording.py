@@ -57,3 +57,118 @@ def test_kernel_observability_event_recording(tmp_path):
 
     # Reset override mode
     ObservabilityConfig.set_override_mode(None)
+
+
+def test_belief_assimilated_fires_through_real_tick_once_loop():
+    """Kernel tick-alignment fix (event_extractor.py:286, compares against
+    prior_state.tick instead of the post-advance tick): the compile-time-seeded
+    pending_information_responses entry for urban_political's pop_0 now fires
+    belief_assimilated through the real Kernel.tick_once() loop, not just the
+    direct AuthoritativeApplyPipeline.refine() call
+    (TCK-20260703-SIMQ-INFORMATION-BELIEF-TRIGGER)."""
+    from dataclasses import replace as dataclass_replace
+    from src.worldbuilding.schema import load_world_spec_from_yaml
+    from src.worldbuilding.compiler import WorldCompiler
+    from src.domains.optimization.feature_flags import FeatureMode
+    from src.config.profiles import PROD_SMALL
+    from src.platform.rng import DeterministicRNG as _RNG
+
+    spec = load_world_spec_from_yaml("data/worlds/urban_political/resolved/world.resolved.yaml")
+    compiled_state, _ = WorldCompiler.compile(spec, seed=42)
+    compiled_state = dataclass_replace(
+        compiled_state, feature_flags={"ENABLE_BELIEF_ASSIMILATION": FeatureMode.ON}
+    )
+    actor_id = compiled_state.pending_information_responses[0]["actor_id"]
+
+    ObservabilityConfig.set_override_mode(ObservabilityMode.NORMAL)
+    kernel = Kernel(PROD_SMALL, compiled_state, _RNG(42))
+    try:
+        kernel.tick_once()
+        belief_events = [
+            ev for ev in kernel._event_recorder.events
+            if getattr(ev, "event_type", None) == "belief_assimilated" and ev.entity_id == actor_id
+        ]
+        assert len(belief_events) == 1
+        assert belief_events[0].payload["subject"] == "bandit_road_danger"
+    finally:
+        kernel.shutdown()
+        ObservabilityConfig.set_override_mode(None)
+
+
+def test_calamity_spawned_fires_through_real_tick_once_loop():
+    """Kernel tick-alignment fix (event_extractor.py:899, compares against
+    prior_state.tick instead of the post-advance tick): calamity_spawned had
+    never fired through any real Kernel.tick_once() loop prior to this fix.
+    A minimal state meeting CalamityService's spawn gates (tick a multiple of
+    CALAMITY_FORCE_INTERVAL=5000, >= CALAMITY_MIN_INTERVAL=2000 ticks since
+    last_calamity_tick, a region with calamity_intensity > 0.3) fires it once
+    on the real loop (TCK-20260703-SIMQ-INFORMATION-BELIEF-TRIGGER)."""
+    from src.core.state import RegionState
+    from src.config.profiles import PROD_SMALL
+    from src.platform.rng import DeterministicRNG as _RNG
+
+    region = RegionState(
+        id="danger_region", name="Danger Region", bounds=(0, 0, 10, 10),
+        calamity_intensity=0.5,
+    )
+    state = AuthoritativeState(
+        tick=5000, seed=42, world_time=0, last_calamity_tick=0,
+        regions={"danger_region": region},
+    )
+
+    ObservabilityConfig.set_override_mode(ObservabilityMode.NORMAL)
+    kernel = Kernel(PROD_SMALL, state, _RNG(42))
+    try:
+        kernel.tick_once()
+        calamity_events = [
+            ev for ev in kernel._event_recorder.events
+            if getattr(ev, "event_type", None) == "calamity_spawned"
+        ]
+        assert len(calamity_events) == 1
+        # payload["tick"]/event.tick both use the post-advance tick label (kernel.py's
+        # existing, unchanged convention — only the stamped-property comparison that
+        # gates whether this event fires at all was fixed, not the tick label itself).
+        assert calamity_events[0].payload["tick"] == 5001
+        assert calamity_events[0].tick == 5001
+    finally:
+        kernel.shutdown()
+        ObservabilityConfig.set_override_mode(None)
+
+
+def test_governor_mode_changed_fires_through_real_tick_once_loop():
+    """Kernel tick-alignment fix (kernel.py:836, compares against
+    prior_state.tick instead of the post-advance tick): GovernorModeChanged had
+    never fired through any real Kernel.tick_once() loop prior to this fix.
+    Seeding state.work_debt above the profile's max_work_debt makes
+    ResourceGovernor._get_indicated_mode() escalate to SURVIVAL on the very
+    first tick, which reset_dwell() stamps with the pre-advance tick
+    (TCK-20260703-SIMQ-INFORMATION-BELIEF-TRIGGER)."""
+    from src.platform.rng import DeterministicRNG as _RNG
+
+    profile = RuntimeProfile(
+        name="test-governor-escalation",
+        hardware_class=HardwareClass.CLASS_B,
+        max_ram_mb=1024,
+        max_cpu_percent=100.0,
+        max_worker_count=1,
+        max_queue_depth=100,
+        max_work_debt=100,
+        max_replay_buffer_kb=0,
+        max_observability_budget_percent=0.0,
+        max_tick_budget_ms=16.6,
+    )
+    state = AuthoritativeState(tick=0, seed=7, world_time=0, work_debt={"queue": 500})
+
+    ObservabilityConfig.set_override_mode(ObservabilityMode.NORMAL)
+    kernel = Kernel(profile, state, _RNG(7))
+    try:
+        kernel.tick_once()
+        mode_events = [
+            ev for ev in kernel._event_recorder.events
+            if getattr(ev, "event_type", None) == "GovernorModeChanged"
+        ]
+        assert len(mode_events) == 1
+        assert mode_events[0].payload["current_mode"] == "SURVIVAL"
+    finally:
+        kernel.shutdown()
+        ObservabilityConfig.set_override_mode(None)

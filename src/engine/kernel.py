@@ -833,7 +833,7 @@ class Kernel:
             generated_events.append(event)
 
         # Emit GovernorModeChanged if a transition happened this tick
-        if getattr(self._status, "last_transition_tick", -1) == tick:
+        if getattr(self._status, "last_transition_tick", -1) == prior_state.tick:
             prev_mode = getattr(self._status, "previous_mode", "NORMAL")
             event = SimulationEvent(
                 event_type="GovernorModeChanged",

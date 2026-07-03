@@ -3029,16 +3029,17 @@
     catalog exists for this content, unlike factions — see plan.md UQ-1 resolution,
     TCK-20260702-SIMQ-UPLIFT2-INFORMATION). Closes the "compiler never constructs the field"
     gap where AuthoritativeState.information_source_profiles was permanently [] for every
-    compiled world. Scaffolding only: InformationBeliefPhase's trigger branches
-    (pending_information_responses, self_model.knowledge.unknowns) remain unreachable
-    independent of this fix — belief_assimilated/lead_certainty_updated calibration_hits stay
-    at 0 pending TCK-20260703-SIMQ-INFORMATION-BELIEF-TRIGGER. Pillar is NOT active; only the
-    compile-time data pathway is verified. Recalibrated 2026-07-03 across all 7
-    urban_political_* scenarios (200t/500t/1000t, seeds 42/123/456): confirmed
-    information_source_profiles compiles with 2 entries and ENABLE_BELIEF_ASSIMILATION=ON in
-    every run, and confirmed belief_assimilated/lead_certainty_updated calibration_hits remain
-    0 in every run (expected, not a regression). dungeon_crawl spot-checked (seed123, 1000t)
-    for 0 leakage — INFORMATION stayed C, 0 events.
+    compiled world. pending_information_responses compile-time plumbing (this ticket's
+    sibling entry, INFRA-257) makes InformationBeliefPhase's Branch A reachable once per run:
+    belief_assimilated/belief_updated calibration_hits are now > 0 (exactly 1 per run) for
+    urban_political, confirmed via calibrate_simq.py through the real Kernel.tick_once() live
+    loop (TCK-20260703-SIMQ-INFORMATION-BELIEF-TRIGGER). Branch B
+    (self_model.knowledge.unknowns) and the paid-information path remain unreachable.
+    Recalibrated 2026-07-03 across all 7 urban_political_* scenarios (200t/500t/1000t, seeds
+    42/123/456): confirmed information_source_profiles compiles with 2 entries and
+    ENABLE_BELIEF_ASSIMILATION=ON in every run; INFORMATION pillar grade moved C→B in all 7
+    (via the newly-reachable Branch A). dungeon_crawl spot-checked (seed 42, 200t) for 0
+    leakage — INFORMATION stayed C, 0 events.
   status: verified
   priority: P1
   legacy_evidence: null
@@ -3051,19 +3052,139 @@
     src/worldbuilding/compiler.py (WorldCompiler.compile() InformationSourceProfile
     construction + AuthoritativeState(information_source_profiles=...) seeding)
   proof_type: parity
-  test_path: "tests/unit/worldbuilding/test_world_compiler.py; tests/unit/worldassembly/test_assembly.py"
-  divergence_note: "Pillar remains functionally inactive — see TCK-20260703-SIMQ-INFORMATION-BELIEF-TRIGGER for the deferred trigger-wiring gap that will complete pillar activation."
+  test_path: "tests/unit/worldbuilding/test_world_compiler.py; tests/unit/worldassembly/test_assembly.py; tests/integration/scenarios/test_phase5_information_belief_scenarios.py"
+  divergence_note: "Pillar is now partially active via Branch A (pending_information_responses, INFRA-257) — belief_assimilated/belief_updated calibration_hits are > 0 (exactly 1 per run) for urban_political, confirmed through the real live loop. Branch B (self_model.knowledge.unknowns) and the paid-information path remain the documented residual gap — see INFRA-257's support_boundary. Documented in docs/guidelines/intentional_divergences.md."
   support_boundary: >
-    belief_assimilated and lead_certainty_updated are emitted only from
+    belief_assimilated and belief_updated are emitted only from
     InformationBeliefPhase.apply() (src/domains/information/phase.py), gated behind
-    ENABLE_BELIEF_ASSIMILATION (now ON for urban_political). Even with the flag ON and
-    information_source_profiles seeded, both of apply()'s trigger branches are unreachable:
-    Branch A requires state.pending_information_responses, which has zero writers anywhere in
-    src/; Branch B requires self_model.knowledge.unknowns, but SelfModelUpdatePhase.apply()
+    ENABLE_BELIEF_ASSIMILATION (ON for urban_political). Branch A
+    (state.pending_information_responses, INFRA-257) is no longer unreachable — it fires
+    once, at the initial compiled state (tick 0), per run, confirmed via calibrate_simq.py
+    through the real Kernel.tick_once() live loop (TCK-20260703-SIMQ-INFORMATION-BELIEF-TRIGGER).
+    Branch B (self_model.knowledge.unknowns) remains unreachable: SelfModelUpdatePhase.apply()
     hardcodes events=[], so the assimilation loop that would populate it never runs.
-    INFORMATION=C is therefore expected (not archetype-blocked, but trigger-unreachable) in
-    every calibration world including urban_political, pending
-    TCK-20260703-SIMQ-INFORMATION-BELIEF-TRIGGER.
+    lead_certainty_updated/paid_information_transaction remain 0 — neither Branch B nor the
+    paid-information path (InformationNeedDetector/state.information_providers) is wired by
+    this ticket.
+- id: INFRA-257
+  text: >
+    pending_information_responses compile-time plumbing: a PendingInformationResponseSpec on
+    WorldSpec/WorldCompositionSpec/NormalizedWorldComposition is resolved by WorldCompiler.compile()
+    into AuthoritativeState.pending_information_responses dict entries, with target_population_id
+    resolved to a compiled actor_id via entity.properties["population_id"] matching (the same
+    mechanism used for per-population profile overrides). Closes the "compiler never constructs
+    the field" gap that made InformationBeliefPhase's Branch A permanently unreachable
+    (TCK-20260703-SIMQ-INFORMATION-BELIEF-TRIGGER). urban_political seeds one entry targeting
+    pop_0 (bandit_road_danger, KNOWN_FACT); belief_assimilated/belief_updated calibration_hits
+    are now > 0 (exactly 1 per run) confirmed via calibrate_simq.py through the real
+    Kernel.tick_once() live loop across all 7 urban_political_* calibration runs. The seed fires
+    exactly once, at the initial compiled state (tick 0 of any run), because
+    pending_information_responses is not carried forward by ApplyPath.apply_generation()
+    (src/engine/apply.py:179-416, esp. lines 356-408) across subsequent tick advancements
+    (src/engine/kernel.py:702-722) — a property of the broader compile-vs-apply state
+    reconstruction model, not something Branch A itself manages. Branch B
+    (self_model.knowledge.unknowns) and the paid-information path remain unaddressed — see
+    INFRA-256's support_boundary. This calibration_hits > 0 result additionally required the
+    kernel tick-alignment fix (INFRA-258) to be observable through the real live loop — prior
+    to that fix, calibration_hits would have measured 0 despite this plumbing being correct.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/worldbuilding/schema.py::PendingInformationResponseSpec,
+    WorldSpec.pending_information_responses;
+    src/worldassembly/schema.py::WorldCompositionSpec.pending_information_responses,
+    NormalizedWorldComposition.pending_information_responses;
+    src/worldassembly/resolver.py (WorldAssemblyResolver.assemble() passthrough);
+    src/worldbuilding/compiler.py (target_population_id -> actor_id resolution +
+    AuthoritativeState(pending_information_responses=...) seeding);
+    data/worlds/urban_political/world.yaml (pop_0 seed);
+    src/engine/apply.py::ApplyPath.apply_generation() (lines 179-416, esp. 356-408 — confirms
+    pending_information_responses/information_source_profiles are not carried forward from
+    prior_state, establishing the single-fire mechanism);
+    src/engine/kernel.py:702-722 (Kernel._phase_advancement(), the per-tick caller of
+    apply_generation())
+  proof_type: parity
+  test_path: "tests/unit/worldbuilding/test_world_compiler.py; tests/unit/worldassembly/test_assembly.py; tests/integration/scenarios/test_phase5_information_belief_scenarios.py"
+  divergence_note: "Compile-time-seeded responses are processed by InformationBeliefPhase exactly once — at the initial compiled state (tick 0 of any run) — because ApplyPath.apply_generation() does not carry pending_information_responses forward from prior_state on later tick advancements. This is a single-fire seed, not a per-tick recurrence, and not something Branch A itself manages. Documented in docs/guidelines/intentional_divergences.md."
+  support_boundary: >
+    Only Branch A (pending_information_responses assimilation) is made reachable by this entry,
+    and only once per run (tick 0). Branch B (routing new queries via self_model.knowledge.unknowns)
+    and the paid_information_transaction path remain unreachable — see INFRA-256.
+- id: INFRA-258
+  text: >
+    Kernel tick-alignment fix: Kernel._phase_advancement() (src/engine/kernel.py:702-736)
+    reassigns self._state to the post-advance tick before calling _phase_observability(prior_state,
+    update), but three Resolution-phase-stamped properties (last_assimilated_tick,
+    phase.py:77; last_calamity_tick_set, calamity.py:56; RuntimeStatus.last_transition_tick,
+    runtime_status.py:79, set via reset_dwell() from _phase_init(), kernel.py:535-541) are all
+    stamped using the pre-advance tick. EventExtractor.extract()'s and _phase_observability's
+    == tick checks (event_extractor.py:286, event_extractor.py:899, kernel.py:836) compared these
+    against the post-advance tick local, so belief_assimilated/belief_updated, calamity_spawned,
+    and GovernorModeChanged could never match through the real Kernel.tick_once() loop — a
+    pre-existing bug discovered while empirically verifying
+    TCK-20260703-SIMQ-INFORMATION-BELIEF-TRIGGER's Step 6 against the real Kernel loop (not
+    introduced by that ticket's schema/compiler/resolver work). Fixed by comparing each of the 3
+    sites against prior_state.tick (already an in-scope parameter at all 3 call sites) instead of
+    the shared post-advance tick variable, leaving the tick label on every emitted
+    SimulationEvent (including InvariantViolation and GovernorModeChanged's own tick field)
+    unchanged. Verified correct for all 3 event types via 3 dedicated unit tests
+    (tests/integration/observability/test_kernel_event_recording.py) that drive the real
+    Kernel.tick_once() loop directly, all passing:
+    test_belief_assimilated_fires_through_real_tick_once_loop,
+    test_calamity_spawned_fires_through_real_tick_once_loop,
+    test_governor_mode_changed_fires_through_real_tick_once_loop.
+    belief_assimilated/belief_updated additionally confirmed firing (calibration_hits == 1 per
+    run) across all 7 urban_political_* calibration runs via calibrate_simq.py through the live
+    loop, and GovernorModeChanged confirmed firing naturally (63-73 occurrences) in the existing
+    dungeon_crawl_seed{42,123,456}_2000t / sandbox_world_seed42_2000t baselines (infrastructure
+    telemetry, not SimQ-scored). calamity_spawned's fix mechanism is proven correct by its
+    dedicated unit test (which constructs a state meeting CalamityService's spawn gates
+    directly), but a one-off diagnostic calibration run (dungeon_crawl_seed42_5200t, not added
+    to grade_anchors.json) did not naturally produce a calamity_spawned event: CalamityService
+    additionally requires calamity_intensity > 0.3 in some region, which is only raised when a
+    hero-kind entity dies in a hazard_level > 0.5 region; in that run's RNG/gameplay, monsters
+    died but no hero died, so intensity never crossed the threshold. This is a separate,
+    pre-existing content/mechanics precondition, unrelated to and not fixed by this kernel
+    tick-alignment fix — the fix un-blocks calamity_spawned's tick-gate comparison, not its
+    content-side intensity precondition. Do not read this entry as claiming calamity_spawned
+    now produces calibration_hits > 0 in any calibrated scenario.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/engine/kernel.py:702-736 (Kernel._phase_advancement(), prior_state/self._state
+    reassignment ordering); src/engine/kernel.py:806-855 (_phase_observability(), the
+    prior_state.tick fix at line 836); src/observability/event_extractor.py:286,899 (the two
+    prior_state.tick fixes); src/domains/information/phase.py:77 (last_assimilated_tick stamped
+    with pre-advance state.tick); src/world/calamity.py:56 (last_calamity_tick_set stamped with
+    pre-advance state.tick); src/engine/runtime_status.py:79 (reset_dwell stamps
+    last_transition_tick with the current_tick argument, called pre-advance from
+    src/engine/governor.py:45,51 via kernel.py:535-541's _phase_init()); the follow-up
+    investigation staging_artifacts/TCK-20260703-SIMQ-INFORMATION-BELIEF-TRIGGER/tick_alignment_bug_investigation.md
+    (full site inventory, blast-radius analysis, and test-impact confirmation).
+  proof_type: parity
+  test_path: "tests/integration/observability/test_kernel_event_recording.py; tests/unit/observability/test_event_extractor_cognition.py; tests/unit/observability/test_event_extractor_world.py"
+  divergence_note: "This is a bug fix (not an intentional behavior divergence in the usual sense): three stamped-property comparisons in EventExtractor.extract()/_phase_observability() were comparing pre-advance-stamped values against a post-advance tick, so the equality check could never match through the real per-tick loop. The fix is surgical (3 one-line changes, comparing against prior_state.tick, already in scope at each site) and does not change the tick label on any emitted SimulationEvent. Documented in docs/guidelines/intentional_divergences.md per the project's Divergence rule (rationale class: Bug Fix)."
+  support_boundary: >
+    Fixes exactly 3 confirmed "never fires" sites (belief_assimilated/belief_updated,
+    calamity_spawned, GovernorModeChanged). Does NOT change any other == tick comparison in
+    event_extractor.py — belief_stale's diff/threshold check (line 434), the modulo-gated
+    ecology_cycle_completed/spawn_cadence_fired/conservation_law_verified checks (lines
+    814/826/841), progression_plateau_detected's self-referential diff (lines 736-747), and all
+    diff/state-comparison-based checks (lines 626-629, 945-981) were confirmed unaffected or only
+    benignly phase-shifted by the investigation and are explicitly out of scope for this entry.
+    Does NOT change _phase_observability's or event_extractor's shared tick label used for every
+    SimulationEvent.tick field, and does NOT change InvariantViolation's tick labeling.
+    calamity_spawned: no existing calibration scenario in
+    tests/simulation_quality/fixtures/grade_anchors.json reaches the tick count required for
+    calamity_spawned's tick-interval gate (CalamityService.CALAMITY_FORCE_INTERVAL = 5000;
+    longest existing scenario is 2000 ticks). A one-off diagnostic run crossing that gate
+    (dungeon_crawl_seed42_5200t, not added to grade_anchors.json) confirmed the tick-gate
+    comparison itself is fixed (should_spawn's tick-interval math is satisfied at tick 5000) but
+    showed 0 calamity_spawned hits because CalamityService's separate high_intensity_regions gate
+    (calamity_intensity > 0.3, hero-death-dependent) was not met in that run — see this entry's
+    text for detail. This is a residual content/mechanics gap, not a defect in this kernel fix.
 - id: INFRA-246
   text: "WorldDynamicsScorer owns ecology_cycle_completed (not EconomyScorer) per SQ-08
     conflict note. Covers calamity, boss/raid spawning, region transform/trauma/ownership,
@@ -3075,7 +3196,7 @@
   v2_evidence: src/simulation_quality/scorers/world_dynamics.py::WorldDynamicsScorer.EVENT_TYPES
   proof_type: null
   test_path: tests/simulation_quality/test_world_dynamics_scorer.py::TestEcologyOwnership
-  divergence_note: null
+  divergence_note: "calamity_spawned was unreachable through the real per-tick loop until the kernel tick-alignment fix (INFRA-258, TCK-20260703-SIMQ-INFORMATION-BELIEF-TRIGGER); see that entry for the historical gap, the fix, and the residual hero-death-dependent calamity_intensity precondition that still gates natural firing in calibration content."
   support_boundary: null
 - id: INFRA-247
   text: "NarrativeScorer covers all contract §5 NARRATIVE rules: quest lifecycle (active/

@@ -173,6 +173,87 @@ def test_scenario_5_6_source_trust_affects_query_choice():
     
     q = InformationQuery(subject="iron_ore", kind="material_source")
     candidates = InformationQueryRouter.route(actor, q, state, profiles)
-    
+
     # High-trust guide must be sorted first
     assert candidates[0].source_id == 2
+
+
+def test_compiled_urban_political_state_fires_belief_assimilated():
+    """Compiling urban_political's resolved world and refining it through the real
+    AuthoritativeApplyPipeline processes the compile-time-seeded pending_information_responses
+    entry for pop_0, emitting belief_assimilated with the expected payload and assimilating a
+    real, inspectable KnowledgeFact (not just an event side-effect)
+    (TCK-20260703-SIMQ-INFORMATION-BELIEF-TRIGGER)."""
+    from dataclasses import replace as dataclass_replace
+    from src.worldbuilding.schema import load_world_spec_from_yaml
+    from src.worldbuilding.compiler import WorldCompiler
+    from src.engine.pipeline import AuthoritativeApplyPipeline
+    from src.core.updates import StateUpdate
+    from src.domains.optimization.feature_flags import FeatureMode
+    from src.observability.event_extractor import EventExtractor
+    from src.observability.config import ObservabilityMode
+
+    spec = load_world_spec_from_yaml("data/worlds/urban_political/resolved/world.resolved.yaml")
+    compiled_state, _ = WorldCompiler.compile(spec, seed=42)
+    compiled_state = dataclass_replace(
+        compiled_state, feature_flags={"ENABLE_BELIEF_ASSIMILATION": FeatureMode.ON}
+    )
+
+    assert len(compiled_state.pending_information_responses) == 1
+    actor_id = compiled_state.pending_information_responses[0]["actor_id"]
+    assert compiled_state.entities[actor_id].properties.get("population_id") == "pop_0"
+
+    refined = AuthoritativeApplyPipeline.refine(compiled_state, StateUpdate())
+
+    events = EventExtractor.extract(compiled_state, compiled_state, refined, ObservabilityMode.NORMAL)
+    belief_events = [
+        e for e in events if e.event_type == "belief_assimilated" and e.entity_id == actor_id
+    ]
+    assert len(belief_events) == 1
+    assert belief_events[0].payload["subject"] == "bandit_road_danger"
+
+    new_self_model = refined.entity_updates[actor_id].self_model_bundle_set
+    assert new_self_model is not None
+    fact = new_self_model.knowledge.facts["bandit_road_danger"]
+    assert fact.details == {"danger_level": "elevated", "region": "bandit_road"}
+    assert fact.certainty == 0.8
+
+
+def test_pending_information_response_fires_exactly_once_not_carried_forward():
+    """The compile-time-seeded pending_information_responses entry is processed by
+    InformationBeliefPhase exactly once, at the initial compiled state (tick 0).
+    ApplyPath.apply_generation() does not carry pending_information_responses forward
+    from prior_state on later tick advancements, so state.pending_information_responses
+    is empty from tick 1 onward and no further belief_assimilated events fire — a single-fire
+    seed, not a per-tick recurrence (TCK-20260703-SIMQ-INFORMATION-BELIEF-TRIGGER)."""
+    from dataclasses import replace as dataclass_replace
+    from src.worldbuilding.schema import load_world_spec_from_yaml
+    from src.worldbuilding.compiler import WorldCompiler
+    from src.engine.pipeline import AuthoritativeApplyPipeline
+    from src.engine.apply import ApplyPath
+    from src.core.updates import StateUpdate
+    from src.domains.optimization.feature_flags import FeatureMode
+    from src.observability.event_extractor import EventExtractor
+    from src.observability.config import ObservabilityMode
+
+    spec = load_world_spec_from_yaml("data/worlds/urban_political/resolved/world.resolved.yaml")
+    state, _ = WorldCompiler.compile(spec, seed=42)
+    state = dataclass_replace(state, feature_flags={"ENABLE_BELIEF_ASSIMILATION": FeatureMode.ON})
+
+    assert state.pending_information_responses, "expected the seed to be non-empty at tick 0"
+
+    total_belief_assimilated = 0
+    for i in range(5):
+        refined = AuthoritativeApplyPipeline.refine(state, StateUpdate())
+        events = EventExtractor.extract(state, state, refined, ObservabilityMode.NORMAL)
+        total_belief_assimilated += sum(1 for e in events if e.event_type == "belief_assimilated")
+        state = ApplyPath.apply_generation(state, refined)
+        if i == 0:
+            assert state.pending_information_responses == [], (
+                "pending_information_responses must not be carried forward past tick 0"
+            )
+        else:
+            assert state.pending_information_responses == []
+
+    assert total_belief_assimilated == 1
+    assert state.pending_information_responses == []

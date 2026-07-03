@@ -423,6 +423,34 @@ class WorldCompiler:
             for p in spec.information_source_profiles
         ]
 
+        # 6b. Resolve pending_information_responses: target_population_id -> compiled actor_id
+        pending_information_responses: List[Dict[str, Any]] = []
+        for r in spec.pending_information_responses:
+            actor_id = next(
+                (eid for eid, e in entities.items()
+                 if e.properties.get("population_id") == r.target_population_id),
+                None,
+            )
+            if actor_id is None:
+                warnings.append(
+                    f"pending_information_responses target_population_id "
+                    f"'{r.target_population_id}' matched no compiled entity; entry skipped"
+                )
+                continue
+            pending_information_responses.append({
+                "actor_id": actor_id,
+                "subject": r.subject,
+                "query_kind": r.query_kind,
+                "source_id": r.source_id,
+                "raw_response": {
+                    "answer_kind": r.answer_kind,
+                    "certainty": r.certainty,
+                    "details": dict(r.details),
+                    "reason": r.reason,
+                },
+                "cost_paid": r.cost_paid,
+            })
+
         # Assemble final AuthoritativeState
         state = AuthoritativeState(
             tick=0,
@@ -437,7 +465,8 @@ class WorldCompiler:
             town_tiles=town_tiles,
             town_entity_ids=town_entity_ids,
             factions=factions,
-            information_source_profiles=information_source_profiles
+            information_source_profiles=information_source_profiles,
+            pending_information_responses=pending_information_responses
         )
 
         # Calculate fingerprint state hash

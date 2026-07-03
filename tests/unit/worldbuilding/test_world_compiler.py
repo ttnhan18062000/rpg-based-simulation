@@ -267,6 +267,104 @@ def test_compiler_no_information_sources_declared_yields_empty_list():
     assert state.information_source_profiles == []
 
 
+def test_compiler_seeds_pending_information_responses_from_spec():
+    """WorldCompiler.compile() resolves target_population_id -> compiled actor_id and
+    constructs a pending_information_responses dict entry on AuthoritativeState
+    (TCK-20260703-SIMQ-INFORMATION-BELIEF-TRIGGER)."""
+    data = create_base_valid_spec()
+    data["entities"] = [
+        {"id": "pop_test", "count": 1, "role": "citizen", "faction": "villagers", "spawn_region": "town_square"},
+    ]
+    data["pending_information_responses"] = [
+        {
+            "target_population_id": "pop_test",
+            "subject": "bandit_road_danger",
+            "query_kind": "danger_rating",
+            "source_id": "town_notice_board",
+            "answer_kind": "KNOWN_FACT",
+            "certainty": 0.8,
+            "details": {"danger_level": "elevated", "region": "bandit_road"},
+            "cost_paid": 0,
+        },
+    ]
+    spec = WorldSpec.model_validate(data)
+
+    state, _ = WorldCompiler.compile(spec, seed=42)
+
+    assert len(state.pending_information_responses) == 1
+    entry = state.pending_information_responses[0]
+    compiled_actor_id = next(
+        eid for eid, e in state.entities.items()
+        if e.properties.get("population_id") == "pop_test"
+    )
+    assert entry["actor_id"] == compiled_actor_id
+    assert entry["subject"] == "bandit_road_danger"
+    assert entry["query_kind"] == "danger_rating"
+    assert entry["source_id"] == "town_notice_board"
+    assert entry["raw_response"] == {
+        "answer_kind": "KNOWN_FACT",
+        "certainty": 0.8,
+        "details": {"danger_level": "elevated", "region": "bandit_road"},
+        "reason": None,
+    }
+    assert entry["cost_paid"] == 0
+
+
+def test_compiler_pending_information_response_unmatched_population_is_skipped_with_warning():
+    """A target_population_id referencing no compiled entity is skipped, and a warning is recorded."""
+    data = create_base_valid_spec()
+    data["pending_information_responses"] = [
+        {
+            "target_population_id": "does_not_exist",
+            "subject": "bandit_road_danger",
+            "query_kind": "danger_rating",
+            "source_id": "town_notice_board",
+            "answer_kind": "KNOWN_FACT",
+            "certainty": 0.8,
+        },
+    ]
+    spec = WorldSpec.model_validate(data)
+
+    state, report = WorldCompiler.compile(spec, seed=42)
+
+    assert state.pending_information_responses == []
+    assert any("does_not_exist" in w for w in report["warnings"])
+
+
+def test_compiler_no_pending_information_responses_declared_yields_empty_list():
+    """spec.pending_information_responses == [] compiles to state.pending_information_responses == []
+    (schema-level regression guard)."""
+    data = create_base_valid_spec()
+    spec = WorldSpec.model_validate(data)
+
+    state, _ = WorldCompiler.compile(spec, seed=42)
+
+    assert state.pending_information_responses == []
+
+
+def test_urban_political_resolved_world_seeds_one_pending_information_response():
+    """urban_political's resolved world spec compiles with the seeded pending_information_responses
+    entry targeting pop_0 (TCK-20260703-SIMQ-INFORMATION-BELIEF-TRIGGER)."""
+    from src.worldbuilding.schema import load_world_spec_from_yaml
+
+    spec = load_world_spec_from_yaml("data/worlds/urban_political/resolved/world.resolved.yaml")
+    state, _ = WorldCompiler.compile(spec, seed=42)
+
+    assert len(state.pending_information_responses) == 1
+    entry = state.pending_information_responses[0]
+    assert state.entities[entry["actor_id"]].properties["population_id"] == "pop_0"
+    assert entry["subject"] == "bandit_road_danger"
+    assert entry["query_kind"] == "danger_rating"
+    assert entry["source_id"] == "town_notice_board"
+    assert entry["raw_response"] == {
+        "answer_kind": "KNOWN_FACT",
+        "certainty": 0.8,
+        "details": {"danger_level": "elevated", "region": "bandit_road"},
+        "reason": None,
+    }
+    assert entry["cost_paid"] == 0
+
+
 def test_urban_political_resolved_world_seeds_two_information_sources():
     """urban_political's resolved world spec compiles with the two corrected
     InformationSourceProfile entries (TCK-20260702-SIMQ-UPLIFT2-INFORMATION)."""

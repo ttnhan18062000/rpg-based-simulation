@@ -283,7 +283,7 @@ class EventExtractor:
                     ))
 
                 # Information: belief_assimilated + belief_updated (PP-04)
-                if prop.get("last_assimilated_tick") == tick:
+                if prop.get("last_assimilated_tick") == prior_state.tick:
                     subject = prop.get("last_assimilated_subject", "unknown")
                     events.append(SimulationEvent(
                         event_type="belief_assimilated", event_category="strategy",
@@ -896,7 +896,7 @@ class EventExtractor:
                     payload={"region_id": rid, "new_kind": w_upd.kind_set},
                 ))
 
-        if getattr(update, "last_calamity_tick_set", None) == tick:
+        if getattr(update, "last_calamity_tick_set", None) == prior_state.tick:
             events.append(SimulationEvent(
                 event_type="calamity_spawned", event_category="lifecycle",
                 tick=tick, entity_id=None, severity="CRITICAL",

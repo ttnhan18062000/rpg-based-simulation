@@ -225,6 +225,70 @@ def test_resolver_no_information_source_profiles_declared_yields_empty_list(repo
     assert bundle.world_spec.information_source_profiles == []
 
 
+def test_resolver_passes_pending_information_responses_from_composition(repos):
+    """A composition declaring pending_information_responses entries lands on the resolved
+    WorldSpec's pending_information_responses, all fields round-tripped unchanged
+    (TCK-20260703-SIMQ-INFORMATION-BELIEF-TRIGGER)."""
+    cat, mod = repos
+    from src.worldassembly.schema import PendingInformationResponseSpec
+
+    composition = WorldCompositionSpec(
+        schema_version="worldcomposition.v1",
+        world_id="pending_responses_test",
+        name="Pending Responses Test",
+        module_refs=[
+            ModuleRefSpec(module_id="plains_layout", enabled=True, order=0),
+        ],
+        pending_information_responses=[
+            PendingInformationResponseSpec(
+                target_population_id="pop_0",
+                subject="bandit_road_danger",
+                query_kind="danger_rating",
+                source_id="town_notice_board",
+                answer_kind="KNOWN_FACT",
+                certainty=0.8,
+                details={"danger_level": "elevated", "region": "bandit_road"},
+                cost_paid=0,
+            ),
+        ],
+    )
+
+    resolver = WorldAssemblyResolver(cat, mod)
+    bundle = resolver.assemble(composition)
+
+    responses = bundle.world_spec.pending_information_responses
+    assert len(responses) == 1
+    r = responses[0]
+    assert r.target_population_id == "pop_0"
+    assert r.subject == "bandit_road_danger"
+    assert r.query_kind == "danger_rating"
+    assert r.source_id == "town_notice_board"
+    assert r.answer_kind == "KNOWN_FACT"
+    assert r.certainty == 0.8
+    assert r.details == {"danger_level": "elevated", "region": "bandit_road"}
+    assert r.cost_paid == 0
+
+
+def test_resolver_no_pending_information_responses_declared_yields_empty_list(repos):
+    """A composition with no pending_information_responses key resolves to an empty list
+    (regression guard — every world other than urban_political must be unaffected)."""
+    cat, mod = repos
+
+    composition = WorldCompositionSpec(
+        schema_version="worldcomposition.v1",
+        world_id="no_pending_responses_test",
+        name="No Pending Responses Test",
+        module_refs=[
+            ModuleRefSpec(module_id="plains_layout", enabled=True, order=0),
+        ],
+    )
+
+    resolver = WorldAssemblyResolver(cat, mod)
+    bundle = resolver.assemble(composition)
+
+    assert bundle.world_spec.pending_information_responses == []
+
+
 def test_id_collision_prevention(repos):
     """Verify duplicate IDs across merged layouts raise structural errors."""
     cat, mod = repos
@@ -743,6 +807,38 @@ def test_composition_normalization_shorthand_and_mixed(repos):
     normalized_profiles = WorldCompositionNormalizer.normalize(profiles_spec)
     assert len(normalized_profiles.information_source_profiles) == 1
     assert normalized_profiles.information_source_profiles[0].source_id == "town_notice_board"
+
+    # 6. pending_information_responses mirrors through unset (default []) and set unchanged
+    from src.worldassembly.schema import PendingInformationResponseSpec
+
+    no_pending_spec = WorldCompositionSpec(
+        schema_version="worldcomposition.v1",
+        world_id="no_pending_responses_world",
+        name="No Pending Responses World",
+        module_refs=[],
+    )
+    normalized_no_pending = WorldCompositionNormalizer.normalize(no_pending_spec)
+    assert normalized_no_pending.pending_information_responses == []
+
+    pending_spec = WorldCompositionSpec(
+        schema_version="worldcomposition.v1",
+        world_id="pending_responses_world",
+        name="Pending Responses World",
+        module_refs=[],
+        pending_information_responses=[
+            PendingInformationResponseSpec(
+                target_population_id="pop_0",
+                subject="bandit_road_danger",
+                query_kind="danger_rating",
+                source_id="town_notice_board",
+                answer_kind="KNOWN_FACT",
+                certainty=0.8,
+            ),
+        ],
+    )
+    normalized_pending = WorldCompositionNormalizer.normalize(pending_spec)
+    assert len(normalized_pending.pending_information_responses) == 1
+    assert normalized_pending.pending_information_responses[0].target_population_id == "pop_0"
 
 
 def test_v2_module_resolution_and_heuristics(repos):

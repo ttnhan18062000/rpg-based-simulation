@@ -24,6 +24,8 @@ This document is the canonical record of intentional behavior shifts in `src` co
 | **World Assembly** | Service Assembly | **Stabilized** | DEFERRED |
 | **World / Environment** | Hazard-Kind Faction Endurance | **Bug Fix** | RATIFIED |
 | **World / Authoring** | Worldtemplate.v1 Schema Removal | **Unified** | RATIFIED |
+| **Engine / Observability** | Kernel Tick-Alignment Fix | **Bug Fix** | RATIFIED |
+| **Worldbuilding / Information** | Single-Fire Compile-Time-Seeded Response | **Bounded** | RATIFIED |
 
 ---
 
@@ -210,6 +212,78 @@ This document is the canonical record of intentional behavior shifts in `src` co
 - **Verification**: `tests/cli/test_world_cli.py`, `tests/unit/worldbuilding/
   test_world_repository.py` (added regression coverage); `tests/unit/worldbuilding/
   test_world_recipes.py` deleted (tested only the removed expansion path).
+
+### 2.22 Kernel Tick-Alignment Fix (TCK-20260703-SIMQ-INFORMATION-BELIEF-TRIGGER)
+- **Subsystem**: Engine / Observability
+- **Old Behavior**: `Kernel._phase_advancement()` (`src/engine/kernel.py:702-736`) reassigns
+  `self._state` to the post-advance tick (via `ApplyPath.apply_generation(...,
+  next_tick=self._state.tick + 1, ...)`) before calling `_phase_observability(prior_state,
+  update)`. Three Resolution-phase-stamped properties — `last_assimilated_tick`
+  (`src/domains/information/phase.py:77`), `last_calamity_tick_set`
+  (`src/world/calamity.py:56`), and `RuntimeStatus.last_transition_tick`
+  (`src/engine/runtime_status.py:79`, via `reset_dwell()` called from `_phase_init()`,
+  `kernel.py:535-541`) — are all stamped using the pre-advance tick. `EventExtractor.extract()`'s
+  and `_phase_observability`'s `== tick` checks (`event_extractor.py:286`,
+  `event_extractor.py:899`, `kernel.py:836`) compared these against the post-advance `tick`
+  local instead, so the equality check could never match through the real
+  `Kernel.tick_once()` loop: `belief_assimilated`/`belief_updated`, `calamity_spawned`, and
+  `GovernorModeChanged` had never fired through any real run in the codebase's history,
+  regardless of scenario content.
+- **New Behavior**: The 3 comparison sites now compare against `prior_state.tick` (already an
+  in-scope parameter at each call site) instead of the shared post-advance `tick` variable. The
+  tick label used for every emitted `SimulationEvent.tick` field (including
+  `InvariantViolation`'s and `GovernorModeChanged`'s own `tick`/`payload["tick"]`) is
+  unchanged — only the internal gating comparison for these 3 specific stamped properties was
+  corrected.
+- **Rationale**: **Bug Fix**. A Resolution-phase-stamped value must be compared against the
+  state snapshot it was stamped against (the pre-advance state), not a later-advanced one, or
+  the equality check can never match. This is not a design tradeoff; it is a straightforward
+  off-by-one-tick comparison defect discovered while empirically verifying
+  `TCK-20260703-SIMQ-INFORMATION-BELIEF-TRIGGER`'s Step 6 against the real Kernel loop.
+- **Verification**: `tests/integration/observability/test_kernel_event_recording.py`
+  (`test_belief_assimilated_fires_through_real_tick_once_loop`,
+  `test_calamity_spawned_fires_through_real_tick_once_loop`,
+  `test_governor_mode_changed_fires_through_real_tick_once_loop` — all passing); zero
+  regressions in `tests/unit/observability/test_event_extractor_cognition.py`,
+  `tests/unit/observability/test_event_extractor_world.py` (same-state-twice pattern, inert
+  under this fix).
+- **Note**: `belief_assimilated`/`belief_updated` confirmed firing (calibration_hits == 1 per
+  run) across all 7 `urban_political_*` calibration runs; `GovernorModeChanged` confirmed
+  firing naturally (63-73 occurrences) in existing `dungeon_crawl_seed{42,123,456}_2000t` /
+  `sandbox_world_seed42_2000t` baselines (infrastructure telemetry, not SimQ-scored).
+  `calamity_spawned`'s fix mechanism is verified correct by its dedicated unit test, but a
+  one-off diagnostic run (`dungeon_crawl_seed42_5200t`, not added to `grade_anchors.json`) did
+  not naturally produce the event — `CalamityService` additionally gates the spawn behind
+  `calamity_intensity > 0.3`, only raised by a hero-kind entity dying in a `hazard_level > 0.5`
+  region, which did not occur in that run. This is a separate, pre-existing content/mechanics
+  precondition, not fixed by this entry. See `docs/parity_ledger/infrastructure.yaml::INFRA-258`.
+
+### 2.23 Single-Fire Compile-Time-Seeded Response (TCK-20260703-SIMQ-INFORMATION-BELIEF-TRIGGER)
+- **Subsystem**: Worldbuilding / Information
+- **Old Behavior**: N/A — `pending_information_responses` did not exist as a compile-time-seedable
+  field before this ticket.
+- **New Behavior**: A `PendingInformationResponseSpec` entry declared in world composition YAML
+  (e.g. `data/worlds/urban_political/world.yaml`'s `pop_0` seed) is resolved by
+  `WorldCompiler.compile()` into `AuthoritativeState.pending_information_responses` at compile
+  time (tick 0), and `InformationBeliefPhase.apply()`'s Branch A assimilates it exactly **once**.
+  `ApplyPath.apply_generation()` (`src/engine/apply.py:179-416`, esp. lines 356-408) does not carry
+  `pending_information_responses` (or `information_source_profiles`) forward from `prior_state`
+  when rebuilding `AuthoritativeState` on each subsequent tick advancement
+  (`src/engine/kernel.py:702-722`, `Kernel._phase_advancement()`), so the seed becomes permanently
+  empty from tick 1 onward.
+- **Rationale**: **Bounded**. This is a property of the compile-vs-apply state reconstruction
+  model, not something `InformationBeliefPhase`/Branch A manages itself, and it is not a defect
+  needing mitigation — it is the correct, deterministic, one-shot-inbox outcome for a compile-time
+  seed: exactly one `belief_assimilated` event per run, not an unbounded per-tick recurrence. The
+  same single-fire trait applies to `information_source_profiles` (shipped by the sibling ticket
+  `TCK-20260702-SIMQ-UPLIFT2-INFORMATION`), noted here for traceability only — no action item.
+- **Verification**: `tests/integration/scenarios/test_phase5_information_belief_scenarios.py::test_pending_information_response_fires_exactly_once_not_carried_forward`
+  (drives 5 tick advancements, confirms exactly 1 `belief_assimilated` total and
+  `pending_information_responses == []` from the first `apply_generation()` onward).
+- **Note**: Confirmed via real calibration runs (not just the direct-pipeline test) —
+  `calibration_hits == 1` for `belief_assimilated`/`belief_updated` in every `urban_political_*`
+  scenario regardless of scenario length (200/500/1000 ticks), consistent with single-fire-at-tick-0
+  behavior. See `docs/parity_ledger/infrastructure.yaml::INFRA-257`.
 
 ---
 
