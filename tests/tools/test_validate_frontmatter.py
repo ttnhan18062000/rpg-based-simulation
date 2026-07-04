@@ -47,6 +47,9 @@ AUTHORITY_VALUES = _vfm.AUTHORITY_VALUES
 AUDIENCE_VALUES = _vfm.AUDIENCE_VALUES
 PHASE_VALUES = _vfm.PHASE_VALUES
 ARTIFACT_TYPE_VALUES = _vfm.ARTIFACT_TYPE_VALUES
+FORBIDDEN_PRIORITY_TAGS = _vfm.FORBIDDEN_PRIORITY_TAGS
+TAG_SYNONYM_MAP = _vfm.TAG_SYNONYM_MAP
+TAG_TAXONOMY_EFFECTIVE_DATE = _vfm.TAG_TAXONOMY_EFFECTIVE_DATE
 
 
 # ---------------------------------------------------------------------------
@@ -410,6 +413,141 @@ class TestDirectoryScan:
 
 
 # ---------------------------------------------------------------------------
+# Group 6b — Forbidden priority tags (p0/p1/p2)
+# ---------------------------------------------------------------------------
+
+class TestForbiddenPriorityTags:
+    def _ticket_file(self, tmp_path: Path, content: str) -> Path:
+        d = tmp_path / "tickets" / "done"
+        d.mkdir(parents=True, exist_ok=True)
+        return _write(d / "TCK-TEST.md", content)
+
+    def test_ticket_forbidden_tag_p0_rejected(self, tmp_path):
+        f = self._ticket_file(
+            tmp_path, _ticket_fm(ticket_id="TCK-20260704-TEST", tags="[p0]")
+        )
+        errors = validate_file(f)
+        assert any("p0" in e and "tags" in e for e in errors)
+
+    def test_ticket_forbidden_tag_p1_rejected(self, tmp_path):
+        f = self._ticket_file(
+            tmp_path, _ticket_fm(ticket_id="TCK-20260704-TEST", tags="[p1]")
+        )
+        errors = validate_file(f)
+        assert any("p1" in e and "tags" in e for e in errors)
+
+    def test_ticket_forbidden_tag_p2_rejected(self, tmp_path):
+        f = self._ticket_file(
+            tmp_path, _ticket_fm(ticket_id="TCK-20260704-TEST", tags="[p2]")
+        )
+        errors = validate_file(f)
+        assert any("p2" in e and "tags" in e for e in errors)
+
+    def test_ticket_forbidden_tag_uppercase_rejected(self, tmp_path):
+        for tag in ("P0", "P1", "P2"):
+            f = self._ticket_file(
+                tmp_path, _ticket_fm(ticket_id="TCK-20260704-TEST", tags=f"[{tag}]")
+            )
+            errors = validate_file(f)
+            assert any(tag in e and "tags" in e for e in errors), f"{tag} not rejected"
+
+    def test_ticket_tag_valid_when_no_priority_tag_present(self, tmp_path):
+        f = self._ticket_file(
+            tmp_path,
+            _ticket_fm(ticket_id="TCK-20260704-TEST", tags="[combat, faction]"),
+        )
+        assert validate_file(f) == []
+
+
+# ---------------------------------------------------------------------------
+# Group 6c — Tag canonicalization (synonyms, format, historical exemption)
+# ---------------------------------------------------------------------------
+
+class TestTagCanonicalization:
+    def _ticket_file(self, tmp_path: Path, content: str) -> Path:
+        d = tmp_path / "tickets" / "done"
+        d.mkdir(parents=True, exist_ok=True)
+        return _write(d / "TCK-TEST.md", content)
+
+    def _artifact_file(self, tmp_path: Path, content: str) -> Path:
+        d = tmp_path / "stored_artifacts" / "TCK-TEST"
+        d.mkdir(parents=True, exist_ok=True)
+        return _write(d / "plan.md", content)
+
+    def test_ticket_tag_canonical_form_accepted(self, tmp_path):
+        f = self._ticket_file(
+            tmp_path,
+            _ticket_fm(
+                ticket_id="TCK-20260704-TEST",
+                tags="[observability, cognition, simulation]",
+            ),
+        )
+        assert validate_file(f) == []
+
+    def test_ticket_tag_synonym_obs_rejected(self, tmp_path):
+        f = self._ticket_file(
+            tmp_path, _ticket_fm(ticket_id="TCK-20260704-TEST", tags="[obs]")
+        )
+        errors = validate_file(f)
+        assert any("obs" in e and "observability" in e for e in errors)
+
+    def test_ticket_tag_synonym_cog_rejected(self, tmp_path):
+        f = self._ticket_file(
+            tmp_path, _ticket_fm(ticket_id="TCK-20260704-TEST", tags="[cog]")
+        )
+        errors = validate_file(f)
+        assert any("cog" in e and "cognition" in e for e in errors)
+
+    def test_ticket_tag_phase_format_rejected(self, tmp_path):
+        f = self._ticket_file(
+            tmp_path, _ticket_fm(ticket_id="TCK-20260704-TEST", tags="[phase5]")
+        )
+        errors = validate_file(f)
+        assert any("phase5" in e and "phase-5" in e for e in errors)
+
+    def test_ticket_tag_underscore_format_rejected(self, tmp_path):
+        f = self._ticket_file(
+            tmp_path,
+            _ticket_fm(
+                ticket_id="TCK-20260704-TEST", tags="[simulation_quality]"
+            ),
+        )
+        errors = validate_file(f)
+        assert any(
+            "simulation_quality" in e and "simulation-quality" in e for e in errors
+        )
+
+    def test_ticket_tag_uppercase_format_rejected(self, tmp_path):
+        f = self._ticket_file(
+            tmp_path, _ticket_fm(ticket_id="TCK-20260704-TEST", tags="[Combat]")
+        )
+        errors = validate_file(f)
+        assert any("Combat" in e for e in errors)
+
+    def test_artifact_tag_synonym_rejected(self, tmp_path):
+        f = self._artifact_file(
+            tmp_path,
+            _artifact_fm(ticket_id="TCK-20260704-TEST", tags="[obs, cog]"),
+        )
+        errors = validate_file(f)
+        assert any("obs" in e and "observability" in e for e in errors)
+        assert any("cog" in e and "cognition" in e for e in errors)
+
+    def test_ticket_tag_historical_exemption(self):
+        f = _REPO_ROOT / "tickets" / "done" / "TCK-20260520-SIM-OBS-PHASE5-M24.md"
+        errors = validate_file(f)
+        assert not any("tags:" in e for e in errors)
+
+    def test_ticket_tag_no_ticket_id_date_exempt(self, tmp_path):
+        f = self._ticket_file(
+            tmp_path,
+            _ticket_fm(ticket_id="TCK-NOTADATE-TEST", tags="[obs]"),
+        )
+        errors = validate_file(f)
+        assert not any("tags:" in e for e in errors)
+
+
+# ---------------------------------------------------------------------------
 # Group 7 — Exit code contract (subprocess)
 # ---------------------------------------------------------------------------
 
@@ -476,3 +614,20 @@ class TestEnumAntiDrift:
 
     def test_enum_values_phase(self):
         assert PHASE_VALUES == {"open", "inprogress", "blocked", "done"}
+
+    def test_forbidden_priority_tags(self):
+        assert FORBIDDEN_PRIORITY_TAGS == {"p0", "p1", "p2"}
+
+    def test_tag_synonym_map(self):
+        assert TAG_SYNONYM_MAP == {
+            "obs": "observability",
+            "cog": "cognition",
+            "sim": "simulation",
+            "worldmodules": "world-modules",
+            "selfmodel": "self-model",
+            "datamodel": "data-model",
+            "worldspec": "world-spec",
+        }
+
+    def test_tag_taxonomy_effective_date(self):
+        assert TAG_TAXONOMY_EFFECTIVE_DATE == "20260704"

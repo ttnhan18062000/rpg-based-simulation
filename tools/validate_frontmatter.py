@@ -33,6 +33,31 @@ AUDIENCE_VALUES = {"developer", "agent", "designer", "historical"}
 PHASE_VALUES = {"open", "inprogress", "blocked", "done"}
 ARTIFACT_TYPE_VALUES = {"investigation", "plan", "test_plan"}
 
+# Tag taxonomy — see docs/guidelines/tag_taxonomy.md.
+# Enforcement is forward-only: only tickets/artifacts whose ticket_id embeds a date on or
+# after this cutoff are checked, per the "no backfill of history" decision (TCK-20260704-TAG-TAXONOMY).
+TAG_TAXONOMY_EFFECTIVE_DATE = "20260704"
+
+# Duplicates the dedicated `## Priority` ticket-body field — never valid as a tag, at any date.
+FORBIDDEN_PRIORITY_TAGS = {"p0", "p1", "p2"}
+
+# Confirmed synonyms the general format rule (below) cannot derive mechanically, because the
+# non-canonical spelling has no separator character to normalize (run-together compounds and
+# abbreviations). Keep this small and evidence-based — do not use it to pre-enumerate subsystem
+# tags; see docs/guidelines/tag_taxonomy.md's anti-drift note.
+TAG_SYNONYM_MAP = {
+    "obs": "observability",
+    "cog": "cognition",
+    "sim": "simulation",
+    "worldmodules": "world-modules",
+    "selfmodel": "self-model",
+    "datamodel": "data-model",
+    "worldspec": "world-spec",
+}
+
+_PHASE_TAG_PATTERN = re.compile(r"^phase(\d+)$")
+_TICKET_ID_DATE_PATTERN = re.compile(r"^TCK-(\d{8})-")
+
 # ---------------------------------------------------------------------------
 # Frontmatter extraction
 # ---------------------------------------------------------------------------
@@ -116,6 +141,54 @@ def _check_enum(filepath: str, fm: dict, field: str, valid: set) -> list[str]:
     return []
 
 
+def _ticket_id_effective_date(ticket_id) -> str | None:
+    """Extract the YYYYMMDD date embedded in a TCK-YYYYMMDD-... ticket_id, or None if unparseable."""
+    if not isinstance(ticket_id, str):
+        return None
+    m = _TICKET_ID_DATE_PATTERN.match(ticket_id)
+    return m.group(1) if m else None
+
+
+def _check_tags(filepath: str, fm: dict) -> list[str]:
+    tags = fm.get("tags")
+    if not tags:
+        return []
+
+    embedded_date = _ticket_id_effective_date(fm.get("ticket_id"))
+    if embedded_date is None or embedded_date < TAG_TAXONOMY_EFFECTIVE_DATE:
+        # Predates the taxonomy (or ticket_id unparseable) — exempt, per the explicit
+        # no-backfill decision. Every other frontmatter check still applies as normal.
+        return []
+
+    errors = []
+    for tag in tags:
+        lower = tag.lower()
+        if lower in FORBIDDEN_PRIORITY_TAGS:
+            errors.append(
+                f"{filepath}: tags: {tag!r} duplicates the dedicated Priority field — remove it"
+            )
+            continue
+        if tag != lower or "_" in tag:
+            errors.append(
+                f"{filepath}: tags: {tag!r} is not canonical form "
+                f"(use {lower.replace('_', '-')!r})"
+            )
+            continue
+        phase_match = _PHASE_TAG_PATTERN.match(tag)
+        if phase_match:
+            errors.append(
+                f"{filepath}: tags: {tag!r} is not canonical form "
+                f"(use {'phase-' + phase_match.group(1)!r})"
+            )
+            continue
+        if tag in TAG_SYNONYM_MAP:
+            errors.append(
+                f"{filepath}: tags: {tag!r} is a non-canonical synonym "
+                f"(use {TAG_SYNONYM_MAP[tag]!r})"
+            )
+    return errors
+
+
 def _validate_doc(filepath: str, fm: dict) -> list[str]:
     errors = []
     for field in ("status", "layer", "authority", "audience"):
@@ -142,6 +215,7 @@ def _validate_ticket(filepath: str, fm: dict) -> list[str]:
     errors += _check_enum(filepath, fm, "authority", AUTHORITY_VALUES)
     errors += _check_enum(filepath, fm, "audience", AUDIENCE_VALUES)
     errors += _check_enum(filepath, fm, "phase", PHASE_VALUES)
+    errors += _check_tags(filepath, fm)
     return errors
 
 
@@ -155,6 +229,7 @@ def _validate_artifact(filepath: str, fm: dict) -> list[str]:
     errors += _check_enum(filepath, fm, "authority", AUTHORITY_VALUES)
     errors += _check_enum(filepath, fm, "audience", AUDIENCE_VALUES)
     errors += _check_enum(filepath, fm, "artifact_type", ARTIFACT_TYPE_VALUES)
+    errors += _check_tags(filepath, fm)
     return errors
 
 

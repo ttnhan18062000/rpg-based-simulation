@@ -25,7 +25,7 @@ audience: agent
 ticket_id: TCK-YYYYMMDD-SHORT-SCOPE
 phase: open
 date: YYYY-MM-DD
-tags: [<scope words from ticket ID, lowercase>]
+tags: [<see docs/guidelines/tag_taxonomy.md — prefer its categories and canonical spellings over raw scope-word lowercasing; never emit p0/p1/p2>]
 ---
 
 # TCK-YYYYMMDD-SHORT-SCOPE

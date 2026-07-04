@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: guidelines
 authority: P1
 audience: agent
 ticket_id: TCK-20260704-TAG-TAXONOMY
-phase: open
+phase: done
 date: 2026-07-04
 tags: [tagging, taxonomy, frontmatter, registry, data-quality]
 ---
@@ -15,7 +15,7 @@ tags: [tagging, taxonomy, frontmatter, registry, data-quality]
 Define and enforce a controlled technical-tag taxonomy for tickets
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -62,13 +62,13 @@ User decisions (2026-07-04): build a controlled taxonomy and enforce it going fo
 - A fully closed, exhaustive list of every permitted individual tag — the taxonomy should define categories and canonical-form rules for known synonyms, not attempt to enumerate every valid subsystem tag up front (that list will grow as the project grows; over-constraining it would just recreate the `layer`-enum-is-too-narrow problem at the tag level).
 
 ## Acceptance Criteria
-- [ ] `docs/guidelines/tag_taxonomy.md` exists, defining tag categories and at least the canonical-vs-synonym mapping for the confirmed duplicate pairs found in this investigation.
-- [ ] `tools/validate_frontmatter.py` rejects (or warns — decided during Plan) a ticket/artifact using a non-canonical spelling where a canonical form is defined.
-- [ ] `tools/validate_frontmatter.py` rejects a ticket using `p0`/`p1`/`p2` (any case) as a tag, since that duplicates the dedicated `Priority` field.
-- [ ] `.claude/agents/ticket-scoper.md` references the taxonomy doc when generating tags for new tickets.
-- [ ] New tests cover canonical acceptance, synonym rejection, and forbidden-priority-tag rejection.
-- [ ] Running `python3 tools/validate_frontmatter.py` against all 1001 existing tickets does not newly fail on tag grounds for tickets that predate this taxonomy (i.e., the new tag validation only applies going forward, consistent with the historical-data decision) — confirm the validator's scope/invocation pattern (is it run against all files or only new/changed ones?) before deciding whether this needs a grandfather clause or whether it's naturally forward-only because it's only invoked on new ticket creation.
-- [ ] The taxonomy doc's category list is checked against all five future scenarios in the Request Summary — each scenario should be able to name which category its routing logic would eventually read, even though none are built here. If a scenario can't point to a category that would serve it, the category design isn't done yet.
+- [x] `docs/guidelines/tag_taxonomy.md` exists, defining tag categories and at least the canonical-vs-synonym mapping for the confirmed duplicate pairs found in this investigation.
+- [x] `tools/validate_frontmatter.py` rejects (or warns — decided during Plan) a ticket/artifact using a non-canonical spelling where a canonical form is defined.
+- [x] `tools/validate_frontmatter.py` rejects a ticket using `p0`/`p1`/`p2` (any case) as a tag, since that duplicates the dedicated `Priority` field.
+- [x] `.claude/agents/ticket-scoper.md` references the taxonomy doc when generating tags for new tickets.
+- [x] New tests cover canonical acceptance, synonym rejection, and forbidden-priority-tag rejection.
+- [x] Running `python3 tools/validate_frontmatter.py` against all 1001 existing (pre-2026-07-04) tickets does not newly fail on tag grounds — resolved via a date-gated cutoff (`TAG_TAXONOMY_EFFECTIVE_DATE`) rather than an explicit exemption list; confirmed via whole-directory run (only 2 same-cutoff-date tickets from a concurrent session are newly flagged, which is correct per design — disclosed in Implementation Notes, not a historical-ticket failure).
+- [x] The taxonomy doc's category list is checked against all five future scenarios in the Request Summary — each scenario maps to a category in `tag_taxonomy.md`'s scenario→category table.
 
 ## Related Tickets
 - TCK-20260704-SKILL-TRIGGER-COVERAGE — natural future consumer of the `process/skill-signal` tag category (scenario 1); that ticket's file-path-based `CLAUDE.md` triggers and a future tag-based lookup are complementary, not competing, mechanisms.
@@ -96,13 +96,39 @@ User decisions (2026-07-04): build a controlled taxonomy and enforce it going fo
 - Whether rejection should be a hard validator failure or a softer lint warning (given this repo's general pattern of hooks nudging rather than blocking) is left for Plan/Investigate to resolve against precedent.
 
 ## Implementation Notes
-(not yet implemented — standard tier, requires investigation and plan phases before implementation)
+Implemented per the approved plan (`staging_artifacts/TCK-20260704-TAG-TAXONOMY/plan.md`), Steps 1-8, no deviations:
+
+1. **Validator**: Added `TAG_TAXONOMY_EFFECTIVE_DATE = "20260704"`, `FORBIDDEN_PRIORITY_TAGS = {"p0", "p1", "p2"}`, `TAG_SYNONYM_MAP` (7 entries), `_PHASE_TAG_PATTERN`, `_TICKET_ID_DATE_PATTERN` constants; `_ticket_id_effective_date()` and `_check_tags()` helper functions in `tools/validate_frontmatter.py`. Wired `errors += _check_tags(filepath, fm)` into `_validate_ticket` and `_validate_artifact` only — `_validate_doc`/`_validate_archive` untouched.
+2. **Anti-drift tests**: Added `test_forbidden_priority_tags`, `test_tag_synonym_map`, `test_tag_taxonomy_effective_date` to `TestEnumAntiDrift`, mirroring the existing `*_VALUES` exact-equality pattern.
+3. **New test classes**: `TestForbiddenPriorityTags` (5 tests: p0/p1/p2 rejection, uppercase rejection, valid-when-absent negative control) and `TestTagCanonicalization` (8 tests: canonical acceptance, obs/cog synonym rejection, phase-N format rejection, underscore format rejection, uppercase format rejection, artifact-path synonym rejection, historical-exemption regression against the real file `tickets/done/TCK-20260520-SIM-OBS-PHASE5-M24.md`, and malformed-ticket-id exemption). All new tests use ticket_id `TCK-20260704-TEST` (on-cutoff, checks apply) except the two exemption tests.
+4. **`docs/guidelines/tag_taxonomy.md`** (new) — defines the four categories (Subsystem/Topic, Phase/Milestone, Process/Skill-signal, Quality-attribute), the scenario→category table for all 5 future usage scenarios, the forbidden-tag list, the canonical-synonym table, and the forward-only enforcement note. Frontmatter matches the established `docs/guidelines/*.md` convention exactly (`status: active`, `layer: guidelines`, `authority: P1`, `audience: developer`, no `tags` key) — validated via `python3 tools/validate_frontmatter.py docs/guidelines/tag_taxonomy.md` (passes).
+5. **`docs/guidelines/frontmatter_schema.md`** — updated the `ticket` (line 84) and `artifact` (line 113) `tags` rows to reference `tag_taxonomy.md` and note forward-only enforcement from `2026-07-04`. The `doc` row (line 52) is untouched, still `free-form`.
+6. **`docs/parity_ledger/infrastructure.yaml`** — updated `INFRA-180`'s `text` to describe the new tag enforcement and added `docs/guidelines/tag_taxonomy.md` to `v2_evidence`. `status: verified` and `priority: P2` left unchanged, per the plan's explicit guard (documentation catch-up, not a re-certification event).
+7. **`.claude/agents/ticket-scoper.md`** — line 28's `tags:` template field now reads: `tags: [<see docs/guidelines/tag_taxonomy.md — prefer its categories and canonical spellings over raw scope-word lowercasing; never emit p0/p1/p2>]`.
+8. **Manual whole-directory check** (beyond the unit test): ran `python3 tools/validate_frontmatter.py tickets/done/` — found 2 pre-existing, unrelated tickets (`TCK-20260704-SIMQ-AGENCY-STASIS-COLLAPSE`, `TCK-20260704-SIMQ-RESOURCEREGISTRY-STONE-GAP`) that carry the non-canonical `simulation_quality` tag and are newly flagged. This is correct, not a regression: both have a `ticket_id` date of `20260704`, which is on/after the effective cutoff, so they are not exempt by design — the AC only guarantees no new failures for tickets that *predate* the taxonomy. Fixing those two tickets' tags is out of scope here (no backfill of any ticket's tags is this ticket's job); noted for awareness only, not actioned.
+
+No deviations from `plan.md` were needed; no entry added to its Deviations section.
 
 ## Test Summary
-(not yet implemented)
+```
+python3 -m pytest tests/tools/test_validate_frontmatter.py -v
+# 64 passed (47 pre-existing + 17 new: 3 anti-drift + 5 TestForbiddenPriorityTags + 9 TestTagCanonicalization)
+
+python3 -m pytest tests/tools/test_add_frontmatter_tickets.py tests/tools/test_add_frontmatter_live.py tests/tools/test_add_frontmatter_archive.py -q
+# 199 passed, unaffected
+
+python3 tools/validate_frontmatter.py docs/guidelines/tag_taxonomy.md
+# OK: 1 file(s) checked — no violations
+```
+Full `tests/tools/` suite and full `pytest tests/` were intentionally not run, per `test_plan.md` (pre-existing, unrelated failures in `test_knowledge_search.py`/`test_search_mcp.py`).
 
 ## Files Changed
-(not yet implemented)
+- `tools/validate_frontmatter.py` — added tag-taxonomy constants + `_check_tags()`, wired into `_validate_ticket`/`_validate_artifact`
+- `tests/tools/test_validate_frontmatter.py` — 3 new anti-drift assertions + `TestForbiddenPriorityTags` + `TestTagCanonicalization` (17 new tests total)
+- `docs/guidelines/tag_taxonomy.md` (new)
+- `docs/guidelines/frontmatter_schema.md` — ticket/artifact `tags` rows updated
+- `docs/parity_ledger/infrastructure.yaml` — `INFRA-180` `text`/`v2_evidence` updated
+- `.claude/agents/ticket-scoper.md` — `tags:` template field updated
 
 ## Completion Summary
-(not yet implemented)
+Added a controlled tag taxonomy (`docs/guidelines/tag_taxonomy.md`, 4 categories) and wired forward-only (`>= 2026-07-04`), hard-reject enforcement into `tools/validate_frontmatter.py`'s `_validate_ticket`/`_validate_artifact` for forbidden `p0`/`p1`/`p2` tags and non-canonical format/synonym spellings, with 17 new tests (including a regression against the real historical ticket `TCK-20260520-SIM-OBS-PHASE5-M24.md` proving no backfill/re-validation of history occurs). `ticket-scoper.md` and `frontmatter_schema.md` updated to reference the taxonomy; `INFRA-180` parity ledger entry updated in the same session. All acceptance criteria met; all scoped tests pass (64 + 199).
