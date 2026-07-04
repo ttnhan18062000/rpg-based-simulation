@@ -310,6 +310,9 @@ Some tools should be invoked automatically based on the task — the user does n
 | `docs/REGISTRY.yaml` exists + user asks about prior work or related docs | Query registry by `related_code_areas` or `layer` — do not scan raw directories |
 | **Any investigation** (ticket creation, scoping, implementation planning, answering "how does X work") | **Step 1 (required)**: `mcp__knowledge-search__search_docs` with `query` = the topic. **Step 2 (required)**: `graphify query "<topic>"`. **Step 3 (fallback only)**: `python3 tools/knowledge_search.py query "<q>" --top-k 5`. Only after these: use grep/read/Explore to verify specific file paths. |
 | User asks project-specific mechanics, architecture, or history question | Same as "Any investigation" row above. `search_docs` is always available inside Claude Code sessions registered with `.mcp.json` — never skip it. |
+| Editing or investigating `src/api/` | `/api-design-principles` — review shape/boundaries before or after the change |
+| Investigating a traceback, test failure, or unexpected runtime error | `/debugging-strategies`; if the failure is specifically in world assembly/content resolution (`src/worldassembly/`, `src/worldbuilding/`, `src/worldmodules/`, `src/content/`, `src/core/registries.py`) use `Agent(subagent_type: "world-debugger")` instead — narrower and more specific for that case |
+| Profiling or investigating a slow simulation tick / high-memory world assembly | `/python-performance-optimization` |
 
 ### Require explicit user opt-in (never auto-invoke)
 

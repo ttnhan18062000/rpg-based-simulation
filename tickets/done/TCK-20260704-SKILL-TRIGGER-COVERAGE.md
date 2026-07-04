@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: guidelines
 authority: P1
 audience: agent
 ticket_id: TCK-20260704-SKILL-TRIGGER-COVERAGE
-phase: open
+phase: done
 date: 2026-07-04
 tags: [claude-md, skills, process-improvement]
 ---
@@ -15,7 +15,7 @@ tags: [claude-md, skills, process-improvement]
 Add CLAUDE.md proactive-invocation triggers for skills with confirmed applicable-but-unsurfaced work
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -79,13 +79,13 @@ None — hotfix tier, no staging artifacts required.
 - This ticket assumes the CLAUDE.md table is in fact the effective proactive-invocation signal (supported by graphify/search_docs's heavy usage vs. everything else's near-zero usage) rather than some other unmeasured factor — worth revisiting if these three skills still don't get used after this change lands.
 
 ## Implementation Notes
-(not yet implemented — ticket filed for review before proceeding)
+Added exactly three rows to `CLAUDE.md`'s "Always auto-invoke (no user prompt required)" table, appended after the existing last row (no reordering of existing rows): (1) editing/investigating `src/api/` → `/api-design-principles`; (2) traceback/test-failure/runtime-error investigation → `/debugging-strategies`, with a carve-out to `Agent(subagent_type: "world-debugger")` for failures specifically in `src/worldassembly/`, `src/worldbuilding/`, `src/worldmodules/`, `src/content/`, `src/core/registries.py`; (3) slow-tick/high-memory profiling → `/python-performance-optimization`. No other row in the table was touched. `frontend-design` and `prompt-builder` were not added, per the ticket's explicit exclusion.
 
 ## Test Summary
-(not yet implemented — this is a documentation/process change; "test" here would be observing whether skill invocation rates change in future sessions, not an automated test)
+Not applicable in the automated-test sense — this is a documentation/process change. Verification performed: re-read `CLAUDE.md`'s "Always auto-invoke" table after the edit to confirm exactly 3 new rows were added, none of the 8 pre-existing rows were modified/reordered/removed, and none of the 6 explicitly out-of-scope skills appear in the new rows.
 
 ## Files Changed
-(not yet implemented)
+- `CLAUDE.md`
 
 ## Completion Summary
-(not yet implemented)
+Added CLAUDE.md auto-invoke triggers for the three skills/agent with confirmed applicable-but-unsurfaced work (`api-design-principles`, `debugging-strategies`/`world-debugger`, `python-performance-optimization`). The six other zero-invocation skills and the redundancy question with CLAUDE.md's existing Testing/Architecture Rule sections remain an explicitly open, deferred follow-on (not resolved by this ticket).

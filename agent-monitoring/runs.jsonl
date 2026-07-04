@@ -473,3 +473,4 @@
 {"run_id":"TCK-20260704-SIMQ-RESOURCEREGISTRY-STONE-GAP","start_ts":"2026-07-04T12:37:39Z","end_ts":"2026-07-04T13:47:49Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":9}
 {"run_id":"TCK-20260704-SIMQ-AGENCY-STASIS-COLLAPSE","start_ts":"2026-07-04T14:33:12Z","end_ts":"2026-07-04T15:35:48Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":10}
 {"run_id":"TCK-20260704-LABKNOWLEDGE-TIMESTAMP","start_ts":"2026-07-04T15:45:05Z","end_ts":"2026-07-04T15:58:13Z","workflow":"implement-ticket","tier":"hotfix","final_status":"DONE","agent_count":9}
+{"run_id":"TCK-20260704-SKILL-TRIGGER-COVERAGE","start_ts":"2026-07-04T15:58:35Z","end_ts":"2026-07-04T16:06:36Z","workflow":"implement-ticket","tier":"hotfix","final_status":"DONE","agent_count":9}
