@@ -1,6 +1,8 @@
 import json
+import time
 import yaml
 import pytest
+from datetime import datetime, timezone
 from pathlib import Path
 from src.lab.request import WorkflowRequest
 from src.lab.session import LabSessionStore
@@ -11,8 +13,7 @@ from src.lab.workflows import (
     UpdateSimulationKnowledgeWorkflow
 )
 
-@pytest.fixture
-def mock_workspace_for_knowledge(tmp_path: Path) -> Path:
+def _build_knowledge_workspace(tmp_path: Path) -> Path:
     """Sets up a complete session stage with investigation and enhancement results."""
     (tmp_path / "data" / "lab_sessions").mkdir(parents=True)
     (tmp_path / "data" / "lab_runs").mkdir(parents=True)
@@ -102,8 +103,14 @@ def mock_workspace_for_knowledge(tmp_path: Path) -> Path:
     )
     enhance_workflow = ProposeSimulationEnhancementsWorkflow(workspace_root=tmp_path)
     enhance_workflow.run("session_know_01", enhance_request)
-    
+
     return tmp_path
+
+
+@pytest.fixture
+def mock_workspace_for_knowledge(tmp_path: Path) -> Path:
+    return _build_knowledge_workspace(tmp_path)
+
 
 def test_knowledge_update_success(mock_workspace_for_knowledge: Path):
     """Verify that approved insights, known issues, and decisions are successfully stored."""
@@ -304,3 +311,54 @@ def test_approved_with_insights_not_blocked(mock_workspace_for_knowledge: Path):
     assert sync_events, "knowledge_sync_result event must be written to audit trail"
     assert sync_events[-1]["details"]["status"] == "SYNCED"
     assert sync_events[-1]["details"]["synced_insights"] >= 1
+
+
+def test_knowledge_timestamps_are_dynamic(tmp_path_factory):
+    """Verify insight created_at and decision log timestamp are generated live per run.
+
+    Regression test for the hardcoded "2026-05-24T10:00:00Z" literal: runs the
+    workflow twice against independent workspaces with a real time gap between
+    them and asserts both timestamp fields are parseable, close to "now" at
+    write time, and differ between the two runs.
+    """
+    request_kwargs = {
+        "workflow": "UpdateSimulationKnowledge",
+        "mode": "generic",
+        "user_goal": "Verify timestamps reflect actual run time",
+        "specific_inputs": {
+            "approved_by": "user_admin",
+            "approval_recorded": True,
+            "decision_note": "Checking dynamic timestamps",
+        },
+    }
+
+    def run_once(tag: str):
+        workspace = _build_knowledge_workspace(tmp_path_factory.mktemp(tag))
+        workflow = UpdateSimulationKnowledgeWorkflow(workspace_root=workspace)
+        before = datetime.now(timezone.utc)
+        result = workflow.run("session_know_01", WorkflowRequest(**request_kwargs))
+        after = datetime.now(timezone.utc)
+        assert result["status"] == "SYNCED"
+
+        knowledge_dir = workspace / "data" / "lab_knowledge"
+        insight_file = next((knowledge_dir / "insights").glob("*.json"))
+        with open(insight_file, "r", encoding="utf-8") as f:
+            insight = json.load(f)
+
+        dec_file = knowledge_dir / "decisions" / "decision_log.jsonl"
+        with open(dec_file, "r", encoding="utf-8") as f:
+            decision = json.loads(f.readlines()[-1])
+
+        for field, raw in (("created_at", insight["created_at"]), ("timestamp", decision["timestamp"])):
+            assert raw != "2026-05-24T10:00:00Z", f"{field} must not be the hardcoded literal"
+            parsed = datetime.fromisoformat(raw)
+            assert before <= parsed <= after, f"{field} {raw!r} is not within the run's execution window"
+
+        return insight["created_at"], decision["timestamp"]
+
+    created_at_1, timestamp_1 = run_once("know_ts_1")
+    time.sleep(0.05)
+    created_at_2, timestamp_2 = run_once("know_ts_2")
+
+    assert created_at_1 != created_at_2, "created_at must differ across separate runs"
+    assert timestamp_1 != timestamp_2, "decision log timestamp must differ across separate runs"

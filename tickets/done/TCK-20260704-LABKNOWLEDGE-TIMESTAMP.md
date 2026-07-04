@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: simulation
 authority: P1
 audience: agent
 ticket_id: TCK-20260704-LABKNOWLEDGE-TIMESTAMP
-phase: open
+phase: done
 date: 2026-07-04
 tags: [lab-agent, knowledge-store, bug]
 ---
@@ -15,7 +15,7 @@ tags: [lab-agent, knowledge-store, bug]
 Fix hardcoded fake timestamps in UpdateSimulationKnowledgeWorkflow
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -61,13 +61,16 @@ None — hotfix tier, no staging artifacts required.
 None — the fix pattern (`datetime.now(timezone.utc).isoformat()`) is already used correctly elsewhere in the same file.
 
 ## Implementation Notes
-(not yet implemented — ticket filed for review before proceeding)
+- `src/lab/workflows.py`: added `from datetime import datetime, timezone` to the import block (line 6). Replaced the hardcoded `"2026-05-24T10:00:00Z"` literal at the stored-insight `created_at` field (was line 2448) with `datetime.now(timezone.utc).isoformat()`, and the decision-log `timestamp` field (was line 2489) with the same expression. `LabAuditTrail.log_event` in `src/lab/audit.py` was not touched (already correct, out of scope).
+- `tests/integration/lab_agent/test_update_simulation_knowledge_workflow.py`: extracted the existing `mock_workspace_for_knowledge` fixture body into a plain helper `_build_knowledge_workspace(tmp_path)` (fixture now just calls it) so a workspace can be built more than once per test. Added `test_knowledge_timestamps_are_dynamic`, which builds two independent workspaces via `tmp_path_factory`, runs `UpdateSimulationKnowledgeWorkflow` in each with a `time.sleep(0.05)` gap between them, and asserts for both the insight `created_at` and decision log `timestamp`: (a) the value is not the old literal, (b) it parses as ISO 8601 via `datetime.fromisoformat` and falls within the `before`/`after` window bracketing the `.run()` call, and (c) the two runs produce different values for both fields.
 
 ## Test Summary
-(not yet implemented)
+- `python3 -m pytest tests/integration/lab_agent/test_update_simulation_knowledge_workflow.py -q` — 7 passed (6 pre-existing + 1 new).
+- `python3 -m pytest tests/unit/lab_agent/ -q` — 33 passed, no regressions.
 
 ## Files Changed
-(not yet implemented)
+- `src/lab/workflows.py`
+- `tests/integration/lab_agent/test_update_simulation_knowledge_workflow.py`
 
 ## Completion Summary
-(not yet implemented)
+Replaced both hardcoded `"2026-05-24T10:00:00Z"` literals in `UpdateSimulationKnowledgeWorkflow.run()` with `datetime.now(timezone.utc).isoformat()`, matching the existing correct pattern in `LabAuditTrail.log_event`. Added a regression test proving the insight `created_at` and decision log `timestamp` fields are dynamic and differ across separate workflow runs. All existing integration and unit tests for the lab agent still pass.

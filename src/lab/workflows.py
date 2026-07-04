@@ -3,6 +3,7 @@ import logging
 import os
 import re
 import yaml
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional, Any, Dict, List
 from unittest.mock import MagicMock
@@ -2445,7 +2446,7 @@ class UpdateSimulationKnowledgeWorkflow:
                 "source_report": ins.get("source_report", ""),
                 "evidence_refs": ins.get("evidence_refs", ins.get("evidence", [])),
                 "status": "APPROVED",
-                "created_at": "2026-05-24T10:00:00Z"
+                "created_at": datetime.now(timezone.utc).isoformat()
             }
             with open(target_file, "w", encoding="utf-8") as f:
                 json.dump(insight_record, f, indent=2)
@@ -2486,7 +2487,7 @@ class UpdateSimulationKnowledgeWorkflow:
             "session_id": session_id,
             "decision_note": decision_note,
             "approved_by": approved_by,
-            "timestamp": "2026-05-24T10:00:00Z"
+            "timestamp": datetime.now(timezone.utc).isoformat()
         }
         with open(decision_file, "a", encoding="utf-8") as f:
             f.write(json.dumps(log_entry) + "\n")
