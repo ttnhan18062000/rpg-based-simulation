@@ -26,3 +26,9 @@ dependency chain `implement-epic` must enforce.
   functionally depend on ticket 1's fix.
 - Ticket 5 is the only one requiring the full standard-tier pipeline (Investigate → Plan →
   Architecture Review) before implementation — expect it to take meaningfully longer than 1-4.
+- Ticket 4 (tag taxonomy) is *designed with* tickets 2 and 3 in mind — its taxonomy explicitly
+  includes a process/skill-signal tag category chosen to eventually feed ticket 2's skill-routing
+  problem and ticket 3's future retro grouping — but this is a design-time consideration, not an
+  execution dependency. None of 2/3/4 need to wait on each other; the connection only matters for
+  whoever designs ticket 4's taxonomy categories, so they don't have to rediscover why that category
+  exists.
