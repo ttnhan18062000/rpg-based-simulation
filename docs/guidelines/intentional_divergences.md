@@ -26,6 +26,8 @@ This document is the canonical record of intentional behavior shifts in `src` co
 | **World / Authoring** | Worldtemplate.v1 Schema Removal | **Unified** | RATIFIED |
 | **Engine / Observability** | Kernel Tick-Alignment Fix | **Bug Fix** | RATIFIED |
 | **Worldbuilding / Information** | Single-Fire Compile-Time-Seeded Response | **Bounded** | RATIFIED |
+| **Engine / Cognition-Information** | `information_belief` Pipeline-Wiring Merge Fix | **Bug Fix** | RATIFIED |
+| **Engine / Cognition** | `self_model_bundle_set` Durable Materialization (`SelfModelPatch`) | **Bug Fix** | RATIFIED |
 
 ---
 
@@ -284,6 +286,85 @@ This document is the canonical record of intentional behavior shifts in `src` co
   `calibration_hits == 1` for `belief_assimilated`/`belief_updated` in every `urban_political_*`
   scenario regardless of scenario length (200/500/1000 ticks), consistent with single-fire-at-tick-0
   behavior. See `docs/parity_ledger/infrastructure.yaml::INFRA-257`.
+
+### 2.24 `information_belief` Pipeline-Wiring Merge Fix (TCK-20260703-SIMQ-UPLIFT3-BRANCH-B)
+- **Subsystem**: Engine / Cognition-Information
+- **Old Behavior**: `src/engine/pipeline.py:152`'s `information_belief` call site called
+  `InformationBeliefPhase.apply(state, source_profiles, pending_resps)` directly and used its
+  return value as the tick's entire `StateUpdate`, discarding the prior `update` instead of merging
+  with it — the only one of this file's 4 `information_belief`-adjacent phase call sites not
+  following the established `u.merge(...)` pattern (`faction_awareness`, `diplomatic_transitions`,
+  and `military_conflict` all wrap their phase's output in `u.merge(...)`). With both
+  `ENABLE_SELF_MODEL_COGNITION` and `ENABLE_BELIEF_ASSIMILATION` ON, this silently wiped
+  `self_model`'s same-tick `entity_updates` contribution entirely — empirically reproduced this
+  session by temporarily reverting the fix and observing `refined.entity_updates` collapse to `{}`.
+  This combination had never been exercised by any shipped calibration profile, so the defect was
+  never observed in a real run.
+- **New Behavior**: The call site now wraps the phase's output in `u.merge(...)`, matching all 3
+  siblings exactly: `lambda u: u.merge(InformationBeliefPhase.apply(state, source_profiles,
+  pending_resps))`. No signature change to `InformationBeliefPhase.apply()` or
+  `src/domains/information/phase.py`.
+- **Rationale**: **Bug Fix**. This is a straightforward pipeline-wiring defect — a call site not
+  following its own file's established merge pattern for no principled reason — not a design
+  tradeoff, following the same class as `§2.22`'s kernel tick-alignment fix.
+- **Verification**: `tests/integration/domains/test_fused_loop.py::test_information_belief_merge_preserves_self_model_writes_both_flags_on`
+  (both flags ON, self_model's write and an unrelated entity's update both survive the merge);
+  `tests/integration/domains/test_fused_loop.py::test_branch_b_on_compiled_urban_political_state_self_model_and_branch_a_coexist`
+  (real compiled `urban_political` state, Branch A and self_model's write coexist correctly);
+  `tests/integration/domains/test_fused_loop.py::test_belief_assimilation_persists_facts` (regression
+  guard — `ENABLE_BELIEF_ASSIMILATION` alone, `ENABLE_SELF_MODEL_COGNITION` OFF — passes unmodified,
+  confirming the fix is a no-op whenever `self_model`'s phase-skip branch contributes nothing to
+  merge).
+- **Note**: This fix is required, alongside `INFRA-259`'s `events=[]` fix and `§2.25`'s
+  `SelfModelPatch` materialization fix, for `InformationBeliefPhase`'s Branch B to be reachable
+  end-to-end. None of the three individually turns Branch B on in any shipped calibration
+  profile — `ENABLE_SELF_MODEL_COGNITION` stays `OFF` everywhere. See
+  `docs/parity_ledger/infrastructure.yaml::INFRA-260`.
+
+### 2.25 `self_model_bundle_set` Durable Materialization — `SelfModelPatch` (TCK-20260703-SIMQ-UPLIFT3-BRANCH-B)
+- **Subsystem**: Engine / Cognition
+- **Old Behavior**: `EntityUpdate.self_model_bundle_set` was never materialized into durable
+  `EntityState.self_model` by the authoritative apply path. `src/engine/patches.py::extract_patches()`
+  had no patch class reading `update.self_model_bundle_set`, and `src/engine/apply.py`'s
+  `_fast_replace_entity()` read a `changes["self_model"]` key that nothing ever populated — every
+  entity's `self_model` was silently discarded on every apply pass, for every entity, every world,
+  every tick, since `self_model_bundle_set` was introduced. This affected Branch A's already-shipped
+  writes identically; the existing `test_belief_assimilation_persists_facts` only ever asserted
+  `self_model.knowledge is not None`, never that its content matched what was written, which is why
+  this was never caught.
+- **New Behavior**: A new `SelfModelPatch(ComponentPatch)` (`src/engine/patches.py`, structural
+  mirror of `KindPatch` — whole-object replace-if-present) is wired into `extract_patches()`. When
+  `update.self_model_bundle_set` is non-`None`, it sets `changes["self_model"]`, which
+  `_fast_replace_entity()` already correctly read but was never fed. `entity.self_model` now
+  genuinely persists across tick boundaries and accumulates real assimilation history instead of
+  always starting from `SelfModelBundle.empty()`.
+- **Rationale**: **Bug Fix**. This is a missing apply-path wiring for an existing typed update
+  field (`self_model_bundle_set`), completing Pattern 2 (Decision/Mutation Separation via Typed
+  Update Records, `docs/guidelines/design_patterns.md`) for this field — not a new pattern or a
+  design tradeoff. A blast-radius sweep of all 15 identified consumers of `entity.self_model` found
+  8 intended positive fix effects (self-model assimilation becomes genuinely cumulative), 2 orphaned
+  consumers with zero live callers, 3 false positives/already-decoupled telemetry paths, 1 pure
+  passthrough, and 1 pre-existing, unrelated docstring/code divergence (corrected as
+  `docs/parity_ledger/substrate.yaml::SUB-374` — `self_model` was already, and remains, included in
+  the authoritative canonical hash; a stale docstring claimed otherwise). The only consumers with any
+  live conditional behavior change (`AdventureRouteGenerator`/`scoring.py`) require both
+  `ENABLE_SELF_MODEL_COGNITION` and `ENABLE_ADVENTURE_ROUTING` ON simultaneously — no shipped
+  `config/`/`data/worlds/` runtime profile combines these flags today.
+- **Verification**: `tests/unit/optimization/test_component_patches.py` (6 new `SelfModelPatch`
+  tests — noop detection, merge, apply-sets-changes-key); `tests/integration/optimization/test_component_patch_apply_parity.py::test_self_model_patch_apply_parity_durable_materialization`
+  (direct end-to-end regression guard through `ApplyPath.apply_generation()`, full bundle equality);
+  `tests/unit/core/test_entity_integrity.py::test_self_model_participates_in_canonical_hash` and
+  `::test_self_model_fix_preserves_existing_baseline_hashes_when_flag_off`;
+  `tests/integration/domains/test_fused_loop.py::test_branch_b_fires_across_real_tick_boundary_after_self_model_patch_materialization`
+  (proves the full seed → assimilate → materialize → route sequence across a real tick boundary).
+- **Note**: Hash stability empirically confirmed — compiled `urban_political`'s real resolved world
+  (seed 42, shipped default flags), advanced 50 ticks, and computed the canonical hash both with
+  `SelfModelPatch` present and with it temporarily reverted: bit-identical
+  (`15081e225da292dd91ae8179922729ec0103f1b9a09cc64be8e14f49c8549591`), confirming 0 impact on
+  existing calibration baselines since `self_model` stays constant `SelfModelBundle.empty()` while
+  `ENABLE_SELF_MODEL_COGNITION` is OFF. A `calibrate_simq.py` spot-check (`urban_political`, seed 42,
+  200t) confirmed `INFORMATION`/`COGNITION` pillar grades unchanged at `B`. See
+  `docs/parity_ledger/substrate.yaml::SUB-374`.
 
 ---
 

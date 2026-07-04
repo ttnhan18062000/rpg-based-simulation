@@ -231,3 +231,47 @@ def test_schema_no_side_effects(tmp_path):
     # Verify Pydantic frozen model config prevents mutating fields
     with pytest.raises(ValidationError):
         spec.name = "Mutated Name"
+
+
+def test_pending_self_model_information_event_spec_constructs_with_defaults():
+    """TCK-20260703-SIMQ-UPLIFT3-BRANCH-B: direct construction with only required fields
+    yields the documented defaults."""
+    from src.worldbuilding.schema import PendingSelfModelInformationEventSpec
+
+    spec = PendingSelfModelInformationEventSpec(
+        target_population_id="pop_1",
+        answer_kind="unknown",
+        unknowns=["material.moon_resin.source"],
+    )
+    assert spec.facts == []
+    assert spec.certainty == 0.0
+    assert spec.source_id is None
+    assert spec.cost_gold == 0
+
+
+def test_pending_self_model_information_event_spec_rejects_uppercase_answer_kind():
+    """Regression guard against vocabulary confusion with PendingInformationResponseSpec's
+    uppercase answer_kind — this spec's answer_kind is strictly lowercase."""
+    from src.worldbuilding.schema import PendingSelfModelInformationEventSpec
+
+    with pytest.raises(ValidationError):
+        PendingSelfModelInformationEventSpec(
+            target_population_id="pop_1",
+            answer_kind="UNKNOWN",
+            unknowns=["material.moon_resin.source"],
+        )
+
+
+def test_world_spec_defaults_pending_self_model_information_events_to_empty_list():
+    data = {
+        "schema_version": "worldspec.v1",
+        "world_id": "test_valley",
+        "name": "Test Valley",
+        "topology": {
+            "width": 100,
+            "height": 100,
+            "coordinate_system": "grid",
+        },
+    }
+    spec = WorldSpec.model_validate(data)
+    assert spec.pending_self_model_information_events == []

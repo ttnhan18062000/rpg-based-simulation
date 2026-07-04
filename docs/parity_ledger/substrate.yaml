@@ -4153,3 +4153,35 @@
   test_path: tests/unit/content/test_content_usage_matrix.py::test_merged_matrix_covers_all_disk_files
   divergence_note: null
   support_boundary: null
+
+- id: SUB-374
+  text: >
+    EntityState.self_model (SelfModelBundle) participates in the authoritative canonical
+    hash. EntityState.to_canonical_dict() unconditionally includes
+    "self_model": self.self_model.to_canonical_dict(), and
+    CanonicalStateHasher.to_canonical_data() calls this same method for every entity when
+    computing the full canonical hash used for determinism/replay/certification. There is
+    no separate hash-only vs. debug-only code path for self_model.
+  status: divergent
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/core/state.py:750 (EntityState.to_canonical_dict(), unconditional
+    "self_model" key) + src/engine/checkpoint.py:81
+    (CanonicalStateHasher.to_canonical_data(), calls entities[eid].to_canonical_dict()
+    for every entity) + src/core/self_model.py:216-219 (SelfModelBundle docstring,
+    corrected under TCK-20260703-SIMQ-UPLIFT3-BRANCH-B)
+  proof_type: parity
+  test_path: tests/unit/core/test_entity_integrity.py::test_self_model_participates_in_canonical_hash
+  divergence_note: >
+    The SelfModelBundle docstring previously claimed self_model was "intentionally excluded
+    from authoritative canonical hash" - this was false and pre-existing, not introduced by
+    TCK-20260703-SIMQ-UPLIFT3-BRANCH-B's self_model_bundle_set materialization fix. The
+    docstring was corrected to match actual code (self_model IS included), rather than
+    changing the hash formula to match the stale docstring - changing hash computation would
+    retroactively alter every existing calibration baseline's hash value across the whole
+    test suite, judged out of scope / too disruptive for this ticket. Because
+    ENABLE_SELF_MODEL_COGNITION is OFF in every shipped profile, self_model stays constant
+    SelfModelBundle.empty() regardless of this fix, so no shipped baseline's hash VALUE
+    changes as a direct result of landing SelfModelPatch.
+  support_boundary: null

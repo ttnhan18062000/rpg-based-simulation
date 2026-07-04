@@ -48,6 +48,10 @@ Runs every tick for all alive/active entities:
 ```
 Step 1: Knowledge assimilation (KnowledgeModelService.assimilate)
          └─ Only if InformationResponse events exist for this entity this tick
+         └─ Events sourced from AuthoritativeState.pending_self_model_information_events
+            (compile-time-seeded, filtered by actor_id; confirmed matching code 2026-07-04,
+            TCK-20260703-SIMQ-UPLIFT3-BRANCH-B — see self_model_contract.md's "Phase lifecycle"
+            section for detail)
 Step 2: Self-assessment (SelfAssessmentService.assess)
          └─ Dirty check: skip steps 3–4 if nothing changed
 Step 3: Need interpretation (NeedInterpretationService.interpret)

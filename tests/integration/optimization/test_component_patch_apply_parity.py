@@ -5,13 +5,14 @@ from src.core.state import (
     BiologicalComponent, LifecycleComponent, StaminaComponent, StrategicComponent,
     AttributeComponent, IdentityComponent, InventoryComponent
 )
+from src.core.self_model import SelfModelBundle, KnowledgeModelComponent, KnowledgeFact, UnknownFact
 from src.core.updates import (
     StateUpdate, EntityUpdate, NavigationUpdate, CombatUpdate, AttributeUpdate, IdentityUpdate
 )
 from src.engine.cadence import SystemCadence
 from src.engine.apply import ApplyPath
 from src.engine.pipeline import AuthoritativeApplyPipeline
-from src.engine.patches import extract_patches, NavigationPatch, CombatPatch, AttributePatch, IdentityPatch
+from src.engine.patches import extract_patches, NavigationPatch, CombatPatch, AttributePatch, IdentityPatch, SelfModelPatch
 
 def test_component_patch_apply_parity():
     # Setup rich multi-domain entity state
@@ -67,3 +68,35 @@ def test_component_patch_apply_parity():
     assert new_state.entities[2].combat.readiness == 100.0 # 100 + 15 clamped to 100.0
     assert new_state.entities[3].attributes.strength == 15
     assert new_state.entities[4].identity.role == "PALADIN"
+
+
+def test_self_model_patch_apply_parity_durable_materialization():
+    """
+    TCK-20260703-SIMQ-UPLIFT3-BRANCH-B (supplementary fix): direct regression guard for
+    Finding 5 — EntityUpdate.self_model_bundle_set must durably materialize into
+    entity.self_model end-to-end through ApplyPath.apply_generation(), via the new
+    SelfModelPatch (src/engine/patches.py).
+    """
+    entity = EntityState(id=1, kind="HERO", combat=CombatComponent(hp=100, max_hp=100, alive=True))
+    state = AuthoritativeState(tick=1, seed=1, world_time=100, entities={1: entity})
+
+    bundle = SelfModelBundle(
+        knowledge=KnowledgeModelComponent(
+            facts={"coal_ore": KnowledgeFact(subject="coal_ore", fact_type="material_source", details={"source": "old_mine"})},
+            unknowns={"iron_ore": UnknownFact(subject="iron_ore", reason="never_queried")},
+        )
+    )
+
+    e_upd = EntityUpdate(entity_id=1, self_model_bundle_set=bundle)
+
+    # Patch-extraction sanity check
+    patches = extract_patches(1, e_upd)
+    assert any(isinstance(p, SelfModelPatch) for p in patches)
+
+    update = StateUpdate(entity_updates={1: e_upd}, force_full_scan=True)
+    new_state = ApplyPath.apply_generation(state, update, next_tick=2, cadence=SystemCadence())
+
+    result_entity = new_state.entities[1]
+    assert result_entity.self_model == bundle  # full equality, not just not-None
+    assert result_entity.self_model.knowledge.facts["coal_ore"].details == {"source": "old_mine"}
+    assert result_entity.self_model.knowledge.unknowns["iron_ore"].reason == "never_queried"

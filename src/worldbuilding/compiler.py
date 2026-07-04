@@ -26,6 +26,8 @@ from src.worldbuilding.schema import WorldSpec
 from src.core.quests import QuestState, QuestStatus, QuestKind, RewardState
 from src.core.strategic import ProjectKind
 from src.domains.information.schema import InformationSourceProfile
+from src.world.providers.information import InformationResponse as _ProviderInformationResponse
+from src.world.providers.information import KnowledgeFact as _ProviderKnowledgeFact
 
 
 def get_role_enum(role_str: str, catalog_repo: Optional[Any] = None, context: Optional[Any] = None) -> EntityRole:
@@ -451,6 +453,36 @@ class WorldCompiler:
                 "cost_paid": r.cost_paid,
             })
 
+        # 6c. Resolve pending_self_model_information_events: target_population_id -> compiled actor_id,
+        # construct real InformationResponse objects (Step 1's consumer needs attribute access, not
+        # dict-item access — a different construction shape from 6b above).
+        pending_self_model_information_events: List[Dict[str, Any]] = []
+        for r in spec.pending_self_model_information_events:
+            actor_id = next(
+                (eid for eid, e in entities.items()
+                 if e.properties.get("population_id") == r.target_population_id),
+                None,
+            )
+            if actor_id is None:
+                warnings.append(
+                    f"pending_self_model_information_events target_population_id "
+                    f"'{r.target_population_id}' matched no compiled entity; entry skipped"
+                )
+                continue
+            event = _ProviderInformationResponse(
+                answer_kind=r.answer_kind,
+                facts=tuple(
+                    _ProviderKnowledgeFact(subject=f.subject, fact_type=f.fact_type, details=dict(f.details))
+                    for f in r.facts
+                ),
+                unknowns=tuple(r.unknowns),
+                suggested_leads=(),
+                certainty=r.certainty,
+                source_id=r.source_id,
+                cost_gold=r.cost_gold,
+            )
+            pending_self_model_information_events.append({"actor_id": actor_id, "event": event})
+
         # Assemble final AuthoritativeState
         state = AuthoritativeState(
             tick=0,
@@ -466,7 +498,8 @@ class WorldCompiler:
             town_entity_ids=town_entity_ids,
             factions=factions,
             information_source_profiles=information_source_profiles,
-            pending_information_responses=pending_information_responses
+            pending_information_responses=pending_information_responses,
+            pending_self_model_information_events=pending_self_model_information_events
         )
 
         # Calculate fingerprint state hash

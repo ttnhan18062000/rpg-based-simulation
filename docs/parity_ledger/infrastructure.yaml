@@ -3061,11 +3061,25 @@
     (state.pending_information_responses, INFRA-257) is no longer unreachable — it fires
     once, at the initial compiled state (tick 0), per run, confirmed via calibrate_simq.py
     through the real Kernel.tick_once() live loop (TCK-20260703-SIMQ-INFORMATION-BELIEF-TRIGGER).
-    Branch B (self_model.knowledge.unknowns) remains unreachable: SelfModelUpdatePhase.apply()
-    hardcodes events=[], so the assimilation loop that would populate it never runs.
-    lead_certainty_updated/paid_information_transaction remain 0 — neither Branch B nor the
-    paid-information path (InformationNeedDetector/state.information_providers) is wired by
-    this ticket.
+    Branch B (self_model.knowledge.unknowns) UPDATE 2026-07-04
+    (TCK-20260703-SIMQ-UPLIFT3-BRANCH-B, INFRA-259/INFRA-260): the code-level mechanism is now
+    correct and proven reachable — SelfModelUpdatePhase.apply()'s events=[] hardcoding is fixed
+    (real events sourced from pending_self_model_information_events), InformationBeliefPhase's
+    pipeline-wiring merge bug that silently clobbered self_model's same-tick write is fixed
+    (src/engine/pipeline.py:152 now wraps the call in u.merge(...)), and
+    EntityUpdate.self_model_bundle_set now durably materializes into EntityState.self_model
+    (SelfModelPatch, src/engine/patches.py; see docs/parity_ledger/substrate.yaml::SUB-374). A
+    dedicated cross-tick-boundary test proves Branch B fires end-to-end (tick N materializes
+    self_model.knowledge.unknowns; tick N+1's InformationBeliefPhase routes a query off it) with
+    both ENABLE_SELF_MODEL_COGNITION and ENABLE_BELIEF_ASSIMILATION ON. However, Branch B is NOT
+    activated in any shipped calibration profile — ENABLE_SELF_MODEL_COGNITION stays OFF
+    everywhere in config/simulation_quality/profiles/*.yaml and data/worlds/*.yaml, so
+    calibration_hits for belief_assimilated/lead_certainty_updated attributable to Branch B
+    specifically remain 0 in real calibration runs. Do not read this entry as claiming Branch B
+    fires in any calibrated scenario — only that the mechanism is now correct and verifiably
+    reachable when both flags are scoped ON (test-only). lead_certainty_updated/
+    paid_information_transaction remain 0 regardless — neither is in this ticket's scope
+    (InformationNeedDetector/state.information_providers remain orphaned).
 - id: INFRA-257
   text: >
     pending_information_responses compile-time plumbing: a PendingInformationResponseSpec on
@@ -3109,8 +3123,14 @@
   divergence_note: "Compile-time-seeded responses are processed by InformationBeliefPhase exactly once — at the initial compiled state (tick 0 of any run) — because ApplyPath.apply_generation() does not carry pending_information_responses forward from prior_state on later tick advancements. This is a single-fire seed, not a per-tick recurrence, and not something Branch A itself manages. Documented in docs/guidelines/intentional_divergences.md."
   support_boundary: >
     Only Branch A (pending_information_responses assimilation) is made reachable by this entry,
-    and only once per run (tick 0). Branch B (routing new queries via self_model.knowledge.unknowns)
-    and the paid_information_transaction path remain unreachable — see INFRA-256.
+    and only once per run (tick 0). Branch B (routing new queries via self_model.knowledge.unknowns):
+    UPDATE 2026-07-04 (TCK-20260703-SIMQ-UPLIFT3-BRANCH-B, INFRA-259/INFRA-260) — see INFRA-256's
+    updated support_boundary for the full detail. Summary: the code-level mechanism (events
+    sourcing, the information_belief merge-clobber fix, and self_model's durable materialization)
+    is now correct and proven reachable end-to-end via a test-scoped cross-tick-boundary test, but
+    remains inactive in every shipped calibration profile because ENABLE_SELF_MODEL_COGNITION stays
+    OFF everywhere — 0 impact on real calibration_hits. The paid_information_transaction path
+    remains unreachable and out of this ticket's scope — see INFRA-256.
 - id: INFRA-258
   text: >
     Kernel tick-alignment fix: Kernel._phase_advancement() (src/engine/kernel.py:702-736)
@@ -3185,6 +3205,96 @@
     showed 0 calamity_spawned hits because CalamityService's separate high_intensity_regions gate
     (calamity_intensity > 0.3, hero-death-dependent) was not met in that run — see this entry's
     text for detail. This is a residual content/mechanics gap, not a defect in this kernel fix.
+- id: INFRA-259
+  text: >
+    pending_self_model_information_events compile-time plumbing (third application of the
+    compile-time-seed pattern, docs/guidelines/design_patterns.md Pattern 6, following
+    information_source_profiles/INFRA-256 and pending_information_responses/INFRA-257) fixes
+    SelfModelUpdatePhase.apply()'s (src/cognition/self_model_phase.py) events=[] hardcoding:
+    events are now grouped by actor_id from AuthoritativeState.pending_self_model_information_events
+    and passed per-entity instead of an unconditional empty list.
+    self_model.knowledge.unknowns is confirmed populated for urban_political's pop_1 when
+    ENABLE_SELF_MODEL_COGNITION is scoped ON (test-only override — never a shipped profile
+    default; confirmed absent from every config/simulation_quality/profiles/*.yaml and
+    data/worlds/*.yaml). This closes the "events=[]" half of Branch B's residual blocker
+    documented in INFRA-256/INFRA-257's support_boundary; see INFRA-260 for the companion
+    pipeline-wiring merge fix required for the two fixes to compose correctly, and
+    docs/parity_ledger/substrate.yaml::SUB-374 for the related self_model durable-materialization
+    (SelfModelPatch) fix that this entry's cross-tick-boundary test also depends on.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/worldbuilding/schema.py::PendingSelfModelInformationEventSpec,
+    SelfModelInformationFactSpec, WorldSpec.pending_self_model_information_events;
+    src/worldassembly/schema.py::WorldCompositionSpec.pending_self_model_information_events,
+    NormalizedWorldComposition.pending_self_model_information_events;
+    src/worldassembly/resolver.py (WorldAssemblyResolver.assemble() passthrough);
+    src/worldbuilding/compiler.py (target_population_id -> actor_id resolution + real
+    InformationResponse/KnowledgeFact construction +
+    AuthoritativeState(pending_self_model_information_events=...) seeding);
+    src/cognition/self_model_phase.py::SelfModelUpdatePhase.apply() (events grouped by actor_id,
+    events=[] hardcoding removed); data/worlds/urban_political/world.yaml (pop_1 seed,
+    material.moon_resin.source, answer_kind="unknown")
+  proof_type: parity
+  test_path: >
+    tests/unit/worldbuilding/test_worldspec_schema.py;
+    tests/unit/worldbuilding/test_world_compiler.py;
+    tests/unit/worldassembly/test_assembly.py;
+    tests/integration/domains/test_fused_loop.py::test_self_model_apply_sources_events_from_pending_field_isolated_from_finding4;
+    tests/integration/domains/test_fused_loop.py::test_branch_b_fires_across_real_tick_boundary_after_self_model_patch_materialization
+  divergence_note: >
+    Single-fire compile-time seed, matching the established pending_information_responses/
+    information_source_profiles precedent (not carried forward by ApplyPath.apply_generation()).
+    Documented in docs/guidelines/intentional_divergences.md §2.24 alongside INFRA-260's merge fix.
+  support_boundary: >
+    Fixes the events=[] sourcing defect only. Does not, by itself, make Branch B reachable when
+    ENABLE_BELIEF_ASSIMILATION is also ON — InformationBeliefPhase.apply()'s pipeline-wiring merge
+    bug (fixed by INFRA-260) previously clobbered self_model's same-tick write whenever both flags
+    were on. The two fixes compose to make Branch B's mechanism correct; neither is activated by
+    any shipped calibration profile (ENABLE_SELF_MODEL_COGNITION stays OFF everywhere) — real
+    calibration_hits for Branch B remain 0. See INFRA-256/INFRA-257's updated support_boundary.
+- id: INFRA-260
+  text: >
+    information_belief pipeline-wiring merge fix (Finding 4, TCK-20260703-SIMQ-UPLIFT3-BRANCH-B):
+    src/engine/pipeline.py:152's information_belief call site previously called
+    InformationBeliefPhase.apply(state, source_profiles, pending_resps) directly, discarding the
+    tick's prior StateUpdate instead of merging — the only one of information_belief's 4 sibling
+    phase call sites in this file (faction_awareness, diplomatic_transitions, military_conflict all
+    use u.merge(...)) not following the established merge pattern. With both
+    ENABLE_SELF_MODEL_COGNITION and ENABLE_BELIEF_ASSIMILATION ON, this silently wiped
+    self_model's same-tick contribution to entity_updates entirely — empirically reproduced this
+    session by temporarily reverting the fix and observing refined.entity_updates collapse to {}.
+    Fixed by wrapping the call in u.merge(...), matching the 3 siblings exactly:
+    lambda u: u.merge(InformationBeliefPhase.apply(state, source_profiles, pending_resps)).
+    No signature change to InformationBeliefPhase.apply() or src/domains/information/phase.py.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/engine/pipeline.py:152 (information_belief call site, now wrapped in u.merge(...));
+    src/core/updates.py:946-950 (StateUpdate.merge(), delegates to merge_many);
+    src/core/updates.py:663-697 (EntityUpdate.merge(), per-entity merge — two different
+    entities' EntityUpdates never collide; self_model_bundle_set prefers the later non-None set)
+  proof_type: parity
+  test_path: >
+    tests/integration/domains/test_fused_loop.py::test_information_belief_merge_preserves_self_model_writes_both_flags_on;
+    tests/integration/domains/test_fused_loop.py::test_branch_b_on_compiled_urban_political_state_self_model_and_branch_a_coexist;
+    tests/integration/domains/test_fused_loop.py::test_belief_assimilation_persists_facts (regression,
+    ENABLE_BELIEF_ASSIMILATION alone, unmodified pass required)
+  divergence_note: >
+    Straightforward bug fix, not an intentional behavior divergence — the call site now matches
+    its 3 siblings' pre-existing pattern exactly. Documented in
+    docs/guidelines/intentional_divergences.md §2.24 (Bug Fix rationale, same class as the kernel
+    tick-alignment fix, INFRA-258).
+  support_boundary: >
+    Fixes exactly the information_belief call-site merge defect. Companion to INFRA-259 (the
+    events=[] sourcing fix) — both are required together for Branch B to be reachable with
+    ENABLE_SELF_MODEL_COGNITION and ENABLE_BELIEF_ASSIMILATION both ON; neither is activated in any
+    shipped calibration profile. Is a no-op whenever self_model's phase-skip branch contributes
+    nothing to merge (i.e. ENABLE_SELF_MODEL_COGNITION OFF, the shipped default everywhere) — hash
+    stability confirmed via byte-identical canonical hash with/without the SelfModelPatch
+    materialization fix for urban_political's shipped profile (50-tick run, seed 42).
 - id: INFRA-246
   text: "WorldDynamicsScorer owns ecology_cycle_completed (not EconomyScorer) per SQ-08
     conflict note. Covers calamity, boss/raid spawning, region transform/trauma/ownership,

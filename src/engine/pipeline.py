@@ -149,7 +149,7 @@ class AuthoritativeApplyPipeline:
         # Retrieve dynamic profiles/pending responses from state or context if present
         source_profiles = getattr(state, "information_source_profiles", [])
         pending_resps = getattr(state, "pending_information_responses", [])
-        update = run_phase("information_belief", update, lambda u: InformationBeliefPhase.apply(state, source_profiles, pending_resps), "ENABLE_BELIEF_ASSIMILATION")
+        update = run_phase("information_belief", update, lambda u: u.merge(InformationBeliefPhase.apply(state, source_profiles, pending_resps)), "ENABLE_BELIEF_ASSIMILATION")
         costs["information_belief"] = (time.perf_counter_ns() - t_start) / 1e6
 
         # --- Enhanced RPG Phase 7: Social Cooperation ---

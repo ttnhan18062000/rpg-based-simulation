@@ -4,7 +4,7 @@ from __future__ import annotations
 from typing import Optional, Any, Dict, List
 from pydantic import BaseModel, Field, ConfigDict, field_validator, model_validator
 
-from src.worldbuilding.schema import RegionSpec, FactionSpec, PopulationSpec, QuestDefinition, InformationSourceProfileSpec, PendingInformationResponseSpec
+from src.worldbuilding.schema import RegionSpec, FactionSpec, PopulationSpec, QuestDefinition, InformationSourceProfileSpec, PendingInformationResponseSpec, PendingSelfModelInformationEventSpec
 
 
 class ModuleRefSpec(BaseModel):
@@ -50,6 +50,14 @@ class WorldCompositionSpec(BaseModel):
         description="Compile-time-seeded pending information responses, targeted at a population "
                     "by target_population_id. No global catalog exists for this content (same "
                     "reasoning as information_source_profiles). Scoped to this composition only."
+    )
+    pending_self_model_information_events: List[PendingSelfModelInformationEventSpec] = Field(
+        default_factory=list,
+        description="Compile-time-seeded InformationResponse-shaped events for "
+                    "SelfModelUpdatePhase's Step 1 (KnowledgeModelService.assimilate()). No global "
+                    "catalog exists for this content (same reasoning as "
+                    "information_source_profiles/pending_information_responses). Scoped to this "
+                    "composition only."
     )
 
     @model_validator(mode="before")
@@ -170,6 +178,14 @@ class NormalizedWorldComposition(BaseModel):
         description="Compile-time-seeded pending information responses, targeted at a population "
                     "by target_population_id. No global catalog exists for this content (same "
                     "reasoning as information_source_profiles). Scoped to this composition only."
+    )
+    pending_self_model_information_events: List[PendingSelfModelInformationEventSpec] = Field(
+        default_factory=list,
+        description="Compile-time-seeded InformationResponse-shaped events for "
+                    "SelfModelUpdatePhase's Step 1 (KnowledgeModelService.assimilate()). No global "
+                    "catalog exists for this content (same reasoning as "
+                    "information_source_profiles/pending_information_responses). Scoped to this "
+                    "composition only."
     )
 
     @field_validator("schema_version")

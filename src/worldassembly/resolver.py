@@ -672,6 +672,7 @@ class WorldAssemblyResolver:
             factions=list(factions.values()),
             information_source_profiles=list(normalized_comp.information_source_profiles),
             pending_information_responses=list(normalized_comp.pending_information_responses),
+            pending_self_model_information_events=list(normalized_comp.pending_self_model_information_events),
             entities=list(entities.values()),
             resources=list(resources.values()),
             buildings=list(buildings.values()),

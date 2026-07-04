@@ -1142,6 +1142,7 @@ class AuthoritativeState:
     _opt_profile: Any = field(default=None, repr=False, compare=False)
     _force_full_scan: bool = field(default=False, repr=False, compare=False)
     pending_information_responses: List[Dict[str, Any]] = field(default_factory=list, repr=False, compare=False)
+    pending_self_model_information_events: List[Dict[str, Any]] = field(default_factory=list, repr=False, compare=False)
     information_source_profiles: List[Any] = field(default_factory=list, repr=False, compare=False)
     feature_flags: Dict[str, Any] = field(default_factory=dict, repr=False, compare=False)
     recent_world_events: List["WorldEvent"] = field(default_factory=list)

@@ -289,6 +289,66 @@ def test_resolver_no_pending_information_responses_declared_yields_empty_list(re
     assert bundle.world_spec.pending_information_responses == []
 
 
+def test_resolver_passes_pending_self_model_information_events_from_composition(repos):
+    """A composition declaring pending_self_model_information_events entries lands on the
+    resolved WorldSpec's pending_self_model_information_events, all fields round-tripped
+    unchanged (TCK-20260703-SIMQ-UPLIFT3-BRANCH-B)."""
+    cat, mod = repos
+    from src.worldassembly.schema import PendingSelfModelInformationEventSpec
+
+    composition = WorldCompositionSpec(
+        schema_version="worldcomposition.v1",
+        world_id="self_model_events_test",
+        name="Self Model Events Test",
+        module_refs=[
+            ModuleRefSpec(module_id="plains_layout", enabled=True, order=0),
+        ],
+        pending_self_model_information_events=[
+            PendingSelfModelInformationEventSpec(
+                target_population_id="pop_1",
+                answer_kind="unknown",
+                unknowns=["material.moon_resin.source"],
+                certainty=0.0,
+                source_id=None,
+                cost_gold=0,
+            ),
+        ],
+    )
+
+    resolver = WorldAssemblyResolver(cat, mod)
+    bundle = resolver.assemble(composition)
+
+    events = bundle.world_spec.pending_self_model_information_events
+    assert len(events) == 1
+    e = events[0]
+    assert e.target_population_id == "pop_1"
+    assert e.answer_kind == "unknown"
+    assert e.unknowns == ["material.moon_resin.source"]
+    assert e.certainty == 0.0
+    assert e.source_id is None
+    assert e.cost_gold == 0
+
+
+def test_resolver_no_pending_self_model_information_events_declared_yields_empty_list(repos):
+    """A composition with no pending_self_model_information_events key resolves to an empty
+    list (regression guard — every world other than urban_political must be unaffected)."""
+    cat, mod = repos
+
+    composition = WorldCompositionSpec(
+        schema_version="worldcomposition.v1",
+        world_id="no_self_model_events_test",
+        name="No Self Model Events Test",
+        module_refs=[
+            ModuleRefSpec(module_id="plains_layout", enabled=True, order=0),
+        ],
+    )
+
+    resolver = WorldAssemblyResolver(cat, mod)
+    bundle = resolver.assemble(composition)
+
+    assert bundle.world_spec.pending_self_model_information_events == []
+
+
 def test_id_collision_prevention(repos):
     """Verify duplicate IDs across merged layouts raise structural errors."""
     cat, mod = repos
@@ -839,6 +899,36 @@ def test_composition_normalization_shorthand_and_mixed(repos):
     normalized_pending = WorldCompositionNormalizer.normalize(pending_spec)
     assert len(normalized_pending.pending_information_responses) == 1
     assert normalized_pending.pending_information_responses[0].target_population_id == "pop_0"
+
+    # 7. pending_self_model_information_events mirrors through unset (default []) and set unchanged
+    # (TCK-20260703-SIMQ-UPLIFT3-BRANCH-B)
+    from src.worldassembly.schema import PendingSelfModelInformationEventSpec
+
+    no_self_model_events_spec = WorldCompositionSpec(
+        schema_version="worldcomposition.v1",
+        world_id="no_self_model_events_world",
+        name="No Self Model Events World",
+        module_refs=[],
+    )
+    normalized_no_self_model_events = WorldCompositionNormalizer.normalize(no_self_model_events_spec)
+    assert normalized_no_self_model_events.pending_self_model_information_events == []
+
+    self_model_events_spec = WorldCompositionSpec(
+        schema_version="worldcomposition.v1",
+        world_id="self_model_events_world",
+        name="Self Model Events World",
+        module_refs=[],
+        pending_self_model_information_events=[
+            PendingSelfModelInformationEventSpec(
+                target_population_id="pop_1",
+                answer_kind="unknown",
+                unknowns=["material.moon_resin.source"],
+            ),
+        ],
+    )
+    normalized_self_model_events = WorldCompositionNormalizer.normalize(self_model_events_spec)
+    assert len(normalized_self_model_events.pending_self_model_information_events) == 1
+    assert normalized_self_model_events.pending_self_model_information_events[0].target_population_id == "pop_1"
 
 
 def test_v2_module_resolution_and_heuristics(repos):

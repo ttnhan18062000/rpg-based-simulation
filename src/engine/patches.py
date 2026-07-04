@@ -625,6 +625,26 @@ class WoundPatch(ComponentPatch):
             changes["combat"] = new_com
 
 
+@dataclass(frozen=True, slots=True)
+class SelfModelPatch(ComponentPatch):
+    self_model_bundle_set: Optional[Any] = None  # SelfModelBundle
+
+    def is_noop(self) -> bool:
+        return self.self_model_bundle_set is None
+
+    def merge(self, other: SelfModelPatch) -> SelfModelPatch:
+        if not other or other.is_noop():
+            return self
+        return SelfModelPatch(
+            entity_id=self.entity_id,
+            self_model_bundle_set=other.self_model_bundle_set if other.self_model_bundle_set is not None else self.self_model_bundle_set,
+        )
+
+    def apply(self, entity: EntityState, changes: Dict[str, Any]) -> None:
+        if self.self_model_bundle_set is not None:
+            changes["self_model"] = self.self_model_bundle_set
+
+
 def extract_patches(entity_id: int, update: EntityUpdate) -> List[ComponentPatch]:
     """
     Extracts all active component patches from a monolithic EntityUpdate.
@@ -680,5 +700,8 @@ def extract_patches(entity_id: int, update: EntityUpdate) -> List[ComponentPatch
         if not p.is_noop(): patches.append(p)
     if update.wound_update is not None:
         p = WoundPatch(entity_id, wound_update=update.wound_update)
+        if not p.is_noop(): patches.append(p)
+    if update.self_model_bundle_set is not None:
+        p = SelfModelPatch(entity_id, self_model_bundle_set=update.self_model_bundle_set)
         if not p.is_noop(): patches.append(p)
     return patches

@@ -52,3 +52,11 @@ pending_information_responses:
       danger_level: "elevated"
       region: "bandit_road"
     cost_paid: 0
+pending_self_model_information_events:
+  - target_population_id: "pop_1"
+    answer_kind: "unknown"
+    unknowns:
+      - "material.moon_resin.source"
+    certainty: 0.0
+    source_id: null
+    cost_gold: 0

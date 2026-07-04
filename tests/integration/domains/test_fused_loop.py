@@ -21,6 +21,7 @@ from src.engine.pipeline import AuthoritativeApplyPipeline
 from src.engine.apply import ApplyPath
 from src.world.providers.resources import ResourceOpportunityProvider
 from src.domains.information.schema import InformationSourceProfile
+from src.world.providers.information import InformationResponse
 
 
 def _create_entity(ent_id: int, x: float, y: float, hp: int = 100) -> Any:
@@ -212,5 +213,304 @@ def test_belief_assimilation_persists_facts():
     next_state = ApplyPath.apply_generation(state, refined, next_tick=2)
     next_actor = next_state.entities[1]
     
-    # Check that the coal_ore unknown is cleared or updated correctly
-    assert next_actor.self_model.knowledge is not None
+    # Check that the coal_ore unknown is resolved into a fact with the expected content
+    # (TCK-20260703-SIMQ-UPLIFT3-BRANCH-B supplementary fix: self_model_bundle_set now
+    # durably materializes via SelfModelPatch, so this assertion actually proves the fix
+    # instead of merely tolerating an always-non-None default).
+    fact = next_actor.self_model.knowledge.facts.get("coal_ore")
+    assert fact is not None
+    assert fact.details == {"source": "old_mine"}
+    assert next_actor.self_model.knowledge.unknowns.get("coal_ore") is None
+
+
+def test_self_model_apply_sources_events_from_pending_field_isolated_from_finding4():
+    """
+    TCK-20260703-SIMQ-UPLIFT3-BRANCH-B: SelfModelUpdatePhase.apply() sources real
+    InformationResponse-shaped events from state.pending_self_model_information_events
+    (grouped by actor_id) instead of the previous events=[] hardcoding. Isolated from
+    Finding 4 (ENABLE_BELIEF_ASSIMILATION left unset/OFF).
+    """
+    e1 = _create_entity(1, 0.0, 0.0)
+    e2 = _create_entity(2, 5.0, 5.0)
+    state = _create_state([e1, e2])
+
+    seeded_event = {
+        "actor_id": 1,
+        "event": InformationResponse(answer_kind="unknown", unknowns=("material.moon_resin.source",)),
+    }
+    state = dataclass_replace(
+        state,
+        pending_self_model_information_events=[seeded_event],
+        feature_flags={"ENABLE_SELF_MODEL_COGNITION": FeatureMode.ON},
+    )
+
+    update = StateUpdate()
+    refined = AuthoritativeApplyPipeline.refine(state, update)
+
+    assert 1 in refined.entity_updates
+    eu1 = refined.entity_updates[1]
+    assert eu1.self_model_bundle_set is not None
+    unk = eu1.self_model_bundle_set.knowledge.unknowns.get("material.moon_resin.source")
+    assert unk is not None
+    assert unk.reason == "provider_unknown"
+
+    # Entity 2 (no seeded event) still gets a valid self_model_bundle_set — confirms the
+    # fix does not regress entities without a seeded event.
+    assert 2 in refined.entity_updates
+    assert refined.entity_updates[2].self_model_bundle_set is not None
+
+    # Step 7 single-fire regression guard: not carried forward past this tick.
+    next_state = ApplyPath.apply_generation(state, refined, next_tick=2)
+    assert next_state.pending_self_model_information_events == []
+    # Finding 5 (supplementary fix, this session): EntityUpdate.self_model_bundle_set now
+    # durably materializes into entity.self_model across the tick boundary via
+    # SelfModelPatch (src/engine/patches.py) — confirmed by asserting the actual unknown
+    # entry's content, not just non-None presence.
+    persisted_unk = next_state.entities[1].self_model.knowledge.unknowns.get("material.moon_resin.source")
+    assert persisted_unk is not None
+    assert persisted_unk.reason == "provider_unknown"
+
+
+def test_information_belief_merge_preserves_self_model_writes_both_flags_on():
+    """
+    TCK-20260703-SIMQ-UPLIFT3-BRANCH-B (Finding-4 fix-proving test): with BOTH
+    ENABLE_SELF_MODEL_COGNITION and ENABLE_BELIEF_ASSIMILATION ON simultaneously,
+    InformationBeliefPhase's pipeline-wiring fix (u.merge(...) at
+    src/engine/pipeline.py:152's information_belief call site) must not wipe
+    entity_updates for an entity it never touches.
+
+    Before this ticket's fix (pipeline.py:152 called InformationBeliefPhase.apply()
+    directly instead of via u.merge(...)), this exact scenario (2 entities, no
+    pending_information_responses, entity B has no unknowns) emptied
+    refined.entity_updates to {} entirely — empirically reproduced during this
+    ticket's implementation by temporarily reverting the fix. This test is the direct
+    regression guard against that clobbering ever being reintroduced.
+    """
+    e_a = _create_entity(1, 0.0, 0.0)  # gets a seeded self-model event
+    e_b = _create_entity(2, 5.0, 5.0)  # unrelated; no seeded event, no unknowns
+    state = _create_state([e_a, e_b])
+
+    seeded_event = {
+        "actor_id": 1,
+        "event": InformationResponse(answer_kind="unknown", unknowns=("material.moon_resin.source",)),
+    }
+    state = dataclass_replace(
+        state,
+        pending_self_model_information_events=[seeded_event],
+        feature_flags={
+            "ENABLE_SELF_MODEL_COGNITION": FeatureMode.ON,
+            "ENABLE_BELIEF_ASSIMILATION": FeatureMode.ON,
+        },
+    )
+
+    update = StateUpdate()
+    refined = AuthoritativeApplyPipeline.refine(state, update)
+
+    # Entity A: Step 4's fix fired (self_model wrote the unknown this tick).
+    assert 1 in refined.entity_updates
+    unk = refined.entity_updates[1].self_model_bundle_set.knowledge.unknowns.get("material.moon_resin.source")
+    assert unk is not None
+
+    # Entity B: information_belief never touches it (no unknowns, no pending response) —
+    # but self_model's own same-tick write for entity B must survive the merge fix.
+    assert 2 in refined.entity_updates
+    assert refined.entity_updates[2].self_model_bundle_set is not None
+
+
+def test_information_belief_branch_b_routes_query_when_unknown_precondition_met():
+    """
+    TCK-20260703-SIMQ-UPLIFT3-BRANCH-B: proves InformationBeliefPhase's Branch B
+    (route a new query for an actor's first unresolved unknown, phase.py:84-105) is
+    genuinely reachable and coexists with a same-tick self_model write via the merge
+    fix, both flags ON simultaneously.
+
+    Entity A already has self_model.knowledge.unknowns populated directly on `state`
+    (the durable precondition Branch B's routing checks) — this isolates "does Branch
+    B's routing logic itself work" from "can SelfModelUpdatePhase's same-tick write
+    reach `state` in time" (it cannot within a single refine() call; see
+    test_self_model_apply_sources_events_from_pending_field_isolated_from_finding4's
+    NOTE on phase ordering / Finding 5). Entity B is seeded via the new
+    pending_self_model_information_events field so self_model produces a fresh
+    same-tick EntityUpdate for it — proving the two entities' distinct contributions
+    coexist under the merge fix.
+    """
+    unk = UnknownFact(subject="material.moon_resin.source", reason="provider_unknown", recorded_tick=0)
+    b = V2EntityBuilder(1)
+    b.replace_combat(CombatComponent(hp=100, max_hp=100, atk=10, def_stat=2))
+    b.replace_biological(BiologicalComponent(hunger=0.0, sleep_debt=0.0))
+    b.identity(evolution_level=1, personality=PersonalityComponent(greed=0.5, bravery=0.5, sociability=0.5, industry=0.5))
+    b.location(0.0, 0.0)
+    b.lifecycle(active=True)
+    b.replace_self_model(SelfModelBundle(knowledge=KnowledgeModelComponent(unknowns={"material.moon_resin.source": unk})))
+    actor_a = b.build()
+
+    actor_b = _create_entity(2, 5.0, 5.0)
+
+    profile = InformationSourceProfile(
+        source_id="town_notice_board", source_kind="guide",
+        knowledge_scopes=("regional_danger", "common_resource_sources"),
+        accuracy=0.4, freshness=0.6, bias=0.1, cost_gold=0, max_answers_per_query=2,
+    )
+
+    seeded_event = {
+        "actor_id": 2,
+        "event": InformationResponse(answer_kind="unknown", unknowns=("recipe.iron_dagger.requirements",)),
+    }
+
+    state = _create_state([actor_a, actor_b])
+    state = dataclass_replace(
+        state,
+        information_source_profiles=[profile],
+        pending_self_model_information_events=[seeded_event],
+        feature_flags={
+            "ENABLE_SELF_MODEL_COGNITION": FeatureMode.ON,
+            "ENABLE_BELIEF_ASSIMILATION": FeatureMode.ON,
+        },
+    )
+
+    update = StateUpdate()
+    refined = AuthoritativeApplyPipeline.refine(state, update)
+
+    # Entity A: Branch B fired — a new query was routed for its pre-existing unknown.
+    eu_a = refined.entity_updates.get(1)
+    assert eu_a is not None
+    assert eu_a.property_updates.get("last_routed_query_subject") == "material.moon_resin.source"
+    assert eu_a.intent_results, "expected a routed ASK_INFORMATION intent for entity A"
+    assert eu_a.intent_results[0].kind == "ASK_INFORMATION"
+
+    # Entity B: Step 4's fix fired for a distinct entity/subject in the same tick —
+    # and its self_model write survives the merge alongside entity A's Branch B write.
+    eu_b = refined.entity_updates.get(2)
+    assert eu_b is not None
+    assert eu_b.self_model_bundle_set is not None
+    assert eu_b.self_model_bundle_set.knowledge.unknowns.get("recipe.iron_dagger.requirements") is not None
+
+
+def test_branch_b_on_compiled_urban_political_state_self_model_and_branch_a_coexist():
+    """
+    TCK-20260703-SIMQ-UPLIFT3-BRANCH-B: compile urban_political's real resolved world
+    spec, override ENABLE_SELF_MODEL_COGNITION to ON for this test only (leaving
+    ENABLE_BELIEF_ASSIMILATION at its shipped urban_political profile value, ON), and
+    confirm the events=[] fix populates pop_1's self_model_bundle_set with real
+    compiled content in the same tick Branch A (pending_information_responses) fires
+    for pop_0 — proving the two coexist correctly under the merge fix.
+
+    Honest scope note: InformationBeliefPhase's Branch B routing itself does NOT fire
+    within this same tick 0 call, because InformationBeliefPhase.apply() reads
+    `actor.self_model` off the frozen `state` object (not the in-flight `update`), and
+    `state` is not remutated mid-refine() — self_model's write for pop_1 lands only in
+    `update` this tick. See
+    test_information_belief_branch_b_routes_query_when_unknown_precondition_met above
+    for proof that Branch B's routing logic itself is reachable once its state-level
+    precondition is met.
+    """
+    from src.worldbuilding.schema import load_world_spec_from_yaml
+    from src.worldbuilding.compiler import WorldCompiler
+
+    spec = load_world_spec_from_yaml("data/worlds/urban_political/resolved/world.resolved.yaml")
+    state, _ = WorldCompiler.compile(spec, seed=42)
+    state = dataclass_replace(
+        state,
+        feature_flags={
+            "ENABLE_SELF_MODEL_COGNITION": FeatureMode.ON,
+            "ENABLE_BELIEF_ASSIMILATION": FeatureMode.ON,
+        },
+    )
+
+    pop_1_id = next(
+        eid for eid, e in state.entities.items()
+        if e.properties.get("population_id") == "pop_1"
+    )
+    pop_0_id = next(
+        eid for eid, e in state.entities.items()
+        if e.properties.get("population_id") == "pop_0"
+    )
+
+    update = StateUpdate()
+    refined = AuthoritativeApplyPipeline.refine(state, update)
+
+    eu_1 = refined.entity_updates[pop_1_id]
+    assert eu_1.self_model_bundle_set is not None
+    assert eu_1.self_model_bundle_set.knowledge.unknowns.get("material.moon_resin.source") is not None
+
+    eu_0 = refined.entity_updates[pop_0_id]
+    assert eu_0.property_updates.get("last_assimilated_subject") == "bandit_road_danger"
+
+
+def test_branch_b_fires_across_real_tick_boundary_after_self_model_patch_materialization():
+    """
+    TCK-20260703-SIMQ-UPLIFT3-BRANCH-B (supplementary fix, Finding 5): proves the full
+    seed -> assimilate -> materialize -> route sequence works end-to-end across a real
+    tick boundary, now that SelfModelPatch (src/engine/patches.py) durably materializes
+    EntityUpdate.self_model_bundle_set into entity.self_model via ApplyPath.
+
+    Tick N: a pending_self_model_information_events "unknown" event is seeded for the
+    actor. Within this same refine() call, InformationBeliefPhase reads the actor's
+    self_model off the still-frozen `state` (pre-materialization) — so Branch B does
+    NOT route in tick N (matches the documented same-tick phase-ordering limitation in
+    test_branch_b_on_compiled_urban_political_state_self_model_and_branch_a_coexist).
+    After ApplyPath.apply_generation() commits tick N's self_model write, the actor's
+    durable self_model.knowledge.unknowns is populated for the first time.
+
+    Tick N+1: a second refine() call (no new seed) on the resulting next_state now sees
+    the durably materialized unknown and InformationBeliefPhase's Branch B routes a
+    query for it — the exact cross-tick reachability this ticket's own Finding 5
+    recommended as a follow-up.
+    """
+    profile = InformationSourceProfile(
+        source_id="town_notice_board", source_kind="guide",
+        knowledge_scopes=("regional_danger", "common_resource_sources"),
+        accuracy=0.4, freshness=0.6, bias=0.1, cost_gold=0, max_answers_per_query=2,
+    )
+
+    actor = _create_entity(1, 0.0, 0.0)
+    state = _create_state([actor])
+
+    seeded_event = {
+        "actor_id": 1,
+        "event": InformationResponse(answer_kind="unknown", unknowns=("material.moon_resin.source",)),
+    }
+    state = dataclass_replace(
+        state,
+        pending_self_model_information_events=[seeded_event],
+        information_source_profiles=[profile],
+        feature_flags={
+            "ENABLE_SELF_MODEL_COGNITION": FeatureMode.ON,
+            "ENABLE_BELIEF_ASSIMILATION": FeatureMode.ON,
+        },
+    )
+
+    # Tick N: seed materializes into an EntityUpdate this tick, but Branch B cannot
+    # route yet (state.entities[1].self_model is still pre-write, same-tick limitation).
+    update_n = StateUpdate()
+    refined_n = AuthoritativeApplyPipeline.refine(state, update_n)
+    eu_n = refined_n.entity_updates.get(1)
+    assert eu_n is not None
+    assert eu_n.self_model_bundle_set is not None
+    assert eu_n.self_model_bundle_set.knowledge.unknowns.get("material.moon_resin.source") is not None
+    assert eu_n.property_updates.get("last_routed_query_subject") is None
+
+    next_state = ApplyPath.apply_generation(state, refined_n, next_tick=state.tick + 1)
+    # Single-fire field cleared; durable materialization confirmed via SelfModelPatch.
+    assert next_state.pending_self_model_information_events == []
+    materialized_unk = next_state.entities[1].self_model.knowledge.unknowns.get("material.moon_resin.source")
+    assert materialized_unk is not None
+    assert materialized_unk.reason == "provider_unknown"
+
+    # information_source_profiles is itself a per-tick-seeded field (like
+    # pending_information_responses/pending_self_model_information_events, it is not
+    # carried forward by ApplyPath.apply_generation() — confirmed empty on next_state
+    # here) — unrelated to this fix; re-seed it for tick N+1 exactly as a live world
+    # would supply routable source profiles every tick.
+    assert next_state.information_source_profiles == []
+    next_state = dataclass_replace(next_state, information_source_profiles=[profile])
+
+    # Tick N+1: no new self-model event seed — Branch B now sees the durably
+    # materialized unknown (carried on `next_state` via this fix) and routes.
+    update_n1 = StateUpdate()
+    refined_n1 = AuthoritativeApplyPipeline.refine(next_state, update_n1)
+    eu_n1 = refined_n1.entity_updates.get(1)
+    assert eu_n1 is not None, "expected InformationBeliefPhase's Branch B to route a query in tick N+1"
+    assert eu_n1.property_updates.get("last_routed_query_subject") == "material.moon_resin.source"
+    assert eu_n1.intent_results, "expected a routed ASK_INFORMATION intent in tick N+1"
+    assert eu_n1.intent_results[0].kind == "ASK_INFORMATION"

@@ -3,8 +3,10 @@ import pytest
 from unittest.mock import MagicMock
 from src.core.updates import EntityUpdate, CombatUpdate, NavigationUpdate, AttributeUpdate, IdentityUpdate, WoundUpdate
 from src.core.state import EntityState, CombatComponent, NavigationComponent, AttributeComponent, IdentityComponent
+from src.core.self_model import SelfModelBundle, KnowledgeModelComponent, UnknownFact
 from src.engine.patches import (
-    extract_patches, CombatPatch, NavigationPatch, AttributePatch, IdentityPatch, WoundPatch, KindPatch
+    extract_patches, CombatPatch, NavigationPatch, AttributePatch, IdentityPatch, WoundPatch, KindPatch,
+    SelfModelPatch
 )
 
 def test_patch_noop_detection():
@@ -56,3 +58,85 @@ def test_order_sensitivity():
     # Kind and Identity precede Combat
     assert kind_idx < com_idx
     assert id_idx < com_idx
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# SelfModelPatch (TCK-20260703-SIMQ-UPLIFT3-BRANCH-B supplementary fix)
+# ─────────────────────────────────────────────────────────────────────────────
+
+def test_self_model_patch_noop_detection():
+    smp_noop = SelfModelPatch(entity_id=1, self_model_bundle_set=None)
+    assert smp_noop.is_noop() is True
+
+    bundle = SelfModelBundle(knowledge=KnowledgeModelComponent(
+        unknowns={"coal_ore": UnknownFact(subject="coal_ore", reason="need_material")}
+    ))
+    smp_active = SelfModelPatch(entity_id=1, self_model_bundle_set=bundle)
+    assert smp_active.is_noop() is False
+
+
+def test_self_model_patch_merge_prefers_other():
+    bundle_a = SelfModelBundle(knowledge=KnowledgeModelComponent(
+        unknowns={"coal_ore": UnknownFact(subject="coal_ore", reason="need_material")}
+    ))
+    bundle_b = SelfModelBundle(knowledge=KnowledgeModelComponent(
+        unknowns={"iron_ore": UnknownFact(subject="iron_ore", reason="need_material")}
+    ))
+
+    smp1 = SelfModelPatch(entity_id=1, self_model_bundle_set=bundle_a)
+    smp2 = SelfModelPatch(entity_id=1, self_model_bundle_set=bundle_b)
+
+    merged = smp1.merge(smp2)
+    assert merged.self_model_bundle_set is bundle_b  # last-write-wins
+
+    # other.is_noop() (None) -> self's bundle preserved
+    smp_noop_other = SelfModelPatch(entity_id=1, self_model_bundle_set=None)
+    merged_preserve = smp1.merge(smp_noop_other)
+    assert merged_preserve.self_model_bundle_set is bundle_a
+
+
+def test_self_model_patch_apply_sets_changes_key():
+    entity = EntityState(id=1, kind="hero")
+    bundle = SelfModelBundle(knowledge=KnowledgeModelComponent(
+        unknowns={"coal_ore": UnknownFact(subject="coal_ore", reason="need_material")}
+    ))
+    smp = SelfModelPatch(entity_id=1, self_model_bundle_set=bundle)
+
+    changes = {}
+    smp.apply(entity, changes)
+    assert changes["self_model"] is bundle  # identity, not just equality
+
+
+def test_self_model_patch_apply_noop_leaves_changes_untouched():
+    entity = EntityState(id=1, kind="hero")
+    smp = SelfModelPatch(entity_id=1, self_model_bundle_set=None)
+
+    changes = {}
+    smp.apply(entity, changes)
+    assert "self_model" not in changes
+
+
+def test_extract_patches_includes_self_model_patch():
+    bundle = SelfModelBundle(knowledge=KnowledgeModelComponent(
+        unknowns={"coal_ore": UnknownFact(subject="coal_ore", reason="need_material")}
+    ))
+    update = EntityUpdate(
+        entity_id=1,
+        kind_set="Orc",
+        attributes=AttributeUpdate(strength_delta=5),
+        combat=CombatUpdate(hp_delta=-15),
+        identity=IdentityUpdate(role_set="Warrior"),
+        self_model_bundle_set=bundle,
+    )
+    patches = extract_patches(1, update)
+    patch_types = [type(p) for p in patches]
+
+    assert SelfModelPatch in patch_types
+    smp = next(p for p in patches if isinstance(p, SelfModelPatch))
+    assert smp.self_model_bundle_set is bundle
+
+
+def test_extract_patches_omits_self_model_patch_when_unset():
+    update = EntityUpdate(entity_id=1, kind_set="Orc")
+    patches = extract_patches(1, update)
+    assert not any(isinstance(p, SelfModelPatch) for p in patches)

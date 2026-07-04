@@ -342,6 +342,91 @@ def test_compiler_no_pending_information_responses_declared_yields_empty_list():
     assert state.pending_information_responses == []
 
 
+def test_compiler_seeds_pending_self_model_information_events_from_spec():
+    """WorldCompiler.compile() resolves target_population_id -> compiled actor_id and
+    constructs a real InformationResponse instance inside a
+    pending_self_model_information_events dict entry on AuthoritativeState
+    (TCK-20260703-SIMQ-UPLIFT3-BRANCH-B)."""
+    from src.world.providers.information import InformationResponse
+
+    data = create_base_valid_spec()
+    data["entities"] = [
+        {"id": "pop_test", "count": 1, "role": "citizen", "faction": "villagers", "spawn_region": "town_square"},
+    ]
+    data["pending_self_model_information_events"] = [
+        {
+            "target_population_id": "pop_test",
+            "answer_kind": "unknown",
+            "unknowns": ["material.moon_resin.source"],
+        },
+    ]
+    spec = WorldSpec.model_validate(data)
+
+    state, _ = WorldCompiler.compile(spec, seed=42)
+
+    assert len(state.pending_self_model_information_events) == 1
+    entry = state.pending_self_model_information_events[0]
+    compiled_actor_id = next(
+        eid for eid, e in state.entities.items()
+        if e.properties.get("population_id") == "pop_test"
+    )
+    assert entry["actor_id"] == compiled_actor_id
+    event = entry["event"]
+    assert isinstance(event, InformationResponse)
+    assert event.answer_kind == "unknown"
+    assert event.unknowns == ("material.moon_resin.source",)
+    assert event.facts == ()
+    assert event.suggested_leads == ()
+
+
+def test_compiler_pending_self_model_information_event_unmatched_population_is_skipped_with_warning():
+    """A target_population_id referencing no compiled entity is skipped, and a warning is recorded."""
+    data = create_base_valid_spec()
+    data["pending_self_model_information_events"] = [
+        {
+            "target_population_id": "does_not_exist",
+            "answer_kind": "unknown",
+            "unknowns": ["material.moon_resin.source"],
+        },
+    ]
+    spec = WorldSpec.model_validate(data)
+
+    state, report = WorldCompiler.compile(spec, seed=42)
+
+    assert state.pending_self_model_information_events == []
+    assert any("does_not_exist" in w for w in report["warnings"])
+
+
+def test_compiler_no_pending_self_model_information_events_declared_yields_empty_list():
+    """spec.pending_self_model_information_events == [] compiles to
+    state.pending_self_model_information_events == [] (schema-level regression guard)."""
+    data = create_base_valid_spec()
+    spec = WorldSpec.model_validate(data)
+
+    state, _ = WorldCompiler.compile(spec, seed=42)
+
+    assert state.pending_self_model_information_events == []
+
+
+def test_urban_political_resolved_world_seeds_one_pending_self_model_information_event():
+    """urban_political's resolved world spec compiles with the seeded
+    pending_self_model_information_events entry targeting pop_1
+    (TCK-20260703-SIMQ-UPLIFT3-BRANCH-B)."""
+    from src.worldbuilding.schema import load_world_spec_from_yaml
+    from src.world.providers.information import InformationResponse
+
+    spec = load_world_spec_from_yaml("data/worlds/urban_political/resolved/world.resolved.yaml")
+    state, _ = WorldCompiler.compile(spec, seed=42)
+
+    assert len(state.pending_self_model_information_events) == 1
+    entry = state.pending_self_model_information_events[0]
+    assert state.entities[entry["actor_id"]].properties["population_id"] == "pop_1"
+    event = entry["event"]
+    assert isinstance(event, InformationResponse)
+    assert event.answer_kind == "unknown"
+    assert event.unknowns == ("material.moon_resin.source",)
+
+
 def test_urban_political_resolved_world_seeds_one_pending_information_response():
     """urban_political's resolved world spec compiles with the seeded pending_information_responses
     entry targeting pop_0 (TCK-20260703-SIMQ-INFORMATION-BELIEF-TRIGGER)."""
