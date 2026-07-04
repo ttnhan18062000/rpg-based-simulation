@@ -18,6 +18,17 @@ The retro process transforms raw `runs.jsonl` + `events.jsonl` into a structured
 - Every Friday (or the start of the next sprint)
 - Before changing any agent prompt, workflow phase, or tier routing rule
 
+This is no longer pure human discipline: a `PostToolUse` hook
+(`tools/agent-monitoring/retro_nudge_hook.py`, wired in `.claude/settings.json`)
+counts `implement-ticket` runs with `final_status`/`status` `DONE` in
+`agent-monitoring/runs.jsonl` whose `start_ts`/`started_at` is later than the
+mtime of the most recent dated `agent-monitoring/retro/RETRO-<week>.md` report
+(`RETRO-ALL.md` is a static all-time snapshot and is excluded from this check).
+Once that count reaches 5, it injects an `additionalContext` reminder to run
+`/agent-monitoring-retro` — advisory only, it never blocks a tool call, and it
+fires at most once per session. Run `/agent-monitoring-retro` to invoke the
+skill directly instead of waiting for the nudge.
+
 ---
 
 ## How to Generate a Report

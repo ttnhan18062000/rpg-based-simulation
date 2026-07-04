@@ -114,6 +114,12 @@ The `graphify-out/wiki/index.md` provides a navigable wiki built from the graph.
 
 ---
 
+### Observability
+
+**`/agent-monitoring-retro`** — Generate the weekly agent monitoring retro report (`make agent-monitoring-retro`) and walk through the retrospective process (run summary, gate failures, tier distribution, summary quality, slow runs). Use weekly, after 5+ completed tickets, or before changing any agent prompt/phase/tier rule. A `PostToolUse` hook (`tools/agent-monitoring/retro_nudge_hook.py`) nudges via `additionalContext` once 5+ `implement-ticket` runs have completed DONE since the last dated `RETRO-<week>.md` report.
+
+---
+
 ### Configuration
 
 **`/update-config`** — Modify `settings.json` or `settings.local.json`. Use for:
@@ -142,6 +148,7 @@ These skills are Python and engineering patterns adapted for this project and st
 | `/doc-coauthoring` | `doc-coauthoring/SKILL.md` | Documentation co-authoring |
 | `/prompt-builder` | `prompt-builder/SKILL.md` | Prompt construction guidance |
 | `/frontend-design` | `frontend-design/SKILL.md` | Frontend component design |
+| `/agent-monitoring-retro` | `agent-monitoring-retro/SKILL.md` | Agent monitoring retro report generation |
 
 ---
 

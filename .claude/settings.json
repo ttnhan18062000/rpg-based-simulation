@@ -98,6 +98,15 @@
             "command": "FILE=$(python3 -c \"import json,sys; d=json.load(sys.stdin); print(d.get('tool_input',d).get('file_path',''))\" 2>/dev/null || true); case \"$FILE\" in */src/*|*/tests/*) [ -f graphify-out/graph.json ] && graphify update . 2>/dev/null || true ;; esac"
           }
         ]
+      },
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 tools/agent-monitoring/retro_nudge_hook.py 2>/dev/null || true"
+          }
+        ]
       }
     ]
   }
