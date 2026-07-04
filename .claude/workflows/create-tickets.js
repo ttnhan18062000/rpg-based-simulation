@@ -85,7 +85,58 @@ const COMPREHEND_SCHEMA = {
       type: 'string',
       description: 'One sentence: N concerns extracted from the proposal (≤200 chars)',
     },
+    ts: { type: 'string', description: 'ISO timestamp from `date -u +%Y-%m-%dT%H:%M:%SZ`, captured first' },
   },
+}
+
+// ─── Agent Monitoring Setup ────────────────────────────────────────────────────
+// Hard rule: mandatory for every run (including hotfix). Failure is non-fatal.
+// No single ticket_id exists yet (this workflow creates N tickets), so run_id
+// is derived from the source doc path — mirrors implement-epic's FOLDER-{path}.
+
+const sourceSlug = source.replace(/\.[^/.]+$/, '').replace(/[^A-Za-z0-9]+/g, '-').toUpperCase().replace(/^-+|-+$/g, '')
+const runId = `CREATE-TICKETS-${sourceSlug}`
+
+const events = []
+const pushEvent = (phaseLabel, agentName, status, summary, ts) => {
+  events.push({
+    seq: events.length + 1,
+    phase: phaseLabel,
+    agent: agentName,
+    status,
+    summary: (summary || '').toString().slice(0, 200),
+    ts: ts || null,
+  })
+}
+
+let startTs = null
+
+const writeMonitoring = async (finalStatus) => {
+  const eventsJson = JSON.stringify(events)
+  const eventsCount = events.length
+  const startTsLiteral = startTs ? startTs : '<END_TS>'
+  const result = await agent(
+    `Write agent monitoring records for run "${runId}". This is bookkeeping — do NOT fail if writes error.
+
+Step 1 — get current timestamp (run end time):
+  Run via Bash: date -u +%Y-%m-%dT%H:%M:%SZ
+  Save result as END_TS. Replace every literal <END_TS> in the commands below with this value.
+
+Step 2 — build and write events:
+  Input events: ${eventsJson}
+  For each event: add "run_id": "${runId}". If "ts" is null or missing, set "ts" to END_TS.
+  Run: python3 tools/agent-monitoring/record_events.py --data '<final JSON array>'
+
+Step 3 — write run record (replace <END_TS> with the value from Step 1):
+  Run: python3 tools/agent-monitoring/record_run.py --data '{"run_id":"${runId}","start_ts":"${startTsLiteral}","end_ts":"<END_TS>","workflow":"create-tickets","tier":"n/a","final_status":"${finalStatus}","agent_count":${eventsCount}}'
+
+If any command fails, print "WARNING: monitoring write failed: <error>" and continue — do NOT raise.
+Return "monitoring written" or "monitoring write failed: <reason>".`,
+    { label: 'monitoring-write' }
+  )
+  if (!result) {
+    log('WARNING: agent-monitoring write agent returned null (non-fatal)')
+  }
 }
 
 const comprehension = await agent(
@@ -98,6 +149,8 @@ The proposal is written in natural language by a developer, BA, or tester. It ma
 - Written in domain/business language, not code terms
 
 Your job: understand what the author wants, NOT how to implement it. Leave investigation for the next phase.
+
+Step 0: run \`date -u +%Y-%m-%dT%H:%M:%SZ\` and return it as "ts" — captured before any other work.
 
 Step 1 — read the proposal:
   Read: ${source}
@@ -123,13 +176,18 @@ Step 3 — extract discrete concerns:
   - priority_hint: P0/P1/P2 — infer from urgency language, default P1 if not stated
   - raw_excerpts: 1-3 quotes or paraphrases from the proposal supporting this concern
 
-Return: concerns[], summary (one sentence: N concerns extracted).`,
+Return: concerns[], summary (one sentence: N concerns extracted), ts.`,
   { label: 'comprehend', schema: COMPREHEND_SCHEMA }
 )
 
+startTs = comprehension.ts || null
+
 log(`Comprehend: ${comprehension.summary}`)
+pushEvent('Comprehend', 'create-tickets', 'ok', comprehension.summary, startTs)
 
 if (comprehension.concerns.length === 0) {
+  pushEvent('Comprehend', 'create-tickets', 'skipped', 'No actionable concerns found in the proposal', startTs)
+  await writeMonitoring('NOTHING_TO_CREATE')
   return {
     status: 'NOTHING_TO_CREATE',
     source,
@@ -347,6 +405,13 @@ is_duplicate, duplicate_of, tier_recommendation, summary.`,
 const validInvestigations = investigations.filter(Boolean)
 log(`Investigate: ${validInvestigations.length}/${comprehension.concerns.length} concerns investigated`)
 
+for (const inv of validInvestigations) {
+  pushEvent('Investigate', `investigate:${inv.concern_id}`, inv.is_duplicate ? 'skipped' : 'ok', inv.summary, null)
+}
+if (validInvestigations.length < comprehension.concerns.length) {
+  pushEvent('Investigate', 'create-tickets', 'failed', `${comprehension.concerns.length - validInvestigations.length} investigation agent(s) returned null`, null)
+}
+
 const duplicates = validInvestigations.filter(i => i.is_duplicate)
 if (duplicates.length > 0) {
   log(`Duplicates skipped: ${duplicates.map(d => `${d.concern_id} → ${d.duplicate_of}`).join(' | ')}`)
@@ -355,6 +420,7 @@ if (duplicates.length > 0) {
 const activeInvestigations = validInvestigations.filter(i => !i.is_duplicate)
 
 if (activeInvestigations.length === 0) {
+  await writeMonitoring('NOTHING_TO_CREATE')
   return {
     status: 'NOTHING_TO_CREATE',
     source,
@@ -520,11 +586,13 @@ Return: date (YYYYMMDD), folder_name, tasks[], skipped[], summary.`,
 )
 
 log(`Structure: ${structured.summary}`)
+pushEvent('Structure', 'structure', structured.tasks.length > 0 ? 'ok' : 'skipped', structured.summary, null)
 if (structured.skipped.length > 0) {
   log(`Skipped: ${structured.skipped.join(' | ')}`)
 }
 
 if (structured.tasks.length === 0) {
+  await writeMonitoring('NOTHING_TO_CREATE')
   return {
     status: 'NOTHING_TO_CREATE',
     source,
@@ -641,8 +709,12 @@ const succeeded = written.filter(Boolean)
 const ticketIds = succeeded.map(w => w.ticket_id)
 
 log(`Written: ${succeeded.length}/${dedupedTasks.length} tickets`)
+for (const w of succeeded) {
+  pushEvent('Write', 'ticket-scoper', 'ok', w.summary || `Wrote ${w.ticket_id}`, w.ts)
+}
 if (succeeded.length < dedupedTasks.length) {
   log(`WARNING: ${dedupedTasks.length - succeeded.length} write agent(s) returned null`)
+  pushEvent('Write', 'ticket-scoper', 'failed', `${dedupedTasks.length - succeeded.length} write agent(s) returned null`, null)
 }
 
 // ─── Auto-generate SEQUENCE.md when intra-batch dependencies exist ────────────
@@ -736,7 +808,7 @@ Confirm: DONE or ERROR.`,
 if (epicId && ticketIds.length > 0) {
   phase('Link')
 
-  await agent(
+  const linkResult = await agent(
     `Append new ticket IDs to the ## Related Tickets section of epic ${epicId}.
 
 Step 1 — find the epic ticket:
@@ -752,8 +824,12 @@ Step 3 — report: DONE (file path updated) or SKIPPED (epic ticket not found).`
     { label: 'link-epic', phase: 'Link' }
   )
 
+  const linkText = (linkResult || '').toString()
+  pushEvent('Link', 'link-epic', linkText.includes('SKIPPED') ? 'skipped' : 'ok', linkText.slice(0, 200) || `Linked to ${epicId}`, null)
   log(`Linked ${ticketIds.length} ticket(s) to epic ${epicId}`)
 }
+
+await writeMonitoring('DONE')
 
 return {
   status: 'DONE',

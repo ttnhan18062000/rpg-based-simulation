@@ -33,11 +33,11 @@ One record per workflow invocation.
 
 | Field | Type | Nullable | Description |
 |---|---|---|---|
-| `run_id` | string | No | Unique run identifier. For `implement-ticket`: the ticket ID. For `implement-epic`: `EPIC-{id}` or `FOLDER-{path}`. |
-| `start_ts` | ISO 8601 | No | UTC timestamp when the workflow started (captured at Scope / Discover phase via `date -u`). |
+| `run_id` | string | No | Unique run identifier. For `implement-ticket`: the ticket ID. For `implement-epic`: `EPIC-{id}` or `FOLDER-{path}`. For `create-tickets`: `CREATE-TICKETS-{sanitized source path}` — no single ticket_id exists at run start since this workflow creates N tickets. |
+| `start_ts` | ISO 8601 | No | UTC timestamp when the workflow started (captured at Scope / Discover / Comprehend phase via `date -u`). |
 | `end_ts` | ISO 8601 | Yes | UTC timestamp when the workflow finished. `null` if the workflow crashed before writing the end record. |
-| `workflow` | string | No | Name of the workflow that produced this run. |
-| `tier` | string | No | Ticket tier: `hotfix` \| `standard` \| `epic`. |
+| `workflow` | string | No | Name of the workflow that produced this run: `implement-ticket` \| `implement-epic` \| `create-tickets`. |
+| `tier` | string | No | Ticket tier: `hotfix` \| `standard` \| `epic`. For `create-tickets`: always `n/a` — this workflow doesn't operate on a single ticket's tier (each generated ticket gets its own tier, decided during the Structure phase). |
 | `final_status` | string | No | Outcome of the run. See values below. |
 | `agent_count` | int | No | Total number of agent calls that produced events. |
 | `duration_s` | int | Yes | Wall-clock seconds from start to end. `null` for crashed runs. |
@@ -61,6 +61,7 @@ One record per workflow invocation.
 | `BLOCKED` | Architecture review found fundamental conflict. |
 | `TESTS_FAILED` | Tests failed after implementation. |
 | `DOD_BLOCKED` | Definition-of-Done conditions not met. |
+| `NOTHING_TO_CREATE` | `create-tickets` only — no actionable concerns, all concerns were duplicates of existing tickets, or no tasks survived structuring. |
 | `CRASHED` | Synthetic status set by `validate.py` for runs with `start_ts` but no `end_ts`. |
 
 ---
@@ -106,6 +107,10 @@ One record per agent call within a workflow run. FK: `run_id → runs.run_id`.
 ### `phase` values (implement-ticket workflow)
 
 `Scope`, `Investigate`, `Plan`, `Review`, `Implement`, `Test`, `Parity`, `Verify`, `Finalize`
+
+### `phase` values (create-tickets workflow)
+
+`Comprehend`, `Investigate` (one event per concern), `Structure`, `Write` (one event per ticket), `Link` (only when `epic_id` is provided). `create-tickets` does not register a `.claude/current_run` sidecar per agent call, so `tool_call_count` is always `null` on its events — not computed the way it is for `implement-ticket`/`implement-epic`.
 
 ---
 
