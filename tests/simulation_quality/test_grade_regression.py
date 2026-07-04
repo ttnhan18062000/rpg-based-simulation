@@ -56,6 +56,22 @@ FAST_ANCHOR_KEYS = [
     "urban_political_seed42_500t",
     "urban_political_seed123_500t",
     "urban_political_seed456_500t",
+    # new — TCK-20260703-SIMQ-UPLIFT3-WORLD-CORPUS: 5 newly-anchored worlds, 3 seeds each
+    "frontier_extended_seed42_200t",
+    "frontier_extended_seed123_200t",
+    "frontier_extended_seed456_200t",
+    "frontier_living_world_seed42_200t",
+    "frontier_living_world_seed123_200t",
+    "frontier_living_world_seed456_200t",
+    "wilderness_survival_seed42_200t",
+    "wilderness_survival_seed123_200t",
+    "wilderness_survival_seed456_200t",
+    "highland_traverse_seed42_200t",
+    "highland_traverse_seed123_200t",
+    "highland_traverse_seed456_200t",
+    "swamp_border_world_seed42_200t",
+    "swamp_border_world_seed123_200t",
+    "swamp_border_world_seed456_200t",
 ]
 
 SLOW_ANCHOR_KEYS = [

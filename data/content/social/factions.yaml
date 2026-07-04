@@ -69,6 +69,7 @@
   common_races: ["human", "goblin", "orc"]
   themes: ["bandit", "frontier"]
   legacy_engine_bucket: "MONSTER_HORDE"
+  hazard_immunities: ["NATURAL_TERRAIN"]
 
 # STATE: ADDITIONAL
 - id: "forest_wardens"
@@ -79,6 +80,7 @@
   common_races: ["elf", "human", "spirit"]
   themes: ["forest", "sacred"]
   legacy_engine_bucket: "HERO_GUILD"
+  hazard_immunities: ["NATURAL_TERRAIN"]
 
 # STATE: ADDITIONAL
 - id: "orc_clan"
@@ -89,6 +91,7 @@
   common_races: ["orc"]
   themes: ["orc", "frontier"]
   legacy_engine_bucket: "MONSTER_HORDE"
+  hazard_immunities: ["NATURAL_TERRAIN"]
 
 # STATE: ADDITIONAL
 - id: "dwarven_mine_clan"
@@ -119,6 +122,7 @@
   common_races: ["undead", "spirit"]
   themes: ["undead", "ruin"]
   legacy_engine_bucket: "MONSTER_HORDE"
+  hazard_immunities: ["UNDEAD_CORRUPTION"]
 
 # STATE: ADDITIONAL
 - id: "arcane_circle"
@@ -139,6 +143,7 @@
   common_races: ["lizardfolk"]
   themes: ["swamp"]
   legacy_engine_bucket: "MONSTER_HORDE"
+  hazard_immunities: ["NATURAL_TERRAIN"]
 
 # STATE: ADDITIONAL
 - id: "dragon_cult"
@@ -159,3 +164,4 @@
   common_races: ["spirit"]
   themes: ["spirit", "sacred"]
   legacy_engine_bucket: "NEUTRAL"
+  hazard_immunities: ["NATURAL_TERRAIN"]

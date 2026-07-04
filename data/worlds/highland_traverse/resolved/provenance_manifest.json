@@ -1,18 +1,18 @@
 {
-  "manifest_id": "prov_cafb34a8e93eaf67",
+  "manifest_id": "prov_0af5fb91b4f88bba",
   "world_id": "highland_traverse",
   "source_schema_version": "provenancemanifest.v1",
-  "catalog_fingerprint": "3529ebbe985937cfa0e2bf3066657f19d7112f21620e16d31e6bf661d5305f46",
+  "catalog_fingerprint": "f3f195b92f3ae565267a8297fcff8db47685fa789ff0cfbdec01533636f5b378",
   "module_fingerprints": {
     "mountain_pass": "25529e16619ae519dde6e77d9aade020940ab0b7e78e58b7755be29562d561e6",
-    "nomadic_herd": "b1c2eb716e68c4d23676274fa86fe41687fa5d7cb72068b9e413aa7f79a0ef7b",
+    "nomadic_herd": "0279bf89a42df43d79c40a2df72e69bb95dfb15b7716cf79fc34d41191c24b2e",
     "river_crossing": "31b408206c2116cc3c7162e49d97e4b690bbe3f3adf689f3d44aed6a2ab16e56",
     "settled_quarter": "afdc3b0cc332b6c34089ab6b230285362afc955ef46f5e8c3b48e680528ccbb4"
   },
-  "composition_fingerprint": "0138192c0ab83c99a154adf79a622f3c314e6c3e73820e222190b4e74baeea3d",
+  "composition_fingerprint": "e8baf4c4304c86259d7957440b4ff3c669d1fe25ceb3a3cc27b0a54ba970575e",
   "resolver_version": "1.0.0",
-  "content_fingerprint": "cafb34a8e93eaf676ce0ec596d4add620b2c949b9652d8966c537d10daa97dd6",
-  "created_at": "2026-06-30T18:47:23.069513Z",
+  "content_fingerprint": "0af5fb91b4f88bba9a33a850e82077d1521a2d1a94031411cc261f7042493374",
+  "created_at": "2026-07-04T04:47:01.123184Z",
   "records": {
     "hero_guild": {
       "element_id": "hero_guild",

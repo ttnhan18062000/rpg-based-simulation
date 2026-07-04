@@ -13,12 +13,14 @@ regions:
     grid_bounds: [60, 130, 100, 170]
     terrain: "plain"
     hazard_level: 1.5
+    hazard_kind: "NATURAL_TERRAIN"
     tags: [plain]
   - id: "wolf_den"
     type: "wilderness"
     grid_bounds: [60, 170, 100, 210]
     terrain: "forest"
     hazard_level: 2.0
+    hazard_kind: "NATURAL_TERRAIN"
 factions: ["wild_beast_pack"]
 populations: ["wolf_pack_small"]
 resources: {}

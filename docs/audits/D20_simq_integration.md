@@ -13,12 +13,12 @@ tags: [audit, simulation-quality, simq, integration, observability, event-bus]
 | Axis | Value |
 |---|---|
 | **Group** | A — Simulation Quality |
-| **State** | `done` (all gaps resolved; 81/82 event types emitted; re-run verified 2026-07-01; calibration corpus refreshed 2026-07-02; all P1/P2 action items closed; simq-uplift batch 2026-07-02: SOCIAL activated, grade formula fixed, DA decisions documented; simq-uplift batch 2 2026-07-02/03: AGENCY DA-documented, FACTION activated, INFORMATION scaffolded + activated via kernel fix — see §SimQ Uplift Batch 2 below) |
+| **State** | `done` (all gaps resolved; 81/82 event types emitted; re-run verified 2026-07-01; calibration corpus refreshed 2026-07-02; all P1/P2 action items closed; simq-uplift batch 2026-07-02: SOCIAL activated, grade formula fixed, DA decisions documented; simq-uplift batch 2 2026-07-02/03: AGENCY DA-documented, FACTION activated, INFORMATION scaffolded + activated via kernel fix — see §SimQ Uplift Batch 2 below; simq-uplift batch 3 2026-07-04: corpus diversified 25→40 anchor entries across 5 newly-anchored worlds — see §5 newly-anchored worlds below) |
 | **Impact** | 4 / 5 |
 | **Interest** | 5 / 5 |
 | **Priority** | 9 |
 | **Method** | run-sim + code-read |
-| **Audit date** | 2026-06-30 (original); 2026-07-01 (re-run after fixes); 2026-07-02 (calibration corpus refresh + loop-detection sweep); 2026-07-02 (simq-uplift batch); 2026-07-03 (simq-uplift batch 2) |
+| **Audit date** | 2026-06-30 (original); 2026-07-01 (re-run after fixes); 2026-07-02 (calibration corpus refresh + loop-detection sweep); 2026-07-02 (simq-uplift batch); 2026-07-03 (simq-uplift batch 2); 2026-07-04 (simq-uplift batch 3 — TCK-20260703-SIMQ-UPLIFT3-WORLD-CORPUS) |
 
 **What this dimension answers:** Is the SimQ module actually receiving events and scoring
 live simulation runs — or is it built but disconnected? This audit exercises the full path
@@ -364,6 +364,27 @@ by SimQ Uplift Batch 1 (SOCIAL→S) and Batch 2 (FACTION→S/A, INFORMATION→B)
 worlds, including `sandbox_world` and `dungeon_crawl`, are unaffected by either batch and remain as
 described here.
 
+### 5 newly-anchored worlds (2026-07-04, TCK-20260703-SIMQ-UPLIFT3-WORLD-CORPUS)
+
+`frontier_extended`, `frontier_living_world`, `wilderness_survival`, `highland_traverse`, and
+`swamp_border_world` were previously stale-compiled and unanchored (Finding 3 in
+`stored_artifacts/TCK-20260703-SIMQ-UPLIFT3-WORLD-CORPUS/investigation.md`: collapsing to <25%
+alive by tick 50 due to missing `hazard_kind` on their modules). Recompiled after the Step 1
+content fix, re-verified for population stability (>=60% alive floor through 300 ticks), and
+anchored at 3 seeds x 200t each:
+
+| World | Ticks | COMBAT | NARRATIVE | PROGRESSION | WORLD | 5 zero-pillars | Notes |
+|---|---|---|---|---|---|---|---|
+| frontier_extended | 200 | B (all seeds) | A (all seeds) | B (all seeds) | B (all seeds) | all C | 56 entities, 10 regions — largest/widest-spread anchored world |
+| frontier_living_world | 200 | B (all seeds) | A/B/A | B (all seeds) | B (all seeds) | all C | 46 entities, 7 regions — fills 35-50-entity band |
+| wilderness_survival | 200 | C (all seeds) | C (all seeds) | C (all seeds) | B (all seeds) | all C | 11 entities, 4 regions — second <20-entity data point |
+| highland_traverse | 200 | B/B/C | A (all seeds) | C (all seeds) | B (all seeds) | all C | 18 entities — brings mountain_pass/river_crossing/nomadic_herd/settled_quarter family in |
+| swamp_border_world | 200 | C (all seeds) | A (all seeds) | C (all seeds) | B (all seeds) | all C | 26 entities — brings sunken_swamp_border/lizardfolk family in |
+
+Full per-seed tables: `docs/simulation_quality/eval_matrix_results.md` §Newly-Anchored Worlds.
+As with all other worlds, AGENCY/COGNITION/ECONOMY/FACTION/INFORMATION/SOCIAL=C is structural
+(feature-gate blocked, out of scope for this ticket), not a gap.
+
 **Loop detection in practice:** At current event densities (47–287 scored events per 200-tick run),
 the 200-event window never fills for any pillar in any tested world. Loop flags observed in
 sandbox_world (`hazard_active`, `quest_active`, `combat_active`) fire because those specific tags
@@ -375,6 +396,11 @@ significantly higher event volumes (long runs, larger worlds), re-evaluation is 
 
 Corpus expanded from 8 anchor entries (all seed=42 point estimates, except sandbox_world seeds 137
 and 999) to 25 anchor entries covering 3 seeds × 3–4 tick counts across signal-producing worlds.
+**2026-07-04 update (TCK-20260703-SIMQ-UPLIFT3-WORLD-CORPUS):** corpus further expanded from 25 to
+40 entries — 25 + 15 new (5 newly-anchored worlds x 3 seeds x 200t) — see "5 newly-anchored worlds"
+above. Combined with the pre-existing 13-run calibration-report corpus (10 dungeon_crawl +
+3 simq_routing_test run_keys, refreshed post-hazard-kind-recompile in the same ticket's Step 4a),
+the total distinct calibration run_key surface is 28 (13 + 15 new).
 
 **Corpus before / after:**
 
@@ -427,7 +453,7 @@ No remaining action items.
 | Event translation layer | `_TRANSLATE_SIMPLE` + `_TRANSLATE_CONDITIONAL` in quality_hub.py |
 | EventExtractor emissions | **81 of 82** scored event types emitted. 1 has no engine path (`camp_constructed` — no dynamic camp construction; scorer entry premature). |
 | Calibration tooling | `calibrate_simq.py` — `--window-size`/`--loop-threshold` CLI overrides added (TCK-20260701-SIMQ-LOOP-WINDOW-TUNE); run-scoped via `model_copy`, no YAML mutation |
-| Calibration corpus | 13-run corpus refreshed 2026-07-02 — dungeon_crawl 200t/1000t and urban_political 200t re-run post-emit-epic. Grade anchors updated. |
+| Calibration corpus | 28-run corpus (13 + 15 new, 2026-07-04, TCK-20260703-SIMQ-UPLIFT3-WORLD-CORPUS) — 5 previously-unanchored worlds (`frontier_extended`, `frontier_living_world`, `wilderness_survival`, `highland_traverse`, `swamp_border_world`) anchored at 3 seeds x 200t; `dungeon_crawl`/`simq_routing_test`'s 13 pre-existing anchor entries re-verified post-hazard-kind-recompile (8 of 10 `dungeon_crawl` keys drifted and were updated; `simq_routing_test`'s 3 keys could not be re-verified — pre-existing, unrelated `ResourceRegistry: STONE` crash, see `docs/simulation_quality/eval_matrix_results.md`). Grade anchors updated. |
 | Parity ledger | SOC-237, SOC-238, INFRA-251 added and marked `verified` |
 | Kernel→hub bridge | **RESOLVED** — `InProcessQualityFeed` refactored; no competing consumer |
 | Early-extinction penalty | **RESOLVED** — `TCK-20260701-HAZARD-NATIVE-IMMUNITY` + `TCK-20260701-HAZARD-KIND-RESOLVER-GAP`; 0/5 wolf deaths confirmed at seed 42/137 |

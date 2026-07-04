@@ -12,6 +12,7 @@ regions:
     grid_bounds: [180, 80, 220, 120]
     terrain: "swamp"
     hazard_level: 2.5
+    hazard_kind: "NATURAL_TERRAIN"
 factions: ["swamp_tribe", "wild_beast_pack"]
 populations: ["swamp_tribe_patrol", "swamp_ambush_party"]
 resources:

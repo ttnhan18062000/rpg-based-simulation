@@ -17,6 +17,7 @@ regions:
   - 60
   terrain: forest
   hazard_level: 0.5
+  hazard_kind: PHYSICAL
   tags: []
 - id: haunted_battlefield
   type: wilderness
@@ -27,6 +28,7 @@ regions:
   - 60
   terrain: ruin
   hazard_level: 4.0
+  hazard_kind: UNDEAD_CORRUPTION
   tags:
   - ruins
 - id: near_forest
@@ -38,6 +40,7 @@ regions:
   - 55
   terrain: forest
   hazard_level: 1.0
+  hazard_kind: NATURAL_TERRAIN
   tags:
   - forest
 - id: wolf_den
@@ -49,41 +52,61 @@ regions:
   - 70
   terrain: forest
   hazard_level: 2.0
+  hazard_kind: NATURAL_TERRAIN
   tags:
   - forest
 factions:
 - id: hero_guild
   type: defender
+  initial_tension_level: 0.0
 - id: town_council
   type: defender
+  initial_tension_level: 0.0
 - id: neutral
   type: neutral
+  initial_tension_level: 0.0
 - id: wild_beast_pack
   type: wild
+  initial_tension_level: 0.0
 - id: goblin_warband
   type: invader
+  initial_tension_level: 0.0
 - id: merchant_league
   type: neutral
+  initial_tension_level: 0.0
 - id: bandit_company
   type: invader
+  initial_tension_level: 0.0
 - id: forest_wardens
   type: defender
+  initial_tension_level: 0.0
 - id: orc_clan
   type: rival
+  initial_tension_level: 0.0
 - id: dwarven_mine_clan
   type: defender
+  initial_tension_level: 0.0
 - id: moon_cult
   type: invader
+  initial_tension_level: 0.0
 - id: undead_remnants
   type: invader
+  initial_tension_level: 0.0
 - id: arcane_circle
   type: neutral
+  initial_tension_level: 0.0
 - id: swamp_tribe
   type: rival
+  initial_tension_level: 0.0
 - id: dragon_cult
   type: invader
+  initial_tension_level: 0.0
 - id: spirit_court
   type: neutral
+  initial_tension_level: 0.0
+information_source_profiles: []
+pending_information_responses: []
+pending_self_model_information_events: []
 entities:
 - id: undead_battlefield_patrol_undead_sentinel
   count: 6

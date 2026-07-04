@@ -1,18 +1,18 @@
 {
-  "manifest_id": "prov_5126f02cf609b9ee",
+  "manifest_id": "prov_1ab87782d289f7d5",
   "world_id": "simq_routing_test",
   "source_schema_version": "provenancemanifest.v1",
-  "catalog_fingerprint": "3529ebbe985937cfa0e2bf3066657f19d7112f21620e16d31e6bf661d5305f46",
+  "catalog_fingerprint": "f3f195b92f3ae565267a8297fcff8db47685fa789ff0cfbdec01533636f5b378",
   "module_fingerprints": {
-    "frontier_village_core": "c11d5cfa898492816ce36af0962a2d3bb5a976db28b312baec6708347982d456",
-    "goblin_camp_conflict": "46109f6f59603d34e4d2be3946987568d375ed2f085dee3537d850c271690f21",
+    "frontier_village_core": "ac2da4bc478c24180e4b53f1267959956c00bbf473d6b119dc270633b2c322f3",
+    "goblin_camp_conflict": "7e712ab3d3321805bfad0b116c66ac5c679854fe887f7752b9ab6a27cb61e5fb",
     "hero_adventurers": "1b1d1e2859fdd6b23262edba556718f6c506a72be8dc44cd84db74c68078b837",
-    "old_mine_resource_loop": "3307ee93b187d56a00220a71eb6bb4ead096f20ff267e9d53dbbd9d891d041c3"
+    "old_mine_resource_loop": "7e069040e802e137042f16c0f2b19372d878a2bf7a6fae520b369cc5d5e91ff2"
   },
-  "composition_fingerprint": "9f1dc6092e4109af1dd9acea351ffe920cc7cb2a45a2bdf8532d78b1da1c89fd",
+  "composition_fingerprint": "b4ed528d56da186beccd84efff62da4c5ad69de5c1484210f0417772b63912cd",
   "resolver_version": "1.0.0",
-  "content_fingerprint": "5126f02cf609b9ee53ca33db7310dbf034aa2fd699c6d9ae0f554137f67f9ba3",
-  "created_at": "2026-06-30T16:40:37.800664Z",
+  "content_fingerprint": "1ab87782d289f7d59e2970320858f372aa87fab72047d101718890b6da78b2be",
+  "created_at": "2026-07-04T04:46:39.847822Z",
   "records": {
     "hero_guild": {
       "element_id": "hero_guild",

@@ -6,22 +6,7 @@
   "resource_node_count": 5,
   "building_count": 6,
   "quest_count": 7,
-  "warnings": [
-    "QuestDefinition 'village_fetch_supply_run' required_location_tag 'plain' does not match any region ID in this world",
-    "QuestDefinition 'village_fetch_supply_run' required_location_tag 'settlement' does not match any region ID in this world",
-    "QuestDefinition 'village_escort_merchant_delivery' required_location_tag 'plain' does not match any region ID in this world",
-    "QuestDefinition 'village_escort_merchant_delivery' required_location_tag 'settlement' does not match any region ID in this world",
-    "QuestDefinition 'village_defend_gate_assault' required_location_tag 'plain' does not match any region ID in this world",
-    "QuestDefinition 'village_defend_gate_assault' required_location_tag 'settlement' does not match any region ID in this world",
-    "QuestDefinition 'goblin_hunt_warlord' required_location_tag 'wilderness' does not match any region ID in this world",
-    "QuestDefinition 'goblin_hunt_warlord' required_location_tag 'forest' does not match any region ID in this world",
-    "QuestDefinition 'goblin_fetch_stolen_goods' required_location_tag 'wilderness' does not match any region ID in this world",
-    "QuestDefinition 'goblin_fetch_stolen_goods' required_location_tag 'forest' does not match any region ID in this world",
-    "QuestDefinition 'goblin_defend_village_perimeter' required_location_tag 'wilderness' does not match any region ID in this world",
-    "QuestDefinition 'goblin_defend_village_perimeter' required_location_tag 'forest' does not match any region ID in this world",
-    "QuestDefinition 'mine_fetch_ore' required_location_tag 'mine' does not match any region ID in this world",
-    "QuestDefinition 'mine_fetch_ore' required_location_tag 'underground' does not match any region ID in this world"
-  ],
-  "compile_duration_ms": 12.8430529985053,
+  "warnings": [],
+  "compile_duration_ms": 27.245916993706487,
   "state_hash": "b60ef9dc2bdedb61b1f6726f2468994c"
 }

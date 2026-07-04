@@ -34,8 +34,8 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'hill' is active but never consumed by any downstream component",
-      "target": "hill"
+      "message": "Terrain 'grass' is active but never consumed by any downstream component",
+      "target": "grass"
     },
     {
       "severity": "WARNING",
@@ -46,8 +46,8 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'grass' is active but never consumed by any downstream component",
-      "target": "grass"
+      "message": "Terrain 'hill' is active but never consumed by any downstream component",
+      "target": "hill"
     },
     {
       "severity": "WARNING",
@@ -601,8 +601,8 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'hill' is active but never consumed by any downstream component",
-      "target": "hill"
+      "message": "Terrain 'grass' is active but never consumed by any downstream component",
+      "target": "grass"
     },
     {
       "severity": "WARNING",
@@ -613,8 +613,8 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'grass' is active but never consumed by any downstream component",
-      "target": "grass"
+      "message": "Terrain 'hill' is active but never consumed by any downstream component",
+      "target": "hill"
     },
     {
       "severity": "WARNING",
@@ -1146,11 +1146,11 @@
     }
   ],
   "fingerprints": {
-    "catalog": "3529ebbe985937cfa0e2bf3066657f19d7112f21620e16d31e6bf661d5305f46",
+    "catalog": "f3f195b92f3ae565267a8297fcff8db47685fa789ff0cfbdec01533636f5b378",
     "modules": {
       "frontier_village_core": "ac2da4bc478c24180e4b53f1267959956c00bbf473d6b119dc270633b2c322f3",
-      "sunken_swamp_border": "d0c4b3e980f9daa3cb07ed37937a886eaf00fefdd02f7a41b2925596fb2418e5",
-      "wolf_den_near_forest": "b95456ea741bcd26f54e54f965a0cb57c0b37dca9d8d75ad77e7fcf65d88ff16"
+      "sunken_swamp_border": "adbeeba097121a59128bc0d09a3b35b5fbaca044c2761049d3f97c477ca2ff96",
+      "wolf_den_near_forest": "236ed57805d9d8a947b072448b36ce728b6b6653ad9fd5f0085c3bfb269953ee"
     }
   }
 }

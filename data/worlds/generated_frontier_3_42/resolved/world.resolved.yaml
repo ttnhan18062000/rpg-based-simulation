@@ -15,6 +15,7 @@ regions:
   - 40
   terrain: plain
   hazard_level: 0.0
+  hazard_kind: PHYSICAL
   tags:
   - plain
   - settlement
@@ -27,6 +28,7 @@ regions:
   - 60
   terrain: road
   hazard_level: 2.0
+  hazard_kind: NATURAL_TERRAIN
   tags:
   - wilderness
 - id: goblin_camp
@@ -38,6 +40,7 @@ regions:
   - 55
   terrain: forest
   hazard_level: 3.0
+  hazard_kind: NATURAL_TERRAIN
   tags:
   - forest
 - id: moon_cave
@@ -49,6 +52,7 @@ regions:
   - 110
   terrain: cave
   hazard_level: 4.0
+  hazard_kind: PHYSICAL
   tags:
   - cave
 - id: old_mine
@@ -60,6 +64,7 @@ regions:
   - 105
   terrain: cave
   hazard_level: 2.0
+  hazard_kind: NATURAL_TERRAIN
   tags:
   - mine
   - underground
@@ -72,40 +77,60 @@ regions:
   - 100
   terrain: plain
   hazard_level: 3.0
+  hazard_kind: NATURAL_TERRAIN
   tags: []
 factions:
 - id: hero_guild
   type: defender
+  initial_tension_level: 0.0
 - id: town_council
   type: defender
+  initial_tension_level: 0.0
 - id: neutral
   type: neutral
+  initial_tension_level: 0.0
 - id: wild_beast_pack
   type: wild
+  initial_tension_level: 0.0
 - id: goblin_warband
   type: invader
+  initial_tension_level: 0.0
 - id: merchant_league
   type: neutral
+  initial_tension_level: 0.0
 - id: bandit_company
   type: invader
+  initial_tension_level: 0.0
 - id: forest_wardens
   type: defender
+  initial_tension_level: 0.0
 - id: orc_clan
   type: rival
+  initial_tension_level: 0.0
 - id: dwarven_mine_clan
   type: defender
+  initial_tension_level: 0.0
 - id: moon_cult
   type: invader
+  initial_tension_level: 0.0
 - id: undead_remnants
   type: invader
+  initial_tension_level: 0.0
 - id: arcane_circle
   type: neutral
+  initial_tension_level: 0.0
 - id: swamp_tribe
   type: rival
+  initial_tension_level: 0.0
 - id: dragon_cult
   type: invader
+  initial_tension_level: 0.0
 - id: spirit_court
   type: neutral
+  initial_tension_level: 0.0
+information_source_profiles: []
+pending_information_responses: []
+pending_self_model_information_events: []
 entities:
 - id: frontier_village_population_village_worker
   count: 8

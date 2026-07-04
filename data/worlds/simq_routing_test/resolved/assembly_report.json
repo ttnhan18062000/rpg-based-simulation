@@ -29,14 +29,14 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'hill' is active but never consumed by any downstream component",
-      "target": "hill"
+      "message": "Terrain 'sand' is active but never consumed by any downstream component",
+      "target": "sand"
     },
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'grass' is active but never consumed by any downstream component",
-      "target": "grass"
+      "message": "Terrain 'hill' is active but never consumed by any downstream component",
+      "target": "hill"
     },
     {
       "severity": "WARNING",
@@ -47,8 +47,8 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'sand' is active but never consumed by any downstream component",
-      "target": "sand"
+      "message": "Terrain 'grass' is active but never consumed by any downstream component",
+      "target": "grass"
     },
     {
       "severity": "WARNING",
@@ -575,32 +575,8 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Module 'mountain_pass' is active but never consumed by any downstream component",
-      "target": "mountain_pass"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
-      "message": "Module 'settled_quarter' is active but never consumed by any downstream component",
-      "target": "settled_quarter"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
       "message": "Module 'hero_adventurers' is active but never consumed by any downstream component",
       "target": "hero_adventurers"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
-      "message": "Module 'river_crossing' is active but never consumed by any downstream component",
-      "target": "river_crossing"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
-      "message": "Module 'nomadic_herd' is active but never consumed by any downstream component",
-      "target": "nomadic_herd"
     }
   ],
   "module_validation": {
@@ -614,21 +590,21 @@
   "summary": {
     "status": "SUCCESS",
     "blocking_errors_count": 0,
-    "warnings_count": 96
+    "warnings_count": 92
   },
   "blocking_errors": [],
   "warnings": [
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'hill' is active but never consumed by any downstream component",
-      "target": "hill"
+      "message": "Terrain 'sand' is active but never consumed by any downstream component",
+      "target": "sand"
     },
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'grass' is active but never consumed by any downstream component",
-      "target": "grass"
+      "message": "Terrain 'hill' is active but never consumed by any downstream component",
+      "target": "hill"
     },
     {
       "severity": "WARNING",
@@ -639,8 +615,8 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'sand' is active but never consumed by any downstream component",
-      "target": "sand"
+      "message": "Terrain 'grass' is active but never consumed by any downstream component",
+      "target": "grass"
     },
     {
       "severity": "WARNING",
@@ -1167,41 +1143,17 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Module 'mountain_pass' is active but never consumed by any downstream component",
-      "target": "mountain_pass"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
-      "message": "Module 'settled_quarter' is active but never consumed by any downstream component",
-      "target": "settled_quarter"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
       "message": "Module 'hero_adventurers' is active but never consumed by any downstream component",
       "target": "hero_adventurers"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
-      "message": "Module 'river_crossing' is active but never consumed by any downstream component",
-      "target": "river_crossing"
-    },
-    {
-      "severity": "WARNING",
-      "rule_id": "CAT-DEAD-001",
-      "message": "Module 'nomadic_herd' is active but never consumed by any downstream component",
-      "target": "nomadic_herd"
     }
   ],
   "fingerprints": {
-    "catalog": "3529ebbe985937cfa0e2bf3066657f19d7112f21620e16d31e6bf661d5305f46",
+    "catalog": "f3f195b92f3ae565267a8297fcff8db47685fa789ff0cfbdec01533636f5b378",
     "modules": {
-      "frontier_village_core": "c11d5cfa898492816ce36af0962a2d3bb5a976db28b312baec6708347982d456",
-      "goblin_camp_conflict": "46109f6f59603d34e4d2be3946987568d375ed2f085dee3537d850c271690f21",
+      "frontier_village_core": "ac2da4bc478c24180e4b53f1267959956c00bbf473d6b119dc270633b2c322f3",
+      "goblin_camp_conflict": "7e712ab3d3321805bfad0b116c66ac5c679854fe887f7752b9ab6a27cb61e5fb",
       "hero_adventurers": "1b1d1e2859fdd6b23262edba556718f6c506a72be8dc44cd84db74c68078b837",
-      "old_mine_resource_loop": "3307ee93b187d56a00220a71eb6bb4ead096f20ff267e9d53dbbd9d891d041c3"
+      "old_mine_resource_loop": "7e069040e802e137042f16c0f2b19372d878a2bf7a6fae520b369cc5d5e91ff2"
     }
   }
 }

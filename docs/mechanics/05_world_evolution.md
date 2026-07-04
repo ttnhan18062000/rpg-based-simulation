@@ -60,11 +60,16 @@ As `Hazard Level` (0.0 to 1.0) increases, entities within the region suffer:
 
 #### Native Endurance to a Region's Hazard Kind
 Every region carries a `hazard_kind` tag (e.g. `"PHYSICAL"` — the default, `"NATURAL_TERRAIN"`,
-`"TOXIC_GAS"`) describing *what kind* of hazard its passive drain represents. Separately, a
-faction's catalog definition may declare `hazard_immunities` — the set of `hazard_kind` values
-its members endure without harm (e.g. `wild_beast_pack` and `goblin_warband` both declare
-`hazard_immunities: ["NATURAL_TERRAIN"]`, since wolves and goblins are native to their own
-forest habitats).
+`"TOXIC_GAS"`, `"UNDEAD_CORRUPTION"`) describing *what kind* of hazard its passive drain
+represents. Separately, a faction's catalog definition may declare `hazard_immunities` — the set
+of `hazard_kind` values its members endure without harm (e.g. `wild_beast_pack` and
+`goblin_warband` both declare `hazard_immunities: ["NATURAL_TERRAIN"]`, since wolves and goblins
+are native to their own forest habitats; `undead_remnants` declares
+`hazard_immunities: ["UNDEAD_CORRUPTION"]`, since undead endure the corruption of their own
+battlefield for a distinct in-fiction reason from ordinary wilderness endurance). `"TOXIC_GAS"`
+remains synthetic/test-only (used only in unit tests, `tests/unit/world/test_regional_consequences.py`);
+`"UNDEAD_CORRUPTION"` is an authored production value as of
+TCK-20260703-SIMQ-UPLIFT3-WORLD-CORPUS (`data/content/world_modules/undead_battlefield.yaml`).
 
 When computing Passive HP Drain for an entity, `EnvironmentService.calculate_hazard_drain`
 resolves the entity's catalog faction id and checks it against the region's `hazard_kind`:
@@ -91,6 +96,14 @@ matching `hazard_immunities` entry for the exemption to take effect.
 > artifacts are generated ahead-of-time from the source catalog and do not pick up this
 > mechanism's effect until they are recompiled — that recompile is the responsibility of
 > `TCK-20260701-SANDBOX-MONSTER-BALANCE`, not this chapter's authoring change.
+>
+> `TCK-20260703-SIMQ-UPLIFT3-WORLD-CORPUS` extended this mechanism corpus-wide: 7 modules
+> (`orc_clan_territory`, `bandit_road_trade_pressure`, `old_mine_resource_loop`,
+> `forest_warden_grove`, `undead_battlefield`, `nomadic_herd`, `sunken_swamp_border`) gained
+> `hazard_kind` + matching native-faction `hazard_immunities`, and the 8 worlds whose compiled
+> state predated these fixes (`simq_routing_test`, `dungeon_crawl`, `generated_frontier_3_42`,
+> `frontier_extended`, `frontier_living_world`, `swamp_border_world`, `highland_traverse`,
+> `wilderness_survival`) were recompiled to pick them up.
 
 ---
 

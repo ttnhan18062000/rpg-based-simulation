@@ -12,6 +12,7 @@ regions:
     grid_bounds: [160, 60, 200, 100]
     terrain: "plain"
     hazard_level: 3.0
+    hazard_kind: "NATURAL_TERRAIN"
 factions: ["orc_clan"]
 populations: ["orc_clan_warband"]
 resources:

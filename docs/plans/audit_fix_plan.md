@@ -214,6 +214,16 @@ pursued — documentation of the current boundary was judged sufficient.
 **Finding:** SpawnService fires at ~tick 500 and adds 3 entities but combat attrition in ticks 800–1000 kills faster than spawn rate. Net entity count at tick 1,000 is below starting count (13.1 vs 15 for seed 42). A 5,000-tick run risks approaching zero.  
 **Fix:** Tune `SpawnService` cadence or spawn count so entity population is stable over 5,000 ticks. Target: alive_avg stays ≥ 12 (80% of starting count) throughout. Consider two spawn cadence tiers: early slow spawn, late fast spawn to compensate attrition.
 
+**RESOLVED (verified 2026-07-04, TCK-20260703-SIMQ-UPLIFT3-WORLD-CORPUS)** — code inspection
+confirms `SpawnService.process_spawns()`'s two-tier cadence (`src/world/spawn.py`) is present and
+functioning exactly as `TCK-20260627-P2B-SPAWN-CADENCE` designed; no logic regression from the
+file relocation. **Distinct finding:** the "159†"/"101‡" early-termination markers recorded in
+the 13-run corpus table below for `frontier_extended`/`frontier_living_world`/
+`wilderness_survival` were NOT caused by spawn cadence (P2-B is a *late*-run, tick 500+ mechanism;
+the collapse there happens by tick 50) — they were a stale-compile / missing `hazard_kind` content
+gap, separately root-caused and fixed under this ticket. See
+`stored_artifacts/TCK-20260703-SIMQ-UPLIFT3-WORLD-CORPUS/investigation.md` Findings 1-4.
+
 ---
 
 ### P2-C: Entity archetype distribution skewed — 4 scouts, underrepresented roles — **RESOLVED (verified 2026-07-03)**
@@ -472,15 +482,23 @@ goblin spawn staggered, `--profile` arg added. Deep audit tracked in `docs/plans
 | dungeon_crawl | 42 | 1000 | B | B | B | C | C | C | C | C | C | B |
 | urban_political | 42 | 200 | B | A | B | C | C | C | C | C | C | A |
 | simq_routing_test | 42 | 500 | B | A | B | **B** | C | C | C | C | C | B |
-| frontier_extended | 42 | 159† | A | A | A | C | C | C | C | C | C | A |
-| frontier_living_world | 42 | 159† | A | A | A | C | C | C | C | C | C | A |
-| swamp_border_world | 42 | 200 | B | A | B | C | C | C | C | C | C | B |
-| highland_traverse | 42 | 164 | B | B | B | C | C | C | C | C | C | B |
-| wilderness_survival | 42 | 101‡ | B | C | B | C | C | C | C | C | C | A |
+| frontier_extended | 42 | 200 | B | A | B | C | C | C | C | C | C | B |
+| frontier_living_world | 42 | 200 | B | A | B | C | C | C | C | C | C | B |
+| swamp_border_world | 42 | 200 | C | A | C | C | C | C | C | C | C | B |
+| highland_traverse | 42 | 200 | B | A | C | C | B | C | C | C | C | B |
+| wilderness_survival | 42 | 200 | C | C | C | C | C | C | C | C | C | B |
 
-†Early termination — large entity count (56/46) accelerates combat attrition. See P2-B.  
-‡Early termination — only 11 entities; survivor_camp_shelter now included (combat-heavy). Confirms P2-B at small scale.  
 \*Refreshed 2026-07-02 (TCK-20260701-SIMQ-CALIBRATE-REFRESH): dungeon_crawl/urban_political re-run post-emit-epic. PROGRESSION dropped A→B in dungeon_crawl 200t — new progression emitters add both positive and negative deltas net-reducing normalized score. grade_anchors.json updated to B. All other refreshed grades unchanged from prior corpus.
+**Update 2026-07-04 (TCK-20260703-SIMQ-UPLIFT3-WORLD-CORPUS):** The `frontier_extended`/
+`frontier_living_world`/`wilderness_survival` rows above no longer show early termination — the
+`159†`/`101‡` markers previously recorded here were misattributed to P2-B (see the P2-B section
+above, now RESOLVED with a distinct-finding note) and were actually a stale-compile / missing
+`hazard_kind` content gap. All five rows above reflect fresh 200-tick, seed-42 calibration runs
+taken after that gap was fixed and each world was recompiled and re-verified for population
+stability (>=60% alive floor through 300 ticks — see
+`stored_artifacts/TCK-20260703-SIMQ-UPLIFT3-WORLD-CORPUS/investigation.md` Findings 1-4 and
+`docs/simulation_quality/eval_matrix_results.md` §Newly-Anchored Worlds for the full 3-seed
+tables). All five worlds are now anchored in `tests/simulation_quality/fixtures/grade_anchors.json`.
 
 ### Findings
 
@@ -497,10 +515,22 @@ AGENCY is C in all 12 default-mode runs and B only in simq_routing_test (where `
 sandbox_world (2 regions, 10 nodes, 0 quests) scores WORLD=C despite high resource density. dungeon_crawl, frontier_extended, urban_political, and wilderness_survival all score WORLD=A. The differentiator is ecology events: hazard_drain, region_trauma_delta, raid_party_spawned. Worlds with ecology/danger modules score higher. sandbox_world has none. This is expected behavior, not a gap.
 
 **Finding 5: NARRATIVE = C is a short-run / low-entity signal, not a gap in wilderness_survival.**  
-wilderness_survival terminates at tick 101 with 11 entities. NARRATIVE is C because quest_started events require living entities pursuing quest objectives; with rapid attrition the narrative event rate is too low to cross the B threshold. NARRATIVE=C here confirms P2-B (entity attrition outpaces spawning) rather than indicating a narrative system gap.
+**Superseded 2026-07-04 (TCK-20260703-SIMQ-UPLIFT3-WORLD-CORPUS):** the original text here read
+"wilderness_survival terminates at tick 101 with 11 entities ... confirms P2-B" — that
+early-termination and P2-B attribution were incorrect (see the P2-B section's Distinct Finding and
+the 13-run corpus table's 2026-07-04 update above). wilderness_survival now runs the full 200+
+ticks without early termination; NARRATIVE=C is a genuine low-entity/short-run signal (11
+entities, few quest-pursuing agents), not evidence of attrition outpacing spawning.
 
-**Finding 6: Larger multi-module worlds show COMBAT=A and PROGRESSION=A.**  
-frontier_extended (56 entities, 10 regions) and frontier_living_world (46 entities, 7 regions) both score COMBAT=A and PROGRESSION=A at 200 ticks. These are currently the highest-activity worlds in the corpus. They also terminate early (tick 159) — confirming P2-B applies at higher entity counts too.
+**Finding 6: Larger multi-module worlds show COMBAT and PROGRESSION signal.**  
+**Superseded 2026-07-04 (TCK-20260703-SIMQ-UPLIFT3-WORLD-CORPUS):** the original text here read
+"frontier_extended ... and frontier_living_world ... both score COMBAT=A and PROGRESSION=A at 200
+ticks ... They also terminate early (tick 159) — confirming P2-B" — that early-termination and
+P2-B attribution were incorrect (same root cause as Finding 5). Both worlds now run the full 200
+ticks without early termination; post-recompile they score COMBAT=B and PROGRESSION=B (down from
+the pre-fix A/A, itself an artifact of the population having already collapsed to a small,
+easily-saturated residual — see `docs/simulation_quality/eval_matrix_results.md` §Newly-Anchored
+Worlds for the current, stable grades).
 
 **Finding 7: Quest location fix has no grade impact (correct).**  
 The TCK-20260630-WORLD-QUEST-LOCATION fix eliminated 28 compile warnings by validating `required_location_tags` against `region.type`/`region.tags` instead of `region.id`. This fix was compile-time validation only — the runtime quest activation path (P1-B) is not gated by this validation. quest_completed grades remain 0 across all worlds, as expected until P0-A and P1-B are addressed.
@@ -550,7 +580,7 @@ Tickets created: `tickets/todos/simq-emit/` (5 tickets, 2026-07-01).
 | P1-G | D09 F5 | **P1** | Docs/Engine | **RESOLVED (verified 2026-07-03)** — documented in `known_limitations.md` |
 | P1-H | D15 Gap 1 | **P1** | Observability | OPEN (verified 2026-07-03) — no runner-up/top-3 score tracking found — S — top-3 runner-up scores in trace |
 | P2-A | D06 F2 | **P2** | Engine | **RESOLVED (verified 2026-07-03)** — conditional lock, capped at 50 ticks, in `intelligence.py` |
-| P2-B | D06 F5 | **P2** | Engine | UNVERIFIED (2026-07-03) — `SpawnService` relocated to `src/world/spawn.py`; cadence tuning not re-checked — S — tune spawn cadence |
+| P2-B | D06 F5 | **P2** | Engine | **RESOLVED (verified 2026-07-04)** — TCK-20260703-SIMQ-UPLIFT3-WORLD-CORPUS; two-tier cadence intact, frontier_extended/frontier_living_world/wilderness_survival symptom re-attributed to hazard-kind staleness (separately fixed, same ticket) |
 | P2-C | D07 F4 | **P2** | Content | **RESOLVED (verified 2026-07-03)** — 29 archetypes, 18 roles, no single-role dominance |
 | P2-D | D07 F6 | **P2** | Content | UNVERIFIED (2026-07-03) — relationships consolidated into `data/content/social/faction_relationships.yaml`; pair-coverage % not re-checked — M — verify 50%+ coverage |
 | P2-E | D09 F4 | **P2** | Testing | OPEN (not re-checked 2026-07-03) — S — per-scenario feature flag test |
@@ -585,11 +615,13 @@ DONE as of 2026-07-01.~~ **Correction (verified 2026-07-03): this claim was inac
 the time it was written** — it conflated "the 2026-07-01 SimQ emit-gap sequence is done" (true)
 with "every P0–P3 item in this document is done" (false). The 2026-07-03 status refresh above
 found several P1/P2/P3 items were never resolved and remain genuinely open: **P1-D** (pressure-driven
-quest generation), **P1-H** (runner-up goal scores in trace), **P2-B** (spawn cadence tuning,
-unverified), **P2-D** (faction relationship coverage %, unverified), **P2-E** (per-scenario flag
+quest generation), **P1-H** (runner-up goal scores in trace),
+**P2-D** (faction relationship coverage %, unverified), **P2-E** (per-scenario flag
 test), **P2-K** (ContentUsageMatrix auto-generation, unverified), **P2-N** (degraded-mode catalog
 fallback), **P3-A** (feature epics), **P3-C** (mechanics doc verification). The SimQ emit-gap
-sequence below was completed as stated — that specific claim holds.
+sequence below was completed as stated — that specific claim holds. (**P2-B** was in this list as
+of 2026-07-03; **RESOLVED (verified 2026-07-04)** by TCK-20260703-SIMQ-UPLIFT3-WORLD-CORPUS — see
+the P2-B section above.)
 
 **Completed as of 2026-07-01:** Engine emission gaps (`tickets/todos/simq-emit/`, 5 tickets created 2026-07-01)
 
@@ -600,7 +632,8 @@ sequence below was completed as stated — that specific claim holds.
 5. `TCK-20260701-SIMQ-EMIT-SOCIAL2` — 7 misc gaps (ECONOMY ×2, FACTION ×2, SOCIAL ×2, NARRATIVE ×1)
 
 **Still open, no ticket exists yet (per 2026-07-03 status refresh):** P1-D, P1-H, P2-E, P2-N,
-P3-A, P3-C — and P2-B/P2-D/P2-K pending re-verification against their relocated files.
+P3-A, P3-C — and P2-D/P2-K pending re-verification against their relocated files. (P2-B resolved
+2026-07-04, TCK-20260703-SIMQ-UPLIFT3-WORLD-CORPUS — no longer pending.)
 
 ---
 

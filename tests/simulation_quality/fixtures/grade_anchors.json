@@ -54,7 +54,7 @@
     "FACTION": "C",
     "INFORMATION": "C",
     "SOCIAL": "C",
-    "WORLD": "A"
+    "WORLD": "B"
   },
   "urban_political_seed42_200t": {
     "COMBAT": "A",
@@ -81,8 +81,8 @@
     "WORLD": "B"
   },
   "dungeon_crawl_seed42_1000t": {
-    "COMBAT": "A",
-    "NARRATIVE": "B",
+    "COMBAT": "B",
+    "NARRATIVE": "A",
     "PROGRESSION": "B",
     "AGENCY": "C",
     "COGNITION": "C",
@@ -131,38 +131,38 @@
   "dungeon_crawl_seed42_500t": {
     "COGNITION": "C",
     "AGENCY": "C",
-    "COMBAT": "A",
+    "COMBAT": "B",
     "FACTION": "C",
     "ECONOMY": "C",
-    "PROGRESSION": "A",
+    "PROGRESSION": "B",
     "SOCIAL": "C",
     "INFORMATION": "C",
     "WORLD": "B",
-    "NARRATIVE": "B"
+    "NARRATIVE": "A"
   },
   "dungeon_crawl_seed123_500t": {
     "COGNITION": "C",
     "AGENCY": "C",
-    "COMBAT": "A",
+    "COMBAT": "B",
     "FACTION": "C",
     "ECONOMY": "C",
-    "PROGRESSION": "A",
+    "PROGRESSION": "B",
     "SOCIAL": "C",
     "INFORMATION": "C",
     "WORLD": "B",
-    "NARRATIVE": "B"
+    "NARRATIVE": "A"
   },
   "dungeon_crawl_seed456_500t": {
     "COGNITION": "C",
     "AGENCY": "C",
-    "COMBAT": "A",
+    "COMBAT": "B",
     "FACTION": "C",
     "ECONOMY": "C",
-    "PROGRESSION": "A",
+    "PROGRESSION": "B",
     "SOCIAL": "C",
     "INFORMATION": "C",
     "WORLD": "B",
-    "NARRATIVE": "B"
+    "NARRATIVE": "A"
   },
   "urban_political_seed42_500t": {
     "COGNITION": "B",
@@ -203,7 +203,7 @@
   "dungeon_crawl_seed123_1000t": {
     "COGNITION": "C",
     "AGENCY": "C",
-    "COMBAT": "A",
+    "COMBAT": "B",
     "FACTION": "C",
     "ECONOMY": "C",
     "PROGRESSION": "B",
@@ -215,14 +215,14 @@
   "dungeon_crawl_seed456_1000t": {
     "COGNITION": "C",
     "AGENCY": "C",
-    "COMBAT": "A",
+    "COMBAT": "B",
     "FACTION": "C",
     "ECONOMY": "C",
     "PROGRESSION": "B",
     "SOCIAL": "C",
     "INFORMATION": "C",
     "WORLD": "B",
-    "NARRATIVE": "B"
+    "NARRATIVE": "A"
   },
   "urban_political_seed42_1000t": {
     "COGNITION": "B",
@@ -270,7 +270,7 @@
     "SOCIAL": "C",
     "INFORMATION": "C",
     "WORLD": "B",
-    "NARRATIVE": "B"
+    "NARRATIVE": "A"
   },
   "dungeon_crawl_seed123_2000t": {
     "COGNITION": "C",
@@ -303,6 +303,186 @@
     "FACTION": "C",
     "ECONOMY": "B",
     "PROGRESSION": "B",
+    "SOCIAL": "C",
+    "INFORMATION": "C",
+    "WORLD": "B",
+    "NARRATIVE": "A"
+  },
+  "frontier_extended_seed42_200t": {
+    "COGNITION": "C",
+    "AGENCY": "C",
+    "COMBAT": "B",
+    "FACTION": "C",
+    "ECONOMY": "C",
+    "PROGRESSION": "B",
+    "SOCIAL": "C",
+    "INFORMATION": "C",
+    "WORLD": "B",
+    "NARRATIVE": "A"
+  },
+  "frontier_extended_seed123_200t": {
+    "COGNITION": "C",
+    "AGENCY": "C",
+    "COMBAT": "B",
+    "FACTION": "C",
+    "ECONOMY": "C",
+    "PROGRESSION": "B",
+    "SOCIAL": "C",
+    "INFORMATION": "C",
+    "WORLD": "B",
+    "NARRATIVE": "A"
+  },
+  "frontier_extended_seed456_200t": {
+    "COGNITION": "C",
+    "AGENCY": "C",
+    "COMBAT": "B",
+    "FACTION": "C",
+    "ECONOMY": "C",
+    "PROGRESSION": "B",
+    "SOCIAL": "C",
+    "INFORMATION": "C",
+    "WORLD": "B",
+    "NARRATIVE": "A"
+  },
+  "frontier_living_world_seed42_200t": {
+    "COGNITION": "C",
+    "AGENCY": "C",
+    "COMBAT": "B",
+    "FACTION": "C",
+    "ECONOMY": "C",
+    "PROGRESSION": "B",
+    "SOCIAL": "C",
+    "INFORMATION": "C",
+    "WORLD": "B",
+    "NARRATIVE": "A"
+  },
+  "frontier_living_world_seed123_200t": {
+    "COGNITION": "C",
+    "AGENCY": "C",
+    "COMBAT": "B",
+    "FACTION": "C",
+    "ECONOMY": "C",
+    "PROGRESSION": "B",
+    "SOCIAL": "C",
+    "INFORMATION": "C",
+    "WORLD": "B",
+    "NARRATIVE": "B"
+  },
+  "frontier_living_world_seed456_200t": {
+    "COGNITION": "C",
+    "AGENCY": "C",
+    "COMBAT": "B",
+    "FACTION": "C",
+    "ECONOMY": "C",
+    "PROGRESSION": "B",
+    "SOCIAL": "C",
+    "INFORMATION": "C",
+    "WORLD": "B",
+    "NARRATIVE": "A"
+  },
+  "wilderness_survival_seed42_200t": {
+    "COGNITION": "C",
+    "AGENCY": "C",
+    "COMBAT": "C",
+    "FACTION": "C",
+    "ECONOMY": "C",
+    "PROGRESSION": "C",
+    "SOCIAL": "C",
+    "INFORMATION": "C",
+    "WORLD": "B",
+    "NARRATIVE": "C"
+  },
+  "wilderness_survival_seed123_200t": {
+    "COGNITION": "C",
+    "AGENCY": "C",
+    "COMBAT": "C",
+    "FACTION": "C",
+    "ECONOMY": "C",
+    "PROGRESSION": "C",
+    "SOCIAL": "C",
+    "INFORMATION": "C",
+    "WORLD": "B",
+    "NARRATIVE": "C"
+  },
+  "wilderness_survival_seed456_200t": {
+    "COGNITION": "C",
+    "AGENCY": "C",
+    "COMBAT": "C",
+    "FACTION": "C",
+    "ECONOMY": "C",
+    "PROGRESSION": "C",
+    "SOCIAL": "C",
+    "INFORMATION": "C",
+    "WORLD": "B",
+    "NARRATIVE": "C"
+  },
+  "highland_traverse_seed42_200t": {
+    "COGNITION": "B",
+    "AGENCY": "C",
+    "COMBAT": "B",
+    "FACTION": "C",
+    "ECONOMY": "C",
+    "PROGRESSION": "C",
+    "SOCIAL": "C",
+    "INFORMATION": "C",
+    "WORLD": "B",
+    "NARRATIVE": "A"
+  },
+  "highland_traverse_seed123_200t": {
+    "COGNITION": "C",
+    "AGENCY": "C",
+    "COMBAT": "B",
+    "FACTION": "C",
+    "ECONOMY": "C",
+    "PROGRESSION": "C",
+    "SOCIAL": "C",
+    "INFORMATION": "C",
+    "WORLD": "B",
+    "NARRATIVE": "A"
+  },
+  "highland_traverse_seed456_200t": {
+    "COGNITION": "C",
+    "AGENCY": "C",
+    "COMBAT": "C",
+    "FACTION": "C",
+    "ECONOMY": "C",
+    "PROGRESSION": "C",
+    "SOCIAL": "C",
+    "INFORMATION": "C",
+    "WORLD": "B",
+    "NARRATIVE": "A"
+  },
+  "swamp_border_world_seed42_200t": {
+    "COGNITION": "C",
+    "AGENCY": "C",
+    "COMBAT": "C",
+    "FACTION": "C",
+    "ECONOMY": "C",
+    "PROGRESSION": "C",
+    "SOCIAL": "C",
+    "INFORMATION": "C",
+    "WORLD": "B",
+    "NARRATIVE": "A"
+  },
+  "swamp_border_world_seed123_200t": {
+    "COGNITION": "C",
+    "AGENCY": "C",
+    "COMBAT": "C",
+    "FACTION": "C",
+    "ECONOMY": "C",
+    "PROGRESSION": "C",
+    "SOCIAL": "C",
+    "INFORMATION": "C",
+    "WORLD": "B",
+    "NARRATIVE": "A"
+  },
+  "swamp_border_world_seed456_200t": {
+    "COGNITION": "C",
+    "AGENCY": "C",
+    "COMBAT": "C",
+    "FACTION": "C",
+    "ECONOMY": "C",
+    "PROGRESSION": "C",
     "SOCIAL": "C",
     "INFORMATION": "C",
     "WORLD": "B",

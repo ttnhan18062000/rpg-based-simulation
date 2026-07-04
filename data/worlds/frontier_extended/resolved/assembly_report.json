@@ -33,8 +33,8 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'floor' is active but never consumed by any downstream component",
-      "target": "floor"
+      "message": "Terrain 'sand' is active but never consumed by any downstream component",
+      "target": "sand"
     },
     {
       "severity": "WARNING",
@@ -45,8 +45,8 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'sand' is active but never consumed by any downstream component",
-      "target": "sand"
+      "message": "Terrain 'floor' is active but never consumed by any downstream component",
+      "target": "floor"
     },
     {
       "severity": "WARNING",
@@ -605,8 +605,8 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'floor' is active but never consumed by any downstream component",
-      "target": "floor"
+      "message": "Terrain 'sand' is active but never consumed by any downstream component",
+      "target": "sand"
     },
     {
       "severity": "WARNING",
@@ -617,8 +617,8 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'sand' is active but never consumed by any downstream component",
-      "target": "sand"
+      "message": "Terrain 'floor' is active but never consumed by any downstream component",
+      "target": "floor"
     },
     {
       "severity": "WARNING",
@@ -1156,16 +1156,16 @@
     }
   ],
   "fingerprints": {
-    "catalog": "3529ebbe985937cfa0e2bf3066657f19d7112f21620e16d31e6bf661d5305f46",
+    "catalog": "f3f195b92f3ae565267a8297fcff8db47685fa789ff0cfbdec01533636f5b378",
     "modules": {
       "frontier_village_core": "ac2da4bc478c24180e4b53f1267959956c00bbf473d6b119dc270633b2c322f3",
-      "bandit_road_trade_pressure": "14f4161782ab617ee6da3a54afa2487d2eefd2cc63ff66899e08f87bc2993161",
-      "goblin_camp_conflict": "36e0a62287420b3a3ab01ce4396ce507e998bbecbc6ed4c0beb37c346d933daf",
-      "old_mine_resource_loop": "dbef38a7d0c2261e24948cd9dded020279386c10e0084872a2df9963bb9cc677",
-      "orc_clan_territory": "7162ce4798b527bebb9026704fae3e07dca324d0a63408efd1e8324a9e35811a",
-      "undead_battlefield": "0d1daa592a5fa30bf11c363017769c8234287c33aed53a8319da3a38858fa67d",
-      "wolf_den_near_forest": "b95456ea741bcd26f54e54f965a0cb57c0b37dca9d8d75ad77e7fcf65d88ff16",
-      "forest_warden_grove": "68998009e7d2ae7e372e198409d58f83e5faab2441e0e655bd83547f5cdc8384"
+      "bandit_road_trade_pressure": "aa350454ab34ccb615a928faceff3c8d77a6dd3358eeee43e8828e0eb6b8a76d",
+      "goblin_camp_conflict": "7e712ab3d3321805bfad0b116c66ac5c679854fe887f7752b9ab6a27cb61e5fb",
+      "old_mine_resource_loop": "7e069040e802e137042f16c0f2b19372d878a2bf7a6fae520b369cc5d5e91ff2",
+      "orc_clan_territory": "ef831c3098410e440c3e67d22c57f9e4ae6ee9cbb7e9ddaaf4bc02020e55f97e",
+      "undead_battlefield": "5a28c8d022a3a2d2510e3b0ef36e62ef4cb78d366f2b61e2c226c8797ee86b30",
+      "wolf_den_near_forest": "236ed57805d9d8a947b072448b36ce728b6b6653ad9fd5f0085c3bfb269953ee",
+      "forest_warden_grove": "1afd9828cbd2087f5cbafffdbd2d3b81c59a32d20fa66debd95249844022e3fe"
     }
   }
 }

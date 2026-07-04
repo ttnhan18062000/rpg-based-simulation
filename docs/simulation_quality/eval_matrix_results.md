@@ -14,8 +14,12 @@ are extracted from `data/calibration/{run_key}/quality_report.json` and committe
 `tests/simulation_quality/fixtures/grade_anchors.json`.
 
 Zero-pillar worlds (AGENCY/COGNITION/ECONOMY/SOCIAL/FACTION/INFORMATION all C in default mode)
-were not included: `wilderness_survival`, `highland_traverse`, `swamp_border_world`,
+were not included at the time: `wilderness_survival`, `highland_traverse`, `swamp_border_world`,
 `frontier_extended`, `frontier_living_world`. All confirmed structurally feature-gate blocked.
+**Now anchored as of TCK-20260703-SIMQ-UPLIFT3-WORLD-CORPUS** — see "Newly-Anchored Worlds"
+section below. The feature-gate-blocked pillars remain C (unchanged, structural, not a
+regression); these worlds add entity-count/region-count/module-family diversity to the corpus
+(COMBAT/NARRATIVE/PROGRESSION/WORLD signal), not new pillar coverage.
 
 ---
 
@@ -28,6 +32,27 @@ were not included: `wilderness_survival`, `highland_traverse`, `swamp_border_wor
 > change: **COMBAT and PROGRESSION in dungeon_crawl now hold A at 500t and 1000t** (previously B
 > due to tick-dilution). WORLD holds B (unchanged — it was genuinely active throughout).
 > The "A→B decay" pattern previously described in the stability analysis is resolved.
+
+> **NOTE (TCK-20260703-SIMQ-UPLIFT3-WORLD-CORPUS — hazard-kind recompile drift):** `dungeon_crawl`
+> and `simq_routing_test` were both stale-compiled (resolved YAML predated the 2026-07-01
+> hazard-kind fixes) and both use `old_mine_resource_loop`, one of the 7 modules that gained a
+> `hazard_kind` declaration under this ticket (Step 1a). Per the Step 4a drift-check procedure
+> (mirroring the D2-fix precedent above), all 13 pre-existing anchor entries for these two worlds
+> were refreshed and diffed against their committed values after recompiling:
+> **8 of `dungeon_crawl`'s 10 keys drifted** (COMBAT A→B and PROGRESSION A→B at 200t/500t;
+> NARRATIVE B→A at 500t/1000t/2000t; COMBAT A→B at 1000t; WORLD A→B at 200t) — attributed to the
+> `old_mine_spider_cluster` population no longer taking unconditional hazard-drain in `old_mine`
+> now that the region declares `hazard_kind: "NATURAL_TERRAIN"` and `wild_beast_pack` declares
+> matching `hazard_immunities`, which changes survival/engagement dynamics feeding these pillars.
+> `dungeon_crawl_seed123_2000t` and `dungeon_crawl_seed456_2000t` showed **no drift**. `grade_anchors.json`
+> was updated in place for the 8 drifted keys only. **`simq_routing_test`'s 3 keys could not be
+> independently re-verified** — re-running its `ENABLE_ADVENTURE_ROUTING=ON` calibration crashes
+> with `KeyError: Resource not found in ResourceRegistry: STONE` (a pre-existing, unrelated bug in
+> `src/world/ecology.py`'s dynamic resource-node generation, confirmed via `git stash` bisection to
+> reproduce identically with and without this ticket's content changes — see Implementation Notes
+> in `tickets/done/TCK-20260703-SIMQ-UPLIFT3-WORLD-CORPUS.md`). `simq_routing_test`'s 3 anchor
+> entries are left unchanged (not silently marked as verified); a follow-up ticket is recommended
+> for the `ResourceRegistry` gap.
 
 ---
 
@@ -47,9 +72,9 @@ were not included: `wilderness_survival`, `highland_traverse`, `swamp_border_wor
 
 | Pillar | seed42 | seed123 | seed456 | Stable? | Note |
 |---|---|---|---|---|---|
-| COMBAT | A | A | A | yes | was B (D2 fix) |
-| NARRATIVE | B | B | B | yes | |
-| PROGRESSION | A | A | A | yes | was B (D2 fix) |
+| COMBAT | B | B | B | yes | was A pre-recompile; hazard-kind fix to `old_mine_resource_loop` changed `old_mine_spider_cluster` survival dynamics (TCK-20260703-SIMQ-UPLIFT3-WORLD-CORPUS Step 4a) |
+| NARRATIVE | A | A | A | yes | was B pre-recompile (same cause) |
+| PROGRESSION | B | B | B | yes | was A pre-recompile (same cause) |
 | WORLD | B | B | B | yes | |
 | AGENCY | C | C | C | yes | |
 | COGNITION | C | C | C | yes | |
@@ -62,9 +87,9 @@ were not included: `wilderness_survival`, `highland_traverse`, `swamp_border_wor
 
 | Pillar | seed42 | seed123 | seed456 | Stable? | Note |
 |---|---|---|---|---|---|
-| COMBAT | A | A | A | yes | was B (D2 fix); floor=250, 127/250=0.508 → A |
-| NARRATIVE | B | B | B | yes | |
-| PROGRESSION | B | B | B | yes | floor=250, 88/250=0.352 → B |
+| COMBAT | B | B | B | yes | was A pre-recompile; hazard-kind recompile shift (Step 4a) |
+| NARRATIVE | A | B | A | mostly | seed123 unchanged at B; seed42/456 were B pre-recompile, now A |
+| PROGRESSION | B | B | B | yes | floor=250, unchanged |
 | WORLD | B | B | B | yes | |
 | AGENCY | C | C | C | yes | |
 | COGNITION | C | C | C | yes | |
@@ -77,8 +102,8 @@ were not included: `wilderness_survival`, `highland_traverse`, `swamp_border_wor
 
 | Pillar | seed42 | seed123 | seed456 | Stable? | Note |
 |---|---|---|---|---|---|
-| COMBAT | B | B | B | yes | floor=500 > last_event_tick; 127/500=0.254 → B (correct: floor-proportional dilution at very long runs) |
-| NARRATIVE | B | B | B | yes | |
+| COMBAT | B | B | B | yes | unchanged by hazard-kind recompile |
+| NARRATIVE | A | B | B | no | seed42 was B pre-recompile, now A (Step 4a); seed123/456 unchanged (no drift) |
 | PROGRESSION | B | B | B | yes | |
 | WORLD | B | B | B | yes | |
 | AGENCY | C | C | C | yes | |
@@ -88,15 +113,15 @@ were not included: `wilderness_survival`, `highland_traverse`, `swamp_border_wor
 | INFORMATION | C | C | C | yes | |
 | SOCIAL | C | C | C | yes | |
 
-**Stability analysis (dungeon_crawl, post-D2 fix):** Exceptionally stable. COMBAT and PROGRESSION
-now hold **A at 500t and 1000t** (upgraded from B — the prior B was a tick-dilution artifact, not
-a real quality change). At 2000t, COMBAT returns to B because the floor (`current_tick // 4 = 500`)
-exceeds `last_event_tick=172`; the denominator is 500 and norm=0.254 → B. This is correct and
-distinct from the H2 bug: at 2000t the floor grows proportionally with run duration, producing
-genuine long-run proportional dilution rather than the fixed-denominator artifact. WORLD holds B
-across all tick counts (unchanged — it was genuinely active throughout at last_event_tick≈400).
-NARRATIVE holds B. The "A→B decay" pattern described in earlier analysis is fully resolved at 500t
-and 1000t. dungeon_crawl remains the most deterministic world in the corpus.
+**Stability analysis (dungeon_crawl, post-D2 fix, post-hazard-kind-recompile):** COMBAT and
+PROGRESSION now hold **B at 500t/1000t** (down from A) and NARRATIVE now holds **A at 500t and at
+1000t/2000t for 2 of 3 seeds** (up from B) — a consequence of Step 4a's hazard-kind recompile of
+`old_mine_resource_loop`/`old_mine_spider_cluster` changing this world's survival/engagement
+dynamics, not a scoring regression (see the hazard-kind recompile drift NOTE above for the full
+attribution and the confirmed-unchanged keys: `dungeon_crawl_seed123_2000t`,
+`dungeon_crawl_seed456_2000t`). WORLD holds B across all tick counts (unchanged — it was genuinely
+active throughout at last_event_tick≈400). dungeon_crawl remains otherwise deterministic across
+seeds within each tick count.
 
 **Archetype Note (TCK-20260702-SIMQ-UPLIFT-DUNGEON-ECON-COG):** ECONOMY=C and COGNITION=C
 are archetype-correct for dungeon_crawl and are not bugs or gaps. Two root causes:
@@ -300,12 +325,103 @@ anchors currently recorded for that world's AGENCY pillar assume the flag stays 
 
 ---
 
+## Newly-Anchored Worlds (TCK-20260703-SIMQ-UPLIFT3-WORLD-CORPUS)
+
+Five worlds that previously had zero calibration-corpus anchor entries were recompiled (picking up
+the Step 1 hazard-kind fixes), re-verified for population stability (>=60% alive floor over 300
+ticks at seed 42 — see `stored_artifacts/TCK-20260703-SIMQ-UPLIFT3-WORLD-CORPUS/investigation.md`
+Finding 3 for the pre-fix collapse pattern this guards against), and anchored at 3 seeds x 200t
+each. None of the four flag-gated pillars (AGENCY/FACTION/INFORMATION/SOCIAL) are reachable by
+these worlds by design (out of scope for this ticket) — uniform C is expected and correct, not a
+gap.
+
+### frontier_extended (56 entities, 10 regions — >50-entity band, widest region spread in corpus)
+
+| Pillar | seed42 | seed123 | seed456 | Stable? |
+|---|---|---|---|---|
+| COMBAT | B | B | B | yes |
+| NARRATIVE | A | A | A | yes |
+| PROGRESSION | B | B | B | yes |
+| WORLD | B | B | B | yes |
+| AGENCY | C | C | C | yes |
+| COGNITION | C | C | C | yes |
+| ECONOMY | C | C | C | yes |
+| FACTION | C | C | C | yes |
+| INFORMATION | C | C | C | yes |
+| SOCIAL | C | C | C | yes |
+
+### frontier_living_world (46 entities, 7 regions — fills the 35-50-entity band)
+
+| Pillar | seed42 | seed123 | seed456 | Stable? |
+|---|---|---|---|---|
+| COMBAT | B | B | B | yes |
+| NARRATIVE | A | B | A | mostly |
+| PROGRESSION | B | B | B | yes |
+| WORLD | B | B | B | yes |
+| AGENCY | C | C | C | yes |
+| COGNITION | C | C | C | yes |
+| ECONOMY | C | C | C | yes |
+| FACTION | C | C | C | yes |
+| INFORMATION | C | C | C | yes |
+| SOCIAL | C | C | C | yes |
+
+### wilderness_survival (11 entities, 4 regions — second <20-entity data point alongside sandbox_world)
+
+| Pillar | seed42 | seed123 | seed456 | Stable? |
+|---|---|---|---|---|
+| COMBAT | C | C | C | yes |
+| NARRATIVE | C | C | C | yes |
+| PROGRESSION | C | C | C | yes |
+| WORLD | B | B | B | yes |
+| AGENCY | C | C | C | yes |
+| COGNITION | C | C | C | yes |
+| ECONOMY | C | C | C | yes |
+| FACTION | C | C | C | yes |
+| INFORMATION | C | C | C | yes |
+| SOCIAL | C | C | C | yes |
+
+### highland_traverse (18 entities, 5 regions — brings mountain_pass/river_crossing/nomadic_herd/settled_quarter into the anchored corpus)
+
+| Pillar | seed42 | seed123 | seed456 | Stable? |
+|---|---|---|---|---|
+| COMBAT | B | B | C | no — seed456 lower event count |
+| NARRATIVE | A | A | A | yes |
+| PROGRESSION | C | C | C | yes |
+| WORLD | B | B | B | yes |
+| AGENCY | C | C | C | yes |
+| COGNITION | B | C | C | no — seed42 elevated |
+| ECONOMY | C | C | C | yes |
+| FACTION | C | C | C | yes |
+| INFORMATION | C | C | C | yes |
+| SOCIAL | C | C | C | yes |
+
+### swamp_border_world (26 entities, 4 regions — brings sunken_swamp_border/lizardfolk family into the anchored corpus)
+
+| Pillar | seed42 | seed123 | seed456 | Stable? |
+|---|---|---|---|---|
+| COMBAT | C | C | C | yes |
+| NARRATIVE | A | A | A | yes |
+| PROGRESSION | C | C | C | yes |
+| WORLD | B | B | B | yes |
+| AGENCY | C | C | C | yes |
+| COGNITION | C | C | C | yes |
+| ECONOMY | C | C | C | yes |
+| FACTION | C | C | C | yes |
+| INFORMATION | C | C | C | yes |
+| SOCIAL | C | C | C | yes |
+
+---
+
 ## Zero-Pillar World Confirmation
 
-Six confirmed zero-active-pillar worlds not included in this matrix:
+Five confirmed zero-*flag-gated*-pillar worlds (AGENCY/FACTION/INFORMATION/SOCIAL always C in
+default mode — structural, feature-gate blocked, not duration-limited):
 - `wilderness_survival`, `highland_traverse`, `swamp_border_world`
 - `frontier_extended`, `frontier_living_world`
 
-All have AGENCY/COGNITION/ECONOMY/SOCIAL/FACTION/INFORMATION=C in default mode. This is structural
-(feature-gate blocked), not duration-limited. More ticks will not improve scores without enabling
-the relevant feature flags.
+**Now anchored as of TCK-20260703-SIMQ-UPLIFT3-WORLD-CORPUS** — see "Newly-Anchored Worlds" above.
+COGNITION/ECONOMY also remain C in all five (no merchant NPCs, no non-combat cognitive triggers,
+same archetype pattern as `dungeon_crawl`'s documented COGNITION/ECONOMY C — see the Archetype
+Note above). COMBAT/NARRATIVE/PROGRESSION/WORLD are the pillars these five worlds contribute
+genuine new signal for; more ticks will not activate AGENCY/FACTION/INFORMATION/SOCIAL without
+enabling the relevant feature flags (explicitly out of scope for this ticket).

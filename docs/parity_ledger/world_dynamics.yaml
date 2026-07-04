@@ -294,8 +294,14 @@
     the region's hazard_kind (RegionState.hazard_kind) from drain; all other entities take
     the unchanged hazard_level/calamity_intensity-scaled drain. See
     src/engine/world_dynamics.py for the per-tick call site.
+    TCK-20260703-SIMQ-UPLIFT3-WORLD-CORPUS extended this corpus-wide, 7 modules
+    (orc_clan_territory, bandit_road_trade_pressure, old_mine_resource_loop,
+    forest_warden_grove, undead_battlefield, nomadic_herd, sunken_swamp_border) / 6 factions
+    now declare hazard_kind/hazard_immunities, exercised across the 5 newly-anchored worlds
+    (frontier_extended, frontier_living_world, wilderness_survival, highland_traverse,
+    swamp_border_world), not only wolf_den_near_forest/goblin_camp_conflict.
   proof_type: parity
-  test_path: tests/unit/world/test_regional_consequences.py
+  test_path: tests/unit/world/test_regional_consequences.py, tests/unit/worldassembly/test_corpus_diversity.py
   divergence_note: null
   support_boundary: null
 - id: WORLD-060
@@ -309,8 +315,12 @@
     region's hazard_kind (RegionState.hazard_kind), which takes zero drain unconditionally.
     Endurance is faction-declared, not derived from hostility-to-hero or from a legacy
     faction bucket (TCK-20260701-HAZARD-NATIVE-IMMUNITY).
+    TCK-20260703-SIMQ-UPLIFT3-WORLD-CORPUS extended this mechanism corpus-wide (7 modules,
+    6 factions, including a new "UNDEAD_CORRUPTION" hazard_kind for undead_battlefield /
+    undead_remnants), exercised across 5 newly-anchored worlds instead of only
+    wolf_den_near_forest/goblin_camp_conflict.
   proof_type: parity
-  test_path: tests/unit/world/test_regional_consequences.py
+  test_path: tests/unit/world/test_regional_consequences.py, tests/unit/worldassembly/test_corpus_diversity.py
   divergence_note: null
   support_boundary: null
 - id: WORLD-061

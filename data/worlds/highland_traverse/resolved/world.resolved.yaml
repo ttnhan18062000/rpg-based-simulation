@@ -17,6 +17,7 @@ regions:
   - 120
   terrain: mountain
   hazard_level: 2.5
+  hazard_kind: PHYSICAL
   tags:
   - mountain
 - id: near_forest
@@ -28,6 +29,7 @@ regions:
   - 170
   terrain: plain
   hazard_level: 1.5
+  hazard_kind: NATURAL_TERRAIN
   tags:
   - plain
 - id: wolf_den
@@ -39,6 +41,7 @@ regions:
   - 210
   terrain: forest
   hazard_level: 2.0
+  hazard_kind: NATURAL_TERRAIN
   tags: []
 - id: river_ford
   type: wilderness
@@ -49,6 +52,7 @@ regions:
   - 70
   terrain: river
   hazard_level: 1.0
+  hazard_kind: PHYSICAL
   tags: []
 - id: hometown
   type: settlement
@@ -59,40 +63,60 @@ regions:
   - 120
   terrain: plain
   hazard_level: 0.0
+  hazard_kind: PHYSICAL
   tags: []
 factions:
 - id: hero_guild
   type: defender
+  initial_tension_level: 0.0
 - id: town_council
   type: defender
+  initial_tension_level: 0.0
 - id: neutral
   type: neutral
+  initial_tension_level: 0.0
 - id: wild_beast_pack
   type: wild
+  initial_tension_level: 0.0
 - id: goblin_warband
   type: invader
+  initial_tension_level: 0.0
 - id: merchant_league
   type: neutral
+  initial_tension_level: 0.0
 - id: bandit_company
   type: invader
+  initial_tension_level: 0.0
 - id: forest_wardens
   type: defender
+  initial_tension_level: 0.0
 - id: orc_clan
   type: rival
+  initial_tension_level: 0.0
 - id: dwarven_mine_clan
   type: defender
+  initial_tension_level: 0.0
 - id: moon_cult
   type: invader
+  initial_tension_level: 0.0
 - id: undead_remnants
   type: invader
+  initial_tension_level: 0.0
 - id: arcane_circle
   type: neutral
+  initial_tension_level: 0.0
 - id: swamp_tribe
   type: rival
+  initial_tension_level: 0.0
 - id: dragon_cult
   type: invader
+  initial_tension_level: 0.0
 - id: spirit_court
   type: neutral
+  initial_tension_level: 0.0
+information_source_profiles: []
+pending_information_responses: []
+pending_self_model_information_events: []
 entities:
 - id: wolf_pack_small_hungry_wolf
   count: 4
