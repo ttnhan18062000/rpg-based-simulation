@@ -126,7 +126,7 @@ already existed; it only made the SimQ FACTION pillar's calibration signal reach
 
 ---
 
-### P1-D: Pressure-Driven Quest Generation `[M]` — **OPEN** (confirmed still open 2026-07-03)
+### P1-D: Pressure-Driven Quest Generation `[M]` — RESOLVED — TCK-20260703-SIMQ-UPLIFT3-QUEST-PRESSURE
 
 **Source:** D01 §Pressure-Driven Quest Generation  
 **Files:** `src/quests/generator.py`  
@@ -135,6 +135,14 @@ already existed; it only made the SimQ FACTION pillar's calibration signal reach
 **2026-07-03 re-check:** `QuestGenerator` (`src/quests/generator.py`) confirmed still using a
 static, hero-level-keyed `TEMPLATES` list (`QuestTemplate("q_slime_cull", ..., level 1-5, ...)`
 etc.) — no world-state pressure signal input found. Still open, no ticket exists yet.
+
+**RESOLVED (2026-07-04, TCK-20260703-SIMQ-UPLIFT3-QUEST-PRESSURE)** — `GuildAction.visit()`
+(`src/town/guild.py`) now derives a `QuestPressureProfile` (region `trauma_score`/`hazard_level`
+plus a node-charge-ratio-derived scarcity signal) at read time and passes it to
+`QuestGenerator.generate()`, which weights template selection via a new
+`DeterministicRNG.weighted_choice()` primitive while leaving hero-level gating untouched. A
+neutral/`None` profile collapses to the exact pre-existing `rng.choice()` draw (proven
+byte-identical). See `docs/mechanics/05_world_evolution.md` §3 "Derived Scarcity Ratio".
 
 ---
 
@@ -574,7 +582,7 @@ Tickets created: `tickets/todos/simq-emit/` (5 tickets, 2026-07-01).
 | P1-A | D03 F3 / D06 F3 | **P1** | Engine | **RESOLVED (verified 2026-07-03)** — `failure_count`/`_MAX_CONSECUTIVE_REJECTIONS` in `intelligence.py` |
 | P1-B | D06 F4 | **P1** | Engine | **RESOLVED** — `TCK-20260627-P1B-QUEST-ACTIVATION` |
 | P1-C | D01 §Faction | **P1** | Feature | **RESOLVED (verified 2026-07-03; already resolved 2026-06-23 via E53, this doc was stale from authoring)** |
-| P1-D | D01 §Quest | **P1** | Feature | OPEN (verified 2026-07-03) — `QuestGenerator` still static template-based, not pressure-signal-driven — L — extend QuestGenerator |
+| P1-D | D01 §Quest | **P1** | Feature | **RESOLVED** — TCK-20260703-SIMQ-UPLIFT3-QUEST-PRESSURE |
 | P1-E | D09 F3 | **P1** | Docs | **RESOLVED** — D19 exists |
 | P1-F | D12 F2 | **P1** | Refactor | **RESOLVED (verified 2026-07-03)** — `AbandonmentClassification` dataclass exists |
 | P1-G | D09 F5 | **P1** | Docs/Engine | **RESOLVED (verified 2026-07-03)** — documented in `known_limitations.md` |
@@ -621,7 +629,8 @@ test), **P2-K** (ContentUsageMatrix auto-generation, unverified), **P2-N** (degr
 fallback), **P3-A** (feature epics), **P3-C** (mechanics doc verification). The SimQ emit-gap
 sequence below was completed as stated — that specific claim holds. (**P2-B** was in this list as
 of 2026-07-03; **RESOLVED (verified 2026-07-04)** by TCK-20260703-SIMQ-UPLIFT3-WORLD-CORPUS — see
-the P2-B section above.)
+the P2-B section above. **P1-D** was also in this list as of 2026-07-03; **RESOLVED (2026-07-04)**
+by TCK-20260703-SIMQ-UPLIFT3-QUEST-PRESSURE — see the P1-D section above.)
 
 **Completed as of 2026-07-01:** Engine emission gaps (`tickets/todos/simq-emit/`, 5 tickets created 2026-07-01)
 
@@ -631,9 +640,10 @@ the P2-B section above.)
 4. `TCK-20260701-SIMQ-EMIT-AGENCY2` — 4 agency tracking events
 5. `TCK-20260701-SIMQ-EMIT-SOCIAL2` — 7 misc gaps (ECONOMY ×2, FACTION ×2, SOCIAL ×2, NARRATIVE ×1)
 
-**Still open, no ticket exists yet (per 2026-07-03 status refresh):** P1-D, P1-H, P2-E, P2-N,
+**Still open, no ticket exists yet (per 2026-07-03 status refresh):** P1-H, P2-E, P2-N,
 P3-A, P3-C — and P2-D/P2-K pending re-verification against their relocated files. (P2-B resolved
-2026-07-04, TCK-20260703-SIMQ-UPLIFT3-WORLD-CORPUS — no longer pending.)
+2026-07-04, TCK-20260703-SIMQ-UPLIFT3-WORLD-CORPUS — no longer pending. P1-D resolved 2026-07-04,
+TCK-20260703-SIMQ-UPLIFT3-QUEST-PRESSURE — no longer pending.)
 
 ---
 

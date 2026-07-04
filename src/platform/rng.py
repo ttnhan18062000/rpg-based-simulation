@@ -83,6 +83,11 @@ class DeterministicRNG:
         seed = self._composite_seed(self._base_seed, domain, tick, entity_id, sub_id)
         return random.Random(seed).choice(seq)
 
+    def weighted_choice(self, domain: Domain, tick: int, entity_id: int, seq: Any, weights: Any, sub_id: int = 0) -> Any:
+        """Stateless, order-independent weighted choice from a sequence."""
+        seed = self._composite_seed(self._base_seed, domain, tick, entity_id, sub_id)
+        return random.Random(seed).choices(seq, weights=weights, k=1)[0]
+
     def sample(self, domain: Domain, tick: int, entity_id: int, population: Any, k: int, sub_id: int = 0) -> list:
         """Stateless, order-independent sample from a population."""
         seed = self._composite_seed(self._base_seed, domain, tick, entity_id, sub_id)

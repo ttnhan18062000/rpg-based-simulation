@@ -1,5 +1,5 @@
 import pytest
-from src.quests.generator import QuestGenerator
+from src.quests.generator import QuestGenerator, QuestPressureProfile
 from src.core.quests import QuestKind
 from src.core.models.quests import QuestOpportunity
 from src.domains.world_emergence.services import QuestOpportunityGenerator
@@ -8,11 +8,11 @@ from src.core.state import AuthoritativeState, RegionState
 from src.core.updates import StateUpdate
 from src.domains.world_emergence.phase import WorldEmergencePhase
 
-def test_quest_generation_determinism():
+def test_quest_generator_determinism():
     seed = 42
     level = 1
     tick = 100
-    
+
     q1 = QuestGenerator.generate(seed, level, tick)
     q2 = QuestGenerator.generate(seed, level, tick)
     
@@ -64,6 +64,57 @@ def test_duplicate_suppression():
     assert q_filtered is not None
     assert q_filtered.id != q_orig.id
     assert q_filtered.name != q_orig.name
+
+
+# ── Pressure-driven selection tests (TCK-20260703-SIMQ-UPLIFT3-QUEST-PRESSURE) ─
+
+def test_quest_generation_favors_hunt_under_high_trauma():
+    profile = QuestPressureProfile(trauma=1.0)
+    hunt_count = 0
+    for seed in range(30):
+        q = QuestGenerator.generate(seed, 8, 100, pressure_profile=profile)
+        if q.quest_kind == QuestKind.HUNT:
+            hunt_count += 1
+    assert hunt_count > 15
+
+
+def test_quest_generation_favors_gather_under_high_scarcity():
+    profile = QuestPressureProfile(scarcity=1.0)
+    gather_count = 0
+    for seed in range(30):
+        q = QuestGenerator.generate(seed, 8, 100, pressure_profile=profile)
+        if q.quest_kind == QuestKind.GATHER:
+            gather_count += 1
+    assert gather_count > 15
+
+
+def test_quest_generation_neutral_profile_matches_legacy_none():
+    for seed in range(30):
+        q_none = QuestGenerator.generate(seed, 8, 100)
+        q_neutral = QuestGenerator.generate(seed, 8, 100, pressure_profile=QuestPressureProfile())
+        assert q_none.id == q_neutral.id
+
+
+def test_level_gating_overrides_pressure():
+    profile = QuestPressureProfile(trauma=1.0, hazard=1.0, scarcity=1.0)
+    for seed in range(10):
+        q = QuestGenerator.generate(seed, 1, 100, pressure_profile=profile)
+        assert q.name in ["Clear the Slimes", "Survey the Woods"]
+        assert q.name not in ["Bounty: Bandit Leader", "Liberate the Outpost"]
+
+
+def test_pressure_driven_selection_determinism():
+    profile = QuestPressureProfile(trauma=0.8, scarcity=0.3)
+    q1 = QuestGenerator.generate(42, 8, 100, pressure_profile=profile)
+    q2 = QuestGenerator.generate(42, 8, 100, pressure_profile=profile)
+    assert q1.id == q2.id
+    assert q1.name == q2.name
+    assert q1.reward.xp == q2.reward.xp
+
+
+def test_quest_generation_missing_region_signal_defaults_neutral():
+    q = QuestGenerator.generate(1, 8, 100, pressure_profile=QuestPressureProfile())
+    assert q is not None
 
 
 # ── QuestOpportunity model + generator tests (E23A) ───────────────────────────

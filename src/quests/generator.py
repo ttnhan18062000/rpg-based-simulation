@@ -20,6 +20,37 @@ class QuestTemplate:
     base_gold: int
     items: List[str] = field(default_factory=list)
 
+@dataclass(frozen=True, slots=True)
+class QuestPressureProfile:
+    """
+    Ephemeral, read-time-derived pressure signals used to WEIGHT (never gate) quest
+    template selection. Computed fresh on every GuildAction.visit() call from durable
+    RegionState/ResourceNodeState fields -- this profile itself is never persisted
+    (mirrors how `Opportunity` in src/world/providers/resources.py is a derived
+    read-model, not durable state; see docs/mechanics/05_world_evolution.md for the
+    underlying durable trauma/hazard fields and the "Derived Scarcity Ratio"
+    subsection for the scarcity-ratio formula).
+
+    All fields are conventionally in [0.0, 1.0]. The all-zero default is the neutral
+    profile: it must reduce selection to today's exact uniform rng.choice() behavior
+    (see QuestGenerator.generate()'s "collapse to legacy path" check).
+    """
+    trauma: float = 0.0
+    hazard: float = 0.0
+    scarcity: float = 0.0
+
+# Maps each QuestKind to the QuestPressureProfile field it is weighted by.
+# EXPLORE has no directional pressure driver -- it stays at baseline weight,
+# which is also what keeps a genuinely neutral profile perfectly uniform.
+PRESSURE_AFFINITY: Dict[QuestKind, str] = {
+    QuestKind.HUNT: "trauma",
+    QuestKind.BOUNTY: "trauma",
+    QuestKind.LIBERATE: "hazard",
+    QuestKind.GATHER: "scarcity",
+    QuestKind.EXPLORE: "none",
+}
+PRESSURE_WEIGHT_SCALE = 2.0  # max additive bonus at signal strength 1.0
+
 class QuestGenerator:
     """
     Deterministic quest generator based on hero level and world state.
@@ -40,7 +71,23 @@ class QuestGenerator:
     ]
 
     @staticmethod
-    def generate(seed: int, level: int, tick: int, existing_ids: Set[str] | None = None) -> Optional[QuestState]:
+    def _pressure_weight(template: "QuestTemplate", profile: Optional["QuestPressureProfile"]) -> float:
+        if profile is None:
+            return 1.0
+        signal_name = PRESSURE_AFFINITY.get(template.kind, "none")
+        if signal_name == "none":
+            return 1.0
+        signal_value = getattr(profile, signal_name, 0.0)
+        return 1.0 + PRESSURE_WEIGHT_SCALE * max(0.0, min(1.0, signal_value))
+
+    @staticmethod
+    def generate(
+        seed: int,
+        level: int,
+        tick: int,
+        existing_ids: Set[str] | None = None,
+        pressure_profile: Optional["QuestPressureProfile"] = None,
+    ) -> Optional[QuestState]:
         """
         Generate a level-appropriate quest deterministically.
         """
@@ -48,14 +95,25 @@ class QuestGenerator:
         candidates = [t for t in QuestGenerator.TEMPLATES if t.min_level <= level <= t.max_level]
         if existing_ids:
             candidates = [t for t in candidates if t.id not in existing_ids]
-            
+
         if not candidates:
             return None
-            
-        # 2. Select template using DeterministicRNG
+
+        # 2. Select template using DeterministicRNG.
         rng = DeterministicRNG(seed)
-        template = rng.choice(Domain.QUEST, tick, level, candidates)
-        
+        weights = [QuestGenerator._pressure_weight(t, pressure_profile) for t in candidates]
+
+        # Collapse-to-legacy-path guarantee: when the profile is None, or every candidate
+        # resolves to the same weight (neutral profile, or a level band where no candidate's
+        # QuestKind has a live pressure affinity), draw with the exact same rng.choice() call
+        # as before this ticket -- byte-identical distribution, not just "approximately
+        # uniform." Only diverge to the weighted draw when pressure actually differentiates
+        # the candidates.
+        if pressure_profile is None or len(set(weights)) == 1:
+            template = rng.choice(Domain.QUEST, tick, level, candidates)
+        else:
+            template = rng.weighted_choice(Domain.QUEST, tick, level, candidates, weights)
+
         # 3. Scale rewards and goal
         # Linear scaling for now: 10% increase per level above min_level
         scale_factor = 1.0 + (level - template.min_level) * 0.1
@@ -86,11 +144,18 @@ class QuestGenerator:
         )
 
     @staticmethod
-    def generate_quests(seed: int, level: int, tick: int, building_id: int, count: int = 1) -> List[QuestState]:
+    def generate_quests(
+        seed: int,
+        level: int,
+        tick: int,
+        building_id: int,
+        count: int = 1,
+        pressure_profile: Optional["QuestPressureProfile"] = None,
+    ) -> List[QuestState]:
         """Generate multiple quests for a building."""
         quests = []
         for i in range(count):
-            q = QuestGenerator.generate(seed + i, level, tick)
+            q = QuestGenerator.generate(seed + i, level, tick, pressure_profile=pressure_profile)
             if q:
                 # Add source info
                 q = q.replace(source_building_id=building_id)

@@ -1655,7 +1655,7 @@
   legacy_evidence: null
   v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
   proof_type: null
-  test_path: null
+  test_path: tests/unit/quest/test_quest_generation.py::test_quest_generator_determinism
   divergence_note: null
   support_boundary: null
 - id: STRAT-155
@@ -1665,7 +1665,7 @@
   legacy_evidence: null
   v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
   proof_type: parity
-  test_path: null
+  test_path: tests/unit/quest/test_quest_generation.py::test_level_banding_tier3
   divergence_note: null
   support_boundary: null
 - id: STRAT-156
@@ -1675,7 +1675,7 @@
   legacy_evidence: null
   v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
   proof_type: null
-  test_path: null
+  test_path: tests/unit/quest/test_quest_generation.py::test_duplicate_suppression
   divergence_note: null
   support_boundary: null
 - id: STRAT-157
@@ -1686,7 +1686,7 @@
   legacy_evidence: null
   v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
   proof_type: parity
-  test_path: null
+  test_path: tests/unit/quest/test_quest_generation.py::test_reward_scaling
   divergence_note: null
   support_boundary: null
 - id: STRAT-158
@@ -1696,7 +1696,7 @@
   legacy_evidence: null
   v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
   proof_type: null
-  test_path: null
+  test_path: tests/unit/quest/test_quest_generation.py::test_level_banding_tier1
   divergence_note: null
   support_boundary: null
 - id: STRAT-159
@@ -2768,5 +2768,28 @@
   proof_type: parity
   test_path: >-
     tests/unit/systems/test_spawn_lock_condition.py::TestLockHeldWhenThreatActive
+  divergence_note: null
+  support_boundary: null
+- id: STRAT-244
+  text: >
+    QuestGenerator template selection is weighted by a QuestPressureProfile (region
+    trauma_score/hazard_level plus a node-charge-ratio-derived scarcity signal) via
+    DeterministicRNG.weighted_choice(), so quest content emerges from world pressure
+    rather than hero level alone. A neutral/None profile collapses to the exact
+    pre-existing rng.choice() draw, preserving prior determinism guarantees.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/quests/generator.py — QuestPressureProfile, PRESSURE_AFFINITY,
+    QuestGenerator._pressure_weight()/generate() (TCK-20260703-SIMQ-UPLIFT3-QUEST-PRESSURE);
+    src/town/guild.py::GuildAction.visit() derives the profile from
+    RegionState.trauma_score/hazard_level and ResourceNodeState charge ratios at read
+    time; src/platform/rng.py::DeterministicRNG.weighted_choice() reuses the existing
+    composite-seed mechanism for the weighted draw.
+  proof_type: parity
+  test_path: >-
+    tests/unit/quest/test_quest_generation.py::test_quest_generation_favors_hunt_under_high_trauma;
+    tests/unit/quest/test_quest_generation.py::test_quest_generation_favors_gather_under_high_scarcity
   divergence_note: null
   support_boundary: null

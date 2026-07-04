@@ -119,6 +119,20 @@ The world automatically replenishes consumed resources and removes "Simulation T
 *   **Corpses**: Entities that are killed remain in the world as `Corpse` objects for a fixed duration (`decay_tick`) before being permanently removed.
 *   **Ground Items**: Items dropped on the floor also decay over time to prevent simulation clutter.
 
+### Derived Scarcity Ratio (Consumer-Facing)
+Resource nodes do not carry a separate durable "scarcity" field -- consumers derive one at read
+time from `ResourceNodeState.remaining_charges / max_charges`, scoped to nodes tagged into a
+region via `ResourceRegistry` definitions' `source_region_tags`. Two consumers use this ratio
+today:
+*   **`ResourceOpportunityProvider`** (`src/world/providers/resources.py`) uses the raw ratio
+    directly as a *reward multiplier* -- opportunities on a near-depleted node are worth less
+    (`reward *= 0.5 + 0.5 * depletion_mult`).
+*   **`QuestGenerator`** (`src/quests/generator.py`) uses the *inverse* of the region-averaged
+    ratio, `scarcity = 1.0 - avg(remaining/max)`, as a *quest-selection weight* -- a region with
+    heavily depleted nodes favors `GATHER`-kind quest templates. This is a distinct derived
+    signal from the trauma/hazard signals in §2 above, aggregated the same way (read-time, from
+    durable per-node fields, never itself persisted).
+
 ---
 
 ## 4. Regional Transformation
