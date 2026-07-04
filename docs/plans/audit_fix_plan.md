@@ -191,14 +191,30 @@ pursued — documentation of the current boundary was judged sufficient.
 
 ---
 
-### P1-H: Goal score history over ticks — runner-up scores discarded — **OPEN** (confirmed still open 2026-07-03)
+### P1-H: Goal score history over ticks — runner-up scores discarded — **RESOLVED (verified 2026-07-04; the 2026-07-03 "still open" re-check was a false negative)**
 
 **Source:** D15 Gap 1 (partial — trace writer added but runner-up scores not retained)  
 **Files:** `src/domains/adventure/phase.py`, `src/observability/cognition/recorder.py`  
 **Finding:** `source_goal_score` in cognition snapshots captures only the winning project's score. Runner-up scores (why goal X won over Y) are computed transiently in `execute_brain()` and discarded at tick boundary. Developer cannot distinguish "entity stuck because all alternatives scored lower" from "entity stuck on high-priority goal that should be interrupted."  
-**Fix:** Retain top-3 candidate scores at tick commit in the cognition snapshot. Add to `EntityInspectionSnapshot.goal_scores` field. Existing `decision_trace.jsonl` infrastructure can carry the data — extend the trace record schema.
-**2026-07-03 re-check:** No `runner_up`/`top_3`/`candidate_scores` pattern found in
-`recorder.py` or `phase.py`. Still open, no ticket exists yet.
+**Fix (historical, already implemented):** Retain top-3 candidate scores at tick commit in the cognition snapshot. Add to `EntityInspectionSnapshot.goal_scores` field. Existing `decision_trace.jsonl` infrastructure can carry the data — extend the trace record schema.
+**Resolution:** `TCK-20260627-P1H-GOAL-RUNNERUP` (done 2026-06-27) already implemented exactly this
+fix — `src/observability/cognition/decision_trace_writer.py::DecisionTraceWriter.write_trace()`
+(lines 84-133) sorts candidates descending and emits `source_goal_score` (winner) +
+`runner_up_scores` (ranks 2-3, gracefully truncated below 3 candidates), maintaining a bounded
+per-entity cache (`_latest_goal_scores`) matching the repo's established O(1)-memory-boundedness
+pattern (§2.16/§2.10 in `docs/guidelines/intentional_divergences.md`).
+`src/observability/live/entity_inspector.py::EntityInspectionSnapshot.goal_scores` (line 31) is
+populated from that cache. `docs/observability/decision_trace_contract.md` documents the full
+schema ("Goal Score Cache" section). `tests/unit/observability/test_decision_trace.py` has 4
+dedicated tests (`test_decision_trace_runner_up_scores_present`, `_source_goal_score_present`,
+`_runner_up_fewer_than_3`, `_runner_up_single_candidate`) — confirmed passing (24/24) 2026-07-04.
+**2026-07-03 re-check correction:** the prior "still open" re-check grepped `recorder.py` and
+`phase.py` — the files named in the *original pre-fix* finding above — and found nothing, a false
+negative. The actual fix landed in `decision_trace_writer.py` and `entity_inspector.py`, neither of
+which was checked. `recorder.py` is a genuinely separate system (the cognition graph-snapshot/diff
+recorder feeding narrative diffing, with its own single-value `source_goal_score` copied from
+`ProjectState.score`) that was never in scope for the 2026-06-27 fix and is not what this finding's
+acceptance criteria target — confirmed via `TCK-20260703-SIMQ-UPLIFT3-GOAL-TRACE`'s investigation.
 
 ---
 
@@ -586,7 +602,7 @@ Tickets created: `tickets/todos/simq-emit/` (5 tickets, 2026-07-01).
 | P1-E | D09 F3 | **P1** | Docs | **RESOLVED** — D19 exists |
 | P1-F | D12 F2 | **P1** | Refactor | **RESOLVED (verified 2026-07-03)** — `AbandonmentClassification` dataclass exists |
 | P1-G | D09 F5 | **P1** | Docs/Engine | **RESOLVED (verified 2026-07-03)** — documented in `known_limitations.md` |
-| P1-H | D15 Gap 1 | **P1** | Observability | OPEN (verified 2026-07-03) — no runner-up/top-3 score tracking found — S — top-3 runner-up scores in trace |
+| P1-H | D15 Gap 1 | **P1** | Observability | **RESOLVED (verified 2026-07-04)** — `TCK-20260627-P1H-GOAL-RUNNERUP` already implemented this; 2026-07-03 "still open" was a false negative (wrong files grepped) |
 | P2-A | D06 F2 | **P2** | Engine | **RESOLVED (verified 2026-07-03)** — conditional lock, capped at 50 ticks, in `intelligence.py` |
 | P2-B | D06 F5 | **P2** | Engine | **RESOLVED (verified 2026-07-04)** — TCK-20260703-SIMQ-UPLIFT3-WORLD-CORPUS; two-tier cadence intact, frontier_extended/frontier_living_world/wilderness_survival symptom re-attributed to hazard-kind staleness (separately fixed, same ticket) |
 | P2-C | D07 F4 | **P2** | Content | **RESOLVED (verified 2026-07-03)** — 29 archetypes, 18 roles, no single-role dominance |
@@ -630,7 +646,10 @@ fallback), **P3-A** (feature epics), **P3-C** (mechanics doc verification). The 
 sequence below was completed as stated — that specific claim holds. (**P2-B** was in this list as
 of 2026-07-03; **RESOLVED (verified 2026-07-04)** by TCK-20260703-SIMQ-UPLIFT3-WORLD-CORPUS — see
 the P2-B section above. **P1-D** was also in this list as of 2026-07-03; **RESOLVED (2026-07-04)**
-by TCK-20260703-SIMQ-UPLIFT3-QUEST-PRESSURE — see the P1-D section above.)
+by TCK-20260703-SIMQ-UPLIFT3-QUEST-PRESSURE — see the P1-D section above. **P1-H** was also in this
+list as of 2026-07-03 but that was itself a false negative — **RESOLVED (verified 2026-07-04)**,
+already implemented by the pre-existing `TCK-20260627-P1H-GOAL-RUNNERUP`, discovered during
+`TCK-20260703-SIMQ-UPLIFT3-GOAL-TRACE`'s investigation — see the P1-H section above.)
 
 **Completed as of 2026-07-01:** Engine emission gaps (`tickets/todos/simq-emit/`, 5 tickets created 2026-07-01)
 
@@ -640,10 +659,12 @@ by TCK-20260703-SIMQ-UPLIFT3-QUEST-PRESSURE — see the P1-D section above.)
 4. `TCK-20260701-SIMQ-EMIT-AGENCY2` — 4 agency tracking events
 5. `TCK-20260701-SIMQ-EMIT-SOCIAL2` — 7 misc gaps (ECONOMY ×2, FACTION ×2, SOCIAL ×2, NARRATIVE ×1)
 
-**Still open, no ticket exists yet (per 2026-07-03 status refresh):** P1-H, P2-E, P2-N,
+**Still open, no ticket exists yet (per 2026-07-03 status refresh):** P2-E, P2-N,
 P3-A, P3-C — and P2-D/P2-K pending re-verification against their relocated files. (P2-B resolved
 2026-07-04, TCK-20260703-SIMQ-UPLIFT3-WORLD-CORPUS — no longer pending. P1-D resolved 2026-07-04,
-TCK-20260703-SIMQ-UPLIFT3-QUEST-PRESSURE — no longer pending.)
+TCK-20260703-SIMQ-UPLIFT3-QUEST-PRESSURE — no longer pending. P1-H resolved 2026-07-04 — was
+already fixed by TCK-20260627-P1H-GOAL-RUNNERUP, a false negative in the 2026-07-03 refresh — no
+longer pending.)
 
 ---
 
