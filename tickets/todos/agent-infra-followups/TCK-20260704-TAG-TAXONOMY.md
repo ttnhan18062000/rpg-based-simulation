@@ -67,7 +67,8 @@ None.
 - docs/plans/agent_infrastructure/idea_agent_monitoring_schema_enforcement.md (same underlying pattern — write-time validation exists for some fields but not others, leading to drift; this ticket is the `tags` analogue of that idea applied to a different subsystem)
 
 ## Related Stored Artifacts
-None yet — staging artifacts to be created under `staging_artifacts/TCK-20260704-TAG-TAXONOMY/` when implementation begins (standard tier).
+- `staging_artifacts/TCK-20260704-TAG-TAXONOMY/investigation.md` — written 2026-07-04, covers the exact `validate_frontmatter.py` enum pattern to mirror, the full confirmed near-duplicate-group table, and the confirmed "tags are never queried" evidence.
+- `plan.md` and `test_plan.md` intentionally not yet written — commit to concrete implementation steps, deferred until implementation actually begins per explicit user decision (ticket stays queued, not in-progress).
 
 ## Related Code Areas
 - tools/validate_frontmatter.py (LAYER_VALUES pattern to mirror for tags)

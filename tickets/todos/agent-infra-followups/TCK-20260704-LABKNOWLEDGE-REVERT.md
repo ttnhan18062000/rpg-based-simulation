@@ -61,7 +61,8 @@ TCK-20260704-LABKNOWLEDGE-TIMESTAMP (unrelated bug found in the same file during
 - docs/ai/agent_infrastructure_audit.md (originally flagged this as "documented, not verified"; this investigation upgraded it to "documented, confirmed absent")
 
 ## Related Stored Artifacts
-None yet — staging artifacts (`plan.md`, `investigation.md`, `test_plan.md`) to be created under `staging_artifacts/TCK-20260704-LABKNOWLEDGE-REVERT/` when implementation begins (standard tier).
+- `staging_artifacts/TCK-20260704-LABKNOWLEDGE-REVERT/investigation.md` — written 2026-07-04, covers current behavior (file:line), docs-vs-reality gap, existing test fixtures to reuse, and risks (superseding-sync case, append-only decision log).
+- `plan.md` and `test_plan.md` intentionally not yet written — commit to concrete implementation steps, deferred until implementation actually begins per explicit user decision (ticket stays queued, not in-progress).
 
 ## Related Code Areas
 - src/lab/audit.py (LabAuditTrail — add the revert capability here or a sibling class)
