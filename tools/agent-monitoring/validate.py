@@ -79,7 +79,8 @@ def main():
             # individual tickets — they never produce their own working_log entry.
             if not run_id.startswith("TCK-"):
                 continue
-            if run.get("final_status") == "DONE" and run_id not in log_tids:
+            status = run.get("final_status") or run.get("status")
+            if status == "DONE" and run_id not in log_tids:
                 warnings.append(f"Run marked DONE has no working_log entry: {run_id}")
     else:
         warnings.append(f"{LOG_FILE} not found — skipping working_log cross-check")

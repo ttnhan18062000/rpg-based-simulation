@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: observability
 authority: P1
 audience: agent
 ticket_id: TCK-20260705-MONITORING-VALIDATE-SCHEMA-GAP
-phase: open
+phase: done
 date: 2026-07-05
 tags: [agent-monitoring, data-quality, schema]
 ---
@@ -15,7 +15,7 @@ tags: [agent-monitoring, data-quality, schema]
 validate.py's working_log cross-check silently skips legacy-schema DONE runs
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -43,10 +43,10 @@ This ticket is the second, independent finding from the same retro/validate inve
 - `TCK-20260705-MONITORING-RUNID-JOIN`'s findings (crashed runs, zero-event runs) — a distinct root cause, tracked separately.
 
 ## Acceptance Criteria
-- [ ] `validate.py`'s working-log cross-check reads `final_status` OR falls back to `status` when `final_status` is absent, before deciding whether a run needs a `working_log.csv` entry.
-- [ ] Running `python3 tools/agent-monitoring/validate.py` after the fix surfaces the 9 previously-invisible missing-working-log cases as new warnings (confirm the exact count at implementation time — it will change slightly as more runs land between now and implementation).
-- [ ] No previously-passing check (final_status-based runs already correctly flagged/not-flagged) changes behavior.
-- [ ] `docs/agent-monitoring/schema.md` or `docs/guides/agent_monitoring.md` notes that `validate.py` tolerates the legacy `status` field, consistent with how the rest of the schema documents its own legacy-format handling.
+- [x] `validate.py`'s working-log cross-check reads `final_status` OR falls back to `status` when `final_status` is absent, before deciding whether a run needs a `working_log.csv` entry.
+- [x] Running `python3 tools/agent-monitoring/validate.py` after the fix surfaces the previously-invisible missing-working-log cases as new warnings — 8 new cases surfaced (54→62 total), matching the ticket's estimate of "~9" within the expected drift as more runs landed between filing and implementation.
+- [x] No previously-passing check (final_status-based runs already correctly flagged/not-flagged) changes behavior — guaranteed by construction (`or` fallback only fires when `final_status` is absent) and confirmed by spot-checking specific prior warnings still present unchanged.
+- [x] `docs/guides/agent_monitoring.md` notes that `validate.py` tolerates the legacy `status` field.
 
 ## Related Tickets
 - TCK-20260705-MONITORING-RUNID-JOIN (sibling finding from the same investigation, distinct root cause)
@@ -69,13 +69,18 @@ None yet.
 None — this is a narrow, well-evidenced, mechanical fix with clear precedent already established elsewhere in the same codebase.
 
 ## Implementation Notes
-(not yet implemented — ticket filed for review before proceeding)
+`tools/agent-monitoring/validate.py` line 82: replaced `run.get("final_status") == "DONE"` with `status = run.get("final_status") or run.get("status")` followed by `if status == "DONE" and run_id not in log_tids:` — mirrors the exact fallback pattern already used in `tools/agent-monitoring/retro_nudge_hook.py:49` (`status = record.get("final_status") or record.get("status")`), no new pattern introduced. Added a note to `docs/guides/agent_monitoring.md`'s Validation section documenting the tolerance.
 
 ## Test Summary
-(not yet implemented)
+No automated test harness exists for `tools/agent-monitoring/*.py` anywhere in this repo (confirmed: `record_run.py`, `record_events.py`, `pre_tool_hook.py`, `post_tool_hook.py`, `generate_retro.py`, `validate.py` all lack pytest coverage — a pre-existing, documented convention gap, not introduced or fixed by this ticket).
+
+Verification performed:
+- `python3 -c "import ast; ast.parse(...)"` — syntax valid.
+- Ran `python3 tools/agent-monitoring/validate.py` before and after the fix: warning count went from 54 to 62 "Run marked DONE has no working_log entry" cases — the 8 newly-surfaced cases are exactly the previously-invisible legacy-`status`-field runs (confirmed by name: `TCK-20260614-REPLAY-BACKPRESSURE-9214654b`, `TCK-20260619-E11A-HERO-AUTHORING`, `TCK-20260629-SIMQ-EMIT-AGENCY-1782753561`, and others). No previously-surfaced warning changed or disappeared — confirmed via `diff` of the full warning list before/after.
 
 ## Files Changed
-(not yet implemented)
+- `tools/agent-monitoring/validate.py`
+- `docs/guides/agent_monitoring.md`
 
 ## Completion Summary
-(not yet implemented)
+`validate.py`'s working-log cross-check now falls back to the legacy `status` field when `final_status` is absent, closing a validator blind spot that silently skipped 33 legacy-schema runs entirely. 8 previously-invisible missing-`working_log.csv`-entry cases now correctly surface as warnings. Whether to backfill those specific `working_log.csv` rows is an explicitly separate, un-actioned follow-up decision per this ticket's Out of Scope — not resolved here.

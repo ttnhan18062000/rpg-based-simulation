@@ -78,6 +78,10 @@ This checks:
 - Every run record has at least one event
 - No incomplete (crashed) runs are silently treated as complete
 
+`validate.py` tolerates both the current schema (`final_status`) and the legacy `status` field
+when deciding whether a run needs a `working_log.csv` entry — a run using either field is checked,
+not just ones already on the current schema.
+
 ---
 
 ## Querying Raw Data
