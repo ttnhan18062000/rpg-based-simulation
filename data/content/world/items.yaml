@@ -93,6 +93,13 @@
   rarity: "COMMON"
   base_value: 2
 
+# STATE: NEW (TCK-20260704-SIMQ-RESOURCEREGISTRY-STONE-GAP)
+- id: "stone"
+  display_name: "Stone"
+  categories: ["material"]
+  rarity: "COMMON"
+  base_value: 2
+
 # STATE: LEGACY-EXPORT
 - id: "herb"
   display_name: "Herb"

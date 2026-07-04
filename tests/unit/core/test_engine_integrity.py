@@ -128,10 +128,10 @@ def test_id_generation_integrity(base_state):
         from src.core.state import ResourceNodeState
         eco_upd = eco_upd.replace(
             nodes_add=[ResourceNodeState(
-                id=state_eco.next_node_id, 
-                kind="WOOD", 
+                id=state_eco.next_node_id,
+                kind="wood_node",
                 position=(0,0),
-                yields_item="wood_log",
+                yields_item="wood",
                 remaining_charges=5,
                 max_charges=5,
                 required_ticks=10

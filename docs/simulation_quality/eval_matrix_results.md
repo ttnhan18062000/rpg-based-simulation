@@ -54,6 +54,55 @@ regression); these worlds add entity-count/region-count/module-family diversity 
 > entries are left unchanged (not silently marked as verified); a follow-up ticket is recommended
 > for the `ResourceRegistry` gap.
 
+> **NOTE (TCK-20260704-SIMQ-RESOURCEREGISTRY-STONE-GAP — STONE/WOOD/IRON kind-emission fix,
+> `simq_routing_test` re-verified for the first time):** `src/world/ecology.py`'s dynamic
+> resource-node generator emitted hardcoded `"WOOD"`/`"STONE"`/`"IRON"` literals that matched no
+> `ResourceRegistry` entry (catalog ids are lowercase — `wood_node`/`iron_vein` — and no `"stone"`
+> resource existed at all). Fixed: emission now uses real catalog ids (`wood_node`/`iron_vein`/a
+> newly-authored `stone_outcrop`), and `yields_item` is derived from
+> `ResourceRegistry.get(kind).yield_item` instead of hand-computed. `simq_routing_test`'s 3 regions
+> (`hometown`, `goblin_camp`, `old_mine`) all compile to `kind` values other than `FOREST`/`MOUNTAIN`
+> (`TOWN`/`WILDERNESS`), so under the pre-fix code **every** ecology-seeded node in this world was
+> `"STONE"` — the crash was 100% deterministic once ecology's tick-200 seed check fired, meaning no
+> prior calibration of this exact world+`ENABLE_ADVENTURE_ROUTING=ON` combination had ever run to
+> completion since the bug was introduced (2026-05-18) or since the 2026-07-01 hazard-kind recompile
+> changed this world's entity/RNG dynamics. **This is therefore the first real, complete calibration
+> of the post-hazard-kind-recompile `simq_routing_test` world** — the 3 previously-committed anchor
+> entries were stale placeholders from before both the recompile and this fix, not a comparable
+> baseline. All 10 pillars drifted for all 3 seeds (seed42/123/456); `grade_anchors.json` was updated
+> in place for all 3 keys. Full new pillar breakdown in the updated table below.
+>
+> **AC6 gate violation found (out of scope to fix here):** `seed456` now grades `AGENCY=F`
+> (`normalized_score=-345.08`), breaking the AC6 gate ("AGENCY ≥ B confirmed for all three
+> `simq_routing_test` seeds"). Root cause traced in `quality_scores.jsonl` for
+> `run_1783171252_1673`: entity 23 enters a sustained `defer_with_reason` streak starting at
+> **tick 176** — before ecology's first seed check (tick 200) can possibly write any
+> `wood_node`/`iron_vein`/`stone_outcrop` node into state — so this stasis dynamic is provably
+> unrelated to the STONE/WOOD/IRON content fix or to the new `stone_outcrop` resource (whose
+> `source_region_tags=("frontier_village",)` doesn't even match any of this world's actual region
+> ids, so `stone_outcrop` opportunities never surface here regardless). The escalating
+> `stasis_per_tick` penalty (`config/simulation_quality/scoring_weights.yaml:20`, `-3.0` per tick
+> past `stasis_gate_ticks`, applied per subsequent defer event) compounds once a population-wide
+> idle streak crosses the gate, producing the large negative raw score (`-172541.0` over 693 AGENCY
+> events, 491 of them `defer_idle`/`stasis_N`-tagged). This is a pre-existing property of the
+> 2026-07-01-recompiled world + `AgencyScorer`'s stasis formula, first observable now only because
+> the STONE crash no longer blocks this world from running to completion — it is not introduced by
+> this ticket's fix and is out of scope to remediate here (touching `AgencyScorer`/entity idle
+> decision logic is unrelated to a `ResourceRegistry` catalog-id bug). **A follow-up ticket is
+> recommended** to investigate why `seed456` (and not `seed42`/`seed123`) drives an entity into a
+> sustained defer streak in this world, and whether AC6's "AGENCY ≥ B for all 3 seeds" gate needs
+> revision or the underlying stasis-entry condition needs a fix.
+>
+> **Anchor schema note:** `tests/simulation_quality/fixtures/grade_anchors.json`'s consumer
+> (`tests/simulation_quality/test_grade_regression.py`, `GRADE_ORDER = ["D","C","B","A","S"]`)
+> has no representable slot for `F` — `test_grade_anchor_file_exists_and_valid` asserts every anchor
+> is a `GRADE_ORDER` member. `seed456`'s AGENCY anchor is therefore recorded as `"D"` (the schema's
+> floor, not the true observed grade) purely so the fixture stays schema-valid; the true raw grade
+> is `F` (`normalized_score=-345.08`). This is intentional: with anchor=`D`, a re-run that still
+> grades `F` will correctly keep failing `test_grade_within_anchor_band` (`"F"` is not in
+> `GRADE_ORDER` at all, so no anchor value can silently absorb it) until the underlying stasis bug
+> is actually fixed and re-anchored.
+
 ---
 
 ## Grade Distribution Tables
@@ -193,7 +242,35 @@ see the AGENCY Cross-World Design Note below for why that is archetype-correct, 
 
 ### simq_routing_test (ENABLE_ADVENTURE_ROUTING=ON)
 
-#### 500t (seeds 42 / 123 / 456)
+#### 500t (seeds 42 / 123 / 456) — re-verified 2026-07-04, TCK-20260704-SIMQ-RESOURCEREGISTRY-STONE-GAP
+
+> The table below supersedes the pre-fix values (see the dated NOTE above): this is the first
+> completed calibration of this world since the 2026-07-01 hazard-kind recompile, because the
+> `ResourceRegistry: STONE` crash previously blocked every attempt to run it to completion.
+
+| Pillar | seed42 | seed123 | seed456 | Notes |
+|---|---|---|---|---|
+| AGENCY | A | A | **F** (anchored as D — schema floor, see note) | seed42/123 legitimate (norm 1.42, 0.64); seed456=F, sustained defer/stasis streak from entity 23 starting tick 176 (see AC6 note below) — **not** caused by this ticket's content fix |
+| COGNITION | A | S | S | events 101/233/173 respectively |
+| COMBAT | C | C | C | 0 combat events all 3 seeds |
+| NARRATIVE | S | S | A | seed42/123 norm 4.28/2.37; seed456 norm 1.91 |
+| PROGRESSION | C | C | C | norm ≈ -0.06, event_count=1, all 3 seeds |
+| WORLD | B | B | B | stable |
+| ECONOMY | C | C | C | 0 events, all 3 seeds |
+| FACTION | C | C | C | 0 events, all 3 seeds |
+| INFORMATION | C | C | C | 0 events, all 3 seeds |
+| SOCIAL | C | C | C | 0 events, all 3 seeds |
+
+**AC6 gate status (re-verified 2026-07-04):** AGENCY ≥ B confirmed for seed42 (A) and seed123 (A),
+but **violated for seed456 (F)** — see the dated NOTE above for root-cause tracing (entity 23's
+tick-176 defer streak, provably unrelated to the STONE/WOOD/IRON emission fix or the new
+`stone_outcrop` resource). Gate does not fully pass post-recompile; a follow-up ticket is
+recommended to investigate the seed456-specific stasis dynamic. The historical pre-recompile
+analysis below is retained for traceability only and no longer reflects the current world state.
+
+---
+
+#### Historical pre-recompile table (superseded, retained for traceability)
 
 | Pillar | seed42 | seed123 | seed456 | Notes |
 |---|---|---|---|---|
@@ -208,14 +285,12 @@ see the AGENCY Cross-World Design Note below for why that is archetype-correct, 
 | INFORMATION | C | C | C | stable |
 | SOCIAL | C | C | C | stable |
 
-**AGENCY cross-seed confirmation (AC6, post-D2 fix):**
+**AGENCY cross-seed confirmation (AC6, post-D2 fix, pre-recompile):**
 - seed42: AGENCY=B (floor=100 > last_event_tick=1; 40/100=0.40 → B — correct, initialization burst damped)
 - seed123: AGENCY=A (floor=100 > last_event_tick=1; 137/100=1.37 → A — legitimate: 3.4× more events than seed42)
 - seed456: AGENCY=A (floor=100 > last_event_tick=1; 170/100=1.70 → A — legitimate: 4.25× more events than seed42)
 
-All three seeds show AGENCY ≥ B with `ENABLE_ADVENTURE_ROUTING=ON`. Gate passes.
-
-**Stability analysis (simq_routing_test, post-D2 fix):** NARRATIVE=A stable across all three seeds.
+**Stability analysis (simq_routing_test, post-D2 fix, pre-recompile):** NARRATIVE=A stable across all three seeds.
 AGENCY shows seed-dependent variation (B for seed42, A for seeds 123/456) — this is correct
 behavior: the floor prevents S-grade inflation from AGENCY's initialization burst at tick 1, and
 the grade reflects actual event count differences (137 vs 40 events). COGNITION shows B for seeds
@@ -283,11 +358,24 @@ mode. NARRATIVE holds A at 2000t post-D2 fix (prior B was tick-dilution artifact
 
 ## AC6 — AGENCY Confirmation
 
-AGENCY ≥ B confirmed for all three simq_routing_test seeds (42, 123, 456) with
-`ENABLE_ADVENTURE_ROUTING=ON`. This is the gate criterion for the `simq_routing_test` world.
-Post-D2 fix: seed42=B (floor-damped initialization burst), seeds 123/456=A (legitimate upgrade
-reflecting higher event counts — 137 and 170 events vs seed42's 40).
-Without this flag, AGENCY=C (as seen in dungeon_crawl and urban_political default runs).
+**Status as of 2026-07-04 re-verification (TCK-20260704-SIMQ-RESOURCEREGISTRY-STONE-GAP): PARTIAL.**
+AGENCY ≥ B confirmed for seed42 (A) and seed123 (A) with `ENABLE_ADVENTURE_ROUTING=ON`, but
+**seed456 now grades AGENCY=F**, breaking the gate for that seed. This is the first completed
+calibration of this world since the 2026-07-01 hazard-kind recompile (the `ResourceRegistry: STONE`
+crash previously blocked every attempt to run it to completion — see the dated NOTE near the top
+of this document). Root-cause tracing places seed456's failure in a tick-176 entity defer/stasis
+streak, provably unrelated to the STONE/WOOD/IRON kind-emission fix (ecology's first seed check
+cannot fire before tick 200). A follow-up ticket is recommended to investigate and either fix the
+underlying stasis dynamic or revisit this gate's definition. Without this flag, AGENCY=C (as seen
+in dungeon_crawl and urban_political default runs) — that part of the gate's premise is unaffected.
+(`grade_anchors.json`'s seed456 AGENCY anchor is recorded as `D`, the fixture schema's floor — `F`
+has no representable slot in `GRADE_ORDER`; see the schema note in the dated NOTE above.)
+
+**Historical text (pre-recompile, superseded, retained for traceability):** AGENCY ≥ B confirmed
+for all three simq_routing_test seeds (42, 123, 456) with `ENABLE_ADVENTURE_ROUTING=ON`. This is
+the gate criterion for the `simq_routing_test` world. Post-D2 fix: seed42=B (floor-damped
+initialization burst), seeds 123/456=A (legitimate upgrade reflecting higher event counts — 137 and
+170 events vs seed42's 40).
 
 ---
 
@@ -308,9 +396,10 @@ default-mode world grades AGENCY=C across all seeds and tick counts (dungeon_cra
 sandbox_world, and the six confirmed zero-pillar worlds in the section below).
 
 `simq_routing_test` is the one calibration world that forces `ENABLE_ADVENTURE_ROUTING=ON`
-(see the `simq_routing_test` section above): AGENCY confirms A in 2 of 3 seeds and B in 1,
-demonstrating the scorer and emitters are wired correctly and activate as designed once the
-routing gate is open (see AC6 — AGENCY Confirmation, above).
+(see the `simq_routing_test` section above): AGENCY activates (non-C) in all 3 seeds — A, A, and F
+(seed456's F is a stasis-dynamic gate violation, not a return to the inactive-flag C — see AC6
+above) — demonstrating the scorer and emitters are wired correctly and activate as designed once
+the routing gate is open.
 
 `AdventureDecisionPhase` is opt-in by world archetype, not a global default — it represents a
 distinct "routing-capable" archetype rather than a baseline behavior every world is expected to

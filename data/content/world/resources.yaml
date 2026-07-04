@@ -16,6 +16,17 @@
   default_charges: 5
   preferred_biomes: ["old_mine"]
 
+# STATE: NEW (TCK-20260704-SIMQ-RESOURCEREGISTRY-STONE-GAP)
+- id: "stone_outcrop"
+  material: "stone"
+  display_name: "Stone Outcrop"
+  resource_type: "stone"
+  required_ticks: 10
+  default_charges: 10
+  preferred_biomes: ["frontier_village"]
+  metadata:
+    source_region_tags: ["frontier_village"]
+
 # STATE: LEGACY-EXPORT
 - id: "herb_patch"
   material: "herb"

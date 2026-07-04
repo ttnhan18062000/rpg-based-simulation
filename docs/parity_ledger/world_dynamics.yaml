@@ -719,9 +719,16 @@
   status: verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  v2_evidence: >-
+    Implementation proven via exhaustive checklist audit Phase 1-11. Gap closed by
+    TCK-20260704-SIMQ-RESOURCEREGISTRY-STONE-GAP: ResourceEcologyService.process_ecology
+    (src/world/ecology.py:124-138) previously emitted hardcoded uppercase literals
+    ("WOOD"/"STONE"/"IRON") not present in ResourceRegistry, contradicting this entry's claim.
+    Now selects real catalog ids (wood_node/iron_vein/stone_outcrop, the latter newly authored in
+    data/content/world/resources.yaml) and derives yields_item via
+    ResourceRegistry.get(kind).yield_item instead of hand-computed suffixing.
   proof_type: parity
-  test_path: null
+  test_path: tests/unit/world/test_resource_ecology.py::test_process_ecology_never_emits_unregistered_kind
   divergence_note: null
   support_boundary: null
 - id: WORLD-071

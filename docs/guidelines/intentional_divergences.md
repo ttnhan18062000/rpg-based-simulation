@@ -28,6 +28,7 @@ This document is the canonical record of intentional behavior shifts in `src` co
 | **Worldbuilding / Information** | Single-Fire Compile-Time-Seeded Response | **Bounded** | RATIFIED |
 | **Engine / Cognition-Information** | `information_belief` Pipeline-Wiring Merge Fix | **Bug Fix** | RATIFIED |
 | **Engine / Cognition** | `self_model_bundle_set` Durable Materialization (`SelfModelPatch`) | **Bug Fix** | RATIFIED |
+| **World / Ecology** | Resource Ecology Kind-Emission Catalog Alignment | **Bug Fix** | RATIFIED |
 
 ---
 
@@ -365,6 +366,60 @@ This document is the canonical record of intentional behavior shifts in `src` co
   `ENABLE_SELF_MODEL_COGNITION` is OFF. A `calibrate_simq.py` spot-check (`urban_political`, seed 42,
   200t) confirmed `INFORMATION`/`COGNITION` pillar grades unchanged at `B`. See
   `docs/parity_ledger/substrate.yaml::SUB-374`.
+
+### 2.26 Resource Ecology Kind-Emission Catalog Alignment (TCK-20260704-SIMQ-RESOURCEREGISTRY-STONE-GAP)
+- **Subsystem**: World / Ecology
+- **Old Behavior**: `ResourceEcologyService.process_ecology` (`src/world/ecology.py:124-125,138`)
+  emitted hardcoded uppercase literals (`"WOOD"`/`"STONE"`/`"IRON"`) as a seeded `ResourceNodeState`'s
+  `kind`, none of which matched any `ResourceRegistry` entry (catalog ids are lowercase —
+  `wood_node`/`iron_vein` — and no `"stone"`-type resource existed in the catalog at all).
+  `yields_item` was hand-computed via `kind.lower() + "_ore"` / `"wood_log"` string suffixing,
+  coupled to the same broken literals. This caused a `KeyError: Resource not found in
+  ResourceRegistry: STONE` crash in `ResourceOpportunityProvider.get_opportunities`
+  (`src/world/providers/resources.py:60`, the one call site that read `ResourceRegistry.get(node.kind)`
+  unguarded), reachable only when `ENABLE_ADVENTURE_ROUTING=ON`. The defect was general (all 3
+  literals were wrong), not `STONE`-specific — `STONE` merely surfaced first because it is the
+  fallback branch (fires for every region whose `kind` is neither `FOREST` nor `MOUNTAIN`).
+- **New Behavior**: Emission now selects real, `ResourceRegistry`-registered catalog ids —
+  `wood_node` (`FOREST`), `iron_vein` (`MOUNTAIN`), `stone_outcrop` (fallback/else branch) — and
+  `yields_item` is derived from `ResourceRegistry.get(kind).yield_item` instead of hand-computed
+  suffixing, so it cannot drift out of sync with the catalog again. `stone_outcrop` (+ a paired
+  `stone` material item) is a newly-authored catalog resource
+  (`data/content/world/resources.yaml`, `data/content/world/items.yaml`) preserving the original
+  three-terrain-kind seeding design intent, not a design change. The one remaining unguarded
+  `ResourceRegistry.get()` call site (`src/world/providers/resources.py:60`) now guards with
+  `.contains()` first, matching `src/town/guild.py:67-69` and
+  `src/engine/intent/action_intent.py:73-74`'s existing pattern.
+- **Rationale**: **Bug Fix**. `src/core/registries.py:195-198` documents catalog-backed registries
+  as authoritative for all active development; these literals predate that transition
+  (introduced 2026-05-18, per `git blame`) and were never migrated. This is staleness/oversight, not
+  a deliberate design decision — no evidence a `STONE` resource was ever intentionally scoped and
+  then dropped.
+- **Verification**: `tests/unit/world/test_resource_ecology.py` (new Group F tests —
+  `test_seeded_node_kind_registered_for_forest_region`,
+  `test_seeded_node_kind_registered_for_mountain_region`,
+  `test_seeded_node_kind_registered_for_other_region`,
+  `test_process_ecology_never_emits_unregistered_kind`); new
+  `tests/unit/world/providers/test_resource_opportunity_provider.py` (provider-level
+  `.contains()` guard test plus a `stone_outcrop` opportunity-surfacing test). All 25 pre-existing
+  `test_resource_ecology.py` tests plus `tests/unit/core/test_engine_integrity.py` re-run unmodified
+  as a regression gate (`test_engine_integrity.py`'s hardcoded `kind="WOOD"` test fixture literal
+  updated to `"wood_node"`/`yields_item="wood"` for consistency — a fixture literal, not new
+  behavior).
+- **Note**: Re-running `simq_routing_test`'s calibration (`ENABLE_ADVENTURE_ROUTING=ON`,
+  seed{42,123,456}, 500t) — previously blocked entirely by this crash — now completes for all 3
+  seeds. All 3 regions in this world (`hometown`, `goblin_camp`, `old_mine`) compile to
+  `kind` values other than `FOREST`/`MOUNTAIN`, so every pre-fix ecology-seeded node in this world
+  was `"STONE"`, making the crash 100% deterministic once ecology's tick-200 seed check fired. This
+  is therefore the first calibration of this world to run to completion since the 2026-07-01
+  hazard-kind recompile; substantial grade drift across all 10 pillars for all 3 seeds was found and
+  `grade_anchors.json` updated in place, with one gate violation (`seed456` AGENCY=F, traced to a
+  pre-existing, unrelated tick-176 entity stasis dynamic) flagged for follow-up. Since the anchor
+  fixture schema has no representable slot for `F` (`GRADE_ORDER = [D,C,B,A,S]`), `seed456`'s AGENCY
+  anchor is recorded as `D` (the schema's floor), not the true observed grade — this keeps
+  `test_grade_within_anchor_band` correctly failing on any future re-run that still grades `F`
+  rather than silently absorbing it. See `docs/simulation_quality/eval_matrix_results.md`'s dated
+  NOTE and AC6 section for full detail.
 
 ---
 

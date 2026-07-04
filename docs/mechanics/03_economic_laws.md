@@ -35,7 +35,7 @@ Entities are constrained by physical limits. Inventory management is a core surv
 Resources exist in the world as `ResourceNodes`.
 
 *   **Node Charges**: Nodes have finite energy.
-    *   **Regular Nodes** (e.g., Iron Vein): Lose **1 charge** per harvest tick.
+    *   **Regular Nodes** (e.g., Iron Vein, Stone Outcrop): Lose **1 charge** per harvest tick.
     *   **Loot Nodes** (e.g., Treasure Chest): Are **fully consumed** on the first successful interaction.
 *   **Depletion**: Once charges reach 0, the node is removed from the world and enters a regeneration phase (if applicable).
 

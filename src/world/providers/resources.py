@@ -57,9 +57,12 @@ class ResourceOpportunityProvider:
 
             # Check if this node is in the entity's current region bounds or tags
             # (ResourceRegistry definitions mapped via kind)
-            res_def = ResourceRegistry.get(node.kind)
-            if not res_def:
+            # ResourceRegistry.get() raises KeyError on an unregistered kind (unlike a dict
+            # .get()), so contains() is checked first -- matches src/town/guild.py and
+            # src/engine/intent/action_intent.py's guard pattern.
+            if not ResourceRegistry.contains(node.kind):
                 continue
+            res_def = ResourceRegistry.get(node.kind)
 
             # Ensure the node's region corresponds to entity's current region
             # We can also verify position bounds if they match

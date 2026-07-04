@@ -9,6 +9,7 @@ from src.domains.world_emergence.schema import WorldEvent, WorldEventCategory
 from src.engine.pipeline import AuthoritativeApplyPipeline
 from src.world.ecology import ResourceEcologyService
 from src.core.builder import V2EntityBuilder
+from src.core.registries import ResourceRegistry
 
 
 # ---------------------------------------------------------------------------
@@ -59,6 +60,14 @@ class _FakeGenerator:
     class _RNG:
         def get_float(self, *args, **kwargs):
             return 0.9  # > 0.5, so no seeding
+    rng = _RNG()
+
+
+class _FakeGeneratorSeeded:
+    """Stub forcing the seed-chance branch at ecology.py:122 (< 0.5) to fire."""
+    class _RNG:
+        def get_float(self, *args, **kwargs):
+            return 0.1  # < 0.5, so seeding always fires
     rng = _RNG()
 
 
@@ -391,3 +400,63 @@ def test_effective_regen_never_below_one():
     result = ResourceEcologyService.process_ecology(state, _FakeGenerator())
     assert 5 in result.node_updates
     assert result.node_updates[5].charges_delta >= 1
+
+
+# ---------------------------------------------------------------------------
+# Group F — Seeded node kind must always be a registered catalog id
+# (TCK-20260704-SIMQ-RESOURCEREGISTRY-STONE-GAP)
+# ---------------------------------------------------------------------------
+
+def _seed_state(region_kind: str) -> AuthoritativeState:
+    """State with a single empty region of the given kind, sized so target_count >= 1."""
+    region = RegionState(id="r1", name="Region", bounds=(0, 0, 100, 100), kind=region_kind)
+    return AuthoritativeState(
+        tick=200, seed=42,
+        resource_nodes={},
+        regions={"r1": region},
+        entities={},
+    )
+
+
+def test_seeded_node_kind_registered_for_forest_region():
+    state = _seed_state("FOREST")
+    result = ResourceEcologyService.process_ecology(state, _FakeGeneratorSeeded())
+
+    assert len(result.nodes_add) == 1
+    node = result.nodes_add[0]
+    assert node.kind == "wood_node"
+    assert ResourceRegistry.contains(node.kind)
+    assert ResourceRegistry.get(node.kind).yield_item == node.yields_item
+
+
+def test_seeded_node_kind_registered_for_mountain_region():
+    state = _seed_state("MOUNTAIN")
+    result = ResourceEcologyService.process_ecology(state, _FakeGeneratorSeeded())
+
+    assert len(result.nodes_add) == 1
+    node = result.nodes_add[0]
+    assert node.kind == "iron_vein"
+    assert ResourceRegistry.contains(node.kind)
+    assert ResourceRegistry.get(node.kind).yield_item == node.yields_item
+
+
+def test_seeded_node_kind_registered_for_other_region():
+    """This is the exact fallback branch that produced the reported STONE crash."""
+    state = _seed_state("TOWN")
+    result = ResourceEcologyService.process_ecology(state, _FakeGeneratorSeeded())
+
+    assert len(result.nodes_add) == 1
+    node = result.nodes_add[0]
+    assert node.kind == "stone_outcrop"
+    assert ResourceRegistry.contains(node.kind)
+    assert ResourceRegistry.get(node.kind).yield_item == node.yields_item
+
+
+@pytest.mark.parametrize("region_kind", ["FOREST", "MOUNTAIN", "TOWN", "SWAMP"])
+def test_process_ecology_never_emits_unregistered_kind(region_kind):
+    state = _seed_state(region_kind)
+    result = ResourceEcologyService.process_ecology(state, _FakeGeneratorSeeded())
+
+    assert len(result.nodes_add) == 1
+    for node in result.nodes_add:
+        assert ResourceRegistry.contains(node.kind)
