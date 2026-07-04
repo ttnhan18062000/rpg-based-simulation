@@ -1,4 +1,4 @@
-.PHONY: help install install-py install-fe build dev serve stop clean lint profile-api memray-profile docs-serve docs-build docs-registry docs-artifacts knowledge-index knowledge-index-update search-server search-server-docker search-server-stop search-server-logs install-hooks eval-search evaluate evaluate-full mcp-server-test world-list world-validate world-compile world-resolve world-inspect world-template catalog-list sim sim-debug sim-quick sim-world sim-sweep check-resources export-run retention-plan retention-clean warehouse-init warehouse-ingest typecheck-py perf-measure
+.PHONY: help install install-py install-fe build dev serve stop clean lint profile-api memray-profile docs-serve docs-build docs-registry docs-artifacts knowledge-index knowledge-index-update search-server search-server-docker search-server-stop search-server-logs install-hooks eval-search evaluate evaluate-full simq-full-audit simq-full-audit-full simq-full-audit-slow mcp-server-test world-list world-validate world-compile world-resolve world-inspect world-template catalog-list sim sim-debug sim-quick sim-world sim-sweep check-resources export-run retention-plan retention-clean warehouse-init warehouse-ingest typecheck-py perf-measure
 
 # Default
 help: ## Show available commands
@@ -288,6 +288,24 @@ evaluate: ## Diff current calibration data against grade anchors (no engine re-r
 
 evaluate-full: ## Re-run engine for all fast (≤500t) scenarios and diff against grade anchors
 	$(PYTHON) tools/evaluate_simq.py
+
+simq-full-audit: ## Mechanical SimQ audit: diff calibration vs anchors, run fast regression tests, scan anchor/parity coverage gaps
+	@echo "[simq-full-audit] Step 1/3: diff current calibration data against anchors (no engine re-run)"
+	-$(PYTHON) tools/evaluate_simq.py --dry-run
+	@echo "[simq-full-audit] Step 2/3: run fast-tier grade regression tests"
+	$(PYTHON) -m pytest tests/simulation_quality/test_grade_regression.py -m "not slow" -q; test_status=$$?; \
+	echo "[simq-full-audit] Step 3/3: cross-check anchor key coverage + parity ledger candidates"; \
+	$(PYTHON) tools/simq_audit_gaps.py; \
+	exit $$test_status
+
+simq-full-audit-full: ## Same as simq-full-audit but re-runs the engine for all fast (<=500t) scenarios first
+	-$(PYTHON) tools/evaluate_simq.py
+	$(PYTHON) -m pytest tests/simulation_quality/test_grade_regression.py -m "not slow" -q; test_status=$$?; \
+	$(PYTHON) tools/simq_audit_gaps.py; \
+	exit $$test_status
+
+simq-full-audit-slow: ## Slow-tier (1000t/2000t) regression check -- run after simq-full-audit passes
+	$(PYTHON) -m pytest tests/simulation_quality/test_grade_regression.py -q
 
 mcp-server-test: ## Smoke-test MCP search_docs tool via --test mode (no MCP client needed)
 	@echo '{"query": "damage formula", "top_k": 3}' | \
