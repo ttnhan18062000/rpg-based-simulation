@@ -440,19 +440,47 @@ time-gate tick values:
 
 ```python
 class AgencyScorer(PillarScorer):
+    def __init__(self, weights):
+        ...
+        self._entity_defer_streak: dict[int, int] = {}
+        self._entity_stasis_fired: dict[int, bool] = {}
+
     def score(self, envelope, context):
         w = self.weights  # injected ScoringWeights at construction
+        entity_id = envelope.entity_id
 
         if envelope.event_type == "action_executed":
+            self._entity_defer_streak.pop(entity_id, None)
+            self._entity_stasis_fired.pop(entity_id, None)
             return ScoreRecord(delta=w["action_taken"], tags=("action_taken",), ...)
 
         if envelope.event_type == "defer_with_reason":
+            gate = w.int("stasis_gate_ticks")
+            cap = w.int("stasis_extra_ticks_cap")
+            streak = self._entity_defer_streak.get(entity_id, 0) + 1
+            self._entity_defer_streak[entity_id] = streak
+
             delta = w["defer_idle"]
-            consecutive = context.window_tag_counts[PillarId.AGENCY].get("defer_idle", 0)
-            if consecutive > w.int("stasis_gate_ticks"):  # time-gate from config
-                delta += w["stasis_per_tick"] * (consecutive - w.int("stasis_gate_ticks"))
-            return ScoreRecord(delta=delta, tags=("defer_idle",), ...)
+            tags = ["defer_idle"]
+            if streak > gate:
+                tags.append("stasis_N")
+                extra = streak - gate
+                # Fire only once the streak has actually reached the full cap threshold
+                # (extra >= cap) -- NOT at the first post-gate tick (extra == 1), which
+                # would always yield capped_extra=1 regardless of `cap`.
+                if not self._entity_stasis_fired.get(entity_id, False) and extra >= cap:
+                    delta += w["stasis_per_tick"] * min(extra, cap)
+                    self._entity_stasis_fired[entity_id] = True
+            return ScoreRecord(delta=delta, tags=tuple(tags), ...)
 ```
+
+`_entity_defer_streak`/`_entity_stasis_fired` are per-entity instance state (not part of the
+shared `ScoringContext`/`window_tag_counts`) — they track a true per-entity consecutive-defer
+streak, mirroring the scorer's existing `_last_abandoned` per-entity pattern. The streak resets
+whenever the entity takes `action_executed`, `route_selected`, `route_family_first_use`, or
+`project_completed` (any real non-defer routing outcome). The population-wide `population_stasis`
+one-shot check (zero `action_taken` for anyone in the shared window) is a separate mechanism and
+still reads `context.window_tag_counts` — it is unaffected by this per-entity streak.
 
 #### Injection pattern
 
@@ -553,14 +581,19 @@ PP-15 (`movement_routing`), PP-30 (`strategic_intelligence`)
 | Project successfully completed | +3 | `project_done` |
 | Entity movement resolves toward goal location | +1 | `navigation_active` |
 | Entity receives DEFER_WITH_REASON | −1 | `defer_idle` |
-| Entity receives DEFER for N>5 consecutive ticks | −3 per additional tick | `stasis_N` |
+| Entity receives DEFER for N>5 consecutive ticks (per-entity streak, tracked via instance state — not the shared scoring window) | −3 × cap (max −15, capped), applied exactly once per continuous streak — at the tick the streak first reaches `gate + cap` (streak=10), not at the first post-gate tick (streak=6); no further escalation for the rest of the streak; resets when the entity next takes a non-DEFER routing action | `stasis_N` |
 | Population-level rejection cascade >100/tick | −5 | `rejection_cascade` |
 | Population-level rejection cascade >500/tick sustained | −15 | `rejection_cascade_sustained` |
 | Entity abandons and immediately restarts the same project | −2 | `project_cycle` |
 | Route family entropy (H) per 100-tick window, per entity | +H×2 | `entropy_reward` |
 | Zero non-DEFER actions population-wide for 20 ticks | −25 | `population_stasis` |
 
-**Loop signal:** `stasis_N` at >70% of window → `loop_detected:entity_stasis`
+**Loop signal:** `stasis_N` at >70% of window → `loop_detected:entity_stasis`. Note: the `stasis_N`
+**tag** continues to be applied on every qualifying event past the gate, for as long as the entity
+remains in a genuine defer streak (this keeps the loop-detection signal meaningful for the whole
+duration of a real stasis episode) — but the **score delta** it carries is the one-shot capped
+escalation only on the event where the streak first crosses `gate + cap`; every other tagged event
+carries only the flat `defer_idle` base. Tag-presence does not imply a repeating penalty.
 **Loop signal:** `rejection_cascade_sustained` at >50% of window → `loop_detected:rejection_cascade`
 
 **Traceability path:**

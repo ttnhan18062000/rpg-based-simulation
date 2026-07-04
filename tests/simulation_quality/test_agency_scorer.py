@@ -104,13 +104,38 @@ class TestDefer:
 
     def test_stasis_fires_after_gate(self, scorer: AgencyScorer, scoring_weights: ScoringWeights) -> None:
         gate = scoring_weights.int_param("stasis_gate_ticks")
-        extra = 3
-        ctx = _ctx(tick=100, window_tags={"defer_idle": gate + extra, "action_taken": 1})
-        rec = scorer.score(_env("defer_with_reason"), ctx)
-        assert rec is not None
-        assert "stasis_N" in rec.tags
-        expected = scoring_weights["defer_idle"] + scoring_weights["stasis_per_tick"] * extra
-        assert rec.delta == pytest.approx(expected)
+        cap = scoring_weights.int_param("stasis_extra_ticks_cap")
+        entity_id = 42
+        ctx = _ctx(tick=100, window_tags={"defer_idle": 0, "action_taken": 1})
+
+        recs = []
+        for call_num in range(1, gate + cap + 5):
+            rec = scorer.score(_env("defer_with_reason", tick=100 + call_num, entity_id=entity_id), ctx)
+            recs.append(rec)
+            assert rec is not None
+
+        # calls 1..gate: below/at gate, no stasis_N tag, flat defer_idle only
+        for i in range(gate):
+            assert "stasis_N" not in recs[i].tags
+            assert recs[i].delta == pytest.approx(scoring_weights["defer_idle"])
+
+        # calls gate+1 .. gate+cap-1: past gate but extra < cap -- tag present, escalation NOT fired
+        # (this is the exact defect the architecture review caught: firing here would always
+        # yield capped_extra=1 regardless of `cap`'s configured value)
+        for i in range(gate, gate + cap - 1):
+            assert "stasis_N" in recs[i].tags
+            assert recs[i].delta == pytest.approx(scoring_weights["defer_idle"])
+
+        # call gate+cap (streak == gate + cap): the one-shot fires here
+        fire_index = gate + cap - 1
+        assert "stasis_N" in recs[fire_index].tags
+        expected_fire_delta = scoring_weights["defer_idle"] + scoring_weights["stasis_per_tick"] * cap
+        assert recs[fire_index].delta == pytest.approx(expected_fire_delta)
+
+        # all subsequent calls in the same streak: tag still present, escalation already fired
+        for i in range(fire_index + 1, len(recs)):
+            assert "stasis_N" in recs[i].tags
+            assert recs[i].delta == pytest.approx(scoring_weights["defer_idle"])
 
     def test_population_stasis_fires_when_no_actions(self, scorer: AgencyScorer, scoring_weights: ScoringWeights) -> None:
         gate = scoring_weights.int_param("stasis_gate_ticks")
@@ -127,6 +152,74 @@ class TestDefer:
         rec2 = scorer.score(_env("defer_with_reason"), ctx)
         assert rec1 is not None and "population_stasis" in rec1.tags
         assert rec2 is None or "population_stasis" not in rec2.tags
+
+
+class TestStasisBounding:
+    @pytest.mark.parametrize("streak_length", [20, 2000])
+    def test_stasis_one_shot_bounded_for_long_streak(
+        self, scorer: AgencyScorer, scoring_weights: ScoringWeights, streak_length: int
+    ) -> None:
+        gate = scoring_weights.int_param("stasis_gate_ticks")
+        cap = scoring_weights.int_param("stasis_extra_ticks_cap")
+        entity_id = 99
+        ctx = _ctx(tick=100, window_tags={"defer_idle": 0, "action_taken": 1})
+
+        total_delta = 0.0
+        for call_num in range(streak_length):
+            rec = scorer.score(_env("defer_with_reason", tick=100 + call_num, entity_id=entity_id), ctx)
+            assert rec is not None
+            total_delta += rec.delta
+
+        base_total = scoring_weights["defer_idle"] * streak_length
+        escalation_contribution = total_delta - base_total
+        expected_escalation = scoring_weights["stasis_per_tick"] * cap
+        assert escalation_contribution == pytest.approx(expected_escalation)
+
+    def test_streak_resets_on_non_defer_action(self, scorer: AgencyScorer, scoring_weights: ScoringWeights) -> None:
+        gate = scoring_weights.int_param("stasis_gate_ticks")
+        cap = scoring_weights.int_param("stasis_extra_ticks_cap")
+        entity_id = 7
+        ctx = _ctx(tick=100, window_tags={"defer_idle": 0, "action_taken": 1})
+
+        def run_streak_to_fire() -> None:
+            fired = False
+            for call_num in range(gate + cap):
+                rec = scorer.score(_env("defer_with_reason", tick=100 + call_num, entity_id=entity_id), ctx)
+                assert rec is not None
+                expected_fire = scoring_weights["defer_idle"] + scoring_weights["stasis_per_tick"] * cap
+                if rec.delta == pytest.approx(expected_fire):
+                    fired = True
+            assert fired, "expected the one-shot escalation to fire once within gate+cap calls"
+
+        run_streak_to_fire()
+
+        # non-defer action resets the streak for this entity
+        reset_rec = scorer.score(_env("action_executed", entity_id=entity_id), ctx)
+        assert reset_rec is not None
+
+        # deferring past the gate again should fire the one-shot a second time
+        run_streak_to_fire()
+
+    def test_two_entities_streaks_independent(self, scorer: AgencyScorer, scoring_weights: ScoringWeights) -> None:
+        gate = scoring_weights.int_param("stasis_gate_ticks")
+        cap = scoring_weights.int_param("stasis_extra_ticks_cap")
+        entity_a = 101
+        entity_b = 102
+        ctx = _ctx(tick=100, window_tags={"defer_idle": 0, "action_taken": 1})
+        expected_fire = scoring_weights["defer_idle"] + scoring_weights["stasis_per_tick"] * cap
+
+        fired = {entity_a: False, entity_b: False}
+        for call_num in range(gate + cap):
+            rec_a = scorer.score(_env("defer_with_reason", tick=100 + call_num, entity_id=entity_a), ctx)
+            rec_b = scorer.score(_env("defer_with_reason", tick=100 + call_num, entity_id=entity_b), ctx)
+            assert rec_a is not None and rec_b is not None
+            if rec_a.delta == pytest.approx(expected_fire):
+                fired[entity_a] = True
+            if rec_b.delta == pytest.approx(expected_fire):
+                fired[entity_b] = True
+
+        assert fired[entity_a]
+        assert fired[entity_b]
 
 
 class TestRejectionCascade:

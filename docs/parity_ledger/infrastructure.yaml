@@ -2893,7 +2893,8 @@
   text: "AgencyScorer covers all contract §5 AGENCY & ACTION rules: action_taken,
     route_novelty, commitment_complete, project_done, navigation_active, defer_idle,
     stasis_N (time-gated), rejection_cascade, rejection_cascade_sustained, project_cycle,
-    population_stasis. All deltas from ScoringWeights; no numeric literals."
+    population_stasis. All deltas from ScoringWeights; no numeric literals. stasis_N is now
+    per-entity-attributed and capped/one-shot (was population-wide and unbounded)."
   status: verified
   priority: P1
   legacy_evidence: null
@@ -2902,7 +2903,14 @@
     config/simulation_quality/scoring_weights.yaml AGENCY section
   proof_type: null
   test_path: "tests/simulation_quality/test_agency_scorer.py; tests/simulation_quality/test_timegate_penalties.py::TestAgencyTimegate"
-  divergence_note: null
+  divergence_note: >
+    2026-07-04 (TCK-20260704-SIMQ-AGENCY-STASIS-COLLAPSE): stasis_N attribution corrected from
+    population-wide windowed count to true per-entity consecutive streak, matching the contract's
+    own documented intent (quality_scoring_contract.md:556); escalation term capped to a one-shot
+    magnitude (stasis_per_tick * stasis_extra_ticks_cap, new detection_params.yaml time-gate) to
+    prevent unbounded growth. Corrects a real doc/code mismatch where the contract's own worked
+    pseudocode (line 451, variable consecutive) encoded the same population-wide bug as the
+    implementation.
   support_boundary: >
     route_selected, action_executed, and route_family_first_use are emitted only from
     AdventureDecisionPhase (src/domains/adventure/phase.py), invoked via run_phase(...,

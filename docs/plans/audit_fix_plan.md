@@ -563,7 +563,7 @@ The TCK-20260630-WORLD-QUEST-LOCATION fix eliminated 28 compile warnings by vali
 
 | Blocker | Status |
 |---|---|
-| P0-A ENABLE_ADVENTURE_ROUTING | **RESOLVED** — TCK-20260627-P0A-ADVENTURE-FLAG. Option B: all Phase 10 flags remain OFF by default; documented in `known_limitations.md §1.5` and `intentional_divergences.md DEV-002`. AGENCY=B achievable via env-var inject (confirmed by simq_routing_test). |
+| P0-A ENABLE_ADVENTURE_ROUTING | **RESOLVED** — TCK-20260627-P0A-ADVENTURE-FLAG. Option B: all Phase 10 flags remain OFF by default; documented in `known_limitations.md §1.5` and `intentional_divergences.md DEV-002`. AGENCY=B achievable via env-var inject (confirmed by simq_routing_test). (seed456 specifically now carries a documented D-grade exception post-TCK-20260704-SIMQ-AGENCY-STASIS-COLLAPSE — see eval_matrix_results.md AC6 section; seed42/seed123 remain unaffected, A/A) |
 | P0-B urban_political resource nodes | **RESOLVED** — TCK-20260627-P0B-URBAN-RESOURCE-NODES + confirmed in compile report (3 nodes). |
 | P0-C entity navigation.region_id None | **RESOLVED** — TCK-20260627-P0C-ENTITY-REGION-ASSIGN. Entity region assignment fixed at compile. |
 | P1-B quest activation | **RESOLVED** — TCK-20260627-P1B-QUEST-ACTIVATION. quest_to_project() bug fixed; 12-test suite added. |

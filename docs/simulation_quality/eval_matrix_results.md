@@ -377,6 +377,25 @@ the gate criterion for the `simq_routing_test` world. Post-D2 fix: seed42=B (flo
 initialization burst), seeds 123/456=A (legitimate upgrade reflecting higher event counts — 137 and
 170 events vs seed42's 40).
 
+**Status as of 2026-07-04 (TCK-20260704-SIMQ-AGENCY-STASIS-COLLAPSE): DOCUMENTED EXCEPTION.**
+seed456's AGENCY grade is fixed at **D** (up from `F`), and this is accepted as a permanent,
+evidenced exception to AC6's "≥ B for all 3 seeds" gate — not a further remediation target. Root
+cause: entity 23's `sociability` roll lands just under the `FORM_PARTY` gate
+(`src/domains/adventure/generator.py:124`), and no resource node in `simq_routing_test`'s world
+content lists `hometown` in `source_region_tags` (`src/world/providers/resources.py:69`), while all
+heroes spawn in `hometown` — so this entity has zero legal non-defer route for its entire 500-tick
+life, seed-independently, once its personality roll lands this way. This is a genuine, provable,
+legitimate-stasis case (confirmed by `TCK-20260704-SIMQ-AGENCY-STASIS-COLLAPSE`'s investigation),
+not a decision-logic or scoring bug — the scoring fix in that ticket (per-entity streak attribution
++ one-shot capped escalation) corrects the *magnitude* of the penalty (`F` → `D`) but cannot and
+should not force the grade to `B`, since the underlying behavior (491 legitimate consecutive
+defers) is real, and the `defer_idle` per-event weight is explicitly out of that ticket's authorized
+scope. The world-content gap producing the zero-route condition is tracked separately as
+`TCK-20260704-SIMQ-ROUTING-TEST-HOMETOWN-RESOURCE-GAP` (a `hometown` resource-tag authoring fix, not
+a scoring or decision-logic change); even if that lands, this per-seed exception record is retained
+as historical evidence for this run — a future re-anchor would be a new anchor update, not a
+retroactive edit here.
+
 ---
 
 ## AGENCY — Cross-World Design Note
@@ -411,6 +430,15 @@ structurally inactive by design, not by bug.
 `ENABLE_ADVENTURE_ROUTING`, AGENCY will activate for that world and its grade anchors in
 `tests/simulation_quality/fixtures/grade_anchors.json` must be recalibrated and updated — the C
 anchors currently recorded for that world's AGENCY pillar assume the flag stays OFF.
+
+**Second exception class — per-seed legitimate-stasis (TCK-20260704-SIMQ-AGENCY-STASIS-COLLAPSE):**
+unlike the archetype-C exception above (a *pillar-inactive-by-flag* exception, applying uniformly
+whenever `ENABLE_ADVENTURE_ROUTING=OFF`), this is a *pillar-active-but-content-constrained*
+exception: routing is genuinely ON and the scorer is scoring correctly for
+`simq_routing_test_seed456`, but one entity's personality roll combined with a resource-tagging gap
+in this specific world's content leaves it with zero legal routes for its whole life, capping the
+achievable grade at D regardless of scoring-formula correctness. See AC6 above for the full
+evidence chain.
 
 ---
 

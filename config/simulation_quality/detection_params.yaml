@@ -4,6 +4,7 @@ window_size: 200
 max_worst_events: 100
 time_gates:
   stasis_gate_ticks: 5
+  stasis_extra_ticks_cap: 5
   zero_harvest_after_tick: 100
   zero_crafting_after_tick: 200
   zero_trade_after_tick: 300
