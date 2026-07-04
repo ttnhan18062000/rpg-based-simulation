@@ -2682,14 +2682,15 @@
   support_boundary: null
 - id: INFRA-225
   text: >
-    All 7 lab Workflow.run() methods in src/lab/workflows.py return specific
+    All 8 lab Workflow.run() methods in src/lab/workflows.py return specific
     TypedDict types defined in src/lab/results.py — no dict[str, Any] or
     Dict[str, Any] in run() return positions. Workflows with BLOCKED/READY
     branching use Union[BlockedWorkflowResult, <Workflow>ReadyResult] with
-    Literal-tagged status fields enabling mypy narrowing. GenerateSimulationSetup
-    and UpdateSimulationKnowledge return flat TypedDicts (no BLOCKED path).
-    Callers remain backward-compatible: TypedDicts support dict-key access at
-    runtime. (TCK-20260627-P2I-WORKFLOW-TYPES, D13 F4)
+    Literal-tagged status fields enabling mypy narrowing. GenerateSimulationSetup,
+    UpdateSimulationKnowledge, and RevertSimulationKnowledge return flat
+    TypedDicts (no BLOCKED path). Callers remain backward-compatible: TypedDicts
+    support dict-key access at runtime. (TCK-20260627-P2I-WORKFLOW-TYPES, D13 F4;
+    RevertSimulationKnowledge added by TCK-20260704-LABKNOWLEDGE-REVERT)
   status: verified
   priority: P2
   legacy_evidence: null
@@ -2697,8 +2698,9 @@
     src/lab/results.py (BlockedWorkflowResult, GenerateSimulationSetupResult,
     PrepareSimulationExecutionResult, RegisterSimulationResultResult,
     CompactSimulationDataResult, InvestigateSimulationResultResult,
-    ProposeSimulationEnhancementsResult, UpdateSimulationKnowledgeResult) +
-    src/lab/workflows.py (all 7 run() signatures annotated with result types)
+    ProposeSimulationEnhancementsResult, UpdateSimulationKnowledgeResult,
+    RevertSimulationKnowledgeResult) +
+    src/lab/workflows.py (all 8 run() signatures annotated with result types)
   proof_type: null
   test_path: tests/unit/lab/
   divergence_note: null
@@ -3308,6 +3310,45 @@
     nothing to merge (i.e. ENABLE_SELF_MODEL_COGNITION OFF, the shipped default everywhere) — hash
     stability confirmed via byte-identical canonical hash with/without the SelfModelPatch
     materialization fix for urban_political's shipped profile (50-tick run, seed 42).
+- id: INFRA-261
+  text: >
+    RevertSimulationKnowledgeWorkflow (TCK-20260704-LABKNOWLEDGE-REVERT) provides a real revert
+    capability for UpdateSimulationKnowledgeWorkflow's knowledge-store syncs, closing the gap
+    docs/ai/agent_infrastructure_audit.md previously flagged as "documented, not verified."
+    run(session_id) locates the most recent knowledge_sync_result and its paired files_written
+    audit event for the session, removes exactly the insight/known_issue/rule files recorded
+    there (report_path and the decision log are excluded from the delete list, handled
+    separately), and removes the matching decisions/decision_log.jsonl line by exact
+    full-record equality (temp-file + os.replace, never in-place truncation). Before deleting
+    anything, it pre-flight-checks every target file's live sha256 against the file_hashes
+    recorded at write time and raises LabKnowledgeRevertError if any target was modified by a
+    later sync (supersede rejection) or if the audit log predates hash-tracking support (legacy
+    pre-Step-1 logs missing file_hashes/decision_log_entry). A successful revert is itself
+    audited via a new knowledge_reverted event.
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: >
+    src/lab/workflows.py::RevertSimulationKnowledgeWorkflow (revert logic, LabKnowledgeRevertError);
+    src/lab/workflows.py::UpdateSimulationKnowledgeWorkflow.run() (Step 1 files_written/
+    knowledge_sync_result payload fix: file_hashes dict + decision_log_entry echo, the plumbing
+    revert depends on); src/lab/results.py::RevertSimulationKnowledgeResult
+  proof_type: parity
+  test_path: >
+    tests/integration/lab_agent/test_update_simulation_knowledge_workflow.py::test_revert_function_exists_and_is_callable;
+    tests/integration/lab_agent/test_update_simulation_knowledge_workflow.py::test_revert_removes_exact_files_written;
+    tests/integration/lab_agent/test_update_simulation_knowledge_workflow.py::test_revert_fixes_known_issues_and_rules_omission;
+    tests/integration/lab_agent/test_update_simulation_knowledge_workflow.py::test_revert_decision_log_removes_only_matching_line;
+    tests/integration/lab_agent/test_update_simulation_knowledge_workflow.py::test_revert_rejects_superseded_known_issue;
+    tests/integration/lab_agent/test_update_simulation_knowledge_workflow.py::test_revert_rejects_superseded_rule;
+    tests/integration/lab_agent/test_update_simulation_knowledge_workflow.py::test_revert_logs_audit_event;
+    tests/integration/lab_agent/test_update_simulation_knowledge_workflow.py::test_revert_rejects_legacy_log_missing_hash_keys
+  divergence_note: null
+  support_boundary: >
+    Covers revert of SYNCED sessions only (NOTHING_TO_REVERT for NO_INSIGHTS syncs, per the
+    ticket's Out of Scope). Does not revert or regenerate knowledge_update_report.md (a derived
+    artifact, not source-of-truth state). No CLI/skill-level invocation surface is added — this
+    is the underlying src/lab/ capability only.
 - id: INFRA-246
   text: "WorldDynamicsScorer owns ecology_cycle_completed (not EconomyScorer) per SQ-08
     conflict note. Covers calamity, boss/raid spawning, region transform/trauma/ownership,

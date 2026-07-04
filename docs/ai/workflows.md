@@ -327,7 +327,16 @@ Workflow({ name: 'implement-ticket', args: { ticket_id: 'TCK-20260606-PHASE28-RU
 **Outputs:**
 - Structured knowledge contribution (rule statements, evidence, confidence, scope, exceptions)
 - Graph update description (new nodes and edges for `graphify-out/`)
-- Audit log JSON (what was included, excluded, approved, and how to revert)
+- Audit log JSON (what was included, excluded, approved)
+
+**Revert:** `RevertSimulationKnowledgeWorkflow.run(session_id)` (`src/lab/workflows.py`) reverts the
+most recent sync for that session. It removes exactly the insight/known-issue/rule files recorded
+in that sync's `files_written` audit event, matches and removes the corresponding
+`decision_log.jsonl` line by exact content equality (never by timestamp alone), and rejects with
+`LabKnowledgeRevertError` if any target file was modified by a later sync. The revert action itself
+is logged as a `knowledge_reverted` audit event. It does not regenerate or revert
+`knowledge_update_report.md` — that report is a derived artifact, not source-of-truth knowledge
+state.
 
 **When to use:** Only after the approval gate passes. This is the final step in the simulation learning loop, committing validated insights into the long-term knowledge graph.
 

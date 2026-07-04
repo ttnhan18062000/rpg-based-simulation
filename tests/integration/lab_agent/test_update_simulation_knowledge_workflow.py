@@ -10,7 +10,9 @@ from src.lab.workflows import (
     CompactSimulationDataWorkflow,
     InvestigateSimulationResultWorkflow,
     ProposeSimulationEnhancementsWorkflow,
-    UpdateSimulationKnowledgeWorkflow
+    UpdateSimulationKnowledgeWorkflow,
+    RevertSimulationKnowledgeWorkflow,
+    LabKnowledgeRevertError,
 )
 
 def _build_knowledge_workspace(tmp_path: Path) -> Path:
@@ -362,3 +364,315 @@ def test_knowledge_timestamps_are_dynamic(tmp_path_factory):
 
     assert created_at_1 != created_at_2, "created_at must differ across separate runs"
     assert timestamp_1 != timestamp_2, "decision log timestamp must differ across separate runs"
+
+
+def _sync_default(workspace: Path, decision_note: str = "Syncing verified anomalies"):
+    """Runs UpdateSimulationKnowledgeWorkflow once with the default (approved) fixture inputs.
+
+    The default `mock_workspace_for_knowledge` workspace already yields one insight, one
+    KnownIssues patch, and four ScenarioSpec patches, so this exercises insights/known_issues/
+    rules in a single sync without any patch-mutation boilerplate.
+    """
+    request = WorkflowRequest(
+        workflow="UpdateSimulationKnowledge",
+        mode="generic",
+        user_goal="Sync for revert test setup",
+        specific_inputs={
+            "approved_by": "user_admin",
+            "approval_recorded": True,
+            "decision_note": decision_note,
+        },
+    )
+    workflow = UpdateSimulationKnowledgeWorkflow(workspace_root=workspace)
+    return workflow.run("session_know_01", request)
+
+
+def test_files_written_includes_known_issues_and_rules_with_hashes(mock_workspace_for_knowledge: Path):
+    """Step 1 payload-shape regression: files_written must list known_issues/rules paths with
+    file_hashes, and knowledge_sync_result must echo the exact decision_log_entry dict."""
+    from src.lab.audit import LabAuditTrail
+
+    result = _sync_default(mock_workspace_for_knowledge)
+    assert result["status"] == "SYNCED"
+
+    trail = LabAuditTrail(mock_workspace_for_knowledge)
+    events = trail.read_log("session_know_01")
+
+    files_written = [e for e in events if e["event_type"] == "files_written"][-1]
+    files = files_written["details"]["files"]
+    assert "decisions/decision_log.jsonl" in files
+    assert any(f.startswith("known_issues/") for f in files), files
+    assert any(f.startswith("rules/") for f in files), files
+    assert any(f.startswith("insights/") for f in files), files
+
+    file_hashes = files_written["details"]["file_hashes"]
+    for path in files:
+        if path.startswith(("insights/", "known_issues/", "rules/")):
+            assert path in file_hashes, f"{path} missing from file_hashes"
+            assert len(file_hashes[path]) == 64, "sha256 hex digest must be 64 chars"
+
+    knowledge_dir = mock_workspace_for_knowledge / "data" / "lab_knowledge"
+    dec_file = knowledge_dir / "decisions" / "decision_log.jsonl"
+    dec_entry = json.loads(dec_file.read_text(encoding="utf-8").splitlines()[-1])
+
+    sync_result = [e for e in events if e["event_type"] == "knowledge_sync_result"][-1]
+    assert sync_result["details"]["decision_log_entry"] == dec_entry
+
+
+def test_revert_function_exists_and_is_callable(mock_workspace_for_knowledge: Path):
+    """AC1: a revert entrypoint exists that takes a session_id and returns without raising."""
+    _sync_default(mock_workspace_for_knowledge)
+
+    revert_workflow = RevertSimulationKnowledgeWorkflow(workspace_root=mock_workspace_for_knowledge)
+    result = revert_workflow.run("session_know_01")
+
+    assert result["status"] == "REVERTED"
+    assert result["session_id"] == "session_know_01"
+
+
+def test_revert_removes_exact_files_written(mock_workspace_for_knowledge: Path):
+    """AC2: revert removes exactly the files listed in files_written — no more, no less."""
+    from src.lab.audit import LabAuditTrail
+
+    _sync_default(mock_workspace_for_knowledge)
+
+    knowledge_dir = mock_workspace_for_knowledge / "data" / "lab_knowledge"
+    sentinel = knowledge_dir / "insights" / "zzz_sentinel.json"
+    sentinel.write_text("{}", encoding="utf-8")
+
+    trail = LabAuditTrail(mock_workspace_for_knowledge)
+    events = trail.read_log("session_know_01")
+    files_written = [e for e in events if e["event_type"] == "files_written"][-1]
+    target_files = [
+        f for f in files_written["details"]["files"]
+        if f != "decisions/decision_log.jsonl" and not Path(f).is_absolute()
+    ]
+    assert target_files, "expected at least one insight/known_issue/rule target file"
+
+    revert_workflow = RevertSimulationKnowledgeWorkflow(workspace_root=mock_workspace_for_knowledge)
+    result = revert_workflow.run("session_know_01")
+
+    assert result["status"] == "REVERTED"
+    for rel_path in target_files:
+        assert not (knowledge_dir / rel_path).is_file(), f"{rel_path} should have been removed"
+
+    assert sentinel.is_file(), "unrelated sentinel file must survive revert untouched"
+
+    report_glob = list(
+        (mock_workspace_for_knowledge / "data" / "lab_sessions" / "session_know_01" / "enhancement").glob(
+            "knowledge_update_report.md"
+        )
+    )
+    assert report_glob, "report_path is explicitly out of scope and must not be removed by revert"
+
+
+def test_revert_fixes_known_issues_and_rules_omission(mock_workspace_for_knowledge: Path):
+    """Regression test for the investigation's 'New Finding': known_issues/rules files must be
+    both recorded in files_written and actually deleted by revert, not just the insight file."""
+    knowledge_dir = mock_workspace_for_knowledge / "data" / "lab_knowledge"
+
+    _sync_default(mock_workspace_for_knowledge)
+
+    issue_files = list((knowledge_dir / "known_issues").glob("*.json"))
+    rule_files = list((knowledge_dir / "rules").glob("*.json"))
+    assert issue_files, "fixture must produce at least one known_issues file"
+    assert rule_files, "fixture must produce at least one rules file"
+
+    revert_workflow = RevertSimulationKnowledgeWorkflow(workspace_root=mock_workspace_for_knowledge)
+    result = revert_workflow.run("session_know_01")
+
+    assert result["status"] == "REVERTED"
+    for f in issue_files:
+        assert not f.is_file(), f"known_issues file {f.name} must be removed by revert"
+    for f in rule_files:
+        assert not f.is_file(), f"rules file {f.name} must be removed by revert"
+
+
+def test_revert_decision_log_removes_only_matching_line(mock_workspace_for_knowledge: Path):
+    """AC2: revert removes exactly the one decision-log line belonging to the reverted sync,
+    leaving other sessions' lines byte-for-byte intact (append-only, multi-session file)."""
+    from src.lab.session import LabSessionStore
+
+    _sync_default(mock_workspace_for_knowledge, decision_note="First session decision")
+
+    # Simulate a second session's decision appended afterward, sharing the same file.
+    session_store = LabSessionStore(mock_workspace_for_knowledge / "data" / "lab_sessions")
+    session_store.create_session("session_know_02")
+    decision_file = mock_workspace_for_knowledge / "data" / "lab_knowledge" / "decisions" / "decision_log.jsonl"
+    other_entry = {
+        "session_id": "session_know_02",
+        "decision_note": "Second session decision",
+        "approved_by": "user_other",
+        "timestamp": "2026-07-05T00:00:00+00:00",
+    }
+    with open(decision_file, "a", encoding="utf-8") as f:
+        f.write(json.dumps(other_entry) + "\n")
+
+    lines_before = decision_file.read_text(encoding="utf-8").splitlines()
+    assert len(lines_before) == 2
+
+    revert_workflow = RevertSimulationKnowledgeWorkflow(workspace_root=mock_workspace_for_knowledge)
+    result = revert_workflow.run("session_know_01")
+    assert result["status"] == "REVERTED"
+
+    lines_after = decision_file.read_text(encoding="utf-8").splitlines()
+    assert len(lines_after) == 1
+    remaining_entry = json.loads(lines_after[0])
+    assert remaining_entry == other_entry, "the other session's line must survive byte-for-byte"
+
+
+def test_revert_rejects_superseded_known_issue(mock_workspace_for_knowledge: Path):
+    """AC3: reverting a sync whose known_issues file was silently overwritten by a later sync
+    (no duplicate guard exists for known_issues/rules, unlike insights) must be rejected."""
+    knowledge_dir = mock_workspace_for_knowledge / "data" / "lab_knowledge"
+
+    _sync_default(mock_workspace_for_knowledge)
+
+    issue_files = list((knowledge_dir / "known_issues").glob("*.json"))
+    assert issue_files, "fixture must produce a known_issues file"
+    issue_file = issue_files[0]
+
+    superseded_content = json.dumps({"issue_id": "SUPERSEDED", "status": "STORED"}, indent=2)
+    issue_file.write_text(superseded_content, encoding="utf-8")
+
+    revert_workflow = RevertSimulationKnowledgeWorkflow(workspace_root=mock_workspace_for_knowledge)
+    with pytest.raises(LabKnowledgeRevertError) as exc:
+        revert_workflow.run("session_know_01")
+    assert "modified by a later operation" in str(exc.value)
+
+    # The superseding content must be untouched by the rejected revert attempt.
+    assert issue_file.read_text(encoding="utf-8") == superseded_content
+
+
+def test_revert_rejects_superseded_rule(mock_workspace_for_knowledge: Path):
+    """AC3 mirror case: a ScenarioSpec/WorldSpec rules/*.json file silently overwritten by a
+    later sync must also reject revert."""
+    knowledge_dir = mock_workspace_for_knowledge / "data" / "lab_knowledge"
+
+    _sync_default(mock_workspace_for_knowledge)
+
+    rule_files = list((knowledge_dir / "rules").glob("*.json"))
+    assert rule_files, "fixture must produce a rules file"
+    rule_file = rule_files[0]
+
+    superseded_content = json.dumps({"patch_id": "SUPERSEDED", "target_type": "ScenarioSpec"}, indent=2)
+    rule_file.write_text(superseded_content, encoding="utf-8")
+
+    revert_workflow = RevertSimulationKnowledgeWorkflow(workspace_root=mock_workspace_for_knowledge)
+    with pytest.raises(LabKnowledgeRevertError) as exc:
+        revert_workflow.run("session_know_01")
+    assert "modified by a later operation" in str(exc.value)
+    assert rule_file.read_text(encoding="utf-8") == superseded_content
+
+
+def test_revert_rejection_does_not_log_false_success(mock_workspace_for_knowledge: Path):
+    """AC4: a rejected (superseded) revert must never log a knowledge_reverted success event."""
+    from src.lab.audit import LabAuditTrail
+
+    knowledge_dir = mock_workspace_for_knowledge / "data" / "lab_knowledge"
+    _sync_default(mock_workspace_for_knowledge)
+
+    issue_file = list((knowledge_dir / "known_issues").glob("*.json"))[0]
+    issue_file.write_text(json.dumps({"issue_id": "SUPERSEDED"}), encoding="utf-8")
+
+    revert_workflow = RevertSimulationKnowledgeWorkflow(workspace_root=mock_workspace_for_knowledge)
+    with pytest.raises(LabKnowledgeRevertError):
+        revert_workflow.run("session_know_01")
+
+    trail = LabAuditTrail(mock_workspace_for_knowledge)
+    events = trail.read_log("session_know_01")
+    assert not any(e["event_type"] == "knowledge_reverted" for e in events), (
+        "a rejected revert must never log a knowledge_reverted success event"
+    )
+
+
+def test_revert_logs_audit_event(mock_workspace_for_knowledge: Path):
+    """AC4: a successful revert is logged to audit_log.jsonl as a new 'knowledge_reverted' event
+    naming the files actually removed."""
+    from src.lab.audit import LabAuditTrail
+
+    _sync_default(mock_workspace_for_knowledge)
+
+    revert_workflow = RevertSimulationKnowledgeWorkflow(workspace_root=mock_workspace_for_knowledge)
+    result = revert_workflow.run("session_know_01")
+
+    trail = LabAuditTrail(mock_workspace_for_knowledge)
+    events = trail.read_log("session_know_01")
+    reverted_events = [e for e in events if e["event_type"] == "knowledge_reverted"]
+    assert reverted_events, "knowledge_reverted event must be written to audit trail"
+    assert reverted_events[-1]["details"]["removed_files"] == result["removed_files"]
+
+
+def test_revert_nothing_to_revert_for_no_insights_sync(mock_workspace_empty_insights: Path):
+    """A NO_INSIGHTS sync wrote nothing, so revert must no-op cleanly rather than error."""
+    request = WorkflowRequest(
+        workflow="UpdateSimulationKnowledge",
+        mode="generic",
+        user_goal="Sync with empty insight set",
+        specific_inputs={
+            "approved_by": "user_admin",
+            "approval_recorded": True,
+            "decision_note": "No new insights this cycle",
+        },
+    )
+    workflow = UpdateSimulationKnowledgeWorkflow(workspace_root=mock_workspace_empty_insights)
+    res = workflow.run("session_know_01", request)
+    assert res["status"] == "NO_INSIGHTS"
+
+    revert_workflow = RevertSimulationKnowledgeWorkflow(workspace_root=mock_workspace_empty_insights)
+    result = revert_workflow.run("session_know_01")
+
+    assert result == {
+        "status": "NOTHING_TO_REVERT",
+        "session_id": "session_know_01",
+        "removed_files": [],
+    }
+
+
+def test_revert_rejects_legacy_log_missing_hash_keys(mock_workspace_for_knowledge: Path):
+    """Step 2b legacy-log guard: an audit_log.jsonl written before this ticket's Step 1 lands has
+    files_written/knowledge_sync_result events without file_hashes/decision_log_entry — revert
+    must raise LabKnowledgeRevertError instead of letting a bare KeyError propagate or attempting
+    a best-effort partial revert."""
+    from src.lab.session import LabSessionStore
+
+    session_store = LabSessionStore(mock_workspace_for_knowledge / "data" / "lab_sessions")
+    session_store.create_session("session_legacy_01")
+
+    session_dir = mock_workspace_for_knowledge / "data" / "lab_sessions" / "session_legacy_01"
+    audit_file = session_dir / "audit_log.jsonl"
+    legacy_events = [
+        {
+            "timestamp": "2026-05-24T10:00:00Z",
+            "event_type": "files_written",
+            "details": {
+                "files": [
+                    "/abs/path/knowledge_update_report.md",
+                    "decision_log.jsonl",
+                    "insights/insight-legacy.json",
+                ]
+            },
+        },
+        {
+            "timestamp": "2026-05-24T10:00:01Z",
+            "event_type": "knowledge_sync_result",
+            "details": {"status": "SYNCED", "synced_insights": 1, "synced_patches": 0},
+        },
+    ]
+    with open(audit_file, "w", encoding="utf-8") as f:
+        for event in legacy_events:
+            f.write(json.dumps(event) + "\n")
+
+    knowledge_dir = mock_workspace_for_knowledge / "data" / "lab_knowledge"
+    insights_dir = knowledge_dir / "insights"
+    insights_dir.mkdir(parents=True, exist_ok=True)
+    legacy_insight = insights_dir / "insight-legacy.json"
+    legacy_insight.write_text("{}", encoding="utf-8")
+
+    revert_workflow = RevertSimulationKnowledgeWorkflow(workspace_root=mock_workspace_for_knowledge)
+    with pytest.raises(LabKnowledgeRevertError) as exc:
+        revert_workflow.run("session_legacy_01")
+    assert "predates hash-tracking support" in str(exc.value)
+
+    # No file may be touched by a rejected legacy-format revert.
+    assert legacy_insight.is_file()

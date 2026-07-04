@@ -56,7 +56,7 @@ Weighted mean → **8.0 / 10**.
 
 **Skill catalog shows signs of not being curated for this repo.** *(maintenance)* `.claude/skills/` mixes project-tuned shortcuts (`implement-ticket`, `create-tickets`) with generic skills — `frontend-design`, `api-design-principles` — with no obvious surface in an RPG simulation backend. Unclear if these are active or vestigial.
 
-**Rollback path for knowledge-store writes is described, not verified.** *(unverified)* `update-knowledge-store` is documented as producing "an audit log JSON — what was included, excluded, approved, and how to revert." This review did not find or execute an actual revert procedure to confirm it works.
+**Rollback path for knowledge-store writes is described, not verified.** *(unverified)* `update-knowledge-store` is documented as producing "an audit log JSON — what was included, excluded, approved, and how to revert." This review did not find or execute an actual revert procedure to confirm it works. *(Closed by TCK-20260704-LABKNOWLEDGE-REVERT: `RevertSimulationKnowledgeWorkflow` now implements and tests this path — see `docs/ai/workflows.md`'s `update-knowledge-store` section.)*
 
 ---
 
@@ -68,7 +68,7 @@ Ordered by leverage — cheapest fix with the most trust gained comes first.
 2. **Add a cost proxy to `tools.jsonl`.** Even a rough per-call estimate (agent count × phase) closes the one gap the project's own docs already flag.
 3. **Write down what `lane-architecture` actually covers.** Turn the LLM/static split from implicit to an explicit, reviewable boundary — so gaps in the judged gates are a known quantity.
 4. **Prune or scope the skill catalog.** Confirm which of the 14 skills have ever fired against this codebase; retire the rest so the catalog reflects what's actually maintained.
-5. **Exercise the knowledge-store revert path once, for real.** A documented rollback that has never run is a hypothesis, not a safety net.
+5. **Exercise the knowledge-store revert path once, for real.** A documented rollback that has never run is a hypothesis, not a safety net. *(Closed by TCK-20260704-LABKNOWLEDGE-REVERT — see pointer at L59.)*
 
 ---
 

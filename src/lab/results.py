@@ -120,3 +120,18 @@ class UpdateSimulationKnowledgeResult(TypedDict):
     status: Literal["SYNCED", "NO_INSIGHTS"]
     report_path: str
     synced_count: int
+
+
+# ---------------------------------------------------------------------------
+# 8. RevertSimulationKnowledgeWorkflow — never returns BLOCKED (raises instead)
+# ---------------------------------------------------------------------------
+
+class RevertSimulationKnowledgeResult(TypedDict):
+    """Result from RevertSimulationKnowledgeWorkflow.run().
+
+    status is 'REVERTED' when a prior sync's files were removed,
+    'NOTHING_TO_REVERT' when the session had no SYNCED sync to undo.
+    """
+    status: Literal["REVERTED", "NOTHING_TO_REVERT"]
+    session_id: str
+    removed_files: list[str]
