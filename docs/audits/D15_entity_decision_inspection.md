@@ -178,7 +178,7 @@ is no way for a developer to query it without writing Python.
 
 ## Gap Analysis
 
-### Gap 1 — No "why goal X was chosen" explanation — Impact: 15 / 15 — **RESOLVED by TCK-20260619-E22A-TRACE-WRITER**
+### Gap 1 — No "why goal X was chosen" explanation — Impact: 15 / 15 — **FULLY RESOLVED (two-stage fix; runner-up half confirmed accurate 2026-07-04)**
 
 | Dimension | Score | Reason |
 |---|---|---|
@@ -187,21 +187,42 @@ is no way for a developer to query it without writing Python.
 | Fix Leverage | 5 | One change (retain top-N scores at commit) eliminates an entire class of black-box work |
 | **Total** | **15** | |
 
-**The core gap.** Every inspection tool shows the entity's *current* goal ID. None show
-why that goal won the scoring competition this tick.
+**The core gap (historical — both halves now resolved, see Resolution below).** Every
+inspection tool showed the entity's *current* goal ID. None showed why that goal won the
+scoring competition this tick.
 
 Goal scoring happens inside `execute_brain()` → `CognitionDomain` during `_phase_collection()`.
 The ranked scores for all candidate goals are computed transiently and discarded at tick
-boundary. `source_goal_score` in cognition snapshots captures only the winning project's
-score — not the runner-up scores.
+boundary. `source_goal_score` in cognition snapshots originally captured only the winning
+project's score — not the runner-up scores.
 
-**DX impact:** Developer cannot distinguish "entity stuck on low-priority goal because
-all alternatives scored lower" from "entity stuck on high-priority goal that should be
-interrupted but isn't." These require completely different fixes but look identical from
-the inspection API.
+**DX impact (historical):** Developer could not distinguish "entity stuck on low-priority
+goal because all alternatives scored lower" from "entity stuck on high-priority goal that
+should be interrupted but isn't." These require completely different fixes but looked
+identical from the inspection API.
 
 **Gap from D01:** "Route decision trace is already computed every tick — this is promotion
 of existing data to a queryable API, not new logic." (D01 §Decision Explanation Model)
+
+**Resolution (two stages):**
+1. `TCK-20260619-E22A-TRACE-WRITER` — promoted the decision trace to a queryable
+   `decision_trace.jsonl` API (the header's original "RESOLVED" tag referred to this stage
+   only; it did not yet add runner-up scores, which is why the "core gap"/"DX impact" prose
+   above was left describing the pre-fix state for a while — a documentation staleness this
+   entry now corrects).
+2. `TCK-20260627-P1H-GOAL-RUNNERUP` — added the actual runner-up-score capture this Gap
+   asked for: `DecisionTraceWriter.write_trace()` (`src/observability/cognition/decision_trace_writer.py`)
+   sorts candidates descending and emits `source_goal_score` (winner) + `runner_up_scores`
+   (ranks 2-3, gracefully truncated below 3 candidates) via a bounded per-entity cache;
+   `EntityInspectionSnapshot.goal_scores` is populated from that same cache. Documented in
+   `docs/observability/decision_trace_contract.md`'s "Goal Score Cache" section.
+
+**Reconfirmed 2026-07-04** via `TCK-20260703-SIMQ-UPLIFT3-GOAL-TRACE`'s investigation (which set
+out to build this exact feature, discovered it already existed, and closed as a documentation-only
+duplicate): `tests/unit/observability/test_decision_trace.py`'s 4 runner-up-specific tests
+(`test_decision_trace_runner_up_scores_present`, `_source_goal_score_present`,
+`_runner_up_fewer_than_3`, `_runner_up_single_candidate`) all pass (24/24 in the full file).
+`docs/plans/audit_fix_plan.md`'s P1-H entry was corrected to match.
 
 ---
 

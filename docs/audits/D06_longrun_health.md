@@ -191,6 +191,21 @@ SpawnService fires at ~tick 500 and successfully adds 3 entities in both seeds. 
 
 For a 1,000-tick run this is marginal. A 5,000-tick run risks entity count approaching zero.
 
+**Status update (2026-07-04):** `docs/plans/audit_fix_plan.md`'s P2-B entry (sourced from this
+finding) is now **RESOLVED** — `src/world/spawn.py`'s two-tier `SpawnConfig` cadence (WORLD-103)
+addresses the spawn/attrition rate directly. A *separate*, previously-conflated symptom — total
+early-tick population collapse in `frontier_extended`/`frontier_living_world`/`wilderness_survival`
+(56→13 alive within the first 50 ticks in one case) — was root-caused by
+`TCK-20260703-SIMQ-UPLIFT3-WORLD-CORPUS` (2026-07-04) to a *different* cause entirely: those
+worlds' compiled content was stale relative to the 2026-07-01 hazard-native-immunity fix, so
+entities took unmitigated lethal hazard drain in their own habitat. Fixed by adding missing
+`hazard_kind` declarations to 7 world modules and recompiling. All 5 previously-collapsing or
+never-checked worlds now hold ≥60% population over 300 ticks — see
+`docs/simulation_quality/eval_matrix_results.md` for the current numbers. The `sandbox_world`
+data in this table itself predates that world's `worldcomposition.v1` migration
+(`TCK-20260701-SANDBOX-WORLDCOMP-MIGRATE`) and is retained here as the original historical
+measurement, not updated in place.
+
 ---
 
 ## Key Findings Summary
@@ -201,7 +216,7 @@ For a 1,000-tick run this is marginal. A 5,000-tick run risks entity count appro
 | F2 | 7/15 | 200-tick activation delay from initial spawn project locks |
 | F3 | 11/15 | Rejection cascade grows to 500K–550K/run at ~650/tick after RC1 fix |
 | F4 | 15/15 | Quest system never activates — no material blockers generated while F1 persists |
-| F5 | 9/15 | Late-run attrition exceeds spawn rate; entity count ends below starting count |
+| F5 | 9/15 | Late-run attrition exceeds spawn rate; entity count ends below starting count — **RESOLVED** (P2-B, `SpawnConfig` two-tier cadence); a separately-conflated early-collapse symptom in other worlds fixed 2026-07-04 by `TCK-20260703-SIMQ-UPLIFT3-WORLD-CORPUS` (stale hazard-kind content, unrelated cause) |
 
 **Performance — all green:**
 - Tick compute: 9–15ms avg, stable, well within 50ms budget ✓

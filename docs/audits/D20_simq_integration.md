@@ -18,7 +18,7 @@ tags: [audit, simulation-quality, simq, integration, observability, event-bus]
 | **Interest** | 5 / 5 |
 | **Priority** | 9 |
 | **Method** | run-sim + code-read |
-| **Audit date** | 2026-06-30 (original); 2026-07-01 (re-run after fixes); 2026-07-02 (calibration corpus refresh + loop-detection sweep); 2026-07-02 (simq-uplift batch); 2026-07-03 (simq-uplift batch 2); 2026-07-04 (simq-uplift batch 3 — TCK-20260703-SIMQ-UPLIFT3-WORLD-CORPUS) |
+| **Audit date** | 2026-06-30 (original); 2026-07-01 (re-run after fixes); 2026-07-02 (calibration corpus refresh + loop-detection sweep); 2026-07-02 (simq-uplift batch); 2026-07-03 (simq-uplift batch 2); 2026-07-04 (simq-uplift batch 3, all 8 tickets — see "SimQ Uplift Batch 3" section below) |
 
 **What this dimension answers:** Is the SimQ module actually receiving events and scoring
 live simulation runs — or is it built but disconnected? This audit exercises the full path
@@ -557,6 +557,41 @@ this batch's explicit `urban_political`-only scope.*
   `docs/parity_ledger/infrastructure.yaml::INFRA-258`. Not currently tracked as its own ticket.
 - FACTION/INFORMATION activation confined to `urban_political` this batch, per explicit scope
   guard — extending to other worlds is a future batch's decision, not automatic follow-on work.
+
+---
+
+## SimQ Uplift Batch 3 (2026-07-03 / 2026-07-04)
+
+Eight tickets, sequenced per `tickets/done/simq-uplift-3/SEQUENCE.md`, addressing calibration
+speed, documentation, an unresolved investigation question, corpus diversity, and three backlog
+items from `docs/plans/audit_fix_plan.md` (P1-D, P1-H) plus a new process gap (repeatable audits).
+
+| Ticket | What changed | Outcome |
+|---|---|---|
+| TCK-20260703-SIMQ-UPLIFT3-FAST-CALIBRATE | Added `flags={"no_frame_pacing": True}` to `tools/calibrate_simq.py`'s `Kernel(...)` construction — offline/batch calibration runs don't need real-time tick-pacing sleep | 2000-tick `dungeon_crawl` run: 231s→28s (~8.3x speedup); byte-identical `quality_report.json` output confirmed via git-stash before/after diff |
+| TCK-20260703-SIMQ-UPLIFT3-PLAYBOOK-DOC | Documented the "Compile-Time Pillar Activation Pattern" (schema field → composition mirror → resolver passthrough → compiler construction) in `docs/guidelines/design_patterns.md` as Pattern 6, generalizing the FACTION/INFORMATION fix shape from Batch 2 | Documentation only; 0 regressions |
+| TCK-20260703-SIMQ-UPLIFT3-DUAL-GATE-AUDIT | Investigated whether ECONOMY/SOCIAL share FACTION/INFORMATION's "compiler never constructs the field" bug class | Found EconomyScorer is 100% event-driven (reads zero `AuthoritativeState` fields) — its C ceiling is duration-driven (activates at 1000t+), not a construction gap; SOCIAL is pure feature-flag gating, unlike FACTION's closed loop. No fix needed; corrected a stale D04-era claim in `quality_scoring_contract.md` (resource_nodes/region_id were already fixed by the worldgen epic) |
+| TCK-20260703-SIMQ-UPLIFT3-BRANCH-B | Found and fixed 3 causally-linked bugs blocking `InformationBeliefPhase` Branch B: `SelfModelUpdatePhase.run()` hardcoded `events=[]`; `pipeline.py`'s `InformationBeliefPhase.apply(...)` call site was missing the `u.merge(...)` wrapper every sibling phase uses; and `EntityUpdate.self_model_bundle_set` was never durably materialized into `EntityState.self_model` for **any** entity, **any** world, ever (added `SelfModelPatch`, the 18th `ComponentPatch` subclass) | Branch B mechanism proven correct and reachable via test-scoped verification (both flags ON); NOT active in any shipped calibration profile (honest disclosure, not claimed as a live grade change); byte-identical canonical hash proven with/without the fix on `urban_political`'s shipped profile; 950+ tests passing across a widened regression sweep |
+| TCK-20260703-SIMQ-UPLIFT3-WORLD-CORPUS | See "5 newly-anchored worlds" and "Multi-seed / multi-tick matrix" sections above | Corpus 25→40 anchor entries; fixed a corpus-wide stale-content bug (7 modules missing `hazard_kind`) causing real population collapse in 5 worlds; caught genuine drift in 8 of `dungeon_crawl`'s 10 already-shipped anchor keys via a drift-check the plan initially omitted (caught by architecture review) — updated in place with attribution notes; `simq_routing_test`'s 3 anchors blocked by a pre-existing, unrelated `ResourceRegistry: STONE` crash, filed as `TCK-20260704-SIMQ-RESOURCEREGISTRY-STONE-GAP` rather than silently marked verified |
+| TCK-20260703-SIMQ-UPLIFT3-AUDIT-WORKFLOW | Built `tools/simq_audit_gaps.py` (anchor-coverage + parity-ledger candidate scanner) + `make simq-full-audit`/`-full`/`-slow` targets for the mechanical steps, plus a full 7-phase `.claude/workflows/simq-audit.js` + `.claude/skills/simq-audit/SKILL.md` agent-orchestrated workflow mirroring `implement-ticket.js`'s conventions, with a governance-encoded Report phase (no-regression → lightweight chore commit; regression/DA-needed → ticket hand-off) | Formalizes the manual doc-sync process repeated by hand across all 3 batches (15 historical commits reconstructed during investigation); documented in `docs/simulation_quality/audit_workflow.md`; smoke-tested against current repo state without invoking the workflow's own agent phases |
+| TCK-20260703-SIMQ-UPLIFT3-QUEST-PRESSURE | Resolves `docs/plans/audit_fix_plan.md` P1-D. Extended `QuestGenerator`'s template selection to weight candidates by regional pressure signals (`RegionState.trauma_score`/`hazard_level`, a node-charge-ratio scarcity signal) via a new deterministic `DeterministicRNG.weighted_choice()`, while preserving hero-level gating as the primary filter; neutral/`None`-profile scenarios fall back to the exact pre-existing `rng.choice(...)` call, byte-identical to prior behavior | Also fixed a pre-existing masked test bug (two functions both named `test_quest_generation_determinism`, so the `QuestGenerator`-specific determinism test never actually ran). Documented as distinct from the separate, already-pressure-driven `QuestOpportunity`/`quest_registry` system (world-emergence events) — not a duplicate of it |
+| TCK-20260703-SIMQ-UPLIFT3-GOAL-TRACE | Investigation found this ticket's entire scope (retain top-3 runner-up goal scores) was already implemented by `TCK-20260627-P1H-GOAL-RUNNERUP` (done 2026-06-27) — the "still open" status carried in `audit_fix_plan.md`'s 2026-07-03 refresh was itself a false negative (grepped the original pre-fix finding's files, not the files the actual fix landed in) | Closed as a documentation-only duplicate; corrected `audit_fix_plan.md`'s P1-H entry and `docs/audits/D15_entity_decision_inspection.md`'s Gap 1 section to reflect the true two-stage resolution history; re-confirmed the existing implementation genuinely works (24/24 tests passing), not just claimed |
+
+**Net effect on `docs/plans/audit_fix_plan.md`'s backlog:** P1-D and P1-H both moved from "still
+open, no ticket exists" to RESOLVED this batch (P1-H's resolution predates this batch by a week —
+this batch only corrected the record). P2-B was also corrected to RESOLVED (see "5 newly-anchored
+worlds" above — its underlying spawn-cadence fix was already shipped; a separately-conflated
+early-collapse symptom in other worlds was root-caused and fixed by this batch's WORLD-CORPUS
+ticket). `docs/audits/D06_longrun_health.md`'s F5 finding (source of P2-B) updated to match.
+
+**Open follow-up work (new, from this batch):**
+- `TCK-20260704-SIMQ-RESOURCEREGISTRY-STONE-GAP` — pre-existing `ResourceRegistry: STONE` crash in
+  `src/world/ecology.py`'s dynamic resource-node generation, independently hit twice this batch
+  (BRANCH-B's regression sweep, WORLD-CORPUS's drift check). Blocks `simq_routing_test`'s 3
+  calibration anchors from being re-verified. Confirmed pre-existing via git-stash bisection, not a
+  regression introduced by either ticket.
+- BRANCH-B's mechanism is proven correct but not active in any shipped profile — activating it for
+  a real world (if ever desired) is a future scope decision, not automatic follow-on work.
 
 ---
 
