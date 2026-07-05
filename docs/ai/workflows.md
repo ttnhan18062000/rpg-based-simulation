@@ -84,6 +84,7 @@ Workflow({ name: "workflow-name", args: { key: value } })
 | Implement | `implementer` | — |
 | Test | `test-scoper` | Stops if any test fails |
 | Parity | `parity-updater` | — |
+| Security-Review | `security-reviewer` | Fires when the ticket's tags include `security` (ground truth) or suggested_skills includes /security-review; stops if NEEDS_CHANGES or BLOCKED |
 | Verify | `done-checker` | Stops if any DoD condition fails |
 | Finalize | inline | Moves ticket, writes working_log.csv, migrates artifacts |
 
@@ -112,6 +113,7 @@ Workflow({ name: 'implement-ticket', args: { ticket_id: 'TCK-20260606-PHASE28-RU
 | `NEEDS_CHANGES` | Architecture review rejected plan | Fix `plan.md` violations, re-run with `ticket_id` |
 | `BLOCKED` | Architecture fundamental conflict | Revisit scope, re-run with `ticket_id` |
 | `TESTS_FAILED` | One or more tests failing | Fix failing tests, re-run with `ticket_id` |
+| `SECURITY_BLOCKED` | Security review rejected the change | Fix violations, re-run with `ticket_id` |
 | `DOD_BLOCKED` | DoD conditions not met | Fix listed items, re-run with `ticket_id` |
 | `DONE` | Ticket closed, artifacts migrated | — |
 

@@ -76,9 +76,12 @@ same 5 phases, independently confirming them.
 **The 9-phase `implement-ticket` pipeline** (standard tier): Scope (`ticket-scoper`) → Investigate
 (`investigator`) → Plan (`planner`) → Review (`architecture-reviewer`, gate: `NEEDS_CHANGES`/`BLOCKED`)
 → Implement (`implementer`) → Test (`test-scoper`, gate: `TESTS_FAILED`) → Parity (`parity-updater`) →
-Verify (`done-checker`, gate: `DOD_BLOCKED`) → Finalize (inline, no agent). This matches
-`docs/ai/workflows.md` and `docs/ai/ticket-lifecycle.md`, both of which match
-`.claude/workflows/implement-ticket.js` exactly.
+**Security-Review (`security-reviewer`, conditional: fires when the ticket's `tags` include `security`
+or `suggested_skills` includes `/security-review`; gate: `SECURITY_BLOCKED`)** → Verify (`done-checker`,
+gate: `DOD_BLOCKED`) → Finalize (inline, no agent). Security-Review is a 10th, conditional phase — it
+does not run for every ticket, so the pipeline is still described as 9 standing phases plus this one
+conditional gate. This matches `docs/ai/workflows.md` and `docs/ai/ticket-lifecycle.md`, both of which
+match `.claude/workflows/implement-ticket.js` exactly.
 
 Tier routing, matching this repository's own `CLAUDE.md` "Tier Routing" table:
 
@@ -94,7 +97,7 @@ optional `tier_override`. Its return values include `EPIC_CREATED`, `NOTHING_TO_
 child ticket's gate status.
 
 Across these workflows, the literal gate/return-status vocabulary is: `CONFLICTS_DETECTED`,
-`NEEDS_HUMAN_INPUT`, `NEEDS_CHANGES`, `BLOCKED`, `TESTS_FAILED`, `DOD_BLOCKED`, `DONE`.
+`NEEDS_HUMAN_INPUT`, `NEEDS_CHANGES`, `BLOCKED`, `TESTS_FAILED`, `SECURITY_BLOCKED`, `DOD_BLOCKED`, `DONE`.
 
 The Verify phase (`done-checker`) checks **12 substantive Definition-of-Done conditions**, plus a
 13th — agent monitoring — that is pre-marked PASS and guaranteed by the workflow itself rather than

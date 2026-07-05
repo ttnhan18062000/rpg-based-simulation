@@ -65,6 +65,11 @@ Request
   ▼
 [Parity]         parity-updater    → docs/parity_ledger/*.yaml updated
   │
+  ▼  (only if the ticket's tags include `security`, or suggested_skills includes /security-review)
+[Security-Review] security-reviewer → APPROVED / NEEDS_CHANGES / BLOCKED
+  │
+  ├─ NEEDS_CHANGES / BLOCKED → human fixes code, re-run with ticket_id
+  │
   ▼
 [Verify]         done-checker      → DoD check (hotfix: condition 4 N/A)
   │
@@ -266,6 +271,18 @@ The agent executes this via Bash and reports results.
 
 ---
 
+### Security-Review
+
+**Agent:** `security-reviewer`
+
+**Runs only when triggered:** the ticket's frontmatter `tags` include `security` (ground truth), or its `suggested_skills` include `/security-review` (derived, secondary). For a ticket with neither, this phase does not run — zero added latency, agent calls, or events.
+
+**What it validates:** injection, unsafe deserialization, path traversal, subprocess/command injection, secrets-in-code, and raw-domain-model API exposure (cross-referencing `architecture-reviewer`'s own API-boundary rule rather than duplicating it).
+
+**Gate:** Returns `NEEDS_CHANGES` or `BLOCKED` with a violation list — the workflow returns `SECURITY_BLOCKED` and does not proceed to Verify/Finalize. The user fixes the flagged code and re-runs with `ticket_id`.
+
+---
+
 ### Verify (Definition of Done)
 
 **Agent:** `done-checker`
@@ -386,6 +403,7 @@ After work:
 | `NEEDS_CHANGES` | Architecture violations in plan | Fix `plan.md` per violation list | Re-run with `ticket_id` |
 | `BLOCKED` | Fundamental architectural conflict | Revisit scope, possibly split ticket | Re-run with `ticket_id` or new `request` |
 | `TESTS_FAILED` | Tests failing after implementation | Fix the code or tests | Re-run with `ticket_id` |
+| `SECURITY_BLOCKED` | Security review found a vulnerability | Fix the flagged code | Re-run with `ticket_id` |
 | `DOD_BLOCKED` | DoD condition(s) not met | Fix each failing item listed | Re-run with `ticket_id` |
 
 ---

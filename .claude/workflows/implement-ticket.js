@@ -9,6 +9,7 @@ export const meta = {
     { title: 'Implement', detail: 'Write code following the approved plan' },
     { title: 'Test', detail: 'Scope and run tests for changed files' },
     { title: 'Parity', detail: 'Update parity ledger entries for behavior changes' },
+    { title: 'Security-Review', detail: "Security gate for security-tagged tickets — fires when the ticket's tags include 'security' (ground truth) or suggested_skills includes '/security-review' (skipped otherwise)" },
     { title: 'Verify', detail: 'Run Definition-of-Done checklist' },
     { title: 'Finalize', detail: 'Move ticket, append working_log, migrate artifacts, clean up' },
   ],
@@ -28,7 +29,7 @@ phase('Scope')
 
 const TICKET_SCHEMA = {
   type: 'object',
-  required: ['ticket_id', 'ticket_path', 'status', 'conflicts', 'tier', 'summary', 'ts'],
+  required: ['ticket_id', 'ticket_path', 'status', 'conflicts', 'tier', 'tags', 'summary', 'ts'],
   properties: {
     ticket_id: { type: 'string' },
     ticket_path: { type: 'string' },
@@ -36,7 +37,12 @@ const TICKET_SCHEMA = {
     status: { type: 'string', enum: ['CREATED', 'EXISTING'] },
     conflicts: { type: 'array', items: { type: 'string' } },
     tier: { type: 'string', enum: ['hotfix', 'standard', 'epic'] },
+    tags: { type: 'array', items: { type: 'string' }, description: 'The ticket frontmatter tags list, read directly — required so the Security-Review gate trigger (Step 2) has a ground-truth fallback independent of the derived suggested_skills field.' },
     suggested_skills: { type: 'array', items: { type: 'string' }, description: 'Mapped skill(s) for Process/Skill-signal tags on this ticket; empty array if none.' },
+    // mistag_warning is a 4th place in this file independently computing tag-related logic
+    // (alongside the existing triple-copy suggested_skills mapping). Not mirrored in
+    // ticket-scoper.md — that file is out of scope for the ticket that introduced this field.
+    mistag_warning: { type: 'boolean', description: 'True if Related Code Areas suggests auth/secrets/credential paths but no `security` tag was assigned. Computed independently in both Scope-phase branches, alongside the existing suggested_skills tag->skill mapping. NOT mirrored in ticket-scoper.md (Out of Scope for TCK-20260705-WORKFLOW-SECURITY-GATE forbids touching that file).' },
     summary: { type: 'string', description: 'One sentence: what was scoped and any conflicts found (≤200 chars)' },
     ts: { type: 'string', description: 'ISO timestamp from `date -u +%Y-%m-%dT%H:%M:%SZ` run at start of this phase' },
   },
@@ -67,10 +73,17 @@ any tag not listed below produces no suggestion:
   | \`security\` | \`/security-review\` |
 If none of the ticket's tags match, suggested_skills is an empty array — never omit the field.
 
+Step 3a — read the ticket's frontmatter \`tags\` field directly and return it verbatim as \`tags\` (do not
+filter or transform it — this is the ground-truth list the Security-Review gate trigger reads).
+
+Step 3b — check for a security mis-tag: if the ticket's "Related Code Areas" section contains any path or filename matching one of: \`credential\`, \`secret\`, \`password\`, \`api_key\`, \`private_key\`, \`.env\`, \`oauth\`, \`jwt\` (case-insensitive substring match; do NOT match \`auth\`, \`cert\`, \`key\`, \`token\`, or \`session\` bare — those collide with this codebase's own \`AuthoritativeState\`/\`authoritative_pipeline\`/\`certification\`/\`LabSessionStore\` vocabulary), AND the ticket's tags do NOT include \`security\` — set mistag_warning=true. Otherwise mistag_warning=false.
+
 Return: ticket_id="${ticketId}", ticket_path (full path used in step 1/2),
 todos_source_path (the tickets/todos/... path if found in step 1c, else ""),
 status="EXISTING", conflicts=[], tier=(value from ticket or 'standard'),
+tags=(from step 3a, the ticket's actual frontmatter tags list),
 suggested_skills=(computed list from step 3, [] if none),
+mistag_warning=(computed per step 3b),
 summary="Loaded existing ticket ${ticketId}", ts=TS.`
     : `Create a new ticket for this request using the ticket-scoper role.
 
@@ -110,10 +123,14 @@ Steps:
    Files Changed (blank), Completion Summary (blank).
 7. Create the staging directory: staging_artifacts/{ticket_id}/
 
+Step 8 — check for a security mis-tag against the just-drafted ticket: if the ticket's "Related Code Areas" section contains any path or filename matching one of: \`credential\`, \`secret\`, \`password\`, \`api_key\`, \`private_key\`, \`.env\`, \`oauth\`, \`jwt\` (case-insensitive substring match; do NOT match \`auth\`, \`cert\`, \`key\`, \`token\`, or \`session\` bare — those collide with this codebase's own \`AuthoritativeState\`/\`authoritative_pipeline\`/\`certification\`/\`LabSessionStore\` vocabulary), AND the ticket's tags do NOT include \`security\` — set mistag_warning=true. Otherwise mistag_warning=false.
+
 Return: ticket_id (the full TCK-... ID), ticket_path, status="CREATED",
 conflicts (list of any duplicates or conflicts found — empty array if none),
 tier (the tier value written into the ticket),
+tags (the tags array written into the new ticket's own frontmatter — the same ground-truth reasoning as the Load-existing branch),
 suggested_skills (from the mapping table in your Output contract, [] if none),
+mistag_warning (computed per step 8, false if none),
 summary (one sentence: what was scoped and any conflicts found, ≤200 chars),
 ts=TS.`,
   { label: 'scope', schema: TICKET_SCHEMA, agentType: 'ticket-scoper' }
@@ -198,6 +215,10 @@ pushEvent('Scope', 'ticket-scoper', ticketInfo.conflicts && ticketInfo.conflicts
 
 if (ticketInfo.suggested_skills && ticketInfo.suggested_skills.length > 0) {
   log(`Suggested skill(s): ${ticketInfo.suggested_skills.join(', ')}`)
+}
+
+if (ticketInfo.mistag_warning) {
+  log('WARNING: Related Code Areas suggests auth/secrets/credential-adjacent paths but no `security` tag was assigned — verify tagging is correct.')
 }
 
 if (ticketInfo.conflicts && ticketInfo.conflicts.length > 0) {
@@ -548,6 +569,64 @@ Then report: entries updated (by ID and what changed), any P0 entries missing a 
 const parityTs = parity.toString().match(/^PHASE_TS: (\S+)/m)?.[1] || null
 const parityText = parity.toString().replace(/^PHASE_TS: \S+\n?/, '').trim()
 pushEvent('Parity', 'parity-updater', 'ok', parityText.slice(0, 200), parityTs)
+
+// ─── Phase 7b: Security-Review (conditional gate) ─────────────────────────────
+// Trigger reads ticketInfo.tags (raw, required ground truth) directly rather than relying solely
+// on the derived, optional suggested_skills field — per architecture-review finding #6: a gate meant
+// to be "mandatory not advisory" must not depend on the same unenforced LLM-derived value that made
+// the original signal advisory-only in the first place.
+
+if ((ticketInfo.tags && ticketInfo.tags.includes('security')) ||
+    (ticketInfo.suggested_skills && ticketInfo.suggested_skills.includes('/security-review'))) {
+  phase('Security-Review')
+
+  const SECURITY_REVIEW_SCHEMA = {
+    type: 'object',
+    required: ['verdict', 'violations', 'summary'],
+    properties: {
+      verdict: { type: 'string', enum: ['APPROVED', 'NEEDS_CHANGES', 'BLOCKED'] },
+      violations: { type: 'array', items: { type: 'string' } },
+      summary: { type: 'string', description: 'One sentence: verdict + key reason (≤200 chars)' },
+      ts: { type: 'string', description: 'ISO timestamp from `date -u +%Y-%m-%dT%H:%M:%SZ` at start of this phase' },
+    },
+  }
+
+  const securityReview = await agent(
+    `Security review for ticket ${tid}.
+
+Step 0: run \`date -u +%Y-%m-%dT%H:%M:%SZ\` and include result as the \`ts\` field.
+
+Step 0b: run \`python3 -c "import json; open('.claude/current_run','w').write(json.dumps({'run_id':'${tid}','seq':${events.length + 1}}))" 2>/dev/null || true\` — register this agent call for tool tracking.
+
+Read:
+- ${ticketInfo.ticket_path}
+- Files changed: ${implementation.files_changed.join(', ')}
+
+This ticket is tagged \`security\` (its frontmatter tags include \`security\`, or suggested_skills includes /security-review). Review the actual diff/changed files for: injection, unsafe deserialization, path traversal, subprocess/command injection, secrets-in-code, raw-domain-model API exposure.
+
+Return: APPROVED / NEEDS_CHANGES (fixable violations) / BLOCKED (fundamental vulnerability),
+violations (empty if APPROVED), summary (one sentence: verdict + key reason, ≤200 chars), ts.`,
+    { label: 'security-review', schema: SECURITY_REVIEW_SCHEMA, agentType: 'security-reviewer' }
+  )
+
+  if (securityReview.verdict !== 'APPROVED') {
+    log(`Security review: ${securityReview.verdict}`)
+    if (securityReview.violations.length > 0) {
+      log(`Violations: ${securityReview.violations.join(' | ')}`)
+    }
+    pushEvent('Security-Review', 'security-reviewer', 'failed', securityReview.summary || 'Security review: ' + securityReview.verdict, securityReview.ts)
+    await writeMonitoring('SECURITY_BLOCKED')
+    return {
+      status: 'SECURITY_BLOCKED',
+      ticket_id: tid,
+      violations: securityReview.violations,
+      message: 'Fix violations, then re-run with ticket_id="' + tid + '".',
+    }
+  }
+
+  pushEvent('Security-Review', 'security-reviewer', 'ok', securityReview.summary || 'Security review: APPROVED', securityReview.ts)
+  log('Security review: APPROVED')
+}
 
 // ─── Phase 8: Verify ──────────────────────────────────────────────────────────
 
