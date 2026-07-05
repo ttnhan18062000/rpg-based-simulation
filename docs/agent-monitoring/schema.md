@@ -60,6 +60,7 @@ One record per workflow invocation.
 | `NEEDS_CHANGES` | Architecture review returned violations. |
 | `BLOCKED` | Architecture review found fundamental conflict. |
 | `TESTS_FAILED` | Tests failed after implementation. |
+| `SECURITY_BLOCKED` | Security review rejected the change (fires only for tickets whose tags include `security`, or whose derived `suggested_skills` includes `/security-review`). |
 | `DOD_BLOCKED` | Definition-of-Done conditions not met. |
 | `NOTHING_TO_CREATE` | `create-tickets` only — no actionable concerns, all concerns were duplicates of existing tickets, or no tasks survived structuring. |
 | `CRASHED` | Synthetic status set by `validate.py` for runs with `start_ts` but no `end_ts`. |
@@ -106,7 +107,11 @@ One record per agent call within a workflow run. FK: `run_id → runs.run_id`.
 
 ### `phase` values (implement-ticket workflow)
 
-`Scope`, `Investigate`, `Plan`, `Review`, `Implement`, `Test`, `Parity`, `Verify`, `Finalize`
+`Scope`, `Investigate`, `Plan`, `Review`, `Implement`, `Test`, `Parity`, `Security-Review`, `Verify`, `Finalize`
+
+`Security-Review` is conditional — it only appears in `events.jsonl` for tickets whose tags include
+`security`, or whose derived `suggested_skills` includes `/security-review`; it is absent entirely
+(not even a `skipped` event) for every other ticket.
 
 ### `phase` values (create-tickets workflow)
 
