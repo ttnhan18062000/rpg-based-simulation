@@ -36,6 +36,7 @@ const TICKET_SCHEMA = {
     status: { type: 'string', enum: ['CREATED', 'EXISTING'] },
     conflicts: { type: 'array', items: { type: 'string' } },
     tier: { type: 'string', enum: ['hotfix', 'standard', 'epic'] },
+    suggested_skills: { type: 'array', items: { type: 'string' }, description: 'Mapped skill(s) for Process/Skill-signal tags on this ticket; empty array if none.' },
     summary: { type: 'string', description: 'One sentence: what was scoped and any conflicts found (≤200 chars)' },
     ts: { type: 'string', description: 'ISO timestamp from `date -u +%Y-%m-%dT%H:%M:%SZ` run at start of this phase' },
   },
@@ -56,9 +57,20 @@ Step 1 — locate the ticket file. Check these locations in order, stop at the f
 
 Step 2 — read the file at ticket_path. Extract the ## Tier field (default 'standard' if absent).
 
+Step 3 — read the ticket's frontmatter \`tags\` field and compute \`suggested_skills\` against this mapping —
+any tag not listed below produces no suggestion:
+  | Tag | Suggested skill |
+  |---|---|
+  | \`api-design\` | \`/api-design-principles\` |
+  | \`debugging\` | \`/debugging-strategies\` — unless \`Related Code Areas\` includes a path under \`src/worldassembly/\`, \`src/worldbuilding/\`, \`src/worldmodules/\`, \`src/content/\`, or \`src/core/registries.py\`, in which case suggest \`Agent(subagent_type: "world-debugger")\` instead |
+  | \`performance\` | \`/python-performance-optimization\` |
+  | \`security\` | \`/security-review\` |
+If none of the ticket's tags match, suggested_skills is an empty array — never omit the field.
+
 Return: ticket_id="${ticketId}", ticket_path (full path used in step 1/2),
 todos_source_path (the tickets/todos/... path if found in step 1c, else ""),
 status="EXISTING", conflicts=[], tier=(value from ticket or 'standard'),
+suggested_skills=(computed list from step 3, [] if none),
 summary="Loaded existing ticket ${ticketId}", ts=TS.`
     : `Create a new ticket for this request using the ticket-scoper role.
 
@@ -101,6 +113,7 @@ Steps:
 Return: ticket_id (the full TCK-... ID), ticket_path, status="CREATED",
 conflicts (list of any duplicates or conflicts found — empty array if none),
 tier (the tier value written into the ticket),
+suggested_skills (from the mapping table in your Output contract, [] if none),
 summary (one sentence: what was scoped and any conflicts found, ≤200 chars),
 ts=TS.`,
   { label: 'scope', schema: TICKET_SCHEMA, agentType: 'ticket-scoper' }
@@ -182,6 +195,10 @@ Return "monitoring written" or "monitoring write failed: <reason>".`,
 
 // Push scope event
 pushEvent('Scope', 'ticket-scoper', ticketInfo.conflicts && ticketInfo.conflicts.length > 0 ? 'failed' : 'ok', ticketInfo.summary || 'Scoped ticket ' + tid, ticketInfo.ts)
+
+if (ticketInfo.suggested_skills && ticketInfo.suggested_skills.length > 0) {
+  log(`Suggested skill(s): ${ticketInfo.suggested_skills.join(', ')}`)
+}
 
 if (ticketInfo.conflicts && ticketInfo.conflicts.length > 0) {
   log(`Conflicts detected: ${ticketInfo.conflicts.join(' | ')}`)

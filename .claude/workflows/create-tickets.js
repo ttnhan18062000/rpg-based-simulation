@@ -440,13 +440,23 @@ phase('Structure')
 
 const TASK_SCHEMA = {
   type: 'object',
-  required: ['short_scope', 'title', 'tier', 'type', 'priority', 'request_summary', 'scope', 'out_of_scope', 'acceptance_criteria', 'related_code_areas'],
+  required: ['short_scope', 'title', 'tier', 'type', 'priority', 'request_summary', 'scope', 'out_of_scope', 'acceptance_criteria', 'related_code_areas', 'tags', 'suggested_skills'],
   properties: {
     short_scope: {
       type: 'string',
       description: 'UPPER-KEBAB-CASE, max 4 words, unique across all tasks in this batch. Descriptive, not generic.',
     },
     title: { type: 'string' },
+    tags: {
+      type: 'array',
+      items: { type: 'string' },
+      description: 'Canonical-form tags (lowercase, hyphen-separated, never p0/p1/p2) limited to Process/Skill-signal detection for this ticket — see prompt rule below. Broader Subsystem/Topic/Phase/Quality-attribute tagging is deferred to TCK-20260705-TAG-REGISTRY-QUERY, not assigned here.',
+    },
+    suggested_skills: {
+      type: 'array',
+      items: { type: 'string' },
+      description: 'Mapped skill(s) from the tag->skill table below; empty array if no tag matches.',
+    },
     tier: { type: 'string', enum: ['hotfix', 'standard', 'epic'] },
     type: { type: 'string', enum: ['bug', 'feature', 'refactor', 'chore', 'repair'] },
     priority: { type: 'string', enum: ['P0', 'P1', 'P2'] },
@@ -570,6 +580,22 @@ Step 4 — produce ticket tasks using these strict rules:
   assumptions:
   - From investigation risks that remain as open questions
 
+  tags:
+  - Canonical form only: lowercase, hyphen-separated. Never emit p0/p1/p2 as tags.
+  - Include a Process/Skill-signal tag from this closed list ONLY when it applies: api-design, debugging, performance, security
+  - Do NOT assign Subsystem/Topic, Phase/Milestone, or Quality-attribute tags (per docs/guidelines/tag_taxonomy.md's other 3 categories) — that broader tagging is explicitly out of scope for this workflow today (deferred to a separate ticket, TCK-20260705-TAG-REGISTRY-QUERY). If none of the 4 Process/Skill-signal tags apply, tags may be an empty array.
+
+  suggested_skills:
+  - Map each assigned tag against this table; empty array if nothing matches:
+      api-design  -> /api-design-principles
+      debugging   -> /debugging-strategies (or Agent(subagent_type: "world-debugger") if
+                     related_code_areas includes a path under src/worldassembly/,
+                     src/worldbuilding/, src/worldmodules/, src/content/, or
+                     src/core/registries.py)
+      performance -> /python-performance-optimization
+      security    -> /security-review
+  - Do not invent mappings for tags outside this 4-entry table
+
   tier:
   - Use investigation's tier_recommendation
   - Override to 'standard' if scope, out_of_scope, or AC count suggests more than a one-liner
@@ -616,6 +642,11 @@ for (const task of structured.tasks) {
 }
 if (droppedScopes.length > 0) {
   log(`WARNING: duplicate short_scope from structure — dropped: ${droppedScopes.join(', ')}`)
+}
+
+const tasksWithSkills = dedupedTasks.filter(t => t.suggested_skills && t.suggested_skills.length > 0)
+if (tasksWithSkills.length > 0) {
+  log(`Suggested skills: ${tasksWithSkills.map(t => `${t.short_scope}: ${t.suggested_skills.join(', ')}`).join(' | ')}`)
 }
 
 const outputFolder = outputOverride
@@ -678,7 +709,7 @@ Steps:
    ticket_id: ${ticketId}
    phase: open
    date: <YYYY-MM-DD from TS>
-   tags: []
+   tags: <substitute task.tags as a YAML flow-sequence, e.g. [tagging, skills]; use [] only if task.tags is empty>
    ---
 
    Map task data to markdown sections:

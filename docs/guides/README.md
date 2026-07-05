@@ -18,6 +18,7 @@ Practical how-to guides for working with each major subsystem. These are startin
 | [content_authoring.md](content_authoring.md) | World modules, compositions, simulation scenarios — quickstart, field reference, sharp edges, FAQ |
 | [bounded_cognition_tuning.md](bounded_cognition_tuning.md) | Tuning INT/WIS parameters, cognitive archetypes, troubleshooting AI behavior |
 | [agent_monitoring.md](agent_monitoring.md) | Agent retrospectives, querying monitoring data, interpreting gate failures |
+| [ticket_tagging.md](ticket_tagging.md) | Tag categories, canonical examples, and which tags trigger a skill suggestion |
 
 For system architecture, see `docs/engine/` and `docs/architecture/`.
 For simulation laws, see `docs/mechanics/`.
