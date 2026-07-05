@@ -239,6 +239,13 @@ Step 2 — write batch events (add run_id="${batchRunId}" and ts=END_TS to each)
   Events: ${JSON.stringify(batchEvents)}
   Run: python3 tools/agent-monitoring/record_events.py --data '<JSON array with run_id and ts=END_TS added>'
 
+Step 2b — verify: after Step 2, run:
+  grep -c "\"run_id\":\"${batchRunId}\"" agent-monitoring/events.jsonl
+Confirm the count is >= ${batchEvents.length}. If it is lower, retry Step 2 once.
+If still short after retry, proceed to Step 3 anyway (per the "do NOT raise" rule below)
+but prefix the WARNING in Step 3's failure message with "EVENTS-MISSING: " so a future
+retro run can distinguish this from an ordinary write failure.
+
 Step 3 — write batch run record (replace <END_TS> with the value from Step 1):
   python3 tools/agent-monitoring/record_run.py --data '{"run_id":"${batchRunId}","start_ts":"${batchStartTsLiteral}","end_ts":"<END_TS>","workflow":"implement-epic","tier":"epic","final_status":"${batchStatus}","agent_count":${results.length}}'
 

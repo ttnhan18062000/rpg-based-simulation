@@ -189,3 +189,33 @@ for event in events:
     tools = tools_by_event[(run['run_id'], event['seq'])]
     print(f"  {event['phase']} ({event['agent']}): {len(tools)} tool calls")
 ```
+
+---
+
+## Known Limitations
+
+### Legacy schema generations without `end_ts`
+
+At least five historical monitoring-write generations coexist with the current schema in `runs.jsonl`:
+
+1. `started_at`/`finished_at`/`status`/`phases_completed`/`notes`
+2. `final_status` present but `end_ts` key absent
+3. `ts_start`/`ts_end`/`result`/`agent`
+4. `completed_at`/`status`
+5. `FOLDER-*`/`EPIC-*` batch wrappers using a bare `status` field
+
+`validate.py`'s incomplete-run check now recognizes all of these as valid completion signals (not just the current schema's `end_ts`), via the `LEGACY_COMPLETION_FIELDS` (`end_ts`, `finished_at`, `completed_at`, `ts_end`) and `LEGACY_TERMINAL_STATUS_VALUES` (the enumerated union of every terminal `final_status`/`status` value observed in the data — `DONE`, `done`, `complete`, `completed`, `success`, `EPIC_SCOPED`, `ALL_SCOPED`, `DOD_BLOCKED`, `NEEDS_HUMAN_INPUT`, `GATE_FAIL`, `STOPPED_BY_USER`) allowlists in `tools/agent-monitoring/validate.py`. The check also dedupes by `run_id` first — a `run_id`'s group of records is only flagged if none of its records satisfy the completion check.
+
+This was a deliberate decision: an exhaustive audit (not a sample) of the 2026-07-05 investigation (`TCK-20260705-MONITORING-RUNID-JOIN`) found **107/107** of the previously-residual "Incomplete run (CRASHED?)" warnings were genuinely completed work — 98/107 via direct `tickets/done/` file match, the other 9 via explicit terminal-status fields plus independently-DONE child tickets. Zero genuine crashes or abandoned work were found.
+
+**Final residual after the fix: exactly 1** — `TCK-20260623-TYPE-CHECKER`, a 6th legacy shape (`"outcome":"success"`, `"phase":"implement"`, no `end_ts`/`final_status`/`status` field at all) confirmed genuinely complete via a direct `tickets/done/TCK-20260623-TYPE-CHECKER.md` match. It is not added to the allowlist (a single-record shape is not worth a speculative code addition) — it is accepted as a permanently-documented, individually-verified exception.
+
+Do not "fix" any of this by backfilling `runs.jsonl` (Out of Scope, append-only precedent) — the fix lives entirely in `validate.py`'s read-side interpretation.
+
+### Manual/ad hoc run_id convention
+
+The `run-{code}-{unix_ts}` run_id convention and ad hoc `-REDESIGN`-style suffixes found in historical data are pre-refactor/manual-session artifacts (confirmed via `.claude/workflows/implement-ticket.js`'s single-capture `tid` pattern, which cannot produce either shape) — not reproducible by current `.claude/workflows/*.js` code. If hand-writing monitoring records outside the JS workflows (e.g. an `audit-maintenance`-style direct invocation), always reuse the exact ticket ID as `run_id` verbatim — never invent a suffix or a synthesized `run-{code}-{timestamp}` ID; doing so breaks the events/run-record join for that record permanently.
+
+### Full evidence
+
+Full classification evidence for the 2026-07-05 audit of 126 incomplete-run / 5 zero-event records (corrected: 16 true dedup-resolved, 107 true residual, 107/107 confirmed genuinely completed): `stored_artifacts/TCK-20260705-MONITORING-RUNID-JOIN/investigation.md`.

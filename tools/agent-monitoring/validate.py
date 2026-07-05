@@ -24,6 +24,28 @@ LOG_FILE = Path("tickets/working_log.csv")
 # Only validate working_log entries on or after this date (ISO prefix match)
 MONITORING_START = "2026-06-07"
 
+LEGACY_COMPLETION_FIELDS = ("end_ts", "finished_at", "completed_at", "ts_end")
+# The full union of distinct final_status AND status values actually observed in
+# agent-monitoring/runs.jsonl (12 total), minus "INPROGRESS" (the one genuinely
+# non-terminal value found) — enumerated by reading BOTH fields' value sets
+# independently and unioning them, not inferred, so a future value this list has
+# never seen is NOT silently treated as terminal.
+LEGACY_TERMINAL_STATUS_VALUES = {
+    "DONE", "done", "complete", "completed", "success",
+    "EPIC_SCOPED", "ALL_SCOPED",
+    "DOD_BLOCKED", "NEEDS_HUMAN_INPUT", "GATE_FAIL", "STOPPED_BY_USER",
+}
+
+
+def _record_is_complete(rec: dict) -> bool:
+    if any(rec.get(f) for f in LEGACY_COMPLETION_FIELDS):
+        return True
+    if rec.get("final_status") in LEGACY_TERMINAL_STATUS_VALUES:
+        return True
+    if rec.get("status") in LEGACY_TERMINAL_STATUS_VALUES:
+        return True
+    return False
+
 
 def load_jsonl(path):
     if not path.exists():
@@ -53,10 +75,18 @@ def main():
         if "run_id" in e:
             events_by_run[e["run_id"]].append(e)
 
-    # 1. Incomplete runs (start_ts but no end_ts)
-    for run in runs:
-        if not run.get("end_ts"):
-            warnings.append(f"Incomplete run (no end_ts — CRASHED?): {run.get('run_id', '?')}")
+    # 1. Incomplete runs (start_ts but no end_ts), deduped by run_id and aware of
+    # legacy completion-field variants (see LEGACY_COMPLETION_FIELDS/
+    # LEGACY_TERMINAL_STATUS_VALUES above). A run_id's group of records is only
+    # flagged if NONE of its records satisfy _record_is_complete() — aggregate
+    # then check, not a last-write-wins dict swap, since file ordering is not a
+    # documented guarantee.
+    runs_grouped_by_id = defaultdict(list)
+    for i, run in enumerate(runs):
+        runs_grouped_by_id[run.get("run_id", f"?:{i}")].append(run)
+    for run_id, group in runs_grouped_by_id.items():
+        if not any(_record_is_complete(r) for r in group):
+            warnings.append(f"Incomplete run (no end_ts — CRASHED?): {run_id}")
 
     # 2. Runs with no events
     for run_id in runs_by_id:
