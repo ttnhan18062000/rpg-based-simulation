@@ -489,3 +489,4 @@
 {"run_id":"FOLDER-tickets-todos-tag-taxonomy-followups","start_ts":"2026-07-05T04:54:22Z","end_ts":"2026-07-05T07:39:02Z","workflow":"implement-epic","tier":"epic","final_status":"DONE","agent_count":2}
 {"run_id":"TCK-20260705-TAG-DOCS-CROSSREF","start_ts":"2026-07-05T07:46:12Z","end_ts":"2026-07-05T07:48:47Z","workflow":"implement-ticket","tier":"hotfix","final_status":"DONE","agent_count":4}
 {"run_id":"TCK-20260705-AI-AGENT-OVERVIEW-DOC","start_ts":"2026-07-05T07:53:27Z","end_ts":"2026-07-05T08:23:28Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":9}
+{"run_id":"TCK-20260705-WORKFLOW-TAG-TUNING-INVESTIGATION","start_ts":"2026-07-05T08:26:17Z","end_ts":"2026-07-05T10:19:08Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":9}
