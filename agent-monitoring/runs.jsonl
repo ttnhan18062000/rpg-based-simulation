@@ -482,3 +482,4 @@
 {"run_id":"TCK-20260705-RETRO-METRIC-ACCURACY","start_ts":"2026-07-04T18:30:40Z","end_ts":"2026-07-05T01:16:01Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":9}
 {"run_id":"TCK-20260705-MONITORING-RUNID-JOIN","start_ts":"2026-07-05T01:16:21Z","end_ts":"2026-07-05T02:30:48Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":14}
 {"run_id":"FOLDER-tickets-todos-retro-findings","start_ts":"2026-07-04T18:24:11Z","end_ts":"2026-07-05T02:32:25Z","workflow":"implement-epic","tier":"epic","final_status":"DONE","agent_count":3}
+{"run_id":"TCK-20260705-RETRO-INDEX-ALL-ROW","start_ts":"2026-07-05T03:14:14Z","end_ts":"2026-07-05T03:34:29Z","workflow":"implement-ticket","tier":"hotfix","final_status":"DONE","agent_count":9}

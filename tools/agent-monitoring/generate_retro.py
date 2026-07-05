@@ -275,7 +275,9 @@ def _update_index():
 
     for f in retro_files:
         name = f.stem.replace("RETRO-", "")
-        week_runs = runs_by_week.get(name, [])
+        # "ALL" is never a real ISO week (RETRO-ALL.md is the all-time snapshot,
+        # not a dated weekly report) — the runs_by_week lookup would always miss.
+        week_runs = all_runs if name == "ALL" else runs_by_week.get(name, [])
         n = len(week_runs)
         done = sum(1 for r in week_runs if _resolve_status(r) == "DONE")
         fails = sum(1 for r in week_runs if _resolve_status(r) not in ("DONE", "EPIC_SCOPED", "IN_PROGRESS"))
