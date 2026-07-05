@@ -50,14 +50,33 @@ def fmt_pct(n, total):
     return f"{100 * n // total}%"
 
 
+def _resolve_status(r):
+    """Fallback-aware run status for runs.jsonl. Current schema writes
+    final_status; legacy (pre-normalization) records write only status.
+    Mirrors the precedented pattern in retro_nudge_hook.py:49 and
+    validate.py (post TCK-20260705-MONITORING-VALIDATE-SCHEMA-GAP).
+    Only bridges the field-presence gap — does NOT normalize legacy
+    status-string spellings (e.g. "success", "done", "complete") to
+    "DONE"; those remain distinct, literal values by design."""
+    return r.get("final_status") or r.get("status")
+
+
+def _is_legacy_event(e):
+    """events.jsonl legacy-schema discriminator: agent is None on
+    pre-normalization records (free-text `event` field, no `summary`).
+    Distinct from _resolve_status's runs.jsonl discriminator — different
+    field, different file. Do not merge these two predicates."""
+    return e.get("agent") is None
+
+
 def generate(runs, events, label, week_str=None):
     events_by_run = defaultdict(list)
     for e in events:
         events_by_run[e.get("run_id", "")].append(e)
 
     total = len(runs)
-    done_count = sum(1 for r in runs if r.get("final_status") == "DONE")
-    gate_fails = [r for r in runs if r.get("final_status") not in ("DONE", "EPIC_SCOPED", "IN_PROGRESS")]
+    done_count = sum(1 for r in runs if _resolve_status(r) == "DONE")
+    gate_fails = [r for r in runs if _resolve_status(r) not in ("DONE", "EPIC_SCOPED", "IN_PROGRESS")]
 
     durations = [r["duration_s"] for r in runs if r.get("duration_s")]
     avg_dur = int(sum(durations) / len(durations)) if durations else 0
@@ -67,14 +86,17 @@ def generate(runs, events, label, week_str=None):
     avg_agents = round(sum(agent_counts) / len(agent_counts), 1) if agent_counts else 0
 
     # Gate failure breakdown
-    gate_counter = Counter(r.get("final_status") for r in gate_fails)
+    gate_counter = Counter(_resolve_status(r) for r in gate_fails)
 
     # Tier distribution
     tier_counts = Counter(r.get("tier", "unknown") for r in runs)
     tier_done = defaultdict(int)
+    tier_scoped = defaultdict(int)
     for r in runs:
-        if r.get("final_status") == "DONE":
+        if _resolve_status(r) == "DONE":
             tier_done[r.get("tier", "unknown")] += 1
+        if _resolve_status(r) == "EPIC_SCOPED":
+            tier_scoped[r.get("tier", "unknown")] += 1
 
     # Agent status distribution
     agent_stats = defaultdict(lambda: Counter())
@@ -82,7 +104,10 @@ def generate(runs, events, label, week_str=None):
         agent_stats[e.get("agent", "?")][e.get("status", "?")] += 1
 
     # Summary quality
-    empty_summaries = sum(1 for e in events if not e.get("summary", "").strip())
+    legacy_events = [e for e in events if _is_legacy_event(e)]
+    current_events = [e for e in events if not _is_legacy_event(e)]
+    empty_summaries_current = sum(1 for e in current_events if not e.get("summary", "").strip())
+    legacy_event_count = len(legacy_events)
     long_summaries = sum(1 for e in events if len(e.get("summary", "")) > 200)
 
     # Slow runs (> 30 min = 1800s)
@@ -129,12 +154,14 @@ def generate(runs, events, label, week_str=None):
     # Tier distribution
     lines.append("## Tier Distribution")
     lines.append("")
-    lines.append("| Tier | Count | DONE count | DONE rate |")
-    lines.append("|---|---|---|---|")
+    lines.append("| Tier | Count | Scoped | DONE count | DONE rate |")
+    lines.append("|---|---|---|---|---|")
     for tier in sorted(tier_counts):
         n = tier_counts[tier]
+        scoped = tier_scoped[tier]
         d = tier_done[tier]
-        lines.append(f"| {tier} | {n} | {d} | {fmt_pct(d, n)} |")
+        denom = n - scoped
+        lines.append(f"| {tier} | {n} | {scoped} | {d} | {fmt_pct(d, denom)} |")
     lines.append("")
 
     # Agent status distribution
@@ -159,11 +186,12 @@ def generate(runs, events, label, week_str=None):
     lines.append("")
     lines.append("| Issue | Count |")
     lines.append("|---|---|")
-    lines.append(f"| Empty summary | {empty_summaries} |")
+    lines.append(f"| Empty summary (current schema) | {empty_summaries_current} |")
+    lines.append(f"| Legacy-format records (summary field not applicable) | {legacy_event_count} |")
     lines.append(f"| Truncated (>200 chars) | {long_summaries} |")
-    if empty_summaries > 0:
+    if empty_summaries_current > 0:
         lines.append("")
-        lines.append(f"_⚠ {empty_summaries} empty summaries — check agent prompts for `summary` field._")
+        lines.append(f"_⚠ {empty_summaries_current} empty summaries (current schema) — check agent prompts for `summary` field._")
     lines.append("")
 
     # Slow runs
@@ -249,8 +277,8 @@ def _update_index():
         name = f.stem.replace("RETRO-", "")
         week_runs = runs_by_week.get(name, [])
         n = len(week_runs)
-        done = sum(1 for r in week_runs if r.get("final_status") == "DONE")
-        fails = sum(1 for r in week_runs if r.get("final_status") not in ("DONE", "EPIC_SCOPED", "IN_PROGRESS"))
+        done = sum(1 for r in week_runs if _resolve_status(r) == "DONE")
+        fails = sum(1 for r in week_runs if _resolve_status(r) not in ("DONE", "EPIC_SCOPED", "IN_PROGRESS"))
         lines.append(f"| [{name}]({f.name}) | {n} | {done} | {fails} |")
 
     (RETRO_DIR / "index.md").write_text("\n".join(lines) + "\n")

@@ -58,9 +58,9 @@ The index at `agent-monitoring/retro/index.md` is updated automatically.
 |---|---|
 | **Run Summary** | DONE rate < 80%? Average duration > 20 min? |
 | **Gate Failure Breakdown** | Which gates block most runs? Repeated TESTS_FAILED or PARITY_FAIL suggests systemic issues. |
-| **Tier Distribution** | Are hotfix tickets actually taking a fast path? High hotfix gate-fail rate = wrong tier. |
+| **Tier Distribution** | Are hotfix tickets actually taking a fast path? High hotfix gate-fail rate = wrong tier. A tier's DONE rate is computed excluding EPIC_SCOPED runs (shown in a separate Scoped column) — EPIC_SCOPED is a correct terminal state for scope-only epics, not a failure, and inflating the denominator with it previously understated epic tier health (44% vs. the real 79%). |
 | **Agent Status Distribution** | High `failed` or `blocked` on specific agents → prompt problem. |
-| **Summary Quality** | Any empty summaries → fix agent prompt. Truncation frequent → responses too verbose. |
+| **Summary Quality** | Empty-summary count is scoped to current-schema events only (agent field set); pre-normalization legacy events (agent is null) never had a summary field and are reported separately as "Legacy-format records," not as a prompt-quality issue. Truncation count still covers all events (current + legacy). |
 | **Slow Runs** | > 30 min runs — usually Review or Implement phase. Consider splitting or simplifying scope. |
 
 ---
@@ -81,6 +81,10 @@ This checks:
 `validate.py` tolerates both the current schema (`final_status`) and the legacy `status` field
 when deciding whether a run needs a `working_log.csv` entry — a run using either field is checked,
 not just ones already on the current schema.
+
+`generate_retro.py` now applies the same `final_status`/`status` fallback for its DONE/gate-fail
+counts (Run Summary, Gate Failure Breakdown, Tier Distribution, and the retro index) — so a reader
+shouldn't assume only `validate.py` handles legacy records.
 
 ---
 
