@@ -186,6 +186,7 @@ Entity self-knowledge layer. Covers: self-assessment, capability estimation, kno
 
 Claude Code subagents, workflows, and skills for the development and simulation lifecycle.
 
+- [System Overview](ai/system_overview.md) — consolidated technical narrative of the full agent system
 - [AI README](ai/README.md) — overview
 - [Agents](ai/agents.md) — all subagents: roles, inputs, outputs
 - [Workflows](ai/workflows.md) — multi-agent orchestration phases and return values
