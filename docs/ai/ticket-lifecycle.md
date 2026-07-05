@@ -308,6 +308,10 @@ no P0 entry's `v2_evidence` depends on a changed file; if it does, the full agen
 its PASS/FAIL/NA + evidence output verbatim for those five conditions, then self-reports a
 `verified_by` field listing which conditions came from the script vs. pure judgment.
 
+`mechanics-auditor` is a separate, ad hoc agent (not part of this Verify phase or any pipeline phase)
+available for checking mechanics parity before/after a change; it now has its own self-invoked static
+pre-check, `tools/gate_checks/mechanics_auditor_static.py::verify_entry_test_path`.
+
 **13-condition table:**
 
 | # | Condition | Expected evidence |

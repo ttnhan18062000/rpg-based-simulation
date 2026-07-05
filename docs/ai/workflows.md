@@ -88,6 +88,8 @@ Workflow({ name: "workflow-name", args: { key: value } })
 | Verify | `done-checker` | Runs `tools/gate_checks/done_checker_static.py::run_static_precheck` first and cites its output for the 5 machine-checkable conditions (3, 4, 7, 10, 12); stops if any DoD condition fails |
 | Finalize | inline | Moves ticket, writes working_log.csv, migrates artifacts; then runs `run_finalize_selfcheck` via `bash()` to confirm the migration actually landed — returns `FINALIZE_INCOMPLETE` instead of `DONE` if a discrepancy is found |
 
+`mechanics-auditor` is not one of the phases above — it is an ad hoc agent (`Agent(subagent_type: "mechanics-auditor")`, no `implement-ticket.js` call site) that now has its own static pre-check (`tools/gate_checks/mechanics_auditor_static.py`), self-invoked rather than orchestrator-run; see `docs/ai/agents.md`'s `mechanics-auditor` section for detail.
+
 **Args:**
 
 | Arg | Type | Required | Description |

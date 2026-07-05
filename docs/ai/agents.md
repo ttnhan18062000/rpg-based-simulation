@@ -242,6 +242,23 @@ by the injected context vs. independent judgment in a `verified_by` field.
 - `MISSING` — law is documented but has no implementation
 - `UNDOCUMENTED` — implementation exists but has no corresponding law
 
+**Step 0 — static pre-check:** Before finalizing a `Status`/`Finding` for any entry, the agent runs
+`tools/gate_checks/mechanics_auditor_static.py`'s `verify_entry_test_path(entry_id)` (via
+`python3 -c "..."`) and cites its PASS/FAIL + evidence verbatim. This check only confirms whether the
+entry's cited `test_path` exists and passes — it never overrides the agent's own bit-identical
+code-vs-formula comparison. A static `FAIL` (commonly: no `test_path` at all — 82% of `verified`
+entries have none) does not downgrade a `PARITY` row to `DIVERGENT`/`MISSING`; it is appended as a
+caveat in `Finding` instead, since a missing test citation is a verification gap, not evidence of code
+divergence. Unlike `done-checker`/`parity-updater`'s Step 0 (orchestrator-run and independently
+verified), this Step 0 has no orchestrator-side enforcement — `mechanics-auditor` has no pipeline call
+site — so compliance depends entirely on the agent actually running the script and citing it honestly.
+The agent self-reports in `verified_by` whether each row's `Status` was corroborated by the static check
+or came from independent judgment alone.
+
+A convenience wrapper, `candidate_ledger_files_for_module`, reuses `parity-updater`'s
+`expected_subsystems_for_files` to locate candidate ledger files when auditing a whole chapter/module
+rather than a single named entry.
+
 **When to invoke directly:** Before modifying a simulation subsystem, or after a `parity-updater` run to verify the ledger is consistent with the actual implementation.
 
 ---

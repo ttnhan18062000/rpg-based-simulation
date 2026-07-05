@@ -115,6 +115,11 @@ LLM judgment — `done-checker` runs it first and cites its output. Finalize run
 `run_finalize_selfcheck` after its own migration steps, returning `FINALIZE_INCOMPLETE` instead of
 `DONE` if the migration didn't actually land.
 
+`mechanics-auditor` — an ad hoc agent with no phase in either pipeline above — now has an equivalent
+static pre-check (`tools/gate_checks/mechanics_auditor_static.py::verify_entry_test_path`), but unlike
+`done-checker`/`parity-updater`'s Step 0 it is agent-self-invoked, with no orchestrator-side
+enforcement.
+
 For the full worked example — a real ticket walked end to end, plus the manual-execution fallback
 without the workflow — see [`ticket-lifecycle.md`](ticket-lifecycle.md).
 

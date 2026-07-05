@@ -496,3 +496,4 @@
 {"run_id":"TCK-20260705-MONITORING-SCHEMA-GATE-SYNC","start_ts":"2026-07-05T12:21:09Z","end_ts":"2026-07-05T12:23:00Z","workflow":"implement-ticket","tier":"hotfix","final_status":"DONE","agent_count":4}
 {"run_id":"TCK-20260705-GATE-DET-DONE-CHECKER","start_ts":"2026-07-05T13:00:00Z","end_ts":"2026-07-05T14:30:00Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":10}
 {"run_id":"TCK-20260705-GATE-DET-PARITY-UPDATER","start_ts":"2026-07-05T13:35:00Z","end_ts":"2026-07-05T15:08:00Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":10}
+{"run_id":"TCK-20260705-GATE-DET-MECHANICS-AUDITOR","start_ts":"2026-07-05T15:00:00Z","end_ts":"2026-07-05T15:51:00Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":11}
