@@ -82,6 +82,7 @@ Workflow({ name: "workflow-name", args: { key: value } })
 | Plan | `planner` | Stops if unresolved questions in plan |
 | Review | `architecture-reviewer` | Stops if NEEDS_CHANGES or BLOCKED |
 | Implement | `implementer` | — |
+| Architecture-Verify | `architecture-reviewer` | Second, post-Implement call; runs `tools/gate_checks/architecture_reviewer_static.py::run_architecture_checks` before the agent call and injects its JSON output; narrowly scoped to judging flagged items, not re-reviewing the plan; stops if NEEDS_CHANGES or BLOCKED (same vocabulary as Review); skipped for hotfix |
 | Test | `test-scoper` | Stops if any test fails |
 | Parity | `parity-updater` | Skipped when `files_changed` has no `src/` path and `behavior_changed` is false; a P0 ledger safeguard forces the full run instead if any P0 entry's `v2_evidence` would go stale; when not skipped, runs `tools/gate_checks/parity_updater_static.py::expected_subsystems_for_files` before the agent call and `::cross_reference_touched` after it returns, surfacing any untouched-mapped-subsystem miss via the pushed event (non-blocking) |
 | Security-Review | `security-reviewer` | Fires when the ticket's tags include `security` (ground truth) or suggested_skills includes /security-review; stops if NEEDS_CHANGES or BLOCKED |
@@ -112,8 +113,8 @@ Workflow({ name: 'implement-ticket', args: { ticket_id: 'TCK-20260606-PHASE28-RU
 |---|---|---|
 | `CONFLICTS_DETECTED` | Duplicate or conflicting tickets found | Review conflicts, adjust scope, re-run |
 | `NEEDS_HUMAN_INPUT` | Plan has unresolved questions | Read `staging_artifacts/{id}/plan.md`, resolve, re-run with `ticket_id` |
-| `NEEDS_CHANGES` | Architecture review rejected plan | Fix `plan.md` violations, re-run with `ticket_id` |
-| `BLOCKED` | Architecture fundamental conflict | Revisit scope, re-run with `ticket_id` |
+| `NEEDS_CHANGES` | Architecture review rejected the plan (Review phase) or a post-Implement diff (Architecture-Verify phase) — same status string, distinguish by which phase logged it | Review: fix `plan.md` violations. Architecture-Verify: fix the flagged code. Re-run with `ticket_id` either way |
+| `BLOCKED` | Architecture fundamental conflict — plan (Review phase) or diff (Architecture-Verify phase) | Review: revisit scope. Architecture-Verify: fix the flagged code. Re-run with `ticket_id` either way |
 | `TESTS_FAILED` | One or more tests failing | Fix failing tests, re-run with `ticket_id` |
 | `SECURITY_BLOCKED` | Security review rejected the change | Fix violations, re-run with `ticket_id` |
 | `DOD_BLOCKED` | DoD conditions not met | Fix listed items, re-run with `ticket_id` |

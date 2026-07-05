@@ -73,9 +73,15 @@ directly from `.claude/workflows/create-tickets.js`'s `phase(...)` calls, not fr
 `docs/agent-monitoring/schema.md`'s `events.jsonl` phase list for `create-tickets` already lists these
 same 5 phases, independently confirming them.
 
-**The 9-phase `implement-ticket` pipeline** (standard tier): Scope (`ticket-scoper`) → Investigate
+**The 10-phase `implement-ticket` pipeline** (standard tier): Scope (`ticket-scoper`) → Investigate
 (`investigator`) → Plan (`planner`) → Review (`architecture-reviewer`, gate: `NEEDS_CHANGES`/`BLOCKED`)
-→ Implement (`implementer`) → Test (`test-scoper`, gate: `TESTS_FAILED`) →
+→ Implement (`implementer`) →
+**Architecture-Verify (`architecture-reviewer`, 2nd call, gate: `NEEDS_CHANGES`/`BLOCKED` — runs
+`tools/gate_checks/architecture_reviewer_static.py::run_architecture_checks` against
+`implementation.files_changed` before the agent call and injects its JSON output; narrowly scoped to
+judging flagged items against the real diff, not re-reviewing the whole plan again; skipped for
+hotfix, same as Review)** →
+Test (`test-scoper`, gate: `TESTS_FAILED`) →
 **Parity (`parity-updater`, conditional agent call: skipped when `files_changed` has no `src/` path and
 `behavior_changed` is false, unless a P0 ledger safeguard forces it to run; when the full call runs, the
 orchestrator runs `tools/gate_checks/parity_updater_static.py::expected_subsystems_for_files` before the
@@ -83,19 +89,25 @@ agent call and `::cross_reference_touched` after it returns, flagging any untouc
 in the pushed event — visibility only, no new blocking status)** →
 **Security-Review (`security-reviewer`, conditional: fires when the ticket's `tags` include `security`
 or `suggested_skills` includes `/security-review`; gate: `SECURITY_BLOCKED`)** → Verify (`done-checker`,
-gate: `DOD_BLOCKED`) → Finalize (inline, no agent). Security-Review is a 10th, conditional phase — it
-does not run for every ticket, so the pipeline is still described as 9 standing phases plus this one
-conditional gate. Parity itself remains one of those 9 standing phases (it always runs and is always
+gate: `DOD_BLOCKED`) → Finalize (inline, no agent). Security-Review is an 11th, conditional phase — it
+does not run for every ticket, so the pipeline is still described as 10 standing phases plus this one
+conditional gate. Parity itself remains one of those 10 standing phases (it always runs and is always
 announced/logged) — only its `agent(...)` call within the phase is conditional, which does not change
 the phase count. This matches `docs/ai/workflows.md` and `docs/ai/ticket-lifecycle.md`, both of which
 match `.claude/workflows/implement-ticket.js` exactly.
+
+**Self-reference note:** the ticket that introduced Architecture-Verify
+(TCK-20260705-GATE-DET-ARCHITECTURE-REVIEWER) does not exercise the new phase against itself — the
+workflow script executing that ticket's own run was already loaded before its own edits landed, so
+its own run history shows no second `architecture-reviewer` call. This is expected, not a defect;
+the first ticket to actually trigger it is a later one.
 
 Tier routing, matching this repository's own `CLAUDE.md` "Tier Routing" table:
 
 | Tier | Phases run | Use when |
 |---|---|---|
 | `hotfix` | Scope → Implement → Test → Parity → Verify → Finalize | Bug fix or minimal targeted change with self-evident intent |
-| `standard` | Full 9-phase pipeline | Any new feature, refactor, or substantive repair |
+| `standard` | Full 10-phase pipeline | Any new feature, refactor, or substantive repair |
 | `epic` | Scope only — tracks child tickets | Large multi-ticket initiative; no direct implementation |
 
 **`implement-epic` has 3 phases**: Discover → Implement → Report, matching `docs/ai/workflows.md` and

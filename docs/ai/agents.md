@@ -88,6 +88,21 @@ These agents handle the pre-implementation and post-implementation phases of a d
 
 **Role:** Validates a plan against architecture rules before any code is written.
 
+**Step 0 — static pre-check (post-Implement only):** The original pre-Implement call (below) has
+no code to parse — `plan.md` is prose, not Python source. A **second, post-Implement** call to this
+same agent, in the `Architecture-Verify` phase, runs
+`tools/gate_checks/architecture_reviewer_static.py::run_architecture_checks(files_changed)` (via
+`bash()`, before the agent call) and injects its `condition`/`status`/`evidence` JSON output into
+the prompt. Three checks: `check_durable_state_mutation` (AST scan for `object.__setattr__`
+bypasses outside a field-name allowlist, nested mutable-container mutation by field-name heuristic,
+and direct nested attribute assignment), `check_api_boundary_exposure` (AST scan of `src/api/`
+top-level route functions for a raw-domain-model return annotation), and
+`check_reason_metadata_smuggling` (regex scan for a delimiter-packed `reason`/`metadata` value later
+unpacked via a matching `.split(...)` in the same file — this one has zero confirmed historical
+incidents in this repo; disclosed as speculative/rule-derived, not evidence-derived). In this second
+call, the agent judges only the flagged item(s) against the real diff — not the whole plan again —
+and self-reports provenance in a `verified_by` field.
+
 **What it checks:**
 - Durable state rule (no direct mutation, no meaning in `reason`/`metadata` strings)
 - API boundary (no raw domain models, shaped read models only)
@@ -97,11 +112,16 @@ These agents handle the pre-implementation and post-implementation phases of a d
 - Engine contract compliance (`docs/engine/authoritative_pipeline.md` for pipeline changes)
 - Parity ledger impact — flags P0 entries that will be affected
 
-**Inputs:** `staging_artifacts/{ticket_id}/plan.md` + ticket.
+**Inputs:** `staging_artifacts/{ticket_id}/plan.md` + ticket (pre-Implement call); `files_changed` +
+static-check JSON (post-Implement `Architecture-Verify` call).
 
-**Outputs:** `APPROVED` / `NEEDS_CHANGES` / `BLOCKED` verdict with violation list and parity entries affected.
+**Outputs:** `APPROVED` / `NEEDS_CHANGES` / `BLOCKED` verdict with violation list and parity entries
+affected (pre-Implement call); same vocabulary plus a `verified_by` field (post-Implement
+`Architecture-Verify` call).
 
-**Gate behavior:** The `implement-ticket` workflow halts on `NEEDS_CHANGES` or `BLOCKED` and returns the violations. Fix the plan, then re-run with `ticket_id`.
+**Gate behavior:** The `implement-ticket` workflow halts on `NEEDS_CHANGES` or `BLOCKED` from either
+call. Pre-Implement: fix the plan, then re-run with `ticket_id`. Post-Implement
+(`Architecture-Verify`): fix the flagged code, then re-run with `ticket_id`.
 
 ---
 

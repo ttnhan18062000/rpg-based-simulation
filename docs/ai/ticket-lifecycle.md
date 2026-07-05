@@ -20,7 +20,7 @@ The workflow short-circuits based on the ticket's `## Tier` field:
 | Tier | Phases run | Use when |
 |---|---|---|
 | `hotfix` | Scope → Implement → Test → Parity → Verify → Finalize | Targeted fix with self-evident intent — no investigation needed |
-| `standard` | Full 9-phase pipeline (default) | Any substantive feature, repair, or refactor |
+| `standard` | Full 10-phase pipeline (default) | Any substantive feature, repair, or refactor |
 | `epic` | Scope only | Large initiative; tracks child tickets, no direct implementation |
 
 The tier can be set in the ticket file (`## Tier`) or passed as `args.tier` to override.
@@ -56,6 +56,14 @@ Request
   ▼
 [Implement]      implementer       → code changes
                                      ticket Implementation Notes updated
+  │
+  ▼  (skipped for hotfix, same as Review)
+[Architecture-Verify]  architecture-reviewer (2nd call)  → APPROVED / NEEDS_CHANGES / BLOCKED
+                 runs tools/gate_checks/architecture_reviewer_static.py::run_architecture_checks
+                 against files_changed first, injects its JSON output; judges only the flagged
+                 items against the real diff, does not re-review the whole plan
+  │
+  ├─ NEEDS_CHANGES / BLOCKED → human fixes the flagged code, re-run with ticket_id
   │
   ▼
 [Test]           test-scoper       → scoped pytest run
@@ -238,6 +246,44 @@ Step 5 — Legacy regression
   "implementation_summary": "Added RelationProjectionWrapper..."
 }
 ```
+
+---
+
+### Architecture Verify
+
+**Agent:** `architecture-reviewer` (second call — same agent identity as the pre-Implement Review
+phase, invoked again post-Implement).
+
+**Why a second call exists:** the original Review phase (above) runs before Implement, so it has no
+code to parse — `plan.md` is prose, not Python source. Architecture-Verify closes that gap by
+re-invoking `architecture-reviewer` after the real diff exists.
+
+**Step 0 — static pre-check:** before the agent call, the orchestrator runs
+`tools/gate_checks/architecture_reviewer_static.py::run_architecture_checks(implementation.files_changed)`
+via `bash()` and injects its `condition`/`status`/`evidence` JSON output into the prompt. Three
+checks: a durable-state-mutation AST scan (`object.__setattr__` bypass outside a field-name
+allowlist, nested mutable-container mutation by field-name heuristic, direct nested attribute
+assignment), a raw-domain-object API-boundary AST scan of `src/api/` route return annotations, and a
+reason/metadata-smuggling regex scan (disclosed as having zero confirmed historical incidents in
+this repo — rule-derived, not evidence-derived).
+
+**What the agent does:** judges only the flagged item(s) (if any) against the real changed files —
+does **not** re-review the whole plan, and does not re-litigate strategic/tactical boundary
+soundness or abstraction-premature-ness (already judged `APPROVED` in the pre-Implement Review
+phase). Self-reports which findings came from the static script vs. independent judgment in a
+`verified_by` field.
+
+**Gate:** Returns `NEEDS_CHANGES` or `BLOCKED` (same vocabulary as Review) with a violation list —
+the workflow returns that status and does not proceed to Test. The user fixes the flagged code and
+re-runs with `ticket_id`.
+
+**Skipped for hotfix**, same as the pre-Implement Review phase and the hotfix Tier Routing pipeline.
+
+**Self-reference note:** the ticket that introduced this phase
+(TCK-20260705-GATE-DET-ARCHITECTURE-REVIEWER) does not exercise it against itself — the workflow
+script executing that ticket's own run was already loaded before its own edits landed, so that
+ticket's own run proceeds straight from Implement to Test, same as every prior ticket. This is
+expected, not a defect.
 
 ---
 

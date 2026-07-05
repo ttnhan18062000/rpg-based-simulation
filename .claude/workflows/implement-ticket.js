@@ -1,12 +1,13 @@
 export const meta = {
   name: 'implement-ticket',
-  description: 'Full ticket lifecycle: scope → investigate → plan → architecture review → implement → test → parity → done-check → finalize',
+  description: 'Full ticket lifecycle: scope → investigate → plan → architecture review → implement → architecture verify → test → parity → done-check → finalize',
   phases: [
     { title: 'Scope', detail: 'Create or load ticket, create staging directory' },
     { title: 'Investigate', detail: 'Investigate codebase, produce investigation.md and test_plan.md (skipped for hotfix)' },
     { title: 'Plan', detail: 'Produce plan.md from investigation findings (skipped for hotfix)' },
     { title: 'Review', detail: 'Architecture review of plan — gate before implementation (skipped for hotfix)' },
     { title: 'Implement', detail: 'Write code following the approved plan' },
+    { title: 'Architecture-Verify', detail: "Post-Implement deterministic backstop for architecture-reviewer's durable-state/API-boundary/reason-metadata rules — re-invokes architecture-reviewer against the actual diff (skipped for hotfix)" },
     { title: 'Test', detail: 'Scope and run tests for changed files' },
     { title: 'Parity', detail: 'Update parity ledger entries for behavior changes — skips the parity-updater agent call when files_changed has no src/ path and behavior_changed is false (a P0 ledger safeguard can force it to run anyway)' },
     { title: 'Security-Review', detail: "Security gate for security-tagged tickets — fires when the ticket's tags include 'security' (ground truth) or suggested_skills includes '/security-review' (skipped otherwise)" },
@@ -473,6 +474,89 @@ Return: files_changed (list of paths), behavior_changed (boolean), parity_subsys
 )
 
 pushEvent('Implement', 'implementer', 'ok', implementation.summary || implementation.implementation_summary || 'Implementation complete', implementation.ts)
+
+// ─── Phase 5b: Architecture-Verify (post-Implement static backstop) ───────────
+// The original pre-Implement Review phase (above) has no code to parse — plan.md is prose, not
+// Python source. This second, post-Implement architecture-reviewer call runs the deterministic
+// static checks (tools/gate_checks/architecture_reviewer_static.py) against the real diff and asks
+// the agent to judge only the flagged items, not re-review the whole plan. Skipped for hotfix,
+// matching the existing Review-phase skip and the Tier Routing table's hotfix pipeline.
+
+if (tier !== 'hotfix') {
+  phase('Architecture-Verify')
+
+  const filesChangedArgs = implementation.files_changed.map(f => `"${f}"`).join(' ')
+  const archCheckOutput = await bash(
+    `python3 -c "
+import sys, json
+sys.path.insert(0, 'tools')
+from gate_checks.architecture_reviewer_static import run_architecture_checks
+print('ARCH_CHECK_JSON:' + json.dumps(run_architecture_checks(sys.argv[1:])))
+" ${filesChangedArgs}`
+  )
+
+  let archCheckResults = null
+  const archMarkerIndex = archCheckOutput.indexOf('ARCH_CHECK_JSON:')
+  if (archMarkerIndex !== -1) {
+    try { archCheckResults = JSON.parse(archCheckOutput.slice(archMarkerIndex + 'ARCH_CHECK_JSON:'.length).trim()) }
+    catch (e) { archCheckResults = null }
+  }
+
+  const ARCH_VERIFY_SCHEMA = {
+    type: 'object',
+    required: ['verdict', 'violations', 'summary'],
+    properties: {
+      verdict: { type: 'string', enum: ['APPROVED', 'NEEDS_CHANGES', 'BLOCKED'] },
+      violations: { type: 'array', items: { type: 'string' } },
+      summary: { type: 'string', description: 'One sentence: verdict + key reason (≤200 chars)' },
+      ts: { type: 'string', description: 'ISO timestamp from `date -u +%Y-%m-%dT%H:%M:%SZ` at start of this phase' },
+      verified_by: { type: 'array', items: { type: 'string' }, description: 'Agent self-report of which findings came from tools/gate_checks/architecture_reviewer_static.py vs. independent judgment, e.g. ["static:architecture_reviewer_static", "llm"].' },
+    },
+  }
+
+  const archVerify = await agent(
+    `Post-implementation architecture verification for ticket ${tid}.
+
+Step 0: run \`date -u +%Y-%m-%dT%H:%M:%SZ\` and include result as the \`ts\` field.
+
+Step 0b: run \`python3 -c "import json; open('.claude/current_run','w').write(json.dumps({'run_id':'${tid}','seq':${events.length + 1}}))" 2>/dev/null || true\` — register this agent call for tool tracking.
+
+Files changed: ${implementation.files_changed.join(', ')}
+
+Deterministic static-check results (tools/gate_checks/architecture_reviewer_static.py::run_architecture_checks, already run against the files above):
+${archCheckResults !== null ? JSON.stringify(archCheckResults) : 'UNPARSEABLE — treat as inconclusive, do not silently pass'}
+
+This is a narrow verification, not a full re-review. The plan was already judged APPROVED in the pre-Implement Review phase — do not re-litigate strategic/tactical boundary soundness or abstraction-premature-ness here. Your job:
+1. For each FAIL item above, read the actual file/line cited and decide: real violation, or false positive (state which, and why).
+2. For each SKIP item, note it as unchecked (not clean) — do not treat a SKIP as a passing result.
+3. Address any confirmed real violation by describing what must change, or explain why it's a false positive.
+
+Return: APPROVED (no confirmed real violations) / NEEDS_CHANGES (fixable violations confirmed) / BLOCKED (fundamental conflict),
+violations (empty if APPROVED), summary (one sentence: verdict + key reason, ≤200 chars), ts,
+verified_by (list which findings came from the static script vs. independent judgment, e.g. ["static:architecture_reviewer_static", "llm"]).`,
+    { label: 'architecture-verify', schema: ARCH_VERIFY_SCHEMA, agentType: 'architecture-reviewer' }
+  )
+
+  if (archVerify.verdict !== 'APPROVED') {
+    log(`Architecture-Verify: ${archVerify.verdict}`)
+    if (archVerify.violations.length > 0) {
+      log(`Violations: ${archVerify.violations.join(' | ')}`)
+    }
+    pushEvent('Architecture-Verify', 'architecture-reviewer', 'failed', archVerify.summary || 'Architecture-Verify: ' + archVerify.verdict, archVerify.ts)
+    await writeMonitoring(archVerify.verdict)
+    return {
+      status: archVerify.verdict,
+      ticket_id: tid,
+      violations: archVerify.violations,
+      message: 'Fix the flagged code in the files changed for ' + tid + ', then re-run with ticket_id="' + tid + '".',
+    }
+  }
+
+  pushEvent('Architecture-Verify', 'architecture-reviewer', 'ok', archVerify.summary || 'Architecture-Verify: APPROVED', archVerify.ts)
+  log('Architecture-Verify: APPROVED')
+} else {
+  pushEvent('Architecture-Verify', 'architecture-reviewer', 'skipped', 'Hotfix tier — architecture verify skipped')
+}
 
 // ─── Phase 6: Test ────────────────────────────────────────────────────────────
 
