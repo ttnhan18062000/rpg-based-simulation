@@ -491,3 +491,5 @@
 {"run_id":"TCK-20260705-AI-AGENT-OVERVIEW-DOC","start_ts":"2026-07-05T07:53:27Z","end_ts":"2026-07-05T08:23:28Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":9}
 {"run_id":"TCK-20260705-WORKFLOW-TAG-TUNING-INVESTIGATION","start_ts":"2026-07-05T08:26:17Z","end_ts":"2026-07-05T10:19:08Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":9}
 {"run_id":"TCK-20260705-WORKFLOW-SECURITY-GATE","start_ts":"2026-07-05T10:29:51Z","end_ts":"2026-07-05T11:03:32Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":12}
+{"run_id":"TCK-20260705-WORKFLOW-PARITY-SKIP","start_ts":"2026-07-05T11:03:53Z","end_ts":"2026-07-05T12:18:31Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":10}
+{"run_id":"FOLDER-tickets-todos-workflow-tuning-followups","start_ts":"2026-07-05T10:29:51Z","end_ts":"2026-07-05T12:18:31Z","workflow":"implement-epic","tier":"epic","final_status":"DONE","agent_count":2}
