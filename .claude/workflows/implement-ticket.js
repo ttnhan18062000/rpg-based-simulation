@@ -8,7 +8,7 @@ export const meta = {
     { title: 'Review', detail: 'Architecture review of plan — gate before implementation (skipped for hotfix)' },
     { title: 'Implement', detail: 'Write code following the approved plan' },
     { title: 'Test', detail: 'Scope and run tests for changed files' },
-    { title: 'Parity', detail: 'Update parity ledger entries for behavior changes' },
+    { title: 'Parity', detail: 'Update parity ledger entries for behavior changes — skips the parity-updater agent call when files_changed has no src/ path and behavior_changed is false (a P0 ledger safeguard can force it to run anyway)' },
     { title: 'Security-Review', detail: "Security gate for security-tagged tickets — fires when the ticket's tags include 'security' (ground truth) or suggested_skills includes '/security-review' (skipped otherwise)" },
     { title: 'Verify', detail: 'Run Definition-of-Done checklist' },
     { title: 'Finalize', detail: 'Move ticket, append working_log, migrate artifacts, clean up' },
@@ -539,8 +539,44 @@ if (testResult.coverage_gaps.length > 0) {
 
 phase('Parity')
 
-const parity = await agent(
-  `Update parity ledger for ticket ${tid}.
+// Skip-eligible only when BOTH post-Implement signals agree: no src/ file touched AND no reported
+// behavior change. Reads implementation.* (post-Implement, authoritative) — never ticketInfo/Scope-time
+// fields, so mid-run scope drift (a ticket that turns out to touch src/ once Implement runs) always
+// forces the full call, never the skip.
+const parityNoSrcChange = implementation.files_changed.every(f => !f.startsWith('src/'))
+const paritySkipEligible = parityNoSrcChange && !implementation.behavior_changed
+
+let parityForceFullRun = false
+if (paritySkipEligible) {
+  // Lazy P0 safeguard — only runs in this rare skip-eligible branch, zero cost on the common
+  // (non-skip) path. The orchestrating session runs this Bash command directly itself — do NOT
+  // spawn a new agent() for it (a sub-agent call here would defeat the point of the optimization).
+  // Each changed path is passed as its own shell argument (never embedded as a JSON blob inside the
+  // quoted -c script) — embedding `${JSON.stringify(implementation.files_changed)}` directly inside
+  // the double-quoted `python3 -c "..."` string causes the shell to strip the JSON array's own
+  // double quotes (since they're unescaped and nested inside the same quote style), corrupting the
+  // script into a Python NameError and causing this check to silently fail open. Passing paths as
+  // trailing argv elements (each independently shell-quoted) avoids that collision entirely.
+  const filesChangedArgs = implementation.files_changed.map(f => `"${f}"`).join(' ')
+  const p0ScanOutput = await bash(
+    `python3 -c "
+import sys
+sys.path.insert(0, 'tools')
+from parity_ledger_scan import find_p0_intersection
+hits = find_p0_intersection(sys.argv[1:])
+print('P0_INTERSECTION_FOUND' if hits else 'P0_NO_INTERSECTION')
+if hits: print(hits)
+" ${filesChangedArgs}`
+  )
+  parityForceFullRun = p0ScanOutput.includes('P0_INTERSECTION_FOUND')
+}
+
+if (paritySkipEligible && !parityForceFullRun) {
+  log('Parity: no src/ changes and no reported behavior change — skipping parity-updater agent call.')
+  pushEvent('Parity', 'parity-updater', 'skipped', 'No src/ changes and behavior_changed=false — parity ledger unaffected')
+} else {
+  const parity = await agent(
+    `Update parity ledger for ticket ${tid}.
 
 Step 0: run \`date -u +%Y-%m-%dT%H:%M:%SZ\`. Your response MUST begin with this exact line (nothing before it):
 PHASE_TS: <result>
@@ -563,12 +599,13 @@ Rules:
   : `No observable behavior change reported. Verify this is accurate by checking whether any referenced parity entries need test_path updates (e.g., tests were renamed or moved). Report what you checked.`}
 
 Then report: entries updated (by ID and what changed), any P0 entries missing a test_path.`,
-  { label: 'parity-update', agentType: 'parity-updater' }
-)
+    { label: 'parity-update', agentType: 'parity-updater' }
+  )
 
-const parityTs = parity.toString().match(/^PHASE_TS: (\S+)/m)?.[1] || null
-const parityText = parity.toString().replace(/^PHASE_TS: \S+\n?/, '').trim()
-pushEvent('Parity', 'parity-updater', 'ok', parityText.slice(0, 200), parityTs)
+  const parityTs = parity.toString().match(/^PHASE_TS: (\S+)/m)?.[1] || null
+  const parityText = parity.toString().replace(/^PHASE_TS: \S+\n?/, '').trim()
+  pushEvent('Parity', 'parity-updater', 'ok', parityText.slice(0, 200), parityTs)
+}
 
 // ─── Phase 7b: Security-Review (conditional gate) ─────────────────────────────
 // Trigger reads ticketInfo.tags (raw, required ground truth) directly rather than relying solely

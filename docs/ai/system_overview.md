@@ -75,12 +75,16 @@ same 5 phases, independently confirming them.
 
 **The 9-phase `implement-ticket` pipeline** (standard tier): Scope (`ticket-scoper`) → Investigate
 (`investigator`) → Plan (`planner`) → Review (`architecture-reviewer`, gate: `NEEDS_CHANGES`/`BLOCKED`)
-→ Implement (`implementer`) → Test (`test-scoper`, gate: `TESTS_FAILED`) → Parity (`parity-updater`) →
+→ Implement (`implementer`) → Test (`test-scoper`, gate: `TESTS_FAILED`) →
+**Parity (`parity-updater`, conditional agent call: skipped when `files_changed` has no `src/` path and
+`behavior_changed` is false, unless a P0 ledger safeguard forces it to run)** →
 **Security-Review (`security-reviewer`, conditional: fires when the ticket's `tags` include `security`
 or `suggested_skills` includes `/security-review`; gate: `SECURITY_BLOCKED`)** → Verify (`done-checker`,
 gate: `DOD_BLOCKED`) → Finalize (inline, no agent). Security-Review is a 10th, conditional phase — it
 does not run for every ticket, so the pipeline is still described as 9 standing phases plus this one
-conditional gate. This matches `docs/ai/workflows.md` and `docs/ai/ticket-lifecycle.md`, both of which
+conditional gate. Parity itself remains one of those 9 standing phases (it always runs and is always
+announced/logged) — only its `agent(...)` call within the phase is conditional, which does not change
+the phase count. This matches `docs/ai/workflows.md` and `docs/ai/ticket-lifecycle.md`, both of which
 match `.claude/workflows/implement-ticket.js` exactly.
 
 Tier routing, matching this repository's own `CLAUDE.md` "Tier Routing" table:

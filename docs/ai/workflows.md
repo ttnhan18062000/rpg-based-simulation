@@ -83,7 +83,7 @@ Workflow({ name: "workflow-name", args: { key: value } })
 | Review | `architecture-reviewer` | Stops if NEEDS_CHANGES or BLOCKED |
 | Implement | `implementer` | — |
 | Test | `test-scoper` | Stops if any test fails |
-| Parity | `parity-updater` | — |
+| Parity | `parity-updater` | Skipped when `files_changed` has no `src/` path and `behavior_changed` is false; a P0 ledger safeguard forces the full run instead if any P0 entry's `v2_evidence` would go stale |
 | Security-Review | `security-reviewer` | Fires when the ticket's tags include `security` (ground truth) or suggested_skills includes /security-review; stops if NEEDS_CHANGES or BLOCKED |
 | Verify | `done-checker` | Stops if any DoD condition fails |
 | Finalize | inline | Moves ticket, writes working_log.csv, migrates artifacts |

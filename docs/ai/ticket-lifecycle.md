@@ -62,7 +62,8 @@ Request
   │
   ├─ TESTS_FAILED → human fixes tests, re-run with ticket_id
   │
-  ▼
+  ▼  (agent call skipped if files_changed has no src/ path and behavior_changed is false — a P0 ledger
+      safeguard forces the full run instead if any P0 entry's v2_evidence would go stale)
 [Parity]         parity-updater    → docs/parity_ledger/*.yaml updated
   │
   ▼  (only if the ticket's tags include `security`, or suggested_skills includes /security-review)
@@ -268,6 +269,10 @@ The agent executes this via Bash and reports results.
 - Finds the entry covering target classification (or adds a new one)
 - Sets `status: verified`, `v2_evidence: "src/content_semantics/relation.py::RelationProjectionWrapper"`, `test_path: "tests/unit/content_semantics/test_relation_wrapper.py::test_combat_target_uses_relation_projection_for_clean_data"`
 - If the legacy fallback is an intentional divergence from the Mechanics Bible: sets `status: divergent`, adds to `docs/guidelines/intentional_divergences.md`
+
+**Skipped when:** `files_changed` has no `src/` path and `behavior_changed` is false — the
+`parity-updater` agent call is replaced with a `skipped` event. A P0 ledger safeguard checks first that
+no P0 entry's `v2_evidence` depends on a changed file; if it does, the full agent call runs anyway.
 
 ---
 
