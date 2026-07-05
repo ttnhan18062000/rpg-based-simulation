@@ -677,6 +677,7 @@ const DONE_SCHEMA = {
     failing_items: { type: 'array', items: { type: 'string' } },
     summary: { type: 'string', description: 'One sentence: verdict + item count (≤200 chars)' },
     ts: { type: 'string', description: 'ISO timestamp from `date -u +%Y-%m-%dT%H:%M:%SZ` at start of this phase' },
+    verified_by: { type: 'array', items: { type: 'string' }, description: 'Agent self-report of which conditions came from the tools/gate_checks/done_checker_static.py static script vs. pure LLM judgment, e.g. ["static:done_checker_static", "llm"].' },
     checklist: {
       type: 'array',
       items: {
@@ -713,14 +714,18 @@ Tier-specific N/A rules:
 - If tier is 'hotfix': mark Condition 4 (staging artifacts) as N/A — no investigation.md / plan.md / test_plan.md required.
 - If tier is 'standard': all conditions apply.
 
+Before checking conditions 3, 4, 7, 10, 12 by hand, run the static pre-check script and cite its JSON
+output verbatim for those five conditions instead of re-deriving them:
+  python3 -c "import sys; sys.path.insert(0,'.'); from tools.gate_checks.done_checker_static import run_static_precheck; import json; print(json.dumps(run_static_precheck('${tid}', '${tier}', '${startTs}')))"
+
 Check all DoD conditions with evidence. For these, mark as noted:
 - Condition 7 (working_log.csv entry): NOT yet written — workflow writes it after READY_TO_CLOSE.
 - Condition 3 (ticket in done/): NOT yet moved — workflow moves it after READY_TO_CLOSE.
-- Condition 12 (agent monitoring): NOT yet written — workflow writes it after READY_TO_CLOSE.
+- Condition 13 (agent monitoring): NOT yet written — workflow writes it after READY_TO_CLOSE.
 Mark those three as PASS with note "will be completed by workflow" — they are guaranteed by the workflow.
 
 For all others, read the actual files to verify.
-Return: verdict, failing_items, checklist, summary (one sentence: READY_TO_CLOSE or BLOCKED + count, ≤200 chars), ts.`,
+Return: verdict, failing_items, checklist, summary (one sentence: READY_TO_CLOSE or BLOCKED + count, ≤200 chars), ts, verified_by (list which conditions came from the static script vs. pure judgment, e.g. ["static:done_checker_static", "llm"]).`,
   { label: 'done-check', schema: DONE_SCHEMA, agentType: 'done-checker' }
 )
 
@@ -790,6 +795,57 @@ ${ticketInfo.todos_source_path ? `
 Report each step: DONE / SKIPPED (reason).`,
   { label: 'finalize' }
 )
+
+// Post-Finalize migration self-check — confirms the agent's own migration work above actually
+// landed, rather than trusting its prose report. Mirrors the Parity-phase p0ScanOutput bash()
+// precedent (lines ~561-571): one Python one-liner, args as individually quoted argv elements.
+const finalizeCheckOutput = await bash(
+  `python3 -c "
+import sys, json
+sys.path.insert(0, 'tools')
+from gate_checks.done_checker_static import run_finalize_selfcheck
+results = run_finalize_selfcheck(sys.argv[1], sys.argv[2])
+print('FINALIZE_CHECK_JSON:' + json.dumps(results))
+" "${tid}" "${tier}"`
+)
+
+// No established contract in this repo that bash() output is safe for a bare JSON.parse() — the
+// only existing precedent (p0ScanOutput) only ever does a substring .includes() check. Guard
+// against an unparseable/missing marker explicitly so a malformed script output can never regress
+// to today's silent "always DONE" bug, and can never crash Finalize with an uncaught exception.
+let finalizeResults = null
+const markerIndex = finalizeCheckOutput.indexOf('FINALIZE_CHECK_JSON:')
+if (markerIndex !== -1) {
+  const jsonPayload = finalizeCheckOutput.slice(markerIndex + 'FINALIZE_CHECK_JSON:'.length).trim()
+  try {
+    finalizeResults = JSON.parse(jsonPayload)
+  } catch (e) {
+    finalizeResults = null
+  }
+}
+
+if (finalizeResults === null) {
+  pushEvent('Finalize', 'finalizer', 'failed', 'Finalize self-check output could not be parsed — treating as incomplete')
+  await writeMonitoring('FINALIZE_INCOMPLETE')
+  return {
+    status: 'FINALIZE_INCOMPLETE',
+    ticket_id: tid,
+    failing_items: ['finalize_selfcheck_unparseable'],
+    message: 'Finalize self-check output could not be parsed — treating as incomplete. Raw output: ' + finalizeCheckOutput,
+  }
+}
+
+const finalizeFailures = finalizeResults.filter(r => r.status === 'FAIL')
+if (finalizeFailures.length > 0) {
+  pushEvent('Finalize', 'finalizer', 'failed', finalizeFailures.map(f => f.condition + ': ' + f.evidence).join(' | ').slice(0, 200))
+  await writeMonitoring('FINALIZE_INCOMPLETE')
+  return {
+    status: 'FINALIZE_INCOMPLETE',
+    ticket_id: tid,
+    failing_items: finalizeFailures.map(f => f.condition + ': ' + f.evidence),
+    message: 'Finalize completed its steps but the post-migration self-check found a discrepancy — see failing_items.',
+  }
+}
 
 pushEvent('Finalize', 'finalizer', 'ok', 'Ticket ' + tid + ' finalized and moved to done')
 await writeMonitoring('DONE')

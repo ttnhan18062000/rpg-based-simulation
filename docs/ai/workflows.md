@@ -85,8 +85,8 @@ Workflow({ name: "workflow-name", args: { key: value } })
 | Test | `test-scoper` | Stops if any test fails |
 | Parity | `parity-updater` | Skipped when `files_changed` has no `src/` path and `behavior_changed` is false; a P0 ledger safeguard forces the full run instead if any P0 entry's `v2_evidence` would go stale |
 | Security-Review | `security-reviewer` | Fires when the ticket's tags include `security` (ground truth) or suggested_skills includes /security-review; stops if NEEDS_CHANGES or BLOCKED |
-| Verify | `done-checker` | Stops if any DoD condition fails |
-| Finalize | inline | Moves ticket, writes working_log.csv, migrates artifacts |
+| Verify | `done-checker` | Runs `tools/gate_checks/done_checker_static.py::run_static_precheck` first and cites its output for the 5 machine-checkable conditions (3, 4, 7, 10, 12); stops if any DoD condition fails |
+| Finalize | inline | Moves ticket, writes working_log.csv, migrates artifacts; then runs `run_finalize_selfcheck` via `bash()` to confirm the migration actually landed — returns `FINALIZE_INCOMPLETE` instead of `DONE` if a discrepancy is found |
 
 **Args:**
 
@@ -115,6 +115,7 @@ Workflow({ name: 'implement-ticket', args: { ticket_id: 'TCK-20260606-PHASE28-RU
 | `TESTS_FAILED` | One or more tests failing | Fix failing tests, re-run with `ticket_id` |
 | `SECURITY_BLOCKED` | Security review rejected the change | Fix violations, re-run with `ticket_id` |
 | `DOD_BLOCKED` | DoD conditions not met | Fix listed items, re-run with `ticket_id` |
+| `FINALIZE_INCOMPLETE` | Finalize ran its steps, but the post-migration self-check (`run_finalize_selfcheck`) found a discrepancy — e.g. `stored_artifacts/` incomplete, `staging_artifacts/` not cleaned, ticket not moved, or the working_log row is missing/duplicated | Read `failing_items`, fix the discrepancy manually, re-run with `ticket_id` |
 | `DONE` | Ticket closed, artifacts migrated | — |
 
 **Artifacts produced:**

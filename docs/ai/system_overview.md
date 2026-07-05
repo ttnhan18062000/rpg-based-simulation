@@ -105,7 +105,12 @@ Across these workflows, the literal gate/return-status vocabulary is: `CONFLICTS
 
 The Verify phase (`done-checker`) checks **12 substantive Definition-of-Done conditions**, plus a
 13th — agent monitoring — that is pre-marked PASS and guaranteed by the workflow itself rather than
-independently checked by `done-checker`.
+independently checked by `done-checker`. Five of the 12 (staging artifacts complete, ticket location,
+working_log row not yet present, data/runs cleanliness, frontmatter validity) are verified
+deterministically by `tools/gate_checks/done_checker_static.py::run_static_precheck` rather than by
+LLM judgment — `done-checker` runs it first and cites its output. Finalize runs the same module's
+`run_finalize_selfcheck` after its own migration steps, returning `FINALIZE_INCOMPLETE` instead of
+`DONE` if the migration didn't actually land.
 
 For the full worked example — a real ticket walked end to end, plus the manual-execution fallback
 without the workflow — see [`ticket-lifecycle.md`](ticket-lifecycle.md).

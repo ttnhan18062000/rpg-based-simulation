@@ -107,24 +107,33 @@ These agents handle the pre-implementation and post-implementation phases of a d
 
 ### `done-checker`
 
-**Role:** Verifies all 11 Definition-of-Done conditions before a ticket can close.
+**Role:** Verifies all 13 Definition-of-Done conditions before a ticket can close.
 
-**The 11 conditions:**
+**Step 0 — static pre-check:** Before judging conditions 3, 4, 7, 10, and 12 by hand, the agent runs
+`tools/gate_checks/done_checker_static.py`'s `run_static_precheck(ticket_id, tier, start_ts)` (via
+`python3 -c "..."`) and cites its PASS/FAIL/NA + evidence output verbatim for those five conditions
+instead of re-deriving them by hand. The agent self-reports which conditions came from the script
+vs. pure judgment in a `verified_by` field.
+
+**The 13 conditions:**
 1. Implementation matches accepted scope
 2. Architecture constraints respected
-3. Ticket updated and in `tickets/inprogress/`
-4. Staging artifacts complete (`plan.md`, `investigation.md`, `test_plan.md`)
+3. Ticket has required metadata, in `tickets/inprogress/` — script-checked
+4. Staging artifacts complete (`plan.md`, `investigation.md`, `test_plan.md`) — script-checked
 5. Tests run and updated
 6. Docs updated if behavior changed
-7. `tickets/working_log.csv` entry added
+7. `tickets/working_log.csv` entry not yet present (pre-Finalize) — script-checked
 8. No undocumented decisions
 9. Repo state consistent
-10. `data/runs/` and `reports/release_proof/` cleaned
+10. `data/runs/` and `reports/release_proof/` cleaned — script-checked
 11. No material gaps unstated
+12. Frontmatter valid in ticket and staging artifacts — script-checked
+13. Agent monitoring records (pre-marked PASS — written by workflow after READY_TO_CLOSE)
 
 **Inputs:** Ticket ID. Reads the ticket, staging artifacts, test results, and parity ledger.
 
-**Outputs:** `READY_TO_CLOSE` or `BLOCKED` with a per-condition table showing evidence.
+**Outputs:** `READY_TO_CLOSE` or `BLOCKED` with a per-condition table showing evidence, plus a
+`verified_by` field listing which conditions came from the static script vs. pure judgment.
 
 **When to invoke directly:** Before manually closing a ticket that was implemented outside the workflow.
 

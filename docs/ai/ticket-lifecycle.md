@@ -81,6 +81,9 @@ Request
                                      working_log.csv appended
                                      staging_artifacts/ → stored_artifacts/  (standard)
                                      data/runs/ and reports/ cleaned
+                                     self-check: run_finalize_selfcheck confirms the above landed
+  │
+  ├─ FINALIZE_INCOMPLETE → human fixes flagged discrepancy, re-run with ticket_id
   │
   ▼
 DONE
@@ -292,22 +295,28 @@ no P0 entry's `v2_evidence` depends on a changed file; if it does, the full agen
 
 **Agent:** `done-checker`
 
-**11-condition table:**
+**Step 0:** Before judging conditions 3, 4, 7, 10, 12 by hand, `done-checker` runs
+`tools/gate_checks/done_checker_static.py::run_static_precheck(ticket_id, tier, start_ts)` and cites
+its PASS/FAIL/NA + evidence output verbatim for those five conditions, then self-reports a
+`verified_by` field listing which conditions came from the script vs. pure judgment.
 
-| Condition | Expected evidence |
-|---|---|
-| Implementation matches scope | Wrapper + classification logic, no combat rewrite |
-| Architecture respected | No raw domain models, no durable state in wrapper |
-| Ticket in inprogress/ | ✓ (moved to done/ by finalizer after this check) |
-| Staging artifacts complete | investigation.md, plan.md, test_plan.md all exist |
-| Tests run and updated | 5 new tests + passing arena/combat regression |
-| Docs updated | `combat_movement.yaml` updated, Ch02 unchanged (classification not a formula) |
-| working_log.csv entry | Will be written by finalizer |
-| No undocumented decisions | Fallback-first vs. projection-first decision documented in plan |
-| Repo consistent | No leftover temp files |
-| data/runs/ cleaned | — |
-| No material gaps | All follow-up items (e.g. fallback reporting) marked complete or explicitly flagged |
-| **Agent monitoring** _(pre-marked PASS)_ | Written by workflow `writeMonitoring` after READY_TO_CLOSE |
+**13-condition table:**
+
+| # | Condition | Expected evidence |
+|---|---|---|
+| 1 | Implementation matches scope | Wrapper + classification logic, no combat rewrite |
+| 2 | Architecture respected | No raw domain models, no durable state in wrapper |
+| 3 | Ticket in inprogress/ | ✓ (moved to done/ by finalizer after this check) — script-checked |
+| 4 | Staging artifacts complete | investigation.md, plan.md, test_plan.md all exist — script-checked |
+| 5 | Tests run and updated | 5 new tests + passing arena/combat regression |
+| 6 | Docs updated | `combat_movement.yaml` updated, Ch02 unchanged (classification not a formula) |
+| 7 | working_log.csv entry | Not yet present — will be written by finalizer — script-checked |
+| 8 | No undocumented decisions | Fallback-first vs. projection-first decision documented in plan |
+| 9 | Repo consistent | No leftover temp files |
+| 10 | data/runs/ cleaned | — script-checked |
+| 11 | No material gaps | All follow-up items (e.g. fallback reporting) marked complete or explicitly flagged |
+| 12 | Frontmatter valid (ticket + staging artifacts) | — script-checked |
+| 13 | **Agent monitoring** _(pre-marked PASS)_ | Written by workflow `writeMonitoring` after READY_TO_CLOSE |
 
 ---
 
@@ -323,7 +332,13 @@ no P0 entry's `v2_evidence` depends on a changed file; if it does, the full agen
    ```
 4. Move: `staging_artifacts/{id}/` → `stored_artifacts/{id}/`
 5. Clean: `data/runs/*`, `reports/release_proof/*`
-6. **Write agent monitoring records** (`writeMonitoring`): appends one run entry to `agent-monitoring/runs.jsonl` and one event per phase to `agent-monitoring/events.jsonl`. This step is non-fatal — if the write fails, it logs a WARNING and the workflow still returns DONE.
+6. **Self-verification** (`bash()`, orchestrator-level — not the finalize agent's own prose report):
+   runs `tools/gate_checks/done_checker_static.py::run_finalize_selfcheck(ticket_id, tier)` to
+   confirm steps 2-4 above actually landed — `stored_artifacts/` complete, `staging_artifacts/`
+   gone, ticket in `tickets/done/`, exactly one `working_log.csv` row. Any discrepancy (or
+   unparseable script output) returns `FINALIZE_INCOMPLETE` with `failing_items` instead of falling
+   through to `DONE`.
+7. **Write agent monitoring records** (`writeMonitoring`): appends one run entry to `agent-monitoring/runs.jsonl` and one event per phase to `agent-monitoring/events.jsonl` — status is `DONE` if the self-check passed, `FINALIZE_INCOMPLETE` otherwise. This step is non-fatal — if the write fails, it logs a WARNING and the workflow still returns its computed status.
 
 ---
 
@@ -365,7 +380,7 @@ Every `implement-ticket` run (including hotfix) writes:
 
 These records are written at the end of every exit point (CONFLICTS_DETECTED, DONE, TESTS_FAILED, etc.) — not just on success. Hotfix runs push three `skipped` events for the Investigate/Plan/Review phases.
 
-**DoD condition 12** (pre-marked PASS) — the `done-checker` agent marks this PASS with the note "will be written by workflow writeMonitoring after READY_TO_CLOSE". You do not need to verify monitoring manually.
+**DoD condition 13** (pre-marked PASS) — the `done-checker` agent marks this PASS with the note "will be written by workflow writeMonitoring after READY_TO_CLOSE". You do not need to verify monitoring manually.
 
 **Retrospective tools:**
 ```sh
@@ -410,6 +425,7 @@ After work:
 | `TESTS_FAILED` | Tests failing after implementation | Fix the code or tests | Re-run with `ticket_id` |
 | `SECURITY_BLOCKED` | Security review found a vulnerability | Fix the flagged code | Re-run with `ticket_id` |
 | `DOD_BLOCKED` | DoD condition(s) not met | Fix each failing item listed | Re-run with `ticket_id` |
+| `FINALIZE_INCOMPLETE` | Finalize's own migration self-check found a discrepancy after moving artifacts | Fix each item in `failing_items` (e.g. incomplete `stored_artifacts/`, `staging_artifacts/` not cleaned, duplicate working_log row) | Re-run with `ticket_id` |
 
 ---
 
