@@ -37,5 +37,17 @@ fire *during* editing, with a signal that fires *before* implementation work sta
 If none of a ticket's tags match this table, `suggested_skills` is an empty array. The suggestion is
 a note for the orchestrating session or a human to act on — it does not itself invoke anything.
 
+## Tags as a Registry Search Filter
+
+`Subsystem/Topic` tags are now also used as a second, cheap filter dimension when searching
+`docs/REGISTRY.yaml` for prior work — alongside `layer` in `create-tickets.js`'s Investigate phase
+and alongside `related_code_areas` in `investigator.md`'s "Finding Prior Work" step. Both consumers
+derive candidate tags from a concern/ticket's own title and description via a plain substring match
+against a fixed seed vocabulary, implemented in
+[`tools/registry_query.py`](../../tools/registry_query.py). That vocabulary is the same 10
+Subsystem/Topic words this guide's sibling doc
+([`docs/guidelines/tag_taxonomy.md`](../guidelines/tag_taxonomy.md)) names as examples — not a
+separate list.
+
 See [`docs/guidelines/tag_taxonomy.md`](../guidelines/tag_taxonomy.md) for the full formal rules:
 canonical-form requirements, forbidden tags, and the complete (non-closed) category definitions.

@@ -52,7 +52,7 @@ These agents handle the pre-implementation and post-implementation phases of a d
 
 **What it does:**
 - Reads the ticket, all "Related Code Areas" files, relevant `docs/mechanics/` and `docs/engine/` chapters, and `docs/parity_ledger/` for overlapping entries
-- Searches `stored_artifacts/` and `tickets/done/` for prior work in the same area
+- Searches `stored_artifacts/` and `tickets/done/` for prior work in the same area (including tag-based matches against `docs/REGISTRY.yaml`, per `docs/guides/ticket_tagging.md`)
 
 **Inputs:** Ticket ID. Reads `tickets/inprogress/{ticket_id}.md`.
 

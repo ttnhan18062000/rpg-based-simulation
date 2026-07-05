@@ -334,15 +334,22 @@ for h in hits[:15]: print(h)
 
 ─── Step 2: Docs and prior tickets via REGISTRY.yaml ──────────────────────────
 
-  Query REGISTRY.yaml for entries in the relevant layers (${registryLayers.join(', ')}):
+  Query REGISTRY.yaml for entries in the relevant layers (${registryLayers.join(', ')}), unioned
+  with entries whose `tags` match candidate Subsystem/Topic tags derived from the concern's own
+  text:
     python3 -c "
-import yaml
+import sys, yaml
+sys.path.insert(0, 'tools')
+from registry_query import candidate_tags_from_text, filter_registry
+
 with open('docs/REGISTRY.yaml') as f:
     entries = yaml.safe_load(f)
 layers = ${JSON.stringify(registryLayers)}
-matches = [e for e in entries if e.get('layer') in layers]
+candidate_tags = candidate_tags_from_text(${JSON.stringify(concern.title)}, ${JSON.stringify(concern.description)}, ${JSON.stringify(concern.domain_area)})
+matches = filter_registry(entries, layers=layers, candidate_tags=candidate_tags)
 docs    = [e for e in matches if e.get('type') == 'doc']
 tickets = [e for e in matches if e.get('type') == 'ticket']
+print('candidate tags:', sorted(candidate_tags))
 print('=== DOCS ===')
 for e in docs[:20]:   print(e['path'], '-', e['title'])
 print('=== TICKETS ===')
