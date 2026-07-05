@@ -59,7 +59,7 @@ tickets) or through direct ticket authoring. Either way, a ticket is then carrie
 
 **`create-tickets` has 5 phases**: Comprehend → Investigate → Structure → Write → Link. This is sourced
 directly from `.claude/workflows/create-tickets.js`'s `phase(...)` calls, not from
-`docs/ai/workflows.md`'s prose (which documents only 3 phases there — see Section 6's dated note).
+`docs/ai/workflows.md`'s prose.
 - **Comprehend** reads the proposal and extracts discrete concerns; no codebase investigation happens
   yet.
 - **Investigate** runs per-concern, in parallel: `tools/knowledge_search.py`, `graphify query`,
@@ -149,14 +149,11 @@ any time on already-registered runs).
 
 Phase names, per workflow:
 - `generate-simulation-setup`: **Scan → Draft → Validate**, sourced directly from
-  `.claude/workflows/generate-simulation-setup.js` (not `workflows.md`, whose prose here is stale — see
-  Section 6).
+  `.claude/workflows/generate-simulation-setup.js`.
 - `investigate-simulation-result`: **Load → Analyze → Report** (3 phases), sourced directly from
-  `.claude/workflows/investigate-simulation-result.js` (not `workflows.md`, which lists an extra,
-  nonexistent 4th phase — see Section 6).
+  `.claude/workflows/investigate-simulation-result.js`.
 - `compact-simulation-result`: **Scan → Compact → Archive**, sourced directly from
-  `.claude/workflows/compact-simulation-result.js` (not `workflows.md`, whose first phase name is stale
-  there — see Section 6).
+  `.claude/workflows/compact-simulation-result.js`.
 - `prepare-simulation-execution` (Resolve → Estimate → Generate), `register-simulation-result`
   (Validate → Index → Score), `propose-simulation-enhancements` (Read → Hypothesize → Propose), and
   `update-knowledge-store` (Verify → Synthesize → Commit) all match code as documented, so these four are
@@ -239,13 +236,6 @@ leaving exactly 1 permanent documented exception (`TCK-20260623-TYPE-CHECKER`).
 `docs/ai/agent_infrastructure_audit.md` scores the agent orchestration layer **8.0/10 — "Mature, gated,
 not yet deterministic."** See that document for the full category breakdown, strengths, and risks; this
 overview does not re-derive or re-score it.
-
-**Note (as of 2026-07-05):** `docs/ai/workflows.md` does not yet document `simq-audit` as an 11th
-workflow, and its phase lists for `create-tickets`, `generate-simulation-setup`,
-`investigate-simulation-result`, and `compact-simulation-result` do not match the current
-`.claude/workflows/*.js` phase arrays (this document cites the `.js` files directly for those four).
-`docs/ai/skills.md` similarly does not yet list a `/simq-audit` skill entry. These are candidates for a
-future documentation-maintenance ticket; this document does not modify those files.
 
 ### Where to go deeper
 

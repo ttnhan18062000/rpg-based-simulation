@@ -35,8 +35,10 @@ Workflow({ name: "workflow-name", args: { key: value } })
 
 | Phase | What happens |
 |---|---|
-| Parse | Reads source doc + optional structure template; scans existing tickets for duplicates; extracts one task per discrete concern |
-| Write | Writes `TCK-YYYYMMDD-<SHORT-SCOPE>.md` per task into the output folder (parallel) |
+| Comprehend | Reads the source doc and extracts one task per discrete concern; no codebase investigation yet |
+| Investigate | Per-concern, in parallel: `tools/knowledge_search.py`, `graphify query`, `docs/REGISTRY.yaml` lookups, a `working_log.csv` grep, code/test reads, and a tier assessment |
+| Structure | One synthesis agent produces ticket fields from the investigation evidence only, handling merge/split/short-scope dedup across concerns |
+| Write | Per ticket, parallel `ticket-scoper` invocations write `TCK-YYYYMMDD-<SHORT-SCOPE>.md` into the output folder, plus a conditional `SEQUENCE.md` when intra-batch dependencies are detected |
 | Link | If `epic_id` given, appends new ticket IDs to the epic's `## Related Tickets` section |
 
 **Args:**
@@ -187,7 +189,7 @@ Workflow({ name: 'implement-ticket', args: { ticket_id: 'TCK-20260606-PHASE28-RU
 
 **Purpose:** Generate world specs, scenario configs, and experiment parameters for a new simulation run.
 
-**Phases:** Spec Draft → Validation → Promotion
+**Phases:** Scan → Draft → Validate
 
 **Args:**
 
@@ -253,7 +255,7 @@ Workflow({ name: 'implement-ticket', args: { ticket_id: 'TCK-20260606-PHASE28-RU
 
 **Purpose:** Deep multi-agent investigation of balance anomalies in a completed simulation run.
 
-**Phases:** Load → Analyze → Correlate → Report
+**Phases:** Load → Analyze → Report
 
 **Args:**
 
@@ -297,7 +299,7 @@ Workflow({ name: 'implement-ticket', args: { ticket_id: 'TCK-20260606-PHASE28-RU
 
 **Purpose:** Compress heavy event log files and archive unnecessary telemetry from past simulation runs to recover disk space.
 
-**Phases:** Inventory → Compact → Archive
+**Phases:** Scan → Compact → Archive
 
 **Args:**
 
@@ -345,6 +347,46 @@ is logged as a `knowledge_reverted` audit event. It does not regenerate or rever
 state.
 
 **When to use:** Only after the approval gate passes. This is the final step in the simulation learning loop, committing validated insights into the long-term knowledge graph.
+
+---
+
+### `simq-audit`
+
+**Purpose:** A narrow calibration and anchor-drift maintenance lane for the 10-pillar SimQ grading system — recalibrates against `grade_anchors.json`, classifies drift, and either closes out cleanly or spawns a follow-up ticket. Never changes SimQ scoring formulas or pillar logic (`src/simulation_quality/*` is out of scope for every phase).
+
+**Phases:**
+
+| Phase | What happens |
+|---|---|
+| Recalibrate | Runs `make simq-full-audit` (or `-full`/`-slow` per `mode`) — diffs current calibration data against anchors, runs fast-tier grade regression tests, and cross-checks anchor/parity coverage gaps |
+| Classify Drift | Classifies each flagged item as `EXPECTED_DRIFT` (must cite a specific commit/ticket), `REGRESSION`, `DA_NEEDED`, or `NO_ACTION`, and computes a rollup verdict: `no_regression` / `regression` / `needs_da_decision` |
+| Update Anchors | Edits `grade_anchors.json` and `FAST_ANCHOR_KEYS`/`SLOW_ANCHOR_KEYS` for `EXPECTED_DRIFT` items only; gates on `ANCHORS_STILL_FAILING` |
+| Sync Docs | Updates `docs/simulation_quality/eval_matrix_results.md` and `docs/audits/D20_simq_integration.md`; conditionally `event_type_coverage.md` and `v2_intentional_divergences.md` |
+| Parity Check | Updates `docs/parity_ledger/*.yaml` entries flagged by the coverage/parity gap scan |
+| Verify | DoD-style gate: fast-tier regression tests pass, zero uncovered anchor keys, every instructed doc touched or explicitly skipped; `BLOCKED` on failure |
+| Report | Deterministic branch on the Classify Drift verdict — no ticket for `no_regression`, one spawned ticket otherwise |
+
+**Args:**
+
+| Arg | Type | Required | Description |
+|---|---|---|---|
+| `mode` | string | No | `fast` (default) — dry-run diff only; `full` — re-runs the engine for fast scenarios first; `slow` — fast tier then the slow (1000t/2000t) tier |
+| `worlds` | string | No | Optional comma-separated scope for calibration re-runs; only meaningful with `mode=full` |
+
+**Outputs:**
+- Updated `grade_anchors.json` / `FAST_ANCHOR_KEYS` / `SLOW_ANCHOR_KEYS` (Update Anchors phase, `EXPECTED_DRIFT` items only)
+- Updated `docs/simulation_quality/eval_matrix_results.md` and `docs/audits/D20_simq_integration.md`, conditionally `event_type_coverage.md` and `v2_intentional_divergences.md` (Sync Docs phase)
+- Updated `docs/parity_ledger/*.yaml` entries (Parity Check phase)
+- Either a suggested no-ticket chore-commit message or one spawned follow-up ticket (Report phase, see Return values below)
+
+**Return values:**
+
+| Status | Meaning | Next action |
+|---|---|---|
+| `DONE_NO_TICKET` | Verdict was `no_regression` — no ticket created, suggested chore-commit message emitted | — |
+| `NEEDS_TICKET` | Verdict was `regression` or `needs_da_decision` — one ticket spawned via `ticket-scoper` | Hand off with `/implement-ticket ticket_id=<new-id>` |
+
+**When to use:** After a SimQ-related uplift ticket lands, or on a recalibration cadence, to check anchor/grade drift without re-deriving the manual process by hand (see [`audit_workflow.md`](../simulation_quality/audit_workflow.md) §1 for the manual sequence this replaces).
 
 ---
 

@@ -55,6 +55,7 @@ These skills trigger the project's multi-agent workflows.
 | `/register-simulation-result` | `register-simulation-result` | Register a completed run into the lab index |
 | `/compact-simulation-result` | `compact-simulation-result` | Compress old run logs to recover disk space |
 | `/update-knowledge-store` | `update-knowledge-store` | Commit approved insights to the knowledge graph |
+| `/simq-audit` | `simq-audit` | Check SimQ grade/anchor drift after a calibration corpus change; closes cleanly or spawns a follow-up ticket |
 
 ---
 

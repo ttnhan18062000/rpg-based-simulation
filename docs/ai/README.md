@@ -37,7 +37,7 @@ This project uses **Claude Code** with a structured set of subagents, multi-agen
 |---|---|
 | [system_overview.md](system_overview.md) | Consolidated technical narrative — three-layer model, ticket lifecycle, simulation lab, SimQ audit, observability, with links to every detail doc |
 | [agents.md](agents.md) | All 11 subagents — role, inputs, outputs, when to invoke |
-| [workflows.md](workflows.md) | All 8 workflows — phases, args, return values, when to use |
+| [workflows.md](workflows.md) | 10 documented development and simulation workflows, plus `simq-audit` as an 11th — phases, args, return values, when to use |
 | [skills.md](skills.md) | Project skills and built-in Claude Code skills |
 | [ticket-lifecycle.md](ticket-lifecycle.md) | Complete development flow from request to closed ticket |
 | [agent_infrastructure_audit.md](agent_infrastructure_audit.md) | Scored technical audit of the agent orchestration layer (2026-07-03) |
