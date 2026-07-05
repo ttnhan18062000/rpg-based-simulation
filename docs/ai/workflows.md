@@ -83,7 +83,7 @@ Workflow({ name: "workflow-name", args: { key: value } })
 | Review | `architecture-reviewer` | Stops if NEEDS_CHANGES or BLOCKED |
 | Implement | `implementer` | — |
 | Test | `test-scoper` | Stops if any test fails |
-| Parity | `parity-updater` | Skipped when `files_changed` has no `src/` path and `behavior_changed` is false; a P0 ledger safeguard forces the full run instead if any P0 entry's `v2_evidence` would go stale |
+| Parity | `parity-updater` | Skipped when `files_changed` has no `src/` path and `behavior_changed` is false; a P0 ledger safeguard forces the full run instead if any P0 entry's `v2_evidence` would go stale; when not skipped, runs `tools/gate_checks/parity_updater_static.py::expected_subsystems_for_files` before the agent call and `::cross_reference_touched` after it returns, surfacing any untouched-mapped-subsystem miss via the pushed event (non-blocking) |
 | Security-Review | `security-reviewer` | Fires when the ticket's tags include `security` (ground truth) or suggested_skills includes /security-review; stops if NEEDS_CHANGES or BLOCKED |
 | Verify | `done-checker` | Runs `tools/gate_checks/done_checker_static.py::run_static_precheck` first and cites its output for the 5 machine-checkable conditions (3, 4, 7, 10, 12); stops if any DoD condition fails |
 | Finalize | inline | Moves ticket, writes working_log.csv, migrates artifacts; then runs `run_finalize_selfcheck` via `bash()` to confirm the migration actually landed — returns `FINALIZE_INCOMPLETE` instead of `DONE` if a discrepancy is found |

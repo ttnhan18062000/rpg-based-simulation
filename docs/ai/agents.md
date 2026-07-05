@@ -189,6 +189,15 @@ vs. pure judgment in a `verified_by` field.
 
 **Role:** Keeps `docs/parity_ledger/` accurate after a behavior change.
 
+**Step 0 — static pre-check:** The orchestrator runs
+`tools/gate_checks/parity_updater_static.py::expected_subsystems_for_files` (via `bash()`) *before*
+this agent is invoked, injecting the resulting `src/` file → expected ledger file(s) todo-list into
+the prompt's preamble (`NA` = no existing `v2_evidence` citation found). After this agent's turn
+ends, the orchestrator runs `::cross_reference_touched` (via `bash()`) against the actual `git
+status` diff of `docs/parity_ledger/` and records any discrepancy in `agent-monitoring/events.jsonl`
+— visibility only, not a blocking gate. The agent self-reports which of its findings were informed
+by the injected context vs. independent judgment in a `verified_by` field.
+
 **Ledger files it manages:**
 
 | File | Subsystem |

@@ -575,11 +575,34 @@ if (paritySkipEligible && !parityForceFullRun) {
   log('Parity: no src/ changes and no reported behavior change — skipping parity-updater agent call.')
   pushEvent('Parity', 'parity-updater', 'skipped', 'No src/ changes and behavior_changed=false — parity ledger unaffected')
 } else {
+  const PARITY_SCHEMA = {
+    type: 'object',
+    required: ['entries_updated', 'p0_missing_test_path', 'summary'],
+    properties: {
+      entries_updated: { type: 'array', items: { type: 'string' } },
+      p0_missing_test_path: { type: 'array', items: { type: 'string' } },
+      summary: { type: 'string', description: 'One sentence: what was updated (≤200 chars)' },
+      ts: { type: 'string', description: 'ISO timestamp from `date -u +%Y-%m-%dT%H:%M:%SZ` at start of this phase' },
+      verified_by: { type: 'array', items: { type: 'string' }, description: 'Agent self-report of which findings came from tools/gate_checks/parity_updater_static.py vs. pure LLM judgment, e.g. ["static:parity_updater_static", "llm"].' },
+    },
+  }
+
+  // Orchestrator-run, before the agent() call — mirrors the p0ScanOutput bash() call's shape above
+  // (args passed as individually quoted argv elements, never JSON-embedded in the -c string).
+  const filesChangedArgs = implementation.files_changed.map(f => `"${f}"`).join(' ')
+  const expectedSubsystemsOutput = await bash(
+    `python3 -c "
+import sys, json
+sys.path.insert(0, 'tools')
+from gate_checks.parity_updater_static import expected_subsystems_for_files
+print(json.dumps(expected_subsystems_for_files(sys.argv[1:])))
+" ${filesChangedArgs}`
+  )
+
   const parity = await agent(
     `Update parity ledger for ticket ${tid}.
 
-Step 0: run \`date -u +%Y-%m-%dT%H:%M:%SZ\`. Your response MUST begin with this exact line (nothing before it):
-PHASE_TS: <result>
+Step 0: run \`date -u +%Y-%m-%dT%H:%M:%SZ\` and include result as the \`ts\` field.
 
 Step 0b: run \`python3 -c "import json; open('.claude/current_run','w').write(json.dumps({'run_id':'${tid}','seq':${events.length + 1}}))" 2>/dev/null || true\` — register this agent call for tool tracking.
 
@@ -587,6 +610,7 @@ Behavior changed: ${implementation.behavior_changed}
 Parity subsystems affected: ${(implementation.parity_subsystems || []).join(', ') || 'check implementation summary'}
 Parity entries from architecture review: ${review.parity_entries_affected.join(', ') || 'none pre-identified'}
 Implementation: ${implementation.implementation_summary}
+Expected parity-ledger files per changed src/ file (NA = no existing citation found): ${expectedSubsystemsOutput}
 
 ${implementation.behavior_changed
   ? `Update docs/parity_ledger/ entries (files: substrate.yaml, combat_movement.yaml, strategic_cognition.yaml, town_resource.yaml, progression.yaml, social_narrative.yaml, world_dynamics.yaml, infrastructure.yaml).
@@ -598,13 +622,39 @@ Rules:
 - P0 entries MUST have a non-null test_path pointing to a now-passing test`
   : `No observable behavior change reported. Verify this is accurate by checking whether any referenced parity entries need test_path updates (e.g., tests were renamed or moved). Report what you checked.`}
 
-Then report: entries updated (by ID and what changed), any P0 entries missing a test_path.`,
-    { label: 'parity-update', agentType: 'parity-updater' }
+Then report: entries updated (by ID and what changed), any P0 entries missing a test_path, verified_by (list which findings came from the injected expected-subsystem context vs. independent reasoning).`,
+    { label: 'parity-update', schema: PARITY_SCHEMA, agentType: 'parity-updater' }
   )
 
-  const parityTs = parity.toString().match(/^PHASE_TS: (\S+)/m)?.[1] || null
-  const parityText = parity.toString().replace(/^PHASE_TS: \S+\n?/, '').trim()
-  pushEvent('Parity', 'parity-updater', 'ok', parityText.slice(0, 200), parityTs)
+  // Orchestrator-run, after the agent() call returns — mirrors run_finalize_selfcheck's
+  // JSON-marker-prefix + try/catch-with-fallback parsing pattern, since there is no established
+  // contract in this repo that bash() output is safe for a bare JSON.parse().
+  const touchedOutput = await bash(`git status --porcelain -- docs/parity_ledger/`)
+  const crossRefOutput = await bash(
+    `python3 -c "
+import sys, json
+sys.path.insert(0, 'tools')
+from gate_checks.parity_updater_static import cross_reference_touched
+files_changed = json.loads(sys.argv[1])
+touched = sys.argv[2].splitlines()
+results = cross_reference_touched(files_changed, touched)
+print('PARITY_CHECK_JSON:' + json.dumps(results))
+" '${JSON.stringify(implementation.files_changed)}' "${touchedOutput}"`
+  )
+  let parityCrossRef = null
+  const parityMarkerIndex = crossRefOutput.indexOf('PARITY_CHECK_JSON:')
+  if (parityMarkerIndex !== -1) {
+    try { parityCrossRef = JSON.parse(crossRefOutput.slice(parityMarkerIndex + 'PARITY_CHECK_JSON:'.length).trim()) }
+    catch (e) { parityCrossRef = null }
+  }
+  const parityCrossRefFailures = (parityCrossRef || []).filter(r => r.status === 'FAIL')
+
+  const parityEvidence = (parityCrossRef === null || parityCrossRefFailures.length > 0)
+    ? (parity.summary || 'Parity ledger updated').slice(0, 150) + ' | cross-ref: ' + (parityCrossRef === null
+        ? 'unparseable'
+        : parityCrossRefFailures.map(f => f.file + ': ' + f.evidence).join('; ')).slice(0, 200)
+    : (parity.summary || 'Parity ledger updated')
+  pushEvent('Parity', 'parity-updater', 'ok', parityEvidence, parity.ts)
 }
 
 // ─── Phase 7b: Security-Review (conditional gate) ─────────────────────────────

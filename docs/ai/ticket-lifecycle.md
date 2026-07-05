@@ -266,6 +266,14 @@ The agent executes this via Bash and reports results.
 
 **Agent:** `parity-updater`
 
+**Step 0:** When the full agent call is not skipped, the orchestrator runs
+`tools/gate_checks/parity_updater_static.py::expected_subsystems_for_files(implementation.files_changed)`
+via `bash()` before the agent call and injects the resulting `src/` file → expected ledger file(s)
+todo-list into the prompt preamble (`NA` = no existing `v2_evidence` citation found). After the agent
+call returns, the orchestrator runs `::cross_reference_touched` against the actual `git status` diff
+of `docs/parity_ledger/` and includes any untouched-mapped-subsystem miss in the pushed event —
+visibility only, no new blocking status.
+
 **For the example task:** `behavior_changed: true`, subsystem: `combat_movement`
 
 **Updates `docs/parity_ledger/combat_movement.yaml`:**

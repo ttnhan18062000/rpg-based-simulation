@@ -77,7 +77,10 @@ same 5 phases, independently confirming them.
 (`investigator`) → Plan (`planner`) → Review (`architecture-reviewer`, gate: `NEEDS_CHANGES`/`BLOCKED`)
 → Implement (`implementer`) → Test (`test-scoper`, gate: `TESTS_FAILED`) →
 **Parity (`parity-updater`, conditional agent call: skipped when `files_changed` has no `src/` path and
-`behavior_changed` is false, unless a P0 ledger safeguard forces it to run)** →
+`behavior_changed` is false, unless a P0 ledger safeguard forces it to run; when the full call runs, the
+orchestrator runs `tools/gate_checks/parity_updater_static.py::expected_subsystems_for_files` before the
+agent call and `::cross_reference_touched` after it returns, flagging any untouched-mapped-subsystem miss
+in the pushed event — visibility only, no new blocking status)** →
 **Security-Review (`security-reviewer`, conditional: fires when the ticket's `tags` include `security`
 or `suggested_skills` includes `/security-review`; gate: `SECURITY_BLOCKED`)** → Verify (`done-checker`,
 gate: `DOD_BLOCKED`) → Finalize (inline, no agent). Security-Review is a 10th, conditional phase — it
