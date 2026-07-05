@@ -27,6 +27,18 @@ You type:                Claude does internally:
 
 ---
 
+## Tag-Based Skill Suggestions
+
+A second, complementary invocation signal exists alongside `CLAUDE.md`'s file-path-based auto-invoke
+table (which fires *during* editing): a ticket's `Process/Skill-signal` tags (`api-design`,
+`debugging`, `performance`, `security`) now produce a `suggested_skills` note at ticket-scoping time,
+*before* implementation work starts — computed by `ticket-scoper` and `create-tickets.js`'s Structure
+phase, surfaced via `log(...)` in `implement-ticket.js`'s Scope phase. See
+[`docs/guides/ticket_tagging.md`](../guides/ticket_tagging.md) for the full tag→skill mapping and the
+related registry-search-filter mechanism — not duplicated here.
+
+---
+
 ## Project Skills (Workflow Shortcuts)
 
 These skills trigger the project's multi-agent workflows.
