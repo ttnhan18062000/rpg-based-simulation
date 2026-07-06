@@ -421,6 +421,23 @@ This document is the canonical record of intentional behavior shifts in `src` co
   rather than silently absorbing it. See `docs/simulation_quality/eval_matrix_results.md`'s dated
   NOTE and AC6 section for full detail.
 
+### 2.27 Hometown Resource-Opportunity Gating Fix (TCK-20260704-SIMQ-ROUTING-TEST-HOMETOWN-RESOURCE-GAP)
+- **Subsystem**: World / Resource Opportunities
+- **Old Behavior**: wood_node/herb_patch's catalog source_region_tags (data/content/world/
+  resources.yaml) did not include "hometown", even though frontier_village_core.yaml already placed
+  both kinds' nodes there (TCK-20260627-P0B-URBAN-RESOURCE-NODES). ResourceOpportunityProvider gates
+  purely on the kind-level catalog allowlist, never on a node's own placement region (ResourceNodeState
+  has no region field), so hometown-standing entities never received gather_resource opportunities
+  regardless of role or seed.
+- **New Behavior**: wood_node's source_region_tags additively gains "hometown" (now
+  ["near_forest", "hometown"]); herb_patch's additively gains "hometown" (now ["near_forest",
+  "moon_cave", "hometown"]), via the same metadata.source_region_tags override mechanism used for
+  stone_outcrop. Purely additive — no other world/region's existing tag coverage changes.
+- **Rationale**: **Bug Fix**. The original P0B ticket's evident intent (placing nodes in hometown) was
+  never fully realized for opportunity-matching purposes; this closes that gap.
+- **Verification**: tests/unit/core/test_registry_bridge.py, tests/unit/strategic/test_opportunities.py
+- **Status**: ACTIVE
+
 ---
 
 ## 3. Unsupported / Retired Behavior

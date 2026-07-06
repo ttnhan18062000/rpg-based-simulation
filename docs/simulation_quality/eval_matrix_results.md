@@ -396,6 +396,22 @@ a scoring or decision-logic change); even if that lands, this per-seed exception
 as historical evidence for this run — a future re-anchor would be a new anchor update, not a
 retroactive edit here.
 
+**Status as of 2026-07-06 (TCK-20260704-SIMQ-ROUTING-TEST-HOMETOWN-RESOURCE-GAP): EXCEPTION CLOSED
+(grade improved).** `wood_node` and `herb_patch`'s `source_region_tags` in
+`data/content/world/resources.yaml` now additively include `"hometown"` (both kinds were already
+physically placed there by `frontier_village_core.yaml`; only the catalog-level gating tag was
+missing — see investigation.md §1a for the root mechanism). Entity 23 in seed456 now has a legal
+`gather_resource` route in `hometown` for its entire life, interrupting its
+491-event `defer_with_reason` streak. Re-verified AGENCY grade: `A` (up from `D`).
+`grade_anchors.json`'s `simq_routing_test_seed456_500t.AGENCY` anchor updated to `A`.
+seed42/seed123 re-verified live (not assumed inert): AGENCY held at `A`/`A`, no regression on any
+of the other 9 pillars. This closes the per-seed legitimate-stasis exception documented above as a
+historical record only — the record itself is retained for traceability (it correctly described the
+state of the world *before* this fix), not deleted or rewritten. (Two other seed456 pillars,
+COGNITION and NARRATIVE, moved by one grade step each — S→A and A→S respectively — as a downstream
+consequence of entity 23's freed decision stream; both remain within the ±1-letter anchor band per
+`test_grade_regression.py`, so neither anchor was re-pinned.)
+
 ---
 
 ## AGENCY — Cross-World Design Note
@@ -438,7 +454,9 @@ exception: routing is genuinely ON and the scorer is scoring correctly for
 `simq_routing_test_seed456`, but one entity's personality roll combined with a resource-tagging gap
 in this specific world's content leaves it with zero legal routes for its whole life, capping the
 achievable grade at D regardless of scoring-formula correctness. See AC6 above for the full
-evidence chain.
+evidence chain. [Closed 2026-07-06 by `TCK-20260704-SIMQ-ROUTING-TEST-HOMETOWN-RESOURCE-GAP`'s
+content fix — the resource-tagging gap is fixed and seed456's AGENCY grade improved to `A`; see the
+"EXCEPTION CLOSED" status paragraph in AC6 above for the full re-verification evidence.]
 
 ---
 

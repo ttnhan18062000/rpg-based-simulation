@@ -6,6 +6,8 @@
   required_ticks: 10
   default_charges: 10
   preferred_biomes: ["frontier_village", "near_forest"]
+  metadata:
+    source_region_tags: ["near_forest", "hometown"]
 
 # STATE: EXISTING-LOGIC
 - id: "iron_vein"
@@ -35,6 +37,8 @@
   required_ticks: 8
   default_charges: 8
   preferred_biomes: ["near_forest", "sunken_swamp"]
+  metadata:
+    source_region_tags: ["near_forest", "moon_cave", "hometown"]
 
 # STATE: LEGACY-EXPORT
 - id: "healing_flower_patch"

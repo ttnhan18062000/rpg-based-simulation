@@ -2120,3 +2120,31 @@
     New mechanic introduced in TCK-20260628-E21D-DENSITY-REGEN. No prior behavior existed —
     regen was flat (regen_rate_per_tick per cycle regardless of entity density).
   support_boundary: null
+
+- id: TOWN-188
+  text: >
+    wood_node and herb_patch resource nodes placed in the hometown region (by
+    frontier_village_core.yaml, used by both simq_routing_test and urban_political) now correctly
+    yield gather_resource opportunities for entities standing in hometown.
+    ResourceOpportunityProvider.get_opportunities() gates on a global, catalog-wide,
+    per-resource-kind source_region_tags allowlist (not the node's own placement region);
+    wood_node/herb_patch's catalog entries previously omitted "hometown" from that allowlist despite
+    both kinds already being physically placed there, so the gate silently never fired for
+    hometown-standing entities of any role.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    data/content/world/resources.yaml — wood_node/herb_patch metadata.source_region_tags now
+    additively include "hometown"; src/core/registries.py CatalogToResourceRegistryAdapter.adapt()
+    precedence (metadata override > preferred_biomes > legacy_id heuristic); src/world/providers/
+    resources.py:69 ResourceOpportunityProvider.get_opportunities() gating check.
+  proof_type: parity
+  test_path: >
+    tests/unit/core/test_registry_bridge.py; tests/unit/strategic/test_opportunities.py
+  divergence_note: >
+    Content-authoring gap, not a decision-logic or scoring bug: frontier_village_core.yaml's
+    resource_recipes already placed both node kinds in hometown (TCK-20260627-P0B-URBAN-RESOURCE-NODES),
+    but that placement was never reflected in the global catalog's per-kind gating tags until this fix
+    (TCK-20260704-SIMQ-ROUTING-TEST-HOMETOWN-RESOURCE-GAP).
+  support_boundary: null

@@ -472,6 +472,25 @@ def test_referential_integrity_catalog(mock_catalog_repo):
         assert RegionRegistry.contains(service.region_id)
 
 
+def test_production_catalog_wood_and_herb_cover_hometown():
+    """TCK-20260704-SIMQ-ROUTING-TEST-HOMETOWN-RESOURCE-GAP: the real (non-synthetic)
+    data/content catalog must additively include "hometown" in wood_node's and herb_patch's
+    source_region_tags, alongside their pre-existing near_forest/moon_cave coverage — a
+    hometown-standing entity now has a legal gather_resource route for these kinds."""
+    repo = CatalogRepository("data/content")
+    repo.load_all()
+    seed_phase1_content(repo)
+
+    res_wood = ResourceRegistry.get("node_wood")
+    assert "near_forest" in res_wood.source_region_tags
+    assert "hometown" in res_wood.source_region_tags
+
+    res_herb = ResourceRegistry.get("node_herb")
+    assert "near_forest" in res_herb.source_region_tags
+    assert "moon_cave" in res_herb.source_region_tags
+    assert "hometown" in res_herb.source_region_tags
+
+
 def test_runtime_content_mode_enum_has_four_explicit_modes():
     assert RuntimeContentMode.CATALOG_STRICT.value == "catalog_strict"
     assert RuntimeContentMode.CATALOG_WITH_COMPATIBILITY.value == "catalog_with_compatibility"

@@ -89,6 +89,46 @@ def test_resource_opportunities_with_blocker():
     assert iron_opp.estimated_reward == 50.0
 
 
+def test_resource_opportunities_hometown_wood_node():
+    """TCK-20260704-SIMQ-ROUTING-TEST-HOMETOWN-RESOURCE-GAP: a hero standing in hometown must
+    now receive a gather_resource opportunity for wood_node (source_region_tags additively
+    gained "hometown" in data/content/world/resources.yaml)."""
+    ent = (V2EntityBuilder(1)
+        .kind("hero")
+        .build())
+    object.__setattr__(ent.navigation, "region_id", "hometown")
+
+    from src.core.state import ResourceNodeState
+    node1 = ResourceNodeState(id=1, kind="wood_node", position=(0.0, 0.0), yields_item="wood", remaining_charges=10, max_charges=10, required_ticks=5)
+    mock_state = MockState(resource_nodes={1: node1})
+
+    opportunities = ResourceOpportunityProvider.get_opportunities(ent, mock_state)
+
+    assert len(opportunities) > 0
+    assert all(opp.kind == "gather_resource" for opp in opportunities)
+    assert any(opp.subject == "wood" for opp in opportunities)
+
+
+def test_resource_opportunities_hometown_herb_patch():
+    """TCK-20260704-SIMQ-ROUTING-TEST-HOMETOWN-RESOURCE-GAP: a hero standing in hometown must
+    now receive a gather_resource opportunity for herb_patch (source_region_tags additively
+    gained "hometown" in data/content/world/resources.yaml)."""
+    ent = (V2EntityBuilder(1)
+        .kind("hero")
+        .build())
+    object.__setattr__(ent.navigation, "region_id", "hometown")
+
+    from src.core.state import ResourceNodeState
+    node1 = ResourceNodeState(id=1, kind="herb_patch", position=(0.0, 0.0), yields_item="herb", remaining_charges=10, max_charges=10, required_ticks=5)
+    mock_state = MockState(resource_nodes={1: node1})
+
+    opportunities = ResourceOpportunityProvider.get_opportunities(ent, mock_state)
+
+    assert len(opportunities) > 0
+    assert all(opp.kind == "gather_resource" for opp in opportunities)
+    assert any(opp.subject == "herb" for opp in opportunities)
+
+
 def test_service_opportunities_basic(minimal_service_registry):
     """Verify ServiceOpportunityProvider returns town service options."""
     ent = (V2EntityBuilder(1)
