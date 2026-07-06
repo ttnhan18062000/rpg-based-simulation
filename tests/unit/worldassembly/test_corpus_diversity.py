@@ -46,6 +46,22 @@ ANCHORED_WORLD_BANDS: dict[str, tuple[int, int | None]] = {
 
 POPULATION_STABILITY_WORLDS = list(ANCHORED_WORLD_BANDS.keys())
 
+# All 10 worlds' distinct-populated-faction counts, verified against
+# staging_artifacts/TCK-20260704-SIMQ-CORPUS-TIERS-EPIC/investigation.md §2 and re-confirmed by
+# TCK-20260704-SIMQ-CORPUS-SCALE-METRIC's own recompile cross-check (investigation.md §3).
+EXPECTED_DISTINCT_POPULATED_FACTIONS: dict[str, int] = {
+    "wilderness_survival": 2,
+    "sandbox_world": 3,
+    "highland_traverse": 3,
+    "urban_political": 4,
+    "dungeon_crawl": 4,
+    "swamp_border_world": 4,
+    "simq_routing_test": 5,
+    "frontier_living_world": 6,
+    "generated_frontier_3_42": 7,
+    "frontier_extended": 9,
+}
+
 # The 10 modules Step 4 brought into the anchored corpus for the first time.
 # ``moon_cult_ruins`` is the only module deliberately left unanchored (out of
 # scope — see plan.md Step 4 "Scope boundary").
@@ -120,6 +136,26 @@ def test_entity_count_band(world_id: str) -> None:
         assert entity_count <= high, (
             f"{world_id}: entity_count={entity_count} exceeded its chosen band ceiling {high}"
         )
+
+
+# ---------------------------------------------------------------------------
+# 1b. Distinct populated factions (TCK-20260704-SIMQ-CORPUS-SCALE-METRIC)
+# ---------------------------------------------------------------------------
+
+@pytest.mark.parametrize(
+    "world_id,expected", list(EXPECTED_DISTINCT_POPULATED_FACTIONS.items())
+)
+def test_distinct_populated_factions(world_id: str, expected: int) -> None:
+    report = _load_compile_report(world_id)
+    assert "distinct_populated_factions" in report, (
+        f"{world_id}: world_compile_report.json missing 'distinct_populated_factions' — "
+        "recompile with the updated WorldCompiler."
+    )
+    assert report["distinct_populated_factions"] == expected, (
+        f"{world_id}: distinct_populated_factions={report['distinct_populated_factions']} "
+        f"!= expected {expected} (staging_artifacts/TCK-20260704-SIMQ-CORPUS-TIERS-EPIC/"
+        "investigation.md §2)"
+    )
 
 
 # ---------------------------------------------------------------------------

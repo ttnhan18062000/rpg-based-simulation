@@ -6,7 +6,8 @@
   "resource_node_count": 4,
   "building_count": 1,
   "quest_count": 7,
+  "distinct_populated_factions": 2,
   "warnings": [],
-  "compile_duration_ms": 33.911186998011544,
+  "compile_duration_ms": 26.189717999841378,
   "state_hash": "b62047de2876c7fc06f91513744e9999"
 }

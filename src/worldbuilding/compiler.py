@@ -518,6 +518,10 @@ class WorldCompiler:
             "resource_node_count": len(resource_nodes),
             "building_count": len(buildings),
             "quest_count": len(compiled_quests),
+            "distinct_populated_factions": len({
+                fid for e in entities.values()
+                if (fid := e.properties.get("faction_id"))
+            }),
             "warnings": warnings,
             "compile_duration_ms": compile_duration_ms,
             "state_hash": state_hash

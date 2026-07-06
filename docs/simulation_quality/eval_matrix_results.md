@@ -560,3 +560,35 @@ same archetype pattern as `dungeon_crawl`'s documented COGNITION/ECONOMY C — s
 Note above). COMBAT/NARRATIVE/PROGRESSION/WORLD are the pillars these five worlds contribute
 genuine new signal for; more ticks will not activate AGENCY/FACTION/INFORMATION/SOCIAL without
 enabling the relevant feature flags (explicitly out of scope for this ticket).
+
+---
+
+## Corpus World-Scale Summary (TCK-20260704-SIMQ-CORPUS-SCALE-METRIC)
+
+Consolidated scale reporting for all 10 worlds under `data/worlds/`, pulled directly from each
+world's `world_compile_report.json`. Earlier per-world reporting in "Newly-Anchored Worlds" above
+covered entity/region counts for only 5 of the 10 worlds and did not include resource-node,
+building, quest, or populated-faction counts anywhere in this doc — this table closes that gap in
+one place rather than patching five scattered headers. `distinct_populated_factions` counts unique
+`entity.properties["faction_id"]` values actually assigned to a compiled entity (not the static
+16-entry `AuthoritativeState.factions` catalog, which is constant across all worlds and therefore
+not a meaningful per-world signal on its own — see
+`staging_artifacts/TCK-20260704-SIMQ-CORPUS-TIERS-EPIC/investigation.md` §2).
+
+| World | Seed | Entities | Regions | Resource Nodes | Buildings | Quests | Distinct Populated Factions |
+|---|---|---|---|---|---|---|---|
+| wilderness_survival | 101 | 11 | 4 | 4 | 1 | 7 | 2 |
+| sandbox_world | 42 | 18 | 3 | 5 | 5 | 6 | 3 |
+| highland_traverse | 91 | 18 | 5 | 3 | 5 | 6 | 3 |
+| urban_political | 202 | 30 | 3 | 3 | 7 | 9 | 4 |
+| dungeon_crawl | 303 | 32 | 4 | 3 | 1 | 9 | 4 |
+| swamp_border_world | 77 | 26 | 4 | 7 | 5 | 6 | 4 |
+| simq_routing_test | 42 | 30 | 3 | 5 | 6 | 7 | 5 |
+| frontier_living_world | 42 | 46 | 7 | 9 | 6 | 16 | 6 |
+| generated_frontier_3_42 | 42 | 44 | 6 | 9 | 6 | 16 | 7 |
+| frontier_extended | 43 | 56 | 10 | 13 | 6 | 22 | 9 |
+
+`generated_frontier_3_42` has zero entries in `tests/simulation_quality/fixtures/grade_anchors.json`
+and is not part of the pillar-grade calibration corpus tracked elsewhere in this doc — it is
+included here only for scale-metric completeness (it is one of the 10 worlds under `data/worlds/`),
+not as a calibration claim.
