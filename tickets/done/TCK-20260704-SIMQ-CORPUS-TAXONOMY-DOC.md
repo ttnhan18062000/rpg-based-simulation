@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: simulation
 authority: P1
 audience: agent
 ticket_id: TCK-20260704-SIMQ-CORPUS-TAXONOMY-DOC
-phase: open
+phase: done
 date: 2026-07-04T12:17:33Z
 tags: [simulation-quality, world, corpus, documentation, taxonomy]
 ---
@@ -15,7 +15,7 @@ tags: [simulation-quality, world, corpus, documentation, taxonomy]
 Document the Unit/End-to-End/Stress/Regression SimQ corpus tier taxonomy
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -121,13 +121,49 @@ doc location.
   implementation, and relocate if investigation reveals a stronger existing convention.
 
 ## Implementation Notes
-(to be filled during implementation)
+Created `docs/simulation_quality/corpus_tier_taxonomy.md` with all four tier definitions (Unit,
+End-to-end, Stress, Regression/baseline), each with an explicit classification criterion. Mapped
+all 10 current `data/worlds/` entries to Regression/baseline tier (none of the new unit/stress
+worlds exist yet, and no world has been promoted into deliberate end-to-end content expansion, as
+of this ticket's authoring date) — cited `staging_artifacts/TCK-20260704-SIMQ-CORPUS-TIERS-EPIC/
+investigation.md` §2 as the evidentiary source for per-world counts rather than duplicating the
+table verbatim (per Scope item 4). Also transcribed the investigation's 5 named scale-diversity
+gaps as concrete stress-tier candidates, and added a decision-order section for classifying future
+world additions.
+
+Note: the ticket's own citation to `staging_artifacts/EPIC-SCOPE-full-feature-world-coverage/
+investigation.md` is a stale path — that folder was renamed to `staging_artifacts/
+TCK-20260704-SIMQ-CORPUS-TIERS-EPIC/` earlier this session once the epic ticket ID existed. The new
+doc cites the correct, current path.
+
+Ran `make docs-registry` to index the new doc — it exited non-zero, but the registry write itself
+succeeded (`docs/REGISTRY.yaml` correctly indexes the new doc; confirmed via direct grep). The
+non-zero exit is caused by 12 pre-existing, unrelated docs across `docs/engine/`, `docs/mechanics/`,
+`docs/simulation/`, `docs/simulation_quality/`, `docs/systems/`, and `docs/world/` that have no YAML
+frontmatter at all — a repo-wide gap that predates and is unrelated to this ticket. Filed
+`TCK-20260706-DOCS-REGISTRY-MISSING-FRONTMATTER` to track it rather than silently ignoring the
+non-zero exit code or expanding this hotfix ticket's scope to fix 12 unrelated files.
 
 ## Test Summary
-(to be filled during implementation)
+- `python3 tools/validate_frontmatter.py docs/simulation_quality/corpus_tier_taxonomy.md
+  --content-type doc` → OK, no violations.
+- `make docs-registry` → registry write succeeded (new doc indexed, confirmed via grep); non-zero
+  exit code attributed entirely to the 12 pre-existing files tracked in the new follow-up ticket,
+  not to this ticket's own doc.
+- `make knowledge-index-update` → 1 file re-embedded successfully.
+- No code changes in this ticket; no calibration re-run required (per Out of Scope).
 
 ## Files Changed
-(to be filled during implementation)
+- `docs/simulation_quality/corpus_tier_taxonomy.md` — new file
+- `docs/REGISTRY.yaml` — regenerated (includes the new doc)
+- `tickets/todos/TCK-20260706-DOCS-REGISTRY-MISSING-FRONTMATTER.md` — new follow-up ticket
 
 ## Completion Summary
-(to be filled on done)
+Created the canonical SimQ corpus tier taxonomy doc, giving every other ticket in this batch
+(2-10) a durable, citable definition for the Unit/End-to-end/Stress/Regression vocabulary they
+each reference by name. All 10 current worlds mapped explicitly to Regression/baseline tier, with
+concrete classification criteria for future world additions and the investigation's 5 named
+scale-diversity gaps transcribed as stress-tier candidates. While regenerating the docs registry to
+index the new file, found and filed a follow-up ticket for a pre-existing, unrelated repo-wide gap
+(12 docs missing frontmatter entirely, causing `make docs-registry` to always exit non-zero) rather
+than letting it pass silently or expanding this hotfix ticket's scope to fix it directly.
