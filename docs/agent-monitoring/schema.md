@@ -56,6 +56,7 @@ One record per workflow invocation.
 | `DONE` | Workflow completed successfully. |
 | `EPIC_SCOPED` | Epic tier — ticket scoped, no implementation. |
 | `CONFLICTS_DETECTED` | Duplicate or conflicting ticket found at Scope gate. |
+| `TAGS_NOT_REGISTERED` | A ticket's tag isn't in `docs/guidelines/tag_registry.jsonl` — caught at Scope, before the rest of the pipeline runs (`TCK-20260706-SCOPE-TAG-REGISTRY-CHECK`). |
 | `NEEDS_HUMAN_INPUT` | Plan had unresolved questions; paused for human. |
 | `NEEDS_CHANGES` | Architecture review returned violations. |
 | `BLOCKED` | Architecture review found fundamental conflict. |
@@ -95,6 +96,7 @@ One record per agent call within a workflow run. FK: `run_id → runs.run_id`.
 | `summary` | string | No | One sentence describing what the agent did and the key finding. Empty string = agent did not provide a summary (prompt quality signal). Max 200 chars. |
 | `status` | string | No | `ok` \| `failed` \| `blocked` \| `skipped` |
 | `tool_call_count` | int | Yes | Total number of tool calls made by this agent. Computed by `writeMonitoring` from `tools.jsonl` (counts entries matching `run_id` + `seq`). `null` for runs produced before this field was added. |
+| `reason_code` | string | Yes | Machine-parseable sub-cause code. Populated for `Scope`/`ticket-scoper` and `Verify`/`done-checker` `failed` events; `null` everywhere else, and `null` for all records predating `TCK-20260706-MONITORING-REASON-CODE`/`TCK-20260706-SCOPE-TAG-REGISTRY-CHECK`. See below for why only those two phases get one. |
 
 ### `status` values
 
@@ -104,6 +106,35 @@ One record per agent call within a workflow run. FK: `run_id → runs.run_id`.
 | `failed` | Agent returned an error or could not complete. |
 | `blocked` | Agent was blocked by a gate condition (e.g. architecture violation). |
 | `skipped` | Phase was skipped (e.g. Investigate/Plan/Review for hotfix tier). |
+
+### `reason_code` values
+
+Populated wherever a gate status collapses more than one distinct cause into a single value.
+`NEEDS_HUMAN_INPUT` → Plan, `NEEDS_CHANGES`/`BLOCKED` → Review or Architecture-Verify,
+`TESTS_FAILED` → Test, and `SECURITY_BLOCKED` → Security-Review each still disambiguate 1:1 via
+`phase`/`final_status` alone — no code needed there. Three phases, across both workflows that
+write to this file, don't:
+
+- **`Verify`** (`done-checker`, `implement-ticket`) — its 13-condition checklist collapses many
+  distinct DoD failure reasons into one `DOD_BLOCKED` status (`TCK-20260706-MONITORING-REASON-CODE`).
+- **`Scope`** (`ticket-scoper`, `implement-ticket`) — used to have exactly one failure cause
+  (conflicts), so `phase=Scope + status=failed` alone was enough; adding a second cause
+  (unregistered tags, `TCK-20260706-SCOPE-TAG-REGISTRY-CHECK`) reopened the same collapsed-cause
+  problem, so it now gets a code too.
+- **`Structure`** (`create-tickets`, `create-tickets` workflow) — the same unregistered-tag cause
+  can also surface here, since this workflow computes tags for a whole batch of tickets before any
+  of `implement-ticket`'s gates ever run (`TCK-20260706-CREATE-TICKETS-TAG-CHECK`).
+
+| Value | Meaning | Phase(s) |
+|---|---|---|
+| `conflicts_detected` | Duplicate or conflicting ticket found. | Scope |
+| `tag_registry_rejection` | A tag isn't in `docs/guidelines/tag_registry.jsonl` (see `docs/guidelines/tag_taxonomy.md`'s Tag Registry section) — same root cause regardless of which phase/workflow caught it. | Scope, Structure, Verify |
+| `dod_condition_failed` | Any other DoD condition failed at Verify — a deliberately coarse fallback, not a full taxonomy of every possible DoD failure reason (that would be speculative rather than evidence-driven; see `tools/gate_checks/done_checker_static.py`'s `classify_checklist_failure`). | Verify |
+
+Not a closed enum — a future phase found to have its own catch-all-status problem could add its
+own value, but none is added speculatively ahead of evidence. `generate_retro.py`'s reason-code
+aggregation is workflow-agnostic (iterates every event regardless of source) — no code change was
+needed there when `Structure` started emitting this field.
 
 ### `phase` values (implement-ticket workflow)
 

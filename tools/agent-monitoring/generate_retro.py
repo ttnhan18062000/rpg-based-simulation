@@ -88,6 +88,14 @@ def generate(runs, events, label, week_str=None):
     # Gate failure breakdown
     gate_counter = Counter(_resolve_status(r) for r in gate_fails)
 
+    # Reason-code breakdown (TCK-20260706-MONITORING-REASON-CODE, extended by
+    # TCK-20260706-SCOPE-TAG-REGISTRY-CHECK and TCK-20260706-CREATE-TICKETS-TAG-CHECK) —
+    # reason_code disambiguates gate statuses that collapse multiple distinct causes into one
+    # value (DOD_BLOCKED at Verify; Scope's 'failed'/'blocked' across both workflows). Workflow-
+    # agnostic: iterates every event regardless of which workflow (implement-ticket or
+    # create-tickets) wrote it (docs/agent-monitoring/schema.md).
+    reason_counter = Counter(e.get("reason_code") for e in events if e.get("reason_code"))
+
     # Tier distribution
     tier_counts = Counter(r.get("tier", "unknown") for r in runs)
     tier_done = defaultdict(int)
@@ -150,6 +158,17 @@ def generate(runs, events, label, week_str=None):
     else:
         lines.append("_No gate failures this period._")
     lines.append("")
+
+    # Reason-code breakdown — only rendered when at least one event carries one, so weeks with
+    # no reason_code data (or runs predating this field) don't get an empty/zero-value section.
+    if reason_counter:
+        lines.append("## Reason Codes")
+        lines.append("")
+        lines.append("| Reason | Count |")
+        lines.append("|---|---|")
+        for reason, count in reason_counter.most_common():
+            lines.append(f"| {reason} | {count} |")
+        lines.append("")
 
     # Tier distribution
     lines.append("## Tier Distribution")

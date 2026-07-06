@@ -24,6 +24,7 @@ from gate_checks.done_checker_static import (  # noqa: E402
     check_ticket_location,
     check_working_log_exactly_one_row,
     check_working_log_no_row_yet,
+    classify_checklist_failure,
     run_finalize_selfcheck,
     run_static_precheck,
 )
@@ -378,6 +379,64 @@ def test_run_static_precheck_surfaces_fail_not_masked(tmp_path, monkeypatch):
     assert by_condition["working_log_no_row_yet"]["status"] == "FAIL"
     # Other checks still present and not swallowed by the one FAIL.
     assert by_condition["ticket_location"]["status"] == "PASS"
+
+
+# ---------------------------------------------------------------------------
+# classify_checklist_failure (TCK-20260706-MONITORING-REASON-CODE)
+# ---------------------------------------------------------------------------
+
+
+def test_classify_checklist_failure_all_pass_returns_none():
+    checklist = [
+        {"condition": "ticket_location", "status": "PASS", "evidence": "ok"},
+        {"condition": "staging_artifacts_complete", "status": "NA", "evidence": "hotfix — n/a"},
+    ]
+    assert classify_checklist_failure(checklist) is None
+
+
+def test_classify_checklist_failure_tag_registry_rejection():
+    checklist = [
+        {"condition": "ticket_location", "status": "PASS", "evidence": "ok"},
+        {
+            "condition": "frontmatter_valid",
+            "status": "FAIL",
+            "evidence": "tickets/inprogress/TCK-FAKE.md: tags: 'some-tag' is not in the tag registry — register it first",
+        },
+    ]
+    assert classify_checklist_failure(checklist) == "tag_registry_rejection"
+
+
+def test_classify_checklist_failure_generic_dod_failure():
+    checklist = [
+        {"condition": "working_log_no_row_yet", "status": "FAIL", "evidence": "duplicate row found"},
+    ]
+    assert classify_checklist_failure(checklist) == "dod_condition_failed"
+
+
+def test_classify_checklist_failure_scans_past_leading_pass_entries():
+    checklist = [
+        {"condition": "ticket_location", "status": "PASS", "evidence": "ok"},
+        {"condition": "data_runs_clean", "status": "PASS", "evidence": "ok"},
+        {
+            "condition": "frontmatter_valid",
+            "status": "FAIL",
+            "evidence": "tags: 'foo' is not in the tag registry",
+        },
+    ]
+    assert classify_checklist_failure(checklist) == "tag_registry_rejection"
+
+
+def test_classify_checklist_failure_returns_first_fail_when_multiple():
+    checklist = [
+        {"condition": "working_log_no_row_yet", "status": "FAIL", "evidence": "duplicate row"},
+        {
+            "condition": "frontmatter_valid",
+            "status": "FAIL",
+            "evidence": "tags: 'foo' is not in the tag registry",
+        },
+    ]
+    # First FAIL wins — documented tie-break, not left ambiguous.
+    assert classify_checklist_failure(checklist) == "dod_condition_failed"
 
 
 # ---------------------------------------------------------------------------

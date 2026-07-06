@@ -152,6 +152,8 @@ tags: []
 
 Frontmatter block is required as the first element. Fill `layer` and `tags` based on scope; leave `tags: []` if uncertain. Use `misc` for layer only if no keyword match is possible.
 
+**Tags are a hard allowlist**, not free text: every tag on a ticket/artifact created on or after 2026-07-04 must already be registered in `docs/guidelines/tag_registry.jsonl`, or `validate_frontmatter.py` rejects it. Before using a genuinely new tag, check `python3 tools/tag_registry.py list` — if it isn't there, register it first with `python3 tools/tag_registry.py add <tag> --category <subsystem-topic|process-skill-signal|quality-attribute|meta-process> --note "why"` (append-only: it cannot be renamed or removed once added). See `docs/guidelines/tag_taxonomy.md` for the category definitions and `docs/guides/ticket_tagging.md` for a practical walkthrough.
+
 ---
 
 ## Testing Rule

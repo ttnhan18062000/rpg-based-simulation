@@ -188,6 +188,45 @@ def run_static_precheck(ticket_id: str, tier: str, start_ts: str | None) -> list
     ]
 
 
+# Substring unique to validate_frontmatter.py's tag-registry-membership rejection message (via
+# tools/tag_registry.py's canonical_form_violation / is_tag_registered) — confirmed via
+# `grep -rn "is not in the tag registry" tools/` to not collide with any other validation error
+# text (canonical-form, forbidden-priority-tag, and synonym-map messages all read differently).
+_TAG_REGISTRY_REJECTION_MARKER = "is not in the tag registry"
+
+
+def classify_checklist_failure(checklist: list[dict]) -> str | None:
+    """Return a coarse reason code for the first FAIL entry in a done-checker checklist.
+
+    Built for TCK-20260706-MONITORING-REASON-CODE: `DOD_BLOCKED` is the one gate status
+    (`docs/agent-monitoring/schema.md`'s `final_status` values) that collapses many distinct DoD
+    conditions into a single value — every other gate status maps 1:1 to a specific phase/meaning
+    already. This disambiguates the two currently-evidenced DOD_BLOCKED sub-causes: an unregistered
+    tag (`"tag_registry_rejection"`), or anything else (`"dod_condition_failed"`, a deliberately
+    coarse fallback — not a full taxonomy of DoD failure reasons, which would be speculative rather
+    than evidence-driven). Returns `None` if no entry has `status == "FAIL"`.
+
+    Scans in order and returns on the first FAIL found — if multiple conditions fail
+    simultaneously, only the first one's classification is reported (documented behavior, not an
+    accident of implementation).
+
+    Not invoked directly by `implement-ticket.js`'s orchestrator via subprocess — passing
+    `doneCheck.checklist`'s arbitrary evidence text (which can contain quotes and backticks, e.g.
+    from `validate_frontmatter.py`'s own error messages) through a shell command risks exactly the
+    quote-corruption failure mode that file's `p0ScanOutput` comment already documents. Instead,
+    `implement-ticket.js` has a hand-synced JS mirror of this exact logic
+    (`classifyChecklistFailure`, same marker string). This Python function remains the tested
+    reference implementation the JS mirror must match, and is directly reusable by any future
+    offline/retro tooling that wants to re-classify a historical checklist.
+    """
+    for item in checklist:
+        if item.get("status") == "FAIL":
+            if _TAG_REGISTRY_REJECTION_MARKER in item.get("evidence", ""):
+                return "tag_registry_rejection"
+            return "dod_condition_failed"
+    return None
+
+
 # ---------------------------------------------------------------------------
 # Part B — post-Finalize migration self-check (Finalize phase)
 # ---------------------------------------------------------------------------

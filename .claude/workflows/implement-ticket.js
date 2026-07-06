@@ -147,7 +147,13 @@ const startTs = ticketInfo.ts || null
 // for distinct timestamps and threads startTs into the run record's start_ts.
 
 const events = []
-const pushEvent = (phaseLabel, agentName, status, summary, ts, toolCallCount) => {
+// reasonCode (TCK-20260706-MONITORING-REASON-CODE): optional, null by default. Only the Verify
+// phase's failed pushEvent call passes one today — DOD_BLOCKED is the one gate status that
+// collapses multiple distinct DoD conditions into a single value, unlike every other gate status
+// (CONFLICTS_DETECTED, NEEDS_HUMAN_INPUT, NEEDS_CHANGES/BLOCKED, TESTS_FAILED, SECURITY_BLOCKED),
+// which already disambiguate 1:1 via phase/final_status alone — see
+// docs/agent-monitoring/schema.md.
+const pushEvent = (phaseLabel, agentName, status, summary, ts, toolCallCount, reasonCode) => {
   events.push({
     seq: events.length + 1,
     phase: phaseLabel,
@@ -156,7 +162,28 @@ const pushEvent = (phaseLabel, agentName, status, summary, ts, toolCallCount) =>
     summary: (summary || '').toString().slice(0, 200),
     ts: ts || null,
     tool_call_count: toolCallCount != null ? toolCallCount : null,
+    reason_code: reasonCode || null,
   })
+}
+
+// Mirrors tools/gate_checks/done_checker_static.py's classify_checklist_failure() exactly — kept
+// in sync by hand (small, evidence-based marker string; see that function's docstring). Not
+// invoked via bash()/subprocess: doneCheck.checklist can contain arbitrary evidence text (quoted
+// tag names, backtick-wrapped shell commands from validate_frontmatter.py's own error messages)
+// that this file's own established convention warns against embedding into a shell command string
+// (see the p0ScanOutput comment above — embedding a JSON blob directly in a `python3 -c "..."`
+// string can corrupt the script and silently fail open). A local JS re-implementation of this
+// ~5-line check avoids that risk entirely.
+const _TAG_REGISTRY_REJECTION_MARKER = 'is not in the tag registry'
+const classifyChecklistFailure = (checklist) => {
+  for (const item of checklist || []) {
+    if (item.status === 'FAIL') {
+      return (item.evidence || '').includes(_TAG_REGISTRY_REJECTION_MARKER)
+        ? 'tag_registry_rejection'
+        : 'dod_condition_failed'
+    }
+  }
+  return null
 }
 
 const writeMonitoring = async (finalStatus) => {
@@ -211,8 +238,36 @@ Return "monitoring written" or "monitoring write failed: <reason>".`,
   }
 }
 
-// Push scope event
-pushEvent('Scope', 'ticket-scoper', ticketInfo.conflicts && ticketInfo.conflicts.length > 0 ? 'failed' : 'ok', ticketInfo.summary || 'Scoped ticket ' + tid, ticketInfo.ts)
+// Tag-registry check (TCK-20260706-SCOPE-TAG-REGISTRY-CHECK): orchestrator-run, not
+// agent-self-reported — mirrors Architecture-Verify's/Parity's Step 0 pattern (individually-quoted
+// argv elements, MARKER-prefixed JSON, try/catch parse) rather than depending on the agent to
+// self-report correctly. Catches an unregistered tag here, at Scope, instead of only 6+ phases
+// later at Verify (done-checker's frontmatter_valid condition, TCK-20260706-TAG-REGISTRY-DATA).
+const tagsArgs = (ticketInfo.tags || []).map(t => `"${t}"`).join(' ')
+const tagCheckOutput = tagsArgs ? await bash(
+  `python3 -c "
+import sys, json
+sys.path.insert(0, 'tools')
+from tag_registry import check_tags_registered
+print('TAG_CHECK_JSON:' + json.dumps(check_tags_registered(sys.argv[1:])))
+" ${tagsArgs}`
+) : 'TAG_CHECK_JSON:[]'
+let unregisteredTags = []
+const tagCheckMarkerIndex = tagCheckOutput.indexOf('TAG_CHECK_JSON:')
+if (tagCheckMarkerIndex !== -1) {
+  try { unregisteredTags = JSON.parse(tagCheckOutput.slice(tagCheckMarkerIndex + 'TAG_CHECK_JSON:'.length).trim()) }
+  catch (e) { unregisteredTags = [] }
+}
+
+// Push scope event. reason_code (TCK-20260706-MONITORING-REASON-CODE convention, reused here):
+// Scope now has 2 distinct failure causes (conflicts, unregistered tags) — the same
+// "collapsed causes" problem DOD_BLOCKED had — so it needs the same disambiguation.
+const scopeReasonCode = (ticketInfo.conflicts && ticketInfo.conflicts.length > 0)
+  ? 'conflicts_detected'
+  : (unregisteredTags.length > 0) ? 'tag_registry_rejection' : null
+pushEvent('Scope', 'ticket-scoper',
+  (ticketInfo.conflicts && ticketInfo.conflicts.length > 0) || unregisteredTags.length > 0 ? 'failed' : 'ok',
+  ticketInfo.summary || 'Scoped ticket ' + tid, ticketInfo.ts, null, scopeReasonCode)
 
 if (ticketInfo.suggested_skills && ticketInfo.suggested_skills.length > 0) {
   log(`Suggested skill(s): ${ticketInfo.suggested_skills.join(', ')}`)
@@ -231,6 +286,19 @@ if (ticketInfo.conflicts && ticketInfo.conflicts.length > 0) {
     ticket_id: tid,
     tier,
     conflicts: ticketInfo.conflicts,
+  }
+}
+
+if (unregisteredTags.length > 0) {
+  log(`Unregistered tag(s): ${unregisteredTags.join(', ')}`)
+  log('Register each via `python3 tools/tag_registry.py add <tag> --category <cat> --note "..."`, or edit the ticket to use an existing registered tag, then re-run with ticket_id="' + tid + '".')
+  await writeMonitoring('TAGS_NOT_REGISTERED')
+  return {
+    status: 'TAGS_NOT_REGISTERED',
+    ticket_id: tid,
+    tier,
+    unregistered_tags: unregisteredTags,
+    message: 'Register each tag via `python3 tools/tag_registry.py add <tag> --category <cat> --note "..."`, or edit the ticket\'s tags to use an existing registered tag, then re-run with ticket_id="' + tid + '".',
   }
 }
 
@@ -864,7 +932,8 @@ Return: verdict, failing_items, checklist, summary (one sentence: READY_TO_CLOSE
 )
 
 if (doneCheck.verdict !== 'READY_TO_CLOSE') {
-  pushEvent('Verify', 'done-checker', 'failed', doneCheck.summary || 'DoD BLOCKED — ' + doneCheck.failing_items.length + ' items failing', doneCheck.ts)
+  const reasonCode = classifyChecklistFailure(doneCheck.checklist)
+  pushEvent('Verify', 'done-checker', 'failed', doneCheck.summary || 'DoD BLOCKED — ' + doneCheck.failing_items.length + ' items failing', doneCheck.ts, null, reasonCode)
   log(`DoD check: BLOCKED — ${doneCheck.failing_items.length} items failing`)
   log(doneCheck.failing_items.join(' | '))
   await writeMonitoring('DOD_BLOCKED')

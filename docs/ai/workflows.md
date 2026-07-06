@@ -37,8 +37,8 @@ Workflow({ name: "workflow-name", args: { key: value } })
 |---|---|
 | Comprehend | Reads the source doc and extracts one task per discrete concern; no codebase investigation yet |
 | Investigate | Per-concern, in parallel: `tools/knowledge_search.py`, `graphify query`, `docs/REGISTRY.yaml` lookups, a `working_log.csv` grep, code/test reads, and a tier assessment |
-| Structure | One synthesis agent produces ticket fields from the investigation evidence only, handling merge/split/short-scope dedup across concerns |
-| Write | Per ticket, parallel `ticket-scoper` invocations write `TCK-YYYYMMDD-<SHORT-SCOPE>.md` into the output folder, plus a conditional `SEQUENCE.md` when intra-batch dependencies are detected |
+| Structure | One synthesis agent produces ticket fields from the investigation evidence only, handling merge/split/short-scope dedup across concerns; orchestrator then runs `tools/tag_registry.py::check_tags_registered` across all tasks' tags — any task with an unregistered tag is skipped (not written), reported in the final `tags_not_registered` field, and excluded from the `SEQUENCE.md` dependency graph, while the rest of the batch proceeds (`TCK-20260706-CREATE-TICKETS-TAG-CHECK`) |
+| Write | Per ticket (only those that passed the tag-registry check), parallel `ticket-scoper` invocations write `TCK-YYYYMMDD-<SHORT-SCOPE>.md` into the output folder, plus a conditional `SEQUENCE.md` when intra-batch dependencies are detected |
 | Link | If `epic_id` given, appends new ticket IDs to the epic's `## Related Tickets` section |
 
 **Args:**
@@ -66,8 +66,9 @@ Workflow({ name: "workflow-name", args: { key: value } })
 ```
 
 **Artifacts produced:**
-- `tickets/todos/<folder>/TCK-YYYYMMDD-<SHORT-SCOPE>.md` — one per task, Status: OPEN, all required sections filled
+- `tickets/todos/<folder>/TCK-YYYYMMDD-<SHORT-SCOPE>.md` — one per task that passed the tag-registry check, Status: OPEN, all required sections filled
 - Epic `## Related Tickets` updated (if `epic_id` provided)
+- Return value includes `tags_not_registered`: tasks skipped for an unregistered tag, alongside the existing `scope_dupes_dropped` field
 
 ---
 
@@ -79,7 +80,7 @@ Workflow({ name: "workflow-name", args: { key: value } })
 
 | Phase | Agent used | Gate condition |
 |---|---|---|
-| Scope | `ticket-scoper` | Stops if conflicts detected |
+| Scope | `ticket-scoper` | Stops if conflicts detected, or if any ticket tag isn't in `docs/guidelines/tag_registry.jsonl` (orchestrator-run check via `tools/tag_registry.py::check_tags_registered`, after the agent call returns) |
 | Investigate | `investigator` | — |
 | Plan | `planner` | Stops if unresolved questions in plan |
 | Review | `architecture-reviewer` | Stops if NEEDS_CHANGES or BLOCKED |
@@ -114,6 +115,7 @@ Workflow({ name: 'implement-ticket', args: { ticket_id: 'TCK-20260606-PHASE28-RU
 | Status | Meaning | Next action |
 |---|---|---|
 | `CONFLICTS_DETECTED` | Duplicate or conflicting tickets found | Review conflicts, adjust scope, re-run |
+| `TAGS_NOT_REGISTERED` | A ticket tag isn't in `docs/guidelines/tag_registry.jsonl` | Register it (`python3 tools/tag_registry.py add <tag> --category <cat> --note "..."`) or edit the ticket to use an existing registered tag, then re-run with `ticket_id` |
 | `NEEDS_HUMAN_INPUT` | Plan has unresolved questions | Read `staging_artifacts/{id}/plan.md`, resolve, re-run with `ticket_id` |
 | `NEEDS_CHANGES` | Architecture review rejected the plan (Review phase) or a post-Implement diff (Architecture-Verify phase) — same status string, distinguish by which phase logged it | Review: fix `plan.md` violations. Architecture-Verify: fix the flagged code. Re-run with `ticket_id` either way |
 | `BLOCKED` | Architecture fundamental conflict — plan (Review phase) or diff (Architecture-Verify phase) | Review: revisit scope. Architecture-Verify: fix the flagged code. Re-run with `ticket_id` either way |

@@ -33,6 +33,7 @@ These agents handle the pre-implementation and post-implementation phases of a d
 - Scans `tickets/inprogress/`, `tickets/done/`, `docs/`, `stored_artifacts/`, and relevant source files for duplicate work, conflicting requirements, or architectural mismatches
 - Produces `tickets/inprogress/TCK-YYYYMMDD-SHORT-SCOPE.md` with all required sections
 - Creates `staging_artifacts/{ticket_id}/`
+- Picks tags per `docs/guidelines/tag_taxonomy.md`, ideally from what `python3 tools/tag_registry.py list` already shows registered — the orchestrator checks this after the agent returns and gates on it (`TAGS_NOT_REGISTERED`, `TCK-20260706-SCOPE-TAG-REGISTRY-CHECK`), so this agent's own choice doesn't need to enforce it itself
 
 **Inputs:** A request description (free text) or an existing ticket path.
 

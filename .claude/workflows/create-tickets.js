@@ -98,7 +98,10 @@ const sourceSlug = source.replace(/\.[^/.]+$/, '').replace(/[^A-Za-z0-9]+/g, '-'
 const runId = `CREATE-TICKETS-${sourceSlug}`
 
 const events = []
-const pushEvent = (phaseLabel, agentName, status, summary, ts) => {
+// reasonCode (TCK-20260706-CREATE-TICKETS-TAG-CHECK, reusing the reason_code field from
+// TCK-20260706-MONITORING-REASON-CODE): optional, null by default. Populated on the Structure
+// phase's 'blocked' event when tasks are skipped for having an unregistered tag.
+const pushEvent = (phaseLabel, agentName, status, summary, ts, reasonCode) => {
   events.push({
     seq: events.length + 1,
     phase: phaseLabel,
@@ -106,6 +109,7 @@ const pushEvent = (phaseLabel, agentName, status, summary, ts) => {
     status,
     summary: (summary || '').toString().slice(0, 200),
     ts: ts || null,
+    reason_code: reasonCode || null,
   })
 }
 
@@ -651,7 +655,47 @@ if (droppedScopes.length > 0) {
   log(`WARNING: duplicate short_scope from structure — dropped: ${droppedScopes.join(', ')}`)
 }
 
-const tasksWithSkills = dedupedTasks.filter(t => t.suggested_skills && t.suggested_skills.length > 0)
+// Tag-registry check (TCK-20260706-CREATE-TICKETS-TAG-CHECK): orchestrator-run, same pattern as
+// implement-ticket.js's Scope-phase check. Mirrors droppedScopes' defensive-skip precedent
+// directly above — the structure agent may still produce an unregistered tag despite
+// instructions restricting it to a closed 4-tag list; skip writing that task and continue the
+// batch, rather than aborting all N tickets over one task's tag.
+const allBatchTags = [...new Set(dedupedTasks.flatMap(t => t.tags || []))]
+const tagsArgs = allBatchTags.map(t => `"${t}"`).join(' ')
+const tagCheckOutput = tagsArgs ? await bash(
+  `python3 -c "
+import sys, json
+sys.path.insert(0, 'tools')
+from tag_registry import check_tags_registered
+print('TAG_CHECK_JSON:' + json.dumps(check_tags_registered(sys.argv[1:])))
+" ${tagsArgs}`
+) : 'TAG_CHECK_JSON:[]'
+let unregisteredBatchTags = []
+const tagCheckMarkerIndex = tagCheckOutput.indexOf('TAG_CHECK_JSON:')
+if (tagCheckMarkerIndex !== -1) {
+  try { unregisteredBatchTags = JSON.parse(tagCheckOutput.slice(tagCheckMarkerIndex + 'TAG_CHECK_JSON:'.length).trim()) }
+  catch (e) { unregisteredBatchTags = [] }
+}
+
+let tasksReadyToWrite = dedupedTasks
+const tasksWithUnregisteredTags = []
+if (unregisteredBatchTags.length > 0) {
+  const unregisteredSet = new Set(unregisteredBatchTags)
+  tasksReadyToWrite = []
+  for (const task of dedupedTasks) {
+    const badTags = (task.tags || []).filter(t => unregisteredSet.has(t))
+    if (badTags.length > 0) {
+      tasksWithUnregisteredTags.push({ short_scope: task.short_scope, tags: badTags })
+    } else {
+      tasksReadyToWrite.push(task)
+    }
+  }
+  log(`WARNING: unregistered tag(s) — skipping write for: ${tasksWithUnregisteredTags.map(t => `${t.short_scope} (${t.tags.join(', ')})`).join(' | ')}`)
+  log('Register each via `python3 tools/tag_registry.py add <tag> --category <cat> --note "..."`, then re-run to pick up the skipped concern(s).')
+  pushEvent('Structure', 'create-tickets', 'blocked', `${tasksWithUnregisteredTags.length} task(s) skipped — unregistered tag(s)`, null, 'tag_registry_rejection')
+}
+
+const tasksWithSkills = tasksReadyToWrite.filter(t => t.suggested_skills && t.suggested_skills.length > 0)
 if (tasksWithSkills.length > 0) {
   log(`Suggested skills: ${tasksWithSkills.map(t => `${t.short_scope}: ${t.suggested_skills.join(', ')}`).join(' | ')}`)
 }
@@ -662,7 +706,7 @@ const outputFolder = outputOverride
 
 const dateStr = structured.date
 
-log(`Writing ${dedupedTasks.length} ticket(s) to ${outputFolder}`)
+log(`Writing ${tasksReadyToWrite.length} ticket(s) to ${outputFolder}`)
 
 // ─── Phase 4: Write (parallel) ────────────────────────────────────────────────
 //
@@ -684,7 +728,7 @@ const WRITE_SCHEMA = {
 }
 
 const written = await pipeline(
-  dedupedTasks,
+  tasksReadyToWrite,
   (task) => {
     const ticketId = `TCK-${dateStr}-${task.short_scope}`
     const ticketPath = `${outputFolder}${ticketId}.md`
@@ -746,24 +790,26 @@ summary (one sentence confirming the file was written, ≤200 chars), ts=TS.`,
 const succeeded = written.filter(Boolean)
 const ticketIds = succeeded.map(w => w.ticket_id)
 
-log(`Written: ${succeeded.length}/${dedupedTasks.length} tickets`)
+log(`Written: ${succeeded.length}/${tasksReadyToWrite.length} tickets`)
 for (const w of succeeded) {
   pushEvent('Write', 'ticket-scoper', 'ok', w.summary || `Wrote ${w.ticket_id}`, w.ts)
 }
-if (succeeded.length < dedupedTasks.length) {
-  log(`WARNING: ${dedupedTasks.length - succeeded.length} write agent(s) returned null`)
-  pushEvent('Write', 'ticket-scoper', 'failed', `${dedupedTasks.length - succeeded.length} write agent(s) returned null`, null)
+if (succeeded.length < tasksReadyToWrite.length) {
+  log(`WARNING: ${tasksReadyToWrite.length - succeeded.length} write agent(s) returned null`)
+  pushEvent('Write', 'ticket-scoper', 'failed', `${tasksReadyToWrite.length - succeeded.length} write agent(s) returned null`, null)
 }
 
 // ─── Auto-generate SEQUENCE.md when intra-batch dependencies exist ────────────
 //
 // Detect which tickets depend on other tickets in this same batch,
 // topological-sort them, and write SEQUENCE.md if any deps were found.
+// Uses tasksReadyToWrite, not dedupedTasks — a task skipped for an unregistered tag was never
+// written, so it must not appear in the dependency graph either (TCK-20260706-CREATE-TICKETS-TAG-CHECK).
 
-const batchIdSet = new Set(dedupedTasks.map(t => `TCK-${dateStr}-${t.short_scope}`))
+const batchIdSet = new Set(tasksReadyToWrite.map(t => `TCK-${dateStr}-${t.short_scope}`))
 
 const depMap = new Map()
-for (const task of dedupedTasks) {
+for (const task of tasksReadyToWrite) {
   const ticketId = `TCK-${dateStr}-${task.short_scope}`
   const prereqs = new Set()
   for (const rt of (task.related_tickets || [])) {
@@ -877,6 +923,7 @@ return {
   duplicates_skipped: duplicates.map(d => `${d.concern_id} → ${d.duplicate_of}`),
   skipped: structured.skipped,
   scope_dupes_dropped: droppedScopes,
+  tags_not_registered: tasksWithUnregisteredTags,
   epic_linked: !!epicId,
   message: succeeded.length > 0
     ? `Created ${succeeded.length} ticket(s) in ${outputFolder}.${epicId ? ` Linked to ${epicId}.` : ` Run /implement-epic folder=${outputFolder} to implement.`}`

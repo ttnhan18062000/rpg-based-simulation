@@ -25,7 +25,7 @@ audience: agent
 ticket_id: TCK-YYYYMMDD-SHORT-SCOPE
 phase: open
 date: YYYY-MM-DD
-tags: [<see docs/guidelines/tag_taxonomy.md — prefer its categories and canonical spellings over raw scope-word lowercasing; never emit p0/p1/p2>]
+tags: [<see docs/guidelines/tag_taxonomy.md — prefer its categories and canonical spellings over raw scope-word lowercasing; never emit p0/p1/p2. Tags are a hard allowlist — run `python3 tools/tag_registry.py list` to see what's already registered before picking one; the orchestrator checks this after Scope and blocks (TAGS_NOT_REGISTERED) if a chosen tag isn't registered, so preferring an existing tag avoids that round-trip>]
 ---
 
 # TCK-YYYYMMDD-SHORT-SCOPE

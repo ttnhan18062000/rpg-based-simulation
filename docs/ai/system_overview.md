@@ -65,7 +65,11 @@ directly from `.claude/workflows/create-tickets.js`'s `phase(...)` calls, not fr
 - **Investigate** runs per-concern, in parallel: `tools/knowledge_search.py`, `graphify query`,
   `docs/REGISTRY.yaml` lookups, a `working_log.csv` grep, code and test reads, and a tier assessment.
 - **Structure** runs one synthesis agent that produces ticket fields from the investigation evidence
-  only, handling merge/split/short-scope dedup across concerns.
+  only, handling merge/split/short-scope dedup across concerns. The orchestrator then checks every
+  task's tags against `docs/guidelines/tag_registry.jsonl` (`tools/tag_registry.py::check_tags_registered`)
+  — a task with an unregistered tag is skipped (not written), reported in the run's
+  `tags_not_registered` field, and excluded from `SEQUENCE.md`'s dependency graph, while the rest of
+  the batch proceeds (`TCK-20260706-CREATE-TICKETS-TAG-CHECK`).
 - **Write** runs, per ticket, parallel `ticket-scoper` invocations that produce the actual `TCK-*.md`
   file plus a conditional `SEQUENCE.md` when intra-batch dependencies are detected.
 - **Link** runs only when an `epic_id` is given.
@@ -73,7 +77,9 @@ directly from `.claude/workflows/create-tickets.js`'s `phase(...)` calls, not fr
 `docs/agent-monitoring/schema.md`'s `events.jsonl` phase list for `create-tickets` already lists these
 same 5 phases, independently confirming them.
 
-**The 10-phase `implement-ticket` pipeline** (standard tier): Scope (`ticket-scoper`) → Investigate
+**The 10-phase `implement-ticket` pipeline** (standard tier): Scope (`ticket-scoper`, plus an
+orchestrator-run check of `ticketInfo.tags` against `docs/guidelines/tag_registry.jsonl` after the
+agent returns — gate: `TAGS_NOT_REGISTERED`, `TCK-20260706-SCOPE-TAG-REGISTRY-CHECK`) → Investigate
 (`investigator`) → Plan (`planner`) → Review (`architecture-reviewer`, gate: `NEEDS_CHANGES`/`BLOCKED`)
 → Implement (`implementer`) →
 **Architecture-Verify (`architecture-reviewer`, 2nd call, gate: `NEEDS_CHANGES`/`BLOCKED` — runs
@@ -116,7 +122,12 @@ optional `tier_override`. Its return values include `EPIC_CREATED`, `NOTHING_TO_
 child ticket's gate status.
 
 Across these workflows, the literal gate/return-status vocabulary is: `CONFLICTS_DETECTED`,
-`NEEDS_HUMAN_INPUT`, `NEEDS_CHANGES`, `BLOCKED`, `TESTS_FAILED`, `SECURITY_BLOCKED`, `DOD_BLOCKED`, `DONE`.
+`TAGS_NOT_REGISTERED`, `NEEDS_HUMAN_INPUT`, `NEEDS_CHANGES`, `BLOCKED`, `TESTS_FAILED`,
+`SECURITY_BLOCKED`, `DOD_BLOCKED`, `DONE`. `agent-monitoring/events.jsonl` additionally carries an
+optional `reason_code` on some `Scope`/`Structure`/`Verify` events, disambiguating a status that
+collapses more than one cause into one value (e.g. `DOD_BLOCKED` alone doesn't say whether the
+cause was an unregistered tag or an unrelated DoD condition) — see
+`docs/agent-monitoring/schema.md`'s `reason_code` section.
 
 The Verify phase (`done-checker`) checks **12 substantive Definition-of-Done conditions**, plus a
 13th — agent monitoring — that is pre-marked PASS and guaranteed by the workflow itself rather than

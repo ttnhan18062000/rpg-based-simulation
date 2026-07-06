@@ -16,6 +16,7 @@ from tag_registry import (  # noqa: E402
     ALL_CATEGORIES,
     add_tag,
     canonical_form_violation,
+    check_tags_registered,
     is_phase_milestone_tag,
     is_tag_registered,
     load_registry,
@@ -180,3 +181,33 @@ def test_add_tag_is_append_only_existing_entries_unchanged(tmp_path):
     assert registry["faction"]["note"] == "first"
     assert registry["debugging"]["note"] == "second"
     assert len(registry) == 2
+
+
+# ---------------------------------------------------------------------------
+# check_tags_registered (TCK-20260706-SCOPE-TAG-REGISTRY-CHECK)
+# ---------------------------------------------------------------------------
+
+
+def test_check_tags_registered_all_registered_returns_empty(tmp_path):
+    add_tag("faction", "subsystem-topic", root=tmp_path)
+    add_tag("debugging", "process-skill-signal", root=tmp_path)
+
+    assert check_tags_registered(["faction", "debugging"], root=tmp_path) == []
+
+
+def test_check_tags_registered_returns_only_unregistered_subset(tmp_path):
+    add_tag("faction", "subsystem-topic", root=tmp_path)
+
+    result = check_tags_registered(["faction", "some-new-tag", "another-new-tag"], root=tmp_path)
+
+    assert result == ["some-new-tag", "another-new-tag"]
+
+
+def test_check_tags_registered_phase_tags_never_flagged(tmp_path):
+    result = check_tags_registered(["phase-5", "some-new-tag"], root=tmp_path)
+
+    assert result == ["some-new-tag"]
+
+
+def test_check_tags_registered_empty_input_returns_empty(tmp_path):
+    assert check_tags_registered([], root=tmp_path) == []

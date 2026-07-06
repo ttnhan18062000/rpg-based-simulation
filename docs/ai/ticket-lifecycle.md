@@ -39,6 +39,7 @@ flowchart TD
 
     Scope["Scope<br/><i>ticket-scoper</i><br/>→ tickets/inprogress/{id}.md<br/>→ staging_artifacts/{id}/"]
     Scope -- CONFLICTS_DETECTED --> ScopeFix[/"Human resolves, re-run"/]
+    Scope -- TAGS_NOT_REGISTERED --> ScopeTagFix[/"Register tag(s) via tag_registry.py add,<br/>or edit ticket to use an existing tag, re-run"/]
     Scope -- "tier=epic" --> EpicDone(["EPIC_SCOPED"])
     Scope --> Investigate
 
@@ -133,7 +134,17 @@ staging_artifacts/TCK-20260606-COMBAT-RELATION/
 
 **Gate:** If conflicts are detected, the workflow returns `CONFLICTS_DETECTED` with a list. The user resolves (adjust scope, close duplicate, etc.) and re-runs.
 
-**If resuming with `ticket_id`:** This phase reads the existing ticket and skips creation.
+**Gate (tag registry):** After the agent call returns, the orchestrator runs
+`tools/tag_registry.py::check_tags_registered` against the ticket's tags (via `bash()` — not
+agent-self-reported, so it can't be skipped by a prompt-following mistake). If any tag isn't in
+`docs/guidelines/tag_registry.jsonl`, the workflow returns `TAGS_NOT_REGISTERED` with the list —
+catching this here instead of only at Verify (`done-checker`'s `frontmatter_valid` condition), 6+
+phases later. The user registers the tag (`python3 tools/tag_registry.py add <tag> --category <cat>
+--note "..."`) or edits the ticket to use an existing registered tag, then re-runs.
+
+**If resuming with `ticket_id`:** This phase reads the existing ticket and skips creation — the
+tag-registry check still runs against whatever tags the file already has, since those may have
+been set by a human or by `create-tickets.js` without going through this check.
 
 ---
 
@@ -464,6 +475,7 @@ After work:
 | Return status | What failed | Fix | Re-run |
 |---|---|---|---|
 | `CONFLICTS_DETECTED` | Duplicate or conflicting ticket found | Review `conflicts` list, adjust scope or close duplicate | Re-run with `request` (new scope) |
+| `TAGS_NOT_REGISTERED` | A ticket tag isn't in `docs/guidelines/tag_registry.jsonl` | Register it (`python3 tools/tag_registry.py add <tag> --category <cat> --note "..."`) or edit the ticket's tags to use an existing registered one | Re-run with `ticket_id` |
 | `NEEDS_HUMAN_INPUT` | Plan has unresolved questions | Edit `staging_artifacts/{id}/plan.md`, fill in the answers | Re-run with `ticket_id` |
 | `NEEDS_CHANGES` | Architecture violations in plan | Fix `plan.md` per violation list | Re-run with `ticket_id` |
 | `BLOCKED` | Fundamental architectural conflict | Revisit scope, possibly split ticket | Re-run with `ticket_id` or new `request` |

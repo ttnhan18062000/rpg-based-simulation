@@ -152,6 +152,18 @@ def is_tag_registered(tag: str, registry: dict) -> bool:
     return tag in registry or is_phase_milestone_tag(tag)
 
 
+def check_tags_registered(tags: list[str], root: Path | str | None = None) -> list[str]:
+    """Return the subset of `tags` that are NOT registered (phase-N tags always excluded).
+
+    Built for TCK-20260706-SCOPE-TAG-REGISTRY-CHECK: lets the Scope phase
+    (`.claude/workflows/implement-ticket.js`) catch an unregistered tag immediately, instead of
+    only discovering it 6+ phases later at Verify (`done-checker`'s `frontmatter_valid` condition,
+    `TCK-20260706-TAG-REGISTRY-DATA`). One `load_registry()` call, not one per tag.
+    """
+    registry = load_registry(root)
+    return [tag for tag in tags if not is_tag_registered(tag, registry)]
+
+
 def add_tag(tag: str, category: str, note: str = "", root: Path | str | None = None) -> dict:
     """Append a new tag registration. Returns the entry written.
 
