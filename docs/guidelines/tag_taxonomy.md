@@ -14,11 +14,16 @@ audience: developer
 plus at least 19 confirmed format-duplicate groups (`p0`/`P0`, `phase-5`/`phase5`,
 `simulation_quality`/`simulation-quality`, etc.).
 
-This document defines a **controlled vocabulary of categories and canonical-form rules** — not a
-frozen enumeration of every valid tag. A clean vocabulary is a prerequisite for tags becoming an
-actual routing signal later (skill suggestion, gate routing, retro grouping); this document does
-not build any of that consumption logic itself. Each future scenario below names which category
-its routing logic would eventually read:
+This document defines a **controlled vocabulary of categories and canonical-form rules**. Until
+`TCK-20260706-TAG-REGISTRY-DATA`, that vocabulary was deliberately open-ended — categories and
+canonical-form rules only, not a closed list of every valid tag. It is now backed by a concrete,
+append-only data file, `docs/guidelines/tag_registry.jsonl` (managed by `tools/tag_registry.py`),
+which **is** an enumeration: every tag used on a ticket/artifact created on or after the
+enforcement cutoff must be registered there first. See [Tag Registry](#tag-registry) below for why
+and how. A clean vocabulary is a prerequisite for tags becoming an actual routing signal later
+(skill suggestion, gate routing, retro grouping); this document does not build any of that
+consumption logic itself. Each future scenario below names which category its routing logic would
+eventually read:
 
 | Scenario | Category it reads |
 |---|---|
@@ -68,11 +73,35 @@ otherwise, if it characterizes the nature of a change, it is Quality-attribute. 
 `hardening` describes *how* a change was made (Quality-attribute), while `security` names the
 `security-review` skill (Process/Skill-signal).
 
+### Meta-Process
+
+Tags about the ticket/agent-workflow process itself, not about simulation gameplay, an engine
+subsystem, a skill gate, or a change's nature — e.g. `workflows`, `agent-monitoring`,
+`documentation`, `tagging`, `investigation`, `retro`, `frontmatter`. Added alongside the tag
+registry (`TCK-20260706-TAG-REGISTRY-DATA`): seeding the registry from the live corpus found the
+large majority of in-use tags were exactly this kind of tag — evidence that they were never a bad
+fit for the original 4 categories, they were simply a 5th, undocumented one. Note that `layer: ai`
+in this repo also means this domain (`docs/ai/` is the Claude agent-orchestration system, not
+gameplay AI/cognition — that lives under `strategy`/`cognition` instead), so an `ai` tag is
+Meta-Process, not Subsystem/Topic.
+
+**Disambiguation rule** (Meta-Process vs. Subsystem/Topic): if the tag names something a player or
+the simulation engine would recognize (a gameplay subsystem, an engine capability), it is
+Subsystem/Topic. If it names something only a developer or agent working *on* the ticket/tooling
+system would recognize, it is Meta-Process. For example, `resource-registry` (a gameplay system)
+is Subsystem/Topic, while `registry` (referring to `docs/REGISTRY.yaml` tooling) is Meta-Process.
+
 ## Forbidden Tags
 
 `p0`, `p1`, `p2` (any case: `P0`, `P1`, `P2`) are never valid tags. This information already lives
 in the ticket's dedicated `## Priority` field — a tag duplicating it is pure redundancy, not a
 taxonomy gap to fill.
+
+**Open question, not decided here:** the same redundancy argument may apply to `bug` (registered
+today as Meta-Process, `TCK-20260706-TAG-REGISTRY-DATA` seed) and other tags naming a ticket's
+`## Type` value (`feature`, `refactor`, `chore`, `repair`) — that field already exists for exactly
+this purpose. Flagged for a future decision rather than forbidden unilaterally here, since
+forbidding it retroactively would fail the 3 existing tickets already using it.
 
 ## Canonical-Form Rules
 
@@ -93,9 +122,51 @@ taxonomy gap to fill.
 | `worldspec` | `world-spec` |
 
 This list is intentionally small and evidence-based (derived from confirmed corpus duplicate
-groups). Do not use it to pre-enumerate every subsystem tag — the taxonomy defines categories and
-canonical-form rules, not a closed list of every valid tag. 1273 existing tags include a large
-amount of legitimately one-off, ticket-specific detail that is not evidence of a missing category.
+groups). Do not use it to pre-enumerate every subsystem tag. 1273 pre-registry tags include a
+large amount of legitimately one-off, ticket-specific detail that was never evidence of a missing
+category — the same principle now applies to the registry: a tag not yet registered is not
+necessarily wrong, it may just not have been needed yet (see [Tag Registry](#tag-registry)).
+
+## Tag Registry
+
+`docs/guidelines/tag_registry.jsonl` is the machine-readable, **append-only** enumeration of every
+tag a ticket/artifact is allowed to use, going forward. Each line is one JSON object, one tag,
+registered exactly once:
+
+```json
+{"tag": "faction", "category": "subsystem-topic", "added_date": "2026-07-06", "note": "..."}
+```
+
+**Why a registry, not just canonical-form rules:** canonical-form rules alone (lowercase,
+hyphenated, no known synonym) cannot catch a *new* near-duplicate of an existing tag's *meaning*
+(e.g. `calibrate` alongside the already-registered `calibration`) — both are perfectly canonical
+form, just two different words for the same thing. A registry that must be checked against (not
+just pattern-matched) is what closes that gap.
+
+**Append-only, by design:** `tools/tag_registry.py`'s CLI has no `update` or `delete` command — the
+only way to change what a tag means is to stop using it and register a different one; the file
+itself, plus its own git history, is the changelog (no separate changelog file to keep in sync by
+hand). Registering a tag that already exists is rejected.
+
+**How to register a new tag:**
+
+```bash
+python3 tools/tag_registry.py add <tag> --category <category> --note "why this tag exists"
+python3 tools/tag_registry.py list   # see everything currently registered
+```
+
+`<category>` must be one of `subsystem-topic`, `process-skill-signal`, `quality-attribute`,
+`meta-process` (`phase-milestone` is deliberately not addable this way — see below). `<tag>` must
+already be in canonical form; the tool rejects the same violations `validate_frontmatter.py` would.
+
+**`phase-N` tags are exempt from registration:** `phase-5`, `phase-12`, etc. are recognized
+automatically by pattern (`^phase-\d+$`) rather than requiring every phase number to be registered
+individually — registering an open-ended, ever-growing numeric series one value at a time would
+defeat the point of an append-only file staying small and readable.
+
+See `docs/guides/ticket_tagging.md` for a walkthrough of when and how to add a tag in practice, and
+`tools/tag_report.py` (`docs/guides/ticket_reporting.md`) for a usage-frequency report over
+whatever is currently registered.
 
 ## Enforcement
 
@@ -104,9 +175,20 @@ tag checks to tickets/artifacts whose `ticket_id` embeds a date (`TCK-YYYYMMDD-.
 this date. Tickets and artifacts predating this taxonomy are intentionally not backfilled or
 re-validated, so a whole-directory validation run does not newly fail on historical tags.
 
+For tickets/artifacts within scope, two checks now apply, in order: canonical form (as above), then
+**registry membership** — `validate_frontmatter.py` loads `docs/guidelines/tag_registry.jsonl` and
+rejects any canonical-form tag that isn't registered there (except `phase-N` tags, always allowed).
+This is a **hard allowlist**: a genuinely new tag must be registered via `tools/tag_registry.py add`
+before it can be used on any ticket/artifact. Confirmed to introduce zero new regressions against
+the existing corpus: seeding the registry from every tag already in use across the 27 (at the time)
+post-cutoff tickets, then re-running `validate_frontmatter.py tickets/done`, produced the identical
+185-violation count as the unmodified tree — the only 2 tag-related failures already existed before
+the registry (a non-canonical `simulation_quality` usage, unrelated to registration).
+
 Violations are a hard rejection (exit 1), the same severity as every other frontmatter field
 (`status`, `layer`, `authority`, `audience`, `phase`, `artifact_type`) — not a separate warn-only
 path.
 
 This taxonomy applies to `ticket` and `artifact` content types only. `doc`-type frontmatter's
-`tags` field remains free-form and unvalidated (see `docs/guidelines/frontmatter_schema.md`).
+`tags` field remains free-form and unvalidated (see `docs/guidelines/frontmatter_schema.md`) — the
+registry does not apply there either.

@@ -11,7 +11,7 @@ tags: [tagging, taxonomy, skills]
 `tags` on a ticket or artifact are a controlled vocabulary, not free text — they exist so tools and
 agents can route on them later instead of relying on prose.
 
-## The 4 Categories
+## The 5 Categories
 
 | Category | What it names | Example |
 |---|---|---|
@@ -19,6 +19,26 @@ agents can route on them later instead of relying on prose.
 | Phase/Milestone | A numbered phase or milestone | `phase-5` |
 | Process/Skill-signal | A tag whose canonical spelling matches an existing skill/process gate 1:1 | `debugging` |
 | Quality-attribute | The nature of a change, not tied to a specific skill | `hardening` |
+| Meta-Process | About the ticket/agent-workflow process itself, not gameplay or engine subject matter | `workflows` |
+
+## Registering a New Tag
+
+Tags are now a **hard allowlist**, backed by `docs/guidelines/tag_registry.jsonl`
+(`tools/tag_registry.py`) — see `docs/guidelines/tag_taxonomy.md`'s Tag Registry section for the
+full rationale. In practice, if you want to use a tag that isn't already registered:
+
+```bash
+python3 tools/tag_registry.py add <tag> --category <category> --note "why this tag exists"
+```
+
+`<category>` is one of `subsystem-topic`, `process-skill-signal`, `quality-attribute`,
+`meta-process` (`phase-milestone` tags like `phase-5` never need registering — they're recognized
+by pattern). The tool refuses a tag that's already registered (registration is append-only — you
+can't rename or repurpose an existing tag, only add a new one) and refuses a non-canonical tag name
+(same lowercase/hyphenated rules `validate_frontmatter.py` enforces). Run
+`python3 tools/tag_registry.py list` to see everything currently registered before deciding whether
+your intended tag already exists under a different spelling (e.g. `calibration` instead of
+`calibrate`) — the whole point of the registry is to catch that before it duplicates.
 
 ## Skill Suggestions From Tags
 

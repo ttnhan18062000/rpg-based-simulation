@@ -548,6 +548,80 @@ class TestTagCanonicalization:
 
 
 # ---------------------------------------------------------------------------
+# Group 6d — Tag registry enforcement (TCK-20260706-TAG-REGISTRY-DATA)
+#
+# `registry` is an opt-in third argument to validate_file/_check_tags: omitting it (as every test
+# above does) preserves pre-registry behavior (canonical-form checks only). These tests pass an
+# explicit in-memory registry to exercise the new hard-allowlist membership check without touching
+# the real docs/guidelines/tag_registry.jsonl.
+# ---------------------------------------------------------------------------
+
+class TestTagRegistryEnforcement:
+    def _ticket_file(self, tmp_path: Path, content: str) -> Path:
+        d = tmp_path / "tickets" / "done"
+        d.mkdir(parents=True, exist_ok=True)
+        return _write(d / "TCK-TEST.md", content)
+
+    def _artifact_file(self, tmp_path: Path, content: str) -> Path:
+        d = tmp_path / "stored_artifacts" / "TCK-TEST"
+        d.mkdir(parents=True, exist_ok=True)
+        return _write(d / "plan.md", content)
+
+    def test_registered_tag_accepted(self, tmp_path):
+        registry = {"faction": {"tag": "faction", "category": "subsystem-topic"}}
+        f = self._ticket_file(
+            tmp_path, _ticket_fm(ticket_id="TCK-20260704-TEST", tags="[faction]")
+        )
+        assert validate_file(f, registry=registry) == []
+
+    def test_unregistered_tag_rejected(self, tmp_path):
+        f = self._ticket_file(
+            tmp_path, _ticket_fm(ticket_id="TCK-20260704-TEST", tags="[some-new-tag]")
+        )
+        errors = validate_file(f, registry={})
+        assert any("some-new-tag" in e and "not in the tag registry" in e for e in errors)
+        assert any("tools/tag_registry.py add" in e for e in errors)
+
+    def test_phase_milestone_tag_accepted_without_registration(self, tmp_path):
+        f = self._ticket_file(
+            tmp_path, _ticket_fm(ticket_id="TCK-20260704-TEST", tags="[phase-5]")
+        )
+        assert validate_file(f, registry={}) == []
+
+    def test_canonical_form_violation_reported_before_registry_check(self, tmp_path):
+        """A non-canonical tag is rejected for its form, not its (also-failing) registry absence —
+        the error message should describe the canonical-form fix, not registry registration."""
+        f = self._ticket_file(
+            tmp_path, _ticket_fm(ticket_id="TCK-20260704-TEST", tags="[Combat]")
+        )
+        errors = validate_file(f, registry={})
+        assert any("not canonical form" in e for e in errors)
+        assert not any("not in the tag registry" in e for e in errors)
+
+    def test_registry_check_skipped_when_registry_omitted(self, tmp_path):
+        """Without an explicit registry, any canonical-form tag passes — matches every other test
+        in this file that calls validate_file() with no registry argument."""
+        f = self._ticket_file(
+            tmp_path, _ticket_fm(ticket_id="TCK-20260704-TEST", tags="[some-unregistered-tag]")
+        )
+        assert validate_file(f) == []
+
+    def test_artifact_unregistered_tag_rejected(self, tmp_path):
+        f = self._artifact_file(
+            tmp_path, _artifact_fm(ticket_id="TCK-20260704-TEST", tags="[some-new-tag]")
+        )
+        errors = validate_file(f, registry={})
+        assert any("not in the tag registry" in e for e in errors)
+
+    def test_pre_taxonomy_ticket_exempt_from_registry_check(self, tmp_path):
+        """A ticket predating the taxonomy cutoff skips tag validation entirely, registry or not."""
+        f = self._ticket_file(
+            tmp_path, _ticket_fm(ticket_id="TCK-20260101-OLD", tags="[some-unregistered-tag]")
+        )
+        assert validate_file(f, registry={}) == []
+
+
+# ---------------------------------------------------------------------------
 # Group 7 — Exit code contract (subprocess)
 # ---------------------------------------------------------------------------
 

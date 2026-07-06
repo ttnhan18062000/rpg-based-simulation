@@ -19,6 +19,24 @@ import sys
 from pathlib import Path
 
 # ---------------------------------------------------------------------------
+# Import taxonomy constants and the canonical-form/registry rules from tag_registry.py (same
+# package, one-directional import — tag_registry.py has no dependency on this module, so there is
+# no import cycle). Re-exported here (not just used internally) so existing callers doing
+# `from validate_frontmatter import FORBIDDEN_PRIORITY_TAGS` etc. keep working unchanged.
+# ---------------------------------------------------------------------------
+
+_TOOLS_DIR = Path(__file__).parent
+sys.path.insert(0, str(_TOOLS_DIR))
+from tag_registry import (  # noqa: E402,F401
+    FORBIDDEN_PRIORITY_TAGS,
+    TAG_SYNONYM_MAP,
+    TAG_TAXONOMY_EFFECTIVE_DATE,
+    canonical_form_violation,
+    is_tag_registered,
+    load_registry,
+)
+
+# ---------------------------------------------------------------------------
 # Enum constants — single source of truth for all valid field values.
 # ---------------------------------------------------------------------------
 
@@ -33,29 +51,6 @@ AUDIENCE_VALUES = {"developer", "agent", "designer", "historical"}
 PHASE_VALUES = {"open", "inprogress", "blocked", "done"}
 ARTIFACT_TYPE_VALUES = {"investigation", "plan", "test_plan"}
 
-# Tag taxonomy — see docs/guidelines/tag_taxonomy.md.
-# Enforcement is forward-only: only tickets/artifacts whose ticket_id embeds a date on or
-# after this cutoff are checked, per the "no backfill of history" decision (TCK-20260704-TAG-TAXONOMY).
-TAG_TAXONOMY_EFFECTIVE_DATE = "20260704"
-
-# Duplicates the dedicated `## Priority` ticket-body field — never valid as a tag, at any date.
-FORBIDDEN_PRIORITY_TAGS = {"p0", "p1", "p2"}
-
-# Confirmed synonyms the general format rule (below) cannot derive mechanically, because the
-# non-canonical spelling has no separator character to normalize (run-together compounds and
-# abbreviations). Keep this small and evidence-based — do not use it to pre-enumerate subsystem
-# tags; see docs/guidelines/tag_taxonomy.md's anti-drift note.
-TAG_SYNONYM_MAP = {
-    "obs": "observability",
-    "cog": "cognition",
-    "sim": "simulation",
-    "worldmodules": "world-modules",
-    "selfmodel": "self-model",
-    "datamodel": "data-model",
-    "worldspec": "world-spec",
-}
-
-_PHASE_TAG_PATTERN = re.compile(r"^phase(\d+)$")
 _TICKET_ID_DATE_PATTERN = re.compile(r"^TCK-(\d{8})-")
 
 # ---------------------------------------------------------------------------
@@ -149,7 +144,13 @@ def _ticket_id_effective_date(ticket_id) -> str | None:
     return m.group(1) if m else None
 
 
-def _check_tags(filepath: str, fm: dict) -> list[str]:
+def _check_tags(filepath: str, fm: dict, registry: dict | None = None) -> list[str]:
+    """Validate tags: canonical form, then (if `registry` is given) registry membership.
+
+    `registry` is optional so existing callers that don't pass one (including most of this
+    module's own tests) keep their pre-registry behavior — only canonical-form/forbidden/synonym
+    checks apply. `main()` loads the real registry and passes it through for actual CLI runs.
+    """
     tags = fm.get("tags")
     if not tags:
         return []
@@ -162,34 +163,20 @@ def _check_tags(filepath: str, fm: dict) -> list[str]:
 
     errors = []
     for tag in tags:
-        lower = tag.lower()
-        if lower in FORBIDDEN_PRIORITY_TAGS:
-            errors.append(
-                f"{filepath}: tags: {tag!r} duplicates the dedicated Priority field — remove it"
-            )
+        violation = canonical_form_violation(tag)
+        if violation:
+            errors.append(f"{filepath}: tags: {violation}")
             continue
-        if tag != lower or "_" in tag:
+        if registry is not None and not is_tag_registered(tag, registry):
             errors.append(
-                f"{filepath}: tags: {tag!r} is not canonical form "
-                f"(use {lower.replace('_', '-')!r})"
-            )
-            continue
-        phase_match = _PHASE_TAG_PATTERN.match(tag)
-        if phase_match:
-            errors.append(
-                f"{filepath}: tags: {tag!r} is not canonical form "
-                f"(use {'phase-' + phase_match.group(1)!r})"
-            )
-            continue
-        if tag in TAG_SYNONYM_MAP:
-            errors.append(
-                f"{filepath}: tags: {tag!r} is a non-canonical synonym "
-                f"(use {TAG_SYNONYM_MAP[tag]!r})"
+                f"{filepath}: tags: {tag!r} is not in the tag registry — register it first via "
+                f"`python3 tools/tag_registry.py add {tag} --category <category> "
+                f'--note "..."`'
             )
     return errors
 
 
-def _validate_doc(filepath: str, fm: dict) -> list[str]:
+def _validate_doc(filepath: str, fm: dict, registry: dict | None = None) -> list[str]:
     errors = []
     for field in ("status", "layer", "authority", "audience"):
         if field not in fm:
@@ -205,7 +192,7 @@ def _validate_doc(filepath: str, fm: dict) -> list[str]:
     return errors
 
 
-def _validate_ticket(filepath: str, fm: dict) -> list[str]:
+def _validate_ticket(filepath: str, fm: dict, registry: dict | None = None) -> list[str]:
     errors = []
     for field in ("status", "layer", "authority", "audience", "ticket_id", "phase", "date"):
         if field not in fm:
@@ -215,11 +202,11 @@ def _validate_ticket(filepath: str, fm: dict) -> list[str]:
     errors += _check_enum(filepath, fm, "authority", AUTHORITY_VALUES)
     errors += _check_enum(filepath, fm, "audience", AUDIENCE_VALUES)
     errors += _check_enum(filepath, fm, "phase", PHASE_VALUES)
-    errors += _check_tags(filepath, fm)
+    errors += _check_tags(filepath, fm, registry)
     return errors
 
 
-def _validate_artifact(filepath: str, fm: dict) -> list[str]:
+def _validate_artifact(filepath: str, fm: dict, registry: dict | None = None) -> list[str]:
     errors = []
     for field in ("status", "layer", "authority", "audience", "ticket_id", "artifact_type"):
         if field not in fm:
@@ -229,11 +216,11 @@ def _validate_artifact(filepath: str, fm: dict) -> list[str]:
     errors += _check_enum(filepath, fm, "authority", AUTHORITY_VALUES)
     errors += _check_enum(filepath, fm, "audience", AUDIENCE_VALUES)
     errors += _check_enum(filepath, fm, "artifact_type", ARTIFACT_TYPE_VALUES)
-    errors += _check_tags(filepath, fm)
+    errors += _check_tags(filepath, fm, registry)
     return errors
 
 
-def _validate_archive(filepath: str, fm: dict) -> list[str]:
+def _validate_archive(filepath: str, fm: dict, registry: dict | None = None) -> list[str]:
     errors = []
     for field in ("status", "layer", "original_date"):
         if field not in fm:
@@ -254,8 +241,14 @@ _VALIDATORS = {
 }
 
 
-def validate_file(path: Path, content_type_override: str | None = None) -> list[str]:
-    """Return list of error strings for the given file (empty = pass)."""
+def validate_file(
+    path: Path, content_type_override: str | None = None, registry: dict | None = None
+) -> list[str]:
+    """Return list of error strings for the given file (empty = pass).
+
+    `registry` (tag_registry.load_registry()'s output) is optional; when omitted, tag validation
+    only checks canonical form, not registry membership — see `_check_tags`.
+    """
     filepath = str(path)
     try:
         text = path.read_text(encoding="utf-8")
@@ -280,16 +273,16 @@ def validate_file(path: Path, content_type_override: str | None = None) -> list[
     if validator is None:
         return [f"{filepath}: content_type: unrecognised value {content_type!r}"]
 
-    return validator(filepath, fm)
+    return validator(filepath, fm, registry)
 
 
 def validate_directory(
-    path: Path, content_type_override: str | None = None
+    path: Path, content_type_override: str | None = None, registry: dict | None = None
 ) -> dict[Path, list[str]]:
     """Recursively validate all .md files under path. Returns path→errors map."""
     results = {}
     for md_file in sorted(path.rglob("*.md")):
-        errors = validate_file(md_file, content_type_override)
+        errors = validate_file(md_file, content_type_override, registry)
         results[md_file] = errors
     return results
 
@@ -317,15 +310,18 @@ def main() -> None:
         sys.exit(1)
 
     override = args.content_type
+    # Real CLI runs enforce registry membership (hard allowlist); load_registry() defaults to the
+    # real docs/guidelines/tag_registry.jsonl regardless of cwd.
+    registry = load_registry()
     all_errors: list[str] = []
 
     if target.is_dir():
-        results = validate_directory(target, override)
+        results = validate_directory(target, override, registry)
         file_count = len(results)
         for errors in results.values():
             all_errors.extend(errors)
     else:
-        errors = validate_file(target, override)
+        errors = validate_file(target, override, registry)
         all_errors.extend(errors)
         file_count = 1
 
