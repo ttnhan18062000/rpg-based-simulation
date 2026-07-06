@@ -6,7 +6,7 @@ audience: agent
 ticket_id: TCK-20260704-SIMQ-CORPUS-TIERS-EPIC
 phase: open
 date: 2026-07-04T12:17:33Z
-tags: [simulation_quality, world-content, feature-flags, corpus, epic]
+tags: [simulation-quality, world, feature-flags, corpus]
 ---
 
 # TCK-20260704-SIMQ-CORPUS-TIERS-EPIC

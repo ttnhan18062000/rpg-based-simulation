@@ -6,7 +6,7 @@ audience: agent
 ticket_id: TCK-20260704-SIMQ-AGENCY-STASIS-COLLAPSE
 phase: done
 date: 2026-07-04
-tags: [simulation_quality, agency, cognition, stasis, calibration, bug]
+tags: [simulation-quality, agency, cognition, stasis, calibration, bug]
 ---
 
 # TCK-20260704-SIMQ-AGENCY-STASIS-COLLAPSE

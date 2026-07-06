@@ -6,7 +6,7 @@ audience: agent
 ticket_id: TCK-20260704-SIMQ-CORPUS-UNIT-WORLD-SELFMODEL-PILOT
 phase: open
 date: 2026-07-04T12:17:33Z
-tags: [simulation_quality, self-model, branch-b, unit-tier, calibration, cognition]
+tags: [simulation-quality, self-model, corpus, calibration, cognition]
 ---
 
 # TCK-20260704-SIMQ-CORPUS-UNIT-WORLD-SELFMODEL-PILOT

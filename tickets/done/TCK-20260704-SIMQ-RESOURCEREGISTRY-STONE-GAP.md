@@ -6,7 +6,7 @@ audience: agent
 ticket_id: TCK-20260704-SIMQ-RESOURCEREGISTRY-STONE-GAP
 phase: done
 date: 2026-07-04
-tags: [simulation_quality, world, ecology, resource-registry, bug]
+tags: [simulation-quality, world, ecology, resource-registry, bug]
 ---
 
 # TCK-20260704-SIMQ-RESOURCEREGISTRY-STONE-GAP

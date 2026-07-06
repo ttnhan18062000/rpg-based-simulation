@@ -6,7 +6,7 @@ audience: agent
 ticket_id: TCK-20260704-SIMQ-ROUTING-TEST-HOMETOWN-RESOURCE-GAP
 phase: open
 date: 2026-07-04
-tags: [simulation_quality, world, adventure, routing, content-gap, bug]
+tags: [simulation-quality, world, adventure, bug]
 ---
 
 # TCK-20260704-SIMQ-ROUTING-TEST-HOMETOWN-RESOURCE-GAP

@@ -6,7 +6,7 @@ audience: agent
 ticket_id: TCK-20260704-SIMQ-CORPUS-STRESS-WORLDS
 phase: open
 date: 2026-07-04T12:17:33Z
-tags: [simulation_quality, world-content, stress-tier, scale-diversity, calibration]
+tags: [simulation-quality, world, corpus, calibration]
 ---
 
 # TCK-20260704-SIMQ-CORPUS-STRESS-WORLDS

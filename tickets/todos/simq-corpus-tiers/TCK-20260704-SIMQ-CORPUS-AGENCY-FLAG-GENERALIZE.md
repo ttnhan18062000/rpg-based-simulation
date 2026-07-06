@@ -6,7 +6,7 @@ audience: agent
 ticket_id: TCK-20260704-SIMQ-CORPUS-AGENCY-FLAG-GENERALIZE
 phase: open
 date: 2026-07-04T12:17:33Z
-tags: [simulation_quality, agency, feature-flags, mechanism, calibration-harness]
+tags: [simulation-quality, agency, feature-flags, calibration]
 ---
 
 # TCK-20260704-SIMQ-CORPUS-AGENCY-FLAG-GENERALIZE

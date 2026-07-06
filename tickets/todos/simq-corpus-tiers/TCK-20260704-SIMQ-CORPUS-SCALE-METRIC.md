@@ -6,7 +6,7 @@ audience: agent
 ticket_id: TCK-20260704-SIMQ-CORPUS-SCALE-METRIC
 phase: open
 date: 2026-07-04T12:17:33Z
-tags: [simulation_quality, world-content, corpus, faction, scale-metric]
+tags: [simulation-quality, world, corpus, faction]
 ---
 
 # TCK-20260704-SIMQ-CORPUS-SCALE-METRIC

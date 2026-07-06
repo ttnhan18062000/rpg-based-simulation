@@ -6,7 +6,7 @@ audience: agent
 ticket_id: TCK-20260704-SIMQ-CORPUS-TAXONOMY-DOC
 phase: open
 date: 2026-07-04T12:17:33Z
-tags: [simulation_quality, world-content, corpus, documentation, taxonomy]
+tags: [simulation-quality, world, corpus, documentation, taxonomy]
 ---
 
 # TCK-20260704-SIMQ-CORPUS-TAXONOMY-DOC

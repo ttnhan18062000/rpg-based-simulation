@@ -6,7 +6,7 @@ audience: agent
 ticket_id: TCK-20260704-SIMQ-CORPUS-FACTION-RELATIONSHIPS
 phase: open
 date: 2026-07-04T12:17:33Z
-tags: [simulation_quality, faction, content, global-catalog, audit-fix-plan]
+tags: [simulation-quality, faction]
 ---
 
 # TCK-20260704-SIMQ-CORPUS-FACTION-RELATIONSHIPS

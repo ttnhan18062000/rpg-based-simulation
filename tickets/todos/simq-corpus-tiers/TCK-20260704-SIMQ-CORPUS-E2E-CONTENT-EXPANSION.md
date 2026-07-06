@@ -6,7 +6,7 @@ audience: agent
 ticket_id: TCK-20260704-SIMQ-CORPUS-E2E-CONTENT-EXPANSION
 phase: open
 date: 2026-07-04T12:17:33Z
-tags: [simulation_quality, world-content, faction, information, end-to-end-tier, calibration]
+tags: [simulation-quality, world, faction, information, corpus, calibration]
 ---
 
 # TCK-20260704-SIMQ-CORPUS-E2E-CONTENT-EXPANSION
