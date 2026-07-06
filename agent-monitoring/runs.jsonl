@@ -503,3 +503,4 @@
 {"run_id":"TCK-20260704-SIMQ-ROUTING-TEST-HOMETOWN-RESOURCE-GAP","start_ts":"2026-07-06T15:17:00Z","end_ts":"2026-07-06T16:26:20Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":7}
 {"run_id":"TCK-20260704-SIMQ-CORPUS-TAXONOMY-DOC","start_ts":"2026-07-06T16:31:17Z","end_ts":"2026-07-06T16:36:25Z","workflow":"implement-ticket","tier":"hotfix","final_status":"DONE","agent_count":4}
 {"run_id":"TCK-20260704-SIMQ-CORPUS-SCALE-METRIC","start_ts":"2026-07-06T16:38:45Z","end_ts":"2026-07-06T17:04:36Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":7}
+{"run_id":"TCK-20260704-SIMQ-CORPUS-AGENCY-FLAG-GENERALIZE","start_ts":"2026-07-06T17:08:30Z","end_ts":"2026-07-06T17:39:54Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":9}

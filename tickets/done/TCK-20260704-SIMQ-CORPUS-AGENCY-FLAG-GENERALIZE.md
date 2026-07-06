@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: simulation
 authority: P1
 audience: agent
 ticket_id: TCK-20260704-SIMQ-CORPUS-AGENCY-FLAG-GENERALIZE
-phase: open
+phase: done
 date: 2026-07-04T12:17:33Z
 tags: [simulation-quality, agency, feature-flags, calibration]
 ---
@@ -15,7 +15,7 @@ tags: [simulation-quality, agency, feature-flags, calibration]
 Generalize ENABLE_ADVENTURE_ROUTING activation into the per-world feature_flags profile mechanism
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -142,13 +142,97 @@ implementation should determine which is cleaner, but either way its 3 existing 
   signature.
 
 ## Implementation Notes
-(to be filled during implementation)
+Followed plan.md's 10-step ordered plan exactly (2nd-pass architecture-approved), no deviations:
+
+1. Added `feature_flags:\n  ENABLE_ADVENTURE_ROUTING: "ON"` to
+   `config/simulation_quality/profiles/simq_routing_test.yaml`, matching `urban_political.yaml`'s
+   existing `feature_flags:` block style (blank line, then block) exactly.
+2. Removed `ROUTING_KEYS` (module-level set) from `tools/evaluate_simq.py` entirely. Simplified
+   `_run_calibration()` by dropping the `routing_flag` parameter and the
+   `os.environ["ENABLE_ADVENTURE_ROUTING"]` set/restore branch — the function is kept (not
+   inlined/removed) because it still centralizes the `sys.argv` monkey-patch/restore around the
+   in-process `cal_mod.main()` call, which is an independent concern from the routing special case
+   (confirmed by re-reading the function post-simplification: `import os` at module scope remains
+   needed for `os.path.join(os.path.dirname(__file__), "..")` on line 27, so no now-unused import
+   was left behind). Removed the `routing = run_key in ROUTING_KEYS` line and the routing arg at
+   the `_run_calibration(name, seed, ticks)` call site in `main()`.
+3. Live re-ran all 3 `simq_routing_test_seed{42,123,456}_500t` scenarios individually
+   (`python3 tools/evaluate_simq.py --scenario <run_key>`) under the new profile-YAML-only
+   mechanism (no env var set anywhere in this session) — all 3 produced 10/10 PASS against
+   `grade_anchors.json`, matching the plan's pre-implementation dry-run findings exactly, now
+   confirmed live post-code-change. (Seed 456's anchor has a pre-existing, out-of-scope
+   COGNITION/NARRATIVE one-grade-step disagreement with the actual report — documented in
+   investigation.md/plan.md §3 as predating this ticket; both anchor grades still pass the
+   existing ±1 tolerance band, so this is not a regression introduced here.)
+4. `tests/simulation_quality/test_evaluate_harness.py` — 17/17 passed unchanged (only imports
+   `_within_band`/`_compare`/`_parse_run_key`, none of which were touched).
+5. `make evaluate-full` (full corpus re-run, all 14 fast anchor scenarios including the 3 routing
+   ones) — exit 0, 400 pillars checked, 0 regressions, 0 missing.
+6. `make evaluate` (dry-run against the regenerated `data/calibration/` reports) — exit 0, 400
+   pillars checked, 0 regressions, 0 missing — identical to step 5's live numbers.
+7. `grep -rl ENABLE_ADVENTURE_ROUTING config/simulation_quality/profiles/` returns only
+   `simq_routing_test.yaml` — no leakage to `urban_political.yaml`, `dungeon_crawl.yaml`,
+   `default.yaml`, or any other archetype world's profile. `TCK-20260702-SIMQ-UPLIFT2-AGENCY-DA`
+   is not reversed.
+8. Added the plan's exact drafted documentation paragraph to
+   `docs/simulation_quality/quality_scoring_contract.md` §11.6 "Standing Evaluation Harness",
+   immediately after the "Anchor update workflow" 5-step list and before the `---` separator
+   preceding "## 12. Acceptance Criteria".
+9. No test files were modified (only `tools/evaluate_simq.py`, one config YAML, and one doc were
+   changed) — confirmed via `git status --porcelain` before concluding — so `graphify update .`
+   was correctly skipped per the plan's stated trigger scope (`src/`/`tests/` only).
+
+No deviations from plan.md were needed; no Deviations entry was required in plan.md.
 
 ## Test Summary
-(to be filled during implementation)
+- `python3 tools/evaluate_simq.py --scenario simq_routing_test_seed42_500t` — 10/10 PASS
+- `python3 tools/evaluate_simq.py --scenario simq_routing_test_seed123_500t` — 10/10 PASS
+- `python3 tools/evaluate_simq.py --scenario simq_routing_test_seed456_500t` — 10/10 PASS
+  (pre-existing anchor/report grade-step gap on COGNITION/NARRATIVE, both within ±1 tolerance,
+  documented pre-existing in investigation.md/plan.md §3, not introduced by this ticket)
+- `python3 -m pytest tests/simulation_quality/test_evaluate_harness.py -v` — 17 passed, 0 failed
+- `make evaluate-full` — exit 0, 400 pillars checked, 0 regressions, 0 missing
+- `make evaluate` (dry-run) — exit 0, 400 pillars checked, 0 regressions, 0 missing
+- `grep -rl ENABLE_ADVENTURE_ROUTING config/simulation_quality/profiles/` — only
+  `simq_routing_test.yaml` (no leakage to any other archetype world)
 
 ## Files Changed
-(to be filled during implementation)
+- `config/simulation_quality/profiles/simq_routing_test.yaml` — added `feature_flags:
+  {ENABLE_ADVENTURE_ROUTING: "ON"}` block
+- `tools/evaluate_simq.py` — removed `ROUTING_KEYS` module-level set; simplified
+  `_run_calibration()` (dropped `routing_flag` param + env-var set/restore branch); removed the
+  `routing = run_key in ROUTING_KEYS` call-site line and routing arg
+- `docs/simulation_quality/quality_scoring_contract.md` — added a documentation paragraph to
+  §11.6 "Standing Evaluation Harness" describing the profile-driven (not harness-driven)
+  feature-flag activation mechanism
+- `data/calibration/simq_routing_test_seed{42,123,456}_500t/quality_report.json` — regenerated
+  under the new mechanism (content is byte/grade-identical to the previously committed reports;
+  not part of this ticket's durable Files Changed list beyond noting they were regenerated as
+  part of step 3/5 verification)
 
 ## Completion Summary
-(to be filled on done)
+Migrated `ENABLE_ADVENTURE_ROUTING` activation for `simq_routing_test` off `tools/evaluate_simq.py`'s
+hardcoded `ROUTING_KEYS`/env-var special case and onto the already-generic `feature_flags:`
+profile-YAML mechanism `urban_political.yaml` already uses for `ENABLE_BELIEF_ASSIMILATION`/
+`ENABLE_SOCIAL_COOPERATION` — `calibrate_simq.py::_load_profile_feature_flags()` required zero
+changes, confirmed genuinely generic across any flag name. `simq_routing_test.yaml`'s profile now
+carries `feature_flags: {ENABLE_ADVENTURE_ROUTING: "ON"}` directly; `ROUTING_KEYS` and the
+env-var set/restore branch in `_run_calibration()` are fully removed (the function itself is
+retained, simplified, since its `sys.argv` monkey-patch/restore purpose is independent of routing).
+
+Behavior preservation was verified three times independently, not just once: empirically during
+investigation (seed42 A/B test), again during planning (all 3 seeds live-tested pre-implementation),
+and again during implementation (all 3 seeds re-run post-code-change) — all three passes produced
+identical grades/normalized-scores to the pre-existing anchors. `make evaluate-full` (full corpus
+re-run) and `make evaluate` (dry-run diff) both independently confirmed 0 regressions across all
+400 pillars. A `grep` confirms no other world's profile YAML picked up the flag. One pre-existing,
+unrelated discrepancy was found and explicitly not touched: `simq_routing_test_seed456_500t`'s
+committed anchor has COGNITION/NARRATIVE reversed against the actual report (COGNITION=A vs
+anchor=S, NARRATIVE=S vs anchor=A) — both directions pass only via the ±1-grade tolerance band, and
+this predates and is unrelated to this ticket's mechanism migration.
+
+Architecture review caught one real defect during planning (before any code was written): the
+plan's own verification steps had the `make evaluate`/`make evaluate-full` Makefile targets swapped,
+with one command (`make evaluate --dry-run`) being a silent no-op since `--dry-run` is GNU Make's
+own flag, not passed through to the underlying script. Fixed and re-verified before implementation
+began.

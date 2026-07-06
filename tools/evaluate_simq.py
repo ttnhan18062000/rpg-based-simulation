@@ -31,12 +31,6 @@ GRADE_ORDER = ["D", "C", "B", "A", "S"]
 DEFAULT_ANCHORS = Path("tests/simulation_quality/fixtures/grade_anchors.json")
 CALIBRATION_ROOT = Path("data/calibration")
 
-ROUTING_KEYS = {
-    "simq_routing_test_seed42_500t",
-    "simq_routing_test_seed123_500t",
-    "simq_routing_test_seed456_500t",
-}
-
 
 def _within_band(actual: str, anchor: str, tolerance: int = 1) -> bool:
     if actual not in GRADE_ORDER or anchor not in GRADE_ORDER:
@@ -62,11 +56,10 @@ def _load_calibration_report(run_key: str) -> dict[str, Any] | None:
     return json.loads(path.read_text())
 
 
-def _run_calibration(name: str, seed: int, ticks: int, routing_flag: bool) -> None:
+def _run_calibration(name: str, seed: int, ticks: int) -> None:
     import tools.calibrate_simq as cal_mod
 
     old_argv = sys.argv[:]
-    old_routing = os.environ.get("ENABLE_ADVENTURE_ROUTING")
     try:
         sys.argv = [
             "calibrate_simq",
@@ -74,16 +67,9 @@ def _run_calibration(name: str, seed: int, ticks: int, routing_flag: bool) -> No
             "--seed", str(seed),
             "--ticks", str(ticks),
         ]
-        if routing_flag:
-            os.environ["ENABLE_ADVENTURE_ROUTING"] = "ON"
         cal_mod.main()
     finally:
         sys.argv = old_argv
-        if routing_flag:
-            if old_routing is None:
-                os.environ.pop("ENABLE_ADVENTURE_ROUTING", None)
-            else:
-                os.environ["ENABLE_ADVENTURE_ROUTING"] = old_routing
 
 
 def _compare(
@@ -155,10 +141,9 @@ def main() -> None:
                 print(f"ERROR: {exc}", file=sys.stderr)
                 error_count += 1
                 continue
-            routing = run_key in ROUTING_KEYS
             print(f"[evaluate] Running engine: {run_key} ...", flush=True)
             try:
-                _run_calibration(name, seed, ticks, routing)
+                _run_calibration(name, seed, ticks)
             except SystemExit:
                 pass
             except Exception as exc:

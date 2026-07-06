@@ -1266,6 +1266,18 @@ For each scenario in §6 Scenario Registry:
 4. Run `make evaluate` to confirm all PASS
 5. Commit calibration data, fixture, and any doc/ledger updates together
 
+**Feature-flag activation is profile-driven, not harness-driven:** `evaluate_simq.py` does not
+special-case any scenario by name to decide which feature flags are active during a calibration
+run. Every flag — including `ENABLE_ADVENTURE_ROUTING` — is activated the same way: by adding a
+`feature_flags:` block to that world's `config/simulation_quality/profiles/<name>.yaml` (see §4.8),
+read generically by `calibrate_simq.py::_load_profile_feature_flags()`. `simq_routing_test.yaml`
+sets `ENABLE_ADVENTURE_ROUTING: "ON"` this way; no other archetype world's profile sets it, so
+`ENABLE_ADVENTURE_ROUTING` remains OFF (default) for `urban_political`, `dungeon_crawl`, and
+`default` — consistent with `TCK-20260702-SIMQ-UPLIFT2-AGENCY-DA`. (Prior to
+`TCK-20260704-SIMQ-CORPUS-AGENCY-FLAG-GENERALIZE`, `simq_routing_test`'s 3 anchor scenarios were
+the sole exception, activated via a hardcoded `ROUTING_KEYS` set and env-var injection inside
+`evaluate_simq.py` itself; that special case has been removed.)
+
 ---
 
 ## 12. Acceptance Criteria
