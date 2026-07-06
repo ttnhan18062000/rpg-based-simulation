@@ -29,72 +29,59 @@ The tier can be set in the ticket file (`## Tier`) or passed as `args.tier` to o
 
 ## Overview
 
-```
-Request
-  │
-  ▼
-[Scope]          ticket-scoper     → tickets/inprogress/{id}.md  (tier read here)
-                                     staging_artifacts/{id}/
-  │
-  ├─ CONFLICTS_DETECTED → human resolves, re-run
-  ├─ tier=epic → EPIC_SCOPED (done — implement children separately)
-  │
-  ▼  (standard only)
-[Investigate]    investigator      → investigation.md
-                                     test_plan.md
-  │
-  ▼  (standard only)
-[Plan]           planner           → plan.md
-  │
-  ├─ NEEDS_HUMAN_INPUT → human resolves open questions, re-run with ticket_id
-  │
-  ▼  (standard only)
-[Review]         architecture-reviewer  → APPROVED / NEEDS_CHANGES / BLOCKED
-  │
-  ├─ NEEDS_CHANGES / BLOCKED → human fixes plan.md, re-run with ticket_id
-  │
-  ▼
-[Implement]      implementer       → code changes
-                                     ticket Implementation Notes updated
-  │
-  ▼  (skipped for hotfix, same as Review)
-[Architecture-Verify]  architecture-reviewer (2nd call)  → APPROVED / NEEDS_CHANGES / BLOCKED
-                 runs tools/gate_checks/architecture_reviewer_static.py::run_architecture_checks
-                 against files_changed first, injects its JSON output; judges only the flagged
-                 items against the real diff, does not re-review the whole plan
-  │
-  ├─ NEEDS_CHANGES / BLOCKED → human fixes the flagged code, re-run with ticket_id
-  │
-  ▼
-[Test]           test-scoper       → scoped pytest run
-  │
-  ├─ TESTS_FAILED → human fixes tests, re-run with ticket_id
-  │
-  ▼  (agent call skipped if files_changed has no src/ path and behavior_changed is false — a P0 ledger
-      safeguard forces the full run instead if any P0 entry's v2_evidence would go stale)
-[Parity]         parity-updater    → docs/parity_ledger/*.yaml updated
-  │
-  ▼  (only if the ticket's tags include `security`, or suggested_skills includes /security-review)
-[Security-Review] security-reviewer → APPROVED / NEEDS_CHANGES / BLOCKED
-  │
-  ├─ NEEDS_CHANGES / BLOCKED → human fixes code, re-run with ticket_id
-  │
-  ▼
-[Verify]         done-checker      → DoD check (hotfix: condition 4 N/A)
-  │
-  ├─ DOD_BLOCKED → human fixes remaining items, re-run with ticket_id
-  │
-  ▼
-[Finalize]       inline            → ticket moved to tickets/done/
-                                     working_log.csv appended
-                                     staging_artifacts/ → stored_artifacts/  (standard)
-                                     data/runs/ and reports/ cleaned
-                                     self-check: run_finalize_selfcheck confirms the above landed
-  │
-  ├─ FINALIZE_INCOMPLETE → human fixes flagged discrepancy, re-run with ticket_id
-  │
-  ▼
-DONE
+`Investigate`/`Plan`/`Review` and `Architecture-Verify` run for `standard` tier only — `hotfix`
+skips straight from `Scope` to `Implement`, and from `Implement` to `Test` (see Tier Routing
+above). Every gate-branch edge below is labeled with the exact return status that triggers it.
+
+```mermaid
+flowchart TD
+    Start([Request]) --> Scope
+
+    Scope["Scope<br/><i>ticket-scoper</i><br/>→ tickets/inprogress/{id}.md<br/>→ staging_artifacts/{id}/"]
+    Scope -- CONFLICTS_DETECTED --> ScopeFix[/"Human resolves, re-run"/]
+    Scope -- "tier=epic" --> EpicDone(["EPIC_SCOPED"])
+    Scope --> Investigate
+
+    subgraph StandardOnly ["Standard tier only"]
+        Investigate["Investigate<br/><i>investigator</i><br/>→ investigation.md, test_plan.md"] --> Plan
+        Plan["Plan<br/><i>planner</i><br/>→ plan.md"]
+        Plan -- NEEDS_HUMAN_INPUT --> PlanFix[/"Human resolves open questions, re-run with ticket_id"/]
+        Plan --> Review
+        Review["Review<br/><i>architecture-reviewer</i><br/>(1st call, judges plan.md)"]
+        Review -- "NEEDS_CHANGES / BLOCKED" --> ReviewFix[/"Human fixes plan.md, re-run with ticket_id"/]
+    end
+
+    Review --> Implement
+    Scope -. "hotfix skips to" .-> Implement
+
+    Implement["Implement<br/><i>implementer</i><br/>→ code changes, Implementation Notes updated"] --> ArchVerify
+
+    subgraph StandardOnly2 ["Standard tier only"]
+        ArchVerify["Architecture-Verify<br/><i>architecture-reviewer</i> (2nd call)<br/>static pre-check + judges flagged diff only"]
+        ArchVerify -- "NEEDS_CHANGES / BLOCKED" --> ArchVerifyFix[/"Human fixes flagged code, re-run with ticket_id"/]
+    end
+
+    ArchVerify --> Test
+    Implement -. "hotfix skips to" .-> Test
+
+    Test["Test<br/><i>test-scoper</i><br/>→ scoped pytest run"]
+    Test -- TESTS_FAILED --> TestFix[/"Human fixes tests, re-run with ticket_id"/]
+    Test --> Parity
+
+    Parity["Parity<br/><i>parity-updater</i><br/>→ docs/parity_ledger/*.yaml updated<br/><small>skipped if no src/ change and behavior unchanged, unless a P0 entry would go stale</small>"] --> SecurityCheck{"tags include security,<br/>or suggested_skills has<br/>/security-review?"}
+
+    SecurityCheck -- yes --> Security["Security-Review<br/><i>security-reviewer</i>"]
+    Security -- SECURITY_BLOCKED --> SecurityFix[/"Human fixes code, re-run with ticket_id"/]
+    Security --> Verify
+    SecurityCheck -- no --> Verify
+
+    Verify["Verify<br/><i>done-checker</i><br/>DoD check (hotfix: condition 4 N/A)"]
+    Verify -- DOD_BLOCKED --> VerifyFix[/"Human fixes remaining items, re-run with ticket_id"/]
+    Verify --> Finalize
+
+    Finalize["Finalize<br/><i>inline</i><br/>→ ticket moved to tickets/done/<br/>→ working_log.csv appended<br/>→ staging_artifacts/ → stored_artifacts/ (standard)<br/>→ data/runs/, reports/ cleaned<br/>→ run_finalize_selfcheck confirms it all landed"]
+    Finalize -- FINALIZE_INCOMPLETE --> FinalizeFix[/"Human fixes flagged discrepancy, re-run with ticket_id"/]
+    Finalize --> Done(["DONE"])
 ```
 
 ---

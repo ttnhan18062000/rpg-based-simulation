@@ -35,3 +35,4 @@
 {"added_date": "2026-07-06", "category": "meta-process", "note": "seed: docs/ai/ agent-orchestration domain (this repo's layer:ai means the Claude agent system, not gameplay AI/cognition \u2014 that's tracked under 'strategy'/'cognition' instead)", "tag": "ai"}
 {"added_date": "2026-07-06", "category": "meta-process", "note": "seed: agent-monitoring/reporting data-quality fixes (working_log.csv, generate_retro.py)", "tag": "data-quality"}
 {"added_date": "2026-07-06", "category": "meta-process", "note": "seed: ticket/tag reporting tooling (tools/tag_report.py, docs/guides/ticket_reporting.md)", "tag": "reporting"}
+{"added_date": "2026-07-06", "category": "meta-process", "note": "seed: documentation diagram coverage/index work (TCK-20260706-DIAGRAM-COVERAGE)", "tag": "diagrams"}

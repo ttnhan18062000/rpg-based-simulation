@@ -27,6 +27,28 @@ Use SimQ to:
 - Monitor a long run without watching every tick
 - Drive automated regression tests against grade thresholds
 
+### Data flow
+
+See [Feed modes](#feed-modes) below for when each feed path applies.
+
+```mermaid
+flowchart LR
+    Engine["Engine<br/>observability event bus"]
+
+    Engine --> InProcess["InProcessQualityFeed<br/><small>default — QueueDrainWorker<br/>thread, same process</small>"]
+    Engine --> Broker["BrokerQualityFeed<br/><small>production multi-process —<br/>Redis stream via RedisStreamConsumer</small>"]
+
+    InProcess --> Hub["QualityHub<br/>.on_envelope()"]
+    Broker --> Hub
+
+    Hub --> Pillars["10 pillar scorers<br/><small>Cognition · Agency · Combat · Faction · Economy<br/>Progression · Social · Information · World Dynamics · Narrative</small>"]
+
+    Pillars --> Grades["Normalized scores<br/>→ letter grades"]
+
+    Grades --> API["REST API<br/>/status /pillars /pillars/{id} /alerts /report"]
+    Grades --> Report["QualityReport<br/><small>written to QUALITY_RUN_DIR<br/>on worker shutdown (broker mode)</small>"]
+```
+
 ---
 
 ## Quick start
