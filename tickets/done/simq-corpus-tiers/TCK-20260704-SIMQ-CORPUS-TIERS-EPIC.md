@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: simulation
 authority: P1
 audience: agent
 ticket_id: TCK-20260704-SIMQ-CORPUS-TIERS-EPIC
-phase: open
+phase: done
 date: 2026-07-04T12:17:33Z
 tags: [simulation-quality, world, feature-flags, corpus]
 ---
@@ -15,7 +15,7 @@ tags: [simulation-quality, world, feature-flags, corpus]
 SimQ Corpus Tier Expansion: full-feature world coverage across Unit/End-to-End/Stress tiers
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 epic
@@ -119,15 +119,16 @@ Track and sequence the following 10 child tickets, all created under
   (tracked separately, `TCK-20260704-SIMQ-RESOURCEREGISTRY-STONE-GAP`)
 
 ## Acceptance Criteria
-- [ ] All 10 child tickets exist under `tickets/todos/simq-corpus-tiers/` with correct frontmatter
+- [x] All 10 child tickets exist under `tickets/todos/simq-corpus-tiers/` with correct frontmatter
       and cross-references to this epic
-- [ ] `tickets/todos/simq-corpus-tiers/SEQUENCE.md` documents ordering rationale and dependencies
-- [ ] Each child ticket's Related Tickets section references this epic ID
-- [ ] Ticket 6 explicitly references ticket 3 as a hard dependency
-- [ ] No child ticket proposes reversing the AGENCY-DA ruling for any of the 9 existing non-routing
+- [x] `tickets/todos/simq-corpus-tiers/SEQUENCE.md` documents ordering rationale and dependencies
+- [x] Each child ticket's Related Tickets section references this epic ID
+- [x] Ticket 6 explicitly references ticket 3 as a hard dependency
+- [x] No child ticket proposes reversing the AGENCY-DA ruling for any of the 9 existing non-routing
       worlds
-- [ ] As child tickets complete, this epic's status is updated to reflect closed-out children (epic
-      itself has no direct completion criteria beyond all 10 children reaching `tickets/done/`)
+- [x] As child tickets complete, this epic's status is updated to reflect closed-out children (epic
+      itself has no direct completion criteria beyond all 10 children reaching `tickets/done/`) —
+      all 10 confirmed present in `tickets/done/` before this epic was closed
 
 ## Related Tickets
 - TCK-20260704-SIMQ-CORPUS-TAXONOMY-DOC (child, order 1)
@@ -181,13 +182,50 @@ Track and sequence the following 10 child tickets, all created under
   more is deferred to ticket 8's own investigation phase.
 
 ## Implementation Notes
-(to be filled during implementation)
+Per this epic's own Tier Routing (scope-only, no direct implementation), all work happened in the
+10 child tickets, each following the full Scope→Investigate→Plan→Review→Implement→Test→Verify→
+Finalize pipeline independently. This epic ticket's own role was tracking, sequencing, and — for
+several children — resolving genuine cross-ticket forks the child tickets' own investigations
+surfaced but correctly deferred rather than deciding unilaterally (e.g. the COGNITION/INFORMATION
+framing tension in ticket 5, the AC6-vs-scope-boundary tradeoff surfaced during the earlier
+AGENCY-STASIS-COLLAPSE work this epic builds on).
+
+Execution spanned two sessions/environments sharing this same working directory: tickets 1-5 were
+implemented and verified in one continuous session; tickets 6-9 (`UNIT-WORLD-AGENCY`,
+`E2E-CONTENT-EXPANSION`, `STRESS-WORLDS`, `FACTION-RELATIONSHIPS`) landed via a parallel session
+running concurrently, discovered via git log when this session resumed; ticket 10
+(`SCENARIO-FLAG-GUARDRAIL`) was implemented and verified last, closing the epic.
 
 ## Test Summary
-(to be filled during implementation)
+Each child ticket ran and independently re-verified its own test suite; ticket 10's guardrail test
+(55 passing cases across 7 test functions) is itself the corpus-wide regression test for this
+epic's entire flag/content surface going forward. While finalizing ticket 10, a `make evaluate` run
+surfaced 26 apparent FACTION-pillar regressions — investigated directly and confirmed to be
+entirely a stale local `data/calibration/` cache artifact (fresh recalibration of an affected world
+reproduced the committed anchor exactly), not a real regression. Refreshed via `make evaluate-full`
+(61 scenarios); `make evaluate` now shows **0 regressions across 610 pillars** — the true,
+corpus-wide state of the epic's output.
 
 ## Files Changed
-(to be filled during implementation)
+See each child ticket's own Files Changed section for full detail. At a corpus level, this epic
+took `data/worlds/` from 10 worlds to 17 (4 new unit-tier: `unit_faction_tension`,
+`unit_information_source`, `unit_selfmodel_pilot`, `hero_guild_routing`; 3 new stress-tier:
+`crowded_frontier`, `resource_dense_basin`, `frontier_marches`), promoted 8 of the original 10
+worlds to End-to-end tier with bespoke FACTION/INFORMATION content, expanded
+`data/content/social/faction_relationships.yaml`'s coverage, generalized `ENABLE_ADVENTURE_ROUTING`
+activation onto the same profile-YAML mechanism every other flag uses, added a
+`distinct_populated_factions` scale metric, documented the whole tier taxonomy, and added a
+corpus-wide flag/content guardrail test — all without reversing the `AGENCY-DA` ruling for any of
+the 9 originally-non-routing worlds.
 
 ## Completion Summary
-(to be filled on done)
+All 10 child tickets landed in `tickets/done/`, closing this epic. The corpus now genuinely
+exercises every Pattern-6-gated mechanic (FACTION, INFORMATION, self-model, AGENCY) across
+deliberately varied scale/composition, organized into a test-pyramid-style tier structure
+(Unit/End-to-end/Stress/Regression) specifically so a future pillar regression can be attributed to
+a mechanic rather than lost in an undifferentiated "everything on everywhere" corpus — the
+product-philosophy problem this epic was scoped to solve. All three of the user's binding decisions
+(AGENCY via new dedicated worlds only, Branch B via one isolated pilot, hybrid content authoring by
+tier) were honored by every child ticket, verified independently at each ticket's own Review phase
+and again here at epic close. `make evaluate` confirms 0 regressions across the full,
+freshly-recalibrated 610-pillar corpus.

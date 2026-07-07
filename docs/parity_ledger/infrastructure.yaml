@@ -3620,3 +3620,47 @@
     S-inflation for initialization-burst pillars (AGENCY fires all events at tick 1).
     Rationale class: Bug Fix / Bounded.
   support_boundary: null
+
+- id: INFRA-262
+  text: >
+    Per-world calibration-profile feature-flag/content-field guardrail
+    (TCK-20260704-SIMQ-CORPUS-SCENARIO-FLAG-GUARDRAIL). Closes the calibration-profile half of
+    docs/plans/audit_fix_plan.md P2-E ("Feature-gated phases have no per-scenario default
+    test") -- the half INFRA-221 never covered, since INFRA-221 tests
+    data/content/simulation_scenarios/*.yaml scenario templates (perspective-derived flag
+    defaults), a different subsystem from config/simulation_quality/profiles/<world>.yaml
+    calibration profiles. Loads every one of the corpus's 17 worlds' resolved profile via the
+    real tools/calibrate_simq.py::_resolve_profile()/_load_profile_feature_flags() functions
+    against a checked-in fixture (tests/simulation_quality/fixtures/expected_world_flag_state.json)
+    and asserts: per-world ENABLE_ADVENTURE_ROUTING/ENABLE_BELIEF_ASSIMILATION/
+    ENABLE_SELF_MODEL_COGNITION state; the ENABLE_ADVENTURE_ROUTING AGENCY-DA anti-drift guard
+    as a standalone named test (9 non-routing worlds OFF, 2 routing worlds ON); both directions
+    of the Pattern-6 content/flag pairing for the two fields that are actually flag-gated
+    (INFORMATION content <-> ENABLE_BELIEF_ASSIMILATION, zero exceptions; self-model content <->
+    ENABLE_SELF_MODEL_COGNITION, one documented exception); that faction_tension_overrides
+    correctly has no flag gate; and that the fixture's world set matches data/worlds/ exactly.
+    The one documented exception (urban_political's pending_self_model_information_events
+    seeded pre-epic with ENABLE_SELF_MODEL_COGNITION never shipped ON) is cited to INFRA-259/
+    INFRA-260, which confirm this was verified via a test-scoped FeatureFlagManager override
+    only, "never a shipped profile default." Test-only, config-assertion-only change: no
+    engine code, FeatureMode, feature_flags.py, or world/profile YAML modified.
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: >
+    tools/calibrate_simq.py::_resolve_profile (lines 32-41), _load_profile_feature_flags
+    (lines 44-64); tests/simulation_quality/fixtures/expected_world_flag_state.json (17-world
+    fixture); config/simulation_quality/profiles/*.yaml (14 profile files + default.yaml
+    fallback for crowded_frontier, resource_dense_basin, unit_faction_tension,
+    wilderness_survival).
+  proof_type: parity
+  test_path: tests/integration/test_world_profile_feature_flag_guardrail.py
+  divergence_note: null
+  support_boundary: >
+    Companion to INFRA-221, not a duplicate -- INFRA-221 covers
+    data/content/simulation_scenarios/*.yaml scenario-template flag defaults; this entry
+    covers config/simulation_quality/profiles/<world>.yaml calibration-profile overrides
+    applied via _load_profile_feature_flags(). Does not touch, extend, or duplicate
+    tests/integration/test_scenario_feature_flag_defaults.py. Allow-lists exactly one cited
+    exception (urban_political self-model content, INFRA-259/INFRA-260); any other
+    content/flag asymmetry not in the fixture's known_exceptions block fails the guardrail.

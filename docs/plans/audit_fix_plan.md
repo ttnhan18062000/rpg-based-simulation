@@ -284,12 +284,23 @@ checked, 0 regressions.
 
 ---
 
-### P2-E: Feature-gated phases have no per-scenario default test
+### P2-E: Feature-gated phases have no per-scenario default test — **RESOLVED (verified 2026-07-07)**
 
 **Source:** D09 Finding 4 — Risk 9/15  
 **Files:** `src/domains/optimization/feature_flags.py`, `data/content/simulation_scenarios/`  
 **Finding:** 8 pipeline phases are gated behind `FeatureMode` flags. No test verifies that the correct default flag values are set per scenario type. A misconfigured scenario silently loses features.  
-**Fix:** Add a test in `tests/integration/` or `tests/certification/` that loads each scenario definition and asserts expected flag states. At minimum assert that the flags required for that scenario's content type are `ON` or `SHADOW`.
+**Fix:** Add a test in `tests/integration/` or `tests/certification/` that loads each scenario definition and asserts expected flag states. At minimum assert that the flags required for that scenario's content type are `ON` or `SHADOW`.  
+**Resolution:** This finding spans two distinct mechanisms, only one of which had prior coverage.
+`TCK-20260627-P2E-FEATURE-FLAG-TEST` (`INFRA-221`, `tests/integration/test_scenario_feature_flag_defaults.py`)
+closed the scenario-definition half (`data/content/simulation_scenarios/*.yaml`, flag defaults
+derived from the `perspective` field). `TCK-20260704-SIMQ-CORPUS-SCENARIO-FLAG-GUARDRAIL`
+(`INFRA-262`, `tests/integration/test_world_profile_feature_flag_guardrail.py`) closes the
+calibration-profile half (`config/simulation_quality/profiles/<world>.yaml`, the
+`_load_profile_feature_flags()` mechanism `tools/calibrate_simq.py` uses to apply per-world flag
+overrides) — asserting expected `ENABLE_ADVENTURE_ROUTING`/`ENABLE_BELIEF_ASSIMILATION`/
+`ENABLE_SELF_MODEL_COGNITION` state for all 17 corpus worlds, both directions of the Pattern-6
+content/flag pairing, and the `ENABLE_ADVENTURE_ROUTING` AGENCY-DA anti-drift guard as a standalone
+named test.
 
 ---
 
@@ -620,7 +631,7 @@ Tickets created: `tickets/todos/simq-emit/` (5 tickets, 2026-07-01).
 | P2-B | D06 F5 | **P2** | Engine | **RESOLVED (verified 2026-07-04)** — TCK-20260703-SIMQ-UPLIFT3-WORLD-CORPUS; two-tier cadence intact, frontier_extended/frontier_living_world/wilderness_survival symptom re-attributed to hazard-kind staleness (separately fixed, same ticket) |
 | P2-C | D07 F4 | **P2** | Content | **RESOLVED (verified 2026-07-03)** — 29 archetypes, 18 roles, no single-role dominance |
 | P2-D | D07 F6 | **P2** | Content | **RESOLVED (verified 2026-07-07)** — TCK-20260704-SIMQ-CORPUS-FACTION-RELATIONSHIPS; `data/content/social/faction_relationships.yaml` 34→75 entries, 34/66 (51.5%) populated-only coverage / 41/120 (34.2%) raw coverage, `neutral` entry added, `COMB-294` parity entry added |
-| P2-E | D09 F4 | **P2** | Testing | OPEN (not re-checked 2026-07-03) — S — per-scenario feature flag test |
+| P2-E | D09 F4 | **P2** | Testing | **RESOLVED (verified 2026-07-07)** — scenario-definition half closed by `INFRA-221`/`TCK-20260627-P2E-FEATURE-FLAG-TEST`; calibration-profile half closed by `INFRA-262`/`TCK-20260704-SIMQ-CORPUS-SCENARIO-FLAG-GUARDRAIL` |
 | P2-F | D09 F6 | **P2** | Docs | **RESOLVED (verified 2026-07-03)** — documented in `known_limitations.md` §2.4 |
 | P2-G | D14 F3 | **P2** | Refactor | **RESOLVED (verified 2026-07-03)** — `hard_law_monitor.py` only imports `Kernel` now |
 | P2-H | D12 F5 | **P2** | Refactor | **RESOLVED (verified 2026-07-03)** — no `timeline.append()` pattern remains in `kernel.py` |
@@ -674,8 +685,9 @@ also in this list as of 2026-07-03; **RESOLVED (verified 2026-07-07)** by
 4. `TCK-20260701-SIMQ-EMIT-AGENCY2` — 4 agency tracking events
 5. `TCK-20260701-SIMQ-EMIT-SOCIAL2` — 7 misc gaps (ECONOMY ×2, FACTION ×2, SOCIAL ×2, NARRATIVE ×1)
 
-**Still open, no ticket exists yet (per 2026-07-03 status refresh):** P2-E, P2-N,
-P3-A, P3-C — and P2-D/P2-K pending re-verification against their relocated files. (P2-B resolved
+**Still open, no ticket exists yet (per 2026-07-03 status refresh):** P2-N,
+P3-A, P3-C — and P2-D/P2-K pending re-verification against their relocated files. (P2-E resolved
+2026-07-07, TCK-20260704-SIMQ-CORPUS-SCENARIO-FLAG-GUARDRAIL — no longer pending.) (P2-B resolved
 2026-07-04, TCK-20260703-SIMQ-UPLIFT3-WORLD-CORPUS — no longer pending. P1-D resolved 2026-07-04,
 TCK-20260703-SIMQ-UPLIFT3-QUEST-PRESSURE — no longer pending. P1-H resolved 2026-07-04 — was
 already fixed by TCK-20260627-P1H-GOAL-RUNNERUP, a false negative in the 2026-07-03 refresh — no

@@ -1,0 +1,111 @@
+{
+  "_meta": {
+    "description": "Expected per-world FeatureMode flag state and Pattern-6 content-field seeding for config/simulation_quality/profiles/. Distinct from data/content/simulation_scenarios/ scenario-template defaults (see tests/integration/test_scenario_feature_flag_defaults.py, parity INFRA-221) -- do not merge or extend that file with this fixture's coverage.",
+    "world_count": 17,
+    "agency_da_non_routing_worlds": [
+      "urban_political", "dungeon_crawl", "sandbox_world", "wilderness_survival",
+      "highland_traverse", "swamp_border_world", "frontier_living_world",
+      "frontier_extended", "generated_frontier_3_42"
+    ],
+    "agency_da_routing_worlds": ["simq_routing_test", "hero_guild_routing"],
+    "source_ticket": "TCK-20260704-SIMQ-CORPUS-SCENARIO-FLAG-GUARDRAIL"
+  },
+  "worlds": {
+    "urban_political": {
+      "profile_file": "urban_political.yaml",
+      "flags": {"ENABLE_ADVENTURE_ROUTING": "OFF", "ENABLE_BELIEF_ASSIMILATION": "ON", "ENABLE_SELF_MODEL_COGNITION": "OFF"},
+      "content": {"faction_tension_overrides": true, "information_content": true, "self_model_content": true}
+    },
+    "dungeon_crawl": {
+      "profile_file": "dungeon_crawl.yaml",
+      "flags": {"ENABLE_ADVENTURE_ROUTING": "OFF", "ENABLE_BELIEF_ASSIMILATION": "OFF", "ENABLE_SELF_MODEL_COGNITION": "OFF"},
+      "content": {"faction_tension_overrides": true, "information_content": false, "self_model_content": false}
+    },
+    "sandbox_world": {
+      "profile_file": "sandbox_world.yaml",
+      "flags": {"ENABLE_ADVENTURE_ROUTING": "OFF", "ENABLE_BELIEF_ASSIMILATION": "ON", "ENABLE_SELF_MODEL_COGNITION": "OFF"},
+      "content": {"faction_tension_overrides": true, "information_content": true, "self_model_content": false}
+    },
+    "wilderness_survival": {
+      "profile_file": null,
+      "flags": {"ENABLE_ADVENTURE_ROUTING": "OFF", "ENABLE_BELIEF_ASSIMILATION": "OFF", "ENABLE_SELF_MODEL_COGNITION": "OFF"},
+      "content": {"faction_tension_overrides": true, "information_content": false, "self_model_content": false}
+    },
+    "highland_traverse": {
+      "profile_file": "highland_traverse.yaml",
+      "flags": {"ENABLE_ADVENTURE_ROUTING": "OFF", "ENABLE_BELIEF_ASSIMILATION": "ON", "ENABLE_SELF_MODEL_COGNITION": "OFF"},
+      "content": {"faction_tension_overrides": true, "information_content": true, "self_model_content": false}
+    },
+    "swamp_border_world": {
+      "profile_file": "swamp_border_world.yaml",
+      "flags": {"ENABLE_ADVENTURE_ROUTING": "OFF", "ENABLE_BELIEF_ASSIMILATION": "ON", "ENABLE_SELF_MODEL_COGNITION": "OFF"},
+      "content": {"faction_tension_overrides": true, "information_content": true, "self_model_content": false}
+    },
+    "frontier_living_world": {
+      "profile_file": "frontier_living_world.yaml",
+      "flags": {"ENABLE_ADVENTURE_ROUTING": "OFF", "ENABLE_BELIEF_ASSIMILATION": "ON", "ENABLE_SELF_MODEL_COGNITION": "OFF"},
+      "content": {"faction_tension_overrides": true, "information_content": true, "self_model_content": false}
+    },
+    "frontier_extended": {
+      "profile_file": "frontier_extended.yaml",
+      "flags": {"ENABLE_ADVENTURE_ROUTING": "OFF", "ENABLE_BELIEF_ASSIMILATION": "ON", "ENABLE_SELF_MODEL_COGNITION": "OFF"},
+      "content": {"faction_tension_overrides": true, "information_content": true, "self_model_content": false}
+    },
+    "generated_frontier_3_42": {
+      "profile_file": "generated_frontier_3_42.yaml",
+      "flags": {"ENABLE_ADVENTURE_ROUTING": "OFF", "ENABLE_BELIEF_ASSIMILATION": "ON", "ENABLE_SELF_MODEL_COGNITION": "OFF"},
+      "content": {"faction_tension_overrides": true, "information_content": true, "self_model_content": false}
+    },
+    "simq_routing_test": {
+      "profile_file": "simq_routing_test.yaml",
+      "flags": {"ENABLE_ADVENTURE_ROUTING": "ON", "ENABLE_BELIEF_ASSIMILATION": "OFF", "ENABLE_SELF_MODEL_COGNITION": "OFF"},
+      "content": {"faction_tension_overrides": false, "information_content": false, "self_model_content": false}
+    },
+    "unit_faction_tension": {
+      "profile_file": null,
+      "flags": {"ENABLE_ADVENTURE_ROUTING": "OFF", "ENABLE_BELIEF_ASSIMILATION": "OFF", "ENABLE_SELF_MODEL_COGNITION": "OFF"},
+      "content": {"faction_tension_overrides": true, "information_content": false, "self_model_content": false}
+    },
+    "unit_information_source": {
+      "profile_file": "unit_information_source.yaml",
+      "flags": {"ENABLE_ADVENTURE_ROUTING": "OFF", "ENABLE_BELIEF_ASSIMILATION": "ON", "ENABLE_SELF_MODEL_COGNITION": "OFF"},
+      "content": {"faction_tension_overrides": false, "information_content": true, "self_model_content": false}
+    },
+    "unit_selfmodel_pilot": {
+      "profile_file": "unit_selfmodel_pilot.yaml",
+      "flags": {"ENABLE_ADVENTURE_ROUTING": "OFF", "ENABLE_BELIEF_ASSIMILATION": "OFF", "ENABLE_SELF_MODEL_COGNITION": "ON"},
+      "content": {"faction_tension_overrides": false, "information_content": false, "self_model_content": true}
+    },
+    "hero_guild_routing": {
+      "profile_file": "hero_guild_routing.yaml",
+      "flags": {"ENABLE_ADVENTURE_ROUTING": "ON", "ENABLE_BELIEF_ASSIMILATION": "OFF", "ENABLE_SELF_MODEL_COGNITION": "OFF"},
+      "content": {"faction_tension_overrides": false, "information_content": false, "self_model_content": false}
+    },
+    "crowded_frontier": {
+      "profile_file": null,
+      "flags": {"ENABLE_ADVENTURE_ROUTING": "OFF", "ENABLE_BELIEF_ASSIMILATION": "OFF", "ENABLE_SELF_MODEL_COGNITION": "OFF"},
+      "content": {"faction_tension_overrides": false, "information_content": false, "self_model_content": false}
+    },
+    "resource_dense_basin": {
+      "profile_file": null,
+      "flags": {"ENABLE_ADVENTURE_ROUTING": "OFF", "ENABLE_BELIEF_ASSIMILATION": "OFF", "ENABLE_SELF_MODEL_COGNITION": "OFF"},
+      "content": {"faction_tension_overrides": false, "information_content": false, "self_model_content": false}
+    },
+    "frontier_marches": {
+      "profile_file": "frontier_marches.yaml",
+      "flags": {"ENABLE_ADVENTURE_ROUTING": "OFF", "ENABLE_BELIEF_ASSIMILATION": "ON", "ENABLE_SELF_MODEL_COGNITION": "OFF"},
+      "content": {"faction_tension_overrides": true, "information_content": true, "self_model_content": false}
+    }
+  },
+  "known_exceptions": {
+    "self_model_content_without_flag": [
+      {
+        "world": "urban_political",
+        "field": "pending_self_model_information_events",
+        "flag": "ENABLE_SELF_MODEL_COGNITION",
+        "citation": ["INFRA-259", "INFRA-260"],
+        "reason": "pending_self_model_information_events is seeded in data/worlds/urban_political/world.yaml (pop_1, material.moon_resin.source, answer_kind=unknown), predating this epic, but ENABLE_SELF_MODEL_COGNITION has intentionally never shipped ON in any config/simulation_quality/profiles/*.yaml for this world. INFRA-259 and INFRA-260 (docs/parity_ledger/infrastructure.yaml) both confirm this was verified via a test-scoped FeatureFlagManager override only -- 'never a shipped profile default; confirmed absent from every config/simulation_quality/profiles/*.yaml and data/worlds/*.yaml'. STRAT-245 (docs/parity_ledger/strategic_cognition.yaml) confirms unit_selfmodel_pilot is the only world that ships this flag ON. Do not resolve this exception by turning the flag on in urban_political.yaml -- that is a real behavior change, out of scope for TCK-20260704-SIMQ-CORPUS-SCENARIO-FLAG-GUARDRAIL."
+      }
+    ]
+  }
+}

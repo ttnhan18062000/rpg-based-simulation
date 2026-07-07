@@ -90,6 +90,7 @@ markers = [
     "e2e_golden: golden artifact fixture tests validating schema compatibility with real engine output",
     "scenario_flags: per-scenario feature flag default and configuration assertions",
     "feature_flag_default: feature flag default value and stability assertions",
+    "corpus_flag_guardrail: per-world calibration-profile feature-flag/content-field guardrail assertions",
 ]
 
 [tool.mypy]
