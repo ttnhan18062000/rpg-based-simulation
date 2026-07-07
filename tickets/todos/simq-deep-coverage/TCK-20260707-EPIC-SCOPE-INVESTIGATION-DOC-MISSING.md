@@ -76,6 +76,12 @@ citation-hygiene gap, not evidence that the cited facts are wrong.
 - TCK-20260704-SIMQ-CORPUS-UNIT-WORLD-AGENCY — first flagged this as OQ-3 (non-blocking)
 - TCK-20260704-SIMQ-CORPUS-E2E-CONTENT-EXPANSION — hit it again independently, reconstructed facts
   from ground truth instead
+- TCK-20260707-SIMQ-DEEP-COVERAGE-EPIC — parent epic; relocated into
+  `tickets/todos/simq-deep-coverage/` as a documentation/traceability-only child with zero
+  code/content overlap with the rest of the epic — can run fully independently and in parallel per
+  that folder's `SEQUENCE.md`. Note: this new epic's own investigation doc
+  (`staging_artifacts/TCK-20260707-SIMQ-DEEP-COVERAGE-EPIC/investigation.md`) was written and preserved
+  precisely to avoid repeating the citation-rot pattern this ticket exists to fix
 
 ## Related Docs
 - `tickets/todos/simq-corpus-tiers/SEQUENCE.md` — cites the same missing path

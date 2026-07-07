@@ -69,6 +69,12 @@ INFORMATION content to `dungeon_crawl` and `sandbox_world`, and content-only to
   pre-existing gap
 - TCK-20260703-SIMQ-UPLIFT3-WORLD-CORPUS — originally added `test_population_stability` and the 5-world
   `ANCHORED_WORLD_BANDS` list this ticket's `POPULATION_STABILITY_WORLDS` builds on
+- TCK-20260707-SIMQ-DEEP-COVERAGE-EPIC — parent epic; relocated into
+  `tickets/todos/simq-deep-coverage/`. Sequenced FIRST (with the other 3 resource/coverage-gap
+  tickets) per that folder's `SEQUENCE.md` — `dungeon_crawl`, `sandbox_world`, and
+  `generated_frontier_3_42` are exactly the worlds carrying (or, for `generated_frontier_3_42`,
+  about to newly carry) this epic's long-run anchors, so closing their population-stability
+  coverage gap first is directly relevant groundwork
 
 ## Related Docs
 - None beyond the code itself (`tests/unit/worldassembly/test_corpus_diversity.py`'s own module

@@ -84,6 +84,11 @@ zero-legal-routes stasis pattern `simq_routing_test_seed456` hit pre-fix (docume
   (Step 2 resource-tag verification), did not fix it (shared-catalog change, out of scope there)
 - TCK-20260704-SIMQ-ROUTING-TEST-HOMETOWN-RESOURCE-GAP — the precedent ticket that fixed the same
   class of gap for `hometown`/`wood_node`/`herb_patch`
+- TCK-20260707-SIMQ-DEEP-COVERAGE-EPIC — parent epic; relocated into
+  `tickets/todos/simq-deep-coverage/`. Sequenced FIRST (with the other 3 resource/coverage-gap
+  tickets) per that folder's `SEQUENCE.md`, ahead of `TCK-20260707-SIMQ-LONGRUN-HOTPILLAR-ANCHORS`,
+  which adds a 1000t anchor for `hero_guild_routing` — closing this gap first avoids anchoring a
+  long-run AGENCY grade against content with a known latent stasis risk
 
 ## Related Docs
 - `docs/simulation_quality/eval_matrix_results.md` — `hero_guild_routing` subsection, "Resource-tag

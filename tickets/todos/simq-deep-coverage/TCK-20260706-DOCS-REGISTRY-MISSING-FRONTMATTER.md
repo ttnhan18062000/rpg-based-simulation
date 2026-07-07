@@ -86,6 +86,10 @@ and is indexed successfully in the regenerated registry).
 ## Related Tickets
 - TCK-20260704-SIMQ-CORPUS-TAXONOMY-DOC — the ticket during which this pre-existing gap was
   discovered (unrelated to that ticket's own scope)
+- TCK-20260707-SIMQ-DEEP-COVERAGE-EPIC — parent epic; relocated into
+  `tickets/todos/simq-deep-coverage/` as an independent housekeeping child with no subject-matter
+  overlap with the epic's long-run-coverage/pillar-completeness threads (docs registry hygiene, not
+  SimQ corpus/pillar work); sequenced to run in parallel per that folder's `SEQUENCE.md`
 
 ## Related Docs
 (the 12 files listed above)

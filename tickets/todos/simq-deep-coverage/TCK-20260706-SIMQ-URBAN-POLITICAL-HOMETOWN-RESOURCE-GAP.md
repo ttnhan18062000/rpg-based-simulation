@@ -98,6 +98,11 @@ to cover this.
   `simq_routing_test`, for reference on how the failure mode was diagnosed and scored
 - TCK-20260627-P0B-URBAN-RESOURCE-NODES — original ticket that placed `wood_node`/`herb_patch` in
   `hometown` via `frontier_village_core.yaml`, for both worlds using that module
+- TCK-20260707-SIMQ-DEEP-COVERAGE-EPIC — parent epic; relocated into
+  `tickets/todos/simq-deep-coverage/`. Sequenced FIRST (with the other 3 resource/coverage-gap
+  tickets) per that folder's `SEQUENCE.md`, ahead of `TCK-20260707-SIMQ-LONGRUN-HOTPILLAR-ANCHORS`'s
+  2000t extension of `urban_political` — the epic's own scope decision requires this dormant-gap
+  disposition to be settled before anchoring `urban_political` at long run
 
 ## Related Docs
 - `docs/simulation_quality/eval_matrix_results.md` — "AGENCY — Cross-World Design Note" section

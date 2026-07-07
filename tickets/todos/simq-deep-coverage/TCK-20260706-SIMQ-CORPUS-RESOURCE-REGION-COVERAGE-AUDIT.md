@@ -134,6 +134,11 @@ investigation.
   `urban_political` hero/hometown row specifically; do not duplicate)
 - TCK-20260704-SIMQ-RESOURCEREGISTRY-STONE-GAP — established the `metadata.source_region_tags`
   additive-override mechanism this ticket's option (a) reuses
+- TCK-20260707-SIMQ-DEEP-COVERAGE-EPIC — parent epic; relocated into
+  `tickets/todos/simq-deep-coverage/`. Sequenced FIRST (with the other 3 resource/coverage-gap
+  tickets) per that folder's `SEQUENCE.md`, ahead of the epic's long-run-anchor work, because
+  `TCK-20260707-SIMQ-LONGRUN-HOTPILLAR-ANCHORS` anchors `hero_guild_routing` and this audit's
+  findings/fixes could change that world's AGENCY-relevant content before anchoring
 
 ## Related Docs
 - `docs/mechanics/adventure_routing_contract.md`
