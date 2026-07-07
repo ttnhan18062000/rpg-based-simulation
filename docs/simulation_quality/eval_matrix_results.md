@@ -472,6 +472,28 @@ calibration world except `simq_routing_test`" ruling for any of the 9 non-routin
 only adds `hero_guild_routing` as a second, named exception to that ruling, exactly as
 `simq_routing_test` already was.
 
+**Third exception class — `urban_political`'s dormant `hometown` gap, accepted as permanent
+non-issue (TCK-20260706-SIMQ-URBAN-POLITICAL-HOMETOWN-RESOURCE-GAP):**
+`TCK-20260704-SIMQ-ROUTING-TEST-HOMETOWN-RESOURCE-GAP`'s investigation (§4(i)) found that
+`urban_political` shares both `frontier_village_core` (places `wood_node`/`herb_patch` in
+`hometown`) and `hero_adventurers` (spawns all 3 hero-role entities in `hometown`) with
+`simq_routing_test` — the same module combination that produced `simq_routing_test_seed456`'s
+`defer_with_reason` stasis failure mode before that ticket's catalog fix. That fix (adding
+`"hometown"` to `wood_node`/`herb_patch`'s `source_region_tags` in
+`data/content/world/resources.yaml`) is global and already covers `urban_political` too, as a
+confirmed side effect — verified directly against the current catalog file
+(`TCK-20260706-SIMQ-URBAN-POLITICAL-HOMETOWN-RESOURCE-GAP`'s investigation). This gap remains
+permanently dormant, not merely temporarily inert: per the archetype decision above
+(`TCK-20260702-SIMQ-UPLIFT2-AGENCY-DA`) and `TCK-20260704-SIMQ-CORPUS-UNIT-WORLD-AGENCY`'s explicit
+choice to author a brand-new routing-capable world (`hero_guild_routing`) rather than enable routing
+on `urban_political` — the closest existing candidate, having a `hero_guild`-framed population
+already — `urban_political` is confirmed to never force `ENABLE_ADVENTURE_ROUTING=ON`. Its
+archetype framing (settlement/political, FACTION/ECONOMY/SOCIAL-weighted, `Regression/baseline`
+tier per `corpus_tier_taxonomy.md`) was never intended as adventuring/routing-oriented. No further
+action is required unless a future ticket explicitly proposes reversing both
+`TCK-20260702-SIMQ-UPLIFT2-AGENCY-DA` and `TCK-20260704-SIMQ-CORPUS-UNIT-WORLD-AGENCY`'s
+Out-of-Scope ruling for `urban_political`.
+
 ---
 
 ## Newly-Anchored Worlds (TCK-20260703-SIMQ-UPLIFT3-WORLD-CORPUS)

@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: world
 authority: P2
 audience: agent
 ticket_id: TCK-20260706-SIMQ-URBAN-POLITICAL-HOMETOWN-RESOURCE-GAP
-phase: open
+phase: done
 date: 2026-07-06T15:27:41Z
 tags: [simulation-quality, world, adventure, bug]
 ---
@@ -17,7 +17,7 @@ tags: [simulation-quality, world, adventure, bug]
 `ENABLE_ADVENTURE_ROUTING` off
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -79,16 +79,16 @@ to cover this.
 - Changing the `FORM_PARTY` `sociability >= 0.2` gate value — a separate design/balance question.
 
 ## Acceptance Criteria
-- [ ] Explicit decision recorded (with rationale) on whether `urban_political` should ever force
-      `ENABLE_ADVENTURE_ROUTING=ON`
-- [ ] If enabled: `urban_political` calibration re-run for seeds 42/123/456, AGENCY grade confirmed
-      not to collapse the way `simq_routing_test_seed456` originally did (the content fix should
-      prevent it, but this must be live-verified, not assumed)
-- [ ] If not enabled: `docs/simulation_quality/eval_matrix_results.md` updated with an explicit
+- [x] Explicit decision recorded (with rationale) on whether `urban_political` should ever force
+      `ENABLE_ADVENTURE_ROUTING=ON` — **no**, settled by direct precedent (see Completion Summary)
+- [ ] ~~If enabled: `urban_political` calibration re-run...~~ — not applicable, routing stays off
+- [x] If not enabled: `docs/simulation_quality/eval_matrix_results.md` updated with an explicit
       "dormant, accepted" note for `urban_political`'s `hometown` gap, cross-referencing this ticket
       and the parent content-fix ticket
-- [ ] `grade_anchors.json` updated if a new `urban_political` calibration run changes any pillar's
-      grade
+- [x] `grade_anchors.json` updated if a new `urban_political` calibration run changes any pillar's
+      grade — not applicable, no recalibration performed (routing stays off, AGENCY grade unchanged
+      at C, confirmed via the existing `test_agency_da_anti_drift_guard` guard test, which already
+      passes without modification)
 
 ## Related Tickets
 - TCK-20260704-SIMQ-ROUTING-TEST-HOMETOWN-RESOURCE-GAP (parent — filed this ticket; its content fix
@@ -127,13 +127,67 @@ to cover this.
   flag or document the dormancy as permanent.
 
 ## Implementation Notes
-(to be filled during implementation)
+The routing-capability question this ticket's Scope item 1 asks was already settled by direct,
+on-point precedent — no new human decision was needed:
+
+- `TCK-20260702-SIMQ-UPLIFT2-AGENCY-DA` ruled `AGENCY=C` in every calibration world except
+  `simq_routing_test` is archetype-correct, not a gap — `AdventureDecisionPhase` is opt-in per
+  world archetype, not a global default.
+- `TCK-20260704-SIMQ-CORPUS-UNIT-WORLD-AGENCY` — the ticket that most directly answered "how do we
+  add more AGENCY coverage" — explicitly *considered* `urban_political` as the closest candidate
+  (it already has a `hero_guild`-framed population, so it's "not architecturally foreign" to a
+  routing framing) and explicitly *rejected* enabling routing on it, choosing instead to author a
+  brand-new dedicated world (`hero_guild_routing`). Its own Out of Scope names `urban_political`
+  explicitly as a world this decision does not reverse routing for. This is a rejection-with-
+  consideration, the strongest form of precedent — not silence or an unexamined default.
+
+Content-fix side effect independently reconfirmed live: `data/content/world/resources.yaml`'s
+`wood_node`/`herb_patch` entries both already carry `"hometown"` in `source_region_tags` (landed
+globally by `TCK-20260704-SIMQ-ROUTING-TEST-HOMETOWN-RESOURCE-GAP`, a catalog-wide, not per-world,
+change) — so even though routing stays off, if a future ticket ever did reverse the above
+precedent, the content half of the original failure mode is already closed.
+
+Added a "Third exception class" paragraph to `docs/simulation_quality/eval_matrix_results.md`'s
+"AGENCY — Cross-World Design Note" section (after the `hero_guild_routing` paragraph), matching
+that section's existing bold-lead-in/ticket-citation style, cross-referencing this ticket and all
+3 precedent tickets. No code, content, profile, or grade-anchor changes — this ticket's entire
+scope was documenting an already-settled decision. Confirmed the existing
+`test_agency_da_anti_drift_guard` test (added by `TCK-20260704-SIMQ-CORPUS-SCENARIO-FLAG-GUARDRAIL`)
+already asserts `urban_political` stays `ENABLE_ADVENTURE_ROUTING` OFF, via
+`expected_world_flag_state.json`'s `_meta.agency_da_non_routing_worlds` list — this ticket's
+disposition is fully consistent with that existing guard and required no modification to it.
+
+Note for the record: this ticket's realized work (one doc paragraph, zero code/content/test
+changes) turned out lighter than a typical `standard`-tier ticket, closer in shape to the
+`hotfix`-tier precedent (`TCK-20260702-SIMQ-UPLIFT2-AGENCY-DA`) it directly cites — not changing
+the ticket's own `Tier` field retroactively, just noting the actual effort for future reference.
 
 ## Test Summary
-(to be filled during implementation)
+- `pytest tests/integration/test_world_profile_feature_flag_guardrail.py
+  tests/integration/test_scenario_feature_flag_defaults.py -q` → 100 passed, including
+  `test_agency_da_anti_drift_guard` unmodified and still passing.
+- `make evaluate` → 610 pillars checked, 0 regressions, 0 missing (expected no-op impact for a
+  doc-only change).
+- `python3 tools/validate_frontmatter.py docs/simulation_quality/eval_matrix_results.md
+  --content-type doc` → pre-existing frontmatter-missing error, confirmed via `git diff` to predate
+  this ticket's edit entirely (this file is one of the 12 already tracked by
+  `TCK-20260706-DOCS-REGISTRY-MISSING-FRONTMATTER`, ticket 5 in this same epic — not this ticket's
+  issue to fix).
 
 ## Files Changed
-(to be filled during implementation)
+- `docs/simulation_quality/eval_matrix_results.md` — new "Third exception class" paragraph in the
+  "AGENCY — Cross-World Design Note" section
 
 ## Completion Summary
-(to be filled on done)
+Resolved the routing-capability question via direct precedent rather than a new decision:
+`urban_political` will never force `ENABLE_ADVENTURE_ROUTING=ON`, per `TCK-20260702-SIMQ-UPLIFT2-AGENCY-DA`'s
+archetype-correctness ruling and `TCK-20260704-SIMQ-CORPUS-UNIT-WORLD-AGENCY`'s explicit
+consideration-and-rejection of `urban_political` as a routing candidate in favor of authoring
+`hero_guild_routing` instead. The content half of the original gap
+(`TCK-20260704-SIMQ-ROUTING-TEST-HOMETOWN-RESOURCE-GAP`'s `wood_node`/`herb_patch` `hometown` tag
+fix) already covers `urban_political` as a confirmed side effect of that global catalog change,
+independently reconfirmed live here. Documented the full disposition in
+`docs/simulation_quality/eval_matrix_results.md` so a future reader doesn't have to re-derive this
+analysis from scratch. No code, content, or anchor changes; `make evaluate` confirms 0 regressions.
+This closes the second of 4 prerequisite tickets that must land before
+`TCK-20260707-SIMQ-LONGRUN-HOTPILLAR-ANCHORS` extends `urban_political` to 2000t.
