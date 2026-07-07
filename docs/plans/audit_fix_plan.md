@@ -262,12 +262,25 @@ from 4/21 (~19%) proportionally, and no role dominates the distribution.
 
 ---
 
-### P2-D: Faction relationships sparse — 14 defined for 16 factions
+### P2-D: Faction relationships sparse — 14 defined for 16 factions — **RESOLVED (verified 2026-07-07)**
 
 **Source:** D07 F6 — Gap Risk 8/15  
-**Files:** `data/content/faction_relationships/`  
+**Files:** `data/content/social/faction_relationships.yaml`  
 **Finding:** 14 faction relationships for 16 factions (120 directed pairs possible). Factions without explicit relationships default to neutral, reducing encounter variety.  
-**Fix:** Define relationships for at least 50% of active cross-faction pairs (30+ entries). Focus on conflict and economy module factions first (highest encounter frequency).
+**Fix:** Define relationships for at least 50% of active cross-faction pairs (30+ entries). Focus on conflict and economy module factions first (highest encounter frequency).  
+**Resolution:** `TCK-20260704-SIMQ-CORPUS-FACTION-RELATIONSHIPS` took the catalog from 34 entries
+(20/120 raw pairs, 16.7%) to **75 entries (41/120 raw pairs, 34.2%)**. Graded against the
+populated-only 66-pair basis (the 12 factions with a live module-population path today — see the
+ticket's Implementation Notes for UQ-1's resolution), coverage reached **34/66 (51.5%)**, exceeding
+the 50%+ target. `neutral` gained its first-ever explicit relationship entry
+(`hostility: "none"`, deliberately bounded blast radius since `neutral` is the universal
+`get_faction_id_str()` fallback ID). The investigation for this ticket found the catalog is a live
+input to `LegalityServiceV2.verify_attack_legality()` (Friendly Fire law) and
+`CombatRewardClassificationService.classify_defeated_target()` (`COMB-280`), not inert content —
+the implementation added targeted regression tests for every newly-affected faction pair and a new
+parity ledger entry (`COMB-294`, `docs/parity_ledger/combat_movement.yaml`) documenting the two
+consumers' independent fallback mechanisms. `make evaluate-full` (real engine re-run): 610 pillars
+checked, 0 regressions.
 
 ---
 
@@ -606,7 +619,7 @@ Tickets created: `tickets/todos/simq-emit/` (5 tickets, 2026-07-01).
 | P2-A | D06 F2 | **P2** | Engine | **RESOLVED (verified 2026-07-03)** — conditional lock, capped at 50 ticks, in `intelligence.py` |
 | P2-B | D06 F5 | **P2** | Engine | **RESOLVED (verified 2026-07-04)** — TCK-20260703-SIMQ-UPLIFT3-WORLD-CORPUS; two-tier cadence intact, frontier_extended/frontier_living_world/wilderness_survival symptom re-attributed to hazard-kind staleness (separately fixed, same ticket) |
 | P2-C | D07 F4 | **P2** | Content | **RESOLVED (verified 2026-07-03)** — 29 archetypes, 18 roles, no single-role dominance |
-| P2-D | D07 F6 | **P2** | Content | UNVERIFIED (2026-07-03) — relationships consolidated into `data/content/social/faction_relationships.yaml`; pair-coverage % not re-checked — M — verify 50%+ coverage |
+| P2-D | D07 F6 | **P2** | Content | **RESOLVED (verified 2026-07-07)** — TCK-20260704-SIMQ-CORPUS-FACTION-RELATIONSHIPS; `data/content/social/faction_relationships.yaml` 34→75 entries, 34/66 (51.5%) populated-only coverage / 41/120 (34.2%) raw coverage, `neutral` entry added, `COMB-294` parity entry added |
 | P2-E | D09 F4 | **P2** | Testing | OPEN (not re-checked 2026-07-03) — S — per-scenario feature flag test |
 | P2-F | D09 F6 | **P2** | Docs | **RESOLVED (verified 2026-07-03)** — documented in `known_limitations.md` §2.4 |
 | P2-G | D14 F3 | **P2** | Refactor | **RESOLVED (verified 2026-07-03)** — `hard_law_monitor.py` only imports `Kernel` now |
@@ -649,7 +662,9 @@ the P2-B section above. **P1-D** was also in this list as of 2026-07-03; **RESOL
 by TCK-20260703-SIMQ-UPLIFT3-QUEST-PRESSURE — see the P1-D section above. **P1-H** was also in this
 list as of 2026-07-03 but that was itself a false negative — **RESOLVED (verified 2026-07-04)**,
 already implemented by the pre-existing `TCK-20260627-P1H-GOAL-RUNNERUP`, discovered during
-`TCK-20260703-SIMQ-UPLIFT3-GOAL-TRACE`'s investigation — see the P1-H section above.)
+`TCK-20260703-SIMQ-UPLIFT3-GOAL-TRACE`'s investigation — see the P1-H section above. **P2-D** was
+also in this list as of 2026-07-03; **RESOLVED (verified 2026-07-07)** by
+`TCK-20260704-SIMQ-CORPUS-FACTION-RELATIONSHIPS` — see the P2-D section above.)
 
 **Completed as of 2026-07-01:** Engine emission gaps (`tickets/todos/simq-emit/`, 5 tickets created 2026-07-01)
 

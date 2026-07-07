@@ -3047,3 +3047,49 @@
     Secondary ref — primary entry is INFRA-255 in infrastructure.yaml.
     Prior formula divided by current_tick; same COMBAT activity received B at 401t vs A at 200t.
   support_boundary: null
+
+- id: COMB-294
+  text: >
+    Faction relationship catalog coverage determines combat-legality and reward-classification
+    outcomes for faction pairs without a perspectives.yaml override.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: >
+    data/content/social/faction_relationships.yaml entries are read by
+    RelationProjectionService.project_relation() (src/content_semantics/relation.py) and
+    FactionSemanticsService.is_hostile_compat() (src/content_semantics/faction.py), which gate
+    LegalityServiceV2.verify_attack_legality() (src/engine/legality.py, Friendly Fire law) and
+    CombatRewardClassificationService.classify_defeated_target() (src/engine/combat_rewards.py,
+    see COMB-280). For factions without a perspectives.yaml entry, a new relationship entry flips
+    each consumer's own gate (has_perspective OR has_relationship for the exact directed pair) from
+    False to True. The two consumers diverge on the "gate False" fallback: is_hostile_compat()
+    (combat_rewards.py's path) falls back to is_hostile(), alignment_bucket-based; legality.py's
+    own Friendly Fire step computes a separate has_clean flag with the identical gate expression but
+    falls back to raw attacker.identity.faction == target.identity.faction (legacy_engine_bucket-based,
+    a different factions.yaml attribute than alignment_bucket) when the gate is False, then switches
+    to calling is_hostile_compat() itself once the gate flips True. Verified per new pair added by
+    TCK-20260704-SIMQ-CORPUS-FACTION-RELATIONSHIPS (21 populated-set pairs, 14/66 -> 35/66 on the
+    populated-only basis): 9 same-legacy-bucket MONSTER_HORDE pairs flip Friendly-Fire illegal ->
+    legal (bandit_company/orc_clan/wild_beast_pack/goblin_warband/undead_remnants/swamp_tribe
+    combinations); 2 cross-bucket pairs (forest_wardens->merchant_league, neutral->town_council)
+    flip legal -> illegal as the new "none"-hostility relationship makes them protected allies; the
+    remaining non-perspective-source pairs show no Friendly-Fire verdict change (same-bucket, "none"
+    hostility, both fallbacks already agreed). The combat_rewards.py/is_hostile_compat() delta
+    (alignment_bucket-based) independently flips False -> True for 4 of these pairs
+    (orc_clan->wild_beast_pack, bandit_company->goblin_warband, bandit_company->undead_remnants,
+    orc_clan->swamp_tribe) — confirming the two consumers' fallbacks are genuinely independent, not
+    redundant checks of the same thing.
+  proof_type: regression
+  test_path: tests/unit/content/test_faction_relationships_coverage.py::test_new_pair_changes_legality_friendly_fire_verdict
+  divergence_note: >
+    Intentional, documented behavior change (same disclosure style as COMB-280): several
+    same-legacy-bucket MONSTER_HORDE faction pairs (e.g. bandit_company vs orc_clan, bandit_company
+    vs goblin_warband) that could never legally attack each other before this ticket (Friendly Fire
+    blocked purely because they shared a legacy_engine_bucket) can now fight once a relationship
+    record with elevated hostility exists between them — this is the intended "encounter variety"
+    outcome, not a regression. Conversely, forest_wardens<->merchant_league and neutral->town_council
+    gain Friendly-Fire protection (legal -> illegal) as newly-declared non-hostile allies. Full
+    per-pair delta table (both consumers) is in
+    tickets/done/TCK-20260704-SIMQ-CORPUS-FACTION-RELATIONSHIPS.md's Implementation Notes.
+  support_boundary: null

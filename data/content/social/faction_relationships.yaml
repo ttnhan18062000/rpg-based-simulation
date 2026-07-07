@@ -359,3 +359,420 @@
     hostility: "none"
     trust: "high"
     respect: "high"
+
+# STATE: ADDITIONAL
+# TCK-20260704-SIMQ-CORPUS-FACTION-RELATIONSHIPS: populated-set coverage expansion (COMB-294).
+- id: "wild_beasts_to_goblins"
+  source_faction: "wild_beast_pack"
+  target_faction: "goblin_warband"
+  relationship_model: "contextual_territorial_pressure"
+  axes:
+    hostility: "medium_contextual"
+    trust: "none"
+    territorial_conflict: "medium"
+
+# STATE: ADDITIONAL
+- id: "goblins_to_wild_beasts"
+  source_faction: "goblin_warband"
+  target_faction: "wild_beast_pack"
+  relationship_model: "wary_coexistence"
+  axes:
+    hostility: "low"
+    trust: "low"
+    territorial_conflict: "low"
+
+# STATE: ADDITIONAL
+- id: "wild_beasts_to_bandits"
+  source_faction: "wild_beast_pack"
+  target_faction: "bandit_company"
+  relationship_model: "contextual_territorial_pressure"
+  axes:
+    hostility: "medium_contextual"
+    trust: "none"
+    territorial_conflict: "medium"
+
+# STATE: ADDITIONAL
+- id: "bandits_to_wild_beasts"
+  source_faction: "bandit_company"
+  target_faction: "wild_beast_pack"
+  relationship_model: "predator_hazard_avoidance"
+  axes:
+    hostility: "medium"
+    trust: "none"
+    fear: "low"
+
+# STATE: ADDITIONAL
+- id: "wild_beasts_to_orc_clan"
+  source_faction: "wild_beast_pack"
+  target_faction: "orc_clan"
+  relationship_model: "contextual_territorial_pressure"
+  axes:
+    hostility: "low_base_contextual"
+    trust: "none"
+    territorial_conflict: "medium"
+
+# STATE: ADDITIONAL
+- id: "orc_clan_to_wild_beasts"
+  source_faction: "orc_clan"
+  target_faction: "wild_beast_pack"
+  relationship_model: "rival_predator_territory"
+  axes:
+    hostility: "medium"
+    trust: "none"
+    territorial_conflict: "medium"
+    respect: "low"
+
+# STATE: ADDITIONAL
+- id: "wild_beasts_to_undead"
+  source_faction: "wild_beast_pack"
+  target_faction: "undead_remnants"
+  relationship_model: "contextual_territorial_pressure"
+  axes:
+    hostility: "medium_contextual"
+    fear: "low"
+    territorial_conflict: "medium"
+
+# STATE: ADDITIONAL
+- id: "undead_to_wild_beasts"
+  source_faction: "undead_remnants"
+  target_faction: "wild_beast_pack"
+  relationship_model: "purposeless_disregard"
+  axes:
+    hostility: "none"
+    trust: "none"
+
+# STATE: ADDITIONAL
+- id: "wild_beasts_to_swamp_tribe"
+  source_faction: "wild_beast_pack"
+  target_faction: "swamp_tribe"
+  relationship_model: "contextual_territorial_pressure"
+  axes:
+    hostility: "low_base_contextual"
+    trust: "none"
+    territorial_conflict: "medium"
+
+# STATE: ADDITIONAL
+- id: "swamp_tribe_to_wild_beasts"
+  source_faction: "swamp_tribe"
+  target_faction: "wild_beast_pack"
+  relationship_model: "wetland_coexistence"
+  axes:
+    hostility: "none"
+    trust: "low"
+    territorial_conflict: "low"
+
+# STATE: ADDITIONAL
+- id: "goblins_to_bandits"
+  source_faction: "goblin_warband"
+  target_faction: "bandit_company"
+  relationship_model: "rival_raider_competition"
+  axes:
+    hostility: "medium"
+    trust: "none"
+    resource_competition: "high"
+
+# STATE: ADDITIONAL
+- id: "bandits_to_goblins"
+  source_faction: "bandit_company"
+  target_faction: "goblin_warband"
+  relationship_model: "rival_raider_competition"
+  axes:
+    hostility: "medium"
+    trust: "none"
+    resource_competition: "high"
+
+# STATE: ADDITIONAL
+- id: "goblins_to_undead"
+  source_faction: "goblin_warband"
+  target_faction: "undead_remnants"
+  relationship_model: "haunted_ruin_unease"
+  axes:
+    hostility: "medium"
+    fear: "medium"
+    trust: "none"
+
+# STATE: ADDITIONAL
+- id: "undead_to_goblins"
+  source_faction: "undead_remnants"
+  target_faction: "goblin_warband"
+  relationship_model: "battlefield_remnant_hostility"
+  axes:
+    hostility: "medium"
+    trust: "none"
+    ancient_grudge: "low"
+
+# STATE: ADDITIONAL
+- id: "goblins_to_swamp_tribe"
+  source_faction: "goblin_warband"
+  target_faction: "swamp_tribe"
+  relationship_model: "raider_vs_defender_tension"
+  axes:
+    hostility: "medium"
+    trust: "none"
+    territorial_conflict: "medium"
+
+# STATE: ADDITIONAL
+- id: "swamp_tribe_to_goblins"
+  source_faction: "swamp_tribe"
+  target_faction: "goblin_warband"
+  relationship_model: "raider_vs_defender_tension"
+  axes:
+    hostility: "medium"
+    trust: "none"
+    territorial_conflict: "medium"
+
+# STATE: ADDITIONAL
+- id: "bandits_to_orc_clan"
+  source_faction: "bandit_company"
+  target_faction: "orc_clan"
+  relationship_model: "ancient_border_hostility"
+  axes:
+    hostility: "high"
+    trust: "none"
+    territorial_conflict: "high"
+
+# STATE: ADDITIONAL
+- id: "orc_clan_to_bandits"
+  source_faction: "orc_clan"
+  target_faction: "bandit_company"
+  relationship_model: "ancient_border_hostility"
+  axes:
+    hostility: "high"
+    trust: "none"
+    territorial_conflict: "high"
+
+# STATE: ADDITIONAL
+- id: "bandits_to_undead"
+  source_faction: "bandit_company"
+  target_faction: "undead_remnants"
+  relationship_model: "haunted_ruin_avoidance"
+  axes:
+    hostility: "high"
+    fear: "medium"
+    trust: "none"
+
+# STATE: ADDITIONAL
+- id: "undead_to_bandits"
+  source_faction: "undead_remnants"
+  target_faction: "bandit_company"
+  relationship_model: "battlefield_remnant_hostility"
+  axes:
+    hostility: "high"
+    trust: "none"
+    ancient_grudge: "low"
+
+# STATE: ADDITIONAL
+- id: "bandits_to_swamp_tribe"
+  source_faction: "bandit_company"
+  target_faction: "swamp_tribe"
+  relationship_model: "outlaw_hideout_competition"
+  axes:
+    hostility: "medium"
+    trust: "none"
+    territorial_conflict: "medium"
+
+# STATE: ADDITIONAL
+- id: "swamp_tribe_to_bandits"
+  source_faction: "swamp_tribe"
+  target_faction: "bandit_company"
+  relationship_model: "outlaw_hideout_competition"
+  axes:
+    hostility: "medium"
+    trust: "none"
+    territorial_conflict: "medium"
+
+# STATE: ADDITIONAL
+- id: "orc_clan_to_undead"
+  source_faction: "orc_clan"
+  target_faction: "undead_remnants"
+  relationship_model: "old_battlefield_grudge"
+  axes:
+    hostility: "high"
+    trust: "none"
+    ancient_grudge: "medium"
+
+# STATE: ADDITIONAL
+- id: "undead_to_orc_clan"
+  source_faction: "undead_remnants"
+  target_faction: "orc_clan"
+  relationship_model: "old_battlefield_grudge"
+  axes:
+    hostility: "high"
+    trust: "none"
+    ancient_grudge: "medium"
+
+# STATE: ADDITIONAL
+- id: "orc_clan_to_swamp_tribe"
+  source_faction: "orc_clan"
+  target_faction: "swamp_tribe"
+  relationship_model: "territorial_power_rivalry"
+  axes:
+    hostility: "medium"
+    trust: "none"
+    territorial_conflict: "medium"
+    respect: "low"
+
+# STATE: ADDITIONAL
+- id: "swamp_tribe_to_orc_clan"
+  source_faction: "swamp_tribe"
+  target_faction: "orc_clan"
+  relationship_model: "territorial_power_rivalry"
+  axes:
+    hostility: "medium"
+    trust: "none"
+    territorial_conflict: "medium"
+
+# STATE: ADDITIONAL
+- id: "undead_to_swamp_tribe"
+  source_faction: "undead_remnants"
+  target_faction: "swamp_tribe"
+  relationship_model: "contextual_border_unease"
+  axes:
+    hostility: "medium_contextual"
+    trust: "none"
+    territorial_conflict: "low"
+
+# STATE: ADDITIONAL
+- id: "swamp_tribe_to_undead"
+  source_faction: "swamp_tribe"
+  target_faction: "undead_remnants"
+  relationship_model: "contextual_border_unease"
+  axes:
+    hostility: "medium_contextual"
+    trust: "none"
+    fear: "low"
+
+# STATE: ADDITIONAL
+- id: "merchants_to_spirit_court"
+  source_faction: "merchant_league"
+  target_faction: "spirit_court"
+  relationship_model: "curio_trade_curiosity"
+  axes:
+    hostility: "none"
+    trust: "medium"
+    trade_affinity: "low"
+    respect: "low"
+
+# STATE: ADDITIONAL
+- id: "spirit_court_to_merchants"
+  source_faction: "spirit_court"
+  target_faction: "merchant_league"
+  relationship_model: "wary_commerce_tolerance"
+  axes:
+    hostility: "none"
+    trust: "low"
+    respect: "low"
+
+# STATE: ADDITIONAL
+- id: "merchants_to_arcane"
+  source_faction: "merchant_league"
+  target_faction: "arcane_circle"
+  relationship_model: "reagent_trade_alliance"
+  axes:
+    hostility: "none"
+    trust: "medium"
+    trade_affinity: "high"
+
+# STATE: ADDITIONAL
+- id: "arcane_to_merchants"
+  source_faction: "arcane_circle"
+  target_faction: "merchant_league"
+  relationship_model: "reagent_trade_alliance"
+  axes:
+    hostility: "none"
+    trust: "medium"
+    trade_affinity: "high"
+
+# STATE: ADDITIONAL
+- id: "spirit_court_to_arcane"
+  source_faction: "spirit_court"
+  target_faction: "arcane_circle"
+  relationship_model: "sacred_knowledge_caution"
+  axes:
+    hostility: "none"
+    trust: "low"
+    respect: "medium"
+
+# STATE: ADDITIONAL
+- id: "arcane_to_spirit_court"
+  source_faction: "arcane_circle"
+  target_faction: "spirit_court"
+  relationship_model: "sacred_knowledge_caution"
+  axes:
+    hostility: "none"
+    trust: "low"
+    respect: "medium"
+
+# STATE: ADDITIONAL
+- id: "forest_wardens_to_hero_guild"
+  source_faction: "forest_wardens"
+  target_faction: "hero_guild"
+  relationship_model: "allied_protector_kinship"
+  axes:
+    hostility: "none"
+    trust: "high"
+    respect: "high"
+    kinship: "medium"
+
+# STATE: ADDITIONAL
+- id: "hero_guild_to_forest_wardens"
+  source_faction: "hero_guild"
+  target_faction: "forest_wardens"
+  relationship_model: "allied_protector_kinship"
+  axes:
+    hostility: "none"
+    trust: "high"
+    respect: "high"
+    kinship: "medium"
+
+# STATE: ADDITIONAL
+- id: "merchants_to_forest_wardens"
+  source_faction: "merchant_league"
+  target_faction: "forest_wardens"
+  relationship_model: "trade_positive"
+  axes:
+    hostility: "none"
+    trust: "medium"
+    trade_affinity: "medium"
+
+# STATE: ADDITIONAL
+- id: "forest_wardens_to_merchants"
+  source_faction: "forest_wardens"
+  target_faction: "merchant_league"
+  relationship_model: "trade_positive"
+  axes:
+    hostility: "none"
+    trust: "medium"
+    trade_affinity: "medium"
+
+# STATE: ADDITIONAL
+- id: "merchants_to_hero_guild"
+  source_faction: "merchant_league"
+  target_faction: "hero_guild"
+  relationship_model: "trade_positive"
+  axes:
+    hostility: "none"
+    trust: "high"
+    trade_affinity: "high"
+
+# STATE: ADDITIONAL
+- id: "hero_guild_to_merchants"
+  source_faction: "hero_guild"
+  target_faction: "merchant_league"
+  relationship_model: "trade_positive"
+  axes:
+    hostility: "none"
+    trust: "high"
+    trade_affinity: "high"
+
+# STATE: ADDITIONAL
+# AC#3: neutral's first-ever explicit relationship entry. hostility MUST stay "none" —
+# neutral is the universal get_faction_id_str() fallback ID, so any elevated value here
+# would have unbounded blast radius across every entity that fails faction resolution.
+- id: "neutral_to_town_council"
+  source_faction: "neutral"
+  target_faction: "town_council"
+  relationship_model: "unaffiliated_civil_default"
+  axes:
+    hostility: "none"
+    trust: "low"
