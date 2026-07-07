@@ -17,6 +17,8 @@
   required_ticks: 15
   default_charges: 5
   preferred_biomes: ["old_mine"]
+  metadata:
+    source_region_tags: ["old_mine", "mountain_pass_zone"]
 
 # STATE: NEW (TCK-20260704-SIMQ-RESOURCEREGISTRY-STONE-GAP)
 - id: "stone_outcrop"
@@ -111,3 +113,5 @@
   required_ticks: 24
   default_charges: 2
   preferred_biomes: ["frozen_peak"]
+  metadata:
+    source_region_tags: ["mountain_pass_zone"]

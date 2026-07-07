@@ -129,33 +129,81 @@ def test_resource_opportunities_hometown_herb_patch():
     assert any(opp.subject == "herb" for opp in opportunities)
 
 
-def test_resource_opportunities_mountain_pass_zone_tag_gap():
-    """TCK-20260704-SIMQ-CORPUS-UNIT-WORLD-AGENCY Step 2 finding: a hero standing in
-    hero_guild_routing's mountain_pass_zone region gets zero gather_resource opportunities for
-    either resource kind the mountain_pass module places there (iron_vein, frost_shard_cluster) --
-    neither carries a "mountain_pass_zone" (or any) source_region_tags entry in
-    data/content/world/resources.yaml. Same class of registry-omission gap
-    TCK-20260704-SIMQ-ROUTING-TEST-HOMETOWN-RESOURCE-GAP fixed for hometown/wood_node/herb_patch;
-    found here but deliberately left unfixed (out of this ticket's scope) and flagged as a
-    follow-up content-fix recommendation in docs/simulation_quality/eval_matrix_results.md instead.
-    If this assertion starts failing, the tag gap has been closed and this test should be
-    rewritten to assert coverage."""
+def test_resource_opportunities_mountain_pass_zone_iron_vein():
+    """TCK-20260707-HERO-GUILD-ROUTING-RESOURCE-TAG-GAP: a hero standing in
+    hero_guild_routing's mountain_pass_zone region must now receive a gather_resource
+    opportunity for iron_vein (source_region_tags additively gained "mountain_pass_zone" in
+    data/content/world/resources.yaml, alongside the pre-existing "old_mine" legacy-fallback
+    tag verified by test_resource_opportunities_old_mine_iron_vein). Supersedes the former
+    test_resource_opportunities_mountain_pass_zone_tag_gap, which documented this as a zero-
+    opportunity gap before the fix (TCK-20260704-SIMQ-CORPUS-UNIT-WORLD-AGENCY Step 2 finding)."""
+    ent = (V2EntityBuilder(1)
+        .kind("hero")
+        .build())
+    object.__setattr__(ent.navigation, "region_id", "mountain_pass_zone")
+
+    from src.core.state import ResourceNodeState
+    node1 = ResourceNodeState(id=1, kind="iron_vein", position=(0.0, 0.0), yields_item="iron_ore", remaining_charges=10, max_charges=10, required_ticks=5)
+    mock_state = MockState(resource_nodes={1: node1})
+
+    opportunities = ResourceOpportunityProvider.get_opportunities(ent, mock_state)
+
+    assert len(opportunities) > 0
+    assert all(opp.kind == "gather_resource" for opp in opportunities)
+    assert any(opp.subject == "iron_ore" for opp in opportunities)
+
+
+def test_resource_opportunities_mountain_pass_zone_frost_shard_cluster():
+    """TCK-20260707-HERO-GUILD-ROUTING-RESOURCE-TAG-GAP: a hero standing in
+    hero_guild_routing's mountain_pass_zone region must now receive a gather_resource
+    opportunity for frost_shard_cluster (source_region_tags gained "mountain_pass_zone" in
+    data/content/world/resources.yaml -- frost_shard_cluster previously carried no
+    source_region_tags entry at all). Supersedes the former
+    test_resource_opportunities_mountain_pass_zone_tag_gap, which documented this as a zero-
+    opportunity gap before the fix (TCK-20260704-SIMQ-CORPUS-UNIT-WORLD-AGENCY Step 2 finding)."""
+    ent = (V2EntityBuilder(1)
+        .kind("hero")
+        .build())
+    object.__setattr__(ent.navigation, "region_id", "mountain_pass_zone")
+
+    from src.core.state import ResourceNodeState
+    node1 = ResourceNodeState(id=1, kind="frost_shard_cluster", position=(0.0, 0.0), yields_item="frost_shard", remaining_charges=10, max_charges=10, required_ticks=5)
+    mock_state = MockState(resource_nodes={1: node1})
+
+    opportunities = ResourceOpportunityProvider.get_opportunities(ent, mock_state)
+
+    assert len(opportunities) > 0
+    assert all(opp.kind == "gather_resource" for opp in opportunities)
+    assert any(opp.subject == "frost_shard" for opp in opportunities)
+
+
+def test_resource_opportunities_goblin_camp_and_haunted_battlefield_no_resource_nodes():
+    """TCK-20260707-HERO-GUILD-ROUTING-RESOURCE-TAG-GAP Scope item 2: goblin_camp
+    (goblin_camp_conflict module) and haunted_battlefield (ruins_mystery_quest module) place no
+    resource nodes at all in hero_guild_routing -- confirmed via both modules' YAML (no
+    `resources:` key in data/content/world_modules/goblin_camp_conflict.yaml or
+    data/content/world_modules/ruins_mystery_quest.yaml) and the compiled
+    data/worlds/hero_guild_routing/resolved/world.resolved.yaml (only wood_node/herb_patch in
+    hometown and iron_vein/frost_shard_cluster in mountain_pass_zone are listed under
+    `resources:`). There is therefore nothing to tag for these two regions -- no
+    source_region_tags addition was made for either, and this test documents that finding rather
+    than silently skipping it. A hero standing in either region with no resource nodes present in
+    live state correctly receives zero gather_resource opportunities."""
     from src.core.state import ResourceNodeState
 
-    for kind, item in (("iron_vein", "iron_ore"), ("frost_shard_cluster", "frost_shard")):
+    for region_id in ("goblin_camp", "haunted_battlefield"):
         ent = (V2EntityBuilder(1)
             .kind("hero")
             .build())
-        object.__setattr__(ent.navigation, "region_id", "mountain_pass_zone")
+        object.__setattr__(ent.navigation, "region_id", region_id)
 
-        node = ResourceNodeState(id=1, kind=kind, position=(0.0, 0.0), yields_item=item, remaining_charges=10, max_charges=10, required_ticks=5)
-        mock_state = MockState(resource_nodes={1: node})
+        mock_state = MockState(resource_nodes={})
 
         opportunities = ResourceOpportunityProvider.get_opportunities(ent, mock_state)
 
         assert opportunities == [], (
-            f"mountain_pass_zone/{kind}: expected zero gather_resource opportunities "
-            f"(no source_region_tags coverage), got {opportunities!r}"
+            f"{region_id}: expected zero gather_resource opportunities (no resource node is "
+            f"physically placed in this region by its composing module), got {opportunities!r}"
         )
 
 
