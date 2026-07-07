@@ -506,3 +506,4 @@
 {"run_id":"TCK-20260704-SIMQ-CORPUS-AGENCY-FLAG-GENERALIZE","start_ts":"2026-07-06T17:08:30Z","end_ts":"2026-07-06T17:39:54Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":9}
 {"run_id":"TCK-20260704-SIMQ-CORPUS-UNIT-WORLDS-FACTION-INFO","start_ts":"2026-07-06T17:47:13Z","end_ts":"2026-07-07T00:18:55Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":8}
 {"run_id":"TCK-20260704-SIMQ-CORPUS-UNIT-WORLD-SELFMODEL-PILOT","start_ts":"2026-07-07T00:26:45Z","end_ts":"2026-07-07T01:11:16Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":8}
+{"run_id":"TCK-20260707-SUBAGENT-FRONTMATTER","start_ts":"2026-07-07T02:33:55Z","end_ts":"2026-07-07T02:47:16Z","workflow":"implement-ticket","tier":"hotfix","final_status":"DONE","agent_count":6}
