@@ -96,9 +96,10 @@ active end-to-end-tier content work.
 
 ## Current tier mapping (as of 2026-07-07)
 
-The original 10 worlds under `data/worlds/` are **Regression / baseline tier**. Two new
-**Unit-tier** worlds now exist (`unit_faction_tension`, `unit_information_source`, added by
-`TCK-20260704-SIMQ-CORPUS-UNIT-WORLDS-FACTION-INFO`) — see
+The original 10 worlds under `data/worlds/` are **Regression / baseline tier**. Three new
+**Unit-tier** worlds now exist (`unit_faction_tension`, `unit_information_source`,
+`unit_selfmodel_pilot`) — the first two added by `TCK-20260704-SIMQ-CORPUS-UNIT-WORLDS-FACTION-INFO`,
+the third by `TCK-20260704-SIMQ-CORPUS-UNIT-WORLD-SELFMODEL-PILOT` — see
 `docs/simulation_quality/eval_matrix_results.md`'s "Unit-Tier Isolation Worlds" section for their
 grade tables. No world has yet been promoted into deliberate end-to-end-tier content expansion
 (scoped by ticket 7 of this epic, not yet implemented), and no stress-tier world exists yet (scoped
@@ -118,6 +119,7 @@ by ticket 8, not yet implemented).
 | `frontier_extended` | Regression/baseline | 56 entities, 10 regions — largest world in the corpus |
 | `unit_faction_tension` | Unit | 18 entities, 3 regions — isolates FACTION only (TCK-20260704-SIMQ-CORPUS-UNIT-WORLDS-FACTION-INFO) |
 | `unit_information_source` | Unit | 16 entities, 1 region — isolates INFORMATION only (TCK-20260704-SIMQ-CORPUS-UNIT-WORLDS-FACTION-INFO) |
+| `unit_selfmodel_pilot` | Unit | 16 entities, 1 region — isolates COGNITION's self-model materialization half only (TCK-20260704-SIMQ-CORPUS-UNIT-WORLD-SELFMODEL-PILOT) |
 
 Full per-world entity/region/resource/quest counts and module composition are documented in
 `staging_artifacts/TCK-20260704-SIMQ-CORPUS-TIERS-EPIC/investigation.md` §2 — this doc cites that

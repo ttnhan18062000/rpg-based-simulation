@@ -559,5 +559,41 @@
     "INFORMATION": "B",
     "WORLD": "B",
     "NARRATIVE": "A"
+  },
+  "unit_selfmodel_pilot_seed42_200t": {
+    "COGNITION": "S",
+    "AGENCY": "C",
+    "COMBAT": "C",
+    "FACTION": "C",
+    "ECONOMY": "C",
+    "PROGRESSION": "C",
+    "SOCIAL": "C",
+    "INFORMATION": "C",
+    "WORLD": "B",
+    "NARRATIVE": "A"
+  },
+  "unit_selfmodel_pilot_seed123_200t": {
+    "COGNITION": "S",
+    "AGENCY": "C",
+    "COMBAT": "C",
+    "FACTION": "C",
+    "ECONOMY": "C",
+    "PROGRESSION": "C",
+    "SOCIAL": "C",
+    "INFORMATION": "C",
+    "WORLD": "B",
+    "NARRATIVE": "A"
+  },
+  "unit_selfmodel_pilot_seed456_200t": {
+    "COGNITION": "S",
+    "AGENCY": "C",
+    "COMBAT": "C",
+    "FACTION": "C",
+    "ECONOMY": "C",
+    "PROGRESSION": "C",
+    "SOCIAL": "C",
+    "INFORMATION": "C",
+    "WORLD": "B",
+    "NARRATIVE": "A"
   }
 }

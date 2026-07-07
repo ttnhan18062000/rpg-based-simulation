@@ -659,3 +659,53 @@ INFORMATION lands at `B` with exactly 1 `belief_assimilated` hit/run (not `S`/`A
 expected honest outcome per investigation.md's single-fire, tick-length-invariant characterization
 of this mechanism, not a partial failure. FACTION stays `C` as expected — isolation confirmed, not
 a gap.
+
+### unit_selfmodel_pilot (unit-tier — 16 entities, 1 region)
+
+Composes `frontier_village_core` + `hero_adventurers` (same module pair as
+`unit_information_source`). Seeds one `pending_self_model_information_events` entry targeting
+`pop_1` (`unknowns: ["material.wood.source"]` — a real material this composition's own
+`frontier_village_core` resource_recipes actually produce, via `wood_node`), together with
+`ENABLE_SELF_MODEL_COGNITION: "ON"` in
+`config/simulation_quality/profiles/unit_selfmodel_pilot.yaml` (confirmed loaded — calibration
+output shows `profile=unit_selfmodel_pilot`, not `default`). `ENABLE_BELIEF_ASSIMILATION` is
+absent (default OFF) — deliberately, per this world's own ticket's Scope item 3.
+
+**Framing (load-bearing, not a caveat to skip):** this world isolates and exercises only
+`SelfModelUpdatePhase`'s knowledge-assimilation half of "Branch B" (`self_model.knowledge.unknowns`
+population, durably materialized via `SelfModelPatch` every tick, producing genuine
+`self_model_updated`/`self_model_active` COGNITION-pillar signal at real multi-entity/multi-tick
+scale for the first time — validating `INFRA-259`/`SUB-374` beyond the single hand-built unit test
+that previously proved them). It does **not** exercise `InformationBeliefPhase`'s query-routing
+half of "Branch B" (the literal mechanism
+`test_branch_b_fires_across_real_tick_boundary_after_self_model_patch_materialization` and Finding
+4 refer to) — that logic lives entirely inside the `ENABLE_BELIEF_ASSIMILATION`-gated phase, which
+this world never invokes, by design. INFORMATION pillar staying at `C` below is the correct,
+predicted isolation result, not a bug or gap.
+
+#### 200t (seeds 42 / 123 / 456)
+
+| Pillar | seed42 | seed123 | seed456 | Notes |
+|---|---|---|---|---|
+| AGENCY | C | C | C | stable — no `ENABLE_ADVENTURE_ROUTING` |
+| **COGNITION** | **S** | **S** | **S** | genuine non-C signal: 3200 `self_model_updated`/`self_model_active` hits/run, identical across all 3 seeds — exactly `alive_entities (16) x ticks (200)`, confirming `self_model_updated` fires unconditionally every tick for every alive/active entity, not a threshold-crossing or single-fire event |
+| COMBAT | C | C | C | stable |
+| ECONOMY | C | C | C | stable |
+| FACTION | C | C | C | **isolation confirmed** — `faction_tension_overrides` absent, 0 events, as designed |
+| INFORMATION | C | C | C | **isolation confirmed, as predicted before the run** — `InformationBeliefPhase` never invoked (`ENABLE_BELIEF_ASSIMILATION` absent); 0 events, exactly as investigation.md §4/§5 foretold, not discovered as a surprise |
+| PROGRESSION | C | C | C | stable (1 event, below threshold) |
+| SOCIAL | C | C | C | stable — no `ENABLE_SOCIAL_COOPERATION` |
+| WORLD | B | B | B | stable |
+| NARRATIVE | A | A | A | stable |
+
+COGNITION's signal is real, large-volume, and structurally different from every other pillar signal
+in the corpus (every entity, every tick, not a single-fire or threshold-crossing event) — this is
+the expected, correct consequence of `self_model_updated` firing unconditionally once
+`ENABLE_SELF_MODEL_COGNITION` is ON, not an anomaly. Population stability held at 100% alive through
+300 ticks at seed 42 (identical to `unit_information_source`, same module pair, no new
+hazard/combat content). INFORMATION stays `C` exactly as this ticket's own Scope item 3 designed and
+investigation.md predicted in advance — the query-routing sense of "Branch B" remains proven only by
+the existing single-entity unit test
+(`test_branch_b_fires_across_real_tick_boundary_after_self_model_patch_materialization`); extending
+that proof to multi-entity/multi-tick scale would require `ENABLE_BELIEF_ASSIMILATION` ON too — a
+different, not-yet-scoped follow-on pilot, not this ticket's job.

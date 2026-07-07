@@ -79,6 +79,10 @@ FAST_ANCHOR_KEYS = [
     "unit_information_source_seed42_200t",
     "unit_information_source_seed123_200t",
     "unit_information_source_seed456_200t",
+    # new — TCK-20260704-SIMQ-CORPUS-UNIT-WORLD-SELFMODEL-PILOT: 1 unit-tier world, 3 seeds
+    "unit_selfmodel_pilot_seed42_200t",
+    "unit_selfmodel_pilot_seed123_200t",
+    "unit_selfmodel_pilot_seed456_200t",
 ]
 
 SLOW_ANCHOR_KEYS = [

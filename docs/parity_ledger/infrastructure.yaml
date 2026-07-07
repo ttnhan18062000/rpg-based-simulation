@@ -3236,6 +3236,9 @@
     pipeline-wiring merge fix required for the two fixes to compose correctly, and
     docs/parity_ledger/substrate.yaml::SUB-374 for the related self_model durable-materialization
     (SelfModelPatch) fix that this entry's cross-tick-boundary test also depends on.
+    As of TCK-20260704-SIMQ-CORPUS-UNIT-WORLD-SELFMODEL-PILOT, this is no longer true
+    without qualification: config/simulation_quality/profiles/unit_selfmodel_pilot.yaml turns this flag
+    ON for that one dedicated unit-tier world only — see docs/parity_ledger/strategic_cognition.yaml::STRAT-245.
   status: verified
   priority: P1
   legacy_evidence: null

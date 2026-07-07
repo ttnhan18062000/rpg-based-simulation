@@ -2793,3 +2793,24 @@
     tests/unit/quest/test_quest_generation.py::test_quest_generation_favors_gather_under_high_scarcity
   divergence_note: null
   support_boundary: null
+
+- id: STRAT-245
+  text: >
+    unit_selfmodel_pilot (TCK-20260704-SIMQ-CORPUS-UNIT-WORLD-SELFMODEL-PILOT) is the first
+    calibration-anchored world to turn ENABLE_SELF_MODEL_COGNITION ON via a shipped profile
+    (config/simulation_quality/profiles/unit_selfmodel_pilot.yaml). Its committed canonical-hash
+    baseline reflects non-empty EntityState.self_model content for the run's alive population, per
+    SUB-374 (self_model participates unconditionally in EntityState.to_canonical_dict() /
+    CanonicalStateHasher.to_canonical_data()). This is expected baseline churn for this one new
+    world only, not a correctness risk — no other shipped world/profile turns this flag on, and no
+    existing world's committed hash is affected.
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: >
+    data/worlds/unit_selfmodel_pilot/world.yaml, config/simulation_quality/profiles/unit_selfmodel_pilot.yaml,
+    docs/parity_ledger/substrate.yaml::SUB-374 (general mechanism, not duplicated here),
+    docs/parity_ledger/infrastructure.yaml::INFRA-259/INFRA-260 (the underlying fixes this world
+    exercises at multi-entity/multi-tick calibration scale for the first time).
+  test_path: tests/simulation_quality/test_grade_regression.py (unit_selfmodel_pilot_seed{42,123,456}_200t anchors)
+  divergence_note: null
