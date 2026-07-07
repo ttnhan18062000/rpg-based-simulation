@@ -129,6 +129,36 @@ def test_resource_opportunities_hometown_herb_patch():
     assert any(opp.subject == "herb" for opp in opportunities)
 
 
+def test_resource_opportunities_mountain_pass_zone_tag_gap():
+    """TCK-20260704-SIMQ-CORPUS-UNIT-WORLD-AGENCY Step 2 finding: a hero standing in
+    hero_guild_routing's mountain_pass_zone region gets zero gather_resource opportunities for
+    either resource kind the mountain_pass module places there (iron_vein, frost_shard_cluster) --
+    neither carries a "mountain_pass_zone" (or any) source_region_tags entry in
+    data/content/world/resources.yaml. Same class of registry-omission gap
+    TCK-20260704-SIMQ-ROUTING-TEST-HOMETOWN-RESOURCE-GAP fixed for hometown/wood_node/herb_patch;
+    found here but deliberately left unfixed (out of this ticket's scope) and flagged as a
+    follow-up content-fix recommendation in docs/simulation_quality/eval_matrix_results.md instead.
+    If this assertion starts failing, the tag gap has been closed and this test should be
+    rewritten to assert coverage."""
+    from src.core.state import ResourceNodeState
+
+    for kind, item in (("iron_vein", "iron_ore"), ("frost_shard_cluster", "frost_shard")):
+        ent = (V2EntityBuilder(1)
+            .kind("hero")
+            .build())
+        object.__setattr__(ent.navigation, "region_id", "mountain_pass_zone")
+
+        node = ResourceNodeState(id=1, kind=kind, position=(0.0, 0.0), yields_item=item, remaining_charges=10, max_charges=10, required_ticks=5)
+        mock_state = MockState(resource_nodes={1: node})
+
+        opportunities = ResourceOpportunityProvider.get_opportunities(ent, mock_state)
+
+        assert opportunities == [], (
+            f"mountain_pass_zone/{kind}: expected zero gather_resource opportunities "
+            f"(no source_region_tags coverage), got {opportunities!r}"
+        )
+
+
 def test_service_opportunities_basic(minimal_service_registry):
     """Verify ServiceOpportunityProvider returns town service options."""
     ent = (V2EntityBuilder(1)

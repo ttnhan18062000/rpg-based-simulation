@@ -2928,6 +2928,11 @@
     dungeon_crawl, urban_political, sandbox_world, and all zero-pillar worlds.
     (TCK-20260702-SIMQ-UPLIFT2-AGENCY-DA, decision DA — see eval_matrix_results.md AGENCY
     Cross-World Design Note)
+    hero_guild_routing (TCK-20260704-SIMQ-CORPUS-UNIT-WORLD-AGENCY) is a second world where the
+    flag is forced ON via its own profile YAML (config/simulation_quality/profiles/
+    hero_guild_routing.yaml) from first compile: AGENCY graded A at all 3 measured seeds
+    (42/123/456, 500t) — see eval_matrix_results.md's "Unit-Tier Isolation Worlds" section for the
+    full table.
 - id: INFRA-238
   text: "CombatScorer covers all contract §5 COMBAT rules: combat_active, combat_resolved,
     survival_tension, tactical_variety (per unique modifier), attrition, early_extinction
@@ -3493,6 +3498,9 @@
     ENABLE_ADVENTURE_ROUTING (defaults OFF). Archetype-blocked in every calibration world except
     simq_routing_test. (TCK-20260702-SIMQ-UPLIFT2-AGENCY-DA, decision DA — see
     eval_matrix_results.md AGENCY Cross-World Design Note)
+    hero_guild_routing (TCK-20260704-SIMQ-CORPUS-UNIT-WORLD-AGENCY) also forces the flag ON via its
+    own profile YAML; route_selected/action_executed fire as expected — AGENCY graded A at all 3
+    measured seeds (42/123/456, 500t).
 - id: INFRA-251
   text: "calibrate_simq.py --window-size and --loop-threshold CLI flags override detection_params.yaml
     window_size/loop_threshold for the current run only. ScoringWeights is patched via model_copy()

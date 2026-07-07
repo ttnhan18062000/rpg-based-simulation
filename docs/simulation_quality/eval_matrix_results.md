@@ -458,6 +458,20 @@ evidence chain. [Closed 2026-07-06 by `TCK-20260704-SIMQ-ROUTING-TEST-HOMETOWN-R
 content fix — the resource-tagging gap is fixed and seed456's AGENCY grade improved to `A`; see the
 "EXCEPTION CLOSED" status paragraph in AC6 above for the full re-verification evidence.]
 
+**Second routing-capable archetype — `hero_guild_routing` (TCK-20260704-SIMQ-CORPUS-UNIT-WORLD-
+AGENCY):** `hero_guild_routing` is a second world that forces `ENABLE_ADVENTURE_ROUTING=ON`, set in
+its own profile YAML (`config/simulation_quality/profiles/hero_guild_routing.yaml`) from its first
+compile. Unlike `simq_routing_test`'s purpose as a minimal calibration/test world, `hero_guild_routing`
+is authored at real-archetype scale (31 entities, 4 regions — comparable to `urban_political`'s
+30/3 and `dungeon_crawl`'s 32/4) with an explicit adventuring/route-selection framing, making it the
+first routing-capable world in the corpus that is also a shipped-gameplay-scale archetype rather than
+a calibration fixture. AGENCY graded `A` at all 3 measured seeds (42/123/456, 500t) — see its
+subsection under "Unit-Tier Isolation Worlds" below for the full table and the resource-tag-coverage
+finding this ticket surfaced (not fixed). This does not change the scope of the "AGENCY=C in every
+calibration world except `simq_routing_test`" ruling for any of the 9 non-routing worlds above — it
+only adds `hero_guild_routing` as a second, named exception to that ruling, exactly as
+`simq_routing_test` already was.
+
 ---
 
 ## Newly-Anchored Worlds (TCK-20260703-SIMQ-UPLIFT3-WORLD-CORPUS)
@@ -601,7 +615,12 @@ Two new **unit-tier** worlds (per `docs/simulation_quality/corpus_tier_taxonomy.
 classification: "isolates exactly one gated mechanic, with everything else at baseline, using
 template/synthetic content") were authored and anchored at 3 seeds x 200t each. Both compiled with
 `warnings: []` and passed the >=60% alive-floor population-stability guard through 300 ticks at
-seed 42 (100% alive at every 50-tick checkpoint, no incident).
+seed 42 (100% alive at every 50-tick checkpoint, no incident). A third unit-tier world,
+`hero_guild_routing` (TCK-20260704-SIMQ-CORPUS-UNIT-WORLD-AGENCY), was later authored at real-
+archetype scale (31 entities, comparable to `urban_political`/`dungeon_crawl` rather than these
+first two worlds' template-minimal sizing) and anchored at 3 seeds x 500t, matching
+`simq_routing_test`'s calibration length rather than the 200t default — see its own subsection
+below for the reasoning.
 
 ### unit_faction_tension (unit-tier — 18 entities, 3 regions)
 
@@ -709,3 +728,68 @@ the existing single-entity unit test
 (`test_branch_b_fires_across_real_tick_boundary_after_self_model_patch_materialization`); extending
 that proof to multi-entity/multi-tick scale would require `ENABLE_BELIEF_ASSIMILATION` ON too — a
 different, not-yet-scoped follow-on pilot, not this ticket's job.
+
+### hero_guild_routing (unit-tier — 31 entities, 4 regions)
+
+Composes `frontier_village_core`, `hero_adventurers`, `mountain_pass`, `ruins_mystery_quest`, and
+`goblin_camp_conflict` (seed 717), with `ENABLE_ADVENTURE_ROUTING: "ON"` set in this world's own
+`config/simulation_quality/profiles/hero_guild_routing.yaml` `feature_flags:` block — confirmed
+loaded (calibration output shows `profile=hero_guild_routing`, not `default`). Compiled with
+`warnings: []`. Unlike `simq_routing_test` — a minimal calibration/test world purpose-built to
+exercise `AgencyScorer` in isolation — `hero_guild_routing` is a real-scale, routing-capable
+archetype: 31 entities / 4 regions sits almost exactly between `urban_political` (30/3) and
+`dungeon_crawl` (32/4), and its description explicitly frames adventuring/route-selection ("a hero
+guild's home settlement dispatches adventuring parties across three competing destinations... a
+mountain pass, a goblin camp, and haunted ruins") as the world's central mechanic, not an incidental
+settlement feature. It is a second, distinct member of the routing-capable archetype category
+alongside `simq_routing_test`, not a replacement for it.
+
+#### 500t (seeds 42 / 123 / 456)
+
+| Pillar | seed42 | seed123 | seed456 | Notes |
+|---|---|---|---|---|
+| **AGENCY** | **A** | **A** | **A** | genuine non-C signal at real-archetype scale, stable across all 3 seeds — no stasis-collapse anomaly observed (contrast `simq_routing_test_seed456`'s pre-fix F/D collapse) |
+| COGNITION | A | S | A | stable-to-high, varies by seed |
+| COMBAT | B | B | B | stable |
+| ECONOMY | C | C | C | stable — no gather_resource/craft/buy events scored this run |
+| FACTION | C | C | C | stable — no `faction_tension_overrides` seeded (isolation-tier default) |
+| INFORMATION | C | C | C | stable — no `information_source_profiles` seeded (isolation-tier default) |
+| PROGRESSION | B | B | B | stable |
+| SOCIAL | C | C | C | stable — no `ENABLE_SOCIAL_COOPERATION` |
+| WORLD | B | B | B | stable |
+| NARRATIVE | S | S | S | stable, high event density |
+
+**What each check proves, and what it does not:** three separate checks touch this world's
+population/routing behavior, and none of them should be mistaken for covering the other two's
+concern. `test_population_stability[hero_guild_routing]`
+(`tests/unit/worldassembly/test_corpus_diversity.py`) is the generic OFF-flag baseline
+survival-mechanic guard every corpus world gets — it runs with `ENABLE_ADVENTURE_ROUTING` at its
+default OFF state and is not evidence for this world's ON-flag population floor.
+`tests/unit/worldassembly/test_hero_guild_routing_population_stability.py` is the new, standalone,
+world-scoped test that genuinely applies `ENABLE_ADVENTURE_ROUTING=ON` onto the compiled
+`AuthoritativeState.feature_flags` before driving the kernel — it is the sole, authoritative
+evidence for the acceptance criterion's >=60% ON-flag population floor claim, and it passed cleanly
+through 500 ticks at seed 42 with no checkpoint below the floor. `tools/calibrate_simq.py`'s 3-seed
+calibration matrix (this subsection's table above) is the source of the measured pillar grades,
+including AGENCY, but asserts no population floor of its own.
+
+**Resource-tag coverage finding (Step 2, `tests/unit/strategic/test_opportunities.py`):** a gap was
+found, not a clean pass. `mountain_pass`'s two resource kinds (`iron_vein`, `frost_shard_cluster`)
+carry no `source_region_tags` entry at all in `data/content/world/resources.yaml`, and no resource
+definition in that catalog lists `mountain_pass_zone`, `goblin_camp`, or `haunted_battlefield` (the
+three new-to-this-world regions) as a `source_region_tags` value — confirmed directly via
+`ResourceOpportunityProvider.get_opportunities()`, which returns zero opportunities for a hero
+standing in any of those three regions regardless of which resource node is present there. This is
+the same class of registry-omission gap `TCK-20260704-SIMQ-ROUTING-TEST-HOMETOWN-RESOURCE-GAP`
+fixed for `hometown`/`wood_node`/`herb_patch`. It is deliberately **not** fixed by this ticket (out
+of scope — `data/content/world/resources.yaml` is a shared catalog file, and this ticket's scope is
+authoring/calibrating one world, not patching shared content) and is flagged here as a recommended
+follow-up: add `mountain_pass_zone` (and, if `ruins_mystery_quest`/`goblin_camp_conflict` later gain
+their own resource placements, `haunted_battlefield`/`goblin_camp`) to the relevant resource
+definitions' `source_region_tags`. It did not visibly harm this world's measured AGENCY grade (A at
+all 3 seeds) — heroes routed to these regions still had `RECOVER`/`ASK_INFORMATION`/`FORM_PARTY`
+structural-default routes and the guaranteed `DEFER_WITH_REASON` fallback available, and the
+`AdventureDecisionPhase` only ever consults `ResourceOpportunityProvider` (not
+`ServiceOpportunityProvider`, confirmed by direct read of `src/domains/adventure/phase.py`) — but a
+future world that relies more heavily on gather_resource routes in these regions could be exposed to
+the same stasis pattern `simq_routing_test_seed456` hit pre-fix.

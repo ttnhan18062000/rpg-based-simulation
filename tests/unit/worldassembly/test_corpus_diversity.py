@@ -53,6 +53,7 @@ POPULATION_STABILITY_WORLDS = list(ANCHORED_WORLD_BANDS.keys()) + [
     "unit_faction_tension",
     "unit_information_source",
     "unit_selfmodel_pilot",
+    "hero_guild_routing",
 ]
 
 # All 10 worlds' distinct-populated-faction counts, verified against

@@ -595,5 +595,41 @@
     "INFORMATION": "C",
     "WORLD": "B",
     "NARRATIVE": "A"
+  },
+  "hero_guild_routing_seed42_500t": {
+    "COGNITION": "A",
+    "AGENCY": "A",
+    "COMBAT": "B",
+    "FACTION": "C",
+    "ECONOMY": "C",
+    "PROGRESSION": "B",
+    "SOCIAL": "C",
+    "INFORMATION": "C",
+    "WORLD": "B",
+    "NARRATIVE": "S"
+  },
+  "hero_guild_routing_seed123_500t": {
+    "COGNITION": "S",
+    "AGENCY": "A",
+    "COMBAT": "B",
+    "FACTION": "C",
+    "ECONOMY": "C",
+    "PROGRESSION": "B",
+    "SOCIAL": "C",
+    "INFORMATION": "C",
+    "WORLD": "B",
+    "NARRATIVE": "S"
+  },
+  "hero_guild_routing_seed456_500t": {
+    "COGNITION": "A",
+    "AGENCY": "A",
+    "COMBAT": "B",
+    "FACTION": "C",
+    "ECONOMY": "C",
+    "PROGRESSION": "B",
+    "SOCIAL": "C",
+    "INFORMATION": "C",
+    "WORLD": "B",
+    "NARRATIVE": "S"
   }
 }

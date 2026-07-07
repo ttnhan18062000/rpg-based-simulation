@@ -1,55 +1,5 @@
 {
   "worlds": {
-    "urban_political": {
-      "world_id": "urban_political",
-      "name": "Urban Political",
-      "path": "urban_political/world.yaml",
-      "schema_version": "worldcomposition.v1",
-      "tags": [],
-      "created_at": "2026-07-02T00:59:39.041768",
-      "updated_at": "2026-07-07T08:00:25.140075",
-      "status": "COMPOSITION"
-    },
-    "unit_selfmodel_pilot": {
-      "world_id": "unit_selfmodel_pilot",
-      "name": "Unit Test \u2014 Self-Model Cognition Isolation",
-      "path": "unit_selfmodel_pilot/world.yaml",
-      "schema_version": "worldcomposition.v1",
-      "tags": [],
-      "created_at": "2026-07-07T08:00:25.141773",
-      "updated_at": "2026-07-07T08:00:25.141773",
-      "status": "COMPOSITION"
-    },
-    "unit_information_source": {
-      "world_id": "unit_information_source",
-      "name": "Unit Test \u2014 Information Source Isolation",
-      "path": "unit_information_source/world.yaml",
-      "schema_version": "worldcomposition.v1",
-      "tags": [],
-      "created_at": "2026-07-07T01:07:51.830214",
-      "updated_at": "2026-07-07T08:00:25.143908",
-      "status": "COMPOSITION"
-    },
-    "highland_traverse": {
-      "world_id": "highland_traverse",
-      "name": "Highland Traverse",
-      "path": "highland_traverse/world.yaml",
-      "schema_version": "worldcomposition.v1",
-      "tags": [],
-      "created_at": "2026-07-02T00:59:39.043057",
-      "updated_at": "2026-07-07T08:00:25.144561",
-      "status": "COMPOSITION"
-    },
-    "dungeon_crawl": {
-      "world_id": "dungeon_crawl",
-      "name": "Dungeon Crawl",
-      "path": "dungeon_crawl/world.yaml",
-      "schema_version": "worldcomposition.v1",
-      "tags": [],
-      "created_at": "2026-07-02T00:59:39.045324",
-      "updated_at": "2026-07-07T08:00:25.145782",
-      "status": "COMPOSITION"
-    },
     "simq_routing_test": {
       "world_id": "simq_routing_test",
       "name": "SimQ Routing Test",
@@ -57,27 +7,7 @@
       "schema_version": "worldcomposition.v1",
       "tags": [],
       "created_at": "2026-07-02T00:59:39.046975",
-      "updated_at": "2026-07-07T08:00:25.147360",
-      "status": "COMPOSITION"
-    },
-    "unit_faction_tension": {
-      "world_id": "unit_faction_tension",
-      "name": "Unit Test \u2014 Faction Tension Isolation",
-      "path": "unit_faction_tension/world.yaml",
-      "schema_version": "worldcomposition.v1",
-      "tags": [],
-      "created_at": "2026-07-07T01:07:51.834222",
-      "updated_at": "2026-07-07T08:00:25.148352",
-      "status": "COMPOSITION"
-    },
-    "frontier_extended": {
-      "world_id": "frontier_extended",
-      "name": "Frontier Extended",
-      "path": "frontier_extended/world.yaml",
-      "schema_version": "worldcomposition.v1",
-      "tags": [],
-      "created_at": "2026-07-02T00:59:39.048335",
-      "updated_at": "2026-07-07T08:00:25.149245",
+      "updated_at": "2026-07-07T09:27:44.398425",
       "status": "COMPOSITION"
     },
     "swamp_border_world": {
@@ -87,7 +17,67 @@
       "schema_version": "worldcomposition.v1",
       "tags": [],
       "created_at": "2026-07-02T00:59:39.049279",
-      "updated_at": "2026-07-07T08:00:25.149793",
+      "updated_at": "2026-07-07T09:27:44.399555",
+      "status": "COMPOSITION"
+    },
+    "highland_traverse": {
+      "world_id": "highland_traverse",
+      "name": "Highland Traverse",
+      "path": "highland_traverse/world.yaml",
+      "schema_version": "worldcomposition.v1",
+      "tags": [],
+      "created_at": "2026-07-02T00:59:39.043057",
+      "updated_at": "2026-07-07T09:27:44.400689",
+      "status": "COMPOSITION"
+    },
+    "unit_faction_tension": {
+      "world_id": "unit_faction_tension",
+      "name": "Unit Test \u2014 Faction Tension Isolation",
+      "path": "unit_faction_tension/world.yaml",
+      "schema_version": "worldcomposition.v1",
+      "tags": [],
+      "created_at": "2026-07-07T01:07:51.834222",
+      "updated_at": "2026-07-07T09:27:44.401717",
+      "status": "COMPOSITION"
+    },
+    "frontier_extended": {
+      "world_id": "frontier_extended",
+      "name": "Frontier Extended",
+      "path": "frontier_extended/world.yaml",
+      "schema_version": "worldcomposition.v1",
+      "tags": [],
+      "created_at": "2026-07-02T00:59:39.048335",
+      "updated_at": "2026-07-07T09:27:44.402703",
+      "status": "COMPOSITION"
+    },
+    "hero_guild_routing": {
+      "world_id": "hero_guild_routing",
+      "name": "Hero Guild Routing",
+      "path": "hero_guild_routing/world.yaml",
+      "schema_version": "worldcomposition.v1",
+      "tags": [],
+      "created_at": "2026-07-07T09:27:44.404565",
+      "updated_at": "2026-07-07T09:27:44.404565",
+      "status": "COMPOSITION"
+    },
+    "urban_political": {
+      "world_id": "urban_political",
+      "name": "Urban Political",
+      "path": "urban_political/world.yaml",
+      "schema_version": "worldcomposition.v1",
+      "tags": [],
+      "created_at": "2026-07-02T00:59:39.041768",
+      "updated_at": "2026-07-07T09:27:44.408477",
+      "status": "COMPOSITION"
+    },
+    "dungeon_crawl": {
+      "world_id": "dungeon_crawl",
+      "name": "Dungeon Crawl",
+      "path": "dungeon_crawl/world.yaml",
+      "schema_version": "worldcomposition.v1",
+      "tags": [],
+      "created_at": "2026-07-02T00:59:39.045324",
+      "updated_at": "2026-07-07T09:27:44.410318",
       "status": "COMPOSITION"
     },
     "sandbox_world": {
@@ -97,17 +87,17 @@
       "schema_version": "worldcomposition.v1",
       "tags": [],
       "created_at": "2026-05-23T15:47:38.022954",
-      "updated_at": "2026-07-07T08:00:25.150454",
+      "updated_at": "2026-07-07T09:27:44.411087",
       "status": "COMPOSITION"
     },
-    "frontier_living_world": {
-      "world_id": "frontier_living_world",
-      "name": "Frontier Living World",
-      "path": "frontier_living_world/world.yaml",
+    "unit_information_source": {
+      "world_id": "unit_information_source",
+      "name": "Unit Test \u2014 Information Source Isolation",
+      "path": "unit_information_source/world.yaml",
       "schema_version": "worldcomposition.v1",
       "tags": [],
-      "created_at": "2026-07-02T00:59:39.050748",
-      "updated_at": "2026-07-07T08:00:25.151247",
+      "created_at": "2026-07-07T01:07:51.830214",
+      "updated_at": "2026-07-07T09:27:44.414163",
       "status": "COMPOSITION"
     },
     "wilderness_survival": {
@@ -117,7 +107,17 @@
       "schema_version": "worldcomposition.v1",
       "tags": [],
       "created_at": "2026-07-02T00:59:39.052001",
-      "updated_at": "2026-07-07T08:00:25.152302",
+      "updated_at": "2026-07-07T09:27:44.416019",
+      "status": "COMPOSITION"
+    },
+    "unit_selfmodel_pilot": {
+      "world_id": "unit_selfmodel_pilot",
+      "name": "Unit Test \u2014 Self-Model Cognition Isolation",
+      "path": "unit_selfmodel_pilot/world.yaml",
+      "schema_version": "worldcomposition.v1",
+      "tags": [],
+      "created_at": "2026-07-07T08:00:25.141773",
+      "updated_at": "2026-07-07T09:27:44.417857",
       "status": "COMPOSITION"
     },
     "generated_frontier_3_42": {
@@ -127,7 +127,17 @@
       "schema_version": "worldcomposition.v1",
       "tags": [],
       "created_at": "2026-07-02T00:59:39.054159",
-      "updated_at": "2026-07-07T08:00:25.154093",
+      "updated_at": "2026-07-07T09:27:44.420164",
+      "status": "COMPOSITION"
+    },
+    "frontier_living_world": {
+      "world_id": "frontier_living_world",
+      "name": "Frontier Living World",
+      "path": "frontier_living_world/world.yaml",
+      "schema_version": "worldcomposition.v1",
+      "tags": [],
+      "created_at": "2026-07-02T00:59:39.050748",
+      "updated_at": "2026-07-07T09:27:44.421265",
       "status": "COMPOSITION"
     }
   }

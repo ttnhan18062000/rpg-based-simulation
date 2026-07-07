@@ -96,10 +96,12 @@ active end-to-end-tier content work.
 
 ## Current tier mapping (as of 2026-07-07)
 
-The original 10 worlds under `data/worlds/` are **Regression / baseline tier**. Three new
+The original 10 worlds under `data/worlds/` are **Regression / baseline tier**. Four new
 **Unit-tier** worlds now exist (`unit_faction_tension`, `unit_information_source`,
-`unit_selfmodel_pilot`) — the first two added by `TCK-20260704-SIMQ-CORPUS-UNIT-WORLDS-FACTION-INFO`,
-the third by `TCK-20260704-SIMQ-CORPUS-UNIT-WORLD-SELFMODEL-PILOT` — see
+`unit_selfmodel_pilot`, `hero_guild_routing`) — the first two added by
+`TCK-20260704-SIMQ-CORPUS-UNIT-WORLDS-FACTION-INFO`, the third by
+`TCK-20260704-SIMQ-CORPUS-UNIT-WORLD-SELFMODEL-PILOT`, and the fourth by
+`TCK-20260704-SIMQ-CORPUS-UNIT-WORLD-AGENCY` — see
 `docs/simulation_quality/eval_matrix_results.md`'s "Unit-Tier Isolation Worlds" section for their
 grade tables. No world has yet been promoted into deliberate end-to-end-tier content expansion
 (scoped by ticket 7 of this epic, not yet implemented), and no stress-tier world exists yet (scoped
@@ -120,6 +122,7 @@ by ticket 8, not yet implemented).
 | `unit_faction_tension` | Unit | 18 entities, 3 regions — isolates FACTION only (TCK-20260704-SIMQ-CORPUS-UNIT-WORLDS-FACTION-INFO) |
 | `unit_information_source` | Unit | 16 entities, 1 region — isolates INFORMATION only (TCK-20260704-SIMQ-CORPUS-UNIT-WORLDS-FACTION-INFO) |
 | `unit_selfmodel_pilot` | Unit | 16 entities, 1 region — isolates COGNITION's self-model materialization half only (TCK-20260704-SIMQ-CORPUS-UNIT-WORLD-SELFMODEL-PILOT) |
+| `hero_guild_routing` | Unit | 31 entities, 4 regions — isolates AGENCY/route-selection only via `ENABLE_ADVENTURE_ROUTING` (TCK-20260704-SIMQ-CORPUS-UNIT-WORLD-AGENCY); real-archetype scale distinguishes it from calibration-minimal `simq_routing_test` |
 
 Full per-world entity/region/resource/quest counts and module composition are documented in
 `staging_artifacts/TCK-20260704-SIMQ-CORPUS-TIERS-EPIC/investigation.md` §2 — this doc cites that
