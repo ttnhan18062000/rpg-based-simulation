@@ -67,7 +67,7 @@ factions:
   initial_tension_level: 0.0
 - id: wild_beast_pack
   type: wild
-  initial_tension_level: 0.0
+  initial_tension_level: 0.5
 - id: goblin_warband
   type: invader
   initial_tension_level: 0.0
@@ -91,7 +91,7 @@ factions:
   initial_tension_level: 0.0
 - id: undead_remnants
   type: invader
-  initial_tension_level: 0.0
+  initial_tension_level: 0.5
 - id: arcane_circle
   type: neutral
   initial_tension_level: 0.0

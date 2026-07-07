@@ -72,13 +72,13 @@ factions:
   initial_tension_level: 0.0
 - id: goblin_warband
   type: invader
-  initial_tension_level: 0.0
+  initial_tension_level: 0.5
 - id: merchant_league
   type: neutral
   initial_tension_level: 0.0
 - id: bandit_company
   type: invader
-  initial_tension_level: 0.0
+  initial_tension_level: 0.5
 - id: forest_wardens
   type: defender
   initial_tension_level: 0.0

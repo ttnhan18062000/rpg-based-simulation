@@ -6,3 +6,26 @@ modules:
   - "frontier_village_core"
   - "wolf_den_near_forest"
 generation_seed: 42
+faction_tension_overrides:
+  town_council: 0.5
+  merchant_league: 0.5
+information_source_profiles:
+  - source_id: "town_notice_board"
+    source_kind: "guide"
+    knowledge_scopes: ["regional_danger", "common_resource_sources"]
+    accuracy: 0.4
+    freshness: 0.6
+    bias: 0.1
+    cost_gold: 0
+    max_answers_per_query: 2
+pending_information_responses:
+  - target_population_id: "frontier_village_population_frontier_guard"
+    subject: "hometown_danger"
+    query_kind: "danger_rating"
+    source_id: "town_notice_board"
+    answer_kind: "KNOWN_FACT"
+    certainty: 0.8
+    details:
+      danger_level: "low"
+      region: "hometown"
+    cost_paid: 0

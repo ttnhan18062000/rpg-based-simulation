@@ -153,10 +153,10 @@ factions:
   initial_tension_level: 0.0
 - id: forest_wardens
   type: defender
-  initial_tension_level: 0.0
+  initial_tension_level: 0.5
 - id: orc_clan
   type: rival
-  initial_tension_level: 0.0
+  initial_tension_level: 0.5
 - id: dwarven_mine_clan
   type: defender
   initial_tension_level: 0.0
@@ -178,8 +178,28 @@ factions:
 - id: spirit_court
   type: neutral
   initial_tension_level: 0.0
-information_source_profiles: []
-pending_information_responses: []
+information_source_profiles:
+- source_id: town_notice_board
+  source_kind: guide
+  knowledge_scopes:
+  - regional_danger
+  - common_resource_sources
+  accuracy: 0.4
+  freshness: 0.6
+  bias: 0.1
+  cost_gold: 0
+  max_answers_per_query: 2
+pending_information_responses:
+- target_population_id: frontier_village_population_frontier_guard
+  subject: orc_clan_encroachment
+  query_kind: danger_rating
+  source_id: town_notice_board
+  answer_kind: KNOWN_FACT
+  certainty: 0.75
+  details:
+    danger_level: elevated
+    region: orc_stronghold
+  cost_paid: 0
 pending_self_model_information_events: []
 entities:
 - id: frontier_village_population_village_worker

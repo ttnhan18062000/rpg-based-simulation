@@ -1,8 +1,8 @@
 {
-  "manifest_id": "prov_8c76b4f368c20d43",
+  "manifest_id": "prov_156960d08fd40d4f",
   "world_id": "generated_frontier_3_42",
   "source_schema_version": "provenancemanifest.v1",
-  "catalog_fingerprint": "f3f195b92f3ae565267a8297fcff8db47685fa789ff0cfbdec01533636f5b378",
+  "catalog_fingerprint": "4f1de54c8c58561f20136ed1924e453452df09e25b62b49a7b76640ce26eeb7c",
   "module_fingerprints": {
     "frontier_village_core": "ac2da4bc478c24180e4b53f1267959956c00bbf473d6b119dc270633b2c322f3",
     "bandit_road_trade_pressure": "aa350454ab34ccb615a928faceff3c8d77a6dd3358eeee43e8828e0eb6b8a76d",
@@ -11,10 +11,10 @@
     "old_mine_resource_loop": "7e069040e802e137042f16c0f2b19372d878a2bf7a6fae520b369cc5d5e91ff2",
     "orc_clan_territory": "ef831c3098410e440c3e67d22c57f9e4ae6ee9cbb7e9ddaaf4bc02020e55f97e"
   },
-  "composition_fingerprint": "0e8b7b6313e8fdc8c007a9f171afcf6fb9a2cb01abf88742dbf54eed7c642707",
+  "composition_fingerprint": "08df661524d9fb50237b7d875aeeb81bd7a0a1a213175a2960a0fb1454d6996a",
   "resolver_version": "1.0.0",
-  "content_fingerprint": "8c76b4f368c20d437bfd93f856f2f4d7fd81721aff24893a2638f67ed58dcfac",
-  "created_at": "2026-07-04T04:46:47.195859Z",
+  "content_fingerprint": "156960d08fd40d4f036356583358d78bd4817852b627beb973cd71ab402a99d2",
+  "created_at": "2026-07-07T08:21:50.492092Z",
   "records": {
     "hero_guild": {
       "element_id": "hero_guild",

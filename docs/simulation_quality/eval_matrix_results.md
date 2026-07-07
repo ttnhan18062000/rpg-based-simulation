@@ -561,7 +561,187 @@ gap.
 
 ---
 
+## FACTION/INFORMATION Content Expansion — End-to-End Tier (TCK-20260704-SIMQ-CORPUS-E2E-CONTENT-EXPANSION)
+
+Bespoke, archetype-matched `faction_tension_overrides` (all 8 worlds below) and, where an
+archetype-honest fit exists, `information_source_profiles`/`pending_information_responses` (6 of 8
+— `dungeon_crawl` and `wilderness_survival` have no settlement/service-bearing module and are
+documented skip cases) were authored directly into each world's `data/worlds/{world}/world.yaml`
+(never the frozen `data/content/world_compositions/{world}.yaml` mirror). This **supersedes** the
+FACTION=C / INFORMATION=C rows recorded for these 8 worlds everywhere else in this document
+(`dungeon_crawl`'s own tables above, `sandbox_world`'s own tables above, and all 5 "Newly-Anchored
+Worlds" tables above) — those tables are retained for historical traceability of the pre-expansion
+state, not rewritten in place, per this doc's existing convention (see the `dungeon_crawl`
+hazard-kind-recompile note and `simq_routing_test`'s "Historical pre-recompile table" for
+precedent).
+
+Every world was recompiled with 0 new warnings (dungeon_crawl, sandbox_world, wilderness_survival,
+swamp_border_world, frontier_living_world, frontier_extended, generated_frontier_3_42) or its one
+confirmed **pre-existing, unrelated** warning (`highland_traverse`'s `survey_river_route` /
+`'river'` region-tag mismatch — present in the committed baseline before this ticket's edit,
+unaffected by the FACTION/INFORMATION content). All touched worlds' calibration anchors were
+re-verified against a **freshly re-run** calibration (never a stale-data diff) per
+`tools/calibrate_simq.py`, and every drifted anchor was updated in place in
+`tests/simulation_quality/fixtures/grade_anchors.json`.
+
+**Cross-world drift pattern (attributed, not a regression):** In every world where
+`information_source_profiles`/`pending_information_responses` + `ENABLE_BELIEF_ASSIMILATION: "ON"`
+were seeded, COGNITION also moved C→B in addition to INFORMATION C→B. This is the same dual-emission
+mechanism already documented for `urban_political` above (`src/observability/event_extractor.py:285-295`,
+tagged `PP-04`): a single assimilated response emits both a `belief_assimilated` event (scored by
+`InformationScorer`) and a `belief_updated` event (scored by `CognitionScorer`) from the same
+underlying fact. No pillar outside FACTION/INFORMATION/COGNITION drifted in any of the 8 worlds —
+confirmed per-world before each anchor update (COMBAT/ECONOMY/SOCIAL/WORLD/NARRATIVE/PROGRESSION/AGENCY
+held at their pre-expansion grades in every touched anchor).
+
+### dungeon_crawl — FACTION only (INFORMATION: documented skip)
+
+**Judgment call:** `goblin_warband: 0.5` / `bandit_company: 0.5` — two aggressive humanoid factions
+vying for control of the ruins/dungeon, matching this world's own "escalating bandit threat"
+framing. `undead_remnants`/`wild_beast_pack` (also populated) stay at catalog default (ambient
+hazard, not political). **INFORMATION skipped**: no settlement/service module exists in this
+world's composition (`ruins_mystery_quest`, `goblin_camp_conflict`, `old_mine_resource_loop`,
+`scalable_bandit_camp` are all non-population/non-settlement modules) — forcing a notice-board
+archetype here would be dishonest. No `feature_flags:` block added to
+`config/simulation_quality/profiles/dungeon_crawl.yaml`; its existing `pillar_weights:` block is
+untouched.
+
+| Run | FACTION (was → now) | INFORMATION | COGNITION |
+|---|---|---|---|
+| seed42_200t | C → S (29 `diplomatic_transition` hits) | C (unchanged, skip) | C (unchanged) |
+| seed{42,123,456}_500t | C → A | C (unchanged) | C (unchanged) |
+| seed{42,123,456}_1000t | C → A | C (unchanged) | C (unchanged) |
+| seed{42,123,456}_2000t | C → B | C (unchanged) | C (unchanged) |
+
+### sandbox_world — FACTION + INFORMATION
+
+**Judgment call:** `town_council: 0.5` / `merchant_league: 0.5` — governance-vs-commerce tension in
+the settlement present. **INFORMATION fit:** `frontier_village_core` provides the settlement;
+seeded a `town_notice_board` guide profile (`accuracy=0.4`, `freshness=0.6`) with one
+`pending_information_responses` entry (`hometown_danger`, targeting
+`frontier_village_population_frontier_guard`, the real resolved population id — `pop_0` does not
+exist in this world's compiled output; that positional id only arises from the `hero_adventurers`
+module, which none of these 8 worlds compose). New `config/simulation_quality/profiles/sandbox_world.yaml`
+sets `ENABLE_BELIEF_ASSIMILATION: "ON"`.
+
+| Run | FACTION (was → now) | INFORMATION | COGNITION |
+|---|---|---|---|
+| seed{42,137,999}_200t | C → S (29 hits) | C → B (1 `belief_assimilated` hit) | C → B (dual-emission) |
+| seed42_1000t | C → A | C → B | B (unchanged — already B pre-expansion) |
+| seed42_2000t | C → B | C → B | B (unchanged) |
+
+### wilderness_survival — FACTION only (INFORMATION: documented skip)
+
+**Judgment call:** `undead_remnants: 0.5` / `wild_beast_pack: 0.5` — the only 2 populated factions,
+both hazard-type; framed as escalating territorial rivalry between the undead battlefield and the
+wolf den's beast pack over the same survivor-camp territory, matching this world's "high danger...
+escalating" framing. **INFORMATION skipped**: no settlement-adjacent module in composition
+(`forest_deep_ecology`, `wolf_den_near_forest`, `undead_battlefield`, `survivor_camp_shelter` spawns
+no settlement population of its own — confirmed against the resolved YAML's `entities[].faction`
+list, which contains only `undead_remnants`/`wild_beast_pack`).
+
+| Run | FACTION (was → now) | INFORMATION | COGNITION |
+|---|---|---|---|
+| seed{42,123,456}_200t | C → S (29 hits) | C (unchanged, skip) | C (unchanged) |
+
+`test_population_stability[wilderness_survival]` re-confirmed passing post-recompile.
+
+### highland_traverse — FACTION + INFORMATION
+
+**Judgment call:** `town_council: 0.5` / `merchant_league: 0.5` — the `settled_quarter` module's own
+service-hub archetype (governance vs. trade services). **INFORMATION fit:** seeded a
+`route_waystation_guide` profile with a `mountain_pass_conditions` response (region corrected to the
+actual resolved region id `mountain_pass_zone`, not the module name `mountain_pass`), targeting
+`frontier_village_population_frontier_guard` (the `settled_quarter` module reuses the
+`frontier_village_population` recipe, so this id resolves here too). New
+`config/simulation_quality/profiles/highland_traverse.yaml` sets `ENABLE_BELIEF_ASSIMILATION: "ON"`.
+
+| Run | FACTION (was → now) | INFORMATION | COGNITION |
+|---|---|---|---|
+| seed42_200t | C → S (29 hits) | C → B (1 hit) | B (unchanged — already B pre-expansion) |
+| seed123_200t | C → S | C → B | C → B (dual-emission) |
+| seed456_200t | C → S | C → B | C → B (dual-emission) |
+
+Recompile surfaced 1 pre-existing warning (`survey_river_route`/`'river'` tag mismatch — confirmed
+present in the committed pre-ticket baseline via `git show HEAD`, unrelated to this ticket's edit).
+
+### swamp_border_world — FACTION + INFORMATION
+
+**Judgment call:** `town_council: 0.5` / `swamp_tribe: 0.5` — border tension between the frontier
+village's governance and the swamp tribe on its border, matching this world's own "lizardfolk
+tribes and swamp trolls" framing (`bandit_company` deliberately not used — not populated here).
+**INFORMATION fit:** seeded a `town_notice_board` profile with a `swamp_border_danger` response
+(region: `swamp_border_territory`, the actual resolved region id — corrected from the module-name
+guess `sunken_swamp_border`). New `config/simulation_quality/profiles/swamp_border_world.yaml` sets
+`ENABLE_BELIEF_ASSIMILATION: "ON"`.
+
+| Run | FACTION (was → now) | INFORMATION | COGNITION |
+|---|---|---|---|
+| seed{42,123,456}_200t | C → S (29 hits) | C → B (1 hit) | C → B (dual-emission) |
+
+### frontier_living_world — FACTION + INFORMATION
+
+**Judgment call:** `bandit_company: 0.5` / `merchant_league: 0.5` — the `bandit_road_trade_pressure`
+module's own built-in tension (bandit threat vs. merchant trade), the most mechanically literal fit
+among all 8 worlds. **INFORMATION fit:** seeded a `town_notice_board` profile with a
+`trade_road_bandit_activity` response (region: `bandit_road`, matching the resolved region id
+exactly). New `config/simulation_quality/profiles/frontier_living_world.yaml` sets
+`ENABLE_BELIEF_ASSIMILATION: "ON"`. The frozen `data/content/world_compositions/frontier_living_world.yaml`
+mirror (read by `test_real_content_world_compositions.py`) was left untouched and re-verified passing.
+
+| Run | FACTION (was → now) | INFORMATION | COGNITION |
+|---|---|---|---|
+| seed{42,123,456}_200t | C → S (29 hits) | C → B (1 hit) | C → B (dual-emission) |
+
+### frontier_extended — FACTION + INFORMATION
+
+**Judgment call:** `orc_clan: 0.5` / `forest_wardens: 0.5` — this world's own *additions* over
+`frontier_living_world` (`orc_clan_territory` + `forest_warden_grove`), framed as orc territorial
+expansion encroaching on the forest wardens' grove — deliberately not reusing
+`frontier_living_world`'s bandit/merchant pair, since `frontier_extended` is a superset composition
+and needs distinct content. **INFORMATION fit:** seeded a `town_notice_board` profile with an
+`orc_clan_encroachment` response (region: `orc_stronghold`, the actual resolved region id —
+corrected from the module-name guess `orc_clan_territory`), a subject deliberately distinct from
+`frontier_living_world`'s `trade_road_bandit_activity`. New
+`config/simulation_quality/profiles/frontier_extended.yaml` sets `ENABLE_BELIEF_ASSIMILATION: "ON"`.
+
+| Run | FACTION (was → now) | INFORMATION | COGNITION |
+|---|---|---|---|
+| seed{42,123,456}_200t | C → S (29 hits) | C → B (1 hit) | C → B (dual-emission) |
+
+### generated_frontier_3_42 — FACTION + INFORMATION, content-only, NO new anchor
+
+**Judgment call:** `arcane_circle: 0.5` / `orc_clan: 0.5` — the `moon_cult_ruins` module's arcane
+circle under territorial pressure from the `orc_clan_territory` module, a pairing unique to this
+world. **INFORMATION fit:** seeded a `town_notice_board` profile with a `moon_cult_ruins_mystery`
+response (region: `moon_cave`, the actual resolved region id — corrected from the module-name guess
+`moon_cult_ruins`). New `config/simulation_quality/profiles/generated_frontier_3_42.yaml` sets
+`ENABLE_BELIEF_ASSIMILATION: "ON"`. **`moon_cult` (declared by `moon_cult_ruins` but not actually
+populated) deliberately received no tension override** — only `arcane_circle` from that module is
+populated.
+
+**This world has zero existing `grade_anchors.json` entries and deliberately receives none from this
+ticket** (per the ticket's own scope: "re-verify existing calibration anchors," which does not apply
+here — newly anchoring a world is a materially bigger task than re-verifying one, out of this
+ticket's scope). The 3-seed 200t calibration below is documentation-only evidence that the new
+content produces a genuine, non-inert signal — it is **not** added to `FAST_ANCHOR_KEYS`/
+`SLOW_ANCHOR_KEYS` or `grade_anchors.json`. This world remains outside the anchored calibration
+corpus by design; a future ticket to newly-anchor it is a separate, larger scope decision.
+
+| Run | FACTION | INFORMATION | COGNITION |
+|---|---|---|---|
+| seed{42,123,456}_200t | S (29 hits) | B (1 hit) | B (2 hits) |
+
+---
+
 ## Zero-Pillar World Confirmation
+
+**Superseded for FACTION (all 5) and for INFORMATION (4 of 5) as of
+TCK-20260704-SIMQ-CORPUS-E2E-CONTENT-EXPANSION** — see the new section above. `wilderness_survival`
+remains INFORMATION=C by documented judgment call (no settlement-adjacent module); the other 4
+(`highland_traverse`, `swamp_border_world`, `frontier_extended`, `frontier_living_world`) now grade
+INFORMATION=B. This section's original text is retained below for historical traceability of the
+pre-expansion state.
 
 Five confirmed zero-*flag-gated*-pillar worlds (AGENCY/FACTION/INFORMATION/SOCIAL always C in
 default mode — structural, feature-gate blocked, not duration-limited):
@@ -573,7 +753,9 @@ COGNITION/ECONOMY also remain C in all five (no merchant NPCs, no non-combat cog
 same archetype pattern as `dungeon_crawl`'s documented COGNITION/ECONOMY C — see the Archetype
 Note above). COMBAT/NARRATIVE/PROGRESSION/WORLD are the pillars these five worlds contribute
 genuine new signal for; more ticks will not activate AGENCY/FACTION/INFORMATION/SOCIAL without
-enabling the relevant feature flags (explicitly out of scope for this ticket).
+enabling the relevant feature flags (explicitly out of scope for this ticket). AGENCY/SOCIAL remain
+C in all 8 worlds this document covers — neither `ENABLE_ADVENTURE_ROUTING` nor
+`ENABLE_SOCIAL_COOPERATION` was touched by the FACTION/INFORMATION content expansion above.
 
 ---
 

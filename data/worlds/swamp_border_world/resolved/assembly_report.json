@@ -34,14 +34,14 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'grass' is active but never consumed by any downstream component",
-      "target": "grass"
+      "message": "Terrain 'sand' is active but never consumed by any downstream component",
+      "target": "sand"
     },
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'sand' is active but never consumed by any downstream component",
-      "target": "sand"
+      "message": "Terrain 'grass' is active but never consumed by any downstream component",
+      "target": "grass"
     },
     {
       "severity": "WARNING",
@@ -520,6 +520,12 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
+      "message": "Resource 'stone_outcrop' is active but never consumed by any downstream component",
+      "target": "stone_outcrop"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
       "message": "Resource 'venom_nest' is active but never consumed by any downstream component",
       "target": "venom_nest"
     },
@@ -528,6 +534,12 @@
       "rule_id": "CAT-DEAD-001",
       "message": "Item 'steel_sword' is active but never consumed by any downstream component",
       "target": "steel_sword"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Item 'stone' is active but never consumed by any downstream component",
+      "target": "stone"
     },
     {
       "severity": "WARNING",
@@ -588,7 +600,7 @@
   "summary": {
     "status": "SUCCESS",
     "blocking_errors_count": 0,
-    "warnings_count": 92
+    "warnings_count": 94
   },
   "blocking_errors": [],
   "warnings": [
@@ -601,14 +613,14 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'grass' is active but never consumed by any downstream component",
-      "target": "grass"
+      "message": "Terrain 'sand' is active but never consumed by any downstream component",
+      "target": "sand"
     },
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
-      "message": "Terrain 'sand' is active but never consumed by any downstream component",
-      "target": "sand"
+      "message": "Terrain 'grass' is active but never consumed by any downstream component",
+      "target": "grass"
     },
     {
       "severity": "WARNING",
@@ -1087,6 +1099,12 @@
     {
       "severity": "WARNING",
       "rule_id": "CAT-DEAD-001",
+      "message": "Resource 'stone_outcrop' is active but never consumed by any downstream component",
+      "target": "stone_outcrop"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
       "message": "Resource 'venom_nest' is active but never consumed by any downstream component",
       "target": "venom_nest"
     },
@@ -1095,6 +1113,12 @@
       "rule_id": "CAT-DEAD-001",
       "message": "Item 'steel_sword' is active but never consumed by any downstream component",
       "target": "steel_sword"
+    },
+    {
+      "severity": "WARNING",
+      "rule_id": "CAT-DEAD-001",
+      "message": "Item 'stone' is active but never consumed by any downstream component",
+      "target": "stone"
     },
     {
       "severity": "WARNING",
@@ -1146,7 +1170,7 @@
     }
   ],
   "fingerprints": {
-    "catalog": "f3f195b92f3ae565267a8297fcff8db47685fa789ff0cfbdec01533636f5b378",
+    "catalog": "4f1de54c8c58561f20136ed1924e453452df09e25b62b49a7b76640ce26eeb7c",
     "modules": {
       "frontier_village_core": "ac2da4bc478c24180e4b53f1267959956c00bbf473d6b119dc270633b2c322f3",
       "sunken_swamp_border": "adbeeba097121a59128bc0d09a3b35b5fbaca044c2761049d3f97c477ca2ff96",

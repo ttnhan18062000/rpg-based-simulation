@@ -1,8 +1,8 @@
 {
-  "manifest_id": "prov_fcea00df738a4833",
+  "manifest_id": "prov_6071e1ae65a1b0bf",
   "world_id": "frontier_living_world",
   "source_schema_version": "provenancemanifest.v1",
-  "catalog_fingerprint": "f3f195b92f3ae565267a8297fcff8db47685fa789ff0cfbdec01533636f5b378",
+  "catalog_fingerprint": "4f1de54c8c58561f20136ed1924e453452df09e25b62b49a7b76640ce26eeb7c",
   "module_fingerprints": {
     "frontier_village_core": "ac2da4bc478c24180e4b53f1267959956c00bbf473d6b119dc270633b2c322f3",
     "bandit_road_trade_pressure": "aa350454ab34ccb615a928faceff3c8d77a6dd3358eeee43e8828e0eb6b8a76d",
@@ -11,10 +11,10 @@
     "undead_battlefield": "5a28c8d022a3a2d2510e3b0ef36e62ef4cb78d366f2b61e2c226c8797ee86b30",
     "wolf_den_near_forest": "236ed57805d9d8a947b072448b36ce728b6b6653ad9fd5f0085c3bfb269953ee"
   },
-  "composition_fingerprint": "81da0e4da7211ae8152468b8be9c8ee01c42325e57656db9681b75a00856832d",
+  "composition_fingerprint": "705be0ca787f09189b05baa64415eb2c69854159196c514ff31ecab86c930ba9",
   "resolver_version": "1.0.0",
-  "content_fingerprint": "fcea00df738a483325e9ed6b2d6fb4faa56dd7324fc168e433d5a717fffecb89",
-  "created_at": "2026-07-04T04:46:53.752725Z",
+  "content_fingerprint": "6071e1ae65a1b0bf32bc938b26291a1b6303aacc921d88d8683e96310f75366c",
+  "created_at": "2026-07-07T08:10:48.788733Z",
   "records": {
     "hero_guild": {
       "element_id": "hero_guild",

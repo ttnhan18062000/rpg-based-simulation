@@ -96,29 +96,36 @@ active end-to-end-tier content work.
 
 ## Current tier mapping (as of 2026-07-07)
 
-The original 10 worlds under `data/worlds/` are **Regression / baseline tier**. Four new
+The original 10 worlds under `data/worlds/` were **Regression / baseline tier**. As of
+`TCK-20260704-SIMQ-CORPUS-E2E-CONTENT-EXPANSION`, 8 of those 10 have been deliberately promoted to
+**End-to-end tier**: each received bespoke, archetype-matched `faction_tension_overrides` and (for 6
+of the 8) `information_source_profiles`/`pending_information_responses` content, with calibration
+anchors re-verified and updated — see `docs/simulation_quality/eval_matrix_results.md`'s
+"FACTION/INFORMATION Content Expansion" section for the full per-world judgment calls and grade
+tables. `urban_political` (already End-to-end by this same criterion, promoted earlier by
+`TCK-20260702-SIMQ-UPLIFT2-FACTION`/`-INFORMATION`, predating this taxonomy doc) and
+`simq_routing_test` (a purpose-built AGENCY calibration fixture, not a shipped-gameplay archetype)
+remain **Regression/baseline tier** — neither is one of this ticket's 8 target worlds. Four new
 **Unit-tier** worlds now exist (`unit_faction_tension`, `unit_information_source`,
 `unit_selfmodel_pilot`, `hero_guild_routing`) — the first two added by
 `TCK-20260704-SIMQ-CORPUS-UNIT-WORLDS-FACTION-INFO`, the third by
 `TCK-20260704-SIMQ-CORPUS-UNIT-WORLD-SELFMODEL-PILOT`, and the fourth by
 `TCK-20260704-SIMQ-CORPUS-UNIT-WORLD-AGENCY` — see
 `docs/simulation_quality/eval_matrix_results.md`'s "Unit-Tier Isolation Worlds" section for their
-grade tables. No world has yet been promoted into deliberate end-to-end-tier content expansion
-(scoped by ticket 7 of this epic, not yet implemented), and no stress-tier world exists yet (scoped
-by ticket 8, not yet implemented).
+grade tables. No stress-tier world exists yet (scoped by ticket 8, not yet implemented).
 
 | World | Tier | Notes |
 |---|---|---|
-| `wilderness_survival` | Regression/baseline | 11 entities, 4 regions — smallest world in the corpus |
-| `sandbox_world` | Regression/baseline | 18 entities, 3 regions |
-| `highland_traverse` | Regression/baseline | 18 entities, 5 regions |
-| `urban_political` | Regression/baseline | 30 entities, 3 regions — the only world with any FACTION/INFORMATION/self-model content populated today |
-| `dungeon_crawl` | Regression/baseline | 32 entities, 4 regions |
-| `swamp_border_world` | Regression/baseline | 26 entities, 4 regions |
+| `wilderness_survival` | End-to-end | 11 entities, 4 regions — smallest world in the corpus; FACTION-only (INFORMATION documented skip, no settlement module) |
+| `sandbox_world` | End-to-end | 18 entities, 3 regions; FACTION + INFORMATION (`town_notice_board`) |
+| `highland_traverse` | End-to-end | 18 entities, 5 regions; FACTION + INFORMATION (`route_waystation_guide`) |
+| `urban_political` | Regression/baseline | 30 entities, 3 regions — the only world with any FACTION/INFORMATION/self-model content populated before this ticket; already End-to-end by criterion, not one of this ticket's 8 target worlds |
+| `dungeon_crawl` | End-to-end | 32 entities, 4 regions; FACTION-only (INFORMATION documented skip, no settlement module) |
+| `swamp_border_world` | End-to-end | 26 entities, 4 regions; FACTION + INFORMATION (`town_notice_board`) |
 | `simq_routing_test` | Regression/baseline | 30 entities, 3 regions — the only world with `ENABLE_ADVENTURE_ROUTING=ON`, purpose-built as a minimal AGENCY calibration world (not a shipped gameplay archetype) |
-| `frontier_living_world` | Regression/baseline | 46 entities, 7 regions |
-| `generated_frontier_3_42` | Regression/baseline | 44 entities, 6 regions — procedurally generated |
-| `frontier_extended` | Regression/baseline | 56 entities, 10 regions — largest world in the corpus |
+| `frontier_living_world` | End-to-end | 46 entities, 7 regions; FACTION + INFORMATION (`town_notice_board`) |
+| `generated_frontier_3_42` | End-to-end | 44 entities, 6 regions — procedurally generated; FACTION + INFORMATION content authored but deliberately left outside the anchored calibration corpus (no `grade_anchors.json` entries) |
+| `frontier_extended` | End-to-end | 56 entities, 10 regions — largest world in the corpus; FACTION + INFORMATION (`town_notice_board`) |
 | `unit_faction_tension` | Unit | 18 entities, 3 regions — isolates FACTION only (TCK-20260704-SIMQ-CORPUS-UNIT-WORLDS-FACTION-INFO) |
 | `unit_information_source` | Unit | 16 entities, 1 region — isolates INFORMATION only (TCK-20260704-SIMQ-CORPUS-UNIT-WORLDS-FACTION-INFO) |
 | `unit_selfmodel_pilot` | Unit | 16 entities, 1 region — isolates COGNITION's self-model materialization half only (TCK-20260704-SIMQ-CORPUS-UNIT-WORLD-SELFMODEL-PILOT) |

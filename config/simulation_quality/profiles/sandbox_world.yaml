@@ -1,0 +1,2 @@
+feature_flags:
+  ENABLE_BELIEF_ASSIMILATION: "ON"

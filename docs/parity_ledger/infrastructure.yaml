@@ -3060,6 +3060,17 @@
     ENABLE_BELIEF_ASSIMILATION=ON in every run; INFORMATION pillar grade moved C→B in all 7
     (via the newly-reachable Branch A). dungeon_crawl spot-checked (seed 42, 200t) for 0
     leakage — INFORMATION stayed C, 0 events.
+    TCK-20260704-SIMQ-CORPUS-E2E-CONTENT-EXPANSION extended information_source_profiles/
+    pending_information_responses to 6 more worlds — sandbox_world, highland_traverse,
+    swamp_border_world, frontier_living_world, frontier_extended, generated_frontier_3_42 —
+    each with its own bespoke source/response pair and ENABLE_BELIEF_ASSIMILATION=ON;
+    INFORMATION pillar grade moved C→B in all 6 (generated_frontier_3_42 measured via a
+    3-seed 200t run recorded as documentation-only evidence outside the anchored corpus per
+    its own explicit scope decision, not added to grade_anchors.json). wilderness_survival
+    joins dungeon_crawl as a documented archetype-honest INFORMATION skip (no
+    settlement-adjacent module) — 0 leakage, INFORMATION held C. See
+    eval_matrix_results.md's "FACTION/INFORMATION Content Expansion" section for the full
+    per-world table.
   status: verified
   priority: P1
   legacy_evidence: null
@@ -3121,6 +3132,15 @@
     INFRA-256's support_boundary. This calibration_hits > 0 result additionally required the
     kernel tick-alignment fix (INFRA-258) to be observable through the real live loop — prior
     to that fix, calibration_hits would have measured 0 despite this plumbing being correct.
+    TCK-20260704-SIMQ-CORPUS-E2E-CONTENT-EXPANSION seeded a bespoke pending_information_responses
+    entry in 6 more worlds — sandbox_world, highland_traverse, swamp_border_world,
+    frontier_living_world, frontier_extended, generated_frontier_3_42 — each targeting that
+    world's own real compiled population id (corrected from the urban_political-derived pop_0
+    placeholder; none of these 8 worlds compose hero_adventurers, so pop_0/pop_1/pop_2
+    positional addressing does not resolve there). belief_assimilated/belief_updated
+    calibration_hits are > 0 (exactly 1 per run) for all 6, confirmed the same way as
+    urban_political. dungeon_crawl and wilderness_survival remain documented INFORMATION skips
+    (see INFRA-256) — no entry seeded, 0 leakage.
   status: verified
   priority: P1
   legacy_evidence: null
