@@ -18,7 +18,7 @@ tags: [audit, simulation-quality, simq, integration, observability, event-bus]
 | **Interest** | 5 / 5 |
 | **Priority** | 9 |
 | **Method** | run-sim + code-read |
-| **Audit date** | 2026-06-30 (original); 2026-07-01 (re-run after fixes); 2026-07-02 (calibration corpus refresh + loop-detection sweep); 2026-07-02 (simq-uplift batch); 2026-07-03 (simq-uplift batch 2); 2026-07-04 (simq-uplift batch 3, all 8 tickets — see "SimQ Uplift Batch 3" section below) |
+| **Audit date** | 2026-06-30 (original); 2026-07-01 (re-run after fixes); 2026-07-02 (calibration corpus refresh + loop-detection sweep); 2026-07-02 (simq-uplift batch); 2026-07-03 (simq-uplift batch 2); 2026-07-04 (simq-uplift batch 3, all 8 tickets); 2026-07-07 (SimQ Corpus Tiers epic, all 10 tickets — see "SimQ Corpus Tiers Epic" section below) |
 
 **What this dimension answers:** Is the SimQ module actually receiving events and scoring
 live simulation runs — or is it built but disconnected? This audit exercises the full path
@@ -453,7 +453,7 @@ No remaining action items.
 | Event translation layer | `_TRANSLATE_SIMPLE` + `_TRANSLATE_CONDITIONAL` in quality_hub.py |
 | EventExtractor emissions | **81 of 82** scored event types emitted. 1 has no engine path (`camp_constructed` — no dynamic camp construction; scorer entry premature). |
 | Calibration tooling | `calibrate_simq.py` — `--window-size`/`--loop-threshold` CLI overrides added (TCK-20260701-SIMQ-LOOP-WINDOW-TUNE); run-scoped via `model_copy`, no YAML mutation |
-| Calibration corpus | 28-run corpus (13 + 15 new, 2026-07-04, TCK-20260703-SIMQ-UPLIFT3-WORLD-CORPUS) — 5 previously-unanchored worlds (`frontier_extended`, `frontier_living_world`, `wilderness_survival`, `highland_traverse`, `swamp_border_world`) anchored at 3 seeds x 200t; `dungeon_crawl`/`simq_routing_test`'s 13 pre-existing anchor entries re-verified post-hazard-kind-recompile (8 of 10 `dungeon_crawl` keys drifted and were updated; `simq_routing_test`'s 3 keys could not be re-verified — pre-existing, unrelated `ResourceRegistry: STONE` crash, see `docs/simulation_quality/eval_matrix_results.md`). Grade anchors updated. |
+| Calibration corpus | 61-scenario corpus across 17 worlds (2026-07-07, `TCK-20260704-SIMQ-CORPUS-TIERS-EPIC`) — grew from the 28-run/10-world corpus via 7 new worlds (4 unit-tier isolating single mechanics, 3 stress-tier filling named scale-diversity gaps) and 8 of the original 10 promoted to end-to-end tier with bespoke FACTION/INFORMATION content; see `docs/simulation_quality/corpus_tier_taxonomy.md` for the full tier structure and `docs/simulation_quality/eval_matrix_results.md`'s "Corpus World-Scale Summary" for per-world counts. `make evaluate`: 0 regressions across all 610 pillars. |
 | Parity ledger | SOC-237, SOC-238, INFRA-251 added and marked `verified` |
 | Kernel→hub bridge | **RESOLVED** — `InProcessQualityFeed` refactored; no competing consumer |
 | Early-extinction penalty | **RESOLVED** — `TCK-20260701-HAZARD-NATIVE-IMMUNITY` + `TCK-20260701-HAZARD-KIND-RESOLVER-GAP`; 0/5 wolf deaths confirmed at seed 42/137 |
@@ -592,6 +592,42 @@ ticket). `docs/audits/D06_longrun_health.md`'s F5 finding (source of P2-B) updat
   regression introduced by either ticket.
 - BRANCH-B's mechanism is proven correct but not active in any shipped profile — activating it for
   a real world (if ever desired) is a future scope decision, not automatic follow-on work.
+
+---
+
+## SimQ Corpus Tiers Epic (2026-07-06 / 2026-07-07)
+
+Ten tickets under `tickets/done/simq-corpus-tiers/` (parent epic
+`TCK-20260704-SIMQ-CORPUS-TIERS-EPIC`), addressing a product-philosophy redirection: world data
+should exercise every feature the engine supports, not just what already looks good, so SimQ
+scoring becomes an honest diagnostic across the whole corpus — organized into a test-pyramid-style
+tier structure (Unit/End-to-end/Stress/Regression) so a pillar regression can still be attributed to
+a specific mechanic rather than lost in an "everything on everywhere" corpus. Full tier definitions
+and per-world classification in `docs/simulation_quality/corpus_tier_taxonomy.md`.
+
+| Ticket | What changed | Outcome |
+|---|---|---|
+| TCK-20260704-SIMQ-CORPUS-TAXONOMY-DOC | Documented the 4-tier taxonomy and classification criteria for future world additions | Doc-only hotfix; foundation for tickets 2-10 |
+| TCK-20260704-SIMQ-CORPUS-SCALE-METRIC | Added `distinct_populated_factions` to `WorldCompiler.compile()`'s report (the coarse `Faction` enum only has 4 buckets and can't distinguish e.g. `undead_remnants` from `wild_beast_pack`) | Recompiled all 10 pre-epic worlds; `state_hash` byte-identical confirmed (purely additive); values matched the epic's own investigation table exactly, 0 discrepancy |
+| TCK-20260704-SIMQ-CORPUS-AGENCY-FLAG-GENERALIZE | Migrated `ENABLE_ADVENTURE_ROUTING` off `evaluate_simq.py`'s hardcoded `ROUTING_KEYS` scenario-name special case onto the same per-world `feature_flags:` profile-YAML mechanism every other flag already used | Behavior preservation verified 3 independent times across all 3 `simq_routing_test` seeds; prerequisite for ticket 6; does not touch the AGENCY-DA ruling |
+| TCK-20260704-SIMQ-CORPUS-UNIT-WORLDS-FACTION-INFO | Authored `unit_faction_tension` and `unit_information_source` — first unit-tier worlds, each isolating exactly one Pattern-6 mechanic | FACTION=S (29 hits/run, genuine signal matching `urban_political`'s own precedent), INFORMATION=B (1 hit/run), clean cross-isolation in both worlds; found and fixed a blocking, pre-existing, unrelated catalog bug (missing `stone` material registration) that had silently broken `resolve` for the whole corpus since 2026-07-04 |
+| TCK-20260704-SIMQ-CORPUS-UNIT-WORLD-SELFMODEL-PILOT | Authored `unit_selfmodel_pilot` — first-ever multi-entity (16), multi-tick, multi-seed live evidence for Branch B's self-model mechanism, previously proven only via a single hand-built unit test | COGNITION=S (3200 hits/run = 16 entities × 200 ticks, genuine), INFORMATION=C (0 events, correctly predicted since `InformationBeliefPhase` is structurally unreachable with `ENABLE_BELIEF_ASSIMILATION` absent — not a bug); all 3 of Branch-B's original fixes reconfirmed still in place; no genuine bug found |
+| TCK-20260704-SIMQ-CORPUS-UNIT-WORLD-AGENCY | Authored `hero_guild_routing` — new routing-capable world at real archetype scale, `ENABLE_ADVENTURE_ROUTING` ON by design | Does not reverse the AGENCY-DA ruling for any existing world |
+| TCK-20260704-SIMQ-CORPUS-E2E-CONTENT-EXPANSION | Authored bespoke, archetype-matched FACTION/INFORMATION content into 8 of the 10 original worlds | Direct answer to "why does only `urban_political` have this content"; drift-checked and re-anchored per-world |
+| TCK-20260704-SIMQ-CORPUS-STRESS-WORLDS | Authored `crowded_frontier`, `resource_dense_basin`, `frontier_marches` — filling named scale-diversity gaps (many-factions/small-map, resource-density decoupled from map size, gated content at large scale) | 3 new stress-tier worlds, anchored |
+| TCK-20260704-SIMQ-CORPUS-FACTION-RELATIONSHIPS | Folds in `docs/plans/audit_fix_plan.md` P2-D. Expanded `data/content/social/faction_relationships.yaml` coverage | Global catalog content, benefits every world simultaneously |
+| TCK-20260704-SIMQ-CORPUS-SCENARIO-FLAG-GUARDRAIL | Folds in P2-E. Added a static test (17 worlds, 7 functions, 55 cases) asserting per-world flag/content-field pairing, an AGENCY-DA anti-drift guard, and the structural fact that only 2 of 4 Pattern-6 fields are actually flag-gated | Lands last by design — covers the epic's own expanded flag surface; found and resolved a 26-pillar false-alarm regression (confirmed via fresh recalibration to be stale local calibration cache, not a real bug) |
+
+**Net effect on the calibration corpus:** 10 worlds → 17; 28-run/61-scenario anchor coverage;
+`make evaluate` confirms 0 regressions across all 610 pillars post-epic. All three of the user's
+binding decisions (AGENCY via new dedicated worlds only, Branch B via one isolated pilot world,
+hybrid template/bespoke content authoring by tier) were honored by every child ticket.
+
+**Open follow-up work (new, from this epic):**
+- None outstanding — the one process-level bug discovered mid-epic (missing `stone` material
+  catalog registration) was fixed directly as a blocking prerequisite in ticket 4, and the one
+  apparent regression found while finalizing ticket 10 was confirmed to be a stale local cache
+  artifact, not a real bug, and fully resolved before the epic closed.
 
 ---
 

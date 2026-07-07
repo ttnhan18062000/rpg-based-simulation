@@ -686,12 +686,13 @@ also in this list as of 2026-07-03; **RESOLVED (verified 2026-07-07)** by
 5. `TCK-20260701-SIMQ-EMIT-SOCIAL2` — 7 misc gaps (ECONOMY ×2, FACTION ×2, SOCIAL ×2, NARRATIVE ×1)
 
 **Still open, no ticket exists yet (per 2026-07-03 status refresh):** P2-N,
-P3-A, P3-C — and P2-D/P2-K pending re-verification against their relocated files. (P2-E resolved
-2026-07-07, TCK-20260704-SIMQ-CORPUS-SCENARIO-FLAG-GUARDRAIL — no longer pending.) (P2-B resolved
-2026-07-04, TCK-20260703-SIMQ-UPLIFT3-WORLD-CORPUS — no longer pending. P1-D resolved 2026-07-04,
-TCK-20260703-SIMQ-UPLIFT3-QUEST-PRESSURE — no longer pending. P1-H resolved 2026-07-04 — was
-already fixed by TCK-20260627-P1H-GOAL-RUNNERUP, a false negative in the 2026-07-03 refresh — no
-longer pending.)
+P3-A, P3-C — and P2-K pending re-verification against its relocated files. (P2-E resolved
+2026-07-07, TCK-20260704-SIMQ-CORPUS-SCENARIO-FLAG-GUARDRAIL — no longer pending.) (P2-D resolved
+2026-07-07, TCK-20260704-SIMQ-CORPUS-FACTION-RELATIONSHIPS — no longer pending; see P2-D section
+above.) (P2-B resolved 2026-07-04, TCK-20260703-SIMQ-UPLIFT3-WORLD-CORPUS — no longer pending.
+P1-D resolved 2026-07-04, TCK-20260703-SIMQ-UPLIFT3-QUEST-PRESSURE — no longer pending. P1-H
+resolved 2026-07-04 — was already fixed by TCK-20260627-P1H-GOAL-RUNNERUP, a false negative in the
+2026-07-03 refresh — no longer pending.)
 
 ---
 
