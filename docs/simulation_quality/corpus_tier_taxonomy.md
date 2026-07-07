@@ -94,12 +94,15 @@ active end-to-end-tier content work.
 
 ---
 
-## Current tier mapping (as of 2026-07-06)
+## Current tier mapping (as of 2026-07-07)
 
-All 10 worlds currently under `data/worlds/` are **Regression / baseline tier** — none of the new
-unit-tier or stress-tier worlds exist yet (they are scoped by tickets 4-6 and 8 of this epic, not
-yet implemented as of this doc's authoring), and no world has yet been promoted into deliberate
-end-to-end-tier content expansion (scoped by ticket 7, also not yet implemented).
+The original 10 worlds under `data/worlds/` are **Regression / baseline tier**. Two new
+**Unit-tier** worlds now exist (`unit_faction_tension`, `unit_information_source`, added by
+`TCK-20260704-SIMQ-CORPUS-UNIT-WORLDS-FACTION-INFO`) — see
+`docs/simulation_quality/eval_matrix_results.md`'s "Unit-Tier Isolation Worlds" section for their
+grade tables. No world has yet been promoted into deliberate end-to-end-tier content expansion
+(scoped by ticket 7 of this epic, not yet implemented), and no stress-tier world exists yet (scoped
+by ticket 8, not yet implemented).
 
 | World | Tier | Notes |
 |---|---|---|
@@ -113,6 +116,8 @@ end-to-end-tier content expansion (scoped by ticket 7, also not yet implemented)
 | `frontier_living_world` | Regression/baseline | 46 entities, 7 regions |
 | `generated_frontier_3_42` | Regression/baseline | 44 entities, 6 regions — procedurally generated |
 | `frontier_extended` | Regression/baseline | 56 entities, 10 regions — largest world in the corpus |
+| `unit_faction_tension` | Unit | 18 entities, 3 regions — isolates FACTION only (TCK-20260704-SIMQ-CORPUS-UNIT-WORLDS-FACTION-INFO) |
+| `unit_information_source` | Unit | 16 entities, 1 region — isolates INFORMATION only (TCK-20260704-SIMQ-CORPUS-UNIT-WORLDS-FACTION-INFO) |
 
 Full per-world entity/region/resource/quest counts and module composition are documented in
 `staging_artifacts/TCK-20260704-SIMQ-CORPUS-TIERS-EPIC/investigation.md` §2 — this doc cites that

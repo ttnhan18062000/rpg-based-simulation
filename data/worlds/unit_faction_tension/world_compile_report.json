@@ -1,0 +1,13 @@
+{
+  "world_id": "unit_faction_tension",
+  "seed": 42,
+  "entity_count": 18,
+  "region_count": 3,
+  "resource_node_count": 5,
+  "building_count": 5,
+  "quest_count": 6,
+  "distinct_populated_factions": 3,
+  "warnings": [],
+  "compile_duration_ms": 11.103060998721048,
+  "state_hash": "836b45e8913b46862240c6ba80f177f6"
+}

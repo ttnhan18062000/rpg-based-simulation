@@ -592,3 +592,70 @@ not a meaningful per-world signal on its own — see
 and is not part of the pillar-grade calibration corpus tracked elsewhere in this doc — it is
 included here only for scale-metric completeness (it is one of the 10 worlds under `data/worlds/`),
 not as a calibration claim.
+
+---
+
+## Unit-Tier Isolation Worlds (TCK-20260704-SIMQ-CORPUS-UNIT-WORLDS-FACTION-INFO)
+
+Two new **unit-tier** worlds (per `docs/simulation_quality/corpus_tier_taxonomy.md`'s
+classification: "isolates exactly one gated mechanic, with everything else at baseline, using
+template/synthetic content") were authored and anchored at 3 seeds x 200t each. Both compiled with
+`warnings: []` and passed the >=60% alive-floor population-stability guard through 300 ticks at
+seed 42 (100% alive at every 50-tick checkpoint, no incident).
+
+### unit_faction_tension (unit-tier — 18 entities, 3 regions)
+
+Reuses `sandbox_world`'s exact module pair (`frontier_village_core` + `wolf_den_near_forest`) with
+`faction_tension_overrides` seeded on `town_council: 0.5` / `merchant_league: 0.5`. No profile YAML
+exists for this world (all feature flags default OFF via `_resolve_profile()`'s `"default"`
+fallback).
+
+#### 200t (seeds 42 / 123 / 456)
+
+| Pillar | seed42 | seed123 | seed456 | Notes |
+|---|---|---|---|---|
+| AGENCY | C | C | C | stable — no `ENABLE_ADVENTURE_ROUTING` |
+| COGNITION | C | C | C | stable |
+| COMBAT | C | C | C | stable |
+| ECONOMY | C | C | C | stable |
+| **FACTION** | **S** | **S** | **S** | genuine non-C signal: 29 `diplomatic_transition`/`tension_active` hits/run, identical across all 3 seeds — matches `urban_political_seed42_200t`'s own "29 hits/run" precedent for the same mechanism |
+| INFORMATION | C | C | C | **isolation confirmed** — `information_source_profiles`/`pending_information_responses` both empty, 0 events, as designed |
+| PROGRESSION | C | C | C | stable (1 event, below threshold) |
+| SOCIAL | C | C | C | stable — no `ENABLE_SOCIAL_COOPERATION` |
+| WORLD | B | B | B | stable |
+| NARRATIVE | A | A | A | stable, high event density from the reused `sandbox_world` module pair |
+
+FACTION lands at `S`, not merely a non-C letter — the event-count breakdown (29 hits/run, every
+seed) confirms this is genuine `FactionScorer` activity (`tension_active`/`diplomatic_transition`
+events from a live threshold crossing), not an inert or dormancy-negative false positive. Every
+other Pattern-6-adjacent pillar (INFORMATION) stays `C` as expected — isolation confirmed, not a
+gap.
+
+### unit_information_source (unit-tier — 16 entities, 1 region)
+
+Composes `frontier_village_core` + `hero_adventurers` (the latter's 3 un-ided
+`population_recipes` produce the positional `pop_0`/`pop_1`/`pop_2` addressing `urban_political`
+also relies on). Seeds one `information_source_profiles` entry (`town_notice_board`, guide) and one
+`pending_information_responses` entry targeting `pop_0`, together with
+`ENABLE_BELIEF_ASSIMILATION: "ON"` in `config/simulation_quality/profiles/unit_information_source.yaml`
+(confirmed loaded — calibration output shows `profile=unit_information_source`, not `default`).
+
+#### 200t (seeds 42 / 123 / 456)
+
+| Pillar | seed42 | seed123 | seed456 | Notes |
+|---|---|---|---|---|
+| AGENCY | C | C | C | stable — no `ENABLE_ADVENTURE_ROUTING` |
+| COGNITION | B | B | B | side effect of `belief_updated` also being scored by `CognitionScorer` (2 events/run), same pattern as `urban_political`'s own COGNITION uplift |
+| COMBAT | C | C | C | stable |
+| ECONOMY | C | C | C | stable |
+| FACTION | C | C | C | **isolation confirmed** — `faction_tension_overrides` absent (catalog default 0.0 for all factions), 0 events, as designed |
+| **INFORMATION** | **B** | **B** | **B** | genuine non-C signal: exactly 1 `belief_assimilated` hit/run, identical across all 3 seeds — matches `urban_political_seed42_200t`'s own single-fire, tick-length-invariant precedent for this mechanism |
+| PROGRESSION | C | C | C | stable (1 event, below threshold) |
+| SOCIAL | C | C | C | stable — no `ENABLE_SOCIAL_COOPERATION` |
+| WORLD | B | B | B | stable |
+| NARRATIVE | A | A | A | stable |
+
+INFORMATION lands at `B` with exactly 1 `belief_assimilated` hit/run (not `S`/`A`) — this is the
+expected honest outcome per investigation.md's single-fire, tick-length-invariant characterization
+of this mechanism, not a partial failure. FACTION stays `C` as expected — isolation confirmed, not
+a gap.

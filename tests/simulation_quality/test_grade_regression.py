@@ -72,6 +72,13 @@ FAST_ANCHOR_KEYS = [
     "swamp_border_world_seed42_200t",
     "swamp_border_world_seed123_200t",
     "swamp_border_world_seed456_200t",
+    # new — TCK-20260704-SIMQ-CORPUS-UNIT-WORLDS-FACTION-INFO: 2 unit-tier worlds, 3 seeds each
+    "unit_faction_tension_seed42_200t",
+    "unit_faction_tension_seed123_200t",
+    "unit_faction_tension_seed456_200t",
+    "unit_information_source_seed42_200t",
+    "unit_information_source_seed123_200t",
+    "unit_information_source_seed456_200t",
 ]
 
 SLOW_ANCHOR_KEYS = [

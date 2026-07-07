@@ -487,5 +487,77 @@
     "INFORMATION": "C",
     "WORLD": "B",
     "NARRATIVE": "A"
+  },
+  "unit_faction_tension_seed42_200t": {
+    "COGNITION": "C",
+    "AGENCY": "C",
+    "COMBAT": "C",
+    "FACTION": "S",
+    "ECONOMY": "C",
+    "PROGRESSION": "C",
+    "SOCIAL": "C",
+    "INFORMATION": "C",
+    "WORLD": "B",
+    "NARRATIVE": "A"
+  },
+  "unit_faction_tension_seed123_200t": {
+    "COGNITION": "C",
+    "AGENCY": "C",
+    "COMBAT": "C",
+    "FACTION": "S",
+    "ECONOMY": "C",
+    "PROGRESSION": "C",
+    "SOCIAL": "C",
+    "INFORMATION": "C",
+    "WORLD": "B",
+    "NARRATIVE": "A"
+  },
+  "unit_faction_tension_seed456_200t": {
+    "COGNITION": "C",
+    "AGENCY": "C",
+    "COMBAT": "C",
+    "FACTION": "S",
+    "ECONOMY": "C",
+    "PROGRESSION": "C",
+    "SOCIAL": "C",
+    "INFORMATION": "C",
+    "WORLD": "B",
+    "NARRATIVE": "A"
+  },
+  "unit_information_source_seed42_200t": {
+    "COGNITION": "B",
+    "AGENCY": "C",
+    "COMBAT": "C",
+    "FACTION": "C",
+    "ECONOMY": "C",
+    "PROGRESSION": "C",
+    "SOCIAL": "C",
+    "INFORMATION": "B",
+    "WORLD": "B",
+    "NARRATIVE": "A"
+  },
+  "unit_information_source_seed123_200t": {
+    "COGNITION": "B",
+    "AGENCY": "C",
+    "COMBAT": "C",
+    "FACTION": "C",
+    "ECONOMY": "C",
+    "PROGRESSION": "C",
+    "SOCIAL": "C",
+    "INFORMATION": "B",
+    "WORLD": "B",
+    "NARRATIVE": "A"
+  },
+  "unit_information_source_seed456_200t": {
+    "COGNITION": "B",
+    "AGENCY": "C",
+    "COMBAT": "C",
+    "FACTION": "C",
+    "ECONOMY": "C",
+    "PROGRESSION": "C",
+    "SOCIAL": "C",
+    "INFORMATION": "B",
+    "WORLD": "B",
+    "NARRATIVE": "A"
   }
 }

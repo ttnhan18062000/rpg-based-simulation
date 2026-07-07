@@ -44,7 +44,15 @@ ANCHORED_WORLD_BANDS: dict[str, tuple[int, int | None]] = {
     "swamp_border_world": (20, 35),
 }
 
-POPULATION_STABILITY_WORLDS = list(ANCHORED_WORLD_BANDS.keys())
+# unit_faction_tension / unit_information_source (TCK-20260704-SIMQ-CORPUS-UNIT-WORLDS-
+# FACTION-INFO) are unit-tier isolation worlds, not part of the 5-world ANCHORED_WORLD_BANDS
+# regression-tier band set — they are added only to the population-stability guard, per
+# that ticket's plan.md Step 5 (do not fork a new test file; do not add them to
+# ANCHORED_WORLD_BANDS, whose entity-count-band/hazard-kind tests are out of this ticket's scope).
+POPULATION_STABILITY_WORLDS = list(ANCHORED_WORLD_BANDS.keys()) + [
+    "unit_faction_tension",
+    "unit_information_source",
+]
 
 # All 10 worlds' distinct-populated-faction counts, verified against
 # staging_artifacts/TCK-20260704-SIMQ-CORPUS-TIERS-EPIC/investigation.md §2 and re-confirmed by

@@ -7,7 +7,17 @@
       "schema_version": "worldcomposition.v1",
       "tags": [],
       "created_at": "2026-07-02T00:59:39.041768",
-      "updated_at": "2026-07-02T00:59:39.041768",
+      "updated_at": "2026-07-07T01:07:57.225435",
+      "status": "COMPOSITION"
+    },
+    "unit_information_source": {
+      "world_id": "unit_information_source",
+      "name": "Unit Test \u2014 Information Source Isolation",
+      "path": "unit_information_source/world.yaml",
+      "schema_version": "worldcomposition.v1",
+      "tags": [],
+      "created_at": "2026-07-07T01:07:51.830214",
+      "updated_at": "2026-07-07T01:07:57.227218",
       "status": "COMPOSITION"
     },
     "highland_traverse": {
@@ -17,7 +27,7 @@
       "schema_version": "worldcomposition.v1",
       "tags": [],
       "created_at": "2026-07-02T00:59:39.043057",
-      "updated_at": "2026-07-02T00:59:39.043057",
+      "updated_at": "2026-07-07T01:07:57.228338",
       "status": "COMPOSITION"
     },
     "dungeon_crawl": {
@@ -27,7 +37,7 @@
       "schema_version": "worldcomposition.v1",
       "tags": [],
       "created_at": "2026-07-02T00:59:39.045324",
-      "updated_at": "2026-07-02T00:59:39.045324",
+      "updated_at": "2026-07-07T01:07:57.229976",
       "status": "COMPOSITION"
     },
     "simq_routing_test": {
@@ -37,7 +47,17 @@
       "schema_version": "worldcomposition.v1",
       "tags": [],
       "created_at": "2026-07-02T00:59:39.046975",
-      "updated_at": "2026-07-02T00:59:39.046975",
+      "updated_at": "2026-07-07T01:07:57.231630",
+      "status": "COMPOSITION"
+    },
+    "unit_faction_tension": {
+      "world_id": "unit_faction_tension",
+      "name": "Unit Test \u2014 Faction Tension Isolation",
+      "path": "unit_faction_tension/world.yaml",
+      "schema_version": "worldcomposition.v1",
+      "tags": [],
+      "created_at": "2026-07-07T01:07:51.834222",
+      "updated_at": "2026-07-07T01:07:57.232607",
       "status": "COMPOSITION"
     },
     "frontier_extended": {
@@ -47,7 +67,7 @@
       "schema_version": "worldcomposition.v1",
       "tags": [],
       "created_at": "2026-07-02T00:59:39.048335",
-      "updated_at": "2026-07-02T00:59:39.048335",
+      "updated_at": "2026-07-07T01:07:57.233446",
       "status": "COMPOSITION"
     },
     "swamp_border_world": {
@@ -57,7 +77,7 @@
       "schema_version": "worldcomposition.v1",
       "tags": [],
       "created_at": "2026-07-02T00:59:39.049279",
-      "updated_at": "2026-07-02T00:59:39.049279",
+      "updated_at": "2026-07-07T01:07:57.234046",
       "status": "COMPOSITION"
     },
     "sandbox_world": {
@@ -67,7 +87,7 @@
       "schema_version": "worldcomposition.v1",
       "tags": [],
       "created_at": "2026-05-23T15:47:38.022954",
-      "updated_at": "2026-07-02T00:59:39.049927",
+      "updated_at": "2026-07-07T01:07:57.234462",
       "status": "COMPOSITION"
     },
     "frontier_living_world": {
@@ -77,7 +97,7 @@
       "schema_version": "worldcomposition.v1",
       "tags": [],
       "created_at": "2026-07-02T00:59:39.050748",
-      "updated_at": "2026-07-02T00:59:39.050748",
+      "updated_at": "2026-07-07T01:07:57.235534",
       "status": "COMPOSITION"
     },
     "wilderness_survival": {
@@ -87,7 +107,7 @@
       "schema_version": "worldcomposition.v1",
       "tags": [],
       "created_at": "2026-07-02T00:59:39.052001",
-      "updated_at": "2026-07-02T00:59:39.052001",
+      "updated_at": "2026-07-07T01:07:57.237306",
       "status": "COMPOSITION"
     },
     "generated_frontier_3_42": {
@@ -97,7 +117,7 @@
       "schema_version": "worldcomposition.v1",
       "tags": [],
       "created_at": "2026-07-02T00:59:39.054159",
-      "updated_at": "2026-07-02T00:59:39.054159",
+      "updated_at": "2026-07-07T01:07:57.240315",
       "status": "COMPOSITION"
     }
   }
