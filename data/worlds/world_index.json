@@ -7,7 +7,7 @@
       "schema_version": "worldcomposition.v1",
       "tags": [],
       "created_at": "2026-07-02T00:59:39.046975",
-      "updated_at": "2026-07-07T09:27:44.398425",
+      "updated_at": "2026-07-07T17:00:00.456137",
       "status": "COMPOSITION"
     },
     "swamp_border_world": {
@@ -17,7 +17,7 @@
       "schema_version": "worldcomposition.v1",
       "tags": [],
       "created_at": "2026-07-02T00:59:39.049279",
-      "updated_at": "2026-07-07T09:27:44.399555",
+      "updated_at": "2026-07-07T17:00:00.458460",
       "status": "COMPOSITION"
     },
     "highland_traverse": {
@@ -27,7 +27,7 @@
       "schema_version": "worldcomposition.v1",
       "tags": [],
       "created_at": "2026-07-02T00:59:39.043057",
-      "updated_at": "2026-07-07T09:27:44.400689",
+      "updated_at": "2026-07-07T17:00:00.460631",
       "status": "COMPOSITION"
     },
     "unit_faction_tension": {
@@ -37,7 +37,17 @@
       "schema_version": "worldcomposition.v1",
       "tags": [],
       "created_at": "2026-07-07T01:07:51.834222",
-      "updated_at": "2026-07-07T09:27:44.401717",
+      "updated_at": "2026-07-07T17:00:00.461711",
+      "status": "COMPOSITION"
+    },
+    "crowded_frontier": {
+      "world_id": "crowded_frontier",
+      "name": "Crowded Frontier",
+      "path": "crowded_frontier/world.yaml",
+      "schema_version": "worldcomposition.v1",
+      "tags": [],
+      "created_at": "2026-07-07T17:00:00.462733",
+      "updated_at": "2026-07-07T17:00:00.462733",
       "status": "COMPOSITION"
     },
     "frontier_extended": {
@@ -47,7 +57,7 @@
       "schema_version": "worldcomposition.v1",
       "tags": [],
       "created_at": "2026-07-02T00:59:39.048335",
-      "updated_at": "2026-07-07T09:27:44.402703",
+      "updated_at": "2026-07-07T17:00:00.465424",
       "status": "COMPOSITION"
     },
     "hero_guild_routing": {
@@ -57,7 +67,7 @@
       "schema_version": "worldcomposition.v1",
       "tags": [],
       "created_at": "2026-07-07T09:27:44.404565",
-      "updated_at": "2026-07-07T09:27:44.404565",
+      "updated_at": "2026-07-07T17:00:00.467260",
       "status": "COMPOSITION"
     },
     "urban_political": {
@@ -67,7 +77,7 @@
       "schema_version": "worldcomposition.v1",
       "tags": [],
       "created_at": "2026-07-02T00:59:39.041768",
-      "updated_at": "2026-07-07T09:27:44.408477",
+      "updated_at": "2026-07-07T17:00:00.470733",
       "status": "COMPOSITION"
     },
     "dungeon_crawl": {
@@ -77,7 +87,7 @@
       "schema_version": "worldcomposition.v1",
       "tags": [],
       "created_at": "2026-07-02T00:59:39.045324",
-      "updated_at": "2026-07-07T09:27:44.410318",
+      "updated_at": "2026-07-07T17:00:00.472352",
       "status": "COMPOSITION"
     },
     "sandbox_world": {
@@ -87,7 +97,17 @@
       "schema_version": "worldcomposition.v1",
       "tags": [],
       "created_at": "2026-05-23T15:47:38.022954",
-      "updated_at": "2026-07-07T09:27:44.411087",
+      "updated_at": "2026-07-07T17:00:00.474295",
+      "status": "COMPOSITION"
+    },
+    "frontier_marches": {
+      "world_id": "frontier_marches",
+      "name": "Frontier Marches",
+      "path": "frontier_marches/world.yaml",
+      "schema_version": "worldcomposition.v1",
+      "tags": [],
+      "created_at": "2026-07-07T17:00:00.476840",
+      "updated_at": "2026-07-07T17:00:00.476840",
       "status": "COMPOSITION"
     },
     "unit_information_source": {
@@ -97,7 +117,17 @@
       "schema_version": "worldcomposition.v1",
       "tags": [],
       "created_at": "2026-07-07T01:07:51.830214",
-      "updated_at": "2026-07-07T09:27:44.414163",
+      "updated_at": "2026-07-07T17:00:00.478923",
+      "status": "COMPOSITION"
+    },
+    "resource_dense_basin": {
+      "world_id": "resource_dense_basin",
+      "name": "Resource-Dense Basin",
+      "path": "resource_dense_basin/world.yaml",
+      "schema_version": "worldcomposition.v1",
+      "tags": [],
+      "created_at": "2026-07-07T17:00:00.479781",
+      "updated_at": "2026-07-07T17:00:00.479781",
       "status": "COMPOSITION"
     },
     "wilderness_survival": {
@@ -107,7 +137,7 @@
       "schema_version": "worldcomposition.v1",
       "tags": [],
       "created_at": "2026-07-02T00:59:39.052001",
-      "updated_at": "2026-07-07T09:27:44.416019",
+      "updated_at": "2026-07-07T17:00:00.481287",
       "status": "COMPOSITION"
     },
     "unit_selfmodel_pilot": {
@@ -117,7 +147,7 @@
       "schema_version": "worldcomposition.v1",
       "tags": [],
       "created_at": "2026-07-07T08:00:25.141773",
-      "updated_at": "2026-07-07T09:27:44.417857",
+      "updated_at": "2026-07-07T17:00:00.482917",
       "status": "COMPOSITION"
     },
     "generated_frontier_3_42": {
@@ -127,7 +157,7 @@
       "schema_version": "worldcomposition.v1",
       "tags": [],
       "created_at": "2026-07-02T00:59:39.054159",
-      "updated_at": "2026-07-07T09:27:44.420164",
+      "updated_at": "2026-07-07T17:00:00.486706",
       "status": "COMPOSITION"
     },
     "frontier_living_world": {
@@ -137,7 +167,7 @@
       "schema_version": "worldcomposition.v1",
       "tags": [],
       "created_at": "2026-07-02T00:59:39.050748",
-      "updated_at": "2026-07-07T09:27:44.421265",
+      "updated_at": "2026-07-07T17:00:00.489140",
       "status": "COMPOSITION"
     }
   }

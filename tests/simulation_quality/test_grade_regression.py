@@ -87,6 +87,16 @@ FAST_ANCHOR_KEYS = [
     "hero_guild_routing_seed42_500t",
     "hero_guild_routing_seed123_500t",
     "hero_guild_routing_seed456_500t",
+    # new — TCK-20260704-SIMQ-CORPUS-STRESS-WORLDS: 3 stress-tier worlds, 3 seeds each, 200t
+    "crowded_frontier_seed42_200t",
+    "crowded_frontier_seed123_200t",
+    "crowded_frontier_seed456_200t",
+    "resource_dense_basin_seed42_200t",
+    "resource_dense_basin_seed123_200t",
+    "resource_dense_basin_seed456_200t",
+    "frontier_marches_seed42_200t",
+    "frontier_marches_seed123_200t",
+    "frontier_marches_seed456_200t",
 ]
 
 SLOW_ANCHOR_KEYS = [

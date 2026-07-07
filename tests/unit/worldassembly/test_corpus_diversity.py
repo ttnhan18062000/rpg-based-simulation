@@ -42,6 +42,11 @@ ANCHORED_WORLD_BANDS: dict[str, tuple[int, int | None]] = {
     "wilderness_survival": (0, 19),
     "highland_traverse": (0, 19),
     "swamp_border_world": (20, 35),
+    # new — TCK-20260704-SIMQ-CORPUS-STRESS-WORLDS: 3 stress-tier worlds filling the
+    # corpus's named scale-diversity gaps (docs/simulation_quality/corpus_tier_taxonomy.md).
+    "crowded_frontier": (35, 50),
+    "resource_dense_basin": (20, 35),
+    "frontier_marches": (51, None),
 }
 
 # unit_faction_tension / unit_information_source (TCK-20260704-SIMQ-CORPUS-UNIT-WORLDS-
@@ -70,6 +75,11 @@ EXPECTED_DISTINCT_POPULATED_FACTIONS: dict[str, int] = {
     "frontier_living_world": 6,
     "generated_frontier_3_42": 7,
     "frontier_extended": 9,
+    # new — TCK-20260704-SIMQ-CORPUS-STRESS-WORLDS (re-confirmed against each world's own
+    # world_compile_report.json, not eyeballed from world.yaml).
+    "crowded_frontier": 6,
+    "resource_dense_basin": 4,
+    "frontier_marches": 9,
 }
 
 # The 10 modules Step 4 brought into the anchored corpus for the first time.

@@ -783,6 +783,19 @@ not a meaningful per-world signal on its own — see
 | frontier_living_world | 42 | 46 | 7 | 9 | 6 | 16 | 6 |
 | generated_frontier_3_42 | 42 | 44 | 6 | 9 | 6 | 16 | 7 |
 | frontier_extended | 43 | 56 | 10 | 13 | 6 | 22 | 9 |
+| crowded_frontier | 601 | 38 | 4 | 4 | 5 | 12 | 6 |
+| resource_dense_basin | 602 | 23 | 3 | 7 | 6 | 7 | 4 |
+| frontier_marches | 603 | 62 | 9 | 13 | 6 | 19 | 9 |
+
+The 3 stress-tier worlds above (`TCK-20260704-SIMQ-CORPUS-STRESS-WORLDS`) are detailed in their own
+"Stress-Tier Worlds" section below; their `Resource Nodes` counts are `world_compile_report.json`'s
+`resource_node_count` (number of distinct resource-node definitions actually compiled into
+`AuthoritativeState.resource_nodes`, e.g. `frontier_village_core`'s `wood_node`+`herb_patch` = 2
+definitions) — the same metric already used for every other row in this table. This is **not** the
+same thing as summing each definition's `count:`/charge field (e.g. `wood_node: 8` means one
+resource-node definition with 8 harvestable charges, not 8 separate nodes); the two metrics were
+conflated during this ticket's own investigation phase, corrected here against the actual measured
+field.
 
 `generated_frontier_3_42` has zero entries in `tests/simulation_quality/fixtures/grade_anchors.json`
 and is not part of the pillar-grade calibration corpus tracked elsewhere in this doc — it is
@@ -975,3 +988,169 @@ structural-default routes and the guaranteed `DEFER_WITH_REASON` fallback availa
 `ServiceOpportunityProvider`, confirmed by direct read of `src/domains/adventure/phase.py`) — but a
 future world that relies more heavily on gather_resource routes in these regions could be exposed to
 the same stasis pattern `simq_routing_test_seed456` hit pre-fix.
+
+---
+
+## Stress-Tier Worlds (TCK-20260704-SIMQ-CORPUS-STRESS-WORLDS)
+
+Three new **stress-tier** worlds (per `docs/simulation_quality/corpus_tier_taxonomy.md`'s
+classification: justified by scale/shape alone, not by exercising a new gated mechanic) fill the
+corpus's three named scale-diversity gaps
+(`staging_artifacts/EPIC-SCOPE-full-feature-world-coverage/investigation.md` §2): a
+many-factions/small-map world (gap 1), a resource-saturated/small-map world (gap 2), and a
+large-scale FACTION/INFORMATION world (gap 3). All 3 are built entirely from existing
+`data/content/world_modules/` catalog content — no new module was authored — and all 3 compiled
+with `warnings: []` and passed the >=60% alive-floor population-stability guard through 300 ticks
+at seed 42 (`test_population_stability` via `ANCHORED_WORLD_BANDS` membership,
+`tests/unit/worldassembly/test_corpus_diversity.py`).
+
+### crowded_frontier (stress-tier — 38 entities, 4 regions) — fills gap 1 (many-factions/small-map)
+
+Composes `frontier_village_core` + `hero_adventurers` + `bandit_road_trade_pressure` +
+`goblin_camp_conflict` + `orc_clan_territory` (seed 601). Reaches 6 distinct populated factions
+(`town_council`, `merchant_league`, `hero_guild`, `bandit_company`, `goblin_warband`, `orc_clan`,
+confirmed via `world_compile_report.json`'s `distinct_populated_factions` field, not eyeballed)
+across only 4 regions — matching `wilderness_survival`'s region count exactly, the smallest region
+footprint in the corpus alongside `sandbox_world`. Its 38-entity count is larger than
+`wilderness_survival`(11)/`sandbox_world`(18) — this is the unavoidable cost of the region-count
+reading of "small-map" (see this ticket's plan.md UQ resolution #1): no catalog combination reaches
+6+ distinct populated factions under ~20 entities, because every faction-populating module besides
+`hero_adventurers` (which spawns 0 new regions) contributes 5+ entities of its own. No
+`faction_tension_overrides`/`information_source_profiles` content was added (tier-purity rule — this
+world's justification is scale alone).
+
+#### 200t (seeds 42 / 123 / 456)
+
+| Pillar | seed42 | seed123 | seed456 | Notes |
+|---|---|---|---|---|
+| COGNITION | C | C | C | stable |
+| AGENCY | C | C | C | stable — no `ENABLE_ADVENTURE_ROUTING` |
+| COMBAT | B | B | B | stable |
+| FACTION | C | C | C | stable — no `faction_tension_overrides` seeded (tier-purity default) |
+| ECONOMY | C | C | C | stable |
+| PROGRESSION | B | B | B | stable |
+| SOCIAL | C | C | C | stable — no `ENABLE_SOCIAL_COOPERATION` |
+| INFORMATION | C | C | C | stable — no `information_source_profiles` seeded (tier-purity default) |
+| WORLD | B | B | B | stable |
+| NARRATIVE | A | A | A | stable, high event density from the 5-module conflict mix |
+
+Grades are identical across all 3 seeds — no anomalous pillar observed at this density.
+
+### resource_dense_basin (stress-tier — 23 entities, 3 regions) — fills gap 2 (resource-saturated/small-map)
+
+Composes `frontier_village_core` + `old_mine_resource_loop` + `orc_clan_territory` (seed 602). This
+fills gap 2 from the resource-**saturated**/small-map direction rather than the
+sparse-resources/large-map direction (both fill the same named gap from opposite directions; this
+ticket's investigation phase judged resource-saturated/small-map the lower-risk choice, since the
+sparse direction would need ~7-8 modules, most needing fresh `hazard_kind` verification, for the
+same evidentiary payoff — see plan.md's UQ-2 resolution). `resource_node_count` (the same metric
+used throughout this doc's "Corpus World-Scale Summary" table — distinct resource-node definitions,
+not summed charge counts) is 7 across 3 regions (~2.33/region), the corpus's new density maximum,
+surpassing `swamp_border_world`'s prior 1.75/region (7 nodes/4 regions). This corrects an early
+investigation-phase estimate (~12.3/region) that conflated the `count:`/charge field with the
+node-definition count; the corrected 2.33/region figure is still the corpus's highest measured
+density and still supports the gap-2 justification.
+
+**Resource-tag coverage finding (Step 7, `tests/unit/strategic/test_opportunities.py`):** mixed
+result, not a uniform clean pass. `old_mine` (this world's other new-to-the-corpus-composition
+region alongside `orc_stronghold`) is covered: `iron_vein` has no explicit `source_region_tags`
+metadata in `data/content/world/resources.yaml`, but `CatalogToResourceRegistryAdapter`'s
+legacy_id-based fallback (`src/core/registries.py:435-436`) infers `source_region_tags=("old_mine",)`
+for it, confirmed via a passing spot-check test
+(`test_resource_opportunities_old_mine_iron_vein`). `orc_stronghold`, however, has a genuine gap:
+neither resource kind `orc_clan_territory` places there (`iron_vein`, `wood_node`) carries an
+`orc_stronghold` `source_region_tags` entry — `wood_node`'s explicit tags are only
+`["near_forest", "hometown"]`, and `iron_vein`'s fallback tags are only `("old_mine",)` — confirmed
+via `test_resource_opportunities_orc_stronghold_tag_gap`, which asserts zero `gather_resource`
+opportunities for a hero standing in `orc_stronghold`. This is the same class of registry-omission
+gap `test_resource_opportunities_mountain_pass_zone_tag_gap`
+(`TCK-20260704-SIMQ-CORPUS-UNIT-WORLD-AGENCY`) already documented, and it pre-dates this ticket:
+`orc_clan_territory` is already composed by `frontier_extended`/`frontier_living_world`/
+`generated_frontier_3_42`, so this gap has been latent in the corpus since those worlds were
+authored, only now surfaced by a targeted spot-check. Deliberately **not** fixed here (shared
+catalog file, out of this ticket's authoring-scoped work) — flagged as the same class of follow-up
+recommendation: add `orc_stronghold` to `wood_node`'s (or `iron_vein`'s) `source_region_tags`.
+
+#### 200t (seeds 42 / 123 / 456)
+
+| Pillar | seed42 | seed123 | seed456 | Notes |
+|---|---|---|---|---|
+| COGNITION | C | C | C | stable |
+| AGENCY | C | C | C | stable — no `ENABLE_ADVENTURE_ROUTING` |
+| COMBAT | C | C | C | stable |
+| FACTION | C | C | C | stable — no `faction_tension_overrides` seeded (tier-purity default) |
+| **ECONOMY** | **C** | **C** | **C** | stable, not anomalous — consistent with the corpus's typical ECONOMY=C baseline (matches `urban_political`/`dungeon_crawl`/`swamp_border_world` etc.) despite the elevated resource-node density; no scoring-formula concern found on inspection |
+| PROGRESSION | C | C | C | stable |
+| SOCIAL | C | C | C | stable — no `ENABLE_SOCIAL_COOPERATION` |
+| INFORMATION | C | C | C | stable — no `information_source_profiles` seeded (tier-purity default) |
+| WORLD | B | B | B | stable |
+| NARRATIVE | A | A | A | stable |
+
+Grades are identical across all 3 seeds — no anomalous pillar observed.
+
+### frontier_marches (stress-tier — 62 entities, 9 regions) — fills gap 3 (large-scale FACTION/INFORMATION, authored-from-inception)
+
+Composes `frontier_village_core` + `hero_adventurers` + `wolf_den_near_forest` +
+`goblin_camp_conflict` + `bandit_road_trade_pressure` + `orc_clan_territory` +
+`undead_battlefield` + `sunken_swamp_border` + `old_mine_resource_loop` (seed 603) — 9 distinct
+populated factions across 9 regions, comparable in scale to `frontier_extended` (56 entities/10
+regions) but not a duplicate composition: it shares 6 of `frontier_extended`'s 8 modules but swaps
+`forest_warden_grove` for `hero_adventurers` + `sunken_swamp_border`, so its faction mix includes
+`hero_guild`/`swamp_tribe` and excludes `forest_wardens`/`spirit_court`.
+
+**Gap-3 reframing (see `corpus_tier_taxonomy.md`'s corrected gap-3 text):** by the time this ticket
+was implemented, `frontier_extended`/`frontier_living_world` had already gained
+`faction_tension_overrides`/`information_source_profiles` content via the sibling
+`TCK-20260704-SIMQ-CORPUS-E2E-CONTENT-EXPANSION` ticket — so `frontier_marches` is not literally
+"the first" data point at this scale, as the original gap-3 framing assumed. It is the first
+**authored-from-inception** data point: this content was part of the world's initial composition
+and first compile, not retrofitted onto an already-anchored world after the fact.
+
+**Bespoke-content rationale:** `faction_tension_overrides` seeds `bandit_company: 0.5` /
+`orc_clan: 0.5` — a tension pair no other existing world declares together (`frontier_extended`
+declares `orc_clan`+`forest_wardens`; `frontier_living_world` declares
+`bandit_company`+`merchant_league`), chosen because `frontier_marches` is the only world where both
+the bandit-road and orc-clan modules are present with neither's usual tension partner in play,
+giving a "dual external-threat" framing distinct from either sibling world.
+`information_source_profiles`/`pending_information_responses` seeds a `bandit_road_conditions`
+query (region `bandit_road`, certainty `0.72`) — deliberately different in subject, region, and
+certainty from `frontier_extended`'s `orc_clan_encroachment`/`orc_stronghold`/`0.75` and
+`swamp_border_world`'s `swamp_border_danger`/`swamp_border_territory`/`0.7`.
+
+**Parity-ledger extension:** `docs/parity_ledger/faction.yaml::FAC-012` and
+`docs/parity_ledger/infrastructure.yaml::INFRA-256` were both extended additively (one new clause
+each, no rewording of existing text) citing `frontier_marches` as a second/third real-world data
+point for `faction_tension_overrides`/`information_source_profiles` compile-time plumbing at this
+scale — closing a prior inconsistency where `INFRA-256` had been extended twice for the E2E ticket's
+work but `FAC-012` had not been extended at all despite that same ticket adding
+`faction_tension_overrides` to 8 worlds.
+
+**Calibration profile:** unlike `crowded_frontier`/`resource_dense_basin`, this world required a new
+`config/simulation_quality/profiles/frontier_marches.yaml` (`feature_flags: {ENABLE_BELIEF_ASSIMILATION:
+"ON"}`) — without it, `tools/calibrate_simq.py`'s `_resolve_profile()` falls back to `"default"`,
+leaving `InformationBeliefPhase`'s Branch A permanently unreached regardless of the seeded
+`pending_information_responses` content. This was traced (not assumed) during this ticket's own
+first calibration pass, which measured `INFORMATION=C`/`event_count=0` despite correctly-resolved
+compile-time plumbing (`AuthoritativeState.pending_information_responses` had 1 well-formed entry);
+adding the missing profile file and recalibrating moved `INFORMATION` to `B`/`event_count=1` across
+all 3 seeds, matching the other 8 `information_source_profiles`-bearing worlds' established
+C→B pattern.
+
+#### 200t (seeds 42 / 123 / 456)
+
+| Pillar | seed42 | seed123 | seed456 | Notes |
+|---|---|---|---|---|
+| COGNITION | B | B | B | stable |
+| AGENCY | C | C | C | stable — no `ENABLE_ADVENTURE_ROUTING` |
+| COMBAT | B | B | B | stable |
+| **FACTION** | **S** | **S** | **S** | genuine non-C signal from the seeded `faction_tension_overrides`, stable across all 3 seeds |
+| ECONOMY | C | C | C | stable |
+| PROGRESSION | B | B | B | stable |
+| SOCIAL | C | C | C | stable |
+| **INFORMATION** | **B** | **B** | **B** | genuine non-C signal from the seeded `information_source_profiles`/`pending_information_responses` (Branch A, 1 `belief_assimilated`/`belief_updated` hit per run) — see calibration-profile note above |
+| WORLD | B | B | B | stable |
+| NARRATIVE | A | A | A | stable |
+
+Grades are identical across all 3 seeds — no anomalous pillar observed, and the FACTION/INFORMATION
+signals confirm both mechanics scale cleanly to a 62-entity/9-region composition authored from
+inception.

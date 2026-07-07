@@ -159,6 +159,61 @@ def test_resource_opportunities_mountain_pass_zone_tag_gap():
         )
 
 
+def test_resource_opportunities_old_mine_iron_vein():
+    """TCK-20260704-SIMQ-CORPUS-STRESS-WORLDS Step 7: resource_dense_basin composes
+    old_mine_resource_loop, whose old_mine region places iron_vein nodes. iron_vein has no
+    explicit source_region_tags metadata in data/content/world/resources.yaml, but
+    CatalogToResourceRegistryAdapter's legacy_id fallback (src/core/registries.py:435-436)
+    infers source_region_tags=("old_mine",) for it — confirming a hero standing in old_mine
+    does get a real gather_resource opportunity, unlike the orc_stronghold gap below."""
+    ent = (V2EntityBuilder(1)
+        .kind("hero")
+        .build())
+    object.__setattr__(ent.navigation, "region_id", "old_mine")
+
+    from src.core.state import ResourceNodeState
+    node = ResourceNodeState(id=1, kind="iron_vein", position=(0.0, 0.0), yields_item="iron_ore", remaining_charges=10, max_charges=10, required_ticks=5)
+    mock_state = MockState(resource_nodes={1: node})
+
+    opportunities = ResourceOpportunityProvider.get_opportunities(ent, mock_state)
+
+    assert len(opportunities) > 0
+    assert any(opp.subject == "iron_ore" for opp in opportunities)
+
+
+def test_resource_opportunities_orc_stronghold_tag_gap():
+    """TCK-20260704-SIMQ-CORPUS-STRESS-WORLDS Step 7 finding: a hero standing in
+    resource_dense_basin's/frontier_marches's orc_stronghold region (from orc_clan_territory)
+    gets zero gather_resource opportunities for either resource kind that module places there
+    (iron_vein, wood_node) -- neither carries an "orc_stronghold" source_region_tags entry in
+    data/content/world/resources.yaml (wood_node's explicit tags are ["near_forest", "hometown"];
+    iron_vein's legacy_id-fallback tags are only ("old_mine",)). Same class of pre-existing
+    registry-omission gap as test_resource_opportunities_mountain_pass_zone_tag_gap
+    (TCK-20260704-SIMQ-CORPUS-UNIT-WORLD-AGENCY) -- found here, deliberately left unfixed (out
+    of this ticket's scope, and pre-dates it: orc_clan_territory is already composed by
+    frontier_extended/frontier_living_world/generated_frontier_3_42), and flagged as a follow-up
+    content-fix recommendation in docs/simulation_quality/eval_matrix_results.md instead. If this
+    assertion starts failing, the tag gap has been closed and this test should be rewritten to
+    assert coverage."""
+    from src.core.state import ResourceNodeState
+
+    for kind, item in (("iron_vein", "iron_ore"), ("wood_node", "wood")):
+        ent = (V2EntityBuilder(1)
+            .kind("hero")
+            .build())
+        object.__setattr__(ent.navigation, "region_id", "orc_stronghold")
+
+        node = ResourceNodeState(id=1, kind=kind, position=(0.0, 0.0), yields_item=item, remaining_charges=10, max_charges=10, required_ticks=5)
+        mock_state = MockState(resource_nodes={1: node})
+
+        opportunities = ResourceOpportunityProvider.get_opportunities(ent, mock_state)
+
+        assert opportunities == [], (
+            f"orc_stronghold/{kind}: expected zero gather_resource opportunities "
+            f"(no source_region_tags coverage), got {opportunities!r}"
+        )
+
+
 def test_service_opportunities_basic(minimal_service_registry):
     """Verify ServiceOpportunityProvider returns town service options."""
     ent = (V2EntityBuilder(1)

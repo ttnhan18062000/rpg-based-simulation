@@ -45,6 +45,12 @@ covers that region. The result, across **all** entity roles (not just heroes):
 | swamp_border_world | hometown, swamp_border_territory, wolf_den |
 | urban_political | bandit_road, hometown, trading_hometown |
 | wilderness_survival | haunted_battlefield, wolf_den |
+| resource_dense_basin | orc_stronghold |
+
+(`resource_dense_basin` added 2026-07-07: found during `TCK-20260704-SIMQ-CORPUS-STRESS-WORLDS`'s
+Step 7 spot-check — same root mechanism, same `orc_stronghold` region already listed above for
+`frontier_extended`/`generated_frontier_3_42`. Documented + a regression test added in
+`tests/unit/strategic/test_opportunities.py`; not fixed there, per that ticket's scope.)
 
 (`simq_routing_test`'s and `urban_political`'s `hometown` rows are already addressed for **hero-role**
 entities by `TCK-20260704-SIMQ-ROUTING-TEST-HOMETOWN-RESOURCE-GAP`'s catalog fix and tracked further

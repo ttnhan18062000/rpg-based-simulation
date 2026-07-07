@@ -248,6 +248,14 @@
     compiled world, which meant compute_transitions()'s pair_tension > 0.4 threshold
     could never fire and diplomatic_transition/faction_tension_delta had 0
     calibration_hits (TCK-20260702-SIMQ-UPLIFT2-FACTION).
+    TCK-20260704-SIMQ-CORPUS-STRESS-WORLDS extends this with a second, authored-from-inception
+    data point at frontier_extended-comparable scale (62 entities/9 regions):
+    data/worlds/frontier_marches/world.yaml seeds faction_tension_overrides
+    ({bandit_company: 0.5, orc_clan: 0.5}), confirmed to compile with 0 warnings and to seed
+    FactionState.tension_level=0.5 for both factions via the same WorldCompiler.compile()/
+    WorldAssemblyResolver.assemble() plumbing above — no new code path exercised, just a second
+    real-world composition proving the mechanism scales beyond urban_political's 30-entity/
+    3-region footprint.
   status: verified
   priority: P1
   legacy_evidence: null

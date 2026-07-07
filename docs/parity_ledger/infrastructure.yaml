@@ -3071,6 +3071,19 @@
     settlement-adjacent module) — 0 leakage, INFORMATION held C. See
     eval_matrix_results.md's "FACTION/INFORMATION Content Expansion" section for the full
     per-world table.
+    TCK-20260704-SIMQ-CORPUS-STRESS-WORLDS adds a third scale data point:
+    data/worlds/frontier_marches/world.yaml (62 entities/9 regions, authored with this content
+    from its first compile rather than retrofitted) seeds its own bespoke
+    information_source_profiles/pending_information_responses pair (subject
+    bandit_road_conditions, region bandit_road, certainty 0.72 — distinct from
+    frontier_extended's orc_clan_encroachment/orc_stronghold/0.75 and swamp_border_world's
+    swamp_border_danger/swamp_border_territory/0.7) with a new
+    config/simulation_quality/profiles/frontier_marches.yaml enabling
+    ENABLE_BELIEF_ASSIMILATION=ON (this world has no matching profile otherwise, since
+    calibrate_simq.py's _resolve_profile falls back to "default" without one, which would
+    silently leave Branch A unreachable — traced during this ticket's own calibration run before
+    being added, not assumed). INFORMATION pillar grade measured B across all 3 seeds (200t),
+    matching the other 8 worlds' C→B pattern at this larger scale.
   status: verified
   priority: P1
   legacy_evidence: null

@@ -631,5 +631,113 @@
     "INFORMATION": "C",
     "WORLD": "B",
     "NARRATIVE": "S"
+  },
+  "crowded_frontier_seed42_200t": {
+    "COGNITION": "C",
+    "AGENCY": "C",
+    "COMBAT": "B",
+    "FACTION": "C",
+    "ECONOMY": "C",
+    "PROGRESSION": "B",
+    "SOCIAL": "C",
+    "INFORMATION": "C",
+    "WORLD": "B",
+    "NARRATIVE": "A"
+  },
+  "crowded_frontier_seed123_200t": {
+    "COGNITION": "C",
+    "AGENCY": "C",
+    "COMBAT": "B",
+    "FACTION": "C",
+    "ECONOMY": "C",
+    "PROGRESSION": "B",
+    "SOCIAL": "C",
+    "INFORMATION": "C",
+    "WORLD": "B",
+    "NARRATIVE": "A"
+  },
+  "crowded_frontier_seed456_200t": {
+    "COGNITION": "C",
+    "AGENCY": "C",
+    "COMBAT": "B",
+    "FACTION": "C",
+    "ECONOMY": "C",
+    "PROGRESSION": "B",
+    "SOCIAL": "C",
+    "INFORMATION": "C",
+    "WORLD": "B",
+    "NARRATIVE": "A"
+  },
+  "resource_dense_basin_seed42_200t": {
+    "COGNITION": "C",
+    "AGENCY": "C",
+    "COMBAT": "C",
+    "FACTION": "C",
+    "ECONOMY": "C",
+    "PROGRESSION": "C",
+    "SOCIAL": "C",
+    "INFORMATION": "C",
+    "WORLD": "B",
+    "NARRATIVE": "A"
+  },
+  "resource_dense_basin_seed123_200t": {
+    "COGNITION": "C",
+    "AGENCY": "C",
+    "COMBAT": "C",
+    "FACTION": "C",
+    "ECONOMY": "C",
+    "PROGRESSION": "C",
+    "SOCIAL": "C",
+    "INFORMATION": "C",
+    "WORLD": "B",
+    "NARRATIVE": "A"
+  },
+  "resource_dense_basin_seed456_200t": {
+    "COGNITION": "C",
+    "AGENCY": "C",
+    "COMBAT": "C",
+    "FACTION": "C",
+    "ECONOMY": "C",
+    "PROGRESSION": "C",
+    "SOCIAL": "C",
+    "INFORMATION": "C",
+    "WORLD": "B",
+    "NARRATIVE": "A"
+  },
+  "frontier_marches_seed42_200t": {
+    "COGNITION": "B",
+    "AGENCY": "C",
+    "COMBAT": "B",
+    "FACTION": "S",
+    "ECONOMY": "C",
+    "PROGRESSION": "B",
+    "SOCIAL": "C",
+    "INFORMATION": "B",
+    "WORLD": "B",
+    "NARRATIVE": "A"
+  },
+  "frontier_marches_seed123_200t": {
+    "COGNITION": "B",
+    "AGENCY": "C",
+    "COMBAT": "B",
+    "FACTION": "S",
+    "ECONOMY": "C",
+    "PROGRESSION": "B",
+    "SOCIAL": "C",
+    "INFORMATION": "B",
+    "WORLD": "B",
+    "NARRATIVE": "A"
+  },
+  "frontier_marches_seed456_200t": {
+    "COGNITION": "B",
+    "AGENCY": "C",
+    "COMBAT": "B",
+    "FACTION": "S",
+    "ECONOMY": "C",
+    "PROGRESSION": "B",
+    "SOCIAL": "C",
+    "INFORMATION": "B",
+    "WORLD": "B",
+    "NARRATIVE": "A"
   }
 }

@@ -1,0 +1,414 @@
+{
+  "entities": {
+    "frontier_village_population_village_worker": {
+      "legacy_role": 4,
+      "legacy_faction": 2,
+      "hp": 100,
+      "max_hp": 100,
+      "atk": 10,
+      "def": 0,
+      "attack_range": 1,
+      "readiness": 100.0,
+      "inventory_seed": "hero_pocket",
+      "cognition_seed": "practical_humanoid",
+      "archetype_id": "village_worker",
+      "race_id": "human",
+      "role_id": "worker",
+      "faction_id": "town_council",
+      "traits": [
+        "humanoid",
+        "tool_user",
+        "social_humanoid"
+      ],
+      "themes": [
+        "village",
+        "frontier"
+      ],
+      "stat_profile_id": "commoner_base",
+      "combat_profile_id": "basic_melee",
+      "cognition_profile_id": "practical_humanoid",
+      "drive_profile_id": "cautious_commoner",
+      "need_profile_id": "humanoid_survival",
+      "sense_profile_id": "normal_humanoid_senses",
+      "inventory_profile_id": "hero_pocket",
+      "skill_profile_id": "blacksmith_skills"
+    },
+    "frontier_village_population_frontier_guard": {
+      "legacy_role": 5,
+      "legacy_faction": 2,
+      "hp": 120,
+      "max_hp": 120,
+      "atk": 12,
+      "def": 4,
+      "attack_range": 1,
+      "readiness": 100.0,
+      "inventory_seed": "guard_basic_kit",
+      "cognition_seed": "disciplined_guard",
+      "archetype_id": "frontier_guard",
+      "race_id": "human",
+      "role_id": "guard",
+      "faction_id": "town_council",
+      "traits": [
+        "humanoid",
+        "tool_user",
+        "social_humanoid",
+        "disciplined"
+      ],
+      "themes": [
+        "village",
+        "frontier"
+      ],
+      "stat_profile_id": "frontier_guard_base",
+      "combat_profile_id": "guard_disciplined",
+      "cognition_profile_id": "disciplined_guard",
+      "drive_profile_id": "disciplined_protector",
+      "need_profile_id": "humanoid_survival",
+      "sense_profile_id": "normal_humanoid_senses",
+      "inventory_profile_id": "guard_basic_kit",
+      "skill_profile_id": "guard_skills"
+    },
+    "frontier_village_population_traveling_merchant": {
+      "legacy_role": 1,
+      "legacy_faction": 3,
+      "hp": 80,
+      "max_hp": 80,
+      "atk": 4,
+      "def": 1,
+      "attack_range": 1,
+      "readiness": 100.0,
+      "inventory_seed": "merchant_trade_pack",
+      "cognition_seed": "trade_pragmatist",
+      "archetype_id": "traveling_merchant",
+      "race_id": "human",
+      "role_id": "merchant",
+      "faction_id": "merchant_league",
+      "traits": [
+        "humanoid",
+        "tool_user",
+        "merchant_minded",
+        "social_humanoid"
+      ],
+      "themes": [
+        "trade",
+        "frontier"
+      ],
+      "stat_profile_id": "merchant_base",
+      "combat_profile_id": "basic_melee",
+      "cognition_profile_id": "trade_pragmatist",
+      "drive_profile_id": "profit_seeker",
+      "need_profile_id": "humanoid_survival",
+      "sense_profile_id": "normal_humanoid_senses",
+      "inventory_profile_id": "merchant_trade_pack",
+      "skill_profile_id": "merchant_skills"
+    },
+    "frontier_village_population_village_blacksmith": {
+      "legacy_role": 4,
+      "legacy_faction": 2,
+      "hp": 90,
+      "max_hp": 90,
+      "atk": 5,
+      "def": 1,
+      "attack_range": 1,
+      "readiness": 100.0,
+      "inventory_seed": "blacksmith_toolkit",
+      "cognition_seed": "practical_humanoid",
+      "archetype_id": "village_blacksmith",
+      "race_id": "human",
+      "role_id": "blacksmith",
+      "faction_id": "town_council",
+      "traits": [
+        "humanoid",
+        "tool_user",
+        "craftsman",
+        "social_humanoid"
+      ],
+      "themes": [
+        "village",
+        "frontier"
+      ],
+      "stat_profile_id": "artisan_base",
+      "combat_profile_id": "basic_melee",
+      "cognition_profile_id": "practical_humanoid",
+      "drive_profile_id": "cautious_commoner",
+      "need_profile_id": "humanoid_survival",
+      "sense_profile_id": "normal_humanoid_senses",
+      "inventory_profile_id": "blacksmith_toolkit",
+      "skill_profile_id": "blacksmith_skills"
+    },
+    "old_mine_spider_cluster_cave_spider": {
+      "legacy_role": 2,
+      "legacy_faction": 1,
+      "hp": 50,
+      "max_hp": 50,
+      "atk": 14,
+      "def": 4,
+      "attack_range": 1,
+      "readiness": 100.0,
+      "inventory_seed": "empty_animal_inventory",
+      "cognition_seed": "instinctive_animal",
+      "archetype_id": "cave_spider",
+      "race_id": "spider",
+      "role_id": "predator_hunter",
+      "faction_id": "wild_beast_pack",
+      "traits": [
+        "venomous",
+        "territorial"
+      ],
+      "themes": [
+        "mine",
+        "swamp"
+      ],
+      "stat_profile_id": "cave_spider_base",
+      "combat_profile_id": "venom_bite",
+      "cognition_profile_id": "instinctive_animal",
+      "drive_profile_id": "territorial_predator",
+      "need_profile_id": "carnivore_survival",
+      "sense_profile_id": "spider_vibration_senses",
+      "inventory_profile_id": "empty_animal_inventory",
+      "skill_profile_id": "predator_skills"
+    },
+    "orc_clan_warband_orc_brute": {
+      "legacy_role": 2,
+      "legacy_faction": 1,
+      "hp": 150,
+      "max_hp": 150,
+      "atk": 18,
+      "def": 5,
+      "attack_range": 1,
+      "readiness": 100.0,
+      "inventory_seed": "goblin_looter_pouch",
+      "cognition_seed": "opportunistic_humanoid",
+      "archetype_id": "orc_brute",
+      "race_id": "orc",
+      "role_id": "raider",
+      "faction_id": "orc_clan",
+      "traits": [
+        "humanoid",
+        "tool_user",
+        "large_body"
+      ],
+      "themes": [
+        "orc"
+      ],
+      "stat_profile_id": "orc_brute_base",
+      "combat_profile_id": "brute_crush",
+      "cognition_profile_id": "opportunistic_humanoid",
+      "drive_profile_id": "opportunistic_raider",
+      "need_profile_id": "humanoid_survival",
+      "sense_profile_id": "normal_humanoid_senses",
+      "inventory_profile_id": "goblin_looter_pouch",
+      "skill_profile_id": null
+    }
+  },
+  "buildings": {
+    "town_hall_0": {
+      "hp": 1000,
+      "max_hp": 1000,
+      "service_profile_id": null,
+      "owner_faction": null
+    },
+    "shop_0": {
+      "hp": 500,
+      "max_hp": 500,
+      "service_profile_id": "general_store_service",
+      "owner_faction": null
+    },
+    "blacksmith_0": {
+      "hp": 700,
+      "max_hp": 700,
+      "service_profile_id": "blacksmith_service",
+      "owner_faction": null
+    },
+    "inn_0": {
+      "hp": 600,
+      "max_hp": 600,
+      "service_profile_id": "inn_service",
+      "owner_faction": null
+    },
+    "healer_hut_0": {
+      "hp": 450,
+      "max_hp": 450,
+      "service_profile_id": "healer_service",
+      "owner_faction": null
+    },
+    "mine_entrance_0": {
+      "hp": 900,
+      "max_hp": 900,
+      "service_profile_id": "mining_service",
+      "owner_faction": null
+    }
+  },
+  "resources": {
+    "res_0": {
+      "required_ticks": 10,
+      "resource_type": "wood_node",
+      "yield_policy": null
+    },
+    "res_1": {
+      "required_ticks": 8,
+      "resource_type": "herb_patch",
+      "yield_policy": null
+    },
+    "old_mine_resource_loop__iron_vein_0": {
+      "required_ticks": 15,
+      "resource_type": "iron_vein",
+      "yield_policy": null
+    },
+    "old_mine_resource_loop__crystal_outcrop_1": {
+      "required_ticks": 18,
+      "resource_type": "crystal_outcrop",
+      "yield_policy": null
+    },
+    "old_mine_resource_loop__silver_vein_2": {
+      "required_ticks": 18,
+      "resource_type": "silver_vein",
+      "yield_policy": null
+    },
+    "orc_clan_territory__iron_vein_0": {
+      "required_ticks": 15,
+      "resource_type": "iron_vein",
+      "yield_policy": null
+    },
+    "orc_clan_territory__wood_node_1": {
+      "required_ticks": 10,
+      "resource_type": "wood_node",
+      "yield_policy": null
+    }
+  },
+  "factions": {
+    "hero_guild": {
+      "starting_gold": 1000.0
+    },
+    "town_council": {
+      "starting_gold": 1000.0
+    },
+    "neutral": {
+      "starting_gold": 1000.0
+    },
+    "wild_beast_pack": {
+      "starting_gold": 1000.0
+    },
+    "goblin_warband": {
+      "starting_gold": 1000.0
+    },
+    "merchant_league": {
+      "starting_gold": 1000.0
+    },
+    "bandit_company": {
+      "starting_gold": 1000.0
+    },
+    "forest_wardens": {
+      "starting_gold": 1000.0
+    },
+    "orc_clan": {
+      "starting_gold": 1000.0
+    },
+    "dwarven_mine_clan": {
+      "starting_gold": 1000.0
+    },
+    "moon_cult": {
+      "starting_gold": 1000.0
+    },
+    "undead_remnants": {
+      "starting_gold": 1000.0
+    },
+    "arcane_circle": {
+      "starting_gold": 1000.0
+    },
+    "swamp_tribe": {
+      "starting_gold": 1000.0
+    },
+    "dragon_cult": {
+      "starting_gold": 1000.0
+    },
+    "spirit_court": {
+      "starting_gold": 1000.0
+    }
+  },
+  "region_ownership": {
+    "hometown": 0
+  },
+  "legacy_factions": {
+    "town_council": 2,
+    "merchant_league": 3,
+    "wild_beast_pack": 1,
+    "orc_clan": 1
+  },
+  "legacy_roles": {
+    "worker": 4,
+    "guard": 5,
+    "merchant": 1,
+    "blacksmith": 4,
+    "predator_hunter": 2,
+    "raider": 2
+  },
+  "perspectives": {
+    "merchant_league_perspective": {
+      "id": "merchant_league_perspective",
+      "display_name": null,
+      "description": null,
+      "tags": [],
+      "schema_version": null,
+      "deprecated": false,
+      "metadata": {},
+      "extension": {},
+      "design_notes": null,
+      "chosen_faction": "merchant_league",
+      "default_focus": "profit_and_route_safety",
+      "projected_labels": {
+        "ally_groups": [
+          "merchant_league"
+        ],
+        "trade_groups": [
+          "town_council",
+          "hero_guild",
+          "dwarven_mine_clan",
+          "arcane_circle"
+        ],
+        "threat_groups": [
+          "bandit_company",
+          "goblin_warband",
+          "undead_remnants"
+        ],
+        "contextual_threat_groups": [
+          "wild_beast_pack",
+          "orc_clan"
+        ]
+      }
+    },
+    "wild_beast_pack_perspective": {
+      "id": "wild_beast_pack_perspective",
+      "display_name": null,
+      "description": null,
+      "tags": [],
+      "schema_version": null,
+      "deprecated": false,
+      "metadata": {},
+      "extension": {},
+      "design_notes": null,
+      "chosen_faction": "wild_beast_pack",
+      "default_focus": "territory_and_survival",
+      "projected_labels": {
+        "ally_groups": [
+          "wild_beast_pack"
+        ],
+        "neutral_groups": [
+          "forest_wardens",
+          "spirit_court"
+        ],
+        "contextual_intruder_groups": [
+          "town_council",
+          "hero_guild",
+          "goblin_warband",
+          "bandit_company",
+          "orc_clan"
+        ],
+        "prey_or_threat_by_context": [
+          "human",
+          "goblin",
+          "orc"
+        ]
+      }
+    }
+  }
+}

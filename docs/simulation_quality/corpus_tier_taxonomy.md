@@ -112,7 +112,11 @@ remain **Regression/baseline tier** — neither is one of this ticket's 8 target
 `TCK-20260704-SIMQ-CORPUS-UNIT-WORLD-SELFMODEL-PILOT`, and the fourth by
 `TCK-20260704-SIMQ-CORPUS-UNIT-WORLD-AGENCY` — see
 `docs/simulation_quality/eval_matrix_results.md`'s "Unit-Tier Isolation Worlds" section for their
-grade tables. No stress-tier world exists yet (scoped by ticket 8, not yet implemented).
+grade tables. Three new **Stress-tier** worlds now exist — `crowded_frontier`,
+`resource_dense_basin`, and `frontier_marches`, all added by
+`TCK-20260704-SIMQ-CORPUS-STRESS-WORLDS` — filling named scale-diversity gaps 1-3 below; see
+`docs/simulation_quality/eval_matrix_results.md`'s "Stress-Tier Worlds" section for their grade
+tables and per-world justification.
 
 | World | Tier | Notes |
 |---|---|---|
@@ -130,6 +134,9 @@ grade tables. No stress-tier world exists yet (scoped by ticket 8, not yet imple
 | `unit_information_source` | Unit | 16 entities, 1 region — isolates INFORMATION only (TCK-20260704-SIMQ-CORPUS-UNIT-WORLDS-FACTION-INFO) |
 | `unit_selfmodel_pilot` | Unit | 16 entities, 1 region — isolates COGNITION's self-model materialization half only (TCK-20260704-SIMQ-CORPUS-UNIT-WORLD-SELFMODEL-PILOT) |
 | `hero_guild_routing` | Unit | 31 entities, 4 regions — isolates AGENCY/route-selection only via `ENABLE_ADVENTURE_ROUTING` (TCK-20260704-SIMQ-CORPUS-UNIT-WORLD-AGENCY); real-archetype scale distinguishes it from calibration-minimal `simq_routing_test` |
+| `crowded_frontier` | Stress | 38 entities, 4 regions — fills gap 1 (many-factions/small-map): 6 distinct populated factions in a 4-region footprint (TCK-20260704-SIMQ-CORPUS-STRESS-WORLDS) |
+| `resource_dense_basin` | Stress | 23 entities, 3 regions — fills gap 2 (resource-saturated/small-map): the corpus's new resource-node density maximum, ~2.33 nodes/region (TCK-20260704-SIMQ-CORPUS-STRESS-WORLDS) |
+| `frontier_marches` | Stress | 62 entities, 9 regions — fills gap 3 (large-scale FACTION/INFORMATION, authored-from-inception): `faction_tension_overrides` + `information_source_profiles`/`pending_information_responses` seeded from this world's first compile, at `frontier_extended`-comparable scale (TCK-20260704-SIMQ-CORPUS-STRESS-WORLDS) |
 
 Full per-world entity/region/resource/quest counts and module composition are documented in
 `staging_artifacts/TCK-20260704-SIMQ-CORPUS-TIERS-EPIC/investigation.md` §2 — this doc cites that
@@ -150,10 +157,17 @@ the concrete candidates a stress-tier world should cite when justifying its auth
    resources). Node-per-region density is currently roughly flat (1.3-1.75) across the corpus
    regardless of overall scale.
 3. **Pattern-6 gated content (FACTION/INFORMATION/self-model) combined with a large-scale
-   population.** The only world with any of this content populated (`urban_political`) is
-   mid-scale; there's no data point for how these mechanics behave at `frontier_extended`'s scale
-   (56 entities, 10 regions) or `wilderness_survival`'s (11 entities, near-zero settlement
-   structure).
+   population.** ~~The only world with any of this content populated (`urban_political`) is
+   mid-scale; there's no data point for how these mechanics behave at `frontier_extended`'s scale~~
+   — **stale as of `TCK-20260704-SIMQ-CORPUS-E2E-CONTENT-EXPANSION`**: `frontier_extended` and
+   `frontier_living_world` now both carry `faction_tension_overrides`/`information_source_profiles`
+   content too, but as a **retrofit** applied after those worlds were already anchored, not
+   authored alongside their initial composition. `frontier_marches`
+   (`TCK-20260704-SIMQ-CORPUS-STRESS-WORLDS`) closes the remaining, narrower version of this gap:
+   the first world with this content **authored from inception** — present at first compile,
+   not added after the fact — at `frontier_extended`-comparable scale (62 entities/9 regions vs.
+   56/10). `wilderness_survival`'s near-zero settlement structure remains an intentional
+   INFORMATION skip (no settlement-adjacent module), not a gap this ticket addresses.
 4. **A routing-capable (AGENCY-active) world that is also a "real" gameplay archetype**, as opposed
    to `simq_routing_test`'s purpose-built minimal-calibration framing.
 5. **Quest density decoupled from entity count.** Quest-def count currently scales almost linearly
