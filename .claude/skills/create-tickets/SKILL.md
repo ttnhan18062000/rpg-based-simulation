@@ -24,11 +24,22 @@ Parse the user's input to extract:
 
 ## Action
 
-Invoke the Workflow tool with:
-- `name: "create-tickets"`
-- `args`: an object with the parsed fields above (omit any not provided)
+**Do not call the Workflow tool — it is not available.** Execute the workflow directly:
 
-If the Workflow tool is unavailable, execute the pipeline inline using the steps below. **Do not skip or abbreviate the Investigate phase** — the investigation steps are the core value of this skill.
+1. Read `.claude/workflows/create-tickets.js` in full before doing anything else.
+2. Execute each phase block in order, translating JS constructs to tool calls as follows:
+
+| JS construct | What to do |
+|---|---|
+| `phase('Name')` | Announce the current phase to the user |
+| `log(msg)` | Output the message to the user |
+| `await agent(prompt, { agentType: 'name', schema: S })` | Spawn `Agent(subagent_type: "name", prompt: prompt)`; parse its JSON response and validate it matches schema S |
+| `await agent(prompt, { label: 'L' })` | Spawn `Agent(prompt: prompt)` — no specific agent type; label is for monitoring context only |
+| `await writeMonitoring(finalStatus)` | Execute the monitoring write block defined in that function in the JS — mandatory at every exit point; use `python3 tools/agent-monitoring/record_run.py` and `record_events.py`, never write to those files directly |
+| `return { status, ... }` | Report the final status and relevant fields to the user |
+
+3. Carry all variables (`comprehension`, `validInvestigations`, `structured`, `outputFolder`, etc.) across phases exactly as the JS does.
+4. **Do not skip or abbreviate the Investigate phase** — the investigation steps are the core value of this skill.
 
 ## Pipeline
 

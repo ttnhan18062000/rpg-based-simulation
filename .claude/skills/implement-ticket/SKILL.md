@@ -49,16 +49,18 @@ If the input is a natural language sentence, treat it as `request`.
    Raw file reads and grep are follow-up steps only — use paths from steps 1–2 first.
 
 1. **Scope** — create or load ticket; copy from `tickets/todos/**/` to `tickets/inprogress/` if needed
-2. **Investigate** — produce `investigation.md` and `test_plan.md`
-3. **Plan** — produce `plan.md`
-4. **Review** — architecture review (gate)
+2. **Investigate** — produce `investigation.md` and `test_plan.md` (skipped for hotfix)
+3. **Plan** — produce `plan.md` (skipped for hotfix)
+4. **Review** — architecture review of the plan (gate, skipped for hotfix)
 5. **Implement** — write code
-6. **Test** — run scoped pytest (gate)
-7. **Parity** — update parity ledger
-8. **Verify** — Definition-of-Done checklist (gate)
-9. **Finalize** — move ticket to `tickets/done/`; remove todos source file (then move the entire parent `tickets/todos/{folder}/` to `tickets/done/{folder}/` if no other TCK-*.md files remain); append working_log; move `staging_artifacts/{tid}/` → `stored_artifacts/{tid}/`
+6. **Architecture-Verify** — post-Implement deterministic backstop; re-invokes architecture-reviewer against the actual diff to check durable-state/API-boundary/reason-metadata rules (skipped for hotfix)
+7. **Test** — run scoped pytest (gate)
+8. **Parity** — update parity ledger
+9. **Security-Review** — security gate, conditional: fires when the ticket's tags include `security` or `suggested_skills` includes `/security-review` (skipped otherwise — not tier-gated)
+10. **Verify** — Definition-of-Done checklist (gate)
+11. **Finalize** — move ticket to `tickets/done/`; remove todos source file (then move the entire parent `tickets/todos/{folder}/` to `tickets/done/{folder}/` if no other TCK-*.md files remain); append working_log; move `staging_artifacts/{tid}/` → `stored_artifacts/{tid}/`
 
-Hotfix tier skips phases 2–4.
+Hotfix tier skips Investigate, Plan, Review, and Architecture-Verify.
 
 ## Notes
 

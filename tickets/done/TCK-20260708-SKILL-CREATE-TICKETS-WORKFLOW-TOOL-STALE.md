@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20260708-SKILL-CREATE-TICKETS-WORKFLOW-TOOL-STALE
-phase: open
+phase: done
 date: 2026-07-08
 tags: [ai, documentation, workflows, skills]
 ---
@@ -15,7 +15,7 @@ tags: [ai, documentation, workflows, skills]
 Fix stale "Workflow tool" primary-path instructions in .claude/skills/create-tickets/SKILL.md
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -94,14 +94,31 @@ None.
 None — self-evident fix, the corrected pattern already exists twice in-repo as precedent.
 
 ## Implementation Notes
-(filled in during implementation)
+Rewrote the `## Action` section of `.claude/skills/create-tickets/SKILL.md` to match the pattern in
+`implement-ticket/SKILL.md` and `implement-epic/SKILL.md`: leads with "**Do not call the Workflow tool —
+it is not available.** Execute the workflow directly:", then a numbered JS-to-tool-call translation
+(read `.claude/workflows/create-tickets.js` in full, execute phase blocks in order, a translation table
+for `phase()`/`log()`/`await agent(...)`/`await writeMonitoring(finalStatus)`/`return {...}`, and a step
+to carry variables across phases — using this file's own variable names `comprehension`,
+`validInvestigations`, `structured`, `outputFolder` in place of implement-ticket's `tier`/`tid`/etc.).
+The "do not skip or abbreviate the Investigate phase" instruction was preserved as the final numbered
+step in the corrected Action section rather than dropped. No other section of the file (Usage, Input,
+Pipeline, Notes) was touched, and no other file was modified. Verified via `git diff --stat` that only
+this one file changed and via `git diff` that the hunk is confined to the Action section.
 
 ## Test Summary
-(filled in during implementation — this is a documentation-only change; verification is a manual diff
-against the sibling SKILL.md files' Action sections, no pytest applies)
+Documentation-only change; no pytest applies. Verified by manual diff: `git diff .claude/skills/create-tickets/SKILL.md`
+shows the Action section now matches the structural/phrasing convention of `implement-ticket/SKILL.md`
+and `implement-epic/SKILL.md` ("Do not call the Workflow tool — it is not available. Execute the workflow
+directly: ..." followed by a numbered JS-translation table), and that the Pipeline/Usage/Input/Notes
+sections are byte-identical to before (diff shows only the Action section hunk).
 
 ## Files Changed
-(filled in during implementation)
+- `.claude/skills/create-tickets/SKILL.md`
 
 ## Completion Summary
-(filled in during implementation)
+Fixed the stale two-path (Workflow-tool-first, inline-fallback) Action section in
+`create-tickets/SKILL.md` so it now flatly states the Workflow tool is unavailable and directs the agent
+straight to inline JS-to-tool-call execution, consistent with its sibling skills. The Investigate-phase
+"do not skip or abbreviate" instruction was preserved. All three ticket-workflow skills
+(`create-tickets`, `implement-ticket`, `implement-epic`) now describe the same single execution model.

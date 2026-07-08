@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20260708-SKILL-IMPLEMENT-TICKET-PHASE-DRIFT
-phase: open
+phase: done
 date: 2026-07-08
 tags: [ai, documentation, workflows, skills]
 ---
@@ -15,7 +15,7 @@ tags: [ai, documentation, workflows, skills]
 Fix stale pipeline summary in .claude/skills/implement-ticket/SKILL.md
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -93,14 +93,30 @@ None.
 None — self-evident fix, source of truth (`meta.phases` in the `.js`) is unambiguous.
 
 ## Implementation Notes
-(filled in during implementation)
+Updated `.claude/skills/implement-ticket/SKILL.md`'s "Pipeline (standard tier)" section (previously lines
+43-61) to list all 11 phases from `.claude/workflows/implement-ticket.js`'s `meta.phases` array (lines
+1-17), in order: Scope, Investigate, Plan, Review, Implement, Architecture-Verify, Test, Parity,
+Security-Review, Verify, Finalize. Renumbered the list 1-11 (context search remains item 0, unchanged).
+Added a one-line description for Architecture-Verify (post-Implement backstop re-invoking
+architecture-reviewer against the actual diff, skipped for hotfix) and Security-Review (conditional gate
+firing on `security` tag or `/security-review` in `suggested_skills`, not tier-gated). Corrected the
+"Hotfix tier skips phases 2-4" note to "Hotfix tier skips Investigate, Plan, Review, and
+Architecture-Verify" per the `.js`'s `if (tier !== 'hotfix')` guard around that phase. No other content
+in SKILL.md was touched. `.claude/workflows/implement-ticket.js`, `.claude/agents/`, `docs/ai/workflows.md`,
+and `.claude/skills/create-tickets/SKILL.md` were not modified, per scope guards.
 
 ## Test Summary
-(filled in during implementation — this is a documentation-only change; verification is a manual diff
-against `meta.phases`, no pytest applies)
+No automated tests apply — documentation-only change to a Claude Code skill file. Verified via manual
+diff against `.claude/workflows/implement-ticket.js`'s `meta.phases` array (lines 1-17), confirming the
+SKILL.md's Pipeline section phase names and order now match exactly.
 
 ## Files Changed
-(filled in during implementation)
+- `.claude/skills/implement-ticket/SKILL.md` (Pipeline section and hotfix-skip note corrected)
 
 ## Completion Summary
-(filled in during implementation)
+Updated the "Pipeline (standard tier)" list in `.claude/skills/implement-ticket/SKILL.md` to include all
+11 phases matching `.claude/workflows/implement-ticket.js`'s `meta.phases` array exactly in order (added
+Architecture-Verify and Security-Review, which were previously missing). Corrected the "Hotfix tier skips
+phases 2-4" note to correctly list Investigate, Plan, Review, and Architecture-Verify as skipped for
+hotfix. No automated tests apply (docs-only change to a Claude Code skill file); verified via manual diff
+against `meta.phases` lines 1-17 that phase names and order match exactly.

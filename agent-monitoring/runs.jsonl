@@ -525,3 +525,6 @@
 {"run_id":"TCK-20260707-SIMQ-PILLAR-COMPLETENESS-DOC","start_ts":"2026-07-08T09:18:10Z","end_ts":"2026-07-08T09:31:21Z","workflow":"implement-ticket","tier":"hotfix","final_status":"DONE","agent_count":9}
 {"run_id":"TCK-20260707-SIMQ-BUILDING-SABOTAGE-SIGNAL","start_ts":"2026-07-08T09:33:27Z","end_ts":"2026-07-08T10:20:50Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":10}
 {"run_id":"FOLDER-tickets-todos-simq-deep-coverage","start_ts":"2026-07-08T02:08:15Z","end_ts":"2026-07-08T10:24:15Z","workflow":"implement-epic","tier":"epic","final_status":"DONE","agent_count":8}
+{"run_id":"TCK-20260708-SKILL-CREATE-TICKETS-WORKFLOW-TOOL-STALE","start_ts":"2026-07-08T11:53:07Z","end_ts":"2026-07-08T12:03:24Z","workflow":"implement-ticket","tier":"hotfix","final_status":"DONE","agent_count":10}
+{"run_id":"TCK-20260708-SKILL-IMPLEMENT-TICKET-PHASE-DRIFT","start_ts":"2026-07-08T12:06:03Z","end_ts":"2026-07-08T12:12:12Z","workflow":"implement-ticket","tier":"hotfix","final_status":"DONE","agent_count":10}
+{"run_id":"FOLDER-tickets-todos-skill-doc-drift","start_ts":"2026-07-08T11:52:32Z","end_ts":"2026-07-08T12:15:12Z","workflow":"implement-epic","tier":"epic","final_status":"DONE","agent_count":2}
