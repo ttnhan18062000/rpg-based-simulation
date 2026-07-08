@@ -2148,3 +2148,32 @@
     but that placement was never reflected in the global catalog's per-kind gating tags until this fix
     (TCK-20260704-SIMQ-ROUTING-TEST-HOMETOWN-RESOURCE-GAP).
   support_boundary: null
+- id: TOWN-189
+  text: >
+    wood_node, iron_vein, herb_patch, healing_flower_patch, and spirit_wisp resource nodes placed in
+    orc_stronghold, sacred_grove, swamp_border_territory, haunted_battlefield, and trading_hometown
+    (by orc_clan_territory.yaml, forest_warden_grove.yaml, sunken_swamp_border.yaml,
+    undead_battlefield.yaml, and trading_company_hub.yaml respectively) now correctly yield
+    gather_resource opportunities for entities standing in those regions. Same root mechanism as
+    TOWN-188 (hometown): ResourceOpportunityProvider.get_opportunities() gates on a global,
+    catalog-wide, per-resource-kind source_region_tags allowlist, not the node's own placement
+    region; these 5 kinds previously omitted the relevant region id(s) from that allowlist despite
+    nodes already being physically placed there.
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: >
+    data/content/world/resources.yaml — wood_node/iron_vein/herb_patch's metadata.source_region_tags
+    additively extended; healing_flower_patch/spirit_wisp gained new metadata.source_region_tags
+    blocks (previously relied on the node_flower legacy_id heuristic or resolved to zero tags,
+    respectively). src/core/registries.py CatalogToResourceRegistryAdapter.adapt() precedence unchanged.
+    src/world/providers/resources.py:69 gating check unchanged.
+  proof_type: parity
+  test_path: >
+    tests/unit/strategic/test_opportunities.py; tests/unit/core/test_registry_bridge.py;
+    tests/integration/content/test_resource_region_coverage_corpus.py
+  divergence_note: >
+    Content-authoring gap, not a decision-logic or scoring bug, identical root cause to TOWN-188.
+    zero hero-role entities affected in the live corpus prior to this fix (confirmed in
+    investigation.md §2 — every hero-role entity corpus-wide spawns in hometown, already covered).
+  support_boundary: null

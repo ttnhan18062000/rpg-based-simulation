@@ -491,6 +491,37 @@ def test_production_catalog_wood_and_herb_cover_hometown():
     assert "hometown" in res_herb.source_region_tags
 
 
+def test_production_catalog_covers_orc_stronghold_sacred_grove_swamp_border_haunted_battlefield_trading_hometown():
+    """TCK-20260706-SIMQ-CORPUS-RESOURCE-REGION-COVERAGE-AUDIT: the real (non-synthetic)
+    data/content catalog must additively carry the 5 new region tags this ticket closed, on the
+    exact resource kind each is physically placed under by its composing world module. Reads
+    the actual production catalog file (not a synthetic fixture) so YAML structural mistakes —
+    a typo'd region id, or a metadata block nested under the wrong key — are caught here, unlike
+    an opportunity test built on a hand-constructed ResourceNodeState."""
+    repo = CatalogRepository("data/content")
+    repo.load_all()
+    seed_phase1_content(repo)
+
+    res_wood = ResourceRegistry.get("node_wood")
+    res_iron = ResourceRegistry.get("node_iron")
+    res_herb = ResourceRegistry.get("node_herb")
+    res_healing_flower = ResourceRegistry.get("node_flower")
+    res_spirit_wisp = ResourceRegistry.get("spirit_wisp")
+
+    assert "orc_stronghold" in res_wood.source_region_tags
+    assert "orc_stronghold" in res_iron.source_region_tags
+
+    assert "swamp_border_territory" in res_wood.source_region_tags
+    assert "swamp_border_territory" in res_herb.source_region_tags
+
+    assert "trading_hometown" in res_iron.source_region_tags
+
+    assert "sacred_grove" in res_healing_flower.source_region_tags
+    assert "sacred_grove" in res_spirit_wisp.source_region_tags
+
+    assert "haunted_battlefield" in res_spirit_wisp.source_region_tags
+
+
 def test_runtime_content_mode_enum_has_four_explicit_modes():
     assert RuntimeContentMode.CATALOG_STRICT.value == "catalog_strict"
     assert RuntimeContentMode.CATALOG_WITH_COMPATIBILITY.value == "catalog_with_compatibility"

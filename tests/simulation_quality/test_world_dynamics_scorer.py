@@ -145,6 +145,18 @@ class TestStructureAndHazard:
         assert rec.delta == scoring_weights["hazard_active"]
 
 
+class TestBuildingSabotage:
+    def test_building_sabotaged_registered_in_scorer_registry(self) -> None:
+        assert "building_sabotaged" in WorldDynamicsScorer.EVENT_TYPES
+
+    def test_building_sabotaged_scored_by_world_dynamics(self, scorer: WorldDynamicsScorer, scoring_weights: ScoringWeights) -> None:
+        rec = scorer.score(_env("building_sabotaged", payload={"region_id": "r1"}), _ctx())
+        assert rec is not None
+        assert rec.delta == scoring_weights["infrastructure_damaged"]
+        assert rec.pillar == PillarId.WORLD
+        assert "infrastructure_damaged" in rec.tags
+
+
 class TestNullReturn:
     def test_threat_evolved_returns_none(self, scorer: WorldDynamicsScorer) -> None:
         assert scorer.score(_env("threat_evolved"), _ctx()) is None

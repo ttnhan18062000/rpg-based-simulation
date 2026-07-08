@@ -386,6 +386,14 @@ class TestYAMLOutput:
 # ---------------------------------------------------------------------------
 
 
+class TestRealDocsTree:
+    def test_registry_exits_zero_on_real_docs_tree(self, tmp_path):
+        repo_root = Path(__file__).resolve().parents[2]
+        output = tmp_path / "REGISTRY.yaml"
+        rc = generate_registry(repo_root, output)
+        assert rc == 0
+
+
 class TestEdgeCases:
     def test_invert_date_newest_sorts_first(self):
         dates = ["2026-06-01", "2025-01-15", "2026-01-01"]

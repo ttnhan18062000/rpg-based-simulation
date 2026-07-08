@@ -1,3 +1,10 @@
+---
+status: active
+layer: simulation
+authority: P1
+audience: agent
+---
+
 # Party Contract — Epic 4.1 Full Party Adventure Loop
 
 **Authority:** P1  

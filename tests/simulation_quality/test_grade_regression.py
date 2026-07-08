@@ -97,6 +97,10 @@ FAST_ANCHOR_KEYS = [
     "frontier_marches_seed42_200t",
     "frontier_marches_seed123_200t",
     "frontier_marches_seed456_200t",
+    # new — TCK-20260707-SIMQ-GENERATED-FRONTIER-BASELINE-ANCHORS
+    "generated_frontier_3_42_seed42_200t",
+    "generated_frontier_3_42_seed123_200t",
+    "generated_frontier_3_42_seed456_200t",
 ]
 
 SLOW_ANCHOR_KEYS = [
@@ -115,6 +119,15 @@ SLOW_ANCHOR_KEYS = [
     "dungeon_crawl_seed456_2000t",
     # new — sandbox_world 2000t
     "sandbox_world_seed42_2000t",
+    # new — TCK-20260707-SIMQ-LONGRUN-HOTPILLAR-ANCHORS
+    "unit_selfmodel_pilot_seed42_1000t",
+    "hero_guild_routing_seed42_1000t",
+    "simq_routing_test_seed42_1000t",
+    "unit_faction_tension_seed42_1000t",
+    "unit_faction_tension_seed42_2000t",
+    "urban_political_seed42_2000t",
+    # new — TCK-20260707-SIMQ-GENERATED-FRONTIER-BASELINE-ANCHORS
+    "generated_frontier_3_42_seed42_1000t",
 ]
 
 MINIMUM_FAST_ANCHORS = set(FAST_ANCHOR_KEYS)

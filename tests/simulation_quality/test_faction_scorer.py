@@ -114,3 +114,11 @@ class TestResourceSeized:
 class TestNullReturn:
     def test_null_unknown(self, scorer: FactionScorer) -> None:
         assert scorer.score(_env("combat_initiated"), _ctx()) is None
+
+
+class TestBuildingSabotageOwnership:
+    def test_building_sabotaged_not_in_faction_event_types(self) -> None:
+        assert "building_sabotaged" not in FactionScorer.EVENT_TYPES
+
+    def test_building_sabotaged_not_scored_by_faction(self, scorer: FactionScorer) -> None:
+        assert scorer.score(_env("building_sabotaged"), _ctx()) is None

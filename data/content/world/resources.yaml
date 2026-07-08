@@ -7,7 +7,7 @@
   default_charges: 10
   preferred_biomes: ["frontier_village", "near_forest"]
   metadata:
-    source_region_tags: ["near_forest", "hometown"]
+    source_region_tags: ["near_forest", "hometown", "orc_stronghold", "swamp_border_territory"]
 
 # STATE: EXISTING-LOGIC
 - id: "iron_vein"
@@ -18,7 +18,7 @@
   default_charges: 5
   preferred_biomes: ["old_mine"]
   metadata:
-    source_region_tags: ["old_mine", "mountain_pass_zone"]
+    source_region_tags: ["old_mine", "mountain_pass_zone", "orc_stronghold", "trading_hometown"]
 
 # STATE: NEW (TCK-20260704-SIMQ-RESOURCEREGISTRY-STONE-GAP)
 - id: "stone_outcrop"
@@ -40,7 +40,7 @@
   default_charges: 8
   preferred_biomes: ["near_forest", "sunken_swamp"]
   metadata:
-    source_region_tags: ["near_forest", "moon_cave", "hometown"]
+    source_region_tags: ["near_forest", "moon_cave", "hometown", "swamp_border_territory"]
 
 # STATE: LEGACY-EXPORT
 - id: "healing_flower_patch"
@@ -50,6 +50,8 @@
   required_ticks: 12
   default_charges: 5
   preferred_biomes: ["near_forest", "sacred_grove"]
+  metadata:
+    source_region_tags: ["near_forest", "sacred_grove"]
 
 # STATE: LEGACY-EXPORT
 - id: "moon_resin_tree"
@@ -95,6 +97,8 @@
   required_ticks: 25
   default_charges: 2
   preferred_biomes: ["sacred_grove", "haunted_battlefield"]
+  metadata:
+    source_region_tags: ["sacred_grove", "haunted_battlefield"]
 
 # STATE: ADDITIONAL
 - id: "ember_core_cluster"

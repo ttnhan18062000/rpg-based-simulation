@@ -1,3 +1,10 @@
+---
+status: active
+layer: engine
+authority: P1
+audience: developer
+---
+
 # Supported Progression Surface — Phase 5
 
 ## Purpose

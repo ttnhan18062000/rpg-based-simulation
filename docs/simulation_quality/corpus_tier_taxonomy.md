@@ -128,7 +128,7 @@ tables and per-world justification.
 | `swamp_border_world` | End-to-end | 26 entities, 4 regions; FACTION + INFORMATION (`town_notice_board`) |
 | `simq_routing_test` | Regression/baseline | 30 entities, 3 regions — the only world with `ENABLE_ADVENTURE_ROUTING=ON`, purpose-built as a minimal AGENCY calibration world (not a shipped gameplay archetype) |
 | `frontier_living_world` | End-to-end | 46 entities, 7 regions; FACTION + INFORMATION (`town_notice_board`) |
-| `generated_frontier_3_42` | End-to-end | 44 entities, 6 regions — procedurally generated; FACTION + INFORMATION content authored but deliberately left outside the anchored calibration corpus (no `grade_anchors.json` entries) |
+| `generated_frontier_3_42` | End-to-end | 44 entities, 6 regions — procedurally generated; FACTION + INFORMATION content authored; anchored at 200t (3 seeds) and 1000t (seed42) per TCK-20260707-SIMQ-GENERATED-FRONTIER-BASELINE-ANCHORS |
 | `frontier_extended` | End-to-end | 56 entities, 10 regions — largest world in the corpus; FACTION + INFORMATION (`town_notice_board`) |
 | `unit_faction_tension` | Unit | 18 entities, 3 regions — isolates FACTION only (TCK-20260704-SIMQ-CORPUS-UNIT-WORLDS-FACTION-INFO) |
 | `unit_information_source` | Unit | 16 entities, 1 region — isolates INFORMATION only (TCK-20260704-SIMQ-CORPUS-UNIT-WORLDS-FACTION-INFO) |
@@ -204,7 +204,11 @@ its *authoring justification*, not by every mechanic it happens to touch.
 
 - `staging_artifacts/TCK-20260704-SIMQ-CORPUS-TIERS-EPIC/investigation.md` — full evidentiary
   source for the mechanic inventory (§1) and scale diversity tables/gap analysis (§2) this doc
-  summarizes
+  summarizes. **Path no longer resolves** — `staging_artifacts/` is gitignored and this pre-ticket
+  epic-scoping doc was never migrated to `stored_artifacts/` before being lost; see
+  `tickets/done/TCK-20260707-EPIC-SCOPE-INVESTIGATION-DOC-MISSING.md` for the root cause. The tables
+  this doc summarizes have been independently re-verified against ground truth (`world.yaml`/
+  `world_compile_report.json`, `test_corpus_diversity.py::EXPECTED_DISTINCT_POPULATED_FACTIONS`).
 - `docs/guidelines/design_patterns.md` — Pattern 6, "Compile-Time Pillar Activation Pattern"
 - `docs/simulation_quality/eval_matrix_results.md` — calibration grade tables and AC6/exception
   history for the regression-tier worlds

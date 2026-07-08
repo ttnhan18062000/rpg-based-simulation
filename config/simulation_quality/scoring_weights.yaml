@@ -131,6 +131,7 @@ WORLD:
   natural_lifecycle: 1.0
   persistent_structure: 1.0
   hazard_active: 1.0
+  infrastructure_damaged: 1.0
   calamity_dormant: -8.0
   world_depopulating: -10.0
   world_static: -6.0

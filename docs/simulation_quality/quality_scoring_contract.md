@@ -880,7 +880,7 @@ WD-14 (`camp lifecycle`), WD-15 (`demographics`)
 `region_transformed`, `region_trauma_delta`, `region_ownership_changed`,
 `ecology_cycle_completed`, `spawn_cadence_fired`, `demographic_birth`,
 `demographic_mortality`, `camp_constructed`†, `hazard_drain_applied`,
-`threat_evolved`, `node_recharged`
+`threat_evolved`, `node_recharged`, `building_sabotaged`
 
 †`camp_constructed` is registered, not currently emittable — see
 `event_type_coverage.md` §3.9.
@@ -899,6 +899,7 @@ WD-14 (`camp lifecycle`), WD-15 (`demographics`)
 | Demographic mortality event | +1 | `natural_lifecycle` |
 | Camp constructed | +1 | `persistent_structure` |
 | Hazard drain applies damage in hazardous region | +1 | `hazard_active` |
+| Building takes sabotage damage (hp_delta < 0 on building_updates) | +1 | `infrastructure_damaged` |
 | Zero calamity events in run of 500+ ticks | −8 | `calamity_dormant` |
 | Zero spawn cadence fires (no monster repopulation after depletion) | −10 | `world_depopulating` |
 | Zero region transformations in run of 1000+ ticks | −6 | `world_static` |
@@ -1002,6 +1003,7 @@ When adding a new scorer rule or new pillar, consult this registry first:
 | SQ-20 | Is the world producing history (chronicle entries, milestones)? | NARRATIVE | FACTION | `chronicle_entry_created`, `narrative_milestone` | Faction milestones contribute to chronicle: FACTION secondary |
 | SQ-21 | Do entities behave as distinct RPG archetypes? | COGNITION | PROGRESSION | `decision_divergence_detected`, `trait_expressed` | Class divergence through personality: COGNITION; through stat growth: PROGRESSION |
 | SQ-22 | Is the scenario progressing toward its objectives? | NARRATIVE | AGENCY | `scenario_objective_progressed`, `scenario_stalled` | Scenario stall is NARRATIVE; underlying action stall is AGENCY secondary |
+| SQ-23 | Does infrastructure sabotage register as a real-world consequence? | WORLD | — | `building_sabotaged` | Building damage is WORLD-owned per building-events-have-no-existing-pillar-owner (§7.3); do not duplicate in FACTION even though urban_political's sabotage framing is faction-conflict-adjacent |
 
 ---
 
@@ -1067,6 +1069,49 @@ class QualityProfile:
 Example: `QualityProfile("dungeon_crawl", {PillarId.COMBAT: 2.0, PillarId.FACTION: 0.1})`.
 
 Profiles are defined in `src/simulation_quality/profiles.py` — not in world.yaml.
+
+### 7.5 Pillar Completeness Audit (2026-07)
+
+Per the user's request during `TCK-20260707-SIMQ-DEEP-COVERAGE-EPIC` scoping ("consideration of
+new pillars if warranted"), four candidate dimensions were checked against the §7.1 bar for a new
+top-level pillar. Source: `staging_artifacts/TCK-20260707-SIMQ-DEEP-COVERAGE-EPIC/investigation.md`
+§2. Each candidate below was re-verified against current repo state rather than trusted from that
+investigation snapshot.
+
+| Candidate dimension | Owning system (verified) |
+|---|---|
+| Determinism / replay-fidelity | `tests/certification/`, `tests/integration/kernel/test_long_run_determinism.py`, `tests/integration/observability/test_phase28_observability_determinism.py`, `tests/unit/kernel/test_replay_determinism.py` |
+| Performance / tick-time budget | `tests/perf/` (38 files), tied to `docs/engine/performance_contract.md`'s hardware classes; SimQ's own overhead is separately budgeted in `tests/simulation_quality/test_performance.py` |
+| Save/checkpoint integrity | `tests/integration/kernel/test_checkpoint_reproducibility.py`, `tests/unit/engine/test_scenario_checkpointer.py` |
+| Content/catalog health | `src/content/validator.py`'s `CAT-REL-001`–`CAT-REL-004` and `CAT-REL-011`–`CAT-REL-019` rules (non-contiguous range; there is no `CAT-REL-005`–`CAT-REL-010`) |
+
+§1's own "What this module is NOT" table already scopes SimQ away from determinism (owned by
+`hard_law_monitor`/replay certification, not this module) and performance (`perf_baseline_policy.md`)
+explicitly. A pillar duplicating either would violate that scope boundary. Checkpoint integrity and
+content/catalog health are each likewise owned end-to-end by a dedicated existing system outside
+`src/simulation_quality/`. **None of the four candidates justify a new top-level pillar.**
+
+One genuine, narrow gap was found (investigation.md §2.6): `building_sabotage` (pipeline phase 15
+per `docs/engine/authoritative_pipeline.md`, `src/engine/sabotage.py::BuildingSabotageSystem.resolve()`)
+is a live, non-dead mechanic — it resolves `SABOTAGE` / `ENTITY_ACT(action=SABOTAGE)` intents
+directed at buildings and mutates `building_updates` (`hp_delta`, `functional_set`) through the
+authoritative pipeline. It is exercised by real corpus content (`urban_political`'s resolved world
+spec at `data/worlds/urban_political/resolved/world.resolved.yaml` and
+`data/content/world_modules/trading_company_hub.yaml`), but emits no
+`ObservabilityEventEnvelope`/`SimulationEvent`, so it is invisible to every pillar's event-type/tag
+list — including WORLD's own list in §5 (`calamity_spawned`, `boss_spawned`, `region_transformed`,
+etc.; none cover building damage or functional-state changes).
+
+Applying §7.1 vs §7.2: this is a single additional signal on an existing subsystem's usage question
+("is the world itself alive") — not a new usage question requiring its own pillar — so it is a new
+**WORLD-pillar scoring rule**, not an 11th top-level pillar. `FACTION` is a plausible secondary owner
+given `urban_political`'s faction-conflict framing, but per §7.3's no-dual-ownership rule, WORLD is
+the cleaner primary: no existing pillar currently claims building-state events, so there is no
+conflict to resolve by picking a secondary. This gap is tracked and implemented by
+`TCK-20260707-SIMQ-BUILDING-SABOTAGE-SIGNAL` (event-emission prerequisite plus the WORLD-pillar
+scoring rule itself), which cites this subsection as its evidence source.
+
+**Conclusion: no new top-level SimQ pillar is justified at this time.**
 
 ---
 

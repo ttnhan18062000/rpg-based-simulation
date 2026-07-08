@@ -1,3 +1,10 @@
+---
+status: active
+layer: simulation
+authority: P1
+audience: developer
+---
+
 # SimQ Multi-Seed / Multi-Tick Evaluation Matrix Results
 
 **Ticket:** TCK-20260702-SIMQ-EVAL-MATRIX
@@ -742,6 +749,11 @@ response (region: `moon_cave`, the actual resolved region id — corrected from 
 populated) deliberately received no tension override** — only `arcane_circle` from that module is
 populated.
 
+**Superseded by the new anchored section below, added by
+`TCK-20260707-SIMQ-GENERATED-FRONTIER-BASELINE-ANCHORS`** — retained here for traceability only.
+The "zero existing anchors, deliberately receives none" framing below no longer reflects this
+world's state.
+
 **This world has zero existing `grade_anchors.json` entries and deliberately receives none from this
 ticket** (per the ticket's own scope: "re-verify existing calibration anchors," which does not apply
 here — newly anchoring a world is a materially bigger task than re-verifying one, out of this
@@ -753,6 +765,100 @@ corpus by design; a future ticket to newly-anchor it is a separate, larger scope
 | Run | FACTION | INFORMATION | COGNITION |
 |---|---|---|---|
 | seed{42,123,456}_200t | S (29 hits) | B (1 hit) | B (2 hits) |
+
+---
+
+### generated_frontier_3_42 — first-ever grade anchors (200t × 3 seeds, 1000t × seed42)
+
+**Added by `TCK-20260707-SIMQ-GENERATED-FRONTIER-BASELINE-ANCHORS`.** This section supersedes the
+"FACTION + INFORMATION, content-only, NO new anchor" section immediately above: this world now has
+its **first-ever `grade_anchors.json` entries** — 3 seeds anchored at 200t (`FAST_ANCHOR_KEYS`) and
+1 seed (42) anchored at 1000t (`SLOW_ANCHOR_KEYS`). The prior section's "remains outside the
+anchored calibration corpus by design" statement is no longer accurate; it is retained above only
+as a historical record of that ticket's own scope decision at the time.
+
+**Seed-count decision:** 200t is anchored at all 3 seeds (42, 123, 456) because the calibration data
+already existed on disk (produced one day earlier by
+`TCK-20260704-SIMQ-CORPUS-E2E-CONTENT-EXPANSION`) and 3-seed/200t is this corpus's dominant
+convention for the tier — reuse was free. 1000t is anchored at seed42 only: no 1000t data existed
+for this world before this ticket, every additional seed at that tier is a genuinely fresh, non-free
+engine run whose cost compounds onto every future `evaluate-full`, and the acceptance criteria only
+require "at least one" long-run anchor. seed42 was chosen for direct comparability with the existing
+200t seed42 data and because it is the corpus's universal primary seed.
+
+**Live compile/run confirmation (Scope item 1):** a fresh 200t seed42 run was re-executed and its
+`quality_report.json` compared field-for-field against the existing on-disk artifact — `raw_score`,
+`normalized_score`, `grade`, and `event_count` matched exactly for all 10 pillars (only `run_id`,
+`generated_at`, and per-event random `event_id` hashes differed, as expected). This confirms the
+engine is deterministic by seed for this world and stands in for a seed123/seed456 determinism
+spot-check as well (same tooling, same world, same day of origin as the existing seed123/seed456
+artifacts). The on-disk seed42 200t artifact was overwritten with this fresh run.
+
+#### 200t (seeds 42 / 123 / 456)
+
+| Pillar | seed42 | seed123 | seed456 |
+|---|---|---|---|
+| COGNITION | B | B | B |
+| AGENCY | C | C | C |
+| COMBAT | A | A | A |
+| FACTION | S | S | S |
+| ECONOMY | C | C | C |
+| PROGRESSION | B | B | B |
+| SOCIAL | C | C | C |
+| INFORMATION | B | B | B |
+| WORLD | B | B | B |
+| NARRATIVE | A | A | A |
+
+All 3 seeds grade identically (overall grade A for all three). AGENCY=C and SOCIAL=C are
+archetype-correct (`ENABLE_ADVENTURE_ROUTING`/`ENABLE_SOCIAL_COOPERATION` both OFF for this world —
+see the AGENCY Cross-World Design Note elsewhere in this document). ECONOMY=C at 200t reflects no
+merchant/Gini-threshold-crossing content having fired yet in this window.
+
+#### 1000t (seed 42 — new, this world's first long-run data point)
+
+| Pillar | 200t | 1000t | Shift | Attribution |
+|---|---|---|---|---|
+| COGNITION | B | B | held | raw_score grew 3→45 (events 2→9, new `subjective_divergence` loop flag) — genuine accumulation, not dilution; stayed within B band |
+| AGENCY | C | C | held | 0 events both durations — archetype baseline (`ENABLE_ADVENTURE_ROUTING=OFF`) |
+| COMBAT | A | B | **A→B** | raw_score grew 32→174 (events 16→96) but `effective_denom` grew faster; also 6 new `entity_killed` negative events (ticks 982–1000) — correlates with the population-erosion finding below, not a scoring artifact alone |
+| FACTION | S | A | **S→A** | raw_score and event_count are **identical** at both durations (145.0 / 29 events) — zero new diplomatic transitions after tick ~200, so the shift is pure `effective_denom` dilution (`floor_tick` growing from 50 to 250), matching the already-documented `dungeon_crawl` FACTION S→A→B trajectory. Not a bug. |
+| ECONOMY | C | B | **C→B** | 0→24 events — genuine new economic activity accumulating past tick 200 (`inflation_controlled` loop flag newly active), not a dilution artifact |
+| PROGRESSION | B | B | held | raw_score grew 16→121 (events 9→44) — stayed within B band |
+| SOCIAL | C | C | held | 0 events both durations — archetype baseline (no social-cooperation content) |
+| INFORMATION | B | B | held | raw_score and event_count identical at both durations (2.0 / 1 event) — the single `pending_information_responses` tick-0 fire, held flat by weight-scaling (per the `urban_political` precedent); did not cross the B/C boundary |
+| WORLD | B | B | held | raw_score grew 56→174 (events 41→95) — stayed within B band |
+| NARRATIVE | A | A | held | raw_score grew 180→1040 (events 36→208) — sustained quest/chronicle activity, stayed within A band |
+
+Overall grade: A (200t) → B (1000t). The only genuine letter-grade shifts are FACTION (S→A,
+`effective_denom` dilution, architecturally intentional per
+`docs/simulation_quality/quality_scoring_contract.md` §4.4) and COMBAT (A→B, dilution plus a
+genuine late-run attrition signal — see population finding below). ECONOMY actually improved
+(C→B) as new content activated past tick 200. No `diplomacy_dormant`, `faction_monopoly`,
+`tension_oscillation`, or `belief_system_dormant` negative markers fired in either report
+(`negative_count: 0` for FACTION, COGNITION, and INFORMATION at both durations) — the FACTION and
+INFORMATION shifts are confirmed normalization effects, not genuine regression mechanisms.
+
+**Population-health finding (Step 5, ad hoc cross-check, non-gating for this ticket but a
+significant new result):** `generated_frontier_3_42` was previously only exercised to 300 ticks
+(via `test_population_stability`) and 200 ticks (via calibration). Driving the same
+`WorldCompiler.compile` → `Kernel.tick_once()` pattern to 1000 ticks at seed 42, sampling
+`alive_count` every 100 ticks against the same 60%-alive-of-starting-44 floor (26.4), population
+**holds** through tick 800 (81.8% → 79.5% → 65.9% → 70.5% → 63.6%, all above floor) but then
+**collapses** between tick 800 and tick 1000: 28/44 (63.6%) at tick 800 → 15/44 (34.1%) at tick 900
+→ 4/44 (9.1%) at tick 1000 — well below the 60% floor at both the 900 and 1000 checkpoints. This
+correlates with the 6 `entity_killed` COMBAT events observed at ticks 982–1000 in the 1000t
+calibration report above, though the checkpoint data shows the erosion beginning by tick 900,
+earlier than those specific worst-events entries. **This is a genuine new finding, not previously
+known** — `generated_frontier_3_42` correctly passes `test_population_stability` (which only runs
+to tick 300, so it does not exercise this range) and is therefore not a fit for
+`KNOWN_POPULATION_COLLAPSE_WORLDS` (`tests/unit/worldassembly/test_corpus_diversity.py`), which is
+keyed to that existing 300-tick test — this late-tick collapse (800→1000) was never previously
+exercised or observed by any existing test. Per this ticket's Out of Scope, the underlying cause is
+**not** investigated or fixed here — filed as
+`TCK-20260708-GENERATED-FRONTIER-LATE-TICK-POPULATION-COLLAPSE` (root-cause investigation, fix, and
+a new extended-window regression guard past tick 800, since no existing test covers this range).
+The 1000t anchor is still landed as-is (AC3 requires it) — the anchor reflects the world's actual
+measured behavior at 1000t, collapse included, per this document's own evidence-first convention.
 
 ---
 
@@ -1017,8 +1123,8 @@ the same stasis pattern `simq_routing_test_seed456` hit pre-fix.
 
 Three new **stress-tier** worlds (per `docs/simulation_quality/corpus_tier_taxonomy.md`'s
 classification: justified by scale/shape alone, not by exercising a new gated mechanic) fill the
-corpus's three named scale-diversity gaps
-(`staging_artifacts/EPIC-SCOPE-full-feature-world-coverage/investigation.md` §2): a
+corpus's three named scale-diversity gaps (§2 of the epic-scoping investigation doc — path no
+longer resolves, see `tickets/done/TCK-20260707-EPIC-SCOPE-INVESTIGATION-DOC-MISSING.md`): a
 many-factions/small-map world (gap 1), a resource-saturated/small-map world (gap 2), and a
 large-scale FACTION/INFORMATION world (gap 3). All 3 are built entirely from existing
 `data/content/world_modules/` catalog content — no new module was authored — and all 3 compiled
@@ -1176,3 +1282,176 @@ C→B pattern.
 Grades are identical across all 3 seeds — no anomalous pillar observed, and the FACTION/INFORMATION
 signals confirm both mechanics scale cleanly to a 62-entity/9-region composition authored from
 inception.
+
+---
+
+**2026-07-08 (`TCK-20260706-SIMQ-CORPUS-RESOURCE-REGION-COVERAGE-AUDIT`): `orc_stronghold` follow-up
+closed.** The "recommended follow-up" flagged above (`resource_dense_basin` §, ~line 1094) — add
+`orc_stronghold` to `wood_node`'s (or `iron_vein`'s) `source_region_tags` — is now closed. Both
+`wood_node` and `iron_vein` gained an additive `"orc_stronghold"` entry in
+`data/content/world/resources.yaml`; `test_resource_opportunities_orc_stronghold_tag_gap`
+(`tests/unit/strategic/test_opportunities.py`) was rewritten from an "expects zero" regression
+document into a positive-coverage assertion. See `docs/parity_ledger/town_resource.yaml::TOWN-189`.
+
+**2026-07-08 — region-aware `ResourceNodeState` architecture recommendation: DEFER.** This ticket's
+corpus-wide audit found the same tag-omission pattern recurring in 5+ distinct regions
+(`orc_stronghold`, `sacred_grove`, `swamp_border_territory`, `haunted_battlefield`,
+`trading_hometown`, on top of the earlier `hometown`/`mountain_pass_zone`/`stone_outcrop` fixes) —
+this is a structural, not one-off, bug class. Despite that recurrence, the additive
+`metadata.source_region_tags` fix continues to fully resolve every case found so far with zero blast
+radius, while implementing region-aware gating requires a durable-state schema change to the frozen
+`ResourceNodeState` dataclass (`src/core/state.py`) plus touching the compiler, `ResourceOpportunityProvider`,
+`GuildAction.visit()`'s parallel scarcity computation, and dozens of test call sites across
+`tests/unit/strategic/`, `tests/unit/core/`, `tests/integration/`. Recommendation: **DEFER** — not
+adopt-now, not reject. Flag for re-evaluation if a 6th+ occurrence surfaces where the additive fix
+cannot express the needed distinction (e.g. two worlds wanting the same kind covered in one region but
+not another — not yet observed).
+
+**2026-07-08 — `GuildAction` dormant secondary risk.** `GuildAction.visit()` (`STRAT-244`,
+`src/town/guild.py`) independently reimplements the same `source_region_tags` gating check to compute
+a `scarcity` signal feeding `QuestGenerator`'s pressure-weighted template selection, but is currently
+unwired from any dispatched pipeline phase (confirmed: no `src/engine/` or `src/domains/` module
+references `GuildAction`). Not fixed in this ticket — a currently-dormant risk of the same root
+mechanism: if/when wired in, it would silently report `scarcity = 0.0` ("fully abundant") for any
+entity in an uncovered region. Guarded by `tests/architecture/test_guild_action_dormancy.py`, which
+will fail the moment `GuildAction` becomes live-dispatched, signaling this risk needs its own
+region-coverage evaluation.
+
+**2026-07-08 — `bandit_road`/`goblin_camp`/`wolf_den` disposition: intentional hazard-zone gap.**
+These three regions place zero resource nodes corpus-wide. Reviewed for disposition (this ticket's
+OQ-1); a human reviewer decided: intentional hazard-zone gap, no new content authored (matches the
+pattern of other danger regions in the corpus). Durable record: `docs/guidelines/
+intentional_divergences.md` §2.29, verified by
+`tests/unit/strategic/test_opportunities.py::test_resource_opportunities_bandit_road_and_wolf_den_no_resource_nodes`
+and the pre-existing `test_resource_opportunities_goblin_camp_and_haunted_battlefield_no_resource_nodes`.
+
+---
+
+## Long-Run Hot-Pillar Anchors (TCK-20260707-SIMQ-LONGRUN-HOTPILLAR-ANCHORS)
+
+**Single-seed (seed42) evidence** — see `staging_artifacts/TCK-20260707-SIMQ-LONGRUN-HOTPILLAR-ANCHORS/
+plan.md`'s seed-count rationale for why this ticket departs from the `dungeon_crawl`/`urban_political`
+3-seed convention: this is hypothesis-testing evidence, not a production regression-guard expansion,
+and `evaluate_simq.py --full` re-runs every anchored key on every future invocation, so extra seeds
+here would be a permanent recurring cost for marginal evidentiary gain at this stage. All four worlds'
+short-run peaks (200t/500t, seed42) are already 3-seed-confirmed elsewhere in this document; this
+section only extends the tick axis.
+
+**Step 2 outcome — `unit_faction_tension` profile need, confirmed live:** ran
+`unit_faction_tension_seed42_1000t` against the existing `default.yaml` fallback (no
+`config/simulation_quality/profiles/unit_faction_tension.yaml` exists). Result: FACTION graded `A`
+(`raw_score=145.0`, `event_count=29`, `negative_count=0`, `loop_flags=["diplomacy_active"]`) — a
+non-degenerate, interpretable one-band decay from the 200t `S` anchor, not a cliff to `C` and not a
+silent zero. **Verdict: `default.yaml` confirmed sufficient — no profile created.** No change to
+`tests/integration/test_world_profile_feature_flag_guardrail.py`'s
+`expected_world_flag_state.json` fixture was needed (`INFRA-262`'s existing default-fallback entry
+for this world already reflects reality). Because Step 2's run used the exact seed/tick combination
+Step 6 required, its output was committed directly as the `unit_faction_tension_seed42_1000t` anchor
+— no redundant re-run.
+
+### Hypothesis 1 — AGENCY (`hero_guild_routing`, `simq_routing_test` @ 1000t): HOLDS
+
+| World | Tick | AGENCY | NARRATIVE | AGENCY event_count | AGENCY negative_count | loop_flags |
+|---|---|---|---|---|---|---|
+| hero_guild_routing | 500t (existing) | A | S | 687 | 0 | navigation_active |
+| hero_guild_routing | 1000t (new) | A | S | 987 | 0 | navigation_active |
+| simq_routing_test | 500t (existing) | A | S | 687 | 0 | navigation_active |
+| simq_routing_test | 1000t (new) | A | S | 987 | 0 | navigation_active |
+
+Both worlds' AGENCY grade holds at `A` and NARRATIVE holds at `S` from 500t to 1000t. `event_count`
+grew from 687 to 987 in both worlds (sustained route-selection activity, not a one-time burst), and
+`negative_count=0` with zero `worst_events` in either report — there is no `stasis_N` or
+`population_stasis` tag anywhere in the 1000t AGENCY breakdown for either world (contrast
+`simq_routing_test_seed456_500t`'s pre-fix `defer_with_reason` stasis collapse, documented above under
+"AC6 — AGENCY Confirmation"). The normalized score did fall (hero_guild_routing: 1.4207 → 1.0071;
+simq_routing_test: 1.4207 → 1.0071) purely from `effective_denom` growing (`floor_tick` doubling
+500→1000), consistent with §4.4's intentional dilution mechanic — event volume kept pace closely
+enough with the growing denominator to stay solidly inside the `A` band on both letter and margin.
+**No `stasis_N`/`population_stasis` mechanism explains any part of this data; the "hot" AGENCY/
+NARRATIVE peak is a genuine hold at 1000t, not a decay-toward-stasis or a normalization artifact
+crossing a grade boundary.**
+
+### Hypothesis 2 — FACTION (`unit_faction_tension` @ 1000t/2000t): DECAYS via `effective_denom`, extends the `dungeon_crawl` pattern
+
+This extends the `dungeon_crawl` FACTION C→S(200t)→A(500t/1000t)→B(2000t) trajectory documented above
+(see "FACTION/INFORMATION Content Expansion", `dungeon_crawl` subsection) rather than duplicating its
+write-up — `unit_faction_tension` is now the second S-tier-at-200t FACTION world with long-run data:
+
+| Tick | FACTION | raw_score | event_count | negative_count | normalized_score | loop_flags |
+|---|---|---|---|---|---|---|
+| 200t (existing) | S | — | 29 | 0 | — | diplomacy_active |
+| 1000t (new) | A | 145.0 | 29 | 0 | 0.58 | diplomacy_active |
+| 2000t (new) | B | 145.0 | 29 | 0 | 0.29 | diplomacy_active |
+
+`raw_score` and `event_count` are **byte-identical** between the 1000t and 2000t runs (145.0 / 29),
+and `negative_count=0` at both — the diplomatic transitions that drive this world's FACTION signal
+settle early (matching `sandbox_world`'s "already proven population-stable to 2000 ticks" module
+pair, `frontier_village_core` + `wolf_den_near_forest`) and never repeat. `normalized_score` halves
+exactly (0.58 → 0.29) as `floor_tick` doubles (250 → 500) between 1000t and 2000t. None of
+`diplomacy_dormant`, `faction_monopoly`, or `tension_oscillation` appear in either report's
+`loop_flags` or `worst_events`. **This is pure `effective_denom` dilution — the same mechanism
+already documented for `dungeon_crawl`'s A→B transition — not a genuine drift bug.** This is the
+second independent world confirming the pattern; `INFRA-255`'s rationale note is strengthened, not
+merely repeated, by this second data point.
+
+### Hypothesis 3 — COGNITION (`unit_selfmodel_pilot` @ 1000t): HOLDS
+
+| Tick | COGNITION | raw_score | event_count | negative_count | normalized_score | loop_flags |
+|---|---|---|---|---|---|---|
+| 200t (existing) | S | — | 3200 | — | — | self_model_active |
+| 1000t (new) | S | 15196.0 | 15161 | 0 | 15.196 | self_model_active |
+
+COGNITION holds `S` at 1000t. `event_count` (15161) is consistent with `self_model_updated` firing
+unconditionally every tick for every alive/active entity (as established in the 200t analysis above,
+`event_count = alive_entities × ticks`) continuing through 1000 ticks — not front-loaded at world
+init. `negative_count=0` and no `worst_events` — neither `belief_system_dormant` nor
+`goal_lock_no_cognition` fired anywhere in the 1000t run. **The 200t COGNITION=S peak is a genuine
+hold through 1000t, not a decay and not a bug.**
+
+### Hypothesis 4 — SOCIAL persistence (`urban_political` @ 2000t): HOLDS, but confounded by a severe, separately-tracked population collapse
+
+| Tick | SOCIAL | raw_score | event_count | negative_count | normalized_score |
+|---|---|---|---|---|---|
+| 1000t (existing) | S | 15983.0 | 6627 | 2105 | 15.983 |
+| 2000t (new) | S | 27108.0 | 15177 | 6720 | 13.554 |
+
+SOCIAL holds `S` at 2000t (overall run grade `A`). `event_count` and `negative_count` (mostly
+`contract_expired_offer`/`offer_dead` tags) both **grew** from 1000t to 2000t rather than shrinking —
+this pillar's grade is not being suppressed by declining population.
+
+**Step 9 mandatory population cross-check (per plan.md, human-reviewed decision 2026-07-08: proceed
+and document, not defer):** an ad hoc script mirroring `test_population_stability`'s method
+(`tests/unit/worldassembly/test_corpus_diversity.py`) but extended to 300/500/1000/1500/2000-tick
+checkpoints was run against the same world/seed as the 2000t calibration (not committed as a pytest
+test, per Step 9's scope):
+
+| tick | alive/starting | % alive | 60% floor (18.0) |
+|---|---|---|---|
+| 300 | 17/30 | 56.7% | below floor (matches `TCK-20260708-DUNGEON-URBAN-POPULATION-COLLAPSE`'s recorded figure exactly) |
+| 500 | 17/30 | 56.7% | below floor |
+| 1000 | 14/30 | 46.7% | below floor |
+| 1500 | 6/30 | 20.0% | below floor |
+| 2000 | 7/30 | 23.3% | below floor |
+
+Population erosion is **not** a one-time dip that stabilizes — it continues throughout the full
+2000-tick run, reaching 23.3% alive by tick 2000 (worse than the already-known 56.7% at tick 300).
+This confirms `urban_political`'s population-collapse defect
+(`TCK-20260708-DUNGEON-URBAN-POPULATION-COLLAPSE`, OPEN, world-content/engine-balance root cause, not
+a SimQ scorer defect) is severe and ongoing, not a one-off. **Explicit statement per plan.md Step 11:
+the SOCIAL=S grade at 2000t must not be read in isolation from this collapse** — however, the
+observed *direction* of the confound is the opposite of what a naive "fewer entities → fewer social
+events" model would predict: SOCIAL `event_count` and `negative_count` both grew substantially from
+1000t to 2000t even as the surviving population fell from 46.7% to 23.3%. This suggests the remaining
+entities are generating a growing volume of (mostly failed/expired) contract-offer interactions
+per-capita as the population shrinks, not that the collapse is starving the SOCIAL pillar. This
+observation is additional evidence potentially useful to
+`TCK-20260708-DUNGEON-URBAN-POPULATION-COLLAPSE`'s own root-cause investigation (combat/economy
+attrition dynamics), but is not a SimQ scoring bug in its own right and is not filed as a new,
+possibly-duplicate follow-up per the Anti-Drift Hazards' "do not conflate" rule — it is left here as
+a cross-reference for that ticket's investigator.
+
+**Summary — no genuine bug found across any of the four hypotheses.** AGENCY holds, FACTION decays
+purely via the already-documented `effective_denom` mechanism (second confirming data point),
+COGNITION holds, and SOCIAL holds (confounded by, but not caused by, the separately-tracked
+population-collapse defect). No follow-up ticket is filed under Scope item 5, since no decay
+observed here is attributable to a genuine drift/decay bug in any scorer.

@@ -1,3 +1,11 @@
+---
+status: authoritative
+layer: systems
+authority: P1
+audience: developer
+last_verified: 2026-06-23
+---
+
 # Faction System Contract
 
 **Status**: AUTHORITATIVE — E53A–E53D complete. Last verified: 2026-06-23.

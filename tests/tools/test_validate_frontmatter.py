@@ -705,3 +705,30 @@ class TestEnumAntiDrift:
 
     def test_tag_taxonomy_effective_date(self):
         assert TAG_TAXONOMY_EFFECTIVE_DATE == "20260704"
+
+
+# ---------------------------------------------------------------------------
+# Group 9 — Real-tree regression pin: previously frontmatter-missing docs
+# ---------------------------------------------------------------------------
+
+_PREVIOUSLY_FRONTMATTER_MISSING_DOCS = [
+    "docs/engine/legacy_replacement_ledger.md",
+    "docs/engine/phase12_entry_package.md",
+    "docs/engine/phase13_retirement_manifest.md",
+    "docs/engine/engineering_playbook_m10.md",
+    "docs/engine/project_lawbook_m10.md",
+    "docs/engine/supported_progression_surface_phase5.md",
+    "docs/mechanics/content_usage_matrix.md",
+    "docs/systems/faction_contract.md",
+    "docs/world/demographics_contract.md",
+    "docs/simulation/domains/party_contract.md",
+    "docs/simulation_quality/event_type_coverage.md",
+    "docs/simulation_quality/eval_matrix_results.md",
+]
+
+
+class TestPreviouslyFrontmatterMissingDocs:
+    @pytest.mark.parametrize("rel_path", _PREVIOUSLY_FRONTMATTER_MISSING_DOCS)
+    def test_all_previously_frontmatter_missing_docs_now_pass_validation(self, rel_path):
+        errors = validate_file(_REPO_ROOT / rel_path, content_type_override="doc", registry=None)
+        assert errors == [], f"{rel_path}: expected no violations, got {errors}"

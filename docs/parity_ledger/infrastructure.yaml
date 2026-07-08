@@ -2933,6 +2933,11 @@
     hero_guild_routing.yaml) from first compile: AGENCY graded A at all 3 measured seeds
     (42/123/456, 500t) — see eval_matrix_results.md's "Unit-Tier Isolation Worlds" section for the
     full table.
+    (TCK-20260707-SIMQ-LONGRUN-HOTPILLAR-ANCHORS, seed42) AGENCY=A holds through 1000t for both
+    hero_guild_routing and simq_routing_test — event_count grew 687→987 in both worlds,
+    negative_count=0, and no stasis_N/population_stasis tag appears in either 1000t report; the
+    normalized-score dip (1.4207→1.0071) is pure effective_denom growth, not a decay-toward-stasis
+    signal. See eval_matrix_results.md's "Long-Run Hot-Pillar Anchors" section, Hypothesis 1.
 - id: INFRA-238
   text: "CombatScorer covers all contract §5 COMBAT rules: combat_active, combat_resolved,
     survival_tension, tactical_variety (per unique modifier), attrition, early_extinction
@@ -2969,7 +2974,21 @@
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: src/simulation_quality/scorers/cognition.py::CognitionScorer.score
+  v2_evidence: >
+    src/simulation_quality/scorers/cognition.py::CognitionScorer.score
+    (TCK-20260707-SIMQ-LONGRUN-HOTPILLAR-ANCHORS, seed42) unit_selfmodel_pilot_seed42_1000t:
+    COGNITION=S holds through 1000t (raw_score=15196.0, event_count=15161, negative_count=0,
+    self_model_active) — same S grade as the 200t anchor, no belief_system_dormant or
+    goal_lock_no_cognition observed. See eval_matrix_results.md's "Long-Run Hot-Pillar Anchors"
+    section, Hypothesis 3.
+    (TCK-20260707-SIMQ-GENERATED-FRONTIER-BASELINE-ANCHORS, seed42) this world's first
+    COGNITION data point of any kind: generated_frontier_3_42_seed42_200t COGNITION=B
+    (raw_score=3.0, event_count=2, self_model_active) →
+    generated_frontier_3_42_seed42_1000t COGNITION=B (raw_score=45.0, event_count=9,
+    negative_count=0, self_model_active + subjective_divergence) — grade holds at B; raw_score
+    grew with genuine new event accumulation past tick 200, not effective_denom dilution; no
+    belief_system_dormant fired. See eval_matrix_results.md's
+    "generated_frontier_3_42 — first-ever grade anchors" section.
   proof_type: null
   test_path: tests/simulation_quality/test_cognition_scorer.py
   divergence_note: null
@@ -2981,7 +3000,21 @@
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: src/simulation_quality/scorers/faction.py::FactionScorer.score
+  v2_evidence: >
+    src/simulation_quality/scorers/faction.py::FactionScorer.score
+    (TCK-20260707-SIMQ-LONGRUN-HOTPILLAR-ANCHORS, seed42) unit_faction_tension: FACTION=S(200t) →
+    A(1000t, raw_score=145.0/event_count=29/negative_count=0) → B(2000t, byte-identical
+    raw_score/event_count) — pure effective_denom dilution (normalized_score halves exactly as
+    floor_tick doubles), no diplomacy_dormant/faction_monopoly/tension_oscillation observed. See
+    eval_matrix_results.md's "Long-Run Hot-Pillar Anchors" section, Hypothesis 2.
+    (TCK-20260707-SIMQ-GENERATED-FRONTIER-BASELINE-ANCHORS, seed42) this world's first anchored
+    FACTION data point: generated_frontier_3_42_seed42_200t FACTION=S (raw_score=145.0,
+    event_count=29) → generated_frontier_3_42_seed42_1000t FACTION=A (raw_score=145.0,
+    event_count=29, negative_count=0, identical to the 200t values) — matches the same pure
+    effective_denom-dilution pattern already documented for unit_faction_tension/dungeon_crawl
+    (zero new diplomatic transitions after ~tick 200, no diplomacy_dormant/faction_monopoly/
+    tension_oscillation observed). See eval_matrix_results.md's
+    "generated_frontier_3_42 — first-ever grade anchors" section.
   proof_type: null
   test_path: tests/simulation_quality/test_faction_scorer.py
   divergence_note: null
@@ -3466,7 +3499,14 @@
     TCK-20260702-SIMQ-EVAL-MATRIX expanded corpus to 25 entries (14 fast, 11 slow) via
     multi-seed/multi-tick matrix: dungeon_crawl×{42,123,456}×{500t,1000t,2000t},
     urban_political×{42,123,456}×{500t,1000t}, simq_routing_test×{123,456}×{500t}
-    (ENABLE_ADVENTURE_ROUTING=ON), sandbox_world×{42}×{2000t}. All 26 regression tests pass."
+    (ENABLE_ADVENTURE_ROUTING=ON), sandbox_world×{42}×{2000t}. All 26 regression tests pass.
+    STALENESS FLAG (TCK-20260707-SIMQ-GENERATED-FRONTIER-BASELINE-ANCHORS): the '25 run keys
+    (14 fast, 11 slow)' text above is out of date — live count as of this ticket is 71
+    non-metadata grade_anchors.json keys (53 FAST_ANCHOR_KEYS + 18 SLOW_ANCHOR_KEYS), already
+    flagged stale once by TCK-20260707-SIMQ-LONGRUN-HOTPILLAR-ANCHORS and now further inflated
+    by this ticket's 4 new generated_frontier_3_42 entries (3 fast + 1 slow). Flagging only, per
+    that sibling ticket's precedent — the full count-text correction is a separate ticket's
+    scope."
   proof_type: null
   test_path: "tests/simulation_quality/test_scenario_coverage.py;
     tests/simulation_quality/test_grade_regression.py::test_grade_within_anchor_band;
@@ -3619,6 +3659,10 @@
     same raw_score received B at 401t vs A at 200t (H2 dilution artifact). Floor prevents
     S-inflation for initialization-burst pillars (AGENCY fires all events at tick 1).
     Rationale class: Bug Fix / Bounded.
+    (TCK-20260707-SIMQ-LONGRUN-HOTPILLAR-ANCHORS) unit_faction_tension_seed42 1000t→2000t FACTION
+    A→B is a second confirming data point: raw_score/event_count byte-identical (145.0/29) across
+    both runs, normalized_score halves exactly as floor_tick doubles (250→500) — matching
+    dungeon_crawl's already-documented A→B pattern.
   support_boundary: null
 
 - id: INFRA-262

@@ -54,11 +54,21 @@ ANCHORED_WORLD_BANDS: dict[str, tuple[int, int | None]] = {
 # regression-tier band set — they are added only to the population-stability guard, per
 # that ticket's plan.md Step 5 (do not fork a new test file; do not add them to
 # ANCHORED_WORLD_BANDS, whose entity-count-band/hazard-kind tests are out of this ticket's scope).
+#
+# dungeon_crawl / sandbox_world / generated_frontier_3_42 / urban_political
+# (TCK-20260707-CORPUS-POPULATION-STABILITY-COVERAGE-GAP) were compiled corpus worlds that
+# never carried population-stability coverage at all — not anchored-tier (ANCHORED_WORLD_BANDS),
+# not unit-tier. Added here for the same reason: out of scope to fold them into
+# ANCHORED_WORLD_BANDS (entity-count-band anchoring is a separate concern).
 POPULATION_STABILITY_WORLDS = list(ANCHORED_WORLD_BANDS.keys()) + [
     "unit_faction_tension",
     "unit_information_source",
     "unit_selfmodel_pilot",
     "hero_guild_routing",
+    "dungeon_crawl",
+    "sandbox_world",
+    "generated_frontier_3_42",
+    "urban_political",
 ]
 
 # All 10 worlds' distinct-populated-faction counts, verified against
@@ -82,9 +92,13 @@ EXPECTED_DISTINCT_POPULATED_FACTIONS: dict[str, int] = {
     "frontier_marches": 9,
 }
 
-# The 10 modules Step 4 brought into the anchored corpus for the first time.
-# ``moon_cult_ruins`` is the only module deliberately left unanchored (out of
-# scope — see plan.md Step 4 "Scope boundary").
+# The 10 modules Step 4 (of the corpus-uplift ticket this constant originates from) brought
+# into the anchored corpus for the first time. ``moon_cult_ruins`` was deliberately left
+# unanchored at that time (out of that ticket's scope — see plan.md Step 4 "Scope boundary")
+# because it was unique to generated_frontier_3_42, which had no grade_anchors.json entries of
+# its own yet. TCK-20260707-SIMQ-GENERATED-FRONTIER-BASELINE-ANCHORS anchored that world for the
+# first time, which anchors moon_cult_ruins as a side effect — it is now included below instead
+# of tracked as the sole holdout. No module in the corpus remains unanchored as of that ticket.
 NEWLY_ANCHORED_MODULES = [
     "forest_warden_grove",
     "orc_clan_territory",
@@ -96,8 +110,35 @@ NEWLY_ANCHORED_MODULES = [
     "nomadic_herd",
     "settled_quarter",
     "sunken_swamp_border",
+    "moon_cult_ruins",
 ]
-STILL_UNANCHORED_MODULE = "moon_cult_ruins"
+
+# Genuine pre-existing population-collapse defects surfaced by adding coverage for these worlds
+# (TCK-20260707-CORPUS-POPULATION-STABILITY-COVERAGE-GAP is coverage-only and out of scope for the
+# content/config fix) — root-cause fix tracked separately at
+# TCK-20260708-DUNGEON-URBAN-POPULATION-COLLAPSE. Remove each entry once that ticket lands its fix.
+KNOWN_POPULATION_COLLAPSE_WORLDS: dict[str, str] = {
+    "dungeon_crawl": (
+        "alive=14/32 (43.8%) at tick 50, floor 60% (19.2) — early-tick collapse "
+        "(TCK-20260708-DUNGEON-URBAN-POPULATION-COLLAPSE)"
+    ),
+    "urban_political": (
+        "alive=17/30 (56.7%) at tick 300, floor 60% (18.0) — late-tick erosion "
+        "(TCK-20260708-DUNGEON-URBAN-POPULATION-COLLAPSE)"
+    ),
+}
+
+# Same population-stability gap (TCK-20260707-CORPUS-POPULATION-STABILITY-COVERAGE-GAP) also
+# left test_hazard_kind_completeness's coverage at just the 8 ANCHORED_WORLD_BANDS worlds. This
+# list is deliberately kept separate from ANCHORED_WORLD_BANDS — folding these 4 worlds into
+# ANCHORED_WORLD_BANDS would also pull them into test_entity_count_band's entity-count-band
+# anchoring, which is out of this ticket's scope.
+HAZARD_KIND_COMPLETENESS_WORLDS = list(ANCHORED_WORLD_BANDS.keys()) + [
+    "dungeon_crawl",
+    "sandbox_world",
+    "generated_frontier_3_42",
+    "urban_political",
+]
 
 
 def _load_compile_report(world_id: str) -> dict[str, Any]:
@@ -183,7 +224,20 @@ def test_distinct_populated_factions(world_id: str, expected: int) -> None:
 # ---------------------------------------------------------------------------
 
 @pytest.mark.slow
-@pytest.mark.parametrize("world_id", POPULATION_STABILITY_WORLDS)
+@pytest.mark.parametrize(
+    "world_id",
+    [
+        pytest.param(
+            world_id,
+            marks=pytest.mark.xfail(
+                strict=False, reason=KNOWN_POPULATION_COLLAPSE_WORLDS[world_id]
+            ),
+        )
+        if world_id in KNOWN_POPULATION_COLLAPSE_WORLDS
+        else world_id
+        for world_id in POPULATION_STABILITY_WORLDS
+    ],
+)
 def test_population_stability(world_id: str) -> None:
     """Regression guard for Finding 3's early-tick collapse (investigation.md).
 
@@ -226,7 +280,7 @@ def test_population_stability(world_id: str) -> None:
 # 3. Hazard-kind completeness
 # ---------------------------------------------------------------------------
 
-@pytest.mark.parametrize("world_id", list(ANCHORED_WORLD_BANDS.keys()))
+@pytest.mark.parametrize("world_id", HAZARD_KIND_COMPLETENESS_WORLDS)
 def test_hazard_kind_completeness(world_id: str) -> None:
     """Every region with hazard_level > 0 must declare hazard_kind.
 
@@ -260,9 +314,3 @@ def test_module_family_anchored() -> None:
             f"module '{module_id}' should now be anchored (via one of {sorted(anchored_worlds)}) "
             "but does not appear in any anchored world's module list."
         )
-
-    assert STILL_UNANCHORED_MODULE not in covered_modules, (
-        f"'{STILL_UNANCHORED_MODULE}' was expected to remain the sole unanchored module "
-        "(see plan.md Step 4 scope boundary) — it now appears in an anchored world's "
-        "module list, so this test's exclusion list is stale and should be updated."
-    )

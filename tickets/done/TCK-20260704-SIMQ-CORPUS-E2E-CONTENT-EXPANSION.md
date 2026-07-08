@@ -244,6 +244,19 @@ calibration data, unrelated to this ticket).
 `make knowledge-index-update` (Step 11) ran clean: 5 files re-embedded, 1931 unchanged, 5429 chunks
 total.
 
+## Citation Correction (2026-07-08, TCK-20260707-EPIC-SCOPE-INVESTIGATION-DOC-MISSING)
+
+This ticket's citations above to `staging_artifacts/EPIC-SCOPE-full-feature-world-coverage/investigation.md`
+(later renamed to `staging_artifacts/TCK-20260704-SIMQ-CORPUS-TIERS-EPIC/investigation.md`) point to a
+pre-ticket epic-scoping investigation that was never migrated to `stored_artifacts/` and is now
+unrecoverable: `staging_artifacts/` is gitignored by repo policy, and full git history confirms no commit
+ever added a file at either path. This is a citation/traceability gap only -- every specific fact this
+ticket drew from that doc has been independently cross-validated against ground truth
+(`world.yaml`/`world_compile_report.json`,
+`test_corpus_diversity.py::EXPECTED_DISTINCT_POPULATED_FACTIONS`) by this ticket and/or
+`TCK-20260704-SIMQ-CORPUS-UNIT-WORLD-AGENCY` / `TCK-20260704-SIMQ-CORPUS-E2E-CONTENT-EXPANSION`. See
+`tickets/done/TCK-20260707-EPIC-SCOPE-INVESTIGATION-DOC-MISSING.md` for the full root-cause writeup.
+
 ## Test Summary
 All commands below were run against the working tree after all 8 worlds' content landed (final
 gate, Step 10 of plan.md) and passed with exit code 0 / 0 failures:

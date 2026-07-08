@@ -205,3 +205,19 @@ style):
 - None in the "Related Code Areas" — all listed files exist and were read directly.
 - No acceptance criterion references behavior that doesn't exist; the AC's "if routing is never
   enabled" branch is the one this investigation confirms applies.
+
+
+---
+
+## Citation Correction (2026-07-08, TCK-20260707-EPIC-SCOPE-INVESTIGATION-DOC-MISSING)
+
+This doc's citations above to `staging_artifacts/EPIC-SCOPE-full-feature-world-coverage/investigation.md`
+and/or its later rename, `staging_artifacts/TCK-20260704-SIMQ-CORPUS-TIERS-EPIC/investigation.md`, point
+to a pre-ticket epic-scoping investigation that was never migrated to `stored_artifacts/` and is now
+unrecoverable: `staging_artifacts/` is gitignored by repo policy, and full git history confirms no commit
+ever added a file at either path. This is a citation/traceability gap only -- every specific fact drawn
+from that doc has been independently cross-validated against ground truth
+(`world.yaml`/`world_compile_report.json`,
+`test_corpus_diversity.py::EXPECTED_DISTINCT_POPULATED_FACTIONS`) by
+`TCK-20260704-SIMQ-CORPUS-UNIT-WORLD-AGENCY` and/or `TCK-20260704-SIMQ-CORPUS-E2E-CONTENT-EXPANSION`. See
+`tickets/done/TCK-20260707-EPIC-SCOPE-INVESTIGATION-DOC-MISSING.md` for the full root-cause writeup.

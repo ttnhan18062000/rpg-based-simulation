@@ -362,3 +362,19 @@ version.
   world (composition-scoped overrides, confirmed by `resolver.py:637-646`'s per-composition
   application), but an implementer skimming across worlds could mistakenly assume consistency is
   required across worlds. It is not — each world's override is independent.
+
+
+---
+
+## Citation Correction (2026-07-08, TCK-20260707-EPIC-SCOPE-INVESTIGATION-DOC-MISSING)
+
+This doc's citations above to `staging_artifacts/EPIC-SCOPE-full-feature-world-coverage/investigation.md`
+and/or its later rename, `staging_artifacts/TCK-20260704-SIMQ-CORPUS-TIERS-EPIC/investigation.md`, point
+to a pre-ticket epic-scoping investigation that was never migrated to `stored_artifacts/` and is now
+unrecoverable: `staging_artifacts/` is gitignored by repo policy, and full git history confirms no commit
+ever added a file at either path. This is a citation/traceability gap only -- every specific fact drawn
+from that doc has been independently cross-validated against ground truth
+(`world.yaml`/`world_compile_report.json`,
+`test_corpus_diversity.py::EXPECTED_DISTINCT_POPULATED_FACTIONS`) by
+`TCK-20260704-SIMQ-CORPUS-UNIT-WORLD-AGENCY` and/or `TCK-20260704-SIMQ-CORPUS-E2E-CONTENT-EXPANSION`. See
+`tickets/done/TCK-20260707-EPIC-SCOPE-INVESTIGATION-DOC-MISSING.md` for the full root-cause writeup.

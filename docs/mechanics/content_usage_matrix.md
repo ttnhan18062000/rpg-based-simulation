@@ -1,3 +1,10 @@
+---
+status: active
+layer: mechanics
+authority: P1
+audience: developer
+---
+
 # Content Usage Matrix Report
 
 > [!IMPORTANT]

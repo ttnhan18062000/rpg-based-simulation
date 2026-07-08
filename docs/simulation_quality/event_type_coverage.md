@@ -1,3 +1,11 @@
+---
+status: authoritative
+layer: simulation
+authority: P1
+audience: developer
+last_verified: 2026-07-04
+---
+
 # SimQ Event Type Coverage
 
 **Status:** Certified Level 1 — Authoritative  
@@ -16,14 +24,14 @@
 
 | Category | Count | Notes |
 |---|---|---|
-| scored | 81 | +1 `contract_milestone_completed` (TCK-20260701-SIMQ-EMIT-CONTRACT-MILESTONE) |
+| scored | 82 | +1 `building_sabotaged` (TCK-20260707-SIMQ-BUILDING-SABOTAGE-SIGNAL) |
 | translation_gap | 0 | — |
 | engine_emission_gap | 0 | — |
 | no_engine_path | 1 | `camp_constructed` — no dynamic camp construction in simulation; scorer entry is premature |
 | p0_a_blocked | 3 | Unchanged — campaign/scenario gate |
 | unscored_intentional | 13 | Unchanged |
 
-**Last updated:** 2026-07-01 (TCK-20260701-SIMQ-EMIT-CONTRACT-MILESTONE)
+**Last updated:** 2026-07-07 (TCK-20260707-SIMQ-BUILDING-SABOTAGE-SIGNAL)
 
 **Translation table status:** Complete. All 8 `_TRANSLATE_SIMPLE` and 5 `_TRANSLATE_CONDITIONAL` entries in `quality_hub.py` are correct. No translation table gaps found.
 
@@ -97,6 +105,7 @@ All events below are emitted by the engine and reach at least one pillar scorer,
 | `threat_evolved` | event_extractor | WorldDynamicsScorer | 0 | trauma_score threshold crossing 25/50/75/100 — TCK-20260701-SIMQ-EMIT-WORLD-DYNAMICS |
 | `node_recharged` | event_extractor | WorldDynamicsScorer | 0 | remaining_charges 0 → >0 — TCK-20260701-SIMQ-EMIT-WORLD-DYNAMICS |
 | `hazard_drain_applied` | event_extractor | WorldDynamicsScorer | 322 | combat_upd.outcome_kind=="HAZARD" |
+| `building_sabotaged` | event_extractor | WorldDynamicsScorer | 0 | Emitted on hp_delta < 0 in building_updates (BuildingSabotageSystem.resolve()); 0 hits expected in all current calibration runs because no strategic/goal-selection/quest-reward code anywhere in src/ currently sets task_upd.work_kind_set="SABOTAGE" or payload_set["action"]="SABOTAGE" — confirmed via repo-wide grep (investigation.md Risk #1); this is a genuine engine emission path with no live producer yet, not a translation gap or missing-scorer gap. TCK-20260707-SIMQ-BUILDING-SABOTAGE-SIGNAL |
 | `lead_certainty_changed` | event_extractor | CognitionScorer | 0 | Strategic lead certainty state diff; see §3 note on `lead_certainty_updated`. Still 0 post-TCK-20260702-SIMQ-UPLIFT2-INFORMATION recalibration; same deferred-trigger gap |
 | `social_memory_created` | event_extractor | SocialScorer | 0 | trust_history new entry or delta ≥ 0.3; once per (entity_id, other_entity_id) per run — TCK-20260701-SIMQ-EMIT-SOCIAL-MEM |
 | `contract_milestone_completed` | event_extractor | SocialScorer | 0 | ACTIVE contract at 25%/50%/75% of duration; once per (contract_id, milestone) per run; attributed to source_id — TCK-20260701-SIMQ-EMIT-CONTRACT-MILESTONE |

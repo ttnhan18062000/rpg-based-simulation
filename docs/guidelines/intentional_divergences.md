@@ -438,6 +438,54 @@ This document is the canonical record of intentional behavior shifts in `src` co
 - **Verification**: tests/unit/core/test_registry_bridge.py, tests/unit/strategic/test_opportunities.py
 - **Status**: ACTIVE
 
+### 2.28 Corpus Resource-Region Tag-Gap Fix (TCK-20260706-SIMQ-CORPUS-RESOURCE-REGION-COVERAGE-AUDIT)
+- **Subsystem**: World / Resource Opportunities
+- **Old Behavior**: wood_node, iron_vein, herb_patch, healing_flower_patch, and spirit_wisp each had a
+  resource kind physically placed in a region by its composing world module, but the catalog's
+  source_region_tags allowlist (data/content/world/resources.yaml) omitted that region id, so
+  ResourceOpportunityProvider silently returned zero gather_resource opportunities for entities standing
+  there. Same root mechanism as §2.27 (hometown), recurring at corpus scale across 5 additional regions.
+- **New Behavior**: All five changes are purely additive extensions of `metadata.source_region_tags`
+  (or new blocks where none existed):
+  - `wood_node`: `["near_forest", "hometown"]` → `["near_forest", "hometown", "orc_stronghold",
+    "swamp_border_territory"]`
+  - `iron_vein`: `["old_mine", "mountain_pass_zone"]` → `["old_mine", "mountain_pass_zone",
+    "orc_stronghold", "trading_hometown"]`
+  - `herb_patch`: `["near_forest", "moon_cave", "hometown"]` → `["near_forest", "moon_cave", "hometown",
+    "swamp_border_territory"]`
+  - `healing_flower_patch`: no `metadata` block (fell through to the `node_flower`→`("near_forest",)`
+    legacy_id heuristic) → new `metadata.source_region_tags: ["near_forest", "sacred_grove"]`
+    (`"near_forest"` explicitly re-included so the prior heuristic coverage is preserved, not
+    silently dropped)
+  - `spirit_wisp`: no `metadata` block (resolved to `()`, no legacy_id branch matches this kind) → new
+    `metadata.source_region_tags: ["sacred_grove", "haunted_battlefield"]`
+- **Rationale**: **Bug Fix** (same class as §2.26/§2.27 — authoring staleness, not a deliberate design
+  decision). Each affected region already had a resource node physically placed there by its composing
+  world module (`orc_clan_territory.yaml`, `forest_warden_grove.yaml`, `sunken_swamp_border.yaml`,
+  `undead_battlefield.yaml`, `trading_company_hub.yaml`); the catalog's gating tags simply never caught
+  up to that placement.
+- **Verification**: `tests/unit/strategic/test_opportunities.py`, `tests/unit/core/test_registry_bridge.py`,
+  `tests/integration/content/test_resource_region_coverage_corpus.py` (parity ledger `TOWN-189`)
+- **Status**: ACTIVE
+
+### 2.29 Hazard-Zone Resource-Free Regions (TCK-20260706-SIMQ-CORPUS-RESOURCE-REGION-COVERAGE-AUDIT)
+- **Subsystem**: World / Resource Opportunities — Content Disposition
+- **Situation**: `bandit_road`, `goblin_camp`, and `wolf_den` carry zero resource-node content
+  corpus-wide — neither `scalable_bandit_camp.yaml` nor `bandit_road_trade_pressure.yaml` declares any
+  `resources:`/`resource_recipes:` for `bandit_road`; `goblin_camp_conflict.yaml` declares none for
+  `goblin_camp`; `wolf_den_near_forest.yaml` declares resources but its first-declared region is
+  `near_forest`, so the compiler places all of that module's nodes there, never in `wolf_den` itself.
+  Unlike the 5 regions closed by §2.28, no resource kind's `preferred_biomes` names any of these three
+  regions — there is no self-evident authoring intent either way.
+- **Decision**: This absence of resource content is an **intentional hazard-zone gap**, decided by human
+  review (2026-07-08) — hazard/combat regions do not offer foraging by design. No new resource content
+  is authored for any of the three regions.
+- **Rationale**: **Intentional Gameplay Change**.
+- **Verification**: `tests/unit/strategic/test_opportunities.py::test_resource_opportunities_bandit_road_and_wolf_den_no_resource_nodes`
+  (bandit_road, wolf_den) and the pre-existing
+  `test_resource_opportunities_goblin_camp_and_haunted_battlefield_no_resource_nodes` (goblin_camp)
+- **Status**: ACTIVE
+
 ---
 
 ## 3. Unsupported / Retired Behavior

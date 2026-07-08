@@ -29,6 +29,7 @@ class WorldDynamicsScorer(PillarScorer):
         "hazard_drain_applied",
         "threat_evolved",
         "node_recharged",
+        "building_sabotaged",
     )
 
     def __init__(self, weights: ScoringWeights) -> None:
@@ -168,6 +169,9 @@ class WorldDynamicsScorer(PillarScorer):
 
         if et == "hazard_drain_applied":
             return _rec(self.weights["hazard_active"], "hazard drain applied in hazardous region", ("hazard_active",))
+
+        if et == "building_sabotaged":
+            return _rec(self.weights["infrastructure_damaged"], "building took sabotage damage — real infrastructure consequence", ("infrastructure_damaged",))
 
         if et == "threat_evolved":
             return None  # threat_evolved not in scoring table but in event bus; no score defined

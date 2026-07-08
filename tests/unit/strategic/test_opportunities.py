@@ -230,19 +230,14 @@ def test_resource_opportunities_old_mine_iron_vein():
 
 
 def test_resource_opportunities_orc_stronghold_tag_gap():
-    """TCK-20260704-SIMQ-CORPUS-STRESS-WORLDS Step 7 finding: a hero standing in
-    resource_dense_basin's/frontier_marches's orc_stronghold region (from orc_clan_territory)
-    gets zero gather_resource opportunities for either resource kind that module places there
-    (iron_vein, wood_node) -- neither carries an "orc_stronghold" source_region_tags entry in
-    data/content/world/resources.yaml (wood_node's explicit tags are ["near_forest", "hometown"];
-    iron_vein's legacy_id-fallback tags are only ("old_mine",)). Same class of pre-existing
-    registry-omission gap as test_resource_opportunities_mountain_pass_zone_tag_gap
-    (TCK-20260704-SIMQ-CORPUS-UNIT-WORLD-AGENCY) -- found here, deliberately left unfixed (out
-    of this ticket's scope, and pre-dates it: orc_clan_territory is already composed by
-    frontier_extended/frontier_living_world/generated_frontier_3_42), and flagged as a follow-up
-    content-fix recommendation in docs/simulation_quality/eval_matrix_results.md instead. If this
-    assertion starts failing, the tag gap has been closed and this test should be rewritten to
-    assert coverage."""
+    """TCK-20260706-SIMQ-CORPUS-RESOURCE-REGION-COVERAGE-AUDIT: a hero standing in
+    orc_stronghold (placed by orc_clan_territory.yaml, composed by
+    resource_dense_basin/frontier_marches/frontier_extended/frontier_living_world/
+    generated_frontier_3_42/crowded_frontier) now receives gather_resource opportunities for
+    both resource kinds that module places there (iron_vein, wood_node) -- both gained an
+    "orc_stronghold" source_region_tags entry in data/content/world/resources.yaml. Supersedes
+    the former version of this test (TCK-20260704-SIMQ-CORPUS-STRESS-WORLDS Step 7), which
+    documented this as a zero-opportunity gap before the fix."""
     from src.core.state import ResourceNodeState
 
     for kind, item in (("iron_vein", "iron_ore"), ("wood_node", "wood")):
@@ -256,9 +251,173 @@ def test_resource_opportunities_orc_stronghold_tag_gap():
 
         opportunities = ResourceOpportunityProvider.get_opportunities(ent, mock_state)
 
+        assert len(opportunities) > 0
+        assert all(opp.kind == "gather_resource" for opp in opportunities)
+        assert any(opp.subject == item for opp in opportunities)
+
+
+def test_resource_opportunities_sacred_grove_healing_flower_patch():
+    """TCK-20260706-SIMQ-CORPUS-RESOURCE-REGION-COVERAGE-AUDIT: forest_warden_grove.yaml places
+    healing_flower_patch nodes in sacred_grove. healing_flower_patch previously had no metadata
+    block at all (falling through to the node_flower legacy_id heuristic, which only names
+    near_forest); it now carries an explicit metadata.source_region_tags entry naming
+    sacred_grove (and re-including near_forest so that prior coverage is preserved)."""
+    ent = (V2EntityBuilder(1)
+        .kind("hero")
+        .build())
+    object.__setattr__(ent.navigation, "region_id", "sacred_grove")
+
+    from src.core.state import ResourceNodeState
+    node = ResourceNodeState(id=1, kind="healing_flower_patch", position=(0.0, 0.0), yields_item="healing_flower", remaining_charges=10, max_charges=10, required_ticks=5)
+    mock_state = MockState(resource_nodes={1: node})
+
+    opportunities = ResourceOpportunityProvider.get_opportunities(ent, mock_state)
+
+    assert len(opportunities) > 0
+    assert all(opp.kind == "gather_resource" for opp in opportunities)
+    assert any(opp.subject == "healing_flower" for opp in opportunities)
+
+
+def test_resource_opportunities_sacred_grove_spirit_wisp():
+    """TCK-20260706-SIMQ-CORPUS-RESOURCE-REGION-COVERAGE-AUDIT: forest_warden_grove.yaml places
+    spirit_wisp nodes in sacred_grove. spirit_wisp previously had no metadata block at all and
+    resolved to zero source_region_tags; it now carries an explicit
+    metadata.source_region_tags entry naming sacred_grove (mirroring its own
+    preferred_biomes, which already named this region)."""
+    ent = (V2EntityBuilder(1)
+        .kind("hero")
+        .build())
+    object.__setattr__(ent.navigation, "region_id", "sacred_grove")
+
+    from src.core.state import ResourceNodeState
+    node = ResourceNodeState(id=1, kind="spirit_wisp", position=(0.0, 0.0), yields_item="spirit_essence", remaining_charges=10, max_charges=10, required_ticks=5)
+    mock_state = MockState(resource_nodes={1: node})
+
+    opportunities = ResourceOpportunityProvider.get_opportunities(ent, mock_state)
+
+    assert len(opportunities) > 0
+    assert all(opp.kind == "gather_resource" for opp in opportunities)
+    assert any(opp.subject == "spirit_essence" for opp in opportunities)
+
+
+def test_resource_opportunities_swamp_border_territory_wood_node():
+    """TCK-20260706-SIMQ-CORPUS-RESOURCE-REGION-COVERAGE-AUDIT: sunken_swamp_border.yaml places
+    wood_node nodes in swamp_border_territory. wood_node's source_region_tags gained an
+    additive "swamp_border_territory" entry in data/content/world/resources.yaml."""
+    ent = (V2EntityBuilder(1)
+        .kind("hero")
+        .build())
+    object.__setattr__(ent.navigation, "region_id", "swamp_border_territory")
+
+    from src.core.state import ResourceNodeState
+    node = ResourceNodeState(id=1, kind="wood_node", position=(0.0, 0.0), yields_item="wood", remaining_charges=10, max_charges=10, required_ticks=5)
+    mock_state = MockState(resource_nodes={1: node})
+
+    opportunities = ResourceOpportunityProvider.get_opportunities(ent, mock_state)
+
+    assert len(opportunities) > 0
+    assert all(opp.kind == "gather_resource" for opp in opportunities)
+    assert any(opp.subject == "wood" for opp in opportunities)
+
+
+def test_resource_opportunities_swamp_border_territory_herb_patch():
+    """TCK-20260706-SIMQ-CORPUS-RESOURCE-REGION-COVERAGE-AUDIT: sunken_swamp_border.yaml places
+    herb_patch nodes in swamp_border_territory. herb_patch's source_region_tags gained an
+    additive "swamp_border_territory" entry in data/content/world/resources.yaml."""
+    ent = (V2EntityBuilder(1)
+        .kind("hero")
+        .build())
+    object.__setattr__(ent.navigation, "region_id", "swamp_border_territory")
+
+    from src.core.state import ResourceNodeState
+    node = ResourceNodeState(id=1, kind="herb_patch", position=(0.0, 0.0), yields_item="herb", remaining_charges=10, max_charges=10, required_ticks=5)
+    mock_state = MockState(resource_nodes={1: node})
+
+    opportunities = ResourceOpportunityProvider.get_opportunities(ent, mock_state)
+
+    assert len(opportunities) > 0
+    assert all(opp.kind == "gather_resource" for opp in opportunities)
+    assert any(opp.subject == "herb" for opp in opportunities)
+
+
+def test_resource_opportunities_haunted_battlefield_spirit_wisp():
+    """TCK-20260706-SIMQ-CORPUS-RESOURCE-REGION-COVERAGE-AUDIT: undead_battlefield.yaml places
+    spirit_wisp nodes in haunted_battlefield, in worlds composing that module
+    (frontier_extended, wilderness_survival). spirit_wisp's source_region_tags gained an
+    additive "haunted_battlefield" entry. This only applies where a node is actually placed --
+    worlds using only ruins_mystery_quest (dungeon_crawl, hero_guild_routing,
+    frontier_marches) place no node in haunted_battlefield at all, and
+    test_resource_opportunities_goblin_camp_and_haunted_battlefield_no_resource_nodes (which
+    tests that "no live node in mock state" case) remains valid and unmodified alongside this
+    new test -- they exercise different mock-state shapes for the same region, not
+    contradictory outcomes."""
+    ent = (V2EntityBuilder(1)
+        .kind("hero")
+        .build())
+    object.__setattr__(ent.navigation, "region_id", "haunted_battlefield")
+
+    from src.core.state import ResourceNodeState
+    node = ResourceNodeState(id=1, kind="spirit_wisp", position=(0.0, 0.0), yields_item="spirit_essence", remaining_charges=10, max_charges=10, required_ticks=5)
+    mock_state = MockState(resource_nodes={1: node})
+
+    opportunities = ResourceOpportunityProvider.get_opportunities(ent, mock_state)
+
+    assert len(opportunities) > 0
+    assert all(opp.kind == "gather_resource" for opp in opportunities)
+    assert any(opp.subject == "spirit_essence" for opp in opportunities)
+
+
+def test_resource_opportunities_trading_hometown_iron_vein():
+    """TCK-20260706-SIMQ-CORPUS-RESOURCE-REGION-COVERAGE-AUDIT: trading_company_hub.yaml's
+    resource_recipes places an iron_vein node in region "hometown", which
+    src/worldassembly/resolver.py:335's namespace-prefixing remaps to "trading_hometown" for
+    any world composing it under the "trading" namespace (e.g. urban_political). This is a
+    distinct region id from plain "hometown" (already closed by
+    TCK-20260704-SIMQ-ROUTING-TEST-HOMETOWN-RESOURCE-GAP) -- iron_vein's source_region_tags
+    gained an additive "trading_hometown" entry, independent of that prior fix."""
+    ent = (V2EntityBuilder(1)
+        .kind("hero")
+        .build())
+    object.__setattr__(ent.navigation, "region_id", "trading_hometown")
+
+    from src.core.state import ResourceNodeState
+    node = ResourceNodeState(id=1, kind="iron_vein", position=(0.0, 0.0), yields_item="iron_ore", remaining_charges=10, max_charges=10, required_ticks=5)
+    mock_state = MockState(resource_nodes={1: node})
+
+    opportunities = ResourceOpportunityProvider.get_opportunities(ent, mock_state)
+
+    assert len(opportunities) > 0
+    assert all(opp.kind == "gather_resource" for opp in opportunities)
+    assert any(opp.subject == "iron_ore" for opp in opportunities)
+
+
+def test_resource_opportunities_bandit_road_and_wolf_den_no_resource_nodes():
+    """TCK-20260706-SIMQ-CORPUS-RESOURCE-REGION-COVERAGE-AUDIT: bandit_road and wolf_den carry
+    zero resource-node content corpus-wide (neither scalable_bandit_camp.yaml nor
+    bandit_road_trade_pressure.yaml declares any resources for bandit_road; wolf_den_near_forest.yaml
+    declares resources but its first-declared region is near_forest, so the compiler places all of
+    that module's nodes there, not in wolf_den). This is an intentional hazard-zone gap, decided by
+    human review 2026-07-08 -- not an authoring oversight (see
+    docs/guidelines/intentional_divergences.md #2.29). No source_region_tags addition was made for
+    either region; a hero standing in either region correctly receives zero gather_resource
+    opportunities regardless of resource kind. Mirrors
+    test_resource_opportunities_goblin_camp_and_haunted_battlefield_no_resource_nodes's existing
+    pattern for goblin_camp (already covered there)."""
+    from src.core.state import ResourceNodeState
+
+    for region_id in ("bandit_road", "wolf_den"):
+        ent = (V2EntityBuilder(1)
+            .kind("hero")
+            .build())
+        object.__setattr__(ent.navigation, "region_id", region_id)
+
+        mock_state = MockState(resource_nodes={})
+
+        opportunities = ResourceOpportunityProvider.get_opportunities(ent, mock_state)
+
         assert opportunities == [], (
-            f"orc_stronghold/{kind}: expected zero gather_resource opportunities "
-            f"(no source_region_tags coverage), got {opportunities!r}"
+            f"{region_id}: expected zero gather_resource opportunities (intentional hazard-zone "
+            f"gap, no resource node placed corpus-wide), got {opportunities!r}"
         )
 
 

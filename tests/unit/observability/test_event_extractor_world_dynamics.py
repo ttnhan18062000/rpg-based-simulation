@@ -2,9 +2,11 @@
 
 Tests for: ecology_cycle_completed, spawn_cadence_fired, threat_evolved, node_recharged.
 camp_constructed is blocked (CampService has no event recorder).
+
+building_sabotaged added by TCK-20260707-SIMQ-BUILDING-SABOTAGE-SIGNAL.
 """
 from __future__ import annotations
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -57,7 +59,7 @@ def _state(entities: dict, tick: int = 0, regions: dict | None = None,
     return s
 
 
-def _update(world_updates=None, entities_add=None):
+def _update(world_updates=None, entities_add=None, building_updates=None):
     u = MagicMock()
     u.entity_updates = {}
     u.world_updates = world_updates or {}
@@ -65,6 +67,7 @@ def _update(world_updates=None, entities_add=None):
     u.entities_add = entities_add or []
     u.faction_updates = []
     u.world_events_add = []
+    u.building_updates = building_updates or {}
     return u
 
 
@@ -73,6 +76,13 @@ def _world_upd(trauma_delta: float = 0.0, prior_trauma: float = 0.0):
     w.trauma_delta = trauma_delta
     w.prior_trauma = prior_trauma
     return w
+
+
+def _building_upd(hp_delta: float = 0.0, functional_set=None):
+    b = MagicMock()
+    b.hp_delta = hp_delta
+    b.functional_set = functional_set
+    return b
 
 
 def _types(events) -> list[str]:
@@ -250,3 +260,47 @@ class TestNodeRecharged:
             _update(), ObservabilityMode.NORMAL,
         )
         assert "node_recharged" not in _types(events)
+
+
+# ── building_sabotaged ──────────────────────────────────────────────────────────
+
+class TestBuildingSabotaged:
+    def test_emitted_on_negative_hp_delta(self):
+        entity = _entity()
+        b_upd = _building_upd(hp_delta=-50, functional_set=True)
+        region = _region("r1")
+        region.id = "r1"
+        with patch(
+            "src.engine.spatial_query.SpatialQueryService.get_building_region",
+            return_value=region,
+        ):
+            events = EventExtractor.extract(
+                _state({1: entity}),
+                _state({1: entity}),
+                _update(building_updates={7: b_upd}), ObservabilityMode.NORMAL,
+            )
+        sabotage_evts = [e for e in events if e.event_type == "building_sabotaged"]
+        assert len(sabotage_evts) == 1
+        assert sabotage_evts[0].payload["building_id"] == 7
+        assert sabotage_evts[0].payload["hp_delta"] == -50
+        assert sabotage_evts[0].payload["region_id"] == "r1"
+
+    def test_not_emitted_on_functional_only_update(self):
+        entity = _entity()
+        b_upd = _building_upd(hp_delta=0, functional_set=False)
+        events = EventExtractor.extract(
+            _state({1: entity}),
+            _state({1: entity}),
+            _update(building_updates={7: b_upd}), ObservabilityMode.NORMAL,
+        )
+        assert "building_sabotaged" not in _types(events)
+
+    def test_not_emitted_on_positive_hp_delta(self):
+        entity = _entity()
+        b_upd = _building_upd(hp_delta=25, functional_set=True)
+        events = EventExtractor.extract(
+            _state({1: entity}),
+            _state({1: entity}),
+            _update(building_updates={7: b_upd}), ObservabilityMode.NORMAL,
+        )
+        assert "building_sabotaged" not in _types(events)

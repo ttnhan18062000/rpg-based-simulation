@@ -1,3 +1,10 @@
+---
+status: active
+layer: engine
+authority: P1
+audience: developer
+---
+
 # Engineering Playbook — Milestone 10
 
 ## Purpose

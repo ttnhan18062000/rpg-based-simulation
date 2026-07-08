@@ -896,6 +896,21 @@ class EventExtractor:
                     payload={"region_id": rid, "new_kind": w_upd.kind_set},
                 ))
 
+        # World: building_sabotaged — building took sabotage damage (hp_delta < 0 discriminates
+        # BuildingSabotageSystem.resolve() from town_resolution.py's insolvency writes, which only
+        # ever set functional_set=False with no hp_delta)
+        for b_id, b_upd in (getattr(update, "building_updates", None) or {}).items():
+            if getattr(b_upd, "hp_delta", 0.0) is not None and getattr(b_upd, "hp_delta", 0.0) < 0:
+                from src.engine.spatial_query import SpatialQueryService
+                _region = SpatialQueryService.get_building_region(current_state, b_id) if current_state else None
+                events.append(SimulationEvent(
+                    event_type="building_sabotaged", event_category="region",
+                    tick=tick, entity_id=None, severity="WARNING",
+                    source_system="event_extractor", message="",
+                    payload={"building_id": b_id, "hp_delta": b_upd.hp_delta,
+                             "region_id": _region.id if _region else None},
+                ))
+
         if getattr(update, "last_calamity_tick_set", None) == prior_state.tick:
             events.append(SimulationEvent(
                 event_type="calamity_spawned", event_category="lifecycle",

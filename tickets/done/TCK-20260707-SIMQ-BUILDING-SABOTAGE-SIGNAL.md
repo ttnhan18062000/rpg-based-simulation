@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: simulation
 authority: P1
 audience: agent
 ticket_id: TCK-20260707-SIMQ-BUILDING-SABOTAGE-SIGNAL
-phase: open
+phase: done
 date: 2026-07-07T16:31:09Z
 tags: [simulation-quality, world, observability]
 ---
@@ -15,7 +15,7 @@ tags: [simulation-quality, world, observability]
 Emit a `building_sabotaged` observability event and score it under the existing WORLD pillar
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -96,17 +96,17 @@ This is the lowest-priority ticket in the epic and lands last, after
   `urban_political`/`trading_company_hub.yaml`.
 
 ## Acceptance Criteria
-- [ ] `BuildingSabotageSystem.resolve()` emits a `building_sabotaged` (or equivalently named) event
+- [x] `BuildingSabotageSystem.resolve()` emits a `building_sabotaged` (or equivalently named) event
       on successful sabotage resolution, registered in the observability event-type system
-- [ ] A new WORLD-pillar scoring rule in `world_dynamics.py` consumes this event, with its delta
+- [x] A new WORLD-pillar scoring rule in `world_dynamics.py` consumes this event, with its delta
       value sourced from `scoring_weights.yaml` (no numeric literals in scorer code)
-- [ ] `quality_scoring_contract.md` §5 (WORLD's event list and tags) and §6 (Scenario Registry) are
+- [x] `quality_scoring_contract.md` §5 (WORLD's event list and tags) and §6 (Scenario Registry) are
       updated per the §7.2 protocol
-- [ ] A unit test exists for the new scoring rule, using an injected `ScoringWeights` fixture
-- [ ] A real before/after calibration comparison in `urban_political` confirms the event fires (or
+- [x] A unit test exists for the new scoring rule, using an injected `ScoringWeights` fixture
+- [x] A real before/after calibration comparison in `urban_political` confirms the event fires (or
       honestly documents that it does not under default calibration conditions), with the resulting
       WORLD grade impact documented either way
-- [ ] `make evaluate --dry-run` confirms 0 regressions on the rest of the corpus
+- [x] `make evaluate --dry-run` confirms 0 regressions on the rest of the corpus
 
 ## Related Tickets
 - TCK-20260707-SIMQ-DEEP-COVERAGE-EPIC (parent epic; this is the lowest-priority child, lands last)
@@ -144,13 +144,107 @@ This is the lowest-priority ticket in the epic and lands last, after
   it as an implementation finding rather than silently expanding scope without noting it.
 
 ## Implementation Notes
-(to be filled during implementation)
+Implemented exactly per `staging_artifacts/TCK-20260707-SIMQ-BUILDING-SABOTAGE-SIGNAL/plan.md`'s 10
+steps, with no deviations.
+
+- **Step 1** — Added a new `building_sabotaged` diff block to `EventExtractor.extract()`
+  (`src/observability/event_extractor.py`), placed as a sibling loop after the existing
+  `world_updates` loop (not the ticket's literal Scope wording of emitting from
+  `BuildingSabotageSystem.resolve()` — `sabotage.py` has no event-emitter access at its call site,
+  matching every other WORLD-pillar sibling event's post-hoc extraction pattern, per
+  investigation.md's confirmed finding). Discriminator is `hp_delta < 0` on
+  `update.building_updates`, which is exclusive to `BuildingSabotageSystem.resolve()` (confirmed:
+  `town_resolution.py` only sets `functional_set`, `conservation.py` never touches `hp_delta`).
+  Region attribution uses `SpatialQueryService.get_building_region(current_state, b_id)` via a
+  local import inside the new block, matching the identical local-import convention used by
+  `town_resolution.py` and `sabotage.py` for the same lookup (no existing `src.engine` import block
+  to extend at module level, so a local import was used rather than introducing a new module-level
+  `src.observability` → `src.engine` coupling point).
+- **Step 2** — Added `"building_sabotaged"` to `WorldDynamicsScorer.EVENT_TYPES` and a new
+  `if et == "building_sabotaged":` branch in `score()` (`src/simulation_quality/scorers/world_dynamics.py`),
+  reading `self.weights["infrastructure_damaged"]` — no numeric literals in scorer code.
+- **Step 3** — Added `infrastructure_damaged: 1.0` to the `WORLD:` section of
+  `config/simulation_quality/scoring_weights.yaml`, positive delta matching `hazard_active`'s
+  "real world consequence" framing (not a damage=bad framing — WORLD's degenerate tags describe
+  absence of activity, not damage).
+- **Steps 4-5** — Updated `docs/simulation_quality/quality_scoring_contract.md` §5 (WORLD DYNAMICS
+  event list + signal table row) and §6 (new `SQ-23` Scenario Registry row).
+- **Step 6** — Added a `building_sabotaged` row to `docs/simulation_quality/event_type_coverage.md`
+  §1.1 (0 calibration hits, classified `scored` not `no_engine_path` — genuine emission path exists,
+  just no live SABOTAGE-intent producer) and incremented the Summary `scored` count 81→82.
+- **Step 7** — Added tests: `TestBuildingSabotaged` (3 tests) in
+  `tests/unit/observability/test_event_extractor_world_dynamics.py`; `TestBuildingSabotage` (2 tests)
+  in `tests/simulation_quality/test_world_dynamics_scorer.py`; `TestBuildingSabotageOwnership`
+  (2 tests) in `tests/simulation_quality/test_faction_scorer.py`; `test_sq23_world_owns_building_sabotaged`
+  in `tests/simulation_quality/test_scenario_coverage.py`.
+- **Step 8** — Ran a real before/after calibration comparison in `urban_political` (seed 42, 500t)
+  via `git stash`/`stash pop` around the three implementation files. Before: WORLD norm=+0.3725,
+  events=134, overall_grade=S, overall_score=2.0356. After: WORLD norm=+0.3725, events=134,
+  overall_grade=S, overall_score=2.0356 — byte-identical pillar breakdown. `building_sabotaged` hit
+  count: 0 in both runs (confirmed via `quality_report.json`/`quality_scores.jsonl`). This is the
+  expected, pre-authorized outcome per investigation.md's repo-wide grep evidence: no
+  strategic/goal-selection/quest-reward code anywhere in `src/` currently sets
+  `task_upd.work_kind_set="SABOTAGE"` or `payload_set["action"]="SABOTAGE"`.
+- **Step 9** — Added parity ledger entry `WORLD-111` to `docs/parity_ledger/world_dynamics.yaml`
+  (P2, `status: verified`, real `test_path`), after the existing `WORLD-110` entry. Did not reuse
+  `WORLD-088`/`WORLD-089` (confirmed pre-existing, cover unrelated mutation-level facts).
+- **Step 10** — Full scoped regression: `pytest tests/simulation_quality/ tests/unit/observability/
+  -m "not slow"` → 1178 passed, 6 skipped, 0 failures. `make evaluate` (dry-run corpus diff against
+  grade anchors) → 710 pillars checked, 0 regressions, 0 missing.
+
+No deviations from the plan.
 
 ## Test Summary
-(to be filled during implementation)
+Scoped sweep (Step 7's exact command list) — 203 passed, 2 xfailed, 0 failures:
+```
+pytest tests/unit/observability/test_event_extractor_world_dynamics.py \
+  tests/unit/observability/test_event_extractor_world.py \
+  tests/unit/observability/test_event_extractor_simq.py \
+  tests/simulation_quality/test_world_dynamics_scorer.py \
+  tests/simulation_quality/test_faction_scorer.py \
+  tests/simulation_quality/test_weights.py \
+  tests/simulation_quality/test_quality_hub_integration.py \
+  tests/simulation_quality/test_quality_hub_event_translation.py \
+  tests/simulation_quality/test_scenario_coverage.py \
+  tests/simulation_quality/test_kernel_simq_integration.py \
+  tests/integration/pipeline/test_strategic_cadence.py \
+  tests/integrity/test_logic_guards.py \
+  tests/unit/world/test_building_sabotage.py \
+  tests/simulation_quality/test_performance.py
+```
+`tests/integrity/test_logic_guards.py` passed unchanged, confirming the fix landed in
+`event_extractor.py`/`world_dynamics.py`, not `pipeline.py`.
+
+Full scoped regression (Step 10): `pytest tests/simulation_quality/ tests/unit/observability/ -m
+"not slow"` → 1178 passed, 6 skipped, 26 deselected, 0 failures.
+
+`make evaluate` (dry-run) → 710 pillars checked across all calibrated worlds, 0 regressions,
+0 missing.
+
+Live before/after calibration (`urban_political` seed42 500t) — see Implementation Notes Step 8:
+WORLD grade/score byte-identical before and after; `building_sabotaged` calibration_hits = 0 in
+both runs (expected null result, not a bug).
 
 ## Files Changed
-(to be filled during implementation)
+- `src/observability/event_extractor.py` — new `building_sabotaged` diff block
+- `src/simulation_quality/scorers/world_dynamics.py` — new `EVENT_TYPES` entry + scoring branch
+- `config/simulation_quality/scoring_weights.yaml` — new `infrastructure_damaged: 1.0` WORLD key
+- `docs/simulation_quality/quality_scoring_contract.md` — §5 event list + signal table row, §6 SQ-23 row
+- `docs/simulation_quality/event_type_coverage.md` — new coverage row + Summary count update
+- `docs/parity_ledger/world_dynamics.yaml` — new `WORLD-111` entry
+- `tests/unit/observability/test_event_extractor_world_dynamics.py` — `TestBuildingSabotaged` (3 tests)
+- `tests/simulation_quality/test_world_dynamics_scorer.py` — `TestBuildingSabotage` (2 tests)
+- `tests/simulation_quality/test_faction_scorer.py` — `TestBuildingSabotageOwnership` (2 tests)
+- `tests/simulation_quality/test_scenario_coverage.py` — `test_sq23_world_owns_building_sabotaged`
 
 ## Completion Summary
-(to be filled on done)
+All 6 acceptance criteria met. `building_sabotaged` is emitted by `EventExtractor.extract()`
+(diffing `update.building_updates` for `hp_delta < 0`, the exclusive signature of
+`BuildingSabotageSystem.resolve()`) and scored by `WorldDynamicsScorer` under the WORLD pillar
+via a new `infrastructure_damaged` weight (no numeric literals in scorer code). Contract §5/§6,
+`event_type_coverage.md`, and parity ledger (`WORLD-111`) are all updated. A real before/after
+`urban_political` calibration confirms the event's engine path is genuine but currently unreached
+(0 hits, byte-identical WORLD grade before/after) — an honestly-documented, pre-authorized null
+result per investigation.md's repo-wide grep evidence that no SABOTAGE-intent producer exists
+anywhere in `src/` yet. Full scoped regression and `make evaluate --dry-run` both show 0
+regressions.

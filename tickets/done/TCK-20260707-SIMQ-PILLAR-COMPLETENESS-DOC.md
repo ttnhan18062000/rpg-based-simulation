@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: simulation
 authority: P1
 audience: agent
 ticket_id: TCK-20260707-SIMQ-PILLAR-COMPLETENESS-DOC
-phase: open
+phase: done
 date: 2026-07-07T16:31:09Z
 tags: [simulation-quality, documentation, world]
 ---
@@ -15,7 +15,7 @@ tags: [simulation-quality, documentation, world]
 Document the pillar-completeness research conclusion: no new top-level SimQ pillar is justified
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -132,13 +132,72 @@ modification is `TCK-20260707-SIMQ-BUILDING-SABOTAGE-SIGNAL`'s scope.)
   treating it as a scope-invalidating surprise).
 
 ## Implementation Notes
-(to be filled during implementation)
+Added `### 7.5 Pillar Completeness Audit (2026-07)` to
+`docs/simulation_quality/quality_scoring_contract.md`, directly after `### 7.4 Configuring Quality
+Profiles` and before the `## 8. Data Flow & Persistence` separator (so it lands inside the
+Extensibility Protocol section as its own precedent case, per the ticket's Scope item 1 decision).
+
+Before writing, discovered that `staging_artifacts/TCK-20260707-SIMQ-DEEP-COVERAGE-EPIC/investigation.md`
+(the ticket's own cited evidence source) does not exist on disk — `staging_artifacts/` currently
+contains only `TCK-20260702-SIMQ-UPLIFT2-INFORMATION/`. This is the exact same citation-rot pattern
+already root-caused and documented by `TCK-20260707-EPIC-SCOPE-INVESTIGATION-DOC-MISSING`
+(gitignored pre-ticket staging file, epic-tier ticket never ran a Finalize/migrate step, lost from
+the working tree). Rather than block on this, used the full transcription of investigation.md §2
+already embedded verbatim in this ticket's own Request Summary (lines 30-64, written during epic
+scoping when the investigation doc still existed) as the content source, and independently
+re-verified every cited file path against current repo state per Scope item 2 and the Assumptions
+section's instruction to correct rather than block on drift:
+
+- Determinism/replay-fidelity, performance, and checkpoint-integrity citations verified unchanged
+  (`tests/certification/`, `tests/integration/kernel/test_long_run_determinism.py`,
+  `tests/integration/observability/test_phase28_observability_determinism.py`,
+  `tests/unit/kernel/test_replay_determinism.py`, `tests/perf/` (38 files, up from "14+" cited —
+  updated the count), `docs/engine/performance_contract.md`, `tests/simulation_quality/test_performance.py`,
+  `tests/integration/kernel/test_checkpoint_reproducibility.py`,
+  `tests/unit/engine/test_scenario_checkpointer.py` — all exist).
+- **Corrected one citation**: the ticket's "CAT-REL-001 through CAT-REL-011" was checked against
+  `src/content/validator.py` directly (`grep -n "CAT-REL-[0-9]" `) — the actual rule ID range is
+  non-contiguous: `CAT-REL-001`–`CAT-REL-004`, then `CAT-REL-011`–`CAT-REL-019`, plus a `CAT-REL-099`
+  fallback. There is no `CAT-REL-005` through `CAT-REL-010`. The new §7.5 cites the corrected,
+  verified range instead of copying the stale "through CAT-REL-011" phrasing.
+- `building_sabotage` finding verified against `src/engine/sabotage.py::BuildingSabotageSystem.resolve()`
+  directly (SABOTAGE/ENTITY_ACT(action=SABOTAGE) intents, mutates `building_updates.hp_delta`/
+  `functional_set`, no observability emission in the file) and cross-checked pipeline phase 15
+  against `docs/engine/authoritative_pipeline.md:35` (`building_sabotage` row, confirmed).
+  `data/content/world_modules/trading_company_hub.yaml` and
+  `data/worlds/urban_political/resolved/world.resolved.yaml` both confirmed to exist.
+- WORLD pillar's event-type/tag list (§5 WORLD DYNAMICS, lines 866-921) re-read directly to confirm
+  no existing tag covers building damage/functional-state changes, supporting the §7.3
+  no-dual-ownership reasoning cited in the new subsection.
+
+No deviation from the ticket's Scope beyond the one corrected citation (CAT-REL range), which the
+ticket's own Assumptions section explicitly anticipated and pre-authorized ("if re-verification
+finds a cited file has moved/been deleted, correct the citation rather than treating it as a
+scope-invalidating surprise" — extended here to a corrected rule-ID range, same principle).
 
 ## Test Summary
-(to be filled during implementation)
+Documentation-only change; no code paths affected. Verified: (1)
+`python3 tools/validate_frontmatter.py docs/simulation_quality/quality_scoring_contract.md
+--content-type doc` → `OK: 1 file(s) checked — no violations`; (2) `grep -n "^## 7\|^### 7\."` on
+the file confirms `### 7.5 Pillar Completeness Audit (2026-07)` is correctly nested under `## 7.
+Extensibility Protocol`, after `### 7.4`; (3) every file path cited in the new §7.5 subsection was
+independently re-verified to exist via direct `ls`/`grep` checks (see Implementation Notes); (4)
+`make knowledge-index-update` ran successfully (`Incremental update complete: 5485 chunks total (4
+files re-embedded, 1953 from cache, 0 deleted)`).
 
 ## Files Changed
-(to be filled during implementation)
+- `docs/simulation_quality/quality_scoring_contract.md` — added `### 7.5 Pillar Completeness Audit
+  (2026-07)` subsection
 
 ## Completion Summary
-(to be filled on done)
+Added `### 7.5 Pillar Completeness Audit (2026-07)` to `docs/simulation_quality/quality_scoring_contract.md`,
+recording the pillar-completeness research conclusion: no new top-level SimQ pillar is justified. All
+4 candidate dimensions (determinism/replay-fidelity, performance/tick-time budget, save/checkpoint
+integrity, content/catalog health) were re-verified against current repo state and confirmed each is
+already owned by a dedicated system outside SimQ (one citation corrected: `CAT-REL` rule ID range is
+non-contiguous, `001`-`004` + `011`-`019` + `099` fallback, not "through CAT-REL-011"). The one genuine
+gap found — `building_sabotage` (pipeline phase 15) mutating `building_updates` with no observability
+emission — was documented as a new WORLD-pillar scoring rule (not an 11th pillar), cross-referenced to
+`TCK-20260707-SIMQ-BUILDING-SABOTAGE-SIGNAL` as its implementing ticket. `make knowledge-index-update`
+ran successfully; `validate_frontmatter.py` passed; all cited file paths independently re-verified.
+Documentation-only change, no code paths affected. done-checker returned READY_TO_CLOSE on first pass.

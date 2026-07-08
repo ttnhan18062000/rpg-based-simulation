@@ -1349,3 +1349,14 @@
     WORLD holds B post-fix as expected; the formula change does not affect pillars
     that are active throughout the run (last_event_tick ≈ current_tick >> floor).
   support_boundary: null
+
+- id: WORLD-111
+  text: Building sabotage emits a scored building_sabotaged WORLD-pillar observability signal.
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: "EventExtractor.extract() building_updates diff block (hp_delta < 0) + WorldDynamicsScorer infrastructure_damaged branch; TCK-20260707-SIMQ-BUILDING-SABOTAGE-SIGNAL"
+  proof_type: parity
+  test_path: tests/simulation_quality/test_world_dynamics_scorer.py::TestBuildingSabotage::test_building_sabotaged_scored_by_world_dynamics
+  divergence_note: null
+  support_boundary: null
