@@ -89,11 +89,20 @@ def check_staging_artifacts_complete(
     return ("FAIL", f"Missing or empty file(s) in {directory}: {', '.join(problems)}")
 
 
-def check_data_runs_clean(
+def _find_flagged_data_run_files(
     start_ts: str | None,
-    runs_dir: Path = Path("data/runs"),
-    proof_dir: Path = Path("reports/release_proof"),
-) -> tuple[str, str]:
+    runs_dir: Path,
+    proof_dir: Path,
+) -> list[Path]:
+    """Shared primitive: the canonical definition of "this session's own file" under
+    data/runs/ and reports/release_proof/. A missing/unparsable start_ts is not evidence of
+    cleanliness — flags any file found rather than silently passing.
+
+    check_data_runs_clean (PASS/FAIL reporting, Verify-phase backstop) and
+    clean_data_runs_early (auto-clean, post-Test checkpoint) both call this exact function so
+    the two can never diverge on what counts as flaggable. Do not duplicate this walk anywhere
+    else (TCK-20260708-DATA-RUNS-CLEANUP-TIMING).
+    """
     start_epoch = None
     if start_ts:
         try:
@@ -108,14 +117,75 @@ def check_data_runs_clean(
         for f in directory.rglob("*"):
             if not f.is_file():
                 continue
-            # A missing/unparsable start_ts is not evidence of cleanliness — flag any file found
-            # rather than silently passing (per investigation's resolved recommendation).
             if start_epoch is None or f.stat().st_mtime >= start_epoch:
-                flagged.append(str(f))
+                flagged.append(f)
+    return flagged
 
+
+def check_data_runs_clean(
+    start_ts: str | None,
+    runs_dir: Path = Path("data/runs"),
+    proof_dir: Path = Path("reports/release_proof"),
+) -> tuple[str, str]:
+    flagged = _find_flagged_data_run_files(start_ts, runs_dir, proof_dir)
     if flagged:
-        return ("FAIL", f"File(s) at/after start_ts (or start_ts unparsable): {', '.join(flagged)}")
+        return (
+            "FAIL",
+            f"File(s) at/after start_ts (or start_ts unparsable): "
+            f"{', '.join(str(f) for f in flagged)}",
+        )
     return ("PASS", f"{runs_dir} and {proof_dir} clean of this session's artifacts")
+
+
+def clean_data_runs_early(
+    start_ts: str | None,
+    runs_dir: Path = Path("data/runs"),
+    proof_dir: Path = Path("reports/release_proof"),
+) -> tuple[str, str]:
+    """Auto-clean this session's own data/runs/ + reports/release_proof/ artifacts immediately
+    after Test phase, before Parity/Verify ever see them.
+
+    Built for TCK-20260708-DATA-RUNS-CLEANUP-TIMING: closes the ordering gap where
+    check_data_runs_clean (Verify, phase 8) ran before Finalize (phase 9, the only prior cleanup
+    step) had a chance to remove anything Test phase (test-scoper) had just generated via its own
+    pytest run. Invoked directly by the orchestrator (bash() call in implement-ticket.js) between
+    Test and Parity — not from within an agent prompt — so it cannot be silently skipped the way
+    Finalize step 6's prose cleanup instruction has been.
+
+    Reuses _find_flagged_data_run_files's exact mtime>=start_ts / None-is-flagged definition (the
+    same primitive check_data_runs_clean uses) so the two functions can never diverge on what
+    counts as "this session's own file." Never a blind rm -rf: only deletes paths that definition
+    flags. This guarantees only that artifacts from a session that STARTED BEFORE this session's
+    start_ts are left untouched (mtime lower-bound only) — it does NOT protect against a second
+    session that is concurrently/overlapping in progress at the moment this checkpoint fires,
+    since data/runs/ and reports/release_proof/ have no session/PID partitioning; a file that
+    other session writes with mtime >= this session's start_ts is indistinguishable from this
+    session's own output and will be deleted. See "Residual Risk: Concurrent-Session Overlap
+    Window" in the Anti-Drift Notes below — this is a documented, accepted tradeoff, not a
+    mitigated one.
+
+    Returns ("PASS", ...) if nothing needed cleaning, ("CLEANED", "<n> file(s) removed: ...") on
+    successful auto-clean, or ("FAIL", "<error>") if deletion itself raised (e.g. permission
+    error) — the one case the orchestrator escalates to a new blocking status
+    (DATA_RUNS_CLEAN_FAILED) instead of silently continuing.
+    """
+    flagged = _find_flagged_data_run_files(start_ts, runs_dir, proof_dir)
+    if not flagged:
+        return ("PASS", f"{runs_dir} and {proof_dir} already clean of this session's artifacts")
+
+    removed = []
+    try:
+        for f in flagged:
+            f.unlink()
+            removed.append(str(f))
+    except OSError as e:
+        remaining = [str(f) for f in flagged if str(f) not in removed]
+        return (
+            "FAIL",
+            f"Auto-clean failed after removing {len(removed)}/{len(flagged)} file(s): {e}. "
+            f"Remaining flagged: {', '.join(remaining)}",
+        )
+    return ("CLEANED", f"{len(removed)} file(s) removed: {', '.join(removed)}")
 
 
 def check_ticket_location(

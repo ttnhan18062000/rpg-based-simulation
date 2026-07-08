@@ -16,6 +16,7 @@ if str(_TOOLS_DIR) not in sys.path:
     sys.path.insert(0, str(_TOOLS_DIR))
 
 from gate_checks.done_checker_static import (  # noqa: E402
+    _find_flagged_data_run_files,
     check_data_runs_clean,
     check_frontmatter_valid,
     check_migration_complete,
@@ -25,6 +26,7 @@ from gate_checks.done_checker_static import (  # noqa: E402
     check_working_log_exactly_one_row,
     check_working_log_no_row_yet,
     classify_checklist_failure,
+    clean_data_runs_early,
     run_finalize_selfcheck,
     run_static_precheck,
 )
@@ -187,6 +189,122 @@ def test_data_runs_clean_unparsable_start_ts_flags_any_file(tmp_path):
 
     status, _ = check_data_runs_clean(None, runs_dir=runs_dir, proof_dir=proof_dir)
     assert status == "FAIL"
+
+
+# ---------------------------------------------------------------------------
+# clean_data_runs_early (TCK-20260708-DATA-RUNS-CLEANUP-TIMING)
+# ---------------------------------------------------------------------------
+
+
+def test_clean_data_runs_early_detects_and_removes_leftover_artifacts(tmp_path):
+    runs_dir = tmp_path / "data" / "runs"
+    proof_dir = tmp_path / "reports" / "release_proof"
+    runs_dir.mkdir(parents=True)
+    proof_dir.mkdir(parents=True)
+
+    leaked = runs_dir / "leaked_run.json"
+    leaked.write_text("{}", encoding="utf-8")
+    new_epoch = time.mktime(time.strptime("2026-07-06T00:00:00", "%Y-%m-%dT%H:%M:%S"))
+    os.utime(leaked, (new_epoch, new_epoch))
+
+    status, evidence = clean_data_runs_early("2026-07-05T00:00:00Z", runs_dir=runs_dir, proof_dir=proof_dir)
+    assert status == "CLEANED"
+    assert str(leaked) in evidence
+    assert not leaked.exists()
+
+    followup_status, _ = check_data_runs_clean("2026-07-05T00:00:00Z", runs_dir=runs_dir, proof_dir=proof_dir)
+    assert followup_status == "PASS"
+
+
+def test_clean_data_runs_early_preserves_files_older_than_start_ts(tmp_path):
+    """Mirrors test_data_runs_clean_file_before_start_ts_passes exactly — this is the
+    earlier-started-session safety guard test_plan.md calls "not optional."
+
+    Note: this test covers only the mtime-lower-bound guarantee (earlier start_ts); it does not
+    and cannot exercise the concurrent-overlap case where another session is still actively
+    writing at the moment this checkpoint fires — see "Residual Risk: Concurrent-Session Overlap
+    Window" in plan.md.
+    """
+    runs_dir = tmp_path / "data" / "runs"
+    proof_dir = tmp_path / "reports" / "release_proof"
+    runs_dir.mkdir(parents=True)
+    proof_dir.mkdir(parents=True)
+
+    leftover = runs_dir / "old_run.json"
+    leftover.write_text("{}", encoding="utf-8")
+    old_epoch = time.mktime(time.strptime("2026-07-01T00:00:00", "%Y-%m-%dT%H:%M:%S"))
+    os.utime(leftover, (old_epoch, old_epoch))
+
+    status, _ = clean_data_runs_early("2026-07-05T00:00:00Z", runs_dir=runs_dir, proof_dir=proof_dir)
+    assert status == "PASS"
+    assert leftover.exists()
+
+
+def test_clean_data_runs_early_reuses_check_data_runs_clean_definition(tmp_path):
+    runs_dir = tmp_path / "data" / "runs"
+    proof_dir = tmp_path / "reports" / "release_proof"
+    runs_dir.mkdir(parents=True)
+    proof_dir.mkdir(parents=True)
+
+    before = runs_dir / "before.json"
+    before.write_text("{}", encoding="utf-8")
+    before_epoch = time.mktime(time.strptime("2026-07-01T00:00:00", "%Y-%m-%dT%H:%M:%S"))
+    os.utime(before, (before_epoch, before_epoch))
+
+    at_start = runs_dir / "at_start.json"
+    at_start.write_text("{}", encoding="utf-8")
+    at_epoch = time.mktime(time.strptime("2026-07-06T00:00:00", "%Y-%m-%dT%H:%M:%S"))
+    os.utime(at_start, (at_epoch, at_epoch))
+
+    after = proof_dir / "after.json"
+    after.write_text("{}", encoding="utf-8")
+    after_epoch = time.mktime(time.strptime("2026-07-07T00:00:00", "%Y-%m-%dT%H:%M:%S"))
+    os.utime(after, (after_epoch, after_epoch))
+
+    start_ts = "2026-07-05T00:00:00Z"
+    canonical_flagged = {str(f) for f in _find_flagged_data_run_files(start_ts, runs_dir, proof_dir)}
+    assert canonical_flagged == {str(at_start), str(after)}
+
+    check_status, check_evidence = check_data_runs_clean(start_ts, runs_dir=runs_dir, proof_dir=proof_dir)
+    assert check_status == "FAIL"
+    for f in canonical_flagged:
+        assert f in check_evidence
+
+    clean_status, clean_evidence = clean_data_runs_early(start_ts, runs_dir=runs_dir, proof_dir=proof_dir)
+    assert clean_status == "CLEANED"
+    for f in canonical_flagged:
+        assert f in clean_evidence
+    assert before.exists()
+    assert not at_start.exists()
+    assert not after.exists()
+
+
+def test_clean_data_runs_early_returns_fail_on_deletion_error(tmp_path, monkeypatch):
+    runs_dir = tmp_path / "data" / "runs"
+    proof_dir = tmp_path / "reports" / "release_proof"
+    runs_dir.mkdir(parents=True)
+    proof_dir.mkdir(parents=True)
+
+    leaked = runs_dir / "leaked_run.json"
+    leaked.write_text("{}", encoding="utf-8")
+    new_epoch = time.mktime(time.strptime("2026-07-06T00:00:00", "%Y-%m-%dT%H:%M:%S"))
+    os.utime(leaked, (new_epoch, new_epoch))
+
+    def _raise_unlink(self):
+        raise OSError("permission denied")
+
+    monkeypatch.setattr(Path, "unlink", _raise_unlink)
+
+    status, evidence = clean_data_runs_early("2026-07-05T00:00:00Z", runs_dir=runs_dir, proof_dir=proof_dir)
+    assert status == "FAIL"
+    assert "permission denied" in evidence
+    assert str(leaked) in evidence
+
+
+def test_data_runs_clean_status_appears_in_failure_recovery_reference_table():
+    doc_path = Path(__file__).parent.parent.parent / "docs" / "ai" / "ticket-lifecycle.md"
+    content = doc_path.read_text(encoding="utf-8")
+    assert "DATA_RUNS_CLEAN_FAILED" in content
 
 
 # ---------------------------------------------------------------------------

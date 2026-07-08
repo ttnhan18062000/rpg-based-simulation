@@ -687,6 +687,51 @@ if (testResult.coverage_gaps.length > 0) {
   log(`Coverage gaps: ${testResult.coverage_gaps.join(', ')}`)
 }
 
+// ─── Post-Test cleanup checkpoint: data/runs/ + reports/release_proof/ ────────────
+// Closes the ordering gap where done-checker's data_runs_clean check (Verify, phase 8) ran
+// before Finalize (phase 9) — the only phase that actually cleaned these dirs — making the
+// check structurally guaranteed to fail whenever Test phase (test-scoper) generated run
+// artifacts, which is nearly every standard-tier run touching simulation code. Auto-cleans this
+// session's own artifacts (mtime >= startTs only — never a blind rm) immediately after Test,
+// before Parity/Verify ever see them stale. This only guarantees no deletion of artifacts from
+// sessions that STARTED BEFORE startTs (mtime lower-bound only) — it does NOT protect against a
+// second session concurrently/overlapping in progress at this moment, since data/runs/ and
+// reports/release_proof/ have no session/PID partitioning (accepted residual risk — see plan.md
+// Anti-Drift Notes, "Residual Risk: Concurrent-Session Overlap Window"). Orchestrator-run bash()
+// call, not an agent prompt instruction, so it can't be silently skipped
+// (TCK-20260708-DATA-RUNS-CLEANUP-TIMING). Finalize step 6's own cleanup and done-checker's
+// data_runs_clean check both remain in place as backstops — see docs/ai/ticket-lifecycle.md.
+const cleanupOutput = await bash(
+  `python3 -c "
+import sys
+sys.path.insert(0, 'tools')
+from gate_checks.done_checker_static import clean_data_runs_early
+status, evidence = clean_data_runs_early(${JSON.stringify(startTs || null)})
+print(status + '|' + evidence)
+"`
+)
+const cleanupSepIdx = cleanupOutput.indexOf('|')
+const cleanupStatus = cleanupSepIdx === -1 ? cleanupOutput.trim() : cleanupOutput.slice(0, cleanupSepIdx).trim()
+const cleanupEvidence = cleanupSepIdx === -1 ? '' : cleanupOutput.slice(cleanupSepIdx + 1).trim()
+
+if (cleanupStatus === 'FAIL') {
+  pushEvent('Test', 'implement-ticket-orchestrator', 'failed', `Post-Test data/runs cleanup failed: ${cleanupEvidence.slice(0, 200)}`, testResult.ts)
+  log(`Post-Test data/runs cleanup FAILED: ${cleanupEvidence}`)
+  await writeMonitoring('DATA_RUNS_CLEAN_FAILED')
+  return {
+    status: 'DATA_RUNS_CLEAN_FAILED',
+    ticket_id: tid,
+    message: 'Auto-clean of data/runs/*, reports/release_proof/* failed — resolve manually (check permissions/locks), then re-run with ticket_id="' + tid + '".',
+    evidence: cleanupEvidence,
+  }
+}
+
+if (cleanupStatus === 'CLEANED') {
+  log(`Post-Test cleanup: removed leftover data/runs/ + reports/release_proof/ artifacts — ${cleanupEvidence}`)
+} else {
+  log('Post-Test cleanup: data/runs/ and reports/release_proof/ already clean.')
+}
+
 // ─── Phase 7: Parity ──────────────────────────────────────────────────────────
 
 phase('Parity')

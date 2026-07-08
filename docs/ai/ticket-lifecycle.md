@@ -304,6 +304,16 @@ The agent executes this via Bash and reports results.
 
 **Gate:** Returns `TESTS_FAILED` with failing test names. The user fixes the tests and re-runs with `ticket_id`. The workflow resumes from the Test phase.
 
+**Post-Test cleanup checkpoint:** Immediately after Test phase completes (before Parity), the
+orchestrator runs `tools/gate_checks/done_checker_static.py::clean_data_runs_early(start_ts)`
+directly via `bash()` — not an agent prompt step. This auto-cleans any `data/runs/*` /
+`reports/release_proof/*` files this session's own Test-phase pytest run produced
+(`mtime >= start_ts`), closing the gap where Verify's `data_runs_clean` check (below) used to
+run before Finalize's cleanup ever had a chance to execute. On success (nothing to clean, or
+cleaned successfully) the workflow proceeds silently to Parity. **Gate:** Returns
+`DATA_RUNS_CLEAN_FAILED` only if deletion itself errors (e.g. permission/lock) — the user
+resolves manually and re-runs with `ticket_id`.
+
 ---
 
 ### Parity
@@ -369,7 +379,7 @@ pre-check, `tools/gate_checks/mechanics_auditor_static.py::verify_entry_test_pat
 | 7 | working_log.csv entry | Not yet present — will be written by finalizer — script-checked |
 | 8 | No undocumented decisions | Fallback-first vs. projection-first decision documented in plan |
 | 9 | Repo consistent | No leftover temp files |
-| 10 | data/runs/ cleaned | — script-checked |
+| 10 | data/runs/ cleaned | — script-checked; **backstop only** as of TCK-20260708-DATA-RUNS-CLEANUP-TIMING — primary cleanup now happens post-Test (see Test section above). |
 | 11 | No material gaps | All follow-up items (e.g. fallback reporting) marked complete or explicitly flagged |
 | 12 | Frontmatter valid (ticket + staging artifacts) | — script-checked |
 | 13 | **Agent monitoring** _(pre-marked PASS)_ | Written by workflow `writeMonitoring` after READY_TO_CLOSE |
@@ -387,7 +397,8 @@ pre-check, `tools/gate_checks/mechanics_auditor_static.py::verify_entry_test_pat
    2026-06-06T00:00:00Z,TCK-20260606-COMBAT-RELATION,Relation Projection,DONE,Added relation projection wrapper into combat target classification,stored_artifacts/TCK-20260606-COMBAT-RELATION
    ```
 4. Move: `staging_artifacts/{id}/` → `stored_artifacts/{id}/`
-5. Clean: `data/runs/*`, `reports/release_proof/*`
+5. Clean: `data/runs/*`, `reports/release_proof/*` (backstop — primary cleanup happens post-Test as of
+   TCK-20260708-DATA-RUNS-CLEANUP-TIMING; this step now typically finds nothing to remove).
 6. **Self-verification** (`bash()`, orchestrator-level — not the finalize agent's own prose report):
    runs `tools/gate_checks/done_checker_static.py::run_finalize_selfcheck(ticket_id, tier)` to
    confirm steps 2-4 above actually landed — `stored_artifacts/` complete, `staging_artifacts/`
@@ -480,6 +491,7 @@ After work:
 | `NEEDS_CHANGES` | Architecture violations in plan | Fix `plan.md` per violation list | Re-run with `ticket_id` |
 | `BLOCKED` | Fundamental architectural conflict | Revisit scope, possibly split ticket | Re-run with `ticket_id` or new `request` |
 | `TESTS_FAILED` | Tests failing after implementation | Fix the code or tests | Re-run with `ticket_id` |
+| `DATA_RUNS_CLEAN_FAILED` | Post-Test auto-clean of `data/runs/*`/`reports/release_proof/*` failed (deletion error, e.g. permission/lock) | Resolve the underlying error manually (check file permissions/locks), then confirm the flagged files are removable | Re-run with `ticket_id` |
 | `SECURITY_BLOCKED` | Security review found a vulnerability | Fix the flagged code | Re-run with `ticket_id` |
 | `DOD_BLOCKED` | DoD condition(s) not met | Fix each failing item listed | Re-run with `ticket_id` |
 | `FINALIZE_INCOMPLETE` | Finalize's own migration self-check found a discrepancy after moving artifacts | Fix each item in `failing_items` (e.g. incomplete `stored_artifacts/`, `staging_artifacts/` not cleaned, duplicate working_log row) | Re-run with `ticket_id` |
