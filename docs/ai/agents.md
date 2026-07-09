@@ -65,6 +65,24 @@ These agents handle the pre-implementation and post-implementation phases of a d
 
 ---
 
+### `concern-investigator`
+
+**Role:** Investigates a pre-ticket proposal concern and returns structured JSON findings for `create-tickets.js`'s Structure phase — distinct from `investigator`, which operates on an existing ticket and writes markdown files. Read-only: its `tools:` frontmatter field omits `Edit`, `Write`, and `NotebookEdit`, since this phase never needs to change repo state.
+
+**What it does:**
+- Works through the same mandatory context-scan ordering as `investigator`/`CLAUDE.md`'s Context Scan rule: semantic `search_docs` retrieval → graphify query → `docs/REGISTRY.yaml` (layer + tag match) → `tickets/working_log.csv` cross-reference → code file reads → test discovery → AC-signal derivation → tier assessment
+- Never writes files to disk — returns JSON only
+
+**Inputs:** A concern object (`id`, `title`, `description`, `domain_area`, `type_hint`, `priority_hint`, `raw_excerpts`) and a derived `registryLayers` list — supplied per-call in the invocation prompt. No ticket file is required or read.
+
+**Outputs:** JSON matching `INVESTIGATION_SCHEMA` (`concern_id`, `files_found`, `constraints`, `existing_tests`, `related_tickets`, `ac_signals`, `risks`, `is_duplicate`, `duplicate_of`, `tier_recommendation`, `summary`) — never writes files to disk.
+
+**When to invoke directly:** Available for ad hoc "investigate this idea before I write a ticket" use, same as `investigator`/`world-debugger`/`simulation-analyst` are documented as directly invokable. No invocation-context restriction — the tool-scoping (not caller identity) is what makes this agent safe to expose broadly.
+
+Use `investigator` when a ticket already exists and you need file-based artifacts; use `concern-investigator` when you have a pre-ticket idea and want structured findings back without writing anything.
+
+---
+
 ### `planner`
 
 **Role:** Converts investigation findings into an ordered, implementer-ready plan.
@@ -331,6 +349,7 @@ rather than a single named entry.
 |---|---|---|
 | `ticket-scoper` | Pre-work | `tickets/inprogress/{id}.md` |
 | `investigator` | Pre-work | `investigation.md`, `test_plan.md` |
+| `concern-investigator` | Pre-work (pre-ticket) | Structured JSON (files_found, ac_signals, ...) |
 | `planner` | Pre-work | `plan.md` |
 | `architecture-reviewer` | Gate before implementation | APPROVED / NEEDS_CHANGES verdict |
 | `implementer` | Implementation | Code changes + implementation notes |

@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20260709-CONCERN-INVESTIGATOR-AGENT
-phase: open
+phase: done
 date: 2026-07-09
 tags: []
 ---
@@ -15,7 +15,7 @@ tags: []
 Add a dedicated, tool-scoped agent for create-tickets.js's pre-ticket Investigate phase
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -78,12 +78,31 @@ None.
 
 ## Implementation Notes
 
+Implemented per `staging_artifacts/TCK-20260709-CONCERN-INVESTIGATOR-AGENT/plan.md` Steps 1-4, in order.
+
+1. **`.claude/agents/concern-investigator.md`** (new) — frontmatter uses the existing 12-agent `name`/`description` convention plus a new `tools: Read, Grep, Glob, Bash, WebFetch, WebSearch, mcp__knowledge-search__search_docs` field (first `tools:`-restricted custom agent in this repo; omits `Edit`/`Write`/`NotebookEdit`/`Agent`/`Artifact`/`ExitPlanMode`). Body extracts `create-tickets.js`'s prior Step 0-7 investigation methodology verbatim (same scripts, same fallback behavior, same Bad/Good AC-signal examples, same hotfix/standard tier split), reworded from JS template-literal interpolations (`${concern.title}`) to generic placeholder prose ("the concern's title", "the concern's registryLayers"). The `## Output` section copies `INVESTIGATION_SCHEMA`'s 10 fields and descriptions field-for-field.
+2. **`.claude/workflows/create-tickets.js`** — Investigate-phase `agent(...)` call (line ~296-312) now passes `agentType: 'concern-investigator'`; prompt shrunk from ~115 lines to concern-specific substitutions only (id, title, description, domain_area, type_hint, priority_hint, raw_excerpts, registryLayers). `INVESTIGATION_SCHEMA` and `DOMAIN_TO_LAYERS` are byte-identical to before (verified by `git diff` and by the new schema-drift test).
+3. **`tests/tools/test_concern_investigator_agent_definition.py`** (new) — 5 tests: frontmatter/tools-field shape, context-scan ordering (search_docs -> graphify -> REGISTRY.yaml -> working_log.csv), Investigate-phase dispatch uses the new agentType with old Step-header text absent, `INVESTIGATION_SCHEMA`'s required-field list unchanged, and `docs/ai/agents.md` has a distinct `concern-investigator` heading. All 5 pass, alongside the existing `test_tag_skill_mapping_check.py` regression guard (10 tests, all passing) confirming the create-tickets.js edit didn't bleed into the adjacent Structure-phase tag->skill table.
+4. **`docs/ai/agents.md`** — new `### \`concern-investigator\`` subsection added between `### \`investigator\`` and `### \`planner\`` (Role / What it does / Inputs / Outputs / When to invoke directly, plus an explicit investigator-vs-concern-investigator contrast line), and a new row in the Agent Summary Table.
+
+**Minor implementation detail (not a plan deviation):** the Inputs section's `registryLayers` bullet was worded as "REGISTRY.yaml layers" rather than "`docs/REGISTRY.yaml` layers" specifically so the literal string `docs/REGISTRY.yaml` first appears in the Methodology's Step 2 section, not earlier in Inputs — this keeps the context-scan-ordering test meaningful (it asserts `search_docs` -> `graphify query` -> `docs/REGISTRY.yaml` -> `tickets/working_log.csv` occur in that relative order in the methodology text). No content or meaning was lost; this is a phrasing choice made while writing the test in the same step.
+
+**Runtime verification — superseded during Verify, documented here for the record:** At Implement time, the assumption (based on `TCK-20260707-SUBAGENT-FRONTMATTER`'s precedent) was that the harness does not hot-reload `.claude/agents/` mid-session, so live invocation was believed impossible within this run. That assumption turned out to be **wrong for this session**: shortly after Implement completed, the harness emitted a system-level notice that `concern-investigator` had become available as an `Agent` subagent type, without a session restart. During the Verify phase, `Agent(subagent_type: "concern-investigator", ...)` was actually invoked live against a real (synthetic, smoke-test) concern. Result: it dispatched successfully, followed its documented Step 0–7 methodology (search_docs → graphify → `docs/REGISTRY.yaml` → `tickets/working_log.csv` → code read → tests → AC-signal derivation, in that order), used only read-only tools (`Read`, `Bash` for read-only commands, MCP search, `graphify query`) — no `Edit`/`Write`/`NotebookEdit` call was attempted or needed — and returned valid JSON matching `INVESTIGATION_SCHEMA`'s exact field list. Both previously-open questions (does `tools:` enforcement hold at runtime; does the `agentType` string resolve) are now answered **yes**, by direct observation, not just static configuration. Hot-reload behavior may still vary across harness versions/sessions — the static tests remain the durable regression guard — but for this ticket, live verification is complete, not merely disclosed as pending.
+
+`graphify update .` was run after the test file was added; it reported a pre-existing node-count mismatch warning (25661 vs 25662) unrelated to this change and requiring `--force` to override — not forced, since investigating/fixing the graph index is outside this ticket's scope.
 
 ## Test Summary
 
+`.venv/bin/python3 -m pytest tests/tools/test_tag_skill_mapping_check.py tests/tools/test_concern_investigator_agent_definition.py -v` — 15 passed, 0 failed.
 
 ## Files Changed
 
+- `.claude/agents/concern-investigator.md` (new)
+- `.claude/workflows/create-tickets.js` (Investigate-phase dispatch only)
+- `tests/tools/test_concern_investigator_agent_definition.py` (new)
+- `docs/ai/agents.md` (new `concern-investigator` subsection + summary table row)
 
 ## Completion Summary
+
+Added `.claude/agents/concern-investigator.md`, a read-only (`tools:` field excludes Edit/Write/NotebookEdit), JSON-returning agent that owns the pre-ticket investigation methodology previously duplicated inline in `create-tickets.js`'s Investigate phase. `create-tickets.js` now dispatches `agentType: 'concern-investigator'` with a shrunk, concern-specific prompt; `INVESTIGATION_SCHEMA` is unchanged. Documented in `docs/ai/agents.md` under its own heading, distinct from `investigator`. Static tests pass (15/15). Live verification (see Implementation Notes) confirmed via an actual smoke-test invocation during Verify: the agent dispatches correctly, stays read-only in practice, and returns schema-conformant JSON — both runtime-enforcement questions are answered, not just disclosed as open.
 

@@ -294,7 +294,7 @@ const investigations = await pipeline(
     const registryLayers = DOMAIN_TO_LAYERS[domainKey] || ['core']
 
     return agent(
-      `Investigate concern "${concern.id}: ${concern.title}" using the project's structured knowledge assets before falling back to grep.
+      `Investigate concern "${concern.id}: ${concern.title}".
 
 Concern (from proposal):
   Title: ${concern.title}
@@ -306,109 +306,10 @@ Concern (from proposal):
 Raw excerpts from proposal:
 ${concern.raw_excerpts.map(e => `  - ${e}`).join('\n')}
 
-Work through these steps in order. Each step narrows the search so the next step is more targeted.
-Do NOT invent file paths — report only what the tools actually return.
+Registry layers to search: ${registryLayers.join(', ')}
 
-─── Step 0: Semantic prior-work retrieval ─────────────────────────────────────
-
-  Run (only if knowledge-index/ exists — the tool will self-check):
-    python3 tools/knowledge_search.py query "${concern.title} ${concern.description}" --top-k 5
-
-  If the command prints "knowledge index not found" or exits non-zero: skip and proceed to Step 1.
-  If results are returned: note each returned ticket ID and path. Use these as warm-start
-  candidates in Step 3 (prior ticket cross-reference) — check them in working_log.csv before
-  running additional keyword greps.
-
-─── Step 1: Knowledge graph — code structure ──────────────────────────────────
-
-  1a. Read graphify-out/GRAPH_REPORT.md for god nodes and community structure.
-      Identify which community/god node is most relevant to domain_area="${concern.domain_area}".
-
-  1b. Run the graphify CLI to find code nodes related to this concern:
-        graphify query "${concern.title}"
-      Note: if the CLI is unavailable, search graphify-out/graph.json via:
-        python3 -c "
-import json
-with open('graphify-out/graph.json') as f: g = json.load(f)
-terms = '${concern.title}'.lower().split()
-hits = [n for n in g.get('nodes', []) if any(t in str(n).lower() for t in terms)]
-for h in hits[:15]: print(h)
-"
-      Collect: node names, file paths, module names surfaced by the graph.
-
-─── Step 2: Docs and prior tickets via REGISTRY.yaml ──────────────────────────
-
-  Query REGISTRY.yaml for entries in the relevant layers (${registryLayers.join(', ')}), unioned
-  with entries whose `tags` match candidate Subsystem/Topic tags derived from the concern's own
-  text:
-    python3 -c "
-import sys, yaml
-sys.path.insert(0, 'tools')
-from registry_query import candidate_tags_from_text, filter_registry
-
-with open('docs/REGISTRY.yaml') as f:
-    entries = yaml.safe_load(f)
-layers = ${JSON.stringify(registryLayers)}
-candidate_tags = candidate_tags_from_text(${JSON.stringify(concern.title)}, ${JSON.stringify(concern.description)}, ${JSON.stringify(concern.domain_area)})
-matches = filter_registry(entries, layers=layers, candidate_tags=candidate_tags)
-docs    = [e for e in matches if e.get('type') == 'doc']
-tickets = [e for e in matches if e.get('type') == 'ticket']
-print('candidate tags:', sorted(candidate_tags))
-print('=== DOCS ===')
-for e in docs[:20]:   print(e['path'], '-', e['title'])
-print('=== TICKETS ===')
-for e in tickets[:30]: print(e.get('ticket_id', e['path']), '-', e['title'])
-"
-
-  From the doc list: read the highest-authority entries (P0 first) that match this concern.
-  From the ticket list: note IDs for cross-referencing in step 3.
-
-─── Step 3: Prior ticket history via working_log.csv ──────────────────────────
-
-  Extract keywords from the concern title and description (nouns, domain terms).
-  Search ticket history for each keyword:
-    grep -i "<keyword>" tickets/working_log.csv
-
-  For up to 3 matching prior tickets, check if stored_artifacts/<ticket_id>/investigation.md exists.
-  If it does, read it — prior investigations in the same area often surface the same constraints and risks.
-  Determine if any prior ticket FULLY covers this concern (is_duplicate=true) or partially overlaps (related_ticket).
-
-─── Step 4: Code files ────────────────────────────────────────────────────────
-
-  Use the node names and file paths from Step 1 as primary targets.
-  Read up to 3 most relevant files to understand current behavior, missing logic, or broken state.
-  Note specific line ranges where the relevant logic lives.
-
-  Only fall back to grep if Step 1 returned no usable file paths:
-    grep -r "<noun from concern>" src/ --include="*.py" -l 2>/dev/null
-
-─── Step 5: Existing tests ────────────────────────────────────────────────────
-
-  Using file names found in Step 4, find their test counterparts:
-    find tests/ -name "test_<module_name>.py" 2>/dev/null
-  Also grep for key terms in tests/:
-    grep -r "<key term>" tests/ --include="*.py" -l 2>/dev/null
-  Identify specific test function names that already cover this area.
-
-─── Step 6: Derive acceptance criteria signals ────────────────────────────────
-
-  From: concern description + code behavior (step 4) + doc constraints (step 2) + test patterns (step 5)
-  Produce 2-4 concrete, testable AC signals. Each must describe a SPECIFIC, VERIFIABLE outcome.
-
-  Bad:  "the system handles this case correctly"
-  Bad:  "the feature works as expected"
-  Good: "harvesting a non-empty node returns quantity > 0 and decrements node.quantity by that amount"
-  Good: "calling resolve_conflict() with two overlapping regions raises RegionConflictError"
-
-─── Step 7: Assess tier ───────────────────────────────────────────────────────
-
-  hotfix: fix is in ≤1 file and ≤1 function, no new state, no architecture change
-  standard: anything else
-
-Return: concern_id="${concern.id}", files_found (only actual paths from steps 1/4), constraints
-(with doc path prefix), existing_tests, related_tickets, ac_signals, risks,
-is_duplicate, duplicate_of, tier_recommendation, summary.`,
-      { label: `investigate:${concern.id}`, schema: INVESTIGATION_SCHEMA }
+Return: concern_id="${concern.id}", plus all other INVESTIGATION_SCHEMA fields per your system prompt's methodology.`,
+      { agentType: 'concern-investigator', label: `investigate:${concern.id}`, schema: INVESTIGATION_SCHEMA }
     )
   }
 )
