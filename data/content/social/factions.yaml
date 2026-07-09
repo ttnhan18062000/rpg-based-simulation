@@ -59,6 +59,7 @@
   common_races: ["human", "dwarf", "elf"]
   themes: ["trade", "frontier"]
   legacy_engine_bucket: "NEUTRAL"
+  hazard_immunities: ["NATURAL_TERRAIN"]
 
 # STATE: ADDITIONAL
 - id: "bandit_company"
@@ -133,6 +134,7 @@
   common_races: ["human", "elf", "spirit"]
   themes: ["arcane", "moon"]
   legacy_engine_bucket: "NEUTRAL"
+  hazard_immunities: ["ARCANE_CORRUPTION"]
 
 # STATE: ADDITIONAL
 - id: "swamp_tribe"

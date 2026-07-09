@@ -60,16 +60,20 @@ As `Hazard Level` (0.0 to 1.0) increases, entities within the region suffer:
 
 #### Native Endurance to a Region's Hazard Kind
 Every region carries a `hazard_kind` tag (e.g. `"PHYSICAL"` — the default, `"NATURAL_TERRAIN"`,
-`"TOXIC_GAS"`, `"UNDEAD_CORRUPTION"`) describing *what kind* of hazard its passive drain
-represents. Separately, a faction's catalog definition may declare `hazard_immunities` — the set
-of `hazard_kind` values its members endure without harm (e.g. `wild_beast_pack` and
-`goblin_warband` both declare `hazard_immunities: ["NATURAL_TERRAIN"]`, since wolves and goblins
-are native to their own forest habitats; `undead_remnants` declares
+`"TOXIC_GAS"`, `"UNDEAD_CORRUPTION"`, `"ARCANE_CORRUPTION"`) describing *what kind* of hazard its
+passive drain represents. Separately, a faction's catalog definition may declare
+`hazard_immunities` — the set of `hazard_kind` values its members endure without harm (e.g.
+`wild_beast_pack` and `goblin_warband` both declare `hazard_immunities: ["NATURAL_TERRAIN"]`,
+since wolves and goblins are native to their own forest habitats; `undead_remnants` declares
 `hazard_immunities: ["UNDEAD_CORRUPTION"]`, since undead endure the corruption of their own
 battlefield for a distinct in-fiction reason from ordinary wilderness endurance). `"TOXIC_GAS"`
 remains synthetic/test-only (used only in unit tests, `tests/unit/world/test_regional_consequences.py`);
 `"UNDEAD_CORRUPTION"` is an authored production value as of
 TCK-20260703-SIMQ-UPLIFT3-WORLD-CORPUS (`data/content/world_modules/undead_battlefield.yaml`).
+`"ARCANE_CORRUPTION"` is an authored production value as of
+TCK-20260708-GENERATED-FRONTIER-LATE-TICK-POPULATION-COLLAPSE
+(`data/content/world_modules/moon_cult_ruins.yaml`'s `moon_cave` region, matched by
+`arcane_circle`'s `hazard_immunities`).
 
 When computing Passive HP Drain for an entity, `EnvironmentService.calculate_hazard_drain`
 resolves the entity's catalog faction id and checks it against the region's `hazard_kind`:

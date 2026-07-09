@@ -1,6 +1,6 @@
 {
   "world_id": "urban_political",
-  "seed": 202,
+  "seed": 42,
   "entity_count": 30,
   "region_count": 3,
   "resource_node_count": 3,
@@ -8,6 +8,6 @@
   "quest_count": 9,
   "distinct_populated_factions": 4,
   "warnings": [],
-  "compile_duration_ms": 17.1492159997797,
-  "state_hash": "1231e82297f79b746c7ed214346ab3d7"
+  "compile_duration_ms": 12.12616398697719,
+  "state_hash": "a1192dcbafccb16e77a950e74e9fa066"
 }

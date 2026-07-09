@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: simulation
 authority: P1
 audience: agent
 ticket_id: TCK-20260707-SIMQ-DEEP-COVERAGE-EPIC
-phase: open
+phase: done
 date: 2026-07-07T16:31:09Z
 tags: [simulation-quality, corpus, calibration, world]
 ---
@@ -15,7 +15,7 @@ tags: [simulation-quality, corpus, calibration, world]
 SimQ Deep Coverage: long-run drift detection and pillar-completeness verification
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 epic
@@ -104,14 +104,14 @@ low-priority WORLD-pillar scoring rule addition, explicitly not a new pillar.
   tickets.
 
 ## Acceptance Criteria
-- [ ] All 10 child tickets listed above exist, are correctly formatted, and pass
+- [x] All 10 child tickets listed above exist, are correctly formatted, and pass
       `python3 tools/validate_frontmatter.py <file> --content-type ticket`
-- [ ] The 4 relocated resource/coverage-gap tickets land (move to `tickets/done/`) before
+- [x] The 4 relocated resource/coverage-gap tickets land (move to `tickets/done/`) before
       `TCK-20260707-SIMQ-LONGRUN-HOTPILLAR-ANCHORS` touches `hero_guild_routing` or
       `urban_political`
-- [ ] No new long-run anchor exceeds 2000 ticks
-- [ ] No 11th top-level pillar is added
-- [ ] This epic ticket is moved to `tickets/done/` only once all 10 child tickets are done (or
+- [x] No new long-run anchor exceeds 2000 ticks
+- [x] No 11th top-level pillar is added
+- [x] This epic ticket is moved to `tickets/done/` only once all 10 child tickets are done (or
       explicitly descoped with rationale recorded here)
 
 ## Related Tickets
@@ -141,12 +141,8 @@ low-priority WORLD-pillar scoring rule addition, explicitly not a new pillar.
   reference for this epic's own `tickets/todos/simq-deep-coverage/SEQUENCE.md`
 
 ## Related Stored Artifacts
-- `staging_artifacts/TCK-20260707-SIMQ-DEEP-COVERAGE-EPIC/` — this epic's own scoping
-  investigation (renamed from the pre-ticket working name `EPIC-SCOPE-simq-deep-coverage/` once
-  this epic ticket ID existed); must be preserved into
-  `stored_artifacts/TCK-20260707-SIMQ-DEEP-COVERAGE-EPIC/` at epic close (per investigation.md §3's
-  explicit process lesson, to avoid the citation-rot pattern that produced
-  `TCK-20260707-EPIC-SCOPE-INVESTIGATION-DOC-MISSING`)
+- `staging_artifacts/TCK-20260707-SIMQ-DEEP-COVERAGE-EPIC/` — **could not be preserved at epic
+  close: the file no longer exists.** See Citation Note below.
 
 ## Related Code Areas
 - `tests/simulation_quality/fixtures/grade_anchors.json` — anchor data
@@ -163,13 +159,60 @@ low-priority WORLD-pillar scoring rule addition, explicitly not a new pillar.
   child ticket to confirm live, not a blocking epic-level decision.
 
 ## Implementation Notes
-(to be filled during implementation)
+Per this epic's own Tier Routing (scope-only, no direct implementation), all work happened in the
+10 child tickets, each following its own tier-appropriate pipeline independently. This epic
+ticket's role was tracking and sequencing only. The child tickets landed across 2026-07-07 through
+2026-07-08 (see `working_log.csv` for the full timeline); all 10 are confirmed `DONE` and the
+child-tracking folder was moved to `tickets/done/simq-deep-coverage/` per the standard
+folder-completion rule, but this epic ticket itself was left behind in `tickets/todos/` after the
+last child (`TCK-20260707-SIMQ-BUILDING-SABOTAGE-SIGNAL`) closed. Closed out here as a follow-up
+housekeeping pass (2026-07-09), discovered while auditing `tickets/todos/` for simulation-quality
+work.
+
+## Citation Note (2026-07-09)
+`staging_artifacts/TCK-20260707-SIMQ-DEEP-COVERAGE-EPIC/investigation.md` no longer exists — not in
+the working tree, and (per `git log --all --diff-filter=A`) never committed, since
+`staging_artifacts/` is gitignored by repo policy. This is the exact citation-rot pattern
+`TCK-20260707-EPIC-SCOPE-INVESTIGATION-DOC-MISSING` fixed for the predecessor epic, recurring here
+despite this epic's own Related Stored Artifacts section explicitly calling out the intent to avoid
+it. Impact is limited: every specific finding this epic's Request Summary cites (the 3-of-17-worlds
+long-run coverage gap, the AGENCY/COMBAT/PROGRESSION/WORLD invariance finding, the
+`building_sabotage` gap) is preserved directly in this ticket's own Request Summary text above, and
+every child ticket's own investigation/implementation independently re-verified its slice against
+live data rather than trusting the epic doc blindly (e.g. `TCK-20260707-SIMQ-LONGRUN-HOTPILLAR-ANCHORS`
+and `TCK-20260707-SIMQ-GENERATED-FRONTIER-BASELINE-ANCHORS` both re-ran calibration live). No child
+ticket's acceptance criteria depended on re-reading the missing file. Flagged here rather than
+silently closing, per this ticket's own "no known material gap left unstated" obligation; a future
+ticket may want to harden `staging_artifacts/` migration enforcement so this stops recurring, but
+that is not scoped here.
 
 ## Test Summary
-(to be filled during implementation)
+Each child ticket ran and independently verified its own test suite at closure; no epic-level test
+run beyond the children's own (see individual child tickets' Test Summary sections). Most recent
+corpus-wide confirmation across the epic's full output was `TCK-20260707-SIMQ-BUILDING-SABOTAGE-SIGNAL`'s
+close.
 
 ## Files Changed
-(to be filled during implementation)
+See each child ticket's own Files Changed section. At a corpus level: 6 new long-run calibration
+anchors (1000t/2000t, capped per this epic's explicit ≤2000t rule), `generated_frontier_3_42`'s
+first-ever grade anchors (200t + 1000t), 5 tag-gap resource/region catalog fixes, a new
+`building_sabotaged` WORLD-pillar observability signal, and `quality_scoring_contract.md` §7.5
+documenting the pillar-completeness conclusion (no 11th pillar justified). One genuine new defect
+was discovered as a byproduct and correctly spun out rather than fixed in-epic:
+`TCK-20260708-GENERATED-FRONTIER-LATE-TICK-POPULATION-COLLAPSE` (found during the
+`generated_frontier_3_42` 1000t anchor run).
 
 ## Completion Summary
-(to be filled on done)
+All 10 child tickets landed in `tickets/done/`; the child-tracking folder moved to
+`tickets/done/simq-deep-coverage/` per the standard folder-completion rule. This epic delivered its
+two threads as scoped: (1) long-run coverage — new 1000t/2000t anchors for the worlds already known
+to drive AGENCY/COGNITION/FACTION/NARRATIVE to peak grades at short run, plus `generated_frontier_3_42`'s
+first-ever anchors at any tick count, all within the explicit ≤2000t cap; (2) pillar completeness —
+documented conclusion that no 11th top-level pillar is justified, and closed the one genuine gap
+found (`building_sabotage`) as a WORLD-pillar scoring-rule addition rather than a new pillar. Two
+genuine population-collapse defects were surfaced as a byproduct of the long-run anchoring work
+(not epic-in-scope to fix) and correctly spun into their own standalone tickets rather than papered
+over: `TCK-20260708-DUNGEON-URBAN-POPULATION-COLLAPSE` and
+`TCK-20260708-GENERATED-FRONTIER-LATE-TICK-POPULATION-COLLAPSE`. This epic ticket itself was left
+open in `tickets/todos/` after its last child closed; closed out here as housekeeping (see
+Implementation Notes and Citation Note above for the two process gaps found during closure).

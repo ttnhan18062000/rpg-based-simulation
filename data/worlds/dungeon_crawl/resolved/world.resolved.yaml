@@ -42,7 +42,7 @@ regions:
   - 120
   terrain: ruin
   hazard_level: 3.5
-  hazard_kind: PHYSICAL
+  hazard_kind: UNDEAD_CORRUPTION
   tags:
   - ruins
 - id: bandit_road
@@ -54,7 +54,7 @@ regions:
   - 60
   terrain: forest
   hazard_level: 2.0
-  hazard_kind: PHYSICAL
+  hazard_kind: NATURAL_TERRAIN
   tags:
   - forest
 factions:

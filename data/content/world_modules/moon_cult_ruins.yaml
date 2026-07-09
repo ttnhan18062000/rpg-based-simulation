@@ -10,6 +10,7 @@ regions:
     grid_bounds: [100, 70, 130, 110]
     terrain: "cave"
     hazard_level: 4.0
+    hazard_kind: "ARCANE_CORRUPTION"
     tags: [cave]
 factions: ["moon_cult", "arcane_circle"]
 populations:

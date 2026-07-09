@@ -796,6 +796,11 @@ artifacts). The on-disk seed42 200t artifact was overwritten with this fresh run
 
 #### 200t (seeds 42 / 123 / 456)
 
+**Superseded by `TCK-20260708-GENERATED-FRONTIER-LATE-TICK-POPULATION-COLLAPSE`'s post-fix
+re-calibration** — see the new section below. The table below is retained as a historical record
+of the pre-fix grades (`moon_cave`'s missing `hazard_kind` still causing `arcane_circle`'s 4
+entities to die by tick 50 in every run at the time these grades were measured).
+
 | Pillar | seed42 | seed123 | seed456 |
 |---|---|---|---|
 | COGNITION | B | B | B |
@@ -859,6 +864,61 @@ exercised or observed by any existing test. Per this ticket's Out of Scope, the 
 a new extended-window regression guard past tick 800, since no existing test covers this range).
 The 1000t anchor is still landed as-is (AC3 requires it) — the anchor reflects the world's actual
 measured behavior at 1000t, collapse included, per this document's own evidence-first convention.
+
+### generated_frontier_3_42 — post-fix re-calibration (`TCK-20260708-GENERATED-FRONTIER-LATE-TICK-POPULATION-COLLAPSE`)
+
+**Root cause and fix:** the `moon_cave` region (`data/content/world_modules/moon_cult_ruins.yaml`)
+declared `hazard_level: 4.0` with no `hazard_kind`, so the resolver's `"PHYSICAL"` default applied
+unconditionally — its sole population, `moon_cult_apprentice_circle` (4 `arcane_circle`
+`apprentice_mage` entities), took unmitigated hazard drain and died by tick 50 in every run,
+regardless of seed. Fixed by declaring `hazard_kind: "ARCANE_CORRUPTION"` on `moon_cave` and adding
+a matching `hazard_immunities: ["ARCANE_CORRUPTION"]` entry to `arcane_circle`
+(`data/content/social/factions.yaml`) — the same remediation pattern
+`TCK-20260708-DUNGEON-URBAN-POPULATION-COLLAPSE` used. `generated_frontier_3_42` was recompiled to
+pick up the fix (the only world composing `moon_cult_ruins`). A second confirmed gap
+(`town_council`'s 2 `bandit_road`-stationed guards have no `hazard_immunities` matching
+`bandit_road`'s `NATURAL_TERRAIN` `hazard_kind`) was deliberately **not** fixed here, consistent
+with `TCK-20260708-DUNGEON-URBAN-POPULATION-COLLAPSE` leaving the identical
+`urban_political`/`town_council` case open — fixing one world's instance of a shared, unresolved
+design question without a decision covering both would create an inconsistency.
+
+**200t re-calibration (all 3 seeds, fresh `calibrate_simq.py` runs):** `arcane_circle`'s 4 entities
+now survive past tick 200 (previously dead by tick 50), which shifts real event volume: COMBAT
+**A→B** (fewer/different combat events without the guaranteed early deaths — raw_score 32.0→8.0,
+events 16→4) and PROGRESSION **B→C** (raw_score 16.0→-2.0, events 9→3) at all 3 seeds identically.
+All other pillars (COGNITION, AGENCY, FACTION, ECONOMY, SOCIAL, INFORMATION, WORLD, NARRATIVE) are
+unchanged. `grade_anchors.json`'s 3 `generated_frontier_3_42_seed{42,123,456}_200t` entries were
+updated to match. This is a genuine, expected behavioral shift from the fix (removing 4
+guaranteed-dead entities changes what combat/progression activity actually occurs), not a scoring
+artifact.
+
+**1000t re-calibration (seed 42):** all 10 pillar letter grades are **unchanged** from the pre-fix
+anchor (COGNITION B, AGENCY C, COMBAT B, FACTION A, ECONOMY B, PROGRESSION B, SOCIAL C, INFORMATION
+B, WORLD B, NARRATIVE A; overall B) — raw scores and event counts increased across COMBAT (174→182,
+96→100 events), PROGRESSION (121→127, 44→46 events), WORLD (174→164, 95→84 events), and NARRATIVE
+(1040→1110, 208→222 events), consistent with more entities surviving and acting longer, but none of
+these shifts crossed a grade-band boundary. `grade_anchors.json`'s
+`generated_frontier_3_42_seed42_1000t` entry is unchanged (re-verified, not re-generated).
+
+**Population-health outcome:** a fresh instrumented drive (same seed 42, same harness) post-fix
+shows tick 50 now at 42/44 (95.5%, up from 38/44 pre-fix — the 4 `arcane_circle` entities no longer
+die immediately) and the population still narrows late in the run (tick 800: 68.2%, tick 900:
+56.8%, tick 1000: 34.1%). The late-tick (roughly tick 740-860 onward) erosion documented above is
+**not** primarily caused by the 4 `moon_cave` entities — the investigation
+(`stored_artifacts/TCK-20260708-GENERATED-FRONTIER-LATE-TICK-POPULATION-COLLAPSE/investigation.md`,
+Root cause 3) traced it to the engine's documented, wall-clock-dependent tick-budget
+watchdog/emergency-throttle (`docs/engine/kernel.md` §"Emergency Throttling"), which drops
+different entities' resolution work depending on real compute timing, not the deterministic seed —
+two back-to-back pre-fix runs on identical seed/code diverged by 100+ ticks in floor-violation
+onset and by more than 2x at tick 1000. This is documented, intentional, corpus-wide engine
+behavior and is explicitly out of this ticket's scope to change. A new regression guard,
+`test_generated_frontier_3_42_extended_population_stability`
+(`tests/unit/worldassembly/test_corpus_diversity.py`), drives 3 independent same-seed trials to
+1000 ticks: it hard-asserts the standard 60% floor per-trial through tick 800 (unaffected by the
+throttle non-determinism), then asserts an averaged, widened floor at tick 900 (mean ≥35%) and tick
+1000 (mean ≥8%, plus a hard no-full-extinction check), with thresholds set below the worst pre-fix
+observations (43.2% at 900, 11.4% at 1000) to absorb legitimate run-to-run variance while still
+catching a genuine future regression. Confirmed passing across 3 separate full pytest invocations.
 
 ---
 

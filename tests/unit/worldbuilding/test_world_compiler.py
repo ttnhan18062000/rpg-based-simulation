@@ -492,6 +492,28 @@ def test_urban_political_resolved_world_seeds_bandit_town_council_tension():
     assert state.factions["town_council"].tension_level == 0.5
 
 
+def test_urban_political_resolved_bandit_road_hazard_kind_matches_source():
+    """urban_political's resolved bandit_road region must carry the hazard_kind its
+    source module (bandit_road_trade_pressure.yaml) declares, not a stale default from
+    an out-of-date recompile (TCK-20260708-DUNGEON-URBAN-POPULATION-COLLAPSE)."""
+    import yaml
+
+    resolved = yaml.safe_load(
+        open("data/worlds/urban_political/resolved/world.resolved.yaml").read()
+    )
+    regions_by_id = {r["id"]: r for r in resolved["regions"]}
+    assert regions_by_id["bandit_road"]["hazard_kind"] == "NATURAL_TERRAIN", (
+        "urban_political's resolved bandit_road region is stale relative to "
+        "bandit_road_trade_pressure.yaml's source — re-run "
+        "`worldbuilding.cli resolve` + `compile --from-resolved` for urban_political."
+    )
+    assert regions_by_id["trading_hometown"]["hazard_kind"] == "NATURAL_TERRAIN", (
+        "urban_political's resolved trading_hometown region is stale relative to "
+        "trading_company_hub.yaml's source — re-run "
+        "`worldbuilding.cli resolve` + `compile --from-resolved` for urban_political."
+    )
+
+
 def test_helper_enum_mappers():
     assert get_role_enum("hero") == EntityRole.HERO
     assert get_role_enum("worker") == EntityRole.WORKER

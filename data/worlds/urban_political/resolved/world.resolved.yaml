@@ -31,7 +31,7 @@ regions:
   - 60
   terrain: road
   hazard_level: 2.0
-  hazard_kind: PHYSICAL
+  hazard_kind: NATURAL_TERRAIN
   tags:
   - wilderness
 - id: trading_hometown
@@ -43,7 +43,7 @@ regions:
   - 45
   terrain: plain
   hazard_level: 0.5
-  hazard_kind: PHYSICAL
+  hazard_kind: NATURAL_TERRAIN
   tags:
   - plain
   - trade_route

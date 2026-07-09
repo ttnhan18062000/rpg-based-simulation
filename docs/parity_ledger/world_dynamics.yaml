@@ -300,8 +300,21 @@
     now declare hazard_kind/hazard_immunities, exercised across the 5 newly-anchored worlds
     (frontier_extended, frontier_living_world, wilderness_survival, highland_traverse,
     swamp_border_world), not only wolf_den_near_forest/goblin_camp_conflict.
+    TCK-20260708-DUNGEON-URBAN-POPULATION-COLLAPSE closed the remaining corpus gap — 3 more
+    modules (ruins_mystery_quest, scalable_bandit_camp, trading_company_hub) now declare
+    hazard_kind matching their populating faction's hazard_immunities (undead_remnants gains
+    no new immunity — UNDEAD_CORRUPTION already existed; merchant_league gains a new
+    NATURAL_TERRAIN hazard_immunities entry), and urban_political's stale compiled artifact
+    (predating bandit_road_trade_pressure.yaml's already-landed hazard_kind fix) was
+    refreshed via a recompile — exercised by dungeon_crawl, hero_guild_routing, and
+    urban_political.
+    TCK-20260708-GENERATED-FRONTIER-LATE-TICK-POPULATION-COLLAPSE closed the last remaining
+    module gap — moon_cult_ruins's moon_cave region now declares a new hazard_kind,
+    "ARCANE_CORRUPTION", matching a new arcane_circle hazard_immunities entry (arcane_circle
+    previously had zero hazard_immunities, same pattern as merchant_league's prior fix) —
+    exercised by generated_frontier_3_42, the sole world composing moon_cult_ruins.
   proof_type: parity
-  test_path: tests/unit/world/test_regional_consequences.py, tests/unit/worldassembly/test_corpus_diversity.py
+  test_path: tests/unit/world/test_regional_consequences.py, tests/unit/worldassembly/test_corpus_diversity.py::test_hazard_kind_matches_populating_faction_immunity, tests/unit/worldassembly/test_corpus_diversity.py::test_population_stability, tests/unit/worldassembly/test_corpus_diversity.py::test_generated_frontier_3_42_extended_population_stability, tests/unit/worldbuilding/test_world_compiler.py::test_urban_political_resolved_bandit_road_hazard_kind_matches_source
   divergence_note: null
   support_boundary: null
 - id: WORLD-060
@@ -319,8 +332,19 @@
     6 factions, including a new "UNDEAD_CORRUPTION" hazard_kind for undead_battlefield /
     undead_remnants), exercised across 5 newly-anchored worlds instead of only
     wolf_den_near_forest/goblin_camp_conflict.
+    TCK-20260708-DUNGEON-URBAN-POPULATION-COLLAPSE fixed 3 remaining never-anchored modules
+    (ruins_mystery_quest, scalable_bandit_camp, trading_company_hub) that had never declared
+    hazard_kind at all — the resolver's PHYSICAL default (nothing immune) was silently
+    draining their populating factions unconditionally, reproducing the exact
+    population-collapse pattern this parity entry guards against. urban_political's
+    compiled artifact was also refreshed to pick up bandit_road_trade_pressure.yaml's
+    already-fixed hazard_kind (stale-compile bug, same class, separate cause).
+    TCK-20260708-GENERATED-FRONTIER-LATE-TICK-POPULATION-COLLAPSE fixed the last remaining
+    never-declared module, moon_cult_ruins (moon_cave region), gaining a new "ARCANE_CORRUPTION"
+    hazard_kind matched by a new arcane_circle hazard_immunities entry — exercised by
+    generated_frontier_3_42.
   proof_type: parity
-  test_path: tests/unit/world/test_regional_consequences.py, tests/unit/worldassembly/test_corpus_diversity.py
+  test_path: tests/unit/world/test_regional_consequences.py, tests/unit/worldassembly/test_corpus_diversity.py::test_hazard_kind_matches_populating_faction_immunity, tests/unit/worldassembly/test_corpus_diversity.py::test_population_stability, tests/unit/worldassembly/test_corpus_diversity.py::test_generated_frontier_3_42_extended_population_stability, tests/unit/worldbuilding/test_world_compiler.py::test_urban_political_resolved_bandit_road_hazard_kind_matches_source
   divergence_note: null
   support_boundary: null
 - id: WORLD-061
