@@ -31,7 +31,7 @@ eventually read:
 | 2. Tag-driven gate routing | Process/Skill-signal |
 | 3. Cross-cutting discovery beyond `layer` | Subsystem/Topic |
 | 4. Retro/analytics grouping | Subsystem/Topic (primary), Process/Skill-signal (skill-specific gate failures) |
-| 5. Automatable skill-catalog health check | Process/Skill-signal |
+| 5. Automatable skill-catalog health check | Process/Skill-signal — built: `tools/tag_skill_mapping_check.py` (extraction/comparison logic), run via `tests/tools/test_tag_skill_mapping_check.py` (`python3 -m pytest tests/tools/test_tag_skill_mapping_check.py -q`) |
 
 ## Categories
 

@@ -10,13 +10,31 @@ Usage:
 """
 import argparse
 import json
+import sys
 from collections import Counter, defaultdict
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 
+# tools/agent-monitoring/generate_retro.py's parent is tools/agent-monitoring/, so parent.parent
+# is tools/ — same sys.path wiring pattern tag_report.py uses for its own imports, one directory
+# further up. Read-only reuse: this module only calls load_registry/categorize_tag/
+# collect_completed_tickets/extract_frontmatter/_ticket_id_effective_date, never modifies them.
+_TOOLS_DIR = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(_TOOLS_DIR))
+from tag_registry import load_registry  # noqa: E402
+from tag_report import categorize_tag, collect_completed_tickets  # noqa: E402
+from validate_frontmatter import (  # noqa: E402
+    TAG_TAXONOMY_EFFECTIVE_DATE,
+    _ticket_id_effective_date,
+    extract_frontmatter,
+)
+
 RUNS_FILE = Path("agent-monitoring/runs.jsonl")
 EVENTS_FILE = Path("agent-monitoring/events.jsonl")
 RETRO_DIR = Path("agent-monitoring/retro")
+
+# Repo root — two levels above tools/agent-monitoring/, matching this file's actual depth.
+_DEFAULT_TICKETS_ROOT = Path(__file__).resolve().parent.parent.parent
 
 
 def load_jsonl(path):
@@ -69,14 +87,96 @@ def _is_legacy_event(e):
     return e.get("agent") is None
 
 
-def generate(runs, events, label, week_str=None):
+def _is_gate_fail(r):
+    """Single source of truth for "this run did not reach a terminal
+    success/scoped/in-progress state" — mirrors the gate_fails filter below.
+    Extracted so per-tag gate-failure counts share one definition instead of
+    a second copy of the same status tuple."""
+    return _resolve_status(r) not in ("DONE", "EPIC_SCOPED", "IN_PROGRESS")
+
+
+def _collect_inprogress_tagged_tickets(root):
+    """Walk tickets/inprogress/ (rglob, future-proofed against subfolders even
+    though it is flat today) applying the same three skip rules
+    collect_completed_tickets applies to tickets/done/: unparseable/missing
+    frontmatter, pre-taxonomy or unparseable ticket_id date, empty/missing
+    tags. Returns a list of (ticket_id, tags, rel_path) tuples in the same
+    shape collect_completed_tickets returns.
+
+    tickets/inprogress/ is outside collect_completed_tickets's contract
+    (hardcoded to tickets/done/), so this is a small parallel implementation
+    built from the same reusable primitives, not a duplicate of that function.
+    """
+    inprogress_dir = root / "tickets" / "inprogress"
+    included = []
+
+    if not inprogress_dir.is_dir():
+        return included
+
+    for md_file in sorted(inprogress_dir.rglob("*.md")):
+        rel_path = str(md_file.relative_to(root))
+        text = md_file.read_text(encoding="utf-8")
+        try:
+            fm = extract_frontmatter(text)
+        except ValueError:
+            continue
+        if fm is None:
+            continue
+
+        ticket_id = fm.get("ticket_id") or md_file.stem
+        embedded_date = _ticket_id_effective_date(ticket_id)
+        if embedded_date is None or embedded_date < TAG_TAXONOMY_EFFECTIVE_DATE:
+            continue
+
+        tags = fm.get("tags")
+        if not tags or not isinstance(tags, list):
+            continue
+
+        included.append((ticket_id, tags, rel_path))
+
+    return included
+
+
+def _collect_tagged_tickets(root):
+    """Return {ticket_id: tags} merged across tickets/done/ (recursive, via
+    collect_completed_tickets — unmodified) and tickets/inprogress/ (recursive,
+    via _collect_inprogress_tagged_tickets). Later write wins on a collision —
+    a ticket_id should only exist under one directory at a time in practice."""
+    ticket_tag_map = {}
+    done_included, _skip_reasons, _skipped_paths = collect_completed_tickets(root)
+    for ticket_id, tags, _rel_path in done_included:
+        ticket_tag_map[ticket_id] = tags
+    for ticket_id, tags, _rel_path in _collect_inprogress_tagged_tickets(root):
+        ticket_tag_map[ticket_id] = tags
+    return ticket_tag_map
+
+
+# Tag -> gate phase / final_status this Process/Skill-signal tag can be cross-referenced against.
+# `security` is the only Process/Skill-signal tag with a real gate today: mirrors
+# phase('Security-Review') in .claude/workflows/implement-ticket.js (built by
+# TCK-20260705-WORKFLOW-SECURITY-GATE). Grepping that file confirmed zero phase(...) calls exist
+# for `api-design`/`debugging`/`performance` — those three tags only ever drive an advisory
+# suggested_skills log line, never a gate, so they deliberately have no entry here rather than a
+# fabricated one. This is the fourth conceptual place a tag->phase mapping exists in the repo
+# (ticket-scoper.md, ticket_tagging.md, implement-ticket.js are the other three) — keep this dict
+# as the single local source of truth for the retro report rather than re-deriving it inline.
+_TAG_GATE_PHASE = {"security": "Security-Review"}
+_TAG_GATE_FINAL_STATUS = {"security": "SECURITY_BLOCKED"}
+_NO_GATE_IMPLEMENTED = "N/A — no gate implemented"
+
+
+def generate(runs, events, label, week_str=None, tickets_root=None):
+    tickets_root = tickets_root if tickets_root is not None else _DEFAULT_TICKETS_ROOT
+    ticket_tag_map = _collect_tagged_tickets(tickets_root)
+    registry = load_registry(tickets_root)
+
     events_by_run = defaultdict(list)
     for e in events:
         events_by_run[e.get("run_id", "")].append(e)
 
     total = len(runs)
     done_count = sum(1 for r in runs if _resolve_status(r) == "DONE")
-    gate_fails = [r for r in runs if _resolve_status(r) not in ("DONE", "EPIC_SCOPED", "IN_PROGRESS")]
+    gate_fails = [r for r in runs if _is_gate_fail(r)]
 
     durations = [r["duration_s"] for r in runs if r.get("duration_s")]
     avg_dur = int(sum(durations) / len(durations)) if durations else 0
@@ -95,6 +195,24 @@ def generate(runs, events, label, week_str=None):
     # agnostic: iterates every event regardless of which workflow (implement-ticket or
     # create-tickets) wrote it (docs/agent-monitoring/schema.md).
     reason_counter = Counter(e.get("reason_code") for e in events if e.get("reason_code"))
+
+    # Tag breakdown — run_id resolved live against ticket_tag_map (built above from
+    # tickets/done/ + tickets/inprogress/ frontmatter). A run_id with no matching entry
+    # (EPIC-*/FOLDER-*/CREATE-TICKETS-*/ad-hoc/legacy/missing-file/pre-taxonomy/no-tags) is
+    # simply not in the dict and falls through here — no prefix-based special-casing, the dict
+    # lookup itself is the universal "unresolvable" fallback.
+    subsystem_tag_runs = defaultdict(list)
+    skill_tag_runs = defaultdict(list)
+    for r in runs:
+        tags = ticket_tag_map.get(r.get("run_id"))
+        if not tags:
+            continue
+        for tag in tags:
+            category = categorize_tag(tag, registry)
+            if category == "subsystem-topic":
+                subsystem_tag_runs[tag].append(r)
+            elif category == "process-skill-signal":
+                skill_tag_runs[tag].append(r)
 
     # Tier distribution
     tier_counts = Counter(r.get("tier", "unknown") for r in runs)
@@ -168,6 +286,57 @@ def generate(runs, events, label, week_str=None):
         lines.append("|---|---|")
         for reason, count in reason_counter.most_common():
             lines.append(f"| {reason} | {count} |")
+        lines.append("")
+
+    # Tag Breakdown — Subsystem/Topic: per-tag run count, DONE rate, gate-failure count. Only
+    # rendered when at least one run resolves to a registered subsystem-topic tag, mirroring the
+    # Reason Codes conditional-render pattern above. Deliberately does NOT apply Tier
+    # Distribution's EPIC_SCOPED-exclusion-from-denominator logic: EPIC_SCOPED only ever occurs on
+    # EPIC-*/FOLDER-* run_ids (implement-epic runs), which never resolve to a single ticket's tags
+    # and are therefore never present in subsystem_tag_runs in the first place — importing that
+    # logic here would be "fixing" a bug that cannot occur.
+    if subsystem_tag_runs:
+        lines.append("## Tag Breakdown — Subsystem/Topic")
+        lines.append("")
+        lines.append("| Tag | Runs | DONE rate | Gate failures |")
+        lines.append("|---|---|---|---|")
+        for tag in sorted(subsystem_tag_runs):
+            tag_runs = subsystem_tag_runs[tag]
+            n = len(tag_runs)
+            d = sum(1 for r in tag_runs if _resolve_status(r) == "DONE")
+            gf = sum(1 for r in tag_runs if _is_gate_fail(r))
+            lines.append(f"| {tag} | {n} | {fmt_pct(d, n)} | {gf} |")
+        lines.append("")
+
+    # Tag Breakdown — Process/Skill-signal: per-tag run count plus a gate-hit cross-reference.
+    # Asymmetric by design (see _TAG_GATE_PHASE's comment above): only `security` has a real gate
+    # to cross-reference today, so every other Process/Skill-signal tag shows an explicit
+    # "N/A — no gate implemented" marker rather than a fabricated 0 — that marker is itself useful
+    # retro signal (visible evidence those tags remain advisory-only), not a data gap.
+    if skill_tag_runs:
+        lines.append("## Tag Breakdown — Process/Skill-signal")
+        lines.append("")
+        lines.append("| Tag | Runs | Gate Hits |")
+        lines.append("|---|---|---|")
+        for tag in sorted(skill_tag_runs):
+            tag_runs = skill_tag_runs[tag]
+            n = len(tag_runs)
+            if tag in _TAG_GATE_PHASE:
+                gate_phase = _TAG_GATE_PHASE[tag].casefold()
+                final_status = _TAG_GATE_FINAL_STATUS.get(tag)
+                hits = sum(
+                    1
+                    for r in tag_runs
+                    if any(
+                        e.get("phase", "").casefold() == gate_phase
+                        for e in events_by_run[r.get("run_id", "")]
+                    )
+                    or _resolve_status(r) == final_status
+                )
+                hits_cell = str(hits)
+            else:
+                hits_cell = _NO_GATE_IMPLEMENTED
+            lines.append(f"| {tag} | {n} | {hits_cell} |")
         lines.append("")
 
     # Tier distribution

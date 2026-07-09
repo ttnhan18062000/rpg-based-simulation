@@ -1,7 +1,9 @@
 """Targeted tests for tools/agent-monitoring/generate_retro.py's reason-code section
 (TCK-20260706-MONITORING-REASON-CODE, extended by TCK-20260706-SCOPE-TAG-REGISTRY-CHECK and
-TCK-20260706-CREATE-TICKETS-TAG-CHECK). Not full coverage of the pre-existing script (which had no
-test file before the first of these tickets) — scoped to the behavior these tickets changed.
+TCK-20260706-CREATE-TICKETS-TAG-CHECK), and its Subsystem/Topic + Process/Skill-signal tag
+breakdown sections (TCK-20260708-RETRO-TAG-BREAKDOWN). Not full coverage of the pre-existing
+script (which had no test file before the first of these tickets) — scoped to the behavior these
+tickets changed.
 """
 
 import sys
@@ -60,6 +62,193 @@ def test_reason_code_section_ignores_null_and_missing_fields():
     report = generate(runs, events, "test-label")
 
     assert "## Reason Codes" not in report
+
+
+def _write_ticket(root, subdir, ticket_id, tags, date="20260710"):
+    """Write a minimal ticket markdown file with a parseable frontmatter block under
+    root/tickets/{subdir}/{ticket_id}.md. `date` controls the embedded ticket_id date used by
+    _ticket_id_effective_date; defaults to a post-taxonomy date."""
+    tickets_dir = root / "tickets" / subdir
+    tickets_dir.mkdir(parents=True, exist_ok=True)
+    tags_inline = "[" + ", ".join(tags) + "]"
+    (tickets_dir / f"{ticket_id}.md").write_text(
+        f"---\n"
+        f"status: active\n"
+        f"layer: observability\n"
+        f"authority: P1\n"
+        f"audience: agent\n"
+        f"ticket_id: {ticket_id}\n"
+        f"phase: open\n"
+        f"date: {date[:4]}-{date[4:6]}-{date[6:]}\n"
+        f"tags: {tags_inline}\n"
+        f"---\n\n"
+        f"# {ticket_id}\n"
+    )
+
+
+def _write_registry(root, entries):
+    """Write a fixture docs/guidelines/tag_registry.jsonl under root with `entries`, a list of
+    (tag, category) tuples."""
+    import json as _json
+
+    registry_dir = root / "docs" / "guidelines"
+    registry_dir.mkdir(parents=True, exist_ok=True)
+    lines = [
+        _json.dumps({"tag": tag, "category": category, "added_date": "2026-07-06", "note": "fixture"})
+        for tag, category in entries
+    ]
+    (registry_dir / "tag_registry.jsonl").write_text("\n".join(lines) + "\n")
+
+
+def test_tag_breakdown_subsystem_topic_section_renders_when_tags_resolve(tmp_path):
+    _write_registry(tmp_path, [("observability", "subsystem-topic")])
+    _write_ticket(tmp_path, "done", "TCK-20260710-FAKE-DONE", ["observability"])
+    _write_ticket(tmp_path, "inprogress", "TCK-20260710-FAKE-INPROG", ["observability"])
+
+    runs = [
+        dict(_BASE_RUN, run_id="TCK-20260710-FAKE-DONE", final_status="DONE"),
+        dict(_BASE_RUN, run_id="TCK-20260710-FAKE-INPROG", final_status="DOD_BLOCKED"),
+    ]
+    # status-without-final_status regression case: a legacy-shaped record whose DONE-ness can
+    # only be read via the `status` fallback (_resolve_status), not `final_status` directly —
+    # guards against reintroducing the exact bug TCK-20260705-RETRO-METRIC-ACCURACY fixed.
+    runs[0].pop("final_status")
+    runs[0]["status"] = "DONE"
+    events = []
+
+    report = generate(runs, events, "test-label", tickets_root=tmp_path)
+
+    assert "## Tag Breakdown — Subsystem/Topic" in report
+    assert "| observability | 2 | 50% | 1 |" in report
+
+
+def test_tag_breakdown_process_skill_signal_security_cross_reference(tmp_path):
+    _write_registry(tmp_path, [("security", "process-skill-signal")])
+    _write_ticket(tmp_path, "done", "TCK-20260710-SEC-PHASE-HIT", ["security"])
+    _write_ticket(tmp_path, "done", "TCK-20260710-SEC-NO-HIT", ["security"])
+    _write_ticket(tmp_path, "done", "TCK-20260710-SEC-STATUS-HIT", ["security"])
+
+    runs = [
+        dict(_BASE_RUN, run_id="TCK-20260710-SEC-PHASE-HIT", final_status="DONE"),
+        dict(_BASE_RUN, run_id="TCK-20260710-SEC-NO-HIT", final_status="DONE"),
+        dict(_BASE_RUN, run_id="TCK-20260710-SEC-STATUS-HIT", final_status="SECURITY_BLOCKED"),
+    ]
+    events = [
+        # Case-insensitive match (Decision 3): lowercase "security-review" must still count.
+        {"run_id": "TCK-20260710-SEC-PHASE-HIT", "seq": 1, "phase": "security-review",
+         "agent": "security-reviewer", "status": "ok", "summary": "reviewed"},
+        {"run_id": "TCK-20260710-SEC-NO-HIT", "seq": 1, "phase": "Verify",
+         "agent": "done-checker", "status": "ok", "summary": "no security review"},
+    ]
+
+    report = generate(runs, events, "test-label", tickets_root=tmp_path)
+
+    assert "## Tag Breakdown — Process/Skill-signal" in report
+    assert "| security | 3 | 2 |" in report
+
+
+def test_tag_breakdown_process_skill_signal_non_security_tags_have_no_gate_column(tmp_path):
+    _write_registry(tmp_path, [("performance", "process-skill-signal")])
+    _write_ticket(tmp_path, "done", "TCK-20260710-PERF-ONE", ["performance"])
+
+    runs = [dict(_BASE_RUN, run_id="TCK-20260710-PERF-ONE", final_status="DONE")]
+    events = []
+
+    report = generate(runs, events, "test-label", tickets_root=tmp_path)
+
+    assert "## Tag Breakdown — Process/Skill-signal" in report
+    assert "| performance | 1 | N/A — no gate implemented |" in report
+
+
+def test_tag_breakdown_section_omitted_when_no_run_id_resolves(tmp_path):
+    _write_registry(tmp_path, [("observability", "subsystem-topic"), ("security", "process-skill-signal")])
+    # No ticket files written — every run_id below is unresolvable against this empty tree.
+    runs = [_BASE_RUN]
+    events = [
+        {"run_id": "TCK-FAKE", "seq": 1, "phase": "Verify", "agent": "done-checker",
+         "status": "failed", "summary": "blocked"},
+    ]
+
+    report = generate(runs, events, "test-label", tickets_root=tmp_path)
+
+    assert "## Tag Breakdown — Subsystem/Topic" not in report
+    assert "## Tag Breakdown — Process/Skill-signal" not in report
+
+
+def test_tag_breakdown_excludes_epic_folder_and_unresolvable_run_ids(tmp_path):
+    _write_registry(tmp_path, [("observability", "subsystem-topic")])
+    _write_ticket(tmp_path, "done", "TCK-20260710-RESOLVABLE", ["observability"])
+
+    runs = [
+        dict(_BASE_RUN, run_id="EPIC-some-epic", final_status="EPIC_SCOPED"),
+        dict(_BASE_RUN, run_id="FOLDER-simq", final_status="EPIC_SCOPED"),
+        dict(_BASE_RUN, run_id="CREATE-TICKETS-some-source", final_status="DONE"),
+        dict(_BASE_RUN, run_id="E41D-20260621-001", final_status="DONE"),
+        dict(_BASE_RUN, run_id="427cbe47-6093-481c-8abc-1234567890ab", final_status="DONE"),
+        dict(_BASE_RUN, run_id="TCK-20260710-RESOLVABLE", final_status="DONE"),
+    ]
+    events = []
+
+    report = generate(runs, events, "test-label", tickets_root=tmp_path)
+
+    assert "## Tag Breakdown — Subsystem/Topic" in report
+    assert "| observability | 1 | 100% | 0 |" in report
+
+
+def test_tag_breakdown_excludes_pre_taxonomy_and_untagged_tickets(tmp_path):
+    _write_registry(tmp_path, [("observability", "subsystem-topic")])
+    # Pre-taxonomy ticket_id date (before 2026-07-04) — excluded even though the file exists and
+    # is readable.
+    _write_ticket(tmp_path, "done", "TCK-20260601-OLD-TICKET", ["observability"], date="20260601")
+    # Post-taxonomy ticket with no tags — excluded, must not crash.
+    (tmp_path / "tickets" / "done").mkdir(parents=True, exist_ok=True)
+    (tmp_path / "tickets" / "done" / "TCK-20260710-NO-TAGS.md").write_text(
+        "---\n"
+        "status: active\n"
+        "layer: observability\n"
+        "authority: P1\n"
+        "audience: agent\n"
+        "ticket_id: TCK-20260710-NO-TAGS\n"
+        "phase: open\n"
+        "date: 2026-07-10\n"
+        "tags: []\n"
+        "---\n\n"
+        "# TCK-20260710-NO-TAGS\n"
+    )
+
+    runs = [
+        dict(_BASE_RUN, run_id="TCK-20260601-OLD-TICKET", final_status="DONE"),
+        dict(_BASE_RUN, run_id="TCK-20260710-NO-TAGS", final_status="DONE"),
+    ]
+    events = []
+
+    report = generate(runs, events, "test-label", tickets_root=tmp_path)
+
+    assert "## Tag Breakdown — Subsystem/Topic" not in report
+    assert "## Tag Breakdown — Process/Skill-signal" not in report
+
+
+def test_tag_breakdown_uses_registry_categorize_tag_not_reimplemented_lookup(tmp_path):
+    """Proves generate() actually calls the real load_registry/categorize_tag against the
+    injected tickets_root, rather than reimplementing tag-category lookup locally — an unused
+    import wouldn't be caught by a grep, but a distinct fixture-only category assignment would
+    only classify correctly if the real functions were invoked against the fixture registry."""
+    _write_registry(tmp_path, [
+        ("fixture-only-subsystem-tag", "subsystem-topic"),
+        ("fixture-only-skill-tag", "process-skill-signal"),
+    ])
+    _write_ticket(
+        tmp_path, "done", "TCK-20260710-FIXTURE-REGISTRY",
+        ["fixture-only-subsystem-tag", "fixture-only-skill-tag"],
+    )
+
+    runs = [dict(_BASE_RUN, run_id="TCK-20260710-FIXTURE-REGISTRY", final_status="DONE")]
+    events = []
+
+    report = generate(runs, events, "test-label", tickets_root=tmp_path)
+
+    assert "| fixture-only-subsystem-tag | 1 | 100% | 0 |" in report
+    assert "| fixture-only-skill-tag | 1 | N/A — no gate implemented |" in report
 
 
 def test_reason_code_aggregation_is_workflow_agnostic():
