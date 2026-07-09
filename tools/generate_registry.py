@@ -32,7 +32,7 @@ from validate_frontmatter import extract_frontmatter  # noqa: E402
 # ---------------------------------------------------------------------------
 
 # Subdirectories under docs/ to skip entirely (not indexed in the registry).
-_SKIP_DOC_SUBDIRS = {"archive", "superpowers", "specs", "parity_ledger", "scenarios", "entity"}
+_SKIP_DOC_SUBDIRS = {"archive", "parity_ledger", "scenarios", "entity"}
 
 _AUTHORITY_SORT = {"P0": 0, "P1": 1, "P2": 2}
 

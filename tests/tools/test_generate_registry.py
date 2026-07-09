@@ -20,6 +20,7 @@ from generate_registry import (  # noqa: E402
     parse_related_code_areas,
     sort_entries,
     _invert_date,
+    _SKIP_DOC_SUBDIRS,
 )
 
 # ---------------------------------------------------------------------------
@@ -392,6 +393,19 @@ class TestRealDocsTree:
         output = tmp_path / "REGISTRY.yaml"
         rc = generate_registry(repo_root, output)
         assert rc == 0
+
+    def test_skip_doc_subdirs_exist_on_disk(self):
+        repo_root = Path(__file__).resolve().parents[2]
+        docs_dir = repo_root / "docs"
+        missing = sorted(
+            name for name in _SKIP_DOC_SUBDIRS
+            if not (docs_dir / name).is_dir()
+        )
+        assert missing == [], (
+            f"_SKIP_DOC_SUBDIRS entries with no matching docs/ subdirectory: {missing}. "
+            "Remove dead entries, or if intentionally forward-compatible/retained, "
+            "document that in-code next to _SKIP_DOC_SUBDIRS."
+        )
 
 
 class TestEdgeCases:
