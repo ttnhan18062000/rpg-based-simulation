@@ -3735,3 +3735,29 @@
     Ticket-closing workflow tooling only -- no simulation behavior is involved.
     Does not touch, extend, or duplicate INFRA-183 (which covers
     tools/generate_registry.py's output shape and is unmodified by this change).
+
+- id: INFRA-264
+  text: >
+    CI drift-detection backstop -- generate_registry.py --check regenerates the registry
+    in-memory and diffs the parsed entry list (not raw file text/header timestamp) against
+    the checked-in docs/REGISTRY.yaml, writing nothing and exiting 2 on mismatch, 1 on
+    pre-existing doc-frontmatter errors (short-circuits before the diff), 0 when in sync.
+    Runs inside tests/tools/test_generate_registry.py against the real repo root, which the
+    api-tools CI job already executes via `pytest tests/tools` -- no .github/workflows/test.yml
+    edit required. Independent of, and complementary to, INFRA-263's Finalize-phase
+    auto-regen-and-write: this entry catches drift even if that Finalize hook is bypassed,
+    skipped, or fails silently.
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: >
+    tools/generate_registry.py::generate_registry (check kwarg) + main() --check flag +
+    tests/tools/test_generate_registry.py::TestCheckMode,
+    TestCLICheckFlag, TestRealDocsTree (api-tools CI job runs pytest tests/tools)
+  proof_type: null
+  test_path: tests/tools/test_generate_registry.py::TestRealDocsTree::test_check_flag_detects_no_drift_against_real_registry
+  divergence_note: null
+  support_boundary: >
+    Doc tooling only -- no simulation behavior involved (mirrors INFRA-183's support_boundary).
+    Does not touch, extend, or duplicate INFRA-183 (output shape) or INFRA-263 (Finalize-time
+    write-and-verify invocation timing); this is a third, distinct guarantee (CI backstop).

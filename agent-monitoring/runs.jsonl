@@ -546,3 +546,4 @@
 {"run_id":"TCK-20260709-PRUNE-DEAD-SKIP-ENTRIES","start_ts":"2026-07-09T03:40:59Z","end_ts":"2026-07-09T03:49:33Z","workflow":"implement-ticket","tier":"hotfix","final_status":"DONE","agent_count":10}
 {"run_id":"TCK-20260709-REGISTRY-COUNT-STALE-DOCS","start_ts":"2026-07-09T03:50:29Z","end_ts":"2026-07-09T03:59:39Z","workflow":"implement-ticket","tier":"hotfix","final_status":"DONE","agent_count":10}
 {"run_id":"TCK-20260709-REGISTRY-REGEN-ON-CLOSE","start_ts":"2026-07-09T04:00:19Z","end_ts":"2026-07-09T07:09:54Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":11}
+{"run_id":"TCK-20260709-REGISTRY-DRIFT-CHECK-GATE","start_ts":"2026-07-09T07:10:51Z","end_ts":"2026-07-09T07:32:02Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":10}
