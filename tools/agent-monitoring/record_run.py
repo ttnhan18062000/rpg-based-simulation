@@ -3,6 +3,7 @@
 import argparse
 import json
 import sys
+from datetime import datetime
 from pathlib import Path
 
 REQUIRED = {"run_id", "start_ts", "workflow", "tier", "final_status"}
@@ -19,6 +20,22 @@ def validate_record(record: dict) -> list[str]:
     if missing:
         return [f"Missing required fields: {sorted(missing)}"]
     return []
+
+
+def compute_duration_s(record: dict) -> int | None:
+    """Wall-clock seconds from start_ts to end_ts, or None if end_ts is absent.
+
+    end_ts is not in REQUIRED (schema.md documents it nullable for crashed
+    runs), so this must degrade to None rather than error when it's missing.
+    Always overrides any caller-supplied duration_s — the point of computing
+    it here is to stop depending on caller-supplied correctness.
+    """
+    end_ts = record.get("end_ts")
+    if not end_ts:
+        return None
+    start = datetime.fromisoformat(record["start_ts"].replace("Z", "+00:00"))
+    end = datetime.fromisoformat(end_ts.replace("Z", "+00:00"))
+    return int((end - start).total_seconds())
 
 
 def main():
@@ -41,6 +58,8 @@ def main():
         for err in errors:
             print(f"ERROR: {err}", file=sys.stderr)
         sys.exit(1)
+
+    record["duration_s"] = compute_duration_s(record)
 
     RUNS_FILE.parent.mkdir(parents=True, exist_ok=True)
     with open(RUNS_FILE, "a") as f:

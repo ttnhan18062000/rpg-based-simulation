@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: observability
 authority: P1
 audience: agent
 ticket_id: TCK-20260709-AGENT-MONITORING-DURATION
-phase: open
+phase: done
 date: 2026-07-09
 tags: [agent-monitoring, data-quality]
 ---
@@ -15,7 +15,7 @@ tags: [agent-monitoring, data-quality]
 Compute duration_s at write time in record_run.py — schema marks it required but it's never populated
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -115,12 +115,58 @@ None.
   computation can't be "forgotten" the way a caller-supplied field can?
 
 ## Implementation Notes
-
+- Added `compute_duration_s(record)` to `tools/agent-monitoring/record_run.py`: returns
+  `int((end - start).total_seconds())` parsed via `datetime.fromisoformat(ts.replace("Z", "+00:00"))`
+  (same pattern already used in `post_tool_hook.py` / `generate_retro.py` for this repo's `Z`-suffixed
+  timestamps), or `None` if `end_ts` is absent/null. Called unconditionally in `main()` after
+  `validate_record()` passes and before the record is appended, so `record["duration_s"]` is always
+  set (possibly to `None`) regardless of whether the caller included it in `--data`.
+- Confirmed via `.claude/workflows/*.js` (`implement-ticket.js:234`, `implement-epic.js:250`,
+  `create-tickets.js:135`, `simq-audit.js:78`) that every real call site invokes `record_run.py`
+  exactly once, at the very end of the run, with `end_ts` already substituted from a `date -u` capture
+  — there is no separate "write IN_PROGRESS record at start" call anywhere. A true crash (process killed
+  mid-run) means this final call never fires at all, so no run record is written for that run_id —
+  `docs/agent-monitoring/schema.md`'s CRASHED status is synthesized by `validate.py` from records that
+  exist with `start_ts` but no `end_ts`, which is a shape `record_run.py` must tolerate even though no
+  current caller produces it directly. `end_ts` is intentionally left out of `REQUIRED` (unchanged) so
+  this shape stays legal to write; `compute_duration_s` returns `None` for it rather than erroring.
+- Design decision (resolving the ticket's "always wins?" question): the computed value always
+  overwrites any caller-supplied `duration_s` in `--data` — `record["duration_s"] = compute_duration_s(record)`
+  runs unconditionally after validation, with no branch that checks for a pre-existing value. This is
+  the ticket's own recommendation and matches the stated goal of not depending on caller correctness.
+- Resolved the ticket's open question (add `duration_s` to `REQUIRED`?): **no**. `REQUIRED` enforces
+  that a *caller* didn't forget to supply something; `duration_s` is no longer caller-supplied at all —
+  it's computed by the script itself immediately before every write, so there's no "forgot to pass it"
+  failure mode left to guard against. Adding it to `REQUIRED` would only reject records that are
+  missing `end_ts` (the legitimate crashed-run shape per schema.md), which is exactly the case this
+  field is supposed to represent as `null`, not reject. Enforcing it in `REQUIRED` would be enforcing
+  the wrong thing.
+- Confirmed `generate_retro.py` needs no changes: `durations = [r["duration_s"] for r in runs if r.get("duration_s")]`
+  (line 181) and `slow_runs = [r for r in runs if (r.get("duration_s") or 0) > 1800]` (line 240) already
+  read `duration_s` via truthy/`.get()` checks that treat missing, `None`, and `0` all as "no data" —
+  correct behavior for both the historical gap (field absent) and the new crashed-run case
+  (field explicitly `None`). No change made to this file.
 
 ## Test Summary
-
+Added to `tests/tools/test_record_run.py` (pre-existing file, extended rather than created):
+`test_compute_duration_s_from_valid_start_and_end`, `test_compute_duration_s_none_when_end_ts_missing`,
+`test_compute_duration_s_none_when_end_ts_null` (pure-function tests against `compute_duration_s`), and
+`TestDurationWrittenToRecord` (3 subprocess-level tests run against `tmp_path` cwd, never touching the
+real `agent-monitoring/runs.jsonl`): duration computed and written correctly, `duration_s: null` written
+when `end_ts` is absent, and a caller-supplied `duration_s: 99999` in `--data` is overwritten by the
+computed value. Ran `pytest tests/tools/test_record_run.py tests/tools/test_record_events.py
+tests/tools/test_generate_retro.py` — all 44 tests pass (13 + 31), confirming no regression in sibling
+monitoring-tool tests.
 
 ## Files Changed
-
+- `tools/agent-monitoring/record_run.py`
+- `tests/tools/test_record_run.py`
 
 ## Completion Summary
+`record_run.py` now computes `duration_s` at write time from `start_ts`/`end_ts` instead of relying on
+callers to pass it — no caller currently does, which was silently defeating `generate_retro.py`'s
+avg-duration and slow-run sections. The computed value always overrides any caller-supplied
+`duration_s`, and degrades to `null` (not an error) when `end_ts` is absent, matching the schema's
+documented crashed-run exception. `duration_s` was deliberately left out of `REQUIRED` since it's no
+longer a "did the caller remember" field. Historical backfill of the ~552 existing records without
+`duration_s` is explicitly out of scope, per the ticket.
