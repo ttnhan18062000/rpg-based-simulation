@@ -20,6 +20,7 @@ from gate_checks.done_checker_static import (  # noqa: E402
     check_data_runs_clean,
     check_frontmatter_valid,
     check_migration_complete,
+    check_monitoring_write_recorded,
     check_staging_artifacts_complete,
     check_ticket_finalized,
     check_ticket_location,
@@ -696,3 +697,75 @@ def test_run_finalize_selfcheck_duplicate_rows_fails(tmp_path, monkeypatch):
     results = run_finalize_selfcheck("TCK-FAKE", "standard")
     by_condition = {r["condition"]: r for r in results}
     assert by_condition["working_log_exactly_one_row"]["status"] == "FAIL"
+
+
+# ---------------------------------------------------------------------------
+# check_monitoring_write_recorded
+# ---------------------------------------------------------------------------
+
+
+def _write_jsonl(path: Path, rows: list[dict]) -> None:
+    import json
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("\n".join(json.dumps(r) for r in rows) + ("\n" if rows else ""), encoding="utf-8")
+
+
+def test_check_monitoring_write_recorded_fails_when_run_missing(tmp_path):
+    runs_path = tmp_path / "runs.jsonl"
+    events_path = tmp_path / "events.jsonl"
+    _write_jsonl(runs_path, [{"run_id": "TCK-OTHER"}])
+    _write_jsonl(events_path, [{"run_id": "TCK-OTHER"}])
+
+    status, evidence = check_monitoring_write_recorded(
+        "TCK-FAKE", runs_path=runs_path, events_path=events_path
+    )
+    assert status == "FAIL"
+    assert "No row with run_id == TCK-FAKE" in evidence
+
+
+def test_check_monitoring_write_recorded_fails_when_events_missing(tmp_path):
+    runs_path = tmp_path / "runs.jsonl"
+    events_path = tmp_path / "events.jsonl"
+    _write_jsonl(runs_path, [{"run_id": "TCK-FAKE"}])
+    _write_jsonl(events_path, [{"run_id": "TCK-OTHER"}])
+
+    status, evidence = check_monitoring_write_recorded(
+        "TCK-FAKE", runs_path=runs_path, events_path=events_path
+    )
+    assert status == "FAIL"
+    assert "zero matching rows" in evidence
+
+
+def test_check_monitoring_write_recorded_passes_when_both_present(tmp_path):
+    runs_path = tmp_path / "runs.jsonl"
+    events_path = tmp_path / "events.jsonl"
+    _write_jsonl(runs_path, [{"run_id": "TCK-FAKE"}])
+    _write_jsonl(events_path, [{"run_id": "TCK-FAKE"}, {"run_id": "TCK-FAKE"}])
+
+    status, evidence = check_monitoring_write_recorded(
+        "TCK-FAKE", runs_path=runs_path, events_path=events_path
+    )
+    assert status == "PASS"
+    assert "TCK-FAKE" in evidence
+
+
+def test_check_monitoring_write_recorded_applies_under_hotfix_tier(tmp_path):
+    # The function takes no `tier` argument at all — this documents and locks in that it
+    # cannot special-case hotfix, per CLAUDE.md's Hard Rule ("including hotfix").
+    runs_path = tmp_path / "runs.jsonl"
+    events_path = tmp_path / "events.jsonl"
+    _write_jsonl(runs_path, [])
+    _write_jsonl(events_path, [])
+
+    status, _ = check_monitoring_write_recorded(
+        "TCK-HOTFIX-FAKE", runs_path=runs_path, events_path=events_path
+    )
+    assert status == "FAIL"
+
+    _write_jsonl(runs_path, [{"run_id": "TCK-HOTFIX-FAKE"}])
+    _write_jsonl(events_path, [{"run_id": "TCK-HOTFIX-FAKE"}])
+    status, _ = check_monitoring_write_recorded(
+        "TCK-HOTFIX-FAKE", runs_path=runs_path, events_path=events_path
+    )
+    assert status == "PASS"

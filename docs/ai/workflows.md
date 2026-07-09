@@ -87,10 +87,10 @@ Workflow({ name: "workflow-name", args: { key: value } })
 | Implement | `implementer` | — |
 | Architecture-Verify | `architecture-reviewer` | Second, post-Implement call; runs `tools/gate_checks/architecture_reviewer_static.py::run_architecture_checks` before the agent call and injects its JSON output; narrowly scoped to judging flagged items, not re-reviewing the plan; stops if NEEDS_CHANGES or BLOCKED (same vocabulary as Review); skipped for hotfix |
 | Test | `test-scoper` | Stops if any test fails |
-| Parity | `parity-updater` | Skipped when `files_changed` has no `src/` path and `behavior_changed` is false; a P0 ledger safeguard forces the full run instead if any P0 entry's `v2_evidence` would go stale; when not skipped, runs `tools/gate_checks/parity_updater_static.py::expected_subsystems_for_files` before the agent call and `::cross_reference_touched` after it returns, surfacing any untouched-mapped-subsystem miss via the pushed event (non-blocking) |
+| Parity | `parity-updater` | Skipped when `files_changed` has no `src/` path and `behavior_changed` is false; a P0 ledger safeguard forces the full run instead if any P0 entry's `v2_evidence` would go stale; when not skipped, runs `tools/gate_checks/parity_updater_static.py::expected_subsystems_for_files` before the agent call and `::cross_reference_touched` after it returns, surfacing any untouched-mapped-subsystem miss; a genuine miss now hard-blocks the phase (returns `PARITY_INCOMPLETE`); an unparseable cross-ref result remains non-blocking |
 | Security-Review | `security-reviewer` | Fires when the ticket's tags include `security` (ground truth) or suggested_skills includes /security-review; stops if NEEDS_CHANGES or BLOCKED |
 | Verify | `done-checker` | Runs `tools/gate_checks/done_checker_static.py::run_static_precheck` first and cites its output for the 5 machine-checkable conditions (3, 4, 7, 10, 12); stops if any DoD condition fails |
-| Finalize | inline | Moves ticket, writes working_log.csv, migrates artifacts; then runs `run_finalize_selfcheck` via `bash()` to confirm the migration actually landed — returns `FINALIZE_INCOMPLETE` instead of `DONE` if a discrepancy is found |
+| Finalize | inline | Moves ticket, writes working_log.csv, migrates artifacts; then runs `run_finalize_selfcheck` via `bash()` to confirm the migration actually landed — returns `FINALIZE_INCOMPLETE` instead of `DONE` if a discrepancy is found; separately, after `writeMonitoring('DONE')`, runs `check_monitoring_write_recorded` to confirm the agent-monitoring write (`runs.jsonl`/`events.jsonl`) for this run landed — a FAIL here is loud but non-blocking (a `failed`-status event plus a `WARNING` in the returned `message`), `status` stays `DONE` (CLAUDE.md's Hard Rule that a monitoring write failure must never fail the workflow) |
 
 `mechanics-auditor` is not one of the phases above — it is an ad hoc agent (`Agent(subagent_type: "mechanics-auditor")`, no `implement-ticket.js` call site) that now has its own static pre-check (`tools/gate_checks/mechanics_auditor_static.py`), self-invoked rather than orchestrator-run; see `docs/ai/agents.md`'s `mechanics-auditor` section for detail.
 
@@ -122,6 +122,7 @@ Workflow({ name: 'implement-ticket', args: { ticket_id: 'TCK-20260606-PHASE28-RU
 | `TESTS_FAILED` | One or more tests failing | Fix failing tests, re-run with `ticket_id` |
 | `SECURITY_BLOCKED` | Security review rejected the change | Fix violations, re-run with `ticket_id` |
 | `DOD_BLOCKED` | DoD conditions not met | Fix listed items, re-run with `ticket_id` |
+| `PARITY_INCOMPLETE` | A `src/` file mapped to a parity-ledger subsystem had no corresponding `docs/parity_ledger/*.yaml` entry touched in this diff (`tools/gate_checks/parity_updater_static.py::cross_reference_touched`) | Read `failing_items`, update the missing `docs/parity_ledger/*.yaml` entry, re-run with `ticket_id` |
 | `FINALIZE_INCOMPLETE` | Finalize ran its steps, but the post-migration self-check (`run_finalize_selfcheck`) found a discrepancy — e.g. `stored_artifacts/` incomplete, `staging_artifacts/` not cleaned, ticket not moved, or the working_log row is missing/duplicated | Read `failing_items`, fix the discrepancy manually, re-run with `ticket_id` |
 | `DONE` | Ticket closed, artifacts migrated | — |
 
@@ -130,6 +131,18 @@ Workflow({ name: 'implement-ticket', args: { ticket_id: 'TCK-20260606-PHASE28-RU
 - `stored_artifacts/{ticket_id}/` (investigation.md, plan.md, test_plan.md)
 - `tickets/working_log.csv` (one new row)
 - `agent-monitoring/runs.jsonl` + `events.jsonl` (one run record + per-phase events)
+
+**`lane-architecture` coverage boundary:** `make lane-architecture` (`pytest tests/ -m "architecture"`)
+is a `src/`-simulation-code guard lane only — durable-state mutation discipline, cross-domain import
+bans, unstable-sort detection. It has **zero overlap** with the 4 gate-checker modules in
+`tools/gate_checks/` (`done_checker_static.py`, `parity_updater_static.py`,
+`mechanics_auditor_static.py`, `architecture_reviewer_static.py`): none of
+`tests/tools/test_*_static.py` carry `@pytest.mark.architecture`, by deliberate design
+(`tickets/done/gate-determinism-followups/SEQUENCE.md` decision 1) — these are agent-workflow
+hygiene checks, not simulation-code architecture guards, and are intentionally not folded into
+`lane-architecture`. Whether `lane-architecture` itself is wired into CI is a separate,
+already-resolved question (audit finding D18 F3); this note is strictly about content-coverage
+boundary.
 
 ---
 

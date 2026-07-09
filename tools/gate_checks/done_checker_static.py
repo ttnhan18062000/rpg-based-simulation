@@ -24,6 +24,7 @@ tuple returns, no argparse/CLI — consumed exclusively via `python3 -c "..."`.
 """
 
 import csv
+import json
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -49,6 +50,24 @@ def _files_complete(directory: Path, filenames) -> tuple[bool, list[str]]:
         if not f.exists() or not f.read_text(encoding="utf-8").strip():
             problems.append(name)
     return (not problems, problems)
+
+
+def _jsonl_rows_for_run_id(path: Path, run_id: str) -> list[dict]:
+    """Return every parsed JSON row in `path` whose run_id == run_id. Malformed lines are
+    skipped, not raised — a corrupt line elsewhere in the file must not crash this check."""
+    if not path.exists():
+        return []
+    rows = []
+    for line in path.read_text(encoding="utf-8").splitlines():
+        if not line.strip():
+            continue
+        try:
+            row = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if row.get("run_id") == run_id:
+            rows.append(row)
+    return rows
 
 
 def _count_rows_for_ticket(csv_path: Path, ticket_id: str) -> int:
@@ -348,6 +367,38 @@ def check_working_log_exactly_one_row(
     if count == 0:
         return ("FAIL", "no working_log row found — Finalize did not append")
     return ("FAIL", f"{count} rows found — duplicate Finalize run")
+
+
+def check_monitoring_write_recorded(
+    ticket_id: str,
+    runs_path: Path = Path("agent-monitoring/runs.jsonl"),
+    events_path: Path = Path("agent-monitoring/events.jsonl"),
+) -> tuple[str, str]:
+    """Verify the agent-monitoring write for this run actually landed. Deliberately has no
+    `tier` parameter and no NA branch — CLAUDE.md's Hard Rule requires the monitoring write
+    "including hotfix," so unlike `check_migration_complete` this applies identically
+    regardless of tier; the omission of a tier parameter is itself the design decision.
+
+    Built for TCK-20260708-AGENT-GATE-ENFORCEMENT-HARDENING: wired into Finalize as a
+    loud-but-non-blocking warning (a FAIL here never changes `status` away from `'DONE'`,
+    per CLAUDE.md's Hard Rule that a monitoring write failure must never fail the workflow),
+    not as a 4th condition in `run_finalize_selfcheck` — see that ticket's plan.md Design
+    Decision 2 for why it is wired in separately, at a later call site.
+    """
+    run_rows = _jsonl_rows_for_run_id(runs_path, ticket_id)
+    if not run_rows:
+        return ("FAIL", f"No row with run_id == {ticket_id} found in {runs_path}")
+    event_rows = _jsonl_rows_for_run_id(events_path, ticket_id)
+    if not event_rows:
+        return (
+            "FAIL",
+            f"{runs_path} has a row for {ticket_id} but {events_path} has zero matching rows",
+        )
+    return (
+        "PASS",
+        f"{runs_path} ({len(run_rows)} row(s)) and {events_path} ({len(event_rows)} row(s)) "
+        f"both have entries for {ticket_id}",
+    )
 
 
 def run_finalize_selfcheck(ticket_id: str, tier: str) -> list[dict]:

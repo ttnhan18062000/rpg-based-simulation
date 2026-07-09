@@ -10,7 +10,12 @@ tags: [idea, agent-infrastructure, observability, cost, tokens, model-routing]
 
 # Idea: Agent Spend & Token Observability Layer
 
-> **Maturity: IDEA** — Not scheduled. Raised directly from [`docs/ai/agent_infrastructure_audit.md`](../../ai/agent_infrastructure_audit.md) (2026-07-03 score: 8.0/10 — the audit calls out lack of cost telemetry by name in both Strengths-adjacent gaps and Recommendation 2). Sibling idea to [`idea_agent_gate_determinism.md`](idea_agent_gate_determinism.md); benefits from that idea's `verified_by` field landing first (see Open Questions).
+> **Maturity: SCHEDULED** — tracked as `TCK-20260708-AGENT-COST-OBSERVABILITY` under
+> `TCK-20260708-AGENT-INFRA-HARDENING-EPIC` (2026-07-08). The sibling idea's `verified_by` field
+> (see below) already landed via `gate-determinism-followups` (2026-07-05), so that precondition is
+> satisfied. Originally raised directly from [`docs/ai/agent_infrastructure_audit.md`](../../ai/agent_infrastructure_audit.md)
+> (2026-07-03 score: 8.0/10 — the audit calls out lack of cost telemetry by name in both
+> Strengths-adjacent gaps and Recommendation 2). Sibling idea to [`idea_agent_gate_determinism.md`](idea_agent_gate_determinism.md).
 
 ---
 

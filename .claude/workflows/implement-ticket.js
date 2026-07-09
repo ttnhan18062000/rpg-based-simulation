@@ -846,10 +846,25 @@ print('PARITY_CHECK_JSON:' + json.dumps(results))
   }
   const parityCrossRefFailures = (parityCrossRef || []).filter(r => r.status === 'FAIL')
 
-  const parityEvidence = (parityCrossRef === null || parityCrossRefFailures.length > 0)
-    ? (parity.summary || 'Parity ledger updated').slice(0, 150) + ' | cross-ref: ' + (parityCrossRef === null
-        ? 'unparseable'
-        : parityCrossRefFailures.map(f => f.file + ': ' + f.evidence).join('; ')).slice(0, 200)
+  // Reverses TCK-20260705-GATE-DET-PARITY-UPDATER's explicit "visibility-only, no new blocking
+  // status" decision (stored_artifacts/TCK-20260705-GATE-DET-PARITY-UPDATER/plan.md lines 222-227) —
+  // this ticket's own ACs ask for exactly the gate that decision declined to add. Only a genuine
+  // FAIL (a src/ file mapped to a ledger subsystem with no matching ledger touch) hard-blocks; an
+  // unparseable cross-ref result (parityCrossRef === null) stays non-blocking, unchanged from today.
+  if (parityCrossRefFailures.length > 0) {
+    const evidence = parityCrossRefFailures.map(f => f.file + ': ' + f.evidence).join('; ').slice(0, 200)
+    pushEvent('Parity', 'parity-updater', 'failed', evidence, parity.ts)
+    await writeMonitoring('PARITY_INCOMPLETE')
+    return {
+      status: 'PARITY_INCOMPLETE',
+      ticket_id: tid,
+      failing_items: parityCrossRefFailures.map(f => f.file + ': ' + f.evidence),
+      message: 'A src/ file mapped to a parity-ledger subsystem had no corresponding docs/parity_ledger/*.yaml entry touched in this diff — see failing_items.',
+    }
+  }
+
+  const parityEvidence = parityCrossRef === null
+    ? (parity.summary || 'Parity ledger updated').slice(0, 150) + ' | cross-ref: unparseable'
     : (parity.summary || 'Parity ledger updated')
   pushEvent('Parity', 'parity-updater', 'ok', parityEvidence, parity.ts)
 }
@@ -1098,6 +1113,36 @@ if (finalizeFailures.length > 0) {
 pushEvent('Finalize', 'finalizer', 'ok', 'Ticket ' + tid + ' finalized and moved to done')
 await writeMonitoring('DONE')
 
+// Verifies the write just above actually landed (tools/gate_checks/done_checker_static.py::
+// check_monitoring_write_recorded). Deliberately non-blocking: CLAUDE.md's Hard Rule ("monitoring
+// write failure must never fail the workflow") governs the OUTCOME here, not just the write
+// ATTEMPT — so a FAIL result must not change `status` away from 'DONE'. This is a loud warning
+// surfaced in the return message, not a gate. (Revised from an earlier hard-block design that was
+// rejected at architecture-review for silently reversing the Hard Rule — see plan.md Design
+// Decision 2.)
+const monitoringCheckOutput = await bash(
+  `python3 -c "
+import sys, json
+sys.path.insert(0, 'tools')
+from gate_checks.done_checker_static import check_monitoring_write_recorded
+status, evidence = check_monitoring_write_recorded(sys.argv[1])
+print('MONITORING_CHECK_JSON:' + json.dumps({'status': status, 'evidence': evidence}))
+" "${tid}"`
+)
+let monitoringCheck = null
+const monitoringMarkerIndex = monitoringCheckOutput.indexOf('MONITORING_CHECK_JSON:')
+if (monitoringMarkerIndex !== -1) {
+  try {
+    monitoringCheck = JSON.parse(monitoringCheckOutput.slice(monitoringMarkerIndex + 'MONITORING_CHECK_JSON:'.length).trim())
+  } catch (e) { monitoringCheck = null }
+}
+let monitoringWarning = null
+if (monitoringCheck === null || monitoringCheck.status === 'FAIL') {
+  monitoringWarning = monitoringCheck === null ? 'monitoring-write self-check output unparseable' : monitoringCheck.evidence
+  pushEvent('Finalize', 'finalizer', 'failed', ('monitoring_write_recorded: ' + monitoringWarning).slice(0, 200))
+  log(`WARNING: agent-monitoring write for ${tid} could not be verified — ${monitoringWarning}`)
+}
+
 return {
   status: 'DONE',
   ticket_id: tid,
@@ -1107,4 +1152,7 @@ return {
   tests: { pass_count: testResult.pass_count },
   parity_updated: implementation.behavior_changed,
   artifacts: tier !== 'hotfix' ? `stored_artifacts/${tid}` : 'none (hotfix)',
+  message: monitoringWarning
+    ? `WARNING: agent-monitoring write for this run could not be verified (${monitoringWarning}). Ticket is otherwise complete — investigate agent-monitoring/runs.jsonl and events.jsonl manually.`
+    : undefined,
 }

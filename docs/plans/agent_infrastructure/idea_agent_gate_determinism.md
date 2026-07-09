@@ -10,7 +10,19 @@ tags: [idea, agent-infrastructure, determinism, gates, enforcement, observabilit
 
 # Idea: Deterministic Gate Substrate for Agent Workflows
 
-> **Maturity: IDEA** — Not scheduled. Raised directly from [`docs/ai/agent_infrastructure_audit.md`](../../ai/agent_infrastructure_audit.md) (2026-07-03 score: 8.0/10, lowest category "Determinism of judged gates" at 6.5). Consider before scaling agent-workflow autonomy further (e.g. CI-triggered `implement-ticket` runs).
+> **Maturity: SHIPPED.** The four static-verifier gates and the `verified_by` provenance
+> field (this doc's "Idea" and "Verdict provenance" sections) were implemented in full by
+> `gate-determinism-followups` (2026-07-05, `tickets/done/gate-determinism-followups/`) — see
+> `TCK-20260705-GATE-DET-DONE-CHECKER`, `-PARITY-UPDATER`, `-MECHANICS-AUDITOR`,
+> `-ARCHITECTURE-REVIEWER`. The "Enforcement: nudge vs. block" section below was subsequently
+> shipped by `TCK-20260708-AGENT-GATE-ENFORCEMENT-HARDENING` (under
+> `TCK-20260708-AGENT-INFRA-HARDENING-EPIC`): the parity-ledger cross-reference miss now hard-blocks
+> (`PARITY_INCOMPLETE`), and the missing agent-monitoring-write case was revised mid-ticket (one
+> architecture-review round-trip) from a proposed hard block to a loud-but-non-blocking warning, to
+> avoid an undisclosed reversal of CLAUDE.md's Hard Rule that a monitoring write failure must never
+> fail the workflow — see that ticket's `plan.md` Design Decision 2.
+> Originally raised directly from [`docs/ai/agent_infrastructure_audit.md`](../../ai/agent_infrastructure_audit.md)
+> (2026-07-03 score: 8.0/10, lowest category "Determinism of judged gates" at 6.5).
 
 ---
 
@@ -60,7 +72,7 @@ Not every hook should escalate — over-blocking exploratory work is its own fai
 | Existing component | How this idea attaches |
 |---|---|
 | `make lane-architecture` | Becomes the home for the new static verifiers, or a documented sibling — either way, its coverage should be written down explicitly against the four gates above, closing Recommendation 3 of the audit |
-| `agent-monitoring/tools.jsonl` / hooks | The hard-block escalation is a `PreToolUse`/`PostToolUse` hook change, not a new subsystem — reuses the existing hook plumbing in `.claude/settings.json` |
+| `agent-monitoring/tools.jsonl` / hooks | The hard-block escalation lives in `implement-ticket.js`'s own control flow (early `return {status: ...}`), the same mechanism every other gate in this pipeline already uses — not a `.claude/settings.json` hook change; hooks in this harness can only inject `additionalContext`, never block a tool call (confirmed by TCK-20260708-AGENT-GATE-ENFORCEMENT-HARDENING's investigation) |
 | `docs/parity_ledger/*.yaml` schema | `parity-updater`'s diff cross-reference needs a stable mapping from `src/` path → subsystem YAML file; this may already be implicit in how `parity-updater` scopes its reads and just needs to be made explicit and scriptable |
 | `docs/ai/agent_infrastructure_audit.md` | Recommendations 1 ("log hook near-misses") and 3 ("write down what `lane-architecture` covers") are subsumed by this idea rather than being separate small fixes |
 
@@ -68,7 +80,13 @@ Not every hook should escalate — over-blocking exploratory work is its own fai
 
 ## Open Questions
 
-- Do static verifier failures hard-block immediately, or downgrade to the same `NEEDS_CHANGES`/`BLOCKED` path the LLM verdict already uses — so there's one failure vocabulary, not two?
+- **Resolved by `TCK-20260708-AGENT-GATE-ENFORCEMENT-HARDENING`:** the two escalated cases hard-block,
+  reusing existing vocabulary where one exists (none did for either case) and introducing exactly one
+  new phase-specific status where the phase had none before — `PARITY_INCOMPLETE` for the parity
+  cross-reference miss, following the `FINALIZE_INCOMPLETE` precedent. The agent-monitoring-write case
+  does not introduce or reuse any status at all: it was revised mid-implementation to a non-blocking
+  warning (`failed`-status event + `WARNING` in the returned `message`, `status` stays `DONE`) to avoid
+  reversing CLAUDE.md's Hard Rule — see that ticket's `plan.md` Design Decisions 1–2.
 - Where do the static checks live — a new `tools/gate_checks/` module, or folded into the existing `lane-architecture` test lane? The latter keeps one deterministic-check surface instead of two.
 - How is the static layer itself kept honest — is there a test asserting 1:1 coverage between what this doc claims is checked and what's actually implemented, so this doesn't become the next undocumented gap?
 - Should token/cost telemetry (the other acknowledged gap in the audit — `agent-monitoring` cannot see `input_tokens`/`output_tokens`) ride along with this effort, since both are "make the invisible parts of a gate visible," or is that a separate, smaller idea?
