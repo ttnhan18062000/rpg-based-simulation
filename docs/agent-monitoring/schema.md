@@ -97,6 +97,7 @@ One record per agent call within a workflow run. FK: `run_id → runs.run_id`.
 | `status` | string | No | `ok` \| `failed` \| `blocked` \| `skipped` |
 | `tool_call_count` | int | Yes | Total number of tool calls made by this agent. Computed by `writeMonitoring` from `tools.jsonl` (counts entries matching `run_id` + `seq`). `null` for runs produced before this field was added. |
 | `reason_code` | string | Yes | Machine-parseable sub-cause code. Populated for `Scope`/`ticket-scoper` and `Verify`/`done-checker` `failed` events; `null` everywhere else, and `null` for all records predating `TCK-20260706-MONITORING-REASON-CODE`/`TCK-20260706-SCOPE-TAG-REGISTRY-CHECK`. See below for why only those two phases get one. |
+| `cost_proxy_score` | float | Yes | Monotonic, unitless spend-proxy score computed by `writeMonitoring` from `tools.jsonl`. `null`/absent for all records predating `TCK-20260708-AGENT-COST-OBSERVABILITY` (no backfill). See below for the formula. |
 
 ### `status` values
 
@@ -135,6 +136,39 @@ Not a closed enum — a future phase found to have its own catch-all-status prob
 own value, but none is added speculatively ahead of evidence. `generate_retro.py`'s reason-code
 aggregation is workflow-agnostic (iterates every event regardless of source) — no code change was
 needed there when `Structure` started emitting this field.
+
+### `cost_proxy_score` — proxy formula and interpretation
+
+`cost_proxy_score` is a **monotonic, unitless proxy for relative comparison** (e.g. "agent A costs
+3x agent B this week"), **not a dollar-denominated cost figure** — no reader should subtract two
+scores and interpret the delta as real currency.
+
+Formula (computed by `writeMonitoring`, one group per `(run_id, seq)`):
+
+```
+cost_proxy_score = w_bash  * Σ(Bash duration_ms)
+                  + w_agent * count(Agent-tool spawns)
+                  + w_edit  * count(Read/Edit/Write/MultiEdit calls)
+```
+
+Current starting weights: `w_bash=0.001, w_agent=50, w_edit=1`. These are calibratable, not
+precision-load-bearing — `tools/agent-monitoring/cost_proxy.py` is the single source of truth for
+the live values (same pattern as this doc deferring to `vocabulary.py` for phase/agent vocabulary).
+
+Why `count(Agent)` and never `Σ duration_ms where tool=Agent`: the `Agent` tool's own `duration_ms`
+is SDK call-dispatch overhead, not the spawned subagent's real cost — a sampled ticket showed the
+`Agent` tool averaging ~97ms regardless of the spawned agent's actual runtime, and a
+background/async spawn's real cost is invisible to the parent's own tool-call duration entirely.
+Summing would silently undercount fan-out cost, so the formula counts spawns instead.
+
+Known limitations:
+
+- The raw linear formula is **unclamped and outlier-sensitive** — a single very-long Bash call can
+  dominate a spend breakdown. This is an accepted characteristic of Tier 1, not a bug; a future
+  ticket may revisit capping if real retro data shows distortion.
+- `null`/absent for every event recorded before `TCK-20260708-AGENT-COST-OBSERVABILITY` landed (no
+  backfill) — a retro breakdown over a period spanning the cutover will show partial coverage, by
+  design.
 
 Canonical phase/agent values for all four workflows are enforced from `tools/agent-monitoring/vocabulary.py` — the tables below are illustrative documentation, not the source of truth; if they disagree with `vocabulary.py`, the module wins.
 

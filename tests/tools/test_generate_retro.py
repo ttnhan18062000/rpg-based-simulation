@@ -251,6 +251,79 @@ def test_tag_breakdown_uses_registry_categorize_tag_not_reimplemented_lookup(tmp
     assert "| fixture-only-skill-tag | 1 | N/A — no gate implemented |" in report
 
 
+def test_retro_spend_by_phase_breakdown_renders_with_fixture_events():
+    runs = [_BASE_RUN]
+    events = [
+        {"run_id": "TCK-FAKE", "seq": 1, "phase": "Investigate", "agent": "investigator", "status": "ok", "summary": "found stuff", "cost_proxy_score": 10.0},
+        {"run_id": "TCK-FAKE", "seq": 2, "phase": "Investigate", "agent": "investigator", "status": "ok", "summary": "more stuff", "cost_proxy_score": 30.0},
+        {"run_id": "TCK-FAKE", "seq": 3, "phase": "Test", "agent": "test-scoper", "status": "ok", "summary": "ran tests", "cost_proxy_score": 5.0},
+    ]
+
+    report = generate(runs, events, "test-label")
+
+    assert "## Spend Proxy — By Phase" in report
+    assert "| Investigate | 2 | 40.0 | 20.0 |" in report
+    assert "| Test | 1 | 5.0 | 5.0 |" in report
+
+
+def test_retro_spend_by_agent_breakdown_renders_with_fixture_events():
+    runs = [_BASE_RUN]
+    events = [
+        {"run_id": "TCK-FAKE", "seq": 1, "phase": "Investigate", "agent": "investigator", "status": "ok", "summary": "found stuff", "cost_proxy_score": 10.0},
+        {"run_id": "TCK-FAKE", "seq": 2, "phase": "Investigate", "agent": "investigator", "status": "ok", "summary": "more stuff", "cost_proxy_score": 30.0},
+        {"run_id": "TCK-FAKE", "seq": 3, "phase": "Test", "agent": "test-scoper", "status": "ok", "summary": "ran tests", "cost_proxy_score": 5.0},
+    ]
+
+    report = generate(runs, events, "test-label")
+
+    assert "## Spend Proxy — By Agent" in report
+    assert "| investigator | 2 | 40.0 | 20.0 |" in report
+    assert "| test-scoper | 1 | 5.0 | 5.0 |" in report
+
+
+def test_retro_spend_breakdown_omitted_or_zero_safe_when_no_events_have_cost_proxy_score():
+    runs = [_BASE_RUN]
+    events = [
+        {"run_id": "TCK-FAKE", "seq": 1, "phase": "Verify", "agent": "done-checker", "status": "failed", "summary": "blocked"},
+        {"run_id": "TCK-FAKE", "seq": 2, "phase": "Test", "agent": "test-scoper", "status": "ok", "summary": "passed", "cost_proxy_score": None},
+    ]
+
+    report = generate(runs, events, "test-label")
+
+    assert "## Spend Proxy — By Phase" not in report
+    assert "## Spend Proxy — By Agent" not in report
+
+
+def test_retro_spend_breakdown_placement_does_not_disturb_tag_breakdown_sections(tmp_path):
+    _write_registry(tmp_path, [("observability", "subsystem-topic"), ("security", "process-skill-signal")])
+    _write_ticket(tmp_path, "done", "TCK-20260710-FAKE-DONE", ["observability"])
+    _write_ticket(tmp_path, "done", "TCK-20260710-SEC-ONE", ["security"])
+
+    runs = [
+        dict(_BASE_RUN, run_id="TCK-20260710-FAKE-DONE", final_status="DONE"),
+        dict(_BASE_RUN, run_id="TCK-20260710-SEC-ONE", final_status="DONE"),
+    ]
+    events = [
+        {"run_id": "TCK-20260710-FAKE-DONE", "seq": 1, "phase": "Investigate", "agent": "investigator", "status": "ok", "summary": "found stuff", "cost_proxy_score": 12.0},
+    ]
+
+    report = generate(runs, events, "test-label", tickets_root=tmp_path)
+
+    assert "## Tag Breakdown — Subsystem/Topic" in report
+    assert "## Tag Breakdown — Process/Skill-signal" in report
+    assert "## Spend Proxy — By Phase" in report
+    assert "## Spend Proxy — By Agent" in report
+
+    tag_subsystem_idx = report.index("## Tag Breakdown — Subsystem/Topic")
+    tag_skill_idx = report.index("## Tag Breakdown — Process/Skill-signal")
+    agent_status_idx = report.index("## Agent Status Distribution")
+    spend_phase_idx = report.index("## Spend Proxy — By Phase")
+    spend_agent_idx = report.index("## Spend Proxy — By Agent")
+    summary_quality_idx = report.index("## Summary Quality")
+
+    assert tag_subsystem_idx < tag_skill_idx < agent_status_idx < spend_phase_idx < spend_agent_idx < summary_quality_idx
+
+
 def test_reason_code_aggregation_is_workflow_agnostic():
     """Confirms TCK-20260706-CREATE-TICKETS-TAG-CHECK's claim: no code change was needed for
     generate_retro.py to also tally reason_code values from create-tickets.js's events, since the

@@ -199,28 +199,35 @@ Step 1 — get current timestamp (run end time):
   Run via Bash: date -u +%Y-%m-%dT%H:%M:%SZ
   Save result as END_TS. Replace every literal <END_TS> in the commands below with this value.
 
-Step 2 — compute tool_call_count per agent seq from tools.jsonl:
+Step 2 — compute tool_call_count and cost_proxy_score per agent seq from tools.jsonl:
   Run via Bash:
     python3 -c "
 import json
+import sys
 from pathlib import Path
-from collections import Counter
+from collections import Counter, defaultdict
+sys.path.insert(0, 'tools/agent-monitoring')
+from cost_proxy import compute_cost_proxy_score
 f = Path('agent-monitoring/tools.jsonl')
 counts = Counter()
+rows_by_seq = defaultdict(list)
 if f.exists():
     for line in f.read_text().splitlines():
         if not line: continue
         r = json.loads(line)
         if r.get('run_id') == '${tid}' and r.get('seq') is not None:
             counts[r['seq']] += 1
-print(json.dumps(dict(counts)))
+            rows_by_seq[r['seq']].append(r)
+scores = {seq: compute_cost_proxy_score(rows) for seq, rows in rows_by_seq.items()}
+print(json.dumps({'counts': dict(counts), 'scores': scores}))
 "
-  Save the JSON dict result as TOOL_COUNTS (e.g. {"2":4,"3":11}).
+  Save the JSON dict result as TOOL_STATS (e.g. {"counts":{"2":4,"3":11},"scores":{"2":12.5,"3":83.0}}).
 
 Step 3 — build and write events:
   Input events: ${eventsJson}
   For each event: add "run_id": "${tid}". If "ts" is null or missing, set "ts" to END_TS.
-  Set "tool_call_count" on each event to the integer from TOOL_COUNTS[str(event.seq)], or 0 if not present.
+  Set "tool_call_count" on each event to the integer from TOOL_STATS["counts"][str(event.seq)], or 0 if not present.
+  Set "cost_proxy_score" on each event to the number from TOOL_STATS["scores"][str(event.seq)], or 0.0 if not present.
   Run: python3 tools/agent-monitoring/record_events.py --data '<final JSON array>'
 
 Step 4 — write run record (replace <END_TS> with the value from Step 1):

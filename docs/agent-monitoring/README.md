@@ -18,6 +18,7 @@ Observability layer for the Claude Code AI agent workflow. Tracks workflow runs 
 - Which agents were called, in which phase, and what each did in one sentence (`events.jsonl`)
 - Every individual tool call during a session: tool name, input summary, status, duration (`tools.jsonl`)
 - Per-agent tool call counts derived from `tools.jsonl`, stored as `tool_call_count` on each event
+- A monotonic cost-proxy score per agent event, derived from `tools.jsonl` (Bash duration + Agent spawn count + edit-tool call count), stored as `cost_proxy_score` — an explicit proxy, not real token/dollar cost (see schema.md)
 - Weekly retro reports derived from the above
 
 ## What It Does NOT Capture

@@ -369,6 +369,35 @@ def generate(runs, events, label, week_str=None, tickets_root=None):
         lines.append("_No events recorded._")
     lines.append("")
 
+    # Spend proxy — by phase and by agent. Filter-then-aggregate: events lacking cost_proxy_score
+    # (pre-TCK-20260708-AGENT-COST-OBSERVABILITY historical records, no backfill) are excluded from
+    # both sum and count, never coerced to 0 (would silently deflate older phases' averages).
+    scored_events = [e for e in events if e.get("cost_proxy_score") is not None]
+    if scored_events:
+        phase_scores = defaultdict(list)
+        agent_scores = defaultdict(list)
+        for e in scored_events:
+            phase_scores[e.get("phase", "?")].append(e["cost_proxy_score"])
+            agent_scores[e.get("agent", "?")].append(e["cost_proxy_score"])
+
+        lines.append("## Spend Proxy — By Phase")
+        lines.append("")
+        lines.append("| Phase | Events scored | Total | Avg |")
+        lines.append("|---|---|---|---|")
+        for phase in sorted(phase_scores):
+            scores = phase_scores[phase]
+            lines.append(f"| {phase} | {len(scores)} | {round(sum(scores), 1)} | {round(sum(scores) / len(scores), 1)} |")
+        lines.append("")
+
+        lines.append("## Spend Proxy — By Agent")
+        lines.append("")
+        lines.append("| Agent | Events scored | Total | Avg |")
+        lines.append("|---|---|---|---|")
+        for agent in sorted(agent_scores):
+            scores = agent_scores[agent]
+            lines.append(f"| {agent} | {len(scores)} | {round(sum(scores), 1)} | {round(sum(scores) / len(scores), 1)} |")
+        lines.append("")
+
     # Summary quality
     lines.append("## Summary Quality")
     lines.append("")

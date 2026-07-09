@@ -163,3 +163,25 @@ class TestVocabularyWarning:
         assert "TotallyMadeUpPhase" in result.stderr
         written = (tmp_path / "agent-monitoring" / "events.jsonl").read_text()
         assert "TCK-VOCAB-WARN-TEST" in written
+
+
+# ---------------------------------------------------------------------------
+# TCK-20260708-AGENT-COST-OBSERVABILITY — cost_proxy_score additive-field pass-through
+# ---------------------------------------------------------------------------
+
+def test_cost_proxy_score_field_written_to_events_jsonl(tmp_path):
+    # cost_proxy_score is additive, not in REQUIRED — this proves it persists through
+    # record_events.py's existing unknown-key pass-through with zero source changes to that
+    # script. Runs with cwd=tmp_path so the write never touches the repo's real events.jsonl.
+    record = {**_VALID_EVENT, "run_id": "TCK-COST-PROXY-TEST", "cost_proxy_score": 42.5}
+    assert validate_record(record) == []
+
+    result = subprocess.run(
+        [sys.executable, str(_RECORD_PATH), "--data", json.dumps(record)],
+        capture_output=True,
+        text=True,
+        cwd=tmp_path,
+    )
+    assert result.returncode == 0
+    written = json.loads((tmp_path / "agent-monitoring" / "events.jsonl").read_text().strip())
+    assert written["cost_proxy_score"] == 42.5

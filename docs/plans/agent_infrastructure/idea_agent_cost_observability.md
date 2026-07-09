@@ -10,10 +10,22 @@ tags: [idea, agent-infrastructure, observability, cost, tokens, model-routing]
 
 # Idea: Agent Spend & Token Observability Layer
 
-> **Maturity: SCHEDULED** — tracked as `TCK-20260708-AGENT-COST-OBSERVABILITY` under
-> `TCK-20260708-AGENT-INFRA-HARDENING-EPIC` (2026-07-08). The sibling idea's `verified_by` field
-> (see below) already landed via `gate-determinism-followups` (2026-07-05), so that precondition is
-> satisfied. Originally raised directly from [`docs/ai/agent_infrastructure_audit.md`](../../ai/agent_infrastructure_audit.md)
+> **Maturity: SHIPPED (Tier 1).** Implemented by `TCK-20260708-AGENT-COST-OBSERVABILITY`
+> (`tickets/done/`) under `TCK-20260708-AGENT-INFRA-HARDENING-EPIC`. `cost_proxy_score` is computed
+> in `writeMonitoring`'s existing single pass over `tools.jsonl` (weighted Bash `duration_ms` +
+> `Agent`-spawn count + edit-tool-call count; concrete starting weights `w_bash=0.001`, `w_agent=50`,
+> `w_edit=1`, sized against real data rather than left as this doc's original placeholders), written
+> additively to `events.jsonl`, documented as an explicit non-dollar proxy in
+> `docs/agent-monitoring/schema.md`, and surfaced as a spend-by-phase/spend-by-agent breakdown in
+> `make agent-monitoring-retro`'s report — closing this doc's own "Where it surfaces" section and the
+> audit's Recommendation 2. **Tier 2 (`self_reported_scope`) was deferred, not ticketed** — the
+> ticket's own Scope framed it as stretch-only, and there is no concrete retro use case yet demanding
+> it; it remains available as a natural pickup once Tier 1's data has actually motivated a need for
+> it in practice. Tier 3 remains platform-blocked, unchanged. The sibling idea's `verified_by` field
+> (see below) landed via `gate-determinism-followups` (2026-07-05) and this idea's own vocabulary-cleanup
+> precondition landed via [`idea_agent_monitoring_schema_enforcement.md`](idea_agent_monitoring_schema_enforcement.md)
+> (`TCK-20260708-AGENT-MONITORING-SCHEMA-ENFORCEMENT`), both satisfied before this ticket ran.
+> Originally raised directly from [`docs/ai/agent_infrastructure_audit.md`](../../ai/agent_infrastructure_audit.md)
 > (2026-07-03 score: 8.0/10 — the audit calls out lack of cost telemetry by name in both
 > Strengths-adjacent gaps and Recommendation 2). Sibling idea to [`idea_agent_gate_determinism.md`](idea_agent_gate_determinism.md).
 

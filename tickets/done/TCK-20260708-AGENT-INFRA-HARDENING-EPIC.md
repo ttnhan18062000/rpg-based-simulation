@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20260708-AGENT-INFRA-HARDENING-EPIC
-phase: open
+phase: done
 date: 2026-07-08
 tags: [ai, agent-monitoring, process-improvement]
 ---
@@ -15,7 +15,7 @@ tags: [ai, agent-monitoring, process-improvement]
 Agent Infrastructure Hardening Phase 2 — close the audit's remaining gaps: monitoring schema drift, gate enforcement (hook hard-block + lane-architecture coverage), and spend observability
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 epic
@@ -69,7 +69,18 @@ Sequencing: (1) MONITORING-SCHEMA-ENFORCEMENT first — foundational data-qualit
 (epic — see children)
 
 ## Files Changed
-(epic — see children)
+(epic — see children for source/test changes)
+- `docs/plans/agent_infrastructure/idea_agent_monitoring_schema_enforcement.md` (maturity banner: SCHEDULED → SHIPPED)
+- `docs/plans/agent_infrastructure/idea_agent_cost_observability.md` (maturity banner: SCHEDULED → SHIPPED (Tier 1))
+- `docs/ai/agent_infrastructure_audit.md` (Recommendation 2 marked closed with pointer)
+- `docs/plans/agent_infrastructure/idea_agent_gate_determinism.md` and Recommendations 1/3 were already closed by TCK-20260708-AGENT-GATE-ENFORCEMENT-HARDENING prior to this epic-closure pass — verified, not re-touched.
 
 ## Completion Summary
-(pending)
+All three child tickets are DONE: `TCK-20260708-AGENT-MONITORING-SCHEMA-ENFORCEMENT`, `TCK-20260708-AGENT-GATE-ENFORCEMENT-HARDENING`, `TCK-20260708-AGENT-COST-OBSERVABILITY` (all `tickets/done/`). All 5 epic Acceptance Criteria are satisfied:
+1. Three child tickets DONE — confirmed.
+2. All three source idea docs reflect final disposition — `idea_agent_gate_determinism.md` was already SHIPPED; this closure pass updated `idea_agent_monitoring_schema_enforcement.md` and `idea_agent_cost_observability.md` from SCHEDULED to SHIPPED with pointers to their completed tickets.
+3. `docs/ai/agent_infrastructure_audit.md` Recommendations 1 and 3 were already marked closed (by GATE-ENFORCEMENT-HARDENING); this closure pass added the Recommendation 2 pointer to COST-OBSERVABILITY.
+4. `make agent-monitoring-retro` output includes a spend-by-phase/spend-by-agent breakdown — shipped by COST-OBSERVABILITY.
+5. `.claude/settings.json`-adjacent enforcement escalated from advisory to hard block for the two audit-named cases (parity-ledger cross-reference miss now hard-blocks as `PARITY_INCOMPLETE`; the monitoring-write case was deliberately revised to a non-blocking warning during that ticket's own architecture review, to avoid reversing CLAUDE.md's Hard Rule — see that ticket's plan.md Design Decision 2) — shipped by GATE-ENFORCEMENT-HARDENING.
+
+No `src/` files were touched by this epic-closure pass (docs only). No parity ledger impact.

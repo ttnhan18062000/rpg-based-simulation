@@ -10,15 +10,20 @@ tags: [idea, agent-infrastructure, observability, schema, data-quality]
 
 # Idea: Enforce agent-monitoring Schema at Write Time, Not Just at Read Time
 
-> **Maturity: SCHEDULED** — tracked as `TCK-20260708-AGENT-MONITORING-SCHEMA-ENFORCEMENT` under
-> `TCK-20260708-AGENT-INFRA-HARDENING-EPIC` (2026-07-08), sequenced first in that epic since the
-> cost-observability idea depends on this one's vocabulary cleanup. Raised from a direct
-> investigation of `agent-monitoring/runs.jsonl`/`events.jsonl` (2026-07-04), the same investigation
-> that produced [`TCK-20260704-CREATE-TICKETS-MONITORING`](../../../tickets/done/TCK-20260704-CREATE-TICKETS-MONITORING.md)
-> (now in `tickets/done/`). That ticket fixed a coverage gap (`create-tickets` wasn't recorded at
-> all); this idea addresses a data-quality gap in the workflows that already are recorded. Decision
-> made explicitly when this was raised: **do not backfill or rewrite the 98 historical drifted
-> records** — this idea is about preventing further drift, not correcting the past.
+> **Maturity: SHIPPED.** Implemented in full by `TCK-20260708-AGENT-MONITORING-SCHEMA-ENFORCEMENT`
+> (`tickets/done/`), sequenced first under `TCK-20260708-AGENT-INFRA-HARDENING-EPIC` since the
+> cost-observability idea depended on this one's vocabulary cleanup (now also shipped — see
+> [`idea_agent_cost_observability.md`](idea_agent_cost_observability.md)). All 3 layers from this
+> doc's "Idea" section landed: (1) non-null enforcement is a hard reject in both `record_run.py` and
+> `record_events.py`; (2) a per-workflow phase/agent vocabulary check is warn-only (stderr), verified
+> to never escalate to `sys.exit`; (3) `compute_drift_report()` in `validate.py` reports
+> null-required-field counts and non-canonical phase/agent/tier frequency tables — confirmed against
+> real data (exactly 98 `workflow: null` records, matching this doc's own cited figure).
+> `tools/agent-monitoring/vocabulary.py` is the single source of truth for the canonical sets, per
+> this doc's "Natural Integration Points" table. As decided when this was raised, the 98 historical
+> drifted records were **not** backfilled or rewritten — only future drift is prevented. Raised from
+> a direct investigation of `agent-monitoring/runs.jsonl`/`events.jsonl` (2026-07-04), the same
+> investigation that produced [`TCK-20260704-CREATE-TICKETS-MONITORING`](../../../tickets/done/TCK-20260704-CREATE-TICKETS-MONITORING.md).
 
 ---
 
