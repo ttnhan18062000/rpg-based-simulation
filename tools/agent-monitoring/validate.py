@@ -15,8 +15,11 @@ Exit 0 = clean. Exit 1 = errors found.
 import csv
 import json
 import sys
-from collections import defaultdict
+from collections import Counter, defaultdict
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from vocabulary import CANONICAL_TIERS, WORKFLOW_PHASES, infer_workflow, is_known_agent  # noqa: E402
 
 RUNS_FILE = Path("agent-monitoring/runs.jsonl")
 EVENTS_FILE = Path("agent-monitoring/events.jsonl")
@@ -45,6 +48,76 @@ def _record_is_complete(rec: dict) -> bool:
     if rec.get("status") in LEGACY_TERMINAL_STATUS_VALUES:
         return True
     return False
+
+
+# Run-record fields checked for null-required-field drift. A subset of
+# record_run.py's own REQUIRED set — "run_id" and "start_ts" are excluded
+# because a null run_id/start_ts already breaks the runs_by_id/events_by_run
+# joins elsewhere in this file, well before a drift report would matter.
+RUN_REQUIRED_FIELDS_FOR_DRIFT = ("workflow", "tier", "final_status")
+
+
+def compute_drift_report(runs: list, events: list) -> str:
+    """Read-only vocabulary/null-field drift report, mirroring
+    generate_retro.py's generate(runs, events, label) -> str shape for
+    testability. Never gates anything — validate.py's exit-code contract
+    (errors -> exit 1, else exit 0 regardless of warnings) is unaffected by
+    what this function returns; it is purely additive reporting."""
+    null_field_counts = Counter()
+    for r in runs:
+        for field in RUN_REQUIRED_FIELDS_FOR_DRIFT:
+            if r.get(field) is None:
+                null_field_counts[field] += 1
+
+    phase_drift = Counter()
+    agent_drift = Counter()
+    for e in events:
+        workflow = infer_workflow(e.get("run_id") or "")
+        if workflow is None:
+            continue
+        phase = e.get("phase")
+        if phase is not None and phase not in WORKFLOW_PHASES.get(workflow, set()):
+            phase_drift[phase] += 1
+        agent = e.get("agent")
+        if agent is not None and not is_known_agent(workflow, agent):
+            agent_drift[agent] += 1
+
+    tier_drift = Counter()
+    for r in runs:
+        tier = r.get("tier")
+        if tier is not None and tier not in CANONICAL_TIERS:
+            tier_drift[tier] += 1
+
+    lines = ["--- Vocabulary / Null-Field Drift Report ---", ""]
+    lines.append("Null required fields (runs.jsonl):")
+    for field in RUN_REQUIRED_FIELDS_FOR_DRIFT:
+        lines.append(f"  {field}: {null_field_counts.get(field, 0)}")
+    lines.append("")
+
+    lines.append("Non-canonical phase values (events.jsonl):")
+    if phase_drift:
+        for value, count in phase_drift.most_common():
+            lines.append(f"  '{value}': {count}")
+    else:
+        lines.append("  none")
+    lines.append("")
+
+    lines.append("Non-canonical agent values (events.jsonl):")
+    if agent_drift:
+        for value, count in agent_drift.most_common():
+            lines.append(f"  '{value}': {count}")
+    else:
+        lines.append("  none")
+    lines.append("")
+
+    lines.append("Non-canonical tier values (runs.jsonl):")
+    if tier_drift:
+        for value, count in tier_drift.most_common():
+            lines.append(f"  '{value}': {count}")
+    else:
+        lines.append("  none")
+
+    return "\n".join(lines)
 
 
 def load_jsonl(path):
@@ -122,6 +195,8 @@ def main():
 
     if errors:
         sys.exit(1)
+
+    print(compute_drift_report(runs, events))
 
     total_runs = len(runs)
     total_events = len(events)

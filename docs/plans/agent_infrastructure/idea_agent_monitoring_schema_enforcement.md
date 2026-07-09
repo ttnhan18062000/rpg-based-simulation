@@ -10,7 +10,15 @@ tags: [idea, agent-infrastructure, observability, schema, data-quality]
 
 # Idea: Enforce agent-monitoring Schema at Write Time, Not Just at Read Time
 
-> **Maturity: IDEA** — Not scheduled. Raised from a direct investigation of `agent-monitoring/runs.jsonl`/`events.jsonl` (2026-07-04), the same investigation that produced [`TCK-20260704-CREATE-TICKETS-MONITORING`](../../../tickets/done/TCK-20260704-CREATE-TICKETS-MONITORING.md) (now in `tickets/done/`). That ticket fixed a coverage gap (`create-tickets` wasn't recorded at all); this idea addresses a data-quality gap in the workflows that already are recorded. Decision made explicitly when this was raised: **do not backfill or rewrite the 98 historical drifted records** — this idea is about preventing further drift, not correcting the past.
+> **Maturity: SCHEDULED** — tracked as `TCK-20260708-AGENT-MONITORING-SCHEMA-ENFORCEMENT` under
+> `TCK-20260708-AGENT-INFRA-HARDENING-EPIC` (2026-07-08), sequenced first in that epic since the
+> cost-observability idea depends on this one's vocabulary cleanup. Raised from a direct
+> investigation of `agent-monitoring/runs.jsonl`/`events.jsonl` (2026-07-04), the same investigation
+> that produced [`TCK-20260704-CREATE-TICKETS-MONITORING`](../../../tickets/done/TCK-20260704-CREATE-TICKETS-MONITORING.md)
+> (now in `tickets/done/`). That ticket fixed a coverage gap (`create-tickets` wasn't recorded at
+> all); this idea addresses a data-quality gap in the workflows that already are recorded. Decision
+> made explicitly when this was raised: **do not backfill or rewrite the 98 historical drifted
+> records** — this idea is about preventing further drift, not correcting the past.
 
 ---
 

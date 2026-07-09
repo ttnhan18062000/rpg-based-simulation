@@ -136,6 +136,8 @@ own value, but none is added speculatively ahead of evidence. `generate_retro.py
 aggregation is workflow-agnostic (iterates every event regardless of source) — no code change was
 needed there when `Structure` started emitting this field.
 
+Canonical phase/agent values for all four workflows are enforced from `tools/agent-monitoring/vocabulary.py` — the tables below are illustrative documentation, not the source of truth; if they disagree with `vocabulary.py`, the module wins.
+
 ### `phase` values (implement-ticket workflow)
 
 `Scope`, `Investigate`, `Plan`, `Review`, `Implement`, `Test`, `Parity`, `Security-Review`, `Verify`, `Finalize`
