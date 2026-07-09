@@ -3708,3 +3708,30 @@
     tests/integration/test_scenario_feature_flag_defaults.py. Allow-lists exactly one cited
     exception (urban_political self-model content, INFRA-259/INFRA-260); any other
     content/flag asymmetry not in the fixture's known_exceptions block fails the guardrail.
+- id: INFRA-263
+  text: >
+    Ticket-close finalize gate enforces that docs/REGISTRY.yaml has been regenerated
+    to include the closing ticket's own entry. check_registry_entry_regenerated()
+    (tools/gate_checks/done_checker_static.py) calls generate_registry() directly,
+    treating any nonzero return from generate_registry() as non-blocking informational
+    evidence text only (an unrelated doc missing frontmatter elsewhere in docs/ must not
+    fail this specific ticket's close), then checks docs/REGISTRY.yaml for the ticket's
+    own entry, returning FAIL only when that entry is absent. Wired in as
+    run_finalize_selfcheck's 4th tuple element via the existing finalizeCheckOutput
+    bash() call site in implement-ticket.js -- runs unconditionally on every ticket
+    close, including hotfix tier. Companion guarantee to INFRA-183, which covers
+    generate_registry.py's output shape; this entry covers invocation timing
+    (auto-run at close, not just available to run manually).
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: >
+    tools/gate_checks/done_checker_static.py::check_registry_entry_regenerated +
+    .claude/workflows/implement-ticket.js (run_finalize_selfcheck 4th tuple element)
+  proof_type: null
+  test_path: tests/tools/test_done_checker_static.py::test_check_registry_entry_regenerated_fails_when_entry_absent
+  divergence_note: null
+  support_boundary: >
+    Ticket-closing workflow tooling only -- no simulation behavior is involved.
+    Does not touch, extend, or duplicate INFRA-183 (which covers
+    tools/generate_registry.py's output shape and is unmodified by this change).

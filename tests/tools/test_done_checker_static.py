@@ -21,6 +21,7 @@ from gate_checks.done_checker_static import (  # noqa: E402
     check_frontmatter_valid,
     check_migration_complete,
     check_monitoring_write_recorded,
+    check_registry_entry_regenerated,
     check_staging_artifacts_complete,
     check_ticket_finalized,
     check_ticket_location,
@@ -661,8 +662,18 @@ def test_run_finalize_selfcheck_all_pass(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
 
     results = run_finalize_selfcheck("TCK-FAKE", "standard")
-    assert len(results) == 3
+    assert len(results) == 4
     assert all(r["status"] == "PASS" for r in results), results
+
+
+def test_run_finalize_selfcheck_surfaces_missing_registry_entry(tmp_path, monkeypatch):
+    _scaffold_finalize_repo(tmp_path)
+    (tmp_path / "tickets" / "done" / "TCK-FAKE.md").unlink()
+    monkeypatch.chdir(tmp_path)
+
+    results = run_finalize_selfcheck("TCK-FAKE", "standard")
+    by_condition = {r["condition"]: r for r in results}
+    assert by_condition["registry_entry_regenerated"]["status"] == "FAIL"
 
 
 def test_run_finalize_selfcheck_surfaces_incomplete_stored_artifacts(tmp_path, monkeypatch):
@@ -769,3 +780,77 @@ def test_check_monitoring_write_recorded_applies_under_hotfix_tier(tmp_path):
         "TCK-HOTFIX-FAKE", runs_path=runs_path, events_path=events_path
     )
     assert status == "PASS"
+
+
+# ---------------------------------------------------------------------------
+# check_registry_entry_regenerated
+# ---------------------------------------------------------------------------
+
+
+def test_check_registry_entry_regenerated_passes_when_entry_present(tmp_path, monkeypatch):
+    (tmp_path / "tickets" / "done").mkdir(parents=True)
+    _write_ticket(tmp_path / "tickets" / "done" / "TCK-FAKE.md", "TCK-FAKE")
+    monkeypatch.chdir(tmp_path)
+
+    status, evidence = check_registry_entry_regenerated("TCK-FAKE")
+    assert status == "PASS"
+    assert "TCK-FAKE" in evidence
+
+
+def test_check_registry_entry_regenerated_fails_when_entry_absent(tmp_path, monkeypatch):
+    (tmp_path / "tickets" / "done").mkdir(parents=True)
+    monkeypatch.chdir(tmp_path)
+
+    status, evidence = check_registry_entry_regenerated("TCK-FAKE")
+    assert status == "FAIL"
+    assert "TCK-FAKE" in evidence
+
+
+def test_check_registry_entry_regenerated_nonzero_tool_exit_does_not_fail(tmp_path, monkeypatch):
+    # A doc missing frontmatter anywhere in docs/ drives generate_registry()'s own exit code to
+    # nonzero — unrelated to the closing ticket's own entry, which is present here. Proves AC #2:
+    # this must not turn into a FAIL, and the call must not raise.
+    (tmp_path / "tickets" / "done").mkdir(parents=True)
+    _write_ticket(tmp_path / "tickets" / "done" / "TCK-FAKE.md", "TCK-FAKE")
+    nofm = tmp_path / "docs" / "engine" / "nofm.md"
+    nofm.parent.mkdir(parents=True, exist_ok=True)
+    nofm.write_text("# No frontmatter\n\nBody.\n", encoding="utf-8")
+    monkeypatch.chdir(tmp_path)
+
+    status, evidence = check_registry_entry_regenerated("TCK-FAKE")
+    assert status == "PASS"
+    assert "TCK-FAKE" in evidence
+
+
+def test_check_registry_entry_regenerated_applies_under_hotfix_tier(tmp_path, monkeypatch):
+    # The function takes no `tier` argument at all — mirrors check_monitoring_write_recorded's
+    # precedent: applies identically regardless of tier context.
+    (tmp_path / "tickets" / "done").mkdir(parents=True)
+    monkeypatch.chdir(tmp_path)
+
+    status, _ = check_registry_entry_regenerated("TCK-HOTFIX-FAKE")
+    assert status == "FAIL"
+
+    _write_ticket(tmp_path / "tickets" / "done" / "TCK-HOTFIX-FAKE.md", "TCK-HOTFIX-FAKE")
+    status, _ = check_registry_entry_regenerated("TCK-HOTFIX-FAKE")
+    assert status == "PASS"
+
+
+def test_registry_entry_check_ordering_guard_fails_if_ticket_still_inprogress(tmp_path, monkeypatch):
+    # collect_tickets() only walks tickets/done/*.md — a ticket still sitting in
+    # tickets/inprogress/ must not be found, guarding against a future regression where this check
+    # is accidentally moved to run before the Finalize agent's own move-to-done step.
+    (tmp_path / "tickets" / "inprogress").mkdir(parents=True)
+    _write_ticket(tmp_path / "tickets" / "inprogress" / "TCK-FAKE.md", "TCK-FAKE")
+    monkeypatch.chdir(tmp_path)
+
+    status, evidence = check_registry_entry_regenerated("TCK-FAKE")
+    assert status == "FAIL"
+    assert "TCK-FAKE" in evidence
+
+
+def test_claude_md_documents_registry_regen_trigger():
+    doc_path = Path(__file__).parent.parent.parent / "CLAUDE.md"
+    content = doc_path.read_text(encoding="utf-8")
+    assert "regenerated unconditionally" in content
+    assert "git add docs/REGISTRY.yaml" in content

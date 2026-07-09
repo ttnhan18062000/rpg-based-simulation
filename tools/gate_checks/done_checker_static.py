@@ -10,11 +10,12 @@ verifier for that subset:
   tickets/inprogress/, no working_log row yet, frontmatter valid). Called from the Verify-phase
   agent prompt in `.claude/workflows/implement-ticket.js`; a static FAIL downgrades to the
   existing `DOD_BLOCKED` status — no new status vocabulary here.
-- Part B (`run_finalize_selfcheck`): the 3 post-Finalize conditions confirming Finalize's own
+- Part B (`run_finalize_selfcheck`): the 4 post-Finalize conditions confirming Finalize's own
   migration actually landed (stored_artifacts/ complete and staging_artifacts/ gone, ticket moved
-  to tickets/done/, exactly one working_log row). Called directly via `bash(...)` from the
-  Finalize phase in `implement-ticket.js`; a FAIL here produces the one new status this ticket
-  introduces, `FINALIZE_INCOMPLETE`.
+  to tickets/done/, exactly one working_log row, and — as of TCK-20260709-REGISTRY-REGEN-ON-CLOSE
+  — docs/REGISTRY.yaml regenerated with an entry for the closing ticket). Called directly via
+  `bash(...)` from the Finalize phase in `implement-ticket.js`; a FAIL here produces the one new
+  status this ticket introduces, `FINALIZE_INCOMPLETE`.
 
 Both parts live in one module because both are static checks for the same `done-checker` gate,
 just invoked at different pipeline points (see SEQUENCE.md decision 1).
@@ -29,11 +30,14 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
+import yaml
+
 _TOOLS_DIR = Path(__file__).resolve().parent.parent
 if str(_TOOLS_DIR) not in sys.path:
     sys.path.insert(0, str(_TOOLS_DIR))
 
 from validate_frontmatter import validate_file, validate_directory  # noqa: E402
+from generate_registry import generate_registry  # noqa: E402
 
 REQUIRED_ARTIFACT_FILES = ("plan.md", "investigation.md", "test_plan.md")
 
@@ -401,12 +405,66 @@ def check_monitoring_write_recorded(
     )
 
 
+def check_registry_entry_regenerated(
+    ticket_id: str,
+    root: Path = Path("."),
+    registry_output: Path = Path("docs/REGISTRY.yaml"),
+) -> tuple[str, str]:
+    """Regenerate docs/REGISTRY.yaml and confirm the closing ticket's entry landed in it.
+
+    Deliberately has no `tier` parameter — same design choice as
+    `check_monitoring_write_recorded`: TCK-20260709-REGISTRY-REGEN-ON-CLOSE's AC #1 requires the
+    regen to run "on every ticket close, all tiers including hotfix," so the absence of a
+    tier-skip branch is itself the mechanism, not an oversight.
+
+    Unlike every sibling `check_*` function in this file, this one is not read-only — calling it
+    mutates a tracked file (`registry_output`) as a side effect of "checking." This is a
+    deliberate reuse of the existing `run_finalize_selfcheck` call site rather than adding a
+    parallel invocation site (see plan.md's Question 2 resolution): `generate_registry()` is
+    called directly so the regen and the entry-presence check happen atomically together.
+
+    `generate_registry()`'s own nonzero return (it writes the YAML unconditionally, then returns
+    1 only if some *unrelated* doc elsewhere in docs/ is missing frontmatter — see
+    `generate_registry.py`'s own docstring) is captured only as informational evidence text, never
+    as a cause of FAIL — the only thing that can FAIL here is the closing ticket's own entry being
+    absent from the regenerated file. This is AC #2's "write never fails" non-blocking handling.
+    """
+    resolved_root = root.resolve()
+    output_path = registry_output if registry_output.is_absolute() else resolved_root / registry_output
+
+    regen_note = ""
+    try:
+        exit_code = generate_registry(resolved_root, output_path)
+        if exit_code != 0:
+            regen_note = f"generate_registry() exited {exit_code} (unrelated doc frontmatter gap)"
+    except Exception as exc:  # noqa: BLE001 - regen must never block ticket close
+        regen_note = f"generate_registry() raised: {exc}"
+
+    entries = yaml.safe_load(output_path.read_text(encoding="utf-8")) or []
+    found = any(
+        isinstance(entry, dict) and entry.get("ticket_id") == ticket_id for entry in entries
+    )
+
+    if found:
+        return (
+            "PASS",
+            f"{output_path} contains an entry for {ticket_id}"
+            + (f" (note: regen exited nonzero: {regen_note})" if regen_note else ""),
+        )
+    return (
+        "FAIL",
+        f"{output_path} has no entry for {ticket_id} after regeneration"
+        + (f" (regen also exited nonzero: {regen_note})" if regen_note else ""),
+    )
+
+
 def run_finalize_selfcheck(ticket_id: str, tier: str) -> list[dict]:
-    """Aggregate all 3 Part B checks. Same return shape as `run_static_precheck`."""
+    """Aggregate all 4 Part B checks. Same return shape as `run_static_precheck`."""
     checks = (
         ("migration_complete", check_migration_complete(ticket_id, tier)),
         ("ticket_finalized", check_ticket_finalized(ticket_id)),
         ("working_log_exactly_one_row", check_working_log_exactly_one_row(ticket_id)),
+        ("registry_entry_regenerated", check_registry_entry_regenerated(ticket_id)),
     )
     return [
         {"condition": name, "status": status, "evidence": evidence}

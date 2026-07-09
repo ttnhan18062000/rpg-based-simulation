@@ -1069,6 +1069,11 @@ Report each step: DONE / SKIPPED (reason).`,
 // Post-Finalize migration self-check — confirms the agent's own migration work above actually
 // landed, rather than trusting its prose report. Mirrors the Parity-phase p0ScanOutput bash()
 // precedent (lines ~561-571): one Python one-liner, args as individually quoted argv elements.
+// As of TCK-20260709-REGISTRY-REGEN-ON-CLOSE, run_finalize_selfcheck's 4th condition
+// (registry_entry_regenerated) also regenerates docs/REGISTRY.yaml as a side effect and verifies
+// the closing ticket's entry landed in it — this call site now mutates a tracked file, not just
+// reads state, and any FAIL (including a missing registry entry) is handled below by the same
+// generic finalizeFailures logic as the other 3 conditions.
 const finalizeCheckOutput = await bash(
   `python3 -c "
 import sys, json
