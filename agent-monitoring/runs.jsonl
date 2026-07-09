@@ -544,3 +544,4 @@
 {"run_id":"CREATE-TICKETS-DOCUMENT-FEATURE-REPAIR","start_ts":"2026-07-09T02:58:45Z","end_ts":"2026-07-09T03:10:22Z","workflow":"create-tickets","tier":"n/a","final_status":"DONE","agent_count":12}
 {"run_id":"TCK-20260709-DOCSITE-TICKETS-FRONTMATTER-BACKFILL","start_ts":"2026-07-09T03:29:14Z","end_ts":"2026-07-09T03:40:10Z","workflow":"implement-ticket","tier":"hotfix","final_status":"DONE","agent_count":10}
 {"run_id":"TCK-20260709-PRUNE-DEAD-SKIP-ENTRIES","start_ts":"2026-07-09T03:40:59Z","end_ts":"2026-07-09T03:49:33Z","workflow":"implement-ticket","tier":"hotfix","final_status":"DONE","agent_count":10}
+{"run_id":"TCK-20260709-REGISTRY-COUNT-STALE-DOCS","start_ts":"2026-07-09T03:50:29Z","end_ts":"2026-07-09T03:59:39Z","workflow":"implement-ticket","tier":"hotfix","final_status":"DONE","agent_count":10}

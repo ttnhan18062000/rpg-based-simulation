@@ -110,7 +110,7 @@ Exits 0 if valid, 1 on any violation. Content type is inferred from path (no `co
 
 ### The doc registry
 
-`docs/REGISTRY.yaml` is a flat machine-readable index of all tagged docs and closed tickets (912 entries after the initial pass). It is committed to git so agents can query it without running the script.
+`docs/REGISTRY.yaml` is a flat machine-readable index of all tagged docs and closed tickets. It is committed to git so agents can query it without running the script.
 
 ```bash
 make docs-registry   # Regenerate docs/REGISTRY.yaml
