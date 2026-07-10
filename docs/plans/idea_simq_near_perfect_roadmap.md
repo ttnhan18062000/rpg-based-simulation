@@ -17,6 +17,11 @@ tags: [idea, simulation-quality, calibration, corpus, determinism, roadmap]
 > (F6) — this doc's job is the cross-cutting synthesis those per-item entries don't carry: why these
 > particular five threads, in this particular order, constitute the actual distance between "SimQ
 > ships and works" and "SimQ is what its own contract says it should be."
+>
+> **Superseded as the actionable plan by `docs/plans/simq_development_roadmap.md`** (2026-07-10),
+> which sequences these five threads into 6 phases with ticket-count estimates and is where actual
+> tickets get filed from. This doc remains the evidence trail for *why* — read it first if you need
+> the reasoning behind the roadmap's phase ordering; read the roadmap doc for *what to do next*.
 
 ---
 

@@ -723,6 +723,11 @@ were re-verified current (still citing both ticket IDs, `status: verified`) by t
 
 ## Actionable Next Steps (as of 2026-07-01)
 
+> **Superseded as the live action list by `docs/plans/simq_development_roadmap.md`** (2026-07-10) —
+> the table below is historical (all items from the 2026-07-01 snapshot are resolved; kept for
+> traceability, not as a current task list). For what's actually next, see the roadmap doc's 6-phase
+> sequence and ticket-count estimates.
+
 | Priority | Action | Rationale |
 |---|---|---|
 | P1 | ~~Run `tools/calibrate_simq.py` against `dungeon_crawl` and `urban_political` worlds~~ — **RESOLVED 2026-07-02** (TCK-20260701-SIMQ-CALIBRATE-REFRESH) | Re-ran dungeon_crawl 200t/1000t and urban_political 200t post-emit-epic. Fresh grades: dungeon_crawl 200t COMBAT=A/NARRATIVE=B/PROGRESSION=B/WORLD=A; dungeon_crawl 1000t unchanged (B/B/B/B); urban_political 200t unchanged (B/A/B/A). One grade shift: dungeon_crawl 200t PROGRESSION A→B (new plateau emitter adds negative deltas). calibration_hits updated: `progression_plateau_detected` now 18 corpus-wide. grade_anchors.json updated. See `docs/plans/audit_fix_plan.md` corpus table. |

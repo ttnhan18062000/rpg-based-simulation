@@ -434,6 +434,7 @@ against every world in the corpus, not just the allowlist — for every populate
 populating faction's `hazard_immunities` (or is explicitly documented as intentional exposure, per the
 P2-P question below). This converts a reactive per-investigation fix pattern into a corpus-wide
 completeness guarantee, closing the gap class permanently rather than one sweep at a time.
+**Sequenced as Phase 1.1** in `docs/plans/simq_development_roadmap.md`.
 
 ---
 
@@ -457,6 +458,8 @@ re-verify those anchors with a multi-run tolerance check (same pattern as
 `eval_matrix_results.md` that single-run long-tick anchors carry unquantified throttle-variance risk.
 Cross-reference D06 F6's "Recommended Follow-Up" entry — same finding, tracked in both places since
 D06 owns the engine-health angle and this doc owns the actionable-backlog angle.
+**Sequenced as Phase 0.1** in `docs/plans/simq_development_roadmap.md` — the roadmap's first,
+blocking phase.
 
 ---
 
@@ -481,6 +484,7 @@ future world reusing this pattern): either (a) rule it intentional flavor and re
 re-deriving the question, or (b) rule it a genuine gap and add a `NATURAL_TERRAIN` (or a new,
 narrower) `hazard_immunities` entry for `town_council`. Either answer is fine — what's missing is a
 recorded answer, not more investigation.
+**Sequenced as Phase 1.2** in `docs/plans/simq_development_roadmap.md`.
 
 ---
 
