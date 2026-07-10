@@ -18,7 +18,7 @@ tags: [audit, simulation-quality, simq, integration, observability, event-bus]
 | **Interest** | 5 / 5 |
 | **Priority** | 9 |
 | **Method** | run-sim + code-read |
-| **Audit date** | 2026-06-30 (original); 2026-07-01 (re-run after fixes); 2026-07-02 (calibration corpus refresh + loop-detection sweep); 2026-07-02 (simq-uplift batch); 2026-07-03 (simq-uplift batch 2); 2026-07-04 (simq-uplift batch 3, all 8 tickets); 2026-07-07 (SimQ Corpus Tiers epic, all 10 tickets — see "SimQ Corpus Tiers Epic" section below) |
+| **Audit date** | 2026-06-30 (original); 2026-07-01 (re-run after fixes); 2026-07-02 (calibration corpus refresh + loop-detection sweep); 2026-07-02 (simq-uplift batch); 2026-07-03 (simq-uplift batch 2); 2026-07-04 (simq-uplift batch 3, all 8 tickets); 2026-07-07 (SimQ Corpus Tiers epic, all 10 tickets — see "SimQ Corpus Tiers Epic" section below); 2026-07-09 (SimQ Deep Coverage epic, all 10 tickets, plus 2 byproduct population-collapse fixes — see "SimQ Uplift Batch 4" section below); 2026-07-10 (SimQ audit run `SIMQ-AUDIT-20260710T020542Z` — Classify Drift verdict `no_regression`, 0 anchor edits) |
 
 **What this dimension answers:** Is the SimQ module actually receiving events and scoring
 live simulation runs — or is it built but disconnected? This audit exercises the full path
@@ -453,7 +453,7 @@ No remaining action items.
 | Event translation layer | `_TRANSLATE_SIMPLE` + `_TRANSLATE_CONDITIONAL` in quality_hub.py |
 | EventExtractor emissions | **81 of 82** scored event types emitted. 1 has no engine path (`camp_constructed` — no dynamic camp construction; scorer entry premature). |
 | Calibration tooling | `calibrate_simq.py` — `--window-size`/`--loop-threshold` CLI overrides added (TCK-20260701-SIMQ-LOOP-WINDOW-TUNE); run-scoped via `model_copy`, no YAML mutation |
-| Calibration corpus | 61-scenario corpus across 17 worlds (2026-07-07, `TCK-20260704-SIMQ-CORPUS-TIERS-EPIC`) — grew from the 28-run/10-world corpus via 7 new worlds (4 unit-tier isolating single mechanics, 3 stress-tier filling named scale-diversity gaps) and 8 of the original 10 promoted to end-to-end tier with bespoke FACTION/INFORMATION content; see `docs/simulation_quality/corpus_tier_taxonomy.md` for the full tier structure and `docs/simulation_quality/eval_matrix_results.md`'s "Corpus World-Scale Summary" for per-world counts. `make evaluate`: 0 regressions across all 610 pillars. |
+| Calibration corpus | **71-scenario corpus across 17 worlds** (re-verified 2026-07-10: `FAST_ANCHOR_KEYS` 53 + `SLOW_ANCHOR_KEYS` 18 = 71 in `tests/simulation_quality/test_grade_regression.py`, matching 71 non-metadata `run_key` entries in `tests/simulation_quality/fixtures/grade_anchors.json`) — grew from the 61-scenario/17-world corpus via `TCK-20260707-SIMQ-DEEP-COVERAGE-EPIC` (2026-07-07/09, see "SimQ Uplift Batch 4" section below): 6 new long-run (1000t/2000t) anchors plus `generated_frontier_3_42`'s first-ever anchors (200t x3 seeds + 1000t). The 61-scenario/17-world figure itself dates to 2026-07-07, `TCK-20260704-SIMQ-CORPUS-TIERS-EPIC`, which grew it from the 28-run/10-world corpus via 7 new worlds (4 unit-tier isolating single mechanics, 3 stress-tier filling named scale-diversity gaps) and 8 of the original 10 promoted to end-to-end tier with bespoke FACTION/INFORMATION content; see `docs/simulation_quality/corpus_tier_taxonomy.md` for the full tier structure and `docs/simulation_quality/eval_matrix_results.md`'s "Corpus World-Scale Summary" for per-world counts. `make evaluate`: 0 regressions across all 610 pillars (as of the Corpus Tiers Epic; not re-run at the wider corpus scope by this update). |
 | Parity ledger | SOC-237, SOC-238, INFRA-251 added and marked `verified` |
 | Kernel→hub bridge | **RESOLVED** — `InProcessQualityFeed` refactored; no competing consumer |
 | Early-extinction penalty | **RESOLVED** — `TCK-20260701-HAZARD-NATIVE-IMMUNITY` + `TCK-20260701-HAZARD-KIND-RESOLVER-GAP`; 0/5 wolf deaths confirmed at seed 42/137 |
@@ -628,6 +628,96 @@ hybrid template/bespoke content authoring by tier) were honored by every child t
   catalog registration) was fixed directly as a blocking prerequisite in ticket 4, and the one
   apparent regression found while finalizing ticket 10 was confirmed to be a stale local cache
   artifact, not a real bug, and fully resolved before the epic closed.
+
+---
+
+## SimQ Uplift Batch 4 (2026-07-07 / 2026-07-09)
+
+Ten tickets under `tickets/done/simq-deep-coverage/` (parent epic
+`TCK-20260707-SIMQ-DEEP-COVERAGE-EPIC`), the direct follow-up to the "SimQ Corpus Tiers Epic"
+above. Where that epic diversified the corpus (10→17 worlds), this one closed the long-run blind
+spot it left behind: pre-epic, only 3 of 17 worlds (`dungeon_crawl`, `sandbox_world`,
+`urban_political`) had any anchor >=1000 ticks, and across all 11 existing long-run anchors
+AGENCY/COMBAT/PROGRESSION/WORLD grades were literally invariant — masking drift the short-run
+corpus already showed those pillars capable of (peak grades in `unit_selfmodel_pilot`,
+`unit_faction_tension`, `hero_guild_routing`, `simq_routing_test`, none of which had ever run past
+500t).
+
+**Thread 1 — Long-run coverage (capped at <=2000t per explicit user direction):** 4 relocated
+resource/coverage-gap tickets landed first (so the long-run anchors would not measure against
+known-broken content), then `TCK-20260707-SIMQ-LONGRUN-HOTPILLAR-ANCHORS` added new 1000t/2000t
+anchors for the worlds already known to drive those 4 pillars to peak grades, and
+`TCK-20260707-SIMQ-GENERATED-FRONTIER-BASELINE-ANCHORS` established `generated_frontier_3_42`'s
+first-ever grade anchors (200t + 1000t) — this world had zero anchors at any tick count before
+this batch.
+
+**Thread 2 — Pillar completeness:** `TCK-20260707-SIMQ-PILLAR-COMPLETENESS-DOC` documented the
+conclusion that no 11th top-level pillar is justified (4 candidate dimensions — determinism,
+performance, checkpoint integrity, catalog health — are each already owned by dedicated systems
+outside SimQ); `TCK-20260707-SIMQ-BUILDING-SABOTAGE-SIGNAL` closed the one genuine gap found
+(`building_sabotage`, pipeline phase 15, previously invisible to all 10 pillars) as a new
+WORLD-pillar scoring rule, not a new pillar.
+
+| Ticket | What it did |
+|---|---|
+| TCK-20260707-HERO-GUILD-ROUTING-RESOURCE-TAG-GAP | Fixed `hero_guild_routing`'s resource-tag gap before its long-run anchor |
+| TCK-20260706-SIMQ-URBAN-POLITICAL-HOMETOWN-RESOURCE-GAP | Resolved `urban_political`'s dormant hometown resource gap before its 2000t extension |
+| TCK-20260706-SIMQ-CORPUS-RESOURCE-REGION-COVERAGE-AUDIT | Corpus-wide resource/region coverage audit |
+| TCK-20260707-CORPUS-POPULATION-STABILITY-COVERAGE-GAP | Extended `test_population_stability`/`test_hazard_kind_completeness` coverage to the worlds this epic anchors at long run — surfaced the two population-collapse defects fixed below |
+| TCK-20260706-DOCS-REGISTRY-MISSING-FRONTMATTER | Doc-hygiene chore (parallel) |
+| TCK-20260707-EPIC-SCOPE-INVESTIGATION-DOC-MISSING | Doc-traceability chore (parallel) |
+| TCK-20260707-SIMQ-LONGRUN-HOTPILLAR-ANCHORS | Added the 1000t/2000t hot-pillar anchors (`unit_selfmodel_pilot`, `unit_faction_tension` incl. 2000t, `hero_guild_routing`, `simq_routing_test`, `urban_political` 2000t) |
+| TCK-20260707-SIMQ-GENERATED-FRONTIER-BASELINE-ANCHORS | Established `generated_frontier_3_42`'s first-ever anchors (200t x3 seeds + 1000t seed42); surfaced the tick-800→1000 collapse fixed below |
+| TCK-20260707-SIMQ-PILLAR-COMPLETENESS-DOC | Documented the pillar-completeness conclusion — no 11th pillar justified |
+| TCK-20260707-SIMQ-BUILDING-SABOTAGE-SIGNAL | Added `building_sabotaged` event emission + WORLD-pillar scoring rule for the one genuine gap found |
+
+**Net effect on the calibration corpus:** 6 new long-run anchors (1000t/2000t, within the explicit
+<=2000t cap) plus `generated_frontier_3_42`'s first-ever anchors (200t x3 + 1000t) — corpus grew
+from 61 scenarios/17 worlds to **71 scenarios/17 worlds** (re-verified 2026-07-10: `FAST_ANCHOR_KEYS`
+53 + `SLOW_ANCHOR_KEYS` 18 = 71 in `tests/simulation_quality/test_grade_regression.py`, matching
+71 non-metadata `run_key` entries in `tests/simulation_quality/fixtures/grade_anchors.json`). No
+new top-level pillar added; `building_sabotage` closed as a WORLD-pillar rule instead.
+
+**Byproduct defects found and fixed — population collapse (2026-07-08):** The long-run anchoring
+work in Thread 1 surfaced two genuine, previously-latent population-collapse defects — both the
+same bug class (the worldassembly resolver's `hazard_kind` default of `"PHYSICAL"` matching no
+faction's declared `hazard_immunities`, causing unconditional lethal hazard drain in a
+never-declared region) but independent, per-module root causes — each spun into its own
+standalone ticket rather than fixed in-epic:
+
+- **`TCK-20260708-DUNGEON-URBAN-POPULATION-COLLAPSE`** — `dungeon_crawl` failed
+  `test_population_stability` at tick 50 (43.8% alive, early-tick collapse) and `urban_political`
+  failed it at tick 300 (56.7% alive, gradual erosion). Root cause: `ruins_mystery_quest.yaml` /
+  `scalable_bandit_camp.yaml` (dungeon_crawl) and `trading_company_hub.yaml` (urban_political,
+  compounded by a stale compiled artifact) never declared `hazard_kind` for hazardous, populated
+  regions. Fixed via 3 targeted content edits plus one new `merchant_league` hazard-immunity
+  entry; post-fix `dungeon_crawl` holds 100% alive through tick 50, `urban_political` holds 93.3%
+  through tick 300. Both `xfail` markers (added when the coverage gap was first surfaced) were
+  removed once each world confirmed a plain `PASSED`.
+- **`TCK-20260708-GENERATED-FRONTIER-LATE-TICK-POPULATION-COLLAPSE`** — `generated_frontier_3_42`
+  held through tick 800 (81.8%→63.6%) then collapsed to 9.1% by tick 1000, a distinct late-cliff
+  shape. Root cause: `moon_cult_ruins.yaml`'s `moon_cave` region (same bug class, new
+  `hazard_kind: "ARCANE_CORRUPTION"` value — its first content use) never declared `hazard_kind`
+  for `arcane_circle`'s population. Fixed via the matching content declaration plus a new
+  `arcane_circle` `hazard_immunities` entry and one recompile. Also surfaced a genuine,
+  **not fixed**, architecture finding: the engine's wall-clock-dependent tick-budget
+  emergency-throttle (`docs/engine/kernel.md` §"Emergency Throttling") causes real run-to-run
+  population variance past roughly tick 300-400 (two identical-seed pre-fix runs diverged by 100+
+  ticks in floor-violation onset and by more than 2x at tick 1000) — intentional, corpus-wide
+  engine behavior, explicitly out of scope to change. A new tolerance-based regression guard
+  (`test_generated_frontier_3_42_extended_population_stability`, averaged across 3 same-seed
+  trials at tick 900/1000) was added to catch a genuine future regression without false-failing on
+  this legitimate variance.
+
+Both tickets' `docs/parity_ledger/world_dynamics.yaml` WORLD-029/WORLD-060 `v2_evidence` entries
+were re-verified current (still citing both ticket IDs, `status: verified`) by this doc's own
+`SIMQ-AUDIT-20260710T020542Z` Classify Drift pass — `NO_ACTION` on both, no further edit needed.
+
+**Open follow-up work (new, from this batch):**
+- `town_council`'s `frontier_guard`/`bandit_road` hazard-immunity gap (shared by `dungeon_crawl`
+  and `urban_political`) was deliberately left unfixed by both population-collapse tickets,
+  pending a future ticket resolving whether it is intentional conflict-pressure flavor or a
+  genuine gap — check both tickets' existing "left open" notes before filing a duplicate.
 
 ---
 

@@ -18,7 +18,7 @@ tags: [audit, long-run, performance, attrition, behavioral-continuity, rejection
 | **Interest** | 5 / 5 |
 | **Priority** | 9 |
 | **Method** | run-sim |
-| **Audit date** | 2026-06-19 |
+| **Audit date** | 2026-06-19 (original); 2026-07-09 (F6 added — wall-clock non-determinism finding from `TCK-20260708-GENERATED-FRONTIER-LATE-TICK-POPULATION-COLLAPSE`) |
 
 **What this dimension answers:** Does the simulation remain healthy, performant, and behaviorally active across 1,000 ticks — or do entities stagnate, the world deplete, or the engine degrade? This is the first long-run observation after the RC1/RC2/RC3 fixes. D03 confirmed behavioral stasis onset by tick 20 under the broken pipeline. This audit confirms the RC fixes restored behavioral activity while revealing new systemic gaps at the 1,000-tick scale.
 
@@ -208,6 +208,54 @@ measurement, not updated in place.
 
 ---
 
+### F6 — Wall-Clock-Dependent Non-Determinism at Long Tick Counts (Tick-Budget Throttle)
+
+> **Discovered:** 2026-07-09, `TCK-20260708-GENERATED-FRONTIER-LATE-TICK-POPULATION-COLLAPSE`
+> **Status:** Documented, not fixed — intentional engine behavior, not a bug
+
+**Score: not scored on the Emergence Gap axes above (this is a determinism/reproducibility finding, not
+a behavioral-emergence gap) — flagged here because D06 owns "does the simulation remain healthy... across
+1,000+ ticks," and this finding is specifically a long-run-scale phenomenon invisible at ≤300 ticks.**
+
+Investigating a late-tick (800→1000) population collapse in `generated_frontier_3_42`, two independent
+instrumented drives — same seed (42), same code, same machine, run back-to-back — diverged sharply:
+floor-violation onset differed by 100+ ticks (tick 860 vs. 960) and the tick-1000 population endpoint
+differed by more than 2× (12/44 vs. 5/44 alive). Root cause: `src/engine/kernel.py`'s tick-budget
+watchdog (`kernel.py:420-442`) and mid-tick emergency throttle (`kernel.py:574-601`) measure **real
+wall-clock compute time** per tick (`time.perf_counter_ns()`), and when a tick's measured time exceeds
+budget, the mid-tick path drops the remaining resolution-queue work items for that tick — entities do not
+act, defend, or flee that tick. *Which* entities get dropped depends on where in the resolution queue the
+elapsed-time check trips, which depends on actual wall-clock timing (system load, scheduler jitter, GC
+pauses), not the deterministic seed or RNG stream.
+
+Both throttle paths are documented, intentional behavior (`docs/engine/kernel.md` §"Emergency
+Throttling") and are already known to be non-determinism-guaranteed (`docs/engine/kernel.md` §"State
+Hashing in Phase 7": canonical hash is `"SKIPPED"` in `DEGRADED` mode) — this finding does not reveal a
+new violation, it is the **first population-outcome-level test to actually encounter** an already-known
+gap, because no existing hard-assertion test previously drove any corpus world past ~tick 400-500 in a
+non-`audit_mode` context. The first `"Tick N exceeded budget"` watchdog warning fires at tick ~300-320 in
+every observed run; below that, floor assertions are reliably reproducible (confirmed: the existing
+300-tick `test_population_stability` window has never shown this divergence).
+
+**Resolution applied (narrow, not a fix for the underlying non-determinism):** `TCK-20260708-GENERATED-FRONTIER-LATE-TICK-POPULATION-COLLAPSE`
+added `test_generated_frontier_3_42_extended_population_stability` — a tolerance-based regression guard
+(3 same-seed trials, throttling left active/no `audit_mode`, hard per-trial floor through tick 800,
+relaxed mean-across-trials floors at ticks 900/1000, hard no-full-extinction check) rather than a tight
+per-tick assertion, since the investigation confirmed a tight assertion would be empirically false and
+`audit_mode=True` would verify a materially different (unthrottled, unrealistically optimistic) scenario.
+Explicitly did **not** touch `kernel.py`'s watchdog/throttle/`ResourceGovernor` logic — that is documented,
+intentional, corpus-wide engine behavior governing real hardware-class performance scaling
+(`docs/engine/performance_contract.md` §7), not a `generated_frontier_3_42`-specific defect.
+
+**Open question for a future ticket (not resolved here):** whether other long-run calibration tiers
+(the 1000t/2000t anchors added by `TCK-20260707-SIMQ-LONGRUN-HOTPILLAR-ANCHORS` and others in
+`docs/simulation_quality/eval_matrix_results.md`) are silently exposed to the same run-to-run variance in
+their `quality_report.json` outputs — i.e. whether a single calibration run's grade is representative or
+got a lucky/unlucky throttle-timing draw. Out of scope for the ticket that found this; flagged so a future
+audit does not have to rediscover the mechanism from scratch.
+
+---
+
 ## Key Findings Summary
 
 | Finding | Score | Description |
@@ -217,6 +265,7 @@ measurement, not updated in place.
 | F3 | 11/15 | Rejection cascade grows to 500K–550K/run at ~650/tick after RC1 fix |
 | F4 | 15/15 | Quest system never activates — no material blockers generated while F1 persists |
 | F5 | 9/15 | Late-run attrition exceeds spawn rate; entity count ends below starting count — **RESOLVED** (P2-B, `SpawnConfig` two-tier cadence); a separately-conflated early-collapse symptom in other worlds fixed 2026-07-04 by `TCK-20260703-SIMQ-UPLIFT3-WORLD-CORPUS` (stale hazard-kind content, unrelated cause) |
+| F6 | N/A | Wall-clock-dependent non-determinism past ~tick 300-320 (tick-budget throttle drops resolution work based on real compute time, not seed) — **documented, not fixed** (intentional engine behavior); narrow mitigation applied via a tolerance-based regression guard, `TCK-20260708-GENERATED-FRONTIER-LATE-TICK-POPULATION-COLLAPSE` (2026-07-09) |
 
 **Performance — all green:**
 - Tick compute: 9–15ms avg, stable, well within 50ms budget ✓
@@ -239,3 +288,12 @@ If the `lock_until_tick` for `proj_combat_retreat` / `proj_recover` is currently
 
 **P2 — D04 and D05 now unblocked but conditionally**
 D04 (Balance & Tuning) and D05 (Entity Differentiation) can now run, but F1 means economic/crafting tuning analysis is still not possible until hunger satiation is resolved. D05 can observe personality differentiation across survival-tier behavior; it is not blocked by F1 for that scope.
+
+**P2 — Audit whether other long-run SimQ anchors (1000t/2000t) are throttle-timing-sensitive (F6)**
+`TCK-20260707-SIMQ-LONGRUN-HOTPILLAR-ANCHORS` and other long-run calibration entries in
+`docs/simulation_quality/eval_matrix_results.md` were each captured from a single run. F6 confirmed at
+least one world (`generated_frontier_3_42`) shows >2× population variance between two back-to-back
+same-seed runs past ~tick 300-320. Determine whether any already-shipped 1000t/2000t anchor grade would
+flip if re-measured, and whether a tolerance-based re-verification (same pattern as
+`test_generated_frontier_3_42_extended_population_stability`) should become the standard for all
+long-run anchors rather than a single-run point estimate.

@@ -302,6 +302,43 @@ rather than a single named entry.
 
 ---
 
+### `security-reviewer`
+
+**Role:** Reviews implemented code changes for security vulnerabilities before Verify.
+
+**Trigger:** Conditional — the `implement-ticket` workflow's Security-Review phase fires only when the
+ticket's `tags` include `security` (ground truth), or its derived `suggested_skills` include
+`/security-review` (secondary). For a ticket matching neither, this phase does not run — zero added
+latency, agent calls, or events.
+
+**Registry lookup:** Before reviewing, reads `docs/REGISTRY.yaml` to find active docs matching the
+ticket's layer (`type: doc`, `status: active`/`authoritative`, `layer: <ticket_layer>`) rather than
+scanning `docs/` by listing. Falls back to the checklist below directly if the registry doesn't exist.
+
+**What it checks:**
+1. Injection — command/SQL/template injection in new string-building code
+2. Unsafe deserialization — `pickle`, `yaml.load` without `SafeLoader`, `eval`/`exec` on external input
+3. Path traversal — unvalidated path joins or user-controlled file paths
+4. Subprocess/command injection — `subprocess`/`os.system`/`shell=True` with unsanitized input
+5. Secrets-in-code — hardcoded credentials, API keys, tokens committed to source
+6. Raw-domain-model API exposure — overlaps `architecture-reviewer`'s API-boundary rule (no raw domain
+   models exposed from APIs, shaped read models only); cross-references that rule by name rather than
+   restating it
+
+**Inputs:** Ticket + its changed files/diff.
+
+**Outputs:** `APPROVED` / `NEEDS_CHANGES` / `BLOCKED` verdict, per-violation findings (which of the six
+categories, what the code does, the fix), and a `summary` field (one sentence ≤200 chars) for the agent
+monitoring event record.
+
+**Gate behavior:** The `implement-ticket` workflow halts with `SECURITY_BLOCKED` on `NEEDS_CHANGES` or
+`BLOCKED` and does not proceed to Verify/Finalize. Fix the flagged code, then re-run with `ticket_id`.
+
+**When to invoke directly:** After any manual change touching auth, secrets, subprocess calls,
+deserialization, or file-path handling, even outside the automated workflow.
+
+---
+
 ### `world-debugger`
 
 **Role:** Traces world assembly and content resolution failures through the authoritative pipeline.
@@ -357,5 +394,6 @@ rather than a single named entry.
 | `parity-updater` | Post-implementation | Updated `docs/parity_ledger/*.yaml` |
 | `done-checker` | Closure gate | READY_TO_CLOSE / BLOCKED verdict |
 | `mechanics-auditor` | Quality / compliance | PARITY/DIVERGENT/MISSING table |
+| `security-reviewer` | Conditional gate (security-tagged tickets only) | APPROVED/NEEDS_CHANGES/BLOCKED verdict |
 | `world-debugger` | Debugging | Root cause + fix recommendation |
 | `simulation-analyst` | Analysis | Anomaly table + severity |

@@ -195,6 +195,17 @@ are archetype-correct for dungeon_crawl and are not bugs or gaps. Two root cause
 profile (e.g., dungeon guide, treasure hunter) is added to dungeon_crawl, re-run calibration
 and reassess these grades.
 
+> **NOTE (2026-07-10 — TCK-20260708-DUNGEON-URBAN-POPULATION-COLLAPSE):** dungeon_crawl's
+> early-tick population collapse (43.8% alive at tick 50, below the 60% floor) was traced to the
+> worldassembly resolver's `hazard_kind` default of `"PHYSICAL"` matching no faction's declared
+> `hazard_immunities` in `ruins_mystery_quest.yaml` and `scalable_bandit_camp.yaml`, causing
+> unconditional lethal hazard drain. Fixed by declaring explicit `hazard_kind` values on the
+> affected regions and recompiling; post-fix, dungeon_crawl holds 100% alive through tick 50 (was
+> 43.8%), and `test_population_stability[dungeon_crawl]` passes without the `xfail` marker added
+> by `TCK-20260707-CORPUS-POPULATION-STABILITY-COVERAGE-GAP`. Population health is now restored;
+> the grade tables above are unaffected (population was not the driver of any pillar's grade in
+> this world).
+
 ---
 
 ### urban_political
@@ -244,6 +255,20 @@ grow with additional ticks); COGNITION moved C→B in 6 of 7 scenarios as a side
 `belief_updated` also being scored by `CognitionScorer` (seed123 at 1000t was already B before
 this batch, from a separate transient signal). AGENCY remains C — unaffected by this batch;
 see the AGENCY Cross-World Design Note below for why that is archetype-correct, not a gap.
+
+> **NOTE (2026-07-10 — TCK-20260708-DUNGEON-URBAN-POPULATION-COLLAPSE):** urban_political's
+> gradual population erosion (56.7% alive at tick 300, below the 60% floor) was traced to the same
+> resolver `hazard_kind` default gap in `trading_company_hub.yaml`'s `hometown`/`trading_hometown`
+> region, plus a stale compiled artifact that predated an already-landed
+> `bandit_road_trade_pressure.yaml` fix. Fixed by declaring `hazard_kind: "NATURAL_TERRAIN"` and a
+> matching `merchant_league` `hazard_immunities` entry, then recompiling; post-fix, urban_political
+> holds 93.3% alive through tick 300 (was 56.7%), and `test_population_stability[urban_political]`
+> passes without the `xfail` marker. Population health is now restored; the grade tables above are
+> unaffected (population was not the driver of any pillar's grade in this world). This also
+> supersedes the "OPEN" root-cause status of the population-collapse defect referenced in the
+> long-run (2000t) `Hypothesis 4 — SOCIAL persistence` section further below — that section is
+> retained as a historical record of the pre-fix investigation and not rewritten in place, per this
+> document's existing convention.
 
 ---
 

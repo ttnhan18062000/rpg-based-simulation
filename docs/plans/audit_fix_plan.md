@@ -248,6 +248,18 @@ the collapse there happens by tick 50) — they were a stale-compile / missing `
 gap, separately root-caused and fixed under this ticket. See
 `stored_artifacts/TCK-20260703-SIMQ-UPLIFT3-WORLD-CORPUS/investigation.md` Findings 1-4.
 
+**2026-07-09 follow-up (`TCK-20260708-DUNGEON-URBAN-POPULATION-COLLAPSE`,
+`TCK-20260708-GENERATED-FRONTIER-LATE-TICK-POPULATION-COLLAPSE`):** the same missing-`hazard_kind`
+bug class recurred in 4 more world modules the 2026-07-04 sweep didn't cover
+(`ruins_mystery_quest`, `scalable_bandit_camp`, `trading_company_hub`, `moon_cult_ruins`),
+collapsing `dungeon_crawl` (early-tick), `urban_political` (two-phase), and `generated_frontier_3_42`
+(late-tick, 800→1000). All fixed via the same per-module `hazard_kind`/`hazard_immunities`
+authoring pattern. This is now the **third** time this exact bug class has recurred across
+separate sweeps (2026-06-30 sandbox_world, 2026-07-04 5-world sweep, 2026-07-09 this pass) — each
+time because a newly-anchored or newly-investigated module wasn't in the prior sweep's list, not
+because the mechanism itself is broken. See **P2-O** below for a proposed structural fix (a
+corpus-wide completeness test) rather than continuing to fix this reactively, module by module.
+
 ---
 
 ### P2-C: Entity archetype distribution skewed — 4 scouts, underrepresented roles — **RESOLVED (verified 2026-07-03)**
@@ -397,6 +409,78 @@ exactly as specified.
 **File:** `src/domains/optimization/degradation.py` or equivalent  
 **Finding:** `runtime_content_source = "legacy_hardcoded"` persists as the default in non-strict modes. Content loading falls back to hardcoded paths rather than the catalog system in degraded mode.  
 **Fix:** Replace the hardcoded default with a catalog-driven fallback. In strict mode, raise immediately; in degraded mode, select the lowest-cost catalog entry for the requested content type rather than a static path. Update `GracefulDegradationManager` contract.
+
+---
+
+### P2-O: `hazard_kind` completeness has recurred 3 times as a reactive, per-sweep fix — needs a structural test
+
+**Source:** `docs/audits/D20_simq_integration.md` §"SimQ Uplift Batch 4"; new, added 2026-07-09  
+**Files:** `tests/unit/worldassembly/test_corpus_diversity.py` (`HAZARD_KIND_MATCH_WORLDS`, `test_hazard_kind_matches_populating_faction_immunity`)  
+**Finding:** The same bug class — a world module declares `hazard_level > 0` on a region but never
+declares `hazard_kind`, so `src/worldassembly/resolver.py:798` silently defaults it to `"PHYSICAL"`,
+which no faction is ever immune to, causing unconditional lethal drain to the region's own populating
+faction — has now been found and fixed **three separate times**: 2026-06-30 (`sandbox_world`'s
+`woods`/`wolf_den`), 2026-07-04 (7 modules across 5 worlds, `TCK-20260703-SIMQ-UPLIFT3-WORLD-CORPUS`),
+and 2026-07-09 (4 more modules across `dungeon_crawl`/`urban_political`/`generated_frontier_3_42`,
+`TCK-20260708-DUNGEON-URBAN-POPULATION-COLLAPSE` + `TCK-20260708-GENERATED-FRONTIER-LATE-TICK-POPULATION-COLLAPSE`).
+Each time, the fix was correct and narrow, but the *coverage* was reactive — limited to whichever
+modules that specific investigation happened to touch. `test_hazard_kind_matches_populating_faction_immunity`
+exists but is scoped to an explicit allowlist (`HAZARD_KIND_MATCH_WORLDS`), not run corpus-wide, so a
+5th/6th recurrence in an unlisted world/module would not be caught until another investigation
+stumbles onto it.  
+**Fix:** Extend `test_hazard_kind_matches_populating_faction_immunity` (or add a sibling test) to run
+against every world in the corpus, not just the allowlist — for every populated region with
+`hazard_level > 0`, assert its `hazard_kind` is declared and matches at least one entry in its
+populating faction's `hazard_immunities` (or is explicitly documented as intentional exposure, per the
+P2-P question below). This converts a reactive per-investigation fix pattern into a corpus-wide
+completeness guarantee, closing the gap class permanently rather than one sweep at a time.
+
+---
+
+### P2-P: Wall-clock-dependent non-determinism past ~tick 300-320 (tick-budget throttle) — long-run SimQ anchor reliability unverified
+
+**Source:** `docs/audits/D06_longrun_health.md` F6; new, added 2026-07-09 (`TCK-20260708-GENERATED-FRONTIER-LATE-TICK-POPULATION-COLLAPSE`)  
+**Files:** `src/engine/kernel.py` (tick-budget watchdog `kernel.py:420-442`, mid-tick emergency throttle `kernel.py:574-601`)  
+**Finding:** Two back-to-back same-seed, same-code runs of `generated_frontier_3_42` diverged by
+100+ ticks in when the 60%-alive floor is first violated, and by more than 2× in the tick-1000
+population endpoint. Root cause: both throttle paths measure real wall-clock compute time and drop
+resolution work mid-tick when it's exceeded — which entities get dropped depends on system load/
+scheduler timing, not the deterministic seed. This is documented, intentional engine behavior
+(`docs/engine/kernel.md` §"Emergency Throttling"), not a bug to fix here — see D06 F6 for full detail
+and the explicit scope guard against touching `kernel.py`'s throttle logic.  
+**Fix (documentation/verification, not an engine change):** Determine whether any already-shipped
+1000t/2000t SimQ calibration anchor (`tests/simulation_quality/fixtures/grade_anchors.json`,
+`SLOW_ANCHOR_KEYS`) is throttle-timing-sensitive — i.e. would a fresh re-run at the same seed produce
+a different grade purely from throttle-timing variance, not genuine behavior drift? If so, either (a)
+re-verify those anchors with a multi-run tolerance check (same pattern as
+`test_generated_frontier_3_42_extended_population_stability`), or (b) explicitly document in
+`eval_matrix_results.md` that single-run long-tick anchors carry unquantified throttle-variance risk.
+Cross-reference D06 F6's "Recommended Follow-Up" entry — same finding, tracked in both places since
+D06 owns the engine-health angle and this doc owns the actionable-backlog angle.
+
+---
+
+### P2-Q: Non-native factions stationed in a hazardous region with no immunity — recurring open design question, never formally resolved
+
+**Source:** `stored_artifacts/TCK-20260708-DUNGEON-URBAN-POPULATION-COLLAPSE/investigation.md` Risk #2;
+recurred verbatim in `TCK-20260708-GENERATED-FRONTIER-LATE-TICK-POPULATION-COLLAPSE`'s investigation
+(Root cause 2). New, added 2026-07-09.  
+**Files:** `data/content/social/factions.yaml` (`town_council`), `bandit_road`-composing world modules  
+**Finding:** In both `urban_political` and `generated_frontier_3_42`, `town_council`'s
+`merchant_caravan_frontier_guard` entities are stationed at `bandit_road` (a `NATURAL_TERRAIN`-hazard
+region correctly exempting its native `bandit_company` occupants) but `town_council` itself declares
+no `hazard_immunities`, so its 2 guards there take slow, continuous hazard drain over a long run. Both
+investigations independently found this, both correctly declined to fix it (per the Anti-Drift
+guidance against blanket/wildcard immunities), and both deferred it as "may be intentional
+'conflict-pressure' flavor — a guard escort posted to a bandit-contested road taking losses over a
+campaign" — but neither made or recorded an actual decision. This is now the **second** time the
+identical question has surfaced and been silently re-deferred rather than resolved once.  
+**Fix:** Make an explicit DA (design-acknowledgment) ruling, once, applicable to both worlds (and any
+future world reusing this pattern): either (a) rule it intentional flavor and record the decision in
+`docs/guidelines/v2_intentional_divergences.md` so future investigations cite the ruling instead of
+re-deriving the question, or (b) rule it a genuine gap and add a `NATURAL_TERRAIN` (or a new,
+narrower) `hazard_immunities` entry for `town_council`. Either answer is fine — what's missing is a
+recorded answer, not more investigation.
 
 ---
 
@@ -641,6 +725,9 @@ Tickets created: `tickets/todos/simq-emit/` (5 tickets, 2026-07-01).
 | P2-L | D16 Gap | **P2** | Docs | **RESOLVED** — docs/guides/content_authoring.md exists |
 | P2-M | D18 F5 | **P2** | CI | **RESOLVED (verified 2026-07-03)** — `upload-artifact@v4` step exists in `test.yml` |
 | P2-N | D02 §6.6 | **P2** | Engine | OPEN (not re-checked 2026-07-03) — S — catalog-driven degraded fallback |
+| P2-O | D20 (new) | **P2** | Testing | OPEN (added 2026-07-09) — S — extend `test_hazard_kind_matches_populating_faction_immunity` corpus-wide; 3rd recurrence of the same bug class |
+| P2-P | D06 F6 (new) | **P2** | Docs/Verification | OPEN (added 2026-07-09) — S — verify whether shipped 1000t/2000t anchors are throttle-timing-sensitive |
+| P2-Q | D06/D20 (new) | **P2** | Docs/DA | OPEN (added 2026-07-09) — XS — one DA ruling on `town_council`/`bandit_road` hazard exposure, resolves 2 recurrences at once |
 | P3-A | D01 [P] items | **P3** | Feature | varies — see individual epics (not re-checked 2026-07-03) |
 | P3-B | D03 F5 | **P3** | DX | **RESOLVED (verified 2026-07-03)** — `"STANDARD": ObservabilityMode.NORMAL` confirmed |
 | P3-C | D17 P2 | **P3** | Docs | OPEN (not re-checked 2026-07-03) — S — verify 4 uncertain claims |
@@ -694,17 +781,24 @@ P1-D resolved 2026-07-04, TCK-20260703-SIMQ-UPLIFT3-QUEST-PRESSURE — no longer
 resolved 2026-07-04 — was already fixed by TCK-20260627-P1H-GOAL-RUNNERUP, a false negative in the
 2026-07-03 refresh — no longer pending.)
 
+**New, no ticket exists yet (added 2026-07-09, from `TCK-20260708-DUNGEON-URBAN-POPULATION-COLLAPSE`
+and `TCK-20260708-GENERATED-FRONTIER-LATE-TICK-POPULATION-COLLAPSE`'s investigations):** P2-O
+(hazard_kind corpus-wide completeness test — 3rd recurrence of the same bug class, highest-leverage
+of the three since it prevents future recurrences rather than reacting to them), P2-P (verify
+long-run SimQ anchor reliability against F6's throttle-timing variance), P2-Q (one DA ruling closes
+two recurring open questions — lowest-effort item in this whole document, XS).
+
 ---
 
 ## Related Documents
 
 - `docs/audits/D01_rpg_feature_impact.md` — [P]/[M] items are sources for P1-C, P1-D, P3-A
 - `docs/audits/D04_balance_tuning.md` — P0-A/B/C findings in §6
-- `docs/audits/D06_longrun_health.md` — P1-A/B, P2-A/B
+- `docs/audits/D06_longrun_health.md` — P1-A/B, P2-A/B, P2-P (F6, new 2026-07-09)
 - `docs/audits/D09_system_wiring.md` — P1-E/G, P2-E/F
 - `docs/audits/D12_pattern_consistency.md` — P1-F, P2-H
 - `docs/audits/D13_type_safety.md` — P2-I/J
-- `docs/audits/D20_simq_integration.md` — D20-G1/G2/G3/F5
+- `docs/audits/D20_simq_integration.md` — D20-G1/G2/G3/F5, P2-O/P2-Q (SimQ Uplift Batch 4, new 2026-07-09)
 - `docs/audits/D14_coupling_depth.md` — P2-G
 - `docs/audits/D15_entity_decision_inspection.md` — P1-H
 - `docs/audits/D16_scenario_authoring_dx.md` — P2-K/L, P3-D
