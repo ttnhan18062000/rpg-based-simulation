@@ -224,7 +224,7 @@ The **Mechanics Bible** (`docs/mechanics/`) and the **Engine Contracts** (`docs/
 - **Consistency**: All logic changes MUST be consistent with the laws defined in the Mechanics Bible.
 - **Parity**: Documentation and source code must remain in 100% semantic parity. If logic changes, update the corresponding doc AND the parity ledger entry (`docs/parity_ledger/`) in the same session.
 - **Reference**: When explaining or implementing mechanics, cite the specific chapter in `docs/mechanics/` or the contract ID in `docs/engine/`.
-- **Divergence**: Any intentional behavior change that differs from the Mechanics Bible MUST be recorded in `docs/guidelines/v2_intentional_divergences.md` with a rationale class and verification path.
+- **Divergence**: Any intentional behavior change that differs from the Mechanics Bible MUST be recorded in `docs/guidelines/intentional_divergences.md` with a rationale class and verification path.
 - **Precedence**: In case of ambiguity between legacy behavior and the V2 Mechanics Bible, the Mechanics Bible takes precedence.
 
 ### Mechanics Bible — `docs/mechanics/`
@@ -282,7 +282,7 @@ Each entry has: `id`, `text`, `status` (`verified` / `divergent` / `missing` / `
 | `world_dynamics.yaml` | World evolution, ecology, calamities |
 | `infrastructure.yaml` | Replay, telemetry, observability, workers |
 
-### Intentional Divergences — `docs/guidelines/v2_intentional_divergences.md`
+### Intentional Divergences — `docs/guidelines/intentional_divergences.md`
 
 The canonical record of V2 behavior shifts from legacy. Any new divergence must be added here with a rationale class (`Hardened` / `Enforced` / `Unified` / `Stabilized` / `Bounded` / `Bug Fix` / `Intentional Gameplay Change`) and a `Verification` test path.
 

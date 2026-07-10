@@ -52,7 +52,7 @@ calibration worlds as archetype-correct given this decision.
 - Enable in non-test runs: change default to `FeatureMode.ON` in `feature_flags.py`
 - Keep `OFF` as default but require test harness to set `ON` explicitly for all balance/behavioral tests (document in `docs/engine/known_limitations.md`)
 
-Record the decision in `docs/guidelines/v2_intentional_divergences.md` and update `ENABLE_ADVENTURE_ROUTING` parity ledger entry.
+Record the decision in `docs/guidelines/intentional_divergences.md` and update `ENABLE_ADVENTURE_ROUTING` parity ledger entry.
 
 **Cross-reference:** `docs/audits/D20_simq_integration.md` Actionable Next Steps (AGENCY row) confirms this flag is the sole root cause of AGENCY pillar zero-scores in sandbox_world and all other default-mode SimQ calibration worlds — not an AgencyScorer or EventExtractor defect (TCK-20260701-SIMQ-AGENCY-ROUTING-DOC).
 
@@ -477,7 +477,7 @@ campaign" — but neither made or recorded an actual decision. This is now the *
 identical question has surfaced and been silently re-deferred rather than resolved once.  
 **Fix:** Make an explicit DA (design-acknowledgment) ruling, once, applicable to both worlds (and any
 future world reusing this pattern): either (a) rule it intentional flavor and record the decision in
-`docs/guidelines/v2_intentional_divergences.md` so future investigations cite the ruling instead of
+`docs/guidelines/intentional_divergences.md` so future investigations cite the ruling instead of
 re-deriving the question, or (b) rule it a genuine gap and add a `NATURAL_TERRAIN` (or a new,
 narrower) `hazard_immunities` entry for `town_council`. Either answer is fine — what's missing is a
 recorded answer, not more investigation.

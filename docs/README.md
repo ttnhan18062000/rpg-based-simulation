@@ -208,6 +208,7 @@ Practical how-to guides for working with each major subsystem. These are startin
 | [guides/content_authoring.md](guides/content_authoring.md) | World modules, compositions, scenarios — quickstart, sharp edges, FAQ |
 | [guides/bounded_cognition_tuning.md](guides/bounded_cognition_tuning.md) | Tuning AI cognition parameters, archetype defaults, troubleshooting |
 | [guides/agent_monitoring.md](guides/agent_monitoring.md) | Agent retrospectives, monitoring queries, gate failure patterns |
+| [guides/feature_flags.md](guides/feature_flags.md) | Feature flag defaults, rollout profiles, SimQ activation, and the DEV-002 default-OFF policy |
 
 ---
 
