@@ -437,6 +437,8 @@ Use `/implement-epic` when you have multiple tickets to implement in sequence.
 
 See `docs/ai/workflows.md` → `implement-epic` for the full args reference.
 
+**Epic staleness check:** `tools/agent-monitoring/epic_staleness_check.py` (`make agent-monitoring-epic-staleness`) periodically scans all open epics — both `epic_id`-mode tickets in `tickets/inprogress/` and `folder`-mode/hybrid `SEQUENCE.md` folders in `tickets/todos/*/` — for child-ticket activity that has gone idle. It flags an epic **stale** only if at least one child ticket shows real activity evidence (a `tickets/working_log.csv` row or `agent-monitoring/runs.jsonl` record) whose timestamp is older than a 5-day default window. An epic whose children have **zero activity ever** is never flagged stale — that shape (scoped and sequenced, then deliberately queued behind other work) is normal planning behavior, not abandonment; it is instead surfaced separately, informationally, as "never started" in the report (never in the hook nudge). `TCK-20260702-OBSISO-EPIC` is the concrete example: zero child activity ever, correctly classified as never-started, not stale. Advisory-only, read-only, mirrors `retro_nudge_hook.py`'s `PostToolUse` hook shape — see "Agent Monitoring" below.
+
 ---
 
 ## Agent Monitoring
@@ -454,7 +456,10 @@ These records are written at the end of every exit point (CONFLICTS_DETECTED, DO
 make agent-monitoring-retro        # current-week retro report
 make agent-monitoring-validate     # cross-check integrity against working_log.csv
 make agent-monitoring-query ARGS="--agent investigator --days 14"
+make agent-monitoring-epic-staleness  # report open epics with no recent child-ticket activity
 ```
+
+**Epic staleness advisory hook:** a `PostToolUse` hook entry (`epic_staleness_check.py --hook`, wired alongside `retro_nudge_hook.py` in `.claude/settings.json`) fires an `additionalContext` nudge, at most once per session, if any open epic is flagged **stale** — i.e. has real child-ticket activity followed by 5+ days of silence. The separate "never started" (zero activity ever) case never reaches this hook — it is queryable-surface only, via `make agent-monitoring-epic-staleness`, to avoid alarm-fatigue nudges on legitimately-queued backlog epics.
 
 ---
 

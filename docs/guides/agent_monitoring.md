@@ -125,12 +125,62 @@ Commit the filled-in report to the repo. Do not discard notes — they are the i
 
 ---
 
+## Epic Staleness Check
+
+`tools/agent-monitoring/epic_staleness_check.py` is a separate, read-only check
+(distinct from the retro-cadence nudge above) that scans every open epic —
+`epic_id`-mode tickets (`## Tier` -> `epic`) in `tickets/inprogress/`, and
+`folder`-mode/hybrid `SEQUENCE.md` folders in `tickets/todos/*/` — for
+child-ticket activity that has gone idle.
+
+It resolves each epic's child ticket IDs, then cross-references
+`tickets/working_log.csv` rows and `agent-monitoring/runs.jsonl` records for
+the most recent matching timestamp across both sources. An epic is flagged
+**stale** only if at least one child ticket shows real activity evidence AND
+that evidence is older than the default **5-day** staleness window
+(`DEFAULT_STALENESS_WINDOW_DAYS`).
+
+**Stale vs. never-started — an intentional distinction.** An epic whose
+children have **zero activity ever** (no `working_log.csv` row, no
+`runs.jsonl` record, for any child, at any time) is **never** flagged stale,
+regardless of how old the epic ticket's own `date:` field is. That shape —
+scoped and sequenced, then deliberately left queued behind other work — is
+normal planning behavior, not abandonment. It is instead surfaced separately
+as a lower-priority "Informational: never-started epics" section, visible
+only through the directly-queryable surface below, never through the hook
+nudge. `TCK-20260702-OBSISO-EPIC` is the concrete real example: zero child
+activity ever as of this check's introduction, correctly classified as
+never-started rather than stale.
+
+Only an epic with real activity evidence that then goes idle past the window
+— the actual "started, then forgotten" failure mode this check targets — is
+flagged stale (the motivating case: `TCK-20260707-SIMQ-DEEP-COVERAGE-EPIC`,
+whose 10 child tickets were all DONE before the epic ticket itself was left
+behind in `tickets/todos/`).
+
+Advisory-only and read-only, matching `retro_nudge_hook.py`'s contract: it
+never mutates a ticket file's `Status`/`phase`, never raises past its own
+entry point, and never blocks a tool call.
+
+```bash
+make agent-monitoring-epic-staleness
+```
+
+A `PostToolUse` hook entry (`epic_staleness_check.py --hook`, wired alongside
+`retro_nudge_hook.py` in `.claude/settings.json`) fires an `additionalContext`
+nudge, at most once per session (own state file,
+`.claude/.epic_staleness_state.json`), only when the **stale** list is
+non-empty — the never-started/informational list never reaches the hook.
+
+---
+
 ## Makefile Targets
 
 ```bash
-make agent-monitoring-retro      # generate current-week retro report
-make agent-monitoring-validate   # cross-check integrity
-make agent-monitoring-query      # open interactive query (pass ARGS="...")
+make agent-monitoring-retro          # generate current-week retro report
+make agent-monitoring-validate       # cross-check integrity
+make agent-monitoring-query          # open interactive query (pass ARGS="...")
+make agent-monitoring-epic-staleness # report open epics with no recent child-ticket activity
 ```
 
 ---
