@@ -557,3 +557,5 @@
 {"run_id":"TCK-20260710-SECURITY-REVIEWER-AGENT-DOC","start_ts":"2026-07-10T02:13:36Z","end_ts":"2026-07-10T02:29:21Z","workflow":"implement-ticket","tier":"hotfix","final_status":"DONE","agent_count":11,"duration_s":945}
 {"run_id":"TCK-20260710-FEATURE-FLAGS-GUIDE","start_ts":"2026-07-10T03:20:34Z","end_ts":"2026-07-10T04:04:39Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":9,"duration_s":2645}
 {"run_id":"TCK-20260710-EPIC-STALENESS-CHECK","start_ts":"2026-07-10T03:36:20Z","end_ts":"2026-07-10T04:28:42Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":12,"duration_s":3142}
+{"run_id":"CREATE-TICKETS-DOCS-PLANS-AGENT-INFRASTRUCTURE-IDEA-AGENT-BOOKKEEPING-DETERMINISM","start_ts":"2026-07-10T07:14:57Z","end_ts":"2026-07-10T07:23:56Z","workflow":"create-tickets","tier":"n/a","final_status":"DONE","agent_count":9,"duration_s":539}
+{"run_id":"CREATE-TICKETS-DOCS-PLANS-AGENT-INFRASTRUCTURE-IDEA-WORKFLOW-EXECUTION-DETERMINISM","start_ts":"2026-07-10T07:58:49Z","end_ts":"2026-07-10T08:01:00Z","workflow":"create-tickets","tier":"n/a","final_status":"DONE","agent_count":4,"duration_s":131}
