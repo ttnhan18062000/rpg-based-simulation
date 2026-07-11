@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: world
 authority: P1
 audience: agent
 ticket_id: TCK-20260710-HAZARD-KIND-CORPUS-WIDE
-phase: open
+phase: done
 date: 2026-07-10
 tags: [simulation-quality, world, corpus, calibration]
 ---
@@ -15,7 +15,7 @@ tags: [simulation-quality, world, corpus, calibration]
 Make `hazard_kind`/`hazard_immunities` match coverage corpus-wide, not allowlist-based
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -120,6 +120,14 @@ immunities) has recurred three separate times across independent sweeps (2026-06
   parity entries — no update expected unless a genuine new content defect is fixed in-ticket).
 - `docs/guidelines/design_patterns.md` (compile-time content pattern references, if applicable).
 - `docs/simulation_quality/corpus_tier_taxonomy.md` (corpus tier structure context).
+- `tickets/todos/simq-roadmap-phase1-process-hardening/SEQUENCE.md` — scope added during Plan
+  phase (architecture-review NEEDS_CHANGES remediation, 2026-07-11): the folder's own ordering
+  rationale ("running 1.1 before 1.2 hits town_council/bandit_road as a live failure") is
+  empirically disproven by this ticket's corpus-wide dry run (zero mismatches, including
+  bandit_road) and is corrected here via an append-only note alongside the same correction
+  already in scope for `docs/plans/simq_development_roadmap.md`'s Phase 1 section — left
+  uncorrected, it would contradict the roadmap doc's own corrected text describing the same two
+  tickets.
 
 ## Related Stored Artifacts
 - `stored_artifacts/TCK-20260701-HAZARD-NATIVE-IMMUNITY/investigation.md`
@@ -160,8 +168,101 @@ immunities) has recurred three separate times across independent sweeps (2026-06
 
 ## Implementation Notes
 
+Followed the plan's 7 steps exactly, no code-level deviations.
+
+1. **Parametrization (Step 1):** Replaced `HAZARD_KIND_MATCH_WORLDS` (3-world list) with
+   `ALL_CORPUS_WORLDS = sorted(p.name for p in WORLDS_ROOT.iterdir() if p.is_dir())` in
+   `tests/unit/worldassembly/test_corpus_diversity.py` — approach (a) from the plan (glob-based,
+   self-updating), since filtering to directories cleanly excludes `world_index.json` with no
+   added complexity. `test_hazard_kind_matches_populating_faction_immunity`'s
+   `@pytest.mark.parametrize` now references `ALL_CORPUS_WORLDS`; the function body (matching
+   logic, `_load_resolved_spec`, `_faction_hazard_immunities`) is untouched.
+2. **Cleanup (Step 2):** Removed `HAZARD_KIND_MATCH_WORLDS` entirely (confirmed via grep — zero
+   remaining references anywhere in the repo). Updated the module docstring to add item 3b
+   describing corpus-wide coverage, and replaced the stale allowlist-provenance comment above the
+   old constant with one describing the new glob-based, self-updating approach.
+3. **Explanatory comment (Step 3):** Added a documentation-only paragraph to
+   `test_hazard_kind_matches_populating_faction_immunity`'s docstring explaining the region-level
+   "any populating faction" matching semantics and why `town_council`/`bandit_road` passes today
+   (not a content fix), citing `docs/guidelines/intentional_divergences.md` §2.30 and
+   `TCK-20260710-TOWN-COUNCIL-HAZARD-DA`. No xfail/skip/conditional logic was added — the test
+   executes identically for all 17 worlds.
+4. **`audit_fix_plan.md` (Step 4):** P2-O's table row and detail-section heading marked
+   `RESOLVED (2026-07-11)`; a Resolution paragraph appended to the detail section citing this
+   ticket, matching the P2-M/P2-P closeout convention.
+5. **`simq_development_roadmap.md` (Step 5):** Appended a "Result (landed 2026-07-11)" note under
+   Phase 1.1 stating the corpus-wide test passed with 0 mismatches and no exception was needed,
+   independent of Phase 1.2's ordering. Appended a "Correction (2026-07-11, post-implementation)"
+   note to the existing 2026-07-10 callout box, stating the original 1.1-before-1.2 coupling claim
+   is empirically disproven — the original text was preserved, not rewritten.
+6. **`SEQUENCE.md` (Step 6):** Appended a correction note below the ordering table citing this
+   ticket's investigation.md as the source, stating Row 1's "why this order" claim does not hold —
+   the corpus-wide test's region-level "any" semantics already covered `bandit_road` independent
+   of ordering. Table content preserved as historical record, per the plan's append-only
+   instruction.
+7. **Regression verification (Step 7):** all commands run; see Test Summary.
+
+**Corpus-wide dry-run outcome (implementation-time, not just investigation-time):** re-running
+the actual (now corpus-wide) pytest parametrization reproduced the investigation's dry run exactly
+— **17/17 worlds, 45 hazardous-populated-region checks, 0 mismatches**, including all 6
+`bandit_road`-containing worlds (`crowded_frontier`, `frontier_extended`,
+`frontier_living_world`, `frontier_marches`, `generated_frontier_3_42`, `urban_political`). This
+confirms the investigation's central finding: **no runtime exception/xfail/skip was needed** for
+`town_council`/`bandit_road` — the test's pre-existing region-level "any populating faction"
+matching semantics already pass that case via `bandit_company`/`merchant_league`'s immunities,
+independent of the Phase 1.2 DA ruling or of implementation ordering. AC #7's contingency (document
+a genuine new 4th+ recurrence) did not apply — none was found.
+
 ## Test Summary
 
+- `pytest tests/unit/worldassembly/test_corpus_diversity.py -k test_hazard_kind_matches_populating_faction_immunity -v`
+  — 17 passed (all corpus worlds), 0 failed, 0 skipped.
+- `pytest tests/unit/worldassembly/test_corpus_diversity.py -k hazard_kind -v` — 29 passed (12
+  `test_hazard_kind_completeness` + 17 `test_hazard_kind_matches_populating_faction_immunity`), 0
+  failed.
+- `pytest tests/unit/worldassembly/test_corpus_diversity.py -k test_hazard_kind_completeness -v`
+  (isolated) — 12 passed, identical case set/behavior to pre-change baseline (list and logic
+  untouched).
+- `pytest tests/unit/worldassembly/test_corpus_diversity.py -v -m "not slow"` — 51 passed, 17
+  deselected (slow-marked population-stability tests, out of scope per Testing Rule), 0 failed —
+  full-file regression confidence given shared module-level fixtures/constants.
+- `pytest tests/unit/world/test_regional_consequences.py -v` — 11 passed (adjacent-file
+  confirmation, byte-identical to baseline; no `src/` changes made).
+- `pytest tests/unit/worldbuilding/test_world_compiler.py -k bandit_road -v` — 1 passed (adjacent
+  reference test, byte-identical to baseline).
+- `grep -rn "HAZARD_KIND_MATCH_WORLDS"` (whole repo) — empty, confirms full removal.
+- `git diff --stat` scoped to this ticket's 4 touched files
+  (`tests/unit/worldassembly/test_corpus_diversity.py`, `docs/plans/audit_fix_plan.md`,
+  `docs/plans/simq_development_roadmap.md`,
+  `tickets/todos/simq-roadmap-phase1-process-hardening/SEQUENCE.md`) — no `src/`, no
+  `data/content/social/factions.yaml`, no `docs/parity_ledger/world_dynamics.yaml`.
+
 ## Files Changed
+- `tests/unit/worldassembly/test_corpus_diversity.py` — corpus-wide parametrization,
+  docstring/comment updates, explanatory comment.
+- `docs/plans/audit_fix_plan.md` — P2-O closed out to RESOLVED.
+- `docs/plans/simq_development_roadmap.md` — Phase 1.1 marked done; ordering-coupling claim
+  corrected (append-only).
+- `tickets/todos/simq-roadmap-phase1-process-hardening/SEQUENCE.md` — ordering-rationale
+  correction note appended (append-only).
 
 ## Completion Summary
+`test_hazard_kind_matches_populating_faction_immunity` now runs unconditionally across the full
+17-world calibration corpus (`ALL_CORPUS_WORLDS`, globbed from `data/worlds/*`) instead of the
+3-world `HAZARD_KIND_MATCH_WORLDS` allowlist, which has been fully removed. The corpus-wide run
+found **zero mismatches across 45 hazardous-populated-region checks**, including every
+`town_council`/`bandit_road` occurrence (6 of 17 worlds) — confirming the investigation's dry-run
+finding that the test's region-level "any populating faction" matching semantics already pass that
+known case via `bandit_company`/`merchant_league`'s pre-existing immunities, so **no
+xfail/skip/exception was added or needed** (AC #3 satisfied by outcome (b): resolved because the
+mechanism already matches, not via a named carve-out). A documentation-only comment was added to
+the test citing `docs/guidelines/intentional_divergences.md` §2.30 and
+`TCK-20260710-TOWN-COUNCIL-HAZARD-DA` so a future reader understands why `bandit_road` passes
+without mistaking it for an oversight. No genuine new (4th+) `hazard_kind` recurrence was found
+(AC #7 contingency does not apply). This is a test-file-only change plus three append-only doc
+closeouts (`audit_fix_plan.md` P2-O → RESOLVED, `simq_development_roadmap.md` Phase 1.1 → done
+with the now-disproven 1.1-before-1.2 coupling claim corrected, and `SEQUENCE.md`'s ordering
+rationale corrected) — `git diff --stat` confirms zero changes to `src/worldassembly/resolver.py`,
+`src/world/environment.py`, `data/content/social/factions.yaml`, or
+`docs/parity_ledger/world_dynamics.yaml`. All acceptance criteria are met; no follow-up ticket is
+required.

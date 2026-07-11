@@ -187,6 +187,16 @@ in the same session.
 > immunity), which is why it scoped to standard tier, not the hotfix/XS this section originally
 > assumed. **Recommended order: land 1.2 before 1.1**, so 1.1 never needs the temporary exception to
 > exist at all — but 1.1 is already written to tolerate either order if 1.2 runs second.
+>
+> **Correction (2026-07-11, post-implementation):** the coupling claim above was empirically
+> disproven by 1.1's own investigation dry run (`TCK-20260710-HAZARD-KIND-CORPUS-WIDE`). Running
+> the corpus-wide test does **not** hit `town_council`/`bandit_road` as a live failure, with or
+> without 1.2's ruling: the test's region-level "any populating faction" matching semantics already
+> pass that case via `bandit_company`/`merchant_league`'s pre-existing immunities. 1.1 landed
+> against the full 17-world corpus with **0 mismatches and no exception added**, regardless of
+> ordering. The original coupling theory and its "land 1.2 before 1.1" recommendation are preserved
+> above as the historical record of why that order was chosen — they should not be read as
+> validated by the clean outcome.
 
 Runs in parallel with Phase 0. Both items are already fully scoped in `docs/plans/audit_fix_plan.md`
 and need no further investigation before ticketing.
@@ -205,6 +215,15 @@ recurrences requiring judgment).
 includes the temporary `town_council`/`bandit_road` test exception described above, to be reconciled
 once 1.2 lands.
 
+**Result (landed 2026-07-11):** `test_hazard_kind_matches_populating_faction_immunity` now runs
+corpus-wide (17/17 `data/worlds/*` world_ids, replacing `HAZARD_KIND_MATCH_WORLDS`). The corpus-wide
+dry run found **0 mismatches across 45 hazardous-populated-region checks, including every
+`bandit_road` occurrence** — the test's pre-existing region-level "any populating faction" matching
+semantics already passed `bandit_road` via `bandit_company`/`merchant_league`'s immunities,
+independent of 1.2's DA ruling. **No temporary test exception was ever needed or added** — see the
+correction note above and TCK-20260710-HAZARD-KIND-CORPUS-WIDE's investigation.md for the full
+dry-run evidence. Test-file-only change; no `src/` or content edits.
+
 ### 1.2 — `town_council`/`bandit_road` DA ruling (P2-Q)
 
 The same two-entity hazard-exposure question has been independently found and silently re-deferred
@@ -215,6 +234,10 @@ higher — see correction note above.
 
 **Ticket filed (2026-07-10):** `TCK-20260710-TOWN-COUNCIL-HAZARD-DA` — standard tier (bumped up from
 the XS/hotfix estimate once scoping found the `trading_company_hub.yaml` blast-radius question).
+
+**Ruling landed (2026-07-10):** ruled **(a) intentional** — see
+`docs/guidelines/intentional_divergences.md` §2.30 and
+`docs/plans/audit_fix_plan.md` P2-Q. No `factions.yaml`/parity-ledger change made.
 
 **Acceptance signal (both items):** the recurrence pattern each documents cannot recur a 4th/3rd time
 without the new test or the recorded ruling catching it.

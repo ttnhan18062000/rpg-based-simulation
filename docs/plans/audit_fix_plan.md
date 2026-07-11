@@ -412,7 +412,7 @@ exactly as specified.
 
 ---
 
-### P2-O: `hazard_kind` completeness has recurred 3 times as a reactive, per-sweep fix — needs a structural test
+### P2-O: `hazard_kind` completeness has recurred 3 times as a reactive, per-sweep fix — needs a structural test — **RESOLVED (verified 2026-07-11)**
 
 **Source:** `docs/audits/D20_simq_integration.md` §"SimQ Uplift Batch 4"; new, added 2026-07-09  
 **Files:** `tests/unit/worldassembly/test_corpus_diversity.py` (`HAZARD_KIND_MATCH_WORLDS`, `test_hazard_kind_matches_populating_faction_immunity`)  
@@ -435,6 +435,14 @@ populating faction's `hazard_immunities` (or is explicitly documented as intenti
 P2-P question below). This converts a reactive per-investigation fix pattern into a corpus-wide
 completeness guarantee, closing the gap class permanently rather than one sweep at a time.
 **Sequenced as Phase 1.1** in `docs/plans/simq_development_roadmap.md`.
+**Resolution:** `TCK-20260710-HAZARD-KIND-CORPUS-WIDE` (2026-07-11) replaced
+`HAZARD_KIND_MATCH_WORLDS`'s 3-world allowlist with `ALL_CORPUS_WORLDS`, parametrizing
+`test_hazard_kind_matches_populating_faction_immunity` over every world under `data/worlds/*`
+(17 worlds). The corpus-wide run passed cleanly — 0 mismatches across 45 hazardous-populated-
+region checks, including every `bandit_road`/`town_council` occurrence (that case passes under
+the test's existing region-level "any populating faction" matching semantics; see the code
+comment on the test itself and `docs/guidelines/intentional_divergences.md` §2.30). No `src/`
+or content changes were required; test-file-only change.
 
 ---
 
@@ -493,6 +501,9 @@ re-deriving the question, or (b) rule it a genuine gap and add a `NATURAL_TERRAI
 narrower) `hazard_immunities` entry for `town_council`. Either answer is fine — what's missing is a
 recorded answer, not more investigation.
 **Sequenced as Phase 1.2** in `docs/plans/simq_development_roadmap.md`.
+**Resolved (2026-07-10):** Ruled (a) intentional by `TCK-20260710-TOWN-COUNCIL-HAZARD-DA` — see
+`docs/guidelines/intentional_divergences.md` §2.30. `town_council`'s bandit_road exposure is
+ratified as designed non-native conflict-pressure flavor; no content or code change made.
 
 ---
 
@@ -737,9 +748,9 @@ Tickets created: `tickets/todos/simq-emit/` (5 tickets, 2026-07-01).
 | P2-L | D16 Gap | **P2** | Docs | **RESOLVED** — docs/guides/content_authoring.md exists |
 | P2-M | D18 F5 | **P2** | CI | **RESOLVED (verified 2026-07-03)** — `upload-artifact@v4` step exists in `test.yml` |
 | P2-N | D02 §6.6 | **P2** | Engine | OPEN (not re-checked 2026-07-03) — S — catalog-driven degraded fallback |
-| P2-O | D20 (new) | **P2** | Testing | OPEN (added 2026-07-09) — S — extend `test_hazard_kind_matches_populating_faction_immunity` corpus-wide; 3rd recurrence of the same bug class |
+| P2-O | D20 (new) | **P2** | Testing | **RESOLVED (2026-07-11)** — `test_hazard_kind_matches_populating_faction_immunity` now runs corpus-wide (17/17 worlds) — `TCK-20260710-HAZARD-KIND-CORPUS-WIDE` |
 | P2-P | D06 F6 (new) | **P2** | Docs/Verification | **RESOLVED (verified 2026-07-11)** — `TCK-20260710-SIMQ-ANCHOR-RELIABILITY-VERIFY` — 18/18 shipped anchors re-verified stable |
-| P2-Q | D06/D20 (new) | **P2** | Docs/DA | OPEN (added 2026-07-09) — XS — one DA ruling on `town_council`/`bandit_road` hazard exposure, resolves 2 recurrences at once |
+| P2-Q | D06/D20 (new) | **P2** | Docs/DA | **RESOLVED (2026-07-10)** — ruled (a) intentional, see `intentional_divergences.md` §2.30 — `TCK-20260710-TOWN-COUNCIL-HAZARD-DA` |
 | P3-A | D01 [P] items | **P3** | Feature | varies — see individual epics (not re-checked 2026-07-03) |
 | P3-B | D03 F5 | **P3** | DX | **RESOLVED (verified 2026-07-03)** — `"STANDARD": ObservabilityMode.NORMAL` confirmed |
 | P3-C | D17 P2 | **P3** | Docs | OPEN (not re-checked 2026-07-03) — S — verify 4 uncertain claims |

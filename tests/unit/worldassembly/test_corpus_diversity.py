@@ -13,6 +13,10 @@ calibration world corpus:
    declare ``hazard_kind`` or have every populating archetype's faction declare a
    matching ``hazard_immunities`` entry (the native-endurance mechanism from
    TCK-20260701-HAZARD-NATIVE-IMMUNITY, docs/mechanics/05_world_evolution.md §3).
+3b. ``test_hazard_kind_matches_populating_faction_immunity`` — the same
+   ``hazard_kind``/``hazard_immunities`` matching check, but now runs unconditionally
+   across the full calibration corpus (every world_id under ``data/worlds/*``), not a
+   fixed allowlist (TCK-20260710-HAZARD-KIND-CORPUS-WIDE).
 4. ``test_module_family_anchored`` — the 10 previously-never-anchored world
    modules this ticket brought into the anchored corpus stay anchored, leaving
    only ``moon_cult_ruins`` outside any anchored world's module list.
@@ -33,12 +37,12 @@ WORLDS_ROOT = REPO_ROOT / "data" / "worlds"
 FIXTURE_PATH = REPO_ROOT / "tests" / "simulation_quality" / "fixtures" / "grade_anchors.json"
 FACTIONS_CATALOG_PATH = REPO_ROOT / "data" / "content" / "social" / "factions.yaml"
 
-# Worlds this ticket's fix (TCK-20260708-DUNGEON-URBAN-POPULATION-COLLAPSE) directly targeted —
-# scoped narrowly per test_plan.md New Test #2, not a redesign of test_hazard_kind_completeness's
-# broader presence-only coverage (that redesign is out of scope, see investigation.md Risk 5).
-# generated_frontier_3_42 added by TCK-20260708-GENERATED-FRONTIER-LATE-TICK-POPULATION-COLLAPSE
-# (moon_cave / arcane_circle — same defect class, Root cause 1).
-HAZARD_KIND_MATCH_WORLDS = ["dungeon_crawl", "urban_political", "generated_frontier_3_42"]
+# test_hazard_kind_matches_populating_faction_immunity now runs corpus-wide (all
+# data/worlds/* world_ids) instead of a fixed allowlist — TCK-20260710-HAZARD-KIND-CORPUS-WIDE.
+# This self-updates as the corpus grows, replacing the reactive per-sweep allowlist edits that
+# preceded it (TCK-20260708-DUNGEON-URBAN-POPULATION-COLLAPSE,
+# TCK-20260708-GENERATED-FRONTIER-LATE-TICK-POPULATION-COLLAPSE).
+ALL_CORPUS_WORLDS = sorted(p.name for p in WORLDS_ROOT.iterdir() if p.is_dir())
 
 # The 5 worlds this ticket anchored, and the entity-count band each was chosen to
 # fill (docs/simulation_quality/eval_matrix_results.md /
@@ -410,7 +414,7 @@ def test_hazard_kind_completeness(world_id: str) -> None:
 # 3b. Hazard-kind matches populating faction's immunity
 # ---------------------------------------------------------------------------
 
-@pytest.mark.parametrize("world_id", HAZARD_KIND_MATCH_WORLDS)
+@pytest.mark.parametrize("world_id", ALL_CORPUS_WORLDS)
 def test_hazard_kind_matches_populating_faction_immunity(world_id: str) -> None:
     """Every hazardous, populated region's hazard_kind must match at least one of its
     populating factions' hazard_immunities.
@@ -421,6 +425,19 @@ def test_hazard_kind_matches_populating_faction_immunity(world_id: str) -> None:
     collapse in both worlds this test covers (TCK-20260708-DUNGEON-URBAN-POPULATION-
     COLLAPSE). A region with hazard_level > 0 and no matching immunity is an unconditional,
     unmitigated per-tick drain to every entity spawned there.
+
+    Matching here is region-level "any populating faction is immune," not per-faction
+    "every populating faction is immune" (see ``matched = any(...)`` below). At
+    ``bandit_road`` (present in 6 of the 17 corpus worlds), ``town_council`` is not immune
+    to NATURAL_TERRAIN but co-located ``bandit_company``/``merchant_league`` are, so this
+    region-level check passes even though ``town_council``'s own entities take real,
+    unmitigated per-tick drain at runtime (``calculate_hazard_drain`` resolves immunity
+    per-entity, not per-region). This is a known, ratified condition — see
+    docs/guidelines/intentional_divergences.md §2.30 and
+    TCK-20260710-TOWN-COUNCIL-HAZARD-DA — not an oversight in this test. Do not add an
+    xfail/skip/exception for it: the region-level "any" semantics already make it pass
+    corpus-wide, and redesigning the semantics to per-faction "every" is a separate,
+    out-of-scope change (TCK-20260710-HAZARD-KIND-CORPUS-WIDE investigation.md Risk 2).
     """
     spec = _load_resolved_spec(world_id)
     immunities = _faction_hazard_immunities()

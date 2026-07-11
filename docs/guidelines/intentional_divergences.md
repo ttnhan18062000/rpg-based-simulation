@@ -29,6 +29,7 @@ This document is the canonical record of intentional behavior shifts in `src` co
 | **Engine / Cognition-Information** | `information_belief` Pipeline-Wiring Merge Fix | **Bug Fix** | RATIFIED |
 | **Engine / Cognition** | `self_model_bundle_set` Durable Materialization (`SelfModelPatch`) | **Bug Fix** | RATIFIED |
 | **World / Ecology** | Resource Ecology Kind-Emission Catalog Alignment | **Bug Fix** | RATIFIED |
+| **World / Environment** | Non-Native Faction Hazard Exposure (`town_council`/`bandit_road`) | **Intentional Gameplay Change** | RATIFIED |
 
 ---
 
@@ -484,6 +485,53 @@ This document is the canonical record of intentional behavior shifts in `src` co
 - **Verification**: `tests/unit/strategic/test_opportunities.py::test_resource_opportunities_bandit_road_and_wolf_den_no_resource_nodes`
   (bandit_road, wolf_den) and the pre-existing
   `test_resource_opportunities_goblin_camp_and_haunted_battlefield_no_resource_nodes` (goblin_camp)
+- **Status**: ACTIVE
+
+### 2.30 Non-Native Faction Hazard Exposure — `town_council` at `bandit_road` (TCK-20260710-TOWN-COUNCIL-HAZARD-DA)
+- **Subsystem**: World / Environment — Content Disposition
+- **Situation**: `town_council`'s 2 `merchant_caravan_frontier_guard` entities are stationed at
+  `bandit_road` (`hazard_level: 2.0`, `hazard_kind: "NATURAL_TERRAIN"`) in both `urban_political`
+  and `generated_frontier_3_42`. `town_council` declares no `hazard_immunities`
+  (`data/content/social/factions.yaml`), so these entities take full, unmitigated hazard drain via
+  `EnvironmentService.calculate_hazard_drain`, unlike `bandit_road`'s native `bandit_company`
+  (`hazard_immunities: ["NATURAL_TERRAIN"]`) and the region's other populating faction,
+  `merchant_league` (also `["NATURAL_TERRAIN"]`, granted by
+  `TCK-20260708-DUNGEON-URBAN-POPULATION-COLLAPSE`). Two independent investigations
+  (`TCK-20260708-DUNGEON-URBAN-POPULATION-COLLAPSE` Risk #2,
+  `TCK-20260708-GENERATED-FRONTIER-LATE-TICK-POPULATION-COLLAPSE` Root cause 2) found this
+  identical case and both declined to rule on it, deferring it as "may be intentional
+  conflict-pressure flavor" without recording a decision. A blast-radius check (this ticket)
+  confirmed `town_council` is populated in exactly one hazardous region across both worlds —
+  `bandit_road` — and nowhere else corpus-wide within the two named worlds
+  (`trading_company_hub.yaml`'s `hometown`/`trading_hometown` region spawns only
+  `merchant_league`, never `town_council`, in either world's actual resolved spec).
+- **Decision**: This exposure is **ratified as intentional**, decided by DA ruling under
+  `TCK-20260710-TOWN-COUNCIL-HAZARD-DA` (2026-07-10). `town_council`'s guards are not native to
+  `bandit_road` — they are dispatched there specifically because it is a bandit-contested
+  wilderness road, i.e. the thematic opposite of "native habitat," which
+  `docs/mechanics/05_world_evolution.md` §3 establishes as the criterion for declared endurance.
+  The mechanics doc's own worked example (a hero party and a hostile wolf pack both taking full,
+  equal `TOXIC_GAS` drain inside a hazard neither declares endurance for) establishes that
+  non-native factions taking unmitigated drain in a hazard they are not adapted to is designed
+  behavior, not an oversight — `town_council`'s guard escort taking slow attrition on a contested
+  road over a long campaign is the same shape of case. No content or code change is made;
+  `data/content/social/factions.yaml` and `docs/parity_ledger/world_dynamics.yaml` (`WORLD-029`,
+  `WORLD-060`) are left unchanged by this ruling.
+- **Rationale**: **Intentional Gameplay Change**. Endurance under this mechanism is strictly a
+  faction-declared, native-habitat property (`TCK-20260701-HAZARD-NATIVE-IMMUNITY`'s design,
+  reaffirmed by this ruling) — `town_council` was never native to `bandit_road`, so extending it
+  an immunity here would require inferring endurance from something other than declared nativity
+  (e.g. "is the last remaining unmitigated faction in the region"), which is the same
+  blanket/inferred-immunity anti-pattern that mechanism's own rejected first-pass design
+  (`entity.identity.faction == Faction.MONSTER_HORDE and region.kind == "WILDERNESS"`) was
+  rejected for.
+- **Verification**: `tests/unit/worldassembly/test_corpus_diversity.py::test_population_stability[urban_political]`,
+  `::test_population_stability[generated_frontier_3_42]` (both pass at the existing 300-tick floor
+  with this exposure present and unmodified, confirmed 2026-07-10);
+  `::test_hazard_kind_matches_populating_faction_immunity[urban_political]`,
+  `::test_hazard_kind_matches_populating_faction_immunity[generated_frontier_3_42]`
+  (region-level immunity match already satisfied by `bandit_company`/`merchant_league`, unaffected
+  by this ruling).
 - **Status**: ACTIVE
 
 ---

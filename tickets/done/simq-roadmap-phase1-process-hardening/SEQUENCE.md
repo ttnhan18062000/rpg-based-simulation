@@ -13,3 +13,12 @@ relative to the rest of the roadmap.
 
 See `docs/plans/simq_development_roadmap.md` §"Phase 1 — Process Hardening" (including its
 2026-07-10 correction note) for the full dependency discovery and reasoning.
+
+**Correction (2026-07-11):** Row 1's "why this order" claim — that running 1.1's corpus-wide test
+before this DA ruling lands would hit `town_council`/`bandit_road` as a live failure — does not
+hold. `TCK-20260710-HAZARD-KIND-CORPUS-WIDE`'s investigation.md dry run found the corpus-wide
+test's region-level "any populating faction" matching semantics already pass `bandit_road` via
+`bandit_company`/`merchant_league`'s pre-existing immunities, independent of ordering or of this
+DA ruling. Both tickets are now done regardless of this correction; the original row is left as-is
+above as the historical record of why this order was chosen, but a future reader should not
+conclude the clean landing validates the original coupling theory.

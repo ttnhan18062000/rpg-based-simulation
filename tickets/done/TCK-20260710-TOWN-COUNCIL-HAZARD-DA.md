@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: world
 authority: P1
 audience: agent
 ticket_id: TCK-20260710-TOWN-COUNCIL-HAZARD-DA
-phase: open
+phase: done
 date: 2026-07-10
 tags: [world, faction, simulation-quality]
 ---
@@ -15,7 +15,7 @@ tags: [world, faction, simulation-quality]
 DA ruling: `town_council` hazard exposure at `bandit_road` (P2-Q, Phase 1.2)
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -193,8 +193,105 @@ gap and add a `NATURAL_TERRAIN` (or narrower) `hazard_immunities` entry for `tow
 
 ## Implementation Notes
 
+**DA Ruling made: (a) intentional.** Recorded as `docs/guidelines/intentional_divergences.md`
+§2.30 (Detailed Record) plus a new Divergence Summary Table row. No content or code change was
+made — `data/content/social/factions.yaml` and `docs/parity_ledger/world_dynamics.yaml` are
+unchanged (verified by `git diff`, see Test Summary).
+
+1. **Blast-radius check result**: Clean. `town_council` is populated in exactly one hazardous
+   region across both worlds — `bandit_road` (2 `merchant_caravan_frontier_guard` entities per
+   world). `trading_company_hub.yaml`'s `hometown`/`trading_hometown` region (the candidate case
+   named in this ticket's Scope) spawns only `merchant_league` in both worlds' actual resolved
+   specs (`data/worlds/urban_political/resolved/world.resolved.yaml`,
+   `data/worlds/generated_frontier_3_42/resolved/world.resolved.yaml`) — `town_council` is never
+   populated there. The module's `factions:` list is metadata, not a population wiring. This
+   candidate case did not materialize.
+2. **Sibling ticket coordination**: `TCK-20260710-HAZARD-KIND-CORPUS-WIDE` (Phase 1.1) was
+   re-checked at implementation time and confirmed still in
+   `tickets/todos/simq-roadmap-phase1-process-hardening/`, not started, not in
+   `tickets/inprogress/`. A grep of `tests/unit/worldassembly/test_corpus_diversity.py` for
+   `town_council`/`bandit_road` found no temporary test exception present. **No reconciliation
+   action taken** — sibling ticket `TCK-20260710-HAZARD-KIND-CORPUS-WIDE` had not yet added its
+   temporary `town_council`/`bandit_road` test exception at this ticket's implementation time;
+   this ruling (a) is now available for that ticket to cite when it lands, per its own stated
+   design. Per `tickets/todos/simq-roadmap-phase1-process-hardening/SEQUENCE.md`'s own stated
+   dependency reasoning ("Landing 1.2 first means 1.1 never needs its temporary test exception at
+   all"), Phase 1.1 is now clear to land directly against the corpus-wide completeness test
+   without ever needing to add that temporary exception, since this ruling (a) makes
+   `town_council`'s `bandit_road` exposure a documented, ratified intentional case rather than an
+   open question the exception would have had to carve around.
+3. **`merchant_league` generalization note**: This ruling's nativity-based rationale does not
+   retroactively question `merchant_league`'s existing `bandit_road` immunity — that grant was
+   made under a separate, already-closed ticket
+   (`TCK-20260708-DUNGEON-URBAN-POPULATION-COLLAPSE`) for reasons not re-examined here. However,
+   the same rationale (non-native faction dispatched to a contested hazard region vs. native
+   habitat) would mechanically apply if `merchant_league`'s grant is ever revisited — this is
+   flagged only as a candidate observation for a future scoping pass, not an action item, per this
+   ticket's Out of Scope.
+
 ## Test Summary
 
+Scoped pytest commands from `test_plan.md` run 2026-07-10:
+
+```
+pytest tests/unit/worldassembly/test_corpus_diversity.py -k "population_stability or hazard_kind" -v
+```
+→ 31 passed, 1 failed, 22 deselected. The 1 failure,
+`test_generated_frontier_3_42_extended_population_stability`, is the pre-existing,
+already-documented tick-budget-throttle wall-clock non-determinism issue (Root cause 3 in
+`TCK-20260708-GENERATED-FRONTIER-LATE-TICK-POPULATION-COLLAPSE`, separately tracked and already
+**RESOLVED** under `docs/plans/audit_fix_plan.md` P2-P) — unrelated to this ticket, not owned by
+this ticket, did not regress further. Matches the investigation's documented baseline exactly.
+
+```
+pytest tests/unit/world/test_regional_consequences.py -v
+```
+→ all passed (mechanism-level unit tests untouched, byte-identical to baseline).
+
+```
+pytest tests/unit/worldbuilding/test_world_compiler.py -k urban_political_resolved_bandit_road -v
+```
+→ all passed.
+
+**Zero-change verification** (required by AC2 under ruling (a)):
+```
+git diff --stat data/content/social/factions.yaml docs/parity_ledger/world_dynamics.yaml
+```
+→ empty output — both files confirmed unchanged.
+
+Total: 0 regressions against the documented baseline; ruling (a)'s zero-content-change requirement
+confirmed.
+
 ## Files Changed
+- `docs/guidelines/intentional_divergences.md` — new Divergence Summary Table row + Detailed
+  Record §2.30
+- `tickets/inprogress/TCK-20260710-TOWN-COUNCIL-HAZARD-DA.md` — Implementation Notes, Test
+  Summary, Files Changed (this file)
+- `docs/plans/audit_fix_plan.md` — P2-Q entry closed out, master table row updated
+- `docs/plans/simq_development_roadmap.md` — Phase 1.2 marked with landed ruling
+- `staging_artifacts/TCK-20260710-TOWN-COUNCIL-HAZARD-DA/plan.md` — no deviations recorded (see
+  Deviations section, empty)
 
 ## Completion Summary
+Made the DA ruling this ticket exists to make: **(a) intentional.** `town_council`'s
+`merchant_caravan_frontier_guard` entities posted at `bandit_road` in both `urban_political` and
+`generated_frontier_3_42` are non-native, contested-road-posted forces, and their unmitigated
+`NATURAL_TERRAIN` hazard drain is ratified as designed "conflict-pressure flavor" exposure —
+consistent with `docs/mechanics/05_world_evolution.md` §3's opt-in, faction-declared endurance
+design (architecture review independently confirmed this reading of the mechanics chapter). The
+blast-radius check came back clean: `town_council` is populated in exactly one hazardous region
+across the corpus (`bandit_road`); `trading_company_hub.yaml`'s `hometown` region only spawns
+`merchant_league`, not `town_council`, in either composed world's actual resolved spec. Recorded
+the ruling as Divergence Summary Table row + Detailed Record §2.30 in
+`docs/guidelines/intentional_divergences.md` (rationale class: Intentional Gameplay Change,
+verification: `test_population_stability` for both affected worlds). Closed out P2-Q in
+`docs/plans/audit_fix_plan.md` and Phase 1.2 in `docs/plans/simq_development_roadmap.md`, both
+citing §2.30. `TCK-20260710-HAZARD-KIND-CORPUS-WIDE` (Phase 1.1) was confirmed not yet started, so
+there was no temporary test exception to reconcile — that sibling ticket is now clear to land
+without ever needing one. The `merchant_league` generalization (the same rationale would
+mechanically apply to it) was noted as a non-actionable candidate observation, explicitly not
+implemented under this ticket's scope. Zero code or content changes: `factions.yaml` and
+`world_dynamics.yaml` are byte-for-byte unchanged, confirmed via `git diff --stat`. Regression pass:
+43 passed / 1 failed, the one failure (`test_generated_frontier_3_42_extended_population_stability`)
+a pre-existing, already-resolved-elsewhere (P2-P) wall-clock-throttle flake unrelated to this
+zero-src-diff ticket.
