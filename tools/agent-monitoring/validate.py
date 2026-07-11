@@ -23,6 +23,7 @@ from vocabulary import CANONICAL_TIERS, WORKFLOW_PHASES, infer_workflow, is_know
 
 RUNS_FILE = Path("agent-monitoring/runs.jsonl")
 EVENTS_FILE = Path("agent-monitoring/events.jsonl")
+TOOLS_FILE = Path("agent-monitoring/tools.jsonl")
 LOG_FILE = Path("tickets/working_log.csv")
 # Only validate working_log entries on or after this date (ISO prefix match)
 MONITORING_START = "2026-06-07"
@@ -120,6 +121,52 @@ def compute_drift_report(runs: list, events: list) -> str:
     return "\n".join(lines)
 
 
+def compute_tool_count_drift_report(events: list, tools: list) -> str:
+    """Read-only cross-check of events.jsonl's recorded tool_call_count against tools.jsonl
+    ground truth, grouped by (run_id, seq) — mirrors compute_drift_report's shape (pure function,
+    never gates anything, purely additive reporting).
+
+    TCK-20260711-MONITORING-TOOLCOUNT-SIDECAR-COLLISION: a direct empirical audit found ~35% of
+    historical events had a tool_call_count that didn't match tools.jsonl, traced to two now-fixed
+    mechanisms (Scope-phase sidecar gap; writeMonitoring's own calls polluting the last phase's
+    count before its sidecar-clear ran). This report exists so a future recurrence of either
+    mechanism — or a new one — surfaces automatically instead of requiring another manual audit.
+    Historical drift from before the fix is expected and not itself actionable; this report is
+    most meaningful when scoped to runs after the fix landed.
+    """
+    actual_counts = Counter()
+    for t in tools:
+        run_id = t.get("run_id")
+        seq = t.get("seq")
+        if run_id and seq is not None:
+            actual_counts[(run_id, seq)] += 1
+
+    mismatches = []
+    checked = 0
+    for e in events:
+        run_id = e.get("run_id")
+        seq = e.get("seq")
+        recorded = e.get("tool_call_count")
+        if run_id is None or seq is None or recorded is None:
+            continue
+        checked += 1
+        actual = actual_counts.get((run_id, seq), 0)
+        if recorded != actual:
+            mismatches.append((run_id, seq, recorded, actual))
+
+    lines = ["--- Tool Call Count Drift Report ---", ""]
+    lines.append(f"Events checked (non-null tool_call_count, run_id+seq present): {checked}")
+    lines.append(f"Mismatches (recorded != actual tools.jsonl row count): {len(mismatches)}")
+    if mismatches:
+        lines.append("")
+        lines.append("Sample mismatches (run_id, seq, recorded, actual):")
+        for run_id, seq, recorded, actual in mismatches[:20]:
+            lines.append(f"  {run_id} seq={seq}: recorded={recorded} actual={actual}")
+        if len(mismatches) > 20:
+            lines.append(f"  ... and {len(mismatches) - 20} more")
+    return "\n".join(lines)
+
+
 def load_jsonl(path):
     if not path.exists():
         return []
@@ -141,6 +188,7 @@ def main():
 
     runs = load_jsonl(RUNS_FILE)
     events = load_jsonl(EVENTS_FILE)
+    tools = load_jsonl(TOOLS_FILE)
 
     runs_by_id = {r["run_id"]: r for r in runs if "run_id" in r}
     events_by_run = defaultdict(list)
@@ -197,6 +245,8 @@ def main():
         sys.exit(1)
 
     print(compute_drift_report(runs, events))
+    print()
+    print(compute_tool_count_drift_report(events, tools))
 
     total_runs = len(runs)
     total_events = len(events)

@@ -15,7 +15,7 @@ if str(_MONITORING_TOOLS_DIR) not in sys.path:
 
 import record_events  # noqa: E402
 import validate  # noqa: E402
-from validate import compute_drift_report  # noqa: E402
+from validate import compute_drift_report, compute_tool_count_drift_report  # noqa: E402
 
 _BASE_RUN = {
     "run_id": "TCK-FAKE",
@@ -100,6 +100,83 @@ def test_drift_report_is_read_only(tmp_path, monkeypatch):
     runs = [dict(_BASE_RUN, workflow=None)]
     events = [{"run_id": "TCK-FAKE", "seq": 1, "ts": "t", "phase": "weird", "agent": "weird", "status": "ok", "summary": "ok"}]
     compute_drift_report(runs, events)
+
+    assert not (tmp_path / "agent-monitoring").exists()
+
+
+# ---------------------------------------------------------------------------
+# compute_tool_count_drift_report (TCK-20260711-MONITORING-TOOLCOUNT-SIDECAR-COLLISION)
+# ---------------------------------------------------------------------------
+
+def _tool_row(run_id, seq, tool="Read"):
+    return {"run_id": run_id, "seq": seq, "ts": "t", "tool": tool, "input_summary": "x", "status": "ok", "duration_ms": 1}
+
+
+def _event_with_count(run_id, seq, tool_call_count):
+    return {"run_id": run_id, "seq": seq, "ts": "t", "phase": "Implement", "agent": "implementer",
+            "status": "ok", "summary": "ok", "tool_call_count": tool_call_count}
+
+
+def test_tool_count_drift_report_no_mismatch_when_counts_agree():
+    events = [_event_with_count("TCK-A", 2, 3)]
+    tools = [_tool_row("TCK-A", 2) for _ in range(3)]
+    report = compute_tool_count_drift_report(events, tools)
+
+    assert "Events checked (non-null tool_call_count, run_id+seq present): 1" in report
+    assert "Mismatches (recorded != actual tools.jsonl row count): 0" in report
+
+
+def test_tool_count_drift_report_detects_undercounted_mismatch():
+    # Reproduces the real bug shape: recorded=0 but tools.jsonl actually has rows for that seq.
+    events = [_event_with_count("TCK-B", 8, 0)]
+    tools = [_tool_row("TCK-B", 8) for _ in range(34)]
+    report = compute_tool_count_drift_report(events, tools)
+
+    assert "Mismatches (recorded != actual tools.jsonl row count): 1" in report
+    assert "TCK-B seq=8: recorded=0 actual=34" in report
+
+
+def test_tool_count_drift_report_detects_overcounted_mismatch():
+    # Reproduces the traced case shape: recorded=2 but tools.jsonl has zero rows for that seq
+    # (the run's tool calls were actually attributed elsewhere, e.g. a stale sidecar).
+    events = [_event_with_count("TCK-C", 1, 2)]
+    tools = []
+    report = compute_tool_count_drift_report(events, tools)
+
+    assert "Mismatches (recorded != actual tools.jsonl row count): 1" in report
+    assert "TCK-C seq=1: recorded=2 actual=0" in report
+
+
+def test_tool_count_drift_report_skips_null_fields():
+    # Events with no run_id/seq/tool_call_count (legacy shapes, or fields genuinely unset)
+    # must not be counted as checked or mismatched.
+    events = [
+        {"run_id": None, "seq": 1, "ts": "t", "phase": "x", "agent": "x", "status": "ok", "summary": "s", "tool_call_count": 5},
+        {"run_id": "TCK-D", "seq": None, "ts": "t", "phase": "x", "agent": "x", "status": "ok", "summary": "s", "tool_call_count": 5},
+        {"run_id": "TCK-D", "seq": 1, "ts": "t", "phase": "x", "agent": "x", "status": "ok", "summary": "s", "tool_call_count": None},
+    ]
+    report = compute_tool_count_drift_report(events, [])
+
+    assert "Events checked (non-null tool_call_count, run_id+seq present): 0" in report
+    assert "Mismatches (recorded != actual tools.jsonl row count): 0" in report
+
+
+def test_tool_count_drift_report_ignores_tools_rows_without_run_id_or_seq():
+    # Interactive-use tool rows (run_id: null, seq: null) must not pollute any run's count.
+    events = [_event_with_count("TCK-E", 3, 0)]
+    tools = [
+        {"run_id": None, "seq": None, "ts": "t", "tool": "Read", "input_summary": "x", "status": "ok", "duration_ms": 1},
+    ]
+    report = compute_tool_count_drift_report(events, tools)
+
+    assert "Mismatches (recorded != actual tools.jsonl row count): 0" in report
+
+
+def test_tool_count_drift_report_is_read_only(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    events = [_event_with_count("TCK-F", 1, 0)]
+    tools = [_tool_row("TCK-F", 1)]
+    compute_tool_count_drift_report(events, tools)
 
     assert not (tmp_path / "agent-monitoring").exists()
 

@@ -28,6 +28,30 @@ const tierOverride = (args && args.tier) || ''
 
 phase('Scope')
 
+// Scope-phase sidecar coverage (net-new — TCK-20260711-MONITORING-TOOLCOUNT-SIDECAR-COLLISION,
+// the follow-up explicitly recommended by TCK-20260710-CURRENT-RUN-SIDECAR-BASH's Decision 1:
+// "extend .claude/current_run sidecar coverage to call sites that have never had one — Scope-phase
+// (ticket-scoper)..."). Can't reuse the writeSidecar(seq) helper defined below — it closes over
+// `tid`, which doesn't exist yet at this point (only known after the ticket-scoper agent call
+// resolves). When resuming an existing ticket, `ticketId` IS already known — write the real sidecar
+// value so this phase's tool calls (including resolveScopeTicketLocation's own bash() call, invoked
+// right after this) are correctly attributed. When creating a brand-new ticket, the ticket_id
+// genuinely doesn't exist yet — clear the sidecar to a neutral state instead of leaving whatever a
+// crashed prior run last wrote there, so a stale run_id can't silently bleed into this run's
+// Scope-phase tool calls (this run's own Scope tool calls stay correctly unattributed/null rather
+// than wrongly attributed to an unrelated old ticket — confirmed as the dominant real-world failure
+// mode in the investigation this ticket cites).
+if (ticketId) {
+  await bash(
+    `python3 -c "
+import json, sys
+open('.claude/current_run', 'w').write(json.dumps({'run_id': sys.argv[1], 'seq': 1}))
+" "${ticketId}" 2>/dev/null || true`
+  )
+} else {
+  await bash(`printf '{}' > .claude/current_run 2>/dev/null || true`)
+}
+
 const TICKET_SCHEMA = {
   type: 'object',
   required: ['ticket_id', 'ticket_path', 'status', 'conflicts', 'tier', 'tags', 'summary'],
@@ -240,6 +264,14 @@ const writeMonitoring = async (finalStatus) => {
   const result = await agent(
     `Write agent monitoring records for run "${tid}". This is bookkeeping — do NOT fail if writes error.
 
+Step 0 — clear the tool-tracking sidecar FIRST, before any other command in this call:
+  Run via Bash: printf '{}' > .claude/current_run
+  This must run before Steps 1-4 (not after, as it did previously) — otherwise this call's own
+  Bash/python invocations below get attributed to whatever (run_id, seq) was still active from the
+  last real phase, inflating that phase's tools.jsonl row count beyond what Step 2's snapshot
+  already recorded (confirmed via empirical audit: TCK-20260711-MONITORING-TOOLCOUNT-SIDECAR-COLLISION).
+  Clearing first makes every command below correctly unattributed (run_id: null) instead.
+
 Step 1 — get current timestamp (run end time):
   Run via Bash: date -u +%Y-%m-%dT%H:%M:%SZ
   Save result as END_TS. Replace every literal <END_TS> in the commands below with this value.
@@ -277,9 +309,6 @@ Step 3 — build and write events:
 
 Step 4 — write run record (replace <END_TS> with the value from Step 1):
   Run: python3 tools/agent-monitoring/record_run.py --data '{"run_id":"${tid}","start_ts":"${startTsLiteral}","end_ts":"<END_TS>","workflow":"implement-ticket","tier":"${tier}","final_status":"${finalStatus}","agent_count":${eventsCount}}'
-
-Step 5 — clear the tool-tracking sidecar:
-  Run via Bash: printf '{}' > .claude/current_run
 
 If any command fails, print "WARNING: monitoring write failed: <error>" and continue — do NOT raise.
 Return "monitoring written" or "monitoring write failed: <reason>".`,

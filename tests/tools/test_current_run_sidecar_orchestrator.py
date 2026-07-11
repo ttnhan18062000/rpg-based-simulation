@@ -1,4 +1,5 @@
-"""Regression tests for TCK-20260710-CURRENT-RUN-SIDECAR-BASH.
+"""Regression tests for TCK-20260710-CURRENT-RUN-SIDECAR-BASH and its follow-up,
+TCK-20260711-MONITORING-TOOLCOUNT-SIDECAR-COLLISION.
 
 Static, raw-source-text-parsing tests against `.claude/workflows/implement-ticket.js` and
 `docs/agent-monitoring/schema.md` — reuses tests/tools/test_tag_skill_mapping_check.py's
@@ -9,9 +10,20 @@ Covers: the former per-prompt "Step 0b" (and Finalize's combined "Step 0") sidec
 agent-prompt-text instruction has been replaced by an orchestrator-side `writeSidecar(seq)`
 helper invoked via `bash()` immediately before each of the 10 corresponding `await agent(...)`
 calls (the 9 two-line sites: Investigate, Plan, Review, Implement, Architecture-Verify, Test,
-Parity, Security-Review, Verify; plus Finalize's single combined site). The two call sites that
-never had a sidecar instruction (Scope/`ticket-scoper`, and `writeMonitoring`'s own `agent()`
-call) must remain permanently sidecar-free by design — not oversights to "complete" later.
+Parity, Security-Review, Verify; plus Finalize's single combined site).
+
+Two follow-up fixes from TCK-20260711-MONITORING-TOOLCOUNT-SIDECAR-COLLISION, which found (via
+direct empirical cross-check of tool_call_count against tools.jsonl ground truth) that ~35% of
+historical events had a wrong count:
+- Scope (`ticket-scoper`) now HAS sidecar coverage (previously permanently sidecar-free by
+  design — this was TCK-20260710-CURRENT-RUN-SIDECAR-BASH's own recommended follow-up, Decision
+  1). It can't reuse the `writeSidecar(seq)` helper (which closes over `tid`, not yet known when
+  creating a brand-new ticket) — it inlines two bash() branches instead.
+- `writeMonitoring`'s own `agent()` call remains permanently sidecar-*tracking*-free (it never
+  gets its own `(run_id, seq)`), but its internal Step 5 "clear the sidecar" instruction moved to
+  Step 0 (run first, not last) — previously, Steps 1-4's own Bash/python calls executed *before*
+  the clear, so they were silently attributed to whatever phase's sidecar was still active,
+  inflating that phase's true tools.jsonl row count beyond what Step 2's own snapshot recorded.
 """
 import re
 import sys
@@ -118,7 +130,8 @@ def test_finalize_call_site_still_registers_sidecar():
 
 
 # ---------------------------------------------------------------------------
-# 4. The two intentionally-excluded call sites remain permanently sidecar-free
+# 4. writeMonitoring's own agent() call remains untracked (no orchestrator-side writeSidecar()
+#    call precedes it) — but its own Step 0/Steps 1-4 ordering is covered separately below (item 7).
 # ---------------------------------------------------------------------------
 
 
@@ -131,17 +144,29 @@ def test_writeMonitoring_call_has_no_preceding_sidecar_write():
     assert "writeSidecar(" not in monitoring_write_region
 
 
-def test_scope_phase_call_site_has_no_preceding_sidecar_write():
+def test_scope_phase_has_sidecar_coverage():
+    # TCK-20260711-MONITORING-TOOLCOUNT-SIDECAR-COLLISION: Scope now registers a sidecar value
+    # before its agent() call — net-new coverage, not a relocation, so it can't reuse the
+    # writeSidecar(seq) helper (tid isn't known yet for a brand-new ticket). Two inline branches:
+    # real {run_id: ticketId, seq: 1} when resuming; a neutral clear when creating a new ticket.
     source = _read_workflow_source()
 
+    phase_scope_idx = source.index("phase('Scope')")
     scope_start = source.index("const ticketInfo = await agent(")
     scope_label = source.index("{ label: 'scope',", scope_start)
+    pre_scope_region = source[phase_scope_idx:scope_start]
     scope_region = source[scope_start:scope_label]
-    assert "writeSidecar(" not in scope_region
-    # Scope's own "Step 0b" is an unrelated context-warm-start instruction (search_docs/graphify),
-    # never a sidecar write — must not be confused with the sidecar Step 0b pattern removed
-    # elsewhere.
+
+    assert "if (ticketId) {" in pre_scope_region
+    assert "open('.claude/current_run', 'w').write(json.dumps({'run_id': sys.argv[1], 'seq': 1}))" in pre_scope_region
+    assert '"${ticketId}" 2>/dev/null || true' in pre_scope_region
+    assert "printf '{}' > .claude/current_run 2>/dev/null || true" in pre_scope_region
+
+    # Scope's own "Step 0b" (inside the agent prompt itself) is an unrelated context-warm-start
+    # instruction (search_docs/graphify), never a sidecar write — must not be confused with the
+    # orchestrator-side sidecar registration added above pre_scope_region.
     assert "search_docs" in scope_region
+    assert "writeSidecar(" not in scope_region
 
 
 # ---------------------------------------------------------------------------
@@ -202,23 +227,38 @@ def test_schema_doc_no_longer_describes_agent_self_report_mechanism():
 
 
 # ---------------------------------------------------------------------------
-# 7. Anti-drift guard: writeMonitoring's Step 5 sidecar-clear is unchanged
+# 7. Anti-drift guard: writeMonitoring's sidecar-clear now runs FIRST (Step 0), not last.
+#
+# TCK-20260711-MONITORING-TOOLCOUNT-SIDECAR-COLLISION found (via direct empirical cross-check of
+# tool_call_count against tools.jsonl ground truth) that the clear-last ordering caused
+# writeMonitoring's own Steps 1-4 Bash/python calls to be silently attributed to whatever phase's
+# sidecar was still active — inflating that phase's true row count beyond what Step 2's own
+# snapshot had already recorded. Moving the clear to Step 0 (before Steps 1-4) makes
+# writeMonitoring's own calls correctly unattributed (run_id: null) instead. This intentionally
+# supersedes the original clear-last ordering asserted by this test's previous version — the
+# original intent ("writeMonitoring stays sidecar-free by design") is preserved and, in fact, more
+# faithfully achieved this way than the previous ordering actually achieved it.
 # ---------------------------------------------------------------------------
 
 
-def test_writeMonitoring_step5_sidecar_clear_still_present():
+def test_writeMonitoring_step0_sidecar_clear_precedes_steps_1_to_4():
     source = _read_workflow_source()
     assert "Run via Bash: printf '{}' > .claude/current_run" in source
 
-    # Order-preserved relative to writeMonitoring's Steps 1-4 (get timestamp, compute stats,
-    # build/write events, write run record) — Step 5 clear must remain last.
     monitoring_write_start = source.index("const writeMonitoring = async")
+    step0_idx = source.index("Step 0 — clear the tool-tracking sidecar FIRST", monitoring_write_start)
     step1_idx = source.index("Step 1 — get current timestamp", monitoring_write_start)
     step2_idx = source.index("Step 2 — compute tool_call_count", monitoring_write_start)
     step3_idx = source.index("Step 3 — build and write events", monitoring_write_start)
     step4_idx = source.index("Step 4 — write run record", monitoring_write_start)
-    step5_idx = source.index("Step 5 — clear the tool-tracking sidecar", monitoring_write_start)
-    assert step1_idx < step2_idx < step3_idx < step4_idx < step5_idx
+    assert step0_idx < step1_idx < step2_idx < step3_idx < step4_idx
+
+    # The old trailing "Step 5 — clear..." label is gone — there is exactly one sidecar-clear
+    # instruction in writeMonitoring now, at Step 0, not a duplicate leftover at the end.
+    assert "Step 5 — clear the tool-tracking sidecar" not in source
+    monitoring_write_label_idx = source.index("{ label: 'monitoring-write' }", monitoring_write_start)
+    monitoring_prompt_region = source[monitoring_write_start:monitoring_write_label_idx]
+    assert monitoring_prompt_region.count("printf '{}' > .claude/current_run") == 1
 
 
 # ---------------------------------------------------------------------------
