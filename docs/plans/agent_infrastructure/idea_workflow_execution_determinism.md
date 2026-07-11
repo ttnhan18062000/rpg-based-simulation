@@ -3,7 +3,7 @@ status: idea
 layer: ai
 authority: P2
 audience: developer
-maturity: idea
+maturity: near-horizon-shipped-long-horizon-backlogged
 date: 2026-07-10
 tags: [idea, agent-infrastructure, observability, determinism]
 ---
@@ -148,3 +148,71 @@ eye.
 popular agent-orchestration design (orchestrator-workers pattern, Temporal/LangGraph-style
 execute-don't-narrate workflow engines), and confirmed live by two reproduced incidents in this same
 session at the orchestrator-narration layer itself. Not yet scoped as a ticket.*
+
+---
+
+## Resolution (2026-07-11)
+
+Scoped as `TCK-20260710-WORKFLOW-EXECUTION-DETERMINISM-EPIC` with 2 children. Both are now resolved,
+but asymmetrically:
+
+**Near-horizon child SHIPPED.** `TCK-20260710-WORKFLOW-META-CONFORMANCE-CHECK` landed
+(`tools/gate_checks/workflow_meta_conformance.py`) and immediately proved its own value on real
+data: it caught `implement-epic.js` silently emitting only `Implement`-phase events for a workflow
+declaring `Discover`/`Implement`/`Report` — a live instance of the exact failure class this epic
+exists to catch, found the same day the tool shipped.
+
+**Long-horizon child BACKLOGGED, not left BLOCKED.** `TCK-20260710-EXECUTABLE-WORKFLOW-RUNTIME` was
+re-investigated twice this session (2026-07-11, ~03:12 and ~07:00) — both times independently
+re-confirming the blocking condition (no `Workflow`/`tool_runner`-equivalent tool exists inside this
+Claude Code harness; verified empirically via live `ToolSearch` probes, not just by re-reading
+`SKILL.md` text) with zero drift between checks. Rather than leave it sitting `BLOCKED` in
+`tickets/inprogress/` indefinitely waiting on a platform change nobody can schedule, it was moved to
+`tickets/backlogs/TCK-20260710-EXECUTABLE-WORKFLOW-RUNTIME.md` — deliberately deprioritized future
+work, not actively-blocked-and-waiting.
+
+**New finding this session: a concrete (if expensive) unblock path exists today.** Researching the
+Claude API/Agent SDK landscape surfaced four distinct ways to build an agent, only one of which
+supplies both a harness *and* real, deterministic code execution outside LLM narration: the
+**Claude Agent SDK** (`claude-agent-sdk` / `@anthropic-ai/claude-agent-sdk`) — "Claude Code packaged
+as a library," shipping the full agent loop, built-in tools, context management, hooks, subagents,
+and sessions, callable via `query(prompt, options)`. This is architecturally exactly what the
+long-horizon idea describes: `.claude/workflows/*.js`-equivalent phase sequencing and gate branching
+running as real code, with `Agent()`-style subagent calls as the only LLM-judgment surface. Critically,
+this is **not** a new capability appearing inside the current interactive Claude Code CLI session —
+it would mean building and maintaining a **separate standalone program** (Python/TypeScript) outside
+this harness that reimplements the orchestration layer. That is a real, uncertain-ROI engineering
+project, not a config flip, and is explicitly not scheduled by this resolution.
+
+**Decision: keep the current narrate-then-gate approach, improve it incrementally via
+agent-monitoring, until a hard wall is hit.** Reviewed the actual track record this session — the
+sibling `TCK-20260710-AGENT-BOOKKEEPING-DETERMINISM-EPIC` (3 mechanical-step fixes) plus this epic's
+own near-horizon child, plus two in-session bugs discovered and *fixed* by the very gates this
+strategy relies on (`EPIC-SCOPE-ORPHAN-FIX`'s Verify pass and `EPIC-STALENESS-DEDUPE-CHECK`'s Verify
+pass both caught the narrating LLM omitting a required `docs/` update, on back-to-back tickets, before
+either reached `done`). Every fix shipped was cheap, well-tested, and low-risk; no gate failure this
+session let a bad state ship. This is evidence the mitigation strategy is working as designed, not
+evidence it's failing — so the incremental path continues: keep finding and closing narration-fragility
+failure modes one at a time via `tools/gate_checks/` / `tools/agent-monitoring/` detectors (the
+`workflow_meta_conformance.py` / `epic_scope_orphan_check.py` / staleness-dedupe pattern), rather than
+committing to the Agent SDK rewrite now. Revisit the Agent SDK path only if the *same class* of
+narration mistake (e.g. the docs-update omission) recurs a third time despite a gate already existing
+for it — that would be the signal that gate-based mitigation has hit a hard wall for that failure
+class specifically, not a reason to rewrite the whole orchestration layer preemptively.
+
+**Follow-up (2026-07-11, same-day): a fourth instance of the pattern shipped, from the first
+weekly agent-monitoring retro (`agent-monitoring/retro/RETRO-2026-W28.md`) rather than from live
+session investigation.** The retro's own data confirmed the docs-update omission is not just a
+this-session anecdote: `done-checker` failed its first Verify attempt 22 of 61 times (36%) across
+the whole week, every failure tagged the same `reason_code`. `TCK-20260711-DOC-STALENESS-GATE-CHECK`
+shipped `tools/gate_checks/doc_staleness_check.py` in response — but **unwired**, same as its three
+siblings. This matters for the "revisit Agent SDK if it recurs a third time despite a gate already
+existing" trigger above: an unwired check is a detector waiting to be pointed at something, not yet
+a gate that actively prevents recurrence. The omission can still recur indefinitely without ever
+tripping this check, since nothing calls it. Whoever eventually decides whether/where to wire it in
+(Parity phase vs. a new pre-Verify step — an explicitly open question in that ticket) should treat
+that wiring decision as the point where this specific failure class actually starts being prevented,
+not the day the detector was written.
+
+See `tickets/backlogs/TCK-20260710-EXECUTABLE-WORKFLOW-RUNTIME.md` for the backlogged ticket itself
+(full investigation history preserved in `stored_artifacts/TCK-20260710-EXECUTABLE-WORKFLOW-RUNTIME/`).

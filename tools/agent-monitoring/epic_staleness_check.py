@@ -66,6 +66,16 @@ def _dedupe_preserve_order(items: Iterable[str]) -> list:
     return result
 
 
+def _dedupe_candidates_by_epic_id(candidates: list) -> list:
+    seen = set()
+    result = []
+    for candidate in candidates:
+        if candidate.epic_id not in seen:
+            seen.add(candidate.epic_id)
+            result.append(candidate)
+    return result
+
+
 def _frontmatter_block(text: str) -> str:
     lines = text.splitlines()
     if not lines or lines[0].strip() != "---":
@@ -185,7 +195,7 @@ def discover_candidate_epics(inprogress_dir: Path, todos_dir: Path) -> list:
                 epic_date=epic_date,
             ))
 
-    return candidates
+    return _dedupe_candidates_by_epic_id(candidates)
 
 
 # ---------------------------------------------------------------------------

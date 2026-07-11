@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P2
 audience: agent
 ticket_id: TCK-20260710-WORKFLOW-EXECUTION-DETERMINISM-EPIC
-phase: open
+phase: done
 date: 2026-07-10
 tags: [ai, agent-monitoring, determinism]
 ---
@@ -12,10 +12,10 @@ tags: [ai, agent-monitoring, determinism]
 # TCK-20260710-WORKFLOW-EXECUTION-DETERMINISM-EPIC
 
 ## Title
-The orchestrator itself is narrated, not executed — epic tracking 2 draft child tickets
+The orchestrator itself is narrated, not executed — epic tracking 2 child tickets (RESOLVED: 1 shipped, 1 backlogged)
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 epic
@@ -92,11 +92,16 @@ Track the following 2 draft child tickets, to be created next via the create-tic
   only — verified by `Files Changed` being empty at Finalize).
 
 ## Related Tickets
-- TCK-20260710-WORKFLOW-META-CONFORMANCE-CHECK (draft — actionable near-horizon check)
-- TCK-20260710-EXECUTABLE-WORKFLOW-RUNTIME (draft — blocked, long-horizon aspiration)
+- TCK-20260710-WORKFLOW-META-CONFORMANCE-CHECK (DONE — `tickets/done/TCK-20260710-WORKFLOW-META-CONFORMANCE-CHECK.md`)
+- TCK-20260710-EXECUTABLE-WORKFLOW-RUNTIME (BACKLOG, not BLOCKED — moved to
+  `tickets/backlogs/TCK-20260710-EXECUTABLE-WORKFLOW-RUNTIME.md` on 2026-07-11 after two independent
+  re-confirmations of the blocking condition found zero drift; see that ticket and the idea doc's
+  Resolution section for the full reasoning, including a newly-found concrete unblock path via the
+  Claude Agent SDK)
 
 Related (distinct layer, not a duplicate): `TCK-20260710-AGENT-BOOKKEEPING-DETERMINISM-EPIC`
-(`tickets/todos/agent-bookkeeping-determinism/TCK-20260710-AGENT-BOOKKEEPING-DETERMINISM-EPIC.md`).
+(DONE — all 3 children complete; epic and folder archived to
+`tickets/done/agent-bookkeeping-determinism/TCK-20260710-AGENT-BOOKKEEPING-DETERMINISM-EPIC.md`).
 
 ## Related Docs
 - `docs/plans/agent_infrastructure/idea_workflow_execution_determinism.md` — primary source idea doc.
@@ -146,9 +151,28 @@ runs, the scope recorded here should be treated as provisional and revised rathe
 still valid.
 
 ## Implementation Notes
+Epic tier — no direct implementation, per Tier Routing. Both children resolved independently:
+`TCK-20260710-WORKFLOW-META-CONFORMANCE-CHECK` implemented and closed via the standard
+`implement-ticket` pipeline. `TCK-20260710-EXECUTABLE-WORKFLOW-RUNTIME` investigated twice (confirming
+its blocking condition holds, with zero drift) and then deliberately moved to `tickets/backlogs/`
+rather than left `BLOCKED` indefinitely — see `docs/plans/agent_infrastructure/idea_workflow_execution_determinism.md`'s
+Resolution section for the reasoning, including the Claude Agent SDK finding.
 
 ## Test Summary
+N/A — epic tier, no code changes.
 
 ## Files Changed
+None (epic tier, Scope only). Related docs updated as part of this epic's resolution:
+`docs/plans/agent_infrastructure/idea_workflow_execution_determinism.md` (Resolution section added),
+`tickets/backlogs/TCK-20260710-EXECUTABLE-WORKFLOW-RUNTIME.md` (new).
 
 ## Completion Summary
+Both children resolved: the near-horizon workflow-meta-conformance check shipped and already caught a
+real bug (`implement-epic.js`'s silent Discover/Report event gap) on its first day. The long-horizon
+executable-workflow-runtime aspiration was re-confirmed blocked (twice, empirically, zero drift) and
+moved from `BLOCKED`/`tickets/inprogress/` to `BACKLOG`/`tickets/backlogs/` — a deliberate reframing
+from "waiting on an external event" to "known future improvement, not currently competing for
+attention." Decision made to continue the current narrate-then-gate orchestration strategy,
+improving it incrementally via `tools/gate_checks/`/`tools/agent-monitoring/` detectors, rather than
+committing to a rewrite — based on this session's own track record showing the strategy's gates
+correctly catching real mistakes before they shipped.

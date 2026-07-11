@@ -119,7 +119,7 @@ Workflow({ name: 'implement-ticket', args: {
 **Agent:** `ticket-scoper`
 
 **What happens:**
-- Scans `tickets/` for duplicate or conflicting work
+- Scans `tickets/` (including `inprogress/`, `done/`, and `backlogs/`) for duplicate or conflicting work — a hit in `backlogs/` means the work was already investigated and deliberately deprioritized, not abandoned
 - Scans `docs/mechanics/`, `docs/engine/` for constraints
 - Scans `stored_artifacts/` for prior investigations
 - Reads relevant source files
@@ -437,7 +437,7 @@ Use `/implement-epic` when you have multiple tickets to implement in sequence.
 
 See `docs/ai/workflows.md` → `implement-epic` for the full args reference.
 
-**Epic staleness check:** `tools/agent-monitoring/epic_staleness_check.py` (`make agent-monitoring-epic-staleness`) periodically scans all open epics — both `epic_id`-mode tickets in `tickets/inprogress/` and `folder`-mode/hybrid `SEQUENCE.md` folders in `tickets/todos/*/` — for child-ticket activity that has gone idle. It flags an epic **stale** only if at least one child ticket shows real activity evidence (a `tickets/working_log.csv` row or `agent-monitoring/runs.jsonl` record) whose timestamp is older than a 5-day default window. An epic whose children have **zero activity ever** is never flagged stale — that shape (scoped and sequenced, then deliberately queued behind other work) is normal planning behavior, not abandonment; it is instead surfaced separately, informationally, as "never started" in the report (never in the hook nudge). `TCK-20260702-OBSISO-EPIC` is the concrete example: zero child activity ever, correctly classified as never-started, not stale. Advisory-only, read-only, mirrors `retro_nudge_hook.py`'s `PostToolUse` hook shape — see "Agent Monitoring" below.
+**Epic staleness check:** `tools/agent-monitoring/epic_staleness_check.py` (`make agent-monitoring-epic-staleness`) periodically scans all open epics — both `epic_id`-mode tickets in `tickets/inprogress/` and `folder`-mode/hybrid `SEQUENCE.md` folders in `tickets/todos/*/` — for child-ticket activity that has gone idle. It flags an epic **stale** only if at least one child ticket shows real activity evidence (a `tickets/working_log.csv` row or `agent-monitoring/runs.jsonl` record) whose timestamp is older than a 5-day default window. An epic whose children have **zero activity ever** is never flagged stale — that shape (scoped and sequenced, then deliberately queued behind other work) is normal planning behavior, not abandonment; it is instead surfaced separately, informationally, as "never started" in the report (never in the hook nudge). `TCK-20260702-OBSISO-EPIC` is the concrete example: zero child activity ever, correctly classified as never-started, not stale. The two discovery loops (`epic_id`-mode, `folder`-mode) are deduped by `epic_id` after both scans complete — first-occurrence-wins, with the `epic_id`-mode loop enumerated first so an epic present in both `tickets/inprogress/` and its `tickets/todos/` origin (e.g. during the window between Scope's copy and a later Finalize/cleanup) is reported exactly once, preferring the `tickets/inprogress/` candidate. Advisory-only, read-only, mirrors `retro_nudge_hook.py`'s `PostToolUse` hook shape — see "Agent Monitoring" below.
 
 ---
 
@@ -482,7 +482,36 @@ After work:
     plan.md
     test_plan.md
   tickets/working_log.csv  ← one new row appended
+
+Deliberately deprioritized (not done, not actively blocked-and-waiting):
+  tickets/backlogs/{ticket_id}.md
 ```
+
+**`tickets/backlogs/`** holds two distinct kinds of content — both intentionally out of the active
+`inprogress/done/todos` pipeline:
+
+1. **Pre-ticket epic outlines** (the folder's original use) — lightweight `epic-NN-*.md` /
+   `enhance-NN-*.md` feature sketches that haven't been promoted through `ticket-scoper` into a
+   full `TCK-YYYYMMDD-*.md` yet. No frontmatter or required-sections format is enforced on these.
+2. **Formally-scoped tickets moved here after deliberate deprioritization** — a full `TCK-*.md`
+   ticket (already through Scope, and often through Investigate/Plan) whose work is real,
+   understood, and worth keeping — but is not competing for active attention right now, and isn't
+   "blocked" in the sense of *actively waiting* on a specific external event a human is tracking.
+   Distinguish this from `Status: BLOCKED` in `tickets/inprogress/`: BLOCKED means "paused mid-pipeline,
+   resume once the blocking condition changes" (the ticket stays where active work lives); BACKLOG
+   means "understood, shelved on purpose, no one is watching for a trigger to resume it." Moving a
+   ticket here does not delete its `staging_artifacts/` — migrate them to `stored_artifacts/{ticket_id}/`
+   as usual so the investigation record survives, and update the ticket's own `## Status` to
+   `BACKLOG` (not `BLOCKED`/`OPEN`) plus its frontmatter `phase: backlog`. See
+   `tickets/backlogs/TCK-20260710-EXECUTABLE-WORKFLOW-RUNTIME.md` for a worked example (moved
+   2026-07-11 after two independent re-confirmations that its actual platform blocker still held —
+   the ticket was accurate, but "wait indefinitely in `inprogress/`" was the wrong resting place for
+   a condition nobody could schedule or predict).
+
+There is no automated workflow step that reads from or writes to `tickets/backlogs/` — moving a
+ticket there (or promoting one out, back into `tickets/todos/` or `tickets/inprogress/` when it's
+picked up) is a manual, deliberate action, not something `implement-ticket`/`implement-epic` do on
+their own.
 
 ---
 

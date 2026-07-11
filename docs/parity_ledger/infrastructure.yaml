@@ -3761,3 +3761,47 @@
     Doc tooling only -- no simulation behavior involved (mirrors INFRA-183's support_boundary).
     Does not touch, extend, or duplicate INFRA-183 (output shape) or INFRA-263 (Finalize-time
     write-and-verify invocation timing); this is a third, distinct guarantee (CI backstop).
+
+- id: INFRA-265
+  text: >
+    Scope-phase epic-tier orphan fix (TCK-20260711-EPIC-SCOPE-ORPHAN-FIX): the Scope phase's
+    ticket-location resolution (finding a ticketId under tickets/inprogress/, then
+    tickets/done/, then tickets/todos/**) and file relocation is resolved orchestrator-side by
+    resolveScopeTicketLocation() calling tools/agent-monitoring/scope_ticket_relocate.py via
+    bash(), replacing the former agent-prompt-text Step 1a/1b/1c file search + unconditional
+    copy. Moves (copy-then-delete) a tickets/todos/ original to tickets/inprogress/{id}.md when
+    the ticket's `## Tier` is `epic`; copies (leaving the todos original in place) for every
+    other tier, preserving existing hotfix/standard Finalize-reconciliation behavior. This
+    closes the permanent-duplicate defect: epic-tier tickets return EPIC_SCOPED immediately
+    after Scope and never reach Finalize's cleanup `rm` step, so the old unconditional-copy
+    behavior left a byte-identical orphan under tickets/todos/**. resolveScopeTicketLocation()
+    is invoked before scopeTs's captureTs() call in the orchestrator's Scope-phase sequence.
+    A separate, standalone (not wired into any phase) repo-wide sweep,
+    tools/agent-monitoring/epic_scope_orphan_check.py, detects the dual-presence signature
+    (epic-tier ticket present in both tickets/inprogress/ and tickets/todos/** simultaneously)
+    for pre-existing orphans such as TCK-20260710-WORKFLOW-EXECUTION-DETERMINISM-EPIC's.
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: >
+    tools/agent-monitoring/scope_ticket_relocate.py::resolve_and_relocate_ticket +
+    tools/agent-monitoring/epic_scope_orphan_check.py::check_single_epic_orphan +
+    .claude/workflows/implement-ticket.js::resolveScopeTicketLocation (called at line 52,
+    before scopeTs's captureTs() call at line 54)
+  proof_type: null
+  test_path: >
+    tests/tools/test_scope_orphan_fix.py::test_step1c_orphan_bash_precedes_capturets,
+    tests/tools/test_scope_orphan_fix.py::test_epic_tier_move_deletes_todos_original,
+    tests/tools/test_scope_orphan_fix.py::test_standard_hotfix_tier_still_copy_only,
+    tests/tools/test_epic_scope_orphan_check.py::test_new_orphan_check_flags_dual_presence,
+    tests/tools/test_epic_scope_orphan_check.py::test_live_repo_orphan_check_returns_zero_findings
+  divergence_note: null
+  support_boundary: >
+    Ticket-closing/scoping workflow tooling only -- no simulation behavior is involved
+    (mirrors INFRA-263/INFRA-264's support_boundary pattern for orchestrator bash()-wiring
+    changes to implement-ticket.js). Does not touch, extend, or duplicate INFRA-263 (Finalize-
+    phase registry-regen invocation) or INFRA-264 (CI registry-drift backstop); this is a
+    distinct guarantee scoped to the Scope phase's ticket-location/relocation step.
+    epic_scope_orphan_check.py is intentionally unwired (no call site in
+    implement-ticket.js or done_checker_static.py) -- ships standalone per its own docstring,
+    pending a future ticket to wire it into a pipeline phase.

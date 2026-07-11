@@ -128,7 +128,7 @@ Step 4 — return:
 Request: ${request}
 
 Step 1 — create an epic ticket using the ticket-scoper approach:
-  - Scan tickets/ for overlapping scope
+  - Scan tickets/ (including inprogress/, done/, and backlogs/) for overlapping scope — a hit in backlogs/ means the work was already investigated and deliberately deprioritized, not abandoned
   - Draft the epic ticket at tickets/inprogress/TCK-YYYYMMDD-SHORT-SCOPE.md
   - Set Tier: epic, Status: OPEN
   - The ## Related Tickets section should list the child tickets that will need to be created

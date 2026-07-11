@@ -451,7 +451,7 @@ Step 0b (context warm-start — REQUIRED before any file reads):
 Request: ${ticketRequest}
 
 Steps:
-1. Scan tickets/ (inprogress/ and done/) for overlapping scope or prior attempts.
+1. Scan tickets/ (inprogress/, done/, and backlogs/) for overlapping scope or prior attempts. A hit in backlogs/ means the work was already investigated and deliberately deprioritized, not abandoned — flag it as a conflict/duplicate candidate rather than re-scoping from scratch.
 2. Scan docs/ (mechanics Bible chapters, engine contracts) for constraints on the request.
 3. Scan stored_artifacts/ for prior investigations in the same area.
 4. Read relevant source files to understand current state.

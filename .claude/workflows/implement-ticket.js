@@ -49,19 +49,22 @@ const TICKET_SCHEMA = {
   },
 }
 
+const scopeOrphanInfo = ticketId ? await resolveScopeTicketLocation(ticketId) : null
+
 const scopeTs = await captureTs()
 const ticketInfo = await agent(
   ticketId
     ? `Load the existing ticket.
 
-Step 1 — locate the ticket file. Check these locations in order, stop at the first hit:
-  a. tickets/inprogress/${ticketId}.md
-  b. tickets/done/${ticketId}.md
-  c. Run: find tickets/todos -name "${ticketId}.md" 2>/dev/null
-     If found, the file exists under tickets/todos/. Copy it to tickets/inprogress/${ticketId}.md
-     so it enters the standard workflow location, then use that as ticket_path.
-
-Step 2 — read the file at ticket_path. Extract the ## Tier field (default 'standard' if absent).
+The ticket file has already been located by the orchestrator (and relocated from
+tickets/todos/ to tickets/inprogress/ if it originated there — moved, with the todos original
+deleted, if its tier is epic; copied, with the todos original left in place, otherwise):
+  ticket_path = "${scopeOrphanInfo && scopeOrphanInfo.ticket_path}"
+  tier = "${scopeOrphanInfo && scopeOrphanInfo.tier}"
+  todos_source_path = "${scopeOrphanInfo && scopeOrphanInfo.todos_source_path}"
+${scopeOrphanInfo && scopeOrphanInfo.ticket_path ? '' : '(No ticket file was found at tickets/inprogress/, tickets/done/, or under tickets/todos/ for this ticket_id — report this in conflicts.)\n'}
+Step 1 — read the file at ticket_path directly (skip this if ticket_path is empty, per the note
+above). Do not re-locate, re-copy, or move the file — that has already been done.
 
 Step 3 — read the ticket's frontmatter \`tags\` field and compute \`suggested_skills\` against this mapping —
 any tag not listed below produces no suggestion:
@@ -78,9 +81,10 @@ filter or transform it — this is the ground-truth list the Security-Review gat
 
 Step 3b — check for a security mis-tag: if the ticket's "Related Code Areas" section contains any path or filename matching one of: \`credential\`, \`secret\`, \`password\`, \`api_key\`, \`private_key\`, \`.env\`, \`oauth\`, \`jwt\` (case-insensitive substring match; do NOT match \`auth\`, \`cert\`, \`key\`, \`token\`, or \`session\` bare — those collide with this codebase's own \`AuthoritativeState\`/\`authoritative_pipeline\`/\`certification\`/\`LabSessionStore\` vocabulary), AND the ticket's tags do NOT include \`security\` — set mistag_warning=true. Otherwise mistag_warning=false.
 
-Return: ticket_id="${ticketId}", ticket_path (full path used in step 1/2),
-todos_source_path (the tickets/todos/... path if found in step 1c, else ""),
-status="EXISTING", conflicts=[], tier=(value from ticket or 'standard'),
+Return: ticket_id="${ticketId}", ticket_path=(the ticket_path value stated above),
+todos_source_path=(the todos_source_path value stated above),
+status="EXISTING", conflicts=(["ticket file not found for ${ticketId}"] if ticket_path is empty, else []),
+tier=(the tier value stated above),
 tags=(from step 3a, the ticket's actual frontmatter tags list),
 suggested_skills=(computed list from step 3, [] if none),
 mistag_warning=(computed per step 3b),
@@ -96,7 +100,7 @@ Step 0b (context warm-start — REQUIRED before any file reads):
 Request: ${request}
 
 Steps:
-1. Scan tickets/ (inprogress/ and done/) for overlapping scope or prior attempts.
+1. Scan tickets/ (inprogress/, done/, and backlogs/) for overlapping scope or prior attempts. A hit in backlogs/ means the work was already investigated and deliberately deprioritized, not abandoned — flag it as a conflict/duplicate candidate rather than re-scoping from scratch.
 2. Scan docs/ (mechanics Bible chapters, engine contracts) for constraints on the request.
 3. Scan stored_artifacts/ for prior investigations in the same area.
 4. Read relevant source files to understand current state.
@@ -189,6 +193,22 @@ open('.claude/current_run', 'w').write(json.dumps({'run_id': sys.argv[1], 'seq':
 const captureTs = async () => {
   const out = await bash('date -u +%Y-%m-%dT%H:%M:%SZ')
   return (out || '').trim() || null
+}
+
+// Orchestrator-side ticket-location resolution (TCK-20260711-EPIC-SCOPE-ORPHAN-FIX). Replaces
+// the former Step 1a/1b/1c agent-prompt-text file search + unconditional copy: `## Tier` is a
+// static fact already on disk, locatable by the same mechanical search the agent used to perform
+// itself, so the orchestrator resolves it deterministically before the ticket-scoper agent() call
+// runs. Moves (copy-then-delete) a tickets/todos/ original when tier is epic — epic tier returns
+// immediately after Scope and never reaches Finalize's cleanup rm step, so leaving the copy-only
+// behavior for epic tier created a permanent duplicate. Copies (leaving the todos original in
+// place) for every other tier, preserving existing Finalize-reconciliation behavior.
+const resolveScopeTicketLocation = async (id) => {
+  const out = await bash(`python3 tools/agent-monitoring/scope_ticket_relocate.py "${id}" 2>/dev/null`)
+  const markerIndex = (out || '').indexOf('MARKER:')
+  if (markerIndex === -1) return null
+  try { return JSON.parse(out.slice(markerIndex + 'MARKER:'.length).trim()) }
+  catch (e) { return null }
 }
 
 // Mirrors tools/gate_checks/done_checker_static.py's classify_checklist_failure() exactly — kept

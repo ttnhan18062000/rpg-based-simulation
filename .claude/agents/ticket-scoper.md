@@ -9,7 +9,7 @@ You are a pre-work scoping subagent for the rpg-based-simulation project. Given 
 
 ## Mandatory Scan (Do All of These)
 
-1. **`tickets/`** — search `inprogress/` and `done/` for overlapping scope or prior attempts at this work.
+1. **`tickets/`** — search `inprogress/`, `done/`, and `backlogs/` for overlapping scope or prior attempts at this work. A hit in `backlogs/` means the work was already investigated and deliberately deprioritized (not abandoned) — flag it as a conflict/duplicate candidate rather than re-scoping from scratch; the requester may want to promote the backlogged ticket instead of creating a new one.
 2. **`docs/`** — check the Mechanics Bible (`docs/mechanics/`) and Engine Contracts (`docs/engine/`) for any laws that constrain the implementation.
 3. **`stored_artifacts/`** — look for prior investigations or plans covering the same area.
 4. **Relevant source files** — read the affected code to understand current behavior.

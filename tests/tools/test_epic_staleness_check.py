@@ -307,3 +307,85 @@ def test_working_log_row_missing_ticket_id_key_does_not_raise():
     most_recent = resolve_child_activity(child_ids, working_log_rows, [])
 
     assert most_recent is None
+
+
+# ---------------------------------------------------------------------------
+# 10. Dual-presence dedupe — same epic_id in both inprogress/ and todos/{folder}/
+# ---------------------------------------------------------------------------
+
+def _write_dual_presence_fixture(inprogress_dir: Path, todos_dir: Path, ticket_id: str):
+    _write_ticket(
+        inprogress_dir / f"{ticket_id}.md",
+        ticket_id,
+        "epic",
+        "2026-07-01",
+        related_tickets="TCK-20260701-DUAL-PRESENCE-CHILD",
+    )
+    folder = todos_dir / "dual-presence-folder"
+    folder.mkdir()
+    (folder / "SEQUENCE.md").write_text(
+        f"Epic: `{ticket_id}`.\n\n"
+        "| Order | Ticket |\n|---|---|\n"
+        "| 1 | TCK-20260701-DUAL-PRESENCE-CHILD |\n"
+    )
+    _write_ticket(folder / f"{ticket_id}.md", ticket_id, "epic", "2026-07-01")
+
+
+def test_discover_candidate_epics_dedupes_dual_presence(tmp_path):
+    inprogress_dir = tmp_path / "inprogress"
+    todos_dir = tmp_path / "todos"
+    inprogress_dir.mkdir()
+    todos_dir.mkdir()
+    ticket_id = "TCK-20260701-DUAL-PRESENCE-EPIC"
+
+    _write_dual_presence_fixture(inprogress_dir, todos_dir, ticket_id)
+
+    candidates = discover_candidate_epics(inprogress_dir, todos_dir)
+
+    assert len(candidates) == 1
+    assert candidates[0].epic_id == ticket_id
+
+
+def test_dual_presence_not_double_reported_in_stale_list(tmp_path):
+    inprogress_dir = tmp_path / "inprogress"
+    todos_dir = tmp_path / "todos"
+    working_log_path = tmp_path / "working_log.csv"
+    runs_jsonl_path = tmp_path / "runs.jsonl"
+    inprogress_dir.mkdir()
+    todos_dir.mkdir()
+    ticket_id = "TCK-20260701-DUAL-PRESENCE-EPIC"
+
+    _write_dual_presence_fixture(inprogress_dir, todos_dir, ticket_id)
+
+    # 8-day gap between the child's last activity and NOW, past the staleness
+    # window, mirroring test_epic_with_all_children_stale's pattern.
+    working_log_path.write_text(
+        "timestamp,ticket_id,title,status,summary,artifacts_path\n"
+        "2026-07-02T00:00:00Z,TCK-20260701-DUAL-PRESENCE-CHILD,t,DONE,s,none\n"
+    )
+    runs_jsonl_path.write_text("")
+
+    stale = find_stale_epics(inprogress_dir, todos_dir, working_log_path, runs_jsonl_path, now=NOW)
+    assert [c.epic_id for c in stale].count(ticket_id) == 1
+
+    report = compute_stale_epics_report(inprogress_dir, todos_dir, working_log_path, runs_jsonl_path, now=NOW)
+    stale_section = report.split("Informational:")[0]
+    matching_lines = [line for line in stale_section.splitlines() if ticket_id in line]
+    assert len(matching_lines) == 1
+
+
+def test_dual_presence_prefers_inprogress_candidate(tmp_path):
+    inprogress_dir = tmp_path / "inprogress"
+    todos_dir = tmp_path / "todos"
+    inprogress_dir.mkdir()
+    todos_dir.mkdir()
+    ticket_id = "TCK-20260701-DUAL-PRESENCE-EPIC"
+
+    _write_dual_presence_fixture(inprogress_dir, todos_dir, ticket_id)
+
+    candidates = discover_candidate_epics(inprogress_dir, todos_dir)
+
+    assert len(candidates) == 1
+    survivor = candidates[0]
+    assert survivor.mode == "epic_id"
+    assert survivor.source_path.parent == inprogress_dir

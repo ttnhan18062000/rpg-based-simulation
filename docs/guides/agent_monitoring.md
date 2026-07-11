@@ -140,6 +140,13 @@ the most recent matching timestamp across both sources. An epic is flagged
 that evidence is older than the default **5-day** staleness window
 (`DEFAULT_STALENESS_WINDOW_DAYS`).
 
+If the same epic ticket is discoverable in both scan modes at once (a
+transient dual-presence state — e.g. an interrupted Scope-phase move, or a
+manual copy), `discover_candidate_epics()` dedupes by `epic_id` before
+classification, first-occurrence-wins with the `epic_id`-mode
+(`tickets/inprogress/`) candidate preferred, so the epic is reported at most
+once rather than double-counted in the stale list or hook nudge.
+
 **Stale vs. never-started — an intentional distinction.** An epic whose
 children have **zero activity ever** (no `working_log.csv` row, no
 `runs.jsonl` record, for any child, at any time) is **never** flagged stale,
