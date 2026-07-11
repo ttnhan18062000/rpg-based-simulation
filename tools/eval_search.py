@@ -34,15 +34,20 @@ def _run_query(query: str, top_k: int = 10) -> list[str]:
     return doc_ids
 
 
+def _strip_anchor(doc_id: str) -> str:
+    """Reduce a chunk-level id (e.g. 'section/stem#body-000') to its document-level identity."""
+    return doc_id.split("#", 1)[0]
+
+
 def _reciprocal_rank(results: list[str], expected: set[str]) -> float:
     for rank, doc_id in enumerate(results):
-        if doc_id in expected:
+        if _strip_anchor(doc_id) in expected:
             return 1.0 / (rank + 1)
     return 0.0
 
 
 def _hit(results: list[str], expected: set[str], k: int) -> bool:
-    return any(d in expected for d in results[:k])
+    return any(_strip_anchor(d) in expected for d in results[:k])
 
 
 def evaluate(queries: list[dict], top_k: int = 10, threshold: float = 0.80) -> int:

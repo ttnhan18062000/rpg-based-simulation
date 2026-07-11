@@ -58,6 +58,25 @@ class TestQueriesJson:
 
 # ── Metrics functions ─────────────────────────────────────────────────────────
 
+class TestStripAnchor:
+    def test_strips_body_anchor(self):
+        assert _mod._strip_anchor("architecture/world_repository_layout#body-000") == "architecture/world_repository_layout"
+
+    def test_strips_heading_anchor(self):
+        assert _mod._strip_anchor("mechanics/02_combat_laws#damage-formula-001") == "mechanics/02_combat_laws"
+
+    def test_bare_id_passthrough(self):
+        assert _mod._strip_anchor("TCK-20260523-WORLD-REPO-INIT") == "TCK-20260523-WORLD-REPO-INIT"
+
+    def test_hit_matches_anchored_result_against_bare_expected(self):
+        # Reproduces the real bug: knowledge_docs.doc_id is chunk-level (anchored),
+        # but queries.json's expected_doc_ids are document-level (bare).
+        assert _mod._hit(["architecture/world_repository_layout#body-000"], {"architecture/world_repository_layout"}, k=5) is True
+
+    def test_reciprocal_rank_matches_anchored_result_against_bare_expected(self):
+        assert _mod._reciprocal_rank(["other#body-000", "target/doc#h2-slug-003"], {"target/doc"}) == pytest.approx(0.5)
+
+
 class TestReciprocalRank:
     def test_rank_1_is_1(self):
         assert _mod._reciprocal_rank(["a", "b", "c"], {"a"}) == pytest.approx(1.0)
@@ -126,6 +145,16 @@ class TestEvaluateExitCode:
     def test_exit_0_when_all_hit(self, monkeypatch, tmp_path):
         monkeypatch.setattr(_mod, "_REPORTS_DIR", tmp_path)
         monkeypatch.setattr(_mod, "_run_query", lambda q, top_k=10: ["target/doc"] * top_k)
+        qs = self._make_queries(5)
+        result = _mod.evaluate(qs, top_k=10, threshold=0.80)
+        assert result == 0
+
+    def test_exit_0_when_hits_are_anchored_chunk_ids(self, monkeypatch, tmp_path):
+        # Real-world bug reproduction: _run_query returns anchored chunk ids
+        # (as knowledge_search.py actually does post-chunking), expected_doc_ids
+        # stays bare (as queries.json actually does) — must still count as a hit.
+        monkeypatch.setattr(_mod, "_REPORTS_DIR", tmp_path)
+        monkeypatch.setattr(_mod, "_run_query", lambda q, top_k=10: ["target/doc#body-000"] * top_k)
         qs = self._make_queries(5)
         result = _mod.evaluate(qs, top_k=10, threshold=0.80)
         assert result == 0
