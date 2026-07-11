@@ -1,19 +1,23 @@
 ---
-status: idea
+status: historical
 layer: observability
 authority: P2
 audience: developer
-maturity: idea
+maturity: shipped
 date: 2026-07-04
+archived: 2026-07-12
 tags: [idea, agent-infrastructure, observability, schema, data-quality]
 ---
 
 # Idea: Enforce agent-monitoring Schema at Write Time, Not Just at Read Time
 
+**Archived:** 2026-07-12 — fully shipped by `TCK-20260708-AGENT-MONITORING-SCHEMA-ENFORCEMENT`
+(`tickets/done/`); this document is the historical design reference.
+
 > **Maturity: SHIPPED.** Implemented in full by `TCK-20260708-AGENT-MONITORING-SCHEMA-ENFORCEMENT`
 > (`tickets/done/`), sequenced first under `TCK-20260708-AGENT-INFRA-HARDENING-EPIC` since the
 > cost-observability idea depended on this one's vocabulary cleanup (now also shipped — see
-> [`idea_agent_cost_observability.md`](idea_agent_cost_observability.md)). All 3 layers from this
+> [`idea_agent_cost_observability.md`](../../agent_infrastructure/idea_agent_cost_observability.md)). All 3 layers from this
 > doc's "Idea" section landed: (1) non-null enforcement is a hard reject in both `record_run.py` and
 > `record_events.py`; (2) a per-workflow phase/agent vocabulary check is warn-only (stderr), verified
 > to never escalate to `sys.exit`; (3) `compute_drift_report()` in `validate.py` reports
@@ -23,7 +27,7 @@ tags: [idea, agent-infrastructure, observability, schema, data-quality]
 > this doc's "Natural Integration Points" table. As decided when this was raised, the 98 historical
 > drifted records were **not** backfilled or rewritten — only future drift is prevented. Raised from
 > a direct investigation of `agent-monitoring/runs.jsonl`/`events.jsonl` (2026-07-04), the same
-> investigation that produced [`TCK-20260704-CREATE-TICKETS-MONITORING`](../../../tickets/done/TCK-20260704-CREATE-TICKETS-MONITORING.md).
+> investigation that produced [`TCK-20260704-CREATE-TICKETS-MONITORING`](../../../../tickets/done/TCK-20260704-CREATE-TICKETS-MONITORING.md).
 
 ---
 
@@ -68,7 +72,7 @@ For `phase` and `agent`, maintain a known-good set per workflow (the set this ve
 | `tools/agent-monitoring/validate.py` | Extend with the drift-report summary described above |
 | `docs/agent-monitoring/schema.md` | Already had to be updated with `create-tickets`'s phase list and `tier: "n/a"` as part of the sibling ticket — this idea is what stops the *next* new workflow from silently reintroducing the same kind of drift instead of documenting it |
 | [`idea_agent_gate_determinism.md`](idea_agent_gate_determinism.md) | Shares the same underlying principle: make an implicit thing (which gate-check passed, which vocabulary a value belongs to) explicit and checkable, rather than trusting free text |
-| [`idea_agent_cost_observability.md`](idea_agent_cost_observability.md) | A spend-by-phase breakdown is only meaningful if "phase" means one consistent thing — this idea is close to a prerequisite for that one's retro-report payoff, not just a parallel concern |
+| [`idea_agent_cost_observability.md`](../../agent_infrastructure/idea_agent_cost_observability.md) | A spend-by-phase breakdown is only meaningful if "phase" means one consistent thing — this idea is close to a prerequisite for that one's retro-report payoff, not just a parallel concern |
 
 ---
 

@@ -1,14 +1,19 @@
 ---
-status: idea
+status: historical
 layer: ai
 authority: P2
 audience: developer
-maturity: idea
+maturity: shipped
 date: 2026-07-03
+archived: 2026-07-12
 tags: [idea, agent-infrastructure, determinism, gates, enforcement, observability]
 ---
 
 # Idea: Deterministic Gate Substrate for Agent Workflows
+
+**Archived:** 2026-07-12 — fully shipped, all 5 implementing tickets confirmed in `tickets/done/`
+(`gate-determinism-followups/` batch + `TCK-20260708-AGENT-GATE-ENFORCEMENT-HARDENING`); this
+document is the historical design reference.
 
 > **Maturity: SHIPPED.** The four static-verifier gates and the `verified_by` provenance
 > field (this doc's "Idea" and "Verdict provenance" sections) were implemented in full by
@@ -21,14 +26,14 @@ tags: [idea, agent-infrastructure, determinism, gates, enforcement, observabilit
 > architecture-review round-trip) from a proposed hard block to a loud-but-non-blocking warning, to
 > avoid an undisclosed reversal of CLAUDE.md's Hard Rule that a monitoring write failure must never
 > fail the workflow — see that ticket's `plan.md` Design Decision 2.
-> Originally raised directly from [`docs/ai/agent_infrastructure_audit.md`](../../ai/agent_infrastructure_audit.md)
+> Originally raised directly from [`docs/ai/agent_infrastructure_audit.md`](../../../ai/agent_infrastructure_audit.md)
 > (2026-07-03 score: 8.0/10, lowest category "Determinism of judged gates" at 6.5).
 
 ---
 
 ## Problem
 
-The `implement-ticket` pipeline is structurally sound — 9 phases, hard gates, resumable failure states (see [`docs/ai/workflows.md`](../../ai/workflows.md)) — but the gates that actually decide whether work is safe to land are pure LLM judgment with almost no deterministic backstop:
+The `implement-ticket` pipeline is structurally sound — 9 phases, hard gates, resumable failure states (see [`docs/ai/workflows.md`](../../../ai/workflows.md)) — but the gates that actually decide whether work is safe to land are pure LLM judgment with almost no deterministic backstop:
 
 1. **`architecture-reviewer`** renders `APPROVED` / `NEEDS_CHANGES` / `BLOCKED` by reading a plan and reasoning about durable-state rules, API boundaries, and Mechanics Bible compliance — no static check confirms the verdict.
 2. **`done-checker`** verifies all 11 Definition-of-Done conditions by reading files and judging — several of these (working_log.csv entry exists, staging artifacts exist, `data/runs/` cleaned) are trivially machine-checkable but aren't machine-checked.

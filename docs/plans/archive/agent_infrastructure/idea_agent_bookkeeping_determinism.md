@@ -1,19 +1,24 @@
 ---
-status: idea
+status: historical
 layer: ai
 authority: P2
 audience: developer
 maturity: shipped
 date: 2026-07-10
+archived: 2026-07-12
 tags: [idea, agent-infrastructure, observability, determinism, data-quality]
 ---
 
 # Idea: Compute Bookkeeping at the Source — Stop Trusting Agent Prompts to Remember It
 
+**Archived:** 2026-07-12 — shipped by the 3-child epic plus a same-class follow-up fix
+(`TCK-20260711-MONITORING-TOOLCOUNT-SIDECAR-COLLISION`, see Amendment at the bottom of this
+document); this document is the historical design reference.
+
 > **Maturity: SHIPPED.** Raised 2026-07-10 during a review of the `implement-ticket` pipeline and
 > agent-monitoring process, reproduced live in the same session (see Problem below) while running
 > `TCK-20260710-SECURITY-REVIEWER-AGENT-DOC`. Scheduled 2026-07-10 under
-> [`TCK-20260710-AGENT-BOOKKEEPING-DETERMINISM-EPIC`](../../../tickets/done/agent-bookkeeping-determinism/TCK-20260710-AGENT-BOOKKEEPING-DETERMINISM-EPIC.md),
+> [`TCK-20260710-AGENT-BOOKKEEPING-DETERMINISM-EPIC`](../../../../tickets/done/agent-bookkeeping-determinism/TCK-20260710-AGENT-BOOKKEEPING-DETERMINISM-EPIC.md),
 > which tracked three child tickets covering only the concrete core of this doc (the "Where this
 > pattern already shows up" table) — all three are now DONE: `TCK-20260710-CURRENT-RUN-SIDECAR-BASH`
 > (sidecar registration), `TCK-20260710-STEP0-TS-ORCHESTRATOR-BASH` (per-phase `ts` capture), and
@@ -146,3 +151,32 @@ Named here for traceability; each would need its own investigation before becomi
 (`docs/guides/agent_monitoring.md`, `docs/agent-monitoring/schema.md`, `docs/ai/ticket-lifecycle.md`,
 `docs/ai/agents.md`) and confirmed live while manually executing
 `TCK-20260710-SECURITY-REVIEWER-AGENT-DOC` in the same session. Not yet scoped as a ticket.*
+
+---
+
+## Amendment (2026-07-12) — the "Fixed" sidecar mechanism itself had two more gaps
+
+`TCK-20260711-MONITORING-TOOLCOUNT-SIDECAR-COLLISION` (`tickets/done/`) found, via a direct
+empirical cross-check of `events.jsonl`'s `tool_call_count` against `tools.jsonl` ground truth, that
+**433 of 1,247 events (~35%) had a wrong count** — meaning `TCK-20260710-CURRENT-RUN-SIDECAR-BASH`'s
+"Fixed" claim above (the child ticket covering this table's `tool_call_count`/`cost_proxy_score`
+row) was itself incomplete. Two deterministic gaps remained in the orchestrator-side mechanism that
+ticket shipped:
+
+1. **Scope-phase never had sidecar coverage at all** — a gap `TCK-20260710-CURRENT-RUN-SIDECAR-BASH`
+   had already identified in its own Implementation Notes as a recommended follow-up ("extend
+   `.claude/current_run` sidecar coverage to... Scope-phase (`ticket-scoper`)"), not a new discovery.
+2. **`writeMonitoring`'s own bookkeeping calls polluted the last tracked phase** — its sidecar-clear
+   step ran *last* (Step 5) instead of first, so its own Bash/python calls kept getting attributed to
+   whatever phase was last active. This was the dominant mechanism, previously unidentified.
+
+Both are now fixed (sidecar-clear moved to Step 0; Scope registers a real value). This does not
+retract the "SHIPPED" verdict above — the concrete instance this idea was raised about
+(`tool_call_count`/`cost_proxy_score` silently zeroing when an agent skips a prompt-text
+instruction) is still correctly fixed by moving the write to orchestrator-side `bash()`, exactly as
+this doc proposed. What this amendment adds: even a fully orchestrator-side, deterministic
+mechanism can still have ordinary logic bugs — determinism removes the "did the LLM remember to do
+this" failure mode, but is not itself a substitute for testing the mechanism's actual correctness
+end-to-end. `TCK-20260711-MONITORING-TOOLCOUNT-SIDECAR-COLLISION` also added
+`compute_tool_count_drift_report()` to `tools/agent-monitoring/validate.py` so a future recurrence
+of this specific kind of miscount surfaces automatically instead of requiring another manual audit.

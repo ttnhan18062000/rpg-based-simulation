@@ -1,14 +1,25 @@
 ---
-status: idea
+status: historical
 layer: ai
 authority: P2
 audience: developer
-maturity: idea
+maturity: shipped
 date: 2026-07-11
+archived: 2026-07-12
 tags: [idea, agent-infrastructure, workflow-orchestration]
 ---
 
 # Idea: Epic-Tier Scope Phase Leaves an Orphaned Ticket Duplicate in `tickets/inprogress/`
+
+> **Maturity: SHIPPED.** Implemented in full by `TCK-20260711-EPIC-SCOPE-ORPHAN-FIX`
+> (`tickets/done/`) — both proposed fixes landed: the todos→inprogress transfer for epic-tier
+> tickets is now a move (copy-then-delete), not a copy-only, eliminating dual on-disk presence;
+> and a static self-check (mirroring `done_checker_static.py`'s `(status, evidence)` tuple shape)
+> scans `tickets/inprogress/*.md` for the dual-presence orphan signature. A one-time sweep also
+> confirmed and cleaned the pre-existing live orphan this idea was raised from.
+
+**Archived:** 2026-07-12 — fully shipped by `TCK-20260711-EPIC-SCOPE-ORPHAN-FIX` (`tickets/done/`);
+this document is the historical design reference.
 
 > Raised 2026-07-11 while running `implement-ticket` on an epic-tier ticket
 > (`TCK-20260710-WORKFLOW-EXECUTION-DETERMINISM-EPIC`) as part of continuing the

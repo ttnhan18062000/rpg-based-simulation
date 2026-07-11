@@ -36,7 +36,7 @@ Add a **derived, read-only SQLite index**, rebuilt from the 3 JSONL files, model
 ### What this does not fix (orthogonal, already known)
 
 - Uneven writer coverage across the 4 workflows (`implement-epic`/`create-tickets` still have incomplete or zero sidecar registration) — a storage-format change doesn't add missing instrumentation.
-- `writeMonitoring` still being LLM-executed bookkeeping rather than fully deterministic orchestrator code (`idea_agent_bookkeeping_determinism.md`'s remaining scope) — same, orthogonal.
+- `writeMonitoring` still being LLM-executed bookkeeping rather than fully deterministic orchestrator code (`idea_agent_bookkeeping_determinism.md`'s remaining scope, archived — shipped, see its 2026-07-12 Amendment) — same, orthogonal.
 - `done-checker`'s existence-only, non-blocking verification — a policy decision (warn vs. gate), not a format question.
 - Historical data corruption — not backfilled either way, regardless of storage format.
 
@@ -48,7 +48,7 @@ Add a **derived, read-only SQLite index**, rebuilt from the 3 JSONL files, model
 | `tools/agent-monitoring/query.py` | Lowest-risk first migration target — currently has zero tests; migrating is also the moment to add them |
 | `tools/agent-monitoring/validate.py` | `compute_drift_report()` and `compute_tool_count_drift_report()` (`TCK-20260711-MONITORING-TOOLCOUNT-SIDECAR-COLLISION`) both re-derive groupings by hand today — natural second migration target |
 | `tools/agent-monitoring/generate_retro.py` | `_resolve_status()`/`_is_legacy_event()`/`_is_gate_fail()` are exactly the kind of build-time normalization this index would centralize |
-| [`idea_agent_monitoring_schema_enforcement.md`](idea_agent_monitoring_schema_enforcement.md) | That idea's vocabulary/null-field drift-checking is a read-time concern this index's build step could absorb as a `CHECK` constraint or build-time warning, instead of a separate read-time pass |
+| [`idea_agent_monitoring_schema_enforcement.md`](../archive/agent_infrastructure/idea_agent_monitoring_schema_enforcement.md) (archived — shipped) | That idea's vocabulary/null-field drift-checking is a read-time concern this index's build step could absorb as a `CHECK` constraint or build-time warning, instead of a separate read-time pass |
 | [`idea_agent_cost_observability.md`](idea_agent_cost_observability.md) | Its spend-by-phase/spend-by-agent retro breakdown is exactly the kind of aggregation query this index makes trivial instead of hand-rolled |
 | `TCK-20260711-EVAL-SEARCH-DOCID-ANCHOR-FIX`, `TCK-20260711-MONITORING-TOOLCOUNT-SIDECAR-COLLISION` | Both tickets that directly motivated this idea — each required writing bespoke one-off Python to answer "is this derived metric actually correct," which a queryable index would make a one-line query instead |
 

@@ -11,8 +11,8 @@ tags: [idea, agent-infrastructure, observability, determinism]
 # Idea: The Orchestrator Itself Is Narrated, Not Executed — Close the Gap One Level Above the Sub-Agents
 
 > **Maturity: IDEA — not scheduled.** Raised 2026-07-10 as a follow-on observation while reviewing
-> [`idea_agent_bookkeeping_determinism.md`](idea_agent_bookkeeping_determinism.md) and its epic
-> ([`TCK-20260710-AGENT-BOOKKEEPING-DETERMINISM-EPIC`](../../../tickets/todos/agent-bookkeeping-determinism/TCK-20260710-AGENT-BOOKKEEPING-DETERMINISM-EPIC.md))
+> [`idea_agent_bookkeeping_determinism.md`](../archive/agent_infrastructure/idea_agent_bookkeeping_determinism.md) (archived — shipped) and its epic
+> ([`TCK-20260710-AGENT-BOOKKEEPING-DETERMINISM-EPIC`](../../../tickets/done/agent-bookkeeping-determinism/TCK-20260710-AGENT-BOOKKEEPING-DETERMINISM-EPIC.md), now DONE)
 > against how popular agent-orchestration tooling (Temporal, LangGraph, Airflow-style DAG engines)
 > actually executes workflows. Distinct from, and one architectural layer above, that epic — not a
 > child of it, and not folded into its scope.
@@ -46,7 +46,7 @@ order except the narrating LLM's own diligence in that single pass.
 **This was not hypothetical this session — it happened twice, at the exact layer this idea is about:**
 1. While manually orchestrating `TCK-20260710-SECURITY-REVIEWER-AGENT-DOC`, the Step 0b
    sidecar-registration instruction was omitted from all 5 agent prompts issued — the bug that
-   produced [`idea_agent_bookkeeping_determinism.md`](idea_agent_bookkeeping_determinism.md) in the
+   produced [`idea_agent_bookkeeping_determinism.md`](../archive/agent_infrastructure/idea_agent_bookkeeping_determinism.md) (archived — shipped) in the
    first place. That bug was a sub-agent-layer symptom, but its root cause — an LLM narrator
    forgetting a mechanical step it was supposed to always include — is exactly the failure mode this
    idea is about, just observed one level down.
@@ -122,7 +122,7 @@ eye.
 | `agent-monitoring/events.jsonl` | Already has the `phase` field needed for cross-reference — no schema change required |
 | `tools/gate_checks/parity_updater_static.py`'s `cross_reference_touched` | Direct structural precedent: "expected mapping vs. actual diff" cross-reference, applied to files→ledger there, phases→events here |
 | `tools/gate_checks/done_checker_static.py`'s `run_finalize_selfcheck` | Same "verify the narrated steps actually landed" philosophy, applied post-Finalize rather than mid-run |
-| [`idea_agent_bookkeeping_determinism.md`](idea_agent_bookkeeping_determinism.md) (sibling, SCHEDULED) | That epic fixes sub-agent-layer mechanical-step reliability; this idea is the same principle one layer up, at the orchestrator/narrator layer — related, not a duplicate, and deliberately not folded into that epic's scope |
+| [`idea_agent_bookkeeping_determinism.md`](../archive/agent_infrastructure/idea_agent_bookkeeping_determinism.md) (sibling, archived — shipped) | That epic fixes sub-agent-layer mechanical-step reliability; this idea is the same principle one layer up, at the orchestrator/narrator layer — related, not a duplicate, and deliberately not folded into that epic's scope |
 
 ---
 
