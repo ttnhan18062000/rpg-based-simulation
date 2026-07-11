@@ -713,11 +713,20 @@ Both tickets' `docs/parity_ledger/world_dynamics.yaml` WORLD-029/WORLD-060 `v2_e
 were re-verified current (still citing both ticket IDs, `status: verified`) by this doc's own
 `SIMQ-AUDIT-20260710T020542Z` Classify Drift pass — `NO_ACTION` on both, no further edit needed.
 
-**Open follow-up work (new, from this batch):**
+**Open follow-up work (new, from this batch):** — **RESOLVED 2026-07-11**
 - `town_council`'s `frontier_guard`/`bandit_road` hazard-immunity gap (shared by `dungeon_crawl`
   and `urban_political`) was deliberately left unfixed by both population-collapse tickets,
   pending a future ticket resolving whether it is intentional conflict-pressure flavor or a
   genuine gap — check both tickets' existing "left open" notes before filing a duplicate.
+  **Resolution (`TCK-20260710-TOWN-COUNCIL-HAZARD-DA`):** ruled intentional — non-native,
+  contested-road-posted forces enduring unmitigated drain by design, consistent with
+  `docs/mechanics/05_world_evolution.md` §3's opt-in, faction-declared endurance model. Recorded
+  as `docs/guidelines/intentional_divergences.md` §2.30. Blast-radius check confirmed
+  `town_council` is populated in exactly this one hazardous region corpus-wide. Zero code/content
+  changes. A companion ticket, `TCK-20260710-HAZARD-KIND-CORPUS-WIDE`, separately made the
+  corpus-wide `hazard_kind` completeness check unconditional (all 17 worlds, replacing a 3-world
+  allowlist) — the dry run found `bandit_road` already passes the test's region-level matching
+  regardless of this ruling, since `bandit_company`/`merchant_league` are both immune there.
 
 ---
 

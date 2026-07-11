@@ -212,7 +212,7 @@ archetype worlds, deliberately trading corpus width growth for corpus depth grow
 
 ---
 
-### Thread 4 — `hazard_kind` completeness has recurred three times as a reactive fix (P2-O)
+### Thread 4 — `hazard_kind` completeness has recurred three times as a reactive fix (P2-O) — **RESOLVED 2026-07-11**
 
 **Problem.** The same bug class — a world module declares `hazard_level > 0` on a region but never
 declares `hazard_kind`, so `src/worldassembly/resolver.py:798` silently defaults it to `"PHYSICAL"`,
@@ -241,9 +241,17 @@ three reactive fixes into one permanent guarantee.
 existing test infrastructure already does this exact check per-world, just needs to run
 unconditionally).
 
+**Resolution (`TCK-20260710-HAZARD-KIND-CORPUS-WIDE`):** ran the recommended action exactly —
+`test_hazard_kind_matches_populating_faction_immunity` now runs unconditionally across all 17
+corpus worlds, replacing `HAZARD_KIND_MATCH_WORLDS`. Dry run found **zero mismatches** (45
+hazardous-populated-region checks, including all 6 `bandit_road` occurrences) — the recurrence
+risk is now permanently closed rather than swept per-investigation. `town_council`/`bandit_road`
+(see Thread 5) required no runtime exception: the test's region-level "any populating faction"
+matching already passes there since `bandit_company`/`merchant_league` are both immune.
+
 ---
 
-### Thread 5 (lowest effort, cheapest close) — The `town_council`/`bandit_road` question keeps getting silently re-deferred (P2-Q)
+### Thread 5 (lowest effort, cheapest close) — The `town_council`/`bandit_road` question keeps getting silently re-deferred (P2-Q) — **RESOLVED 2026-07-11**
 
 **Problem.** In both `urban_political` and `generated_frontier_3_42`, `town_council`'s
 `merchant_caravan_frontier_guard` entities are stationed at `bandit_road` (a region correctly exempting
@@ -267,6 +275,10 @@ ruling, recorded once, applicable to both worlds — either rule it intentional 
 is fine; what's missing is a recorded answer.
 
 **Effort:** XS (a five-minute decision plus a doc entry — the cheapest item in this entire document).
+
+**Resolution (`TCK-20260710-TOWN-COUNCIL-HAZARD-DA`):** ruled intentional — recorded once,
+applicable to both worlds, as `docs/guidelines/intentional_divergences.md` §2.30. The recurring
+"silently re-deferred" pattern this thread named is now broken: a decision exists and is cited.
 
 ---
 
