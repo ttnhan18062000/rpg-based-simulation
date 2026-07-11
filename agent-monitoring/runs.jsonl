@@ -582,3 +582,4 @@
 {"run_id":"TCK-20260710-TOWN-COUNCIL-HAZARD-DA","start_ts":"2026-07-11T15:26:34Z","end_ts":"2026-07-11T16:14:00Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":11,"duration_s":2846}
 {"run_id":"TCK-20260710-HAZARD-KIND-CORPUS-WIDE","start_ts":"2026-07-11T16:16:12Z","end_ts":"2026-07-11T16:57:18Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":11,"duration_s":2466}
 {"run_id":"FOLDER-tickets-todos-simq-roadmap-phase1-process-hardening","start_ts":"2026-07-11T15:26:17Z","end_ts":"2026-07-11T17:04:23Z","workflow":"implement-epic","tier":"epic","final_status":"DONE","agent_count":2,"duration_s":5886}
+{"run_id":"TCK-20260712-WORKFLOW-FRICTION-FIXES","start_ts":"2026-07-11T17:18:48Z","end_ts":"2026-07-11T17:33:04Z","workflow":"implement-ticket","tier":"hotfix","final_status":"DONE","agent_count":10,"duration_s":856}

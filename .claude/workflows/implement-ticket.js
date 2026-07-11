@@ -443,6 +443,8 @@ Sections: Current Behavior (file:line refs) | Mechanics/Engine Constraints | Par
 FILE 2: staging_artifacts/${tid}/test_plan.md
 Sections: Regression Surface (existing tests that must pass) | New Tests Required (per AC) | Scoped Pytest Commands | Anti-Drift Test Guards
 
+Each new file must begin with a valid frontmatter block matching sibling files' format (see other staging_artifacts/ files for the pattern), with artifact_type set to one of investigation, plan, test_plan — the enum tools/validate_frontmatter.py's ARTIFACT_TYPE_VALUES defines and done_checker_static.py enforces. Missing or invalid frontmatter is a DOD_BLOCKED failure caught late at Verify — get it right now.
+
 Write both files. Then return: key findings, open questions requiring a decision, parity entry IDs that will need updating.`,
     { label: 'investigate', agentType: 'investigator' }
   )
@@ -603,8 +605,8 @@ Architecture constraints (non-negotiable):
 - No backwards-compatibility hacks for removed code.
 
 After writing code:
-1. Update the "Implementation Notes" section in ${ticketInfo.ticket_path} with what was done (concise, factual).
-${tier !== 'hotfix' ? `2. Update staging_artifacts/${tid}/plan.md "Deviations" section if any step differed from the plan — never silently deviate.` : ''}
+1. Update the "Implementation Notes" section in ${ticketInfo.ticket_path} with what was done (concise, factual). Also fill in the ticket's "## Completion Summary" section now — never leave it blank when the ticket is later moved to done; a blank Completion Summary is a DOD_BLOCKED failure caught late at Verify.
+${tier !== 'hotfix' ? `2. Update staging_artifacts/${tid}/plan.md "Deviations" section if any step differed from the plan — never silently deviate. If you amend that file, keep its existing frontmatter block valid — artifact_type must remain one of investigation, plan, test_plan (tools/validate_frontmatter.py's ARTIFACT_TYPE_VALUES enum).` : ''}
 
 Return: files_changed (list of paths), behavior_changed (boolean), parity_subsystems (from: substrate, combat_movement, strategic_cognition, town_resource, progression, social_narrative, world_dynamics, infrastructure), implementation_summary (one paragraph), summary (one sentence ≤200 chars).`,
   { label: 'implement', schema: IMPL_SCHEMA, agentType: 'implementer' }

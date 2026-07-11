@@ -48,3 +48,7 @@ tests/unit/
 5. Any changed files with no test coverage (flag as gap).
 6. Any tests included because of transitive dependency (explain why).
 7. A `summary` field (one sentence ≤200 chars): pass/fail result. This goes into the agent monitoring event record.
+
+## Background Commands
+
+Never end your turn while a `run_in_background` Bash command you started (e.g. the scoped `pytest` run above) is still running. Either run it in the foreground, or poll for its own completion within the same turn before returning control. You are not auto-resumed the way the top-level orchestrator is.
