@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: simulation
 authority: P1
 audience: agent
 ticket_id: TCK-20260710-SIMQ-CONTRACT-AC-CLOSEOUT
-phase: open
+phase: done
 date: 2026-07-10
 tags: [simulation-quality, documentation]
 ---
@@ -15,7 +15,7 @@ tags: [simulation-quality, documentation]
 SimQ Contract Acceptance Criteria (§12) Closeout — Verification & Citation Pass
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -195,8 +195,85 @@ artifact by that exact name exists. The closest matching 2026-06-30 SimQ artifac
 
 ## Implementation Notes
 
+Verification-and-citation pass performed 2026-07-11 against current `src/simulation_quality/`,
+`src/observability/`, `src/engine/kernel.py`, and `tests/simulation_quality/` state (not assumed
+unchanged since 2026-06-28).
+
+**Summary: 24 of 25 items checked `[x]` with inline citation; 1 genuine gap left unchecked with a
+linked follow-up ticket.**
+
+By checklist:
+- Functional: 6/6 checked.
+- Performance: 5/5 checked (including both explicit safety-invariant items, re-verified live this
+  session per the ticket's own requirement — see below).
+- Scalability: 3/3 checked.
+- Extensibility: 3/3 checked.
+- Traceability: 2/3 checked; item 3 ("The traceability path in §9 is validated by an integration
+  test") is a confirmed genuine gap — no test in the repo exercises the §9 drill-down end-to-end.
+  Filed `tickets/todos/TCK-20260711-SIMQ-TRACEABILITY-PATH-INTEGRATION-TEST.md` (tier: standard,
+  since it requires writing a new integration test, not just documentation).
+- Testing: 5/5 checked.
+
+**Safety-invariant items (special attention per scope):**
+- `QUALITY_SCORING_DISABLED=1` bit-identical output: re-read `src/simulation_quality/feed.py::build_feed_from_env`
+  directly — the unconditional short-circuit (`if os.environ.get("QUALITY_SCORING_DISABLED") == "1": return None`,
+  checked before any `QUALITY_FEED_MODE` branching) still exists at lines 125-126. Ran
+  `tests/simulation_quality/test_feed.py::test_build_feed_returns_none_when_disabled` this session — passes.
+- Scoring exception isolation: re-read `src/simulation_quality/quality_hub.py::QualityHub.on_envelope`
+  directly — the disabled check at entry plus a `try/except Exception` wrapping every individual
+  `scorer.score()` call (logging at WARNING, never re-raising) still exists at lines 135-159. Ran
+  `tests/simulation_quality/test_quality_hub_integration.py::TestErrorIsolation::test_scorer_exception_does_not_propagate`
+  this session — passes.
+
+**Parity ledger correction:** `docs/parity_ledger/infrastructure.yaml` INFRA-233's `test_path` cited
+`tests/simulation_quality/test_feed.py::test_build_feed_disabled_returns_none`, which does not exist
+(confirmed via a live `pytest` collection attempt returning 0 items — the test was apparently
+renamed to `test_build_feed_returns_none_when_disabled` at some point after the entry was written).
+Corrected the `test_path` and added a `divergence_note` documenting the correction and the live
+re-confirmation. `status` remains `verified` since the underlying behavior is still correct — only
+the citation was stale.
+
+**Other findings (not gaps, just drift noted inline):**
+- §6's Scenario Registry now has 23 entries (SQ-01 through SQ-23), not the 22 that Functional
+  item 6 and Testing item 5 were literally authored against. All 23 current entries have unit test
+  coverage in `test_scenario_coverage.py`, so both items are still true as written (22 is a subset
+  of 23) — noted inline rather than treated as a gap, since re-wording §12's count is out of this
+  ticket's scope.
+- INFRA-250's "353 tests total" count is already flagged stale by a prior ticket's `STALENESS FLAG`
+  note; current live count is 456 passed + 5 skipped in `tests/simulation_quality/` alone. Not
+  re-touched — the flag is already accurate, and the count-text correction is explicitly called out
+  in that entry as a separate ticket's scope, consistent with how a prior sibling ticket handled it.
+
+**Full test runs performed this session** (all passing, evidence for the Testing checklist and
+several Performance/Scalability items):
+- `pytest tests/simulation_quality/ -q` → 456 passed, 5 skipped (broker/REDIS_AVAILABLE-gated)
+- `pytest tests/simulation_quality/ -q -m slow` → 24 passed, 2 skipped
+- `pytest tests/simulation_quality/test_performance.py -v -m slow` → 6/6 passed
+- `pytest tests/simulation_quality/test_scenario_coverage.py -q` → 36/36 passed
+- `pytest tests/simulation_quality/test_api_routes.py -q` → 14/14 passed
+- `pytest tests/simulation_quality/test_feed.py tests/simulation_quality/test_quality_hub_integration.py -v` → 21/21 passed
+
+No engine, scorer, or API logic was changed — this ticket is documentation and parity-ledger
+citation only, per its hotfix scope.
+
 ## Test Summary
+All cited tests were run live in this session against current branch state (see command list
+above); all passed. No new tests were added (out of scope for this ticket — the one genuine gap
+found, Traceability item 3, is deferred to `TCK-20260711-SIMQ-TRACEABILITY-PATH-INTEGRATION-TEST`).
 
 ## Files Changed
+- `docs/simulation_quality/quality_scoring_contract.md` (§12: 24/25 checkboxes checked with inline
+  citations; 1 left unchecked with follow-up ticket reference)
+- `docs/parity_ledger/infrastructure.yaml` (INFRA-233: corrected stale `test_path`, added
+  `divergence_note`)
+- `tickets/todos/TCK-20260711-SIMQ-TRACEABILITY-PATH-INTEGRATION-TEST.md` (new — follow-up ticket
+  for the one confirmed gap)
 
 ## Completion Summary
+§12's 25 acceptance-criteria checkboxes are now either checked with a live-verified citation (24)
+or left unchecked with a linked follow-up ticket for the one confirmed genuine gap (1: Traceability
+item 3, the §9 integration test). Both explicit safety-invariant items were re-confirmed against
+current source and a current passing test run in this session, not assumed unchanged from the
+2026-06-28 parity ledger entries. One stale parity ledger entry (INFRA-233) was found and corrected
+in the same session. `docs/plans/simq_development_roadmap.md` Phase 0.2's acceptance signal is
+satisfied.

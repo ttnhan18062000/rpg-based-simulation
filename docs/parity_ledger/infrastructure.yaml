@@ -2847,8 +2847,13 @@
     src/simulation_quality/feed.py::build_feed_from_env
     (returns None when QUALITY_SCORING_DISABLED=1)
   proof_type: null
-  test_path: tests/simulation_quality/test_feed.py::test_build_feed_disabled_returns_none
-  divergence_note: null
+  test_path: tests/simulation_quality/test_feed.py::test_build_feed_returns_none_when_disabled
+  divergence_note: "2026-07-11 (TCK-20260710-SIMQ-CONTRACT-AC-CLOSEOUT): test_path corrected —
+    the test function was renamed at some point after this entry was written and the ledger was
+    never updated (cited name test_build_feed_disabled_returns_none does not exist; verified via
+    a live pytest collection attempt returning 0 items). Re-confirmed live in this session: the
+    unconditional short-circuit at feed.py build_feed_from_env still exists (QUALITY_SCORING_DISABLED
+    checked before any mode branching) and test_build_feed_returns_none_when_disabled passes."
   support_boundary: null
 - id: INFRA-234
   text: >

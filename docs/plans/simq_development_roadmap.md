@@ -67,7 +67,7 @@ checkpoint where "how much is enough" gets decided with real data instead of gue
 
 | Phase | Goal | Effort | Blocks |
 |---|---|---|---|
-| **0 — Reliability Foundation** | Make existing long-run measurements trustworthy | M | Everything — building corpus depth on unverified anchors compounds the risk |
+| **0 — Reliability Foundation** — **DONE 2026-07-11** | Make existing long-run measurements trustworthy | M | Everything — building corpus depth on unverified anchors compounds the risk |
 | **1 — Process Hardening** | Stop the same defect classes recurring silently | S | Nothing downstream; runs parallel to Phase 0 |
 | **2 — Depth Wave 1: SOCIAL** | Prove the cheap pillar-activation playbook | M | Phase 3 (same playbook shape, higher cost) |
 | **3 — Depth Wave 2: FACTION + INFORMATION** | Extend the proven playbook to compiler-construction-gated pillars | L | Phase 4 |
@@ -76,8 +76,9 @@ checkpoint where "how much is enough" gets decided with real data instead of gue
 
 **Effort legend:** XS ≤ 1 day · S = 2–4 days · M = 1–3 weeks · L = 3–8 weeks · XL = 2+ months.
 
-**Critical path:** Phase 0 → (Phase 2 → Phase 3 → Phase 4) → Phase 5. Phase 1 runs in parallel with
-Phase 0 relative to everything else — but as of ticketing (2026-07-10), 1.1 and 1.2 are **not**
+**Critical path:** Phase 0 → (Phase 2 → Phase 3 → Phase 4) → Phase 5. Phase 0 is now complete
+(2026-07-11) — Phases 2–4 are unblocked on this dependency. Phase 1 runs in parallel with Phase 0
+relative to everything else — but as of ticketing (2026-07-10), 1.1 and 1.2 are **not**
 independent of each other; see the correction note under Phase 1 below. Recommended internal order:
 1.2 before 1.1.
 
@@ -104,12 +105,15 @@ reading what each Phase 3/4 ticket's own Investigate phase actually finds.
 
 ---
 
-## Phase 0 — Reliability Foundation
+## Phase 0 — Reliability Foundation — **COMPLETE (2026-07-11)**
 
 **Goal:** Confirm that measurements already shipped mean what they claim to mean, before any further
 corpus investment makes that question more expensive to answer.
 
-### 0.1 — Long-run calibration reliability verification (the F6 thread)
+Both 0.1 and 0.2 landed 2026-07-11. Phases 2–4 (corpus depth waves) are now unblocked on this
+critical-path dependency; Phase 1 was already running in parallel and is unaffected.
+
+### 0.1 — Long-run calibration reliability verification (the F6 thread) — **DONE (2026-07-11)**
 
 **Problem:** `src/engine/kernel.py`'s tick-budget watchdog and mid-tick emergency throttle measure
 real wall-clock compute time, not simulated ticks, and drop resolution work when a tick exceeds
@@ -132,7 +136,16 @@ converted-to-tolerance, or flagged-unverified) in `eval_matrix_results.md`.
 Scope confirmed exactly 18 `SLOW_ANCHOR_KEYS` entries across 8 worlds; no conflicts found; reuses the
 `generated_frontier_3_42` investigation's exact two-run instrumented-drive methodology as required.
 
-### 0.2 — Contract Acceptance Criteria closeout
+**Result (landed 2026-07-11):** all 18 keys re-run 3 trials each (54 total calibration runs, real
+throttled `Kernel`, no `audit_mode`) — **18/18 stable**. Every one of 540 pillar/trial data points
+fell within the existing ±1-`GRADE_ORDER` band despite confirmed throttle-timing variance
+(`budget_warnings` 41–539/run, `watchdog_trips` 1–3/run, up to ~4× elapsed-time spread for
+identical seed/code). Zero anchors required conversion to a tolerance-based guard; zero flagged
+unverified. Full evidence: `docs/simulation_quality/eval_matrix_results.md` "Anchor Reliability
+Verification" section, `stored_artifacts/TCK-20260710-SIMQ-ANCHOR-RELIABILITY-VERIFY/raw_calibration_sweep.md`.
+`kernel.py` and `grade_anchors.json` left untouched, per scope guard.
+
+### 0.2 — Contract Acceptance Criteria closeout — **DONE (2026-07-11)**
 
 **Problem:** `quality_scoring_contract.md` §12's five checklists (Functional, Performance,
 Scalability, Extensibility, Traceability, Testing) have sat as unchecked `[ ]` markdown since
@@ -150,6 +163,15 @@ ticket for a confirmed gap.
 items are cleaner to cite if 0.1 has already landed, but neither blocks the other from starting.
 
 **Ticket filed (2026-07-10):** `TCK-20260710-SIMQ-CONTRACT-AC-CLOSEOUT` — hotfix tier, no conflicts.
+
+**Result (landed 2026-07-11):** 24/25 §12 checkboxes verified and checked with live citations against
+current source (both explicit safety-invariant items — `QUALITY_SCORING_DISABLED=1` bit-identical
+output and scoring-exception isolation — re-confirmed by direct code read plus a live passing test
+run, not by pointing at the 2026-06-28 parity entries). 1 genuine gap found (Traceability item 3, no
+end-to-end §9 integration test) and filed as a linked follow-up:
+`tickets/todos/TCK-20260711-SIMQ-TRACEABILITY-PATH-INTEGRATION-TEST.md` (standard tier). A stale
+`docs/parity_ledger/infrastructure.yaml` INFRA-233 test-path citation was also found and corrected
+in the same session.
 
 ---
 

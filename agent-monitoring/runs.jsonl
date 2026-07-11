@@ -573,3 +573,6 @@
 {"run_id":"FOLDER-tickets-todos-epic-scope-orphan-cleanup","start_ts":"2026-07-11T05:24:13Z","end_ts":"2026-07-11T06:54:00Z","workflow":"implement-epic","tier":"epic","final_status":"DONE","agent_count":2,"duration_s":5387}
 {"run_id":"TCK-20260710-EXECUTABLE-WORKFLOW-RUNTIME","start_ts":"2026-07-11T06:59:38Z","end_ts":"2026-07-11T07:02:08Z","workflow":"implement-ticket","tier":"standard","final_status":"BLOCKED","agent_count":2,"duration_s":150}
 {"run_id":"TCK-20260711-DOC-STALENESS-GATE-CHECK","start_ts":"2026-07-11T08:24:44Z","end_ts":"2026-07-11T08:35:30Z","workflow":"implement-ticket","tier":"hotfix","final_status":"DONE","agent_count":10,"duration_s":646}
+{"run_id":"TCK-20260710-SIMQ-ANCHOR-RELIABILITY-VERIFY","start_ts":"2026-07-11T09:16:06Z","end_ts":"2026-07-11T11:59:53Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":12,"duration_s":9827}
+{"run_id":"TCK-20260710-SIMQ-CONTRACT-AC-CLOSEOUT","start_ts":"2026-07-11T12:02:01Z","end_ts":"2026-07-11T13:31:42Z","workflow":"implement-ticket","tier":"hotfix","final_status":"DONE","agent_count":6,"duration_s":5381}
+{"run_id":"FOLDER-tickets-todos-simq-roadmap-phase0-reliability-foundation","start_ts":"2026-07-11T09:15:44Z","end_ts":"2026-07-11T13:32:13Z","workflow":"implement-epic","tier":"epic","final_status":"DONE","agent_count":2,"duration_s":15389}

@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: simulation
 authority: P1
 audience: agent
 ticket_id: TCK-20260710-SIMQ-ANCHOR-RELIABILITY-VERIFY
-phase: open
+phase: done
 date: 2026-07-10
 tags: [simulation-quality, calibration, determinism, corpus, investigation]
 ---
@@ -15,7 +15,7 @@ tags: [simulation-quality, calibration, determinism, corpus, investigation]
 Verify long-run (1000t/2000t) SimQ calibration anchor reliability against wall-clock throttle timing variance (SimQ Roadmap Phase 0.1)
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -99,8 +99,93 @@ This is a **measurement-verification ticket**: determine which anchors are throt
 
 ## Implementation Notes
 
+Ran the full 18-key × 3-trial calibration sweep (54 invocations of `tools/calibrate_simq.py`,
+real throttled `Kernel`, no `audit_mode`) exactly per plan.md Step 1's invocation table. Trial 1
+per key used the canonical output path; trials 2/3 used `--output data/calibration/{run_key}_trial{2,3}`.
+All 54 invocations completed without crashing. Raw per-trial, per-pillar grades transcribed to
+`staging_artifacts/TCK-20260710-SIMQ-ANCHOR-RELIABILITY-VERIFY/raw_calibration_sweep.md`, including
+per-run throttle evidence (`budget_warnings` = count of mid-tick "exceeded budget" log lines,
+`watchdog_trips` = count of end-of-tick `WatchdogTrip` CRITICAL alerts).
+
+**Classification result: all 18/18 keys are `stable`. Zero unstable, zero escalate.** Every one of
+540 pillar/trial data points (18 keys × 3 trials × 10 pillars) landed within the existing ±1-`GRADE_ORDER`
+band of its committed anchor in `grade_anchors.json`, using the exact `_within_band` rule already in
+`test_grade_regression.py:140-148`. This held despite direct, measured evidence that the F6 throttle
+mechanism fired variably during the sweep: `budget_warnings` per run ranged 41-539, `watchdog_trips`
+ranged 1-3, and engine elapsed time for identical seed/code varied up to ~4x within a single key
+(`unit_faction_tension_seed42_1000t`: 15.99s-18.95s for trials 1-2 vs. 71.41s for trial 3). No trial/pillar
+combination fell outside the ±1 band anywhere in the sweep, so the "escalate" path (reserved for a
+violation where all 3 trials agree on the same off-anchor grade, indicating a genuine non-throttle drift)
+was never triggered — no genuine (non-throttle) divergence was found.
+
+Documented all 18 keys' full per-trial pillar tables and reliability status in
+`docs/simulation_quality/eval_matrix_results.md` under a new
+`## Anchor Reliability Verification (TCK-20260710-SIMQ-ANCHOR-RELIABILITY-VERIFY)` section
+(appended after the existing "Long-Run Hot-Pillar Anchors" section, append-only, no prior content edited).
+
+Step 4 (grade-stability multi-trial guard tests) is a **documented no-op**: zero keys were classified
+`unstable`, so no new test was added to `tests/unit/worldassembly/test_corpus_diversity.py`. This is
+recorded explicitly (not silently skipped) in both `raw_calibration_sweep.md`'s Classification section
+and the `eval_matrix_results.md` "Step 4 outcome" subsection, per plan.md Step 4 and test_plan.md's
+callout that a zero-conversion result is a valid outcome requiring documentation.
+
+`src/engine/kernel.py` has zero diff lines throughout (verified via `git diff --stat`). No edits to
+`FAST_ANCHOR_KEYS`, `test_grade_within_anchor_band`, `grade_anchors.json` (values or schema),
+`test_generated_frontier_3_42_extended_population_stability`, or any `HAZARD_KIND_MATCH_WORLDS`/
+`POPULATION_STABILITY_WORLDS` list.
+
+**Verification note:** re-running `tests/unit/worldassembly/test_corpus_diversity.py -m slow` without
+`--resource-budget large` produced one `TimeoutError` (pytest's own 60s default "medium" resource-budget
+kicking in on `test_generated_frontier_3_42_extended_population_stability`, whose 3-trial×1000-tick body
+routinely takes 70-100s+) — a test-harness invocation mistake, not a real regression, and consistent with
+`stored_artifacts/TCK-20260708-GENERATED-FRONTIER-LATE-TICK-POPULATION-COLLAPSE/plan.md`'s own documented
+finding that this test requires `--resource-budget large` (matching `.github/workflows/test.yml:230`'s CI
+invocation). Re-ran with `--resource-budget large`: 17 passed, 37 deselected, clean.
+
+**Final reliability breakdown (18/18 keys):** all stable — `dungeon_crawl_seed{42,123,456}_1000t`,
+`dungeon_crawl_seed{42,123,456}_2000t`, `urban_political_seed{42,123,456}_1000t`,
+`urban_political_seed42_2000t`, `sandbox_world_seed42_1000t`, `sandbox_world_seed42_2000t`,
+`unit_faction_tension_seed42_1000t`, `unit_faction_tension_seed42_2000t`,
+`unit_selfmodel_pilot_seed42_1000t`, `hero_guild_routing_seed42_1000t`,
+`simq_routing_test_seed42_1000t`, `generated_frontier_3_42_seed42_1000t`.
+
 ## Test Summary
+
+- `git diff --stat src/engine/kernel.py` → empty (zero-diff AC confirmed).
+- `pytest tests/simulation_quality/test_grade_regression.py -m "not slow"` → 51 passed, 3 skipped,
+  18 deselected (fast-tier baseline unchanged).
+- `pytest tests/simulation_quality/test_grade_regression.py::test_grade_anchor_file_exists_and_valid`
+  → 1 passed.
+- `pytest tests/simulation_quality/test_grade_regression.py -m slow` → 18 passed, 54 deselected (all
+  18 `SLOW_ANCHOR_KEYS` now execute, not skip — previously 7 of 18 had no calibration data on disk).
+- `pytest tests/unit/worldassembly/test_corpus_diversity.py -m "not slow"` → 37 passed, 17 deselected.
+- `pytest tests/unit/worldassembly/test_corpus_diversity.py -m slow --resource-budget large` → 17
+  passed, 37 deselected (includes the untouched `test_generated_frontier_3_42_extended_population_stability`).
+- `make simq-full-audit-slow` → 69 passed, 3 skipped (the 3 skips are pre-existing `FAST_ANCHOR_KEYS`
+  entries with no calibration data on this machine, unrelated to this ticket's scope).
+- `git diff --stat data/content/ config/ data/worlds/` → empty (no collateral content/config/world drift).
+- `git diff --stat tests/simulation_quality/test_grade_regression.py` → empty (`FAST_ANCHOR_KEYS`
+  untouched).
+- `git diff --stat tests/simulation_quality/fixtures/grade_anchors.json` → empty (no schema or value
+  changes — no genuine drift found).
 
 ## Files Changed
 
+- `docs/simulation_quality/eval_matrix_results.md` — new "Anchor Reliability Verification" section
+  (append-only).
+- `staging_artifacts/TCK-20260710-SIMQ-ANCHOR-RELIABILITY-VERIFY/raw_calibration_sweep.md` — new
+  working-evidence file (not a required staging artifact; gitignored `staging_artifacts/` directory,
+  not committed).
+- `tickets/inprogress/TCK-20260710-SIMQ-ANCHOR-RELIABILITY-VERIFY.md` — this file.
+- No changes to `src/engine/kernel.py`, `tests/simulation_quality/test_grade_regression.py`,
+  `tests/simulation_quality/fixtures/grade_anchors.json`, or
+  `tests/unit/worldassembly/test_corpus_diversity.py`.
+
 ## Completion Summary
+
+Measurement-verification ticket. Re-ran all 18 `SLOW_ANCHOR_KEYS` 3x each via the real, throttled
+`Kernel` (no `audit_mode`). Result: all 18/18 keys are grade-stable within the existing ±1-letter
+band, despite confirmed, measured throttle-timing variance (up to ~4x elapsed-time spread, 41-539
+budget warnings, 1-3 watchdog trips per run). No genuine (non-throttle) divergence found; no
+tolerance-guard test conversions needed (documented no-op); no parity ledger changes required;
+`src/engine/kernel.py` untouched throughout.

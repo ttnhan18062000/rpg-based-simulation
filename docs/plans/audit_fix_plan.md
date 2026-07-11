@@ -438,7 +438,7 @@ completeness guarantee, closing the gap class permanently rather than one sweep 
 
 ---
 
-### P2-P: Wall-clock-dependent non-determinism past ~tick 300-320 (tick-budget throttle) — long-run SimQ anchor reliability unverified
+### P2-P: Wall-clock-dependent non-determinism past ~tick 300-320 (tick-budget throttle) — long-run SimQ anchor reliability unverified — **RESOLVED (verified 2026-07-11)**
 
 **Source:** `docs/audits/D06_longrun_health.md` F6; new, added 2026-07-09 (`TCK-20260708-GENERATED-FRONTIER-LATE-TICK-POPULATION-COLLAPSE`)  
 **Files:** `src/engine/kernel.py` (tick-budget watchdog `kernel.py:420-442`, mid-tick emergency throttle `kernel.py:574-601`)  
@@ -460,6 +460,14 @@ Cross-reference D06 F6's "Recommended Follow-Up" entry — same finding, tracked
 D06 owns the engine-health angle and this doc owns the actionable-backlog angle.
 **Sequenced as Phase 0.1** in `docs/plans/simq_development_roadmap.md` — the roadmap's first,
 blocking phase.
+**Resolution:** `TCK-20260710-SIMQ-ANCHOR-RELIABILITY-VERIFY` (2026-07-11) re-ran all 18
+`SLOW_ANCHOR_KEYS` 3 times each at the same seed (54 total runs, real throttled `Kernel`, no
+`audit_mode`) — **18/18 keys stable**, none required a tolerance-guard conversion, none flagged
+unverified. Every one of 540 pillar/trial data points fell within the existing ±1-`GRADE_ORDER`
+band despite confirmed throttle variance (`budget_warnings` 41–539/run, `watchdog_trips` 1–3/run,
+up to ~4× elapsed-time spread for identical seed/code). Full per-key evidence documented in
+`docs/simulation_quality/eval_matrix_results.md`'s "Anchor Reliability Verification" section.
+`kernel.py` and `grade_anchors.json` left untouched, per this finding's own scope guard.
 
 ---
 
@@ -730,7 +738,7 @@ Tickets created: `tickets/todos/simq-emit/` (5 tickets, 2026-07-01).
 | P2-M | D18 F5 | **P2** | CI | **RESOLVED (verified 2026-07-03)** — `upload-artifact@v4` step exists in `test.yml` |
 | P2-N | D02 §6.6 | **P2** | Engine | OPEN (not re-checked 2026-07-03) — S — catalog-driven degraded fallback |
 | P2-O | D20 (new) | **P2** | Testing | OPEN (added 2026-07-09) — S — extend `test_hazard_kind_matches_populating_faction_immunity` corpus-wide; 3rd recurrence of the same bug class |
-| P2-P | D06 F6 (new) | **P2** | Docs/Verification | OPEN (added 2026-07-09) — S — verify whether shipped 1000t/2000t anchors are throttle-timing-sensitive |
+| P2-P | D06 F6 (new) | **P2** | Docs/Verification | **RESOLVED (verified 2026-07-11)** — `TCK-20260710-SIMQ-ANCHOR-RELIABILITY-VERIFY` — 18/18 shipped anchors re-verified stable |
 | P2-Q | D06/D20 (new) | **P2** | Docs/DA | OPEN (added 2026-07-09) — XS — one DA ruling on `town_council`/`bandit_road` hazard exposure, resolves 2 recurrences at once |
 | P3-A | D01 [P] items | **P3** | Feature | varies — see individual epics (not re-checked 2026-07-03) |
 | P3-B | D03 F5 | **P3** | DX | **RESOLVED (verified 2026-07-03)** — `"STANDARD": ObservabilityMode.NORMAL` confirmed |
@@ -785,12 +793,15 @@ P1-D resolved 2026-07-04, TCK-20260703-SIMQ-UPLIFT3-QUEST-PRESSURE — no longer
 resolved 2026-07-04 — was already fixed by TCK-20260627-P1H-GOAL-RUNNERUP, a false negative in the
 2026-07-03 refresh — no longer pending.)
 
-**New, no ticket exists yet (added 2026-07-09, from `TCK-20260708-DUNGEON-URBAN-POPULATION-COLLAPSE`
-and `TCK-20260708-GENERATED-FRONTIER-LATE-TICK-POPULATION-COLLAPSE`'s investigations):** P2-O
+**New, added 2026-07-09, from `TCK-20260708-DUNGEON-URBAN-POPULATION-COLLAPSE`
+and `TCK-20260708-GENERATED-FRONTIER-LATE-TICK-POPULATION-COLLAPSE`'s investigations:** P2-O
 (hazard_kind corpus-wide completeness test — 3rd recurrence of the same bug class, highest-leverage
-of the three since it prevents future recurrences rather than reacting to them), P2-P (verify
-long-run SimQ anchor reliability against F6's throttle-timing variance), P2-Q (one DA ruling closes
-two recurring open questions — lowest-effort item in this whole document, XS).
+of the three since it prevents future recurrences rather than reacting to them, ticket exists at
+`tickets/inprogress/TCK-20260710-HAZARD-KIND-CORPUS-WIDE.md`), P2-P (verify long-run SimQ anchor
+reliability against F6's throttle-timing variance — **RESOLVED 2026-07-11**,
+`TCK-20260710-SIMQ-ANCHOR-RELIABILITY-VERIFY`), P2-Q (one DA ruling closes two recurring open
+questions — lowest-effort item in this whole document, XS, ticket exists at
+`tickets/inprogress/TCK-20260710-TOWN-COUNCIL-HAZARD-DA.md`).
 
 ---
 

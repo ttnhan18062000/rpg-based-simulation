@@ -254,6 +254,17 @@ their `quality_report.json` outputs — i.e. whether a single calibration run's 
 got a lucky/unlucky throttle-timing draw. Out of scope for the ticket that found this; flagged so a future
 audit does not have to rediscover the mechanism from scratch.
 
+> **Resolved 2026-07-11, `TCK-20260710-SIMQ-ANCHOR-RELIABILITY-VERIFY`:** all 18 `SLOW_ANCHOR_KEYS`
+> entries re-run 3 independent same-seed trials each (54 total runs, real throttled `Kernel`, no
+> `audit_mode`), transcribed in `staging_artifacts/TCK-20260710-SIMQ-ANCHOR-RELIABILITY-VERIFY/raw_calibration_sweep.md`
+> and documented per-key in `docs/simulation_quality/eval_matrix_results.md`'s "Anchor Reliability
+> Verification" section. Result: **18/18 keys stable** — every one of 540 pillar/trial data points
+> landed within the existing ±1-`GRADE_ORDER` band, despite confirmed throttle-timing variance
+> (`budget_warnings` 41–539/run, `watchdog_trips` 1–3/run, up to ~4× elapsed-time spread for
+> identical seed/code within a single key). No anchor required conversion to a tolerance-based guard
+> and no anchor was flagged unverified. `kernel.py` and `grade_anchors.json` were left untouched, per
+> this finding's scope guard.
+
 ---
 
 ## Key Findings Summary
@@ -265,7 +276,7 @@ audit does not have to rediscover the mechanism from scratch.
 | F3 | 11/15 | Rejection cascade grows to 500K–550K/run at ~650/tick after RC1 fix |
 | F4 | 15/15 | Quest system never activates — no material blockers generated while F1 persists |
 | F5 | 9/15 | Late-run attrition exceeds spawn rate; entity count ends below starting count — **RESOLVED** (P2-B, `SpawnConfig` two-tier cadence); a separately-conflated early-collapse symptom in other worlds fixed 2026-07-04 by `TCK-20260703-SIMQ-UPLIFT3-WORLD-CORPUS` (stale hazard-kind content, unrelated cause) |
-| F6 | N/A | Wall-clock-dependent non-determinism past ~tick 300-320 (tick-budget throttle drops resolution work based on real compute time, not seed) — **documented, not fixed** (intentional engine behavior); narrow mitigation applied via a tolerance-based regression guard, `TCK-20260708-GENERATED-FRONTIER-LATE-TICK-POPULATION-COLLAPSE` (2026-07-09) |
+| F6 | N/A | Wall-clock-dependent non-determinism past ~tick 300-320 (tick-budget throttle drops resolution work based on real compute time, not seed) — **documented, not fixed** (intentional engine behavior); narrow mitigation applied via a tolerance-based regression guard, `TCK-20260708-GENERATED-FRONTIER-LATE-TICK-POPULATION-COLLAPSE` (2026-07-09); all 18 shipped long-run anchors re-verified stable against this variance, `TCK-20260710-SIMQ-ANCHOR-RELIABILITY-VERIFY` (2026-07-11) |
 
 **Performance — all green:**
 - Tick compute: 9–15ms avg, stable, well within 50ms budget ✓
@@ -289,7 +300,7 @@ If the `lock_until_tick` for `proj_combat_retreat` / `proj_recover` is currently
 **P2 — D04 and D05 now unblocked but conditionally**
 D04 (Balance & Tuning) and D05 (Entity Differentiation) can now run, but F1 means economic/crafting tuning analysis is still not possible until hunger satiation is resolved. D05 can observe personality differentiation across survival-tier behavior; it is not blocked by F1 for that scope.
 
-**P2 — Audit whether other long-run SimQ anchors (1000t/2000t) are throttle-timing-sensitive (F6)**
+**P2 — Audit whether other long-run SimQ anchors (1000t/2000t) are throttle-timing-sensitive (F6)** — **RESOLVED 2026-07-11**
 `TCK-20260707-SIMQ-LONGRUN-HOTPILLAR-ANCHORS` and other long-run calibration entries in
 `docs/simulation_quality/eval_matrix_results.md` were each captured from a single run. F6 confirmed at
 least one world (`generated_frontier_3_42`) shows >2× population variance between two back-to-back
@@ -298,3 +309,7 @@ flip if re-measured, and whether a tolerance-based re-verification (same pattern
 `test_generated_frontier_3_42_extended_population_stability`) should become the standard for all
 long-run anchors rather than a single-run point estimate.
 **Sequenced as Phase 0.1 (the blocking first phase)** in `docs/plans/simq_development_roadmap.md`.
+**Result (`TCK-20260710-SIMQ-ANCHOR-RELIABILITY-VERIFY`):** all 18 shipped anchors re-verified stable
+across 3 trials each — none flip; a tolerance-based re-verification standard was evaluated but found
+unnecessary since the existing ±1-`GRADE_ORDER` band already absorbs the observed variance for every
+key. See the F6 finding above for full evidence.

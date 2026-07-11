@@ -1327,48 +1327,54 @@ the sole exception, activated via a hardcoded `ROUTING_KEYS` set and env-var inj
 
 ## 12. Acceptance Criteria
 
+Closed out 2026-07-11 (`TCK-20260710-SIMQ-CONTRACT-AC-CLOSEOUT`, hotfix tier — verification and
+citation only, no engine/scorer logic changed) — every item below was re-verified against current
+`src/`/`tests/` state in that ticket's own session, not assumed unchanged since authoring. See
+`tickets/done/TCK-20260710-SIMQ-CONTRACT-AC-CLOSEOUT.md`'s Implementation Notes for the full
+verification trail (test commands run, live code reads performed).
+
 ### Functional
 
-- [ ] All 10 pillars produce ScoreRecord entries when their event_types are emitted
-- [ ] Health grades assigned for all 10 pillars in `QualityReport`
-- [ ] `quality_scores.jsonl` written to `data/runs/{run_id}/` during every run
-- [ ] `quality_report.json` written at run end with correct schema
-- [ ] REST endpoints respond with correct data for live and post-run queries
-- [ ] All 22 scenarios in §6 are covered by at least one unit test
+- [x] All 10 pillars produce ScoreRecord entries when their event_types are emitted — `tests/simulation_quality/test_scenario_coverage.py` (36 tests spanning all 10 scorers, all passing) + 10 per-scorer unit test files (`tests/simulation_quality/test_{agency,cognition,combat,economy,faction,information,narrative,progression,social,world_dynamics}_scorer.py`)
+- [x] Health grades assigned for all 10 pillars in `QualityReport` — `src/simulation_quality/quality_hub.py:109-111` (`QualityHub` builds one `PillarAccumulator` per `PillarId`, all 10) + `src/simulation_quality/quality_report.py:98-113` (`QualityReportBuilder.build` assigns a grade per accumulator passed in) + `tests/simulation_quality/test_report.py::test_overall_score_weighted_average` (iterates `for pillar in PillarId`)
+- [x] `quality_scores.jsonl` written to `data/runs/{run_id}/` during every run — `src/simulation_quality/persistence.py:17-24` (`QualityPersistence.__init__` opens the file) + `tests/simulation_quality/test_persistence.py::test_write_appends_jsonl_line`
+- [x] `quality_report.json` written at run end with correct schema — `src/simulation_quality/persistence.py:46-54` (`write_report`, atomic tmp+rename) + `src/engine/kernel.py:964-972` (`Kernel.shutdown()` calls `write_report` at run end) + `tests/simulation_quality/test_persistence.py::test_write_report_creates_json_file`
+- [x] REST endpoints respond with correct data for live and post-run queries — `src/simulation_quality/api/routes.py` (5 `@router.get` endpoints) + `tests/simulation_quality/test_api_routes.py` (14 tests, all passing)
+- [x] All 22 scenarios in §6 are covered by at least one unit test — `tests/simulation_quality/test_scenario_coverage.py` (36 tests passing, covering SQ-01 through SQ-23; §6 now has 23 registered scenarios, a superset of the "22" this item was authored against — all current entries are covered)
 
 ### Performance
 
-- [ ] Simulation tick timing is not measurably affected by quality scoring (< 1% overhead)
-- [ ] `QUALITY_SCORING_DISABLED=1` produces bit-identical simulation output
-- [ ] Scoring exceptions are caught and logged; they do not propagate to simulation
-- [ ] `scorer.score()` runs in < 0.1 ms per event
-- [ ] `QualityReport.build()` runs in < 50 ms
+- [x] Simulation tick timing is not measurably affected by quality scoring (< 1% overhead) — `src/observability/event_recorder.py::EventRecorder.record` (enqueues only, no scorer call on the tick thread) + `src/observability/queue.py::QueueDrainWorker._run` (invokes `quality_fn` on a separate daemon thread, `name="observability-drain-worker"`, fully decoupled from tick execution) — confirmed by direct code read 2026-07-11
+- [x] `QUALITY_SCORING_DISABLED=1` produces bit-identical simulation output — `src/simulation_quality/feed.py::build_feed_from_env` lines 125-126, unconditional short-circuit re-read directly 2026-07-11 (`if os.environ.get("QUALITY_SCORING_DISABLED") == "1": return None`, checked before any mode branching) + `tests/simulation_quality/test_feed.py::test_build_feed_returns_none_when_disabled` — run this session, passes (see corrected `docs/parity_ledger/infrastructure.yaml` INFRA-233, whose `test_path` had gone stale)
+- [x] Scoring exceptions are caught and logged; they do not propagate to simulation — `src/simulation_quality/quality_hub.py::QualityHub.on_envelope` lines 135-159 re-read directly 2026-07-11: disabled check at entry, then `try/except Exception` wraps every `scorer.score()` call individually, logging at `logger.warning(...)` — no exception can escape the loop + `tests/simulation_quality/test_quality_hub_integration.py::TestErrorIsolation::test_scorer_exception_does_not_propagate` — run this session, passes
+- [x] `scorer.score()` runs in < 0.1 ms per event — `tests/simulation_quality/test_performance.py::test_agency_scorer_median_under_0_1ms`, `::test_combat_scorer_median_under_0_1ms` — run with `pytest -m slow` this session, passes
+- [x] `QualityReport.build()` runs in < 50 ms — `tests/simulation_quality/test_performance.py::test_quality_report_build_under_50ms` — passes
 
 ### Scalability
 
-- [ ] `PillarAccumulator.worst_events` never exceeds 100 entries
-- [ ] `PillarAccumulator.window_buffer` never exceeds 200 entries
-- [ ] Architecture is separate-process-ready: `QualityHub` consumes only serializable inputs
+- [x] `PillarAccumulator.worst_events` never exceeds 100 entries — `tests/simulation_quality/test_performance.py::test_worst_events_bounded_at_100` — passes
+- [x] `PillarAccumulator.window_buffer` never exceeds 200 entries — `tests/simulation_quality/test_performance.py::test_window_buffer_bounded_at_200` — passes
+- [x] Architecture is separate-process-ready: `QualityHub` consumes only serializable inputs — `src/observability/events.py::ObservabilityEventEnvelope` (dataclass of `str`/`int`/`dict`/`tuple` fields only, no live object references) + `src/simulation_quality/feed.py::BrokerQualityFeed` (delivers the same envelope type across a Redis stream in broker mode) — confirmed by direct code read 2026-07-11
 
 ### Extensibility
 
-- [ ] Adding a new pillar requires only: new `PillarId` value + new `PillarScorer` subclass + `SCORER_REGISTRY` entry + §6 scenario entry — zero changes to `QualityHub` routing logic
-- [ ] Adding a new scoring rule to an existing pillar requires only: new branch in `scorer.score()` + new unit test + §6 scenario entry if new scenario
-- [ ] `QualityProfile` overrides pillar weights without touching scorer code
+- [x] Adding a new pillar requires only: new `PillarId` value + new `PillarScorer` subclass + `SCORER_REGISTRY` entry + §6 scenario entry — zero changes to `QualityHub` routing logic — `src/simulation_quality/quality_hub.py:103-107` (`SCORER_REGISTRY` built generically from each scorer's declared `EVENT_TYPES`, no per-pillar branching) + `src/simulation_quality/scorers/__init__.py::build_all_scorers` (adding a pillar is one new list entry) — confirmed by direct code read 2026-07-11
+- [x] Adding a new scoring rule to an existing pillar requires only: new branch in `scorer.score()` + new unit test + §6 scenario entry if new scenario — `src/simulation_quality/scorers/agency.py::AgencyScorer.score` (single method, one `score()` per pillar, event_type/payload-branched) + `tests/simulation_quality/test_agency_scorer.py` (one test per rule) — confirmed by direct code read 2026-07-11
+- [x] `QualityProfile` overrides pillar weights without touching scorer code — `src/simulation_quality/weights.py::ScoringWeights.load`/`_load_profile_weights` (loads `config/simulation_quality/profiles/{profile}.yaml`, no scorer file touched) + `tests/simulation_quality/test_weights.py::test_dungeon_crawl_profile_overrides`, `::test_urban_political_profile_overrides` — passes
 
 ### Traceability
 
-- [ ] Every `ScoreRecord` in `worst_events` has a valid `event_id` that cross-references `simulation_events.jsonl`
-- [ ] Every low-grade pillar has at least one worst_event with a tag matching §5
-- [ ] The traceability path in §9 is validated by an integration test
+- [x] Every `ScoreRecord` in `worst_events` has a valid `event_id` that cross-references `simulation_events.jsonl` — `src/simulation_quality/scorers/*.py` (all 10 scorers set `event_id=envelope.event_id`, e.g. `src/simulation_quality/scorers/agency.py:51`) + `src/observability/event_recorder.py:114` (`EventRecorder` writes that same `envelope.event_id` into `simulation_events.jsonl`) — confirmed by direct code read 2026-07-11: both paths consume the same `ObservabilityEventEnvelope` instance, so the id is identical by construction
+- [x] Every low-grade pillar has at least one worst_event with a tag matching §5 — `tests/simulation_quality/test_agency_scorer.py` (per-rule tests assert the exact §5-documented tag string is present on every produced `ScoreRecord`, e.g. `"stasis_N"`, `"population_stasis"`, `"rejection_cascade"`) + `tests/simulation_quality/test_accumulator.py::test_worst_events_sorted_by_abs_delta_desc` (`worst_events` preserves the full tagged `ScoreRecord`, no tag stripping) — passes
+- [ ] The traceability path in §9 is validated by an integration test — **confirmed genuine gap**: no test in the repo exercises the §9 drill-down end-to-end (a repo-wide `grep -rln "simulation_events.jsonl" tests/ tools/` returns only `tests/simulation_quality/test_persistence.py`, which does not cross-reference against `simulation_events.jsonl`). The underlying mechanism is correct (see the item above), but no test asserts it. Follow-up filed: `tickets/todos/TCK-20260711-SIMQ-TRACEABILITY-PATH-INTEGRATION-TEST.md`
 
 ### Testing
 
-- [ ] Unit tests for every scoring rule in every scorer (positive, negative, null, time-gated)
-- [ ] Integration tests for hub routing, accumulation, persistence, error isolation, disable
-- [ ] Regression anchors committed for canonical scenarios
-- [ ] Performance tests pass against limits in §11.4
-- [ ] Scenario coverage test verifies all 22 §6 entries have at least one test
+- [x] Unit tests for every scoring rule in every scorer (positive, negative, null, time-gated) — 10 per-scorer test files (`tests/simulation_quality/test_{agency,cognition,combat,economy,faction,information,narrative,progression,social,world_dynamics}_scorer.py`) + `tests/simulation_quality/test_timegate_penalties.py` (4 time-gated test classes: `TestEconomyTimegate`, `TestProgressionTimegate`, `TestNarrativeTimegate`, `TestAgencyTimegate`) — full `tests/simulation_quality/` suite: 456 passed, 5 skipped (broker tests requiring `REDIS_AVAILABLE`), run 2026-07-11
+- [x] Integration tests for hub routing, accumulation, persistence, error isolation, disable — `tests/simulation_quality/test_quality_hub_integration.py` (`TestEventRouting`, `TestAccumulation`, `TestPersistence`, `TestErrorIsolation`, `TestDisableMechanism` classes) — passes
+- [x] Regression anchors committed for canonical scenarios — `tests/simulation_quality/test_grade_regression.py` + `tests/simulation_quality/fixtures/grade_anchors.json` — passes (`pytest -m "not slow"` and `pytest -m slow` both run clean 2026-07-11)
+- [x] Performance tests pass against limits in §11.4 — `tests/simulation_quality/test_performance.py` — 6/6 passed with `pytest -m slow`, run 2026-07-11
+- [x] Scenario coverage test verifies all 22 §6 entries have at least one test — `tests/simulation_quality/test_scenario_coverage.py` — 36/36 passed, covers all current §6 entries (SQ-01 through SQ-23)
 
 ---
 

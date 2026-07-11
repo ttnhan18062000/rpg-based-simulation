@@ -90,7 +90,7 @@ Ranking principle: a thread ranks higher if it calls into question the trustwort
 **already shipped**, and lower if it's forward-looking scope hygiene. A latent correctness question
 about existing anchors outranks a well-scoped but purely additive improvement.
 
-### Thread 1 (highest leverage) — Long-run calibration reliability is unverified (F6 / P2-P)
+### Thread 1 (highest leverage) — Long-run calibration reliability is unverified (F6 / P2-P) — **RESOLVED 2026-07-11**
 
 **Problem.** `TCK-20260708-GENERATED-FRONTIER-LATE-TICK-POPULATION-COLLAPSE`'s investigation ran the
 same seed, same code, same machine, back-to-back, and got population outcomes that diverged by 100+
@@ -133,9 +133,15 @@ change:
 **Effort:** M (re-running N slow-tier scenarios 2–3× each is compute-bound, not design-bound; the
 `--slow` tier already exists via `make simq-full-audit-slow`).
 
+**Resolution (`TCK-20260710-SIMQ-ANCHOR-RELIABILITY-VERIFY`, 2026-07-11):** ran the recommended
+action exactly — all 18 `SLOW_ANCHOR_KEYS` re-run 3 times each at the same seed. Outcome: **18/18
+stable**, zero required conversion to a tolerance-based guard. Documented per-key in
+`docs/simulation_quality/eval_matrix_results.md`. The open question this thread raised is now closed
+with evidence.
+
 ---
 
-### Thread 2 — The contract's own Acceptance Criteria have never been formally closed out
+### Thread 2 — The contract's own Acceptance Criteria have never been formally closed out — **RESOLVED 2026-07-11**
 
 **Problem.** `quality_scoring_contract.md` §12 lists five checklists — Functional, Performance,
 Scalability, Extensibility, Traceability, Testing — as the module's own definition of done. Every
@@ -161,6 +167,15 @@ evidence inline), not folded into an unrelated feature ticket.
 
 **Effort:** S–M (mostly verification-and-citation, not implementation; some items may surface a real
 small gap worth a follow-up ticket).
+
+**Resolution (`TCK-20260710-SIMQ-CONTRACT-AC-CLOSEOUT`, 2026-07-11):** ran the recommended action
+exactly as a hotfix-tier ticket. 24/25 items verified true and checked with live citations against
+current source, including both explicit safety invariants (re-confirmed by direct code read of
+`feed.py::build_feed_from_env` and `quality_hub.py::QualityHub.on_envelope`, plus a live passing
+test run — not a pointer to the old MVP parity entries). 1 genuine gap surfaced (Traceability item
+3, no end-to-end §9 integration test) and filed as a linked follow-up:
+`tickets/todos/TCK-20260711-SIMQ-TRACEABILITY-PATH-INTEGRATION-TEST.md`. A stale parity-ledger
+citation (`infrastructure.yaml` INFRA-233) was also found and corrected in the same session.
 
 ---
 

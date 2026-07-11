@@ -1540,3 +1540,394 @@ purely via the already-documented `effective_denom` mechanism (second confirming
 COGNITION holds, and SOCIAL holds (confounded by, but not caused by, the separately-tracked
 population-collapse defect). No follow-up ticket is filed under Scope item 5, since no decay
 observed here is attributable to a genuine drift/decay bug in any scorer.
+
+---
+
+## Anchor Reliability Verification (TCK-20260710-SIMQ-ANCHOR-RELIABILITY-VERIFY)
+
+`docs/audits/D06_longrun_health.md` F6 found that `src/engine/kernel.py`'s tick-budget
+watchdog and mid-tick emergency throttle measure real wall-clock compute time, and two
+identical-seed, identical-code, back-to-back runs of `generated_frontier_3_42` diverged
+by 100+ ticks in floor-violation onset and >2x in tick-1000 population (12/44 vs 5/44
+alive) — driven by wall-clock scheduling variance, not the deterministic RNG seed. Every
+one of the 18 `SLOW_ANCHOR_KEYS` entries in `tests/simulation_quality/fixtures/
+grade_anchors.json` had been captured from a single calibration run. This section
+re-verifies all 18 keys, 3 independent same-seed trials each, via
+`tools/calibrate_simq.py` (real, throttled `Kernel`, no `audit_mode`), same machine,
+back-to-back. Full per-trial per-pillar transcription lives in
+`staging_artifacts/TCK-20260710-SIMQ-ANCHOR-RELIABILITY-VERIFY/raw_calibration_sweep.md`
+(the source this section's tables are drawn from).
+
+**Result: all 18/18 keys are `stable`.** Zero keys required conversion to a
+tolerance-guard test and zero keys were flagged unverified. Every trial's every pillar
+grade landed within the existing ±1-`GRADE_ORDER` band
+(`tests/simulation_quality/test_grade_regression.py:140-148`, `_within_band`) of its
+committed anchor — 540 pillar/trial data points (18 keys x 3 trials x 10 pillars), zero
+band violations. This holds despite direct evidence that the F6 throttle mechanism fired
+variably during this sweep: per-run `budget_warnings` (mid-tick emergency-throttle log
+lines) ranged from 41 to 539, `watchdog_trips` (end-of-tick DEGRADED-mode transitions)
+ranged 1-3, and engine elapsed time for the identical seed/code varied up to ~4x within
+a single key (`unit_faction_tension_seed42_1000t`: 15.99s-18.95s for trials 1-2 vs.
+71.41s for trial 3). The SimQ grade banding (5 letter grades, ±1-letter tolerance) is
+coarse enough to absorb the F6-scale wall-clock variance for all 18 currently-anchored
+long-run keys — no genuine (non-throttle) divergence was found in this sweep.
+
+### `dungeon_crawl_seed42_1000t` — stable
+
+| Pillar | Anchor | Trial 1 | Trial 2 | Trial 3 |
+|---|---|---|---|---|
+| AGENCY | C | C | C | C |
+| COGNITION | C | C | C | C |
+| COMBAT | B | B | B | B |
+| ECONOMY | C | B | B | B |
+| FACTION | A | A | A | A |
+| INFORMATION | C | C | C | C |
+| NARRATIVE | A | A | A | A |
+| PROGRESSION | B | B | B | B |
+| SOCIAL | C | C | C | C |
+| WORLD | B | B | B | B |
+
+Throttle evidence: budget_warnings per trial = [55, 49, 53]; elapsed_s per trial = ['24.24', '22.69', '24.35'].
+Reliability status: **stable** — every pillar, every trial, within the ±1-letter band
+of the committed anchor. No tolerance-guard conversion needed.
+
+### `dungeon_crawl_seed123_1000t` — stable
+
+| Pillar | Anchor | Trial 1 | Trial 2 | Trial 3 |
+|---|---|---|---|---|
+| AGENCY | C | C | C | C |
+| COGNITION | C | C | C | C |
+| COMBAT | B | B | B | B |
+| ECONOMY | C | B | B | B |
+| FACTION | A | A | A | A |
+| INFORMATION | C | C | C | C |
+| NARRATIVE | B | A | A | A |
+| PROGRESSION | B | B | B | B |
+| SOCIAL | C | C | C | C |
+| WORLD | B | B | B | B |
+
+Throttle evidence: budget_warnings per trial = [51, 47, 50]; elapsed_s per trial = ['20.66', '23.04', '21.91'].
+Reliability status: **stable** — every pillar, every trial, within the ±1-letter band
+of the committed anchor. No tolerance-guard conversion needed.
+
+### `dungeon_crawl_seed456_1000t` — stable
+
+| Pillar | Anchor | Trial 1 | Trial 2 | Trial 3 |
+|---|---|---|---|---|
+| AGENCY | C | C | C | C |
+| COGNITION | C | C | C | C |
+| COMBAT | B | B | B | B |
+| ECONOMY | C | B | B | B |
+| FACTION | A | A | A | A |
+| INFORMATION | C | C | C | C |
+| NARRATIVE | A | A | A | A |
+| PROGRESSION | B | B | B | B |
+| SOCIAL | C | C | C | C |
+| WORLD | B | B | B | B |
+
+Throttle evidence: budget_warnings per trial = [64, 41, 48]; elapsed_s per trial = ['21.38', '20.50', '23.36'].
+Reliability status: **stable** — every pillar, every trial, within the ±1-letter band
+of the committed anchor. No tolerance-guard conversion needed.
+
+### `dungeon_crawl_seed42_2000t` — stable
+
+| Pillar | Anchor | Trial 1 | Trial 2 | Trial 3 |
+|---|---|---|---|---|
+| AGENCY | C | C | C | C |
+| COGNITION | C | C | C | C |
+| COMBAT | B | B | B | B |
+| ECONOMY | C | B | B | B |
+| FACTION | B | B | B | B |
+| INFORMATION | C | C | C | C |
+| NARRATIVE | A | A | A | A |
+| PROGRESSION | B | B | B | B |
+| SOCIAL | C | C | C | C |
+| WORLD | B | B | B | B |
+
+Throttle evidence: budget_warnings per trial = [118, 105, 93]; elapsed_s per trial = ['44.49', '45.44', '41.19'].
+Reliability status: **stable** — every pillar, every trial, within the ±1-letter band
+of the committed anchor. No tolerance-guard conversion needed.
+
+### `dungeon_crawl_seed123_2000t` — stable
+
+| Pillar | Anchor | Trial 1 | Trial 2 | Trial 3 |
+|---|---|---|---|---|
+| AGENCY | C | C | C | C |
+| COGNITION | C | C | C | C |
+| COMBAT | B | B | B | B |
+| ECONOMY | C | B | B | B |
+| FACTION | B | B | B | B |
+| INFORMATION | C | C | C | C |
+| NARRATIVE | B | A | A | A |
+| PROGRESSION | B | B | B | B |
+| SOCIAL | C | C | C | C |
+| WORLD | B | B | B | B |
+
+Throttle evidence: budget_warnings per trial = [114, 119, 109]; elapsed_s per trial = ['42.49', '46.39', '46.63'].
+Reliability status: **stable** — every pillar, every trial, within the ±1-letter band
+of the committed anchor. No tolerance-guard conversion needed.
+
+### `dungeon_crawl_seed456_2000t` — stable
+
+| Pillar | Anchor | Trial 1 | Trial 2 | Trial 3 |
+|---|---|---|---|---|
+| AGENCY | C | C | C | C |
+| COGNITION | C | C | C | C |
+| COMBAT | B | B | B | B |
+| ECONOMY | C | B | B | B |
+| FACTION | B | B | B | B |
+| INFORMATION | C | C | C | C |
+| NARRATIVE | B | A | A | A |
+| PROGRESSION | B | B | B | B |
+| SOCIAL | C | C | C | C |
+| WORLD | B | B | B | B |
+
+Throttle evidence: budget_warnings per trial = [128, 121, 114]; elapsed_s per trial = ['48.79', '44.93', '44.67'].
+Reliability status: **stable** — every pillar, every trial, within the ±1-letter band
+of the committed anchor. No tolerance-guard conversion needed.
+
+### `urban_political_seed42_1000t` — stable
+
+| Pillar | Anchor | Trial 1 | Trial 2 | Trial 3 |
+|---|---|---|---|---|
+| AGENCY | C | C | C | C |
+| COGNITION | B | B | B | B |
+| COMBAT | B | B | B | B |
+| ECONOMY | B | B | B | B |
+| FACTION | A | A | A | A |
+| INFORMATION | B | B | B | B |
+| NARRATIVE | B | A | A | A |
+| PROGRESSION | B | B | B | B |
+| SOCIAL | S | S | S | S |
+| WORLD | B | B | B | B |
+
+Throttle evidence: budget_warnings per trial = [148, 156, 114]; elapsed_s per trial = ['53.54', '53.34', '53.13'].
+Reliability status: **stable** — every pillar, every trial, within the ±1-letter band
+of the committed anchor. No tolerance-guard conversion needed.
+
+### `urban_political_seed123_1000t` — stable
+
+| Pillar | Anchor | Trial 1 | Trial 2 | Trial 3 |
+|---|---|---|---|---|
+| AGENCY | C | C | C | C |
+| COGNITION | B | B | B | B |
+| COMBAT | B | B | B | B |
+| ECONOMY | B | B | B | B |
+| FACTION | A | A | A | A |
+| INFORMATION | B | B | B | B |
+| NARRATIVE | B | A | A | A |
+| PROGRESSION | B | B | B | B |
+| SOCIAL | S | S | S | S |
+| WORLD | B | B | B | B |
+
+Throttle evidence: budget_warnings per trial = [424, 225, 303]; elapsed_s per trial = ['84.38', '65.88', '69.21'].
+Reliability status: **stable** — every pillar, every trial, within the ±1-letter band
+of the committed anchor. No tolerance-guard conversion needed.
+
+### `urban_political_seed456_1000t` — stable
+
+| Pillar | Anchor | Trial 1 | Trial 2 | Trial 3 |
+|---|---|---|---|---|
+| AGENCY | C | C | C | C |
+| COGNITION | B | B | B | B |
+| COMBAT | B | B | B | B |
+| ECONOMY | B | B | B | B |
+| FACTION | A | A | A | A |
+| INFORMATION | B | B | B | B |
+| NARRATIVE | B | A | A | A |
+| PROGRESSION | B | B | B | B |
+| SOCIAL | S | S | S | S |
+| WORLD | B | B | B | B |
+
+Throttle evidence: budget_warnings per trial = [222, 191, 153]; elapsed_s per trial = ['65.46', '64.43', '59.44'].
+Reliability status: **stable** — every pillar, every trial, within the ±1-letter band
+of the committed anchor. No tolerance-guard conversion needed.
+
+### `urban_political_seed42_2000t` — stable
+
+| Pillar | Anchor | Trial 1 | Trial 2 | Trial 3 |
+|---|---|---|---|---|
+| AGENCY | C | C | C | C |
+| COGNITION | B | B | B | B |
+| COMBAT | B | B | B | B |
+| ECONOMY | B | B | B | B |
+| FACTION | B | B | B | B |
+| INFORMATION | B | B | B | B |
+| NARRATIVE | B | B | B | B |
+| PROGRESSION | B | B | B | B |
+| SOCIAL | S | S | S | S |
+| WORLD | B | B | B | B |
+
+Throttle evidence: budget_warnings per trial = [539, 276, 258]; elapsed_s per trial = ['146.29', '121.82', '113.21'].
+Reliability status: **stable** — every pillar, every trial, within the ±1-letter band
+of the committed anchor. No tolerance-guard conversion needed.
+
+### `sandbox_world_seed42_1000t` — stable
+
+| Pillar | Anchor | Trial 1 | Trial 2 | Trial 3 |
+|---|---|---|---|---|
+| AGENCY | C | C | C | C |
+| COGNITION | B | B | B | B |
+| COMBAT | B | B | B | B |
+| ECONOMY | B | B | B | B |
+| FACTION | A | A | A | A |
+| INFORMATION | B | B | B | B |
+| NARRATIVE | A | A | A | A |
+| PROGRESSION | B | B | B | B |
+| SOCIAL | C | C | C | C |
+| WORLD | B | B | B | B |
+
+Throttle evidence: budget_warnings per trial = [73, 65, 64]; elapsed_s per trial = ['21.18', '19.33', '20.67'].
+Reliability status: **stable** — every pillar, every trial, within the ±1-letter band
+of the committed anchor. No tolerance-guard conversion needed.
+
+### `sandbox_world_seed42_2000t` — stable
+
+| Pillar | Anchor | Trial 1 | Trial 2 | Trial 3 |
+|---|---|---|---|---|
+| AGENCY | C | C | C | C |
+| COGNITION | B | B | B | B |
+| COMBAT | B | B | B | B |
+| ECONOMY | B | B | B | B |
+| FACTION | B | B | B | B |
+| INFORMATION | B | B | B | B |
+| NARRATIVE | A | B | B | B |
+| PROGRESSION | B | B | B | B |
+| SOCIAL | C | C | C | C |
+| WORLD | B | B | B | B |
+
+Throttle evidence: budget_warnings per trial = [117, 122, 122]; elapsed_s per trial = ['39.97', '37.95', '40.24'].
+Reliability status: **stable** — every pillar, every trial, within the ±1-letter band
+of the committed anchor. No tolerance-guard conversion needed.
+
+### `unit_faction_tension_seed42_1000t` — stable
+
+| Pillar | Anchor | Trial 1 | Trial 2 | Trial 3 |
+|---|---|---|---|---|
+| AGENCY | C | C | C | C |
+| COGNITION | B | B | B | B |
+| COMBAT | B | B | B | B |
+| ECONOMY | B | B | B | B |
+| FACTION | A | A | A | A |
+| INFORMATION | C | C | C | C |
+| NARRATIVE | A | A | A | A |
+| PROGRESSION | B | B | B | B |
+| SOCIAL | C | C | C | C |
+| WORLD | B | B | B | B |
+
+Throttle evidence: budget_warnings per trial = [59, 53, 72]; elapsed_s per trial = ['18.95', '15.99', '71.41'].
+Reliability status: **stable** — every pillar, every trial, within the ±1-letter band
+of the committed anchor. No tolerance-guard conversion needed.
+
+### `unit_faction_tension_seed42_2000t` — stable
+
+| Pillar | Anchor | Trial 1 | Trial 2 | Trial 3 |
+|---|---|---|---|---|
+| AGENCY | C | C | C | C |
+| COGNITION | B | B | B | B |
+| COMBAT | B | B | B | B |
+| ECONOMY | B | B | B | B |
+| FACTION | B | B | B | B |
+| INFORMATION | C | C | C | C |
+| NARRATIVE | A | A | B | A |
+| PROGRESSION | B | B | B | B |
+| SOCIAL | C | C | C | C |
+| WORLD | B | B | B | B |
+
+Throttle evidence: budget_warnings per trial = [117, 100, 113]; elapsed_s per trial = ['30.34', '27.36', '28.90'].
+Reliability status: **stable** — every pillar, every trial, within the ±1-letter band
+of the committed anchor. No tolerance-guard conversion needed.
+
+### `unit_selfmodel_pilot_seed42_1000t` — stable
+
+| Pillar | Anchor | Trial 1 | Trial 2 | Trial 3 |
+|---|---|---|---|---|
+| AGENCY | C | C | C | C |
+| COGNITION | S | S | S | S |
+| COMBAT | B | B | B | B |
+| ECONOMY | B | B | B | B |
+| FACTION | C | C | C | C |
+| INFORMATION | C | C | C | C |
+| NARRATIVE | B | B | B | B |
+| PROGRESSION | B | B | B | B |
+| SOCIAL | C | C | C | C |
+| WORLD | B | B | B | B |
+
+Throttle evidence: budget_warnings per trial = [84, 82, 94]; elapsed_s per trial = ['36.90', '38.81', '38.05'].
+Reliability status: **stable** — every pillar, every trial, within the ±1-letter band
+of the committed anchor. No tolerance-guard conversion needed.
+
+### `hero_guild_routing_seed42_1000t` — stable
+
+| Pillar | Anchor | Trial 1 | Trial 2 | Trial 3 |
+|---|---|---|---|---|
+| AGENCY | A | A | A | A |
+| COGNITION | A | A | A | A |
+| COMBAT | B | B | B | B |
+| ECONOMY | B | B | B | B |
+| FACTION | C | C | C | C |
+| INFORMATION | C | C | C | C |
+| NARRATIVE | S | S | S | S |
+| PROGRESSION | B | B | B | B |
+| SOCIAL | C | C | C | C |
+| WORLD | B | B | B | B |
+
+Throttle evidence: budget_warnings per trial = [58, 58, 59]; elapsed_s per trial = ['21.36', '21.09', '22.36'].
+Reliability status: **stable** — every pillar, every trial, within the ±1-letter band
+of the committed anchor. No tolerance-guard conversion needed.
+
+### `simq_routing_test_seed42_1000t` — stable
+
+| Pillar | Anchor | Trial 1 | Trial 2 | Trial 3 |
+|---|---|---|---|---|
+| AGENCY | A | A | A | A |
+| COGNITION | A | A | A | A |
+| COMBAT | B | B | B | B |
+| ECONOMY | B | B | B | B |
+| FACTION | C | C | C | C |
+| INFORMATION | C | C | C | C |
+| NARRATIVE | S | S | S | S |
+| PROGRESSION | B | B | B | B |
+| SOCIAL | C | C | C | C |
+| WORLD | B | B | B | B |
+
+Throttle evidence: budget_warnings per trial = [47, 67, 56]; elapsed_s per trial = ['20.47', '22.22', '22.44'].
+Reliability status: **stable** — every pillar, every trial, within the ±1-letter band
+of the committed anchor. No tolerance-guard conversion needed.
+
+### `generated_frontier_3_42_seed42_1000t` — stable
+
+| Pillar | Anchor | Trial 1 | Trial 2 | Trial 3 |
+|---|---|---|---|---|
+| AGENCY | C | C | C | C |
+| COGNITION | B | B | B | B |
+| COMBAT | B | B | B | B |
+| ECONOMY | B | B | B | B |
+| FACTION | A | A | A | A |
+| INFORMATION | B | B | B | B |
+| NARRATIVE | A | A | A | A |
+| PROGRESSION | B | B | B | B |
+| SOCIAL | C | C | C | C |
+| WORLD | B | B | B | B |
+
+Throttle evidence: budget_warnings per trial = [77, 71, 48]; elapsed_s per trial = ['24.32', '23.08', '23.15'].
+Reliability status: **stable** — every pillar, every trial, within the ±1-letter band
+of the committed anchor. No tolerance-guard conversion needed.
+
+### Step 4 outcome — no conversions needed
+
+Zero of the 18 keys were classified `unstable`, so no `@pytest.mark.slow`
+grade-stability multi-trial test was added to
+`tests/unit/worldassembly/test_corpus_diversity.py`. This is documented explicitly per
+this ticket's plan.md Step 4 and test_plan.md's callout that a zero-conversion result is
+a valid outcome that must still be recorded, not silently skipped. The existing
+`test_generated_frontier_3_42_extended_population_stability` population-checkpoint guard
+(added by `TCK-20260708-GENERATED-FRONTIER-LATE-TICK-POPULATION-COLLAPSE`) remains the
+only multi-trial tolerance guard in the corpus — it targets population-checkpoint
+stability, a stronger/finer-grained signal than pillar-grade banding, and continues to
+serve as the guard for `generated_frontier_3_42`'s known population variance even though
+that variance did not surface as a grade-band violation in this sweep.
+
+No `docs/parity_ledger/` entry required a status change as a result of this ticket —
+measurement-only, no scored behavior changed, and no genuine (non-throttle) divergence
+was found.
