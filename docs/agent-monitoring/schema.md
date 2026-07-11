@@ -90,7 +90,7 @@ One record per agent call within a workflow run. FK: `run_id → runs.run_id`.
 |---|---|---|---|
 | `run_id` | string | No | FK to runs.jsonl. |
 | `seq` | int | No | 1-based call order within the run. Monotonically increasing. |
-| `ts` | ISO 8601 | No | UTC timestamp when this event was recorded. |
+| `ts` | ISO 8601 | No | UTC timestamp when this event was recorded. Captured by the orchestrator (`bash('date -u +%Y-%m-%dT%H:%M:%SZ')`) immediately before the paired `agent()` call, not self-reported by the agent — see TCK-20260710-STEP0-TS-ORCHESTRATOR-BASH. |
 | `phase` | string | No | Workflow phase this agent call belongs to. |
 | `agent` | string | No | Agent identifier (matches `.claude/agents/{agent}.md` filename). |
 | `summary` | string | No | One sentence describing what the agent did and the key finding. Empty string = agent did not provide a summary (prompt quality signal). Max 200 chars. |
@@ -182,7 +182,7 @@ Canonical phase/agent values for all four workflows are enforced from `tools/age
 
 ### `phase` values (create-tickets workflow)
 
-`Comprehend`, `Investigate` (one event per concern), `Structure`, `Write` (one event per ticket), `Link` (only when `epic_id` is provided). `create-tickets` does not register a `.claude/current_run` sidecar per agent call, so `tool_call_count` is always `null` on its events — not computed the way it is for `implement-ticket`/`implement-epic`.
+`Comprehend`, `Investigate` (one event per concern), `Structure`, `Write` (one event per ticket), `Link` (only when `epic_id` is provided). Neither `create-tickets` nor `implement-epic` registers a `.claude/current_run` sidecar per agent call (neither ever has), so `tool_call_count` is always `null` on their events. `implement-ticket` computes it via the orchestrator-side `bash()` mechanism described in "How tool calls are attributed to agent events" above.
 
 ---
 
@@ -209,7 +209,7 @@ One record per tool call, written by `PreToolUse` and `PostToolUse` hooks. Joine
 |---|---|---|---|
 | `session_id` | string | No | Claude Code session ID from the hook payload. Groups all tool calls within one session. |
 | `run_id` | string | Yes | FK → runs.jsonl. `null` when the tool call occurred outside an active workflow run (interactive session use). |
-| `seq` | int | Yes | FK → events.seq. Identifies which agent event this tool call belongs to. Written by the agent to `.claude/current_run` as its first Bash step; `null` if the sidecar was not yet written at hook time. |
+| `seq` | int | Yes | FK → events.seq. Identifies which agent event this tool call belongs to. Written by the orchestrating workflow (`implement-ticket.js`'s `writeSidecar(seq)` helper) via a `bash()` call immediately before the paired `agent()` call; `null` if the sidecar was not yet written at hook time. |
 | `ts` | ISO 8601 | No | UTC timestamp of the tool call (captured at PostToolUse). |
 | `tool` | string | No | Tool name: `Read`, `Edit`, `Write`, `Bash`, `Agent`, `MultiEdit`, etc. |
 | `input_summary` | string | No | Extracted key identifier from tool input. Per-tool: file path for Read/Edit/Write/MultiEdit; first 80 chars of command for Bash; description/prompt for Agent. Max 120 chars. |
@@ -218,7 +218,7 @@ One record per tool call, written by `PreToolUse` and `PostToolUse` hooks. Joine
 
 ### How tool calls are attributed to agent events
 
-Each agent prompt includes an early Bash step that writes `{"run_id": "...", "seq": N}` to `.claude/current_run`. The PostToolUse hook reads this file on every tool call and tags the record with `run_id` + `seq`. The `writeMonitoring` step at the end of the workflow counts records per seq to produce `tool_call_count` in events.jsonl.
+The orchestrating workflow (`implement-ticket.js`) writes `{"run_id": "...", "seq": N}` to `.claude/current_run` itself via a `bash()` call (the shared `writeSidecar(seq)` helper), immediately before dispatching each corresponding `agent()` call — agent prompts no longer contain a sidecar-write instruction. The PostToolUse hook reads this file on every tool call and tags the record with `run_id` + `seq`. The `writeMonitoring` step at the end of the workflow counts records per seq to produce `tool_call_count` in events.jsonl.
 
 Tool calls made outside a workflow (interactive Claude Code session) are still recorded with `run_id: null, seq: null` — useful for auditing overall tool usage.
 

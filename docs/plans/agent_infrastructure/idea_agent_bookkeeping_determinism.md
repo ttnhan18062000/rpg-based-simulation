@@ -3,22 +3,24 @@ status: idea
 layer: ai
 authority: P2
 audience: developer
-maturity: scheduled
+maturity: shipped
 date: 2026-07-10
 tags: [idea, agent-infrastructure, observability, determinism, data-quality]
 ---
 
 # Idea: Compute Bookkeeping at the Source — Stop Trusting Agent Prompts to Remember It
 
-> **Maturity: SCHEDULED.** Raised 2026-07-10 during a review of the `implement-ticket` pipeline and
+> **Maturity: SHIPPED.** Raised 2026-07-10 during a review of the `implement-ticket` pipeline and
 > agent-monitoring process, reproduced live in the same session (see Problem below) while running
 > `TCK-20260710-SECURITY-REVIEWER-AGENT-DOC`. Scheduled 2026-07-10 under
-> [`TCK-20260710-AGENT-BOOKKEEPING-DETERMINISM-EPIC`](../../../tickets/todos/agent-bookkeeping-determinism/TCK-20260710-AGENT-BOOKKEEPING-DETERMINISM-EPIC.md),
-> tracking three child tickets that cover only the concrete core of this doc (the "Where this pattern
-> already shows up" table) — `TCK-20260710-CURRENT-RUN-SIDECAR-BASH` (sidecar registration),
-> `TCK-20260710-STEP0-TS-ORCHESTRATOR-BASH` (per-phase `ts` capture), and
-> `TCK-20260710-MECHANICS-AUDITOR-ENFORCEMENT` (`verified_by` enforcement). The 4 "related, smaller
-> ideas" below remain unscheduled by deliberate scope decision, not oversight.
+> [`TCK-20260710-AGENT-BOOKKEEPING-DETERMINISM-EPIC`](../../../tickets/done/agent-bookkeeping-determinism/TCK-20260710-AGENT-BOOKKEEPING-DETERMINISM-EPIC.md),
+> which tracked three child tickets covering only the concrete core of this doc (the "Where this
+> pattern already shows up" table) — all three are now DONE: `TCK-20260710-CURRENT-RUN-SIDECAR-BASH`
+> (sidecar registration), `TCK-20260710-STEP0-TS-ORCHESTRATOR-BASH` (per-phase `ts` capture), and
+> `TCK-20260710-MECHANICS-AUDITOR-ENFORCEMENT` (`verified_by` post-hoc detection — note: detection
+> only, not automatic pipeline enforcement; see that ticket's Completion Summary for the disclosed
+> invocation gap). The 4 "related, smaller ideas" below remain unscheduled by deliberate scope
+> decision, not oversight, and are not covered by this completion.
 
 ---
 

@@ -115,6 +115,15 @@ const pushEvent = (phaseLabel, agentName, status, summary, ts, reasonCode) => {
 
 let startTs = null
 
+// Orchestrator-side ts capture — replaces the former "Step 0: run `date -u ...`"
+// agent-prompt-text instruction (TCK-20260710-STEP0-TS-ORCHESTRATOR-BASH). This file has no
+// writeSidecar mechanism, so it gets its own local helper, called immediately before the
+// Comprehend `agent()` call.
+const captureTs = async () => {
+  const out = await bash('date -u +%Y-%m-%dT%H:%M:%SZ')
+  return (out || '').trim() || null
+}
+
 const writeMonitoring = async (finalStatus) => {
   const eventsJson = JSON.stringify(events)
   const eventsCount = events.length
@@ -143,6 +152,7 @@ Return "monitoring written" or "monitoring write failed: <reason>".`,
   }
 }
 
+const comprehendTs = await captureTs()
 const comprehension = await agent(
   `Read a proposal document and extract the discrete concerns the author is describing.
 
@@ -153,8 +163,6 @@ The proposal is written in natural language by a developer, BA, or tester. It ma
 - Written in domain/business language, not code terms
 
 Your job: understand what the author wants, NOT how to implement it. Leave investigation for the next phase.
-
-Step 0: run \`date -u +%Y-%m-%dT%H:%M:%SZ\` and return it as "ts" — captured before any other work.
 
 Step 1 — read the proposal:
   Read: ${source}
@@ -180,11 +188,11 @@ Step 3 — extract discrete concerns:
   - priority_hint: P0/P1/P2 — infer from urgency language, default P1 if not stated
   - raw_excerpts: 1-3 quotes or paraphrases from the proposal supporting this concern
 
-Return: concerns[], summary (one sentence: N concerns extracted), ts.`,
+Return: concerns[], summary (one sentence: N concerns extracted).`,
   { label: 'comprehend', schema: COMPREHEND_SCHEMA }
 )
 
-startTs = comprehension.ts || null
+startTs = comprehendTs || null
 
 log(`Comprehend: ${comprehension.summary}`)
 pushEvent('Comprehend', 'create-tickets', 'ok', comprehension.summary, startTs)

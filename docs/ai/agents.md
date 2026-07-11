@@ -294,6 +294,18 @@ site — so compliance depends entirely on the agent actually running the script
 The agent self-reports in `verified_by` whether each row's `Status` was corroborated by the static check
 or came from independent judgment alone.
 
+A separate, on-demand post-hoc audit closes part of this gap after the fact:
+`tools/gate_checks/mechanics_auditor_static.py`'s `audit_verified_by_claims(rows, ...)` takes a
+`mechanics-auditor` session's own output rows and independently recomputes each `verified`-status
+row's Step 0 result, flagging a row whose `verified_by` omits the static-check tag entirely ("Step 0
+skipped") or whose claim contradicts a fresh recompute without a disclosed caveat ("falsely cited").
+It returns `honesty_status: "PASS"|"FAIL"` per row — a field distinct from, and never overriding,
+the agent's own `PARITY`/`DIVERGENT`/`MISSING`/`UNDOCUMENTED` classification. **Disclosed
+limitation:** nothing currently calls this function automatically — it requires a human reviewer or
+a future ticket to supply a session's output rows explicitly. Closing that invocation gap would
+require a durable-capture mechanism for ad hoc agent output that does not exist yet (see
+`TCK-20260710-MECHANICS-AUDITOR-ENFORCEMENT`'s plan.md, Decision 2).
+
 A convenience wrapper, `candidate_ledger_files_for_module`, reuses `parity-updater`'s
 `expected_subsystems_for_files` to locate candidate ledger files when auditing a whole chapter/module
 rather than a single named entry.

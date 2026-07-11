@@ -40,7 +40,7 @@ phase('Discover')
 
 const DISCOVER_SCHEMA = {
   type: 'object',
-  required: ['mode', 'ticket_ids', 'already_done', 'summary', 'ts'],
+  required: ['mode', 'ticket_ids', 'already_done', 'summary'],
   properties: {
     mode: { type: 'string', enum: ['folder', 'epic_id', 'request'] },
     ticket_ids: {
@@ -59,11 +59,19 @@ const DISCOVER_SCHEMA = {
   },
 }
 
+// Orchestrator-side ts capture — replaces the former per-branch "Step 0 — run `date -u ...`"
+// agent-prompt-text instruction (TCK-20260710-STEP0-TS-ORCHESTRATOR-BASH). This file has no
+// pushEvent/writeSidecar cluster to compose alongside, so it gets its own local helper, called
+// immediately before the single `agent()` call below.
+const captureTs = async () => {
+  const out = await bash('date -u +%Y-%m-%dT%H:%M:%SZ')
+  return (out || '').trim() || null
+}
+
+const discoverTs = await captureTs()
 const discovery = await agent(
   folder
     ? `Discover tickets in folder "${folder}".
-
-Step 0 — run \`date -u +%Y-%m-%dT%H:%M:%SZ\` and include result as the \`ts\` field.
 
 Step 1 — list all files in the folder:
   Run: ls "${folder}"
@@ -96,8 +104,6 @@ Do not implement anything. Discovery only.`
     : epicId
     ? `Discover child tickets for epic "${epicId}".
 
-Step 0 — run \`date -u +%Y-%m-%dT%H:%M:%SZ\` and include result as the \`ts\` field.
-
 Step 1 — find and read the epic ticket:
   Check tickets/inprogress/${epicId}.md, tickets/done/${epicId}.md, tickets/todos/ subdirectories.
   Read the file. Extract the ## Related Tickets section.
@@ -121,8 +127,6 @@ Step 4 — return:
 
 Request: ${request}
 
-Step 0 — run \`date -u +%Y-%m-%dT%H:%M:%SZ\` and include result as the \`ts\` field.
-
 Step 1 — create an epic ticket using the ticket-scoper approach:
   - Scan tickets/ for overlapping scope
   - Draft the epic ticket at tickets/inprogress/TCK-YYYYMMDD-SHORT-SCOPE.md
@@ -140,7 +144,7 @@ Step 2 — return:
   { label: 'discover', schema: DISCOVER_SCHEMA }
 )
 
-const batchStartTs = discovery.ts || null
+const batchStartTs = discoverTs || null
 
 log(`Discover: ${discovery.summary}`)
 

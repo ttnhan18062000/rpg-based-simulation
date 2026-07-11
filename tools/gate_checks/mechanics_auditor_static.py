@@ -193,3 +193,69 @@ def candidate_ledger_files_for_module(src_files, ledger_dir="docs/parity_ledger"
     cross-reference, with zero test-execution logic; `derive_mapping`/`cross_reference_touched` are
     not reused beyond this discovery step)."""
     return expected_subsystems_for_files(src_files, ledger_dir)
+
+
+def audit_verified_by_claims(rows, ledger_dir="docs/parity_ledger", base_dir: Path = Path(".")) -> list:
+    """Post-hoc cross-check of a mechanics-auditor agent's own self-reported `verified_by` claims
+    against an independently recomputed Step 0 result. Scoped strictly to the rows passed in — never
+    a ledger-wide sweep (see module docstring).
+
+    Each item in `rows` is one row of a mechanics-auditor agent's own output table, shaped:
+        {"entry_id": str, "status": <agent's PARITY|DIVERGENT|MISSING|UNDOCUMENTED classification>,
+         "verified_by": list[str], "Finding": str (optional, default "")}
+
+    Only rows whose underlying parity-ledger entry has ledger status == "verified" are evaluated —
+    Step 0 is mandatory only for that branch per .claude/agents/mechanics-auditor.md's "Checking
+    Parity" section. Rows mapping to missing/divergent/unsupported/legacy_verified ledger entries, or
+    to an entry_id not found at all, are skipped entirely: never flagged, never included in the
+    returned list.
+
+    Returns a list of dicts, one per evaluated row:
+        {"entry_id": str, "honesty_status": "PASS" | "FAIL", "evidence": str}
+    `honesty_status` reuses this module's own existing PASS/FAIL vocabulary (see check_test_path /
+    verify_entry_test_path) rather than inventing a new status string, and is never named
+    "status"/"Status" — it must never be read as, or substituted for, the agent's own
+    PARITY/DIVERGENT/MISSING/UNDOCUMENTED classification for entry_id.
+    """
+    results = []
+    for row in rows:
+        entry_id = row.get("entry_id")
+        entry, _filename = find_entry(entry_id, ledger_dir)
+        if entry is None or entry.get("status") != "verified":
+            continue
+
+        claimed_static = "static:mechanics_auditor_static" in (row.get("verified_by") or [])
+        finding_text = str(row.get("Finding") or "")
+
+        if not claimed_static:
+            results.append({
+                "entry_id": entry_id,
+                "honesty_status": "FAIL",
+                "evidence": (
+                    f"ledger status is 'verified' (Step 0 is mandatory) but row's verified_by "
+                    f"{row.get('verified_by')!r} omits 'static:mechanics_auditor_static' — Step 0 "
+                    "appears to have been skipped."
+                ),
+            })
+            continue
+
+        recompute = verify_entry_test_path(entry_id, ledger_dir, base_dir)
+        if recompute["status"] == "FAIL" and "FAIL" not in finding_text.upper():
+            results.append({
+                "entry_id": entry_id,
+                "honesty_status": "FAIL",
+                "evidence": (
+                    "row claims static corroboration but a fresh recompute of "
+                    f"verify_entry_test_path returned FAIL ({recompute['evidence']}) with no FAIL "
+                    "caveat disclosed in the row's Finding text — falsely cited static PASS."
+                ),
+            })
+            continue
+
+        results.append({
+            "entry_id": entry_id,
+            "honesty_status": "PASS",
+            "evidence": f"verified_by claim corroborated by fresh recompute: {recompute['evidence']}",
+        })
+
+    return results

@@ -30,7 +30,7 @@ phase('Scope')
 
 const TICKET_SCHEMA = {
   type: 'object',
-  required: ['ticket_id', 'ticket_path', 'status', 'conflicts', 'tier', 'tags', 'summary', 'ts'],
+  required: ['ticket_id', 'ticket_path', 'status', 'conflicts', 'tier', 'tags', 'summary'],
   properties: {
     ticket_id: { type: 'string' },
     ticket_path: { type: 'string' },
@@ -49,11 +49,10 @@ const TICKET_SCHEMA = {
   },
 }
 
+const scopeTs = await captureTs()
 const ticketInfo = await agent(
   ticketId
     ? `Load the existing ticket.
-
-Step 0: run \`date -u +%Y-%m-%dT%H:%M:%SZ\` — save result as TS (use as the \`ts\` field).
 
 Step 1 — locate the ticket file. Check these locations in order, stop at the first hit:
   a. tickets/inprogress/${ticketId}.md
@@ -85,10 +84,8 @@ status="EXISTING", conflicts=[], tier=(value from ticket or 'standard'),
 tags=(from step 3a, the ticket's actual frontmatter tags list),
 suggested_skills=(computed list from step 3, [] if none),
 mistag_warning=(computed per step 3b),
-summary="Loaded existing ticket ${ticketId}", ts=TS.`
+summary="Loaded existing ticket ${ticketId}".`
     : `Create a new ticket for this request using the ticket-scoper role.
-
-Step 0: run \`date -u +%Y-%m-%dT%H:%M:%SZ\` — save result as TS (use as the \`ts\` field).
 
 Step 0b (context warm-start — REQUIRED before any file reads):
 1. Call mcp__knowledge-search__search_docs with query="${request}" and top_k=5. Note the top results as context for scoping.
@@ -132,14 +129,13 @@ tier (the tier value written into the ticket),
 tags (the tags array written into the new ticket's own frontmatter — the same ground-truth reasoning as the Load-existing branch),
 suggested_skills (from the mapping table in your Output contract, [] if none),
 mistag_warning (computed per step 8, false if none),
-summary (one sentence: what was scoped and any conflicts found, ≤200 chars),
-ts=TS.`,
+summary (one sentence: what was scoped and any conflicts found, ≤200 chars).`,
   { label: 'scope', schema: TICKET_SCHEMA, agentType: 'ticket-scoper' }
 )
 
 const tid = ticketInfo.ticket_id
 const tier = tierOverride || ticketInfo.tier || 'standard'
-const startTs = ticketInfo.ts || null
+const startTs = scopeTs || null
 
 // ─── Agent Monitoring Setup ────────────────────────────────────────────────────
 // Hard rule: mandatory for every run (including hotfix). Failure is non-fatal.
@@ -164,6 +160,35 @@ const pushEvent = (phaseLabel, agentName, status, summary, ts, toolCallCount, re
     tool_call_count: toolCallCount != null ? toolCallCount : null,
     reason_code: reasonCode || null,
   })
+}
+
+// Orchestrator-side sidecar write — replaces the former per-prompt "Step 0b" (and Finalize's combined
+// "Step 0") agent-prompt-text instruction. Call this once, immediately before each corresponding
+// `await agent(...)` call below, passing `events.length + 1` (the same seq value the removed prompt-text
+// line used to compute inline, at the same point in execution — JS here is single-threaded and
+// await-sequenced, so there is no timing drift). Args passed as individually-quoted argv elements, never
+// JSON-embedded in the `-c` string (mirrors tagCheckOutput/archCheckOutput/p0ScanOutput's convention,
+// documented at implement-ticket.js:756-763 — embedding JSON directly in a double-quoted python3 -c
+// string corrupts the script on nested unescaped quotes). Fail-open per CLAUDE.md's "monitoring write
+// failure must never fail the workflow" rule — keeps the existing `2>/dev/null || true` suffix.
+const writeSidecar = async (seq) => {
+  await bash(
+    `python3 -c "
+import json, sys
+open('.claude/current_run', 'w').write(json.dumps({'run_id': sys.argv[1], 'seq': int(sys.argv[2])}))
+" "${tid}" "${seq}" 2>/dev/null || true`
+  )
+}
+
+// Orchestrator-side ts capture — replaces the former per-prompt "Step 0: run `date -u ...`"
+// agent-prompt-text instruction (TCK-20260710-STEP0-TS-ORCHESTRATOR-BASH). Call this once,
+// immediately before writeSidecar/the paired `await agent(...)` call, so the captured value can be
+// wired directly into pushEvent — never depends on agent prose compliance. Called BEFORE
+// writeSidecar at each site so C1's writeSidecar-to-agent() adjacency strings (tests/tools/
+// test_current_run_sidecar_orchestrator.py) are untouched by this insertion.
+const captureTs = async () => {
+  const out = await bash('date -u +%Y-%m-%dT%H:%M:%SZ')
+  return (out || '').trim() || null
 }
 
 // Mirrors tools/gate_checks/done_checker_static.py's classify_checklist_failure() exactly — kept
@@ -274,7 +299,7 @@ const scopeReasonCode = (ticketInfo.conflicts && ticketInfo.conflicts.length > 0
   : (unregisteredTags.length > 0) ? 'tag_registry_rejection' : null
 pushEvent('Scope', 'ticket-scoper',
   (ticketInfo.conflicts && ticketInfo.conflicts.length > 0) || unregisteredTags.length > 0 ? 'failed' : 'ok',
-  ticketInfo.summary || 'Scoped ticket ' + tid, ticketInfo.ts, null, scopeReasonCode)
+  ticketInfo.summary || 'Scoped ticket ' + tid, scopeTs, null, scopeReasonCode)
 
 if (ticketInfo.suggested_skills && ticketInfo.suggested_skills.length > 0) {
   log(`Suggested skill(s): ${ticketInfo.suggested_skills.join(', ')}`)
@@ -341,13 +366,10 @@ if (tier !== 'hotfix') {
 
   phase('Investigate')
 
+  const investigationTs = await captureTs()
+  await writeSidecar(events.length + 1)
   investigation = await agent(
     `Investigate ticket ${tid} using the investigator role.
-
-Step 0: run \`date -u +%Y-%m-%dT%H:%M:%SZ\`. Your response MUST begin with this exact line (nothing before it):
-PHASE_TS: <result>
-
-Step 0b: run \`python3 -c "import json; open('.claude/current_run','w').write(json.dumps({'run_id':'${tid}','seq':${events.length + 1}}))" 2>/dev/null || true\` — register this agent call for tool tracking.
 
 Step 0c — REQUIRED context search (do this BEFORE any file reads or grep):
 1. Call mcp__knowledge-search__search_docs with query = "<ticket title> <request summary>" (read the ticket first to get these). Note all returned doc paths, ticket IDs, and excerpts as warm-start candidates.
@@ -376,21 +398,17 @@ Write both files. Then return: key findings, open questions requiring a decision
     { label: 'investigate', agentType: 'investigator' }
   )
 
-  const investigationTs = investigation.toString().match(/^PHASE_TS: (\S+)/m)?.[1] || null
-  investigationText = investigation.toString().replace(/^PHASE_TS: \S+\n?/, '').trim()
+  investigationText = investigation.toString().trim()
   pushEvent('Investigate', 'investigator', 'ok', investigationText.slice(0, 200), investigationTs)
 
   // ─── Phase 3: Plan ────────────────────────────────────────────────────────────
 
   phase('Plan')
 
+  const planTs = await captureTs()
+  await writeSidecar(events.length + 1)
   plan = await agent(
     `Produce the implementation plan for ticket ${tid} using the planner role.
-
-Step 0: run \`date -u +%Y-%m-%dT%H:%M:%SZ\`. Your response MUST begin with this exact line (nothing before it):
-PHASE_TS: <result>
-
-Step 0b: run \`python3 -c "import json; open('.claude/current_run','w').write(json.dumps({'run_id':'${tid}','seq':${events.length + 1}}))" 2>/dev/null || true\` — register this agent call for tool tracking.
 
 Read:
 - ${ticketInfo.ticket_path}
@@ -413,8 +431,7 @@ Then return: ordered step list (one line per step) + any unresolved questions.`,
     { label: 'plan', agentType: 'planner' }
   )
 
-  const planTs = plan.toString().match(/^PHASE_TS: (\S+)/m)?.[1] || null
-  planText = plan.toString().replace(/^PHASE_TS: \S+\n?/, '').trim()
+  planText = plan.toString().trim()
 
   if (planText.toLowerCase().includes('unresolved question')) {
     pushEvent('Plan', 'planner', 'blocked', 'Plan contains unresolved questions — human review required', planTs)
@@ -447,12 +464,10 @@ Then return: ordered step list (one line per step) + any unresolved questions.`,
     },
   }
 
+  const reviewTs = await captureTs()
+  await writeSidecar(events.length + 1)
   review = await agent(
     `Architecture review for ticket ${tid}.
-
-Step 0: run \`date -u +%Y-%m-%dT%H:%M:%SZ\` and include result as the \`ts\` field.
-
-Step 0b: run \`python3 -c "import json; open('.claude/current_run','w').write(json.dumps({'run_id':'${tid}','seq':${events.length + 1}}))" 2>/dev/null || true\` — register this agent call for tool tracking.
 
 Read:
 - staging_artifacts/${tid}/plan.md
@@ -473,7 +488,7 @@ Validate against:
 
 Return: APPROVED / NEEDS_CHANGES (fixable violations) / BLOCKED (fundamental conflict),
 list of violations (empty if APPROVED), parity ledger entry IDs affected, mechanics chapters implementer must read,
-summary (one sentence: verdict + key reason, ≤200 chars), ts.`,
+summary (one sentence: verdict + key reason, ≤200 chars).`,
     { label: 'architecture-review', schema: REVIEW_SCHEMA, agentType: 'architecture-reviewer' }
   )
 
@@ -482,7 +497,7 @@ summary (one sentence: verdict + key reason, ≤200 chars), ts.`,
     if (review.violations.length > 0) {
       log(`Violations: ${review.violations.join(' | ')}`)
     }
-    pushEvent('Review', 'architecture-reviewer', 'failed', review.summary || 'Review: ' + review.verdict, review.ts)
+    pushEvent('Review', 'architecture-reviewer', 'failed', review.summary || 'Review: ' + review.verdict, reviewTs)
     await writeMonitoring(review.verdict)
     return {
       status: review.verdict,
@@ -492,7 +507,7 @@ summary (one sentence: verdict + key reason, ≤200 chars), ts.`,
     }
   }
 
-  pushEvent('Review', 'architecture-reviewer', 'ok', review.summary || 'Architecture review: APPROVED', review.ts)
+  pushEvent('Review', 'architecture-reviewer', 'ok', review.summary || 'Architecture review: APPROVED', reviewTs)
   log('Architecture review: APPROVED')
 } else {
   log('Hotfix tier: skipping Investigate, Plan, and Architecture Review.')
@@ -518,12 +533,10 @@ const IMPL_SCHEMA = {
   },
 }
 
+const implementTs = await captureTs()
+await writeSidecar(events.length + 1)
 const implementation = await agent(
   `Implement ticket ${tid}. Tier: ${tier}.
-
-Step 0: run \`date -u +%Y-%m-%dT%H:%M:%SZ\` and include result as the \`ts\` field.
-
-Step 0b: run \`python3 -c "import json; open('.claude/current_run','w').write(json.dumps({'run_id':'${tid}','seq':${events.length + 1}}))" 2>/dev/null || true\` — register this agent call for tool tracking.
 
 Read:
 ${tier !== 'hotfix' ? `- staging_artifacts/${tid}/plan.md (follow this exactly)
@@ -544,11 +557,11 @@ After writing code:
 1. Update the "Implementation Notes" section in ${ticketInfo.ticket_path} with what was done (concise, factual).
 ${tier !== 'hotfix' ? `2. Update staging_artifacts/${tid}/plan.md "Deviations" section if any step differed from the plan — never silently deviate.` : ''}
 
-Return: files_changed (list of paths), behavior_changed (boolean), parity_subsystems (from: substrate, combat_movement, strategic_cognition, town_resource, progression, social_narrative, world_dynamics, infrastructure), implementation_summary (one paragraph), summary (one sentence ≤200 chars), ts.`,
+Return: files_changed (list of paths), behavior_changed (boolean), parity_subsystems (from: substrate, combat_movement, strategic_cognition, town_resource, progression, social_narrative, world_dynamics, infrastructure), implementation_summary (one paragraph), summary (one sentence ≤200 chars).`,
   { label: 'implement', schema: IMPL_SCHEMA, agentType: 'implementer' }
 )
 
-pushEvent('Implement', 'implementer', 'ok', implementation.summary || implementation.implementation_summary || 'Implementation complete', implementation.ts)
+pushEvent('Implement', 'implementer', 'ok', implementation.summary || implementation.implementation_summary || 'Implementation complete', implementTs)
 
 // ─── Phase 5b: Architecture-Verify (post-Implement static backstop) ───────────
 // The original pre-Implement Review phase (above) has no code to parse — plan.md is prose, not
@@ -589,12 +602,10 @@ print('ARCH_CHECK_JSON:' + json.dumps(run_architecture_checks(sys.argv[1:])))
     },
   }
 
+  const archVerifyTs = await captureTs()
+  await writeSidecar(events.length + 1)
   const archVerify = await agent(
     `Post-implementation architecture verification for ticket ${tid}.
-
-Step 0: run \`date -u +%Y-%m-%dT%H:%M:%SZ\` and include result as the \`ts\` field.
-
-Step 0b: run \`python3 -c "import json; open('.claude/current_run','w').write(json.dumps({'run_id':'${tid}','seq':${events.length + 1}}))" 2>/dev/null || true\` — register this agent call for tool tracking.
 
 Files changed: ${implementation.files_changed.join(', ')}
 
@@ -607,7 +618,7 @@ This is a narrow verification, not a full re-review. The plan was already judged
 3. Address any confirmed real violation by describing what must change, or explain why it's a false positive.
 
 Return: APPROVED (no confirmed real violations) / NEEDS_CHANGES (fixable violations confirmed) / BLOCKED (fundamental conflict),
-violations (empty if APPROVED), summary (one sentence: verdict + key reason, ≤200 chars), ts,
+violations (empty if APPROVED), summary (one sentence: verdict + key reason, ≤200 chars),
 verified_by (list which findings came from the static script vs. independent judgment, e.g. ["static:architecture_reviewer_static", "llm"]).`,
     { label: 'architecture-verify', schema: ARCH_VERIFY_SCHEMA, agentType: 'architecture-reviewer' }
   )
@@ -617,7 +628,7 @@ verified_by (list which findings came from the static script vs. independent jud
     if (archVerify.violations.length > 0) {
       log(`Violations: ${archVerify.violations.join(' | ')}`)
     }
-    pushEvent('Architecture-Verify', 'architecture-reviewer', 'failed', archVerify.summary || 'Architecture-Verify: ' + archVerify.verdict, archVerify.ts)
+    pushEvent('Architecture-Verify', 'architecture-reviewer', 'failed', archVerify.summary || 'Architecture-Verify: ' + archVerify.verdict, archVerifyTs)
     await writeMonitoring(archVerify.verdict)
     return {
       status: archVerify.verdict,
@@ -627,7 +638,7 @@ verified_by (list which findings came from the static script vs. independent jud
     }
   }
 
-  pushEvent('Architecture-Verify', 'architecture-reviewer', 'ok', archVerify.summary || 'Architecture-Verify: APPROVED', archVerify.ts)
+  pushEvent('Architecture-Verify', 'architecture-reviewer', 'ok', archVerify.summary || 'Architecture-Verify: APPROVED', archVerifyTs)
   log('Architecture-Verify: APPROVED')
 } else {
   pushEvent('Architecture-Verify', 'architecture-reviewer', 'skipped', 'Hotfix tier — architecture verify skipped')
@@ -652,12 +663,10 @@ const TEST_SCHEMA = {
   },
 }
 
+const testTs = await captureTs()
+await writeSidecar(events.length + 1)
 const testResult = await agent(
   `Scope and run tests for ticket ${tid}.
-
-Step 0: run \`date -u +%Y-%m-%dT%H:%M:%SZ\` and include result as the \`ts\` field.
-
-Step 0b: run \`python3 -c "import json; open('.claude/current_run','w').write(json.dumps({'run_id':'${tid}','seq':${events.length + 1}}))" 2>/dev/null || true\` — register this agent call for tool tracking.
 
 Files changed:
 ${implementation.files_changed.join('\n')}
@@ -670,12 +679,12 @@ Step 3 — Build the scoped pytest command. Never use bare "pytest tests/".
 
 Step 4 — Run the command via Bash. Capture stdout/stderr.
 
-Step 5 — Report: pytest_command used, pass_count, fail_count, failed_tests (empty if all pass), coverage_gaps (changed files with no test coverage), summary (one sentence: pass/fail result, ≤200 chars), ts.`,
+Step 5 — Report: pytest_command used, pass_count, fail_count, failed_tests (empty if all pass), coverage_gaps (changed files with no test coverage), summary (one sentence: pass/fail result, ≤200 chars).`,
   { label: 'test-scope-and-run', schema: TEST_SCHEMA, agentType: 'test-scoper' }
 )
 
 if (!testResult.passed) {
-  pushEvent('Test', 'test-scoper', 'failed', testResult.summary || testResult.fail_count + ' tests failing: ' + testResult.failed_tests.slice(0, 3).join(', '), testResult.ts)
+  pushEvent('Test', 'test-scoper', 'failed', testResult.summary || testResult.fail_count + ' tests failing: ' + testResult.failed_tests.slice(0, 3).join(', '), testTs)
   log(`Tests FAILED: ${testResult.fail_count} failing — ${testResult.failed_tests.join(', ')}`)
   await writeMonitoring('TESTS_FAILED')
   return {
@@ -687,7 +696,7 @@ if (!testResult.passed) {
   }
 }
 
-pushEvent('Test', 'test-scoper', 'ok', testResult.summary || testResult.pass_count + ' tests passed', testResult.ts)
+pushEvent('Test', 'test-scoper', 'ok', testResult.summary || testResult.pass_count + ' tests passed', testTs)
 log(`Tests passed: ${testResult.pass_count} passing`)
 
 if (testResult.coverage_gaps.length > 0) {
@@ -722,7 +731,7 @@ const cleanupStatus = cleanupSepIdx === -1 ? cleanupOutput.trim() : cleanupOutpu
 const cleanupEvidence = cleanupSepIdx === -1 ? '' : cleanupOutput.slice(cleanupSepIdx + 1).trim()
 
 if (cleanupStatus === 'FAIL') {
-  pushEvent('Test', 'implement-ticket-orchestrator', 'failed', `Post-Test data/runs cleanup failed: ${cleanupEvidence.slice(0, 200)}`, testResult.ts)
+  pushEvent('Test', 'implement-ticket-orchestrator', 'failed', `Post-Test data/runs cleanup failed: ${cleanupEvidence.slice(0, 200)}`, testTs)
   log(`Post-Test data/runs cleanup FAILED: ${cleanupEvidence}`)
   await writeMonitoring('DATA_RUNS_CLEAN_FAILED')
   return {
@@ -803,12 +812,10 @@ print(json.dumps(expected_subsystems_for_files(sys.argv[1:])))
 " ${filesChangedArgs}`
   )
 
+  const parityTs = await captureTs()
+  await writeSidecar(events.length + 1)
   const parity = await agent(
     `Update parity ledger for ticket ${tid}.
-
-Step 0: run \`date -u +%Y-%m-%dT%H:%M:%SZ\` and include result as the \`ts\` field.
-
-Step 0b: run \`python3 -c "import json; open('.claude/current_run','w').write(json.dumps({'run_id':'${tid}','seq':${events.length + 1}}))" 2>/dev/null || true\` — register this agent call for tool tracking.
 
 Behavior changed: ${implementation.behavior_changed}
 Parity subsystems affected: ${(implementation.parity_subsystems || []).join(', ') || 'check implementation summary'}
@@ -860,7 +867,7 @@ print('PARITY_CHECK_JSON:' + json.dumps(results))
   // unparseable cross-ref result (parityCrossRef === null) stays non-blocking, unchanged from today.
   if (parityCrossRefFailures.length > 0) {
     const evidence = parityCrossRefFailures.map(f => f.file + ': ' + f.evidence).join('; ').slice(0, 200)
-    pushEvent('Parity', 'parity-updater', 'failed', evidence, parity.ts)
+    pushEvent('Parity', 'parity-updater', 'failed', evidence, parityTs)
     await writeMonitoring('PARITY_INCOMPLETE')
     return {
       status: 'PARITY_INCOMPLETE',
@@ -873,7 +880,7 @@ print('PARITY_CHECK_JSON:' + json.dumps(results))
   const parityEvidence = parityCrossRef === null
     ? (parity.summary || 'Parity ledger updated').slice(0, 150) + ' | cross-ref: unparseable'
     : (parity.summary || 'Parity ledger updated')
-  pushEvent('Parity', 'parity-updater', 'ok', parityEvidence, parity.ts)
+  pushEvent('Parity', 'parity-updater', 'ok', parityEvidence, parityTs)
 }
 
 // ─── Phase 7b: Security-Review (conditional gate) ─────────────────────────────
@@ -897,12 +904,10 @@ if ((ticketInfo.tags && ticketInfo.tags.includes('security')) ||
     },
   }
 
+  const securityReviewTs = await captureTs()
+  await writeSidecar(events.length + 1)
   const securityReview = await agent(
     `Security review for ticket ${tid}.
-
-Step 0: run \`date -u +%Y-%m-%dT%H:%M:%SZ\` and include result as the \`ts\` field.
-
-Step 0b: run \`python3 -c "import json; open('.claude/current_run','w').write(json.dumps({'run_id':'${tid}','seq':${events.length + 1}}))" 2>/dev/null || true\` — register this agent call for tool tracking.
 
 Read:
 - ${ticketInfo.ticket_path}
@@ -911,7 +916,7 @@ Read:
 This ticket is tagged \`security\` (its frontmatter tags include \`security\`, or suggested_skills includes /security-review). Review the actual diff/changed files for: injection, unsafe deserialization, path traversal, subprocess/command injection, secrets-in-code, raw-domain-model API exposure.
 
 Return: APPROVED / NEEDS_CHANGES (fixable violations) / BLOCKED (fundamental vulnerability),
-violations (empty if APPROVED), summary (one sentence: verdict + key reason, ≤200 chars), ts.`,
+violations (empty if APPROVED), summary (one sentence: verdict + key reason, ≤200 chars).`,
     { label: 'security-review', schema: SECURITY_REVIEW_SCHEMA, agentType: 'security-reviewer' }
   )
 
@@ -920,7 +925,7 @@ violations (empty if APPROVED), summary (one sentence: verdict + key reason, ≤
     if (securityReview.violations.length > 0) {
       log(`Violations: ${securityReview.violations.join(' | ')}`)
     }
-    pushEvent('Security-Review', 'security-reviewer', 'failed', securityReview.summary || 'Security review: ' + securityReview.verdict, securityReview.ts)
+    pushEvent('Security-Review', 'security-reviewer', 'failed', securityReview.summary || 'Security review: ' + securityReview.verdict, securityReviewTs)
     await writeMonitoring('SECURITY_BLOCKED')
     return {
       status: 'SECURITY_BLOCKED',
@@ -930,7 +935,7 @@ violations (empty if APPROVED), summary (one sentence: verdict + key reason, ≤
     }
   }
 
-  pushEvent('Security-Review', 'security-reviewer', 'ok', securityReview.summary || 'Security review: APPROVED', securityReview.ts)
+  pushEvent('Security-Review', 'security-reviewer', 'ok', securityReview.summary || 'Security review: APPROVED', securityReviewTs)
   log('Security review: APPROVED')
 }
 
@@ -962,12 +967,10 @@ const DONE_SCHEMA = {
   },
 }
 
+const doneCheckTs = await captureTs()
+await writeSidecar(events.length + 1)
 const doneCheck = await agent(
   `Definition-of-Done check for ticket ${tid}.
-
-Step 0: run \`date -u +%Y-%m-%dT%H:%M:%SZ\` and include result as the \`ts\` field.
-
-Step 0b: run \`python3 -c "import json; open('.claude/current_run','w').write(json.dumps({'run_id':'${tid}','seq':${events.length + 1}}))" 2>/dev/null || true\` — register this agent call for tool tracking.
 
 Ticket path: ${ticketInfo.ticket_path}
 Tier: ${tier}
@@ -994,13 +997,13 @@ Check all DoD conditions with evidence. For these, mark as noted:
 Mark those three as PASS with note "will be completed by workflow" — they are guaranteed by the workflow.
 
 For all others, read the actual files to verify.
-Return: verdict, failing_items, checklist, summary (one sentence: READY_TO_CLOSE or BLOCKED + count, ≤200 chars), ts, verified_by (list which conditions came from the static script vs. pure judgment, e.g. ["static:done_checker_static", "llm"]).`,
+Return: verdict, failing_items, checklist, summary (one sentence: READY_TO_CLOSE or BLOCKED + count, ≤200 chars), verified_by (list which conditions came from the static script vs. pure judgment, e.g. ["static:done_checker_static", "llm"]).`,
   { label: 'done-check', schema: DONE_SCHEMA, agentType: 'done-checker' }
 )
 
 if (doneCheck.verdict !== 'READY_TO_CLOSE') {
   const reasonCode = classifyChecklistFailure(doneCheck.checklist)
-  pushEvent('Verify', 'done-checker', 'failed', doneCheck.summary || 'DoD BLOCKED — ' + doneCheck.failing_items.length + ' items failing', doneCheck.ts, null, reasonCode)
+  pushEvent('Verify', 'done-checker', 'failed', doneCheck.summary || 'DoD BLOCKED — ' + doneCheck.failing_items.length + ' items failing', doneCheckTs, null, reasonCode)
   log(`DoD check: BLOCKED — ${doneCheck.failing_items.length} items failing`)
   log(doneCheck.failing_items.join(' | '))
   await writeMonitoring('DOD_BLOCKED')
@@ -1013,16 +1016,15 @@ if (doneCheck.verdict !== 'READY_TO_CLOSE') {
   }
 }
 
-pushEvent('Verify', 'done-checker', 'ok', doneCheck.summary || 'DoD: READY_TO_CLOSE', doneCheck.ts)
+pushEvent('Verify', 'done-checker', 'ok', doneCheck.summary || 'DoD: READY_TO_CLOSE', doneCheckTs)
 
 // ─── Phase 9: Finalize ────────────────────────────────────────────────────────
 
 phase('Finalize')
 
+await writeSidecar(events.length + 1)
 await agent(
   `Finalize ticket ${tid} — all gates passed. Tier: ${tier}.
-
-Step 0: run \`python3 -c "import json; open('.claude/current_run','w').write(json.dumps({'run_id':'${tid}','seq':${events.length + 1}}))" 2>/dev/null || true\` — register this agent call for tool tracking.
 
 Complete these steps in order:
 

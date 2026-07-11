@@ -14,6 +14,7 @@ if str(_TOOLS_DIR) not in sys.path:
     sys.path.insert(0, str(_TOOLS_DIR))
 
 from gate_checks.mechanics_auditor_static import (  # noqa: E402
+    audit_verified_by_claims,
     check_test_path,
     verify_entry_test_path,
 )
@@ -162,3 +163,142 @@ def test_scoped_by_entry_id_not_whole_ledger(tmp_path):
     assert result["entry_id"] == "A-002"
     assert "A-001" not in str(result)
     assert "A-003" not in str(result)
+
+
+def test_audit_passes_honest_static_pass_claim(tmp_path):
+    (tmp_path / "test_ok_file.py").write_text("def test_ok():\n    assert True\n")
+    _write_ledger(tmp_path, "combat_movement.yaml", [
+        {
+            "id": "H-001", "text": "x", "status": "verified", "priority": "P1",
+            "v2_evidence": "src/engine/foo.py", "test_path": "test_ok_file.py::test_ok",
+        },
+    ])
+    rows = [{
+        "entry_id": "H-001",
+        "status": "PARITY",
+        "verified_by": ["static:mechanics_auditor_static", "llm"],
+        "Finding": "matches formula exactly",
+    }]
+
+    result = audit_verified_by_claims(rows, ledger_dir=tmp_path, base_dir=tmp_path)
+
+    assert len(result) == 1
+    assert result[0]["entry_id"] == "H-001"
+    assert result[0]["honesty_status"] == "PASS"
+
+
+def test_audit_detects_step_0_skipped_on_verified_status_entry(tmp_path):
+    _write_ledger(tmp_path, "combat_movement.yaml", [
+        {
+            "id": "S-001", "text": "x", "status": "verified", "priority": "P1",
+            "v2_evidence": "src/engine/foo.py", "test_path": "tests/unit/test_foo.py",
+        },
+    ])
+    rows = [{
+        "entry_id": "S-001",
+        "status": "PARITY",
+        "verified_by": ["llm"],
+        "Finding": "matches formula",
+    }]
+
+    result = audit_verified_by_claims(rows, ledger_dir=tmp_path, base_dir=tmp_path)
+
+    assert len(result) == 1
+    assert result[0]["entry_id"] == "S-001"
+    assert result[0]["honesty_status"] == "FAIL"
+    assert "skipped" in result[0]["evidence"].lower()
+
+
+def test_audit_detects_falsely_cited_static_pass(tmp_path):
+    (tmp_path / "test_fail_file.py").write_text(
+        "def test_fails():\n    assert False\n"
+    )
+    _write_ledger(tmp_path, "combat_movement.yaml", [
+        {
+            "id": "F-001", "text": "x", "status": "verified", "priority": "P1",
+            "v2_evidence": "src/engine/foo.py", "test_path": "test_fail_file.py::test_fails",
+        },
+    ])
+    rows = [{
+        "entry_id": "F-001",
+        "status": "PARITY",
+        "verified_by": ["static:mechanics_auditor_static", "llm"],
+        "Finding": "matches formula exactly",
+    }]
+
+    result = audit_verified_by_claims(rows, ledger_dir=tmp_path, base_dir=tmp_path)
+
+    assert len(result) == 1
+    assert result[0]["entry_id"] == "F-001"
+    assert result[0]["honesty_status"] == "FAIL"
+    assert "falsely cited" in result[0]["evidence"].lower()
+
+
+def test_audit_passes_honest_llm_only_claim_on_non_verified_status_entry(tmp_path):
+    _write_ledger(tmp_path, "combat_movement.yaml", [
+        {
+            "id": "N-001", "text": "x", "status": "missing", "priority": "P1",
+            "v2_evidence": "src/engine/foo.py", "test_path": None,
+        },
+    ])
+    rows = [{
+        "entry_id": "N-001",
+        "status": "MISSING",
+        "verified_by": ["llm"],
+        "Finding": "no implementation found",
+    }]
+
+    result = audit_verified_by_claims(rows, ledger_dir=tmp_path, base_dir=tmp_path)
+
+    assert result == []
+
+
+def test_audit_scoped_by_row_not_whole_ledger(tmp_path):
+    _write_ledger(tmp_path, "combat_movement.yaml", [
+        {
+            "id": "A-001", "text": "x", "status": "verified", "priority": "P1",
+            "v2_evidence": "src/engine/foo.py", "test_path": "tests/unit/test_foo.py",
+        },
+        {
+            "id": "A-002", "text": "y", "status": "verified", "priority": "P1",
+            "v2_evidence": "src/engine/bar.py", "test_path": "tests/does_not_exist.py::test_bar",
+        },
+        {
+            "id": "A-003", "text": "z", "status": "verified", "priority": "P1",
+            "v2_evidence": "src/engine/baz.py", "test_path": "tests/unit/test_baz.py",
+        },
+    ])
+    rows = [{
+        "entry_id": "A-002",
+        "status": "PARITY",
+        "verified_by": ["llm"],
+        "Finding": "no static tag cited",
+    }]
+
+    result = audit_verified_by_claims(rows, ledger_dir=tmp_path, base_dir=tmp_path)
+
+    assert len(result) <= 1
+    assert "A-001" not in str(result)
+    assert "A-003" not in str(result)
+
+
+def test_audit_never_overrides_agent_status_classification(tmp_path):
+    _write_ledger(tmp_path, "combat_movement.yaml", [
+        {
+            "id": "K-001", "text": "x", "status": "verified", "priority": "P1",
+            "v2_evidence": "src/engine/foo.py", "test_path": "tests/unit/test_foo.py",
+        },
+    ])
+    rows = [{
+        "entry_id": "K-001",
+        "status": "PARITY",
+        "verified_by": ["llm"],
+        "Finding": "matches formula",
+    }]
+
+    result = audit_verified_by_claims(rows, ledger_dir=tmp_path, base_dir=tmp_path)
+
+    assert len(result) == 1
+    assert "status" not in result[0]
+    assert "Status" not in result[0]
+    assert set(result[0].keys()) == {"entry_id", "honesty_status", "evidence"}
