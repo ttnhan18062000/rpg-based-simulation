@@ -585,3 +585,6 @@
 {"run_id":"TCK-20260712-WORKFLOW-FRICTION-FIXES","start_ts":"2026-07-11T17:18:48Z","end_ts":"2026-07-11T17:33:04Z","workflow":"implement-ticket","tier":"hotfix","final_status":"DONE","agent_count":10,"duration_s":856}
 {"run_id":"TCK-20260710-SIMQ-DEPTH-SOCIAL","start_ts":"2026-07-11T18:58:27Z","end_ts":"2026-07-12T08:47:16Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":10,"duration_s":49729}
 {"run_id":"FOLDER-tickets-todos-simq-roadmap-phase2-depth-social","start_ts":"2026-07-11T18:58:14Z","end_ts":"2026-07-12T08:48:46Z","workflow":"implement-epic","tier":"epic","final_status":"DONE","agent_count":1,"duration_s":49832}
+{"run_id":"TCK-20260710-SIMQ-DEPTH-FACTION","start_ts":"2026-07-12T08:58:01Z","end_ts":"2026-07-12T13:19:02Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":10,"duration_s":15661}
+{"run_id":"TCK-20260710-SIMQ-DEPTH-INFORMATION","start_ts":"2026-07-12T13:20:33Z","end_ts":"2026-07-12T16:11:34Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":10,"duration_s":10261}
+{"run_id":"FOLDER-tickets-todos-simq-roadmap-phase3-depth-faction-information","start_ts":"2026-07-12T08:57:41Z","end_ts":"2026-07-12T16:12:37Z","workflow":"implement-epic","tier":"epic","final_status":"DONE","agent_count":2,"duration_s":26096}

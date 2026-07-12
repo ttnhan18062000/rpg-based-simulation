@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: world
 authority: P1
 audience: agent
 ticket_id: TCK-20260710-SIMQ-DEPTH-INFORMATION
-phase: open
+phase: done
 date: 2026-07-10
 tags: [simulation-quality, information, world, corpus, calibration]
 ---
@@ -15,7 +15,7 @@ tags: [simulation-quality, information, world, corpus, calibration]
 Extend INFORMATION pillar depth (Pattern 6 `information_source_profiles` + `pending_information_responses` seeding) to 2-3 more corpus worlds — Phase 3 Depth Wave 2 (INFORMATION half)
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -371,8 +371,118 @@ work is expected for this ticket, mirroring the FACTION sibling's conclusion.
 
 ## Implementation Notes
 
+**Closure-mechanism decision:** closed directly as "already-satisfied by prior work," not folded
+into the roadmap's Phase 5 Coverage Decision Gate — the identical mechanism the sibling
+`TCK-20260710-SIMQ-DEPTH-FACTION` ticket used. Phase 5 is an explicit later, corpus-wide,
+multi-phase decision gate (fires once Phases 2-4 have all landed and asks "is continuing toward
+full 17-world coverage worth the cost," a roadmap-wide question) — not a per-ticket closure
+mechanism for "is there any remaining work in this one pillar." The roadmap's own Phase 3 text
+(`docs/plans/simq_development_roadmap.md`) already pre-authorized "zero new worlds, coverage
+already adequate, documented and closed" as a valid acceptance outcome. Investigation re-verified
+all 17 corpus worlds live against `data/worlds/*/world.yaml` and
+`config/simulation_quality/profiles/*.yaml` (two independent, agreeing signals — compile-time
+content grep and runtime `ENABLE_BELIEF_ASSIMILATION` flag grep, both landing on the same 9-world
+set) and found the roadmap's original "2-3 more worlds" framing stale: 9/17 worlds already carry
+calibrated INFORMATION content, and the remaining 8 each have a documented, live-verified,
+pre-existing reason to stay INFORMATION-inert (2 structurally incapable — no population-bearing
+settlement module; 2 Stress tier-purity; 1 Regression/baseline fixture; 3 Unit single-mechanic
+isolation). Zero genuinely uncovered, tier-appropriate candidates remain.
+
+**INFRA-256/INFRA-257 naming-gap decision:** fixed, not deferred. Investigation found both entries'
+`text` prose named `urban_political` + the 6 `CORPUS-E2E-CONTENT-EXPANSION` worlds + `frontier_marches`
+(8 worlds) by name but never named the 9th covered world, `unit_information_source`, even though it
+clearly satisfies both entries' `support_boundary`. This is a documentation-completeness gap in an
+already-`verified`, P1 entry, not a functional gap — fixed via one additive sentence per entry,
+mirroring the pre-existing `frontier_marches` additive-clause pattern already used in both entries
+(append-only, no reword of prior text). `status`, `priority`, `v2_evidence`, `proof_type`,
+`test_path`, and `divergence_note` were left untouched on both entries, since this is a
+documentation-accuracy correction, not a behavior or evidence-path change.
+
+**Step 5 (`audit_fix_plan.md` check):** `grep -n -i "information" docs/plans/audit_fix_plan.md`
+returned exactly 3 hits — a standing structural-gap note about COGNITION/ECONOMY/FACTION/
+INFORMATION/SOCIAL all being C due to 27 engine emission gaps (already-tracked, unrelated to this
+ticket's content-authoring scope), a table row citing INFORMATION's historical C→B move, and a
+reference to the already-closed `TCK-20260701-SIMQ-EMIT-INFORMATION2`. None is an open, in-scope
+entry. `audit_fix_plan.md` was not edited.
+
+No deviations from `staging_artifacts/TCK-20260710-SIMQ-DEPTH-INFORMATION/plan.md` occurred — all
+7 steps were followed as written.
+
 ## Test Summary
 
+No code, content, or test changes were made under this ticket beyond the INFRA-256/INFRA-257
+additive prose sentences. Per `test_plan.md`'s "Scoped Pytest Commands," a confirmatory regression
+sweep was run against the final doc-only diff to prove zero drift:
+
+- `pytest tests/unit/worldbuilding/test_world_compiler.py tests/unit/worldassembly/test_assembly.py
+  tests/unit/worldassembly/test_corpus_diversity.py
+  tests/integration/scenarios/test_phase5_information_belief_scenarios.py -q` — 132 passed, 1 failed
+  (`test_generated_frontier_3_42_extended_population_stability`, a `TimeoutError: Test execution
+  exceeded the resource time limit` from `tests/conftest.py:48`, driven by this machine's tick-compute
+  performance under a watchdog/emergency-throttle threshold — pre-existing test-infra flakiness
+  unrelated to this ticket, since no file that test exercises (`data/worlds/`, `src/`, `config/`) was
+  touched here).
+- `pytest tests/simulation_quality/test_grade_regression.py -q` — 70 passed, 2 failed
+  (`dungeon_crawl_seed42_200t`, `urban_political_seed42_200t`, both on the **PROGRESSION** pillar
+  drifting outside its anchor band — unrelated pillar to this ticket's INFORMATION scope, and
+  unrelated to this ticket's edits since `grade_anchors.json` was not touched; pre-existing drift).
+- Re-ran the two live grep signals from `investigation.md`: `grep -c
+  "information_source_profiles\|pending_information_responses" data/worlds/*/world.yaml` and `grep -rln
+  "ENABLE_BELIEF_ASSIMILATION" config/simulation_quality/profiles/*.yaml` — the flag-grep signal still
+  returns exactly the same 9-world set (`frontier_extended`, `frontier_living_world`,
+  `frontier_marches`, `highland_traverse`, `generated_frontier_3_42`, `swamp_border_world`,
+  `sandbox_world`, `urban_political`, `unit_information_source`) as `investigation.md`'s
+  2026-07-12 table, confirming no accidental content drift occurred during this documentation-only
+  closure.
+- `python3 -c "import yaml; yaml.safe_load(open('docs/parity_ledger/infrastructure.yaml'))"` —
+  parses without error after the INFRA-256/INFRA-257 edits.
+- `grep -n "unit_information_source" docs/parity_ledger/infrastructure.yaml` — 3 hits (2 lines in
+  INFRA-256's new sentence, which wraps across two lines; 1 line in INFRA-257's new sentence), where
+  it previously returned 0.
+
+Both failures above are honestly reported as pre-existing/unrelated per this ticket's Test Summary
+discipline (the FACTION sibling ticket's own precedent), not silently rounded up to a clean pass.
+
 ## Files Changed
+- `docs/simulation_quality/eval_matrix_results.md` — appended "INFORMATION Coverage Closure —
+  Phase 3" section (17-world coverage table + UQ-1 verdict), after the existing FACTION closure
+  section
+- `docs/simulation_quality/corpus_tier_taxonomy.md` — added INFORMATION coverage-closure paragraph
+  directly after the existing FACTION closure paragraph
+- `docs/plans/simq_development_roadmap.md` — added a dated INFORMATION-half closure blockquote to
+  the Phase 3 section, after the existing FACTION-half blockquote
+- `docs/parity_ledger/infrastructure.yaml` — added one additive sentence each to `INFRA-256` and
+  `INFRA-257`'s `text` fields, naming `unit_information_source`; `status`/`priority`/`v2_evidence`/
+  `proof_type`/`test_path`/`divergence_note` unchanged on both entries
+- `tickets/inprogress/TCK-20260710-SIMQ-DEPTH-INFORMATION.md` (this file) — Status/Implementation
+  Notes/Test Summary/Files Changed/Completion Summary filled in
 
 ## Completion Summary
+Investigation definitively resolved UQ-1: zero genuinely uncovered, tier-appropriate INFORMATION
+candidates remain in the 17-world corpus as of live 2026-07-12 verification. 9/17 worlds already
+carry calibrated `information_source_profiles`/`pending_information_responses` content with
+`ENABLE_BELIEF_ASSIMILATION: "ON"` (independently confirmed by two agreeing live signals), and the
+remaining 8 (`dungeon_crawl`, `wilderness_survival`, `crowded_frontier`, `resource_dense_basin`,
+`simq_routing_test`, `hero_guild_routing`, `unit_faction_tension`, `unit_selfmodel_pilot`) each have
+a documented, live-verified, pre-existing reason to stay INFORMATION-inert (2 structurally incapable,
+2 Stress tier-purity, 1 Regression/baseline fixture, 3 Unit single-mechanic isolation). The roadmap's
+Phase 3 INFORMATION-half goal is satisfied by five prior, already-closed tickets
+(`TCK-20260702-SIMQ-UPLIFT2-INFORMATION`, `TCK-20260703-SIMQ-INFORMATION-BELIEF-TRIGGER`,
+`TCK-20260704-SIMQ-CORPUS-E2E-CONTENT-EXPANSION`, `TCK-20260704-SIMQ-CORPUS-STRESS-WORLDS`,
+`TCK-20260704-SIMQ-CORPUS-UNIT-WORLDS-FACTION-INFO`).
+
+**This ticket's original 9 acceptance criteria mostly presuppose content authoring occurs.** With
+zero legitimate candidates found, those criteria (seeded content, compile/population-alive checks,
+grade movement, grade-anchor entries, `make evaluate` full sweep, `v2_evidence` extension for newly
+selected worlds) are satisfied **vacuously, by prior work already done under other tickets** — not
+by any action taken under this ticket, exactly mirroring how the FACTION sibling ticket reframed its
+own acceptance. This ticket's real, actually-delivered acceptance bar was: (1) re-verify current
+corpus coverage live rather than trust stale docs, (2) durably record that finding in
+`eval_matrix_results.md` and `corpus_tier_taxonomy.md` so a future investigator does not have to
+re-derive it, (3) close the roadmap's Phase 3 INFORMATION-half with a dated blockquote noting both
+halves of Phase 3 (FACTION and INFORMATION) are now closed, and (4) fix the genuine
+`INFRA-256`/`INFRA-257` documentation-accuracy gap discovered along the way (naming
+`unit_information_source`). All four were completed; zero content, schema, compiler, resolver, or
+calibration-profile changes were made or needed. The scoped regression sweep confirmed no drift
+(2 unrelated, pre-existing failures honestly reported in Test Summary — a resource-timeout flake and
+a PROGRESSION-pillar anchor drift, neither touching INFORMATION or any file this ticket changed).

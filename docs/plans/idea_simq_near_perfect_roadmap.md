@@ -210,6 +210,24 @@ archetype worlds, deliberately trading corpus width growth for corpus depth grow
 
 **Effort:** XS to close as a documented decision; L (epic-scale) if (b) is chosen.
 
+**Progress (option (b) chosen, epic underway as `docs/plans/simq_development_roadmap.md` Phases 2-4):**
+Phase 2 (SOCIAL, `TCK-20260710-SIMQ-DEPTH-SOCIAL`, done 2026-07-11/12) genuinely deepened the corpus:
+`frontier_living_world` and `highland_traverse` both moved SOCIAL C→S via real flag activation on
+previously-inert worlds — a clean instance of (b) as originally proposed. Phase 3 (FACTION +
+INFORMATION, both done 2026-07-12) took an unexpected but honest turn: both `TCK-20260710-SIMQ-DEPTH-FACTION`
+and `TCK-20260710-SIMQ-DEPTH-INFORMATION` independently found, via live re-verification against
+current `data/worlds/*/world.yaml` (not this thread's 2026-07-10 snapshot), that the corpus had
+already been deepened past this thread's original premise by intervening work
+(`TCK-20260704-SIMQ-CORPUS-E2E-CONTENT-EXPANSION` and siblings) — 11/17 worlds for FACTION, 9/17 for
+INFORMATION, with every remaining world carrying a documented, tier-appropriate reason to stay
+pillar-inert. Both tickets closed as already-satisfied with zero new content authoring, which is
+effectively option (a)'s outcome (accept + document) arrived at empirically rather than decided
+up front — the "C-ceiling" this thread worried about had already narrowed to COGNITION alone for
+2 of the 4 originally-named gated pillars by the time Phase 3 picked them up. Phase 4 (COGNITION,
+`TCK-20260710-SIMQ-COGNITION-REALWORLD-GENERALIZE`) remains open and is this thread's last
+unresolved pillar. ECONOMY was never included in the roadmap's Phase 2-4 scope and remains
+unaddressed by this initiative.
+
 ---
 
 ### Thread 4 — `hazard_kind` completeness has recurred three times as a reactive fix (P2-O) — **RESOLVED 2026-07-11**

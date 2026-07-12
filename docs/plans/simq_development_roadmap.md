@@ -340,6 +340,37 @@ candidate worlds if honest investigation finds none remain.
   zero-candidates finding above. Both tickets sit in the same folder
   (`tickets/todos/simq-roadmap-phase3-depth-faction-information/`) and reference each other.
 
+> **Closure (2026-07-10, `TCK-20260710-SIMQ-DEPTH-FACTION` done) — FACTION half closed as
+> already-satisfied.** Investigation re-verified all 17 corpus worlds against live
+> `data/worlds/*/world.yaml` content and confirmed 11/17 already carry calibrated
+> `faction_tension_overrides`, with the remaining 6 each having a documented, deliberate tier-purity
+> reason to stay FACTION-inert (not an oversight — see
+> `docs/simulation_quality/eval_matrix_results.md`'s "FACTION Coverage Closure — Phase 3" section).
+> Zero content authoring, recalibration, or engine work was needed or performed. This is the "zero
+> new worlds, coverage already adequate, documented and closed" outcome this section's Acceptance
+> Signal explicitly names as valid. This closure was decided at the ticket level, not deferred to
+> Phase 5 — Phase 5 is a later, corpus-wide gate that fires once Phases 2-4 have all landed and asks
+> a different question (whether pursuing full 17-world coverage is worth its cost), not whether any
+> single pillar's single-ticket scope still has work in it. The INFORMATION half
+> (`TCK-20260710-SIMQ-DEPTH-INFORMATION`) is tracked separately and is not affected by this closure.
+
+> **Closure (2026-07-12, `TCK-20260710-SIMQ-DEPTH-INFORMATION` done) — INFORMATION half closed as
+> already-satisfied.** Investigation re-verified all 17 corpus worlds against live
+> `data/worlds/*/world.yaml` content and `config/simulation_quality/profiles/*.yaml` flags (two
+> independent, agreeing signals) and confirmed 9/17 already carry calibrated
+> `information_source_profiles`/`pending_information_responses` with `ENABLE_BELIEF_ASSIMILATION:
+> "ON"`, with the remaining 8 each having a documented, live-verified reason to stay
+> INFORMATION-inert (2 structurally incapable, 2 Stress tier-purity, 1 Regression/baseline fixture,
+> 3 Unit single-mechanic isolation — not an oversight — see `docs/simulation_quality
+> /eval_matrix_results.md`'s "INFORMATION Coverage Closure — Phase 3" section). Zero content
+> authoring, recalibration, or engine work was needed or performed. This is the "zero new worlds,
+> coverage already adequate, documented and closed" outcome this section's Acceptance Signal
+> explicitly names as valid. This closure was decided at the ticket level, not deferred to Phase 5,
+> for the same reasoning the FACTION-half closure above already establishes (Phase 5 is a later,
+> corpus-wide gate that fires once Phases 2-4 have all landed and asks a different question). **Both
+> halves of Phase 3 (FACTION and INFORMATION) are now closed** — this phase requires no further
+> tickets.
+
 ---
 
 ## Phase 4 — Depth Wave 3: COGNITION (self-model / Branch B)

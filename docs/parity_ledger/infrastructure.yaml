@@ -3122,6 +3122,13 @@
     silently leave Branch A unreachable — traced during this ticket's own calibration run before
     being added, not assumed). INFORMATION pillar grade measured B across all 3 seeds (200t),
     matching the other 8 worlds' C→B pattern at this larger scale.
+    TCK-20260704-SIMQ-CORPUS-UNIT-WORLDS-FACTION-INFO adds a fourth data point at unit-tier scale:
+    data/worlds/unit_information_source/world.yaml (16 entities/1 region, a deliberate
+    single-mechanic INFORMATION-isolation world) seeds 2 information_source_profiles/
+    pending_information_responses entries (town_notice_board, hometown_danger) targeting pop_0,
+    with ENABLE_BELIEF_ASSIMILATION=ON in config/simulation_quality/profiles
+    /unit_information_source.yaml. INFORMATION pillar grade measured B, confirming the mechanism
+    holds at the smallest tested scale as well as the largest (frontier_marches).
   status: verified
   priority: P1
   legacy_evidence: null
@@ -3192,6 +3199,10 @@
     calibration_hits are > 0 (exactly 1 per run) for all 6, confirmed the same way as
     urban_political. dungeon_crawl and wilderness_survival remain documented INFORMATION skips
     (see INFRA-256) — no entry seeded, 0 leakage.
+    TCK-20260704-SIMQ-CORPUS-UNIT-WORLDS-FACTION-INFO seeded the same 2-entry pattern in
+    unit_information_source (see INFRA-256), the 9th and final world with this content as of
+    2026-07-12 (TCK-20260710-SIMQ-DEPTH-INFORMATION re-verification) — belief_assimilated/
+    belief_updated calibration_hits confirmed > 0 for that world as well.
   status: verified
   priority: P1
   legacy_evidence: null

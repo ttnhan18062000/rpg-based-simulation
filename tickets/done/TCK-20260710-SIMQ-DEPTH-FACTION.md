@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: world
 authority: P1
 audience: agent
 ticket_id: TCK-20260710-SIMQ-DEPTH-FACTION
-phase: open
+phase: done
 date: 2026-07-10
 tags: [simulation-quality, faction, world, corpus, calibration]
 ---
@@ -15,7 +15,7 @@ tags: [simulation-quality, faction, world, corpus, calibration]
 Extend FACTION pillar depth (Pattern 6 tension seeding) to 2-3 more corpus worlds — Phase 3 Depth Wave 2 (FACTION half)
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -232,9 +232,121 @@ corpus-wide regression sweep — not new schema/compiler/resolver work.
   schema/compiler/resolver work, not applicable here since that plumbing is already built).
 
 ## Implementation Notes
+Investigate resolved UQ-1 definitively: 0 legitimate, tier-appropriate FACTION candidates remain in
+the 17-world corpus. Plan phase then faced an explicit open question (deferred by Investigate, per
+the project workflow rule that Investigate does not silently reduce or close scope on its own):
+close this ticket as "already-satisfied by prior work" directly, or fold the finding into the
+roadmap's Phase 5 Coverage Decision Gate.
+
+**Decision: close as "already-satisfied" directly (`staging_artifacts/.../plan.md`'s
+"Closure-Mechanism Decision" section), not folded into Phase 5.** Rationale: (1) Phase 3's own
+Acceptance Signal text already names "zero new worlds, coverage already adequate, documented and
+closed" as a valid outcome for this phase, with no dependency on Phase 5 to make it legitimate; (2)
+Phase 5 is explicitly scoped as a later, corpus-wide gate that fires only once Phases 2-4 have all
+landed (Phase 4, `TCK-20260710-SIMQ-COGNITION-REALWORLD-GENERALIZE`, has not landed as of this
+ticket) and answers a different question — whether pursuing full 17-world coverage is worth its
+cost — not whether one pillar's one-ticket scope still has remaining work; (3) folding this finding
+into Phase 5 would incorrectly imply the 6 tier-purity worlds are "not yet covered but could be,
+pending a cost/benefit call," when the investigation found they are FACTION-inert by deliberate
+design (isolation contracts), not by omission — there is no future world of "continuing FACTION
+coverage into them" for Phase 5 to ever weigh.
+
+At implementation time, ground truth was re-verified fresh against live `data/worlds/*/world.yaml`
+(not trusted from the investigation's table alone, per the plan's anti-drift note that corpus
+content can change between ticket pickup and implementation): `grep -l "faction_tension_overrides"
+data/worlds/*/world.yaml` plus per-world `grep -n -A3 "^faction_tension_overrides:"` confirmed the
+same 11/17 covered-world set with identical override values, and confirmed the 6 tier-purity worlds
+have no real `faction_tension_overrides:` key (the two Unit-tier worlds' description fields contain
+the string but only as documentation of the deliberate absence, not a populated key — the exact
+anti-drift hazard the investigation flagged). No drift since investigation; the finding stands
+unchanged.
+
+Step 4 (`audit_fix_plan.md` check): `grep -n -i "faction" docs/plans/audit_fix_plan.md` at
+implementation time returned only `P1-C` (Faction & Diplomacy System, RESOLVED 2026-07-03, an
+unrelated diplomacy-engine item) and `P2-D` (Faction relationships sparse, RESOLVED 2026-07-07, the
+global `faction_relationships.yaml` catalog density item, a different content domain per this
+ticket's Out of Scope). No open, in-scope entry found; `audit_fix_plan.md` left untouched.
+
+Durable closure record was written to `docs/simulation_quality/eval_matrix_results.md` (new
+"FACTION Coverage Closure — Phase 3" section, pure append after the file's prior final section) and
+`docs/simulation_quality/corpus_tier_taxonomy.md` (new closure paragraph after the "Current tier
+mapping" table, before the "Named scale-diversity gaps" section — the tier table itself untouched)
+so a future investigator scanning those docs directly finds the finding without needing to dig into
+`stored_artifacts/`. `docs/plans/simq_development_roadmap.md`'s Phase 3 section got a dated closure
+blockquote recording the FACTION-half closure and explicitly noting the INFORMATION half
+(`TCK-20260710-SIMQ-DEPTH-INFORMATION`) is unaffected and proceeds independently on its own
+evidence.
+
+No code, content, or test files were touched. `docs/parity_ledger/faction.yaml`'s `FAC-012` entry
+was left as-is (no new evidence world to add — it already accurately documents `urban_political` +
+`frontier_marches`). No `faction_tension_overrides` content was authored into any of the 6
+tier-purity worlds.
 
 ## Test Summary
+No code or content changed, so no pre/post-change diff was applicable. A confirmatory regression
+sweep was run instead, per `test_plan.md`'s "Scoped Pytest Commands", to prove the documentation-only
+closure did not accidentally destabilize anything even though nothing code-facing was touched:
+
+- `pytest tests/unit/worldbuilding/test_worldspec_schema.py tests/unit/worldbuilding/test_world_compiler.py tests/unit/worldassembly/test_assembly.py` — Pattern-6 plumbing (schema/compiler/resolver)
+- `pytest tests/unit/faction/` — faction domain (diplomacy state machine, siege, war exhaustion)
+- `pytest tests/unit/worldassembly/test_corpus_diversity.py tests/unit/worldassembly/test_hero_guild_routing_population_stability.py` — corpus-wide diversity/population-stability invariants across all 17 worlds
+- `pytest tests/integration/scenarios/test_faction_campaign.py` — integration faction-campaign scenarios
+- `pytest tests/simulation_quality/test_grade_regression.py` — SimQ fast grade-anchor regression
+
+Combined result: 333 passed, 2 failed, in 335.77s. The 2 failures are both in
+`test_grade_regression.py::test_grade_within_anchor_band` — `dungeon_crawl_seed42_200t` (COMBAT
+actual=`C` vs anchor=`A`; PROGRESSION actual=`C` vs anchor=`A`) and `urban_political_seed42_200t`
+(PROGRESSION actual=`C` vs anchor=`A`). Both failures are **pre-existing and unrelated to this
+ticket**: (1) the drifted pillars are COMBAT and PROGRESSION, never FACTION — direct inspection of
+both worlds' `data/calibration/*/quality_report.json` confirms `FACTION.grade == "S"` in both
+cases, comfortably within the anchor band, meaning FACTION shows zero drift; (2)
+`data/calibration/` is gitignored (confirmed via `.gitignore:240`) and untracked by git — these
+`quality_report.json` files are locally-generated leftover artifacts from an unrelated prior run in
+this environment, not part of this ticket's diff or of any committed repo state; (3) this ticket
+made zero code/content changes, so it cannot have caused a COMBAT/PROGRESSION drift regardless. This
+is local environmental staleness in generated calibration data, not a regression introduced by this
+closure — recorded here per the "no known material gap is left unstated" rule rather than silently
+omitted. All other 5 command groups (Pattern-6 plumbing, faction domain, corpus diversity,
+population stability, integration faction campaign) passed cleanly. No new tests were added — none
+are warranted for a documentation-only closure per `test_plan.md`'s "New Tests Required: None"
+finding.
 
 ## Files Changed
+- `docs/simulation_quality/eval_matrix_results.md` — appended "FACTION Coverage Closure — Phase 3" section (17-world coverage table + UQ-1 verdict)
+- `docs/simulation_quality/corpus_tier_taxonomy.md` — added closure-note paragraph after the "Current tier mapping" section
+- `docs/plans/simq_development_roadmap.md` — added dated closure blockquote to the Phase 3 section
+- `tickets/inprogress/TCK-20260710-SIMQ-DEPTH-FACTION.md` (this file) — Status/Implementation Notes/Test Summary/Files Changed/Completion Summary filled in
+
+No `src/`, `data/worlds/*/world.yaml`, `tests/`, `tests/simulation_quality/fixtures/grade_anchors.json`,
+or `docs/parity_ledger/faction.yaml` files were touched.
 
 ## Completion Summary
+**What "acceptance" means for this closure:** this ticket's original 8 acceptance criteria all
+presuppose that content authoring occurs (candidate worlds selected, `faction_tension_overrides`
+seeded, recalibration run, `FAC-012` extended, engine bugs filed if found). Investigation's UQ-1
+resolution — 0 legitimate, tier-appropriate FACTION candidates remain among the 17-world corpus —
+means those content-authoring criteria are satisfied **vacuously**, by prior work already done
+under three other, already-closed tickets (`TCK-20260704-SIMQ-CORPUS-E2E-CONTENT-EXPANSION`,
+`TCK-20260704-SIMQ-CORPUS-STRESS-WORLDS`, `TCK-20260704-SIMQ-CORPUS-UNIT-WORLDS-FACTION-INFO`), not
+by any action taken under this ticket. This is not a failure or a shortfall against the original
+scope — it is what those criteria's own text predicts happens when the honest answer to "is there a
+genuinely uncovered candidate" is zero: there is nothing left for criteria written for a
+content-authoring outcome to bind to.
+
+**This ticket's own actual deliverable is different from its original criteria: a fresh coverage
+re-verification against live repo state, plus a durably recorded closure.** Concretely: (1) all 17
+corpus worlds were re-checked against live `data/worlds/*/world.yaml` (not just against
+possibly-stale docs) at both investigation time and again at implementation time, with identical
+results both times — 11/17 covered with matching override values, 6/17 confirmed FACTION-inert by
+deliberate tier-purity design, not omission; (2) that finding was written durably into
+`eval_matrix_results.md` and `corpus_tier_taxonomy.md` (not left only in `staging_artifacts/`, which
+archives to `stored_artifacts/` on close and is less discoverable to a future investigator scanning
+the docs directly); (3) the roadmap's Phase 3 FACTION-half was formally closed at the ticket level
+(not deferred to Phase 5, which fires later on a different, corpus-wide question) with the
+INFORMATION half of the same phase explicitly noted as unaffected and still open on its own
+evidence; (4) a confirmatory regression sweep (5 pytest commands spanning Pattern-6 plumbing,
+faction domain, corpus diversity, integration campaign scenarios, and SimQ grade-anchor regression)
+proved zero drift resulted from this documentation-only closure. Zero code, content, or test files
+were changed. No `faction_tension_overrides` content was authored into any tier-purity world, and
+`docs/parity_ledger/faction.yaml`'s `FAC-012` entry was left untouched since no new evidence world
+exists to extend it with.

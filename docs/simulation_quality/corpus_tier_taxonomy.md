@@ -143,6 +143,28 @@ Full per-world entity/region/resource/quest counts and module composition are do
 table as its evidentiary source rather than duplicating it, since the investigation's numbers are
 the audited, evidence-backed original and should not risk drifting out of sync with a second copy.
 
+**FACTION coverage closure (2026-07-10, `TCK-20260710-SIMQ-DEPTH-FACTION`):** the roadmap's Phase 3
+FACTION-half re-verified this table's tier assignments against live `data/worlds/*/world.yaml`
+content and found them accurate (no staleness) — 11/17 corpus worlds carry
+`faction_tension_overrides` content; the 6 that do not (`crowded_frontier`, `resource_dense_basin`,
+`simq_routing_test`, `hero_guild_routing`, `unit_information_source`, `unit_selfmodel_pilot`, all
+already listed in the table above) are each FACTION-inert by deliberate tier-purity design, not by
+omission. No tier reassignment resulted. See `eval_matrix_results.md`'s "FACTION Coverage Closure —
+Phase 3" section for the full re-verification table.
+
+**INFORMATION coverage closure (2026-07-12, `TCK-20260710-SIMQ-DEPTH-INFORMATION`):** the roadmap's
+Phase 3 INFORMATION-half re-verified this table's tier assignments against live
+`data/worlds/*/world.yaml` content and `config/simulation_quality/profiles/*.yaml` flags (two
+independent, agreeing signals) and found them accurate (no staleness) — 9/17 corpus worlds carry
+`information_source_profiles`/`pending_information_responses` content with
+`ENABLE_BELIEF_ASSIMILATION: "ON"`; the 8 that do not (`dungeon_crawl`, `wilderness_survival`,
+`crowded_frontier`, `resource_dense_basin`, `simq_routing_test`, `hero_guild_routing`,
+`unit_faction_tension`, `unit_selfmodel_pilot`, all already listed in the table above) are each
+INFORMATION-inert by a documented, pre-existing reason (2 structural — no population-bearing
+settlement module; 2 Stress tier-purity; 1 Regression/baseline fixture; 3 Unit single-mechanic
+isolation), not by omission. No tier reassignment resulted. See `eval_matrix_results.md`'s
+"INFORMATION Coverage Closure — Phase 3" section for the full re-verification table.
+
 ---
 
 ## Named scale-diversity gaps (stress-tier candidates)

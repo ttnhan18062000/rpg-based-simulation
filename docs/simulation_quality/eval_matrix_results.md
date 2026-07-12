@@ -1990,3 +1990,67 @@ that variance did not surface as a grade-band violation in this sweep.
 No `docs/parity_ledger/` entry required a status change as a result of this ticket —
 measurement-only, no scored behavior changed, and no genuine (non-throttle) divergence
 was found.
+
+## FACTION Coverage Closure — Phase 3 (TCK-20260710-SIMQ-DEPTH-FACTION)
+
+| # | World | Tier | FACTION content? | `faction_tension_overrides` (live grep) | Tier-purity rationale (if not covered) |
+|---|---|---|---|---|---|
+| 1 | `urban_political` | Regression/baseline (already E2E by criterion) | **Covered** | `{bandit_company: 0.5, town_council: 0.5}` | — |
+| 2 | `highland_traverse` | End-to-end | **Covered** | `{town_council: 0.5, merchant_league: 0.5}` | — |
+| 3 | `dungeon_crawl` | End-to-end | **Covered** | `{goblin_warband: 0.5, bandit_company: 0.5}` | — |
+| 4 | `swamp_border_world` | End-to-end | **Covered** | `{town_council: 0.5, swamp_tribe: 0.5}` | — |
+| 5 | `sandbox_world` | End-to-end | **Covered** | `{town_council: 0.5, merchant_league: 0.5}` | — |
+| 6 | `generated_frontier_3_42` | End-to-end | **Covered** | `{arcane_circle: 0.5, orc_clan: 0.5}` | — |
+| 7 | `wilderness_survival` | End-to-end | **Covered** | `{undead_remnants: 0.5, wild_beast_pack: 0.5}` | — |
+| 8 | `frontier_extended` | End-to-end | **Covered** | `{orc_clan: 0.5, forest_wardens: 0.5}` | — |
+| 9 | `frontier_living_world` | End-to-end | **Covered** | `{bandit_company: 0.5, merchant_league: 0.5}` | — |
+| 10 | `frontier_marches` | Stress (gap 3, authored-from-inception) | **Covered** | `{bandit_company: 0.5, orc_clan: 0.5}` | — |
+| 11 | `unit_faction_tension` | Unit (isolates FACTION itself) | **Covered** | `{town_council: 0.5, merchant_league: 0.5}` | — |
+| 12 | `crowded_frontier` | Stress (gap 1: many-factions/small-map) | Not covered | absent (verified: no key in `world.yaml` at all) | Deliberate tier-purity default — world populates 6 distinct factions (`town_council`, `merchant_league`, `hero_guild`, `bandit_company`, `goblin_warband`, `orc_clan`, per `world_compile_report.json`'s `distinct_populated_factions`) but the stress tier's job is isolating scale as the sole variable (`eval_matrix_results.md:1291-1292`, `corpus_tier_taxonomy.md`). FACTION=C confirmed stable across all 3 seeds. |
+| 13 | `resource_dense_basin` | Stress (gap 2: resource-saturated/small-map) | Not covered | absent (verified: no key in `world.yaml` at all) | Same tier-purity default — composes `orc_clan_territory` (faction-populating module) but deliberately isolates resource density as the sole variable. FACTION=C confirmed stable across all 3 seeds (`eval_matrix_results.md:1353`). |
+| 14 | `simq_routing_test` | Regression/baseline | Not covered | absent (no key in `world.yaml`) | Purpose-built minimal AGENCY calibration fixture predating the FACTION Pattern-6 uplift, not a shipped-gameplay archetype (`corpus_tier_taxonomy.md:129`). FACTION=C, 0 events, all 3 seeds (`eval_matrix_results.md:292`). |
+| 15 | `hero_guild_routing` | Unit (isolates AGENCY/routing only) | Not covered | absent (no key in `world.yaml`) | Deliberately isolates AGENCY/route-selection; FACTION explicitly noted "isolation-tier default" (`eval_matrix_results.md:1222`). |
+| 16 | `unit_information_source` | Unit (isolates INFORMATION only) | Not covered | key absent in `world.yaml`; description explicitly states "`faction_tension_overrides` stays at catalog default (all factions 0.0)" (`world.yaml:4`) | Deliberate single-mechanic isolation (INFORMATION). FACTION=C, "isolation confirmed... 0 events, as designed" (`eval_matrix_results.md:1137`). |
+| 17 | `unit_selfmodel_pilot` | Unit (isolates COGNITION self-model only) | Not covered | key absent in `world.yaml`; description explicitly states "`faction_tension_overrides` stays at catalog default (all factions 0.0)" (`world.yaml:4`) | Deliberate single-mechanic isolation (COGNITION self-model). FACTION=C, "isolation confirmed" (`eval_matrix_results.md:1180`). |
+
+**Verdict: 11/17 worlds covered, 6/17 deliberately FACTION-inert by tier-purity design (Stress:
+crowded_frontier, resource_dense_basin; Regression/baseline: simq_routing_test; Unit:
+hero_guild_routing, unit_information_source, unit_selfmodel_pilot). No genuinely uncovered,
+tier-appropriate FACTION candidate remains in the corpus.** This closes the roadmap's Phase 3
+FACTION-half goal (`docs/plans/simq_development_roadmap.md`) as already-satisfied by prior work —
+see that doc's Phase 3 section for the closure record. No content authoring, recalibration, or
+grade-anchor changes were made under this ticket; ground truth was re-verified by direct grep against
+live `data/worlds/*/world.yaml` (not inferred from docs) on 2026-07-10.
+
+## INFORMATION Coverage Closure — Phase 3 (TCK-20260710-SIMQ-DEPTH-INFORMATION)
+
+| # | World | Tier | INFORMATION content? | Live evidence | Reason if not covered |
+|---|---|---|---|---|---|
+| 1 | `urban_political` | Regression/baseline (already E2E by criterion) | **Covered** | `information_source_profiles` (1 entry) + `pending_information_responses` (1 entry) in `world.yaml`; `ENABLE_BELIEF_ASSIMILATION: "ON"` in `urban_political.yaml` | — |
+| 2 | `sandbox_world` | End-to-end | **Covered** | 1+1 entries (`town_notice_board`/`hometown_danger`); `ENABLE_BELIEF_ASSIMILATION: "ON"` in `sandbox_world.yaml` | — |
+| 3 | `highland_traverse` | End-to-end | **Covered** | 1+1 entries (`route_waystation_guide`); `ENABLE_BELIEF_ASSIMILATION: "ON"` in `highland_traverse.yaml` | — |
+| 4 | `swamp_border_world` | End-to-end | **Covered** | 1+1 entries; `ENABLE_BELIEF_ASSIMILATION: "ON"` in `swamp_border_world.yaml` | — |
+| 5 | `frontier_living_world` | End-to-end | **Covered** | 1+1 entries; `ENABLE_BELIEF_ASSIMILATION: "ON"` in `frontier_living_world.yaml` | — |
+| 6 | `frontier_extended` | End-to-end | **Covered** | 1+1 entries; `ENABLE_BELIEF_ASSIMILATION: "ON"` in `frontier_extended.yaml` | — |
+| 7 | `generated_frontier_3_42` | End-to-end (generated) | **Covered** (documentation-only evidence — not in `grade_anchors.json`/`FAST_ANCHOR_KEYS`, per its own explicit scope decision, `INFRA-256` text) | 1+1 entries; `ENABLE_BELIEF_ASSIMILATION: "ON"` in `generated_frontier_3_42.yaml` | — |
+| 8 | `frontier_marches` | Stress (gap 3, authored-from-inception) | **Covered** | 1+1 entries; `ENABLE_BELIEF_ASSIMILATION: "ON"` in `frontier_marches.yaml` (required a dedicated profile file — `_resolve_profile()` would otherwise fall back to `default`, leaving Branch A unreached despite correct compile-time content) | — |
+| 9 | `unit_information_source` | Unit (isolates INFORMATION itself) | **Covered** | 2+2 entries (`town_notice_board`, `hometown_danger` → `pop_0`); `ENABLE_BELIEF_ASSIMILATION: "ON"` in `unit_information_source.yaml` | — |
+| 10 | `dungeon_crawl` | End-to-end | Not covered | `world.yaml` composes `ruins_mystery_quest` (danger_zone), `goblin_camp_conflict` (conflict), `old_mine_resource_loop` (economy), `scalable_bandit_camp` (conflict, has `population_recipes` but no settlement module type) — no `module_type: settlement` present anywhere in the composition | **Structural skip** — no settlement/service module; `eval_matrix_results.md:651-659` documents "forcing a notice-board archetype here would be dishonest" |
+| 11 | `wilderness_survival` | End-to-end | Not covered | `world.yaml` composes `forest_deep_ecology`/`wolf_den_near_forest` (ecology), `undead_battlefield` (danger_zone), `survivor_camp_shelter` (`module_type: settlement`, but `provides: [shelter, survival]` only — no `population_recipes` key anywhere in the module file, confirmed by direct read) | **Structural skip** — `survivor_camp_shelter`'s `module_type` label is "settlement" but it spawns no population (only a `healer_hut` building), so there is no compiled `actor_id`/`population_id` a `pending_information_responses` entry could target; `eval_matrix_results.md:703-711` independently confirms "no settlement-adjacent module... spawns no settlement population of its own" |
+| 12 | `crowded_frontier` | Stress (gap 1: many-factions/small-map) | Not covered | `world.yaml` composes `frontier_village_core` (settlement, population-bearing) + `hero_adventurers` + 3 conflict modules — a settlement module IS present but no `information_source_profiles`/`pending_information_responses` key exists | **Deliberate tier-purity default** — isolates scale/faction-density as the sole variable; `INFORMATION=C` stable all 3 seeds (`eval_matrix_results.md:1305`, "tier-purity default") |
+| 13 | `resource_dense_basin` | Stress (gap 2: resource-saturated/small-map) | Not covered | `world.yaml` composes `frontier_village_core` (settlement) + `old_mine_resource_loop` + `orc_clan_territory` — settlement module present, no INFORMATION key | **Deliberate tier-purity default**; `INFORMATION=C` stable all 3 seeds (`eval_matrix_results.md:1357`) |
+| 14 | `simq_routing_test` | Regression/baseline | Not covered | `world.yaml` composes `frontier_village_core` (settlement) + others; own description text mentions "information" only in prose ("a frontier village (economy, social, information, faction)"), no `information_source_profiles:`/`pending_information_responses:` key | Purpose-built minimal AGENCY/10-pillar calibration fixture predating the Pattern-6 uplift, "do not touch" baseline; `INFORMATION=C`, 0 events, all 3 seeds (`eval_matrix_results.md`, `simq_routing_test` 500t table) |
+| 15 | `hero_guild_routing` | Unit (isolates AGENCY/routing only) | Not covered | `world.yaml` composes `frontier_village_core` (settlement) + `hero_adventurers` + `mountain_pass` + `ruins_mystery_quest` + `goblin_camp_conflict` — settlement module present, no INFORMATION key | **Deliberate isolation** — "isolation-tier default," `INFORMATION=C` stable all 3 seeds at 500t (`eval_matrix_results.md:1223`) |
+| 16 | `unit_faction_tension` | Unit (isolates FACTION itself) | Not covered | `world.yaml` composes `frontier_village_core` + `wolf_den_near_forest`; description text explicitly states "`information_source_profiles`, `pending_information_responses`... stay empty/default" — confirmed no real content, only the description sentence itself matched the grep | **Deliberate single-mechanic isolation** (FACTION); `INFORMATION=C`, "isolation confirmed... 0 events, as designed" (`eval_matrix_results.md:1114`) |
+| 17 | `unit_selfmodel_pilot` | Unit (isolates COGNITION self-model only) | Not covered | `world.yaml` composes `frontier_village_core` + `hero_adventurers`; description explicitly states "No `information_source_profiles` or `pending_information_responses` content is seeded in this world" — confirmed, only the description sentence matched the grep; `unit_selfmodel_pilot.yaml` profile has `ENABLE_SELF_MODEL_COGNITION: "ON"` but no `ENABLE_BELIEF_ASSIMILATION` key at all | **Deliberate single-mechanic isolation** (COGNITION self-model); `INFORMATION=C`, "isolation confirmed, as predicted before the run" (`eval_matrix_results.md:1192`) |
+
+**Verdict: 9/17 worlds covered, 8/17 deliberately INFORMATION-inert (2 structurally incapable —
+dungeon_crawl, wilderness_survival; 2 Stress tier-purity — crowded_frontier, resource_dense_basin;
+1 Regression/baseline fixture — simq_routing_test; 3 Unit single-mechanic isolation —
+hero_guild_routing, unit_faction_tension, unit_selfmodel_pilot). No genuinely uncovered,
+tier-appropriate INFORMATION candidate remains in the corpus.** This closes the roadmap's Phase 3
+INFORMATION-half goal (`docs/plans/simq_development_roadmap.md`) as already-satisfied by prior work
+— see that doc's Phase 3 section for the closure record. No content authoring, recalibration, or
+grade-anchor changes were made under this ticket; ground truth was re-verified by two independent
+live signals against `data/worlds/*/world.yaml` and `config/simulation_quality/profiles/*.yaml`
+(not inferred from docs) on 2026-07-12, both landing on the same 9-world set.
