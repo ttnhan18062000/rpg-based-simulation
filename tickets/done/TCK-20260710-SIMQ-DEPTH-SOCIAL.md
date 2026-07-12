@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: world
 authority: P1
 audience: agent
 ticket_id: TCK-20260710-SIMQ-DEPTH-SOCIAL
-phase: open
+phase: done
 date: 2026-07-10
 tags: [simulation-quality, social, world, corpus, calibration, feature-flags]
 ---
@@ -15,7 +15,7 @@ tags: [simulation-quality, social, world, corpus, calibration, feature-flags]
 Extend SOCIAL pillar activation (ENABLE_SOCIAL_COOPERATION) to 2-3 more corpus worlds — Phase 2 Depth Wave 1
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -266,8 +266,167 @@ expansion opportunity, exactly as the roadmap assumes.
 
 ## Implementation Notes
 
+Followed `staging_artifacts/TCK-20260710-SIMQ-DEPTH-SOCIAL/plan.md`'s 6 steps exactly, with two
+deviations (both required by the actual data, recorded here and in the plan's own Deviations
+section):
+
+1. **Flag activation.** Added `ENABLE_SOCIAL_COOPERATION: "ON"` to
+   `config/simulation_quality/profiles/frontier_living_world.yaml` and
+   `config/simulation_quality/profiles/highland_traverse.yaml`, matching `urban_political.yaml`'s
+   existing pattern. `dungeon_crawl.yaml` (rejected candidate, confirmed by Investigate: no
+   settlement/civilian module means no population ever accrues `current_objective_id`, so
+   `HelpNeedEvaluator`'s hard gate never opens — 0 cooperation events under a live probe) and
+   `urban_political.yaml` (existing control) both show zero diff.
+
+2. **Recalibration (3 seeds x 2 worlds, against the committed profile YAML, not an env-var
+   probe).** Results:
+   - `frontier_living_world`: SOCIAL C → S all 3 seeds (545 / 903 / 625 `cooperation_event`s at
+     seed 42/123/456).
+   - `highland_traverse`: SOCIAL C → S all 3 seeds (1496 / 1667 / 715 events).
+   - **Deviation from plan.md's stated expectation** ("Every other pillar field... must remain
+     byte-identical"): `frontier_living_world_seed123_200t`'s NARRATIVE moved B → A, and
+     `frontier_living_world_seed456_200t`'s PROGRESSION moved B → C. Both are within the grade
+     regression suite's ±1 letter band tolerance. Attribution: `CooperationPhase` is a genuine
+     per-tick decision phase (assigns objectives, forms partner candidates, can affect entity
+     routing) unlike the purely additive scorers activated by prior pillar work — once active it
+     deterministically perturbs each seed's downstream entity trajectory, which can cascade into
+     other pillars' event counts. This is expected engine behavior for a real phase activation,
+     not a bug, and per the parent task's own instruction ("Update the SOCIAL field (and any other
+     pillar fields that shift)"), both fields were updated to the real observed values rather than
+     left stale. `highland_traverse` showed no such cascade in any of its 3 seeds — the effect is
+     population/composition dependent.
+   - All 6 touched `grade_anchors.json` entries updated in place (no new keys minted, all already
+     in `FAST_ANCHOR_KEYS`).
+
+3. **Corpus-wide regression sweep** (`python3 tools/evaluate_simq.py`, the full non-`--dry-run`
+   sweep — ~9.5 minutes wall clock for the ~60-key fast corpus, run in the background and polled to
+   completion). Found 3 REGRESS pillars, **all in worlds this ticket does not touch**:
+   `dungeon_crawl_seed42_200t` (COMBAT A→C, PROGRESSION A→C) and `urban_political_seed42_200t`
+   (PROGRESSION A→C). Confirmed unrelated to this ticket by: (a) zero diff exists to either world's
+   profile YAML, world content, or any engine code; (b) the same grades reproduce deterministically
+   under a standalone `calibrate_simq.py` re-run for each world in isolation. Most likely cause
+   (not confirmed): the recent `TCK-20260708-DUNGEON-URBAN-POPULATION-COLLAPSE` population fix for
+   exactly these two worlds left their anchors stale. **Filed as a follow-up ticket**,
+   `tickets/todos/TCK-20260712-SIMQ-DUNGEON-URBAN-ANCHOR-DRIFT.md` (hotfix, P1), per this ticket's
+   own Scope point 9 discipline — not fixed here (`dungeon_crawl`/`urban_political` anchors and
+   profiles remain byte-identical to their pre-ticket state). The already-documented pre-existing
+   COGNITION signal from `ENABLE_BELIEF_ASSIMILATION` (prior INFORMATION expansion ticket) was
+   present in both `frontier_living_world`/`highland_traverse` before this ticket and did not move
+   — correctly not misattributed to this ticket's SOCIAL flag flip.
+
+4. **SOC-007 parity-ledger fix.** Corrected `v2_evidence`'s stale path
+   (`src/systems/groups.py` → `src/systems/world_systems/groups.py`, class `GroupSystem` was
+   already correct) and replaced the broken `test_path`
+   (`tests_v2/parity/test_group_coordination.py`, which does not exist) with
+   `tests/unit/social/test_social_party_regression.py::test_no_proximity_only_groups` (confirmed
+   real and passing). Extended `v2_evidence` with a corpus-scale corroboration clause citing the
+   two newly-activated worlds' `seed{42,123,456}_200t` runs. No other `SOC-*` entry touched.
+
+5. **Docs.** Added SOCIAL-activation writeups to `eval_matrix_results.md` for
+   `frontier_living_world` and `highland_traverse` (following the existing FACTION/INFORMATION
+   section format), plus a `dungeon_crawl` rejection note with the structural reason and empirical
+   zero-event evidence. Updated `corpus_tier_taxonomy.md`'s three affected world rows. Ran
+   `make knowledge-index-update` (2 files re-embedded) since `docs/` content changed.
+
+6. **Full regression pass.** All of test_plan.md's scoped pytest commands were run. Two categories
+   of pre-existing, unrelated failures surfaced (both confirmed unrelated to this ticket's changes
+   — no diff touches the code paths involved):
+   - `tests/simulation_quality/test_grade_regression.py`/`tests/simulation_quality/`:
+     `dungeon_crawl_seed42_200t` and `urban_political_seed42_200t` fail (same drift as point 3
+     above — expected, tracked in the same follow-up ticket).
+   - `tests/unit/social/test_group_lifecycle_fields.py::test_group_canonical_dict_has_no_missing_keys`
+     (stale `EXPECTED_KEYS` missing `composition_score`) and
+     `tests/integration/scenarios/test_phase7_social_cooperation_scenarios.py`'s two scenario tests
+     (asserting a pre-serialization-fix `.selected_posture` attribute access on what
+     `phase.py:139` now intentionally stores as a plain string) — both pre-existing, confirmed via
+     code-path analysis (this ticket makes zero changes to `src/domains/cooperation/` or
+     `src/systems/world_systems/groups.py`). `tests/perf/test_phase7_social_cooperation_budget.py`
+     also showed one apparently load-dependent flaky failure (27.8ms vs. 25ms budget in one run,
+     passed in another, identical code both times). **Filed as a second follow-up ticket**,
+     `tickets/todos/TCK-20260712-SIMQ-COOPERATION-SOCIAL-STALE-TESTS.md` (hotfix, P2) — not fixed
+     here, since this ticket's scope is profile-YAML activation plus the one parity-ledger entry,
+     not stale-test repair in unrelated files.
+   - All other scoped commands (cooperation domain unit/integration — 30 passed;
+     `tests/unit/social/` minus the one stale test — 187 passed; observability event-extractor
+     tests — 63 passed; grade regression minus the 2 unrelated failures — 70/72 passed;
+     `tests/simulation_quality/` full — 457 passed, 2 skipped, 2 unrelated failures) passed clean.
+
+**Two follow-up-candidate observations identified but explicitly NOT actioned in this ticket**
+(both noted in investigation.md, both out of this ticket's stated scope):
+1. `docs/simulation/domains/cooperation_contract.md` is stale relative to live code — missing the
+   `current_objective_id` hard-gate in its trigger table, references non-existent file names
+   (`contract_service.py`/`group_evaluator.py`/`partner_scoring.py`/`posture.py`) instead of the
+   live `services.py`/`providers.py`/`postures.py`.
+2. The vestigial `state.social_cooperation_enabled` dead-flag check at
+   `src/domains/cooperation/phase.py:40` (always defaults `True`, never set anywhere, harmless but
+   confusing) — a candidate for a small cleanup ticket, not touched here since it is engine code
+   and this ticket's Out of Scope explicitly excludes engine work.
+
 ## Test Summary
+
+- `pytest tests/unit/domains/cooperation/ tests/integration/domains/cooperation/ -q` — 30 passed.
+- `pytest tests/unit/social/ -q` — 187 passed, 1 failed (pre-existing, unrelated — see follow-up
+  ticket `TCK-20260712-SIMQ-COOPERATION-SOCIAL-STALE-TESTS`).
+- `pytest tests/unit/observability/test_event_extractor_social_faction.py
+  tests/unit/observability/test_event_extractor_social_memory.py -q` — 63 passed.
+- `pytest tests/integration/scenarios/test_phase7_social_cooperation_scenarios.py
+  tests/perf/test_phase7_social_cooperation_budget.py -q` — 1 passed, 2 pre-existing failures
+  (same follow-up ticket).
+- `pytest tests/simulation_quality/test_grade_regression.py -q` — 70 passed, 2 pre-existing
+  failures (`dungeon_crawl_seed42_200t`, `urban_political_seed42_200t` — follow-up ticket
+  `TCK-20260712-SIMQ-DUNGEON-URBAN-ANCHOR-DRIFT`).
+- `pytest tests/simulation_quality/ -q` — 457 passed, 2 skipped, 2 pre-existing failures (same as
+  above).
+- `pytest tests/unit/social/test_social_party_regression.py::test_no_proximity_only_groups -v` —
+  1 passed (SOC-007's corrected `test_path`).
+- `python3 tools/evaluate_simq.py` (full corpus sweep, non-`--dry-run`) — 710 pillars checked, 3
+  REGRESS, all attributed to the pre-existing, unrelated `dungeon_crawl`/`urban_political` drift.
 
 ## Files Changed
 
+- `config/simulation_quality/profiles/frontier_living_world.yaml`
+- `config/simulation_quality/profiles/highland_traverse.yaml`
+- `tests/simulation_quality/fixtures/grade_anchors.json`
+- `docs/parity_ledger/social_narrative.yaml`
+- `docs/simulation_quality/eval_matrix_results.md`
+- `docs/simulation_quality/corpus_tier_taxonomy.md`
+- `tickets/todos/TCK-20260712-SIMQ-DUNGEON-URBAN-ANCHOR-DRIFT.md` (new, follow-up)
+- `tickets/todos/TCK-20260712-SIMQ-COOPERATION-SOCIAL-STALE-TESTS.md` (new, follow-up)
+
 ## Completion Summary
+
+SOCIAL pillar activation (`ENABLE_SOCIAL_COOPERATION`) extended from 1 to 3 corpus worlds. Both
+`frontier_living_world` and `highland_traverse` moved SOCIAL C → S across all 3 seeds via pure
+feature-flag activation in their calibration profile YAML — no engine, `WorldCompiler`, or content
+changes, consistent with the ticket's Out-of-Scope guarantee. `dungeon_crawl` was investigated as
+the third candidate and **rejected**: it has no settlement/civilian module, so no entity ever
+accrues `entity.strategic.current_objective_id`, and `HelpNeedEvaluator`'s hard gate
+(`evaluators.py:34-35`) never opens — confirmed empirically via a live probe showing 0
+`cooperation_event`s. This is **not** an AQ-2 "fewer than 2 candidates" situation: 2 of the
+original 3 candidates panned out, so no 4th candidate (`swamp_border_world`/`frontier_extended`)
+was promoted, per the plan's own resolution of that open question.
+
+The required full corpus regression sweep (`tools/evaluate_simq.py`, non-dry-run) surfaced 3
+REGRESS pillars, all in `dungeon_crawl_seed42_200t`/`urban_political_seed42_200t` — worlds this
+ticket does not touch. Confirmed unrelated (zero diff to either world's profile/content/engine
+code; reproduces identically in standalone isolation) and filed as a separate follow-up ticket
+(`TCK-20260712-SIMQ-DUNGEON-URBAN-ANCHOR-DRIFT`, hotfix/P1) rather than silently absorbed or
+fixed out-of-scope. The Step 6 regression pass separately surfaced 3 pre-existing, unrelated test
+failures (a stale `EXPECTED_KEYS` set in a group-canonical-dict test, two scenario tests asserting
+a pre-serialization-fix API shape, and one apparently load-dependent perf-budget flake) — also
+filed separately (`TCK-20260712-SIMQ-COOPERATION-SOCIAL-STALE-TESTS`, hotfix/P2).
+
+`docs/parity_ledger/social_narrative.yaml`'s SOC-007 entry (P0) had its stale `v2_evidence` file
+path and broken `test_path` corrected, and was extended with corpus-scale corroboration from the
+two newly-activated worlds. `eval_matrix_results.md` and `corpus_tier_taxonomy.md` were updated
+with the new SOCIAL grade tables/tier notes and the `dungeon_crawl` rejection rationale.
+
+Two follow-up-candidate observations from investigation.md were explicitly identified but **not**
+actioned in this ticket, per its Out-of-Scope discipline (no engine-code changes permitted):
+(1) `docs/simulation/domains/cooperation_contract.md` is stale relative to live code (missing the
+`current_objective_id` hard-gate, wrong file-name references); (2) the vestigial
+`state.social_cooperation_enabled` dead-flag check at `src/domains/cooperation/phase.py:40`
+(always defaults `True`, unrelated to the real gating mechanism) is a candidate for a small
+cleanup ticket. Both are noted only, not fixed, and not filed as tickets here since neither rises
+to the level of a newly-discovered *bug* the way the two drift findings above do — they remain
+documented candidates for whoever picks up the roadmap's next phase.

@@ -351,7 +351,7 @@
     "FACTION": "S",
     "ECONOMY": "C",
     "PROGRESSION": "B",
-    "SOCIAL": "C",
+    "SOCIAL": "S",
     "INFORMATION": "B",
     "WORLD": "B",
     "NARRATIVE": "A"
@@ -363,10 +363,10 @@
     "FACTION": "S",
     "ECONOMY": "C",
     "PROGRESSION": "B",
-    "SOCIAL": "C",
+    "SOCIAL": "S",
     "INFORMATION": "B",
     "WORLD": "B",
-    "NARRATIVE": "B"
+    "NARRATIVE": "A"
   },
   "frontier_living_world_seed456_200t": {
     "COGNITION": "B",
@@ -374,8 +374,8 @@
     "COMBAT": "B",
     "FACTION": "S",
     "ECONOMY": "C",
-    "PROGRESSION": "B",
-    "SOCIAL": "C",
+    "PROGRESSION": "C",
+    "SOCIAL": "S",
     "INFORMATION": "B",
     "WORLD": "B",
     "NARRATIVE": "A"
@@ -423,7 +423,7 @@
     "FACTION": "S",
     "ECONOMY": "C",
     "PROGRESSION": "C",
-    "SOCIAL": "C",
+    "SOCIAL": "S",
     "INFORMATION": "B",
     "WORLD": "B",
     "NARRATIVE": "A"
@@ -435,7 +435,7 @@
     "FACTION": "S",
     "ECONOMY": "C",
     "PROGRESSION": "C",
-    "SOCIAL": "C",
+    "SOCIAL": "S",
     "INFORMATION": "B",
     "WORLD": "B",
     "NARRATIVE": "A"
@@ -447,7 +447,7 @@
     "FACTION": "S",
     "ECONOMY": "C",
     "PROGRESSION": "C",
-    "SOCIAL": "C",
+    "SOCIAL": "S",
     "INFORMATION": "B",
     "WORLD": "B",
     "NARRATIVE": "A"

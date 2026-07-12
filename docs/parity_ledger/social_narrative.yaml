@@ -69,10 +69,13 @@
   status: verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: '`src/systems/groups.py` (`GroupSystem` manages formation, cohesion,
-    and intent propagation)'
+  v2_evidence: '`src/systems/world_systems/groups.py` (`GroupSystem.update_groups()`
+    — groups form only from an already-ACTIVE contract between ungrouped entities
+    within 10.0 units, not proximity alone; documented in-code as SOC-164). Corroborated
+    at corpus scale by `frontier_living_world`/`highland_traverse` `seed{42,123,456}_200t`
+    calibration runs with `ENABLE_SOCIAL_COOPERATION: "ON"` (TCK-20260710-SIMQ-DEPTH-SOCIAL).'
   proof_type: parity
-  test_path: '`tests_v2/parity/test_group_coordination.py`'
+  test_path: '`tests/unit/social/test_social_party_regression.py::test_no_proximity_only_groups`'
   divergence_note: null
   support_boundary: null
 - id: SOC-008
@@ -2926,6 +2929,10 @@
     calibrate_simq.py; apply_generation() bug fixed (feature_flags no longer
     dropped on tick reconstruction). urban_political_seed42_500t: 1891 SOCIAL
     events, grade S.
+    TCK-20260710-SIMQ-DEPTH-SOCIAL activated ENABLE_SOCIAL_COOPERATION (pure
+    config, no engine change — same mechanism as above) in 2 more worlds'
+    calibration profiles — frontier_living_world and highland_traverse —
+    recalibrated across 3 seeds each; SOCIAL grade moved C→S on both.
   status: verified
   priority: P1
   legacy_evidence: null
@@ -2938,7 +2945,11 @@
     AuthoritativeState tick reconstruction).
     config/simulation_quality/profiles/urban_political.yaml (feature_flags:
     {ENABLE_SOCIAL_COOPERATION: "ON"}).
-    (TCK-20260629-SIMQ-EMIT-SOCIAL-FACTION, TCK-20260702-SIMQ-UPLIFT-SOCIAL-ZERO)
+    config/simulation_quality/profiles/frontier_living_world.yaml,
+    config/simulation_quality/profiles/highland_traverse.yaml (feature_flags:
+    {ENABLE_SOCIAL_COOPERATION: "ON"}; SOCIAL grade C→S at 3 seeds each).
+    (TCK-20260629-SIMQ-EMIT-SOCIAL-FACTION, TCK-20260702-SIMQ-UPLIFT-SOCIAL-ZERO,
+    TCK-20260710-SIMQ-DEPTH-SOCIAL)
   proof_type: parity
   test_path: >
     tests/unit/observability/test_event_extractor_social_faction.py::test_cooperation_event_emitted_when_decision_in_property_updates;

@@ -667,6 +667,22 @@ untouched.
 | seed{42,123,456}_1000t | C → A | C (unchanged) | C (unchanged) |
 | seed{42,123,456}_2000t | C → B | C (unchanged) | C (unchanged) |
 
+**SOCIAL — rejected as an activation candidate (TCK-20260710-SIMQ-DEPTH-SOCIAL, 2026-07-12):**
+Investigated as one of three Phase-2-Depth candidates alongside `frontier_living_world`/
+`highland_traverse` below. `dungeon_crawl`'s composition (`ruins_mystery_quest`,
+`goblin_camp_conflict`, `old_mine_resource_loop`, `scalable_bandit_camp`) has **no
+settlement/civilian module** — its only factions are `goblin_warband`, `wild_beast_pack`,
+`undead_remnants`, `bandit_company`. `CooperationPhase`'s `HelpNeedEvaluator` hard-gates on
+`entity.strategic.current_objective_id` (`src/domains/cooperation/evaluators.py:34-35`), which is
+assigned by the baseline `StrategicIntelligenceSystem` through routine civilian/guard goal-seeking
+— a population this world's pure hostile-faction spawns never exhibit. Empirically confirmed via a
+scratch `ENABLE_SOCIAL_COOPERATION=ON` probe (seed42, 200t, profile YAML untouched): **0**
+`cooperation_event`s, SOCIAL stayed at grade C, vs. 545/1496 events (grade S) for
+`frontier_living_world`/`highland_traverse` under the identical probe. No `feature_flags:` entry
+was added to `config/simulation_quality/profiles/dungeon_crawl.yaml` — its `SOCIAL=C` anchors are
+unchanged and correct. See the `highland_traverse`/`frontier_living_world` SOCIAL activation notes
+below for the two worlds where this same mechanism succeeded.
+
 ### sandbox_world — FACTION + INFORMATION
 
 **Judgment call:** `town_council: 0.5` / `merchant_league: 0.5` — governance-vs-commerce tension in
@@ -719,6 +735,23 @@ actual resolved region id `mountain_pass_zone`, not the module name `mountain_pa
 Recompile surfaced 1 pre-existing warning (`survey_river_route`/`'river'` tag mismatch — confirmed
 present in the committed pre-ticket baseline via `git show HEAD`, unrelated to this ticket's edit).
 
+**SOCIAL — activated (TCK-20260710-SIMQ-DEPTH-SOCIAL, 2026-07-12):** `settled_quarter`'s
+`town_council`/`merchant_league` civilian/guard population accrues `current_objective_id` through
+routine goal-seeking, satisfying `HelpNeedEvaluator`'s hard gate and `PartnerCandidateProvider`'s
+same-faction/`spatial_radius=15.0` clustering — no compiler-level schema field or bespoke content
+authoring required, only the flag. Added `ENABLE_SOCIAL_COOPERATION: "ON"` to
+`config/simulation_quality/profiles/highland_traverse.yaml`'s existing `feature_flags:` block
+(alongside the pre-existing `ENABLE_BELIEF_ASSIMILATION: "ON"`).
+
+| Run | SOCIAL (was → now) | cooperation_event count |
+|---|---|---|
+| seed42_200t | C → S | 1496 |
+| seed123_200t | C → S | 1667 |
+| seed456_200t | C → S | 715 |
+
+All other pillars held at their pre-activation grades for all 3 seeds (re-verified by a full
+`seed{42,123,456}_200t` recalibration against the committed profile YAML, not an env-var probe).
+
 ### swamp_border_world — FACTION + INFORMATION
 
 **Judgment call:** `town_council: 0.5` / `swamp_tribe: 0.5` — border tension between the frontier
@@ -746,6 +779,32 @@ mirror (read by `test_real_content_world_compositions.py`) was left untouched an
 | Run | FACTION (was → now) | INFORMATION | COGNITION |
 |---|---|---|---|
 | seed{42,123,456}_200t | C → S (29 hits) | C → B (1 hit) | C → B (dual-emission) |
+
+**SOCIAL — activated (TCK-20260710-SIMQ-DEPTH-SOCIAL, 2026-07-12):** `frontier_village_core`'s
+`town_council`/`merchant_league` civilian/guard population accrues `current_objective_id` through
+routine goal-seeking, satisfying `HelpNeedEvaluator`'s hard gate and `PartnerCandidateProvider`'s
+same-faction/`spatial_radius=15.0` clustering — same flag-only mechanism as `highland_traverse`
+above, no compiler-level schema field or bespoke content authoring required. Added
+`ENABLE_SOCIAL_COOPERATION: "ON"` to `config/simulation_quality/profiles/frontier_living_world.yaml`'s
+existing `feature_flags:` block (alongside the pre-existing `ENABLE_BELIEF_ASSIMILATION: "ON"`).
+
+| Run | SOCIAL (was → now) | cooperation_event count | Other pillar movement |
+|---|---|---|---|
+| seed42_200t | C → S | 545 | none |
+| seed123_200t | C → S | 903 | NARRATIVE B → A |
+| seed456_200t | C → S | 625 | PROGRESSION B → C |
+
+**Attributed, not a regression:** unlike the flag-only pillars activated by the earlier FACTION/
+INFORMATION expansion (which only ever produced the documented COGNITION dual-emission
+side-effect), `CooperationPhase` is a genuine per-tick decision phase that assigns objectives,
+forms partner candidates, and can move/re-route entities — it participates in the simulation, it
+does not just observe it. Once active, it deterministically perturbs each seed's downstream entity
+trajectory, which cascades into other pillars' event counts (NARRATIVE discovery events,
+PROGRESSION XP/skill events) for 2 of the 3 `frontier_living_world` seeds. Both shifts are within
+the grade-regression suite's ±1 letter band tolerance (`B` accepts `A`/`B`/`C`) and were confirmed
+via a real 3-seed recalibration against the committed profile YAML (not extrapolated from a single
+seed). `highland_traverse`'s 3 seeds showed no such cascade — the effect is population/composition
+dependent, not universal to every SOCIAL activation.
 
 ### frontier_extended — FACTION + INFORMATION
 

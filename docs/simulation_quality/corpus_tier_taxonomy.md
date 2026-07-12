@@ -122,12 +122,12 @@ tables and per-world justification.
 |---|---|---|
 | `wilderness_survival` | End-to-end | 11 entities, 4 regions — smallest world in the corpus; FACTION-only (INFORMATION documented skip, no settlement module) |
 | `sandbox_world` | End-to-end | 18 entities, 3 regions; FACTION + INFORMATION (`town_notice_board`) |
-| `highland_traverse` | End-to-end | 18 entities, 5 regions; FACTION + INFORMATION (`route_waystation_guide`) |
+| `highland_traverse` | End-to-end | 18 entities, 5 regions; FACTION + INFORMATION (`route_waystation_guide`) + SOCIAL (`ENABLE_SOCIAL_COOPERATION`, TCK-20260710-SIMQ-DEPTH-SOCIAL: SOCIAL C→S all 3 seeds, `settled_quarter` civilian/guard population satisfies `current_objective_id` gate) |
 | `urban_political` | Regression/baseline | 30 entities, 3 regions — the only world with any FACTION/INFORMATION/self-model content populated before this ticket; already End-to-end by criterion, not one of this ticket's 8 target worlds |
-| `dungeon_crawl` | End-to-end | 32 entities, 4 regions; FACTION-only (INFORMATION documented skip, no settlement module) |
+| `dungeon_crawl` | End-to-end | 32 entities, 4 regions; FACTION-only (INFORMATION documented skip, no settlement module). SOCIAL activation rejected (TCK-20260710-SIMQ-DEPTH-SOCIAL): no settlement/civilian module → no population ever accrues `current_objective_id` → `HelpNeedEvaluator` hard gate never opens; 0 cooperation events under a live probe, SOCIAL stays C |
 | `swamp_border_world` | End-to-end | 26 entities, 4 regions; FACTION + INFORMATION (`town_notice_board`) |
 | `simq_routing_test` | Regression/baseline | 30 entities, 3 regions — the only world with `ENABLE_ADVENTURE_ROUTING=ON`, purpose-built as a minimal AGENCY calibration world (not a shipped gameplay archetype) |
-| `frontier_living_world` | End-to-end | 46 entities, 7 regions; FACTION + INFORMATION (`town_notice_board`) |
+| `frontier_living_world` | End-to-end | 46 entities, 7 regions; FACTION + INFORMATION (`town_notice_board`) + SOCIAL (`ENABLE_SOCIAL_COOPERATION`, TCK-20260710-SIMQ-DEPTH-SOCIAL: SOCIAL C→S all 3 seeds, `frontier_village_core` civilian/guard population satisfies `current_objective_id` gate) |
 | `generated_frontier_3_42` | End-to-end | 44 entities, 6 regions — procedurally generated; FACTION + INFORMATION content authored; anchored at 200t (3 seeds) and 1000t (seed42) per TCK-20260707-SIMQ-GENERATED-FRONTIER-BASELINE-ANCHORS |
 | `frontier_extended` | End-to-end | 56 entities, 10 regions — largest world in the corpus; FACTION + INFORMATION (`town_notice_board`) |
 | `unit_faction_tension` | Unit | 18 entities, 3 regions — isolates FACTION only (TCK-20260704-SIMQ-CORPUS-UNIT-WORLDS-FACTION-INFO) |
