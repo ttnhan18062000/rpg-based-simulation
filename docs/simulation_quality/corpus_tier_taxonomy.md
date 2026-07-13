@@ -172,7 +172,7 @@ structurally saturated, no further legitimate candidates) and for SOCIAL (staged
 expansion only opportunistic as new worlds get authored). COGNITION self-model query-routing
 world-coverage is explicitly not pursued further under this roadmap — its real blocker is a
 separate, unscoped pipeline-wiring initiative, not corpus depth; see
-`docs/plans/simq_development_roadmap.md`'s Phase 5 section for the full ruling. No further tier
+`docs/plans/archive/simq_development_roadmap.md`'s Phase 5 section for the full ruling. No further tier
 reassignment or content-authoring work against this table is queued.
 
 ---

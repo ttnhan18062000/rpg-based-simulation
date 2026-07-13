@@ -434,7 +434,7 @@ against every world in the corpus, not just the allowlist — for every populate
 populating faction's `hazard_immunities` (or is explicitly documented as intentional exposure, per the
 P2-P question below). This converts a reactive per-investigation fix pattern into a corpus-wide
 completeness guarantee, closing the gap class permanently rather than one sweep at a time.
-**Sequenced as Phase 1.1** in `docs/plans/simq_development_roadmap.md`.
+**Sequenced as Phase 1.1** in `docs/plans/archive/simq_development_roadmap.md`.
 **Resolution:** `TCK-20260710-HAZARD-KIND-CORPUS-WIDE` (2026-07-11) replaced
 `HAZARD_KIND_MATCH_WORLDS`'s 3-world allowlist with `ALL_CORPUS_WORLDS`, parametrizing
 `test_hazard_kind_matches_populating_faction_immunity` over every world under `data/worlds/*`
@@ -466,7 +466,7 @@ re-verify those anchors with a multi-run tolerance check (same pattern as
 `eval_matrix_results.md` that single-run long-tick anchors carry unquantified throttle-variance risk.
 Cross-reference D06 F6's "Recommended Follow-Up" entry — same finding, tracked in both places since
 D06 owns the engine-health angle and this doc owns the actionable-backlog angle.
-**Sequenced as Phase 0.1** in `docs/plans/simq_development_roadmap.md` — the roadmap's first,
+**Sequenced as Phase 0.1** in `docs/plans/archive/simq_development_roadmap.md` — the roadmap's first,
 blocking phase.
 **Resolution:** `TCK-20260710-SIMQ-ANCHOR-RELIABILITY-VERIFY` (2026-07-11) re-ran all 18
 `SLOW_ANCHOR_KEYS` 3 times each at the same seed (54 total runs, real throttled `Kernel`, no
@@ -500,7 +500,7 @@ future world reusing this pattern): either (a) rule it intentional flavor and re
 re-deriving the question, or (b) rule it a genuine gap and add a `NATURAL_TERRAIN` (or a new,
 narrower) `hazard_immunities` entry for `town_council`. Either answer is fine — what's missing is a
 recorded answer, not more investigation.
-**Sequenced as Phase 1.2** in `docs/plans/simq_development_roadmap.md`.
+**Sequenced as Phase 1.2** in `docs/plans/archive/simq_development_roadmap.md`.
 **Resolved (2026-07-10):** Ruled (a) intentional by `TCK-20260710-TOWN-COUNCIL-HAZARD-DA` — see
 `docs/guidelines/intentional_divergences.md` §2.30. `town_council`'s bandit_road exposure is
 ratified as designed non-native conflict-pressure flavor; no content or code change made.

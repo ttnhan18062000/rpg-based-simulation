@@ -2045,7 +2045,7 @@ was found.
 crowded_frontier, resource_dense_basin; Regression/baseline: simq_routing_test; Unit:
 hero_guild_routing, unit_information_source, unit_selfmodel_pilot). No genuinely uncovered,
 tier-appropriate FACTION candidate remains in the corpus.** This closes the roadmap's Phase 3
-FACTION-half goal (`docs/plans/simq_development_roadmap.md`) as already-satisfied by prior work —
+FACTION-half goal (`docs/plans/archive/simq_development_roadmap.md`) as already-satisfied by prior work —
 see that doc's Phase 3 section for the closure record. No content authoring, recalibration, or
 grade-anchor changes were made under this ticket; ground truth was re-verified by direct grep against
 live `data/worlds/*/world.yaml` (not inferred from docs) on 2026-07-10.
@@ -2077,7 +2077,7 @@ dungeon_crawl, wilderness_survival; 2 Stress tier-purity — crowded_frontier, r
 1 Regression/baseline fixture — simq_routing_test; 3 Unit single-mechanic isolation —
 hero_guild_routing, unit_faction_tension, unit_selfmodel_pilot). No genuinely uncovered,
 tier-appropriate INFORMATION candidate remains in the corpus.** This closes the roadmap's Phase 3
-INFORMATION-half goal (`docs/plans/simq_development_roadmap.md`) as already-satisfied by prior work
+INFORMATION-half goal (`docs/plans/archive/simq_development_roadmap.md`) as already-satisfied by prior work
 — see that doc's Phase 3 section for the closure record. No content authoring, recalibration, or
 grade-anchor changes were made under this ticket; ground truth was re-verified by two independent
 live signals against `data/worlds/*/world.yaml` and `config/simulation_quality/profiles/*.yaml`
@@ -2085,7 +2085,7 @@ live signals against `data/worlds/*/world.yaml` and `config/simulation_quality/p
 
 ## COGNITION Real-World Generalization — Phase 4 (TCK-20260710-SIMQ-COGNITION-REALWORLD-GENERALIZE)
 
-Phase 4 (Depth Wave 3: COGNITION) of `docs/plans/simq_development_roadmap.md` asked whether Branch B
+Phase 4 (Depth Wave 3: COGNITION) of `docs/plans/archive/simq_development_roadmap.md` asked whether Branch B
 (self-model cognition, established by `TCK-20260703-SIMQ-UPLIFT3-BRANCH-B`'s 3-bug fix chain and
 exercised so far only by `unit_selfmodel_pilot`'s purpose-built, materialization-only isolation
 world) generalizes to a real, already-populated archetype world. This ticket ran real calibration

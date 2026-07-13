@@ -308,7 +308,7 @@ same-seed runs past ~tick 300-320. Determine whether any already-shipped 1000t/2
 flip if re-measured, and whether a tolerance-based re-verification (same pattern as
 `test_generated_frontier_3_42_extended_population_stability`) should become the standard for all
 long-run anchors rather than a single-run point estimate.
-**Sequenced as Phase 0.1 (the blocking first phase)** in `docs/plans/simq_development_roadmap.md`.
+**Sequenced as Phase 0.1 (the blocking first phase)** in `docs/plans/archive/simq_development_roadmap.md`.
 **Result (`TCK-20260710-SIMQ-ANCHOR-RELIABILITY-VERIFY`):** all 18 shipped anchors re-verified stable
 across 3 trials each — none flip; a tolerance-based re-verification standard was evaluated but found
 unnecessary since the existing ±1-`GRADE_ORDER` band already absorbs the observed variance for every

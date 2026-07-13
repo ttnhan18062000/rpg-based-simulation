@@ -1,14 +1,19 @@
 ---
-status: active
+status: historical
 layer: simulation
 authority: P1
 audience: agent
 tags: [roadmap, simulation-quality, calibration, corpus, determinism, planning]
 date: 2026-07-10
+archived: 2026-07-13
 source: docs/plans/idea_simq_near_perfect_roadmap.md
 ---
 
 # Simulation Quality (SimQ) — Long-Term Development Roadmap
+
+**Archived:** 2026-07-13 — all 6 phases (0-5) complete; see Phase 5's ruling below
+(`TCK-20260713-SIMQ-COVERAGE-DECISION-GATE`) for the closing decision. Kept for traceability, not
+as a live action list.
 
 ## Source & Method
 

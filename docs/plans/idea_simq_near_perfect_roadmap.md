@@ -18,7 +18,7 @@ tags: [idea, simulation-quality, calibration, corpus, determinism, roadmap]
 > particular five threads, in this particular order, constitute the actual distance between "SimQ
 > ships and works" and "SimQ is what its own contract says it should be."
 >
-> **Superseded as the actionable plan by `docs/plans/simq_development_roadmap.md`** (2026-07-10),
+> **Superseded as the actionable plan by `docs/plans/archive/simq_development_roadmap.md`** (2026-07-10),
 > which sequences these five threads into 6 phases with ticket-count estimates and is where actual
 > tickets get filed from. This doc remains the evidence trail for *why* — read it first if you need
 > the reasoning behind the roadmap's phase ordering; read the roadmap doc for *what to do next*.
@@ -210,7 +210,7 @@ archetype worlds, deliberately trading corpus width growth for corpus depth grow
 
 **Effort:** XS to close as a documented decision; L (epic-scale) if (b) is chosen.
 
-**Progress (option (b) chosen, epic underway as `docs/plans/simq_development_roadmap.md` Phases 2-4):**
+**Progress (option (b) chosen, epic underway as `docs/plans/archive/simq_development_roadmap.md` Phases 2-4):**
 Phase 2 (SOCIAL, `TCK-20260710-SIMQ-DEPTH-SOCIAL`, done 2026-07-11/12) genuinely deepened the corpus:
 `frontier_living_world` and `highland_traverse` both moved SOCIAL C→S via real flag activation on
 previously-inert worlds — a clean instance of (b) as originally proposed. Phase 3 (FACTION +
@@ -235,7 +235,7 @@ cost data: FACTION/INFORMATION declared complete (structurally saturated), SOCIA
 declared the permanent bar (opportunistic-only future expansion), and COGNITION query-routing
 world-coverage explicitly not pursued further (its real blocker is a separate, unscoped
 pipeline-wiring initiative, not corpus depth). See
-`docs/plans/simq_development_roadmap.md`'s Phase 5 section for the full ruling. ECONOMY remains
+`docs/plans/archive/simq_development_roadmap.md`'s Phase 5 section for the full ruling. ECONOMY remains
 correctly out of scope — its C-ceiling is a Gini-threshold/archetype-composition question, not a
 `FeatureMode` gating question like the other four pillars, and was never part of this roadmap's
 Phase 2-4 scope.
