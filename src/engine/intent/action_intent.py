@@ -134,10 +134,51 @@ class ActionIntentAdapter:
                 execution_result="SUCCESS"
             )
             cls._traces.append(trace)
-            gold_deduct = intent.payload.get("cost_gold", 0)
+
+            if "query_kind" not in intent.payload:
+                # Adventure/AGENCY-domain-originated intent (ObjectiveIntentResolver) — behavior
+                # must stay byte-identical to pre-fix code. Do not read "cost_paid" here.
+                gold_deduct = intent.payload.get("cost_gold", 0)
+                return {entity.id: EntityUpdate(
+                    entity_id=entity.id,
+                    inventory=InventoryUpdate(gold_delta=-gold_deduct),
+                )}
+
+            # Information-domain-originated (InformationIntentResolver) — close the loop.
+            # Reuse the EXISTING canonical assimilation path (InformationResponseNormalizer +
+            # InformationAssimilationService), the same two calls Branch A makes at phase.py:56-69,
+            # instead of hand-rolling a second KnowledgeFact-merge implementation. Branch A's service
+            # enforces capacity bounds (max_facts=10, max_unknowns=5, oldest-eviction) on this exact
+            # durable field (EntityState.self_model.knowledge); a hand-rolled merge here would silently
+            # skip those invariants and create two code paths reaching the same state through different,
+            # divergent mechanisms — architecture-review finding, fixed here.
+            gold_deduct = intent.payload.get("cost_paid", 0)  # dead-key fix: resolver.py writes "cost_paid"
+
+            from src.domains.information.schema import InformationQuery
+            from src.domains.information.normalizer import InformationResponseNormalizer
+            from src.domains.information.assimilation import InformationAssimilationService
+            from dataclasses import replace as dataclass_replace
+
+            subject = intent.payload.get("subject", "")
+            query = InformationQuery(subject=subject, kind=intent.payload.get("query_kind", ""))
+            normalized = InformationResponseNormalizer.normalize(
+                query=query,
+                source_id=intent.target_id if intent.target_id is not None else "",
+                raw_response={
+                    "answer_kind": "KNOWN_FACT",
+                    "certainty": intent.payload.get("expected_certainty", 0.5),
+                    "details": {},
+                },
+                cost_paid=gold_deduct,
+                current_tick=current_tick,
+            )
+            assim = InformationAssimilationService.assimilate(entity, normalized, current_tick)
+            new_bundle = dataclass_replace(entity.self_model, knowledge=assim.knowledge_update)
+
             return {entity.id: EntityUpdate(
                 entity_id=entity.id,
-                inventory=InventoryUpdate(gold_delta=-gold_deduct)
+                inventory=InventoryUpdate(gold_delta=-gold_deduct),
+                self_model_bundle_set=new_bundle,
             )}
         else:
             router_payload["action"] = intent.kind

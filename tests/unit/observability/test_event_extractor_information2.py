@@ -60,9 +60,9 @@ def _state(entities: dict, tick: int = 100, resource_nodes: dict | None = None,
     return s
 
 
-def _update(eid: int):
+def _update(eid: int, property_updates: dict | None = None):
     eu = MagicMock()
-    eu.property_updates = {}
+    eu.property_updates = property_updates or {}
     eu.combat_upd = None
     eu.intent_results = []
     eu.self_model_bundle_set = None
@@ -250,3 +250,37 @@ class TestDecisionDivergenceDetected:
             _update(1), ObservabilityMode.NORMAL,
         )
         assert "decision_divergence_detected" not in _types(events)
+
+
+# ── route_new_query (TCK-20260712-SIMQ-INFORMATION-ROUTING-CLOSURE, fix 4) ─────
+
+class TestRouteNewQuery:
+    def test_event_extractor_emits_route_new_query_event(self):
+        entity = _entity()
+        prior = _state({1: entity}, tick=99)
+        curr = _state({1: entity}, tick=100)
+        update = _update(1, property_updates={
+            "last_routed_query_subject": "material.moon_resin.source",
+            "last_routed_query_tick": 99,
+        })
+        events = EventExtractor.extract(prior, curr, update, ObservabilityMode.NORMAL)
+        evt = next(e for e in events if e.event_type == "route_new_query")
+        assert evt.payload["subject"] == "material.moon_resin.source"
+
+    def test_not_fired_when_tick_does_not_match_prior_tick(self):
+        entity = _entity()
+        prior = _state({1: entity}, tick=99)
+        curr = _state({1: entity}, tick=100)
+        update = _update(1, property_updates={
+            "last_routed_query_subject": "material.moon_resin.source",
+            "last_routed_query_tick": 50,
+        })
+        events = EventExtractor.extract(prior, curr, update, ObservabilityMode.NORMAL)
+        assert "route_new_query" not in _types(events)
+
+    def test_not_fired_when_no_routed_query_property(self):
+        entity = _entity()
+        prior = _state({1: entity}, tick=99)
+        curr = _state({1: entity}, tick=100)
+        events = EventExtractor.extract(prior, curr, _update(1), ObservabilityMode.NORMAL)
+        assert "route_new_query" not in _types(events)

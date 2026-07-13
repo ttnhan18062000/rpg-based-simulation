@@ -252,6 +252,44 @@ def test_grade_within_anchor_band_long_run(run_key: str, grade_anchors: dict) ->
 # Structural sanity test
 # ---------------------------------------------------------------------------
 
+def test_urban_political_selfmodel_cognition_isolated_grade_anchor(grade_anchors: dict) -> None:
+    """Grade-anchor probe for the permanent
+    config/simulation_quality/profiles/urban_political_selfmodel_probe.yaml fixture
+    (formalized by TCK-20260712-SIMQ-INFORMATION-ROUTING-CLOSURE, originally the
+    investigation-scoped _investigation_probe_urban_political_selfmodel_only.yaml from
+    TCK-20260710-SIMQ-COGNITION-REALWORLD-GENERALIZE). This profile isolates
+    ENABLE_SELF_MODEL_COGNITION materialization from ENABLE_BELIEF_ASSIMILATION routing
+    (the latter stays OFF), so Branch B's InformationBeliefPhase never runs in this
+    calibration — COGNITION anchors at S (self_model_updated fires every tick) and
+    INFORMATION anchors at C (zero belief_*/route_new_query events), independent of
+    this ticket's routing fix (re-measured post-fix, not copied blindly from the pre-fix
+    baseline — confirmed unchanged since this profile never activates Branch B)."""
+    run_key = "urban_political_selfmodel_probe_seed42_200t"
+    if run_key not in grade_anchors:
+        pytest.skip(f"No anchor entry for {run_key!r} in grade_anchors.json")
+
+    report = _load_calibration_report(run_key)
+    if report is None:
+        pytest.skip(f"Calibration report not found: data/calibration/{run_key}/quality_report.json")
+
+    pillars = report.get("pillars", {})
+    assert pillars["COGNITION"]["grade"] == "S"
+    assert pillars["INFORMATION"]["grade"] == "C"
+    assert pillars["INFORMATION"]["event_count"] == 0, (
+        "expected zero belief_*/route_new_query events — ENABLE_BELIEF_ASSIMILATION stays "
+        "OFF in this probe profile, so InformationBeliefPhase's Branch A/B never run"
+    )
+
+    actual_grades = _extract_pillar_grades(report)
+    anchors = grade_anchors[run_key]
+    failures = [
+        f"  {pillar}: actual={actual_grades.get(pillar, 'C')!r} outside ±1 band of anchor={anchor!r}"
+        for pillar, anchor in anchors.items()
+        if not _within_band(actual_grades.get(pillar, "C"), anchor)
+    ]
+    assert not failures, f"{run_key} — pillar(s) drifted beyond anchor band:\n" + "\n".join(failures)
+
+
 def test_grade_anchor_file_exists_and_valid(grade_anchors: dict) -> None:
     """grade_anchors.json must exist and contain at least all fast anchor run keys.
 

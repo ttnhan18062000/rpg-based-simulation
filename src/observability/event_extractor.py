@@ -298,6 +298,16 @@ class EventExtractor:
                         payload={"subject": subject},
                     ))
 
+                # Information: route_new_query (fix 4, TCK-20260712-SIMQ-INFORMATION-ROUTING-CLOSURE)
+                if prop.get("last_routed_query_tick") == prior_state.tick:
+                    subject = prop.get("last_routed_query_subject", "unknown")
+                    events.append(SimulationEvent(
+                        event_type="route_new_query", event_category="strategy",
+                        tick=tick, entity_id=eid, severity="INFO",
+                        source_system="event_extractor", message="",
+                        payload={"subject": subject},
+                    ))
+
                 # Social: cooperation_event (PP-05)
                 if prop.get("last_cooperation_decision") is not None:
                     events.append(SimulationEvent(

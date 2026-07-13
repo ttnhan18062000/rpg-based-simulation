@@ -1,9 +1,12 @@
-# TEMPORARY investigation-scoped probe profile — TCK-20260710-SIMQ-COGNITION-REALWORLD-GENERALIZE
-# NOT a shipped profile. Isolates ENABLE_SELF_MODEL_COGNITION materialization from
-# ENABLE_BELIEF_ASSIMILATION routing by turning the self-model flag ON while omitting
-# the belief-assimilation flag that urban_political.yaml normally ships ON.
-# Delete after investigation closes unless Plan phase decides to keep it as a permanent
-# test fixture.
+# Permanent grade-anchor probe profile (formalized TCK-20260712-SIMQ-INFORMATION-ROUTING-CLOSURE,
+# originally created by TCK-20260710-SIMQ-COGNITION-REALWORLD-GENERALIZE as
+# _investigation_probe_urban_political_selfmodel_only.yaml).
+# NOT a shipped profile — not referenced by any world's default calibration inheritance chain;
+# used only by tests/simulation_quality/test_grade_regression.py's
+# test_urban_political_selfmodel_cognition_isolated_grade_anchor. Isolates
+# ENABLE_SELF_MODEL_COGNITION materialization from ENABLE_BELIEF_ASSIMILATION routing by
+# turning the self-model flag ON while omitting the belief-assimilation flag that
+# urban_political.yaml normally ships ON.
 #
 # Corrected 2026-07-12 (orchestrator re-verification): the file at this path previously
 # lacked ENABLE_SELF_MODEL_COGNITION entirely and instead carried ENABLE_SOCIAL_COOPERATION

@@ -3880,3 +3880,73 @@
     not re-verified at other worlds, tick counts, or seeds. Does not supersede or duplicate
     INFRA-259 (materialization sourcing fix) or INFRA-260 (pipeline-wiring merge fix); this entry
     is the real-world-reachability finding that sits on top of both.
+- id: INFRA-267
+  text: >
+    Query-routing-half fix (TCK-20260712-SIMQ-INFORMATION-ROUTING-CLOSURE), closing the gap
+    INFRA-266 root-caused: fix 2 (InformationBeliefPhase.apply()'s Branch B now loops over all
+    router-returned candidates, trying InformationIntentResolver.resolve() on each until one
+    yields a real ActionIntent, instead of only ever trying candidates[0]); fix 3
+    (InformationIntentResolver.resolve()'s affordability gate now returns a structured
+    InformationResponse(answer_kind="insufficient_gold", cost_gold=..., source_id=...) signal
+    instead of a bare None, giving knowledge_model.py's existing "insufficient_gold" branch its
+    first real producer); fix 4 (event_extractor.py gains an additive route_new_query branch
+    reading last_routed_query_subject/last_routed_query_tick, mirroring the existing
+    belief_assimilated/belief_updated shape); and fix 5 (action_intent.py's shared
+    ASK_INFORMATION branch now discriminates by "query_kind" in intent.payload -- the
+    adventure/AGENCY-domain path, ObjectiveIntentResolver, which never sets this key, stays
+    byte-identical including its pre-fix "cost_gold" payload read; the information-domain path
+    reuses the existing InformationResponseNormalizer -> InformationAssimilationService ->
+    dataclass_replace(entity.self_model, ...) chain Branch A already relies on at phase.py:56-69,
+    and also fixes the previously-undocumented cost_gold/cost_paid dead-key bug that made gold
+    deduction a silent no-op for every information-domain ASK_INFORMATION intent). Per the
+    investigation's Ranking vs. Fallback Recommendation, router.py:102-103's candidate sort key
+    ((-expected_certainty, cost_gold)) is deliberately left untouched -- the phase-level fallback
+    alone is sufficient to reach candidates[1] (town_notice_board, free) once candidates[0]
+    (traveling_merchant_rumors, cost=5) fails the affordability gate for entity 23 (0 gold),
+    reproduced end-to-end against urban_political's real compiled state across all 3 anchor seeds.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/domains/information/resolver.py (InformationIntentResolver.resolve() return type widened
+    to Union[ActionIntent, InformationResponse]; affordability gate returns a structured
+    insufficient_gold signal; payload additively gains expected_certainty/source_kind alongside
+    the unchanged subject/query_kind/cost_paid keys); src/domains/information/phase.py
+    (InformationBeliefPhase.apply()'s Branch B now loops over router.route()'s candidates instead
+    of only trying candidates[0]); src/observability/event_extractor.py (new additive
+    route_new_query branch, gated on last_routed_query_tick == prior_state.tick, mirroring the
+    belief_assimilated/belief_updated pattern); src/engine/intent/action_intent.py
+    (ActionIntentAdapter.execute()'s ASK_INFORMATION branch discriminated by "query_kind" in
+    intent.payload; information-domain path closes the loop via
+    InformationResponseNormalizer.normalize() -> InformationAssimilationService.assimilate() ->
+    dataclass_replace(entity.self_model, knowledge=...), returned via
+    EntityUpdate.self_model_bundle_set; adventure-domain path unchanged, still reads
+    intent.payload.get("cost_gold", 0)); src/domains/information/router.py:102-103 explicitly
+    UNCHANGED (candidate sort key still (-expected_certainty, cost_gold), no affordability term)
+  proof_type: parity
+  test_path: >
+    tests/integration/domains/information/test_phase5_branch_b_realworld.py::test_branch_b_query_routing_fails_silently_on_real_urban_political_state;
+    tests/integration/domains/information/test_phase5_information_belief_phase.py::test_information_belief_phase_falls_back_to_next_candidate_on_resolution_failure;
+    tests/unit/domains/information/test_phase5_information_intent_resolver.py::test_intent_resolver_insufficient_gold_produces_signal_not_silent_none;
+    tests/unit/observability/test_event_extractor_information2.py::TestRouteNewQuery::test_event_extractor_emits_route_new_query_event;
+    tests/integration/domains/information/test_phase5_information_belief_phase.py::test_ask_information_intent_execution_closes_the_loop;
+    tests/simulation_quality/test_grade_regression.py::test_urban_political_selfmodel_cognition_isolated_grade_anchor;
+    tests/integration/domains/test_fused_loop.py::test_branch_b_fires_across_real_tick_boundary_after_self_model_patch_materialization
+  divergence_note: null
+  support_boundary: >
+    Scoped to urban_political, seeds 42/123/456, 200 ticks -- same scope as INFRA-266. Adventure-
+    domain ASK_INFORMATION behavior (ObjectiveIntentResolver, src/domains/adventure/resolver.py)
+    is confirmed unchanged: it is not modified by this fix and never sets "query_kind" in its
+    intent payload, so it always takes the byte-identical pre-fix branch in
+    action_intent.py -- verified by tests/unit/domains/adventure/test_phase3_route_scoring.py,
+    test_phase3_route_generator.py, and tests/unit/strategic/test_classifier.py passing
+    unmodified. ENABLE_SELF_MODEL_COGNITION and ENABLE_BELIEF_ASSIMILATION remain OFF in every
+    shipped config/simulation_quality/profiles/*.yaml and data/worlds/*.yaml profile -- this fix
+    does not activate Branch B in any shipped calibration scenario, it only makes the mechanism
+    correct and reachable when both flags are scoped ON (test-only, or via the new
+    urban_political_selfmodel_probe.yaml grade-anchor probe fixture, which itself only turns
+    ENABLE_SELF_MODEL_COGNITION ON and leaves ENABLE_BELIEF_ASSIMILATION OFF). ActionIntentAdapter.
+    execute() has no production tick-pipeline call site today (unchanged by this ticket) -- the
+    close-the-loop fix (fix 5) is verified via direct test-harness invocation
+    (test_ask_information_intent_execution_closes_the_loop), not via live-gameplay activation;
+    see INFRA-266 for the historical pre-fix root-cause record (left untouched).

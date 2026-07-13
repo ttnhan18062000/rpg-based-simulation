@@ -596,6 +596,18 @@
     "WORLD": "B",
     "NARRATIVE": "A"
   },
+  "urban_political_selfmodel_probe_seed42_200t": {
+    "COGNITION": "S",
+    "AGENCY": "C",
+    "COMBAT": "B",
+    "FACTION": "S",
+    "ECONOMY": "C",
+    "PROGRESSION": "C",
+    "SOCIAL": "S",
+    "INFORMATION": "C",
+    "WORLD": "B",
+    "NARRATIVE": "A"
+  },
   "hero_guild_routing_seed42_500t": {
     "COGNITION": "A",
     "AGENCY": "A",
