@@ -3326,6 +3326,8 @@
     As of TCK-20260704-SIMQ-CORPUS-UNIT-WORLD-SELFMODEL-PILOT, this is no longer true
     without qualification: config/simulation_quality/profiles/unit_selfmodel_pilot.yaml turns this flag
     ON for that one dedicated unit-tier world only — see docs/parity_ledger/strategic_cognition.yaml::STRAT-245.
+    See INFRA-266 for the real-world (urban_political) generalization split verdict this materialization
+    claim was independently re-confirmed against.
   status: verified
   priority: P1
   legacy_evidence: null
@@ -3400,6 +3402,21 @@
     nothing to merge (i.e. ENABLE_SELF_MODEL_COGNITION OFF, the shipped default everywhere) — hash
     stability confirmed via byte-identical canonical hash with/without the SelfModelPatch
     materialization fix for urban_political's shipped profile (50-tick run, seed 42).
+
+    Real-world reachability beyond the hand-built test (TCK-20260710-SIMQ-COGNITION-REALWORLD-
+    GENERALIZE): reproduced directly against urban_political's real compiled state (actor_id 23,
+    seeds 42/123/456, seed-invariant). The routing half does NOT reach a scoreable outcome there —
+    InformationQueryRouter.route() (router.py:102-103) ranks the paid traveling_merchant_rumors
+    candidate ahead of the free town_notice_board by certainty; InformationBeliefPhase.apply()
+    (phase.py:92-105) never falls back past candidates[0]; InformationIntentResolver.resolve()
+    (resolver.py:65-69) silently returns None on the affordability gate (entity 23 has 0 gold, all 3
+    seeds); and even a hypothetically successful resolution would not score, since
+    event_extractor.py:276-299 has no mapping for last_routed_query_subject/last_routed_query_tick.
+    This does not reopen INFRA-260's own claim (accurate for the hand-built single-profile test,
+    which only ever seeds one candidate source and therefore never exercises the ranking/
+    affordability gap) -- it narrows the claim's scope explicitly to that narrower case. See
+    docs/parity_ledger/infrastructure.yaml::INFRA-266 for the split-verdict entry and
+    TCK-20260712-SIMQ-INFORMATION-ROUTING-CLOSURE for the scoped follow-up fix.
 - id: INFRA-261
   text: >
     RevertSimulationKnowledgeWorkflow (TCK-20260704-LABKNOWLEDGE-REVERT) provides a real revert
@@ -3821,3 +3838,45 @@
     epic_scope_orphan_check.py is intentionally unwired (no call site in
     implement-ticket.js or done_checker_static.py) -- ships standalone per its own docstring,
     pending a future ticket to wire it into a pipeline phase.
+- id: INFRA-266
+  text: >
+    Branch B real-world generalization split verdict (TCK-20260710-SIMQ-COGNITION-REALWORLD-
+    GENERALIZE): the self-model materialization half (SelfModelUpdatePhase -> SelfModelPatch ->
+    self_model.knowledge.unknowns) generalizes cleanly to urban_political's real compiled state --
+    entity 23 (pop_1)'s unknowns populate from tick 1, seed-invariant across 42/123/456, and a
+    200-tick calibration (ENABLE_SELF_MODEL_COGNITION scoped ON via env-var override atop the
+    shipped urban_political profile) shows COGNITION moving from baseline B to S (5610-5611
+    self_model_updated events/run). The query-routing half (InformationBeliefPhase's route-new-
+    query branch, phase.py:83-105) does NOT generalize -- reproducible, seed-invariant intent=None
+    result, root-caused to 3 independent points plus a 4th observability gap: router.py:102-103
+    ranks a paid candidate ahead of a free one by certainty; phase.py:92-105 has no fallback past
+    candidates[0]; resolver.py:65-69 silently returns None on the affordability gate (entity 23 has
+    0 gold, all 3 seeds); and even a hypothetically successful resolution would not score, since
+    event_extractor.py:276-299 has no mapping for last_routed_query_subject/last_routed_query_tick.
+    Real-world reachability beyond unit_selfmodel_pilot is therefore no longer "unverified" in
+    either direction -- it is verified-generalizing for materialization and verified-NOT-
+    generalizing for routing. See INFRA-260's support_boundary for the companion narrative and
+    TCK-20260712-SIMQ-INFORMATION-ROUTING-CLOSURE for the scoped follow-up fix covering the 4
+    routing-half points.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/domains/information/router.py:102-103 (candidate ranking by (-expected_certainty,
+    cost_gold)); src/domains/information/phase.py:92-105 (Branch B, no fallback past
+    candidates[0]); src/domains/information/resolver.py:65-69 (affordability gate returns None);
+    src/observability/event_extractor.py:276-299 (last_assimilated_subject/tick mapped,
+    last_routed_query_subject/tick absent); src/cognition/knowledge_model.py:67-70
+    ("insufficient_gold" answer_kind branch has no producer today)
+  proof_type: null
+  test_path: >
+    tests/simulation_quality/test_grade_regression.py (urban_political_seed{42,123,456}_200t
+    anchors -- materialization-half evidence only; the query-routing-half failure has no dedicated
+    regression test yet, this is exactly TCK-20260712-SIMQ-INFORMATION-ROUTING-CLOSURE's test 1,
+    test_branch_b_query_routing_fails_silently_on_real_urban_political_state)
+  divergence_note: null
+  support_boundary: >
+    Scoped strictly to urban_political's real compiled state at 200 ticks, seeds 42/123/456 --
+    not re-verified at other worlds, tick counts, or seeds. Does not supersede or duplicate
+    INFRA-259 (materialization sourcing fix) or INFRA-260 (pipeline-wiring merge fix); this entry
+    is the real-world-reachability finding that sits on top of both.

@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: world
 authority: P1
 audience: agent
 ticket_id: TCK-20260710-SIMQ-COGNITION-REALWORLD-GENERALIZE
-phase: open
+phase: done
 date: 2026-07-10
 tags: [cognition, self-model, simulation-quality, calibration, investigation]
 ---
@@ -15,7 +15,7 @@ tags: [cognition, self-model, simulation-quality, calibration, investigation]
 Investigate whether Branch B (self-model) generalizes beyond `unit_selfmodel_pilot` to a real, already-populated archetype world
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -270,8 +270,109 @@ framing uncritically.
 
 ## Implementation Notes
 
+**Candidate-world re-confirmation:** `urban_political` was independently re-derived (not just
+accepted from this ticket's own pre-filed framing) as the correct candidate against current
+`corpus_tier_taxonomy.md` and `grade_anchors.json` data. `hero_guild_routing` was re-checked and
+rejected: it is Unit-tier, and its non-`C` COGNITION grade is driven entirely by
+`strategic_intelligence`/AGENCY (PP-30) signal from route-selection, not self-model materialization
+— it would have tested the wrong mechanism. `urban_political` (Regression/baseline tier) already
+ships `ENABLE_BELIEF_ASSIMILATION: "ON"` and already carries the `pending_self_model_information_
+events` seed from `TCK-20260703-SIMQ-UPLIFT3-BRANCH-B`, re-verified still valid (zero compiler
+warnings, actor_id=23 across seeds 42/123/456).
+
+**Split-verdict finding:** Branch B splits into two independently-testable halves that generalize
+differently. Materialization (Step 1 assimilation → `SelfModelPatch` → `self_model.knowledge.
+unknowns`) is **(a) clean generalization** — real, multi-tick, multi-seed evidence, COGNITION moves
+`B`→`S` (5610–5611 `self_model_updated` events/run, seed-invariant). Query-routing
+(`InformationBeliefPhase` Branch B, `phase.py:83-105`) is **(c) does not generalize** — reproducible,
+seed-invariant `intent=None`, root-caused to 4 exact file:line points (`router.py:102-103` ranking-
+before-affordability; `phase.py:92-105` no fallback past `candidates[0]`; `resolver.py:65-69` silent
+`None` on the affordability gate; `event_extractor.py:276-299` missing event mapping for Branch B's
+own property-update keys). These two halves are deliberately kept separate in every write-up
+produced by this ticket — collapsing them into a single verdict would misrepresent both.
+
+**AC7 reconciliation (Decision 2 in `staging_artifacts/.../plan.md`):** AC7 as literally written
+("`make evaluate --dry-run` exits 0 with 0 regressions") is not satisfiable as written — 3
+pre-existing, unrelated regressions (`dungeon_crawl_seed42_200t` COMBAT/PROGRESSION,
+`urban_political_seed42_200t` PROGRESSION) exist on the corpus independent of this investigation,
+confirmed via `git status`/`git diff --stat` showing zero tracked files changed before the dry-run
+ran. Re-scoped to **"0 new regressions attributable to this ticket"** — trivially and verifiably
+true, since this ticket made zero `src/`/`data/`/shipped-`config/` changes. The pre-existing drift
+is not fixed here (out of scope, unrelated to Branch B/COGNITION) — it remains open corpus drift for
+a future, separately-scoped ticket.
+
+**Probe-profile resolution — RESOLVED, kept as permanent test fixture:**
+`config/simulation_quality/profiles/_investigation_probe_urban_political_selfmodel_only.yaml` was
+found during planning to not match this investigation's description of it (a genuine evidentiary gap,
+recorded as UQ-A in `staging_artifacts/.../plan.md`). The orchestrator rebuilt the file correctly
+(`urban_political.yaml`'s shipped content + `ENABLE_SELF_MODEL_COGNITION: "ON"`, minus
+`ENABLE_BELIEF_ASSIMILATION`) and re-ran the isolated-materialization-only calibration
+(`tools/calibrate_simq.py --ticks 200 --seed 42 --name urban_political --profile
+_investigation_probe_urban_political_selfmodel_only`), reproducing the exact originally-claimed
+numbers (`COGNITION grade=S events=5610`, `INFORMATION grade=C events=0`). With the evidence now
+independently re-confirmed rather than merely asserted, the file is kept as a permanent test fixture
+— it is the only real-world evidence isolating materialization from routing, and it is cheap to
+retain. It is git-added and committed as part of this ticket's Files Changed.
+
 ## Test Summary
+
+Verification already performed by the investigation (no new pytest tests were added by this
+investigation-only ticket — this ticket documents findings and files a follow-up, per its Out of
+Scope):
+- `make evaluate --dry-run` (`tools/evaluate_simq.py --dry-run`, full corpus): 710 pillars checked,
+  3 pre-existing regressions (confirmed unrelated, see AC7 reconciliation above), 0 missing.
+- Direct `WorldCompiler.compile()` calls (seeds 42/123/456) against
+  `data/worlds/urban_political/resolved/world.resolved.yaml`: zero compiler warnings, confirms the
+  seed content is still valid.
+- Real `calibrate_simq.py` 200-tick calibration runs with `ENABLE_SELF_MODEL_COGNITION=ON`, both
+  alone (via the probe profile) and combined with `ENABLE_BELIEF_ASSIMILATION=ON` (via the shipped
+  `urban_political` profile) — full grade/event-count evidence in
+  `stored_artifacts/TCK-20260710-SIMQ-COGNITION-REALWORLD-GENERALIZE/investigation.md`.
+- Direct reproduction of `InformationQueryRouter.route()` → `InformationIntentResolver.resolve()`
+  against the real compiled state, across all 3 anchor seeds — confirms `intent=None`,
+  seed-invariant.
+- Orchestrator re-verification of the isolated-probe run (Decision 3): re-ran the corrected probe
+  file and independently re-confirmed the exact claimed numbers — `COGNITION grade=S events=5610`,
+  `INFORMATION grade=C events=0` — no longer pending, cited as confirmed evidence throughout
+  `docs/simulation_quality/eval_matrix_results.md`'s new section and `INFRA-266`.
+- `python3 -c "import yaml; yaml.safe_load(...)"` parse check on
+  `docs/parity_ledger/infrastructure.yaml` after the `INFRA-260`/`INFRA-266` edits: parses cleanly,
+  `INFRA-266` is the only new ID, no duplicates.
+- `python3 tools/validate_frontmatter.py tickets/todos/simq-roadmap-phase4-depth-cognition/
+  TCK-20260712-SIMQ-INFORMATION-ROUTING-CLOSURE.md`: passes (all 5 tags pre-registered).
 
 ## Files Changed
 
+- `docs/simulation_quality/eval_matrix_results.md` (new append-only section, "COGNITION Real-World
+  Generalization — Phase 4")
+- `docs/parity_ledger/infrastructure.yaml` (`INFRA-260` `support_boundary` addition, `INFRA-259`
+  cross-reference clause, new `INFRA-266` entry)
+- `config/simulation_quality/profiles/_investigation_probe_urban_political_selfmodel_only.yaml`
+  (new file, permanent test fixture per Decision 3, content independently re-verified)
+- `tickets/todos/simq-roadmap-phase4-depth-cognition/TCK-20260712-SIMQ-INFORMATION-ROUTING-CLOSURE.md`
+  (new file, follow-up engine-fix ticket)
+- `tickets/inprogress/TCK-20260710-SIMQ-COGNITION-REALWORLD-GENERALIZE.md` (this file — Implementation
+  Notes/Test Summary/Files Changed/Completion Summary filled in)
+
+Zero `src/` files changed. Zero shipped-content files (`data/worlds/urban_political/world.yaml`,
+`config/simulation_quality/profiles/urban_political.yaml`) changed.
+
 ## Completion Summary
+
+Branch B (self-model cognition) splits into two independently-generalizing halves when tested
+against `urban_political`, a real archetype world (not the isolated `unit_selfmodel_pilot` used
+previously): materialization **(a) clean generalization** (COGNITION `B`→`S`, 5610–5611
+`self_model_updated` events/run, seed-invariant across 42/123/456), and query-routing **(c) does not
+generalize** (reproducible, seed-invariant `intent=None`, root-caused to 4 exact file:line points
+across `router.py`, `phase.py`, `resolver.py`, and `event_extractor.py`). The overall COGNITION grade
+improvement is entirely attributable to materialization; routing contributes zero events. A
+follow-up engine-fix ticket, `TCK-20260712-SIMQ-INFORMATION-ROUTING-CLOSURE` (standard tier), was
+filed to `tickets/todos/simq-roadmap-phase4-depth-cognition/` covering all 4 root-cause points plus
+the intent-execution-loop closure gap, with 6 required tests. AC7 ("`make evaluate --dry-run` exits
+0 with 0 regressions") was re-scoped to "0 new regressions attributable to this ticket" — true and
+verified, since 3 pre-existing, unrelated corpus regressions exist independent of this investigation
+(zero tracked files were changed by this ticket). The probe-profile fixture's fate is resolved: its
+on-disk content was found mismatched during planning, was rebuilt and re-verified by the
+orchestrator to reproduce the exact originally-claimed evidence, and is now kept as a permanent test
+fixture. This ticket made zero `src/` or shipped-content changes; the routing-half fix is
+deliberately deferred to the follow-up ticket, not implemented here.

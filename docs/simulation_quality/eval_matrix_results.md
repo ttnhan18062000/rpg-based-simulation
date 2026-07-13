@@ -2054,3 +2054,90 @@ INFORMATION-half goal (`docs/plans/simq_development_roadmap.md`) as already-sati
 grade-anchor changes were made under this ticket; ground truth was re-verified by two independent
 live signals against `data/worlds/*/world.yaml` and `config/simulation_quality/profiles/*.yaml`
 (not inferred from docs) on 2026-07-12, both landing on the same 9-world set.
+
+## COGNITION Real-World Generalization — Phase 4 (TCK-20260710-SIMQ-COGNITION-REALWORLD-GENERALIZE)
+
+Phase 4 (Depth Wave 3: COGNITION) of `docs/plans/simq_development_roadmap.md` asked whether Branch B
+(self-model cognition, established by `TCK-20260703-SIMQ-UPLIFT3-BRANCH-B`'s 3-bug fix chain and
+exercised so far only by `unit_selfmodel_pilot`'s purpose-built, materialization-only isolation
+world) generalizes to a real, already-populated archetype world. This ticket ran real calibration
+compute against `urban_political` and found a **split verdict**: the two structurally separate
+halves of Branch B generalize differently, and must not be collapsed into one "Branch B
+generalizes"/"doesn't generalize" statement.
+
+**Candidate-world resolution:** `hero_guild_routing` — the roadmap's originally-named candidate — was
+re-verified during scoping and rejected: it is Unit-tier (`corpus_tier_taxonomy.md:136`), and its
+non-`C` COGNITION grade (A/S across its 4 `grade_anchors.json` entries) is driven by
+`strategic_intelligence`/AGENCY signal (PP-30, route-selection), not self-model materialization at
+all — using it would have produced a false-positive "generalizes" result for the wrong mechanism.
+`urban_political` — Regression/baseline tier, "the only world with any FACTION/INFORMATION/self-model
+content populated" (`corpus_tier_taxonomy.md:126`) — was confirmed the correct candidate: it already
+ships `ENABLE_BELIEF_ASSIMILATION: "ON"` and already carries a `pending_self_model_information_events`
+seed (`pop_1`, `material.moon_resin.source`) from `TCK-20260703-SIMQ-UPLIFT3-BRANCH-B`'s Step 8,
+re-confirmed still valid against the current compiled world (zero compiler warnings, actor_id=23,
+identical across seeds 42/123/456).
+
+**Materialization half — (a) clean generalization.** Direct kernel instrumentation and a full
+200-tick calibration (shipped `urban_political` profile + `ENABLE_SELF_MODEL_COGNITION` scoped ON via
+`calibrate_simq.py`'s env-var override, `ENABLE_BELIEF_ASSIMILATION` already ON in the shipped
+profile — i.e. both flags on together) show entity 23 (`pop_1`)'s `self_model.knowledge.unknowns`
+populated with `material.moon_resin.source` from tick 1 onward, identically across seeds 42/123/456.
+The 200-tick calibration moves COGNITION from its `grade_anchors.json`-confirmed `urban_political_
+seed42_200t` baseline of `B` to `S` (5610–5611 `self_model_updated` events/run, seed-invariant). This
+is the same "fires unconditionally every alive/active entity, every tick" pattern already established
+for `unit_selfmodel_pilot`, now confirmed at real-archetype scale (~30-entity population, in-run
+mortality, a second, independently-active INFORMATION branch) rather than only in an isolated pilot.
+
+**Query-routing half — (c) does not generalize.** `InformationBeliefPhase.apply()`'s Branch B
+(`src/domains/information/phase.py:83-105`) was invoked directly against the real compiled
+`urban_political` state (seed 42/123/456, entity 23, its real `unknowns`, the world's real
+`information_source_profiles`). It is mechanically reachable — `InformationQueryRouter.route()`
+returns two legitimate candidates (`traveling_merchant_rumors`: cost 5, certainty 0.33;
+`town_notice_board`: cost 0, certainty 0.20) — but dead-ends reproducibly and seed-invariantly
+(identical actor_id=23, identical gold=0, identical `intent=None` result on all three seeds), rooted
+in 4 exact points:
+1. **`src/domains/information/router.py:102-103`** — `InformationQueryRouter.route()` sorts
+   candidates by `(-expected_certainty, cost_gold)`, ranking the paid `traveling_merchant_rumors`
+   ahead of the free `town_notice_board` regardless of affordability.
+2. **`src/domains/information/phase.py:92-105`** — `InformationBeliefPhase.apply()` only ever tries
+   `candidates[0]`, with no fallback to the next candidate when resolution fails.
+3. **`src/domains/information/resolver.py:65-69`** — `InformationIntentResolver.resolve()` hard-gates
+   on `actor_gold < candidate.cost_gold` and returns `None` silently; entity 23's compiled
+   `inventory.gold == 0` on all three seeds, so this gate is hit every time.
+4. **`src/observability/event_extractor.py:276-299`** — even a hypothetically successful resolution
+   would not score: this file maps Branch A's `last_assimilated_subject`/`last_assimilated_tick` to
+   `belief_assimilated`/`belief_updated`, but has no extractor branch at all for Branch B's own
+   property-update keys, `last_routed_query_subject`/`last_routed_query_tick` (set at
+   `phase.py:101-104`).
+
+The existing hand-built test
+(`tests/integration/domains/test_fused_loop.py::test_branch_b_fires_across_real_tick_boundary_after_self_model_patch_materialization`)
+missed this because it seeds exactly one `InformationSourceProfile` (the free `town_notice_board`),
+so `route()` never has a second, more-certain-but-paid candidate to rank ahead of it, and the
+hand-built actor's unset gold never triggers the affordability gate. That test proves the mechanism
+is *reachable*; it does not, and was never claimed to, prove it succeeds against a real world's
+actual candidate ranking and actual entity economy.
+
+**Isolated-probe corroboration (independently re-confirmed, not pending).** A third run, using
+`config/simulation_quality/profiles/_investigation_probe_urban_political_selfmodel_only.yaml`
+(`ENABLE_SELF_MODEL_COGNITION` scoped ON only, no belief-assimilation flag) isolates materialization
+from routing cleanly and was independently re-run and re-verified against this document's claimed
+figures: `COGNITION grade=S events=5610` (materialization only), `INFORMATION grade=C events=0`
+(both Branch A and Branch B structurally inert, as expected). This is kept as a permanent test
+fixture (not a one-off scratch file) because it is the only real-world evidence isolating
+materialization from routing. The split verdict does not depend on this probe run alone — it is
+independently corroborated by the combined-flags run (materialization) and the direct
+router/resolver reproduction (routing) above — but the isolated numbers themselves are confirmed,
+not provisional.
+
+**Outcome classification:**
+- Materialization half: **(a) clean generalization.**
+- Query-routing half: **(c) does not generalize** — reproducible, root-caused, seed-invariant, with
+  file:line evidence sufficient to scope a follow-up engine-fix ticket directly.
+- Overall COGNITION pillar grade movement (`B` → `S`) is **entirely attributable to the
+  materialization half**; the query-routing half contributes zero events either way.
+
+See `docs/parity_ledger/infrastructure.yaml::INFRA-260` (support_boundary addition) and
+`::INFRA-266` (new split-verdict entry) for the parity-ledger record, and
+`tickets/todos/simq-roadmap-phase4-depth-cognition/TCK-20260712-SIMQ-INFORMATION-ROUTING-CLOSURE.md`
+for the scoped follow-up fixing the 4 routing-half points.

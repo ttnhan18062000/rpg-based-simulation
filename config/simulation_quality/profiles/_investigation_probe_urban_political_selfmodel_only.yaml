@@ -1,0 +1,22 @@
+# TEMPORARY investigation-scoped probe profile — TCK-20260710-SIMQ-COGNITION-REALWORLD-GENERALIZE
+# NOT a shipped profile. Isolates ENABLE_SELF_MODEL_COGNITION materialization from
+# ENABLE_BELIEF_ASSIMILATION routing by turning the self-model flag ON while omitting
+# the belief-assimilation flag that urban_political.yaml normally ships ON.
+# Delete after investigation closes unless Plan phase decides to keep it as a permanent
+# test fixture.
+#
+# Corrected 2026-07-12 (orchestrator re-verification): the file at this path previously
+# lacked ENABLE_SELF_MODEL_COGNITION entirely and instead carried ENABLE_SOCIAL_COOPERATION
+# plus unrelated pillar weights — content that did not match this file's own header comment
+# or its stated investigative purpose. Rebuilt from urban_political.yaml's actual shipped
+# profile (config/simulation_quality/profiles/urban_political.yaml) with only the two
+# intended changes applied: ENABLE_SELF_MODEL_COGNITION added ON, ENABLE_BELIEF_ASSIMILATION
+# removed.
+pillar_weights:
+  FACTION: 1.5
+  ECONOMY: 1.5
+  SOCIAL: 1.5
+  COMBAT: 0.3
+feature_flags:
+  ENABLE_SOCIAL_COOPERATION: "ON"
+  ENABLE_SELF_MODEL_COGNITION: "ON"
