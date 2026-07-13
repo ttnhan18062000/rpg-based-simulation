@@ -179,7 +179,7 @@ citation (`infrastructure.yaml` INFRA-233) was also found and corrected in the s
 
 ---
 
-### Thread 3 — Corpus grew wide, not necessarily deep: the 5-pillar C-ceiling
+### Thread 3 — Corpus grew wide, not necessarily deep: the 5-pillar C-ceiling — **RESOLVED 2026-07-13**
 
 **Problem.** COGNITION, ECONOMY, FACTION, INFORMATION, and SOCIAL are C by design (feature-flag-gated
 off) across nearly the entire 17-world corpus. Only `urban_political` and the purpose-built unit-tier
@@ -223,10 +223,22 @@ INFORMATION, with every remaining world carrying a documented, tier-appropriate 
 pillar-inert. Both tickets closed as already-satisfied with zero new content authoring, which is
 effectively option (a)'s outcome (accept + document) arrived at empirically rather than decided
 up front — the "C-ceiling" this thread worried about had already narrowed to COGNITION alone for
-2 of the 4 originally-named gated pillars by the time Phase 3 picked them up. Phase 4 (COGNITION,
-`TCK-20260710-SIMQ-COGNITION-REALWORLD-GENERALIZE`) remains open and is this thread's last
-unresolved pillar. ECONOMY was never included in the roadmap's Phase 2-4 scope and remains
-unaddressed by this initiative.
+2 of the 4 originally-named gated pillars by the time Phase 3 picked them up.
+
+**Final outcome (2026-07-13, `TCK-20260713-SIMQ-COVERAGE-DECISION-GATE`):** Phase 4 (COGNITION,
+`TCK-20260710-SIMQ-COGNITION-REALWORLD-GENERALIZE` + follow-up
+`TCK-20260712-SIMQ-INFORMATION-ROUTING-CLOSURE`) closed with a split verdict — materialization
+generalizes cleanly and cheaply, query-routing required a full engine-fix ticket to reach zero
+live-gameplay worlds (no shipped profile enables it, no production pipeline call site exists for
+the intent-execution path). The roadmap's Phase 5 gate ruled on all four pillars using this real
+cost data: FACTION/INFORMATION declared complete (structurally saturated), SOCIAL's staged depth
+declared the permanent bar (opportunistic-only future expansion), and COGNITION query-routing
+world-coverage explicitly not pursued further (its real blocker is a separate, unscoped
+pipeline-wiring initiative, not corpus depth). See
+`docs/plans/simq_development_roadmap.md`'s Phase 5 section for the full ruling. ECONOMY remains
+correctly out of scope — its C-ceiling is a Gini-threshold/archetype-composition question, not a
+`FeatureMode` gating question like the other four pillars, and was never part of this roadmap's
+Phase 2-4 scope.
 
 ---
 

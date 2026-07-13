@@ -435,10 +435,43 @@ recommendation more likely, not less — if the corpus turns out to already be a
 FACTION/INFORMATION with little new work needed, that itself is evidence toward "staged depth was
 already close to the right bar." Still not decided now; still waiting on real Phase 2–4 outcomes.
 
-**Folder status:** `tickets/todos/simq-roadmap-phase5-coverage-gate/` exists with a `SEQUENCE.md`
-explaining why it intentionally holds no ticket yet — filed 2026-07-10 alongside the other 5 phases'
-folders so the roadmap's full structure is represented under `tickets/todos/`, per explicit user
-instruction.
+**RULED (2026-07-13, `TCK-20260713-SIMQ-COVERAGE-DECISION-GATE`):** the recommendation above is
+confirmed by real three-wave evidence, not guessed. Per-pillar (the four pillars' actual costs
+diverged too much for one blanket verdict):
+
+- **FACTION and INFORMATION — near-perfect bar already reached, declared complete.** Both are
+  structurally saturated (11/17 and 9/17 worlds respectively) with every remaining world
+  documented as tier-appropriately pillar-inert by design, not by omission. "Full 17-world coverage"
+  was never a reachable target for these two — a genuine subset of the corpus is *supposed* to stay
+  inert. No further action.
+- **SOCIAL — staged depth is the right permanent bar.** Phase 2's one wave (1→3/17 worlds, SOCIAL
+  C→S) captured both candidates with a qualifying settlement/civilian module among those actually
+  evaluated; no backlog of easy remaining candidates was found. Further expansion should happen
+  opportunistically as new worlds get authored, not as a dedicated roadmap wave.
+- **COGNITION self-model query-routing — do not pursue further world-coverage under this roadmap.**
+  This is the pillar this gate exists to make a real call on, and the evidence is unambiguous: its
+  cost already exceeded the roadmap's own L-XL estimate (a full standard-tier engine-fix ticket,
+  `TCK-20260712-SIMQ-INFORMATION-ROUTING-CLOSURE`, not a doc-only closure like FACTION/INFORMATION)
+  to reach **zero live-gameplay worlds** — the routing mechanism is verified correct in isolation
+  (direct test-harness invocation) but structurally unreachable in any shipped profile today (no
+  profile enables the required flag combination, and `ActionIntentAdapter.execute()` has no
+  production tick-pipeline call site). Extending it to more worlds would first require a new,
+  currently-unscoped initiative (wiring that call site into the production pipeline) — new
+  engineering scope, not incremental corpus depth. That should be decided on its own merits as a
+  distinct future initiative if gameplay ever actually needs live self-model query-routing, not
+  folded into "add more worlds."
+- **ECONOMY** stays out of scope, as it was for Phases 2-4 — a Gini-threshold/archetype-composition
+  problem, not a `FeatureMode` gating problem like the other four pillars (see
+  `idea_simq_near_perfect_roadmap.md` Thread 3).
+
+**This roadmap is now complete — all 6 phases (0-5) resolved.** SimQ's three MVP goals (automated
+quality visibility, regression detection, balance/tuning support) are judged adequately served by
+the corpus's current staged depth. No further pillar-depth expansion work is queued.
+
+**Folder status:** `tickets/todos/simq-roadmap-phase5-coverage-gate/` held only a `SEQUENCE.md`
+placeholder (filed 2026-07-10 so the roadmap's full structure was represented under
+`tickets/todos/`) until `TCK-20260713-SIMQ-COVERAGE-DECISION-GATE` landed this ruling; the folder
+moves to `tickets/done/` on that ticket's close, per the standard folder-completion rule.
 
 ---
 

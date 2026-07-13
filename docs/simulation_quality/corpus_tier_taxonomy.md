@@ -165,6 +165,16 @@ settlement module; 2 Stress tier-purity; 1 Regression/baseline fixture; 3 Unit s
 isolation), not by omission. No tier reassignment resulted. See `eval_matrix_results.md`'s
 "INFORMATION Coverage Closure — Phase 3" section for the full re-verification table.
 
+**Coverage Decision Gate ruling (2026-07-13, `TCK-20260713-SIMQ-COVERAGE-DECISION-GATE`):** the
+SimQ roadmap's Phase 5 gate ruled, using real cost data from all three depth waves, that this
+table's current coverage levels are the permanent bar for FACTION and INFORMATION (both
+structurally saturated, no further legitimate candidates) and for SOCIAL (staged depth, further
+expansion only opportunistic as new worlds get authored). COGNITION self-model query-routing
+world-coverage is explicitly not pursued further under this roadmap — its real blocker is a
+separate, unscoped pipeline-wiring initiative, not corpus depth; see
+`docs/plans/simq_development_roadmap.md`'s Phase 5 section for the full ruling. No further tier
+reassignment or content-authoring work against this table is queued.
+
 ---
 
 ## Named scale-diversity gaps (stress-tier candidates)
