@@ -3,12 +3,22 @@ status: idea
 layer: observability
 authority: P2
 audience: developer
-maturity: idea
+maturity: scheduled
 date: 2026-07-11
 tags: [idea, agent-infrastructure, observability, data-quality, schema]
 ---
 
 # Idea: Derived SQLite Index Over agent-monitoring/*.jsonl (Read Path Only)
+
+> **Maturity: SCHEDULED.** Scheduled 2026-07-13 as 4 draft tickets in
+> `tickets/todos/agent-monitoring-derived-index/` (not yet implemented): `TCK-20260713-MONITORING-SQLITE-INDEX`
+> (the `build_index.py` script and SQLite schema itself — this doc's core "Idea" section) plus three
+> consumer-migration tickets covering the "Consumers migrate opportunistically" paragraph's named
+> targets — `TCK-20260713-MONITORING-QUERY-INDEX-MIGRATE`, `TCK-20260713-MONITORING-VALIDATE-INDEX-MIGRATE`,
+> `TCK-20260713-MONITORING-RETRO-INDEX-MIGRATE` — each explicitly blocked on the first
+> (`tickets/todos/agent-monitoring-derived-index/SEQUENCE.md` enforces the order). All 4 Open Questions
+> below remain unresolved by design — deferred to each ticket's own future Scope/Plan phase, per this
+> folder's standard draft-ticket convention.
 
 ## Problem
 
@@ -62,4 +72,4 @@ Add a **derived, read-only SQLite index**, rebuilt from the 3 JSONL files, model
 
 ---
 
-*Raised: 2026-07-11, directly from investigating whether `TCK-20260711-EVAL-SEARCH-DOCID-ANCHOR-FIX`'s and `TCK-20260711-MONITORING-TOOLCOUNT-SIDECAR-COLLISION`'s pattern (a derived signal nobody could cheaply cross-check against ground truth) generalizes across the whole `agent-monitoring/` subsystem, not just the one field each of those tickets fixed. Not yet scheduled — no epic/ticket created for this idea yet, pending a decision on scope/sequencing.*
+*Raised: 2026-07-11, directly from investigating whether `TCK-20260711-EVAL-SEARCH-DOCID-ANCHOR-FIX`'s and `TCK-20260711-MONITORING-TOOLCOUNT-SIDECAR-COLLISION`'s pattern (a derived signal nobody could cheaply cross-check against ground truth) generalizes across the whole `agent-monitoring/` subsystem, not just the one field each of those tickets fixed. Scheduled 2026-07-13 as 4 draft tickets in `tickets/todos/agent-monitoring-derived-index/` — see the Maturity banner above. Not yet implemented.*
