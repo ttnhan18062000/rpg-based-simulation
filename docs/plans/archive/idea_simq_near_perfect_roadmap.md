@@ -1,14 +1,19 @@
 ---
-status: active
+status: historical
 layer: simulation
 authority: P2
 audience: developer
 maturity: idea
 date: 2026-07-10
+archived: 2026-07-13
 tags: [idea, simulation-quality, calibration, corpus, determinism, roadmap]
 ---
 
 # Idea: SimQ Near-Perfect Roadmap — Closing the Gap Between "Shipped" and "Done"
+
+**Archived:** 2026-07-13 — all 5 threads resolved (see each thread's own Resolution note below);
+its successor, `docs/plans/archive/simq_development_roadmap.md`, is archived too. Kept for
+traceability as the evidence trail, not as a live reference.
 
 > **Maturity: IDEA** — Not scheduled. This is a synthesis document, not a ticket. It exists so the
 > next SimQ investigation starts from a ranked, evidence-based list of open threads instead of

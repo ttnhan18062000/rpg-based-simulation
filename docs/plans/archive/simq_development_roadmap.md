@@ -6,7 +6,7 @@ audience: agent
 tags: [roadmap, simulation-quality, calibration, corpus, determinism, planning]
 date: 2026-07-10
 archived: 2026-07-13
-source: docs/plans/idea_simq_near_perfect_roadmap.md
+source: docs/plans/archive/idea_simq_near_perfect_roadmap.md
 ---
 
 # Simulation Quality (SimQ) — Long-Term Development Roadmap
@@ -21,7 +21,7 @@ This roadmap replaces reactive, per-investigation SimQ work with a top-down sequ
 synthesized from `docs/simulation_quality/quality_scoring_contract.md`'s own stated bar (§1, §7.5,
 §12, §14), the audit history in `docs/audits/D06_longrun_health.md` and
 `docs/audits/D20_simq_integration.md`, the backlog in `docs/plans/audit_fix_plan.md`, and
-`docs/plans/idea_simq_near_perfect_roadmap.md`'s five-thread synthesis (2026-07-10) — which this
+`docs/plans/archive/idea_simq_near_perfect_roadmap.md`'s five-thread synthesis (2026-07-10) — which this
 document supersedes as the actionable plan; that doc remains as the evidence trail for *why* these
 threads matter, this doc is *what to do about them, in what order*.
 
@@ -503,7 +503,7 @@ moves to `tickets/done/` on that ticket's close, per the standard folder-complet
   into (all 6 exist as of 2026-07-10; Phase 5's is a placeholder with no ticket yet, per design).
   Each folder has its own `SEQUENCE.md`. This is where the actual, current ticket state lives —
   treat it as more current than this document's prose wherever the two disagree.
-- `docs/plans/idea_simq_near_perfect_roadmap.md` — the five-thread evidence synthesis this roadmap
+- `docs/plans/archive/idea_simq_near_perfect_roadmap.md` — the five-thread evidence synthesis this roadmap
   sequences into phases; read it for the full problem/evidence detail behind Phases 0 and 1.
 - `docs/simulation_quality/quality_scoring_contract.md` — §1 (goals), §7.5 (pillar completeness,
   confirms no 11th pillar needed), §12 (Acceptance Criteria, target of Phase 0.2), §14 (Non-Goals,
