@@ -54,7 +54,7 @@ calibration worlds as archetype-correct given this decision.
 
 Record the decision in `docs/guidelines/intentional_divergences.md` and update `ENABLE_ADVENTURE_ROUTING` parity ledger entry.
 
-**Cross-reference:** `docs/audits/D20_simq_integration.md` Actionable Next Steps (AGENCY row) confirms this flag is the sole root cause of AGENCY pillar zero-scores in sandbox_world and all other default-mode SimQ calibration worlds — not an AgencyScorer or EventExtractor defect (TCK-20260701-SIMQ-AGENCY-ROUTING-DOC).
+**Cross-reference:** `docs/audits/D20_simq_integration.md`'s Verification section confirms this flag is the sole root cause of AGENCY pillar zero-scores in sandbox_world and all other default-mode SimQ calibration worlds — not an AgencyScorer or EventExtractor defect (TCK-20260701-SIMQ-AGENCY-ROUTING-DOC).
 
 ---
 

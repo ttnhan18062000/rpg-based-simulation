@@ -8,24 +8,31 @@ tags: [audit, simulation-quality, simq, integration, observability, event-bus]
 
 # D20 — Simulation Quality Module Integration
 
+## Summary
+
+SimQ was audited 2026-06-30 and found fully built but disconnected from the kernel — zero events
+reached the scoring hub despite a complete, unit-tested pillar-scoring implementation. All three
+wiring gaps were fixed the same day. Across 4 "uplift" batches and 2 corpus-expansion epics
+(2026-07-02 through 2026-07-11), the module was calibrated to a 71-scenario, 17-world corpus, 81 of
+82 scored event types were wired to real engine emissions, and every P1/P2 action item was closed.
+This document is the historical record of that work — current corpus/grade tables live in
+`docs/simulation_quality/eval_matrix_results.md`; this doc preserves *why* things are the way they
+are, not the live numbers.
+
 ## Dimension Profile
 
 | Axis | Value |
 |---|---|
 | **Group** | A — Simulation Quality |
-| **State** | `done` (all gaps resolved; 81/82 event types emitted; re-run verified 2026-07-01; calibration corpus refreshed 2026-07-02; all P1/P2 action items closed; simq-uplift batch 2026-07-02: SOCIAL activated, grade formula fixed, DA decisions documented; simq-uplift batch 2 2026-07-02/03: AGENCY DA-documented, FACTION activated, INFORMATION scaffolded + activated via kernel fix — see §SimQ Uplift Batch 2 below; simq-uplift batch 3 2026-07-04: corpus diversified 25→40 anchor entries across 5 newly-anchored worlds — see §5 newly-anchored worlds below) |
+| **State** | `done` — see Module Health below for the current-state summary |
 | **Impact** | 4 / 5 |
 | **Interest** | 5 / 5 |
 | **Priority** | 9 |
 | **Method** | run-sim + code-read |
-| **Audit date** | 2026-06-30 (original); 2026-07-01 (re-run after fixes); 2026-07-02 (calibration corpus refresh + loop-detection sweep); 2026-07-02 (simq-uplift batch); 2026-07-03 (simq-uplift batch 2); 2026-07-04 (simq-uplift batch 3, all 8 tickets); 2026-07-07 (SimQ Corpus Tiers epic, all 10 tickets — see "SimQ Corpus Tiers Epic" section below); 2026-07-09 (SimQ Deep Coverage epic, all 10 tickets, plus 2 byproduct population-collapse fixes — see "SimQ Uplift Batch 4" section below); 2026-07-10 (SimQ audit run `SIMQ-AUDIT-20260710T020542Z` — Classify Drift verdict `no_regression`, 0 anchor edits) |
-
-**What this dimension answers:** Is the SimQ module actually receiving events and scoring
-live simulation runs — or is it built but disconnected? This audit exercises the full path
-from kernel tick → observability queue → SimQ hub → pillar scores, using the in-process feed
-mode across two deterministic seeds.
+| **Audit history** | 2026-06-30 (original, found broken) → 2026-07-01 (wiring fixed, re-verified) → 2026-07-02/07-11 (4 uplift batches + 2 corpus epics, see Batch History below) → 2026-07-10 audit run `SIMQ-AUDIT-20260710T020542Z`: `no_regression` |
 
 **Related dimensions:**
+
 | Dimension | Relationship |
 |---|---|
 | D03 (Behavioral Emergence) | Prior run observations that SimQ is now meant to quantify |
@@ -34,432 +41,200 @@ mode across two deterministic seeds.
 
 ---
 
-## Run Configuration
+## Original Finding (2026-06-30): Wiring Gap — *Resolved same day*
 
-| Field | Value |
+Both 200-tick seeds ran to completion, but the SimQ hub received zero events — all 10 pillars
+graded C(0.0), not from degenerate behavior but because nothing reached the scorers. The
+infrastructure (10 pillar scorers, `QualityHub`, persistence, REST API) was fully built and
+unit-tested; only the event-delivery path was disconnected.
+
+```
+Kernel.tick_once() → EventExtractor → EventRecorder.record() → BoundedObservabilityQueue
+  → QueueDrainWorker → [quality_fn, if registered] → QualityHub.on_envelope()
+```
+
+`QueueDrainWorker` already had a `quality_fn` callback slot; nothing populated it.
+
+| Gap | Location | Description | Fix |
+|---|---|---|---|
+| G1 | `src/engine/kernel.py` | `EventRecorder`'s `QueueDrainWorker` created without `quality_fn` | `TCK-20260630-SIMQ-WIRE-KERNEL` — pass `quality_fn=hub.on_envelope` at kernel init |
+| G2 | `src/api/server.py` | `set_quality_hub()` defined but never called at server startup | `TCK-20260630-SIMQ-WIRE-SERVER` — call it in the `lifespan` handler after manager start |
+| G3 | `src/simulation_quality/feed.py` | `InProcessQualityFeed` created a second, competing `QueueDrainWorker` on the same queue | `TCK-20260630-SIMQ-WIRE-KERNEL` — refactored to lifecycle-only, no longer creates a worker |
+
+---
+
+## Verification (2026-07-01)
+
+Re-ran the same world/seeds/ticks after the wiring fix: all three gaps resolved, 81 event types
+now emitted, all 10 pillar grades landed B, and final state hashes were bit-identical to the
+pre-fix run — confirming the fix changed nothing about simulation determinism, only observability.
+
+**`sandbox_world` schema migration** (`TCK-20260701-SANDBOX-WORLDCOMP-MIGRATE`, same session):
+migrated from the retiring `worldtemplate.v1` schema (fully removed shortly after by
+`TCK-20260701-WORLDTEMPLATE-REMOVE`, once this was the last world on it) to `worldcomposition.v1`
+(`frontier_village_core` + `wolf_den_near_forest`), moving from 23 flat-stat entities to 18
+catalog-resolved entities. Compile validation was clean (zero issues); calibration anchors were
+regenerated to match. The wolf-population extinction symptom persisted post-migration as expected
+— its root cause (hazard-drain not respecting native fauna immunity) was tracked separately and
+fixed the same week (`TCK-20260701-HAZARD-NATIVE-IMMUNITY`, `TCK-20260701-HAZARD-KIND-RESOLVER-GAP`,
+`TCK-20260701-SANDBOX-MONSTER-BALANCE`) — confirmed via 0/5 wolf deaths post-fix across both seeds.
+
+**Emission gap closure** (simq-emit epic, 2026-07-01): 24 of 27 engine emission gaps closed across
+5 tickets (`TCK-20260701-SIMQ-EMIT-AGENCY2`, `TCK-20260701-SIMQ-EMIT-LEAD-BELIEFS`,
+`TCK-20260701-SIMQ-EMIT-PROGRESSION`, `TCK-20260701-SIMQ-EMIT-FACTION-ECONOMY`,
+`TCK-20260701-SIMQ-EMIT-WORLD-DYNAMICS`). The remaining 3 turned out not to need engine changes: `social_memory_created`
+was re-derived from `EventExtractor` reading `trust_history` deltas directly
+(`TCK-20260701-SIMQ-EMIT-SOCIAL-MEM`); `contract_milestone_completed` needed no schema change,
+just an `EventExtractor` rule on existing contract-duration fields
+(`TCK-20260701-SIMQ-EMIT-CONTRACT-MILESTONE`); `camp_constructed` has no engine path at all — camps
+are pre-placed at world generation, never dynamically constructed — so its scorer entry is
+permanently a documented dead event, not a gap (`TCK-20260701-SIMQ-EMIT-CAMP`).
+
+**Loop-detection tuning** (`TCK-20260701-SIMQ-LOOP-WINDOW-TUNE`, 2026-07-02): swept window sizes
+{100,150,200,300} — zero grade change across all of them, since event density at 200 ticks (47–287
+events depending on world) never fills the window regardless of size. The 200-event/0.70-threshold
+defaults were confirmed correct, not a signal-suppression bug; `--window-size`/`--loop-threshold`
+CLI overrides were added to `calibrate_simq.py` for future sweeps.
+
+**Structural C-ceiling pillars in `sandbox_world`** (unchanged by the emission fixes, expected):
+AGENCY (gated by `ENABLE_ADVENTURE_ROUTING`, off by default — confirmed not a scorer/emitter
+defect by `TCK-20260701-SIMQ-AGENCY-ROUTING-DOC`, later DA-ruled archetype-correct corpus-wide by
+Batch 2), COGNITION and INFORMATION (require an active self-model/information-seeking loop, not
+present in a pure-combat scenario), ECONOMY (no trades/harvesting in scope) and SOCIAL (no
+cooperation events in scope). None of these are SimQ scoring gaps — see
+`docs/plans/audit_fix_plan.md §Finding 1`.
+
+**Calibration corpus refresh** (`TCK-20260701-SIMQ-CALIBRATE-REFRESH`, 2026-07-02): re-ran
+`dungeon_crawl`/`urban_political` post-emit-epic; one real grade shift found (`dungeon_crawl` 200t
+PROGRESSION A→B, from the new plateau-detection emitter). `TCK-20260702-SIMQ-EVAL-MATRIX` then
+expanded the corpus from 8 to 25 anchor entries (3 seeds × 2-3 tick counts per signal-producing
+world, up from mostly single-seed point estimates) — the baseline Batch 3's `WORLD-CORPUS` ticket
+later grew further to 40.
+
+---
+
+## Batch History (2026-07-02 → 2026-07-11)
+
+Every batch below closed with 0 regressions on the corpus scope it touched. Ticket-level detail
+(root causes, exact evidence) lives in each ticket's own `tickets/done/` record and
+`stored_artifacts/`; this table is the index, not the full account.
+
+### SimQ Uplift Batch 1 (2026-07-02)
+
+| Ticket | Change | Outcome |
+|---|---|---|
+| `TCK-20260702-SIMQ-UPLIFT-SOCIAL-ZERO` | Activated SOCIAL (`ENABLE_SOCIAL_COOPERATION=ON`) in `urban_political`; fixed a silent bug dropping `feature_flags` each tick; fixed `CooperationPhase` storing a non-serializable object in durable state | SOCIAL C→S in `urban_political` |
+| `TCK-20260702-SIMQ-UPLIFT-GRADE-DECAY` | Fixed the `normalized_score` formula's tick-dilution artifact (`raw_score / tick_count` → `raw_score / max(floor_tick, last_event_tick)`) | 24 of 25 anchor grades updated; COMBAT/PROGRESSION now hold A at 500t/1000t for `dungeon_crawl` |
+| `TCK-20260702-SIMQ-UPLIFT-DUNGEON-ECON-COG` | DA ruling: ECONOMY=C and COGNITION=C in `dungeon_crawl` are archetype-correct (no merchant NPCs; all entities in permanent survival mode) | Documentation only |
+
+### SimQ Uplift Batch 2 (2026-07-02 / 2026-07-03)
+
+| Ticket | Change | Outcome |
+|---|---|---|
+| `TCK-20260702-SIMQ-UPLIFT2-AGENCY-DA` | DA ruling: AGENCY=C in every non-`simq_routing_test` world is archetype-correct (`AdventureDecisionPhase` is opt-in per world, gated off by default) | Documentation only; closes the AGENCY follow-up without a rollout decision |
+| `TCK-20260702-SIMQ-UPLIFT2-FACTION` | `WorldCompiler.compile()` had never constructed `FactionState` for any world. Added `FactionSpec.initial_tension_level` + `faction_tension_overrides` compiler/resolver plumbing; seeded `urban_political` | FACTION C→S/A in `urban_political` |
+| `TCK-20260702-SIMQ-UPLIFT2-INFORMATION` | Same compiler-never-constructs-the-field bug class, for `information_source_profiles`. Shipped scaffolding + `ENABLE_BELIEF_ASSIMILATION=ON`, but `InformationBeliefPhase`'s trigger branches were still unreachable | Scaffolding shipped honestly inactive; activation deferred to the next ticket rather than forced |
+| `TCK-20260703-SIMQ-INFORMATION-BELIEF-TRIGGER` | Seeded `pending_information_responses` at compile time, reaching Branch A. Also found and fixed a real kernel bug: `Kernel._phase_advancement()` compared Resolution-phase-stamped properties against the wrong tick, so `belief_assimilated`/`calamity_spawned`/`GovernorModeChanged` could never fire through the real tick loop | INFORMATION C→B in `urban_political`; COGNITION C→B as a side effect (shared scorer signal) |
+
+### SimQ Uplift Batch 3 (2026-07-03 / 2026-07-04) — 8 tickets
+
+| Ticket | Change | Outcome |
+|---|---|---|
+| `TCK-20260703-SIMQ-UPLIFT3-FAST-CALIBRATE` | Added `no_frame_pacing` flag to offline calibration's `Kernel(...)` call | ~8.3x calibration speedup; byte-identical output confirmed |
+| `TCK-20260703-SIMQ-UPLIFT3-PLAYBOOK-DOC` | Documented the FACTION/INFORMATION fix shape as reusable "Pattern 6" (`docs/guidelines/design_patterns.md`) | Documentation only |
+| `TCK-20260703-SIMQ-UPLIFT3-DUAL-GATE-AUDIT` | Investigated whether ECONOMY/SOCIAL share FACTION/INFORMATION's construction-gap bug class | They don't — ECONOMY is purely event-driven (duration-gated, not construction-gated); SOCIAL is pure flag-gating. No fix needed |
+| `TCK-20260703-SIMQ-UPLIFT3-BRANCH-B` | Found and fixed 3 causally-linked bugs blocking self-model Branch B: hardcoded `events=[]`, a missing pipeline merge wrapper, and `self_model_bundle_set` never durably materializing (new `SelfModelPatch` component-patch class) | Mechanism proven correct via test-scoped verification; **not** active in any shipped calibration profile |
+| `TCK-20260703-SIMQ-UPLIFT3-WORLD-CORPUS` | Recompiled 5 stale worlds (missing `hazard_kind` on 7 modules); caught genuine drift in 8 of `dungeon_crawl`'s 10 shipped anchors via a drift-check the plan initially omitted | Corpus 25→40 anchor entries; `simq_routing_test`'s 3 anchors blocked by a pre-existing, unrelated crash, filed separately (below) |
+| `TCK-20260703-SIMQ-UPLIFT3-AUDIT-WORKFLOW` | Built `tools/simq_audit_gaps.py`, `make simq-full-audit*` targets, and the `simq-audit` agent workflow, formalizing the manual doc-sync process repeated by hand across 3 batches | Tooling only |
+| `TCK-20260703-SIMQ-UPLIFT3-QUEST-PRESSURE` | Resolves `audit_fix_plan.md` P1-D — weighted `QuestGenerator` template selection by regional pressure signals | Also fixed a masked test bug (two functions both named `test_quest_generation_determinism`) |
+| `TCK-20260703-SIMQ-UPLIFT3-GOAL-TRACE` | Investigation found this ticket's scope was already implemented by `TCK-20260627-P1H-GOAL-RUNNERUP` | Closed as a documentation-only duplicate; corrected `audit_fix_plan.md`'s stale P1-H entry |
+
+Follow-up: `TCK-20260704-SIMQ-RESOURCEREGISTRY-STONE-GAP` — a pre-existing `ResourceRegistry: STONE`
+crash in `src/world/ecology.py`'s dynamic resource generation, hit twice this batch (confirmed
+pre-existing via git-stash bisection), blocked `simq_routing_test`'s anchors until fixed.
+
+### SimQ Corpus Tiers Epic (2026-07-06 / 2026-07-07) — `TCK-20260704-SIMQ-CORPUS-TIERS-EPIC`, 10 tickets
+
+Product-philosophy redirection: world data should exercise every engine feature, not just what
+already looks good, organized as a test-pyramid tier structure (Unit/End-to-end/Stress/Regression —
+see `docs/simulation_quality/corpus_tier_taxonomy.md`).
+
+| Ticket | Change |
 |---|---|
-| World | `sandbox_world` (worldtemplate.v1, 23 entities) — **superseded 2026-07-01, see §Migration Baseline below**; `sandbox_world` is now `worldcomposition.v1`, 18 entities |
-| Ticks | 200 |
-| Seeds | 42, 137 |
-| Feed mode | `InProcessQualityFeed` (in-process queue drain) |
-| Scorers active | All 10 pillar scorers (COGNITION, AGENCY, COMBAT, FACTION, ECONOMY, PROGRESSION, SOCIAL, INFORMATION, WORLD, NARRATIVE) |
-| Config profile | `default` |
-| Run date | 2026-06-30 |
+| `TCK-20260704-SIMQ-CORPUS-TAXONOMY-DOC` | Documented the 4-tier taxonomy and classification criteria |
+| `TCK-20260704-SIMQ-CORPUS-SCALE-METRIC` | Added `distinct_populated_factions` to compile reports (purely additive, hash-preserving) |
+| `TCK-20260704-SIMQ-CORPUS-AGENCY-FLAG-GENERALIZE` | Migrated `ENABLE_ADVENTURE_ROUTING` off a hardcoded scenario-name special case onto the standard per-world flag mechanism |
+| `TCK-20260704-SIMQ-CORPUS-UNIT-WORLDS-FACTION-INFO` | Authored `unit_faction_tension`, `unit_information_source` (first unit-tier worlds); found and fixed a corpus-wide blocking catalog bug (missing `stone` material) |
+| `TCK-20260704-SIMQ-CORPUS-UNIT-WORLD-SELFMODEL-PILOT` | Authored `unit_selfmodel_pilot` — first multi-entity, multi-tick, multi-seed live evidence Branch B's mechanism actually works |
+| `TCK-20260704-SIMQ-CORPUS-UNIT-WORLD-AGENCY` | Authored `hero_guild_routing` — new routing-capable world at archetype scale |
+| `TCK-20260704-SIMQ-CORPUS-E2E-CONTENT-EXPANSION` | Authored bespoke FACTION/INFORMATION content into 8 of the original 10 worlds |
+| `TCK-20260704-SIMQ-CORPUS-STRESS-WORLDS` | Authored `crowded_frontier`, `resource_dense_basin`, `frontier_marches` — 3 new stress-tier worlds filling named scale-diversity gaps |
+| `TCK-20260704-SIMQ-CORPUS-FACTION-RELATIONSHIPS` | Resolves `audit_fix_plan.md` P2-D — expanded `faction_relationships.yaml` coverage (global catalog content) |
+| `TCK-20260704-SIMQ-CORPUS-SCENARIO-FLAG-GUARDRAIL` | Resolves P2-E — added a static flag/content-pairing guardrail test (17 worlds, 55 cases); found and resolved a false-alarm regression (stale local cache, not real) |
+
+**Net effect:** 10 worlds → 17; 0 regressions across 610 pillars post-epic.
+
+### SimQ Uplift Batch 4 / Deep Coverage Epic (2026-07-07 / 2026-07-09) — `TCK-20260707-SIMQ-DEEP-COVERAGE-EPIC`, 10 tickets
+
+Follow-up to the Corpus Tiers epic: closed the long-run blind spot it left behind (only 3/17 worlds
+had any anchor ≥1000 ticks; long-run AGENCY/COMBAT/PROGRESSION/WORLD grades were suspiciously
+invariant).
+
+| Ticket | Change |
+|---|---|
+| `TCK-20260707-HERO-GUILD-ROUTING-RESOURCE-TAG-GAP` | Fixed a resource-tag gap before `hero_guild_routing`'s long-run anchor |
+| `TCK-20260706-SIMQ-URBAN-POLITICAL-HOMETOWN-RESOURCE-GAP` | Resolved a dormant resource gap before `urban_political`'s 2000t extension |
+| `TCK-20260706-SIMQ-CORPUS-RESOURCE-REGION-COVERAGE-AUDIT` | Corpus-wide resource/region coverage audit |
+| `TCK-20260707-CORPUS-POPULATION-STABILITY-COVERAGE-GAP` | Extended population-stability test coverage — surfaced the 2 collapse defects below |
+| `TCK-20260706-DOCS-REGISTRY-MISSING-FRONTMATTER`, `TCK-20260707-EPIC-SCOPE-INVESTIGATION-DOC-MISSING` | Parallel doc-hygiene chores |
+| `TCK-20260707-SIMQ-LONGRUN-HOTPILLAR-ANCHORS` | Added 1000t/2000t anchors for the worlds already known to drive those pillars to peak grades |
+| `TCK-20260707-SIMQ-GENERATED-FRONTIER-BASELINE-ANCHORS` | `generated_frontier_3_42`'s first-ever anchors (200t×3 + 1000t); surfaced the late-tick collapse below |
+| `TCK-20260707-SIMQ-PILLAR-COMPLETENESS-DOC` | No 11th pillar justified — 4 candidate dimensions each already owned by dedicated systems outside SimQ |
+| `TCK-20260707-SIMQ-BUILDING-SABOTAGE-SIGNAL` | Closed the one genuine gap found (`building_sabotage`) as a new WORLD-pillar rule, not a new pillar |
+
+**Net effect:** corpus grew to **71 scenarios / 17 worlds** (final state — see Module Health).
+
+**Population-collapse defects found as a byproduct (2026-07-08), same root-cause class** (the
+worldassembly resolver's `hazard_kind` default of `"PHYSICAL"` matching no faction's declared
+`hazard_immunities`, causing unconditional lethal drain):
+
+- `TCK-20260708-DUNGEON-URBAN-POPULATION-COLLAPSE` — `dungeon_crawl` (43.8% alive at tick 50) and
+  `urban_political` (56.7% alive at tick 300) both failed population-stability. Fixed via
+  `hazard_kind` declarations on 3 modules (`ruins_mystery_quest.yaml`, `scalable_bandit_camp.yaml`,
+  `trading_company_hub.yaml`) plus one new immunity entry; post-fix both worlds pass cleanly.
+- `TCK-20260708-GENERATED-FRONTIER-LATE-TICK-POPULATION-COLLAPSE` — `generated_frontier_3_42`
+  collapsed from 81.8% to 9.1% between tick 800–1000. Same bug class, `moon_cult_ruins.yaml`'s
+  `moon_cave` region (introduced a new `hazard_kind: "ARCANE_CORRUPTION"` value). Also surfaced a
+  genuine, **not fixed** architecture finding: the kernel's wall-clock tick-budget throttle causes
+  real run-to-run population variance past ~tick 300-400 — documented, intentional engine behavior,
+  explicitly out of scope to change. A tolerance-based regression guard was added instead of a
+  tight assertion.
+
+**Follow-up, resolved 2026-07-10/11:** `town_council`'s hazard-immunity gap at `bandit_road`
+(shared by `dungeon_crawl`/`urban_political`, deliberately left open by both collapse tickets) —
+ruled **intentional** by `TCK-20260710-TOWN-COUNCIL-HAZARD-DA` (contested-road-posted forces
+enduring unmitigated drain by design; recorded as `docs/guidelines/intentional_divergences.md`
+§2.30). Zero code/content changes. `TCK-20260710-HAZARD-KIND-CORPUS-WIDE` separately made the
+`hazard_kind` completeness check unconditional across all 17 worlds (was a 3-world allowlist) — 0
+mismatches found, closing the recurrence risk this defect class had shown 3 times.
 
 ---
 
-## Observed Results — Original Run (2026-06-30, pre-fix)
-
-Both seeds completed 200 ticks without error. The simulation engine ran correctly, but the
-SimQ hub received zero events due to the wiring gap (G1).
-
-| Metric | Seed 42 | Seed 137 |
-|---|---|---|
-| Outcome | SUCCESS | SUCCESS |
-| Elapsed | 11.02s | 10.86s |
-| Final state hash | `9b42f891…` | `69572fb8…` |
-| **SimQ tick count** | **0** | **0** |
-| **Total events scored** | **0** | **0** |
-
-All 10 pillar grades: C (0.0). Not from degenerate behavior — zero events reached the hub.
-
----
-
-## Verified Re-Run Results — 2026-07-01 (all fixes applied)
-
-Same world, seeds, and tick count. All three kernel wiring gaps resolved; 81 event types
-emitted. Final state hashes are bit-identical to the original run — determinism confirmed.
-
-| Metric | Seed 42 | Seed 137 |
-|---|---|---|
-| Run ID | `run_1782900226_5169` | `run_1782900239_2781` |
-| Outcome | SUCCESS | SUCCESS |
-| Elapsed | 10.99s | 11.00s |
-| Tick count | 200 | 200 |
-| Final state hash | `9b42f891…` ✓ | `69572fb8…` ✓ |
-| Hard law violations | 0 | 0 |
-| Overall score | 0.0355 | 0.0380 |
-| Overall grade | **B** | **B** |
-
-### Pillar scores — Seed 42
-
-| Pillar | Raw score | Normalized | Grade | Events | Negatives | Loop flags |
-|---|---|---|---|---|---|---|
-| COGNITION | 0.0 | 0.0 | C | 0 | 0 | — |
-| AGENCY | 0.0 | 0.0 | C | 0 | 0 | — |
-| COMBAT | 6.0 | 0.030 | B | 15 | 5 | `combat_active` |
-| FACTION | 0.0 | 0.0 | C | 0 | 0 | — |
-| ECONOMY | 0.0 | 0.0 | C | 0 | 0 | — |
-| PROGRESSION | 7.0 | 0.035 | B | 6 | 1 | `survival_experience` |
-| SOCIAL | 0.0 | 0.0 | C | 0 | 0 | — |
-| INFORMATION | 0.0 | 0.0 | C | 0 | 0 | — |
-| WORLD | 43.0 | 0.215 | B | 38 | 0 | `hazard_active` |
-| NARRATIVE | 15.0 | 0.075 | B | 3 | 0 | `quest_active` |
-
-Seed 137 is near-identical: COMBAT/PROGRESSION/WORLD scores match exactly; NARRATIVE slightly
-higher (raw=20.0, 4 events). Overall grade B for both.
-
-### Notable worst events — Seed 42
-
-| Tick | Pillar | Event type | Delta | Reason |
-|---|---|---|---|---|
-| 8 | COMBAT | `entity_killed` | −10 | early_extinction: entity 16 dead before tick threshold |
-| 8 | COMBAT | `entity_killed` | −1 × 4 | attrition: entities 17–20 killed at tick 8 |
-| 51 | PROGRESSION | `progression_plateau_detected` | −8 | entity 1 XP rate dropped to zero after tick gate |
-
----
-
-## Migration Baseline — worldtemplate.v1 → worldcomposition.v1 (2026-07-01)
-
-`sandbox_world` was migrated from `schema_version: worldtemplate.v1` to
-`worldcomposition.v1` by `TCK-20260701-SANDBOX-WORLDCOMP-MIGRATE` — the composition now
-reuses `frontier_village_core` (settlement) + `wolf_den_near_forest` (wilderness ecology,
-`requires: frontier_village_core`) instead of the flat-stat `worldtemplate.v1` recipe. This
-was a prerequisite for retiring `worldtemplate.v1` support (`TCK-20260701-WORLDTEMPLATE-REMOVE`)
-since `sandbox_world` was the only remaining world on that schema. All numbers below are the
-new baseline; the pre-migration numbers above are kept for traceability.
-
-### Composition and entity count change
-
-| Field | Old (worldtemplate.v1) | New (worldcomposition.v1) |
-|---|---|---|
-| Regions | `town_center` (GRASS, hazard 0.0), `woods` (FOREST, hazard 1.5) | `hometown` (from `frontier_village_core`), `near_forest` (hazard 1.0), `wolf_den` (hazard 2.0) |
-| Factions | `villagers`, `monsters` | `town_council`, `merchant_league`, `wild_beast_pack` |
-| Entity count | 23 (15 citizen + 5 monster + 3 hero) | **18** (8 village_worker, 3 frontier_guard, 1 traveling_merchant, 1 village_blacksmith, 4 hungry_wolf, 1 alpha_wolf) |
-| Entity stats | Flat defaults for every entity (hp=100/atk=10/def=0) — `WorldCompiler.compile()` always called with `context=None` for `worldtemplate.v1` | **Non-flat, catalog-resolved** — e.g. `frontier_guard` hp=120/atk=12/def=4, `wolf_pack_small` (hungry_wolf/alpha) hp=45/atk=12/def=3, `traveling_merchant` hp=80/atk=4/def=1. Confirmed by inspecting `AuthoritativeState.entities[*].combat` after compiling with the resolved `CompileContext`. |
-
-Approximate (not exact) population replication was accepted per the ticket's assumptions —
-entity count and roles differ from the old recipe by design.
-
-### Compile validation
-
-`WorldAssemblyResolver.assemble()` → `data/worlds/sandbox_world/resolved/world.resolved.yaml`
-+ sidecars. `module_validation`, `composition_validation`, `world_validation` are all empty
-(zero issues) for both `frontier_village_core` and `wolf_den_near_forest` — matches the same
-clean pattern as other already-migrated `worldcomposition.v1` worlds (e.g. `simq_routing_test`).
-`catalog_validation` carries ~92 `CAT-DEAD-001` warnings, but these are global catalog-wide
-"unused by any world" warnings present across the whole content catalog, not specific to this
-composition (confirmed by comparing counts against `simq_routing_test`'s resolve, which shows
-the same class of warning). `WorldCompiler.compile()` itself reports `warnings: []` — zero
-compile-time validation warnings, satisfying the acceptance criterion.
-
-### New state hashes (seed 42, seed 137)
-
-| Metric | Seed 42 | Seed 137 |
-|---|---|---|
-| Compile-time state hash (tick 0, post-compile) | `836b45e8913b46862240c6ba80f177f6` | `7e8ae05dbeffccb8edd65fd9754787aa` |
-| 200-tick final state hash | `16e38263ef839603ffe0ce9e362c3c106523cb23440ea25b8b1a1dfee00015be` | `2c37726ffc0cd924703da8246b577cec4c8e626ba478fb89bf3bc62770839492` |
-| Entities alive at tick 200 | 13 / 18 | 13 / 18 |
-
-Both new hashes differ from the pre-migration hashes (`9b42f891…` / `69572fb8…`) — expected
-and intentional, not a determinism regression. Re-running compile with the same seed
-reproduces the same hash on repeat (verified for seed 42), confirming determinism holds for
-the new composition.
-
-### Extinction symptom — still present (expected, tracked separately)
-
-All 5 `wolf_pack_small` entities (4 `hungry_wolf` + 1 `alpha_wolf`, faction `wild_beast_pack`,
-role `predator_hunter`/`alpha`) are dead by tick 200 at both seeds — 13 of 18 entities remain
-alive, and the 5 dead are exactly the wolf population. This is the same class of symptom the
-original audit observed (monster-type entities dying early), now reproduced against real,
-non-flat catalog stats rather than flat 100/10/0 defaults. Per this ticket's explicit scope,
-the extinction root cause (hazard-drain not respecting native/immune fauna in their own
-habitat) is **not** fixed here — that is `TCK-20260701-HAZARD-NATIVE-IMMUNITY`. This
-migration's job was real stats + clean compile + baseline update, which is confirmed above;
-the extinction persisting is the expected, documented outcome pending the sibling ticket.
-
-### Calibration anchors regenerated
-
-Re-ran `tools/calibrate_simq.py` for all 4 `sandbox_world_*` run keys (full names, `sandbox_world_`
-prefix on all four). New grades (`tests/simulation_quality/fixtures/grade_anchors.json` updated,
-`test_grade_regression.py` passes — 9/9):
-
-| Run key | COGNITION | AGENCY | COMBAT | FACTION | ECONOMY | PROGRESSION | SOCIAL | INFORMATION | WORLD | NARRATIVE | Overall |
-|---|---|---|---|---|---|---|---|---|---|---|---|
-| `sandbox_world_seed42_200t` | C | C | B | C | C | B | C | C | **B** (was C) | A | B (0.1365) |
-| `sandbox_world_seed137_200t` | C | C | B | C | C | **B** (was C) | C | C | **B** (was C) | A | B (0.1050) |
-| `sandbox_world_seed999_200t` | C | C | B | C | C | **B** (was C) | C | C | **B** (was C) | A | B (0.1295) |
-| `sandbox_world_seed42_1000t` | **B** (was C) | C | B | C | **B** (was C) | B | C | C | B | **B** (was A) | B (0.0757) |
-
-WORLD moved C→B at 200t across all three seeds (richer hazard/region signal from the new
-module pair's two-region wilderness). At 1000t, COGNITION and ECONOMY moved C→B (new module
-pair exercises information/self-model and resource events the old flat recipe did not), and
-NARRATIVE eased A→B (still within the ±1 band). All shifts are within the regression test's
-±1-band tolerance — no anchor tolerance was weakened to force a pass; these are the genuine
-new calibration numbers from real content.
-
-### MODULE_MATRIX coverage — confirmed, not re-added
-
-`tests/integration/worldassembly/test_real_content_world_modules.py::MODULE_MATRIX` already
-lists `frontier_village_core` and `wolf_den_near_forest` (added by
-`TCK-20260630-WORLD-TEST-MATRIX`) — verified present, no changes needed.
-
----
-
-## Root Cause: Integration Bridge Not Connected *(Historical — resolved 2026-06-30)*
-
-> This section documents the original wiring failure. All three gaps are now resolved.
-> See §Finding Updates for the fix tickets.
-
-The SimQ module infrastructure was fully built and tested in isolation. The failure was
-a wiring gap in the event delivery path.
-
-### How the path is designed to work
-
-```
-Kernel.tick_once()
-  → EventExtractor.extract()         # read-only state diff observer
-  → EventRecorder.record(events)     # pushes ObservabilityEventEnvelope to global queue
-  → BoundedObservabilityQueue        # module-level singleton
-  → QueueDrainWorker._run()          # background thread, pops envelopes
-      → if quality_fn: quality_fn(envelope)   # calls hub.on_envelope()
-  → QualityHub.on_envelope()         # routes to pillar scorers
-```
-
-`QueueDrainWorker` already has a `quality_fn: Optional[Callable]` slot (
-`src/observability/queue.py:97`) intended for exactly this purpose. When set, the worker
-calls it for every envelope it drains.
-
-### What actually happens today
-
-The kernel creates `EventRecorder` which creates its own `QueueDrainWorker` — but passes
-**no** `quality_fn`. The hub is never registered as a callback.
-
-`InProcessQualityFeed` (used by this audit) creates a **second** `QueueDrainWorker` on
-the same queue. Both workers race to drain the same items. Because the EventRecorder's
-worker is started first as part of kernel init, it consumes events before the feed's
-worker can reach them. `hub.on_envelope()` is never called. `tick_count` stays 0.
-
-Additionally, `set_quality_hub()` in `src/api/dependencies.py` is defined but never
-called from the server startup (`server.py` lifespan) or the CLI (`cli/entry.py`). There
-is no execution path where the hub is registered with the server-side dependency injector.
-
-### Three independent gaps
-
-| Gap | Location | Description |
-|---|---|---|
-| G1 | `src/engine/kernel.py` | EventRecorder's QueueDrainWorker created without `quality_fn` |
-| G2 | `src/api/server.py` | `set_quality_hub()` never called in server lifespan |
-| G3 | `src/simulation_quality/feed.py` | `InProcessQualityFeed` creates competing consumer instead of using existing slot |
-
----
-
-## Recommended Fix *(Historical — all fixes applied 2026-06-30)*
-
-> Kept for traceability. These changes are in the codebase.
-
-**Minimal wiring (G1 only — addresses in-process and CLI paths):**
-
-In `Kernel.__init__`, after constructing the hub and feed, pass
-`quality_fn=hub.on_envelope` to the `EventRecorder`'s `QueueDrainWorker`. This avoids
-the competing-consumer issue entirely and uses the already-designed callback slot.
-
-```python
-# Kernel.__init__ (pseudocode — exact lines TBD at implementation time)
-from src.simulation_quality.feed import build_feed_from_env
-from src.simulation_quality.quality_hub import QualityHub
-
-feed = build_feed_from_env()
-if feed is not None:
-    hub = QualityHub(scorers, weights, persistence, run_id=self._run_id)
-    self._event_recorder = EventRecorder(
-        ...,
-        quality_fn=hub.on_envelope,   # thread-safe; QueueDrainWorker already handles this
-    )
-    self._quality_hub = hub
-```
-
-**Server wiring (G2):**
-
-Call `set_quality_hub(hub)` in the `lifespan` function of `server.py` after the manager
-starts, so REST endpoints return live data. The shutdown handler already reads
-`get_quality_hub()` for the final report write — it just needs the hub set on startup.
-
-**Remove competing consumer (G3):**
-
-`InProcessQualityFeed` should be deprecated or changed to a thin wrapper that injects
-`quality_fn` into an existing `QueueDrainWorker` rather than creating its own. The broker
-mode path (`BrokerQualityFeed`) is unaffected as it uses a separate Redis stream.
-
----
-
-## What SimQ Actually Shows (Verified 2026-07-01; Updated 2026-07-02)
-
-### Pillars with signal in sandbox_world (200 ticks)
-
-**WORLD — B (0.215 normalized, 38 events)**
-Primary driver: `hazard_drain_applied` (confirmed `calibration_hits=322` in event_type_coverage).
-`region_trauma_delta` also contributes. Loop detection flags `hazard_active` before run end.
-WORLD is the richest pillar in combat-heavy sandbox_world.
-
-**2026-07-02 update:** Loop detection sweep (TCK-20260701-SIMQ-LOOP-WINDOW-TUNE) confirmed that
-`hazard_active` loop flag does NOT suppress real signal at 200 ticks — sandbox_world produces only
-47 total scored events across all pillars, so the window (200 events) never fills and loop
-detection is dormant throughout the run. The "~40 ticks" suppression described in the original
-audit was a misread of the window semantics. WORLD=B is the genuine signal, not a suppressed one.
-
-**COMBAT — B (0.030 normalized, 15 events, 5 negative)** *(pre-fix baseline; see update below)*
-`combat_initiated` and `near_death_survival` fire; `entity_killed` events fire with penalties.
-Hard early attrition at tick 8: 5 monster-type entities die, triggering `early_extinction` (−10).
-Loop detection flags `combat_active`. COMBAT scores positively but the early-extinction penalty
-significantly depresses the grade.
-
-**2026-07-02 update:** The `early_extinction` penalty is now eliminated. Root cause confirmed as
-a three-part chain — flat catalog stats → hazard-drain self-kill → resolver plumbing gap — fixed
-across TCK-20260701-SANDBOX-WORLDCOMP-MIGRATE, TCK-20260701-HAZARD-NATIVE-IMMUNITY, and
-TCK-20260701-HAZARD-KIND-RESOLVER-GAP. Empirical verification (seed 42 and 137): 0/5 wolf deaths
-across a full 200-tick run, zero `hazard_drain_applied` events against `wild_beast_pack` entities
-in `NATURAL_TERRAIN` regions. Current sandbox_world calibration shows `COMBAT event_count=0`
-at seed 42/137 (200t) — consistent with `ENABLE_COMBAT_ENGAGEMENT` defaulting off; the
-hazard-drain extinction path is independently confirmed absent.
-
-**PROGRESSION — B (0.035 normalized, 6 events, 1 negative)**
-New emitters confirmed active: `progression_plateau_detected` fires at tick 51 for entity 1
-(XP rate dropped to zero after tick gate, −8 penalty). `survival_experience` loop detected.
-PROGRESSION is functional but the plateau penalty is the dominant signal in a 200-tick sandbox run.
-
-**2026-07-02 update:** `progression_plateau_detected` now has 18 corpus-wide calibration hits
-across the full 13-run corpus (TCK-20260701-SIMQ-CALIBRATE-REFRESH). The other 4 new progression
-emitters (`skill_unlocked`, `trait_expressed`, `pillar_trait_unlocked`, `progression_conversion_applied`)
-still show 0 calibration hits — these require longer runs or more entity progression cycles.
-In dungeon_crawl 200t the net effect of new progression emitters shifted PROGRESSION from A→B
-(plateau penalty outweighs positive skill/trait signal in a 200-tick window).
-
-**NARRATIVE — B (0.075 normalized, 3–4 events)**
-`quest_active` loop flag fires. The signal is real but quest state does not advance fast enough
-in sandbox_world to sustain high event density.
-
-**2026-07-02 update:** The concern about loop detection "suppressing" NARRATIVE signal is resolved
-by the window-event density analysis above. sandbox_world generates only 47 total scored events
-at 200 ticks — the 200-event window cannot fill. NARRATIVE=B reflects genuine low quest activity
-in a combat-only world, not loop suppression of real signal.
-
-### Pillars scoring zero in sandbox_world
-
-| Pillar | Root cause | Status |
-|---|---|---|
-| AGENCY | `route_selected`/`action_executed` gated by `ENABLE_ADVENTURE_ROUTING` (off by default) — zero events is correct, not a gap | **RESOLVED** — documented as P0-A; confirmed by `simq_routing_test` (AGENCY=B with flag ON) |
-| COGNITION | `self_model_bundle_set` and `last_assimilated_tick` signals absent — no information economy in sandbox | Structural gap; requires feature-flag-gated cognition loop enabled |
-| ECONOMY | No trades, harvesting, or shop transactions in sandbox_world (pure combat scenario) | Expected — calibrated against `dungeon_crawl`/`urban_political` (see below) |
-| SOCIAL | `trust_history` not updated — no cooperation or social interaction in sandbox | Expected — 0 calibration hits for `social_memory_created` even in richer worlds at 200t |
-| FACTION | No faction diplomacy in sandbox_world; no tension, alliance, or territory events | Expected |
-| INFORMATION | `lead_certainty_updated`, `belief_stale` and related events require active information-seeking behavior | Structural gap; requires cognition/strategy loop |
-
-### Calibration results — richer worlds (2026-07-02, TCK-20260701-SIMQ-CALIBRATE-REFRESH)
-
-Sandbox_world is a combat-only scenario, blind to 6 of 10 pillars. Post-calibration results for
-richer worlds confirm the structural gap picture and add new signal:
-
-| World | Ticks | COMBAT | NARRATIVE | PROGRESSION | WORLD | 5 zero-pillars | Notes |
-|---|---|---|---|---|---|---|---|
-| dungeon_crawl | 200 | A | B | B | A | all C | 287 events; PROGRESSION net-negative from plateau emitter |
-| dungeon_crawl | 1000 | B | B | B | B | all C | 367 events; WORLD B at 1000t (loop detection active at higher density) |
-| urban_political | 200 | B | A | B | A | all C | 210 events; NARRATIVE=A (quest density higher than sandbox) |
-
-AGENCY, COGNITION, ECONOMY, FACTION, INFORMATION, SOCIAL remain C across all worlds in
-default-mode runs (as of this 2026-07-02 snapshot; historical record, not updated in place). This
-is 100% attributable to feature-flag gates and missing upstream emitters — not a SimQ scoring gap.
-See `docs/plans/audit_fix_plan.md §Finding 1`. **Superseded for `urban_political` specifically**
-by SimQ Uplift Batch 1 (SOCIAL→S) and Batch 2 (FACTION→S/A, INFORMATION→B) below — all other
-worlds, including `sandbox_world` and `dungeon_crawl`, are unaffected by either batch and remain as
-described here.
-
-### 5 newly-anchored worlds (2026-07-04, TCK-20260703-SIMQ-UPLIFT3-WORLD-CORPUS)
-
-`frontier_extended`, `frontier_living_world`, `wilderness_survival`, `highland_traverse`, and
-`swamp_border_world` were previously stale-compiled and unanchored (Finding 3 in
-`stored_artifacts/TCK-20260703-SIMQ-UPLIFT3-WORLD-CORPUS/investigation.md`: collapsing to <25%
-alive by tick 50 due to missing `hazard_kind` on their modules). Recompiled after the Step 1
-content fix, re-verified for population stability (>=60% alive floor through 300 ticks), and
-anchored at 3 seeds x 200t each:
-
-| World | Ticks | COMBAT | NARRATIVE | PROGRESSION | WORLD | 5 zero-pillars | Notes |
-|---|---|---|---|---|---|---|---|
-| frontier_extended | 200 | B (all seeds) | A (all seeds) | B (all seeds) | B (all seeds) | all C | 56 entities, 10 regions — largest/widest-spread anchored world |
-| frontier_living_world | 200 | B (all seeds) | A/B/A | B (all seeds) | B (all seeds) | all C | 46 entities, 7 regions — fills 35-50-entity band |
-| wilderness_survival | 200 | C (all seeds) | C (all seeds) | C (all seeds) | B (all seeds) | all C | 11 entities, 4 regions — second <20-entity data point |
-| highland_traverse | 200 | B/B/C | A (all seeds) | C (all seeds) | B (all seeds) | all C | 18 entities — brings mountain_pass/river_crossing/nomadic_herd/settled_quarter family in |
-| swamp_border_world | 200 | C (all seeds) | A (all seeds) | C (all seeds) | B (all seeds) | all C | 26 entities — brings sunken_swamp_border/lizardfolk family in |
-
-Full per-seed tables: `docs/simulation_quality/eval_matrix_results.md` §Newly-Anchored Worlds.
-As with all other worlds, AGENCY/COGNITION/ECONOMY/FACTION/INFORMATION/SOCIAL=C is structural
-(feature-gate blocked, out of scope for this ticket), not a gap.
-
-**Loop detection in practice:** At current event densities (47–287 scored events per 200-tick run),
-the 200-event window never fills for any pillar in any tested world. Loop flags observed in
-sandbox_world (`hazard_active`, `quest_active`, `combat_active`) fire because those specific tags
-dominate a small window that fills faster at low event diversity — not because the window is too
-small. The 200/0.70 defaults are confirmed correct for the current event density regime. At
-significantly higher event volumes (long runs, larger worlds), re-evaluation is warranted.
-
-### Multi-seed / multi-tick matrix (2026-07-02, TCK-20260702-SIMQ-EVAL-MATRIX)
-
-Corpus expanded from 8 anchor entries (all seed=42 point estimates, except sandbox_world seeds 137
-and 999) to 25 anchor entries covering 3 seeds × 3–4 tick counts across signal-producing worlds.
-**2026-07-04 update (TCK-20260703-SIMQ-UPLIFT3-WORLD-CORPUS):** corpus further expanded from 25 to
-40 entries — 25 + 15 new (5 newly-anchored worlds x 3 seeds x 200t) — see "5 newly-anchored worlds"
-above. Combined with the pre-existing 13-run calibration-report corpus (10 dungeon_crawl +
-3 simq_routing_test run_keys, refreshed post-hazard-kind-recompile in the same ticket's Step 4a),
-the total distinct calibration run_key surface is 28 (13 + 15 new).
-
-**Corpus before / after:**
-
-| | Before | After |
-|---|---|---|
-| Total anchor entries | 8 | 25 |
-| Seeds covered per world | 1 (seed42 only, with exceptions) | 3 (seeds 42, 123, 456) |
-| Tick counts per world | 1–2 | 2–3 |
-| FAST_ANCHOR_KEYS | 6 | 14 |
-| SLOW_ANCHOR_KEYS | 2 | 11 |
-
-**Per-world stability conclusions:**
-
-- **dungeon_crawl:** Perfectly stable. COMBAT/NARRATIVE/PROGRESSION/WORLD all hold B across seeds
-  42, 123, 456 at 500t, 1000t, and 2000t. No COMBAT grade drift observed at 2000t.
-- **urban_political:** Mildly variable at 500t (NARRATIVE B/A, WORLD B/A depending on seed).
-  Stable at 1000t — all active pillars normalise to B. ECONOMY activates at 1000t for all seeds
-  (duration effect, not noise). COGNITION borderline (B only for seed123 at 1000t).
-- **simq_routing_test:** Highly stable. NARRATIVE=A and AGENCY=B confirmed across all three seeds
-  with ENABLE_ADVENTURE_ROUTING=ON. COGNITION seed-variable (C for seed42, B for seeds 123/456).
-- **sandbox_world:** COGNITION and ECONOMY plateau at B at 2000t — no upgrade to A observed.
-  NARRATIVE drops A→B from 1000t to 2000t (scoring-window dilution at low event density, not
-  a regression).
-
-**OQ1 resolution:** urban_political NARRATIVE at 1000t converges to B across all seeds. The 500t
-seed123 NARRATIVE=A was a window-composition burst artefact.
-
-**OQ2 resolution:** sandbox_world COGNITION=B and ECONOMY=B at 2000t — both plateau; confirmed
-B-ceiling in default mode.
-
-**AC6 — AGENCY:** Confirmed ≥ B for simq_routing_test seeds 42, 123, and 456 with
-ENABLE_ADVENTURE_ROUTING=ON. All three seeds: AGENCY=B.
-
-Full grade distribution tables: `docs/simulation_quality/eval_matrix_results.md`.
-
----
-
-## Module Health (as of 2026-07-02)
+## Module Health (current state)
 
 All integration gaps resolved. Module is fully wired, calibrated, and producing live scores.
-No remaining action items.
 
 | Component | Status |
 |---|---|
 | 10 pillar scorers | Implemented, unit-tested, live |
-| QualityHub | Wired — `quality_fn=hub.on_envelope` at `kernel.py:264` |
-| PillarAccumulator | Sliding window (200 events), loop detection (0.70 threshold), worst-event tracking — active; defaults confirmed correct by 2026-07-02 sweep |
-| QualityPersistence | Write-through to `data/runs/` — verified by re-run |
-| REST API (5 endpoints) | `set_quality_hub()` called at server startup (`server.py:34`) — live |
-| Event translation layer | `_TRANSLATE_SIMPLE` + `_TRANSLATE_CONDITIONAL` in quality_hub.py |
-| EventExtractor emissions | **81 of 82** scored event types emitted. 1 has no engine path (`camp_constructed` — no dynamic camp construction; scorer entry premature). |
-| Calibration tooling | `calibrate_simq.py` — `--window-size`/`--loop-threshold` CLI overrides added (TCK-20260701-SIMQ-LOOP-WINDOW-TUNE); run-scoped via `model_copy`, no YAML mutation |
-| Calibration corpus | **71-scenario corpus across 17 worlds** (re-verified 2026-07-10: `FAST_ANCHOR_KEYS` 53 + `SLOW_ANCHOR_KEYS` 18 = 71 in `tests/simulation_quality/test_grade_regression.py`, matching 71 non-metadata `run_key` entries in `tests/simulation_quality/fixtures/grade_anchors.json`) — grew from the 61-scenario/17-world corpus via `TCK-20260707-SIMQ-DEEP-COVERAGE-EPIC` (2026-07-07/09, see "SimQ Uplift Batch 4" section below): 6 new long-run (1000t/2000t) anchors plus `generated_frontier_3_42`'s first-ever anchors (200t x3 seeds + 1000t). The 61-scenario/17-world figure itself dates to 2026-07-07, `TCK-20260704-SIMQ-CORPUS-TIERS-EPIC`, which grew it from the 28-run/10-world corpus via 7 new worlds (4 unit-tier isolating single mechanics, 3 stress-tier filling named scale-diversity gaps) and 8 of the original 10 promoted to end-to-end tier with bespoke FACTION/INFORMATION content; see `docs/simulation_quality/corpus_tier_taxonomy.md` for the full tier structure and `docs/simulation_quality/eval_matrix_results.md`'s "Corpus World-Scale Summary" for per-world counts. `make evaluate`: 0 regressions across all 610 pillars (as of the Corpus Tiers Epic; not re-run at the wider corpus scope by this update). |
-| Parity ledger | SOC-237, SOC-238, INFRA-251 added and marked `verified` |
-| Kernel→hub bridge | **RESOLVED** — `InProcessQualityFeed` refactored; no competing consumer |
-| Early-extinction penalty | **RESOLVED** — `TCK-20260701-HAZARD-NATIVE-IMMUNITY` + `TCK-20260701-HAZARD-KIND-RESOLVER-GAP`; 0/5 wolf deaths confirmed at seed 42/137 |
-| Loop-detection tuning | **RESOLVED** — 200/0.70 confirmed correct; sweep data in `quality_scoring_contract.md §4.7` |
-
-The module is fully operational. All P1/P2 action items from the 2026-07-01 re-run are closed.
+| `QualityHub` | Wired — `quality_fn=hub.on_envelope` at `kernel.py:264` |
+| `PillarAccumulator` | Sliding window (200 events, 0.70 loop threshold) — defaults confirmed correct |
+| `QualityPersistence` | Write-through to `data/runs/`, verified |
+| REST API | `set_quality_hub()` called at server startup (`server.py:34`) — live |
+| `EventExtractor` emissions | 81 of 82 scored event types emitted; `camp_constructed` has no engine path (documented dead event, not a gap) |
+| Calibration tooling | `calibrate_simq.py` with `--window-size`/`--loop-threshold` overrides, run-scoped (no YAML mutation) |
+| Calibration corpus | **71 scenarios across 17 worlds** (`FAST_ANCHOR_KEYS` 53 + `SLOW_ANCHOR_KEYS` 18, `tests/simulation_quality/test_grade_regression.py`) — see `docs/simulation_quality/corpus_tier_taxonomy.md` for tier structure and `eval_matrix_results.md` for current grade tables |
+| Parity ledger | SOC-237, SOC-238, INFRA-251 added and `verified` |
 
 ---
 
@@ -467,280 +242,14 @@ The module is fully operational. All P1/P2 action items from the 2026-07-01 re-r
 
 | # | Finding | Severity | Status |
 |---|---|---|---|
-| F1 | `QueueDrainWorker.quality_fn` slot exists but is never populated at kernel init | High | **RESOLVED** — TCK-20260630-SIMQ-WIRE-KERNEL (2026-06-30) |
-| F2 | `set_quality_hub()` is never called; REST quality endpoints always return hub=None path | High | **RESOLVED** — TCK-20260630-SIMQ-WIRE-SERVER (2026-06-30) |
-| F3 | `InProcessQualityFeed` creates a competing consumer that races against EventRecorder | Medium | **RESOLVED** — TCK-20260630-SIMQ-WIRE-KERNEL (2026-06-30) |
-| F4 | Zero events scored across both 200-tick seeds — SimQ produces no actionable signal | High | **Resolved** — hub wired; 81 event types emitted; all engine emission gaps closed; `camp_constructed` has no viable engine path (scorer entry premature) |
-| F5 | Threshold calibration (`tools/calibrate_simq.py`) remains blocked until F1 is fixed | Medium | **UNBLOCKED** — F1 resolved; calibration can proceed |
-
-### §Finding Updates — 2026-07-01
-
-**Kernel wiring (F1/F2/F3): RESOLVED on 2026-06-30.**
-- G1 (`quality_fn` at kernel init) — fixed by `TCK-20260630-SIMQ-WIRE-KERNEL`: `quality_fn=hub.on_envelope` passed to `QueueDrainWorker` in `Kernel.__init__` (`src/engine/kernel.py:264`)
-- G2 (`set_quality_hub` in server lifespan) — fixed by `TCK-20260630-SIMQ-WIRE-SERVER`: `set_quality_hub(_k.quality_hub)` called after manager start (`src/api/server.py:34`)
-- G3 (`InProcessQualityFeed` competing consumer) — fixed by `TCK-20260630-SIMQ-WIRE-KERNEL`: `InProcessQualityFeed` refactored to lifecycle-only; no longer creates a second `QueueDrainWorker`
-
-**Emission gap progress:** 24 of 27 engine emission gaps resolved by the simq-emit epic:
-- `TCK-20260701-SIMQ-EMIT-AGENCY2` — 4 AGENCY events (`defer_with_reason`, `route_family_first_use`, `commitment_abandoned`, `rejection_cascade_tick`)
-- `TCK-20260701-SIMQ-EMIT-LEAD-BELIEFS` — 6 INFORMATION/COGNITION events
-- `TCK-20260701-SIMQ-EMIT-PROGRESSION` — 5 PROGRESSION events
-- `TCK-20260701-SIMQ-EMIT-FACTION-ECONOMY` — 5 FACTION/ECONOMY/NARRATIVE events
-- `TCK-20260701-SIMQ-EMIT-WORLD-DYNAMICS` — 4 WORLD DYNAMICS events
-
-**Remaining gaps — premise corrections (2026-07-01):**
-- `social_memory_created` — prior premise wrong. `SocialMemoryExporter` is campaign-layer only (called at episode end). Correct emit: `EventExtractor` on `trust_history` delta — no infrastructure change needed. TCK-20260701-SIMQ-EMIT-SOCIAL-MEM scope updated.
-- `contract_milestone_completed` — **resolved**. No schema change needed. EventExtractor emits at 25%/50%/75% of ACTIVE contract duration using existing `created_tick`/`expiry_tick` fields. Gate: once per `(contract_id, milestone)` per run. TCK-20260701-SIMQ-EMIT-CONTRACT-MILESTONE DONE.
-- `camp_constructed` — prior premise wrong. `StateUpdate` has no `camps_add`; camps are pre-placed at world generation. No dynamic camp construction occurs in simulation. No event recorder can fix this — the mechanic doesn't exist. TCK-20260701-SIMQ-EMIT-CAMP closed.
+| F1 | `QueueDrainWorker.quality_fn` slot never populated at kernel init | High | **RESOLVED** — `TCK-20260630-SIMQ-WIRE-KERNEL` |
+| F2 | `set_quality_hub()` never called; REST endpoints always returned `hub=None` | High | **RESOLVED** — `TCK-20260630-SIMQ-WIRE-SERVER` |
+| F3 | `InProcessQualityFeed` created a competing consumer, racing `EventRecorder` | Medium | **RESOLVED** — `TCK-20260630-SIMQ-WIRE-KERNEL` |
+| F4 | Zero events scored — SimQ produced no actionable signal | High | **RESOLVED** — hub wired; 81/82 event types emitted; `camp_constructed` has no engine path |
+| F5 | Threshold calibration blocked until F1 fixed | Medium | **RESOLVED** — unblocked by F1, calibration corpus built out fully |
 
 ---
 
-## SimQ Uplift Batch (2026-07-02)
-
-Three tickets completed after the calibration corpus refresh:
-
-| Ticket | What changed | Outcome |
-|---|---|---|
-| TCK-20260702-SIMQ-UPLIFT-SOCIAL-ZERO | SOCIAL pillar activated via `ENABLE_SOCIAL_COOPERATION=ON` in `urban_political` calibration profile; fixed `apply_generation()` dropping `feature_flags` each tick (silent bug); fixed `CooperationPhase` storing non-serializable object in `property_updates` | SOCIAL grade C→S in urban_political (1657 cooperation events/500t); 0 regressions |
-| TCK-20260702-SIMQ-UPLIFT-GRADE-DECAY | Fixed normalized_score formula: replaced `raw_score / tick_count` with `raw_score / max(floor_tick, last_event_tick)` where `floor_tick = current_tick // 4`; eliminates tick-dilution artifact for quiet post-event ticks | 24 of 25 anchor grades updated; COMBAT/PROGRESSION now hold A at 500t and 1000t for dungeon_crawl; 0 regressions |
-| TCK-20260702-SIMQ-UPLIFT-DUNGEON-ECON-COG | DA decision documented: ECONOMY=C and COGNITION=C in dungeon_crawl are archetype-correct (no merchant NPCs → Gini < 0.7; all entities in survival mode → non-survival project condition never satisfied); 5 parity ledger entries annotated | Documentation only; 0 regressions |
-
-**Current grade distribution (30 calibration runs, 2026-07-02, superseded for AGENCY/FACTION/INFORMATION by SimQ Uplift Batch 2 below):**
-
-| Pillar | S | A | B | C | Status |
-|---|---|---|---|---|---|
-| COMBAT | — | 12 | 16 | 2 | Healthy |
-| NARRATIVE | — | 14 | 15 | 1 | Healthy |
-| PROGRESSION | — | 7 | 20 | 3 | Healthy |
-| WORLD | — | 6 | 24 | 0 | Healthy |
-| SOCIAL | 7 | — | — | 23 | Urban_political=S; all others C (ENABLE_SOCIAL_COOPERATION=OFF) |
-| ECONOMY | — | — | 5 | 25 | Activates at urban_political 1000t+ |
-| COGNITION | — | — | 5 | 25 | Activates at urban_political/sandbox seed123 |
-| AGENCY | — | 2 | 1 | 27 | Gated by ENABLE_ADVENTURE_ROUTING (P0-A) |
-| FACTION | — | — | — | 30 | Structurally zero — WorldCompiler does not seed FactionState tension |
-| INFORMATION | — | — | — | 30 | Dual-gate: ENABLE_BELIEF_ASSIMILATION=OFF + no information_source_profiles |
-
-**Open follow-up work (resolved by SimQ Uplift Batch 2, see below):**
-- ~~FACTION activation: WorldCompiler extension + world spec seeding~~ — **DONE**, TCK-20260702-SIMQ-UPLIFT2-FACTION
-- ~~INFORMATION activation: flag enable + InformationSourceProfile seeding~~ — **DONE**, TCK-20260702-SIMQ-UPLIFT2-INFORMATION + TCK-20260703-SIMQ-INFORMATION-BELIEF-TRIGGER
-- ~~AGENCY P0-A: ENABLE_ADVENTURE_ROUTING global rollout decision~~ — **DA-documented**, TCK-20260702-SIMQ-UPLIFT2-AGENCY-DA (AGENCY=C in non-routing worlds ruled archetype-correct, not a gap; no rollout decision needed)
-
----
-
-## SimQ Uplift Batch 2 (2026-07-02 / 2026-07-03)
-
-Four tickets completed after SimQ Uplift Batch 1, closing all three "Open follow-up work" items
-from that batch:
-
-| Ticket | What changed | Outcome |
-|---|---|---|
-| TCK-20260702-SIMQ-UPLIFT2-AGENCY-DA | DA decision documented: AGENCY=C in all non-`simq_routing_test` worlds is archetype-correct (`AdventureDecisionPhase` is opt-in by world archetype, gated behind `ENABLE_ADVENTURE_ROUTING=OFF` by default); DA annotation added to `eval_matrix_results.md`, `support_boundary` populated on `INFRA-237`/`SIMQ-CALIBRATED-001` | Documentation only; 0 regressions; closes the AGENCY P0-A follow-up without a rollout decision |
-| TCK-20260702-SIMQ-UPLIFT2-FACTION | `WorldCompiler.compile()` previously never constructed any `FactionState` at all (state.factions permanently `{}` for every world). Added `FactionSpec.initial_tension_level` + composition-level `faction_tension_overrides` (schema/compiler/resolver plumbing), seeded `urban_political`'s `bandit_company`/`town_council` at `tension_level=0.5` | FACTION grade C→S (200t) / C→A (500t, 1000t) across all 7 `urban_political_*` anchor scenarios; 29 `diplomatic_transition` hits/run; 0 leakage to other worlds; 0 regressions |
-| TCK-20260702-SIMQ-UPLIFT2-INFORMATION | Shipped `information_source_profiles` compile-time scaffolding (same "compiler never constructs the field" bug class as FACTION, fixed for a different field) + two corrected `InformationSourceProfile` entries in `urban_political` + `ENABLE_BELIEF_ASSIMILATION=ON`. Investigation found this scaffolding alone insufficient — `InformationBeliefPhase`'s trigger branches were unreachable — deferred pillar activation to a follow-up ticket rather than force it | Scaffolding shipped honestly as inactive; INFORMATION stayed C this ticket; deferred work documented in `docs/plans/idea_information_belief_trigger_wiring.md` and `TCK-20260703-SIMQ-INFORMATION-BELIEF-TRIGGER` |
-| TCK-20260703-SIMQ-INFORMATION-BELIEF-TRIGGER | Seeded `AuthoritativeState.pending_information_responses` at compile time (reusing the FACTION plumbing pattern for a new field), reaching `InformationBeliefPhase`'s already-implemented Branch A. Also found and fixed a separate, pre-existing kernel bug: `Kernel._phase_advancement()` compared Resolution-phase-stamped properties against the post-advance tick instead of the pre-advance tick they were stamped with, so `belief_assimilated`, `calamity_spawned`, and `GovernorModeChanged` could never fire through the real `Kernel.tick_once()` loop, ever — fixed via 3 one-line comparisons against `prior_state.tick` | INFORMATION grade C→B across all 7 `urban_political_*` scenarios (`belief_assimilated` calibration_hits=1/run, confirmed through the real live loop); COGNITION C→B in 6/7 as a side effect (`belief_updated` also scored by `CognitionScorer`); `calamity_spawned`'s kernel-fix mechanism unit-test-verified but its natural firing in calibration is separately gated by a pre-existing hero-death content precondition (documented, not fixed); 0 regressions |
-
-**Grade distribution delta for AGENCY/FACTION/INFORMATION (30 calibration runs, 2026-07-03):**
-
-| Pillar | S | A | B | C | Status |
-|---|---|---|---|---|---|
-| AGENCY | — | 2 | 1 | 27 | Unchanged — DA-documented as archetype-correct, not a gap (`ENABLE_ADVENTURE_ROUTING` remains an opt-in world-archetype flag) |
-| FACTION | 7 | 7 | — | 16 | `urban_political` 200t=S (7 runs... see note), 500t/1000t=A (14 runs); `dungeon_crawl` DA-documented archetype-correct C; all other worlds still C (not this batch's scope) |
-| INFORMATION | — | — | 7 | 23 | `urban_political` all 7 anchor scenarios=B; all other worlds still C (not this batch's scope) |
-
-*Note: FACTION's S/A split above counts `urban_political`'s 7 anchor scenarios only (1×200t=S,
-6×500t/1000t=A); the remaining 23 non-`urban_political` runs are unchanged at C, consistent with
-this batch's explicit `urban_political`-only scope.*
-
-**Open follow-up work (new, from this batch):**
-- `TCK-20260703-SIMQ-INFORMATION-BELIEF-TRIGGER`'s residual finding: `calamity_spawned`'s natural
-  firing in calibration is blocked by a pre-existing `calamity_intensity > 0.3` (hero-death)
-  content precondition, unrelated to and not fixed by the kernel-alignment fix — see
-  `docs/parity_ledger/infrastructure.yaml::INFRA-258`. Not currently tracked as its own ticket.
-- FACTION/INFORMATION activation confined to `urban_political` this batch, per explicit scope
-  guard — extending to other worlds is a future batch's decision, not automatic follow-on work.
-
----
-
-## SimQ Uplift Batch 3 (2026-07-03 / 2026-07-04)
-
-Eight tickets, sequenced per `tickets/done/simq-uplift-3/SEQUENCE.md`, addressing calibration
-speed, documentation, an unresolved investigation question, corpus diversity, and three backlog
-items from `docs/plans/audit_fix_plan.md` (P1-D, P1-H) plus a new process gap (repeatable audits).
-
-| Ticket | What changed | Outcome |
-|---|---|---|
-| TCK-20260703-SIMQ-UPLIFT3-FAST-CALIBRATE | Added `flags={"no_frame_pacing": True}` to `tools/calibrate_simq.py`'s `Kernel(...)` construction — offline/batch calibration runs don't need real-time tick-pacing sleep | 2000-tick `dungeon_crawl` run: 231s→28s (~8.3x speedup); byte-identical `quality_report.json` output confirmed via git-stash before/after diff |
-| TCK-20260703-SIMQ-UPLIFT3-PLAYBOOK-DOC | Documented the "Compile-Time Pillar Activation Pattern" (schema field → composition mirror → resolver passthrough → compiler construction) in `docs/guidelines/design_patterns.md` as Pattern 6, generalizing the FACTION/INFORMATION fix shape from Batch 2 | Documentation only; 0 regressions |
-| TCK-20260703-SIMQ-UPLIFT3-DUAL-GATE-AUDIT | Investigated whether ECONOMY/SOCIAL share FACTION/INFORMATION's "compiler never constructs the field" bug class | Found EconomyScorer is 100% event-driven (reads zero `AuthoritativeState` fields) — its C ceiling is duration-driven (activates at 1000t+), not a construction gap; SOCIAL is pure feature-flag gating, unlike FACTION's closed loop. No fix needed; corrected a stale D04-era claim in `quality_scoring_contract.md` (resource_nodes/region_id were already fixed by the worldgen epic) |
-| TCK-20260703-SIMQ-UPLIFT3-BRANCH-B | Found and fixed 3 causally-linked bugs blocking `InformationBeliefPhase` Branch B: `SelfModelUpdatePhase.run()` hardcoded `events=[]`; `pipeline.py`'s `InformationBeliefPhase.apply(...)` call site was missing the `u.merge(...)` wrapper every sibling phase uses; and `EntityUpdate.self_model_bundle_set` was never durably materialized into `EntityState.self_model` for **any** entity, **any** world, ever (added `SelfModelPatch`, the 18th `ComponentPatch` subclass) | Branch B mechanism proven correct and reachable via test-scoped verification (both flags ON); NOT active in any shipped calibration profile (honest disclosure, not claimed as a live grade change); byte-identical canonical hash proven with/without the fix on `urban_political`'s shipped profile; 950+ tests passing across a widened regression sweep |
-| TCK-20260703-SIMQ-UPLIFT3-WORLD-CORPUS | See "5 newly-anchored worlds" and "Multi-seed / multi-tick matrix" sections above | Corpus 25→40 anchor entries; fixed a corpus-wide stale-content bug (7 modules missing `hazard_kind`) causing real population collapse in 5 worlds; caught genuine drift in 8 of `dungeon_crawl`'s 10 already-shipped anchor keys via a drift-check the plan initially omitted (caught by architecture review) — updated in place with attribution notes; `simq_routing_test`'s 3 anchors blocked by a pre-existing, unrelated `ResourceRegistry: STONE` crash, filed as `TCK-20260704-SIMQ-RESOURCEREGISTRY-STONE-GAP` rather than silently marked verified |
-| TCK-20260703-SIMQ-UPLIFT3-AUDIT-WORKFLOW | Built `tools/simq_audit_gaps.py` (anchor-coverage + parity-ledger candidate scanner) + `make simq-full-audit`/`-full`/`-slow` targets for the mechanical steps, plus a full 7-phase `.claude/workflows/simq-audit.js` + `.claude/skills/simq-audit/SKILL.md` agent-orchestrated workflow mirroring `implement-ticket.js`'s conventions, with a governance-encoded Report phase (no-regression → lightweight chore commit; regression/DA-needed → ticket hand-off) | Formalizes the manual doc-sync process repeated by hand across all 3 batches (15 historical commits reconstructed during investigation); documented in `docs/simulation_quality/audit_workflow.md`; smoke-tested against current repo state without invoking the workflow's own agent phases |
-| TCK-20260703-SIMQ-UPLIFT3-QUEST-PRESSURE | Resolves `docs/plans/audit_fix_plan.md` P1-D. Extended `QuestGenerator`'s template selection to weight candidates by regional pressure signals (`RegionState.trauma_score`/`hazard_level`, a node-charge-ratio scarcity signal) via a new deterministic `DeterministicRNG.weighted_choice()`, while preserving hero-level gating as the primary filter; neutral/`None`-profile scenarios fall back to the exact pre-existing `rng.choice(...)` call, byte-identical to prior behavior | Also fixed a pre-existing masked test bug (two functions both named `test_quest_generation_determinism`, so the `QuestGenerator`-specific determinism test never actually ran). Documented as distinct from the separate, already-pressure-driven `QuestOpportunity`/`quest_registry` system (world-emergence events) — not a duplicate of it |
-| TCK-20260703-SIMQ-UPLIFT3-GOAL-TRACE | Investigation found this ticket's entire scope (retain top-3 runner-up goal scores) was already implemented by `TCK-20260627-P1H-GOAL-RUNNERUP` (done 2026-06-27) — the "still open" status carried in `audit_fix_plan.md`'s 2026-07-03 refresh was itself a false negative (grepped the original pre-fix finding's files, not the files the actual fix landed in) | Closed as a documentation-only duplicate; corrected `audit_fix_plan.md`'s P1-H entry and `docs/audits/D15_entity_decision_inspection.md`'s Gap 1 section to reflect the true two-stage resolution history; re-confirmed the existing implementation genuinely works (24/24 tests passing), not just claimed |
-
-**Net effect on `docs/plans/audit_fix_plan.md`'s backlog:** P1-D and P1-H both moved from "still
-open, no ticket exists" to RESOLVED this batch (P1-H's resolution predates this batch by a week —
-this batch only corrected the record). P2-B was also corrected to RESOLVED (see "5 newly-anchored
-worlds" above — its underlying spawn-cadence fix was already shipped; a separately-conflated
-early-collapse symptom in other worlds was root-caused and fixed by this batch's WORLD-CORPUS
-ticket). `docs/audits/D06_longrun_health.md`'s F5 finding (source of P2-B) updated to match.
-
-**Open follow-up work (new, from this batch):**
-- `TCK-20260704-SIMQ-RESOURCEREGISTRY-STONE-GAP` — pre-existing `ResourceRegistry: STONE` crash in
-  `src/world/ecology.py`'s dynamic resource-node generation, independently hit twice this batch
-  (BRANCH-B's regression sweep, WORLD-CORPUS's drift check). Blocks `simq_routing_test`'s 3
-  calibration anchors from being re-verified. Confirmed pre-existing via git-stash bisection, not a
-  regression introduced by either ticket.
-- BRANCH-B's mechanism is proven correct but not active in any shipped profile — activating it for
-  a real world (if ever desired) is a future scope decision, not automatic follow-on work.
-
----
-
-## SimQ Corpus Tiers Epic (2026-07-06 / 2026-07-07)
-
-Ten tickets under `tickets/done/simq-corpus-tiers/` (parent epic
-`TCK-20260704-SIMQ-CORPUS-TIERS-EPIC`), addressing a product-philosophy redirection: world data
-should exercise every feature the engine supports, not just what already looks good, so SimQ
-scoring becomes an honest diagnostic across the whole corpus — organized into a test-pyramid-style
-tier structure (Unit/End-to-end/Stress/Regression) so a pillar regression can still be attributed to
-a specific mechanic rather than lost in an "everything on everywhere" corpus. Full tier definitions
-and per-world classification in `docs/simulation_quality/corpus_tier_taxonomy.md`.
-
-| Ticket | What changed | Outcome |
-|---|---|---|
-| TCK-20260704-SIMQ-CORPUS-TAXONOMY-DOC | Documented the 4-tier taxonomy and classification criteria for future world additions | Doc-only hotfix; foundation for tickets 2-10 |
-| TCK-20260704-SIMQ-CORPUS-SCALE-METRIC | Added `distinct_populated_factions` to `WorldCompiler.compile()`'s report (the coarse `Faction` enum only has 4 buckets and can't distinguish e.g. `undead_remnants` from `wild_beast_pack`) | Recompiled all 10 pre-epic worlds; `state_hash` byte-identical confirmed (purely additive); values matched the epic's own investigation table exactly, 0 discrepancy |
-| TCK-20260704-SIMQ-CORPUS-AGENCY-FLAG-GENERALIZE | Migrated `ENABLE_ADVENTURE_ROUTING` off `evaluate_simq.py`'s hardcoded `ROUTING_KEYS` scenario-name special case onto the same per-world `feature_flags:` profile-YAML mechanism every other flag already used | Behavior preservation verified 3 independent times across all 3 `simq_routing_test` seeds; prerequisite for ticket 6; does not touch the AGENCY-DA ruling |
-| TCK-20260704-SIMQ-CORPUS-UNIT-WORLDS-FACTION-INFO | Authored `unit_faction_tension` and `unit_information_source` — first unit-tier worlds, each isolating exactly one Pattern-6 mechanic | FACTION=S (29 hits/run, genuine signal matching `urban_political`'s own precedent), INFORMATION=B (1 hit/run), clean cross-isolation in both worlds; found and fixed a blocking, pre-existing, unrelated catalog bug (missing `stone` material registration) that had silently broken `resolve` for the whole corpus since 2026-07-04 |
-| TCK-20260704-SIMQ-CORPUS-UNIT-WORLD-SELFMODEL-PILOT | Authored `unit_selfmodel_pilot` — first-ever multi-entity (16), multi-tick, multi-seed live evidence for Branch B's self-model mechanism, previously proven only via a single hand-built unit test | COGNITION=S (3200 hits/run = 16 entities × 200 ticks, genuine), INFORMATION=C (0 events, correctly predicted since `InformationBeliefPhase` is structurally unreachable with `ENABLE_BELIEF_ASSIMILATION` absent — not a bug); all 3 of Branch-B's original fixes reconfirmed still in place; no genuine bug found |
-| TCK-20260704-SIMQ-CORPUS-UNIT-WORLD-AGENCY | Authored `hero_guild_routing` — new routing-capable world at real archetype scale, `ENABLE_ADVENTURE_ROUTING` ON by design | Does not reverse the AGENCY-DA ruling for any existing world |
-| TCK-20260704-SIMQ-CORPUS-E2E-CONTENT-EXPANSION | Authored bespoke, archetype-matched FACTION/INFORMATION content into 8 of the 10 original worlds | Direct answer to "why does only `urban_political` have this content"; drift-checked and re-anchored per-world |
-| TCK-20260704-SIMQ-CORPUS-STRESS-WORLDS | Authored `crowded_frontier`, `resource_dense_basin`, `frontier_marches` — filling named scale-diversity gaps (many-factions/small-map, resource-density decoupled from map size, gated content at large scale) | 3 new stress-tier worlds, anchored |
-| TCK-20260704-SIMQ-CORPUS-FACTION-RELATIONSHIPS | Folds in `docs/plans/audit_fix_plan.md` P2-D. Expanded `data/content/social/faction_relationships.yaml` coverage | Global catalog content, benefits every world simultaneously |
-| TCK-20260704-SIMQ-CORPUS-SCENARIO-FLAG-GUARDRAIL | Folds in P2-E. Added a static test (17 worlds, 7 functions, 55 cases) asserting per-world flag/content-field pairing, an AGENCY-DA anti-drift guard, and the structural fact that only 2 of 4 Pattern-6 fields are actually flag-gated | Lands last by design — covers the epic's own expanded flag surface; found and resolved a 26-pillar false-alarm regression (confirmed via fresh recalibration to be stale local calibration cache, not a real bug) |
-
-**Net effect on the calibration corpus:** 10 worlds → 17; 28-run/61-scenario anchor coverage;
-`make evaluate` confirms 0 regressions across all 610 pillars post-epic. All three of the user's
-binding decisions (AGENCY via new dedicated worlds only, Branch B via one isolated pilot world,
-hybrid template/bespoke content authoring by tier) were honored by every child ticket.
-
-**Open follow-up work (new, from this epic):**
-- None outstanding — the one process-level bug discovered mid-epic (missing `stone` material
-  catalog registration) was fixed directly as a blocking prerequisite in ticket 4, and the one
-  apparent regression found while finalizing ticket 10 was confirmed to be a stale local cache
-  artifact, not a real bug, and fully resolved before the epic closed.
-
----
-
-## SimQ Uplift Batch 4 (2026-07-07 / 2026-07-09)
-
-Ten tickets under `tickets/done/simq-deep-coverage/` (parent epic
-`TCK-20260707-SIMQ-DEEP-COVERAGE-EPIC`), the direct follow-up to the "SimQ Corpus Tiers Epic"
-above. Where that epic diversified the corpus (10→17 worlds), this one closed the long-run blind
-spot it left behind: pre-epic, only 3 of 17 worlds (`dungeon_crawl`, `sandbox_world`,
-`urban_political`) had any anchor >=1000 ticks, and across all 11 existing long-run anchors
-AGENCY/COMBAT/PROGRESSION/WORLD grades were literally invariant — masking drift the short-run
-corpus already showed those pillars capable of (peak grades in `unit_selfmodel_pilot`,
-`unit_faction_tension`, `hero_guild_routing`, `simq_routing_test`, none of which had ever run past
-500t).
-
-**Thread 1 — Long-run coverage (capped at <=2000t per explicit user direction):** 4 relocated
-resource/coverage-gap tickets landed first (so the long-run anchors would not measure against
-known-broken content), then `TCK-20260707-SIMQ-LONGRUN-HOTPILLAR-ANCHORS` added new 1000t/2000t
-anchors for the worlds already known to drive those 4 pillars to peak grades, and
-`TCK-20260707-SIMQ-GENERATED-FRONTIER-BASELINE-ANCHORS` established `generated_frontier_3_42`'s
-first-ever grade anchors (200t + 1000t) — this world had zero anchors at any tick count before
-this batch.
-
-**Thread 2 — Pillar completeness:** `TCK-20260707-SIMQ-PILLAR-COMPLETENESS-DOC` documented the
-conclusion that no 11th top-level pillar is justified (4 candidate dimensions — determinism,
-performance, checkpoint integrity, catalog health — are each already owned by dedicated systems
-outside SimQ); `TCK-20260707-SIMQ-BUILDING-SABOTAGE-SIGNAL` closed the one genuine gap found
-(`building_sabotage`, pipeline phase 15, previously invisible to all 10 pillars) as a new
-WORLD-pillar scoring rule, not a new pillar.
-
-| Ticket | What it did |
-|---|---|
-| TCK-20260707-HERO-GUILD-ROUTING-RESOURCE-TAG-GAP | Fixed `hero_guild_routing`'s resource-tag gap before its long-run anchor |
-| TCK-20260706-SIMQ-URBAN-POLITICAL-HOMETOWN-RESOURCE-GAP | Resolved `urban_political`'s dormant hometown resource gap before its 2000t extension |
-| TCK-20260706-SIMQ-CORPUS-RESOURCE-REGION-COVERAGE-AUDIT | Corpus-wide resource/region coverage audit |
-| TCK-20260707-CORPUS-POPULATION-STABILITY-COVERAGE-GAP | Extended `test_population_stability`/`test_hazard_kind_completeness` coverage to the worlds this epic anchors at long run — surfaced the two population-collapse defects fixed below |
-| TCK-20260706-DOCS-REGISTRY-MISSING-FRONTMATTER | Doc-hygiene chore (parallel) |
-| TCK-20260707-EPIC-SCOPE-INVESTIGATION-DOC-MISSING | Doc-traceability chore (parallel) |
-| TCK-20260707-SIMQ-LONGRUN-HOTPILLAR-ANCHORS | Added the 1000t/2000t hot-pillar anchors (`unit_selfmodel_pilot`, `unit_faction_tension` incl. 2000t, `hero_guild_routing`, `simq_routing_test`, `urban_political` 2000t) |
-| TCK-20260707-SIMQ-GENERATED-FRONTIER-BASELINE-ANCHORS | Established `generated_frontier_3_42`'s first-ever anchors (200t x3 seeds + 1000t seed42); surfaced the tick-800→1000 collapse fixed below |
-| TCK-20260707-SIMQ-PILLAR-COMPLETENESS-DOC | Documented the pillar-completeness conclusion — no 11th pillar justified |
-| TCK-20260707-SIMQ-BUILDING-SABOTAGE-SIGNAL | Added `building_sabotaged` event emission + WORLD-pillar scoring rule for the one genuine gap found |
-
-**Net effect on the calibration corpus:** 6 new long-run anchors (1000t/2000t, within the explicit
-<=2000t cap) plus `generated_frontier_3_42`'s first-ever anchors (200t x3 + 1000t) — corpus grew
-from 61 scenarios/17 worlds to **71 scenarios/17 worlds** (re-verified 2026-07-10: `FAST_ANCHOR_KEYS`
-53 + `SLOW_ANCHOR_KEYS` 18 = 71 in `tests/simulation_quality/test_grade_regression.py`, matching
-71 non-metadata `run_key` entries in `tests/simulation_quality/fixtures/grade_anchors.json`). No
-new top-level pillar added; `building_sabotage` closed as a WORLD-pillar rule instead.
-
-**Byproduct defects found and fixed — population collapse (2026-07-08):** The long-run anchoring
-work in Thread 1 surfaced two genuine, previously-latent population-collapse defects — both the
-same bug class (the worldassembly resolver's `hazard_kind` default of `"PHYSICAL"` matching no
-faction's declared `hazard_immunities`, causing unconditional lethal hazard drain in a
-never-declared region) but independent, per-module root causes — each spun into its own
-standalone ticket rather than fixed in-epic:
-
-- **`TCK-20260708-DUNGEON-URBAN-POPULATION-COLLAPSE`** — `dungeon_crawl` failed
-  `test_population_stability` at tick 50 (43.8% alive, early-tick collapse) and `urban_political`
-  failed it at tick 300 (56.7% alive, gradual erosion). Root cause: `ruins_mystery_quest.yaml` /
-  `scalable_bandit_camp.yaml` (dungeon_crawl) and `trading_company_hub.yaml` (urban_political,
-  compounded by a stale compiled artifact) never declared `hazard_kind` for hazardous, populated
-  regions. Fixed via 3 targeted content edits plus one new `merchant_league` hazard-immunity
-  entry; post-fix `dungeon_crawl` holds 100% alive through tick 50, `urban_political` holds 93.3%
-  through tick 300. Both `xfail` markers (added when the coverage gap was first surfaced) were
-  removed once each world confirmed a plain `PASSED`.
-- **`TCK-20260708-GENERATED-FRONTIER-LATE-TICK-POPULATION-COLLAPSE`** — `generated_frontier_3_42`
-  held through tick 800 (81.8%→63.6%) then collapsed to 9.1% by tick 1000, a distinct late-cliff
-  shape. Root cause: `moon_cult_ruins.yaml`'s `moon_cave` region (same bug class, new
-  `hazard_kind: "ARCANE_CORRUPTION"` value — its first content use) never declared `hazard_kind`
-  for `arcane_circle`'s population. Fixed via the matching content declaration plus a new
-  `arcane_circle` `hazard_immunities` entry and one recompile. Also surfaced a genuine,
-  **not fixed**, architecture finding: the engine's wall-clock-dependent tick-budget
-  emergency-throttle (`docs/engine/kernel.md` §"Emergency Throttling") causes real run-to-run
-  population variance past roughly tick 300-400 (two identical-seed pre-fix runs diverged by 100+
-  ticks in floor-violation onset and by more than 2x at tick 1000) — intentional, corpus-wide
-  engine behavior, explicitly out of scope to change. A new tolerance-based regression guard
-  (`test_generated_frontier_3_42_extended_population_stability`, averaged across 3 same-seed
-  trials at tick 900/1000) was added to catch a genuine future regression without false-failing on
-  this legitimate variance.
-
-Both tickets' `docs/parity_ledger/world_dynamics.yaml` WORLD-029/WORLD-060 `v2_evidence` entries
-were re-verified current (still citing both ticket IDs, `status: verified`) by this doc's own
-`SIMQ-AUDIT-20260710T020542Z` Classify Drift pass — `NO_ACTION` on both, no further edit needed.
-
-**Open follow-up work (new, from this batch):** — **RESOLVED 2026-07-11**
-- `town_council`'s `frontier_guard`/`bandit_road` hazard-immunity gap (shared by `dungeon_crawl`
-  and `urban_political`) was deliberately left unfixed by both population-collapse tickets,
-  pending a future ticket resolving whether it is intentional conflict-pressure flavor or a
-  genuine gap — check both tickets' existing "left open" notes before filing a duplicate.
-  **Resolution (`TCK-20260710-TOWN-COUNCIL-HAZARD-DA`):** ruled intentional — non-native,
-  contested-road-posted forces enduring unmitigated drain by design, consistent with
-  `docs/mechanics/05_world_evolution.md` §3's opt-in, faction-declared endurance model. Recorded
-  as `docs/guidelines/intentional_divergences.md` §2.30. Blast-radius check confirmed
-  `town_council` is populated in exactly this one hazardous region corpus-wide. Zero code/content
-  changes. A companion ticket, `TCK-20260710-HAZARD-KIND-CORPUS-WIDE`, separately made the
-  corpus-wide `hazard_kind` completeness check unconditional (all 17 worlds, replacing a 3-world
-  allowlist) — the dry run found `bandit_road` already passes the test's region-level matching
-  regardless of this ruling, since `bandit_company`/`merchant_league` are both immune there.
-
----
-
-## Actionable Next Steps (as of 2026-07-01)
-
-> **Superseded as the live action list by `docs/plans/simq_development_roadmap.md`** (2026-07-10) —
-> the table below is historical (all items from the 2026-07-01 snapshot are resolved; kept for
-> traceability, not as a current task list). For what's actually next, see the roadmap doc's 6-phase
-> sequence and ticket-count estimates.
-
-| Priority | Action | Rationale |
-|---|---|---|
-| P1 | ~~Run `tools/calibrate_simq.py` against `dungeon_crawl` and `urban_political` worlds~~ — **RESOLVED 2026-07-02** (TCK-20260701-SIMQ-CALIBRATE-REFRESH) | Re-ran dungeon_crawl 200t/1000t and urban_political 200t post-emit-epic. Fresh grades: dungeon_crawl 200t COMBAT=A/NARRATIVE=B/PROGRESSION=B/WORLD=A; dungeon_crawl 1000t unchanged (B/B/B/B); urban_political 200t unchanged (B/A/B/A). One grade shift: dungeon_crawl 200t PROGRESSION A→B (new plateau emitter adds negative deltas). calibration_hits updated: `progression_plateau_detected` now 18 corpus-wide. grade_anchors.json updated. See `docs/plans/audit_fix_plan.md` corpus table. |
-| P1 | ~~Investigate AGENCY zero-score~~ — **RESOLVED**, not a scorer/emitter bug | `route_selected`/`action_executed`/`route_family_first_use` all depend on `property_updates["last_routing_family"]`, written only inside `AdventureDecisionPhase` (`src/domains/adventure/phase.py`), which is gated by `ENABLE_ADVENTURE_ROUTING` (`src/domains/optimization/feature_flags.py:16`). The flag defaults `OFF`, so the phase short-circuits in sandbox_world and every other default-mode calibration run — zero AGENCY events is the correct outcome, not a diff-condition defect. `simq_routing_test` (flag forced `ON`) confirms AGENCY scores B once the phase runs. Root cause tracked as `P0-A` in `docs/plans/audit_fix_plan.md`; see TCK-20260701-SIMQ-AGENCY-ROUTING-DOC. |
-| P2 | ~~Tune loop detection window for `hazard_active` and `quest_active`~~ — **RESOLVED 2026-07-02** (TCK-20260701-SIMQ-LOOP-WINDOW-TUNE) | Empirical sweep (window_size ∈ {100,150,200,300}) on sandbox_world (47 events/200t) and dungeon_crawl (287 events/200t): zero grade change across all window sizes. Total event density too low for window to fill in 200-tick runs — loop detection is dormant, not suppressing signal. Decision: 200/0.70 confirmed correct. `--window-size`/`--loop-threshold` CLI overrides added to calibrate_simq.py for future sweeps. `quality_scoring_contract.md §4.7` updated. |
-| P2 | ~~Investigate `early_extinction` penalty at tick 8 — sandbox_world entities 16–20 are weak~~ — **RESOLVED**, was a world-data balance bug, now fixed | Confirmed a three-part root-cause chain, each falsified/fixed in sequence across `TCK-20260701-SANDBOX-MONSTER-BALANCE`'s three attempts: (1) `sandbox_world`'s original `worldtemplate.v1` schema hardcoded flat stats (`hp=100/atk=10/def=0`) for every entity regardless of role — fixed by migrating to `worldcomposition.v1` with real catalog stats (`TCK-20260701-SANDBOX-WORLDCOMP-MIGRATE`); (2) even with real stats, monsters still died — root-caused via direct event-log inspection to `woods`/`wolf_den`'s own `hazard_level` environmental drain self-killing the `wild_beast_pack` faction in its own habitat (15 dmg/tick, independent of combat or proximity to `town_center`) — fixed by the typed `hazard_kind`/`hazard_immunities` exemption mechanism (`TCK-20260701-HAZARD-NATIVE-IMMUNITY`); (3) a resolver plumbing gap (`RegionRecipeSpec`/`WorldAssemblyResolver` not forwarding `hazard_kind`) blocked the fix from taking effect for `sandbox_world` specifically until `TCK-20260701-HAZARD-KIND-RESOLVER-GAP` (hotfix) landed. Final empirical verification (`sandbox_world` recompiled, seed 42 hash `836b45e8913b46862240c6ba80f177f6`, seed 137 hash `7e8ae05dbeffccb8edd65fd9754787aa`): **0/5 monster deaths at both seeds across a full 200-tick run**, zero `hazard_drain_applied` events against `wild_beast_pack`-faction entities standing in `NATURAL_TERRAIN`-kind regions — exceeds the original acceptance bar ("some early attrition is fine; a total cohort wipe is not"). Regenerated `sandbox_world_*` calibration anchors show the `early_extinction` penalty no longer firing (COMBAT pillar `event_count=0` at seed 42/137 200t, consistent with `ENABLE_COMBAT_ENGAGEMENT` defaulting off in the calibration harness — not a masking artifact, since the hazard-drain death mechanism that originally caused the wipe is not gated by that flag and is independently confirmed absent). See `TCK-20260701-SANDBOX-MONSTER-BALANCE` (done) for full attempt-by-attempt evidence. |
-| P3 | Add `camp_constructed` to the "no engine path" exclusion list in event_type_coverage.md | Already documented; formally remove it from the 82-event scored set if the mechanic is not planned. |
+*Superseded as the live action list by `docs/plans/archive/simq_development_roadmap.md` (archived
+2026-07-13, all 6 phases complete) — this document is the historical wiring/calibration record, not
+a current task list. No open follow-up work remains from any batch above.*
