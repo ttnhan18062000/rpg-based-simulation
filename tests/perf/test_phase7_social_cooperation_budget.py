@@ -4,6 +4,7 @@ tests/perf/test_phase7_social_cooperation_budget.py
 Phase 7 Performance and Strategic Budget Tests.
 """
 
+import statistics
 import time
 import pytest
 from src.core.state import AuthoritativeState
@@ -45,14 +46,24 @@ def test_cooperation_phase_performance_budget_100_entities():
     for _ in range(5):
         CooperationPhase.execute(state, update)
         
-    t_start = time.perf_counter()
     iterations = 20
+    durations_ms = []
     for _ in range(iterations):
+        t0 = time.perf_counter_ns()
         refined = CooperationPhase.execute(state, update)
-    t_duration = ((time.perf_counter() - t_start) * 1000.0) / iterations # Average ms per execute
-    
-    print(f"\n[PERF] Phase 7 average execution speed for 100 entities: {t_duration:.2f}ms")
-    
-    # Must stay strictly inside agreed budget of < 25.0ms for 100+ entities after averaging JIT/interpreter cost on VM
-    assert t_duration < 25.0
+        durations_ms.append((time.perf_counter_ns() - t0) / 1e6)
+
+    # Median rather than mean: a single VM-scheduler-induced spike among 20
+    # samples must not fail the whole run (observed in practice — see
+    # TCK-20260712-SIMQ-COOPERATION-SOCIAL-STALE-TESTS).
+    median_duration = statistics.median(durations_ms)
+
+    print(f"\n[PERF] Phase 7 median execution speed for 100 entities: {median_duration:.2f}ms "
+          f"(samples: {[round(d, 2) for d in durations_ms]})")
+
+    # Must stay strictly inside agreed budget of < 25.0ms for 100+ entities.
+    assert median_duration < 25.0, (
+        f"Median duration {median_duration:.2f}ms exceeds 25.0ms budget across {iterations} samples: "
+        f"{[round(d, 2) for d in durations_ms]}"
+    )
     assert refined.metric_counters["cooperation_evaluations"] == 50

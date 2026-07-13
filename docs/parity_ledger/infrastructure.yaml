@@ -3959,3 +3959,35 @@
     RUMOR branch that would populate it is not covered by test_path here and remains a latent gap
     for a future ticket that adds source_kind-driven answer_kind branching. See INFRA-266 for the
     historical pre-fix root-cause record (left untouched).
+- id: INFRA-268
+  text: >
+    §9 Traceability Design drill-down path, steps 1-3 (QualityReport -> low-grade pillar ->
+    worst_events[:5] -> ScoreRecord.event_id -> cross-reference in
+    data/runs/{run_id}/simulation_events.jsonl), is now covered end-to-end by an integration test
+    (TCK-20260711-SIMQ-TRACEABILITY-PATH-INTEGRATION-TEST). Prior to this ticket the underlying
+    mechanism (event_id=envelope.event_id set identically by all 10 scorers, and the same envelope
+    written to simulation_events.jsonl by EventRecorder) was verified correct by direct code read
+    only (TCK-20260710-SIMQ-CONTRACT-AC-CLOSEOUT); no test asserted the cross-reference. Steps 4-6
+    of §9 (cognition_graph_snapshots.jsonl, world.yaml/compiled state, root-cause library) remain
+    out of scope for this entry.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/observability/event_recorder.py (EventRecorder writes each envelope, including
+    envelope.event_id, to data/runs/{run_id}/simulation_events.jsonl); the ten scorers under
+    src/simulation_quality/scorers/ (combat.py, economy.py, social.py, faction.py, information.py,
+    narrative.py, cognition.py, agency.py, progression.py, world_dynamics.py) each construct their
+    ScoreRecord with event_id=envelope.event_id; src/simulation_quality/persistence.py
+    (QualityPersistence.write persists ScoreRecord.event_id to quality_scores.jsonl). This
+    propagation chain is now exercised end-to-end by
+    tests/simulation_quality/test_traceability_path.py::test_worst_event_id_resolves_in_simulation_events_jsonl
+    and ::test_worst_event_id_matches_originating_envelope_exactly (injects a
+    combat_hard_law_violation SimulationEvent via a minimal Kernel, asserts the resulting
+    worst_events[0].event_id from the in-memory QualityReport resolves to, and matches the
+    originating fields of, an entry in the same run's simulation_events.jsonl) -- passes.
+  proof_type: regression
+  test_path: >
+    tests/simulation_quality/test_traceability_path.py::test_worst_event_id_resolves_in_simulation_events_jsonl;
+    tests/simulation_quality/test_traceability_path.py::test_worst_event_id_matches_originating_envelope_exactly
+  divergence_note: null

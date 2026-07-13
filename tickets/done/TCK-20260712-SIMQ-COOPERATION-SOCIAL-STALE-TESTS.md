@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: simulation
 authority: P1
 audience: agent
 ticket_id: TCK-20260712-SIMQ-COOPERATION-SOCIAL-STALE-TESTS
-phase: open
+phase: done
 date: 2026-07-12
 tags: [simulation-quality]
 ---
@@ -16,7 +16,7 @@ tags: [simulation-quality]
 not caused by SOCIAL-pillar activation
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -75,8 +75,8 @@ stashed out).
   `composition_score` is an unintended leak rather than a real field.
 
 ## Acceptance Criteria
-- [ ] All 3 tests pass (or the perf test's flakiness is resolved with a documented margin).
-- [ ] Root cause of `composition_score`'s presence (intentional vs. leak) is documented.
+- [x] All 3 tests pass (or the perf test's flakiness is resolved with a documented margin).
+- [x] Root cause of `composition_score`'s presence (intentional vs. leak) is documented.
 
 ## Related Tickets
 - `TCK-20260710-SIMQ-DEPTH-SOCIAL` (done) — discovered these failures during its Step 6 regression
@@ -103,9 +103,46 @@ None yet — filed directly from a sibling ticket's Verify-phase finding, hotfix
   determined — flagged for Investigate.
 
 ## Implementation Notes
+1. **`composition_score` — confirmed intentional durable state, not a leak.** It's a typed field
+   on `src/core/state.py:571` (`composition_score: float = 0.0  # PartyCompositionScorer result at
+   formation (SOC-232)`), set by `src/systems/world_systems/groups.py:322` from
+   `PartyCompositionScorer.score()` (`src/systems/social_systems/party_composition.py`), and
+   already cited by parity ledger entry `SOC-232` (`docs/parity_ledger/social_narrative.yaml`).
+   Added `composition_score` to `test_group_lifecycle_fields.py`'s `EXPECTED_KEYS` set with a
+   citation comment — no `src/` change needed.
+2. **Scenario test assertions updated** to match the already-shipped serialization fix
+   (`src/domains/cooperation/phase.py:139`, untouched): `last_cooperation_decision` is now asserted
+   as `CooperationPosture.X.value` (a plain string) instead of a `.selected_posture` attribute
+   access on a non-existent object. The dropped `decision.selected_partner_id == 2` assertion in
+   `test_scenario_7_1` was replaced with an equivalent check on
+   `a_up.strategic.contracts_add_or_update[0].target_id == 2` — verified this is a faithful
+   equivalent, not a loosened check: `src/domains/cooperation/services.py:149,174` shows the
+   contract's `target_id` is derived directly from `decision.selected_partner_id`
+   (`partner_id = decision.selected_partner_id` then `target_id=partner_id`).
+3. **Perf budget test** switched from a single-sample average (`t_duration`) to a
+   `statistics.median` over the same 20 iterations, with per-sample values included in the
+   assertion failure message for diagnosability. Re-run independently 3 times after the fix:
+   medians of 17.21ms/16.96ms/16.94ms, comfortably inside the 25.0ms budget with real margin
+   (individual sample outliers up to 24.06ms no longer fail the run, matching the ticket's own
+   suggested fix — "a retry/percentile-based assertion").
 
 ## Test Summary
+- `pytest tests/unit/social/ tests/integration/scenarios/test_phase7_social_cooperation_scenarios.py
+  tests/perf/test_phase7_social_cooperation_budget.py -q` → 191 passed (previously 3 failing)
+- Perf test re-run independently 3 times to confirm stability post-fix: all passed, medians
+  16.94-17.21ms (budget: 25.0ms)
 
 ## Files Changed
+- `tests/unit/social/test_group_lifecycle_fields.py`
+- `tests/integration/scenarios/test_phase7_social_cooperation_scenarios.py`
+- `tests/perf/test_phase7_social_cooperation_budget.py`
 
 ## Completion Summary
+Fixed all 3 pre-existing, unrelated test failures found during `TCK-20260710-SIMQ-DEPTH-SOCIAL`'s
+regression pass. `composition_score` confirmed as intentional typed durable state (SOC-232,
+`PartyCompositionScorer`), added to the canonical-dict test's allowlist. The 2 scenario test
+assertions were updated to match the already-shipped `last_cooperation_decision` serialization fix
+(string, not object) — no production code changed, `src/domains/cooperation/phase.py` untouched
+per Out of Scope. The perf budget test's flakiness was resolved with a median-based measurement
+across the same 20 samples, verified stable across 3 independent re-runs. All 191 tests in the
+scoped regression surface pass.

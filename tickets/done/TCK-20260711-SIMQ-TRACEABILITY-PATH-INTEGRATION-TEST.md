@@ -101,9 +101,63 @@ the integration test asserting this explicitly, per §12's literal wording.
   should extend the fixture rather than introduce a second, divergent test harness.
 
 ## Implementation Notes
+Implemented per `staging_artifacts/TCK-20260711-SIMQ-TRACEABILITY-PATH-INTEGRATION-TEST/plan.md`
+Steps 1-7 with no logic deviations:
+
+- Created `tests/simulation_quality/test_traceability_path.py` with a `minimal_kernel` fixture
+  (real `run_id="simq-traceability-test"`, no `QUALITY_RUN_DIR`, teardown reads
+  `kernel._event_recorder.filepath` and `shutil.rmtree()`s its parent dir), matching
+  `tests/integration/observability/test_run_artifact_flow.py`'s `clean_runs` pattern and the
+  investigation's resolved-decision recommendation (option (a): real run_dir, not a
+  monkeypatched `base_dir`).
+- Added `test_worst_event_id_resolves_in_simulation_events_jsonl`: injects one
+  `combat_hard_law_violation` `SimulationEvent` (unconditional -30.0 weight, no tick-gate,
+  `src/simulation_quality/scorers/combat.py:111-112`), asserts `report.pillars["COMBAT"].worst_events`
+  is non-empty (unconditional precondition assertion, not a vacuous `if`-guard), then asserts
+  `worst_events[0].event_id` is present in the run's `simulation_events.jsonl`.
+- Added `test_worst_event_id_matches_originating_envelope_exactly`: same injection, but asserts
+  exactly one matching JSONL line and checks `event_type`/`tick`/`entity_id` match the injected
+  values exactly.
+- Added `test_run_directory_cleaned_up_after_test`: constructs a second `Kernel` with the same
+  `RUN_ID`, shuts it down, `shutil.rmtree()`s its run dir, asserts the directory no longer exists —
+  an explicit, pytest-verifiable guard independent of fixture teardown ordering.
+- Ran the new file alone (3 passed), together with the reference pattern
+  (`test_kernel_simq_integration.py` + `test_quality_hub_integration.py`, 17 passed total, no
+  regression), and the full `tests/simulation_quality/` suite (463 passed, 2 skipped — pre-existing
+  broker-mode skips, unrelated to this change). No stray `data/runs/simq-traceability-test/`
+  directory found after any run.
+- Added `INFRA-268` to `docs/parity_ledger/infrastructure.yaml`, additive-only, `status: verified`,
+  `priority: P1`. Deviated slightly from the plan's literal YAML snippet by also including
+  `proof_type` and `test_path` fields — `docs/parity_ledger/schema.json` requires `test_path` as a
+  hard field whenever `status` is `verified`; the plan's snippet (which listed only `id`, `text`,
+  `status`, `priority`, `legacy_evidence`, `v2_evidence`) would have failed schema validation.
+  Verified full-file YAML validity and per-entry schema conformance for the new entry directly
+  (a pre-existing, unrelated entry — `SIMQ-CALIBRATED-001` — already violates the `id` regex and
+  is untouched by this change).
+- Flipped `docs/simulation_quality/quality_scoring_contract.md` §12 Traceability item 3 from `[ ]`
+  to `[x]`, citing both new test names and the resolution date; removed the "confirmed genuine
+  gap" / follow-up-ticket language since this ticket is that follow-up, now closed.
+- Cleaned `data/runs/` (removed `simq-wire-test` left by the reference test's own run and confirmed
+  no `simq-traceability-test` directory existed).
 
 ## Test Summary
+- `pytest tests/simulation_quality/test_traceability_path.py -v` — 3 passed.
+- `pytest tests/simulation_quality/test_kernel_simq_integration.py tests/simulation_quality/test_quality_hub_integration.py tests/simulation_quality/test_traceability_path.py -v` — 17 passed, no regression in the reference pattern.
+- `pytest tests/simulation_quality/ -q` — 463 passed, 2 skipped (pre-existing broker-mode skips).
+- `find data/runs -maxdepth 1 -type d` — empty of any `simq-traceability-test` directory after every run.
+- `python3 -c "import yaml; yaml.safe_load(open('docs/parity_ledger/infrastructure.yaml'))"` — loads cleanly; new `INFRA-268` entry independently checked against `schema.json`'s per-item `required`/`if`/`then` rules.
 
 ## Files Changed
+- `tests/simulation_quality/test_traceability_path.py` (new)
+- `docs/parity_ledger/infrastructure.yaml` (additive: `INFRA-268`)
+- `docs/simulation_quality/quality_scoring_contract.md` (§12 Traceability item 3 checkbox flip)
 
 ## Completion Summary
+Added an integration test proving the §9 Traceability Design drill-down path (steps 1-3) holds
+end-to-end: a `combat_hard_law_violation` event injected into a minimal `Kernel` produces a
+`ScoreRecord` whose `event_id` lands in the COMBAT pillar's `worst_events` and is verifiably
+present, with matching fields, in that run's `simulation_events.jsonl`. No production code changed
+— this closes a test-coverage gap identified by `TCK-20260710-SIMQ-CONTRACT-AC-CLOSEOUT`, not a
+functional bug. `docs/parity_ledger/infrastructure.yaml::INFRA-268` and
+`quality_scoring_contract.md` §12's Traceability item 3 are both updated to reflect the closed gap.
+All acceptance criteria met; all scoped tests pass; no stray run directories remain.

@@ -47,26 +47,26 @@
   "dungeon_crawl_seed42_200t": {
     "COGNITION": "C",
     "AGENCY": "C",
-    "COMBAT": "A",
+    "COMBAT": "C",
     "FACTION": "S",
     "ECONOMY": "C",
-    "PROGRESSION": "A",
+    "PROGRESSION": "C",
     "SOCIAL": "C",
     "INFORMATION": "C",
     "WORLD": "B",
-    "NARRATIVE": "B"
+    "NARRATIVE": "C"
   },
   "urban_political_seed42_200t": {
-    "COMBAT": "A",
+    "COMBAT": "B",
     "NARRATIVE": "A",
-    "PROGRESSION": "A",
+    "PROGRESSION": "C",
     "AGENCY": "C",
     "COGNITION": "B",
     "ECONOMY": "C",
     "FACTION": "S",
     "INFORMATION": "B",
     "SOCIAL": "S",
-    "WORLD": "A"
+    "WORLD": "B"
   },
   "simq_routing_test_seed42_500t": {
     "COMBAT": "C",

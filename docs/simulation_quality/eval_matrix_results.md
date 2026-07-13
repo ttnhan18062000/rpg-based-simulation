@@ -206,6 +206,22 @@ and reassess these grades.
 > the grade tables above are unaffected (population was not the driver of any pillar's grade in
 > this world).
 
+> **NOTE (2026-07-13 — `TCK-20260712-SIMQ-DUNGEON-URBAN-ANCHOR-DRIFT`):** the "unaffected" claim
+> in the NOTE above did not hold at the shorter 200t window — the 500t/1000t/2000t tables here were
+> the only ones re-verified at the time, and `dungeon_crawl_seed42_200t`'s COMBAT/PROGRESSION/
+> NARRATIVE drifted beyond the +/-1-grade tolerance band (COMBAT A to C, PROGRESSION A to C,
+> NARRATIVE B to C), flagged as a `REGRESS` by `tools/evaluate_simq.py`. Root cause confirmed as
+> the same population-collapse fix (commit `b142ef5d`, same as the NOTE above) — no other commit
+> touched this world's content between then and this ticket. The effect is real but
+> window-size-dependent: at 200 ticks the population-survival change dominates a smaller sample of
+> total events, producing a 2-grade swing; by 500t+ the same underlying behavior change washes out
+> to within the existing tolerance band (all `dungeon_crawl`/`urban_political` sibling seed/tick
+> anchors were independently re-checked and confirmed already within tolerance — no other entries
+> needed updating). `grade_anchors.json`'s `dungeon_crawl_seed42_200t` entry was updated in place
+> to the live values (COGNITION=C, AGENCY=C, COMBAT=C, FACTION=S, ECONOMY=C, PROGRESSION=C,
+> SOCIAL=C, INFORMATION=C, WORLD=B, NARRATIVE=C); `tools/evaluate_simq.py --dry-run` now shows 0
+> regressions corpus-wide.
+
 ---
 
 ### urban_political
@@ -269,6 +285,18 @@ see the AGENCY Cross-World Design Note below for why that is archetype-correct, 
 > long-run (2000t) `Hypothesis 4 — SOCIAL persistence` section further below — that section is
 > retained as a historical record of the pre-fix investigation and not rewritten in place, per this
 > document's existing convention.
+
+> **NOTE (2026-07-13 — `TCK-20260712-SIMQ-DUNGEON-URBAN-ANCHOR-DRIFT`):** as with `dungeon_crawl`
+> above, the "unaffected" claim did not hold at the 200t window specifically —
+> `urban_political_seed42_200t`'s COMBAT/PROGRESSION/WORLD drifted (COMBAT A to B, PROGRESSION A to
+> C, WORLD A to B), with PROGRESSION's 2-grade swing flagged as a `REGRESS` by
+> `tools/evaluate_simq.py` (COMBAT/WORLD's 1-grade swings stayed within tolerance). Same root cause
+> and same window-size-dependent mechanism as `dungeon_crawl` — see that world's 2026-07-13 NOTE
+> above for the full explanation; all `urban_political` sibling seed/tick anchors were independently
+> re-checked and confirmed already within tolerance. `grade_anchors.json`'s
+> `urban_political_seed42_200t` entry was updated in place to the live values (COMBAT=B,
+> NARRATIVE=A, PROGRESSION=C, AGENCY=C, COGNITION=B, ECONOMY=C, FACTION=S, INFORMATION=B, SOCIAL=S,
+> WORLD=B); `tools/evaluate_simq.py --dry-run` now shows 0 regressions corpus-wide.
 
 ---
 
