@@ -592,3 +592,4 @@
 {"run_id":"TCK-20260712-SIMQ-INFORMATION-ROUTING-CLOSURE","start_ts":"2026-07-13T00:20:00Z","end_ts":"2026-07-13T02:52:49Z","workflow":"implement-ticket","tier":"standard","final_status":"NEEDS_CHANGES","agent_count":6,"duration_s":9169}
 {"run_id":"TCK-20260712-SIMQ-INFORMATION-ROUTING-CLOSURE","start_ts":"2026-07-13T00:20:00Z","end_ts":"2026-07-13T03:44:56Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":10,"duration_s":12296}
 {"run_id":"TCK-20260713-SIMQ-COVERAGE-DECISION-GATE","start_ts":"2026-07-13T04:08:48Z","end_ts":"2026-07-13T04:20:00Z","workflow":"implement-ticket","tier":"hotfix","final_status":"DONE","agent_count":0,"duration_s":672}
+{"run_id":"CREATE-TICKETS-DOCS-PLANS-AGENT-INFRASTRUCTURE-IDEA-AGENT-MONITORING-DERIVED-INDEX","start_ts":"2026-07-13T04:25:10Z","end_ts":"2026-07-13T04:33:25Z","workflow":"create-tickets","tier":"n/a","final_status":"DONE","agent_count":10,"duration_s":495}
