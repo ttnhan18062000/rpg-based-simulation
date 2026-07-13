@@ -1,14 +1,20 @@
 ---
-status: idea
+status: historical
 layer: ai
 authority: P2
 audience: developer
-maturity: idea
+maturity: shipped
 date: 2026-07-03
+archived: 2026-07-13
 tags: [idea, agent-infrastructure, observability, cost, tokens, model-routing]
 ---
 
 # Idea: Agent Spend & Token Observability Layer
+
+**Archived:** 2026-07-13 — Tier 1 shipped by `TCK-20260708-AGENT-COST-OBSERVABILITY`
+(`tickets/done/`); Tier 2 (`self_reported_scope`) deliberately deferred as stretch-only (no ticket,
+no demonstrated need yet) and Tier 3 remains platform-blocked, both by design rather than left
+incomplete; this document is the historical design reference.
 
 > **Maturity: SHIPPED (Tier 1).** Implemented by `TCK-20260708-AGENT-COST-OBSERVABILITY`
 > (`tickets/done/`) under `TCK-20260708-AGENT-INFRA-HARDENING-EPIC`. `cost_proxy_score` is computed
@@ -23,11 +29,11 @@ tags: [idea, agent-infrastructure, observability, cost, tokens, model-routing]
 > it; it remains available as a natural pickup once Tier 1's data has actually motivated a need for
 > it in practice. Tier 3 remains platform-blocked, unchanged. The sibling idea's `verified_by` field
 > (see below) landed via `gate-determinism-followups` (2026-07-05) and this idea's own vocabulary-cleanup
-> precondition landed via [`idea_agent_monitoring_schema_enforcement.md`](../archive/agent_infrastructure/idea_agent_monitoring_schema_enforcement.md) (archived — shipped)
+> precondition landed via [`idea_agent_monitoring_schema_enforcement.md`](idea_agent_monitoring_schema_enforcement.md) (archived — shipped)
 > (`TCK-20260708-AGENT-MONITORING-SCHEMA-ENFORCEMENT`), both satisfied before this ticket ran.
-> Originally raised directly from [`docs/ai/agent_infrastructure_audit.md`](../../ai/agent_infrastructure_audit.md)
+> Originally raised directly from [`docs/ai/agent_infrastructure_audit.md`](../../../ai/agent_infrastructure_audit.md)
 > (2026-07-03 score: 8.0/10 — the audit calls out lack of cost telemetry by name in both
-> Strengths-adjacent gaps and Recommendation 2). Sibling idea to [`idea_agent_gate_determinism.md`](../archive/agent_infrastructure/idea_agent_gate_determinism.md) (archived — shipped).
+> Strengths-adjacent gaps and Recommendation 2). Sibling idea to [`idea_agent_gate_determinism.md`](idea_agent_gate_determinism.md) (archived — shipped).
 
 ---
 
@@ -87,7 +93,7 @@ Longer-term, once cost-by-agent-type is visible for a few weeks, it becomes the 
 | `agent-monitoring/README.md` — "What It Does NOT Capture" | Token counts stay listed as not captured (still platform-blocked); the proxy should be described as a proxy, not silently presented as equivalent |
 | `writeMonitoring` (workflow finalize step) | Natural place to compute Tier 1 — it already reads `tools.jsonl` to derive `tool_call_count` today |
 | `make agent-monitoring-retro` | Where the payoff has to show up, or this is telemetry nobody looks at |
-| [`idea_agent_gate_determinism.md`](../archive/agent_infrastructure/idea_agent_gate_determinism.md) (archived — shipped) | Its `verified_by` field tells you which half of a gate is static vs. LLM-judged — exactly the split needed before a model-routing decision is defensible |
+| [`idea_agent_gate_determinism.md`](idea_agent_gate_determinism.md) (archived — shipped) | Its `verified_by` field tells you which half of a gate is static vs. LLM-judged — exactly the split needed before a model-routing decision is defensible |
 
 ---
 
