@@ -589,3 +589,5 @@
 {"run_id":"TCK-20260710-SIMQ-DEPTH-INFORMATION","start_ts":"2026-07-12T13:20:33Z","end_ts":"2026-07-12T16:11:34Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":10,"duration_s":10261}
 {"run_id":"FOLDER-tickets-todos-simq-roadmap-phase3-depth-faction-information","start_ts":"2026-07-12T08:57:41Z","end_ts":"2026-07-12T16:12:37Z","workflow":"implement-epic","tier":"epic","final_status":"DONE","agent_count":2,"duration_s":26096}
 {"run_id":"TCK-20260710-SIMQ-COGNITION-REALWORLD-GENERALIZE","start_ts":"2026-07-12T16:22:05Z","end_ts":"2026-07-13T00:26:38Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":13,"duration_s":29073}
+{"run_id":"TCK-20260712-SIMQ-INFORMATION-ROUTING-CLOSURE","start_ts":"2026-07-13T00:20:00Z","end_ts":"2026-07-13T02:52:49Z","workflow":"implement-ticket","tier":"standard","final_status":"NEEDS_CHANGES","agent_count":6,"duration_s":9169}
+{"run_id":"TCK-20260712-SIMQ-INFORMATION-ROUTING-CLOSURE","start_ts":"2026-07-13T00:20:00Z","end_ts":"2026-07-13T03:44:56Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":10,"duration_s":12296}

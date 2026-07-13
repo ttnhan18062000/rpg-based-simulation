@@ -3920,9 +3920,13 @@
     intent.payload; information-domain path closes the loop via
     InformationResponseNormalizer.normalize() -> InformationAssimilationService.assimilate() ->
     dataclass_replace(entity.self_model, knowledge=...), returned via
-    EntityUpdate.self_model_bundle_set; adventure-domain path unchanged, still reads
-    intent.payload.get("cost_gold", 0)); src/domains/information/router.py:102-103 explicitly
-    UNCHANGED (candidate sort key still (-expected_certainty, cost_gold), no affordability term)
+    EntityUpdate.self_model_bundle_set alongside strategic=assim.strategic_update
+    (src/engine/intent/action_intent.py:182 -- Architecture-Verify fix, added for parity with
+    Branch A's equivalent merge at phase.py:80; the reuse claim in this branch's comment was only
+    true for the knowledge/self_model_bundle_set half before this fix); adventure-domain path
+    unchanged, still reads intent.payload.get("cost_gold", 0));
+    src/domains/information/router.py:102-103 explicitly UNCHANGED (candidate sort key still
+    (-expected_certainty, cost_gold), no affordability term)
   proof_type: parity
   test_path: >
     tests/integration/domains/information/test_phase5_branch_b_realworld.py::test_branch_b_query_routing_fails_silently_on_real_urban_political_state;
@@ -3948,5 +3952,10 @@
     ENABLE_SELF_MODEL_COGNITION ON and leaves ENABLE_BELIEF_ASSIMILATION OFF). ActionIntentAdapter.
     execute() has no production tick-pipeline call site today (unchanged by this ticket) -- the
     close-the-loop fix (fix 5) is verified via direct test-harness invocation
-    (test_ask_information_intent_execution_closes_the_loop), not via live-gameplay activation;
-    see INFRA-266 for the historical pre-fix root-cause record (left untouched).
+    (test_ask_information_intent_execution_closes_the_loop), not via live-gameplay activation.
+    strategic=assim.strategic_update (action_intent.py:182) is currently functionally inert:
+    answer_kind is hardcoded to "KNOWN_FACT" above, which never populates response.leads, so no
+    existing test exercises a non-empty strategic_update through this path -- the PARTIAL_LEAD/
+    RUMOR branch that would populate it is not covered by test_path here and remains a latent gap
+    for a future ticket that adds source_kind-driven answer_kind branching. See INFRA-266 for the
+    historical pre-fix root-cause record (left untouched).

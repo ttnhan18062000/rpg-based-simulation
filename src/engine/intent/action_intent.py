@@ -179,6 +179,7 @@ class ActionIntentAdapter:
                 entity_id=entity.id,
                 inventory=InventoryUpdate(gold_delta=-gold_deduct),
                 self_model_bundle_set=new_bundle,
+                strategic=assim.strategic_update,
             )}
         else:
             router_payload["action"] = intent.kind
