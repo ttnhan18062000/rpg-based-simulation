@@ -11,6 +11,11 @@ audience: developer
 **Date:** 2026-07-02
 **Corpus expansion:** 8 anchor entries → 25 anchor entries
 
+**For the current, single-glance state of the corpus** (not this document's per-batch historical
+detail), see `docs/simulation_quality/current_state.md` — refreshed in place rather than layered
+with dated notes. This document remains the evidence trail for *why* each grade is what it is,
+batch by batch; that one is the answer to "where do things stand right now."
+
 ---
 
 ## Overview
