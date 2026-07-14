@@ -309,6 +309,13 @@ def test_data_runs_clean_status_appears_in_failure_recovery_reference_table():
     assert "DATA_RUNS_CLEAN_FAILED" in content
 
 
+def test_data_runs_clean_pre_verify_sweep_documented_in_done_checker_prompt():
+    doc_path = Path(__file__).parent.parent.parent / ".claude" / "agents" / "done-checker.md"
+    content = doc_path.read_text(encoding="utf-8")
+    assert "clean_data_runs_early" in content
+    assert "Step 0a" in content
+
+
 # ---------------------------------------------------------------------------
 # check_ticket_location
 # ---------------------------------------------------------------------------

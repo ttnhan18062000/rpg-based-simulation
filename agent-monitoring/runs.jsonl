@@ -609,3 +609,4 @@
 {"run_id":"TCK-20260713-SIMQ-COGNITION-LOOPDET-NONDETERMINISM","start_ts":"2026-07-14T04:45:34Z","end_ts":"2026-07-14T04:48:12Z","workflow":"implement-ticket","tier":"standard","final_status":"CONFLICTS_DETECTED","agent_count":1,"duration_s":158}
 {"run_id":"TCK-20260713-SIMQ-COGNITION-LOOPDET-NONDETERMINISM","start_ts":"2026-07-14T04:50:28Z","end_ts":"2026-07-14T07:43:59Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":10,"duration_s":10411}
 {"run_id":"TCK-20260713-SIMQ-ECONOMY-INTENT-GENERATION-GAP","start_ts":"2026-07-14T07:50:48Z","end_ts":"2026-07-14T11:59:19Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":10,"duration_s":14911}
+{"run_id":"TCK-20260714-DATA-RUNS-VERIFY-REGEN","start_ts":"2026-07-14T15:17:38Z","end_ts":"2026-07-14T16:11:52Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":10,"duration_s":3254}

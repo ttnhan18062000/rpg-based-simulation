@@ -314,6 +314,17 @@ cleaned successfully) the workflow proceeds silently to Parity. **Gate:** Return
 `DATA_RUNS_CLEAN_FAILED` only if deletion itself errors (e.g. permission/lock) — the user
 resolves manually and re-runs with `ticket_id`.
 
+**Reliability caveat (added by TCK-20260714-DATA-RUNS-VERIFY-REGEN):** direct evidence from
+`agent-monitoring/tools.jsonl` across 5+ weeks of runs found this checkpoint's own `bash()` call
+has never been observed to execute — as a bare, non-`phase()`-anchored block, the LLM orchestrator
+reading `implement-ticket.js` has no reliable translation-table anchor for it (see
+`stored_artifacts/TCK-20260714-DATA-RUNS-VERIFY-REGEN/investigation.md`). Its code and this
+paragraph are kept as documentation of intent and as a defense-in-depth no-op if the orchestrator
+ever does execute it, but it must not be relied on as the load-bearing cleanup mechanism. The
+Verify section below (`done-checker`'s Step 0a) carries the evidenced-reliable sweep that actually
+closes this gap, and subsumes this checkpoint's original post-Test purpose as well as covering
+later-phase (Parity/Verify) regeneration.
+
 ---
 
 ### Parity
@@ -357,10 +368,18 @@ no P0 entry's `v2_evidence` depends on a changed file; if it does, the full agen
 
 **Agent:** `done-checker`
 
-**Step 0:** Before judging conditions 3, 4, 7, 10, 12 by hand, `done-checker` runs
-`tools/gate_checks/done_checker_static.py::run_static_precheck(ticket_id, tier, start_ts)` and cites
-its PASS/FAIL/NA + evidence output verbatim for those five conditions, then self-reports a
-`verified_by` field listing which conditions came from the script vs. pure judgment.
+**Step 0a (added by TCK-20260714-DATA-RUNS-VERIFY-REGEN):** before anything else, `done-checker`
+runs `tools/gate_checks/done_checker_static.py::clean_data_runs_early(start_ts)` and auto-cleans
+any `data/runs/*` / `reports/release_proof/*` this session has produced up to this point —
+including artifacts Parity's or `done-checker`'s own re-verification pytest runs regenerated after
+the post-Test checkpoint (above) ran or was skipped. A deletion-error result here is folded
+directly into condition 10 rather than raising a separate blocking status.
+
+**Step 0b:** Before judging conditions 3, 4, 7, 10 (if not already marked `FAIL` by Step 0a), 12 by
+hand, `done-checker` runs
+`tools/gate_checks/done_checker_static.py::run_static_precheck(ticket_id, tier, start_ts)` and
+cites its PASS/FAIL/NA + evidence output verbatim for those five conditions, then self-reports a
+`verified_by` field listing which condition(s) came from which script(s) vs. pure judgment.
 
 `mechanics-auditor` is a separate, ad hoc agent (not part of this Verify phase or any pipeline phase)
 available for checking mechanics parity before/after a change; it now has its own self-invoked static
@@ -379,7 +398,7 @@ pre-check, `tools/gate_checks/mechanics_auditor_static.py::verify_entry_test_pat
 | 7 | working_log.csv entry | Not yet present — will be written by finalizer — script-checked |
 | 8 | No undocumented decisions | Fallback-first vs. projection-first decision documented in plan |
 | 9 | Repo consistent | No leftover temp files |
-| 10 | data/runs/ cleaned | — script-checked; **backstop only** as of TCK-20260708-DATA-RUNS-CLEANUP-TIMING — primary cleanup now happens post-Test (see Test section above). |
+| 10 | data/runs/ cleaned | — script-checked; primary cleanup now happens immediately before this check, inside done-checker's own Step 0a (as of TCK-20260714-DATA-RUNS-VERIFY-REGEN) — closes the gap where Parity/Verify's own re-verification work could regenerate artifacts after the post-Test checkpoint (Test section above, now a documented-intent no-op — see its Reliability caveat) had already run. `run_static_precheck`'s data_runs_clean check (Step 0b) remains the backstop confirmation read. |
 | 11 | No material gaps | All follow-up items (e.g. fallback reporting) marked complete or explicitly flagged |
 | 12 | Frontmatter valid (ticket + staging artifacts) | — script-checked |
 | 13 | **Agent monitoring** _(pre-marked PASS)_ | Written by workflow `writeMonitoring` after READY_TO_CLOSE |
