@@ -216,8 +216,10 @@ EXPECTED_DRIFT items to act on (GRADE_DELTA / UNCOVERED_ANCHOR_KEY kinds only):
 ${JSON.stringify(expectedDriftItems, null, 2)}
 
 Steps:
-1. For every item above, edit tests/simulation_quality/fixtures/grade_anchors.json (new grade for an
-   existing key, or a new key entirely).
+1. For every item above, edit tests/simulation_quality/fixtures/grade_anchors.json (new
+   {"grade": ..., "score": ...} object for an existing key — update BOTH fields, not grade
+   alone, reading score from data/calibration/<run_key>/quality_report.json's
+   normalized_score, not raw_score — or a new key entirely).
 2. For genuinely new run_keys (not just an existing key's grade changing), add them to FAST_ANCHOR_KEYS
    or SLOW_ANCHOR_KEYS in tests/simulation_quality/test_grade_regression.py — tier determined by the
    run_key's _<N>t suffix (<=500t -> fast, >=1000t -> slow).

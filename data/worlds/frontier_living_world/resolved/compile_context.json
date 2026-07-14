@@ -408,6 +408,32 @@
       "inventory_profile_id": "empty_animal_inventory",
       "skill_profile_id": "predator_skills"
     },
+    "trading_pop_0": {
+      "legacy_role": 1,
+      "legacy_faction": 3,
+      "hp": 80,
+      "max_hp": 80,
+      "atk": 4,
+      "def": 1,
+      "attack_range": 1,
+      "readiness": 100.0,
+      "inventory_seed": null,
+      "cognition_seed": null,
+      "archetype_id": null,
+      "race_id": null,
+      "role_id": null,
+      "faction_id": null,
+      "traits": [],
+      "themes": [],
+      "stat_profile_id": null,
+      "combat_profile_id": null,
+      "cognition_profile_id": null,
+      "drive_profile_id": null,
+      "need_profile_id": null,
+      "sense_profile_id": null,
+      "inventory_profile_id": null,
+      "skill_profile_id": null
+    },
     "undead_battlefield_patrol_undead_sentinel": {
       "legacy_role": 2,
       "legacy_faction": 1,
@@ -545,6 +571,18 @@
       "max_hp": 900,
       "service_profile_id": "mining_service",
       "owner_faction": null
+    },
+    "trading_bld_0": {
+      "hp": 500,
+      "max_hp": 500,
+      "service_profile_id": "general_store_service",
+      "owner_faction": null
+    },
+    "trading_bld_1": {
+      "hp": 600,
+      "max_hp": 600,
+      "service_profile_id": "inn_service",
+      "owner_faction": null
     }
   },
   "resources": {
@@ -571,6 +609,11 @@
     "old_mine_resource_loop__silver_vein_2": {
       "required_ticks": 18,
       "resource_type": "silver_vein",
+      "yield_policy": null
+    },
+    "trading_res_0": {
+      "required_ticks": 15,
+      "resource_type": "iron_vein",
       "yield_policy": null
     },
     "undead_battlefield__spirit_wisp_0": {
@@ -645,7 +688,8 @@
     }
   },
   "region_ownership": {
-    "hometown": 0
+    "hometown": 0,
+    "trading_hometown": 0
   },
   "legacy_factions": {
     "town_council": 2,

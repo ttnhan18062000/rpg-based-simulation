@@ -105,12 +105,15 @@ anchors re-verified and updated — see `docs/simulation_quality/eval_matrix_res
 tables. `urban_political` (already End-to-end by this same criterion, promoted earlier by
 `TCK-20260702-SIMQ-UPLIFT2-FACTION`/`-INFORMATION`, predating this taxonomy doc) and
 `simq_routing_test` (a purpose-built AGENCY calibration fixture, not a shipped-gameplay archetype)
-remain **Regression/baseline tier** — neither is one of this ticket's 8 target worlds. Four new
+remain **Regression/baseline tier** — neither is one of this ticket's 8 target worlds. Five
 **Unit-tier** worlds now exist (`unit_faction_tension`, `unit_information_source`,
-`unit_selfmodel_pilot`, `hero_guild_routing`) — the first two added by
+`unit_selfmodel_pilot`, `hero_guild_routing`, `unit_information_density`) — the first two added by
 `TCK-20260704-SIMQ-CORPUS-UNIT-WORLDS-FACTION-INFO`, the third by
-`TCK-20260704-SIMQ-CORPUS-UNIT-WORLD-SELFMODEL-PILOT`, and the fourth by
-`TCK-20260704-SIMQ-CORPUS-UNIT-WORLD-AGENCY` — see
+`TCK-20260704-SIMQ-CORPUS-UNIT-WORLD-SELFMODEL-PILOT`, the fourth by
+`TCK-20260704-SIMQ-CORPUS-UNIT-WORLD-AGENCY`, and the fifth by
+`TCK-20260713-SIMQ-SCORE-CEILING-FIX` (a complementary INFORMATION event-density probe alongside
+`unit_information_source`, added because that world's deliberately-minimal 1-event richness could
+not reach grade A under any weight raise that didn't let a single event dominate the pillar) — see
 `docs/simulation_quality/eval_matrix_results.md`'s "Unit-Tier Isolation Worlds" section for their
 grade tables. Three new **Stress-tier** worlds now exist — `crowded_frontier`,
 `resource_dense_basin`, and `frontier_marches`, all added by
@@ -134,6 +137,7 @@ tables and per-world justification.
 | `unit_information_source` | Unit | 16 entities, 1 region — isolates INFORMATION only (TCK-20260704-SIMQ-CORPUS-UNIT-WORLDS-FACTION-INFO) |
 | `unit_selfmodel_pilot` | Unit | 16 entities, 1 region — isolates COGNITION's self-model materialization half only (TCK-20260704-SIMQ-CORPUS-UNIT-WORLD-SELFMODEL-PILOT) |
 | `hero_guild_routing` | Unit | 31 entities, 4 regions — isolates AGENCY/route-selection only via `ENABLE_ADVENTURE_ROUTING` (TCK-20260704-SIMQ-CORPUS-UNIT-WORLD-AGENCY); real-archetype scale distinguishes it from calibration-minimal `simq_routing_test` |
+| `unit_information_density` | Unit | 16 entities, 1 region — isolates INFORMATION *event density* (3 `pending_information_responses` entries vs. `unit_information_source`'s deliberately-minimal 1), complementary to that world rather than a replacement (TCK-20260713-SIMQ-SCORE-CEILING-FIX) |
 | `crowded_frontier` | Stress | 38 entities, 4 regions — fills gap 1 (many-factions/small-map): 6 distinct populated factions in a 4-region footprint (TCK-20260704-SIMQ-CORPUS-STRESS-WORLDS) |
 | `resource_dense_basin` | Stress | 23 entities, 3 regions — fills gap 2 (resource-saturated/small-map): the corpus's new resource-node density maximum, ~2.33 nodes/region (TCK-20260704-SIMQ-CORPUS-STRESS-WORLDS) |
 | `frontier_marches` | Stress | 62 entities, 9 regions — fills gap 3 (large-scale FACTION/INFORMATION, authored-from-inception): `faction_tension_overrides` + `information_source_profiles`/`pending_information_responses` seeded from this world's first compile, at `frontier_extended`-comparable scale (TCK-20260704-SIMQ-CORPUS-STRESS-WORLDS) |

@@ -1,13 +1,13 @@
 {
   "world_id": "swamp_border_world",
-  "seed": 77,
-  "entity_count": 26,
-  "region_count": 4,
-  "resource_node_count": 7,
-  "building_count": 5,
-  "quest_count": 6,
+  "seed": 42,
+  "entity_count": 29,
+  "region_count": 5,
+  "resource_node_count": 8,
+  "building_count": 7,
+  "quest_count": 9,
   "distinct_populated_factions": 4,
   "warnings": [],
-  "compile_duration_ms": 13.07217701105401,
-  "state_hash": "a43b095f5f7864ca8fd535f55a59b459"
+  "compile_duration_ms": 28.939894000359345,
+  "state_hash": "f8c041069a2e297d9eb85227b79b6e96"
 }

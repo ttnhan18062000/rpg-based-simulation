@@ -1,21 +1,31 @@
 """Grade regression anchors for canonical simulation scenarios.
 
-Tests compare per-pillar grades in committed calibration reports against anchors stored
-in tests/simulation_quality/fixtures/grade_anchors.json. A regression is flagged when
-a pillar grade shifts by more than one letter from its anchor.
+Tests compare per-pillar grades and scores in committed calibration reports against
+anchors stored in tests/simulation_quality/fixtures/grade_anchors.json. Each anchor
+entry is ``{"grade": "S", "score": 2.87}``, where ``score`` is the pillar's
+``normalized_score`` (not ``raw_score`` — the two differ by an order of magnitude).
+Two independent regressions are flagged:
 
 Band tolerance rule (±1 letter):
   anchor=B → accepts A, B, C — fails on D or S
   anchor=A → accepts S, A, B — fails on C or D
   GRADE_ORDER (ascending quality): D < C < B < A < S
 
+Score tolerance rule (independent of the letter band):
+  abs(actual_score - anchor_score) <= max(SCORE_TOLERANCE_ABS_FLOOR,
+                                            SCORE_TOLERANCE_REL_PCT * abs(anchor_score))
+  Catches within-band magnitude regressions the letter-only check cannot see (e.g. an
+  S-graded pillar's score cut in half but still >2.0, still graded S).
+
 Fast tests (200t / 500t runs) run in the standard suite.
 Slow tests (1000t runs) require ``pytest -m slow`` or omit ``-m "not slow"``.
 
 To update anchors after an intentional scoring change:
   1. Re-run calibration: ``make calibrate`` (or per-scenario variant)
-  2. Inspect new grades in ``data/calibration/<run_key>/quality_report.json``
-  3. Edit ``tests/simulation_quality/fixtures/grade_anchors.json`` with new grades
+  2. Inspect new grades/scores in ``data/calibration/<run_key>/quality_report.json``
+     (use ``normalized_score``, not ``raw_score``)
+  3. Edit ``tests/simulation_quality/fixtures/grade_anchors.json`` with new
+     ``{"grade": ..., "score": ...}`` values
   4. Run this file to confirm all pass
   5. Commit both fixture and calibration data together
 """
@@ -32,6 +42,9 @@ import pytest
 # ---------------------------------------------------------------------------
 
 GRADE_ORDER = ["D", "C", "B", "A", "S"]  # ascending quality; index distance = band distance
+
+SCORE_TOLERANCE_ABS_FLOOR = 0.05
+SCORE_TOLERANCE_REL_PCT = 0.20
 
 FIXTURE_PATH = Path(__file__).parent / "fixtures" / "grade_anchors.json"
 
@@ -101,6 +114,14 @@ FAST_ANCHOR_KEYS = [
     "generated_frontier_3_42_seed42_200t",
     "generated_frontier_3_42_seed123_200t",
     "generated_frontier_3_42_seed456_200t",
+    # new — TCK-20260713-SIMQ-SCORE-CEILING-FIX: unit-tier INFORMATION event-density probe,
+    # complementary to unit_information_source (3 belief_assimilated events/run instead of 1),
+    # added because INFORMATION's positive weight raise alone could not reach grade A on any
+    # existing 1-event corpus scenario without a per-event weight large enough to dominate
+    # the pillar on its own.
+    "unit_information_density_seed42_200t",
+    "unit_information_density_seed123_200t",
+    "unit_information_density_seed456_200t",
 ]
 
 SLOW_ANCHOR_KEYS = [
@@ -148,10 +169,34 @@ def _within_band(actual: str, anchor: str, tolerance: int = 1) -> bool:
     return abs(GRADE_ORDER.index(actual) - GRADE_ORDER.index(anchor)) <= tolerance
 
 
+def _within_score_tolerance(
+    actual_score: float,
+    anchor_score: float,
+    abs_floor: float = SCORE_TOLERANCE_ABS_FLOOR,
+    rel_pct: float = SCORE_TOLERANCE_REL_PCT,
+) -> bool:
+    """Return True if *actual_score* is within tolerance of *anchor_score*.
+
+    Passes if the delta is within either the absolute floor or the relative
+    percentage of the anchor's magnitude, whichever tolerance is wider — see
+    module docstring and investigation.md's trial-pair variance dataset for
+    derivation of the default constants.
+    """
+    return abs(actual_score - anchor_score) <= max(abs_floor, rel_pct * abs(anchor_score))
+
+
 def _extract_pillar_grades(report: dict[str, Any]) -> dict[str, str]:
     """Extract ``{PILLAR: grade}`` mapping from a quality_report.json dict."""
     return {
         pillar: data["grade"]
+        for pillar, data in report.get("pillars", {}).items()
+    }
+
+
+def _extract_pillar_scores(report: dict[str, Any]) -> dict[str, float]:
+    """Extract ``{PILLAR: normalized_score}`` mapping from a quality_report.json dict."""
+    return {
+        pillar: data["normalized_score"]
         for pillar, data in report.get("pillars", {}).items()
     }
 
@@ -183,7 +228,9 @@ def grade_anchors() -> dict[str, Any]:
 
 @pytest.mark.parametrize("run_key", FAST_ANCHOR_KEYS)
 def test_grade_within_anchor_band(run_key: str, grade_anchors: dict) -> None:
-    """Each pillar grade must be within ±1 letter of the committed anchor.
+    """Each pillar grade must be within ±1 letter of the committed anchor, and its
+    normalized_score must stay within the documented score tolerance — two
+    independent checks (see module docstring).
 
     Reads the current calibration report from data/calibration/{run_key}/quality_report.json.
     Skips if the calibration file is not present (calibration not yet run for this key).
@@ -197,18 +244,32 @@ def test_grade_within_anchor_band(run_key: str, grade_anchors: dict) -> None:
 
     anchors = grade_anchors[run_key]
     actual_grades = _extract_pillar_grades(report)
+    actual_scores = _extract_pillar_scores(report)
 
-    failures: list[str] = []
-    for pillar, anchor_grade in anchors.items():
-        actual = actual_grades.get(pillar, "C")
-        if not _within_band(actual, anchor_grade):
-            failures.append(
-                f"  {pillar}: actual={actual!r} is outside ±1 band of anchor={anchor_grade!r}"
+    band_failures: list[str] = []
+    score_failures: list[str] = []
+    for pillar, anchor in anchors.items():
+        anchor_grade = anchor["grade"]
+        anchor_score = anchor["score"]
+        actual_grade = actual_grades.get(pillar, "C")
+        actual_score = actual_scores.get(pillar, 0.0)
+        if not _within_band(actual_grade, anchor_grade):
+            band_failures.append(
+                f"  {pillar}: actual={actual_grade!r} is outside ±1 band of anchor={anchor_grade!r}"
+            )
+        if not _within_score_tolerance(actual_score, anchor_score):
+            score_failures.append(
+                f"  {pillar}: actual_score={actual_score!r} is outside tolerance of "
+                f"anchor_score={anchor_score!r}"
             )
 
-    assert not failures, (
-        f"{run_key} — {len(failures)} pillar(s) drifted beyond anchor band:\n"
-        + "\n".join(failures)
+    assert not band_failures, (
+        f"{run_key} — {len(band_failures)} pillar(s) drifted beyond anchor band:\n"
+        + "\n".join(band_failures)
+    )
+    assert not score_failures, (
+        f"{run_key} — {len(score_failures)} pillar(s) drifted beyond score tolerance:\n"
+        + "\n".join(score_failures)
     )
 
 
@@ -220,6 +281,10 @@ def test_grade_within_anchor_band(run_key: str, grade_anchors: dict) -> None:
 @pytest.mark.parametrize("run_key", SLOW_ANCHOR_KEYS)
 def test_grade_within_anchor_band_long_run(run_key: str, grade_anchors: dict) -> None:
     """Long-run anchor check (1000t). Marked slow — excluded from fast CI.
+
+    Each pillar grade must be within ±1 letter of the committed anchor, and its
+    normalized_score must stay within the documented score tolerance — two
+    independent checks (see module docstring).
 
     Reads data/calibration/{run_key}/quality_report.json.
     Skips if the calibration file is not present.
@@ -233,18 +298,32 @@ def test_grade_within_anchor_band_long_run(run_key: str, grade_anchors: dict) ->
 
     anchors = grade_anchors[run_key]
     actual_grades = _extract_pillar_grades(report)
+    actual_scores = _extract_pillar_scores(report)
 
-    failures: list[str] = []
-    for pillar, anchor_grade in anchors.items():
-        actual = actual_grades.get(pillar, "C")
-        if not _within_band(actual, anchor_grade):
-            failures.append(
-                f"  {pillar}: actual={actual!r} is outside ±1 band of anchor={anchor_grade!r}"
+    band_failures: list[str] = []
+    score_failures: list[str] = []
+    for pillar, anchor in anchors.items():
+        anchor_grade = anchor["grade"]
+        anchor_score = anchor["score"]
+        actual_grade = actual_grades.get(pillar, "C")
+        actual_score = actual_scores.get(pillar, 0.0)
+        if not _within_band(actual_grade, anchor_grade):
+            band_failures.append(
+                f"  {pillar}: actual={actual_grade!r} is outside ±1 band of anchor={anchor_grade!r}"
+            )
+        if not _within_score_tolerance(actual_score, anchor_score):
+            score_failures.append(
+                f"  {pillar}: actual_score={actual_score!r} is outside tolerance of "
+                f"anchor_score={anchor_score!r}"
             )
 
-    assert not failures, (
-        f"{run_key} — {len(failures)} pillar(s) drifted beyond anchor band:\n"
-        + "\n".join(failures)
+    assert not band_failures, (
+        f"{run_key} — {len(band_failures)} pillar(s) drifted beyond anchor band:\n"
+        + "\n".join(band_failures)
+    )
+    assert not score_failures, (
+        f"{run_key} — {len(score_failures)} pillar(s) drifted beyond score tolerance:\n"
+        + "\n".join(score_failures)
     )
 
 
@@ -281,19 +360,29 @@ def test_urban_political_selfmodel_cognition_isolated_grade_anchor(grade_anchors
     )
 
     actual_grades = _extract_pillar_grades(report)
+    actual_scores = _extract_pillar_scores(report)
     anchors = grade_anchors[run_key]
-    failures = [
-        f"  {pillar}: actual={actual_grades.get(pillar, 'C')!r} outside ±1 band of anchor={anchor!r}"
+    band_failures = [
+        f"  {pillar}: actual={actual_grades.get(pillar, 'C')!r} outside ±1 band of "
+        f"anchor={anchor['grade']!r}"
         for pillar, anchor in anchors.items()
-        if not _within_band(actual_grades.get(pillar, "C"), anchor)
+        if not _within_band(actual_grades.get(pillar, "C"), anchor["grade"])
     ]
-    assert not failures, f"{run_key} — pillar(s) drifted beyond anchor band:\n" + "\n".join(failures)
+    score_failures = [
+        f"  {pillar}: actual_score={actual_scores.get(pillar, 0.0)!r} outside tolerance of "
+        f"anchor_score={anchor['score']!r}"
+        for pillar, anchor in anchors.items()
+        if not _within_score_tolerance(actual_scores.get(pillar, 0.0), anchor["score"])
+    ]
+    assert not band_failures, f"{run_key} — pillar(s) drifted beyond anchor band:\n" + "\n".join(band_failures)
+    assert not score_failures, f"{run_key} — pillar(s) drifted beyond score tolerance:\n" + "\n".join(score_failures)
 
 
 def test_grade_anchor_file_exists_and_valid(grade_anchors: dict) -> None:
     """grade_anchors.json must exist and contain at least all fast anchor run keys.
 
-    Each entry must have exactly 10 pillar grades, all in GRADE_ORDER.
+    Each entry must have exactly 10 pillars, each pillar an object with exactly
+    ``{"grade", "score"}`` — grade in GRADE_ORDER, score a numeric normalized_score.
     """
     assert FIXTURE_PATH.exists(), f"Grade anchors fixture missing: {FIXTURE_PATH}"
 
@@ -305,7 +394,70 @@ def test_grade_anchor_file_exists_and_valid(grade_anchors: dict) -> None:
         assert len(entry) == 10, (
             f"{run_key}: expected 10 pillars, got {len(entry)}: {list(entry.keys())}"
         )
-        for pillar, grade in entry.items():
-            assert grade in GRADE_ORDER, (
-                f"{run_key}/{pillar}: grade {grade!r} not in GRADE_ORDER {GRADE_ORDER}"
+        for pillar, value in entry.items():
+            assert isinstance(value, dict) and set(value.keys()) == {"grade", "score"}, (
+                f"{run_key}/{pillar}: expected {{'grade', 'score'}} object, got {value!r}"
             )
+            assert value["grade"] in GRADE_ORDER, (
+                f"{run_key}/{pillar}: grade {value['grade']!r} not in GRADE_ORDER {GRADE_ORDER}"
+            )
+            assert isinstance(value["score"], (int, float)), (
+                f"{run_key}/{pillar}: score {value['score']!r} is not numeric"
+            )
+
+    # Field-confusion guard: catches an implementer wiring raw_score instead of
+    # normalized_score into the "score" field (the two differ by an order of magnitude).
+    guard_run_key = "hero_guild_routing_seed42_1000t"
+    guard_pillar = "NARRATIVE"
+    guard_entry = grade_anchors[guard_run_key][guard_pillar]
+    assert guard_entry["grade"] == "S"
+    assert guard_entry["score"] > 2.0
+    guard_report = _load_calibration_report(guard_run_key)
+    assert guard_entry["score"] != guard_report["pillars"][guard_pillar]["raw_score"], (
+        f"{guard_run_key}/{guard_pillar}: anchor 'score' matches raw_score — "
+        "normalized_score should have been persisted, not raw_score"
+    )
+
+
+def test_score_tolerance_catches_within_band_regression() -> None:
+    """Before/after proof: a within-band score regression is caught by the new
+    score-tolerance check, and would NOT have been caught by the old letter-only check.
+
+    Synthetic anchor: S-graded pillar at normalized_score=4.5. Synthetic live value:
+    2.25 (exactly half, still >2.0 so still grade S — same letter band as the anchor).
+    """
+    anchor_grade, anchor_score = "S", 4.5
+    live_grade, live_score = "S", 2.25  # cut in half; still S-band (>2.0)
+
+    # OLD mechanism: letter-band check alone sees no regression.
+    assert _within_band(live_grade, anchor_grade) is True
+
+    # NEW mechanism: score-tolerance check catches the magnitude regression.
+    assert _within_score_tolerance(live_score, anchor_score) is False
+    assert abs(live_score - anchor_score) > max(
+        SCORE_TOLERANCE_ABS_FLOOR, SCORE_TOLERANCE_REL_PCT * abs(anchor_score)
+    )
+
+
+def test_within_band_default_tolerance_unchanged() -> None:
+    """Anti-drift guard: `_within_band`'s default tolerance must stay 1 (±1 letter band).
+
+    A silent widening/narrowing of this default would change every anchor's regression
+    sensitivity without any other test noticing, since all call sites rely on the default.
+    """
+    assert _within_band.__defaults__ == (1,)
+
+
+def test_grade_anchors_entry_count_unchanged(grade_anchors: dict) -> None:
+    """Anti-drift guard: the migration (bare string -> {grade, score}) must not silently
+    drop or duplicate a scenario entry.
+
+    75 real scenario entries as of TCK-20260713-SIMQ-RAWSCORE-PERSIST's migration (78 total
+    keys minus the 3 metadata keys: _note, _instructions, _grade_order).
+    """
+    metadata_keys = {"_note", "_instructions", "_grade_order"}
+    scenario_keys = set(grade_anchors.keys()) - metadata_keys
+    assert len(scenario_keys) == 75, (
+        f"Expected 75 real scenario entries, found {len(scenario_keys)} — "
+        "an anchor entry may have been silently dropped or duplicated"
+    )

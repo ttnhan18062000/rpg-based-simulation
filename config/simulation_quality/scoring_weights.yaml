@@ -54,16 +54,21 @@ FACTION:
   tension_oscillation: -5.0
 
 ECONOMY:
-  harvest_active: 3.0
-  crafting_active: 4.0
-  trade_active: 3.0
-  gold_flow: 1.0
-  quest_economy_coupling: 3.0
-  scarcity_active: 1.0
-  ecology_cycling: 2.0
-  conservation_valid: 1.0
-  inflation_controlled: 2.0
-  knowledge_economy_active: 2.0
+  # Positive per-event weights raised x4 (TCK-20260713-SIMQ-SCORE-CEILING-FIX): the
+  # richest observed anchor scenario (urban_political_seed123_1000t, 69 ECONOMY events,
+  # raw_score=138.0, normalized_score=0.164) could never cross the A threshold (0.5) at
+  # the pre-fix scale. M_ECONOMY = ceil((0.5 * 841) / 138) = 4. Gini-threshold mechanism
+  # and negative/dormancy weights below are untouched.
+  harvest_active: 12.0
+  crafting_active: 16.0
+  trade_active: 12.0
+  gold_flow: 4.0
+  quest_economy_coupling: 12.0
+  scarcity_active: 4.0
+  ecology_cycling: 8.0
+  conservation_valid: 4.0
+  inflation_controlled: 8.0
+  knowledge_economy_active: 8.0
   zero_harvest: -20.0
   zero_crafting: -15.0
   zero_trade: -15.0
@@ -74,13 +79,19 @@ ECONOMY:
   ecology_cadence_broken: -10.0
 
 PROGRESSION:
-  xp_active: 1.0
-  level_milestone: 8.0
-  skill_growth: 5.0
-  genetic_determinism_active: 2.0
-  pillar_trait_milestone: 15.0
-  soft_skill_evolution: 4.0
-  survival_experience: 3.0
+  # Positive per-event weights raised x5 (TCK-20260713-SIMQ-SCORE-CEILING-FIX): the
+  # richest observed anchor scenario (generated_frontier_3_42_seed42_1000t, 44
+  # PROGRESSION events, raw_score=121.0, normalized_score=0.122) could never cross the
+  # A threshold (0.5) at the pre-fix scale. M_PROGRESSION = ceil((0.5 * 993) / 121) = 5.
+  # xp_active's delta is weight * max(1, xp_amount // 10), so this raises every XP grant
+  # proportionally, not just milestones. Negative/dormancy weights below are untouched.
+  xp_active: 5.0
+  level_milestone: 40.0
+  skill_growth: 25.0
+  genetic_determinism_active: 10.0
+  pillar_trait_milestone: 75.0
+  soft_skill_evolution: 20.0
+  survival_experience: 15.0
   progression_frozen: -10.0
   skill_system_silent: -5.0
   all_level_1: -30.0
@@ -105,12 +116,25 @@ SOCIAL:
   social_isolation: -2.0
 
 INFORMATION:
-  belief_active: 2.0
-  intel_quality_up: 2.0
-  knowledge_economy_active: 3.0
-  info_has_impact: 5.0
-  intel_complexity: 4.0
-  subjective_divergence: 6.0
+  # Positive per-event weights raised x5 (TCK-20260713-SIMQ-SCORE-CEILING-FIX): the
+  # richest pre-fix anchor scenario (unit_information_source, 1 event, raw_score=2.0,
+  # normalized_score=0.04) would need a single-event weight of 25 to cross A on its own
+  # (denom=50) — above PROGRESSION's own pre-fix milestone-tier ceiling (15), the
+  # escalation condition from plan.md's Step 5, since a per-event weight that large would
+  # let one occurrence dominate the entire pillar (a discriminative-power problem in its
+  # own right, not a fix). Per the escalation path, a new Unit-tier probe world
+  # (unit_information_density, 3 belief_assimilated events/run instead of 1) was added to
+  # the corpus to supply real event density. Recomputing M against THAT scenario's
+  # richest run (raw_score=6.0, denom=50) gives M_INFORMATION = ceil((0.5 * 50) / 6) = 5 —
+  # the same order of magnitude as the other 3 pillars, non-degenerate. paid_information_
+  # transaction's scoring ownership stays here (not EconomyScorer, per INFRA-245).
+  # Negative/dormancy weights below are untouched.
+  belief_active: 10.0
+  intel_quality_up: 10.0
+  knowledge_economy_active: 15.0
+  info_has_impact: 25.0
+  intel_complexity: 20.0
+  subjective_divergence: 30.0
   knowledge_rot: -2.0
   belief_pipeline_deaf: -1.0
   knowledge_economy_dormant: -10.0
@@ -119,19 +143,24 @@ INFORMATION:
   paid_info_memory_failure: -5.0
 
 WORLD:
-  calamity_active: 8.0
-  boss_active: 6.0
-  raid_active: 4.0
-  world_evolving: 6.0
-  trauma_feedback: 2.0
-  political_change: 5.0
-  ecology_cycling: 3.0
-  world_repopulating: 2.0
-  demographics_active: 2.0
-  natural_lifecycle: 1.0
-  persistent_structure: 1.0
-  hazard_active: 1.0
-  infrastructure_damaged: 1.0
+  # Positive per-event weights raised x2 (TCK-20260713-SIMQ-SCORE-CEILING-FIX): the
+  # richest observed anchor scenario (frontier_marches_seed123_200t, 38 WORLD events,
+  # raw_score=60.0, normalized_score=0.30) could never cross the A threshold (0.5) at
+  # the pre-fix scale. M_WORLD = ceil((0.5 * 200) / 60) = 2. Negative/dormancy weights
+  # below are untouched.
+  calamity_active: 16.0
+  boss_active: 12.0
+  raid_active: 8.0
+  world_evolving: 12.0
+  trauma_feedback: 4.0
+  political_change: 10.0
+  ecology_cycling: 6.0
+  world_repopulating: 4.0
+  demographics_active: 4.0
+  natural_lifecycle: 2.0
+  persistent_structure: 2.0
+  hazard_active: 2.0
+  infrastructure_damaged: 2.0
   calamity_dormant: -8.0
   world_depopulating: -10.0
   world_static: -6.0

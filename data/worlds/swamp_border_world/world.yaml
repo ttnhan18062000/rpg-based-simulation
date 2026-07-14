@@ -3,10 +3,18 @@ schema_version: "worldcomposition.v1"
 world_id: "swamp_border_world"
 name: "Swamp Border World"
 description: "Frontier settlement with an adjacent sunken swamp inhabited by lizardfolk tribes and swamp trolls."
-modules:
-  - "frontier_village_core"
-  - "wolf_den_near_forest"
-  - "sunken_swamp_border"
+module_refs:
+  - module_id: "frontier_village_core"
+    order: 0
+  - module_id: "wolf_den_near_forest"
+    order: 1
+  - module_id: "sunken_swamp_border"
+    order: 2
+  - module_id: "trading_company_hub"
+    order: 3
+    namespace: "trading"
+    parameters:
+      merchant_count: 3
 default_perspectives:
   - "hero_guild_perspective"
   - "wild_beast_pack_perspective"

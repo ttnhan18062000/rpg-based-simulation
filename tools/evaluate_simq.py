@@ -30,6 +30,7 @@ GRADE_ORDER = ["D", "C", "B", "A", "S"]
 
 DEFAULT_ANCHORS = Path("tests/simulation_quality/fixtures/grade_anchors.json")
 CALIBRATION_ROOT = Path("data/calibration")
+WORLDS_ROOT = Path("data/worlds")
 
 
 def _within_band(actual: str, anchor: str, tolerance: int = 1) -> bool:
@@ -43,10 +44,38 @@ def _extract_pillar_grades(report: dict[str, Any]) -> dict[str, str]:
 
 
 def _parse_run_key(run_key: str) -> tuple[str, int, int]:
+    """Split a run_key into (profile_name, seed, ticks).
+
+    The prefix is always the calibration *profile* name (grade_anchors.json
+    keys are named after the profile, e.g. `urban_political_selfmodel_probe`),
+    which is not necessarily the same as the *world* directory name — see
+    `_resolve_world_name`.
+    """
     m = re.match(r"^(.+)_seed(\d+)_(\d+)t$", run_key)
     if not m:
         raise ValueError(f"Cannot parse run_key: {run_key!r}")
     return m.group(1), int(m.group(2)), int(m.group(3))
+
+
+def _resolve_world_name(profile_name: str) -> str:
+    """Find the real `data/worlds/{world_name}/` directory backing a profile.
+
+    Profile names are usually identical to their world name, but a profile
+    can be a more specific variant of a world (e.g. the probe fixture
+    `urban_political_selfmodel_probe` scores the `urban_political` world
+    under a different scoring profile). Try the full profile name first,
+    then progressively strip trailing `_segment` tokens until a real world
+    directory is found.
+    """
+    segments = profile_name.split("_")
+    for cutoff in range(len(segments), 0, -1):
+        candidate = "_".join(segments[:cutoff])
+        if (WORLDS_ROOT / candidate).is_dir():
+            return candidate
+    raise ValueError(
+        f"Cannot resolve a world directory for profile {profile_name!r} — "
+        f"no prefix of it matches a directory under {WORLDS_ROOT}/"
+    )
 
 
 def _load_calibration_report(run_key: str) -> dict[str, Any] | None:
@@ -56,16 +85,25 @@ def _load_calibration_report(run_key: str) -> dict[str, Any] | None:
     return json.loads(path.read_text())
 
 
-def _run_calibration(name: str, seed: int, ticks: int) -> None:
+def _run_calibration(world_name: str, profile_name: str, seed: int, ticks: int, run_key: str) -> None:
+    """Run calibration, writing the report under CALIBRATION_ROOT/{run_key}.
+
+    `--output` must be pinned to `run_key` explicitly: `calibrate_simq.py`'s
+    own default output directory is derived from `--name` (the world), which
+    only matches `run_key` (derived from the profile) when profile and world
+    share a name. `_load_calibration_report` always looks up by `run_key`.
+    """
     import tools.calibrate_simq as cal_mod
 
     old_argv = sys.argv[:]
     try:
         sys.argv = [
             "calibrate_simq",
-            "--name", name,
+            "--name", world_name,
+            "--profile", profile_name,
             "--seed", str(seed),
             "--ticks", str(ticks),
+            "--output", str(CALIBRATION_ROOT / run_key),
         ]
         cal_mod.main()
     finally:
@@ -136,14 +174,15 @@ def main() -> None:
 
         if not args.dry_run:
             try:
-                name, seed, ticks = _parse_run_key(run_key)
+                profile_name, seed, ticks = _parse_run_key(run_key)
+                world_name = _resolve_world_name(profile_name)
             except ValueError as exc:
                 print(f"ERROR: {exc}", file=sys.stderr)
                 error_count += 1
                 continue
-            print(f"[evaluate] Running engine: {run_key} ...", flush=True)
+            print(f"[evaluate] Running engine: {run_key} (world={world_name} profile={profile_name}) ...", flush=True)
             try:
-                _run_calibration(name, seed, ticks)
+                _run_calibration(world_name, profile_name, seed, ticks, run_key)
             except SystemExit:
                 pass
             except Exception as exc:
@@ -158,7 +197,7 @@ def main() -> None:
             continue
 
         actual_grades = _extract_pillar_grades(report)
-        anchor_grades = all_anchors[run_key]
+        anchor_grades = {p: v["grade"] for p, v in all_anchors[run_key].items()}
         rows = _compare(run_key, actual_grades, anchor_grades)
         all_rows.extend(rows)
 

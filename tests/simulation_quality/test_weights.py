@@ -50,7 +50,8 @@ def test_grade_thresholds_values(scoring_weights):
 def test_getitem_known_key(scoring_weights):
     value = scoring_weights["harvest_active"]
     assert isinstance(value, float)
-    assert value == pytest.approx(3.0)
+    # TCK-20260713-SIMQ-SCORE-CEILING-FIX raised ECONOMY's positive weights x4 (3.0 -> 12.0)
+    assert value == pytest.approx(12.0)
 
 
 def test_getitem_raises_on_missing_key(scoring_weights):

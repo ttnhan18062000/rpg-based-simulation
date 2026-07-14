@@ -69,6 +69,19 @@ regions:
   hazard_level: 3.0
   hazard_kind: NATURAL_TERRAIN
   tags: []
+- id: trading_hometown
+  type: town
+  bounds:
+  - 45
+  - 10
+  - 80
+  - 45
+  terrain: plain
+  hazard_level: 0.5
+  hazard_kind: NATURAL_TERRAIN
+  tags:
+  - plain
+  - trade_route
 - id: haunted_battlefield
   type: wilderness
   bounds:
@@ -280,6 +293,11 @@ entities:
   faction: orc_clan
   spawn_region: orc_stronghold
   archetype_id: orc_brute
+- id: trading_pop_0
+  count: 3
+  role: merchant
+  faction: merchant_league
+  spawn_region: trading_hometown
 - id: undead_battlefield_patrol_undead_sentinel
   count: 6
   role: sentinel
@@ -346,6 +364,11 @@ resources:
   count: 6
   region: orc_stronghold
   regen_rate: 1
+- id: trading_res_0
+  resource_type: iron_vein
+  count: 6
+  region: trading_hometown
+  regen_rate: 1
 - id: undead_battlefield__spirit_wisp_0
   resource_type: spirit_wisp
   count: 2
@@ -395,6 +418,12 @@ buildings:
 - id: mine_entrance_0
   type: mine_entrance
   region: old_mine
+- id: trading_bld_0
+  type: shop
+  region: trading_hometown
+- id: trading_bld_1
+  type: inn
+  region: trading_hometown
 quest_definitions:
 - id: village_fetch_supply_run
   type: fetch
@@ -607,6 +636,57 @@ quest_definitions:
   - conflict
   - territory
   source_module: orc_clan_territory
+- id: trade_fetch_shipment_goods
+  type: fetch
+  required_participant_tags:
+  - humanoid
+  - merchant_minded
+  required_location_tags:
+  - plain
+  - trade_route
+  reward_budget: 100
+  procedural_hints:
+    difficulty: 1
+    escalation: false
+  tags:
+  - trade
+  - economy
+  - supply
+  source_module: trading_company_hub
+- id: trade_escort_merchant_convoy
+  type: escort
+  required_participant_tags:
+  - humanoid
+  - merchant_minded
+  required_location_tags:
+  - plain
+  - trade_route
+  reward_budget: 120
+  procedural_hints:
+    difficulty: 2
+    escalation: true
+  tags:
+  - trade
+  - economy
+  - escort
+  source_module: trading_company_hub
+- id: trade_investigate_sabotage
+  type: investigate
+  required_participant_tags:
+  - humanoid
+  - merchant_minded
+  required_location_tags:
+  - plain
+  - trade_route
+  reward_budget: 150
+  procedural_hints:
+    difficulty: 2
+    escalation: false
+  tags:
+  - trade
+  - economy
+  - mystery
+  source_module: trading_company_hub
 - id: undead_investigate_risen_source
   type: investigate
   required_participant_tags:

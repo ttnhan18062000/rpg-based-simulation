@@ -15,11 +15,21 @@ this doc is the answer to "what's the current picture," refreshed in place rathe
 with dated notes. When this doc and `eval_matrix_results.md` disagree, re-run the refresh command
 below — this doc should always reflect the latest run, not accumulate history of its own.
 
-**Last refreshed:** 2026-07-13, from the committed `tests/simulation_quality/fixtures/grade_anchors.json`
-(72 entries) — each entry independently verified against a live run at the time it was last
-committed, spot-checked here via a standalone `calibrate_simq.py` re-run of
+**Last refreshed:** 2026-07-13 (post `TCK-20260713-SIMQ-ECONOMY-CONTENT-DEPTH`), from the committed
+`tests/simulation_quality/fixtures/grade_anchors.json` (**75 real scenario entries, 18 worlds** —
+corrected from the previously-cited "72 entries, 17 worlds"; the file's 3 non-scenario meta keys
+(`_note`, `_instructions`, `_grade_order`) had been under-excluded by one in the prior count, and
+`TCK-20260713-SIMQ-SCORE-CEILING-FIX` separately added 1 new world, `unit_information_density`,
+3 seeds) — each entry independently verified against a live run at the time it was last committed,
+spot-checked here via a standalone `calibrate_simq.py` re-run of
 `urban_political_selfmodel_probe_seed42_200t` (see Known Issue below for why the full-corpus live
 run couldn't be used directly this time).
+
+`TCK-20260713-SIMQ-ECONOMY-CONTENT-DEPTH` composed `trading_company_hub` into 3 more worlds
+(`frontier_living_world`, `frontier_extended`, `swamp_border_world`) and recalibrated their 9
+anchors (3 worlds x 3 seeds, 200t) — this moved 9 anchors' COMBAT/PROGRESSION/SOCIAL/WORLD/
+NARRATIVE columns (new entities/quest content changing those pillars' event counts as a side
+effect) but **ECONOMY itself did not move for any of the 9** — see Recommendation 2 below for why.
 
 **To refresh this report:** `python3 tools/evaluate_simq.py --dry-run`, then update the table below
 from its output. Prefer `--dry-run` for now — see the known tooling bug below before running the
@@ -43,47 +53,73 @@ filed as a ticket.
 
 ---
 
-## Current grade distribution (72 anchor entries, 17 worlds)
+## Current grade distribution (75 anchor entries, 18 worlds)
 
 | Pillar | S | A | B | C | D |
 |---|---|---|---|---|---|
-| WORLD | 0 | 1 | 71 | 0 | 0 |
-| NARRATIVE | 7 | 52 | 9 | 4 | 0 |
-| COMBAT | 0 | 1 | 46 | 25 | 0 |
-| PROGRESSION | 0 | 0 | 38 | 34 | 0 |
-| FACTION | 30 | 15 | 6 | 21 | 0 |
-| INFORMATION | 0 | 0 | 35 | 37 | 0 |
-| COGNITION | 8 | 5 | 37 | 22 | 0 |
-| SOCIAL | 15 | 0 | 0 | 57 | 0 |
-| ECONOMY | 0 | 0 | 12 | 60 | 0 |
-| AGENCY | 0 | 8 | 0 | 64 | 0 |
+| WORLD | 0 | 4 | 71 | 0 | 0 |
+| NARRATIVE | 7 | 55 | 9 | 4 | 0 |
+| COMBAT | 0 | 1 | 46 | 28 | 0 |
+| PROGRESSION | 0 | 8 | 39 | 28 | 0 |
+| FACTION | 30 | 15 | 6 | 24 | 0 |
+| INFORMATION | 0 | 3 | 35 | 37 | 0 |
+| COGNITION | 8 | 8 | 37 | 22 | 0 |
+| SOCIAL | 15 | 0 | 0 | 60 | 0 |
+| ECONOMY | 0 | 1 | 17 | 57 | 0 |
+| AGENCY | 0 | 8 | 0 | 67 | 0 |
+
+WORLD/PROGRESSION moved by 2/1 entries respectively as a side effect of
+`TCK-20260713-SIMQ-ECONOMY-CONTENT-DEPTH`'s content addition (new entities/quest content shifting
+those pillars' event counts in `frontier_living_world`/`frontier_extended`'s 200t anchors) — **not**
+an intentional target of that ticket, which targeted ECONOMY. ECONOMY's own distribution is
+unchanged (0/1/17/57) — the content addition did not move it; see Recommendation 2 below.
+
+WORLD/PROGRESSION/INFORMATION/ECONOMY's `A` columns went from all-zero to non-zero this session
+(`TCK-20260713-SIMQ-SCORE-CEILING-FIX`) — see the discriminative-power section below, now updated
+to reflect the fix rather than the ceiling problem it fixed.
 
 ---
 
 ## Per-pillar read
 
-**Discriminative-power check (2026-07-13, prompted by a direct question about whether the scoring
-formula itself needs recalibration — not just corpus coverage):** grade letters alone hide a real
-problem. Cross-referencing the raw `normalized_score` values from a full live corpus run
-(`tmp/evaluate_simq_full_run_20260713.log`) against the S/A/B/C/D band thresholds
-(`quality_scoring_contract.md` §4.5: `S >2.0`, `A 0.5-2.0`, `B 0.0-0.5`) shows **4 of 10 pillars
-structurally cannot reach A or S under the current weight scale, no matter how good the world is**:
+**Discriminative-power check — RESOLVED 2026-07-13 (`TCK-20260713-SIMQ-SCORE-CEILING-FIX`).**
+A prior pass this same day found 4 of 10 pillars structurally could not reach grade A or S under
+the then-current weight scale, no matter how good the world was — even the single richest ECONOMY
+run in the whole corpus (69 scored events) only reached 1/3 of the way to the A threshold (0.5).
+That was a weight/normalization-scale problem, not a corpus-coverage problem (content authoring
+alone, Recommendation 2 below, would not have fixed it). The fix raised each affected pillar's
+**positive** per-event weights only (`config/simulation_quality/scoring_weights.yaml`), computed
+per-pillar from each pillar's own richest-observed corpus scenario so that scenario crosses 0.5 —
+not a blanket multiplier across pillars, and no negative/dormancy weight or grade threshold was
+touched:
 
-| Pillar | Max normalized score seen (all 72 scenarios) | A threshold | Gap |
+| Pillar | Pre-fix max normalized score | Weight multiplier | Post-fix result |
 |---|---|---|---|
-| WORLD | 0.30 (38-event run) | 0.5 | Never halfway there — entire real range (0.0-0.3) fits inside the B band alone |
-| ECONOMY | 0.16 (a **69-event** run — genuinely rich activity) | 0.5 | 1/3 of the way even at its richest observed point |
-| PROGRESSION | 0.13 (46-event run) | 0.5 | Same shape |
-| INFORMATION | 0.04 (1-event run) | 0.5 | ~12x short |
+| WORLD | 0.30 (`frontier_marches_seed123_200t`, 38 events) | x2 | Same scenario now A (0.60) |
+| ECONOMY | 0.16 (`urban_political_seed123_1000t`, 69 events) | x4 | Same scenario now A (0.66) |
+| PROGRESSION | 0.12 (`generated_frontier_3_42_seed42_1000t`, 44 events) | x5 | Same scenario now A (0.64) |
+| INFORMATION | 0.04 (`unit_information_source`, 1 event) | x5 | New `unit_information_density` world (3 events/run) now A (0.60); old 1-event scenario stays B |
 
-This is a weight/normalization-scale problem, not a corpus-coverage problem — content authoring
-alone (see Recommendation 2 below) will not fix it, since even the single richest ECONOMY run in
-the whole corpus (69 scored events) still only reached 1/3 of the way to A. See Recommendation 1.
+INFORMATION could not be fixed by weight alone: reaching 0.5 on its existing 1-event richest
+scenario would have required a single-event weight (25) larger than PROGRESSION's own pre-fix
+milestone-tier ceiling (15) — a per-event weight so large it would let one occurrence dominate the
+entire pillar, itself a discriminative-power problem rather than a fix. A new Unit-tier probe world,
+`unit_information_density` (complementary to the existing `unit_information_source` isolation
+probe — 3 `belief_assimilated` events/run instead of 1), was added to the corpus to supply the
+missing event density; see `corpus_tier_taxonomy.md`'s Unit-tier mapping table.
 
-**NARRATIVE, COMBAT** — the other two "always-on" pillars, and by contrast genuinely healthy:
-NARRATIVE spans all 4 grades with real spread (7 S / 52 A / 9 B / 4 C), COMBAT spans a narrower but
-real range including both B and C outcomes reflecting genuine archetype differences (a combat-only
-world scores differently from a low-combat one). Not exhibiting the same ceiling pattern as WORLD.
+Structurally-inert scenarios (zero WORLD/ECONOMY/PROGRESSION/INFORMATION activity) are unaffected
+by this fix and remain grade C — every pillar's dormancy/zero-activity penalty only fires inside
+its own triggering event's handler, so a world with zero events for a signal family never enters
+that code path regardless of the positive weight's magnitude (confirmed empirically across the
+full regenerated corpus: 0 zero-event anchors changed grade).
+
+**NARRATIVE, COMBAT** — the other two "always-on" pillars, and by contrast were already healthy
+before this fix and untouched by it (their weights are unchanged; the ceiling pattern above was
+specific to WORLD/ECONOMY/PROGRESSION/INFORMATION). NARRATIVE spans all 4 grades with real spread
+(7 S / 55 A / 9 B / 4 C), COMBAT spans a narrower but real range including both B and C outcomes
+reflecting genuine archetype differences (a combat-only world scores differently from a low-combat
+one).
 
 **FACTION, INFORMATION** — declared structurally complete by the SimQ roadmap's Phase 5 gate
 (`TCK-20260713-SIMQ-COVERAGE-DECISION-GATE`, `docs/plans/archive/simq_development_roadmap.md`).
@@ -117,70 +153,89 @@ by design (`ENABLE_ADVENTURE_ROUTING` is opt-in per world, DA-ruled intentional,
   no equivalent line exists for intent execution. This is a real, well-scoped, unstarted gap — see
   Recommendation 3 below.
 
-**ECONOMY** — the pillar with the most headroom, for two separate reasons. `EconomyScorer`
-(`src/simulation_quality/scorers/economy.py`) actually listens for 10 distinct event types
-(harvesting, crafting, trading, gold flow, scarcity, inflation control, conservation checks,
-paid-info transactions, quest rewards) — this is not a thin, single-signal pillar the way it's
-sometimes described, so the corpus-wide C-heavy distribution is partly a genuine content gap: most
-worlds simply don't have sustained harvest/craft/trade content authored into them (Recommendation
-2 below). But the discriminative-power check above shows the ceiling issue is real too — even the
-richest observed run (69 events) only reached 1/3 of the way to A (Recommendation 1). Both need
-addressing; content authoring alone won't be enough. This pillar was never addressed by the SimQ
-roadmap (explicitly out of scope — a Gini-threshold/archetype-composition question, not the
-`FeatureMode` gating question the roadmap's 4 pillars shared).
+**ECONOMY** — the pillar with the most remaining headroom, now for a **different, better-understood
+reason** than previously documented here. `EconomyScorer` (`src/simulation_quality/scorers/economy.py`)
+listens for 10 distinct event types (harvesting, crafting, trading, gold flow, scarcity, inflation
+control, conservation checks, paid-info transactions, quest rewards) — not a thin, single-signal
+pillar. This doc previously read the corpus-wide C-heavy distribution as "largely a genuine content
+gap: most worlds simply don't have sustained harvest/craft/trade content authored into them."
+`TCK-20260713-SIMQ-ECONOMY-CONTENT-DEPTH` tested that reading directly: it composed
+`trading_company_hub` (a dedicated merchant population, shop/inn buildings, iron_vein resource
+nodes — the same module `urban_political`'s own richest ECONOMY run uses) into 3 more worlds
+(`frontier_living_world`, `frontier_extended`, `swamp_border_world`) at merchant_count 3 and 6,
+calibrated at 200t (the corpus's anchor length for these worlds) and, diagnostically, 1000t.
+**ECONOMY did not move off C in any of the 9 recalibrated anchors, at any merchant_count tested.**
+Root-cause investigation found why: `resource_harvested`/`item_crafted`/`trade_executed`/
+`shop_transaction` (the 4 event types that would indicate real content-driven activity) have never
+fired in **any** calibration run in the corpus — confirmed by grepping every
+`data/calibration/*/quality_scores.jsonl`, including all 8 of `urban_political`'s own committed
+seed/tick combinations. The corpus's only ever-observed ECONOMY signal is `gold_sink_fired`
+(Gini-threshold inflation control, fires from combat-loot wealth inequality, content-independent) —
+including the specific 69-event `urban_political_seed123_1000t` run this doc and
+`SIMQ-CALIBRATED-001` previously cited as evidence of "real economic activity": all 69 of those
+events are `gold_sink_fired`. That prior reading is now confirmed incorrect on this specific point
+(see `docs/parity_ledger/infrastructure.yaml` INFRA-242's `support_boundary` for the full finding).
+The weight-scale ceiling fix (`TCK-20260713-SIMQ-SCORE-CEILING-FIX`) is unaffected and remains
+correct — it is genuinely easier to reach A now — but the underlying assumption about what a
+"richer" ECONOMY run represents was wrong: no world in the corpus has ever produced real
+harvest/craft/trade signal, because no entity archetype's decision/strategy layer currently
+generates an accepted harvest, craft, or trade intent (analogous to AGENCY's own documented
+`ENABLE_ADVENTURE_ROUTING` gap). Closing this requires strategy/cognition-layer work, not content
+authoring — see Recommendation 2 below for the reframed next step. This pillar was never addressed
+by the SimQ roadmap (explicitly out of scope — a Gini-threshold/archetype-composition question, not
+the `FeatureMode` gating question the roadmap's 4 pillars shared).
 
 ---
 
 ## Recommended next features
 
-All four are genuinely open — not previously investigated-and-declined, unlike FACTION/
+Three remain genuinely open — not previously investigated-and-declined, unlike FACTION/
 INFORMATION/SOCIAL depth (closed) or AGENCY rollout (closed). None requires re-litigating any
-existing DA ruling. Ordered by priority, not discovery order — 1 and 4 are both measurement-
-validity fixes and probably belong before 2 and 3 in any real sequencing, since they affect
-whether *any* future content-authoring or engine work would even be visible in the grades.
+existing DA ruling. Numbering preserved from the prior refresh for continuity even though item 1 is
+now done; 4 was (and remains) a measurement-validity fix that probably belongs before 2 and 3 in any
+real sequencing, since it affects whether *any* future content-authoring or engine work would even
+be visible in the grades.
 
-### 1. Recalibrate the weight/normalization scale for WORLD, ECONOMY, PROGRESSION, INFORMATION
+### 1. Recalibrate the weight/normalization scale for WORLD, ECONOMY, PROGRESSION, INFORMATION — DONE
 
-**Why now:** the discriminative-power check above found these 4 pillars structurally cannot reach
-A or S under current weights — WORLD's entire observed range across the whole corpus (0.0-0.3)
-fits inside the B band alone; ECONOMY tops out at 1/3 of the way to A even at its single richest
-observed point (69 events). This means the scorer currently cannot ever tell you a world is
-*exceptional* on these 4 dimensions, only "has some activity" vs. "has none" — a real gap against
-SimQ's own stated goal of balance/tuning support (`quality_scoring_contract.md` §1), which needs
-the top of the scale to be reachable to be useful.
+**Status:** done, `TCK-20260713-SIMQ-SCORE-CEILING-FIX`. See the discriminative-power section above
+for the full before/after. Summary: raised each pillar's positive per-event weights only (WORLD x2,
+ECONOMY x4, PROGRESSION x5, INFORMATION x5), computed per-pillar from each pillar's own
+richest-observed scenario; grade thresholds untouched; a new Unit-tier probe world
+(`unit_information_density`) added because INFORMATION's existing 1-event richest scenario could
+not be fixed by weight alone without letting a single event dominate the pillar. Full corpus
+regression (`pytest tests/simulation_quality/`) showed 0 unattributed regressions — every changed
+anchor traces to one of these 4 pillars' weight raise.
 
-**Shape of the work:** an investigation-tier ticket first — deliberately construct or identify one
-genuinely best-case and one genuinely worst-case scenario per affected pillar, run them through the
-current formula, and determine whether raising per-event weights or lowering grade thresholds (or
-both) restores real discrimination without destabilizing the many already-passing anchors for these
-pillars. Changing shared weight constants risks moving grades corpus-wide, so this needs a full
-regression sweep and probably a wholesale `grade_anchors.json` re-anchor, not a quiet tweak.
+### 2. Author ECONOMY-rich content into 2-3 more archetype worlds — ATTEMPTED, ROOT CAUSE FOUND, NOT A CONTENT GAP
 
-**Effort estimate:** M — mostly analysis and calibration-formula tuning, not new engine code, but
-touches every anchor in the corpus so the verification tail is long.
+**Status:** attempted, `TCK-20260713-SIMQ-ECONOMY-CONTENT-DEPTH`. Composed `trading_company_hub`
+(dedicated merchant population + shop/inn buildings + resource nodes, `urban_political`'s own
+proven module) into `frontier_living_world`, `frontier_extended`, `swamp_border_world` at
+merchant_count 3 and 6 (within each world's entity-count band ceiling), recalibrated all 9 anchors
+(3 worlds x 3 seeds, 200t). **ECONOMY did not move off C in any of the 9** — this was not a content
+gap. Direct evidence: `resource_harvested`/`item_crafted`/`trade_executed`/`shop_transaction` have
+never fired in any calibration run in the corpus, ever, including `urban_political`'s own 8 seed/
+tick combinations and a diagnostic 1000t probe of `frontier_extended` at merchant_count 6. The
+corpus's only observed ECONOMY signal, at any content level, is the generic `gold_sink_fired`
+Gini-threshold mechanism. See the ECONOMY paragraph above and `docs/parity_ledger/infrastructure.yaml`
+INFRA-242 for the full finding.
 
-### 2. Author ECONOMY-rich content into 2-3 more archetype worlds
+**What this means for future work:** the real gap is upstream, in the strategy/cognition layer — no
+entity archetype currently generates an accepted harvest, craft, or trade intent, so
+`trading_company_hub`'s merchants (and every other archetype in the corpus) never exercise the
+resolution path `event_extractor.py` reads from. This is structurally similar to AGENCY's
+`ENABLE_ADVENTURE_ROUTING` gap (a real behavior path that exists but has no live trigger in any
+shipped world/profile) — **not** a "the modules/populations aren't there yet" problem, which is
+what this recommendation originally assumed. A follow-up investigation into why no entity ever
+forms/accepts a NODE/CRAFTING/SHOP_BUY/SHOP_SELL intent (goal-generation in the strategy layer, or
+a missing wiring analogous to AGENCY's) is the next real step for this pillar — content authoring
+alone cannot close it further. Not filed as a new ticket by this recommendation update; left for a
+deliberate scoping decision given the depth of engine-layer work implied.
 
-**Why now:** this pillar was never in scope for any prior SimQ initiative — the 2026-07-10 roadmap
-covered COGNITION/FACTION/INFORMATION/SOCIAL specifically because they share one gating mechanism
-(`FeatureMode` flags); ECONOMY's mechanism is different (Gini-threshold + content presence) and was
-explicitly carved out, not investigated. It's the largest remaining pillar-visibility gap in the
-corpus by grade-count (60/72 C).
-
-**Shape of the work:** same playbook as the FACTION/INFORMATION depth waves — pick 2-3 archetype
-worlds with a plausible in-fiction merchant/crafting economy (e.g. a trade-hub or settlement-heavy
-world), author harvest/craft/trade content, recalibrate, verify signal, full regression sweep.
-Should start as an investigation-tier ticket (confirm which worlds have a merchant NPC or
-crafting-capable population already, per `data/worlds/*/world.yaml`) before any content authoring —
-mirrors how Phase 3's investigation found FACTION/INFORMATION already more covered than assumed;
-ECONOMY's real gap size should be verified the same way before committing to a multi-world content
-pass.
-
-**Effort estimate:** M, by analogy to Phase 2 (SOCIAL) — same "activate a pillar in a few more
-worlds via content authoring, no engine work expected" shape. **Depends on Recommendation 1
-landing first** (or at least being scoped) — authoring more ECONOMY content into a formula that
-caps at 1/3-of-A regardless of volume risks spending real effort for a result that still reads as
-C/B corpus-wide.
+**Effort estimate for the follow-up:** unknown until the strategy-layer investigation is done — likely
+larger than the M estimate this recommendation originally carried, since the gap is now understood
+to be a missing decision/goal-generation path rather than a content-volume shortfall.
 
 ### 3. Wire `ActionIntentAdapter.execute()` into the production tick pipeline
 
@@ -219,7 +274,7 @@ additional tolerance assertion, squarely inside the existing regression-detectio
 new comparison/analytics capability.
 
 **Shape of the work:** extend `grade_anchors.json`'s schema to carry `{"grade": "S", "score":
-2.87}` per pillar instead of a bare string (migration needed for all 72×10 existing entries);
+2.87}` per pillar instead of a bare string (migration needed for all 75×10 existing entries);
 extend `test_grade_regression.py`'s comparison to also assert the raw score stays within a
 tolerance band (e.g. ±15%) of the anchored value, independent of whether the letter grade moved.
 Should start as an investigation ticket to confirm the right tolerance width empirically (too tight

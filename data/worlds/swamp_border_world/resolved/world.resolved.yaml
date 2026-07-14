@@ -32,6 +32,19 @@ regions:
   hazard_level: 2.5
   hazard_kind: NATURAL_TERRAIN
   tags: []
+- id: trading_hometown
+  type: town
+  bounds:
+  - 45
+  - 10
+  - 80
+  - 45
+  terrain: plain
+  hazard_level: 0.5
+  hazard_kind: NATURAL_TERRAIN
+  tags:
+  - plain
+  - trade_route
 - id: near_forest
   type: wilderness
   bounds:
@@ -171,6 +184,11 @@ entities:
   faction: swamp_tribe
   spawn_region: swamp_border_territory
   archetype_id: lizardfolk_scout
+- id: trading_pop_0
+  count: 3
+  role: merchant
+  faction: merchant_league
+  spawn_region: trading_hometown
 - id: wolf_pack_small_hungry_wolf
   count: 4
   role: predator_hunter
@@ -204,6 +222,11 @@ resources:
   count: 3
   region: swamp_border_territory
   regen_rate: 1
+- id: trading_res_0
+  resource_type: iron_vein
+  count: 6
+  region: trading_hometown
+  regen_rate: 1
 - id: wolf_den_near_forest__wood_node_0
   resource_type: wood_node
   count: 8
@@ -235,6 +258,12 @@ buildings:
 - id: healer_hut_0
   type: healer_hut
   region: hometown
+- id: trading_bld_0
+  type: shop
+  region: trading_hometown
+- id: trading_bld_1
+  type: inn
+  region: trading_hometown
 quest_definitions:
 - id: village_fetch_supply_run
   type: fetch
@@ -285,6 +314,57 @@ quest_definitions:
   - settlement
   - defense
   source_module: frontier_village_core
+- id: trade_fetch_shipment_goods
+  type: fetch
+  required_participant_tags:
+  - humanoid
+  - merchant_minded
+  required_location_tags:
+  - plain
+  - trade_route
+  reward_budget: 100
+  procedural_hints:
+    difficulty: 1
+    escalation: false
+  tags:
+  - trade
+  - economy
+  - supply
+  source_module: trading_company_hub
+- id: trade_escort_merchant_convoy
+  type: escort
+  required_participant_tags:
+  - humanoid
+  - merchant_minded
+  required_location_tags:
+  - plain
+  - trade_route
+  reward_budget: 120
+  procedural_hints:
+    difficulty: 2
+    escalation: true
+  tags:
+  - trade
+  - economy
+  - escort
+  source_module: trading_company_hub
+- id: trade_investigate_sabotage
+  type: investigate
+  required_participant_tags:
+  - humanoid
+  - merchant_minded
+  required_location_tags:
+  - plain
+  - trade_route
+  reward_budget: 150
+  procedural_hints:
+    difficulty: 2
+    escalation: false
+  tags:
+  - trade
+  - economy
+  - mystery
+  source_module: trading_company_hub
 - id: wolf_hunt_alpha_pack
   type: hunt
   required_participant_tags:

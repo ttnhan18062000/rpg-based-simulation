@@ -2174,3 +2174,120 @@ See `docs/parity_ledger/infrastructure.yaml::INFRA-260` (support_boundary additi
 `::INFRA-266` (new split-verdict entry) for the parity-ledger record, and
 `tickets/todos/simq-roadmap-phase4-depth-cognition/TCK-20260712-SIMQ-INFORMATION-ROUTING-CLOSURE.md`
 for the scoped follow-up fixing the 4 routing-half points.
+
+---
+
+## TCK-20260713-SIMQ-ECONOMY-CONTENT-DEPTH — ECONOMY content-depth calibration batch
+
+**Goal:** move ECONOMY grade off C in >=2 more archetype worlds by composing `trading_company_hub`
+(dedicated merchant population, shop/inn buildings, iron_vein resource nodes — the same module
+`urban_political` already uses) into `frontier_living_world`, `frontier_extended`,
+`swamp_border_world`. All 3 worlds migrated from the plain `modules: [...]` list to `module_refs:`
+with `namespace: "trading"` (required — `trading_company_hub` and `frontier_village_core`, already
+present in all 3, both declare a region id `"hometown"`; unnamespaced composition raises
+`ValueError("Duplicate region ID collision ...")` at `src/worldassembly/resolver.py` L346-347).
+
+**Calibrated at:** seed42/123/456, 200t (the existing anchor length for these 3 worlds), at
+`merchant_count: 3` (module default) for all 3, plus a diagnostic probe of `frontier_extended` at
+`merchant_count: 6` (200t and 1000t) to test whether population density was the limiting factor.
+
+**Result: ECONOMY did not move off C in any of the 9 recalibrated anchors, at either merchant_count
+tested.**
+
+| World | seed | merchant_count | ECONOMY grade | raw_score | event_count |
+|---|---|---|---|---|---|
+| frontier_living_world | 42/123/456 | 3 | C (all 3) | 0.0 | 0 |
+| frontier_extended | 42/123/456 | 3 | C (all 3) | 0.0 | 0 |
+| frontier_extended (diagnostic, not committed) | 42/123/456 | 6, 200t | C (all 3) | 0.0 | 0 |
+| frontier_extended (diagnostic, not committed) | 42 | 6, 1000t | B | 192.0 | 24 |
+| swamp_border_world | 42/123/456 | 3 | C (all 3) | 0.0 | 0 |
+
+The one apparent movement (`frontier_extended` at 1000t/merchant_count 6, B grade, 24 events) is
+**not real content-driven activity** — direct grep of that run's raw event log shows all 24 scored
+events are `gold_sink_fired` (0 `resource_harvested`/`item_crafted`/`trade_executed`/
+`shop_transaction`), matching the generic content-independent baseline documented elsewhere in this
+file (`dungeon_crawl_seed42_1000t`/`sandbox_world_seed42_1000t`, `raw_score=192.0, event_count=24`
+exactly). It is not committed as an anchor — these 3 worlds are anchored at 200t only, and 1000t was
+used for diagnosis only, per this ticket's plan.
+
+**Root cause, confirmed by direct measurement, not assumption:** grepping every
+`data/calibration/*/quality_scores.jsonl` in the entire corpus for `resource_harvested`,
+`item_crafted`, `trade_executed`, `shop_transaction` returns **zero matches across the whole
+corpus**, including all 8 of `urban_political`'s own committed seed/tick combinations (the world
+this ticket's lever was copied from, on the assumption it already proved the lever works).
+`urban_political_seed123_1000t`'s 69-event/grade-A run — previously cited in this document and in
+`docs/simulation_quality/current_state.md` as the corpus's "one data point with actual
+harvest_active/crafting_active/trade_active density" — is, on direct inspection, 100%
+`gold_sink_fired`. That prior characterization is now confirmed incorrect on this specific point.
+
+`resource_harvested`/`item_crafted`/`trade_executed`/`shop_transaction`
+(`src/observability/event_extractor.py` L327-353) are derived only from an entity's *accepted*
+`intent_results` with `source_kind` `NODE`/`CRAFTING`/`SHOP_BUY`/`SHOP_SELL`. No entity archetype in
+the corpus — including `trading_company_hub`'s own dedicated "merchant" role — has ever produced an
+accepted intent of any of these 4 kinds. The gap is upstream of both the scorer (verified correct,
+`INFRA-242`) and world content (verified sufficient — 3 more worlds now compose a full trading hub):
+no entity's decision/strategy layer currently generates a harvest, craft, or trade goal that reaches
+acceptance. This is structurally analogous to AGENCY's own documented `ENABLE_ADVENTURE_ROUTING`
+support_boundary — a real execution path with no live trigger in any shipped world/profile — not a
+"content volume" problem. See `docs/parity_ledger/infrastructure.yaml` INFRA-242's
+`support_boundary` for the full record.
+
+**Side effects (attributed, not silently absorbed):** all 3 worlds' new `trading_company_hub`
+composition added entities (merchants) and 3 bundled `quest_definitions`
+(`trade_fetch_shipment_goods`, `trade_escort_merchant_convoy`, `trade_investigate_sabotage`), which
+measurably shifted COMBAT/PROGRESSION/SOCIAL/WORLD/NARRATIVE scores (not always grade bands) for
+several of the 9 recalibrated anchors:
+- `frontier_living_world_seed42_200t`: COMBAT 0.24→0.32 (B, unchanged band), PROGRESSION
+  0.7255→1.0196 (A, unchanged band), SOCIAL 7.325→4.405 (S, unchanged band).
+- `frontier_living_world_seed123_200t`: SOCIAL 6.655→8.71 (S, unchanged band), WORLD 0.44→0.59
+  (**B→A**).
+- `frontier_living_world_seed456_200t`: SOCIAL 5.27→6.92 (S, unchanged band).
+- `frontier_extended_seed42_200t`: COMBAT 0.24→0.16 (B, unchanged band), PROGRESSION 0.7255→0.4314
+  (**A→B**).
+- `frontier_extended_seed123_200t`: NARRATIVE 0.5385→0.8889 (A, unchanged band).
+- `frontier_extended_seed456_200t`: COMBAT 0.24→0.4 (B, unchanged band), PROGRESSION 0.7255→1.3137
+  (A, unchanged band), WORLD 0.5→0.59 (**B→A**), NARRATIVE 0.6599→1.1856 (A, unchanged band).
+- `swamp_border_world_seed456_200t`: NARRATIVE 0.8247→1.1082 (A, unchanged band).
+- `swamp_border_world_seed42_200t`, `swamp_border_world_seed123_200t`: no change on any pillar.
+
+All 9 anchors updated in `tests/simulation_quality/fixtures/grade_anchors.json` to match. ECONOMY
+itself is byte-identical (C/0.0) before and after for all 9 — no ECONOMY anchor edit was needed.
+
+**Gini/gold-sink interaction (investigation.md Risk 3), measured, not assumed:** at 200t, ECONOMY's
+`loop_flags` are empty (`[]`) both before and after the content addition for all 9 anchors — no
+`gold_sink_fired` activity occurs at this tick length regardless of merchant population, matching
+`urban_political`'s own 200t/500t behavior (also C/0 events at merchant_count 6). No Gini/gold-sink
+interaction was observed to close or open at this tick length. `EconomyHealthMonitor.
+INFLATION_SPIRAL_GINI_THRESHOLD` was not touched.
+
+**Regression sweep:** full scoped pytest command set (SimQ scorer/weights/report, economy engine
+substrate, world composition/compilation, grade regression fast+slow, full `tests/simulation_quality/`
+fast+slow, `tests/unit/worldassembly/test_corpus_diversity.py`) all green except 2 pre-existing,
+unrelated failures confirmed to predate this ticket (both already committed at `HEAD` before this
+session): `test_module_family_anchored` (broken by an already-committed `urban_political_
+selfmodel_probe` profile-variant key with no matching `data/worlds/` directory — pre-existing,
+`TCK-20260712-SIMQ-INFORMATION-ROUTING-CLOSURE`) and a one-off flake in
+`test_generated_frontier_3_42_extended_population_stability` under sustained system load (passes in
+isolation; matches the load-sensitivity symptom already tracked in the open
+`TCK-20260713-SIMQ-COGNITION-LOOPDET-NONDETERMINISM` ticket). Neither touches a world or file this
+ticket modified. `python3 tools/evaluate_simq.py --dry-run`: 750 pillars checked, 0 regressions, 0
+missing, across the full 75-entry corpus.
+
+**Acceptance criteria outcome:** AC1 ("ECONOMY grade moves measurably off C in >=2 additional
+worlds") was **not achieved** — a documented, evidence-backed finding, not a silent shortfall. AC2
+("0 regressions on a full sweep") is met. The ticket's own AC3 escape valve ("if honest
+investigation finds [none/fewer candidates], that is an equally valid, documented closure") is
+extended here in spirit: honest calibration measurement, not investigation, is what closed off the
+path — 3 concrete, well-chosen candidates were authored correctly, and the reason ECONOMY didn't
+move is a corpus-wide engine-layer gap, not a shortfall in this ticket's own execution.
+
+## Zero-Pillar World Confirmation — ECONOMY update (TCK-20260713-SIMQ-ECONOMY-CONTENT-DEPTH)
+
+The "no merchant NPCs" framing for `frontier_extended`/`frontier_living_world`/`swamp_border_world`
+in the original section above is now superseded for these 3: all 3 compose `trading_company_hub`
+(a dedicated merchant population, shop/inn buildings, resource nodes) as of this ticket. ECONOMY
+remains C in all 3 anyway — **not** because of missing merchant NPCs (that gap is closed), but
+because of the corpus-wide engine-layer gap this batch found (see above). `wilderness_survival` and
+`highland_traverse` are untouched by this ticket (not chosen candidates) and remain valid,
+unexamined C cases for the original "no settlement module" reason. `dungeon_crawl` also remains
+untouched and valid for the same original reason.

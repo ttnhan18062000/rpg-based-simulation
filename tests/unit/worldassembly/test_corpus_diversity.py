@@ -479,3 +479,21 @@ def test_module_family_anchored() -> None:
             f"module '{module_id}' should now be anchored (via one of {sorted(anchored_worlds)}) "
             "but does not appear in any anchored world's module list."
         )
+
+
+# ---------------------------------------------------------------------------
+# 5. trading_company_hub composition presence (TCK-20260713-SIMQ-ECONOMY-CONTENT-DEPTH)
+# ---------------------------------------------------------------------------
+
+@pytest.mark.parametrize(
+    "world_id",
+    ["frontier_living_world", "frontier_extended", "swamp_border_world"],
+)
+def test_trading_company_hub_composed(world_id: str) -> None:
+    """Guards the ECONOMY content-depth addition — a future unrelated edit to any of
+    these 3 worlds' world.yaml must not silently drop the trading_company_hub module
+    reference these worlds were given to raise merchant/crafting content density."""
+    assert "trading_company_hub" in _world_modules(world_id), (
+        f"{world_id}: expected 'trading_company_hub' in composition module list, "
+        f"got {_world_modules(world_id)}"
+    )

@@ -3,15 +3,28 @@ schema_version: "worldcomposition.v1"
 world_id: "frontier_extended"
 name: "Frontier Extended"
 description: "Expanded frontier world adding orc clan territory and forest warden grove to the base composition."
-modules:
-  - "frontier_village_core"
-  - "wolf_den_near_forest"
-  - "goblin_camp_conflict"
-  - "old_mine_resource_loop"
-  - "bandit_road_trade_pressure"
-  - "undead_battlefield"
-  - "orc_clan_territory"
-  - "forest_warden_grove"
+module_refs:
+  - module_id: "frontier_village_core"
+    order: 0
+  - module_id: "wolf_den_near_forest"
+    order: 1
+  - module_id: "goblin_camp_conflict"
+    order: 2
+  - module_id: "old_mine_resource_loop"
+    order: 3
+  - module_id: "bandit_road_trade_pressure"
+    order: 4
+  - module_id: "undead_battlefield"
+    order: 5
+  - module_id: "orc_clan_territory"
+    order: 6
+  - module_id: "forest_warden_grove"
+    order: 7
+  - module_id: "trading_company_hub"
+    order: 8
+    namespace: "trading"
+    parameters:
+      merchant_count: 3
 default_perspectives:
   - "hero_guild_perspective"
   - "wild_beast_pack_perspective"

@@ -109,13 +109,23 @@ def _load_world_state(name: str, seed: int):
     """Load and compile a WorldSpec for the given world name.
 
     Looks for ``data/worlds/{name}/resolved/world.resolved.yaml``.
-    Returns ``(AuthoritativeState, compile_report)`` on success, or
-    ``(None, None)`` if the world is not found or compilation fails.
+    Returns ``(AuthoritativeState, compile_report)`` on success. The literal
+    name ``"generic"`` (the CLI's ``--name`` default) intentionally has no
+    world directory and returns ``(None, None)`` to use the hero+goblins
+    fallback scenario. Any other name that fails to resolve raises
+    ``FileNotFoundError`` — a mistyped or nonexistent world name must not
+    silently degrade into a meaningless synthetic scenario that still
+    produces a "successful" quality report.
     """
     resolved_path = os.path.join("data", "worlds", name, "resolved", "world.resolved.yaml")
     if not os.path.exists(resolved_path):
-        logger.info("No resolved world spec found for '%s' at %s — using generic simulation", name, resolved_path)
-        return None, None
+        if name == "generic":
+            logger.info("No world requested ('generic') — using generic hero+goblins simulation")
+            return None, None
+        raise FileNotFoundError(
+            f"World '{name}' not found: {resolved_path} does not exist. "
+            "Pass --name generic for the synthetic fallback scenario, or check for a typo in --name."
+        )
 
     try:
         import yaml

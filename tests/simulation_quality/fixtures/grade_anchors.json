@@ -1,6 +1,6 @@
 {
   "_note": "Empirical grade anchors committed from calibration runs. Update by re-running calibration and editing grades here. See docs/simulation_quality/quality_scoring_contract.md \u00a711.3.",
-  "_instructions": "If a pillar grade moves by more than one letter from the anchor, the regression test fails. Band: anchor=B accepts A/B/C, fails D or S. To update: re-run calibration, confirm new grades, edit this file, commit.",
+  "_instructions": "Each pillar entry is an object {grade, score} (score = normalized_score from quality_report.json, not raw_score). Two independent checks run against it: (1) letter-grade band \u00b11 \u2014 if a pillar grade moves by more than one letter from the anchor, the regression test fails (anchor=B accepts A/B/C, fails D or S); (2) score tolerance \u2014 the live normalized_score must stay within max(0.05, 0.20 * |anchored_score|) of the anchored score, independent of whether the letter grade moved (catches within-band magnitude regressions the letter check alone cannot see). Either check failing is a regression. To update: re-run calibration, confirm new grades/scores, edit this file, commit.",
   "_grade_order": [
     "D",
     "C",
@@ -9,867 +9,3153 @@
     "S"
   ],
   "sandbox_world_seed42_200t": {
-    "COGNITION": "B",
-    "AGENCY": "C",
-    "COMBAT": "C",
-    "FACTION": "S",
-    "ECONOMY": "C",
-    "PROGRESSION": "C",
-    "SOCIAL": "C",
-    "INFORMATION": "B",
-    "WORLD": "B",
-    "NARRATIVE": "A"
+    "COGNITION": {
+      "grade": "B",
+      "score": 0.22
+    },
+    "AGENCY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "COMBAT": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "FACTION": {
+      "grade": "S",
+      "score": 2.9
+    },
+    "ECONOMY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "PROGRESSION": {
+      "grade": "C",
+      "score": -0.1568627450980392
+    },
+    "SOCIAL": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "INFORMATION": {
+      "grade": "B",
+      "score": 0.2
+    },
+    "WORLD": {
+      "grade": "B",
+      "score": 0.09
+    },
+    "NARRATIVE": {
+      "grade": "A",
+      "score": 1.1320754716981132
+    }
   },
   "sandbox_world_seed137_200t": {
-    "COGNITION": "B",
-    "AGENCY": "C",
-    "COMBAT": "C",
-    "FACTION": "S",
-    "ECONOMY": "C",
-    "PROGRESSION": "C",
-    "SOCIAL": "C",
-    "INFORMATION": "B",
-    "WORLD": "B",
-    "NARRATIVE": "A"
+    "COGNITION": {
+      "grade": "B",
+      "score": 0.22
+    },
+    "AGENCY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "COMBAT": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "FACTION": {
+      "grade": "S",
+      "score": 2.9
+    },
+    "ECONOMY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "PROGRESSION": {
+      "grade": "C",
+      "score": -0.1568627450980392
+    },
+    "SOCIAL": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "INFORMATION": {
+      "grade": "B",
+      "score": 0.2
+    },
+    "WORLD": {
+      "grade": "B",
+      "score": 0.09
+    },
+    "NARRATIVE": {
+      "grade": "A",
+      "score": 0.5583756345177665
+    }
   },
   "sandbox_world_seed999_200t": {
-    "COGNITION": "B",
-    "AGENCY": "C",
-    "COMBAT": "B",
-    "FACTION": "S",
-    "ECONOMY": "C",
-    "PROGRESSION": "C",
-    "SOCIAL": "C",
-    "INFORMATION": "B",
-    "WORLD": "B",
-    "NARRATIVE": "A"
+    "COGNITION": {
+      "grade": "B",
+      "score": 0.22
+    },
+    "AGENCY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "COMBAT": {
+      "grade": "B",
+      "score": 0.08
+    },
+    "FACTION": {
+      "grade": "S",
+      "score": 2.9
+    },
+    "ECONOMY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "PROGRESSION": {
+      "grade": "B",
+      "score": 0.13725490196078433
+    },
+    "SOCIAL": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "INFORMATION": {
+      "grade": "B",
+      "score": 0.2
+    },
+    "WORLD": {
+      "grade": "B",
+      "score": 0.21
+    },
+    "NARRATIVE": {
+      "grade": "A",
+      "score": 1.0357142857142858
+    }
   },
   "dungeon_crawl_seed42_200t": {
-    "COGNITION": "C",
-    "AGENCY": "C",
-    "COMBAT": "C",
-    "FACTION": "S",
-    "ECONOMY": "C",
-    "PROGRESSION": "C",
-    "SOCIAL": "C",
-    "INFORMATION": "C",
-    "WORLD": "B",
-    "NARRATIVE": "C"
+    "COGNITION": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "AGENCY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "COMBAT": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "FACTION": {
+      "grade": "S",
+      "score": 2.9
+    },
+    "ECONOMY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "PROGRESSION": {
+      "grade": "C",
+      "score": -0.1568627450980392
+    },
+    "SOCIAL": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "INFORMATION": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "WORLD": {
+      "grade": "B",
+      "score": 0.12
+    },
+    "NARRATIVE": {
+      "grade": "C",
+      "score": 0.0
+    }
   },
   "urban_political_seed42_200t": {
-    "COMBAT": "B",
-    "NARRATIVE": "A",
-    "PROGRESSION": "C",
-    "AGENCY": "C",
-    "COGNITION": "B",
-    "ECONOMY": "C",
-    "FACTION": "S",
-    "INFORMATION": "B",
-    "SOCIAL": "S",
-    "WORLD": "B"
+    "COMBAT": {
+      "grade": "B",
+      "score": 0.16
+    },
+    "NARRATIVE": {
+      "grade": "A",
+      "score": 1.0185185185185186
+    },
+    "PROGRESSION": {
+      "grade": "B",
+      "score": 0.43137254901960786
+    },
+    "AGENCY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "COGNITION": {
+      "grade": "B",
+      "score": 0.22
+    },
+    "ECONOMY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "FACTION": {
+      "grade": "S",
+      "score": 2.9
+    },
+    "INFORMATION": {
+      "grade": "B",
+      "score": 0.2
+    },
+    "SOCIAL": {
+      "grade": "S",
+      "score": 7.525
+    },
+    "WORLD": {
+      "grade": "B",
+      "score": 0.21
+    }
   },
   "simq_routing_test_seed42_500t": {
-    "COMBAT": "C",
-    "NARRATIVE": "S",
-    "PROGRESSION": "C",
-    "AGENCY": "A",
-    "COGNITION": "A",
-    "ECONOMY": "C",
-    "FACTION": "C",
-    "INFORMATION": "C",
-    "SOCIAL": "C",
-    "WORLD": "B"
+    "COMBAT": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "NARRATIVE": {
+      "grade": "S",
+      "score": 4.278455284552845
+    },
+    "PROGRESSION": {
+      "grade": "C",
+      "score": -0.06451612903225806
+    },
+    "AGENCY": {
+      "grade": "A",
+      "score": 1.420731707317073
+    },
+    "COGNITION": {
+      "grade": "A",
+      "score": 6.096579476861167
+    },
+    "ECONOMY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "FACTION": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "INFORMATION": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "SOCIAL": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "WORLD": {
+      "grade": "B",
+      "score": 0.09
+    }
   },
   "dungeon_crawl_seed42_1000t": {
-    "COGNITION": "C",
-    "AGENCY": "C",
-    "COMBAT": "B",
-    "FACTION": "A",
-    "ECONOMY": "C",
-    "PROGRESSION": "B",
-    "SOCIAL": "C",
-    "INFORMATION": "C",
-    "WORLD": "B",
-    "NARRATIVE": "A"
+    "COGNITION": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "AGENCY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "COMBAT": {
+      "grade": "B",
+      "score": 0.106
+    },
+    "FACTION": {
+      "grade": "A",
+      "score": 0.58
+    },
+    "ECONOMY": {
+      "grade": "B",
+      "score": 0.21309655937846836
+    },
+    "PROGRESSION": {
+      "grade": "B",
+      "score": 0.47628657921291623
+    },
+    "SOCIAL": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "INFORMATION": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "WORLD": {
+      "grade": "B",
+      "score": 0.214
+    },
+    "NARRATIVE": {
+      "grade": "A",
+      "score": 1.845
+    }
   },
   "sandbox_world_seed42_1000t": {
-    "COGNITION": "B",
-    "AGENCY": "C",
-    "COMBAT": "B",
-    "FACTION": "A",
-    "ECONOMY": "B",
-    "PROGRESSION": "B",
-    "SOCIAL": "C",
-    "INFORMATION": "B",
-    "WORLD": "B",
-    "NARRATIVE": "A"
+    "COGNITION": {
+      "grade": "B",
+      "score": 0.221
+    },
+    "AGENCY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "COMBAT": {
+      "grade": "B",
+      "score": 0.055
+    },
+    "FACTION": {
+      "grade": "A",
+      "score": 0.58
+    },
+    "ECONOMY": {
+      "grade": "B",
+      "score": 0.21309655937846836
+    },
+    "PROGRESSION": {
+      "grade": "B",
+      "score": 0.2638469284994965
+    },
+    "SOCIAL": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "INFORMATION": {
+      "grade": "B",
+      "score": 0.04
+    },
+    "WORLD": {
+      "grade": "B",
+      "score": 0.118
+    },
+    "NARRATIVE": {
+      "grade": "A",
+      "score": 0.5606060606060606
+    }
   },
   "simq_routing_test_seed123_500t": {
-    "COGNITION": "S",
-    "AGENCY": "A",
-    "COMBAT": "C",
-    "FACTION": "C",
-    "ECONOMY": "C",
-    "PROGRESSION": "C",
-    "SOCIAL": "C",
-    "INFORMATION": "C",
-    "WORLD": "B",
-    "NARRATIVE": "S"
+    "COGNITION": {
+      "grade": "S",
+      "score": 14.036144578313253
+    },
+    "AGENCY": {
+      "grade": "A",
+      "score": 0.6415478615071283
+    },
+    "COMBAT": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "FACTION": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "ECONOMY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "PROGRESSION": {
+      "grade": "C",
+      "score": -0.06451612903225806
+    },
+    "SOCIAL": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "INFORMATION": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "WORLD": {
+      "grade": "B",
+      "score": 0.09
+    },
+    "NARRATIVE": {
+      "grade": "S",
+      "score": 2.3727087576374744
+    }
   },
   "simq_routing_test_seed456_500t": {
-    "COGNITION": "S",
-    "AGENCY": "A",
-    "COMBAT": "C",
-    "FACTION": "C",
-    "ECONOMY": "C",
-    "PROGRESSION": "C",
-    "SOCIAL": "C",
-    "INFORMATION": "C",
-    "WORLD": "B",
-    "NARRATIVE": "A"
+    "COGNITION": {
+      "grade": "S",
+      "score": 9.778672032193159
+    },
+    "AGENCY": {
+      "grade": "A",
+      "score": 0.6415478615071283
+    },
+    "COMBAT": {
+      "grade": "C",
+      "score": -0.018
+    },
+    "FACTION": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "ECONOMY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "PROGRESSION": {
+      "grade": "C",
+      "score": -0.064
+    },
+    "SOCIAL": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "INFORMATION": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "WORLD": {
+      "grade": "B",
+      "score": 0.09
+    },
+    "NARRATIVE": {
+      "grade": "A",
+      "score": 2.3930753564154785
+    }
   },
   "dungeon_crawl_seed42_500t": {
-    "COGNITION": "C",
-    "AGENCY": "C",
-    "COMBAT": "B",
-    "FACTION": "A",
-    "ECONOMY": "C",
-    "PROGRESSION": "B",
-    "SOCIAL": "C",
-    "INFORMATION": "C",
-    "WORLD": "B",
-    "NARRATIVE": "A"
+    "COGNITION": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "AGENCY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "COMBAT": {
+      "grade": "B",
+      "score": -0.010548523206751054
+    },
+    "FACTION": {
+      "grade": "A",
+      "score": 1.1693548387096775
+    },
+    "ECONOMY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "PROGRESSION": {
+      "grade": "B",
+      "score": 0.07805907172995781
+    },
+    "SOCIAL": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "INFORMATION": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "WORLD": {
+      "grade": "B",
+      "score": 0.189873417721519
+    },
+    "NARRATIVE": {
+      "grade": "A",
+      "score": 1.8036072144288577
+    }
   },
   "dungeon_crawl_seed123_500t": {
-    "COGNITION": "C",
-    "AGENCY": "C",
-    "COMBAT": "B",
-    "FACTION": "A",
-    "ECONOMY": "C",
-    "PROGRESSION": "B",
-    "SOCIAL": "C",
-    "INFORMATION": "C",
-    "WORLD": "B",
-    "NARRATIVE": "A"
+    "COGNITION": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "AGENCY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "COMBAT": {
+      "grade": "B",
+      "score": -0.018947368421052633
+    },
+    "FACTION": {
+      "grade": "A",
+      "score": 1.1693548387096775
+    },
+    "ECONOMY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "PROGRESSION": {
+      "grade": "B",
+      "score": 0.04631578947368421
+    },
+    "SOCIAL": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "INFORMATION": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "WORLD": {
+      "grade": "B",
+      "score": 0.16
+    },
+    "NARRATIVE": {
+      "grade": "A",
+      "score": 1.2124248496993988
+    }
   },
   "dungeon_crawl_seed456_500t": {
-    "COGNITION": "C",
-    "AGENCY": "C",
-    "COMBAT": "B",
-    "FACTION": "A",
-    "ECONOMY": "C",
-    "PROGRESSION": "B",
-    "SOCIAL": "C",
-    "INFORMATION": "C",
-    "WORLD": "B",
-    "NARRATIVE": "A"
+    "COGNITION": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "AGENCY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "COMBAT": {
+      "grade": "B",
+      "score": -0.012165450121654502
+    },
+    "FACTION": {
+      "grade": "A",
+      "score": 1.1693548387096775
+    },
+    "ECONOMY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "PROGRESSION": {
+      "grade": "B",
+      "score": 0.09002433090024331
+    },
+    "SOCIAL": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "INFORMATION": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "WORLD": {
+      "grade": "B",
+      "score": 0.21897810218978103
+    },
+    "NARRATIVE": {
+      "grade": "A",
+      "score": 1.783567134268537
+    }
   },
   "urban_political_seed42_500t": {
-    "COGNITION": "B",
-    "AGENCY": "C",
-    "COMBAT": "B",
-    "FACTION": "A",
-    "ECONOMY": "C",
-    "PROGRESSION": "B",
-    "SOCIAL": "S",
-    "INFORMATION": "B",
-    "WORLD": "B",
-    "NARRATIVE": "A"
+    "COGNITION": {
+      "grade": "B",
+      "score": 0.088
+    },
+    "AGENCY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "COMBAT": {
+      "grade": "B",
+      "score": 0.02459016393442623
+    },
+    "FACTION": {
+      "grade": "A",
+      "score": 1.16
+    },
+    "ECONOMY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "PROGRESSION": {
+      "grade": "B",
+      "score": 0.176
+    },
+    "SOCIAL": {
+      "grade": "S",
+      "score": 10.866
+    },
+    "INFORMATION": {
+      "grade": "B",
+      "score": 0.08
+    },
+    "WORLD": {
+      "grade": "B",
+      "score": 0.15
+    },
+    "NARRATIVE": {
+      "grade": "A",
+      "score": 0.4690831556503198
+    }
   },
   "urban_political_seed123_500t": {
-    "COGNITION": "B",
-    "AGENCY": "C",
-    "COMBAT": "B",
-    "FACTION": "A",
-    "ECONOMY": "C",
-    "PROGRESSION": "B",
-    "SOCIAL": "S",
-    "INFORMATION": "B",
-    "WORLD": "B",
-    "NARRATIVE": "A"
+    "COGNITION": {
+      "grade": "B",
+      "score": 0.088
+    },
+    "AGENCY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "COMBAT": {
+      "grade": "B",
+      "score": 0.04024144869215292
+    },
+    "FACTION": {
+      "grade": "A",
+      "score": 1.16
+    },
+    "ECONOMY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "PROGRESSION": {
+      "grade": "B",
+      "score": 0.0744466800804829
+    },
+    "SOCIAL": {
+      "grade": "S",
+      "score": 11.62
+    },
+    "INFORMATION": {
+      "grade": "B",
+      "score": 0.08
+    },
+    "WORLD": {
+      "grade": "B",
+      "score": 0.15
+    },
+    "NARRATIVE": {
+      "grade": "A",
+      "score": 0.4184549356223176
+    }
   },
   "urban_political_seed456_500t": {
-    "COGNITION": "B",
-    "AGENCY": "C",
-    "COMBAT": "A",
-    "FACTION": "A",
-    "ECONOMY": "C",
-    "PROGRESSION": "B",
-    "SOCIAL": "S",
-    "INFORMATION": "B",
-    "WORLD": "A",
-    "NARRATIVE": "B"
+    "COGNITION": {
+      "grade": "B",
+      "score": 0.088
+    },
+    "AGENCY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "COMBAT": {
+      "grade": "A",
+      "score": 0.029978586723768737
+    },
+    "FACTION": {
+      "grade": "A",
+      "score": 1.16
+    },
+    "ECONOMY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "PROGRESSION": {
+      "grade": "B",
+      "score": 0.176
+    },
+    "SOCIAL": {
+      "grade": "S",
+      "score": 16.776
+    },
+    "INFORMATION": {
+      "grade": "B",
+      "score": 0.08
+    },
+    "WORLD": {
+      "grade": "B",
+      "score": 0.15
+    },
+    "NARRATIVE": {
+      "grade": "B",
+      "score": 0.5154639175257731
+    }
   },
   "dungeon_crawl_seed123_1000t": {
-    "COGNITION": "C",
-    "AGENCY": "C",
-    "COMBAT": "B",
-    "FACTION": "A",
-    "ECONOMY": "C",
-    "PROGRESSION": "B",
-    "SOCIAL": "C",
-    "INFORMATION": "C",
-    "WORLD": "B",
-    "NARRATIVE": "B"
+    "COGNITION": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "AGENCY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "COMBAT": {
+      "grade": "B",
+      "score": 0.108
+    },
+    "FACTION": {
+      "grade": "A",
+      "score": 0.58
+    },
+    "ECONOMY": {
+      "grade": "B",
+      "score": 0.21309655937846836
+    },
+    "PROGRESSION": {
+      "grade": "B",
+      "score": 0.4611503531786075
+    },
+    "SOCIAL": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "INFORMATION": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "WORLD": {
+      "grade": "B",
+      "score": 0.2
+    },
+    "NARRATIVE": {
+      "grade": "B",
+      "score": 1.725
+    }
   },
   "dungeon_crawl_seed456_1000t": {
-    "COGNITION": "C",
-    "AGENCY": "C",
-    "COMBAT": "B",
-    "FACTION": "A",
-    "ECONOMY": "C",
-    "PROGRESSION": "B",
-    "SOCIAL": "C",
-    "INFORMATION": "C",
-    "WORLD": "B",
-    "NARRATIVE": "A"
+    "COGNITION": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "AGENCY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "COMBAT": {
+      "grade": "B",
+      "score": 0.112
+    },
+    "FACTION": {
+      "grade": "A",
+      "score": 0.58
+    },
+    "ECONOMY": {
+      "grade": "B",
+      "score": 0.21309655937846836
+    },
+    "PROGRESSION": {
+      "grade": "B",
+      "score": 0.47628657921291623
+    },
+    "SOCIAL": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "INFORMATION": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "WORLD": {
+      "grade": "B",
+      "score": 0.2
+    },
+    "NARRATIVE": {
+      "grade": "A",
+      "score": 1.505
+    }
   },
   "urban_political_seed42_1000t": {
-    "COGNITION": "B",
-    "AGENCY": "C",
-    "COMBAT": "B",
-    "FACTION": "A",
-    "ECONOMY": "B",
-    "PROGRESSION": "B",
-    "SOCIAL": "S",
-    "INFORMATION": "B",
-    "WORLD": "B",
-    "NARRATIVE": "B"
+    "COGNITION": {
+      "grade": "B",
+      "score": 0.044
+    },
+    "AGENCY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "COMBAT": {
+      "grade": "B",
+      "score": 0.105
+    },
+    "FACTION": {
+      "grade": "A",
+      "score": 0.58
+    },
+    "ECONOMY": {
+      "grade": "B",
+      "score": 0.21309655937846836
+    },
+    "PROGRESSION": {
+      "grade": "B",
+      "score": 0.44511581067472306
+    },
+    "SOCIAL": {
+      "grade": "S",
+      "score": 23.51
+    },
+    "INFORMATION": {
+      "grade": "B",
+      "score": 0.04
+    },
+    "WORLD": {
+      "grade": "B",
+      "score": 0.138
+    },
+    "NARRATIVE": {
+      "grade": "B",
+      "score": 0.584
+    }
   },
   "urban_political_seed123_1000t": {
-    "COGNITION": "B",
-    "AGENCY": "C",
-    "COMBAT": "B",
-    "FACTION": "A",
-    "ECONOMY": "B",
-    "PROGRESSION": "B",
-    "SOCIAL": "S",
-    "INFORMATION": "B",
-    "WORLD": "B",
-    "NARRATIVE": "B"
+    "COGNITION": {
+      "grade": "B",
+      "score": 0.044
+    },
+    "AGENCY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "COMBAT": {
+      "grade": "B",
+      "score": 0.109
+    },
+    "FACTION": {
+      "grade": "A",
+      "score": 0.58
+    },
+    "ECONOMY": {
+      "grade": "A",
+      "score": 0.6563614744351962
+    },
+    "PROGRESSION": {
+      "grade": "B",
+      "score": 0.44511581067472306
+    },
+    "SOCIAL": {
+      "grade": "S",
+      "score": 23.512
+    },
+    "INFORMATION": {
+      "grade": "B",
+      "score": 0.04
+    },
+    "WORLD": {
+      "grade": "B",
+      "score": 0.154
+    },
+    "NARRATIVE": {
+      "grade": "B",
+      "score": 0.6603206412825652
+    }
   },
   "urban_political_seed456_1000t": {
-    "COGNITION": "B",
-    "AGENCY": "C",
-    "COMBAT": "B",
-    "FACTION": "A",
-    "ECONOMY": "B",
-    "PROGRESSION": "B",
-    "SOCIAL": "S",
-    "INFORMATION": "B",
-    "WORLD": "B",
-    "NARRATIVE": "B"
+    "COGNITION": {
+      "grade": "B",
+      "score": 0.044
+    },
+    "AGENCY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "COMBAT": {
+      "grade": "B",
+      "score": 0.114
+    },
+    "FACTION": {
+      "grade": "A",
+      "score": 0.58
+    },
+    "ECONOMY": {
+      "grade": "B",
+      "score": 0.21309655937846836
+    },
+    "PROGRESSION": {
+      "grade": "B",
+      "score": 0.44511581067472306
+    },
+    "SOCIAL": {
+      "grade": "S",
+      "score": 24.382
+    },
+    "INFORMATION": {
+      "grade": "B",
+      "score": 0.04
+    },
+    "WORLD": {
+      "grade": "B",
+      "score": 0.142
+    },
+    "NARRATIVE": {
+      "grade": "B",
+      "score": 0.6806806806806807
+    }
   },
   "dungeon_crawl_seed42_2000t": {
-    "COGNITION": "C",
-    "AGENCY": "C",
-    "COMBAT": "B",
-    "FACTION": "B",
-    "ECONOMY": "C",
-    "PROGRESSION": "B",
-    "SOCIAL": "C",
-    "INFORMATION": "C",
-    "WORLD": "B",
-    "NARRATIVE": "A"
+    "COGNITION": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "AGENCY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "COMBAT": {
+      "grade": "B",
+      "score": 0.06096311475409836
+    },
+    "FACTION": {
+      "grade": "B",
+      "score": 0.29
+    },
+    "ECONOMY": {
+      "grade": "B",
+      "score": 0.21309655937846836
+    },
+    "PROGRESSION": {
+      "grade": "B",
+      "score": 0.34306569343065696
+    },
+    "SOCIAL": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "INFORMATION": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "WORLD": {
+      "grade": "B",
+      "score": 0.195
+    },
+    "NARRATIVE": {
+      "grade": "A",
+      "score": 1.042929292929293
+    }
   },
   "dungeon_crawl_seed123_2000t": {
-    "COGNITION": "C",
-    "AGENCY": "C",
-    "COMBAT": "B",
-    "FACTION": "B",
-    "ECONOMY": "C",
-    "PROGRESSION": "B",
-    "SOCIAL": "C",
-    "INFORMATION": "C",
-    "WORLD": "B",
-    "NARRATIVE": "B"
+    "COGNITION": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "AGENCY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "COMBAT": {
+      "grade": "B",
+      "score": 0.057889344262295084
+    },
+    "FACTION": {
+      "grade": "B",
+      "score": 0.29
+    },
+    "ECONOMY": {
+      "grade": "B",
+      "score": 0.21309655937846836
+    },
+    "PROGRESSION": {
+      "grade": "B",
+      "score": 0.3178851174934726
+    },
+    "SOCIAL": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "INFORMATION": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "WORLD": {
+      "grade": "B",
+      "score": 0.188
+    },
+    "NARRATIVE": {
+      "grade": "B",
+      "score": 0.9994794377928162
+    }
   },
   "dungeon_crawl_seed456_2000t": {
-    "COGNITION": "C",
-    "AGENCY": "C",
-    "COMBAT": "B",
-    "FACTION": "B",
-    "ECONOMY": "C",
-    "PROGRESSION": "B",
-    "SOCIAL": "C",
-    "INFORMATION": "C",
-    "WORLD": "B",
-    "NARRATIVE": "B"
+    "COGNITION": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "AGENCY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "COMBAT": {
+      "grade": "B",
+      "score": 0.05891393442622951
+    },
+    "FACTION": {
+      "grade": "B",
+      "score": 0.29
+    },
+    "ECONOMY": {
+      "grade": "B",
+      "score": 0.21309655937846836
+    },
+    "PROGRESSION": {
+      "grade": "B",
+      "score": 0.3178851174934726
+    },
+    "SOCIAL": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "INFORMATION": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "WORLD": {
+      "grade": "B",
+      "score": 0.194
+    },
+    "NARRATIVE": {
+      "grade": "B",
+      "score": 0.9806418746816098
+    }
   },
   "sandbox_world_seed42_2000t": {
-    "COGNITION": "B",
-    "AGENCY": "C",
-    "COMBAT": "B",
-    "FACTION": "B",
-    "ECONOMY": "B",
-    "PROGRESSION": "B",
-    "SOCIAL": "C",
-    "INFORMATION": "B",
-    "WORLD": "B",
-    "NARRATIVE": "A"
+    "COGNITION": {
+      "grade": "B",
+      "score": 0.25074925074925075
+    },
+    "AGENCY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "COMBAT": {
+      "grade": "B",
+      "score": 0.030225409836065573
+    },
+    "FACTION": {
+      "grade": "B",
+      "score": 0.29
+    },
+    "ECONOMY": {
+      "grade": "B",
+      "score": 0.21309655937846836
+    },
+    "PROGRESSION": {
+      "grade": "B",
+      "score": 0.20065359477124184
+    },
+    "SOCIAL": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "INFORMATION": {
+      "grade": "B",
+      "score": 0.02
+    },
+    "WORLD": {
+      "grade": "B",
+      "score": 0.132
+    },
+    "NARRATIVE": {
+      "grade": "A",
+      "score": 0.482776617954071
+    }
   },
   "frontier_extended_seed42_200t": {
-    "COGNITION": "B",
-    "AGENCY": "C",
-    "COMBAT": "B",
-    "FACTION": "S",
-    "ECONOMY": "C",
-    "PROGRESSION": "B",
-    "SOCIAL": "C",
-    "INFORMATION": "B",
-    "WORLD": "B",
-    "NARRATIVE": "A"
+    "COGNITION": {
+      "grade": "B",
+      "score": 0.22
+    },
+    "AGENCY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "COMBAT": {
+      "grade": "B",
+      "score": 0.16
+    },
+    "FACTION": {
+      "grade": "S",
+      "score": 2.9
+    },
+    "ECONOMY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "PROGRESSION": {
+      "grade": "B",
+      "score": 0.43137254901960786
+    },
+    "SOCIAL": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "INFORMATION": {
+      "grade": "B",
+      "score": 0.2
+    },
+    "WORLD": {
+      "grade": "B",
+      "score": 0.48
+    },
+    "NARRATIVE": {
+      "grade": "A",
+      "score": 0.7286432160804021
+    }
   },
   "frontier_extended_seed123_200t": {
-    "COGNITION": "B",
-    "AGENCY": "C",
-    "COMBAT": "B",
-    "FACTION": "S",
-    "ECONOMY": "C",
-    "PROGRESSION": "B",
-    "SOCIAL": "C",
-    "INFORMATION": "B",
-    "WORLD": "B",
-    "NARRATIVE": "A"
+    "COGNITION": {
+      "grade": "B",
+      "score": 0.22
+    },
+    "AGENCY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "COMBAT": {
+      "grade": "B",
+      "score": 0.2777777777777778
+    },
+    "FACTION": {
+      "grade": "S",
+      "score": 2.9
+    },
+    "ECONOMY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "PROGRESSION": {
+      "grade": "A",
+      "score": 0.9305555555555556
+    },
+    "SOCIAL": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "INFORMATION": {
+      "grade": "B",
+      "score": 0.2
+    },
+    "WORLD": {
+      "grade": "A",
+      "score": 0.59
+    },
+    "NARRATIVE": {
+      "grade": "A",
+      "score": 0.8888888888888888
+    }
   },
   "frontier_extended_seed456_200t": {
-    "COGNITION": "B",
-    "AGENCY": "C",
-    "COMBAT": "B",
-    "FACTION": "S",
-    "ECONOMY": "C",
-    "PROGRESSION": "B",
-    "SOCIAL": "C",
-    "INFORMATION": "B",
-    "WORLD": "B",
-    "NARRATIVE": "A"
+    "COGNITION": {
+      "grade": "B",
+      "score": 0.22
+    },
+    "AGENCY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "COMBAT": {
+      "grade": "B",
+      "score": 0.4
+    },
+    "FACTION": {
+      "grade": "S",
+      "score": 2.9
+    },
+    "ECONOMY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "PROGRESSION": {
+      "grade": "A",
+      "score": 1.3137254901960784
+    },
+    "SOCIAL": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "INFORMATION": {
+      "grade": "B",
+      "score": 0.2
+    },
+    "WORLD": {
+      "grade": "A",
+      "score": 0.59
+    },
+    "NARRATIVE": {
+      "grade": "A",
+      "score": 1.1855670103092784
+    }
   },
   "frontier_living_world_seed42_200t": {
-    "COGNITION": "B",
-    "AGENCY": "C",
-    "COMBAT": "B",
-    "FACTION": "S",
-    "ECONOMY": "C",
-    "PROGRESSION": "B",
-    "SOCIAL": "S",
-    "INFORMATION": "B",
-    "WORLD": "B",
-    "NARRATIVE": "A"
+    "COGNITION": {
+      "grade": "B",
+      "score": 0.22
+    },
+    "AGENCY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "COMBAT": {
+      "grade": "B",
+      "score": 0.32
+    },
+    "FACTION": {
+      "grade": "S",
+      "score": 2.9
+    },
+    "ECONOMY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "PROGRESSION": {
+      "grade": "A",
+      "score": 1.0196078431372548
+    },
+    "SOCIAL": {
+      "grade": "S",
+      "score": 4.405
+    },
+    "INFORMATION": {
+      "grade": "B",
+      "score": 0.2
+    },
+    "WORLD": {
+      "grade": "B",
+      "score": 0.39
+    },
+    "NARRATIVE": {
+      "grade": "A",
+      "score": 0.8928571428571429
+    }
   },
   "frontier_living_world_seed123_200t": {
-    "COGNITION": "B",
-    "AGENCY": "C",
-    "COMBAT": "B",
-    "FACTION": "S",
-    "ECONOMY": "C",
-    "PROGRESSION": "B",
-    "SOCIAL": "S",
-    "INFORMATION": "B",
-    "WORLD": "B",
-    "NARRATIVE": "A"
+    "COGNITION": {
+      "grade": "B",
+      "score": 0.22
+    },
+    "AGENCY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "COMBAT": {
+      "grade": "B",
+      "score": 0.32
+    },
+    "FACTION": {
+      "grade": "S",
+      "score": 2.9
+    },
+    "ECONOMY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "PROGRESSION": {
+      "grade": "A",
+      "score": 1.0196078431372548
+    },
+    "SOCIAL": {
+      "grade": "S",
+      "score": 8.71
+    },
+    "INFORMATION": {
+      "grade": "B",
+      "score": 0.2
+    },
+    "WORLD": {
+      "grade": "A",
+      "score": 0.59
+    },
+    "NARRATIVE": {
+      "grade": "A",
+      "score": 0.7
+    }
   },
   "frontier_living_world_seed456_200t": {
-    "COGNITION": "B",
-    "AGENCY": "C",
-    "COMBAT": "B",
-    "FACTION": "S",
-    "ECONOMY": "C",
-    "PROGRESSION": "C",
-    "SOCIAL": "S",
-    "INFORMATION": "B",
-    "WORLD": "B",
-    "NARRATIVE": "A"
+    "COGNITION": {
+      "grade": "B",
+      "score": 0.22
+    },
+    "AGENCY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "COMBAT": {
+      "grade": "B",
+      "score": 0.16
+    },
+    "FACTION": {
+      "grade": "S",
+      "score": 2.9
+    },
+    "ECONOMY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "PROGRESSION": {
+      "grade": "B",
+      "score": 0.43137254901960786
+    },
+    "SOCIAL": {
+      "grade": "S",
+      "score": 6.92
+    },
+    "INFORMATION": {
+      "grade": "B",
+      "score": 0.2
+    },
+    "WORLD": {
+      "grade": "B",
+      "score": 0.33
+    },
+    "NARRATIVE": {
+      "grade": "A",
+      "score": 0.8291457286432161
+    }
   },
   "wilderness_survival_seed42_200t": {
-    "COGNITION": "C",
-    "AGENCY": "C",
-    "COMBAT": "C",
-    "FACTION": "S",
-    "ECONOMY": "C",
-    "PROGRESSION": "C",
-    "SOCIAL": "C",
-    "INFORMATION": "C",
-    "WORLD": "B",
-    "NARRATIVE": "C"
+    "COGNITION": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "AGENCY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "COMBAT": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "FACTION": {
+      "grade": "S",
+      "score": 2.9
+    },
+    "ECONOMY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "PROGRESSION": {
+      "grade": "C",
+      "score": -0.1568627450980392
+    },
+    "SOCIAL": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "INFORMATION": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "WORLD": {
+      "grade": "B",
+      "score": 0.12
+    },
+    "NARRATIVE": {
+      "grade": "C",
+      "score": 0.0
+    }
   },
   "wilderness_survival_seed123_200t": {
-    "COGNITION": "C",
-    "AGENCY": "C",
-    "COMBAT": "C",
-    "FACTION": "S",
-    "ECONOMY": "C",
-    "PROGRESSION": "C",
-    "SOCIAL": "C",
-    "INFORMATION": "C",
-    "WORLD": "B",
-    "NARRATIVE": "C"
+    "COGNITION": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "AGENCY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "COMBAT": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "FACTION": {
+      "grade": "S",
+      "score": 2.9
+    },
+    "ECONOMY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "PROGRESSION": {
+      "grade": "C",
+      "score": -0.1568627450980392
+    },
+    "SOCIAL": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "INFORMATION": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "WORLD": {
+      "grade": "B",
+      "score": 0.12
+    },
+    "NARRATIVE": {
+      "grade": "C",
+      "score": 0.0
+    }
   },
   "wilderness_survival_seed456_200t": {
-    "COGNITION": "C",
-    "AGENCY": "C",
-    "COMBAT": "C",
-    "FACTION": "S",
-    "ECONOMY": "C",
-    "PROGRESSION": "C",
-    "SOCIAL": "C",
-    "INFORMATION": "C",
-    "WORLD": "B",
-    "NARRATIVE": "C"
+    "COGNITION": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "AGENCY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "COMBAT": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "FACTION": {
+      "grade": "S",
+      "score": 2.9
+    },
+    "ECONOMY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "PROGRESSION": {
+      "grade": "C",
+      "score": -0.1568627450980392
+    },
+    "SOCIAL": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "INFORMATION": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "WORLD": {
+      "grade": "B",
+      "score": 0.12
+    },
+    "NARRATIVE": {
+      "grade": "C",
+      "score": 0.0
+    }
   },
   "highland_traverse_seed42_200t": {
-    "COGNITION": "B",
-    "AGENCY": "C",
-    "COMBAT": "B",
-    "FACTION": "S",
-    "ECONOMY": "C",
-    "PROGRESSION": "C",
-    "SOCIAL": "S",
-    "INFORMATION": "B",
-    "WORLD": "B",
-    "NARRATIVE": "A"
+    "COGNITION": {
+      "grade": "B",
+      "score": 0.25
+    },
+    "AGENCY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "COMBAT": {
+      "grade": "B",
+      "score": 0.024539877300613498
+    },
+    "FACTION": {
+      "grade": "S",
+      "score": 2.9
+    },
+    "ECONOMY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "PROGRESSION": {
+      "grade": "B",
+      "score": 0.04294478527607362
+    },
+    "SOCIAL": {
+      "grade": "S",
+      "score": 13.52
+    },
+    "INFORMATION": {
+      "grade": "B",
+      "score": 0.2
+    },
+    "WORLD": {
+      "grade": "B",
+      "score": 0.27
+    },
+    "NARRATIVE": {
+      "grade": "A",
+      "score": 0.9
+    }
   },
   "highland_traverse_seed123_200t": {
-    "COGNITION": "B",
-    "AGENCY": "C",
-    "COMBAT": "B",
-    "FACTION": "S",
-    "ECONOMY": "C",
-    "PROGRESSION": "C",
-    "SOCIAL": "S",
-    "INFORMATION": "B",
-    "WORLD": "B",
-    "NARRATIVE": "A"
+    "COGNITION": {
+      "grade": "B",
+      "score": 0.22
+    },
+    "AGENCY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "COMBAT": {
+      "grade": "B",
+      "score": 0.038461538461538464
+    },
+    "FACTION": {
+      "grade": "S",
+      "score": 2.9
+    },
+    "ECONOMY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "PROGRESSION": {
+      "grade": "B",
+      "score": 0.12087912087912088
+    },
+    "SOCIAL": {
+      "grade": "S",
+      "score": 14.84
+    },
+    "INFORMATION": {
+      "grade": "B",
+      "score": 0.2
+    },
+    "WORLD": {
+      "grade": "B",
+      "score": 0.27
+    },
+    "NARRATIVE": {
+      "grade": "A",
+      "score": 1.3
+    }
   },
   "highland_traverse_seed456_200t": {
-    "COGNITION": "B",
-    "AGENCY": "C",
-    "COMBAT": "C",
-    "FACTION": "S",
-    "ECONOMY": "C",
-    "PROGRESSION": "C",
-    "SOCIAL": "S",
-    "INFORMATION": "B",
-    "WORLD": "B",
-    "NARRATIVE": "A"
+    "COGNITION": {
+      "grade": "B",
+      "score": 0.22
+    },
+    "AGENCY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "COMBAT": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "FACTION": {
+      "grade": "S",
+      "score": 2.9
+    },
+    "ECONOMY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "PROGRESSION": {
+      "grade": "C",
+      "score": -0.1568627450980392
+    },
+    "SOCIAL": {
+      "grade": "S",
+      "score": 5.85
+    },
+    "INFORMATION": {
+      "grade": "B",
+      "score": 0.2
+    },
+    "WORLD": {
+      "grade": "B",
+      "score": 0.15
+    },
+    "NARRATIVE": {
+      "grade": "A",
+      "score": 0.6052631578947368
+    }
   },
   "swamp_border_world_seed42_200t": {
-    "COGNITION": "B",
-    "AGENCY": "C",
-    "COMBAT": "C",
-    "FACTION": "S",
-    "ECONOMY": "C",
-    "PROGRESSION": "C",
-    "SOCIAL": "C",
-    "INFORMATION": "B",
-    "WORLD": "B",
-    "NARRATIVE": "A"
+    "COGNITION": {
+      "grade": "B",
+      "score": 0.22
+    },
+    "AGENCY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "COMBAT": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "FACTION": {
+      "grade": "S",
+      "score": 2.9
+    },
+    "ECONOMY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "PROGRESSION": {
+      "grade": "C",
+      "score": -0.1568627450980392
+    },
+    "SOCIAL": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "INFORMATION": {
+      "grade": "B",
+      "score": 0.2
+    },
+    "WORLD": {
+      "grade": "B",
+      "score": 0.12
+    },
+    "NARRATIVE": {
+      "grade": "A",
+      "score": 1.1320754716981132
+    }
   },
   "swamp_border_world_seed123_200t": {
-    "COGNITION": "B",
-    "AGENCY": "C",
-    "COMBAT": "C",
-    "FACTION": "S",
-    "ECONOMY": "C",
-    "PROGRESSION": "C",
-    "SOCIAL": "C",
-    "INFORMATION": "B",
-    "WORLD": "B",
-    "NARRATIVE": "A"
+    "COGNITION": {
+      "grade": "B",
+      "score": 0.22
+    },
+    "AGENCY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "COMBAT": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "FACTION": {
+      "grade": "S",
+      "score": 2.9
+    },
+    "ECONOMY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "PROGRESSION": {
+      "grade": "C",
+      "score": -0.1568627450980392
+    },
+    "SOCIAL": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "INFORMATION": {
+      "grade": "B",
+      "score": 0.2
+    },
+    "WORLD": {
+      "grade": "B",
+      "score": 0.12
+    },
+    "NARRATIVE": {
+      "grade": "A",
+      "score": 1.0256410256410255
+    }
   },
   "swamp_border_world_seed456_200t": {
-    "COGNITION": "B",
-    "AGENCY": "C",
-    "COMBAT": "C",
-    "FACTION": "S",
-    "ECONOMY": "C",
-    "PROGRESSION": "C",
-    "SOCIAL": "C",
-    "INFORMATION": "B",
-    "WORLD": "B",
-    "NARRATIVE": "A"
+    "COGNITION": {
+      "grade": "B",
+      "score": 0.22
+    },
+    "AGENCY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "COMBAT": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "FACTION": {
+      "grade": "S",
+      "score": 2.9
+    },
+    "ECONOMY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "PROGRESSION": {
+      "grade": "C",
+      "score": -0.1568627450980392
+    },
+    "SOCIAL": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "INFORMATION": {
+      "grade": "B",
+      "score": 0.2
+    },
+    "WORLD": {
+      "grade": "B",
+      "score": 0.12
+    },
+    "NARRATIVE": {
+      "grade": "A",
+      "score": 1.1082474226804124
+    }
   },
   "unit_faction_tension_seed42_200t": {
-    "COGNITION": "C",
-    "AGENCY": "C",
-    "COMBAT": "C",
-    "FACTION": "S",
-    "ECONOMY": "C",
-    "PROGRESSION": "C",
-    "SOCIAL": "C",
-    "INFORMATION": "C",
-    "WORLD": "B",
-    "NARRATIVE": "A"
+    "COGNITION": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "AGENCY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "COMBAT": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "FACTION": {
+      "grade": "S",
+      "score": 2.9
+    },
+    "ECONOMY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "PROGRESSION": {
+      "grade": "C",
+      "score": -0.1568627450980392
+    },
+    "SOCIAL": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "INFORMATION": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "WORLD": {
+      "grade": "B",
+      "score": 0.09
+    },
+    "NARRATIVE": {
+      "grade": "A",
+      "score": 1.1320754716981132
+    }
   },
   "unit_faction_tension_seed123_200t": {
-    "COGNITION": "C",
-    "AGENCY": "C",
-    "COMBAT": "C",
-    "FACTION": "S",
-    "ECONOMY": "C",
-    "PROGRESSION": "C",
-    "SOCIAL": "C",
-    "INFORMATION": "C",
-    "WORLD": "B",
-    "NARRATIVE": "A"
+    "COGNITION": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "AGENCY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "COMBAT": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "FACTION": {
+      "grade": "S",
+      "score": 2.9
+    },
+    "ECONOMY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "PROGRESSION": {
+      "grade": "C",
+      "score": -0.1568627450980392
+    },
+    "SOCIAL": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "INFORMATION": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "WORLD": {
+      "grade": "B",
+      "score": 0.09
+    },
+    "NARRATIVE": {
+      "grade": "A",
+      "score": 0.9487179487179487
+    }
   },
   "unit_faction_tension_seed456_200t": {
-    "COGNITION": "C",
-    "AGENCY": "C",
-    "COMBAT": "C",
-    "FACTION": "S",
-    "ECONOMY": "C",
-    "PROGRESSION": "C",
-    "SOCIAL": "C",
-    "INFORMATION": "C",
-    "WORLD": "B",
-    "NARRATIVE": "A"
+    "COGNITION": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "AGENCY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "COMBAT": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "FACTION": {
+      "grade": "S",
+      "score": 2.9
+    },
+    "ECONOMY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "PROGRESSION": {
+      "grade": "C",
+      "score": -0.1568627450980392
+    },
+    "SOCIAL": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "INFORMATION": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "WORLD": {
+      "grade": "B",
+      "score": 0.09
+    },
+    "NARRATIVE": {
+      "grade": "A",
+      "score": 1.0218978102189782
+    }
   },
   "unit_information_source_seed42_200t": {
-    "COGNITION": "B",
-    "AGENCY": "C",
-    "COMBAT": "C",
-    "FACTION": "C",
-    "ECONOMY": "C",
-    "PROGRESSION": "C",
-    "SOCIAL": "C",
-    "INFORMATION": "B",
-    "WORLD": "B",
-    "NARRATIVE": "A"
+    "COGNITION": {
+      "grade": "B",
+      "score": 0.22
+    },
+    "AGENCY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "COMBAT": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "FACTION": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "ECONOMY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "PROGRESSION": {
+      "grade": "C",
+      "score": -0.1568627450980392
+    },
+    "SOCIAL": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "INFORMATION": {
+      "grade": "B",
+      "score": 0.2
+    },
+    "WORLD": {
+      "grade": "B",
+      "score": 0.03
+    },
+    "NARRATIVE": {
+      "grade": "A",
+      "score": 1.3836477987421383
+    }
   },
   "unit_information_source_seed123_200t": {
-    "COGNITION": "B",
-    "AGENCY": "C",
-    "COMBAT": "C",
-    "FACTION": "C",
-    "ECONOMY": "C",
-    "PROGRESSION": "C",
-    "SOCIAL": "C",
-    "INFORMATION": "B",
-    "WORLD": "B",
-    "NARRATIVE": "A"
+    "COGNITION": {
+      "grade": "B",
+      "score": 0.22
+    },
+    "AGENCY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "COMBAT": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "FACTION": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "ECONOMY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "PROGRESSION": {
+      "grade": "C",
+      "score": -0.1568627450980392
+    },
+    "SOCIAL": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "INFORMATION": {
+      "grade": "B",
+      "score": 0.2
+    },
+    "WORLD": {
+      "grade": "B",
+      "score": 0.03
+    },
+    "NARRATIVE": {
+      "grade": "A",
+      "score": 1.4912280701754386
+    }
   },
   "unit_information_source_seed456_200t": {
-    "COGNITION": "B",
-    "AGENCY": "C",
-    "COMBAT": "C",
-    "FACTION": "C",
-    "ECONOMY": "C",
-    "PROGRESSION": "C",
-    "SOCIAL": "C",
-    "INFORMATION": "B",
-    "WORLD": "B",
-    "NARRATIVE": "A"
+    "COGNITION": {
+      "grade": "B",
+      "score": 0.22
+    },
+    "AGENCY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "COMBAT": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "FACTION": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "ECONOMY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "PROGRESSION": {
+      "grade": "C",
+      "score": -0.1568627450980392
+    },
+    "SOCIAL": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "INFORMATION": {
+      "grade": "B",
+      "score": 0.2
+    },
+    "WORLD": {
+      "grade": "B",
+      "score": 0.03
+    },
+    "NARRATIVE": {
+      "grade": "A",
+      "score": 0.7989690721649485
+    }
   },
   "unit_selfmodel_pilot_seed42_200t": {
-    "COGNITION": "S",
-    "AGENCY": "C",
-    "COMBAT": "C",
-    "FACTION": "C",
-    "ECONOMY": "C",
-    "PROGRESSION": "C",
-    "SOCIAL": "C",
-    "INFORMATION": "C",
-    "WORLD": "B",
-    "NARRATIVE": "A"
+    "COGNITION": {
+      "grade": "S",
+      "score": 16.0
+    },
+    "AGENCY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "COMBAT": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "FACTION": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "ECONOMY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "PROGRESSION": {
+      "grade": "C",
+      "score": -0.1568627450980392
+    },
+    "SOCIAL": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "INFORMATION": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "WORLD": {
+      "grade": "B",
+      "score": 0.03
+    },
+    "NARRATIVE": {
+      "grade": "A",
+      "score": 1.3836477987421383
+    }
   },
   "unit_selfmodel_pilot_seed123_200t": {
-    "COGNITION": "S",
-    "AGENCY": "C",
-    "COMBAT": "C",
-    "FACTION": "C",
-    "ECONOMY": "C",
-    "PROGRESSION": "C",
-    "SOCIAL": "C",
-    "INFORMATION": "C",
-    "WORLD": "B",
-    "NARRATIVE": "A"
+    "COGNITION": {
+      "grade": "S",
+      "score": 16.0
+    },
+    "AGENCY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "COMBAT": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "FACTION": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "ECONOMY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "PROGRESSION": {
+      "grade": "C",
+      "score": -0.1568627450980392
+    },
+    "SOCIAL": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "INFORMATION": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "WORLD": {
+      "grade": "B",
+      "score": 0.03
+    },
+    "NARRATIVE": {
+      "grade": "A",
+      "score": 1.4912280701754386
+    }
   },
   "unit_selfmodel_pilot_seed456_200t": {
-    "COGNITION": "S",
-    "AGENCY": "C",
-    "COMBAT": "C",
-    "FACTION": "C",
-    "ECONOMY": "C",
-    "PROGRESSION": "C",
-    "SOCIAL": "C",
-    "INFORMATION": "C",
-    "WORLD": "B",
-    "NARRATIVE": "A"
+    "COGNITION": {
+      "grade": "S",
+      "score": 16.0
+    },
+    "AGENCY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "COMBAT": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "FACTION": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "ECONOMY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "PROGRESSION": {
+      "grade": "C",
+      "score": -0.1568627450980392
+    },
+    "SOCIAL": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "INFORMATION": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "WORLD": {
+      "grade": "B",
+      "score": 0.03
+    },
+    "NARRATIVE": {
+      "grade": "A",
+      "score": 0.7474226804123711
+    }
   },
   "urban_political_selfmodel_probe_seed42_200t": {
-    "COGNITION": "S",
-    "AGENCY": "C",
-    "COMBAT": "B",
-    "FACTION": "S",
-    "ECONOMY": "C",
-    "PROGRESSION": "C",
-    "SOCIAL": "S",
-    "INFORMATION": "C",
-    "WORLD": "B",
-    "NARRATIVE": "A"
+    "COGNITION": {
+      "grade": "S",
+      "score": 28.05
+    },
+    "AGENCY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "COMBAT": {
+      "grade": "B",
+      "score": 0.16
+    },
+    "FACTION": {
+      "grade": "S",
+      "score": 2.9
+    },
+    "ECONOMY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "PROGRESSION": {
+      "grade": "B",
+      "score": 0.43137254901960786
+    },
+    "SOCIAL": {
+      "grade": "S",
+      "score": 10.105
+    },
+    "INFORMATION": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "WORLD": {
+      "grade": "B",
+      "score": 0.21
+    },
+    "NARRATIVE": {
+      "grade": "A",
+      "score": 1.0
+    }
   },
   "hero_guild_routing_seed42_500t": {
-    "COGNITION": "A",
-    "AGENCY": "A",
-    "COMBAT": "B",
-    "FACTION": "C",
-    "ECONOMY": "C",
-    "PROGRESSION": "B",
-    "SOCIAL": "C",
-    "INFORMATION": "C",
-    "WORLD": "B",
-    "NARRATIVE": "S"
+    "COGNITION": {
+      "grade": "A",
+      "score": 6.096579476861167
+    },
+    "AGENCY": {
+      "grade": "A",
+      "score": 1.420731707317073
+    },
+    "COMBAT": {
+      "grade": "B",
+      "score": 0.057971014492753624
+    },
+    "FACTION": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "ECONOMY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "PROGRESSION": {
+      "grade": "B",
+      "score": 0.18840579710144928
+    },
+    "SOCIAL": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "INFORMATION": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "WORLD": {
+      "grade": "B",
+      "score": 0.22
+    },
+    "NARRATIVE": {
+      "grade": "S",
+      "score": 4.1361788617886175
+    }
   },
   "hero_guild_routing_seed123_500t": {
-    "COGNITION": "S",
-    "AGENCY": "A",
-    "COMBAT": "B",
-    "FACTION": "C",
-    "ECONOMY": "C",
-    "PROGRESSION": "B",
-    "SOCIAL": "C",
-    "INFORMATION": "C",
-    "WORLD": "B",
-    "NARRATIVE": "S"
+    "COGNITION": {
+      "grade": "S",
+      "score": 14.036144578313253
+    },
+    "AGENCY": {
+      "grade": "A",
+      "score": 0.6415478615071283
+    },
+    "COMBAT": {
+      "grade": "B",
+      "score": 0.024822695035460994
+    },
+    "FACTION": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "ECONOMY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "PROGRESSION": {
+      "grade": "B",
+      "score": 0.2375886524822695
+    },
+    "SOCIAL": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "INFORMATION": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "WORLD": {
+      "grade": "B",
+      "score": 0.24
+    },
+    "NARRATIVE": {
+      "grade": "S",
+      "score": 2.179226069246436
+    }
   },
   "hero_guild_routing_seed456_500t": {
-    "COGNITION": "A",
-    "AGENCY": "A",
-    "COMBAT": "B",
-    "FACTION": "C",
-    "ECONOMY": "C",
-    "PROGRESSION": "B",
-    "SOCIAL": "C",
-    "INFORMATION": "C",
-    "WORLD": "B",
-    "NARRATIVE": "S"
+    "COGNITION": {
+      "grade": "A",
+      "score": 9.778672032193159
+    },
+    "AGENCY": {
+      "grade": "A",
+      "score": 0.6415478615071283
+    },
+    "COMBAT": {
+      "grade": "B",
+      "score": 0.016
+    },
+    "FACTION": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "ECONOMY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "PROGRESSION": {
+      "grade": "B",
+      "score": 0.296
+    },
+    "SOCIAL": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "INFORMATION": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "WORLD": {
+      "grade": "B",
+      "score": 0.19
+    },
+    "NARRATIVE": {
+      "grade": "S",
+      "score": 2.291242362525458
+    }
   },
   "crowded_frontier_seed42_200t": {
-    "COGNITION": "C",
-    "AGENCY": "C",
-    "COMBAT": "B",
-    "FACTION": "C",
-    "ECONOMY": "C",
-    "PROGRESSION": "B",
-    "SOCIAL": "C",
-    "INFORMATION": "C",
-    "WORLD": "B",
-    "NARRATIVE": "A"
+    "COGNITION": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "AGENCY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "COMBAT": {
+      "grade": "B",
+      "score": 0.16
+    },
+    "FACTION": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "ECONOMY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "PROGRESSION": {
+      "grade": "B",
+      "score": 0.43137254901960786
+    },
+    "SOCIAL": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "INFORMATION": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "WORLD": {
+      "grade": "B",
+      "score": 0.24
+    },
+    "NARRATIVE": {
+      "grade": "A",
+      "score": 0.5882352941176471
+    }
   },
   "crowded_frontier_seed123_200t": {
-    "COGNITION": "C",
-    "AGENCY": "C",
-    "COMBAT": "B",
-    "FACTION": "C",
-    "ECONOMY": "C",
-    "PROGRESSION": "B",
-    "SOCIAL": "C",
-    "INFORMATION": "C",
-    "WORLD": "B",
-    "NARRATIVE": "A"
+    "COGNITION": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "AGENCY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "COMBAT": {
+      "grade": "B",
+      "score": 0.16
+    },
+    "FACTION": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "ECONOMY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "PROGRESSION": {
+      "grade": "B",
+      "score": 0.43137254901960786
+    },
+    "SOCIAL": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "INFORMATION": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "WORLD": {
+      "grade": "B",
+      "score": 0.24
+    },
+    "NARRATIVE": {
+      "grade": "A",
+      "score": 0.7142857142857143
+    }
   },
   "crowded_frontier_seed456_200t": {
-    "COGNITION": "C",
-    "AGENCY": "C",
-    "COMBAT": "B",
-    "FACTION": "C",
-    "ECONOMY": "C",
-    "PROGRESSION": "B",
-    "SOCIAL": "C",
-    "INFORMATION": "C",
-    "WORLD": "B",
-    "NARRATIVE": "A"
+    "COGNITION": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "AGENCY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "COMBAT": {
+      "grade": "B",
+      "score": 0.16
+    },
+    "FACTION": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "ECONOMY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "PROGRESSION": {
+      "grade": "B",
+      "score": 0.43137254901960786
+    },
+    "SOCIAL": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "INFORMATION": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "WORLD": {
+      "grade": "B",
+      "score": 0.24
+    },
+    "NARRATIVE": {
+      "grade": "A",
+      "score": 1.1194029850746268
+    }
   },
   "resource_dense_basin_seed42_200t": {
-    "COGNITION": "C",
-    "AGENCY": "C",
-    "COMBAT": "C",
-    "FACTION": "C",
-    "ECONOMY": "C",
-    "PROGRESSION": "C",
-    "SOCIAL": "C",
-    "INFORMATION": "C",
-    "WORLD": "B",
-    "NARRATIVE": "A"
+    "COGNITION": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "AGENCY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "COMBAT": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "FACTION": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "ECONOMY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "PROGRESSION": {
+      "grade": "C",
+      "score": -0.1568627450980392
+    },
+    "SOCIAL": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "INFORMATION": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "WORLD": {
+      "grade": "B",
+      "score": 0.09
+    },
+    "NARRATIVE": {
+      "grade": "A",
+      "score": 1.1320754716981132
+    }
   },
   "resource_dense_basin_seed123_200t": {
-    "COGNITION": "C",
-    "AGENCY": "C",
-    "COMBAT": "C",
-    "FACTION": "C",
-    "ECONOMY": "C",
-    "PROGRESSION": "C",
-    "SOCIAL": "C",
-    "INFORMATION": "C",
-    "WORLD": "B",
-    "NARRATIVE": "A"
+    "COGNITION": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "AGENCY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "COMBAT": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "FACTION": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "ECONOMY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "PROGRESSION": {
+      "grade": "C",
+      "score": -0.1568627450980392
+    },
+    "SOCIAL": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "INFORMATION": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "WORLD": {
+      "grade": "B",
+      "score": 0.09
+    },
+    "NARRATIVE": {
+      "grade": "A",
+      "score": 0.9487179487179487
+    }
   },
   "resource_dense_basin_seed456_200t": {
-    "COGNITION": "C",
-    "AGENCY": "C",
-    "COMBAT": "C",
-    "FACTION": "C",
-    "ECONOMY": "C",
-    "PROGRESSION": "C",
-    "SOCIAL": "C",
-    "INFORMATION": "C",
-    "WORLD": "B",
-    "NARRATIVE": "A"
+    "COGNITION": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "AGENCY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "COMBAT": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "FACTION": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "ECONOMY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "PROGRESSION": {
+      "grade": "C",
+      "score": -0.1568627450980392
+    },
+    "SOCIAL": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "INFORMATION": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "WORLD": {
+      "grade": "B",
+      "score": 0.09
+    },
+    "NARRATIVE": {
+      "grade": "A",
+      "score": 0.8505154639175257
+    }
   },
   "frontier_marches_seed42_200t": {
-    "COGNITION": "B",
-    "AGENCY": "C",
-    "COMBAT": "B",
-    "FACTION": "S",
-    "ECONOMY": "C",
-    "PROGRESSION": "B",
-    "SOCIAL": "C",
-    "INFORMATION": "B",
-    "WORLD": "B",
-    "NARRATIVE": "A"
+    "COGNITION": {
+      "grade": "B",
+      "score": 0.22
+    },
+    "AGENCY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "COMBAT": {
+      "grade": "B",
+      "score": 0.24
+    },
+    "FACTION": {
+      "grade": "S",
+      "score": 2.9
+    },
+    "ECONOMY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "PROGRESSION": {
+      "grade": "A",
+      "score": 0.7254901960784313
+    },
+    "SOCIAL": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "INFORMATION": {
+      "grade": "B",
+      "score": 0.2
+    },
+    "WORLD": {
+      "grade": "B",
+      "score": 0.48
+    },
+    "NARRATIVE": {
+      "grade": "A",
+      "score": 0.7474226804123711
+    }
   },
   "frontier_marches_seed123_200t": {
-    "COGNITION": "B",
-    "AGENCY": "C",
-    "COMBAT": "B",
-    "FACTION": "S",
-    "ECONOMY": "C",
-    "PROGRESSION": "B",
-    "SOCIAL": "C",
-    "INFORMATION": "B",
-    "WORLD": "B",
-    "NARRATIVE": "A"
+    "COGNITION": {
+      "grade": "B",
+      "score": 0.22
+    },
+    "AGENCY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "COMBAT": {
+      "grade": "B",
+      "score": 0.14772727272727273
+    },
+    "FACTION": {
+      "grade": "S",
+      "score": 2.9
+    },
+    "ECONOMY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "PROGRESSION": {
+      "grade": "A",
+      "score": 0.7192982456140351
+    },
+    "SOCIAL": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "INFORMATION": {
+      "grade": "B",
+      "score": 0.2
+    },
+    "WORLD": {
+      "grade": "A",
+      "score": 0.6
+    },
+    "NARRATIVE": {
+      "grade": "A",
+      "score": 0.9627329192546584
+    }
   },
   "frontier_marches_seed456_200t": {
-    "COGNITION": "B",
-    "AGENCY": "C",
-    "COMBAT": "B",
-    "FACTION": "S",
-    "ECONOMY": "C",
-    "PROGRESSION": "B",
-    "SOCIAL": "C",
-    "INFORMATION": "B",
-    "WORLD": "B",
-    "NARRATIVE": "A"
+    "COGNITION": {
+      "grade": "B",
+      "score": 0.22
+    },
+    "AGENCY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "COMBAT": {
+      "grade": "B",
+      "score": 0.24
+    },
+    "FACTION": {
+      "grade": "S",
+      "score": 2.9
+    },
+    "ECONOMY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "PROGRESSION": {
+      "grade": "A",
+      "score": 0.7254901960784313
+    },
+    "SOCIAL": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "INFORMATION": {
+      "grade": "B",
+      "score": 0.2
+    },
+    "WORLD": {
+      "grade": "B",
+      "score": 0.45
+    },
+    "NARRATIVE": {
+      "grade": "A",
+      "score": 1.116751269035533
+    }
   },
   "unit_selfmodel_pilot_seed42_1000t": {
-    "COGNITION": "S",
-    "AGENCY": "C",
-    "COMBAT": "B",
-    "FACTION": "C",
-    "ECONOMY": "B",
-    "PROGRESSION": "B",
-    "SOCIAL": "C",
-    "INFORMATION": "C",
-    "WORLD": "B",
-    "NARRATIVE": "B"
+    "COGNITION": {
+      "grade": "S",
+      "score": 17.323
+    },
+    "AGENCY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "COMBAT": {
+      "grade": "B",
+      "score": 0.05337361530715005
+    },
+    "FACTION": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "ECONOMY": {
+      "grade": "B",
+      "score": 0.21309655937846836
+    },
+    "PROGRESSION": {
+      "grade": "B",
+      "score": 0.23363544813695872
+    },
+    "SOCIAL": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "INFORMATION": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "WORLD": {
+      "grade": "B",
+      "score": 0.054
+    },
+    "NARRATIVE": {
+      "grade": "B",
+      "score": 0.4262788365095286
+    }
   },
   "hero_guild_routing_seed42_1000t": {
-    "COGNITION": "A",
-    "AGENCY": "A",
-    "COMBAT": "B",
-    "FACTION": "C",
-    "ECONOMY": "B",
-    "PROGRESSION": "B",
-    "SOCIAL": "C",
-    "INFORMATION": "C",
-    "WORLD": "B",
-    "NARRATIVE": "S"
+    "COGNITION": {
+      "grade": "A",
+      "score": 9.829659318637274
+    },
+    "AGENCY": {
+      "grade": "A",
+      "score": 1.0070564516129032
+    },
+    "COMBAT": {
+      "grade": "B",
+      "score": 0.117
+    },
+    "FACTION": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "ECONOMY": {
+      "grade": "B",
+      "score": 0.21309655937846836
+    },
+    "PROGRESSION": {
+      "grade": "B",
+      "score": 0.4149043303121853
+    },
+    "SOCIAL": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "INFORMATION": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "WORLD": {
+      "grade": "B",
+      "score": 0.184
+    },
+    "NARRATIVE": {
+      "grade": "S",
+      "score": 3.19
+    }
   },
   "simq_routing_test_seed42_1000t": {
-    "COGNITION": "A",
-    "AGENCY": "A",
-    "COMBAT": "B",
-    "FACTION": "C",
-    "ECONOMY": "B",
-    "PROGRESSION": "B",
-    "SOCIAL": "C",
-    "INFORMATION": "C",
-    "WORLD": "B",
-    "NARRATIVE": "S"
+    "COGNITION": {
+      "grade": "A",
+      "score": 9.498997995991983
+    },
+    "AGENCY": {
+      "grade": "A",
+      "score": 1.0070564516129032
+    },
+    "COMBAT": {
+      "grade": "B",
+      "score": 0.1041041041041041
+    },
+    "FACTION": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "ECONOMY": {
+      "grade": "B",
+      "score": 0.21309655937846836
+    },
+    "PROGRESSION": {
+      "grade": "B",
+      "score": 0.3997985901309164
+    },
+    "SOCIAL": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "INFORMATION": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "WORLD": {
+      "grade": "B",
+      "score": 0.114
+    },
+    "NARRATIVE": {
+      "grade": "S",
+      "score": 3.325
+    }
   },
   "unit_faction_tension_seed42_1000t": {
-    "COGNITION": "B",
-    "AGENCY": "C",
-    "COMBAT": "B",
-    "FACTION": "A",
-    "ECONOMY": "B",
-    "PROGRESSION": "B",
-    "SOCIAL": "C",
-    "INFORMATION": "C",
-    "WORLD": "B",
-    "NARRATIVE": "A"
+    "COGNITION": {
+      "grade": "B",
+      "score": 0.21
+    },
+    "AGENCY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "COMBAT": {
+      "grade": "B",
+      "score": 0.05
+    },
+    "FACTION": {
+      "grade": "A",
+      "score": 0.58
+    },
+    "ECONOMY": {
+      "grade": "B",
+      "score": 0.21309655937846836
+    },
+    "PROGRESSION": {
+      "grade": "B",
+      "score": 0.23363544813695872
+    },
+    "SOCIAL": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "INFORMATION": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "WORLD": {
+      "grade": "B",
+      "score": 0.118
+    },
+    "NARRATIVE": {
+      "grade": "A",
+      "score": 0.5360721442885772
+    }
   },
   "unit_faction_tension_seed42_2000t": {
-    "COGNITION": "B",
-    "AGENCY": "C",
-    "COMBAT": "B",
-    "FACTION": "B",
-    "ECONOMY": "B",
-    "PROGRESSION": "B",
-    "SOCIAL": "C",
-    "INFORMATION": "C",
-    "WORLD": "B",
-    "NARRATIVE": "A"
+    "COGNITION": {
+      "grade": "B",
+      "score": 0.23976023976023977
+    },
+    "AGENCY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "COMBAT": {
+      "grade": "B",
+      "score": 0.02817622950819672
+    },
+    "FACTION": {
+      "grade": "B",
+      "score": 0.29
+    },
+    "ECONOMY": {
+      "grade": "B",
+      "score": 0.21309655937846836
+    },
+    "PROGRESSION": {
+      "grade": "B",
+      "score": 0.17112998040496408
+    },
+    "SOCIAL": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "INFORMATION": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "WORLD": {
+      "grade": "B",
+      "score": 0.134
+    },
+    "NARRATIVE": {
+      "grade": "A",
+      "score": 0.5587467362924282
+    }
   },
   "urban_political_seed42_2000t": {
-    "COGNITION": "B",
-    "AGENCY": "C",
-    "COMBAT": "B",
-    "FACTION": "B",
-    "ECONOMY": "B",
-    "PROGRESSION": "B",
-    "SOCIAL": "S",
-    "INFORMATION": "B",
-    "WORLD": "B",
-    "NARRATIVE": "B"
+    "COGNITION": {
+      "grade": "B",
+      "score": 0.022
+    },
+    "AGENCY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "COMBAT": {
+      "grade": "B",
+      "score": 0.05584016393442623
+    },
+    "FACTION": {
+      "grade": "B",
+      "score": 0.29
+    },
+    "ECONOMY": {
+      "grade": "B",
+      "score": 0.23976023976023977
+    },
+    "PROGRESSION": {
+      "grade": "B",
+      "score": 0.3183006535947712
+    },
+    "SOCIAL": {
+      "grade": "S",
+      "score": 14.6535
+    },
+    "INFORMATION": {
+      "grade": "B",
+      "score": 0.02
+    },
+    "WORLD": {
+      "grade": "B",
+      "score": 0.144
+    },
+    "NARRATIVE": {
+      "grade": "B",
+      "score": 0.36283185840707965
+    }
   },
   "generated_frontier_3_42_seed42_200t": {
-    "COGNITION": "B",
-    "AGENCY": "C",
-    "COMBAT": "B",
-    "FACTION": "S",
-    "ECONOMY": "C",
-    "PROGRESSION": "C",
-    "SOCIAL": "C",
-    "INFORMATION": "B",
-    "WORLD": "B",
-    "NARRATIVE": "A"
+    "COGNITION": {
+      "grade": "B",
+      "score": 0.22
+    },
+    "AGENCY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "COMBAT": {
+      "grade": "B",
+      "score": 0.16
+    },
+    "FACTION": {
+      "grade": "S",
+      "score": 2.9
+    },
+    "ECONOMY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "PROGRESSION": {
+      "grade": "B",
+      "score": 0.43137254901960786
+    },
+    "SOCIAL": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "INFORMATION": {
+      "grade": "B",
+      "score": 0.2
+    },
+    "WORLD": {
+      "grade": "B",
+      "score": 0.3
+    },
+    "NARRATIVE": {
+      "grade": "A",
+      "score": 0.8379888268156425
+    }
   },
   "generated_frontier_3_42_seed123_200t": {
-    "COGNITION": "B",
-    "AGENCY": "C",
-    "COMBAT": "B",
-    "FACTION": "S",
-    "ECONOMY": "C",
-    "PROGRESSION": "C",
-    "SOCIAL": "C",
-    "INFORMATION": "B",
-    "WORLD": "B",
-    "NARRATIVE": "A"
+    "COGNITION": {
+      "grade": "B",
+      "score": 0.22
+    },
+    "AGENCY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "COMBAT": {
+      "grade": "B",
+      "score": 0.07142857142857142
+    },
+    "FACTION": {
+      "grade": "S",
+      "score": 2.9
+    },
+    "ECONOMY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "PROGRESSION": {
+      "grade": "B",
+      "score": 0.43137254901960786
+    },
+    "SOCIAL": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "INFORMATION": {
+      "grade": "B",
+      "score": 0.2
+    },
+    "WORLD": {
+      "grade": "B",
+      "score": 0.3
+    },
+    "NARRATIVE": {
+      "grade": "A",
+      "score": 1.0913705583756346
+    }
   },
   "generated_frontier_3_42_seed456_200t": {
-    "COGNITION": "B",
-    "AGENCY": "C",
-    "COMBAT": "B",
-    "FACTION": "S",
-    "ECONOMY": "C",
-    "PROGRESSION": "C",
-    "SOCIAL": "C",
-    "INFORMATION": "B",
-    "WORLD": "B",
-    "NARRATIVE": "A"
+    "COGNITION": {
+      "grade": "B",
+      "score": 0.22
+    },
+    "AGENCY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "COMBAT": {
+      "grade": "B",
+      "score": 0.16
+    },
+    "FACTION": {
+      "grade": "S",
+      "score": 2.9
+    },
+    "ECONOMY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "PROGRESSION": {
+      "grade": "B",
+      "score": 0.43137254901960786
+    },
+    "SOCIAL": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "INFORMATION": {
+      "grade": "B",
+      "score": 0.2
+    },
+    "WORLD": {
+      "grade": "B",
+      "score": 0.3
+    },
+    "NARRATIVE": {
+      "grade": "A",
+      "score": 0.979381443298969
+    }
   },
   "generated_frontier_3_42_seed42_1000t": {
-    "COGNITION": "B",
-    "AGENCY": "C",
-    "COMBAT": "B",
-    "FACTION": "A",
-    "ECONOMY": "B",
-    "PROGRESSION": "B",
-    "SOCIAL": "C",
-    "INFORMATION": "B",
-    "WORLD": "B",
-    "NARRATIVE": "A"
+    "COGNITION": {
+      "grade": "B",
+      "score": 0.221
+    },
+    "AGENCY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "COMBAT": {
+      "grade": "B",
+      "score": 0.179
+    },
+    "FACTION": {
+      "grade": "A",
+      "score": 0.58
+    },
+    "ECONOMY": {
+      "grade": "B",
+      "score": 0.21309655937846836
+    },
+    "PROGRESSION": {
+      "grade": "A",
+      "score": 0.6565961732124874
+    },
+    "SOCIAL": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "INFORMATION": {
+      "grade": "B",
+      "score": 0.04
+    },
+    "WORLD": {
+      "grade": "B",
+      "score": 0.34
+    },
+    "NARRATIVE": {
+      "grade": "A",
+      "score": 1.0960960960960962
+    }
+  },
+  "unit_information_density_seed42_200t": {
+    "COGNITION": {
+      "grade": "A",
+      "score": 0.66
+    },
+    "AGENCY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "COMBAT": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "FACTION": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "ECONOMY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "PROGRESSION": {
+      "grade": "C",
+      "score": -0.1568627450980392
+    },
+    "SOCIAL": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "INFORMATION": {
+      "grade": "A",
+      "score": 0.6
+    },
+    "WORLD": {
+      "grade": "B",
+      "score": 0.03
+    },
+    "NARRATIVE": {
+      "grade": "A",
+      "score": 1.3836477987421383
+    }
+  },
+  "unit_information_density_seed123_200t": {
+    "COGNITION": {
+      "grade": "A",
+      "score": 0.66
+    },
+    "AGENCY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "COMBAT": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "FACTION": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "ECONOMY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "PROGRESSION": {
+      "grade": "C",
+      "score": -0.1568627450980392
+    },
+    "SOCIAL": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "INFORMATION": {
+      "grade": "A",
+      "score": 0.6
+    },
+    "WORLD": {
+      "grade": "B",
+      "score": 0.03
+    },
+    "NARRATIVE": {
+      "grade": "A",
+      "score": 1.4912280701754386
+    }
+  },
+  "unit_information_density_seed456_200t": {
+    "COGNITION": {
+      "grade": "A",
+      "score": 0.66
+    },
+    "AGENCY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "COMBAT": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "FACTION": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "ECONOMY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "PROGRESSION": {
+      "grade": "C",
+      "score": -0.1568627450980392
+    },
+    "SOCIAL": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "INFORMATION": {
+      "grade": "A",
+      "score": 0.6
+    },
+    "WORLD": {
+      "grade": "B",
+      "score": 0.03
+    },
+    "NARRATIVE": {
+      "grade": "A",
+      "score": 0.7989690721649485
+    }
   }
 }

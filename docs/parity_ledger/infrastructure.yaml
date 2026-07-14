@@ -3033,11 +3033,36 @@
   legacy_evidence: null
   v2_evidence: >
     src/simulation_quality/scorers/economy.py::EconomyScorer.EVENT_TYPES
-    (ecology_cycle_completed absent); EconomyScorer.score returns None for that event
+    (ecology_cycle_completed absent); EconomyScorer.score returns None for that event.
+    Cross-checked by TCK-20260713-SIMQ-ECONOMY-CONTENT-DEPTH: composed trading_company_hub
+    (dedicated merchant population, shop/inn buildings, iron_vein resource nodes) into 3
+    additional worlds (frontier_living_world, frontier_extended, swamp_border_world) at
+    merchant_count 3 and 6, calibrated at 200t and (diagnostically) 1000t. resource_harvested/
+    item_crafted/trade_executed/shop_transaction never fired in any of these runs, nor in a
+    full grep of every data/calibration/*/quality_scores.jsonl in the corpus (including
+    urban_political, the pre-existing trading_company_hub reference world, at any of its 8
+    committed seed/tick combinations) — the scorer's own event-type coverage is unaffected;
+    see support_boundary for the root cause this surfaced.
   proof_type: null
   test_path: tests/simulation_quality/test_economy_scorer.py::TestEcologyExclusion::test_ecology_cycle_not_scored
   divergence_note: null
-  support_boundary: null
+  support_boundary: >
+    resource_harvested/item_crafted/trade_executed/shop_transaction (src/observability/
+    event_extractor.py L327-353) are derived only from an entity's *accepted* intent_results
+    with source_kind NODE/CRAFTING/SHOP_BUY/SHOP_SELL. TCK-20260713-SIMQ-ECONOMY-CONTENT-DEPTH
+    found, by direct grep of every calibration run's raw event log, that no entity archetype in
+    the corpus — including trading_company_hub's own dedicated "merchant" role, at merchant_count
+    3 or 6 — has ever produced an accepted intent of any of these 4 kinds, at 200t or 1000t. The
+    corpus's only ever-observed ECONOMY signal is gold_sink_fired (Gini-threshold inflation
+    control, content-independent), confirmed by grep to be the sole contributor even to
+    urban_political_seed123_1000t's 69-event/grade-A run, previously read (SIMQ-CALIBRATED-001,
+    current_state.md pre-this-ticket) as evidence of "real economic activity" — that reading is
+    now confirmed incorrect on this specific point. The gap is upstream of both the scorer and
+    world content: no entity's decision/strategy layer currently generates a harvest, craft, or
+    trade goal that reaches acceptance, analogous to AGENCY's own documented
+    ENABLE_ADVENTURE_ROUTING support_boundary above. Content authoring alone cannot close this;
+    flagged for a follow-up investigation into the strategy/cognition layer's goal-generation
+    path for these 4 intent kinds.
 - id: INFRA-243
   text: "ProgressionScorer covers all contract §5 PROGRESSION rules including XP-per-10
     scaling, level cap detection, all plateau types (xp_freeze, skill_silence, xp_rate_zero,
@@ -3522,7 +3547,16 @@
     coverage table (SQ-01 through SQ-22). Performance limits: scorer < 0.1ms, report < 50ms,
     worst_events ≤ 100, window_buffer ≤ 200. Grade regression anchors: 25 run keys committed
     to tests/simulation_quality/fixtures/grade_anchors.json (14 fast ≤500t, 11 slow ≥1000t).
-    Parametric band-tolerance tests (±1 letter) against data/calibration/ reports."
+    Parametric band-tolerance tests (±1 letter) against data/calibration/ reports.
+    UPDATE 2026-07-13 (TCK-20260713-SIMQ-RAWSCORE-PERSIST): each anchor entry's per-pillar
+    schema changed from a bare grade string to an object {\"grade\": ..., \"score\": ...},
+    where score is the pillar's normalized_score (not raw_score — the two differ by an order
+    of magnitude). Regression detection now has two independent dimensions: the existing
+    ±1-letter band check, plus a new score-tolerance check
+    (abs_delta <= max(0.05, 0.20 * |anchored_score|)) that catches within-band magnitude
+    regressions the letter-only check cannot see. Tolerance constants derived from an
+    18-run_key/180-observation same-config repeat-trial dataset (max observed organic
+    absolute delta ~0.019)."
   status: verified
   priority: P1
   legacy_evidence: null
@@ -3539,24 +3573,74 @@
     flagged stale once by TCK-20260707-SIMQ-LONGRUN-HOTPILLAR-ANCHORS and now further inflated
     by this ticket's 4 new generated_frontier_3_42 entries (3 fast + 1 slow). Flagging only, per
     that sibling ticket's precedent — the full count-text correction is a separate ticket's
-    scope."
+    scope. TCK-20260713-SIMQ-RAWSCORE-PERSIST 2026-07-13: migrated all 75 entries (live count
+    as of this ticket) to the {grade, score} object schema, reading normalized_score from the
+    same-day TCK-20260713-SIMQ-SCORE-CEILING-FIX regenerated data/calibration/ reports; added
+    _within_score_tolerance() and test_score_tolerance_catches_within_band_regression() to
+    tests/simulation_quality/test_grade_regression.py; updated quality_scoring_contract.md §11.3."
   proof_type: null
   test_path: "tests/simulation_quality/test_scenario_coverage.py;
     tests/simulation_quality/test_grade_regression.py::test_grade_within_anchor_band;
-    tests/simulation_quality/test_grade_regression.py::test_grade_anchor_file_exists_and_valid"
+    tests/simulation_quality/test_grade_regression.py::test_grade_anchor_file_exists_and_valid;
+    tests/simulation_quality/test_grade_regression.py::test_score_tolerance_catches_within_band_regression"
   divergence_note: null
   support_boundary: null
 - id: INFRA-252
   text: "tools/evaluate_simq.py standing harness: --dry-run diffs existing data/calibration/
     reports against grade_anchors.json (25 entries); full mode re-runs calibrate_simq.py
     for all fast anchor scenarios. Exit 0=all pass, 1=regress, 2=setup error.
-    make evaluate (dry-run) and make evaluate-full targets added to Makefile."
+    make evaluate (dry-run) and make evaluate-full targets added to Makefile.
+    UPDATE 2026-07-13 (TCK-20260713-SIMQ-EVAL-PROFILE-BUG): full-mode's _run_calibration()
+    previously forwarded the grade_anchors.json run_key's profile-name prefix straight
+    through as calibrate_simq.py's --name (world) argument, which only happened to work
+    when the profile name and world directory name were identical. For any anchor whose
+    profile name is a variant/probe of a shorter world name (e.g.
+    urban_political_selfmodel_probe), this silently pointed --name at a nonexistent world
+    directory. calibrate_simq.py's old _load_world_state() masked this by falling back to
+    a meaningless generic synthetic scenario instead of erroring, so full-mode evaluate
+    runs could silently score the wrong (or a fabricated) world. Fixed by adding
+    _resolve_world_name(), which probes data/worlds/ directly (progressively stripping
+    trailing name segments) to recover the real world directory, and by forwarding
+    --profile plus an explicit --output pinned to the run_key so the correct calibration
+    profile is applied and the report lands under the expected run_key.
+    UPDATE 2026-07-13 (TCK-20260713-SIMQ-RAWSCORE-PERSIST): grade_anchors.json's per-pillar
+    schema changed to {grade, score} objects (see INFRA-250); main()'s call site now extracts
+    just the grade (anchor_grades = {p: v[\"grade\"] for p, v in all_anchors[run_key].items()})
+    before calling _compare(), which is unchanged and still takes dict[str, str]. This is a
+    schema-compatibility fix only — the new score-tolerance check is deliberately not mirrored
+    into this harness (deferred, see plan.md Anti-Drift Notes); §11.6's '±1 band tolerance'
+    framing remains accurate for this file."
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: "tools/evaluate_simq.py::main(); Makefile evaluate/evaluate-full targets. TCK-20260702-SIMQ-EVAL-HARNESS 2026-07-02."
+  v2_evidence: "tools/evaluate_simq.py::main(); Makefile evaluate/evaluate-full targets. TCK-20260702-SIMQ-EVAL-HARNESS 2026-07-02. tools/evaluate_simq.py::_resolve_world_name(), _run_calibration() (now forwards --profile and an explicit --output pinned to run_key) — TCK-20260713-SIMQ-EVAL-PROFILE-BUG 2026-07-13. tools/evaluate_simq.py::main() anchor_grades extraction fixed for the new {grade, score} anchor schema — TCK-20260713-SIMQ-RAWSCORE-PERSIST 2026-07-13."
   proof_type: null
-  test_path: "tests/simulation_quality/test_evaluate_harness.py"
+  test_path: "tests/simulation_quality/test_evaluate_harness.py::TestResolveWorldName;
+    tests/simulation_quality/test_evaluate_harness.py::TestAnchorSchemaCompat"
+  divergence_note: null
+  support_boundary: null
+- id: INFRA-269
+  text: >
+    tools/calibrate_simq.py's _load_world_state() fails loud instead of silently
+    substituting a synthetic world: any non-"generic" world name that does not resolve to
+    a real data/worlds/{name}/ directory now raises FileNotFoundError, rather than falling
+    back to a meaningless generic synthetic scenario that would let a mistyped or
+    unresolvable --name produce a plausible-looking but corrupted calibration result. The
+    "generic" sentinel itself is unaffected — it still returns (None, None) to signal the
+    synthetic-scenario path deliberately, without raising.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: "tools/calibrate_simq.py::_load_world_state() — raises FileNotFoundError for
+    any unresolvable non-'generic' world name; TCK-20260713-SIMQ-EVAL-PROFILE-BUG 2026-07-13.
+    Companion fix in the same ticket: tools/evaluate_simq.py::_resolve_world_name() (see
+    INFRA-252), which resolves profile-name-to-world-name mismatches before calling into
+    calibrate_simq.py, so this fail-loud guard now also acts as a backstop for evaluate_simq.py's
+    live-mode calibration runner."
+  proof_type: regression
+  test_path: "tests/simulation_quality/test_calibrate_world_loading.py::test_unresolvable_name_raises_instead_of_falling_back;
+    tests/simulation_quality/test_calibrate_world_loading.py::test_generic_sentinel_returns_none_without_raising;
+    tests/simulation_quality/test_calibrate_world_loading.py::test_real_world_resolves_to_a_compiled_state"
   divergence_note: null
   support_boundary: null
 - id: SIMQ-CALIBRATED-001
@@ -3579,7 +3663,17 @@
     resource_seized (no distinct WorldEvent), contract_milestone_completed (no milestone field),
     social_memory_created (transient timeline buffer).
     100-tick baseline: NARRATIVE=A, AGENCY/LIFECYCLE/COMBAT/SOCIAL/FACTION partially active.
-    Full calibration requires remaining EMIT tickets (COGNITION, WORLD, ECONOMY, NARRATIVE)."
+    Full calibration requires remaining EMIT tickets (COGNITION, WORLD, ECONOMY, NARRATIVE).
+    TCK-20260713-SIMQ-SCORE-CEILING-FIX: WORLD/ECONOMY/PROGRESSION/INFORMATION's positive
+    per-event weights in scoring_weights.yaml are now empirically tuned against each pillar's
+    actual richest-observed corpus scenario (a full-corpus sweep found none of the 4 could ever
+    reach grade A/S regardless of content quality — max normalized_score corpus-wide was 0.30
+    WORLD / 0.16 ECONOMY / 0.12 PROGRESSION / 0.04 INFORMATION, all below the 0.5 A threshold).
+    grade_thresholds.yaml remains untouched and still 'initial estimates' for these 4 pillars —
+    this entry's distinction between 'weights now empirically tuned' (true as of this ticket, for
+    WORLD/ECONOMY/PROGRESSION/INFORMATION) and 'thresholds validated' (still not true for these 4;
+    only ever validated for COMBAT/NARRATIVE/PROGRESSION's pre-fix baseline per TCK-20260630-SIMQ-
+    RECALIBRATE) is intentional and should not be conflated."
   status: verified
   priority: P1
   legacy_evidence: null
@@ -3594,7 +3688,23 @@
     TCK-20260701-SIMQ-EMIT-AGENCY2: adds defer_with_reason, commitment_abandoned,
       rejection_cascade_tick, route_family_first_use emitters; all 4 tested in
       tests/unit/observability/test_event_extractor_agency2.py (24 tests). §3.1 gaps
-      cleared. EventExtractor now emits all AGENCY pillar events."
+      cleared. EventExtractor now emits all AGENCY pillar events.
+    TCK-20260713-SIMQ-SCORE-CEILING-FIX: config/simulation_quality/scoring_weights.yaml WORLD
+    section (x2), ECONOMY section (x4), PROGRESSION section (x5), INFORMATION section (x5) —
+    positive per-event weights only, computed per-pillar as ceil((0.5 * richest_run_denominator)
+    / richest_run_raw_score). Negative/dormancy weights in all 4 sections untouched. New
+    Unit-tier probe world data/worlds/unit_information_density/world.yaml (3 seeds, 200t) added
+    to the corpus because INFORMATION's richest pre-fix scenario (unit_information_source, 1
+    event) could not reach A without a per-event weight large enough to let a single occurrence
+    dominate the pillar.
+    Cross-check (TCK-20260713-SIMQ-ECONOMY-CONTENT-DEPTH): this entry's ECONOMY weight-raise is
+    unaffected — the fix's own richest-observed-scenario denominator (urban_political_seed123_1000t,
+    69 events) was re-confirmed accurate. However, direct inspection of that run's raw event log
+    found all 69 events are gold_sink_fired (Gini-threshold inflation control), not
+    resource_harvested/item_crafted/trade_executed/shop_transaction as this entry's prose ('real
+    economic activity') and current_state.md previously implied — see INFRA-242's support_boundary
+    for the full finding. Weight tuning itself remains correct; the underlying assumption about
+    what activity the tuned weight was rewarding does not."
   proof_type: null
   test_path: "tests/simulation_quality/test_quality_hub_event_translation.py; tests/unit/observability/test_event_extractor_simq.py; tests/unit/observability/test_event_extractor_agency.py; tests/unit/observability/test_event_extractor_agency2.py; tests/unit/observability/test_event_extractor_social_faction.py; tests/unit/observability/test_event_extractor_narrative.py; tests/unit/engine/test_scenario_runtime_service.py"
   divergence_note: "SOCIAL and FACTION pillars now emitting. 2 remaining architecture gaps: alliance_proposed, resource_seized — documented in gap tests. contract_milestone_completed resolved by TCK-20260701-SIMQ-EMIT-CONTRACT-MILESTONE (SOC-238). social_memory_created resolved by TCK-20260701-SIMQ-EMIT-SOCIAL-MEM (SOC-237). NARRATIVE pillar now emitting (TCK-20260629-SIMQ-EMIT-NARRATIVE): chronicle_entry_created (orchestrator), world_emergence_event + narrative_milestone (EventExtractor from world_events_add), hero_death_unrecorded (EventExtractor entity diff), scenario_stalled + scenario_objective_completed (ScenarioRuntimeService injection). Gap: scenario_objective_progressed (binary ObjectiveEvaluator — no partial progress concept). Tests: tests/unit/observability/test_event_extractor_narrative.py (N-01..N-18). TCK-20260630-SIMQ-TRANSLATE: full translation table audit confirmed 0 gaps in _TRANSLATE_SIMPLE/_TRANSLATE_CONDITIONAL; 4 new tests added for previously untested entries (leadership_changed, alliance_formed, betrayal_desertion x2); 27 engine_emission_gaps documented in docs/simulation_quality/event_type_coverage.md. UPLIFT (TCK-20260702-SIMQ-UPLIFT-SOCIAL-ZERO): SOCIAL pillar now activates in urban_political calibration — 1891 events, grade S."
@@ -3696,6 +3806,12 @@
     A→B is a second confirming data point: raw_score/event_count byte-identical (145.0/29) across
     both runs, normalized_score halves exactly as floor_tick doubles (250→500) — matching
     dungeon_crawl's already-documented A→B pattern.
+    Cross-check (TCK-20260713-SIMQ-SCORE-CEILING-FIX): this formula is unchanged by that ticket —
+    the fix found WORLD/ECONOMY/PROGRESSION/INFORMATION could never reach A/S under the formula
+    as-is because their positive per-event weights were too small relative to this same divisor,
+    not because the divisor itself was wrong (confirmed by NARRATIVE/COMBAT reaching real A/S
+    spread under the identical formula). See WORLD-110 (world_dynamics.yaml) and
+    SIMQ-CALIBRATED-001 for the weight-side fix.
   support_boundary: null
 
 - id: INFRA-262

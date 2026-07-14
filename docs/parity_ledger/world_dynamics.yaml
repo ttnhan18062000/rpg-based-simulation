@@ -1357,21 +1357,34 @@
   text: >
     WORLD pillar grade stability under normalized_score formula change — see INFRA-255
     (infrastructure.yaml) for the cross-pillar formula. WORLD-specific: dungeon_crawl seed42
-    500t has last_event_tick=400 (dense ecology cycling throughout run); floor=401//4=100;
-    400 > 100 so last_event_tick wins; norm=176/400=0.440 → B. Grade is correct — WORLD was
-    genuinely active up to tick 400 and B at 0.440 reflects its event density fairly.
+    500t (re-measured post TCK-20260713-SIMQ-SCORE-CEILING-FIX's weight raise) has
+    raw_score=76.0/event_count=20/last_event_tick=400; floor=499//4=124; 400 > 124 so
+    last_event_tick wins; norm=76/400=0.19 → B. Grade is correct — WORLD was genuinely active
+    up to tick 400 but at this event density even the recalibrated weights (x2, TCK-20260713-
+    SIMQ-SCORE-CEILING-FIX) don't cross the A threshold (0.5) for this specific run; that ticket
+    found the pillar's ceiling itself was the real defect (max normalized_score across the whole
+    72-scenario corpus was 0.30, never reachable A/S under any real content), not this scenario's
+    B grade, which reflects genuine density fairly at either weight scale.
+    frontier_marches_seed123_200t (38 WORLD events, raw_score=120.0 post-fix, norm=0.6) is the
+    scenario that now demonstrates the pillar can reach A under real corpus content — this
+    entry's dungeon_crawl_seed42_500t example staying at B is the expected, non-uniform outcome
+    the fix's positive-only per-event weight raise (not a blanket multiplier or threshold change)
+    was designed to produce: genuinely denser runs cross into A, less-dense runs correctly do not.
     WORLD does not receive S-inflation because its events fire continuously throughout the run.
-    (TCK-20260702-SIMQ-UPLIFT-GRADE-DECAY)
+    (TCK-20260702-SIMQ-UPLIFT-GRADE-DECAY; TCK-20260713-SIMQ-SCORE-CEILING-FIX)
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: "see INFRA-255 in infrastructure.yaml"
+  v2_evidence: "see INFRA-255 in infrastructure.yaml; config/simulation_quality/scoring_weights.yaml WORLD section (x2 positive-weight raise)"
   proof_type: parity
-  test_path: tests/simulation_quality/test_report.py::test_active_throughout_run_behavior_unchanged
+  test_path: tests/simulation_quality/test_grade_regression.py::test_grade_within_anchor_band[frontier_marches_seed123_200t]
   divergence_note: >
     Secondary ref — primary entry is INFRA-255 in infrastructure.yaml.
-    WORLD holds B post-fix as expected; the formula change does not affect pillars
-    that are active throughout the run (last_event_tick ≈ current_tick >> floor).
+    WORLD holds B on dungeon_crawl_seed42_500t post-fix as expected (event density there
+    doesn't cross the recalibrated A threshold); the formula change does not affect pillars
+    that are active throughout the run (last_event_tick ≈ current_tick >> floor). The pillar's
+    ceiling itself was raised by TCK-20260713-SIMQ-SCORE-CEILING-FIX's positive-weight recalibration,
+    confirmed reachable on frontier_marches_seed123_200t (A, was B pre-fix).
   support_boundary: null
 
 - id: WORLD-111

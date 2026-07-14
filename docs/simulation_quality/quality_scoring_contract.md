@@ -1264,8 +1264,24 @@ After calibration (E7-CALIBRATE), canonical scenarios produce stable grades:
 | `urban_political` seed=42, 100 ticks | COMBAT: B+, FACTION: A−, ECONOMY: F (known root causes from D04) |
 | `sandbox_world` seed=42, 100 ticks | AGENCY: C (RC1/RC2/RC3 resolved?), ECONOMY: F (no resource nodes) |
 
-These grades are committed as regression anchors. A code change that moves a pillar grade
-by more than one letter (e.g., B → D) must be explicitly justified and the anchor updated.
+These grades are committed as regression anchors. Each anchor entry in `grade_anchors.json`
+is an object `{"grade": "S", "score": 2.87}` — `score` is the pillar's `normalized_score`
+(§4.4), not `raw_score`. A regression is now detected along **two independent dimensions**,
+either of which failing blocks the anchor as a regression:
+
+1. **Letter-grade band (±1)** — unchanged: a code change that moves a pillar grade by more
+   than one letter (e.g., B → D) must be explicitly justified and the anchor updated.
+2. **Score tolerance** — the live `normalized_score` must stay within
+   `max(0.05, 0.20 * |anchored_score|)` of the anchored value, independent of whether the
+   letter grade moved. This catches within-band magnitude regressions the letter-only check
+   cannot see (e.g., an S-graded pillar's score halved but still `>2.0`, still graded S).
+   The tolerance width (absolute floor 0.05, relative 20%, whichever is wider) is derived
+   from an 18-run_key/180-observation same-config repeat-trial dataset: real run-to-run
+   noise (driven by the kernel's wall-clock tick-budget throttle, see
+   `docs/audits/D20_simq_integration.md`) concentrates at low absolute magnitude (max
+   observed ~0.019 absolute delta) even where relative deltas reach up to 43.5%; the 0.05
+   floor comfortably absorbs that noise while the 20% relative threshold still catches a
+   50%+ magnitude regression on higher-magnitude (e.g. S-band) pillars.
 
 ### 11.4 Performance Tests
 
