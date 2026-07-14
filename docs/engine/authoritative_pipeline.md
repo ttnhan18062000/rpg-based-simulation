@@ -8,11 +8,11 @@ audience: developer
 # Authoritative Refinement Pipeline
 
 > [!IMPORTANT]
-> **The Singular Bottleneck Law**: All state transitions must pass through this pipeline. No system, worker, or external process may mutate the `AuthoritativeState` directly. All changes must be represented as a `StateUpdate` and refined through these 31 phases.
+> **The Singular Bottleneck Law**: All state transitions must pass through this pipeline. No system, worker, or external process may mutate the `AuthoritativeState` directly. All changes must be represented as a `StateUpdate` and refined through these 32 phases.
 
 The `AuthoritativeApplyPipeline` ensures that concurrent "intents" from workers are resolved into a deterministic, causally-consistent state update.
 
-## The 31 Phases of Refinement
+## The 32 Phases of Refinement
 
 Phase names match the `run_phase()` call identifiers in `src/engine/pipeline.py:refine()`. Phases may be skipped if their associated feature flag is disabled.
 
@@ -22,33 +22,34 @@ Phase names match the `run_phase()` call identifiers in `src/engine/pipeline.py:
 | 2 | `actor_validity` | Rejects intents from dead, stunned, or incapacitated actors (`TOWN-001`). |
 | 3 | `self_model` | Enhanced RPG: updates cognitive self-model (`ENABLE_SELF_MODEL_COGNITION`). |
 | 4 | `information_belief` | Enhanced RPG: assimilates new information into entity belief state (`ENABLE_BELIEF_ASSIMILATION`). |
-| 5 | `cooperation` | Enhanced RPG: resolves social cooperation contracts (`ENABLE_SOCIAL_COOPERATION`). |
-| 6 | `contracts` | Expires stale social and legal contracts before system consumption. |
-| 7 | `blacksmith` | Validates crafting/blacksmithing requirements and resource costs (`TOWN-155`). |
-| 8 | `adventure_decision` | Enhanced RPG: routes adventure/quest decision logic (`ENABLE_ADVENTURE_ROUTING`). |
-| 9 | `action_routing` | Resolves combat, skills, and tactical ability interactions (`TOWN-149`). |
-| 10 | `position_swaps` | Resolves adjacent position exchange contracts and mutual passing (`COMB-028`). |
-| 11 | `movement_routing` | Calculates movement steps, terrain costs, and obstacle avoidance (`COMB-046`). |
-| 12 | `combat_engagement` | Enhanced RPG: resolves full combat engagement sequences (`ENABLE_COMBAT_ENGAGEMENT`). |
-| 13 | `interaction_routing` | Routes interaction intents to domain handlers (`TOWN-165`). |
-| 14 | `interaction_enforcement` | Enforces harvesting, chest opening, and node usage rules. |
-| 15 | `building_sabotage` | Resolves damage to buildings and town structures (`LEG-RPG-006`). |
-| 16 | `town_resolution` | Updates regional influence, taxes, and town-level state (`TOWN-147`). |
-| 17 | `world_dynamics` | Resolves world-wide generation, respawns, and weather effects (`INFRA-001`). |
-| 18 | `world_emergence` | Enhanced RPG: emergent world events and narrative triggers (`ENABLE_WORLD_EMERGENCE`). |
-| 19 | `quest_rewards` | Authoritatively delivers quest rewards and completion markers (`PROG-084`). |
-| 20 | `shop` | Enforces shop prices and trade legality (`TOWN-166`). |
-| 21 | `resource_transactions` | Enforces resource conservation and atomic transaction integrity. |
-| 22 | `evolution` | Applies entity evolution and stat boosts. |
-| 23 | `progression_conversion` | Enhanced RPG: converts progression points to levels/skills. |
-| 24 | `strategic_intelligence` | Updates strategic blockers, leads, and project markers (`STRAT-002`). |
-| 25 | `near_death_hardening` | Finalizes near-death state and damage-mitigation logic (`COMB-121`). |
-| 26 | `occupancy_resolution` | Resolves spatial occupancy conflicts between entities. |
-| 27 | `lifecycle` | Commits death and lifecycle status changes. |
-| 28 | `groups` | Updates group membership and party composition. |
-| 29 | `active_contracts` | Enforces active social and economic contract obligations. |
-| 30 | `expired_offers` | Clears stale trade and social offers past their TTL. |
-| 31 | `capacity_enforcement` | Final inventory and carrying-capacity enforcement pass. |
+| 5 | `information_intent_execution` | Enhanced RPG: executes self-model query-routing intents via `ActionIntentAdapter.execute()` (`ENABLE_INFORMATION_INTENT_EXECUTION`). |
+| 6 | `cooperation` | Enhanced RPG: resolves social cooperation contracts (`ENABLE_SOCIAL_COOPERATION`). |
+| 7 | `contracts` | Expires stale social and legal contracts before system consumption. |
+| 8 | `blacksmith` | Validates crafting/blacksmithing requirements and resource costs (`TOWN-155`). |
+| 9 | `adventure_decision` | Enhanced RPG: routes adventure/quest decision logic (`ENABLE_ADVENTURE_ROUTING`). |
+| 10 | `action_routing` | Resolves combat, skills, and tactical ability interactions (`TOWN-149`). |
+| 11 | `position_swaps` | Resolves adjacent position exchange contracts and mutual passing (`COMB-028`). |
+| 12 | `movement_routing` | Calculates movement steps, terrain costs, and obstacle avoidance (`COMB-046`). |
+| 13 | `combat_engagement` | Enhanced RPG: resolves full combat engagement sequences (`ENABLE_COMBAT_ENGAGEMENT`). |
+| 14 | `interaction_routing` | Routes interaction intents to domain handlers (`TOWN-165`). |
+| 15 | `interaction_enforcement` | Enforces harvesting, chest opening, and node usage rules. |
+| 16 | `building_sabotage` | Resolves damage to buildings and town structures (`LEG-RPG-006`). |
+| 17 | `town_resolution` | Updates regional influence, taxes, and town-level state (`TOWN-147`). |
+| 18 | `world_dynamics` | Resolves world-wide generation, respawns, and weather effects (`INFRA-001`). |
+| 19 | `world_emergence` | Enhanced RPG: emergent world events and narrative triggers (`ENABLE_WORLD_EMERGENCE`). |
+| 20 | `quest_rewards` | Authoritatively delivers quest rewards and completion markers (`PROG-084`). |
+| 21 | `shop` | Enforces shop prices and trade legality (`TOWN-166`). |
+| 22 | `resource_transactions` | Enforces resource conservation and atomic transaction integrity. |
+| 23 | `evolution` | Applies entity evolution and stat boosts. |
+| 24 | `progression_conversion` | Enhanced RPG: converts progression points to levels/skills. |
+| 25 | `strategic_intelligence` | Updates strategic blockers, leads, and project markers (`STRAT-002`). |
+| 26 | `near_death_hardening` | Finalizes near-death state and damage-mitigation logic (`COMB-121`). |
+| 27 | `occupancy_resolution` | Resolves spatial occupancy conflicts between entities. |
+| 28 | `lifecycle` | Commits death and lifecycle status changes. |
+| 29 | `groups` | Updates group membership and party composition. |
+| 30 | `active_contracts` | Enforces active social and economic contract obligations. |
+| 31 | `expired_offers` | Clears stale trade and social offers past their TTL. |
+| 32 | `capacity_enforcement` | Final inventory and carrying-capacity enforcement pass. |
 
 ---
 

@@ -16,6 +16,7 @@ class FeatureFlagManager:
             "ENABLE_ADVENTURE_ROUTING": FeatureMode.OFF,
             "ENABLE_COMBAT_ENGAGEMENT": FeatureMode.OFF,
             "ENABLE_BELIEF_ASSIMILATION": FeatureMode.OFF,
+            "ENABLE_INFORMATION_INTENT_EXECUTION": FeatureMode.OFF,
             "ENABLE_PROGRESSION_EVOLUTION": FeatureMode.OFF,
             "ENABLE_SOCIAL_COOPERATION": FeatureMode.OFF,
             "ENABLE_WORLD_EMERGENCE": FeatureMode.OFF,

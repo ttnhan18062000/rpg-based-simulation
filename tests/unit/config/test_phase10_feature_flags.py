@@ -32,3 +32,8 @@ def test_feature_flag_matrix_is_serialized_in_run_manifest():
     manager.set_flag_mode("ENABLE_SELF_MODEL_COGNITION", FeatureMode.STRICT)
     manifest = manager.serialize()
     assert manifest["ENABLE_SELF_MODEL_COGNITION"] == "STRICT"
+
+def test_new_flag_registered_in_feature_flag_manager():
+    manager = FeatureFlagManager()
+    assert "ENABLE_INFORMATION_INTENT_EXECUTION" in manager.get_all_flags()
+    assert manager.get_flag_mode("ENABLE_INFORMATION_INTENT_EXECUTION") == FeatureMode.OFF

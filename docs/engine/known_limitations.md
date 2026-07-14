@@ -31,7 +31,7 @@ This document records the current technical limitations, unsupported features, a
 
 ### 1.5 Feature Flag Defaults (Phase 10 Rollout Gates)
 
-All 10 Phase 10 feature flags in `src/domains/optimization/feature_flags.py` default to
+All 11 Phase 10 feature flags in `src/domains/optimization/feature_flags.py` default to
 `FeatureMode.OFF`. The flags are:
 
 - `ENABLE_WORLD_CAPABILITY_LAYER`
@@ -39,6 +39,7 @@ All 10 Phase 10 feature flags in `src/domains/optimization/feature_flags.py` def
 - `ENABLE_ADVENTURE_ROUTING`
 - `ENABLE_COMBAT_ENGAGEMENT`
 - `ENABLE_BELIEF_ASSIMILATION`
+- `ENABLE_INFORMATION_INTENT_EXECUTION`
 - `ENABLE_PROGRESSION_EVOLUTION`
 - `ENABLE_SOCIAL_COOPERATION`
 - `ENABLE_WORLD_EMERGENCE`

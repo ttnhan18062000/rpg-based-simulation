@@ -152,6 +152,16 @@ class AuthoritativeApplyPipeline:
         update = run_phase("information_belief", update, lambda u: u.merge(InformationBeliefPhase.apply(state, source_profiles, pending_resps)), "ENABLE_BELIEF_ASSIMILATION")
         costs["information_belief"] = (time.perf_counter_ns() - t_start) / 1e6
 
+        # --- Enhanced RPG Phase 6: Information Intent Execution (self-model query-routing) ---
+        t_start = time.perf_counter_ns()
+        from src.engine.pipeline_phases.information_intent_execution import InformationIntentExecutionPhase
+        update = run_phase(
+            "information_intent_execution", update,
+            lambda u: InformationIntentExecutionPhase.execute(state, u),
+            "ENABLE_INFORMATION_INTENT_EXECUTION",
+        )
+        costs["information_intent_execution"] = (time.perf_counter_ns() - t_start) / 1e6
+
         # --- Enhanced RPG Phase 7: Social Cooperation ---
         t_start = time.perf_counter_ns()
         from src.domains.cooperation.phase import CooperationPhase

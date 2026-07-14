@@ -34,7 +34,7 @@ from tools.calibrate_simq import _resolve_profile, _load_profile_feature_flags
 
 _FIXTURE_PATH = Path("tests/simulation_quality/fixtures/expected_world_flag_state.json")
 _WORLDS_DIR = Path("data/worlds")
-_GATED_FLAGS = ("ENABLE_ADVENTURE_ROUTING", "ENABLE_BELIEF_ASSIMILATION", "ENABLE_SELF_MODEL_COGNITION")
+_GATED_FLAGS = ("ENABLE_ADVENTURE_ROUTING", "ENABLE_BELIEF_ASSIMILATION", "ENABLE_SELF_MODEL_COGNITION", "ENABLE_INFORMATION_INTENT_EXECUTION")
 
 
 def _load_fixture() -> Dict[str, Any]:

@@ -61,6 +61,7 @@ class PhaseDependencyGraph:
         # Phase 2-8 Enhanced RPG cognitive & world emergence loop integration
         "self_model": PhaseMetadata("self_model", {"strategic", "attributes"}, {"strategic"}),
         "information_belief": PhaseMetadata("information_belief", {"strategic", "social"}, {"strategic"}),
+        "information_intent_execution": PhaseMetadata("information_intent_execution", {"strategic"}, {"strategic", "inventory"}),
         "cooperation": PhaseMetadata("cooperation", {"social", "strategic"}, {"social", "strategic"}),
         "adventure_decision": PhaseMetadata("adventure_decision", {"strategic", "movement"}, {"strategic"}),
         "combat_engagement": PhaseMetadata("combat_engagement", {"combat", "movement"}, {"combat", "strategic"}),

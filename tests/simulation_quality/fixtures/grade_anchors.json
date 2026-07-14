@@ -3157,5 +3157,47 @@
       "grade": "A",
       "score": 0.7989690721649485
     }
+  },
+  "urban_political_selfmodel_execution_probe_seed42_200t": {
+    "COGNITION": {
+      "grade": "S",
+      "score": 28.1
+    },
+    "AGENCY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "COMBAT": {
+      "grade": "B",
+      "score": 0.16
+    },
+    "FACTION": {
+      "grade": "S",
+      "score": 2.9
+    },
+    "ECONOMY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "PROGRESSION": {
+      "grade": "B",
+      "score": 0.43137254901960786
+    },
+    "SOCIAL": {
+      "grade": "S",
+      "score": 7.525
+    },
+    "INFORMATION": {
+      "grade": "B",
+      "score": 0.2
+    },
+    "WORLD": {
+      "grade": "B",
+      "score": 0.21
+    },
+    "NARRATIVE": {
+      "grade": "A",
+      "score": 1.0185185185185186
+    }
   }
 }

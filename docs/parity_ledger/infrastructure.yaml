@@ -4106,4 +4106,62 @@
   test_path: >
     tests/simulation_quality/test_traceability_path.py::test_worst_event_id_resolves_in_simulation_events_jsonl;
     tests/simulation_quality/test_traceability_path.py::test_worst_event_id_matches_originating_envelope_exactly
+- id: INFRA-270
+  text: >
+    ActionIntentAdapter.execute() (src/engine/intent/action_intent.py) now has a production
+    tick-pipeline call site (TCK-20260713-SIMQ-COGNITION-PIPELINE-WIRE), superseding INFRA-267's
+    "no production call site" support_boundary claim -- following the INFRA-266 -> INFRA-267
+    succession precedent already established in this lineage (historical entries are not rewritten
+    in place; INFRA-267's own text/evidence/test_path remain an accurate record of what that
+    ticket verified at the time). A new phase, InformationIntentExecutionPhase
+    (src/engine/pipeline_phases/information_intent_execution.py), runs between
+    information_belief and cooperation in AuthoritativeApplyPipeline.refine(), filters
+    EntityUpdate.intent_results by isinstance(x, ActionIntent) (guarding against the unrelated
+    IntentResult dataclass economy.py/patches.py also populate that field with), iterates
+    entities in sorted-ID order, and merges ActionIntentAdapter.execute()'s returned
+    Dict[int, EntityUpdate] back into the tick's update set via the same
+    existing_upd.merge(action_upd) pattern ActionRoutingPhase.route() uses. Gated by a new flag,
+    ENABLE_INFORMATION_INTENT_EXECUTION, registered in FeatureFlagManager._flags and defaulting
+    OFF.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/domains/optimization/feature_flags.py (ENABLE_INFORMATION_INTENT_EXECUTION registered,
+    default FeatureMode.OFF); src/engine/pipeline_phases/information_intent_execution.py
+    (InformationIntentExecutionPhase.execute()); src/engine/pipeline.py (new
+    run_phase("information_intent_execution", ...) call between the information_belief and
+    cooperation blocks); src/engine/phase_graph.py (PhaseDependencyGraph.PHASES gains a
+    cosmetic "information_intent_execution" entry, consistent with sibling phases -- the
+    dirty-set short-circuit does not gate this pipeline position, since update.dirty_set is
+    None for the entire early-refine() section this phase runs in).
+  proof_type: parity
+  test_path: >
+    tests/unit/engine/test_information_intent_execution_phase.py;
+    tests/integration/domains/information/test_phase5_information_belief_phase.py::test_action_intent_execution_phase_fires_in_real_tick_pipeline;
+    tests/integration/domains/information/test_phase5_information_belief_phase.py::test_action_intent_execution_phase_off_by_default_is_a_noop;
+    tests/unit/config/test_phase10_feature_flags.py::test_new_flag_registered_in_feature_flag_manager;
+    tests/integration/test_world_profile_feature_flag_guardrail.py;
+    tests/simulation_quality/test_grade_regression.py::test_information_intent_execution_fires_through_kernel_tick_once;
+    tests/simulation_quality/test_grade_regression.py::test_urban_political_selfmodel_execution_isolated_grade_anchor
+  divergence_note: null
+  support_boundary: >
+    ENABLE_INFORMATION_INTENT_EXECUTION remains OFF in every shipped
+    config/simulation_quality/profiles/*.yaml and data/worlds/*.yaml calibration chain -- this
+    ticket wires the mechanism, it does not activate it for live gameplay anywhere. Enforced by
+    tests/integration/test_world_profile_feature_flag_guardrail.py's _GATED_FLAGS tuple, extended
+    to include this flag. The new, dedicated, non-shipped probe profile
+    (config/simulation_quality/profiles/urban_political_selfmodel_execution_probe.yaml) is the
+    only place the flag is ever set ON outside test fixtures. Verified directly (not assumed) that
+    urban_political's real compiled world/state does not have InformationBeliefPhase Branch B
+    route a query within a 200-tick window at seed 42 -- ActionIntentAdapter.get_traces() returns
+    empty for that specific corpus/seed/tick combination, matching INFRA-266's "does NOT
+    generalize" finding for this exact scenario (INFRA-267's fallback fix makes Branch B correct,
+    not guaranteed to fire in every corpus). The deterministic proof that ActionIntentAdapter.
+    execute() fires through a real Kernel.tick_once() loop therefore uses a minimal hand-built
+    scenario (test_information_intent_execution_fires_through_kernel_tick_once), not the
+    urban_political corpus; the corpus-based grade-anchor test
+    (test_urban_political_selfmodel_execution_isolated_grade_anchor) instead verifies the phase
+    does not regress calibration grades/costs when wired in and gated ON. See INFRA-267 for the
+    historical pre-fix support_boundary text this entry supersedes (left untouched).
   divergence_note: null

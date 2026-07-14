@@ -13,87 +13,87 @@
   "worlds": {
     "urban_political": {
       "profile_file": "urban_political.yaml",
-      "flags": {"ENABLE_ADVENTURE_ROUTING": "OFF", "ENABLE_BELIEF_ASSIMILATION": "ON", "ENABLE_SELF_MODEL_COGNITION": "OFF"},
+      "flags": {"ENABLE_ADVENTURE_ROUTING": "OFF", "ENABLE_BELIEF_ASSIMILATION": "ON", "ENABLE_SELF_MODEL_COGNITION": "OFF", "ENABLE_INFORMATION_INTENT_EXECUTION": "OFF"},
       "content": {"faction_tension_overrides": true, "information_content": true, "self_model_content": true}
     },
     "dungeon_crawl": {
       "profile_file": "dungeon_crawl.yaml",
-      "flags": {"ENABLE_ADVENTURE_ROUTING": "OFF", "ENABLE_BELIEF_ASSIMILATION": "OFF", "ENABLE_SELF_MODEL_COGNITION": "OFF"},
+      "flags": {"ENABLE_ADVENTURE_ROUTING": "OFF", "ENABLE_BELIEF_ASSIMILATION": "OFF", "ENABLE_SELF_MODEL_COGNITION": "OFF", "ENABLE_INFORMATION_INTENT_EXECUTION": "OFF"},
       "content": {"faction_tension_overrides": true, "information_content": false, "self_model_content": false}
     },
     "sandbox_world": {
       "profile_file": "sandbox_world.yaml",
-      "flags": {"ENABLE_ADVENTURE_ROUTING": "OFF", "ENABLE_BELIEF_ASSIMILATION": "ON", "ENABLE_SELF_MODEL_COGNITION": "OFF"},
+      "flags": {"ENABLE_ADVENTURE_ROUTING": "OFF", "ENABLE_BELIEF_ASSIMILATION": "ON", "ENABLE_SELF_MODEL_COGNITION": "OFF", "ENABLE_INFORMATION_INTENT_EXECUTION": "OFF"},
       "content": {"faction_tension_overrides": true, "information_content": true, "self_model_content": false}
     },
     "wilderness_survival": {
       "profile_file": null,
-      "flags": {"ENABLE_ADVENTURE_ROUTING": "OFF", "ENABLE_BELIEF_ASSIMILATION": "OFF", "ENABLE_SELF_MODEL_COGNITION": "OFF"},
+      "flags": {"ENABLE_ADVENTURE_ROUTING": "OFF", "ENABLE_BELIEF_ASSIMILATION": "OFF", "ENABLE_SELF_MODEL_COGNITION": "OFF", "ENABLE_INFORMATION_INTENT_EXECUTION": "OFF"},
       "content": {"faction_tension_overrides": true, "information_content": false, "self_model_content": false}
     },
     "highland_traverse": {
       "profile_file": "highland_traverse.yaml",
-      "flags": {"ENABLE_ADVENTURE_ROUTING": "OFF", "ENABLE_BELIEF_ASSIMILATION": "ON", "ENABLE_SELF_MODEL_COGNITION": "OFF"},
+      "flags": {"ENABLE_ADVENTURE_ROUTING": "OFF", "ENABLE_BELIEF_ASSIMILATION": "ON", "ENABLE_SELF_MODEL_COGNITION": "OFF", "ENABLE_INFORMATION_INTENT_EXECUTION": "OFF"},
       "content": {"faction_tension_overrides": true, "information_content": true, "self_model_content": false}
     },
     "swamp_border_world": {
       "profile_file": "swamp_border_world.yaml",
-      "flags": {"ENABLE_ADVENTURE_ROUTING": "OFF", "ENABLE_BELIEF_ASSIMILATION": "ON", "ENABLE_SELF_MODEL_COGNITION": "OFF"},
+      "flags": {"ENABLE_ADVENTURE_ROUTING": "OFF", "ENABLE_BELIEF_ASSIMILATION": "ON", "ENABLE_SELF_MODEL_COGNITION": "OFF", "ENABLE_INFORMATION_INTENT_EXECUTION": "OFF"},
       "content": {"faction_tension_overrides": true, "information_content": true, "self_model_content": false}
     },
     "frontier_living_world": {
       "profile_file": "frontier_living_world.yaml",
-      "flags": {"ENABLE_ADVENTURE_ROUTING": "OFF", "ENABLE_BELIEF_ASSIMILATION": "ON", "ENABLE_SELF_MODEL_COGNITION": "OFF"},
+      "flags": {"ENABLE_ADVENTURE_ROUTING": "OFF", "ENABLE_BELIEF_ASSIMILATION": "ON", "ENABLE_SELF_MODEL_COGNITION": "OFF", "ENABLE_INFORMATION_INTENT_EXECUTION": "OFF"},
       "content": {"faction_tension_overrides": true, "information_content": true, "self_model_content": false}
     },
     "frontier_extended": {
       "profile_file": "frontier_extended.yaml",
-      "flags": {"ENABLE_ADVENTURE_ROUTING": "OFF", "ENABLE_BELIEF_ASSIMILATION": "ON", "ENABLE_SELF_MODEL_COGNITION": "OFF"},
+      "flags": {"ENABLE_ADVENTURE_ROUTING": "OFF", "ENABLE_BELIEF_ASSIMILATION": "ON", "ENABLE_SELF_MODEL_COGNITION": "OFF", "ENABLE_INFORMATION_INTENT_EXECUTION": "OFF"},
       "content": {"faction_tension_overrides": true, "information_content": true, "self_model_content": false}
     },
     "generated_frontier_3_42": {
       "profile_file": "generated_frontier_3_42.yaml",
-      "flags": {"ENABLE_ADVENTURE_ROUTING": "OFF", "ENABLE_BELIEF_ASSIMILATION": "ON", "ENABLE_SELF_MODEL_COGNITION": "OFF"},
+      "flags": {"ENABLE_ADVENTURE_ROUTING": "OFF", "ENABLE_BELIEF_ASSIMILATION": "ON", "ENABLE_SELF_MODEL_COGNITION": "OFF", "ENABLE_INFORMATION_INTENT_EXECUTION": "OFF"},
       "content": {"faction_tension_overrides": true, "information_content": true, "self_model_content": false}
     },
     "simq_routing_test": {
       "profile_file": "simq_routing_test.yaml",
-      "flags": {"ENABLE_ADVENTURE_ROUTING": "ON", "ENABLE_BELIEF_ASSIMILATION": "OFF", "ENABLE_SELF_MODEL_COGNITION": "OFF"},
+      "flags": {"ENABLE_ADVENTURE_ROUTING": "ON", "ENABLE_BELIEF_ASSIMILATION": "OFF", "ENABLE_SELF_MODEL_COGNITION": "OFF", "ENABLE_INFORMATION_INTENT_EXECUTION": "OFF"},
       "content": {"faction_tension_overrides": false, "information_content": false, "self_model_content": false}
     },
     "unit_faction_tension": {
       "profile_file": null,
-      "flags": {"ENABLE_ADVENTURE_ROUTING": "OFF", "ENABLE_BELIEF_ASSIMILATION": "OFF", "ENABLE_SELF_MODEL_COGNITION": "OFF"},
+      "flags": {"ENABLE_ADVENTURE_ROUTING": "OFF", "ENABLE_BELIEF_ASSIMILATION": "OFF", "ENABLE_SELF_MODEL_COGNITION": "OFF", "ENABLE_INFORMATION_INTENT_EXECUTION": "OFF"},
       "content": {"faction_tension_overrides": true, "information_content": false, "self_model_content": false}
     },
     "unit_information_source": {
       "profile_file": "unit_information_source.yaml",
-      "flags": {"ENABLE_ADVENTURE_ROUTING": "OFF", "ENABLE_BELIEF_ASSIMILATION": "ON", "ENABLE_SELF_MODEL_COGNITION": "OFF"},
+      "flags": {"ENABLE_ADVENTURE_ROUTING": "OFF", "ENABLE_BELIEF_ASSIMILATION": "ON", "ENABLE_SELF_MODEL_COGNITION": "OFF", "ENABLE_INFORMATION_INTENT_EXECUTION": "OFF"},
       "content": {"faction_tension_overrides": false, "information_content": true, "self_model_content": false}
     },
     "unit_selfmodel_pilot": {
       "profile_file": "unit_selfmodel_pilot.yaml",
-      "flags": {"ENABLE_ADVENTURE_ROUTING": "OFF", "ENABLE_BELIEF_ASSIMILATION": "OFF", "ENABLE_SELF_MODEL_COGNITION": "ON"},
+      "flags": {"ENABLE_ADVENTURE_ROUTING": "OFF", "ENABLE_BELIEF_ASSIMILATION": "OFF", "ENABLE_SELF_MODEL_COGNITION": "ON", "ENABLE_INFORMATION_INTENT_EXECUTION": "OFF"},
       "content": {"faction_tension_overrides": false, "information_content": false, "self_model_content": true}
     },
     "hero_guild_routing": {
       "profile_file": "hero_guild_routing.yaml",
-      "flags": {"ENABLE_ADVENTURE_ROUTING": "ON", "ENABLE_BELIEF_ASSIMILATION": "OFF", "ENABLE_SELF_MODEL_COGNITION": "OFF"},
+      "flags": {"ENABLE_ADVENTURE_ROUTING": "ON", "ENABLE_BELIEF_ASSIMILATION": "OFF", "ENABLE_SELF_MODEL_COGNITION": "OFF", "ENABLE_INFORMATION_INTENT_EXECUTION": "OFF"},
       "content": {"faction_tension_overrides": false, "information_content": false, "self_model_content": false}
     },
     "crowded_frontier": {
       "profile_file": null,
-      "flags": {"ENABLE_ADVENTURE_ROUTING": "OFF", "ENABLE_BELIEF_ASSIMILATION": "OFF", "ENABLE_SELF_MODEL_COGNITION": "OFF"},
+      "flags": {"ENABLE_ADVENTURE_ROUTING": "OFF", "ENABLE_BELIEF_ASSIMILATION": "OFF", "ENABLE_SELF_MODEL_COGNITION": "OFF", "ENABLE_INFORMATION_INTENT_EXECUTION": "OFF"},
       "content": {"faction_tension_overrides": false, "information_content": false, "self_model_content": false}
     },
     "resource_dense_basin": {
       "profile_file": null,
-      "flags": {"ENABLE_ADVENTURE_ROUTING": "OFF", "ENABLE_BELIEF_ASSIMILATION": "OFF", "ENABLE_SELF_MODEL_COGNITION": "OFF"},
+      "flags": {"ENABLE_ADVENTURE_ROUTING": "OFF", "ENABLE_BELIEF_ASSIMILATION": "OFF", "ENABLE_SELF_MODEL_COGNITION": "OFF", "ENABLE_INFORMATION_INTENT_EXECUTION": "OFF"},
       "content": {"faction_tension_overrides": false, "information_content": false, "self_model_content": false}
     },
     "frontier_marches": {
       "profile_file": "frontier_marches.yaml",
-      "flags": {"ENABLE_ADVENTURE_ROUTING": "OFF", "ENABLE_BELIEF_ASSIMILATION": "ON", "ENABLE_SELF_MODEL_COGNITION": "OFF"},
+      "flags": {"ENABLE_ADVENTURE_ROUTING": "OFF", "ENABLE_BELIEF_ASSIMILATION": "ON", "ENABLE_SELF_MODEL_COGNITION": "OFF", "ENABLE_INFORMATION_INTENT_EXECUTION": "OFF"},
       "content": {"faction_tension_overrides": true, "information_content": true, "self_model_content": false}
     }
   },

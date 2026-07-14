@@ -378,6 +378,111 @@ def test_urban_political_selfmodel_cognition_isolated_grade_anchor(grade_anchors
     assert not score_failures, f"{run_key} — pillar(s) drifted beyond score tolerance:\n" + "\n".join(score_failures)
 
 
+def test_urban_political_selfmodel_execution_isolated_grade_anchor(grade_anchors: dict) -> None:
+    """Grade-anchor probe for the permanent config/simulation_quality/profiles/
+    urban_political_selfmodel_execution_probe.yaml fixture
+    (TCK-20260713-SIMQ-COGNITION-PIPELINE-WIRE). This profile turns
+    ENABLE_SELF_MODEL_COGNITION, ENABLE_BELIEF_ASSIMILATION, AND the new
+    ENABLE_INFORMATION_INTENT_EXECUTION all ON — a superset of the sibling
+    urban_political_selfmodel_probe.yaml (which leaves the latter two OFF).
+
+    Honest scope note (verified directly, not assumed): urban_political's real compiled
+    state does not have InformationBeliefPhase Branch B route a query within this 200-tick
+    window at seed 42 (matches INFRA-266's "does NOT generalize" finding for this specific
+    corpus/seed — INFRA-267's fallback fix makes Branch B *correct*, not *guaranteed to
+    fire* in every corpus). Confirmed via a direct in-process ActionIntentAdapter.get_traces()
+    check against this exact profile/world/seed/tick combination: 0 traces. This anchor test
+    therefore proves the new phase does not regress the calibration pipeline (grades/costs
+    stable with the phase wired in and gated ON), not that it fires in this specific corpus.
+    The deterministic, guaranteed proof that ActionIntentAdapter.execute() fires through a
+    real Kernel.tick_once() loop is test_information_intent_execution_fires_through_kernel_tick_once
+    below, using a minimal hand-built scenario where Branch B is guaranteed to route."""
+    run_key = "urban_political_selfmodel_execution_probe_seed42_200t"
+    if run_key not in grade_anchors:
+        pytest.skip(f"No anchor entry for {run_key!r} in grade_anchors.json")
+
+    report = _load_calibration_report(run_key)
+    if report is None:
+        pytest.skip(f"Calibration report not found: data/calibration/{run_key}/quality_report.json")
+
+    actual_grades = _extract_pillar_grades(report)
+    actual_scores = _extract_pillar_scores(report)
+    anchors = grade_anchors[run_key]
+    band_failures = [
+        f"  {pillar}: actual={actual_grades.get(pillar, 'C')!r} outside ±1 band of "
+        f"anchor={anchor['grade']!r}"
+        for pillar, anchor in anchors.items()
+        if not _within_band(actual_grades.get(pillar, "C"), anchor["grade"])
+    ]
+    score_failures = [
+        f"  {pillar}: actual_score={actual_scores.get(pillar, 0.0)!r} outside tolerance of "
+        f"anchor_score={anchor['score']!r}"
+        for pillar, anchor in anchors.items()
+        if not _within_score_tolerance(actual_scores.get(pillar, 0.0), anchor["score"])
+    ]
+    assert not band_failures, f"{run_key} — pillar(s) drifted beyond anchor band:\n" + "\n".join(band_failures)
+    assert not score_failures, f"{run_key} — pillar(s) drifted beyond score tolerance:\n" + "\n".join(score_failures)
+
+
+def test_information_intent_execution_fires_through_kernel_tick_once() -> None:
+    """Direct, deterministic proof of Acceptance Criterion 2: with
+    ENABLE_INFORMATION_INTENT_EXECUTION deliberately ON (alongside ENABLE_SELF_MODEL_COGNITION
+    and ENABLE_BELIEF_ASSIMILATION), ActionIntentAdapter.execute() fires through a real
+    Kernel.tick_once() loop — not just direct test-harness invocation of .execute() in
+    isolation. Uses a minimal hand-built state (not the urban_political corpus, which does
+    not route Branch B within a 200-tick window at seed 42 — see the isolated_grade_anchor
+    test above) so routing is guaranteed and this test stays fast/deterministic."""
+    from dataclasses import replace as dataclass_replace
+
+    from src.config.profiles import PROD_SMALL
+    from src.core.builder import V2EntityBuilder
+    from src.core.self_model import KnowledgeModelComponent, SelfModelBundle, UnknownFact
+    from src.core.state import AuthoritativeState, BiologicalComponent, CombatComponent, PersonalityComponent
+    from src.domains.information.schema import InformationSourceProfile
+    from src.domains.optimization.feature_flags import FeatureMode
+    from src.engine.intent.action_intent import ActionIntentAdapter
+    from src.engine.kernel import Kernel
+    from src.platform.rng import DeterministicRNG
+
+    unk = UnknownFact(subject="iron_ore", reason="test_unk", recorded_tick=0)
+    b = V2EntityBuilder(1)
+    b.replace_combat(CombatComponent(hp=100, max_hp=100, atk=10, def_stat=2))
+    b.replace_biological(BiologicalComponent(hunger=0.0, sleep_debt=0.0))
+    b.identity(evolution_level=1, personality=PersonalityComponent(greed=0.5, bravery=0.5, sociability=0.5, industry=0.5))
+    b.location(0.0, 0.0)
+    b.lifecycle(active=True)
+    b.replace_self_model(SelfModelBundle(knowledge=KnowledgeModelComponent(unknowns={"iron_ore": unk})))
+    actor = b.build()
+
+    state = AuthoritativeState(tick=0, seed=42, entities={actor.id: actor})
+    state = dataclass_replace(
+        state,
+        information_source_profiles=[
+            InformationSourceProfile(
+                source_id="town_notice_board", source_kind="guide",
+                knowledge_scopes=("common_resource_sources",),
+                accuracy=0.4, freshness=0.6, cost_gold=0,
+            )
+        ],
+        feature_flags={
+            "ENABLE_SELF_MODEL_COGNITION": FeatureMode.ON,
+            "ENABLE_BELIEF_ASSIMILATION": FeatureMode.ON,
+            "ENABLE_INFORMATION_INTENT_EXECUTION": FeatureMode.ON,
+        },
+    )
+
+    ActionIntentAdapter.clear_traces()
+    kernel = Kernel(profile=PROD_SMALL, state=state, rng=DeterministicRNG(42), flags={"no_frame_pacing": True})
+    try:
+        kernel.tick_once()
+    finally:
+        kernel.shutdown()
+
+    traces = ActionIntentAdapter.get_traces()
+    assert traces, "expected ActionIntentAdapter.execute() to fire through Kernel.tick_once()"
+    assert any(t.actor_id == actor.id and t.intent_kind == "ASK_INFORMATION" for t in traces)
+
+
 def test_grade_anchor_file_exists_and_valid(grade_anchors: dict) -> None:
     """grade_anchors.json must exist and contain at least all fast anchor run keys.
 
@@ -452,12 +557,13 @@ def test_grade_anchors_entry_count_unchanged(grade_anchors: dict) -> None:
     """Anti-drift guard: the migration (bare string -> {grade, score}) must not silently
     drop or duplicate a scenario entry.
 
-    75 real scenario entries as of TCK-20260713-SIMQ-RAWSCORE-PERSIST's migration (78 total
-    keys minus the 3 metadata keys: _note, _instructions, _grade_order).
+    76 real scenario entries as of TCK-20260713-SIMQ-COGNITION-PIPELINE-WIRE, which added
+    urban_political_selfmodel_execution_probe_seed42_200t (79 total keys minus the 3
+    metadata keys: _note, _instructions, _grade_order).
     """
     metadata_keys = {"_note", "_instructions", "_grade_order"}
     scenario_keys = set(grade_anchors.keys()) - metadata_keys
-    assert len(scenario_keys) == 75, (
-        f"Expected 75 real scenario entries, found {len(scenario_keys)} — "
+    assert len(scenario_keys) == 76, (
+        f"Expected 76 real scenario entries, found {len(scenario_keys)} — "
         "an anchor entry may have been silently dropped or duplicated"
     )

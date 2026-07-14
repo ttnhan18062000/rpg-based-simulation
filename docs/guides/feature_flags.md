@@ -29,9 +29,9 @@ default OFF, how per-world SimQ profiles can activate them, and how the `Rollout
 | `ON` | Feature active; output applied |
 | `STRICT` | Feature active; any failure raises immediately (no silent degradation) |
 
-## The 10 flags
+## The 11 flags
 
-`FeatureFlagManager.__init__` (`feature_flags.py:13-24`) hardcodes exactly 10 flags. **All 10
+`FeatureFlagManager.__init__` (`feature_flags.py:13-25`) hardcodes exactly 11 flags. **All 11
 default to `FeatureMode.OFF`** (confirmed in `docs/engine/known_limitations.md` §1.5):
 
 | Flag | Default | Controls |
@@ -41,6 +41,7 @@ default to `FeatureMode.OFF`** (confirmed in `docs/engine/known_limitations.md` 
 | `ENABLE_ADVENTURE_ROUTING` | OFF | Adventure/route resolution |
 | `ENABLE_COMBAT_ENGAGEMENT` | OFF | combat_engagement domain (Pre-Combat Assessment stage) |
 | `ENABLE_BELIEF_ASSIMILATION` | OFF | information domain (Information / Belief Processing stage) |
+| `ENABLE_INFORMATION_INTENT_EXECUTION` | OFF | information_intent_execution domain (executes self-model query-routing `ActionIntent`s via `ActionIntentAdapter.execute()`) |
 | `ENABLE_PROGRESSION_EVOLUTION` | OFF | progression domain |
 | `ENABLE_SOCIAL_COOPERATION` | OFF | cooperation domain |
 | `ENABLE_WORLD_EMERGENCE` | OFF | World emergence domain activation |
@@ -49,7 +50,7 @@ default to `FeatureMode.OFF`** (confirmed in `docs/engine/known_limitations.md` 
 
 ## Default-OFF policy
 
-All 10 flags start `OFF` by design — this is a deliberate rollout gate, not an oversight. To
+All 11 flags start `OFF` by design — this is a deliberate rollout gate, not an oversight. To
 exercise a flag-gated pipeline, a scenario or test must explicitly opt in via the
 `overrides` constructor argument or `FeatureFlagManager.set_flag_mode()`. The canonical example is
 `_build_kernel(enable_routing=True)` in `tests/integration/scenarios/test_balance_regression.py`.
@@ -60,7 +61,7 @@ establish new baseline constants and updating `test_balance_regression.py` accor
 
 ## DEV-002 — default-OFF decision record
 
-The decision to keep all 10 flags `OFF` by default (rationale class **Stabilized**) is recorded
+The decision to keep all 11 flags `OFF` by default (rationale class **Stabilized**) is recorded
 in [`intentional_divergences.md` § DEV-002](../guidelines/intentional_divergences.md). The
 sentinel test `test_adventure_routing_defaults_off()` in `test_balance_regression.py` guards this
 policy. See that entry for the full rationale and unblock condition — not duplicated here.

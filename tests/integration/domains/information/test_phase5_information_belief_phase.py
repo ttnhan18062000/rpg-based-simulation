@@ -8,9 +8,11 @@ import pytest
 from src.core.builder import V2EntityBuilder
 from src.core.state import CombatComponent, BiologicalComponent, PersonalityComponent, AuthoritativeState
 from src.core.self_model import SelfModelBundle, KnowledgeModelComponent, UnknownFact
+from src.core.updates import StateUpdate
 from src.domains.information.schema import InformationSourceProfile
 from src.domains.information.phase import InformationBeliefPhase
 from src.engine.intent.action_intent import ActionIntent, ActionIntentAdapter
+from src.engine.pipeline import AuthoritativeApplyPipeline
 
 
 def _entity(e_id, x=0.0, y=0.0, unknowns=None):
@@ -142,3 +144,99 @@ def test_ask_information_intent_execution_closes_the_loop():
     assert eu.self_model_bundle_set is not None
     assert "iron_ore" in eu.self_model_bundle_set.knowledge.facts
     assert "iron_ore" not in eu.self_model_bundle_set.knowledge.unknowns
+
+
+def _full_pipeline_state(entities) -> AuthoritativeState:
+    """Distinct from module-level _state(): building_tiles/town_tiles/blocked_tiles must
+    be dict/set (not tuple) for later pipeline phases (e.g. BlacksmithSystem) that this
+    file's other tests never reach via direct InformationBeliefPhase.apply() calls."""
+    ent_map = {e.id: e for e in entities}
+    return AuthoritativeState(
+        tick=1, seed=1, world_time=100, entities=ent_map,
+        groups={}, regions={}, resource_nodes={}, buildings={},
+        chests={}, ground_items={}, corpses={}, camps={},
+        local_scars={}, global_resources={}, town_tiles=set(),
+        building_tiles={}, terrain={}, home_storage={},
+        town_center=(0, 0), periodic_due_ticks={}, work_debt={},
+        movement_count=0, maturity=0, last_calamity_tick=0,
+        blocked_tiles=set(), town_entity_ids=set(),
+    )
+
+
+def _selfmodel_execution_probe_state():
+    unk = UnknownFact(subject="iron_ore", reason="test_unk", recorded_tick=1)
+    actor = _entity(1, x=0.0, y=0.0, unknowns={"iron_ore": unk})
+    guide = _entity(2, x=1.0, y=1.0)  # close source, matches existing routing tests
+    state = _full_pipeline_state([actor, guide])
+
+    profiles = [
+        InformationSourceProfile(
+            source_id=2,
+            source_kind="guide",
+            knowledge_scopes=("common_resource_sources",),
+            accuracy=0.8,
+            freshness=0.9,
+            cost_gold=0,
+        )
+    ]
+    from dataclasses import replace as dataclass_replace
+    state = dataclass_replace(state, information_source_profiles=profiles)
+    return state, actor
+
+
+def test_action_intent_execution_phase_fires_in_real_tick_pipeline():
+    """TCK-20260713-SIMQ-COGNITION-PIPELINE-WIRE: with ENABLE_SELF_MODEL_COGNITION,
+    ENABLE_BELIEF_ASSIMILATION, and ENABLE_INFORMATION_INTENT_EXECUTION all ON, a real
+    end-to-end AuthoritativeApplyPipeline.refine() call must route the actor's unresolved
+    "iron_ore" unknown (Branch B) AND execute the resulting ActionIntent through
+    ActionIntentAdapter.execute() (the new phase), closing the loop into
+    self_model_bundle_set within a single tick — not just via direct
+    ActionIntentAdapter.execute() invocation."""
+    from dataclasses import replace as dataclass_replace
+    from src.domains.optimization.feature_flags import FeatureMode
+
+    state, actor = _selfmodel_execution_probe_state()
+    state = dataclass_replace(state, feature_flags={
+        "ENABLE_SELF_MODEL_COGNITION": FeatureMode.ON,
+        "ENABLE_BELIEF_ASSIMILATION": FeatureMode.ON,
+        "ENABLE_INFORMATION_INTENT_EXECUTION": FeatureMode.ON,
+    })
+
+    from src.core.updates import StateUpdate
+    refined = AuthoritativeApplyPipeline.refine(state, StateUpdate())
+
+    eu = refined.entity_updates.get(actor.id)
+    assert eu is not None
+    assert eu.self_model_bundle_set is not None
+    assert "iron_ore" in eu.self_model_bundle_set.knowledge.facts, (
+        "expected ActionIntentAdapter.execute() to fire through the real pipeline and "
+        "assimilate the routed query's answer into self_model_bundle_set.facts"
+    )
+    assert "iron_ore" not in eu.self_model_bundle_set.knowledge.unknowns
+
+
+def test_action_intent_execution_phase_off_by_default_is_a_noop():
+    """Same setup as test_action_intent_execution_phase_fires_in_real_tick_pipeline, but
+    ENABLE_INFORMATION_INTENT_EXECUTION is left unset (default OFF). Branch B still routes
+    the ActionIntent into intent_results (ENABLE_BELIEF_ASSIMILATION stays ON), but it must
+    sit inert — the flag gate must actually block production reachability."""
+    from dataclasses import replace as dataclass_replace
+    from src.domains.optimization.feature_flags import FeatureMode
+
+    state, actor = _selfmodel_execution_probe_state()
+    state = dataclass_replace(state, feature_flags={
+        "ENABLE_SELF_MODEL_COGNITION": FeatureMode.ON,
+        "ENABLE_BELIEF_ASSIMILATION": FeatureMode.ON,
+    })
+
+    from src.core.updates import StateUpdate
+    refined = AuthoritativeApplyPipeline.refine(state, StateUpdate())
+
+    eu = refined.entity_updates.get(actor.id)
+    assert eu is not None
+    assert eu.intent_results, "expected Branch B to still route the ActionIntent into intent_results"
+    assert eu.self_model_bundle_set is not None
+    assert "iron_ore" not in eu.self_model_bundle_set.knowledge.facts, (
+        "ActionIntentAdapter.execute() must not have fired while the flag is OFF"
+    )
+    assert "iron_ore" in eu.self_model_bundle_set.knowledge.unknowns
