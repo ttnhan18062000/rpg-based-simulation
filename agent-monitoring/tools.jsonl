@@ -52265,3 +52265,6 @@
 {"session_id":"7c69cdb0-1927-42f4-89c3-eda5c870c426","run_id":null,"seq":null,"ts":"2026-07-14T12:04:04.304110Z","tool":"Bash","input_summary":"graphify update . 2>&1 | tail -15","status":"ok","duration_ms":59609}
 {"session_id":"7c69cdb0-1927-42f4-89c3-eda5c870c426","run_id":null,"seq":null,"ts":"2026-07-14T12:04:07.993192Z","tool":"Bash","input_summary":"git status --short","status":"ok","duration_ms":159}
 {"session_id":"7c69cdb0-1927-42f4-89c3-eda5c870c426","run_id":null,"seq":null,"ts":"2026-07-14T12:06:11.751340Z","tool":"Bash","input_summary":"git status --short","status":"ok","duration_ms":136}
+{"session_id":"7c69cdb0-1927-42f4-89c3-eda5c870c426","run_id":null,"seq":null,"ts":"2026-07-14T12:06:20.521484Z","tool":"Bash","input_summary":"git add \\\n  agent-monitoring/events.jsonl \\\n  agent-monitoring/runs.jsonl \\\n  ag","status":"ok","duration_ms":306}
+{"session_id":"7c69cdb0-1927-42f4-89c3-eda5c870c426","run_id":null,"seq":null,"ts":"2026-07-14T12:06:35.294881Z","tool":"Bash","input_summary":"git commit -m \"$(cat <<'EOF'\nTCK-20260713-SIMQ-COGNITION-LOOPDET-NONDETERMINISM,","status":"ok","duration_ms":256}
+{"session_id":"7c69cdb0-1927-42f4-89c3-eda5c870c426","run_id":null,"seq":null,"ts":"2026-07-14T12:06:41.722425Z","tool":"Bash","input_summary":"git diff --stat agent-monitoring/tools.jsonl","status":"ok","duration_ms":158}
