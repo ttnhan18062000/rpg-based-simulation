@@ -48,7 +48,8 @@ class AdventureRouteOption:
         blockers:               Active blocker reasons/strings if route is blocked
         source_opportunity_ids: Dynamic world options backing this route
         reason:                 Short descriptive reason for the option
-        target_node_id:         Integer node ID for GATHER_RESOURCE routes; None for all others
+        target_node_id:         Integer node/building ref id resolved from the backing
+                                 opportunity's target_id, when available; None otherwise.
     """
     family: RouteFamily
     score: float

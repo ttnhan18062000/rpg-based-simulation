@@ -18,6 +18,7 @@ from src.domains.adventure.schema import RouteFamily
 from src.domains.adventure.service import AdventureDecisionService
 from src.engine.spatial_query import SpatialQueryService
 from src.world.providers.resources import ResourceOpportunityProvider
+from src.world.providers.services import ServiceOpportunityProvider
 from src.observability.cognition.decision_trace_writer import get_active_writer as _get_active_writer
 
 
@@ -97,7 +98,10 @@ class AdventureDecisionPhase:
                         continue
 
             # 1. Generate candidate route options
-            opportunities = ResourceOpportunityProvider.get_opportunities(hero, state)
+            opportunities = (
+                ResourceOpportunityProvider.get_opportunities(hero, state)
+                + ServiceOpportunityProvider.get_opportunities(hero, state)
+            )
             candidates = AdventureRouteGenerator.generate(hero, state, opportunities=opportunities)
 
             # 2. Decide using service ( personality-biased scoring + project mapping )

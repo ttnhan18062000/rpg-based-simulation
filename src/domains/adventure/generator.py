@@ -67,13 +67,14 @@ class AdventureRouteGenerator:
                     if item_count < req.quantity:
                         blockers.append(f"missing_item:{req.subject}:{req.quantity - item_count}")
 
-            # Extract integer node ID for GATHER_RESOURCE routes (used by depletion scorer)
-            target_node_id = None
-            if opp.kind == "gather_resource":
-                try:
-                    target_node_id = int(opp.target_id)
-                except (ValueError, TypeError):
-                    target_node_id = None
+            # Extract integer node/building ref id when the backing opportunity's
+            # target_id resolves to one (used by the depletion scorer for
+            # GATHER_RESOURCE, and by tactical.py's position resolution for any
+            # opportunity-backed objective).
+            try:
+                target_node_id = int(opp.target_id)
+            except (ValueError, TypeError):
+                target_node_id = None
 
             opts.append(
                 AdventureRouteOption(

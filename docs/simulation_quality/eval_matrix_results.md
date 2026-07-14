@@ -2291,3 +2291,63 @@ because of the corpus-wide engine-layer gap this batch found (see above). `wilde
 `highland_traverse` are untouched by this ticket (not chosen candidates) and remain valid,
 unexamined C cases for the original "no settlement module" reason. `dungeon_crawl` also remains
 untouched and valid for the same original reason.
+
+---
+
+## COGNITION Loop-Detection Nondeterminism Verification (TCK-20260713-SIMQ-COGNITION-LOOPDET-NONDETERMINISM)
+
+A one-off anomalous full-corpus live-mode sweep (discovered during `TCK-20260713-SIMQ-SCORE-CEILING-FIX`'s
+Step 12) produced a wildly different COGNITION result for `urban_political_seed123_500t`
+(`grade=S`, `raw_score=3521.0`, `event_count=119`, `loop_detected=True` on
+`self_model_active`/`subjective_divergence`) than the committed `grade_anchors.json` anchor
+(`grade=B`, `score=0.088`, from `raw_score=11.0`/`event_count=2`), observed under ~30 minutes of
+sustained concurrent system load with repeated `WatchdogTrip`/tick-budget-exceeded warnings.
+`urban_political_seed123_500t` is a `FAST_ANCHOR_KEYS` entry (`tests/simulation_quality/
+test_grade_regression.py:70`), not one of the 18 `SLOW_ANCHOR_KEYS` entries
+`TCK-20260710-SIMQ-ANCHOR-RELIABILITY-VERIFY` already re-verified — it had never been tested
+against the wall-clock-driven throttle mechanism (F6, `docs/audits/D06_longrun_health.md` §F6)
+before this ticket.
+
+**Root cause**: the investigation confirmed `decision_divergence_detected`
+(`src/observability/event_extractor.py:477-496`) has no "already-emitted" dedup gate by design and
+re-fires every tick an entity's `danger` concern (`urgency > 0.7`) persists alongside a non-survival
+active project. Under F6's wall-clock watchdog/throttle (`src/engine/kernel.py:420-442`, `574-601`),
+dropped resolution-queue work under sustained load can stall that resolution and cause the mismatch
+to persist across many consecutive ticks — the same mechanism as F6, not a COGNITION-local
+determinism bug. (A second, load-independent finding — a cross-pillar flat weight-key collision in
+`src/simulation_quality/weights.py` inflating `subjective_divergence`'s effective weight 6x — explains
+the anomaly's raw_score *magnitude* but not its *event_count* jump; that finding is filed separately
+as `TCK-20260714-SIMQ-WEIGHTS-PILLAR-COLLISION` and is out of scope here.)
+
+**Controlled repro** (full data:
+`staging_artifacts/TCK-20260713-SIMQ-COGNITION-LOOPDET-NONDETERMINISM/repro_sweep.md`): drove
+`urban_political` seed 123, 500 ticks, via the real throttled `Kernel` (no `audit_mode`), two idle
+repeats and two escalating induced-load levels (multiprocessing busy-loop pool oversubscribing the
+4-core test machine 2x and 4x):
+
+| Run | Load | budget_warnings | watchdog_trips | wall_elapsed_s | COGNITION event_count | raw_score | normalized_score | grade | loop_detected |
+|---|---|---|---|---|---|---|---|---|---|
+| idle-1 | none | 28 | 0 | 12.24 | 2 | 11.0 | 0.088 | B | True |
+| idle-2 | none | 31 | 0 | 12.32 | 2 | 11.0 | 0.088 | B | True |
+| load-2x | 8 busy workers | 40 | 1 | 21.52 | 2 | 11.0 | 0.088 | B | True |
+| load-4x | 16 busy workers | 108 | 0 | 43.03 | 2 | 11.0 | 0.088 | B | True |
+
+The throttle mechanism itself is confirmed load-sensitive here (`budget_warnings` climbs 28/31 idle
+-> 40 at 2x -> 108 at 4x; a genuine mid-tick emergency throttle fired at 2x; wall-clock time grew up
+to 3.5x under 4x load) — but COGNITION's `event_count`/`raw_score`/`normalized_score`/`grade`/
+`loop_detected` are bit-identical across all four runs, and match the committed anchor exactly.
+`urban_political_seed123_500t` does not appear to place any entity into the danger-concern-stuck
+state F6's mechanism requires to explode `decision_divergence_detected`, at this seed/tick-count and
+up to 4x core oversubscription.
+
+**Reliability status: stable.** A tight bit-identical assertion
+(`test_urban_political_seed123_500t_cognition_bit_identical_under_load`,
+`tests/unit/worldassembly/test_corpus_diversity.py`) was added rather than a tolerance-guard
+conversion, since the repro demonstrated bit-identity is achievable for this anchor even under
+confirmed throttle-sensitive conditions — a stronger result than tolerance-bounded stability
+(mirroring `TCK-20260710-SIMQ-ANCHOR-RELIABILITY-VERIFY`'s vocabulary, where **stable** denotes no
+tolerance-guard conversion was needed).
+
+`urban_political_seed42_500t` and `urban_political_seed456_500t` (sibling `FAST_ANCHOR_KEYS`
+entries) remain unverified against F6 — out of this ticket's scope, candidates for a future ticket
+if their own controlled repro is warranted.

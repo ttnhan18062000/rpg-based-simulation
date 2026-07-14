@@ -79,6 +79,10 @@ def test_phase3_adventure_decision_perf_budget():
     t_delta_ms = (time.perf_counter_ns() - t0) / 1e6
 
     # Verify response bounds under 100+ entities.
-    # Steady-state measured at ~4-5ms; budget raised to 20ms to accommodate VM scheduling
-    # variance when running after other CPU-intensive tests in the same session.
-    assert t_delta_ms < 20.0, f"Adventure decision phase execution is too slow: {t_delta_ms}ms"
+    # Steady-state measured at ~4-5ms pre-TCK-20260713-SIMQ-ECONOMY-INTENT-GENERATION-GAP.
+    # That ticket wired the previously-orphaned ServiceOpportunityProvider into this phase
+    # (closing its Open Question 3 — craft/buy/repair/rest opportunities were never being
+    # generated in production), which adds a real, structural O(services x recipes) cost per
+    # hero (services.py's internal logic is out of scope to alter). New steady-state measured
+    # at ~44-48ms; budget raised to 70ms for VM scheduling variance headroom.
+    assert t_delta_ms < 70.0, f"Adventure decision phase execution is too slow: {t_delta_ms}ms"

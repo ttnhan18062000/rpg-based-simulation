@@ -11,13 +11,14 @@ logger = logging.getLogger(__name__)
 from src.core.updates import EntityUpdate, TaskUpdate, NavigationUpdate
 from src.engine.legality import LegalityServiceV2
 from src.engine.positioning import PositioningService
-from src.core.strategic import ProjectStatus
+from src.core.strategic import ProjectStatus, ObjectiveKind
 from src.core.movement_modes import MovementMode
 from src.core.enums import ActionStyle, ReasonCode, EntityRole, Faction
 from src.core.skills import SKILL_REGISTRY
 
 if TYPE_CHECKING:
     from src.core.state import EntityState, AuthoritativeState
+    from src.core.strategic import ObjectiveState
 
 class TacticalDecisionSystem:
     """
@@ -211,30 +212,7 @@ class TacticalDecisionSystem:
                 if project:
                     obj = next((o for o in project.objectives if o.id == obj_id), None)
                     if obj and obj.kind == "reach_location" and obj.target:
-                        # Find the node or target position
-                        target_pos = None
-                        node_id = None
-                        building_id = None
-                        try:
-                            candidate_id = int(obj.target)
-                            node = state.resource_nodes.get(candidate_id)
-                            if node:
-                                target_pos = node.position
-                                node_id = candidate_id
-                            else:
-                                # Not a resource node — check buildings (e.g. HUNGER→tavern, FATIGUE→inn)
-                                building = state.buildings.get(candidate_id)
-                                if building:
-                                    target_pos = building.position
-                                    building_id = candidate_id
-                        except ValueError:
-                            # Not an int, try coordinate tuple
-                            # Safe coordinate parse: "(x, y)" -> (float, float)
-                            try:
-                                import ast
-                                target_pos = ast.literal_eval(obj.target)
-                            except (ValueError, SyntaxError):
-                                target_pos = None
+                        target_pos, node_id, building_id = TacticalDecisionSystem._resolve_target_position(state, obj)
 
                         if target_pos:
                             dist = abs(target_pos[0] - entity.navigation.position[0]) + abs(target_pos[1] - entity.navigation.position[1])
@@ -279,7 +257,35 @@ class TacticalDecisionSystem:
                                     entity_id=entity.id,
                                     navigation=NavigationUpdate(target_set=target_pos, movement_mode_set=MovementMode.WANDER),
                                 )
-            
+                    elif obj and obj.kind not in (ObjectiveKind.REACH_LOCATION, ObjectiveKind.DEFEAT_ENEMY):
+                        # Pillar 5.1 continued: every other ObjectiveKind System A/B can
+                        # produce reaches real execution via ObjectiveIntentResolver +
+                        # ActionIntentAdapter, not just REACH_LOCATION. DEFEAT_ENEMY is
+                        # excluded — handled entirely by the hostile-engagement branch
+                        # below (gated on `hostiles`, not `obj.kind`).
+                        target_pos = None
+                        if obj.target:
+                            target_pos, _, _ = TacticalDecisionSystem._resolve_target_position(state, obj)
+
+                        if target_pos:
+                            dist = abs(target_pos[0] - entity.navigation.position[0]) + abs(target_pos[1] - entity.navigation.position[1])
+                            if dist > 1.0:
+                                return EntityUpdate(
+                                    entity_id=entity.id,
+                                    navigation=NavigationUpdate(target_set=target_pos, movement_mode_set=MovementMode.WANDER),
+                                )
+
+                        from src.domains.adventure.resolver import ObjectiveIntentResolver
+                        from src.engine.intent.action_intent import ActionIntentAdapter
+
+                        intent = ObjectiveIntentResolver.resolve(
+                            entity.id, obj, payload={"position": target_pos} if target_pos else {}
+                        )
+                        updates = ActionIntentAdapter.execute(
+                            entity, intent, current_tick=state.tick, neighbor_view=neighbors, context=state
+                        )
+                        return updates.get(entity.id, EntityUpdate(entity_id=entity.id))
+
             # 4.1 Role-Based Obligation (Phase 7)
             group = state.groups.get(entity.identity.group_id) if entity.identity.group_id is not None else None
             if group and not hostiles:
@@ -664,6 +670,43 @@ class TacticalDecisionSystem:
                     }
                 )
             )
+
+    @staticmethod
+    def _resolve_target_position(
+        state: AuthoritativeState, obj: "ObjectiveState"
+    ) -> Tuple[Optional[Tuple[float, float]], Optional[int], Optional[int]]:
+        """
+        Resolve an objective's `target` (an int-castable resource-node/building id,
+        or a stringified coordinate tuple) into a concrete world position.
+
+        Caller must guard `obj.target` truthy before calling — `int(None)` raises
+        TypeError, which is deliberately left uncaught here to keep this a byte-
+        identical extraction of the pre-existing REACH_LOCATION inline logic.
+        """
+        target_pos = None
+        node_id = None
+        building_id = None
+        try:
+            candidate_id = int(obj.target)
+            node = state.resource_nodes.get(candidate_id)
+            if node:
+                target_pos = node.position
+                node_id = candidate_id
+            else:
+                # Not a resource node — check buildings (e.g. HUNGER→tavern, FATIGUE→inn)
+                building = state.buildings.get(candidate_id)
+                if building:
+                    target_pos = building.position
+                    building_id = candidate_id
+        except ValueError:
+            # Not an int, try coordinate tuple
+            # Safe coordinate parse: "(x, y)" -> (float, float)
+            try:
+                import ast
+                target_pos = ast.literal_eval(obj.target)
+            except (ValueError, SyntaxError):
+                target_pos = None
+        return target_pos, node_id, building_id
 
     @staticmethod
     def select_best_target(

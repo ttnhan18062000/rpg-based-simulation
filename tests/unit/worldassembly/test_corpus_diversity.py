@@ -388,6 +388,107 @@ def test_generated_frontier_3_42_extended_population_stability() -> None:
 
 
 # ---------------------------------------------------------------------------
+# 2c. urban_political_seed123_500t COGNITION bit-identical under induced load
+# ---------------------------------------------------------------------------
+
+@pytest.mark.slow
+def test_urban_political_seed123_500t_cognition_bit_identical_under_load() -> None:
+    """Bit-identical regression guard for TCK-20260713-SIMQ-COGNITION-LOOPDET-NONDETERMINISM.
+
+    Investigation into a one-off anomalous sweep result (COGNITION event_count 2->119,
+    grade B->S) hypothesized the same wall-clock-driven watchdog/throttle mechanism as F6
+    (docs/audits/D06_longrun_health.md §F6, kernel.py:420-442/574-601): dropped
+    resolution-queue work under sustained load could stall an entity's `danger`-concern
+    resolution and cause `decision_divergence_detected` (which has no "already-emitted"
+    dedup gate, src/observability/event_extractor.py:477-496) to re-fire every tick the
+    mismatch persists. A controlled repro
+    (staging_artifacts/TCK-20260713-SIMQ-COGNITION-LOOPDET-NONDETERMINISM/repro_sweep.md)
+    drove this exact scenario/seed via the real throttled Kernel (no audit_mode) at two
+    idle repeats and two escalating induced-load levels (2x and 4x core oversubscription).
+    The induced-load mechanism was confirmed real and load-sensitive (budget_warnings
+    28/31 idle -> 40 at 2x -> 108 at 4x; a genuine mid-tick emergency throttle fired at
+    2x, absent in both idle runs; wall-clock time grew up to 3.5x) — but COGNITION's
+    event_count/raw_score/normalized_score/grade/loop_detected were bit-identical across
+    all four runs (event_count=2, raw_score=11.0, normalized_score=0.088, grade=B,
+    loop_detected=True), matching the committed grade_anchors.json anchor exactly. This
+    scenario does not appear to place any entity into the danger-concern-stuck state F6's
+    mechanism requires, so a tight bit-identical assertion (rather than a tolerance-guard
+    conversion, per repro_sweep.md's Decision section) is the correct regression guard
+    for this anchor.
+
+    This test replays the same idle-vs-induced-load structure as the repro, in-process,
+    via tools.calibrate_simq's real internals (exercising the exact scoring path
+    grade_anchors.json was calibrated against — profile-aware ScoringWeights, feature
+    flags) rather than a hand-rolled Kernel setup.
+    """
+    import multiprocessing
+    import tempfile
+    import time
+
+    from tools.calibrate_simq import (
+        _build_hub,
+        _load_profile_feature_flags,
+        _load_weights,
+        _replay_jsonl_through_hub,
+        _resolve_profile,
+        _run_engine,
+    )
+
+    world_name = "urban_political"
+    seed = 123
+    ticks = 500
+
+    def _busy_loop(stop_flag) -> None:
+        x = 0
+        while not stop_flag.value:
+            for _ in range(200000):
+                x = (x * 1103515245 + 12345) & 0x7FFFFFFF
+
+    def _run_cognition(label: str, cal_dir: str) -> dict:
+        profile = _resolve_profile(world_name)
+        feature_flags = _load_profile_feature_flags(profile)
+        engine_run_dir, _elapsed, run_id = _run_engine(world_name, seed, ticks, extra_flags=feature_flags)
+        weights = _load_weights(profile)
+        hub, persistence = _build_hub(weights, cal_dir, run_id or f"{world_name}_seed{seed}_{ticks}t_{label}")
+        _replay_jsonl_through_hub(engine_run_dir, hub)
+        report = hub.get_quality_report()
+        persistence.write_report(report)
+        persistence.shutdown()
+        cognition = report.pillars["COGNITION"]
+        return {
+            "event_count": cognition.event_count,
+            "raw_score": cognition.raw_score,
+            "normalized_score": cognition.normalized_score,
+            "grade": cognition.grade,
+            "loop_detected": cognition.loop_detected,
+        }
+
+    with tempfile.TemporaryDirectory() as idle_dir:
+        idle_result = _run_cognition("idle", idle_dir)
+
+    stop_flag = multiprocessing.Value("b", False)
+    n_workers = max(1, multiprocessing.cpu_count() * 2)
+    procs = [multiprocessing.Process(target=_busy_loop, args=(stop_flag,)) for _ in range(n_workers)]
+    for p in procs:
+        p.start()
+    try:
+        time.sleep(1.0)  # let induced load ramp up before the drive starts
+        with tempfile.TemporaryDirectory() as load_dir:
+            load_result = _run_cognition("load", load_dir)
+    finally:
+        stop_flag.value = True
+        for p in procs:
+            p.join(timeout=5.0)
+            if p.is_alive():
+                p.terminate()
+
+    assert idle_result == load_result, (
+        f"urban_political_seed123_500t COGNITION diverged between idle and induced-load runs — "
+        f"idle={idle_result} load={load_result}"
+    )
+
+
+# ---------------------------------------------------------------------------
 # 3. Hazard-kind completeness
 # ---------------------------------------------------------------------------
 

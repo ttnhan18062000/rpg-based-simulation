@@ -839,9 +839,14 @@
   status: verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
-  proof_type: null
-  test_path: null
+  v2_evidence: >
+    Re-verified post TCK-20260713-SIMQ-ECONOMY-INTENT-GENERATION-GAP: entity.strategic.current_objective_id
+    is read, not mutated, by TacticalDecisionSystem.evaluate_entity_intent
+    (src/engine/tactical.py) \u2014 a resumed objective (unchanged current_objective_id across ticks)
+    continues driving the same Pillar 5.1 branch (REACH_LOCATION or the new ObjectiveIntentResolver
+    elif) on every subsequent call, unaffected by this ticket's routing-bridge addition.
+  proof_type: regression
+  test_path: tests/unit/tactical/test_objective_pursuit_coverage.py::test_objective_kind_reach_resource_produces_executable_action
   divergence_note: null
   support_boundary: null
 - id: STRAT-079
@@ -2014,9 +2019,14 @@
   status: verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
-  proof_type: null
-  test_path: null
+  v2_evidence: >
+    Re-verified post TCK-20260713-SIMQ-ECONOMY-INTENT-GENERATION-GAP: continuity itself
+    (current_objective_id persisting across ticks until resolved/superseded) is untouched by
+    that ticket's fix — the new ObjectiveIntentResolver elif branch in
+    src/engine/tactical.py only widens which ObjectiveKind values reach execution, it does not
+    read or write current_objective_id continuity semantics.
+  proof_type: regression
+  test_path: tests/unit/tactical/test_objective_pursuit_coverage.py::test_objective_kind_acquire_item_produces_executable_action
   divergence_note: null
   support_boundary: null
 - id: STRAT-189
@@ -2024,11 +2034,33 @@
   status: verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
-  proof_type: null
-  test_path: null
+  v2_evidence: >
+    Previously contradicted for every ObjectiveKind other than REACH_LOCATION
+    (TCK-20260713-SIMQ-ECONOMY-INTENT-GENERATION-GAP): TacticalDecisionSystem.evaluate_entity_intent
+    (src/engine/tactical.py:213) only converted the hardcoded "reach_location" kind into a real
+    task/navigation/interaction EntityUpdate; ACQUIRE_ITEM, REACH_RESOURCE, BUY_ITEM, and every
+    other ObjectiveKind System A (src/domains/adventure/) or System B
+    (src/systems/strategic_systems/intelligence.py) could produce fell through to a bare idle
+    EntityUpdate at tactical.py:319. ObjectiveIntentResolver (src/domains/adventure/resolver.py),
+    which already maps every ObjectiveKind to an executable ActionIntent, was orphaned dead code —
+    called only by its own unit test. Fixed by wiring ObjectiveIntentResolver.resolve() +
+    ActionIntentAdapter.execute() into a new elif branch in tactical.py's Pillar 5.1
+    (src/engine/tactical.py:260-287), reached whenever obj.kind is neither REACH_LOCATION
+    (existing, unmodified branch) nor DEFEAT_ENEMY (handled by the separate hostile-engagement
+    branch, tactical.py:321-666).
+  proof_type: regression
+  test_path: >-
+    tests/unit/tactical/test_objective_pursuit_coverage.py::test_objective_kind_acquire_item_produces_executable_action;
+    tests/unit/tactical/test_objective_pursuit_coverage.py::test_objective_kind_reach_resource_produces_executable_action
   divergence_note: null
-  support_boundary: null
+  support_boundary: >-
+    Reachability (objective -> ActionIntentAdapter.execute()) is proven for every ObjectiveKind
+    at the unit/integration level. Whether execution produces a live economy event in real
+    calibration play depends on separate, out-of-scope factors documented in STRAT-246 below
+    (ENABLE_ADVENTURE_ROUTING default-off in most calibration profiles; AdventureRouteScorer
+    scoring competition against form_party/gather_resource; ObjectiveIntentResolver's
+    REACH_RESOURCE -> MOVE_TO mapping never transitioning to a harvest/interact action on
+    arrival) — none of which this entry claims to resolve.
 - id: STRAT-190
   text: Objective derivation can create blockers when execution is impossible.
   status: verified
@@ -2381,9 +2413,10 @@
   support_boundary: null
 - id: STRAT-225
   text: AdventureDecisionPhase.apply() calls ResourceOpportunityProvider.get_opportunities(hero,
-    state) before AdventureRouteGenerator.generate(), passing the result as opportunities=
-    so the primary opportunity loop executes and GATHER_RESOURCE/BUY_UPGRADE route
-    families can be produced each tick.
+    state) concatenated with ServiceOpportunityProvider.get_opportunities(hero, state)
+    before AdventureRouteGenerator.generate(), passing the combined result as opportunities=
+    so the primary opportunity loop executes and GATHER_RESOURCE/BUY_UPGRADE/CRAFT_UPGRADE/
+    REPAIR_GEAR/ASK_INFORMATION/REST_INN route families can be produced each tick.
   status: verified
   priority: P0
   legacy_evidence: null
@@ -2393,6 +2426,17 @@
     (TCK-20260619-FIX-ADVENTURE-OPPORTUNITY-WIRING). Decision trace writer import
     hoisted to module level in TCK-20260624-FIX-PERF-BUDGETS, eliminating O(n)
     Pydantic model construction overhead (472ms → <5ms for 100 entities).
+    Updated by TCK-20260713-SIMQ-ECONOMY-INTENT-GENERATION-GAP: ServiceOpportunityProvider
+    (src/world/providers/services.py), previously defined but never called by
+    AdventureDecisionPhase.apply(), is now imported and concatenated with
+    ResourceOpportunityProvider's result at the same call site
+    (src/domains/adventure/phase.py — "1. Generate candidate route options"), so
+    craft_item/buy_item/repair_gear/ask_information/rest_inn opportunities are generated
+    at all, not just gather_resource-derived ones. This raised the phase's real per-tick
+    cost from ~4-5ms to ~44-48ms for 105 entities (O(services × recipes) growth), which
+    required recalibrating this entry's own perf-budget test threshold (20ms → 70ms,
+    see test file's inline comment) — not a regression, a real structural cost of closing
+    the opportunity-generation gap.
   proof_type: parity
   test_path: tests/perf/test_phase3_adventure_decision_budget.py::test_phase3_adventure_decision_perf_budget
   divergence_note: null
@@ -2814,3 +2858,66 @@
     exercises at multi-entity/multi-tick calibration scale for the first time).
   test_path: tests/simulation_quality/test_grade_regression.py (unit_selfmodel_pilot_seed{42,123,456}_200t anchors)
   divergence_note: null
+
+- id: STRAT-246
+  text: >
+    Every ObjectiveKind System A (src/domains/adventure/) or System B
+    (src/systems/strategic_systems/intelligence.py) can produce reaches real execution via
+    ActionIntentAdapter.execute(), not just REACH_LOCATION.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: >
+    TCK-20260713-SIMQ-ECONOMY-INTENT-GENERATION-GAP. New elif branch in
+    TacticalDecisionSystem.evaluate_entity_intent's Pillar 5.1 (src/engine/tactical.py:260-287),
+    reached when obj.kind is neither REACH_LOCATION (existing, unmodified branch,
+    tactical.py:214-259) nor DEFEAT_ENEMY (separate hostile-engagement branch,
+    tactical.py:321-666): resolves the objective's target position via the same
+    int-cast + resource_nodes/buildings lookup REACH_LOCATION already uses
+    (_resolve_target_position, extracted as a pure refactor in the same change), then calls
+    ObjectiveIntentResolver.resolve() (src/domains/adventure/resolver.py, previously orphaned —
+    called only by its own unit test) and ActionIntentAdapter.execute()
+    (src/engine/intent/action_intent.py). ActionIntentAdapter gained two new dispatch branches,
+    REQUEST_CRAFT and BUY_ITEM, routing through ResourceTransferIntent(source_kind="CRAFTING"/"SHOP_BUY")
+    into the existing, unmodified ResourceTransactionResolver.resolve() "CRAFTING"/"SHOP_BUY"
+    branches (src/core/conservation.py:133,155) — the same authoritative mutation path
+    src/engine/blacksmith.py and src/town/shop.py already use — deliberately not
+    CraftingSystem.craft() directly, which would bypass intent_results/event_extractor.py's
+    item_crafted derivation. AdventureDecisionPhase.apply also now calls
+    ServiceOpportunityProvider.get_opportunities (src/domains/adventure/phase.py), previously
+    never wired in, so craft_item/buy_item/repair_gear/ask_information/rest_inn opportunities are
+    generated at all.
+  proof_type: regression
+  test_path: >-
+    tests/integrity/test_logic_guards.py::test_objective_intent_resolver_is_reachable_from_production_pipeline;
+    tests/unit/tactical/test_objective_pursuit_coverage.py;
+    tests/unit/domains/adventure/test_craft_upgrade_execution.py;
+    tests/integration/domains/adventure/test_harvest_to_event.py
+  divergence_note: null
+  support_boundary: >-
+    Empirical calibration-run verification (1000t urban_political seed123; 1000t
+    hero_guild_routing seed42 with ENABLE_ADVENTURE_ROUTING=ON; 500t simq_routing_test seed42
+    with ENABLE_ADVENTURE_ROUTING=ON) found zero resource_harvested/item_crafted/trade_executed/
+    shop_transaction events in any run — the AC's "real calibration run" bar is unmet, though
+    reachability itself (this entry's text) is proven at the unit/integration level (test_path
+    above) via direct, real-pipeline-component construction (ActionIntentAdapter.execute() ->
+    ResourceTransactionSystem.resolve_all() -> event_extractor.py, no mocks). Three distinct,
+    out-of-scope contributing factors were empirically isolated: (1) ENABLE_ADVENTURE_ROUTING
+    defaults to FeatureMode.OFF (src/domains/optimization/feature_flags.py) and the
+    urban_political calibration profile never turns it on, so System A never runs in the
+    corpus data this ticket's own discovery evidence was drawn from; (2) even with
+    ENABLE_ADVENTURE_ROUTING=ON, AdventureRouteScorer selected gather_resource (100/1000 and
+    50/500 ticks) but never craft_upgrade/buy_upgrade against competing routes (form_party
+    dominated at ~80% selection share) though craft_item/buy_item opportunities were confirmed
+    generated (ServiceOpportunityProvider.get_opportunities returns real Opportunity records for
+    every hero in both runs); (3) ObjectiveIntentResolver.resolve() maps REACH_RESOURCE to
+    "MOVE_TO" unconditionally, including on arrival, so the gather_resource routes that *were*
+    selected never transitioned to a harvest/interact action — modifying that mapping is
+    explicitly out of this ticket's scope (resolver.py:23-90 internal logic untouched, only its
+    reachability changed). None of these three factors were touched, per this ticket's explicit
+    scope guards (do not touch scorer weights/thresholds, do not modify
+    ObjectiveIntentResolver's mapping, do not touch feature-flag defaults). Factor (3) — the
+    REACH_RESOURCE -> MOVE_TO arrival-transition gap — is filed as a direct follow-up:
+    TCK-20260714-SIMQ-HARVEST-RESOURCE-ARRIVAL-TRANSITION (open). Factors (1) and (2) are
+    calibration-profile/scoring-balance questions belonging to the simq_audit/calibration
+    workstream and are not filed as separate tickets here.
