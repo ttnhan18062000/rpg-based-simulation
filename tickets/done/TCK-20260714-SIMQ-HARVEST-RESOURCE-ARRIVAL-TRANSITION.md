@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: strategy
 authority: P1
 audience: agent
 ticket_id: TCK-20260714-SIMQ-HARVEST-RESOURCE-ARRIVAL-TRANSITION
-phase: open
+phase: done
 date: 2026-07-14
 tags: [simulation-quality, cognition]
 ---
@@ -19,7 +19,7 @@ so `gather_resource` routes navigate to the node and then go idle, never produci
 `resource_harvested` event.
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -116,26 +116,26 @@ never compared against the entity's current position).
   the parent ticket's investigation; not reopened here.
 
 ## Acceptance Criteria
-- [ ] Given an entity with an active `ObjectiveState` of `kind == ObjectiveKind.REACH_RESOURCE`
+- [x] Given an entity with an active `ObjectiveState` of `kind == ObjectiveKind.REACH_RESOURCE`
       and a resolved target position more than 1.0 Manhattan distance away, the produced
       `ActionIntent` (or equivalent tactical-layer update) continues to be navigation
       (`kind="MOVE_TO"` or the existing navigation-update path) — unchanged from current behavior.
       Covered by a unit test.
-- [ ] Given the same entity now within interaction range (`dist <= 1.0`, mirroring
+- [x] Given the same entity now within interaction range (`dist <= 1.0`, mirroring
       `tactical.py:219`'s existing threshold) of the target resource node, the produced action
       is a harvest/interact action (not another `MOVE_TO`). Covered by a unit test.
-- [ ] An integration-level test with real, non-mocked authoritative pipeline components
+- [x] An integration-level test with real, non-mocked authoritative pipeline components
       (`ActionIntentAdapter.execute()` through to `event_extractor.py`) proves a `REACH_RESOURCE`
       objective at arrival produces a real `resource_harvested` `SimulationEvent`.
-- [ ] No regression to `ObjectiveKind.REACH_LOCATION`'s existing `tactical.py:214-259` behavior,
+- [x] No regression to `ObjectiveKind.REACH_LOCATION`'s existing `tactical.py:214-259` behavior,
       `ObjectiveKind.HARVEST_RESOURCE`'s existing resolver mapping, or any other `ObjectiveKind`
       routed by `TCK-20260713-SIMQ-ECONOMY-INTENT-GENERATION-GAP`'s Pillar 5.1 branch — verified by
       the existing `tests/unit/domains/adventure/`, `tests/integration/domains/adventure/`,
       `tests/unit/tactical/`, and `tests/unit/strategic/` suites passing unmodified (or with only
       documented, justified adjustments).
-- [ ] `tests/integrity/test_logic_guards.py::test_objective_intent_resolver_is_reachable_from_production_pipeline`
+- [x] `tests/integrity/test_logic_guards.py::test_objective_intent_resolver_is_reachable_from_production_pipeline`
       (added by the parent ticket) still passes.
-- [ ] `docs/parity_ledger/strategic_cognition.yaml`'s `STRAT-246` entry (or a new entry) is updated
+- [x] `docs/parity_ledger/strategic_cognition.yaml`'s `STRAT-246` entry (or a new entry) is updated
       to reflect the closed arrival-transition gap, per the Authoritative Mechanics Rule.
 
 ## Related Tickets
@@ -204,8 +204,118 @@ never compared against the entity's current position).
 
 ## Implementation Notes
 
+Implemented option (b) from investigation.md/plan.md — call-site gating in
+`TacticalDecisionSystem.evaluate_entity_intent`'s Pillar 5.1 `elif` branch
+(`src/engine/tactical.py:260-306`). `ObjectiveIntentResolver.resolve()`
+(`src/domains/adventure/resolver.py`) is unmodified.
+
+1. **`src/engine/tactical.py`** — the `elif` branch's call to
+   `_resolve_target_position(state, obj)` now captures `node_id` (previously
+   discarded as `_`). Added one new conditional between the existing `dist > 1.0`
+   early-return and the existing `ObjectiveIntentResolver.resolve()` fallthrough:
+   when `obj.kind == ObjectiveKind.REACH_RESOURCE and node_id is not None` (i.e.
+   arrived, `dist <= 1.0`), builds `ActionIntent(kind="HARVEST_RESOURCE",
+   actor_id=entity.id, target_id=node_id, source_opportunity_id=obj.id, reason=...)`
+   and routes it through the already-wired `ActionIntentAdapter.execute()`
+   `HARVEST_RESOURCE` dispatch (`action_intent.py:78`, `:130`), returning that
+   result directly. The far-away case (`dist > 1.0`) and every other
+   `ObjectiveKind`'s fallthrough to `ObjectiveIntentResolver.resolve()` are
+   unchanged. `REACH_LOCATION`'s branch (`tactical.py:214-259`) was not touched.
+
+2. **`tests/unit/tactical/test_objective_pursuit_coverage.py`** —
+   - Extended `test_objective_kind_reach_resource_produces_executable_action`
+     with explicit `update.task is None` / `update.interaction is None`
+     assertions for the far-away case (AC #1).
+   - Added `test_objective_kind_reach_resource_arrival_produces_harvest_action`
+     (hero placed at the node's position; asserts
+     `update.interaction.target_node_id == node.id`) (AC #2).
+   - Added `test_reach_location_arrival_behavior_unchanged` — a pinning test for
+     `REACH_LOCATION`'s pre-existing arrival branch (node-target `INTERACT` case,
+     plus building-target `EAT`/`REST` cases for `"hunger"`/`"fatigue"`-kind
+     projects), per the plan's Step 4 conditional addendum: no existing test
+     asserted this branch's `EntityUpdate` shape via
+     `TacticalDecisionSystem.evaluate_entity_intent` before this ticket.
+
+3. **`tests/integration/domains/adventure/test_harvest_to_event.py`** — added
+   `test_reach_resource_arrival_produces_resource_harvested_event_through_full_pipeline`:
+   a real, non-mocked `ActionIntent(kind="HARVEST_RESOURCE", ...)` through
+   `ActionIntentAdapter.execute()` -> `InteractionSystem.enforce` (using
+   `ResourceNodeState(required_ticks=1, ...)` so a single `progress_delta=1`
+   completes the harvest) -> `ResourceTransactionSystem.resolve_all` ->
+   `EventExtractor.extract`, asserting `"resource_harvested"` appears in the
+   extracted event types (AC #3). Updated the module's stale docstring, which
+   previously documented the arrival gap as open, to point at the new test.
+
+4. Ran the full regression sweep from `test_plan.md`'s Scoped Pytest Commands:
+   `tests/unit/tactical/`, `tests/unit/combat/`, `tests/unit/movement/`;
+   `tests/unit/domains/adventure/`, `tests/integration/domains/adventure/`;
+   `tests/unit/strategic/test_strategic_cognition_regression.py`,
+   `tests/unit/strategic/test_cognition_authoritative_path.py`,
+   `tests/integration/pipeline/test_strategic_cadence.py`;
+   `tests/perf/test_phase3_adventure_decision_budget.py`;
+   `tests/integrity/test_logic_guards.py`. All pass except one pre-existing,
+   unrelated failure (`tests/unit/movement/test_movement_spatial_regression.py::test_normal_move_triggers_oa`),
+   confirmed to fail identically on the pre-change commit via `git stash`
+   (opportunity-attack damage assertion, nothing to do with `tactical.py`'s
+   Pillar 5.1 branch or resource harvesting).
+
+5. **`docs/parity_ledger/strategic_cognition.yaml`** — updated `STRAT-246`:
+   appended the two new/extended test function references to `test_path`
+   (alongside the four existing entries, unchanged); updated `support_boundary`
+   to mark factor (3) `[CLOSED by TCK-20260714-SIMQ-HARVEST-RESOURCE-ARRIVAL-TRANSITION]`
+   with a description of the actual fix, leaving factors (1)/(2) and all other
+   language unchanged; appended a new paragraph to `v2_evidence` describing the
+   Step 1 fix. `STRAT-189` and all other entries were left untouched. Re-ran the
+   full `STRAT-246` `test_path` list (9 tests) — all pass. YAML re-parsed
+   successfully with `yaml.safe_load`.
+
+See `staging_artifacts/TCK-20260714-SIMQ-HARVEST-RESOURCE-ARRIVAL-TRANSITION/plan.md`'s
+"Deviations" section for the two plan-flagged decision points resolved during
+implementation (the Step 4 conditional addendum firing, and the Step 5
+`test_path` function-vs-file-level resolution).
+
 ## Test Summary
 
+All tests pass. New/modified tests (9 assertions across 5 test functions, 3
+new, 2 extended):
+- `tests/unit/tactical/test_objective_pursuit_coverage.py::test_objective_kind_reach_resource_produces_executable_action` (extended, AC #1)
+- `tests/unit/tactical/test_objective_pursuit_coverage.py::test_objective_kind_reach_resource_arrival_produces_harvest_action` (new, AC #2)
+- `tests/unit/tactical/test_objective_pursuit_coverage.py::test_reach_location_arrival_behavior_unchanged` (new, anti-drift pin, AC #4)
+- `tests/integration/domains/adventure/test_harvest_to_event.py::test_reach_resource_arrival_produces_resource_harvested_event_through_full_pipeline` (new, AC #3)
+- `tests/integrity/test_logic_guards.py::test_objective_intent_resolver_is_reachable_from_production_pipeline` (unmodified, re-verified, AC #5)
+
+Full regression sweep (per test_plan.md): `tests/unit/tactical/`,
+`tests/unit/combat/`, `tests/unit/movement/` (133 passed, 1 pre-existing
+unrelated failure); `tests/unit/domains/adventure/`,
+`tests/integration/domains/adventure/` (64 passed);
+`tests/unit/strategic/test_strategic_cognition_regression.py`,
+`tests/unit/strategic/test_cognition_authoritative_path.py`,
+`tests/integration/pipeline/test_strategic_cadence.py` (12 passed);
+`tests/perf/test_phase3_adventure_decision_budget.py` (1 passed);
+`tests/integrity/test_logic_guards.py` (5 passed, 2 xfailed as expected).
+
 ## Files Changed
+- `src/engine/tactical.py` — captured `node_id`, added `REACH_RESOURCE` arrival branch (Pillar 5.1 `elif`)
+- `tests/unit/tactical/test_objective_pursuit_coverage.py` — extended far-away test, added arrival test, added `REACH_LOCATION` pinning test
+- `tests/integration/domains/adventure/test_harvest_to_event.py` — added full-pipeline `resource_harvested` test, updated stale module docstring
+- `docs/parity_ledger/strategic_cognition.yaml` — updated `STRAT-246` (`test_path`, `support_boundary`, `v2_evidence`)
+- `staging_artifacts/TCK-20260714-SIMQ-HARVEST-RESOURCE-ARRIVAL-TRANSITION/plan.md` — added Deviations section
+- `tickets/inprogress/TCK-20260714-SIMQ-HARVEST-RESOURCE-ARRIVAL-TRANSITION.md` — this file
 
 ## Completion Summary
+Closed the `REACH_RESOURCE` arrival-transition gap: `TacticalDecisionSystem.evaluate_entity_intent`'s
+Pillar 5.1 branch now captures the `node_id` it was already resolving and discarding, and
+transitions to a `HARVEST_RESOURCE` `ActionIntent` (routed through the existing
+`ActionIntentAdapter` dispatch into `InteractionSystem.enforce` ->
+`ResourceTransactionSystem.resolve_all` -> `event_extractor.py`) once the entity is within
+interaction range (`dist <= 1.0`) of the target resource node, instead of falling through to
+`ObjectiveIntentResolver.resolve()`'s unconditional `REACH_RESOURCE -> MOVE_TO` mapping, which
+previously re-issued navigation forever. `ObjectiveIntentResolver.resolve()` itself is untouched
+and remains the fallback for the rare case where `target_pos` resolves but `node_id` does not. All
+five acceptance criteria are met: far-away behavior is unchanged and explicitly regression-tested;
+arrival now produces a harvest/interact action, unit-tested; a full non-mocked integration test
+proves a real `resource_harvested` `SimulationEvent`; no regression to `REACH_LOCATION`,
+`HARVEST_RESOURCE`'s resolver mapping, or any other `ObjectiveKind` (full regression sweep passes,
+one pre-existing unrelated failure confirmed via `git stash`); the integrity guard test still
+passes; and `docs/parity_ledger/strategic_cognition.yaml`'s `STRAT-246` entry is updated to reflect
+the closed gap.
