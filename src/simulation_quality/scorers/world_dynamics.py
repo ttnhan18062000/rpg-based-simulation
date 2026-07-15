@@ -14,6 +14,8 @@ class WorldDynamicsScorer(PillarScorer):
     ecology_cycle_completed is scored HERE (not in EconomyScorer) per SQ-08 conflict note.
     """
 
+    PILLAR_ID = PillarId.WORLD
+
     EVENT_TYPES = (
         "calamity_spawned",
         "boss_spawned",

@@ -37,7 +37,7 @@ class TestBeliefUpdated:
     def test_positive(self, scorer: CognitionScorer, scoring_weights: ScoringWeights) -> None:
         rec = scorer.score(_env("belief_updated"), _ctx(window_tags={"belief_active": 3}))
         assert rec is not None
-        assert rec.delta == scoring_weights["belief_active"]
+        assert rec.delta == scoring_weights.for_pillar("COGNITION")["belief_active"]
         assert "belief_active" in rec.tags
 
     def test_dormant_fires_when_no_recent_updates(self, scorer: CognitionScorer, scoring_weights: ScoringWeights) -> None:
@@ -65,7 +65,7 @@ class TestLeadCertaintyChanged:
     def test_knowledge_rot_on_active_lead(self, scorer: CognitionScorer, scoring_weights: ScoringWeights) -> None:
         rec = scorer.score(_env("lead_certainty_changed", payload={"certainty_delta": -0.5, "lead_active": True}), _ctx())
         assert rec is not None
-        assert rec.delta == scoring_weights["knowledge_rot"]
+        assert rec.delta == scoring_weights.for_pillar("COGNITION")["knowledge_rot"]
         assert "knowledge_rot" in rec.tags
 
     def test_no_score_on_inactive_lead_decay(self, scorer: CognitionScorer) -> None:
@@ -99,13 +99,13 @@ class TestDecisionDivergence:
     def test_subjective_divergence(self, scorer: CognitionScorer, scoring_weights: ScoringWeights) -> None:
         rec = scorer.score(_env("decision_divergence_detected", payload={}), _ctx())
         assert rec is not None
-        assert rec.delta == scoring_weights["subjective_divergence"]
+        assert rec.delta == scoring_weights.for_pillar("COGNITION")["subjective_divergence"]
         assert "subjective_divergence" in rec.tags
 
     def test_omniscience_collapse(self, scorer: CognitionScorer, scoring_weights: ScoringWeights) -> None:
         rec = scorer.score(_env("decision_divergence_detected", payload={"is_collapse": True}), _ctx())
         assert rec is not None
-        assert rec.delta == scoring_weights["omniscience_collapse"]
+        assert rec.delta == scoring_weights.for_pillar("COGNITION")["omniscience_collapse"]
 
     def test_omniscience_fires_once(self, scorer: CognitionScorer) -> None:
         rec1 = scorer.score(_env("decision_divergence_detected", payload={"is_collapse": True}), _ctx())

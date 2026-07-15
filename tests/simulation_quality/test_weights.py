@@ -1,10 +1,10 @@
 from __future__ import annotations
 import os
 import pytest
-from pydantic import ValidationError
+import yaml
 
 from src.simulation_quality.pillars import PillarId
-from src.simulation_quality.weights import ScoringWeights
+from src.simulation_quality.weights import DetectionParams, PillarWeightsView, ScoringWeights
 
 _WEIGHTS_PATH = os.path.join(
     os.path.dirname(__file__),
@@ -110,6 +110,105 @@ def test_missing_file_raises(tmp_path):
     with pytest.raises(FileNotFoundError):
         ScoringWeights.load(
             weights_path=str(tmp_path / "nonexistent.yaml"),
+            grade_path=_GRADE_PATH,
+            detection_path=_DETECTION_PATH,
+        )
+
+
+def _make_synthetic_weights(pillar_rules: dict[str, dict[str, float]]) -> ScoringWeights:
+    return ScoringWeights(
+        pillar_rules=pillar_rules,
+        grade_thresholds={"S": 2.0, "A": 0.5, "B": 0.0, "C": -0.5, "D": -1.0},
+        detection=DetectionParams(
+            loop_threshold=0.70,
+            window_size=200,
+            max_worst_events=100,
+            time_gates={},
+        ),
+    )
+
+
+@pytest.mark.parametrize(
+    "pillar_rules",
+    [
+        {
+            "PILLAR_A": {"shared_key": 1.0, "a_only": 9.0},
+            "PILLAR_B": {"shared_key": 2.0, "b_only": 8.0},
+        },
+        {
+            "PILLAR_B": {"shared_key": 2.0, "b_only": 8.0},
+            "PILLAR_A": {"shared_key": 1.0, "a_only": 9.0},
+        },
+    ],
+)
+def test_pillar_scoped_lookup_resolves_independently_of_declaration_order(pillar_rules):
+    weights = _make_synthetic_weights(pillar_rules)
+    assert weights.for_pillar("PILLAR_A")["shared_key"] == pytest.approx(1.0)
+    assert weights.for_pillar("PILLAR_B")["shared_key"] == pytest.approx(2.0)
+    assert isinstance(weights.for_pillar("PILLAR_A"), PillarWeightsView)
+    with pytest.raises(KeyError):
+        _ = weights["shared_key"]
+
+
+_SEVEN_KNOWN_COLLISIONS = [
+    ("belief_active", "COGNITION", 2.0, "INFORMATION", 10.0),
+    ("subjective_divergence", "COGNITION", 5.0, "INFORMATION", 30.0),
+    ("knowledge_rot", "COGNITION", -3.0, "INFORMATION", -2.0),
+    ("omniscience_collapse", "COGNITION", -20.0, "INFORMATION", -20.0),
+    ("ecology_cycling", "ECONOMY", 8.0, "WORLD", 6.0),
+    ("ecology_broken", "ECONOMY", -25.0, "WORLD", -20.0),
+    ("knowledge_economy_active", "ECONOMY", 8.0, "INFORMATION", 15.0),
+]
+
+
+@pytest.mark.parametrize(
+    "key,pillar_a,value_a,pillar_b,value_b", _SEVEN_KNOWN_COLLISIONS
+)
+def test_real_config_seven_known_collisions_resolve_per_pillar(
+    scoring_weights, key, pillar_a, value_a, pillar_b, value_b
+):
+    assert scoring_weights.for_pillar(pillar_a)[key] == pytest.approx(value_a)
+    assert scoring_weights.for_pillar(pillar_b)[key] == pytest.approx(value_b)
+    with pytest.raises(KeyError):
+        _ = scoring_weights[key]
+
+
+def test_missing_key_raises_validation_error(tmp_path):
+    with open(_DETECTION_PATH, "r", encoding="utf-8") as fh:
+        detection_raw = yaml.safe_load(fh)
+    del detection_raw["loop_threshold"]
+    detection_path = tmp_path / "detection_params.yaml"
+    with open(detection_path, "w", encoding="utf-8") as fh:
+        yaml.safe_dump(detection_raw, fh)
+
+    # ScoringWeights.load()'s `raw_detection["loop_threshold"]` access raises a bare
+    # KeyError for a missing top-level key today, not pydantic.ValidationError as
+    # INFRA-234/this ticket's AC #3 originally assumed (architecture-review correction,
+    # see plan.md's Plan Amendment) — asserting the real exception type here rather
+    # than the wrong one.
+    with pytest.raises(KeyError, match="loop_threshold"):
+        ScoringWeights.load(
+            weights_path=_WEIGHTS_PATH,
+            grade_path=_GRADE_PATH,
+            detection_path=str(detection_path),
+        )
+
+
+def test_malformed_value_raises_validation_error(tmp_path):
+    with open(_WEIGHTS_PATH, "r", encoding="utf-8") as fh:
+        weights_raw = yaml.safe_load(fh)
+    weights_raw["ECONOMY"]["harvest_active"] = "not_a_number"
+    weights_path = tmp_path / "scoring_weights.yaml"
+    with open(weights_path, "w", encoding="utf-8") as fh:
+        yaml.safe_dump(weights_raw, fh)
+
+    # `load()`'s `float(v)` conversion raises a bare ValueError for a non-numeric rule
+    # value today, not pydantic.ValidationError as INFRA-234/this ticket's AC #3
+    # originally assumed — asserting the real exception type here rather than the
+    # wrong one (see plan.md's Step 3 for the verified-first-before-asserting rule).
+    with pytest.raises(ValueError, match="not_a_number"):
+        ScoringWeights.load(
+            weights_path=str(weights_path),
             grade_path=_GRADE_PATH,
             detection_path=_DETECTION_PATH,
         )

@@ -1,8 +1,10 @@
 from __future__ import annotations
 import os
-from typing import Any, Optional
+from typing import Any, Optional, Union
 import yaml
 from pydantic import BaseModel, ConfigDict, Field, model_validator
+
+from src.simulation_quality.pillars import PillarId
 
 
 class DetectionParams(BaseModel):
@@ -22,15 +24,33 @@ class ScoringWeights(BaseModel):
     detection: DetectionParams
     _pillar_weights: dict[str, float] = {}
     _flat_rules: dict[str, float] = {}
+    _ambiguous_keys: set[str] = set()
 
     @model_validator(mode="after")
     def _build_flat_index(self) -> "ScoringWeights":
         flat: dict[str, float] = {}
-        for pillar_section in self.pillar_rules.values():
+        seen_in: dict[str, set[str]] = {}
+        for pillar_id, pillar_section in self.pillar_rules.items():
             for key, value in pillar_section.items():
                 flat[key] = value
+                seen_in.setdefault(key, set()).add(pillar_id)
+        ambiguous = {key for key, pillars in seen_in.items() if len(pillars) > 1}
         object.__setattr__(self, "_flat_rules", flat)
+        object.__setattr__(self, "_ambiguous_keys", ambiguous)
         return self
+
+    def for_pillar(self, pillar_id: Union[str, PillarId]) -> "PillarWeightsView":
+        # `PillarId` mixes in `str`, but its `Enum.__str__` override means bare
+        # `str(pillar_id)` renders as "PillarId.WORLD", not "WORLD" — `.value` is
+        # required to normalize an enum member to its plain pillar-name string.
+        key = pillar_id.value if isinstance(pillar_id, PillarId) else str(pillar_id)
+        rules = self.pillar_rules.get(key)
+        if rules is None:
+            raise KeyError(
+                f"ScoringWeights.for_pillar: unknown pillar '{key}'. "
+                f"Available pillars: {sorted(self.pillar_rules.keys())}"
+            )
+        return PillarWeightsView(key, rules, self)
 
     @classmethod
     def load(
@@ -89,6 +109,17 @@ class ScoringWeights(BaseModel):
         return {str(k): float(v) for k, v in overrides.items()}
 
     def __getitem__(self, key: str) -> float:
+        if key in self._ambiguous_keys:
+            owning_pillars = sorted(
+                pillar_id
+                for pillar_id, rules in self.pillar_rules.items()
+                if key in rules
+            )
+            raise KeyError(
+                f"ScoringWeights: rule key '{key}' is declared in multiple pillars "
+                f"({owning_pillars}) — use ScoringWeights.for_pillar(pillar_id)['{key}'] "
+                f"instead of a bare top-level lookup for this key."
+            )
         value = self._flat_rules.get(key)
         if value is None:
             raise KeyError(
@@ -108,3 +139,32 @@ class ScoringWeights(BaseModel):
 
     def pillar_weight(self, pillar_id: str) -> float:
         return self._pillar_weights.get(str(pillar_id), 1.0)
+
+
+class PillarWeightsView:
+    """A pillar-scoped read window onto a `ScoringWeights` instance.
+
+    Returned by `ScoringWeights.for_pillar(pillar_id)`. Reads only from that pillar's own
+    `pillar_rules` section, so a rule key declared in more than one pillar section resolves
+    to the calling pillar's own declared value rather than colliding with another pillar's.
+    """
+
+    def __init__(self, pillar_id: str, rules: dict[str, float], parent: "ScoringWeights") -> None:
+        self._pillar_id = pillar_id
+        self._rules = rules
+        self._parent = parent
+
+    def __getitem__(self, key: str) -> float:
+        try:
+            return self._rules[key]
+        except KeyError:
+            raise KeyError(
+                f"ScoringWeights: rule key '{key}' not found in pillar '{self._pillar_id}'. "
+                f"Available keys for this pillar: {sorted(self._rules.keys())}"
+            )
+
+    def int_param(self, key: str) -> int:
+        return self._parent.int_param(key)
+
+    def pillar_weight(self, pillar_id: str) -> float:
+        return self._parent.pillar_weight(pillar_id)

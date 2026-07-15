@@ -198,8 +198,48 @@ widened this bug's impact but does not address the flat-namespace mechanism itse
 
 ## Implementation Notes
 
+**PAUSED mid-Implement by explicit user request (2026-07-15) — resume from here.** Steps 1-6 of
+`staging_artifacts/TCK-20260714-SIMQ-WEIGHTS-PILLAR-COLLISION/plan.md` (approved on the second
+Review round after a plan amendment fixing an exception-type assumption and a stale parity-ledger
+ID) are complete and verified:
+
+1. Added `PillarWeightsView` + `ScoringWeights.for_pillar()` + an ambiguous-key guard on
+   `__getitem__` (`src/simulation_quality/weights.py`).
+2. Wired `PillarScorer.__init__` to `for_pillar(self.PILLAR_ID)`; added one `PILLAR_ID` class
+   attribute to each of the 10 scorer subclasses.
+3. Closed the INFRA-234 test gap (`test_missing_key_raises_validation_error` confirmed the real
+   exception is `KeyError`, not `pydantic.ValidationError` as INFRA-234's prior text assumed;
+   `test_malformed_value_raises_validation_error` confirmed `ValueError` for the malformed-value
+   path — see plan.md's amended Step 3 and Deviations section for the exact resolution taken).
+4. Added pillar-scoping regression tests (synthetic 2-pillar fixture + real-config 7-key
+   parametrized test, including the ambiguous-top-level-key `KeyError` assertion).
+5. Rewrote the 4 known scorer-test value oracles (`test_cognition_scorer.py` x3,
+   `test_economy_scorer.py` x1) to query `for_pillar(...)` instead of the now-ambiguous bare key;
+   added `test_scorer_pillar_binding.py` (10 `PILLAR_ID` assertions + 2 additional guard tests).
+6. Updated `docs/simulation_quality/quality_scoring_contract.md` (§4.8/§7.2/§7.3) and
+   `docs/parity_ledger/infrastructure.yaml` (INFRA-234 corrected, new `INFRA-271` entry added).
+
+**Verified:** `pytest tests/simulation_quality/test_weights.py tests/simulation_quality/test_cognition_scorer.py tests/simulation_quality/test_economy_scorer.py tests/simulation_quality/test_information_scorer.py tests/simulation_quality/test_world_dynamics_scorer.py tests/simulation_quality/test_scorer_pillar_binding.py tests/simulation_quality/test_quality_hub_integration.py -v` — **118/118 passed**. `test_information_scorer.py`/`test_world_dynamics_scorer.py` (the two pillars that were always the flat-dict "winner") pass unmodified, confirming the fix didn't change their behavior, per the plan's scope guard.
+
+**NOT yet done — Step 7 (the largest remaining risk):** run `tests/simulation_quality/test_grade_regression.py`'s real scan against the corrected weights, then re-anchor `tests/simulation_quality/fixtures/grade_anchors.json` **only** for diffs that mechanically reconcile against the corrected weight arithmetic (per plan.md's Design Decision on recalibration scope) — anything unreconciled, or the one anchor with no calibration report on disk (`urban_political_selfmodel_execution_probe_seed42_200t`, a pre-existing gap unrelated to this ticket), gets named explicitly and carved into a follow-up ticket rather than force-closed. `grade_anchors.json` is currently **untouched** — `test_grade_regression.py` has not been run against the corrected weights at all yet, so its current pass/fail state against the new code is unknown.
+
+**To resume:** re-run `/implement-ticket ticket_id=TCK-20260714-SIMQ-WEIGHTS-PILLAR-COLLISION` — Scope/Investigate/Plan/Review/Implement(partial) are already complete and staged; the next agent should pick up at Step 7 of the (already-approved) plan, then continue through Architecture-Verify → Test → Parity → Verify → Finalize.
+
 ## Test Summary
+
+118/118 tests pass for the pillar-scoping fix itself (Steps 1-6): `tests/simulation_quality/test_weights.py`, `test_cognition_scorer.py`, `test_economy_scorer.py`, `test_information_scorer.py`, `test_world_dynamics_scorer.py`, `test_scorer_pillar_binding.py` (new), `test_quality_hub_integration.py`. `test_grade_regression.py` (the full 76-anchor corpus scan) has not yet been run against the corrected code — this is Step 7, not yet started.
 
 ## Files Changed
 
+- `src/simulation_quality/weights.py` — `PillarWeightsView`, `ScoringWeights.for_pillar()`, ambiguous-key guard
+- `src/simulation_quality/scorers/base.py` + all 10 scorer files — `PILLAR_ID` class attribute, wired to `for_pillar()`
+- `tests/simulation_quality/test_weights.py` — INFRA-234 gap tests + pillar-scoping regression tests
+- `tests/simulation_quality/test_cognition_scorer.py`, `test_economy_scorer.py` — 4 rewritten value-oracle assertions
+- `tests/simulation_quality/test_scorer_pillar_binding.py` — new
+- `docs/simulation_quality/quality_scoring_contract.md` — §4.8/§7.2/§7.3
+- `docs/parity_ledger/infrastructure.yaml` — INFRA-234 corrected, INFRA-271 added
+- **Not yet touched:** `tests/simulation_quality/fixtures/grade_anchors.json` (Step 7, pending)
+
 ## Completion Summary
+
+(Not applicable — ticket is not complete. See Implementation Notes for exact pause point and resumption instructions.)

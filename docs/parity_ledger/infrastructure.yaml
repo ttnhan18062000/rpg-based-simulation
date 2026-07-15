@@ -2857,18 +2857,51 @@
   support_boundary: null
 - id: INFRA-234
   text: >
-    `ScoringWeights` raises `pydantic.ValidationError` at startup if any required
-    key is missing or malformed in the loaded YAML config files. Missing keys are
-    never silently swallowed and do not produce runtime `KeyError` in scorer code.
-    (TCK-20260628-SIMQ-E1-FOUNDATION)
+    `ScoringWeights.load()` raises at startup if a required key is missing or a rule
+    value is malformed in the loaded YAML config files — never silently swallowed and
+    never deferred to a runtime `KeyError` inside scorer `.score()` code. Corrected
+    (TCK-20260714-SIMQ-WEIGHTS-PILLAR-COLLISION) from an earlier, inaccurate claim that
+    this raises `pydantic.ValidationError`: `load()` validates via direct dict access
+    and explicit `float()`/`int()` conversion ahead of pydantic model construction, so
+    a missing `detection_params.yaml` key raises a bare `KeyError` and a non-numeric
+    rule value raises a bare `ValueError` — both at load time, both real, neither is
+    `pydantic.ValidationError`. (TCK-20260628-SIMQ-E1-FOUNDATION)
   status: verified
   priority: P1
   legacy_evidence: null
   v2_evidence: >
-    src/simulation_quality/weights.py::ScoringWeights (Pydantic v2 BaseModel) +
-    src/simulation_quality/weights.py::ScoringWeights.load (ValidationError on bad config)
+    src/simulation_quality/weights.py::ScoringWeights.load — `raw_detection["loop_threshold"]`
+    raises bare KeyError on a missing top-level detection key;
+    `{str(k): float(v) for k, v in rules.items()}` raises bare ValueError on a
+    non-numeric rule value. Verified by direct exception-type inspection during
+    TCK-20260714-SIMQ-WEIGHTS-PILLAR-COLLISION implementation, not assumed.
   proof_type: null
   test_path: tests/simulation_quality/test_weights.py::test_missing_key_raises_validation_error,test_malformed_value_raises_validation_error
+  divergence_note: null
+  support_boundary: null
+
+- id: INFRA-271
+  text: >
+    `ScoringWeights` resolves rule-key weights on a per-pillar basis: each pillar's
+    scorer reads its own declared weight for a rule name via
+    `ScoringWeights.for_pillar(pillar_id)["rule_key"]` (or `self.weights["rule_key"]`
+    from inside a `PillarScorer` subclass, which resolves through that scorer's own
+    `PILLAR_ID`-bound `PillarWeightsView`), never another pillar's value for a reused
+    rule-key name. A bare top-level `ScoringWeights["rule_key"]` lookup raises
+    `KeyError` for any of the 7 rule keys declared in more than one pillar section,
+    instead of silently returning whichever pillar happened to be declared later in
+    `scoring_weights.yaml`. (TCK-20260714-SIMQ-WEIGHTS-PILLAR-COLLISION)
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/simulation_quality/weights.py::ScoringWeights.for_pillar,
+    src/simulation_quality/weights.py::PillarWeightsView,
+    src/simulation_quality/weights.py::ScoringWeights.__getitem__ (ambiguous-key guard),
+    src/simulation_quality/scorers/base.py::PillarScorer.__init__ (self.weights =
+    weights.for_pillar(self.PILLAR_ID))
+  proof_type: regression
+  test_path: tests/simulation_quality/test_weights.py::test_real_config_seven_known_collisions_resolve_per_pillar
   divergence_note: null
   support_boundary: null
 - id: INFRA-235

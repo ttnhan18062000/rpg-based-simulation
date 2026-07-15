@@ -15,6 +15,8 @@ class EconomyScorer(PillarScorer):
     That event is owned by WorldDynamicsScorer (E4) per SQ-08 conflict notes.
     """
 
+    PILLAR_ID = PillarId.ECONOMY
+
     EVENT_TYPES = (
         "resource_harvested",
         "item_crafted",

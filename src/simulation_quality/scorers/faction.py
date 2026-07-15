@@ -11,6 +11,8 @@ from src.simulation_quality.weights import ScoringWeights
 class FactionScorer(PillarScorer):
     """Scores Faction & Military pillar: SQ-05, SQ-06 (primary)."""
 
+    PILLAR_ID = PillarId.FACTION
+
     EVENT_TYPES = (
         "diplomatic_transition",
         "alliance_proposed",

@@ -11,6 +11,8 @@ from src.simulation_quality.weights import ScoringWeights
 class CognitionScorer(PillarScorer):
     """Scores Cognition pillar: SQ-21 (primary), SQ-01/SQ-02 (secondary via goal-lock)."""
 
+    PILLAR_ID = PillarId.COGNITION
+
     EVENT_TYPES = (
         "belief_updated",
         "lead_certainty_changed",

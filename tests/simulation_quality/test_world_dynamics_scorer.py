@@ -45,7 +45,7 @@ class TestEcologyOwnership:
     def test_ecology_cycling_positive(self, scorer: WorldDynamicsScorer, scoring_weights: ScoringWeights) -> None:
         rec = scorer.score(_env("ecology_cycle_completed"), _ctx())
         assert rec is not None
-        assert rec.delta == scoring_weights["ecology_cycling"]
+        assert rec.delta == scoring_weights.for_pillar("WORLD")["ecology_cycling"]
 
     def test_ecology_broken_once(self, scorer: WorldDynamicsScorer, scoring_weights: ScoringWeights) -> None:
         rec = scorer.score(_env("ecology_cycle_completed", payload={"ecology_broken": True}), _ctx())

@@ -494,8 +494,33 @@ scorers = [AgencyScorer(weights), CombatScorer(weights), ...]
 hub = QualityHub(scorers, weights)
 ```
 
-`ScoringWeights` is a Pydantic model — invalid YAML values (wrong type, missing key)
-raise a `ValidationError` at startup, not silently at score time.
+`ScoringWeights` is a Pydantic model. Invalid YAML raises at load time, not silently at
+score time: a missing top-level `detection_params.yaml` key raises a bare `KeyError`
+(e.g. `raw_detection["loop_threshold"]`); a non-numeric rule value raises a bare
+`ValueError` from the `float(v)` conversion. Neither path currently raises
+`pydantic.ValidationError` — `ScoringWeights.load()` validates by direct dict access and
+explicit `float()`/`int()` conversion before constructing the pydantic model, not via
+pydantic's own field validation (corrected here from an earlier, inaccurate description;
+see `TCK-20260714-SIMQ-WEIGHTS-PILLAR-COLLISION`, INFRA-234).
+
+#### Pillar-scoped weight resolution (`TCK-20260714-SIMQ-WEIGHTS-PILLAR-COLLISION`)
+
+Weight lookup is pillar-scoped, not a single shared namespace. `ScoringWeights.for_pillar
+(pillar_id)` returns a `PillarWeightsView` that reads only from that pillar's own
+`pillar_rules` section; `PillarScorer.__init__` resolves `self.weights =
+weights.for_pillar(self.PILLAR_ID)` once at construction (each of the 10 scorer
+subclasses declares its own `PILLAR_ID` class attribute). A scorer's `self.weights["key"]`
+call sites keep their existing bare-string syntax, but now resolve to that scorer's own
+pillar's declared value — never another pillar's, even if a rule key name is reused
+across two pillar sections. `PillarWeightsView` forwards `int_param()`/`pillar_weight()`
+to the parent `ScoringWeights` unchanged.
+
+A rule key declared in more than one pillar section (7 keys exist today — see §7.3) is
+*ambiguous* at the top level: `ScoringWeights.__getitem__` (bare `weights["key"]`, outside
+any scorer) raises `KeyError` for these keys, directing the caller to
+`ScoringWeights.for_pillar(pillar_id)["key"]` instead of risking a silent cross-pillar
+collision. Non-colliding keys are unaffected and keep resolving via bare `weights["key"]`
+exactly as before.
 
 #### Calibration workflow (E7-CALIBRATE)
 
@@ -1034,7 +1059,10 @@ the same delta sign for the same condition. Consult §6 Scenario Registry for ov
    a. Add the rule's delta key and default value to `config/simulation_quality/scoring_weights.yaml`
       under the relevant pillar section
    b. Add the conditional logic to `scorer.py` using `self.weights["new_rule_key"]`
-      — **no numeric literals**
+      — **no numeric literals**. This resolves to *this scorer's own pillar's* declared
+      value (via the `PILLAR_ID`-bound `PillarWeightsView` set up in `__init__` — see
+      §4.8), not a shared cross-pillar namespace, even if `new_rule_key` happens to also
+      be declared in another pillar's section.
 3. Add the tag to the pillar's tag documentation in §5
 4. If the scenario is new: add a row to §6 Scenario Registry
 5. Add a unit test for the new rule (inject a `ScoringWeights` fixture)
@@ -1052,6 +1080,21 @@ The only legitimate exception: one event can score in two pillars if the two sce
 it maps to have different primary pillars (e.g., `paid_info_transaction` scores +3 in
 INFORMATION for SQ-16 and is noted as secondary in ECONOMY for SQ-16). In this case,
 exactly one pillar owns the primary score; the secondary is documentary only.
+
+This primary/secondary dual-pillar design (SQ-15, SQ-08/SQ-16/SQ-18) requires each pillar
+to read its *own* declared delta for the shared rule key — e.g. COGNITION's secondary
+`subjective_divergence` (5.0) is deliberately a smaller magnitude than INFORMATION's
+primary (30.0). Before `TCK-20260714-SIMQ-WEIGHTS-PILLAR-COLLISION`'s pillar-scoped
+lookup fix, the shared flat-index mechanism silently collapsed every such pair to
+whichever pillar was declared later in `scoring_weights.yaml`, so the secondary pillar's
+scorer was actually reading the primary's value (or vice versa) instead of its own — the
+primary/secondary design described here existed in config and in this doc, but the
+lookup mechanism didn't honor it. `ScoringWeights.for_pillar()` (§4.8) is what makes this
+section's design actually work as documented. One divergence from "documentary only"
+survives this fix unresolved: `EconomyScorer`'s `paid_info_transaction` handling returns
+a real, live-scored `ScoreRecord` added to ECONOMY's `raw_score`, not a documentary-only
+non-contribution — flagged as a candidate follow-up, not fixed by this ticket (see
+`TCK-20260714-SIMQ-WEIGHTS-PILLAR-COLLISION`'s Implementation Notes).
 
 ### 7.4 Configuring Quality Profiles
 

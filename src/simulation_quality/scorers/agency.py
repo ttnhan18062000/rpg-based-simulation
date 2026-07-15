@@ -11,6 +11,8 @@ from src.simulation_quality.weights import ScoringWeights
 class AgencyScorer(PillarScorer):
     """Scores Agency & Action pillar: SQ-01, SQ-02 (primary), SQ-12 (secondary)."""
 
+    PILLAR_ID = PillarId.AGENCY
+
     EVENT_TYPES = (
         "action_executed",
         "route_selected",

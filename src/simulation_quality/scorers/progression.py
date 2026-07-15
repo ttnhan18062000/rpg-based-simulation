@@ -11,6 +11,8 @@ from src.simulation_quality.weights import ScoringWeights
 class ProgressionScorer(PillarScorer):
     """Scores Progression pillar: SQ-10, SQ-11 (primary), SQ-04 (secondary)."""
 
+    PILLAR_ID = PillarId.PROGRESSION
+
     EVENT_TYPES = (
         "xp_granted",
         "level_up",
