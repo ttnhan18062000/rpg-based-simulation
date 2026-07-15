@@ -17,7 +17,7 @@ from __future__ import annotations
 from dataclasses import replace
 
 from src.core.builder import V2EntityBuilder
-from src.core.state import AuthoritativeState, ResourceNodeState, ItemStack
+from src.core.state import AuthoritativeState, ResourceNodeState, BuildingState, ItemStack
 from src.core.strategic import (
     ProjectKind,
     ProjectState,
@@ -136,3 +136,154 @@ def test_objective_kind_reach_resource_produces_executable_action():
         "REACH_RESOURCE objective did not navigate toward the resolved node position — "
         "fell through to the idle fallback instead of real execution"
     )
+    assert update.task is None, (
+        "REACH_RESOURCE objective fired a harvest/interact task while still > 1.0 away from the node"
+    )
+    assert update.interaction is None, (
+        "REACH_RESOURCE objective fired an interaction update while still > 1.0 away from the node"
+    )
+
+
+def test_objective_kind_reach_resource_arrival_produces_harvest_action():
+    """
+    REACH_RESOURCE at arrival (dist <= 1.0 from the target node) must transition
+    to a harvest/interact action via ActionIntentAdapter's HARVEST_RESOURCE
+    dispatch, not re-issue another MOVE_TO through ObjectiveIntentResolver's
+    unconditional REACH_RESOURCE -> MOVE_TO mapping.
+    """
+    node = ResourceNodeState(
+        id=501,
+        kind="iron_ore",
+        position=(50.0, 50.0),
+        yields_item="iron_ore",
+        remaining_charges=5,
+        max_charges=5,
+        required_ticks=5,
+    )
+
+    obj = ObjectiveState(
+        id="obj.gather_resource.ent1.t10",
+        kind=ObjectiveKind.REACH_RESOURCE,
+        target=str(node.id),
+        status=ObjectiveStatus.ACTIVE,
+    )
+    project = ProjectState(
+        id="proj.gather_resource.ent1.t10",
+        kind=ProjectKind.HARVESTING,
+        status=ProjectStatus.ACTIVE,
+        objectives=[obj],
+        active_objective_id=obj.id,
+        lock_until_tick=0,
+    )
+
+    builder = _hero(1, node.position)
+    hero = _with_project(builder, project)
+
+    state = AuthoritativeState(tick=10, seed=1, entities={1: hero}, resource_nodes={501: node})
+
+    update = TacticalDecisionSystem.evaluate_entity_intent(state, hero, neighbors=[])
+
+    assert update.entity_id == 1
+    assert update.interaction is not None and update.interaction.target_node_id == node.id, (
+        "REACH_RESOURCE objective at arrival did not produce an interaction update "
+        "targeting the resource node — the arrival-transition fix did not fire"
+    )
+
+
+def test_reach_location_arrival_behavior_unchanged():
+    """
+    Anti-drift pin for REACH_LOCATION's pre-existing arrival branch
+    (tactical.py:214-259), added alongside TCK-20260714-SIMQ-HARVEST-RESOURCE-
+    ARRIVAL-TRANSITION's new REACH_RESOURCE arrival branch in the same elif
+    block, to catch any accidental control-flow bleed between the two.
+    """
+    node = ResourceNodeState(
+        id=601,
+        kind="iron_ore",
+        position=(10.0, 10.0),
+        yields_item="iron_ore",
+        remaining_charges=5,
+        max_charges=5,
+        required_ticks=5,
+    )
+    obj_node = ObjectiveState(
+        id="obj.reach_location.node.ent1.t10",
+        kind=ObjectiveKind.REACH_LOCATION,
+        target=str(node.id),
+        status=ObjectiveStatus.ACTIVE,
+    )
+    project_node = ProjectState(
+        id="proj.reach_location.node.ent1.t10",
+        kind=ProjectKind.EXPLORATION,
+        status=ProjectStatus.ACTIVE,
+        objectives=[obj_node],
+        active_objective_id=obj_node.id,
+        lock_until_tick=0,
+    )
+    hero_node = _with_project(_hero(1, node.position), project_node)
+    state_node = AuthoritativeState(tick=10, seed=1, entities={1: hero_node}, resource_nodes={601: node})
+
+    update_node = TacticalDecisionSystem.evaluate_entity_intent(state_node, hero_node, neighbors=[])
+
+    assert update_node.entity_id == 1
+    assert update_node.navigation is None
+    assert update_node.task is not None
+    assert update_node.task.work_kind_set == "ENTITY_ACT"
+    assert update_node.task.payload_set == {"action": "INTERACT", "target_id": node.id}
+    assert update_node.interaction is not None
+    assert update_node.interaction.target_node_id == node.id
+    assert update_node.interaction.progress_delta == 1
+
+    tavern = BuildingState(id=701, kind="tavern", position=(20.0, 20.0))
+    obj_eat = ObjectiveState(
+        id="obj.reach_location.eat.ent2.t10",
+        kind=ObjectiveKind.REACH_LOCATION,
+        target=str(tavern.id),
+        status=ObjectiveStatus.ACTIVE,
+    )
+    project_eat = ProjectState(
+        id="proj.reach_location.eat.ent2.t10",
+        kind="hunger",
+        status=ProjectStatus.ACTIVE,
+        objectives=[obj_eat],
+        active_objective_id=obj_eat.id,
+        lock_until_tick=0,
+    )
+    hero_eat = _with_project(_hero(2, tavern.position), project_eat)
+    state_eat = AuthoritativeState(tick=10, seed=1, entities={2: hero_eat}, buildings={701: tavern})
+
+    update_eat = TacticalDecisionSystem.evaluate_entity_intent(state_eat, hero_eat, neighbors=[])
+
+    assert update_eat.entity_id == 2
+    assert update_eat.navigation is None
+    assert update_eat.interaction is None
+    assert update_eat.task is not None
+    assert update_eat.task.work_kind_set == "ENTITY_ACT"
+    assert update_eat.task.payload_set == {"action": "EAT", "target_id": tavern.id}
+
+    inn = BuildingState(id=702, kind="inn", position=(30.0, 30.0))
+    obj_rest = ObjectiveState(
+        id="obj.reach_location.rest.ent3.t10",
+        kind=ObjectiveKind.REACH_LOCATION,
+        target=str(inn.id),
+        status=ObjectiveStatus.ACTIVE,
+    )
+    project_rest = ProjectState(
+        id="proj.reach_location.rest.ent3.t10",
+        kind="fatigue",
+        status=ProjectStatus.ACTIVE,
+        objectives=[obj_rest],
+        active_objective_id=obj_rest.id,
+        lock_until_tick=0,
+    )
+    hero_rest = _with_project(_hero(3, inn.position), project_rest)
+    state_rest = AuthoritativeState(tick=10, seed=1, entities={3: hero_rest}, buildings={702: inn})
+
+    update_rest = TacticalDecisionSystem.evaluate_entity_intent(state_rest, hero_rest, neighbors=[])
+
+    assert update_rest.entity_id == 3
+    assert update_rest.navigation is None
+    assert update_rest.interaction is None
+    assert update_rest.task is not None
+    assert update_rest.task.work_kind_set == "ENTITY_ACT"
+    assert update_rest.task.payload_set == {"action": "REST", "target_id": inn.id}

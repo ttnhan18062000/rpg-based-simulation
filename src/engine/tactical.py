@@ -264,8 +264,9 @@ class TacticalDecisionSystem:
                         # excluded — handled entirely by the hostile-engagement branch
                         # below (gated on `hostiles`, not `obj.kind`).
                         target_pos = None
+                        node_id = None
                         if obj.target:
-                            target_pos, _, _ = TacticalDecisionSystem._resolve_target_position(state, obj)
+                            target_pos, node_id, _ = TacticalDecisionSystem._resolve_target_position(state, obj)
 
                         if target_pos:
                             dist = abs(target_pos[0] - entity.navigation.position[0]) + abs(target_pos[1] - entity.navigation.position[1])
@@ -274,6 +275,24 @@ class TacticalDecisionSystem:
                                     entity_id=entity.id,
                                     navigation=NavigationUpdate(target_set=target_pos, movement_mode_set=MovementMode.WANDER),
                                 )
+                            if obj.kind == ObjectiveKind.REACH_RESOURCE and node_id is not None:
+                                # Arrived at the resource node: transition to a harvest
+                                # action instead of falling through to
+                                # ObjectiveIntentResolver's REACH_RESOURCE -> MOVE_TO
+                                # mapping, which would re-issue navigation forever.
+                                from src.engine.intent.action_intent import ActionIntent, ActionIntentAdapter
+
+                                harvest_intent = ActionIntent(
+                                    kind="HARVEST_RESOURCE",
+                                    actor_id=entity.id,
+                                    target_id=node_id,
+                                    source_opportunity_id=obj.id,
+                                    reason=f"Arrived at resource node {node_id} for objective {obj.id}",
+                                )
+                                updates = ActionIntentAdapter.execute(
+                                    entity, harvest_intent, current_tick=state.tick, neighbor_view=neighbors, context=state
+                                )
+                                return updates.get(entity.id, EntityUpdate(entity_id=entity.id))
 
                         from src.domains.adventure.resolver import ObjectiveIntentResolver
                         from src.engine.intent.action_intent import ActionIntentAdapter

@@ -2051,16 +2051,24 @@
   proof_type: regression
   test_path: >-
     tests/unit/tactical/test_objective_pursuit_coverage.py::test_objective_kind_acquire_item_produces_executable_action;
-    tests/unit/tactical/test_objective_pursuit_coverage.py::test_objective_kind_reach_resource_produces_executable_action
+    tests/unit/tactical/test_objective_pursuit_coverage.py::test_objective_kind_reach_resource_produces_executable_action;
+    tests/unit/tactical/test_objective_pursuit_coverage.py::test_objective_kind_reach_resource_arrival_produces_harvest_action;
+    tests/integration/domains/adventure/test_harvest_to_event.py::test_reach_resource_arrival_produces_resource_harvested_event_through_full_pipeline
   divergence_note: null
   support_boundary: >-
     Reachability (objective -> ActionIntentAdapter.execute()) is proven for every ObjectiveKind
     at the unit/integration level. Whether execution produces a live economy event in real
     calibration play depends on separate, out-of-scope factors documented in STRAT-246 below
     (ENABLE_ADVENTURE_ROUTING default-off in most calibration profiles; AdventureRouteScorer
-    scoring competition against form_party/gather_resource; ObjectiveIntentResolver's
-    REACH_RESOURCE -> MOVE_TO mapping never transitioning to a harvest/interact action on
-    arrival) — none of which this entry claims to resolve.
+    scoring competition against form_party/gather_resource). The third factor previously listed
+    here — ObjectiveIntentResolver's REACH_RESOURCE -> MOVE_TO mapping never transitioning to a
+    harvest/interact action on arrival — was closed by
+    TCK-20260714-SIMQ-HARVEST-RESOURCE-ARRIVAL-TRANSITION via call-site gating in
+    TacticalDecisionSystem's Pillar 5.1 elif branch (src/engine/tactical.py:260-295), which now
+    captures the previously-discarded node_id and, once dist <= 1.0 and node_id is not None,
+    dispatches HARVEST_RESOURCE through ActionIntentAdapter.execute() instead of falling through
+    to resolver.py's REACH_RESOURCE -> MOVE_TO mapping (resolver.py itself is unmodified and
+    remains the fallback when node_id is None). See STRAT-246 for full detail.
 - id: STRAT-190
   text: Objective derivation can create blockers when execution is impossible.
   status: verified
@@ -2887,12 +2895,25 @@
     ServiceOpportunityProvider.get_opportunities (src/domains/adventure/phase.py), previously
     never wired in, so craft_item/buy_item/repair_gear/ask_information/rest_inn opportunities are
     generated at all.
+
+    TCK-20260714-SIMQ-HARVEST-RESOURCE-ARRIVAL-TRANSITION. Closed the REACH_RESOURCE arrival gap
+    left open above: the same Pillar 5.1 elif branch (tactical.py:260-295) now captures the
+    node_id that _resolve_target_position already resolves (previously discarded), and — when
+    obj.kind == ObjectiveKind.REACH_RESOURCE and node_id is not None once dist <= 1.0 — builds an
+    ActionIntent(kind="HARVEST_RESOURCE", target_id=node_id) and routes it through
+    ActionIntentAdapter.execute()'s existing HARVEST_RESOURCE dispatch, instead of falling through
+    to ObjectiveIntentResolver.resolve()'s unconditional REACH_RESOURCE -> MOVE_TO mapping.
+    resolver.py is unmodified; its REACH_RESOURCE -> MOVE_TO mapping remains the fallback for the
+    rare case where target_pos resolves but node_id does not. The far-away case (dist > 1.0) is
+    unchanged.
   proof_type: regression
   test_path: >-
     tests/integrity/test_logic_guards.py::test_objective_intent_resolver_is_reachable_from_production_pipeline;
     tests/unit/tactical/test_objective_pursuit_coverage.py;
+    tests/unit/tactical/test_objective_pursuit_coverage.py::test_objective_kind_reach_resource_arrival_produces_harvest_action;
     tests/unit/domains/adventure/test_craft_upgrade_execution.py;
-    tests/integration/domains/adventure/test_harvest_to_event.py
+    tests/integration/domains/adventure/test_harvest_to_event.py;
+    tests/integration/domains/adventure/test_harvest_to_event.py::test_reach_resource_arrival_produces_resource_harvested_event_through_full_pipeline
   divergence_note: null
   support_boundary: >-
     Empirical calibration-run verification (1000t urban_political seed123; 1000t
@@ -2910,14 +2931,22 @@
     50/500 ticks) but never craft_upgrade/buy_upgrade against competing routes (form_party
     dominated at ~80% selection share) though craft_item/buy_item opportunities were confirmed
     generated (ServiceOpportunityProvider.get_opportunities returns real Opportunity records for
-    every hero in both runs); (3) ObjectiveIntentResolver.resolve() maps REACH_RESOURCE to
-    "MOVE_TO" unconditionally, including on arrival, so the gather_resource routes that *were*
-    selected never transitioned to a harvest/interact action — modifying that mapping is
-    explicitly out of this ticket's scope (resolver.py:23-90 internal logic untouched, only its
-    reachability changed). None of these three factors were touched, per this ticket's explicit
-    scope guards (do not touch scorer weights/thresholds, do not modify
-    ObjectiveIntentResolver's mapping, do not touch feature-flag defaults). Factor (3) — the
-    REACH_RESOURCE -> MOVE_TO arrival-transition gap — is filed as a direct follow-up:
-    TCK-20260714-SIMQ-HARVEST-RESOURCE-ARRIVAL-TRANSITION (open). Factors (1) and (2) are
+    every hero in both runs); (3) [CLOSED by TCK-20260714-SIMQ-HARVEST-RESOURCE-ARRIVAL-TRANSITION]
+    ObjectiveIntentResolver.resolve() mapped REACH_RESOURCE to "MOVE_TO" unconditionally, including
+    on arrival, so the gather_resource routes that *were* selected never transitioned to a
+    harvest/interact action. The fix is call-site gating in TacticalDecisionSystem's Pillar 5.1
+    elif branch (src/engine/tactical.py:260-295), not a change to
+    ObjectiveIntentResolver.resolve() itself (resolver.py:23-90 remains untouched and still serves
+    as the fallback for the rare/malformed case where target_pos resolves but node_id does not):
+    the branch now captures the node_id that _resolve_target_position already returned and
+    discarded, and — once dist <= 1.0 (arrived) and node_id is not None — builds an
+    ActionIntent(kind="HARVEST_RESOURCE", target_id=node_id) routed through
+    ActionIntentAdapter.execute()'s existing HARVEST_RESOURCE dispatch (action_intent.py:78,130),
+    which converges on the same authoritative completion path (InteractionSystem.enforce ->
+    ResourceTransactionSystem.resolve_all -> event_extractor.py's resource_harvested derivation)
+    that REACH_LOCATION's arrival branch already uses. Verified end-to-end, non-mocked, by
+    tests/integration/domains/adventure/test_harvest_to_event.py::test_reach_resource_arrival_produces_resource_harvested_event_through_full_pipeline.
+    None of factors (1) and (2) were touched, per this ticket's explicit scope guards (do not
+    touch scorer weights/thresholds, do not touch feature-flag defaults) — they remain
     calibration-profile/scoring-balance questions belonging to the simq_audit/calibration
     workstream and are not filed as separate tickets here.

@@ -13,23 +13,25 @@ ResourceTransactionResolver.resolve() pipeline phase, into an intent_results
 entry that event_extractor.py translates into a real item_crafted
 SimulationEvent.
 
-item_crafted is used here rather than resource_harvested because the new
-tactical.py Pillar 5.1 branch (Step 5) resolves REACH_RESOURCE objectives to
-ObjectiveIntentResolver's unmodified MOVE_TO mapping even on arrival — closing
-the harvest-on-arrival transition is out of this ticket's scope (Scope Guards:
-"Do not modify ObjectiveIntentResolver's internal mapping logic"). item_crafted
-is the routing-bridge fix's most directly reachable new economy event and
-satisfies the AC ("resource_harvested, item_crafted, trade_executed, or
-shop_transaction" — any one of the four).
+item_crafted is used for the REQUEST_CRAFT proof above because it does not
+need InteractionSystem.enforce (REQUEST_CRAFT resolves directly to a
+ResourceTransferIntent). The harvest-on-arrival transition —
+TCK-20260714-SIMQ-HARVEST-RESOURCE-ARRIVAL-TRANSITION — is covered separately
+below by
+test_reach_resource_arrival_produces_resource_harvested_event_through_full_pipeline,
+which drives a HARVEST_RESOURCE ActionIntent through
+InteractionSystem.enforce -> ResourceTransactionSystem.resolve_all ->
+EventExtractor.extract to prove a real resource_harvested event.
 """
 from __future__ import annotations
 
 from src.core.builder import V2EntityBuilder
-from src.core.state import AuthoritativeState, ItemStack
+from src.core.state import AuthoritativeState, ItemStack, ResourceNodeState
 from src.core.updates import StateUpdate
 from src.core.registries import RecipeRegistry
 from src.engine.economy import ResourceTransactionSystem
 from src.engine.intent.action_intent import ActionIntent, ActionIntentAdapter
+from src.engine.interaction import InteractionSystem
 from src.observability.event_extractor import EventExtractor
 from src.observability.config import ObservabilityMode
 
@@ -77,4 +79,59 @@ def test_crafting_project_produces_item_crafted_event_through_full_pipeline():
     event_types = {e.event_type for e in events}
     assert "item_crafted" in event_types, (
         f"Expected a real item_crafted event, got: {event_types}"
+    )
+
+
+def test_reach_resource_arrival_produces_resource_harvested_event_through_full_pipeline():
+    hero = (
+        V2EntityBuilder(1)
+        .kind("hero")
+        .identity()
+        .combat(hp=100, max_hp=100, alive=True, readiness=100.0)
+        .lifecycle(active=True)
+        .build()
+    )
+    node = ResourceNodeState(
+        id=501,
+        kind="iron_ore",
+        position=(50.0, 50.0),
+        yields_item="iron_ore",
+        remaining_charges=5,
+        max_charges=5,
+        required_ticks=1,
+    )
+    state = AuthoritativeState(tick=10, seed=1, entities={1: hero}, resource_nodes={501: node})
+
+    # 1. ActionIntentAdapter.execute() — the same call tactical.py's Pillar 5.1
+    # REACH_RESOURCE arrival branch reaches once dist <= 1.0 from the node.
+    ActionIntentAdapter.clear_traces()
+    intent = ActionIntent(
+        kind="HARVEST_RESOURCE",
+        actor_id=hero.id,
+        target_id=node.id,
+        reason="integration test harvest",
+    )
+    adapter_updates = ActionIntentAdapter.execute(hero, intent, current_tick=state.tick, context=state)
+    update = StateUpdate(entity_updates=adapter_updates)
+
+    # 2. The interaction-enforcement phase (pipeline.py's "interaction_enforcement"
+    # phase) — accumulates progress and, once progress >= required_ticks, builds
+    # the ResourceTransferIntent that REQUEST_CRAFT does not need to go through.
+    refined_update = InteractionSystem.enforce(state, update)
+
+    # 3. The unmodified, already parity-verified authoritative resolution phase.
+    resolved_update = ResourceTransactionSystem.resolve_all(state, refined_update)
+
+    assert resolved_update.entity_updates[hero.id].intent_results, (
+        "ResourceTransactionSystem.resolve_all produced no intent_results — "
+        "the NODE transfer intent was not resolved"
+    )
+
+    # 4. The same event derivation event_extractor.py runs every tick.
+    EventExtractor.reset_run_state()
+    events = EventExtractor.extract(state, state, resolved_update, mode=ObservabilityMode.LIGHT)
+
+    event_types = {e.event_type for e in events}
+    assert "resource_harvested" in event_types, (
+        f"Expected a real resource_harvested event, got: {event_types}"
     )
