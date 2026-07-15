@@ -4198,3 +4198,63 @@
     does not regress calibration grades/costs when wired in and gated ON. See INFRA-267 for the
     historical pre-fix support_boundary text this entry supersedes (left untouched).
   divergence_note: null
+
+- id: INFRA-272
+  text: >
+    The INFRA-271 pillar-scoped weight-lookup fix has been validated against the full 76-anchor
+    grade-regression corpus (tests/simulation_quality/test_grade_regression.py /
+    tests/simulation_quality/fixtures/grade_anchors.json), not just the synthetic and
+    real-config-fixture unit tests INFRA-271 itself cites
+    (TCK-20260714-SIMQ-WEIGHTS-PILLAR-COLLISION Step 7). Regenerating all 76 anchors'
+    calibration reports and running the full regression scan surfaced 61 pillar-level
+    score-tolerance diffs across 76 anchors (0 band-level regressions). 41 of these diffs (39
+    unique anchors, all COGNITION) reconciled exactly against the corrected pillar-scoped weight
+    arithmetic -- verified per-event by reconstructing each anchor's pre-fix raw score with the
+    buggy flat-dict-winner value substituted back in for each of the 7 known colliding keys, and
+    confirming the reconstruction matches the committed (buggy) anchor to floating-point
+    precision -- and were re-anchored directly in grade_anchors.json. The remaining 20 diffs (14
+    unique anchors) do NOT reconcile against the weight-collision arithmetic: 4 are COGNITION
+    event-count anomalies matching the already-closed
+    TCK-20260713-SIMQ-COGNITION-LOOPDET-NONDETERMINISM's F6 kernel-watchdog signature on
+    scenarios that ticket never swept; the remaining 16 touch pillars the weight fix never reads
+    (SOCIAL, COMBAT, PROGRESSION, NARRATIVE) or have a reconstructed pre-fix value that equals
+    the current post-fix value verbatim (proving the weight fix caused zero change there). These
+    14 anchors are intentionally left un-reconciled and are NOT evidence against the INFRA-271
+    fix -- they are tracked as a separate, load-sensitivity investigation in
+    TCK-20260715-SIMQ-ANCHOR-LOAD-SENSITIVITY-SWEEP (working hypothesis: the same F6 wall-clock
+    kernel-watchdog/throttle mechanism, triggered by this session's ~20-minute sustained
+    sequential 76-scenario calibration sweep -- 8 of the 14 still failed even under a second,
+    isolated per-scenario re-run, 6 passed cleanly, which is independent evidence of genuine
+    load/timing sensitivity rather than a stable value error). A future reader running
+    `pytest tests/simulation_quality/test_grade_regression.py -v` should expect up to 14 known,
+    separately-tracked failures until TCK-20260715-SIMQ-ANCHOR-LOAD-SENSITIVITY-SWEEP closes --
+    this is a known, named exception, not a regression of the INFRA-271 fix and not license to
+    assume that test file should already be 100% green.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    tests/simulation_quality/fixtures/grade_anchors.json (41 COGNITION-pillar {grade, score}
+    entries re-anchored 2026-07-15, 76 top-level scenario keys unchanged -- confirmed via
+    `git diff --stat` showing only value edits inside existing keys, 0 insertions/deletions of
+    top-level keys); TCK-20260714-SIMQ-WEIGHTS-PILLAR-COLLISION "Implementation Notes / Step 7"
+    section (full per-event reconciliation methodology and the 61-diff / 41-reconciled /
+    20-deferred breakdown); tickets/inprogress/TCK-20260715-SIMQ-ANCHOR-LOAD-SENSITIVITY-SWEEP.md
+    (named follow-up scope, 14-anchor list, F6 working hypothesis, and the 8/6 split from the
+    independent isolated re-run).
+  proof_type: regression
+  test_path: >
+    tests/simulation_quality/test_grade_regression.py::test_grade_anchor_file_exists_and_valid;
+    tests/simulation_quality/test_grade_regression.py::test_grade_anchors_entry_count_unchanged;
+    tests/simulation_quality/test_weights.py::test_real_config_seven_known_collisions_resolve_per_pillar
+    -- NOTE: the parametrized test_grade_within_anchor_band / test_grade_within_anchor_band_long_run
+    cases for the 14 anchors named in TCK-20260715-SIMQ-ANCHOR-LOAD-SENSITIVITY-SWEEP are a known,
+    tracked exception (not expected to pass until that ticket closes) and are deliberately not
+    cited here as passing evidence.
+  divergence_note: null
+  support_boundary: >
+    This entry documents corpus-scan validation coverage for the INFRA-271 fix only; it does not
+    supersede, rewrite, or modify INFRA-271's own text/evidence/test_path, which remains an
+    accurate, standalone description of the pillar-scoped lookup mechanism itself. The 14 deferred
+    anchors' root cause (F6 load-sensitivity vs. some other cause) is explicitly unconfirmed and is
+    TCK-20260715-SIMQ-ANCHOR-LOAD-SENSITIVITY-SWEEP's own open question, not settled here.

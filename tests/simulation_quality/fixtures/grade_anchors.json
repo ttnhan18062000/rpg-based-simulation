@@ -11,7 +11,7 @@
   "sandbox_world_seed42_200t": {
     "COGNITION": {
       "grade": "B",
-      "score": 0.22
+      "score": 0.06
     },
     "AGENCY": {
       "grade": "C",
@@ -53,7 +53,7 @@
   "sandbox_world_seed137_200t": {
     "COGNITION": {
       "grade": "B",
-      "score": 0.22
+      "score": 0.06
     },
     "AGENCY": {
       "grade": "C",
@@ -95,7 +95,7 @@
   "sandbox_world_seed999_200t": {
     "COGNITION": {
       "grade": "B",
-      "score": 0.22
+      "score": 0.06
     },
     "AGENCY": {
       "grade": "C",
@@ -195,7 +195,7 @@
     },
     "COGNITION": {
       "grade": "B",
-      "score": 0.22
+      "score": 0.06
     },
     "ECONOMY": {
       "grade": "C",
@@ -305,7 +305,7 @@
   "sandbox_world_seed42_1000t": {
     "COGNITION": {
       "grade": "B",
-      "score": 0.221
+      "score": 0.038
     },
     "AGENCY": {
       "grade": "C",
@@ -347,7 +347,7 @@
   "simq_routing_test_seed123_500t": {
     "COGNITION": {
       "grade": "S",
-      "score": 14.036144578313253
+      "score": 2.3393574297188753
     },
     "AGENCY": {
       "grade": "A",
@@ -388,8 +388,8 @@
   },
   "simq_routing_test_seed456_500t": {
     "COGNITION": {
-      "grade": "S",
-      "score": 9.778672032193159
+      "grade": "A",
+      "score": 1.6297786720321932
     },
     "AGENCY": {
       "grade": "A",
@@ -557,7 +557,7 @@
   "urban_political_seed42_500t": {
     "COGNITION": {
       "grade": "B",
-      "score": 0.088
+      "score": 0.024
     },
     "AGENCY": {
       "grade": "C",
@@ -599,7 +599,7 @@
   "urban_political_seed123_500t": {
     "COGNITION": {
       "grade": "B",
-      "score": 0.088
+      "score": 0.024
     },
     "AGENCY": {
       "grade": "C",
@@ -641,7 +641,7 @@
   "urban_political_seed456_500t": {
     "COGNITION": {
       "grade": "B",
-      "score": 0.088
+      "score": 0.024
     },
     "AGENCY": {
       "grade": "C",
@@ -1019,7 +1019,7 @@
   "sandbox_world_seed42_2000t": {
     "COGNITION": {
       "grade": "B",
-      "score": 0.25074925074925075
+      "score": 0.04295704295704296
     },
     "AGENCY": {
       "grade": "C",
@@ -1061,7 +1061,7 @@
   "frontier_extended_seed42_200t": {
     "COGNITION": {
       "grade": "B",
-      "score": 0.22
+      "score": 0.06
     },
     "AGENCY": {
       "grade": "C",
@@ -1103,7 +1103,7 @@
   "frontier_extended_seed123_200t": {
     "COGNITION": {
       "grade": "B",
-      "score": 0.22
+      "score": 0.06
     },
     "AGENCY": {
       "grade": "C",
@@ -1145,7 +1145,7 @@
   "frontier_extended_seed456_200t": {
     "COGNITION": {
       "grade": "B",
-      "score": 0.22
+      "score": 0.06
     },
     "AGENCY": {
       "grade": "C",
@@ -1187,7 +1187,7 @@
   "frontier_living_world_seed42_200t": {
     "COGNITION": {
       "grade": "B",
-      "score": 0.22
+      "score": 0.06
     },
     "AGENCY": {
       "grade": "C",
@@ -1229,7 +1229,7 @@
   "frontier_living_world_seed123_200t": {
     "COGNITION": {
       "grade": "B",
-      "score": 0.22
+      "score": 0.06
     },
     "AGENCY": {
       "grade": "C",
@@ -1271,7 +1271,7 @@
   "frontier_living_world_seed456_200t": {
     "COGNITION": {
       "grade": "B",
-      "score": 0.22
+      "score": 0.06
     },
     "AGENCY": {
       "grade": "C",
@@ -1439,7 +1439,7 @@
   "highland_traverse_seed42_200t": {
     "COGNITION": {
       "grade": "B",
-      "score": 0.25
+      "score": 0.04878048780487805
     },
     "AGENCY": {
       "grade": "C",
@@ -1481,7 +1481,7 @@
   "highland_traverse_seed123_200t": {
     "COGNITION": {
       "grade": "B",
-      "score": 0.22
+      "score": 0.06
     },
     "AGENCY": {
       "grade": "C",
@@ -1523,7 +1523,7 @@
   "highland_traverse_seed456_200t": {
     "COGNITION": {
       "grade": "B",
-      "score": 0.22
+      "score": 0.06
     },
     "AGENCY": {
       "grade": "C",
@@ -1565,7 +1565,7 @@
   "swamp_border_world_seed42_200t": {
     "COGNITION": {
       "grade": "B",
-      "score": 0.22
+      "score": 0.06
     },
     "AGENCY": {
       "grade": "C",
@@ -1607,7 +1607,7 @@
   "swamp_border_world_seed123_200t": {
     "COGNITION": {
       "grade": "B",
-      "score": 0.22
+      "score": 0.06
     },
     "AGENCY": {
       "grade": "C",
@@ -1649,7 +1649,7 @@
   "swamp_border_world_seed456_200t": {
     "COGNITION": {
       "grade": "B",
-      "score": 0.22
+      "score": 0.06
     },
     "AGENCY": {
       "grade": "C",
@@ -1817,7 +1817,7 @@
   "unit_information_source_seed42_200t": {
     "COGNITION": {
       "grade": "B",
-      "score": 0.22
+      "score": 0.06
     },
     "AGENCY": {
       "grade": "C",
@@ -1859,7 +1859,7 @@
   "unit_information_source_seed123_200t": {
     "COGNITION": {
       "grade": "B",
-      "score": 0.22
+      "score": 0.06
     },
     "AGENCY": {
       "grade": "C",
@@ -1901,7 +1901,7 @@
   "unit_information_source_seed456_200t": {
     "COGNITION": {
       "grade": "B",
-      "score": 0.22
+      "score": 0.06
     },
     "AGENCY": {
       "grade": "C",
@@ -2111,7 +2111,7 @@
   "hero_guild_routing_seed42_500t": {
     "COGNITION": {
       "grade": "A",
-      "score": 6.096579476861167
+      "score": 1.0160965794768613
     },
     "AGENCY": {
       "grade": "A",
@@ -2153,7 +2153,7 @@
   "hero_guild_routing_seed123_500t": {
     "COGNITION": {
       "grade": "S",
-      "score": 14.036144578313253
+      "score": 2.3393574297188753
     },
     "AGENCY": {
       "grade": "A",
@@ -2195,7 +2195,7 @@
   "hero_guild_routing_seed456_500t": {
     "COGNITION": {
       "grade": "A",
-      "score": 9.778672032193159
+      "score": 1.6297786720321932
     },
     "AGENCY": {
       "grade": "A",
@@ -2489,7 +2489,7 @@
   "frontier_marches_seed42_200t": {
     "COGNITION": {
       "grade": "B",
-      "score": 0.22
+      "score": 0.06
     },
     "AGENCY": {
       "grade": "C",
@@ -2531,7 +2531,7 @@
   "frontier_marches_seed123_200t": {
     "COGNITION": {
       "grade": "B",
-      "score": 0.22
+      "score": 0.06
     },
     "AGENCY": {
       "grade": "C",
@@ -2573,7 +2573,7 @@
   "frontier_marches_seed456_200t": {
     "COGNITION": {
       "grade": "B",
-      "score": 0.22
+      "score": 0.06
     },
     "AGENCY": {
       "grade": "C",
@@ -2741,7 +2741,7 @@
   "unit_faction_tension_seed42_1000t": {
     "COGNITION": {
       "grade": "B",
-      "score": 0.21
+      "score": 0.035
     },
     "AGENCY": {
       "grade": "C",
@@ -2783,7 +2783,7 @@
   "unit_faction_tension_seed42_2000t": {
     "COGNITION": {
       "grade": "B",
-      "score": 0.23976023976023977
+      "score": 0.03996003996003996
     },
     "AGENCY": {
       "grade": "C",
@@ -2867,7 +2867,7 @@
   "generated_frontier_3_42_seed42_200t": {
     "COGNITION": {
       "grade": "B",
-      "score": 0.22
+      "score": 0.06
     },
     "AGENCY": {
       "grade": "C",
@@ -2909,7 +2909,7 @@
   "generated_frontier_3_42_seed123_200t": {
     "COGNITION": {
       "grade": "B",
-      "score": 0.22
+      "score": 0.06
     },
     "AGENCY": {
       "grade": "C",
@@ -2951,7 +2951,7 @@
   "generated_frontier_3_42_seed456_200t": {
     "COGNITION": {
       "grade": "B",
-      "score": 0.22
+      "score": 0.06
     },
     "AGENCY": {
       "grade": "C",
@@ -2993,7 +2993,7 @@
   "generated_frontier_3_42_seed42_1000t": {
     "COGNITION": {
       "grade": "B",
-      "score": 0.221
+      "score": 0.038
     },
     "AGENCY": {
       "grade": "C",
@@ -3034,8 +3034,8 @@
   },
   "unit_information_density_seed42_200t": {
     "COGNITION": {
-      "grade": "A",
-      "score": 0.66
+      "grade": "B",
+      "score": 0.18
     },
     "AGENCY": {
       "grade": "C",
@@ -3076,8 +3076,8 @@
   },
   "unit_information_density_seed123_200t": {
     "COGNITION": {
-      "grade": "A",
-      "score": 0.66
+      "grade": "B",
+      "score": 0.18
     },
     "AGENCY": {
       "grade": "C",
@@ -3118,8 +3118,8 @@
   },
   "unit_information_density_seed456_200t": {
     "COGNITION": {
-      "grade": "A",
-      "score": 0.66
+      "grade": "B",
+      "score": 0.18
     },
     "AGENCY": {
       "grade": "C",
