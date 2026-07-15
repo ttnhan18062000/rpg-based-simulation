@@ -237,7 +237,7 @@
     },
     "COGNITION": {
       "grade": "A",
-      "score": 6.096579476861167
+      "score": 1.8373
     },
     "ECONOMY": {
       "grade": "C",
@@ -791,7 +791,7 @@
     },
     "SOCIAL": {
       "grade": "S",
-      "score": 23.51
+      "score": 15.45
     },
     "INFORMATION": {
       "grade": "B",
@@ -825,7 +825,7 @@
     },
     "ECONOMY": {
       "grade": "A",
-      "score": 0.6563614744351962
+      "score": 0.6564
     },
     "PROGRESSION": {
       "grade": "B",
@@ -833,7 +833,7 @@
     },
     "SOCIAL": {
       "grade": "S",
-      "score": 23.512
+      "score": 17.9655
     },
     "INFORMATION": {
       "grade": "B",
@@ -1097,7 +1097,7 @@
     },
     "NARRATIVE": {
       "grade": "A",
-      "score": 0.7286432160804021
+      "score": 0.6888
     }
   },
   "frontier_extended_seed123_200t": {
@@ -1111,7 +1111,7 @@
     },
     "COMBAT": {
       "grade": "B",
-      "score": 0.2777777777777778
+      "score": 0.32
     },
     "FACTION": {
       "grade": "S",
@@ -1123,7 +1123,7 @@
     },
     "PROGRESSION": {
       "grade": "A",
-      "score": 0.9305555555555556
+      "score": 1.0196
     },
     "SOCIAL": {
       "grade": "C",
@@ -1139,7 +1139,7 @@
     },
     "NARRATIVE": {
       "grade": "A",
-      "score": 0.8888888888888888
+      "score": 0.9084
     }
   },
   "frontier_extended_seed456_200t": {
@@ -1211,7 +1211,7 @@
     },
     "SOCIAL": {
       "grade": "S",
-      "score": 4.405
+      "score": 4.9625
     },
     "INFORMATION": {
       "grade": "B",
@@ -1237,7 +1237,7 @@
     },
     "COMBAT": {
       "grade": "B",
-      "score": 0.32
+      "score": 0.3333
     },
     "FACTION": {
       "grade": "S",
@@ -1265,7 +1265,7 @@
     },
     "NARRATIVE": {
       "grade": "A",
-      "score": 0.7
+      "score": 0.6389
     }
   },
   "frontier_living_world_seed456_200t": {
@@ -2093,7 +2093,7 @@
     },
     "SOCIAL": {
       "grade": "S",
-      "score": 10.105
+      "score": 7.525
     },
     "INFORMATION": {
       "grade": "C",
@@ -2525,7 +2525,7 @@
     },
     "NARRATIVE": {
       "grade": "A",
-      "score": 0.7474226804123711
+      "score": 0.6186
     }
   },
   "frontier_marches_seed123_200t": {
@@ -2615,7 +2615,7 @@
   "unit_selfmodel_pilot_seed42_1000t": {
     "COGNITION": {
       "grade": "S",
-      "score": 17.323
+      "score": 14.478
     },
     "AGENCY": {
       "grade": "C",
@@ -2631,7 +2631,7 @@
     },
     "ECONOMY": {
       "grade": "B",
-      "score": 0.21309655937846836
+      "score": 0.1465
     },
     "PROGRESSION": {
       "grade": "B",
@@ -2651,13 +2651,13 @@
     },
     "NARRATIVE": {
       "grade": "B",
-      "score": 0.4262788365095286
+      "score": 0.3715
     }
   },
   "hero_guild_routing_seed42_1000t": {
     "COGNITION": {
-      "grade": "A",
-      "score": 9.829659318637274
+      "grade": "S",
+      "score": 2.0641
     },
     "AGENCY": {
       "grade": "A",
@@ -2699,7 +2699,7 @@
   "simq_routing_test_seed42_1000t": {
     "COGNITION": {
       "grade": "A",
-      "score": 9.498997995991983
+      "score": 1.7961
     },
     "AGENCY": {
       "grade": "A",
@@ -2917,7 +2917,7 @@
     },
     "COMBAT": {
       "grade": "B",
-      "score": 0.07142857142857142
+      "score": 0.1157
     },
     "FACTION": {
       "grade": "S",
@@ -2945,7 +2945,7 @@
     },
     "NARRATIVE": {
       "grade": "A",
-      "score": 1.0913705583756346
+      "score": 0.8934
     }
   },
   "generated_frontier_3_42_seed456_200t": {

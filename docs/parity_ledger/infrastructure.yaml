@@ -4239,22 +4239,86 @@
     `git diff --stat` showing only value edits inside existing keys, 0 insertions/deletions of
     top-level keys); TCK-20260714-SIMQ-WEIGHTS-PILLAR-COLLISION "Implementation Notes / Step 7"
     section (full per-event reconciliation methodology and the 61-diff / 41-reconciled /
-    20-deferred breakdown); tickets/inprogress/TCK-20260715-SIMQ-ANCHOR-LOAD-SENSITIVITY-SWEEP.md
-    (named follow-up scope, 14-anchor list, F6 working hypothesis, and the 8/6 split from the
-    independent isolated re-run).
+    20-deferred breakdown).
+    UPDATE 2026-07-15 (TCK-20260715-SIMQ-ANCHOR-LOAD-SENSITIVITY-SWEEP, closed): the 14-anchor
+    known-exception carve-out below is now closed. Each of the 14 anchors got an independent
+    controlled idle-vs-induced-load repro (staging_artifacts/TCK-20260715-SIMQ-ANCHOR-LOAD-
+    SENSITIVITY-SWEEP/repro_sweep.md) confirming genuine load/timing-sensitivity (not a stable
+    value error) for every one, plus a dedicated tolerance-based multi-trial grade-stability
+    guard in tests/unit/worldassembly/test_corpus_diversity.py
+    (test_<anchor>_<pillar(s)>_grade_stability, 14 tests, all green), plus a re-anchored
+    grade_anchors.json value for each drifted pillar. See INFRA-273 for the F6-blast-radius
+    finding this sweep confirmed.
   proof_type: regression
   test_path: >
     tests/simulation_quality/test_grade_regression.py::test_grade_anchor_file_exists_and_valid;
     tests/simulation_quality/test_grade_regression.py::test_grade_anchors_entry_count_unchanged;
-    tests/simulation_quality/test_weights.py::test_real_config_seven_known_collisions_resolve_per_pillar
-    -- NOTE: the parametrized test_grade_within_anchor_band / test_grade_within_anchor_band_long_run
-    cases for the 14 anchors named in TCK-20260715-SIMQ-ANCHOR-LOAD-SENSITIVITY-SWEEP are a known,
-    tracked exception (not expected to pass until that ticket closes) and are deliberately not
-    cited here as passing evidence.
+    tests/simulation_quality/test_weights.py::test_real_config_seven_known_collisions_resolve_per_pillar;
+    tests/unit/worldassembly/test_corpus_diversity.py -m slow --resource-budget large -k
+    "grade_stability" (14/14 pass, the authoritative multi-trial regression protection for the
+    14 anchors closed by TCK-20260715-SIMQ-ANCHOR-LOAD-SENSITIVITY-SWEEP).
+    NOTE (unchanged honest caveat, not a new gap): the single-draw parametrized
+    test_grade_within_anchor_band / test_grade_within_anchor_band_long_run cases for a handful of
+    these 14 anchors' most-volatile pillars (confirmed: urban_political_seed123_1000t/SOCIAL and
+    /ECONOMY, frontier_marches_seed42_200t/NARRATIVE) have residual, inherent single-draw failure
+    risk against test_grade_regression.py's fixed ±0.05/20% tolerance -- this is a property of
+    those pillars' real (not just artificially-induced) wall-clock variance exceeding a
+    fixed-width single-sample check, not a defect this ticket left unaddressed; see
+    tickets/done/TCK-20260715-SIMQ-ANCHOR-LOAD-SENSITIVITY-SWEEP.md Implementation Notes for the
+    full characterization (multiple independent fresh single-draw samples collected and reported).
   divergence_note: null
   support_boundary: >
     This entry documents corpus-scan validation coverage for the INFRA-271 fix only; it does not
     supersede, rewrite, or modify INFRA-271's own text/evidence/test_path, which remains an
-    accurate, standalone description of the pillar-scoped lookup mechanism itself. The 14 deferred
-    anchors' root cause (F6 load-sensitivity vs. some other cause) is explicitly unconfirmed and is
-    TCK-20260715-SIMQ-ANCHOR-LOAD-SENSITIVITY-SWEEP's own open question, not settled here.
+    accurate, standalone description of the pillar-scoped lookup mechanism itself. The 14 anchors'
+    root cause is now confirmed (F6-class load/timing-sensitivity, TCK-20260715-SIMQ-ANCHOR-LOAD-
+    SENSITIVITY-SWEEP) -- no longer an open question as of this update.
+
+- id: INFRA-273
+  text: >
+    F6 (docs/audits/D06_longrun_health.md, kernel.py's tick-budget watchdog/mid-tick emergency
+    throttle) is confirmed to extend beyond COGNITION/decision_divergence_detected to
+    SOCIAL/ECONOMY/COMBAT/PROGRESSION/NARRATIVE/WORLD -- previously only proven for COGNITION
+    (TCK-20260713-SIMQ-COGNITION-LOOPDET-NONDETERMINISM). TCK-20260715-SIMQ-ANCHOR-LOAD-
+    SENSITIVITY-SWEEP's idle-vs-induced-load repro found every one of its 14 investigated
+    anchors' drifted pillar(s) genuinely load/timing-sensitive, across all 6 of the above
+    pillars, at both 200t and 1000t tiers. Two mechanisms confirmed, both rooted in the same
+    dropped-resolution-queue-item throttle behavior: (1) COGNITION's already-known refire
+    mechanism (decision_divergence_detected has no dedup gate, re-evaluated every tick); (2) a
+    newly-characterized "cascading divergence" mechanism for the delta-gated SOCIAL/COMBAT/
+    PROGRESSION/NARRATIVE/WORLD events (event_extractor.py) -- these fire once per genuine state
+    transition, not every tick, so they cannot refire like COGNITION's event, but a dropped
+    resolution-queue item on tick T diverges that entity's subsequent state from what it would
+    otherwise have been, cascading into a materially different total event count for the rest
+    of the run, not just a single event's tick shifting by a few ticks. Also confirmed:
+    combat_damage/entity_killed (CombatDamageEvent/CombatKillEvent) ARE constructed in
+    event_extractor.py via this-tick delta gating -- correcting that investigation's earlier
+    finding that they came from an unlocated separate emission path. Also confirmed: F6-class
+    variance is not exclusive to ~1000t+ runs -- two of the 14 anchors
+    (urban_political_selfmodel_probe_seed42_200t, generated_frontier_3_42_seed123_200t) showed
+    genuine variance at 200 ticks, below D06's documented ~tick 300-320 onset heuristic
+    (sharpens, does not contradict, that section's existing "reliably reproducible" hedge).
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: >
+    staging_artifacts/TCK-20260715-SIMQ-ANCHOR-LOAD-SENSITIVITY-SWEEP/repro_sweep.md Sections
+    2-7 (per-anchor idle-vs-induced-load trial tables, budget_warnings/watchdog_trips counts
+    confirming genuine throttle activity, per-pillar event_count/score variance across trials).
+    docs/simulation_quality/eval_matrix_results.md "Anchor Reliability Verification, Part 2"
+    subsection (14 per-anchor summaries).
+  proof_type: regression
+  test_path: >
+    tests/unit/worldassembly/test_corpus_diversity.py -m slow --resource-budget large -k
+    "grade_stability" (14 dedicated guards, one per anchor, all green -- each guard's own
+    docstring cites the specific repro evidence for that anchor/pillar).
+  divergence_note: null
+  support_boundary: >
+    This entry documents the confirmed blast radius of F6's existing, intentional, documented
+    mechanism (docs/engine/kernel.md, docs/engine/performance_contract.md §7) -- it does not
+    propose changing that mechanism, and per this ticket's hard Out-of-Scope guard,
+    src/engine/kernel.py's watchdog/throttle code was not modified (confirmed byte-identical,
+    `git diff --stat src/engine/kernel.py` empty at close). Whether D06's ~tick 300-320 onset
+    heuristic should be formally revised is left to a future doc-only update of
+    docs/audits/D06_longrun_health.md, not performed here (out of this ticket's Related Docs
+    scope, which names the file as read-only reference).

@@ -2024,6 +2024,127 @@ No `docs/parity_ledger/` entry required a status change as a result of this tick
 measurement-only, no scored behavior changed, and no genuine (non-throttle) divergence
 was found.
 
+## Anchor Reliability Verification, Part 2 (TCK-20260715-SIMQ-ANCHOR-LOAD-SENSITIVITY-SWEEP)
+
+`TCK-20260714-SIMQ-WEIGHTS-PILLAR-COLLISION`'s Step 7 recalibration sweep (a ~20-minute
+sustained sequential run of all 76 anchors) surfaced 14 anchors whose drift did not
+reconcile against that ticket's weight-collision fix — 4 COGNITION anchors matching
+`decision_divergence_detected`'s F6-class missing-dedup-gate signature, plus 10 anchors
+across SOCIAL/COMBAT/PROGRESSION/NARRATIVE/ECONOMY not previously proven F6-class. This
+ticket ran a controlled idle-vs-induced-load repro for each of the 14 independently
+(`staging_artifacts/TCK-20260715-SIMQ-ANCHOR-LOAD-SENSITIVITY-SWEEP/repro_sweep.md`, 2
+idle repeats + 2x/4x core-oversubscription induced load per anchor, real throttled
+`Kernel`, no `audit_mode`).
+
+**Result: all 14/14 converted to a tolerance-based multi-trial grade-stability guard.**
+Every anchor's drifted pillar(s) showed genuine trial-to-trial variance in this repro —
+none were bit-identical, and none traced to a non-F6 cause. This includes 6 anchors that
+had passed an isolated single-run re-check earlier in the same session — a single
+isolated pass does not prove stability, only the repeated-trial repro does. Notably,
+`urban_political_selfmodel_probe_seed42_200t` and `generated_frontier_3_42_seed123_200t`
+confirm genuine load-driven variance at 200 ticks, below `docs/audits/D06_longrun_health.md`
+§F6's documented ~tick 300-320 onset — this sharpens (does not contradict) that section's
+existing hedge ("below that, floor assertions are *reliably* reproducible," not
+"guaranteed"). Each anchor's guard lives in
+`tests/unit/worldassembly/test_corpus_diversity.py` as
+`test_<anchor>_<pillar(s)>_grade_stability`.
+
+### `simq_routing_test_seed42_500t` — converted-to-tolerance
+
+COGNITION event_count/score varied across all 4 repro trials (183→179 events, 1x-4x
+load). Guard: `test_simq_routing_test_seed42_500t_cognition_grade_stability`.
+
+### `simq_routing_test_seed42_1000t` — converted-to-tolerance
+
+COGNITION event_count ranged 316-401 across trials (one idle repeat alone spiked to
+grade S); not load-monotonic but genuinely unstable. Guard:
+`test_simq_routing_test_seed42_1000t_cognition_grade_stability`.
+
+### `hero_guild_routing_seed42_1000t` — converted-to-tolerance
+
+COGNITION event_count 412 (both idle trials, grade S) vs 327 (both load trials, grade
+A) — a load-correlated grade-band shift. Guard:
+`test_hero_guild_routing_seed42_1000t_cognition_grade_stability`.
+
+### `unit_selfmodel_pilot_seed42_1000t` — converted-to-tolerance
+
+COGNITION event_count climbs ~20% under load (14390-14530 idle vs 17242-17244 load);
+grade stays S throughout. ECONOMY/NARRATIVE also drifted in this ticket's Step 1
+baseline but did not carry across into a distinct guard (COGNITION is the pillar the
+repro isolated as the dominant load-sensitive signal for this anchor; ECONOMY/NARRATIVE
+values were re-anchored directly at Step 11 alongside it). Guard:
+`test_unit_selfmodel_pilot_seed42_1000t_cognition_grade_stability`.
+
+### `urban_political_seed42_1000t` — converted-to-tolerance
+
+SOCIAL event_count ranged 7819-11026 across trials (~40% spread) — a cascading
+behavioral divergence once the mid-tick throttle drops one entity's resolution work on a
+given tick, not a single event's tick shifting by a few ticks. Guard:
+`test_urban_political_seed42_1000t_social_grade_stability`.
+
+### `urban_political_seed123_1000t` — converted-to-tolerance
+
+SOCIAL event_count ranged 7974-9168; ECONOMY event_count ranged 49-59 with one trial
+crossing the A/B grade band. Same cascading-divergence mechanism as the seed42 sibling.
+Guard: `test_urban_political_seed123_1000t_social_economy_grade_stability`.
+
+### `urban_political_selfmodel_probe_seed42_200t` — converted-to-tolerance
+
+SOCIAL event_count ranged 639-770 across trials — genuinely load-sensitive at 200
+ticks. WORLD (`demographic_birth`/`demographic_mortality`) was bit-identical within this
+repro's own 4-trial batch but diverged from this ticket's independent Step 1 baseline
+sample (event_count 12 vs 14) — folded into the same guard rather than asserted
+bit-identical. Guard:
+`test_urban_political_selfmodel_probe_seed42_200t_social_world_grade_stability`.
+
+### `generated_frontier_3_42_seed123_200t` — converted-to-tolerance
+
+COMBAT event_count ranged 4-5 (small-sample pillar, score moved >2x); NARRATIVE
+event_count ranged 31-39. Both `combat_damage`/`entity_killed` were confirmed (correcting
+an earlier investigation gap) to be constructed in `event_extractor.py` via
+`CombatDamageEvent`/`CombatKillEvent`, delta-gated the same way as the SOCIAL/NARRATIVE
+events already characterized — not a distinct, unlocated emission path. Do not conflate
+with `TCK-20260708-GENERATED-FRONTIER-LATE-TICK-POPULATION-COLLAPSE`'s guard
+(different seed, tick-count, and metric). Guard:
+`test_generated_frontier_3_42_seed123_200t_combat_narrative_grade_stability`.
+
+### `urban_political_seed42_200t` — converted-to-tolerance
+
+SOCIAL event_count ranged 710-770 — this anchor passed its isolated Step 1 re-run this
+session, but the repro still found genuine trial-to-trial variance; a single-scenario
+repro *did* reproduce the drift, contrary to this ticket's plan.md's stated expectation
+that only a multi-scenario sustained session would. Guard:
+`test_urban_political_seed42_200t_social_grade_stability`.
+
+### `frontier_extended_seed42_200t` — converted-to-tolerance
+
+NARRATIVE event_count ranged 15-24, with one load trial crossing the A/B band. Guard:
+`test_frontier_extended_seed42_200t_narrative_grade_stability`.
+
+### `frontier_extended_seed123_200t` — converted-to-tolerance
+
+COMBAT event_count 8 (idle) vs 10-13 (load); PROGRESSION event_count 5 (idle, grade A)
+vs 6-7 (load, grade B); NARRATIVE event_count ranged 32-53. Guard:
+`test_frontier_extended_seed123_200t_combat_progression_narrative_grade_stability`.
+
+### `frontier_living_world_seed42_200t` — converted-to-tolerance
+
+SOCIAL event_count ranged 344-476 (one idle repeat alone was the low outlier). Guard:
+`test_frontier_living_world_seed42_200t_social_grade_stability`.
+
+### `frontier_living_world_seed123_200t` — converted-to-tolerance
+
+COMBAT event_count 12-13; NARRATIVE event_count ranged 23-40, climbing with load
+intensity. Guard:
+`test_frontier_living_world_seed123_200t_combat_narrative_grade_stability`.
+
+### `frontier_marches_seed42_200t` — converted-to-tolerance
+
+NARRATIVE event_count ranged 18-27, with one idle repeat (not a load trial) crossing the
+A/B band — confirming the mechanism is genuine wall-clock/scheduling timing sensitivity,
+not strictly a function of artificially induced load. Guard:
+`test_frontier_marches_seed42_200t_narrative_grade_stability`.
+
 ## FACTION Coverage Closure — Phase 3 (TCK-20260710-SIMQ-DEPTH-FACTION)
 
 | # | World | Tier | FACTION content? | `faction_tension_overrides` (live grep) | Tier-purity rationale (if not covered) |
