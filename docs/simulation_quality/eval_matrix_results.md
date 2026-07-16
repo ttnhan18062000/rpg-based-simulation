@@ -2263,6 +2263,85 @@ now the 2nd consecutive investigation of this exact anchor to organically surfac
 `docs/parity_ledger/infrastructure.yaml::INFRA-272`'s disclosure block and the ticket's
 Implementation Notes for the full writeup.
 
+## Anchor Reliability Verification, Part 5 (TCK-20260716-SIMQ-URBAN-POLITICAL-FULL-PILLAR-SWEEP)
+
+Follow-up to Part 4 above, closing out the SOCIAL disclosure Part 4 left as a named
+follow-up ticket rather than a prose recommendation. This ticket ran the full-pillar
+sweep Part 4 recommended: 8 independent fresh calibration draws of
+`urban_political_seed123_1000t` (exceeding the 5+ AC minimum), all 10 tracked pillars
+checked against `grade_anchors.json` in one pass.
+
+Per-pillar `normalized_score` table (anchor column is the committed `grade_anchors.json`
+value):
+
+| Pillar | Anchor | Draw1 | Draw2 | Draw3 | Draw4 | Draw5 | Draw6 | Draw7 | Draw8 |
+|---|---|---|---|---|---|---|---|---|---|
+| COGNITION | 0.0440 | 0.0120 | 0.0120 | 0.4380 | 0.0120 | 0.0120 | 1.6159 | 0.0120 | 0.0120 |
+| AGENCY | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 |
+| COMBAT | 0.1090 | 0.1140 | 0.1150 | 0.1130 | 0.1170 | 0.1140 | 0.1180 | 0.1150 | 0.1130 |
+| FACTION | 0.5800 | 0.5800 | 0.5800 | 0.5800 | 0.5800 | 0.5800 | 0.5800 | 0.5800 | 0.5800 |
+| ECONOMY | 0.6564 | 0.5239 | 0.5327 | 0.5327 | 0.6564 | 0.6564 | 0.5150 | 0.6564 | 0.6564 |
+| PROGRESSION | 0.4451 | 0.4451 | 0.4451 | 0.4451 | 0.4602 | 0.4451 | 0.4602 | 0.4602 | 0.4451 |
+| SOCIAL | 17.9655 | 20.3390 | 15.6840 | 21.1790 | 18.2660 | 16.1090 | 15.4620 | 17.5040 | 16.0330 |
+| INFORMATION | 0.0400 | 0.0400 | 0.0400 | 0.0400 | 0.0400 | 0.0400 | 0.0400 | 0.0400 | 0.0400 |
+| WORLD | 0.1540 | 0.1460 | 0.1500 | 0.1420 | 0.1540 | 0.1580 | 0.1500 | 0.1540 | 0.1580 |
+| NARRATIVE | 0.6603 | 0.5461 | 0.5060 | 0.5800 | 0.6002 | 0.5411 | 0.6603 | 0.5802 | 0.5661 |
+
+All grade values stayed within ±1 `GRADE_ORDER` band of their anchor grade on every
+draw for every pillar (zero band failures across all 80 pillar/draw data points) — the
+band check was never at risk; this sweep is scoped entirely to the score-tolerance
+check, consistent with every prior ticket in this chain.
+
+**Two pillars needed new `SCORE_TOLERANCE_OVERRIDES` entries:**
+
+- SOCIAL: `abs_floor=5.003`. This session's 8 draws alone (max deviation 3.2135) would
+  not have crossed the default width (3.5931). Combined with the 3 historical draws
+  Part 4 disclosed (max deviation 3.8485, from a historical draw), the combined 11-draw
+  evidence base exceeds the default width: `round(1.3 * 3.8485, 4) = 5.003`. This
+  combined-evidence-across-sessions methodology mirrors how the NARRATIVE override
+  (Part 4) was itself derived (6 draws: 3 historical + 3 fresh), not a novel approach.
+  Anchor not re-centered.
+- COGNITION: `abs_floor=2.0435`, applied as a plain tolerance override with an explicit
+  width caveat rather than a new dedicated `grade_stability` guard (the latter would be
+  new scope this ticket's Out of Scope section does not authorize on this evidence).
+  Derived from this session's 8 draws alone, max deviation 1.5719 (draw6):
+  `round(1.3 * 1.5719, 4) = 2.0435`. This floor is wide relative to the anchor (0.0440,
+  a ~46x ratio) because COGNITION's `decision_divergence_detected` event has no dedup
+  gate and can refire every tick (`src/observability/event_extractor.py:477-496`) —
+  the floor bounds this session's observed spikes but is not a hard ceiling on the
+  mechanism's worst case. Anchor not re-centered.
+
+**Confirmed to need no override, via real fresh-draw evidence, not assumption:**
+AGENCY (bit-identical 0.0000 across all 8 draws), COMBAT (max deviation 0.0090),
+FACTION (bit-identical 0.5800 across all 8 draws), INFORMATION (bit-identical 0.0400
+across all 8 draws), PROGRESSION (max deviation 0.0151), WORLD (max deviation 0.0120).
+COMBAT, PROGRESSION, and WORLD had never been checked against real evidence for this
+anchor before this sweep (this anchor's originally-scoped pillars were ECONOMY/SOCIAL
+only) — all three confirmed small and well-bounded, consistent with `INFRA-273`'s
+cascading-divergence mechanism claim for these pillars.
+
+**Re-confirmed adequate, no change:** ECONOMY (existing `abs_floor=0.2878`, max
+observed deviation this session 0.1414) and NARRATIVE (existing `abs_floor=0.3197`, max
+observed deviation this session 0.1543).
+
+`SCORE_TOLERANCE_OVERRIDES` now has 5 entries; the anti-drift guards
+(`test_score_tolerance_override_table_scoped_to_named_pillars`,
+`test_score_tolerance_overrides_do_not_affect_unlisted_anchors`) were updated to the
+5-entry set and confirmed passing. A fresh, real (non-skip) calibration regeneration
+was collected after the override-table edit landed, and
+`test_grade_within_anchor_band_long_run[urban_political_seed123_1000t]` (`-m slow
+--resource-budget large`) confirmed `1 passed` against it. The precedent
+`grade_stability` guard,
+`test_urban_political_seed123_1000t_social_economy_grade_stability`, also confirmed
+passing (untouched, run-only).
+
+This closes the SOCIAL follow-up Part 4 named (`docs/parity_ledger/
+infrastructure.yaml::INFRA-272`'s `RESOLVED 2026-07-16
+(TCK-20260716-SIMQ-URBAN-POLITICAL-FULL-PILLAR-SWEEP)` paragraph); `INFRA-273` was also
+updated with a cross-reference for the new COGNITION-mechanism-1 evidence this sweep
+surfaced. See `stored_artifacts/TCK-20260716-SIMQ-URBAN-POLITICAL-FULL-PILLAR-SWEEP/
+investigation.md` for the full derivation detail.
+
 ## FACTION Coverage Closure — Phase 3 (TCK-20260710-SIMQ-DEPTH-FACTION)
 
 | # | World | Tier | FACTION content? | `faction_tension_overrides` (live grep) | Tier-purity rationale (if not covered) |

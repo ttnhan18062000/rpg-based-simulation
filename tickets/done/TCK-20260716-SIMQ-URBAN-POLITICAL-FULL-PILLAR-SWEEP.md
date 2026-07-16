@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: simulation
 authority: P1
 audience: agent
 ticket_id: TCK-20260716-SIMQ-URBAN-POLITICAL-FULL-PILLAR-SWEEP
-phase: open
+phase: done
 date: 2026-07-16
 tags: [simulation-quality, calibration, determinism, corpus]
 ---
@@ -15,7 +15,7 @@ tags: [simulation-quality, calibration, determinism, corpus]
 Full-pillar `SCORE_TOLERANCE_OVERRIDES` sweep for `urban_political_seed123_1000t`
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -98,27 +98,27 @@ sweep of `urban_political_seed123_1000t` instead of spinning out a 5th single-pi
   pillar, not to pre-apply overrides to all 10.
 
 ## Acceptance Criteria
-- [ ] 5 or more independent fresh calibration draws of `urban_political_seed123_1000t`
+- [x] 5 or more independent fresh calibration draws of `urban_political_seed123_1000t`
       collected via `tools/calibrate_simq.py`; all 10 pillars' scores recorded per draw in a
       table in this ticket's investigation.md.
-- [ ] For each of the 10 pillars, the max deviation from its `grade_anchors.json` anchor is
+- [x] For each of the 10 pillars, the max deviation from its `grade_anchors.json` anchor is
       computed and compared against its current tolerance (default or already-overridden);
       each pillar has an explicit pass/fail determination with cited evidence.
-- [ ] Every pillar whose fresh evidence exceeds its current tolerance gets a
+- [x] Every pillar whose fresh evidence exceeds its current tolerance gets a
       `SCORE_TOLERANCE_OVERRIDES` entry added via the `1.3x max-observed-deviation` formula,
       with derivation shown (mirroring the 3 existing entries' documented derivations).
-- [ ] `test_score_tolerance_override_table_scoped_to_named_pillars` is updated to the final
+- [x] `test_score_tolerance_override_table_scoped_to_named_pillars` is updated to the final
       entry set and passes.
-- [ ] `pytest "tests/simulation_quality/test_grade_regression.py::test_grade_within_anchor_band_long_run[urban_political_seed123_1000t]" -m slow --resource-budget large -v`
+- [x] `pytest "tests/simulation_quality/test_grade_regression.py::test_grade_within_anchor_band_long_run[urban_political_seed123_1000t]" -m slow --resource-budget large -v`
       reports `1 passed` (not skipped, not failed) against freshly regenerated real calibration
       data.
-- [ ] `docs/parity_ledger/infrastructure.yaml::INFRA-272` has an appended (not edited)
+- [x] `docs/parity_ledger/infrastructure.yaml::INFRA-272` has an appended (not edited)
       resolution paragraph naming this ticket, summarizing which pillars got overrides and
       which were confirmed to need none, with evidence pointers; `INFRA-273` is cross-referenced
       (updated only if this sweep's evidence adds to or contradicts its mechanism claim).
-- [ ] `docs/simulation_quality/eval_matrix_results.md` has an appended summary section
+- [x] `docs/simulation_quality/eval_matrix_results.md` has an appended summary section
       (following the existing Part 1-4 style) covering this sweep's per-pillar results.
-- [ ] `git diff --stat -- src/engine/kernel.py tests/unit/worldassembly/test_corpus_diversity.py tests/simulation_quality/fixtures/grade_anchors.json`
+- [x] `git diff --stat -- src/engine/kernel.py tests/unit/worldassembly/test_corpus_diversity.py tests/simulation_quality/fixtures/grade_anchors.json`
       shows no unjustified changes: `kernel.py` untouched; the 14 existing `grade_stability`
       guards' logic untouched; any `grade_anchors.json` re-centering is explicitly justified in
       Implementation Notes with cited evidence, not incidental.
@@ -220,13 +220,123 @@ sweep of `urban_political_seed123_1000t` instead of spinning out a 5th single-pi
   calls for confirming via real evidence, not assuming every pillar needs one.
 
 ## Implementation Notes
+Followed `staging_artifacts/TCK-20260716-SIMQ-URBAN-POLITICAL-FULL-PILLAR-SWEEP/plan.md`'s
+8 steps in order, respecting the Dependency Map (table edit before the final calibration
+regen, proof test after both).
 
+- **Step 1/5 (calibration regen + AC proof)**: Freed disk space first (the environment
+  had 0 bytes free; cleaned `data/calibration/*`, `data/runs/*`,
+  `reports/release_proof/*` — all gitignored generated data, matching Step 8's intent,
+  done early out of necessity, not to skip Step 8's own later verification). Ran
+  `tools/calibrate_simq.py --name urban_political --seed 123 --ticks 1000` (no
+  `--output`, default path) once, **after** Step 2/3's table edit landed, so the data
+  consumed by Step 5 is fresh relative to the new override table.
+  `test_grade_within_anchor_band_long_run[urban_political_seed123_1000t]` reported
+  `1 passed` (non-skip) on the first attempt — no re-run needed.
+  `test_urban_political_seed123_1000t_social_economy_grade_stability` (precedent guard,
+  run-only, not edited) also passed.
+- **Step 2**: Added `("urban_political_seed123_1000t", "COGNITION"): 2.0435` and
+  `("urban_political_seed123_1000t", "SOCIAL"): 5.003` to `SCORE_TOLERANCE_OVERRIDES`,
+  appended after the 3 existing entries (byte-identical, untouched). Rewrote the stale
+  module comment: removed the "SOCIAL intentionally NOT in this table" paragraph
+  (now false) and added two new derivation paragraphs, one per new entry.
+- **Step 3**: Updated `test_score_tolerance_override_table_scoped_to_named_pillars`'s
+  hard-coded set assertion to the 5-entry set and corrected its docstring (dropped the
+  now-false "3 entries... SOCIAL intentionally excluded" claim). No other test edited.
+- **Step 4**: All 5 named fast tests plus the parametrized
+  `test_grade_within_anchor_band` (excluding `long_run`) suite ran; the 5 named tests
+  passed. The parametrized band-check suite showed 56 skipped (no failures) — expected,
+  since local `data/calibration/` fixtures for those other anchors were cleared for disk
+  space per the note above; this is a pre-existing local-data-dependency behavior, not a
+  regression this ticket introduced (per plan.md's documented
+  `hero_guild_routing_seed42_1000t` caveat, generalized here to "missing local
+  calibration data skips gracefully rather than failing").
+- **Step 6**: Appended a `RESOLVED 2026-07-16
+  (TCK-20260716-SIMQ-URBAN-POLITICAL-FULL-PILLAR-SWEEP)` paragraph to `INFRA-272`'s
+  `v2_evidence` (38 insertions, 0 deletions confirmed via `git diff`) and an `UPDATE
+  2026-07-16 (TCK-20260716-SIMQ-URBAN-POLITICAL-FULL-PILLAR-SWEEP)` paragraph to
+  `INFRA-273`'s `v2_evidence`. YAML parses cleanly.
+- **Step 7**: Appended "Anchor Reliability Verification, Part 5" to
+  `docs/simulation_quality/eval_matrix_results.md`, immediately before "FACTION
+  Coverage Closure — Phase 3" (79 insertions, 0 deletions confirmed via `git diff`).
+- **Step 8**: `data/calibration/`, `data/runs/`, `reports/release_proof/` cleared after
+  all steps verified complete (in addition to the earlier disk-space-driven clean —
+  re-confirmed empty at close). `git status --porcelain data/ reports/` shows no
+  output.
+- Ran `make knowledge-index-update` (2 doc files changed) and `graphify update .`
+  (test file changed) per project convention.
+
+**Anti-drift caveats a future reader must not miss (per plan.md's Anti-Drift Notes)**:
+- **COGNITION's `abs_floor=2.0435` is deliberately wide** (~46x the anchor's own value
+  of 0.0440). This is a documented tradeoff, not an oversight: COGNITION's
+  `decision_divergence_detected` event has no dedup gate and can refire every tick
+  (`src/observability/event_extractor.py:477-496`), so its distribution is
+  architecturally unbounded-shaped (6/8 draws at 0.0120, 2/8 spiking to 0.4380 and
+  1.6159). The floor covers this session's observed spikes (max deviation 1.5719) but
+  is **not a hard ceiling** on the mechanism's true worst case — a still-longer refire
+  streak under worse throttle timing is architecturally possible. Per Decision 1 in
+  plan.md, a dedicated `grade_stability`-style 3-trial-mean guard (option b) was
+  considered and explicitly not authorized by this ticket's Out-of-Scope gate; that
+  remains future work for a follow-up ticket if a future draw shows this floor is
+  genuinely inadequate.
+- **SOCIAL's `abs_floor=5.003` is derived from the combined 11-draw evidence base**
+  (3 historical draws from `TCK-20260716-SIMQ-URBAN-POLITICAL-NARRATIVE-TOLERANCE`'s
+  investigation.md + 8 fresh draws this session), **not this session's 8 draws alone**.
+  This session's 8 draws in isolation would show max deviation 3.2135, under the
+  3.5931 default width — a reviewer re-deriving from only this session's raw data would
+  reach the opposite conclusion. The exceeding draw (delta 3.8485) is one of the 3
+  historical draws. This combined-evidence-across-sessions methodology mirrors how the
+  existing NARRATIVE override was itself derived (6 draws: 3 historical + 3 fresh) —
+  established precedent in this codebase, not a novel interpretation (see Decision 2 in
+  plan.md).
 
 ## Test Summary
-
+- `tests/simulation_quality/test_grade_regression.py::test_score_tolerance_override_table_scoped_to_named_pillars` — PASSED
+- `tests/simulation_quality/test_grade_regression.py::test_score_tolerance_overrides_do_not_affect_unlisted_anchors` — PASSED
+- `tests/simulation_quality/test_grade_regression.py::test_within_band_default_tolerance_unchanged` — PASSED
+- `tests/simulation_quality/test_grade_regression.py::test_grade_anchors_entry_count_unchanged` — PASSED
+- `tests/simulation_quality/test_grade_regression.py::test_score_tolerance_catches_within_band_regression` — PASSED
+- `tests/simulation_quality/test_grade_regression.py -k "test_grade_within_anchor_band and not long_run"` — 56 skipped (local calibration data not present for those other anchors), 0 failed
+- `tests/simulation_quality/test_grade_regression.py::test_grade_within_anchor_band_long_run[urban_political_seed123_1000t] -m slow --resource-budget large` — **1 passed** (AC-mandated proof, against freshly regenerated real calibration data)
+- `tests/unit/worldassembly/test_corpus_diversity.py::test_urban_political_seed123_1000t_social_economy_grade_stability -m slow --resource-budget large` — **1 passed** (precedent guard, untouched, run-only)
 
 ## Files Changed
+- `tests/simulation_quality/test_grade_regression.py` — added COGNITION and SOCIAL
+  entries to `SCORE_TOLERANCE_OVERRIDES`; rewrote the stale module comment; updated
+  `test_score_tolerance_override_table_scoped_to_named_pillars`'s assertion set and
+  docstring.
+- `docs/parity_ledger/infrastructure.yaml` — appended resolution paragraph to
+  `INFRA-272`, cross-reference paragraph to `INFRA-273` (both `v2_evidence` only,
+  append-only).
+- `docs/simulation_quality/eval_matrix_results.md` — appended "Anchor Reliability
+  Verification, Part 5" section (append-only).
+- `agent-monitoring/tools.jsonl` — auto-updated by monitoring tooling this session.
 
+Not committed to git (gitignored, local generated data, cleaned per Step 8):
+`data/calibration/`, `data/runs/`, `reports/release_proof/`.
 
 ## Completion Summary
+Full 10-pillar `SCORE_TOLERANCE_OVERRIDES` sweep of `urban_political_seed123_1000t`
+complete. 8 independent fresh calibration draws gathered this session (exceeding the
+5+ AC minimum); combined with 3 historical draws for SOCIAL specifically (11 total),
+per Decision 2 in plan.md. Two pillars needed new overrides — SOCIAL
+(`abs_floor=5.003`, combined 11-draw evidence) and COGNITION (`abs_floor=2.0435`,
+8-draw evidence, applied as a plain override with an explicit documented width caveat
+per Decision 1, not a new `grade_stability` guard, since the ticket's Out-of-Scope gate
+for that path was not met by the evidence). AGENCY, COMBAT, FACTION, INFORMATION,
+PROGRESSION, and WORLD were checked against real evidence and confirmed to need none;
+ECONOMY and NARRATIVE's existing overrides were re-confirmed adequate. The anti-drift
+guard was updated to the final 5-entry set and passes.
+`test_grade_within_anchor_band_long_run[urban_political_seed123_1000t]` reports
+`1 passed` (non-skip) against freshly regenerated real calibration data generated
+after the table edit landed, satisfying the AC's literal requirement. `INFRA-272` and
+`INFRA-273` in `docs/parity_ledger/infrastructure.yaml` were appended (not edited) with
+resolution/cross-reference text, and `docs/simulation_quality/eval_matrix_results.md`
+gained an appended "Part 5" summary section. No engine code, `grade_anchors.json`, or
+existing `grade_stability` guard was touched;
+`git diff --stat -- src/engine/kernel.py tests/unit/worldassembly/test_corpus_diversity.py tests/simulation_quality/fixtures/grade_anchors.json`
+shows no output, confirming the scope guard. All plan.md steps were followed with no
+deviations from the plan's specified approach (the only addition was an early,
+necessity-driven disk-space cleanup, documented above, which did not change the
+plan's outcome or ordering).
 

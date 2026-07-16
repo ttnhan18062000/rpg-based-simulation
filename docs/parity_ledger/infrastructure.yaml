@@ -4310,6 +4310,29 @@
     COMBAT, PROGRESSION, WORLD -- the other pillars INFRA-273 names as sharing the same
     confirmed delta-gated cascading-divergence mechanism), not a single-pillar SOCIAL-only
     ticket, to break the repeating one-new-pillar-per-ticket pattern on this exact anchor.
+    RESOLVED 2026-07-16 (TCK-20260716-SIMQ-URBAN-POLITICAL-FULL-PILLAR-SWEEP): full 10-pillar
+    sweep of urban_political_seed123_1000t complete (8 independent fresh calibration draws
+    this session, exceeding the 5+ AC minimum). Two pillars needed new
+    SCORE_TOLERANCE_OVERRIDES entries: SOCIAL (abs_floor=5.003, derived from the combined
+    11-draw evidence base -- 3 historical draws from TCK-20260716-SIMQ-URBAN-POLITICAL-
+    NARRATIVE-TOLERANCE plus 8 fresh this session, max deviation 3.8485 from a historical
+    draw, not this session's 8 draws alone which showed max deviation 3.2135 under the
+    default width) and COGNITION (abs_floor=2.0435, derived from this session's 8 draws
+    alone, max deviation 1.5719; applied as a plain tolerance-override with an explicit
+    documented width caveat -- the floor is wide relative to the anchor because COGNITION's
+    decision_divergence_detected event has no dedup gate and can refire every tick, so the
+    floor bounds this session's observed spikes but is not a hard ceiling on the mechanism's
+    worst case). AGENCY, COMBAT, FACTION, INFORMATION, PROGRESSION, and WORLD were checked
+    against real fresh-draw evidence and confirmed to need no override (small, well-bounded
+    deviation in every case). ECONOMY and NARRATIVE's existing overrides were re-confirmed
+    adequate against this session's fresh evidence (no change). Guarded by
+    test_score_tolerance_override_table_scoped_to_named_pillars (updated to the final
+    5-entry set) and test_score_tolerance_overrides_do_not_affect_unlisted_anchors.
+    test_grade_within_anchor_band_long_run[urban_political_seed123_1000t] confirmed passing
+    (1 passed, non-skip) against freshly-regenerated real calibration data generated after
+    the override-table edit landed. See
+    stored_artifacts/TCK-20260716-SIMQ-URBAN-POLITICAL-FULL-PILLAR-SWEEP/investigation.md
+    for the full 8-draw per-pillar table and derivations.
   divergence_note: null
   support_boundary: >
     This entry documents corpus-scan validation coverage for the INFRA-271 fix only; it does not
@@ -4368,6 +4391,21 @@
     carryover mechanism) rather than purely statistical; sample size (5 sequential-style
     observations, 2 isolated observations total) remains too thin to confirm or refute the
     original ~1-in-16 flake-rate estimate either way.
+    UPDATE 2026-07-16 (TCK-20260716-SIMQ-URBAN-POLITICAL-FULL-PILLAR-SWEEP): COMBAT,
+    PROGRESSION, and WORLD were checked against real fresh-draw evidence for the
+    urban_political_seed123_1000t anchor for the first time (this anchor's originally-scoped
+    pillars were ECONOMY/SOCIAL only) and confirmed small/bounded deviation (max 0.009,
+    0.0151, 0.012 respectively, well inside default tolerance) -- consistent with this
+    entry's mechanism-2 cascading-divergence claim for these pillars, no contradiction. Also,
+    new evidence: this sweep's COGNITION finding (8 fresh draws, 2/8 spiking to 0.4380 and
+    1.6159 against an anchor of 0.0440, a ~36x swing) is the first confirmation that
+    mechanism-1 (COGNITION's no-dedup-gate refire, previously characterized only by
+    TCK-20260713-SIMQ-COGNITION-LOOPDET-NONDETERMINISM for a different anchor/tier) can also
+    manifest at large single-draw magnitude on an anchor this entry's own mechanism-1/
+    mechanism-2 distinction did not previously have COGNITION evidence for. This does not
+    contradict or restate the existing mechanism-1/mechanism-2 distinction above -- it is a
+    new anchor/tier data point for mechanism-1, cross-referenced here. See
+    stored_artifacts/TCK-20260716-SIMQ-URBAN-POLITICAL-FULL-PILLAR-SWEEP/investigation.md.
   proof_type: regression
   test_path: >
     tests/unit/worldassembly/test_corpus_diversity.py -m slow --resource-budget large -k

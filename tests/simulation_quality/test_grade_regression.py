@@ -67,15 +67,32 @@ SCORE_TOLERANCE_REL_PCT = 0.20
 # staging_artifacts/TCK-20260716-SIMQ-URBAN-POLITICAL-NARRATIVE-TOLERANCE/investigation.md
 # for the full 6-draw table and derivation.
 #
-# urban_political_seed123_1000t/SOCIAL is intentionally NOT in this table: its existing
-# 20%-relative global default (3.5931) already exceeds the grade_stability guard's own
-# evidence-derived floor (2.9568) — the single-draw check is not actually under-tolerant
-# for that pillar at the current anchor value, so adding a redundant override would be
-# unjustified scope creep. Do not add it without new evidence.
+# urban_political_seed123_1000t/SOCIAL: abs_floor=5.003 is derived from 11 independent
+# fresh draws combined across two sessions (3 historical from
+# TCK-20260716-SIMQ-URBAN-POLITICAL-NARRATIVE-TOLERANCE, 8 fresh from
+# TCK-20260716-SIMQ-URBAN-POLITICAL-FULL-PILLAR-SWEEP), not this latter session's 8 draws
+# alone (which alone would show max deviation 3.2135, under the then-and-now-unchanged
+# default width of 3.5931). The max deviation across the combined 11 draws is 3.8485,
+# from one of the 3 historical draws: round(1.3 * 3.8485, 4) = 5.003. The anchor is NOT
+# re-centered (matches the ECONOMY/NARRATIVE precedent on this same anchor) — see
+# stored_artifacts/TCK-20260716-SIMQ-URBAN-POLITICAL-FULL-PILLAR-SWEEP/investigation.md
+# for the full 8-draw table and combined-evidence derivation.
+#
+# urban_political_seed123_1000t/COGNITION: abs_floor=2.0435 is derived from 8 independent
+# fresh draws this session (TCK-20260716-SIMQ-URBAN-POLITICAL-FULL-PILLAR-SWEEP), max
+# observed deviation 1.5719 (draw6): round(1.3 * 1.5719, 4) = 2.0435. The anchor is NOT
+# re-centered. This floor is wide relative to the anchor (0.0440) because COGNITION's
+# `decision_divergence_detected` event has no dedup gate and can refire every tick
+# (src/observability/event_extractor.py:477-496), so the floor bounds this session's
+# observed spikes but is not a hard ceiling on the mechanism's worst case — see
+# stored_artifacts/TCK-20260716-SIMQ-URBAN-POLITICAL-FULL-PILLAR-SWEEP/investigation.md
+# Risks and Open Questions #1 for the full reasoning.
 SCORE_TOLERANCE_OVERRIDES: dict[tuple[str, str], float] = {
     ("urban_political_seed123_1000t", "ECONOMY"): 0.2878,
     ("frontier_marches_seed42_200t", "NARRATIVE"): 0.3351,
     ("urban_political_seed123_1000t", "NARRATIVE"): 0.3197,
+    ("urban_political_seed123_1000t", "COGNITION"): 2.0435,
+    ("urban_political_seed123_1000t", "SOCIAL"): 5.003,
 }
 
 
@@ -614,14 +631,15 @@ def test_grade_anchors_entry_count_unchanged(grade_anchors: dict) -> None:
 
 
 def test_score_tolerance_override_table_scoped_to_named_pillars() -> None:
-    """Anti-drift guard: the override table contains exactly the 3 evidence-derived
-    entries (SOCIAL intentionally excluded, see module comment) and each entry widens
-    -- never narrows -- the tolerance relative to the global default for that anchor's
-    committed score."""
+    """Anti-drift guard: the override table contains exactly the 5 evidence-derived
+    entries and each entry widens -- never narrows -- the tolerance relative to the
+    global default for that anchor's committed score."""
     assert set(SCORE_TOLERANCE_OVERRIDES.keys()) == {
         ("urban_political_seed123_1000t", "ECONOMY"),
         ("frontier_marches_seed42_200t", "NARRATIVE"),
         ("urban_political_seed123_1000t", "NARRATIVE"),
+        ("urban_political_seed123_1000t", "COGNITION"),
+        ("urban_political_seed123_1000t", "SOCIAL"),
     }
     anchors = json.loads(FIXTURE_PATH.read_text())
     for (run_key, pillar), abs_floor in SCORE_TOLERANCE_OVERRIDES.items():
@@ -637,7 +655,7 @@ def test_score_tolerance_override_table_scoped_to_named_pillars() -> None:
 
 def test_score_tolerance_overrides_do_not_affect_unlisted_anchors(grade_anchors: dict) -> None:
     """Anti-drift guard: for every (run_key, pillar) NOT in SCORE_TOLERANCE_OVERRIDES
-    (including urban_political_seed123_1000t/SOCIAL), the lookup helper must fall through
+    (including urban_political_seed123_1000t/COMBAT), the lookup helper must fall through
     to the global defaults -- byte-identical to calling _within_score_tolerance with no
     kwargs at all."""
     checked = 0
