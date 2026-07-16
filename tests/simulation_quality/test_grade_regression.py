@@ -46,6 +46,35 @@ GRADE_ORDER = ["D", "C", "B", "A", "S"]  # ascending quality; index distance = b
 SCORE_TOLERANCE_ABS_FLOOR = 0.05
 SCORE_TOLERANCE_REL_PCT = 0.20
 
+# Evidence-derived per-(run_key, pillar) score-tolerance overrides for anchors with
+# confirmed real-world single-draw variance exceeding the global default width.
+# Values are reused verbatim from the corresponding tests/unit/worldassembly/
+# test_corpus_diversity.py `*_grade_stability` guard's own `abs_floor` — see
+# stored_artifacts/TCK-20260715-SIMQ-ANCHOR-LOAD-SENSITIVITY-SWEEP/repro_sweep.md
+# Section 8 for derivation. Section 8 shows both floors were widened against
+# independent single fresh-draw samples (not only 3-trial means: e.g. ECONOMY's floor
+# was set after two independent single-draw evaluate_simq.py runs, not a trial mean),
+# so no additional single-draw safety multiplier is applied on top of the guards'
+# committed value — TCK-20260715-SIMQ-CORPUS-DIVERSITY-SESSION-LOAD-FLAKE investigation.
+#
+# urban_political_seed123_1000t/SOCIAL is intentionally NOT in this table: its existing
+# 20%-relative global default (3.5931) already exceeds the grade_stability guard's own
+# evidence-derived floor (2.9568) — the single-draw check is not actually under-tolerant
+# for that pillar at the current anchor value, so adding a redundant override would be
+# unjustified scope creep. Do not add it without new evidence.
+SCORE_TOLERANCE_OVERRIDES: dict[tuple[str, str], float] = {
+    ("urban_political_seed123_1000t", "ECONOMY"): 0.2878,
+    ("frontier_marches_seed42_200t", "NARRATIVE"): 0.3351,
+}
+
+
+def _score_tolerance_kwargs(run_key: str, pillar: str) -> dict[str, float]:
+    """Return abs_floor override kwargs for _within_score_tolerance, or {} for the
+    global default (SCORE_TOLERANCE_ABS_FLOOR/SCORE_TOLERANCE_REL_PCT)."""
+    abs_floor = SCORE_TOLERANCE_OVERRIDES.get((run_key, pillar))
+    return {"abs_floor": abs_floor} if abs_floor is not None else {}
+
+
 FIXTURE_PATH = Path(__file__).parent / "fixtures" / "grade_anchors.json"
 
 # Calibration root relative to repo root (tests run from repo root).
@@ -257,7 +286,9 @@ def test_grade_within_anchor_band(run_key: str, grade_anchors: dict) -> None:
             band_failures.append(
                 f"  {pillar}: actual={actual_grade!r} is outside ±1 band of anchor={anchor_grade!r}"
             )
-        if not _within_score_tolerance(actual_score, anchor_score):
+        if not _within_score_tolerance(
+            actual_score, anchor_score, **_score_tolerance_kwargs(run_key, pillar)
+        ):
             score_failures.append(
                 f"  {pillar}: actual_score={actual_score!r} is outside tolerance of "
                 f"anchor_score={anchor_score!r}"
@@ -311,7 +342,9 @@ def test_grade_within_anchor_band_long_run(run_key: str, grade_anchors: dict) ->
             band_failures.append(
                 f"  {pillar}: actual={actual_grade!r} is outside ±1 band of anchor={anchor_grade!r}"
             )
-        if not _within_score_tolerance(actual_score, anchor_score):
+        if not _within_score_tolerance(
+            actual_score, anchor_score, **_score_tolerance_kwargs(run_key, pillar)
+        ):
             score_failures.append(
                 f"  {pillar}: actual_score={actual_score!r} is outside tolerance of "
                 f"anchor_score={anchor_score!r}"
@@ -567,3 +600,41 @@ def test_grade_anchors_entry_count_unchanged(grade_anchors: dict) -> None:
         f"Expected 76 real scenario entries, found {len(scenario_keys)} — "
         "an anchor entry may have been silently dropped or duplicated"
     )
+
+
+def test_score_tolerance_override_table_scoped_to_named_pillars() -> None:
+    """Anti-drift guard: the override table contains exactly the 2 evidence-derived
+    entries (SOCIAL intentionally excluded, see module comment) and each entry widens
+    -- never narrows -- the tolerance relative to the global default for that anchor's
+    committed score."""
+    assert set(SCORE_TOLERANCE_OVERRIDES.keys()) == {
+        ("urban_political_seed123_1000t", "ECONOMY"),
+        ("frontier_marches_seed42_200t", "NARRATIVE"),
+    }
+    anchors = json.loads(FIXTURE_PATH.read_text())
+    for (run_key, pillar), abs_floor in SCORE_TOLERANCE_OVERRIDES.items():
+        anchor_score = anchors[run_key][pillar]["score"]
+        default_width = max(
+            SCORE_TOLERANCE_ABS_FLOOR, SCORE_TOLERANCE_REL_PCT * abs(anchor_score)
+        )
+        assert abs_floor > default_width, (
+            f"{run_key}/{pillar}: override abs_floor {abs_floor} does not widen the "
+            f"default tolerance {default_width}"
+        )
+
+
+def test_score_tolerance_overrides_do_not_affect_unlisted_anchors(grade_anchors: dict) -> None:
+    """Anti-drift guard: for every (run_key, pillar) NOT in SCORE_TOLERANCE_OVERRIDES
+    (including urban_political_seed123_1000t/SOCIAL), the lookup helper must fall through
+    to the global defaults -- byte-identical to calling _within_score_tolerance with no
+    kwargs at all."""
+    checked = 0
+    for run_key, anchors in grade_anchors.items():
+        for pillar in anchors:
+            if (run_key, pillar) in SCORE_TOLERANCE_OVERRIDES:
+                continue
+            assert _score_tolerance_kwargs(run_key, pillar) == {}, (
+                f"{run_key}/{pillar} unexpectedly has a tolerance override"
+            )
+            checked += 1
+    assert checked > 0

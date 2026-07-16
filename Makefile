@@ -1,4 +1,4 @@
-.PHONY: help install install-py install-fe build dev serve stop clean lint profile-api memray-profile docs-serve docs-build docs-registry tag-report docs-artifacts knowledge-index knowledge-index-update search-server search-server-docker search-server-stop search-server-logs install-hooks eval-search evaluate evaluate-full simq-full-audit simq-full-audit-full simq-full-audit-slow mcp-server-test world-list world-validate world-compile world-resolve world-inspect world-template catalog-list sim sim-debug sim-quick sim-world sim-sweep check-resources export-run retention-plan retention-clean warehouse-init warehouse-ingest typecheck-py perf-measure
+.PHONY: help install install-py install-fe build dev serve stop clean lint profile-api memray-profile docs-serve docs-build docs-registry tag-report docs-artifacts knowledge-index knowledge-index-update search-server search-server-docker search-server-stop search-server-logs install-hooks eval-search evaluate evaluate-full simq-full-audit simq-full-audit-full simq-full-audit-slow simq-corpus-diversity-slow-isolated mcp-server-test world-list world-validate world-compile world-resolve world-inspect world-template catalog-list sim sim-debug sim-quick sim-world sim-sweep check-resources export-run retention-plan retention-clean warehouse-init warehouse-ingest typecheck-py perf-measure
 
 # Default
 help: ## Show available commands
@@ -312,6 +312,20 @@ simq-full-audit-full: ## Same as simq-full-audit but re-runs the engine for all 
 
 simq-full-audit-slow: ## Slow-tier (1000t/2000t) regression check -- run after simq-full-audit passes
 	$(PYTHON) -m pytest tests/simulation_quality/test_grade_regression.py -q
+
+simq-corpus-diversity-slow-isolated: ## [slow] Run test_corpus_diversity.py's -m slow guards as isolated per-test subprocesses (no cumulative-session-load carryover, TCK-20260715-SIMQ-CORPUS-DIVERSITY-SESSION-LOAD-FLAKE)
+	@nodeids=$$($(PYTHON) -m pytest tests/unit/worldassembly/test_corpus_diversity.py -m slow --resource-budget large --collect-only -q | grep '::' || true); \
+	nodeid_count=$$(echo "$$nodeids" | grep -c '::' || true); \
+	if [ "$$nodeid_count" -lt 32 ]; then \
+	  echo "ERROR: expected >=32 tests from test_corpus_diversity.py -m slow, collected $$nodeid_count -- aborting, not silently passing (collection failure, marker drift, import error, or misconfiguration)"; \
+	  exit 1; \
+	fi; \
+	status=0; \
+	for nodeid in $$nodeids; do \
+	  echo "[isolated] $$nodeid"; \
+	  $(PYTHON) -m pytest "$$nodeid" --resource-budget large --tb=short -q || status=1; \
+	done; \
+	exit $$status
 
 mcp-server-test: ## Smoke-test MCP search_docs tool via --test mode (no MCP client needed)
 	@echo '{"query": "damage formula", "top_k": 3}' | \

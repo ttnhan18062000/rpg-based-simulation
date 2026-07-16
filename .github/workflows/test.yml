@@ -225,9 +225,11 @@ jobs:
       - uses: actions/setup-python@v5
         with: { python-version: "3.13", cache: pip }
       - run: pip install -r requirements.txt
+      - name: Slow tests — corpus diversity (isolated per-test, TCK-20260715-SIMQ-CORPUS-DIVERSITY-SESSION-LOAD-FLAKE)
+        run: make simq-corpus-diversity-slow-isolated
       - name: Slow tests (includes 5k behavioral regression)
         run: |
-          pytest tests/ -m "slow or extra_slow" --resource-budget large --tb=short -q
+          pytest tests/ -m "slow or extra_slow" --resource-budget large --tb=short -q --ignore=tests/unit/worldassembly/test_corpus_diversity.py
       - name: Legacy regression
         run: make lane-legacy-regression
       - name: Upload certification report

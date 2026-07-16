@@ -2145,6 +2145,78 @@ A/B band — confirming the mechanism is genuine wall-clock/scheduling timing se
 not strictly a function of artificially induced load. Guard:
 `test_frontier_marches_seed42_200t_narrative_grade_stability`.
 
+## Anchor Reliability Verification, Part 3 (TCK-20260715-SIMQ-CORPUS-DIVERSITY-SESSION-LOAD-FLAKE)
+
+Follow-up to Part 2 above, investigating the two residual risks Part 2's own parent
+ticket (`TCK-20260715-SIMQ-ANCHOR-LOAD-SENSITIVITY-SWEEP`) disclosed but explicitly left
+open. Both remedies named in that disclosure were adopted; neither requires touching the
+14 `grade_stability` guards, `grade_anchors.json`, or `src/engine/kernel.py` from Part 2.
+This subsection is a summary only — see the ticket's own `investigation.md`, `plan.md`,
+and `isolation_comparison.md` for full derivation.
+
+### Remedy (a) — evidence-derived score-tolerance overrides
+
+`tests/simulation_quality/test_grade_regression.py`'s fixed-width
+`test_grade_within_anchor_band`/`_long_run` score-tolerance check now supports a
+per-`(run_key, pillar)` override (`SCORE_TOLERANCE_OVERRIDES`,
+`_score_tolerance_kwargs()`), wired into both call sites. Two entries, reused verbatim
+from the corresponding `grade_stability` guard's own evidence-derived `abs_floor`:
+
+- `urban_political_seed123_1000t` / ECONOMY: `abs_floor=0.2878`
+- `frontier_marches_seed42_200t` / NARRATIVE: `abs_floor=0.3351`
+
+`urban_political_seed123_1000t` / SOCIAL was deliberately **not** overridden: its
+existing 20%-relative global default (3.5931) already exceeds the guard's own
+evidence-derived floor (2.9568) — confirmed by direct arithmetic, not assumed. Adding a
+redundant override there would have been unjustified scope creep.
+
+Both entries were verified against fresh, real (non-skip) calibration regenerations —
+not just unit-level table checks — via `tools/calibrate_simq.py`. Across 3 independent
+fresh `urban_political_seed123_1000t` calibration draws collected during this
+verification, the ECONOMY override comfortably covered the observed variance every time
+(deltas 0.0286–0.1237, well under the 0.2878 floor); the `frontier_marches_seed42_200t`
+NARRATIVE override passed on its one fresh draw.
+
+**New residual risk surfaced, disclosed but out of this ticket's authorized scope to
+fix**: those same 3 `urban_political_seed123_1000t` calibration draws all showed
+NARRATIVE — a pillar with no existing `grade_stability` guard for this anchor, not named
+in this ticket's investigation — landing 0.139–0.246 outside the default ±0.05/20%
+tolerance (anchor 0.6603; draws 0.5210/0.4340/0.4144; band check unaffected, grade B
+every time). This is the same F6-class single-draw variance mechanism on a 4th
+pillar/anchor combination this ticket's Scope did not name and its Out of Scope
+explicitly forbids adding coverage for. No override was added; `grade_anchors.json` was
+not touched. See `docs/parity_ledger/infrastructure.yaml::INFRA-272`'s disclosure block
+and the ticket's Implementation Notes for the full writeup — left as an open finding for
+a future ticket.
+
+### Remedy (b) — CI test isolation for `test_corpus_diversity.py`'s `-m slow` guards
+
+CI's `slow` job (`.github/workflows/test.yml`) now runs this file's 32 `-m slow` guards
+as isolated per-test subprocesses via a new Makefile target
+(`simq-corpus-diversity-slow-isolated`, dynamically collects node IDs via
+`--collect-only`, asserts a minimum count of 32 before running so a short/empty
+collection fails loudly rather than silently passing), inserted ahead of the existing
+sequential invocation, which now `--ignore`s this file to avoid double-running it. No
+`pytest-xdist` or other parallelism plugin was added — sequential subprocess-splitting
+was chosen specifically because it never holds more than one `--resource-budget large`
+8 GB `RLIMIT_AS` ceiling at a time, sidestepping the CI-runner memory-pressure risk a
+concurrent-worker approach would introduce. A static architecture guard
+(`tests/static/test_corpus_diversity_ci_isolation.py`) protects the wiring shape
+(dynamic collection, `--ignore` flag present, correct step ordering).
+
+A controlled comparison (`isolation_comparison.md`) ran 2 isolated samples and 1 fresh
+sequential-baseline sample this session, alongside 2 prior sequential-baseline samples
+cited from the parent ticket. Honest result: all 3 of this session's own fresh runs
+(isolated ×2, sequential ×1) came back completely clean — the isolated-vs-sequential
+contrast only appears when pooling with the parent ticket's 2 older failing samples (2
+failures / 3 pooled sequential samples vs. 0 failures / 2 isolated samples). This
+session's own live A/B did not independently reproduce a difference between conditions.
+The remedy's justification is treated as architectural (subprocess isolation
+structurally removes the cross-test cumulative-session-load carryover mechanism
+Part 2 characterized) rather than statistically proven — 5 total sequential-style and 2
+isolated observations remain too thin to confirm or refute the original ~1-in-16
+flake-rate estimate. See `isolation_comparison.md` for full per-run data and timing.
+
 ## FACTION Coverage Closure — Phase 3 (TCK-20260710-SIMQ-DEPTH-FACTION)
 
 | # | World | Tier | FACTION content? | `faction_tension_overrides` (live grep) | Tier-purity rationale (if not covered) |

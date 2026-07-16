@@ -4266,6 +4266,25 @@
     fixed-width single-sample check, not a defect this ticket left unaddressed; see
     tickets/done/TCK-20260715-SIMQ-ANCHOR-LOAD-SENSITIVITY-SWEEP.md Implementation Notes for the
     full characterization (multiple independent fresh single-draw samples collected and reported).
+    RESOLVED 2026-07-16 (TCK-20260715-SIMQ-CORPUS-DIVERSITY-SESSION-LOAD-FLAKE):
+    SCORE_TOLERANCE_OVERRIDES in test_grade_regression.py now widens
+    urban_political_seed123_1000t/ECONOMY and frontier_marches_seed42_200t/NARRATIVE; SOCIAL
+    needed no override (global default already wider than the guard's own evidence floor --
+    see that ticket's investigation.md). Guarded by
+    test_score_tolerance_overrides_do_not_affect_unlisted_anchors and
+    test_score_tolerance_override_table_scoped_to_named_pillars.
+    HONEST DISCLOSURE, NOT RESOLVED (found during TCK-20260715-SIMQ-CORPUS-DIVERSITY-SESSION-
+    LOAD-FLAKE's own calibration regen, out of that ticket's authorized 3-pillar override
+    scope): 3 independent fresh single-draw urban_political_seed123_1000t calibration runs in
+    that ticket's session all showed NARRATIVE (not previously named as a risky pillar for this
+    anchor -- no grade_stability guard exists for it) landing 0.139-0.246 outside the fixed
+    ±0.05/20% default tolerance (anchor 0.6603, draws 0.5210/0.4340/0.4144, all still grade B,
+    band check unaffected). This is the same F6-class single-draw variance mechanism, on a
+    4th pillar this investigation did not have evidence for at filing time. No override was
+    added for it (out of scope per that ticket's explicit Out-of-Scope guard against widening
+    coverage beyond the 3 named pillars) and grade_anchors.json/the anchor value were not
+    touched. Tracked in a named follow-up ticket, TCK-20260716-SIMQ-URBAN-POLITICAL-NARRATIVE-TOLERANCE,
+    same as this NOTE's original 3-pillar caveat was handled by TCK-20260715-SIMQ-CORPUS-DIVERSITY-SESSION-LOAD-FLAKE.
   divergence_note: null
   support_boundary: >
     This entry documents corpus-scan validation coverage for the INFRA-271 fix only; it does not
@@ -4307,11 +4326,34 @@
     confirming genuine throttle activity, per-pillar event_count/score variance across trials).
     docs/simulation_quality/eval_matrix_results.md "Anchor Reliability Verification, Part 2"
     subsection (14 per-anchor summaries).
+    UPDATE 2026-07-16 (TCK-20260715-SIMQ-CORPUS-DIVERSITY-SESSION-LOAD-FLAKE): CI's `slow` job
+    (`.github/workflows/test.yml`) now runs this file's 32 `-m slow` guards as isolated
+    per-test subprocesses (new Makefile target `simq-corpus-diversity-slow-isolated`, wired
+    in ahead of the existing sequential invocation, which now `--ignore`s this file) instead
+    of one long sequential in-process run, directly targeting the cumulative-session-load
+    mechanism this entry documents. See
+    staging_artifacts/TCK-20260715-SIMQ-CORPUS-DIVERSITY-SESSION-LOAD-FLAKE/isolation_comparison.md
+    for the controlled-comparison data: 2 isolated runs (0/2 failures) and 1 fresh sequential
+    run (0/32 failures) this session, alongside the 2 prior sequential-session failures cited
+    above. Honest disclosure, not overclaimed: this session's own fresh sequential run was
+    also clean, so the isolated-vs-sequential contrast in this specific comparison rests on
+    pooling with the parent ticket's older failing samples, not on a live within-session A/B
+    difference -- the comparison artifact states this plainly. The remedy's justification is
+    architectural (subprocess isolation structurally removes the cross-test session-load
+    carryover mechanism) rather than purely statistical; sample size (5 sequential-style
+    observations, 2 isolated observations total) remains too thin to confirm or refute the
+    original ~1-in-16 flake-rate estimate either way.
   proof_type: regression
   test_path: >
     tests/unit/worldassembly/test_corpus_diversity.py -m slow --resource-budget large -k
     "grade_stability" (14 dedicated guards, one per anchor, all green -- each guard's own
     docstring cites the specific repro evidence for that anchor/pillar).
+    UPDATE 2026-07-16 (TCK-20260715-SIMQ-CORPUS-DIVERSITY-SESSION-LOAD-FLAKE):
+    `make simq-corpus-diversity-slow-isolated` (all 32 `-m slow` guards in this file, run as
+    isolated per-test subprocesses; asserts a minimum collected node-ID count of 32 before
+    running, failing loudly rather than silently passing on a short/empty collection);
+    `tests/static/test_corpus_diversity_ci_isolation.py` (static guard proving the CI/Makefile
+    wiring shape is correct).
   divergence_note: null
   support_boundary: >
     This entry documents the confirmed blast radius of F6's existing, intentional, documented
