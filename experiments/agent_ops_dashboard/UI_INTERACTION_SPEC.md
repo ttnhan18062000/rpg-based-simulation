@@ -20,8 +20,10 @@ layout.
 `Title` (truncated, full text on hover) · `Tier` · `Type` · `Priority` (color-coded: P0 red, P1
 amber, P2 default) · `Layer` · `Status` (workflow status badge — `OPEN`/`INPROGRESS`/`BLOCKED`/
 `DONE`, per `DATA_MODEL.md` §1's `workflow_status` field, not the frontmatter `status` field) ·
-`Tags` (pill list, max 3 shown + "+N more") · `Date` · a trailing link icon, shown only when
-`run_id_match` is non-null (`DATA_MODEL.md` §1).
+`Tags` (pill list, max 3 shown + "+N more") · `Date` · a trailing link indicator, shown only when
+`matching_runs` is non-empty (`DATA_MODEL.md` §1) — a single link icon when there's exactly one
+match, a small "×N" badge when there are multiple (retried ticket), per the 2026-07-16 decision to
+surface all matching runs rather than collapsing to one.
 
 **Filters** (a filter bar above the table, mirroring `src/api/server.py`'s `.filter-bar`/
 `.filter-pill` pattern already proven in this codebase): multi-select pills for `Tier`, `Layer`,
@@ -34,9 +36,11 @@ columns for v1 — this is a filterable log, not a spreadsheet; if more sort dim
 later, `docs/guides/ticket_reporting.md`'s deferred "velocity/throughput" pillar (`PROPOSAL.md` §2)
 is the more natural home for aggregate/sorted views, not this table.
 
-**Row click:** if `run_id_match` is set, navigate to that run's Replay timeline (§3). If not (a
-ticket with no matching agent-monitoring run — plausible for very old or manually-created tickets),
-expand the row in place to show the ticket file's raw body text, read-only.
+**Row click:** if `matching_runs` has exactly one entry, navigate directly to that run's Replay
+timeline (§3). If it has more than one (a retried ticket), open a small picker listing each run by
+`start_ts` + `final_status`, most recent first, then navigate on selection. If empty (a ticket with
+no matching agent-monitoring run — plausible for very old or manually-created tickets), expand the
+row in place to show the ticket file's raw body text, read-only.
 
 **Empty state:** "No tickets match these filters" if filters exclude everything; "No tickets found"
 (distinct copy) if the repo genuinely has zero ticket files — this distinction matters the same way

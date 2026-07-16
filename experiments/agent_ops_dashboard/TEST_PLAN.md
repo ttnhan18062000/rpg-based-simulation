@@ -26,11 +26,15 @@ is tested against real historical shapes, not just the current schema.
 | 7 | A `tools.jsonl` row with `run_id: null, seq: null` | Interactive/out-of-workflow tool use | Excluded from every run's `tools_by_seq`/`tools_by_run_recent` — confirmed not to leak into any run's `files_touched` or `live_tail` |
 | 8 | A single malformed JSON line in the middle of an otherwise-valid file | Data corruption | Skipped, counted in `/api/health`'s `unparsed_lines` (`DATA_MODEL.md` §1), **does not** abort parsing the rest of the file |
 | 9 | A ticket file with valid frontmatter but no `## Tier`/`## Priority`/`## Type` body sections | An incomplete/malformed ticket | `tier`/`ticket_type`/`priority` surface as `null` (`DATA_MODEL.md` §1's `Nullable: Yes` for `ticket_type`/`priority` — note `tier` is documented `No` there, so this case should be treated as a data-quality signal worth its own assertion, not silently defaulted) |
-| 10 | Two tickets whose `ticket_id` both match the same `run_id` (shouldn't happen, but not structurally prevented) | A data-integrity edge case | Documented, deliberate behavior needed: first-match-wins or explicit ambiguity flag — **not decided in this plan**, a real open question for whoever implements `ingest.py`'s ticket↔run join (not previously named in any other document in this folder) |
+| 10 | A `ticket_id` with two `runs.jsonl` rows sharing that `run_id` (a retried/re-run ticket) | A data pattern confirmed real, not hypothetical — 43 of 618 current `runs.jsonl` rows are such collisions | `matching_runs` (`DATA_MODEL.md` §1) returns both, sorted `start_ts` descending — **decided 2026-07-16**, see below |
 
-Row 10 is a genuinely new finding from writing this test plan — no other document here considered
-the case of an ambiguous ticket↔run match. Flagging it here rather than silently picking a default,
-consistent with this whole investigation's practice of naming undecided things explicitly.
+Row 10 was a genuinely new finding from writing this test plan — no other document here originally
+considered the case of an ambiguous ticket↔run match, and it was flagged as an undecided open
+question. **Decision (2026-07-16), confirmed with the user:** direct query against live
+`runs.jsonl` data found this "shouldn't happen" case occurs 43 times already, from ticket
+retries/re-runs — not rare enough to collapse via first-match-wins. `ingest.py`'s ticket↔run join
+returns every matching run per ticket (`DATA_MODEL.md` §1's `matching_runs` field), not a single
+best guess.
 
 ---
 
@@ -45,6 +49,8 @@ consistent with this whole investigation's practice of naming undecided things e
 - `test_ingest_excludes_out_of_workflow_tool_calls` — fixture #7
 - `test_ingest_skips_malformed_line_and_counts_it` — fixture #8, asserts `/api/health`'s `unparsed_lines` increments and the rest of the file still parses
 - `test_ingest_ticket_body_section_fields_nullable_when_absent` — fixture #9
+- `test_ingest_ticket_returns_all_matching_runs_sorted_desc` — fixture #10, asserts `matching_runs`
+  contains both rows for a `ticket_id` with two `runs.jsonl` matches, ordered `start_ts` descending
 - `test_join_events_to_tools_by_seq` — asserts `DATA_MODEL.md` §3's `build_timeline` join produces correctly-ordered `TimelineEntry` list with matching `tool_calls`
 - `test_live_tail_excludes_known_seqs` — asserts a live run's `live_tail` never duplicates tool calls already represented in `entries` (the `known_seqs` filter in `DATA_MODEL.md` §3's pseudocode)
 - `test_files_touched_dedupes_by_path` — asserts `extract_files_touched` keeps first-seen `ts`/`tool` per unique path, doesn't list a repeatedly-edited file N times

@@ -225,6 +225,19 @@ Recommendation for the next investigator: this is now a three-way judgment call 
 precedent in every direction, not a foregone conclusion — confirm with the user before writing any
 frontend code.
 
+**Decision (2026-07-16), confirmed with the user:** Option 2, **FastAPI + React/Vite SPA**. Option 3
+was independently ruled out during the same investigation pass, before being put to the user — a
+direct read of `frontend/src/components/` (`GameCanvas.tsx`, `BuildingPanel.tsx`, `LootPanel.tsx`,
+`ClassHallPanel.tsx`) confirmed `frontend/` is a live game/simulation canvas UI, not an admin/ops
+surface; bundling this dashboard into it would be a real product-boundary mismatch, not a
+hypothetical one. Between the remaining two, the user chose the SPA over vanilla embedded HTML/JS
+(the lower-footprint option, recommended by the investigator) for the higher long-term
+interaction/maintainability ceiling — accepting the named trade-off that no CI coverage exists for
+any frontend in this repo today (`IMPLEMENTATION_CONTEXT.md` §4), so this dashboard's frontend
+inherits that same gap unless new CI steps are added separately. §5b's Makefile/tooling section
+(`dashboard-install`/`dashboard-build`/`dashboard-dev`/`dashboard-serve`) applies as written for the
+SPA path; the vanilla-HTML-specific conditionals there no longer apply.
+
 ---
 
 ## 5b. Tooling, deployment, and service management — investigated after being flagged as missing
@@ -408,6 +421,13 @@ This dashboard's v1 scope does not depend on that fix landing first — the Rece
 Replay timeline views both function with today's instrumentation (§7b). The fix would upgrade the
 Recent Activity view's live bars and the Replay timeline's live edge from "tool activity, phase
 unknown until completion" to "tool activity, phase + agent labeled live."
+
+**Decision (2026-07-16), confirmed with the user:** the instrumentation-gap fix ships as an
+**independent sibling ticket, not a blocking dependency**. Dashboard v1 is scoped and built without
+waiting on it; the fix's own `standard`-tier `layer: observability` ticket (per
+`MONITORING_INSTRUMENTATION_GAP.md` §4) can be filed and run in parallel or afterward. This also
+keeps the dashboard's own ticket from touching `.claude/workflows/implement-ticket.js`, which this
+repo's rules already exclude from `experiments/`-sandbox scope.
 
 ---
 

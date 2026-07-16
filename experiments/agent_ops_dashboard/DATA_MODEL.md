@@ -43,7 +43,7 @@ their shape.
 | `tags` | `List[str]` | No | frontmatter |
 | `date` | `str` (ISO date) | No | frontmatter |
 | `lifecycle_state` | `str` | No | `inprogress`/`done`/`todos` — derived from which directory the file was read from, not a file field |
-| `run_id_match` | `str?` | Yes | set when `ticket_id` matches a `run_id` in the runs cache (§2) — lets the frontend link a ticket row to its run detail |
+| `matching_runs` | `List[RunMatchSummary]` | No (empty list if none) | **Decision (2026-07-16):** every `runs.jsonl` row whose `run_id` equals this `ticket_id`, sorted `start_ts` descending (most recent first). Not a single nullable match — confirmed by direct query against live data that `run_id == ticket_id` collisions are real and non-rare (43 of 618 `runs.jsonl` rows as of 2026-07-16, from ticket retries/re-runs), not the "shouldn't happen" edge case `TEST_PLAN.md` originally flagged as undecided. Collapsing to first-match-wins would silently hide genuine retry history. `RunMatchSummary`: `{run_id, start_ts, end_ts, final_status}` (enough for the Tickets view to render a compact multi-run indicator without a second round-trip). |
 
 **Note on frontmatter vs. body fields:** per `IMPLEMENTATION_CONTEXT.md` §2's confirmed
 `docs/REGISTRY.yaml` gap, `tier`, `ticket_type`, `priority`, and the workflow `## Status` are all
@@ -242,6 +242,14 @@ this codebase and easier to reason about for a first version); **use the swap-ba
 if rebuild time ever becomes noticeable** (it never blocks readers during the slow part). Given
 §3's own measured "sub-second" rebuild time at current data volume (`PROPOSAL.md` §4), either choice
 is safe today — this is flagged so the choice is made deliberately, not defaulted into.
+
+**Decision (2026-07-16), confirmed with the user: `RLock`-per-method**, directly reusing
+`ReadModelCache`'s pattern rather than the swap-based design. Rationale: it's an already-proven
+precedent in this exact codebase, simpler to reason about, and the swap design's core benefit
+(never blocking readers during a slow rebuild) isn't needed at today's confirmed sub-second rebuild
+time. Revisit if `agent-monitoring/*.jsonl` growth (currently unbounded — no retention/rotation
+policy exists for these files, confirmed by repo-wide grep; `retention.py` only governs the
+unrelated `data/runs/` simulation-artifact domain) ever pushes rebuild time high enough to matter.
 
 ---
 

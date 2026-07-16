@@ -89,26 +89,32 @@ the recommendation was made against these specific numbers, not as a timeless co
 
 ---
 
-## 5. Open verification items for the next agent — not resolved here
+## 5. Decisions confirmed with the user (2026-07-16)
 
-- **Confirm the §5a/§5b three-way stack decision** (vanilla embedded HTML/CSS/JS; a new standalone
-  FastAPI + React/Vite SPA; or a new view inside the existing `frontend/` app) with the user before
-  writing any frontend code — this reopens a decision already made once in this investigation, on
-  new evidence, twice, and deserves explicit re-confirmation, not a silent default in any direction.
-- **Full read of `tools/generate_registry.py`'s `parse_related_code_areas()` and related helpers**
-  if the dashboard ever wants a "Related Code Areas" column — not required for v1 scope, not
-  investigated in depth here.
-- **Whether `agent-monitoring/*.jsonl` files are ever subject to retention/rotation** — confirmed
-  `data/runs/`'s chunked simulation artifacts have a `RetentionPolicy`/`RetentionManager`
-  (`src/observability/reporting/retention.py`, cited in the sibling `placement_integrity`
-  proposal), but whether the same or a different retention rule applies to
-  `agent-monitoring/*.jsonl` itself was **not checked** in this investigation — worth confirming
-  before assuming these files grow unbounded forever (relevant to the in-memory cache's long-term
-  memory footprint).
-- **Whether `MONITORING_INSTRUMENTATION_GAP.md`'s proposed fix should land before, after, or
-  independent of the dashboard's own implementation** — `PROPOSAL.md` §8 states the dashboard does
-  not depend on it, but the actual sequencing (does the dashboard ticket block on it, or can they
-  run as sibling tickets) is a planning decision, not made here.
+All four items previously listed here as open were investigated further and resolved:
+
+- **Stack: FastAPI + React/Vite SPA** (`PROPOSAL.md` §5a). The `frontend/`-embedded option was
+  independently ruled out first — direct read of `frontend/src/components/` confirmed it's a live
+  game/simulation canvas UI (`GameCanvas.tsx`, `BuildingPanel.tsx`, etc.), a real product-boundary
+  mismatch for an ops dashboard. Between vanilla HTML/JS and the SPA, the user chose the SPA for its
+  higher long-term ceiling, accepting that no frontend CI exists in this repo today.
+- **Instrumentation gap fix sequencing: independent sibling ticket, not blocking** (`PROPOSAL.md`
+  §8). Dashboard v1 ships without waiting on it.
+- **Ticket↔run ambiguity: not actually rare** — a direct query against live `runs.jsonl` found 43 of
+  618 rows share a `run_id`/`ticket_id` with another row (retries/re-runs), confirming §2's "shouldn't
+  happen" framing was too optimistic. `ingest.py` returns all matches (`DATA_MODEL.md` §1's
+  `matching_runs`, sorted most-recent-first), not one arbitrary pick.
+- **`agent-monitoring/*.jsonl` retention: confirmed none exists.** Repo-wide grep found no
+  rotation/retention logic targets these files — `retention.py`'s `RetentionPolicy` only governs the
+  unrelated `data/runs/` simulation-artifact domain. Not a v1 blocker given current sub-second
+  rebuild time, but a genuine unbounded-growth item worth a line in the eventual ticket.
+
+Also confirmed in the same pass: **port 8420 is free** on the current dev machine (checked directly,
+not just "doesn't collide with known ports" by inspection).
+
+**Still open, deliberately not resolved in this design pass:**
+- Full read of `tools/generate_registry.py`'s `parse_related_code_areas()` and related helpers, if
+  the dashboard ever wants a "Related Code Areas" column — not required for v1 scope.
 
 ---
 
