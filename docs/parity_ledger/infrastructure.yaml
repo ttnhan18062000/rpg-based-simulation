@@ -4427,3 +4427,51 @@
     heuristic should be formally revised is left to a future doc-only update of
     docs/audits/D06_longrun_health.md, not performed here (out of this ticket's Related Docs
     scope, which names the file as read-only reference).
+- id: INFRA-274
+  text: >
+    Plan-phase "unresolved questions" gate false-positive fix (TCK-20260716-PLAN-GATE-SUBSTRING-
+    FALSEPOS): the orchestrator's Plan-phase gate previously tested
+    `planText.toLowerCase().includes('unresolved question')` against the planner agent's free-text
+    return summary, which false-triggered `NEEDS_HUMAN_INPUT` whenever that prose contained a
+    phrase like "No unresolved questions: ..." (the plural "questions" substring-matches "question"
+    even when no genuine section exists). Fixed by replacing the prose substring check with an
+    orchestrator-run `bash()` read of the actual generated `staging_artifacts/${tid}/plan.md` file,
+    testing via `re.search(r'^##\s+Unresolved Questions\s*$', text, re.MULTILINE)` for a genuine
+    H2 markdown heading, mirroring this same file's existing `tagCheckOutput`/`archCheckOutput`
+    orchestrator-run-check-against-durable-state convention (marker-prefix output, `indexOf` +
+    `JSON.parse`). True-positive path (a real `## Unresolved Questions` heading present) is
+    unchanged: same `NEEDS_HUMAN_INPUT` status, `pushEvent('Plan', 'planner', 'blocked', ...)`,
+    monitoring write, and return message. This is agent-orchestration workflow tooling (which of
+    two Plan-phase gate branches the pipeline takes) -- no simulation engine, mechanics, or
+    determinism behavior is involved.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    .claude/workflows/implement-ticket.js (Phase 3: Plan, ~line 487 -- the
+    `planText.toLowerCase().includes('unresolved question')` condition replaced with the
+    `unresolvedCheckOutput` bash()/python3 call to
+    `tools/gate_checks/plan_gate_static.py::plan_has_unresolved_questions_heading`, gated on
+    `UNRESOLVED_CHECK_JSON:` marker parsing). UPDATE (same ticket, same session): the regex-heading
+    logic was extracted out of the inline `python3 -c` string into a real importable module
+    (`tools/gate_checks/plan_gate_static.py`), matching the established `tagCheckOutput`
+    (`tools/tag_registry.py`) / `archCheckOutput`
+    (`tools/gate_checks/architecture_reviewer_static.py`) convention of calling a testable function
+    rather than inlining untestable regex logic in the `-c` string.
+  proof_type: null
+  test_path: >
+    tests/tools/test_plan_gate_static.py (6/6 passing -- dedicated regression coverage added:
+    true-positive genuine heading, the exact false-positive prose ("No unresolved questions: ...")
+    that motivated this ticket, no-heading case, H3-does-not-match-H2-only-contract, trailing-
+    whitespace-after-heading, and missing-file-returns-false-not-raise). Closes the gap this
+    entry originally flagged. tests/tools/test_step0_ts_orchestrator.py (6/6 passing) additionally
+    confirms the surrounding planTs/writeSidecar/plan=await agent(...)/planText adjacency block
+    was left structurally intact.
+  divergence_note: null
+  support_boundary: >
+    Agent-orchestration workflow tooling only -- no simulation behavior is involved (mirrors
+    INFRA-263/264/265's support_boundary pattern for orchestrator-side implement-ticket.js
+    gate/check-logic changes). Does not touch, extend, or duplicate INFRA-263 (Finalize-phase
+    registry-regen gate), INFRA-264 (CI registry-drift backstop), or INFRA-265 (Scope-phase
+    ticket-location resolution); this is a fourth, distinct gate-logic guarantee scoped to the
+    Plan phase's unresolved-questions check specifically.

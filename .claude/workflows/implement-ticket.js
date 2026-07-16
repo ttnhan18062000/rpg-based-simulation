@@ -484,7 +484,29 @@ Then return: ordered step list (one line per step) + any unresolved questions.`,
 
   planText = plan.toString().trim()
 
-  if (planText.toLowerCase().includes('unresolved question')) {
+  // Ground-truth check against the real plan.md heading rather than the agent's free-text
+  // return summary — a prose substring match false-triggers on sentences like "No unresolved
+  // questions: ..." (see TCK-20260716-PLAN-GATE-SUBSTRING-FALSEPOS). Mirrors the
+  // tagCheckOutput/archCheckOutput orchestrator-run bash() marker-prefix convention, and calls a
+  // real importable function (unit-tested in tests/tools/test_plan_gate_static.py) rather than
+  // inlining regex logic in the -c string.
+  const unresolvedCheckOutput = await bash(
+    `python3 -c "
+import sys, json
+sys.path.insert(0, 'tools')
+from gate_checks.plan_gate_static import plan_has_unresolved_questions_heading
+print('UNRESOLVED_CHECK_JSON:' + json.dumps(plan_has_unresolved_questions_heading(sys.argv[1])))
+" "staging_artifacts/${tid}/plan.md"`
+  )
+
+  let hasUnresolvedQuestions = false
+  const unresolvedMarkerIndex = unresolvedCheckOutput.indexOf('UNRESOLVED_CHECK_JSON:')
+  if (unresolvedMarkerIndex !== -1) {
+    try { hasUnresolvedQuestions = JSON.parse(unresolvedCheckOutput.slice(unresolvedMarkerIndex + 'UNRESOLVED_CHECK_JSON:'.length).trim()) === true }
+    catch (e) { hasUnresolvedQuestions = false }
+  }
+
+  if (hasUnresolvedQuestions) {
     pushEvent('Plan', 'planner', 'blocked', 'Plan contains unresolved questions — human review required', planTs)
     log('Plan contains unresolved questions — human review required before implementation.')
     await writeMonitoring('NEEDS_HUMAN_INPUT')
