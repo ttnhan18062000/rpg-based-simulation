@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """PostToolUse hook: appends one tool-call record to agent-monitoring/tools.jsonl."""
+import fcntl
 import json
 import sys
 from datetime import datetime, timezone
@@ -71,7 +72,9 @@ try:
     tools_file = Path("agent-monitoring/tools.jsonl")
     tools_file.parent.mkdir(parents=True, exist_ok=True)
     with open(tools_file, "a") as f:
+        fcntl.flock(f, fcntl.LOCK_EX)
         f.write(json.dumps(record, separators=(",", ":")) + "\n")
+        fcntl.flock(f, fcntl.LOCK_UN)
 
 except Exception:
     pass

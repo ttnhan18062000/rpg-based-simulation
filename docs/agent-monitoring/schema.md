@@ -216,6 +216,10 @@ One record per tool call, written by `PreToolUse` and `PostToolUse` hooks. Joine
 | `status` | string | No | `ok` \| `failed`. Derived from the tool response's error flag. |
 | `duration_ms` | int | Yes | Wall-clock milliseconds from PreToolUse to PostToolUse. `null` if the pre-hook temp file was missing. |
 
+### Write locking
+
+The `PostToolUse` hook (`post_tool_hook.py`) wraps its open+write block in `fcntl.flock(f, fcntl.LOCK_EX)` (released via `fcntl.flock(f, fcntl.LOCK_UN)` after the write) so concurrent hook invocations from different Claude Code sessions/processes serialize their appends instead of racing — without this, two processes' `write()` calls to the same append-mode file handle can interleave mid-line, producing an unparseable record (observed and hand-repaired once, `TCK-20260716-MONITORING-TOOLS-JSONL-WRITE-LOCK`). This is a POSIX-only guarantee (`fcntl` has no Windows equivalent); the hook has no platform fallback, consistent with this repo's `tools/` convention of not supporting non-POSIX environments. The lock is advisory and only serializes writers going through this same hook script — it does not protect against a non-Python process writing to the file directly (none is known to). Any locking failure (unsupported platform, OS-level error) is swallowed by the hook's existing fail-silent `try/except Exception: pass` wrapper exactly like every other exception in this hook — it never blocks or fails the tool call the hook fires after.
+
 ### How tool calls are attributed to agent events
 
 The orchestrating workflow (`implement-ticket.js`) writes `{"run_id": "...", "seq": N}` to `.claude/current_run` itself via a `bash()` call (the shared `writeSidecar(seq)` helper), immediately before dispatching each corresponding `agent()` call — agent prompts no longer contain a sidecar-write instruction. The PostToolUse hook reads this file on every tool call and tags the record with `run_id` + `seq`. The `writeMonitoring` step at the end of the workflow counts records per seq to produce `tool_call_count` in events.jsonl.
