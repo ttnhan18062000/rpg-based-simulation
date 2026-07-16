@@ -615,3 +615,4 @@
 {"run_id":"TCK-20260715-SIMQ-ANCHOR-LOAD-SENSITIVITY-SWEEP","start_ts":"2026-07-15T06:38:13Z","end_ts":"2026-07-15T16:23:20Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":11,"duration_s":35107}
 {"run_id":"TCK-20260714-SIMQ-HARVEST-RESOURCE-ARRIVAL-TRANSITION","start_ts":"2026-07-15T16:37:12Z","end_ts":"2026-07-15T17:40:20Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":10,"duration_s":3788}
 {"run_id":"TCK-20260715-SIMQ-CORPUS-DIVERSITY-SESSION-LOAD-FLAKE","start_ts":"2026-07-16T02:15:32Z","end_ts":"2026-07-16T04:39:52Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":12,"duration_s":8660}
+{"run_id":"TCK-20260716-SIMQ-URBAN-POLITICAL-NARRATIVE-TOLERANCE","start_ts":"2026-07-16T06:38:06Z","end_ts":"2026-07-16T09:06:15Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":11,"duration_s":8889}

@@ -48,14 +48,24 @@ SCORE_TOLERANCE_REL_PCT = 0.20
 
 # Evidence-derived per-(run_key, pillar) score-tolerance overrides for anchors with
 # confirmed real-world single-draw variance exceeding the global default width.
-# Values are reused verbatim from the corresponding tests/unit/worldassembly/
-# test_corpus_diversity.py `*_grade_stability` guard's own `abs_floor` — see
-# stored_artifacts/TCK-20260715-SIMQ-ANCHOR-LOAD-SENSITIVITY-SWEEP/repro_sweep.md
-# Section 8 for derivation. Section 8 shows both floors were widened against
-# independent single fresh-draw samples (not only 3-trial means: e.g. ECONOMY's floor
-# was set after two independent single-draw evaluate_simq.py runs, not a trial mean),
-# so no additional single-draw safety multiplier is applied on top of the guards'
+# The first two entries' values are reused verbatim from the corresponding
+# tests/unit/worldassembly/test_corpus_diversity.py `*_grade_stability` guard's own
+# `abs_floor` — see stored_artifacts/TCK-20260715-SIMQ-ANCHOR-LOAD-SENSITIVITY-SWEEP/
+# repro_sweep.md Section 8 for derivation. Section 8 shows both floors were widened
+# against independent single fresh-draw samples (not only 3-trial means: e.g. ECONOMY's
+# floor was set after two independent single-draw evaluate_simq.py runs, not a trial
+# mean), so no additional single-draw safety multiplier is applied on top of the guards'
 # committed value — TCK-20260715-SIMQ-CORPUS-DIVERSITY-SESSION-LOAD-FLAKE investigation.
+#
+# urban_political_seed123_1000t/NARRATIVE has no corresponding grade_stability guard to
+# reuse a floor from (it was never in that anchor's originally-scoped pillar set). Its
+# abs_floor=0.3197 is instead derived directly from 6 independent fresh calibration
+# draws (3 from TCK-20260715-SIMQ-CORPUS-DIVERSITY-SESSION-LOAD-FLAKE, 3 fresh this
+# session) using the same 1.3x max-observed-deviation formula: max deviation 0.2459,
+# round(1.3 * 0.2459, 4) = 0.3197. The anchor is NOT re-centered (matches the ECONOMY
+# precedent, not the frontier_marches-NARRATIVE re-centered precedent) — see
+# staging_artifacts/TCK-20260716-SIMQ-URBAN-POLITICAL-NARRATIVE-TOLERANCE/investigation.md
+# for the full 6-draw table and derivation.
 #
 # urban_political_seed123_1000t/SOCIAL is intentionally NOT in this table: its existing
 # 20%-relative global default (3.5931) already exceeds the grade_stability guard's own
@@ -65,6 +75,7 @@ SCORE_TOLERANCE_REL_PCT = 0.20
 SCORE_TOLERANCE_OVERRIDES: dict[tuple[str, str], float] = {
     ("urban_political_seed123_1000t", "ECONOMY"): 0.2878,
     ("frontier_marches_seed42_200t", "NARRATIVE"): 0.3351,
+    ("urban_political_seed123_1000t", "NARRATIVE"): 0.3197,
 }
 
 
@@ -603,13 +614,14 @@ def test_grade_anchors_entry_count_unchanged(grade_anchors: dict) -> None:
 
 
 def test_score_tolerance_override_table_scoped_to_named_pillars() -> None:
-    """Anti-drift guard: the override table contains exactly the 2 evidence-derived
+    """Anti-drift guard: the override table contains exactly the 3 evidence-derived
     entries (SOCIAL intentionally excluded, see module comment) and each entry widens
     -- never narrows -- the tolerance relative to the global default for that anchor's
     committed score."""
     assert set(SCORE_TOLERANCE_OVERRIDES.keys()) == {
         ("urban_political_seed123_1000t", "ECONOMY"),
         ("frontier_marches_seed42_200t", "NARRATIVE"),
+        ("urban_political_seed123_1000t", "NARRATIVE"),
     }
     anchors = json.loads(FIXTURE_PATH.read_text())
     for (run_key, pillar), abs_floor in SCORE_TOLERANCE_OVERRIDES.items():

@@ -2217,6 +2217,52 @@ Part 2 characterized) rather than statistically proven — 5 total sequential-st
 isolated observations remain too thin to confirm or refute the original ~1-in-16
 flake-rate estimate. See `isolation_comparison.md` for full per-run data and timing.
 
+## Anchor Reliability Verification, Part 4 (TCK-20260716-SIMQ-URBAN-POLITICAL-NARRATIVE-TOLERANCE)
+
+Follow-up to Part 3 above, resolving the NARRATIVE finding Part 3 disclosed but left
+open (`urban_political_seed123_1000t`/NARRATIVE, out of that ticket's authorized
+3-pillar scope). No `grade_stability` guard existed for this `(anchor, pillar)` pair to
+reuse an `abs_floor` from, so the value was derived directly from 6 independent fresh
+single-draw calibration runs (3 from `TCK-20260715-SIMQ-CORPUS-DIVERSITY-SESSION-LOAD-
+FLAKE`, 3 fresh this session) using the same `1.3x` max-observed-deviation formula as
+the existing ECONOMY entry:
+
+- `urban_political_seed123_1000t` / NARRATIVE: `abs_floor=0.3197` (max observed
+  deviation 0.2459, `round(1.3 * 0.2459, 4) = 0.3197`; anchor 0.6603206412825652 not
+  re-centered)
+
+`SCORE_TOLERANCE_OVERRIDES` now has 3 entries; the anti-drift guards
+(`test_score_tolerance_override_table_scoped_to_named_pillars`,
+`test_score_tolerance_overrides_do_not_affect_unlisted_anchors`) were updated and
+confirmed passing against the 3-entry table.
+
+The band check was never at risk for this pillar: all 6 draws stayed within ±1 grade
+of the anchor's B grade (3 landed B, 3 landed A) — this fix is scoped entirely to the
+score-tolerance check, consistent with the evidence. A fresh, real (non-skip)
+`urban_political_seed123_1000t` calibration regeneration was collected this session
+(NARRATIVE 0.5711, delta 0.0892, comfortably inside the 0.3197 floor) and
+`test_grade_within_anchor_band_long_run[urban_political_seed123_1000t]` (`-m slow
+--resource-budget large`) confirmed `1 passed` against it.
+
+**New finding surfaced, disclosed but out of this ticket's authorized NARRATIVE-only
+scope to fix**: that same fresh-draw gathering also showed SOCIAL — a pillar this
+ticket's own parent (`TCK-20260715-SIMQ-CORPUS-DIVERSITY-SESSION-LOAD-FLAKE`)
+concluded needed no override, since its existing default tolerance already exceeded
+the corresponding `grade_stability` guard's evidence floor — exceeding its existing
+default tolerance on 1 of 3 fresh draws (actual 21.814 vs anchor 17.9655, delta 3.8485
+vs tolerance width 3.5931), contradicting that prior "no override needed" finding with
+new evidence specifically implicating it. No override or guard was added for it in
+this ticket. Unlike Part 3's NARRATIVE disclosure, this one is not left as a prose
+recommendation alone: a concrete stub follow-up ticket has been filed,
+`TCK-20260716-SIMQ-URBAN-POLITICAL-FULL-PILLAR-SWEEP`, scoped as a full-pillar sweep of
+`urban_political_seed123_1000t`'s remaining untested-for-load-sensitivity pillars
+(SOCIAL, COMBAT, PROGRESSION, WORLD — the other pillars `INFRA-273` names as sharing
+the same confirmed delta-gated cascading-divergence mechanism), not another
+single-pillar ticket, to break the repeating one-new-pillar-per-ticket pattern this is
+now the 2nd consecutive investigation of this exact anchor to organically surface. See
+`docs/parity_ledger/infrastructure.yaml::INFRA-272`'s disclosure block and the ticket's
+Implementation Notes for the full writeup.
+
 ## FACTION Coverage Closure — Phase 3 (TCK-20260710-SIMQ-DEPTH-FACTION)
 
 | # | World | Tier | FACTION content? | `faction_tension_overrides` (live grep) | Tier-purity rationale (if not covered) |

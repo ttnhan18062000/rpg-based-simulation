@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: simulation
 authority: P1
 audience: agent
 ticket_id: TCK-20260716-SIMQ-URBAN-POLITICAL-NARRATIVE-TOLERANCE
-phase: open
+phase: done
 date: 2026-07-16
 tags: [simulation-quality, calibration, determinism, corpus]
 ---
@@ -17,7 +17,7 @@ score-tolerance exposure found (but explicitly not fixed, per scope guard) durin
 `TCK-20260715-SIMQ-CORPUS-DIVERSITY-SESSION-LOAD-FLAKE`
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -237,8 +237,116 @@ pass against the same calibration data). This ticket files the authorized follow
 
 ## Implementation Notes
 
+Followed `staging_artifacts/TCK-20260716-SIMQ-URBAN-POLITICAL-NARRATIVE-TOLERANCE/plan.md`'s
+7 steps (as amended after the first architecture-review round) in order, no deviations from
+the plan's substance.
+
+1. **Conclusion (F6-class, confirmed).** Investigation.md's 6-draw evidence base (3 from the
+   parent ticket + 3 fresh this session, deviations 0.031-0.246 from anchor 0.6603206412825652)
+   is fully consistent with `INFRA-273`'s already-confirmed "cascading divergence" mechanism:
+   NARRATIVE is explicitly named among the delta-gated pillars, `hero_death_unrecorded`'s
+   construction in `src/observability/event_extractor.py` is architecturally identical to the
+   other named events' this-tick-vs-prior-tick pattern, and `NarrativeScorer.score()` is a
+   deterministic pure accumulator with no scorer-side defect found. No distinct root cause.
+2. Regenerated fresh calibration data at the default path
+   (`data/calibration/urban_political_seed123_1000t/quality_report.json`) via
+   `.venv/bin/python3 tools/calibrate_simq.py --name urban_political --seed 123 --ticks 1000`.
+   Result: NARRATIVE `normalized_score=0.5711422845691383`, delta from anchor `0.0892`, well
+   inside the recommended `0.3197` floor (sanity check passed).
+3. Added the 3rd `SCORE_TOLERANCE_OVERRIDES` entry to
+   `tests/simulation_quality/test_grade_regression.py`:
+   `("urban_political_seed123_1000t", "NARRATIVE"): 0.3197`, derived via
+   `round(1.3 * 0.2459, 4) = 0.3197` (max observed deviation across 6 draws, anchor not
+   re-centered — matches the ECONOMY precedent). Updated the module comment block to document
+   this entry's derivation (no corresponding `grade_stability` guard existed to reuse a floor
+   from, unlike the 2 existing entries). The 2 existing entries and the SOCIAL-exclusion
+   sentence were left byte-identical.
+4. Updated `test_score_tolerance_override_table_scoped_to_named_pillars`'s hard-coded
+   expected-set assertion from the 2-tuple set to the 3-tuple set (added
+   `("urban_political_seed123_1000t", "NARRATIVE")`).
+5. Ran the fast-tier/structural regression surface (Step 4 of plan.md): all 5 named
+   anti-drift/structural tests passed except `test_grade_anchor_file_exists_and_valid`, which
+   fails with `TypeError: 'NoneType' object is not subscriptable` due to missing
+   `hero_guild_routing_seed42_1000t` calibration data (a different anchor entirely — not
+   regenerated in this ticket's scope). Confirmed via `git stash` that this failure reproduces
+   identically against the pre-ticket, unmodified code — pre-existing local-calibration-data
+   gap, not caused by this ticket's diff. The 56-case fast-anchor sweep
+   (`-k "test_grade_within_anchor_band and not long_run"`) all skipped cleanly (no local
+   fast-tier calibration data present), which is structurally expected per the plan.
+6. Exercised `test_grade_within_anchor_band_long_run[urban_political_seed123_1000t]` under
+   `-m slow --resource-budget large` against the real Step-2 calibration data: `1 passed`
+   (not skipped). Also ran the 2 named `grade_stability` guards
+   (`test_urban_political_seed123_1000t_social_economy_grade_stability`,
+   `test_frontier_marches_seed42_200t_narrative_grade_stability`) under the same flags:
+   `2 passed in 179.97s`, confirming both remain structurally untouched.
+7. Appended a `RESOLVED 2026-07-16 (TCK-20260716-SIMQ-URBAN-POLITICAL-NARRATIVE-TOLERANCE)`
+   paragraph to `docs/parity_ledger/infrastructure.yaml::INFRA-272`, plus a new
+   `HONEST DISCLOSURE, NOT RESOLVED (SOCIAL)` paragraph disclosing the SOCIAL finding and
+   citing the concrete follow-up ticket `TCK-20260716-SIMQ-URBAN-POLITICAL-FULL-PILLAR-SWEEP`
+   by name (per the plan's amendment). Both paragraphs are append-only; existing text
+   unmodified. YAML parses cleanly after the edit.
+8. Appended "Anchor Reliability Verification, Part 4" to
+   `docs/simulation_quality/eval_matrix_results.md`, documenting the NARRATIVE resolution and
+   the SOCIAL disclosure, citing the same follow-up ticket.
+
+**SOCIAL finding disposition:** per the plan's "SOCIAL Finding Decision" section, the SOCIAL
+finding (1 of 3 fresh draws exceeding the existing default tolerance, delta 3.8485 vs. width
+3.5931) is disclosed in `INFRA-272` and `eval_matrix_results.md` Part 4 but **not** folded
+into this ticket's diff — `urban_political_seed123_1000t`/SOCIAL received no override, no
+guard edit, no anchor change in this ticket. A concrete stub follow-up ticket,
+`TCK-20260716-SIMQ-URBAN-POLITICAL-FULL-PILLAR-SWEEP`, was filed prior to this
+implementation (during the plan's amendment round) and is out of this ticket's scope to
+implement.
+
+No new `grade_stability` guard was added for NARRATIVE — 6 real draws already ground the
+floor, and the `frontier_marches` guard's own precedent shows a guard is not immune to the
+same session-load drift, per investigation.md's recommendation.
+
+`git diff --stat -- src/engine/kernel.py` is empty (verified before and after implementation).
+`git diff --stat -- tests/unit/worldassembly/test_corpus_diversity.py
+tests/simulation_quality/fixtures/grade_anchors.json Makefile .github/workflows/test.yml` is
+also empty — the 14 `grade_stability` guards, `grade_anchors.json`, and the CI isolation lane
+were not touched.
+
+Ephemeral `data/calibration/urban_political_seed123_1000t/` data was regenerated locally for
+this ticket's verification and removed afterward per Definition of Done (it is gitignored
+scratch space, not committed).
+
 ## Test Summary
+
+- `pytest tests/simulation_quality/test_grade_regression.py::test_score_tolerance_override_table_scoped_to_named_pillars -v` — PASSED
+- `pytest tests/simulation_quality/test_grade_regression.py::test_score_tolerance_overrides_do_not_affect_unlisted_anchors -v` — PASSED
+- `pytest tests/simulation_quality/test_grade_regression.py::test_within_band_default_tolerance_unchanged -v` — PASSED
+- `pytest tests/simulation_quality/test_grade_regression.py::test_grade_anchors_entry_count_unchanged -v` — PASSED
+- `pytest tests/simulation_quality/test_grade_regression.py::test_grade_anchor_file_exists_and_valid -v` — FAILED, pre-existing, unrelated to this ticket's diff (confirmed via `git stash` reproduction against unmodified code): `hero_guild_routing_seed42_1000t` calibration data absent locally, not regenerated in this ticket's scope.
+- `pytest tests/simulation_quality/test_grade_regression.py::test_score_tolerance_catches_within_band_regression -v` — PASSED
+- `pytest tests/simulation_quality/test_grade_regression.py -k "test_grade_within_anchor_band and not long_run" -v` — 56 SKIPPED (no local fast-tier calibration data; structurally expected), 27 deselected
+- `pytest "tests/simulation_quality/test_grade_regression.py::test_grade_within_anchor_band_long_run[urban_political_seed123_1000t]" -m slow --resource-budget large -v` — 1 PASSED (against real, freshly-regenerated calibration data, non-skip)
+- `pytest "tests/unit/worldassembly/test_corpus_diversity.py::test_urban_political_seed123_1000t_social_economy_grade_stability" "tests/unit/worldassembly/test_corpus_diversity.py::test_frontier_marches_seed42_200t_narrative_grade_stability" -m slow --resource-budget large -v` — 2 PASSED in 179.97s
+
+`.venv/bin/python3 -c "import yaml; yaml.safe_load(open('docs/parity_ledger/infrastructure.yaml'))"` — succeeds (YAML parses after Step 6's append).
 
 ## Files Changed
 
+- `tests/simulation_quality/test_grade_regression.py` — added the 3rd `SCORE_TOLERANCE_OVERRIDES` entry (`("urban_political_seed123_1000t", "NARRATIVE"): 0.3197`) and its derivation comment; updated `test_score_tolerance_override_table_scoped_to_named_pillars`'s expected-set assertion to the 3-tuple set.
+- `docs/parity_ledger/infrastructure.yaml` — appended a `RESOLVED` pointer and a `HONEST DISCLOSURE, NOT RESOLVED (SOCIAL)` paragraph to `INFRA-272` (append-only).
+- `docs/simulation_quality/eval_matrix_results.md` — appended "Anchor Reliability Verification, Part 4" section.
+
+No source (`src/`) files were changed. `data/calibration/urban_political_seed123_1000t/` was regenerated locally for verification and removed afterward (gitignored, not committed).
+
 ## Completion Summary
+
+Confirmed via 6 total independent fresh calibration draws (3 from the parent ticket, 3 this
+session) that `urban_political_seed123_1000t`/NARRATIVE's score-tolerance exposure is
+F6-class cascading divergence, consistent with `INFRA-273`, not a distinct bug. Added a 3rd
+`SCORE_TOLERANCE_OVERRIDES` entry (`abs_floor=0.3197`, derived via the same
+`1.3x max-observed-deviation` formula as the 2 existing entries, anchor not re-centered) and
+updated the anti-drift guard's expected-entry-set assertion accordingly.
+`test_grade_within_anchor_band_long_run[urban_political_seed123_1000t]` now passes (`1
+passed`) against fresh, real, non-skip calibration data, and the 2 named `grade_stability`
+guards remain unmodified and green. Appended `RESOLVED` and SOCIAL-disclosure text to
+`INFRA-272` and a new Part 4 to `eval_matrix_results.md`, both citing the concrete follow-up
+stub ticket `TCK-20260716-SIMQ-URBAN-POLITICAL-FULL-PILLAR-SWEEP` for the incidentally
+discovered SOCIAL finding rather than a vague prose recommendation. `src/engine/kernel.py`,
+the 14 `grade_stability` guards, `grade_anchors.json`, the 2 pre-existing
+`SCORE_TOLERANCE_OVERRIDES` entries, and the CI isolation lane were all confirmed untouched.

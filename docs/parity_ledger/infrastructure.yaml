@@ -4285,6 +4285,31 @@
     coverage beyond the 3 named pillars) and grade_anchors.json/the anchor value were not
     touched. Tracked in a named follow-up ticket, TCK-20260716-SIMQ-URBAN-POLITICAL-NARRATIVE-TOLERANCE,
     same as this NOTE's original 3-pillar caveat was handled by TCK-20260715-SIMQ-CORPUS-DIVERSITY-SESSION-LOAD-FLAKE.
+    RESOLVED 2026-07-16 (TCK-20260716-SIMQ-URBAN-POLITICAL-NARRATIVE-TOLERANCE):
+    SCORE_TOLERANCE_OVERRIDES in test_grade_regression.py now widens
+    urban_political_seed123_1000t/NARRATIVE (abs_floor=0.3197, derived from 6 independent
+    fresh single-draw calibration runs -- 3 from the parent ticket plus 3 fresh this session,
+    max observed deviation 0.2459 -- via the same 1.3x max-observed-deviation formula as the
+    ECONOMY entry above; anchor not re-centered). Guarded by
+    test_score_tolerance_override_table_scoped_to_named_pillars and
+    test_score_tolerance_overrides_do_not_affect_unlisted_anchors.
+    test_grade_within_anchor_band_long_run[urban_political_seed123_1000t] confirmed passing
+    (1 passed, non-skip) against freshly-regenerated real calibration data.
+    HONEST DISCLOSURE, NOT RESOLVED (SOCIAL) (found during TCK-20260716-SIMQ-URBAN-POLITICAL-
+    NARRATIVE-TOLERANCE's own fresh-draw gathering, out of that ticket's authorized
+    NARRATIVE-only scope): 1 of 3 fresh single-draw urban_political_seed123_1000t
+    calibration runs in that ticket's session showed SOCIAL exceeding its existing default
+    tolerance (actual 21.814 vs anchor 17.9655, delta 3.8485 vs tolerance width 3.5931),
+    contradicting the prior ticket's (TCK-20260715-SIMQ-CORPUS-DIVERSITY-SESSION-LOAD-FLAKE)
+    "no override needed" finding for this same pillar/anchor with new evidence specifically
+    implicating it. No override or guard was added for it in this ticket (out of its
+    authorized NARRATIVE-only scope) and grade_anchors.json/the anchor value were not
+    touched. Tracked in a named follow-up ticket,
+    TCK-20260716-SIMQ-URBAN-POLITICAL-FULL-PILLAR-SWEEP, scoped as a full-pillar sweep of
+    urban_political_seed123_1000t's remaining untested-for-load-sensitivity pillars (SOCIAL,
+    COMBAT, PROGRESSION, WORLD -- the other pillars INFRA-273 names as sharing the same
+    confirmed delta-gated cascading-divergence mechanism), not a single-pillar SOCIAL-only
+    ticket, to break the repeating one-new-pillar-per-ticket pattern on this exact anchor.
   divergence_note: null
   support_boundary: >
     This entry documents corpus-scan validation coverage for the INFRA-271 fix only; it does not
