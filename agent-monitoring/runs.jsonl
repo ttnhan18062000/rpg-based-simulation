@@ -625,3 +625,8 @@
 {"run_id":"FOLDER-tickets-todos-agent-ops-dashboard","start_ts":"2026-07-16T16:24:43Z","end_ts":"2026-07-16T23:45:27Z","workflow":"implement-epic","tier":"epic","final_status":"DOD_BLOCKED","agent_count":2,"duration_s":26444}
 {"run_id":"TCK-20260716-AGENTOPS-ACTIVITY-GANTT","start_ts":"2026-07-16T23:53:47Z","end_ts":"2026-07-17T00:07:05Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":5,"duration_s":798}
 {"run_id":"TCK-20260716-AGENTOPS-REPLAY-TIMELINE","start_ts":"2026-07-17T00:17:04Z","end_ts":"2026-07-17T01:32:30Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":10,"duration_s":4526}
+{"run_id":"TCK-20260716-AGENTOPS-TICKETS-VIEW","start_ts":"2026-07-17T02:09:45Z","end_ts":"2026-07-17T03:15:15Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":10,"duration_s":3930}
+{"run_id":"TCK-20260716-AGENTOPS-BUILD-SERVE","start_ts":"2026-07-17T03:16:55Z","end_ts":"2026-07-17T03:55:57Z","workflow":"implement-ticket","tier":"standard","final_status":"DOD_BLOCKED","agent_count":9,"duration_s":2342}
+{"run_id":"FOLDER-tickets-todos-agent-ops-dashboard","start_ts":"2026-07-17T02:08:47Z","end_ts":"2026-07-17T04:00:25Z","workflow":"implement-epic","tier":"epic","final_status":"DOD_BLOCKED","agent_count":2,"duration_s":6698}
+{"run_id":"TCK-20260716-AGENTOPS-BUILD-SERVE","start_ts":"2026-07-17T03:16:55Z","end_ts":"2026-07-17T04:15:43Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":11,"duration_s":3528}
+{"run_id":"FOLDER-tickets-todos-agent-ops-dashboard","start_ts":"2026-07-17T02:08:47Z","end_ts":"2026-07-17T04:16:24Z","workflow":"implement-epic","tier":"epic","final_status":"DONE","agent_count":3,"duration_s":7657}

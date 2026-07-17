@@ -1,4 +1,4 @@
-.PHONY: help install install-py install-fe build dev serve stop clean lint profile-api memray-profile docs-serve docs-build docs-registry tag-report docs-artifacts knowledge-index knowledge-index-update search-server search-server-docker search-server-stop search-server-logs install-hooks eval-search evaluate evaluate-full simq-full-audit simq-full-audit-full simq-full-audit-slow simq-corpus-diversity-slow-isolated mcp-server-test world-list world-validate world-compile world-resolve world-inspect world-template catalog-list sim sim-debug sim-quick sim-world sim-sweep check-resources export-run retention-plan retention-clean warehouse-init warehouse-ingest typecheck-py perf-measure
+.PHONY: help install install-py install-fe build dev serve stop clean lint profile-api memray-profile docs-serve docs-build docs-registry tag-report docs-artifacts knowledge-index knowledge-index-update search-server search-server-docker search-server-stop search-server-logs install-hooks eval-search evaluate evaluate-full simq-full-audit simq-full-audit-full simq-full-audit-slow simq-corpus-diversity-slow-isolated mcp-server-test world-list world-validate world-compile world-resolve world-inspect world-template catalog-list sim sim-debug sim-quick sim-world sim-sweep check-resources export-run retention-plan retention-clean warehouse-init warehouse-ingest typecheck-py perf-measure dashboard-install dashboard-build dashboard-dev dashboard-serve
 
 # Default
 help: ## Show available commands
@@ -47,6 +47,25 @@ serve: build ## Build frontend + start production server
 
 serve-only: ## Start production server (assumes frontend already built)
 	python3 -m src serve --port 8000
+
+# ── Agent Ops Dashboard ──────────────────────────────────
+
+dashboard-install: ## Install agent ops dashboard frontend Node dependencies
+	cd dashboard-frontend && npm install
+
+dashboard-build: ## Build the agent ops dashboard frontend for production
+	cd dashboard-frontend && npm run build
+
+dashboard-dev: ## Start dashboard backend (reload) + Vite dev server concurrently
+	@echo "Starting dashboard backend on :8471 and Vite dev server..."
+	@echo "Press Ctrl+C to stop both."
+	@trap 'kill 0' INT; \
+		uvicorn src.api.agent_ops_dashboard.main:app --host 127.0.0.1 --port 8471 --reload & \
+		(cd dashboard-frontend && npm run dev) & \
+		wait
+
+dashboard-serve: dashboard-build ## Build dashboard frontend + start single-process production server (port 8420)
+	python3 -m src.api.agent_ops_dashboard.serve
 
 # ── Infrastructure & Testing ─────────────────────────────
 

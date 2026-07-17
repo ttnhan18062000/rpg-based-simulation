@@ -4507,15 +4507,67 @@
     HealthStatus).
   proof_type: feature
   test_path: >
-    tests/tools/test_agent_ops_dashboard_ingest.py, tests/tools/test_agent_ops_dashboard_api.py,
+    tests/tools/test_agent_ops_dashboard_ingest.py (including
+    test_get_tickets_and_across_dimensions_filters_tier_and_layer,
+    test_get_tickets_or_within_tag,
+    test_get_tickets_dimension_filter_and_tag_filter_combine_with_and — added under
+    TCK-20260716-AGENTOPS-TICKETS-VIEW to close a pre-existing coverage gap: this file's
+    original scope never directly exercised get_tickets()'s own AND-across-dimensions /
+    OR-within-tag filter semantics, only ingestion/parsing paths; additive only, no src/
+    file or existing test was modified), tests/tools/test_agent_ops_dashboard_api.py,
     tests/tools/test_agent_ops_dashboard_concurrency.py,
-    tests/tools/test_agent_ops_dashboard_api_boundary.py (29/29 passing, re-run and confirmed
+    tests/tools/test_agent_ops_dashboard_api_boundary.py (32/32 passing, re-run and confirmed
     during this parity update: `python3 -m pytest tests/tools/test_agent_ops_dashboard_ingest.py
     tests/tools/test_agent_ops_dashboard_api.py tests/tools/test_agent_ops_dashboard_concurrency.py
-    tests/tools/test_agent_ops_dashboard_api_boundary.py -q` -> "29 passed in 1.09s")
+    tests/tools/test_agent_ops_dashboard_api_boundary.py -q` -> "32 passed in 1.28s")
   divergence_note: null
   support_boundary: >
     Read-only over tickets/** and agent-monitoring/*.jsonl; never touches AuthoritativeState.
     Excludes frontend, build/serve tooling (AGENTOPS-BUILD-SERVE), the live phase/agent
     null-labeling gap (independent sibling ticket), and agent-monitoring retention/rotation
     (out of scope, unbounded growth accepted).
+- id: INFRA-276
+  text: >
+    Agent Ops Dashboard production serving (TCK-20260716-AGENTOPS-BUILD-SERVE): a sibling
+    module src/api/agent_ops_dashboard/serve.py builds a *separate* FastAPI() instance
+    (build_app(dist_dir)) that copies main.py's five typed /api/* routes onto it via
+    include_router (a copy operation) and mounts StaticFiles for the pre-built
+    dashboard-frontend/dist SPA at "/" -- main.py's own `app` object is never mutated and
+    never gains a StaticFiles/.mount() reference, satisfying the pre-existing
+    test_main_mounts_no_static_files regression guard. Exposes an argparse CLI
+    (--host/--port/--dist-dir, defaulting to 127.0.0.1:8420) and a __main__ entry point;
+    uvicorn is imported locally inside main() so importing the module never starts a
+    server. Four new Makefile targets (dashboard-install, dashboard-build, dashboard-dev,
+    dashboard-serve) mirror the existing install/build/dev/serve shape, with
+    dashboard-serve depending on dashboard-build. Explicitly outside INFRA-275's
+    support_boundary (dashboard-backend API/ingest), which this entry does not duplicate.
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  proof_type: regression
+  v2_evidence: >
+    src/api/agent_ops_dashboard/serve.py:29-42 (build_app -- constructs a new FastAPI()
+    at L39, include_router(main_app.router) at L40 copies main.py's routes without
+    mutating main.app, StaticFiles mount at L41), serve.py:45-50 (_build_parser --
+    --host/--port/--dist-dir with DEFAULT_HOST="127.0.0.1"/DEFAULT_PORT=8420 at L24-25),
+    serve.py:53-63 (main() / __main__ entry point, `import uvicorn` deferred inside
+    main() at L57 so import time never starts a server); Makefile:53-67 (dashboard-install,
+    dashboard-build, dashboard-dev, dashboard-serve targets; dashboard-serve depends on
+    dashboard-build), Makefile:1 (.PHONY list includes all four new targets).
+  test_path: >
+    tests/tools/test_agent_ops_dashboard_serve.py::test_serve_module_does_not_mutate_main_app_at_import_time,
+    tests/tools/test_agent_ops_dashboard_serve.py::test_serve_app_exposes_same_five_routes_as_main_app,
+    tests/tools/test_agent_ops_dashboard_serve.py::test_serve_app_returns_index_html_for_spa_root,
+    tests/tools/test_agent_ops_dashboard_serve.py::test_serve_app_raises_clear_error_when_dist_dir_missing,
+    tests/tools/test_agent_ops_dashboard_serve.py::test_serve_argparse_port_and_host_defaults,
+    tests/tools/test_agent_ops_dashboard_serve.py::test_serve_module_has_no_node_npm_invocation,
+    tests/tools/test_dashboard_makefile_targets.py (9/9 passing, re-run and confirmed during
+    this parity update: `python3 -m pytest tests/tools/test_agent_ops_dashboard_serve.py
+    tests/tools/test_dashboard_makefile_targets.py -q` -> "9 passed in 0.93s")
+  divergence_note: null
+  support_boundary: >
+    Production serving/build tooling only for the dashboard SPA + API co-mount; never
+    mutates AuthoritativeState. Does not touch or duplicate INFRA-275 (dashboard-backend
+    ingest/cache/API routes) -- consumes main.py's app read-only via include_router.
+    Excludes dashboard-dev's Vite dev-server process orchestration (Makefile-only,
+    no src/ behavior to verify) and any CI/deploy automation (out of scope).
