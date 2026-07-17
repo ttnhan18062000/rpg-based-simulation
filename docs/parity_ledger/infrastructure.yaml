@@ -4475,3 +4475,47 @@
     registry-regen gate), INFRA-264 (CI registry-drift backstop), or INFRA-265 (Scope-phase
     ticket-location resolution); this is a fourth, distinct gate-logic guarantee scoped to the
     Plan phase's unresolved-questions check specifically.
+- id: INFRA-275
+  text: >
+    Agent Ops Dashboard backend (TCK-20260716-AGENTOPS-DASHBOARD-BACKEND): a standalone FastAPI
+    app (src/api/agent_ops_dashboard/) exposing GET /api/tickets, /api/runs, /api/runs/{run_id},
+    /api/runs/{run_id}/timeline, /api/health as typed Pydantic response models only (never raw
+    dict/domain payloads). ingest.py owns all file reads over tickets/{inprogress,done,todos}/
+    and agent-monitoring/{runs,events,tools}.jsonl, reusing tools/validate_frontmatter.py's
+    extract_frontmatter(), tools/generate_registry.py's body-section parsers, and
+    tools/agent-monitoring/validate.py's tolerant load_jsonl + legacy allowlists rather than
+    reimplementing them. In-memory cache rebuilt on source mtime change, guarded by a single
+    threading.RLock() per method matching src/api/read_model_cache.py::ReadModelCache's exact
+    pattern (not the swap-based alternative). Ticket-to-run join returns all matching runs.jsonl
+    rows per ticket_id (not first-match-wins). is_inferred_active heuristic covers runs visible
+    in tools.jsonl but absent from runs_by_id within a 10-minute window.
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: >
+    src/api/agent_ops_dashboard/main.py:29-81 (5 typed routes: GET /api/tickets L29,
+    /api/runs L52, /api/runs/{run_id} L63, /api/runs/{run_id}/timeline L71, /api/health L79 —
+    all declare response_model=; no raw dict/domain payloads returned);
+    src/api/agent_ops_dashboard/ingest.py:348-361 (DashboardCache class, single
+    threading.RLock() at L361 guarding every public method, matching
+    src/api/read_model_cache.py:40's ReadModelCache.__init__ RLock-per-instance pattern),
+    ingest.py:178 (build_matching_runs — ticket-to-run join returns all matching rows,
+    not first-match-wins), ingest.py:234 (compute_inferred_active — 10-minute-window
+    tools.jsonl-vs-runs_by_id heuristic), ingest.py:264 (extract_files_touched — dedup);
+    src/api/agent_ops_dashboard/models.py:17-96 (9 Pydantic response models: RunMatchSummary,
+    TicketSummary, RawToolCall, FileTouch, TimelineEntry, RunSummary, RunDetail, RunTimeline,
+    HealthStatus).
+  proof_type: feature
+  test_path: >
+    tests/tools/test_agent_ops_dashboard_ingest.py, tests/tools/test_agent_ops_dashboard_api.py,
+    tests/tools/test_agent_ops_dashboard_concurrency.py,
+    tests/tools/test_agent_ops_dashboard_api_boundary.py (29/29 passing, re-run and confirmed
+    during this parity update: `python3 -m pytest tests/tools/test_agent_ops_dashboard_ingest.py
+    tests/tools/test_agent_ops_dashboard_api.py tests/tools/test_agent_ops_dashboard_concurrency.py
+    tests/tools/test_agent_ops_dashboard_api_boundary.py -q` -> "29 passed in 1.09s")
+  divergence_note: null
+  support_boundary: >
+    Read-only over tickets/** and agent-monitoring/*.jsonl; never touches AuthoritativeState.
+    Excludes frontend, build/serve tooling (AGENTOPS-BUILD-SERVE), the live phase/agent
+    null-labeling gap (independent sibling ticket), and agent-monitoring retention/rotation
+    (out of scope, unbounded growth accepted).
