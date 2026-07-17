@@ -22,7 +22,7 @@ function App() {
 
   return (
     <div className="h-screen flex flex-col overflow-hidden">
-      <header className="flex items-center px-5 h-14 border-b border-border shrink-0">
+      <header className="flex flex-wrap items-center gap-y-2 px-5 py-2 sm:py-0 sm:h-14 border-b border-border shrink-0">
         <h1 className="text-base font-semibold mr-4">Agent Ops Dashboard</h1>
         <nav className="flex items-center gap-1">
           {NAV_ITEMS.map((item) => (

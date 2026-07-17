@@ -18,7 +18,8 @@ from src.api.agent_ops_dashboard.models import (
     RunDetail,
     RunSummary,
     RunTimeline,
-    TicketSummary,
+    TicketFacets,
+    TicketsPage,
 )
 
 app = FastAPI(title="Agent Ops Dashboard API")
@@ -26,7 +27,7 @@ app = FastAPI(title="Agent Ops Dashboard API")
 _cache = DashboardCache()
 
 
-@app.get("/api/tickets", response_model=List[TicketSummary])
+@app.get("/api/tickets", response_model=TicketsPage)
 async def list_tickets(
     tier: Optional[str] = None,
     layer: Optional[str] = None,
@@ -36,8 +37,10 @@ async def list_tickets(
     lifecycle: Optional[str] = None,
     q: Optional[str] = None,
     sort: str = "date_desc",
-) -> List[TicketSummary]:
-    return _cache.get_tickets(
+    limit: int = Query(default=100, ge=1, le=500),
+    offset: int = Query(default=0, ge=0),
+) -> TicketsPage:
+    result = _cache.get_tickets(
         tier=tier,
         layer=layer,
         status=status,
@@ -46,6 +49,13 @@ async def list_tickets(
         lifecycle=lifecycle,
         q=q,
         sort=sort,
+        limit=limit,
+        offset=offset,
+    )
+    return TicketsPage(
+        items=list(result),
+        total_count=result.total_count,
+        facets=TicketFacets(**result.facets),
     )
 
 

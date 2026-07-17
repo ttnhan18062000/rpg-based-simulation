@@ -4504,7 +4504,35 @@
     tools.jsonl-vs-runs_by_id heuristic), ingest.py:264 (extract_files_touched — dedup);
     src/api/agent_ops_dashboard/models.py:17-96 (9 Pydantic response models: RunMatchSummary,
     TicketSummary, RawToolCall, FileTouch, TimelineEntry, RunSummary, RunDetail, RunTimeline,
-    HealthStatus).
+    HealthStatus). TCK-20260717-TICKET-TITLE-PARSE-FIX: ingest.py:98
+    (parse_ticket_file — TicketSummary.title now derived from
+    parse_body_section(body, "Title") instead of parse_h1_title(body); the H1
+    heading is mandated to equal ticket_id, so the prior call was structurally
+    guaranteed to return ticket_id, silently degrading title for the entire
+    corpus rendered by the dashboard. Mirrors tools/generate_registry.py::
+    collect_tickets()'s already-correct usage of parse_body_section for
+    title). This is a bug fix in already-verified code, not a change to the
+    verified contract itself — INFRA-275's typed-routes/cache/join/heuristic
+    claims are unaffected. TCK-20260717-TICKETS-TABLE-PAGINATION:
+    main.py:30-59 (GET /api/tickets now declares
+    limit: int = Query(default=100, ge=1, le=500) and offset: int =
+    Query(default=0, ge=0), response_model changed from List[TicketSummary]
+    to the new TicketsPage envelope model); ingest.py:345-358
+    (TicketsQueryResult — a list[TicketSummary] subclass carrying
+    total_count/facets, returned by get_tickets so the three pre-existing
+    direct-call filter tests keep iterating it unmodified), ingest.py:470-524
+    (get_tickets computes total_count and facets — sorted(set(...)) over
+    tier/layer/workflow_status/priority/tags — over the full
+    filtered-but-unpaginated result before slicing to
+    filtered[offset:offset+limit] when limit is not None; limit stays
+    Optional[int] = None at the cache layer, deliberately not aligned to
+    get_runs's hardcoded default, so existing zero-arg call sites still
+    return the full filtered set); models.py (new TicketFacets and
+    TicketsPage Pydantic models — items/total_count/facets — never a raw
+    dict at the route boundary). GET /api/runs, get_runs, and
+    _build_run_summary were not touched (confirmed via git diff — this
+    ticket's Out of Scope explicitly excludes /api/runs's own missing-
+    total_count gap).
   proof_type: feature
   test_path: >
     tests/tools/test_agent_ops_dashboard_ingest.py (including
@@ -4519,7 +4547,35 @@
     tests/tools/test_agent_ops_dashboard_api_boundary.py (32/32 passing, re-run and confirmed
     during this parity update: `python3 -m pytest tests/tools/test_agent_ops_dashboard_ingest.py
     tests/tools/test_agent_ops_dashboard_api.py tests/tools/test_agent_ops_dashboard_concurrency.py
-    tests/tools/test_agent_ops_dashboard_api_boundary.py -q` -> "32 passed in 1.28s")
+    tests/tools/test_agent_ops_dashboard_api_boundary.py -q` -> "32 passed in 1.28s").
+    TCK-20260717-TICKET-TITLE-PARSE-FIX added
+    tests/tools/test_agent_ops_dashboard_ingest.py::test_ticket_title_reads_body_section_not_h1_heading,
+    tests/tools/test_agent_ops_dashboard_ingest.py::test_ticket_title_missing_section_surfaces_empty_string_not_h1,
+    tests/tools/test_agent_ops_dashboard_api.py::test_get_tickets_title_is_distinct_from_ticket_id
+    (re-run and confirmed during this parity update:
+    `python3 -m pytest tests/tools/test_agent_ops_dashboard_ingest.py
+    tests/tools/test_agent_ops_dashboard_api.py -q` -> "28 passed in 0.79s").
+    TCK-20260717-TICKETS-TABLE-PAGINATION added
+    tests/tools/test_agent_ops_dashboard_ingest.py::test_get_tickets_slices_to_requested_page,
+    tests/tools/test_agent_ops_dashboard_ingest.py::test_get_tickets_limit_offset_default_preserves_existing_behavior,
+    tests/tools/test_agent_ops_dashboard_ingest.py::test_facets_source_reflects_full_filtered_corpus_not_just_current_page,
+    tests/tools/test_agent_ops_dashboard_api.py::test_list_tickets_route_rejects_out_of_range_limit,
+    tests/tools/test_agent_ops_dashboard_api.py::test_list_tickets_route_passes_limit_offset_through_to_cache
+    (re-run and confirmed during this parity update:
+    `python3 -m pytest tests/tools/test_agent_ops_dashboard_ingest.py
+    tests/tools/test_agent_ops_dashboard_api.py
+    tests/tools/test_agent_ops_dashboard_api_boundary.py
+    tests/tools/test_agent_ops_dashboard_concurrency.py
+    tests/tools/test_agent_ops_dashboard_frontend_api_surface.py
+    tests/architecture/test_api_read_model_guard.py -m "not slow" -q` -> "42 passed in 3.59s").
+    Frontend: dashboard-frontend/src/test/TicketsView.test.tsx (mockFetchReturning
+    updated to resolve the {items, total_count, facets} envelope; new
+    'TicketsView — pagination' and 'TicketsView — facets independent of page
+    window' describe blocks; rewritten 'TicketsView — client-side column sort'
+    asserting the column-sort-page-scoped-note observable signal),
+    dashboard-frontend/src/test/App.test.tsx (mockTicketsFetch updated to the
+    same envelope shape) — `npm test -- --run` -> "49 passed", `npx tsc -b`
+    and `npm run build` both clean.
   divergence_note: null
   support_boundary: >
     Read-only over tickets/** and agent-monitoring/*.jsonl; never touches AuthoritativeState.

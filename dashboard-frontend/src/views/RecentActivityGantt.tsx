@@ -3,6 +3,7 @@ import * as Tooltip from '@radix-ui/react-tooltip'
 import { useRunsPolling, type RunSummary } from '@/api'
 import { GanttBar } from '@/components/GanttBar'
 import { Legend } from '@/components/Legend'
+import { TimeAxis } from '@/components/TimeAxis'
 
 const SINCE_WINDOW_MS = 24 * 60 * 60 * 1000
 const NOW_TICK_MS = 1000
@@ -67,6 +68,7 @@ export function RecentActivityGantt({ onSelectRun }: RecentActivityGanttProps) {
   return (
     <div data-testid="recent-activity-gantt" className="flex flex-col h-full">
       <Legend />
+      <TimeAxis windowStartIso={sinceIso} windowEndIso={nowIso} />
       <Tooltip.Provider delayDuration={200}>
         <div className="relative flex-1 overflow-y-auto px-4 py-2">
           {runs.map((run) => (
@@ -86,7 +88,10 @@ export function RecentActivityGantt({ onSelectRun }: RecentActivityGanttProps) {
                 </div>
               </Tooltip.Trigger>
               <Tooltip.Portal>
-                <Tooltip.Content className="rounded-md bg-bg-tertiary px-2 py-1 text-[11px] text-text-primary border border-border">
+                <Tooltip.Content
+                  collisionPadding={8}
+                  className="rounded-md bg-bg-tertiary px-2 py-1 text-[11px] text-text-primary border border-border max-w-[280px] whitespace-normal"
+                >
                   {run.run_id} · {run.tier} · {run.workflow} · {durationLabel(run, nowIso)} · {run.agent_count} agents
                 </Tooltip.Content>
               </Tooltip.Portal>

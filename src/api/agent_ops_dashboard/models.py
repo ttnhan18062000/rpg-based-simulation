@@ -36,6 +36,20 @@ class TicketSummary(BaseModel):
     matching_runs: List[RunMatchSummary] = Field(default_factory=list)
 
 
+class TicketFacets(BaseModel):
+    tiers: List[str]
+    layers: List[str]
+    statuses: List[str]
+    priorities: List[str]
+    tags: List[str]
+
+
+class TicketsPage(BaseModel):
+    items: List[TicketSummary]
+    total_count: int
+    facets: TicketFacets
+
+
 class RawToolCall(BaseModel):
     tool: str
     input_summary: str

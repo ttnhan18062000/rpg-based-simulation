@@ -57,6 +57,12 @@ completes, its bar transitions to the solid authoritative style rather than
 cutting over instantly. Clicking a row navigates to the Replay Timeline view
 for that run.
 
+A fixed time axis (7 evenly-spaced ticks with local-time labels) renders
+above the scrollable row list, positioned via the same time-to-position
+mapping the bars themselves use, so axis ticks and bar edges never visually
+diverge. Each bar also carries an on-chart run-id label distinct from the
+hover tooltip, so identifying a run no longer requires hovering it.
+
 ### Replay Timeline
 
 A scrubbable phase/tool-call playback for one run, plus a files-touched
@@ -69,17 +75,32 @@ agent name — see Known Limitation below.
 
 ### Tickets view
 
-A filterable, sortable table over the ticket corpus. Filters are single-select
-per dimension for tier/layer/status/priority, and multi-select for tags —
-this matches the backend's actual query-parameter shape (each of the first
-four accepts one value; only `tag` is repeatable). Filtering across
-dimensions is AND (a ticket must match every active filter); filtering within
-the tag selection is OR (a ticket matches if it has any selected tag).
-Clicking the date column header re-sorts via the backend (the only
-server-side sort dimension); clicking any other column header (tier, layer,
-status, priority, tag) re-orders the already-fetched rows client-side — the
-backend does not support server-side sorting on those dimensions. Each row
-links to its matching run(s) in Replay Timeline.
+A filterable, sortable table over the ticket corpus, fetched one bounded
+page (up to 100 rows) at a time rather than the whole corpus at once.
+Filters are single-select per dimension for tier/layer/status/priority, and
+multi-select for tags — this matches the backend's actual query-parameter
+shape (each of the first four accepts one value; only `tag` is repeatable).
+Filtering across dimensions is AND (a ticket must match every active
+filter); filtering within the tag selection is OR (a ticket matches if it
+has any selected tag). Filter-dropdown and tag options are sourced from a
+server-computed summary of the full filtered corpus, so they never narrow
+to just the current page. The tag list itself is capped at 40
+always-visible options with a search box to narrow further, instead of
+dumping every tag in the corpus as an unbroken wall of buttons. Clicking
+the date column header re-sorts via the backend (the only server-side sort
+dimension); clicking any other column header (tier, layer, status,
+priority, tag) re-orders the current page's rows client-side — the backend
+does not support server-side sorting on those dimensions. Each row links
+to its matching run(s) in Replay Timeline.
+
+## Responsive Behavior
+
+At viewport widths at or below the `sm:` Tailwind breakpoint (~480px), the
+header's title and nav wrap onto a second line instead of crowding each
+other, and the header's height is no longer fixed so the wrapped line has
+room to render (the fixed height returns at `sm:` and above). Separately,
+the Recent Activity Gantt view's hover tooltip is bounded to a max width and
+wraps its text rather than overflowing past the right edge of the viewport.
 
 ## Known limitation
 

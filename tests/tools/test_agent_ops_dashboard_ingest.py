@@ -118,6 +118,42 @@ def test_ticket_run_join_no_matches_returns_empty_list():
 
 
 # ---------------------------------------------------------------------------
+# TCK-20260717-TICKET-TITLE-PARSE-FIX — title comes from the ## Title body
+# section, not the H1 heading (H1 is mandated to equal ticket_id, so
+# parse_h1_title would silently degrade title to the ticket_id for every
+# ticket in the corpus).
+# ---------------------------------------------------------------------------
+
+
+def test_ticket_title_reads_body_section_not_h1_heading(tmp_path):
+    p = _write_ticket_raw(
+        tmp_path,
+        "inprogress",
+        "TCK-20260101-TITLED",
+        body=(
+            "# TCK-20260101-TITLED\n\n## Title\nFix the frobnicator overheating bug\n\n"
+            "## Tier\nstandard\n\n## Type\nbug\n\n## Priority\nP2\n\n## Status\nOPEN\n"
+        ),
+    )
+    record = ingest.parse_ticket_file(p, "inprogress")
+    assert record is not None
+    assert record["title"] == "Fix the frobnicator overheating bug"
+    assert record["title"] != record["ticket_id"]
+
+
+def test_ticket_title_missing_section_surfaces_empty_string_not_h1(tmp_path):
+    p = _write_ticket_raw(
+        tmp_path,
+        "inprogress",
+        "TCK-20260101-NOTITLE",
+        body="# TCK-20260101-NOTITLE\n\n## Tier\nstandard\n\n## Type\nbug\n\n## Priority\nP2\n\n## Status\nOPEN\n",
+    )
+    record = ingest.parse_ticket_file(p, "inprogress")
+    assert record is not None
+    assert record["title"] == ""
+
+
+# ---------------------------------------------------------------------------
 # AC #6 — missing body sections surface as null, not error/placeholder
 # ---------------------------------------------------------------------------
 
@@ -431,6 +467,84 @@ def test_get_tickets_dimension_filter_and_tag_filter_combine_with_and(tmp_path):
     # excluded (wrong layer) even though it has tag "observability" not
     # "infra"; TCK-20260101-NOTAGMATCH is excluded (no "infra" tag).
     assert ids == {"TCK-20260101-MATCH", "TCK-20260101-OTHERTIER"}
+
+
+# ---------------------------------------------------------------------------
+# TCK-20260717-TICKETS-TABLE-PAGINATION — get_tickets limit/offset slicing,
+# default-preserves-full-set behavior, and facets computed pre-slice.
+# ---------------------------------------------------------------------------
+
+
+def _write_pagination_fixture_tickets(tmp_path: Path) -> None:
+    _init_repo_skeleton(tmp_path)
+
+    fixtures = [
+        # (ticket_id, date, tier, layer, workflow_status, priority, tags)
+        ("TCK-20260101-PAGE1", "2026-07-15", "epic", "ai", "BLOCKED", "P0", ["ai", "onpage"]),
+        ("TCK-20260101-PAGE2", "2026-07-14", "standard", "engine", "INPROGRESS", "P1", ["engine"]),
+        ("TCK-20260101-PAGE3", "2026-07-13", "hotfix", "combat", "OPEN", "P2", ["combat", "offpage"]),
+        ("TCK-20260101-PAGE4", "2026-07-12", "standard", "world", "DONE", "P1", ["world"]),
+        ("TCK-20260101-PAGE5", "2026-07-11", "standard", "world", "OPEN", "P2", ["world"]),
+    ]
+    for ticket_id, date, tier, layer, status, priority, tags in fixtures:
+        path = tmp_path / "tickets" / "inprogress" / f"{ticket_id}.md"
+        tags_yaml = "[" + ", ".join(tags) + "]"
+        frontmatter = (
+            f"status: active\nlayer: {layer}\nauthority: P1\naudience: agent\n"
+            f"ticket_id: {ticket_id}\nphase: open\ndate: {date}\ntags: {tags_yaml}"
+        )
+        path.write_text(
+            f"---\n{frontmatter}\n---\n\n"
+            f"# {ticket_id}\n\n## Tier\n{tier}\n\n## Type\nfeature\n\n"
+            f"## Priority\n{priority}\n\n## Status\n{status}\n",
+            encoding="utf-8",
+        )
+
+
+def test_get_tickets_slices_to_requested_page(tmp_path):
+    _write_pagination_fixture_tickets(tmp_path)
+
+    cache = ingest.DashboardCache(repo_root=tmp_path)
+    results = cache.get_tickets(limit=2, offset=1)
+
+    # Default sort is date_desc, so the full order is PAGE1..PAGE5; offset=1,
+    # limit=2 must return exactly [PAGE2, PAGE3].
+    assert [r.ticket_id for r in results] == ["TCK-20260101-PAGE2", "TCK-20260101-PAGE3"]
+    assert results.total_count == 5
+
+
+def test_get_tickets_limit_offset_default_preserves_existing_behavior(tmp_path):
+    _write_pagination_fixture_tickets(tmp_path)
+
+    cache = ingest.DashboardCache(repo_root=tmp_path)
+    results = cache.get_tickets()
+
+    assert len(results) == 5
+    assert results.total_count == 5
+    assert {r.ticket_id for r in results} == {
+        "TCK-20260101-PAGE1",
+        "TCK-20260101-PAGE2",
+        "TCK-20260101-PAGE3",
+        "TCK-20260101-PAGE4",
+        "TCK-20260101-PAGE5",
+    }
+
+
+def test_facets_source_reflects_full_filtered_corpus_not_just_current_page(tmp_path):
+    _write_pagination_fixture_tickets(tmp_path)
+
+    cache = ingest.DashboardCache(repo_root=tmp_path)
+    results = cache.get_tickets(limit=1, offset=0)
+
+    # Only PAGE1 (tier=epic, layer=ai, tags=[ai, onpage]) comes back as items,
+    # but facets must still carry values that only exist on later pages.
+    assert [r.ticket_id for r in results] == ["TCK-20260101-PAGE1"]
+    assert results.facets["tiers"] == ["epic", "hotfix", "standard"]
+    assert results.facets["layers"] == ["ai", "combat", "engine", "world"]
+    assert results.facets["statuses"] == ["BLOCKED", "DONE", "INPROGRESS", "OPEN"]
+    assert results.facets["priorities"] == ["P0", "P1", "P2"]
+    assert "offpage" in results.facets["tags"]
+    assert "world" in results.facets["tags"]
 
 
 def test_malformed_jsonl_line_is_skipped_and_counted():

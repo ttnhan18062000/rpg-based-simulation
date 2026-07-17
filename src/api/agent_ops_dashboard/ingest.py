@@ -7,8 +7,10 @@ rebuilt on source mtime change.
 
 Reuses (never reimplements):
 - tools/validate_frontmatter.py::extract_frontmatter for ticket frontmatter
-- tools/generate_registry.py::parse_body_section/parse_h1_title/_strip_frontmatter
-  for ticket body-section fields (title, tier, ticket_type, priority, workflow_status)
+- tools/generate_registry.py::parse_body_section/_strip_frontmatter for ticket
+  body-section fields (title, tier, ticket_type, priority, workflow_status) —
+  title comes from the ## Title body section, not the H1 heading, since the
+  H1 is mandated to equal the ticket_id and would otherwise mask the title
 - tools/agent-monitoring/validate.py::load_jsonl (the tolerant loader — catches
   JSONDecodeError per line, warns, continues) and its legacy status allowlists
 """
@@ -30,7 +32,7 @@ for _p in (_TOOLS_DIR, _MONITORING_TOOLS_DIR):
         sys.path.insert(0, str(_p))
 
 from validate_frontmatter import extract_frontmatter  # noqa: E402
-from generate_registry import parse_body_section, parse_h1_title, _strip_frontmatter  # noqa: E402
+from generate_registry import parse_body_section, _strip_frontmatter  # noqa: E402
 import validate  # noqa: E402  (tools/agent-monitoring/validate.py)
 
 from src.api.agent_ops_dashboard.models import (
@@ -93,7 +95,7 @@ def parse_ticket_file(path: Path, lifecycle_state: str) -> Optional[dict]:
         return None
 
     body = _strip_frontmatter(text)
-    title = parse_h1_title(body)
+    title = parse_body_section(body, "Title")
     tier = parse_body_section(body, "Tier") or None
     ticket_type = parse_body_section(body, "Type") or None
     priority = parse_body_section(body, "Priority") or None
@@ -340,6 +342,26 @@ def _ticket_record_to_summary(record: dict) -> TicketSummary:
     )
 
 
+class TicketsQueryResult(list):
+    """The requested page of TicketSummary, plus total_count/facets computed
+    over the full filtered-but-unpaginated result. Subclasses list (rather
+    than wrapping items in a dict/namedtuple) so that the pre-existing
+    direct-call get_tickets tests — which iterate the return value and read
+    .ticket_id off each element — keep passing unmodified: with the default
+    limit=None, the page equals the full filtered set, so iterating this
+    object is indistinguishable from iterating the old bare list.
+    """
+
+    def __init__(self, items: list[TicketSummary], total_count: int, facets: dict[str, list[str]]):
+        super().__init__(items)
+        self.total_count = total_count
+        self.facets = facets
+
+
+def _distinct_sorted(values) -> list[str]:
+    return sorted({v for v in values if v})
+
+
 # ---------------------------------------------------------------------------
 # Step 7 — RLock-per-method cache, matching ReadModelCache's exact pattern
 # ---------------------------------------------------------------------------
@@ -456,7 +478,9 @@ class DashboardCache:
         lifecycle: Optional[str] = None,
         q: Optional[str] = None,
         sort: str = "date_desc",
-    ) -> list[TicketSummary]:
+        limit: Optional[int] = None,
+        offset: int = 0,
+    ) -> TicketsQueryResult:
         with self._lock:
             self._maybe_rebuild()
             records = list(self._tickets_by_id.values())
@@ -482,7 +506,22 @@ class DashboardCache:
                 filtered.append(r)
 
             filtered.sort(key=lambda r: r["date"] or "", reverse=(sort != "date_asc"))
-            return [_ticket_record_to_summary(r) for r in filtered]
+
+            total_count = len(filtered)
+            facets = {
+                "tiers": _distinct_sorted(r["tier"] for r in filtered),
+                "layers": _distinct_sorted(r["layer"] for r in filtered),
+                "statuses": _distinct_sorted(r["workflow_status"] for r in filtered),
+                "priorities": _distinct_sorted(r["priority"] for r in filtered),
+                "tags": _distinct_sorted(tag for r in filtered for tag in r["tags"]),
+            }
+
+            paged = filtered[offset : offset + limit] if limit is not None else filtered
+            return TicketsQueryResult(
+                items=[_ticket_record_to_summary(r) for r in paged],
+                total_count=total_count,
+                facets=facets,
+            )
 
     def get_runs(
         self,

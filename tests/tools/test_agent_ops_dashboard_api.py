@@ -69,6 +69,85 @@ def test_run_detail_200_for_known_run_id(tmp_path):
 
 
 # ---------------------------------------------------------------------------
+# TCK-20260717-TICKET-TITLE-PARSE-FIX — GET /api/tickets title field must be
+# distinct from ticket_id for a ticket with a real ## Title section.
+# ---------------------------------------------------------------------------
+
+
+def test_get_tickets_title_is_distinct_from_ticket_id(tmp_path):
+    (tmp_path / "agent-monitoring").mkdir(parents=True, exist_ok=True)
+    (tmp_path / "tickets" / "inprogress").mkdir(parents=True, exist_ok=True)
+    (tmp_path / "tickets" / "done").mkdir(parents=True, exist_ok=True)
+    (tmp_path / "tickets" / "todos").mkdir(parents=True, exist_ok=True)
+
+    ticket_path = tmp_path / "tickets" / "inprogress" / "TCK-20260101-TITLED.md"
+    ticket_path.write_text(
+        "---\nstatus: active\nlayer: observability\nauthority: P1\naudience: agent\n"
+        "ticket_id: TCK-20260101-TITLED\nphase: open\ndate: 2026-07-16\ntags: []\n---\n\n"
+        "# TCK-20260101-TITLED\n\n## Title\nFix the frobnicator overheating bug\n\n"
+        "## Tier\nstandard\n\n## Type\nbug\n\n## Priority\nP2\n\n## Status\nOPEN\n",
+        encoding="utf-8",
+    )
+
+    client = _client_with_repo(tmp_path)
+    resp = client.get("/api/tickets")
+    assert resp.status_code == 200
+    tickets = resp.json()["items"]
+    ticket = next(t for t in tickets if t["ticket_id"] == "TCK-20260101-TITLED")
+    assert ticket["title"] == "Fix the frobnicator overheating bug"
+    assert ticket["title"] != ticket["ticket_id"]
+
+
+# ---------------------------------------------------------------------------
+# TCK-20260717-TICKETS-TABLE-PAGINATION — GET /api/tickets limit/offset
+# validation and pass-through to the cache layer.
+# ---------------------------------------------------------------------------
+
+
+def _write_multi_ticket_fixture(tmp_path: Path) -> None:
+    (tmp_path / "agent-monitoring").mkdir(parents=True, exist_ok=True)
+    (tmp_path / "tickets" / "inprogress").mkdir(parents=True, exist_ok=True)
+    (tmp_path / "tickets" / "done").mkdir(parents=True, exist_ok=True)
+    (tmp_path / "tickets" / "todos").mkdir(parents=True, exist_ok=True)
+
+    for ticket_id, date in [
+        ("TCK-20260101-ROWA", "2026-07-15"),
+        ("TCK-20260101-ROWB", "2026-07-14"),
+        ("TCK-20260101-ROWC", "2026-07-13"),
+    ]:
+        path = tmp_path / "tickets" / "inprogress" / f"{ticket_id}.md"
+        path.write_text(
+            "---\nstatus: active\nlayer: observability\nauthority: P1\naudience: agent\n"
+            f"ticket_id: {ticket_id}\nphase: open\ndate: {date}\ntags: []\n---\n\n"
+            f"# {ticket_id}\n\n## Tier\nstandard\n\n## Type\nfeature\n\n"
+            "## Priority\nP2\n\n## Status\nOPEN\n",
+            encoding="utf-8",
+        )
+
+
+def test_list_tickets_route_rejects_out_of_range_limit(tmp_path):
+    client = _client_with_repo(tmp_path)
+
+    assert client.get("/api/tickets?limit=0").status_code == 422
+    assert client.get("/api/tickets?limit=501").status_code == 422
+    assert client.get("/api/tickets?offset=-1").status_code == 422
+
+
+def test_list_tickets_route_passes_limit_offset_through_to_cache(tmp_path):
+    _write_multi_ticket_fixture(tmp_path)
+    client = _client_with_repo(tmp_path)
+
+    resp = client.get("/api/tickets?limit=1&offset=1")
+    assert resp.status_code == 200
+    body = resp.json()
+    assert len(body["items"]) == 1
+    # Default sort is date_desc: ROWA (07-15), ROWB (07-14), ROWC (07-13).
+    # limit=1, offset=1 must return exactly ROWB.
+    assert body["items"][0]["ticket_id"] == "TCK-20260101-ROWB"
+    assert body["total_count"] == 3
+
+
+# ---------------------------------------------------------------------------
 # Malformed JSONL line: never crashes the API, counted in /api/health
 # ---------------------------------------------------------------------------
 

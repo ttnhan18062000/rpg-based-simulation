@@ -1,8 +1,11 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { compile } from '@tailwindcss/node'
+import { readFileSync } from 'node:fs'
+import path from 'node:path'
 import { TicketsView } from '../views/TicketsView'
-import type { TicketSummary } from '../api'
+import type { TicketSummary, TicketsFacets } from '../api'
 import TICKETS_VIEW_SOURCE from '../views/TicketsView.tsx?raw'
 
 function makeTicket(overrides: Partial<TicketSummary> = {}): TicketSummary {
@@ -23,8 +26,43 @@ function makeTicket(overrides: Partial<TicketSummary> = {}): TicketSummary {
   }
 }
 
-function mockFetchReturning(response: TicketSummary[]) {
-  const mockFetch = vi.fn().mockResolvedValue({ ok: true, json: async () => response })
+// Mirrors what a real backend would return as `facets` for a filtered set
+// equal to `items` — i.e. this page happens to be the entire corpus. Existing
+// tests rely on the filter dropdowns being populated from exactly this
+// derivation, since that was `distinctValues`/`distinctTags`'s old behavior
+// over the (formerly unbounded) fetch result.
+function computeFacetsFromItems(items: TicketSummary[]): TicketsFacets {
+  function distinct(pick: (ticket: TicketSummary) => string | null): string[] {
+    const values = new Set<string>()
+    for (const item of items) {
+      const value = pick(item)
+      if (value) values.add(value)
+    }
+    return Array.from(values).sort()
+  }
+  const tags = new Set<string>()
+  for (const item of items) {
+    for (const tag of item.tags) tags.add(tag)
+  }
+  return {
+    tiers: distinct((t) => t.tier),
+    layers: distinct((t) => t.layer),
+    statuses: distinct((t) => t.workflow_status),
+    priorities: distinct((t) => t.priority),
+    tags: Array.from(tags).sort(),
+  }
+}
+
+function mockFetchReturning(
+  items: TicketSummary[],
+  envelopeOverrides: Partial<{ total_count: number; facets: TicketsFacets }> = {},
+) {
+  const body = {
+    items,
+    total_count: envelopeOverrides.total_count ?? items.length,
+    facets: envelopeOverrides.facets ?? computeFacetsFromItems(items),
+  }
+  const mockFetch = vi.fn().mockResolvedValue({ ok: true, json: async () => body })
   globalThis.fetch = mockFetch as unknown as typeof fetch
   return mockFetch
 }
@@ -182,16 +220,20 @@ describe('TicketsView — client-side column sort', () => {
     vi.restoreAllMocks()
   })
 
-  it('a tier column-header click re-orders rendered rows without triggering a new fetchTickets call', async () => {
+  it('a tier column-header click re-orders rendered rows without triggering a new fetchTickets call, and surfaces a page-scoped-sort note when more than one page exists', async () => {
     const user = userEvent.setup()
-    const mockFetch = mockFetchReturning([
-      makeTicket({ ticket_id: 'TCK-B', tier: 'standard' }),
-      makeTicket({ ticket_id: 'TCK-A', tier: 'hotfix' }),
-    ])
+    const mockFetch = mockFetchReturning(
+      [
+        makeTicket({ ticket_id: 'TCK-B', tier: 'standard' }),
+        makeTicket({ ticket_id: 'TCK-A', tier: 'hotfix' }),
+      ],
+      { total_count: 500 },
+    )
 
     render(<TicketsView onSelectRun={noopOnSelectRun} />)
     await screen.findByTestId('tickets-table')
 
+    expect(screen.queryByTestId('column-sort-page-scoped-note')).toBeNull()
     const callsBeforeSort = mockFetch.mock.calls.length
 
     await user.click(screen.getByTestId('col-header-tier'))
@@ -202,15 +244,213 @@ describe('TicketsView — client-side column sort', () => {
       'ticket-row-TCK-B',
     ])
 
-    const callsAfterSort = mockFetch.mock.calls.length
-    if (callsAfterSort > callsBeforeSort) {
-      const lastCall = mockFetch.mock.calls[callsAfterSort - 1]
-      const requestedUrl = String(lastCall[0])
-      const sortParam = new URL(requestedUrl, 'http://localhost').searchParams.get('sort')
-      expect(['date_asc', 'date_desc']).toContain(sortParam)
-    } else {
-      expect(callsAfterSort).toBe(callsBeforeSort)
-    }
+    expect(mockFetch.mock.calls.length).toBe(callsBeforeSort)
+    expect(screen.getByTestId('column-sort-page-scoped-note')).toBeInTheDocument()
+  })
+
+  it('does not surface the page-scoped-sort note when the loaded page is the entire corpus', async () => {
+    const user = userEvent.setup()
+    mockFetchReturning(
+      [
+        makeTicket({ ticket_id: 'TCK-B', tier: 'standard' }),
+        makeTicket({ ticket_id: 'TCK-A', tier: 'hotfix' }),
+      ],
+      { total_count: 2 },
+    )
+
+    render(<TicketsView onSelectRun={noopOnSelectRun} />)
+    await screen.findByTestId('tickets-table')
+
+    await user.click(screen.getByTestId('col-header-tier'))
+
+    expect(screen.queryByTestId('column-sort-page-scoped-note')).toBeNull()
+  })
+})
+
+describe('TicketsView — pagination', () => {
+  beforeEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  it('renders only page-size ticket rows when the mocked corpus exceeds 1000 rows', async () => {
+    const pageItems = Array.from({ length: 100 }, (_, i) => makeTicket({ ticket_id: `TCK-${i}` }))
+    mockFetchReturning(pageItems, { total_count: 1109 })
+
+    render(<TicketsView onSelectRun={noopOnSelectRun} />)
+    await screen.findByTestId('tickets-table')
+
+    expect(screen.getAllByTestId(/^ticket-row-/).length).toBe(100)
+  })
+
+  it('requests a bounded limit/offset param on initial load', async () => {
+    const mockFetch = mockFetchReturning([makeTicket()])
+
+    render(<TicketsView onSelectRun={noopOnSelectRun} />)
+    await screen.findByTestId('tickets-table')
+
+    const firstCall = mockFetch.mock.calls[0]
+    const requestedUrl = String(firstCall[0])
+    expect(requestedUrl).toContain('limit=100')
+    expect(requestedUrl).toContain('offset=0')
+  })
+})
+
+describe('TicketsView — facets independent of page window', () => {
+  beforeEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  it('filter dropdown options include values from tickets outside the currently-loaded page', async () => {
+    mockFetchReturning([makeTicket({ ticket_id: 'TCK-A', tier: 'standard' })], {
+      total_count: 500,
+      facets: {
+        tiers: ['epic', 'standard'],
+        layers: ['combat', 'observability'],
+        statuses: ['OPEN'],
+        priorities: ['P1', 'P2'],
+        tags: ['observability', 'offpage-tag'],
+      },
+    })
+
+    render(<TicketsView onSelectRun={noopOnSelectRun} />)
+    await screen.findByTestId('tickets-table')
+
+    const tierSelect = screen.getByTestId('filter-tier') as HTMLSelectElement
+    const tierOptionValues = Array.from(tierSelect.options).map((option) => option.value)
+    expect(tierOptionValues).toContain('epic')
+
+    expect(screen.getByTestId('filter-tag-offpage-tag')).toBeInTheDocument()
+  })
+})
+
+describe('TicketsView — tag search/collapse', () => {
+  beforeEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  it('typing a substring into the tag search narrows the rendered tag options case-insensitively without a new fetchTickets call', async () => {
+    const user = userEvent.setup()
+    const mockFetch = mockFetchReturning([makeTicket({ ticket_id: 'TCK-A', tags: ['observability'] })], {
+      facets: {
+        tiers: ['standard'],
+        layers: ['observability'],
+        statuses: ['OPEN'],
+        priorities: ['P1'],
+        tags: ['observability', 'infra', 'combat', 'economy', 'strategy'],
+      },
+    })
+
+    render(<TicketsView onSelectRun={noopOnSelectRun} />)
+    await screen.findByTestId('tickets-table')
+
+    const callsBeforeSearch = mockFetch.mock.calls.length
+    const rowsBeforeSearch = screen.getAllByTestId(/^ticket-row-/).map((row) => row.getAttribute('data-testid'))
+
+    await user.type(screen.getByTestId('filter-tags-search'), 'co')
+
+    expect(screen.getByTestId('filter-tag-combat')).toBeInTheDocument()
+    expect(screen.getByTestId('filter-tag-economy')).toBeInTheDocument()
+    expect(screen.queryByTestId('filter-tag-observability')).toBeNull()
+    expect(screen.queryByTestId('filter-tag-infra')).toBeNull()
+    expect(screen.queryByTestId('filter-tag-strategy')).toBeNull()
+
+    expect(mockFetch.mock.calls.length).toBe(callsBeforeSearch)
+    const rowsAfterSearch = screen.getAllByTestId(/^ticket-row-/).map((row) => row.getAttribute('data-testid'))
+    expect(rowsAfterSearch).toEqual(rowsBeforeSearch)
+  })
+
+  it('the tag selector does not render all ~1,309 facets.tags option buttons simultaneously on initial load', async () => {
+    const manyTags = Array.from({ length: 1500 }, (_, i) => `tag-${String(i).padStart(4, '0')}`)
+    mockFetchReturning([makeTicket({ ticket_id: 'TCK-A' })], {
+      facets: {
+        tiers: ['standard'],
+        layers: ['observability'],
+        statuses: ['OPEN'],
+        priorities: ['P1'],
+        tags: manyTags,
+      },
+    })
+
+    render(<TicketsView onSelectRun={noopOnSelectRun} />)
+    await screen.findByTestId('tickets-table')
+
+    expect(screen.getAllByTestId(/^filter-tag-/).length).toBe(40)
+  })
+
+  it('an off-page facets tag remains reachable through the tag search after narrowing', async () => {
+    const user = userEvent.setup()
+    const manyTags = Array.from({ length: 1500 }, (_, i) => `tag-${String(i).padStart(4, '0')}`)
+    manyTags.push('zzz-offpage-target')
+    mockFetchReturning([makeTicket({ ticket_id: 'TCK-A' })], {
+      facets: {
+        tiers: ['standard'],
+        layers: ['observability'],
+        statuses: ['OPEN'],
+        priorities: ['P1'],
+        tags: manyTags,
+      },
+    })
+
+    render(<TicketsView onSelectRun={noopOnSelectRun} />)
+    await screen.findByTestId('tickets-table')
+
+    expect(screen.queryByTestId('filter-tag-zzz-offpage-target')).toBeNull()
+
+    await user.type(screen.getByTestId('filter-tags-search'), 'zzz-offpage')
+
+    expect(screen.getByTestId('filter-tag-zzz-offpage-target')).toBeInTheDocument()
+  })
+
+  it('selecting a tag through the search-narrowed control still sends exactly one repeated tag= query param per selection', async () => {
+    const user = userEvent.setup()
+    const fiftyTags = Array.from({ length: 50 }, (_, i) => `tag-${String(i).padStart(2, '0')}`)
+    const mockFetch = mockFetchReturning([makeTicket({ ticket_id: 'TCK-A' })], {
+      facets: {
+        tiers: ['standard'],
+        layers: ['observability'],
+        statuses: ['OPEN'],
+        priorities: ['P1'],
+        tags: fiftyTags,
+      },
+    })
+
+    render(<TicketsView onSelectRun={noopOnSelectRun} />)
+    await screen.findByTestId('tickets-table')
+
+    await user.type(screen.getByTestId('filter-tags-search'), 'tag-07')
+    await user.click(screen.getByTestId('filter-tag-tag-07'))
+
+    const lastCall = mockFetch.mock.calls[mockFetch.mock.calls.length - 1]
+    const requestedUrl = String(lastCall[0])
+    const tagMatches = requestedUrl.match(/tag=/g) ?? []
+    expect(tagMatches.length).toBe(1)
+    expect(requestedUrl).toContain('tag=tag-07')
+  })
+
+  it('clearing the tag search restores the full (bounded) option list', async () => {
+    const user = userEvent.setup()
+    mockFetchReturning([makeTicket({ ticket_id: 'TCK-A' })], {
+      facets: {
+        tiers: ['standard'],
+        layers: ['observability'],
+        statuses: ['OPEN'],
+        priorities: ['P1'],
+        tags: ['observability', 'infra', 'combat'],
+      },
+    })
+
+    render(<TicketsView onSelectRun={noopOnSelectRun} />)
+    await screen.findByTestId('tickets-table')
+
+    const searchInput = screen.getByTestId('filter-tags-search')
+    await user.type(searchInput, 'obs')
+    expect(screen.queryByTestId('filter-tag-infra')).toBeNull()
+
+    await user.clear(searchInput)
+
+    expect(screen.getByTestId('filter-tag-observability')).toBeInTheDocument()
+    expect(screen.getByTestId('filter-tag-infra')).toBeInTheDocument()
+    expect(screen.getByTestId('filter-tag-combat')).toBeInTheDocument()
   })
 })
 
@@ -230,5 +470,122 @@ describe('TicketsView — anti-drift source guards', () => {
       expect(['date_asc', 'date_desc'].some((literal) => assignment.includes(literal))).toBe(true)
     }
     expect(TICKETS_VIEW_SOURCE).not.toMatch(/'tier_asc'|'tier_desc'|'layer_asc'|'layer_desc'|'priority_asc'|'priority_desc'|'status_asc'|'status_desc'|'tag_asc'|'tag_desc'/)
+  })
+})
+
+// jsdom's getComputedStyle does not evaluate rules nested inside @layer at
+// all (verified empirically: a rule declared only inside `@layer utilities`
+// never affects computed style, even though CSSOM parses it correctly as a
+// CSSLayerBlockRule). A real browser resolves cascade layers per spec —
+// unlayered rules always beat layered ones regardless of specificity, and
+// among layered rules the later-declared layer wins — so this walk
+// reimplements just that comparison against the real, Tailwind-compiled
+// index.css to prove which declaration actually wins for a given element.
+function findLayerPriorityOrder(sheet: CSSStyleSheet): string[] {
+  const order: string[] = []
+  for (const rule of Array.from(sheet.cssRules)) {
+    if (rule instanceof CSSLayerStatementRule) {
+      for (const name of Array.from(rule.nameList)) {
+        if (!order.includes(name)) order.push(name)
+      }
+    } else if (rule instanceof CSSLayerBlockRule && !order.includes(rule.name)) {
+      order.push(rule.name)
+    }
+  }
+  return order
+}
+
+function resolveCascadeWinner(sheet: CSSStyleSheet, element: Element, property: string): string | null {
+  const layerPriorityOrder = findLayerPriorityOrder(sheet)
+  const unlayeredValues: string[] = []
+  const layeredValues: { priority: number; value: string }[] = []
+
+  function visit(rules: CSSRuleList, layerName: string | null) {
+    for (const rule of Array.from(rules)) {
+      if (rule instanceof CSSLayerBlockRule) {
+        visit(rule.cssRules, rule.name)
+        continue
+      }
+      if (!(rule instanceof CSSStyleRule)) continue
+      let matches: boolean
+      try {
+        matches = element.matches(rule.selectorText)
+      } catch {
+        // jsdom's selector engine rejects some of Tailwind preflight's
+        // vendor-prefixed pseudo-classes (e.g. :-moz-focusring); those never
+        // apply to our td elements, so treat an unparseable selector as a miss.
+        matches = false
+      }
+      if (!matches) continue
+      const value = rule.style.getPropertyValue(property)
+      if (!value) continue
+      if (layerName === null) {
+        unlayeredValues.push(value)
+      } else {
+        layeredValues.push({ priority: layerPriorityOrder.indexOf(layerName), value })
+      }
+    }
+  }
+
+  visit(sheet.cssRules, null)
+  if (unlayeredValues.length > 0) return unlayeredValues[unlayeredValues.length - 1]
+  if (layeredValues.length === 0) return null
+  return layeredValues.reduce((best, current) => (current.priority > best.priority ? current : best)).value
+}
+
+const DASHBOARD_ROOT = process.cwd()
+const INDEX_CSS_SOURCE = readFileSync(path.join(DASHBOARD_ROOT, 'src/index.css'), 'utf8')
+
+describe('TicketsView — index.css reset does not zero out padding utilities', () => {
+  beforeEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  it('the compiled reset no longer sits unlayered above the utilities layer, so pr-3 wins the cascade on the Tier and Layer cells', async () => {
+    mockFetchReturning([makeTicket({ ticket_id: 'TCK-PAD', tier: 'standard', layer: 'engine' })])
+
+    render(<TicketsView onSelectRun={noopOnSelectRun} />)
+    await screen.findByTestId('tickets-table')
+
+    const tierCell = screen.getByTestId('tier-cell-TCK-PAD')
+    const layerCell = tierCell.nextElementSibling as HTMLElement
+    expect(layerCell).not.toBeNull()
+
+    const candidates = Array.from(
+      new Set([...tierCell.className.split(/\s+/), ...layerCell.className.split(/\s+/)].filter(Boolean)),
+    )
+
+    const compiler = await compile(INDEX_CSS_SOURCE, { base: DASHBOARD_ROOT, onDependency: () => {} })
+    const compiledCss = compiler.build(candidates)
+
+    const styleTag = document.createElement('style')
+    styleTag.textContent = compiledCss
+    document.head.appendChild(styleTag)
+    const sheet = styleTag.sheet as CSSStyleSheet
+
+    const tierPaddingRight = resolveCascadeWinner(sheet, tierCell, 'padding-right')
+    const layerPaddingRight = resolveCascadeWinner(sheet, layerCell, 'padding-right')
+
+    // pr-3 resolves to calc(var(--spacing) * 3) with --spacing: 0.25rem,
+    // i.e. 0.25rem * 3 = 0.75rem = 12px at the default 16px root font size —
+    // the exact scale value the ticket's reported "standardengine" run-together
+    // bug depended on being silently zeroed.
+    expect(tierPaddingRight).toBe('calc(var(--spacing) * 3)')
+    expect(layerPaddingRight).toBe('calc(var(--spacing) * 3)')
+    expect(tierPaddingRight).not.toBe('0px')
+    expect(tierPaddingRight).not.toBe('0')
+
+    // Independently confirm that declaration is the 12px scale step Tailwind
+    // ships by default, not an accidental theme override.
+    expect(INDEX_CSS_SOURCE).toMatch(/--spacing:\s*0\.25rem|@import ['"]tailwindcss['"]/)
+
+    // getComputedStyle itself can't resolve calc()/var() in jsdom, but it does
+    // apply unlayered rules directly, so it still proves the reset stopped
+    // forcing an explicit zero on this cell.
+    expect(getComputedStyle(tierCell).paddingRight).not.toBe('0px')
+  })
+
+  it('the margin/padding/box-sizing reset lives inside @layer base, not unlayered', () => {
+    expect(INDEX_CSS_SOURCE).toMatch(/@layer base\s*{\s*\*\s*{\s*margin:\s*0;\s*padding:\s*0;\s*box-sizing:\s*border-box;/)
   })
 })

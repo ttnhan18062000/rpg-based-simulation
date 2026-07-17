@@ -93,6 +93,20 @@ export interface TicketSummary {
   matching_runs: RunMatchSummary[]
 }
 
+export interface TicketsFacets {
+  tiers: string[]
+  layers: string[]
+  statuses: string[]
+  priorities: string[]
+  tags: string[]
+}
+
+export interface TicketsPage {
+  items: TicketSummary[]
+  total_count: number
+  facets: TicketsFacets
+}
+
 export interface FetchTicketsParams {
   tier?: string
   layer?: string
@@ -102,9 +116,11 @@ export interface FetchTicketsParams {
   lifecycle?: string
   q?: string
   sort?: 'date_asc' | 'date_desc'
+  limit?: number
+  offset?: number
 }
 
-export async function fetchTickets(params: FetchTicketsParams = {}): Promise<TicketSummary[]> {
+export async function fetchTickets(params: FetchTicketsParams = {}): Promise<TicketsPage> {
   const query = new URLSearchParams()
   if (params.tier !== undefined) query.set('tier', params.tier)
   if (params.layer !== undefined) query.set('layer', params.layer)
@@ -114,12 +130,14 @@ export async function fetchTickets(params: FetchTicketsParams = {}): Promise<Tic
   if (params.lifecycle !== undefined) query.set('lifecycle', params.lifecycle)
   if (params.q !== undefined) query.set('q', params.q)
   if (params.sort !== undefined) query.set('sort', params.sort)
+  if (params.limit !== undefined) query.set('limit', String(params.limit))
+  if (params.offset !== undefined) query.set('offset', String(params.offset))
 
   const response = await fetch(`/api/tickets?${query.toString()}`)
   if (!response.ok) {
     throw new Error(`GET /api/tickets failed with status ${response.status}`)
   }
-  return (await response.json()) as TicketSummary[]
+  return (await response.json()) as TicketsPage
 }
 
 export async function fetchRunTimeline(runId: string): Promise<RunTimeline> {

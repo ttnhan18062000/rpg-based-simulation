@@ -34,6 +34,13 @@ const BAR_POSITION_STYLE: CSSProperties = {
   borderRadius: 2,
 }
 
+// Bars are often <1% wide, so the label must not inherit that width for wrapping purposes —
+// `position: absolute` detaches it from the bar's own box, and `whitespace-nowrap` stops the
+// browser from soft-wrapping at the hyphens in a long run_id (the default line-break behavior),
+// which otherwise stacks many short lines and bleeds vertically into neighboring rows.
+const RUN_LABEL_CLASS =
+  'absolute left-full top-0 ml-1 max-w-[180px] overflow-hidden text-ellipsis whitespace-nowrap text-[10px] leading-4 text-text-secondary pointer-events-none'
+
 export interface GanttBarProps {
   run: RunSummary
   nowIso: string
@@ -42,7 +49,7 @@ export interface GanttBarProps {
   justSettled?: boolean
 }
 
-function toPercent(ts: string, windowStartIso: string, windowEndIso: string): number {
+export function toPercent(ts: string, windowStartIso: string, windowEndIso: string): number {
   const start = Date.parse(windowStartIso)
   const end = Date.parse(windowEndIso)
   const value = Date.parse(ts)
@@ -69,6 +76,7 @@ export function GanttBar({ run, nowIso, windowStartIso, windowEndIso, justSettle
         style={{ ...BAR_POSITION_STYLE, left: `${left}%`, width: `${width}%` }}
       >
         <span className="gantt-bar__estimate-label">~est.</span>
+        <span data-testid="gantt-bar-run-label" className={RUN_LABEL_CLASS}>{run.run_id}</span>
       </div>
     )
   }
@@ -96,6 +104,8 @@ export function GanttBar({ run, nowIso, windowStartIso, windowEndIso, justSettle
       data-start={startTs}
       data-end={endTs}
       style={{ ...BAR_POSITION_STYLE, left: `${left}%`, width: `${width}%` }}
-    />
+    >
+      <span data-testid="gantt-bar-run-label" className={RUN_LABEL_CLASS}>{run.run_id}</span>
+    </div>
   )
 }

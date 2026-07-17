@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { fetchTickets, type FetchTicketsParams, type TicketSummary } from '@/api'
+import { fetchTickets, type FetchTicketsParams, type TicketSummary, type TicketsFacets } from '@/api'
 
 export interface TicketsViewProps {
   onSelectRun: (runId: string) => void
@@ -24,23 +24,9 @@ interface ColumnSort {
 }
 
 const EMPTY_FILTERS: FilterState = { tier: '', layer: '', status: '', priority: '', tags: [] }
-
-function distinctValues(tickets: TicketSummary[], pick: (ticket: TicketSummary) => string | null): string[] {
-  const values = new Set<string>()
-  for (const ticket of tickets) {
-    const value = pick(ticket)
-    if (value) values.add(value)
-  }
-  return Array.from(values).sort()
-}
-
-function distinctTags(tickets: TicketSummary[]): string[] {
-  const values = new Set<string>()
-  for (const ticket of tickets) {
-    for (const tag of ticket.tags) values.add(tag)
-  }
-  return Array.from(values).sort()
-}
+const EMPTY_FACETS: TicketsFacets = { tiers: [], layers: [], statuses: [], priorities: [], tags: [] }
+const PAGE_SIZE = 100
+const MAX_VISIBLE_TAGS = 40
 
 // "status" here means TicketSummary.workflow_status (the body `## Status`
 // section), matching the backend's `status` query param semantics
@@ -74,6 +60,8 @@ function buildFetchParams(filters: FilterState, dateSort: DateSort): FetchTicket
     priority: filters.priority || undefined,
     tags: filters.tags.length > 0 ? filters.tags : undefined,
     sort: dateSort,
+    limit: PAGE_SIZE,
+    offset: 0,
   }
 }
 
@@ -82,6 +70,18 @@ function removeTag(tags: string[], tag: string): string[] {
     if (existing !== tag) remaining.push(existing)
     return remaining
   }, [])
+}
+
+function narrowTags(tags: string[], query: string): string[] {
+  const trimmed = query.trim().toLowerCase()
+  const result: string[] = []
+  for (const tag of tags) {
+    if (trimmed === '' || tag.toLowerCase().includes(trimmed)) {
+      result.push(tag)
+      if (result.length >= MAX_VISIBLE_TAGS) break
+    }
+  }
+  return result
 }
 
 interface FilterSelectProps {
@@ -115,12 +115,14 @@ function FilterSelect({ label, testId, value, options, onChange }: FilterSelectP
 
 export function TicketsView({ onSelectRun }: TicketsViewProps) {
   const [rows, setRows] = useState<TicketSummary[]>([])
-  const [optionsSource, setOptionsSource] = useState<TicketSummary[]>([])
+  const [optionsFacets, setOptionsFacets] = useState<TicketsFacets>(EMPTY_FACETS)
+  const [totalCount, setTotalCount] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<Error | null>(null)
   const [filters, setFilters] = useState<FilterState>(EMPTY_FILTERS)
   const [dateSort, setDateSort] = useState<DateSort>('date_desc')
   const [columnSort, setColumnSort] = useState<ColumnSort | null>(null)
+  const [tagSearch, setTagSearch] = useState('')
 
   useEffect(() => {
     let cancelled = false
@@ -129,10 +131,11 @@ export function TicketsView({ onSelectRun }: TicketsViewProps) {
       setIsLoading(true)
       setError(null)
       try {
-        const result = await fetchTickets({})
+        const result = await fetchTickets({ limit: PAGE_SIZE, offset: 0 })
         if (!cancelled) {
-          setRows(result)
-          setOptionsSource(result)
+          setRows(result.items)
+          setOptionsFacets(result.facets)
+          setTotalCount(result.total_count)
           setIsLoading(false)
         }
       } catch (err) {
@@ -154,7 +157,9 @@ export function TicketsView({ onSelectRun }: TicketsViewProps) {
     setError(null)
     try {
       const result = await fetchTickets(buildFetchParams(nextFilters, dateSort))
-      setRows(result)
+      setRows(result.items)
+      setOptionsFacets(result.facets)
+      setTotalCount(result.total_count)
     } catch (err) {
       setError(err instanceof Error ? err : new Error(String(err)))
     }
@@ -166,7 +171,9 @@ export function TicketsView({ onSelectRun }: TicketsViewProps) {
     setError(null)
     try {
       const result = await fetchTickets(buildFetchParams(filters, nextDateSort))
-      setRows(result)
+      setRows(result.items)
+      setOptionsFacets(result.facets)
+      setTotalCount(result.total_count)
     } catch (err) {
       setError(err instanceof Error ? err : new Error(String(err)))
     }
@@ -191,6 +198,8 @@ export function TicketsView({ onSelectRun }: TicketsViewProps) {
     [rows, columnSort],
   )
 
+  const isPageScopedSort = columnSort !== null && totalCount > rows.length
+
   if (isLoading) {
     return (
       <div data-testid="tickets-view" className="p-6 text-text-secondary">
@@ -210,32 +219,40 @@ export function TicketsView({ onSelectRun }: TicketsViewProps) {
           label="Tier"
           testId="filter-tier"
           value={filters.tier}
-          options={distinctValues(optionsSource, (ticket) => ticket.tier)}
+          options={optionsFacets.tiers}
           onChange={(value) => applyFilters({ ...filters, tier: value })}
         />
         <FilterSelect
           label="Layer"
           testId="filter-layer"
           value={filters.layer}
-          options={distinctValues(optionsSource, (ticket) => ticket.layer)}
+          options={optionsFacets.layers}
           onChange={(value) => applyFilters({ ...filters, layer: value })}
         />
         <FilterSelect
           label="Status"
           testId="filter-status"
           value={filters.status}
-          options={distinctValues(optionsSource, (ticket) => ticket.workflow_status)}
+          options={optionsFacets.statuses}
           onChange={(value) => applyFilters({ ...filters, status: value })}
         />
         <FilterSelect
           label="Priority"
           testId="filter-priority"
           value={filters.priority}
-          options={distinctValues(optionsSource, (ticket) => ticket.priority)}
+          options={optionsFacets.priorities}
           onChange={(value) => applyFilters({ ...filters, priority: value })}
         />
         <div className="flex flex-wrap items-center gap-1" data-testid="filter-tags">
-          {distinctTags(optionsSource).map((tag) => {
+          <input
+            type="text"
+            data-testid="filter-tags-search"
+            value={tagSearch}
+            onChange={(event) => setTagSearch(event.target.value)}
+            placeholder="Search tags…"
+            className="bg-bg-tertiary border border-border rounded-md px-2 py-1 text-text-primary text-[11px]"
+          />
+          {narrowTags(optionsFacets.tags, tagSearch).map((tag) => {
             const active = filters.tags.includes(tag)
             return (
               <button
@@ -256,6 +273,12 @@ export function TicketsView({ onSelectRun }: TicketsViewProps) {
           })}
         </div>
       </div>
+
+      {isPageScopedSort && (
+        <div data-testid="column-sort-page-scoped-note" className="text-[11px] text-text-secondary">
+          Sorting current page only
+        </div>
+      )}
 
       <table className="text-[11px] w-full border-collapse" data-testid="tickets-table">
         <thead>

@@ -83,3 +83,45 @@ describe('GanttBar — no client-side activity re-derivation', () => {
     expect(bar.className).not.toContain('gantt-bar--authoritative')
   })
 })
+
+// Regression guard for the on-chart label crowding bug (found during live verification of
+// TCK-20260717-GANTT-TIME-AXIS): a long, hyphen-heavy run_id inside a narrow (<1%-wide)
+// absolutely-positioned bar was soft-wrapping at each hyphen with no white-space/overflow
+// constraint, stacking many lines that bled vertically into neighboring rows.
+describe('GanttBar — on-chart label never wraps or grows unbounded', () => {
+  const LONG_RUN_ID = 'TCK-20260717-DASHBOARD-RESPONSIVE-LAYOUT-VERY-LONG-EXAMPLE-ID'
+
+  it('renders the authoritative-branch label with whitespace-nowrap and a bounded max-width', () => {
+    const run = makeRun({ run_id: LONG_RUN_ID, final_status: 'DONE' })
+    const nowIso = new Date().toISOString()
+    const windowStartIso = new Date(Date.now() - 60_000).toISOString()
+
+    render(
+      <GanttBar run={run} nowIso={nowIso} windowStartIso={windowStartIso} windowEndIso={nowIso} />,
+    )
+
+    const label = document.querySelector('[data-testid="gantt-bar-run-label"]')!
+    expect(label.className).toContain('whitespace-nowrap')
+    expect(label.className).toMatch(/max-w-\[\d+px\]/)
+    expect(label.className).toContain('overflow-hidden')
+  })
+
+  it('renders the inferred-branch label with whitespace-nowrap and a bounded max-width', () => {
+    const run = makeRun({
+      run_id: LONG_RUN_ID,
+      is_inferred_active: true,
+      inferred_start_ts: new Date(Date.now() - 60_000).toISOString(),
+    })
+    const nowIso = new Date().toISOString()
+    const windowStartIso = new Date(Date.now() - 120_000).toISOString()
+
+    render(
+      <GanttBar run={run} nowIso={nowIso} windowStartIso={windowStartIso} windowEndIso={nowIso} />,
+    )
+
+    const label = document.querySelector('[data-testid="gantt-bar-run-label"]')!
+    expect(label.className).toContain('whitespace-nowrap')
+    expect(label.className).toMatch(/max-w-\[\d+px\]/)
+    expect(label.className).toContain('overflow-hidden')
+  })
+})

@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { RecentActivityGantt } from '../views/RecentActivityGantt'
 import { useRunsPolling, type RunSummary } from '../api'
+import RECENT_ACTIVITY_GANTT_SOURCE from '../views/RecentActivityGantt.tsx?raw'
 
 vi.mock('../api', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../api')>()
@@ -153,5 +154,103 @@ describe('RecentActivityGantt', () => {
 
     expect(onSelectRun).toHaveBeenCalledTimes(1)
     expect(onSelectRun).toHaveBeenCalledWith('run-b')
+  })
+
+  it('renders a visible time axis independent of any hover state', () => {
+    mockedUseRunsPolling.mockReturnValue({ runs: [completedRun()], isLoading: false, error: null })
+
+    render(<RecentActivityGantt onSelectRun={onSelectRun} />)
+
+    expect(screen.getByTestId('gantt-time-axis')).toBeInTheDocument()
+  })
+
+  it('time axis end label updates as nowIso advances', async () => {
+    vi.useFakeTimers()
+    try {
+      mockedUseRunsPolling.mockReturnValue({ runs: [completedRun()], isLoading: false, error: null })
+
+      render(<RecentActivityGantt onSelectRun={onSelectRun} />)
+
+      const ticksBefore = screen.getAllByTestId('gantt-time-axis-tick')
+      const lastLabelBefore = ticksBefore[ticksBefore.length - 1].textContent
+
+      await vi.advanceTimersByTimeAsync(60_000)
+
+      const ticksAfter = screen.getAllByTestId('gantt-time-axis-tick')
+      const lastLabelAfter = ticksAfter[ticksAfter.length - 1].textContent
+
+      expect(lastLabelAfter).not.toBe(lastLabelBefore)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('each rendered bar carries an on-chart run-id label distinct from the tooltip', () => {
+    mockedUseRunsPolling.mockReturnValue({ runs: [completedRun()], isLoading: false, error: null })
+
+    render(<RecentActivityGantt onSelectRun={onSelectRun} />)
+
+    const label = screen.getByTestId('gantt-bar-run-label')
+    expect(label.textContent).toBe('run-completed')
+    expect(
+      screen.queryByText('run-completed · standard · implement-ticket · 5m 0s · 2 agents'),
+    ).not.toBeInTheDocument()
+  })
+
+  it('narrow/clamped bar label is not dropped when the bar hits its minimum width', () => {
+    mockedUseRunsPolling.mockReturnValue({
+      runs: [
+        completedRun({
+          run_id: 'run-narrow',
+          start_ts: '2026-07-16T10:00:00.000Z',
+          end_ts: '2026-07-16T10:00:00.000Z',
+        }),
+      ],
+      isLoading: false,
+      error: null,
+    })
+
+    render(<RecentActivityGantt onSelectRun={onSelectRun} />)
+
+    const bar = document.querySelector('[data-run-id="run-narrow"]') as HTMLElement
+    expect(bar.style.width).toBe('0.5%')
+    expect(screen.getByTestId('gantt-bar-run-label').textContent).toBeTruthy()
+  })
+
+  it('existing hover-tooltip content is unchanged after the on-chart label addition', async () => {
+    mockedUseRunsPolling.mockReturnValue({ runs: [completedRun()], isLoading: false, error: null })
+
+    render(<RecentActivityGantt onSelectRun={onSelectRun} />)
+
+    const trigger = document.querySelector('[data-run-id="run-completed"]')!.closest('.relative.h-6')!
+    trigger.dispatchEvent(new MouseEvent('pointerenter', { bubbles: true }))
+    trigger.dispatchEvent(new MouseEvent('pointermove', { bubbles: true }))
+    ;(trigger as HTMLElement).focus()
+
+    const tooltip = await screen.findByText(
+      (_, element) => element?.textContent === 'run-completed · standard · implement-ticket · 5m 0s · 2 agents',
+    )
+    expect(tooltip).toBeInTheDocument()
+    expect(tooltip).not.toBe(screen.getByTestId('gantt-bar-run-label'))
+  })
+
+  it('Tooltip.Content is bounded by a max-width/whitespace class and explicit collisionPadding', async () => {
+    mockedUseRunsPolling.mockReturnValue({ runs: [completedRun()], isLoading: false, error: null })
+
+    render(<RecentActivityGantt onSelectRun={onSelectRun} />)
+
+    const trigger = document.querySelector('[data-run-id="run-completed"]')!.closest('.relative.h-6')!
+    trigger.dispatchEvent(new MouseEvent('pointerenter', { bubbles: true }))
+    trigger.dispatchEvent(new MouseEvent('pointermove', { bubbles: true }))
+    ;(trigger as HTMLElement).focus()
+
+    const tooltip = await screen.findByText(
+      (_, element) => element?.textContent === 'run-completed · standard · implement-ticket · 5m 0s · 2 agents',
+    )
+    const tooltipContent = tooltip.closest('[data-side]')!
+    expect(tooltipContent.className).toContain('max-w-[280px]')
+    expect(tooltipContent.className).toContain('whitespace-normal')
+
+    expect(RECENT_ACTIVITY_GANTT_SOURCE).toMatch(/collisionPadding=\{8\}/)
   })
 })

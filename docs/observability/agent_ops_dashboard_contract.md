@@ -25,7 +25,7 @@ on exact behavior after any of the five source tickets' code changes again.
 
 | Route | Returns | Params | Backing |
 |---|---|---|---|
-| `GET /api/tickets` | `List[TicketSummary]` | `tier`, `layer`, `status`, `priority` (single-value); `tag` (repeatable); `lifecycle`, `q`, `sort` (default `date_desc`) | `DashboardCache.get_tickets` |
+| `GET /api/tickets` | `TicketsPage` (`items`/`total_count`/`facets`) | `tier`, `layer`, `status`, `priority` (single-value); `tag` (repeatable); `lifecycle`, `q`, `sort` (default `date_desc`); `limit` (1-500, default 100), `offset` (default 0) | `DashboardCache.get_tickets` |
 | `GET /api/runs` | `List[RunSummary]` | `limit` (1-100, default 50), `offset`, `status`, `workflow`, `since` (ISO string, compared lexically, never parsed to `datetime`) | `DashboardCache.get_runs` |
 | `GET /api/runs/{run_id}` | `RunDetail`, 404 on miss | — | `DashboardCache.get_run` |
 | `GET /api/runs/{run_id}/timeline` | `RunTimeline`, 404 on miss | — | `DashboardCache.get_timeline` |
@@ -45,7 +45,11 @@ nullable), `FileTouch`, `TimelineEntry` (has its own `phase`/`agent` fields,
 both nullable — distinct from `RawToolCall`), `RunSummary`, `RunDetail`
 (extends `RunSummary` with `ticket_title`, `ticket_lifecycle_state`),
 `RunTimeline`, `HealthStatus` (`status` field is hardcoded `"ok"`, never
-derived from `unparsed_lines` counts).
+derived from `unparsed_lines` counts). `TicketFacets` (distinct
+`tiers`/`layers`/`statuses`/`priorities`/`tags` across the filtered-but-
+unpaginated result) and `TicketsPage` (`items: list[TicketSummary]`,
+`total_count: int`, `facets: TicketFacets`) — both real Pydantic models,
+never a raw dict at the route boundary.
 
 ### Ingest / cache (`ingest.py`)
 
@@ -54,8 +58,10 @@ module — `main.py` never reads a file directly. It reuses, rather than
 reimplements:
 - `tools/validate_frontmatter.py`'s `extract_frontmatter` for ticket
   frontmatter.
-- `tools/generate_registry.py`'s `parse_body_section`/`parse_h1_title`/
-  `_strip_frontmatter` for ticket body-section fields.
+- `tools/generate_registry.py`'s `parse_body_section`/`_strip_frontmatter` for
+  ticket body-section fields, including `title` (read from the `## Title`
+  body section, not the H1 heading — the H1 is mandated to equal the
+  ticket_id, so `parse_h1_title` would return the ticket_id, not a title).
 - `tools/agent-monitoring/validate.py`'s tolerant `load_jsonl` (skips
   unparseable lines, continues) and its legacy status allowlists.
 
@@ -82,7 +88,18 @@ so a run that completes falls out of it on the very next rebuild.
 (= `workflow_status`)/`priority`, OR within the `tags` selection (set
 intersection). Sorting is date-only (`date_asc`/`date_desc`) — there is no
 server-side sort support for tier/layer/status/priority/tag; the shipped
-`TicketsView.tsx` compensates with a client-side re-order for those columns.
+`TicketsView.tsx` compensates with a client-side re-order for those columns,
+which is inherently page-scoped once pagination applies (it sorts only the
+currently-fetched page, not the full corpus).
+
+`get_tickets` computes `total_count` and `facets` (distinct
+tier/layer/status/priority/tag values) over the full filtered result
+*before* slicing to `[offset:offset+limit]`, so filter-dropdown options
+always reflect the whole corpus even when only one page of rows is loaded.
+The `limit` param defaults to `None` at the cache-method level (existing
+zero-arg call sites — the three AND/OR filter tests — still get the full
+filtered set); the route layer (`main.py`) always passes a bounded
+`limit` (1-500, default 100) through `Query(...)`.
 
 ### Frontend SPA structure (`dashboard-frontend/src/`)
 
@@ -95,8 +112,9 @@ server-side sort support for tier/layer/status/priority/tag; the shipped
   offset-loops `fetchAllRunsSince` to guard against `GET /api/runs`'s
   per-page result cap.
 - `views/RecentActivityGantt.tsx` — default landing view; composes
-  `useRunsPolling` with `GanttBar`/`Legend`; tracks an active→completed
-  settle transition so a run's bar style change is not an instant cut.
+  `useRunsPolling` with `GanttBar`/`Legend`/`TimeAxis`; tracks an
+  active→completed settle transition so a run's bar style change is not an
+  instant cut.
 - `views/ReplayTimelineView.tsx` — one fetch per run selection (no
   independent polling loop); renders phase-timeline segments from the
   fetched entries in order; the live-tail caption is unconditional, never
@@ -105,13 +123,30 @@ server-side sort support for tier/layer/status/priority/tag; the shipped
 - `views/TicketsView.tsx` — fetch-and-render table over `GET /api/tickets`;
   filter changes go through the backend query params (never re-filtered
   client-side); non-date column sort is a client-side re-order over the
-  already-fetched array, since the backend `sort` param is date-only.
+  already-fetched array, since the backend `sort` param is date-only. The
+  tag filter renders `optionsFacets.tags` (never `rows`, never
+  `docs/guidelines/tag_registry.jsonl`) through a manual-loop `narrowTags()`
+  helper — never `Array.prototype.filter` — capped at `MAX_VISIBLE_TAGS`
+  (40) and narrowed further by a local search input; selecting a tag still
+  round-trips through the existing `toggleTag()`/`applyFilters()` ->
+  `fetchTickets()` path with one repeated `tag=` param per selection.
 - `components/GanttBar.tsx` — `classifyFinalStatus` buckets `DONE`→green,
   any `*_BLOCKED`/`*_FAILED`/`CONFLICTS_DETECTED`→red, else neutral gray; the
   inferred-active and authoritative-completed render branches share no CSS
-  class tokens.
+  class tokens. Exports `toPercent(ts, windowStartIso, windowEndIso)`, the
+  time-to-horizontal-position mapping both the bars and `TimeAxis` use, so
+  the two can never visually diverge. Each render branch also carries an
+  on-chart `data-testid="gantt-bar-run-label"` span with the full `run_id`
+  in `textContent` (untruncated in the DOM, for tests and accessibility)
+  but visually clamped via a `max-w-[180px]`/`overflow-hidden`/`text-ellipsis`/
+  `whitespace-nowrap` class so a long, hyphen-heavy id can neither soft-wrap
+  inside a narrow (<1%-wide) bar nor bleed into neighboring rows. Additive
+  to (not a replacement for) the existing hover tooltip.
 - `components/Legend.tsx` — reuses `GanttBar`'s status-bucket class map so
   the legend and bars can never visually diverge.
+- `components/TimeAxis.tsx` — renders 7 evenly-spaced ticks with local-time
+  labels above the scrollable row list, using `GanttBar`'s exported
+  `toPercent` for tick positioning.
 - `components/PlaybackScrubber.tsx` — takes a bare integer index range;
   imports no types from `api.ts` and has no knowledge of
   `RunTimeline`/`TimelineEntry`, so "scrub never fetches" is structural.

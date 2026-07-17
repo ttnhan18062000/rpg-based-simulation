@@ -42,8 +42,9 @@ function ticketWithRun(runId: string): TicketSummary {
   }
 }
 
-function mockTicketsFetch(response: TicketSummary[]) {
-  const mockFetch = vi.fn().mockResolvedValue({ ok: true, json: async () => response })
+function mockTicketsFetch(items: TicketSummary[]) {
+  const body = { items, total_count: items.length, facets: { tiers: [], layers: [], statuses: [], priorities: [], tags: [] } }
+  const mockFetch = vi.fn().mockResolvedValue({ ok: true, json: async () => body })
   globalThis.fetch = mockFetch as unknown as typeof fetch
   return mockFetch
 }
@@ -80,6 +81,15 @@ describe('App', () => {
     mockedUseRunsPolling.mockReturnValue({ runs: [], isLoading: false, error: null })
     mockedFetchRunTimeline.mockReset()
     mockedFetchRunTimeline.mockResolvedValue(navTargetTimeline())
+  })
+
+  it('header wraps and relaxes fixed height at narrow widths', () => {
+    const { container } = render(<App />)
+
+    const header = container.querySelector('header')!
+    expect(header.className).toContain('flex-wrap')
+    expect(header.className).toContain('sm:h-14')
+    expect(header.className).not.toMatch(/(?<!sm:)\bh-14\b/)
   })
 
   it('lands on the RecentActivityGantt view by default', () => {
