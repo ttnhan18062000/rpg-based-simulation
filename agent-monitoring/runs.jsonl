@@ -630,3 +630,4 @@
 {"run_id":"FOLDER-tickets-todos-agent-ops-dashboard","start_ts":"2026-07-17T02:08:47Z","end_ts":"2026-07-17T04:00:25Z","workflow":"implement-epic","tier":"epic","final_status":"DOD_BLOCKED","agent_count":2,"duration_s":6698}
 {"run_id":"TCK-20260716-AGENTOPS-BUILD-SERVE","start_ts":"2026-07-17T03:16:55Z","end_ts":"2026-07-17T04:15:43Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":11,"duration_s":3528}
 {"run_id":"FOLDER-tickets-todos-agent-ops-dashboard","start_ts":"2026-07-17T02:08:47Z","end_ts":"2026-07-17T04:16:24Z","workflow":"implement-epic","tier":"epic","final_status":"DONE","agent_count":3,"duration_s":7657}
+{"run_id":"TCK-20260717-AGENTOPS-DASHBOARD-DOCS","start_ts":"2026-07-17T04:25:32Z","end_ts":"2026-07-17T05:54:02Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":9,"duration_s":5310}

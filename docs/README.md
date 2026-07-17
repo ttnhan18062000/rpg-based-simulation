@@ -209,6 +209,7 @@ Practical how-to guides for working with each major subsystem. These are startin
 | [guides/bounded_cognition_tuning.md](guides/bounded_cognition_tuning.md) | Tuning AI cognition parameters, archetype defaults, troubleshooting |
 | [guides/agent_monitoring.md](guides/agent_monitoring.md) | Agent retrospectives, monitoring queries, gate failure patterns |
 | [guides/feature_flags.md](guides/feature_flags.md) | Feature flag defaults, rollout profiles, SimQ activation, and the DEV-002 default-OFF policy |
+| [guides/agent_ops_dashboard.md](guides/agent_ops_dashboard.md) | Agent ops dashboard: build/serve, Gantt/Replay/Tickets views, API + design constraints |
 
 ---
 
