@@ -330,6 +330,109 @@ def test_legacy_runs_jsonl_schema_generations_do_not_crash_ingest(tmp_path):
     assert by_id["FOLDER-batch-x"].final_status == "DONE"
 
 
+# ---------------------------------------------------------------------------
+# TCK-20260716-AGENTOPS-TICKETS-VIEW — get_tickets AND-across-dimensions,
+# OR-within-tag filter semantics (closes a coverage gap left by this file's
+# original scope, which never exercised get_tickets's own filter logic).
+# ---------------------------------------------------------------------------
+
+
+def _write_filter_fixture_tickets(tmp_path: Path) -> None:
+    _init_repo_skeleton(tmp_path)
+
+    _matched_path = tmp_path / "tickets" / "inprogress" / "TCK-20260101-MATCH.md"
+    frontmatter_matched = (
+        "status: active\nlayer: observability\nauthority: P1\naudience: agent\n"
+        "ticket_id: TCK-20260101-MATCH\nphase: open\ndate: 2026-07-16\n"
+        "tags: [observability, infra]"
+    )
+    _matched_path.write_text(
+        f"---\n{frontmatter_matched}\n---\n\n"
+        "# TCK-20260101-MATCH\n\n## Tier\nstandard\n\n## Type\nfeature\n\n"
+        "## Priority\nP1\n\n## Status\nOPEN\n",
+        encoding="utf-8",
+    )
+
+    other_layer_path = tmp_path / "tickets" / "inprogress" / "TCK-20260101-OTHERLAYER.md"
+    frontmatter_other_layer = (
+        "status: active\nlayer: combat\nauthority: P1\naudience: agent\n"
+        "ticket_id: TCK-20260101-OTHERLAYER\nphase: open\ndate: 2026-07-16\n"
+        "tags: [observability]"
+    )
+    other_layer_path.write_text(
+        f"---\n{frontmatter_other_layer}\n---\n\n"
+        "# TCK-20260101-OTHERLAYER\n\n## Tier\nstandard\n\n## Type\nfeature\n\n"
+        "## Priority\nP1\n\n## Status\nOPEN\n",
+        encoding="utf-8",
+    )
+
+    other_tier_path = tmp_path / "tickets" / "inprogress" / "TCK-20260101-OTHERTIER.md"
+    frontmatter_other_tier = (
+        "status: active\nlayer: observability\nauthority: P1\naudience: agent\n"
+        "ticket_id: TCK-20260101-OTHERTIER\nphase: open\ndate: 2026-07-16\n"
+        "tags: [infra]"
+    )
+    other_tier_path.write_text(
+        f"---\n{frontmatter_other_tier}\n---\n\n"
+        "# TCK-20260101-OTHERTIER\n\n## Tier\nhotfix\n\n## Type\nbug\n\n"
+        "## Priority\nP2\n\n## Status\nDONE\n",
+        encoding="utf-8",
+    )
+
+    no_tag_path = tmp_path / "tickets" / "inprogress" / "TCK-20260101-NOTAGMATCH.md"
+    frontmatter_no_tag = (
+        "status: active\nlayer: observability\nauthority: P1\naudience: agent\n"
+        "ticket_id: TCK-20260101-NOTAGMATCH\nphase: open\ndate: 2026-07-16\n"
+        "tags: [unrelated]"
+    )
+    no_tag_path.write_text(
+        f"---\n{frontmatter_no_tag}\n---\n\n"
+        "# TCK-20260101-NOTAGMATCH\n\n## Tier\nstandard\n\n## Type\nfeature\n\n"
+        "## Priority\nP1\n\n## Status\nOPEN\n",
+        encoding="utf-8",
+    )
+
+
+def test_get_tickets_and_across_dimensions_filters_tier_and_layer(tmp_path):
+    _write_filter_fixture_tickets(tmp_path)
+
+    cache = ingest.DashboardCache(repo_root=tmp_path)
+    results = cache.get_tickets(tier="standard", layer="observability")
+
+    ids = {r.ticket_id for r in results}
+    assert ids == {"TCK-20260101-MATCH", "TCK-20260101-NOTAGMATCH"}
+
+
+def test_get_tickets_or_within_tag(tmp_path):
+    _write_filter_fixture_tickets(tmp_path)
+
+    cache = ingest.DashboardCache(repo_root=tmp_path)
+    results = cache.get_tickets(tags=["observability", "infra"])
+
+    ids = {r.ticket_id for r in results}
+    assert ids == {
+        "TCK-20260101-MATCH",
+        "TCK-20260101-OTHERLAYER",
+        "TCK-20260101-OTHERTIER",
+    }
+    assert "TCK-20260101-NOTAGMATCH" not in ids
+
+
+def test_get_tickets_dimension_filter_and_tag_filter_combine_with_and(tmp_path):
+    _write_filter_fixture_tickets(tmp_path)
+
+    cache = ingest.DashboardCache(repo_root=tmp_path)
+    results = cache.get_tickets(layer="observability", tags=["infra"])
+
+    ids = {r.ticket_id for r in results}
+    # TCK-20260101-MATCH (layer=observability, tags include infra) and
+    # TCK-20260101-OTHERTIER (layer=observability, tags=[infra]) both satisfy
+    # AND(layer=observability, tag in {infra}); TCK-20260101-OTHERLAYER is
+    # excluded (wrong layer) even though it has tag "observability" not
+    # "infra"; TCK-20260101-NOTAGMATCH is excluded (no "infra" tag).
+    assert ids == {"TCK-20260101-MATCH", "TCK-20260101-OTHERTIER"}
+
+
 def test_malformed_jsonl_line_is_skipped_and_counted():
     import tempfile
 

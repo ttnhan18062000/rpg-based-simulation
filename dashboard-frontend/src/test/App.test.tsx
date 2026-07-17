@@ -2,7 +2,13 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import App from '../App'
-import { useRunsPolling, fetchRunTimeline, type RunSummary, type RunTimeline } from '../api'
+import {
+  useRunsPolling,
+  fetchRunTimeline,
+  type RunSummary,
+  type RunTimeline,
+  type TicketSummary,
+} from '../api'
 
 vi.mock('../api', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../api')>()
@@ -15,6 +21,32 @@ vi.mock('../api', async (importOriginal) => {
 
 const mockedUseRunsPolling = vi.mocked(useRunsPolling)
 const mockedFetchRunTimeline = vi.mocked(fetchRunTimeline)
+
+// TicketsView calls the real fetchTickets (only useRunsPolling/fetchRunTimeline
+// are mocked above), which issues an actual fetch() — must be stubbed whenever
+// the Tickets tab is activated in a test.
+function ticketWithRun(runId: string): TicketSummary {
+  return {
+    ticket_id: 'TCK-20260716-NAV',
+    title: 'Nav-target ticket',
+    tier: 'standard',
+    ticket_type: 'feature',
+    priority: 'P2',
+    layer: 'observability',
+    status: 'active',
+    workflow_status: 'OPEN',
+    tags: [],
+    date: '2026-07-16',
+    lifecycle_state: 'inprogress',
+    matching_runs: [{ run_id: runId, start_ts: '2026-07-16T10:00:00Z', end_ts: null, final_status: 'DONE' }],
+  }
+}
+
+function mockTicketsFetch(response: TicketSummary[]) {
+  const mockFetch = vi.fn().mockResolvedValue({ ok: true, json: async () => response })
+  globalThis.fetch = mockFetch as unknown as typeof fetch
+  return mockFetch
+}
 
 function navTargetRun(overrides: Partial<RunSummary> = {}): RunSummary {
   return {
@@ -54,26 +86,47 @@ describe('App', () => {
     render(<App />)
 
     expect(screen.getByTestId('recent-activity-gantt')).toBeInTheDocument()
-    expect(screen.queryByText('Tickets view coming soon.')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('tickets-view')).not.toBeInTheDocument()
     expect(screen.queryByTestId('replay-timeline-view')).not.toBeInTheDocument()
   })
 
-  it('App-shell scaffold smoke test: Replay tab renders a "select a run" placeholder with no run selected, Tickets remains its unchanged stub', async () => {
+  it('App-shell scaffold smoke test: Tickets tab renders the real TicketsView, other tabs unaffected', async () => {
+    mockTicketsFetch([])
     const user = userEvent.setup()
     render(<App />)
 
     await user.click(screen.getByRole('button', { name: 'Tickets' }))
-    expect(screen.getByText('Tickets view coming soon.')).toBeInTheDocument()
+    expect(await screen.findByTestId('tickets-view')).toBeInTheDocument()
     expect(screen.queryByTestId('recent-activity-gantt')).not.toBeInTheDocument()
 
+    await user.click(screen.getByRole('button', { name: 'Recent Activity' }))
+    expect(screen.getByTestId('recent-activity-gantt')).toBeInTheDocument()
+    expect(screen.queryByTestId('tickets-view')).not.toBeInTheDocument()
+
     await user.click(screen.getByRole('button', { name: 'Replay' }))
-    expect(screen.queryByText('Tickets view coming soon.')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('tickets-view')).not.toBeInTheDocument()
     expect(screen.queryByTestId('recent-activity-gantt')).not.toBeInTheDocument()
     expect(screen.queryByTestId('replay-timeline-view')).not.toBeInTheDocument()
     expect(
       screen.getByText('Select a run from Recent Activity to view its replay.'),
     ).toBeInTheDocument()
     expect(mockedFetchRunTimeline).not.toHaveBeenCalled()
+  })
+
+  it("row-link navigates to that row's Replay timeline via the existing App navigation state", async () => {
+    mockTicketsFetch([ticketWithRun('run-nav-target')])
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.click(screen.getByRole('button', { name: 'Tickets' }))
+    await screen.findByTestId('tickets-view')
+
+    const link = await screen.findByTestId('linked-run-link-TCK-20260716-NAV-run-nav-target')
+    await user.click(link)
+
+    expect(await screen.findByTestId('replay-timeline-view')).toBeInTheDocument()
+    expect(mockedFetchRunTimeline).toHaveBeenCalledWith('run-nav-target')
+    expect(screen.queryByTestId('tickets-view')).not.toBeInTheDocument()
   })
 
   it('Gantt row click navigates to that run\'s Replay timeline, scoped to that run_id', async () => {

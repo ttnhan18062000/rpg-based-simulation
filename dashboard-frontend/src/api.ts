@@ -71,6 +71,57 @@ export interface FetchRunsParams {
   workflow?: string
 }
 
+export interface RunMatchSummary {
+  run_id: string
+  start_ts: string | null
+  end_ts: string | null
+  final_status: string
+}
+
+export interface TicketSummary {
+  ticket_id: string
+  title: string
+  tier: string | null
+  ticket_type: string | null
+  priority: string | null
+  layer: string
+  status: string
+  workflow_status: string | null
+  tags: string[]
+  date: string
+  lifecycle_state: string
+  matching_runs: RunMatchSummary[]
+}
+
+export interface FetchTicketsParams {
+  tier?: string
+  layer?: string
+  status?: string
+  priority?: string
+  tags?: string[]
+  lifecycle?: string
+  q?: string
+  sort?: 'date_asc' | 'date_desc'
+}
+
+export async function fetchTickets(params: FetchTicketsParams = {}): Promise<TicketSummary[]> {
+  const query = new URLSearchParams()
+  if (params.tier !== undefined) query.set('tier', params.tier)
+  if (params.layer !== undefined) query.set('layer', params.layer)
+  if (params.status !== undefined) query.set('status', params.status)
+  if (params.priority !== undefined) query.set('priority', params.priority)
+  for (const tag of params.tags ?? []) query.append('tag', tag)
+  if (params.lifecycle !== undefined) query.set('lifecycle', params.lifecycle)
+  if (params.q !== undefined) query.set('q', params.q)
+  if (params.sort !== undefined) query.set('sort', params.sort)
+
+  const response = await fetch(`/api/tickets?${query.toString()}`)
+  if (!response.ok) {
+    throw new Error(`GET /api/tickets failed with status ${response.status}`)
+  }
+  return (await response.json()) as TicketSummary[]
+}
+
 export async function fetchRunTimeline(runId: string): Promise<RunTimeline> {
   const response = await fetch(`/api/runs/${encodeURIComponent(runId)}/timeline`)
   if (!response.ok) {

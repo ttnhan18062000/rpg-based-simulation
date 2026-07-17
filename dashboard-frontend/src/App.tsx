@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { RecentActivityGantt } from '@/views/RecentActivityGantt'
 import { ReplayTimelineView } from '@/views/ReplayTimelineView'
+import { TicketsView } from '@/views/TicketsView'
 
 type PageView = 'activity' | 'tickets' | 'replay'
 
@@ -41,9 +42,7 @@ function App() {
       </header>
       <div className="flex-1 min-h-0 overflow-auto">
         {currentView === 'activity' && <RecentActivityGantt onSelectRun={handleSelectRun} />}
-        {currentView === 'tickets' && (
-          <div className="p-6 text-text-secondary">Tickets view coming soon.</div>
-        )}
+        {currentView === 'tickets' && <TicketsView onSelectRun={handleSelectRun} />}
         {currentView === 'replay' &&
           (selectedRunId !== null ? (
             <ReplayTimelineView runId={selectedRunId} />
