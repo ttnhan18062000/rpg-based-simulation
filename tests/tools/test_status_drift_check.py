@@ -205,11 +205,49 @@ def test_exit_code_nonzero_on_any_fail_zero_on_clean(tmp_path):
 
 
 # ---------------------------------------------------------------------------
-# Live-corpus sanity — confirms the baseline regex matches the exact same shape
-# the ticket's own scoping/fix scripts used
+# Multi-line body extraction (TCK-20260718-STATUS-MULTILINE-FIX) — the checker now uses
+# parse_body_section directly instead of a first-token-only regex, so it must catch shapes the old
+# regex silently passed as "DONE" while the real dashboard showed a garbled multi-line value.
 # ---------------------------------------------------------------------------
 
 
-def test_regex_matches_baseline_scan_pattern():
-    from gate_checks.status_drift_check import TICKET_STATUS_RE
-    assert TICKET_STATUS_RE.pattern == r"^## Status\s*\n+\s*(\S+)"
+def test_uses_real_dashboard_extraction_function(tmp_path):
+    """Anti-drift guard: this module must call the same parse_body_section the dashboard's
+    ingest.py uses, not a reimplemented regex — see TCK-20260718-STATUS-MULTILINE-FIX."""
+    import gate_checks.status_drift_check as module
+    from generate_registry import parse_body_section as real_parse_body_section
+    assert module.parse_body_section is real_parse_body_section
+
+
+def test_stray_trailing_line_after_done_flagged(tmp_path):
+    """A leftover 'INPROGRESS' line directly under 'DONE' (no blank line) — the old first-token
+    regex captured only 'DONE' and missed this; parse_body_section captures the whole multi-line
+    block, exactly as the dashboard does."""
+    _write_ticket(tmp_path, "TCK-20260101-STRAY-LINE.md", "DONE\nINPROGRESS")
+    results = check_ticket_status_drift(tmp_path)
+    assert len(results) == 1
+    assert results[0]["status"] == "FAIL"
+    assert "STRAY-LINE" in results[0]["evidence"]
+
+
+def test_done_bleeding_into_trailing_bold_block_flagged(tmp_path):
+    """A legacy-format file with no '## Tier' heading after '## Status' — DONE bleeds into a
+    trailing bold-text block because there's no next '## ' heading to stop the section at."""
+    (tmp_path / "TCK-20260101-BOLD-BLEED.md").write_text(
+        "---\nstatus: historical\n---\n\n# fixture\n\n## Status\nDONE\n\n"
+        "**Tier:** standard\n**Type:** chore\n**Priority:** P1\n"
+    )
+    results = check_ticket_status_drift(tmp_path)
+    assert len(results) == 1
+    assert results[0]["status"] == "FAIL"
+    assert "BOLD-BLEED" in results[0]["evidence"]
+    assert "Tier" in results[0]["evidence"]
+
+
+def test_done_with_trailing_content_after_proper_tier_heading_passes(tmp_path):
+    """Once a file has a real '## Tier' heading, DONE resolves cleanly again — proves the fix is
+    the missing-heading-boundary bug, not a blanket rejection of anything after DONE."""
+    _write_ticket(tmp_path, "TCK-20260101-CLEAN-TIER.md", "DONE")
+    results = check_ticket_status_drift(tmp_path)
+    assert len(results) == 1
+    assert results[0]["status"] == "PASS"

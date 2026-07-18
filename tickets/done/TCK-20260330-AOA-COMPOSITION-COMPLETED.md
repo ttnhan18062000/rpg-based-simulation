@@ -32,6 +32,11 @@ This ticket documents the successful completion of the core Aspect-Oriented Arch
 ## Status
 DONE
 
-**Tier:** standard
-**Type:** chore
-**Priority:** P1
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1

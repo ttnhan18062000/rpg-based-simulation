@@ -27,6 +27,11 @@ The `tests/e2e/test_logging_structure.py` was failing in certain headless enviro
 ## Status
 DONE
 
-**Tier:** standard
-**Type:** chore
-**Priority:** P1
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1

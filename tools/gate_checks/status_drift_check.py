@@ -1,4 +1,4 @@
-"""Detect stale `## Status` body text in `tickets/done/*.md` and lowercase `final_status` values
+r"""Detect stale `## Status` body text in `tickets/done/*.md` and lowercase `final_status` values
 in `agent-monitoring/runs.jsonl`.
 
 Built for TCK-20260718-STATUS-DRIFT-REPAIR: 71 files in `tickets/done/` had a body `## Status`
@@ -11,12 +11,27 @@ all-uppercase status-enum convention, causing `dashboard-frontend/src/components
 in the neutral/gray bucket instead of green. This module gives both drift classes a deterministic,
 repeatable check so the fix does not silently regress.
 
-**Known, intentional limitation**: `check_ticket_status_drift`'s regex does not detect the
-same-line colon-suffixed `## Status: X` format (12 files use it corpus-wide, 6 currently non-`DONE`
-as of 2026-07-18). This is deliberate, not an oversight — TCK-20260718-STATUS-DRIFT-REPAIR's
-plan.md explicitly excluded those 6 files from its 71-file fix scope (see "Colon-Suffixed Files
-Decision"), and a broader regex here would newly flag them as regressions against the approved
-71/12/83 baseline that fix was verified against. Candidate for a future, separately-scoped ticket.
+**Extraction fix (this revision)**: the original implementation used a first-token-only regex
+(`^## Status\s*\n+\s*(\S+)`) that captured just the first word after the heading. That missed
+real drift the actual dashboard shows, because `src/api/agent_ops_dashboard/ingest.py` extracts
+`workflow_status` via `tools/generate_registry.py::parse_body_section`, which captures the ENTIRE
+section body up to the next `## ` heading — not just the first token. Two follow-up tickets
+(TCK-20260718-STATUS-SUFFIX-TRIM and this one) each independently rediscovered real dashboard-
+visible fragmentation that the first-token regex's own "clean" verdict had missed: a stray
+leftover `INPROGRESS` line after `DONE`, and 11 legacy-format files where `DONE` bled into a
+trailing `**Tier:**`/`**Type:**`/`**Priority:**` bold-text block because there was no `## Tier`
+heading to stop at. This module now imports and calls `parse_body_section` directly, so it always
+validates the exact same extraction the dashboard performs — eliminating this whole class of
+"checker says clean, dashboard shows garbage" gap by construction rather than by patching in a
+fourth regex for a fourth discovered shape.
+
+**Known, intentional limitation**: same-line colon-suffixed `## Status: X` tickets (12 files
+corpus-wide, 6 non-`DONE` as of 2026-07-18) still resolve to `""` via `parse_body_section` (its
+own regex also requires a newline directly after the heading, so `: X` on the same line never
+matches) and are silently skipped here, exactly as under the old regex. This is unchanged,
+deliberate scope — TCK-20260718-STATUS-DRIFT-REPAIR's plan.md explicitly excluded those 6 files
+(see "Colon-Suffixed Files Decision"), and TCK-20260718-STATUS-MULTILINE-FIX (this ticket) did not
+revisit that exclusion. Candidate for a future, separately-scoped ticket.
 
 Mirrors `doc_staleness_check.py`'s and `workflow_meta_conformance.py`'s shape: aggregate
 `check_*()` functions returning `List[dict]` (`{"status": "PASS"|"FAIL", "evidence": "..."}`), a
@@ -26,7 +41,6 @@ where/whether to call it, matching this directory's own stated precedent.
 """
 
 import json
-import re
 import sys
 from pathlib import Path
 from typing import List
@@ -34,12 +48,11 @@ from typing import List
 DEFAULT_DONE_DIR = Path("tickets/done")
 DEFAULT_RUNS_PATH = Path("agent-monitoring/runs.jsonl")
 
-# Must stay byte-identical to the regex used to derive the approved 71/12/83 baseline
-# (staging_artifacts/TCK-20260718-STATUS-DRIFT-REPAIR/scripts/derive_status_drift_scope.py). A
-# "more correct" or more permissive pattern (e.g. one that also matches same-line colon-suffixed
-# values) silently expands the flagged set and breaks the clean-corpus check — see this module's
-# docstring "Known, intentional limitation".
-TICKET_STATUS_RE = re.compile(r"^## Status\s*\n+\s*(\S+)", re.MULTILINE)
+_TOOLS_DIR = Path(__file__).parent.parent
+if str(_TOOLS_DIR) not in sys.path:
+    sys.path.insert(0, str(_TOOLS_DIR))
+
+from generate_registry import parse_body_section, _strip_frontmatter  # noqa: E402
 
 EPIC_TIER_VALUES = {"EPIC_SCOPED", "SCOPED"}
 
@@ -47,20 +60,23 @@ EPIC_TIER_VALUES = {"EPIC_SCOPED", "SCOPED"}
 def check_ticket_status_drift(done_dir: Path = DEFAULT_DONE_DIR) -> List[dict]:
     """Flag `tickets/done/*.md` files whose body `## Status` value is not `DONE`.
 
-    Skips (does not flag) two structural exemptions: `## Status` values in
-    `{"EPIC_SCOPED", "SCOPED"}` (epic-tier terminal text is legitimate, not drift) and files whose
-    name does not start with `TCK-` (pre-TCK-naming legacy files, out of scope per project
-    precedent). Both exemptions are value-based / filename-pattern-based, never a hardcoded literal
-    filename list, so a future epic closure or legacy backfill does not require a checker update to
-    stay correctly exempt.
+    Extracts via `parse_body_section` — the same function `ingest.py` uses for the dashboard's
+    `workflow_status` field — so a file only passes here if the dashboard would also show it as
+    plain `DONE`. Skips (does not flag) three structural exemptions: an empty extraction (same-line
+    colon-suffixed `## Status: X` tickets and any file with no `## Status` heading at all — both
+    return `""` from `parse_body_section` and are out of this check's scope, see module docstring),
+    `## Status` values in `{"EPIC_SCOPED", "SCOPED"}` (epic-tier terminal text is legitimate, not
+    drift), and files whose name does not start with `TCK-` (pre-TCK-naming legacy files, out of
+    scope per project precedent). All three exemptions are value-based / filename-pattern-based,
+    never a hardcoded literal filename list, so a future epic closure or legacy backfill does not
+    require a checker update to stay correctly exempt.
     """
     findings = []
     for path in sorted(done_dir.glob("*.md")):
         text = path.read_text(errors="ignore")
-        match = TICKET_STATUS_RE.search(text)
-        if not match:
+        value = parse_body_section(_strip_frontmatter(text), "Status")
+        if not value:
             continue
-        value = match.group(1)
         if value.upper() == "DONE":
             continue
         if value.upper() in EPIC_TIER_VALUES:
@@ -76,7 +92,8 @@ def check_ticket_status_drift(done_dir: Path = DEFAULT_DONE_DIR) -> List[dict]:
         return [{
             "status": "PASS",
             "evidence": f"no non-DONE ## Status drift found in {done_dir} "
-                        f"(excluding epic-tier and pre-TCK-naming legacy exemptions)",
+                        f"(excluding epic-tier, pre-TCK-naming legacy, and empty-extraction "
+                        f"exemptions)",
         }]
     return findings
 

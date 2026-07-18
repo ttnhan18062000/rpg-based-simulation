@@ -17,7 +17,6 @@ Fix all failed tests by restoring EntityState backward compatibility and updatin
 
 ## Status
 DONE
-INPROGRESS
 
 ## Tier
 standard

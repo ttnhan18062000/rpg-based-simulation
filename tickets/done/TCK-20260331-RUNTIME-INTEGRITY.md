@@ -35,6 +35,11 @@ This ticket addresses the first priority of the `final_implementation_plan.md`. 
 ## Status
 DONE
 
-**Tier:** standard
-**Type:** chore
-**Priority:** P1
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1

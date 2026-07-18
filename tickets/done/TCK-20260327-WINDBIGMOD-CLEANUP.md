@@ -36,6 +36,11 @@ Remove all backward compatibility shims and legacy `effective_*()` methods from 
 ## Status
 DONE
 
-**Tier:** standard
-**Type:** chore
-**Priority:** P1
+## Tier
+standard
+
+## Type
+chore
+
+## Priority
+P1
