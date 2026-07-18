@@ -165,7 +165,16 @@ _TAG_GATE_FINAL_STATUS = {"security": "SECURITY_BLOCKED"}
 _NO_GATE_IMPLEMENTED = "N/A — no gate implemented"
 
 
-def generate(runs, events, label, week_str=None, tickets_root=None):
+def compute_retro_metrics(runs, events, tickets_root=None) -> dict:
+    """Pure computation over `runs`/`events` — the same metrics `generate()` has always rendered
+    to Markdown, extracted (TCK-20260718-RETRO-STATS-REFACTOR) so a JSON API
+    (TCK-20260718-AGENTOPS-STATS-API) can consume them without duplicating this logic. Returns a
+    plain dict — mirrors `tools/tag_report.py::build_json_report()`'s precedent (this module has
+    no existing dataclass/TypedDict convention to introduce instead). Deliberately free of any
+    string-formatting/Markdown concern (`fmt_pct`, table syntax) — that stays in `generate()`,
+    the sole rendering consumer. Never writes a file or prints — read-only over its `runs`/
+    `events`/`tickets_root` inputs, matching every other function in this module.
+    """
     tickets_root = tickets_root if tickets_root is not None else _DEFAULT_TICKETS_ROOT
     ticket_tag_map = _collect_tagged_tickets(tickets_root)
     registry = load_registry(tickets_root)
@@ -214,6 +223,41 @@ def generate(runs, events, label, week_str=None, tickets_root=None):
             elif category == "process-skill-signal":
                 skill_tag_runs[tag].append(r)
 
+    # Deliberately does NOT apply Tier Distribution's EPIC_SCOPED-exclusion-from-denominator
+    # logic: EPIC_SCOPED only ever occurs on EPIC-*/FOLDER-* run_ids (implement-epic runs), which
+    # never resolve to a single ticket's tags and are therefore never present in
+    # subsystem_tag_runs in the first place — importing that logic here would be "fixing" a bug
+    # that cannot occur.
+    tag_breakdown_subsystem = {}
+    for tag, tag_runs in subsystem_tag_runs.items():
+        n = len(tag_runs)
+        d = sum(1 for r in tag_runs if _resolve_status(r) == "DONE")
+        gf = sum(1 for r in tag_runs if _is_gate_fail(r))
+        tag_breakdown_subsystem[tag] = {"runs": n, "done": d, "gate_fails": gf}
+
+    # Asymmetric by design (see _TAG_GATE_PHASE's comment above): only `security` has a real gate
+    # to cross-reference today, so every other Process/Skill-signal tag's gate_hits is None
+    # (rendered as an explicit "N/A — no gate implemented" marker, not a fabricated 0) — that
+    # marker is itself useful retro signal (visible evidence those tags remain advisory-only).
+    tag_breakdown_skill = {}
+    for tag, tag_runs in skill_tag_runs.items():
+        n = len(tag_runs)
+        if tag in _TAG_GATE_PHASE:
+            gate_phase = _TAG_GATE_PHASE[tag].casefold()
+            final_status = _TAG_GATE_FINAL_STATUS.get(tag)
+            hits = sum(
+                1
+                for r in tag_runs
+                if any(
+                    e.get("phase", "").casefold() == gate_phase
+                    for e in events_by_run[r.get("run_id", "")]
+                )
+                or _resolve_status(r) == final_status
+            )
+        else:
+            hits = None
+        tag_breakdown_skill[tag] = {"runs": n, "gate_hits": hits}
+
     # Tier distribution
     tier_counts = Counter(r.get("tier", "unknown") for r in runs)
     tier_done = defaultdict(int)
@@ -223,11 +267,42 @@ def generate(runs, events, label, week_str=None, tickets_root=None):
             tier_done[r.get("tier", "unknown")] += 1
         if _resolve_status(r) == "EPIC_SCOPED":
             tier_scoped[r.get("tier", "unknown")] += 1
+    tier_distribution = {
+        tier: {"count": n, "scoped": tier_scoped[tier], "done": tier_done[tier]}
+        for tier, n in tier_counts.items()
+    }
 
     # Agent status distribution
     agent_stats = defaultdict(lambda: Counter())
     for e in events:
         agent_stats[e.get("agent", "?")][e.get("status", "?")] += 1
+    agent_status_distribution = {agent: dict(counts) for agent, counts in agent_stats.items()}
+
+    # Spend proxy — by phase and by agent. Filter-then-aggregate: events lacking cost_proxy_score
+    # (pre-TCK-20260708-AGENT-COST-OBSERVABILITY historical records, no backfill) are excluded from
+    # both sum and count, never coerced to 0 (would silently deflate older phases' averages).
+    scored_events = [e for e in events if e.get("cost_proxy_score") is not None]
+    phase_scores = defaultdict(list)
+    agent_scores = defaultdict(list)
+    for e in scored_events:
+        phase_scores[e.get("phase", "?")].append(e["cost_proxy_score"])
+        agent_scores[e.get("agent", "?")].append(e["cost_proxy_score"])
+    spend_proxy_by_phase = {
+        phase: {
+            "events_scored": len(scores),
+            "total": round(sum(scores), 1),
+            "avg": round(sum(scores) / len(scores), 1),
+        }
+        for phase, scores in phase_scores.items()
+    }
+    spend_proxy_by_agent = {
+        agent: {
+            "events_scored": len(scores),
+            "total": round(sum(scores), 1),
+            "avg": round(sum(scores) / len(scores), 1),
+        }
+        for agent, scores in agent_scores.items()
+    }
 
     # Summary quality
     legacy_events = [e for e in events if _is_legacy_event(e)]
@@ -236,8 +311,57 @@ def generate(runs, events, label, week_str=None, tickets_root=None):
     legacy_event_count = len(legacy_events)
     long_summaries = sum(1 for e in events if len(e.get("summary", "")) > 200)
 
-    # Slow runs (> 30 min = 1800s)
-    slow_runs = [r for r in runs if (r.get("duration_s") or 0) > 1800]
+    # Slow runs (> 30 min = 1800s) — sorted here (a data concern), not left to the renderer.
+    slow_runs = sorted(
+        (r for r in runs if (r.get("duration_s") or 0) > 1800),
+        key=lambda x: x.get("duration_s", 0),
+        reverse=True,
+    )
+    slow_runs_list = [
+        {
+            "run_id": r.get("run_id", ""),
+            "duration_s": r.get("duration_s", 0),
+            "final_status": r.get("final_status", ""),
+        }
+        for r in slow_runs
+    ]
+
+    return {
+        "run_summary": {
+            "total": total,
+            "done_count": done_count,
+            "gate_fail_count": len(gate_fails),
+            "avg_duration_min": avg_dur_min,
+            "avg_agents": avg_agents,
+            "total_agent_calls": len(events),
+        },
+        "gate_failure_breakdown": dict(gate_counter),
+        "reason_code_breakdown": dict(reason_counter),
+        "tag_breakdown_subsystem": tag_breakdown_subsystem,
+        "tag_breakdown_skill": tag_breakdown_skill,
+        "tier_distribution": tier_distribution,
+        "agent_status_distribution": agent_status_distribution,
+        "spend_proxy_by_phase": spend_proxy_by_phase,
+        "spend_proxy_by_agent": spend_proxy_by_agent,
+        "summary_quality": {
+            "empty_summaries_current": empty_summaries_current,
+            "legacy_event_count": legacy_event_count,
+            "long_summaries": long_summaries,
+        },
+        "slow_runs": slow_runs_list,
+    }
+
+
+def generate(runs, events, label, week_str=None, tickets_root=None):
+    """Render `compute_retro_metrics()`'s result to the retro report's Markdown text — the sole
+    rendering consumer of that function. Signature/behavior unchanged by the
+    TCK-20260718-RETRO-STATS-REFACTOR extraction; see that ticket's plan.md Step 3 for the
+    byte-identical-output proof this relies on.
+    """
+    metrics = compute_retro_metrics(runs, events, tickets_root)
+    rs = metrics["run_summary"]
+    gate_counter = Counter(metrics["gate_failure_breakdown"])
+    reason_counter = Counter(metrics["reason_code_breakdown"])
 
     # Build report
     lines = []
@@ -257,12 +381,12 @@ def generate(runs, events, label, week_str=None, tickets_root=None):
     lines.append("")
     lines.append("| Metric | Value |")
     lines.append("|---|---|")
-    lines.append(f"| Total runs | {total} |")
-    lines.append(f"| Completed (DONE) | {done_count} ({fmt_pct(done_count, total)}) |")
-    lines.append(f"| Gate failures | {len(gate_fails)} |")
-    lines.append(f"| Avg duration | {avg_dur_min} min |")
-    lines.append(f"| Avg agents per run | {avg_agents} |")
-    lines.append(f"| Total agent calls | {len(events)} |")
+    lines.append(f"| Total runs | {rs['total']} |")
+    lines.append(f"| Completed (DONE) | {rs['done_count']} ({fmt_pct(rs['done_count'], rs['total'])}) |")
+    lines.append(f"| Gate failures | {rs['gate_fail_count']} |")
+    lines.append(f"| Avg duration | {rs['avg_duration_min']} min |")
+    lines.append(f"| Avg agents per run | {rs['avg_agents']} |")
+    lines.append(f"| Total agent calls | {rs['total_agent_calls']} |")
     lines.append("")
 
     # Gate failures
@@ -272,7 +396,7 @@ def generate(runs, events, label, week_str=None, tickets_root=None):
         lines.append("| Gate | Count | % of runs |")
         lines.append("|---|---|---|")
         for gate, count in gate_counter.most_common():
-            lines.append(f"| {gate} | {count} | {fmt_pct(count, total)} |")
+            lines.append(f"| {gate} | {count} | {fmt_pct(count, rs['total'])} |")
     else:
         lines.append("_No gate failures this period._")
     lines.append("")
@@ -290,53 +414,27 @@ def generate(runs, events, label, week_str=None, tickets_root=None):
 
     # Tag Breakdown — Subsystem/Topic: per-tag run count, DONE rate, gate-failure count. Only
     # rendered when at least one run resolves to a registered subsystem-topic tag, mirroring the
-    # Reason Codes conditional-render pattern above. Deliberately does NOT apply Tier
-    # Distribution's EPIC_SCOPED-exclusion-from-denominator logic: EPIC_SCOPED only ever occurs on
-    # EPIC-*/FOLDER-* run_ids (implement-epic runs), which never resolve to a single ticket's tags
-    # and are therefore never present in subsystem_tag_runs in the first place — importing that
-    # logic here would be "fixing" a bug that cannot occur.
-    if subsystem_tag_runs:
+    # Reason Codes conditional-render pattern above.
+    if metrics["tag_breakdown_subsystem"]:
         lines.append("## Tag Breakdown — Subsystem/Topic")
         lines.append("")
         lines.append("| Tag | Runs | DONE rate | Gate failures |")
         lines.append("|---|---|---|---|")
-        for tag in sorted(subsystem_tag_runs):
-            tag_runs = subsystem_tag_runs[tag]
-            n = len(tag_runs)
-            d = sum(1 for r in tag_runs if _resolve_status(r) == "DONE")
-            gf = sum(1 for r in tag_runs if _is_gate_fail(r))
-            lines.append(f"| {tag} | {n} | {fmt_pct(d, n)} | {gf} |")
+        for tag in sorted(metrics["tag_breakdown_subsystem"]):
+            row = metrics["tag_breakdown_subsystem"][tag]
+            lines.append(f"| {tag} | {row['runs']} | {fmt_pct(row['done'], row['runs'])} | {row['gate_fails']} |")
         lines.append("")
 
     # Tag Breakdown — Process/Skill-signal: per-tag run count plus a gate-hit cross-reference.
-    # Asymmetric by design (see _TAG_GATE_PHASE's comment above): only `security` has a real gate
-    # to cross-reference today, so every other Process/Skill-signal tag shows an explicit
-    # "N/A — no gate implemented" marker rather than a fabricated 0 — that marker is itself useful
-    # retro signal (visible evidence those tags remain advisory-only), not a data gap.
-    if skill_tag_runs:
+    if metrics["tag_breakdown_skill"]:
         lines.append("## Tag Breakdown — Process/Skill-signal")
         lines.append("")
         lines.append("| Tag | Runs | Gate Hits |")
         lines.append("|---|---|---|")
-        for tag in sorted(skill_tag_runs):
-            tag_runs = skill_tag_runs[tag]
-            n = len(tag_runs)
-            if tag in _TAG_GATE_PHASE:
-                gate_phase = _TAG_GATE_PHASE[tag].casefold()
-                final_status = _TAG_GATE_FINAL_STATUS.get(tag)
-                hits = sum(
-                    1
-                    for r in tag_runs
-                    if any(
-                        e.get("phase", "").casefold() == gate_phase
-                        for e in events_by_run[r.get("run_id", "")]
-                    )
-                    or _resolve_status(r) == final_status
-                )
-                hits_cell = str(hits)
-            else:
-                hits_cell = _NO_GATE_IMPLEMENTED
-            lines.append(f"| {tag} | {n} | {hits_cell} |")
+        for tag in sorted(metrics["tag_breakdown_skill"]):
+            row = metrics["tag_breakdown_skill"][tag]
+            hits_cell = str(row["gate_hits"]) if row["gate_hits"] is not None else _NO_GATE_IMPLEMENTED
+            lines.append(f"| {tag} | {row['runs']} | {hits_cell} |")
         lines.append("")
 
     # Tier distribution
@@ -344,22 +442,20 @@ def generate(runs, events, label, week_str=None, tickets_root=None):
     lines.append("")
     lines.append("| Tier | Count | Scoped | DONE count | DONE rate |")
     lines.append("|---|---|---|---|---|")
-    for tier in sorted(tier_counts):
-        n = tier_counts[tier]
-        scoped = tier_scoped[tier]
-        d = tier_done[tier]
-        denom = n - scoped
-        lines.append(f"| {tier} | {n} | {scoped} | {d} | {fmt_pct(d, denom)} |")
+    for tier in sorted(metrics["tier_distribution"]):
+        row = metrics["tier_distribution"][tier]
+        denom = row["count"] - row["scoped"]
+        lines.append(f"| {tier} | {row['count']} | {row['scoped']} | {row['done']} | {fmt_pct(row['done'], denom)} |")
     lines.append("")
 
     # Agent status distribution
     lines.append("## Agent Status Distribution")
     lines.append("")
-    if agent_stats:
+    if metrics["agent_status_distribution"]:
         lines.append("| Agent | Calls | ok | failed | blocked | skipped |")
         lines.append("|---|---|---|---|---|---|")
-        for agent in sorted(agent_stats):
-            c = agent_stats[agent]
+        for agent in sorted(metrics["agent_status_distribution"]):
+            c = metrics["agent_status_distribution"][agent]
             total_calls = sum(c.values())
             lines.append(
                 f"| {agent} | {total_calls} | {c.get('ok',0)} | "
@@ -369,55 +465,47 @@ def generate(runs, events, label, week_str=None, tickets_root=None):
         lines.append("_No events recorded._")
     lines.append("")
 
-    # Spend proxy — by phase and by agent. Filter-then-aggregate: events lacking cost_proxy_score
-    # (pre-TCK-20260708-AGENT-COST-OBSERVABILITY historical records, no backfill) are excluded from
-    # both sum and count, never coerced to 0 (would silently deflate older phases' averages).
-    scored_events = [e for e in events if e.get("cost_proxy_score") is not None]
-    if scored_events:
-        phase_scores = defaultdict(list)
-        agent_scores = defaultdict(list)
-        for e in scored_events:
-            phase_scores[e.get("phase", "?")].append(e["cost_proxy_score"])
-            agent_scores[e.get("agent", "?")].append(e["cost_proxy_score"])
-
+    # Spend proxy — by phase and by agent.
+    if metrics["spend_proxy_by_phase"]:
         lines.append("## Spend Proxy — By Phase")
         lines.append("")
         lines.append("| Phase | Events scored | Total | Avg |")
         lines.append("|---|---|---|---|")
-        for phase in sorted(phase_scores):
-            scores = phase_scores[phase]
-            lines.append(f"| {phase} | {len(scores)} | {round(sum(scores), 1)} | {round(sum(scores) / len(scores), 1)} |")
+        for phase in sorted(metrics["spend_proxy_by_phase"]):
+            row = metrics["spend_proxy_by_phase"][phase]
+            lines.append(f"| {phase} | {row['events_scored']} | {row['total']} | {row['avg']} |")
         lines.append("")
 
         lines.append("## Spend Proxy — By Agent")
         lines.append("")
         lines.append("| Agent | Events scored | Total | Avg |")
         lines.append("|---|---|---|---|")
-        for agent in sorted(agent_scores):
-            scores = agent_scores[agent]
-            lines.append(f"| {agent} | {len(scores)} | {round(sum(scores), 1)} | {round(sum(scores) / len(scores), 1)} |")
+        for agent in sorted(metrics["spend_proxy_by_agent"]):
+            row = metrics["spend_proxy_by_agent"][agent]
+            lines.append(f"| {agent} | {row['events_scored']} | {row['total']} | {row['avg']} |")
         lines.append("")
 
     # Summary quality
+    sq = metrics["summary_quality"]
     lines.append("## Summary Quality")
     lines.append("")
     lines.append("| Issue | Count |")
     lines.append("|---|---|")
-    lines.append(f"| Empty summary (current schema) | {empty_summaries_current} |")
-    lines.append(f"| Legacy-format records (summary field not applicable) | {legacy_event_count} |")
-    lines.append(f"| Truncated (>200 chars) | {long_summaries} |")
-    if empty_summaries_current > 0:
+    lines.append(f"| Empty summary (current schema) | {sq['empty_summaries_current']} |")
+    lines.append(f"| Legacy-format records (summary field not applicable) | {sq['legacy_event_count']} |")
+    lines.append(f"| Truncated (>200 chars) | {sq['long_summaries']} |")
+    if sq['empty_summaries_current'] > 0:
         lines.append("")
-        lines.append(f"_⚠ {empty_summaries_current} empty summaries (current schema) — check agent prompts for `summary` field._")
+        lines.append(f"_⚠ {sq['empty_summaries_current']} empty summaries (current schema) — check agent prompts for `summary` field._")
     lines.append("")
 
     # Slow runs
     lines.append("## Slow Runs (> 30 min)")
     lines.append("")
-    if slow_runs:
+    if metrics["slow_runs"]:
         lines.append("| run_id | duration | final_status |")
         lines.append("|---|---|---|")
-        for r in sorted(slow_runs, key=lambda x: x.get("duration_s", 0), reverse=True):
+        for r in metrics["slow_runs"]:
             dur_min = (r.get("duration_s", 0) or 0) // 60
             lines.append(f"| {r.get('run_id','')} | {dur_min} min | {r.get('final_status','')} |")
     else:

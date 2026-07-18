@@ -4584,6 +4584,86 @@
     call sites now that none of their facets can shrink below the selected
     value; comment updated to explain why it is retained anyway rather than
     removed, rather than silently leaving a stale rationale in place).
+    TCK-20260718-AGENTOPS-STATS-API: main.py:89-95 (new GET /api/stats/agent-monitoring route,
+    response_model=AgentMonitoringStats, query params days/all(alias)/week mirroring
+    generate_retro.py's CLI period-selection flags); ingest.py (new
+    self._runs_all/self._events_all instance attributes — the raw ungrouped runs.jsonl/events.jsonl
+    lists, previously local-only to _rebuild(), now retained since compute_retro_metrics() needs
+    the same unfiltered/undeduplicated shape generate_retro.py's own CLI passes it, not
+    self._runs_by_id's deduplicated-by-run_id view, which would silently under-count retried
+    tickets); ingest.py's new get_agent_monitoring_stats() method (imports and calls
+    tools/agent-monitoring/generate_retro.py::compute_retro_metrics() directly — zero duplicated
+    computation logic, confirmed by a new source-text anti-drift test); models.py (8 new Pydantic
+    models: RunSummaryStats, SubsystemTagStats, SkillTagStats, TierDistributionStats,
+    SpendProxyStats, SummaryQualityStats, SlowRunEntry, AgentMonitoringStats — field-for-field
+    mirror of compute_retro_metrics()'s dict shape). Two real bugs found and fixed during
+    implementation, both confirmed via live reproduction against the actual repo data before
+    fixing, neither touching generate_retro.py itself (out of this ticket's scope): (1)
+    compute_retro_metrics()'s gate_failure_breakdown can carry a literal None key (a runs.jsonl
+    record with neither final_status nor status set) — harmless for the Markdown renderer (prints
+    literal "None") but breaks Pydantic's Dict[str, int] typing; sanitized to the string "unknown"
+    only at this new API boundary, never inside compute_retro_metrics() itself, so
+    TCK-20260718-RETRO-STATS-REFACTOR's byte-identical-CLI-output guarantee stays intact. (2)
+    generate_retro.py's own main() --days branch crashes with TypeError on the confirmed-live
+    legacy runs.jsonl records whose start_ts is a raw Unix-timestamp number instead of an ISO8601
+    string (reproduced directly: `python3 tools/agent-monitoring/generate_retro.py --days 7`
+    crashes identically) — this ticket's own fresh --days implementation (not a call into the
+    buggy main()) adds an isinstance(start_ts, str) guard, consistent with iso_week()'s own
+    existing try/except-based tolerance for the same malformed-legacy-data class; main() itself is
+    untouched and remains buggy, a candidate for a future, separately-scoped fix, not silently
+    folded into this ticket.
+    TCK-20260718-TICKET-CORPUS-REPORT: new tools/ticket_stats_report.py (mirrors
+    tools/tag_report.py's exact shape — computation/rendering split, --json flag) covering the
+    four ticket_reporting.md "not built" pillars: collect_done_tickets() (frontmatter layer +
+    body-section tier/type/priority via generate_registry.py::parse_body_section, confirming
+    docs/REGISTRY.yaml is not a sufficient data source alone -- its ticket entries have no layer,
+    no priority, no body status, exactly as the dashboard's own origin idea doc already found),
+    compute_velocity() (tickets/working_log.csv grouped by day/ISO-week via
+    generate_retro.py::iso_week, reused not reimplemented), compute_distribution() (tier/type/
+    priority/layer Counters plus a layer-by-tier cross-tab, cross-referenced against
+    tools/ticket_field_values.py's TIER_VALUES/PRIORITY_VALUES and tools/layer_registry.py's
+    layer_values() for a live non-canonical-value marker), compute_artifact_completeness()
+    (standard/epic tickets only, per CLAUDE.md's own hotfix-exemption). New Makefile target
+    ticket-stats-report mirrors tag-report's shape. main.py:99-101 (new GET /api/stats/tickets
+    route, response_model=TicketCorpusStats); ingest.py's new get_ticket_corpus_stats() method —
+    the one DashboardCache method that does its own fresh file walk each call (via
+    tools/ticket_stats_report.py's imported functions) rather than reading from the
+    mtime-cached _tickets_by_id/_runs_all state, since this tool's output shape isn't a subset of
+    what parse_ticket_file() already extracts and caches, documented explicitly in the method's
+    own docstring rather than silently diverging from every other method's caching pattern
+    unremarked; models.py (5 new Pydantic models: VelocityStats, TicketDistributionStats,
+    IncompleteArtifactEntry, ArtifactCompletenessStats, TicketCorpusStats — field-for-field
+    mirror of build_json_report()'s dict shape). Live-verified against the real 1153-ticket
+    tickets/done/ corpus: CLI (`make ticket-stats-report`) and the new route both return
+    identical included_tickets/distribution numbers.
+    TCK-20260718-STATS-TAB-FRONTEND: new 4th "Stats" tab in dashboard-frontend/src/App.tsx
+    (PageView extended to include 'stats', NAV_ITEMS/render-branch additions — 3-line diff,
+    mirrors the existing 3-tab pattern exactly), consuming both /api/stats/agent-monitoring and
+    /api/stats/tickets via new fetchAgentMonitoringStats()/fetchTicketCorpusStats() functions and
+    their field-for-field-mirrored TypeScript interfaces in dashboard-frontend/src/api.ts. New
+    dashboard-frontend/src/views/StatsView.tsx renders both domains as stat tiles, magnitude bar
+    charts, a 2-series grouped bar chart (tier count vs. done), and sortable tables (top agents by
+    call volume, slow runs, incomplete artifacts) — no new npm dependency added; new
+    src/components/BarChart.tsx/GroupedBarChart.tsx/StatTile.tsx follow the same plain-HTML/CSS
+    convention dashboard-frontend/src/components/GanttBar.tsx already established (no chart
+    library exists in package.json and none was added). `Skill(skill: "dataviz")` was invoked
+    before any chart component code was written; its palette-validation step
+    (scripts/validate_palette.js) was run against the dashboard's actual dark chart surface
+    (--color-bg-tertiary #242835, not the skill's generic default) — the app's own pre-existing
+    --color-accent-* tokens FAILED the lightness-band check against that surface and were not
+    reused for chart fills; the skill's validated default dark 8-hue categorical set PASSED, with
+    only its first two slots used (dashboard-frontend/src/lib/chartPalette.ts). Investigation also
+    corrected a false assumption in the ticket's own text: this dashboard has no live light theme
+    (`.dark` class is declared in index.css but never applied anywhere, no ThemeContext, no
+    prefers-color-scheme handling) — recorded as a documented scope call in
+    stored_artifacts/TCK-20260718-STATS-TAB-FRONTEND/investigation.md rather than building a
+    light-mode path with nothing else in the app to be consistent with. Live-verified via a
+    freshly-killed-and-rebuilt `make dashboard-serve` plus a headless-Chromium (Playwright) run
+    against the actual Stats tab: rendered totalRuns (66) and scannedFiles (1,178) matched direct
+    `curl /api/stats/agent-monitoring` and `/api/stats/tickets` output exactly, artifact
+    completeness rendered as the correctly-rounded 64% (623/970), 49 bar-chart rows + 4 grouped
+    tier rows + 15 top-agent rows rendered, a bar's hover tooltip appeared on hover, and zero
+    browser console errors were captured across the whole run.
   proof_type: feature
   test_path: >
     tests/tools/test_agent_ops_dashboard_ingest.py (including
@@ -4659,6 +4739,50 @@
     added a new test proving that fallback is never actually exercised by the real (canonical)
     facets contract (re-run and confirmed: `npm test -- --run` -> "60 passed"; `npx tsc -b` and
     `npm run build` both clean).
+    TCK-20260718-AGENTOPS-STATS-API added tests/tools/test_agent_ops_dashboard_stats.py (new file,
+    6 tests: typed-shape happy path, empty-data no-crash, None-gate-key sanitization,
+    legacy-non-string-start_ts --days tolerance, route-level 200 via TestClient, source-text
+    anti-drift guard proving compute_retro_metrics is imported not reimplemented), and renamed/
+    extended tests/tools/test_agent_ops_dashboard_api_boundary.py::test_all_five_routes_are_declared
+    to test_all_declared_routes_present (the 6th route added by this ticket would otherwise leave
+    a stale "five" in the function name — the exact-set assertion itself was updated in place, not
+    silently left pinned to the old 5-route set) — re-run and confirmed during this parity update:
+    `python3 -m pytest tests/tools/test_agent_ops_dashboard_ingest.py
+    tests/tools/test_agent_ops_dashboard_api.py tests/tools/test_agent_ops_dashboard_api_boundary.py
+    tests/tools/test_agent_ops_dashboard_concurrency.py
+    tests/tools/test_agent_ops_dashboard_frontend_api_surface.py
+    tests/tools/test_agent_ops_dashboard_serve.py tests/tools/test_agent_ops_dashboard_stats.py
+    tests/tools/test_generate_retro.py -q` -> "77 passed in 2.75s".
+    TCK-20260718-TICKET-CORPUS-REPORT added tests/tools/test_ticket_stats_report.py (new file,
+    8 tests: layer/tier/type/priority extraction, SEQUENCE.md skip, velocity day/week grouping,
+    unparseable-timestamp tolerance, unknown-field distribution counting, artifact-completeness
+    detection including the hotfix-exemption, JSON-serializability, canonical-enum-import
+    anti-drift guard), extended tests/tools/test_agent_ops_dashboard_stats.py (2 new tests: the
+    /api/stats/tickets route happy path and its empty-corpus edge case), and extended
+    test_agent_ops_dashboard_api_boundary.py::test_all_declared_routes_present's set literal to
+    include the 7th route — re-run and confirmed during this parity update:
+    `python3 -m pytest tests/tools/test_agent_ops_dashboard_ingest.py
+    tests/tools/test_agent_ops_dashboard_api.py tests/tools/test_agent_ops_dashboard_api_boundary.py
+    tests/tools/test_agent_ops_dashboard_concurrency.py
+    tests/tools/test_agent_ops_dashboard_frontend_api_surface.py
+    tests/tools/test_agent_ops_dashboard_serve.py tests/tools/test_agent_ops_dashboard_stats.py
+    tests/tools/test_generate_retro.py tests/tools/test_ticket_stats_report.py -q` ->
+    "87 passed in 2.58s".
+    TCK-20260718-STATS-TAB-FRONTEND added dashboard-frontend/src/test/StatsView.test.tsx (new
+    file: loading state, real-data rendering across both endpoints, rounded artifact-completeness
+    percentage, fetch-failure error state, zero-corpus/zero-runs empty-state rendering without a
+    crash), dashboard-frontend/src/test/BarChart.test.tsx and GroupedBarChart.test.tsx (new files:
+    empty state, value-descending sort + truncation note, sortByValue=false chronological-order
+    preservation, legend rendering), and a new "Stats tab renders the real StatsView" case in
+    dashboard-frontend/src/test/App.test.tsx — re-run and confirmed during this parity update:
+    `npm test -- --run` -> "71 passed", `npm run build` (`tsc -b && vite build`) clean. Backend
+    regression guard re-run unmodified: `python3 -m pytest
+    tests/tools/test_agent_ops_dashboard_api_boundary.py
+    tests/tools/test_agent_ops_dashboard_frontend_api_surface.py -q` -> "6 passed" (this ticket
+    added no backend route and does not touch dashboard-frontend's isolation from the simulation
+    engine's own API surface). Static architecture check
+    (tools/gate_checks/architecture_reviewer_static.py::run_architecture_checks()) over all 11
+    changed/added files -> zero findings.
   divergence_note: null
   support_boundary: >
     Read-only over tickets/** and agent-monitoring/*.jsonl; never touches AuthoritativeState.
@@ -4866,3 +4990,114 @@
     intentional scope boundary: this entry's check_ticket_field_values() does not validate `##
     Status` (status_drift_check.py's own job, unwired, per that module's documented precedent) or
     `layer:` (already enforced by validate_frontmatter.py/check_frontmatter_valid, unchanged).
+- id: INFRA-279
+  text: >
+    Backend-owned dashboard glossary (TCK-20260718-GLOSSARY-REGISTRY,
+    TCK-20260718-GLOSSARY-API): tools/glossary_registry.py is a new append-only registry
+    (docs/guidelines/glossary_registry.jsonl) mirroring tools/tag_registry.py's shape
+    (category field, add/list CLI, load_registry()), deliberately without tag_registry.py's
+    canonical-form rule -- glossary terms are existing fixed strings this repo's code already
+    emits verbatim (DONE, P0, ok, dod_condition_failed), not freely-chosen labels. Seeded with
+    35 real terms (via the real add_term() API, never hand-written JSON) covering
+    tools/ticket_field_values.py's TIER_VALUES/PRIORITY_VALUES/WORKFLOW_STATUS_VALUES, ##
+    Type values, the live corpus's run/gate final_status values, and
+    docs/agent-monitoring/schema.md's documented reason_code/event-status values. New
+    GET /api/glossary route (src/api/agent_ops_dashboard/main.py) backed by
+    DashboardCache.get_glossary() (ingest.py), which merges glossary_registry.py's own
+    entries with every tools/layer_registry.py entry re-exposed under category="layer" using
+    its existing `note` field as the description -- read-time merge, never a duplicated
+    second description for the same 19 layers (see investigation.md's design-decision
+    section). No src/ simulation file touched; this dashboard remains read-only over
+    tickets/**/agent-monitoring/*.jsonl plus, now, docs/guidelines/{glossary,layer}_registry.jsonl.
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: >
+    tools/glossary_registry.py (new module: GLOSSARY_CATEGORIES fixed 7-value set, add_term(),
+    load_registry(), CLI); docs/guidelines/glossary_registry.jsonl (35 seeded entries);
+    src/api/agent_ops_dashboard/models.py (new GlossaryEntry/GlossaryResponse Pydantic models);
+    src/api/agent_ops_dashboard/ingest.py (DashboardCache.get_glossary() -- merges
+    glossary_registry.load_registry() with layer_registry.load_registry()'s `note` field,
+    first-registered-wins collision guard); src/api/agent_ops_dashboard/main.py
+    (GET /api/glossary route, response_model=GlossaryResponse -- never a raw dict, per this
+    dashboard's established API-boundary rule).
+  proof_type: feature
+  test_path: >
+    tests/tools/test_glossary_registry.py (18 tests: registry I/O, add_term validation,
+    real-seeded-registry coverage checks) and
+    tests/tools/test_agent_ops_dashboard_glossary.py (7 tests: merge happy path, layer-note-reuse
+    proven live via an edit-and-reread check, empty-note-layer skipped, empty-registries
+    no-crash, route-level 200 + typed shape, route signature check, real-registry end-to-end) --
+    both re-run and confirmed clean during this ticket:
+    `python3 -m pytest tests/tools/test_glossary_registry.py
+    tests/tools/test_agent_ops_dashboard_glossary.py
+    tests/tools/test_agent_ops_dashboard_api_boundary.py
+    tests/tools/test_agent_ops_dashboard_stats.py tests/tools/test_agent_ops_dashboard_ingest.py
+    tests/tools/test_agent_ops_dashboard_api.py tests/tools/test_agent_ops_dashboard_serve.py
+    tests/tools/test_agent_ops_dashboard_concurrency.py
+    tests/tools/test_agent_ops_dashboard_frontend_api_surface.py -q` -> "66 passed" (dashboard
+    suite) plus 18 passed (glossary_registry suite) = 84 total. Live verification: killed a
+    stale dashboard-serve process, confirmed port 8420 free, rebuilt via `make dashboard-serve`,
+    `curl -s http://localhost:8420/api/glossary` returned 54 real terms (35 glossary_registry +
+    19 non-empty-note layers), DONE/economy entries spot-checked with correct
+    category/description.
+  divergence_note: null
+  support_boundary: >
+    Dashboard tooling only -- no simulation behavior is involved (mirrors INFRA-263/264/265/
+    277/278's support_boundary pattern). Does not cover or claim anything about the frontend
+    actually rendering tooltips from this data (deliberately deferred to the dependent sibling
+    ticket TCK-20260718-GLOSSARY-TOOLTIPS-FRONTEND, which fetches this endpoint but is not
+    covered by this entry). Known, intentional scope boundary: this endpoint is read-only --
+    no in-app editing UI for glossary descriptions exists or is planned; new terms are added via
+    tools/glossary_registry.py's CLI, same as Tag/Layer.
+- id: INFRA-280
+  text: >
+    Dashboard glossary hover tooltips, frontend consumption (TCK-20260718-GLOSSARY-TOOLTIPS-
+    FRONTEND, depends on INFRA-279's GET /api/glossary): dashboard-frontend/src/api.ts gains
+    fetchGlossary() plus a useGlossary() hook that fetches exactly once per app load via a
+    module-level _glossaryPromise singleton (confirmed by grep: fetchGlossary( has exactly one
+    call site in the whole src/ tree, inside the hook itself), coercing any non-object response
+    to {} defensively. New shared dashboard-frontend/src/components/GlossaryTooltip.tsx wraps
+    Radix Tooltip; renders children completely unwrapped when term is null, unmatched, or the
+    glossary hasn't loaded -- guarded independently of useGlossary()'s own coercion, at two
+    layers total. Wired into TicketsView.tsx (Tier/Layer/ticket-status/Priority cells),
+    ReplayTimelineView.tsx (event status), and StatsView.tsx (Slow Runs final_status cell);
+    BarChart.tsx/GroupedBarChart.tsx take a separate optional `descriptions` prop appending a
+    second line to their existing tooltip content, never nesting a second Tooltip.Root.
+    Deliberately not wired into GanttBar.tsx/Legend.tsx (GanttBar renders only run.run_id as
+    text, never a raw status string; Legend's labels are hand-written descriptive prose
+    covering a synthetic 3-way status bucket, not a single glossary term -- no 1:1 mapping
+    exists), nor onto ticket frontmatter `status` (different doc-lifecycle enum) or Replay's
+    call.status/tailCall.status (different, unconfirmed vocabulary). Zero hardcoded description
+    strings anywhere in dashboard-frontend/src/ -- enforced by a regex source-string guard in
+    StatsView.test.tsx.
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: >
+    dashboard-frontend/src/api.ts (fetchGlossary, useGlossary); dashboard-frontend/src/
+    components/GlossaryTooltip.tsx (new); dashboard-frontend/src/components/BarChart.tsx and
+    GroupedBarChart.tsx (new optional `descriptions` prop); dashboard-frontend/src/views/
+    TicketsView.tsx, ReplayTimelineView.tsx, StatsView.tsx (glossary wiring, each wrapped in
+    its own Tooltip.Provider).
+  proof_type: feature
+  test_path: >
+    dashboard-frontend/src/test/GlossaryTooltip.test.tsx (5 tests: plain render on null term/
+    no-match/empty glossary, hoverable wrap on match, real description text on hover via
+    findAllByText -- Radix a11y-mirror workaround already established by
+    RecentActivityGantt.test.tsx); dashboard-frontend/src/test/BarChart.test.tsx (+2 tests:
+    description appended on match, unchanged tooltip when no match); dashboard-frontend/src/
+    test/StatsView.test.tsx (+3 tests: wiring confirmation, graceful degradation on the Slow
+    Runs status cell, anti-drift source-string guard) -- full suite re-run and confirmed:
+    `cd dashboard-frontend && npm run test -- --run` -> "11 files / 82 tests passing";
+    `npx tsc -b --noEmit` clean; `npm run build` clean (72 modules,
+    dist/assets/index-BTY5NTAg.js 285.02 kB). Live verification: killed/confirmed no stale
+    dashboard-serve process, rebuilt fresh, drove real hover interactions via headless
+    Chromium (Playwright) across 5 distinct label types spanning Tickets and Stats views --
+    each showed real backend-sourced description text, zero console errors.
+  divergence_note: null
+  support_boundary: >
+    Dashboard tooling only -- no simulation behavior is involved (mirrors INFRA-279's
+    support_boundary pattern). Covers frontend consumption only; the registry/API layer is
+    INFRA-279's scope, not repeated here. Known, intentional scope boundary: Gantt/Legend
+    exclusion is deliberate (see text above), not a gap to be closed by a future ticket.

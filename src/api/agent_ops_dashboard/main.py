@@ -14,10 +14,13 @@ from fastapi import FastAPI, HTTPException, Query
 
 from src.api.agent_ops_dashboard.ingest import DashboardCache
 from src.api.agent_ops_dashboard.models import (
+    AgentMonitoringStats,
+    GlossaryResponse,
     HealthStatus,
     RunDetail,
     RunSummary,
     RunTimeline,
+    TicketCorpusStats,
     TicketFacets,
     TicketsPage,
 )
@@ -84,6 +87,25 @@ async def get_run_timeline(run_id: str) -> RunTimeline:
     if timeline is None:
         raise HTTPException(status_code=404, detail=f"Run '{run_id}' not found.")
     return timeline
+
+
+@app.get("/api/stats/agent-monitoring", response_model=AgentMonitoringStats)
+async def get_agent_monitoring_stats(
+    days: Optional[int] = None,
+    all_time: bool = Query(default=False, alias="all"),
+    week: Optional[str] = None,
+) -> AgentMonitoringStats:
+    return _cache.get_agent_monitoring_stats(days=days, all_time=all_time, week=week)
+
+
+@app.get("/api/stats/tickets", response_model=TicketCorpusStats)
+async def get_ticket_corpus_stats() -> TicketCorpusStats:
+    return _cache.get_ticket_corpus_stats()
+
+
+@app.get("/api/glossary", response_model=GlossaryResponse)
+async def get_glossary() -> GlossaryResponse:
+    return _cache.get_glossary()
 
 
 @app.get("/api/health", response_model=HealthStatus)

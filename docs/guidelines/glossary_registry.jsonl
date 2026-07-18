@@ -1,0 +1,35 @@
+{"added_date": "2026-07-18", "category": "ticket-status", "description": "Ticket has been scoped but work has not started yet.", "term": "OPEN"}
+{"added_date": "2026-07-18", "category": "ticket-status", "description": "Ticket is actively being worked on.", "term": "INPROGRESS"}
+{"added_date": "2026-07-18", "category": "ticket-status", "description": "Ticket cannot proceed until an external dependency or decision is resolved.", "term": "BLOCKED"}
+{"added_date": "2026-07-18", "category": "ticket-status", "description": "Work is complete and closed \u2014 the same value also appears as a run's final_status when a run finishes successfully.", "term": "DONE"}
+{"added_date": "2026-07-18", "category": "ticket-status", "description": "Epic-tier ticket has been scoped into child tickets; the epic itself has no direct implementation of its own.", "term": "EPIC_SCOPED"}
+{"added_date": "2026-07-18", "category": "tier", "description": "Bug fix or minimal targeted change with self-evident intent \u2014 uses the short Scope to Implement to Test to Parity to Verify to Finalize pipeline.", "term": "hotfix"}
+{"added_date": "2026-07-18", "category": "tier", "description": "New feature, refactor, or substantive repair \u2014 uses the full pipeline including Investigate/Plan/Review.", "term": "standard"}
+{"added_date": "2026-07-18", "category": "tier", "description": "Large multi-ticket initiative that only scopes child tickets \u2014 no direct implementation happens on the epic ticket itself.", "term": "epic"}
+{"added_date": "2026-07-18", "category": "priority", "description": "Highest priority \u2014 critical, blocking issue.", "term": "P0"}
+{"added_date": "2026-07-18", "category": "priority", "description": "High priority \u2014 the default priority when unspecified.", "term": "P1"}
+{"added_date": "2026-07-18", "category": "priority", "description": "Medium priority.", "term": "P2"}
+{"added_date": "2026-07-18", "category": "priority", "description": "Low priority.", "term": "P3"}
+{"added_date": "2026-07-18", "category": "type", "description": "Fixes incorrect behavior.", "term": "bug"}
+{"added_date": "2026-07-18", "category": "type", "description": "Adds new capability.", "term": "feature"}
+{"added_date": "2026-07-18", "category": "type", "description": "Restructures existing code without changing its behavior.", "term": "refactor"}
+{"added_date": "2026-07-18", "category": "type", "description": "Maintenance work with no direct feature or bug-fix impact.", "term": "chore"}
+{"added_date": "2026-07-18", "category": "type", "description": "Restores previously-working behavior that regressed.", "term": "repair"}
+{"added_date": "2026-07-18", "category": "run-status", "description": "Verify phase found one or more failing Definition-of-Done conditions.", "term": "DOD_BLOCKED"}
+{"added_date": "2026-07-18", "category": "run-status", "description": "Architecture or Security review found fixable violations that must be addressed before continuing.", "term": "NEEDS_CHANGES"}
+{"added_date": "2026-07-18", "category": "run-status", "description": "Scope phase found this ticket duplicates or conflicts with existing work.", "term": "CONFLICTS_DETECTED"}
+{"added_date": "2026-07-18", "category": "run-status", "description": "Plan phase raised unresolved questions that require a human decision before implementation can proceed.", "term": "NEEDS_HUMAN_INPUT"}
+{"added_date": "2026-07-18", "category": "run-status", "description": "Test phase found one or more failing tests.", "term": "TESTS_FAILED"}
+{"added_date": "2026-07-18", "category": "run-status", "description": "Security review found a fundamental vulnerability that blocks the change.", "term": "SECURITY_BLOCKED"}
+{"added_date": "2026-07-18", "category": "run-status", "description": "The user interrupted or stopped the run before it reached a gate outcome.", "term": "STOPPED_BY_USER"}
+{"added_date": "2026-07-18", "category": "run-status", "description": "A gate check failed \u2014 a generic/legacy status predating more specific gate-failure codes.", "term": "GATE_FAIL"}
+{"added_date": "2026-07-18", "category": "run-status", "description": "A batch of tickets were all successfully scoped (create-tickets workflow outcome).", "term": "ALL_SCOPED"}
+{"added_date": "2026-07-18", "category": "run-status", "description": "Work completed successfully but was not associated with a specific ticket record.", "term": "DONE_NO_TICKET"}
+{"added_date": "2026-07-18", "category": "run-status", "description": "Legacy alias of INPROGRESS from older monitoring records \u2014 same meaning: actively being worked on.", "term": "IN_PROGRESS"}
+{"added_date": "2026-07-18", "category": "reason-code", "description": "Duplicate or conflicting ticket found during Scope.", "term": "conflicts_detected"}
+{"added_date": "2026-07-18", "category": "reason-code", "description": "A tag used on this ticket is not registered in docs/guidelines/tag_registry.jsonl.", "term": "tag_registry_rejection"}
+{"added_date": "2026-07-18", "category": "reason-code", "description": "Some other Definition-of-Done condition failed at Verify \u2014 a deliberately coarse fallback covering any DoD failure not broken out into its own code.", "term": "dod_condition_failed"}
+{"added_date": "2026-07-18", "category": "event-status", "description": "Agent completed its task successfully.", "term": "ok"}
+{"added_date": "2026-07-18", "category": "event-status", "description": "Agent returned an error or could not complete its task.", "term": "failed"}
+{"added_date": "2026-07-18", "category": "event-status", "description": "Agent was blocked by a gate condition, such as an architecture violation.", "term": "blocked"}
+{"added_date": "2026-07-18", "category": "event-status", "description": "This phase was skipped \u2014 for example Investigate/Plan/Review are skipped for hotfix-tier tickets.", "term": "skipped"}

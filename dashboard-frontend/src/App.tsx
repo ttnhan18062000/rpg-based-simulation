@@ -1,14 +1,16 @@
 import { useState } from 'react'
 import { RecentActivityGantt } from '@/views/RecentActivityGantt'
 import { ReplayTimelineView } from '@/views/ReplayTimelineView'
+import { StatsView } from '@/views/StatsView'
 import { TicketsView } from '@/views/TicketsView'
 
-type PageView = 'activity' | 'tickets' | 'replay'
+type PageView = 'activity' | 'tickets' | 'replay' | 'stats'
 
 const NAV_ITEMS: Array<{ view: PageView; label: string }> = [
   { view: 'activity', label: 'Recent Activity' },
   { view: 'tickets', label: 'Tickets' },
   { view: 'replay', label: 'Replay' },
+  { view: 'stats', label: 'Stats' },
 ]
 
 function App() {
@@ -43,6 +45,7 @@ function App() {
       <div className="flex-1 min-h-0 overflow-auto">
         {currentView === 'activity' && <RecentActivityGantt onSelectRun={handleSelectRun} />}
         {currentView === 'tickets' && <TicketsView onSelectRun={handleSelectRun} />}
+        {currentView === 'stats' && <StatsView />}
         {currentView === 'replay' &&
           (selectedRunId !== null ? (
             <ReplayTimelineView runId={selectedRunId} />

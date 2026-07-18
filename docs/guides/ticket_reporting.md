@@ -12,8 +12,9 @@ This guide covers reporting tools that read `tickets/`, `docs/REGISTRY.yaml`, an
 `tickets/working_log.csv` to answer questions about the ticket corpus itself (not about a
 simulation run — see [`simulation_quality.md`](simulation_quality.md) for that). Like SimQ's
 scoring surface, this is organized as **pillars** — independent reporting angles over the same
-underlying ticket data. Today there is exactly one pillar built: tag-usage reporting. The
-structure below leaves room for more.
+underlying ticket data. Today there are two pillars built: tag-usage reporting, and ticket-corpus
+statistics (velocity, tier/type/priority/layer distribution, artifact completeness). The structure
+below leaves room for more.
 
 ---
 
@@ -89,23 +90,66 @@ since that corpus was never governed by any vocabulary to begin with.
 
 ---
 
-## Other candidate pillars (not built)
+## Pillar 2: Ticket Corpus Statistics
 
-Documented here only to explain why this guide is structured as "pillars" rather than a single
-flat tool doc — none of the below are scoped, promised, or in progress:
+**Tool:** [`tools/ticket_stats_report.py`](../../tools/ticket_stats_report.py)
 
-- **Ticket velocity / throughput** — derived from `tickets/working_log.csv` timestamps (tickets
-  closed per day/week, by tier or layer).
-- **Tier / type / priority distribution** — how many `hotfix` vs `standard` vs `epic` tickets,
-  bug vs feature vs refactor, P0/P1/P2 mix, over time.
-- **Layer distribution** — cross-tab of `layer` against tier/type, using the same
-  `docs/REGISTRY.yaml` data source `tools/registry_query.py` already reads.
-- **Artifact completeness** — how many `standard`/`epic` tickets have a matching
-  `stored_artifacts/{ticket_id}/` folder with all 3 required files, vs. gaps.
+### What it does
 
-If one of these is ever wanted, it likely belongs as a new `tools/*_report.py` script following
-the same pattern as `tools/tag_report.py` (reuse `validate_frontmatter.py`/`generate_registry.py`
-parsing, dedicated test file, `make` target) — not folded into `tag_report.py` itself.
+Covers four reporting angles over `tickets/done/` in one tool: ticket velocity/throughput (closed
+tickets per day and per ISO-week, from `tickets/working_log.csv`), tier/type/priority distribution
+(counts per canonical value, plus a non-canonical marker for anything outside
+`tools/ticket_field_values.py`'s `TIER_VALUES`/`PRIORITY_VALUES`), layer distribution (counts per
+value in `docs/guidelines/layer_registry.jsonl`, same non-canonical marker), and artifact
+completeness (for `standard`/`epic` tickets only, per this project's own hotfix-exemption: does
+`stored_artifacts/{ticket_id}/` exist with all 3 required files — `investigation.md`, `plan.md`,
+`test_plan.md`). Built by `TCK-20260718-TICKET-CORPUS-REPORT`, mirroring `tools/tag_report.py`'s
+own shape (computation/rendering split, `--json` flag, dedicated test file, `make` target) —
+that module is the direct precedent.
+
+`docs/REGISTRY.yaml` is **not** a sufficient data source for this pillar by itself — its ticket
+entries carry no `layer`, no `priority`, and no body `## Status`, confirmed directly during that
+ticket's investigation — so this tool parses ticket files the same way
+`tools/ticket_field_values.py`/the Agent Ops Dashboard's `ingest.py` already do, reusing
+`validate_frontmatter.py::extract_frontmatter` and `generate_registry.py::parse_body_section`
+rather than reimplementing either.
+
+This pillar's numbers are also exposed as a typed JSON API route,
+`GET /api/stats/tickets` (`TicketCorpusStats`), consumed by the Agent Ops Dashboard's Stats tab —
+see [`docs/guides/agent_ops_dashboard.md`](agent_ops_dashboard.md#stats) and
+[`docs/observability/agent_ops_dashboard_contract.md`](../observability/agent_ops_dashboard_contract.md).
+The CLI and the API route compute from the exact same functions (`compute_velocity`,
+`compute_distribution`, `compute_artifact_completeness`), so their numbers are always identical for
+the same corpus state.
+
+### Quick start
+
+```bash
+python3 tools/ticket_stats_report.py                                   # stdout summary
+python3 tools/ticket_stats_report.py --json reports/ticket_stats.json  # write a structured report to disk
+
+make ticket-stats-report                                                # same as the plain stdout form
+make ticket-stats-report ARGS="--json reports/ticket_stats_report.json"
+```
+
+**Live snapshot as of 2026-07-18** (dated, will shift as the corpus grows): 1179 files scanned
+under `tickets/done/`, 24 skipped as `SEQUENCE.md` → **1155 tickets included**. Tier: 931
+`standard`, 103 `hotfix`, 81 non-canonical `unknown`, 40 `epic`. Priority: 798 `P1`, 237 `P2`, 71
+non-canonical `unknown`, 25 `P0`, 24 `P3`. Layer: 19 distinct values, topped by `misc` (321) and
+`engine` (206). Artifact completeness (`standard`/`epic` only): 624/971 complete.
+
+### Technical detail
+
+Scoped to `tickets/done/` only, matching `tag_report.py`'s own scope choice — the same
+`SEQUENCE.md`-skip rule applies (folder index files are never counted as tickets). Velocity groups
+`tickets/working_log.csv` rows by calendar day and by ISO-week (via
+`tools/agent-monitoring/generate_retro.py::iso_week`, reused not reimplemented), tolerating
+unparseable rows by counting and skipping them rather than crashing. Distribution counts use
+`Counter`s over the three body-section fields (tier, ticket_type, priority) plus the frontmatter
+`layer` field, cross-referenced against the canonical value sets so an out-of-registry value shows
+as `unknown`/non-canonical instead of silently miscounting. Artifact completeness only checks
+`standard`/`epic` tickets, since `hotfix` tickets are explicitly exempt from staging artifacts per
+this project's own workflow rule (`CLAUDE.md`'s "Hotfix: No staging artifacts required").
 
 ---
 

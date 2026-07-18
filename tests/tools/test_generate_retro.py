@@ -1,7 +1,8 @@
 """Targeted tests for tools/agent-monitoring/generate_retro.py's reason-code section
 (TCK-20260706-MONITORING-REASON-CODE, extended by TCK-20260706-SCOPE-TAG-REGISTRY-CHECK and
-TCK-20260706-CREATE-TICKETS-TAG-CHECK), and its Subsystem/Topic + Process/Skill-signal tag
-breakdown sections (TCK-20260708-RETRO-TAG-BREAKDOWN). Not full coverage of the pre-existing
+TCK-20260706-CREATE-TICKETS-TAG-CHECK), its Subsystem/Topic + Process/Skill-signal tag
+breakdown sections (TCK-20260708-RETRO-TAG-BREAKDOWN), and (TCK-20260718-RETRO-STATS-REFACTOR)
+the extracted compute_retro_metrics() computation function. Not full coverage of the pre-existing
 script (which had no test file before the first of these tickets) — scoped to the behavior these
 tickets changed.
 """
@@ -13,7 +14,7 @@ _MONITORING_TOOLS_DIR = Path(__file__).parent.parent.parent / "tools" / "agent-m
 if str(_MONITORING_TOOLS_DIR) not in sys.path:
     sys.path.insert(0, str(_MONITORING_TOOLS_DIR))
 
-from generate_retro import generate  # noqa: E402
+from generate_retro import compute_retro_metrics, generate  # noqa: E402
 
 _BASE_RUN = {
     "run_id": "TCK-FAKE",
@@ -340,3 +341,93 @@ def test_reason_code_aggregation_is_workflow_agnostic():
     report = generate(runs, events, "test-label")
 
     assert "| tag_registry_rejection | 2 |" in report
+
+
+# --- TCK-20260718-RETRO-STATS-REFACTOR: compute_retro_metrics() direct tests ---
+# generate() itself stays covered by every test above (unchanged signature/behavior, proven via
+# this ticket's own byte-identical CLI-output comparison in plan.md Step 3). These tests exercise
+# the newly-extracted computation function directly, so a future JSON API consumer
+# (TCK-20260718-AGENTOPS-STATS-API) has direct coverage of the data shape it will import and call.
+
+def test_compute_retro_metrics_returns_all_documented_keys():
+    runs = [_BASE_RUN]
+    events = [
+        {"run_id": "TCK-FAKE", "seq": 1, "phase": "Verify", "agent": "done-checker", "status": "failed", "summary": "blocked"},
+    ]
+
+    metrics = compute_retro_metrics(runs, events)
+
+    assert set(metrics.keys()) == {
+        "run_summary", "gate_failure_breakdown", "reason_code_breakdown",
+        "tag_breakdown_subsystem", "tag_breakdown_skill", "tier_distribution",
+        "agent_status_distribution", "spend_proxy_by_phase", "spend_proxy_by_agent",
+        "summary_quality", "slow_runs",
+    }
+
+
+def test_compute_retro_metrics_run_summary_matches_fixture():
+    runs = [_BASE_RUN, dict(_BASE_RUN, run_id="TCK-FAKE-2", final_status="DONE", duration_s=1800, agent_count=3)]
+    events = [
+        {"run_id": "TCK-FAKE", "seq": 1, "phase": "Verify", "agent": "done-checker", "status": "failed", "summary": "blocked"},
+        {"run_id": "TCK-FAKE-2", "seq": 1, "phase": "Test", "agent": "test-scoper", "status": "ok", "summary": "passed"},
+    ]
+
+    metrics = compute_retro_metrics(runs, events)
+    rs = metrics["run_summary"]
+
+    assert rs["total"] == 2
+    assert rs["done_count"] == 1
+    assert rs["gate_fail_count"] == 1
+    assert rs["total_agent_calls"] == 2
+    # avg of 3600s and 1800s = 2700s = 45 min
+    assert rs["avg_duration_min"] == 45
+    # avg of 9 and 3 = 6.0
+    assert rs["avg_agents"] == 6.0
+
+
+def test_compute_retro_metrics_is_a_pure_read_only_function(tmp_path):
+    """No file writes, no printing — mirrors this project's read-only-logic architecture test
+    convention. Calling it twice with the same inputs must be side-effect-free and idempotent."""
+    runs = [_BASE_RUN]
+    events = []
+
+    before = set(tmp_path.iterdir()) if tmp_path.exists() else set()
+    metrics_1 = compute_retro_metrics(runs, events, tickets_root=tmp_path)
+    metrics_2 = compute_retro_metrics(runs, events, tickets_root=tmp_path)
+    after = set(tmp_path.iterdir()) if tmp_path.exists() else set()
+
+    assert metrics_1 == metrics_2
+    assert before == after
+
+
+def test_compute_retro_metrics_tag_breakdown_matches_generate_output(tmp_path):
+    """Cross-checks compute_retro_metrics()'s tag_breakdown_subsystem shape directly against
+    generate()'s rendered table row for the same fixture — proves the renderer's fmt_pct(row['done'],
+    row['runs']) call is fed the same raw counts the old inline computation produced."""
+    _write_registry(tmp_path, [("observability", "subsystem-topic")])
+    _write_ticket(tmp_path, "done", "TCK-20260710-FAKE-DONE", ["observability"])
+    _write_ticket(tmp_path, "inprogress", "TCK-20260710-FAKE-INPROG", ["observability"])
+
+    runs = [
+        dict(_BASE_RUN, run_id="TCK-20260710-FAKE-DONE", final_status="DONE"),
+        dict(_BASE_RUN, run_id="TCK-20260710-FAKE-INPROG", final_status="DOD_BLOCKED"),
+    ]
+    events = []
+
+    metrics = compute_retro_metrics(runs, events, tickets_root=tmp_path)
+    report = generate(runs, events, "test-label", tickets_root=tmp_path)
+
+    assert metrics["tag_breakdown_subsystem"]["observability"] == {"runs": 2, "done": 1, "gate_fails": 1}
+    assert "| observability | 2 | 50% | 1 |" in report
+
+
+def test_compute_retro_metrics_skill_tag_gate_hits_none_when_no_gate_implemented(tmp_path):
+    _write_registry(tmp_path, [("performance", "process-skill-signal")])
+    _write_ticket(tmp_path, "done", "TCK-20260710-PERF-ONE", ["performance"])
+
+    runs = [dict(_BASE_RUN, run_id="TCK-20260710-PERF-ONE", final_status="DONE")]
+    events = []
+
+    metrics = compute_retro_metrics(runs, events, tickets_root=tmp_path)
+
+    assert metrics["tag_breakdown_skill"]["performance"] == {"runs": 1, "gate_hits": None}

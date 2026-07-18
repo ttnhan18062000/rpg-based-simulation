@@ -16,8 +16,10 @@ simulation API — exposing read-only, typed projections over `tickets/**` and
 `agent-monitoring/{runs,events,tools}.jsonl` for the dashboard SPA. It never
 touches `AuthoritativeState` or the tick loop; it is a separate product on a
 separate port. Content here reflects the shipped state as of
-TCK-20260717-AGENTOPS-DASHBOARD-DOCS — re-verify against source before relying
-on exact behavior after any of the five source tickets' code changes again.
+TCK-20260717-AGENTOPS-DASHBOARD-DOCS, updated by TCK-20260718-STATS-DOCS-UPDATE
+for the two Stats-tab endpoints and by TCK-20260718-GLOSSARY-DOCS-UPDATE for
+the glossary endpoint and hover tooltips — re-verify against source before
+relying on exact behavior after further code changes.
 
 ## Contract
 
@@ -29,6 +31,9 @@ on exact behavior after any of the five source tickets' code changes again.
 | `GET /api/runs` | `List[RunSummary]` | `limit` (1-100, default 50), `offset`, `status`, `workflow`, `since` (ISO string, compared lexically, never parsed to `datetime`) | `DashboardCache.get_runs` |
 | `GET /api/runs/{run_id}` | `RunDetail`, 404 on miss | — | `DashboardCache.get_run` |
 | `GET /api/runs/{run_id}/timeline` | `RunTimeline`, 404 on miss | — | `DashboardCache.get_timeline` |
+| `GET /api/stats/agent-monitoring` | `AgentMonitoringStats` | `days` (int, optional), `all` (bool, default `false`, query alias `all`), `week` (ISO-week string, optional) — mirrors `generate_retro.py`'s own CLI period-selection flags; priority order `all` > `days` > `week` (defaults to the current ISO week if none are set), no combination validation at the route | `DashboardCache.get_agent_monitoring_stats` |
+| `GET /api/stats/tickets` | `TicketCorpusStats` | — (whole `tickets/done/` corpus, no time window) | `DashboardCache.get_ticket_corpus_stats` |
+| `GET /api/glossary` | `GlossaryResponse` | — | `DashboardCache.get_glossary` |
 | `GET /api/health` | `HealthStatus` | — | `DashboardCache.get_health` |
 
 Every route declares `response_model=`; no raw dict or domain payload is ever
@@ -51,6 +56,45 @@ unpaginated result) and `TicketsPage` (`items: list[TicketSummary]`,
 `total_count: int`, `facets: TicketFacets`) — both real Pydantic models,
 never a raw dict at the route boundary.
 
+`AgentMonitoringStats` (`run_summary: RunSummaryStats`,
+`gate_failure_breakdown`/`reason_code_breakdown: Dict[str, int]`,
+`tag_breakdown_subsystem: Dict[str, SubsystemTagStats]`,
+`tag_breakdown_skill: Dict[str, SkillTagStats]`,
+`tier_distribution: Dict[str, TierDistributionStats]`,
+`agent_status_distribution: Dict[str, Dict[str, int]]`,
+`spend_proxy_by_phase`/`spend_proxy_by_agent: Dict[str, SpendProxyStats]`,
+`summary_quality: SummaryQualityStats`, `slow_runs: List[SlowRunEntry]`) is a
+field-for-field mirror of
+`tools/agent-monitoring/generate_retro.py::compute_retro_metrics()`'s return
+dict — the route computes nothing of its own, it only wraps that function's
+output in typed models. A literal `None` key in `gate_failure_breakdown`
+(from a `runs.jsonl` row with neither `final_status` nor `status` set) is
+sanitized to the string `"unknown"` at this API boundary only —
+`compute_retro_metrics()` itself is untouched, preserving its
+byte-identical-CLI-output guarantee.
+
+`TicketCorpusStats` (`scanned_files`, `included_tickets`,
+`skipped: Dict[str, int]`, `velocity: VelocityStats`,
+`distribution: TicketDistributionStats`,
+`artifact_completeness: ArtifactCompletenessStats`) is a field-for-field
+mirror of `tools/ticket_stats_report.py::build_json_report()`'s return dict —
+same relationship as `AgentMonitoringStats` above, the route wraps rather than
+recomputes.
+
+`GlossaryEntry` (`term`, `category`, `description`) and `GlossaryResponse`
+(`terms: Dict[str, GlossaryEntry]`) back `GET /api/glossary`, the tooltip
+description source for the whole frontend. `DashboardCache.get_glossary`
+merges two registries at read time: every entry from
+`tools/glossary_registry.py`'s `docs/guidelines/glossary_registry.jsonl`
+(ticket-status/tier/priority/type/run-status/reason-code/event-status terms),
+plus every layer from `tools/layer_registry.py`'s
+`docs/guidelines/layer_registry.jsonl`, reusing that registry's existing
+`note` field as the description under `category="layer"`. Layer descriptions
+are never copied into `glossary_registry.jsonl` as a second, parallel source
+— a `if layer in terms: continue` first-registered-wins guard protects
+against a future term-name collision between the two registries, though none
+currently exists (35 glossary terms, 19 layer names, verified disjoint).
+
 ### Ingest / cache (`ingest.py`)
 
 All file reads over `tickets/**` and `agent-monitoring/*.jsonl` live in this
@@ -66,11 +110,32 @@ reimplements:
   unparseable lines, continues) and its legacy status allowlists.
 
 `DashboardCache` holds a single `threading.RLock` guarding every public
-method (`get_tickets`, `get_runs`, `get_run`, `get_timeline`, `get_health`),
-matching `src/api/read_model_cache.py`'s `ReadModelCache` pattern — not the
+method (`get_tickets`, `get_runs`, `get_run`, `get_timeline`, `get_health`,
+`get_agent_monitoring_stats`, `get_ticket_corpus_stats`, `get_glossary`), matching
+`src/api/read_model_cache.py`'s `ReadModelCache` pattern — not the
 swap-based build-outside-lock alternative. `_maybe_rebuild`/`_rebuild`
 re-run the full parse+join+inference pipeline under that same lock whenever
-any source `mtime` changes.
+any source `mtime` changes. `_rebuild` also retains `self._runs_all`/
+`self._events_all` — the raw, ungrouped `runs.jsonl`/`events.jsonl` lists,
+previously local-only to `_rebuild` — since `get_agent_monitoring_stats`
+needs the same unfiltered/undeduplicated shape `generate_retro.py`'s own CLI
+passes to `compute_retro_metrics()`, not `_runs_by_id`'s
+deduplicated-by-`run_id` view (which would silently under-count retried
+tickets).
+
+`get_ticket_corpus_stats` is the **one** `DashboardCache` method that does not
+read from the mtime-cached parse state at all — it performs its own fresh
+`tickets/done/` file walk on every call (via
+`tools/ticket_stats_report.py`'s imported functions), since that tool's
+output shape (velocity/distribution/artifact-completeness) isn't a subset of
+what `parse_ticket_file` already extracts and caches. This is a deliberate,
+documented exception to the mtime-cache pattern every other method follows,
+not an accidental divergence.
+
+`get_glossary` follows the same independent-fresh-read exception, for the
+same reason — its two source files (`glossary_registry.jsonl`,
+`layer_registry.jsonl`) are small and append-only, not worth restructuring
+`_rebuild()` for.
 
 `build_matching_runs` returns **every** `runs.jsonl` row matching a
 `ticket_id`, sorted `start_ts` descending (rows without a `start_ts` sort
@@ -117,14 +182,20 @@ shows a value that at least one matching ticket actually has.
 
 ### Frontend SPA structure (`dashboard-frontend/src/`)
 
-- `App.tsx` — top-level view-switch state (`'activity' | 'tickets' | 'replay'`),
-  no router library; owns `selectedRunId`, wired to each view's run-selection
-  callback so a Gantt-row or Tickets-row click navigates to Replay.
+- `App.tsx` — top-level view-switch state
+  (`'activity' | 'tickets' | 'replay' | 'stats'`), no router library; owns
+  `selectedRunId`, wired to each view's run-selection callback so a
+  Gantt-row or Tickets-row click navigates to Replay.
 - `api.ts` — TypeScript interfaces mirroring `models.py` field-for-field, plus
   typed fetch helpers (`fetchTickets`, `fetchRuns`, `fetchRunTimeline`,
-  `fetchAllRunsSince`) and `useRunsPolling`, a polling hook that
-  offset-loops `fetchAllRunsSince` to guard against `GET /api/runs`'s
-  per-page result cap.
+  `fetchAllRunsSince`, `fetchAgentMonitoringStats`, `fetchTicketCorpusStats`,
+  `fetchGlossary`) and `useRunsPolling`, a polling hook that offset-loops
+  `fetchAllRunsSince` to guard against `GET /api/runs`'s per-page result cap.
+  `useGlossary` is a separate fetch-once hook: a module-level
+  `_glossaryPromise` singleton ensures exactly one `/api/glossary` request
+  per app load regardless of how many views/components call the hook; its
+  `.then()` coerces any non-object response to `{}` so a malformed or
+  differently-shaped fetch mock never crashes a consumer.
 - `views/RecentActivityGantt.tsx` — default landing view; composes
   `useRunsPolling` with `GanttBar`/`Legend`/`TimeAxis`; tracks an
   active→completed settle transition so a run's bar style change is not an
@@ -164,6 +235,54 @@ shows a value that at least one matching ticket actually has.
 - `components/PlaybackScrubber.tsx` — takes a bare integer index range;
   imports no types from `api.ts` and has no knowledge of
   `RunTimeline`/`TimelineEntry`, so "scrub never fetches" is structural.
+- `views/StatsView.tsx` — fetches both `/api/stats/agent-monitoring` and
+  `/api/stats/tickets` in parallel via `Promise.all` on mount (fetch-once,
+  no polling); either request failing surfaces one shared error state rather
+  than a partial render of just the successful domain. Renders two
+  `<section>`s (Agent Monitoring, Ticket Corpus) built from `BarChart`,
+  `GroupedBarChart`, and `StatTile`, plus three plain `<table>`s (top agents
+  by call volume, slow runs, incomplete artifacts) following
+  `TicketsView.tsx`'s existing table conventions.
+- `components/BarChart.tsx` — generic single-hue horizontal magnitude bar
+  chart (`{label, value}[]` in, sorted desc and capped to `maxBars` by
+  default, or `sortByValue={false}` to preserve caller order for a
+  time-series caller like the velocity chart). No new charting dependency —
+  plain divs with inline `backgroundColor`, matching `GanttBar.tsx`'s
+  existing convention; hover tooltips reuse the already-installed
+  `@radix-ui/react-tooltip`.
+- `components/GroupedBarChart.tsx` — 2-series grouped bar chart (used only
+  for tier distribution: count vs. done), with a legend since ≥2 series are
+  present.
+- `components/StatTile.tsx` — `label`/`value` tile, no delta/trend (this is a
+  point-in-time status board, not a period-over-period comparison view).
+- `components/GlossaryTooltip.tsx` — `{term, glossary, children}` wrapper
+  around Radix `Tooltip`; renders `children` completely unwrapped (no
+  tooltip, no crash) when `term` is null, the glossary has no matching entry,
+  or the glossary hasn't loaded yet — guarded independently of `useGlossary`'s
+  own `.then()` coercion, so a consumer is safe even if it's ever called with
+  a differently-shaped glossary object. Wired into `TicketsView.tsx`
+  (Tier/Layer/ticket-status/Priority cells), `ReplayTimelineView.tsx` (event
+  `status`), and `StatsView.tsx` (Slow Runs `final_status` cell); `BarChart`/
+  `GroupedBarChart` take a separate optional `descriptions` prop that appends
+  a second line to their existing tooltip content rather than nesting a
+  second `Tooltip.Root`. All description text is sourced from `/api/glossary`
+  — there is no hardcoded description string anywhere in
+  `dashboard-frontend/src/`, enforced by a source-string regression guard in
+  `StatsView.test.tsx`. Deliberately **not** wired into `GanttBar.tsx`/
+  `Legend.tsx`: `GanttBar` renders only `run.run_id` as text (never a raw
+  status string) and colors bars via a synthetic 3-way bucket
+  (`done`/`failed`/`neutral`) that collapses many status values many-to-one,
+  and `Legend`'s three labels are hand-written descriptive prose, not a
+  single glossary term — no 1:1 term-to-label mapping exists there. Also not
+  wired onto ticket frontmatter `status` (a different doc-lifecycle enum) or
+  Replay's `call.status`/`tailCall.status` (an unconfirmed, different
+  vocabulary from event-status).
+- `lib/chartPalette.ts` — two hex constants (`CHART_SERIES_1` blue,
+  `CHART_SERIES_2` green) used by the two chart components above. Validated
+  via the project's `dataviz` skill's `scripts/validate_palette.js` against
+  this app's actual dark chart surface (`--color-bg-tertiary: #242835`) — the
+  app's own pre-existing `--color-accent-*` tokens failed that validation for
+  chart-mark use and were not reused here.
 
 ## Architecture Law
 
@@ -201,8 +320,15 @@ doc or the tickets it describes.
 ## Related
 
 - Parity ledger: `docs/parity_ledger/infrastructure.yaml`, INFRA-275 (backend
-  routes, ingest, cache, ticket-run join, inferred-active heuristic).
+  routes, ingest, cache, ticket-run join, inferred-active heuristic, and the
+  two Stats-tab endpoints/frontend consumption).
 - Parity ledger: `docs/parity_ledger/infrastructure.yaml`, INFRA-276
   (`serve.py` design, Makefile targets).
+- Parity ledger: `docs/parity_ledger/infrastructure.yaml`, INFRA-279
+  (glossary registry + `/api/glossary` endpoint) and INFRA-280 (glossary
+  frontend tooltip wiring).
 - `docs/guides/agent_ops_dashboard.md` — user/developer guide: build/run/serve
   commands and a usage walkthrough for each view.
+- `docs/guides/ticket_reporting.md` — CLI-side counterpart ("Pillar 2") to the
+  Stats tab's Ticket Corpus section; both read from the same
+  `tools/ticket_stats_report.py` computation functions.

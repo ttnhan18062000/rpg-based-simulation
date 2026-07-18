@@ -49,6 +49,36 @@ function mockTicketsFetch(items: TicketSummary[]) {
   return mockFetch
 }
 
+function mockStatsFetch() {
+  const agentBody = {
+    run_summary: { total: 1, done_count: 1, gate_fail_count: 0, avg_duration_min: 1, avg_agents: 1, total_agent_calls: 1 },
+    gate_failure_breakdown: {},
+    reason_code_breakdown: {},
+    tag_breakdown_subsystem: {},
+    tag_breakdown_skill: {},
+    tier_distribution: {},
+    agent_status_distribution: {},
+    spend_proxy_by_phase: {},
+    spend_proxy_by_agent: {},
+    summary_quality: { empty_summaries_current: 0, legacy_event_count: 0, long_summaries: 0 },
+    slow_runs: [],
+  }
+  const ticketBody = {
+    scanned_files: 1,
+    included_tickets: 1,
+    skipped: {},
+    velocity: { by_day: {}, by_week: {}, unparseable_rows: 0 },
+    distribution: { tier: {}, ticket_type: {}, priority: {}, layer: {}, layer_by_tier: {} },
+    artifact_completeness: { complete_count: 1, incomplete_count: 0, total_checked: 1, incomplete: [] },
+  }
+  const mockFetch = vi.fn((url: string) => {
+    const body = url.includes('agent-monitoring') ? agentBody : ticketBody
+    return Promise.resolve({ ok: true, json: async () => body })
+  })
+  globalThis.fetch = mockFetch as unknown as typeof fetch
+  return mockFetch
+}
+
 function navTargetRun(overrides: Partial<RunSummary> = {}): RunSummary {
   return {
     run_id: 'run-nav-target',
@@ -153,5 +183,19 @@ describe('App', () => {
     expect(screen.getByText('run-nav-target')).toBeInTheDocument()
     expect(mockedFetchRunTimeline).toHaveBeenCalledWith('run-nav-target')
     expect(screen.queryByTestId('recent-activity-gantt')).not.toBeInTheDocument()
+  })
+
+  it('Stats tab renders the real StatsView, other tabs unaffected', async () => {
+    mockStatsFetch()
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.click(screen.getByRole('button', { name: 'Stats' }))
+    expect(await screen.findByTestId('stats-view')).toBeInTheDocument()
+    expect(screen.queryByTestId('recent-activity-gantt')).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Recent Activity' }))
+    expect(screen.getByTestId('recent-activity-gantt')).toBeInTheDocument()
+    expect(screen.queryByTestId('stats-view')).not.toBeInTheDocument()
   })
 })

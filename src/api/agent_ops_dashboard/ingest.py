@@ -40,16 +40,40 @@ from ticket_field_values import (  # noqa: E402
     WORKFLOW_STATUS_VALUES,
 )
 import validate  # noqa: E402  (tools/agent-monitoring/validate.py)
+from generate_retro import compute_retro_metrics, current_week, iso_week  # noqa: E402
+from ticket_stats_report import (  # noqa: E402
+    collect_done_tickets,
+    compute_artifact_completeness,
+    compute_distribution,
+    compute_velocity,
+)
+from glossary_registry import load_registry as load_glossary_registry  # noqa: E402
+import layer_registry  # noqa: E402  (load_registry() for layer note-field reuse — see get_glossary())
 
 from src.api.agent_ops_dashboard.models import (
+    AgentMonitoringStats,
+    ArtifactCompletenessStats,
     FileTouch,
+    GlossaryEntry,
+    GlossaryResponse,
     HealthStatus,
+    IncompleteArtifactEntry,
     RawToolCall,
     RunDetail,
     RunMatchSummary,
     RunSummary,
+    RunSummaryStats,
     RunTimeline,
+    SkillTagStats,
+    SlowRunEntry,
+    SpendProxyStats,
+    SubsystemTagStats,
+    SummaryQualityStats,
+    TicketCorpusStats,
+    TicketDistributionStats,
+    VelocityStats,
     TicketSummary,
+    TierDistributionStats,
     TimelineEntry,
 )
 
@@ -398,6 +422,8 @@ class DashboardCache:
         self._tickets_root = repo_root / "tickets"
         self._lock = threading.RLock()
 
+        self._runs_all: list[dict] = []
+        self._events_all: list[dict] = []
         self._runs_by_id: dict[str, dict] = {}
         self._tickets_by_id: dict[str, dict] = {}
         self._tools_by_seq: dict = {}
@@ -469,6 +495,8 @@ class DashboardCache:
 
             inferred_active = compute_inferred_active(tools_by_run_recent, runs_by_id, now)
 
+            self._runs_all = runs_all
+            self._events_all = events_all
             self._runs_by_id = runs_by_id
             self._tickets_by_id = tickets_by_id
             self._tools_by_seq = tools_by_seq
@@ -637,6 +665,167 @@ class DashboardCache:
                 live_tail=[_tool_call_to_model(t) for t in live_tail_raw],
                 files_touched=files_touched,
             )
+
+    def get_agent_monitoring_stats(
+        self,
+        *,
+        days: Optional[int] = None,
+        all_time: bool = False,
+        week: Optional[str] = None,
+    ) -> AgentMonitoringStats:
+        """Same period-selection semantics as generate_retro.py's CLI (--days/--all/--week,
+        default current week) — replicated here rather than imported since main() mixes
+        argparse/file-I/O concerns with the filter logic; only the filter logic itself is
+        duplicated (a handful of lines), never compute_retro_metrics()'s actual computation."""
+        with self._lock:
+            self._maybe_rebuild()
+
+            if all_time:
+                runs = self._runs_all
+                events = self._events_all
+            elif days:
+                # generate_retro.py's own CLI (main()) does the bare `(r.get("start_ts") or "")
+                # >= cutoff` comparison with no type guard, which crashes on the legacy runs.jsonl
+                # records confirmed to carry a raw Unix-timestamp number (float/int) instead of an
+                # ISO8601 string for start_ts — reproduced live: `generate_retro.py --days 7`
+                # crashes the same way against real data. Out of scope to fix main() itself
+                # (untouched, per this ticket's scope guard); guard it here instead, consistent
+                # with iso_week()'s own existing try/except-based tolerance for the same class of
+                # malformed legacy data (used by the week-selection branch below).
+                cutoff = (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
+                runs = [
+                    r for r in self._runs_all
+                    if isinstance(r.get("start_ts"), str) and r["start_ts"] >= cutoff
+                ]
+                run_ids = {r["run_id"] for r in runs}
+                events = [e for e in self._events_all if e.get("run_id") in run_ids]
+            else:
+                week_str = week or current_week()
+                runs = [r for r in self._runs_all if iso_week(r.get("start_ts", "")) == week_str]
+                run_ids = {r["run_id"] for r in runs}
+                events = [e for e in self._events_all if e.get("run_id") in run_ids]
+
+            metrics = compute_retro_metrics(runs, events, tickets_root=self._tickets_root)
+
+            # compute_retro_metrics()'s gate_failure_breakdown can carry a literal `None` key
+            # (a runs.jsonl record with neither final_status nor status set — _resolve_status()
+            # returns None, and gate_counter has no `.get(..., "unknown")` fallback the way
+            # tier_counts does). The Markdown renderer tolerates this fine (f"| {gate} | ..."
+            # prints the literal text "None"), but a JSON object cannot have a None key — sanitize
+            # only at this typed API boundary, never inside compute_retro_metrics() itself, so the
+            # CLI/Markdown report's own byte-identical behavior (TCK-20260718-RETRO-STATS-REFACTOR)
+            # stays completely untouched.
+            gate_failure_breakdown = {
+                (gate if gate is not None else "unknown"): count
+                for gate, count in metrics["gate_failure_breakdown"].items()
+            }
+
+            return AgentMonitoringStats(
+                run_summary=RunSummaryStats(**metrics["run_summary"]),
+                gate_failure_breakdown=gate_failure_breakdown,
+                reason_code_breakdown=metrics["reason_code_breakdown"],
+                tag_breakdown_subsystem={
+                    tag: SubsystemTagStats(**row)
+                    for tag, row in metrics["tag_breakdown_subsystem"].items()
+                },
+                tag_breakdown_skill={
+                    tag: SkillTagStats(**row) for tag, row in metrics["tag_breakdown_skill"].items()
+                },
+                tier_distribution={
+                    tier: TierDistributionStats(**row)
+                    for tier, row in metrics["tier_distribution"].items()
+                },
+                agent_status_distribution=metrics["agent_status_distribution"],
+                spend_proxy_by_phase={
+                    phase: SpendProxyStats(**row)
+                    for phase, row in metrics["spend_proxy_by_phase"].items()
+                },
+                spend_proxy_by_agent={
+                    agent: SpendProxyStats(**row)
+                    for agent, row in metrics["spend_proxy_by_agent"].items()
+                },
+                summary_quality=SummaryQualityStats(**metrics["summary_quality"]),
+                slow_runs=[SlowRunEntry(**r) for r in metrics["slow_runs"]],
+            )
+
+    def get_ticket_corpus_stats(self) -> TicketCorpusStats:
+        """Ticket-corpus statistics (velocity, tier/type/priority/layer distribution, artifact
+        completeness) via tools/ticket_stats_report.py's computation functions — imported and
+        called directly, never reimplemented. Unlike every other DashboardCache method, this one
+        does its own fresh file walk each call rather than reading from the mtime-cached
+        _tickets_by_id/_runs_all state: tools/ticket_stats_report.py is a standalone tool
+        following tools/tag_report.py's own precedent (a script that walks tickets/done/ itself),
+        and its output shape (layer/tier/priority per ticket) isn't a subset of what
+        DashboardCache's own parse_ticket_file() already extracts and caches — folding it into
+        the mtime-rebuild cycle would require restructuring _rebuild() for a stats view that
+        changes far less often than ticket/run browsing does. self._maybe_rebuild() is still
+        called first for interface consistency with every other method, even though this
+        computation reads its own file set independent of what that rebuild refreshes.
+        """
+        with self._lock:
+            self._maybe_rebuild()
+
+            included, skip_reasons = collect_done_tickets(self._repo_root)
+            velocity = compute_velocity(self._repo_root)
+            distribution = compute_distribution(included)
+            artifact_completeness = compute_artifact_completeness(included, self._repo_root)
+
+            return TicketCorpusStats(
+                scanned_files=len(included) + sum(skip_reasons.values()),
+                included_tickets=len(included),
+                skipped=dict(skip_reasons),
+                velocity=VelocityStats(**velocity),
+                distribution=TicketDistributionStats(**distribution),
+                artifact_completeness=ArtifactCompletenessStats(
+                    complete_count=artifact_completeness["complete_count"],
+                    incomplete_count=artifact_completeness["incomplete_count"],
+                    total_checked=artifact_completeness["total_checked"],
+                    incomplete=[
+                        IncompleteArtifactEntry(**entry)
+                        for entry in artifact_completeness["incomplete"]
+                    ],
+                ),
+            )
+
+    def get_glossary(self) -> GlossaryResponse:
+        """Backend-owned tooltip descriptions, keyed by term. Two sources merged at read time,
+        never duplicated into one file: `tools/glossary_registry.py`'s own registry (ticket-status/
+        tier/priority/type/run-status/reason-code/event-status terms), plus every entry in
+        `tools/layer_registry.py`'s registry re-exposed here under category="layer", reusing each
+        layer's existing `note` field as its description rather than maintaining a second,
+        parallel description for the same 19+ values (see
+        docs/plans/agent_ops_dashboard/proposal_glossary_tooltips.md's investigation for why: layer
+        descriptions already exist in exactly one place, and this dashboard is read-only, so it
+        reads that place directly instead of copying it).
+
+        Like get_ticket_corpus_stats(), this does its own fresh file read rather than participating
+        in the mtime-cached _rebuild() cycle — both registries are small, append-only, and change
+        far less often than tickets/runs, so a fresh read per call is simpler than restructuring
+        _rebuild() for two more source files. self._maybe_rebuild() is still called first for
+        interface consistency with every other method.
+        """
+        with self._lock:
+            self._maybe_rebuild()
+
+            terms: dict[str, GlossaryEntry] = {}
+            for term, entry in load_glossary_registry(self._repo_root).items():
+                terms[term] = GlossaryEntry(
+                    term=entry["term"],
+                    category=entry["category"],
+                    description=entry["description"],
+                )
+            for layer, entry in layer_registry.load_registry(self._repo_root).items():
+                if layer in terms:
+                    # No current collision (verified: no layer name matches a glossary_registry
+                    # term), but never let one registry silently shadow the other if a future
+                    # addition to either ever collides — first-registered (glossary_registry) wins.
+                    continue
+                note = entry.get("note", "")
+                if not note:
+                    continue
+                terms[layer] = GlossaryEntry(term=layer, category="layer", description=note)
+
+            return GlossaryResponse(terms=terms)
 
     def get_health(self) -> HealthStatus:
         with self._lock:

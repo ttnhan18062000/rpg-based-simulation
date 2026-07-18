@@ -1,4 +1,4 @@
-.PHONY: help install install-py install-fe build dev serve stop clean lint profile-api memray-profile docs-serve docs-build docs-registry tag-report docs-artifacts knowledge-index knowledge-index-update search-server search-server-docker search-server-stop search-server-logs install-hooks eval-search evaluate evaluate-full simq-full-audit simq-full-audit-full simq-full-audit-slow simq-corpus-diversity-slow-isolated mcp-server-test world-list world-validate world-compile world-resolve world-inspect world-template catalog-list sim sim-debug sim-quick sim-world sim-sweep check-resources export-run retention-plan retention-clean warehouse-init warehouse-ingest typecheck-py perf-measure dashboard-install dashboard-build dashboard-dev dashboard-serve
+.PHONY: help install install-py install-fe build dev serve stop clean lint profile-api memray-profile docs-serve docs-build docs-registry tag-report docs-artifacts knowledge-index knowledge-index-update search-server search-server-docker search-server-stop search-server-logs install-hooks eval-search evaluate evaluate-full simq-full-audit simq-full-audit-full simq-full-audit-slow simq-corpus-diversity-slow-isolated mcp-server-test world-list world-validate world-compile world-resolve world-inspect world-template catalog-list sim sim-debug sim-quick sim-world sim-sweep check-resources export-run retention-plan retention-clean warehouse-init warehouse-ingest typecheck-py perf-measure dashboard-install dashboard-build dashboard-dev dashboard-serve ticket-stats-report
 
 # Default
 help: ## Show available commands
@@ -254,6 +254,9 @@ docs-registry: ## Regenerate docs/REGISTRY.yaml from frontmatter
 
 tag-report: ## Print a tag-usage report over completed tickets (pass ARGS="--json reports/tag_report.json")
 	python3 tools/tag_report.py $(ARGS)
+
+ticket-stats-report: ## Print a ticket-corpus stats report (velocity/tier/priority/layer/artifact-completeness) (pass ARGS="--json reports/ticket_stats_report.json")
+	python3 tools/ticket_stats_report.py $(ARGS)
 
 # ── Agent Monitoring ─────────────────────────────────────
 

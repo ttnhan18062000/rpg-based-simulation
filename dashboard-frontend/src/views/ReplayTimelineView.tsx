@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
-import { fetchRunTimeline, type FileTouch, type RunTimeline } from '@/api'
+import * as Tooltip from '@radix-ui/react-tooltip'
+import { fetchRunTimeline, useGlossary, type FileTouch, type RunTimeline } from '@/api'
+import { GlossaryTooltip } from '@/components/GlossaryTooltip'
 import { PlaybackScrubber } from '@/components/PlaybackScrubber'
 
 // TimelineEntry.status values, per docs/agent-monitoring/schema.md's event
@@ -21,6 +23,7 @@ export interface ReplayTimelineViewProps {
 }
 
 export function ReplayTimelineView({ runId }: ReplayTimelineViewProps) {
+  const glossary = useGlossary()
   const [timeline, setTimeline] = useState<RunTimeline | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<Error | null>(null)
@@ -75,6 +78,7 @@ export function ReplayTimelineView({ runId }: ReplayTimelineViewProps) {
   }
 
   return (
+    <Tooltip.Provider delayDuration={200}>
     <div data-testid="replay-timeline-view" className="flex flex-col h-full p-6 gap-4 overflow-auto">
       <h2 className="text-sm font-semibold">{timeline.run_id}</h2>
 
@@ -101,7 +105,10 @@ export function ReplayTimelineView({ runId }: ReplayTimelineViewProps) {
         {visibleEntries.map((entry) => (
           <div key={entry.seq} data-testid={`replay-detail-${entry.seq}`} className="mb-3">
             <div className="text-[11px] font-semibold text-text-primary">
-              #{entry.seq} {entry.phase ?? '—'} · {entry.agent ?? '—'} · {entry.status}
+              #{entry.seq} {entry.phase ?? '—'} · {entry.agent ?? '—'} ·{' '}
+              <GlossaryTooltip term={entry.status} glossary={glossary}>
+                {entry.status}
+              </GlossaryTooltip>
             </div>
             <div className="text-[11px] text-text-secondary">{entry.summary}</div>
             <ul className="ml-3 mt-1 space-y-0.5">
@@ -147,5 +154,6 @@ export function ReplayTimelineView({ runId }: ReplayTimelineViewProps) {
         </div>
       )}
     </div>
+    </Tooltip.Provider>
   )
 }

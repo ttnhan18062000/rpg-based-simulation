@@ -1,5 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
-import { fetchTickets, type FetchTicketsParams, type TicketSummary, type TicketsFacets } from '@/api'
+import * as Tooltip from '@radix-ui/react-tooltip'
+import {
+  fetchTickets,
+  useGlossary,
+  type FetchTicketsParams,
+  type TicketSummary,
+  type TicketsFacets,
+} from '@/api'
+import { GlossaryTooltip } from '@/components/GlossaryTooltip'
 
 export interface TicketsViewProps {
   onSelectRun: (runId: string) => void
@@ -126,6 +134,7 @@ function FilterSelect({ label, testId, value, options, onChange }: FilterSelectP
 }
 
 export function TicketsView({ onSelectRun }: TicketsViewProps) {
+  const glossary = useGlossary()
   const [rows, setRows] = useState<TicketSummary[]>([])
   const [optionsFacets, setOptionsFacets] = useState<TicketsFacets>(EMPTY_FACETS)
   const [totalCount, setTotalCount] = useState(0)
@@ -221,6 +230,7 @@ export function TicketsView({ onSelectRun }: TicketsViewProps) {
   }
 
   return (
+    <Tooltip.Provider delayDuration={200}>
     <div data-testid="tickets-view" className="flex flex-col h-full p-6 gap-4 overflow-auto">
       {error && (
         <div className="text-accent-red text-[11px]">Failed to load tickets: {error.message}</div>
@@ -331,13 +341,25 @@ export function TicketsView({ onSelectRun }: TicketsViewProps) {
               <td className="py-1 pr-3">{ticket.ticket_id}</td>
               <td className="py-1 pr-3">{ticket.title}</td>
               <td className="py-1 pr-3" data-testid={`tier-cell-${ticket.ticket_id}`}>
-                {ticket.tier}
+                <GlossaryTooltip term={ticket.tier} glossary={glossary}>
+                  {ticket.tier}
+                </GlossaryTooltip>
               </td>
-              <td className="py-1 pr-3">{ticket.layer}</td>
+              <td className="py-1 pr-3">
+                <GlossaryTooltip term={ticket.layer} glossary={glossary}>
+                  {ticket.layer}
+                </GlossaryTooltip>
+              </td>
               <td className="py-1 pr-3">{ticket.status}</td>
-              <td className="py-1 pr-3">{ticket.workflow_status}</td>
+              <td className="py-1 pr-3">
+                <GlossaryTooltip term={ticket.workflow_status} glossary={glossary}>
+                  {ticket.workflow_status}
+                </GlossaryTooltip>
+              </td>
               <td className="py-1 pr-3" data-testid={`priority-cell-${ticket.ticket_id}`}>
-                {ticket.priority}
+                <GlossaryTooltip term={ticket.priority} glossary={glossary}>
+                  {ticket.priority}
+                </GlossaryTooltip>
               </td>
               <td className="py-1 pr-3" data-testid={`type-cell-${ticket.ticket_id}`}>
                 {ticket.ticket_type}
@@ -367,5 +389,6 @@ export function TicketsView({ onSelectRun }: TicketsViewProps) {
         </tbody>
       </table>
     </div>
+    </Tooltip.Provider>
   )
 }

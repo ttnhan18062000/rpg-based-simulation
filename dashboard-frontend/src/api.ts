@@ -140,6 +140,179 @@ export async function fetchTickets(params: FetchTicketsParams = {}): Promise<Tic
   return (await response.json()) as TicketsPage
 }
 
+// --- Statistics (TCK-20260718-AGENTOPS-STATS-API / TCK-20260718-TICKET-CORPUS-REPORT) ---
+// Mirrors src/api/agent_ops_dashboard/models.py's AgentMonitoringStats/TicketCorpusStats trees
+// field-for-field, per this file's own established convention.
+
+export interface RunSummaryStats {
+  total: number
+  done_count: number
+  gate_fail_count: number
+  avg_duration_min: number
+  avg_agents: number
+  total_agent_calls: number
+}
+
+export interface SubsystemTagStats {
+  runs: number
+  done: number
+  gate_fails: number
+}
+
+export interface SkillTagStats {
+  runs: number
+  gate_hits: number | null
+}
+
+export interface TierDistributionStats {
+  count: number
+  scoped: number
+  done: number
+}
+
+export interface SpendProxyStats {
+  events_scored: number
+  total: number
+  avg: number
+}
+
+export interface SummaryQualityStats {
+  empty_summaries_current: number
+  legacy_event_count: number
+  long_summaries: number
+}
+
+export interface SlowRunEntry {
+  run_id: string
+  duration_s: number | null
+  final_status: string
+}
+
+export interface AgentMonitoringStats {
+  run_summary: RunSummaryStats
+  gate_failure_breakdown: Record<string, number>
+  reason_code_breakdown: Record<string, number>
+  tag_breakdown_subsystem: Record<string, SubsystemTagStats>
+  tag_breakdown_skill: Record<string, SkillTagStats>
+  tier_distribution: Record<string, TierDistributionStats>
+  agent_status_distribution: Record<string, Record<string, number>>
+  spend_proxy_by_phase: Record<string, SpendProxyStats>
+  spend_proxy_by_agent: Record<string, SpendProxyStats>
+  summary_quality: SummaryQualityStats
+  slow_runs: SlowRunEntry[]
+}
+
+export interface VelocityStats {
+  by_day: Record<string, number>
+  by_week: Record<string, number>
+  unparseable_rows: number
+}
+
+export interface TicketDistributionStats {
+  tier: Record<string, number>
+  ticket_type: Record<string, number>
+  priority: Record<string, number>
+  layer: Record<string, number>
+  layer_by_tier: Record<string, Record<string, number>>
+}
+
+export interface IncompleteArtifactEntry {
+  ticket_id: string
+  missing: string[]
+}
+
+export interface ArtifactCompletenessStats {
+  complete_count: number
+  incomplete_count: number
+  total_checked: number
+  incomplete: IncompleteArtifactEntry[]
+}
+
+export interface TicketCorpusStats {
+  scanned_files: number
+  included_tickets: number
+  skipped: Record<string, number>
+  velocity: VelocityStats
+  distribution: TicketDistributionStats
+  artifact_completeness: ArtifactCompletenessStats
+}
+
+export async function fetchAgentMonitoringStats(): Promise<AgentMonitoringStats> {
+  const response = await fetch('/api/stats/agent-monitoring')
+  if (!response.ok) {
+    throw new Error(`GET /api/stats/agent-monitoring failed with status ${response.status}`)
+  }
+  return (await response.json()) as AgentMonitoringStats
+}
+
+export async function fetchTicketCorpusStats(): Promise<TicketCorpusStats> {
+  const response = await fetch('/api/stats/tickets')
+  if (!response.ok) {
+    throw new Error(`GET /api/stats/tickets failed with status ${response.status}`)
+  }
+  return (await response.json()) as TicketCorpusStats
+}
+
+// --- Glossary (TCK-20260718-GLOSSARY-TOOLTIPS-FRONTEND) ---
+// Mirrors src/api/agent_ops_dashboard/models.py's GlossaryEntry/GlossaryResponse exactly.
+// Description text originates ONLY here (fetched from the backend) — never hardcoded as a
+// literal string anywhere else in dashboard-frontend/src/*.tsx.
+
+export interface GlossaryEntry {
+  term: string
+  category: string
+  description: string
+}
+
+export type GlossaryTerms = Record<string, GlossaryEntry>
+
+export async function fetchGlossary(): Promise<GlossaryTerms> {
+  const response = await fetch('/api/glossary')
+  if (!response.ok) {
+    throw new Error(`GET /api/glossary failed with status ${response.status}`)
+  }
+  const data = (await response.json()) as { terms: GlossaryTerms }
+  return data.terms
+}
+
+// Module-level cache — every `useGlossary()` caller across every mounted view shares this one
+// promise, so the glossary is fetched exactly once per page load regardless of how many
+// components use it, never once per hover and never once per component mount. Reset only by a
+// full page reload (this dashboard has no client-side router/navigation that would need a
+// manual invalidation path).
+let _glossaryPromise: Promise<GlossaryTerms> | null = null
+
+export function useGlossary(): GlossaryTerms {
+  const [glossary, setGlossary] = useState<GlossaryTerms>({})
+
+  useEffect(() => {
+    let cancelled = false
+    if (_glossaryPromise === null) {
+      _glossaryPromise = fetchGlossary()
+    }
+    _glossaryPromise
+      .then((terms) => {
+        // Graceful degradation also covers a resolved-but-malformed response (e.g. a stubbed
+        // fetch in a test that returns some other endpoint's shape, or a future backend change
+        // that omits `terms`) — coerce to {} rather than trust the network response's shape
+        // blindly, since a bad `terms` value here must never crash every view that uses
+        // GlossaryTooltip.
+        if (!cancelled) setGlossary(terms && typeof terms === 'object' ? terms : {})
+      })
+      .catch(() => {
+        // Graceful degradation, per this ticket's architectural constraint: a glossary fetch
+        // failure must never crash a view or block rendering the labels themselves — callers
+        // just render without tooltips (GlossaryTooltip already handles an empty/missing entry).
+        if (!cancelled) setGlossary({})
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  return glossary
+}
+
 export async function fetchRunTimeline(runId: string): Promise<RunTimeline> {
   const response = await fetch(`/api/runs/${encodeURIComponent(runId)}/timeline`)
   if (!response.ok) {

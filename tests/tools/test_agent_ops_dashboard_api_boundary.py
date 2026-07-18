@@ -47,13 +47,20 @@ def test_typed_response_models_not_dict():
             )
 
 
-def test_all_five_routes_are_declared():
+def test_all_declared_routes_present():
+    """Renamed from test_all_five_routes_are_declared (TCK-20260718-AGENTOPS-STATS-API added a
+    6th route, TCK-20260718-TICKET-CORPUS-REPORT added a 7th, TCK-20260718-GLOSSARY-API added an
+    8th) — the exact-set assertion below is the actual regression guard; keep the function name
+    generic so it doesn't itself go stale the next time a route is added."""
     paths = {path for path, _ in _response_model_names()}
     assert paths == {
         "/api/tickets",
         "/api/runs",
         "/api/runs/{run_id}",
         "/api/runs/{run_id}/timeline",
+        "/api/stats/agent-monitoring",
+        "/api/stats/tickets",
+        "/api/glossary",
         "/api/health",
     }
 

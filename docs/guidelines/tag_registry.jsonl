@@ -46,3 +46,4 @@
 {"added_date": "2026-07-06", "category": "subsystem-topic", "note": "SelfModelBundle/self_model.py cognition-adjacent subsystem; consolidates ticket-local branch-b tag", "tag": "self-model"}
 {"added_date": "2026-07-06", "category": "quality-attribute", "note": "SimQ calibration corpus concept (world/seed/scale diversity across the full calibration set); consolidates ticket-local unit-tier/end-to-end-tier/stress-tier/scale-metric/scale-diversity/calibration-harness tags", "tag": "corpus"}
 {"added_date": "2026-07-10", "category": "subsystem-topic", "note": "SOCIAL SimQ pillar / cooperation, groups, contracts, reputation subsystem (CooperationPhase, SocialScorer); named as explicit seed example in tag_taxonomy.md's Subsystem/Topic list but not yet registered", "tag": "social"}
+{"added_date": "2026-07-18", "category": "subsystem-topic", "note": "Agent Ops Dashboard feature area (src/api/agent_ops_dashboard/, dashboard-frontend/)", "tag": "dashboard"}
