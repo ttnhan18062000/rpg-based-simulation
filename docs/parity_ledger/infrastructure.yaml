@@ -4522,7 +4522,7 @@
     total_count/facets, returned by get_tickets so the three pre-existing
     direct-call filter tests keep iterating it unmodified), ingest.py:470-524
     (get_tickets computes total_count and facets — sorted(set(...)) over
-    tier/layer/workflow_status/priority/tags — over the full
+    tier/layer/priority/tags — over the full
     filtered-but-unpaginated result before slicing to
     filtered[offset:offset+limit] when limit is not None; limit stays
     Optional[int] = None at the cache layer, deliberately not aligned to
@@ -4532,7 +4532,25 @@
     dict at the route boundary). GET /api/runs, get_runs, and
     _build_run_summary were not touched (confirmed via git diff — this
     ticket's Out of Scope explicitly excludes /api/runs's own missing-
-    total_count gap).
+    total_count gap). TCK-20260718-STATUS-FACET-CANONICAL: ingest.py:361-372
+    (new WORKFLOW_STATUS_VALUES module constant — the fixed 5-value canonical
+    set {"BLOCKED", "DONE", "EPIC_SCOPED", "INPROGRESS", "OPEN"}, CLAUDE.md's
+    documented 4-value ## Status enum plus EPIC_SCOPED, the sole epic-tier
+    terminal state per TCK-20260718-STATUS-DRIFT-REPAIR/-MULTILINE-FIX's
+    corpus normalization), ingest.py:527-530 (facets["statuses"] changed from
+    _distinct_sorted(r["workflow_status"] for r in filtered) to
+    list(WORKFLOW_STATUS_VALUES) — the one facet field that is now fixed and
+    canonical rather than corpus-derived, so a status with zero matching
+    tickets right now, e.g. BLOCKED, is still a selectable filter value
+    instead of silently absent from the dropdown; every other facet
+    (tiers/layers/priorities/tags) is unchanged, still corpus-derived).
+    tools/gate_checks/status_drift_check.py:57-65 (EPIC_TIER_VALUES tightened
+    from {"EPIC_SCOPED", "SCOPED"} to {"EPIC_SCOPED"} for consistency with the
+    new canonical set — the corpus's one remaining bare "SCOPED" ticket was
+    already normalized to EPIC_SCOPED by the predecessor STATUS-MULTILINE-FIX
+    ticket, confirmed via a full tickets/{done,inprogress,todos}/ corpus scan
+    finding zero non-canonical body Status values outside the already-deferred
+    colon-format/empty exemptions).
   proof_type: feature
   test_path: >
     tests/tools/test_agent_ops_dashboard_ingest.py (including
@@ -4576,6 +4594,23 @@
     dashboard-frontend/src/test/App.test.tsx (mockTicketsFetch updated to the
     same envelope shape) — `npm test -- --run` -> "49 passed", `npx tsc -b`
     and `npm run build` both clean.
+    TCK-20260718-STATUS-FACET-CANONICAL added
+    tests/tools/test_agent_ops_dashboard_ingest.py::test_statuses_facet_is_canonical_full_set_regardless_of_corpus_content,
+    tests/tools/test_agent_ops_dashboard_ingest.py::test_statuses_facet_unaffected_by_status_query_param,
+    and updated test_facets_source_reflects_full_filtered_corpus_not_just_current_page's statuses
+    assertion to the new 5-value canonical list (was pinned to the 4 values that happened to be
+    present in that fixture; still passes, now for the right reason — the value is canonical, not
+    corpus-derived); tools/gate_checks/status_drift_check.py's own EPIC_TIER_VALUES tightening
+    covered by tests/tools/test_status_drift_check.py::test_bare_scoped_no_longer_exempt_after_tightening
+    (replacing the removed half of the former test_epic_tier_exception_ignored_by_value fixture
+    that asserted bare "SCOPED" was exempt) — re-run and confirmed during this parity update:
+    `python3 -m pytest tests/tools/test_agent_ops_dashboard_ingest.py
+    tests/tools/test_agent_ops_dashboard_api.py tests/tools/test_agent_ops_dashboard_api_boundary.py
+    tests/tools/test_agent_ops_dashboard_concurrency.py
+    tests/tools/test_agent_ops_dashboard_frontend_api_surface.py
+    tests/tools/test_agent_ops_dashboard_serve.py tests/tools/test_status_drift_check.py -q` ->
+    "66 passed in 1.39s"; frontend `npm test -- --run` -> "58 passed" (no frontend file changed;
+    re-run as a regression guard only).
   divergence_note: null
   support_boundary: >
     Read-only over tickets/** and agent-monitoring/*.jsonl; never touches AuthoritativeState.

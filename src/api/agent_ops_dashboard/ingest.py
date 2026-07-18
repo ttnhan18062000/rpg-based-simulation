@@ -362,6 +362,19 @@ def _distinct_sorted(values) -> list[str]:
     return sorted({v for v in values if v})
 
 
+# Canonical body `## Status` values a ticket can hold — the 4-value enum CLAUDE.md's Ticket
+# Format section documents (`## Status  (OPEN | INPROGRESS | BLOCKED | DONE)`) plus `EPIC_SCOPED`,
+# the sole legitimate epic-tier terminal state (TCK-20260718-STATUS-DRIFT-REPAIR /
+# TCK-20260718-STATUS-MULTILINE-FIX normalized every prior `SCOPED`/`DONE (...)` variant in the
+# corpus down to this set — confirmed via a full tickets/{done,inprogress,todos}/ scan finding
+# zero non-canonical values outside the already-deferred colon-format/empty exemptions). Unlike
+# tiers/layers/priorities/tags, which stay derived from the filtered corpus so a user can never
+# select a combination with zero possible matches, `statuses` is deliberately the fixed full set
+# regardless of what's currently present — a status with zero matching tickets right now (e.g.
+# BLOCKED) is still a valid, selectable filter value, not a hidden one.
+WORKFLOW_STATUS_VALUES: list[str] = sorted({"OPEN", "INPROGRESS", "BLOCKED", "DONE", "EPIC_SCOPED"})
+
+
 # ---------------------------------------------------------------------------
 # Step 7 — RLock-per-method cache, matching ReadModelCache's exact pattern
 # ---------------------------------------------------------------------------
@@ -511,7 +524,9 @@ class DashboardCache:
             facets = {
                 "tiers": _distinct_sorted(r["tier"] for r in filtered),
                 "layers": _distinct_sorted(r["layer"] for r in filtered),
-                "statuses": _distinct_sorted(r["workflow_status"] for r in filtered),
+                # Deliberately NOT corpus-derived, unlike every other facet here — see
+                # WORKFLOW_STATUS_VALUES's docstring for why.
+                "statuses": list(WORKFLOW_STATUS_VALUES),
                 "priorities": _distinct_sorted(r["priority"] for r in filtered),
                 "tags": _distinct_sorted(tag for r in filtered for tag in r["tags"]),
             }

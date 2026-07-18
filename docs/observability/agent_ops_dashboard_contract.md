@@ -93,13 +93,23 @@ which is inherently page-scoped once pagination applies (it sorts only the
 currently-fetched page, not the full corpus).
 
 `get_tickets` computes `total_count` and `facets` (distinct
-tier/layer/status/priority/tag values) over the full filtered result
+tier/layer/priority/tag values) over the full filtered result
 *before* slicing to `[offset:offset+limit]`, so filter-dropdown options
 always reflect the whole corpus even when only one page of rows is loaded.
 The `limit` param defaults to `None` at the cache-method level (existing
 zero-arg call sites — the three AND/OR filter tests — still get the full
 filtered set); the route layer (`main.py`) always passes a bounded
 `limit` (1-500, default 100) through `Query(...)`.
+
+`facets.statuses` is the one exception to "derived from the filtered
+corpus": it's always `WORKFLOW_STATUS_VALUES`, a fixed canonical list
+(`BLOCKED`, `DONE`, `EPIC_SCOPED`, `INPROGRESS`, `OPEN` — CLAUDE.md's
+4-value `## Status` enum plus `EPIC_SCOPED`, the sole epic-tier terminal
+value), independent of both the active filters and what's currently present
+in the ticket corpus. Every other facet only ever shows a value if at least
+one matching ticket exists; `statuses` shows all 5 unconditionally, so a
+status with zero tickets right now (e.g. `BLOCKED`) is still a selectable
+filter option rather than silently invisible.
 
 ### Frontend SPA structure (`dashboard-frontend/src/`)
 

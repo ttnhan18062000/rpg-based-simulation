@@ -63,10 +63,22 @@ def test_stale_ticket_status_flagged(tmp_path):
 
 def test_epic_tier_exception_ignored_by_value(tmp_path):
     _write_ticket(tmp_path, "TCK-20260101-EPIC-A.md", "EPIC_SCOPED")
-    _write_ticket(tmp_path, "TCK-20260101-EPIC-B.md", "SCOPED")
     results = check_ticket_status_drift(tmp_path)
     assert len(results) == 1
     assert results[0]["status"] == "PASS"
+
+
+def test_bare_scoped_no_longer_exempt_after_tightening(tmp_path):
+    # TCK-20260718-STATUS-FACET-CANONICAL tightened EPIC_TIER_VALUES from
+    # {"EPIC_SCOPED", "SCOPED"} to {"EPIC_SCOPED"} once the corpus's one remaining bare "SCOPED"
+    # ticket was normalized by the predecessor STATUS-MULTILINE-FIX ticket — the dashboard's own
+    # canonical statuses list only recognizes EPIC_SCOPED, so this checker must reject exactly what
+    # the dashboard wouldn't recognize as canonical, not more.
+    _write_ticket(tmp_path, "TCK-20260101-EPIC-B.md", "SCOPED")
+    results = check_ticket_status_drift(tmp_path)
+    assert len(results) == 1
+    assert results[0]["status"] == "FAIL"
+    assert "SCOPED" in results[0]["evidence"]
 
 
 def test_legacy_naming_file_ignored_by_pattern(tmp_path):

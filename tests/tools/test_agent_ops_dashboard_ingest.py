@@ -541,10 +541,50 @@ def test_facets_source_reflects_full_filtered_corpus_not_just_current_page(tmp_p
     assert [r.ticket_id for r in results] == ["TCK-20260101-PAGE1"]
     assert results.facets["tiers"] == ["epic", "hotfix", "standard"]
     assert results.facets["layers"] == ["ai", "combat", "engine", "world"]
-    assert results.facets["statuses"] == ["BLOCKED", "DONE", "INPROGRESS", "OPEN"]
+    # statuses is the fixed canonical list (see test_statuses_facet_is_canonical_full_set_below),
+    # not corpus-derived like every other facet here — EPIC_SCOPED shows even though this fixture
+    # has zero epic-tier tickets.
+    assert results.facets["statuses"] == ["BLOCKED", "DONE", "EPIC_SCOPED", "INPROGRESS", "OPEN"]
     assert results.facets["priorities"] == ["P0", "P1", "P2"]
     assert "offpage" in results.facets["tags"]
     assert "world" in results.facets["tags"]
+
+
+def test_statuses_facet_is_canonical_full_set_regardless_of_corpus_content(tmp_path):
+    # A ticket corpus with only OPEN and DONE tickets — no INPROGRESS, BLOCKED, or EPIC_SCOPED
+    # ticket exists anywhere. The statuses facet must still list all 5 canonical values, so a user
+    # can select e.g. BLOCKED and see it's a valid (if currently empty) filter option, matching
+    # every other facet's contract of "never hide a legitimate value" but going further: unlike
+    # tiers/layers/priorities/tags, statuses doesn't even require the value to exist once anywhere
+    # in the corpus.
+    _init_repo_skeleton(tmp_path)
+    for ticket_id, status in [("TCK-20260101-ONLY-OPEN", "OPEN"), ("TCK-20260101-ONLY-DONE", "DONE")]:
+        path = tmp_path / "tickets" / "inprogress" / f"{ticket_id}.md"
+        path.write_text(
+            f"---\nstatus: active\nlayer: engine\nauthority: P1\naudience: agent\n"
+            f"ticket_id: {ticket_id}\nphase: open\ndate: 2026-07-15\ntags: []\n---\n\n"
+            f"# {ticket_id}\n\n## Tier\nstandard\n\n## Type\nfeature\n\n"
+            f"## Priority\nP1\n\n## Status\n{status}\n",
+            encoding="utf-8",
+        )
+
+    cache = ingest.DashboardCache(repo_root=tmp_path)
+    results = cache.get_tickets()
+
+    assert {r.ticket_id for r in results} == {"TCK-20260101-ONLY-OPEN", "TCK-20260101-ONLY-DONE"}
+    assert results.facets["statuses"] == ["BLOCKED", "DONE", "EPIC_SCOPED", "INPROGRESS", "OPEN"]
+
+
+def test_statuses_facet_unaffected_by_status_query_param(tmp_path):
+    # Filtering BY status=DONE must not shrink the statuses facet down to just ["DONE"] — the
+    # facet is the canonical list independent of any active filter, same as it's independent of
+    # pagination.
+    _write_pagination_fixture_tickets(tmp_path)
+    cache = ingest.DashboardCache(repo_root=tmp_path)
+    results = cache.get_tickets(status="DONE")
+
+    assert [r.ticket_id for r in results] == ["TCK-20260101-PAGE4"]
+    assert results.facets["statuses"] == ["BLOCKED", "DONE", "EPIC_SCOPED", "INPROGRESS", "OPEN"]
 
 
 def test_malformed_jsonl_line_is_skipped_and_counted():

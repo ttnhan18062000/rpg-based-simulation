@@ -84,7 +84,12 @@ Filtering across dimensions is AND (a ticket must match every active
 filter); filtering within the tag selection is OR (a ticket matches if it
 has any selected tag). Filter-dropdown and tag options are sourced from a
 server-computed summary of the full filtered corpus, so they never narrow
-to just the current page. The tag list itself is capped at 40
+to just the current page. The Status dropdown is the one exception: it
+always lists the full canonical set (`OPEN`, `INPROGRESS`, `BLOCKED`,
+`DONE`, `EPIC_SCOPED`) regardless of whether any ticket currently holds a
+given status, so e.g. `BLOCKED` stays selectable (returning zero rows)
+instead of disappearing whenever no ticket happens to be blocked right now.
+The tag list itself is capped at 40
 always-visible options with a search box to narrow further, instead of
 dumping every tag in the corpus as an unbroken wall of buttons. Clicking
 the date column header re-sorts via the backend (the only server-side sort

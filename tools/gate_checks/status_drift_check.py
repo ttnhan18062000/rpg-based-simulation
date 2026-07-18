@@ -54,7 +54,15 @@ if str(_TOOLS_DIR) not in sys.path:
 
 from generate_registry import parse_body_section, _strip_frontmatter  # noqa: E402
 
-EPIC_TIER_VALUES = {"EPIC_SCOPED", "SCOPED"}
+# Tightened from {"EPIC_SCOPED", "SCOPED"} by TCK-20260718-STATUS-FACET-CANONICAL:
+# TCK-20260718-STATUS-MULTILINE-FIX normalized the corpus's one remaining bare "SCOPED" ticket to
+# "EPIC_SCOPED" (matching its 6 siblings), and the dashboard's own WORKFLOW_STATUS_VALUES canonical
+# list (src/api/agent_ops_dashboard/ingest.py) now defines EPIC_SCOPED as the sole epic-tier
+# terminal value. Keeping this checker's exemption looser than the canonical set it's meant to
+# validate against would let a future bare "SCOPED" ticket silently pass here while never being a
+# selectable dashboard filter value — this checker should reject exactly what the dashboard
+# wouldn't recognize as canonical, not more.
+EPIC_TIER_VALUES = {"EPIC_SCOPED"}
 
 
 def check_ticket_status_drift(done_dir: Path = DEFAULT_DONE_DIR) -> List[dict]:
@@ -65,9 +73,10 @@ def check_ticket_status_drift(done_dir: Path = DEFAULT_DONE_DIR) -> List[dict]:
     plain `DONE`. Skips (does not flag) three structural exemptions: an empty extraction (same-line
     colon-suffixed `## Status: X` tickets and any file with no `## Status` heading at all — both
     return `""` from `parse_body_section` and are out of this check's scope, see module docstring),
-    `## Status` values in `{"EPIC_SCOPED", "SCOPED"}` (epic-tier terminal text is legitimate, not
-    drift), and files whose name does not start with `TCK-` (pre-TCK-naming legacy files, out of
-    scope per project precedent). All three exemptions are value-based / filename-pattern-based,
+    `## Status` values in `EPIC_TIER_VALUES` (`{"EPIC_SCOPED"}` — the sole canonical epic-tier
+    terminal value; legitimate, not drift), and files whose name does not start with `TCK-`
+    (pre-TCK-naming legacy files, out of scope per project precedent). All three exemptions are
+    value-based / filename-pattern-based,
     never a hardcoded literal filename list, so a future epic closure or legacy backfill does not
     require a checker update to stay correctly exempt.
     """
