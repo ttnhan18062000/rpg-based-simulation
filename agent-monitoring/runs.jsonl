@@ -643,3 +643,4 @@
 {"run_id":"TCK-20260718-STATUS-SUFFIX-TRIM","start_ts":"2026-07-18T05:07:49Z","end_ts":"2026-07-18T05:48:25Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":10,"duration_s":2436}
 {"run_id":"TCK-20260718-STATUS-MULTILINE-FIX","start_ts":"2026-07-18T05:55:06Z","end_ts":"2026-07-18T06:05:00Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":6,"duration_s":594}
 {"run_id":"TCK-20260718-STATUS-FACET-CANONICAL","start_ts":"2026-07-18T06:30:30Z","end_ts":"2026-07-18T06:35:01Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":6,"duration_s":271}
+{"run_id":"TCK-20260718-FILTER-SELECT-DROPOUT","start_ts":"2026-07-18T07:47:04Z","end_ts":"2026-07-18T07:55:29Z","workflow":"implement-ticket","tier":"hotfix","final_status":"DONE","agent_count":6,"duration_s":505}

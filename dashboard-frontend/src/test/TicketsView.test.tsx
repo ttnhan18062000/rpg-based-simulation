@@ -323,6 +323,72 @@ describe('TicketsView — facets independent of page window', () => {
   })
 })
 
+describe('TicketsView — selected filter value survives a zero-match facet response', () => {
+  beforeEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  it('Layer select keeps showing the selected value (not "All") when a combined filter yields zero matches and an empty layers facet', async () => {
+    const user = userEvent.setup()
+    // Initial load: layer=economy exists as an option.
+    const mockFetch = mockFetchReturning([makeTicket({ ticket_id: 'TCK-A', layer: 'economy' })], {
+      total_count: 1,
+      facets: {
+        tiers: ['standard'],
+        layers: ['economy'],
+        statuses: ['OPEN', 'DONE'],
+        priorities: ['P1'],
+        tags: [],
+      },
+    })
+
+    render(<TicketsView onSelectRun={noopOnSelectRun} />)
+    await screen.findByTestId('tickets-table')
+
+    await user.selectOptions(screen.getByTestId('filter-layer'), 'economy')
+    const layerSelect = screen.getByTestId('filter-layer') as HTMLSelectElement
+    expect(layerSelect.value).toBe('economy')
+
+    // Selecting Status=DONE combined with layer=economy now yields zero matching tickets — the
+    // backend's real behavior (confirmed live) is that every corpus-derived facet OTHER than the
+    // one just changed collapses when the combined result is empty, so `layers` comes back [].
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        items: [],
+        total_count: 0,
+        facets: { tiers: [], layers: [], statuses: ['OPEN', 'DONE'], priorities: [], tags: [] },
+      }),
+    })
+    await user.selectOptions(screen.getByTestId('filter-status'), 'DONE')
+
+    // Bug: without a fix, layerSelect.value silently becomes '' here because no <option
+    // value="economy"> exists in the DOM once `layers` facet is []. The select must still
+    // correctly report 'economy' as its value.
+    expect(layerSelect.value).toBe('economy')
+
+    // Confirm this is purely a rendering fix, not a filters-state fix: the next request (any
+    // further filter change) must still include the "invisible" layer=economy filter. Status is
+    // used for this next interaction (rather than Priority, whose only offered option from the
+    // prior response was already dropped to [] and so is no longer selectable at all — a
+    // different, expected scenario) since Status's options are the fixed canonical superset and
+    // so remain selectable regardless of any facet response.
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        items: [],
+        total_count: 0,
+        facets: { tiers: [], layers: [], statuses: ['OPEN', 'DONE'], priorities: [], tags: [] },
+      }),
+    })
+    await user.selectOptions(screen.getByTestId('filter-status'), 'OPEN')
+    const lastCall = mockFetch.mock.calls[mockFetch.mock.calls.length - 1]
+    const requestedUrl = String(lastCall[0])
+    expect(requestedUrl).toContain('layer=economy')
+    expect(requestedUrl).toContain('status=OPEN')
+  })
+})
+
 describe('TicketsView — tag search/collapse', () => {
   beforeEach(() => {
     vi.restoreAllMocks()

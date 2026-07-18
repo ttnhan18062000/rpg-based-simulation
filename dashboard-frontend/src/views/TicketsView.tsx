@@ -93,6 +93,13 @@ interface FilterSelectProps {
 }
 
 function FilterSelect({ label, testId, value, options, onChange }: FilterSelectProps) {
+  // `options` is corpus-derived (see get_tickets' facets computation) and can shrink to exclude
+  // the currently-selected value once combined with another active filter yields zero matching
+  // tickets — a <select> cannot visually display a `value` with no matching <option>, so without
+  // this it silently renders as "All" even though `value` (React/query-param state) is untouched.
+  // Injecting a synthetic option for the selected value keeps the dropdown honest regardless of
+  // what the current combined-filter result happens to contain.
+  const selectedValueMissingFromOptions = value !== '' && !options.includes(value)
   return (
     <label className="flex flex-col text-[11px] text-text-secondary gap-0.5">
       {label}
@@ -103,6 +110,7 @@ function FilterSelect({ label, testId, value, options, onChange }: FilterSelectP
         className="bg-bg-tertiary border border-border rounded-md px-2 py-1 text-text-primary"
       >
         <option value="">All</option>
+        {selectedValueMissingFromOptions && <option value={value}>{value}</option>}
         {options.map((option) => (
           <option key={option} value={option}>
             {option}
