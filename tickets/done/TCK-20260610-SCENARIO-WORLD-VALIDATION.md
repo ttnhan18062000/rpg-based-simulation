@@ -15,7 +15,7 @@ tags: [scenario, world, validation]
 Add scenario-to-world-composition feature validator
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard

@@ -4627,3 +4627,68 @@
     ingest/cache/API routes) -- consumes main.py's app read-only via include_router.
     Excludes dashboard-dev's Vite dev-server process orchestration (Makefile-only,
     no src/ behavior to verify) and any CI/deploy automation (out of scope).
+- id: INFRA-277
+  text: >
+    Ticket/run status-drift regression check (TCK-20260718-STATUS-DRIFT-REPAIR):
+    tools/gate_checks/status_drift_check.py detects two historical data-drift classes so the
+    one-time repair does not silently regress. check_ticket_status_drift() flags any
+    tickets/done/*.md file whose body `## Status` value is not `DONE`, exempting
+    {"EPIC_SCOPED", "SCOPED"} (legitimate epic-tier terminal text) and non-`TCK-`-prefixed
+    filenames (pre-TCK-naming legacy files) by value/pattern, never a hardcoded filename list.
+    check_runs_jsonl_final_status_drift() flags any agent-monitoring/runs.jsonl record whose
+    final_status is not already its own uppercase form, skipping records that lack the key
+    entirely (legacy status/started_at schema, out of scope by design). check_status_drift()
+    aggregates both. Ships unwired -- no Makefile target, no .claude/workflows/*.js call site --
+    a future ticket decides where/whether to gate on it. Motivating one-time data fixes: 71
+    tickets/done/*.md files' `## Status` corrected OPEN/INPROGRESS -> DONE; 7 runs.jsonl records'
+    final_status normalized "done"/"success" -> "DONE" via line-scoped string substitution
+    (line count and every non-target byte unchanged), documented as a one-time, audited
+    exception to the file's append-only-for-new-writes contract in
+    docs/agent-monitoring/schema.md's new "Historical Corrections" subsection. No src/ file was
+    touched by this ticket; dashboard-frontend's classifyFinalStatus() (GanttBar.tsx) is
+    unmodified -- the bug was purely in the underlying data, not the classifier -- confirmed by
+    manual trace that classifyFinalStatus('DONE') already returns 'done'.
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: >
+    tools/gate_checks/status_drift_check.py:47-81 (check_ticket_status_drift -- TICKET_STATUS_RE
+    at L42 kept byte-identical to the baseline derivation regex used to freeze the approved
+    71/12/83 file counts; EPIC_TIER_VALUES at L44), status_drift_check.py:84-111
+    (check_runs_jsonl_final_status_drift), status_drift_check.py:114-118 (check_status_drift
+    aggregate), status_drift_check.py:121-127 (__main__ MARKER: json stdout contract, sys.exit(1)
+    on any FAIL, matching doc_staleness_check.py/workflow_meta_conformance.py's shape);
+    docs/agent-monitoring/schema.md:69-78 ("Historical Corrections" subsection documenting the
+    Part B runs.jsonl edit as a one-time exception, not a change to the ongoing append-only
+    contract); agent-monitoring/runs.jsonl (7 records' final_status now uppercase "DONE");
+    71 tickets/done/*.md files (body `## Status` now DONE, git diff --numstat confirms exactly
+    1 insertion + 1 deletion per file).
+  proof_type: regression
+  test_path: >
+    tests/tools/test_status_drift_check.py::test_clean_corpus_passes,
+    tests/tools/test_status_drift_check.py::test_stale_ticket_status_flagged,
+    tests/tools/test_status_drift_check.py::test_epic_tier_exception_ignored_by_value,
+    tests/tools/test_status_drift_check.py::test_legacy_naming_file_ignored_by_pattern,
+    tests/tools/test_status_drift_check.py::test_same_line_colon_status_format_not_newly_flagged,
+    tests/tools/test_status_drift_check.py::test_lowercase_final_status_flagged,
+    tests/tools/test_status_drift_check.py::test_legacy_runs_jsonl_shape_ignored,
+    tests/tools/test_status_drift_check.py::test_runs_jsonl_clean_uppercase_passes,
+    tests/tools/test_status_drift_check.py::test_check_status_drift_aggregates_both_scans,
+    tests/tools/test_status_drift_check.py::test_check_is_read_only,
+    tests/tools/test_status_drift_check.py::test_marker_json_output_contract,
+    tests/tools/test_status_drift_check.py::test_exit_code_nonzero_on_any_fail_zero_on_clean,
+    tests/tools/test_status_drift_check.py::test_regex_matches_baseline_scan_pattern
+    (13/13 passing, re-run and confirmed during this parity update: `python3 -m pytest
+    tests/tools/test_status_drift_check.py -q` -> "13 passed in 0.23s"); live-corpus check also
+    confirmed clean: `python3 tools/gate_checks/status_drift_check.py` -> exit 0, both scans PASS.
+  divergence_note: null
+  support_boundary: >
+    Ticket/run data-hygiene tooling only -- no simulation behavior is involved (mirrors
+    INFRA-263/264/265's support_boundary pattern for gate-check tooling entries). Does not cover
+    or claim anything about dashboard-frontend's own rendering correctness (INFRA-275/276 own
+    that boundary; classifyFinalStatus() is unmodified by this ticket). Known, intentional
+    limitation carried over from the source docstring: the ticket-status regex does not detect
+    the same-line colon-suffixed `## Status: X` format (6 files corpus-wide as of 2026-07-18,
+    deliberately excluded from both the 71-file fix and this check's flagged set per plan.md's
+    "Colon-Suffixed Files Decision" -- a candidate for a future, separately-scoped ticket, not a
+    gap in this entry's verified claim).

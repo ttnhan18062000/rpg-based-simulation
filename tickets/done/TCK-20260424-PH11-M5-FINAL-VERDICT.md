@@ -15,7 +15,7 @@ tags: [ph11, m5, final, verdict]
 Phase 11 Milestone 5: Final Replacement Verdict
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard

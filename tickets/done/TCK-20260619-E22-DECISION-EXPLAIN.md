@@ -15,7 +15,7 @@ tags: [decision-explanation, observability, rest-api, route-trace, cognition, ep
 Epic 2.2 · Decision Explanation Model
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 epic

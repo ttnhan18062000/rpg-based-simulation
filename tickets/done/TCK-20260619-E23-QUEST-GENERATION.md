@@ -15,7 +15,7 @@ tags: [quest-generation, pressure-driven, opportunity-type, adventure, world-eme
 Epic 2.3 · Pressure-Driven Quest Generation
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 epic

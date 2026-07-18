@@ -17,7 +17,7 @@ Pattern Detectors and Behavior Insights (Phase 25)
 
 ## Status
 
-INPROGRESS
+DONE
 
 ## Tier
 standard

@@ -15,7 +15,7 @@ tags: [docs, reorg]
 Architecting Authoritative RPG Documentation Suite
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard

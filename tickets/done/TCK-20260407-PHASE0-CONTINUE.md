@@ -15,7 +15,7 @@ tags: [phase0, continue]
 Complete the Phase 0 foundational constraints for the Macro-Interest redesign by moving dynamic social state to the `SocialRegistry`, cleaning up `IdentityAspect` and `MindAspect` to avoid duplication, and formalizing the `InterpretedEvent` pipeline.
 
 ## Status
-INPROGRESS
+DONE
 
 ## Scope
 - Align `IdentityAspect` and `MindAspect` to avoid state duplication (`reputation`, `hero_familiarity`).

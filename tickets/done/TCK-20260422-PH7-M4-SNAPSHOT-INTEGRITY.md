@@ -15,7 +15,7 @@ tags: [ph7, m4, snapshot, integrity]
 Phase 7 Milestone 4: Snapshot Integrity, Isolation, and Serialization Closure
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard

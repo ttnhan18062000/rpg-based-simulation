@@ -17,7 +17,7 @@ Semantic Behavior Metrics (Phase 24)
 
 ## Status
 
-INPROGRESS
+DONE
 
 ## Tier
 standard

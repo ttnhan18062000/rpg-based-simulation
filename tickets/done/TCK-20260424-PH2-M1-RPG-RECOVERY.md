@@ -15,7 +15,7 @@ tags: [ph2, m1, rpg, recovery]
 Phase 2 Milestone 1: RPG Core Recovery
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard

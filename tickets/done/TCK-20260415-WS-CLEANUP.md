@@ -17,7 +17,7 @@ Workspace Cleanup of Temporary Files
 
 ## Status
 
-OPEN
+DONE
 
 ## Tier
 standard

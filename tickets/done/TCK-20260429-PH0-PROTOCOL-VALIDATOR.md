@@ -15,7 +15,7 @@ tags: [ph0, protocol, validator]
 Implement Phase 0 Protocol Validator
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard

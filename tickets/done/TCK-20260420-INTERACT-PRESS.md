@@ -15,7 +15,7 @@ tags: [interact, press]
 Weight Pressure and Inventory Parity Enforcement
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard

@@ -49,4 +49,4 @@ Implement the logic for inheritance and succession when an entity (specifically 
 - docs/superpowers/specs/2026-04-09-continuity-and-consequence-design.md
 
 ## Status
-INPROGRESS
+DONE

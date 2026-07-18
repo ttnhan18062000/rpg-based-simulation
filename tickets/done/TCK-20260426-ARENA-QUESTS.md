@@ -15,7 +15,7 @@ tags: [arena, quests]
 Extend E2E Arena Testing for Quest Progression
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard

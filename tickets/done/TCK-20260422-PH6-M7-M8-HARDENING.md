@@ -15,7 +15,7 @@ tags: [ph6, m7, m8, hardening]
 Phase 6 M7/M8 P0 Recovery Hardening and Ledger Truth Alignment
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard

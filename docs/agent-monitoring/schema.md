@@ -66,6 +66,17 @@ One record per workflow invocation.
 | `NOTHING_TO_CREATE` | `create-tickets` only — no actionable concerns, all concerns were duplicates of existing tickets, or no tasks survived structuring. |
 | `CRASHED` | Synthetic status set by `validate.py` for runs with `start_ts` but no `end_ts`. |
 
+### Historical Corrections
+
+`runs.jsonl` is append-only for all *new* writes (see the file's opening line above) — every writer
+(`record_run.py`) only ever `open(RUNS_FILE, "a")`s, never rewrites an existing line. The one
+documented exception: **TCK-20260718-STATUS-DRIFT-REPAIR** (2026-07-18) corrected the `final_status`
+casing on 7 pre-existing records (`"done"`/`"success"` → `"DONE"`, predating this doc's all-uppercase
+enum convention) via an atomic, audited, line-scoped string substitution — not a bulk parse/
+re-serialize — so every other byte of every other line was left untouched. This was a one-time
+historical data correction, not a change to the write contract; the file remains append-only for
+all writes going forward.
+
 ---
 
 ## `agent-monitoring/events.jsonl`

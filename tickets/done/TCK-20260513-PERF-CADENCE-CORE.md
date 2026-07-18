@@ -15,7 +15,7 @@ tags: [perf, cadence, core]
 Implement System Cadence Infrastructure
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard

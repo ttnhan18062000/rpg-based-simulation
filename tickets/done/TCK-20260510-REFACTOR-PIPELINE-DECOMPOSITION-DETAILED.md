@@ -15,7 +15,7 @@ tags: [refactor, pipeline, decomposition, detailed]
 Decompose AuthoritativeApplyPipeline into dedicated phases
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard

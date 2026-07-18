@@ -15,7 +15,7 @@ tags: [ph11, m6, exit, package]
 Phase 11 Milestone 6: Phase 12 Cutover Baseline and Phase 11 Exit Package
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard

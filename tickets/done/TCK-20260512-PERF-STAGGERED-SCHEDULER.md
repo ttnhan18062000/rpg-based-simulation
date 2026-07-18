@@ -17,7 +17,7 @@ Implement Staggered Entity Execution in DeterministicScheduler
 
 ## Status
 
-OPEN
+DONE
 
 ## Tier
 standard

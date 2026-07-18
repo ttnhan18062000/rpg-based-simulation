@@ -15,7 +15,7 @@ tags: [md, task2, harden, protocol, and, commit, law]
 Milestone D - Task 2: Harden Worker Protocol and Commit Law
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard

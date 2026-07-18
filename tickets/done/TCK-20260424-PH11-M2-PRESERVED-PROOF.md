@@ -15,7 +15,7 @@ tags: [ph11, m2, preserved, proof]
 Phase 11 Milestone 2: Preserved-Surface Proof Closure
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard

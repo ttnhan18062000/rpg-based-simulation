@@ -15,7 +15,7 @@ tags: [ph7, m3, kernel, stability]
 Phase 7 Milestone 3: Kernel Stability and Resource-Bounded Finalization
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard

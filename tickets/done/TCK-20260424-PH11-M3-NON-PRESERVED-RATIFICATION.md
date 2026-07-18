@@ -15,7 +15,7 @@ tags: [ph11, m3, non, preserved, ratification]
 Phase 11 Milestone 3: Non-Preserved Scope Ratification
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard

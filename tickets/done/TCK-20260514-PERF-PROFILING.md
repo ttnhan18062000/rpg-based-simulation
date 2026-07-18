@@ -15,7 +15,7 @@ tags: [perf, profiling]
 Implement Engine Profiling Suite
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard

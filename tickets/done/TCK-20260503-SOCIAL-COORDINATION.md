@@ -15,7 +15,7 @@ tags: [social, coordination]
 Hardening Social Contracts, Party Cooperation, and Goal Registry (Domain 4)
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard

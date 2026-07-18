@@ -1,0 +1,215 @@
+"""Tests for tools/gate_checks/status_drift_check.py (TCK-20260718-STATUS-DRIFT-REPAIR).
+
+Coverage-honesty requirement (SEQUENCE.md decision 4, see workflow_meta_conformance's own test
+module): every check function below has at least one fixture proving it catches a real violation
+it claims to catch, not just that it runs on the happy path.
+"""
+
+import json
+import os
+import subprocess
+import sys
+from pathlib import Path
+
+_TOOLS_DIR = Path(__file__).parent.parent.parent / "tools"
+if str(_TOOLS_DIR) not in sys.path:
+    sys.path.insert(0, str(_TOOLS_DIR))
+
+from gate_checks.status_drift_check import (  # noqa: E402
+    check_runs_jsonl_final_status_drift,
+    check_status_drift,
+    check_ticket_status_drift,
+)
+
+_REPO_ROOT = Path(__file__).parent.parent.parent
+_MODULE_PATH = _REPO_ROOT / "tools" / "gate_checks" / "status_drift_check.py"
+
+
+def _write_ticket(tmp_path, name, status_body, blank_line=False):
+    sep = "\n\n" if blank_line else "\n"
+    (tmp_path / name).write_text(
+        "---\nstatus: historical\n---\n\n"
+        f"# {name}\n\n## Title\nFixture\n\n## Status{sep}{status_body}\n\n## Tier\nstandard\n"
+    )
+
+
+def _write_runs_jsonl(tmp_path, records, filename="runs.jsonl"):
+    path = tmp_path / filename
+    path.write_text("\n".join(json.dumps(r) for r in records) + ("\n" if records else ""))
+    return path
+
+
+# ---------------------------------------------------------------------------
+# check_ticket_status_drift
+# ---------------------------------------------------------------------------
+
+
+def test_clean_corpus_passes(tmp_path):
+    _write_ticket(tmp_path, "TCK-20260101-CLEAN-A.md", "DONE")
+    _write_ticket(tmp_path, "TCK-20260101-CLEAN-B.md", "DONE", blank_line=True)
+    results = check_ticket_status_drift(tmp_path)
+    assert len(results) == 1
+    assert results[0]["status"] == "PASS"
+
+
+def test_stale_ticket_status_flagged(tmp_path):
+    _write_ticket(tmp_path, "TCK-20260101-STALE.md", "OPEN")
+    results = check_ticket_status_drift(tmp_path)
+    assert len(results) == 1
+    assert results[0]["status"] == "FAIL"
+    assert "TCK-20260101-STALE.md" in results[0]["evidence"]
+    assert "OPEN" in results[0]["evidence"]
+
+
+def test_epic_tier_exception_ignored_by_value(tmp_path):
+    _write_ticket(tmp_path, "TCK-20260101-EPIC-A.md", "EPIC_SCOPED")
+    _write_ticket(tmp_path, "TCK-20260101-EPIC-B.md", "SCOPED")
+    results = check_ticket_status_drift(tmp_path)
+    assert len(results) == 1
+    assert results[0]["status"] == "PASS"
+
+
+def test_legacy_naming_file_ignored_by_pattern(tmp_path):
+    _write_ticket(tmp_path, "resource_v2_fixture_e9_9.md", "OPEN")
+    results = check_ticket_status_drift(tmp_path)
+    assert len(results) == 1
+    assert results[0]["status"] == "PASS"
+
+
+def test_same_line_colon_status_format_not_newly_flagged(tmp_path):
+    (tmp_path / "TCK-20260101-COLON-FORMAT.md").write_text(
+        "---\nstatus: historical\n---\n\n# fixture\n\n## Status: INPROGRESS\n\n## Tier\nstandard\n"
+    )
+    results = check_ticket_status_drift(tmp_path)
+    assert len(results) == 1
+    assert results[0]["status"] == "PASS"
+
+
+# ---------------------------------------------------------------------------
+# check_runs_jsonl_final_status_drift
+# ---------------------------------------------------------------------------
+
+
+def test_lowercase_final_status_flagged(tmp_path):
+    runs_path = _write_runs_jsonl(tmp_path, [
+        {"run_id": "TCK-FIXTURE-1", "final_status": "done"},
+    ])
+    results = check_runs_jsonl_final_status_drift(runs_path)
+    assert len(results) == 1
+    assert results[0]["status"] == "FAIL"
+    assert "TCK-FIXTURE-1" in results[0]["evidence"]
+
+
+def test_legacy_runs_jsonl_shape_ignored(tmp_path):
+    runs_path = _write_runs_jsonl(tmp_path, [
+        {"run_id": "LEGACY-1", "status": "done", "started_at": "2026-01-01T00:00:00Z"},
+    ])
+    results = check_runs_jsonl_final_status_drift(runs_path)
+    assert len(results) == 1
+    assert results[0]["status"] == "PASS"
+
+
+def test_runs_jsonl_clean_uppercase_passes(tmp_path):
+    runs_path = _write_runs_jsonl(tmp_path, [
+        {"run_id": "TCK-FIXTURE-2", "final_status": "DONE"},
+    ])
+    results = check_runs_jsonl_final_status_drift(runs_path)
+    assert len(results) == 1
+    assert results[0]["status"] == "PASS"
+
+
+# ---------------------------------------------------------------------------
+# check_status_drift — aggregate
+# ---------------------------------------------------------------------------
+
+
+def test_check_status_drift_aggregates_both_scans(tmp_path):
+    _write_ticket(tmp_path, "TCK-20260101-STALE.md", "OPEN")
+    runs_path = _write_runs_jsonl(tmp_path, [
+        {"run_id": "TCK-FIXTURE-1", "final_status": "done"},
+    ])
+    results = check_status_drift(tmp_path, runs_path)
+    statuses = {r["status"] for r in results}
+    assert statuses == {"FAIL"}
+    assert len(results) == 2
+
+
+# ---------------------------------------------------------------------------
+# Architecture guard — read-only
+# ---------------------------------------------------------------------------
+
+
+def test_check_is_read_only(tmp_path):
+    _write_ticket(tmp_path, "TCK-20260101-STALE.md", "OPEN")
+    runs_path = _write_runs_jsonl(tmp_path, [
+        {"run_id": "TCK-FIXTURE-1", "final_status": "done"},
+    ])
+    ticket_path = tmp_path / "TCK-20260101-STALE.md"
+    before_ticket = ticket_path.read_bytes()
+    before_ticket_mtime = os.path.getmtime(ticket_path)
+    before_runs = runs_path.read_bytes()
+    before_runs_mtime = os.path.getmtime(runs_path)
+
+    check_status_drift(tmp_path, runs_path)
+
+    assert ticket_path.read_bytes() == before_ticket
+    assert os.path.getmtime(ticket_path) == before_ticket_mtime
+    assert runs_path.read_bytes() == before_runs
+    assert os.path.getmtime(runs_path) == before_runs_mtime
+
+
+# ---------------------------------------------------------------------------
+# CLI contract — MARKER:-prefixed JSON, non-zero exit on FAIL
+# ---------------------------------------------------------------------------
+
+
+def test_marker_json_output_contract(tmp_path):
+    _write_ticket(tmp_path, "TCK-20260101-CLEAN.md", "DONE")
+    runs_path = _write_runs_jsonl(tmp_path, [{"run_id": "TCK-FIXTURE-1", "final_status": "DONE"}])
+
+    proc = subprocess.run(
+        [sys.executable, str(_MODULE_PATH), str(tmp_path), str(runs_path)],
+        capture_output=True, text=True, check=True,
+    )
+    output_line = proc.stdout.strip()
+    assert output_line.startswith("MARKER:")
+    payload = json.loads(output_line[len("MARKER:"):])
+    assert isinstance(payload, list)
+    for entry in payload:
+        assert set(entry.keys()) == {"status", "evidence"}
+        assert entry["status"] in {"PASS", "FAIL"}
+
+
+def test_exit_code_nonzero_on_any_fail_zero_on_clean(tmp_path):
+    clean_dir = tmp_path / "clean"
+    clean_dir.mkdir()
+    _write_ticket(clean_dir, "TCK-20260101-CLEAN.md", "DONE")
+    clean_runs = _write_runs_jsonl(clean_dir, [{"run_id": "TCK-FIXTURE-1", "final_status": "DONE"}])
+
+    clean_proc = subprocess.run(
+        [sys.executable, str(_MODULE_PATH), str(clean_dir), str(clean_runs)],
+        capture_output=True, text=True,
+    )
+    assert clean_proc.returncode == 0
+
+    stale_dir = tmp_path / "stale"
+    stale_dir.mkdir()
+    _write_ticket(stale_dir, "TCK-20260101-STALE.md", "OPEN")
+    stale_runs = _write_runs_jsonl(stale_dir, [{"run_id": "TCK-FIXTURE-1", "final_status": "DONE"}])
+
+    stale_proc = subprocess.run(
+        [sys.executable, str(_MODULE_PATH), str(stale_dir), str(stale_runs)],
+        capture_output=True, text=True,
+    )
+    assert stale_proc.returncode != 0
+
+
+# ---------------------------------------------------------------------------
+# Live-corpus sanity — confirms the baseline regex matches the exact same shape
+# the ticket's own scoping/fix scripts used
+# ---------------------------------------------------------------------------
+
+
+def test_regex_matches_baseline_scan_pattern():
+    from gate_checks.status_drift_check import TICKET_STATUS_RE
+    assert TICKET_STATUS_RE.pattern == r"^## Status\s*\n+\s*(\S+)"

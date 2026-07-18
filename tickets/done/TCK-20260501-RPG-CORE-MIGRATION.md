@@ -15,7 +15,7 @@ tags: [rpg, core, migration]
 Migrating Phase 7 (Social Contract) and Phase 6 (Strategic Cognition) Legacy Logic
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard

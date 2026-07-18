@@ -15,7 +15,7 @@ tags: [simulation-quality]
 Add integration test validating the §9 Traceability Design drill-down path end-to-end
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard

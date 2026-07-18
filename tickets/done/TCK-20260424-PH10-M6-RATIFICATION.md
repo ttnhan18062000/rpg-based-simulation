@@ -15,7 +15,7 @@ tags: [ph10, m6, ratification]
 Phase 10 Milestone 6: Final System Ratification
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard

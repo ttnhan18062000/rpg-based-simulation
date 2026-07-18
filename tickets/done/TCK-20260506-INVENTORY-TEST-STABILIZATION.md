@@ -17,7 +17,7 @@ Migrate inventory test suites to V2EntityBuilder
 
 ## Status
 
-INPROGRESS
+DONE
 
 ## Tier
 standard

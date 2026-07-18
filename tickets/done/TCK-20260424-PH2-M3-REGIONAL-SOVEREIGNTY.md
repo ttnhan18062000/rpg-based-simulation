@@ -15,7 +15,7 @@ tags: [ph2, m3, regional, sovereignty]
 Phase 2 Milestone 3: Regional Sovereignty
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
