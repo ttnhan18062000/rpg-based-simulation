@@ -6,7 +6,7 @@ audience: agent
 ticket_id: TCK-20260703-SIMQ-UPLIFT3-PLAYBOOK-DOC
 phase: done
 date: 2026-07-03
-tags: [simulation_quality, documentation, worldbuilding, pattern]
+tags: [simulation-quality, documentation, worldbuilding, pattern]
 ---
 
 # TCK-20260703-SIMQ-UPLIFT3-PLAYBOOK-DOC

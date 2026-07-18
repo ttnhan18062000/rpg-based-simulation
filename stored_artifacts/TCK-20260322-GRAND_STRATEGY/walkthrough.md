@@ -4,7 +4,7 @@ status: historical
 layer: strategy
 authority: P2
 audience: agent
-tags: [grand_strategy]
+tags: [grand-strategy]
 ---
 
 # Walkthrough: Milestone 11 - Grand Strategy

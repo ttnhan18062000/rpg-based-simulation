@@ -6,7 +6,7 @@ audience: agent
 ticket_id: TCK-20260623-FIX-RUNTIME-MODE
 phase: done
 date: 2026-06-23
-tags: [test-repair, registry, content-mode, enum, P1]
+tags: [test-repair, registry, content-mode, enum]
 ---
 
 # TCK-20260623-FIX-RUNTIME-MODE

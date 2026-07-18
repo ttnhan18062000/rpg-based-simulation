@@ -6,7 +6,7 @@ audience: agent
 ticket_id: TCK-20260619-P0-DETERMINISM
 phase: done
 date: 2026-06-19
-tags: [determinism, rng, bare-random, phase-0, p0-foundation, p0]
+tags: [determinism, rng, bare-random, phase-0, p0-foundation]
 ---
 
 # TCK-20260619-P0-DETERMINISM

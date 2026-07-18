@@ -6,7 +6,7 @@ audience: agent
 ticket_id: TCK-20260703-SIMQ-UPLIFT3-DUAL-GATE-AUDIT
 phase: done
 date: 2026-07-03
-tags: [simulation_quality, economy, social, investigation, worldbuilding]
+tags: [simulation-quality, economy, social, investigation, worldbuilding]
 ---
 
 # TCK-20260703-SIMQ-UPLIFT3-DUAL-GATE-AUDIT

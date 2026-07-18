@@ -6,7 +6,7 @@ audience: agent
 ticket_id: TCK-20260627-P2H-TIMELINE-APPEND
 phase: done
 date: 2026-06-27
-tags: [p2, timeline, event-emission, kernel, coupling, refactor]
+tags: [timeline, event-emission, kernel, coupling, refactor]
 ---
 
 # TCK-20260627-P2H-TIMELINE-APPEND

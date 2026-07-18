@@ -6,7 +6,7 @@ audience: agent
 ticket_id: TCK-20260627-P2M-CI-ARTIFACTS
 phase: done
 date: 2026-06-27
-tags: [p2, ci, github-actions, artifacts, release-proof, certification]
+tags: [ci, github-actions, artifacts, release-proof, certification]
 ---
 
 # TCK-20260627-P2M-CI-ARTIFACTS

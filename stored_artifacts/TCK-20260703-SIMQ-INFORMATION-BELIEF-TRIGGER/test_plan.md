@@ -5,7 +5,7 @@ authority: P1
 audience: agent
 ticket_id: TCK-20260703-SIMQ-INFORMATION-BELIEF-TRIGGER
 artifact_type: test_plan
-tags: [simulation_quality, information, belief, cognition, self-model]
+tags: [simulation-quality, information, belief, cognition, self-model]
 ---
 
 # Test Plan — TCK-20260703-SIMQ-INFORMATION-BELIEF-TRIGGER

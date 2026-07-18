@@ -6,7 +6,7 @@ audience: agent
 ticket_id: TCK-20260627-P1B-QUEST-ACTIVATION
 phase: done
 date: 2026-06-27
-tags: [p1, quest, activation, strategic-intelligence, material-blocker]
+tags: [quest, activation, strategic-intelligence, material-blocker]
 ---
 
 # TCK-20260627-P1B-QUEST-ACTIVATION

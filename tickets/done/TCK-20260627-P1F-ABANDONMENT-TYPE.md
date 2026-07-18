@@ -6,7 +6,7 @@ audience: agent
 ticket_id: TCK-20260627-P1F-ABANDONMENT-TYPE
 phase: done
 date: 2026-06-27
-tags: [p1, type-safety, abandonment, dataclass, enum, commitment]
+tags: [type-safety, abandonment, dataclass, enum, commitment]
 ---
 
 # TCK-20260627-P1F-ABANDONMENT-TYPE

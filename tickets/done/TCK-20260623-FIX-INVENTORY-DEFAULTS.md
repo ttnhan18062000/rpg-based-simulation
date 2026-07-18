@@ -6,7 +6,7 @@ audience: agent
 ticket_id: TCK-20260623-FIX-INVENTORY-DEFAULTS
 phase: done
 date: 2026-06-23
-tags: [test-repair, inventory, resource, defaults, P1]
+tags: [test-repair, inventory, resource, defaults]
 ---
 
 # TCK-20260623-FIX-INVENTORY-DEFAULTS

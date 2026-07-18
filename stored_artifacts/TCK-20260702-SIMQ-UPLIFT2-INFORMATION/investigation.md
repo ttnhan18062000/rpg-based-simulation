@@ -5,7 +5,7 @@ authority: P1
 audience: agent
 ticket_id: TCK-20260702-SIMQ-UPLIFT2-INFORMATION
 artifact_type: investigation
-tags: [simulation_quality, information, belief, worldbuilder, feature_flag]
+tags: [simulation-quality, information, belief, worldbuilder, feature-flags]
 ---
 
 # Investigation — TCK-20260702-SIMQ-UPLIFT2-INFORMATION

@@ -6,7 +6,7 @@ audience: agent
 ticket_id: TCK-20260623-FIX-ENTITY-ID
 phase: done
 date: 2026-06-23
-tags: [test-repair, entity, identity, KeyError, state, P1]
+tags: [test-repair, entity, identity, KeyError, state]
 ---
 
 # TCK-20260623-FIX-ENTITY-ID

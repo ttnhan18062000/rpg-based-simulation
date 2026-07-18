@@ -6,7 +6,7 @@ audience: agent
 ticket_id: TCK-20260702-SIMQ-UPLIFT2-FACTION
 phase: done
 date: 2026-07-02
-tags: [simulation_quality, faction, worldbuilder, compiler, schema]
+tags: [simulation-quality, faction, worldbuilder, compiler, schema]
 ---
 
 # TCK-20260702-SIMQ-UPLIFT2-FACTION

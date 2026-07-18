@@ -4,7 +4,7 @@ status: historical
 layer: strategy
 authority: P2
 audience: agent
-tags: [grand_strategy]
+tags: [grand-strategy]
 ---
 
 # Milestone 4: The Living World (Part 1 - Soul & Body)

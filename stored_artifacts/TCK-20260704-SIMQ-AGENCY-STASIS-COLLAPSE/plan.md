@@ -5,7 +5,7 @@ authority: P1
 audience: agent
 ticket_id: TCK-20260704-SIMQ-AGENCY-STASIS-COLLAPSE
 artifact_type: plan
-tags: [simulation_quality, agency, cognition, stasis, calibration, bug]
+tags: [simulation-quality, agency, cognition, stasis, calibration, bug]
 ---
 
 # Plan — TCK-20260704-SIMQ-AGENCY-STASIS-COLLAPSE

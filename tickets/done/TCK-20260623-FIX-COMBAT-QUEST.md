@@ -6,7 +6,7 @@ audience: agent
 ticket_id: TCK-20260623-FIX-COMBAT-QUEST
 phase: open
 date: 2026-06-23
-tags: [test-repair, combat, quest, reward, social, P1]
+tags: [test-repair, combat, quest, reward, social]
 ---
 
 # TCK-20260623-FIX-COMBAT-QUEST

@@ -6,7 +6,7 @@ audience: agent
 ticket_id: TCK-20260703-SIMQ-INFORMATION-BELIEF-TRIGGER
 phase: done
 date: 2026-07-03
-tags: [simulation_quality, information, belief, cognition, self-model, deferred]
+tags: [simulation-quality, information, belief, cognition, self-model, deferred]
 ---
 
 # TCK-20260703-SIMQ-INFORMATION-BELIEF-TRIGGER

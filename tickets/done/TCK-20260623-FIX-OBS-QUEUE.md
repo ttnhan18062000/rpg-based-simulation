@@ -6,7 +6,7 @@ audience: agent
 ticket_id: TCK-20260623-FIX-OBS-QUEUE
 phase: done
 date: 2026-06-23
-tags: [test-repair, observability, queue, thread, crash, SIGABRT, P1]
+tags: [test-repair, observability, queue, thread, crash, SIGABRT]
 ---
 
 # TCK-20260623-FIX-OBS-QUEUE

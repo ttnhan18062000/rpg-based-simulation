@@ -6,7 +6,7 @@ audience: agent
 ticket_id: TCK-20260702-SIMQ-UPLIFT2-INFORMATION
 phase: closed
 date: 2026-07-02
-tags: [simulation_quality, information, belief, worldbuilder, feature_flag]
+tags: [simulation-quality, information, belief, worldbuilder, feature-flags]
 ---
 
 # TCK-20260702-SIMQ-UPLIFT2-INFORMATION

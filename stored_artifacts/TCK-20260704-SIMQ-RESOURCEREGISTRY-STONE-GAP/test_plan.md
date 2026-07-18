@@ -5,7 +5,7 @@ authority: P1
 audience: agent
 ticket_id: TCK-20260704-SIMQ-RESOURCEREGISTRY-STONE-GAP
 artifact_type: test_plan
-tags: [simulation_quality, world, ecology, resource-registry, bug]
+tags: [simulation-quality, world, ecology, resource-registry, bug]
 ---
 
 # Test Plan — TCK-20260704-SIMQ-RESOURCEREGISTRY-STONE-GAP

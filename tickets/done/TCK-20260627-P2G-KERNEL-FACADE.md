@@ -6,7 +6,7 @@ audience: agent
 ticket_id: TCK-20260627-P2G-KERNEL-FACADE
 phase: done
 date: 2026-06-27
-tags: [p2, coupling, kernel, hard-law-monitor, worldindexservice, facade, refactor]
+tags: [coupling, kernel, hard-law-monitor, worldindexservice, facade, refactor]
 ---
 
 # TCK-20260627-P2G-KERNEL-FACADE

@@ -6,7 +6,7 @@ audience: agent
 ticket_id: TCK-20260623-FIX-WORLDASSEMBLY
 phase: done
 date: 2026-06-23
-tags: [test-repair, worldassembly, content, validation, P0]
+tags: [test-repair, worldassembly, content, validation]
 ---
 
 # TCK-20260623-FIX-WORLDASSEMBLY

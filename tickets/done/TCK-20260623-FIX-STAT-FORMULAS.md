@@ -6,7 +6,7 @@ audience: agent
 ticket_id: TCK-20260623-FIX-STAT-FORMULAS
 phase: open
 date: 2026-06-23
-tags: [test-repair, stats, progression, optimization, parity, P1]
+tags: [test-repair, stats, progression, optimization, parity]
 ---
 
 # TCK-20260623-FIX-STAT-FORMULAS

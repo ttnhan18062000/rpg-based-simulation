@@ -6,7 +6,7 @@ audience: agent
 ticket_id: TCK-20260627-P0A-ADVENTURE-FLAG
 phase: done
 date: 2026-06-27
-tags: [p0, feature-flags, adventure-routing, blocker, economic-measurement]
+tags: [feature-flags, adventure-routing, blocker, economic-measurement]
 ---
 
 # TCK-20260627-P0A-ADVENTURE-FLAG

@@ -6,7 +6,7 @@ audience: agent
 ticket_id: TCK-20260623-FIX-TEST-TEARDOWN
 phase: done
 date: 2026-06-23
-tags: [test-repair, teardown, catalog, registry, contamination, P1]
+tags: [test-repair, teardown, catalog, registry, contamination]
 ---
 
 # TCK-20260623-FIX-TEST-TEARDOWN

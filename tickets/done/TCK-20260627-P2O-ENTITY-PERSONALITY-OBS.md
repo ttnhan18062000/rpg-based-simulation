@@ -6,7 +6,7 @@ audience: agent
 ticket_id: TCK-20260627-P2O-ENTITY-PERSONALITY-OBS
 phase: done
 date: 2026-06-27
-tags: [p2, observability, personality, entity-snapshot, light-mode, dx]
+tags: [observability, personality, entity-snapshot, light-mode, dx]
 ---
 
 # TCK-20260627-P2O-ENTITY-PERSONALITY-OBS

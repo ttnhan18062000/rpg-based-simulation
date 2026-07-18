@@ -6,7 +6,7 @@ audience: agent
 ticket_id: TCK-20260703-SIMQ-UPLIFT3-WORLD-CORPUS
 phase: done
 date: 2026-07-03
-tags: [simulation_quality, worldbuilding, calibration, content, test-suite]
+tags: [simulation-quality, worldbuilding, calibration, content, test-suite]
 ---
 
 # TCK-20260703-SIMQ-UPLIFT3-WORLD-CORPUS

@@ -6,7 +6,7 @@ audience: agent
 ticket_id: TCK-20260627-P2C-ARCHETYPE-DIST
 phase: done
 date: 2026-06-27
-tags: [p2, archetypes, content, distribution, mage, healer, variety]
+tags: [archetypes, content, distribution, mage, healer, variety]
 ---
 
 # TCK-20260627-P2C-ARCHETYPE-DIST

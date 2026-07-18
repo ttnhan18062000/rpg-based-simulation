@@ -6,7 +6,7 @@ audience: agent
 ticket_id: TCK-20260627-P1E-DOMAIN-INVENTORY
 phase: done
 date: 2026-06-27
-tags: [p1, audit, documentation, domain-phases, pipeline, inventory]
+tags: [audit, documentation, domain-phases, pipeline, inventory]
 ---
 
 # TCK-20260627-P1E-DOMAIN-INVENTORY

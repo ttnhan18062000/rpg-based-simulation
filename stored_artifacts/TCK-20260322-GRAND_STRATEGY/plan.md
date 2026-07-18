@@ -5,7 +5,7 @@ authority: P2
 audience: agent
 ticket_id: TCK-20260322-GRAND_STRATEGY
 artifact_type: plan
-tags: [grand_strategy]
+tags: [grand-strategy]
 ---
 
 # Milestone 11: Grand Strategy - Faction Wars & Territory Conquest

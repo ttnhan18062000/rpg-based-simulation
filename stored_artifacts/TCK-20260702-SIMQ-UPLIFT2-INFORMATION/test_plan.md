@@ -5,7 +5,7 @@ authority: P1
 audience: agent
 ticket_id: TCK-20260702-SIMQ-UPLIFT2-INFORMATION
 artifact_type: test_plan
-tags: [simulation_quality, information, belief, worldbuilder, feature_flag]
+tags: [simulation-quality, information, belief, worldbuilder, feature-flags]
 ---
 
 # Test Plan — TCK-20260702-SIMQ-UPLIFT2-INFORMATION

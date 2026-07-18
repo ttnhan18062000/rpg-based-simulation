@@ -6,7 +6,7 @@ audience: agent
 ticket_id: TCK-20260703-SIMQ-UPLIFT3-FAST-CALIBRATE
 phase: done
 date: 2026-07-03
-tags: [simulation_quality, calibration, performance, tooling]
+tags: [simulation-quality, calibration, performance, tooling]
 ---
 
 # TCK-20260703-SIMQ-UPLIFT3-FAST-CALIBRATE

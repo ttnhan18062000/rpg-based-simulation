@@ -6,7 +6,7 @@ audience: agent
 ticket_id: TCK-20260702-SIMQ-UPLIFT-GRADE-DECAY
 phase: done
 date: 2026-07-02
-tags: [simulation_quality, combat, world, grade_thresholds, normalization, scoring]
+tags: [simulation-quality, combat, world, grade-thresholds, normalization, scoring]
 ---
 
 # TCK-20260702-SIMQ-UPLIFT-GRADE-DECAY

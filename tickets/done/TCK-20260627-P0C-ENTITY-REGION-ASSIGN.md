@@ -6,7 +6,7 @@ audience: agent
 ticket_id: TCK-20260627-P0C-ENTITY-REGION-ASSIGN
 phase: done
 date: 2026-06-27
-tags: [p0, region-id, entity-factory, world-compiler, blocker]
+tags: [region-id, entity-factory, world-compiler, blocker]
 ---
 
 # TCK-20260627-P0C-ENTITY-REGION-ASSIGN

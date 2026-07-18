@@ -6,7 +6,7 @@ audience: agent
 ticket_id: TCK-20260627-P2N-DEGRADED-FALLBACK
 phase: done
 date: 2026-06-27
-tags: [p2, degradation, fallback, catalog, content-source, hardcoded]
+tags: [degradation, fallback, catalog, content-source, hardcoded]
 ---
 
 # TCK-20260627-P2N-DEGRADED-FALLBACK

@@ -6,7 +6,7 @@ audience: agent
 ticket_id: TCK-20260627-P2B-SPAWN-CADENCE
 phase: done
 date: 2026-06-27
-tags: [p2, spawn-service, attrition, population, cadence, long-run]
+tags: [spawn-service, attrition, population, cadence, long-run]
 ---
 
 # TCK-20260627-P2B-SPAWN-CADENCE

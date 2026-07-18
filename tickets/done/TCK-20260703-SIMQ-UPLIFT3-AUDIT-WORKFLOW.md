@@ -6,7 +6,7 @@ audience: agent
 ticket_id: TCK-20260703-SIMQ-UPLIFT3-AUDIT-WORKFLOW
 phase: done
 date: 2026-07-03
-tags: [simulation_quality, workflow, tooling, audit, process]
+tags: [simulation-quality, workflow, tooling, audit, process]
 ---
 
 # TCK-20260703-SIMQ-UPLIFT3-AUDIT-WORKFLOW

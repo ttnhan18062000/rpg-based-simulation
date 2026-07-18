@@ -6,7 +6,7 @@ audience: agent
 ticket_id: TCK-20260703-SIMQ-UPLIFT3-BRANCH-B
 phase: done
 date: 2026-07-03
-tags: [simulation_quality, information, cognition, self-model, bug]
+tags: [simulation-quality, information, cognition, self-model, bug]
 ---
 
 # TCK-20260703-SIMQ-UPLIFT3-BRANCH-B

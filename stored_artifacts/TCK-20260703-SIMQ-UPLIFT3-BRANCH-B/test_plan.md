@@ -5,7 +5,7 @@ authority: P1
 audience: agent
 ticket_id: TCK-20260703-SIMQ-UPLIFT3-BRANCH-B
 artifact_type: test_plan
-tags: [simulation_quality, information, cognition, self-model, bug]
+tags: [simulation-quality, information, cognition, self-model, bug]
 ---
 
 # Test Plan — TCK-20260703-SIMQ-UPLIFT3-BRANCH-B

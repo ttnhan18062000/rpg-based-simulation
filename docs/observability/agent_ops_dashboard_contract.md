@@ -240,9 +240,13 @@ shows a value that at least one matching ticket actually has.
   no polling); either request failing surfaces one shared error state rather
   than a partial render of just the successful domain. Renders two
   `<section>`s (Agent Monitoring, Ticket Corpus) built from `BarChart`,
-  `GroupedBarChart`, and `StatTile`, plus three plain `<table>`s (top agents
-  by call volume, slow runs, incomplete artifacts) following
-  `TicketsView.tsx`'s existing table conventions.
+  `GroupedBarChart`, and `StatTile`, plus two plain `<table>`s (top agents
+  by call volume, slow runs) following `TicketsView.tsx`'s existing table
+  conventions. The per-ticket "Incomplete artifacts" table was removed
+  (kept the aggregate "Artifact completeness" `StatTile` only) — the
+  underlying data remains fully available via `GET /api/stats/tickets`'s
+  `artifact_completeness.incomplete` field, just not rendered as a UI
+  table.
 - `components/BarChart.tsx` — generic single-hue horizontal magnitude bar
   chart (`{label, value}[]` in, sorted desc and capped to `maxBars` by
   default, or `sortByValue={false}` to preserve caller order for a

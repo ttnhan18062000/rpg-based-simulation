@@ -4,7 +4,7 @@ layer: simulation
 authority: P1
 audience: agent
 artifact_type: test_plan
-tags: [epic-scoping, simulation_quality, world-content, feature-flags]
+tags: [epic-scoping, simulation-quality, world-content, feature-flags]
 ---
 
 # Test Plan — TCK-20260704-SIMQ-CORPUS-TIERS-EPIC

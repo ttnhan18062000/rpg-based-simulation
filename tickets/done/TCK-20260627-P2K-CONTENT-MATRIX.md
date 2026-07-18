@@ -6,7 +6,7 @@ audience: agent
 ticket_id: TCK-20260627-P2K-CONTENT-MATRIX
 phase: done
 date: 2026-06-27
-tags: [p2, content, content-usage-matrix, auto-generate, authoring-dx, registry]
+tags: [content, content-usage-matrix, auto-generate, authoring-dx, registry]
 ---
 
 # TCK-20260627-P2K-CONTENT-MATRIX

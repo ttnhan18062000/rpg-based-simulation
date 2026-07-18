@@ -4,7 +4,7 @@ layer: simulation
 authority: P1
 audience: agent
 artifact_type: investigation
-tags: [epic-scoping, simulation_quality, world-content, feature-flags, pre-ticket]
+tags: [epic-scoping, simulation-quality, world-content, feature-flags, pre-ticket]
 ---
 
 # Investigation — TCK-20260704-SIMQ-CORPUS-TIERS-EPIC

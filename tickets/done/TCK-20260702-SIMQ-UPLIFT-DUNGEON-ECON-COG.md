@@ -6,7 +6,7 @@ audience: agent
 ticket_id: TCK-20260702-SIMQ-UPLIFT-DUNGEON-ECON-COG
 phase: done
 date: 2026-07-02
-tags: [simulation_quality, economy, cognition, dungeon_crawl, world_spec, archetype]
+tags: [simulation-quality, economy, cognition, dungeon-crawl, world_spec, archetype]
 ---
 
 # TCK-20260702-SIMQ-UPLIFT-DUNGEON-ECON-COG

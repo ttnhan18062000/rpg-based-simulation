@@ -6,7 +6,7 @@ audience: agent
 ticket_id: TCK-20260702-SIMQ-UPLIFT2-AGENCY-DA
 phase: done
 date: 2026-07-02
-tags: [simulation_quality, agency, documentation, parity]
+tags: [simulation-quality, agency, documentation, parity]
 ---
 
 # TCK-20260702-SIMQ-UPLIFT2-AGENCY-DA
