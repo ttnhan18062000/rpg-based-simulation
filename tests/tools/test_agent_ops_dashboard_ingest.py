@@ -15,6 +15,7 @@ from src.api.agent_ops_dashboard import ingest
 
 import validate  # tools/agent-monitoring/validate.py — importable once ingest.py has run
 import validate_frontmatter  # tools/validate_frontmatter.py — same
+from ticket_field_values import LAYER_VALUES  # tools/ticket_field_values.py — same
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -537,26 +538,66 @@ def test_facets_source_reflects_full_filtered_corpus_not_just_current_page(tmp_p
     results = cache.get_tickets(limit=1, offset=0)
 
     # Only PAGE1 (tier=epic, layer=ai, tags=[ai, onpage]) comes back as items,
-    # but facets must still carry values that only exist on later pages.
+    # but facets must still carry values that only exist on later pages — and, as of
+    # TCK-20260718-DASHBOARD-FACETS-FULLY-CANONICAL, values that don't exist anywhere in this
+    # fixture at all (tiers/layers/statuses/priorities are all fixed canonical lists now, only
+    # tags remains genuinely corpus-derived).
     assert [r.ticket_id for r in results] == ["TCK-20260101-PAGE1"]
     assert results.facets["tiers"] == ["epic", "hotfix", "standard"]
-    assert results.facets["layers"] == ["ai", "combat", "engine", "world"]
-    # statuses is the fixed canonical list (see test_statuses_facet_is_canonical_full_set_below),
-    # not corpus-derived like every other facet here — EPIC_SCOPED shows even though this fixture
-    # has zero epic-tier tickets.
+    assert results.facets["layers"] == sorted(LAYER_VALUES)
     assert results.facets["statuses"] == ["BLOCKED", "DONE", "EPIC_SCOPED", "INPROGRESS", "OPEN"]
-    assert results.facets["priorities"] == ["P0", "P1", "P2"]
+    assert results.facets["priorities"] == ["P0", "P1", "P2", "P3"]
     assert "offpage" in results.facets["tags"]
     assert "world" in results.facets["tags"]
+
+
+def test_tiers_layers_priorities_facets_are_canonical_full_sets_regardless_of_corpus_content(tmp_path):
+    # A ticket corpus with only one tier/layer/priority combination — no other tier, no other
+    # layer, no other priority exists anywhere. All three facets must still list their full
+    # canonical sets, so a user can select e.g. Tier=hotfix or Priority=P3 and see they're valid
+    # (if currently empty) filter options — mirrors test_statuses_facet_is_canonical_full_set's
+    # own pattern, extended to the three facets TCK-20260718-DASHBOARD-FACETS-FULLY-CANONICAL
+    # just made canonical.
+    _init_repo_skeleton(tmp_path)
+    path = tmp_path / "tickets" / "inprogress" / "TCK-20260101-ONLY-ONE.md"
+    path.write_text(
+        "---\nstatus: active\nlayer: engine\nauthority: P1\naudience: agent\n"
+        "ticket_id: TCK-20260101-ONLY-ONE\nphase: open\ndate: 2026-07-15\ntags: []\n---\n\n"
+        "# TCK-20260101-ONLY-ONE\n\n## Tier\nstandard\n\n## Type\nfeature\n\n"
+        "## Priority\nP1\n\n## Status\nOPEN\n",
+        encoding="utf-8",
+    )
+
+    cache = ingest.DashboardCache(repo_root=tmp_path)
+    results = cache.get_tickets()
+
+    assert [r.ticket_id for r in results] == ["TCK-20260101-ONLY-ONE"]
+    assert results.facets["tiers"] == ["epic", "hotfix", "standard"]
+    assert results.facets["layers"] == sorted(LAYER_VALUES)
+    assert results.facets["priorities"] == ["P0", "P1", "P2", "P3"]
+
+
+def test_tiers_layers_priorities_facets_unaffected_by_active_filters(tmp_path):
+    # Filtering BY tier=standard must not shrink the tiers/layers/priorities facets — they are
+    # the canonical lists independent of any active filter, mirroring
+    # test_statuses_facet_unaffected_by_status_query_param's own pattern.
+    _write_pagination_fixture_tickets(tmp_path)
+    cache = ingest.DashboardCache(repo_root=tmp_path)
+    results = cache.get_tickets(tier="epic")
+
+    assert results.facets["tiers"] == ["epic", "hotfix", "standard"]
+    assert results.facets["layers"] == sorted(LAYER_VALUES)
+    assert results.facets["priorities"] == ["P0", "P1", "P2", "P3"]
 
 
 def test_statuses_facet_is_canonical_full_set_regardless_of_corpus_content(tmp_path):
     # A ticket corpus with only OPEN and DONE tickets — no INPROGRESS, BLOCKED, or EPIC_SCOPED
     # ticket exists anywhere. The statuses facet must still list all 5 canonical values, so a user
     # can select e.g. BLOCKED and see it's a valid (if currently empty) filter option, matching
-    # every other facet's contract of "never hide a legitimate value" but going further: unlike
-    # tiers/layers/priorities/tags, statuses doesn't even require the value to exist once anywhere
-    # in the corpus.
+    # every other facet's contract of "never hide a legitimate value" — as of
+    # TCK-20260718-DASHBOARD-FACETS-FULLY-CANONICAL, tiers/layers/priorities share this exact
+    # contract too (see test_tiers_layers_priorities_facets_are_canonical_full_sets_regardless_of_corpus_content);
+    # only tags remains genuinely corpus-derived.
     _init_repo_skeleton(tmp_path)
     for ticket_id, status in [("TCK-20260101-ONLY-OPEN", "OPEN"), ("TCK-20260101-ONLY-DONE", "DONE")]:
         path = tmp_path / "tickets" / "inprogress" / f"{ticket_id}.md"

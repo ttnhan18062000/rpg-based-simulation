@@ -35,17 +35,22 @@ from tag_registry import (  # noqa: E402,F401
     is_tag_registered,
     load_registry,
 )
+from layer_registry import layer_values as _layer_values  # noqa: E402
 
 # ---------------------------------------------------------------------------
 # Enum constants — single source of truth for all valid field values.
 # ---------------------------------------------------------------------------
 
 STATUS_VALUES = {"authoritative", "active", "historical", "archive"}
-LAYER_VALUES = {
-    "mechanics", "engine", "testing", "simulation", "ai", "architecture",
-    "core", "ticket", "artifact", "guidelines", "observability", "performance",
-    "combat", "compliance", "strategy", "systems", "economy", "world", "misc",
-}
+# Registry-backed as of TCK-20260718-LAYER-REGISTRY-CONVERSION — was a hardcoded set literal,
+# requiring a code change to add a new legitimate value. Now computed from
+# docs/guidelines/layer_registry.jsonl via tools/layer_registry.py, mirroring Tag's own
+# registry-backed process (tools/tag_registry.py). `layer:` itself is UNCHANGED — still
+# single-value per ticket; only the source of the legal-value set moved, not the cardinality.
+# The importable name `LAYER_VALUES` is preserved unchanged so every existing consumer
+# (tools/ticket_field_values.py's `from validate_frontmatter import LAYER_VALUES`, and this
+# module's own `_check_enum` calls below) keeps working with no further change.
+LAYER_VALUES = _layer_values()
 AUTHORITY_VALUES = {"P0", "P1", "P2"}
 AUDIENCE_VALUES = {"developer", "agent", "designer", "historical"}
 PHASE_VALUES = {"open", "inprogress", "blocked", "done"}

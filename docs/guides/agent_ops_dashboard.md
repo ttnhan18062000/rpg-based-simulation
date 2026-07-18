@@ -82,14 +82,17 @@ multi-select for tags — this matches the backend's actual query-parameter
 shape (each of the first four accepts one value; only `tag` is repeatable).
 Filtering across dimensions is AND (a ticket must match every active
 filter); filtering within the tag selection is OR (a ticket matches if it
-has any selected tag). Filter-dropdown and tag options are sourced from a
-server-computed summary of the full filtered corpus, so they never narrow
-to just the current page. The Status dropdown is the one exception: it
-always lists the full canonical set (`OPEN`, `INPROGRESS`, `BLOCKED`,
-`DONE`, `EPIC_SCOPED`) regardless of whether any ticket currently holds a
-given status, so e.g. `BLOCKED` stays selectable (returning zero rows)
-instead of disappearing whenever no ticket happens to be blocked right now.
-The tag list itself is capped at 40
+has any selected tag). The Tier/Layer/Status/Priority dropdowns always list
+their full canonical sets (Tier: `hotfix`/`standard`/`epic`; Layer: every
+value registered in `docs/guidelines/layer_registry.jsonl`; Status: `OPEN`/
+`INPROGRESS`/`BLOCKED`/`DONE`/`EPIC_SCOPED`; Priority: `P0`-`P3`) regardless
+of whether any ticket currently holds a given value — so e.g. `BLOCKED`
+stays selectable (returning zero rows) instead of disappearing whenever no
+ticket happens to be blocked right now, and selecting one filter never
+narrows what another dropdown can offer. Only the tag list is genuinely
+corpus-derived (open-vocabulary, not a small closed enum), sourced from a
+server-computed summary of the full filtered corpus so it never narrows to
+just the current page either. The tag list itself is capped at 40
 always-visible options with a search box to narrow further, instead of
 dumping every tag in the corpus as an unbroken wall of buttons. Clicking
 the date column header re-sorts via the backend (the only server-side sort

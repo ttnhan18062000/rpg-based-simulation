@@ -24,7 +24,7 @@ Produce a file named `TCK-YYYYMMDD-SHORT-SCOPE.md` using today's date. The file 
 ```
 ---
 status: active
-layer: <infer from scope — see LAYER_VALUES in tools/validate_frontmatter.py>
+layer: <infer from scope — registered in docs/guidelines/layer_registry.jsonl, run `python3 tools/layer_registry.py list` to see valid values>
 authority: P1
 audience: agent
 ticket_id: TCK-YYYYMMDD-SHORT-SCOPE
@@ -63,15 +63,15 @@ P1
 ## Completion Summary
 ```
 
-If `layer` cannot be confidently inferred from the scope, use `misc` and note it in Assumptions / Open Questions.
+`layer` must be a value already registered in `docs/guidelines/layer_registry.jsonl` — check `python3 tools/layer_registry.py list` before assigning; if nothing genuinely fits, register a new one (`python3 tools/layer_registry.py add <layer> --note "why"`) rather than force-fitting. Use `misc` only if no real layer fits and registering a new one isn't warranted; note the choice in Assumptions / Open Questions.
 
 - **Status** starts as `OPEN`.
-- **Tier** — infer from the request:
+- **Tier** — infer from the request (validated against `tools/ticket_field_values.py::TIER_VALUES` at close time — a ticket cannot close with a value outside this set):
   - `hotfix` — self-evident targeted fix (bug, one-liner, no investigation needed)
   - `standard` — any substantive change (default)
   - `epic` — large multi-ticket initiative; this ticket tracks children, no direct implementation
-- **Type** — infer from the request: `bug` (fixes broken behavior), `feature` (new functionality), `refactor` (restructure without behavior change), `chore` (maintenance/tooling/docs), `repair` (targeted fix to an existing implementation)
-- **Priority** — `P0` (blocking, urgent), `P1` (important, default), `P2` (nice to have / backlog). Use P0 only if explicitly stated or obvious from context.
+- **Type** — infer from the request: `bug` (fixes broken behavior), `feature` (new functionality), `refactor` (restructure without behavior change), `chore` (maintenance/tooling/docs), `repair` (targeted fix to an existing implementation). No canonical enum/validation yet for this field.
+- **Priority** — `P0` (blocking, urgent), `P1` (important, default), `P2` (nice to have), `P3` (backlog / long-horizon). Use P0 only if explicitly stated or obvious from context. Validated against `tools/ticket_field_values.py::PRIORITY_VALUES` at close time — write the bare value only (`P1`), never a descriptive suffix like `P1: High`.
 - **Acceptance Criteria** must be testable — no vague "works correctly" items.
 - **Out of Scope** must explicitly exclude adjacent things that could scope-creep in.
 - **Assumptions / Open Questions** must list anything that, if wrong, would invalidate the scope.

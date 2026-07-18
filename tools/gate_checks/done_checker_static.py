@@ -38,6 +38,7 @@ if str(_TOOLS_DIR) not in sys.path:
 
 from validate_frontmatter import validate_file, validate_directory  # noqa: E402
 from generate_registry import generate_registry  # noqa: E402
+from ticket_field_values import check_ticket_field_values  # noqa: E402
 
 REQUIRED_ARTIFACT_FILES = ("plan.md", "investigation.md", "test_plan.md")
 
@@ -263,8 +264,25 @@ def check_frontmatter_valid(
     return ("PASS", f"Frontmatter valid for {ticket_path} and {staging_dir}")
 
 
+def check_ticket_field_values_valid(
+    ticket_id: str,
+    ticket_path: Path = None,
+) -> tuple[str, str]:
+    """Adapter: `check_ticket_field_values` (tools/ticket_field_values.py) validates `## Tier`/
+    `## Priority` against their canonical enums and returns a single-item `list[dict]`; this
+    unwraps it to the `(status, evidence)` tuple shape every other Part A check already returns,
+    so it slots into `run_static_precheck`'s existing `checks` tuple unchanged.
+    """
+    if ticket_path is None:
+        ticket_path = Path(f"tickets/inprogress/{ticket_id}.md")
+    if not ticket_path.exists():
+        return ("FAIL", f"{ticket_path} does not exist — cannot validate Tier/Priority")
+    result = check_ticket_field_values(ticket_path)[0]
+    return (result["status"], result["evidence"])
+
+
 def run_static_precheck(ticket_id: str, tier: str, start_ts: str | None) -> list[dict]:
-    """Aggregate all 5 Part A checks. Returns one dict per check, in this fixed order, matching
+    """Aggregate all 6 Part A checks. Returns one dict per check, in this fixed order, matching
     `DONE_SCHEMA.checklist`'s own item shape so the agent can transcribe directly. Does not
     collapse to a single boolean — per-check detail must survive.
     """
@@ -274,6 +292,7 @@ def run_static_precheck(ticket_id: str, tier: str, start_ts: str | None) -> list
         ("ticket_location", check_ticket_location(ticket_id)),
         ("working_log_no_row_yet", check_working_log_no_row_yet(ticket_id)),
         ("frontmatter_valid", check_frontmatter_valid(ticket_id, tier)),
+        ("ticket_field_values_valid", check_ticket_field_values_valid(ticket_id)),
     )
     return [
         {"condition": name, "status": status, "evidence": evidence}

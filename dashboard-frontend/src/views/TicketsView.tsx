@@ -93,12 +93,16 @@ interface FilterSelectProps {
 }
 
 function FilterSelect({ label, testId, value, options, onChange }: FilterSelectProps) {
-  // `options` is corpus-derived (see get_tickets' facets computation) and can shrink to exclude
-  // the currently-selected value once combined with another active filter yields zero matching
-  // tickets — a <select> cannot visually display a `value` with no matching <option>, so without
-  // this it silently renders as "All" even though `value` (React/query-param state) is untouched.
-  // Injecting a synthetic option for the selected value keeps the dropdown honest regardless of
-  // what the current combined-filter result happens to contain.
+  // Defensive fallback, not currently load-bearing: as of TCK-20260718-DASHBOARD-FACETS-FULLY-CANONICAL,
+  // get_tickets' tiers/layers/statuses/priorities facets are all fixed canonical lists (never
+  // corpus-derived, never shrink), so `options` always already contains `value` for all four of
+  // this component's real call sites — this branch is proven unreachable in practice by
+  // TicketsView.test.tsx's "never need the defensive fallback in practice" test. Kept anyway as
+  // protection against a future FilterSelect usage over a genuinely corpus-derived (shrinkable)
+  // facet, the way `tags` still is — cheap insurance, not dead weight, since a <select> can never
+  // visually display a `value` with no matching <option> (silently rendering "All" instead) if
+  // this guard is ever needed again. See TCK-20260718-FILTER-SELECT-DROPOUT for the original bug
+  // this fallback was built to fix.
   const selectedValueMissingFromOptions = value !== '' && !options.includes(value)
   return (
     <label className="flex flex-col text-[11px] text-text-secondary gap-0.5">

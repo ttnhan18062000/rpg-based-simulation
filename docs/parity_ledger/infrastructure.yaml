@@ -4542,8 +4542,21 @@
     list(WORKFLOW_STATUS_VALUES) — the one facet field that is now fixed and
     canonical rather than corpus-derived, so a status with zero matching
     tickets right now, e.g. BLOCKED, is still a selectable filter value
-    instead of silently absent from the dropdown; every other facet
-    (tiers/layers/priorities/tags) is unchanged, still corpus-derived).
+    instead of silently absent from the dropdown; at the time this was
+    written, every other facet (tiers/layers/priorities/tags) was unchanged,
+    still corpus-derived -- superseded below by
+    TCK-20260718-DASHBOARD-FACETS-FULLY-CANONICAL, which made
+    tiers/layers/priorities canonical too; only tags remains corpus-derived
+    as of that ticket. Also correcting a stale claim below from when this
+    was first written: `list(WORKFLOW_STATUS_VALUES)` was changed to
+    `sorted(WORKFLOW_STATUS_VALUES)` by the very next ticket,
+    TCK-20260718-TIER-PRIORITY-CANONICAL-ENUM (which relocated
+    WORKFLOW_STATUS_VALUES into tools/ticket_field_values.py as a frozenset,
+    requiring an explicit sort) -- that ticket's own INFRA-278 entry
+    documents the relocation correctly, but this entry was not updated to
+    match at the time; fixed now rather than left stale for a third reader
+    to discover, per the lesson TCK-20260718-STATUS-MULTILINE-FIX's own
+    parity gap already taught this session.
     tools/gate_checks/status_drift_check.py:57-65 (EPIC_TIER_VALUES tightened
     from {"EPIC_SCOPED", "SCOPED"} to {"EPIC_SCOPED"} for consistency with the
     new canonical set — the corpus's one remaining bare "SCOPED" ticket was
@@ -4551,6 +4564,26 @@
     ticket, confirmed via a full tickets/{done,inprogress,todos}/ corpus scan
     finding zero non-canonical body Status values outside the already-deferred
     colon-format/empty exemptions).
+    TCK-20260718-DASHBOARD-FACETS-FULLY-CANONICAL: ingest.py:36-40 (import of
+    LAYER_VALUES/PRIORITY_VALUES/TIER_VALUES alongside the existing
+    WORKFLOW_STATUS_VALUES, all from tools/ticket_field_values.py — the
+    module TCK-20260718-TIER-PRIORITY-CANONICAL-ENUM built and
+    TCK-20260718-LAYER-REGISTRY-CONVERSION extended to make LAYER_VALUES
+    itself registry-backed), ingest.py:536-542 (facets["tiers"]/
+    facets["layers"]/facets["priorities"] changed from
+    _distinct_sorted(r[...] for r in filtered) to sorted(TIER_VALUES) /
+    sorted(LAYER_VALUES) / sorted(PRIORITY_VALUES) — all four single-value
+    facets, tiers/layers/statuses/priorities, are now fixed canonical lists
+    independent of active filters, pagination, and corpus content; only
+    facets["tags"] remains corpus-derived, since Tag is genuinely
+    open-vocabulary and multi-value, not a small closed enum the way the
+    other four are). dashboard-frontend/src/views/TicketsView.tsx:96-102
+    (FilterSelect's synthetic-<option> fallback, added by
+    TCK-20260718-FILTER-SELECT-DROPOUT, kept but re-documented as
+    defensive-only — proven unreachable in practice for all four of its real
+    call sites now that none of their facets can shrink below the selected
+    value; comment updated to explain why it is retained anyway rather than
+    removed, rather than silently leaving a stale rationale in place).
   proof_type: feature
   test_path: >
     tests/tools/test_agent_ops_dashboard_ingest.py (including
@@ -4611,6 +4644,21 @@
     tests/tools/test_agent_ops_dashboard_serve.py tests/tools/test_status_drift_check.py -q` ->
     "66 passed in 1.39s"; frontend `npm test -- --run` -> "58 passed" (no frontend file changed;
     re-run as a regression guard only).
+    TCK-20260718-DASHBOARD-FACETS-FULLY-CANONICAL added
+    tests/tools/test_agent_ops_dashboard_ingest.py::test_tiers_layers_priorities_facets_are_canonical_full_sets_regardless_of_corpus_content,
+    tests/tools/test_agent_ops_dashboard_ingest.py::test_tiers_layers_priorities_facets_unaffected_by_active_filters,
+    and updated test_facets_source_reflects_full_filtered_corpus_not_just_current_page's
+    layers/priorities assertions to the new canonical lists (re-run and confirmed during this
+    parity update: `python3 -m pytest tests/tools/test_agent_ops_dashboard_ingest.py
+    tests/tools/test_agent_ops_dashboard_api.py tests/tools/test_agent_ops_dashboard_api_boundary.py
+    tests/tools/test_agent_ops_dashboard_concurrency.py
+    tests/tools/test_agent_ops_dashboard_frontend_api_surface.py
+    tests/tools/test_agent_ops_dashboard_serve.py -q` -> "51 passed in 1.75s"). Frontend:
+    dashboard-frontend/src/test/TicketsView.test.tsx — retitled the existing zero-match test to
+    clarify it now covers FilterSelect's defensive fallback rather than live backend behavior, and
+    added a new test proving that fallback is never actually exercised by the real (canonical)
+    facets contract (re-run and confirmed: `npm test -- --run` -> "60 passed"; `npx tsc -b` and
+    `npm run build` both clean).
   divergence_note: null
   support_boundary: >
     Read-only over tickets/** and agent-monitoring/*.jsonl; never touches AuthoritativeState.
@@ -4741,3 +4789,80 @@
     silently skipped (6 files corpus-wide as of 2026-07-18, deliberately excluded from both the
     71-file fix and this check's flagged set per plan.md's "Colon-Suffixed Files Decision" -- a
     candidate for a future, separately-scoped ticket, not a gap in this entry's verified claim).
+- id: INFRA-278
+  text: >
+    Canonical ticket-field enums, hard-validated at close time (TCK-20260718-TIER-PRIORITY-
+    CANONICAL-ENUM): `Layer` (ticket frontmatter `layer:`) already had a closed, hardcoded enum
+    (`LAYER_VALUES` in tools/validate_frontmatter.py) hard-validated via
+    `done_checker_static.py::check_frontmatter_valid` -- but `## Tier`/`## Priority` (ticket body
+    sections, parsed via tools/generate_registry.py::parse_body_section, a different code path
+    from frontmatter validation) had no canonical enum or enforcement at all, and `## Priority`
+    already showed real corpus drift ("P1: High" on 2 tickets). New module
+    tools/ticket_field_values.py defines TIER_VALUES ({hotfix, standard, epic}), PRIORITY_VALUES
+    ({P0, P1, P2, P3}), re-exports LAYER_VALUES (imported, not duplicated, from
+    validate_frontmatter.py -- a copy would itself become a second source of truth for the exact
+    drift class this entry exists to prevent), and relocates WORKFLOW_STATUS_VALUES here from
+    src/api/agent_ops_dashboard/ingest.py (added earlier today by TCK-20260718-STATUS-FACET-
+    CANONICAL as a dashboard-local definition) so all four canonical ticket-field enums have
+    exactly one shared source. A new check_ticket_field_values() function validates a ticket's
+    `## Tier`/`## Priority` against the canonical sets and is wired into
+    done_checker_static.py::run_static_precheck as a 6th blocking Part A condition
+    (ticket_field_values_valid) -- a ticket cannot reach READY_TO_CLOSE with a non-canonical body
+    Tier or Priority value going forward. CLAUDE.md's Ticket Format section corrected to list
+    Priority as (P0 | P1 | P2 | P3) -- was missing P3, which the real corpus uses 24 times.
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: >
+    tools/ticket_field_values.py (new file): TIER_VALUES/PRIORITY_VALUES/WORKFLOW_STATUS_VALUES
+    definitions, LAYER_VALUES re-export from validate_frontmatter.py,
+    check_body_field_enum()/check_ticket_field_values() using parse_body_section (never a bespoke
+    regex -- the exact lesson tools/gate_checks/status_drift_check.py's own docstring documents
+    after being burned by a duplicated first-token regex twice). src/api/agent_ops_dashboard/
+    ingest.py: local WORKFLOW_STATUS_VALUES definition removed, replaced with `from
+    ticket_field_values import WORKFLOW_STATUS_VALUES`; facets["statuses"] changed from
+    `list(WORKFLOW_STATUS_VALUES)` to `sorted(WORKFLOW_STATUS_VALUES)` since the canonical set is
+    now a frozenset (unordered) rather than a pre-sorted list -- confirmed the existing pinned
+    test (test_statuses_facet_is_canonical_full_set_regardless_of_corpus_content) still asserts
+    and passes against the identical sorted 5-value list, i.e. this is a pure relocation with zero
+    externally-observable behavior change to the dashboard's statuses facet.
+    tools/gate_checks/done_checker_static.py: new check_ticket_field_values_valid() adapter
+    (unwraps check_ticket_field_values()'s list[dict] to the (status, evidence) tuple shape every
+    other Part A check already returns); run_static_precheck's checks tuple extended from 5 to 6
+    entries. CLAUDE.md: `## Priority` line corrected.
+  proof_type: feature
+  test_path: >
+    tests/tools/test_ticket_field_values.py (8 tests: canonical-set values, LAYER_VALUES identity
+    -- not equality -- proving no duplication, check_body_field_enum PASS/FAIL/absent-section
+    cases, check_ticket_field_values PASS/bad-priority/bad-tier cases) -- 8/8 passing, re-run and
+    confirmed during this parity update: `python3 -m pytest tests/tools/test_ticket_field_values.py
+    -q` -> "8 passed". tests/tools/test_done_checker_static.py::test_run_static_precheck_
+    blocks_on_bad_priority and ::test_run_static_precheck_passes_valid_priority (new), plus
+    ::test_run_static_precheck_all_pass_eligible (updated: asserts 6 conditions, was 5) --
+    genuine-catch proof performed: `git stash push -- tools/gate_checks/done_checker_static.py`
+    then re-running these 3 tests confirmed all 3 fail with `KeyError:
+    'ticket_field_values_valid'` pre-fix, confirming the tests would have caught the gap, not
+    just that they pass post-fix by coincidence; `git stash pop` restored the fix, full suite
+    re-confirmed green. Full regression surface re-run clean: `python3 -m pytest
+    tests/tools/test_ticket_field_values.py tests/tools/test_done_checker_static.py
+    tests/tools/test_validate_frontmatter.py tests/tools/test_status_drift_check.py
+    tests/tools/test_agent_ops_dashboard_ingest.py -q` -> "190 passed"; dashboard backend suite
+    also re-run clean: `python3 -m pytest tests/tools/test_agent_ops_dashboard_api.py
+    tests/tools/test_agent_ops_dashboard_serve.py tests/tools/test_agent_ops_dashboard_api_boundary.py
+    tests/tools/test_agent_ops_dashboard_concurrency.py
+    tests/tools/test_agent_ops_dashboard_frontend_api_surface.py -q` -> "22 passed"; direct import
+    sanity check confirms `src.api.agent_ops_dashboard.main.app` still imports cleanly after the
+    ingest.py change.
+  divergence_note: null
+  support_boundary: >
+    Ticket/agent-tooling data-hygiene infrastructure only -- no simulation behavior is involved
+    (mirrors INFRA-263/264/265/277's support_boundary pattern for gate-check tooling entries).
+    Does not cover or claim anything about the actual corpus drift cleanup (deliberately deferred
+    to a dependent sibling ticket, TCK-20260718-TIER-PRIORITY-CORPUS-CLEANUP, which must re-run
+    the real check function fresh rather than trust any preliminary count from this ticket) or the
+    Agent Ops Dashboard's Tier/Layer/Priority filter facets becoming canonical (deliberately
+    deferred to TCK-20260718-DASHBOARD-FACETS-FULLY-CANONICAL, which depends on this entry's
+    TIER_VALUES/PRIORITY_VALUES/LAYER_VALUES existing but does not touch them here). Known,
+    intentional scope boundary: this entry's check_ticket_field_values() does not validate `##
+    Status` (status_drift_check.py's own job, unwired, per that module's documented precedent) or
+    `layer:` (already enforced by validate_frontmatter.py/check_frontmatter_valid, unchanged).

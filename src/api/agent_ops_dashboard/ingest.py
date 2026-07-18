@@ -33,6 +33,12 @@ for _p in (_TOOLS_DIR, _MONITORING_TOOLS_DIR):
 
 from validate_frontmatter import extract_frontmatter  # noqa: E402
 from generate_registry import parse_body_section, _strip_frontmatter  # noqa: E402
+from ticket_field_values import (  # noqa: E402
+    LAYER_VALUES,
+    PRIORITY_VALUES,
+    TIER_VALUES,
+    WORKFLOW_STATUS_VALUES,
+)
 import validate  # noqa: E402  (tools/agent-monitoring/validate.py)
 
 from src.api.agent_ops_dashboard.models import (
@@ -362,17 +368,14 @@ def _distinct_sorted(values) -> list[str]:
     return sorted({v for v in values if v})
 
 
-# Canonical body `## Status` values a ticket can hold — the 4-value enum CLAUDE.md's Ticket
-# Format section documents (`## Status  (OPEN | INPROGRESS | BLOCKED | DONE)`) plus `EPIC_SCOPED`,
-# the sole legitimate epic-tier terminal state (TCK-20260718-STATUS-DRIFT-REPAIR /
-# TCK-20260718-STATUS-MULTILINE-FIX normalized every prior `SCOPED`/`DONE (...)` variant in the
-# corpus down to this set — confirmed via a full tickets/{done,inprogress,todos}/ scan finding
-# zero non-canonical values outside the already-deferred colon-format/empty exemptions). Unlike
-# tiers/layers/priorities/tags, which stay derived from the filtered corpus so a user can never
-# select a combination with zero possible matches, `statuses` is deliberately the fixed full set
-# regardless of what's currently present — a status with zero matching tickets right now (e.g.
-# BLOCKED) is still a valid, selectable filter value, not a hidden one.
-WORKFLOW_STATUS_VALUES: list[str] = sorted({"OPEN", "INPROGRESS", "BLOCKED", "DONE", "EPIC_SCOPED"})
+# WORKFLOW_STATUS_VALUES itself now lives in tools/ticket_field_values.py (imported above) —
+# TCK-20260718-TIER-PRIORITY-CANONICAL-ENUM relocated it there so it is the single shared source
+# for all four canonical ticket-field enums (Tier/Layer/Status/Priority), not a dashboard-local
+# definition. See that module's docstring for the full "why" (frontmatter-vs-body-section
+# validation split, the anti-duplication rationale). Behavior here is unchanged: `statuses` is
+# still the fixed full canonical set regardless of active filters or current corpus content,
+# unlike tiers/layers/priorities/tags, which (as of this ticket) still derive from the filtered
+# corpus — see TCK-20260718-DASHBOARD-FACETS-FULLY-CANONICAL for making those canonical too.
 
 
 # ---------------------------------------------------------------------------
@@ -521,13 +524,20 @@ class DashboardCache:
             filtered.sort(key=lambda r: r["date"] or "", reverse=(sort != "date_asc"))
 
             total_count = len(filtered)
+            # tiers/layers/statuses/priorities are all fixed canonical lists as of
+            # TCK-20260718-DASHBOARD-FACETS-FULLY-CANONICAL — independent of active filters,
+            # pagination, and current corpus content, so a legitimate value with zero matching
+            # tickets right now (e.g. a rarely-used Tier) is still a selectable filter option
+            # rather than silently absent. Only `tags` remains corpus-derived: it is genuinely
+            # open-vocabulary and multi-value (registry-governed, not a small closed enum), so
+            # "every value that could ever exist" isn't a bounded, canonical list the way the
+            # other four are. All four sets are frozensets (unordered) — sort explicitly rather
+            # than relying on set-iteration order, which is not guaranteed stable.
             facets = {
-                "tiers": _distinct_sorted(r["tier"] for r in filtered),
-                "layers": _distinct_sorted(r["layer"] for r in filtered),
-                # Deliberately NOT corpus-derived, unlike every other facet here — see
-                # WORKFLOW_STATUS_VALUES's docstring for why.
-                "statuses": list(WORKFLOW_STATUS_VALUES),
-                "priorities": _distinct_sorted(r["priority"] for r in filtered),
+                "tiers": sorted(TIER_VALUES),
+                "layers": sorted(LAYER_VALUES),
+                "statuses": sorted(WORKFLOW_STATUS_VALUES),
+                "priorities": sorted(PRIORITY_VALUES),
                 "tags": _distinct_sorted(tag for r in filtered for tag in r["tags"]),
             }
 

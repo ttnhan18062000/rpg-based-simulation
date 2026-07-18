@@ -328,9 +328,18 @@ describe('TicketsView — selected filter value survives a zero-match facet resp
     vi.restoreAllMocks()
   })
 
-  it('Layer select keeps showing the selected value (not "All") when a combined filter yields zero matches and an empty layers facet', async () => {
+  it('FilterSelect defensive fallback: Layer select keeps showing the selected value (not "All") even if a facet response were to send a shrunk layers list', async () => {
+    // As of TCK-20260718-DASHBOARD-FACETS-FULLY-CANONICAL, the REAL backend never actually sends
+    // a shrunk `layers`/`tiers`/`priorities` facet — all three are now fixed canonical lists,
+    // exactly like `statuses` already was. This test intentionally mocks the old, no-longer-real
+    // "layers: []" backend shape anyway: it is no longer testing live backend behavior, it is
+    // testing FilterSelect's own defensive fallback (the synthetic <option> injection added by
+    // TCK-20260718-FILTER-SELECT-DROPOUT) as a regression guard in its own right, in case a
+    // future facet is ever added that IS legitimately corpus-derived and can shrink (mirroring
+    // how `tags` already can). See
+    // test_tiers_layers_priorities_facets_never_need_the_defensive_fallback_in_practice below for
+    // the proof that this fallback is NOT exercised by the real, current backend contract.
     const user = userEvent.setup()
-    // Initial load: layer=economy exists as an option.
     const mockFetch = mockFetchReturning([makeTicket({ ticket_id: 'TCK-A', layer: 'economy' })], {
       total_count: 1,
       facets: {
@@ -349,9 +358,6 @@ describe('TicketsView — selected filter value survives a zero-match facet resp
     const layerSelect = screen.getByTestId('filter-layer') as HTMLSelectElement
     expect(layerSelect.value).toBe('economy')
 
-    // Selecting Status=DONE combined with layer=economy now yields zero matching tickets — the
-    // backend's real behavior (confirmed live) is that every corpus-derived facet OTHER than the
-    // one just changed collapses when the combined result is empty, so `layers` comes back [].
     mockFetch.mockResolvedValueOnce({
       ok: true,
       json: async () => ({
@@ -362,17 +368,8 @@ describe('TicketsView — selected filter value survives a zero-match facet resp
     })
     await user.selectOptions(screen.getByTestId('filter-status'), 'DONE')
 
-    // Bug: without a fix, layerSelect.value silently becomes '' here because no <option
-    // value="economy"> exists in the DOM once `layers` facet is []. The select must still
-    // correctly report 'economy' as its value.
     expect(layerSelect.value).toBe('economy')
 
-    // Confirm this is purely a rendering fix, not a filters-state fix: the next request (any
-    // further filter change) must still include the "invisible" layer=economy filter. Status is
-    // used for this next interaction (rather than Priority, whose only offered option from the
-    // prior response was already dropped to [] and so is no longer selectable at all — a
-    // different, expected scenario) since Status's options are the fixed canonical superset and
-    // so remain selectable regardless of any facet response.
     mockFetch.mockResolvedValueOnce({
       ok: true,
       json: async () => ({
@@ -386,6 +383,57 @@ describe('TicketsView — selected filter value survives a zero-match facet resp
     const requestedUrl = String(lastCall[0])
     expect(requestedUrl).toContain('layer=economy')
     expect(requestedUrl).toContain('status=OPEN')
+  })
+
+  it('tiers/layers/priorities facets never need the defensive fallback in practice: a real zero-match combined filter still returns the full canonical lists', async () => {
+    // Proves TCK-20260718-DASHBOARD-FACETS-FULLY-CANONICAL's actual contract: unlike the
+    // hypothetical mock above, a real zero-match response never sends a shrunk tiers/layers/
+    // priorities facet, so FilterSelect's synthetic-<option> branch is simply never triggered for
+    // these three dimensions (nor for statuses, already proven canonical). Only `tags` can still
+    // legitimately shrink to a subset (it remains genuinely corpus-derived).
+    const user = userEvent.setup()
+    const mockFetch = mockFetchReturning([makeTicket({ ticket_id: 'TCK-A', layer: 'economy' })], {
+      total_count: 1,
+      facets: {
+        tiers: ['epic', 'hotfix', 'standard'],
+        layers: ['ai', 'architecture', 'artifact', 'combat', 'compliance', 'core', 'economy', 'engine', 'guidelines', 'mechanics', 'misc', 'observability', 'performance', 'simulation', 'strategy', 'systems', 'testing', 'ticket', 'world'],
+        statuses: ['BLOCKED', 'DONE', 'EPIC_SCOPED', 'INPROGRESS', 'OPEN'],
+        priorities: ['P0', 'P1', 'P2', 'P3'],
+        tags: [],
+      },
+    })
+
+    render(<TicketsView onSelectRun={noopOnSelectRun} />)
+    await screen.findByTestId('tickets-table')
+
+    await user.selectOptions(screen.getByTestId('filter-layer'), 'economy')
+
+    // Real backend contract: a zero-match response still carries the full canonical facets, not
+    // shrunk ones.
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        items: [],
+        total_count: 0,
+        facets: {
+          tiers: ['epic', 'hotfix', 'standard'],
+          layers: ['ai', 'architecture', 'artifact', 'combat', 'compliance', 'core', 'economy', 'engine', 'guidelines', 'mechanics', 'misc', 'observability', 'performance', 'simulation', 'strategy', 'systems', 'testing', 'ticket', 'world'],
+          statuses: ['BLOCKED', 'DONE', 'EPIC_SCOPED', 'INPROGRESS', 'OPEN'],
+          priorities: ['P0', 'P1', 'P2', 'P3'],
+          tags: [],
+        },
+      }),
+    })
+    await user.selectOptions(screen.getByTestId('filter-status'), 'BLOCKED')
+
+    const layerSelect = screen.getByTestId('filter-layer') as HTMLSelectElement
+    const statusSelect = screen.getByTestId('filter-status') as HTMLSelectElement
+    expect(layerSelect.value).toBe('economy')
+    expect(statusSelect.value).toBe('BLOCKED')
+    // No synthetic fallback <option> was needed — 'economy' was already present in the real
+    // (unshrunk) options list, confirmed by counting rendered <option> elements: 1 "All" + 19
+    // canonical layers, never 1 "All" + 1 synthetic.
+    expect(layerSelect.querySelectorAll('option').length).toBe(20)
   })
 })
 

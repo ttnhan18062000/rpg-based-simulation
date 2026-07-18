@@ -663,7 +663,7 @@ Steps:
    Frontmatter block (substitute actual values):
    ---
    status: active
-   layer: <infer from task.related_code_areas and task.title — use LAYER_VALUES in tools/validate_frontmatter.py>
+   layer: <infer from task.related_code_areas and task.title — registered in docs/guidelines/layer_registry.jsonl, `python3 tools/layer_registry.py list` to see valid values>
    authority: P1
    audience: agent
    ticket_id: ${ticketId}

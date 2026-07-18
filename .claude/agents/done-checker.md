@@ -52,8 +52,16 @@ to the checklist below:
 | `ticket_location` | 3 |
 | `working_log_no_row_yet` | 7 |
 | `frontmatter_valid` | 12 |
+| `ticket_field_values_valid` | 3 |
 
-Use the script's `status`/`evidence` verbatim for these 5 conditions in the checklist table (except
+`ticket_field_values_valid` (added by TCK-20260718-TIER-PRIORITY-CANONICAL-ENUM) is the second
+static condition feeding checklist #3 — it validates `## Tier`/`## Priority` against the real
+canonical enums in `tools/ticket_field_values.py` (`TIER_VALUES`/`PRIORITY_VALUES`), so "contain
+valid values" for those two fields is no longer a judgment call, it's a cited script result. `##
+Type` (bug/feature/refactor/chore/repair) has no equivalent canonical enum or static check as of
+this ticket — still pure LLM judgment for that one field.
+
+Use the script's `status`/`evidence` verbatim for these 6 conditions in the checklist table (except
 condition 10 if Step 0a already set it `FAIL`). Conditions 1, 2, 5, 6, 8, 9, 11 remain pure LLM
 judgment calls — the script does not touch them. Condition 13 stays pre-marked PASS per its own rule
 below.
@@ -84,7 +92,10 @@ Check each condition. Mark PASS, FAIL, or N/A with evidence.
 
 3. **Ticket has required metadata and is in `tickets/inprogress/`**
    - Status must be `INPROGRESS` or ready to move to DONE.
-   - `## Tier`, `## Type`, `## Priority` fields are present and contain valid values.
+   - `## Tier`, `## Type`, `## Priority` fields are present and contain valid values — `## Tier`/
+     `## Priority` are cited verbatim from `run_static_precheck`'s `ticket_field_values_valid`
+     condition (Step 0b above), not re-judged; `## Type` has no canonical enum yet, still your own
+     judgment call.
    - Files Changed, Implementation Notes, Test Summary sections are filled in.
 
 4. **Staging artifacts complete in `staging_artifacts/{ticket_id}/`** _(N/A for hotfix)_

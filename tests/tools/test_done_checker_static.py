@@ -489,7 +489,9 @@ def test_run_static_precheck_all_pass_eligible(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
 
     results = run_static_precheck("TCK-FAKE", "standard", "2026-07-05T00:00:00Z")
-    assert len(results) == 5
+    # 6 conditions as of TCK-20260718-TIER-PRIORITY-CANONICAL-ENUM (was 5; added
+    # ticket_field_values_valid).
+    assert len(results) == 6
     statuses = {r["condition"]: r["status"] for r in results}
     assert all(s in ("PASS", "NA") for s in statuses.values()), statuses
 
@@ -506,6 +508,41 @@ def test_run_static_precheck_surfaces_fail_not_masked(tmp_path, monkeypatch):
     assert by_condition["working_log_no_row_yet"]["status"] == "FAIL"
     # Other checks still present and not swallowed by the one FAIL.
     assert by_condition["ticket_location"]["status"] == "PASS"
+
+
+def test_run_static_precheck_blocks_on_bad_priority(tmp_path, monkeypatch):
+    # TCK-20260718-TIER-PRIORITY-CANONICAL-ENUM: a ticket cannot reach READY_TO_CLOSE with a
+    # non-canonical body ## Priority — proven here at the same run_static_precheck level the real
+    # Verify-phase gate reads from, mirroring test_run_static_precheck_surfaces_fail_not_masked's
+    # own pattern for a different condition.
+    _scaffold_precheck_repo(tmp_path)
+    ticket_path = tmp_path / "tickets" / "inprogress" / "TCK-FAKE.md"
+    ticket_path.write_text(
+        ticket_path.read_text().rstrip() + "\n\n## Priority\nP1: High\n",
+        encoding="utf-8",
+    )
+    monkeypatch.chdir(tmp_path)
+
+    results = run_static_precheck("TCK-FAKE", "standard", "2026-07-05T00:00:00Z")
+    by_condition = {r["condition"]: r for r in results}
+    assert by_condition["ticket_field_values_valid"]["status"] == "FAIL"
+    assert "P1: High" in by_condition["ticket_field_values_valid"]["evidence"]
+    # Other checks still present and not swallowed by the one FAIL.
+    assert by_condition["ticket_location"]["status"] == "PASS"
+
+
+def test_run_static_precheck_passes_valid_priority(tmp_path, monkeypatch):
+    _scaffold_precheck_repo(tmp_path)
+    ticket_path = tmp_path / "tickets" / "inprogress" / "TCK-FAKE.md"
+    ticket_path.write_text(
+        ticket_path.read_text().rstrip() + "\n\n## Priority\nP1\n",
+        encoding="utf-8",
+    )
+    monkeypatch.chdir(tmp_path)
+
+    results = run_static_precheck("TCK-FAKE", "standard", "2026-07-05T00:00:00Z")
+    by_condition = {r["condition"]: r for r in results}
+    assert by_condition["ticket_field_values_valid"]["status"] == "PASS"
 
 
 # ---------------------------------------------------------------------------
