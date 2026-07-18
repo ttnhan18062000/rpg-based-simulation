@@ -15,7 +15,7 @@ tags: [epic, world-evolution, ecology, trauma, sovereignty, p3, deferred, blocke
 Epic: World Evolution System — seasonal multi-region pressure propagation and long-run ecological dynamics
 
 ## Status
-DONE — E52E (seasonal propagation), E52F (trauma motivation), E52G (sovereignty events)
+DONE
 
 ## Tier
 epic
@@ -121,3 +121,5 @@ See child tickets TCK-20260628-E52E-SEASONAL-PROPAGATION, TCK-20260628-E52F-TRAU
 
 ## Completion Summary
 All 3 acceptance criteria met: seasonal calamity propagation (E52E), direct trauma→DANGER concern in <1 tick (E52F), sovereignty shift WorldEvents observable in recent_world_events (E52G). Parity ledger entries WORLD-105, WORLD-106, WORLD-107 added.
+All 3 child tickets are complete: E52E (seasonal propagation), E52F (trauma motivation), E52G
+(sovereignty events).

@@ -15,7 +15,7 @@ tags: [balance, tuning, scoring, blocker-penalty, regression-tests, epic, phase-
 Epic 1.2 · Balance & Tuning Baseline
 
 ## Status
-DONE (EPIC_SCOPED)
+DONE
 
 ## Tier
 epic
@@ -92,4 +92,5 @@ Regression tests are the primary deliverable of E12C. Each test asserts that a k
 _To be filled when child tickets complete._
 
 ## Completion Summary
-_Epic completes when E12A + E12B + E12C are all DONE._
+_Epic completes when E12A + E12B + E12C are all DONE._ This epic-scoped ticket closes now that all
+three child tickets are complete.

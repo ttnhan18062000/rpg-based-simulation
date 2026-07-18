@@ -15,7 +15,7 @@ tags: [culture-drift, myth, regional-culture, doctrine, long-horizon, epic, phas
 Epic 6.2 · Culture / Myth Drift (Long Horizon — 18+ months)
 
 ## Status
-DONE (EPIC_SCOPED)
+DONE
 
 ## Tier
 epic
@@ -109,3 +109,4 @@ Linear dependency chain: E62A → E62B → E62C → E62D.
 Prerequisites: E51 (Chronicle Compiler) done; E53 (Faction Diplomacy) scoped.
 All three staging artifacts (investigation.md, plan.md, test_plan.md) migrated to
 stored_artifacts/TCK-20260619-E62-CULTURE-DRIFT/.
+This epic-scoped ticket closes now that all four child tickets are complete.

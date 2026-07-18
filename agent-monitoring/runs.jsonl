@@ -640,3 +640,4 @@
 {"run_id":"TCK-20260717-DASHBOARD-RESPONSIVE-LAYOUT","start_ts":"2026-07-17T18:47:24Z","end_ts":"2026-07-17T19:11:38Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":10,"duration_s":1454}
 {"run_id":"FOLDER-tickets-todos-agent-ops-dashboard-ui-fixes","start_ts":"2026-07-17T16:19:18Z","end_ts":"2026-07-17T19:12:32Z","workflow":"implement-epic","tier":"epic","final_status":"DONE","agent_count":6,"duration_s":10394}
 {"run_id":"TCK-20260718-STATUS-DRIFT-REPAIR","start_ts":"2026-07-18T03:45:32Z","end_ts":"2026-07-18T04:46:44Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":11,"duration_s":3672}
+{"run_id":"TCK-20260718-STATUS-SUFFIX-TRIM","start_ts":"2026-07-18T05:07:49Z","end_ts":"2026-07-18T05:48:25Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":10,"duration_s":2436}

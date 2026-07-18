@@ -15,7 +15,7 @@ tags: [epic, party, adventure-loop, multi-hero, campaigns, p3, deferred, blocked
 Epic: Full Party Adventure Loop — class-compatibility scoring and multi-hero orchestration
 
 ## Status
-DONE (all child tickets complete: E41F, E41G, E41H)
+DONE
 
 ## Tier
 epic
@@ -117,3 +117,4 @@ orchestration for sustained campaign arcs.
 ## Files Changed
 
 ## Completion Summary
+All child tickets are complete: E41F, E41G, E41H.

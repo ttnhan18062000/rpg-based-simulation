@@ -15,7 +15,7 @@ tags: [feature-packs, pluggable-architecture, manifest, runtime-profile, decisio
 Epic 6.3 · Pluggable Feature Pack Architecture (Long Horizon — Decision Gate Required)
 
 ## Status
-DONE (EPIC_SCOPED)
+DONE
 
 ## Tier
 epic
@@ -92,3 +92,4 @@ All 4 child tickets DONE (2026-06-23):
 - E63C: FeatureRegistry[T] (dict-based, canonical enum + pack entries) + FeaturePackLoader (discovers manifests, filters by profile, imports classes); demo_escort_pack registers ESCORT_DIGNITARY from content/packs/ without touching src/.
 - E63D: BalanceExperimentSpec + pure BalanceExperimentRunner (dot-path metric snapshot); integration tests confirm no src/ modifications; docs finalized; knowledge index updated.
 45 tests pass across all child tickets.
+This epic-scoped ticket closes now that all four child tickets are done.
