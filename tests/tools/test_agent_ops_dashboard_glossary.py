@@ -33,6 +33,15 @@ def _write_layers(tmp_path: Path, entries: list[dict]) -> None:
     path.write_text("\n".join(json.dumps(e) for e in entries) + ("\n" if entries else ""), encoding="utf-8")
 
 
+def _write_agent_role_file(tmp_path: Path, filename: str, name: str, description: str) -> None:
+    agents_dir = tmp_path / ".claude" / "agents"
+    agents_dir.mkdir(parents=True, exist_ok=True)
+    (agents_dir / filename).write_text(
+        f"---\nname: {name}\ndescription: {description}\n---\n\n# {name}\n",
+        encoding="utf-8",
+    )
+
+
 def test_glossary_merges_registry_and_layer_entries(tmp_path):
     _init_repo_skeleton(tmp_path)
     _write_glossary(tmp_path, [
@@ -84,6 +93,55 @@ def test_glossary_layer_with_empty_note_is_skipped(tmp_path):
     assert "misc" not in glossary.terms
 
 
+def test_glossary_merges_agent_role_descriptions(tmp_path):
+    _init_repo_skeleton(tmp_path)
+    _write_glossary(tmp_path, [])
+    _write_layers(tmp_path, [])
+    _write_agent_role_file(
+        tmp_path, "implementer.md", "implementer", "Writes the code changes described in an approved plan.md."
+    )
+
+    cache = ingest.DashboardCache(repo_root=tmp_path)
+    glossary = cache.get_glossary()
+
+    assert glossary.terms["implementer"].category == "agent"
+    assert glossary.terms["implementer"].description == (
+        "Writes the code changes described in an approved plan.md."
+    )
+
+
+def test_glossary_missing_agents_directory_returns_no_agent_terms_not_crash(tmp_path):
+    # _init_repo_skeleton deliberately never creates .claude/agents/ — every other tmp_path-based
+    # test in this file relies on this exact tolerance already (they'd all fail loudly otherwise).
+    _init_repo_skeleton(tmp_path)
+    _write_glossary(tmp_path, [
+        {"term": "DONE", "category": "ticket-status", "added_date": "2026-07-18", "description": "Work is complete."},
+    ])
+    _write_layers(tmp_path, [])
+
+    cache = ingest.DashboardCache(repo_root=tmp_path)
+    glossary = cache.get_glossary()
+
+    assert "DONE" in glossary.terms
+    assert not any(e.category == "agent" for e in glossary.terms.values())
+
+
+def test_glossary_agent_file_with_missing_description_is_skipped(tmp_path):
+    _init_repo_skeleton(tmp_path)
+    _write_glossary(tmp_path, [])
+    _write_layers(tmp_path, [])
+    agents_dir = tmp_path / ".claude" / "agents"
+    agents_dir.mkdir(parents=True, exist_ok=True)
+    (agents_dir / "no-description.md").write_text(
+        "---\nname: no-description\n---\n\n# No Description\n", encoding="utf-8"
+    )
+
+    cache = ingest.DashboardCache(repo_root=tmp_path)
+    glossary = cache.get_glossary()
+
+    assert "no-description" not in glossary.terms
+
+
 def test_glossary_empty_registries_returns_empty_dict_not_crash(tmp_path):
     _init_repo_skeleton(tmp_path)
     _write_glossary(tmp_path, [])
@@ -124,8 +182,9 @@ def test_glossary_route_never_returns_raw_dict_shape():
 
 
 def test_glossary_against_real_seeded_registries():
-    # No tmp_path override — against the real repo's glossary_registry.jsonl + layer_registry.jsonl,
-    # proving the live merge actually works end to end, not just on a fixture.
+    # No tmp_path override — against the real repo's glossary_registry.jsonl + layer_registry.jsonl
+    # + .claude/agents/*.md, proving the live 3-way merge actually works end to end, not just on a
+    # fixture.
     cache = ingest.DashboardCache()
     glossary = cache.get_glossary()
 
@@ -133,4 +192,6 @@ def test_glossary_against_real_seeded_registries():
     assert glossary.terms["DONE"].category == "ticket-status"
     assert "economy" in glossary.terms
     assert glossary.terms["economy"].category == "layer"
-    assert len(glossary.terms) >= 35  # 35 glossary_registry terms + non-empty-note layers
+    assert "implementer" in glossary.terms
+    assert glossary.terms["implementer"].category == "agent"
+    assert len(glossary.terms) >= 48  # 35 glossary_registry + non-empty-note layers + 13 agents

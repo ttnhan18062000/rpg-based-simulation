@@ -61,6 +61,24 @@ describe('GlossaryTooltip', () => {
     expect(screen.getByText('DONE')).toHaveClass('cursor-help')
   })
 
+  it('renders a small "?" hint icon next to the label when the glossary has a matching entry', () => {
+    renderWithProvider(
+      <GlossaryTooltip term="DONE" glossary={GLOSSARY}>
+        DONE
+      </GlossaryTooltip>,
+    )
+    expect(screen.getByTestId('glossary-hint-icon')).toHaveTextContent('?')
+  })
+
+  it('never renders the hint icon when there is no matching glossary entry', () => {
+    renderWithProvider(
+      <GlossaryTooltip term="NOT_A_REAL_TERM" glossary={GLOSSARY}>
+        NOT_A_REAL_TERM
+      </GlossaryTooltip>,
+    )
+    expect(screen.queryByTestId('glossary-hint-icon')).not.toBeInTheDocument()
+  })
+
   it('shows the real backend-sourced description text on hover — never a hardcoded string', async () => {
     renderWithProvider(
       <GlossaryTooltip term="DONE" glossary={GLOSSARY}>

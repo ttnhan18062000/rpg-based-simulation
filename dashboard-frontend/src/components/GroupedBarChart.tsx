@@ -1,5 +1,6 @@
 import * as Tooltip from '@radix-ui/react-tooltip'
 import { CHART_SERIES_1, CHART_SERIES_2 } from '@/lib/chartPalette'
+import { GlossaryHintIcon } from '@/components/GlossaryHintIcon'
 
 export interface GroupedBarChartDatum {
   label: string
@@ -54,7 +55,29 @@ export function GroupedBarChart({
         </div>
         {data.map((d) => (
           <div key={d.label} className="flex flex-col gap-1" data-testid={`grouped-bar-chart-row-${d.label}`}>
-            <div className="text-[11px] text-text-secondary">{d.label}</div>
+            {descriptions?.[d.label] ? (
+              <Tooltip.Root>
+                <Tooltip.Trigger asChild>
+                  <div className="w-fit flex items-center gap-0.5 text-[11px] text-text-secondary cursor-help">
+                    <span>{d.label}</span>
+                    <GlossaryHintIcon />
+                  </div>
+                </Tooltip.Trigger>
+                <Tooltip.Portal>
+                  <Tooltip.Content
+                    collisionPadding={8}
+                    className="rounded-md bg-bg-tertiary px-2 py-1 text-[11px] text-text-primary border border-border max-w-[280px] whitespace-normal"
+                  >
+                    {d.label}
+                    <div className="text-text-secondary mt-0.5">{descriptions[d.label]}</div>
+                  </Tooltip.Content>
+                </Tooltip.Portal>
+              </Tooltip.Root>
+            ) : (
+              <div className="flex items-center gap-0.5 text-[11px] text-text-secondary">
+                <span>{d.label}</span>
+              </div>
+            )}
             {[
               { value: d.series1, color: series1Color, seriesLabel: series1Label },
               { value: d.series2, color: series2Color, seriesLabel: series2Label },

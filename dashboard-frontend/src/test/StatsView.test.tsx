@@ -2,6 +2,7 @@ import { render, screen, waitFor } from '@testing-library/react'
 import { describe, it, expect, afterEach, vi } from 'vitest'
 import { StatsView } from '../views/StatsView'
 import STATS_VIEW_SOURCE from '../views/StatsView.tsx?raw'
+import { _resetGlossaryCacheForTests } from '../api'
 import type { AgentMonitoringStats, GlossaryTerms, TicketCorpusStats } from '../api'
 
 function makeAgentStats(overrides: Partial<AgentMonitoringStats> = {}): AgentMonitoringStats {
@@ -68,6 +69,12 @@ function mockFetch(
 describe('StatsView', () => {
   afterEach(() => {
     vi.restoreAllMocks()
+    // Every render() in this file that mounts StatsView calls useGlossary() internally — without
+    // this, a later test's differently-mocked glossary content silently loses to an earlier
+    // test's already-resolved module-level cache (see _resetGlossaryCacheForTests's own docstring
+    // in api.ts). Caught by this file's own "shows a hint icon..." /
+    // "renders a Top Agents row plainly..." test pair, which genuinely fail without this reset.
+    _resetGlossaryCacheForTests()
   })
 
   it('shows a loading state before the fetches resolve', () => {
@@ -164,6 +171,26 @@ describe('StatsView', () => {
     await waitFor(() => {
       expect(screen.getByTestId('bar-chart-row-architecture_review')).toBeInTheDocument()
     })
+  })
+
+  it('shows a hint icon and real description on the Top Agents table when the glossary has a matching agent entry', async () => {
+    mockFetch(makeAgentStats(), makeTicketStats(), {
+      implementer: {
+        term: 'implementer',
+        category: 'agent',
+        description: 'Writes the code changes described in an approved plan.md.',
+      },
+    })
+    render(<StatsView />)
+    const row = await screen.findByTestId('top-agent-row-implementer')
+    expect(row.querySelector('[data-testid="glossary-hint-icon"]')).not.toBeNull()
+  })
+
+  it('renders a Top Agents row plainly, with no hint icon, when the glossary has no entry for that agent (graceful degradation)', async () => {
+    mockFetch(makeAgentStats(), makeTicketStats(), {})
+    render(<StatsView />)
+    const row = await screen.findByTestId('top-agent-row-implementer')
+    expect(row.querySelector('[data-testid="glossary-hint-icon"]')).toBeNull()
   })
 
   it('renders the slow-runs final_status cell without a tooltip when the glossary has no entry for it (graceful degradation)', async () => {

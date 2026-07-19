@@ -1,6 +1,7 @@
 import * as Tooltip from '@radix-ui/react-tooltip'
 import type { ReactNode } from 'react'
 import type { GlossaryTerms } from '@/api'
+import { GlossaryHintIcon } from '@/components/GlossaryHintIcon'
 
 export interface GlossaryTooltipProps {
   term: string | null
@@ -31,8 +32,9 @@ export function GlossaryTooltip({ term, glossary, children }: GlossaryTooltipPro
   return (
     <Tooltip.Root>
       <Tooltip.Trigger asChild>
-        <span className="cursor-help underline decoration-dotted decoration-text-secondary underline-offset-2">
-          {children}
+        <span className="cursor-help inline-flex items-center gap-0.5">
+          <span className="cursor-help">{children}</span>
+          <GlossaryHintIcon />
         </span>
       </Tooltip.Trigger>
       <Tooltip.Portal>

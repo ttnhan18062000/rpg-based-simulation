@@ -186,16 +186,36 @@ export function StatsView() {
               <tr className="text-left text-text-secondary border-b border-border">
                 <th className="py-1 pr-3">Agent</th>
                 <th className="py-1 pr-3">Total</th>
-                <th className="py-1 pr-3">Ok</th>
-                <th className="py-1 pr-3">Failed</th>
-                <th className="py-1 pr-3">Blocked</th>
-                <th className="py-1 pr-3">Skipped</th>
+                <th className="py-1 pr-3">
+                  <GlossaryTooltip term="ok" glossary={glossary}>
+                    Ok
+                  </GlossaryTooltip>
+                </th>
+                <th className="py-1 pr-3">
+                  <GlossaryTooltip term="failed" glossary={glossary}>
+                    Failed
+                  </GlossaryTooltip>
+                </th>
+                <th className="py-1 pr-3">
+                  <GlossaryTooltip term="blocked" glossary={glossary}>
+                    Blocked
+                  </GlossaryTooltip>
+                </th>
+                <th className="py-1 pr-3">
+                  <GlossaryTooltip term="skipped" glossary={glossary}>
+                    Skipped
+                  </GlossaryTooltip>
+                </th>
               </tr>
             </thead>
             <tbody>
               {topAgentRows(agentStats).map((row) => (
                 <tr key={row.agent} data-testid={`top-agent-row-${row.agent}`} className="border-b border-border">
-                  <td className="py-1 pr-3">{row.agent}</td>
+                  <td className="py-1 pr-3">
+                    <GlossaryTooltip term={row.agent} glossary={glossary}>
+                      {row.agent}
+                    </GlossaryTooltip>
+                  </td>
                   <td className="py-1 pr-3 tabular-nums">{row.total}</td>
                   <td className="py-1 pr-3 tabular-nums">{row.ok}</td>
                   <td className="py-1 pr-3 tabular-nums">{row.failed}</td>

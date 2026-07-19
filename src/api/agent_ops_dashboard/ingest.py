@@ -402,6 +402,37 @@ def _distinct_sorted(values) -> list[str]:
 # corpus — see TCK-20260718-DASHBOARD-FACETS-FULLY-CANONICAL for making those canonical too.
 
 
+def _load_agent_role_descriptions(repo_root: Path) -> dict[str, str]:
+    """Read every `.claude/agents/*.md` role file's own frontmatter and return {name: description}
+    for each file that has both a non-empty `name:` and `description:` field.
+
+    Reuses extract_frontmatter (never a second frontmatter parser) — see get_glossary()'s
+    docstring for why this reads the files directly instead of copying their descriptions into
+    glossary_registry.jsonl. Tolerant by design: a missing .claude/agents/ directory (e.g. a
+    trimmed-down tmp_path fixture in tests) or a file with unparseable/absent frontmatter simply
+    contributes nothing — never raises, since one malformed role file must not break the whole
+    glossary endpoint.
+    """
+    agents_dir = repo_root / ".claude" / "agents"
+    if not agents_dir.is_dir():
+        return {}
+
+    descriptions: dict[str, str] = {}
+    for path in sorted(agents_dir.glob("*.md")):
+        try:
+            text = path.read_text(encoding="utf-8")
+            fm = extract_frontmatter(text)
+        except (OSError, ValueError):
+            continue
+        if not fm:
+            continue
+        name = fm.get("name", "")
+        description = fm.get("description", "")
+        if name and description:
+            descriptions[name] = description
+    return descriptions
+
+
 # ---------------------------------------------------------------------------
 # Step 7 — RLock-per-method cache, matching ReadModelCache's exact pattern
 # ---------------------------------------------------------------------------
@@ -788,21 +819,22 @@ class DashboardCache:
             )
 
     def get_glossary(self) -> GlossaryResponse:
-        """Backend-owned tooltip descriptions, keyed by term. Two sources merged at read time,
+        """Backend-owned tooltip descriptions, keyed by term. Three sources merged at read time,
         never duplicated into one file: `tools/glossary_registry.py`'s own registry (ticket-status/
-        tier/priority/type/run-status/reason-code/event-status terms), plus every entry in
-        `tools/layer_registry.py`'s registry re-exposed here under category="layer", reusing each
-        layer's existing `note` field as its description rather than maintaining a second,
-        parallel description for the same 19+ values (see
-        docs/plans/agent_ops_dashboard/proposal_glossary_tooltips.md's investigation for why: layer
-        descriptions already exist in exactly one place, and this dashboard is read-only, so it
-        reads that place directly instead of copying it).
+        tier/priority/type/run-status/reason-code/event-status terms), every entry in
+        `tools/layer_registry.py`'s registry re-exposed here under category="layer" (reusing each
+        layer's existing `note` field as its description), and every `.claude/agents/*.md` role
+        file re-exposed here under category="agent" (reusing each file's own frontmatter
+        `description:` field — see `_load_agent_role_descriptions()`). None of the three is copied
+        into a second file — this dashboard is read-only, so it reads each source directly instead
+        (see docs/plans/agent_ops_dashboard/proposal_glossary_tooltips.md and
+        docs/plans/agent_ops_dashboard/proposal_agent_glossary.md's investigations for why).
 
         Like get_ticket_corpus_stats(), this does its own fresh file read rather than participating
-        in the mtime-cached _rebuild() cycle — both registries are small, append-only, and change
-        far less often than tickets/runs, so a fresh read per call is simpler than restructuring
-        _rebuild() for two more source files. self._maybe_rebuild() is still called first for
-        interface consistency with every other method.
+        in the mtime-cached _rebuild() cycle — all three sources are small and change far less
+        often than tickets/runs, so a fresh read per call is simpler than restructuring
+        _rebuild() for three more source files/dirs. self._maybe_rebuild() is still called first
+        for interface consistency with every other method.
         """
         with self._lock:
             self._maybe_rebuild()
@@ -824,6 +856,16 @@ class DashboardCache:
                 if not note:
                     continue
                 terms[layer] = GlossaryEntry(term=layer, category="layer", description=note)
+            for agent_name, description in _load_agent_role_descriptions(self._repo_root).items():
+                if agent_name in terms:
+                    # Same shadow-protection precedent as the layer merge above — no current
+                    # collision (verified: no .claude/agents/*.md `name:` matches any
+                    # glossary_registry/layer term), first-registered source wins if one ever
+                    # arises.
+                    continue
+                terms[agent_name] = GlossaryEntry(
+                    term=agent_name, category="agent", description=description
+                )
 
             return GlossaryResponse(terms=terms)
 

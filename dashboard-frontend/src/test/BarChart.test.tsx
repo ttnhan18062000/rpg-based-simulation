@@ -62,6 +62,23 @@ describe('BarChart', () => {
     expect(tooltips.length).toBeGreaterThan(0)
   })
 
+  it('renders a "?" hint icon next to the label when descriptions matches the row label', () => {
+    render(
+      <BarChart
+        data={[{ label: 'DOD_BLOCKED', value: 3 }]}
+        descriptions={{ DOD_BLOCKED: 'Verify phase found a failing Definition-of-Done condition.' }}
+      />,
+    )
+    expect(screen.getByTestId('bar-chart-row-DOD_BLOCKED')).toContainElement(
+      screen.getByTestId('glossary-hint-icon'),
+    )
+  })
+
+  it('never renders the hint icon when no description matches', () => {
+    render(<BarChart data={[{ label: 'unmapped_label', value: 1 }]} />)
+    expect(screen.queryByTestId('glossary-hint-icon')).not.toBeInTheDocument()
+  })
+
   it('renders the original label-only tooltip content, unchanged, when no description matches', async () => {
     render(<BarChart data={[{ label: 'unmapped_label', value: 1 }]} />)
 

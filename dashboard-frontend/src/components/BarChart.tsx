@@ -1,5 +1,6 @@
 import * as Tooltip from '@radix-ui/react-tooltip'
 import { CHART_SERIES_1 } from '@/lib/chartPalette'
+import { GlossaryHintIcon } from '@/components/GlossaryHintIcon'
 
 export interface BarChartDatum {
   label: string
@@ -53,7 +54,10 @@ export function BarChart({
                 className="flex items-center gap-2"
                 data-testid={`bar-chart-row-${d.label}`}
               >
-                <div className="w-32 shrink-0 text-[11px] text-text-secondary truncate">{d.label}</div>
+                <div className="w-32 shrink-0 flex items-center gap-0.5 text-[11px] text-text-secondary">
+                  <span className="truncate">{d.label}</span>
+                  {descriptions?.[d.label] && <GlossaryHintIcon />}
+                </div>
                 <div className="flex-1 h-4 bg-bg-tertiary rounded-sm">
                   <div
                     className="h-full rounded-r-[4px]"

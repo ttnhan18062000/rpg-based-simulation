@@ -84,16 +84,23 @@ recomputes.
 `GlossaryEntry` (`term`, `category`, `description`) and `GlossaryResponse`
 (`terms: Dict[str, GlossaryEntry]`) back `GET /api/glossary`, the tooltip
 description source for the whole frontend. `DashboardCache.get_glossary`
-merges two registries at read time: every entry from
-`tools/glossary_registry.py`'s `docs/guidelines/glossary_registry.jsonl`
+merges three sources at read time, none of them copied into a second file:
+every entry from `tools/glossary_registry.py`'s
+`docs/guidelines/glossary_registry.jsonl`
 (ticket-status/tier/priority/type/run-status/reason-code/event-status terms),
-plus every layer from `tools/layer_registry.py`'s
-`docs/guidelines/layer_registry.jsonl`, reusing that registry's existing
-`note` field as the description under `category="layer"`. Layer descriptions
-are never copied into `glossary_registry.jsonl` as a second, parallel source
-— a `if layer in terms: continue` first-registered-wins guard protects
-against a future term-name collision between the two registries, though none
-currently exists (35 glossary terms, 19 layer names, verified disjoint).
+every layer from `tools/layer_registry.py`'s
+`docs/guidelines/layer_registry.jsonl` (reusing that registry's existing
+`note` field as the description under `category="layer"`), and every
+`.claude/agents/*.md` role file (reusing each file's own frontmatter
+`description:` field as the description under `category="agent"`, via the
+module-level `_load_agent_role_descriptions()` helper — tolerant of a
+missing `.claude/agents/` directory or a role file with no `description:`,
+returning `{}`/skipping rather than raising, since one malformed role file
+must never break the whole endpoint). Each merge step applies the same
+`if term in terms: continue` first-registered-wins guard, protecting against
+a future term-name collision across any of the three sources, though none
+currently exists (35 glossary terms, 19 layer names, 13 agent names, all
+verified disjoint — 67 total).
 
 ### Ingest / cache (`ingest.py`)
 

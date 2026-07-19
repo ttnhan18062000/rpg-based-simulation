@@ -313,6 +313,17 @@ export function useGlossary(): GlossaryTerms {
   return glossary
 }
 
+// Test-only escape hatch for the module-level cache above: within a single test file, every
+// `render()` that mounts a view calling `useGlossary()` shares the SAME `_glossaryPromise` once
+// it's been set — a later test's differently-mocked `/api/glossary` response is silently ignored
+// if an earlier test in the same file already resolved the cache first. Production code has no
+// reason to ever call this (a real page load never needs to re-fetch the glossary mid-session);
+// test files that vary glossary content across multiple `it()` blocks must call this in
+// `beforeEach`/`afterEach` to avoid cross-test pollution.
+export function _resetGlossaryCacheForTests(): void {
+  _glossaryPromise = null
+}
+
 export async function fetchRunTimeline(runId: string): Promise<RunTimeline> {
   const response = await fetch(`/api/runs/${encodeURIComponent(runId)}/timeline`)
   if (!response.ok) {
