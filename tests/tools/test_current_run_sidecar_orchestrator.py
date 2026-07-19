@@ -131,7 +131,7 @@ def test_finalize_call_site_still_registers_sidecar():
 
 # ---------------------------------------------------------------------------
 # 4. writeMonitoring's own agent() call remains untracked (no orchestrator-side writeSidecar()
-#    call precedes it) — but its own Step 0/Steps 1-4 ordering is covered separately below (item 7).
+#    call precedes it) — but its own Step 0/Steps 1-3 ordering is covered separately below (item 7).
 # ---------------------------------------------------------------------------
 
 
@@ -247,27 +247,37 @@ def test_schema_doc_documents_tools_jsonl_phase_agent_fields():
 #
 # TCK-20260711-MONITORING-TOOLCOUNT-SIDECAR-COLLISION found (via direct empirical cross-check of
 # tool_call_count against tools.jsonl ground truth) that the clear-last ordering caused
-# writeMonitoring's own Steps 1-4 Bash/python calls to be silently attributed to whatever phase's
-# sidecar was still active — inflating that phase's true row count beyond what Step 2's own
-# snapshot had already recorded. Moving the clear to Step 0 (before Steps 1-4) makes
-# writeMonitoring's own calls correctly unattributed (run_id: null) instead. This intentionally
-# supersedes the original clear-last ordering asserted by this test's previous version — the
-# original intent ("writeMonitoring stays sidecar-free by design") is preserved and, in fact, more
-# faithfully achieved this way than the previous ordering actually achieved it.
+# writeMonitoring's own Bash/python calls to be silently attributed to whatever phase's sidecar
+# was still active — inflating that phase's true row count. Moving the clear to Step 0 (before
+# every other step) makes writeMonitoring's own calls correctly unattributed (run_id: null)
+# instead. This intentionally supersedes the original clear-last ordering asserted by this test's
+# previous version — the original intent ("writeMonitoring stays sidecar-free by design") is
+# preserved and, in fact, more faithfully achieved this way than the previous ordering actually
+# achieved it.
+#
+# TCK-20260719-COST-PROXY-WRITE-PATH removed the old Step 2 (an inline python3 -c TOOL_STATS
+# compute, now done deterministically inside record_events.py at write time instead) — the prompt
+# is now 4 steps (0-3), not 5 (0-4). Updated below to match; the Step 0-runs-first invariant this
+# test guards is otherwise unchanged.
 # ---------------------------------------------------------------------------
 
 
-def test_writeMonitoring_step0_sidecar_clear_precedes_steps_1_to_4():
+def test_writeMonitoring_step0_sidecar_clear_precedes_other_steps():
     source = _read_workflow_source()
     assert "Run via Bash: printf '{}' > .claude/current_run" in source
 
     monitoring_write_start = source.index("const writeMonitoring = async")
     step0_idx = source.index("Step 0 — clear the tool-tracking sidecar FIRST", monitoring_write_start)
     step1_idx = source.index("Step 1 — get current timestamp", monitoring_write_start)
-    step2_idx = source.index("Step 2 — compute tool_call_count", monitoring_write_start)
-    step3_idx = source.index("Step 3 — build and write events", monitoring_write_start)
-    step4_idx = source.index("Step 4 — write run record", monitoring_write_start)
-    assert step0_idx < step1_idx < step2_idx < step3_idx < step4_idx
+    step2_idx = source.index("Step 2 — build and write events", monitoring_write_start)
+    step3_idx = source.index("Step 3 — write run record", monitoring_write_start)
+    assert step0_idx < step1_idx < step2_idx < step3_idx
+
+    # The old inline TOOL_STATS-compute step is gone — record_events.py computes
+    # tool_call_count/cost_proxy_score itself now (TCK-20260719-COST-PROXY-WRITE-PATH).
+    assert "Step 4 — write run record" not in source
+    assert "compute tool_call_count and cost_proxy_score per agent seq from tools.jsonl" not in source
+    assert "Save the JSON dict result as TOOL_STATS" not in source
 
     # The old trailing "Step 5 — clear..." label is gone — there is exactly one sidecar-clear
     # instruction in writeMonitoring now, at Step 0, not a duplicate leftover at the end.

@@ -10,6 +10,7 @@ Usage:
 """
 import argparse
 import json
+import statistics
 import sys
 from collections import Counter, defaultdict
 from datetime import datetime, timezone, timedelta
@@ -28,6 +29,9 @@ from validate_frontmatter import (  # noqa: E402
     _ticket_id_effective_date,
     extract_frontmatter,
 )
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from vocabulary import WORKFLOW_AGENTS, WORKFLOW_PHASES, infer_workflow  # noqa: E402
 
 RUNS_FILE = Path("agent-monitoring/runs.jsonl")
 EVENTS_FILE = Path("agent-monitoring/events.jsonl")
@@ -93,6 +97,47 @@ def _is_gate_fail(r):
     Extracted so per-tag gate-failure counts share one definition instead of
     a second copy of the same status tuple."""
     return _resolve_status(r) not in ("DONE", "EPIC_SCOPED", "IN_PROGRESS")
+
+
+def _canonicalize(value, canonical_set):
+    """Return the member of `canonical_set` matching `value` case-insensitively, or
+    `value` unchanged if no member matches. Never invents a canonical spelling for a
+    value outside the known vocabulary — a genuinely unrecognized phase/agent (a future
+    workflow, a typo, a prefix-family agent like `investigate:C1`) passes through as-is,
+    exactly the graceful-degradation default `record_events.py`'s own warn-only
+    vocabulary check already uses for the same class of value."""
+    if value is None:
+        return value
+    for canonical in canonical_set:
+        if canonical.casefold() == value.casefold():
+            return canonical
+    return value
+
+
+def _normalize_phase(e):
+    """Fold a phase casing variant (e.g. 'verify'/'VERIFY') to its canonical spelling
+    ('Verify') for the event's own inferred workflow, per `vocabulary.py`'s
+    WORKFLOW_PHASES — the single source of truth `record_events.py`'s warn-only check
+    and `validate.py`'s drift report both already import from. Read-time merge only:
+    does not write back to events.jsonl, does not affect validate.py's drift-visibility
+    output (which deliberately keeps reporting casing variants as distinct entries)."""
+    workflow = infer_workflow(e.get("run_id") or "")
+    phase = e.get("phase")
+    if workflow is None:
+        return phase
+    return _canonicalize(phase, WORKFLOW_PHASES.get(workflow, set()))
+
+
+def _normalize_agent(e):
+    """Same as `_normalize_phase`, for the `agent` field against WORKFLOW_AGENTS. A
+    prefix-family agent (e.g. create-tickets' `investigate:C1`) never exact-matches a
+    literal in the canonical set, so it correctly passes through unchanged rather than
+    being merged into something it isn't."""
+    workflow = infer_workflow(e.get("run_id") or "")
+    agent = e.get("agent")
+    if workflow is None:
+        return agent
+    return _canonicalize(agent, WORKFLOW_AGENTS.get(workflow, set()))
 
 
 def _collect_inprogress_tagged_tickets(root):
@@ -163,6 +208,49 @@ def _collect_tagged_tickets(root):
 _TAG_GATE_PHASE = {"security": "Security-Review"}
 _TAG_GATE_FINAL_STATUS = {"security": "SECURITY_BLOCKED"}
 _NO_GATE_IMPLEMENTED = "N/A — no gate implemented"
+
+# Outlier-flag threshold (TCK-20260719-RETRO-OUTLIER-FLAGS): calibratable, not precision-load-
+# bearing — mirrors cost_proxy.py's own "weights are calibratable" convention. A run/event is
+# flagged when its value exceeds OUTLIER_MEDIAN_MULTIPLIER times its group's median. Purely a
+# visibility signal ("this sits far from its peers"), never a claim about *why* — matches the
+# ticket's own explicit framing ("does not need to explain why an outlier occurred, just make it
+# visible").
+OUTLIER_MEDIAN_MULTIPLIER = 3
+# A median computed from too few points is not a meaningful comparison baseline — a group with
+# fewer than this many non-null values is skipped entirely (no outliers flagged for it), rather
+# than flagging against a near-arbitrary 1- or 2-point "median."
+_OUTLIER_MIN_GROUP_SIZE = 3
+
+
+def _flag_outliers(items, group_key_fn, value_fn, multiplier=OUTLIER_MEDIAN_MULTIPLIER):
+    """Group `items` by `group_key_fn`, compute each group's median of `value_fn`, and return
+    every item whose value exceeds `multiplier` times its group's median — sorted by ratio
+    descending (worst outliers first). Items are only ever compared within their own group (e.g.
+    each tier's own duration_s median, each phase's own cost_proxy_score median), never against a
+    single global median that would conflate unlike things (a hotfix's typical duration is not
+    comparable to an epic's). Groups with fewer than _OUTLIER_MIN_GROUP_SIZE values are skipped —
+    a median from 1-2 points is not a meaningful baseline. Items with a None value_fn result are
+    excluded from both the candidate set and the median basis (never coerced to 0)."""
+    by_group = defaultdict(list)
+    for item in items:
+        value = value_fn(item)
+        if value is None:
+            continue
+        by_group[group_key_fn(item)].append((item, value))
+
+    flagged = []
+    for group_key, pairs in by_group.items():
+        if len(pairs) < _OUTLIER_MIN_GROUP_SIZE:
+            continue
+        median = statistics.median(v for _, v in pairs)
+        if median <= 0:
+            continue
+        for item, value in pairs:
+            if value > multiplier * median:
+                flagged.append((item, value, median, group_key))
+
+    flagged.sort(key=lambda t: t[1] / t[2], reverse=True)
+    return flagged
 
 
 def compute_retro_metrics(runs, events, tickets_root=None) -> dict:
@@ -272,21 +360,32 @@ def compute_retro_metrics(runs, events, tickets_root=None) -> dict:
         for tier, n in tier_counts.items()
     }
 
-    # Agent status distribution
+    # Agent status distribution + phase status distribution (TCK-20260719-PHASE-AGENT-CASE-FOLD:
+    # both keyed on the *normalized* phase/agent, so casing variants of the same logical
+    # phase/agent — e.g. 'Verify'/'verify'/'VERIFY' — merge into one row instead of silently
+    # fragmenting counts (and, for gate-adjacent phases like Review, undercounting the real
+    # failure rate). phase_status_distribution is new — nothing previously exposed a per-phase
+    # ok/failed/blocked/skipped breakdown, so a phase's true gate-failure rate (the ticket's own
+    # motivating example: Review's real 18.2%) was not computable from this function's output at
+    # all before this, regardless of casing.
     agent_stats = defaultdict(lambda: Counter())
+    phase_stats = defaultdict(lambda: Counter())
     for e in events:
-        agent_stats[e.get("agent", "?")][e.get("status", "?")] += 1
+        agent_stats[_normalize_agent(e) or "?"][e.get("status", "?")] += 1
+        phase_stats[_normalize_phase(e) or "?"][e.get("status", "?")] += 1
     agent_status_distribution = {agent: dict(counts) for agent, counts in agent_stats.items()}
+    phase_status_distribution = {phase: dict(counts) for phase, counts in phase_stats.items()}
 
     # Spend proxy — by phase and by agent. Filter-then-aggregate: events lacking cost_proxy_score
     # (pre-TCK-20260708-AGENT-COST-OBSERVABILITY historical records, no backfill) are excluded from
     # both sum and count, never coerced to 0 (would silently deflate older phases' averages).
+    # Keyed on normalized phase/agent for the same reason as agent_status_distribution above.
     scored_events = [e for e in events if e.get("cost_proxy_score") is not None]
     phase_scores = defaultdict(list)
     agent_scores = defaultdict(list)
     for e in scored_events:
-        phase_scores[e.get("phase", "?")].append(e["cost_proxy_score"])
-        agent_scores[e.get("agent", "?")].append(e["cost_proxy_score"])
+        phase_scores[_normalize_phase(e) or "?"].append(e["cost_proxy_score"])
+        agent_scores[_normalize_agent(e) or "?"].append(e["cost_proxy_score"])
     spend_proxy_by_phase = {
         phase: {
             "events_scored": len(scores),
@@ -326,6 +425,55 @@ def compute_retro_metrics(runs, events, tickets_root=None) -> dict:
         for r in slow_runs
     ]
 
+    # Outliers (TCK-20260719-RETRO-OUTLIER-FLAGS): a *relative* signal — "this sits far from its
+    # peers" — distinct from slow_runs' fixed 30-min absolute threshold above. The two can overlap
+    # on the same run (both are computed independently, neither excludes the other) but answer
+    # different questions: slow_runs = "was this literally a long time," outliers = "was this way
+    # more than similar runs typically take." Both are surfaced, not merged, so a reader isn't
+    # misled into thinking they're the same signal.
+    #
+    # duration_s outliers are grouped by tier (runs.jsonl has no phase field, only tier) — a
+    # hotfix's typical duration is not a meaningful baseline for an epic's, so comparing against
+    # a single global median would flag nearly every epic as "an outlier" for no real reason.
+    duration_outliers = _flag_outliers(
+        runs,
+        group_key_fn=lambda r: r.get("tier", "unknown"),
+        value_fn=lambda r: r.get("duration_s"),
+    )
+    outliers_duration_s = [
+        {
+            "run_id": item.get("run_id", ""),
+            "tier": group_key,
+            "duration_s": value,
+            "median": round(median, 1),
+            "ratio": round(value / median, 1),
+        }
+        for item, value, median, group_key in duration_outliers
+    ]
+
+    # cost_proxy_score outliers are grouped by *normalized* phase (reusing _normalize_phase from
+    # TCK-20260719-PHASE-AGENT-CASE-FOLD, landed immediately before this ticket in the same batch —
+    # a casing-fragmented phase would otherwise silently split one real group into several
+    # too-small-to-median groups). Matches D25's own finding shape (">10x spread within the same
+    # phase/agent pair").
+    cost_outliers = _flag_outliers(
+        scored_events,
+        group_key_fn=lambda e: _normalize_phase(e) or "?",
+        value_fn=lambda e: e.get("cost_proxy_score"),
+    )
+    outliers_cost_proxy_score = [
+        {
+            "run_id": item.get("run_id", ""),
+            "seq": item.get("seq"),
+            "phase": group_key,
+            "agent": _normalize_agent(item) or item.get("agent", "?"),
+            "cost_proxy_score": value,
+            "median": round(median, 1),
+            "ratio": round(value / median, 1),
+        }
+        for item, value, median, group_key in cost_outliers
+    ]
+
     return {
         "run_summary": {
             "total": total,
@@ -341,6 +489,7 @@ def compute_retro_metrics(runs, events, tickets_root=None) -> dict:
         "tag_breakdown_skill": tag_breakdown_skill,
         "tier_distribution": tier_distribution,
         "agent_status_distribution": agent_status_distribution,
+        "phase_status_distribution": phase_status_distribution,
         "spend_proxy_by_phase": spend_proxy_by_phase,
         "spend_proxy_by_agent": spend_proxy_by_agent,
         "summary_quality": {
@@ -349,6 +498,10 @@ def compute_retro_metrics(runs, events, tickets_root=None) -> dict:
             "long_summaries": long_summaries,
         },
         "slow_runs": slow_runs_list,
+        "outliers": {
+            "duration_s": outliers_duration_s,
+            "cost_proxy_score": outliers_cost_proxy_score,
+        },
     }
 
 
@@ -465,6 +618,25 @@ def generate(runs, events, label, week_str=None, tickets_root=None):
         lines.append("_No events recorded._")
     lines.append("")
 
+    # Phase status distribution — same shape as Agent Status Distribution above, keyed by phase
+    # instead of agent. Surfaces a phase's real gate-failure rate (e.g. "Review: 41 failed / 225
+    # total") that was not visible from any other section of this report.
+    lines.append("## Phase Status Distribution")
+    lines.append("")
+    if metrics["phase_status_distribution"]:
+        lines.append("| Phase | Calls | ok | failed | blocked | skipped |")
+        lines.append("|---|---|---|---|---|---|")
+        for phase in sorted(metrics["phase_status_distribution"]):
+            c = metrics["phase_status_distribution"][phase]
+            total_calls = sum(c.values())
+            lines.append(
+                f"| {phase} | {total_calls} | {c.get('ok',0)} | "
+                f"{c.get('failed',0)} | {c.get('blocked',0)} | {c.get('skipped',0)} |"
+            )
+    else:
+        lines.append("_No events recorded._")
+    lines.append("")
+
     # Spend proxy — by phase and by agent.
     if metrics["spend_proxy_by_phase"]:
         lines.append("## Spend Proxy — By Phase")
@@ -511,6 +683,41 @@ def generate(runs, events, label, week_str=None, tickets_root=None):
     else:
         lines.append("_No slow runs this period._")
     lines.append("")
+
+    # Outliers — relative signal (Nx group median), distinct from Slow Runs' fixed 30-min
+    # threshold above. Conditionally rendered: only appears when at least one outlier was flagged
+    # in either category, mirroring the Reason Codes/Tag Breakdown conditional-render pattern.
+    outliers = metrics["outliers"]
+    if outliers["duration_s"] or outliers["cost_proxy_score"]:
+        lines.append("## Outliers")
+        lines.append("")
+        lines.append(
+            f"_Flags a value more than {OUTLIER_MEDIAN_MULTIPLIER}x its group's median — a "
+            "relative visibility signal, not an absolute threshold like Slow Runs above, and not "
+            "a claim about *why* the value is high._"
+        )
+        lines.append("")
+        if outliers["duration_s"]:
+            lines.append("### Duration outliers (by tier)")
+            lines.append("")
+            lines.append("| run_id | tier | duration_s | tier median | ratio |")
+            lines.append("|---|---|---|---|---|")
+            for o in outliers["duration_s"]:
+                lines.append(
+                    f"| {o['run_id']} | {o['tier']} | {o['duration_s']} | {o['median']} | {o['ratio']}x |"
+                )
+            lines.append("")
+        if outliers["cost_proxy_score"]:
+            lines.append("### Cost-proxy-score outliers (by phase)")
+            lines.append("")
+            lines.append("| run_id | seq | phase | agent | cost_proxy_score | phase median | ratio |")
+            lines.append("|---|---|---|---|---|---|---|")
+            for o in outliers["cost_proxy_score"]:
+                lines.append(
+                    f"| {o['run_id']} | {o['seq']} | {o['phase']} | {o['agent']} | "
+                    f"{o['cost_proxy_score']} | {o['median']} | {o['ratio']}x |"
+                )
+            lines.append("")
 
     # Notes (human-written)
     lines.append("## Notes")

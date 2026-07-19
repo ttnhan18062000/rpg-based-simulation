@@ -15,7 +15,7 @@ _MONITORING_TOOLS_DIR = Path(__file__).parent.parent.parent / "tools" / "agent-m
 if str(_MONITORING_TOOLS_DIR) not in sys.path:
     sys.path.insert(0, str(_MONITORING_TOOLS_DIR))
 
-from record_events import validate_record, warn_vocabulary_drift  # noqa: E402
+from record_events import compute_tool_stats, validate_record, warn_vocabulary_drift  # noqa: E402
 
 _RECORD_PATH = _MONITORING_TOOLS_DIR / "record_events.py"
 
@@ -166,14 +166,36 @@ class TestVocabularyWarning:
 
 
 # ---------------------------------------------------------------------------
-# TCK-20260708-AGENT-COST-OBSERVABILITY — cost_proxy_score additive-field pass-through
+# TCK-20260719-COST-PROXY-WRITE-PATH — deterministic tool_call_count/cost_proxy_score,
+# computed here from real tools.jsonl ground truth, never trusting a caller-supplied value.
 # ---------------------------------------------------------------------------
 
-def test_cost_proxy_score_field_written_to_events_jsonl(tmp_path):
-    # cost_proxy_score is additive, not in REQUIRED — this proves it persists through
-    # record_events.py's existing unknown-key pass-through with zero source changes to that
-    # script. Runs with cwd=tmp_path so the write never touches the repo's real events.jsonl.
-    record = {**_VALID_EVENT, "run_id": "TCK-COST-PROXY-TEST", "cost_proxy_score": 42.5}
+def _write_tools_jsonl(tmp_path, rows):
+    tools_dir = tmp_path / "agent-monitoring"
+    tools_dir.mkdir(parents=True, exist_ok=True)
+    with open(tools_dir / "tools.jsonl", "w") as f:
+        for row in rows:
+            f.write(json.dumps(row) + "\n")
+
+
+def test_cost_proxy_score_and_tool_call_count_computed_from_real_tools_jsonl_not_passthrough(tmp_path):
+    # A caller-supplied cost_proxy_score/tool_call_count must be IGNORED and overridden by the
+    # real computed value — this is the exact anti-pattern (trusting an LLM-transcribed number)
+    # this ticket fixes. Two Bash rows (500ms + 1500ms) and one Read row for seq=1 give a known,
+    # hand-computable expected score: W_BASH=0.001 * 2000 + W_EDIT=1 * 1 = 3.0, tool_call_count=3.
+    _write_tools_jsonl(tmp_path, [
+        {"run_id": "TCK-COST-PROXY-TEST", "seq": 1, "tool": "Bash", "duration_ms": 500},
+        {"run_id": "TCK-COST-PROXY-TEST", "seq": 1, "tool": "Bash", "duration_ms": 1500},
+        {"run_id": "TCK-COST-PROXY-TEST", "seq": 1, "tool": "Read", "duration_ms": 10},
+        {"run_id": "TCK-COST-PROXY-TEST", "seq": 2, "tool": "Bash", "duration_ms": 999},  # different seq, must not leak in
+    ])
+    record = {
+        **_VALID_EVENT,
+        "run_id": "TCK-COST-PROXY-TEST",
+        "seq": 1,
+        "cost_proxy_score": 999999.0,  # deliberately wrong caller-supplied value
+        "tool_call_count": 999999,
+    }
     assert validate_record(record) == []
 
     result = subprocess.run(
@@ -184,4 +206,52 @@ def test_cost_proxy_score_field_written_to_events_jsonl(tmp_path):
     )
     assert result.returncode == 0
     written = json.loads((tmp_path / "agent-monitoring" / "events.jsonl").read_text().strip())
-    assert written["cost_proxy_score"] == 42.5
+    assert written["cost_proxy_score"] == 3.0
+    assert written["tool_call_count"] == 3
+
+
+def test_cost_proxy_score_absent_when_no_tools_jsonl_exists(tmp_path):
+    # No agent-monitoring/tools.jsonl at all in this cwd — compute_tool_stats must not crash,
+    # and an implement-ticket record with genuinely zero recorded tool calls gets 0, not a stale
+    # caller-supplied value.
+    record = {**_VALID_EVENT, "run_id": "TCK-NO-TOOLS-FILE", "seq": 1}
+    result = subprocess.run(
+        [sys.executable, str(_RECORD_PATH), "--data", json.dumps(record)],
+        capture_output=True,
+        text=True,
+        cwd=tmp_path,
+    )
+    assert result.returncode == 0
+    written = json.loads((tmp_path / "agent-monitoring" / "events.jsonl").read_text().strip())
+    assert written["cost_proxy_score"] == 0.0
+    assert written["tool_call_count"] == 0
+
+
+def test_implement_epic_and_create_tickets_records_unaffected_no_sidecar():
+    # implement-epic ("EPIC-"/"FOLDER-" run_id prefix) and create-tickets ("CREATE-TICKETS-"
+    # prefix) never register a per-agent-call sidecar — compute_tool_stats must leave their
+    # records exactly as passed through, never adding a tool_call_count/cost_proxy_score key
+    # that wasn't already there (matches this ticket's explicit Out-of-Scope: "100% missing for
+    # both fields by documented, deliberate design").
+    records = [
+        {**_VALID_EVENT, "run_id": "EPIC-TCK-FAKE-EPIC", "seq": 1},
+        {**_VALID_EVENT, "run_id": "FOLDER-tickets-todos-fake", "seq": 1},
+        {**_VALID_EVENT, "run_id": "CREATE-TICKETS-fake-source", "seq": 1},
+    ]
+    stats = compute_tool_stats(records)
+    assert stats == {}
+
+
+def test_compute_tool_stats_only_targets_implement_ticket_workflow(tmp_path, monkeypatch):
+    # A mixed batch: one implement-ticket record (gets computed) and one implement-epic record
+    # (must not appear in the result at all, even though tools.jsonl has no rows for it either).
+    monkeypatch.chdir(tmp_path)
+    _write_tools_jsonl(tmp_path, [
+        {"run_id": "TCK-MIXED-BATCH", "seq": 1, "tool": "Read", "duration_ms": 5},
+    ])
+    records = [
+        {**_VALID_EVENT, "run_id": "TCK-MIXED-BATCH", "seq": 1},
+        {**_VALID_EVENT, "run_id": "EPIC-TCK-MIXED-BATCH", "seq": 1},
+    ]
+    stats = compute_tool_stats(records)
+    assert stats == {("TCK-MIXED-BATCH", 1): (1, 1.0)}

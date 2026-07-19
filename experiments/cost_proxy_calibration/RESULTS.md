@@ -16,8 +16,11 @@ landed change (per the proposal's own guardrails).
 **Scripts:** `extract_transcript_usage.py` (read-only against `~/.claude/projects/-home-vboxuser-Work-rpg-based-simulation/*.jsonl`,
 33 files, emits only aggregate numeric features — never raw content — to
 `extracted_usage_features.jsonl`), `fit_regression.py` (fits the regression,
-`regression_fit_result.json`), `validate_rank_order.py` (the §4 step 4 validation gate against real
-`agent-monitoring/tools.jsonl`/`events.jsonl`).
+`regression_fit_result.json`). The §4 step 4 validation gate against real
+`agent-monitoring/tools.jsonl`/`events.jsonl` originally lived here as `validate_rank_order.py`;
+promoted to `tools/agent-monitoring/weight_sensitivity_check.py` by
+`TCK-20260719-WEIGHT-SENSITIVITY-PROMOTE` as a real, tested, parameterized CLI tool — see that
+module for the current version.
 
 ## 1. Extraction
 
@@ -111,9 +114,11 @@ dead end:
 - `edit_count` was by far the strongest single predictor in Fit C (r=0.91 vs. 0.70/0.75) — worth
   treating as a weak prior that `W_EDIT` may be relatively under-weighted vs. `W_AGENT` in the
   shipped formula, without committing to Fit C's exact ratio.
-- If a future ticket does revisit these weights, it should re-run this experiment's
-  `validate_rank_order.py` gate against any candidate weights before shipping — the gate itself
-  (comparable to real `tools.jsonl` data) is reusable, independent of Fit C's own validity.
+- If a future ticket does revisit these weights, it should re-run
+  `tools/agent-monitoring/weight_sensitivity_check.py` (promoted from this experiment's own
+  `validate_rank_order.py` by `TCK-20260719-WEIGHT-SENSITIVITY-PROMOTE`) against any candidate
+  weights before shipping — the gate itself (comparable to real `tools.jsonl` data) is reusable,
+  independent of Fit C's own validity.
 
 ## Related
 

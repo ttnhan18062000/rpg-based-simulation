@@ -106,9 +106,9 @@ One record per agent call within a workflow run. FK: `run_id → runs.run_id`.
 | `agent` | string | No | Agent identifier (matches `.claude/agents/{agent}.md` filename). |
 | `summary` | string | No | One sentence describing what the agent did and the key finding. Empty string = agent did not provide a summary (prompt quality signal). Max 200 chars. |
 | `status` | string | No | `ok` \| `failed` \| `blocked` \| `skipped` |
-| `tool_call_count` | int | Yes | Total number of tool calls made by this agent. Computed by `writeMonitoring` from `tools.jsonl` (counts entries matching `run_id` + `seq`). `null` for runs produced before this field was added. |
+| `tool_call_count` | int | Yes | Total number of tool calls made by this agent. Computed deterministically by `record_events.py` at write time from `tools.jsonl` (counts entries matching `run_id` + `seq`) for `implement-ticket` workflow records only — see below. `null` for runs produced before this field was added, and for workflows that never register a `.claude/current_run` sidecar (`create-tickets`, `implement-epic`). |
 | `reason_code` | string | Yes | Machine-parseable sub-cause code. Populated for `Scope`/`ticket-scoper` and `Verify`/`done-checker` `failed` events; `null` everywhere else, and `null` for all records predating `TCK-20260706-MONITORING-REASON-CODE`/`TCK-20260706-SCOPE-TAG-REGISTRY-CHECK`. See below for why only those two phases get one. |
-| `cost_proxy_score` | float | Yes | Monotonic, unitless spend-proxy score computed by `writeMonitoring` from `tools.jsonl`. `null`/absent for all records predating `TCK-20260708-AGENT-COST-OBSERVABILITY` (no backfill). See below for the formula. |
+| `cost_proxy_score` | float | Yes | Monotonic, unitless spend-proxy score computed deterministically by `record_events.py` at write time from `tools.jsonl`, for `implement-ticket` workflow records only. `null`/absent for all records predating `TCK-20260708-AGENT-COST-OBSERVABILITY` (no backfill). See below for the formula. |
 
 ### `status` values
 
@@ -154,7 +154,11 @@ needed there when `Structure` started emitting this field.
 3x agent B this week"), **not a dollar-denominated cost figure** — no reader should subtract two
 scores and interpret the delta as real currency.
 
-Formula (computed by `writeMonitoring`, one group per `(run_id, seq)`):
+Formula (computed deterministically by `record_events.py::compute_tool_stats()` at write time,
+one group per `(run_id, seq)` — moved out of `writeMonitoring`'s own LLM-executed prompt by
+`TCK-20260719-COST-PROXY-WRITE-PATH`, since an agent-transcribed compute step is exactly the kind
+of non-deterministic bookkeeping this repo's other monitoring fields already moved away from; see
+`record_run.py`'s `compute_duration_s` for the precedent this mirrors):
 
 ```
 cost_proxy_score = w_bash  * Σ(Bash duration_ms)
@@ -193,7 +197,7 @@ Canonical phase/agent values for all four workflows are enforced from `tools/age
 
 ### `phase` values (create-tickets workflow)
 
-`Comprehend`, `Investigate` (one event per concern), `Structure`, `Write` (one event per ticket), `Link` (only when `epic_id` is provided). Neither `create-tickets` nor `implement-epic` registers a `.claude/current_run` sidecar per agent call (neither ever has), so `tool_call_count` is always `null` on their events. `implement-ticket` computes it via the orchestrator-side `bash()` mechanism described in "How tool calls are attributed to agent events" above.
+`Comprehend`, `Investigate` (one event per concern), `Structure`, `Write` (one event per ticket), `Link` (only when `epic_id` is provided). Neither `create-tickets` nor `implement-epic` registers a `.claude/current_run` sidecar per agent call (neither ever has), so `tool_call_count` is always absent on their events — `record_events.py::compute_tool_stats()` only computes it for `implement-ticket` run_ids (see "How tool calls are attributed to agent events" above), and leaves every other workflow's records untouched.
 
 ---
 
@@ -237,7 +241,7 @@ The `PostToolUse` hook (`post_tool_hook.py`) wraps its open+write block in `fcnt
 
 ### How tool calls are attributed to agent events
 
-The orchestrating workflow (`implement-ticket.js`) writes `{"run_id": "...", "seq": N}` to `.claude/current_run` itself via a `bash()` call (the shared `writeSidecar(seq)` helper), immediately before dispatching each corresponding `agent()` call — agent prompts no longer contain a sidecar-write instruction. The PostToolUse hook reads this file on every tool call and tags the record with `run_id` + `seq`. The `writeMonitoring` step at the end of the workflow counts records per seq to produce `tool_call_count` in events.jsonl.
+The orchestrating workflow (`implement-ticket.js`) writes `{"run_id": "...", "seq": N}` to `.claude/current_run` itself via a `bash()` call (the shared `writeSidecar(seq)` helper), immediately before dispatching each corresponding `agent()` call — agent prompts no longer contain a sidecar-write instruction. The PostToolUse hook reads this file on every tool call and tags the record with `run_id` + `seq`. `record_events.py::compute_tool_stats()` — called at write time inside `record_events.py`'s own `main()`, not by `writeMonitoring`'s prompt — counts records per `(run_id, seq)` to produce `tool_call_count`/`cost_proxy_score` in `events.jsonl`, always overriding any value the caller passed in (`TCK-20260719-COST-PROXY-WRITE-PATH`; mirrors `record_run.py`'s `compute_duration_s`).
 
 Since `TCK-20260719-LIVE-PHASE-AGENT-LABEL`, the sidecar (and thus each `tools.jsonl` record) also carries `phase`/`agent`, threaded through the same `writeSidecar(seq, phase, agent)` call as `run_id`/`seq` — this lets a live-run consumer show which phase/agent is currently producing tool calls without waiting for the run's `events.jsonl` entries to be written at exit.
 

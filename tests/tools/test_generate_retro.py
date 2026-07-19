@@ -360,8 +360,8 @@ def test_compute_retro_metrics_returns_all_documented_keys():
     assert set(metrics.keys()) == {
         "run_summary", "gate_failure_breakdown", "reason_code_breakdown",
         "tag_breakdown_subsystem", "tag_breakdown_skill", "tier_distribution",
-        "agent_status_distribution", "spend_proxy_by_phase", "spend_proxy_by_agent",
-        "summary_quality", "slow_runs",
+        "agent_status_distribution", "phase_status_distribution", "spend_proxy_by_phase",
+        "spend_proxy_by_agent", "summary_quality", "slow_runs", "outliers",
     }
 
 
@@ -431,3 +431,237 @@ def test_compute_retro_metrics_skill_tag_gate_hits_none_when_no_gate_implemented
     metrics = compute_retro_metrics(runs, events, tickets_root=tmp_path)
 
     assert metrics["tag_breakdown_skill"]["performance"] == {"runs": 1, "gate_hits": None}
+
+
+# --- TCK-20260719-PHASE-AGENT-CASE-FOLD: phase/agent casing normalization ---
+
+def test_phase_status_distribution_merges_casing_variants_review_failure_rate():
+    # Fragmented input across 3 casing variants of the same logical phase — the exact shape
+    # confirmed in real agent-monitoring/events.jsonl data (Finalize/finalize/FINALIZE,
+    # Implement/implement/IMPLEMENT, Review/review, etc). 41 failed + 184 ok = 225 total,
+    # 41/225 = 18.2% (rounded to 1 decimal) — the ticket's own motivating real-data example.
+    runs = [_BASE_RUN]
+    events = (
+        [{"run_id": "TCK-FAKE", "seq": i, "phase": "Review", "agent": "architecture-reviewer",
+          "status": "failed", "summary": "needs changes"} for i in range(20)]
+        + [{"run_id": "TCK-FAKE", "seq": 100 + i, "phase": "review", "agent": "architecture-reviewer",
+            "status": "failed", "summary": "needs changes"} for i in range(15)]
+        + [{"run_id": "TCK-FAKE", "seq": 200 + i, "phase": "REVIEW", "agent": "architecture-reviewer",
+            "status": "failed", "summary": "needs changes"} for i in range(6)]
+        + [{"run_id": "TCK-FAKE", "seq": 300 + i, "phase": "Review", "agent": "architecture-reviewer",
+            "status": "ok", "summary": "approved"} for i in range(100)]
+        + [{"run_id": "TCK-FAKE", "seq": 400 + i, "phase": "review", "agent": "architecture-reviewer",
+            "status": "ok", "summary": "approved"} for i in range(60)]
+        + [{"run_id": "TCK-FAKE", "seq": 500 + i, "phase": "REVIEW", "agent": "architecture-reviewer",
+            "status": "ok", "summary": "approved"} for i in range(24)]
+    )
+
+    metrics = compute_retro_metrics(runs, events)
+
+    # Merged into exactly one "Review" key — casing variants no longer fragment the count.
+    assert set(metrics["phase_status_distribution"].keys()) == {"Review"}
+    merged = metrics["phase_status_distribution"]["Review"]
+    assert merged == {"failed": 41, "ok": 184}
+
+    failure_rate = round(100 * merged["failed"] / (merged["failed"] + merged["ok"]), 1)
+    assert failure_rate == 18.2
+
+    # Naive (unmerged) reads would have shown 3 separate, individually-smaller-looking phases —
+    # this proves the fragmentation was real and would have undercounted the true rate: e.g. the
+    # "Review" literal-only bucket alone is 20 failed / 120 total = 16.7%, not 18.2%.
+    naive_review_only_rate = round(100 * 20 / 120, 1)
+    assert naive_review_only_rate != failure_rate
+
+
+def test_phase_status_distribution_rendered_in_report():
+    runs = [_BASE_RUN]
+    events = [
+        {"run_id": "TCK-FAKE", "seq": 1, "phase": "Verify", "agent": "done-checker", "status": "failed", "summary": "blocked"},
+        {"run_id": "TCK-FAKE", "seq": 2, "phase": "verify", "agent": "done-checker", "status": "ok", "summary": "passed"},
+    ]
+
+    metrics = compute_retro_metrics(runs, events)
+    report = generate(runs, events, "test-label")
+
+    assert metrics["phase_status_distribution"]["Verify"] == {"failed": 1, "ok": 1}
+    assert "## Phase Status Distribution" in report
+    assert "| Verify | 2 | 1 | 1 | 0 | 0 |" in report
+
+
+def test_agent_status_distribution_still_merges_casing_variants_if_ever_present():
+    # Real production data (checked directly) shows zero agent-name casing drift today — every
+    # implement-ticket agent literal is already lowercase-consistent. This test proves the
+    # normalization mechanism works for agent too (not just phase), so it's not a latent gap if
+    # drift is ever introduced later.
+    runs = [_BASE_RUN]
+    events = [
+        {"run_id": "TCK-FAKE", "seq": 1, "phase": "Test", "agent": "test-scoper", "status": "ok", "summary": "passed"},
+        {"run_id": "TCK-FAKE", "seq": 2, "phase": "Test", "agent": "Test-Scoper", "status": "ok", "summary": "passed"},
+    ]
+
+    metrics = compute_retro_metrics(runs, events)
+
+    assert set(metrics["agent_status_distribution"].keys()) == {"test-scoper"}
+    assert metrics["agent_status_distribution"]["test-scoper"] == {"ok": 2}
+
+
+def test_spend_proxy_by_phase_merges_casing_variants():
+    runs = [_BASE_RUN]
+    events = [
+        {"run_id": "TCK-FAKE", "seq": 1, "phase": "Implement", "agent": "implementer", "status": "ok", "summary": "done", "cost_proxy_score": 10.0},
+        {"run_id": "TCK-FAKE", "seq": 2, "phase": "implement", "agent": "implementer", "status": "ok", "summary": "done", "cost_proxy_score": 20.0},
+        {"run_id": "TCK-FAKE", "seq": 3, "phase": "IMPLEMENT", "agent": "implementer", "status": "ok", "summary": "done", "cost_proxy_score": 30.0},
+    ]
+
+    metrics = compute_retro_metrics(runs, events)
+
+    assert set(metrics["spend_proxy_by_phase"].keys()) == {"Implement"}
+    assert metrics["spend_proxy_by_phase"]["Implement"] == {"events_scored": 3, "total": 60.0, "avg": 20.0}
+
+
+def test_normalization_leaves_unknown_workflow_and_unrecognized_phase_untouched():
+    # A run_id matching no known workflow prefix (infer_workflow returns None) must pass phase/
+    # agent through completely unchanged — never crash, never merge into a fabricated canonical
+    # spelling for a vocabulary that doesn't exist for that workflow.
+    runs = [dict(_BASE_RUN, run_id="UNKNOWN-PREFIX-123")]
+    events = [
+        {"run_id": "UNKNOWN-PREFIX-123", "seq": 1, "phase": "SomeWeirdPhase", "agent": "someone", "status": "ok", "summary": "did a thing"},
+    ]
+
+    metrics = compute_retro_metrics(runs, events)
+
+    assert metrics["phase_status_distribution"] == {"SomeWeirdPhase": {"ok": 1}}
+    assert metrics["agent_status_distribution"] == {"someone": {"ok": 1}}
+
+
+def test_create_tickets_prefix_family_agent_not_merged_into_a_literal():
+    # create-tickets' dynamic `investigate:C1`/`investigate:C2` agents are a prefix-family, not a
+    # fixed literal in WORKFLOW_AGENTS — must never be force-merged into a single canonical
+    # literal (there isn't one), and must not collide with each other.
+    runs = [dict(_BASE_RUN, run_id="CREATE-TICKETS-fake-source", workflow="create-tickets", tier="n/a")]
+    events = [
+        {"run_id": "CREATE-TICKETS-fake-source", "seq": 1, "phase": "Investigate", "agent": "investigate:C1", "status": "ok", "summary": "found stuff"},
+        {"run_id": "CREATE-TICKETS-fake-source", "seq": 2, "phase": "Investigate", "agent": "investigate:C2", "status": "ok", "summary": "found other stuff"},
+    ]
+
+    metrics = compute_retro_metrics(runs, events)
+
+    assert set(metrics["agent_status_distribution"].keys()) == {"investigate:C1", "investigate:C2"}
+
+
+# --- TCK-20260719-RETRO-OUTLIER-FLAGS: duration_s/cost_proxy_score outlier detection ---
+
+def test_duration_outlier_flagged_relative_to_tier_median_not_global():
+    # 5 standard-tier runs around 1000s (median), 1 wildly longer standard-tier run (>3x median)
+    # must be flagged; a 1000s epic-tier run (which would look "high" against the standard-tier
+    # median) must NOT be flagged since epic has its own separate group and too few members
+    # (below _OUTLIER_MIN_GROUP_SIZE) to compute a median at all.
+    runs = [
+        dict(_BASE_RUN, run_id=f"TCK-STD-{i}", tier="standard", duration_s=1000)
+        for i in range(5)
+    ] + [
+        dict(_BASE_RUN, run_id="TCK-STD-OUTLIER", tier="standard", duration_s=5000),
+        dict(_BASE_RUN, run_id="TCK-EPIC-ONE", tier="epic", duration_s=1000),
+    ]
+    events = []
+
+    metrics = compute_retro_metrics(runs, events)
+
+    outlier_run_ids = {o["run_id"] for o in metrics["outliers"]["duration_s"]}
+    assert outlier_run_ids == {"TCK-STD-OUTLIER"}
+    flagged = metrics["outliers"]["duration_s"][0]
+    assert flagged["tier"] == "standard"
+    assert flagged["duration_s"] == 5000
+    assert flagged["median"] == 1000.0
+    assert flagged["ratio"] == 5.0
+
+
+def test_duration_outlier_excludes_null_from_flagging_and_median():
+    # A run with duration_s=None (in-progress, no end_ts yet) must not be flagged, and must not
+    # be counted toward the group's median.
+    runs = [
+        dict(_BASE_RUN, run_id=f"TCK-STD-{i}", tier="standard", duration_s=1000)
+        for i in range(3)
+    ] + [dict(_BASE_RUN, run_id="TCK-STD-INPROGRESS", tier="standard", duration_s=None)]
+    events = []
+
+    metrics = compute_retro_metrics(runs, events)
+
+    assert metrics["outliers"]["duration_s"] == []
+
+
+def test_duration_outlier_skips_group_below_minimum_size():
+    # Only 2 runs in the "hotfix" tier — below _OUTLIER_MIN_GROUP_SIZE (3) — even though one is
+    # numerically 10x the other, no outlier is flagged (a 2-point median is not a meaningful
+    # baseline).
+    runs = [
+        dict(_BASE_RUN, run_id="TCK-HOTFIX-1", tier="hotfix", duration_s=100),
+        dict(_BASE_RUN, run_id="TCK-HOTFIX-2", tier="hotfix", duration_s=1000),
+    ]
+    events = []
+
+    metrics = compute_retro_metrics(runs, events)
+
+    assert metrics["outliers"]["duration_s"] == []
+
+
+def test_cost_proxy_outlier_flagged_relative_to_normalized_phase_median():
+    # cost_proxy_score outliers group by *normalized* phase — 'Investigate'/'investigate' must
+    # merge into one group (not fragment into two too-small groups), reusing
+    # TCK-20260719-PHASE-AGENT-CASE-FOLD's _normalize_phase.
+    runs = [_BASE_RUN]
+    events = (
+        [{"run_id": "TCK-FAKE", "seq": i, "phase": "Investigate", "agent": "investigator",
+          "status": "ok", "summary": "found stuff", "cost_proxy_score": 100.0} for i in range(3)]
+        + [{"run_id": "TCK-FAKE", "seq": 100, "phase": "investigate", "agent": "investigator",
+            "status": "ok", "summary": "found stuff", "cost_proxy_score": 1000.0}]
+    )
+
+    metrics = compute_retro_metrics(runs, events)
+
+    outliers = metrics["outliers"]["cost_proxy_score"]
+    assert len(outliers) == 1
+    assert outliers[0]["phase"] == "Investigate"
+    assert outliers[0]["cost_proxy_score"] == 1000.0
+    assert outliers[0]["seq"] == 100
+
+
+def test_cost_proxy_outlier_excludes_events_with_no_score():
+    # An event with no cost_proxy_score at all (pre-TCK-20260708-AGENT-COST-OBSERVABILITY
+    # historical record) must not be counted in the group or ever flagged.
+    runs = [_BASE_RUN]
+    events = [
+        {"run_id": "TCK-FAKE", "seq": i, "phase": "Test", "agent": "test-scoper",
+         "status": "ok", "summary": "passed", "cost_proxy_score": 10.0} for i in range(3)
+    ] + [
+        {"run_id": "TCK-FAKE", "seq": 100, "phase": "Test", "agent": "test-scoper",
+         "status": "ok", "summary": "passed"},  # no cost_proxy_score key at all
+    ]
+
+    metrics = compute_retro_metrics(runs, events)
+
+    assert metrics["outliers"]["cost_proxy_score"] == []
+
+
+def test_outliers_section_omitted_when_none_flagged():
+    runs = [_BASE_RUN]
+    events = []
+
+    report = generate(runs, events, "test-label")
+
+    assert "## Outliers" not in report
+
+
+def test_outliers_section_rendered_when_flagged():
+    runs = [
+        dict(_BASE_RUN, run_id=f"TCK-STD-{i}", tier="standard", duration_s=1000)
+        for i in range(4)
+    ] + [dict(_BASE_RUN, run_id="TCK-STD-OUTLIER", tier="standard", duration_s=9000)]
+    events = []
+
+    report = generate(runs, events, "test-label")
+
+    assert "## Outliers" in report
+    assert "### Duration outliers (by tier)" in report
+    assert "TCK-STD-OUTLIER" in report
+    assert "9.0x" in report

@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: observability
 authority: P1
 audience: agent
 ticket_id: TCK-20260719-COST-PROXY-CALIBRATION-NOTE
-phase: open
+phase: done
 date: 2026-07-19
 tags: []
 ---
@@ -15,7 +15,7 @@ tags: []
 Record cost_proxy calibration finding as a dated provenance note
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -69,9 +69,29 @@ None.
 - C4 also touches README.md's same area — check C4's ticket status before implementing C5 if both are in flight, to avoid conflicting near-simultaneous edits
 
 ## Implementation Notes
+Placement decision (per the ticket's own Assumptions section): single-location placement in
+`docs/agent-monitoring/README.md`'s existing "What It Does NOT Capture" section (the most natural
+home — that section already covers the platform-blocked token gap this note reconfirms), with a
+one-paragraph cross-reference added to `tools/agent-monitoring/cost_proxy.py`'s module docstring
+pointing back to it, rather than two disconnected duplicate records. No change to `W_BASH`/
+`W_AGENT`/`W_EDIT` or `compute_cost_proxy_score()`'s logic. C4 (`TCK-20260719-WEIGHT-SENSITIVITY-PROMOTE`)
+was checked before this edit — still in `tickets/todos/`, not yet started, so no in-flight
+conflict on README.md's same area.
 
 ## Test Summary
+`python3 -m pytest tests/tools/test_cost_proxy.py -q` — 3/3 passing, unmodified.
 
 ## Files Changed
+- docs/agent-monitoring/README.md (new dated note in "What It Does NOT Capture")
+- tools/agent-monitoring/cost_proxy.py (docstring cross-reference to the note)
 
 ## Completion Summary
+Added a dated (2026-07-19) provenance note to `docs/agent-monitoring/README.md`'s "What It Does
+NOT Capture" section recording the cost_proxy_score calibration experiment's finding: the
+platform-blocked telemetry gap was reconfirmed against 33 real local session transcripts (26,911
+turns, zero subagent-turn transcripts found); `edit_count` is a weak, unconfirmed prior for
+`W_EDIT` under-weighting (Fit C r=0.91), not adopted; recalibration remains blocked on
+better-grained ground-truth data, not missing investigation. Linked
+`experiments/cost_proxy_calibration/RESULTS.md` as the evidence trail. Cross-referenced from
+`cost_proxy.py`'s own module docstring. No weight/logic change; all 3 existing tests pass
+unmodified.

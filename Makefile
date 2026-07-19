@@ -269,6 +269,9 @@ agent-monitoring-validate: ## Cross-check agent monitoring integrity against wor
 agent-monitoring-query: ## Query agent monitoring records (pass ARGS="--agent investigator --days 14")
 	python3 tools/agent-monitoring/query.py $(ARGS)
 
+agent-monitoring-weight-check: ## Required check before proposing a cost_proxy.py weight change (pass ARGS='--candidate-weights "{...}"')
+	python3 tools/agent-monitoring/weight_sensitivity_check.py $(ARGS)
+
 agent-monitoring-epic-staleness: ## Report open epics with no recent child-ticket activity
 	python3 tools/agent-monitoring/epic_staleness_check.py
 

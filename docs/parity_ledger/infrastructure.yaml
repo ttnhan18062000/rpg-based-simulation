@@ -5162,3 +5162,259 @@
     only the tools.jsonl per-row schema widening and the sidecar write-path that feeds it. Known,
     intentional scope boundary: dashboard frontend consumption of the new phase/agent fields
     (an in-progress-run indicator UI) is not part of this ticket's scope and is not claimed here.
+
+- id: INFRA-282
+  text: >
+    tool_call_count/cost_proxy_score compute moved from an LLM-executed agent() prompt step into
+    deterministic code (TCK-20260719-COST-PROXY-WRITE-PATH): investigation found 36.7%/29.5% null
+    rates for cost_proxy_score/tool_call_count across 562 implement-ticket events since
+    2026-07-11, root-caused to writeMonitoring's old inline `python3 -c` TOOL_STATS compute step
+    (implement-ticket.js) failing wholesale per-run rather than per-event, with no deterministic
+    fallback. Fix: `record_events.py::compute_tool_stats(records)` reads agent-monitoring/
+    tools.jsonl once per write-batch and computes {(run_id, seq): (tool_call_count,
+    cost_proxy_score)} for every (run_id, seq) pair whose run_id belongs to the implement-ticket
+    workflow (via vocabulary.py's infer_workflow), reusing cost_proxy.py's
+    compute_cost_proxy_score unchanged. Wired into main() to always override any caller-supplied
+    value for those records -- mirrors record_run.py's compute_duration_s "always overrides"
+    precedent exactly. implement-ticket.js's writeMonitoring prompt had its old TOOL_STATS-compute
+    step removed entirely (an agent following the prompt no longer computes or transmits these two
+    fields at all). Records for implement-epic/create-tickets (neither registers a per-agent-call
+    sidecar) are left completely untouched by compute_tool_stats -- no key added if not already
+    present, preserving their documented "100% missing, no sidecar" behavior, verified by a direct
+    regression test. duration_s was investigated in the same pass and confirmed already resolved
+    (99.13% coverage, single miss an expected in-progress run) -- no code change made for it.
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: >
+    tools/agent-monitoring/record_events.py:34 (`def compute_tool_stats(records:
+    list[dict]) -> dict[tuple, tuple[int, float]]`, gated on `infer_workflow(r.get("run_id",
+    "")) == "implement-ticket"`) and :135 (`tool_stats = compute_tool_stats(records)`, wired
+    into `main()` immediately before the write block, always overwriting `tool_call_count`/
+    `cost_proxy_score` for any record whose `(run_id, seq)` key is present in the computed
+    dict). .claude/workflows/implement-ticket.js:267-289 (`writeMonitoring`'s prompt: Step 0
+    sidecar-clear unchanged, old Step 2 TOOL_STATS-compute-and-substitute instruction removed,
+    remaining steps renumbered 1-3, new Step 2 "build and write events" explicitly instructs the
+    agent not to compute or set either field itself).
+  proof_type: contract
+  test_path: >
+    tests/tools/test_record_events.py::test_cost_proxy_score_and_tool_call_count_computed_from_real_tools_jsonl_not_passthrough
+    (a deliberately wrong caller-supplied value of 999999 is overridden by the real
+    hand-computed value from a tools.jsonl fixture); ::test_cost_proxy_score_absent_when_no_tools_jsonl_exists
+    (no crash, zero-fallback when tools.jsonl is absent); ::test_implement_epic_and_create_tickets_records_unaffected_no_sidecar
+    and ::test_compute_tool_stats_only_targets_implement_ticket_workflow (both directly call
+    compute_tool_stats() to prove non-implement-ticket records are never touched, even in a mixed
+    batch). All 4 re-run and confirmed passing as part of this parity update, alongside the full
+    19/19 in test_record_events.py and the 1 renamed/updated test in
+    test_current_run_sidecar_orchestrator.py (12/12 passing).
+  divergence_note: null
+  support_boundary: >
+    Agent-orchestration/monitoring-pipeline tooling only -- no simulation behavior is involved
+    (same category as INFRA-281 immediately above, and INFRA-263/264/265/277/278/279/280 more
+    generally). Does not change what cost_proxy_score/tool_call_count mean or how they're
+    formulated (cost_proxy.py's weights/formula untouched) -- only where and how reliably they're
+    computed. Deliberately does not fix the same anti-pattern found in .claude/workflows/
+    simq-audit.js's own separate inline TOOL_STATS-style compute step -- out of this ticket's
+    stated scope (Related Code Areas names only implement-ticket.js), zero regression risk to
+    that workflow since compute_tool_stats's infer_workflow gate never matches a SIMQ-AUDIT-
+    prefixed run_id, but noted here as a known, real, unfixed instance of the same defect for a
+    future ticket.
+
+- id: INFRA-283
+  text: >
+    Phase/agent vocabulary casing normalization in the agent-monitoring retro report
+    (TCK-20260719-PHASE-AGENT-CASE-FOLD): direct measurement against live agent-monitoring/
+    events.jsonl found 9 implement-ticket phases with genuine casing fragmentation (Finalize/
+    finalize/FINALIZE, Implement/implement/IMPLEMENT, Investigate/investigate/INVESTIGATE, Parity/
+    parity/PARITY, Plan/plan/PLAN, Review/review, Scope/scope, Test/test/TEST, Verify/verify),
+    silently undercounting real per-phase failure rates when read naively (e.g. Review's true
+    18.2% failure rate was invisible split across casing variants -- and, separately, no
+    phase-keyed ok/failed breakdown existed anywhere in generate_retro.py's output at all before
+    this ticket, so the rate was not computable regardless of casing). Fix: generate_retro.py
+    gained _canonicalize()/_normalize_phase()/_normalize_agent() helpers, resolving each event's
+    workflow via vocabulary.py's infer_workflow() and casefold-matching against that workflow's
+    own WORKFLOW_PHASES/WORKFLOW_AGENTS canonical set (never inventing a canonical spelling for an
+    unmatched value -- a genuinely unrecognized phase/agent, or an event from an unknown workflow,
+    passes through unchanged). Wired into all 3 existing phase/agent-keyed aggregations
+    (agent_status_distribution, spend_proxy_by_phase, spend_proxy_by_agent), plus a new
+    phase_status_distribution output (mirroring agent_status_distribution's shape, keyed by
+    normalized phase instead) and a matching new "## Phase Status Distribution" report section --
+    both additions were necessary to make the ticket's own Review-failure-rate claim testable at
+    all, not present before this ticket. tools/agent-monitoring/validate.py's drift-visibility
+    report (compute_drift_report) is deliberately, verifiably untouched (zero source diff) --
+    that module correctly keeps reporting casing variants as distinct entries by design, decoupled
+    from this ticket's read-time merge-for-aggregation concern.
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: >
+    tools/agent-monitoring/generate_retro.py:101 (`def _canonicalize(value, canonical_set)`), :116
+    (`def _normalize_phase(e)`), :130 (`def _normalize_agent(e)`) -- all three resolve via
+    `vocabulary.py`'s `infer_workflow`/`WORKFLOW_PHASES`/`WORKFLOW_AGENTS`, the same imported
+    module object `record_events.py`/`validate.py` already share (no second hardcoded vocabulary
+    list). Wired into `compute_retro_metrics()`'s `agent_status_distribution`,
+    `spend_proxy_by_phase`, `spend_proxy_by_agent` aggregations, and the new
+    `phase_status_distribution` key (:399) with matching rendering at :527 ("## Phase Status
+    Distribution" section in `generate()`).
+  proof_type: contract
+  test_path: >
+    tests/tools/test_generate_retro.py::test_phase_status_distribution_merges_casing_variants_review_failure_rate
+    (41 failed/184 ok split across 3 casing variants merges to the real 18.2% rate, with an
+    explicit naive-single-variant comparison at 16.7% proving the fragmentation was real and
+    material); ::test_phase_status_distribution_rendered_in_report; ::test_agent_status_distribution_still_merges_casing_variants_if_ever_present;
+    ::test_spend_proxy_by_phase_merges_casing_variants; ::test_normalization_leaves_unknown_workflow_and_unrecognized_phase_untouched;
+    ::test_create_tickets_prefix_family_agent_not_merged_into_a_literal. All 6 new plus the 1
+    updated (test_compute_retro_metrics_returns_all_documented_keys) re-run and confirmed passing
+    as part of this parity update (26/26 in test_generate_retro.py), alongside
+    test_validate_agent_monitoring.py (13/13, zero source diff to validate.py confirmed via `git
+    diff --stat`) and test_agent_ops_dashboard_stats.py (8/8, confirms the new
+    phase_status_distribution key doesn't break the dashboard's typed API-boundary mapping).
+  divergence_note: null
+  support_boundary: >
+    Agent-orchestration/monitoring-pipeline tooling only -- no simulation behavior is involved
+    (same category as INFRA-281/INFRA-282 immediately above). Pure read-time aggregation change:
+    no on-disk schema change to events.jsonl/runs.jsonl, no src/ file touched. Deliberately does
+    NOT touch gate_counter (the Counter keyed by final_status values like DOD_BLOCKED/
+    NEEDS_CHANGES/legacy strings) -- that is a different vocabulary with its own separate,
+    already-documented no-normalize-legacy-strings design in _resolve_status's own docstring, not
+    reopened here. Deliberately does not implement TCK-20260713-MONITORING-SQLITE-INDEX's derived-
+    index migration (confirmed still status:active/phase:open, unimplemented) -- normalization
+    proceeds directly in generate_retro.py per that sibling ticket's own carried-forward
+    sequencing note, to be revisited only once/if the index actually lands.
+
+- id: INFRA-284
+  text: >
+    Outlier flagging added to the agent-monitoring retro report (TCK-20260719-RETRO-OUTLIER-FLAGS):
+    D25 (experiments/audit_expansion/PROPOSAL.md F2/F3) found a ~2000x duration_s spread and a
+    >10x cost_proxy_score spread within the same phase/agent pair, both with zero recorded
+    investigation -- nothing in generate_retro.py flagged either before this ticket. Fix: a new
+    generic _flag_outliers(items, group_key_fn, value_fn, multiplier) helper groups items,
+    computes each group's statistics.median, and returns items exceeding
+    OUTLIER_MEDIAN_MULTIPLIER=3 times that median (a group below _OUTLIER_MIN_GROUP_SIZE=3 is
+    skipped -- a 1-2-point median is not a meaningful baseline), excluding null values from both
+    the candidate set and the median basis. Wired for duration_s (grouped by tier -- runs.jsonl
+    has no phase field, and a global median across hotfix/standard/epic would be meaningless given
+    their differing natural durations) and cost_proxy_score (grouped by *normalized* phase, reusing
+    TCK-20260719-PHASE-AGENT-CASE-FOLD's _normalize_phase from the immediately-preceding ticket in
+    the same batch -- a casing-fragmented phase would otherwise silently split one real outlier
+    group into several too-small groups). New "outliers" key added to compute_retro_metrics()'s
+    return dict, plus a matching conditionally-rendered "## Outliers" Markdown section (placed
+    immediately after the existing "## Slow Runs" section, with explanatory text distinguishing
+    the two -- Slow Runs is a fixed 30-min absolute threshold, Outliers is a relative Nx-median
+    signal, and the two may legitimately both flag the same run without being redundant).
+    Real-data end-to-end verification (generate_retro.py --all against the full live corpus)
+    automatically surfaced D25's own originally-cited 34,837 cost_proxy_score finding as a live
+    444.1x outlier, confirming the fix closes the gap D25 identified. Explicitly does NOT expose
+    the new key to the Agent Ops Dashboard -- src/api/agent_ops_dashboard/ingest.py's
+    get_agent_monitoring_stats() builds AgentMonitoringStats via explicit per-field typed submodel
+    construction, not **metrics passthrough, so the new key is silently absent there until a
+    separate, deliberate future ticket wires it through (confirmed by direct code read, not
+    assumed from the source proposal's claim that the dashboard "benefits automatically" -- that
+    claim is false and the ticket body corrects it explicitly).
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: >
+    tools/agent-monitoring/generate_retro.py:218 (`OUTLIER_MEDIAN_MULTIPLIER = 3`), :222
+    (`_OUTLIER_MIN_GROUP_SIZE = 3`), :225 (`def _flag_outliers(items, group_key_fn, value_fn,
+    multiplier=OUTLIER_MEDIAN_MULTIPLIER)`), wired into `compute_retro_metrics()`'s new `outliers`
+    key at :501 (duration_s grouped by `r.get("tier", "unknown")`, cost_proxy_score grouped by
+    `_normalize_phase(e) or "?"`), with matching Markdown rendering in `generate()` immediately
+    after the "## Slow Runs" section.
+  proof_type: contract
+  test_path: >
+    tests/tools/test_generate_retro.py::test_duration_outlier_flagged_relative_to_tier_median_not_global
+    (proves tier-scoped, not global, median -- a standard-tier outlier is flagged while an
+    epic-tier run with the same absolute duration is not, since epic's own group is below the
+    minimum size); ::test_duration_outlier_excludes_null_from_flagging_and_median;
+    ::test_duration_outlier_skips_group_below_minimum_size;
+    ::test_cost_proxy_outlier_flagged_relative_to_normalized_phase_median (proves the
+    PHASE-AGENT-CASE-FOLD synergy -- 'Investigate'/'investigate' merge into one group);
+    ::test_cost_proxy_outlier_excludes_events_with_no_score;
+    ::test_outliers_section_omitted_when_none_flagged;
+    ::test_outliers_section_rendered_when_flagged. All 7 new plus the 1 updated
+    (test_compute_retro_metrics_returns_all_documented_keys) re-run and confirmed passing as part
+    of this parity update (33/33 in test_generate_retro.py), alongside
+    test_agent_ops_dashboard_stats.py (8/8, confirms the new outliers key doesn't break the
+    dashboard's typed API-boundary mapping and genuinely isn't exposed there, per this ticket's
+    explicit scope) and a real end-to-end run against the full live corpus
+    (`python3 tools/agent-monitoring/generate_retro.py --all`, 677 runs / 3435 events, 26 duration
+    outliers + 82 cost-proxy-score outliers found, including D25's own originally-cited finding).
+  divergence_note: null
+  support_boundary: >
+    Agent-orchestration/monitoring-pipeline tooling only -- no simulation behavior is involved
+    (same category as INFRA-281/282/283 immediately above). Pure read-time computation change: no
+    on-disk schema change to events.jsonl/runs.jsonl, no src/ file touched. Deliberately does not
+    modify src/api/agent_ops_dashboard/models.py or ingest.py -- dashboard exposure is an explicit,
+    separate, deliberate future follow-up, not assumed free (see text above). Deliberately does
+    not fix an unrelated, pre-existing bug found during verification: `generate_retro.py --days N`
+    crashes on a runs.jsonl record with a non-string start_ts -- confirmed pre-existing via `git
+    stash` (crashes identically with this ticket's changes removed), noted for a future ticket,
+    not fixed here.
+
+- id: INFRA-285
+  text: >
+    experiments/cost_proxy_calibration/validate_rank_order.py promoted into
+    tools/agent-monitoring/weight_sensitivity_check.py as a real, tested CLI tool
+    (TCK-20260719-WEIGHT-SENSITIVITY-PROMOTE) -- the last of the 5 sibling tickets in the
+    agent-monitoring-data-quality batch. The pre-promotion script hardcoded two weight dicts
+    (shipped weights re-typed as a literal copy, plus the experiment's own Fit C regression
+    result) and had zero test coverage (exempted under the experiments/ sandbox convention). Fix:
+    compute_weight_sensitivity_report(tool_rows_by_group, phase_of, agent_of, baseline_weights,
+    candidate_weights) is a pure function (no file I/O), taking two arbitrary CLI-supplied weight
+    dicts -- SHIPPED_WEIGHTS reads cost_proxy.py's live W_BASH/W_AGENT/W_EDIT directly as the
+    default baseline (never a second hardcoded copy), and --candidate-weights has no default at
+    all, ever (no baked-in Fit C literal shipped) -- must always be supplied explicitly on the
+    CLI, per this ticket's own explicit scope guard. Spearman rank correlation reimplemented in
+    pure Python (no numpy dependency, since tools/agent-monitoring/*.py scripts run via bare
+    python3). The old experiment script was deleted after promotion (a deliberate choice, no repo
+    precedent found requiring either deletion or a thin pointer -- the promoted module is a strict
+    superset of the old script's behavior) and its two documented references in
+    experiments/cost_proxy_calibration/RESULTS.md updated to the new location.
+    docs/agent-monitoring/README.md documents the promoted tool as the required check before
+    proposing any cost_proxy.py weight change; a new agent-monitoring-weight-check Makefile target
+    added (ARGS passthrough, mirroring agent-monitoring-query's existing shape).
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: >
+    tools/agent-monitoring/weight_sensitivity_check.py:36 (`SHIPPED_WEIGHTS = {"bash": W_BASH,
+    "agent": W_AGENT, "edit": W_EDIT}`, imported from cost_proxy.py at :27), the
+    `compute_weight_sensitivity_report()` pure function, `_spearman_rank_correlation()` (pure
+    Python, no numpy), and `main()`'s `--candidate-weights` (`required=True`, no default)/
+    `--baseline-weights` (optional, defaults to `SHIPPED_WEIGHTS`) CLI contract.
+    experiments/cost_proxy_calibration/validate_rank_order.py deleted (confirmed via `git status`
+    showing it as removed). Makefile: new `agent-monitoring-weight-check` target (mirrors
+    `agent-monitoring-query`'s `$(ARGS)` passthrough shape, not added to `.PHONY` -- matching the
+    confirmed-via-grep precedent that no other `agent-monitoring-*` target is listed there
+    either).
+  proof_type: contract
+  test_path: >
+    tests/tools/test_weight_sensitivity_check.py::test_score_with_weights_matches_hand_computed_formula,
+    ::test_score_with_weights_empty_group_is_zero,
+    ::test_shipped_weights_reads_real_cost_proxy_constants_not_a_second_copy (guards against
+    silent drift from cost_proxy.py), ::test_spearman_identical_rankings_is_one,
+    ::test_spearman_fully_reversed_rankings_is_negative_one,
+    ::test_spearman_undefined_for_fewer_than_two_keys,
+    ::test_compute_weight_sensitivity_report_basic_grouping_and_ranking,
+    ::test_compute_weight_sensitivity_report_group_with_no_matching_event_is_skipped,
+    ::test_compute_weight_sensitivity_report_empty_input_does_not_crash,
+    ::test_rank_delta_reflects_material_reordering_between_weight_sets (proves the tool actually
+    detects the reordering signal it exists to surface, not just that it runs without crashing).
+    10/10 passing, re-run as part of this parity update alongside test_cost_proxy.py and
+    test_validate_agent_monitoring.py (unaffected, 26/26 combined) and the full monitoring-scoped
+    suite (179/179). CLI manually verified against the real live corpus (consistent with the
+    original experiment's Spearman-correlation order of magnitude) and against all 3 bad-input
+    paths (missing --candidate-weights -> argparse exit 2; invalid JSON -> clear ERROR + exit 1;
+    missing required keys -> clear ERROR + exit 1), plus `make agent-monitoring-weight-check`
+    end to end through the new Makefile target.
+  divergence_note: null
+  support_boundary: >
+    Agent-orchestration/monitoring-pipeline tooling only -- no simulation behavior is involved
+    (same category as INFRA-281/282/283/284 immediately above, closing out this 5-ticket batch).
+    No src/ file touched, no on-disk schema change. Does not endorse or ship Fit C weights or any
+    other candidate weight set -- both weight sets remain purely CLI-supplied comparands, per this
+    ticket's own explicit scope guard. No change to cost_proxy.py's shipped W_BASH/W_AGENT/W_EDIT
+    constants or compute_cost_proxy_score()'s formula (confirmed via zero diff to that file from
+    this ticket specifically -- the 6-line diff `git diff --stat` shows on cost_proxy.py belongs
+    to the sibling TCK-20260719-COST-PROXY-CALIBRATION-NOTE ticket, not this one).

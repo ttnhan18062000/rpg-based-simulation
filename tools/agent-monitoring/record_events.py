@@ -3,14 +3,17 @@
 import argparse
 import json
 import sys
+from collections import defaultdict
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+from cost_proxy import compute_cost_proxy_score  # noqa: E402
 from vocabulary import WORKFLOW_PHASES, infer_workflow, is_known_agent  # noqa: E402
 
 REQUIRED = {"run_id", "seq", "ts", "phase", "agent", "summary", "status"}
 VALID_STATUS = {"ok", "failed", "blocked", "skipped"}
 EVENTS_FILE = Path("agent-monitoring/events.jsonl")
+TOOLS_FILE = Path("agent-monitoring/tools.jsonl")
 
 
 def validate_record(record: dict) -> list[str]:
@@ -26,6 +29,42 @@ def validate_record(record: dict) -> list[str]:
     if record.get("status") not in VALID_STATUS:
         errors.append(f"invalid status '{record.get('status')}' — must be one of {VALID_STATUS}")
     return errors
+
+
+def compute_tool_stats(records: list[dict]) -> dict[tuple, tuple[int, float]]:
+    """Deterministically compute {(run_id, seq): (tool_call_count, cost_proxy_score)}
+    from real agent-monitoring/tools.jsonl rows, for every (run_id, seq) pair in
+    `records` whose run_id belongs to the 'implement-ticket' workflow.
+
+    Mirrors record_run.py's compute_duration_s precedent: computed here, at write
+    time, from ground truth — never trusts a caller-supplied value. Only
+    'implement-ticket' run_ids are computed (that's the only workflow whose
+    Scope-through-Finalize call sites write a live .claude/current_run sidecar per
+    phase, giving this a real (run_id, seq) -> tool-call-group ground truth to
+    read); every other workflow's records are left untouched by the caller in
+    main() below — implement-epic/create-tickets never register a sidecar per
+    agent call, so their tool_call_count/cost_proxy_score stay absent, as
+    documented.
+    """
+    wanted = {
+        (r.get("run_id"), r.get("seq"))
+        for r in records
+        if infer_workflow(r.get("run_id", "")) == "implement-ticket" and r.get("seq") is not None
+    }
+    if not wanted:
+        return {}
+
+    rows_by_key: dict[tuple, list[dict]] = defaultdict(list)
+    if TOOLS_FILE.exists():
+        for line in TOOLS_FILE.read_text().splitlines():
+            if not line:
+                continue
+            row = json.loads(line)
+            key = (row.get("run_id"), row.get("seq"))
+            if key in wanted:
+                rows_by_key[key].append(row)
+
+    return {key: (len(rows_by_key[key]), compute_cost_proxy_score(rows_by_key[key])) for key in wanted}
 
 
 def warn_vocabulary_drift(record: dict) -> None:
@@ -88,6 +127,17 @@ def main():
     if not records:
         print("SKIPPED: no records to write")
         return
+
+    # Deterministic tool_call_count/cost_proxy_score, computed here from real tools.jsonl
+    # ground truth — always overrides any caller-supplied value for implement-ticket
+    # records (mirrors record_run.py's compute_duration_s precedent). Other workflows'
+    # records are left exactly as passed through (no key added if not already present).
+    tool_stats = compute_tool_stats(records)
+    for i, record in enumerate(records):
+        key = (record.get("run_id"), record.get("seq"))
+        if key in tool_stats:
+            tool_call_count, cost_proxy_score = tool_stats[key]
+            records[i] = {**record, "tool_call_count": tool_call_count, "cost_proxy_score": cost_proxy_score}
 
     EVENTS_FILE.parent.mkdir(parents=True, exist_ok=True)
     with open(EVENTS_FILE, "a") as f:

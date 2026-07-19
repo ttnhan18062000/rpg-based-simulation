@@ -18,6 +18,12 @@ spawned subagent's real wall-clock work (a single sampled ticket showed ~97ms av
 regardless of the spawned agent's actual runtime, especially for background/async spawns whose
 cost is invisible to the parent's own duration entirely). Summing would silently undercount
 fan-out cost. Count spawns, don't sum their durations.
+
+See docs/agent-monitoring/README.md's "What It Does NOT Capture" section (2026-07-19 note) for a
+calibration-attempt finding: real local session transcripts, at the correct per-subagent grain,
+gave no usable signal for recalibrating these weights, and a differently-grained fit that did show
+signal was domain-mismatched to what this function scores — not adopted, do not re-derive from
+scratch without reading that note first.
 """
 
 W_BASH = 0.001
