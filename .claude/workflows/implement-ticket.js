@@ -45,7 +45,7 @@ if (ticketId) {
   await bash(
     `python3 -c "
 import json, sys
-open('.claude/current_run', 'w').write(json.dumps({'run_id': sys.argv[1], 'seq': 1}))
+open('.claude/current_run', 'w').write(json.dumps({'run_id': sys.argv[1], 'seq': 1, 'phase': 'Scope', 'agent': 'ticket-scoper'}))
 " "${ticketId}" 2>/dev/null || true`
   )
 } else {
@@ -199,12 +199,12 @@ const pushEvent = (phaseLabel, agentName, status, summary, ts, toolCallCount, re
 // documented at implement-ticket.js:756-763 — embedding JSON directly in a double-quoted python3 -c
 // string corrupts the script on nested unescaped quotes). Fail-open per CLAUDE.md's "monitoring write
 // failure must never fail the workflow" rule — keeps the existing `2>/dev/null || true` suffix.
-const writeSidecar = async (seq) => {
+const writeSidecar = async (seq, phase, agent) => {
   await bash(
     `python3 -c "
 import json, sys
-open('.claude/current_run', 'w').write(json.dumps({'run_id': sys.argv[1], 'seq': int(sys.argv[2])}))
-" "${tid}" "${seq}" 2>/dev/null || true`
+open('.claude/current_run', 'w').write(json.dumps({'run_id': sys.argv[1], 'seq': int(sys.argv[2]), 'phase': sys.argv[3], 'agent': sys.argv[4]}))
+" "${tid}" "${seq}" "${phase}" "${agent}" 2>/dev/null || true`
   )
 }
 
@@ -416,7 +416,7 @@ if (tier !== 'hotfix') {
   phase('Investigate')
 
   const investigationTs = await captureTs()
-  await writeSidecar(events.length + 1)
+  await writeSidecar(events.length + 1, 'Investigate', 'investigator')
   investigation = await agent(
     `Investigate ticket ${tid} using the investigator role.
 
@@ -457,7 +457,7 @@ Write both files. Then return: key findings, open questions requiring a decision
   phase('Plan')
 
   const planTs = await captureTs()
-  await writeSidecar(events.length + 1)
+  await writeSidecar(events.length + 1, 'Plan', 'planner')
   plan = await agent(
     `Produce the implementation plan for ticket ${tid} using the planner role.
 
@@ -538,7 +538,7 @@ print('UNRESOLVED_CHECK_JSON:' + json.dumps(plan_has_unresolved_questions_headin
   }
 
   const reviewTs = await captureTs()
-  await writeSidecar(events.length + 1)
+  await writeSidecar(events.length + 1, 'Review', 'architecture-reviewer')
   review = await agent(
     `Architecture review for ticket ${tid}.
 
@@ -607,7 +607,7 @@ const IMPL_SCHEMA = {
 }
 
 const implementTs = await captureTs()
-await writeSidecar(events.length + 1)
+await writeSidecar(events.length + 1, 'Implement', 'implementer')
 const implementation = await agent(
   `Implement ticket ${tid}. Tier: ${tier}.
 
@@ -676,7 +676,7 @@ print('ARCH_CHECK_JSON:' + json.dumps(run_architecture_checks(sys.argv[1:])))
   }
 
   const archVerifyTs = await captureTs()
-  await writeSidecar(events.length + 1)
+  await writeSidecar(events.length + 1, 'Architecture-Verify', 'architecture-reviewer')
   const archVerify = await agent(
     `Post-implementation architecture verification for ticket ${tid}.
 
@@ -737,7 +737,7 @@ const TEST_SCHEMA = {
 }
 
 const testTs = await captureTs()
-await writeSidecar(events.length + 1)
+await writeSidecar(events.length + 1, 'Test', 'test-scoper')
 const testResult = await agent(
   `Scope and run tests for ticket ${tid}.
 
@@ -886,7 +886,7 @@ print(json.dumps(expected_subsystems_for_files(sys.argv[1:])))
   )
 
   const parityTs = await captureTs()
-  await writeSidecar(events.length + 1)
+  await writeSidecar(events.length + 1, 'Parity', 'parity-updater')
   const parity = await agent(
     `Update parity ledger for ticket ${tid}.
 
@@ -978,7 +978,7 @@ if ((ticketInfo.tags && ticketInfo.tags.includes('security')) ||
   }
 
   const securityReviewTs = await captureTs()
-  await writeSidecar(events.length + 1)
+  await writeSidecar(events.length + 1, 'Security-Review', 'security-reviewer')
   const securityReview = await agent(
     `Security review for ticket ${tid}.
 
@@ -1041,7 +1041,7 @@ const DONE_SCHEMA = {
 }
 
 const doneCheckTs = await captureTs()
-await writeSidecar(events.length + 1)
+await writeSidecar(events.length + 1, 'Verify', 'done-checker')
 const doneCheck = await agent(
   `Definition-of-Done check for ticket ${tid}.
 
@@ -1095,7 +1095,7 @@ pushEvent('Verify', 'done-checker', 'ok', doneCheck.summary || 'DoD: READY_TO_CL
 
 phase('Finalize')
 
-await writeSidecar(events.length + 1)
+await writeSidecar(events.length + 1, 'Finalize', 'finalizer')
 await agent(
   `Finalize ticket ${tid} — all gates passed. Tier: ${tier}.
 

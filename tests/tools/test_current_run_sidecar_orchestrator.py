@@ -47,16 +47,16 @@ _SIDECAR_WRITE_PROMPT_TEXT = (
 # The 10 covered call sites: the exact text immediately preceding each `await agent(` opening,
 # after the Step 0b relocation. Order matches the file's phase order.
 _COVERED_SITE_ADJACENCY = [
-    "  await writeSidecar(events.length + 1)\n  investigation = await agent(",
-    "  await writeSidecar(events.length + 1)\n  plan = await agent(",
-    "  await writeSidecar(events.length + 1)\n  review = await agent(",
-    "await writeSidecar(events.length + 1)\nconst implementation = await agent(",
-    "  await writeSidecar(events.length + 1)\n  const archVerify = await agent(",
-    "await writeSidecar(events.length + 1)\nconst testResult = await agent(",
-    "  await writeSidecar(events.length + 1)\n  const parity = await agent(",
-    "  await writeSidecar(events.length + 1)\n  const securityReview = await agent(",
-    "await writeSidecar(events.length + 1)\nconst doneCheck = await agent(",
-    "await writeSidecar(events.length + 1)\nawait agent(",
+    "  await writeSidecar(events.length + 1, 'Investigate', 'investigator')\n  investigation = await agent(",
+    "  await writeSidecar(events.length + 1, 'Plan', 'planner')\n  plan = await agent(",
+    "  await writeSidecar(events.length + 1, 'Review', 'architecture-reviewer')\n  review = await agent(",
+    "await writeSidecar(events.length + 1, 'Implement', 'implementer')\nconst implementation = await agent(",
+    "  await writeSidecar(events.length + 1, 'Architecture-Verify', 'architecture-reviewer')\n  const archVerify = await agent(",
+    "await writeSidecar(events.length + 1, 'Test', 'test-scoper')\nconst testResult = await agent(",
+    "  await writeSidecar(events.length + 1, 'Parity', 'parity-updater')\n  const parity = await agent(",
+    "  await writeSidecar(events.length + 1, 'Security-Review', 'security-reviewer')\n  const securityReview = await agent(",
+    "await writeSidecar(events.length + 1, 'Verify', 'done-checker')\nconst doneCheck = await agent(",
+    "await writeSidecar(events.length + 1, 'Finalize', 'finalizer')\nawait agent(",
 ]
 
 _NINE_TWO_LINE_SITE_LABELS = [
@@ -96,7 +96,7 @@ def test_sidecar_bash_write_precedes_each_covered_agent_call():
         assert adjacency in source, f"expected adjacency not found: {adjacency!r}"
 
     # Exactly 10 writeSidecar() calls total (9 two-line sites + Finalize).
-    assert len(re.findall(r"await writeSidecar\(events\.length \+ 1\)", source)) == 10
+    assert len(re.findall(r"await writeSidecar\(events\.length \+ 1, '[^']+', '[^']+'\)", source)) == 10
 
     # No other `await agent(` call sits between a writeSidecar call and its paired agent() call —
     # each adjacency string above already asserts direct (whitespace-only) adjacency, so a passing
@@ -117,7 +117,7 @@ def test_sidecar_bash_write_precedes_each_covered_agent_call():
 def test_finalize_call_site_still_registers_sidecar():
     source = _read_workflow_source()
     finalize_block_match = re.search(
-        r"phase\('Finalize'\).*?await writeSidecar\(events\.length \+ 1\)\nawait agent\(\n"
+        r"phase\('Finalize'\).*?await writeSidecar\(events\.length \+ 1, 'Finalize', 'finalizer'\)\nawait agent\(\n"
         r"\s*`Finalize ticket \$\{tid\}",
         source,
         re.DOTALL,
@@ -158,7 +158,7 @@ def test_scope_phase_has_sidecar_coverage():
     scope_region = source[scope_start:scope_label]
 
     assert "if (ticketId) {" in pre_scope_region
-    assert "open('.claude/current_run', 'w').write(json.dumps({'run_id': sys.argv[1], 'seq': 1}))" in pre_scope_region
+    assert "open('.claude/current_run', 'w').write(json.dumps({'run_id': sys.argv[1], 'seq': 1, 'phase': 'Scope', 'agent': 'ticket-scoper'}))" in pre_scope_region
     assert '"${ticketId}" 2>/dev/null || true' in pre_scope_region
     assert "printf '{}' > .claude/current_run 2>/dev/null || true" in pre_scope_region
 
@@ -174,10 +174,10 @@ def test_scope_phase_has_sidecar_coverage():
 # ---------------------------------------------------------------------------
 
 
-def test_tid_and_seq_passed_as_argv_not_json_embedded():
+def test_tid_and_seq_and_phase_and_agent_passed_as_argv_not_json_embedded():
     source = _read_workflow_source()
     helper_match = re.search(
-        r"const writeSidecar = async \(seq\) => \{.*?\n\}\n",
+        r"const writeSidecar = async \(seq, phase, agent\) => \{.*?\n\}\n",
         source,
         re.DOTALL,
     )
@@ -185,12 +185,16 @@ def test_tid_and_seq_passed_as_argv_not_json_embedded():
     helper_body = helper_match.group(0)
 
     # Args passed as individually-quoted argv elements, never JSON-embedded in the -c string.
-    assert '"${tid}" "${seq}"' in helper_body
+    assert '"${tid}" "${seq}" "${phase}" "${agent}"' in helper_body
     assert "sys.argv[1]" in helper_body
     assert "sys.argv[2]" in helper_body
-    # No inline JSON literal containing ${tid}/${seq} directly inside the python3 -c string.
+    assert "sys.argv[3]" in helper_body
+    assert "sys.argv[4]" in helper_body
+    # No inline JSON literal containing ${tid}/${seq}/${phase}/${agent} directly inside the python3 -c string.
     assert "'run_id':'${tid}'" not in helper_body
     assert "'seq':${seq}" not in helper_body
+    assert "'phase': '${phase}'" not in helper_body
+    assert "'agent': '${agent}'" not in helper_body
     # Fail-open per CLAUDE.md's "monitoring write failure must never fail the workflow" rule.
     assert "2>/dev/null || true" in helper_body
 
@@ -198,10 +202,10 @@ def test_tid_and_seq_passed_as_argv_not_json_embedded():
 def test_writeSidecar_defined_once_after_pushEvent_before_classifyChecklistFailure():
     source = _read_workflow_source()
     push_event_idx = source.index("const pushEvent = (phaseLabel")
-    write_sidecar_idx = source.index("const writeSidecar = async (seq)")
+    write_sidecar_idx = source.index("const writeSidecar = async (seq, phase, agent)")
     classify_idx = source.index("const classifyChecklistFailure")
     assert push_event_idx < write_sidecar_idx < classify_idx
-    assert source.count("const writeSidecar = async (seq)") == 1
+    assert source.count("const writeSidecar = async (seq, phase, agent)") == 1
 
 
 # ---------------------------------------------------------------------------
@@ -224,6 +228,18 @@ def test_schema_doc_no_longer_describes_agent_self_report_mechanism():
     assert "create-tickets" in doc
     assert "implement-epic" in doc
     assert "neither ever has" in doc
+
+
+def test_schema_doc_documents_tools_jsonl_phase_agent_fields():
+    doc = _read_schema_doc()
+
+    fields_table_start = doc.index("## `agent-monitoring/tools.jsonl`")
+    fields_table_end = doc.index("### Write locking", fields_table_start)
+    fields_table_region = doc[fields_table_start:fields_table_end]
+
+    assert "| `phase` | string | Yes |" in fields_table_region
+    assert "| `agent` | string | Yes |" in fields_table_region
+    assert "TCK-20260719-LIVE-PHASE-AGENT-LABEL" in fields_table_region
 
 
 # ---------------------------------------------------------------------------

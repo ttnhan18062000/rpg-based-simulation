@@ -5101,3 +5101,64 @@
     support_boundary pattern). Covers frontend consumption only; the registry/API layer is
     INFRA-279's scope, not repeated here. Known, intentional scope boundary: Gantt/Legend
     exclusion is deliberate (see text above), not a gap to be closed by a future ticket.
+- id: INFRA-281
+  text: >
+    Live phase/agent labeling threaded through the .claude/current_run sidecar into
+    agent-monitoring/tools.jsonl (TCK-20260719-LIVE-PHASE-AGENT-LABEL): the orchestrator's
+    `writeSidecar(seq)` helper in implement-ticket.js was widened to `writeSidecar(seq, phase,
+    agent)`, threading phase/agent string literals ('Investigate'/'investigator',
+    'Plan'/'planner', 'Review'/'architecture-reviewer', 'Implement'/'implementer',
+    'Architecture-Verify'/'architecture-reviewer', 'Test'/'test-scoper',
+    'Parity'/'parity-updater', 'Security-Review'/'security-reviewer', 'Verify'/'done-checker',
+    'Finalize'/'finalizer') through to all 10 `writeSidecar(...)` call sites, plus the
+    Scope-phase resume-branch's separate inline sidecar write (which can't reuse the
+    `writeSidecar` helper because it closes over `tid`, not yet known at that point) writing
+    `'phase': 'Scope', 'agent': 'ticket-scoper'` directly. `tools/agent-monitoring/
+    post_tool_hook.py` now reads these two new nullable fields off the sidecar JSON and persists
+    them into every `tools.jsonl` record, using the exact same fail-open `try/except` pattern
+    already established for `run_id`/`seq` -- a hook read failure silently leaves `phase`/`agent`
+    as `None` rather than raising, per CLAUDE.md's "monitoring write failure must never fail the
+    workflow" rule. Net effect: a live dashboard can now show an in-progress run's current
+    phase/agent by reading `tools.jsonl`'s tail, without waiting for `events.jsonl` to be written
+    at run/phase exit. This is agent-orchestration/monitoring-pipeline tooling (an on-disk schema
+    widening of the sidecar and the tools.jsonl row shape) -- no simulation engine, mechanics, or
+    determinism behavior is involved.
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: >
+    .claude/workflows/implement-ticket.js:202-208 (`const writeSidecar = async (seq, phase,
+    agent) => { ... }`, now writing `{'run_id': ..., 'seq': ..., 'phase': sys.argv[3], 'agent':
+    sys.argv[4]}` via individually-quoted argv elements, never JSON-embedded in the `-c` string);
+    call sites at implement-ticket.js:419 ('Investigate'/'investigator'), :460
+    ('Plan'/'planner'), :541 ('Review'/'architecture-reviewer'), :610 ('Implement'/
+    'implementer'), :679 ('Architecture-Verify'/'architecture-reviewer'), :740 ('Test'/
+    'test-scoper'), :889 ('Parity'/'parity-updater'), :981 ('Security-Review'/
+    'security-reviewer'), :1044 ('Verify'/'done-checker'), :1098 ('Finalize'/'finalizer');
+    plus the Scope-phase resume-branch's separate inline sidecar write at
+    implement-ticket.js:44-50 (`'phase': 'Scope', 'agent': 'ticket-scoper'`, ticketId-present
+    branch only -- the else branch clears the sidecar to `{}` and leaves phase/agent absent by
+    construction). tools/agent-monitoring/post_tool_hook.py:46-53 (`phase = None; agent = None`
+    defaults, then `phase = sidecar.get("phase") or None; agent = sidecar.get("agent") or None`
+    inside the existing `try/except Exception: pass` block that already covers `run_id`/`seq`)
+    and :65-74 (the `record = {...}` dict literal, now including `"phase": phase, "agent":
+    agent` alongside the pre-existing `run_id`/`seq` keys).
+  proof_type: contract
+  test_path: >
+    tests/tools/test_post_tool_hook.py::test_phase_and_agent_included_when_sidecar_present
+    (confirms a sidecar containing phase/agent produces a tools.jsonl record carrying both
+    fields); tests/tools/test_current_run_sidecar_orchestrator.py::
+    test_tid_and_seq_and_phase_and_agent_passed_as_argv_not_json_embedded (confirms the
+    orchestrator's writeSidecar call sites pass tid/seq/phase/agent as individually-quoted argv
+    elements rather than JSON-embedding them in the python3 -c string). Both re-run and confirmed
+    passing (2/2) as part of this parity update.
+  divergence_note: null
+  support_boundary: >
+    Agent-orchestration/monitoring-pipeline tooling only -- no simulation behavior is involved
+    (mirrors INFRA-274's support_boundary pattern for orchestrator-side implement-ticket.js
+    changes, and INFRA-263/264/265/277/278/279/280's pattern for monitoring/dashboard-tooling
+    entries more generally). Does not touch or extend events.jsonl (still written only at
+    run/phase exit via pushEvent, unchanged by this ticket) or runs.jsonl; this entry covers
+    only the tools.jsonl per-row schema widening and the sidecar write-path that feeds it. Known,
+    intentional scope boundary: dashboard frontend consumption of the new phase/agent fields
+    (an in-progress-run indicator UI) is not part of this ticket's scope and is not claimed here.

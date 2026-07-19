@@ -43,10 +43,14 @@ try:
     # Read workflow sidecar for run_id / seq
     run_id = None
     seq = None
+    phase = None
+    agent = None
     try:
         sidecar = json.loads(Path(".claude/current_run").read_text())
         run_id = sidecar.get("run_id") or None
         seq = sidecar.get("seq") or None
+        phase = sidecar.get("phase") or None
+        agent = sidecar.get("agent") or None
     except Exception:
         pass
 
@@ -62,6 +66,8 @@ try:
         "session_id": session_id,
         "run_id": run_id,
         "seq": seq,
+        "phase": phase,
+        "agent": agent,
         "ts": now,
         "tool": tool_name,
         "input_summary": _input_summary(tool_name, tool_input),

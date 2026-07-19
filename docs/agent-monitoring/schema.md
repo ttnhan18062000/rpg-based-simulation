@@ -206,6 +206,8 @@ One record per tool call, written by `PreToolUse` and `PostToolUse` hooks. Joine
   "session_id": "abc123",
   "run_id": "TCK-20260614-TOOL-TRACKING",
   "seq": 5,
+  "phase": "Implement",
+  "agent": "implementer",
   "ts": "2026-06-14T10:12:01Z",
   "tool": "Bash",
   "input_summary": "pytest tests/engine/ -x",
@@ -221,6 +223,8 @@ One record per tool call, written by `PreToolUse` and `PostToolUse` hooks. Joine
 | `session_id` | string | No | Claude Code session ID from the hook payload. Groups all tool calls within one session. |
 | `run_id` | string | Yes | FK → runs.jsonl. `null` when the tool call occurred outside an active workflow run (interactive session use). |
 | `seq` | int | Yes | FK → events.seq. Identifies which agent event this tool call belongs to. Written by the orchestrating workflow (`implement-ticket.js`'s `writeSidecar(seq)` helper) via a `bash()` call immediately before the paired `agent()` call; `null` if the sidecar was not yet written at hook time. |
+| `phase` | string | Yes | Workflow phase this tool call occurred during, matching the `phase` literal at the corresponding `writeSidecar` call site (or the Scope-phase inline write). `null` when the tool call occurred outside an active workflow run, or for records predating `TCK-20260719-LIVE-PHASE-AGENT-LABEL` (no backfill). |
+| `agent` | string | Yes | Agent identifier active during this tool call, matching the `agent` literal at the corresponding call site. Same nullability rules as `phase`. |
 | `ts` | ISO 8601 | No | UTC timestamp of the tool call (captured at PostToolUse). |
 | `tool` | string | No | Tool name: `Read`, `Edit`, `Write`, `Bash`, `Agent`, `MultiEdit`, etc. |
 | `input_summary` | string | No | Extracted key identifier from tool input. Per-tool: file path for Read/Edit/Write/MultiEdit; first 80 chars of command for Bash; description/prompt for Agent. Max 120 chars. |
@@ -234,6 +238,8 @@ The `PostToolUse` hook (`post_tool_hook.py`) wraps its open+write block in `fcnt
 ### How tool calls are attributed to agent events
 
 The orchestrating workflow (`implement-ticket.js`) writes `{"run_id": "...", "seq": N}` to `.claude/current_run` itself via a `bash()` call (the shared `writeSidecar(seq)` helper), immediately before dispatching each corresponding `agent()` call — agent prompts no longer contain a sidecar-write instruction. The PostToolUse hook reads this file on every tool call and tags the record with `run_id` + `seq`. The `writeMonitoring` step at the end of the workflow counts records per seq to produce `tool_call_count` in events.jsonl.
+
+Since `TCK-20260719-LIVE-PHASE-AGENT-LABEL`, the sidecar (and thus each `tools.jsonl` record) also carries `phase`/`agent`, threaded through the same `writeSidecar(seq, phase, agent)` call as `run_id`/`seq` — this lets a live-run consumer show which phase/agent is currently producing tool calls without waiting for the run's `events.jsonl` entries to be written at exit.
 
 Scope (`ticket-scoper`) also registers a sidecar value now (net-new coverage, `TCK-20260711-MONITORING-TOOLCOUNT-SIDECAR-COLLISION`) — it can't reuse `writeSidecar(seq)` itself (that helper closes over `tid`, not yet known when creating a brand-new ticket), so it inlines two bash() branches: the real `{run_id: ticketId, seq: 1}` when resuming an existing ticket, or an explicit clear-to-`{}` when creating a new one (the ticket_id genuinely doesn't exist yet at that point — clearing at least prevents a stale value from a crashed prior run bleeding into this run's Scope-phase tool calls, even though Scope's own tool calls during ticket *creation* specifically stay correctly unattributed/null rather than attributed to the not-yet-known new ticket).
 

@@ -21,7 +21,7 @@ _REPO_ROOT = Path(__file__).parent.parent.parent
 _HOOK_PATH = _REPO_ROOT / "tools" / "agent-monitoring" / "post_tool_hook.py"
 
 _RECORD_FIELDS = {
-    "session_id", "run_id", "seq", "ts", "tool",
+    "session_id", "run_id", "seq", "phase", "agent", "ts", "tool",
     "input_summary", "status", "duration_ms",
 }
 
@@ -66,7 +66,46 @@ def test_single_writer_produces_one_well_formed_line(tmp_path):
     assert record["status"] == "ok"
     assert record["run_id"] is None
     assert record["seq"] is None
+    assert record["phase"] is None
+    assert record["agent"] is None
     assert record["duration_ms"] is None
+
+
+def test_phase_and_agent_included_when_sidecar_present(tmp_path):
+    sidecar = tmp_path / ".claude"
+    sidecar.mkdir()
+    (sidecar / "current_run").write_text(
+        json.dumps({"run_id": "TCK-X", "seq": 3, "phase": "Implement", "agent": "implementer"})
+    )
+
+    result = _run_hook(tmp_path, _payload())
+    assert result.returncode == 0
+
+    lines = _tools_lines(tmp_path)
+    record = json.loads(lines[0])
+    assert set(record.keys()) == _RECORD_FIELDS
+    assert record["run_id"] == "TCK-X"
+    assert record["seq"] == 3
+    assert record["phase"] == "Implement"
+    assert record["agent"] == "implementer"
+
+
+def test_phase_and_agent_default_to_none_on_partial_sidecar(tmp_path):
+    sidecar = tmp_path / ".claude"
+    sidecar.mkdir()
+    (sidecar / "current_run").write_text(json.dumps({"run_id": "TCK-X", "seq": 3}))
+
+    result = _run_hook(tmp_path, _payload())
+    assert result.returncode == 0
+    assert result.stderr == ""
+
+    lines = _tools_lines(tmp_path)
+    record = json.loads(lines[0])
+    assert set(record.keys()) == _RECORD_FIELDS
+    assert record["run_id"] == "TCK-X"
+    assert record["seq"] == 3
+    assert record["phase"] is None
+    assert record["agent"] is None
 
 
 def test_concurrent_writers_produce_no_interleaved_or_truncated_lines(tmp_path):

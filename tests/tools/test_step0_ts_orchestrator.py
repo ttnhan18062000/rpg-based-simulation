@@ -29,15 +29,15 @@ _SCHEMA_DOC_PATH = _REPO_ROOT / "docs" / "agent-monitoring" / "schema.md"
 # (9) or stands alone (Scope, which has no writeSidecar). Order matches the file's phase order.
 _IMPLEMENT_TICKET_ADJACENCY = [
     "const scopeTs = await captureTs()\nconst ticketInfo = await agent(",
-    "const investigationTs = await captureTs()\n  await writeSidecar(events.length + 1)\n  investigation = await agent(",
-    "const planTs = await captureTs()\n  await writeSidecar(events.length + 1)\n  plan = await agent(",
-    "const reviewTs = await captureTs()\n  await writeSidecar(events.length + 1)\n  review = await agent(",
-    "const implementTs = await captureTs()\nawait writeSidecar(events.length + 1)\nconst implementation = await agent(",
-    "const archVerifyTs = await captureTs()\n  await writeSidecar(events.length + 1)\n  const archVerify = await agent(",
-    "const testTs = await captureTs()\nawait writeSidecar(events.length + 1)\nconst testResult = await agent(",
-    "const parityTs = await captureTs()\n  await writeSidecar(events.length + 1)\n  const parity = await agent(",
-    "const securityReviewTs = await captureTs()\n  await writeSidecar(events.length + 1)\n  const securityReview = await agent(",
-    "const doneCheckTs = await captureTs()\nawait writeSidecar(events.length + 1)\nconst doneCheck = await agent(",
+    "const investigationTs = await captureTs()\n  await writeSidecar(events.length + 1, 'Investigate', 'investigator')\n  investigation = await agent(",
+    "const planTs = await captureTs()\n  await writeSidecar(events.length + 1, 'Plan', 'planner')\n  plan = await agent(",
+    "const reviewTs = await captureTs()\n  await writeSidecar(events.length + 1, 'Review', 'architecture-reviewer')\n  review = await agent(",
+    "const implementTs = await captureTs()\nawait writeSidecar(events.length + 1, 'Implement', 'implementer')\nconst implementation = await agent(",
+    "const archVerifyTs = await captureTs()\n  await writeSidecar(events.length + 1, 'Architecture-Verify', 'architecture-reviewer')\n  const archVerify = await agent(",
+    "const testTs = await captureTs()\nawait writeSidecar(events.length + 1, 'Test', 'test-scoper')\nconst testResult = await agent(",
+    "const parityTs = await captureTs()\n  await writeSidecar(events.length + 1, 'Parity', 'parity-updater')\n  const parity = await agent(",
+    "const securityReviewTs = await captureTs()\n  await writeSidecar(events.length + 1, 'Security-Review', 'security-reviewer')\n  const securityReview = await agent(",
+    "const doneCheckTs = await captureTs()\nawait writeSidecar(events.length + 1, 'Verify', 'done-checker')\nconst doneCheck = await agent(",
 ]
 
 _IMPLEMENT_EPIC_ADJACENCY = "const discoverTs = await captureTs()\nconst discovery = await agent("
@@ -196,7 +196,7 @@ def test_captureTs_helper_defined_once_after_writeSidecar():
     it_source = _read_implement_ticket()
     assert it_source.count("const captureTs = async ()") == 1
 
-    write_sidecar_idx = it_source.index("const writeSidecar = async (seq)")
+    write_sidecar_idx = it_source.index("const writeSidecar = async (seq, phase, agent)")
     capture_ts_idx = it_source.index("const captureTs = async ()")
     classify_idx = it_source.index("const classifyChecklistFailure")
     assert write_sidecar_idx < capture_ts_idx < classify_idx
