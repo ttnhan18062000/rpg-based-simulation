@@ -1,0 +1,25 @@
+{
+  "fit_full": {
+    "n": 26911,
+    "r2": 0.00011437606929198818,
+    "intercept": 929.9040185531672,
+    "coef_bash_ms": -5.5442366911392704e-06,
+    "coef_agent_count": -2.9926837697936577,
+    "coef_edit_count": 49.673917368730045,
+    "residual_std": 1818.332492208056
+  },
+  "fit_tool_calls_only": {
+    "n": 14460,
+    "r2": 3.609709296359398e-06,
+    "intercept": 959.0673978654294,
+    "coef_bash_ms": -8.456354818458255e-06,
+    "coef_agent_count": 5.900057345071276e-14,
+    "coef_edit_count": 2.8991055585454293e-13,
+    "residual_std": 2145.4201600887977
+  },
+  "shipped_weights": {
+    "W_BASH": 0.001,
+    "W_AGENT": 50,
+    "W_EDIT": 1
+  }
+}

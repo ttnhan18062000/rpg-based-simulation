@@ -1,16 +1,29 @@
 ---
-status: active
+status: historical
 layer: observability
 authority: P2
 audience: developer
-maturity: proposal
+maturity: shipped
 date: 2026-07-18
+archived: 2026-07-19
 tags: [dashboard, observability, reporting, agent-monitoring]
 ---
 
 # Proposal: Backend-driven glossary metadata + hover tooltips across the Agent Ops Dashboard
 
-**Maturity: PROPOSAL** — direct follow-up request during the Stats board epic's
+**Archived:** 2026-07-19 — shipped by `TCK-20260718-GLOSSARY-TOOLTIPS-EPIC` and its four child
+tickets (all `tickets/done/`): `TCK-20260718-GLOSSARY-REGISTRY` (concern 1, new
+`docs/guidelines/glossary_registry.jsonl` + `tools/glossary_registry.py`, categorized entries seeded
+from `docs/agent-monitoring/schema.md`'s existing status/reason-code tables), `TCK-20260718-GLOSSARY-API`
+(concern 2, `GET /api/glossary` merging the registry with `layer_registry.jsonl`'s existing `note`
+field), `TCK-20260718-GLOSSARY-TOOLTIPS-FRONTEND` (concern 3, shared `GlossaryTooltip` component +
+fetch-once `useGlossary()` hook wired across all views, plus a later `?` hint-icon addition and a
+`GroupedBarChart` hover-trigger bug fix), `TCK-20260718-GLOSSARY-DOCS-UPDATE` (concern 4). A direct
+follow-up, `TCK-20260719-AGENT-ROLE-GLOSSARY`, extended the merge with a third source — see
+[`proposal_agent_glossary.md`](proposal_agent_glossary.md) (archived — shipped). This document is the
+historical design reference.
+
+**Maturity: SHIPPED** — direct follow-up request during the Stats board epic's
 review, immediately after `TCK-20260718-AGENTOPS-STATS-BOARD-EPIC` closed.
 User asked for hover tooltips on enum-like labels (ticket status, run/gate
 status, reason codes, "everything you think it needs") across the whole

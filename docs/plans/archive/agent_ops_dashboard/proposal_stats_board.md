@@ -1,16 +1,27 @@
 ---
-status: active
+status: historical
 layer: observability
 authority: P2
 audience: developer
-maturity: proposal
+maturity: shipped
 date: 2026-07-18
+archived: 2026-07-19
 tags: [dashboard, observability, reporting, agent-monitoring]
 ---
 
 # Proposal: Statistics board — a 4th "Stats" tab on the Agent Ops Dashboard, covering both agent-monitoring and ticket-corpus aggregate metrics
 
-**Maturity: PROPOSAL** — user asked for "a board to view statistical agent
+**Archived:** 2026-07-19 — shipped by `TCK-20260718-AGENTOPS-STATS-BOARD-EPIC` and its five child
+tickets (all `tickets/done/`): `TCK-20260718-RETRO-STATS-REFACTOR` (concern 1, `generate_retro.py`'s
+`compute_retro_metrics()` extracted as a typed, reusable function, proven byte-identical to the prior
+Markdown output via `git stash` comparison), `TCK-20260718-AGENTOPS-STATS-API` (concern 2, agent-
+monitoring stats endpoint), `TCK-20260718-TICKET-CORPUS-REPORT` (concern 3, new
+`tools/ticket_stats_report.py` covering all four previously-unbuilt pillars: velocity, tier/type/
+priority distribution, layer distribution, artifact completeness), `TCK-20260718-STATS-TAB-FRONTEND`
+(concern 4, new Stats tab), `TCK-20260718-STATS-DOCS-UPDATE` (concern 5). This document is the
+historical design reference.
+
+**Maturity: SHIPPED** — user asked for "a board to view statistical agent
 monitoring and tickets system." Investigated before proposing anything
 (`search_docs` + direct reads, per this repo's Context Scan rule): this gap
 was already anticipated and deliberately deferred by the dashboard's own
@@ -21,7 +32,7 @@ staged sequentially.
 
 ## Background investigation (already done, feed this to Investigate — do not redo)
 
-`docs/plans/agent_ops_dashboard/idea_agent_ops_dashboard.md` (the dashboard's
+[`idea_agent_ops_dashboard.md`](idea_agent_ops_dashboard.md) (the dashboard's
 own origin doc, "Relationship to Planned Tickets" section) explicitly flags:
 > `docs/guides/ticket_reporting.md`'s "pillars" framing for ticket-corpus
 > reporting explicitly lists ticket velocity/throughput and tier/type/priority

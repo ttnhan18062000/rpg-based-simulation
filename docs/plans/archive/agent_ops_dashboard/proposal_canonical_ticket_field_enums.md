@@ -1,16 +1,29 @@
 ---
-status: active
+status: historical
 layer: guidelines
 authority: P2
 audience: developer
-maturity: proposal
+maturity: shipped
 date: 2026-07-18
+archived: 2026-07-19
 tags: [frontmatter, data-quality, observability]
 ---
 
 # Proposal: Canonical, hard-validated enums for Tier/Layer/Status/Priority — and make the dashboard's filter facets reflect them
 
-**Maturity: PROPOSAL** — grew out of a real bug report and a follow-up design
+**Archived:** 2026-07-19 — shipped by `TCK-20260718-CANONICAL-FIELD-ENUMS-EPIC` and its five child
+tickets (all `tickets/done/`): `TCK-20260718-TIER-PRIORITY-CANONICAL-ENUM` (concern 1, canonical
+`TIER_VALUES`/`PRIORITY_VALUES` in new `tools/ticket_field_values.py`, hard-validated at close via
+`done_checker_static.py`), `TCK-20260718-LAYER-REGISTRY-CONVERSION` (converted `LAYER_VALUES` from a
+hardcoded enum into an append-only `docs/guidelines/layer_registry.jsonl` registry, mirroring
+`tag_registry.py`), `TCK-20260718-TIER-PRIORITY-CORPUS-CLEANUP` (concern 2, full-corpus re-scan and
+repair), `TCK-20260718-DASHBOARD-FACETS-FULLY-CANONICAL` (concern 3, all four single-value dashboard
+facets now fixed canonical lists, `TicketsView.tsx`'s synthetic-`<option>` workaround kept as
+documented defensive code rather than removed), `TCK-20260718-CANONICAL-ENUM-DOCS-UPDATE` (concern 4,
+`CLAUDE.md`'s Priority line fixed to include P3, Layer's registry-add process documented). This
+document is the historical design reference.
+
+**Maturity: SHIPPED** — grew out of a real bug report and a follow-up design
 question during today's Agent Ops Dashboard fix session. The user pointed out
 that `TCK-20260718-FILTER-SELECT-DROPOUT`'s fix (a synthetic-`<option>`
 injection) was a band-aid: the real problem is that the Tickets view's

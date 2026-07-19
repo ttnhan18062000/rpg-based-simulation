@@ -15,7 +15,8 @@ tags: [idea, agent-infrastructure, observability, agent-monitoring, data-quality
 > scope, since it touches production orchestration code
 > (`.claude/workflows/implement-ticket.js`), which per this repo's rules cannot be modified inside
 > an `experiments/` sandbox proposal. See
-> [`idea_agent_ops_dashboard.md`](idea_agent_ops_dashboard.md) and its companion
+> [`idea_agent_ops_dashboard.md`](../archive/agent_ops_dashboard/idea_agent_ops_dashboard.md)
+> (archived — shipped) and its companion
 > `experiments/agent_ops_dashboard/MONITORING_INSTRUMENTATION_GAP.md` for the full investigation
 > trail this doc distills.
 
@@ -92,8 +93,10 @@ of scope for this idea.
 
 ## Relationship to Planned Tickets
 
-None yet. Deliberately **independent** of [`idea_agent_ops_dashboard.md`](idea_agent_ops_dashboard.md)
-— that dashboard's v1 scope does not depend on this fix landing first or at all; both its Recent
+None yet. Deliberately **independent** of
+[`idea_agent_ops_dashboard.md`](../archive/agent_ops_dashboard/idea_agent_ops_dashboard.md)
+(archived — shipped) — that dashboard's v1 scope does not depend on this fix landing first or at
+all; both its Recent
 Activity and Replay timeline views degrade gracefully to an honest "phase unknown" label for a
 still-live run without it. Decided 2026-07-16 (with the user) that this should ship as an
 independent sibling ticket, not a blocking dependency in either direction.
@@ -105,8 +108,9 @@ independent sibling ticket, not a blocking dependency in either direction.
 - Whether the `_COVERED_SITE_ADJACENCY` regression test should be updated by hand per site, or
   whether its assertion strategy itself should change to be less brittle to signature changes like
   this one — not decided, a real implementation-time choice for whoever picks this up.
-- Relative priority/timing against `idea_agent_ops_dashboard.md`'s own ticket — both are unscheduled
-  today; nothing here forces an order.
+- Relative priority/timing against `idea_agent_ops_dashboard.md`'s own ticket (archived — shipped,
+  see `docs/plans/archive/agent_ops_dashboard/idea_agent_ops_dashboard.md`) — this idea remains
+  unscheduled; nothing here forces an order.
 
 ---
 

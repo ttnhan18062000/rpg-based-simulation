@@ -1,21 +1,43 @@
 ---
-status: idea
+status: historical
 layer: observability
 authority: P2
 audience: developer
-maturity: idea
+maturity: shipped
 date: 2026-07-16
+archived: 2026-07-19
 tags: [idea, agent-infrastructure, observability, dashboard, reporting]
 ---
 
 # Idea: Agent Ops Dashboard — a visual, feature-rich viewer over tickets + agent-monitoring data
 
-> **Maturity: IDEA** — Not scheduled, no ticket filed yet. Full investigation trail, exact API/data
-> schemas, and UX detail live in `experiments/agent_ops_dashboard/` (`PROPOSAL.md` + 5 companion
-> documents); this doc distills that trail into the standard idea-doc shape and records the four
-> stack/design decisions confirmed with the user on 2026-07-16. See companion idea
-> [`idea_agent_monitoring_live_phase_label.md`](idea_agent_monitoring_live_phase_label.md) for the
-> related, deliberately-independent instrumentation gap this investigation also found.
+**Archived:** 2026-07-19 — the v1 dashboard (Recent Activity Gantt, Tickets, Replay Timeline views,
+FastAPI backend + React/Vite SPA) shipped by `TCK-20260716-AGENTOPS-DASHBOARD-BACKEND`,
+`TCK-20260716-AGENTOPS-ACTIVITY-GANTT`, `TCK-20260716-AGENTOPS-TICKETS-VIEW`,
+`TCK-20260716-AGENTOPS-REPLAY-TIMELINE` (`tickets/done/`), documented by
+`TCK-20260717-AGENTOPS-DASHBOARD-DOCS`. All four decisions below (stack, gap-fix sequencing,
+ticket↔run ambiguity, concurrency) were implemented as decided. A live UI review after shipping
+found further legibility/scalability issues — see [`proposal_ui_review_findings.md`](proposal_ui_review_findings.md)
+(archived — shipped) — and three further epics extended the dashboard beyond this doc's original
+scope: canonical Tier/Layer/Status/Priority enums
+([`proposal_canonical_ticket_field_enums.md`](proposal_canonical_ticket_field_enums.md), archived —
+shipped), a Stats tab ([`proposal_stats_board.md`](proposal_stats_board.md), archived — shipped),
+and backend-owned glossary tooltips
+([`proposal_glossary_tooltips.md`](proposal_glossary_tooltips.md) /
+[`proposal_agent_glossary.md`](proposal_agent_glossary.md), archived — shipped). This document is
+the historical design reference. The companion idea
+[`../../agent_ops_dashboard/idea_agent_monitoring_live_phase_label.md`](../../agent_ops_dashboard/idea_agent_monitoring_live_phase_label.md)
+remains genuinely unimplemented and was deliberately **not** archived alongside this one.
+
+> **Maturity: SHIPPED.** Implemented by `TCK-20260716-AGENTOPS-DASHBOARD-BACKEND`,
+> `TCK-20260716-AGENTOPS-ACTIVITY-GANTT`, `TCK-20260716-AGENTOPS-TICKETS-VIEW`,
+> `TCK-20260716-AGENTOPS-REPLAY-TIMELINE` (`tickets/done/`), documented by
+> `TCK-20260717-AGENTOPS-DASHBOARD-DOCS`. Full investigation trail, exact API/data schemas, and UX
+> detail remain archived in `experiments/agent_ops_dashboard/` (`PROPOSAL.md` + 5 companion
+> documents) for historical reference. See companion idea
+> [`../../agent_ops_dashboard/idea_agent_monitoring_live_phase_label.md`](../../agent_ops_dashboard/idea_agent_monitoring_live_phase_label.md)
+> (still unimplemented, not archived) for the related, deliberately-independent instrumentation gap
+> this investigation also found.
 
 ## Problem
 

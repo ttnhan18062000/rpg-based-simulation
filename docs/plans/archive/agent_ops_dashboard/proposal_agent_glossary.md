@@ -1,16 +1,23 @@
 ---
-status: active
+status: historical
 layer: observability
 authority: P2
 audience: developer
-maturity: proposal
+maturity: shipped
 date: 2026-07-19
+archived: 2026-07-19
 tags: [dashboard, observability]
 ---
 
 # Proposal: Agent-name glossary descriptions (extend the existing glossary registry with an "agent" category)
 
-**Maturity: PROPOSAL** — direct user follow-up during a live bug report
+**Archived:** 2026-07-19 — shipped by `TCK-20260719-AGENT-ROLE-GLOSSARY` (`tickets/done/`):
+`_load_agent_role_descriptions()` added to `src/api/agent_ops_dashboard/ingest.py` as a third
+`get_glossary()` merge source (category `"agent"`), reading every `.claude/agents/*.md` role file's
+own frontmatter `description:` field; the Stats view's Top Agents table `Agent` column wrapped in
+`GlossaryTooltip`. Term count grew from 54 to 67. This document is the historical design reference.
+
+**Maturity: SHIPPED** — direct user follow-up during a live bug report
 ("the TIER DISTRIBUTION ... tooltips ... not trigger" — a separate,
 already-fixed `GroupedBarChart` hover-trigger bug). User explicitly asked
 for agent-name row descriptions in the Stats view's "Top agents by call

@@ -1,0 +1,219 @@
+{
+  "075a16c9-cdbf-4bef-863c-255264e87842.jsonl": {
+    "bash_ms": 1966056.0,
+    "agent_count": 0,
+    "edit_count": 96,
+    "total_tokens": 495994,
+    "n_turns": 520
+  },
+  "0abc1205-f4ea-4308-b012-ff6cc156c5be.jsonl": {
+    "bash_ms": 3260741.0,
+    "agent_count": 21,
+    "edit_count": 25,
+    "total_tokens": 323415,
+    "n_turns": 411
+  },
+  "0abe4093-bd0c-47d8-9de7-c0c70457de9b.jsonl": {
+    "bash_ms": 10495453.0,
+    "agent_count": 6,
+    "edit_count": 98,
+    "total_tokens": 472770,
+    "n_turns": 406
+  },
+  "10b66808-8682-42ff-a3ca-2a3768e450f2.jsonl": {
+    "bash_ms": 0.0,
+    "agent_count": 0,
+    "edit_count": 0,
+    "total_tokens": 0,
+    "n_turns": 2
+  },
+  "13abe97d-8367-4e49-ada2-d3f44de96d10.jsonl": {
+    "bash_ms": 900933.0,
+    "agent_count": 0,
+    "edit_count": 44,
+    "total_tokens": 100177,
+    "n_turns": 129
+  },
+  "13e441cb-5b97-4c67-9251-e8366d04c575.jsonl": {
+    "bash_ms": 12023395.0,
+    "agent_count": 0,
+    "edit_count": 307,
+    "total_tokens": 729107,
+    "n_turns": 1165
+  },
+  "20a04b1c-0d19-49a7-bb3e-fe00cce6a14d.jsonl": {
+    "bash_ms": 0.0,
+    "agent_count": 0,
+    "edit_count": 0,
+    "total_tokens": 0,
+    "n_turns": 20
+  },
+  "28267dbe-de90-4b17-bbf5-f2cd4cd2ca05.jsonl": {
+    "bash_ms": 13369453.0,
+    "agent_count": 23,
+    "edit_count": 157,
+    "total_tokens": 608600,
+    "n_turns": 918
+  },
+  "33058deb-8a8b-4321-99c5-46c66ffa916a.jsonl": {
+    "bash_ms": 25116738.0,
+    "agent_count": 46,
+    "edit_count": 29,
+    "total_tokens": 596313,
+    "n_turns": 456
+  },
+  "3e4b757d-1ab5-4352-812a-9f9278090bfe.jsonl": {
+    "bash_ms": 1314044.0,
+    "agent_count": 23,
+    "edit_count": 42,
+    "total_tokens": 427863,
+    "n_turns": 267
+  },
+  "4b03b1fd-3bd3-4fdb-98b9-40111ec67611.jsonl": {
+    "bash_ms": 946062.0,
+    "agent_count": 1,
+    "edit_count": 31,
+    "total_tokens": 161676,
+    "n_turns": 256
+  },
+  "4ceeab65-ae93-4f1b-a72b-b7877df80673.jsonl": {
+    "bash_ms": 0.0,
+    "agent_count": 0,
+    "edit_count": 3,
+    "total_tokens": 15197,
+    "n_turns": 49
+  },
+  "50a54c02-11d3-4c42-b159-e6a644beb826.jsonl": {
+    "bash_ms": 27900949.0,
+    "agent_count": 55,
+    "edit_count": 22,
+    "total_tokens": 470035,
+    "n_turns": 420
+  },
+  "576199d5-14b6-417f-9070-854228504126.jsonl": {
+    "bash_ms": 239934.0,
+    "agent_count": 10,
+    "edit_count": 3,
+    "total_tokens": 62774,
+    "n_turns": 111
+  },
+  "704f0ca6-494e-4a2e-9e4d-d9c23eda6fa0.jsonl": {
+    "bash_ms": 22673368.0,
+    "agent_count": 0,
+    "edit_count": 227,
+    "total_tokens": 432547,
+    "n_turns": 492
+  },
+  "7604c8b7-b869-4d8e-8bc5-938db8773c3b.jsonl": {
+    "bash_ms": 209417.0,
+    "agent_count": 16,
+    "edit_count": 23,
+    "total_tokens": 225612,
+    "n_turns": 287
+  },
+  "83e832dc-aab2-48dd-9ffb-b2ffd63b32d2.jsonl": {
+    "bash_ms": 5375871.0,
+    "agent_count": 37,
+    "edit_count": 56,
+    "total_tokens": 853423,
+    "n_turns": 804
+  },
+  "861d6ebe-8f42-4430-8706-95b2ee1e984d.jsonl": {
+    "bash_ms": 4961484.0,
+    "agent_count": 89,
+    "edit_count": 86,
+    "total_tokens": 812171,
+    "n_turns": 1252
+  },
+  "8f7a00dd-65a3-4134-ac3e-ea388cea11f5.jsonl": {
+    "bash_ms": 2113008.0,
+    "agent_count": 43,
+    "edit_count": 43,
+    "total_tokens": 303674,
+    "n_turns": 489
+  },
+  "a8dd3ebd-2dd1-4758-b088-50aaf39715de.jsonl": {
+    "bash_ms": 40638014.0,
+    "agent_count": 169,
+    "edit_count": 1501,
+    "total_tokens": 4982938,
+    "n_turns": 6437
+  },
+  "bc1a211b-8fc1-4be0-bc9f-ab103a219f18.jsonl": {
+    "bash_ms": 94409.0,
+    "agent_count": 0,
+    "edit_count": 1,
+    "total_tokens": 44877,
+    "n_turns": 55
+  },
+  "cb53dd95-8dcd-417e-93a3-f9e418be2d9c.jsonl": {
+    "bash_ms": 2286817.0,
+    "agent_count": 0,
+    "edit_count": 197,
+    "total_tokens": 511081,
+    "n_turns": 728
+  },
+  "ceb27d4e-8c69-4dc6-81b8-87bb84e30906.jsonl": {
+    "bash_ms": 41989776.0,
+    "agent_count": 62,
+    "edit_count": 97,
+    "total_tokens": 1952008,
+    "n_turns": 419
+  },
+  "d74a81c0-cbbd-4eda-8d4e-6d402acc777a.jsonl": {
+    "bash_ms": 2599986.0,
+    "agent_count": 49,
+    "edit_count": 56,
+    "total_tokens": 587738,
+    "n_turns": 642
+  },
+  "d82e6a33-7335-4a22-bf66-caf0e0968653.jsonl": {
+    "bash_ms": 115252.0,
+    "agent_count": 27,
+    "edit_count": 15,
+    "total_tokens": 351958,
+    "n_turns": 285
+  },
+  "e1d87423-66ef-4481-99a3-3c0c4264fc5c.jsonl": {
+    "bash_ms": 36300608.0,
+    "agent_count": 1,
+    "edit_count": 812,
+    "total_tokens": 2968577,
+    "n_turns": 2874
+  },
+  "ea1b0fe0-9aef-4d15-9e4a-9135f49eda71.jsonl": {
+    "bash_ms": 14672163.0,
+    "agent_count": 117,
+    "edit_count": 398,
+    "total_tokens": 2759483,
+    "n_turns": 2659
+  },
+  "fa76ee2b-fb57-4533-b182-ad943ca51986.jsonl": {
+    "bash_ms": 60490900.0,
+    "agent_count": 117,
+    "edit_count": 245,
+    "total_tokens": 2024881,
+    "n_turns": 2010
+  },
+  "fd8d642a-e0a0-4a69-8f1f-cbd895e01717.jsonl": {
+    "bash_ms": 1174410.0,
+    "agent_count": 38,
+    "edit_count": 12,
+    "total_tokens": 137769,
+    "n_turns": 213
+  },
+  "fdaa143e-7eeb-453e-b8d6-ff7bef794b08.jsonl": {
+    "bash_ms": 89450.0,
+    "agent_count": 34,
+    "edit_count": 160,
+    "total_tokens": 572148,
+    "n_turns": 523
+  },
+  "fe612123-e353-4542-b73b-2a31aa0a517a.jsonl": {
+    "bash_ms": 2945952.0,
+    "agent_count": 24,
+    "edit_count": 167,
+    "total_tokens": 1280995,
+    "n_turns": 1612
+  }
+}

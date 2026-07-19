@@ -827,8 +827,8 @@ class DashboardCache:
         file re-exposed here under category="agent" (reusing each file's own frontmatter
         `description:` field — see `_load_agent_role_descriptions()`). None of the three is copied
         into a second file — this dashboard is read-only, so it reads each source directly instead
-        (see docs/plans/agent_ops_dashboard/proposal_glossary_tooltips.md and
-        docs/plans/agent_ops_dashboard/proposal_agent_glossary.md's investigations for why).
+        (see docs/plans/archive/agent_ops_dashboard/proposal_glossary_tooltips.md and
+        docs/plans/archive/agent_ops_dashboard/proposal_agent_glossary.md's investigations for why).
 
         Like get_ticket_corpus_stats(), this does its own fresh file read rather than participating
         in the mtime-cached _rebuild() cycle — all three sources are small and change far less

@@ -1,16 +1,26 @@
 ---
-status: active
+status: historical
 layer: observability
 authority: P2
 audience: developer
-maturity: proposal
+maturity: shipped
 date: 2026-07-17
+archived: 2026-07-19
 tags: [idea, agent-infrastructure, observability, dashboard]
 ---
 
 # Proposal: Agent Ops Dashboard UI issues found via live walkthrough
 
-**Maturity: PROPOSAL** — found by driving the shipped dashboard
+**Archived:** 2026-07-19 — all six findings shipped: `TCK-20260717-GANTT-TIME-AXIS` (#1, time axis +
+on-chart labels), `TCK-20260717-TICKETS-TAG-SEARCH` (#2, searchable collapsed tag multi-select),
+`TCK-20260717-CSS-LAYER-PADDING-FIX` (#3, Tier/Layer column concatenation — root cause was an
+unlayered CSS reset silently zeroing Tailwind padding utilities app-wide, not a markup bug),
+`TCK-20260717-TICKET-TITLE-PARSE-FIX` (#4, Ticket/Title duplication — backend ingest was returning
+`ticket_id` as the title for every row), `TCK-20260717-DASHBOARD-RESPONSIVE-LAYOUT` (#5, responsive
+header + Gantt tooltip), `TCK-20260717-TICKETS-TABLE-PAGINATION` (#6, table pagination). All in
+`tickets/done/`. This document is the historical record of the findings as originally reproduced.
+
+**Maturity: SHIPPED** — found by driving the shipped dashboard
 (`make dashboard-serve`) with a headless browser across all three views
 (Recent Activity Gantt, Tickets, Replay Timeline), immediately after
 TCK-20260717-AGENTOPS-DASHBOARD-DOCS documented it. Not a design critique —
