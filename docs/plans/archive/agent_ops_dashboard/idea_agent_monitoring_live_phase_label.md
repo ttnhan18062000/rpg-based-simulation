@@ -1,21 +1,36 @@
 ---
-status: idea
+status: historical
 layer: observability
 authority: P2
 audience: developer
-maturity: idea
+maturity: shipped
 date: 2026-07-16
+archived: 2026-07-19
 tags: [idea, agent-infrastructure, observability, agent-monitoring, data-quality]
 ---
 
 # Idea: Live phase/agent labeling for in-progress `tools.jsonl` rows
 
-> **Maturity: IDEA** — Not scheduled. Found while investigating the Agent Ops Dashboard's real-time
-> capability; deliberately kept as its own independent idea rather than folded into that dashboard's
-> scope, since it touches production orchestration code
+**Archived:** 2026-07-19 — **partially shipped**, not fully. `TCK-20260719-LIVE-PHASE-AGENT-LABEL`
+(`tickets/done/`) shipped exactly the data-producing prerequisite this doc scoped: `writeSidecar`
+now threads `phase`/`agent` through all 10 call sites plus the Scope-phase resume branch, and
+`tools/agent-monitoring/post_tool_hook.py` persists both as new nullable, additive `tools.jsonl`
+fields (no backfill — historical rows still lack them). **What remains unshipped is this doc's own
+stated payoff**: the "Would unlock" section below describes a live dashboard's in-progress-run
+indicator showing e.g. "TCK-... — Implement (implementer) running" — the Agent Ops Dashboard's own
+`RawToolCall` Pydantic model (`src/api/agent_ops_dashboard/models.py`) and Replay Timeline view were
+deliberately left untouched by that ticket (explicitly out of scope), so the dashboard still renders
+the unconditional "phase unknown — run still in progress" caption for a live run today, unchanged
+from before this ticket, even though the underlying data it would need now exists. Wiring the
+dashboard to actually consume these new fields remains a real, undone follow-up — not yet ticketed.
+This document is the historical design reference for the shipped half.
+
+> **Maturity: SHIPPED (data half only).** Found while investigating the Agent Ops Dashboard's
+> real-time capability; deliberately kept as its own independent idea rather than folded into that
+> dashboard's scope, since it touches production orchestration code
 > (`.claude/workflows/implement-ticket.js`), which per this repo's rules cannot be modified inside
 > an `experiments/` sandbox proposal. See
-> [`idea_agent_ops_dashboard.md`](../archive/agent_ops_dashboard/idea_agent_ops_dashboard.md)
+> [`idea_agent_ops_dashboard.md`](idea_agent_ops_dashboard.md)
 > (archived — shipped) and its companion
 > `experiments/agent_ops_dashboard/MONITORING_INSTRUMENTATION_GAP.md` for the full investigation
 > trail this doc distills.
@@ -93,24 +108,25 @@ of scope for this idea.
 
 ## Relationship to Planned Tickets
 
-None yet. Deliberately **independent** of
-[`idea_agent_ops_dashboard.md`](../archive/agent_ops_dashboard/idea_agent_ops_dashboard.md)
-(archived — shipped) — that dashboard's v1 scope does not depend on this fix landing first or at
-all; both its Recent
-Activity and Replay timeline views degrade gracefully to an honest "phase unknown" label for a
-still-live run without it. Decided 2026-07-16 (with the user) that this should ship as an
-independent sibling ticket, not a blocking dependency in either direction.
+Shipped (data half only) by `TCK-20260719-LIVE-PHASE-AGENT-LABEL` (`tickets/done/`), created via
+`/create-tickets` on 2026-07-19 and implemented the same day. Ran as its own independent sibling
+ticket, not blocking or blocked by
+[`idea_agent_ops_dashboard.md`](idea_agent_ops_dashboard.md) (archived — shipped), exactly as
+decided on 2026-07-16 — that dashboard's v1 (and every subsequent dashboard epic through
+2026-07-18) shipped and degraded gracefully to "phase unknown" the entire time this fix was
+pending, confirming the non-blocking call was correct. **No follow-up ticket yet exists** for the
+remaining dashboard-consumption half (see the Archived note above) — this is real, identified,
+unticketed work, not a closed loop.
 
-## Open Questions
+## Open Questions — resolved during implementation
 
-- Exact `law_id`-style naming isn't applicable here, but the exact new field names (`phase`/`agent`
-  vs. something else) haven't been bikeshedded against `schema.md`'s existing vocabulary.
-- Whether the `_COVERED_SITE_ADJACENCY` regression test should be updated by hand per site, or
-  whether its assertion strategy itself should change to be less brittle to signature changes like
-  this one — not decided, a real implementation-time choice for whoever picks this up.
-- Relative priority/timing against `idea_agent_ops_dashboard.md`'s own ticket (archived — shipped,
-  see `docs/plans/archive/agent_ops_dashboard/idea_agent_ops_dashboard.md`) — this idea remains
-  unscheduled; nothing here forces an order.
+- Field names: `phase`/`agent` were used as-is, matching `events.jsonl`'s existing vocabulary — no
+  bikeshedding needed, confirmed compatible during Investigate.
+- `_COVERED_SITE_ADJACENCY` was updated by hand, per-site — its assertion strategy was not changed
+  to be less brittle; that remains a real, undecided future call if a similar signature change ever
+  recurs.
+- Sequencing against `idea_agent_ops_dashboard.md` (archived — shipped): confirmed non-blocking in
+  both directions, as decided 2026-07-16 — see Relationship to Planned Tickets above.
 
 ---
 

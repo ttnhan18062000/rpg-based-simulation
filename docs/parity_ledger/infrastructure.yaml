@@ -5418,3 +5418,64 @@
     constants or compute_cost_proxy_score()'s formula (confirmed via zero diff to that file from
     this ticket specifically -- the 6-line diff `git diff --stat` shows on cost_proxy.py belongs
     to the sibling TCK-20260719-COST-PROXY-CALIBRATION-NOTE ticket, not this one).
+
+- id: INFRA-286
+  text: >
+    TCK-20260719-STATS-PHASE-OUTLIERS-EXPOSE: exposes `phase_status_distribution` (introduced by
+    INFRA-283) and `outliers` (introduced by INFRA-284, whose own text explicitly deferred
+    dashboard exposure to "a separate, deliberate future ticket") through the Agent Ops
+    Dashboard's typed API boundary and Stats tab -- this is that future ticket. Adds
+    `DurationOutlierEntry`/`CostProxyOutlierEntry`/`OutlierStats` Pydantic models and two new
+    fields (`phase_status_distribution: Dict[str, Dict[str, int]]`, `outliers: OutlierStats`) to
+    `AgentMonitoringStats` (`src/api/agent_ops_dashboard/models.py`), wires both into
+    `DashboardCache.get_agent_monitoring_stats()` (`src/api/agent_ops_dashboard/ingest.py`) via
+    the same explicit-per-field-typed-construction pattern every other field already uses (never
+    a `**metrics` passthrough), and renders a Phase Status Distribution table plus two
+    conditionally-rendered Outliers sub-tables (duration-by-tier, cost-proxy-score-by-phase, each
+    shown only when its own list is non-empty, with a combined "No outliers" empty state when
+    both are empty) in `dashboard-frontend/src/views/StatsView.tsx`. Zero change to
+    `compute_retro_metrics()` or `generate()` in `generate_retro.py` -- this ticket only exposes
+    already-computed, already-CLI-rendered data through the typed API boundary, never recomputes
+    anything.
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: >
+    src/api/agent_ops_dashboard/models.py:164 (`class DurationOutlierEntry(BaseModel)`: run_id,
+    tier, duration_s, median, ratio), :172 (`class CostProxyOutlierEntry(BaseModel)`: run_id,
+    seq: Optional[int] = None, phase, agent, cost_proxy_score, median, ratio), :182 (`class
+    OutlierStats(BaseModel)`: duration_s: List[DurationOutlierEntry], cost_proxy_score:
+    List[CostProxyOutlierEntry]), and `AgentMonitoringStats`'s (:187) two new fields
+    `phase_status_distribution: Dict[str, Dict[str, int]]` (:195) / `outliers: OutlierStats`
+    (:200). src/api/agent_ops_dashboard/ingest.py:703 (`def get_agent_monitoring_stats(`), :773
+    (`phase_status_distribution=metrics["phase_status_distribution"]` direct passthrough), :784-789
+    (`outliers=OutlierStats(duration_s=[DurationOutlierEntry(**d) for d in
+    metrics["outliers"]["duration_s"]], cost_proxy_score=[CostProxyOutlierEntry(**d) for d in
+    metrics["outliers"]["cost_proxy_score"]])` construction, no sorting/re-rounding added).
+    dashboard-frontend/src/api.ts: matching `DurationOutlierEntry`/`CostProxyOutlierEntry`/
+    `OutlierStats` TS interfaces and two new required `AgentMonitoringStats` fields.
+    dashboard-frontend/src/views/StatsView.tsx: `phaseStatusRows()` helper + `phase-status-table`,
+    plus the `duration-outliers-table`/`cost-outliers-table`/`no-outliers-state` conditional
+    block.
+  proof_type: contract
+  test_path: >
+    tests/tools/test_agent_ops_dashboard_stats.py::test_stats_endpoint_includes_phase_status_distribution,
+    ::test_stats_endpoint_includes_outliers_duration_and_cost_proxy,
+    ::test_stats_endpoint_outliers_seq_field_tolerates_none,
+    ::test_stats_endpoint_zero_outliers_returns_empty_lists_not_missing_keys (4 new, plus the
+    existing 8/8 unaffected). dashboard-frontend/src/test/StatsView.test.tsx: 'renders a Phase
+    Status Distribution table with ok/failed/blocked/skipped columns', 'renders Duration and
+    Cost-Proxy-Score outlier tables when outliers are present', 'renders a graceful "no outliers"
+    state when both outlier lists are empty, not a broken table', 'wraps tier and agent values in
+    outlier tables with GlossaryTooltip...' (4 new, plus the existing 11/11 unaffected -- 15/15
+    total in that file). Full dashboard-frontend suite: 94/94 passing.
+  divergence_note: null
+  support_boundary: >
+    Agent-orchestration/monitoring-pipeline tooling only -- no simulation behavior is involved
+    (same category as INFRA-283/284 immediately above). No change to
+    `compute_retro_metrics()`/`generate()` in generate_retro.py -- CLI retro report's Markdown
+    output stays byte-identical (guarded by
+    `test_stats_endpoint_uses_real_compute_retro_metrics_not_reimplemented`, re-run unmodified).
+    No on-disk schema change to events.jsonl/runs.jsonl. Dashboard-exposure and rendering only --
+    INFRA-283's and INFRA-284's own entry text is unchanged, this entry is a forward-reference to
+    both, not a rewrite.

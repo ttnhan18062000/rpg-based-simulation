@@ -1,16 +1,35 @@
 ---
-status: active
+status: historical
 layer: observability
 authority: P2
 audience: developer
-maturity: proposal
+maturity: shipped
 date: 2026-07-19
+archived: 2026-07-19
 tags: [idea, agent-infrastructure, observability, agent-monitoring, data-quality]
 ---
 
 # Proposal: Agent-monitoring data-quality epic — normalize, cover, flag, and stop re-deriving the same signals by hand
 
-**Maturity: PROPOSAL** — direct follow-up to `experiments/cost_proxy_calibration/`'s just-completed
+**Archived:** 2026-07-19 — all five concerns shipped the same day, via `tickets/todos/agent-monitoring-data-quality/`
+(all now `tickets/done/`): `TCK-20260719-PHASE-AGENT-CASE-FOLD` (concern 1, casing-variant
+normalization in `generate_retro.py`, new `phase_status_distribution` report section), `TCK-20260719-COST-PROXY-WRITE-PATH`
+(concern 2 — investigation found the coverage question was **not** a pure audit: `duration_s` is
+already resolved at 99.13% coverage, but `cost_proxy_score`/`tool_call_count` had a real, ongoing
+~30-37% null rate since 2026-07-11, root-caused to the same LLM-executed-bookkeeping anti-pattern
+already fixed for `duration_s` — fixed by moving the compute into `record_events.py`),
+`TCK-20260719-RETRO-OUTLIER-FLAGS` (concern 3, new `## Outliers` retro-report section, scoped to
+CLI/Markdown only after investigation found the dashboard would **not** benefit automatically as
+this proposal assumed — see that ticket's own correction), `TCK-20260719-WEIGHT-SENSITIVITY-PROMOTE`
+(concern 4, `experiments/cost_proxy_calibration/validate_rank_order.py` promoted to
+`tools/agent-monitoring/weight_sensitivity_check.py`), `TCK-20260719-COST-PROXY-CALIBRATION-NOTE`
+(concern 5, dated finding recorded in `cost_proxy.py`'s docstring and
+`docs/agent-monitoring/README.md`). Direct weight recalibration of `cost_proxy.py` remained
+deliberately out of scope throughout, per this proposal's own "Explicitly deferred" section below —
+no weight constant was changed by any of the five tickets. This document is the historical design
+reference.
+
+**Maturity: SHIPPED** — direct follow-up to `experiments/cost_proxy_calibration/`'s just-completed
 extraction/regression experiment (see `RESULTS.md` in that folder). That experiment set out to
 recalibrate `cost_proxy_score`'s shipped weights against real local token-usage data and returned a
 **disciplined negative for direct weight adoption** (the only fit with real signal comes from a
@@ -167,6 +186,5 @@ totals — neither of which this epic's concerns below require.
 
 *Raised: 2026-07-19, directly from `experiments/cost_proxy_calibration/`'s completed experiment and
 its cross-reference to `experiments/audit_expansion/PROPOSAL.md`'s independently-computed D25
-findings against the same underlying data. Not yet turned into real tickets — run `/create-tickets
-source=docs/plans/agent_infrastructure/proposal_agent_monitoring_data_quality.md` when ready to
-schedule.*
+findings against the same underlying data. Turned into 5 real tickets via `/create-tickets` the same
+day — see the Archived note at the top of this document.*

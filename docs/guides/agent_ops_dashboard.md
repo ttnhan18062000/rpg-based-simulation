@@ -119,7 +119,10 @@ Two sections, stacked in one scrollable page rather than further nav tabs
   duration, total agent calls), a top-10 magnitude bar chart each for gate
   failure and reason-code breakdowns, a 2-series grouped bar chart for tier
   distribution (count vs. done), summary-quality stat tiles, a top-15 table of
-  agents by call volume (with per-status counts), and a table of slow runs.
+  agents by call volume (with per-status counts), a table of slow runs, a
+  table of per-phase status breakdown (Phase Status Distribution), and up to
+  two outlier tables (duration-by-tier, cost-proxy-score-by-phase, each shown
+  only when non-empty).
 - **Ticket Corpus** — stat tiles (scanned files, included tickets, skipped,
   artifact-completeness percentage), a 14-day velocity bar chart, and four
   distribution bar charts (tier/type/priority/layer). This is the same data
@@ -151,7 +154,9 @@ note) and rendered as-is; nothing is hardcoded in the frontend. Covered today:
 - **Tickets view** — Tier, Layer, ticket status, and Priority cells.
 - **Replay Timeline** — event status.
 - **Stats** — gate-failure/reason-code/tier/type/priority/layer bar labels,
-  and the Slow Runs table's status cell.
+  and the Slow Runs table's status cell, the Phase Status Distribution
+  table's `ok`/`failed`/`blocked`/`skipped` headers, and the Outliers
+  tables' tier and agent cells.
 
 Not covered, deliberately: the Recent Activity Gantt bars and their legend.
 A Gantt bar's only visible text is the run ID, and its color reflects a
@@ -170,12 +175,19 @@ wraps its text rather than overflowing past the right edge of the viewport.
 
 ## Known limitation
 
-Live (in-progress) tool-call rows have no `phase` or `agent` label — the
-underlying data type has no such fields at all for live entries, not merely
-empty ones. The Replay Timeline view renders the honest
-"phase unknown — run still in progress" caption for these rows unconditionally.
-This is a known, tracked gap (`MONITORING_INSTRUMENTATION_GAP`), not something
-this dashboard works around or guesses at.
+Live (in-progress) tool-call rows still show no `phase` or `agent` label in
+this dashboard — the Replay Timeline view renders the honest
+"phase unknown — run still in progress" caption for these rows unconditionally,
+unchanged from before. **As of 2026-07-19 (`TCK-20260719-LIVE-PHASE-AGENT-LABEL`),
+this is no longer because the underlying data doesn't exist** — `tools.jsonl`
+now carries nullable `phase`/`agent` fields, populated for any workflow run
+after that date. It's because this dashboard's own `RawToolCall` model
+(`src/api/agent_ops_dashboard/models.py`) and the Replay Timeline view were
+deliberately left unwired to the new fields — that ticket's scope was
+data-production only. Wiring the dashboard to actually consume them remains a
+real, identified, unticketed follow-up — see
+`docs/plans/archive/agent_ops_dashboard/idea_agent_monitoring_live_phase_label.md`'s
+own Archived note for the precise split between what shipped and what didn't.
 
 ## See also
 

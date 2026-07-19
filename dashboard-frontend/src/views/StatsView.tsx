@@ -66,6 +66,29 @@ function topAgentRows(stats: AgentMonitoringStats): TopAgentRow[] {
   return rows.sort((a, b) => b.total - a.total).slice(0, TOP_AGENTS_LIMIT)
 }
 
+interface PhaseStatusRow {
+  phase: string
+  total: number
+  ok: number
+  failed: number
+  blocked: number
+  skipped: number
+}
+
+function phaseStatusRows(stats: AgentMonitoringStats): PhaseStatusRow[] {
+  return Object.entries(stats.phase_status_distribution).map(([phase, statuses]) => {
+    const total = Object.values(statuses).reduce((sum, n) => sum + n, 0)
+    return {
+      phase,
+      total,
+      ok: statuses.ok ?? 0,
+      failed: statuses.failed ?? 0,
+      blocked: statuses.blocked ?? 0,
+      skipped: statuses.skipped ?? 0,
+    }
+  })
+}
+
 function totalSkipped(skipped: Record<string, number>): number {
   return Object.values(skipped).reduce((sum, n) => sum + n, 0)
 }
@@ -228,6 +251,57 @@ export function StatsView() {
         </div>
 
         <div className="flex flex-col gap-2">
+          <h3 className="text-[11px] font-semibold text-text-secondary uppercase">Phase status distribution</h3>
+          <table className="text-[11px] w-full border-collapse" data-testid="phase-status-table">
+            <thead>
+              <tr className="text-left text-text-secondary border-b border-border">
+                <th className="py-1 pr-3">Phase</th>
+                <th className="py-1 pr-3">Total</th>
+                <th className="py-1 pr-3">
+                  <GlossaryTooltip term="ok" glossary={glossary}>
+                    Ok
+                  </GlossaryTooltip>
+                </th>
+                <th className="py-1 pr-3">
+                  <GlossaryTooltip term="failed" glossary={glossary}>
+                    Failed
+                  </GlossaryTooltip>
+                </th>
+                <th className="py-1 pr-3">
+                  <GlossaryTooltip term="blocked" glossary={glossary}>
+                    Blocked
+                  </GlossaryTooltip>
+                </th>
+                <th className="py-1 pr-3">
+                  <GlossaryTooltip term="skipped" glossary={glossary}>
+                    Skipped
+                  </GlossaryTooltip>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {phaseStatusRows(agentStats).map((row) => (
+                <tr key={row.phase} data-testid={`phase-status-row-${row.phase}`} className="border-b border-border">
+                  <td className="py-1 pr-3">{row.phase}</td>
+                  <td className="py-1 pr-3 tabular-nums">{row.total}</td>
+                  <td className="py-1 pr-3 tabular-nums">{row.ok}</td>
+                  <td className="py-1 pr-3 tabular-nums">{row.failed}</td>
+                  <td className="py-1 pr-3 tabular-nums">{row.blocked}</td>
+                  <td className="py-1 pr-3 tabular-nums">{row.skipped}</td>
+                </tr>
+              ))}
+              {Object.keys(agentStats.phase_status_distribution).length === 0 && (
+                <tr>
+                  <td className="py-1 pr-3 text-text-secondary" colSpan={6}>
+                    No phase data
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="flex flex-col gap-2">
           <h3 className="text-[11px] font-semibold text-text-secondary uppercase">Slow runs</h3>
           <table className="text-[11px] w-full border-collapse" data-testid="slow-runs-table">
             <thead>
@@ -259,6 +333,94 @@ export function StatsView() {
             </tbody>
           </table>
         </div>
+
+        {agentStats.outliers.duration_s.length > 0 || agentStats.outliers.cost_proxy_score.length > 0 ? (
+          <>
+            {agentStats.outliers.duration_s.length > 0 && (
+              <div className="flex flex-col gap-2">
+                <h3 className="text-[11px] font-semibold text-text-secondary uppercase">Duration outliers (by tier)</h3>
+                <table className="text-[11px] w-full border-collapse" data-testid="duration-outliers-table">
+                  <thead>
+                    <tr className="text-left text-text-secondary border-b border-border">
+                      <th className="py-1 pr-3">Run</th>
+                      <th className="py-1 pr-3">Tier</th>
+                      <th className="py-1 pr-3">Duration (s)</th>
+                      <th className="py-1 pr-3">Median</th>
+                      <th className="py-1 pr-3">Ratio</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {agentStats.outliers.duration_s.map((o) => (
+                      <tr
+                        key={o.run_id}
+                        data-testid={`duration-outlier-row-${o.run_id}`}
+                        className="border-b border-border"
+                      >
+                        <td className="py-1 pr-3">{o.run_id}</td>
+                        <td className="py-1 pr-3">
+                          <GlossaryTooltip term={o.tier} glossary={glossary}>
+                            {o.tier}
+                          </GlossaryTooltip>
+                        </td>
+                        <td className="py-1 pr-3 tabular-nums">{o.duration_s}</td>
+                        <td className="py-1 pr-3 tabular-nums">{o.median}</td>
+                        <td className="py-1 pr-3 tabular-nums">{`${o.ratio}x`}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+            {agentStats.outliers.cost_proxy_score.length > 0 && (
+              <div className="flex flex-col gap-2">
+                <h3 className="text-[11px] font-semibold text-text-secondary uppercase">
+                  Cost-proxy-score outliers (by phase)
+                </h3>
+                <table className="text-[11px] w-full border-collapse" data-testid="cost-outliers-table">
+                  <thead>
+                    <tr className="text-left text-text-secondary border-b border-border">
+                      <th className="py-1 pr-3">Run</th>
+                      <th className="py-1 pr-3">Seq</th>
+                      <th className="py-1 pr-3">Phase</th>
+                      <th className="py-1 pr-3">Agent</th>
+                      <th className="py-1 pr-3">Cost Proxy Score</th>
+                      <th className="py-1 pr-3">Median</th>
+                      <th className="py-1 pr-3">Ratio</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {agentStats.outliers.cost_proxy_score.map((o) => (
+                      <tr
+                        key={`${o.run_id}-${o.seq ?? 'none'}`}
+                        data-testid={`cost-outlier-row-${o.run_id}-${o.seq ?? 'none'}`}
+                        className="border-b border-border"
+                      >
+                        <td className="py-1 pr-3">{o.run_id}</td>
+                        <td className="py-1 pr-3 tabular-nums">{o.seq ?? '—'}</td>
+                        <td className="py-1 pr-3">{o.phase}</td>
+                        <td className="py-1 pr-3">
+                          <GlossaryTooltip term={o.agent} glossary={glossary}>
+                            {o.agent}
+                          </GlossaryTooltip>
+                        </td>
+                        <td className="py-1 pr-3 tabular-nums">{o.cost_proxy_score}</td>
+                        <td className="py-1 pr-3 tabular-nums">{o.median}</td>
+                        <td className="py-1 pr-3 tabular-nums">{`${o.ratio}x`}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </>
+        ) : (
+          <div className="flex flex-col gap-2">
+            <h3 className="text-[11px] font-semibold text-text-secondary uppercase">Outliers</h3>
+            <p className="text-text-secondary text-[11px]" data-testid="no-outliers-state">
+              No outliers
+            </p>
+          </div>
+        )}
       </section>
 
       <section data-testid="stats-section-ticket-corpus" className="flex flex-col gap-4">

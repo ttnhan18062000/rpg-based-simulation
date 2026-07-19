@@ -63,8 +63,10 @@ The index at `agent-monitoring/retro/index.md` is updated automatically.
 | **Tag Breakdown — Process/Skill-signal** | Only shown when at least one run resolves to a registered Process/Skill-signal tag. Deliberately asymmetric: only the `security` tag has a real gate to cross-reference today (`Security-Review` phase event or `SECURITY_BLOCKED` final_status, built by `TCK-20260705-WORKFLOW-SECURITY-GATE`) — its row shows a computed gate-hit count. `api-design`, `debugging`, and `performance` show `N/A — no gate implemented` in the same column, because no such gate exists in the orchestration code today, not because of a data gap. This is not a promise that symmetric gates are planned. |
 | **Tier Distribution** | Are hotfix tickets actually taking a fast path? High hotfix gate-fail rate = wrong tier. A tier's DONE rate is computed excluding EPIC_SCOPED runs (shown in a separate Scoped column) — EPIC_SCOPED is a correct terminal state for scope-only epics, not a failure, and inflating the denominator with it previously understated epic tier health (44% vs. the real 79%). |
 | **Agent Status Distribution** | High `failed` or `blocked` on specific agents → prompt problem. |
+| **Phase Status Distribution** | A per-phase `ok`/`failed`/`blocked`/`skipped` breakdown, computed after folding casing variants (`Verify`/`verify`/`VERIFY` etc.) into one canonical bucket per phase (`TCK-20260719-PHASE-AGENT-CASE-FOLD`) — the accurate per-phase failure rate this table shows was previously undercounted when casing fragmentation split one logical phase across 2-3 separate buckets. `tools/agent-monitoring/validate.py`'s drift report deliberately still reports casing variants as separate entries — that's a data-integrity check, distinct from this table's read-time normalization for aggregation. |
 | **Summary Quality** | Empty-summary count is scoped to current-schema events only (agent field set); pre-normalization legacy events (agent is null) never had a summary field and are reported separately as "Legacy-format records," not as a prompt-quality issue. Truncation count still covers all events (current + legacy). |
-| **Slow Runs** | > 30 min runs — usually Review or Implement phase. Consider splitting or simplifying scope. |
+| **Slow Runs** | > 30 min runs (fixed threshold) — usually Review or Implement phase. Consider splitting or simplifying scope. |
+| **Outliers** | Conditionally rendered — only appears when at least one value exceeds 3x its group's median (`duration_s` grouped by tier, `cost_proxy_score` grouped by normalized phase). A *relative* signal, distinct from Slow Runs' fixed 30-minute threshold: a run can be an Outlier without being a Slow Run (fast overall, but far from its tier's norm) and vice versa. Flags a value as worth a look, not a claim about *why* it's high — investigate before assuming (`TCK-20260719-RETRO-OUTLIER-FLAGS`). |
 
 ---
 
@@ -188,6 +190,7 @@ make agent-monitoring-retro          # generate current-week retro report
 make agent-monitoring-validate       # cross-check integrity
 make agent-monitoring-query          # open interactive query (pass ARGS="...")
 make agent-monitoring-epic-staleness # report open epics with no recent child-ticket activity
+make agent-monitoring-weight-check   # required before any cost_proxy.py weight change (pass ARGS='--candidate-weights "{...}"')
 ```
 
 ---

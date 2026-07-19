@@ -62,9 +62,10 @@ never a raw dict at the route boundary.
 `tag_breakdown_skill: Dict[str, SkillTagStats]`,
 `tier_distribution: Dict[str, TierDistributionStats]`,
 `agent_status_distribution: Dict[str, Dict[str, int]]`,
+`phase_status_distribution: Dict[str, Dict[str, int]]`,
 `spend_proxy_by_phase`/`spend_proxy_by_agent: Dict[str, SpendProxyStats]`,
-`summary_quality: SummaryQualityStats`, `slow_runs: List[SlowRunEntry]`) is a
-field-for-field mirror of
+`summary_quality: SummaryQualityStats`, `slow_runs: List[SlowRunEntry]`,
+`outliers: OutlierStats`) is a field-for-field mirror of
 `tools/agent-monitoring/generate_retro.py::compute_retro_metrics()`'s return
 dict — the route computes nothing of its own, it only wraps that function's
 output in typed models. A literal `None` key in `gate_failure_breakdown`
@@ -72,6 +73,23 @@ output in typed models. A literal `None` key in `gate_failure_breakdown`
 sanitized to the string `"unknown"` at this API boundary only —
 `compute_retro_metrics()` itself is untouched, preserving its
 byte-identical-CLI-output guarantee.
+
+`phase_status_distribution` has the identical `{phase: {ok, failed, blocked,
+skipped}}` shape as `agent_status_distribution` (open `Dict[str, int]` inner
+type, not a fixed-field submodel — the status key set is whatever literal
+strings appear in `events.jsonl`, not guaranteed to be exactly those four).
+`OutlierStats` (`duration_s: List[DurationOutlierEntry]`,
+`cost_proxy_score: List[CostProxyOutlierEntry]`) is a new submodel pair:
+`DurationOutlierEntry` (`run_id`, `tier`, `duration_s`, `median`, `ratio`) and
+`CostProxyOutlierEntry` (`run_id`, `seq: Optional[int]`, `phase`, `agent`,
+`cost_proxy_score`, `median`, `ratio`) mirror
+`compute_retro_metrics()`'s `outliers["duration_s"]`/`outliers["cost_proxy_score"]`
+list-of-dicts exactly. `CostProxyOutlierEntry.seq` is nullable because
+`generate_retro.py` builds it via `item.get("seq")` with no fallback — legacy
+events without a `seq` produce a real `None`, same nullability class as
+`gate_failure_breakdown`'s `None`-key sanitization above (though `seq` needs
+no sanitization, since `None` is a valid JSON field value, just not a valid
+JSON object key).
 
 `TicketCorpusStats` (`scanned_files`, `included_tickets`,
 `skipped: Dict[str, int]`, `velocity: VelocityStats`,
@@ -321,12 +339,19 @@ shows a value that at least one matching ticket actually has.
 
 ## Known Limitation
 
-`RawToolCall` has no `phase` or `agent` field at all — this is a genuine gap
-in the type, not a nullable field. Live (in-progress) tool-call rows
-therefore render an unconditional "phase unknown — run still in progress"
-caption in `ReplayTimelineView.tsx` rather than any derived or guessed value.
-Tracked separately as `MONITORING_INSTRUMENTATION_GAP`; not addressed by this
-doc or the tickets it describes.
+`RawToolCall` still has no `phase` or `agent` field at all — this remains a
+genuine gap in the type, not a nullable field, confirmed unchanged as of
+2026-07-19. Live (in-progress) tool-call rows therefore still render an
+unconditional "phase unknown — run still in progress" caption in
+`ReplayTimelineView.tsx` rather than any derived or guessed value. **The
+source data this type would need now exists**: `TCK-20260719-LIVE-PHASE-AGENT-LABEL`
+added nullable `phase`/`agent` fields to the raw `agent-monitoring/tools.jsonl`
+records themselves (populated for workflow runs after 2026-07-19) — but that
+ticket deliberately stopped at the data-production boundary and never touched
+`models.py`/`ingest.py`/`ReplayTimelineView.tsx`. Wiring `RawToolCall` and its
+consumers to the new fields remains a real, identified, unticketed follow-up —
+see `docs/plans/archive/agent_ops_dashboard/idea_agent_monitoring_live_phase_label.md`'s
+own Archived note.
 
 ## Related
 

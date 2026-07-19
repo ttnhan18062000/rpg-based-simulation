@@ -26,8 +26,10 @@ and backend-owned glossary tooltips
 ([`proposal_glossary_tooltips.md`](proposal_glossary_tooltips.md) /
 [`proposal_agent_glossary.md`](proposal_agent_glossary.md), archived — shipped). This document is
 the historical design reference. The companion idea
-[`../../agent_ops_dashboard/idea_agent_monitoring_live_phase_label.md`](../../agent_ops_dashboard/idea_agent_monitoring_live_phase_label.md)
-remains genuinely unimplemented and was deliberately **not** archived alongside this one.
+[`idea_agent_monitoring_live_phase_label.md`](idea_agent_monitoring_live_phase_label.md)
+was **partially shipped** (2026-07-19, `TCK-20260719-LIVE-PHASE-AGENT-LABEL`) — the underlying data
+now exists, but the dashboard-consumption half that doc's own idea was ultimately for remains a
+real, unticketed follow-up; see that doc's own Archived note for the precise split.
 
 > **Maturity: SHIPPED.** Implemented by `TCK-20260716-AGENTOPS-DASHBOARD-BACKEND`,
 > `TCK-20260716-AGENTOPS-ACTIVITY-GANTT`, `TCK-20260716-AGENTOPS-TICKETS-VIEW`,
@@ -35,9 +37,9 @@ remains genuinely unimplemented and was deliberately **not** archived alongside 
 > `TCK-20260717-AGENTOPS-DASHBOARD-DOCS`. Full investigation trail, exact API/data schemas, and UX
 > detail remain archived in `experiments/agent_ops_dashboard/` (`PROPOSAL.md` + 5 companion
 > documents) for historical reference. See companion idea
-> [`../../agent_ops_dashboard/idea_agent_monitoring_live_phase_label.md`](../../agent_ops_dashboard/idea_agent_monitoring_live_phase_label.md)
-> (still unimplemented, not archived) for the related, deliberately-independent instrumentation gap
-> this investigation also found.
+> [`idea_agent_monitoring_live_phase_label.md`](idea_agent_monitoring_live_phase_label.md)
+> (partially shipped, see that doc's own Archived note) for the related, deliberately-independent
+> instrumentation gap this investigation also found.
 
 ## Problem
 
@@ -154,14 +156,17 @@ being put to the user:
 
 ## Relationship to Planned Tickets
 
-None yet — this is the not-yet-scheduled origin doc for whatever ticket(s) this becomes. The
-companion idea [`idea_agent_monitoring_live_phase_label.md`](idea_agent_monitoring_live_phase_label.md)
-is a related but independent sibling, not a dependency in either direction. Real, deferred overlap
-worth checking before scoping a ticket: `docs/guides/ticket_reporting.md`'s "pillars" framing for
-ticket-corpus reporting explicitly lists ticket velocity/throughput and tier/type/priority
-distribution as **not built** — this dashboard's Tickets view covers those implicitly via a
-filterable table over the same underlying data, but does not attempt the full reporting-pillar
-treatment. Not resolved here.
+Superseded by the Archived note at the top of this document — see there for the full list of
+tickets that shipped this doc's scope. Preserved below as the as-written, at-the-time (2026-07-16)
+framing, for historical accuracy: at that point this was "the not-yet-scheduled origin doc for
+whatever ticket(s) this becomes," and the companion idea
+[`idea_agent_monitoring_live_phase_label.md`](idea_agent_monitoring_live_phase_label.md) was
+correctly identified as a related but independent sibling, not a dependency in either direction —
+both since confirmed true by how each actually shipped. The one real, deferred overlap flagged at
+the time — `docs/guides/ticket_reporting.md`'s "pillars" framing listing ticket velocity/throughput
+and tier/type/priority distribution as **not built** — was later resolved by
+`TCK-20260718-AGENTOPS-STATS-BOARD-EPIC` (archived — shipped, see
+[`proposal_stats_board.md`](proposal_stats_board.md)), not by this doc's own scope.
 
 ## Open Questions
 

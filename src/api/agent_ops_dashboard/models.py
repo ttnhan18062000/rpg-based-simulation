@@ -161,6 +161,29 @@ class SlowRunEntry(BaseModel):
     final_status: str
 
 
+class DurationOutlierEntry(BaseModel):
+    run_id: str
+    tier: str
+    duration_s: int
+    median: float
+    ratio: float
+
+
+class CostProxyOutlierEntry(BaseModel):
+    run_id: str
+    seq: Optional[int] = None
+    phase: str
+    agent: str
+    cost_proxy_score: float
+    median: float
+    ratio: float
+
+
+class OutlierStats(BaseModel):
+    duration_s: List[DurationOutlierEntry]
+    cost_proxy_score: List[CostProxyOutlierEntry]
+
+
 class AgentMonitoringStats(BaseModel):
     run_summary: RunSummaryStats
     gate_failure_breakdown: Dict[str, int]
@@ -169,10 +192,12 @@ class AgentMonitoringStats(BaseModel):
     tag_breakdown_skill: Dict[str, SkillTagStats]
     tier_distribution: Dict[str, TierDistributionStats]
     agent_status_distribution: Dict[str, Dict[str, int]]
+    phase_status_distribution: Dict[str, Dict[str, int]]
     spend_proxy_by_phase: Dict[str, SpendProxyStats]
     spend_proxy_by_agent: Dict[str, SpendProxyStats]
     summary_quality: SummaryQualityStats
     slow_runs: List[SlowRunEntry]
+    outliers: OutlierStats
 
 
 # --- Ticket-corpus statistics (TCK-20260718-TICKET-CORPUS-REPORT) ---

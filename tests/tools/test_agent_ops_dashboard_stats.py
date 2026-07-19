@@ -167,6 +167,103 @@ def test_ticket_corpus_stats_empty_corpus_does_not_crash(tmp_path, monkeypatch):
     assert data["included_tickets"] == 0
 
 
+def test_stats_endpoint_includes_phase_status_distribution(tmp_path):
+    _init_repo_skeleton(tmp_path)
+    runs = [_BASE_RUN]
+    events = [
+        {"run_id": "TCK-FAKE", "seq": 1, "phase": "Investigate", "agent": "investigator",
+         "status": "ok", "summary": "found stuff"},
+        {"run_id": "TCK-FAKE", "seq": 2, "phase": "investigate", "agent": "investigator",
+         "status": "failed", "summary": "found stuff"},
+    ]
+    _write_runs(tmp_path, runs)
+    _write_events(tmp_path, events)
+
+    from generate_retro import compute_retro_metrics
+
+    cache = ingest.DashboardCache(repo_root=tmp_path)
+    stats = cache.get_agent_monitoring_stats(all_time=True)
+
+    expected = compute_retro_metrics(runs, events, tickets_root=tmp_path / "tickets")
+    assert stats.phase_status_distribution == expected["phase_status_distribution"]
+    assert stats.phase_status_distribution == {"Investigate": {"ok": 1, "failed": 1}}
+
+
+def test_stats_endpoint_includes_outliers_duration_and_cost_proxy(tmp_path):
+    _init_repo_skeleton(tmp_path)
+    runs = [
+        dict(_BASE_RUN, run_id=f"TCK-STD-{i}", tier="standard", duration_s=1000)
+        for i in range(3)
+    ] + [dict(_BASE_RUN, run_id="TCK-STD-OUTLIER", tier="standard", duration_s=5000)]
+    events = (
+        [
+            {"run_id": "TCK-FAKE", "seq": i, "phase": "Investigate", "agent": "investigator",
+             "status": "ok", "summary": "found stuff", "cost_proxy_score": 100.0}
+            for i in range(3)
+        ]
+        + [
+            {"run_id": "TCK-FAKE", "seq": 100, "phase": "Investigate", "agent": "investigator",
+             "status": "ok", "summary": "found stuff", "cost_proxy_score": 1000.0}
+        ]
+    )
+    _write_runs(tmp_path, runs)
+    _write_events(tmp_path, events)
+
+    cache = ingest.DashboardCache(repo_root=tmp_path)
+    stats = cache.get_agent_monitoring_stats(all_time=True)
+
+    assert len(stats.outliers.duration_s) == 1
+    duration_outlier = stats.outliers.duration_s[0]
+    assert duration_outlier.run_id == "TCK-STD-OUTLIER"
+    assert duration_outlier.tier == "standard"
+    assert duration_outlier.duration_s == 5000
+    assert duration_outlier.median == 1000.0
+    assert duration_outlier.ratio == 5.0
+
+    assert len(stats.outliers.cost_proxy_score) == 1
+    cost_outlier = stats.outliers.cost_proxy_score[0]
+    assert cost_outlier.run_id == "TCK-FAKE"
+    assert cost_outlier.seq == 100
+    assert cost_outlier.phase == "Investigate"
+    assert cost_outlier.agent == "investigator"
+    assert cost_outlier.cost_proxy_score == 1000.0
+
+
+def test_stats_endpoint_outliers_seq_field_tolerates_none(tmp_path):
+    _init_repo_skeleton(tmp_path)
+    runs = [_BASE_RUN]
+    events = [
+        {"run_id": "TCK-FAKE", "phase": "Investigate", "agent": "investigator",
+         "status": "ok", "summary": "found stuff", "cost_proxy_score": 100.0}
+        for _ in range(3)
+    ] + [
+        {"run_id": "TCK-FAKE", "phase": "Investigate", "agent": "investigator",
+         "status": "ok", "summary": "found stuff", "cost_proxy_score": 1000.0}
+    ]
+    _write_runs(tmp_path, runs)
+    _write_events(tmp_path, events)
+
+    cache = ingest.DashboardCache(repo_root=tmp_path)
+    # Must not raise ValidationError.
+    stats = cache.get_agent_monitoring_stats(all_time=True)
+
+    assert len(stats.outliers.cost_proxy_score) == 1
+    assert stats.outliers.cost_proxy_score[0].seq is None
+
+
+def test_stats_endpoint_zero_outliers_returns_empty_lists_not_missing_keys(tmp_path):
+    _init_repo_skeleton(tmp_path)
+    _write_runs(tmp_path, [])
+    _write_events(tmp_path, [])
+
+    cache = ingest.DashboardCache(repo_root=tmp_path)
+    stats = cache.get_agent_monitoring_stats(all_time=True)
+
+    assert stats.outliers.duration_s == []
+    assert stats.outliers.cost_proxy_score == []
+    assert stats.phase_status_distribution == {}
+
+
 def test_stats_endpoint_uses_real_compute_retro_metrics_not_reimplemented():
     """Source-text anti-drift guard: ingest.py must import compute_retro_metrics from
     generate_retro, never redefine its own copy of the computation."""

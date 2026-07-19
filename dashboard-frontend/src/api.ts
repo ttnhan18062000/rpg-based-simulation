@@ -188,6 +188,29 @@ export interface SlowRunEntry {
   final_status: string
 }
 
+export interface DurationOutlierEntry {
+  run_id: string
+  tier: string
+  duration_s: number
+  median: number
+  ratio: number
+}
+
+export interface CostProxyOutlierEntry {
+  run_id: string
+  seq: number | null
+  phase: string
+  agent: string
+  cost_proxy_score: number
+  median: number
+  ratio: number
+}
+
+export interface OutlierStats {
+  duration_s: DurationOutlierEntry[]
+  cost_proxy_score: CostProxyOutlierEntry[]
+}
+
 export interface AgentMonitoringStats {
   run_summary: RunSummaryStats
   gate_failure_breakdown: Record<string, number>
@@ -196,10 +219,12 @@ export interface AgentMonitoringStats {
   tag_breakdown_skill: Record<string, SkillTagStats>
   tier_distribution: Record<string, TierDistributionStats>
   agent_status_distribution: Record<string, Record<string, number>>
+  phase_status_distribution: Record<string, Record<string, number>>
   spend_proxy_by_phase: Record<string, SpendProxyStats>
   spend_proxy_by_agent: Record<string, SpendProxyStats>
   summary_quality: SummaryQualityStats
   slow_runs: SlowRunEntry[]
+  outliers: OutlierStats
 }
 
 export interface VelocityStats {

@@ -53,11 +53,14 @@ import layer_registry  # noqa: E402  (load_registry() for layer note-field reuse
 from src.api.agent_ops_dashboard.models import (
     AgentMonitoringStats,
     ArtifactCompletenessStats,
+    CostProxyOutlierEntry,
+    DurationOutlierEntry,
     FileTouch,
     GlossaryEntry,
     GlossaryResponse,
     HealthStatus,
     IncompleteArtifactEntry,
+    OutlierStats,
     RawToolCall,
     RunDetail,
     RunMatchSummary,
@@ -767,6 +770,7 @@ class DashboardCache:
                     for tier, row in metrics["tier_distribution"].items()
                 },
                 agent_status_distribution=metrics["agent_status_distribution"],
+                phase_status_distribution=metrics["phase_status_distribution"],
                 spend_proxy_by_phase={
                     phase: SpendProxyStats(**row)
                     for phase, row in metrics["spend_proxy_by_phase"].items()
@@ -777,6 +781,14 @@ class DashboardCache:
                 },
                 summary_quality=SummaryQualityStats(**metrics["summary_quality"]),
                 slow_runs=[SlowRunEntry(**r) for r in metrics["slow_runs"]],
+                outliers=OutlierStats(
+                    duration_s=[
+                        DurationOutlierEntry(**d) for d in metrics["outliers"]["duration_s"]
+                    ],
+                    cost_proxy_score=[
+                        CostProxyOutlierEntry(**d) for d in metrics["outliers"]["cost_proxy_score"]
+                    ],
+                ),
             )
 
     def get_ticket_corpus_stats(self) -> TicketCorpusStats:

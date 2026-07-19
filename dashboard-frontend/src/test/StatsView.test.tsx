@@ -17,10 +17,28 @@ function makeAgentStats(overrides: Partial<AgentMonitoringStats> = {}): AgentMon
       implementer: { ok: 40, failed: 1 },
       'ticket-scoper': { ok: 42 },
     },
+    phase_status_distribution: {
+      Investigate: { ok: 40, failed: 2 },
+      Implement: { ok: 42 },
+    },
     spend_proxy_by_phase: {},
     spend_proxy_by_agent: {},
     summary_quality: { empty_summaries_current: 0, legacy_event_count: 5, long_summaries: 1 },
     slow_runs: [{ run_id: 'TCK-slow-1', duration_s: 9000, final_status: 'DONE' }],
+    outliers: {
+      duration_s: [{ run_id: 'TCK-dur-outlier', tier: 'standard', duration_s: 5000, median: 1000, ratio: 5 }],
+      cost_proxy_score: [
+        {
+          run_id: 'TCK-cost-outlier',
+          seq: 3,
+          phase: 'Investigate',
+          agent: 'investigator',
+          cost_proxy_score: 1000,
+          median: 100,
+          ratio: 10,
+        },
+      ],
+    },
     ...overrides,
   }
 }
@@ -136,7 +154,9 @@ describe('StatsView', () => {
         reason_code_breakdown: {},
         tier_distribution: {},
         agent_status_distribution: {},
+        phase_status_distribution: {},
         slow_runs: [],
+        outliers: { duration_s: [], cost_proxy_score: [] },
       }),
       makeTicketStats({
         scanned_files: 0,
@@ -153,6 +173,8 @@ describe('StatsView', () => {
     expect(screen.getAllByTestId('bar-chart-empty').length).toBeGreaterThan(0)
     expect(screen.getByTestId('grouped-bar-chart-empty')).toBeInTheDocument()
     expect(screen.getByText('No slow runs')).toBeInTheDocument()
+    expect(screen.getByText('No phase data')).toBeInTheDocument()
+    expect(screen.getByTestId('no-outliers-state')).toBeInTheDocument()
     expect(screen.getByTestId('stat-tile-Artifact completeness')).toHaveTextContent('0%')
   })
 
@@ -201,6 +223,57 @@ describe('StatsView', () => {
     // No glossary entry for "DONE" in this test's glossary fixture — the cell must still render
     // the raw value, unwrapped, never crash.
     expect(screen.getByTestId('slow-run-row-TCK-slow-1')).toHaveTextContent('DONE')
+  })
+
+  it('renders a Phase Status Distribution table with ok/failed/blocked/skipped columns', async () => {
+    mockFetch(makeAgentStats(), makeTicketStats())
+    render(<StatsView />)
+
+    const table = await screen.findByTestId('phase-status-table')
+    expect(table).toHaveTextContent('Phase')
+    expect(table).toHaveTextContent('Ok')
+    expect(table).toHaveTextContent('Failed')
+    expect(table).toHaveTextContent('Blocked')
+    expect(table).toHaveTextContent('Skipped')
+    expect(screen.getByTestId('phase-status-row-Investigate')).toBeInTheDocument()
+    expect(screen.getByTestId('phase-status-row-Implement')).toBeInTheDocument()
+  })
+
+  it('renders Duration and Cost-Proxy-Score outlier tables when outliers are present', async () => {
+    mockFetch(makeAgentStats(), makeTicketStats())
+    render(<StatsView />)
+
+    await screen.findByTestId('duration-outliers-table')
+    expect(screen.getByTestId('duration-outlier-row-TCK-dur-outlier')).toBeInTheDocument()
+    expect(screen.getByTestId('cost-outliers-table')).toBeInTheDocument()
+    expect(screen.getByTestId('cost-outlier-row-TCK-cost-outlier-3')).toBeInTheDocument()
+  })
+
+  it('renders a graceful "no outliers" state when both outlier lists are empty, not a broken table', async () => {
+    mockFetch(
+      makeAgentStats({ outliers: { duration_s: [], cost_proxy_score: [] } }),
+      makeTicketStats(),
+    )
+    render(<StatsView />)
+
+    await screen.findByTestId('stats-section-agent-monitoring')
+    expect(screen.getByTestId('no-outliers-state')).toBeInTheDocument()
+    expect(screen.queryByTestId('duration-outliers-table')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('cost-outliers-table')).not.toBeInTheDocument()
+  })
+
+  it('wraps tier and agent values in outlier tables with GlossaryTooltip, matching existing Slow Runs / Top Agents cell-wrapping pattern', async () => {
+    mockFetch(makeAgentStats(), makeTicketStats(), {
+      standard: { term: 'standard', category: 'tier', description: 'Full 9-phase pipeline.' },
+      investigator: { term: 'investigator', category: 'agent', description: 'Digs into affected code.' },
+    })
+    render(<StatsView />)
+
+    const durationRow = await screen.findByTestId('duration-outlier-row-TCK-dur-outlier')
+    expect(durationRow.querySelector('[data-testid="glossary-hint-icon"]')).not.toBeNull()
+
+    const costRow = await screen.findByTestId('cost-outlier-row-TCK-cost-outlier-3')
+    expect(costRow.querySelector('[data-testid="glossary-hint-icon"]')).not.toBeNull()
   })
 
   it('never hardcodes a glossary description string in its own source — always sourced from the fetched glossary', () => {

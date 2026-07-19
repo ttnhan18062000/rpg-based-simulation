@@ -58,10 +58,12 @@ function mockStatsFetch() {
     tag_breakdown_skill: {},
     tier_distribution: {},
     agent_status_distribution: {},
+    phase_status_distribution: {},
     spend_proxy_by_phase: {},
     spend_proxy_by_agent: {},
     summary_quality: { empty_summaries_current: 0, legacy_event_count: 0, long_summaries: 0 },
     slow_runs: [],
+    outliers: { duration_s: [], cost_proxy_score: [] },
   }
   const ticketBody = {
     scanned_files: 1,

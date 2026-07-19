@@ -6,12 +6,12 @@
 
 | Metric | Value |
 |---|---|
-| Total runs | 677 |
-| Completed (DONE) | 582 (85%) |
+| Total runs | 680 |
+| Completed (DONE) | 585 (86%) |
 | Gate failures | 73 |
-| Avg duration | 116 min |
+| Avg duration | 114 min |
 | Avg agents per run | 6.1 |
-| Total agent calls | 3435 |
+| Total agent calls | 3458 |
 
 ## Gate Failure Breakdown
 
@@ -53,7 +53,7 @@
 | faction | 7 | 100% | 0 |
 | feature-flags | 4 | 100% | 0 |
 | information | 5 | 80% | 1 |
-| observability | 19 | 89% | 2 |
+| observability | 20 | 90% | 2 |
 | resource-registry | 4 | 75% | 1 |
 | self-model | 6 | 66% | 2 |
 | simulation-quality | 55 | 90% | 5 |
@@ -77,9 +77,9 @@
 | epic | 89 | 20 | 56 | 81% |
 | epic-batch | 1 | 0 | 1 | 100% |
 | epic_batch | 1 | 1 | 0 | 0% |
-| hotfix | 94 | 0 | 92 | 97% |
+| hotfix | 95 | 0 | 93 | 97% |
 | n/a | 12 | 0 | 12 | 100% |
-| standard | 459 | 0 | 406 | 88% |
+| standard | 461 | 0 | 408 | 88% |
 | unknown | 21 | 0 | 15 | 71% |
 
 ## Agent Status Distribution
@@ -88,9 +88,9 @@
 |---|---|---|---|---|---|
 | ? | 258 | 0 | 0 | 0 | 0 |
 | anchor-updater | 1 | 1 | 0 | 0 | 0 |
-| architecture-reviewer | 375 | 280 | 47 | 0 | 48 |
+| architecture-reviewer | 379 | 284 | 47 | 0 | 48 |
 | claude | 26 | 25 | 0 | 1 | 0 |
-| claude-fork-direct | 9 | 9 | 0 | 0 | 0 |
+| claude-fork-direct | 12 | 12 | 0 | 0 | 0 |
 | claude-sonnet | 9 | 9 | 0 | 0 | 0 |
 | claude-sonnet-4-6 | 16 | 16 | 0 | 0 | 0 |
 | concern-investigator | 1 | 1 | 0 | 0 | 0 |
@@ -99,7 +99,7 @@
 | doc-syncer | 1 | 1 | 0 | 0 | 0 |
 | doc-writer | 2 | 2 | 0 | 0 | 0 |
 | dod-verifier | 1 | 1 | 0 | 0 | 0 |
-| done-checker | 280 | 239 | 41 | 0 | 0 |
+| done-checker | 282 | 241 | 41 | 0 | 0 |
 | drift-classifier | 1 | 1 | 0 | 0 | 0 |
 | epic-closure | 1 | 1 | 0 | 0 | 0 |
 | epic-coordinator | 7 | 7 | 0 | 0 | 0 |
@@ -107,13 +107,13 @@
 | epic-loop | 1 | 1 | 0 | 0 | 0 |
 | epic-reporter | 1 | 1 | 0 | 0 | 0 |
 | epic-runner | 1 | 1 | 0 | 0 | 0 |
-| finalizer | 247 | 247 | 0 | 0 | 0 |
+| finalizer | 250 | 250 | 0 | 0 | 0 |
 | hotfix-agent | 5 | 5 | 0 | 0 | 0 |
 | implement | 1 | 1 | 0 | 0 | 0 |
 | implement-epic | 19 | 19 | 0 | 0 | 0 |
 | implement-ticket | 337 | 325 | 7 | 0 | 0 |
 | implement-ticket-orchestrator | 8 | 8 | 0 | 0 | 0 |
-| implementer | 341 | 338 | 2 | 0 | 1 |
+| implementer | 342 | 339 | 2 | 0 | 1 |
 | investigate:C1 | 10 | 9 | 1 | 0 | 0 |
 | investigate:C2 | 8 | 7 | 1 | 0 | 0 |
 | investigate:C3 | 8 | 7 | 1 | 0 | 0 |
@@ -121,7 +121,7 @@
 | investigate:C5 | 6 | 5 | 1 | 0 | 0 |
 | investigate:C6 | 1 | 1 | 0 | 0 | 0 |
 | investigate:direct | 1 | 1 | 0 | 0 | 0 |
-| investigator | 254 | 222 | 0 | 1 | 31 |
+| investigator | 256 | 224 | 0 | 1 | 31 |
 | link-epic | 4 | 4 | 0 | 0 | 0 |
 | main | 6 | 6 | 0 | 0 | 0 |
 | manual-hotfix | 3 | 3 | 0 | 0 | 0 |
@@ -129,19 +129,19 @@
 | orchestrator-audit | 1 | 1 | 0 | 0 | 0 |
 | orchestrator-fix | 3 | 3 | 0 | 0 | 0 |
 | parity-checker | 3 | 3 | 0 | 0 | 0 |
-| parity-updater | 235 | 188 | 0 | 0 | 47 |
+| parity-updater | 237 | 190 | 0 | 0 | 47 |
 | plan-expander | 1 | 1 | 0 | 0 | 0 |
 | plan-fixer | 8 | 8 | 0 | 0 | 0 |
-| planner | 255 | 217 | 0 | 7 | 31 |
+| planner | 257 | 219 | 0 | 7 | 31 |
 | planner+implementer | 1 | 1 | 0 | 0 | 0 |
 | reviewer | 4 | 4 | 0 | 0 | 0 |
 | scope-agent | 9 | 9 | 0 | 0 | 0 |
 | scoper | 4 | 4 | 0 | 0 | 0 |
 | structure | 10 | 10 | 0 | 0 | 0 |
 | test-runner | 2 | 2 | 0 | 0 | 0 |
-| test-scoper | 249 | 247 | 0 | 1 | 1 |
+| test-scoper | 251 | 249 | 0 | 1 | 1 |
 | tester | 4 | 4 | 0 | 0 | 0 |
-| ticket-scoper | 317 | 316 | 1 | 0 | 0 |
+| ticket-scoper | 319 | 318 | 1 | 0 | 0 |
 | verifier | 2 | 2 | 0 | 0 | 0 |
 | workflow | 2 | 2 | 0 | 0 | 0 |
 
@@ -150,32 +150,32 @@
 | Phase | Calls | ok | failed | blocked | skipped |
 |---|---|---|---|---|---|
 | ? | 177 | 0 | 0 | 0 | 0 |
-| Architecture-Verify | 93 | 76 | 1 | 0 | 16 |
+| Architecture-Verify | 95 | 78 | 1 | 0 | 16 |
 | Clarification | 1 | 0 | 0 | 1 | 0 |
 | Classify Drift | 1 | 1 | 0 | 0 | 0 |
 | Comprehend | 11 | 11 | 0 | 0 | 0 |
 | Discover | 3 | 3 | 0 | 0 | 0 |
 | Epic | 1 | 1 | 0 | 0 | 0 |
-| Finalize | 355 | 342 | 0 | 0 | 0 |
-| Implement | 503 | 481 | 7 | 0 | 0 |
+| Finalize | 358 | 345 | 0 | 0 | 0 |
+| Implement | 505 | 483 | 7 | 0 | 0 |
 | Implement+Finalize | 4 | 4 | 0 | 0 | 0 |
-| Investigate | 315 | 278 | 5 | 1 | 31 |
+| Investigate | 317 | 280 | 5 | 1 | 31 |
 | Investigate+Plan+Implement | 1 | 1 | 0 | 0 | 0 |
 | Link | 4 | 4 | 0 | 0 | 0 |
-| Parity | 275 | 222 | 0 | 0 | 48 |
+| Parity | 277 | 224 | 0 | 0 | 48 |
 | Parity Check | 1 | 1 | 0 | 0 | 0 |
-| Plan | 265 | 227 | 0 | 7 | 31 |
+| Plan | 267 | 229 | 0 | 7 | 31 |
 | Plan+Implement | 1 | 1 | 0 | 0 | 0 |
 | Recalibrate | 1 | 1 | 0 | 0 | 0 |
 | Report | 16 | 16 | 0 | 0 | 0 |
-| Review | 297 | 219 | 46 | 0 | 32 |
-| Scope | 334 | 324 | 1 | 0 | 0 |
+| Review | 299 | 221 | 46 | 0 | 32 |
+| Scope | 337 | 327 | 1 | 0 | 0 |
 | Smoke-Test | 1 | 1 | 0 | 0 | 0 |
 | Structure | 11 | 11 | 0 | 0 | 0 |
 | Sync Docs | 1 | 1 | 0 | 0 | 0 |
-| Test | 305 | 293 | 1 | 1 | 1 |
+| Test | 307 | 295 | 1 | 1 | 1 |
 | Update Anchors | 1 | 1 | 0 | 0 | 0 |
-| Verify | 316 | 273 | 42 | 1 | 0 |
+| Verify | 319 | 276 | 42 | 1 | 0 |
 | Write | 44 | 44 | 0 | 0 | 0 |
 | child-ticket-creation | 2 | 2 | 0 | 0 | 0 |
 | context-search | 2 | 2 | 0 | 0 | 0 |
@@ -196,30 +196,31 @@
 
 | Phase | Events scored | Total | Avg |
 |---|---|---|---|
-| Architecture-Verify | 51 | 3748.0 | 73.5 |
-| Finalize | 52 | 19613.2 | 377.2 |
-| Implement | 55 | 79898.8 | 1452.7 |
-| Investigate | 54 | 88900.4 | 1646.3 |
-| Parity | 44 | 3559.0 | 80.9 |
-| Plan | 54 | 2784.7 | 51.6 |
-| Review | 63 | 4541.3 | 72.1 |
-| Scope | 50 | 34845.3 | 696.9 |
-| Test | 54 | 12372.0 | 229.1 |
-| Verify | 72 | 7342.1 | 102.0 |
+| Architecture-Verify | 53 | 3748.0 | 70.7 |
+| Finalize | 55 | 19613.2 | 356.6 |
+| Implement | 57 | 79898.8 | 1401.7 |
+| Investigate | 56 | 88900.4 | 1587.5 |
+| Parity | 46 | 3559.0 | 77.4 |
+| Plan | 56 | 2784.7 | 49.7 |
+| Review | 65 | 4541.3 | 69.9 |
+| Scope | 53 | 35004.5 | 660.5 |
+| Test | 56 | 12372.0 | 220.9 |
+| Verify | 75 | 7342.1 | 97.9 |
 
 ## Spend Proxy — By Agent
 
 | Agent | Events scored | Total | Avg |
 |---|---|---|---|
-| architecture-reviewer | 114 | 8289.3 | 72.7 |
-| done-checker | 72 | 7342.1 | 102.0 |
-| finalizer | 52 | 19613.2 | 377.2 |
-| implementer | 55 | 79898.8 | 1452.7 |
-| investigator | 54 | 88900.4 | 1646.3 |
-| parity-updater | 44 | 3559.0 | 80.9 |
-| planner | 54 | 2784.7 | 51.6 |
-| test-scoper | 54 | 12372.0 | 229.1 |
-| ticket-scoper | 50 | 34845.3 | 696.9 |
+| architecture-reviewer | 118 | 8289.3 | 70.2 |
+| claude-fork-direct | 3 | 0.0 | 0.0 |
+| done-checker | 74 | 7342.1 | 99.2 |
+| finalizer | 55 | 19613.2 | 356.6 |
+| implementer | 56 | 79898.8 | 1426.8 |
+| investigator | 56 | 88900.4 | 1587.5 |
+| parity-updater | 46 | 3559.0 | 77.4 |
+| planner | 56 | 2784.7 | 49.7 |
+| test-scoper | 56 | 12372.0 | 220.9 |
+| ticket-scoper | 52 | 35004.5 | 673.2 |
 
 ## Summary Quality
 
@@ -318,119 +319,122 @@ _Flags a value more than 3x its group's median — a relative visibility signal,
 
 | run_id | tier | duration_s | tier median | ratio |
 |---|---|---|---|---|
-| TCK-20260710-SIMQ-DEPTH-SOCIAL | standard | 49729 | 3254 | 15.3x |
+| TCK-20260710-SIMQ-DEPTH-SOCIAL | standard | 49729 | 3142 | 15.8x |
+| TCK-20260715-SIMQ-ANCHOR-LOAD-SENSITIVITY-SWEEP | standard | 35107 | 3142 | 11.2x |
 | CREATE-TICKETS-DOCS-PLANS-AGENT-OPS-DASHBOARD-PROPOSAL-STATS-BOARD | n/a | 7189 | 661 | 10.9x |
-| TCK-20260715-SIMQ-ANCHOR-LOAD-SENSITIVITY-SWEEP | standard | 35107 | 3254 | 10.8x |
-| TCK-20260714-SIMQ-WEIGHTS-PILLAR-COLLISION | standard | 32485 | 3254 | 10.0x |
-| TCK-20260717-CSS-LAYER-PADDING-FIX | hotfix | 8827 | 900.5 | 9.8x |
-| TCK-20260712-SIMQ-COOPERATION-SOCIAL-STALE-TESTS | hotfix | 8185 | 900.5 | 9.1x |
-| TCK-20260710-SIMQ-COGNITION-REALWORLD-GENERALIZE | standard | 29073 | 3254 | 8.9x |
-| TCK-20260713-SIMQ-ECONOMY-CONTENT-DEPTH | standard | 28991 | 3254 | 8.9x |
-| TCK-20260710-CURRENT-RUN-SIDECAR-BASH | standard | 28516 | 3254 | 8.8x |
-| TCK-20260719-TAG-COLLISION-DEDUP | standard | 25786 | 3254 | 7.9x |
-| TCK-20260708-DUNGEON-URBAN-POPULATION-COLLAPSE | standard | 23793 | 3254 | 7.3x |
-| TCK-20260713-SIMQ-EVAL-PROFILE-BUG | hotfix | 6560 | 900.5 | 7.3x |
+| TCK-20260714-SIMQ-WEIGHTS-PILLAR-COLLISION | standard | 32485 | 3142 | 10.3x |
+| TCK-20260717-CSS-LAYER-PADDING-FIX | hotfix | 8827 | 945 | 9.3x |
+| TCK-20260710-SIMQ-COGNITION-REALWORLD-GENERALIZE | standard | 29073 | 3142 | 9.3x |
+| TCK-20260713-SIMQ-ECONOMY-CONTENT-DEPTH | standard | 28991 | 3142 | 9.2x |
+| TCK-20260710-CURRENT-RUN-SIDECAR-BASH | standard | 28516 | 3142 | 9.1x |
+| TCK-20260712-SIMQ-COOPERATION-SOCIAL-STALE-TESTS | hotfix | 8185 | 945 | 8.7x |
+| TCK-20260719-TAG-COLLISION-DEDUP | standard | 25786 | 3142 | 8.2x |
+| TCK-20260708-DUNGEON-URBAN-POPULATION-COLLAPSE | standard | 23793 | 3142 | 7.6x |
+| TCK-20260713-SIMQ-EVAL-PROFILE-BUG | hotfix | 6560 | 945 | 6.9x |
 | FOLDER-tickets-todos-simq-scoring-improvement | epic | 50386 | 7849.0 | 6.4x |
 | FOLDER-tickets-todos-simq-roadmap-phase2-depth-social | epic | 49832 | 7849.0 | 6.3x |
-| TCK-20260710-SIMQ-CONTRACT-AC-CLOSEOUT | hotfix | 5381 | 900.5 | 6.0x |
+| TCK-20260710-SIMQ-CONTRACT-AC-CLOSEOUT | hotfix | 5381 | 945 | 5.7x |
 | CREATE-TICKETS-DOCS-PLANS-SIMQ-SCORING-IMPROVEMENT-ROADMAP | n/a | 3626 | 661 | 5.5x |
-| TCK-20260710-SIMQ-DEPTH-FACTION | standard | 15661 | 3254 | 4.8x |
-| TCK-20260713-SIMQ-ECONOMY-INTENT-GENERATION-GAP | standard | 14911 | 3254 | 4.6x |
+| TCK-20260710-SIMQ-DEPTH-FACTION | standard | 15661 | 3142 | 5.0x |
+| TCK-20260713-SIMQ-ECONOMY-INTENT-GENERATION-GAP | standard | 14911 | 3142 | 4.7x |
 | EPIC-TCK-20260710-AGENT-BOOKKEEPING-DETERMINISM-EPIC | epic | 32893 | 7849.0 | 4.2x |
-| TCK-20260712-SIMQ-INFORMATION-ROUTING-CLOSURE | standard | 12296 | 3254 | 3.8x |
+| TCK-20260712-SIMQ-INFORMATION-ROUTING-CLOSURE | standard | 12296 | 3142 | 3.9x |
 | FOLDER-tickets-todos-agent-ops-dashboard | epic | 26444 | 7849.0 | 3.4x |
 | FOLDER-tickets-todos-simq-roadmap-phase3-depth-faction-information | epic | 26096 | 7849.0 | 3.3x |
-| TCK-20260716-SIMQ-URBAN-POLITICAL-FULL-PILLAR-SWEEP | standard | 10434 | 3254 | 3.2x |
-| TCK-20260713-SIMQ-COGNITION-LOOPDET-NONDETERMINISM | standard | 10411 | 3254 | 3.2x |
-| TCK-20260710-SIMQ-DEPTH-INFORMATION | standard | 10261 | 3254 | 3.2x |
-| TCK-20260710-SIMQ-ANCHOR-RELIABILITY-VERIFY | standard | 9827 | 3254 | 3.0x |
+| TCK-20260716-SIMQ-URBAN-POLITICAL-FULL-PILLAR-SWEEP | standard | 10434 | 3142 | 3.3x |
+| TCK-20260713-SIMQ-COGNITION-LOOPDET-NONDETERMINISM | standard | 10411 | 3142 | 3.3x |
+| TCK-20260710-SIMQ-DEPTH-INFORMATION | standard | 10261 | 3142 | 3.3x |
+| TCK-20260710-SIMQ-ANCHOR-RELIABILITY-VERIFY | standard | 9827 | 3142 | 3.1x |
 
 ### Cost-proxy-score outliers (by phase)
 
 | run_id | seq | phase | agent | cost_proxy_score | phase median | ratio |
 |---|---|---|---|---|---|---|
-| TCK-20260710-SIMQ-DEPTH-SOCIAL | 2 | Investigate | investigator | 34837.628 | 78.4 | 444.1x |
-| TCK-20260715-SIMQ-ANCHOR-LOAD-SENSITIVITY-SWEEP | 1 | Scope | ticket-scoper | 19056.244 | 51.4 | 370.4x |
-| TCK-20260714-SIMQ-WEIGHTS-PILLAR-COLLISION | 2 | Investigate | investigator | 28601.745 | 78.4 | 364.6x |
-| TCK-20260714-SIMQ-WEIGHTS-PILLAR-COLLISION | 2 | Implement | implementer | 28601.745 | 178.1 | 160.6x |
-| TCK-20260716-SIMQ-URBAN-POLITICAL-NARRATIVE-TOLERANCE | 1 | Scope | ticket-scoper | 6503.344 | 51.4 | 126.4x |
-| TCK-20260714-SIMQ-WEIGHTS-PILLAR-COLLISION | 1 | Scope | ticket-scoper | 5659.732 | 51.4 | 110.0x |
-| TCK-20260710-SIMQ-DEPTH-INFORMATION | 2 | Investigate | investigator | 8243.029 | 78.4 | 105.1x |
-| TCK-20260710-SIMQ-DEPTH-FACTION | 5 | Implement | implementer | 14058.238 | 178.1 | 78.9x |
-| TCK-20260710-SIMQ-DEPTH-SOCIAL | 10 | Finalize | finalizer | 6145.832 | 95.5 | 64.4x |
-| TCK-20260708-DUNGEON-URBAN-POPULATION-COLLAPSE | 2 | Investigate | investigator | 4360.288 | 78.4 | 55.6x |
-| TCK-20260717-GANTT-TIME-AXIS | 2 | Investigate | investigator | 4330.635 | 78.4 | 55.2x |
-| TCK-20260710-SIMQ-CONTRACT-AC-CLOSEOUT | 6 | Finalize | finalizer | 4267.525 | 95.5 | 44.7x |
-| TCK-20260715-SIMQ-CORPUS-DIVERSITY-SESSION-LOAD-FLAKE | 1 | Scope | ticket-scoper | 1963.451 | 51.4 | 38.2x |
-| TCK-20260717-CSS-LAYER-PADDING-FIX | 5 | Implement | implementer | 6415.868 | 178.1 | 36.0x |
-| TCK-20260717-AGENTOPS-DASHBOARD-DOCS | 7 | Test | test-scoper | 2222.629 | 61.8 | 35.9x |
+| TCK-20260710-SIMQ-DEPTH-SOCIAL | 2 | Investigate | investigator | 34837.628 | 76.9 | 453.1x |
+| TCK-20260714-SIMQ-WEIGHTS-PILLAR-COLLISION | 2 | Investigate | investigator | 28601.745 | 76.9 | 372.0x |
+| TCK-20260715-SIMQ-ANCHOR-LOAD-SENSITIVITY-SWEEP | 1 | Scope | ticket-scoper | 19056.244 | 51.5 | 370.3x |
+| TCK-20260714-SIMQ-WEIGHTS-PILLAR-COLLISION | 2 | Implement | implementer | 28601.745 | 156.6 | 182.7x |
+| TCK-20260716-SIMQ-URBAN-POLITICAL-NARRATIVE-TOLERANCE | 1 | Scope | ticket-scoper | 6503.344 | 51.5 | 126.4x |
+| TCK-20260714-SIMQ-WEIGHTS-PILLAR-COLLISION | 1 | Scope | ticket-scoper | 5659.732 | 51.5 | 110.0x |
+| TCK-20260710-SIMQ-DEPTH-INFORMATION | 2 | Investigate | investigator | 8243.029 | 76.9 | 107.2x |
+| TCK-20260710-SIMQ-DEPTH-FACTION | 5 | Implement | implementer | 14058.238 | 156.6 | 89.8x |
+| TCK-20260710-SIMQ-DEPTH-SOCIAL | 10 | Finalize | finalizer | 6145.832 | 84.6 | 72.6x |
+| TCK-20260708-DUNGEON-URBAN-POPULATION-COLLAPSE | 2 | Investigate | investigator | 4360.288 | 76.9 | 56.7x |
+| TCK-20260717-GANTT-TIME-AXIS | 2 | Investigate | investigator | 4330.635 | 76.9 | 56.3x |
+| TCK-20260710-SIMQ-CONTRACT-AC-CLOSEOUT | 6 | Finalize | finalizer | 4267.525 | 84.6 | 50.4x |
+| TCK-20260717-CSS-LAYER-PADDING-FIX | 5 | Implement | implementer | 6415.868 | 156.6 | 41.0x |
+| TCK-20260715-SIMQ-CORPUS-DIVERSITY-SESSION-LOAD-FLAKE | 1 | Scope | ticket-scoper | 1963.451 | 51.5 | 38.2x |
+| TCK-20260717-AGENTOPS-DASHBOARD-DOCS | 7 | Test | test-scoper | 2222.629 | 61.8 | 36.0x |
+| TCK-20260713-SIMQ-EVAL-PROFILE-BUG | 5 | Implement | implementer | 5392.113 | 156.6 | 34.4x |
 | TCK-20260710-SIMQ-DEPTH-SOCIAL | 7 | Test | test-scoper | 2101.762 | 61.8 | 34.0x |
-| TCK-20260713-SIMQ-EVAL-PROFILE-BUG | 5 | Implement | implementer | 5392.113 | 178.1 | 30.3x |
-| TCK-20260710-SIMQ-ANCHOR-RELIABILITY-VERIFY | 5 | Implement | implementer | 4994.127 | 178.1 | 28.0x |
+| TCK-20260710-SIMQ-ANCHOR-RELIABILITY-VERIFY | 5 | Implement | implementer | 4994.127 | 156.6 | 31.9x |
 | TCK-20260716-SIMQ-URBAN-POLITICAL-FULL-PILLAR-SWEEP | 7 | Test | test-scoper | 1478.29 | 61.8 | 23.9x |
-| TCK-20260710-SIMQ-DEPTH-SOCIAL | 5 | Implement | implementer | 3589.04 | 178.1 | 20.1x |
-| TCK-20260714-SIMQ-WEIGHTS-PILLAR-COLLISION | 6 | Verify | done-checker | 1060.682 | 56.7 | 18.7x |
-| TCK-20260713-SIMQ-SCORE-CEILING-FIX | 6 | Implement | implementer | 3227.086 | 178.1 | 18.1x |
+| TCK-20260710-SIMQ-DEPTH-SOCIAL | 5 | Implement | implementer | 3589.04 | 156.6 | 22.9x |
+| TCK-20260713-SIMQ-SCORE-CEILING-FIX | 6 | Implement | implementer | 3227.086 | 156.6 | 20.6x |
+| TCK-20260713-SIMQ-ECONOMY-CONTENT-DEPTH | 5 | Implement | implementer | 3104.991 | 156.6 | 19.8x |
+| TCK-20260714-SIMQ-WEIGHTS-PILLAR-COLLISION | 6 | Verify | done-checker | 1060.682 | 56.3 | 18.8x |
+| TCK-20260712-SIMQ-INFORMATION-ROUTING-CLOSURE | 2 | Investigate | investigator | 1383.699 | 76.9 | 18.0x |
 | TCK-20260713-SIMQ-ECONOMY-CONTENT-DEPTH | 7 | Test | test-scoper | 1099.442 | 61.8 | 17.8x |
-| TCK-20260712-SIMQ-INFORMATION-ROUTING-CLOSURE | 2 | Investigate | investigator | 1383.699 | 78.4 | 17.6x |
-| TCK-20260713-SIMQ-ECONOMY-CONTENT-DEPTH | 5 | Implement | implementer | 3104.991 | 178.1 | 17.4x |
-| TCK-20260711-EPIC-STALENESS-DEDUPE-CHECK | 9 | Verify | done-checker | 973.098 | 56.7 | 17.2x |
-| TCK-20260710-SIMQ-COGNITION-REALWORLD-GENERALIZE | 4 | Review | architecture-reviewer | 869.171 | 53.7 | 16.2x |
-| TCK-20260712-SIMQ-INFORMATION-ROUTING-CLOSURE | 8 | Parity | parity-updater | 909.948 | 57.1 | 15.9x |
+| TCK-20260711-EPIC-STALENESS-DEDUPE-CHECK | 9 | Verify | done-checker | 973.098 | 56.3 | 17.3x |
+| TCK-20260710-SIMQ-COGNITION-REALWORLD-GENERALIZE | 4 | Review | architecture-reviewer | 869.171 | 53.5 | 16.3x |
+| TCK-20260712-SIMQ-INFORMATION-ROUTING-CLOSURE | 8 | Parity | parity-updater | 909.948 | 56.1 | 16.2x |
+| TCK-20260714-SIMQ-HARVEST-RESOURCE-ARRIVAL-TRANSITION | 10 | Finalize | finalizer | 1314.544 | 84.6 | 15.5x |
 | TCK-20260717-CSS-LAYER-PADDING-FIX | 7 | Test | test-scoper | 957.445 | 61.8 | 15.5x |
-| TCK-20260714-SIMQ-HARVEST-RESOURCE-ARRIVAL-TRANSITION | 10 | Finalize | finalizer | 1314.544 | 95.5 | 13.8x |
-| TCK-20260710-HAZARD-KIND-CORPUS-WIDE | 4 | Review | architecture-reviewer | 630.599 | 53.7 | 11.7x |
-| TCK-20260716-SIMQ-URBAN-POLITICAL-FULL-PILLAR-SWEEP | 2 | Investigate | investigator | 802.218 | 78.4 | 10.2x |
-| TCK-20260712-SIMQ-INFORMATION-ROUTING-CLOSURE | 6 | Architecture-Verify | architecture-reviewer | 535.464 | 53.1 | 10.1x |
-| TCK-20260708-GENERATED-FRONTIER-LATE-TICK-POPULATION-COLLAPSE | 5 | Implement | implementer | 1676.257 | 178.1 | 9.4x |
+| TCK-20260710-HAZARD-KIND-CORPUS-WIDE | 4 | Review | architecture-reviewer | 630.599 | 53.5 | 11.8x |
+| TCK-20260708-GENERATED-FRONTIER-LATE-TICK-POPULATION-COLLAPSE | 5 | Implement | implementer | 1676.257 | 156.6 | 10.7x |
+| TCK-20260716-SIMQ-URBAN-POLITICAL-FULL-PILLAR-SWEEP | 2 | Investigate | investigator | 802.218 | 76.9 | 10.4x |
+| TCK-20260712-SIMQ-INFORMATION-ROUTING-CLOSURE | 6 | Architecture-Verify | architecture-reviewer | 535.464 | 53.0 | 10.1x |
+| TCK-20260717-AGENTOPS-DASHBOARD-DOCS | 9 | Finalize | finalizer | 774.179 | 84.6 | 9.1x |
 | TCK-20260708-GENERATED-FRONTIER-LATE-TICK-POPULATION-COLLAPSE | 7 | Test | test-scoper | 547.336 | 61.8 | 8.9x |
-| TCK-20260717-AGENTOPS-DASHBOARD-DOCS | 9 | Finalize | finalizer | 774.179 | 95.5 | 8.1x |
-| TCK-20260717-AGENTOPS-DASHBOARD-DOCS | 2 | Investigate | investigator | 617.064 | 78.4 | 7.9x |
-| TCK-20260710-SIMQ-ANCHOR-RELIABILITY-VERIFY | 12 | Finalize | finalizer | 675.303 | 95.5 | 7.1x |
-| TCK-20260710-SIMQ-DEPTH-SOCIAL | 8 | Parity | parity-updater | 402.54 | 57.1 | 7.0x |
-| TCK-20260710-SIMQ-COGNITION-REALWORLD-GENERALIZE | 9 | Architecture-Verify | architecture-reviewer | 354.638 | 53.1 | 6.7x |
-| TCK-20260713-SIMQ-RAWSCORE-PERSIST | 2 | Investigate | investigator | 512.132 | 78.4 | 6.5x |
-| TCK-20260716-SIMQ-URBAN-POLITICAL-FULL-PILLAR-SWEEP | 6 | Architecture-Verify | architecture-reviewer | 333.693 | 53.1 | 6.3x |
-| TCK-20260710-SIMQ-COGNITION-REALWORLD-GENERALIZE | 2 | Investigate | investigator | 482.209 | 78.4 | 6.1x |
-| TCK-20260710-EXECUTABLE-WORKFLOW-RUNTIME | 2 | Investigate | investigator | 475.986 | 78.4 | 6.1x |
-| TCK-20260714-SIMQ-WEIGHTS-PILLAR-COLLISION | 6 | Implement | implementer | 1059.236 | 178.1 | 5.9x |
-| TCK-20260708-GENERATED-FRONTIER-LATE-TICK-POPULATION-COLLAPSE | 8 | Parity | parity-updater | 324.288 | 57.1 | 5.7x |
+| TCK-20260717-AGENTOPS-DASHBOARD-DOCS | 2 | Investigate | investigator | 617.064 | 76.9 | 8.0x |
+| TCK-20260710-SIMQ-ANCHOR-RELIABILITY-VERIFY | 12 | Finalize | finalizer | 675.303 | 84.6 | 8.0x |
+| TCK-20260710-SIMQ-DEPTH-SOCIAL | 8 | Parity | parity-updater | 402.54 | 56.1 | 7.2x |
+| TCK-20260714-SIMQ-WEIGHTS-PILLAR-COLLISION | 6 | Implement | implementer | 1059.236 | 156.6 | 6.8x |
+| TCK-20260710-SIMQ-COGNITION-REALWORLD-GENERALIZE | 9 | Architecture-Verify | architecture-reviewer | 354.638 | 53.0 | 6.7x |
+| TCK-20260713-SIMQ-RAWSCORE-PERSIST | 2 | Investigate | investigator | 512.132 | 76.9 | 6.7x |
+| TCK-20260714-DATA-RUNS-VERIFY-REGEN | 10 | Finalize | finalizer | 536.0 | 84.6 | 6.3x |
+| TCK-20260716-SIMQ-URBAN-POLITICAL-FULL-PILLAR-SWEEP | 6 | Architecture-Verify | architecture-reviewer | 333.693 | 53.0 | 6.3x |
+| TCK-20260710-SIMQ-COGNITION-REALWORLD-GENERALIZE | 2 | Investigate | investigator | 482.209 | 76.9 | 6.3x |
+| TCK-20260708-DUNGEON-URBAN-POPULATION-COLLAPSE | 12 | Finalize | finalizer | 527.988 | 84.6 | 6.2x |
+| TCK-20260710-EXECUTABLE-WORKFLOW-RUNTIME | 2 | Investigate | investigator | 475.986 | 76.9 | 6.2x |
+| TCK-20260708-GENERATED-FRONTIER-LATE-TICK-POPULATION-COLLAPSE | 8 | Parity | parity-updater | 324.288 | 56.1 | 5.8x |
+| TCK-20260710-SIMQ-DEPTH-FACTION | 2 | Investigate | investigator | 438.081 | 76.9 | 5.7x |
 | TCK-20260716-AGENTOPS-TICKETS-VIEW | 7 | Test | test-scoper | 347.36 | 61.8 | 5.6x |
 | TCK-20260712-SIMQ-INFORMATION-ROUTING-CLOSURE | 7 | Test | test-scoper | 347.264 | 61.8 | 5.6x |
-| TCK-20260714-DATA-RUNS-VERIFY-REGEN | 10 | Finalize | finalizer | 536.0 | 95.5 | 5.6x |
-| TCK-20260710-SIMQ-DEPTH-FACTION | 2 | Investigate | investigator | 438.081 | 78.4 | 5.6x |
-| TCK-20260708-DUNGEON-URBAN-POPULATION-COLLAPSE | 12 | Finalize | finalizer | 527.988 | 95.5 | 5.5x |
-| TCK-20260712-SIMQ-INFORMATION-ROUTING-CLOSURE | 9 | Verify | done-checker | 303.037 | 56.7 | 5.3x |
-| TCK-20260717-TICKETS-TABLE-PAGINATION | 8 | Parity | parity-updater | 304.841 | 57.1 | 5.3x |
-| TCK-20260710-EXECUTABLE-WORKFLOW-RUNTIME | 2 | Investigate | investigator | 416.131 | 78.4 | 5.3x |
-| TCK-20260708-DUNGEON-URBAN-POPULATION-COLLAPSE | 9 | Verify | done-checker | 293.789 | 56.7 | 5.2x |
-| TCK-20260708-DUNGEON-URBAN-POPULATION-COLLAPSE | 10 | Verify | done-checker | 289.145 | 56.7 | 5.1x |
+| TCK-20260717-TICKETS-TABLE-PAGINATION | 8 | Parity | parity-updater | 304.841 | 56.1 | 5.4x |
+| TCK-20260710-EXECUTABLE-WORKFLOW-RUNTIME | 2 | Investigate | investigator | 416.131 | 76.9 | 5.4x |
+| TCK-20260712-SIMQ-INFORMATION-ROUTING-CLOSURE | 9 | Verify | done-checker | 303.037 | 56.3 | 5.4x |
+| TCK-20260708-DUNGEON-URBAN-POPULATION-COLLAPSE | 9 | Verify | done-checker | 293.789 | 56.3 | 5.2x |
+| TCK-20260708-DUNGEON-URBAN-POPULATION-COLLAPSE | 10 | Verify | done-checker | 289.145 | 56.3 | 5.1x |
 | TCK-20260716-PLAN-GATE-SUBSTRING-FALSEPOS | 3 | Test | test-scoper | 311.175 | 61.8 | 5.0x |
-| TCK-20260719-LIVE-PHASE-AGENT-LABEL | 4 | Review | architecture-reviewer | 260.409 | 53.7 | 4.8x |
-| TCK-20260719-LIVE-PHASE-AGENT-LABEL | 4 | Review | architecture-reviewer | 260.409 | 53.7 | 4.8x |
-| TCK-20260710-TOWN-COUNCIL-HAZARD-DA | 2 | Investigate | investigator | 360.99 | 78.4 | 4.6x |
-| TCK-20260710-HAZARD-KIND-CORPUS-WIDE | 10 | Verify | done-checker | 259.841 | 56.7 | 4.6x |
-| TCK-20260711-EPIC-SCOPE-ORPHAN-FIX | 9 | Verify | done-checker | 252.345 | 56.7 | 4.4x |
-| TCK-20260717-GANTT-TIME-AXIS | 6 | Architecture-Verify | architecture-reviewer | 232.32 | 53.1 | 4.4x |
-| TCK-20260717-TICKETS-TAG-SEARCH | 9 | Verify | done-checker | 247.557 | 56.7 | 4.4x |
+| TCK-20260719-LIVE-PHASE-AGENT-LABEL | 4 | Review | architecture-reviewer | 260.409 | 53.5 | 4.9x |
+| TCK-20260719-LIVE-PHASE-AGENT-LABEL | 4 | Review | architecture-reviewer | 260.409 | 53.5 | 4.9x |
+| TCK-20260710-TOWN-COUNCIL-HAZARD-DA | 2 | Investigate | investigator | 360.99 | 76.9 | 4.7x |
+| TCK-20260710-HAZARD-KIND-CORPUS-WIDE | 10 | Verify | done-checker | 259.841 | 56.3 | 4.6x |
+| TCK-20260717-GANTT-TIME-AXIS | 11 | Finalize | finalizer | 386.02 | 84.6 | 4.6x |
+| TCK-20260711-EPIC-SCOPE-ORPHAN-FIX | 9 | Verify | done-checker | 252.345 | 56.3 | 4.5x |
+| TCK-20260717-TICKETS-TAG-SEARCH | 9 | Verify | done-checker | 247.557 | 56.3 | 4.4x |
+| TCK-20260717-GANTT-TIME-AXIS | 6 | Architecture-Verify | architecture-reviewer | 232.32 | 53.0 | 4.4x |
+| TCK-20260714-DATA-RUNS-VERIFY-REGEN | 2 | Investigate | investigator | 319.704 | 76.9 | 4.2x |
 | TCK-20260710-SIMQ-DEPTH-INFORMATION | 7 | Test | test-scoper | 254.593 | 61.8 | 4.1x |
-| TCK-20260714-DATA-RUNS-VERIFY-REGEN | 2 | Investigate | investigator | 319.704 | 78.4 | 4.1x |
-| TCK-20260717-GANTT-TIME-AXIS | 11 | Finalize | finalizer | 386.02 | 95.5 | 4.0x |
-| TCK-20260708-DUNGEON-URBAN-POPULATION-COLLAPSE | 11 | Verify | done-checker | 218.014 | 56.7 | 3.8x |
-| TCK-20260711-DOC-STALENESS-GATE-CHECK | 9 | Verify | done-checker | 214.347 | 56.7 | 3.8x |
-| TCK-20260719-LIVE-PHASE-AGENT-LABEL | 4 | Review | architecture-reviewer | 202.994 | 53.7 | 3.8x |
-| TCK-20260716-AGENTOPS-ACTIVITY-GANTT | 5 | Finalize | finalizer | 343.786 | 95.5 | 3.6x |
-| TCK-20260713-SIMQ-ECONOMY-CONTENT-DEPTH | 2 | Investigate | investigator | 278.746 | 78.4 | 3.6x |
-| TCK-20260717-TICKETS-TABLE-PAGINATION | 11 | Finalize | finalizer | 338.657 | 95.5 | 3.5x |
-| TCK-20260716-AGENTOPS-TICKETS-VIEW | 5 | Implement | implementer | 619.269 | 178.1 | 3.5x |
-| TCK-20260710-CURRENT-RUN-SIDECAR-BASH | 10 | Finalize | finalizer | 330.731 | 95.5 | 3.5x |
-| TCK-20260713-SIMQ-SCORE-CEILING-FIX | 2 | Investigate | investigator | 271.207 | 78.4 | 3.5x |
-| TCK-20260713-SIMQ-SCORE-CEILING-FIX | 4 | Review | architecture-reviewer | 184.09 | 53.7 | 3.4x |
-| TCK-20260713-SIMQ-ECONOMY-CONTENT-DEPTH | 10 | Finalize | finalizer | 322.315 | 95.5 | 3.4x |
-| TCK-20260719-LIVE-PHASE-AGENT-LABEL | 9 | Verify | done-checker | 189.63 | 56.7 | 3.3x |
-| TCK-20260716-AGENTOPS-DASHBOARD-BACKEND | 10 | Finalize | finalizer | 302.356 | 95.5 | 3.2x |
-| TCK-20260713-SIMQ-RAWSCORE-PERSIST | 7 | Implement | implementer | 559.772 | 178.1 | 3.1x |
-| TCK-20260710-SIMQ-DEPTH-INFORMATION | 5 | Implement | implementer | 546.789 | 178.1 | 3.1x |
+| TCK-20260716-AGENTOPS-ACTIVITY-GANTT | 5 | Finalize | finalizer | 343.786 | 84.6 | 4.1x |
+| TCK-20260717-TICKETS-TABLE-PAGINATION | 11 | Finalize | finalizer | 338.657 | 84.6 | 4.0x |
+| TCK-20260716-AGENTOPS-TICKETS-VIEW | 5 | Implement | implementer | 619.269 | 156.6 | 4.0x |
+| TCK-20260710-CURRENT-RUN-SIDECAR-BASH | 10 | Finalize | finalizer | 330.731 | 84.6 | 3.9x |
+| TCK-20260708-DUNGEON-URBAN-POPULATION-COLLAPSE | 11 | Verify | done-checker | 218.014 | 56.3 | 3.9x |
+| TCK-20260713-SIMQ-ECONOMY-CONTENT-DEPTH | 10 | Finalize | finalizer | 322.315 | 84.6 | 3.8x |
+| TCK-20260711-DOC-STALENESS-GATE-CHECK | 9 | Verify | done-checker | 214.347 | 56.3 | 3.8x |
+| TCK-20260719-LIVE-PHASE-AGENT-LABEL | 4 | Review | architecture-reviewer | 202.994 | 53.5 | 3.8x |
+| TCK-20260713-SIMQ-ECONOMY-CONTENT-DEPTH | 2 | Investigate | investigator | 278.746 | 76.9 | 3.6x |
+| TCK-20260713-SIMQ-RAWSCORE-PERSIST | 7 | Implement | implementer | 559.772 | 156.6 | 3.6x |
+| TCK-20260716-AGENTOPS-DASHBOARD-BACKEND | 10 | Finalize | finalizer | 302.356 | 84.6 | 3.6x |
+| TCK-20260713-SIMQ-SCORE-CEILING-FIX | 2 | Investigate | investigator | 271.207 | 76.9 | 3.5x |
+| TCK-20260710-SIMQ-DEPTH-INFORMATION | 5 | Implement | implementer | 546.789 | 156.6 | 3.5x |
+| TCK-20260713-SIMQ-SCORE-CEILING-FIX | 4 | Review | architecture-reviewer | 184.09 | 53.5 | 3.4x |
+| TCK-20260708-DUNGEON-URBAN-POPULATION-COLLAPSE | 5 | Implement | implementer | 528.578 | 156.6 | 3.4x |
+| TCK-20260719-LIVE-PHASE-AGENT-LABEL | 9 | Verify | done-checker | 189.63 | 56.3 | 3.4x |
+| TCK-20260712-SIMQ-INFORMATION-ROUTING-CLOSURE | 10 | Finalize | finalizer | 280.802 | 84.6 | 3.3x |
+| TCK-20260714-SIMQ-HARVEST-RESOURCE-ARRIVAL-TRANSITION | 5 | Implement | implementer | 478.353 | 156.6 | 3.1x |
 
 ## Notes
 
