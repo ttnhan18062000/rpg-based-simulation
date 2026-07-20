@@ -6,7 +6,7 @@ audience: agent
 ticket_id: TCK-20260720-PROGRESS-TIMELINE-VIEW
 phase: open
 date: 2026-07-20
-tags: []
+tags: [dashboard, observability]
 ---
 
 # TCK-20260720-PROGRESS-TIMELINE-VIEW
