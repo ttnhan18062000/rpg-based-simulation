@@ -96,7 +96,10 @@ export function ReplayTimelineView({ runId }: ReplayTimelineViewProps) {
               ENTRY_STATUS_CLASS[entry.status] ?? DEFAULT_ENTRY_STATUS_CLASS
             } ${entryIndex === scrubIndex ? 'ring-2 ring-accent-blue' : ''}`}
           >
-            #{entry.seq} {entry.phase ?? '—'}
+            #{entry.seq}{' '}
+            <GlossaryTooltip term={entry.phase ?? null} glossary={glossary}>
+              {entry.phase ?? '—'}
+            </GlossaryTooltip>
           </button>
         ))}
       </div>
@@ -105,7 +108,15 @@ export function ReplayTimelineView({ runId }: ReplayTimelineViewProps) {
         {visibleEntries.map((entry) => (
           <div key={entry.seq} data-testid={`replay-detail-${entry.seq}`} className="mb-3">
             <div className="text-[11px] font-semibold text-text-primary">
-              #{entry.seq} {entry.phase ?? '—'} · {entry.agent ?? '—'} ·{' '}
+              #{entry.seq}{' '}
+              <GlossaryTooltip term={entry.phase ?? null} glossary={glossary}>
+                {entry.phase ?? '—'}
+              </GlossaryTooltip>{' '}
+              ·{' '}
+              <GlossaryTooltip term={entry.agent ?? null} glossary={glossary}>
+                {entry.agent ?? '—'}
+              </GlossaryTooltip>{' '}
+              ·{' '}
               <GlossaryTooltip term={entry.status} glossary={glossary}>
                 {entry.status}
               </GlossaryTooltip>

@@ -105,8 +105,8 @@ description source for the whole frontend. `DashboardCache.get_glossary`
 merges three sources at read time, none of them copied into a second file:
 every entry from `tools/glossary_registry.py`'s
 `docs/guidelines/glossary_registry.jsonl`
-(ticket-status/tier/priority/type/run-status/reason-code/event-status terms),
-every layer from `tools/layer_registry.py`'s
+(ticket-status/tier/priority/type/run-status/reason-code/event-status/phase
+terms), every layer from `tools/layer_registry.py`'s
 `docs/guidelines/layer_registry.jsonl` (reusing that registry's existing
 `note` field as the description under `category="layer"`), and every
 `.claude/agents/*.md` role file (reusing each file's own frontmatter
@@ -114,11 +114,17 @@ every layer from `tools/layer_registry.py`'s
 module-level `_load_agent_role_descriptions()` helper — tolerant of a
 missing `.claude/agents/` directory or a role file with no `description:`,
 returning `{}`/skipping rather than raising, since one malformed role file
-must never break the whole endpoint). Each merge step applies the same
-`if term in terms: continue` first-registered-wins guard, protecting against
-a future term-name collision across any of the three sources, though none
-currently exists (35 glossary terms, 19 layer names, 13 agent names, all
-verified disjoint — 67 total).
+must never break the whole endpoint). The `phase` category covers all 21
+deduplicated `tools/agent-monitoring/vocabulary.py::WORKFLOW_PHASES` strings
+across `implement-ticket`/`create-tickets`/`implement-epic`/`simq-audit`,
+sourced directly from `glossary_registry.jsonl` like every other glossary
+category — not a fourth `ingest.py` merge source shaped like Layer/Agent,
+since no pre-existing per-phase description text lives anywhere else in the
+repo to extract. Each merge step applies the same `if term in terms:
+continue` first-registered-wins guard, protecting against a future term-name
+collision across any of the three sources, though none currently exists (56
+glossary terms — 35 original plus 21 phase — 19 layer names, 13 agent names,
+all verified disjoint — 88 total).
 
 ### Ingest / cache (`ingest.py`)
 

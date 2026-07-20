@@ -1,8 +1,8 @@
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { ReplayTimelineView } from '../views/ReplayTimelineView'
-import type { RunTimeline } from '../api'
+import { _resetGlossaryCacheForTests, type GlossaryTerms, type RunTimeline } from '../api'
 import REPLAY_VIEW_SOURCE from '../views/ReplayTimelineView.tsx?raw'
 
 function makeTimeline(overrides: Partial<RunTimeline> = {}): RunTimeline {
@@ -50,6 +50,17 @@ function makeTimeline(overrides: Partial<RunTimeline> = {}): RunTimeline {
 
 function mockFetchOnce(timeline: RunTimeline) {
   const mockFetch = vi.fn().mockResolvedValue({ ok: true, json: async () => timeline })
+  globalThis.fetch = mockFetch as unknown as typeof fetch
+  return mockFetch
+}
+
+function mockFetchWithGlossary(timeline: RunTimeline, glossary: GlossaryTerms) {
+  const mockFetch = vi.fn((url: string) => {
+    if (url.includes('glossary')) {
+      return Promise.resolve({ ok: true, json: async () => ({ terms: glossary }) })
+    }
+    return Promise.resolve({ ok: true, json: async () => timeline })
+  })
   globalThis.fetch = mockFetch as unknown as typeof fetch
   return mockFetch
 }
@@ -184,6 +195,69 @@ describe('ReplayTimelineView — scrub/playback never fetches', () => {
 
     expect(screen.queryByTestId('replay-detail-1')).toBeInTheDocument()
     expect(screen.queryByTestId('replay-detail-2')).toBeInTheDocument()
+  })
+})
+
+describe('ReplayTimelineView — glossary tooltip wiring', () => {
+  // Scoped to this describe block only — other describe blocks in this file deliberately rely on
+  // the module-level glossary cache persisting across tests (see the "fetches the timeline
+  // exactly once" test above, which asserts on total fetch() call count and would break if the
+  // cache reset forced a second glossary fetch mid-suite). Only this block varies glossary content
+  // across its own it()s, so only this block needs the reset (same reasoning as api.ts's own
+  // _resetGlossaryCacheForTests docstring and StatsView.test.tsx's file-wide afterEach) — before
+  // each test too, since an earlier describe block may already have resolved the shared cache.
+  beforeEach(() => {
+    vi.restoreAllMocks()
+    _resetGlossaryCacheForTests()
+  })
+
+  afterEach(() => {
+    _resetGlossaryCacheForTests()
+  })
+
+  it('shows a hint icon for the phase name in the phase-timeline button strip when the glossary has a matching entry', async () => {
+    mockFetchWithGlossary(makeTimeline(), {
+      Scope: { term: 'Scope', category: 'phase', description: 'Creates the ticket file.' },
+    })
+
+    render(<ReplayTimelineView runId="run-replay" />)
+    const entry = await screen.findByTestId('replay-entry-1')
+
+    expect(entry.querySelector('[data-testid="glossary-hint-icon"]')).not.toBeNull()
+  })
+
+  it('renders the phase-timeline button strip plainly, with no hint icon, when the glossary has no entry for that phase', async () => {
+    mockFetchWithGlossary(makeTimeline(), {})
+
+    render(<ReplayTimelineView runId="run-replay" />)
+    const entry = await screen.findByTestId('replay-entry-1')
+
+    expect(entry.querySelector('[data-testid="glossary-hint-icon"]')).toBeNull()
+    expect(entry).toHaveTextContent('#1 Scope')
+  })
+
+  it('shows hint icons for phase and agent in the detail-area header when the glossary has matching entries', async () => {
+    mockFetchWithGlossary(makeTimeline(), {
+      Scope: { term: 'Scope', category: 'phase', description: 'Creates the ticket file.' },
+      'ticket-scoper': { term: 'ticket-scoper', category: 'agent', description: 'Creates the ticket.' },
+    })
+
+    render(<ReplayTimelineView runId="run-replay" />)
+    const detail = await screen.findByTestId('replay-detail-1')
+
+    const hintIcons = detail.querySelectorAll('[data-testid="glossary-hint-icon"]')
+    // phase + agent, both matched — status ('ok') has no matching entry in this test's fixture.
+    expect(hintIcons.length).toBe(2)
+  })
+
+  it('renders the detail-area header plainly, with no hint icons, when the glossary has no matching entries', async () => {
+    mockFetchWithGlossary(makeTimeline(), {})
+
+    render(<ReplayTimelineView runId="run-replay" />)
+    const detail = await screen.findByTestId('replay-detail-1')
+
+    expect(detail.querySelectorAll('[data-testid="glossary-hint-icon"]').length).toBe(0)
+    expect(detail).toHaveTextContent('#1 Scope · ticket-scoper · ok')
   })
 })
 

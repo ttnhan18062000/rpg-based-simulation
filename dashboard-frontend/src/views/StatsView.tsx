@@ -282,7 +282,11 @@ export function StatsView() {
             <tbody>
               {phaseStatusRows(agentStats).map((row) => (
                 <tr key={row.phase} data-testid={`phase-status-row-${row.phase}`} className="border-b border-border">
-                  <td className="py-1 pr-3">{row.phase}</td>
+                  <td className="py-1 pr-3">
+                    <GlossaryTooltip term={row.phase} glossary={glossary}>
+                      {row.phase}
+                    </GlossaryTooltip>
+                  </td>
                   <td className="py-1 pr-3 tabular-nums">{row.total}</td>
                   <td className="py-1 pr-3 tabular-nums">{row.ok}</td>
                   <td className="py-1 pr-3 tabular-nums">{row.failed}</td>

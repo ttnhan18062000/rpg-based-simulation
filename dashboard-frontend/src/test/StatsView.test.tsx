@@ -239,6 +239,26 @@ describe('StatsView', () => {
     expect(screen.getByTestId('phase-status-row-Implement')).toBeInTheDocument()
   })
 
+  it('renders a hover description for a phase name in the Phase Status Distribution table', async () => {
+    mockFetch(makeAgentStats(), makeTicketStats(), {
+      Investigate: {
+        term: 'Investigate',
+        category: 'phase',
+        description: 'Digs into the affected code, docs, and prior tickets.',
+      },
+    })
+    render(<StatsView />)
+    const row = await screen.findByTestId('phase-status-row-Investigate')
+    expect(row.querySelector('[data-testid="glossary-hint-icon"]')).not.toBeNull()
+  })
+
+  it('renders a Phase Status Distribution row plainly, with no hint icon, when the glossary has no entry for that phase', async () => {
+    mockFetch(makeAgentStats(), makeTicketStats(), {})
+    render(<StatsView />)
+    const row = await screen.findByTestId('phase-status-row-Investigate')
+    expect(row.querySelector('[data-testid="glossary-hint-icon"]')).toBeNull()
+  })
+
   it('renders Duration and Cost-Proxy-Score outlier tables when outliers are present', async () => {
     mockFetch(makeAgentStats(), makeTicketStats())
     render(<StatsView />)

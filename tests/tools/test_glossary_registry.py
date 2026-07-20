@@ -169,7 +169,16 @@ def test_glossary_categories_is_the_expected_fixed_set():
         "tier",
         "priority",
         "type",
+        "phase",
     }
+
+
+def test_add_term_accepts_phase_category(tmp_path):
+    entry = add_term("Scope", "phase", "Creates the ticket file.", root=tmp_path)
+
+    assert entry["category"] == "phase"
+    registry = load_registry(tmp_path)
+    assert registry["Scope"]["category"] == "phase"
 
 
 def test_real_seeded_registry_covers_every_canonical_ticket_field_value():
@@ -183,6 +192,29 @@ def test_real_seeded_registry_covers_every_canonical_ticket_field_value():
 
     for value in TIER_VALUES | PRIORITY_VALUES | WORKFLOW_STATUS_VALUES:
         assert value in registry, f"{value!r} has no glossary entry"
+
+
+def test_real_seeded_registry_covers_every_workflow_phase():
+    # Against the real, seeded repo registry (no root override) — proves the live seeding actually
+    # covered every distinct literal in tools/agent-monitoring/vocabulary.py's WORKFLOW_PHASES,
+    # imported directly rather than re-derived, so a casing/spacing typo at registration time
+    # would fail this test instead of silently registering a dead term (see plan.md's Anti-Drift
+    # Notes for why byte-exact casing is load-bearing here).
+    agent_monitoring_dir = Path(__file__).parent.parent.parent / "tools" / "agent-monitoring"
+    if str(agent_monitoring_dir) not in sys.path:
+        sys.path.insert(0, str(agent_monitoring_dir))
+    from vocabulary import WORKFLOW_PHASES
+
+    all_phases: set[str] = set()
+    for phases in WORKFLOW_PHASES.values():
+        all_phases |= phases
+
+    registry = load_registry()
+
+    for phase in all_phases:
+        assert phase in registry, f"{phase!r} has no glossary entry"
+        assert registry[phase]["category"] == "phase", f"{phase!r} is registered under the wrong category"
+        assert registry[phase]["description"].strip(), f"{phase!r} has a blank description"
 
 
 def test_real_seeded_registry_every_entry_has_non_blank_description():

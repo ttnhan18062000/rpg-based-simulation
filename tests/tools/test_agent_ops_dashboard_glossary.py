@@ -194,4 +194,21 @@ def test_glossary_against_real_seeded_registries():
     assert glossary.terms["economy"].category == "layer"
     assert "implementer" in glossary.terms
     assert glossary.terms["implementer"].category == "agent"
-    assert len(glossary.terms) >= 48  # 35 glossary_registry + non-empty-note layers + 13 agents
+    assert len(glossary.terms) >= 69  # 56 glossary_registry (35 + 21 phase) + non-empty-note layers + 13 agents
+
+
+def test_glossary_route_includes_phase_terms(monkeypatch):
+    # No tmp_path override — against the real repo's glossary_registry.jsonl, proving the newly
+    # registered "phase" category terms (TCK-20260719-PHASE-GLOSSARY-DESCRIPTIONS) flow through
+    # get_glossary()'s existing first merge source with zero ingest.py code change.
+    monkeypatch.setattr(main, "_cache", ingest.DashboardCache())
+    client = TestClient(main.app)
+
+    resp = client.get("/api/glossary")
+    assert resp.status_code == 200
+    data = resp.json()
+
+    assert data["terms"]["Review"]["category"] == "phase"
+    assert data["terms"]["Review"]["description"].strip()
+    assert data["terms"]["Architecture-Verify"]["category"] == "phase"
+    assert data["terms"]["Architecture-Verify"]["description"].strip()

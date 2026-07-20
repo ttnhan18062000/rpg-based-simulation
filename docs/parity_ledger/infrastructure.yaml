@@ -5479,3 +5479,83 @@
     No on-disk schema change to events.jsonl/runs.jsonl. Dashboard-exposure and rendering only --
     INFRA-283's and INFRA-284's own entry text is unchanged, this entry is a forward-reference to
     both, not a rewrite.
+
+- id: INFRA-287
+  text: >
+    TCK-20260719-PHASE-GLOSSARY-DESCRIPTIONS: extends the Agent Ops Dashboard's glossary registry
+    with an 8th category, `phase`, mirroring the `agent` category added by
+    TCK-20260719-AGENT-ROLE-GLOSSARY (INFRA-281's sibling ticket). `tools/glossary_registry.py`'s
+    `GLOSSARY_CATEGORIES` set gains `"phase"`, and 21 freshly-authored one-sentence descriptions
+    -- one per distinct literal phase string across `tools/agent-monitoring/vocabulary.py`'s
+    `WORKFLOW_PHASES` (implement-ticket, create-tickets, implement-epic, simq-audit workflows,
+    deduplicated where a phase name recurs across workflows, e.g. `Review`/`Verify`/`Implement`)
+    -- are registered into `docs/guidelines/glossary_registry.jsonl` via the existing `add_term()`
+    CLI mechanism, not hand-edited JSON. The previously-plain `row.phase` cell in StatsView.tsx's
+    Phase Status Distribution table (added by INFRA-286 immediately above) and the phase/agent
+    cells in ReplayTimelineView.tsx's button strip and detail header are wired into the existing
+    `GlossaryTooltip` component, matching the wiring pattern INFRA-281's sibling ticket established
+    for the Top Agents table's Agent column. `GET /api/glossary`'s backend needed zero code change
+    -- its registry-reading merge source, `load_glossary_registry()`, is category-agnostic and
+    already iterates every registered term regardless of category.
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: >
+    tools/glossary_registry.py:57 (`"phase",` added to the `GLOSSARY_CATEGORIES` set, :49-58) and
+    :27-28 (module docstring updated to list `phase` among the enum-like domains this dashboard
+    renders). docs/guidelines/glossary_registry.jsonl: 21 new `"category": "phase"` entries
+    appended (`Scope`, `Investigate`, `Plan`, `Review`, `Implement`, `Architecture-Verify`,
+    `Test`, `Parity`, `Security-Review`, `Verify`, `Finalize`, `Comprehend`, `Structure`, `Write`,
+    `Link`, `Recalibrate`, `Classify Drift`, `Update Anchors`, `Sync Docs`, `Parity Check`,
+    `Report`), each with a freshly-composed one-sentence description distilled from
+    `docs/ai/ticket-lifecycle.md` (implement-ticket/create-tickets/implement-epic phases) and
+    `.claude/skills/simq-audit/SKILL.md` (simq-audit phases); registered via `add_term()`, not
+    hand-edited (confirmed by the `added_date: "2026-07-20"` stamp `add_term()` writes on every
+    row). `Review`'s registered term is the literal `vocabulary.py`/dashboard value, not
+    `ticket-lifecycle.md`'s "Architecture Review" section heading, per the ticket's documented
+    anti-drift hazard. dashboard-frontend/src/views/StatsView.tsx:285-288 (`row.phase` cell now
+    wrapped in `<GlossaryTooltip term={row.phase} glossary={glossary}>`, was plain `{row.phase}`
+    text). dashboard-frontend/src/views/ReplayTimelineView.tsx:100 (button-strip phase label
+    wrapped in `<GlossaryTooltip term={entry.phase ?? null} glossary={glossary}>`), :112 (detail
+    header phase label, same wrapping) and :116 (detail header agent label wrapped in
+    `<GlossaryTooltip term={entry.agent ?? null} glossary={glossary}>`, both previously plain
+    template-string interpolation). `src/api/agent_ops_dashboard/*` and
+    `GET /api/glossary`'s route handler: unchanged -- `load_glossary_registry()`'s merge is
+    category-agnostic so the 21 new rows flow through with no backend code edit.
+  proof_type: contract
+  test_path: >
+    tests/tools/test_glossary_registry.py::test_add_term_accepts_phase_category (proves the
+    `add_term()` CLI mechanism accepts and persists the new `phase` category),
+    ::test_real_seeded_registry_covers_every_workflow_phase (against the real, unmocked repo
+    registry -- imports `WORKFLOW_PHASES` directly from `tools/agent-monitoring/vocabulary.py`
+    rather than re-deriving it, and asserts every distinct phase string is present, correctly
+    categorized as `phase`, and has a non-blank description).
+    tests/tools/test_agent_ops_dashboard_glossary.py::test_glossary_route_includes_phase_terms
+    (against the real seeded registry, confirms `GET /api/glossary` returns `Review` and
+    `Architecture-Verify` under `category: "phase"` with non-blank descriptions with zero
+    ingest.py/route code change) and the updated
+    ::test_glossary_against_real_seeded_registries assertion (`len(glossary.terms) >= 69`, up
+    from `>= 48`, accounting for the 21 new phase terms). dashboard-frontend/src/test/
+    StatsView.test.tsx: 'renders a hover description for a phase name in the Phase Status
+    Distribution table', 'renders a Phase Status Distribution row plainly, with no hint icon,
+    when the glossary has no entry for that phase' (2 new). dashboard-frontend/src/test/
+    ReplayTimelineView.test.tsx: 'shows a hint icon for the phase name in the phase-timeline
+    button strip when the glossary has a matching entry', 'renders the phase-timeline button
+    strip plainly, with no hint icon, when the glossary has no entry for that phase', 'shows hint
+    icons for phase and agent in the detail-area header when the glossary has matching entries',
+    'renders the detail-area header plainly, with no hint icons, when the glossary has no
+    matching entries' (4 new). All new and pre-existing backend and frontend tests, typecheck,
+    and the production build reported passing cleanly per the implementation summary.
+  divergence_note: null
+  support_boundary: >
+    Agent-orchestration/monitoring-pipeline tooling only -- no simulation behavior, Mechanics
+    Bible chapter, or engine contract governs glossary content or dashboard tooltip rendering
+    (same category as INFRA-281, its direct sibling/precedent, and INFRA-283/284/286 immediately
+    above). No change to `WORKFLOW_PHASES`/`WORKFLOW_AGENTS` themselves in
+    `tools/agent-monitoring/vocabulary.py` -- this ticket only documents existing phase literals,
+    never adds/removes one (explicitly out of scope per the ticket). No change to
+    `GET /api/glossary`'s route handler or `load_glossary_registry()`'s merge logic -- the
+    category-agnostic merge already covered this without modification. Dashboard views other
+    than StatsView.tsx's Phase Status Distribution table and ReplayTimelineView.tsx's button
+    strip/detail header were investigated but not touched unless a real, analogous plain-text
+    phase/agent gap was found.

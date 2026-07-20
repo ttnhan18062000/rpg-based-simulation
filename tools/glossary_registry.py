@@ -24,8 +24,8 @@ unrelated term from `OPEN` the ticket-status value — case-sensitive lookup, de
 a canonical-form rule onto them would be actively wrong, not just unnecessary.
 
 Categories (`GLOSSARY_CATEGORIES`): `ticket-status`, `run-status`, `reason-code`, `event-status`,
-`tier`, `priority`, `type`. Unlike Tag's 4-category taxonomy, this set is not meant to grow openly —
-it mirrors the fixed small number of enum-like domains this dashboard actually renders. A given
+`tier`, `priority`, `type`, `phase`. Unlike Tag's 4-category taxonomy, this set is not meant to grow
+openly — it mirrors the fixed small number of enum-like domains this dashboard actually renders. A given
 term is registered exactly once even if it is meaningful in more than one domain (e.g. `DONE` means
 "complete" whether it is a ticket `## Status` value or a run `final_status` value — one entry, not
 two) — pick whichever category is the term's most natural primary home and write a description
@@ -54,6 +54,7 @@ GLOSSARY_CATEGORIES = {
     "tier",
     "priority",
     "type",
+    "phase",
 }
 
 # ---------------------------------------------------------------------------
