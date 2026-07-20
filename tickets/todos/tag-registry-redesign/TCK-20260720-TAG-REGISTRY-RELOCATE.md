@@ -6,7 +6,7 @@ audience: agent
 ticket_id: TCK-20260720-TAG-REGISTRY-RELOCATE
 phase: open
 date: 2026-07-20
-tags: []
+tags: [tagging, frontmatter]
 ---
 
 # TCK-20260720-TAG-REGISTRY-RELOCATE

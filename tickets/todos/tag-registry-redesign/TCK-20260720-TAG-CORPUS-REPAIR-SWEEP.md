@@ -6,7 +6,7 @@ audience: agent
 ticket_id: TCK-20260720-TAG-CORPUS-REPAIR-SWEEP
 phase: open
 date: 2026-07-20
-tags: []
+tags: [tagging, data-quality, reporting]
 ---
 
 # TCK-20260720-TAG-CORPUS-REPAIR-SWEEP

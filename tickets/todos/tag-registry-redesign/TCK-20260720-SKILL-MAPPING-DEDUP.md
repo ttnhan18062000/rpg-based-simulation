@@ -6,7 +6,7 @@ audience: agent
 ticket_id: TCK-20260720-SKILL-MAPPING-DEDUP
 phase: open
 date: 2026-07-20
-tags: []
+tags: [tagging, workflows, skills]
 ---
 
 # TCK-20260720-SKILL-MAPPING-DEDUP

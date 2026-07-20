@@ -6,7 +6,7 @@ audience: agent
 ticket_id: TCK-20260720-DASHBOARD-TAG-FACET-REGISTRY
 phase: open
 date: 2026-07-20
-tags: [api-design]
+tags: [dashboard, observability, api-design]
 ---
 
 # TCK-20260720-DASHBOARD-TAG-FACET-REGISTRY

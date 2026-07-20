@@ -6,7 +6,7 @@ audience: agent
 ticket_id: TCK-20260720-TAG-CATEGORY-REGISTRY
 phase: open
 date: 2026-07-20
-tags: []
+tags: [tagging, frontmatter, taxonomy]
 ---
 
 # TCK-20260720-TAG-CATEGORY-REGISTRY

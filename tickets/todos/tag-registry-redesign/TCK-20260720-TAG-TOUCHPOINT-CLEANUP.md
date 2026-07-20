@@ -6,7 +6,7 @@ audience: agent
 ticket_id: TCK-20260720-TAG-TOUCHPOINT-CLEANUP
 phase: open
 date: 2026-07-20
-tags: []
+tags: [tagging, workflows]
 ---
 
 # TCK-20260720-TAG-TOUCHPOINT-CLEANUP
