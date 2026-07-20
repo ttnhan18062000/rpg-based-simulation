@@ -34,6 +34,7 @@ Enforcement of tag rules is forward-only from 2026-07-04, leaving a large, never
 - Reuse validate_frontmatter.py's extract_frontmatter() as the sole parser — no second parser, no per-file LLM reads.
 - Call tag_registry.py's canonical_form_violation/is_tag_registered/check_tags_registered/load_registry as the single source of truth for flagging.
 - Emit (file, tag, issue) rows for unregistered, invalid_category, and non_canonical_form cases; report-only, no writes.
+- Add a new subsection to docs/guides/ticket_reporting.md describing this sweep (its scope, corpus coverage, and report-only nature), following the same "Pillar" documentation pattern that section already uses for tag_report.py.
 
 ## Out of Scope
 - TCK-20260720-CREATE-TICKETS-TAG-SCOPE-FIX (separate, already-filed hotfix — not duplicated or absorbed by this batch).
@@ -46,6 +47,7 @@ Enforcement of tag rules is forward-only from 2026-07-04, leaving a large, never
 - [ ] Files with no frontmatter or no tags key produce zero rows, not a crash (verified against real fixtures: stored_artifacts/TCK-20260623-FIX-INVENTORY-DEFAULTS/plan.md and stored_artifacts/TCK-20260607-MON-DASHBOARD/investigation.md).
 - [ ] Running the sweep against the real corpus produces zero filesystem writes (git-diff-clean before/after) — output is stdout/JSON rows only, no --fix flag exposed.
 - [ ] The exact intended semantics of the 'invalid_category' flag are confirmed during this ticket's own Scope phase rather than assumed, given no direct precedent and possibly zero real hits today.
+- [ ] docs/guides/ticket_reporting.md has a new subsection describing this sweep, mirroring the documentation depth already given to tag_report.py's Pillar 1.
 
 ## Related Tickets
 - TCK-20260706-TAG-REPORT-TOOL

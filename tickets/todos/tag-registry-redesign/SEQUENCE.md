@@ -11,6 +11,7 @@ dependency analysis. `implement-epic` reads this file to override alphabetical o
 4. TCK-20260720-TAG-CATEGORY-REGISTRY  (depends on: TCK-20260720-TAG-REGISTRY-RELOCATE)
 5. TCK-20260720-TAG-CORPUS-REPAIR-SWEEP  (depends on: TCK-20260720-TAG-REGISTRY-RELOCATE, TCK-20260720-TAG-CATEGORY-REGISTRY)
 6. TCK-20260720-TAG-TOUCHPOINT-CLEANUP  (depends on: TCK-20260720-TAG-REGISTRY-RELOCATE, TCK-20260720-TAG-CATEGORY-REGISTRY)
+7. TCK-20260720-TAG-RELEVANCE-VERIFY  (no deps in this batch — targets the assignment/verification pipeline itself, independent of where registry files live; can be implemented any time, listed last only because it was scoped last)
 
 ## Why This Order Matters
 
@@ -39,3 +40,6 @@ ticket's own Investigate/Plan phase, not assumed from this planning session:
   `tag_registry.jsonl`'s append-only design and the need to edit 4 already-registered rows.
 - **TAG-TOUCHPOINT-CLEANUP**: whether `implement-ticket.js`'s intentionally hand-synced string-match
   mirror (kept to avoid shell quote-corruption) gets updated in lockstep or explicitly stays as-is.
+- **TAG-RELEVANCE-VERIFY**: whether the relevance check is a new dedicated agent (mirroring
+  `security-reviewer`/`mechanics-auditor`'s "second independent look" pattern) or a lighter-weight
+  check folded into existing tag-assignment paths.

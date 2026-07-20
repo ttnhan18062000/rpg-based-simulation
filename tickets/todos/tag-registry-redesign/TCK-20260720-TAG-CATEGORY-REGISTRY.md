@@ -35,6 +35,7 @@ Tag categories (ALL_CATEGORIES/ADDABLE_CATEGORIES) are currently a hardcoded Pyt
 - add category_values(root=None) to tools/tag_registry.py returning a live frozenset[str] with no caching, exactly matching layer_values()'s implementation
 - remove the ALL_CATEGORIES/ADDABLE_CATEGORIES set literal; source add_tag()'s category validation and the argparse --category choices from category_values()
 - update test_tag_registry.py's category assertions and add a new test_tag_category_registry.py mirroring test_layer_registry.py's exact structure
+- document the new `add-category` CLI command in docs/guidelines/tag_taxonomy.md's "Tag Registry" section and docs/guides/ticket_tagging.md's "Registering a New Tag" section, alongside the existing `add <tag>` documentation — this is a new capability, not covered by any existing doc today
 
 ## Out of Scope
 - TCK-20260720-CREATE-TICKETS-TAG-SCOPE-FIX (separate, already-filed hotfix — not duplicated or absorbed by this batch)
@@ -47,6 +48,7 @@ Tag categories (ALL_CATEGORIES/ADDABLE_CATEGORIES) are currently a hardcoded Pyt
 - [ ] tools/tag_registry.py gains category_values(root=None) returning a live frozenset[str], no caching, exactly matching layer_values()'s implementation
 - [ ] the ADDABLE_CATEGORIES set literal is removed; add_tag()'s category validation and the argparse --category choices both source from category_values(); phase-milestone stays naturally excluded since it is never seeded in the registry file
 - [ ] test_tag_registry.py's category references are updated and a new test_tag_category_registry.py mirrors test_layer_registry.py's 9-test structure
+- [ ] docs/guidelines/tag_taxonomy.md and docs/guides/ticket_tagging.md document the new `add-category` CLI command with the same level of detail as the existing `add <tag>` documentation
 - [ ] during this ticket's own Investigate phase, the open design question of whether the registry seeds all 5 categories (with phase-milestone marked non-addable) versus only the 4 currently-addable categories (with phase-milestone remaining purely code-side exempt via is_phase_milestone_tag()) is explicitly resolved and documented — not pre-decided by this synthesis
 
 ## Related Tickets

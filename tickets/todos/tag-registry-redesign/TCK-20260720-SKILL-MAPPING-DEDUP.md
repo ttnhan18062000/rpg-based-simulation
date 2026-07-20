@@ -33,6 +33,8 @@ The Process/Skill-signal-tag to suggested_skills table is manually duplicated ac
 - resolve the append-only-vs-existing-rows conflict during this ticket's own Investigate/Plan phases and encode the target-skill mapping as a single source (preferred: a triggers_skill-style field on each process-skill-signal tag's row)
 - update all 4 consumers (ticket-scoper.md, ticket_tagging.md, implement-ticket.js, create-tickets.js) to read from the single source
 - explicitly decide and implement the fate of tag_skill_mapping_check.py (remove vs repurpose)
+- rewrite docs/guides/ticket_tagging.md's "Skill Suggestions From Tags" section to describe the single-source mechanism instead of documenting a 4th independently-maintained copy of the table
+- update docs/ai/agents.md's ticket-scoper section if the single-source mechanism changes how suggested_skills is computed from what that section currently describes (added by TCK-20260705-TAG-SKILL-SUGGEST)
 
 ## Out of Scope
 - TCK-20260720-CREATE-TICKETS-TAG-SCOPE-FIX (separate, already-filed hotfix — not duplicated or absorbed by this batch)
@@ -44,6 +46,8 @@ The Process/Skill-signal-tag to suggested_skills table is manually duplicated ac
 - [ ] tag_skill_mapping_check.py's fate is explicitly decided and implemented — either removed with its 10 tests retired/migrated, or repurposed into a check that each of the 4 consumers reads the live source rather than embedding a literal copy — not left as dead code comparing copies that no longer independently exist
 - [ ] tag_registry.jsonl's append-only/no-update invariant is either preserved by the schema-change design, or the invariant break is explicitly justified and recorded
 - [ ] during this ticket's own Investigate/Plan phase, one of the 3 candidate resolutions to the append-only-vs-existing-rows conflict (or an explicitly justified 4th option) is chosen and documented — not mandated in advance by this ticket's Scope
+- [ ] docs/guides/ticket_tagging.md's "Skill Suggestions From Tags" section describes the single source, not a 4th hand-maintained copy of the mapping table
+- [ ] docs/ai/agents.md's ticket-scoper section is reviewed and updated if its description of suggested_skills computation no longer matches the new single-source mechanism
 
 ## Related Tickets
 - TCK-20260705-TAG-SKILL-SUGGEST
@@ -56,6 +60,8 @@ The Process/Skill-signal-tag to suggested_skills table is manually duplicated ac
 ## Related Docs
 - docs/guidelines/tag_registry.jsonl
 - docs/guidelines/tag_taxonomy.md
+- docs/guides/ticket_tagging.md
+- docs/ai/agents.md
 
 ## Related Stored Artifacts
 None.

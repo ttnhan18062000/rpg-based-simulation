@@ -33,6 +33,7 @@ src/api/agent_ops_dashboard/ingest.py currently derives its tags filter facet on
 - Change ingest.py's tags facet to read registries/tag_registry.jsonl via tag_registry.load_registry(), mirroring the existing layer_registry.load_registry() pattern already used for get_glossary()
 - Rewrite ingest.py's stale comment rationale (around lines 598-604) describing tags as open-vocabulary/corpus-derived to reflect the new registry-backed model
 - Update docs/parity_ledger/infrastructure.yaml's INFRA-275 entry in the same session
+- Update docs/guides/agent_ops_dashboard.md and docs/observability/agent_ops_dashboard_contract.md's descriptions of the Tickets view's tags filter to describe the registry-derived (not corpus-derived) behavior
 
 ## Out of Scope
 - TCK-20260720-CREATE-TICKETS-TAG-SCOPE-FIX (separate, already-filed hotfix — not duplicated or absorbed by this batch)
@@ -44,6 +45,7 @@ src/api/agent_ops_dashboard/ingest.py currently derives its tags filter facet on
 - [ ] ingest.py imports tag_registry via the same module-level cross-package pattern already used for layer_registry (confirmed at line 51's get_glossary() call) — not a new bespoke import mechanism
 - [ ] docs/parity_ledger/infrastructure.yaml's INFRA-275 entry (which currently documents facets['tags'] as "the one facet that remains corpus-derived") is updated in the same session
 - [ ] The semantic behavior change — legacy/pre-taxonomy free-text tags present on tickets but absent from tag_registry.jsonl will disappear from the filter facet, and open-ended phase-N tags won't appear in a pure registry-keys facet — is stated as a deliberate, explicitly recorded decision in this ticket, not a silent regression
+- [ ] docs/guides/agent_ops_dashboard.md and docs/observability/agent_ops_dashboard_contract.md describe the tags filter as registry-derived, matching how those docs already describe tier/layer/status/priority since TCK-20260718-DASHBOARD-FACETS-FULLY-CANONICAL
 
 ## Related Tickets
 - TCK-20260718-DASHBOARD-FACETS-FULLY-CANONICAL
@@ -56,6 +58,8 @@ src/api/agent_ops_dashboard/ingest.py currently derives its tags filter facet on
 ## Related Docs
 - docs/parity_ledger/infrastructure.yaml
 - docs/guidelines/tag_registry.jsonl
+- docs/guides/agent_ops_dashboard.md
+- docs/observability/agent_ops_dashboard_contract.md
 
 ## Related Stored Artifacts
 None.
