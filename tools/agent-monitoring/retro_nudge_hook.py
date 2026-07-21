@@ -4,7 +4,9 @@ implement-ticket runs have completed DONE since the last dated retro report.
 
 Advisory only — never raises, never blocks the tool call. Fires at most once
 per session (tracked via a small state file keyed by session_id from the hook
-payload, matching the pattern in pre_tool_hook.py / post_tool_hook.py).
+payload) — this once-per-session gating is unique to this hook and
+epic_staleness_check.py; pre_tool_hook.py/post_tool_hook.py are unconditional
+loggers with no such gating, not a shared pattern.
 """
 import json
 import sys

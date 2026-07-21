@@ -15,14 +15,23 @@ Skills are slash commands that trigger focused, session-scoped task patterns. Th
 
 ## Skills vs. Workflows — How Invocation Works
 
-**Skills** are the user-facing slash commands. Type `/skill-name args` in the prompt. Claude reads the skill's `SKILL.md`, parses the args, and invokes the workflow internally via the `Workflow` tool.
+**Skills** are the user-facing slash commands. Type `/skill-name args` in the prompt. Claude reads
+the skill's `SKILL.md`, which instructs it to read the corresponding `.claude/workflows/*.js` file
+directly and translate its phase/agent/bash constructs into tool calls by hand — **there is no
+`Workflow` tool in this harness** to invoke instead. Every project workflow-shortcut `SKILL.md`
+states this explicitly in its own Action section (e.g. "Do not call the Workflow tool — it is not
+available").
 
-**Workflows** (`.claude/workflows/*.js`) are Claude-internal multi-agent scripts. They are **not** directly slash-commandable. `/workflow implement-ticket` is not a valid command — it will fail with "Unknown command: /workflow". The correct form is `/implement-ticket` (the skill).
+**Workflows** (`.claude/workflows/*.js`) are Claude-internal multi-agent scripts. They are **not**
+directly slash-commandable on their own — only workflows with a corresponding `.claude/skills/*/
+SKILL.md` wrapper (below) are reachable via a slash command at all. `/workflow implement-ticket` is
+not a valid command — it will fail with "Unknown command: /workflow". The correct form, for a
+workflow that has a skill wrapper, is `/implement-ticket`.
 
 ```
-You type:                Claude does internally:
-/implement-ticket ...  →  Workflow({ name: "implement-ticket", args: { ... } })
-/implement-epic ...    →  Workflow({ name: "implement-epic", args: { ... } })
+You type:                Claude does:
+/implement-ticket ...  →  Reads .claude/workflows/implement-ticket.js and manually executes its
+                           phases via Agent/Bash/etc. tool calls — no Workflow tool involved.
 ```
 
 ---
@@ -41,21 +50,32 @@ related registry-search-filter mechanism — not duplicated here.
 
 ## Project Skills (Workflow Shortcuts)
 
-These skills trigger the project's multi-agent workflows.
+These skills trigger the project's multi-agent workflows. **Only 4 of the project's 11
+`.claude/workflows/*.js` files currently have a `.claude/skills/*/SKILL.md` wrapper** — a workflow
+with no wrapper has no slash command today (confirmed 2026-07-20 orchestration audit; see the row
+notes below).
 
 | Skill | Workflow triggered | When to use |
 |---|---|---|
 | `/create-tickets` | `create-tickets` | Parse a markdown doc into TCK-*.md ticket files |
 | `/implement-ticket` | `implement-ticket` | Implement one development task end-to-end |
 | `/implement-epic` | `implement-epic` | Implement all tickets in a folder or epic sequentially |
-| `/generate-simulation-setup` | `generate-simulation-setup` | Create specs for a new simulation experiment |
-| `/prepare-simulation-execution` | `prepare-simulation-execution` | Validate specs and get the run command |
-| `/investigate-simulation-result` | `investigate-simulation-result` | Deep anomaly investigation after a run |
-| `/propose-simulation-enhancements` | `propose-simulation-enhancements` | Hypothesize and propose fixes for anomalies |
-| `/register-simulation-result` | `register-simulation-result` | Register a completed run into the lab index |
-| `/compact-simulation-result` | `compact-simulation-result` | Compress old run logs to recover disk space |
-| `/update-knowledge-store` | `update-knowledge-store` | Commit approved insights to the knowledge graph |
 | `/simq-audit` | `simq-audit` | Check SimQ grade/anchor drift after a calibration corpus change; closes cleanly or spawns a follow-up ticket |
+
+The following 7 simulation/lab workflows exist under `.claude/workflows/*.js` but have **no
+`SKILL.md` wrapper today** — they are not currently invocable via slash command. Adding wrappers
+for them (mirroring the Action-section pattern the 4 skills above already use) is tracked as
+future work, not yet scoped:
+
+| Workflow (no skill wrapper) | Intended purpose |
+|---|---|
+| `generate-simulation-setup` | Create specs for a new simulation experiment |
+| `prepare-simulation-execution` | Validate specs and get the run command |
+| `investigate-simulation-result` | Deep anomaly investigation after a run |
+| `propose-simulation-enhancements` | Hypothesize and propose fixes for anomalies |
+| `register-simulation-result` | Register a completed run into the lab index |
+| `compact-simulation-result` | Compress old run logs to recover disk space |
+| `update-knowledge-store` | Commit approved insights to the knowledge graph |
 
 ---
 

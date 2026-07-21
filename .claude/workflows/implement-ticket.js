@@ -161,6 +161,33 @@ summary (one sentence: what was scoped and any conflicts found, ≤200 chars).`,
   { label: 'scope', schema: TICKET_SCHEMA, agentType: 'ticket-scoper' }
 )
 
+if (!ticketInfo || !ticketInfo.ticket_id) {
+  // Scope-phase agent returned null or malformed output — none of tid/events/pushEvent/
+  // writeMonitoring exist yet (Agent Monitoring Setup below assumes a valid ticketInfo), so this
+  // path writes a minimal, self-contained monitoring record directly via bash() rather than
+  // relying on the normal writeMonitoring() helper — mirrors create-tickets.js's own "write
+  // agent(s) returned null" handling for the same failure class (TCK-20260720-... orchestration
+  // audit). Uses ticketId (the pre-Scope input, possibly empty when creating a brand-new ticket)
+  // as run_id when available; falls back to a synthesized identifier otherwise, matching
+  // create-tickets.js's own CREATE-TICKETS-{...} synthesis convention for a run with no real
+  // ticket_id yet. Deliberately does not call captureTs()/writeSidecar() (defined later in this
+  // file) to avoid any dependency on forward-reference execution order.
+  const failTsRaw = await bash('date -u +%Y-%m-%dT%H:%M:%SZ')
+  const failTs = (failTsRaw || '').trim() || null
+  const fallbackRunId = ticketId || `SCOPE-FAILED-${(failTs || '').replace(/[^0-9]/g, '')}`
+  await bash(
+    `python3 tools/agent-monitoring/record_events.py --data '[{"run_id":"${fallbackRunId}","seq":1,"phase":"Scope","agent":"ticket-scoper","status":"failed","summary":"Scope agent returned null or malformed output (no ticket_id)","ts":"${failTs}"}]' 2>/dev/null || true`
+  )
+  await bash(
+    `python3 tools/agent-monitoring/record_run.py --data '{"run_id":"${fallbackRunId}","start_ts":"${failTs}","end_ts":"${failTs}","workflow":"implement-ticket","tier":"${tierOverride || 'standard'}","final_status":"SCOPE_AGENT_FAILED","agent_count":1}' 2>/dev/null || true`
+  )
+  return {
+    status: 'SCOPE_AGENT_FAILED',
+    ticket_id: ticketId || null,
+    message: 'Scope-phase agent (ticket-scoper) returned null or malformed output with no ticket_id — cannot proceed.',
+  }
+}
+
 const tid = ticketInfo.ticket_id
 const tier = tierOverride || ticketInfo.tier || 'standard'
 const startTs = scopeTs || null
@@ -615,7 +642,54 @@ Return: files_changed (list of paths), behavior_changed (boolean), parity_subsys
   { label: 'implement', schema: IMPL_SCHEMA, agentType: 'implementer' }
 )
 
-pushEvent('Implement', 'implementer', 'ok', implementation.summary || implementation.implementation_summary || 'Implementation complete', implementTs)
+// ─── Doc-staleness gate (orchestrator-run, no agent call) ─────────────────────
+// TCK-20260720-GATE-CHECK-WIRING-DECISIONS: tools/gate_checks/doc_staleness_check.py shipped
+// unwired (TCK-20260711-DOC-STALENESS-GATE-CHECK) — built after the 2026-W28 retro found 36% of
+// done-checker's first-attempt Verify failures traced to a behavior-changing src/workflow diff
+// with no docs/ update, caught only reactively 6+ phases later. Wired here, immediately after
+// Implement returns (where files_changed/behavior_changed first become available) and before this
+// phase's own pushEvent, mirroring the exact precedent already set for TAGS_NOT_REGISTERED
+// (pulled forward from Verify's frontmatter_valid condition to Scope, for the identical "catch it
+// here instead of 6+ phases later" reason — see docs/ai/ticket-lifecycle.md's Scope section) —
+// including that precedent's shape of folding the check's outcome into the SAME phase event
+// rather than emitting a second one, and using the real agent name ('implementer'), not a
+// synthetic pseudo-agent name outside vocabulary.py's WORKFLOW_AGENTS. Deterministic script
+// check, no LLM judgment involved, so no agent() call — mirrors the tag-registry check's own
+// orchestrator-only shape.
+const docStalenessFilesArgs = implementation.files_changed.map(f => `"${f}"`).join(' ')
+const docStalenessOutput = await bash(
+  `python3 tools/gate_checks/doc_staleness_check.py ${implementation.behavior_changed} ${docStalenessFilesArgs}`
+)
+let docStalenessResults = null
+const docStalenessMarkerIndex = docStalenessOutput.indexOf('MARKER:')
+if (docStalenessMarkerIndex !== -1) {
+  try { docStalenessResults = JSON.parse(docStalenessOutput.slice(docStalenessMarkerIndex + 'MARKER:'.length).trim()) }
+  catch (e) { docStalenessResults = null }
+}
+const docStalenessFailure = docStalenessResults && docStalenessResults.find(r => r.status === 'FAIL')
+
+// No reason_code — DOC_STALENESS_BLOCKED already disambiguates 1:1 like TAGS_NOT_REGISTERED/
+// PARITY_INCOMPLETE/SECURITY_BLOCKED/TESTS_FAILED/CONFLICTS_DETECTED; reason_code exists only for
+// statuses that collapse multiple distinct causes into one value (see schema.md).
+pushEvent(
+  'Implement', 'implementer',
+  docStalenessFailure ? 'failed' : 'ok',
+  docStalenessFailure ? docStalenessFailure.evidence : (implementation.summary || implementation.implementation_summary || 'Implementation complete'),
+  implementTs
+)
+
+if (docStalenessFailure) {
+  log(`Doc staleness: ${docStalenessFailure.evidence}`)
+  log('Add a docs/ update reflecting this behavior change, then re-run with ticket_id="' + tid + '".')
+  await writeMonitoring('DOC_STALENESS_BLOCKED')
+  return {
+    status: 'DOC_STALENESS_BLOCKED',
+    ticket_id: tid,
+    tier,
+    evidence: docStalenessFailure.evidence,
+    message: 'A behavior-changing src/ or .claude/workflows/*.js change has no docs/ path in files_changed. Add a docs/ update, then re-run with ticket_id="' + tid + '".',
+  }
+}
 
 // ─── Phase 5b: Architecture-Verify (post-Implement static backstop) ───────────
 // The original pre-Implement Review phase (above) has no code to parse — plan.md is prose, not

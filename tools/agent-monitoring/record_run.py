@@ -6,7 +6,7 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
-REQUIRED = {"run_id", "start_ts", "workflow", "tier", "final_status"}
+REQUIRED = {"run_id", "start_ts", "workflow", "tier", "final_status", "agent_count"}
 RUNS_FILE = Path("agent-monitoring/runs.jsonl")
 
 

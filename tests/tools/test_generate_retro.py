@@ -14,7 +14,7 @@ _MONITORING_TOOLS_DIR = Path(__file__).parent.parent.parent / "tools" / "agent-m
 if str(_MONITORING_TOOLS_DIR) not in sys.path:
     sys.path.insert(0, str(_MONITORING_TOOLS_DIR))
 
-from generate_retro import compute_retro_metrics, generate  # noqa: E402
+from generate_retro import compute_retro_metrics, generate, _record_since_cutoff  # noqa: E402
 
 _BASE_RUN = {
     "run_id": "TCK-FAKE",
@@ -665,3 +665,44 @@ def test_outliers_section_rendered_when_flagged():
     assert "### Duration outliers (by tier)" in report
     assert "TCK-STD-OUTLIER" in report
     assert "9.0x" in report
+
+
+def test_record_since_cutoff_true_for_iso_string_at_or_after_cutoff():
+    cutoff = "2026-07-01T00:00:00Z"
+    assert _record_since_cutoff("2026-07-15T00:00:00Z", cutoff) is True
+    assert _record_since_cutoff("2026-07-01T00:00:00Z", cutoff) is True
+
+
+def test_record_since_cutoff_false_for_iso_string_before_cutoff():
+    cutoff = "2026-07-01T00:00:00Z"
+    assert _record_since_cutoff("2026-06-01T00:00:00Z", cutoff) is False
+
+
+def test_record_since_cutoff_excludes_non_string_start_ts_instead_of_raising():
+    # TCK-... (2026-07-20 orchestration audit): --days crashed on legacy runs.jsonl records
+    # whose start_ts is a non-string (e.g. a float from an older schema generation) — verify the
+    # >= comparison no longer runs against a non-string value at all.
+    cutoff = "2026-07-01T00:00:00Z"
+    assert _record_since_cutoff(1720000000.0, cutoff) is False
+    assert _record_since_cutoff(None, cutoff) is False
+    assert _record_since_cutoff("", cutoff) is False
+
+
+def test_generate_retro_days_flag_does_not_raise_on_legacy_start_ts(tmp_path, monkeypatch):
+    import generate_retro
+
+    runs_file = tmp_path / "runs.jsonl"
+    events_file = tmp_path / "events.jsonl"
+    runs_file.write_text(
+        '{"run_id":"TCK-LEGACY","start_ts":1720000000.0,"workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":1}\n'
+        '{"run_id":"TCK-RECENT","start_ts":"2026-07-19T00:00:00Z","end_ts":"2026-07-19T01:00:00Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":1}\n'
+    )
+    events_file.write_text("")
+    monkeypatch.setattr(generate_retro, "RUNS_FILE", runs_file)
+    monkeypatch.setattr(generate_retro, "EVENTS_FILE", events_file)
+    monkeypatch.setattr(generate_retro, "RETRO_DIR", tmp_path)
+    monkeypatch.setattr(sys, "argv", ["generate_retro.py", "--days", "30"])
+
+    generate_retro.main()  # must not raise
+
+    assert (tmp_path / "RETRO-LAST30D.md").exists()

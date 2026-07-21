@@ -28,17 +28,19 @@ The agent system has three layers:
 - **Agents** — `.claude/agents/*.md`. A focused subagent for one role in a task. Spawned automatically
   by workflows, or invoked directly via `Agent(subagent_type: "name")`.
 - **Workflows** — `.claude/workflows/*.js`. Multi-agent orchestration across many phases, with gates and
-  resumability. Invoked via `Workflow({ name: "workflow-name", args: {...} })` or `/workflow-name`.
+  resumability. There is no `Workflow` tool in this harness — the orchestrating Claude Code session
+  reads the `.js` file directly and translates its constructs into tool calls by hand (see each
+  workflow-shortcut `SKILL.md`'s own Action section); invoked by the user via `/workflow-name`.
 - **Skills** — `.claude/skills/*/SKILL.md`, plus a set of built-in Claude Code skills. A slash command
   for a well-defined, single-session task pattern. Invoked via `/skill-name`.
 
 Counts, verified directly against the filesystem and source docs rather than assumed:
 
-- **11 subagents** exist under `.claude/agents/`, matching `docs/ai/agents.md`'s catalog exactly.
-- **11 workflow files** exist under `.claude/workflows/`. **10** of them are documented with phase
-  tables in `docs/ai/workflows.md`. The 11th, `simq-audit.js`, is covered later in this document
-  (Section 5) and has its own dedicated doc, `docs/simulation_quality/audit_workflow.md`, but is not yet
-  listed in `workflows.md`'s catalog.
+- **13 subagents** exist under `.claude/agents/`, matching `docs/ai/agents.md`'s catalog exactly.
+- **11 workflow files** exist under `.claude/workflows/`, and all 11 — including `simq-audit.js` —
+  are documented with phase tables in `docs/ai/workflows.md`. `simq-audit` is additionally covered
+  later in this document (Section 5) and has its own dedicated doc,
+  `docs/simulation_quality/audit_workflow.md`.
 - **16 skill folders** exist under `.claude/skills/`.
 
 When to use which: reach for a **workflow** when the task spans multiple phases with gates (scope →
@@ -227,10 +229,13 @@ Agent activity is recorded in 3 append-only JSONL files under `agent-monitoring/
 (and additionally by `seq` for `tools.jsonl`):
 
 - **`runs.jsonl`** — one record per workflow invocation (`run_id`, `start_ts`, `end_ts` nullable,
-  `workflow`, `tier`, `final_status`, `agent_count`, `duration_s`). Token and cost telemetry are
-  explicitly not recorded — a documented gap.
+  `workflow`, `tier`, `final_status`, `agent_count`, `duration_s`). Raw token counts are explicitly
+  not recorded — a documented gap — but `events.jsonl`'s `cost_proxy_score` (below) does give a
+  relative spend proxy per agent call.
 - **`events.jsonl`** — one record per agent call, keyed by `run_id` and `seq` (`phase`, `agent`,
-  `summary` capped at 200 characters, `status`, `tool_call_count`).
+  `summary` capped at 200 characters, `status`, `tool_call_count`, `cost_proxy_score` — a
+  monotonic spend-proxy score, required for `implement-ticket` records; see
+  `docs/agent-monitoring/schema.md`'s `cost_proxy_score` section for the formula).
 - **`tools.jsonl`** — one record per tool call, keyed to events via `run_id`+`seq` through a
   `.claude/current_run` sidecar file (`tool`, `input_summary` capped at 120 characters, `status`,
   `duration_ms`).
@@ -251,7 +256,7 @@ overview does not re-derive or re-score it.
 ### Where to go deeper
 
 **Agents / Workflows / Skills**
-- [`docs/ai/agents.md`](agents.md) — all 11 subagents: role, inputs, outputs, when to invoke
+- [`docs/ai/agents.md`](agents.md) — all 13 subagents: role, inputs, outputs, when to invoke
 - [`docs/ai/workflows.md`](workflows.md) — per-workflow args, phase, and return-value tables
 - [`docs/ai/skills.md`](skills.md) — full skill catalog
 

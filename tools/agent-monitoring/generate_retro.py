@@ -55,6 +55,19 @@ def iso_week(ts_str):
         return "unknown"
 
 
+def _record_since_cutoff(start_ts, cutoff):
+    """True if start_ts (expected ISO 8601 string) is at/after cutoff (ISO 8601 string).
+
+    Legacy records may store start_ts as a non-string, missing, or non-ISO8601 value (see this
+    module's "Known Limitations" — docs/agent-monitoring/schema.md documents 5+ legacy schema
+    generations). Such records are excluded from a --days window rather than crashing the `>=`
+    comparison, mirroring iso_week()'s existing fail-to-"unknown" pattern for the --week path.
+    """
+    if not isinstance(start_ts, str) or not start_ts:
+        return False
+    return start_ts >= cutoff
+
+
 def week_range(week_str):
     year, w = week_str.split("-W")
     monday = datetime.strptime(f"{year}-W{w}-1", "%G-W%V-%u").replace(tzinfo=timezone.utc)
@@ -746,7 +759,7 @@ def main():
         out_name = "RETRO-ALL.md"
     elif args.days:
         cutoff = (datetime.now(timezone.utc) - timedelta(days=args.days)).isoformat()
-        runs = [r for r in all_runs if (r.get("start_ts") or "") >= cutoff]
+        runs = [r for r in all_runs if _record_since_cutoff(r.get("start_ts"), cutoff)]
         run_ids = {r["run_id"] for r in runs}
         events = [e for e in all_events if e.get("run_id") in run_ids]
         label = f"Last {args.days} Days"

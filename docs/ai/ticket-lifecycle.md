@@ -55,7 +55,9 @@ flowchart TD
     Review --> Implement
     Scope -. "hotfix skips to" .-> Implement
 
-    Implement["Implement<br/><i>implementer</i><br/>→ code changes, Implementation Notes updated"] --> ArchVerify
+    Implement["Implement<br/><i>implementer</i><br/>→ code changes, Implementation Notes updated"]
+    Implement -- DOC_STALENESS_BLOCKED --> DocStalenessFix[/"Add a docs/ update reflecting the behavior change, re-run with ticket_id"/]
+    Implement --> ArchVerify
 
     subgraph StandardOnly2 ["Standard tier only"]
         ArchVerify["Architecture-Verify<br/><i>architecture-reviewer</i> (2nd call)<br/>static pre-check + judges flagged diff only"]
@@ -245,6 +247,17 @@ Step 5 — Legacy regression
 }
 ```
 
+**Gate (doc staleness):** Immediately after the agent returns, the orchestrator runs
+`tools/gate_checks/doc_staleness_check.py` (via `bash()` — deterministic, no agent call) against
+`files_changed`/`behavior_changed`. If `behavior_changed` is true, at least one changed path is
+under `src/` or is a `.claude/workflows/*.js` file, and zero changed paths are under `docs/`, the
+workflow returns `DOC_STALENESS_BLOCKED` (`TCK-20260720-GATE-CHECK-WIRING-DECISIONS`, wired in
+after shipping unwired from `TCK-20260711-DOC-STALENESS-GATE-CHECK`) — the same "catch it here
+instead of 6+ phases later at Verify" reasoning already applied to Scope's tag-registry gate
+above; the 2026-W28 retro found 36% of `done-checker`'s first-attempt Verify failures traced to
+exactly this gap. The user adds a `docs/` update reflecting the behavior change, then re-runs with
+`ticket_id`.
+
 ---
 
 ### Architecture Verify
@@ -378,8 +391,11 @@ directly into condition 10 rather than raising a separate blocking status.
 **Step 0b:** Before judging conditions 3, 4, 7, 10 (if not already marked `FAIL` by Step 0a), 12 by
 hand, `done-checker` runs
 `tools/gate_checks/done_checker_static.py::run_static_precheck(ticket_id, tier, start_ts)` and
-cites its PASS/FAIL/NA + evidence output verbatim for those five conditions, then self-reports a
+cites its PASS/FAIL/NA + evidence output verbatim for those conditions, then self-reports a
 `verified_by` field listing which condition(s) came from which script(s) vs. pure judgment.
+`run_static_precheck` aggregates 6 checks as of `TCK-20260718-TIER-PRIORITY-CANONICAL-ENUM`: the 5
+named above plus `ticket_field_values_valid` (canonical `## Tier`/`## Priority` body-field
+values), which does not yet have a dedicated numbered condition in the 13-condition table below.
 
 `mechanics-auditor` is a separate, ad hoc agent (not part of this Verify phase or any pipeline phase)
 available for checking mechanics parity before/after a change; it now has its own self-invoked static
@@ -420,10 +436,12 @@ pre-check, `tools/gate_checks/mechanics_auditor_static.py::verify_entry_test_pat
    TCK-20260708-DATA-RUNS-CLEANUP-TIMING; this step now typically finds nothing to remove).
 6. **Self-verification** (`bash()`, orchestrator-level — not the finalize agent's own prose report):
    runs `tools/gate_checks/done_checker_static.py::run_finalize_selfcheck(ticket_id, tier)` to
-   confirm steps 2-4 above actually landed — `stored_artifacts/` complete, `staging_artifacts/`
-   gone, ticket in `tickets/done/`, exactly one `working_log.csv` row. Any discrepancy (or
-   unparseable script output) returns `FINALIZE_INCOMPLETE` with `failing_items` instead of falling
-   through to `DONE`.
+   confirm steps 2-4 above actually landed, aggregating 4 checks (as of
+   `TCK-20260709-REGISTRY-REGEN-ON-CLOSE`, up from 3): `stored_artifacts/` complete,
+   `staging_artifacts/` gone, ticket in `tickets/done/`, exactly one `working_log.csv` row, and
+   `docs/REGISTRY.yaml` regenerated with the closing ticket's entry landed in it. Any discrepancy
+   (or unparseable script output) returns `FINALIZE_INCOMPLETE` with `failing_items` instead of
+   falling through to `DONE`.
 7. **Write agent monitoring records** (`writeMonitoring`): appends one run entry to `agent-monitoring/runs.jsonl` and one event per phase to `agent-monitoring/events.jsonl` — status is `DONE` if the self-check passed, `FINALIZE_INCOMPLETE` otherwise. This step is non-fatal — if the write fails, it logs a WARNING and the workflow still returns its computed status.
 
 ---

@@ -36,7 +36,7 @@ One record per workflow invocation.
 | `run_id` | string | No | Unique run identifier. For `implement-ticket`: the ticket ID. For `implement-epic`: `EPIC-{id}` or `FOLDER-{path}`. For `create-tickets`: `CREATE-TICKETS-{sanitized source path}` — no single ticket_id exists at run start since this workflow creates N tickets. |
 | `start_ts` | ISO 8601 | No | UTC timestamp when the workflow started (captured at Scope / Discover / Comprehend phase via `date -u`). |
 | `end_ts` | ISO 8601 | Yes | UTC timestamp when the workflow finished. `null` if the workflow crashed before writing the end record. |
-| `workflow` | string | No | Name of the workflow that produced this run: `implement-ticket` \| `implement-epic` \| `create-tickets`. |
+| `workflow` | string | No | Name of the workflow that produced this run: `implement-ticket` \| `implement-epic` \| `create-tickets` \| `simq-audit`. |
 | `tier` | string | No | Ticket tier: `hotfix` \| `standard` \| `epic`. For `create-tickets`: always `n/a` — this workflow doesn't operate on a single ticket's tier (each generated ticket gets its own tier, decided during the Structure phase). |
 | `final_status` | string | No | Outcome of the run. See values below. |
 | `agent_count` | int | No | Total number of agent calls that produced events. |
@@ -57,12 +57,17 @@ One record per workflow invocation.
 | `EPIC_SCOPED` | Epic tier — ticket scoped, no implementation. |
 | `CONFLICTS_DETECTED` | Duplicate or conflicting ticket found at Scope gate. |
 | `TAGS_NOT_REGISTERED` | A ticket's tag isn't in `docs/guidelines/tag_registry.jsonl` — caught at Scope, before the rest of the pipeline runs (`TCK-20260706-SCOPE-TAG-REGISTRY-CHECK`). |
+| `SCOPE_AGENT_FAILED` | The Scope-phase `ticket-scoper` agent call returned null or malformed output with no `ticket_id` — caught before any other phase runs (`TCK-20260720-MONITORING-PIPELINE-BUGFIXES`). |
 | `NEEDS_HUMAN_INPUT` | Plan had unresolved questions; paused for human. |
 | `NEEDS_CHANGES` | Architecture review returned violations. |
 | `BLOCKED` | Architecture review found fundamental conflict. |
+| `DOC_STALENESS_BLOCKED` | A behavior-changing `src/` or `.claude/workflows/*.js` diff has no `docs/` path in `files_changed` — caught right after Implement, before Architecture-Verify/Test/Parity/Verify (`TCK-20260720-GATE-CHECK-WIRING-DECISIONS`, wiring `tools/gate_checks/doc_staleness_check.py`). |
 | `TESTS_FAILED` | Tests failed after implementation. |
+| `DATA_RUNS_CLEAN_FAILED` | Post-Test auto-clean of `data/runs/*`/`reports/release_proof/*` failed (permissions/lock issue) — resolved manually, then re-run. |
+| `PARITY_INCOMPLETE` | A committed `src/` path mapped to a parity-ledger subsystem was not cross-referenced in the Parity phase's ledger update. |
 | `SECURITY_BLOCKED` | Security review rejected the change (fires only for tickets whose tags include `security`, or whose derived `suggested_skills` includes `/security-review`). |
 | `DOD_BLOCKED` | Definition-of-Done conditions not met. |
+| `FINALIZE_INCOMPLETE` | Finalize's self-check (`run_finalize_selfcheck`) found the migration/move/log-append/registry-regen steps did not fully land, or its own output was unparseable. |
 | `NOTHING_TO_CREATE` | `create-tickets` only — no actionable concerns, all concerns were duplicates of existing tickets, or no tasks survived structuring. |
 | `CRASHED` | Synthetic status set by `validate.py` for runs with `start_ts` but no `end_ts`. |
 
@@ -189,15 +194,25 @@ Canonical phase/agent values for all four workflows are enforced from `tools/age
 
 ### `phase` values (implement-ticket workflow)
 
-`Scope`, `Investigate`, `Plan`, `Review`, `Implement`, `Test`, `Parity`, `Security-Review`, `Verify`, `Finalize`
+`Scope`, `Investigate`, `Plan`, `Review`, `Implement`, `Architecture-Verify`, `Test`, `Parity`, `Security-Review`, `Verify`, `Finalize`
 
-`Security-Review` is conditional — it only appears in `events.jsonl` for tickets whose tags include
+`Architecture-Verify` and `Security-Review` are both conditional. `Architecture-Verify` is skipped
+for hotfix tier. `Security-Review` only appears in `events.jsonl` for tickets whose tags include
 `security`, or whose derived `suggested_skills` includes `/security-review`; it is absent entirely
 (not even a `skipped` event) for every other ticket.
 
 ### `phase` values (create-tickets workflow)
 
 `Comprehend`, `Investigate` (one event per concern), `Structure`, `Write` (one event per ticket), `Link` (only when `epic_id` is provided). Neither `create-tickets` nor `implement-epic` registers a `.claude/current_run` sidecar per agent call (neither ever has), so `tool_call_count` is always absent on their events — `record_events.py::compute_tool_stats()` only computes it for `implement-ticket` run_ids (see "How tool calls are attributed to agent events" above), and leaves every other workflow's records untouched.
+
+### `phase` values (implement-epic workflow)
+
+`Implement` — one event per child ticket, recording that child ticket's own overall status. No
+Discover/Report phase-tagged events are emitted today (see `.claude/workflows/implement-epic.js`).
+
+### `phase` values (simq-audit workflow)
+
+`Recalibrate`, `Classify Drift`, `Update Anchors`, `Sync Docs`, `Parity Check`, `Verify`, `Report`.
 
 ---
 

@@ -28,6 +28,15 @@ const request = (args && args.request) || ''
 const tierOverride = (args && args.tier_override) || ''
 
 if (!folder && !epicId && !request) {
+  // No production run happened (Discover never ran) — still write a minimal monitoring record
+  // rather than skip it entirely, per CLAUDE.md's "every run must record a monitoring entry" rule
+  // (previously silently skipped on this path — orchestration audit finding).
+  const invalidTsRaw = await bash('date -u +%Y-%m-%dT%H:%M:%SZ')
+  const invalidTs = (invalidTsRaw || '').trim() || null
+  const invalidRunId = `EPIC-INVALID-ARGS-${(invalidTs || '').replace(/[^0-9]/g, '')}`
+  await bash(
+    `python3 tools/agent-monitoring/record_run.py --data '{"run_id":"${invalidRunId}","start_ts":"${invalidTs}","end_ts":"${invalidTs}","workflow":"implement-epic","tier":"epic","final_status":"INVALID_ARGS","agent_count":0}' 2>/dev/null || true`
+  )
   return {
     status: 'INVALID_ARGS',
     message: 'Provide one of: folder (path), epic_id (TCK-...), or request (natural language).',
@@ -154,6 +163,21 @@ if (discovery.already_done.length > 0) {
 
 // request mode — epic created, no children yet
 if (discovery.mode === 'request') {
+  // Discover ran and created a real ticket — write a minimal monitoring record directly (this
+  // path returns before the batch-monitoring-write agent() call below, which only fires once
+  // ticketIds is known) rather than skip it entirely (orchestration audit finding). Uses a fixed
+  // literal summary, not discovery.summary, to avoid embedding arbitrary agent-returned text into
+  // a shell single-quoted JSON string — this file's own established quote-corruption risk.
+  const epicCreatedTsRaw = await bash('date -u +%Y-%m-%dT%H:%M:%SZ')
+  const epicCreatedTs = (epicCreatedTsRaw || '').trim() || null
+  const createdEpicId = (discovery.epic_ticket_path || '').replace(/^.*\//, '').replace(/\.md$/, '').replace(/[^a-zA-Z0-9-]/g, '-') || 'UNKNOWN'
+  const epicCreatedRunId = 'EPIC-' + createdEpicId
+  await bash(
+    `python3 tools/agent-monitoring/record_events.py --data '[{"run_id":"${epicCreatedRunId}","seq":1,"phase":"Discover","agent":"implement-epic","status":"ok","summary":"Epic ticket created; no child tickets yet","ts":"${epicCreatedTs}"}]' 2>/dev/null || true`
+  )
+  await bash(
+    `python3 tools/agent-monitoring/record_run.py --data '{"run_id":"${epicCreatedRunId}","start_ts":"${batchStartTs || epicCreatedTs}","end_ts":"${epicCreatedTs}","workflow":"implement-epic","tier":"epic","final_status":"EPIC_CREATED","agent_count":1}' 2>/dev/null || true`
+  )
   return {
     status: 'EPIC_CREATED',
     epic_ticket_path: discovery.epic_ticket_path,
@@ -165,6 +189,21 @@ if (discovery.mode === 'request') {
 const ticketIds = discovery.ticket_ids
 
 if (ticketIds.length === 0) {
+  // Discover ran but found nothing to do — write a minimal monitoring record directly (mirrors
+  // the EPIC_CREATED fix above; this path also returns before the batch-monitoring-write agent()
+  // call below) rather than skip it entirely (orchestration audit finding). batchRunId matches
+  // exactly what the batch-monitoring-write section below would compute had the batch proceeded.
+  const nothingTsRaw = await bash('date -u +%Y-%m-%dT%H:%M:%SZ')
+  const nothingTs = (nothingTsRaw || '').trim() || null
+  const nothingRunId = epicId
+    ? 'EPIC-' + epicId
+    : 'FOLDER-' + folder.replace(/[^a-zA-Z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '')
+  await bash(
+    `python3 tools/agent-monitoring/record_events.py --data '[{"run_id":"${nothingRunId}","seq":1,"phase":"Discover","agent":"implement-epic","status":"ok","summary":"Discover found no tickets to implement (all done or none found)","ts":"${nothingTs}"}]' 2>/dev/null || true`
+  )
+  await bash(
+    `python3 tools/agent-monitoring/record_run.py --data '{"run_id":"${nothingRunId}","start_ts":"${batchStartTs || nothingTs}","end_ts":"${nothingTs}","workflow":"implement-epic","tier":"epic","final_status":"NOTHING_TO_DO","agent_count":1}' 2>/dev/null || true`
+  )
   return {
     status: 'NOTHING_TO_DO',
     already_done: discovery.already_done,

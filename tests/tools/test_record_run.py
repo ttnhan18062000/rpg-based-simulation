@@ -25,6 +25,7 @@ _VALID_RECORD = {
     "workflow": "implement-ticket",
     "tier": "standard",
     "final_status": "DONE",
+    "agent_count": 1,
 }
 
 
@@ -59,6 +60,31 @@ def test_falsy_but_non_null_value_still_passes():
     # a schema-shape question outside this ticket's scope, not a null-check failure.
     record = dict(_VALID_RECORD)
     record["final_status"] = ""
+    assert validate_record(record) == []
+
+
+def test_missing_agent_count_rejected():
+    # TCK-... (2026-07-20 orchestration audit): docs/agent-monitoring/schema.md documents
+    # agent_count as Nullable: No, but record_run.py's REQUIRED set previously omitted it —
+    # not manifesting in production (all 4 real callers pass it) but a real contract mismatch.
+    record = dict(_VALID_RECORD)
+    del record["agent_count"]
+    errors = validate_record(record)
+    assert errors == ["Missing required fields: ['agent_count']"]
+
+
+def test_null_agent_count_rejected():
+    record = dict(_VALID_RECORD)
+    record["agent_count"] = None
+    errors = validate_record(record)
+    assert errors == ["Missing required fields: ['agent_count']"]
+
+
+def test_agent_count_zero_is_falsy_but_valid():
+    # 0 is a legitimate agent_count (e.g. a crashed run with no agent calls yet) — must not be
+    # treated as missing, mirroring test_falsy_but_non_null_value_still_passes's is-None check.
+    record = dict(_VALID_RECORD)
+    record["agent_count"] = 0
     assert validate_record(record) == []
 
 

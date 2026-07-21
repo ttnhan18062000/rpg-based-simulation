@@ -150,9 +150,16 @@ call. Pre-Implement: fix the plan, then re-run with `ticket_id`. Post-Implement
 
 **Step 0 — static pre-check:** Before judging conditions 3, 4, 7, 10, and 12 by hand, the agent runs
 `tools/gate_checks/done_checker_static.py`'s `run_static_precheck(ticket_id, tier, start_ts)` (via
-`python3 -c "..."`) and cites its PASS/FAIL/NA + evidence output verbatim for those five conditions
+`python3 -c "..."`) and cites its PASS/FAIL/NA + evidence output verbatim for those conditions
 instead of re-deriving them by hand. The agent self-reports which conditions came from the script
 vs. pure judgment in a `verified_by` field.
+
+As of `TCK-20260718-TIER-PRIORITY-CANONICAL-ENUM`, the static pre-check aggregates **6** checks,
+not 5: `staging_artifacts_complete` (4), `data_runs_clean` (10), `ticket_location` (3),
+`working_log_no_row_yet` (7), `frontmatter_valid` (12), and a 6th, `ticket_field_values_valid`
+(canonical `## Tier`/`## Priority` body-field values), which does not yet have a dedicated
+numbered DoD condition of its own — deliberately left undecided by that ticket's own Implementation
+Notes ("left for a future ticket if a dedicated DoD-list entry for this check is ever wanted").
 
 **The 13 conditions:**
 1. Implementation matches accepted scope

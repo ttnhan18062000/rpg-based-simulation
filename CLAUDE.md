@@ -104,7 +104,7 @@ TCK-YYYYMMDD-SHORT-SCOPE: Brief description of change
 | Tier | Pipeline | Use when |
 |---|---|---|
 | `hotfix` | Scope → Implement → Test → Parity → Verify → Finalize | Bug fix or minimal targeted change with self-evident intent |
-| `standard` | Full 9-phase pipeline | Any new feature, refactor, or substantive repair |
+| `standard` | Full 10-phase pipeline (+1 conditional: Security-Review) | Any new feature, refactor, or substantive repair |
 | `epic` | Scope only — tracks child tickets | Large multi-ticket initiative; no direct implementation |
 
 ---
@@ -218,6 +218,7 @@ A task is not done unless all are true:
 - Temporary run data cleaned: `data/runs/`, `reports/release_proof/`
 - No known material gap is left unstated
 - Agent monitoring records written: run entry in `agent-monitoring/runs.jsonl`, at least one event in `agent-monitoring/events.jsonl` _(guaranteed by workflow — not verified by done-checker)_
+- Frontmatter valid in the ticket and its staging artifacts (script-checked by `done-checker`'s `frontmatter_valid` condition)
 
 ---
 
@@ -253,7 +254,7 @@ The master index is `project_lawbook_m10.md`. Key contracts:
 | File | Covers |
 |---|---|
 | `kernel.md` | 6-phase deterministic loop (Init → Governance → Scheduling → Packetization → Resolution → Persistence) |
-| `authoritative_pipeline.md` | 17-phase refinement sequence for world mutation |
+| `authoritative_pipeline.md` | 32-phase refinement sequence for world mutation |
 | `authoritative_mutation_pipeline_contract.md` | Mutation rules and apply-path law |
 | `governance_logic.md` | Governance and eligibility rules |
 | `performance_contract.md` | Hardware classes (A/B/C) and scaling limits |
@@ -292,12 +293,12 @@ The canonical record of V2 behavior shifts from legacy. Any new divergence must 
 
 ### Other Active Doc Areas
 
-- `docs/architecture/` — ADRs (adr-004 watchdog, adr-005 performance, world assembly, world repository layout)
-- `docs/combat/` — Combat rulebooks per milestone (m1–m7)
+- `docs/architecture/` — ADR-shaped design docs (`simulation_watchdog.md`, `performance_optimization.md`, world assembly, world repository layout)
+- `docs/combat/` — Combat rulebooks (`combat_movement_overhaul_spec.md`, `observability_rulebook.md`, `rollout_hardening_rulebook.md`)
 - `docs/strategy/` — Bounded cognition contracts and test matrices
 - `docs/guidelines/design_patterns.md` — Coding and design conventions
 - `docs/compliance/checklist.md` + `gap_analysis.md` — Compliance tracking
-- `docs/testing/v2_test_taxonomy.md` — Test classification rules
+- `docs/testing/test_taxonomy.md` — Test classification rules
 
 ---
 
