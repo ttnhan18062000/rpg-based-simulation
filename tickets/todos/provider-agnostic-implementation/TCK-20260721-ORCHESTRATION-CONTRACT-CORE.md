@@ -1,0 +1,89 @@
+---
+status: active
+layer: ai
+authority: P1
+audience: agent
+ticket_id: TCK-20260721-ORCHESTRATION-CONTRACT-CORE
+phase: open
+date: 2026-07-21
+tags: []
+---
+
+# TCK-20260721-ORCHESTRATION-CONTRACT-CORE
+
+## Title
+Canonical contract core and validator for implement-ticket
+
+## Status
+OPEN
+
+## Tier
+standard
+
+## Type
+feature
+
+## Priority
+P1
+
+## Request Summary
+Stand up the versioned agent-orchestration/ semantic contract (contract.yaml, workflows/implement-ticket.yaml, roles/*.yaml, monitoring-schema.yaml, hook-events.yaml) as the one authoritative description of phases, terminal statuses, roles, artifacts, and gates for the first vertical slice, plus a deterministic, network-free validator/generator that fails clearly on malformed definitions and never touches provider files except through an explicit generation command. This matters because the ADR already decided YAML+generated-Python validation with the repo-root agent-orchestration/ as the source spec, and the Provider-Adapter Boundary bars adapters from redefining phases/statuses/gates/artifacts.
+
+## Scope
+- Create agent-orchestration/ directory with contract.yaml, workflows/implement-ticket.yaml, roles/*.yaml, monitoring-schema.yaml, hook-events.yaml covering standard and hotfix tiers
+- Decide and document a versioning scheme; contract.yaml carries a required `version` field
+- Build a deterministic, network-free validator/generator tool that fails clearly on malformed contract definitions
+- Ensure the generator only writes outside agent-orchestration/ when invoked via an explicit generation command/flag
+- Derive (not hand-duplicate) phase/status vocabulary in workflows/implement-ticket.yaml from tools/agent-monitoring/vocabulary.py's WORKFLOW_PHASES/WORKFLOW_AGENTS, either generated from it or validated as asserted-equal
+
+## Out of Scope
+- Does not modify or reroute the live .claude/workflows/implement-ticket.js
+- Does not build the Claude conformance/diff tooling (owned by the Claude conformance adapter ticket)
+- Does not implement Codex-side adapters or hooks (owned by the Codex guidance/fixture-capture and Codex replay tickets)
+
+## Acceptance Criteria
+- [ ] agent-orchestration/ exists with contract.yaml, workflows/implement-ticket.yaml, roles/*.yaml, monitoring-schema.yaml, hook-events.yaml, covering both standard and hotfix tiers
+- [ ] workflows/implement-ticket.yaml's phase/agent vocabulary is generated from, or has a test asserting exact equality with, tools/agent-monitoring/vocabulary.py's WORKFLOW_PHASES/WORKFLOW_AGENTS — never independently hand-typed (guards against a second competing source of truth, per the existing test_canonical_vocabulary_single_sourced precedent)
+- [ ] Validator raises a named, deterministic error type on an incomplete/malformed contract (mirroring the FixtureValidationError pattern)
+- [ ] Validator/generator makes zero network calls (verified by an automated test)
+- [ ] Validator/generator writes zero files outside agent-orchestration/ unless the explicit generation flag is passed (AST- or mock-verified test)
+- [ ] contract.yaml contains a required `version` field, with the versioning scheme documented in this ticket's plan/investigation artifacts
+
+## Related Tickets
+- TCK-20260721-ORCHESTRATION-CONTRACT-ADR
+- TCK-20260721-CODEX-REPLAY-PROOF
+- TCK-20260721-MONITORING-WRITER-DECISION
+- TCK-20260721-AGENTS-DIR-DISPOSITION
+- TCK-20260721-CODEX-CAPABILITY-MATRIX
+
+## Related Docs
+- docs/architecture/agent_orchestration_contract.md
+- docs/plans/agent_infrastructure/provider_agnostic_orchestration/implementation_plan.md
+- docs/ai/replay_fixture_spec.md
+- docs/agent-monitoring/schema.md
+
+## Related Stored Artifacts
+None.
+
+## Related Code Areas
+- docs/architecture/agent_orchestration_contract.md
+- docs/plans/agent_infrastructure/provider_agnostic_orchestration/implementation_plan.md
+- docs/ai/replay_fixture_spec.md
+- tools/agent-monitoring/vocabulary.py
+- docs/agent-monitoring/schema.md
+- tools/agent_replay/fixture_envelope.py
+- tools/agent_replay/runner.py
+- .claude/workflows/implement-ticket.js
+- tests/tools/test_validate_agent_monitoring.py
+
+## Assumptions / Open Questions
+- Versioning scheme is Proposed-pending per the ADR — this ticket's Plan phase must decide it (e.g. semver vs. date-based) since no existing scheme applies
+- Terminal statuses currently live only in implement-ticket.js prose/schema.md with no structured source — roles/*.yaml and terminal-status structuring is new modeling work with no existing source to lift from
+
+## Implementation Notes
+
+## Test Summary
+
+## Files Changed
+
+## Completion Summary
