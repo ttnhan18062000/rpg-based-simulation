@@ -1,0 +1,70 @@
+# Terminal-status vocabulary for the implement-ticket workflow.
+#
+# Sibling file to workflows/implement-ticket.yaml, not a field on it: phases are an ordered
+# sequence, terminal statuses are an unordered set reachable through three distinct emission
+# mechanisms (`kind` below). Added by TCK-20260721-CLAUDE-CONFORMANCE-ADAPTER; per the README's
+# versioning note, a new sibling file needs no `workflow_version` bump.
+#
+# Source: exhaustive line-by-line re-read of .claude/workflows/implement-ticket.js as of
+# 2026-07-22 (staging_artifacts/TCK-20260721-CLAUDE-CONFORMANCE-ADAPTER/investigation.md), 13
+# literal `writeMonitoring('STRING')` call sites (12 distinct values — FINALIZE_INCOMPLETE appears
+# at two call sites, :1234 and :1246), 2 verdict-derived call sites (`writeMonitoring(review.verdict)`
+# at :582 and `writeMonitoring(archVerify.verdict)` at :760, shared NEEDS_CHANGES/BLOCKED value
+# space across Review and Architecture-Verify), and 1 bypass call site (SCOPE_AGENT_FAILED, written
+# via a raw bash()-embedded `record_run.py --data` call at :178-183, never passed through
+# writeMonitoring() at all). Cross-checked against docs/agent-monitoring/schema.md's `final_status`
+# table.
+#
+# `kind` vocabulary:
+#   literal         — single writeMonitoring('STRING') call site (or more than one, for a
+#                     duplicated value like FINALIZE_INCOMPLETE).
+#   verdict_derived — writeMonitoring(<var>.verdict); the value is not a source string literal.
+#   bypass          — never passed through writeMonitoring() at all.
+terminal_status_schema_version: 1
+workflow_id: implement-ticket
+statuses:
+  - value: CONFLICTS_DETECTED
+    kind: literal
+    phases: [Scope]
+  - value: TAGS_NOT_REGISTERED
+    kind: literal
+    phases: [Scope]
+  - value: EPIC_SCOPED
+    kind: literal
+    phases: [Scope]
+  - value: SCOPE_AGENT_FAILED
+    kind: bypass
+    phases: [Scope]
+  - value: NEEDS_HUMAN_INPUT
+    kind: literal
+    phases: [Investigate]
+  - value: NEEDS_CHANGES
+    kind: verdict_derived
+    phases: [Review, Architecture-Verify]
+  - value: BLOCKED
+    kind: verdict_derived
+    phases: [Review, Architecture-Verify]
+  - value: DOC_STALENESS_BLOCKED
+    kind: literal
+    phases: [Architecture-Verify]
+  - value: TESTS_FAILED
+    kind: literal
+    phases: [Test]
+  - value: DATA_RUNS_CLEAN_FAILED
+    kind: literal
+    phases: [Test]
+  - value: PARITY_INCOMPLETE
+    kind: literal
+    phases: [Parity]
+  - value: SECURITY_BLOCKED
+    kind: literal
+    phases: [Security-Review]
+  - value: DOD_BLOCKED
+    kind: literal
+    phases: [Verify]
+  - value: FINALIZE_INCOMPLETE
+    kind: literal
+    phases: [Finalize]
+  - value: DONE
+    kind: literal
+    phases: [Finalize]
