@@ -47,9 +47,9 @@ skipped automatically.
 
 ## Corrections Applied (Codex review, 2026-07-22)
 
-This sequence was revised after Codex's review of the initial batch
-(`docs/plans/agent_infrastructure/provider_agnostic_orchestration/tickets_review_response_codex.md`)
-found 4 required corrections, all applied here and in the affected ticket files:
+This sequence was revised after a Claude↔Codex ticket-review cycle (temporary review documents,
+not kept in the repo) found 4 required corrections, all applied here and in the affected ticket
+files:
 
 1. MONITORING-WRITER-UNIFICATION now depends on BASELINE-MONITORING-MANIFEST (was previously
    listed with no intra-batch dependency, which conflicted with Phase 0 and the plan's

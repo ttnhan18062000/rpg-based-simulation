@@ -22,9 +22,9 @@ Tickets 2-4 (the reader-migration sub-tickets) now also depend on
 `TCK-20260721-MONITORING-WRITER-UNIFICATION` in `tickets/todos/provider-agnostic-implementation/`
 — that ticket's monitoring-writer unification work delivers the additive `execution_id`/`provider`
 record fields these tickets' provider/execution-aware read migration consumes. This dependency was
-added per Codex's review of the provider-agnostic-implementation ticket batch
-(`docs/plans/agent_infrastructure/provider_agnostic_orchestration/tickets_review_response_codex.md`,
-correction #3), which resolved a prior scope-overlap ambiguity between the two batches:
+added per a Claude↔Codex review cycle of the provider-agnostic-implementation ticket batch
+(temporary review documents, not kept in the repo; correction #3 in that cycle), which resolved
+a prior scope-overlap ambiguity between the two batches:
 MONITORING-WRITER-UNIFICATION owns the writer/schema/dashboard-ingestion boundary only; this batch
 owns migrating `query.py`/`validate.py`/`generate_retro.py` to consume those new fields via the
 SQLite index. `implement-epic` running against this folder alone will not see that cross-batch
