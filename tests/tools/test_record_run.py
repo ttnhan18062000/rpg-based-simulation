@@ -15,6 +15,7 @@ _MONITORING_TOOLS_DIR = Path(__file__).parent.parent.parent / "tools" / "agent-m
 if str(_MONITORING_TOOLS_DIR) not in sys.path:
     sys.path.insert(0, str(_MONITORING_TOOLS_DIR))
 
+import record_run  # noqa: E402
 from record_run import compute_duration_s, validate_record  # noqa: E402
 
 _RECORD_PATH = _MONITORING_TOOLS_DIR / "record_run.py"
@@ -166,3 +167,44 @@ class TestDurationWrittenToRecord:
         }
         written = self._run_and_read(record, tmp_path)
         assert written["duration_s"] == 2910
+
+
+# ---------------------------------------------------------------------------
+# TCK-20260721-MONITORING-WRITER-UNIFICATION — shared writer migration
+# ---------------------------------------------------------------------------
+
+
+def test_execution_identity_fields_pass_through_unchanged(tmp_path):
+    record = {
+        **_VALID_RECORD,
+        "execution_id": "claude-TCK-FAKE-RUN-1234567890-abcd1234",
+        "provider": "claude",
+        "ticket_id": "TCK-FAKE-RUN",
+    }
+    result = subprocess.run(
+        [sys.executable, str(_RECORD_PATH), "--data", json.dumps(record)],
+        capture_output=True,
+        text=True,
+        cwd=tmp_path,
+    )
+    assert result.returncode == 0, result.stderr
+    written = json.loads((tmp_path / "agent-monitoring" / "runs.jsonl").read_text().strip())
+    assert written["execution_id"] == "claude-TCK-FAKE-RUN-1234567890-abcd1234"
+    assert written["provider"] == "claude"
+    assert written["ticket_id"] == "TCK-FAKE-RUN"
+
+
+def test_append_failure_is_non_blocking(tmp_path, monkeypatch, capsys):
+    # An append-layer failure (post-validation) must not sys.exit(1) — that
+    # code path is reserved for validation failures, which happen before
+    # write_line is ever called. This distinguishes WARNING+exit-0 (append
+    # failure) from ERROR+exit-1 (validation failure).
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(record_run, "write_line", lambda *a, **kw: False)
+    monkeypatch.setattr(sys, "argv", ["record_run.py", "--data", json.dumps(dict(_VALID_RECORD))])
+
+    record_run.main()  # must not raise SystemExit
+
+    captured = capsys.readouterr()
+    assert "WARNING" in captured.err
+    assert "DONE:" in captured.out

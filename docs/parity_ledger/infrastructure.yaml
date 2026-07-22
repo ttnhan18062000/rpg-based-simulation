@@ -4663,7 +4663,23 @@
     `curl /api/stats/agent-monitoring` and `/api/stats/tickets` output exactly, artifact
     completeness rendered as the correctly-rounded 64% (623/970), 49 bar-chart rows + 4 grouped
     tier rows + 15 top-agent rows rendered, a bar's hover tooltip appeared on hover, and zero
-    browser console errors were captured across the whole run.
+    browser console errors were captured across the whole run. TCK-20260721-MONITORING-WRITER-UNIFICATION:
+    models.py:91-94 (RunSummary gains 4 additive Optional fields — provider, execution_id,
+    ticket_id, identity_provenance — default None/"legacy", never breaking any existing
+    legacy-shaped record); ingest.py:203 (_resolve_identity_provenance — new sibling function
+    next to _resolve_final_status, same "prefer new field, fall back through legacy, never raise"
+    pattern: "native" if record carries execution_id, else "legacy"); ingest.py:340-356
+    (_build_run_summary populates the 4 new fields from the record when present); ingest.py:629
+    (get_runs gains 3 new optional filter kwargs — provider, execution_id, ticket_id — each
+    following the exact pre-existing `if x is not None and field != x: continue` guard already
+    used for status/workflow/since, confirmed unmodified). This is a purely additive extension of
+    the already-verified ingest.py/models.py contract — INFRA-275's typed-routes/cache/join/
+    heuristic claims, and every prior ticket-append above, are unaffected; ingest.py continues to
+    reuse tools/agent-monitoring/validate.py's load_jsonl unmodified (confirmed via
+    test_ingest_load_jsonl_is_validate_load_jsonl). This ticket's actual scope center — a new
+    shared append-writer module (tools/agent-monitoring/writer.py) used by post_tool_hook.py/
+    record_run.py/record_events.py — sits entirely outside src/, so only this dashboard-facing
+    slice of that ticket is recorded here.
   proof_type: feature
   test_path: >
     tests/tools/test_agent_ops_dashboard_ingest.py (including
@@ -4782,7 +4798,12 @@
     added no backend route and does not touch dashboard-frontend's isolation from the simulation
     engine's own API surface). Static architecture check
     (tools/gate_checks/architecture_reviewer_static.py::run_architecture_checks()) over all 11
-    changed/added files -> zero findings.
+    changed/added files -> zero findings. TCK-20260721-MONITORING-WRITER-UNIFICATION:
+    test_run_summary_carries_provider_execution_id_ticket_id_when_present,
+    test_run_summary_labels_legacy_record_as_legacy_not_none_silently,
+    test_get_runs_filters_by_provider_and_execution_id (all in
+    tests/tools/test_agent_ops_dashboard_ingest.py) plus the pre-existing
+    test_ingest_load_jsonl_is_validate_load_jsonl guard, re-confirmed unmodified.
   divergence_note: null
   support_boundary: >
     Read-only over tickets/** and agent-monitoring/*.jsonl; never touches AuthoritativeState.

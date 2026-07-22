@@ -200,6 +200,14 @@ def _resolve_final_status(rec: dict) -> str:
     return "IN_PROGRESS"
 
 
+def _resolve_identity_provenance(rec: dict) -> str:
+    """'native' if the record carries the new execution-identity fields (this
+    migration or later); 'legacy' for any pre-migration record — mirrors
+    _resolve_final_status's fallback-without-raising shape, but for identity
+    rather than completion status."""
+    return "native" if rec.get("execution_id") is not None else "legacy"
+
+
 def _coerce_ts(value) -> Optional[str]:
     """A handful of legacy runs.jsonl/events.jsonl/tools.jsonl rows carry raw
     unix-epoch numbers (int/float) instead of ISO strings for timestamp
@@ -342,6 +350,10 @@ def _build_run_summary(run_id: str, record: Optional[dict], inferred: Optional[d
             agent_count=record.get("agent_count") or 0,
             is_inferred_active=False,
             inferred_start_ts=None,
+            provider=record.get("provider"),
+            execution_id=record.get("execution_id"),
+            ticket_id=record.get("ticket_id"),
+            identity_provenance=_resolve_identity_provenance(record),
         )
     info = inferred or {}
     return RunSummary(
@@ -355,6 +367,10 @@ def _build_run_summary(run_id: str, record: Optional[dict], inferred: Optional[d
         agent_count=0,
         is_inferred_active=True,
         inferred_start_ts=info.get("inferred_start_ts"),
+        provider=None,
+        execution_id=None,
+        ticket_id=None,
+        identity_provenance="legacy",
     )
 
 
@@ -618,6 +634,9 @@ class DashboardCache:
         status: Optional[str] = None,
         workflow: Optional[str] = None,
         since: Optional[str] = None,
+        provider: Optional[str] = None,
+        execution_id: Optional[str] = None,
+        ticket_id: Optional[str] = None,
     ) -> list[RunSummary]:
         with self._lock:
             self._maybe_rebuild()
@@ -632,6 +651,12 @@ class DashboardCache:
                 if workflow is not None and summary.workflow != workflow:
                     continue
                 if since is not None and (summary.start_ts is None or summary.start_ts < since):
+                    continue
+                if provider is not None and summary.provider != provider:
+                    continue
+                if execution_id is not None and summary.execution_id != execution_id:
+                    continue
+                if ticket_id is not None and summary.ticket_id != ticket_id:
                     continue
                 summaries.append(summary)
 

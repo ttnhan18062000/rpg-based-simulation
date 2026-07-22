@@ -24,7 +24,7 @@ from manifest import build_manifest  # noqa: E402
 
 _EXPECTED_KEYS = {"file", "line_count", "byte_size", "sha256", "parser_result", "legacy_warning_count"}
 _WATCHED_JSONL_FILES = ["events.jsonl", "runs.jsonl", "tools.jsonl"]
-_WRITER_GUARD_FILES = ["validate.py", "record_run.py", "record_events.py", "post_tool_hook.py"]
+_WRITER_GUARD_FILES = ["validate.py"]
 
 
 # ---------------------------------------------------------------------------
@@ -141,12 +141,20 @@ def test_manifest_run_against_real_corpus_produces_zero_diff():
 
 
 def test_writer_files_are_byte_unchanged_by_this_ticket():
-    # Enforces the ticket's Out of Scope line: this ticket must never touch
-    # validate.py, record_run.py, record_events.py, or post_tool_hook.py.
+    # Enforces TCK-20260721-BASELINE-MONITORING-MANIFEST's own Out of Scope line: that
+    # ticket must never touch validate.py, record_run.py, record_events.py, or
+    # post_tool_hook.py. Narrowed to validate.py only (2026-07-22, superseded by
+    # TCK-20260721-MONITORING-WRITER-UNIFICATION): that ticket's own explicit, reviewed
+    # scope is to migrate record_run.py/record_events.py/post_tool_hook.py's append step
+    # to a new shared writer module (tools/agent-monitoring/writer.py) — an unconditional
+    # "these 3 files must never be modified, by any future ticket, forever" assertion is
+    # factually incompatible with that legitimate, approved work. validate.py's own
+    # untouched status (per that ticket's own Scope Guards: "read load_jsonl only, never
+    # modify") is still a real, currently-true invariant worth guarding.
     result = subprocess.run(
         ["git", "diff", "--stat", "HEAD", "--", *[f"tools/agent-monitoring/{f}" for f in _WRITER_GUARD_FILES]],
         cwd=str(_REPO_ROOT), capture_output=True, text=True, check=True,
     )
     assert result.stdout.strip() == "", (
-        f"a monitoring writer file was modified by this ticket's own diff: {result.stdout}"
+        f"validate.py was modified by this ticket's own diff: {result.stdout}"
     )

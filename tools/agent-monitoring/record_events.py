@@ -9,6 +9,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from cost_proxy import compute_cost_proxy_score  # noqa: E402
 from vocabulary import WORKFLOW_PHASES, infer_workflow, is_known_agent  # noqa: E402
+from writer import write_lines  # noqa: E402
 
 REQUIRED = {"run_id", "seq", "ts", "phase", "agent", "summary", "status"}
 VALID_STATUS = {"ok", "failed", "blocked", "skipped"}
@@ -140,9 +141,14 @@ def main():
             records[i] = {**record, "tool_call_count": tool_call_count, "cost_proxy_score": cost_proxy_score}
 
     EVENTS_FILE.parent.mkdir(parents=True, exist_ok=True)
-    with open(EVENTS_FILE, "a") as f:
-        for record in records:
-            f.write(json.dumps(record, separators=(",", ":")) + "\n")
+    lines = [json.dumps(record, separators=(",", ":")) for record in records]
+    ok = write_lines(EVENTS_FILE, lines)
+    if not ok:
+        print(
+            f"WARNING: append failed for {len(records)} event record(s), "
+            "see agent-monitoring/.writer_health.jsonl",
+            file=sys.stderr,
+        )
 
     print(f"DONE: appended {len(records)} event record(s)")
 

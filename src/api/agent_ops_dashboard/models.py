@@ -88,6 +88,10 @@ class RunSummary(BaseModel):
     agent_count: int
     is_inferred_active: bool
     inferred_start_ts: Optional[str] = None
+    provider: Optional[str] = None
+    execution_id: Optional[str] = None
+    ticket_id: Optional[str] = None
+    identity_provenance: str = "legacy"
 
 
 class RunDetail(RunSummary):

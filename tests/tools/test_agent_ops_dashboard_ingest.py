@@ -368,6 +368,82 @@ def test_legacy_runs_jsonl_schema_generations_do_not_crash_ingest(tmp_path):
 
 
 # ---------------------------------------------------------------------------
+# TCK-20260721-MONITORING-WRITER-UNIFICATION — provider/execution_id/ticket_id
+# grouping/filtering, legacy/unknown labeling
+# ---------------------------------------------------------------------------
+
+
+def test_run_summary_carries_provider_execution_id_ticket_id_when_present(tmp_path):
+    _init_repo_skeleton(tmp_path)
+    runs_file = tmp_path / "agent-monitoring" / "runs.jsonl"
+    row = {
+        "run_id": "TCK-NATIVE-IDENTITY",
+        "start_ts": "2026-07-22T00:00:00Z",
+        "workflow": "implement-ticket",
+        "tier": "standard",
+        "final_status": "DONE",
+        "execution_id": "claude-TCK-NATIVE-IDENTITY-1234567890-abcd1234",
+        "provider": "claude",
+        "ticket_id": "TCK-NATIVE-IDENTITY",
+    }
+    runs_file.write_text(json.dumps(row) + "\n")
+
+    cache = ingest.DashboardCache(repo_root=tmp_path)
+    runs = cache.get_runs(limit=100)
+    assert len(runs) == 1
+    summary = runs[0]
+    assert summary.provider == "claude"
+    assert summary.execution_id == "claude-TCK-NATIVE-IDENTITY-1234567890-abcd1234"
+    assert summary.ticket_id == "TCK-NATIVE-IDENTITY"
+    assert summary.identity_provenance == "native"
+
+
+def test_run_summary_labels_legacy_record_as_legacy_not_none_silently(tmp_path):
+    _init_repo_skeleton(tmp_path)
+    runs_file = tmp_path / "agent-monitoring" / "runs.jsonl"
+    legacy_line = (_FIXTURES_DIR / "shape2_final_status_no_end_ts.jsonl").read_text().strip()
+    runs_file.write_text(legacy_line + "\n")
+
+    cache = ingest.DashboardCache(repo_root=tmp_path)
+    runs = cache.get_runs(limit=100)
+    assert len(runs) == 1
+    summary = runs[0]
+    assert summary.provider is None
+    assert summary.execution_id is None
+    assert summary.identity_provenance == "legacy"
+
+
+def test_get_runs_filters_by_provider_and_execution_id(tmp_path):
+    _init_repo_skeleton(tmp_path)
+    runs_file = tmp_path / "agent-monitoring" / "runs.jsonl"
+    legacy_line = (_FIXTURES_DIR / "shape2_final_status_no_end_ts.jsonl").read_text().strip()
+    native_row = {
+        "run_id": "TCK-NATIVE-FILTER-TEST",
+        "start_ts": "2026-07-22T00:00:00Z",
+        "workflow": "implement-ticket",
+        "tier": "standard",
+        "final_status": "DONE",
+        "execution_id": "claude-TCK-NATIVE-FILTER-TEST-1234567890-abcd1234",
+        "provider": "claude",
+        "ticket_id": "TCK-NATIVE-FILTER-TEST",
+    }
+    runs_file.write_text(legacy_line + "\n" + json.dumps(native_row) + "\n")
+
+    cache = ingest.DashboardCache(repo_root=tmp_path)
+
+    all_runs = cache.get_runs(limit=100)
+    assert len(all_runs) == 2  # never dropped or erroring on the legacy row
+
+    by_provider = cache.get_runs(limit=100, provider="claude")
+    assert [r.run_id for r in by_provider] == ["TCK-NATIVE-FILTER-TEST"]
+
+    by_execution_id = cache.get_runs(
+        limit=100, execution_id="claude-TCK-NATIVE-FILTER-TEST-1234567890-abcd1234"
+    )
+    assert [r.run_id for r in by_execution_id] == ["TCK-NATIVE-FILTER-TEST"]
+
+
+# ---------------------------------------------------------------------------
 # TCK-20260716-AGENTOPS-TICKETS-VIEW — get_tickets AND-across-dimensions,
 # OR-within-tag filter semantics (closes a coverage gap left by this file's
 # original scope, which never exercised get_tickets's own filter logic).
@@ -640,3 +716,52 @@ def test_malformed_jsonl_line_is_skipped_and_counted():
         records, unparsed = ingest.load_jsonl_counted(p)
         assert len(records) == 1
         assert unparsed == 1
+
+
+# ---------------------------------------------------------------------------
+# TCK-20260721-MONITORING-WRITER-UNIFICATION — legacy-shape regression fixture
+# ---------------------------------------------------------------------------
+
+_FIXTURES_DIR = Path(__file__).resolve().parent.parent / "fixtures" / "agent_monitoring"
+
+_LEGACY_SHAPE_FIXTURE_FILES = [
+    "shape1_started_finished_notes.jsonl",
+    "shape2_final_status_no_end_ts.jsonl",
+    "shape3_ts_start_ts_end_result.jsonl",
+    "shape4_completed_at_status.jsonl",
+    "shape5_folder_epic_bare_status.jsonl",
+    "shape6_type_checker_exception.jsonl",
+]
+
+
+def test_load_jsonl_handles_all_legacy_shapes_plus_new_execution_identity_format(tmp_path):
+    # 6 real-corpus-extracted legacy shapes (byte-for-byte copies, per
+    # tests/fixtures/agent_monitoring/PROVENANCE.md's own rule — never hand-edited)
+    # plus one new-format line constructed inline here (this migration is what
+    # introduces the shape, so it does not exist anywhere in the real corpus yet).
+    lines = []
+    for filename in _LEGACY_SHAPE_FIXTURE_FILES:
+        lines.append((_FIXTURES_DIR / filename).read_text().strip())
+
+    new_format_record = {
+        "run_id": "TCK-FAKE-NEW-FORMAT",
+        "workflow": "implement-ticket",
+        "tier": "standard",
+        "final_status": "DONE",
+        "start_ts": "2026-07-22T00:00:00Z",
+        "end_ts": "2026-07-22T00:05:00Z",
+        "execution_id": "claude-TCK-FAKE-NEW-FORMAT-1234567890-abcd1234",
+        "provider": "claude",
+        "ticket_id": "TCK-FAKE-NEW-FORMAT",
+    }
+    lines.append(json.dumps(new_format_record, separators=(",", ":")))
+
+    fixture_file = tmp_path / "runs.jsonl"
+    fixture_file.write_text("\n".join(lines) + "\n")
+
+    records = ingest.load_jsonl(fixture_file)
+    assert len(records) == 7
+
+    parsed_records, unparsed_lines = ingest.load_jsonl_counted(fixture_file)
+    assert len(parsed_records) == 7
+    assert unparsed_lines == 0

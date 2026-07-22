@@ -6,6 +6,9 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from writer import write_line  # noqa: E402
+
 REQUIRED = {"run_id", "start_ts", "workflow", "tier", "final_status", "agent_count"}
 RUNS_FILE = Path("agent-monitoring/runs.jsonl")
 
@@ -62,8 +65,13 @@ def main():
     record["duration_s"] = compute_duration_s(record)
 
     RUNS_FILE.parent.mkdir(parents=True, exist_ok=True)
-    with open(RUNS_FILE, "a") as f:
-        f.write(json.dumps(record, separators=(",", ":")) + "\n")
+    ok = write_line(RUNS_FILE, json.dumps(record, separators=(",", ":")))
+    if not ok:
+        print(
+            f"WARNING: append failed for run_id={record['run_id']}, "
+            "see agent-monitoring/.writer_health.jsonl",
+            file=sys.stderr,
+        )
 
     print(f"DONE: appended run record for {record['run_id']} (status={record['final_status']})")
 

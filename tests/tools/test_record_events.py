@@ -15,6 +15,8 @@ _MONITORING_TOOLS_DIR = Path(__file__).parent.parent.parent / "tools" / "agent-m
 if str(_MONITORING_TOOLS_DIR) not in sys.path:
     sys.path.insert(0, str(_MONITORING_TOOLS_DIR))
 
+import record_events  # noqa: E402
+import writer  # noqa: E402
 from record_events import compute_tool_stats, validate_record, warn_vocabulary_drift  # noqa: E402
 
 _RECORD_PATH = _MONITORING_TOOLS_DIR / "record_events.py"
@@ -255,3 +257,89 @@ def test_compute_tool_stats_only_targets_implement_ticket_workflow(tmp_path, mon
     ]
     stats = compute_tool_stats(records)
     assert stats == {("TCK-MIXED-BATCH", 1): (1, 1.0)}
+
+
+# ---------------------------------------------------------------------------
+# TCK-20260721-MONITORING-WRITER-UNIFICATION — shared writer migration
+# ---------------------------------------------------------------------------
+
+
+def test_execution_identity_fields_pass_through_unchanged(tmp_path):
+    record = {
+        **_VALID_EVENT,
+        "execution_id": "claude-TCK-FAKE-RUN-1234567890-abcd1234",
+        "provider": "claude",
+        "ticket_id": "TCK-FAKE-RUN",
+    }
+    result = subprocess.run(
+        [sys.executable, str(_RECORD_PATH), "--data", json.dumps([record])],
+        capture_output=True,
+        text=True,
+        cwd=tmp_path,
+    )
+    assert result.returncode == 0, result.stderr
+    written = json.loads((tmp_path / "agent-monitoring" / "events.jsonl").read_text().strip())
+    assert written["execution_id"] == "claude-TCK-FAKE-RUN-1234567890-abcd1234"
+    assert written["provider"] == "claude"
+    assert written["ticket_id"] == "TCK-FAKE-RUN"
+
+
+def test_append_failure_is_non_blocking(tmp_path, monkeypatch, capsys):
+    # An append-layer failure (post-validation) must not sys.exit(1) — reserved
+    # for validation failures, which happen before write_lines is ever called.
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(record_events, "write_lines", lambda *a, **kw: False)
+    monkeypatch.setattr(sys, "argv", ["record_events.py", "--data", json.dumps([dict(_VALID_EVENT)])])
+
+    record_events.main()  # must not raise SystemExit
+
+    captured = capsys.readouterr()
+    assert "WARNING" in captured.err
+    assert "DONE:" in captured.out
+
+
+def test_batch_write_holds_contiguous_lines_under_concurrent_writer(tmp_path):
+    # write_lines holds one lock acquisition for the whole batch, so a batch's
+    # own N lines cannot be interleaved by a concurrent single-line writer —
+    # this is a property enforced structurally by the lock, verified here by
+    # racing record_events.py's own batch write against direct writer.write_line
+    # calls targeting the same file.
+    import threading
+
+    events_file = tmp_path / "agent-monitoring" / "events.jsonl"
+    events_file.parent.mkdir(parents=True, exist_ok=True)
+
+    batch_size = 5
+    batch = [
+        {**_VALID_EVENT, "run_id": "TCK-BATCH-CONTIG-TEST", "seq": i, "summary": f"batch-{i}"}
+        for i in range(batch_size)
+    ]
+
+    proc = subprocess.Popen(
+        [sys.executable, str(_RECORD_PATH), "--data", json.dumps(batch)],
+        cwd=tmp_path,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+
+    stop_flag = threading.Event()
+
+    def _single_writer():
+        i = 0
+        while not stop_flag.is_set() and i < 500:
+            writer.write_line(events_file, json.dumps({"run_id": "single-writer", "marker": f"single-{i}"}))
+            i += 1
+
+    t = threading.Thread(target=_single_writer)
+    t.start()
+    proc.wait(timeout=10)
+    stop_flag.set()
+    t.join(timeout=10)
+
+    assert proc.returncode == 0, proc.stderr.read()
+
+    records = [json.loads(line) for line in events_file.read_text().splitlines()]
+    batch_indices = [i for i, r in enumerate(records) if r.get("run_id") == "TCK-BATCH-CONTIG-TEST"]
+    assert len(batch_indices) == batch_size
+    assert batch_indices == list(range(batch_indices[0], batch_indices[0] + batch_size))
