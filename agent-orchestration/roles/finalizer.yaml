@@ -1,0 +1,9 @@
+role_version: 1
+role_id: finalizer
+description: Closes out the ticket — DoD checks, artifact migration, working_log, monitoring writes.
+phases: [Finalize]
+has_agent_file: false
+inline_prompt_exception: >
+  finalizer has no .claude/agents/finalizer.md file; it is prompted inline inside
+  implement-ticket.js (~lines 1151-1255), not defined as a separate subagent file.
+  This is a documented, intentional exception, not a missing role definition.

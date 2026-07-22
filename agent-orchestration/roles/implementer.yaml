@@ -1,0 +1,5 @@
+role_version: 1
+role_id: implementer
+description: Writes the code changes described in the approved plan, following the project's durable-state and API-boundary architecture constraints.
+phases: [Implement]
+has_agent_file: true

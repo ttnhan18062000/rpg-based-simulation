@@ -1,0 +1,71 @@
+# One entry per .claude/skills/*/SKILL.md directory. Distinct vocabulary axis from roles/*.yaml
+# (reusable skills vs. delegated subagent roles) — see test_skills_yaml_does_not_duplicate_role_fields.
+# `workflows`/`roles` only reference ids that actually exist elsewhere in this contract today
+# (workflows/implement-ticket.yaml, roles/*.yaml); left empty where the corresponding
+# workflows/<name>.yaml file has not been built yet in this first vertical slice.
+skills_version: 1
+skills:
+  - id: agent-monitoring-retro
+    description: Generates the agent monitoring retro report from accumulated runs.jsonl/events.jsonl data.
+    workflows: []
+    roles: []
+  - id: api-design-principles
+    description: REST and GraphQL API design principles for building intuitive, scalable, maintainable APIs.
+    workflows: []
+    roles: []
+  - id: architecture
+    description: Architectural decision-making framework — requirements analysis, trade-off evaluation, ADR documentation.
+    workflows: []
+    roles: []
+  - id: backend-testing
+    description: Writes comprehensive backend unit, integration, and API tests.
+    workflows: []
+    roles: []
+  - id: brainstorming
+    description: Explores user intent, requirements, and design before creative implementation work.
+    workflows: []
+    roles: []
+  - id: create-tickets
+    description: Ticket creation/scoping workflow — comprehend, investigate, structure, write, link.
+    workflows: []
+    roles: [ticket-scoper]
+  - id: debugging-strategies
+    description: Systematic debugging techniques, profiling tools, and root cause analysis.
+    workflows: []
+    roles: []
+  - id: doc-coauthoring
+    description: Structured workflow for co-authoring documentation, proposals, and technical specs.
+    workflows: []
+    roles: []
+  - id: frontend-design
+    description: Produces distinctive, production-grade frontend interfaces and UI components.
+    workflows: []
+    roles: []
+  - id: implement-epic
+    description: Scopes and tracks child tickets for a large multi-ticket initiative.
+    workflows: []
+    roles: []
+  - id: implement-ticket
+    description: Full ticket implementation workflow orchestrator — scope through finalize.
+    workflows: [implement-ticket]
+    roles: []
+  - id: prompt-builder
+    description: Guides creation of high-quality structured prompts with proper tool and format conventions.
+    workflows: []
+    roles: []
+  - id: python-performance-optimization
+    description: Profiles and optimizes Python code using cProfile, memory profilers, and performance best practices.
+    workflows: []
+    roles: []
+  - id: python-testing-patterns
+    description: Comprehensive pytest testing strategies — fixtures, mocking, test-driven development.
+    workflows: []
+    roles: []
+  - id: simq-audit
+    description: Recalibration/drift-classification audit workflow for simulation quality.
+    workflows: []
+    roles: []
+  - id: test-driven-development
+    description: Write-tests-first workflow used before implementing any feature or bugfix.
+    workflows: []
+    roles: []

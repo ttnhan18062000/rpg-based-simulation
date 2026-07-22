@@ -1,0 +1,5 @@
+role_version: 1
+role_id: done-checker
+description: Verifies all Definition-of-Done conditions before a ticket can move to tickets/done/.
+phases: [Verify]
+has_agent_file: true

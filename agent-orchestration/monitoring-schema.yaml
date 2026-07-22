@@ -1,0 +1,23 @@
+# Execution-identity field model, carried verbatim from docs/ai/monitoring_writer_decision.md
+# §2 "Execution Identity Model" — already decided there and consumed as an input by
+# docs/architecture/agent_orchestration_contract.md's "Execution Identity (Consumed Input)"
+# subsection. This ticket does not re-derive or alter these fields' shape, and this file does
+# not itself write to any real agent-monitoring/*.jsonl file.
+schema_version: 1
+fields:
+  execution_id:
+    description: >
+      Immutable per-execution key: f"{provider}-{ticket_id}-{unix_ts_ms}-{secrets.token_hex(4)}".
+      Generated fresh once per workflow execution. Never reused. Never a join key.
+    format: "{provider}-{ticket_id}-{unix_ts_ms}-{token_hex_8}"
+    source: docs/ai/monitoring_writer_decision.md#execution-identity-model
+  run_id:
+    description: >
+      Human-readable run reference, unchanged shape (TCK-YYYYMMDD-SHORT-SCOPE or EPIC-*/FOLDER-*).
+      Display/reference field, not the execution's primary key.
+    source: docs/ai/monitoring_writer_decision.md#execution-identity-model
+  ticket_id:
+    description: >
+      Stable cross-run join key. All records for all executions of the same ticket, by any
+      provider, share the same ticket_id value.
+    source: docs/ai/monitoring_writer_decision.md#execution-identity-model

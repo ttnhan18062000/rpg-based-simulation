@@ -1,0 +1,5 @@
+role_version: 1
+role_id: investigator
+description: Investigates the affected codebase and produces investigation.md and test_plan.md ahead of planning.
+phases: [Investigate]
+has_agent_file: true

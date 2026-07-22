@@ -1,0 +1,54 @@
+# Phase/agent vocabulary bootstrap-initialized once (value-equality, not identity) from
+# tools/agent-monitoring/vocabulary.py's WORKFLOW_PHASES["implement-ticket"] /
+# WORKFLOW_AGENTS["implement-ticket"], per docs/architecture/agent_orchestration_contract.md's
+# Source Ownership decision. See tests/agent_orchestration/test_bootstrap_vocabulary_equality.py
+# for the one-time bootstrap-correctness check and agent-orchestration/README.md for why this is
+# one-time, not an ongoing sync.
+#
+# tier_behavior per phase (verified against .claude/workflows/implement-ticket.js's real branch
+# structure, see staging_artifacts/TCK-20260721-ORCHESTRATION-CONTRACT-CORE/investigation.md):
+#   full              — phase runs its full agent call and writes an 'ok'/'failed' event.
+#   skipped_event     — phase is not executed, but an event with status 'skipped' is still
+#                        written to events.jsonl (the phase is not literally absent from the log).
+#   conditional_absent — phase writes NO event at all when its trigger condition is false; this is
+#                        materially different from skipped_event and must not be conflated with it.
+workflow_version: 1
+workflow_id: implement-ticket
+phases:
+  - name: Scope
+    tiers: {standard: full, hotfix: full}
+  - name: Investigate
+    tiers: {standard: full, hotfix: skipped_event}
+  - name: Plan
+    tiers: {standard: full, hotfix: skipped_event}
+  - name: Review
+    tiers: {standard: full, hotfix: skipped_event}
+  - name: Implement
+    tiers: {standard: full, hotfix: full}
+  - name: Architecture-Verify
+    tiers: {standard: full, hotfix: skipped_event}
+  - name: Test
+    tiers: {standard: full, hotfix: full}
+  - name: Parity
+    tiers: {standard: conditional, hotfix: conditional}
+    condition: src_change_and_behavior_changed
+    if_false: skipped_event
+  - name: Security-Review
+    tiers: {standard: conditional, hotfix: conditional}
+    condition: security_tag_or_suggested_skill
+    if_false: conditional_absent
+  - name: Verify
+    tiers: {standard: full, hotfix: full}
+  - name: Finalize
+    tiers: {standard: full, hotfix: full}
+agents:
+  - ticket-scoper
+  - investigator
+  - planner
+  - architecture-reviewer
+  - implementer
+  - test-scoper
+  - parity-updater
+  - security-reviewer
+  - done-checker
+  - finalizer

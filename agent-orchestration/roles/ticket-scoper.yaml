@@ -1,0 +1,5 @@
+role_version: 1
+role_id: ticket-scoper
+description: Creates or loads the ticket, computes tags/suggested_skills/mistag_warning, and detects scope conflicts before implementation begins.
+phases: [Scope]
+has_agent_file: true
