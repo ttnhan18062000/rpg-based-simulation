@@ -1,0 +1,1 @@
+{"run_id":"TCK-20260610-SENSE-PERCEPTION-GATE","ticket_id":"TCK-20260610-SENSE-PERCEPTION-GATE","tier":"standard","status":"DONE","started_at":"2026-06-10T12:05:00Z","completed_at":"2026-06-10T12:10:00Z","agent":"implement-ticket","notes":"PerceptionGate added; 11 tests pass"}

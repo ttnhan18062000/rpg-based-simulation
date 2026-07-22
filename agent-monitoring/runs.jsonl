@@ -700,3 +700,4 @@
 {"run_id":"TCK-20260721-PROVIDER-AGNOSTIC-EPIC","start_ts":"2026-07-21T14:20:40Z","end_ts":"2026-07-21T14:20:40Z","workflow":"implement-epic","tier":"epic","final_status":"DONE","agent_count":1,"duration_s":0}
 {"run_id":"TCK-20260721-PROVIDER-AGNOSTIC-IMPLEMENTATION-EPIC","start_ts":"2026-07-21T14:31:18Z","end_ts":"2026-07-21T14:39:34Z","workflow":"implement-ticket","tier":"epic","final_status":"EPIC_SCOPED","agent_count":1,"duration_s":496}
 {"run_id":"CREATE-TICKETS-DOCS-PLANS-AGENT-INFRASTRUCTURE-PROVIDER-AGNOSTIC-ORCHESTRATION-IMPLEMENTATION-PLAN","start_ts":"2026-07-21T14:40:04Z","end_ts":"2026-07-21T15:00:50Z","workflow":"create-tickets","tier":"n/a","final_status":"DONE","agent_count":18,"duration_s":1246}
+{"run_id":"TCK-20260721-BASELINE-MONITORING-MANIFEST","start_ts":"2026-07-22T03:48:15Z","end_ts":"2026-07-22T04:19:12Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":10,"duration_s":1857}

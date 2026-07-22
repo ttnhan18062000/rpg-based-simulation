@@ -1,0 +1,1 @@
+{"session_id":"72499164-0421-45ce-aa03-25b83d01d931","run_id":"TCK-20260614-CERT-SAFE-SERIAL","seq":2,"ts":"2026-06-14T04:16:52.163120Z","tool":"Bash","input_summary":"python3 -c \"import json; open('.claude/current_run','w').write(json.dumps({'run_","status":"ok","duration_ms":130}
