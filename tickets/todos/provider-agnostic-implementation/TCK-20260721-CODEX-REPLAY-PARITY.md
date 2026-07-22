@@ -29,9 +29,13 @@ P1
 ## Request Summary
 Run the replay fixture through the actual Codex adapter (not just the provider-neutral Python replay runner), proving zero ticket edits, zero production-hook invocation, and zero monitoring-corpus writes during replay; then run shadow mode against real implement-ticket inputs, comparing Claude and Codex on phase completion, gate result, required artifacts, and normalized event intent, with Claude remaining the only live writer throughout. This matters because the discovery epic's existing AST-scan/content-hash containment proof only works for in-process Python code, and a real Codex CLI/session is a separate opaque external process that needs a materially different, process-level verification technique.
 
+**Corrected per Codex review (2026-07-22):** this ticket now has an explicit intra-batch dependency on `TCK-20260721-MONITORING-WRITER-UNIFICATION` (the plan sequences Phase 4 after Phase 3; this ticket's shadow-mode monitoring-record-provenance checks depend on that writer/reader contract existing). It also now requires a formal, enforceable human-consent gate before any real Codex CLI/API invocation that consumes account usage — the Codex-guidance ticket documents this risk, but this ticket needs its own enforceable guard, not just a shared assumption.
+
 ## Scope
+- **Entry criterion: `TCK-20260721-MONITORING-WRITER-UNIFICATION` must have landed** — this ticket's monitoring-record-provenance checks depend on that writer/reader contract existing
+- **Require an explicit, programmatically-checked human-consent gate before any step that invokes the real Codex CLI/API** (which consumes account usage) — the workflow must refuse to proceed to that step without recorded consent, mirroring the same requirement in `TCK-20260721-CODEX-GUIDANCE-FIXTURE-CAPTURE`
 - Run the replay fixture through the actual Codex adapter/CLI (not the provider-neutral Python replay runner) for a fixture spanning Scope through Review phases
-- Prove zero ticket edits, zero production-hook invocation, and zero monitoring-corpus writes during the real Codex replay using a process-level or filesystem-level containment proof (not AST scan) — e.g. strace/file-open monitoring, git-porcelain snapshot diff, or filesystem-permission sandboxing
+- Prove zero ticket edits, zero production-hook invocation, and zero monitoring-corpus writes during the real Codex replay using a process-level or filesystem-level containment proof (not AST scan) — e.g. strace/file-open monitoring, git-porcelain snapshot diff, or filesystem-permission sandboxing; this ticket's own Investigate/Plan phase must select and justify ONE auditable method before any paid/live invocation, not merely list candidates
 - Take pre/post content-hash or git-porcelain snapshots of tickets/ and agent-monitoring/*.jsonl around the real Codex invocation and assert identical
 - Run shadow-mode comparison across N real implement-ticket inputs, comparing Claude and Codex on phase completion, gate result, required artifacts, and normalized event intent
 - Confirm Claude remains the sole live writer throughout, verified via monitoring-record provenance
@@ -41,8 +45,13 @@ Run the replay fixture through the actual Codex adapter (not just the provider-n
 - Does not cover phases beyond Scope through Review (Implement, Test, Parity, Verify, Finalize) unless the fixture envelope format is separately extended to define a files_changed/diff payload — that extension, if needed, is a distinct piece of work explicitly outside this ticket's boundary
 - Does not enable a live Codex pilot ticket run (that is the live-Codex-pilot-guardrails ticket's scope)
 - Does not modify the Python-only replay runner's existing AST-scan/content-hash containment proof (tools/agent_replay/) — this ticket adds a new, separate real-process containment technique rather than replacing the existing one
+- Does not begin before TCK-20260721-MONITORING-WRITER-UNIFICATION has landed
+- Does not invoke the real Codex CLI/API at any point without the explicit, recorded human-consent gate having been satisfied first
 
 ## Acceptance Criteria
+- [ ] This ticket does not begin real-Codex-execution work until TCK-20260721-MONITORING-WRITER-UNIFICATION has landed
+- [ ] An explicit, programmatically-checked human-consent gate exists and is enforced immediately before any step that invokes the real Codex CLI/API; the workflow refuses to proceed without it
+- [ ] This ticket's own Investigate/Plan phase selects and documents ONE auditable process-level containment-verification technique (not a list of candidates) before any paid/live Codex invocation occurs
 - [ ] Running the same fixture envelope through a real Codex-side execution path produces final_status/phases_completed that exactly match the Python runner's output for the same fixture; any divergence is registered in agent-orchestration/intentional-divergences.md
 - [ ] A process-level or filesystem-level containment proof (not AST scan) demonstrates zero invocation of the 4 forbidden monitoring/hook scripts during the real Codex run
 - [ ] Pre/post content-hash or git-porcelain snapshot of tickets/ and agent-monitoring/*.jsonl around the real Codex invocation is asserted identical (zero diff)
@@ -51,6 +60,8 @@ Run the replay fixture through the actual Codex adapter (not just the provider-n
 - [ ] This ticket's scope boundary (Scope through Review only) is explicitly documented and enforced — no fixture inputs spanning Implement/Test/Parity/Verify/Finalize are exercised unless the fixture envelope is separately extended
 
 ## Related Tickets
+- TCK-20260721-MONITORING-WRITER-UNIFICATION (hard predecessor — added per Codex's 2026-07-22 review correction; this ticket's shadow-mode provenance checks depend on the writer/reader contract it delivers)
+- TCK-20260721-CODEX-GUIDANCE-FIXTURE-CAPTURE (hard predecessor — trusted .codex/ config and verified real hook payloads)
 - TCK-20260721-CODEX-REPLAY-PROOF
 - TCK-20260721-CODEX-CAPABILITY-MATRIX
 - TCK-20260721-ORCHESTRATION-CONTRACT-ADR

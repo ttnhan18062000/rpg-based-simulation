@@ -48,6 +48,7 @@ The author wants generate_retro.py's hand-rolled _resolve_status(), _is_legacy_e
 
 ## Related Tickets
 - TCK-20260713-MONITORING-SQLITE-INDEX (BLOCKS this ticket — build_index.py must ship first)
+- TCK-20260721-MONITORING-WRITER-UNIFICATION (BLOCKS this ticket — added 2026-07-22 per Codex review of the provider-agnostic-implementation batch: this ticket's provider/execution_id-aware read migration depends on that ticket's additive writer schema fields existing first; see tickets/todos/provider-agnostic-implementation/SEQUENCE.md)
 - TCK-20260607-MON-RETRO
 - TCK-20260705-RETRO-METRIC-ACCURACY
 - TCK-20260705-RETRO-INDEX-ALL-ROW

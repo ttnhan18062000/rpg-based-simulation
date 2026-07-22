@@ -29,25 +29,30 @@ P1
 ## Request Summary
 Stand up the versioned agent-orchestration/ semantic contract (contract.yaml, workflows/implement-ticket.yaml, roles/*.yaml, monitoring-schema.yaml, hook-events.yaml) as the one authoritative description of phases, terminal statuses, roles, artifacts, and gates for the first vertical slice, plus a deterministic, network-free validator/generator that fails clearly on malformed definitions and never touches provider files except through an explicit generation command. This matters because the ADR already decided YAML+generated-Python validation with the repo-root agent-orchestration/ as the source spec, and the Provider-Adapter Boundary bars adapters from redefining phases/statuses/gates/artifacts.
 
+**Corrected per Codex review (2026-07-22):** the original AC treated `tools/agent-monitoring/vocabulary.py` as a permanent upstream authority the contract must stay generated-from-or-equal-to forever. That reverses the ADR's own Source Ownership decision (the contract, not `vocabulary.py`, is the eventual canonical source). The corrected approach is a one-time bootstrap, not a permanent binding — see the revised Scope/AC below.
+
 ## Scope
 - Create agent-orchestration/ directory with contract.yaml, workflows/implement-ticket.yaml, roles/*.yaml, monitoring-schema.yaml, hook-events.yaml covering standard and hotfix tiers
 - Decide and document a versioning scheme; contract.yaml carries a required `version` field
 - Build a deterministic, network-free validator/generator tool that fails clearly on malformed contract definitions
 - Ensure the generator only writes outside agent-orchestration/ when invoked via an explicit generation command/flag
-- Derive (not hand-duplicate) phase/status vocabulary in workflows/implement-ticket.yaml from tools/agent-monitoring/vocabulary.py's WORKFLOW_PHASES/WORKFLOW_AGENTS, either generated from it or validated as asserted-equal
+- **Bootstrap the phase/status vocabulary from `tools/agent-monitoring/vocabulary.py`'s WORKFLOW_PHASES/WORKFLOW_AGENTS as a one-time initialization step**, with a test asserting equality while the Claude workflow remains live and `vocabulary.py` is still the operative legacy source of truth
+- **Define the one-way future relationship explicitly in this ticket's own documentation**: once this contract is validated, it becomes the upstream semantic authority; `vocabulary.py` (and any provider adapter's own vocabulary) must become generated/validated FROM the contract, not the other way around — this ticket does not flip that direction itself (that's follow-on work once adapters exist), but it must not design the vocabulary relationship as a permanent two-way equality assertion, and must not permanently generate the contract from `vocabulary.py`
 
 ## Out of Scope
 - Does not modify or reroute the live .claude/workflows/implement-ticket.js
 - Does not build the Claude conformance/diff tooling (owned by the Claude conformance adapter ticket)
 - Does not implement Codex-side adapters or hooks (owned by the Codex guidance/fixture-capture and Codex replay tickets)
+- Does not flip `vocabulary.py` to be generated from the contract, and does not modify `vocabulary.py` itself — this ticket only bootstraps from it and documents the future one-way direction; actually reversing the generation direction is follow-on work for a later ticket once provider adapters consume the contract
 
 ## Acceptance Criteria
 - [ ] agent-orchestration/ exists with contract.yaml, workflows/implement-ticket.yaml, roles/*.yaml, monitoring-schema.yaml, hook-events.yaml, covering both standard and hotfix tiers
-- [ ] workflows/implement-ticket.yaml's phase/agent vocabulary is generated from, or has a test asserting exact equality with, tools/agent-monitoring/vocabulary.py's WORKFLOW_PHASES/WORKFLOW_AGENTS — never independently hand-typed (guards against a second competing source of truth, per the existing test_canonical_vocabulary_single_sourced precedent)
+- [ ] workflows/implement-ticket.yaml's phase/agent vocabulary is bootstrap-initialized from tools/agent-monitoring/vocabulary.py's WORKFLOW_PHASES/WORKFLOW_AGENTS, with a test asserting equality while the Claude workflow remains live and vocabulary.py remains the legacy source of truth (this is a one-time bootstrap check, not a claim that vocabulary.py stays canonical forever)
+- [ ] This ticket's own documentation (plan.md or the contract's own README.md) explicitly states the one-way future direction: the validated contract will drive generated/validated monitoring vocabulary and provider adapters going forward; it does not maintain two independently hand-authored vocabularies, and does not permanently generate the contract from vocabulary.py or any other provider/monitoring implementation module
 - [ ] Validator raises a named, deterministic error type on an incomplete/malformed contract (mirroring the FixtureValidationError pattern)
 - [ ] Validator/generator makes zero network calls (verified by an automated test)
 - [ ] Validator/generator writes zero files outside agent-orchestration/ unless the explicit generation flag is passed (AST- or mock-verified test)
-- [ ] contract.yaml contains a required `version` field, with the versioning scheme documented in this ticket's plan/investigation artifacts
+- [ ] contract.yaml contains a required `version` field, with the versioning scheme documented and tested in this ticket's plan/investigation artifacts before any provider adapter (Claude conformance, Codex guidance) consumes it
 
 ## Related Tickets
 - TCK-20260721-ORCHESTRATION-CONTRACT-ADR

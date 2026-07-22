@@ -47,6 +47,7 @@ The author wants validate.py's compute_drift_report() and compute_tool_count_dri
 
 ## Related Tickets
 - TCK-20260713-MONITORING-SQLITE-INDEX (BLOCKS this ticket — build_index.py must ship first)
+- TCK-20260721-MONITORING-WRITER-UNIFICATION (BLOCKS this ticket — added 2026-07-22 per Codex review of the provider-agnostic-implementation batch: this ticket's provider/execution_id-aware read migration depends on that ticket's additive writer schema fields existing first; see tickets/todos/provider-agnostic-implementation/SEQUENCE.md)
 - TCK-20260705-MONITORING-RUNID-JOIN
 - TCK-20260708-AGENT-MONITORING-SCHEMA-ENFORCEMENT
 - TCK-20260711-MONITORING-TOOLCOUNT-SIDECAR-COLLISION
