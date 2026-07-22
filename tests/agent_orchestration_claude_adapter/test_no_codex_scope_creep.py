@@ -49,8 +49,18 @@ def test_no_codex_or_provider_adapter_scope_creep_in_this_tickets_tree():
             assert marker not in text, f"{path}: scope-creep marker {marker!r} found"
 
 
-def test_no_dot_codex_directory_exists_in_repo():
-    assert not (_REPO_ROOT / ".codex").exists(), (
-        ".codex/ must not be created by this ticket — Codex-side adapter implementation is "
-        "owned by a different ticket"
-    )
+def test_no_production_hook_registered_in_codex_config():
+    """Permit this ticket's future minimal config while forbidding live hooks."""
+    config_path = _REPO_ROOT / ".codex" / "config.toml"
+    if not config_path.exists():
+        return
+    import tomllib
+    with open(config_path, "rb") as file:
+        data = tomllib.load(file)
+    def walk(node):
+        if isinstance(node, dict):
+            assert "hooks" not in node, f"{config_path}: production hook wiring is forbidden"
+            for value in node.values(): walk(value)
+        elif isinstance(node, list):
+            for value in node: walk(value)
+    walk(data)

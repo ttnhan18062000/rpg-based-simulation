@@ -66,6 +66,34 @@ def build_manifest(agent_monitoring_dir: Path) -> list:
     return records
 
 
+def capture_lines(agent_monitoring_dir: Path) -> dict[str, list[str]]:
+    """Return raw monitoring-file lines in their original order without writing.
+
+    Line-lazy single-pass read (matches _scan_file's own streaming technique) — never a full
+    read_text()/read()/readlines() of the whole file, per this module's own documented invariant.
+    """
+    result: dict[str, list[str]] = {}
+    for filename in _FILES_BY_SOURCE:
+        path = agent_monitoring_dir / filename
+        lines: list[str] = []
+        with open(path, "r", encoding="utf-8") as file:
+            for line in file:
+                lines.append(line)
+        result[filename] = lines
+    return result
+
+
+def assert_prefix_preserved(pre: dict[str, list[str]], post: dict[str, list[str]]) -> None:
+    """Reject rewrites, reorders, or deletions of pre-existing monitoring lines."""
+    for filename, pre_lines in pre.items():
+        post_lines = post.get(filename, [])
+        if post_lines[: len(pre_lines)] != pre_lines:
+            raise AssertionError(
+                f"{filename}: pre-existing lines were rewritten/reordered/deleted "
+                f"(pre-snapshot had {len(pre_lines)} lines; post-snapshot's prefix does not match)"
+            )
+
+
 def _assert_safe_output_path(path: Path) -> None:
     resolved = path.resolve()
     real_monitoring_dir = _AGENT_MONITORING_DIR.resolve()

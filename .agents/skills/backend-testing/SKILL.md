@@ -1,9 +1,6 @@
 ---
 name: backend-testing
-description: Write comprehensive backend tests including unit tests, integration tests, and API tests. Use when testing REST APIs, database operations, authentication flows, or business logic. Handles Jest, Pytest, Mocha, testing strategies, mocking, and test coverage.
-metadata:
-  tags: testing, backend, unit-test, integration-test, API-test, Jest, Pytest, TDD
-  platforms: Claude, ChatGPT, Gemini
+description: 'Writes comprehensive backend unit, integration, and API tests.'
 ---
 
 

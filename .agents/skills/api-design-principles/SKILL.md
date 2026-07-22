@@ -1,9 +1,6 @@
 ---
 name: api-design-principles
-description: "Master REST and GraphQL API design principles to build intuitive, scalable, and maintainable APIs that delight developers. Use when designing new APIs, reviewing API specifications, or establishing..."
-risk: unknown
-source: community
-date_added: "2026-02-27"
+description: 'REST and GraphQL API design principles for building intuitive, scalable, maintainable APIs.'
 ---
 
 # API Design Principles
