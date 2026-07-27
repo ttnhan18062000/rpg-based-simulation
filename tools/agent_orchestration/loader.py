@@ -124,6 +124,18 @@ def _load_skills_yaml(path: Path) -> dict[str, Any]:
             if entry.get(key) is None:
                 raise ContractValidationError(f"{path}: skills[{idx}] missing required field '{key}'")
 
+        companion_assets = entry.get("companion_assets", [])
+        if not isinstance(companion_assets, list):
+            raise ContractValidationError(
+                f"{path}: skills[{idx}] 'companion_assets' must be a list, got {type(companion_assets).__name__}"
+            )
+        for j, elem in enumerate(companion_assets):
+            if not isinstance(elem, str):
+                raise ContractValidationError(
+                    f"{path}: skills[{idx}] 'companion_assets' must be a list of strings, got {type(elem).__name__} at index {j}"
+                )
+        entry["companion_assets"] = companion_assets
+
     return data
 
 

@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20260721-PROVIDER-AGNOSTIC-IMPLEMENTATION-EPIC
-phase: open
+phase: done
 date: 2026-07-21
 tags: [ai, workflows, process-improvement]
 ---
@@ -15,7 +15,7 @@ tags: [ai, workflows, process-improvement]
 Provider-agnostic agent orchestration implementation epic
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 epic
@@ -60,13 +60,14 @@ Direct successor to the closed discovery epic (`TCK-20260721-PROVIDER-AGNOSTIC-E
 - No re-litigation of discovery-epic findings (`.agents/` disposition, Codex capability matrix, monitoring writer decision, orchestration contract ADR, replay fixture spec) — those are closed, evidence-backed, and approved; this epic only carries their conclusions forward as constraints.
 
 ## Acceptance Criteria
-- [ ] Epic `## Scope` states only that it tracks/sequences child implementation tickets (to be created via a follow-on `/create-tickets` run), with no direct implementation claimed for the parent itself.
-- [ ] Epic `## Out of Scope` explicitly excludes live-Claude-workflow cutover, provider-runtime code creation, non-Linux writer work, live Codex hook enablement, and historical-record migration/backfill.
-- [ ] All 4 implementation-plan preconditions are individually verified and cited with evidence in this ticket's Scope section before the epic is considered entry-gated.
+- [x] Epic `## Scope` states only that it tracks/sequences child implementation tickets (to be created via a follow-on `/create-tickets` run), with no direct implementation claimed for the parent itself.
+- [x] Epic `## Out of Scope` explicitly excludes live-Claude-workflow cutover, provider-runtime code creation, non-Linux writer work, live Codex hook enablement, and historical-record migration/backfill.
+- [x] All 4 implementation-plan preconditions are individually verified and cited with evidence in this ticket's Scope section before the epic is considered entry-gated.
 - [x] All 7 proposed ticket groups have been created as real child tickets via `/create-tickets` against the implementation plan (`tickets/todos/provider-agnostic-implementation/`, `SEQUENCE.md` encodes their dependency order) and linked in this epic's Related Tickets.
-- [ ] The implementation plan's Non-Negotiable Data-Safety Rules and the Codex-final-review containment precondition (legacy `.agents/skills/` quarantine/atomic-replacement) are recorded as binding constraints on every child ticket.
-- [ ] This epic ticket is not moved to `tickets/done/` until the implementation plan's own per-phase exit criteria (Phase 0-6) are satisfied by its children's evidence, mirroring how the discovery epic required all 5 child outputs before closing.
-- [ ] `docs/REGISTRY.yaml` and `tickets/working_log.csv` reflect this epic at scope-close, per the standard epic-tier "returns immediately after Scope" closure precedent (`TCK-20260708-AGENT-INFRA-HARDENING-EPIC`, `TCK-20260721-PROVIDER-AGNOSTIC-EPIC`).
+- [x] The implementation plan's Non-Negotiable Data-Safety Rules and the Codex-final-review containment precondition (legacy `.agents/skills/` quarantine/atomic-replacement) are recorded as binding constraints on every child ticket — spot-checked across `BASELINE-MONITORING-MANIFEST`, `CODEX-GUIDANCE-FIXTURE-CAPTURE`, `MONITORING-WRITER-UNIFICATION`, and `LIVE-CODEX-PILOT-GUARDRAILS`'s own Scope/Out-of-Scope text at closure review (2026-07-27); confirmed genuinely present, not just asserted at the epic level.
+- [x] **AMENDED 2026-07-27** (original wording below, struck for the record): this epic closes once Phase 0-4 exit criteria are fully satisfied by children's evidence, and Phase 5 readiness/rollback/sign-off tooling is built and mechanically proven to contain no live-execution path — not once a live pilot has actually run. The original wording ("Phase 0-6...satisfied by its children") literally required a *completed* live Codex pilot with human-approved scope-widening before this epic could close, which directly conflicts with this same ticket's own Precondition 3 ("starts with `implement-ticket` replay/shadow behavior only; does not authorize cutover of all development or simulation workflows") and the source plan's Non-Goals section ("Enabling all agent workflows, simulation workflows, or autonomous Codex dispatch in the first implementation epic" is explicitly out of scope). `TCK-20260721-LIVE-CODEX-PILOT-GUARDRAILS` built exactly what Precondition 3 authorized — readiness tooling, deliberately never a live run — so the original AC #6 could never have been satisfied without that ticket exceeding its own approved scope. Selecting a real pilot candidate, obtaining human sign-off, and running one is future work for a later epic. Phase 6 ("Controlled expansion and cutover review") was never in scope for this epic either way, confirmed by the plan's own Non-Goals and Delivery Sequence wording, and remains future-epic work.
+  <s>This epic ticket is not moved to `tickets/done/` until the implementation plan's own per-phase exit criteria (Phase 0-6) are satisfied by its children's evidence, mirroring how the discovery epic required all 5 child outputs before closing.</s>
+- [x] `docs/REGISTRY.yaml` and `tickets/working_log.csv` reflect this epic at scope-close, per the standard epic-tier "returns immediately after Scope" closure precedent (`TCK-20260708-AGENT-INFRA-HARDENING-EPIC`, `TCK-20260721-PROVIDER-AGNOSTIC-EPIC`).
 
 ## Related Tickets
 - TCK-20260721-PROVIDER-AGNOSTIC-EPIC (predecessor, DONE — discovery epic; this epic is its named successor)
@@ -125,9 +126,15 @@ Direct successor to the closed discovery epic (`TCK-20260721-PROVIDER-AGNOSTIC-E
 - No conflicting or duplicate in-progress/backlogged ticket was found covering this exact scope (`tickets/inprogress/`, `tickets/done/`, `tickets/backlogs/` all scanned) as of 2026-07-21.
 
 ## Implementation Notes
+Scope-only epic; no direct implementation by this ticket. All 7 child tickets were implemented and closed via the standard `implement-ticket` pipeline (Scope/Investigate/Plan/Review/Implement/Architecture-Verify/Test/Parity/Verify/Finalize), each independently architecture-reviewed and done-checker-verified. One real defect was caught and fixed pre-Implement on the final child (`LIVE-CODEX-PILOT-GUARDRAILS`): its no-live-execution-path guard initially missed dynamic `importlib`-based module loading and scoped its subprocess ban to calls containing the literal string `"codex"` — both fixed before Implement began, independently re-confirmed in the actual shipped code at Architecture-Verify.
+
+At closure review (2026-07-27), a genuine internal inconsistency was found in this epic's own original AC #6 (see the Acceptance Criteria section's amendment note) and resolved by explicit human decision: amend the AC to match Precondition 3's already-stated boundary rather than leave the epic open pending a live pilot that was never authorized in this epic's own scope. Reviewed and approved in substance by Codex per `docs/plans/agent_infrastructure/provider_agnostic_orchestration/implementation_batch_closure_response_codex.md`, with one procedural condition (commit the tickets 6/7 closure diff before closing) that was satisfied prior to this closure.
 
 ## Test Summary
+No tests apply to this ticket directly (epic tier, scope-only). Each of the 7 children carries its own independently-run, independently-verified test suite — see their individual Completion Summaries and `stored_artifacts/{ticket_id}/test_plan.md` files for details. Aggregate: 0 test regressions attributable to this batch; the one pre-existing, unrelated failure (`tests/agent_orchestration/test_contract_structure.py::test_contract_yaml_has_versioning_field_and_documented_scheme`) is tracked separately (`tickets/todos/TCK-20260722-CONTRACT-STRUCTURE-TEST-STALE-PATH.md`) and predates this batch.
 
 ## Files Changed
+This epic itself changes only its own ticket file. Its 7 children's combined Files Changed span: `agent-orchestration/` (contract core), `tools/agent_orchestration*/`, `tools/agent_replay_codex/`, `tools/agent_codex_pilot_guardrails/`, `tools/agent-monitoring/manifest.py` and the unified writer extraction, `AGENTS.md` + `.agents/skills/` regeneration (legacy tree quarantined to `docs/archive/legacy_agents_skills_20260722/`), `docs/architecture/agent_orchestration_contract.md`-adjacent tooling, `pilot_requests/`, and their respective `tests/` directories. No `.claude/workflows/*.js` file was modified by any child ticket (protected baseline, Precondition 4, held throughout). `.codex/config.toml` remains comment-only/hook-free in the committed repo state.
 
 ## Completion Summary
+Closes the provider-agnostic agent orchestration implementation epic. All 7 child ticket groups from the implementation plan (baseline manifest, contract core, Claude conformance adapter, Codex guidance/fixture capture, unified monitoring writer, real Codex replay parity, live-pilot guardrails) are DONE with independently-verified evidence. Phase 0-4 exit criteria (per `implementation_plan.md`'s Delivery Sequence) are fully satisfied. Phase 5 delivers readiness/rollback/sign-off tooling only, by design — no live Codex pilot has been run or authorized; that remains explicit future work for a later epic, consistent with this epic's own Precondition 3 and the source plan's Non-Goals. Phase 6 (controlled expansion beyond `implement-ticket`) was never in this epic's scope. The headline proof this epic delivers: a real, consent-gated, paid Codex CLI invocation was genuinely run against a real fixture and produced output that exactly matched the existing Claude-side replay proof — the first concrete evidence in this repo that Claude and Codex can execute the same deterministic workflow slice through independently-built adapters reading one shared semantic contract.

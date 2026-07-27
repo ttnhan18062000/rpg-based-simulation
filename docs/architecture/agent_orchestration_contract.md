@@ -63,6 +63,17 @@ ADR converts that recommendation into an actual decision.
 
 **Status: Decided**
 
+As of `TCK-20260727-CODEX-SKILL-COMPANION-ASSETS`, `skills.yaml` entries also carry an
+optional `companion_assets: []` field — a list of paths relative to the skill's own
+`.claude/skills/<id>/` directory, naming the non-`SKILL.md` files the skill needs alongside its
+generated `SKILL.md` (e.g. reference docs, a `scripts/` subdirectory). `tools/agent_orchestration/loader.py`
+validates it additively (defaults to `[]` when omitted, is not part of the required-key set), and
+`tools/agent_orchestration_codex_adapter/generator.py::render_codex_guidance()` copies each
+declared asset into `.agents/skills/<id>/` alongside the generated `SKILL.md`. It is a curated
+per-skill allowlist, not a blind copy of every file physically present in a skill's directory —
+some companion content may be intentionally excluded, and not every shipped asset is required to
+be referenced by name in `SKILL.md`'s own body.
+
 ### Source Ownership
 
 The shared contract lives under a new repository-root `agent-orchestration/`

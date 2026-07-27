@@ -3,3 +3,6 @@ class CodexAdapterWriteGuardError(Exception):
 
 class CodexAdapterMissingSkillSourceError(Exception):
     pass
+
+class CodexAdapterMissingCompanionAssetError(Exception):
+    pass

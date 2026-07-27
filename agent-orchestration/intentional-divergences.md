@@ -35,3 +35,32 @@ None. This ticket's own contract data
 (`agent-orchestration/terminal-statuses.yaml`) was authored directly from the same live extraction
 its conformance tests check against, and the phase-order conformance test found no divergence — so
 this log ships with the format defined and zero divergence entries.
+
+## Known Configuration Gaps (Not Conformance-Test Axes)
+
+This section is distinct from the structured `## Entries` log above — nothing here suppresses a
+conformance test, since neither gap is on the `terminal_status | phase_order | gate_policy |
+artifact_requirements` axes that log covers. Recorded here (2026-07-27, post-closure configuration-
+parity audit) so these gaps are explicit and discoverable rather than silently absent, per Claude's
+`final_configuration_parity_verification_claude.md` and Codex's confirming
+`final_configuration_parity_verification_response_codex.md`, both under
+`docs/plans/agent_infrastructure/provider_agnostic_orchestration/`.
+
+**Hook-surface policy.** `agent-orchestration/hook-events.yaml` normalizes only `PreToolUse` and
+`PostToolUse` — the two hooks actually wired in `.claude/settings.json`. `docs/ai/codex_capability_matrix.md`
+verifies Codex has 10 real lifecycle hooks available (`PermissionRequest`, `PreCompact`, `PostCompact`,
+`UserPromptSubmit`, `SubagentStop`, `Stop`, `SessionStart`, `SubagentStart` are the 8 not in the
+contract). This is a deliberate scoping choice, not an oversight: adding capability-only entries for
+hooks no real provider workflow currently uses would make the contract falsely imply support. Expand
+`hook-events.yaml` only when a real workflow needs one of the 8 missing entries — do not add them
+speculatively.
+
+**Execution-identity activation.** `tools/agent-monitoring/post_tool_hook.py` and the unified writer
+support `provider`/`execution_id` fields (per `TCK-20260721-MONITORING-WRITER-UNIFICATION`), but
+`.claude/workflows/implement-ticket.js` does not construct either field on any real run — the
+`.claude/current_run` sidecar only ever carries `run_id`/`seq`/`phase`/`agent`. The concurrent-provider
+guard in `tools/agent_codex_pilot_guardrails/ticket_selection.py::assert_no_concurrent_claim` is
+therefore correctly implemented but currently exercised only against synthetic fixtures, never real
+traffic. A narrowly-scoped follow-up ticket should populate `provider="claude"` and a validated
+`execution_id` in the live workflow/sidecar before any concurrent-provider guard is relied on for real
+traffic — not yet filed as of this note.

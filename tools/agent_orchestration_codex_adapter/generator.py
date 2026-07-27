@@ -4,7 +4,11 @@ import re
 from pathlib import Path
 from tools.agent_orchestration.loader import load_contract
 from tools.agent_orchestration.errors import ContractValidationError
-from .errors import CodexAdapterMissingSkillSourceError, CodexAdapterWriteGuardError
+from .errors import (
+    CodexAdapterMissingCompanionAssetError,
+    CodexAdapterMissingSkillSourceError,
+    CodexAdapterWriteGuardError,
+)
 
 _AUTHORITATIVE_PIPELINE_NOTE = "All durable-state changes in this simulation are refined through the 32-phase authoritative mutation pipeline defined in `docs/engine/authoritative_pipeline.md` (the Singular Bottleneck Law: no system, worker, or external process may mutate `AuthoritativeState` directly; all changes are represented as a `StateUpdate` and refined through these 32 phases)."
 _ID = re.compile(r"[a-z0-9][a-z0-9-]*\Z")
@@ -48,11 +52,23 @@ def render_codex_guidance(repo_root: Path, target_repo_root: Path, *, allow_outs
         raise ContractValidationError(f"missing contract file: {error.filename}") from error
     target = target_repo_root
     paths=[target/'AGENTS.md']
+    companion_pairs: list[tuple[Path, Path]] = []
     for s in b.skills['skills']:
         if not _ID.fullmatch(s['id']): raise CodexAdapterWriteGuardError(f"invalid skill id: {s['id']}")
         paths.append(target/'.agents'/'skills'/s['id']/'SKILL.md')
+        for rel in s.get('companion_assets', []):
+            source = repo_root/'.claude'/'skills'/s['id']/rel
+            dest = target/'.agents'/'skills'/s['id']/rel
+            companion_pairs.append((source, dest))
+            paths.append(dest)
     for path in paths: _assert_write_allowed(repo_root, path, allow_outside_contract)
+    for source, dest in companion_pairs:
+        if not source.is_file():
+            raise CodexAdapterMissingCompanionAssetError(f"{dest.parent.name}: declared companion asset not found: {source}")
     paths[0].parent.mkdir(parents=True, exist_ok=True); paths[0].write_text(build_agents_md(repo_root), encoding='utf-8')
-    for path,s in zip(paths[1:], b.skills['skills']):
+    for s in b.skills['skills']:
+        path = target/'.agents'/'skills'/s['id']/'SKILL.md'
         path.parent.mkdir(parents=True, exist_ok=True); path.write_text(build_codex_skill_md(repo_root,s['id'],s['description']),encoding='utf-8')
+    for source, dest in companion_pairs:
+        dest.parent.mkdir(parents=True, exist_ok=True); dest.write_bytes(source.read_bytes())
     return paths

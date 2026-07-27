@@ -30,3 +30,33 @@ def test_rejects_path_traversal_skill_id_before_writing(tmp_path):
     with pytest.raises(CodexAdapterWriteGuardError):
         render_codex_guidance(source, target, allow_outside_contract=True)
     assert not target.exists()
+
+
+def test_companion_asset_copy_respects_write_guard_and_refuses_traversal(tmp_path):
+    # repo_root == target_repo_root here (matching the real regeneration invocation shape,
+    # `render_codex_guidance(repo_root, repo_root)`) so a `../`-relative companion_assets entry
+    # actually resolves back through the shared root, exercising _assert_write_allowed's
+    # resolve-based containment check rather than the unrelated `id`-format regex.
+    source = tmp_path / "source"
+    shutil.copytree(ROOT / "agent-orchestration", source / "agent-orchestration")
+    skills_path = source / "agent-orchestration" / "skills.yaml"
+    data = yaml.safe_load(skills_path.read_text())
+    data["skills"][0]["companion_assets"] = ["../../../etc/passwd"]
+    skills_path.write_text(yaml.safe_dump(data, sort_keys=False))
+    with pytest.raises(CodexAdapterWriteGuardError):
+        render_codex_guidance(source, source)
+    assert not (source / "AGENTS.md").exists()
+    assert not (source / ".agents").exists()
+
+
+def test_companion_asset_copy_refuses_traversal_into_dot_claude(tmp_path):
+    source = tmp_path / "source"
+    shutil.copytree(ROOT / "agent-orchestration", source / "agent-orchestration")
+    skills_path = source / "agent-orchestration" / "skills.yaml"
+    data = yaml.safe_load(skills_path.read_text())
+    data["skills"][0]["companion_assets"] = ["../../../.claude/skills/agent-monitoring-retro/SKILL.md"]
+    skills_path.write_text(yaml.safe_dump(data, sort_keys=False))
+    with pytest.raises(CodexAdapterWriteGuardError):
+        render_codex_guidance(source, source)
+    assert not (source / "AGENTS.md").exists()
+    assert not (source / ".agents").exists()
