@@ -50,12 +50,22 @@ def _hit(results: list[str], expected: set[str], k: int) -> bool:
     return any(_strip_anchor(d) in expected for d in results[:k])
 
 
+def _duplicate_rate(results: list[str]) -> float:
+    """Fraction of retrieved results that are duplicates of an earlier
+    result, after reducing to document-level identity."""
+    if not results:
+        return 0.0
+    stripped = [_strip_anchor(d) for d in results]
+    return (len(stripped) - len(set(stripped))) / len(stripped)
+
+
 def evaluate(queries: list[dict], top_k: int = 10, threshold: float = 0.80) -> int:
     total = len(queries)
     hits5 = 0
     hits10 = 0
     rr_sum = 0.0
     zero_results = 0
+    dup_rate_sum = 0.0
     per_query = []
 
     for item in queries:
@@ -71,6 +81,7 @@ def evaluate(queries: list[dict], top_k: int = 10, threshold: float = 0.80) -> i
         h5 = _hit(results, expected, 5) if expected else None
         h10 = _hit(results, expected, 10) if expected else None
         rr = _reciprocal_rank(results, expected) if expected else None
+        dup_rate = _duplicate_rate(results)
 
         if h5:
             hits5 += 1
@@ -78,6 +89,7 @@ def evaluate(queries: list[dict], top_k: int = 10, threshold: float = 0.80) -> i
             hits10 += 1
         if rr is not None:
             rr_sum += rr
+        dup_rate_sum += dup_rate
 
         top1 = results[0] if results else "(no results)"
         per_query.append({
@@ -90,21 +102,22 @@ def evaluate(queries: list[dict], top_k: int = 10, threshold: float = 0.80) -> i
             "hit10": h10,
             "rr": rr,
             "zero_results": is_zero,
+            "duplicate_rate": dup_rate,
         })
 
-    recall5 = hits5 / total if total else 0.0
-    recall10 = hits10 / total if total else 0.0
-
     queries_with_expected = sum(1 for q in per_query if q["rr"] is not None)
+    recall5 = hits5 / queries_with_expected if queries_with_expected else 0.0
+    recall10 = hits10 / queries_with_expected if queries_with_expected else 0.0
     mrr10 = rr_sum / queries_with_expected if queries_with_expected else 0.0
+    avg_duplicate_rate = dup_rate_sum / total if total else 0.0
 
     _print_table(per_query)
     print()
     print(f"Recall@5: {recall5:.2f} | Recall@10: {recall10:.2f} | MRR@10: {mrr10:.2f} | Zero-result: {zero_results}")
-    print(f"Queries: {total} | With expected: {queries_with_expected}")
+    print(f"Queries: {total} | With expected: {queries_with_expected} | Avg duplicate rate: {avg_duplicate_rate:.2f}")
     print(f"Threshold: Recall@5 >= {threshold:.2f} → {'PASS' if recall5 >= threshold else 'FAIL'}")
 
-    _save_report(per_query, recall5, recall10, mrr10, zero_results, threshold)
+    _save_report(per_query, recall5, recall10, mrr10, zero_results, avg_duplicate_rate, threshold)
 
     return 0 if recall5 >= threshold else 1
 
@@ -123,7 +136,7 @@ def _print_table(per_query: list[dict]) -> None:
 
 
 def _save_report(per_query: list[dict], recall5: float, recall10: float, mrr10: float,
-                 zero_results: int, threshold: float) -> None:
+                 zero_results: int, avg_duplicate_rate: float, threshold: float) -> None:
     _REPORTS_DIR.mkdir(exist_ok=True)
     date_str = datetime.now(tz=timezone.utc).strftime("%Y%m%d")
     report_path = _REPORTS_DIR / f"eval_search_{date_str}.json"
@@ -134,6 +147,7 @@ def _save_report(per_query: list[dict], recall5: float, recall10: float, mrr10: 
             "recall_at_10": round(recall10, 4),
             "mrr_at_10": round(mrr10, 4),
             "zero_result_count": zero_results,
+            "avg_duplicate_rate": round(avg_duplicate_rate, 4),
             "total_queries": len(per_query),
             "threshold": threshold,
             "pass": recall5 >= threshold,

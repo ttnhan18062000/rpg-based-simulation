@@ -5924,3 +5924,43 @@
     `_canonicalize`/`_flag_outliers` (INFRA-283/284's separate, already-shipped normalization
     concern -- confirmed byte-identical by the same source-hash guard this entry's test_path
     cites).
+- id: INFRA-292
+  text: >
+    New read-only baseline-metrics reporting tool over agent-monitoring/*.jsonl
+    (context-tokens, follow-up-search-count, phase-duration, gate-outcome, review-rework) --
+    TCK-20260728-RETRIEVAL-BASELINE-METRICS. Follows the INFRA-281 through INFRA-291
+    agent-tooling-infrastructure precedent for ledgering this class of change, rather than
+    TCK-20260721-BASELINE-MONITORING-MANIFEST's own (older, less-followed) "no entry needed"
+    conclusion for the structurally identical sibling manifest tool.
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: >
+    tools/agent-monitoring/retrieval_baseline_metrics.py:21-29 (imports
+    `_load_runs_and_events`/`load_jsonl`/`DEFAULT_TOOLS_FILE`/`_resolve_status`/`_is_gate_fail`
+    from generate_retro.py, `classify_provenance` from legacy_reader.py,
+    `_assert_safe_output_path` from manifest.py -- never reimplements their logic), :50-53 (`def
+    load_all_sources()`, the single read entrypoint composing those imports), :56-88 (`def
+    build_context_tokens_section()` / `def build_search_count_section(tools)` -- the
+    context-tokens AC is reported as `status: "unavailable"` since real token telemetry is
+    platform-blocked and not recorded in agent-monitoring/*.jsonl, per :58-61), :91-154 (`def
+    build_duration_section(runs)`, `def build_gate_outcome_section(runs)`, `def
+    build_review_rework_section(runs)` -- the phase-duration/gate-outcome/review-rework ACs, each
+    disclosed as a derived proxy rather than fabricated data at :101-104/:121-122/:151-153),
+    :157-180 (`def build_legacy_schema_notes(runs, events, tools)` and `def
+    build_baseline_report(...)`, assembling all 5 sections), :183-196 (`def main()`, prints JSON
+    to stdout via `json.dumps(..., sort_keys=True)` and optionally writes to `--output` only
+    after `_assert_safe_output_path` validation at :193 -- never writes into
+    agent-monitoring/ itself).
+  proof_type: regression
+  test_path: tests/tools/test_retrieval_baseline_metrics.py
+  divergence_note: null
+  support_boundary: >
+    Agent-orchestration/monitoring-pipeline tooling only -- no simulation behavior, Mechanics
+    Bible chapter, or engine contract governs this reporting tool's semantics (same category as
+    INFRA-281 through INFRA-291). No `src/` file touched, no on-disk schema change to
+    runs.jsonl/events.jsonl/tools.jsonl, and strictly read-only -- computes its 5 baseline
+    metrics purely by importing and composing existing functions from generate_retro.py
+    (`_load_runs_and_events`, `load_jsonl`, `_resolve_status`, `_is_gate_fail`), legacy_reader.py
+    (`classify_provenance`), and manifest.py (`_assert_safe_output_path`); never modifies any of
+    those files, never writes into `agent-monitoring/` or `agent-monitoring/retro/`.

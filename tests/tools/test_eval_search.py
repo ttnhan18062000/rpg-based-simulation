@@ -20,6 +20,34 @@ _mod = importlib.util.module_from_spec(spec)
 sys.modules["eval_search"] = _mod
 spec.loader.exec_module(_mod)
 
+# Stale doc_ids confirmed (TCK-20260728-EVAL-FIXTURE-REPAIR investigation) to no longer
+# resolve against the live index's actual (buggy but unchanged-here) doc_id scheme.
+_KNOWN_STALE_DOC_IDS = {
+    "engine/contracts/replay_contract",
+    "engine/contracts/scheduler_contract",
+    "engine/contracts/observability_contract",
+    "engine/contracts/infrastructure_overview",
+    "architecture/adr-004-simulation-watchdog",
+    "architecture/adr-005-performance-optimization",
+    "engine/contracts/progression_package",
+}
+
+_VALID_SOURCE_LIFECYCLE_ASSUMPTIONS = {"current", "superseded", "archived", "volatile"}
+
+_CATEGORY_MINIMUMS = {
+    "semantic": 15,
+    "exact-term": 15,
+    "cross-section": 5,
+    "edge-case": 5,
+    "doc/exact-id": 3,
+    "policy-vs-superseded": 3,
+    "ticket-history": 3,
+    "symbol-to-test": 3,
+    "changed-path": 3,
+    "provider/workflow/monitoring": 3,
+    "no-result": 3,
+}
+
 
 # ── queries.json schema ───────────────────────────────────────────────────────
 
@@ -41,19 +69,48 @@ class TestQueriesJson:
             assert "notes" in entry, f"Entry {i} missing 'notes'"
             assert isinstance(entry["expected_doc_ids"], list), f"Entry {i}: expected_doc_ids must be list"
             assert isinstance(entry["query"], str), f"Entry {i}: query must be str"
+            assert "allowable_alternatives" in entry, f"Entry {i} missing 'allowable_alternatives'"
+            assert isinstance(entry["allowable_alternatives"], list), f"Entry {i}: allowable_alternatives must be list"
+            assert all(isinstance(x, str) for x in entry["allowable_alternatives"]), \
+                f"Entry {i}: allowable_alternatives elements must be str"
+            assert "source_lifecycle_assumption" in entry, f"Entry {i} missing 'source_lifecycle_assumption'"
+            assert isinstance(entry["source_lifecycle_assumption"], str) and entry["source_lifecycle_assumption"], \
+                f"Entry {i}: source_lifecycle_assumption must be a non-empty str"
+            assert entry["source_lifecycle_assumption"] in _VALID_SOURCE_LIFECYCLE_ASSUMPTIONS, \
+                f"Entry {i}: source_lifecycle_assumption {entry['source_lifecycle_assumption']!r} not in {_VALID_SOURCE_LIFECYCLE_ASSUMPTIONS}"
+            assert "context_budget" in entry, f"Entry {i} missing 'context_budget'"
+            assert isinstance(entry["context_budget"], int) and entry["context_budget"] > 0, \
+                f"Entry {i}: context_budget must be a positive int"
+
+    def test_new_fields_present_all_entries(self):
+        with open(_QUERIES_PATH) as f:
+            data = json.load(f)
+        for i, entry in enumerate(data):
+            assert isinstance(entry.get("allowable_alternatives"), list), \
+                f"Entry {i}: allowable_alternatives missing or wrong type"
+            assert entry.get("source_lifecycle_assumption") in _VALID_SOURCE_LIFECYCLE_ASSUMPTIONS, \
+                f"Entry {i}: source_lifecycle_assumption missing or invalid"
+            assert isinstance(entry.get("context_budget"), int) and entry["context_budget"] > 0, \
+                f"Entry {i}: context_budget missing or not a positive int"
+
+    def test_no_stale_expected_doc_ids(self):
+        with open(_QUERIES_PATH) as f:
+            data = json.load(f)
+        all_ids = set()
+        for entry in data:
+            all_ids.update(entry.get("expected_doc_ids", []))
+        stale_present = all_ids & _KNOWN_STALE_DOC_IDS
+        assert not stale_present, f"Stale doc_ids still present in queries.json: {stale_present}"
 
     def test_category_balance(self):
         with open(_QUERIES_PATH) as f:
             data = json.load(f)
         categories = [e.get("category", "") for e in data]
-        semantic = categories.count("semantic")
-        exact = categories.count("exact-term")
-        cross = categories.count("cross-section")
-        edge = categories.count("edge-case")
-        assert semantic >= 15, f"Need ≥15 semantic queries, got {semantic}"
-        assert exact >= 15, f"Need ≥15 exact-term queries, got {exact}"
-        assert cross >= 5, f"Need ≥5 cross-section queries, got {cross}"
-        assert edge >= 5, f"Need ≥5 edge-case queries, got {edge}"
+        for name, minimum in _CATEGORY_MINIMUMS.items():
+            count = categories.count(name)
+            assert count >= minimum, f"Need ≥{minimum} {name!r} queries, got {count}"
+        unknown = set(categories) - set(_CATEGORY_MINIMUMS)
+        assert not unknown, f"Unregistered category values found in queries.json: {unknown}"
 
 
 # ── Metrics functions ─────────────────────────────────────────────────────────
@@ -186,6 +243,67 @@ class TestEvaluateExitCode:
         assert "metrics" in report
         assert "per_query" in report
         assert len(report["per_query"]) == 3
+
+    def test_no_result_queries_excluded_from_recall_denominator(self, monkeypatch, tmp_path):
+        # Regression test for the Recall@5/Recall@10 denominator bug: before the fix,
+        # `total = len(queries)` included no-result (empty expected_doc_ids) queries in
+        # the denominator, capping the achievable Recall@5 below 1.0 even when every
+        # answerable query hits. 3 answerable + 2 no-result queries, all answerable
+        # queries hit -> recall must be 1.0, not 3/5.
+        monkeypatch.setattr(_mod, "_REPORTS_DIR", tmp_path)
+        monkeypatch.setattr(_mod, "_run_query", lambda q, top_k=10: ["target/doc"])
+        qs = self._make_queries(3) + [
+            {"query": "nr1", "expected_doc_ids": [], "category": "no-result", "notes": "t"},
+            {"query": "nr2", "expected_doc_ids": [], "category": "no-result", "notes": "t"},
+        ]
+        _mod.evaluate(qs, top_k=10, threshold=0.80)
+        report_files = list(tmp_path.glob("eval_search_*.json"))
+        report = json.loads(report_files[0].read_text())
+        assert report["metrics"]["recall_at_5"] == pytest.approx(1.0)
+        assert report["metrics"]["recall_at_10"] == pytest.approx(1.0)
+
+    def test_avg_duplicate_rate_in_saved_report(self, monkeypatch, tmp_path):
+        monkeypatch.setattr(_mod, "_REPORTS_DIR", tmp_path)
+        monkeypatch.setattr(_mod, "_run_query", lambda q, top_k=10: ["target/doc", "target/doc"])
+        qs = self._make_queries(3)
+        _mod.evaluate(qs, top_k=10, threshold=0.80)
+        report_files = list(tmp_path.glob("eval_search_*.json"))
+        report = json.loads(report_files[0].read_text())
+        assert "avg_duplicate_rate" in report["metrics"]
+        assert report["metrics"]["avg_duplicate_rate"] == pytest.approx(0.5)
+
+    def test_threshold_default_unchanged(self, monkeypatch, tmp_path):
+        # Locks in AC6: the 0.80 Recall@5 gate's pass/fail meaning is unchanged by
+        # this ticket's denominator fix or new categories/metric.
+        captured_threshold = {}
+        monkeypatch.setattr(_mod, "_DB_PATH", tmp_path / "knowledge.db")
+        (tmp_path / "knowledge.db").write_text("")
+        monkeypatch.setattr(_mod, "_QUERIES_PATH", _QUERIES_PATH)
+
+        def fake_evaluate(queries, top_k=10, threshold=0.80):
+            captured_threshold["value"] = threshold
+            return 0
+
+        monkeypatch.setattr(_mod, "evaluate", fake_evaluate)
+        monkeypatch.setattr(sys, "argv", ["eval_search.py"])
+        _mod.main()
+        assert captured_threshold["value"] == 0.80
+
+
+# ── duplicate_rate metric ─────────────────────────────────────────────────────
+
+class TestDuplicateRate:
+    def test_no_duplicates_is_zero(self):
+        assert _mod._duplicate_rate(["a", "b", "c"]) == pytest.approx(0.0)
+
+    def test_all_duplicates(self):
+        assert _mod._duplicate_rate(["a", "a", "a"]) == pytest.approx(2 / 3)
+
+    def test_partial_duplicates_after_anchor_strip(self):
+        assert _mod._duplicate_rate(["a#h1-000", "a#h2-001", "b"]) == pytest.approx(1 / 3)
+
+    def test_empty_results_is_zero(self):
+        assert _mod._duplicate_rate([]) == 0.0
 
 
 # ── main() no-index guard ─────────────────────────────────────────────────────

@@ -82,6 +82,23 @@ None.
 
 ## Implementation Notes
 
+**2026-07-28 — Phase 0-1 batch complete.** All 3 child tickets from this batch
+(`TCK-20260728-PHASE0-PREREQ-CONFIRMATION`, `TCK-20260728-RETRIEVAL-BASELINE-METRICS`,
+`TCK-20260728-EVAL-FIXTURE-REPAIR`) are `DONE` — see `tickets/done/` and
+`tickets/working_log.csv`. Phase 0's own prerequisite (provider-neutral execution
+identity, shared monitoring writer, stable replay/live boundary) was directly
+confirmed satisfied by `TCK-20260728-PHASE0-PREREQ-CONFIRMATION`.
+
+This epic remains **open**, not closed — per its own Scope and `SEQUENCE.md`, it
+deliberately covers only Phase 0-1 of the source doc's full 7-phase Sequenced Future
+Epic; Phase 2 onward (retrieval contract, cache implementation, observability events,
+shadow packets, workflow adoption) is intentionally not yet ticketed, and all 6 Open
+Decisions in Assumptions/Open Questions remain unresolved. Do not mark this ticket
+DONE or move it to `tickets/done/` until a future ticketing pass scopes and closes
+the remaining phases (or a deliberate decision is made to stop pursuing them, in
+which case this ticket should instead move to `tickets/backlogs/` per
+`docs/ai/ticket-lifecycle.md`'s backlog convention — not silently closed as done).
+
 ## Test Summary
 
 ## Files Changed
