@@ -52,6 +52,7 @@ The author wants validate.py's compute_drift_report() and compute_tool_count_dri
 - TCK-20260708-AGENT-MONITORING-SCHEMA-ENFORCEMENT
 - TCK-20260711-MONITORING-TOOLCOUNT-SIDECAR-COLLISION
 - TCK-20260705-MONITORING-VALIDATE-SCHEMA-GAP
+- TCK-20260728-MONITORING-PAUSE-RESUME-SEQ-COLLISION (done — added compute_multi_invocation_collision_report() to validate.py after this ticket was filed; see Assumptions/Open Questions)
 
 ## Related Docs
 - docs/plans/agent_infrastructure/idea_agent_monitoring_derived_index.md
@@ -71,6 +72,7 @@ None.
 - BLOCKED until TCK-20260713-MONITORING-SQLITE-INDEX ships and its schema is stable — implementation cannot start before then
 - The exact index schema/API is undecided per the idea doc's Open Questions; this ticket may need to confirm the sibling ticket's index shape before implementation
 - The index's normalization must reproduce validate.py's exact legacy-shape handling or risk silently regressing already-fixed false positives from prior hardening tickets
+- Scope drift since this ticket was filed (2026-07-13): `TCK-20260728-MONITORING-PAUSE-RESUME-SEQ-COLLISION` (done) added a third function to validate.py, `compute_multi_invocation_collision_report()`, alongside the two named in this ticket's Scope. It follows the same read-only/non-gating/hand-rolled-grouping-over-raw-`events.jsonl` shape as `compute_drift_report()`/`compute_tool_count_drift_report()`, so it is a natural candidate for the same index migration — this ticket's own Investigate/Plan phase should decide whether to fold it in (recommended, since leaving one of three sibling functions un-migrated would reintroduce the exact duplication this ticket exists to remove) or explicitly defer it with rationale.
 
 ## Implementation Notes
 

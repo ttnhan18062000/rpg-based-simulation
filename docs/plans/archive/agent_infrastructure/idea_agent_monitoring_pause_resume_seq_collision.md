@@ -1,14 +1,42 @@
 ---
-status: idea
+status: historical
 layer: observability
 authority: P2
 audience: developer
-maturity: idea
+maturity: shipped
 date: 2026-07-28
+archived: 2026-07-28
 tags: [idea, agent-monitoring, observability, data-quality, root-cause, bug]
 ---
 
 # Idea: Pause/Resume Seq-Counter Collision Silently Corrupts `tool_call_count`/`cost_proxy_score`
+
+**Archived:** 2026-07-28 — fully shipped same-day by `TCK-20260728-MONITORING-PAUSE-RESUME-SEQ-COLLISION`
+(`tickets/done/`); this document is the historical design reference.
+
+> **Maturity: SHIPPED.** `tools/agent-monitoring/seq_offset.py::compute_seq_offset(run_id, events)` —
+> a pure read-only lookup of the max prior `seq` already recorded for a `run_id` in `events.jsonl` —
+> was threaded through all 11 `seq`-producing sites in `.claude/workflows/implement-ticket.js`
+> (`pushEvent` plus 10 `writeSidecar` call sites, including the resume branch's previously-hardcoded
+> `seq: 1` literal), closing this doc's core "Idea" section exactly as proposed (the `max(seq) + 1`
+> continuation candidate, not the alternative unique-token candidate — confirmed simpler and
+> sufficient during Investigate). `tools/agent-monitoring/validate.py` gained
+> `compute_multi_invocation_collision_report()`, a purely additive, non-gating detector for this
+> mechanism's signature going forward — this doc's "extend `compute_tool_count_drift_report()`"
+> suggestion, delivered as a sibling function rather than an extension of that one, since the two
+> mechanisms warranted independently-named checks. `docs/agent-monitoring/schema.md` documents the
+> third mechanism alongside the two `TCK-20260711-MONITORING-TOOLCOUNT-SIDECAR-COLLISION` already
+> covered. All three Open Questions below were resolved during Plan/Investigate, not deferred:
+> `max(seq) + 1` was confirmed sufficient (no true concurrency exists in this system, per the
+> sibling ticket's own prior finding); `implement-epic.js` was directly confirmed **not** exposed to
+> this bug (it never registers a `.claude/current_run` sidecar at all); and the fix was implemented
+> as a purely additive read-only lookup, not an extension of the sidecar-write mechanism itself.
+> Test-phase caught and fixed one real collateral regression along the way — a stale cross-ticket
+> guard test (`test_writer_files_are_byte_unchanged_by_this_ticket`) asserting `validate.py` must
+> never change, written for a since-completed prior ticket's own scope guard, removed per the exact
+> precedent already used to narrow that guard once before.
+
+---
 
 ## Problem
 
@@ -99,24 +127,24 @@ Known Limitations). Prevention-only, same as the sibling fix.
 | `.claude/workflows/implement-ticket.js` — Scope-phase sidecar write (added by `TCK-20260711-MONITORING-TOOLCOUNT-SIDECAR-COLLISION`) | Needs resume-awareness: read prior max seq for the run_id before writing the first sidecar value of a resumed session |
 | `tools/agent-monitoring/validate.py` — `compute_tool_count_drift_report()` | Natural home for a dedicated multi-invocation/resume-collision check, distinguishing this mechanism from the two already-fixed ones |
 | `docs/agent-monitoring/schema.md` — "How tool calls are attributed to agent events" | Should document this third mechanism once fixed, alongside the two the sibling ticket already added |
-| [`idea_agent_monitoring_active_duration.md`](idea_agent_monitoring_active_duration.md) | Sibling finding from the same investigation session — that idea covers wall-clock duration contamination from session pauses; this one covers a *different* corruption (tool-call attribution) triggered by the *same* underlying pause/resume behavior. Worth fixing in awareness of each other since both touch resume handling, but they are independent bugs with independent fixes. |
+| [`idea_agent_monitoring_active_duration.md`](../../agent_infrastructure/idea_agent_monitoring_active_duration.md) | Sibling finding from the same investigation session — that idea covers wall-clock duration contamination from session pauses; this one covers a *different* corruption (tool-call attribution) triggered by the *same* underlying pause/resume behavior. Independent bugs, independent fixes — that one remains unshipped. |
 | `TCK-20260711-MONITORING-TOOLCOUNT-SIDECAR-COLLISION` (done) | Direct precedent — same failure class, same fix location, same validation-tooling home; read its Implementation Notes before starting Investigate on this one |
 
 ## Open Questions
 
-- Is `max(seq) + 1` sufficient, or can a resumed session's phases still collide with a *third*
-  future resume of the same ticket if the max-seq lookup itself races with a stale sidecar read?
-  (Given the sibling ticket already ruled out true concurrency as a real-world occurrence, this may
-  be a non-issue in practice — worth confirming, not assuming.)
-- Should `implement-epic`'s per-child-ticket dispatch be checked for the same resume pattern, or is
-  epic-level resume structurally different (new child dispatch = always a fresh `run_id`, not a
-  resume of an existing one)?
-- Does this warrant extending sidecar coverage the same way the Scope-phase gap was closed, or is a
-  purely additive "look up max prior seq" read sufficient without changing the sidecar-write
-  mechanism itself?
+- ~~Is `max(seq) + 1` sufficient, or can a resumed session's phases still collide with a *third*
+  future resume of the same ticket if the max-seq lookup itself races with a stale sidecar read?~~
+  — RESOLVED: sufficient. No concurrency exists in this system (confirmed by the sibling ticket's
+  own investigation), so a single lookup at session start is safe for any number of resumes.
+- ~~Should `implement-epic`'s per-child-ticket dispatch be checked for the same resume pattern, or is
+  epic-level resume structurally different?~~ — RESOLVED: `implement-epic.js` is not exposed — it
+  never registers a `.claude/current_run` sidecar at all, confirmed by direct code read during Plan.
+- ~~Does this warrant extending sidecar coverage the same way the Scope-phase gap was closed, or is a
+  purely additive "look up max prior seq" read sufficient?~~ — RESOLVED: the additive read-only
+  lookup (`seq_offset.py`) was sufficient; no change to the sidecar-write mechanism itself was needed.
 
 ---
 
 *Raised: 2026-07-28, from the same session that investigated `TCK-20260714-SIMQ-WEIGHTS-PILLAR-COLLISION`
 as a reported ~450-470x cost-proxy outlier in the 28-day retro — the outlier turned out to be this
-bug, not real cost.*
+bug, not real cost. Shipped same-day by `TCK-20260728-MONITORING-PAUSE-RESUME-SEQ-COLLISION`.*
