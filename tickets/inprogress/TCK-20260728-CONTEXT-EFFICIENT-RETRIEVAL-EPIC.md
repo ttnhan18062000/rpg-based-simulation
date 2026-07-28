@@ -57,6 +57,10 @@ Create a single epic-tier tracking ticket for the whole context-efficient agent 
 - TCK-20260728-PHASE0-PREREQ-CONFIRMATION
 - TCK-20260728-RETRIEVAL-BASELINE-METRICS
 - TCK-20260728-EVAL-FIXTURE-REPAIR
+- TCK-20260728-CONTEXT-PACKET-SCHEMA
+- TCK-20260728-CODE-TEST-INDEX-BOUNDARIES
+- TCK-20260728-RETRIEVAL-RETENTION-REDACTION
+- TCK-20260728-DEFAULT-PACKET-CRITERIA
 
 ## Related Docs
 - docs/plans/agent_infrastructure/context_efficient_agent_retrieval/idea_context_efficient_agent_retrieval_observability.md
