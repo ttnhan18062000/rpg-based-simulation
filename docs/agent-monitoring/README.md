@@ -58,6 +58,10 @@ so a candidate reweighting's real impact is measured before it ships, not discov
 ## Quick Start
 
 ```bash
+# Build the derived SQLite index (required by query.py/validate.py; generate_retro.py
+# builds it on demand if missing — see schema.md's "Derived SQLite Index" section):
+make agent-monitoring-index
+
 # After some workflow runs have completed:
 make agent-monitoring-retro         # generate this week's report
 open agent-monitoring/retro/RETRO-$(date +%Y-W%V).md

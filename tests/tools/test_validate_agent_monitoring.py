@@ -2,10 +2,18 @@
 and the single-source-of-truth vocabulary wiring (Step 6),
 TCK-20260708-AGENT-MONITORING-SCHEMA-ENFORCEMENT.
 
+Also covers the SQLite-index-backed read path migration,
+TCK-20260713-MONITORING-VALIDATE-INDEX-MIGRATE (see classes at the bottom of
+this file): main() now sources runs/events/tools from
+agent-monitoring-index/monitoring.db instead of direct JSONL reads, mirroring
+tools/agent-monitoring/query.py's precedent (tests/tools/test_query.py).
+
 Constructs runs/events as plain Python dicts, mirroring
 test_generate_retro.py's fixture-construction style — no file I/O, no
 subprocess, pure-function testing.
 """
+import json
+import sqlite3
 import sys
 from pathlib import Path
 
@@ -13,6 +21,9 @@ _MONITORING_TOOLS_DIR = Path(__file__).parent.parent.parent / "tools" / "agent-m
 if str(_MONITORING_TOOLS_DIR) not in sys.path:
     sys.path.insert(0, str(_MONITORING_TOOLS_DIR))
 
+import pytest  # noqa: E402
+
+import build_index  # noqa: E402
 import record_events  # noqa: E402
 import validate  # noqa: E402
 from validate import (  # noqa: E402
@@ -20,6 +31,10 @@ from validate import (  # noqa: E402
     compute_multi_invocation_collision_report,
     compute_tool_count_drift_report,
 )
+
+_REPO_ROOT = Path(__file__).parent.parent.parent
+_VALIDATE_MODULE_PATH = _MONITORING_TOOLS_DIR / "validate.py"
+_FIXTURES_DIR = _REPO_ROOT / "tests" / "fixtures" / "agent_monitoring"
 
 _BASE_RUN = {
     "run_id": "TCK-FAKE",
@@ -224,3 +239,210 @@ def test_canonical_vocabulary_single_sourced():
     # same sets.
     assert record_events.WORKFLOW_PHASES is validate.WORKFLOW_PHASES
     assert record_events.infer_workflow is validate.infer_workflow
+
+
+# ---------------------------------------------------------------------------
+# SQLite-index-backed read path (TCK-20260713-MONITORING-VALIDATE-INDEX-MIGRATE)
+# ---------------------------------------------------------------------------
+
+def _build_db(tmp_path, runs=None, events=None, tools=None):
+    db_path = tmp_path / "monitoring.db"
+    conn = sqlite3.connect(str(db_path))
+    build_index._create_schema(conn)
+    build_index._ingest_runs(conn, runs or [])
+    build_index._ingest_events(conn, events or [])
+    build_index._ingest_tools(conn, tools or [])
+    conn.commit()
+    conn.close()
+    return db_path
+
+
+def _load_fixture_jsonl(name):
+    path = _FIXTURES_DIR / name
+    return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
+
+
+_RUN_SHAPE_FILES = [
+    "shape1_started_finished_notes.jsonl",
+    "shape2_final_status_no_end_ts.jsonl",
+    "shape3_ts_start_ts_end_result.jsonl",
+    "shape4_completed_at_status.jsonl",
+    "shape5_folder_epic_bare_status.jsonl",
+    "shape6_type_checker_exception.jsonl",
+]
+_EVENT_SHAPE_FILES = [
+    "events_jsonl_reason_code_null.jsonl",
+    "events_jsonl_tool_call_count_absent.jsonl",
+]
+_TOOLS_SHAPE_FILES = [
+    "tools_jsonl_interactive_null.jsonl",
+    "tools_jsonl_phase_agent_null_gap.jsonl",
+]
+
+_PARITY_RUNS = [record for name in _RUN_SHAPE_FILES for record in _load_fixture_jsonl(name)]
+_PARITY_EVENTS = [record for name in _EVENT_SHAPE_FILES for record in _load_fixture_jsonl(name)]
+_PARITY_TOOLS = [record for name in _TOOLS_SHAPE_FILES for record in _load_fixture_jsonl(name)]
+
+
+class TestMainUsesIndex:
+    """AC1 — main() sources runs/events/tools from the SQLite index, not direct
+    JSONL reads. Each test runs with cwd pointed at an empty tmp_path (no
+    agent-monitoring/ directory at all), so a passing report — reflecting real
+    fixture content — can only have come from the index db."""
+
+    def test_main_loads_runs_from_index_not_direct_jsonl(self, tmp_path, monkeypatch, capsys):
+        monkeypatch.chdir(tmp_path)
+        run = dict(_BASE_RUN, run_id="TCK-IDX-A")
+        event = {"run_id": "TCK-IDX-A", "seq": 1, "ts": "t", "phase": "Scope",
+                  "agent": "ticket-scoper", "status": "ok", "summary": "s"}
+        db_path = _build_db(tmp_path, runs=[run], events=[event])
+
+        validate.main(["--db-path", str(db_path)])
+        out = capsys.readouterr().out
+
+        assert "OK: 1 runs, 1 events" in out
+        assert not (tmp_path / "agent-monitoring" / "runs.jsonl").exists()
+
+    def test_main_loads_events_from_index_not_direct_jsonl(self, tmp_path, monkeypatch, capsys):
+        monkeypatch.chdir(tmp_path)
+        run = dict(_BASE_RUN, run_id="TCK-IDX-B")
+        event = {"run_id": "TCK-IDX-B", "seq": 1, "ts": "t", "phase": "weird-phase",
+                  "agent": "ticket-scoper", "status": "ok", "summary": "s"}
+        db_path = _build_db(tmp_path, runs=[run], events=[event])
+
+        validate.main(["--db-path", str(db_path)])
+        out = capsys.readouterr().out
+
+        assert "'weird-phase': 1" in out
+        assert not (tmp_path / "agent-monitoring" / "events.jsonl").exists()
+
+    def test_main_loads_tools_from_index_not_direct_jsonl(self, tmp_path, monkeypatch, capsys):
+        monkeypatch.chdir(tmp_path)
+        run = dict(_BASE_RUN, run_id="TCK-IDX-C")
+        event = {"run_id": "TCK-IDX-C", "seq": 1, "ts": "t", "phase": "Implement",
+                  "agent": "implementer", "status": "ok", "summary": "s", "tool_call_count": 5}
+        tools = [{"run_id": "TCK-IDX-C", "seq": 1, "tool": "Read"} for _ in range(2)]
+        db_path = _build_db(tmp_path, runs=[run], events=[event], tools=tools)
+
+        validate.main(["--db-path", str(db_path)])
+        out = capsys.readouterr().out
+
+        assert "TCK-IDX-C seq=1: recorded=5 actual=2" in out
+        assert not (tmp_path / "agent-monitoring" / "tools.jsonl").exists()
+
+
+class TestArchitectureGuards:
+
+    def test_validate_py_has_no_direct_jsonl_reads(self):
+        source = _VALIDATE_MODULE_PATH.read_text(encoding="utf-8")
+        for forbidden in ("RUNS_FILE", "EVENTS_FILE", "TOOLS_FILE"):
+            assert forbidden not in source, f"validate.py must not reference {forbidden!r}"
+        assert "def load_jsonl" in source, "load_jsonl must remain defined for legacy_reader.py/ingest.py"
+
+    def test_legacy_allowlists_still_importable_from_validate(self):
+        from validate import LEGACY_COMPLETION_FIELDS, LEGACY_TERMINAL_STATUS_VALUES
+
+        assert len(LEGACY_COMPLETION_FIELDS) > 0
+        assert len(LEGACY_TERMINAL_STATUS_VALUES) > 0
+
+
+class TestRegressionParity:
+    """AC2 — compute_drift_report/compute_tool_count_drift_report/
+    compute_multi_invocation_collision_report must produce byte-identical
+    output whether their inputs are loaded via load_jsonl() directly from the
+    fixture files or via load_*_from_index() off a fixture SQLite db built
+    from the same corpus. The three functions' bodies are unchanged by this
+    migration; this proves the round-tripped raw_json dicts are field-for-
+    field identical to the direct-JSONL dicts, so output cannot diverge."""
+
+    def test_pre_and_post_migration_drift_report_output_identical(self, tmp_path):
+        db_path = _build_db(tmp_path, runs=_PARITY_RUNS, events=_PARITY_EVENTS)
+        conn = sqlite3.connect(str(db_path))
+        indexed_runs = validate.load_runs_from_index(conn)
+        indexed_events = validate.load_events_from_index(conn)
+        conn.close()
+
+        legacy_report = compute_drift_report(_PARITY_RUNS, _PARITY_EVENTS)
+        migrated_report = compute_drift_report(indexed_runs, indexed_events)
+
+        assert legacy_report == migrated_report
+
+    def test_pre_and_post_migration_tool_count_drift_report_output_identical(self, tmp_path):
+        db_path = _build_db(tmp_path, events=_PARITY_EVENTS, tools=_PARITY_TOOLS)
+        conn = sqlite3.connect(str(db_path))
+        indexed_events = validate.load_events_from_index(conn)
+        indexed_tools = validate.load_tools_from_index(conn)
+        conn.close()
+
+        legacy_report = compute_tool_count_drift_report(_PARITY_EVENTS, _PARITY_TOOLS)
+        migrated_report = compute_tool_count_drift_report(indexed_events, indexed_tools)
+
+        assert legacy_report == migrated_report
+
+    def test_pre_and_post_migration_collision_report_output_identical(self, tmp_path):
+        db_path = _build_db(tmp_path, events=_PARITY_EVENTS)
+        conn = sqlite3.connect(str(db_path))
+        indexed_events = validate.load_events_from_index(conn)
+        conn.close()
+
+        legacy_report = compute_multi_invocation_collision_report(_PARITY_EVENTS)
+        migrated_report = compute_multi_invocation_collision_report(indexed_events)
+
+        assert legacy_report == migrated_report
+
+    def test_tools_row_missing_tool_field_is_a_known_bounded_divergence(self, tmp_path):
+        """Documents a real divergence found by spot-checking the live corpus
+        (agent-monitoring/tools.jsonl), outside the curated fixture shapes: a
+        tools.jsonl record with a valid run_id+seq but no 'tool' field is counted
+        by compute_tool_count_drift_report's load_jsonl() path (which only checks
+        run_id+seq presence — see its actual_counts loop) but is structurally
+        excluded by build_index.py's _ingest_tools (which also requires
+        isinstance(record.get("tool"), str)). Fixing this is out of this ticket's
+        scope: it would require either changing build_index.py's tools-ingestion
+        rule (owned by a sibling ticket) or changing
+        compute_tool_count_drift_report's body to require a 'tool' field too
+        (forbidden — its body must stay unchanged). Non-gating: this only shifts
+        the reported 'Mismatches' count, never validate.py's exit code. Confirmed
+        against production data 2026-07-28: exactly one such record exists in
+        agent-monitoring/tools.jsonl (TCK-20260716-SIMQ-...-SWEEP seq=4), shifting
+        the live report's mismatch count from 487 to 488."""
+        off_schema_tool = {"run_id": "TCK-DIVERGE", "seq": 1, "ts": "t"}
+        event = {"run_id": "TCK-DIVERGE", "seq": 1, "ts": "t", "phase": "Implement",
+                  "agent": "implementer", "status": "ok", "summary": "s", "tool_call_count": 0}
+
+        direct_report = compute_tool_count_drift_report([event], [off_schema_tool])
+
+        db_path = _build_db(tmp_path, events=[event], tools=[off_schema_tool])
+        conn = sqlite3.connect(str(db_path))
+        indexed_events = validate.load_events_from_index(conn)
+        indexed_tools = validate.load_tools_from_index(conn)
+        conn.close()
+        indexed_report = compute_tool_count_drift_report(indexed_events, indexed_tools)
+
+        assert "recorded=0 actual=1" in direct_report
+        assert "recorded=0 actual=0" not in direct_report
+        assert "Mismatches (recorded != actual tools.jsonl row count): 0" in indexed_report
+        assert direct_report != indexed_report
+
+
+class TestMissingIndex:
+
+    def test_missing_index_produces_actionable_error(self, tmp_path, capsys):
+        missing_db = tmp_path / "does-not-exist" / "monitoring.db"
+        with pytest.raises(SystemExit):
+            validate.open_index(missing_db)
+        captured = capsys.readouterr()
+        assert "agent-monitoring-index" in captured.err
+        assert "make agent-monitoring-index" in captured.err
+
+    def test_missing_index_exits_nonzero(self, tmp_path):
+        missing_db = tmp_path / "does-not-exist" / "monitoring.db"
+        with pytest.raises(SystemExit) as exc_info:
+            validate.open_index(missing_db)
+        assert exc_info.value.code != 0
+
+    def test_main_exits_nonzero_when_index_missing(self, tmp_path):
+        missing_db = tmp_path / "nope" / "monitoring.db"
+        with pytest.raises(SystemExit) as exc_info:
+            validate.main(["--db-path", str(missing_db)])
+        assert exc_info.value.code != 0

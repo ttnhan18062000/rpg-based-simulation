@@ -12,8 +12,10 @@ Historical tickets (before monitoring was introduced) are skipped silently.
 
 Exit 0 = clean. Exit 1 = errors found.
 """
+import argparse
 import csv
 import json
+import sqlite3
 import sys
 from collections import Counter, defaultdict
 from pathlib import Path
@@ -21,12 +23,37 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from vocabulary import CANONICAL_TIERS, WORKFLOW_PHASES, infer_workflow, is_known_agent  # noqa: E402
 
-RUNS_FILE = Path("agent-monitoring/runs.jsonl")
-EVENTS_FILE = Path("agent-monitoring/events.jsonl")
-TOOLS_FILE = Path("agent-monitoring/tools.jsonl")
 LOG_FILE = Path("tickets/working_log.csv")
 # Only validate working_log entries on or after this date (ISO prefix match)
 MONITORING_START = "2026-06-07"
+
+DEFAULT_DB_PATH = Path("agent-monitoring-index/monitoring.db")
+
+
+def open_index(db_path: Path) -> sqlite3.Connection:
+    if not db_path.exists():
+        print(
+            f"No agent-monitoring index found at {db_path} — run `make agent-monitoring-index` first.",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+    return sqlite3.connect(str(db_path))
+
+
+def load_runs_from_index(conn: sqlite3.Connection) -> list:
+    cursor = conn.execute("SELECT raw_json FROM runs ORDER BY id")
+    return [json.loads(row[0]) for row in cursor]
+
+
+def load_events_from_index(conn: sqlite3.Connection) -> list:
+    cursor = conn.execute("SELECT raw_json FROM events ORDER BY id")
+    return [json.loads(row[0]) for row in cursor]
+
+
+def load_tools_from_index(conn: sqlite3.Connection) -> list:
+    cursor = conn.execute("SELECT raw_json FROM tools ORDER BY id")
+    return [json.loads(row[0]) for row in cursor]
+
 
 LEGACY_COMPLETION_FIELDS = ("end_ts", "finished_at", "completed_at", "ts_end")
 # The full union of distinct final_status AND status values actually observed in
@@ -208,13 +235,26 @@ def load_jsonl(path):
     return records
 
 
-def main():
+def build_parser():
+    parser = argparse.ArgumentParser(
+        description="Cross-check agent-monitoring integrity against tickets/working_log.csv"
+    )
+    parser.add_argument("--db-path", default=str(DEFAULT_DB_PATH), help="Path to the agent-monitoring SQLite index")
+    return parser
+
+
+def main(argv=None):
+    parser = build_parser()
+    args = parser.parse_args(argv)
+
     errors = []
     warnings = []
 
-    runs = load_jsonl(RUNS_FILE)
-    events = load_jsonl(EVENTS_FILE)
-    tools = load_jsonl(TOOLS_FILE)
+    conn = open_index(Path(args.db_path))
+    runs = load_runs_from_index(conn)
+    events = load_events_from_index(conn)
+    tools = load_tools_from_index(conn)
+    conn.close()
 
     runs_by_id = {r["run_id"]: r for r in runs if "run_id" in r}
     events_by_run = defaultdict(list)

@@ -10,11 +10,35 @@ tickets changed.
 import sys
 from pathlib import Path
 
+import pytest
+
 _MONITORING_TOOLS_DIR = Path(__file__).parent.parent.parent / "tools" / "agent-monitoring"
 if str(_MONITORING_TOOLS_DIR) not in sys.path:
     sys.path.insert(0, str(_MONITORING_TOOLS_DIR))
 
-from generate_retro import compute_retro_metrics, generate, _record_since_cutoff  # noqa: E402
+import generate_retro  # noqa: E402
+from generate_retro import (  # noqa: E402
+    compute_retro_metrics,
+    generate,
+    _record_since_cutoff,
+    _resolve_status,
+    _is_legacy_event,
+    _is_gate_fail,
+)
+
+
+@pytest.fixture(autouse=True)
+def _isolate_monitoring_index(monkeypatch, tmp_path):
+    """Every test in this file drives generate_retro through compute_retro_metrics()/generate()
+    directly (never through the index) except the tests that explicitly exercise
+    _load_runs_and_events()/main() below — but main() now sources its data via
+    DEFAULT_DB_PATH-backed _load_runs_and_events(). Without this monkeypatch, any test reaching
+    that path would read (or worse, on-demand build) the real repo's
+    agent-monitoring-index/monitoring.db, corrupting durable state for other consumers
+    (query.py/validate.py). tmp_path is function-scoped, so this points every test's index at its
+    own private, nonexistent-by-default location."""
+    monkeypatch.setattr(generate_retro, "DEFAULT_DB_PATH", tmp_path / "monitoring.db")
+
 
 _BASE_RUN = {
     "run_id": "TCK-FAKE",
@@ -26,6 +50,57 @@ _BASE_RUN = {
     "agent_count": 9,
     "duration_s": 3600,
 }
+
+
+# --- TCK-20260713-MONITORING-RETRO-INDEX-MIGRATE: direct predicate-level tests for the three
+# legacy-shape helpers, added before the data-loading migration to pin their current behavior. ---
+
+def test_resolve_status_prefers_final_status_over_status():
+    assert _resolve_status({"final_status": "DONE", "status": "old"}) == "DONE"
+
+
+def test_resolve_status_falls_back_to_status_when_final_status_absent():
+    # Literal spelling preserved, NOT normalized to "DONE" — _resolve_status's documented
+    # non-normalizing contract.
+    assert _resolve_status({"status": "complete"}) == "complete"
+
+
+def test_resolve_status_returns_none_when_both_absent():
+    assert _resolve_status({}) is None
+
+
+def test_is_legacy_event_true_when_agent_missing():
+    assert _is_legacy_event({"event": "did a thing"}) is True
+
+
+def test_is_legacy_event_false_when_agent_present():
+    assert _is_legacy_event({"agent": "implementer"}) is False
+
+
+def test_is_gate_fail_true_for_non_terminal_status():
+    assert _is_gate_fail({"final_status": "DOD_BLOCKED"}) is True
+
+
+def test_is_gate_fail_false_for_done_epic_scoped_in_progress():
+    assert _is_gate_fail({"final_status": "DONE"}) is False
+    assert _is_gate_fail({"final_status": "EPIC_SCOPED"}) is False
+    assert _is_gate_fail({"final_status": "IN_PROGRESS"}) is False
+
+
+def test_resolve_status_function_still_importable_from_generate_retro():
+    # Guards against a future edit literally deleting _resolve_status()'s definition —
+    # build_index.py imports it directly (`from generate_retro import _resolve_status`).
+    from generate_retro import _resolve_status as reimported
+
+    assert callable(reimported)
+    assert reimported({"status": "legacy-spelling"}) == "legacy-spelling"
+
+
+def test_gate_fail_tuple_literal_unchanged():
+    # Pins the exact terminal-state tuple _is_gate_fail() compares against.
+    for terminal in ("DONE", "EPIC_SCOPED", "IN_PROGRESS"):
+        assert _is_gate_fail({"final_status": terminal}) is False
+    assert _is_gate_fail({"final_status": "SOMETHING_ELSE"}) is True
 
 
 def test_reason_code_section_omitted_when_no_reason_codes_present():
@@ -706,3 +781,234 @@ def test_generate_retro_days_flag_does_not_raise_on_legacy_start_ts(tmp_path, mo
     generate_retro.main()  # must not raise
 
     assert (tmp_path / "RETRO-LAST30D.md").exists()
+
+
+# --- TCK-20260713-MONITORING-RETRO-INDEX-MIGRATE: build-on-demand / fallback / no-hard-exit ---
+
+def test_generate_retro_builds_index_on_demand_when_missing(tmp_path, monkeypatch):
+    runs_file = tmp_path / "runs.jsonl"
+    events_file = tmp_path / "events.jsonl"
+    tools_file = tmp_path / "tools.jsonl"
+    runs_file.write_text(
+        '{"run_id":"TCK-ONDEMAND","start_ts":"2026-07-20T00:00:00Z","end_ts":"2026-07-20T00:10:00Z",'
+        '"workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":1}\n'
+    )
+    events_file.write_text(
+        '{"run_id":"TCK-ONDEMAND","seq":1,"phase":"Implement","agent":"implementer","status":"ok","summary":"done"}\n'
+    )
+    tools_file.write_text("")
+
+    monkeypatch.setattr(generate_retro, "RUNS_FILE", runs_file)
+    monkeypatch.setattr(generate_retro, "EVENTS_FILE", events_file)
+    monkeypatch.setattr(generate_retro, "DEFAULT_TOOLS_FILE", tools_file)
+
+    assert not generate_retro.DEFAULT_DB_PATH.exists()
+
+    runs, events = generate_retro._load_runs_and_events()
+
+    assert generate_retro.DEFAULT_DB_PATH.exists()
+    assert [r["run_id"] for r in runs] == ["TCK-ONDEMAND"]
+    assert [e["run_id"] for e in events] == ["TCK-ONDEMAND"]
+
+
+def test_generate_retro_produces_clear_error_message_if_build_on_demand_disabled_or_fails(
+    tmp_path, monkeypatch, capsys
+):
+    import build_index
+
+    runs_file = tmp_path / "runs.jsonl"
+    events_file = tmp_path / "events.jsonl"
+    runs_file.write_text(
+        '{"run_id":"TCK-FALLBACK","start_ts":"2026-07-20T00:00:00Z","end_ts":"2026-07-20T00:05:00Z",'
+        '"workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":1}\n'
+    )
+    events_file.write_text("")
+
+    monkeypatch.setattr(generate_retro, "RUNS_FILE", runs_file)
+    monkeypatch.setattr(generate_retro, "EVENTS_FILE", events_file)
+
+    def _raise(*_args, **_kwargs):
+        raise RuntimeError("simulated on-demand build failure")
+
+    monkeypatch.setattr(build_index, "build", _raise)
+
+    runs, events = generate_retro._load_runs_and_events()
+
+    assert runs == generate_retro.load_jsonl(runs_file)
+    assert events == generate_retro.load_jsonl(events_file)
+    captured = capsys.readouterr()
+    assert "WARNING" in captured.err
+    assert "agent-monitoring index unavailable" in captured.err
+
+
+def test_no_sys_exit_1_on_missing_index_in_generate_retro(tmp_path, monkeypatch):
+    # Direct opposite of query.py/validate.py's open_index() precedent (sys.exit(1) on a missing
+    # index) — this ticket's Scope explicitly requires the index never becomes a hard gating
+    # dependency for a retro report.
+    runs_file = tmp_path / "runs.jsonl"
+    events_file = tmp_path / "events.jsonl"
+    runs_file.write_text("")
+    events_file.write_text("")
+
+    monkeypatch.setattr(generate_retro, "RUNS_FILE", runs_file)
+    monkeypatch.setattr(generate_retro, "EVENTS_FILE", events_file)
+
+    try:
+        runs, events = generate_retro._load_runs_and_events()
+    except SystemExit:
+        pytest.fail("_load_runs_and_events() must never sys.exit on a missing/unbuildable index")
+
+    assert runs == []
+    assert events == []
+
+
+def test_generate_retro_never_writes_to_agent_monitoring_index_db():
+    # Architecture guard: the only legitimate write path to monitoring.db is the delegated
+    # build_index.build() call — no bespoke INSERT/UPDATE/sqlite3-write logic may exist here.
+    source = Path(generate_retro.__file__).read_text()
+    assert "INSERT INTO" not in source
+    assert "UPDATE " not in source
+    assert '.execute("INSERT' not in source
+
+
+# --- TCK-20260713-MONITORING-RETRO-INDEX-MIGRATE: migration-completeness / output-parity guards ---
+
+def test_main_loads_via_index_not_direct_jsonl_scan():
+    import inspect
+
+    source = inspect.getsource(generate_retro.main)
+    assert "load_jsonl(RUNS_FILE)" not in source
+    assert "load_jsonl(EVENTS_FILE)" not in source
+    assert "_load_runs_and_events" in source
+
+
+def test_update_index_call_sites_migrated_or_explicitly_documented_as_out_of_scope():
+    import inspect
+
+    source = inspect.getsource(generate_retro._update_index)
+    assert "load_jsonl(RUNS_FILE)" not in source
+
+    sig = inspect.signature(generate_retro._update_index)
+    assert list(sig.parameters) == ["all_runs"]
+
+
+_FIXED_CORPUS_RUNS = [
+    {
+        "run_id": "TCK-FIXED-DONE", "start_ts": "2026-07-01T00:00:00Z",
+        "end_ts": "2026-07-01T00:30:00Z", "workflow": "implement-ticket", "tier": "standard",
+        "final_status": "DONE", "agent_count": 5, "duration_s": 1800,
+    },
+    {
+        "run_id": "TCK-FIXED-GATEFAIL", "start_ts": "2026-07-01T01:00:00Z",
+        "end_ts": "2026-07-01T01:20:00Z", "workflow": "implement-ticket", "tier": "hotfix",
+        "final_status": "DOD_BLOCKED", "agent_count": 3, "duration_s": 1200,
+    },
+    {
+        # Legacy-shaped record: status only, no final_status — exercises _resolve_status's
+        # fallback path with a non-normalized literal spelling ("complete", not "DONE").
+        "run_id": "TCK-FIXED-LEGACY", "start_ts": "2026-07-01T02:00:00Z",
+        "end_ts": "2026-07-01T02:10:00Z", "workflow": "implement-ticket", "tier": "standard",
+        "status": "complete", "agent_count": 2, "duration_s": 600,
+    },
+]
+_FIXED_CORPUS_EVENTS = [
+    {"run_id": "TCK-FIXED-DONE", "seq": 1, "phase": "Implement", "agent": "implementer",
+     "status": "ok", "summary": "did work"},
+    {"run_id": "TCK-FIXED-GATEFAIL", "seq": 1, "phase": "Verify", "agent": "done-checker",
+     "status": "failed", "summary": "blocked"},
+]
+
+# Hand-copied frozen output — captured from generate() before this ticket's data-loading
+# migration landed (mirrors the QUERY-INDEX-MIGRATE convention: a frozen literal in the test
+# file, not sourced from git history). compute_retro_metrics()/generate() are untouched by this
+# migration, so this should trivially pass — its value is pinning the guarantee explicitly.
+_FIXED_CORPUS_EXPECTED_REPORT = (
+    "# Agent Monitoring Retro — fixed-label\n"
+    "\n"
+    "---\n"
+    "\n"
+    "## Run Summary\n"
+    "\n"
+    "| Metric | Value |\n"
+    "|---|---|\n"
+    "| Total runs | 3 |\n"
+    "| Completed (DONE) | 1 (33%) |\n"
+    "| Gate failures | 2 |\n"
+    "| Avg duration | 20 min |\n"
+    "| Avg agents per run | 3.3 |\n"
+    "| Total agent calls | 2 |\n"
+    "\n"
+    "## Gate Failure Breakdown\n"
+    "\n"
+    "| Gate | Count | % of runs |\n"
+    "|---|---|---|\n"
+    "| DOD_BLOCKED | 1 | 33% |\n"
+    "| complete | 1 | 33% |\n"
+    "\n"
+    "## Tier Distribution\n"
+    "\n"
+    "| Tier | Count | Scoped | DONE count | DONE rate |\n"
+    "|---|---|---|---|---|\n"
+    "| hotfix | 1 | 0 | 0 | 0% |\n"
+    "| standard | 2 | 0 | 1 | 50% |\n"
+    "\n"
+    "## Agent Status Distribution\n"
+    "\n"
+    "| Agent | Calls | ok | failed | blocked | skipped |\n"
+    "|---|---|---|---|---|---|\n"
+    "| done-checker | 1 | 0 | 1 | 0 | 0 |\n"
+    "| implementer | 1 | 1 | 0 | 0 | 0 |\n"
+    "\n"
+    "## Phase Status Distribution\n"
+    "\n"
+    "| Phase | Calls | ok | failed | blocked | skipped |\n"
+    "|---|---|---|---|---|---|\n"
+    "| Implement | 1 | 1 | 0 | 0 | 0 |\n"
+    "| Verify | 1 | 0 | 1 | 0 | 0 |\n"
+    "\n"
+    "## Summary Quality\n"
+    "\n"
+    "| Issue | Count |\n"
+    "|---|---|\n"
+    "| Empty summary (current schema) | 0 |\n"
+    "| Legacy-format records (summary field not applicable) | 0 |\n"
+    "| Truncated (>200 chars) | 0 |\n"
+    "\n"
+    "## Slow Runs (> 30 min)\n"
+    "\n"
+    "_No slow runs this period._\n"
+    "\n"
+    "## Notes\n"
+    "\n"
+    "_Fill in after reviewing the report above. What patterns stand out? What to improve?_\n"
+)
+
+
+def test_compute_retro_metrics_output_unchanged_pre_and_post_migration_on_fixed_corpus(tmp_path):
+    report = generate(_FIXED_CORPUS_RUNS, _FIXED_CORPUS_EVENTS, "fixed-label", tickets_root=tmp_path)
+
+    assert report == _FIXED_CORPUS_EXPECTED_REPORT
+
+
+# Hashes captured from generate_retro.py before this ticket's data-loading migration landed —
+# proves these six functions (the three legacy-shape helpers plus the phase/agent normalization
+# quartet) are byte-identical pre/post migration, not "also cleaned up" as unrequested scope creep.
+_PRE_MIGRATION_SOURCE_HASHES = {
+    "_resolve_status": "3af78b8f4068e490c572c4a74a4aa644e4c5a8e6c818209ed806408d7ccf70aa",
+    "_is_legacy_event": "b63e60eb4a26afa9212f1fc3af7f9e63e7526cb450b8a91ef778a422c4f03c2a",
+    "_is_gate_fail": "463d5c42d8c9094f865c7837bdc73f083a70005dbe034209f0a1eadd3deaf13e",
+    "_normalize_phase": "b333ea95446d509fc9b3a188dd8dfdc2635ac429595353a1fd2b2475df31e1f1",
+    "_normalize_agent": "aeb21df5446b1369edb9e0307218f325af919e7123db5b113529786607600115",
+    "_canonicalize": "ce578ddee86f27ef1143f325a4ac012ad0676a13adb50d69e95ed33c91331cd6",
+    "_flag_outliers": "4721cd694fe16bf98d52935c1bf0b888097d988ef9a6104e6afa55ce7c683ca0",
+}
+
+
+def test_normalize_phase_agent_and_flag_outliers_untouched():
+    import hashlib
+    import inspect
+
+    for name, expected_hash in _PRE_MIGRATION_SOURCE_HASHES.items():
+        source = inspect.getsource(getattr(generate_retro, name))
+        actual_hash = hashlib.sha256(source.encode()).hexdigest()
+        assert actual_hash == expected_hash, f"{name}'s source changed unexpectedly"

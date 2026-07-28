@@ -263,6 +263,9 @@ src/graphify-out/
 # Knowledge search index (local only — rebuild with: make knowledge-index)
 knowledge-index/
 
+# Agent-monitoring derived SQLite index (local only — rebuild with: make agent-monitoring-index)
+agent-monitoring-index/
+
 # Docusaurus
 website/node_modules/
 website/build/

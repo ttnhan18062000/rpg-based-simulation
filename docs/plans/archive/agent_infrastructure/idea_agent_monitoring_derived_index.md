@@ -1,24 +1,39 @@
 ---
-status: idea
+status: historical
 layer: observability
 authority: P2
 audience: developer
-maturity: scheduled
+maturity: shipped
 date: 2026-07-11
+archived: 2026-07-28
 tags: [idea, agent-infrastructure, observability, data-quality, schema]
 ---
 
 # Idea: Derived SQLite Index Over agent-monitoring/*.jsonl (Read Path Only)
 
-> **Maturity: SCHEDULED.** Scheduled 2026-07-13 as 4 draft tickets in
-> `tickets/todos/agent-monitoring-derived-index/` (not yet implemented): `TCK-20260713-MONITORING-SQLITE-INDEX`
-> (the `build_index.py` script and SQLite schema itself — this doc's core "Idea" section) plus three
-> consumer-migration tickets covering the "Consumers migrate opportunistically" paragraph's named
-> targets — `TCK-20260713-MONITORING-QUERY-INDEX-MIGRATE`, `TCK-20260713-MONITORING-VALIDATE-INDEX-MIGRATE`,
-> `TCK-20260713-MONITORING-RETRO-INDEX-MIGRATE` — each explicitly blocked on the first
-> (`tickets/todos/agent-monitoring-derived-index/SEQUENCE.md` enforces the order). All 4 Open Questions
-> below remain unresolved by design — deferred to each ticket's own future Scope/Plan phase, per this
-> folder's standard draft-ticket convention.
+**Archived:** 2026-07-28 — fully shipped by the 4-ticket batch in
+`tickets/done/agent-monitoring-derived-index/` (`TCK-20260713-MONITORING-SQLITE-INDEX`,
+`TCK-20260713-MONITORING-QUERY-INDEX-MIGRATE`, `TCK-20260713-MONITORING-VALIDATE-INDEX-MIGRATE`,
+`TCK-20260713-MONITORING-RETRO-INDEX-MIGRATE`); this document is the historical design reference.
+
+> **Maturity: SHIPPED.** `tools/agent-monitoring/build_index.py` delivers this doc's core "Idea"
+> section exactly as proposed: a gitignored, full-rebuild-only, on-demand SQLite index
+> (`agent-monitoring-index/monitoring.db`) built once from all 3 JSONL files, mirroring
+> `knowledge_search.py`'s `build`/`knowledge-index/` precedent, with a `make agent-monitoring-index`
+> target and zero change to the write path. All three named consumer-migration targets shipped in
+> the "Consumers migrate opportunistically" paragraph: `query.py` gained its first-ever test suite
+> (21 tests) in the same diff as its migration and a real legacy `--runs --status` bug was fixed
+> along the way; `validate.py`'s `compute_drift_report()`/`compute_tool_count_drift_report()`
+> migrated, plus a third sibling function (`compute_multi_invocation_collision_report()`, added
+> after this idea was raised) was folded in for the same DRY reason, surfacing one real bounded
+> output divergence (documented in `docs/parity_ledger/infrastructure.yaml` INFRA-290, inert on the
+> live corpus); `generate_retro.py`'s `_resolve_status()`/`_is_legacy_event()`/`_is_gate_fail()`
+> were deliberately left untouched (not "removed" as the migration ticket's own literal AC first
+> assumed) — `build_index.py` imports `_resolve_status()` directly rather than reimplementing it,
+> so only the *data-loading* layer moved to the index, with a build-on-demand-then-JSONL-fallback
+> chain (never a hard gating dependency, per this idea's own framing) since `generate_retro.py`
+> is the one consumer explicitly required to degrade gracefully rather than hard-fail. All 5 Open
+> Questions below are resolved.
 
 ## Problem
 
@@ -64,12 +79,38 @@ Add a **derived, read-only SQLite index**, rebuilt from the 3 JSONL files, model
 
 ## Open Questions
 
-- Should `query.py` gain its (currently nonexistent) test suite *before* migrating it to the index, or as part of the same change? Migrating untested code and adding tests in the same diff is more risk than doing them as two small, sequenced steps.
-- Should the build step encode a single `resolved_status` (or similar normalized) column/view, or should normalization stay entirely in Python helper functions that happen to run once at build time instead of once per reader? The former is more SQL-native; the latter is a smaller diff from what exists today.
-- Is a Make target the right home, or should this be a `tools/agent-monitoring/` CLI subcommand alongside `record_run.py`/`record_events.py`/`validate.py` (this repo has both conventions already)?
-- If `agent-monitoring/tools.jsonl` grows by orders of magnitude in the future (unlikely at current usage patterns, but not impossible), should incremental build be revisited then — or is "always full-rebuild" a durable enough simplification given this is a read-only convenience layer, not a live-critical path?
-- Should the index ever be built automatically (e.g. a post-commit hook mirroring `install-hooks`' knowledge-index pattern), or should it stay strictly on-demand (`make agent-monitoring-index` run manually before an investigation) given it's not relied on by any gating check?
+- ~~Should `query.py` gain its (currently nonexistent) test suite *before* migrating it to the
+  index, or as part of the same change?~~ — RESOLVED: same change. `tests/tools/test_query.py`
+  (21 tests) landed in the identical diff as the migration itself, with no separate sequencing
+  step — the anticipated risk of migrating untested code didn't require the two-step split in
+  practice.
+- ~~Should the build step encode a single `resolved_status` (or similar normalized) column/view,
+  or should normalization stay entirely in Python helper functions?~~ — RESOLVED: both, by
+  delegation rather than duplication. `build_index.py` materializes a `resolved_status` SQL column
+  on the `runs` table, but computes it by importing `generate_retro.py::_resolve_status()` directly
+  rather than reimplementing the logic in SQL — the normalization *logic* stays canonically in
+  Python; the SQL column is just a cached snapshot of calling it once at build time instead of once
+  per reader. `_is_legacy_event()`/`_is_gate_fail()` and `validate.py`'s three `compute_*_report()`
+  functions were left as pure Python for the same reason — no SQL-native reimplementation was found
+  necessary anywhere in this batch.
+- ~~Is a Make target the right home, or should this be a `tools/agent-monitoring/` CLI subcommand?~~
+  — RESOLVED: Make target, per the author's stated preference. `make agent-monitoring-index` is the
+  sole entry point; no CLI subcommand was added.
+- ~~If `agent-monitoring/tools.jsonl` grows by orders of magnitude in the future, should incremental
+  build be revisited?~~ — NOT reopened. Full-rebuild-only shipped exactly as scoped (`build_index.py`
+  processes the live ~68k-line `tools.jsonl` corpus in well under a second); no evidence surfaced
+  during this batch that revisits the simplification.
+- ~~Should the index ever be built automatically, or should it stay strictly on-demand?~~ —
+  RESOLVED, with a deliberate split by consumer: `build_index.py` itself stays strictly on-demand
+  (`make agent-monitoring-index`, no hook). `query.py`/`validate.py` hard-require the index to
+  already exist, exiting with an actionable "run `make agent-monitoring-index` first" error if it's
+  missing. `generate_retro.py` alone gained its own scoped on-demand build (calls
+  `build_index.build()` directly, lazily imported to avoid a circular import, when the index is
+  absent) with a fallback to the original direct-JSONL read if the on-demand build itself fails —
+  because it is the one consumer this idea's own "must never become a hard gating dependency"
+  framing applies to most literally (a weekly retro report degrading gracefully beats it hard-
+  failing). No project-wide post-commit hook was added anywhere.
 
 ---
 
-*Raised: 2026-07-11, directly from investigating whether `TCK-20260711-EVAL-SEARCH-DOCID-ANCHOR-FIX`'s and `TCK-20260711-MONITORING-TOOLCOUNT-SIDECAR-COLLISION`'s pattern (a derived signal nobody could cheaply cross-check against ground truth) generalizes across the whole `agent-monitoring/` subsystem, not just the one field each of those tickets fixed. Scheduled 2026-07-13 as 4 draft tickets in `tickets/todos/agent-monitoring-derived-index/` — see the Maturity banner above. Not yet implemented.*
+*Raised: 2026-07-11, directly from investigating whether `TCK-20260711-EVAL-SEARCH-DOCID-ANCHOR-FIX`'s and `TCK-20260711-MONITORING-TOOLCOUNT-SIDECAR-COLLISION`'s pattern (a derived signal nobody could cheaply cross-check against ground truth) generalizes across the whole `agent-monitoring/` subsystem, not just the one field each of those tickets fixed. Scheduled 2026-07-13 as 4 draft tickets in `tickets/todos/agent-monitoring-derived-index/`. Shipped 2026-07-28 — see the Maturity banner above.*

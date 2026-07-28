@@ -455,7 +455,7 @@ simulation workflows add scope.
 - `docs/agent-monitoring/schema.md`
 - `docs/guides/agent_monitoring.md`
 - `docs/guidelines/agent_working_environment.md`
-- `docs/plans/agent_infrastructure/idea_agent_monitoring_derived_index.md`
+- `docs/plans/archive/agent_infrastructure/idea_agent_monitoring_derived_index.md` (archived — shipped)
 - `docs/ai/agent_infrastructure_audit.md`
 - `docs/architecture/agent_orchestration_contract.md`
 

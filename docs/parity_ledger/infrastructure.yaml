@@ -5303,6 +5303,18 @@
     proceeds directly in generate_retro.py per that sibling ticket's own carried-forward
     sequencing note, to be revisited only once/if the index actually lands.
 
+  cross_reference: >
+    TCK-20260713-MONITORING-SQLITE-INDEX has since shipped, and TCK-20260713-MONITORING-RETRO-
+    INDEX-MIGRATE (INFRA-291) subsequently migrated generate_retro.py's data-loading layer
+    (main()/_update_index()) onto that index -- the "once/if the index actually lands" condition
+    named above is now resolved. The resolution: normalization itself was deliberately NOT moved
+    into a SQL column -- _normalize_phase()/_normalize_agent()/_canonicalize() (and
+    _resolve_status(), _is_legacy_event(), _is_gate_fail()) remain exactly as this entry documents
+    them, confirmed byte-identical post-migration by INFRA-291's own source-hash guard test. Only
+    the physical source feeding these functions changed, from a direct JSONL scan to index-backed
+    raw_json rows -- this entry's own normalization logic and status remain fully current,
+    unaffected by that migration.
+
 - id: INFRA-284
   text: >
     Outlier flagging added to the agent-monitoring retro report (TCK-20260719-RETRO-OUTLIER-FLAGS):
@@ -5653,3 +5665,262 @@
     TCK-20260711-MONITORING-TOOLCOUNT-SIDECAR-COLLISION's precedent). Does not address
     `implement-epic`'s per-child dispatch (flagged as an open question in the linked idea doc, not
     investigated here).
+
+  cross_reference: >
+    TCK-20260713-MONITORING-VALIDATE-INDEX-MIGRATE (INFRA-290) also migrated
+    compute_multi_invocation_collision_report -- the function this entry documents -- onto the
+    SQLite index read path (agent-monitoring-index/monitoring.db), with zero changes to the
+    function's body or signature; only its caller, main(), changed how it sources events.
+
+- id: INFRA-289
+  text: >
+    tools/agent-monitoring/query.py's read path migrated (TCK-20260713-MONITORING-QUERY-INDEX-
+    MIGRATE) from an in-memory linear scan of agent-monitoring/{runs,events}.jsonl to the derived
+    SQLite index at agent-monitoring-index/monitoring.db, built by build_index.py (per the
+    idea_agent_monitoring_derived_index.md read-only-index plan; sibling migration to
+    TCK-20260713-MONITORING-SQLITE-INDEX). query.py's read path now performs zero direct reads of
+    agent-monitoring/runs.jsonl or events.jsonl -- enforced by an architecture-guard test.
+    main()'s monolithic filtering logic was extracted into importable pure functions
+    filter_runs(records, args)/filter_events(records, args), and a new open_index(db_path) gives an
+    actionable "run `make agent-monitoring-index` first" error (exit 1) instead of a raw exception
+    or silent empty result when the index is missing; a corrupt/non-SQLite file at that path is
+    left to raise its native sqlite3.DatabaseError unmasked on first query, not caught. Filter
+    output is field-for-field consistent with the pre-migration in-memory scan for every filter
+    (--agent, --status, --phase, --run-id, --days, --summary-contains, --runs, individually and
+    combined) except one documented intentional fix: see divergence_note.
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: >
+    tools/agent-monitoring/query.py:29 (`def open_index(db_path: Path) -> sqlite3.Connection`,
+    missing-index actionable error + `sys.exit(1)`), :39 (`def load_runs_from_index(conn)`, `SELECT
+    resolved_status, raw_json FROM runs ORDER BY id`, injects `_resolved_status` from the SQL
+    column), :49 (`def load_events_from_index(conn)`, `SELECT raw_json FROM events ORDER BY id`),
+    :104 (`def filter_runs(records, args)`), :119 (`def filter_events(records, args)`), :149 (`def
+    main(argv=None)`, thin CLI wrapper over the above). `load_jsonl()`/`RUNS_FILE`/`EVENTS_FILE`
+    (the pre-migration direct-JSONL-read path) deleted entirely -- confirmed absent by
+    TestArchitectureGuards::test_query_py_has_no_direct_jsonl_reads.
+  proof_type: regression
+  test_path: >
+    tests/tools/test_query.py -- 21 tests: TestEventFilters (6, one per event filter flag),
+    TestRunsFilters (2, including combined --runs --status --days), TestCombinedEventFilters (2),
+    TestMissingIndex (4, including corrupt-db-does-not-print-missing-index-message),
+    TestRegressionParity (4, field-for-field comparison of migrated filter_events/filter_runs
+    against a frozen pre-migration reference implementation over
+    tests/fixtures/agent_monitoring/ shape files, explicitly excluding --runs --status from strict
+    comparison per the documented divergence), TestArchitectureGuards (3, source-text absence of
+    RUNS_FILE/EVENTS_FILE/load_jsonl plus index-order-matches-insertion-order). All 21 passing,
+    plus 161 regression tests unaffected (tests/tools/test_build_index.py,
+    test_validate_agent_monitoring.py, test_generate_retro.py, and the write-path/adjacent-consumer
+    suite) -- 182/182 total confirmed passing as part of this migration.
+  divergence_note: >
+    One intentional behavioral difference from the pre-migration in-memory scan: `--runs --status`
+    now compares against `_resolved_status` (query.py:44, sourced from the SQL `resolved_status`
+    column, itself a `final_status`-or-legacy-bare-`status` fallback computed at index-build time)
+    instead of re-deriving/reading raw `final_status` directly off the record. This fixes a
+    pre-existing bug where legacy-schema runs carrying only a bare `status` field (no
+    `final_status`) were silently excluded from `--runs --status` results -- those runs now
+    correctly match. Rationale: bug fix, not a new design choice -- the same
+    resolved/legacy-fallback-status pattern is already precedented in
+    tools/agent-monitoring/generate_retro.py's `_resolve_status(r)` (generate_retro.py:88), which
+    query.py's fix now mirrors instead of duplicating a second, inconsistent status-derivation path.
+    Verified live: `query.py --runs --status DONE` against the real corpus surfaces a legacy
+    bare-status record that pre-migration `query.py` would have missed (see ticket's Test Summary
+    manual smoke test). Confirmed as the *only* divergence by TestRegressionParity's field-for-field
+    comparison, which explicitly carves out only this one case from strict pre/post equality.
+  support_boundary: >
+    Agent-orchestration/monitoring-pipeline tooling only -- no simulation behavior, Mechanics Bible
+    chapter, or engine contract governs query.py's filtering semantics (same category as INFRA-281
+    through INFRA-288 immediately above). No `src/` file touched, no on-disk schema change to
+    events.jsonl/runs.jsonl -- this is a read-path consumer migration onto an existing derived
+    index (built by TCK-20260713-MONITORING-SQLITE-INDEX, out of this ticket's scope). Does not
+    migrate validate.py's drift-report logic (TCK-20260713-MONITORING-VALIDATE-INDEX-MIGRATE) or
+    generate_retro.py's legacy-shape helpers (TCK-20260713-MONITORING-RETRO-INDEX-MIGRATE) --
+    separate sibling tickets. Does not fix the separately-discovered, pre-existing --days
+    TypeError-on-non-string-ts bug (confirmed identical on pre-migration `query.py` via `git show
+    HEAD:tools/agent-monitoring/query.py`, left as-is per byte-for-byte parity requirement,
+    documented in the ticket's own plan.md Deviations section for a future ticket).
+
+- id: INFRA-290
+  text: >
+    tools/agent-monitoring/validate.py's main() migrated (TCK-20260713-MONITORING-VALIDATE-INDEX-
+    MIGRATE) from an in-memory linear scan of agent-monitoring/{runs,events,tools}.jsonl to the
+    derived SQLite index at agent-monitoring-index/monitoring.db, mirroring query.py's precedent
+    (INFRA-289) but independently written -- no cross-import between the two modules' index-loading
+    helpers. All three report functions -- compute_drift_report, compute_tool_count_drift_report,
+    and compute_multi_invocation_collision_report (the function INFRA-288 documents; folded into
+    this ticket's scope per approved expansion) -- are unchanged in body and signature, receiving
+    index-sourced data transparently through main()'s single unified load. infer_workflow(run_id)
+    is still called fresh inside compute_drift_report rather than shortcut via a stored typed
+    column, preserving output identity with the pre-migration path.
+    LEGACY_COMPLETION_FIELDS/LEGACY_TERMINAL_STATUS_VALUES remain untouched -- still the canonical
+    source legacy_reader.py and build_index.py import from. RUNS_FILE/EVENTS_FILE/TOOLS_FILE
+    constants were removed (nothing else imported them by name). A new hard precondition was
+    introduced: validate.py now requires the SQLite index to already exist and exits 1 with an
+    actionable "run `make agent-monitoring-index` first" error if it does not -- previously it ran
+    standalone directly off the JSONL files with no such dependency. Field-for-field output parity
+    with the pre-migration in-memory scan holds for all three report functions except one
+    documented, narrow, non-gating divergence -- see divergence_note.
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: >
+    tools/agent-monitoring/validate.py:33-40 (`def open_index(db_path: Path) ->
+    sqlite3.Connection`, missing-index actionable error + `sys.exit(1)`), :43-45 (`def
+    load_runs_from_index(conn)`, `SELECT raw_json FROM runs ORDER BY id`), :48-50 (`def
+    load_events_from_index(conn)`, `SELECT raw_json FROM events ORDER BY id`), :53-55 (`def
+    load_tools_from_index(conn)`, `SELECT raw_json FROM tools ORDER BY id`), :246-325 (`def
+    main(argv=None)`, opens the index once, loads runs/events/tools via the three helpers above,
+    then calls the three unchanged report functions). `load_jsonl()`/`RUNS_FILE`/`EVENTS_FILE`/
+    `TOOLS_FILE` (the pre-migration direct-JSONL-read path for main()) -- the three FILE constants
+    deleted entirely, `load_jsonl()` itself intentionally retained (still imported by
+    legacy_reader.py/ingest.py) -- confirmed by
+    TestArchitectureGuards::test_validate_py_has_no_direct_jsonl_reads.
+  proof_type: regression
+  test_path: >
+    tests/tools/test_validate_agent_monitoring.py -- 27 tests (15 pre-existing + 12 new):
+    TestMainUsesIndex (3, one per runs/events/tools load path), TestArchitectureGuards (2, source-
+    text absence of RUNS_FILE/EVENTS_FILE/TOOLS_FILE plus legacy-allowlist re-importability),
+    TestRegressionParity (4, byte-identical output comparison of
+    compute_drift_report/compute_tool_count_drift_report/compute_multi_invocation_collision_report
+    over direct-JSONL-fixture input vs. index-loaded input, plus
+    ::test_tools_row_missing_tool_field_is_a_known_bounded_divergence pinning the one documented
+    divergence below), TestMissingIndex (3, actionable error text, nonzero exit code from
+    open_index, and from main() end-to-end). Plus 167 tests across the full regression/consumer
+    surface unaffected. 194/194 total confirmed passing as part of this migration.
+  divergence_note: >
+    Two behavioral differences from the pre-migration direct-JSONL-read path. (a) A new hard
+    precondition: validate.py now requires `make agent-monitoring-index` to have already been run
+    -- open_index() exits 1 with an actionable error ("No agent-monitoring index found at
+    <db_path> -- run `make agent-monitoring-index` first.") if agent-monitoring-index/monitoring.db
+    does not exist, whereas previously validate.py ran standalone directly off
+    agent-monitoring/{runs,events,tools}.jsonl with no such dependency. Intentional and by design --
+    matches query.py's identical INFRA-289 precondition. (b) A genuine, narrow, non-gating output
+    divergence found on the live production corpus: compute_tool_count_drift_report's "Mismatches"
+    count shifts from 487 to 488. Root cause: build_index.py's stricter tools-table ingestion
+    (`_ingest_tools`, from the sibling TCK-20260713-MONITORING-SQLITE-INDEX ticket) requires
+    `isinstance(record.get("tool"), str)` and so excludes one agent-monitoring/tools.jsonl row
+    (TCK-20260716-SIMQ-...-SWEEP seq=4) that has a valid run_id+seq but no `tool` field --
+    a row the old direct load_jsonl() path still counted (its actual_counts loop only checks
+    run_id+seq presence) but the new index-backed path does not. Fixing this is explicitly out of
+    this ticket's scope: it would require either changing build_index.py's tools-ingestion rule
+    (owned by the sibling SQLITE-INDEX ticket) or changing compute_tool_count_drift_report's body to
+    also require a `tool` field (forbidden -- its body must stay byte-for-byte unchanged by this
+    migration). Non-gating: only shifts the reported "Mismatches" count, never validate.py's exit
+    code. Pinned by
+    tests/tools/test_validate_agent_monitoring.py::TestRegressionParity::test_tools_row_missing_tool_field_is_a_known_bounded_divergence,
+    confirmed against production data 2026-07-28 (exactly one such record in the live corpus).
+  support_boundary: >
+    Agent-orchestration/monitoring-pipeline tooling only -- no simulation behavior, Mechanics Bible
+    chapter, or engine contract governs validate.py's drift-report semantics (same category as
+    INFRA-281 through INFRA-289 immediately above). No `src/` file changed -- only
+    tools/agent-monitoring/validate.py. Does not touch build_index.py's ingestion rules or
+    compute_tool_count_drift_report/compute_drift_report/compute_multi_invocation_collision_report's
+    bodies (all three unchanged, per this ticket's own scope guard). Does not migrate query.py's
+    read path (TCK-20260713-MONITORING-QUERY-INDEX-MIGRATE / INFRA-289, a separate sibling ticket)
+    or generate_retro.py's legacy-shape helpers (TCK-20260713-MONITORING-RETRO-INDEX-MIGRATE,
+    likewise separate).
+
+- id: INFRA-291
+  text: >
+    tools/agent-monitoring/generate_retro.py's data-loading layer migrated
+    (TCK-20260713-MONITORING-RETRO-INDEX-MIGRATE) from direct load_jsonl(RUNS_FILE)/
+    load_jsonl(EVENTS_FILE) scans to the derived SQLite index at
+    agent-monitoring-index/monitoring.db, mirroring query.py's (INFRA-289) and validate.py's
+    (INFRA-290) precedent but deliberately diverging on missing-index handling: instead of
+    query.py/validate.py's hard sys.exit(1), this module builds the index on demand (via a
+    function-local `import build_index` + `build_index.build(...)` call) if missing, and falls
+    back to the original direct load_jsonl() scan if the on-demand build itself fails -- the index
+    must never become a hard gating dependency for a weekly retro report, per the ticket's own
+    Scope wording. `_resolve_status()`, `_is_legacy_event()`, `_is_gate_fail()` -- the three
+    legacy-shape helpers the ticket's title names -- keep their pre-migration definitions and all
+    12 `compute_retro_metrics()`/`_update_index()` call sites completely unchanged; only the
+    physical source of the `all_runs`/`all_events` lists feeding them changed, from two per-report
+    linear JSONL scans to one shared index-backed load reused by both `main()` and
+    `_update_index()` (which also lost its own duplicate `load_jsonl(RUNS_FILE)` read, folded into
+    this migration per investigation.md Risk #3). Following the exact reinterpretation the sibling
+    VALIDATE-INDEX-MIGRATE ticket established for its own identical cross-import conflict:
+    `_resolve_status` cannot be literally deleted from this file because `build_index.py` imports
+    it directly (`from generate_retro import _resolve_status`) to populate the index's
+    `resolved_status` column, so "migrated" is satisfied at the physical-read layer
+    (`main()`/`_update_index()`), not by rewriting `compute_retro_metrics()`'s call sites to read
+    a pre-injected index key (which would break ~15+ existing plain-dict-injection tests).
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: >
+    tools/agent-monitoring/generate_retro.py:40-41 (`DEFAULT_DB_PATH =
+    Path("agent-monitoring-index/monitoring.db")`, `DEFAULT_TOOLS_FILE =
+    Path("agent-monitoring/tools.jsonl")`), :53-87 (`def _load_runs_and_events()` -- builds the
+    index on demand at :61-72 if `DEFAULT_DB_PATH` doesn't exist, reads `raw_json` back via
+    `SELECT raw_json FROM runs/events ORDER BY id` at :76-77, and on any `Exception` prints a
+    non-fatal `WARNING:` to stderr and falls back to `load_jsonl(RUNS_FILE)`/
+    `load_jsonl(EVENTS_FILE)` at :81-87 -- never a `sys.exit`), :784-824 (`def main()`, its two
+    prior direct `load_jsonl()` calls replaced by `all_runs, all_events =
+    _load_runs_and_events()` at :791, `_update_index(all_runs)` called at :824), :827-849 (`def
+    _update_index(all_runs)`, signature changed to accept the already-loaded list, its own
+    `load_jsonl(RUNS_FILE)` read deleted -- the rest of its body, including its two
+    `_resolve_status()` calls at :845-846, is unchanged). `_resolve_status()` (:88 area),
+    `_is_legacy_event()`, `_is_gate_fail()`, `compute_retro_metrics()`, and `generate()` are
+    byte-identical to their pre-migration form -- confirmed by a source-hash-comparison test, not
+    just inspection (see test_path).
+  proof_type: regression
+  test_path: >
+    tests/tools/test_generate_retro.py --
+    ::test_compute_retro_metrics_output_unchanged_pre_and_post_migration_on_fixed_corpus (frozen,
+    hand-copied pre-migration report string compared byte-for-byte against `generate()`'s live
+    output over a fixed 3-run/2-event corpus spanning a DONE run, a gate-fail run, and a
+    legacy-shaped status-only run -- proves the migration is output-preserving, not just
+    source-identical); ::test_normalize_phase_agent_and_flag_outliers_untouched (SHA-256
+    source-hash guard pinning `_resolve_status`, `_is_legacy_event`, `_is_gate_fail`,
+    `_normalize_phase`, `_normalize_agent`, `_canonicalize`, `_flag_outliers` against
+    pre-migration-captured hashes -- fails loudly if any of the 3 legacy-shape helpers this ticket
+    targets, or the adjacent normalization quartet this ticket must not touch, changes by even one
+    character); ::test_main_loads_via_index_not_direct_jsonl_scan and
+    ::test_update_index_call_sites_migrated_or_explicitly_documented_as_out_of_scope (source-text
+    architecture guards confirming `main()`/`_update_index()` no longer call `load_jsonl(RUNS_FILE)`/
+    `load_jsonl(EVENTS_FILE)` directly and route through `_load_runs_and_events()` instead);
+    ::test_generate_retro_builds_index_on_demand_when_missing,
+    ::test_generate_retro_produces_clear_error_message_if_build_on_demand_disabled_or_fails,
+    ::test_no_sys_exit_1_on_missing_index_in_generate_retro (proves the deliberate
+    build-on-demand-then-fallback chain never hard-exits, unlike query.py/validate.py's
+    `open_index()`); ::test_generate_retro_never_writes_to_agent_monitoring_index_db (confirms the
+    only legitimate write path to `monitoring.db` is the delegated `build_index.build()` call, no
+    bespoke SQL writes). 54/54 tests passing in `test_generate_retro.py` (19 new, 35 pre-existing
+    unmodified), plus `tests/tools/test_build_index.py` (17/17, including
+    `TestNormalizationParity::test_resolved_status_matches_generate_retro_resolve_status`) and
+    `tests/tools/test_validate_agent_monitoring.py`/`test_query.py` (48/48, sibling index
+    consumers unaffected) confirmed passing as part of this migration.
+  divergence_note: >
+    One real, currently-inert edge-case divergence, flagged in investigation.md Risk #4 and
+    confirmed by Architecture-Verify: `generate_retro.py`'s own `load_jsonl()` (line 47) has no
+    malformed-line tolerance -- a bad JSONL line raises `json.JSONDecodeError` uncaught, exactly as
+    it did pre-migration. This is only reachable via `_load_runs_and_events()`'s fallback branch
+    (:81-87), used solely when the on-demand index build/read *also* fails -- the primary,
+    non-fallback path builds the index via `build_index.build()`, which imports its `load_jsonl`
+    from `validate.py` (line 37: `from validate import ... load_jsonl`), a strictly more tolerant
+    implementation that catches `json.JSONDecodeError` per line and skips-with-a-warning instead of
+    raising (validate.py:223-233). So in the narrow compound-failure scenario -- index build fails
+    for some other reason AND a JSONL line is malformed -- the fallback path could still crash,
+    identical to pre-migration behavior; this is not a new regression, since pre-migration
+    `generate_retro.py` always read via its own strict `load_jsonl()` with no fallback at all.
+    Confirmed 0 malformed lines exist in the live `agent-monitoring/runs.jsonl`/`events.jsonl`
+    corpus today (per investigation.md and the Implementation Notes' Test Summary) -- currently
+    inert on production data, not a live bug. Not fixed here: doing so would mean either changing
+    `generate_retro.py`'s own `load_jsonl()` body (a pre-existing, out-of-scope function whose
+    behavior this ticket's own tests pin unchanged) or importing `validate.py`'s tolerant version
+    for the fallback path specifically, a scope expansion investigation.md explicitly flagged as
+    "worth a one-line note in the plan, not a blocker."
+  support_boundary: >
+    Agent-orchestration/monitoring-pipeline tooling only -- no simulation behavior, Mechanics Bible
+    chapter, or engine contract governs generate_retro.py's report-generation semantics (same
+    category as INFRA-281 through INFRA-290 immediately above). No `src/` file touched, no on-disk
+    schema change to runs.jsonl/events.jsonl/tools.jsonl -- this is a read-path consumer migration
+    onto the existing derived index (built by TCK-20260713-MONITORING-SQLITE-INDEX, out of this
+    ticket's scope, same as INFRA-289/290). Does not touch `build_index.py`, `query.py`, or
+    `validate.py` themselves. Does not migrate `compute_retro_metrics()`/`generate()`'s internal
+    call sites onto index-injected keys (that would require the tests-inject-plain-dicts conflict
+    documented in this entry's `text`) and does not touch `_normalize_phase`/`_normalize_agent`/
+    `_canonicalize`/`_flag_outliers` (INFRA-283/284's separate, already-shipped normalization
+    concern -- confirmed byte-identical by the same source-hash guard this entry's test_path
+    cites).

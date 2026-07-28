@@ -12,6 +12,35 @@ Two append-only JSONL files, joined by `run_id`.
 
 ---
 
+## Derived SQLite Index (Read Path Only)
+
+`tools/agent-monitoring/build_index.py` builds a gitignored, full-rebuild-only SQLite index
+(`agent-monitoring-index/monitoring.db`) from all 3 JSONL files below — `runs`, `events`, and
+`tools` tables, each column-for-column derived from the corresponding JSONL shape, plus a
+materialized `resolved_status`/`is_complete` pair on `runs` computed by importing
+`generate_retro.py::_resolve_status()` and `validate.py::_record_is_complete()` directly rather
+than reimplementing that normalization in SQL. It mirrors this repo's `knowledge-index/knowledge.db`
+precedent: derived, gitignored, rebuildable, **never** the source of truth — the JSONL files below
+remain the sole write-path/append-only ground truth, untouched by the index or its build step.
+
+Run `make agent-monitoring-index` to (re)build it. `query.py` and `validate.py` **hard-require**
+the index to exist (exiting with an actionable "run `make agent-monitoring-index` first" error if
+it's missing) — a deliberate choice, since neither is meant to run without its data source.
+`generate_retro.py` is the one exception: it builds the index on demand if missing, and falls back
+to reading the raw JSONL directly if that on-demand build itself fails, so the weekly retro report
+never becomes hard-blocked on the index's presence. `events`/`tools` tables use non-unique
+`(run_id, seq)` indexes, not a `UNIQUE` constraint — historical pause/resume seq-collision
+duplicates (see the Known Limitations section below) exist in the live corpus and would crash a
+naive unique-key rebuild. `tools.jsonl` rows missing a `tool` field (a handful of confirmed
+off-schema records) are excluded from the `tools` table with a stderr warning, never coerced.
+
+See `docs/plans/archive/agent_infrastructure/idea_agent_monitoring_derived_index.md` (archived —
+shipped) for the full design rationale, and `docs/parity_ledger/infrastructure.yaml` entries
+INFRA-289 through INFRA-291 for the per-consumer migration evidence and any documented output
+divergences.
+
+---
+
 ## `agent-monitoring/runs.jsonl`
 
 One record per workflow invocation.

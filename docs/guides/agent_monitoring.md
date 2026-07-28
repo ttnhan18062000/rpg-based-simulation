@@ -78,6 +78,9 @@ Before reading results, verify data integrity:
 python3 tools/agent-monitoring/validate.py
 ```
 
+Like `query.py`, `validate.py` reads from the derived SQLite index — run `make agent-monitoring-index`
+first if it's missing (`validate.py` exits with an actionable error rather than a raw exception if so).
+
 This checks:
 - Every DONE working_log entry has a matching run record
 - Every run record has at least one event
@@ -94,6 +97,10 @@ shouldn't assume only `validate.py` handles legacy records.
 ---
 
 ## Querying Raw Data
+
+`query.py` reads from the derived SQLite index, not the raw JSONL directly — run
+`make agent-monitoring-index` first if you haven't built it yet (or it's gone stale after new
+runs). See `docs/agent-monitoring/schema.md`'s "Derived SQLite Index" section.
 
 ```bash
 # All failed events in the last 14 days
@@ -186,6 +193,7 @@ non-empty — the never-started/informational list never reaches the hook.
 ## Makefile Targets
 
 ```bash
+make agent-monitoring-index          # (re)build the derived SQLite index — required by query.py/validate.py
 make agent-monitoring-retro          # generate current-week retro report
 make agent-monitoring-validate       # cross-check integrity
 make agent-monitoring-query          # open interactive query (pass ARGS="...")

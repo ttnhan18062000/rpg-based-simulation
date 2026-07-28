@@ -10,6 +10,7 @@ Usage:
 """
 import argparse
 import json
+import sqlite3
 import statistics
 import sys
 from collections import Counter, defaultdict
@@ -36,6 +37,8 @@ from vocabulary import WORKFLOW_AGENTS, WORKFLOW_PHASES, infer_workflow  # noqa:
 RUNS_FILE = Path("agent-monitoring/runs.jsonl")
 EVENTS_FILE = Path("agent-monitoring/events.jsonl")
 RETRO_DIR = Path("agent-monitoring/retro")
+DEFAULT_DB_PATH = Path("agent-monitoring-index/monitoring.db")
+DEFAULT_TOOLS_FILE = Path("agent-monitoring/tools.jsonl")
 
 # Repo root — two levels above tools/agent-monitoring/, matching this file's actual depth.
 _DEFAULT_TICKETS_ROOT = Path(__file__).resolve().parent.parent.parent
@@ -45,6 +48,43 @@ def load_jsonl(path):
     if not path.exists():
         return []
     return [json.loads(l) for l in path.read_text().splitlines() if l.strip()]
+
+
+def _load_runs_and_events():
+    """Return (all_runs, all_events) sourced from the derived SQLite index when available,
+    building it on demand if missing. The index must never become a hard gating dependency for
+    a retro report (unlike query.py/validate.py's open_index(), which sys.exit(1)s) — any failure
+    along this path (missing index, on-demand build failure) degrades to the original direct
+    load_jsonl(RUNS_FILE)/load_jsonl(EVENTS_FILE) scan rather than raising.
+    """
+    try:
+        if not DEFAULT_DB_PATH.exists():
+            import build_index
+            from types import SimpleNamespace
+
+            build_index.build(
+                SimpleNamespace(
+                    runs_file=str(RUNS_FILE),
+                    events_file=str(EVENTS_FILE),
+                    tools_file=str(DEFAULT_TOOLS_FILE),
+                    db_path=str(DEFAULT_DB_PATH),
+                )
+            )
+
+        conn = sqlite3.connect(str(DEFAULT_DB_PATH))
+        try:
+            runs = [json.loads(row[0]) for row in conn.execute("SELECT raw_json FROM runs ORDER BY id")]
+            events = [json.loads(row[0]) for row in conn.execute("SELECT raw_json FROM events ORDER BY id")]
+        finally:
+            conn.close()
+        return runs, events
+    except Exception as exc:
+        print(
+            f"WARNING: agent-monitoring index unavailable ({exc}); falling back to direct JSONL "
+            f"scan of {RUNS_FILE}/{EVENTS_FILE}",
+            file=sys.stderr,
+        )
+        return load_jsonl(RUNS_FILE), load_jsonl(EVENTS_FILE)
 
 
 def iso_week(ts_str):
@@ -748,8 +788,7 @@ def main():
     parser.add_argument("--week", help="Specific ISO week (e.g. 2026-W23); default = current week")
     args = parser.parse_args()
 
-    all_runs = load_jsonl(RUNS_FILE)
-    all_events = load_jsonl(EVENTS_FILE)
+    all_runs, all_events = _load_runs_and_events()
 
     if args.all:
         runs = all_runs
@@ -782,10 +821,10 @@ def main():
     print(f"Runs: {len(runs)}, Events: {len(events)}")
 
     # Update index
-    _update_index()
+    _update_index(all_runs)
 
 
-def _update_index():
+def _update_index(all_runs):
     retro_files = sorted(RETRO_DIR.glob("RETRO-*.md"), reverse=True)
     retro_files = [f for f in retro_files if f.name != "index.md"]
 
@@ -793,7 +832,6 @@ def _update_index():
     lines.append("| Report | Runs | DONE | Gate failures |")
     lines.append("|---|---|---|---|")
 
-    all_runs = load_jsonl(RUNS_FILE)
     runs_by_week = defaultdict(list)
     for r in all_runs:
         runs_by_week[iso_week(r.get("start_ts", ""))].append(r)
