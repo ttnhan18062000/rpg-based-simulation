@@ -343,7 +343,7 @@ closed and this plan is approved.
 - `docs/ai/monitoring_writer_decision.md`
 - `docs/ai/codex_capability_matrix.md`
 - `docs/ai/replay_fixture_spec.md`
-- `docs/plans/agent_infrastructure/idea_context_efficient_agent_retrieval_observability.md`
+- `docs/plans/agent_infrastructure/context_efficient_agent_retrieval/idea_context_efficient_agent_retrieval_observability.md`
 
 ---
 
