@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20260728-RETRIEVAL-RETENTION-REDACTION
-phase: open
+phase: done
 date: 2026-07-28
 tags: [ai, observability, agent-monitoring]
 ---
@@ -15,7 +15,7 @@ tags: [ai, observability, agent-monitoring]
 Define Retention and Redaction Policy for Retrieval Events and Cache Entries
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -88,9 +88,57 @@ None.
 - Tier is standard rather than hotfix because assigning concrete retention categories and a new redaction vocabulary across 3 cache levels plus events is policy-design work with privacy/security implications, not mere citation of already-produced evidence.
 
 ## Implementation Notes
+This ticket was decision-only, per plan.md's 2 ordered steps.
+
+**Step 1** — Authored `docs/observability/retrieval_retention_redaction_policy.md` with frontmatter
+`layer: ai`, `authority: P1`, `audience: agent` (reusing the registered `ai` layer and existing tags,
+no new registry entries). The doc contains, in order: a Purpose section with the literal
+decision-only statement plus citations to the idea doc's Design Principle 5 (lines 74-76), Risks
+table row (lines 305-315), and Promotion approval gate (lines 250-262); a MAY-contain vs PROHIBITED
+field list cross-referenced against `context_packet_contract.md`'s `included[]` `hash`/`score`
+fields, with `loki_label_policy.md` cited as structural-only precedent (mechanism explicitly
+distinguished); Decision A (extending `RetentionPolicy`'s categories is prose-only, no code diff);
+Decision B (the central call: retrieval *events* inherit agent-monitoring's existing
+retain-forever/append-only convention and are redaction-only, while *caches* are ephemeral/
+rebuildable and get duration-based expiry — this split is justified against
+`docs/agent-monitoring/schema.md`'s documented append-only-forever convention); Decision C (a
+4-row table: `retrieval_index_cache` ~30d, `retrieval_query_cache` ~7d, `retrieval_packet_cache`
+~14d/ticket-lifetime, `retrieval_event` permanent/append-only — all three cache durations
+explicitly labeled placeholders pending future Phase 3+ calibration, citing `retention.py` lines
+36-37/54-55/57 as the analogy basis only); Decision D (doc location justified by direct structural
+analogy to `docs/observability/loki_label_policy.md`); an Out of Scope section; and a final
+Resolution section answering Open Decision 4 directly.
+
+**Step 2** — Updated `tickets/inprogress/TCK-20260728-CONTEXT-EFFICIENT-RETRIEVAL-EPIC.md`'s
+`OPEN DECISION 4` line in `## Assumptions / Open Questions` to `**RESOLVED**` (2026-07-29), in the
+same multi-line format as the already-resolved Decisions 1-3, citing this ticket ID and the new
+doc's path. No other Open Decision line (1, 2, 3, 5, 6) was touched — verified via
+`git diff tickets/inprogress/TCK-20260728-CONTEXT-EFFICIENT-RETRIEVAL-EPIC.md`, which shows only
+the Open Decision 4 block changing (the `--stat` line-count also reflects decisions 1-3's prior
+uncommitted resolution from sibling tickets earlier in this batch, not new changes from this
+ticket).
+
+No deviations from plan.md. Confirmed via `git status --porcelain` that no file matching
+`retention.py` or `tools/agent-monitoring/*.py` was modified; `python3 tools/validate_frontmatter.py
+docs/observability/retrieval_retention_redaction_policy.md` passed with no violations.
 
 ## Test Summary
+No pytest test added or required — per test_plan.md's recommendation, the sole automated guard is
+`done-checker`'s existing `frontmatter_valid` condition plus manual doc-content inspection (both
+satisfied). Ran `python3 tools/validate_frontmatter.py docs/observability/retrieval_retention_redaction_policy.md`
+— passed (`OK: 1 file(s) checked — no violations`). No code changed, so no regression suite applies;
+confirmed via `git status` that `src/observability/reporting/retention.py`, `src/core/retention.py`,
+and `tools/agent-monitoring/*.py` remain unmodified.
 
 ## Files Changed
+- `docs/observability/retrieval_retention_redaction_policy.md` (new)
+- `tickets/inprogress/TCK-20260728-CONTEXT-EFFICIENT-RETRIEVAL-EPIC.md` (Open Decision 4 line only)
 
 ## Completion Summary
+Authored the decision doc resolving Open Decision 4 (retrieval-event and cache retention/redaction
+policy) and cross-referenced it from the epic ticket's Open Decision 4 line, exactly per plan.md's
+2 steps. No code changed anywhere; `retention.py`, `core/retention.py`, and all
+`tools/agent-monitoring/*.py` writers remain untouched, satisfying AC3. All 4 acceptance criteria
+are met: the MAY/PROHIBITED field list (AC1), the per-cache-level category table plus events row
+with placeholder durations (AC2), the explicit decision-only declaration (AC3), and the epic
+cross-reference (AC4).

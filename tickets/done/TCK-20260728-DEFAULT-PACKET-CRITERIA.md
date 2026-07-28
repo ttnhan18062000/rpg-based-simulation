@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20260728-DEFAULT-PACKET-CRITERIA
-phase: open
+phase: done
 date: 2026-07-28
 tags: [ai, agent-monitoring]
 ---
@@ -15,7 +15,7 @@ tags: [ai, agent-monitoring]
 Define Default-Packet Scenario Criteria and Initial Token Budgets
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -46,10 +46,10 @@ The author wants a decision document resolving Open Decision 1: which scenarios 
 - Force-resolving any Open Decision other than Decision 1.
 
 ## Acceptance Criteria
-- [ ] Decision doc addresses each of the 5 named scenarios with a yes/no/deferred verdict on "justifies a default context packet," each citing a specific field from retrieval_baseline_metrics.py's real output (search_count.per_run, gate_outcome.status_breakdown, duration.rows[].flag).
-- [ ] Doc explicitly states context_tokens is "unavailable" (citing schema.md and the baseline tool's own output) and does not assert any measured numeric token-budget figure; states initial budgets as directional/relative sizing (small/medium/large tiers) with proxy basis named.
-- [ ] Doc updates Open Decision 1's status (in the idea doc or a linked decision-doc file) from open to resolved, with rationale traceable to RETRIEVAL-BASELINE-METRICS's real corpus numbers.
-- [ ] Doc explicitly notes as a scoped limitation that no existing tool aggregates events.jsonl's phase+ts fields into per-phase breakdowns, and states whether that gap blocks any part of the decision or is deferred.
+- [x] Decision doc addresses each of the 5 named scenarios with a yes/no/deferred verdict on "justifies a default context packet," each citing a specific field from retrieval_baseline_metrics.py's real output (search_count.per_run, gate_outcome.status_breakdown, duration.rows[].flag).
+- [x] Doc explicitly states context_tokens is "unavailable" (citing schema.md and the baseline tool's own output) and does not assert any measured numeric token-budget figure; states initial budgets as directional/relative sizing (small/medium/large tiers) with proxy basis named.
+- [x] Doc updates Open Decision 1's status (in the idea doc or a linked decision-doc file) from open to resolved, with rationale traceable to RETRIEVAL-BASELINE-METRICS's real corpus numbers.
+- [x] Doc explicitly notes as a scoped limitation that no existing tool aggregates events.jsonl's phase+ts fields into per-phase breakdowns, and states whether that gap blocks any part of the decision or is deferred.
 
 ## Related Tickets
 - TCK-20260728-CONTEXT-EFFICIENT-RETRIEVAL-EPIC
@@ -85,9 +85,46 @@ None.
 - Tier is hotfix per explicit investigation recommendation: this ticket mirrors TCK-20260728-PHASE0-PREREQ-CONFIRMATION's precedent (single decision-doc deliverable citing already-produced evidence, no new code/tests, self-evident intent, no architecture change).
 
 ## Implementation Notes
+Authored `docs/ai/default_packet_scenarios_decision.md`, resolving Open Decision 1 from the epic's
+idea doc. Ran `python3 tools/agent-monitoring/retrieval_baseline_metrics.py` (stdout only, no
+`--output` used, nothing to clean up) against the live corpus (2026-07-29): 721 `runs.jsonl`
+records, `gate_outcome.status_breakdown` shows `DONE: 622` dominant, `NEEDS_CHANGES: 4`,
+`BLOCKED: 1`; `search_count.total = 1694` across 118 ticket-scoped `run_id`s (median per_run = 3,
+excluding the `unattributed` interactive bucket of 852); highest-volume tickets were
+`TCK-20260614-WORLDMOD-PARAMS: 143`, `TCK-20260623-FIX-WORLDASSEMBLY: 69`,
+`TCK-20260630-SIMQ-WIRE-KERNEL: 38`; lowest were hotfix-shaped tickets at 1-2 (53 of 118 runs ≤2);
+`duration.rows[].flag` is `"pause-contaminated"` on all 167 rows with no exception.
+
+Verdicts: Small bugfix (Yes, Small tier) and Ticket implementation (Yes, Medium tier) and
+Architecture-planning (Yes, Large tier) are grounded in `search_count.per_run` volume clusters.
+Code review and Incident-monitoring investigation are Deferred — confirmed via direct inspection
+of `retrieval_baseline_metrics.py` that `build_search_count_section()` and
+`build_duration_section()` both aggregate at `run_id` granularity only; no function reads
+`events.jsonl`'s `phase`/`ts` fields at all in this tool. Confirmed `events.jsonl` genuinely
+carries both fields via a live tail of the file. Confirmed `context_tokens` unavailability by
+reading `docs/agent-monitoring/schema.md`'s "What is not recorded" section verbatim and comparing
+it to the baseline tool's own `build_context_tokens_section()` output — both cite the same fact
+independently.
+
+No deviation from the ticket's plan/scope. No code, no `src/`/`tools/` changes. Updated the epic
+ticket's Open Questions section to mark Open Decision 1 RESOLVED, in the same style as the existing
+Open Decision 2/3 entries (read both as formatting templates before editing).
 
 ## Test Summary
+Documentation-only ticket — no code changed, no tests run or added. Verification consisted of
+running the read-only baseline tool and cross-checking its live JSON output and
+`agent-monitoring/events.jsonl`'s raw content directly, both cited above.
 
 ## Files Changed
+- docs/ai/default_packet_scenarios_decision.md (new)
+- tickets/inprogress/TCK-20260728-DEFAULT-PACKET-CRITERIA.md (this ticket)
+- tickets/inprogress/TCK-20260728-CONTEXT-EFFICIENT-RETRIEVAL-EPIC.md (Open Decision 1 marked RESOLVED)
 
 ## Completion Summary
+Open Decision 1 is resolved: 3 of 5 named scenarios (Small bugfix, Ticket implementation,
+Architecture-planning) justify a default context packet at directional Small/Medium/Large tiers
+grounded in real `search_count.per_run` proxy data; Code review and Incident-monitoring
+investigation are deferred pending per-phase event aggregation tooling that does not exist today.
+No numeric token-budget figure was asserted anywhere, since `context_tokens` is confirmed
+platform-unavailable in 3 independent places. The scoped per-phase aggregation gap is stated
+explicitly and does not silently resolve Open Decision 5.

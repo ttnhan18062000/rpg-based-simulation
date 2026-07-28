@@ -77,10 +77,53 @@ None.
 ## Assumptions / Open Questions
 - Need to confirm the Phase 6 deferred-from-provider-agnostic-epic 'stable monitoring path' precondition is not the same thing as this epic's own item 0 prerequisite — verification tracked via child ticket TCK-20260728-PHASE0-PREREQ-CONFIRMATION
 - Maturity banner in source doc marks this PROPOSED FUTURE EPIC — does not yet authorize new mandatory workflow gate/writer change/external retrieval service
-- OPEN DECISION 1: Which scenarios and phases justify a default context packet, and what are their initial token budgets?
-- OPEN DECISION 2: Which code/test relationships can be built deterministically from existing AST, import, test naming, and Graphify data before adding any semantic code model?
-- OPEN DECISION 3: Which authority/freshness metadata should be mandatory for a packet source, and how should conflicting active documents be represented?
-- OPEN DECISION 4: What retention and redaction policy applies to retrieval events and cache entries?
+- OPEN DECISION 1 — **RESOLVED** (2026-07-29, `TCK-20260728-DEFAULT-PACKET-CRITERIA`): Which
+  scenarios and phases justify a default context packet, and what are their initial token budgets?
+  Answer: Small bugfix, Ticket implementation, and Architecture-planning justify a default packet
+  today (directional Small/Medium/Large tiers, each grounded in real `search_count.per_run` volume
+  patterns from `retrieval_baseline_metrics.py` — never a fabricated token count, since
+  `context_tokens` remains platform-unavailable per `docs/agent-monitoring/schema.md`). Code review
+  and Incident-monitoring investigation are deferred — no existing tool aggregates
+  `events.jsonl`'s `phase`+`ts` fields into a per-phase (vs per-run) breakdown, so neither scenario
+  can be isolated from run-scoped data without inventing a proxy this tool doesn't produce; this
+  gap does not block the other three verdicts and does not resolve Open Decision 5. Full
+  per-scenario verdict table and evidence: `docs/ai/default_packet_scenarios_decision.md`.
+- OPEN DECISION 2 — **RESOLVED** (2026-07-29, `TCK-20260728-CODE-TEST-INDEX-BOUNDARIES`): Which
+  code/test relationships can be built deterministically from existing AST, import, test naming,
+  and Graphify data before adding any semantic code model? Answer: exactly Graphify's Part A
+  (tree-sitter/AST) relation set — `imports`, `imports_from`, `calls`, `contains`, `defines`,
+  `uses`, `uses_static_prop`, `references_constant`, `bound_to`, `listened_by`, `includes`,
+  `uses_component`, `binds_method`, `rationale_for` — all `confidence_score = 1.0`. Part B
+  (LLM-derived `conceptually_related_to`/`semantically_similar_to`/`shares_data_with`) is excluded
+  as non-deterministic. Test-naming linkage remains a deterministic *procedure* only (agent prose
+  in `.claude/agents/test-scoper.md`), not checked-in code — flagged as an open gap for any future
+  Phase 2+ retrieval ticket. Full evidence and relation-type table:
+  `docs/ai/code_test_index_boundaries_decision.md`.
+- OPEN DECISION 3 — **RESOLVED** (2026-07-29, `TCK-20260728-CONTEXT-PACKET-SCHEMA`): Which
+  authority/freshness metadata should be mandatory for a packet source, and how should conflicting
+  active documents be represented? Answer: packet `authority`/`freshness` map directly onto
+  `docs/REGISTRY.yaml`'s existing `authority` (`P0`/`P1`/`P2`) and `status`
+  (`authoritative`/`active`/`historical`/`archive`) enums for REGISTRY-backed sources (docs
+  outside `_SKIP_DOC_SUBDIRS`, `tickets/done/` entries) — no new independent vocabulary. Two
+  extensions cover what the idea doc's field list didn't specify: non-registry-backed `kind`
+  values (`code_symbol`, `test`, `graphify_node`, `tickets/inprogress/` bodies) get
+  `authority`/`freshness: unrated`, a doc-only sentinel distinct from REGISTRY's enums;
+  `parity_ledger_entry` sources use the parity ledger's own differently-shaped `priority`/`status`
+  proxy instead. Conflicting active documents are resolved by an advisory, doc-only tie-break:
+  include both, rank by `authority` then `last_verified` recency, and flag the lower-ranked
+  entry's `inclusion_reason` as superseded — never silently dropped. No `docs/REGISTRY.yaml`
+  schema/enum change accompanies this. Full field shapes and evidence:
+  `docs/engine/contracts/context_packet_contract.md`.
+- OPEN DECISION 4 — **RESOLVED** (2026-07-29, `TCK-20260728-RETRIEVAL-RETENTION-REDACTION`): What
+  retention and redaction policy applies to retrieval events and cache entries? Answer: retrieval
+  events (landing in `agent-monitoring/*.jsonl`) inherit that system's existing retain-forever/
+  append-only convention — "retention" for events means redaction-only (hashes/IDs/counts/reason
+  codes/scores; never raw prompt or retrieved-content text), not a deletion duration. Caches
+  (embedding/index, query-result, context-packet) are ephemeral/rebuildable and DO get
+  duration-based expiry, each assigned its own placeholder category extending `RetentionPolicy`'s
+  7d/30d/permanent naming pattern in prose only (no code change to `retention.py`). Full
+  MAY/PROHIBITED field list, per-cache-level category table, and rationale:
+  `docs/observability/retrieval_retention_redaction_policy.md`.
 - OPEN DECISION 5: What sample size and thresholds are sufficient to promote a scenario from advisory to default behavior?
 - OPEN DECISION 6: Should context packets be exposed as an MCP tool, a provider-adapter library, or both after the provider-neutral contract is implemented?
 

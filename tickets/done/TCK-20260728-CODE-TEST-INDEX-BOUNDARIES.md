@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20260728-CODE-TEST-INDEX-BOUNDARIES
-phase: open
+phase: done
 date: 2026-07-28
 tags: [ai, investigation]
 ---
@@ -15,7 +15,7 @@ tags: [ai, investigation]
 Resolve Code/Test Index Boundaries Without a New Semantic Code Model
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -89,8 +89,65 @@ None.
 
 ## Implementation Notes
 
+Authored `docs/ai/code_test_index_boundaries_decision.md`, resolving Open Decision 2. All claims
+were independently verified against the installed package before writing (not copied from the
+prior investigation pass):
+
+- Confirmed via `python3 -c "import graphify; print(graphify.__file__)"` and `pip show graphifyy`
+  that the import name (`graphify`) and pip distribution name (`graphifyy`, version 0.6.7) differ,
+  and that it is installed to `~/.local/lib/python3.13/site-packages/graphify/`, not repo-owned
+  `tools/` code.
+- Read `graphify/extract.py` directly and confirmed the deterministic tree-sitter engine
+  (`LanguageConfig` + `_extract_generic`, lines 66-1541) emits `imports`, `imports_from`, `calls`,
+  `contains`, `defines`, `uses`, `uses_static_prop`, `references_constant`, `bound_to`,
+  `listened_by` (plus `includes`/`uses_component`/`binds_method` from the Blade-specific
+  extractor), all tagged `confidence: EXTRACTED`, which `graphify/export.py`'s
+  `_CONFIDENCE_SCORE_DEFAULTS` (line 329) maps to `confidence_score = 1.0` on serialization.
+- Read `graphify/llm.py` and confirmed Part B's LLM prompt schema (line 76) fixes its own output
+  vocabulary to `calls|implements|references|cites|conceptually_related_to|shares_data_with|
+  semantically_similar_to`, requiring a live `_call_claude`/OpenAI-compatible API call
+  (`ANTHROPIC_API_KEY`).
+- **Correction to the ticket's stated premise:** the ticket (and the prior investigation) placed
+  `rationale_for` in Part B. Direct inspection shows `rationale_for` is emitted only by
+  `_extract_python_rationale()` (`extract.py:1542-1599`), a deterministic tree-sitter docstring
+  pass with `confidence: EXTRACTED` — it does not appear anywhere in `llm.py`'s LLM output
+  vocabulary. The decision doc documents and corrects this rather than silently reproducing the
+  ticket's framing.
+- Confirmed test-naming mapping (`.claude/agents/test-scoper.md`,
+  `docs/testing/how_to_add_requirement_tests.md` §3, `docs/testing/test_taxonomy.md`) is agent
+  prose only — `grep -rl "tests/unit" tools/` and a filename search for `*test_map*`/
+  `*test_index*`/`*code_test*` under `tools/` found no checked-in mapping code.
+- Updated `tickets/inprogress/TCK-20260728-CONTEXT-EFFICIENT-RETRIEVAL-EPIC.md`'s Assumptions/Open
+  Questions to mark OPEN DECISION 2 resolved, citing the new doc.
+- Did not touch `tickets/todos/context-efficient-retrieval/SEQUENCE.md` — confirmed it only tracks
+  Phase 0-1 batch ticket ordering for an already-closed batch and has no Open Decision references.
+
+No deviation from the ticket's scope. No code, script, or index was created — documentation only.
+
 ## Test Summary
+
+`python3 tools/validate_frontmatter.py docs/ai/code_test_index_boundaries_decision.md` → OK, no
+violations (status/layer/authority/audience all valid, tags `[ai, investigation]` both registered
+per `tools/tag_registry.py list`). No behavior changed, so no pytest scope applies; this is a
+documentation-only hotfix.
 
 ## Files Changed
 
+- `docs/ai/code_test_index_boundaries_decision.md` (new)
+- `tickets/inprogress/TCK-20260728-CODE-TEST-INDEX-BOUNDARIES.md` (this ticket)
+- `tickets/inprogress/TCK-20260728-CONTEXT-EFFICIENT-RETRIEVAL-EPIC.md` (Open Questions updated)
+
 ## Completion Summary
+
+Open Decision 2 is resolved: the deterministic-today code/test relationship set is exactly
+Graphify's Part A (tree-sitter/AST) relations — `imports`, `imports_from`, `calls`, `contains`,
+`defines`, `uses`, `uses_static_prop`, `references_constant`, `bound_to`, `listened_by`,
+`includes`, `uses_component`, `binds_method`, `rationale_for` — all `confidence_score = 1.0`,
+already produced by the externally pip-installed `graphifyy==0.6.7` package and stored in
+`graphify-out/graph.json`. Part B (LLM-derived `conceptually_related_to`,
+`semantically_similar_to`, `shares_data_with`) requires a live model call and is excluded as it
+would itself constitute a new semantic code model. Test-naming linkage is a deterministic
+*procedure* today (test-scoper prose + naming convention docs) but is **not backed by any
+checked-in script/index** — recorded as an explicit gap, not treated as equivalent to graphify's
+stored-artifact determinism. See `docs/ai/code_test_index_boundaries_decision.md` for full
+evidence and the relationship-type table.
