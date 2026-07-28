@@ -370,7 +370,7 @@ const TASK_SCHEMA = {
     tags: {
       type: 'array',
       items: { type: 'string' },
-      description: 'Canonical-form tags (lowercase, hyphen-separated, never p0/p1/p2) limited to Process/Skill-signal detection for this ticket — see prompt rule below. Broader Subsystem/Topic/Phase/Quality-attribute tagging is deferred to TCK-20260705-TAG-REGISTRY-QUERY, not assigned here.',
+      description: 'Canonical-form tags (lowercase, hyphen-separated, never p0/p1/p2) per docs/guidelines/tag_taxonomy.md\'s full 5-category model — see prompt rule below.',
     },
     suggested_skills: {
       type: 'array',
@@ -502,8 +502,10 @@ Step 4 — produce ticket tasks using these strict rules:
 
   tags:
   - Canonical form only: lowercase, hyphen-separated. Never emit p0/p1/p2 as tags.
+  - Follow docs/guidelines/tag_taxonomy.md's full 5-category model (Subsystem/Topic, Phase/Milestone, Process/Skill-signal, Quality-attribute, Meta-Process) — the same policy ticket-scoper.md uses for single-ticket scoping.
   - Include a Process/Skill-signal tag from this closed list ONLY when it applies: api-design, debugging, performance, security
-  - Do NOT assign Subsystem/Topic, Phase/Milestone, or Quality-attribute tags (per docs/guidelines/tag_taxonomy.md's other 3 categories) — that broader tagging is explicitly out of scope for this workflow today (deferred to a separate ticket, TCK-20260705-TAG-REGISTRY-QUERY). If none of the 4 Process/Skill-signal tags apply, tags may be an empty array.
+  - Assign a Subsystem/Topic (or Phase/Milestone, Quality-attribute, Meta-Process) tag only when this concern's investigated files_found or domain clearly indicates one — e.g. files_found under dashboard-frontend/ or src/api/agent_ops_dashboard/ -> dashboard; files_found touching agent-monitoring/*.jsonl -> observability. Do not guess a tag from the title alone if files_found doesn't support it.
+  - If nothing clearly applies, tags may be an empty array.
 
   suggested_skills:
   - Map each assigned tag against this table; empty array if nothing matches:

@@ -47,6 +47,12 @@ by `ticket-scoper` for single tickets and by `create-tickets.js`'s Structure pha
 batch-created tickets. This complements `CLAUDE.md`'s file-path-based auto-invoke triggers, which
 fire *during* editing, with a signal that fires *before* implementation work starts.
 
+Both paths follow the same full 5-category taxonomy for tag assignment, not just the
+Process/Skill-signal category that feeds `suggested_skills` — `create-tickets.js`'s Structure phase
+assigns a Subsystem/Topic (or Phase/Milestone, Quality-attribute, Meta-Process) tag whenever a
+concern's investigated `files_found`/domain clearly supports one, the same way `ticket-scoper` does
+for single tickets. Neither path assigns a tag it can't ground in evidence.
+
 | Tag | Suggested skill |
 |---|---|
 | `api-design` | `/api-design-principles` |

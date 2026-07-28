@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20260720-CREATE-TICKETS-TAG-SCOPE-FIX
-phase: open
+phase: done
 date: 2026-07-20
 tags: [tagging, workflows]
 ---
@@ -15,7 +15,7 @@ tags: [tagging, workflows]
 Fix create-tickets.js's Structure phase over-restricting tags to Process/Skill-signal only, on a stale citation
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -123,12 +123,25 @@ None.
   removing the restriction outright.
 
 ## Implementation Notes
-
+- `.claude/workflows/create-tickets.js`:
+  - `TASK_SCHEMA.properties.tags.description` (was line 373): removed the "limited to Process/Skill-signal detection... deferred to TCK-20260705-TAG-REGISTRY-QUERY" text; now points at `docs/guidelines/tag_taxonomy.md`'s full 5-category model, matching the schema description style already used elsewhere in the file.
+  - Structure-phase `tags:` prompt rule block (was lines 503-506): removed the stale `TCK-20260705-TAG-REGISTRY-QUERY` citation and the blanket "Do NOT assign Subsystem/Topic, Phase/Milestone, or Quality-attribute tags" instruction. Replaced with guidance that (a) follows the full 5-category taxonomy, mirroring `ticket-scoper.md`'s own instruction, (b) keeps the existing Process/Skill-signal closed-list-of-4 rule verbatim (unchanged, per Out of Scope), and (c) adds an explicit evidence guardrail — only assign a Subsystem/Topic (or Phase/Milestone/Quality-attribute/Meta-Process) tag when the concern's investigated `files_found`/domain clearly supports it (with the ticket's own `dashboard` / `observability` examples inlined), never guessed from the title alone. This resolves the Assumptions/Open Questions item: rather than a blanket re-open, the fix carries forward a narrower "evidence-grounded" guardrail so a fully-automated batch pipeline doesn't emit low-confidence tag guesses.
+  - `suggested_skills` mapping table (lines ~508-517) and its 4-tag closed list were left untouched, per Out of Scope.
+- `docs/guides/ticket_tagging.md`: added a paragraph after the `suggested_skills` intro clarifying that both `create-tickets.js` (batch) and `ticket-scoper` (single-ticket) now follow the same full 5-category taxonomy for tag assignment, not just the Process/Skill-signal slice that feeds `suggested_skills` — closing the gap where the doc described the shared `suggested_skills` behavior but never stated the two paths' tag-assignment scope was otherwise identical.
+- `docs/guidelines/tag_taxonomy.md` was checked and contains no reference to `create-tickets.js`, batch tickets, or the stale deferral — left unmodified (no inaccuracy to fix there).
+- Verified no other reference to `TCK-20260705-TAG-REGISTRY-QUERY` or the "Do NOT assign" restriction remains anywhere in `.claude/workflows/create-tickets.js` or `.claude/agents/`.
 
 ## Test Summary
-
+- `node --check .claude/workflows/create-tickets.js` — passes (no syntax errors introduced).
+- `python3 -m pytest tests/tools/test_tag_skill_mapping_check.py -q` — 10 passed (Process/Skill-signal → `suggested_skills` mapping, AC 3, unaffected).
+- `python3 tools/tag_skill_mapping_check.py` — exit 0 (markdown table in `ticket_tagging.md` and JS-escaped table in `create-tickets.js` still consistent).
+- `python3 -m pytest tests/tools/test_workflow_meta_conformance.py -q` — 14 passed, 1 xfailed (pre-existing xfail, unrelated).
+- New: `tests/tools/test_create_tickets_tag_scope.py` (added during Verify remediation, 5 tests) — reads the live `.claude/workflows/create-tickets.js` source and asserts: the stale `TCK-20260705-TAG-REGISTRY-QUERY` citation is gone, the blanket "Do NOT assign Subsystem/Topic" restriction is gone, the full-5-category `tag_taxonomy.md` guidance is present, the evidence guardrail (`files_found` / "Do not guess a tag from the title alone if files_found doesn't support it") is present, and the untouched Process/Skill-signal 4-entry mapping table is still intact. Confirmed as a real regression guard (not a tautology) by checking the assertions against the ticket's own quoted pre-fix text, which fails them. `python3 -m pytest tests/tools/test_create_tickets_tag_scope.py -q` — 5 passed.
 
 ## Files Changed
-
+- `.claude/workflows/create-tickets.js`
+- `docs/guides/ticket_tagging.md`
+- `tests/tools/test_create_tickets_tag_scope.py` (new, added during Verify remediation)
 
 ## Completion Summary
+Removed the stale `TCK-20260705-TAG-REGISTRY-QUERY` citation and the blanket Process/Skill-signal-only tag restriction from `create-tickets.js`'s Structure phase (schema description + prompt rule), replacing it with full-5-category guidance mirroring `ticket-scoper.md`, gated by an explicit evidence guardrail (only assign Subsystem/Topic/etc. when investigated `files_found`/domain clearly supports it) so automated batch runs don't emit low-confidence guesses. Clarified in `docs/guides/ticket_tagging.md` that batch and single-ticket paths now follow one consistent tagging policy. Process/Skill-signal → `suggested_skills` mapping was left untouched and its tests still pass. Verify's Definition-of-Done gate initially failed for missing test coverage on the new guardrail text/behavior; remediated by adding `tests/tools/test_create_tickets_tag_scope.py`, which directly asserts the stale citation and blanket restriction are absent and the new evidence-guardrail guidance is present in the live workflow file.

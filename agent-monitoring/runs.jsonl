@@ -708,3 +708,5 @@
 {"run_id":"TCK-20260721-CODEX-REPLAY-PARITY","start_ts":"2026-07-27T02:08:08Z","end_ts":"2026-07-27T03:39:53Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":11,"duration_s":5505}
 {"run_id":"TCK-20260721-LIVE-CODEX-PILOT-GUARDRAILS","start_ts":"2026-07-27T03:40:41Z","end_ts":"2026-07-27T04:54:10Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":11,"duration_s":4409}
 {"run_id":"TCK-20260727-CODEX-SKILL-COMPANION-ASSETS","start_ts":"2026-07-27T09:55:37Z","end_ts":"2026-07-27T10:43:50Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":11,"duration_s":2893}
+{"run_id":"TCK-20260720-CREATE-TICKETS-TAG-SCOPE-FIX","start_ts":"2026-07-28T02:26:46Z","end_ts":"2026-07-28T02:35:55Z","workflow":"implement-ticket","tier":"hotfix","final_status":"DOD_BLOCKED","agent_count":9,"duration_s":549}
+{"run_id":"TCK-20260720-CREATE-TICKETS-TAG-SCOPE-FIX","start_ts":"2026-07-28T02:26:46Z","end_ts":"2026-07-28T02:43:31Z","workflow":"implement-ticket","tier":"hotfix","final_status":"DONE","agent_count":12,"duration_s":1005}
