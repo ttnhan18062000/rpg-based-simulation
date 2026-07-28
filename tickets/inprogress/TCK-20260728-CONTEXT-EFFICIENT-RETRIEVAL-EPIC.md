@@ -61,6 +61,10 @@ Create a single epic-tier tracking ticket for the whole context-efficient agent 
 - TCK-20260728-CODE-TEST-INDEX-BOUNDARIES
 - TCK-20260728-RETRIEVAL-RETENTION-REDACTION
 - TCK-20260728-DEFAULT-PACKET-CRITERIA
+- TCK-20260729-HYBRID-RETRIEVAL-FUSION
+- TCK-20260729-DETERMINISTIC-CODE-INDEX
+- TCK-20260729-RETRIEVAL-CACHE-LEVELS
+- TCK-20260729-CONTEXT-PACKET-ASSEMBLY
 
 ## Related Docs
 - docs/plans/agent_infrastructure/context_efficient_agent_retrieval/idea_context_efficient_agent_retrieval_observability.md
