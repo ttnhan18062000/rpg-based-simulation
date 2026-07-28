@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20260722-CONTRACT-STRUCTURE-TEST-STALE-PATH
-phase: open
+phase: done
 date: 2026-07-22
 tags: []
 ---
@@ -15,7 +15,7 @@ tags: []
 Fix stale `staging_artifacts` path in `test_contract_yaml_has_versioning_field_and_documented_scheme`
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -66,9 +66,35 @@ P3
 - `tags: []` — checked `python3 tools/tag_registry.py list`; no registered tag cleanly covers "stale test path fixture reference" (closest candidates like `data-quality` and `frontmatter` are scoped to different concerns per their registry notes) so left empty rather than force-fit, per CLAUDE.md guidance.
 
 ## Implementation Notes
+Applied option (a) from the ticket's investigator/planner-discretion note: a minimal path-string
+fix. In `tests/agent_orchestration/test_contract_structure.py::test_contract_yaml_has_versioning_field_and_documented_scheme`,
+changed the `plan_path` construction from `staging_artifacts/TCK-20260721-ORCHESTRATION-CONTRACT-CORE/plan.md`
+to `stored_artifacts/TCK-20260721-ORCHESTRATION-CONTRACT-CORE/plan.md`. Verified the target file
+exists at the new path and still contains the asserted string ("integer generation number"). No
+staging-vs-stored fallback logic was added (option b) — a single fixed subject ticket does not
+warrant it, matching the ticket author's stated assessment. Confirmed via grep that no other
+Python file in the repo references the stale `staging_artifacts/TCK-20260721-ORCHESTRATION-CONTRACT-CORE`
+path. No production code under `tools/agent_orchestration/` or `docs/agent_orchestration/` was
+touched.
 
 ## Test Summary
+Ran `PYTHONPATH=tools:. .venv/bin/python3 -m pytest tests/agent_orchestration/test_contract_structure.py -v`
+— all 6 tests pass, including the previously-failing
+`test_contract_yaml_has_versioning_field_and_documented_scheme`. Ran the full
+`tests/agent_orchestration/` directory (25 tests) to check for regressions in sibling files — all
+pass. (Note: this test module requires `tools/` on `PYTHONPATH` to resolve the `agent_orchestration`
+package import; that requirement predates this ticket and is unaffected by this fix.)
 
 ## Files Changed
+- `tests/agent_orchestration/test_contract_structure.py` — updated `plan_path` in
+  `test_contract_yaml_has_versioning_field_and_documented_scheme` from the stale
+  `staging_artifacts/...` location to the current `stored_artifacts/...` location.
 
 ## Completion Summary
+Fixed the stale `staging_artifacts/` path reference in
+`test_contract_yaml_has_versioning_field_and_documented_scheme` to point at
+`stored_artifacts/TCK-20260721-ORCHESTRATION-CONTRACT-CORE/plan.md`, matching where that ticket's
+Finalize phase actually migrated its artifacts on close. The test now passes and still meaningfully
+asserts the versioning-field documentation content (`"integer generation number"` substring), not
+just file existence. All acceptance criteria met: the target test passes, it reads from the correct
+current location, the rest of the file's tests still pass, and no production code was modified.

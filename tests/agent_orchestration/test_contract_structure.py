@@ -75,7 +75,7 @@ def test_contract_yaml_has_versioning_field_and_documented_scheme():
 
     plan_path = (
         _REPO_ROOT
-        / "staging_artifacts"
+        / "stored_artifacts"
         / "TCK-20260721-ORCHESTRATION-CONTRACT-CORE"
         / "plan.md"
     )
