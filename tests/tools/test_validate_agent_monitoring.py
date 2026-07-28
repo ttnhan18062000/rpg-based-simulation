@@ -15,7 +15,11 @@ if str(_MONITORING_TOOLS_DIR) not in sys.path:
 
 import record_events  # noqa: E402
 import validate  # noqa: E402
-from validate import compute_drift_report, compute_tool_count_drift_report  # noqa: E402
+from validate import (  # noqa: E402
+    compute_drift_report,
+    compute_multi_invocation_collision_report,
+    compute_tool_count_drift_report,
+)
 
 _BASE_RUN = {
     "run_id": "TCK-FAKE",
@@ -177,6 +181,35 @@ def test_tool_count_drift_report_is_read_only(tmp_path, monkeypatch):
     events = [_event_with_count("TCK-F", 1, 0)]
     tools = [_tool_row("TCK-F", 1)]
     compute_tool_count_drift_report(events, tools)
+
+    assert not (tmp_path / "agent-monitoring").exists()
+
+
+# ---------------------------------------------------------------------------
+# compute_multi_invocation_collision_report (TCK-20260728-MONITORING-PAUSE-RESUME-SEQ-COLLISION)
+# ---------------------------------------------------------------------------
+
+def _scope_seq1(run_id):
+    return {"run_id": run_id, "seq": 1, "ts": "t", "phase": "Scope", "agent": "ticket-scoper",
+            "status": "ok", "summary": "ok"}
+
+
+def test_multi_invocation_collision_report_detects_duplicate_scope_seq1():
+    events = [
+        _scope_seq1("TCK-COLLIDED"),
+        _scope_seq1("TCK-COLLIDED"),
+        _scope_seq1("TCK-NORMAL"),
+    ]
+    report = compute_multi_invocation_collision_report(events)
+
+    assert "TCK-COLLIDED" in report
+    assert "TCK-NORMAL" not in report
+
+
+def test_multi_invocation_collision_report_is_read_only(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    events = [_scope_seq1("TCK-G"), _scope_seq1("TCK-G")]
+    compute_multi_invocation_collision_report(events)
 
     assert not (tmp_path / "agent-monitoring").exists()
 

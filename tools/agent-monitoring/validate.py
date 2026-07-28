@@ -167,6 +167,32 @@ def compute_tool_count_drift_report(events: list, tools: list) -> str:
     return "\n".join(lines)
 
 
+def compute_multi_invocation_collision_report(events: list) -> str:
+    """Read-only detector for TCK-20260728-MONITORING-PAUSE-RESUME-SEQ-COLLISION's specific
+    mechanism: a run_id with more than one phase="Scope", seq=1 event is the empirical signature
+    of a resumed session whose seq numbering restarted at 1 and aliased onto a prior session's
+    (run_id, seq) tools.jsonl buckets (the exact signature this ticket's own investigation used to
+    find the 8 affected run_ids in the live corpus). Distinct from
+    compute_tool_count_drift_report's recorded-vs-actual mismatch detection: that function detects
+    THAT a count disagrees; this one flags the specific multi-invocation cause."""
+    scope_seq1_counts = Counter()
+    for e in events:
+        if e.get("phase") == "Scope" and e.get("seq") == 1 and e.get("run_id"):
+            scope_seq1_counts[e["run_id"]] += 1
+
+    collided = {run_id: count for run_id, count in scope_seq1_counts.items() if count > 1}
+
+    lines = ["--- Multi-Invocation Seq Collision Report ---", ""]
+    lines.append(
+        f"run_ids with more than one Scope/seq=1 event (resume-collision candidates): {len(collided)}"
+    )
+    if collided:
+        lines.append("")
+        for run_id, count in sorted(collided.items()):
+            lines.append(f"  {run_id}: {count} Scope/seq=1 events")
+    return "\n".join(lines)
+
+
 def load_jsonl(path):
     if not path.exists():
         return []
@@ -247,6 +273,8 @@ def main():
     print(compute_drift_report(runs, events))
     print()
     print(compute_tool_count_drift_report(events, tools))
+    print()
+    print(compute_multi_invocation_collision_report(events))
 
     total_runs = len(runs)
     total_events = len(events)

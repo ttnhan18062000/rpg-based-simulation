@@ -260,7 +260,21 @@ The orchestrating workflow (`implement-ticket.js`) writes `{"run_id": "...", "se
 
 Since `TCK-20260719-LIVE-PHASE-AGENT-LABEL`, the sidecar (and thus each `tools.jsonl` record) also carries `phase`/`agent`, threaded through the same `writeSidecar(seq, phase, agent)` call as `run_id`/`seq` — this lets a live-run consumer show which phase/agent is currently producing tool calls without waiting for the run's `events.jsonl` entries to be written at exit.
 
-Scope (`ticket-scoper`) also registers a sidecar value now (net-new coverage, `TCK-20260711-MONITORING-TOOLCOUNT-SIDECAR-COLLISION`) — it can't reuse `writeSidecar(seq)` itself (that helper closes over `tid`, not yet known when creating a brand-new ticket), so it inlines two bash() branches: the real `{run_id: ticketId, seq: 1}` when resuming an existing ticket, or an explicit clear-to-`{}` when creating a new one (the ticket_id genuinely doesn't exist yet at that point — clearing at least prevents a stale value from a crashed prior run bleeding into this run's Scope-phase tool calls, even though Scope's own tool calls during ticket *creation* specifically stay correctly unattributed/null rather than attributed to the not-yet-known new ticket).
+Scope (`ticket-scoper`) also registers a sidecar value now (net-new coverage, `TCK-20260711-MONITORING-TOOLCOUNT-SIDECAR-COLLISION`) — it can't reuse `writeSidecar(seq)` itself (that helper closes over `tid`, not yet known when creating a brand-new ticket), so it inlines two bash() branches: the real `{run_id: ticketId, seq: seqOffset + 1}` when resuming an existing ticket, or an explicit clear-to-`{}` when creating a new one (the ticket_id genuinely doesn't exist yet at that point — clearing at least prevents a stale value from a crashed prior run bleeding into this run's Scope-phase tool calls, even though Scope's own tool calls during ticket *creation* specifically stay correctly unattributed/null rather than attributed to the not-yet-known new ticket).
+
+A third mechanism, `TCK-20260728-MONITORING-PAUSE-RESUME-SEQ-COLLISION`: when a ticket's run is
+paused mid-pipeline and resumed later as a separate session sharing the same `run_id`, the
+resumed session's own `seq` numbering (both `pushEvent`'s and every `writeSidecar` call site's
+`events.length + 1` expression, and the Scope-phase resume branch's own sidecar write) would
+previously restart at `1`, silently aliasing the new session's tool-call attribution onto
+whatever `(run_id, seq)` buckets the pre-pause session already wrote in `tools.jsonl`. Fixed by a
+`seqOffset` computed once at Scope-phase resume — `tools/agent-monitoring/seq_offset.py`'s
+`compute_seq_offset(run_id, events)` looks up the max `seq` this `run_id` already has in
+`agent-monitoring/events.jsonl` (`0` for a brand-new ticket) — added into every `seq`-producing
+expression so a resumed session's numbering continues past the prior session's instead of
+restarting. `tools/agent-monitoring/validate.py`'s `compute_multi_invocation_collision_report()`
+detects this mechanism's historical signature (a `run_id` with more than one `phase="Scope",
+seq=1` event) so a future recurrence surfaces automatically.
 
 `writeMonitoring`'s own `agent()` call still never gets its own tracked `(run_id, seq)` by design, but its internal Step 5 "clear the sidecar" instruction was moved to Step 0 (run first, not last) by the same ticket. Previously, Steps 1-4's own Bash/python calls executed *before* the clear, so they were silently attributed to whatever phase's sidecar was still active — inflating that phase's true `tools.jsonl` row count beyond what Step 2's own snapshot had already recorded. This was confirmed empirically: a direct cross-check of `tool_call_count` against `tools.jsonl` ground truth found ~35% of historical events had a wrong count, concentrated (though not exclusively) at whichever phase immediately preceded a `writeMonitoring` call. Clearing first makes every one of writeMonitoring's own calls correctly unattributed (`run_id: null`) instead.
 

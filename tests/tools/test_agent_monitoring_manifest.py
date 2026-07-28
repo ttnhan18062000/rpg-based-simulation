@@ -24,7 +24,6 @@ from manifest import build_manifest  # noqa: E402
 
 _EXPECTED_KEYS = {"file", "line_count", "byte_size", "sha256", "parser_result", "legacy_warning_count"}
 _WATCHED_JSONL_FILES = ["events.jsonl", "runs.jsonl", "tools.jsonl"]
-_WRITER_GUARD_FILES = ["validate.py"]
 
 
 # ---------------------------------------------------------------------------
@@ -140,21 +139,20 @@ def test_manifest_run_against_real_corpus_produces_zero_diff():
     )
 
 
-def test_writer_files_are_byte_unchanged_by_this_ticket():
-    # Enforces TCK-20260721-BASELINE-MONITORING-MANIFEST's own Out of Scope line: that
-    # ticket must never touch validate.py, record_run.py, record_events.py, or
-    # post_tool_hook.py. Narrowed to validate.py only (2026-07-22, superseded by
-    # TCK-20260721-MONITORING-WRITER-UNIFICATION): that ticket's own explicit, reviewed
-    # scope is to migrate record_run.py/record_events.py/post_tool_hook.py's append step
-    # to a new shared writer module (tools/agent-monitoring/writer.py) — an unconditional
-    # "these 3 files must never be modified, by any future ticket, forever" assertion is
-    # factually incompatible with that legitimate, approved work. validate.py's own
-    # untouched status (per that ticket's own Scope Guards: "read load_jsonl only, never
-    # modify") is still a real, currently-true invariant worth guarding.
-    result = subprocess.run(
-        ["git", "diff", "--stat", "HEAD", "--", *[f"tools/agent-monitoring/{f}" for f in _WRITER_GUARD_FILES]],
-        cwd=str(_REPO_ROOT), capture_output=True, text=True, check=True,
-    )
-    assert result.stdout.strip() == "", (
-        f"validate.py was modified by this ticket's own diff: {result.stdout}"
-    )
+# `test_writer_files_are_byte_unchanged_by_this_ticket` (formerly guarding validate.py) was
+# removed 2026-07-28 by TCK-20260728-MONITORING-PAUSE-RESUME-SEQ-COLLISION. History: the guard
+# started under TCK-20260721-BASELINE-MONITORING-MANIFEST as an unconditional "validate.py,
+# record_run.py, record_events.py, post_tool_hook.py must never be touched" assertion; it was
+# narrowed to validate.py only on 2026-07-22 once TCK-20260721-MONITORING-WRITER-UNIFICATION's
+# own approved scope required touching the other 3. The same reasoning now applies to the last
+# remaining file: TCK-20260728-MONITORING-PAUSE-RESUME-SEQ-COLLISION's approved scope (signed off
+# by architecture-reviewer in both Review and Architecture-Verify) is to extend validate.py with
+# compute_multi_invocation_collision_report(), so an unconditional "validate.py must never be
+# modified, by any future ticket, forever" assertion is now factually incompatible with
+# legitimate, approved work — the same way it was for the other 3 files. No file remains that
+# this specific guard's reasoning still protects, so the test and its `_WRITER_GUARD_FILES`
+# constant were deleted rather than narrowed to an empty (and therefore vacuous/dangerous —
+# `git diff --stat HEAD --` with zero pathspecs after `--` would diff the whole repo, not
+# nothing) file list. `validate.py`'s real, still-relevant behavioral contracts (manifest shape,
+# reproducibility, streaming, zero-mutation) remain covered by the other tests in this file and by
+# `tests/tools/test_validate_agent_monitoring.py`.

@@ -46,17 +46,20 @@ _SIDECAR_WRITE_PROMPT_TEXT = (
 
 # The 10 covered call sites: the exact text immediately preceding each `await agent(` opening,
 # after the Step 0b relocation. Order matches the file's phase order.
+# Since TCK-20260728-MONITORING-PAUSE-RESUME-SEQ-COLLISION, each `events.length + 1` expression
+# carries a `+ seqOffset` term so a resumed session's seq numbering continues past a prior
+# session's instead of restarting at 1.
 _COVERED_SITE_ADJACENCY = [
-    "  await writeSidecar(events.length + 1, 'Investigate', 'investigator')\n  investigation = await agent(",
-    "  await writeSidecar(events.length + 1, 'Plan', 'planner')\n  plan = await agent(",
-    "  await writeSidecar(events.length + 1, 'Review', 'architecture-reviewer')\n  review = await agent(",
-    "await writeSidecar(events.length + 1, 'Implement', 'implementer')\nconst implementation = await agent(",
-    "  await writeSidecar(events.length + 1, 'Architecture-Verify', 'architecture-reviewer')\n  const archVerify = await agent(",
-    "await writeSidecar(events.length + 1, 'Test', 'test-scoper')\nconst testResult = await agent(",
-    "  await writeSidecar(events.length + 1, 'Parity', 'parity-updater')\n  const parity = await agent(",
-    "  await writeSidecar(events.length + 1, 'Security-Review', 'security-reviewer')\n  const securityReview = await agent(",
-    "await writeSidecar(events.length + 1, 'Verify', 'done-checker')\nconst doneCheck = await agent(",
-    "await writeSidecar(events.length + 1, 'Finalize', 'finalizer')\nawait agent(",
+    "  await writeSidecar(events.length + 1 + seqOffset, 'Investigate', 'investigator')\n  investigation = await agent(",
+    "  await writeSidecar(events.length + 1 + seqOffset, 'Plan', 'planner')\n  plan = await agent(",
+    "  await writeSidecar(events.length + 1 + seqOffset, 'Review', 'architecture-reviewer')\n  review = await agent(",
+    "await writeSidecar(events.length + 1 + seqOffset, 'Implement', 'implementer')\nconst implementation = await agent(",
+    "  await writeSidecar(events.length + 1 + seqOffset, 'Architecture-Verify', 'architecture-reviewer')\n  const archVerify = await agent(",
+    "await writeSidecar(events.length + 1 + seqOffset, 'Test', 'test-scoper')\nconst testResult = await agent(",
+    "  await writeSidecar(events.length + 1 + seqOffset, 'Parity', 'parity-updater')\n  const parity = await agent(",
+    "  await writeSidecar(events.length + 1 + seqOffset, 'Security-Review', 'security-reviewer')\n  const securityReview = await agent(",
+    "await writeSidecar(events.length + 1 + seqOffset, 'Verify', 'done-checker')\nconst doneCheck = await agent(",
+    "await writeSidecar(events.length + 1 + seqOffset, 'Finalize', 'finalizer')\nawait agent(",
 ]
 
 _NINE_TWO_LINE_SITE_LABELS = [
@@ -96,7 +99,7 @@ def test_sidecar_bash_write_precedes_each_covered_agent_call():
         assert adjacency in source, f"expected adjacency not found: {adjacency!r}"
 
     # Exactly 10 writeSidecar() calls total (9 two-line sites + Finalize).
-    assert len(re.findall(r"await writeSidecar\(events\.length \+ 1, '[^']+', '[^']+'\)", source)) == 10
+    assert len(re.findall(r"await writeSidecar\(events\.length \+ 1 \+ seqOffset, '[^']+', '[^']+'\)", source)) == 10
 
     # No other `await agent(` call sits between a writeSidecar call and its paired agent() call —
     # each adjacency string above already asserts direct (whitespace-only) adjacency, so a passing
@@ -117,7 +120,7 @@ def test_sidecar_bash_write_precedes_each_covered_agent_call():
 def test_finalize_call_site_still_registers_sidecar():
     source = _read_workflow_source()
     finalize_block_match = re.search(
-        r"phase\('Finalize'\).*?await writeSidecar\(events\.length \+ 1, 'Finalize', 'finalizer'\)\nawait agent\(\n"
+        r"phase\('Finalize'\).*?await writeSidecar\(events\.length \+ 1 \+ seqOffset, 'Finalize', 'finalizer'\)\nawait agent\(\n"
         r"\s*`Finalize ticket \$\{tid\}",
         source,
         re.DOTALL,
@@ -148,7 +151,11 @@ def test_scope_phase_has_sidecar_coverage():
     # TCK-20260711-MONITORING-TOOLCOUNT-SIDECAR-COLLISION: Scope now registers a sidecar value
     # before its agent() call — net-new coverage, not a relocation, so it can't reuse the
     # writeSidecar(seq) helper (tid isn't known yet for a brand-new ticket). Two inline branches:
-    # real {run_id: ticketId, seq: 1} when resuming; a neutral clear when creating a new ticket.
+    # real {run_id: ticketId, seq: seqOffset + 1} when resuming; a neutral clear when creating a
+    # new ticket. seq is now resume-aware (TCK-20260728-MONITORING-PAUSE-RESUME-SEQ-COLLISION) —
+    # int(sys.argv[2]) reads the seqOffset-derived value computed by resolveSeqOffset(), rather
+    # than the old hardcoded literal 1, so a resumed session's Scope sidecar write continues past
+    # a prior session's max seq instead of colliding with it.
     source = _read_workflow_source()
 
     phase_scope_idx = source.index("phase('Scope')")
@@ -158,15 +165,41 @@ def test_scope_phase_has_sidecar_coverage():
     scope_region = source[scope_start:scope_label]
 
     assert "if (ticketId) {" in pre_scope_region
-    assert "open('.claude/current_run', 'w').write(json.dumps({'run_id': sys.argv[1], 'seq': 1, 'phase': 'Scope', 'agent': 'ticket-scoper'}))" in pre_scope_region
-    assert '"${ticketId}" 2>/dev/null || true' in pre_scope_region
+    assert "open('.claude/current_run', 'w').write(json.dumps({'run_id': sys.argv[1], 'seq': int(sys.argv[2]), 'phase': 'Scope', 'agent': 'ticket-scoper'}))" in pre_scope_region
+    assert '"${ticketId}" "${seqOffset + 1}" 2>/dev/null || true' in pre_scope_region
     assert "printf '{}' > .claude/current_run 2>/dev/null || true" in pre_scope_region
+    assert "resolveSeqOffset(" in pre_scope_region
+    assert "seqOffset = await resolveSeqOffset(ticketId)" in pre_scope_region
 
     # Scope's own "Step 0b" (inside the agent prompt itself) is an unrelated context-warm-start
     # instruction (search_docs/graphify), never a sidecar write — must not be confused with the
     # orchestrator-side sidecar registration added above pre_scope_region.
     assert "search_docs" in scope_region
     assert "writeSidecar(" not in scope_region
+
+
+def test_new_ticket_branch_seq_offset_is_zero_not_null():
+    # TCK-20260728-MONITORING-PAUSE-RESUME-SEQ-COLLISION anti-drift guard: the brand-new-ticket
+    # branch (no ticketId yet) must leave seqOffset at its safe `0` default, never call the
+    # resolveSeqOffset lookup for a run_id that doesn't exist yet, and never let seqOffset become
+    # NaN/null/undefined for the overwhelmingly common non-resumed path.
+    source = _read_workflow_source()
+
+    assert "let seqOffset = 0" in source
+
+    # Slice the whole if/else statement using the next known landmark (TICKET_SCHEMA's
+    # declaration, which directly follows) rather than brace-matching — the else branch's own
+    # `printf '{}'` literal contains a bare `}` that would break naive brace-counting.
+    seq_offset_decl_idx = source.index("let seqOffset = 0")
+    ticket_schema_idx = source.index("const TICKET_SCHEMA = {", seq_offset_decl_idx)
+    if_else_region = source[seq_offset_decl_idx:ticket_schema_idx]
+
+    else_marker_idx = if_else_region.index("} else {")
+    if_branch = if_else_region[:else_marker_idx]
+    else_branch = if_else_region[else_marker_idx:]
+
+    assert "resolveSeqOffset(" in if_branch
+    assert "resolveSeqOffset(" not in else_branch
 
 
 # ---------------------------------------------------------------------------
@@ -240,6 +273,21 @@ def test_schema_doc_documents_tools_jsonl_phase_agent_fields():
     assert "| `phase` | string | Yes |" in fields_table_region
     assert "| `agent` | string | Yes |" in fields_table_region
     assert "TCK-20260719-LIVE-PHASE-AGENT-LABEL" in fields_table_region
+
+
+def test_schema_doc_documents_pause_resume_seq_collision_fix():
+    # TCK-20260728-MONITORING-PAUSE-RESUME-SEQ-COLLISION: the third attribution mechanism must be
+    # documented alongside the two TCK-20260711-MONITORING-TOOLCOUNT-SIDECAR-COLLISION mechanisms,
+    # in the same "How tool calls are attributed to agent events" section.
+    doc = _read_schema_doc()
+
+    section_start = doc.index("### How tool calls are attributed to agent events")
+    section_end = doc.index("### `status` values", section_start)
+    section_region = doc[section_start:section_end]
+
+    assert "TCK-20260728-MONITORING-PAUSE-RESUME-SEQ-COLLISION" in section_region
+    assert "compute_seq_offset" in section_region or "seqOffset" in section_region
+    assert "compute_multi_invocation_collision_report" in section_region
 
 
 # ---------------------------------------------------------------------------

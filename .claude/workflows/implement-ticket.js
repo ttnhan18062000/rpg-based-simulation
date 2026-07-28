@@ -41,12 +41,29 @@ phase('Scope')
 // Scope-phase tool calls (this run's own Scope tool calls stay correctly unattributed/null rather
 // than wrongly attributed to an unrelated old ticket — confirmed as the dominant real-world failure
 // mode in the investigation this ticket cites).
+// Resume-aware seq continuation (TCK-20260728-MONITORING-PAUSE-RESUME-SEQ-COLLISION): a
+// resumed session's own `events` array restarts at 0, so every seq-producing expression below
+// (pushEvent, writeSidecar) would otherwise collide with the pre-pause session's (run_id, seq)
+// tools.jsonl buckets. seqOffset is looked up once, here, since ticketId (the resume run_id) is
+// known here and nowhere earlier — 0 on the brand-new-ticket branch (no run_id to look up yet).
+const resolveSeqOffset = async (id) => {
+  const out = await bash(`python3 tools/agent-monitoring/seq_offset.py "${id}" 2>/dev/null`)
+  const markerIndex = (out || '').indexOf('MARKER:')
+  if (markerIndex === -1) return 0
+  try {
+    const val = JSON.parse(out.slice(markerIndex + 'MARKER:'.length).trim())
+    return typeof val === 'number' && Number.isInteger(val) ? val : 0
+  } catch (e) { return 0 }
+}
+
+let seqOffset = 0
 if (ticketId) {
+  seqOffset = await resolveSeqOffset(ticketId)
   await bash(
     `python3 -c "
 import json, sys
-open('.claude/current_run', 'w').write(json.dumps({'run_id': sys.argv[1], 'seq': 1, 'phase': 'Scope', 'agent': 'ticket-scoper'}))
-" "${ticketId}" 2>/dev/null || true`
+open('.claude/current_run', 'w').write(json.dumps({'run_id': sys.argv[1], 'seq': int(sys.argv[2]), 'phase': 'Scope', 'agent': 'ticket-scoper'}))
+" "${ticketId}" "${seqOffset + 1}" 2>/dev/null || true`
   )
 } else {
   await bash(`printf '{}' > .claude/current_run 2>/dev/null || true`)
@@ -206,7 +223,7 @@ const events = []
 // docs/agent-monitoring/schema.md.
 const pushEvent = (phaseLabel, agentName, status, summary, ts, toolCallCount, reasonCode) => {
   events.push({
-    seq: events.length + 1,
+    seq: events.length + 1 + seqOffset,
     phase: phaseLabel,
     agent: agentName,
     status,
@@ -424,7 +441,7 @@ if (tier !== 'hotfix') {
   phase('Investigate')
 
   const investigationTs = await captureTs()
-  await writeSidecar(events.length + 1, 'Investigate', 'investigator')
+  await writeSidecar(events.length + 1 + seqOffset, 'Investigate', 'investigator')
   investigation = await agent(
     `Investigate ticket ${tid} using the investigator role.
 
@@ -465,7 +482,7 @@ Write both files. Then return: key findings, open questions requiring a decision
   phase('Plan')
 
   const planTs = await captureTs()
-  await writeSidecar(events.length + 1, 'Plan', 'planner')
+  await writeSidecar(events.length + 1 + seqOffset, 'Plan', 'planner')
   plan = await agent(
     `Produce the implementation plan for ticket ${tid} using the planner role.
 
@@ -546,7 +563,7 @@ print('UNRESOLVED_CHECK_JSON:' + json.dumps(plan_has_unresolved_questions_headin
   }
 
   const reviewTs = await captureTs()
-  await writeSidecar(events.length + 1, 'Review', 'architecture-reviewer')
+  await writeSidecar(events.length + 1 + seqOffset, 'Review', 'architecture-reviewer')
   review = await agent(
     `Architecture review for ticket ${tid}.
 
@@ -615,7 +632,7 @@ const IMPL_SCHEMA = {
 }
 
 const implementTs = await captureTs()
-await writeSidecar(events.length + 1, 'Implement', 'implementer')
+await writeSidecar(events.length + 1 + seqOffset, 'Implement', 'implementer')
 const implementation = await agent(
   `Implement ticket ${tid}. Tier: ${tier}.
 
@@ -731,7 +748,7 @@ print('ARCH_CHECK_JSON:' + json.dumps(run_architecture_checks(sys.argv[1:])))
   }
 
   const archVerifyTs = await captureTs()
-  await writeSidecar(events.length + 1, 'Architecture-Verify', 'architecture-reviewer')
+  await writeSidecar(events.length + 1 + seqOffset, 'Architecture-Verify', 'architecture-reviewer')
   const archVerify = await agent(
     `Post-implementation architecture verification for ticket ${tid}.
 
@@ -792,7 +809,7 @@ const TEST_SCHEMA = {
 }
 
 const testTs = await captureTs()
-await writeSidecar(events.length + 1, 'Test', 'test-scoper')
+await writeSidecar(events.length + 1 + seqOffset, 'Test', 'test-scoper')
 const testResult = await agent(
   `Scope and run tests for ticket ${tid}.
 
@@ -941,7 +958,7 @@ print(json.dumps(expected_subsystems_for_files(sys.argv[1:])))
   )
 
   const parityTs = await captureTs()
-  await writeSidecar(events.length + 1, 'Parity', 'parity-updater')
+  await writeSidecar(events.length + 1 + seqOffset, 'Parity', 'parity-updater')
   const parity = await agent(
     `Update parity ledger for ticket ${tid}.
 
@@ -1033,7 +1050,7 @@ if ((ticketInfo.tags && ticketInfo.tags.includes('security')) ||
   }
 
   const securityReviewTs = await captureTs()
-  await writeSidecar(events.length + 1, 'Security-Review', 'security-reviewer')
+  await writeSidecar(events.length + 1 + seqOffset, 'Security-Review', 'security-reviewer')
   const securityReview = await agent(
     `Security review for ticket ${tid}.
 
@@ -1096,7 +1113,7 @@ const DONE_SCHEMA = {
 }
 
 const doneCheckTs = await captureTs()
-await writeSidecar(events.length + 1, 'Verify', 'done-checker')
+await writeSidecar(events.length + 1 + seqOffset, 'Verify', 'done-checker')
 const doneCheck = await agent(
   `Definition-of-Done check for ticket ${tid}.
 
@@ -1150,7 +1167,7 @@ pushEvent('Verify', 'done-checker', 'ok', doneCheck.summary || 'DoD: READY_TO_CL
 
 phase('Finalize')
 
-await writeSidecar(events.length + 1, 'Finalize', 'finalizer')
+await writeSidecar(events.length + 1 + seqOffset, 'Finalize', 'finalizer')
 await agent(
   `Finalize ticket ${tid} — all gates passed. Tier: ${tier}.
 

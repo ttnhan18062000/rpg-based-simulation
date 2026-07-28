@@ -27,17 +27,20 @@ _SCHEMA_DOC_PATH = _REPO_ROOT / "docs" / "agent-monitoring" / "schema.md"
 
 # The 10 implement-ticket.js call sites where `captureTs()` composes alongside `writeSidecar()`
 # (9) or stands alone (Scope, which has no writeSidecar). Order matches the file's phase order.
+# Since TCK-20260728-MONITORING-PAUSE-RESUME-SEQ-COLLISION, each `events.length + 1` expression
+# carries a `+ seqOffset` term so a resumed session's seq numbering continues past a prior
+# session's instead of restarting at 1.
 _IMPLEMENT_TICKET_ADJACENCY = [
     "const scopeTs = await captureTs()\nconst ticketInfo = await agent(",
-    "const investigationTs = await captureTs()\n  await writeSidecar(events.length + 1, 'Investigate', 'investigator')\n  investigation = await agent(",
-    "const planTs = await captureTs()\n  await writeSidecar(events.length + 1, 'Plan', 'planner')\n  plan = await agent(",
-    "const reviewTs = await captureTs()\n  await writeSidecar(events.length + 1, 'Review', 'architecture-reviewer')\n  review = await agent(",
-    "const implementTs = await captureTs()\nawait writeSidecar(events.length + 1, 'Implement', 'implementer')\nconst implementation = await agent(",
-    "const archVerifyTs = await captureTs()\n  await writeSidecar(events.length + 1, 'Architecture-Verify', 'architecture-reviewer')\n  const archVerify = await agent(",
-    "const testTs = await captureTs()\nawait writeSidecar(events.length + 1, 'Test', 'test-scoper')\nconst testResult = await agent(",
-    "const parityTs = await captureTs()\n  await writeSidecar(events.length + 1, 'Parity', 'parity-updater')\n  const parity = await agent(",
-    "const securityReviewTs = await captureTs()\n  await writeSidecar(events.length + 1, 'Security-Review', 'security-reviewer')\n  const securityReview = await agent(",
-    "const doneCheckTs = await captureTs()\nawait writeSidecar(events.length + 1, 'Verify', 'done-checker')\nconst doneCheck = await agent(",
+    "const investigationTs = await captureTs()\n  await writeSidecar(events.length + 1 + seqOffset, 'Investigate', 'investigator')\n  investigation = await agent(",
+    "const planTs = await captureTs()\n  await writeSidecar(events.length + 1 + seqOffset, 'Plan', 'planner')\n  plan = await agent(",
+    "const reviewTs = await captureTs()\n  await writeSidecar(events.length + 1 + seqOffset, 'Review', 'architecture-reviewer')\n  review = await agent(",
+    "const implementTs = await captureTs()\nawait writeSidecar(events.length + 1 + seqOffset, 'Implement', 'implementer')\nconst implementation = await agent(",
+    "const archVerifyTs = await captureTs()\n  await writeSidecar(events.length + 1 + seqOffset, 'Architecture-Verify', 'architecture-reviewer')\n  const archVerify = await agent(",
+    "const testTs = await captureTs()\nawait writeSidecar(events.length + 1 + seqOffset, 'Test', 'test-scoper')\nconst testResult = await agent(",
+    "const parityTs = await captureTs()\n  await writeSidecar(events.length + 1 + seqOffset, 'Parity', 'parity-updater')\n  const parity = await agent(",
+    "const securityReviewTs = await captureTs()\n  await writeSidecar(events.length + 1 + seqOffset, 'Security-Review', 'security-reviewer')\n  const securityReview = await agent(",
+    "const doneCheckTs = await captureTs()\nawait writeSidecar(events.length + 1 + seqOffset, 'Verify', 'done-checker')\nconst doneCheck = await agent(",
 ]
 
 _IMPLEMENT_EPIC_ADJACENCY = "const discoverTs = await captureTs()\nconst discovery = await agent("

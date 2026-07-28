@@ -5580,3 +5580,76 @@
     than StatsView.tsx's Phase Status Distribution table and ReplayTimelineView.tsx's button
     strip/detail header were investigated but not touched unless a real, analogous plain-text
     phase/agent gap was found.
+
+- id: INFRA-288
+  text: >
+    Resume-across-sessions `seq` collision fix (TCK-20260728-MONITORING-PAUSE-RESUME-SEQ-
+    COLLISION): a third, distinct mechanism from TCK-20260711-MONITORING-TOOLCOUNT-SIDECAR-
+    COLLISION (INFRA's already-documented within-session gaps). When a ticket's run is paused
+    mid-pipeline and resumed later as a genuinely separate `implement-ticket.js` invocation
+    sharing the same `run_id`, every `seq`-producing site (`pushEvent`'s `events.length + 1` and
+    each of the 10 `writeSidecar(events.length + 1, ...)` call sites, plus the Scope-phase
+    resume-branch's own inline sidecar write) derived `seq` purely from the resumed session's own
+    in-memory `events` array, which restarts at 0 -- so the resumed session's `seq` values
+    silently collided with and aliased onto the pre-pause session's `(run_id, seq)` buckets in
+    `tools.jsonl`, corrupting `tool_call_count`/`cost_proxy_score` attribution for every phase
+    from the resume point onward. Confirmed concretely on
+    TCK-20260714-SIMQ-WEIGHTS-PILLAR-COLLISION (5 of 6 post-resume phases reported the exact
+    ground-truth values of the pre-pause session's phase at the same seq) and empirically bounded
+    to 8 affected `run_id`s in the live corpus via the `>1 Scope/seq=1 event` signature. Fix: new
+    `tools/agent-monitoring/seq_offset.py::compute_seq_offset(run_id, events)` (pure, read-only)
+    looks up the max prior `seq` already recorded for `run_id` in `agent-monitoring/events.jsonl`
+    (0 for a brand-new ticket); `implement-ticket.js` computes it once at Scope-phase resume via
+    `resolveSeqOffset(ticketId)` into a `seqOffset` variable, then adds `+ seqOffset` to all 11
+    seq-producing expressions (`pushEvent`'s and all 10 `writeSidecar` call sites) plus the Scope
+    resume-branch's inline `seq: seqOffset + 1`. Detection: new
+    `tools/agent-monitoring/validate.py::compute_multi_invocation_collision_report()` flags any
+    `run_id` with more than one `phase="Scope", seq=1` event (the historical signature used to
+    find the 8 affected run_ids), wired into `main()`'s printed report alongside the existing
+    `compute_tool_count_drift_report`. Prevention-only, matching the sibling ticket's precedent --
+    historical corrupted `tool_call_count`/`cost_proxy_score` values for the 8 already-affected
+    run_ids are not backfilled. No `src/` file touched -- this is agent-orchestration/monitoring-
+    pipeline tooling only, no simulation engine, mechanics, or determinism behavior involved.
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: >
+    tools/agent-monitoring/seq_offset.py (`compute_seq_offset(run_id, events)`, pure/read-only,
+    plus a `MARKER:`-prefixed-JSON `__main__` CLI entrypoint mirroring
+    `scope_ticket_relocate.py`'s shape). .claude/workflows/implement-ticket.js:47-66
+    (`resolveSeqOffset(ticketId)` bash()-invokes `seq_offset.py`, called once at Scope-phase
+    resume into `let seqOffset = 0; ... seqOffset = await resolveSeqOffset(ticketId)`, and the
+    Scope resume-branch's inline sidecar write at :66 now reads
+    `"${ticketId}" "${seqOffset + 1}"`); `+ seqOffset` added to `pushEvent`'s seq expression at
+    :226 (`seq: events.length + 1 + seqOffset`) and all 10 `writeSidecar` call sites at :444, :485,
+    :566, :635, :751, :812, :961, :1053, :1116, :1170 (each now `events.length + 1 + seqOffset`).
+    tools/agent-monitoring/validate.py:170-192 (`compute_multi_invocation_collision_report(events)`
+    -- Counter-based grouping on `(phase == "Scope", seq == 1, run_id)`, flags any run_id with
+    count > 1), wired into `main()` at :276-277 immediately after
+    `compute_tool_count_drift_report`'s existing print. docs/agent-monitoring/schema.md's "How
+    tool calls are attributed to agent events" section documents the third mechanism alongside the
+    two `TCK-20260711-MONITORING-TOOLCOUNT-SIDECAR-COLLISION` mechanisms already there.
+  proof_type: contract
+  test_path: >
+    tests/tools/test_seq_offset.py::test_compute_seq_offset_continues_past_prior_session_max_seq,
+    ::test_compute_seq_offset_returns_zero_for_run_id_with_no_prior_history,
+    ::test_compute_seq_offset_ignores_other_run_ids, ::test_compute_seq_offset_is_read_only (4/4
+    passing). tests/tools/test_validate_agent_monitoring.py::
+    test_multi_invocation_collision_report_detects_duplicate_scope_seq1,
+    ::test_multi_invocation_collision_report_is_read_only (new, both passing alongside the
+    existing suite). tests/tools/test_current_run_sidecar_orchestrator.py and
+    tests/tools/test_step0_ts_orchestrator.py (updated for the `seqOffset`-widened call sites,
+    still passing) and tests/tools/test_agent_monitoring_manifest.py (updated, still passing). All
+    5 test files re-run together and confirmed passing (44/44) as part of this parity update.
+  divergence_note: null
+  support_boundary: >
+    Agent-orchestration/monitoring-pipeline tooling only -- no simulation behavior, Mechanics
+    Bible chapter, or engine contract governs `seq` numbering or tool-call attribution (same
+    category as INFRA-281 through INFRA-287 immediately above). No `src/` file touched, no change
+    to `cost_proxy_score`'s weighting formula (`cost_proxy.py` untouched) -- this fixes which
+    `(run_id, seq)` bucket a resumed session's tool calls land in, not how the score is computed
+    from a correctly-attributed bucket. Historical corrupted values for the 8 already-affected
+    run_ids are explicitly not backfilled (prevention-only, per ticket's Out of Scope and matching
+    TCK-20260711-MONITORING-TOOLCOUNT-SIDECAR-COLLISION's precedent). Does not address
+    `implement-epic`'s per-child dispatch (flagged as an open question in the linked idea doc, not
+    investigated here).
