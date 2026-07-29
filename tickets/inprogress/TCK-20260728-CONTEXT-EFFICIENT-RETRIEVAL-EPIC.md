@@ -172,15 +172,28 @@ Nothing in this phase was wired into any `.claude/workflows/*.js` file or made t
 fire automatically during real agent workflow runs, per this phase's own scope
 constraint.
 
+**2026-07-29 — Phase 5 batch complete.** Both child tickets
+(`TCK-20260729-SHADOW-PACKET-CALL-SITE`, `TCK-20260729-SHADOW-BASELINE-COMPARISON`) are
+`DONE` — an opt-in, fail-open shadow context-packet call site wired into
+`implement-ticket.js`'s Investigate phase (gated behind `SHADOW_CONTEXT_PACKET_ENABLED`,
+off by default, using a monotonic-negative `seq` counter provably disjoint from real
+per-phase event seqs — the first `.claude/workflows/*.js`-touching ticket in this whole
+epic), and a shadow-vs-baseline retrieval comparison report section added to
+`generate_retro.py`, partitioning real (`TCK-...`) vs. synthetic (`RETRIEVAL-EVENT-...`)
+run_id provenance and reusing `compute_retrieval_metrics()` per cohort. Both plans
+required one architecture-review revision cycle each (a seq-collision bug and a missing
+None-guard, respectively) before approval. Parity ledger entries INFRA-296/297/299/300
+added or corrected.
+
 This epic remains **open**, not closed — per its own Scope and `SEQUENCE.md`, it
-deliberately covers only Phase 0-4 of the source doc's full 7-phase Sequenced Future
-Epic so far; Phase 5 onward (shadow context packets, selective workflow adoption,
-continuous calibration) is intentionally not yet ticketed, and Open Decisions 5-6 in
-Assumptions/Open Questions remain unresolved. Do not mark this ticket DONE or move it
-to `tickets/done/` until a future ticketing pass scopes and closes the remaining
-phases (or a deliberate decision is made to stop pursuing them, in which case this
-ticket should instead move to `tickets/backlogs/` per `docs/ai/ticket-lifecycle.md`'s
-backlog convention — not silently closed as done).
+deliberately covers only Phase 0-5 of the source doc's full 7-phase Sequenced Future
+Epic so far; Phase 6 onward (selective workflow adoption beyond the Phase 5 opt-in
+shadow call site, continuous calibration) is intentionally not yet ticketed, and Open
+Decisions 5-6 in Assumptions/Open Questions remain unresolved. Do not mark this ticket
+DONE or move it to `tickets/done/` until a future ticketing pass scopes and closes the
+remaining phases (or a deliberate decision is made to stop pursuing them, in which case
+this ticket should instead move to `tickets/backlogs/` per
+`docs/ai/ticket-lifecycle.md`'s backlog convention — not silently closed as done).
 
 ## Test Summary
 
