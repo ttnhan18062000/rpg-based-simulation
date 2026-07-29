@@ -70,6 +70,7 @@ Create a single epic-tier tracking ticket for the whole context-efficient agent 
 - TCK-20260729-RETRIEVAL-EVENT-PARITY-CHECK
 - TCK-20260729-SHADOW-PACKET-CALL-SITE
 - TCK-20260729-SHADOW-BASELINE-COMPARISON
+- TCK-20260730-SHADOW-PROMOTION-GATE-THRESHOLDS
 
 ## Related Docs
 - docs/plans/agent_infrastructure/context_efficient_agent_retrieval/idea_context_efficient_agent_retrieval_observability.md
@@ -133,7 +134,27 @@ None.
   7d/30d/permanent naming pattern in prose only (no code change to `retention.py`). Full
   MAY/PROHIBITED field list, per-cache-level category table, and rationale:
   `docs/observability/retrieval_retention_redaction_policy.md`.
-- OPEN DECISION 5: What sample size and thresholds are sufficient to promote a scenario from advisory to default behavior?
+- OPEN DECISION 5 — **RESOLVED** (2026-07-30, `TCK-20260730-SHADOW-PROMOTION-GATE-THRESHOLDS`): What
+  sample size and thresholds are sufficient to promote a scenario from advisory to default behavior?
+  Answer: applies only to the 3 scenarios Open Decision 1 already justified (Small bugfix, Ticket
+  implementation, Architecture-planning). Each of the idea doc's six approval-gate criteria gets an
+  explicit bar (e.g. cache correctness and privacy boundary are zero-tolerance invariants; the
+  token/burden-reduction criterion uses `search_count.per_run` as a token-unavailable proxy, requiring
+  at least 1 whole search fewer at the median). Sample size is a per-scenario shadow-enabled run-count
+  floor (56 / 122 / 6 respectively) grounded in the same real `retrieval_baseline_metrics.py` evidence
+  Decision 1 used for each scenario, combined with an elapsed-period floor reusing the existing
+  agent-monitoring-retro weekly/5-ticket cadence — whichever is reached later. No existing Phase 0-5
+  tool computes causal attribution between an outcome and missing/present context; a join-by-`run_id`
+  method is proposed (§4) but requires a human-reviewed audit until a structured gate-failure-cause
+  field exists, since `reason_code` is null for every `Review`/`Architecture-Verify` event today.
+  Authoritative-source recall and provider parity are flagged as **not** fully defensible a priori —
+  recall lacks a join from `eval_search.py`'s index-level Recall@5 gate to a real shadow packet's
+  cited sources, and provider parity cannot be measured with only one of two known adapters
+  (`claude-code`) ever live. Zero real shadow-packet production events exist as of this decision
+  (`SHADOW_CONTEXT_PACKET_ENABLED` off by default, confirmed via `TCK-20260729-SHADOW-PACKET-CALL-SITE`/
+  `TCK-20260729-SHADOW-BASELINE-COMPARISON`) — thresholds are deliberately chosen in that absence, per
+  the idea doc's own instruction that they be selected before evaluation, not retrofitted after. Full
+  per-criterion table and evidence: `docs/ai/shadow_promotion_gate_thresholds_decision.md`.
 - OPEN DECISION 6: Should context packets be exposed as an MCP tool, a provider-adapter library, or both after the provider-neutral contract is implemented?
 
 ## Implementation Notes
