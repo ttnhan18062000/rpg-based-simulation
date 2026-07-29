@@ -679,6 +679,23 @@ def compute_retrieval_metrics(events: list[dict]) -> dict:
     }
 
 
+def compute_shadow_baseline_comparison(events: list[dict]) -> dict:
+    """Partitions events by real (TCK-...) vs. synthetic (RETRIEVAL-EVENT-...) run_id
+    provenance, using vocabulary.infer_workflow(run_id) is not None as the sole partition test —
+    the same non-None-vs-None idiom _normalize_phase()/_normalize_agent() already use. Does NOT
+    pre-filter to retrieval-shaped events itself: compute_retrieval_metrics() already applies its
+    own "retrieval_event_schema_version" in e discriminator internally, so passing the full
+    per-cohort event list (including ordinary workflow events) is correct and avoids a second,
+    redundant filter.
+    """
+    shadow_events = [e for e in events if infer_workflow(e.get("run_id") or "") is not None]
+    baseline_events = [e for e in events if infer_workflow(e.get("run_id") or "") is None]
+    return {
+        "shadow": compute_retrieval_metrics(shadow_events),
+        "baseline": compute_retrieval_metrics(baseline_events),
+    }
+
+
 def generate(runs, events, label, week_str=None, tickets_root=None):
     """Render `compute_retro_metrics()`'s result to the retro report's Markdown text — the sole
     rendering consumer of that function. Signature/behavior unchanged by the
@@ -687,6 +704,7 @@ def generate(runs, events, label, week_str=None, tickets_root=None):
     """
     metrics = compute_retro_metrics(runs, events, tickets_root)
     retrieval_metrics = compute_retrieval_metrics(events)
+    shadow_comparison = compute_shadow_baseline_comparison(events)
     rs = metrics["run_summary"]
     gate_counter = Counter(metrics["gate_failure_breakdown"])
     reason_counter = Counter(metrics["reason_code_breakdown"])
@@ -969,6 +987,93 @@ def generate(runs, events, label, week_str=None, tickets_root=None):
         lines.append("### Expansion Rate")
         lines.append("")
         lines.append(f"**Expansion rate:** {retrieval_metrics['expansion_rate'] * 100:.1f}%")
+        lines.append("")
+
+    # Shadow vs. Baseline Retrieval Comparison (TCK-20260729-SHADOW-BASELINE-COMPARISON):
+    # additive, separately-gated section — never rendered empty, omitted entirely when the
+    # shadow (real-run-id) cohort has zero retrieval events, independent of whether the
+    # synthetic/baseline cohort is nonzero.
+    if shadow_comparison["shadow"]["retrieval_event_count"]:
+        lines.append("## Shadow vs. Baseline Retrieval Comparison")
+        lines.append("")
+        lines.append(
+            "_Compares shadow-packet-covered (real TCK-... run_id) retrieval events against the "
+            "synthetic/manual-invocation baseline, using the same cache-rate/noise-ratio/"
+            "freshness-authority/expansion-rate measurement domain as `## Retrieval Quality` "
+            "above. Comparison data only._"
+        )
+        lines.append("")
+
+        shadow_m = shadow_comparison["shadow"]
+        baseline_m = shadow_comparison["baseline"]
+
+        lines.append("| Metric | Shadow | Baseline |")
+        lines.append("|---|---|---|")
+        lines.append(
+            f"| Retrieval event count | {shadow_m['retrieval_event_count']} | "
+            f"{baseline_m['retrieval_event_count']} |"
+        )
+
+        def _fmt_ratio(agg):
+            return "n/a" if agg["ratio"] is None else f"{agg['ratio']:.2f}"
+
+        lines.append(
+            f"| Candidate → Selected ratio | "
+            f"{_fmt_ratio(shadow_m['candidate_to_selected_aggregate'])} | "
+            f"{_fmt_ratio(baseline_m['candidate_to_selected_aggregate'])} |"
+        )
+        lines.append(
+            f"| Selected → Cited ratio | "
+            f"{_fmt_ratio(shadow_m['selected_to_cited_aggregate'])} | "
+            f"{_fmt_ratio(baseline_m['selected_to_cited_aggregate'])} |"
+        )
+        lines.append(
+            f"| Expansion rate | {shadow_m['expansion_rate'] * 100:.1f}% | "
+            f"{baseline_m['expansion_rate'] * 100:.1f}% |"
+        )
+        lines.append("")
+
+        lines.append("**Cache Rates by Level — Shadow**")
+        lines.append("")
+        if shadow_m["cache_rates"]:
+            lines.append(f"| Cache Level | {HIT} | {MISS} | {STALE_REJECTED} | Total |")
+            lines.append("|---|---|---|---|---|")
+            for cache_level in sorted(shadow_m["cache_rates"]):
+                row = shadow_m["cache_rates"][cache_level]
+                counts = row["counts"]
+                lines.append(
+                    f"| {cache_level} | {counts.get(HIT, 0)} | {counts.get(MISS, 0)} | "
+                    f"{counts.get(STALE_REJECTED, 0)} | {row['total']} |"
+                )
+        else:
+            lines.append("_No cache-level data this period._")
+        lines.append("")
+
+        lines.append("**Cache Rates by Level — Baseline**")
+        lines.append("")
+        if baseline_m["cache_rates"]:
+            lines.append(f"| Cache Level | {HIT} | {MISS} | {STALE_REJECTED} | Total |")
+            lines.append("|---|---|---|---|---|")
+            for cache_level in sorted(baseline_m["cache_rates"]):
+                row = baseline_m["cache_rates"][cache_level]
+                counts = row["counts"]
+                lines.append(
+                    f"| {cache_level} | {counts.get(HIT, 0)} | {counts.get(MISS, 0)} | "
+                    f"{counts.get(STALE_REJECTED, 0)} | {row['total']} |"
+                )
+        else:
+            lines.append("_No cache-level data this period._")
+        lines.append("")
+
+        lines.append("**Freshness / Authority — Shadow**")
+        lines.append("")
+        lines.append(f"Authority: {dict(shadow_m['authority_distribution']) or '_none_'}")
+        lines.append(f"Freshness: {dict(shadow_m['freshness_distribution']) or '_none_'}")
+        lines.append("")
+        lines.append("**Freshness / Authority — Baseline**")
+        lines.append("")
+        lines.append(f"Authority: {dict(baseline_m['authority_distribution']) or '_none_'}")
+        lines.append(f"Freshness: {dict(baseline_m['freshness_distribution']) or '_none_'}")
         lines.append("")
 
     # Notes (human-written)

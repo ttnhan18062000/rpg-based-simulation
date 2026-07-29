@@ -477,6 +477,68 @@ Write both files. Then return: key findings, open questions requiring a decision
   investigationText = investigation.toString().trim()
   pushEvent('Investigate', 'investigator', 'ok', investigationText.slice(0, 200), investigationTs)
 
+  // Shadow context-packet call site (TCK-20260729-SHADOW-PACKET-CALL-SITE): advisory-only,
+  // opt-in instrumentation of assemble_context_packet() via wrap_context_packet_assembly().
+  // Placed strictly after pushEvent('Investigate', ...) — never between writeSidecar(...) and
+  // the agent() call above (see test_current_run_sidecar_orchestrator.py's exact-adjacency
+  // guard). Placement here is for adjacency-safety only; it has NO bearing on seq math (see
+  // below) — do not reintroduce that conflation.
+  //
+  // seq: computed as a monotonic NEGATIVE counter, entirely independent of this file's
+  // `events.length`/`seqOffset` — NEVER reuse the `events.length + 1 + seqOffset` idiom here.
+  // This write goes directly to agent-monitoring/events.jsonl via emit_retrieval_event(),
+  // bypassing the JS `events` array entirely, so `events.length` never advances because of it;
+  // reusing that expression silently aliases onto whatever the next real phase's own
+  // pushEvent/writeSidecar independently computes from the same, unchanged `events.length` —
+  // this is the exact defect an architecture-review NEEDS_CHANGES verdict caught. Every real
+  // per-phase seq in this file is provably >= 1 (events.length >= 0, seqOffset >= 0 per
+  // seq_offset.py::compute_seq_offset(), which starts at 0 and only rises) — so any seq <= 0 is
+  // mathematically guaranteed disjoint from the real range for this run, regardless of
+  // placement, run length, or resume count. The Python script below computes
+  // seq = -(1 + prior_shadow_count_for_this_run_id) by scanning events.jsonl for prior
+  // agent=="context-packet-wrapper" rows matching this run_id (mirrors seq_offset.py's own
+  // resume-lookup precedent, filtered to shadow rows and negated) — this handles Investigate
+  // itself re-running across a resumed session (as this very ticket has done) without two
+  // shadow events colliding with each other, in addition to never colliding with any real event.
+  //
+  // Gated behind SHADOW_CONTEXT_PACKET_ENABLED=1 (strict string equality, off by default,
+  // shell-side only — no .claude/workflows/*.js file reads process.env today and this call
+  // should not be the first to do so). Wrapped in `timeout 10s`; fully fail-open at both the
+  // shell level (2>/dev/null || true, matching writeSidecar's existing convention) and the
+  // Python level (try/except: pass) so a hang/crash/non-zero exit can never change this phase's
+  // pushEvent status or the workflow's return value. Empty candidate set — no real retrieval
+  // pipeline wired in (tools/hybrid_retrieval.py wiring is explicitly deferred to a follow-up
+  // ticket).
+  await bash(
+    `if [ "$SHADOW_CONTEXT_PACKET_ENABLED" = "1" ]; then timeout 10s python3 -c "
+import sys
+sys.path.insert(0, 'tools')
+sys.path.insert(0, 'tools/agent-monitoring')
+from retrieval_events import wrap_context_packet_assembly
+from validate import load_jsonl
+import record_events
+try:
+    run_id = sys.argv[1]
+    prior_shadow_count = sum(
+        1 for e in load_jsonl(record_events.EVENTS_FILE)
+        if e.get('run_id') == run_id and e.get('agent') == 'context-packet-wrapper'
+    )
+    shadow_seq = -(1 + prior_shadow_count)
+    wrap_context_packet_assembly(
+        seq=shadow_seq,
+        summary='shadow packet build for Investigate phase',
+        run_id=run_id,
+        packet_id='shadow-investigate-' + run_id,
+        corpus_generation='shadow',
+        retrieval_version=1,
+        budget_requested=0,
+        included_candidates=[],
+    )
+except Exception:
+    pass
+" "${tid}" 2>/dev/null || true; fi`
+  )
+
   // ─── Phase 3: Plan ────────────────────────────────────────────────────────────
 
   phase('Plan')

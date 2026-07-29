@@ -20,6 +20,7 @@ import generate_retro  # noqa: E402
 from generate_retro import (  # noqa: E402
     compute_retro_metrics,
     compute_retrieval_metrics,
+    compute_shadow_baseline_comparison,
     generate,
     _record_since_cutoff,
     _resolve_status,
@@ -1329,3 +1330,159 @@ def test_no_new_frontend_ui_file_introduced_by_this_ticket():
         assert "import react" not in source.lower()
         assert ".tsx" not in source
         assert ".jsx" not in source
+
+
+# ---------------------------------------------------------------------------
+# TCK-20260729-SHADOW-BASELINE-COMPARISON — "## Shadow vs. Baseline Retrieval
+# Comparison" partition + rendered section
+# ---------------------------------------------------------------------------
+
+def test_shadow_comparison_partitions_real_vs_synthetic_run_id():
+    import inspect
+
+    source = inspect.getsource(compute_shadow_baseline_comparison)
+    assert "infer_workflow(" in source
+    assert "is not None" in source
+    assert '"TCK-"' not in source
+    assert "'TCK-'" not in source
+    assert '"RETRIEVAL-EVENT-"' not in source
+    assert "'RETRIEVAL-EVENT-'" not in source
+
+    events = [
+        _retrieval_event(run_id="TCK-REAL-1", agent="context-packet-wrapper", seq=-1),
+        _retrieval_event(run_id="RETRIEVAL-EVENT-test", seq=1),
+        _retrieval_event(run_id="RETRIEVAL-EVENT-hybrid-retrieval", seq=2),
+        _ORDINARY_WORKFLOW_EVENT,  # run_id "TCK-FAKE" -> shadow cohort by run_id, but not
+                                   # retrieval-shaped, so filtered out of the retrieval count too
+    ]
+
+    comparison = compute_shadow_baseline_comparison(events)
+
+    assert comparison["shadow"]["retrieval_event_count"] == 1
+    assert comparison["baseline"]["retrieval_event_count"] == 2
+
+
+def test_shadow_comparison_computes_same_measurement_domain_as_compute_retrieval_metrics():
+    shadow_event = _retrieval_event(
+        run_id="TCK-REAL-2", agent="context-packet-wrapper", seq=-1,
+        cache_level="retrieval_query_cache", cache_status="hit",
+        candidate_count=10, selected_count=5,
+    )
+    baseline_event = _retrieval_event(
+        run_id="RETRIEVAL-EVENT-test", seq=1,
+        cache_level="retrieval_query_cache", cache_status="miss",
+        candidate_count=4, selected_count=1,
+    )
+    events = [shadow_event, baseline_event]
+
+    comparison = compute_shadow_baseline_comparison(events)
+
+    assert comparison["shadow"] == compute_retrieval_metrics([shadow_event])
+    assert comparison["baseline"] == compute_retrieval_metrics([baseline_event])
+
+
+def test_shadow_comparison_reuses_compute_retrieval_metrics_not_reimplemented():
+    import inspect
+
+    source = inspect.getsource(compute_shadow_baseline_comparison)
+    assert "compute_retrieval_metrics(" in source
+    for literal in (
+        '"hit"', "'hit'",
+        '"miss"', "'miss'",
+        '"stale-rejected"', "'stale-rejected'",
+        '"retrieval_index_cache"', "'retrieval_index_cache'",
+        '"retrieval_query_cache"', "'retrieval_query_cache'",
+        '"retrieval_packet_cache"', "'retrieval_packet_cache'",
+    ):
+        assert literal not in source, (
+            f"{literal} re-literaled in compute_shadow_baseline_comparison"
+        )
+
+
+def test_shadow_comparison_section_omitted_when_zero_shadow_events():
+    runs = [_BASE_RUN]
+
+    synthetic_only_events = [_retrieval_event(run_id="RETRIEVAL-EVENT-test")]
+    report = generate(runs, synthetic_only_events, "test-label")
+    assert "## Shadow vs. Baseline Retrieval Comparison" not in report
+
+    no_retrieval_events = [_ORDINARY_WORKFLOW_EVENT]
+    report_zero = generate(runs, no_retrieval_events, "test-label")
+    assert "## Shadow vs. Baseline Retrieval Comparison" not in report_zero
+
+
+def test_shadow_comparison_section_rendered_when_shadow_events_nonzero():
+    from retrieval_cache import HIT, QUERY_CACHE_CATEGORY
+
+    runs = [_BASE_RUN]
+    events = [
+        _retrieval_event(
+            run_id="TCK-REAL-3", agent="context-packet-wrapper", seq=-1,
+            cache_level=QUERY_CACHE_CATEGORY, cache_status=HIT,
+            candidate_count=10, selected_count=5,
+        ),
+        _retrieval_event(run_id="RETRIEVAL-EVENT-test", seq=1),
+    ]
+
+    report = generate(runs, events, "test-label")
+
+    assert "## Shadow vs. Baseline Retrieval Comparison" in report
+    assert "| Retrieval event count | 1 | 1 |" in report
+
+
+def test_shadow_comparison_existing_report_output_byte_identical_on_same_fixture(tmp_path):
+    report = generate(_FIXED_CORPUS_RUNS, _FIXED_CORPUS_EVENTS, "fixed-label", tickets_root=tmp_path)
+
+    assert report == _FIXED_CORPUS_EXPECTED_REPORT
+    assert "## Shadow vs. Baseline Retrieval Comparison" not in report
+
+
+def test_shadow_comparison_never_emits_any_approval_gate_criteria_phrase():
+    from retrieval_cache import HIT, QUERY_CACHE_CATEGORY
+
+    runs = [_BASE_RUN]
+    events = [
+        _retrieval_event(
+            run_id="TCK-REAL-4", agent="context-packet-wrapper", seq=-1,
+            cache_level=QUERY_CACHE_CATEGORY, cache_status=HIT,
+            candidate_count=10, selected_count=5,
+        ),
+        _retrieval_event(run_id="RETRIEVAL-EVENT-test", seq=1),
+    ]
+
+    report = generate(runs, events, "test-label")
+    assert "## Shadow vs. Baseline Retrieval Comparison" in report
+
+    report_lower = report.lower()
+    for phrase in (
+        "authoritative-source recall",
+        "missed contracts",
+        "review rework",
+        "context tokens",
+        "cache correctness",
+        "provider parity",
+        "privacy boundary",
+        "approval gate",
+        "promotion",
+    ):
+        assert phrase not in report_lower, f"forbidden phrase {phrase!r} found in report"
+
+
+def test_shadow_comparison_new_tests_are_fixture_only_no_live_data_read():
+    import inspect
+
+    new_test_functions = [
+        test_shadow_comparison_partitions_real_vs_synthetic_run_id,
+        test_shadow_comparison_computes_same_measurement_domain_as_compute_retrieval_metrics,
+        test_shadow_comparison_reuses_compute_retrieval_metrics_not_reimplemented,
+        test_shadow_comparison_section_omitted_when_zero_shadow_events,
+        test_shadow_comparison_section_rendered_when_shadow_events_nonzero,
+        test_shadow_comparison_existing_report_output_byte_identical_on_same_fixture,
+        test_shadow_comparison_never_emits_any_approval_gate_criteria_phrase,
+    ]
+    for fn in new_test_functions:
+        source = inspect.getsource(fn)
+        assert "EVENTS_FILE" not in source
+        assert "RUNS_FILE" not in source
+        assert "DEFAULT_DB_PATH" not in source
+        assert "_load_runs_and_events" not in source

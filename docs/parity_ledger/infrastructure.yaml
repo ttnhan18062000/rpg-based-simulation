@@ -6168,8 +6168,14 @@
     chapter, or engine contract governs this module's semantics (same category as INFRA-281
     through INFRA-295). No `src/` file touched, no on-disk schema/corpus change to any existing
     store -- purely consumes `tools/hybrid_retrieval.py`'s and `tools/code_test_index.py`'s
-    already-built output shapes and hand-built `parity_ledger_entry` fixtures, and is not wired
-    into any `.claude/workflows/*.js` file or existing pipeline/gate; standalone and read-only.
+    already-built output shapes and hand-built `parity_ledger_entry` fixtures. Module code itself
+    (`tools/context_packet_assembler.py`) remains untouched and is still never imported directly
+    by any `.claude/workflows/*.js` file. **Update (TCK-20260729-SHADOW-PACKET-CALL-SITE, see
+    INFRA-299):** as of that ticket, `assemble_context_packet()` is indirectly invoked at runtime
+    from `implement-ticket.js`'s Investigate phase via `retrieval_events.wrap_context_packet_assembly()`,
+    gated behind `SHADOW_CONTEXT_PACKET_ENABLED=1` (off by default, fail-open). The "standalone,
+    never wired into a pipeline/gate" characterization above now describes only the
+    default-disabled state, not an absolute guarantee -- see INFRA-299 for the current wiring.
 
 - id: INFRA-297
   text: >
@@ -6223,9 +6229,15 @@
     Agent-orchestration/retrieval tooling only -- no simulation behavior, Mechanics Bible
     chapter, or engine contract governs this module's semantics (same category as INFRA-281
     through INFRA-296). No `src/` file touched, no on-disk schema/corpus change to any existing
-    store, and not wired into any real-time workflow orchestrator file or existing
-    pipeline/gate -- real retrieval-event volume in the live `agent-monitoring/events.jsonl`
-    stays at zero after this ticket ships, by design.
+    store. Module code itself (`tools/retrieval_events.py`) remains untouched by later tickets.
+    **Update (TCK-20260729-SHADOW-PACKET-CALL-SITE, see INFRA-299):** the "not wired into any
+    real-time workflow orchestrator file... stays at zero after this ticket ships, by design"
+    claim below described this ticket's own ship state only and is now superseded --
+    `wrap_context_packet_assembly()` (one of the three wrapper functions this entry covers) is
+    invoked from `implement-ticket.js`'s Investigate phase, opt-in via
+    `SHADOW_CONTEXT_PACKET_ENABLED=1` (off by default, fail-open). `wrap_hybrid_retrieval()` and
+    `wrap_retrieval_cache_check()` remain unwired. Real-event volume stays at zero only while the
+    flag is unset (the current default), not unconditionally by design.
 - id: INFRA-298
   text: >
     generate_retro.py's compute_retrieval_metrics() (previously computed but never rendered by
@@ -6266,3 +6278,100 @@
     retrieval-event volume in the live `agent-monitoring/events.jsonl` stays at zero after this
     ticket ships, by design; the new report section only ever populates against fixture/test data
     or a future manual invocation, never against a real tracked workflow run.
+
+- id: INFRA-299
+  text: >
+    New advisory, opt-in shadow-packet call site -- TCK-20260729-SHADOW-PACKET-CALL-SITE -- added
+    to `implement-ticket.js`'s Investigate phase (only), one orchestrator-side `bash()` statement
+    invoking `tools/context_packet_assembler.py`'s `assemble_context_packet()` via
+    `tools/retrieval_events.py`'s `wrap_context_packet_assembly()` (INFRA-296/INFRA-297), mirroring
+    the existing orchestrator-only pattern used by tagCheckOutput/archCheckOutput/
+    docStalenessOutput. Gated behind `SHADOW_CONTEXT_PACKET_ENABLED` (strict `"1"` string equality,
+    off by default), wrapped in coreutils `timeout 10s`, and the inner `python3 -c` script is
+    wrapped in `try/except Exception: pass` ending `2>/dev/null || true` -- a hang, crash, or
+    non-zero exit cannot delay or change the Investigate phase's `pushEvent` status or the
+    workflow's overall return value. Passes the real ticket's `TCK-...` run_id (never interpolated
+    into the Python source string; passed as a single quoted argv element) into
+    `wrap_context_packet_assembly()` so the emitted event is attributable to the real workflow run;
+    `phase="Retrieval"` (hardcoded inside `wrap_context_packet_assembly` itself) is left unmodified.
+    Uses a monotonic-negative `seq` counter, `seq = -(1 + prior_shadow_count_for_this_run_id)`
+    (computed via a read-only scan of `agent-monitoring/events.jsonl`), adopted after an
+    architecture-review NEEDS_CHANGES verdict on an earlier `events.length`-derived approach --
+    provably disjoint from every real per-phase `seq` (`>= 1`) for the run. Candidate list passed
+    to `assemble_context_packet()` is a minimal smoke-test set (ticket title/summary derived, or
+    empty); no `tools/hybrid_retrieval.py` call is present in the diff. No field added to
+    `RETRIEVAL_EVENT_FIELDS`; no packet variable or its contents is interpolated into any
+    `agent()`-prompt template. Ships with the required `docs/agent-monitoring/schema.md` update
+    (seq field carve-out for `seq <= 0` shadow rows, Provenance-section correction identifying
+    `context_packet_assembler.py` as the one Phase-3 module now wired into
+    `.claude/workflows/*.js`) so the doc-staleness gate does not block this behavior-changing diff.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    .claude/workflows/implement-ticket.js -- new `await bash(...)` statement in the Investigate
+    phase, immediately after `pushEvent('Investigate', 'investigator', 'ok', ...)` and before the
+    Phase 3: Plan comment, gated on `SHADOW_CONTEXT_PACKET_ENABLED`, wrapped in `timeout 10s`,
+    invoking `retrieval_events.wrap_context_packet_assembly(seq=shadow_seq, run_id=run_id,
+    packet_id='shadow-investigate-' + run_id, corpus_generation='shadow', retrieval_version=1,
+    budget_requested=0, included_candidates=[])`. docs/agent-monitoring/schema.md:137 (`seq` field
+    table exception for `seq <= 0` shadow rows) and the Provenance-section split (~line 273-285)
+    calling out `context_packet_assembler.py` as the one wired-in exception with the negative-seq
+    scheme explained.
+  proof_type: regression
+  test_path: tests/tools/test_shadow_packet_call_site.py
+  divergence_note: null
+  support_boundary: >
+    Agent-orchestration/retrieval tooling only -- no simulation behavior, Mechanics Bible chapter,
+    or engine contract governs this module's semantics (same category as INFRA-281 through
+    INFRA-298). No `src/` file touched, no on-disk schema/corpus change to any existing store's
+    write path (module code of `tools/context_packet_assembler.py` and `tools/retrieval_events.py`
+    is untouched -- only a new orchestrator-side call site consuming their existing public API).
+    Off by default (`SHADOW_CONTEXT_PACKET_ENABLED` unset), fully fail-open (timeout + broad
+    except + `|| true`), advisory-only (never read by the agent doing Investigate-phase work,
+    never interpolated into any `agent()`-prompt). This is the first entry in the INFRA-28x/29x
+    retrieval-tooling series to describe an actual real-time workflow-orchestrator wiring rather
+    than a standalone/unwired module -- see the corresponding corrections in INFRA-296 and
+    INFRA-297's support_boundary fields.
+
+- id: INFRA-300
+  text: >
+    generate_retro.py gains compute_shadow_baseline_comparison(events), a new pure function that
+    partitions retrieval-shaped events into a shadow cohort (real TCK-... run_ids) and a baseline
+    cohort (synthetic RETRIEVAL-EVENT-... run_ids) using vocabulary.infer_workflow(run_id) is not
+    None -- the same non-None-vs-None idiom _normalize_phase()/_normalize_agent() already use --
+    then calls the existing compute_retrieval_metrics() (INFRA-298) once per cohort, never
+    reimplementing its cache-rate/noise-ratio/freshness-authority/expansion-rate logic. generate()
+    renders the result as a new, additively-appended "## Shadow vs. Baseline Retrieval Comparison"
+    section, placed after the existing "## Retrieval Quality" section and before "## Notes",
+    gated on the shadow cohort's retrieval_event_count being nonzero -- omitted entirely, not
+    rendered empty, when it is zero, mirroring the existing section's own gate. Comparison data
+    only: renders no phrase from the six approval-gate criteria in docs/plans/
+    agent_infrastructure/context_efficient_agent_retrieval/idea_context_efficient_agent_retrieval_
+    observability.md's "Shadow evaluation and approval gate" section -- that remains a distinct,
+    larger, not-yet-built concept this ticket does not implement.
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: >
+    tools/agent-monitoring/generate_retro.py:682-696 (`def compute_shadow_baseline_comparison()` --
+    new function, partitions by infer_workflow(run_id) is not None, returns {"shadow": ...,
+    "baseline": ...} each shaped identically to compute_retrieval_metrics()'s own return dict).
+    tools/agent-monitoring/generate_retro.py:707 (`generate()` calls
+    compute_shadow_baseline_comparison(events) once, alongside the pre-existing
+    compute_retrieval_metrics(events) call), :992-1074 (new conditionally-rendered
+    "## Shadow vs. Baseline Retrieval Comparison" section, gated on
+    shadow_comparison["shadow"]["retrieval_event_count"] at line 996, omitted entirely when zero,
+    placed after "## Retrieval Quality" (line 920) and before "## Notes" (line 1080)).
+  proof_type: regression
+  test_path: tests/tools/test_generate_retro.py
+  divergence_note: null
+  support_boundary: >
+    Agent-orchestration/retrieval tooling only -- no simulation behavior, Mechanics Bible chapter,
+    or engine contract governs this module's semantics (same category as INFRA-281 through
+    INFRA-299). No `src/` file touched, no on-disk schema/corpus change, no new event-emission or
+    call-site logic -- this is a pure read-only consumer of already-emitted events. Real shadow-
+    cohort volume in the live agent-monitoring/events.jsonl corpus stays at zero while
+    SHADOW_CONTEXT_PACKET_ENABLED remains unset (the current default per INFRA-299) -- the new
+    section only populates against fixture/test data or a future manual invocation until that flag
+    is enabled.

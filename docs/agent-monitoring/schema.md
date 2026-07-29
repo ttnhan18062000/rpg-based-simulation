@@ -134,7 +134,7 @@ One record per agent call within a workflow run. FK: `run_id → runs.run_id`.
 | Field | Type | Nullable | Description |
 |---|---|---|---|
 | `run_id` | string | No | FK to runs.jsonl. |
-| `seq` | int | No | 1-based call order within the run. Monotonically increasing. |
+| `seq` | int | No | 1-based call order within the run. Monotonically increasing. **Exception:** the advisory context-packet shadow-call site (TCK-20260729-SHADOW-PACKET-CALL-SITE, see Provenance note below) emits `seq <= 0` values, deliberately disjoint from this monotonic range — never assume `seq >= 1` when reading `context-packet-wrapper` rows. |
 | `ts` | ISO 8601 | No | UTC timestamp when this event was recorded. Captured by the orchestrator (`bash('date -u +%Y-%m-%dT%H:%M:%SZ')`) immediately before the paired `agent()` call, not self-reported by the agent — see TCK-20260710-STEP0-TS-ORCHESTRATOR-BASH. |
 | `phase` | string | No | Workflow phase this agent call belongs to. |
 | `agent` | string | No | Agent identifier (matches `.claude/agents/{agent}.md` filename). |
@@ -272,8 +272,28 @@ base REQUIRED set enforced by `record_events.py::validate_record()`.
 
 **Provenance (`run_id`/`seq`/`phase`/`agent`) for standalone invocations:** retrieval events are
 emitted from test/manual invocations of the Phase 3 retrieval modules
-(`tools/hybrid_retrieval.py`, `tools/retrieval_cache.py`, `tools/context_packet_assembler.py`),
-none of which are wired into any `.claude/workflows/*.js` file — there is no tracked
+(`tools/hybrid_retrieval.py`, `tools/retrieval_cache.py`), neither of which is wired into
+any `.claude/workflows/*.js` file. The third, `tools/context_packet_assembler.py`, is the one
+exception: `.claude/workflows/implement-ticket.js`'s Investigate phase carries an advisory,
+opt-in shadow-packet call site (gated behind `SHADOW_CONTEXT_PACKET_ENABLED=1`, off by default)
+that passes the real ticket's `tid` as `run_id` instead of the `RETRIEVAL-EVENT-<slug>`
+synthetic prefix described below — see TCK-20260729-SHADOW-PACKET-CALL-SITE. Because this
+wrapper's write path bypasses `implement-ticket.js`'s own JS `events` array entirely (it writes
+directly to `events.jsonl`), its `seq` value is **not** drawn from that file's
+`events.length + 1 + seqOffset` idiom — doing so would silently alias onto whatever the next
+real phase independently computes from the same, unchanged `events.length`. Instead it uses a
+monotonic **negative** counter, `seq = -(1 + prior_shadow_count_for_this_run_id)`, computed by
+scanning `events.jsonl` for prior `context-packet-wrapper` rows matching this `run_id` — provably
+disjoint from the real per-phase range (`>= 1`) for the entire run, and stable across repeated
+Investigate re-runs for the same `run_id`. Once this real-`tid`-attributed event lands,
+`vocabulary.py::infer_workflow()` resolves it to the `implement-ticket` workflow for the first
+time for one of these wrapper-emitted events, and
+`tools/agent-monitoring/validate.py::compute_drift_report()` will show `'Retrieval'` /
+`'context-packet-wrapper'` under 'Non-canonical phase/agent values' for that workflow going
+forward — this is expected and non-gating (`compute_drift_report()` never gates anything), not a
+vocabulary regression to chase.
+
+For every other standalone invocation of the remaining two Phase 3 modules — there is no tracked
 `implement-ticket`/`implement-epic`/`create-tickets`/`simq-audit` run to attach to. Rather than
 reusing a real ticket ID (which would misclassify these synthetic events into that ticket's own
 event stream under `infer_workflow()`) or inventing a synthesized `run-{code}-{timestamp}` value
