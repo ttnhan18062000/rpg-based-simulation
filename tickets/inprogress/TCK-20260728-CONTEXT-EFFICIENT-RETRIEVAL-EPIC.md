@@ -68,6 +68,8 @@ Create a single epic-tier tracking ticket for the whole context-efficient agent 
 - TCK-20260729-RETRIEVAL-EVENT-SCHEMA-EMIT
 - TCK-20260729-RETRIEVAL-RETRO-VIEWS
 - TCK-20260729-RETRIEVAL-EVENT-PARITY-CHECK
+- TCK-20260729-SHADOW-PACKET-CALL-SITE
+- TCK-20260729-SHADOW-BASELINE-COMPARISON
 
 ## Related Docs
 - docs/plans/agent_infrastructure/context_efficient_agent_retrieval/idea_context_efficient_agent_retrieval_observability.md
