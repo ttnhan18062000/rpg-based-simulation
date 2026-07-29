@@ -34,6 +34,19 @@ from validate_frontmatter import (  # noqa: E402
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from vocabulary import WORKFLOW_AGENTS, WORKFLOW_PHASES, infer_workflow  # noqa: E402
 
+# Read-only reference imports for TCK-20260729-RETRIEVAL-RETRO-VIEWS's retrieval-quality views —
+# anti-drift: compute_retrieval_metrics() must never re-literal these values (see
+# test_compute_retrieval_metrics_does_not_reliteral_cache_or_authority_constants).
+from hybrid_retrieval import UNRATED  # noqa: E402
+from retrieval_cache import (  # noqa: E402
+    HIT,
+    MISS,
+    STALE_REJECTED,
+    INDEX_CACHE_CATEGORY,
+    QUERY_CACHE_CATEGORY,
+    PACKET_CACHE_CATEGORY,
+)
+
 RUNS_FILE = Path("agent-monitoring/runs.jsonl")
 EVENTS_FILE = Path("agent-monitoring/events.jsonl")
 RETRO_DIR = Path("agent-monitoring/retro")
@@ -558,6 +571,114 @@ def compute_retro_metrics(runs, events, tickets_root=None) -> dict:
     }
 
 
+def compute_retrieval_metrics(events: list[dict]) -> dict:
+    """Pure, read-only computation over `events` covering TCK-20260729-RETRIEVAL-EVENT-SCHEMA-
+    EMIT's original AC7 proof-of-queryability (cache rates, per-event candidate/selected and
+    selected/cited ratios) plus TCK-20260729-RETRIEVAL-RETRO-VIEWS's four dashboard signals:
+    aggregated noise-indicator ratios, freshness/authority distribution (UNRATED-inclusive), and
+    an unconditional follow-up/expansion rate. Never calls write_lines/write_line or opens any
+    file; operates entirely on its `events` argument (a fixture list in tests, or the real
+    events.jsonl-derived list in `_load_runs_and_events()`'s callers).
+
+    Ordinary workflow events (no `retrieval_event_schema_version` key) are skipped, not crashed
+    on — the same graceful-skip discipline `_is_legacy_event`/`_resolve_status` already use for
+    other events.jsonl schema variance.
+    """
+    retrieval_events = [e for e in events if "retrieval_event_schema_version" in e]
+
+    cache_status_counts_by_level = defaultdict(Counter)
+    for e in retrieval_events:
+        cache_level = e.get("cache_level")
+        cache_status = e.get("cache_status")
+        if cache_level is not None and cache_status is not None:
+            cache_status_counts_by_level[cache_level][cache_status] += 1
+
+    cache_rates = {}
+    for cache_level, counts in cache_status_counts_by_level.items():
+        total = sum(counts.values())
+        cache_rates[cache_level] = {
+            "counts": dict(counts),
+            "total": total,
+            # Zero-division-guarded: total is always >0 here since a Counter only gains an entry
+            # in this loop when it observes at least one (cache_level, cache_status) pair, but the
+            # guard is kept explicit rather than relying on that invariant silently.
+            "rates": {status: count / total for status, count in counts.items()} if total else {},
+        }
+
+    candidate_to_selected_ratios = []
+    selected_to_cited_ratios = []
+    total_candidates = 0
+    total_selected_for_candidates = 0
+    total_selected = 0
+    total_cited = 0
+    authority_distribution = Counter()
+    freshness_distribution = Counter()
+    for e in retrieval_events:
+        candidate_count = e.get("candidate_count")
+        selected_count = e.get("selected_count")
+        if candidate_count is not None and selected_count is not None:
+            ratio = (selected_count / candidate_count) if candidate_count else None
+            candidate_to_selected_ratios.append(
+                {"run_id": e.get("run_id"), "seq": e.get("seq"), "ratio": ratio}
+            )
+            total_candidates += candidate_count
+            total_selected_for_candidates += selected_count
+
+        cited_source_hashes = e.get("cited_source_hashes")
+        if selected_count is not None and cited_source_hashes is not None:
+            ratio = (len(cited_source_hashes) / selected_count) if selected_count else None
+            selected_to_cited_ratios.append(
+                {"run_id": e.get("run_id"), "seq": e.get("seq"), "ratio": ratio}
+            )
+            total_selected += selected_count
+            total_cited += len(cited_source_hashes)
+
+        authority_counts = e.get("authority_counts")
+        if authority_counts:
+            authority_distribution.update(authority_counts)
+
+        freshness_counts = e.get("freshness_counts")
+        if freshness_counts:
+            freshness_distribution.update(freshness_counts)
+
+    candidate_to_selected_aggregate = {
+        "total_candidates": total_candidates,
+        "total_selected": total_selected_for_candidates,
+        "ratio": (total_selected_for_candidates / total_candidates) if total_candidates else None,
+    }
+    selected_to_cited_aggregate = {
+        "total_selected": total_selected,
+        "total_cited": total_cited,
+        "ratio": (total_cited / total_selected) if total_selected else None,
+    }
+
+    # UNCONDITIONAL formula (Resolved Decision 1, plan.md): fraction of retrieval events carrying
+    # expansion_reason/expansion_count at all, not conditioned on adequacy_verdict. Rejected the
+    # conditional-on-adequacy_verdict alternative because none of the 3 shipped wrap_*() functions
+    # ever emit expansion_reason/expansion_count today, making that reading untestable against real
+    # behavior.
+    expansion_count_events = sum(
+        1
+        for e in retrieval_events
+        if e.get("expansion_reason") is not None or e.get("expansion_count") is not None
+    )
+    expansion_rate = (
+        (expansion_count_events / len(retrieval_events)) if retrieval_events else 0.0
+    )
+
+    return {
+        "retrieval_event_count": len(retrieval_events),
+        "cache_rates": cache_rates,
+        "candidate_to_selected_ratios": candidate_to_selected_ratios,
+        "selected_to_cited_ratios": selected_to_cited_ratios,
+        "candidate_to_selected_aggregate": candidate_to_selected_aggregate,
+        "selected_to_cited_aggregate": selected_to_cited_aggregate,
+        "authority_distribution": dict(authority_distribution),
+        "freshness_distribution": dict(freshness_distribution),
+        "expansion_rate": expansion_rate,
+    }
+
+
 def generate(runs, events, label, week_str=None, tickets_root=None):
     """Render `compute_retro_metrics()`'s result to the retro report's Markdown text — the sole
     rendering consumer of that function. Signature/behavior unchanged by the
@@ -565,6 +686,7 @@ def generate(runs, events, label, week_str=None, tickets_root=None):
     byte-identical-output proof this relies on.
     """
     metrics = compute_retro_metrics(runs, events, tickets_root)
+    retrieval_metrics = compute_retrieval_metrics(events)
     rs = metrics["run_summary"]
     gate_counter = Counter(metrics["gate_failure_breakdown"])
     reason_counter = Counter(metrics["reason_code_breakdown"])
@@ -771,6 +893,83 @@ def generate(runs, events, label, week_str=None, tickets_root=None):
                     f"{o['cost_proxy_score']} | {o['median']} | {o['ratio']}x |"
                 )
             lines.append("")
+
+    # Retrieval Quality (TCK-20260729-RETRIEVAL-RETRO-VIEWS): conditionally rendered, mirroring
+    # the Reason Codes/Tag Breakdown/Outliers gating pattern above. Omitted entirely (not rendered
+    # empty) when zero retrieval events are present — the realistic majority case today, since no
+    # Phase 3 module is wired into a real agent run yet.
+    if retrieval_metrics["retrieval_event_count"]:
+        lines.append("## Retrieval Quality")
+        lines.append("")
+        lines.append(
+            "_Retrieval-event volume reflects test/manual invocations only; visible under "
+            "`--all`, not `--days`/`--week`, since these run_ids are deliberately unlinked from "
+            "any `runs.jsonl` row._"
+        )
+        lines.append("")
+
+        lines.append("### Cache Rates by Level")
+        lines.append("")
+        cache_rates = retrieval_metrics["cache_rates"]
+        if cache_rates:
+            lines.append(f"| Cache Level | {HIT} | {MISS} | {STALE_REJECTED} | Total |")
+            lines.append("|---|---|---|---|---|")
+            for cache_level in sorted(cache_rates):
+                row = cache_rates[cache_level]
+                counts = row["counts"]
+                lines.append(
+                    f"| {cache_level} | {counts.get(HIT, 0)} | {counts.get(MISS, 0)} | "
+                    f"{counts.get(STALE_REJECTED, 0)} | {row['total']} |"
+                )
+        else:
+            lines.append("_No cache-level data this period._")
+        lines.append("")
+
+        lines.append("### Noise Indicators")
+        lines.append("")
+        cts_agg = retrieval_metrics["candidate_to_selected_aggregate"]
+        stc_agg = retrieval_metrics["selected_to_cited_aggregate"]
+        cts_ratio = "n/a" if cts_agg["ratio"] is None else f"{cts_agg['ratio']:.2f}"
+        stc_ratio = "n/a" if stc_agg["ratio"] is None else f"{stc_agg['ratio']:.2f}"
+        lines.append("| Signal | Numerator | Denominator | Ratio |")
+        lines.append("|---|---|---|---|")
+        lines.append(
+            f"| Candidate → Selected | {cts_agg['total_selected']} | {cts_agg['total_candidates']} | {cts_ratio} |"
+        )
+        lines.append(
+            f"| Selected → Cited | {stc_agg['total_cited']} | {stc_agg['total_selected']} | {stc_ratio} |"
+        )
+        lines.append("")
+
+        lines.append("### Freshness / Authority Distribution")
+        lines.append("")
+        authority_distribution = retrieval_metrics["authority_distribution"]
+        lines.append("**Authority**")
+        lines.append("")
+        if authority_distribution:
+            lines.append("| Bucket | Count |")
+            lines.append("|---|---|")
+            for bucket in sorted(authority_distribution):
+                lines.append(f"| {bucket} | {authority_distribution[bucket]} |")
+        else:
+            lines.append("_No authority data this period._")
+        lines.append("")
+        freshness_distribution = retrieval_metrics["freshness_distribution"]
+        lines.append("**Freshness**")
+        lines.append("")
+        if freshness_distribution:
+            lines.append("| Bucket | Count |")
+            lines.append("|---|---|")
+            for bucket in sorted(freshness_distribution):
+                lines.append(f"| {bucket} | {freshness_distribution[bucket]} |")
+        else:
+            lines.append("_No freshness data this period._")
+        lines.append("")
+
+        lines.append("### Expansion Rate")
+        lines.append("")
+        lines.append(f"**Expansion rate:** {retrieval_metrics['expansion_rate'] * 100:.1f}%")
+        lines.append("")
 
     # Notes (human-written)
     lines.append("## Notes")

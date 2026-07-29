@@ -10,3 +10,11 @@ torch==2.12.1+cpu
 sentence-transformers==5.6.0
 sqlite-vec==0.1.9
 rank-bm25==0.2.2
+
+# graphify CLI tool (tools/code_test_index.py's data source, `graphify update .`) -- pinned
+# to 0.8.39, the actually-installed version that produced the current graphify-out/graph.json,
+# superseding the 0.6.7 figure evidenced by docs/ai/code_test_index_boundaries_decision.md
+# (stale as of TCK-20260729-DETERMINISTIC-CODE-INDEX; that pin was never installed and is not
+# known to reproduce the current graph). Not a Python import dependency of this project's
+# installable package -- invoked only as a standalone CLI, so it stays out of pyproject.toml.
+graphifyy==0.8.39

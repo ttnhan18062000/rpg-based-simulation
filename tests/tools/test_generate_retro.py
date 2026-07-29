@@ -19,6 +19,7 @@ if str(_MONITORING_TOOLS_DIR) not in sys.path:
 import generate_retro  # noqa: E402
 from generate_retro import (  # noqa: E402
     compute_retro_metrics,
+    compute_retrieval_metrics,
     generate,
     _record_since_cutoff,
     _resolve_status,
@@ -1012,3 +1013,319 @@ def test_normalize_phase_agent_and_flag_outliers_untouched():
         source = inspect.getsource(getattr(generate_retro, name))
         actual_hash = hashlib.sha256(source.encode()).hexdigest()
         assert actual_hash == expected_hash, f"{name}'s source changed unexpectedly"
+
+
+# ---------------------------------------------------------------------------
+# TCK-20260729-RETRIEVAL-EVENT-SCHEMA-EMIT — AC7 proof-of-queryability
+# ---------------------------------------------------------------------------
+
+_ORDINARY_WORKFLOW_EVENT = {
+    "run_id": "TCK-FAKE",
+    "seq": 1,
+    "ts": "2026-07-29T00:00:00Z",
+    "phase": "Implement",
+    "agent": "implementer",
+    "summary": "ordinary workflow event, no retrieval fields",
+    "status": "ok",
+}
+
+
+def _retrieval_event(**overrides):
+    base = {
+        "run_id": "RETRIEVAL-EVENT-test",
+        "seq": 1,
+        "ts": "2026-07-29T00:00:00Z",
+        "phase": "Retrieval",
+        "agent": "retrieval-cache-wrapper",
+        "summary": "fixture retrieval event",
+        "status": "ok",
+        "retrieval_event_schema_version": 1,
+    }
+    base.update(overrides)
+    return base
+
+
+class TestComputeRetrievalMetrics:
+    def test_non_retrieval_events_are_skipped_not_crashed_on(self):
+        metrics = compute_retrieval_metrics([_ORDINARY_WORKFLOW_EVENT])
+        assert metrics["retrieval_event_count"] == 0
+        assert metrics["cache_rates"] == {}
+        assert metrics["candidate_to_selected_ratios"] == []
+        assert metrics["selected_to_cited_ratios"] == []
+
+    def test_mixed_fixture_only_counts_retrieval_shaped_events(self):
+        events = [
+            _ORDINARY_WORKFLOW_EVENT,
+            _retrieval_event(cache_level="retrieval_query_cache", cache_status="hit"),
+            _ORDINARY_WORKFLOW_EVENT,
+        ]
+        metrics = compute_retrieval_metrics(events)
+        assert metrics["retrieval_event_count"] == 1
+
+    def test_cache_hit_miss_stale_rejected_rates_grouped_by_cache_level(self):
+        events = [
+            _retrieval_event(cache_level="retrieval_query_cache", cache_status="hit"),
+            _retrieval_event(cache_level="retrieval_query_cache", cache_status="hit"),
+            _retrieval_event(cache_level="retrieval_query_cache", cache_status="miss"),
+            _retrieval_event(cache_level="retrieval_index_cache", cache_status="stale-rejected"),
+        ]
+        metrics = compute_retrieval_metrics(events)
+
+        query_rates = metrics["cache_rates"]["retrieval_query_cache"]
+        assert query_rates["counts"] == {"hit": 2, "miss": 1}
+        assert query_rates["total"] == 3
+        assert query_rates["rates"]["hit"] == pytest.approx(2 / 3)
+        assert query_rates["rates"]["miss"] == pytest.approx(1 / 3)
+
+        index_rates = metrics["cache_rates"]["retrieval_index_cache"]
+        assert index_rates["counts"] == {"stale-rejected": 1}
+        assert index_rates["total"] == 1
+
+    def test_candidate_to_selected_ratio_computed_correctly(self):
+        events = [_retrieval_event(candidate_count=10, selected_count=4)]
+        metrics = compute_retrieval_metrics(events)
+        assert metrics["candidate_to_selected_ratios"] == [
+            {"run_id": "RETRIEVAL-EVENT-test", "seq": 1, "ratio": pytest.approx(0.4)}
+        ]
+
+    def test_candidate_to_selected_ratio_guards_zero_candidate_count(self):
+        events = [_retrieval_event(candidate_count=0, selected_count=0)]
+        metrics = compute_retrieval_metrics(events)
+        assert metrics["candidate_to_selected_ratios"] == [
+            {"run_id": "RETRIEVAL-EVENT-test", "seq": 1, "ratio": None}
+        ]
+
+    def test_selected_to_cited_ratio_computed_correctly(self):
+        events = [_retrieval_event(selected_count=4, cited_source_hashes=["a" * 64, "b" * 64])]
+        metrics = compute_retrieval_metrics(events)
+        assert metrics["selected_to_cited_ratios"] == [
+            {"run_id": "RETRIEVAL-EVENT-test", "seq": 1, "ratio": pytest.approx(0.5)}
+        ]
+
+    def test_selected_to_cited_ratio_guards_zero_selected_count(self):
+        events = [_retrieval_event(selected_count=0, cited_source_hashes=[])]
+        metrics = compute_retrieval_metrics(events)
+        assert metrics["selected_to_cited_ratios"] == [
+            {"run_id": "RETRIEVAL-EVENT-test", "seq": 1, "ratio": None}
+        ]
+
+    def test_cache_rates_already_covers_hit_miss_stale_rejected_by_level(self):
+        from retrieval_cache import (
+            HIT, MISS, STALE_REJECTED,
+            INDEX_CACHE_CATEGORY, QUERY_CACHE_CATEGORY, PACKET_CACHE_CATEGORY,
+        )
+
+        events = [
+            _retrieval_event(cache_level=INDEX_CACHE_CATEGORY, cache_status=HIT),
+            _retrieval_event(cache_level=INDEX_CACHE_CATEGORY, cache_status=MISS),
+            _retrieval_event(cache_level=INDEX_CACHE_CATEGORY, cache_status=STALE_REJECTED),
+            _retrieval_event(cache_level=QUERY_CACHE_CATEGORY, cache_status=HIT),
+            _retrieval_event(cache_level=QUERY_CACHE_CATEGORY, cache_status=HIT),
+            _retrieval_event(cache_level=PACKET_CACHE_CATEGORY, cache_status=STALE_REJECTED),
+        ]
+        metrics = compute_retrieval_metrics(events)
+        rates = metrics["cache_rates"]
+
+        assert rates[INDEX_CACHE_CATEGORY]["counts"] == {HIT: 1, MISS: 1, STALE_REJECTED: 1}
+        assert rates[INDEX_CACHE_CATEGORY]["total"] == 3
+        assert rates[QUERY_CACHE_CATEGORY]["counts"] == {HIT: 2}
+        assert rates[QUERY_CACHE_CATEGORY]["rates"][HIT] == pytest.approx(1.0)
+        assert rates[PACKET_CACHE_CATEGORY]["counts"] == {STALE_REJECTED: 1}
+
+    def test_function_is_read_only_no_write_call_or_file_open_in_write_mode(self):
+        import inspect
+
+        source = inspect.getsource(compute_retrieval_metrics)
+        assert "write_lines(" not in source
+        assert "write_line(" not in source
+        assert '"w")' not in source and "'w')" not in source
+        assert '"a")' not in source and "'a')" not in source
+        assert "EVENTS_FILE" not in source
+        assert "RUNS_FILE" not in source
+        assert "load_jsonl" not in source
+        assert "DEFAULT_DB_PATH" not in source
+
+    def test_compute_retrieval_metrics_does_not_reliteral_cache_or_authority_constants(self):
+        import inspect
+
+        source = inspect.getsource(compute_retrieval_metrics)
+        for literal in (
+            '"hit"', "'hit'",
+            '"miss"', "'miss'",
+            '"stale-rejected"', "'stale-rejected'",
+            '"retrieval_index_cache"', "'retrieval_index_cache'",
+            '"retrieval_query_cache"', "'retrieval_query_cache'",
+            '"retrieval_packet_cache"', "'retrieval_packet_cache'",
+        ):
+            assert literal not in source, f"{literal} re-literaled in compute_retrieval_metrics"
+
+        module_source = inspect.getsource(generate_retro)
+        assert "from retrieval_cache import" in module_source
+        for name in (
+            "HIT", "MISS", "STALE_REJECTED",
+            "INDEX_CACHE_CATEGORY", "QUERY_CACHE_CATEGORY", "PACKET_CACHE_CATEGORY",
+        ):
+            assert name in module_source
+        assert "from hybrid_retrieval import UNRATED" in module_source
+
+    def test_candidate_to_selected_and_selected_to_cited_aggregate_ratio(self):
+        events = [
+            _retrieval_event(candidate_count=10, selected_count=4, seq=1),
+            _retrieval_event(candidate_count=0, selected_count=0, seq=2),
+            _retrieval_event(selected_count=4, cited_source_hashes=["a" * 64, "b" * 64], seq=3),
+            _retrieval_event(selected_count=0, cited_source_hashes=[], seq=4),
+        ]
+        metrics = compute_retrieval_metrics(events)
+
+        cts = metrics["candidate_to_selected_aggregate"]
+        assert cts["total_candidates"] == 10
+        assert cts["total_selected"] == 4
+        assert cts["ratio"] == pytest.approx(0.4)
+
+        stc = metrics["selected_to_cited_aggregate"]
+        assert stc["total_selected"] == 4
+        assert stc["total_cited"] == 2
+        assert stc["ratio"] == pytest.approx(0.5)
+
+    def test_candidate_to_selected_aggregate_ratio_is_none_when_all_candidate_counts_zero(self):
+        events = [
+            _retrieval_event(candidate_count=0, selected_count=0, seq=1),
+            _retrieval_event(candidate_count=0, selected_count=0, seq=2),
+        ]
+        metrics = compute_retrieval_metrics(events)
+
+        assert metrics["candidate_to_selected_aggregate"] == {
+            "total_candidates": 0, "total_selected": 0, "ratio": None,
+        }
+        assert metrics["selected_to_cited_aggregate"] == {
+            "total_selected": 0, "total_cited": 0, "ratio": None,
+        }
+
+    def test_freshness_authority_distribution_includes_unrated_sentinel_bucket(self):
+        from hybrid_retrieval import UNRATED
+
+        events = [
+            _retrieval_event(
+                authority_counts={"authoritative": 3, UNRATED: 2},
+                freshness_counts={"fresh": 1, UNRATED: 4},
+            ),
+            _retrieval_event(
+                authority_counts={"authoritative": 1, UNRATED: 1},
+                freshness_counts={"fresh": 2},
+            ),
+        ]
+        metrics = compute_retrieval_metrics(events)
+
+        assert metrics["authority_distribution"] == {"authoritative": 4, UNRATED: 3}
+        assert metrics["freshness_distribution"] == {"fresh": 3, UNRATED: 4}
+
+    def test_freshness_authority_distribution_empty_when_no_counts_present(self):
+        events = [_retrieval_event(cache_level="retrieval_query_cache", cache_status="hit")]
+        metrics = compute_retrieval_metrics(events)
+
+        assert metrics["authority_distribution"] == {}
+        assert metrics["freshness_distribution"] == {}
+
+    def test_expansion_rate_computed_from_adequacy_verdict_and_expansion_fields(self):
+        # Formula is UNCONDITIONAL (plan.md Resolved Decision 1): fraction of events carrying
+        # expansion_reason/expansion_count at all, regardless of adequacy_verdict. Of 4 events,
+        # 2 carry an expansion field -> 0.5.
+        events = [
+            _retrieval_event(seq=1, adequacy_verdict="sufficient"),
+            _retrieval_event(seq=2, adequacy_verdict="insufficient", expansion_reason="low_recall"),
+            _retrieval_event(seq=3, adequacy_verdict="noisy", expansion_count=2),
+            _retrieval_event(seq=4, adequacy_verdict="noisy"),
+        ]
+        metrics = compute_retrieval_metrics(events)
+
+        assert metrics["expansion_rate"] == pytest.approx(0.5)
+
+    def test_expansion_rate_zero_when_no_events_carry_expansion_fields(self):
+        events = [
+            _retrieval_event(seq=1, adequacy_verdict="sufficient"),
+            _retrieval_event(seq=2, adequacy_verdict="insufficient"),
+        ]
+        metrics = compute_retrieval_metrics(events)
+
+        assert metrics["expansion_rate"] == 0.0
+
+    def test_expansion_rate_zero_when_no_retrieval_events_at_all(self):
+        metrics = compute_retrieval_metrics([_ORDINARY_WORKFLOW_EVENT])
+        assert metrics["expansion_rate"] == 0.0
+
+
+# ---------------------------------------------------------------------------
+# TCK-20260729-RETRIEVAL-RETRO-VIEWS — "## Retrieval Quality" rendered section
+# ---------------------------------------------------------------------------
+
+def test_retrieval_quality_section_omitted_when_no_retrieval_events():
+    runs = [_BASE_RUN]
+    events = [_ORDINARY_WORKFLOW_EVENT]
+
+    report = generate(runs, events, "test-label")
+
+    assert "## Retrieval Quality" not in report
+
+
+def test_retrieval_quality_section_rendered_with_fixture_retrieval_events():
+    from retrieval_cache import HIT, QUERY_CACHE_CATEGORY
+    from hybrid_retrieval import UNRATED
+
+    runs = [_BASE_RUN]
+    events = [
+        _ORDINARY_WORKFLOW_EVENT,
+        _retrieval_event(
+            cache_level=QUERY_CACHE_CATEGORY,
+            cache_status=HIT,
+            candidate_count=10,
+            selected_count=4,
+            cited_source_hashes=["a" * 64],
+            authority_counts={"authoritative": 1, UNRATED: 1},
+            freshness_counts={"fresh": 1},
+            adequacy_verdict="sufficient",
+        ),
+    ]
+
+    report = generate(runs, events, "test-label")
+
+    assert "## Retrieval Quality" in report
+    assert "--all" in report
+    assert "### Cache Rates by Level" in report
+    assert QUERY_CACHE_CATEGORY in report
+    assert "### Noise Indicators" in report
+    assert "### Freshness / Authority Distribution" in report
+    assert UNRATED in report
+    assert "### Expansion Rate" in report
+    assert "0.0%" in report
+
+
+def test_retrieval_quality_section_placement_does_not_disturb_existing_sections():
+    runs = [
+        dict(_BASE_RUN, run_id=f"TCK-STD-{i}", tier="standard", duration_s=1000)
+        for i in range(4)
+    ] + [dict(_BASE_RUN, run_id="TCK-STD-OUTLIER", tier="standard", duration_s=9000)]
+    events = [_retrieval_event()]
+
+    report = generate(runs, events, "test-label")
+
+    assert "## Outliers" in report
+    assert "## Retrieval Quality" in report
+    assert "## Notes" in report
+
+    outliers_idx = report.index("## Outliers")
+    retrieval_idx = report.index("## Retrieval Quality")
+    notes_idx = report.index("## Notes")
+
+    assert outliers_idx < retrieval_idx < notes_idx
+
+
+def test_no_new_frontend_ui_file_introduced_by_this_ticket():
+    import inspect
+
+    for fn in (compute_retrieval_metrics, generate):
+        source = inspect.getsource(fn)
+        assert "dashboard-frontend/src/" not in source
+        assert "experiments/agent_ops_dashboard/" not in source
+        assert "import react" not in source.lower()
+        assert ".tsx" not in source
+        assert ".jsx" not in source

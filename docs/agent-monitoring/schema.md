@@ -243,6 +243,53 @@ Discover/Report phase-tagged events are emitted today (see `.claude/workflows/im
 
 `Recalibrate`, `Classify Drift`, `Update Anchors`, `Sync Docs`, `Parity Check`, `Verify`, `Report`.
 
+### Retrieval-event field family (additive)
+
+Introduced by `TCK-20260729-RETRIEVAL-EVENT-SCHEMA-EMIT`. `tools/retrieval_events.py` is the
+single source of truth for the field list (`RETRIEVAL_EVENT_FIELDS`) — the table below is
+illustrative documentation, same convention as `vocabulary.py` above. All fields are optional
+additions on top of the 7 base fields already documented above; they never replace or narrow the
+base REQUIRED set enforced by `record_events.py::validate_record()`.
+
+| Field | Type | Description |
+|---|---|---|
+| `retrieval_event_schema_version` | int | Version of this additive field family itself, starting at `1`. Distinct from `retrieval_version` below — the two are unrelated and must not be conflated. |
+| `retrieval_version` | int | The retrieval/cache-key logic's own version number, sourced from `tools/retrieval_cache.py`'s `RETRIEVAL_VERSION` constant (manually bumped on breaking changes to the cache's key/invalidation logic) or a `ContextPacket`'s own `retrieval_version` field. Not to be confused with `retrieval_event_schema_version` above, which versions this monitoring-event shape itself, not the retrieval logic. |
+| `corpus_generation` | string | Which corpus/index generation this retrieval ran against. |
+| `cache_level` | string | `index` \| `query` \| `packet` — which of the 3 cache levels (`docs/observability/retrieval_retention_redaction_policy.md`) this event concerns, if any. |
+| `cache_status` | string | `hit` \| `miss` \| `stale-rejected`, taken verbatim from `tools/retrieval_cache.py`'s own status constants. |
+| `latency_ms` | float | Wall-clock time of the wrapped call, measured by the wrapper via `time.perf_counter()`. |
+| `candidate_count` | int | Upper-bound approximation of the pre-fusion/pre-selection candidate pool size. |
+| `selected_count` | int | Number of results actually selected/returned. |
+| `source_kind_counts` | object | Counts of selected results by `kind` (`doc`, `ticket`, `code_symbol`, etc.). |
+| `authority_counts` | object | Counts of selected results by `authority` value (including the `unrated` sentinel from `tools/hybrid_retrieval.py`). |
+| `freshness_counts` | object | Counts of selected results by `freshness` value (including `unrated`). |
+| `exclusion_reason_counts` | object | Counts of excluded candidates by reason. |
+| `cited_source_hashes` | array of string | Content hashes of cited sources — never raw content, per the retention/redaction policy's PROHIBITED list. |
+| `adequacy_verdict` | string | `sufficient` \| `insufficient` \| `noisy` — a deliberately simple, documented-placeholder heuristic (`tools/retrieval_events.py::compute_adequacy_verdict()`), not a claim of real quality assessment. |
+| `expansion_reason` / `expansion_count` | string / int | Present only if a follow-up expansion occurred. |
+| `scenario` / `risk_tier` | string | Optional, caller-supplied classification fields. |
+
+**Provenance (`run_id`/`seq`/`phase`/`agent`) for standalone invocations:** retrieval events are
+emitted from test/manual invocations of the Phase 3 retrieval modules
+(`tools/hybrid_retrieval.py`, `tools/retrieval_cache.py`, `tools/context_packet_assembler.py`),
+none of which are wired into any `.claude/workflows/*.js` file — there is no tracked
+`implement-ticket`/`implement-epic`/`create-tickets`/`simq-audit` run to attach to. Rather than
+reusing a real ticket ID (which would misclassify these synthetic events into that ticket's own
+event stream under `infer_workflow()`) or inventing a synthesized `run-{code}-{timestamp}` value
+(explicitly forbidden — see "Manual/ad hoc run_id convention" below), these events mint a new,
+self-describing `run_id` prefix: `RETRIEVAL-EVENT-<slug>`. This prefix matches none of
+`infer_workflow()`'s 4 known prefixes (`SIMQ-AUDIT-`, `EPIC-`/`FOLDER-`, `CREATE-TICKETS-`,
+`TCK-`), so `infer_workflow()` returns `None` for it — sanctioned by that function's own
+documented "future 5th workflow" contract — and `warn_vocabulary_drift()` is consequently a
+genuine no-op for these events' `phase`/`agent` literals (`Retrieval` /
+`hybrid-retrieval-wrapper`, `retrieval-cache-wrapper`, `context-packet-wrapper`), not a
+suppressed real warning. `seq` is a small caller-supplied literal, never a timestamp/hash.
+Because these `run_id`s have no matching `runs.jsonl` row, they are naturally excluded from every
+existing run-scoped retro/dashboard view (`generate_retro.py` filters events to `run_id in
+{r["run_id"] for r in runs}`) — they do not corrupt or interleave into any real ticket's event
+stream.
+
 ---
 
 ## `agent-monitoring/tools.jsonl`

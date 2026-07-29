@@ -65,6 +65,9 @@ Create a single epic-tier tracking ticket for the whole context-efficient agent 
 - TCK-20260729-DETERMINISTIC-CODE-INDEX
 - TCK-20260729-RETRIEVAL-CACHE-LEVELS
 - TCK-20260729-CONTEXT-PACKET-ASSEMBLY
+- TCK-20260729-RETRIEVAL-EVENT-SCHEMA-EMIT
+- TCK-20260729-RETRIEVAL-RETRO-VIEWS
+- TCK-20260729-RETRIEVAL-EVENT-PARITY-CHECK
 
 ## Related Docs
 - docs/plans/agent_infrastructure/context_efficient_agent_retrieval/idea_context_efficient_agent_retrieval_observability.md
@@ -140,15 +143,42 @@ None.
 identity, shared monitoring writer, stable replay/live boundary) was directly
 confirmed satisfied by `TCK-20260728-PHASE0-PREREQ-CONFIRMATION`.
 
+**2026-07-29 — Phase 2 batch complete.** All 4 decision-doc child tickets
+(`TCK-20260728-CONTEXT-PACKET-SCHEMA`, `TCK-20260728-CODE-TEST-INDEX-BOUNDARIES`,
+`TCK-20260728-DEFAULT-PACKET-CRITERIA`, `TCK-20260728-RETRIEVAL-RETENTION-REDACTION`)
+are `DONE`, resolving Open Decisions 1-4 (see Assumptions/Open Questions above).
+
+**2026-07-29 — Phase 3 batch complete.** All 4 code-producing child tickets
+(`TCK-20260729-DETERMINISTIC-CODE-INDEX`, `TCK-20260729-HYBRID-RETRIEVAL-FUSION`,
+`TCK-20260729-RETRIEVAL-CACHE-LEVELS`, `TCK-20260729-CONTEXT-PACKET-ASSEMBLY`) are
+`DONE` — standalone, read-only hybrid retrieval, code/test index, 3-level SQLite
+cache, and ContextPacket assembler, none wired into any `.claude/workflows/*.js`
+file per this phase's "no mandatory invocation" constraint.
+
+**2026-07-29 — Phase 4 batch complete.** All 3 child tickets
+(`TCK-20260729-RETRIEVAL-EVENT-SCHEMA-EMIT`, `TCK-20260729-RETRIEVAL-EVENT-PARITY-CHECK`,
+`TCK-20260729-RETRIEVAL-RETRO-VIEWS`) are `DONE` — a new versioned, `run_id`-scoped
+retrieval-event field family wired through the existing monitoring writer
+(`tools/retrieval_events.py`), a structural (not live) provider-parity check for that
+field shape, and real dashboard/retro views (cache rates, noise ratios, freshness/
+authority distribution, expansion rate) rendered into `generate_retro.py`'s report
+output for the first time. Standalone-invocation provenance uses a new
+`RETRIEVAL-EVENT-<slug>` `run_id` prefix deliberately unrecognized by
+`vocabulary.py::infer_workflow()`, so these events never interleave into any real
+ticket's event stream and are visible only under `--all` (never `--days`/`--week`).
+Nothing in this phase was wired into any `.claude/workflows/*.js` file or made to
+fire automatically during real agent workflow runs, per this phase's own scope
+constraint.
+
 This epic remains **open**, not closed — per its own Scope and `SEQUENCE.md`, it
-deliberately covers only Phase 0-1 of the source doc's full 7-phase Sequenced Future
-Epic; Phase 2 onward (retrieval contract, cache implementation, observability events,
-shadow packets, workflow adoption) is intentionally not yet ticketed, and all 6 Open
-Decisions in Assumptions/Open Questions remain unresolved. Do not mark this ticket
-DONE or move it to `tickets/done/` until a future ticketing pass scopes and closes
-the remaining phases (or a deliberate decision is made to stop pursuing them, in
-which case this ticket should instead move to `tickets/backlogs/` per
-`docs/ai/ticket-lifecycle.md`'s backlog convention — not silently closed as done).
+deliberately covers only Phase 0-4 of the source doc's full 7-phase Sequenced Future
+Epic so far; Phase 5 onward (shadow context packets, selective workflow adoption,
+continuous calibration) is intentionally not yet ticketed, and Open Decisions 5-6 in
+Assumptions/Open Questions remain unresolved. Do not mark this ticket DONE or move it
+to `tickets/done/` until a future ticketing pass scopes and closes the remaining
+phases (or a deliberate decision is made to stop pursuing them, in which case this
+ticket should instead move to `tickets/backlogs/` per `docs/ai/ticket-lifecycle.md`'s
+backlog convention — not silently closed as done).
 
 ## Test Summary
 

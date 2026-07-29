@@ -5964,3 +5964,305 @@
     (`_load_runs_and_events`, `load_jsonl`, `_resolve_status`, `_is_gate_fail`), legacy_reader.py
     (`classify_provenance`), and manifest.py (`_assert_safe_output_path`); never modifies any of
     those files, never writes into `agent-monitoring/` or `agent-monitoring/retro/`.
+- id: INFRA-293
+  text: >
+    New deterministic code/test symbol index over graphify-out/graph.json --
+    TCK-20260729-DETERMINISTIC-CODE-INDEX. Corrects the Phase 2 decision doc's
+    (docs/ai/code_test_index_boundaries_decision.md) per-relation-type claim that all Part A
+    relation types carry confidence_score=1.0: investigation proved this false at the per-edge
+    level on live graph.json (`uses`=100% INFERRED, `calls`=39.0% INFERRED), so the index admits
+    an edge only if BOTH its relation is in the Part A allowlist AND its own confidence_score
+    field equals 1.0, never relation-type membership alone and never the separate `confidence`
+    string label (proven to disagree with confidence_score on 5 real `inherits` edges). Follows
+    the INFRA-281 through INFRA-292 agent-tooling-infrastructure precedent for ledgering this
+    class of code-producing tooling change.
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: >
+    tools/code_test_index.py:58-77 (`PART_A_ALLOWLIST`, the decision doc's 14-relation Part A
+    table plus `method`/`inherits`, deliberately excluding `references`/`re_exports`), :90-93
+    (`def iter_admitted_edges()` -- the per-edge admission filter, `edge["relation"] in
+    PART_A_ALLOWLIST and edge.get("confidence_score") == 1.0`; never reads `edge["confidence"]`),
+    :171-197 (`def build_records()` -- module/symbol/docstring/owned_component/associated_tests
+    per record, sorted by id for deterministic ordering), :122-155 (`def _extract_docstring()` --
+    real `ast.parse()` of the source file named in `source_file`, falling back to the
+    `DOCSTRING_GAP` sentinel, never `None`/`""`), :158-168 (`def
+    _associated_tests_for_module()` -- glob-based `src/<module>/` -> `tests/unit/<module>/`
+    mapping, falling back to `ASSOCIATED_TESTS_GAP`), :199-210 (`def write_index()` / `def
+    build_index()` -- `json.dump(..., sort_keys=True, ensure_ascii=True, indent=2)`, no
+    wall-clock/random fields, proving byte-identical rebuild from a frozen graph.json), :213-255
+    (`def _build_adjacency()` / `def query_by_path()` -- bounded-hop (default 2) neighbor query
+    by changed `src/` path, with `architectural_traversal=True` as the only opt-in path to a full
+    community). requirements-knowledge.txt (`graphifyy==0.8.39` pin, the actually-installed
+    version that produced the current graph.json, superseding the decision doc's stale 0.6.7
+    evidence).
+  proof_type: regression
+  test_path: tests/tools/test_code_test_index.py
+  divergence_note: null
+  support_boundary: >
+    Agent-orchestration/monitoring-pipeline tooling only -- no simulation behavior, Mechanics
+    Bible chapter, or engine contract governs this index's semantics (same category as
+    INFRA-281 through INFRA-292). No `src/` file touched, no on-disk schema change to any
+    existing store, strictly read-only over `graphify-out/graph.json` -- never mutates it, never
+    writes into `tools/knowledge_search.py`'s corpus, and is not wired into any
+    `.claude/workflows/*.js` file or existing pipeline/gate; standalone and manually invocable
+    only via its own `build`/`query` CLI subcommands.
+
+- id: INFRA-294
+  text: >
+    New reciprocal-rank-fusion (RRF) module over the existing dense (embeddings) and lexical
+    (BM25) knowledge indexes -- TCK-20260729-HYBRID-RETRIEVAL-FUSION. Fixes a confirmed live bug
+    at both `tools/knowledge_search.py::cmd_query()`'s hybrid branch and
+    `tools/search_mcp.py::_run_search()`: BM25 scores were only ever looked up for rows that had
+    already survived the dense-channel ANN's bounded candidate cut, so a high-BM25,
+    low-semantic-similarity exact match was structurally unreachable -- silently dropped from
+    every agent's `search_docs` MCP call. The fix independently retrieves a bounded top-N from
+    each channel, unions by doc_id, and fuses via the literal RRF formula (score = sum of
+    1/(k+rank)), replacing the old linear-weighted `_hybrid_score()` formula for the hybrid path
+    only (`_hybrid_score()` itself is untouched, still serving `--mode vector`/`--mode keyword`
+    and `tools/search_server.py`, deliberately out of this ticket's scope). Metadata filtering
+    (`authority`/`freshness`, resolved via a query-time join against `docs/REGISTRY.yaml`)
+    excludes non-matching candidates from each channel's ranked list before fusion, not after.
+    Follows the INFRA-281 through INFRA-293 agent-tooling-infrastructure precedent for ledgering
+    this class of code-producing tooling change.
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: >
+    tools/hybrid_retrieval.py:59-76 (`def reciprocal_rank_fusion()` -- literal
+    `score = sum(1/(k+rank))` per channel, union over all doc_ids, deliberately distinct in name
+    and signature from `tools/eval_search.py::_reciprocal_rank()`, an MRR@10 building block over a
+    single ranked list), :104-120 (`def resolve_metadata()` -- query-time join against
+    `docs/REGISTRY.yaml`, resolving to the `UNRATED` ("unrated") sentinel for any `knowledge_docs`
+    row with no registry entry, never a fabricated `P2`/`historical`-looking default), :127-150
+    (`def filter_candidates()` -- excludes non-matching doc_ids from each channel's ranked list
+    before it ever reaches `reciprocal_rank_fusion()`, not a post-hoc down-rank), :164-183 (`class
+    HybridResult` -- the designed, stable return shape), :193-210 (`def _dense_candidates()` --
+    the sole ANN-query seam, parameterized on `dense_candidate_k`), :224-317 (`def
+    hybrid_fuse_and_filter()` -- the orchestration: independent bounded dense + lexical retrieval,
+    union, pre-fusion filter, RRF fusion, deterministic tie-break by doc_id on equal score).
+    tools/knowledge_search.py's `cmd_query()` hybrid branch and tools/search_mcp.py's
+    `_run_search()` both route through `hybrid_fuse_and_filter()`; their `--mode vector`/`--mode
+    keyword` (`knowledge_search.py`) and `section` post-filter (`search_mcp.py`) code paths are
+    byte-for-byte unchanged.
+  proof_type: regression
+  test_path: tests/tools/test_hybrid_retrieval.py
+  divergence_note: null
+  support_boundary: >
+    Agent-orchestration/retrieval tooling only -- no simulation behavior, Mechanics Bible
+    chapter, or engine contract governs this module's semantics (same category as INFRA-281
+    through INFRA-293). No `src/` file touched, no on-disk schema change to
+    `knowledge-index/knowledge.db` or `bm25.pkl` -- reads the *existing* two indexes, not a new
+    corpus source. `tools/search_server.py` shares the identical pre-fix bug pattern but is
+    deliberately out of this ticket's scope, left unfixed as a known, named remaining gap, not
+    silently patched or silently ignored.
+
+- id: INFRA-295
+  text: >
+    New 3-level SQLite retrieval cache -- TCK-20260729-RETRIEVAL-CACHE-LEVELS -- implementing
+    docs/observability/retrieval_retention_redaction_policy.md's Decision C category names
+    (retrieval_index_cache / retrieval_query_cache / retrieval_packet_cache) and MAY-Contain /
+    PROHIBITED field list over three independently-invalidatable tables. Embedding/index cache
+    keys on content hash + embedding/chunking version, recomputing (miss) and evicting stale
+    same-hash rows on either version change. Query-result cache keys on normalized query +
+    filters + corpus_generation + retrieval_version, stale-rejecting (distinct reason codes per
+    changed field) rather than silently missing when corpus_generation or retrieval_version
+    changes under an otherwise-identical query. Context-packet cache keys on a packet key hash
+    and invalidates on any single cited-source hash mismatch, corpus_generation change, or
+    policy_version change -- operating on raw fields only, since `ContextPacket` has no code
+    class yet (context_packet_contract.md §4). `corpus_generation` is a read-only proxy derived
+    from `knowledge-index/manifest.json`'s existing `built_at` field (never a new field written
+    into `knowledge_search.py`); `retrieval_version` is a new module-owned constant
+    (`RETRIEVAL_VERSION = 1`), manually bumped on breaking key/invalidation changes. A shared
+    `_validate_may_list_kwargs()` guard wraps all three write paths, raising `ValueError` on any
+    field outside the `MAY_LIST_COLUMNS` allowlist -- no raw prompt/chunk/source text is ever
+    stored. Owns an isolated `knowledge-index/retrieval_cache.db` file, distinct from
+    `knowledge-index/knowledge.db`, specifically because `knowledge_search.py`'s `cmd_build()`
+    and `cmd_build_incremental()` unconditionally `unlink()` and rewrite `knowledge.db` on every
+    rebuild -- sharing that file would silently destroy every cached row on every index rebuild.
+    Each table also carries a `created_at` column and a manual, non-hot-path
+    `prune --older-than-days N [--table {index,query,packet,all}]` CLI subcommand, added in a
+    plan revision after an architecture-review `NEEDS_CHANGES` finding that the original design
+    left every row with no lifecycle path at all (a Durable State Rule violation) -- `prune` is
+    never called by any `check_*_cache`/`write_*_cache` function; hash/version mismatch remains
+    the sole primary invalidation signal.
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: >
+    tools/retrieval_cache.py:53 (`CACHE_DB_PATH` -- isolated `knowledge-index/retrieval_cache.db`
+    file), :70-88 (`MAY_LIST_COLUMNS` -- the exact allowlist of columns the three tables carry,
+    including `created_at` on the same footing as `reason_code`/`cache_status`), :108-151
+    (`_init_schema()` -- `CREATE TABLE IF NOT EXISTS` for `retrieval_index_cache_rows` /
+    `retrieval_query_cache_rows` / `retrieval_packet_cache_rows`, each with a `created_at REAL
+    NOT NULL` column, never `DROP TABLE`), :155-169 (`_validate_may_list_kwargs()` -- the single
+    shared MAY-list enforcement point wrapping all three write paths, raises `ValueError` on any
+    prohibited field), :183-192 (`_corpus_generation()` -- read-only `manifest.json` `built_at`
+    proxy, `_NO_MANIFEST` sentinel on absence), :204-259 (`check_index_cache()` /
+    `write_index_cache()` -- AC1 hit/miss + same-hash stale-row eviction on version change),
+    :266-328 (`check_query_cache()` / `write_query_cache()` -- AC2 hit/miss/stale-rejected with
+    `corpus_generation_mismatch`/`retrieval_version_mismatch` reason codes), :335-403
+    (`check_packet_cache()` / `write_packet_cache()` -- AC3 hit/stale-rejected on
+    `cited_hash_mismatch`/`corpus_generation_mismatch`/`policy_version_mismatch`, raw fields
+    only, no `ContextPacket` import), :406-433 (`prune()` -- manual, operator-invoked,
+    `created_at`-threshold deletion across the three tables; not called by any
+    `check_*`/`write_*` function above), :435-531 (CLI: `stats` / `check-index` / `check-query`
+    / `check-packet` / `prune` subcommands, mirroring `tools/hybrid_retrieval.py`'s and
+    `tools/knowledge_search.py`'s existing CLI shape).
+  proof_type: regression
+  test_path: tests/tools/test_retrieval_cache.py
+  divergence_note: null
+  support_boundary: >
+    Agent-orchestration/retrieval tooling only -- no simulation behavior, Mechanics Bible
+    chapter, or engine contract governs this module's semantics (same category as INFRA-281
+    through INFRA-294). No `src/` file touched; `knowledge-index/knowledge.db` never opened or
+    modified by this module -- a separate `knowledge-index/retrieval_cache.db` file is used
+    specifically to avoid `knowledge_search.py`'s unconditional rebuild-time `unlink()` of
+    `knowledge.db`.
+
+- id: INFRA-296
+  text: >
+    New ContextPacket assembler -- TCK-20260729-CONTEXT-PACKET-ASSEMBLY -- assembling a real
+    `ContextPacket` (docs/engine/contracts/context_packet_contract.md §2) from three
+    candidate-producing sources: `tools/hybrid_retrieval.py`'s `HybridResult` list (docs,
+    tickets, investigations, working-log rows, REGISTRY-backed authority/freshness passthrough
+    plus a `last_verified` lookup), `tools/code_test_index.py`'s `build_records()` output (code
+    symbols, required as a third input source since `HybridResult.kind` can never be
+    `code_symbol`), and hand-built `parity_ledger_entry`-shaped fixture dicts (Decision A's
+    parity branch -- fixture-only, no live `docs/parity_ledger/*.yaml`-scanning ingestion
+    pipeline is built). All three shapes normalize into a common internal `Candidate` dataclass
+    that structurally cannot carry raw excerpt text (only a pre-computed sha256 hash), then
+    `included[]`/`excluded_summary[]` entries are built with exactly the contract's 10/4 fields.
+    Implements Decision A's per-kind authority/freshness rules (`code_symbol`/`test`/
+    `graphify_node`/in-progress-ticket-body kinds get the `unrated` sentinel imported from
+    `hybrid_retrieval.UNRATED`, never re-literaled; `parity_ledger_entry` uses its own
+    `priority`/`status` fields verbatim, never coerced into REGISTRY's enum) and Decision B's
+    include-both-and-rank conflict resolution (explicit caller-supplied `subject_key` grouping,
+    authority-then-`last_verified` two-pass stable sort, missing `last_verified` sorts last, the
+    loser's `inclusion_reason` names the winner's `source_id` as `superseded-by:<source_id>`).
+    `expansion_policy` is stubbed as a plain marker string citing Open Decisions 5/6, never
+    invented escalation semantics. Never wired into any `.claude/workflows/*.js` file, and does
+    not implement C1's fusion logic or C3's cache logic -- consumes their output only.
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: >
+    tools/context_packet_assembler.py:53-70 (`Candidate` -- no raw-text field of any kind, the
+    structural AC4 guarantee), :73-82 (`ContextPacket` -- the contract's exact top-level field
+    set), :84-95 (`_hash_content()` -- sha256 over raw text or `json.dumps(..., sort_keys=True)`
+    for structured records, matching `retrieval_cache.py`'s hash convention inline), :98-122
+    (`unrated_candidate()` -- the shared kind-parametric `unrated` sentinel builder, AC1), :125-
+    141 (`candidate_from_code_index_record()` -- `code_test_index.py` record adapter, AC1),
+    :144-168 (`candidate_from_hybrid_result()` -- REGISTRY-backed passthrough + `last_verified`
+    lookup), :172-202 (`_resolve_subject_conflicts()` -- Decision B's group/rank/tie-break, AC2),
+    :205-227 (`candidate_from_parity_ledger_fixture()` -- Decision A's parity branch, own
+    priority/status verbatim, Scope item 2), :231-291 (`build_included_entry()` /
+    `build_excluded_summary()` / `assemble_context_packet()` -- exact 10/4 contract field
+    builders and orchestration, AC3).
+  proof_type: regression
+  test_path: tests/tools/test_context_packet_assembler.py
+  divergence_note: null
+  support_boundary: >
+    Agent-orchestration/retrieval tooling only -- no simulation behavior, Mechanics Bible
+    chapter, or engine contract governs this module's semantics (same category as INFRA-281
+    through INFRA-295). No `src/` file touched, no on-disk schema/corpus change to any existing
+    store -- purely consumes `tools/hybrid_retrieval.py`'s and `tools/code_test_index.py`'s
+    already-built output shapes and hand-built `parity_ledger_entry` fixtures, and is not wired
+    into any `.claude/workflows/*.js` file or existing pipeline/gate; standalone and read-only.
+
+- id: INFRA-297
+  text: >
+    New additive, versioned retrieval-event field set appended to the existing
+    `agent-monitoring/events.jsonl` file, plus one shared module, `tools/retrieval_events.py`,
+    owning the field-shape constant and the wrapper functions that emit it --
+    TCK-20260729-RETRIEVAL-EVENT-SCHEMA-EMIT, the deferred "Phase 4" event-emission work
+    TCK-20260729-HYBRID-RETRIEVAL-FUSION/TCK-20260729-RETRIEVAL-CACHE-LEVELS/
+    TCK-20260729-CONTEXT-PACKET-ASSEMBLY (INFRA-294/295/296) each explicitly left out of scope.
+    This is the first ledger entry referencing `events.jsonl`'s schema itself, not merely a module
+    that emits into it -- no prior INFRA-28x/29x entry extends the event shape. Emission reuses
+    `record_events.py`'s `validate_record()`/`writer.py`'s `write_lines()` path verbatim (no new
+    lock/queue/journal writer, no edit to `record_events.py`'s REQUIRED base-field set or
+    `VALID_STATUS`); the ~15 new optional fields pass through `validate_record()` unchanged, the
+    same already-proven mechanism `test_execution_identity_fields_pass_through_unchanged`
+    exercises for `execution_id`/`provider`/`ticket_id`. Standalone-invocation provenance
+    (`run_id`/`seq`/`phase`/`agent`, none of which `events.jsonl`'s schema allows to be null) is
+    resolved by minting a new, explicit `RETRIEVAL-EVENT-<slug>` `run_id` prefix that
+    `vocabulary.py::infer_workflow()` returns `None` for by designed, tested fallthrough, making
+    `warn_vocabulary_drift()` a documented no-op rather than a suppressed warning -- no
+    `vocabulary.py` edit. `adequacy_verdict` is a deliberately simple, explicitly-scoped
+    placeholder heuristic (no re-ranker, no sophisticated evaluation). None of `hybrid_retrieval.py`
+    /`retrieval_cache.py`/`context_packet_assembler.py`'s public signatures or return shapes
+    change; instrumentation wraps each module's own entry point.
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: >
+    tools/retrieval_events.py:46 (`retrieval_event_schema_version = 1`, explicitly distinct from
+    `retrieval_cache.RETRIEVAL_VERSION`), :52-76 (`RETRIEVAL_EVENT_FIELDS` -- the single
+    source-of-truth 18-field retrieval-specific field set, excluding `execution_id`/`provider`/
+    the 7 REQUIRED base fields), :77-89 (`NOISY_RATIO_THRESHOLD` / `compute_adequacy_verdict()`
+    -- the 3-branch insufficient/noisy/sufficient placeholder heuristic), :91-137
+    (`emit_retrieval_event()` -- validates via `record_events.validate_record()`, writes via
+    `writer.write_lines()`, rejects any field outside `RETRIEVAL_EVENT_FIELDS` loudly, never
+    raises on a write failure), :142-193 (`wrap_hybrid_retrieval()` -- times and observes
+    `hybrid_fuse_and_filter()`, `RUN_ID_HYBRID`/`AGENT_HYBRID`), :196-257
+    (`wrap_retrieval_cache_check()` -- dispatches to `check_index_cache`/`check_query_cache`/
+    `check_packet_cache` by imported category constant, `cache_status` sourced verbatim from the
+    imported `HIT`/`MISS`/`STALE_REJECTED` constants), :260-308 (`wrap_context_packet_assembly()`
+    -- times and observes `assemble_context_packet()`, `exclusion_reason_counts`/
+    `cited_source_hashes` derived from its real return value).
+    tools/agent-monitoring/generate_retro.py:561-612 (`compute_retrieval_metrics()` -- read-only,
+    fixture-tested proof-of-queryability function: cache hit/miss/stale-rejection rates grouped
+    by `cache_level`, candidate-to-selected and selected-to-cited ratios, both zero-division
+    guarded, non-retrieval events skipped not crashed on).
+  proof_type: regression
+  test_path: tests/tools/test_retrieval_events.py
+  divergence_note: null
+  support_boundary: >
+    Agent-orchestration/retrieval tooling only -- no simulation behavior, Mechanics Bible
+    chapter, or engine contract governs this module's semantics (same category as INFRA-281
+    through INFRA-296). No `src/` file touched, no on-disk schema/corpus change to any existing
+    store, and not wired into any real-time workflow orchestrator file or existing
+    pipeline/gate -- real retrieval-event volume in the live `agent-monitoring/events.jsonl`
+    stays at zero after this ticket ships, by design.
+- id: INFRA-298
+  text: >
+    generate_retro.py's compute_retrieval_metrics() (previously computed but never rendered by
+    generate(), per TCK-20260729-RETRIEVAL-EVENT-SCHEMA-EMIT's own AC7 minimal-proof scoping) is
+    extended in place with an aggregated candidate-to-selected/selected-to-cited noise-indicator
+    view, a freshness/authority distribution (including the UNRATED sentinel bucket, imported from
+    hybrid_retrieval.py, never re-literaled), and an unconditional follow-up/expansion rate --
+    unconditional rather than adequacy_verdict-conditional because no shipped wrap_*() function
+    emits expansion_reason/expansion_count today, making a conditional formula untestable against
+    real behavior. generate() now calls compute_retrieval_metrics(events) and renders all four
+    retrieval-quality signals (cache rates by level, noise indicators, freshness/authority
+    distribution, expansion rate) as a new conditionally-gated "## Retrieval Quality" Markdown
+    section -- the first real rendered dashboard output this event family produces, inserted after
+    the existing Outliers section and before Notes, disturbing no existing section's ordering.
+    Visible only under --all (never --days/--week), with an explicit inline caveat, since
+    RETRIEVAL-EVENT-<slug> run_ids are deliberately unlinked from any runs.jsonl row by the
+    schema-emit ticket's own design (docs/agent-monitoring/schema.md's provenance section)`; this
+    plan does not special-case that filter, preserving that documented isolation intent.
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: >
+    tools/agent-monitoring/generate_retro.py::compute_retrieval_metrics() -- extended with
+    candidate_to_selected_aggregate/selected_to_cited_aggregate (zero-division guarded),
+    authority_distribution/freshness_distribution (UNRATED-inclusive), expansion_rate
+    (unconditional formula). tools/agent-monitoring/generate_retro.py::generate() -- new
+    conditionally-rendered "## Retrieval Quality" section, gated on
+    retrieval_metrics["retrieval_event_count"], omitted entirely (not rendered empty) when zero
+    retrieval events are present.
+  proof_type: regression
+  test_path: tests/tools/test_generate_retro.py
+  divergence_note: null
+  support_boundary: >
+    Agent-orchestration/retrieval tooling only -- no simulation behavior, Mechanics Bible chapter,
+    or engine contract governs this module's semantics (same category as INFRA-281 through
+    INFRA-297). No `src/` file touched, no on-disk schema/corpus change to any existing store, and
+    not wired into any real-time workflow orchestrator file or existing pipeline/gate -- real
+    retrieval-event volume in the live `agent-monitoring/events.jsonl` stays at zero after this
+    ticket ships, by design; the new report section only ever populates against fixture/test data
+    or a future manual invocation, never against a real tracked workflow run.

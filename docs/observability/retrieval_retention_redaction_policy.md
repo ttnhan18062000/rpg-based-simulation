@@ -106,10 +106,11 @@ inventing a brand-new writer/pruning mechanism — both out of this ticket's sco
 | Retrieval events | `retrieval_event` (not a `RetentionPolicy` category) | permanent / append-only | Per Decision B above: inherits `agent-monitoring/*.jsonl`'s existing retain-forever convention. Listed here only for completeness of "3 cache levels plus retrieval events" — it is explicitly NOT a duration-based category. |
 
 These durations are placeholders by analogy to `retention.py`'s existing 7d/30d/permanent tiers
-(`src/observability/reporting/retention.py` lines 36-37, 54-55, 57), not measured values — no cache
-of any of these three kinds exists yet to measure against (Phase 3 is not yet implemented). A
-future Phase 3+ ticket that implements the caches must calibrate these numbers against real
-hit/miss/staleness data before they govern actual pruning behavior.
+(`src/observability/reporting/retention.py` lines 36-37, 54-55, 57), not measured values. Phase 3
+is now implemented (`tools/retrieval_cache.py`, ticket TCK-20260729-RETRIEVAL-CACHE-LEVELS), but
+the placeholder durations above have not yet been calibrated against real hit/miss/staleness data
+from that implementation. A future ticket must calibrate these numbers before they govern actual
+pruning behavior.
 
 ## Decision D — Doc Location
 

@@ -13,6 +13,8 @@ Groups:
 
 import importlib
 import importlib.util
+import pickle
+import sqlite3
 import subprocess
 import sys
 import time
@@ -41,6 +43,11 @@ def _load_module() -> types.ModuleType:
 
 
 _ks = _load_module()
+# knowledge_search.py's own top-level `from hybrid_retrieval import hybrid_fuse_and_filter`
+# (executed above by _load_module()) guarantees "hybrid_retrieval" is registered in sys.modules
+# by this point -- reuse that exact object so monkeypatching its `_dense_candidates` seam affects
+# calls made from `_ks.cmd_query()`.
+_hr = sys.modules["hybrid_retrieval"]
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -1862,3 +1869,97 @@ class TestManifestHelpers:
         assert content.startswith("#!/usr/bin/env bash")
         assert "knowledge_search.py" in content
         assert "incremental" in content
+
+
+# ---------------------------------------------------------------------------
+# Group H — TestHybridFusionWiring (TCK-20260729-HYBRID-RETRIEVAL-FUSION)
+# ---------------------------------------------------------------------------
+
+class _FakeBM25ScoresH(list):
+    def max(self):
+        return max(self) if self else 0.0
+
+
+class _FakeBM25H:
+    """Minimal get_scores()-only stand-in for rank_bm25.BM25Okapi -- picklable (module-level),
+    no rank_bm25 dependency required."""
+
+    def get_scores(self, tokens):
+        return _FakeBM25ScoresH([0.0, 9.0])
+
+
+class TestHybridFusionWiring:
+    """Proves cmd_query()'s hybrid branch routes through
+    hybrid_retrieval.hybrid_fuse_and_filter instead of the old dense-candidate-gated
+    ANN-then-BM25-lookup sequence, and that the fix surfaces a lexical-only exact match outside
+    the dense channel's candidate cut (AC1) -- exercised in-process against the real function,
+    with only the sqlite-vec-dependent ANN query itself (`_dense_candidates`) stubbed, so this
+    runs without sentence-transformers/sqlite-vec installed.
+    """
+
+    def test_lexical_only_match_surfaced_through_cmd_query(self, tmp_path, monkeypatch, capsys):
+        fake_db = tmp_path / "knowledge.db"
+        conn = sqlite3.connect(str(fake_db))
+        conn.execute(
+            """
+            CREATE TABLE knowledge_docs (
+                rowid       INTEGER PRIMARY KEY,
+                doc_id      TEXT NOT NULL,
+                path        TEXT NOT NULL,
+                text        TEXT NOT NULL,
+                source_type TEXT NOT NULL,
+                heading     TEXT NOT NULL DEFAULT '',
+                section     TEXT NOT NULL DEFAULT ''
+            )
+            """
+        )
+        conn.executemany(
+            "INSERT INTO knowledge_docs (rowid, doc_id, path, text, source_type, heading, section) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?)",
+            [
+                (0, "doc-a", "docs/a.md", "alpha text", "doc_chunk", "A", "docs"),
+                (1, "doc-rare", "docs/rare.md", "zzqfrobnicate_widget appears here",
+                 "doc_chunk", "Rare", "docs"),
+            ],
+        )
+        conn.commit()
+        conn.close()
+
+        # Dense channel never surfaces doc-rare -- the confirmed bug's exact shape.
+        monkeypatch.setattr(
+            _hr, "_dense_candidates",
+            lambda conn, query_vec_bytes, dense_candidate_k: [
+                (0, "doc-a", "docs/a.md", "A", "docs", "alpha text", "doc_chunk", 0.1),
+            ],
+        )
+
+        bm25_path = fake_db.parent / "bm25.pkl"
+        with open(bm25_path, "wb") as fh:
+            pickle.dump((_FakeBM25H(), ["doc-a", "doc-rare"]), fh)
+
+        fake_st_module = types.ModuleType("sentence_transformers")
+
+        class _FakeArray(list):
+            def tolist(self):
+                return list(self)
+
+        class _FakeModel:
+            def __init__(self, *_a, **_kw):
+                pass
+
+            def encode(self, texts, **_kw):
+                return _FakeArray([_FakeArray([0.0] * 8) for _ in texts])
+
+        fake_st_module.SentenceTransformer = _FakeModel
+        fake_vec_module = types.ModuleType("sqlite_vec")
+        fake_vec_module.load = lambda conn: None
+        monkeypatch.setitem(sys.modules, "sentence_transformers", fake_st_module)
+        monkeypatch.setitem(sys.modules, "sqlite_vec", fake_vec_module)
+
+        args = types.SimpleNamespace(
+            query="zzqfrobnicate_widget", top_k=5, db_path=str(fake_db), mode="hybrid"
+        )
+        rc = _ks.cmd_query(args)
+        assert rc == 0
+        out = capsys.readouterr().out
+        assert "doc-rare" in out, f"lexical-only hit missing from hybrid cmd_query output:\n{out}"
