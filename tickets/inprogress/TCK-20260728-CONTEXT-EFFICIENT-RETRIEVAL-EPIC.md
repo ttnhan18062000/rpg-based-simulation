@@ -206,15 +206,28 @@ required one architecture-review revision cycle each (a seq-collision bug and a 
 None-guard, respectively) before approval. Parity ledger entries INFRA-296/297/299/300
 added or corrected.
 
+**2026-07-30 — Phase 6 prep: Open Decision 5 resolved.** `TCK-20260730-SHADOW-PROMOTION-GATE-THRESHOLDS`
+is `DONE` — `docs/ai/shadow_promotion_gate_thresholds_decision.md` attaches a falsifiable
+threshold or qualitative bar to each of the six approval-gate criteria, grounds a sample
+size in real per-scenario run counts from `retrieval_baseline_metrics.py`, and proposes a
+`run_id`-join attribution method (explicitly flagged as unimplemented by any existing
+Phase 0-5 tool). Two criteria — authoritative-source recall and provider parity — are
+honestly flagged as not fully defensible a priori given zero real shadow-packet
+production events exist as of this decision, rather than forced into invented numbers.
+This ticket was decision-document-only, per its own scope guard: no code changed, no
+promotion occurred, `SHADOW_CONTEXT_PACKET_ENABLED` was not enabled anywhere.
+
 This epic remains **open**, not closed — per its own Scope and `SEQUENCE.md`, it
-deliberately covers only Phase 0-5 of the source doc's full 7-phase Sequenced Future
-Epic so far; Phase 6 onward (selective workflow adoption beyond the Phase 5 opt-in
-shadow call site, continuous calibration) is intentionally not yet ticketed, and Open
-Decisions 5-6 in Assumptions/Open Questions remain unresolved. Do not mark this ticket
-DONE or move it to `tickets/done/` until a future ticketing pass scopes and closes the
-remaining phases (or a deliberate decision is made to stop pursuing them, in which case
-this ticket should instead move to `tickets/backlogs/` per
-`docs/ai/ticket-lifecycle.md`'s backlog convention — not silently closed as done).
+deliberately covers only Phase 0-5 plus this Phase 6 prep decision so far; actual Phase 6
+implementation (selective workflow adoption — enabling the shadow-packet phase only for
+scenarios that pass the approval gate using the thresholds resolved above) still cannot be
+scoped: it requires real, non-fixture shadow-packet evidence that does not yet exist
+(`SHADOW_CONTEXT_PACKET_ENABLED` remains off by default in production), and Open Decision 6
+in Assumptions/Open Questions remains unresolved. Do not mark this ticket DONE or move it
+to `tickets/done/` until a future ticketing pass scopes and closes the remaining phases
+(or a deliberate decision is made to stop pursuing them, in which case this ticket should
+instead move to `tickets/backlogs/` per `docs/ai/ticket-lifecycle.md`'s backlog convention
+— not silently closed as done).
 
 ## Test Summary
 
