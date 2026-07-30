@@ -231,6 +231,17 @@ implementation (selective workflow adoption using those thresholds) still cannot
 responsibly scoped from 2 samples; this note exists so a future ticketing pass can see real
 progress has begun, not to imply the gate can be evaluated yet.
 
+**2026-07-30 — Second data-collection vehicle: progress-timeline batch (4 tickets).**
+`TCK-20260720-BULK-RUN-TIMELINE`, `TCK-20260720-ECHARTS-PHASE-PALETTE`,
+`TCK-20260720-PROGRESS-TIMELINE-VIEW`, `TCK-20260720-TIMELINE-RANGE-CONTROL` — all `DONE`.
+Run as a second real vehicle (user-chosen, after the placement-legality batch) purely for
+its side effect of exercising `SHADOW_CONTEXT_PACKET_ENABLED=1` during each ticket's
+Investigate phase. Result: 4 additional real shadow-packet events, bringing the running
+total to **6** (`agent-monitoring/events.jsonl`, `agent: context-packet-wrapper`, all real
+`TCK-...` `run_id`s). Still far short of the 56/122/6 per-scenario floors from Open
+Decision 5 — 6 samples is meaningful *progress*, not close to sufficiency for any
+promotion-gate evaluation. No change to this epic's own scope or the Phase 6 blocker below.
+
 This epic remains **open**, not closed — per its own Scope and `SEQUENCE.md`, it
 deliberately covers only Phase 0-5 plus this Phase 6 prep decision so far; actual Phase 6
 implementation (selective workflow adoption — enabling the shadow-packet phase only for
