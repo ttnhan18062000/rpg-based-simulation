@@ -445,3 +445,89 @@ export function useRunsPolling(sinceIso: string, intervalMs = 5000): UseRunsPoll
 
   return { runs, isLoading, error }
 }
+
+// --- Bulk run timelines (TCK-20260720-PROGRESS-TIMELINE-VIEW) ---
+// Mirrors src/api/agent_ops_dashboard/models.py's BulkRunTimeline exactly.
+
+export interface BulkRunTimeline {
+  entries_by_run: Record<string, TimelineEntry[]>
+}
+
+async function fetchRunTimelines(params: {
+  since?: string
+  until?: string
+  limit?: number
+  offset?: number
+}): Promise<BulkRunTimeline> {
+  const query = new URLSearchParams()
+  if (params.since !== undefined) query.set('since', params.since)
+  if (params.until !== undefined) query.set('until', params.until)
+  if (params.limit !== undefined) query.set('limit', String(params.limit))
+  if (params.offset !== undefined) query.set('offset', String(params.offset))
+
+  const response = await fetch(`/api/runs/timeline?${query.toString()}`)
+  if (!response.ok) {
+    throw new Error(`GET /api/runs/timeline failed with status ${response.status}`)
+  }
+  return (await response.json()) as BulkRunTimeline
+}
+
+const RUN_TIMELINES_PAGE_LIMIT = 100
+
+async function fetchAllRunTimelinesSince(sinceIso: string): Promise<Record<string, TimelineEntry[]>> {
+  const merged: Record<string, TimelineEntry[]> = {}
+  let offset = 0
+
+  for (;;) {
+    const page = await fetchRunTimelines({ since: sinceIso, limit: RUN_TIMELINES_PAGE_LIMIT, offset })
+    const pageRunCount = Object.keys(page.entries_by_run).length
+    Object.assign(merged, page.entries_by_run)
+    if (pageRunCount < RUN_TIMELINES_PAGE_LIMIT) {
+      break
+    }
+    offset += RUN_TIMELINES_PAGE_LIMIT
+  }
+
+  return merged
+}
+
+export interface UseRunTimelinesPollingResult {
+  entriesByRun: Record<string, TimelineEntry[]>
+  isLoading: boolean
+  error: Error | null
+}
+
+export function useRunTimelinesPolling(sinceIso: string, intervalMs = 5000): UseRunTimelinesPollingResult {
+  const [entriesByRun, setEntriesByRun] = useState<Record<string, TimelineEntry[]>>({})
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<Error | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function poll() {
+      try {
+        const merged = await fetchAllRunTimelinesSince(sinceIso)
+        if (!cancelled) {
+          setEntriesByRun(merged)
+          setError(null)
+          setIsLoading(false)
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setError(err instanceof Error ? err : new Error(String(err)))
+          setIsLoading(false)
+        }
+      }
+    }
+
+    poll()
+    const intervalId = setInterval(poll, intervalMs)
+    return () => {
+      cancelled = true
+      clearInterval(intervalId)
+    }
+  }, [sinceIso, intervalMs])
+
+  return { entriesByRun, isLoading, error }
+}

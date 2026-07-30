@@ -33,14 +33,3 @@ body {
 #root {
   height: 100vh;
 }
-
-.gantt-bar--inferred-pattern {
-  background-image: repeating-linear-gradient(
-    45deg,
-    var(--color-accent-blue),
-    var(--color-accent-blue) 4px,
-    transparent 4px,
-    transparent 8px
-  );
-  opacity: 0.75;
-}

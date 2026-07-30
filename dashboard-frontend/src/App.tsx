@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { RecentActivityGantt } from '@/views/RecentActivityGantt'
+import { ProgressTimelineView } from '@/views/ProgressTimelineView'
 import { ReplayTimelineView } from '@/views/ReplayTimelineView'
 import { StatsView } from '@/views/StatsView'
 import { TicketsView } from '@/views/TicketsView'
@@ -43,7 +43,7 @@ function App() {
         </nav>
       </header>
       <div className="flex-1 min-h-0 overflow-auto">
-        {currentView === 'activity' && <RecentActivityGantt onSelectRun={handleSelectRun} />}
+        {currentView === 'activity' && <ProgressTimelineView onSelectRun={handleSelectRun} />}
         {currentView === 'tickets' && <TicketsView onSelectRun={handleSelectRun} />}
         {currentView === 'stats' && <StatsView />}
         {currentView === 'replay' &&

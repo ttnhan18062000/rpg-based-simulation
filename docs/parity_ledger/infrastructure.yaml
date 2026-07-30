@@ -6467,3 +6467,74 @@
     untouched; chartPalette.ts's existing two exports are untouched; no `echarts`/
     `echarts-for-react` import exists anywhere in dashboard-frontend/src -- both deferred to the
     downstream ProgressTimelineView ticket.
+- id: INFRA-303
+  text: >
+    TCK-20260720-PROGRESS-TIMELINE-VIEW -- replaced RecentActivityGantt.tsx's DOM/CSS-percent
+    Gantt rendering with dashboard-frontend/src/views/ProgressTimelineView.tsx, wrapping
+    echarts-for-react's tree-shaken core entry point (`echarts-for-react/lib/core` +
+    `echarts/core` + named submodule imports from `echarts/charts`/`echarts/components`/
+    `echarts/renderers` -- never the default `echarts-for-react` export, which transitively
+    imports the full bare `echarts` bundle regardless of the importing file's own imports). Added
+    a new `useRunTimelinesPolling(sinceIso)` hook in api.ts (sibling to `useRunsPolling`, polling
+    the already-DONE bulk `GET /api/runs/timeline` endpoint from TCK-20260720-BULK-RUN-TIMELINE)
+    and a new pure `dashboard-frontend/src/lib/toChartOption.ts` module exporting
+    `toChartOption(runs, entriesByRun, nowIso, glossary?)` and `buildTooltipHtml`, consuming the
+    already-DONE `phasePalette.ts` (TCK-20260720-ECHARTS-PHASE-PALETTE) for settled-segment colors
+    plus a new, separately-governed `LIVE_SEGMENT_COLOR` constant for the in-progress trailing
+    segment. Per a user-resolved plan decision, every run (settled or live) always renders exactly
+    N segments for N phase-timeline entries -- N-1 inter-entry segments plus one trailing segment
+    (to `run.end_ts` in the last phase's color for settled runs, or to `nowIso` in
+    `LIVE_SEGMENT_COLOR` for `is_inferred_active` runs) -- so no phase is ever left unrendered.
+    Deleted GanttBar.tsx, TimeAxis.tsx, Legend.tsx, RecentActivityGantt.tsx, their three test
+    files, and index.css's dead `.gantt-bar--inferred-pattern` rule; wired ProgressTimelineView
+    into App.tsx in RecentActivityGantt's place while preserving the `'activity'` PageView value
+    and the `'Recent Activity'` nav label verbatim (only the view root's `data-testid` changed, to
+    `progress-timeline-view`). A new architecture-guard test confirms the retirement is complete
+    and no source file re-imports the deleted components or calls the deleted `toPercent()`.
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: >
+    dashboard-frontend/src/api.ts:450-524 (`BulkRunTimeline` interface, `fetchRunTimelines`,
+    `fetchAllRunTimelinesSince`'s offset-loop pagination, `useRunTimelinesPolling` hook mirroring
+    `useRunsPolling`'s poll/cleanup shape). dashboard-frontend/src/lib/toChartOption.ts:8
+    (`LIVE_SEGMENT_COLOR`, component-local, not a `PHASE_PALETTE` key), :63-86 (`buildTooltipHtml`,
+    surfaces run_id/tier/workflow/phase/agent/status/duration plus glossary description lines,
+    gracefully omitted when absent), :107-206 (`toChartOption`, newest-first sort via a locally
+    reproduced comparator, N-segments-per-N-entries construction, `entriesByRun[run.run_id] ?? []`
+    defensive lookup). dashboard-frontend/src/views/ProgressTimelineView.tsx:1-9 (tree-shaken
+    `echarts-for-react/lib/core` + `echarts/core` + `CustomChart`/`TooltipComponent`/
+    `GridComponent`/`DataZoomComponent`/`CanvasRenderer` imports, `echarts.use([...])`), :19-49
+    (`ProgressTimelineView`, two independent polling hooks plus `useGlossary()`, `onEvents.click`
+    forwarding to `onSelectRun`, `data-testid="progress-timeline-view"`). dashboard-frontend/src/
+    App.tsx:2,46 (import + render swap, `'activity'`/`'Recent Activity'` unchanged). Confirmed
+    deleted: dashboard-frontend/src/components/{GanttBar,TimeAxis,Legend}.tsx,
+    dashboard-frontend/src/views/RecentActivityGantt.tsx, their three test files, and
+    index.css's `.gantt-bar--inferred-pattern` rule. Confirmed via the running Vite dev server's
+    dependency pre-bundle (`dashboard-frontend/node_modules/.vite/deps/`) that only
+    `echarts_core.js`/`echarts_charts.js`/`echarts_components.js`/`echarts_renderers.js`/
+    `echarts-for-react_lib_core.js` were optimized -- no bare `echarts.js` or default
+    `echarts-for-react` bundle -- directly confirming the tree-shaken entry point choice holds at
+    the real dev-server level, not just via source-file regex.
+    tests/tools/test_agent_ops_dashboard_frontend_api_surface.py::test_gantt_components_fully_retired.
+    dashboard-frontend/src/test/toChartOption.test.ts (newest-first ordering, N-segments-per-N-
+    entries incl. the settled/live trailing-segment split and edge cases, tooltip formatter,
+    anti-drift no-`Date.now()` guard). dashboard-frontend/src/test/useRunTimelinesPolling.test.ts
+    (pagination union-merge, single-page, error handling). dashboard-frontend/src/test/
+    ProgressTimelineView.test.tsx and App.test.tsx (mocked `echarts-for-react/lib/core`, dataZoom
+    shape, no network-triggering `onEvents`, row-click-through to Replay).
+  proof_type: regression
+  test_path: dashboard-frontend/src/test/toChartOption.test.ts
+  divergence_note: null
+  support_boundary: >
+    Agent-orchestration/dashboard tooling only -- no simulation behavior, Mechanics Bible chapter,
+    or engine contract governs this module's semantics (same category as INFRA-275 through
+    INFRA-302). Read-only consumer of the already-DONE bulk timeline endpoint and phase-palette
+    module (src/api/agent_ops_dashboard/{main,ingest,models}.py and
+    dashboard-frontend/src/lib/phasePalette.ts are untouched); no new backend write path
+    introduced. Full interactive browser/visual verification (Step 11 of this ticket's plan) was
+    attempted but could not be completed end-to-end in this environment -- no browser binary,
+    claude-in-chrome connection, or headless automation tooling (playwright/puppeteer) was
+    available; see the ticket's Implementation Notes for the non-visual verification performed in
+    its place (live backend+dev-server smoke checks, real API data, dependency pre-bundle
+    inspection) and the explicit gap this leaves.

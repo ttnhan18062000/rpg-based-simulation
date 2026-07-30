@@ -1,25 +1,40 @@
-import { render, screen } from '@testing-library/react'
+import { act, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import App from '../App'
 import {
   useRunsPolling,
+  useRunTimelinesPolling,
+  useGlossary,
   fetchRunTimeline,
   type RunSummary,
   type RunTimeline,
   type TicketSummary,
 } from '../api'
 
+let capturedEChartsProps: Record<string, unknown> = {}
+
+vi.mock('echarts-for-react/lib/core', () => ({
+  default: vi.fn((props: Record<string, unknown>) => {
+    capturedEChartsProps = props
+    return <div data-testid="mocked-echarts" />
+  }),
+}))
+
 vi.mock('../api', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../api')>()
   return {
     ...actual,
     useRunsPolling: vi.fn(),
+    useRunTimelinesPolling: vi.fn(),
+    useGlossary: vi.fn(),
     fetchRunTimeline: vi.fn(),
   }
 })
 
 const mockedUseRunsPolling = vi.mocked(useRunsPolling)
+const mockedUseRunTimelinesPolling = vi.mocked(useRunTimelinesPolling)
+const mockedUseGlossary = vi.mocked(useGlossary)
 const mockedFetchRunTimeline = vi.mocked(fetchRunTimeline)
 
 // TicketsView calls the real fetchTickets (only useRunsPolling/fetchRunTimeline
@@ -109,8 +124,13 @@ function navTargetTimeline(): RunTimeline {
 
 describe('App', () => {
   beforeEach(() => {
+    capturedEChartsProps = {}
     mockedUseRunsPolling.mockReset()
     mockedUseRunsPolling.mockReturnValue({ runs: [], isLoading: false, error: null })
+    mockedUseRunTimelinesPolling.mockReset()
+    mockedUseRunTimelinesPolling.mockReturnValue({ entriesByRun: {}, isLoading: false, error: null })
+    mockedUseGlossary.mockReset()
+    mockedUseGlossary.mockReturnValue({})
     mockedFetchRunTimeline.mockReset()
     mockedFetchRunTimeline.mockResolvedValue(navTargetTimeline())
   })
@@ -124,10 +144,10 @@ describe('App', () => {
     expect(header.className).not.toMatch(/(?<!sm:)\bh-14\b/)
   })
 
-  it('lands on the RecentActivityGantt view by default', () => {
+  it('lands on the ProgressTimelineView view by default', () => {
     render(<App />)
 
-    expect(screen.getByTestId('recent-activity-gantt')).toBeInTheDocument()
+    expect(screen.getByTestId('progress-timeline-view')).toBeInTheDocument()
     expect(screen.queryByTestId('tickets-view')).not.toBeInTheDocument()
     expect(screen.queryByTestId('replay-timeline-view')).not.toBeInTheDocument()
   })
@@ -139,15 +159,15 @@ describe('App', () => {
 
     await user.click(screen.getByRole('button', { name: 'Tickets' }))
     expect(await screen.findByTestId('tickets-view')).toBeInTheDocument()
-    expect(screen.queryByTestId('recent-activity-gantt')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('progress-timeline-view')).not.toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: 'Recent Activity' }))
-    expect(screen.getByTestId('recent-activity-gantt')).toBeInTheDocument()
+    expect(screen.getByTestId('progress-timeline-view')).toBeInTheDocument()
     expect(screen.queryByTestId('tickets-view')).not.toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: 'Replay' }))
     expect(screen.queryByTestId('tickets-view')).not.toBeInTheDocument()
-    expect(screen.queryByTestId('recent-activity-gantt')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('progress-timeline-view')).not.toBeInTheDocument()
     expect(screen.queryByTestId('replay-timeline-view')).not.toBeInTheDocument()
     expect(
       screen.getByText('Select a run from Recent Activity to view its replay.'),
@@ -171,20 +191,22 @@ describe('App', () => {
     expect(screen.queryByTestId('tickets-view')).not.toBeInTheDocument()
   })
 
-  it('Gantt row click navigates to that run\'s Replay timeline, scoped to that run_id', async () => {
-    const user = userEvent.setup()
+  it('Progress timeline row click navigates to that run\'s Replay timeline, scoped to that run_id', async () => {
     mockedUseRunsPolling.mockReturnValue({ runs: [navTargetRun()], isLoading: false, error: null })
 
     render(<App />)
 
-    const bar = document.querySelector('[data-run-id="run-nav-target"]')!
-    const row = bar.closest('.relative.h-6')!
-    await user.click(row)
+    const onEvents = capturedEChartsProps.onEvents as {
+      click: (params: { data?: { runId?: string } }) => void
+    }
+    await act(async () => {
+      onEvents.click({ data: { runId: 'run-nav-target' } })
+    })
 
     expect(await screen.findByTestId('replay-timeline-view')).toBeInTheDocument()
-    expect(screen.getByText('run-nav-target')).toBeInTheDocument()
+    expect(await screen.findByText('run-nav-target')).toBeInTheDocument()
     expect(mockedFetchRunTimeline).toHaveBeenCalledWith('run-nav-target')
-    expect(screen.queryByTestId('recent-activity-gantt')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('progress-timeline-view')).not.toBeInTheDocument()
   })
 
   it('Stats tab renders the real StatsView, other tabs unaffected', async () => {
@@ -194,10 +216,10 @@ describe('App', () => {
 
     await user.click(screen.getByRole('button', { name: 'Stats' }))
     expect(await screen.findByTestId('stats-view')).toBeInTheDocument()
-    expect(screen.queryByTestId('recent-activity-gantt')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('progress-timeline-view')).not.toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: 'Recent Activity' }))
-    expect(screen.getByTestId('recent-activity-gantt')).toBeInTheDocument()
+    expect(screen.getByTestId('progress-timeline-view')).toBeInTheDocument()
     expect(screen.queryByTestId('stats-view')).not.toBeInTheDocument()
   })
 })

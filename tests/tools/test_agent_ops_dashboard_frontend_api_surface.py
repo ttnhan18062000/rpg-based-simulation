@@ -83,3 +83,32 @@ def test_no_source_file_imports_full_echarts_bundle() -> None:
         "'echarts/core' plus tree-shaken submodule imports are allowed. Violations: "
         + ", ".join(violations)
     )
+
+
+def test_gantt_components_fully_retired() -> None:
+    import re
+
+    retired_component_paths = [
+        "dashboard-frontend/src/components/GanttBar.tsx",
+        "dashboard-frontend/src/components/TimeAxis.tsx",
+        "dashboard-frontend/src/components/Legend.tsx",
+        "dashboard-frontend/src/views/RecentActivityGantt.tsx",
+    ]
+    for rel_path in retired_component_paths:
+        assert not (_FRONTEND_ROOT.parent.parent / rel_path).exists(), (
+            f"{rel_path} must be deleted — retired by TCK-20260720-PROGRESS-TIMELINE-VIEW"
+        )
+
+    forbidden_import = re.compile(
+        r"""from\s+['"]@/(components/(GanttBar|TimeAxis|Legend)|views/RecentActivityGantt)['"]"""
+    )
+    to_percent_call = re.compile(r"\btoPercent\(")
+    violations: list[str] = []
+    for path in _frontend_source_files():
+        text = path.read_text(encoding="utf-8")
+        rel = path.relative_to(_FRONTEND_ROOT.parent.parent)
+        if forbidden_import.search(text):
+            violations.append(f"{rel} imports a retired Gantt component")
+        if to_percent_call.search(text):
+            violations.append(f"{rel} still calls toPercent(), which was deleted with GanttBar.tsx")
+    assert not violations, "\n".join(violations)
