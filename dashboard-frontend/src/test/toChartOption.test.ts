@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import { toChartOption, buildTooltipHtml, LIVE_SEGMENT_COLOR } from '../lib/toChartOption'
+import { toChartOption, buildTooltipHtml, LIVE_SEGMENT_COLOR, CHART_LEGEND_ENTRIES } from '../lib/toChartOption'
+import { PHASE_FAMILY, PHASE_PALETTE, type WorkflowPhase } from '../lib/phasePalette'
 import type { RunSummary, TimelineEntry, GlossaryTerms } from '../api'
 import TO_CHART_OPTION_SOURCE from '../lib/toChartOption.ts?raw'
 
@@ -222,6 +223,63 @@ describe('buildTooltipHtml', () => {
   it('returns an empty string when params.data is absent, without throwing', () => {
     expect(() => buildTooltipHtml({}, {})).not.toThrow()
     expect(buildTooltipHtml({}, {})).toBe('')
+  })
+})
+
+describe('toChartOption — y-axis label truncation (TCK-20260730-PROGRESS-TIMELINE-VIEW-HOTFIX AC #1)', () => {
+  it('reserves grid space for labels via grid.containLabel', () => {
+    const option = toChartOption([], {}, '2026-07-16T11:00:00Z')
+    expect(option.grid.containLabel).toBe(true)
+  })
+
+  it('truncates long run_id labels with an ellipsis rather than letting them overflow', () => {
+    const option = toChartOption([], {}, '2026-07-16T11:00:00Z')
+    expect(option.yAxis.axisLabel.overflow).toBe('truncate')
+    expect(option.yAxis.axisLabel.ellipsis).toBe('...')
+    expect(typeof option.yAxis.axisLabel.width).toBe('number')
+    expect(option.yAxis.axisLabel.width).toBeGreaterThan(0)
+  })
+
+  it('does not shorten the underlying run_id data — only its on-axis label rendering', () => {
+    const run = makeRun({ run_id: 'FOLDER-tickets-todos-progress-timeline' })
+    const option = toChartOption([run], {}, '2026-07-16T11:00:00Z')
+    expect(option.yAxis.data).toEqual(['FOLDER-tickets-todos-progress-timeline'])
+  })
+})
+
+describe('toChartOption — CHART_LEGEND_ENTRIES (TCK-20260730-PROGRESS-TIMELINE-VIEW-HOTFIX AC #2)', () => {
+  it('has exactly 9 entries: one per phase family (8) plus one for the live segment', () => {
+    expect(CHART_LEGEND_ENTRIES).toHaveLength(9)
+  })
+
+  it('the live entry uses the exact LIVE_SEGMENT_COLOR the chart renders live segments with', () => {
+    const liveEntry = CHART_LEGEND_ENTRIES.find((e) => e.key === 'live')
+    expect(liveEntry?.color).toBe(LIVE_SEGMENT_COLOR)
+  })
+
+  it('each family entry uses that family\'s actual first-listed-member color from PHASE_PALETTE', () => {
+    const seenFamilies = new Set<string>()
+    const expectedByFamily: Record<string, string> = {}
+    ;(Object.keys(PHASE_FAMILY) as WorkflowPhase[]).forEach((phase) => {
+      const family = PHASE_FAMILY[phase]
+      if (seenFamilies.has(family)) return
+      seenFamilies.add(family)
+      expectedByFamily[family] = PHASE_PALETTE[phase]
+    })
+
+    const familyEntries = CHART_LEGEND_ENTRIES.filter((e) => e.key !== 'live')
+    expect(familyEntries).toHaveLength(8)
+    familyEntries.forEach((entry) => {
+      expect(entry.color).toBe(expectedByFamily[entry.key])
+    })
+  })
+
+  it('every entry has a non-empty human-readable label distinct from its raw family key', () => {
+    CHART_LEGEND_ENTRIES.forEach((entry) => {
+      expect(entry.label.length).toBeGreaterThan(0)
+    })
+    const structuralReview = CHART_LEGEND_ENTRIES.find((e) => e.key === 'structural-review')
+    expect(structuralReview?.label).toBe('Structural Review')
   })
 })
 

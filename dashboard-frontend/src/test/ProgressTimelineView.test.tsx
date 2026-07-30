@@ -70,6 +70,14 @@ describe('ProgressTimelineView', () => {
     expect(screen.getByTestId('progress-timeline-view')).toBeInTheDocument()
   })
 
+  it('renders a legend with 9 entries (8 phase families + live), not all 21 raw phases (TCK-20260730-PROGRESS-TIMELINE-VIEW-HOTFIX AC #2)', () => {
+    render(<ProgressTimelineView onSelectRun={vi.fn()} />)
+
+    const legend = screen.getByTestId('timeline-chart-legend')
+    expect(legend.children).toHaveLength(9)
+    expect(legend.textContent).toContain('Live / In Progress')
+  })
+
   describe('range-control integration', () => {
     const fixedNowIso = '2026-07-20T12:00:00.000Z'
 

@@ -1,11 +1,53 @@
 import { graphic } from 'echarts/core'
 import type { RunSummary, TimelineEntry, GlossaryTerms } from '@/api'
-import { getPhaseColor, type WorkflowPhase } from '@/lib/phasePalette'
+import { getPhaseColor, PHASE_FAMILY, type PhaseFamily, type WorkflowPhase } from '@/lib/phasePalette'
 
 // Marker color for the trailing "live"/in-progress segment. Deliberately NOT a member of
 // phasePalette.ts's governed 21-key PHASE_PALETTE (that module's scope is closed — see
 // TCK-20260720-ECHARTS-PHASE-PALETTE) — a distinct, non-categorical constant local to this file.
 export const LIVE_SEGMENT_COLOR = '#5b6178'
+
+// Y-axis category label width budget in pixels — long run_ids (e.g.
+// "FOLDER-tickets-todos-progress-timeline") truncate with an ellipsis here rather than
+// overflowing the plot area; the untruncated run_id remains available via the tooltip.
+const Y_AXIS_LABEL_WIDTH_PX = 160
+
+export interface ChartLegendEntry {
+  key: string
+  label: string
+  color: string
+}
+
+function humanizePhaseFamilyLabel(family: PhaseFamily): string {
+  return family
+    .split('-')
+    .map((word) => word[0].toUpperCase() + word.slice(1))
+    .join(' ')
+}
+
+// phasePalette.ts's own design rationale (its header comment) explicitly rejects a 21-entry
+// legend — 8 families is the intended granularity. Each family's swatch color is its
+// first-listed member in PHASE_FAMILY, which phasePalette.ts's header comment documents as
+// that family's base/lightest hue (the `build` family is the sole exception, stepping up in
+// lightness from its base rather than down — still the correct representative swatch).
+// Derived from the governed PHASE_FAMILY/PHASE_PALETTE exports rather than hand-copying hex
+// values, so this can't silently drift from phasePalette.ts.
+function buildPhaseFamilyLegendEntries(): ChartLegendEntry[] {
+  const seenFamilies = new Set<PhaseFamily>()
+  const entries: ChartLegendEntry[] = []
+  ;(Object.keys(PHASE_FAMILY) as WorkflowPhase[]).forEach((phase) => {
+    const family = PHASE_FAMILY[phase]
+    if (seenFamilies.has(family)) return
+    seenFamilies.add(family)
+    entries.push({ key: family, label: humanizePhaseFamilyLabel(family), color: getPhaseColor(phase) })
+  })
+  return entries
+}
+
+export const CHART_LEGEND_ENTRIES: ChartLegendEntry[] = [
+  ...buildPhaseFamilyLegendEntries(),
+  { key: 'live', label: 'Live / In Progress', color: LIVE_SEGMENT_COLOR },
+]
 
 interface ChartSegmentDatum {
   runId: string
@@ -182,7 +224,12 @@ export function toChartOption(
   })
 
   return {
-    yAxis: { type: 'category', data: sortedRuns.map((r) => r.run_id) },
+    grid: { containLabel: true },
+    yAxis: {
+      type: 'category',
+      data: sortedRuns.map((r) => r.run_id),
+      axisLabel: { width: Y_AXIS_LABEL_WIDTH_PX, overflow: 'truncate', ellipsis: '...' },
+    },
     xAxis: { type: 'time' },
     dataZoom: [
       { type: 'inside', xAxisIndex: 0 },
