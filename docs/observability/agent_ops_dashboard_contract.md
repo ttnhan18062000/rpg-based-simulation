@@ -50,9 +50,12 @@ nullable), `FileTouch`, `TimelineEntry` (has its own `phase`/`agent` fields,
 both nullable — distinct from `RawToolCall`), `RunSummary`, `RunDetail`
 (extends `RunSummary` with `ticket_title`, `ticket_lifecycle_state`),
 `RunTimeline`, `HealthStatus` (`status` field is hardcoded `"ok"`, never
-derived from `unparsed_lines` counts). `TicketFacets` (distinct
-`tiers`/`layers`/`statuses`/`priorities`/`tags` across the filtered-but-
-unpaginated result) and `TicketsPage` (`items: list[TicketSummary]`,
+derived from `unparsed_lines` counts). `TicketFacets` (`tiers`/`layers`/
+`statuses`/`priorities`/`tags` — all five now fixed canonical lists sourced
+from their respective registries/enums, independent of active filters,
+pagination, or corpus content; `tags` joined the other four in
+`TCK-20260720-DASHBOARD-TAG-FACET-REGISTRY`, reading `registries/tag_registry.jsonl`
+directly) and `TicketsPage` (`items: list[TicketSummary]`,
 `total_count: int`, `facets: TicketFacets`) — both real Pydantic models,
 never a raw dict at the route boundary.
 
@@ -104,10 +107,10 @@ recomputes.
 description source for the whole frontend. `DashboardCache.get_glossary`
 merges three sources at read time, none of them copied into a second file:
 every entry from `tools/glossary_registry.py`'s
-`docs/guidelines/glossary_registry.jsonl`
+`registries/glossary_registry.jsonl`
 (ticket-status/tier/priority/type/run-status/reason-code/event-status/phase
 terms), every layer from `tools/layer_registry.py`'s
-`docs/guidelines/layer_registry.jsonl` (reusing that registry's existing
+`registries/layer_registry.jsonl` (reusing that registry's existing
 `note` field as the description under `category="layer"`), and every
 `.claude/agents/*.md` role file (reusing each file's own frontmatter
 `description:` field as the description under `category="agent"`, via the
@@ -204,7 +207,7 @@ isn't a bounded list. The other four (`tiers`, `layers`, `statuses`,
 `tools/ticket_field_values.py`'s `TIER_VALUES`/`LAYER_VALUES`/
 `WORKFLOW_STATUS_VALUES`/`PRIORITY_VALUES` — independent of active filters,
 pagination, and current corpus content. `layers` in particular is
-registry-backed (`docs/guidelines/layer_registry.jsonl` via
+registry-backed (`registries/layer_registry.jsonl` via
 `tools/layer_registry.py`, TCK-20260718-LAYER-REGISTRY-CONVERSION), not a
 hardcoded literal. A value with zero matching tickets right now (e.g.
 `BLOCKED` status, or a rarely-used `Tier`) is still a selectable filter
@@ -241,7 +244,7 @@ shows a value that at least one matching ticket actually has.
   client-side); non-date column sort is a client-side re-order over the
   already-fetched array, since the backend `sort` param is date-only. The
   tag filter renders `optionsFacets.tags` (never `rows`, never
-  `docs/guidelines/tag_registry.jsonl`) through a manual-loop `narrowTags()`
+  `registries/tag_registry.jsonl`) through a manual-loop `narrowTags()`
   helper — never `Array.prototype.filter` — capped at `MAX_VISIBLE_TAGS`
   (40) and narrowed further by a local search input; selecting a tag still
   round-trips through the existing `toggleTag()`/`applyFilters()` ->

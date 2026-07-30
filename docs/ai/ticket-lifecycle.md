@@ -139,7 +139,7 @@ staging_artifacts/TCK-20260606-COMBAT-RELATION/
 **Gate (tag registry):** After the agent call returns, the orchestrator runs
 `tools/tag_registry.py::check_tags_registered` against the ticket's tags (via `bash()` — not
 agent-self-reported, so it can't be skipped by a prompt-following mistake). If any tag isn't in
-`docs/guidelines/tag_registry.jsonl`, the workflow returns `TAGS_NOT_REGISTERED` with the list —
+`registries/tag_registry.jsonl`, the workflow returns `TAGS_NOT_REGISTERED` with the list —
 catching this here instead of only at Verify (`done-checker`'s `frontmatter_valid` condition), 6+
 phases later. The user registers the tag (`python3 tools/tag_registry.py add <tag> --category <cat>
 --note "..."`) or edits the ticket to use an existing registered tag, then re-runs.
@@ -557,7 +557,7 @@ their own.
 | Return status | What failed | Fix | Re-run |
 |---|---|---|---|
 | `CONFLICTS_DETECTED` | Duplicate or conflicting ticket found | Review `conflicts` list, adjust scope or close duplicate | Re-run with `request` (new scope) |
-| `TAGS_NOT_REGISTERED` | A ticket tag isn't in `docs/guidelines/tag_registry.jsonl` | Register it (`python3 tools/tag_registry.py add <tag> --category <cat> --note "..."`) or edit the ticket's tags to use an existing registered one | Re-run with `ticket_id` |
+| `TAGS_NOT_REGISTERED` | A ticket tag isn't in `registries/tag_registry.jsonl` | Register it (`python3 tools/tag_registry.py add <tag> --category <cat> --note "..."`) or edit the ticket's tags to use an existing registered one | Re-run with `ticket_id` |
 | `NEEDS_HUMAN_INPUT` | Plan has unresolved questions | Edit `staging_artifacts/{id}/plan.md`, fill in the answers | Re-run with `ticket_id` |
 | `NEEDS_CHANGES` | Architecture violations in plan | Fix `plan.md` per violation list | Re-run with `ticket_id` |
 | `BLOCKED` | Fundamental architectural conflict | Revisit scope, possibly split ticket | Re-run with `ticket_id` or new `request` |

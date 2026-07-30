@@ -20,16 +20,16 @@ def _init_repo_skeleton(tmp_path: Path) -> None:
     (tmp_path / "tickets" / "inprogress").mkdir(parents=True, exist_ok=True)
     (tmp_path / "tickets" / "done").mkdir(parents=True, exist_ok=True)
     (tmp_path / "tickets" / "todos").mkdir(parents=True, exist_ok=True)
-    (tmp_path / "docs" / "guidelines").mkdir(parents=True, exist_ok=True)
+    (tmp_path / "registries").mkdir(parents=True, exist_ok=True)
 
 
 def _write_glossary(tmp_path: Path, entries: list[dict]) -> None:
-    path = tmp_path / "docs" / "guidelines" / "glossary_registry.jsonl"
+    path = tmp_path / "registries" / "glossary_registry.jsonl"
     path.write_text("\n".join(json.dumps(e) for e in entries) + ("\n" if entries else ""), encoding="utf-8")
 
 
 def _write_layers(tmp_path: Path, entries: list[dict]) -> None:
-    path = tmp_path / "docs" / "guidelines" / "layer_registry.jsonl"
+    path = tmp_path / "registries" / "layer_registry.jsonl"
     path.write_text("\n".join(json.dumps(e) for e in entries) + ("\n" if entries else ""), encoding="utf-8")
 
 

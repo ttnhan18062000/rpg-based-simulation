@@ -28,7 +28,7 @@ Counts how many completed tickets (`tickets/done/`) use each tag, and classifies
 one of the 5 categories defined in
 [`docs/guidelines/tag_taxonomy.md`](../guidelines/tag_taxonomy.md) (Subsystem/Topic,
 Phase/Milestone, Process/Skill-signal, Quality-attribute, Meta-Process) by looking it up in
-[`docs/guidelines/tag_registry.jsonl`](../guidelines/tag_registry.jsonl) — the append-only,
+[`registries/tag_registry.jsonl`](../guidelines/tag_registry.jsonl) — the append-only,
 machine-readable tag data file `tools/tag_registry.py` manages (`TCK-20260706-TAG-REGISTRY-DATA`).
 A tag only shows as `unclassified` if it somehow isn't registered, which should be rare going
 forward: `validate_frontmatter.py`'s hard allowlist rejects an unregistered tag at commit time. It
@@ -69,7 +69,7 @@ Tag classification (`categorize_tag(tag, registry)`):
 | Category | Rule |
 |---|---|
 | `phase-milestone` | Matches `^phase-\d+$` — recognized by pattern, never looked up (see `tag_taxonomy.md`'s Tag Registry section for why phase tags aren't individually registered) |
-| *(registry lookup)* | Every other tag: whatever `category` field the matching entry in `docs/guidelines/tag_registry.jsonl` carries — `subsystem-topic`, `process-skill-signal`, `quality-attribute`, or `meta-process` |
+| *(registry lookup)* | Every other tag: whatever `category` field the matching entry in `registries/tag_registry.jsonl` carries — `subsystem-topic`, `process-skill-signal`, `quality-attribute`, or `meta-process` |
 | `unclassified` | The tag isn't a phase tag and isn't in the registry — a data-integrity signal worth investigating (how did an unregistered tag get past `validate_frontmatter.py`'s hard allowlist?), not an expected steady state |
 
 ### Legacy / historical context
@@ -101,7 +101,7 @@ Covers four reporting angles over `tickets/done/` in one tool: ticket velocity/t
 tickets per day and per ISO-week, from `tickets/working_log.csv`), tier/type/priority distribution
 (counts per canonical value, plus a non-canonical marker for anything outside
 `tools/ticket_field_values.py`'s `TIER_VALUES`/`PRIORITY_VALUES`), layer distribution (counts per
-value in `docs/guidelines/layer_registry.jsonl`, same non-canonical marker), and artifact
+value in `registries/layer_registry.jsonl`, same non-canonical marker), and artifact
 completeness (for `standard`/`epic` tickets only, per this project's own hotfix-exemption: does
 `stored_artifacts/{ticket_id}/` exist with all 3 required files — `investigation.md`, `plan.md`,
 `test_plan.md`). Built by `TCK-20260718-TICKET-CORPUS-REPORT`, mirroring `tools/tag_report.py`'s

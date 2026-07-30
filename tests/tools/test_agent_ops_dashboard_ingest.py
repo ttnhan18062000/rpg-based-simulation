@@ -55,6 +55,18 @@ def _init_repo_skeleton(tmp_path: Path) -> None:
     (tmp_path / "tickets" / "todos").mkdir(parents=True, exist_ok=True)
 
 
+def _write_tag_registry_fixture(tmp_path: Path, tags: list[str]) -> None:
+    """Write a fixture registries/tag_registry.jsonl under tmp_path — facets["tags"] (as of
+    TCK-20260720-DASHBOARD-TAG-FACET-REGISTRY) reads this directly, not the ticket corpus."""
+    registry_dir = tmp_path / "registries"
+    registry_dir.mkdir(parents=True, exist_ok=True)
+    lines = [
+        json.dumps({"tag": tag, "category": "subsystem-topic", "added_date": "2026-07-06", "note": "fixture"})
+        for tag in tags
+    ]
+    (registry_dir / "tag_registry.jsonl").write_text("\n".join(lines) + ("\n" if lines else ""), encoding="utf-8")
+
+
 def _bump_mtime(path: Path) -> None:
     """Force a distinguishable mtime after a same-tick write, so DashboardCache's
     mtime-based rebuild trigger fires deterministically in fast test runs."""
@@ -626,15 +638,16 @@ def test_get_tickets_limit_offset_default_preserves_existing_behavior(tmp_path):
 
 def test_facets_source_reflects_full_filtered_corpus_not_just_current_page(tmp_path):
     _write_pagination_fixture_tickets(tmp_path)
+    _write_tag_registry_fixture(tmp_path, ["ai", "combat", "engine", "offpage", "onpage", "world"])
 
     cache = ingest.DashboardCache(repo_root=tmp_path)
     results = cache.get_tickets(limit=1, offset=0)
 
-    # Only PAGE1 (tier=epic, layer=ai, tags=[ai, onpage]) comes back as items,
-    # but facets must still carry values that only exist on later pages — and, as of
-    # TCK-20260718-DASHBOARD-FACETS-FULLY-CANONICAL, values that don't exist anywhere in this
-    # fixture at all (tiers/layers/statuses/priorities are all fixed canonical lists now, only
-    # tags remains genuinely corpus-derived).
+    # Only PAGE1 (tier=epic, layer=ai, tags=[ai, onpage]) comes back as items, but facets must
+    # still carry values that only exist on later pages — and, as of
+    # TCK-20260720-DASHBOARD-TAG-FACET-REGISTRY, all five facets (tiers/layers/statuses/
+    # priorities/tags) are fixed canonical lists (tags sourced from registries/tag_registry.jsonl,
+    # not the ticket corpus), never narrowed by pagination or any active filter.
     assert [r.ticket_id for r in results] == ["TCK-20260101-PAGE1"]
     assert results.facets["tiers"] == ["epic", "hotfix", "standard"]
     assert results.facets["layers"] == sorted(LAYER_VALUES)
@@ -642,6 +655,43 @@ def test_facets_source_reflects_full_filtered_corpus_not_just_current_page(tmp_p
     assert results.facets["priorities"] == ["P0", "P1", "P2", "P3"]
     assert "offpage" in results.facets["tags"]
     assert "world" in results.facets["tags"]
+
+
+def test_tags_facet_is_canonical_registry_derived_regardless_of_corpus_content(tmp_path):
+    # A ticket corpus using only "onpage" — "registry-only" is registered but appears on zero
+    # tickets. The tags facet must still list the full registry (registry-only included), and must
+    # NOT list any tag that only exists on a ticket but isn't registered (proving the source really
+    # is the registry, not the corpus — the inverse of the old corpus-derived contract).
+    _init_repo_skeleton(tmp_path)
+    _write_tag_registry_fixture(tmp_path, ["onpage", "registry-only"])
+    path = tmp_path / "tickets" / "inprogress" / "TCK-20260101-ONLY-ONE.md"
+    path.write_text(
+        "---\nstatus: active\nlayer: engine\nauthority: P1\naudience: agent\n"
+        "ticket_id: TCK-20260101-ONLY-ONE\nphase: open\ndate: 2026-07-15\ntags: [onpage, unregistered-corpus-tag]\n---\n\n"
+        "# TCK-20260101-ONLY-ONE\n\n## Tier\nstandard\n\n## Type\nfeature\n\n"
+        "## Priority\nP1\n\n## Status\nOPEN\n",
+        encoding="utf-8",
+    )
+
+    cache = ingest.DashboardCache(repo_root=tmp_path)
+    results = cache.get_tickets()
+
+    assert [r.ticket_id for r in results] == ["TCK-20260101-ONLY-ONE"]
+    assert results.facets["tags"] == ["onpage", "registry-only"]
+    assert "unregistered-corpus-tag" not in results.facets["tags"]
+
+
+def test_tags_facet_unaffected_by_active_filters(tmp_path):
+    # Filtering BY tier=epic must not shrink the tags facet down to just PAGE1's tags — it is the
+    # full registry, independent of any active filter, mirroring
+    # test_tiers_layers_priorities_facets_unaffected_by_active_filters's own pattern.
+    _write_pagination_fixture_tickets(tmp_path)
+    _write_tag_registry_fixture(tmp_path, ["ai", "combat", "engine", "offpage", "onpage", "world"])
+    cache = ingest.DashboardCache(repo_root=tmp_path)
+    results = cache.get_tickets(tier="epic")
+
+    assert [r.ticket_id for r in results] == ["TCK-20260101-PAGE1"]
+    assert results.facets["tags"] == ["ai", "combat", "engine", "offpage", "onpage", "world"]
 
 
 def test_tiers_layers_priorities_facets_are_canonical_full_sets_regardless_of_corpus_content(tmp_path):

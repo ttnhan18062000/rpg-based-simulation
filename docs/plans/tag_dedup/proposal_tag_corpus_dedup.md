@@ -42,7 +42,7 @@ Two distinct fix types, both already codified in `canonical_form_violation()`:
    dungeon-crawl, grade-thresholds) — replace the underscore literal with
    the hyphenated canonical form in the ticket/artifact's frontmatter
    `tags:` list. Only `simulation-quality` is currently registered in
-   `docs/guidelines/tag_registry.jsonl`; the other 4 canonical forms are
+   `registries/tag_registry.jsonl`; the other 4 canonical forms are
    not registered at all (0 uses of the canonical spelling anywhere in the
    corpus) — Investigate must decide whether to register each canonical
    form via the real `tag_registry.py add` API before or as part of

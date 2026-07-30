@@ -1,0 +1,53 @@
+{"added_date": "2026-07-06", "category": "subsystem-topic", "note": "seed: SimQ Agency pillar (defer/abandon/cascade/novelty tracking)", "tag": "agency"}
+{"added_date": "2026-07-06", "category": "subsystem-topic", "note": "seed: strategic cognition subsystem; explicit tag_taxonomy.md example", "tag": "cognition"}
+{"added_date": "2026-07-06", "category": "subsystem-topic", "note": "seed: world/resource ecology and regeneration subsystem", "tag": "ecology"}
+{"added_date": "2026-07-06", "category": "subsystem-topic", "note": "seed: event bus / observability subsystem", "tag": "observability"}
+{"added_date": "2026-07-06", "category": "subsystem-topic", "note": "seed: ResourceRegistry gameplay subsystem", "tag": "resource-registry"}
+{"added_date": "2026-07-06", "category": "subsystem-topic", "note": "seed: SimQ degenerate-state concept (economic/behavioral stasis)", "tag": "stasis"}
+{"added_date": "2026-07-06", "category": "subsystem-topic", "note": "seed: world subsystem; explicit tag_taxonomy.md example", "tag": "world"}
+{"added_date": "2026-07-06", "category": "subsystem-topic", "note": "seed: canonical form for the SimQ subsystem \u2014 the live corpus only uses the non-canonical 'simulation_quality' (2 tickets, already flagged separately)", "tag": "simulation-quality"}
+{"added_date": "2026-07-06", "category": "quality-attribute", "note": "seed: engine determinism guarantee/hardening \u2014 parallels tag_taxonomy.md's 'Hardened'/'Enforced' divergence classes", "tag": "determinism"}
+{"added_date": "2026-07-06", "category": "quality-attribute", "note": "seed: explicit tag_taxonomy.md worked example", "tag": "schema"}
+{"added_date": "2026-07-06", "category": "quality-attribute", "note": "seed: explicit tag_taxonomy.md worked example (SimQ calibration)", "tag": "calibration"}
+{"added_date": "2026-07-06", "category": "process-skill-signal", "note": "seed: matches /security-review skill 1:1 per ticket_tagging.md", "tag": "security"}
+{"added_date": "2026-07-06", "category": "meta-process", "note": "seed: Claude Code agent workflow tooling", "tag": "workflows"}
+{"added_date": "2026-07-06", "category": "meta-process", "note": "seed: agent-monitoring/ runs.jsonl/events.jsonl tooling", "tag": "agent-monitoring"}
+{"added_date": "2026-07-06", "category": "meta-process", "note": "seed: the tag taxonomy/registry system itself", "tag": "tagging"}
+{"added_date": "2026-07-06", "category": "meta-process", "note": "seed: docs/ authoring and maintenance", "tag": "documentation"}
+{"added_date": "2026-07-06", "category": "meta-process", "note": "seed: tag taxonomy definition work", "tag": "taxonomy"}
+{"added_date": "2026-07-06", "category": "meta-process", "note": "seed: ticket nature descriptor; overlaps ## Type field, flagged as an open question in tag_taxonomy.md, not forbidden here", "tag": "bug"}
+{"added_date": "2026-07-06", "category": "meta-process", "note": "seed: agent/ticket workflow process improvements", "tag": "process-improvement"}
+{"added_date": "2026-07-06", "category": "meta-process", "note": "seed: agent-monitoring retrospective reports", "tag": "retro"}
+{"added_date": "2026-07-06", "category": "meta-process", "note": "seed: Claude Code skills system", "tag": "skills"}
+{"added_date": "2026-07-06", "category": "meta-process", "note": "seed: ticket investigation phase/artifacts", "tag": "investigation"}
+{"added_date": "2026-07-06", "category": "meta-process", "note": "seed: UpdateSimulationKnowledgeWorkflow / knowledge-store tooling", "tag": "knowledge-store"}
+{"added_date": "2026-07-06", "category": "meta-process", "note": "seed: lab-agent orchestration tooling", "tag": "lab-agent"}
+{"added_date": "2026-07-06", "category": "meta-process", "note": "seed: docs/REGISTRY.yaml tooling", "tag": "registry"}
+{"added_date": "2026-07-06", "category": "meta-process", "note": "seed: CLAUDE.md project-instructions maintenance", "tag": "claude-md"}
+{"added_date": "2026-07-06", "category": "meta-process", "note": "seed: create-tickets workflow", "tag": "create-tickets"}
+{"added_date": "2026-07-06", "category": "meta-process", "note": "seed: doc/ticket frontmatter schema tooling", "tag": "frontmatter"}
+{"added_date": "2026-07-06", "category": "meta-process", "note": "seed: Claude Code hooks configuration", "tag": "hooks"}
+{"added_date": "2026-07-06", "category": "meta-process", "note": "seed: investigator agent", "tag": "investigator"}
+{"added_date": "2026-07-06", "category": "meta-process", "note": "seed: investigation/debugging methodology, not a named skill gate", "tag": "root-cause"}
+{"added_date": "2026-07-06", "category": "meta-process", "note": "seed: ticket-scoper agent", "tag": "ticket-scoper"}
+{"added_date": "2026-07-06", "category": "meta-process", "note": "seed: UpdateSimulationKnowledgeWorkflow revert mechanism (agent tooling, not gameplay rollback)", "tag": "rollback"}
+{"added_date": "2026-07-06", "category": "meta-process", "note": "seed: UpdateSimulationKnowledgeWorkflow audit trail (agent tooling)", "tag": "audit-trail"}
+{"added_date": "2026-07-06", "category": "meta-process", "note": "seed: docs/ai/ agent-orchestration domain (this repo's layer:ai means the Claude agent system, not gameplay AI/cognition \u2014 that's tracked under 'strategy'/'cognition' instead)", "tag": "ai"}
+{"added_date": "2026-07-06", "category": "meta-process", "note": "seed: agent-monitoring/reporting data-quality fixes (working_log.csv, generate_retro.py)", "tag": "data-quality"}
+{"added_date": "2026-07-06", "category": "meta-process", "note": "seed: ticket/tag reporting tooling (tools/tag_report.py, docs/guides/ticket_reporting.md)", "tag": "reporting"}
+{"added_date": "2026-07-06", "category": "meta-process", "note": "seed: documentation diagram coverage/index work (TCK-20260706-DIAGRAM-COVERAGE)", "tag": "diagrams"}
+{"added_date": "2026-07-06", "category": "process-skill-signal", "note": "matches /api-design-principles skill 1:1 per ticket_tagging.md's skill-suggestion table; discovered unregistered while auditing create-tickets.js (TCK-20260706-CREATE-TICKETS-TAG-CHECK)", "tag": "api-design"}
+{"added_date": "2026-07-06", "category": "process-skill-signal", "note": "matches /debugging-strategies (or world-debugger) skill 1:1 per ticket_tagging.md's skill-suggestion table; discovered unregistered while auditing create-tickets.js (TCK-20260706-CREATE-TICKETS-TAG-CHECK)", "tag": "debugging"}
+{"added_date": "2026-07-06", "category": "process-skill-signal", "note": "matches /python-performance-optimization skill 1:1 per ticket_tagging.md's skill-suggestion table; discovered unregistered while auditing create-tickets.js (TCK-20260706-CREATE-TICKETS-TAG-CHECK)", "tag": "performance"}
+{"added_date": "2026-07-06", "category": "subsystem-topic", "note": "src/domains/adventure/ subsystem (AdventureDecisionPhase, route generation); consolidates ticket-local adventure-routing/routing tags", "tag": "adventure"}
+{"added_date": "2026-07-06", "category": "subsystem-topic", "note": "src/domains/optimization/feature_flags.py FeatureMode system (ENABLE_ADVENTURE_ROUTING, ENABLE_BELIEF_ASSIMILATION, etc.)", "tag": "feature-flags"}
+{"added_date": "2026-07-06", "category": "subsystem-topic", "note": "FactionState/faction_relationships.yaml gameplay subsystem", "tag": "faction"}
+{"added_date": "2026-07-06", "category": "subsystem-topic", "note": "InformationBeliefPhase/information_source_profiles gameplay subsystem", "tag": "information"}
+{"added_date": "2026-07-06", "category": "subsystem-topic", "note": "SelfModelBundle/self_model.py cognition-adjacent subsystem; consolidates ticket-local branch-b tag", "tag": "self-model"}
+{"added_date": "2026-07-06", "category": "quality-attribute", "note": "SimQ calibration corpus concept (world/seed/scale diversity across the full calibration set); consolidates ticket-local unit-tier/end-to-end-tier/stress-tier/scale-metric/scale-diversity/calibration-harness tags", "tag": "corpus"}
+{"added_date": "2026-07-10", "category": "subsystem-topic", "note": "SOCIAL SimQ pillar / cooperation, groups, contracts, reputation subsystem (CooperationPhase, SocialScorer); named as explicit seed example in tag_taxonomy.md's Subsystem/Topic list but not yet registered", "tag": "social"}
+{"added_date": "2026-07-18", "category": "subsystem-topic", "note": "Agent Ops Dashboard feature area (src/api/agent_ops_dashboard/, dashboard-frontend/)", "tag": "dashboard"}
+{"added_date": "2026-07-18", "category": "subsystem-topic", "note": "Strategic layer: faction wars, territory conquest, siege mechanics (TCK-20260322-GRAND_STRATEGY)", "tag": "grand-strategy"}
+{"added_date": "2026-07-18", "category": "subsystem-topic", "note": "SimQ calibration world archetype (pure-combat, no town/service infrastructure) \u2014 distinct from sandbox_world", "tag": "dungeon-crawl"}
+{"added_date": "2026-07-18", "category": "subsystem-topic", "note": "SimQ pillar-score grading/decay threshold tuning", "tag": "grade-thresholds"}
+{"added_date": "2026-07-28", "category": "subsystem-topic", "note": "seed: test-infrastructure/eval-harness tickets (tools/eval/, tests/); mirrors the existing 'testing' layer value, previously missing as a Subsystem/Topic tag", "tag": "testing"}

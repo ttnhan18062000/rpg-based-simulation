@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Manage the append-only ticket/doc `layer:` registry (docs/guidelines/layer_registry.jsonl).
+Manage the append-only ticket/doc `layer:` registry (registries/layer_registry.jsonl).
 
 Built for TCK-20260718-LAYER-REGISTRY-CONVERSION. Mirrors `tools/tag_registry.py`'s design
 (append-only JSONL, one entry per line, `add_layer()` refuses to re-add an existing layer, CLI
@@ -57,7 +57,7 @@ def canonical_form_violation(layer: str) -> str | None:
 # ---------------------------------------------------------------------------
 
 _DEFAULT_ROOT = Path(__file__).resolve().parent.parent
-_REGISTRY_REL_PATH = Path("docs/guidelines/layer_registry.jsonl")
+_REGISTRY_REL_PATH = Path("registries/layer_registry.jsonl")
 
 
 def registry_path(root: Path | str | None = None) -> Path:
@@ -156,7 +156,7 @@ def layer_values(root: Path | str | None = None) -> frozenset[str]:
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Manage the append-only layer registry (docs/guidelines/layer_registry.jsonl)."
+        description="Manage the append-only layer registry (registries/layer_registry.jsonl)."
     )
     sub = parser.add_subparsers(dest="command", required=True)
 

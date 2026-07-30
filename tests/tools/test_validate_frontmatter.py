@@ -553,7 +553,7 @@ class TestTagCanonicalization:
 # `registry` is an opt-in third argument to validate_file/_check_tags: omitting it (as every test
 # above does) preserves pre-registry behavior (canonical-form checks only). These tests pass an
 # explicit in-memory registry to exercise the new hard-allowlist membership check without touching
-# the real docs/guidelines/tag_registry.jsonl.
+# the real registries/tag_registry.jsonl.
 # ---------------------------------------------------------------------------
 
 class TestTagRegistryEnforcement:

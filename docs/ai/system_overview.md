@@ -68,7 +68,7 @@ directly from `.claude/workflows/create-tickets.js`'s `phase(...)` calls, not fr
   `docs/REGISTRY.yaml` lookups, a `working_log.csv` grep, code and test reads, and a tier assessment.
 - **Structure** runs one synthesis agent that produces ticket fields from the investigation evidence
   only, handling merge/split/short-scope dedup across concerns. The orchestrator then checks every
-  task's tags against `docs/guidelines/tag_registry.jsonl` (`tools/tag_registry.py::check_tags_registered`)
+  task's tags against `registries/tag_registry.jsonl` (`tools/tag_registry.py::check_tags_registered`)
   — a task with an unregistered tag is skipped (not written), reported in the run's
   `tags_not_registered` field, and excluded from `SEQUENCE.md`'s dependency graph, while the rest of
   the batch proceeds (`TCK-20260706-CREATE-TICKETS-TAG-CHECK`).
@@ -80,7 +80,7 @@ directly from `.claude/workflows/create-tickets.js`'s `phase(...)` calls, not fr
 same 5 phases, independently confirming them.
 
 **The 10-phase `implement-ticket` pipeline** (standard tier): Scope (`ticket-scoper`, plus an
-orchestrator-run check of `ticketInfo.tags` against `docs/guidelines/tag_registry.jsonl` after the
+orchestrator-run check of `ticketInfo.tags` against `registries/tag_registry.jsonl` after the
 agent returns — gate: `TAGS_NOT_REGISTERED`, `TCK-20260706-SCOPE-TAG-REGISTRY-CHECK`) → Investigate
 (`investigator`) → Plan (`planner`) → Review (`architecture-reviewer`, gate: `NEEDS_CHANGES`/`BLOCKED`)
 → Implement (`implementer`) →

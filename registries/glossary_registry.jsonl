@@ -1,0 +1,56 @@
+{"added_date": "2026-07-18", "category": "ticket-status", "description": "Ticket has been scoped but work has not started yet.", "term": "OPEN"}
+{"added_date": "2026-07-18", "category": "ticket-status", "description": "Ticket is actively being worked on.", "term": "INPROGRESS"}
+{"added_date": "2026-07-18", "category": "ticket-status", "description": "Ticket cannot proceed until an external dependency or decision is resolved.", "term": "BLOCKED"}
+{"added_date": "2026-07-18", "category": "ticket-status", "description": "Work is complete and closed \u2014 the same value also appears as a run's final_status when a run finishes successfully.", "term": "DONE"}
+{"added_date": "2026-07-18", "category": "ticket-status", "description": "Epic-tier ticket has been scoped into child tickets; the epic itself has no direct implementation of its own.", "term": "EPIC_SCOPED"}
+{"added_date": "2026-07-18", "category": "tier", "description": "Bug fix or minimal targeted change with self-evident intent \u2014 uses the short Scope to Implement to Test to Parity to Verify to Finalize pipeline.", "term": "hotfix"}
+{"added_date": "2026-07-18", "category": "tier", "description": "New feature, refactor, or substantive repair \u2014 uses the full pipeline including Investigate/Plan/Review.", "term": "standard"}
+{"added_date": "2026-07-18", "category": "tier", "description": "Large multi-ticket initiative that only scopes child tickets \u2014 no direct implementation happens on the epic ticket itself.", "term": "epic"}
+{"added_date": "2026-07-18", "category": "priority", "description": "Highest priority \u2014 critical, blocking issue.", "term": "P0"}
+{"added_date": "2026-07-18", "category": "priority", "description": "High priority \u2014 the default priority when unspecified.", "term": "P1"}
+{"added_date": "2026-07-18", "category": "priority", "description": "Medium priority.", "term": "P2"}
+{"added_date": "2026-07-18", "category": "priority", "description": "Low priority.", "term": "P3"}
+{"added_date": "2026-07-18", "category": "type", "description": "Fixes incorrect behavior.", "term": "bug"}
+{"added_date": "2026-07-18", "category": "type", "description": "Adds new capability.", "term": "feature"}
+{"added_date": "2026-07-18", "category": "type", "description": "Restructures existing code without changing its behavior.", "term": "refactor"}
+{"added_date": "2026-07-18", "category": "type", "description": "Maintenance work with no direct feature or bug-fix impact.", "term": "chore"}
+{"added_date": "2026-07-18", "category": "type", "description": "Restores previously-working behavior that regressed.", "term": "repair"}
+{"added_date": "2026-07-18", "category": "run-status", "description": "Verify phase found one or more failing Definition-of-Done conditions.", "term": "DOD_BLOCKED"}
+{"added_date": "2026-07-18", "category": "run-status", "description": "Architecture or Security review found fixable violations that must be addressed before continuing.", "term": "NEEDS_CHANGES"}
+{"added_date": "2026-07-18", "category": "run-status", "description": "Scope phase found this ticket duplicates or conflicts with existing work.", "term": "CONFLICTS_DETECTED"}
+{"added_date": "2026-07-18", "category": "run-status", "description": "Plan phase raised unresolved questions that require a human decision before implementation can proceed.", "term": "NEEDS_HUMAN_INPUT"}
+{"added_date": "2026-07-18", "category": "run-status", "description": "Test phase found one or more failing tests.", "term": "TESTS_FAILED"}
+{"added_date": "2026-07-18", "category": "run-status", "description": "Security review found a fundamental vulnerability that blocks the change.", "term": "SECURITY_BLOCKED"}
+{"added_date": "2026-07-18", "category": "run-status", "description": "The user interrupted or stopped the run before it reached a gate outcome.", "term": "STOPPED_BY_USER"}
+{"added_date": "2026-07-18", "category": "run-status", "description": "A gate check failed \u2014 a generic/legacy status predating more specific gate-failure codes.", "term": "GATE_FAIL"}
+{"added_date": "2026-07-18", "category": "run-status", "description": "A batch of tickets were all successfully scoped (create-tickets workflow outcome).", "term": "ALL_SCOPED"}
+{"added_date": "2026-07-18", "category": "run-status", "description": "Work completed successfully but was not associated with a specific ticket record.", "term": "DONE_NO_TICKET"}
+{"added_date": "2026-07-18", "category": "run-status", "description": "Legacy alias of INPROGRESS from older monitoring records \u2014 same meaning: actively being worked on.", "term": "IN_PROGRESS"}
+{"added_date": "2026-07-18", "category": "reason-code", "description": "Duplicate or conflicting ticket found during Scope.", "term": "conflicts_detected"}
+{"added_date": "2026-07-18", "category": "reason-code", "description": "A tag used on this ticket is not registered in docs/guidelines/tag_registry.jsonl.", "term": "tag_registry_rejection"}
+{"added_date": "2026-07-18", "category": "reason-code", "description": "Some other Definition-of-Done condition failed at Verify \u2014 a deliberately coarse fallback covering any DoD failure not broken out into its own code.", "term": "dod_condition_failed"}
+{"added_date": "2026-07-18", "category": "event-status", "description": "Agent completed its task successfully.", "term": "ok"}
+{"added_date": "2026-07-18", "category": "event-status", "description": "Agent returned an error or could not complete its task.", "term": "failed"}
+{"added_date": "2026-07-18", "category": "event-status", "description": "Agent was blocked by a gate condition, such as an architecture violation.", "term": "blocked"}
+{"added_date": "2026-07-18", "category": "event-status", "description": "This phase was skipped \u2014 for example Investigate/Plan/Review are skipped for hotfix-tier tickets.", "term": "skipped"}
+{"added_date": "2026-07-20", "category": "phase", "description": "Ticket-scoper agent creates the ticket file and staging artifacts, checking first for duplicate or conflicting work already underway.", "term": "Scope"}
+{"added_date": "2026-07-20", "category": "phase", "description": "Digs into the affected code, docs, and prior tickets for a ticket or proposed concern, producing the findings later phases build on.", "term": "Investigate"}
+{"added_date": "2026-07-20", "category": "phase", "description": "Planner agent turns investigation findings into an ordered, narrow, independently-verifiable implementation plan with explicit scope guards.", "term": "Plan"}
+{"added_date": "2026-07-20", "category": "phase", "description": "Architecture-reviewer agent checks a proposed implementation plan against durable-state, API-boundary, and Mechanics Bible rules before any code is written.", "term": "Review"}
+{"added_date": "2026-07-20", "category": "phase", "description": "Implementer agent writes the code changes described in the plan, or, in implement-epic, delegates one full implement-ticket run per child ticket.", "term": "Implement"}
+{"added_date": "2026-07-20", "category": "phase", "description": "Architecture-reviewer agent re-checks the real code diff after implementation, judging only findings flagged by its own static pre-check rather than re-reviewing the whole plan.", "term": "Architecture-Verify"}
+{"added_date": "2026-07-20", "category": "phase", "description": "Test-scoper agent maps the changed files to relevant existing tests, runs a scoped test command, and reports pass/fail results.", "term": "Test"}
+{"added_date": "2026-07-20", "category": "phase", "description": "Parity-updater agent updates the relevant docs/parity_ledger entry so documentation and source code stay in sync after a behavior change.", "term": "Parity"}
+{"added_date": "2026-07-20", "category": "phase", "description": "Security-reviewer agent checks changed code for injection, unsafe deserialization, secrets, and raw-domain-model exposure; runs only when the ticket is tagged security-relevant.", "term": "Security-Review"}
+{"added_date": "2026-07-20", "category": "phase", "description": "Confirms the work is genuinely complete against its own Definition-of-Done conditions - a 13-condition check in implement-ticket, or a regression/anchor-coverage check in simq-audit.", "term": "Verify"}
+{"added_date": "2026-07-20", "category": "phase", "description": "Moves the ticket to tickets/done/, appends the working log, migrates staging artifacts to storage, and cleans up any leftover run data.", "term": "Finalize"}
+{"added_date": "2026-07-20", "category": "phase", "description": "Reads a natural-language proposal document and extracts its discrete concerns before any investigation begins.", "term": "Comprehend"}
+{"added_date": "2026-07-20", "category": "phase", "description": "Synthesis agent turns per-concern investigation results into properly-formed ticket fields, including real file paths and concrete acceptance criteria.", "term": "Structure"}
+{"added_date": "2026-07-20", "category": "phase", "description": "Writes the finished TCK-YYYYMMDD ticket file(s) into the target output folder.", "term": "Write"}
+{"added_date": "2026-07-20", "category": "phase", "description": "Appends newly-created ticket IDs to a parent epic ticket's Related Tickets section, when an epic_id was given.", "term": "Link"}
+{"added_date": "2026-07-20", "category": "phase", "description": "Re-runs the SimQ calibration corpus and captures regressions, pass/fail counts, and any uncovered anchor keys or parity ledger candidates.", "term": "Recalibrate"}
+{"added_date": "2026-07-20", "category": "phase", "description": "Classifies each flagged calibration item as expected drift, a real regression, a design-acknowledgment decision, or no action needed.", "term": "Classify Drift"}
+{"added_date": "2026-07-20", "category": "phase", "description": "Updates grade-anchor baselines for items classified as expected drift only, then re-runs a targeted test subset to confirm the update holds.", "term": "Update Anchors"}
+{"added_date": "2026-07-20", "category": "phase", "description": "Updates the SimQ evaluation and integration docs so they stay consistent with the refreshed calibration results.", "term": "Sync Docs"}
+{"added_date": "2026-07-20", "category": "phase", "description": "Updates docs/parity_ledger entries flagged by the SimQ audit gap scan, using the same verified/divergent/missing rules as implement-ticket's own Parity phase.", "term": "Parity Check"}
+{"added_date": "2026-07-20", "category": "phase", "description": "Reports the audit's final verdict, either suggesting a no-regression chore commit or handing off a pre-seeded ticket for a real regression or design-acknowledgment decision.", "term": "Report"}

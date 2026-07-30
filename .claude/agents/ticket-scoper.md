@@ -24,7 +24,7 @@ Produce a file named `TCK-YYYYMMDD-SHORT-SCOPE.md` using today's date. The file 
 ```
 ---
 status: active
-layer: <infer from scope — registered in docs/guidelines/layer_registry.jsonl, run `python3 tools/layer_registry.py list` to see valid values>
+layer: <infer from scope — registered in registries/layer_registry.jsonl, run `python3 tools/layer_registry.py list` to see valid values>
 authority: P1
 audience: agent
 ticket_id: TCK-YYYYMMDD-SHORT-SCOPE
@@ -63,7 +63,7 @@ P1
 ## Completion Summary
 ```
 
-`layer` must be a value already registered in `docs/guidelines/layer_registry.jsonl` — check `python3 tools/layer_registry.py list` before assigning; if nothing genuinely fits, register a new one (`python3 tools/layer_registry.py add <layer> --note "why"`) rather than force-fitting. Use `misc` only if no real layer fits and registering a new one isn't warranted; note the choice in Assumptions / Open Questions.
+`layer` must be a value already registered in `registries/layer_registry.jsonl` — check `python3 tools/layer_registry.py list` before assigning; if nothing genuinely fits, register a new one (`python3 tools/layer_registry.py add <layer> --note "why"`) rather than force-fitting. Use `misc` only if no real layer fits and registering a new one isn't warranted; note the choice in Assumptions / Open Questions.
 
 - **Status** starts as `OPEN`.
 - **Tier** — infer from the request (validated against `tools/ticket_field_values.py::TIER_VALUES` at close time — a ticket cannot close with a value outside this set):

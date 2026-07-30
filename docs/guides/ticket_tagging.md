@@ -23,7 +23,7 @@ agents can route on them later instead of relying on prose.
 
 ## Registering a New Tag
 
-Tags are now a **hard allowlist**, backed by `docs/guidelines/tag_registry.jsonl`
+Tags are now a **hard allowlist**, backed by `registries/tag_registry.jsonl`
 (`tools/tag_registry.py`) — see `docs/guidelines/tag_taxonomy.md`'s Tag Registry section for the
 full rationale. In practice, if you want to use a tag that isn't already registered:
 

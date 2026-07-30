@@ -38,7 +38,7 @@ tags: [faction, phase-5, debugging, hardening, some-oneoff-tag]"""
 
 # ---------------------------------------------------------------------------
 # categorize_tag — a pure registry lookup now, tested against a small in-memory registry rather
-# than the live docs/guidelines/tag_registry.jsonl (mirrors this file's existing tmp_path style).
+# than the live registries/tag_registry.jsonl (mirrors this file's existing tmp_path style).
 # ---------------------------------------------------------------------------
 
 _SAMPLE_REGISTRY = {

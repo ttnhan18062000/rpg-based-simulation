@@ -4577,7 +4577,9 @@
     independent of active filters, pagination, and corpus content; only
     facets["tags"] remains corpus-derived, since Tag is genuinely
     open-vocabulary and multi-value, not a small closed enum the way the
-    other four are). dashboard-frontend/src/views/TicketsView.tsx:96-102
+    other four are — superseded below by TCK-20260720-DASHBOARD-TAG-FACET-REGISTRY,
+    which made tags canonical too, once registries/tag_registry.jsonl existed
+    as a real governed list). dashboard-frontend/src/views/TicketsView.tsx:96-102
     (FilterSelect's synthetic-<option> fallback, added by
     TCK-20260718-FILTER-SELECT-DROPOUT, kept but re-documented as
     defensive-only — proven unreachable in practice for all four of its real
@@ -4680,6 +4682,18 @@
     shared append-writer module (tools/agent-monitoring/writer.py) used by post_tool_hook.py/
     record_run.py/record_events.py — sits entirely outside src/, so only this dashboard-facing
     slice of that ticket is recorded here.
+    TCK-20260720-DASHBOARD-TAG-FACET-REGISTRY: ingest.py:51-52 (new `import tag_registry`
+    alongside the pre-existing `import layer_registry`, same module-level cross-package pattern
+    already used for get_glossary()'s layer_registry.load_registry() call), ingest.py:620
+    (facets["tags"] changed from _distinct_sorted(tag for r in filtered for tag in r["tags"]) to
+    sorted(tag_registry.load_registry(self._repo_root).keys()) — the fifth and last ticket facet
+    to become fixed/canonical, superseding the "only tags remains corpus-derived" claim recorded
+    above under TCK-20260718-DASHBOARD-FACETS-FULLY-CANONICAL). Deliberate, accepted behavior
+    change: a legacy/pre-taxonomy free-text tag present on real tickets but absent from
+    registries/tag_registry.jsonl no longer appears in this facet, and open-ended phase-N tags
+    (exempt from registration) never appear here either — both intentional, not a regression.
+    TicketsView.tsx/TicketsView.test.tsx confirmed to need no change (read directly, not assumed —
+    MAX_VISIBLE_TAGS(40) + search-narrowing already tolerate larger synthetic counts).
   proof_type: feature
   test_path: >
     tests/tools/test_agent_ops_dashboard_ingest.py (including
@@ -5035,7 +5049,7 @@
   legacy_evidence: null
   v2_evidence: >
     tools/glossary_registry.py (new module: GLOSSARY_CATEGORIES fixed 7-value set, add_term(),
-    load_registry(), CLI); docs/guidelines/glossary_registry.jsonl (35 seeded entries);
+    load_registry(), CLI); registries/glossary_registry.jsonl (35 seeded entries);
     src/api/agent_ops_dashboard/models.py (new GlossaryEntry/GlossaryResponse Pydantic models);
     src/api/agent_ops_dashboard/ingest.py (DashboardCache.get_glossary() -- merges
     glossary_registry.load_registry() with layer_registry.load_registry()'s `note` field,
@@ -5536,7 +5550,7 @@
   v2_evidence: >
     tools/glossary_registry.py:57 (`"phase",` added to the `GLOSSARY_CATEGORIES` set, :49-58) and
     :27-28 (module docstring updated to list `phase` among the enum-like domains this dashboard
-    renders). docs/guidelines/glossary_registry.jsonl: 21 new `"category": "phase"` entries
+    renders). registries/glossary_registry.jsonl: 21 new `"category": "phase"` entries
     appended (`Scope`, `Investigate`, `Plan`, `Review`, `Implement`, `Architecture-Verify`,
     `Test`, `Parity`, `Security-Review`, `Verify`, `Finalize`, `Comprehend`, `Structure`, `Write`,
     `Link`, `Recalibrate`, `Classify Drift`, `Update Anchors`, `Sync Docs`, `Parity Check`,

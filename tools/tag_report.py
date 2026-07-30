@@ -9,7 +9,7 @@ tags at all — so the count reflects the current controlled vocabulary
 (docs/guidelines/tag_taxonomy.md), not the ~1273-distinct-tag pre-taxonomy corpus that document
 describes.
 
-Tag categorization is now a direct lookup against `docs/guidelines/tag_registry.jsonl` (via
+Tag categorization is now a direct lookup against `registries/tag_registry.jsonl` (via
 `tools/tag_registry.py`) rather than a heuristic guess against a handful of hardcoded example
 tags — the registry is the authoritative source for "which category is this tag," so a tag is
 only ever "unclassified" here if it somehow isn't registered (which `validate_frontmatter.py`'s

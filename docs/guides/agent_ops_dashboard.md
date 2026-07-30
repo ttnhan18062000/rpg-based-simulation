@@ -87,15 +87,19 @@ Filtering across dimensions is AND (a ticket must match every active
 filter); filtering within the tag selection is OR (a ticket matches if it
 has any selected tag). The Tier/Layer/Status/Priority dropdowns always list
 their full canonical sets (Tier: `hotfix`/`standard`/`epic`; Layer: every
-value registered in `docs/guidelines/layer_registry.jsonl`; Status: `OPEN`/
+value registered in `registries/layer_registry.jsonl`; Status: `OPEN`/
 `INPROGRESS`/`BLOCKED`/`DONE`/`EPIC_SCOPED`; Priority: `P0`-`P3`) regardless
 of whether any ticket currently holds a given value — so e.g. `BLOCKED`
 stays selectable (returning zero rows) instead of disappearing whenever no
 ticket happens to be blocked right now, and selecting one filter never
-narrows what another dropdown can offer. Only the tag list is genuinely
-corpus-derived (open-vocabulary, not a small closed enum), sourced from a
-server-computed summary of the full filtered corpus so it never narrows to
-just the current page either. The tag list itself is capped at 40
+narrows what another dropdown can offer. The tag list is also canonical
+(registry-derived, since `TCK-20260720-DASHBOARD-TAG-FACET-REGISTRY`), sourced from every tag
+registered in `registries/tag_registry.jsonl` rather than only tags currently present on a
+ticket — a registered tag with zero matching tickets right now still appears, and selecting one
+filter never narrows what the tag list can offer either. A legacy/pre-taxonomy free-text tag not
+in the registry, or an open-ended phase-N tag (exempt from registration), will not appear in this
+list — a deliberate consequence of the switch to registry-derived, not a bug. The tag list itself
+is capped at 40
 always-visible options with a search box to narrow further, instead of
 dumping every tag in the corpus as an unbroken wall of buttons. Clicking
 the date column header re-sorts via the backend (the only server-side sort
@@ -147,8 +151,8 @@ would only need those constants' values swapped, not a chart rewrite.
 
 Enum-like labels across the dashboard show a description on hover — a dotted
 underline marks a label as hoverable. Descriptions are fetched once per app
-load from `GET /api/glossary` (backed by `docs/guidelines/glossary_registry.jsonl`
-and, for Layer, `docs/guidelines/layer_registry.jsonl`'s existing per-layer
+load from `GET /api/glossary` (backed by `registries/glossary_registry.jsonl`
+and, for Layer, `registries/layer_registry.jsonl`'s existing per-layer
 note) and rendered as-is; nothing is hardcoded in the frontend. Covered today:
 
 - **Tickets view** — Tier, Layer, ticket status, and Priority cells.

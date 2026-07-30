@@ -150,7 +150,7 @@ Steps:
    The file MUST begin with a YAML frontmatter block (before the # heading):
    ---
    status: active
-   layer: <infer from scope — registered in docs/guidelines/layer_registry.jsonl, `python3 tools/layer_registry.py list` to see valid values>
+   layer: <infer from scope — registered in registries/layer_registry.jsonl, `python3 tools/layer_registry.py list` to see valid values>
    authority: P1
    audience: agent
    ticket_id: TCK-YYYYMMDD-SHORT-SCOPE

@@ -85,7 +85,7 @@ One record per workflow invocation.
 | `DONE` | Workflow completed successfully. |
 | `EPIC_SCOPED` | Epic tier — ticket scoped, no implementation. |
 | `CONFLICTS_DETECTED` | Duplicate or conflicting ticket found at Scope gate. |
-| `TAGS_NOT_REGISTERED` | A ticket's tag isn't in `docs/guidelines/tag_registry.jsonl` — caught at Scope, before the rest of the pipeline runs (`TCK-20260706-SCOPE-TAG-REGISTRY-CHECK`). |
+| `TAGS_NOT_REGISTERED` | A ticket's tag isn't in `registries/tag_registry.jsonl` — caught at Scope, before the rest of the pipeline runs (`TCK-20260706-SCOPE-TAG-REGISTRY-CHECK`). |
 | `SCOPE_AGENT_FAILED` | The Scope-phase `ticket-scoper` agent call returned null or malformed output with no `ticket_id` — caught before any other phase runs (`TCK-20260720-MONITORING-PIPELINE-BUGFIXES`). |
 | `NEEDS_HUMAN_INPUT` | Plan had unresolved questions; paused for human. |
 | `NEEDS_CHANGES` | Architecture review returned violations. |
@@ -174,7 +174,7 @@ write to this file, don't:
 | Value | Meaning | Phase(s) |
 |---|---|---|
 | `conflicts_detected` | Duplicate or conflicting ticket found. | Scope |
-| `tag_registry_rejection` | A tag isn't in `docs/guidelines/tag_registry.jsonl` (see `docs/guidelines/tag_taxonomy.md`'s Tag Registry section) — same root cause regardless of which phase/workflow caught it. | Scope, Structure, Verify |
+| `tag_registry_rejection` | A tag isn't in `registries/tag_registry.jsonl` (see `docs/guidelines/tag_taxonomy.md`'s Tag Registry section) — same root cause regardless of which phase/workflow caught it. | Scope, Structure, Verify |
 | `dod_condition_failed` | Any other DoD condition failed at Verify — a deliberately coarse fallback, not a full taxonomy of every possible DoD failure reason (that would be speculative rather than evidence-driven; see `tools/gate_checks/done_checker_static.py`'s `classify_checklist_failure`). | Verify |
 
 Not a closed enum — a future phase found to have its own catch-all-status problem could add its

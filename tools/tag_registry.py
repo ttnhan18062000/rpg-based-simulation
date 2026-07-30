@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Manage the append-only ticket/artifact tag registry (docs/guidelines/tag_registry.jsonl).
+Manage the append-only ticket/artifact tag registry (registries/tag_registry.jsonl).
 
 Built for TCK-20260706-TAG-REGISTRY-DATA. The registry is the machine-readable source of truth for
 which tags exist, replacing the informal "tags are free text, just follow the canonical-form
@@ -113,7 +113,7 @@ def is_phase_milestone_tag(tag: str) -> bool:
 # tools/tag_registry.py's parent is tools/, so parent.parent is the repo root — robust regardless
 # of the caller's current working directory.
 _DEFAULT_ROOT = Path(__file__).resolve().parent.parent
-_REGISTRY_REL_PATH = Path("docs/guidelines/tag_registry.jsonl")
+_REGISTRY_REL_PATH = Path("registries/tag_registry.jsonl")
 
 
 def registry_path(root: Path | str | None = None) -> Path:
@@ -208,7 +208,7 @@ def add_tag(tag: str, category: str, note: str = "", root: Path | str | None = N
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Manage the append-only tag registry (docs/guidelines/tag_registry.jsonl)."
+        description="Manage the append-only tag registry (registries/tag_registry.jsonl)."
     )
     sub = parser.add_subparsers(dest="command", required=True)
 

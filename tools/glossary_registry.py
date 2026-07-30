@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Manage the append-only dashboard glossary registry (docs/guidelines/glossary_registry.jsonl).
+Manage the append-only dashboard glossary registry (registries/glossary_registry.jsonl).
 
 Built for TCK-20260718-GLOSSARY-REGISTRY (child of TCK-20260718-GLOSSARY-TOOLTIPS-EPIC). Mirrors
 `tools/tag_registry.py`'s design (append-only JSONL, one entry per line, `add_term()` refuses to
@@ -65,7 +65,7 @@ GLOSSARY_CATEGORIES = {
 # ---------------------------------------------------------------------------
 
 _DEFAULT_ROOT = Path(__file__).resolve().parent.parent
-_REGISTRY_REL_PATH = Path("docs/guidelines/glossary_registry.jsonl")
+_REGISTRY_REL_PATH = Path("registries/glossary_registry.jsonl")
 
 
 def registry_path(root: Path | str | None = None) -> Path:
@@ -152,7 +152,7 @@ def add_term(
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Manage the append-only glossary registry (docs/guidelines/glossary_registry.jsonl)."
+        description="Manage the append-only glossary registry (registries/glossary_registry.jsonl)."
     )
     sub = parser.add_subparsers(dest="command", required=True)
 

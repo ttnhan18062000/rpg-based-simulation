@@ -49,6 +49,7 @@ from ticket_stats_report import (  # noqa: E402
 )
 from glossary_registry import load_registry as load_glossary_registry  # noqa: E402
 import layer_registry  # noqa: E402  (load_registry() for layer note-field reuse — see get_glossary())
+import tag_registry  # noqa: E402  (load_registry() for the tags facet — see get_tickets())
 
 from src.api.agent_ops_dashboard.models import (
     AgentMonitoringStats,
@@ -408,18 +409,14 @@ class TicketsQueryResult(list):
         self.facets = facets
 
 
-def _distinct_sorted(values) -> list[str]:
-    return sorted({v for v in values if v})
-
-
 # WORKFLOW_STATUS_VALUES itself now lives in tools/ticket_field_values.py (imported above) —
 # TCK-20260718-TIER-PRIORITY-CANONICAL-ENUM relocated it there so it is the single shared source
 # for all four canonical ticket-field enums (Tier/Layer/Status/Priority), not a dashboard-local
 # definition. See that module's docstring for the full "why" (frontmatter-vs-body-section
-# validation split, the anti-duplication rationale). Behavior here is unchanged: `statuses` is
-# still the fixed full canonical set regardless of active filters or current corpus content,
-# unlike tiers/layers/priorities/tags, which (as of this ticket) still derive from the filtered
-# corpus — see TCK-20260718-DASHBOARD-FACETS-FULLY-CANONICAL for making those canonical too.
+# validation split, the anti-duplication rationale). All five ticket facets (tiers/layers/
+# statuses/priorities/tags) are now fixed canonical lists, independent of active filters or
+# current corpus content — see TCK-20260718-DASHBOARD-FACETS-FULLY-CANONICAL for the first four
+# and TCK-20260720-DASHBOARD-TAG-FACET-REGISTRY for tags joining them.
 
 
 def _load_agent_role_descriptions(repo_root: Path) -> dict[str, str]:
@@ -603,21 +600,27 @@ class DashboardCache:
             filtered.sort(key=lambda r: r["date"] or "", reverse=(sort != "date_asc"))
 
             total_count = len(filtered)
-            # tiers/layers/statuses/priorities are all fixed canonical lists as of
-            # TCK-20260718-DASHBOARD-FACETS-FULLY-CANONICAL — independent of active filters,
-            # pagination, and current corpus content, so a legitimate value with zero matching
-            # tickets right now (e.g. a rarely-used Tier) is still a selectable filter option
-            # rather than silently absent. Only `tags` remains corpus-derived: it is genuinely
-            # open-vocabulary and multi-value (registry-governed, not a small closed enum), so
-            # "every value that could ever exist" isn't a bounded, canonical list the way the
-            # other four are. All four sets are frozensets (unordered) — sort explicitly rather
-            # than relying on set-iteration order, which is not guaranteed stable.
+            # tiers/layers/statuses/priorities/tags are all fixed canonical lists, independent of
+            # active filters, pagination, and current corpus content, so a legitimate value with
+            # zero matching tickets right now (e.g. a rarely-used Tier, or a registered tag nobody
+            # has used yet) is still a selectable filter option rather than silently absent. `tags`
+            # joined this canonical-facet model in TCK-20260720-DASHBOARD-TAG-FACET-REGISTRY,
+            # reading registries/tag_registry.jsonl directly (mirroring get_glossary()'s existing
+            # layer_registry.load_registry() pattern) instead of TCK-20260718-DASHBOARD-FACETS-
+            # FULLY-CANONICAL's original "tags is genuinely open-vocabulary, not a small closed
+            # enum" reasoning — true before the tag registry existed as a real governed list,
+            # no longer true after. Deliberate, accepted consequence: a legacy/pre-taxonomy
+            # free-text tag present on real tickets but absent from the registry no longer appears
+            # in this facet, and open-ended phase-N tags (exempt from registration entirely) never
+            # appear here either — both are intentional, not a regression. All five sets are
+            # frozensets/dicts (unordered) — sort explicitly rather than relying on
+            # set/dict-iteration order, which is not guaranteed stable.
             facets = {
                 "tiers": sorted(TIER_VALUES),
                 "layers": sorted(LAYER_VALUES),
                 "statuses": sorted(WORKFLOW_STATUS_VALUES),
                 "priorities": sorted(PRIORITY_VALUES),
-                "tags": _distinct_sorted(tag for r in filtered for tag in r["tags"]),
+                "tags": sorted(tag_registry.load_registry(self._repo_root).keys()),
             }
 
             paged = filtered[offset : offset + limit] if limit is not None else filtered

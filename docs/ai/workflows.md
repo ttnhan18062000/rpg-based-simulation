@@ -80,7 +80,7 @@ Workflow({ name: "workflow-name", args: { key: value } })
 
 | Phase | Agent used | Gate condition |
 |---|---|---|
-| Scope | `ticket-scoper` | Stops if conflicts detected, or if any ticket tag isn't in `docs/guidelines/tag_registry.jsonl` (orchestrator-run check via `tools/tag_registry.py::check_tags_registered`, after the agent call returns); when resuming an existing `ticket_id`, an orchestrator-run `resolveScopeTicketLocation()` step (via `tools/agent-monitoring/scope_ticket_relocate.py::resolve_and_relocate_ticket`) resolves `ticket_path`/`tier`/`todos_source_path` deterministically before the agent call, replacing the former agent-prompt-text file search — for a `tickets/todos/` original it moves (copy-then-delete) the file when `## Tier` is `epic`, or copies it (leaving the original in place, as before) otherwise, so an epic ticket — which never reaches Finalize's cleanup — never ends up permanently duplicated on disk |
+| Scope | `ticket-scoper` | Stops if conflicts detected, or if any ticket tag isn't in `registries/tag_registry.jsonl` (orchestrator-run check via `tools/tag_registry.py::check_tags_registered`, after the agent call returns); when resuming an existing `ticket_id`, an orchestrator-run `resolveScopeTicketLocation()` step (via `tools/agent-monitoring/scope_ticket_relocate.py::resolve_and_relocate_ticket`) resolves `ticket_path`/`tier`/`todos_source_path` deterministically before the agent call, replacing the former agent-prompt-text file search — for a `tickets/todos/` original it moves (copy-then-delete) the file when `## Tier` is `epic`, or copies it (leaving the original in place, as before) otherwise, so an epic ticket — which never reaches Finalize's cleanup — never ends up permanently duplicated on disk |
 | Investigate | `investigator` | — |
 | Plan | `planner` | Stops if unresolved questions in plan |
 | Review | `architecture-reviewer` | Stops if NEEDS_CHANGES or BLOCKED |
@@ -115,7 +115,7 @@ Workflow({ name: 'implement-ticket', args: { ticket_id: 'TCK-20260606-PHASE28-RU
 | Status | Meaning | Next action |
 |---|---|---|
 | `CONFLICTS_DETECTED` | Duplicate or conflicting tickets found | Review conflicts, adjust scope, re-run |
-| `TAGS_NOT_REGISTERED` | A ticket tag isn't in `docs/guidelines/tag_registry.jsonl` | Register it (`python3 tools/tag_registry.py add <tag> --category <cat> --note "..."`) or edit the ticket to use an existing registered tag, then re-run with `ticket_id` |
+| `TAGS_NOT_REGISTERED` | A ticket tag isn't in `registries/tag_registry.jsonl` | Register it (`python3 tools/tag_registry.py add <tag> --category <cat> --note "..."`) or edit the ticket to use an existing registered tag, then re-run with `ticket_id` |
 | `SCOPE_AGENT_FAILED` | The Scope-phase `ticket-scoper` agent call returned null or malformed output with no `ticket_id` | Re-run; if it persists, investigate the agent call itself |
 | `EPIC_SCOPED` | Ticket tier is `epic` — scoped only, no implementation performed | Create child tickets, implement them individually or via `implement-epic` |
 | `NEEDS_HUMAN_INPUT` | Plan has unresolved questions | Read `staging_artifacts/{id}/plan.md`, resolve, re-run with `ticket_id` |

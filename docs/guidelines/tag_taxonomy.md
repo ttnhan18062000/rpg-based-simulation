@@ -17,7 +17,7 @@ plus at least 19 confirmed format-duplicate groups (`p0`/`P0`, `phase-5`/`phase5
 This document defines a **controlled vocabulary of categories and canonical-form rules**. Until
 `TCK-20260706-TAG-REGISTRY-DATA`, that vocabulary was deliberately open-ended — categories and
 canonical-form rules only, not a closed list of every valid tag. It is now backed by a concrete,
-append-only data file, `docs/guidelines/tag_registry.jsonl` (managed by `tools/tag_registry.py`),
+append-only data file, `registries/tag_registry.jsonl` (managed by `tools/tag_registry.py`),
 which **is** an enumeration: every tag used on a ticket/artifact created on or after the
 enforcement cutoff must be registered there first. See [Tag Registry](#tag-registry) below for why
 and how. A clean vocabulary is a prerequisite for tags becoming an actual routing signal later
@@ -129,7 +129,7 @@ necessarily wrong, it may just not have been needed yet (see [Tag Registry](#tag
 
 ## Tag Registry
 
-`docs/guidelines/tag_registry.jsonl` is the machine-readable, **append-only** enumeration of every
+`registries/tag_registry.jsonl` is the machine-readable, **append-only** enumeration of every
 tag a ticket/artifact is allowed to use, going forward. Each line is one JSON object, one tag,
 registered exactly once:
 
@@ -176,7 +176,7 @@ this date. Tickets and artifacts predating this taxonomy are intentionally not b
 re-validated, so a whole-directory validation run does not newly fail on historical tags.
 
 For tickets/artifacts within scope, two checks now apply, in order: canonical form (as above), then
-**registry membership** — `validate_frontmatter.py` loads `docs/guidelines/tag_registry.jsonl` and
+**registry membership** — `validate_frontmatter.py` loads `registries/tag_registry.jsonl` and
 rejects any canonical-form tag that isn't registered there (except `phase-N` tags, always allowed).
 This is a **hard allowlist**: a genuinely new tag must be registered via `tools/tag_registry.py add`
 before it can be used on any ticket/artifact. Confirmed to introduce zero new regressions against

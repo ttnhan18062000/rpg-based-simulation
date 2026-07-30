@@ -44,7 +44,7 @@ from layer_registry import layer_values as _layer_values  # noqa: E402
 STATUS_VALUES = {"authoritative", "active", "historical", "archive"}
 # Registry-backed as of TCK-20260718-LAYER-REGISTRY-CONVERSION — was a hardcoded set literal,
 # requiring a code change to add a new legitimate value. Now computed from
-# docs/guidelines/layer_registry.jsonl via tools/layer_registry.py, mirroring Tag's own
+# registries/layer_registry.jsonl via tools/layer_registry.py, mirroring Tag's own
 # registry-backed process (tools/tag_registry.py). `layer:` itself is UNCHANGED — still
 # single-value per ticket; only the source of the legal-value set moved, not the cardinality.
 # The importable name `LAYER_VALUES` is preserved unchanged so every existing consumer
@@ -316,7 +316,7 @@ def main() -> None:
 
     override = args.content_type
     # Real CLI runs enforce registry membership (hard allowlist); load_registry() defaults to the
-    # real docs/guidelines/tag_registry.jsonl regardless of cwd.
+    # real registries/tag_registry.jsonl regardless of cwd.
     registry = load_registry()
     all_errors: list[str] = []
 

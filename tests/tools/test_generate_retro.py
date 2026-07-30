@@ -165,11 +165,11 @@ def _write_ticket(root, subdir, ticket_id, tags, date="20260710"):
 
 
 def _write_registry(root, entries):
-    """Write a fixture docs/guidelines/tag_registry.jsonl under root with `entries`, a list of
+    """Write a fixture registries/tag_registry.jsonl under root with `entries`, a list of
     (tag, category) tuples."""
     import json as _json
 
-    registry_dir = root / "docs" / "guidelines"
+    registry_dir = root / "registries"
     registry_dir.mkdir(parents=True, exist_ok=True)
     lines = [
         _json.dumps({"tag": tag, "category": category, "added_date": "2026-07-06", "note": "fixture"})
