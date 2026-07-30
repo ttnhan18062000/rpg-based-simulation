@@ -155,7 +155,19 @@ None.
   `TCK-20260729-SHADOW-BASELINE-COMPARISON`) — thresholds are deliberately chosen in that absence, per
   the idea doc's own instruction that they be selected before evaluation, not retrofitted after. Full
   per-criterion table and evidence: `docs/ai/shadow_promotion_gate_thresholds_decision.md`.
-- OPEN DECISION 6: Should context packets be exposed as an MCP tool, a provider-adapter library, or both after the provider-neutral contract is implemented?
+- OPEN DECISION 6 — **RESOLVED** (2026-07-30, `TCK-20260730-CONTEXT-PACKET-EXPOSURE-DECISION`):
+  Should context packets be exposed as an MCP tool, a provider-adapter library, or both after the
+  provider-neutral contract is implemented? Answer: both, but not symmetric — a provider-adapter
+  library is the default/primary integration (matches
+  `docs/architecture/agent_orchestration_contract.md`'s one `Decided` sub-decision, Provider-Adapter
+  Boundary, and the one real Phase 5 shadow-packet-call-site precedent), with MCP tool exposure as a
+  secondary, optional interface layered over the same library (matching `tools/search_mcp.py`'s
+  existing `search_docs`/`search_health` precedent and Codex's confirmed hook-matcher awareness of
+  MCP tool names). Explicitly directional, not final: two of the ADR's three relevant sub-decisions
+  remain `Proposed-pending-implementation-evidence`, and Codex has zero live runtime presence in this
+  repo as of this decision (`tickets/todos/codex-runtime-activation/` not started, no `.codex/`
+  directory exists) — provider parity is exactly as unverifiable here as it was for Open Decision 5.
+  Full evidence and reasoning: `docs/ai/context_packet_exposure_mechanism_decision.md`.
 
 ## Implementation Notes
 
@@ -241,6 +253,15 @@ total to **6** (`agent-monitoring/events.jsonl`, `agent: context-packet-wrapper`
 `TCK-...` `run_id`s). Still far short of the 56/122/6 per-scenario floors from Open
 Decision 5 — 6 samples is meaningful *progress*, not close to sufficiency for any
 promotion-gate evaluation. No change to this epic's own scope or the Phase 6 blocker below.
+
+**2026-07-30 — Open Decision 6 resolved.** `TCK-20260730-CONTEXT-PACKET-EXPOSURE-DECISION` is
+`DONE` — `docs/ai/context_packet_exposure_mechanism_decision.md` recommends a provider-adapter
+library as the default/primary integration path with MCP tool exposure as a secondary optional
+interface over the same library, explicitly flagged as directional (not final) pending two
+still-`Proposed-pending-implementation-evidence` ADR sub-decisions and zero live Codex runtime
+presence in this repo. All 6 Open Decisions this epic tracks are now resolved. This does not
+authorize any Phase 6 wiring — the 56/122/6 sample-size floors from Open Decision 5 remain the
+gate for that, and remain far from met (6 real shadow-packet events as of this writing).
 
 This epic remains **open**, not closed — per its own Scope and `SEQUENCE.md`, it
 deliberately covers only Phase 0-5 plus this Phase 6 prep decision so far; actual Phase 6
