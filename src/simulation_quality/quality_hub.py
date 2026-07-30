@@ -62,6 +62,8 @@ def _translate_invariant(env: ObservabilityEventEnvelope) -> str:
         return "combat_hard_law_violation"
     if law_id.startswith("CONSERVATION"):
         return "conservation_law_violated"
+    if law_id.startswith("LAW-SPAWN-OCCUPANCY"):
+        return "spawn_occupancy_violation"
     return env.event_type  # unknown violation — no translation
 
 

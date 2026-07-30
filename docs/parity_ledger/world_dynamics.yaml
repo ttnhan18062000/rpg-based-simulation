@@ -802,18 +802,39 @@
   legacy_evidence: null
   v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
   proof_type: parity
-  test_path: null
+  test_path: tests/engine/test_hard_law_monitor.py::test_check_initial_placement_reuses_verify_occupancy_wall_terrain_unit
   divergence_note: null
   support_boundary: null
 - id: WORLD-076
   text: Spawn avoids occupied tile or uses conflict-safe placement.
-  status: verified
+  status: divergent
   priority: P0
   legacy_evidence: null
-  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  v2_evidence: >
+    HardLawMonitor.check_initial_placement() (LAW-SPAWN-OCCUPANCY,
+    src/observability/hard_law_monitor.py), invoked once from
+    Kernel._run_initial_placement_check() at Kernel.__init__ (src/engine/kernel.py),
+    now detects tile-collision violations that this entry's text claims do not occur;
+    test_path below reproduces the violation at seed=42 (entities 6 and 14 on tile
+    (27, 38)). TCK-20260716-PLACELEGAL-HARDLAW.
   proof_type: parity
-  test_path: null
-  divergence_note: null
+  test_path: tests/engine/test_hard_law_monitor.py::test_seed42_entity6_entity14_tile_27_38_collision
+  divergence_note: >
+    Prior claim (this entry's original v2_evidence, preserved here per the INFRA-270 lineage
+    convention -- historical entries/claims are not silently deleted, corrections are appended
+    forward): "Implementation proven via exhaustive checklist audit Phase 1-11." That checklist
+    audit did not catch this bug.
+    TCK-20260716-PLACELEGAL-HARDLAW's regression test (test_path above) contradicts the prior
+    claim: compiling unit_information_density at seed=42 deterministically spawns entities 6 and
+    14 on the identical tile (27, 38) -- spawn placement does not reliably avoid occupied tiles.
+    HardLawMonitor.check_initial_placement() (LAW-SPAWN-OCCUPANCY,
+    src/observability/hard_law_monitor.py) now detects and records this class of violation at
+    Kernel.__init__ time, but does not fix the underlying spawn-placement RNG collision -- that
+    root cause is out of this ticket's scope. Re-verified during implementation: the same class of
+    collision (different entity pairs each time) also appears at seeds 137 and 999 in the same
+    worlds, and in most of the 18-world corpus at seed 137 -- the problem is broader than the single
+    recurring entity-6/entity-14 case the prior claim's audit missed. Flip back to verified once a
+    future ticket fixes the underlying collision and re-verification is possible.
   support_boundary: null
 - id: WORLD-077
   text: Camp placement is deterministic.
@@ -1395,5 +1416,28 @@
   v2_evidence: "EventExtractor.extract() building_updates diff block (hp_delta < 0) + WorldDynamicsScorer infrastructure_damaged branch; TCK-20260707-SIMQ-BUILDING-SABOTAGE-SIGNAL"
   proof_type: parity
   test_path: tests/simulation_quality/test_world_dynamics_scorer.py::TestBuildingSabotage::test_building_sabotaged_scored_by_world_dynamics
+  divergence_note: null
+  support_boundary: null
+- id: WORLD-112
+  text: Initial spawn placement (entities, buildings, resource nodes) is checked for occupancy/terrain legality once at Kernel construction, independent of the per-tick DirtySet-gated occupancy check.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: "HardLawMonitor.check_initial_placement() (src/observability/hard_law_monitor.py) -- new law LAW-SPAWN-OCCUPANCY, unconditional full-population scan (entities + buildings + resource nodes) reusing LegalityServiceV2.verify_occupancy()'s WALL/blocked_tiles/building_tiles/transient_claims/occupancy rule plus a multi-occupant tile scan; called once from Kernel._run_initial_placement_check() (src/engine/kernel.py), invoked near the end of Kernel.__init__ after ContentWarmupService.warmup(). TCK-20260716-PLACELEGAL-HARDLAW."
+  proof_type: parity
+  test_path: tests/engine/test_hard_law_monitor.py::test_seed42_entity6_entity14_tile_27_38_collision
+  divergence_note: null
+  support_boundary: null
+- id: WORLD-113
+  text: LAW-SPAWN-OCCUPANCY hard-law violations (WORLD-112) are routed into SimQ's WORLD DYNAMICS pillar as a frequency-scored signal (spawn_occupancy_violation, weight -30.0) -- a correctness fault, not a health gradient in itself; SimQ scores how often it occurs, not whether one placement is legal (HardLawMonitor's job).
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: "src/simulation_quality/quality_hub.py::_translate_invariant() -- new law_id.startswith('LAW-SPAWN-OCCUPANCY') branch routing InvariantViolation events to spawn_occupancy_violation; src/simulation_quality/scorers/world_dynamics.py::WorldDynamicsScorer -- spawn_occupancy_violation added to EVENT_TYPES and score(); config/simulation_quality/scoring_weights.yaml WORLD: spawn_occupancy_violation: -30.0. Kernel._run_initial_placement_check() (src/engine/kernel.py) extended to construct and record an InvariantViolation SimulationEvent (payload['law_id']=v.law_id merged explicitly -- HardLawViolation.details never carries law_id) per violation, making the dispatcher branch reachable from a real Kernel construction, not just hand-built envelopes. TCK-20260716-PLACELEGAL-SIMQ-SIGNAL."
+  proof_type: parity
+  test_path: >
+    tests/simulation_quality/test_quality_hub_event_translation.py::test_invariant_spawn_occupancy_law;
+    tests/simulation_quality/test_world_dynamics_scorer.py::TestSpawnOccupancyViolation::test_spawn_occupancy_violation_scores_negative;
+    tests/simulation_quality/test_traceability_path.py::test_spawn_occupancy_violation_reaches_world_pillar_via_real_kernel_construction
   divergence_note: null
   support_boundary: null

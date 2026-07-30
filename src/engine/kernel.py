@@ -318,6 +318,8 @@ class Kernel:
         except Exception as _warmup_err:
             logger.warning("ContentWarmupService.warmup() failed (non-fatal): %s", _warmup_err)
 
+        self._run_initial_placement_check()
+
     @property
     def quality_hub(self):
         """Read-only access to the QualityHub instance (None if SimQ is disabled)."""
@@ -734,6 +736,91 @@ class Kernel:
         # Keep movement_cache registered across state advancements
         if getattr(self._state, "movement_cache", None) is not None:
             self._cache_registry.register_cache("movement_plan_cache", self._state.movement_cache)
+
+    def _run_initial_placement_check(self) -> None:
+        """
+        One-time, unconditional spawn-placement legality scan (LAW-SPAWN-OCCUPANCY).
+        Mirrors _run_hard_law_checks()'s mode-gating/persistence/alert-routing shape
+        exactly, including its LONG_RUN fall-through (no explicit log, no raise) —
+        deliberately inherited so the 7th law does not diverge from the other 6's
+        mode-gating precedent (TCK-20260716-PLACELEGAL-HARDLAW, Resolved Decision 2).
+        Uses tick=0 explicitly since this runs before the first tick.
+        """
+        from src.observability.config import ObservabilityConfig, ObservabilityMode
+        from src.observability.hard_law_monitor import HardLawMonitor, HardLawViolationError
+
+        mode = ObservabilityConfig.get_mode()
+        if mode == ObservabilityMode.OFF:
+            return
+
+        violations = HardLawMonitor.check_initial_placement(self._state)
+        if not violations:
+            return
+
+        if not hasattr(self._status, "cumulative_violations"):
+            self._status.cumulative_violations = {}
+        if not hasattr(self._status, "hard_law_violations"):
+            self._status.hard_law_violations = []
+
+        self._status.hard_law_violations.extend(violations)
+        self._status.last_hard_law_violation_tick = 0
+
+        for v in violations:
+            self._status.cumulative_violations[v.law_id] = self._status.cumulative_violations.get(v.law_id, 0) + 1
+
+        # Route hard law violations to alerts and persist them to jsonl
+        if self._artifact_repo and self._run_id:
+            try:
+                import os
+                import json
+                v_path = self._artifact_repo.resolve_path(self._run_id, "violations")
+                os.makedirs(os.path.dirname(v_path), exist_ok=True)
+                with open(v_path, "a", encoding="utf-8") as f:
+                    for v in violations:
+                        record = {
+                            "tick": 0,
+                            "law_id": v.law_id,
+                            "entity_id": v.entity_id,
+                            "severity": v.severity,
+                            "message": v.message,
+                            "details": v.details
+                        }
+                        f.write(json.dumps(record) + "\n")
+            except Exception:
+                logger.exception("Failed to write to hard_law_violations.jsonl")
+
+        try:
+            from src.observability.alerts.manager import AlertsManager
+            from src.observability.alerts.models import AlertEvent
+            router = AlertsManager.get_router()
+            for v in violations:
+                event = AlertEvent.create_hard_law_violation(self._run_id, 0, v)
+                router.route(event)
+        except Exception:
+            logger.exception("Failed to route hard law violation alerts")
+
+        from src.observability.events import SimulationEvent
+        for v in violations:
+            payload = dict(v.details)
+            payload["law_id"] = v.law_id
+            event = SimulationEvent(
+                event_type="InvariantViolation",
+                event_category="hard_law",
+                tick=0,
+                severity=v.severity,
+                source_system="hard_law_monitor",
+                message=v.message,
+                entity_id=v.entity_id,
+                payload=payload,
+            )
+            if self._event_recorder is not None:
+                self._event_recorder.record(event)
+
+        if mode in (ObservabilityMode.DEBUG, ObservabilityMode.CERTIFICATION):
+            raise HardLawViolationError(violations)
+        elif mode == ObservabilityMode.LIGHT:
+            for v in violations:
+                logger.warning(f"[{v.severity}] Hard Law Violation: {v.law_id} on entity {v.entity_id}: {v.message}")
 
     def _run_hard_law_checks(self, dirty_set: Optional[Any]) -> None:
         from src.observability.config import ObservabilityConfig, ObservabilityMode

@@ -122,3 +122,99 @@ def test_run_directory_cleaned_up_after_test():
     assert not os.path.isdir(run_dir), (
         f"expected {run_dir!r} to be removed after shutil.rmtree() in test teardown"
     )
+
+
+# ── spawn_occupancy_violation (TCK-20260716-PLACELEGAL-SIMQ-SIGNAL) ─────────
+
+
+def _inject_spawn_occupancy_violation(kernel) -> None:
+    kernel._event_recorder.record(SimulationEvent(
+        event_type="InvariantViolation",
+        event_category="hard_law",
+        tick=0,
+        severity="ERROR",
+        source_system="hard_law_monitor",
+        message="spawn placement violates occupancy/terrain legality (test injection)",
+        entity_id=6,
+        payload={
+            "law_id": "LAW-SPAWN-OCCUPANCY",
+            "object_kind": "entity",
+            "tile": [1, 1],
+            "colliding_object_kind": "entity",
+            "colliding_object_id": 2,
+        },
+    ))
+    time.sleep(0.15)
+
+
+def test_spawn_occupancy_violation_reaches_world_pillar_via_minimal_kernel(minimal_kernel):
+    """Injection-pattern test: proves the dispatcher (_translate_invariant) + WorldDynamicsScorer
+    path end-to-end, independent of whether Kernel._run_initial_placement_check() actually emits
+    the event in production (that real-wiring path is covered separately below)."""
+    _inject_spawn_occupancy_violation(minimal_kernel)
+
+    report = minimal_kernel._quality_hub.get_quality_report()
+    assert report.pillars["WORLD"].worst_events, (
+        "WORLD pillar has no worst_events after injecting a LAW-SPAWN-OCCUPANCY InvariantViolation — "
+        "expected a -30.0 weight (config/simulation_quality/scoring_weights.yaml, WORLD: spawn_occupancy_violation)"
+    )
+    worst_event_id = report.pillars["WORLD"].worst_events[0].event_id
+
+    filepath = minimal_kernel._event_recorder.filepath
+    with open(filepath, "r", encoding="utf-8") as f:
+        event_ids = {json.loads(line)["event_id"] for line in f if line.strip()}
+
+    assert worst_event_id in event_ids, (
+        f"worst_events[0].event_id={worst_event_id!r} not found in {filepath} "
+        f"(event_ids present: {event_ids!r})"
+    )
+
+
+def test_spawn_occupancy_violation_reaches_world_pillar_via_real_kernel_construction(monkeypatch):
+    """Real-wiring test: constructs a Kernel against the parent ticket's known seed=42
+    unit_information_density collision (entities 6/14 on tile (27, 38)), proving
+    Kernel._run_initial_placement_check() actually emits the InvariantViolation SimulationEvent
+    that _translate_invariant()/WorldDynamicsScorer then route into the WORLD pillar — not merely
+    reachable via a hand-built envelope or a manually-injected event.
+
+    Regression source: tests/engine/test_hard_law_monitor.py::test_seed42_entity6_entity14_tile_27_38_collision
+    """
+    from src.worldbuilding.repository import WorldRepository
+    from src.worldbuilding.compiler import WorldCompiler
+
+    monkeypatch.setenv("QUALITY_FEED_MODE", "inprocess")
+    monkeypatch.delenv("QUALITY_SCORING_DISABLED", raising=False)
+
+    repo = WorldRepository("data/worlds")
+    spec = repo.load_world("unit_information_density")
+    state, _ = WorldCompiler.compile(spec, seed=42)
+
+    rng = MagicMock()
+    run_id = "simq-traceability-real-wiring-test"
+    kernel = Kernel(_make_profile(), state, rng, run_id=run_id, flags={"no_replay": True})
+    try:
+        time.sleep(0.15)
+        report = kernel._quality_hub.get_quality_report()
+        assert report.pillars["WORLD"].worst_events, (
+            "WORLD pillar has no worst_events after constructing a real Kernel against the "
+            "seed=42 unit_information_density collision — expected "
+            "Kernel._run_initial_placement_check() to emit an InvariantViolation SimulationEvent "
+            "(law_id=LAW-SPAWN-OCCUPANCY) that routes to spawn_occupancy_violation"
+        )
+        worst_event_id = report.pillars["WORLD"].worst_events[0].event_id
+
+        filepath = kernel._event_recorder.filepath
+        with open(filepath, "r", encoding="utf-8") as f:
+            event_ids = {json.loads(line)["event_id"] for line in f if line.strip()}
+
+        assert worst_event_id in event_ids, (
+            f"worst_events[0].event_id={worst_event_id!r} not found in {filepath} "
+            f"(event_ids present: {event_ids!r})"
+        )
+    finally:
+        kernel.shutdown()
+        filepath = kernel._event_recorder.filepath
+        if filepath is not None:
+            run_dir = os.path.dirname(filepath)
+            if os.path.isdir(run_dir):
+                shutil.rmtree(run_dir)

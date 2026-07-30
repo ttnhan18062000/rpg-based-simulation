@@ -157,6 +157,25 @@ class TestBuildingSabotage:
         assert "infrastructure_damaged" in rec.tags
 
 
+class TestSpawnOccupancyViolation:
+    def test_spawn_occupancy_violation_in_world_dynamics_event_types(self) -> None:
+        assert "spawn_occupancy_violation" in WorldDynamicsScorer.EVENT_TYPES
+
+    def test_spawn_occupancy_violation_scores_negative(self, scorer: WorldDynamicsScorer, scoring_weights: ScoringWeights) -> None:
+        rec = scorer.score(_env("spawn_occupancy_violation", payload={"region_id": "r1"}), _ctx())
+        assert rec is not None
+        assert rec.delta == scoring_weights["spawn_occupancy_violation"]
+        assert rec.delta < 0
+        assert rec.pillar == PillarId.WORLD
+        assert "spawn_occupancy_violation" in rec.tags
+
+    def test_scoring_weights_yaml_has_spawn_occupancy_key(self, scoring_weights: ScoringWeights) -> None:
+        assert scoring_weights.for_pillar(PillarId.WORLD)["spawn_occupancy_violation"] < 0
+
+    def test_spawn_occupancy_weight_is_negative(self, scoring_weights: ScoringWeights) -> None:
+        assert scoring_weights["spawn_occupancy_violation"] < 0
+
+
 class TestNullReturn:
     def test_threat_evolved_returns_none(self, scorer: WorldDynamicsScorer) -> None:
         assert scorer.score(_env("threat_evolved"), _ctx()) is None

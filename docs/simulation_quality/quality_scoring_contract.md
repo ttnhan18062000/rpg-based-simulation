@@ -905,7 +905,7 @@ WD-14 (`camp lifecycle`), WD-15 (`demographics`)
 `region_transformed`, `region_trauma_delta`, `region_ownership_changed`,
 `ecology_cycle_completed`, `spawn_cadence_fired`, `demographic_birth`,
 `demographic_mortality`, `camp_constructed`†, `hazard_drain_applied`,
-`threat_evolved`, `node_recharged`, `building_sabotaged`
+`threat_evolved`, `node_recharged`, `building_sabotaged`, `spawn_occupancy_violation`
 
 †`camp_constructed` is registered, not currently emittable — see
 `event_type_coverage.md` §3.9.
@@ -925,6 +925,7 @@ WD-14 (`camp lifecycle`), WD-15 (`demographics`)
 | Camp constructed | +1 | `persistent_structure` |
 | Hazard drain applies damage in hazardous region | +1 | `hazard_active` |
 | Building takes sabotage damage (hp_delta < 0 on building_updates) | +1 | `infrastructure_damaged` |
+| Spawn placement violates occupancy/terrain legality (LAW-SPAWN-OCCUPANCY) | −30 | `spawn_occupancy_violation` |
 | Zero calamity events in run of 500+ ticks | −8 | `calamity_dormant` |
 | Zero spawn cadence fires (no monster repopulation after depletion) | −10 | `world_depopulating` |
 | Zero region transformations in run of 1000+ ticks | −6 | `world_static` |
@@ -1029,6 +1030,7 @@ When adding a new scorer rule or new pillar, consult this registry first:
 | SQ-21 | Do entities behave as distinct RPG archetypes? | COGNITION | PROGRESSION | `decision_divergence_detected`, `trait_expressed` | Class divergence through personality: COGNITION; through stat growth: PROGRESSION |
 | SQ-22 | Is the scenario progressing toward its objectives? | NARRATIVE | AGENCY | `scenario_objective_progressed`, `scenario_stalled` | Scenario stall is NARRATIVE; underlying action stall is AGENCY secondary |
 | SQ-23 | Does infrastructure sabotage register as a real-world consequence? | WORLD | — | `building_sabotaged` | Building damage is WORLD-owned per building-events-have-no-existing-pillar-owner (§7.3); do not duplicate in FACTION even though urban_political's sabotage framing is faction-conflict-adjacent |
+| SQ-24 | Does illegal spawn placement register as a real correctness fault? | WORLD | — | `spawn_occupancy_violation` | Frequency signal only — detection/legality is HardLawMonitor's job (LAW-SPAWN-OCCUPANCY); SimQ scores how often it occurs, not whether one placement is legal, per the determinism-exclusion precedent (TCK-20260707-SIMQ-DEEP-COVERAGE-EPIC §2.2) |
 
 ---
 

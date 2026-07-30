@@ -24,14 +24,14 @@ last_verified: 2026-07-04
 
 | Category | Count | Notes |
 |---|---|---|
-| scored | 82 | +1 `building_sabotaged` (TCK-20260707-SIMQ-BUILDING-SABOTAGE-SIGNAL) |
+| scored | 83 | +1 `spawn_occupancy_violation` (TCK-20260716-PLACELEGAL-SIMQ-SIGNAL) |
 | translation_gap | 0 | — |
 | engine_emission_gap | 0 | — |
 | no_engine_path | 1 | `camp_constructed` — no dynamic camp construction in simulation; scorer entry is premature |
 | p0_a_blocked | 3 | Unchanged — campaign/scenario gate |
 | unscored_intentional | 13 | Unchanged |
 
-**Last updated:** 2026-07-07 (TCK-20260707-SIMQ-BUILDING-SABOTAGE-SIGNAL)
+**Last updated:** 2026-07-30 (TCK-20260716-PLACELEGAL-SIMQ-SIGNAL — added the `spawn_occupancy_violation` `_TRANSLATE_CONDITIONAL` row for `InvariantViolation`/`law_id` starting with "LAW-SPAWN-OCCUPANCY", scored by WorldDynamicsScorer)
 
 **Translation table status:** Complete. All 8 `_TRANSLATE_SIMPLE` and 5 `_TRANSLATE_CONDITIONAL` entries in `quality_hub.py` are correct. No translation table gaps found.
 
@@ -166,6 +166,7 @@ All events below are emitted by the engine and reach at least one pillar scorer,
 | `StrategicProjectChanged` | default | `project_started` | AgencyScorer | 0 |
 | `InvariantViolation` | law_id starts with "COMBAT" | `combat_hard_law_violation` | CombatScorer | 0 |
 | `InvariantViolation` | law_id starts with "CONSERVATION" | `conservation_law_violated` | EconomyScorer | 0 |
+| `InvariantViolation` | law_id starts with "LAW-SPAWN-OCCUPANCY" | `spawn_occupancy_violation` | WorldDynamicsScorer | 0 |
 | `InvariantViolation` | other law_id | passthrough — no translation | none | 0 |
 | `betrayal_desertion` | payload.faction_id present | `faction_tension_delta` | FactionScorer | 0 |
 | `betrayal_desertion` | no faction_id | `contract_lapsed` | SocialScorer | 0 |

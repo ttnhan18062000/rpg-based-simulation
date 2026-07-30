@@ -112,6 +112,14 @@ def test_invariant_unknown_no_translation() -> None:
     result = QualityHub._translate(_env("InvariantViolation", {"law_id": "UNKNOWN-LAW"}))
     assert result.event_type == "InvariantViolation"
 
+def test_invariant_spawn_occupancy_law() -> None:
+    result = QualityHub._translate(_env("InvariantViolation", {"law_id": "LAW-SPAWN-OCCUPANCY"}))
+    assert result.event_type == "spawn_occupancy_violation"
+
+def test_invariant_spawn_occupancy_no_violation_no_translation() -> None:
+    result = QualityHub._translate(_env("InvariantViolation", {"law_id": "LAW-HP-NONNEGATIVE"}))
+    assert result.event_type == "InvariantViolation"
+
 
 # ── Pass-through for unknown types ───────────────────────────────────────────
 
