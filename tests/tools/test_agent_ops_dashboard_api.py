@@ -183,3 +183,119 @@ def test_health_status_is_always_ok_even_with_parse_errors(tmp_path):
     assert resp.status_code == 200
     assert resp.json()["status"] == "ok"
     assert resp.json()["unparsed_lines"]["events.jsonl"] == 3
+
+
+# ---------------------------------------------------------------------------
+# TCK-20260720-BULK-RUN-TIMELINE — GET /api/runs/timeline
+# ---------------------------------------------------------------------------
+
+
+def test_bulk_run_timeline_route_returns_200_with_entries_by_run_shape(tmp_path):
+    (tmp_path / "agent-monitoring").mkdir(parents=True, exist_ok=True)
+    runs_file = tmp_path / "agent-monitoring" / "runs.jsonl"
+    runs_file.write_text(
+        "\n".join(
+            json.dumps(r)
+            for r in [
+                {"run_id": "TCK-BULK-1", "start_ts": "2026-07-20T00:00:00Z", "final_status": "DONE"},
+                {"run_id": "TCK-BULK-2", "start_ts": "2026-07-19T00:00:00Z", "final_status": "DONE"},
+            ]
+        )
+        + "\n"
+    )
+    events_file = tmp_path / "agent-monitoring" / "events.jsonl"
+    events_file.write_text(
+        json.dumps(
+            {
+                "run_id": "TCK-BULK-1",
+                "seq": 1,
+                "phase": "Implement",
+                "agent": "implementer",
+                "status": "ok",
+                "summary": "did stuff",
+                "ts": "2026-07-20T00:00:01Z",
+            }
+        )
+        + "\n"
+    )
+    client = _client_with_repo(tmp_path)
+
+    resp = client.get("/api/runs/timeline")
+    assert resp.status_code == 200
+    body = resp.json()
+    assert set(body["entries_by_run"].keys()) == {"TCK-BULK-1", "TCK-BULK-2"}
+    assert body["entries_by_run"]["TCK-BULK-2"] == []
+    entry = body["entries_by_run"]["TCK-BULK-1"][0]
+    assert entry["seq"] == 1
+    assert entry["phase"] == "Implement"
+    assert entry["agent"] == "implementer"
+    assert entry["status"] == "ok"
+    assert entry["summary"] == "did stuff"
+    assert "ts" in entry
+    assert "files_touched" not in body
+    assert "live_tail" not in body
+    assert "is_live" not in body
+
+
+def test_bulk_run_timeline_route_rejects_out_of_range_limit_offset(tmp_path):
+    client = _client_with_repo(tmp_path)
+
+    assert client.get("/api/runs/timeline?limit=0").status_code == 422
+    assert client.get("/api/runs/timeline?limit=101").status_code == 422
+    assert client.get("/api/runs/timeline?offset=-1").status_code == 422
+
+
+def test_bulk_run_timeline_route_since_until_pass_through_to_cache(tmp_path):
+    (tmp_path / "agent-monitoring").mkdir(parents=True, exist_ok=True)
+    runs_file = tmp_path / "agent-monitoring" / "runs.jsonl"
+    runs_file.write_text(
+        "\n".join(
+            json.dumps(r)
+            for r in [
+                {"run_id": "TCK-SU1", "start_ts": "2026-07-01T00:00:00Z", "final_status": "DONE"},
+                {"run_id": "TCK-SU2", "start_ts": "2026-07-03T00:00:00Z", "final_status": "DONE"},
+                {"run_id": "TCK-SU3", "start_ts": "2026-07-05T00:00:00Z", "final_status": "DONE"},
+            ]
+        )
+        + "\n"
+    )
+    client = _client_with_repo(tmp_path)
+
+    resp = client.get(
+        "/api/runs/timeline?since=2026-07-02T00:00:00Z&until=2026-07-04T00:00:00Z"
+    )
+    assert resp.status_code == 200
+    body = resp.json()
+    assert set(body["entries_by_run"].keys()) == {"TCK-SU2"}
+
+
+def test_bulk_run_timeline_route_matches_per_run_route_for_same_run_id(tmp_path):
+    (tmp_path / "agent-monitoring").mkdir(parents=True, exist_ok=True)
+    runs_file = tmp_path / "agent-monitoring" / "runs.jsonl"
+    runs_file.write_text(
+        json.dumps({"run_id": "TCK-MATCH", "start_ts": "2026-07-20T00:00:00Z", "final_status": "DONE"})
+        + "\n"
+    )
+    events_file = tmp_path / "agent-monitoring" / "events.jsonl"
+    events_file.write_text(
+        json.dumps(
+            {
+                "run_id": "TCK-MATCH",
+                "seq": 1,
+                "phase": "Implement",
+                "agent": "implementer",
+                "status": "ok",
+                "summary": "did stuff",
+                "ts": "2026-07-20T00:00:01Z",
+            }
+        )
+        + "\n"
+    )
+    client = _client_with_repo(tmp_path)
+
+    per_run_resp = client.get("/api/runs/TCK-MATCH/timeline")
+    bulk_resp = client.get("/api/runs/timeline")
+    assert per_run_resp.status_code == 200
+    assert bulk_resp.status_code == 200
+
+    assert per_run_resp.json()["entries"] == bulk_resp.json()["entries_by_run"]["TCK-MATCH"]

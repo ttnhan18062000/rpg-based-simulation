@@ -261,3 +261,13 @@ class GlossaryEntry(BaseModel):
 
 class GlossaryResponse(BaseModel):
     terms: Dict[str, GlossaryEntry]
+
+
+# --- Bulk run timeline (TCK-20260720-BULK-RUN-TIMELINE) ---
+# Bulk sibling of RunTimeline: entries for every run in a since/until-bounded,
+# limit/offset-paginated window, keyed by run_id. No files_touched/live_tail/is_live
+# per run — see DashboardCache.get_bulk_timeline()'s docstring for why.
+
+
+class BulkRunTimeline(BaseModel):
+    entries_by_run: Dict[str, List[TimelineEntry]]

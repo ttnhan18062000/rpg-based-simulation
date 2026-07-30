@@ -15,6 +15,7 @@ from fastapi import FastAPI, HTTPException, Query
 from src.api.agent_ops_dashboard.ingest import DashboardCache
 from src.api.agent_ops_dashboard.models import (
     AgentMonitoringStats,
+    BulkRunTimeline,
     GlossaryResponse,
     HealthStatus,
     RunDetail,
@@ -71,6 +72,16 @@ async def list_runs(
     since: Optional[str] = None,
 ) -> List[RunSummary]:
     return _cache.get_runs(limit=limit, offset=offset, status=status, workflow=workflow, since=since)
+
+
+@app.get("/api/runs/timeline", response_model=BulkRunTimeline)
+async def list_run_timelines(
+    limit: int = Query(default=50, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
+    since: Optional[str] = None,
+    until: Optional[str] = None,
+) -> BulkRunTimeline:
+    return _cache.get_bulk_timeline(since=since, until=until, limit=limit, offset=offset)
 
 
 @app.get("/api/runs/{run_id}", response_model=RunDetail)

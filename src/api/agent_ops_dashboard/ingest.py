@@ -53,6 +53,7 @@ import layer_registry  # noqa: E402  (load_registry() for layer note-field reuse
 from src.api.agent_ops_dashboard.models import (
     AgentMonitoringStats,
     ArtifactCompletenessStats,
+    BulkRunTimeline,
     CostProxyOutlierEntry,
     DurationOutlierEntry,
     FileTouch,
@@ -678,39 +679,47 @@ class DashboardCache:
                 ticket_lifecycle_state=ticket["lifecycle_state"] if ticket else None,
             )
 
+    def _build_timeline_entries(self, run_id: str) -> tuple[list[TimelineEntry], list[dict]]:
+        """Pure extraction of get_timeline()'s entries-building loop. Caller must already hold
+        self._lock and have already called self._maybe_rebuild() — this method does neither
+        itself, since both get_timeline() and get_bulk_timeline() call it once per already-locked,
+        already-rebuilt request, not once per run inside their own loops."""
+        raw_events = sorted(
+            self._events_by_run.get(run_id, []), key=lambda e: e.get("seq") or 0
+        )
+        entries = []
+        entry_dicts = []
+        for e in raw_events:
+            raw_tool_calls = self._tools_by_seq.get((run_id, e.get("seq")), [])
+            entries.append(
+                TimelineEntry(
+                    seq=e.get("seq"),
+                    phase=e.get("phase"),
+                    agent=e.get("agent"),
+                    status=e.get("status", ""),
+                    summary=e.get("summary", ""),
+                    ts=_coerce_ts(e.get("ts")) or "",
+                    tool_call_count=e.get("tool_call_count"),
+                    cost_proxy_score=e.get("cost_proxy_score"),
+                    reason_code=e.get("reason_code"),
+                    tool_calls=[_tool_call_to_model(t) for t in raw_tool_calls],
+                )
+            )
+            entry_dicts.append({"tool_calls": raw_tool_calls})
+        return entries, entry_dicts
+
     def get_timeline(self, run_id: str) -> Optional[RunTimeline]:
         with self._lock:
             self._maybe_rebuild()
             if run_id not in self._runs_by_id and run_id not in self._inferred_active:
                 return None
 
-            raw_events = sorted(
-                self._events_by_run.get(run_id, []), key=lambda e: e.get("seq") or 0
-            )
-            entries = []
-            entry_dicts = []
-            for e in raw_events:
-                raw_tool_calls = self._tools_by_seq.get((run_id, e.get("seq")), [])
-                entries.append(
-                    TimelineEntry(
-                        seq=e.get("seq"),
-                        phase=e.get("phase"),
-                        agent=e.get("agent"),
-                        status=e.get("status", ""),
-                        summary=e.get("summary", ""),
-                        ts=_coerce_ts(e.get("ts")) or "",
-                        tool_call_count=e.get("tool_call_count"),
-                        cost_proxy_score=e.get("cost_proxy_score"),
-                        reason_code=e.get("reason_code"),
-                        tool_calls=[_tool_call_to_model(t) for t in raw_tool_calls],
-                    )
-                )
-                entry_dicts.append({"tool_calls": raw_tool_calls})
+            entries, entry_dicts = self._build_timeline_entries(run_id)
 
             is_live = run_id in self._inferred_active
             live_tail_raw: list[dict] = []
             if is_live:
-                known_seqs = {e.get("seq") for e in raw_events}
+                known_seqs = {ent.seq for ent in entries}
                 for t in self._tools_by_run_recent.get(run_id, []):
                     if t.get("seq") is None or t.get("seq") not in known_seqs:
                         live_tail_raw.append(t)
@@ -724,6 +733,41 @@ class DashboardCache:
                 live_tail=[_tool_call_to_model(t) for t in live_tail_raw],
                 files_touched=files_touched,
             )
+
+    def get_bulk_timeline(
+        self,
+        *,
+        since: Optional[str] = None,
+        until: Optional[str] = None,
+        limit: int = 50,
+        offset: int = 0,
+    ) -> BulkRunTimeline:
+        """Deliberately duplicates get_runs()'s since/sort/slice selection logic (with `until`
+        added in the same per-run-id filter loop, before sort+slice) rather than calling
+        get_runs() and post-filtering — get_runs()'s own [offset:offset+limit] slice happens
+        before any `until` bound could be applied, which would silently return the wrong page."""
+        with self._lock:
+            self._maybe_rebuild()
+            all_run_ids = set(self._runs_by_id) | set(self._inferred_active)
+            summaries = []
+            for run_id in all_run_ids:
+                summary = _build_run_summary(
+                    run_id, self._runs_by_id.get(run_id), self._inferred_active.get(run_id)
+                )
+                if since is not None and (summary.start_ts is None or summary.start_ts < since):
+                    continue
+                if until is not None and (summary.start_ts is None or summary.start_ts > until):
+                    continue
+                summaries.append(summary)
+
+            summaries.sort(key=lambda s: s.start_ts or "", reverse=True)
+            page = summaries[offset : offset + limit]
+
+            entries_by_run: dict[str, list[TimelineEntry]] = {}
+            for s in page:
+                entries, _entry_dicts = self._build_timeline_entries(s.run_id)
+                entries_by_run[s.run_id] = entries
+            return BulkRunTimeline(entries_by_run=entries_by_run)
 
     def get_agent_monitoring_stats(
         self,

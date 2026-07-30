@@ -6375,3 +6375,95 @@
     SHADOW_CONTEXT_PACKET_ENABLED remains unset (the current default per INFRA-299) -- the new
     section only populates against fixture/test data or a future manual invocation until that flag
     is enabled.
+
+- id: INFRA-301
+  text: >
+    New bulk run-timeline route -- TCK-20260720-BULK-RUN-TIMELINE -- GET /api/runs/timeline,
+    registered in main.py ahead of the pre-existing GET /api/runs/{run_id} route to avoid
+    FastAPI/Starlette's single-path-segment wildcard shadowing a literal `/api/runs/timeline`
+    request. Returns the new BulkRunTimeline Pydantic model (models.py), a Dict[str,
+    List[TimelineEntry]]-wrapper mirroring GlossaryResponse's Dict[str, GlossaryEntry] shape.
+    DashboardCache.get_timeline() (ingest.py) is refactored -- zero observable behavior change --
+    to extract its entries-building loop into a new private helper,
+    _build_timeline_entries(run_id), called by both the pre-existing get_timeline() and the new
+    DashboardCache.get_bulk_timeline() method. get_bulk_timeline() deliberately duplicates (does
+    not call) get_runs()'s since/sort/[offset:offset+limit]-slice run-selection logic, with a new
+    `until` upper-bound query param added in the same per-run-id filter loop as `since` --
+    before sort+slice, not after -- using the same `start_ts is None or ...` short-circuit guard
+    `since` already uses, so a run with start_ts is None is excluded whenever `until` is set,
+    consistent with `since`'s existing convention. get_runs() itself is untouched (no `until`
+    param added to it) and the bulk response carries no files_touched/live_tail/is_live per run
+    (unlike RunTimeline) -- only entries_by_run: Dict[str, List[TimelineEntry]].
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: >
+    src/api/agent_ops_dashboard/ingest.py:682-709 (`_build_timeline_entries()` -- extracted,
+    lock-free helper, callers must already hold self._lock), :711-735 (`get_timeline()`,
+    refactored to call the helper at line 717, rest of its body unchanged), :737-770
+    (`get_bulk_timeline()` -- duplicated since/until/sort/slice selection logic, `until` branch
+    alongside `since`'s existing branch, calls `_build_timeline_entries()` once per selected run
+    at line 768). src/api/agent_ops_dashboard/models.py:272-273 (`class BulkRunTimeline(BaseModel):
+    entries_by_run: Dict[str, List[TimelineEntry]]`). src/api/agent_ops_dashboard/main.py:18
+    (import), :77-84 (`GET /api/runs/timeline` route, registered between `GET /api/runs` at line
+    66 and `GET /api/runs/{run_id}` at line 87 -- the load-bearing ordering that avoids the
+    wildcard-shadowing hazard).
+  proof_type: regression
+  test_path: tests/tools/test_agent_ops_dashboard_api.py::test_bulk_run_timeline_route_matches_per_run_route_for_same_run_id
+  divergence_note: null
+  support_boundary: >
+    Agent-orchestration/dashboard tooling only -- no simulation behavior, Mechanics Bible chapter,
+    or engine contract governs this module's semantics (same category as INFRA-281 through
+    INFRA-300). Read-only over tickets/** and agent-monitoring/*.jsonl; no new write path
+    introduced (test_agent_ops_dashboard_module_has_no_write_path's AST guard passes unmodified).
+    No frontend consumption wired in this ticket -- dashboard-frontend/src/api.ts is untouched,
+    deferred to the downstream ProgressTimelineView ticket.
+- id: INFRA-302
+  text: >
+    TCK-20260720-ECHARTS-PHASE-PALETTE -- added the `echarts`/`echarts-for-react` dependencies to
+    dashboard-frontend/package.json (dependencies-only, no usage code -- deferred to the
+    downstream ProgressTimelineView ticket) with package-lock.json regenerated via a clean `npm
+    install` (no --legacy-peer-deps needed; echarts-for-react's peer range already accepts React
+    19), and a new dashboard-frontend/src/lib/phasePalette.ts module exporting
+    PHASE_PALETTE/PHASE_FAMILY: Record<WorkflowPhase, ...> covering all 21 hand-copied
+    WORKFLOW_PHASES strings from tools/agent-monitoring/vocabulary.py. Resolves the "21 distinct
+    hues vs. the dataviz skill's 8-hue categorical cap" conflict (references/anti-patterns.md,
+    references/choosing-a-form.md) by clustering the 21 phases into the same validated 8-hue dark
+    categorical set chartPalette.ts already uses (unchanged base hexes) and stepping OKLCH
+    lightness within each family (>=0.06 per step) rather than generating any new hue. Two new
+    architecture-guard tests confirm the dependency declaration and a bare `'echarts'`-bundle
+    import ban.
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: >
+    dashboard-frontend/package.json:20-21 (`echarts`/`echarts-for-react` under `dependencies`,
+    caret-range convention). dashboard-frontend/src/lib/phasePalette.ts:46-50 (`WorkflowPhase`
+    union, 21 members), :52-54 (`PhaseFamily` union, 8 members), :56-66 (`PHASE_FAMILY` mapping),
+    :71-80 (`PHASE_PALETTE` mapping, 8 unchanged base hexes stepped by lightness within each
+    family), :83-85 (`getPhaseColor()`, pure passthrough). Validated via the dataviz skill's
+    scripts/validate_palette.js against this app's actual dark chart surface (--color-bg-tertiary
+    #242835), run three separate ways (never all 21 values as one categorical list -- see
+    phasePalette.ts:1-40 header comment for the full rationale and per-run results): (1)
+    categorical check on the 8 unchanged family base hues -- ALL PASS, one pre-existing WARN
+    (#008300 at 2.97:1, same as chartPalette.ts's CHART_SERIES_2 precedent); (2) `--ordinal` check
+    per family (8 runs) -- ALL PASS (monotone lightness, >=0.06 OKLCH L gap, single hue, light-end
+    contrast >=2.0); (3) direct per-hex WCAG contrast check -- 8 of 21 entries sit in the same
+    sub-3:1 "relief" WARN band, documented with the mandatory-visible-label mitigation.
+    tests/tools/test_agent_ops_dashboard_frontend_api_surface.py:59-67
+    (`test_echarts_dependencies_declared_in_package_json`), :70-85
+    (`test_no_source_file_imports_full_echarts_bundle`).
+    dashboard-frontend/src/test/phasePalette.test.ts:45-48 (literal 21-key completeness, not
+    Set-derived), :50-59 (per-hex contrast floor, WARN-allowlisted), :61-64
+    (purity/determinism), :66-68 (8-family cap).
+  proof_type: regression
+  test_path: dashboard-frontend/src/test/phasePalette.test.ts
+  divergence_note: null
+  support_boundary: >
+    Agent-orchestration/dashboard tooling only -- no simulation behavior, Mechanics Bible chapter,
+    or engine contract governs this module's semantics (same category as INFRA-275, INFRA-280,
+    INFRA-281 through INFRA-301). No rendering/UI integration in this ticket --
+    dashboard-frontend/src/components/GanttBar.tsx, BarChart.tsx, and GroupedBarChart.tsx are
+    untouched; chartPalette.ts's existing two exports are untouched; no `echarts`/
+    `echarts-for-react` import exists anywhere in dashboard-frontend/src -- both deferred to the
+    downstream ProgressTimelineView ticket.

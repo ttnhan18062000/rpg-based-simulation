@@ -54,3 +54,32 @@ def test_dashboard_frontend_never_references_simulation_api_surface() -> None:
         "backend is src/api/agent_ops_dashboard/{main,ingest,models}.py, "
         "consumed only via GET /api/runs.\n\n" + "\n".join(f"  {v}" for v in violations)
     )
+
+
+def test_echarts_dependencies_declared_in_package_json() -> None:
+    import json
+    pkg_path = _FRONTEND_ROOT.parent / "package.json"
+    pkg = json.loads(pkg_path.read_text(encoding="utf-8"))
+    deps = pkg.get("dependencies", {})
+    assert "echarts" in deps, "package.json must declare 'echarts' under dependencies"
+    assert "echarts-for-react" in deps, (
+        "package.json must declare 'echarts-for-react' under dependencies"
+    )
+
+
+def test_no_source_file_imports_full_echarts_bundle() -> None:
+    import re
+    # Matches a bare `from 'echarts'` / `require('echarts')` — NOT 'echarts/core',
+    # any 'echarts/...' submodule path, or the distinct 'echarts-for-react' package.
+    bare_echarts_import = re.compile(r"""(from\s+['"]echarts['"]|require\(\s*['"]echarts['"]\s*\))""")
+    violations: list[str] = []
+    for path in _frontend_source_files():
+        text = path.read_text(encoding="utf-8")
+        if bare_echarts_import.search(text):
+            rel = path.relative_to(_FRONTEND_ROOT.parent.parent)
+            violations.append(str(rel))
+    assert not violations, (
+        "no dashboard-frontend/src file may import the full 'echarts' bundle — only "
+        "'echarts/core' plus tree-shaken submodule imports are allowed. Violations: "
+        + ", ".join(violations)
+    )

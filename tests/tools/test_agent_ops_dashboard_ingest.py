@@ -62,6 +62,23 @@ def _bump_mtime(path: Path) -> None:
     os.utime(path, (future, future))
 
 
+def _write_runs_events_tools(
+    tmp_path: Path,
+    runs: list[dict],
+    events: list[dict] | None = None,
+    tools: list[dict] | None = None,
+) -> None:
+    _init_repo_skeleton(tmp_path)
+    runs_file = tmp_path / "agent-monitoring" / "runs.jsonl"
+    runs_file.write_text("\n".join(json.dumps(r) for r in runs) + "\n")
+    if events:
+        events_file = tmp_path / "agent-monitoring" / "events.jsonl"
+        events_file.write_text("\n".join(json.dumps(e) for e in events) + "\n")
+    if tools:
+        tools_file = tmp_path / "agent-monitoring" / "tools.jsonl"
+        tools_file.write_text("\n".join(json.dumps(t) for t in tools) + "\n")
+
+
 # ---------------------------------------------------------------------------
 # AC #3 — reuse, not reimplementation
 # ---------------------------------------------------------------------------
@@ -765,3 +782,168 @@ def test_load_jsonl_handles_all_legacy_shapes_plus_new_execution_identity_format
     parsed_records, unparsed_lines = ingest.load_jsonl_counted(fixture_file)
     assert len(parsed_records) == 7
     assert unparsed_lines == 0
+
+
+# ---------------------------------------------------------------------------
+# TCK-20260720-BULK-RUN-TIMELINE — get_bulk_timeline() / _build_timeline_entries()
+# ---------------------------------------------------------------------------
+
+
+def test_get_timeline_and_bulk_timeline_return_identical_entries_for_same_run(tmp_path):
+    runs = [
+        {
+            "run_id": "TCK-BULK-A",
+            "start_ts": "2026-07-20T00:00:00Z",
+            "end_ts": "2026-07-20T01:00:00Z",
+            "workflow": "implement-ticket",
+            "tier": "standard",
+            "final_status": "DONE",
+            "agent_count": 1,
+        },
+    ]
+    events = [
+        {
+            "run_id": "TCK-BULK-A",
+            "seq": 1,
+            "phase": "Implement",
+            "agent": "implementer",
+            "status": "ok",
+            "summary": "did stuff",
+            "ts": "2026-07-20T00:00:01Z",
+            "tool_call_count": 2,
+            "cost_proxy_score": 1.5,
+        },
+        {
+            "run_id": "TCK-BULK-A",
+            "seq": 2,
+            "phase": "Test",
+            "agent": "tester",
+            "status": "ok",
+            "summary": "ran tests",
+            "ts": "2026-07-20T00:00:02Z",
+            "tool_call_count": 1,
+            "cost_proxy_score": 0.5,
+        },
+    ]
+    tools = [
+        {"run_id": "TCK-BULK-A", "seq": 1, "tool": "Read", "input_summary": "/a.py", "status": "ok", "duration_ms": 10, "ts": "2026-07-20T00:00:00Z"},
+        {"run_id": "TCK-BULK-A", "seq": 1, "tool": "Edit", "input_summary": "/a.py", "status": "ok", "duration_ms": 20, "ts": "2026-07-20T00:00:01Z"},
+        {"run_id": "TCK-BULK-A", "seq": 2, "tool": "Bash", "input_summary": "pytest", "status": "ok", "duration_ms": 500, "ts": "2026-07-20T00:00:02Z"},
+    ]
+    _write_runs_events_tools(tmp_path, runs, events, tools)
+
+    cache = ingest.DashboardCache(repo_root=tmp_path)
+    timeline = cache.get_timeline("TCK-BULK-A")
+    assert timeline is not None
+
+    bulk = cache.get_bulk_timeline(limit=100)
+    assert "TCK-BULK-A" in bulk.entries_by_run
+    assert [e.model_dump() for e in bulk.entries_by_run["TCK-BULK-A"]] == [
+        e.model_dump() for e in timeline.entries
+    ]
+
+
+def test_bulk_timeline_selects_same_run_ids_as_get_runs_for_same_since_limit_offset(tmp_path):
+    runs = [
+        {"run_id": "TCK-S1", "start_ts": "2026-07-01T00:00:00Z", "final_status": "DONE"},
+        {"run_id": "TCK-S2", "start_ts": "2026-07-02T00:00:00Z", "final_status": "DONE"},
+        {"run_id": "TCK-S3", "start_ts": "2026-07-03T00:00:00Z", "final_status": "DONE"},
+    ]
+    _write_runs_events_tools(tmp_path, runs)
+    cache = ingest.DashboardCache(repo_root=tmp_path)
+
+    get_runs_result = cache.get_runs(since="2026-07-02T00:00:00Z", limit=10, offset=0)
+    bulk = cache.get_bulk_timeline(since="2026-07-02T00:00:00Z", limit=10, offset=0)
+
+    assert set(bulk.entries_by_run.keys()) == {s.run_id for s in get_runs_result}
+    assert set(bulk.entries_by_run.keys()) == {"TCK-S2", "TCK-S3"}
+
+
+def test_bulk_timeline_until_excludes_runs_with_start_ts_after_bound(tmp_path):
+    runs = [
+        {"run_id": "TCK-U1", "start_ts": "2026-07-01T00:00:00Z", "final_status": "DONE"},
+        {"run_id": "TCK-U2", "start_ts": "2026-07-05T00:00:00Z", "final_status": "DONE"},
+    ]
+    _write_runs_events_tools(tmp_path, runs)
+    cache = ingest.DashboardCache(repo_root=tmp_path)
+
+    bulk = cache.get_bulk_timeline(until="2026-07-02T00:00:00Z", limit=10)
+    assert set(bulk.entries_by_run.keys()) == {"TCK-U1"}
+
+
+def test_bulk_timeline_until_excludes_none_start_ts_runs_consistent_with_since(tmp_path):
+    _init_repo_skeleton(tmp_path)
+    now = datetime.now(timezone.utc)
+    live_ts = (now - timedelta(minutes=2)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    tools_file = tmp_path / "agent-monitoring" / "tools.jsonl"
+    tools_file.write_text(
+        json.dumps(
+            {
+                "run_id": "TCK-LIVE-NONE-TS",
+                "seq": 1,
+                "ts": live_ts,
+                "tool": "Read",
+                "input_summary": "/x.py",
+                "status": "ok",
+                "duration_ms": 10,
+            }
+        )
+        + "\n"
+    )
+
+    cache = ingest.DashboardCache(repo_root=tmp_path)
+    run = cache.get_run("TCK-LIVE-NONE-TS")
+    assert run is not None
+    assert run.start_ts is None  # inferred-active run, no runs.jsonl record
+
+    bulk = cache.get_bulk_timeline(until="2026-07-20T00:00:00Z", limit=10)
+    assert "TCK-LIVE-NONE-TS" not in bulk.entries_by_run
+
+    bulk_unbounded = cache.get_bulk_timeline(limit=10)
+    assert "TCK-LIVE-NONE-TS" in bulk_unbounded.entries_by_run
+
+
+def test_bulk_timeline_since_and_until_combine_as_inclusive_window(tmp_path):
+    runs = [
+        {"run_id": "TCK-W1", "start_ts": "2026-07-01T00:00:00Z", "final_status": "DONE"},
+        {"run_id": "TCK-W2", "start_ts": "2026-07-03T00:00:00Z", "final_status": "DONE"},
+        {"run_id": "TCK-W3", "start_ts": "2026-07-05T00:00:00Z", "final_status": "DONE"},
+    ]
+    _write_runs_events_tools(tmp_path, runs)
+    cache = ingest.DashboardCache(repo_root=tmp_path)
+
+    bulk = cache.get_bulk_timeline(
+        since="2026-07-02T00:00:00Z", until="2026-07-04T00:00:00Z", limit=10
+    )
+    assert set(bulk.entries_by_run.keys()) == {"TCK-W2"}
+
+
+def test_bulk_timeline_limit_offset_applied_after_since_until_filtering(tmp_path):
+    runs = [
+        {"run_id": "TCK-P1", "start_ts": "2026-07-01T00:00:00Z", "final_status": "DONE"},  # excluded, before since
+        {"run_id": "TCK-P2", "start_ts": "2026-07-02T00:00:00Z", "final_status": "DONE"},  # included
+        {"run_id": "TCK-P3", "start_ts": "2026-07-03T00:00:00Z", "final_status": "DONE"},  # included
+        {"run_id": "TCK-P4", "start_ts": "2026-07-04T00:00:00Z", "final_status": "DONE"},  # included
+        {"run_id": "TCK-P5", "start_ts": "2026-07-06T00:00:00Z", "final_status": "DONE"},  # excluded, after until
+    ]
+    _write_runs_events_tools(tmp_path, runs)
+    cache = ingest.DashboardCache(repo_root=tmp_path)
+
+    # Filtered-and-sorted-desc set is [P4, P3, P2]; offset=1 must land on P3 (the
+    # second entry of the *filtered* set), not P4 (the second entry of the unfiltered,
+    # 5-run descending set) — proves filter-then-slice ordering, not slice-then-filter.
+    bulk = cache.get_bulk_timeline(
+        since="2026-07-02T00:00:00Z", until="2026-07-05T00:00:00Z", limit=1, offset=1
+    )
+    assert set(bulk.entries_by_run.keys()) == {"TCK-P3"}
+
+
+def test_bulk_timeline_empty_window_returns_empty_dict_not_error(tmp_path):
+    runs = [
+        {"run_id": "TCK-E1", "start_ts": "2026-07-01T00:00:00Z", "final_status": "DONE"},
+    ]
+    _write_runs_events_tools(tmp_path, runs)
+    cache = ingest.DashboardCache(repo_root=tmp_path)
+
+    bulk = cache.get_bulk_timeline(since="2026-08-01T00:00:00Z", limit=10)
+    assert bulk.entries_by_run == {}

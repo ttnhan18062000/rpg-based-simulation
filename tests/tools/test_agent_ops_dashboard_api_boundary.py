@@ -56,6 +56,7 @@ def test_all_declared_routes_present():
     assert paths == {
         "/api/tickets",
         "/api/runs",
+        "/api/runs/timeline",
         "/api/runs/{run_id}",
         "/api/runs/{run_id}/timeline",
         "/api/stats/agent-monitoring",
