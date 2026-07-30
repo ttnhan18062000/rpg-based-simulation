@@ -6538,3 +6538,61 @@
     available; see the ticket's Implementation Notes for the non-visual verification performed in
     its place (live backend+dev-server smoke checks, real API data, dependency pre-bundle
     inspection) and the explicit gap this leaves.
+- id: INFRA-304
+  text: >
+    TCK-20260720-TIMELINE-RANGE-CONTROL -- added a range-control UI (four quick-range preset
+    buttons -- 1h/6h/24h/7d -- plus a custom start/end `<input type="datetime-local">` pair)
+    above ProgressTimelineView.tsx's chart, replacing the component's fixed `SINCE_WINDOW_MS =
+    24h` window with live `sinceIso`/`untilIso` React state so the bulk timeline endpoint's
+    `until` bound (already landed by TCK-20260720-BULK-RUN-TIMELINE, INFRA-301) is actually
+    consumed by the frontend. New pure `dashboard-frontend/src/lib/timeRangePresets.ts` module
+    holds the single source of truth for preset durations (`RANGE_PRESETS`,
+    `DEFAULT_WINDOW_MS` derived from the `'24h'` preset entry, never a second independent 24h
+    literal) plus the `<input type="datetime-local">` <-> UTC-ISO conversion helpers
+    (`datetimeLocalToUtcIso`/`utcIsoToDatetimeLocalValue`). New
+    `dashboard-frontend/src/components/RangeControl.tsx` presentational component (button-group
+    presets with `aria-pressed` toggling, `defaultValue`+`key`-keyed custom datetime inputs,
+    lexical-comparison guards rejecting an inverted custom range) follows `TicketsView.tsx`'s
+    real filter-bar precedent. `useRunTimelinesPolling`/`fetchAllRunTimelinesSince` in api.ts
+    gained an optional `untilIso`/`until` parameter (3rd positional, after the already-defaulted
+    `intervalMs`, to leave every existing 2-arg call site's meaning bit-for-bit unchanged) and
+    forward it into the bulk `GET /api/runs/timeline` query string, which already supported
+    `until` server-side. A deliberate, permanently test-guarded decision leaves `useRunsPolling`/
+    `GET /api/runs`/`FetchRunsParams`/`fetchRuns` un-extended with `until` in this ticket -- the
+    known consequence (a custom picker with a past `untilIso` still lists y-axis rows for runs
+    with no visible segments in-window) is accepted as a documented, non-blocking limitation, not
+    fixed here.
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: >
+    dashboard-frontend/src/api.ts:477-500 (`fetchAllRunTimelinesSince(sinceIso, untilIso?)`,
+    forwards `until` into every page's `fetchRunTimelines` call), :508-545
+    (`useRunTimelinesPolling(sinceIso, intervalMs = 5000, untilIso?)`, `untilIso` included in the
+    polling effect's dependency array at :542 so a change to `untilIso` alone re-triggers a poll).
+    dashboard-frontend/src/lib/timeRangePresets.ts:1-56 (`RANGE_PRESETS` four-entry array,
+    `DEFAULT_PRESET_ID`/`DEFAULT_WINDOW_MS` derived from it at :17-23, `computePresetRange` at
+    :25-35, `datetimeLocalToUtcIso` at :42-47, `utcIsoToDatetimeLocalValue` at :52-56).
+    dashboard-frontend/src/components/RangeControl.tsx:1-91 (`RangeControl` component, preset
+    button group with `aria-pressed` state at :49-66, custom start/end datetime-local inputs with
+    `defaultValue`+`key` remount pattern at :67-88, lexical `iso >= untilIso`/`sinceIso >= iso`
+    inverted-range guards at :34,42).
+    dashboard-frontend/src/views/ProgressTimelineView.tsx:1-61 (removed the file-level
+    `SINCE_WINDOW_MS` literal, `sinceIso`/`untilIso` now paired settable `useState` seeded from
+    `DEFAULT_WINDOW_MS` at :21-22, `useRunTimelinesPolling(sinceIso, 5000, untilIso)` at :25,
+    `useRunsPolling(sinceIso)` left unchanged at :24 per the `useRunsPolling` scope decision,
+    `<RangeControl>` rendered at :51 directly above `<ReactEChartsCore>`,
+    `toChartOption.ts`'s `nowIso` parameter and both `dataZoom` entries untouched throughout).
+  proof_type: regression
+  test_path: dashboard-frontend/src/test/RangeControl.test.tsx
+  divergence_note: null
+  support_boundary: >
+    Agent-orchestration/dashboard tooling only -- no simulation behavior, Mechanics Bible chapter,
+    or engine contract governs this module's semantics (same category as INFRA-275 through
+    INFRA-303). Cross-references INFRA-301 (backend `until` param on `GET /api/runs/timeline`,
+    origin of the query-string support this ticket's frontend now actually consumes) and
+    INFRA-303 (`ProgressTimelineView.tsx`/`useRunTimelinesPolling` origin, the `sinceIso`-only
+    hook signature this ticket extends). `toChartOption.ts`, both `dataZoom` entries, and
+    `GET /api/runs`/`useRunsPolling`/`FetchRunsParams` are untouched -- the latter by an explicit,
+    permanently test-guarded scope decision (see `useRunsPolling.test.ts`'s architecture-guard
+    test), not an oversight.

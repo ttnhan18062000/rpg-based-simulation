@@ -474,12 +474,20 @@ async function fetchRunTimelines(params: {
 
 const RUN_TIMELINES_PAGE_LIMIT = 100
 
-async function fetchAllRunTimelinesSince(sinceIso: string): Promise<Record<string, TimelineEntry[]>> {
+async function fetchAllRunTimelinesSince(
+  sinceIso: string,
+  untilIso?: string,
+): Promise<Record<string, TimelineEntry[]>> {
   const merged: Record<string, TimelineEntry[]> = {}
   let offset = 0
 
   for (;;) {
-    const page = await fetchRunTimelines({ since: sinceIso, limit: RUN_TIMELINES_PAGE_LIMIT, offset })
+    const page = await fetchRunTimelines({
+      since: sinceIso,
+      until: untilIso,
+      limit: RUN_TIMELINES_PAGE_LIMIT,
+      offset,
+    })
     const pageRunCount = Object.keys(page.entries_by_run).length
     Object.assign(merged, page.entries_by_run)
     if (pageRunCount < RUN_TIMELINES_PAGE_LIMIT) {
@@ -497,7 +505,11 @@ export interface UseRunTimelinesPollingResult {
   error: Error | null
 }
 
-export function useRunTimelinesPolling(sinceIso: string, intervalMs = 5000): UseRunTimelinesPollingResult {
+export function useRunTimelinesPolling(
+  sinceIso: string,
+  intervalMs = 5000,
+  untilIso?: string,
+): UseRunTimelinesPollingResult {
   const [entriesByRun, setEntriesByRun] = useState<Record<string, TimelineEntry[]>>({})
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<Error | null>(null)
@@ -507,7 +519,7 @@ export function useRunTimelinesPolling(sinceIso: string, intervalMs = 5000): Use
 
     async function poll() {
       try {
-        const merged = await fetchAllRunTimelinesSince(sinceIso)
+        const merged = await fetchAllRunTimelinesSince(sinceIso, untilIso)
         if (!cancelled) {
           setEntriesByRun(merged)
           setError(null)
@@ -527,7 +539,7 @@ export function useRunTimelinesPolling(sinceIso: string, intervalMs = 5000): Use
       cancelled = true
       clearInterval(intervalId)
     }
-  }, [sinceIso, intervalMs])
+  }, [sinceIso, intervalMs, untilIso])
 
   return { entriesByRun, isLoading, error }
 }

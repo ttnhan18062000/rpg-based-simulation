@@ -1,6 +1,7 @@
 import { renderHook, waitFor } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { useRunsPolling, type RunSummary } from '../api'
+import apiSource from '../api.ts?raw'
 
 function makeRun(id: string, startTs: string): RunSummary {
   return {
@@ -57,5 +58,12 @@ describe('useRunsPolling', () => {
 
     expect(mockFetch).toHaveBeenCalledTimes(1)
     expect(result.current.runs).toHaveLength(1)
+  })
+
+  it('FetchRunsParams/useRunsPolling still have no until param (decision: not extended by TCK-20260720-TIMELINE-RANGE-CONTROL)', () => {
+    const paramsBlock = apiSource.match(/export interface FetchRunsParams \{[^}]*\}/)?.[0] ?? ''
+    expect(paramsBlock).not.toMatch(/\buntil\b/)
+    const signatureLine = apiSource.match(/export function useRunsPolling\([^)]*\)/)?.[0] ?? ''
+    expect(signatureLine).not.toMatch(/\buntil\b/)
   })
 })

@@ -74,4 +74,32 @@ describe('useRunTimelinesPolling', () => {
     expect(result.current.error?.message).toBe('network down')
     expect(result.current.entriesByRun).toEqual({})
   })
+
+  it('forwards until to the bulk fetch query string when the 3rd argument is provided', async () => {
+    const body = { entries_by_run: { 'run-a': [makeEntry(0)] } }
+    mockFetch.mockResolvedValue({ ok: true, json: async () => body })
+
+    const { result } = renderHook(() =>
+      useRunTimelinesPolling('2026-07-15T00:00:00Z', 999_999_999, '2026-07-16T00:00:00Z'),
+    )
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false))
+
+    expect(mockFetch).toHaveBeenCalledTimes(1)
+    const calledUrl = new URL((mockFetch.mock.calls[0][0] as string).toString(), 'http://localhost')
+    expect(calledUrl.searchParams.get('until')).toBe('2026-07-16T00:00:00Z')
+  })
+
+  it('2-argument call omits until from the query string (2nd arg still means intervalMs, not untilIso)', async () => {
+    const body = { entries_by_run: { 'run-a': [makeEntry(0)] } }
+    mockFetch.mockResolvedValue({ ok: true, json: async () => body })
+
+    const { result } = renderHook(() => useRunTimelinesPolling('2026-07-15T00:00:00Z', 999_999_999))
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false))
+
+    expect(mockFetch).toHaveBeenCalledTimes(1)
+    const calledUrl = new URL((mockFetch.mock.calls[0][0] as string).toString(), 'http://localhost')
+    expect(calledUrl.searchParams.has('until')).toBe(false)
+  })
 })

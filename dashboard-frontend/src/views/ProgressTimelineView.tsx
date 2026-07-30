@@ -6,10 +6,11 @@ import { TooltipComponent, GridComponent, DataZoomComponent } from 'echarts/comp
 import { CanvasRenderer } from 'echarts/renderers'
 import { useRunsPolling, useRunTimelinesPolling, useGlossary } from '@/api'
 import { toChartOption } from '@/lib/toChartOption'
+import { RangeControl } from '@/components/RangeControl'
+import { DEFAULT_WINDOW_MS } from '@/lib/timeRangePresets'
 
 echarts.use([CustomChart, TooltipComponent, GridComponent, DataZoomComponent, CanvasRenderer])
 
-const SINCE_WINDOW_MS = 24 * 60 * 60 * 1000
 const NOW_TICK_MS = 1000
 
 export interface ProgressTimelineViewProps {
@@ -17,10 +18,11 @@ export interface ProgressTimelineViewProps {
 }
 
 export function ProgressTimelineView({ onSelectRun }: ProgressTimelineViewProps) {
-  const [sinceIso] = useState(() => new Date(Date.now() - SINCE_WINDOW_MS).toISOString())
+  const [sinceIso, setSinceIso] = useState(() => new Date(Date.now() - DEFAULT_WINDOW_MS).toISOString())
+  const [untilIso, setUntilIso] = useState(() => new Date().toISOString())
   const [nowIso, setNowIso] = useState(() => new Date().toISOString())
   const { runs } = useRunsPolling(sinceIso)
-  const { entriesByRun } = useRunTimelinesPolling(sinceIso)
+  const { entriesByRun } = useRunTimelinesPolling(sinceIso, 5000, untilIso)
   const glossary = useGlossary()
 
   useEffect(() => {
@@ -39,8 +41,14 @@ export function ProgressTimelineView({ onSelectRun }: ProgressTimelineViewProps)
     },
   }
 
+  function handleRangeChange(nextSinceIso: string, nextUntilIso: string) {
+    setSinceIso(nextSinceIso)
+    setUntilIso(nextUntilIso)
+  }
+
   return (
-    <div data-testid="progress-timeline-view" className="flex flex-col h-full p-4">
+    <div data-testid="progress-timeline-view" className="flex flex-col h-full p-4 gap-3">
+      <RangeControl sinceIso={sinceIso} untilIso={untilIso} onRangeChange={handleRangeChange} />
       <ReactEChartsCore
         echarts={echarts}
         option={option}

@@ -1,5 +1,5 @@
-import { render, screen } from '@testing-library/react'
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { render, screen, fireEvent } from '@testing-library/react'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { ProgressTimelineView } from '@/views/ProgressTimelineView'
 import { useRunsPolling, useRunTimelinesPolling, useGlossary } from '@/api'
 
@@ -68,5 +68,69 @@ describe('ProgressTimelineView', () => {
     render(<ProgressTimelineView onSelectRun={vi.fn()} />)
 
     expect(screen.getByTestId('progress-timeline-view')).toBeInTheDocument()
+  })
+
+  describe('range-control integration', () => {
+    const fixedNowIso = '2026-07-20T12:00:00.000Z'
+
+    beforeEach(() => {
+      vi.useFakeTimers()
+      vi.setSystemTime(new Date(fixedNowIso))
+    })
+
+    afterEach(() => {
+      vi.useRealTimers()
+    })
+
+    it('default mount reproduces now-24h to now bit-for-bit (AC #3)', () => {
+      render(<ProgressTimelineView onSelectRun={vi.fn()} />)
+
+      const expectedSince = new Date(Date.parse(fixedNowIso) - 24 * 60 * 60 * 1000).toISOString()
+      expect(mockedUseRunsPolling).toHaveBeenLastCalledWith(expectedSince)
+      expect(mockedUseRunTimelinesPolling).toHaveBeenLastCalledWith(expectedSince, 5000, fixedNowIso)
+    })
+
+    it('quick-range preset click updates the bounded fetch, not just the chart (AC #1)', () => {
+      render(<ProgressTimelineView onSelectRun={vi.fn()} />)
+
+      fireEvent.click(screen.getByTestId('range-preset-1h'))
+
+      const expectedSince = new Date(Date.parse(fixedNowIso) - 60 * 60 * 1000).toISOString()
+      expect(mockedUseRunTimelinesPolling).toHaveBeenLastCalledWith(expectedSince, 5000, fixedNowIso)
+    })
+
+    it('custom picker change triggers a refetch bounded by the exact custom values (AC #2)', () => {
+      render(<ProgressTimelineView onSelectRun={vi.fn()} />)
+
+      fireEvent.change(screen.getByTestId('range-custom-start'), {
+        target: { value: '2026-07-19T08:00' },
+      })
+
+      const lastCall = mockedUseRunTimelinesPolling.mock.calls.at(-1)
+      expect(lastCall?.[0]).toBe(new Date('2026-07-19T08:00').toISOString())
+      expect(lastCall?.[2]).toBe(fixedNowIso)
+    })
+
+    it('dataZoom stays independent of range-control changes (AC #4)', () => {
+      render(<ProgressTimelineView onSelectRun={vi.fn()} />)
+
+      fireEvent.click(screen.getByTestId('range-preset-1h'))
+
+      const option = capturedProps.option as { dataZoom: Array<{ type: string }> }
+      expect(option.dataZoom).toHaveLength(2)
+      expect(option.dataZoom.map((z) => z.type).sort()).toEqual(['inside', 'slider'])
+      expect(option.dataZoom.every((z) => !('start' in z) && !('end' in z))).toBe(true)
+
+      const onEvents = capturedProps.onEvents as Record<string, unknown>
+      expect(Object.keys(onEvents)).not.toContain('datazoom')
+      expect(Object.keys(onEvents)).not.toContain('dataZoom')
+    })
+
+    it('range control renders above the chart', () => {
+      render(<ProgressTimelineView onSelectRun={vi.fn()} />)
+
+      expect(screen.getByTestId('timeline-range-control')).toBeInTheDocument()
+      expect(screen.getAllByTestId('mocked-echarts')).toHaveLength(1)
+    })
   })
 })
