@@ -762,3 +762,4 @@
 {"run_id":"TCK-20260720-TAG-REGISTRY-RELOCATE","start_ts":"2026-07-30T17:12:40Z","end_ts":"2026-07-30T17:20:42Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":1,"duration_s":482}
 {"run_id":"TCK-20260720-DASHBOARD-TAG-FACET-REGISTRY","start_ts":"2026-07-30T17:21:22Z","end_ts":"2026-07-30T17:30:37Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":1,"duration_s":555}
 {"run_id":"FOLDER-tickets-todos-tag-registry-redesign","start_ts":"2026-07-30T17:12:40Z","end_ts":"2026-07-30T17:31:08Z","workflow":"implement-epic","tier":"epic","final_status":"STOPPED_FOR_HUMAN_INPUT","agent_count":2,"duration_s":1108}
+{"run_id":"TCK-20260731-GATE-BYPASS-HARDENING","start_ts":"2026-07-30T18:19:13Z","end_ts":"2026-07-30T18:21:14Z","workflow":"implement-ticket","tier":"hotfix","final_status":"DONE","agent_count":1,"duration_s":121}

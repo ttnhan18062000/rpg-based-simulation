@@ -40,6 +40,10 @@ If the input is a natural language sentence, treat it as `request`.
 
 3. Carry all variables (`tier`, `tid`, `ticketInfo`, `startTs`, `events`, etc.) across phases exactly as the JS does.
 
+## Gate Integrity (hard rule)
+
+**Never edit, delete from, or otherwise alter the content of an artifact a gate check reads, for the purpose of making that check pass.** This includes deleting a `## Unresolved Questions` heading, removing a flagged violation, or rewording text specifically to dodge a pattern match — whether you do it yourself or instruct a further sub-agent to do it. A gate's real outcome (`NEEDS_CHANGES`, `BLOCKED`, `NEEDS_HUMAN_INPUT`, `CONFLICTS_DETECTED`, `TAGS_NOT_REGISTERED`, `DOC_STALENESS_BLOCKED`, `TESTS_FAILED`, `SECURITY_BLOCKED`, `DOD_BLOCKED`, or any other status the JS defines) must always match what the artifact honestly says — if a phase produces a blocking result, that is correct information to report, not an obstacle to route around. Stop and report it exactly as the JS specifies, even when the blocking issue looks trivially resolvable to you; that judgment belongs to the human who gets notified by the resulting status, not to the orchestrating agent. This rule applies with equal force at every level of delegation — including any sub-agent you yourself spawn to carry out a phase.
+
 ## Pipeline (standard tier)
 
 0. **Context search** (REQUIRED before Scope — before any file reads or grep):
