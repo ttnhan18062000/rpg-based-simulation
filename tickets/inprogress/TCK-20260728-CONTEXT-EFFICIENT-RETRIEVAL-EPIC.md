@@ -217,6 +217,20 @@ production events exist as of this decision, rather than forced into invented nu
 This ticket was decision-document-only, per its own scope guard: no code changed, no
 promotion occurred, `SHADOW_CONTEXT_PACKET_ENABLED` was not enabled anywhere.
 
+**2026-07-30 — First real shadow-packet data collected.** `SHADOW_CONTEXT_PACKET_ENABLED`
+was enabled permanently in this development machine's shell environment (user decision,
+outside any ticket's scope) and the placement-legality mini-epic
+(`TCK-20260716-PLACELEGAL-HARDLAW`, `TCK-20260716-PLACELEGAL-SIMQ-SIGNAL`, both `DONE`) was
+run as a real vehicle to exercise it. Result: 2 real shadow-packet events now exist in
+`agent-monitoring/events.jsonl` (`agent: context-packet-wrapper`, real `TCK-...` `run_id`s),
+up from the 0 recorded at the time `TCK-20260730-SHADOW-PROMOTION-GATE-THRESHOLDS` set the
+sample-size floors. This is a genuine first data point, not a threshold crossing — the
+per-scenario floors resolved for Open Decision 5 (56 / 122 / 6 shadow-enabled runs, or one
+full agent-monitoring-retro cadence cycle, whichever is later) remain far off. Phase 6
+implementation (selective workflow adoption using those thresholds) still cannot be
+responsibly scoped from 2 samples; this note exists so a future ticketing pass can see real
+progress has begun, not to imply the gate can be evaluated yet.
+
 This epic remains **open**, not closed — per its own Scope and `SEQUENCE.md`, it
 deliberately covers only Phase 0-5 plus this Phase 6 prep decision so far; actual Phase 6
 implementation (selective workflow adoption — enabling the shadow-packet phase only for
