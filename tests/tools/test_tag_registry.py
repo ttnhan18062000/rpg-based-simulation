@@ -14,9 +14,11 @@ if str(_TOOLS_DIR) not in sys.path:
 from tag_registry import (  # noqa: E402
     ADDABLE_CATEGORIES,
     ALL_CATEGORIES,
+    _LEGACY_SKILL_TRIGGERS,
     add_tag,
     canonical_form_violation,
     check_tags_registered,
+    get_skill_mapping,
     is_phase_milestone_tag,
     is_tag_registered,
     load_registry,
@@ -181,6 +183,101 @@ def test_add_tag_is_append_only_existing_entries_unchanged(tmp_path):
     assert registry["faction"]["note"] == "first"
     assert registry["debugging"]["note"] == "second"
     assert len(registry) == 2
+
+
+# ---------------------------------------------------------------------------
+# add_tag(triggers_skill=...) (TCK-20260720-SKILL-MAPPING-DEDUP)
+# ---------------------------------------------------------------------------
+
+
+def test_add_tag_with_triggers_skill_writes_field(tmp_path):
+    triggers_skill = {
+        "skill": "/some-skill",
+        "carveout_agent": None,
+        "carveout_paths": (),
+        "carveout_excluded_paths": (),
+    }
+    entry = add_tag(
+        "some-signal",
+        "process-skill-signal",
+        note="test",
+        root=tmp_path,
+        triggers_skill=triggers_skill,
+    )
+
+    assert entry["triggers_skill"] == triggers_skill
+    registry = load_registry(tmp_path)
+    # JSON round-trip turns tuples into lists — reading back from disk, not just the in-memory
+    # entry `add_tag` returns, is the point of this assertion.
+    assert registry["some-signal"]["triggers_skill"] == {
+        "skill": "/some-skill",
+        "carveout_agent": None,
+        "carveout_paths": [],
+        "carveout_excluded_paths": [],
+    }
+
+
+def test_add_tag_without_triggers_skill_omits_field(tmp_path):
+    entry = add_tag("faction", "subsystem-topic", note="test", root=tmp_path)
+
+    assert "triggers_skill" not in entry
+    registry = load_registry(tmp_path)
+    assert "triggers_skill" not in registry["faction"]
+
+
+# ---------------------------------------------------------------------------
+# _LEGACY_SKILL_TRIGGERS (TCK-20260720-SKILL-MAPPING-DEDUP)
+# ---------------------------------------------------------------------------
+
+
+def test_legacy_skill_triggers_covers_exactly_four_known_tags():
+    assert set(_LEGACY_SKILL_TRIGGERS) == {"api-design", "debugging", "performance", "security"}
+
+
+def test_legacy_skill_triggers_debugging_preserves_carveout_structure():
+    debugging = _LEGACY_SKILL_TRIGGERS["debugging"]
+
+    assert debugging["skill"] == "/debugging-strategies"
+    assert debugging["carveout_agent"] == "world-debugger"
+    assert set(debugging["carveout_paths"]) == {
+        "src/worldassembly/",
+        "src/worldbuilding/",
+        "src/worldmodules/",
+        "src/content/",
+        "src/core/registries.py",
+    }
+    assert debugging["carveout_excluded_paths"] == ("src/worldgeneration/",)
+
+
+# ---------------------------------------------------------------------------
+# get_skill_mapping (TCK-20260720-SKILL-MAPPING-DEDUP)
+# ---------------------------------------------------------------------------
+
+
+def test_get_skill_mapping_returns_all_four_known_tags_today():
+    mapping = get_skill_mapping()
+
+    assert set(mapping) == {"api-design", "debugging", "performance", "security"}
+    assert mapping["security"]["skill"] == "/security-review"
+
+
+def test_get_skill_mapping_single_edit_propagates_with_zero_other_changes(tmp_path):
+    add_tag(
+        "some-new-signal",
+        "process-skill-signal",
+        note="synthetic 5th tag",
+        root=tmp_path,
+        triggers_skill={
+            "skill": "/some-new-skill",
+            "carveout_agent": None,
+            "carveout_paths": (),
+            "carveout_excluded_paths": (),
+        },
+    )
+
+    mapping = get_skill_mapping(root=tmp_path)
+
+    assert mapping["some-new-signal"]["skill"] == "/some-new-skill"
 
 
 # ---------------------------------------------------------------------------

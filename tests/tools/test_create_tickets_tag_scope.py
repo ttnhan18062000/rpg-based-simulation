@@ -40,7 +40,15 @@ def test_evidence_guardrail_present():
     assert "Do not guess a tag from the title alone if files_found doesn't support it" in source
 
 
-def test_process_skill_signal_mapping_table_still_present_unchanged():
+def test_skill_mapping_references_live_source_not_embedded_table():
+    """TCK-20260720-SKILL-MAPPING-DEDUP removed the embedded skill-mapping table
+
+    in favor of a live lookup against tag_registry.py's skill-mapping CLI
+    subcommand, so the old literal table strings must be gone and the new
+    live-lookup reference must be present.
+    """
     source = _read_source()
-    assert "api-design  -> /api-design-principles" in source
-    assert "Do not invent mappings for tags outside this 4-entry table" in source
+    assert "api-design  -> /api-design-principles" not in source
+    assert "Do not invent mappings for tags outside this 4-entry table" not in source
+    assert "tools/tag_registry.py skill-mapping" in source
+    assert "Do not invent mappings for tags outside this live mapping's keys." in source

@@ -83,14 +83,11 @@ P1
 2. A short conflict report: any duplicates, mechanic constraints, or parity entries the implementer must know about.
 3. The path where the ticket should be written: `tickets/inprogress/{ticket_id}.md`.
 4. A `summary` field (one sentence ≤200 chars): what was scoped and any conflicts found. This goes into the agent monitoring event record.
-5. A `suggested_skills` list: check the ticket's `tags` field against this mapping —
-   any tag not listed below produces no suggestion.
-
-   | Tag | Suggested skill |
-   |---|---|
-   | `api-design` | `/api-design-principles` |
-   | `debugging` | `/debugging-strategies` — unless `Related Code Areas` includes a path under `src/worldassembly/`, `src/worldbuilding/`, `src/worldmodules/`, `src/content/`, or `src/core/registries.py`, in which case suggest `Agent(subagent_type: "world-debugger")` instead (mirrors CLAUDE.md's existing debugging carve-out; note `src/worldgeneration/` is intentionally excluded — that path only appears in `world-debugger.md`'s own broader scope list, not CLAUDE.md's, and this mapping follows CLAUDE.md) |
-   | `performance` | `/python-performance-optimization` |
-   | `security` | `/security-review` (first codification of this mapping in the repo — no existing CLAUDE.md auto-invoke row for it yet) |
-
-   If none of the ticket's tags match, `suggested_skills` is an empty array — never omit the field (mirrors the existing `conflicts: []` empty-array convention).
+5. A `suggested_skills` list: Run `python3 tools/tag_registry.py skill-mapping` and match the
+   ticket's `Process/Skill-signal` tags against its JSON keys. Each value's `skill` field is the
+   suggestion; if `carveout_agent` is set and `Related Code Areas` includes a path under one of
+   `carveout_paths` (and is not one of `carveout_excluded_paths`), suggest
+   `Agent(subagent_type: carveout_agent)` instead of `skill`. Do not hand-copy a table — always
+   read the live command's output. If none of the ticket's tags appear as a key, `suggested_skills`
+   is an empty array — never omit the field (mirrors the existing `conflicts: []` empty-array
+   convention).

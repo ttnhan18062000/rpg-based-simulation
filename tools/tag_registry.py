@@ -25,6 +25,7 @@ Design constraints (all deliberate, not incidental):
 Usage:
   python3 tools/tag_registry.py add <tag> --category <category> --note "why this tag exists"
   python3 tools/tag_registry.py list
+  python3 tools/tag_registry.py skill-mapping
 """
 
 import argparse
@@ -107,6 +108,52 @@ def is_phase_milestone_tag(tag: str) -> bool:
 
 
 # ---------------------------------------------------------------------------
+# Legacy skill-mapping fallback (TCK-20260720-SKILL-MAPPING-DEDUP)
+# ---------------------------------------------------------------------------
+
+# Disclosed bounded residual, not an undisclosed shadow copy — modeled on
+# tag_skill_mapping_check.py's own KNOWN_TAGS disclosure (see that module's docstring). The 4
+# `process-skill-signal` rows below were registered on 2026-07-06, before `triggers_skill` existed
+# as a schema field, and tag_registry.jsonl's append-only invariant (see module docstring) forbids
+# rewriting an already-written line to backfill the field. get_skill_mapping() merges this fallback
+# with any `triggers_skill` field present on a registry row, so any *future* process-skill-signal
+# tag added via `add_tag(..., triggers_skill=...)` needs no entry here at all. Do not add a 5th
+# entry to this dict, and do not change any of the 4 existing entries' `skill` values — this is
+# dedup of representation, not a content change to the mapping itself.
+_LEGACY_SKILL_TRIGGERS: dict[str, dict] = {
+    "api-design": {
+        "skill": "/api-design-principles",
+        "carveout_agent": None,
+        "carveout_paths": (),
+        "carveout_excluded_paths": (),
+    },
+    "debugging": {
+        "skill": "/debugging-strategies",
+        "carveout_agent": "world-debugger",
+        "carveout_paths": (
+            "src/worldassembly/",
+            "src/worldbuilding/",
+            "src/worldmodules/",
+            "src/content/",
+            "src/core/registries.py",
+        ),
+        "carveout_excluded_paths": ("src/worldgeneration/",),
+    },
+    "performance": {
+        "skill": "/python-performance-optimization",
+        "carveout_agent": None,
+        "carveout_paths": (),
+        "carveout_excluded_paths": (),
+    },
+    "security": {
+        "skill": "/security-review",
+        "carveout_agent": None,
+        "carveout_paths": (),
+        "carveout_excluded_paths": (),
+    },
+}
+
+# ---------------------------------------------------------------------------
 # Registry file I/O
 # ---------------------------------------------------------------------------
 
@@ -164,11 +211,21 @@ def check_tags_registered(tags: list[str], root: Path | str | None = None) -> li
     return [tag for tag in tags if not is_tag_registered(tag, registry)]
 
 
-def add_tag(tag: str, category: str, note: str = "", root: Path | str | None = None) -> dict:
+def add_tag(
+    tag: str,
+    category: str,
+    note: str = "",
+    root: Path | str | None = None,
+    triggers_skill: dict | None = None,
+) -> dict:
     """Append a new tag registration. Returns the entry written.
 
     Raises ValueError if: `tag` is not canonical form, `category` is not addable, or `tag` is
     already registered (tags can only be added, never updated or re-added).
+
+    `triggers_skill`, if given, is written verbatim as the entry's `triggers_skill` field — used by
+    `get_skill_mapping()` to resolve a `process-skill-signal` tag to a suggested skill. Omitted
+    (the default) produces byte-identical output to every pre-existing caller.
     """
     violation = canonical_form_violation(tag)
     if violation:
@@ -192,6 +249,8 @@ def add_tag(tag: str, category: str, note: str = "", root: Path | str | None = N
         "added_date": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
         "note": note,
     }
+    if triggers_skill is not None:
+        entry["triggers_skill"] = triggers_skill
 
     path = registry_path(root)
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -199,6 +258,25 @@ def add_tag(tag: str, category: str, note: str = "", root: Path | str | None = N
         f.write(json.dumps(entry, sort_keys=True) + "\n")
 
     return entry
+
+
+def get_skill_mapping(root: Path | str | None = None) -> dict[str, dict]:
+    """Return {tag: {"skill", "carveout_agent", "carveout_paths", "carveout_excluded_paths"}}.
+
+    The single source every `Process/Skill-signal` -> suggested-skill consumer reads (directly, or
+    via the `skill-mapping` CLI subcommand): a registry row's own `triggers_skill` field takes
+    precedence when present (the forward-only path new tags use), falling back to
+    `_LEGACY_SKILL_TRIGGERS` for the 4 tags registered before that field existed. Tags with neither
+    are omitted — this function names actual suggestions, not the full tag registry.
+    """
+    registry = load_registry(root)
+    mapping: dict[str, dict] = {}
+    for tag, entry in registry.items():
+        if "triggers_skill" in entry:
+            mapping[tag] = entry["triggers_skill"]
+        elif tag in _LEGACY_SKILL_TRIGGERS:
+            mapping[tag] = _LEGACY_SKILL_TRIGGERS[tag]
+    return mapping
 
 
 # ---------------------------------------------------------------------------
@@ -218,16 +296,30 @@ def main() -> None:
     add_p.add_argument("tag")
     add_p.add_argument("--category", required=True, choices=sorted(ADDABLE_CATEGORIES))
     add_p.add_argument("--note", default="", help="Why this tag is being added")
+    add_p.add_argument(
+        "--triggers-skill",
+        default=None,
+        help='JSON object, e.g. \'{"skill": "/foo", "carveout_agent": null, '
+        '"carveout_paths": [], "carveout_excluded_paths": []}\'',
+    )
     add_p.add_argument("--root", default=None)
 
     list_p = sub.add_parser("list", help="Print all registered tags")
     list_p.add_argument("--root", default=None)
 
+    skill_mapping_p = sub.add_parser(
+        "skill-mapping", help="Print the live Process/Skill-signal tag -> skill mapping as JSON"
+    )
+    skill_mapping_p.add_argument("--root", default=None)
+
     args = parser.parse_args()
 
     if args.command == "add":
+        triggers_skill = json.loads(args.triggers_skill) if args.triggers_skill else None
         try:
-            entry = add_tag(args.tag, args.category, args.note, root=args.root)
+            entry = add_tag(
+                args.tag, args.category, args.note, root=args.root, triggers_skill=triggers_skill
+            )
         except ValueError as exc:
             print(f"ERROR: {exc}", file=sys.stderr)
             sys.exit(1)
@@ -239,6 +331,10 @@ def main() -> None:
         for tag in sorted(registry):
             entry = registry[tag]
             print(f"{tag:<28} {entry['category']:<22} {entry['added_date']}  {entry.get('note', '')}")
+        return
+
+    if args.command == "skill-mapping":
+        print(json.dumps(get_skill_mapping(args.root), sort_keys=True))
         return
 
 

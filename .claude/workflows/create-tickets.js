@@ -508,15 +508,10 @@ Step 4 — produce ticket tasks using these strict rules:
   - If nothing clearly applies, tags may be an empty array.
 
   suggested_skills:
-  - Map each assigned tag against this table; empty array if nothing matches:
-      api-design  -> /api-design-principles
-      debugging   -> /debugging-strategies (or Agent(subagent_type: "world-debugger") if
-                     related_code_areas includes a path under src/worldassembly/,
-                     src/worldbuilding/, src/worldmodules/, src/content/, or
-                     src/core/registries.py)
-      performance -> /python-performance-optimization
-      security    -> /security-review
-  - Do not invent mappings for tags outside this 4-entry table
+  - Run \`python3 tools/tag_registry.py skill-mapping\` and match each assigned
+    Process/Skill-signal tag against its JSON keys the same way (skill field, or
+    Agent(subagent_type: carveout_agent) if a carve-out applies per its carveout_paths); empty
+    array if nothing matches. Do not invent mappings for tags outside this live mapping's keys.
 
   tier:
   - Use investigation's tier_recommendation

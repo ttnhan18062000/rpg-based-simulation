@@ -53,15 +53,14 @@ assigns a Subsystem/Topic (or Phase/Milestone, Quality-attribute, Meta-Process) 
 concern's investigated `files_found`/domain clearly supports one, the same way `ticket-scoper` does
 for single tickets. Neither path assigns a tag it can't ground in evidence.
 
-| Tag | Suggested skill |
-|---|---|
-| `api-design` | `/api-design-principles` |
-| `debugging` | `/debugging-strategies` — unless `Related Code Areas` includes a path under `src/worldassembly/`, `src/worldbuilding/`, `src/worldmodules/`, `src/content/`, or `src/core/registries.py`, in which case suggest `Agent(subagent_type: "world-debugger")` instead |
-| `performance` | `/python-performance-optimization` |
-| `security` | `/security-review` (this mapping is the first place this route is codified anywhere in the repo — there is no `CLAUDE.md` auto-invoke row for it) |
+The mapping is defined once, in `tools/tag_registry.py`'s `get_skill_mapping()` (registry rows'
+optional `triggers_skill` field, merged with a small disclosed legacy fallback for the 4 tags
+registered before this field existed). Run `python3 tools/tag_registry.py skill-mapping` to see the
+live mapping as JSON — this doc does not maintain its own copy; edit `tag_registry.py` (or register
+a new tag with `--triggers-skill`) to change or extend it.
 
-If none of a ticket's tags match this table, `suggested_skills` is an empty array. The suggestion is
-a note for the orchestrating session or a human to act on — it does not itself invoke anything.
+If none of a ticket's tags match, `suggested_skills` is an empty array. The suggestion is a note for
+the orchestrating session or a human to act on — it does not itself invoke anything.
 
 ## Tags as a Registry Search Filter
 

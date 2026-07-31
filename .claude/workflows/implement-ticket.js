@@ -107,15 +107,9 @@ ${scopeOrphanInfo && scopeOrphanInfo.ticket_path ? '' : '(No ticket file was fou
 Step 1 — read the file at ticket_path directly (skip this if ticket_path is empty, per the note
 above). Do not re-locate, re-copy, or move the file — that has already been done.
 
-Step 3 — read the ticket's frontmatter \`tags\` field and compute \`suggested_skills\` against this mapping —
-any tag not listed below produces no suggestion:
-  | Tag | Suggested skill |
-  |---|---|
-  | \`api-design\` | \`/api-design-principles\` |
-  | \`debugging\` | \`/debugging-strategies\` — unless \`Related Code Areas\` includes a path under \`src/worldassembly/\`, \`src/worldbuilding/\`, \`src/worldmodules/\`, \`src/content/\`, or \`src/core/registries.py\`, in which case suggest \`Agent(subagent_type: "world-debugger")\` instead |
-  | \`performance\` | \`/python-performance-optimization\` |
-  | \`security\` | \`/security-review\` |
-If none of the ticket's tags match, suggested_skills is an empty array — never omit the field.
+Step 3 — read the ticket's frontmatter \`tags\` field and compute \`suggested_skills\` per your
+Output contract's skill-mapping instructions (the same mapping mechanism used when scoping a new
+ticket). If none of the ticket's tags match, suggested_skills is an empty array — never omit the field.
 
 Step 3a — read the ticket's frontmatter \`tags\` field directly and return it verbatim as \`tags\` (do not
 filter or transform it — this is the ground-truth list the Security-Review gate trigger reads).
