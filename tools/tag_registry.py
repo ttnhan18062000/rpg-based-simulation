@@ -13,10 +13,11 @@ Design constraints (all deliberate, not incidental):
   - Append-only: `add_tag()` is the only writer, and it refuses to add a tag that already exists
     (no update, no delete — the CLI has no command for either). The file itself, plus git history
     on it, is the changelog; there is no separate changelog file to keep in sync by hand.
-  - `category` must be one of ADDABLE_CATEGORIES. `phase-milestone` is deliberately excluded from
-    that set: phase tags follow the open-ended `phase-N` pattern (`is_tag_registered()` recognizes
-    any canonical `phase-N` tag automatically) rather than requiring each phase number to be
-    registered individually.
+  - `category` must be one of `category_values()` (registries/tag_category_registry.jsonl).
+    `phase-milestone` is deliberately excluded — it is never seeded into that registry: phase tags
+    follow the open-ended `phase-N` pattern (`is_tag_registered()` recognizes any canonical
+    `phase-N` tag automatically) rather than requiring each phase number to be registered
+    individually.
   - This module owns the canonical-form rules (`canonical_form_violation`, `FORBIDDEN_PRIORITY_TAGS`,
     `TAG_SYNONYM_MAP`, `TAG_TAXONOMY_EFFECTIVE_DATE`) that `validate_frontmatter.py` and
     `tag_report.py` both import, rather than each defining their own copy — this module has no
@@ -58,22 +59,6 @@ TAG_SYNONYM_MAP = {
     "datamodel": "data-model",
     "worldspec": "world-spec",
 }
-
-# The 5 tag_taxonomy.md categories. `meta-process` is the 5th, added alongside this registry to
-# cover tags about the ticket/agent-workflow process itself (e.g. `workflows`, `agent-monitoring`,
-# `documentation`) — evidence: seeding this registry from the live corpus found the large majority
-# of in-use tags were exactly this kind of tag, not a bad fit for the original 4 categories.
-ALL_CATEGORIES = {
-    "subsystem-topic",
-    "phase-milestone",
-    "process-skill-signal",
-    "quality-attribute",
-    "meta-process",
-}
-
-# Categories a tag can actually be registered under via `add`. `phase-milestone` is excluded on
-# purpose — see module docstring.
-ADDABLE_CATEGORIES = ALL_CATEGORIES - {"phase-milestone"}
 
 _PHASE_NONCANONICAL_RE = re.compile(r"^phase(\d+)$")
 _PHASE_CANONICAL_RE = re.compile(r"^phase-\d+$")
@@ -230,9 +215,9 @@ def add_tag(
     violation = canonical_form_violation(tag)
     if violation:
         raise ValueError(f"cannot register {tag!r}: {violation}")
-    if category not in ADDABLE_CATEGORIES:
+    if category not in category_values():
         raise ValueError(
-            f"category must be one of {sorted(ADDABLE_CATEGORIES)}, got {category!r}"
+            f"category must be one of {sorted(category_values())}, got {category!r}"
         )
 
     registry = load_registry(root)
@@ -280,6 +265,94 @@ def get_skill_mapping(root: Path | str | None = None) -> dict[str, dict]:
 
 
 # ---------------------------------------------------------------------------
+# Category registry file I/O (registries/tag_category_registry.jsonl) — a second, independent
+# registry surface in this same module. Mirrors tools/layer_registry.py's shape exactly, keyed on
+# "category" instead of "layer". Kept namespaced with distinct names (category_registry_path,
+# load_category_registry, add_category) so it never collides with the tag-scoped registry above.
+# ---------------------------------------------------------------------------
+
+_CATEGORY_REGISTRY_REL_PATH = Path("registries/tag_category_registry.jsonl")
+
+
+def category_registry_path(root: Path | str | None = None) -> Path:
+    base = Path(root) if root is not None else _DEFAULT_ROOT
+    return base / _CATEGORY_REGISTRY_REL_PATH
+
+
+def load_category_registry(root: Path | str | None = None) -> dict:
+    """Return {category: entry_dict} for every registered category. Empty dict if the file
+    doesn't exist yet.
+
+    Raises ValueError on a duplicate category registration — the file must never contain the same
+    category twice; that would violate the append-only-unique-category invariant `add_category()`
+    otherwise guarantees.
+    """
+    path = category_registry_path(root)
+    if not path.exists():
+        return {}
+
+    registry: dict = {}
+    for lineno, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
+        line = line.strip()
+        if not line:
+            continue
+        entry = json.loads(line)
+        category = entry["category"]
+        if category in registry:
+            raise ValueError(
+                f"{path}: duplicate registration for category {category!r} at line {lineno} — "
+                f"the registry must contain each category exactly once"
+            )
+        registry[category] = entry
+    return registry
+
+
+def is_category_registered(category: str, registry: dict) -> bool:
+    """True if `category` is in the registry."""
+    return category in registry
+
+
+def add_category(category: str, note: str = "", root: Path | str | None = None) -> dict:
+    """Append a new category registration. Returns the entry written.
+
+    Raises ValueError if: `category` is not canonical form, or `category` is already registered
+    (categories can only be added, never updated or re-added).
+    """
+    violation = canonical_form_violation(category)
+    if violation:
+        raise ValueError(f"cannot register {category!r}: {violation}")
+
+    registry = load_category_registry(root)
+    if category in registry:
+        existing = registry[category]
+        raise ValueError(
+            f"{category!r} is already registered (added {existing['added_date']}) — "
+            f"categories cannot be re-added or changed"
+        )
+
+    entry = {
+        "category": category,
+        "added_date": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
+        "note": note,
+    }
+
+    path = category_registry_path(root)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("a", encoding="utf-8") as f:
+        f.write(json.dumps(entry, sort_keys=True) + "\n")
+
+    return entry
+
+
+def category_values(root: Path | str | None = None) -> frozenset[str]:
+    """Return the full set of currently-registered tag categories — the live source `add_tag()`'s
+    category validation and the CLI `add` subcommand's `--category` choices read. A frozenset, no
+    caching, exactly matching `layer_registry.py::layer_values()`'s implementation.
+    """
+    return frozenset(load_category_registry(root).keys())
+
+
+# ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
 
@@ -294,7 +367,7 @@ def main() -> None:
         "add", help="Register a new tag (append-only — cannot update or delete an existing tag)"
     )
     add_p.add_argument("tag")
-    add_p.add_argument("--category", required=True, choices=sorted(ADDABLE_CATEGORIES))
+    add_p.add_argument("--category", required=True, choices=sorted(category_values()))
     add_p.add_argument("--note", default="", help="Why this tag is being added")
     add_p.add_argument(
         "--triggers-skill",
@@ -312,6 +385,14 @@ def main() -> None:
     )
     skill_mapping_p.add_argument("--root", default=None)
 
+    add_category_p = sub.add_parser(
+        "add-category",
+        help="Register a new tag category (append-only — cannot update or delete an existing one)",
+    )
+    add_category_p.add_argument("category")
+    add_category_p.add_argument("--note", default="", help="Why this category exists")
+    add_category_p.add_argument("--root", default=None)
+
     args = parser.parse_args()
 
     if args.command == "add":
@@ -324,6 +405,15 @@ def main() -> None:
             print(f"ERROR: {exc}", file=sys.stderr)
             sys.exit(1)
         print(f"Registered tag {entry['tag']!r} as {entry['category']!r} ({entry['added_date']}).")
+        return
+
+    if args.command == "add-category":
+        try:
+            entry = add_category(args.category, args.note, root=args.root)
+        except ValueError as exc:
+            print(f"ERROR: {exc}", file=sys.stderr)
+            sys.exit(1)
+        print(f"Registered category {entry['category']!r} ({entry['added_date']}).")
         return
 
     if args.command == "list":

@@ -177,6 +177,23 @@ write to this file, don't:
 | `tag_registry_rejection` | A tag isn't in `registries/tag_registry.jsonl` (see `docs/guidelines/tag_taxonomy.md`'s Tag Registry section) — same root cause regardless of which phase/workflow caught it. | Scope, Structure, Verify |
 | `dod_condition_failed` | Any other DoD condition failed at Verify — a deliberately coarse fallback, not a full taxonomy of every possible DoD failure reason (that would be speculative rather than evidence-driven; see `tools/gate_checks/done_checker_static.py`'s `classify_checklist_failure`). | Verify |
 
+At `Verify`, `tag_registry_rejection` vs. `dod_condition_failed` is decided by
+`classify_checklist_failure(checklist, ticket_id, tier)`. As of
+`TCK-20260720-TAG-TOUCHPOINT-CLEANUP`, this is **not** a substring match against a checklist
+item's free-form `evidence` text (that scanned four layers of string-joining between the actual
+violation and the classifier, and was dead code in practice — `check_frontmatter_valid` never
+threaded a live registry into `validate_file`/`validate_directory`, so an unregistered tag always
+produced `PASS`, not `FAIL`, meaning the substring path essentially never fired on a real
+rejection). Classification now matches on the checklist item's `condition` field (a small closed
+vocabulary) and, only for a `frontmatter_valid` FAIL, independently re-derives the cause via
+`_frontmatter_has_unregistered_tags(ticket_id, tier)`, which re-reads the ticket's own frontmatter
+and calls `tag_registry.check_tags_registered()` directly — zero dependency on
+`validate_frontmatter.py`'s error text. `implement-ticket.js`'s `classifyChecklistFailure` mirrors
+this by shelling out to the same Python helper (`bash(python3 -c "...")`, passing only `ticket_id`/
+`tier` as argv — never `evidence` text), replacing the previous hand-synced JS string-match mirror;
+that mirror existed specifically to avoid piping arbitrary evidence text through a shell command,
+a risk this design no longer carries since evidence text is never passed to the subprocess.
+
 Not a closed enum — a future phase found to have its own catch-all-status problem could add its
 own value, but none is added speculatively ahead of evidence. `generate_retro.py`'s reason-code
 aggregation is workflow-agnostic (iterates every event regardless of source) — no code change was

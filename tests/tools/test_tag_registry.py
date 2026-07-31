@@ -11,17 +11,19 @@ _TOOLS_DIR = Path(__file__).parent.parent.parent / "tools"
 if str(_TOOLS_DIR) not in sys.path:
     sys.path.insert(0, str(_TOOLS_DIR))
 
+import tag_registry  # noqa: E402
 from tag_registry import (  # noqa: E402
-    ADDABLE_CATEGORIES,
-    ALL_CATEGORIES,
     _LEGACY_SKILL_TRIGGERS,
+    add_category,
     add_tag,
     canonical_form_violation,
+    category_values,
     check_tags_registered,
     get_skill_mapping,
     is_phase_milestone_tag,
     is_tag_registered,
     load_registry,
+    main,
     registry_path,
 )
 
@@ -160,11 +162,38 @@ def test_add_tag_rejects_invalid_category(tmp_path):
 
 
 def test_add_tag_rejects_phase_milestone_category(tmp_path):
-    """phase-milestone is a recognized category but not addable — phase tags are pattern-matched."""
-    assert "phase-milestone" not in ADDABLE_CATEGORIES
-    assert "phase-milestone" in ALL_CATEGORIES
+    """phase-milestone is never seeded into the category registry — phase tags are pattern-matched."""
+    assert "phase-milestone" not in category_values()
     with pytest.raises(ValueError, match="category must be one of"):
         add_tag("some-tag", "phase-milestone", root=tmp_path)
+
+
+def test_add_tag_category_validation_sources_from_category_values(monkeypatch, tmp_path):
+    """Proves live sourcing from category_values(), not a residual hardcoded copy.
+
+    category_values() (called with no root override, both here and inside add_tag()) always
+    resolves against tag_registry._DEFAULT_ROOT — patched to tmp_path so this test proves the
+    live-sourcing property without writing to the real repo's registries/.
+    """
+    monkeypatch.setattr(tag_registry, "_DEFAULT_ROOT", tmp_path)
+    add_category("new-cat")
+
+    entry = add_tag("some-tag", "new-cat")
+
+    assert entry["category"] == "new-cat"
+
+
+def test_argparse_category_choices_match_category_values(monkeypatch, capsys):
+    monkeypatch.setattr(
+        sys, "argv", ["tag_registry.py", "add", "some-tag", "--category", "not-a-real-category"]
+    )
+
+    with pytest.raises(SystemExit):
+        main()
+
+    err = capsys.readouterr().err
+    for category in sorted(category_values()):
+        assert category in err
 
 
 def test_add_tag_rejects_duplicate_tag(tmp_path):

@@ -41,9 +41,11 @@ from validate_frontmatter import (  # noqa: E402
     _ticket_id_effective_date,
     extract_frontmatter,
 )
-from tag_registry import (  # noqa: E402
+from tag_registry import (  # noqa: E402,F401
     canonical_form_violation,
+    category_values,
     is_phase_milestone_tag,
+    is_tag_registered,
     load_registry,
 )
 
@@ -67,6 +69,63 @@ def categorize_tag(tag: str, registry: dict) -> str:
     if entry:
         return entry["category"]
     return "unclassified"
+
+
+# ---------------------------------------------------------------------------
+# Sweep violation classification (TCK-20260720-TAG-CORPUS-REPAIR-SWEEP)
+#
+# A different question from categorize_tag() above: categorize_tag() answers "what display
+# category does this tag have," tag_issues() answers "which rule(s) does this tag violate."
+# Every check here calls straight into tag_registry.py's existing functions — no rule is
+# re-derived.
+# ---------------------------------------------------------------------------
+
+
+def tag_issues(tag: str, registry: dict, valid_categories: frozenset) -> list[str]:
+    """Return the violation issue strings for `tag`: zero, one, two, or all three of
+    'unregistered', 'invalid_category', 'non_canonical_form' may apply.
+
+    'unregistered' and 'invalid_category' are mutually exclusive by construction:
+    'invalid_category' only fires for a tag with a literal registry entry (`tag in registry`), a
+    strictly narrower condition than `is_tag_registered` (which also allows phase-N tags that have
+    no registry entry and thus no category to check). 'non_canonical_form' is independent of both.
+    """
+    issues = []
+    if not is_tag_registered(tag, registry):
+        issues.append("unregistered")
+    elif tag in registry:
+        recorded_category = registry[tag].get("category")  # defensive: missing category -> invalid
+        if recorded_category not in valid_categories:
+            issues.append("invalid_category")
+    if canonical_form_violation(tag) is not None:
+        issues.append("non_canonical_form")
+    return issues
+
+
+def sweep_file_rows(rel_path: str, text: str, registry: dict, valid_categories: frozenset) -> list[dict]:
+    """Return one `{"file", "tag", "issue"}` row per (tag, issue) violation found in `text`'s
+    frontmatter `tags:` list — zero rows, never a crash, for no-frontmatter, no-tags-key, or
+    unparseable-frontmatter input. Deliberately does not read `ticket_id` or apply the
+    TAG_TAXONOMY_EFFECTIVE_DATE cutoff `collect_completed_tickets()` applies — this sweep exists
+    specifically to cover the pre-cutoff corpus that check skips.
+    """
+    try:
+        fm = extract_frontmatter(text)
+    except ValueError:
+        return []
+
+    if fm is None:
+        return []
+
+    tags = fm.get("tags")
+    if not tags or not isinstance(tags, list):
+        return []
+
+    rows = []
+    for tag in tags:
+        for issue in tag_issues(tag, registry, valid_categories):
+            rows.append({"file": rel_path, "tag": tag, "issue": issue})
+    return rows
 
 
 # ---------------------------------------------------------------------------
@@ -128,6 +187,49 @@ def collect_completed_tickets(root: Path):
         included.append((ticket_id, tags, rel_path))
 
     return included, skip_reasons, skipped_paths
+
+
+def collect_sweep_files(root: Path):
+    """Walk all four corpus roots (`tickets/done`, `tickets/inprogress`, `tickets/todos`,
+    `stored_artifacts`) recursively for markdown files, for the full-corpus repair sweep
+    (TCK-20260720-TAG-CORPUS-REPAIR-SWEEP).
+
+    Unlike `collect_completed_tickets()`, this applies only the `sequence_index_file` skip rule —
+    no frontmatter parsing, no tags check, and critically no `TAG_TAXONOMY_EFFECTIVE_DATE` date-
+    cutoff skip happens here; those checks are the sweep's whole point of existing, and belong to
+    `sweep_file_rows()` instead, applied unconditionally to every file this function returns.
+
+    Returns (relative_paths, skip_reasons, skipped_paths) — `relative_paths` is the sorted list of
+    files to sweep, `skip_reasons` is a Counter keyed by skip reason (currently only
+    `sequence_index_file`), and `skipped_paths` maps each reason to its list of relative paths.
+    """
+    roots = [
+        root / "tickets" / "done",
+        root / "tickets" / "inprogress",
+        root / "tickets" / "todos",
+        root / "stored_artifacts",
+    ]
+    skip_reasons: Counter = Counter()
+    skipped_paths = defaultdict(list)
+
+    all_files = []
+    for corpus_root in roots:
+        if not corpus_root.is_dir():
+            continue
+        all_files.extend(corpus_root.rglob("*.md"))
+
+    relative_paths = []
+    for md_file in sorted(all_files):
+        rel_path = str(md_file.relative_to(root))
+
+        if md_file.name == "SEQUENCE.md":
+            skip_reasons["sequence_index_file"] += 1
+            skipped_paths["sequence_index_file"].append(rel_path)
+            continue
+
+        relative_paths.append(rel_path)
+
+    return relative_paths, skip_reasons, skipped_paths
 
 
 # ---------------------------------------------------------------------------

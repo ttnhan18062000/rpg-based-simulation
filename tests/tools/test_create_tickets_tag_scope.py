@@ -52,3 +52,21 @@ def test_skill_mapping_references_live_source_not_embedded_table():
     assert "Do not invent mappings for tags outside this 4-entry table" not in source
     assert "tools/tag_registry.py skill-mapping" in source
     assert "Do not invent mappings for tags outside this live mapping's keys." in source
+
+
+def test_create_tickets_structure_relevance_self_check_instruction_present():
+    """TCK-20260720-TAG-RELEVANCE-VERIFY: the Structure-phase `tags:` prompt block and
+
+    TASK_SCHEMA both gain a `tag_relevance_flags` self-check field, additive to (not replacing)
+    the `files_found`-evidence guardrail TCK-20260720-CREATE-TICKETS-TAG-SCOPE-FIX added. The
+    companion assertions below confirm that guardrail's exact strings still survive unmodified.
+    """
+    source = _read_source()
+
+    assert "tag_relevance_flags" in source
+    assert "tag_relevance_flags:" in source  # prompt rule block header, not just schema key
+
+    # The pre-existing evidence guardrail must survive byte-for-byte.
+    assert "files_found" in source
+    assert "clearly indicates one" in source
+    assert "Do not guess a tag from the title alone if files_found doesn't support it" in source

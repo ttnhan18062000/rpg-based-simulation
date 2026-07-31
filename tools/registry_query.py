@@ -4,34 +4,30 @@ Built for TCK-20260705-TAG-REGISTRY-QUERY: extends the prior-work search consume
 (`.claude/workflows/create-tickets.js`'s Investigate phase, `.claude/agents/investigator.md`'s
 "Finding Prior Work" step) with a second, cheap filter dimension over `tags`, alongside each
 consumer's existing dimension (`layer` for create-tickets.js, `related_code_areas` for
-investigator.md). The seed vocabulary below is the same list of Subsystem/Topic words named in
-`docs/guidelines/tag_taxonomy.md` — that doc's prose list and this module's `SEED_TAGS` tuple are
-two independent copies of the same 10 words and must be kept in sync by hand; there is no
-runtime parsing of the doc into this module (that would be over-engineering for a 10-word list).
+investigator.md).
+
+As of TCK-20260720-TAG-TOUCHPOINT-CLEANUP, the seed vocabulary is read live from
+`registries/tag_registry.jsonl`'s `subsystem-topic` tags instead of a hand-copied tuple —
+registering a new `subsystem-topic` tag via the CLI makes it queryable here with zero code change.
 """
 
-SEED_TAGS = (
-    "combat",
-    "economy",
-    "cognition",
-    "faction",
-    "resource",
-    "social",
-    "content",
-    "world",
-    "engine",
-    "strategy",
-)
+from tag_registry import load_registry
 
 
-def candidate_tags_from_text(*texts: str) -> set[str]:
-    """Return the subset of SEED_TAGS present as a substring anywhere in texts.
+def candidate_tags_from_text(*texts: str, root=None) -> set[str]:
+    """Return the subset of live `subsystem-topic` tags present as a substring anywhere in texts.
 
     Lowercases and concatenates all non-empty texts with a space, then does a plain
-    case-insensitive substring test per seed tag — no NLP, no stemming.
+    case-insensitive substring test per registered `subsystem-topic` tag — no NLP, no stemming.
+    `root` mirrors `tag_registry.py`'s own `root` parameter convention (test fixtures via
+    `monkeypatch.chdir(tmp_path)` or an explicit path).
     """
+    registry = load_registry(root)
+    subsystem_topic_tags = {
+        tag for tag, entry in registry.items() if entry.get("category") == "subsystem-topic"
+    }
     haystack = " ".join(t for t in texts if t).lower()
-    return {tag for tag in SEED_TAGS if tag in haystack}
+    return {tag for tag in subsystem_topic_tags if tag in haystack}
 
 
 def filter_registry(entries, layers=None, candidate_tags=None):

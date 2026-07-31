@@ -55,6 +55,13 @@ Make the active Claude `implement-ticket` workflow supply coherent provider, exe
 - TCK-20260730-CODEX-RUNTIME-ACTIVATION-EPIC (parent)
 - TCK-20260721-MONITORING-WRITER-UNIFICATION (DONE; additive writer/schema)
 - TCK-20260721-LIVE-CODEX-PILOT-GUARDRAILS (DONE; real-data coverage gap identified)
+- TCK-20260731-CODEX-EXECUTION-IDENTITY-TAG-SWEEP (OPEN; filed after the tag-registry-redesign
+  batch landed two new `.claude/workflows/implement-ticket.js` code paths in this ticket's own
+  target region — `classifyChecklistFailure`'s shell-out to `done_checker_static.py` and a new
+  `check_tag_drift` Finalize-phase hook, both added after this ticket was already filed. Investigate
+  here must confirm whether either is a real `record_events.py`/`record_run.py` disk-write call
+  site needing `provider`/`execution_id` population, or a no-op — see that ticket for the specific
+  file:line pointers as of 2026-07-31.)
 
 ## Related Docs
 - docs/plans/archive/agent_infrastructure/current_codex_runtime_status_and_activation_plan.md

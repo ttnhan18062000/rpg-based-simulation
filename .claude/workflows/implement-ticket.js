@@ -273,21 +273,39 @@ const resolveScopeTicketLocation = async (id) => {
   catch (e) { return null }
 }
 
-// Mirrors tools/gate_checks/done_checker_static.py's classify_checklist_failure() exactly — kept
-// in sync by hand (small, evidence-based marker string; see that function's docstring). Not
-// invoked via bash()/subprocess: doneCheck.checklist can contain arbitrary evidence text (quoted
-// tag names, backtick-wrapped shell commands from validate_frontmatter.py's own error messages)
-// that this file's own established convention warns against embedding into a shell command string
-// (see the p0ScanOutput comment above — embedding a JSON blob directly in a `python3 -c "..."`
-// string can corrupt the script and silently fail open). A local JS re-implementation of this
-// ~5-line check avoids that risk entirely.
-const _TAG_REGISTRY_REJECTION_MARKER = 'is not in the tag registry'
-const classifyChecklistFailure = (checklist) => {
+// Mirrors tools/gate_checks/done_checker_static.py's classify_checklist_failure() — updated in
+// lockstep with that function's TCK-20260720-TAG-TOUCHPOINT-CLEANUP redesign. The prior hand-synced
+// JS re-implementation existed specifically to avoid piping doneCheck.checklist's arbitrary
+// `evidence` text (which can contain quotes/backticks) through a shell command — that rationale no
+// longer applies here: this shells out only for the `frontmatter_valid`-FAIL case, passing `tid`/
+// `tier` (plain identifiers, never evidence text) as argv to the Python reference implementation's
+// `_frontmatter_has_unregistered_tags` helper, following this file's own established bash()
+// convention (individually-quoted argv, MARKER-prefixed JSON output, try/catch parse — same
+// pattern as tagCheckOutput/archCheckOutput above). Fail-open to 'dod_condition_failed' on any
+// subprocess/parse error, matching CLAUDE.md's "monitoring write failure must never fail the
+// workflow" convention applied elsewhere in this file (e.g. writeMonitoring).
+const classifyChecklistFailure = async (checklist, ticketId, ticketTier) => {
   for (const item of checklist || []) {
     if (item.status === 'FAIL') {
-      return (item.evidence || '').includes(_TAG_REGISTRY_REJECTION_MARKER)
-        ? 'tag_registry_rejection'
-        : 'dod_condition_failed'
+      if (item.condition === 'frontmatter_valid' && ticketId && ticketTier) {
+        const out = await bash(
+          `python3 -c "
+import sys
+sys.path.insert(0, 'tools/gate_checks')
+from done_checker_static import _frontmatter_has_unregistered_tags
+print('TAG_UNREG_JSON:' + ('true' if _frontmatter_has_unregistered_tags(sys.argv[1], sys.argv[2]) else 'false'))
+" "${ticketId}" "${ticketTier}"`
+        )
+        const markerIndex = (out || '').indexOf('TAG_UNREG_JSON:')
+        if (markerIndex !== -1) {
+          try {
+            if (JSON.parse(out.slice(markerIndex + 'TAG_UNREG_JSON:'.length).trim())) {
+              return 'tag_registry_rejection'
+            }
+          } catch (e) { /* fall through — never crash the workflow on a parse failure */ }
+        }
+      }
+      return 'dod_condition_failed'
     }
   }
   return null
@@ -1203,7 +1221,7 @@ Return: verdict, failing_items, checklist, summary (one sentence: READY_TO_CLOSE
 )
 
 if (doneCheck.verdict !== 'READY_TO_CLOSE') {
-  const reasonCode = classifyChecklistFailure(doneCheck.checklist)
+  const reasonCode = await classifyChecklistFailure(doneCheck.checklist, tid, tier)
   pushEvent('Verify', 'done-checker', 'failed', doneCheck.summary || 'DoD BLOCKED — ' + doneCheck.failing_items.length + ' items failing', doneCheckTs, null, reasonCode)
   log(`DoD check: BLOCKED — ${doneCheck.failing_items.length} items failing`)
   log(doneCheck.failing_items.join(' | '))
@@ -1356,6 +1374,31 @@ if (monitoringCheck === null || monitoringCheck.status === 'FAIL') {
   monitoringWarning = monitoringCheck === null ? 'monitoring-write self-check output unparseable' : monitoringCheck.evidence
   pushEvent('Finalize', 'finalizer', 'failed', ('monitoring_write_recorded: ' + monitoringWarning).slice(0, 200))
   log(`WARNING: agent-monitoring write for ${tid} could not be verified — ${monitoringWarning}`)
+}
+
+// Advisory-only tag-drift check (TCK-20260720-TAG-RELEVANCE-VERIFY) — mirrors
+// check_monitoring_write_recorded's placement exactly: runs after status is already 'DONE',
+// never gates ticket close, uses CLEAN/FLAGGED (never PASS/FAIL) so it can never be misread as a
+// DoD blocking condition.
+const tagDriftCheckOutput = await bash(
+  `python3 -c "
+import sys, json
+sys.path.insert(0, 'tools')
+from gate_checks.done_checker_static import check_tag_drift
+status, evidence = check_tag_drift(sys.argv[1])
+print('TAG_DRIFT_CHECK_JSON:' + json.dumps({'status': status, 'evidence': evidence}))
+" "${tid}"`
+)
+let tagDriftCheck = null
+const tagDriftMarkerIndex = tagDriftCheckOutput.indexOf('TAG_DRIFT_CHECK_JSON:')
+if (tagDriftMarkerIndex !== -1) {
+  try {
+    tagDriftCheck = JSON.parse(tagDriftCheckOutput.slice(tagDriftMarkerIndex + 'TAG_DRIFT_CHECK_JSON:'.length).trim())
+  } catch (e) { tagDriftCheck = null }
+}
+if (tagDriftCheck !== null && tagDriftCheck.status === 'FLAGGED') {
+  pushEvent('Finalize', 'finalizer', 'failed', ('tag_drift: ' + tagDriftCheck.evidence).slice(0, 200))
+  log(`WARNING: possible tag drift for ${tid} — ${tagDriftCheck.evidence}`)
 }
 
 return {

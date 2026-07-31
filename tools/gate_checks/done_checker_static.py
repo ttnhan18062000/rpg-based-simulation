@@ -36,9 +36,11 @@ _TOOLS_DIR = Path(__file__).resolve().parent.parent
 if str(_TOOLS_DIR) not in sys.path:
     sys.path.insert(0, str(_TOOLS_DIR))
 
-from validate_frontmatter import validate_file, validate_directory  # noqa: E402
+from validate_frontmatter import validate_file, validate_directory, extract_frontmatter  # noqa: E402
 from generate_registry import generate_registry  # noqa: E402
 from ticket_field_values import check_ticket_field_values  # noqa: E402
+from tag_registry import load_registry, check_tags_registered  # noqa: E402
+from registry_query import candidate_tags_from_text  # noqa: E402
 
 REQUIRED_ARTIFACT_FILES = ("plan.md", "investigation.md", "test_plan.md")
 
@@ -73,6 +75,21 @@ def _jsonl_rows_for_run_id(path: Path, run_id: str) -> list[dict]:
         if row.get("run_id") == run_id:
             rows.append(row)
     return rows
+
+
+def _extract_section_text(ticket_text: str, heading: str) -> str:
+    """Return the body text under a `## {heading}` markdown heading, up to the next `## ` heading
+    or end of file. Returns "" if the heading is not present. Body-section counterpart to
+    `validate_frontmatter.extract_frontmatter()`, which only parses the YAML frontmatter block and
+    never reads body sections (see TCK-20260720-TAG-RELEVANCE-VERIFY investigation.md)."""
+    marker = f"## {heading}"
+    start = ticket_text.find(marker)
+    if start == -1:
+        return ""
+    body_start = start + len(marker)
+    next_heading = ticket_text.find("\n## ", body_start)
+    end = next_heading if next_heading != -1 else len(ticket_text)
+    return ticket_text[body_start:end].strip()
 
 
 def _count_rows_for_ticket(csv_path: Path, ticket_id: str) -> int:
@@ -245,7 +262,12 @@ def check_frontmatter_valid(
     if staging_dir is None:
         staging_dir = Path(f"staging_artifacts/{ticket_id}")
 
-    ticket_errors = validate_file(ticket_path)
+    # Load the live registry so _check_tags's registry-membership branch actually runs on this
+    # path — without this, an unregistered tag silently PASSes (only canonical-form violations
+    # were ever caught here). Mirrors validate_frontmatter.py::main()'s own load_registry() usage.
+    registry = load_registry()
+
+    ticket_errors = validate_file(ticket_path, registry=registry)
 
     if tier == "hotfix" and not staging_dir.exists():
         if ticket_errors:
@@ -255,7 +277,7 @@ def check_frontmatter_valid(
     # staging_artifacts/ paths do not auto-detect as `artifact` content type (only
     # stored_artifacts/ does) — must pass content_type_override explicitly or this silently
     # falls through to `doc`'s looser required-field set.
-    results = validate_directory(staging_dir, content_type_override="artifact")
+    results = validate_directory(staging_dir, content_type_override="artifact", registry=registry)
     artifact_errors = [err for errs in results.values() for err in errs]
 
     all_errors = ticket_errors + artifact_errors
@@ -300,14 +322,39 @@ def run_static_precheck(ticket_id: str, tier: str, start_ts: str | None) -> list
     ]
 
 
-# Substring unique to validate_frontmatter.py's tag-registry-membership rejection message (via
-# tools/tag_registry.py's canonical_form_violation / is_tag_registered) — confirmed via
-# `grep -rn "is not in the tag registry" tools/` to not collide with any other validation error
-# text (canonical-form, forbidden-priority-tag, and synonym-map messages all read differently).
-_TAG_REGISTRY_REJECTION_MARKER = "is not in the tag registry"
+def _frontmatter_has_unregistered_tags(
+    ticket_id: str, tier: str, ticket_path: Path = None, staging_dir: Path = None
+) -> bool:
+    """Independently determine whether ticket_path/staging_dir's declared `tags:` frontmatter
+    includes anything not in the live tag registry — calls tag_registry.check_tags_registered()
+    directly, zero dependency on validate_frontmatter.py's error TEXT. Mirrors
+    check_frontmatter_valid's own path-resolution/hotfix-branching so the two functions agree on
+    which files' tags to check, without sharing implementation or return shape.
+    """
+    if ticket_path is None:
+        ticket_path = Path(f"tickets/inprogress/{ticket_id}.md")
+    if staging_dir is None:
+        staging_dir = Path(f"staging_artifacts/{ticket_id}")
+
+    files = [ticket_path] if ticket_path.exists() else []
+    if not (tier == "hotfix" and not staging_dir.exists()):
+        files += sorted(staging_dir.rglob("*.md")) if staging_dir.exists() else []
+
+    all_tags: list[str] = []
+    for f in files:
+        try:
+            fm = extract_frontmatter(f.read_text(encoding="utf-8"))
+        except ValueError:
+            continue
+        if fm and isinstance(fm.get("tags"), list):
+            all_tags.extend(fm["tags"])
+
+    return bool(check_tags_registered(all_tags))
 
 
-def classify_checklist_failure(checklist: list[dict]) -> str | None:
+def classify_checklist_failure(
+    checklist: list[dict], ticket_id: str | None = None, tier: str | None = None
+) -> str | None:
     """Return a coarse reason code for the first FAIL entry in a done-checker checklist.
 
     Built for TCK-20260706-MONITORING-REASON-CODE: `DOD_BLOCKED` is the one gate status
@@ -322,18 +369,29 @@ def classify_checklist_failure(checklist: list[dict]) -> str | None:
     simultaneously, only the first one's classification is reported (documented behavior, not an
     accident of implementation).
 
-    Not invoked directly by `implement-ticket.js`'s orchestrator via subprocess — passing
-    `doneCheck.checklist`'s arbitrary evidence text (which can contain quotes and backticks, e.g.
-    from `validate_frontmatter.py`'s own error messages) through a shell command risks exactly the
-    quote-corruption failure mode that file's `p0ScanOutput` comment already documents. Instead,
-    `implement-ticket.js` has a hand-synced JS mirror of this exact logic
-    (`classifyChecklistFailure`, same marker string). This Python function remains the tested
-    reference implementation the JS mirror must match, and is directly reusable by any future
-    offline/retro tooling that wants to re-classify a historical checklist.
+    As of TCK-20260720-TAG-TOUCHPOINT-CLEANUP, classification no longer scans `evidence` text for
+    a marker substring (that depended on four layers of string-joining between the actual
+    violation and this function, and was dead in practice — see that ticket's investigation.md).
+    Instead it matches on the `condition` field (a small closed vocabulary) and, for a
+    `frontmatter_valid` FAIL, independently re-derives the cause via
+    `_frontmatter_has_unregistered_tags()`, which re-reads the ticket_id/tier's own frontmatter and
+    calls `tag_registry.check_tags_registered()` directly. `ticket_id`/`tier` are optional so
+    existing callers that only have a `checklist` still get the coarse `dod_condition_failed`
+    fallback rather than erroring.
+
+    `implement-ticket.js`'s `classifyChecklistFailure` mirrors this via `bash(python3 -c "...")`,
+    shelling out to `_frontmatter_has_unregistered_tags` with `ticket_id`/`tier` as argv — never
+    `evidence` text, so the quote-corruption risk that previously kept the JS side a hand-synced
+    string-match mirror does not apply to this design.
     """
     for item in checklist:
         if item.get("status") == "FAIL":
-            if _TAG_REGISTRY_REJECTION_MARKER in item.get("evidence", ""):
+            if (
+                item.get("condition") == "frontmatter_valid"
+                and ticket_id is not None
+                and tier is not None
+                and _frontmatter_has_unregistered_tags(ticket_id, tier)
+            ):
                 return "tag_registry_rejection"
             return "dod_condition_failed"
     return None
@@ -421,6 +479,49 @@ def check_monitoring_write_recorded(
         "PASS",
         f"{runs_path} ({len(run_rows)} row(s)) and {events_path} ({len(event_rows)} row(s)) "
         f"both have entries for {ticket_id}",
+    )
+
+
+def check_tag_drift(
+    ticket_id: str, ticket_path: Path = None
+) -> tuple[str, str]:
+    """Advisory-only: flags a possible mismatch between the closing ticket's declared `tags:`
+    and the tags its own `Files Changed`/`Related Code Areas` body sections would suggest.
+    Uses CLEAN/FLAGGED — never PASS/FAIL/NA — so no downstream blocking-status consumer
+    (`classify_checklist_failure`, DOD_BLOCKED, FINALIZE_INCOMPLETE) can misread this as a DoD
+    condition. Never returns a status that should gate ticket close — callers must not add this
+    to run_finalize_selfcheck's checks tuple. Mirrors check_monitoring_write_recorded's
+    deliberate placement outside the blocking-checks aggregation.
+    """
+    resolved_path = ticket_path
+    if resolved_path is None:
+        resolved_path = Path(f"tickets/done/{ticket_id}.md")
+        if not resolved_path.exists():
+            resolved_path = Path(f"tickets/inprogress/{ticket_id}.md")
+    if not resolved_path.exists():
+        return ("CLEAN", f"no ticket file found for {ticket_id} — skipping drift check")
+
+    ticket_text = resolved_path.read_text(encoding="utf-8")
+    frontmatter = extract_frontmatter(ticket_text) or {}
+    declared_tags = set(frontmatter.get("tags") or [])
+
+    files_changed_text = _extract_section_text(ticket_text, "Files Changed")
+    related_code_areas_text = _extract_section_text(ticket_text, "Related Code Areas")
+    candidate_tags = candidate_tags_from_text(files_changed_text, related_code_areas_text)
+
+    if not candidate_tags:
+        return ("CLEAN", "no candidate tags derivable from Files Changed/Related Code Areas text")
+
+    missing = candidate_tags - declared_tags
+    if not missing:
+        return (
+            "CLEAN",
+            f"declared tags cover all derived candidates ({', '.join(sorted(candidate_tags))})",
+        )
+    return (
+        "FLAGGED",
+        f"declared tags {sorted(declared_tags)} do not include candidate tag(s) "
+        f"{sorted(missing)} suggested by Files Changed/Related Code Areas text",
     )
 
 

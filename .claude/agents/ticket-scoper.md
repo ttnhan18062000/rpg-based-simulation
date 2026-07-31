@@ -91,3 +91,10 @@ P1
    read the live command's output. If none of the ticket's tags appear as a key, `suggested_skills`
    is an empty array — never omit the field (mirrors the existing `conflicts: []` empty-array
    convention).
+6. A `tag_relevance_flags` list: for each tag assigned in step 3 above, check whether that tag's
+   own registered `note`/category (see `python3 tools/tag_registry.py list`) plausibly matches this
+   ticket's own title, scope, and `related_code_areas` — computed as a self-assessment in this same
+   turn, not a second read of the ticket. If a tag does not clearly fit, add one string
+   `"<tag>: <one-line reason>"` to the list. If every tag clearly fits, or no tags were assigned,
+   return an empty list — never omit the field (mirrors the existing `conflicts: []` empty-array
+   convention already used by item 2).

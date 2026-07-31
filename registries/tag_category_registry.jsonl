@@ -1,0 +1,4 @@
+{"added_date": "2026-07-31", "category": "subsystem-topic", "note": "A subject-matter area the ticket touches"}
+{"added_date": "2026-07-31", "category": "process-skill-signal", "note": "A tag whose canonical spelling matches an existing skill/process gate 1:1"}
+{"added_date": "2026-07-31", "category": "quality-attribute", "note": "The nature of a change, not tied to a specific skill"}
+{"added_date": "2026-07-31", "category": "meta-process", "note": "About the ticket/agent-workflow process itself, not gameplay or engine subject matter"}

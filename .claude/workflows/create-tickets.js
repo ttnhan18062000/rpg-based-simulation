@@ -360,7 +360,7 @@ phase('Structure')
 
 const TASK_SCHEMA = {
   type: 'object',
-  required: ['short_scope', 'title', 'tier', 'type', 'priority', 'request_summary', 'scope', 'out_of_scope', 'acceptance_criteria', 'related_code_areas', 'tags', 'suggested_skills'],
+  required: ['short_scope', 'title', 'tier', 'type', 'priority', 'request_summary', 'scope', 'out_of_scope', 'acceptance_criteria', 'related_code_areas', 'tags', 'suggested_skills', 'tag_relevance_flags'],
   properties: {
     short_scope: {
       type: 'string',
@@ -376,6 +376,11 @@ const TASK_SCHEMA = {
       type: 'array',
       items: { type: 'string' },
       description: 'Mapped skill(s) from the tag->skill table below; empty array if no tag matches.',
+    },
+    tag_relevance_flags: {
+      type: 'array',
+      items: { type: 'string' },
+      description: 'One string "<tag>: <one-line reason>" per assigned tag whose registered note/category does not clearly match this concern\'s title/scope/files_found; empty array if every tag fits.',
     },
     tier: { type: 'string', enum: ['hotfix', 'standard', 'epic'] },
     type: { type: 'string', enum: ['bug', 'feature', 'refactor', 'chore', 'repair'] },
@@ -507,6 +512,13 @@ Step 4 — produce ticket tasks using these strict rules:
   - Assign a Subsystem/Topic (or Phase/Milestone, Quality-attribute, Meta-Process) tag only when this concern's investigated files_found or domain clearly indicates one — e.g. files_found under dashboard-frontend/ or src/api/agent_ops_dashboard/ -> dashboard; files_found touching agent-monitoring/*.jsonl -> observability. Do not guess a tag from the title alone if files_found doesn't support it.
   - If nothing clearly applies, tags may be an empty array.
 
+  tag_relevance_flags:
+  - For each tag assigned above, briefly self-check: does this tag's own registered note/category
+    (see `python3 tools/tag_registry.py list`) plausibly match this concern's title, scope, and
+    files_found/related_code_areas? This is additive to the files_found-evidence guardrail above —
+    it does not replace or weaken it. If a tag does not clearly fit, add one string
+    "<tag>: <one-line reason>". Empty array if every tag clearly fits or no tags were assigned.
+
   suggested_skills:
   - Run \`python3 tools/tag_registry.py skill-mapping\` and match each assigned
     Process/Skill-signal tag against its JSON keys the same way (skill field, or
@@ -604,6 +616,11 @@ if (unregisteredBatchTags.length > 0) {
 const tasksWithSkills = tasksReadyToWrite.filter(t => t.suggested_skills && t.suggested_skills.length > 0)
 if (tasksWithSkills.length > 0) {
   log(`Suggested skills: ${tasksWithSkills.map(t => `${t.short_scope}: ${t.suggested_skills.join(', ')}`).join(' | ')}`)
+}
+
+const tasksWithRelevanceFlags = tasksReadyToWrite.filter(t => t.tag_relevance_flags && t.tag_relevance_flags.length > 0)
+if (tasksWithRelevanceFlags.length > 0) {
+  log(`Tag relevance flags: ${tasksWithRelevanceFlags.map(t => `${t.short_scope}: ${t.tag_relevance_flags.join('; ')}`).join(' | ')}`)
 }
 
 const outputFolder = outputOverride

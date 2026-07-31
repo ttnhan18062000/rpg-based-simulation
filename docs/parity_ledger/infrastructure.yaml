@@ -6610,3 +6610,66 @@
     `GET /api/runs`/`useRunsPolling`/`FetchRunsParams` are untouched -- the latter by an explicit,
     permanently test-guarded scope decision (see `useRunsPolling.test.ts`'s architecture-guard
     test), not an oversight.
+
+- id: INFRA-305
+  text: >
+    TCK-20260720-TAG-TOUCHPOINT-CLEANUP -- fixes a real, previously-dead tag-registry enforcement
+    gap in the Verify-phase done-checker gate, and removes two fragile/duplicated tagging
+    touchpoints. (1) `check_frontmatter_valid()` (tools/gate_checks/done_checker_static.py:238)
+    previously called `validate_file(ticket_path)`/`validate_directory(staging_dir, ...)` with no
+    `registry` argument, so `validate_frontmatter.py`'s `_check_tags` registry-membership branch
+    never ran on this call site -- an unregistered `tags:` entry silently PASSED the static
+    precheck. It now loads the live registry once (`registry = load_registry()`) and threads it
+    through both calls, so an unregistered tag correctly produces FAIL. (2) `classify_checklist_
+    failure()` (:339) no longer classifies `tag_registry_rejection` by substring-matching a
+    `"is not in the tag registry"` marker against a checklist item's free-text `evidence` field
+    (fragile: four layers of string-joining separated the actual violation from this check, and
+    it was dead in practice because of gap (1)). It now takes optional `ticket_id`/`tier` kwargs,
+    matches on the FAIL item's structured `condition` field, and for `condition ==
+    "frontmatter_valid"` calls the new `_frontmatter_has_unregistered_tags()` helper (:309), which
+    independently re-reads the ticket/staging frontmatter and calls `tag_registry.
+    check_tags_registered()` directly -- zero dependency on `validate_frontmatter.py`'s error
+    text. `implement-ticket.js`'s `classifyChecklistFailure` (.claude/workflows/implement-
+    ticket.js:287) was updated in lockstep (now `async`) to shell out to
+    `_frontmatter_has_unregistered_tags` via `bash()` with `ticketId`/`ticketTier` as individually-
+    quoted argv (never evidence text), replacing its former hand-synced string-match mirror; the
+    call site (:1224) now awaits it and passes `tid`/`tier`. (3) `registry_query.py`'s
+    `candidate_tags_from_text()` (tools/registry_query.py:17) no longer filters against a
+    hardcoded `SEED_TAGS` 10-word tuple hand-copied from tag_taxonomy.md's prose; it now loads the
+    live registry and filters to `category == "subsystem-topic"` tags, so a newly-registered
+    subsystem-topic tag becomes queryable with zero code change. The 6 previously-unregistered
+    SEED_TAGS words (combat, economy, resource, content, engine, strategy) were registered as
+    subsystem-topic tags first (registries/tag_registry.jsonl) to preserve prior-work-search
+    coverage across the swap. `validate_frontmatter.py`'s own public contract
+    (`validate_file`/`validate_directory`/`_check_tags` return shape, INFRA-180's evidence) and
+    `check_registry_entry_regenerated()` (INFRA-263) were both spot-checked and confirmed
+    untouched by this ticket.
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: >
+    tools/gate_checks/done_checker_static.py:238-284 (`check_frontmatter_valid`, `registry =
+    load_registry()` threaded into both `validate_file`/`validate_directory` calls), :309-336
+    (`_frontmatter_has_unregistered_tags`), :339-378 (`classify_checklist_failure`, condition-field
+    match + independent re-check, `_TAG_REGISTRY_REJECTION_MARKER` removed) +
+    .claude/workflows/implement-ticket.js:287-320 (`classifyChecklistFailure`, now async, shells
+    out to `_frontmatter_has_unregistered_tags` via `bash()`), :1224 (awaited call site) +
+    tools/registry_query.py:1-31 (`candidate_tags_from_text` reads live `subsystem-topic` tags via
+    `load_registry()`, `SEED_TAGS` tuple removed) + registries/tag_registry.jsonl (6 new
+    subsystem-topic rows: combat, economy, resource, content, engine, strategy)
+  proof_type: regression
+  test_path: tests/tools/test_done_checker_static.py::test_check_frontmatter_valid_fails_on_unregistered_tag
+  divergence_note: null
+  support_boundary: >
+    Agent-workflow/developer-tooling gate-classification and prior-work-search fixes only -- no
+    simulation behavior, Mechanics Bible chapter, or engine contract governs this module's
+    semantics (same support_boundary category as INFRA-263/264/265/277 through INFRA-282). Does
+    not touch, extend, or duplicate INFRA-180 (validate_frontmatter.py's own schema-enforcement
+    contract, unchanged -- only its caller now supplies a registry argument it already accepted)
+    or INFRA-263 (Finalize-phase registry-regen gate, unrelated call path). Companion tests:
+    tests/tools/test_done_checker_static.py (`_frontmatter_has_unregistered_tags` x4,
+    `classify_checklist_failure` rewritten cases + anti-drift guard), tests/tools/
+    test_registry_query.py (`reads_live_registry`, `ignores_non_subsystem_topic_tags`,
+    `seed_words_still_registered_as_subsystem_topic`), tests/tools/
+    test_classify_checklist_failure_js_mirror.py (4 structural JS-mirror guard tests, no JS
+    runtime exists in this repo so this is a shape guard, not full behavioral-equivalence proof).

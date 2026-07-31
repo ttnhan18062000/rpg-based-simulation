@@ -42,6 +42,9 @@ These agents handle the pre-implementation and post-implementation phases of a d
 - Staging directory
 - Conflict report (if any)
 - `suggested_skills` list (skill/agent invocations mapped from the ticket's `Process/Skill-signal` tags — e.g. `debugging` -> `/debugging-strategies` or `world-debugger`; empty if no tag maps)
+- `tag_relevance_flags` list (one string per assigned tag whose registered note/category doesn't
+  clearly match the ticket's own title/scope/related_code_areas; empty if all tags fit — advisory
+  only, never rejects a tag)
 
 **When to invoke directly:** When you want to draft a ticket for human review before running the full `implement-ticket` workflow.
 

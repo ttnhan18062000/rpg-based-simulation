@@ -17,12 +17,14 @@ if str(_TOOLS_DIR) not in sys.path:
 
 from gate_checks.done_checker_static import (  # noqa: E402
     _find_flagged_data_run_files,
+    _frontmatter_has_unregistered_tags,
     check_data_runs_clean,
     check_frontmatter_valid,
     check_migration_complete,
     check_monitoring_write_recorded,
     check_registry_entry_regenerated,
     check_staging_artifacts_complete,
+    check_tag_drift,
     check_ticket_finalized,
     check_ticket_location,
     check_working_log_exactly_one_row,
@@ -465,6 +467,122 @@ Some content.
     assert "artifact_type" in evidence or "ticket_id" in evidence
 
 
+def test_check_frontmatter_valid_fails_on_unregistered_tag(tmp_path):
+    # TCK-20260720-TAG-TOUCHPOINT-CLEANUP: proves the pre-existing enforcement gap is closed —
+    # check_frontmatter_valid must now thread a real registry through validate_file/
+    # validate_directory so an unregistered tag actually produces FAIL, not a silent PASS.
+    # ticket_id must embed a date >= TAG_TAXONOMY_EFFECTIVE_DATE (20260704) — "TCK-FAKE" (used by
+    # every other fixture in this file) has no embedded date and is exempt from tag checking
+    # entirely, which would make this test pass for the wrong reason. The path must also contain
+    # a "tickets" component — detect_content_type() only resolves to the "ticket" schema (the one
+    # that actually calls _check_tags) when "tickets" is in path.parts; every other
+    # check_frontmatter_valid fixture in this file places ticket_path directly under tmp_path,
+    # which resolves to "doc" instead and never exercises tag validation at all.
+    ticket_id = "TCK-20260731-FAKE"
+    ticket_path = tmp_path / "tickets" / "inprogress" / f"{ticket_id}.md"
+    ticket_path.parent.mkdir(parents=True)
+    ticket_path.write_text(
+        TICKET_FM.format(ticket_id=ticket_id, tier="standard").replace(
+            "tags: []", "tags: [totally-unregistered-test-tag-xyz]"
+        ),
+        encoding="utf-8",
+    )
+    staging_dir = tmp_path / "staging_artifacts" / ticket_id
+    _write_artifact_dir(staging_dir, ticket_id)
+
+    status, evidence = check_frontmatter_valid(
+        ticket_id, "standard", ticket_path=ticket_path, staging_dir=staging_dir
+    )
+    assert status == "FAIL"
+    assert "totally-unregistered-test-tag-xyz" in evidence
+    assert "is not in the tag registry" in evidence
+
+
+# ---------------------------------------------------------------------------
+# _frontmatter_has_unregistered_tags
+# ---------------------------------------------------------------------------
+
+# These tests call check_tags_registered() against the real, live registries/tag_registry.jsonl
+# (load_registry() has no test-fixture hook — it always resolves to the repo root regardless of
+# cwd, mirroring validate_frontmatter.py::main()'s own real-registry-only usage). "cognition"/
+# "world" are confirmed-stable seed tags (registered 2026-07-06, append-only registry); the
+# unregistered-tag fixtures use an invented name guaranteed not to collide with any real entry.
+
+
+def test_frontmatter_has_unregistered_tags_detects_real_violation(tmp_path):
+    ticket_id = "TCK-FAKE"
+    ticket_path = tmp_path / f"{ticket_id}.md"
+    ticket_path.write_text(
+        TICKET_FM.format(ticket_id=ticket_id, tier="standard").replace(
+            "tags: []", "tags: [totally-unregistered-test-tag-xyz]"
+        ),
+        encoding="utf-8",
+    )
+    staging_dir = tmp_path / "staging_artifacts" / ticket_id
+
+    assert _frontmatter_has_unregistered_tags(
+        ticket_id, "standard", ticket_path=ticket_path, staging_dir=staging_dir
+    ) is True
+
+
+def test_frontmatter_has_unregistered_tags_false_when_all_registered(tmp_path):
+    ticket_id = "TCK-FAKE"
+    ticket_path = tmp_path / f"{ticket_id}.md"
+    ticket_path.write_text(
+        TICKET_FM.format(ticket_id=ticket_id, tier="standard").replace(
+            "tags: []", "tags: [cognition, world]"
+        ),
+        encoding="utf-8",
+    )
+    staging_dir = tmp_path / "staging_artifacts" / ticket_id
+
+    assert _frontmatter_has_unregistered_tags(
+        ticket_id, "standard", ticket_path=ticket_path, staging_dir=staging_dir
+    ) is False
+
+
+def test_frontmatter_has_unregistered_tags_checks_staging_artifacts_too(tmp_path):
+    ticket_id = "TCK-FAKE"
+    ticket_path = tmp_path / f"{ticket_id}.md"
+    ticket_path.write_text(
+        TICKET_FM.format(ticket_id=ticket_id, tier="standard").replace(
+            "tags: []", "tags: [cognition]"
+        ),
+        encoding="utf-8",
+    )
+    staging_dir = tmp_path / "staging_artifacts" / ticket_id
+    staging_dir.mkdir(parents=True)
+    (staging_dir / "plan.md").write_text(
+        ARTIFACT_FM.format(ticket_id=ticket_id, artifact_type="plan").replace(
+            "tags: []", "tags: [totally-unregistered-test-tag-xyz]"
+        ),
+        encoding="utf-8",
+    )
+
+    assert _frontmatter_has_unregistered_tags(
+        ticket_id, "standard", ticket_path=ticket_path, staging_dir=staging_dir
+    ) is True
+
+
+def test_frontmatter_has_unregistered_tags_hotfix_skips_staging_dir(tmp_path):
+    ticket_id = "TCK-FAKE"
+    ticket_path = tmp_path / f"{ticket_id}.md"
+    ticket_path.write_text(
+        TICKET_FM.format(ticket_id=ticket_id, tier="hotfix").replace(
+            "tags: []", "tags: [cognition]"
+        ),
+        encoding="utf-8",
+    )
+    # staging_dir deliberately not created — a hotfix ticket has none. If the helper didn't skip
+    # it correctly, `.rglob()` on a nonexistent dir would either error or (if implemented wrong)
+    # silently miss the branch guard; asserting False here proves the hotfix-skip path runs.
+    staging_dir = tmp_path / "staging_artifacts" / ticket_id
+
+    assert _frontmatter_has_unregistered_tags(
+        ticket_id, "hotfix", ticket_path=ticket_path, staging_dir=staging_dir
+    ) is False
+
+
 # ---------------------------------------------------------------------------
 # run_static_precheck (aggregate)
 # ---------------------------------------------------------------------------
@@ -558,16 +676,37 @@ def test_classify_checklist_failure_all_pass_returns_none():
     assert classify_checklist_failure(checklist) is None
 
 
-def test_classify_checklist_failure_tag_registry_rejection():
+def _write_tag_rejection_fixture(tmp_path, ticket_id="TCK-FAKE", tier="standard"):
+    """Real on-disk ticket (+ staging artifacts, for non-hotfix tiers) whose `tags:` frontmatter
+    includes an unregistered tag — the fixture `classify_checklist_failure`'s independent
+    `_frontmatter_has_unregistered_tags` re-check now reads, replacing the old evidence-text
+    marker match."""
+    ticket_dir = tmp_path / "tickets" / "inprogress"
+    ticket_dir.mkdir(parents=True)
+    (ticket_dir / f"{ticket_id}.md").write_text(
+        TICKET_FM.format(ticket_id=ticket_id, tier=tier).replace(
+            "tags: []", "tags: [totally-unregistered-test-tag-xyz]"
+        ),
+        encoding="utf-8",
+    )
+    staging_dir = tmp_path / "staging_artifacts" / ticket_id
+    _write_artifact_dir(staging_dir, ticket_id)
+
+
+def test_classify_checklist_failure_tag_registry_rejection(tmp_path, monkeypatch):
+    _write_tag_rejection_fixture(tmp_path)
+    monkeypatch.chdir(tmp_path)
+
     checklist = [
         {"condition": "ticket_location", "status": "PASS", "evidence": "ok"},
         {
             "condition": "frontmatter_valid",
             "status": "FAIL",
-            "evidence": "tickets/inprogress/TCK-FAKE.md: tags: 'some-tag' is not in the tag registry — register it first",
+            "evidence": "tickets/inprogress/TCK-FAKE.md: tags: 'totally-unregistered-test-tag-xyz' "
+            "is not in the tag registry — register it first",
         },
     ]
-    assert classify_checklist_failure(checklist) == "tag_registry_rejection"
+    assert classify_checklist_failure(checklist, ticket_id="TCK-FAKE", tier="standard") == "tag_registry_rejection"
 
 
 def test_classify_checklist_failure_generic_dod_failure():
@@ -577,17 +716,20 @@ def test_classify_checklist_failure_generic_dod_failure():
     assert classify_checklist_failure(checklist) == "dod_condition_failed"
 
 
-def test_classify_checklist_failure_scans_past_leading_pass_entries():
+def test_classify_checklist_failure_scans_past_leading_pass_entries(tmp_path, monkeypatch):
+    _write_tag_rejection_fixture(tmp_path)
+    monkeypatch.chdir(tmp_path)
+
     checklist = [
         {"condition": "ticket_location", "status": "PASS", "evidence": "ok"},
         {"condition": "data_runs_clean", "status": "PASS", "evidence": "ok"},
         {
             "condition": "frontmatter_valid",
             "status": "FAIL",
-            "evidence": "tags: 'foo' is not in the tag registry",
+            "evidence": "tags: 'totally-unregistered-test-tag-xyz' is not in the tag registry",
         },
     ]
-    assert classify_checklist_failure(checklist) == "tag_registry_rejection"
+    assert classify_checklist_failure(checklist, ticket_id="TCK-FAKE", tier="standard") == "tag_registry_rejection"
 
 
 def test_classify_checklist_failure_returns_first_fail_when_multiple():
@@ -599,8 +741,37 @@ def test_classify_checklist_failure_returns_first_fail_when_multiple():
             "evidence": "tags: 'foo' is not in the tag registry",
         },
     ]
-    # First FAIL wins — documented tie-break, not left ambiguous.
+    # First FAIL wins — documented tie-break, not left ambiguous. Called with no ticket_id/tier
+    # too, proving the backward-compatible default path never even reaches the tag re-check.
     assert classify_checklist_failure(checklist) == "dod_condition_failed"
+
+
+def test_classify_checklist_failure_condition_key_used_not_evidence_text(tmp_path, monkeypatch):
+    # Anti-drift guard: a fixture ticket whose real tags are all registered, but whose evidence
+    # text happens to contain the literal old marker string as an unrelated quoted example — must
+    # NOT trigger tag_registry_rejection. Proves classification keys off `condition` + an
+    # independent registry re-check, never off evidence text content.
+    ticket_id = "TCK-FAKE"
+    ticket_dir = tmp_path / "tickets" / "inprogress"
+    ticket_dir.mkdir(parents=True)
+    (ticket_dir / f"{ticket_id}.md").write_text(
+        TICKET_FM.format(ticket_id=ticket_id, tier="standard").replace(
+            "tags: []", "tags: [cognition]"
+        ),
+        encoding="utf-8",
+    )
+    staging_dir = tmp_path / "staging_artifacts" / ticket_id
+    _write_artifact_dir(staging_dir, ticket_id)
+    monkeypatch.chdir(tmp_path)
+
+    checklist = [
+        {
+            "condition": "frontmatter_valid",
+            "status": "FAIL",
+            "evidence": 'unrelated failure — note: some other tag once said "is not in the tag registry" as an example',
+        },
+    ]
+    assert classify_checklist_failure(checklist, ticket_id=ticket_id, tier="standard") == "dod_condition_failed"
 
 
 # ---------------------------------------------------------------------------
@@ -824,6 +995,108 @@ def test_check_monitoring_write_recorded_applies_under_hotfix_tier(tmp_path):
         "TCK-HOTFIX-FAKE", runs_path=runs_path, events_path=events_path
     )
     assert status == "PASS"
+
+
+# ---------------------------------------------------------------------------
+# check_tag_drift
+# ---------------------------------------------------------------------------
+
+_DRIFT_TICKET_TEMPLATE = """---
+status: active
+layer: ai
+authority: P1
+audience: agent
+ticket_id: {ticket_id}
+phase: open
+date: 2026-07-31
+tags: {tags}
+---
+
+# {ticket_id}
+
+## Title
+Fixture ticket
+
+## Files Changed
+{files_changed}
+
+## Related Code Areas
+{related_code_areas}
+
+## Completion Summary
+"""
+
+
+def _write_drift_ticket(path: Path, ticket_id: str, tags, files_changed="", related_code_areas=""):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        _DRIFT_TICKET_TEMPLATE.format(
+            ticket_id=ticket_id,
+            tags=tags,
+            files_changed=files_changed,
+            related_code_areas=related_code_areas,
+        ),
+        encoding="utf-8",
+    )
+
+
+def test_check_tag_drift_flags_mismatch(tmp_path):
+    # "dashboard" is a real, live-registered subsystem-topic tag (registries/tag_registry.jsonl).
+    ticket_path = tmp_path / "TCK-FAKE.md"
+    _write_drift_ticket(
+        ticket_path,
+        "TCK-FAKE",
+        tags="[workflows]",
+        files_changed="- src/api/agent_ops_dashboard/routes.py",
+    )
+
+    status, evidence = check_tag_drift("TCK-FAKE", ticket_path=ticket_path)
+    assert status == "FLAGGED"
+    assert "dashboard" in evidence
+
+
+def test_check_tag_drift_clean_when_tags_cover_candidates(tmp_path):
+    ticket_path = tmp_path / "TCK-FAKE.md"
+    _write_drift_ticket(
+        ticket_path,
+        "TCK-FAKE",
+        tags="[dashboard]",
+        files_changed="- src/api/agent_ops_dashboard/routes.py",
+    )
+
+    status, evidence = check_tag_drift("TCK-FAKE", ticket_path=ticket_path)
+    assert status == "CLEAN"
+    assert "dashboard" in evidence
+
+
+def test_check_tag_drift_no_candidates_is_clean(tmp_path):
+    ticket_path = tmp_path / "TCK-FAKE.md"
+    _write_drift_ticket(
+        ticket_path,
+        "TCK-FAKE",
+        tags="[]",
+        files_changed="- some/unrelated/path.py",
+        related_code_areas="- another/unrelated/path.py",
+    )
+
+    status, evidence = check_tag_drift("TCK-FAKE", ticket_path=ticket_path)
+    assert status == "CLEAN"
+    assert "no candidate tags" in evidence
+
+
+def test_check_tag_drift_not_in_run_finalize_selfcheck_checks_tuple(tmp_path, monkeypatch):
+    _scaffold_finalize_repo(tmp_path)
+    monkeypatch.chdir(tmp_path)
+
+    results = run_finalize_selfcheck("TCK-FAKE", "standard")
+    conditions = [r["condition"] for r in results]
+    assert conditions == [
+        "migration_complete",
+        "ticket_finalized",
+        "working_log_exactly_one_row",
+        "registry_entry_regenerated",
+    ]
+    assert "tag_drift" not in conditions
 
 
 # ---------------------------------------------------------------------------

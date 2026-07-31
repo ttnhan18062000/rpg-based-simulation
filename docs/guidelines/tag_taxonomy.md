@@ -168,6 +168,22 @@ See `docs/guides/ticket_tagging.md` for a walkthrough of when and how to add a t
 `tools/tag_report.py` (`docs/guides/ticket_reporting.md`) for a usage-frequency report over
 whatever is currently registered.
 
+**How to register a new category:**
+
+`registries/tag_category_registry.jsonl` is the category-equivalent of `tag_registry.jsonl` —
+also append-only, also managed by `tools/tag_registry.py`, keyed on `category` instead of `tag`:
+
+```bash
+python3 tools/tag_registry.py add-category <category> --note "why this category exists"
+```
+
+Note `python3 tools/tag_registry.py list` only prints registered *tags*, not categories — there is
+no `list` view over `tag_category_registry.jsonl` today. The registry is currently seeded with
+exactly the 4 addable categories named above (`subsystem-topic`, `process-skill-signal`,
+`quality-attribute`, `meta-process`); `phase-milestone` is deliberately never registered there — it
+stays purely code-side, recognized by the `^phase-\d+$` pattern (see "`phase-N` tags are exempt
+from registration" above), the same exemption shape one level up.
+
 ## Enforcement
 
 Enforcement is **forward-only** from `2026-07-04`: `tools/validate_frontmatter.py` only applies

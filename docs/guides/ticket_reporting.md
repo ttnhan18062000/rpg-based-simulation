@@ -12,9 +12,10 @@ This guide covers reporting tools that read `tickets/`, `docs/REGISTRY.yaml`, an
 `tickets/working_log.csv` to answer questions about the ticket corpus itself (not about a
 simulation run — see [`simulation_quality.md`](simulation_quality.md) for that). Like SimQ's
 scoring surface, this is organized as **pillars** — independent reporting angles over the same
-underlying ticket data. Today there are two pillars built: tag-usage reporting, and ticket-corpus
-statistics (velocity, tier/type/priority/layer distribution, artifact completeness). The structure
-below leaves room for more.
+underlying ticket data. Today there are three pillars built: tag-usage reporting, ticket-corpus
+statistics (velocity, tier/type/priority/layer distribution, artifact completeness), and the
+legacy corpus tag/category repair sweep (a full-corpus, no-date-cutoff violation report). The
+structure below leaves room for more.
 
 ---
 
@@ -28,7 +29,7 @@ Counts how many completed tickets (`tickets/done/`) use each tag, and classifies
 one of the 5 categories defined in
 [`docs/guidelines/tag_taxonomy.md`](../guidelines/tag_taxonomy.md) (Subsystem/Topic,
 Phase/Milestone, Process/Skill-signal, Quality-attribute, Meta-Process) by looking it up in
-[`registries/tag_registry.jsonl`](../guidelines/tag_registry.jsonl) — the append-only,
+[`registries/tag_registry.jsonl`](../../registries/tag_registry.jsonl) — the append-only,
 machine-readable tag data file `tools/tag_registry.py` manages (`TCK-20260706-TAG-REGISTRY-DATA`).
 A tag only shows as `unclassified` if it somehow isn't registered, which should be rare going
 forward: `validate_frontmatter.py`'s hard allowlist rejects an unregistered tag at commit time. It
@@ -151,6 +152,73 @@ unparseable rows by counting and skipping them rather than crashing. Distributio
 as `unknown`/non-canonical instead of silently miscounting. Artifact completeness only checks
 `standard`/`epic` tickets, since `hotfix` tickets are explicitly exempt from staging artifacts per
 this project's own workflow rule (`CLAUDE.md`'s "Hotfix: No staging artifacts required").
+
+---
+
+## Pillar 3: Legacy Corpus Tag/Category Repair Sweep
+
+**Tool:** [`tools/tag_corpus_sweep.py`](../../tools/tag_corpus_sweep.py)
+
+### What it does
+
+Both pillars above only ever look at `tickets/done/`, and Pillar 1's tag-usage report is further
+narrowed to tickets whose `ticket_id` embeds a date on or after the tag taxonomy's effective date
+(`TAG_TAXONOMY_EFFECTIVE_DATE`, 2026-07-04) — enforcement of the controlled vocabulary is
+deliberately forward-only, per the taxonomy's own "no backfill of history" decision. That leaves a
+large historic gap never checked by anything: everything predating the cutoff, plus
+`tickets/inprogress/`, `tickets/todos/`, and `stored_artifacts/`, none of which Pillar 1 or 2 ever
+walks.
+
+This is a **report-only, no-date-cutoff** sweep across all four corpus roots —
+`tickets/done/**`, `tickets/inprogress/**`, `tickets/todos/**`, and `stored_artifacts/**/*.md` —
+built for `TCK-20260720-TAG-CORPUS-REPAIR-SWEEP`. Contrast this explicitly with Pillar 1: Pillar
+1's `tag_report.py` skips any ticket whose `ticket_id` predates the taxonomy cutoff; this sweep
+applies no such date gate anywhere — a 2026-01-01 ticket is checked exactly the same as one from
+today. For every tag found in every file's `tags:` frontmatter list, it emits one `(file, tag,
+issue)` row per applicable violation:
+
+| Issue | Fires when |
+|---|---|
+| `unregistered` | The tag is not in [`registries/tag_registry.jsonl`](../../registries/tag_registry.jsonl) and is not a canonical `phase-N` tag |
+| `invalid_category` | The tag **is** registered, but its recorded `category` is not one of the currently valid values in [`registries/tag_category_registry.jsonl`](../../registries/tag_category_registry.jsonl) — drift protection for a hand-edited registry or a category later deprecated, not something the live corpus is expected to trigger today (registries are append-only, so no category can currently become invalid after a tag was registered under it) |
+| `non_canonical_form` | `canonical_form_violation(tag)` is not `None` (uppercase, underscore, forbidden priority tag, known non-canonical synonym) |
+
+`unregistered` and `invalid_category` are mutually exclusive per tag — `invalid_category` only
+fires for a tag with a literal registry entry, a strictly narrower condition than "registered at
+all" (which also covers phase-N tags that have no registry entry to check a category against).
+`non_canonical_form` is fully independent of the other two and can combine with either, so a tag
+with multiple issues produces multiple rows for the same `(file, tag)` pair.
+
+It never writes to any file it scans — there is no `--fix` flag, and no code path in this tool
+ever calls `Path.write_text` against anything under `tickets/` or `stored_artifacts/`. Deciding
+what to do with a finding (retag, register, or fix a legacy file) is left to a human or a
+follow-up ticket.
+
+### Quick start
+
+```bash
+python3 tools/tag_corpus_sweep.py                                    # stdout summary + row table
+python3 tools/tag_corpus_sweep.py --json reports/tag_corpus_sweep.json  # write a structured report to disk
+```
+
+### Technical detail
+
+The corpus walk (`collect_sweep_files`) and per-file classification (`tag_issues`,
+`sweep_file_rows`) live in `tools/tag_report.py`, alongside Pillar 1's own functions, so both
+reuse `tools/validate_frontmatter.py::extract_frontmatter` as the sole frontmatter parser (no
+second parser) and the same `SEQUENCE.md`-skip convention — but `collect_sweep_files` applies
+**only** that one skip rule (unlike `collect_completed_tickets`'s four), and `sweep_file_rows`
+tolerates a missing frontmatter block, a missing `tags:` key, or unparseable frontmatter by
+returning zero rows rather than crashing or skipping-and-counting. `tools/tag_corpus_sweep.py`
+itself is a separate module holding only the orchestration (`run_sweep`) and CLI/output layer
+(`print_report`, `build_json_report`, `main`) — it does not import, call, or modify Pillar 1's own
+`main()`/`--json`/`--show-tickets`/`--list-skipped` CLI wiring, which stays scoped to its
+narrower, already-shipped `tickets/done/`-only report.
+
+**Live snapshot as of 2026-07-31** (dated, will shift as the corpus grows and as findings are
+addressed): 4145 files scanned across all four roots, 37 skipped as `SEQUENCE.md`. 7832 violation
+rows found: 7002 `unregistered`, 830 `non_canonical_form`, 0 `invalid_category` (expected — see
+the table above).
 
 ---
 
