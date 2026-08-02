@@ -453,8 +453,8 @@ if (tier === 'epic') {
 }
 
 // Default values used by Implement phase — overwritten by standard pipeline if tier !== 'hotfix'
-let investigation = '(hotfix — investigation skipped)'
-let investigationText = investigation
+let investigation = { docs_to_update: [], findings_summary: '(hotfix — investigation skipped)' }
+let investigationText = investigation.findings_summary
 let plan = '(hotfix — plan skipped)'
 let planText = plan
 let review = {
@@ -470,6 +470,22 @@ if (tier !== 'hotfix') {
   // ─── Phase 2: Investigate ─────────────────────────────────────────────────────
 
   phase('Investigate')
+
+  const INVESTIGATION_SCHEMA = {
+    type: 'object',
+    required: ['docs_to_update', 'findings_summary'],
+    properties: {
+      docs_to_update: {
+        type: 'array',
+        items: { type: 'string' },
+        description: 'Specific docs/ paths this ticket must update if implemented as scoped (Mechanics Bible chapter, engine contract, docs/parity_ledger/*.yaml, or a guideline doc) — one entry per path. Empty array only if no doc anywhere needs to change; this is a deliberate judgment, not a lazy default.',
+      },
+      findings_summary: {
+        type: 'string',
+        description: 'Key findings, open questions requiring a decision, and parity entry IDs that will need updating (one paragraph).',
+      },
+    },
+  }
 
   const investigationTs = await captureTs()
   await writeSidecar(events.length + 1 + seqOffset, 'Investigate', 'investigator')
@@ -494,18 +510,18 @@ Read:
 Produce two files:
 
 FILE 1: staging_artifacts/${tid}/investigation.md
-Sections: Current Behavior (file:line refs) | Mechanics/Engine Constraints | Parity Ledger Overlap (IDs + status) | Prior Work | Risks and Open Questions | Anti-Drift Hazards
+Sections: Current Behavior (file:line refs) | Mechanics/Engine Constraints | Docs Requiring Update (every specific docs/ path this ticket must change if implemented as scoped, with a one-line reason each — empty/"None" only if no doc anywhere needs to change) | Parity Ledger Overlap (IDs + status) | Prior Work | Risks and Open Questions | Anti-Drift Hazards
 
 FILE 2: staging_artifacts/${tid}/test_plan.md
 Sections: Regression Surface (existing tests that must pass) | New Tests Required (per AC) | Scoped Pytest Commands | Anti-Drift Test Guards
 
 Each new file must begin with a valid frontmatter block matching sibling files' format (see other staging_artifacts/ files for the pattern), with artifact_type set to one of investigation, plan, test_plan — the enum tools/validate_frontmatter.py's ARTIFACT_TYPE_VALUES defines and done_checker_static.py enforces. Missing or invalid frontmatter is a DOD_BLOCKED failure caught late at Verify — get it right now.
 
-Write both files. Then return: key findings, open questions requiring a decision, parity entry IDs that will need updating.`,
-    { label: 'investigate', agentType: 'investigator' }
+Write both files. Then return: docs_to_update (array of the exact docs/ paths from the "Docs Requiring Update" section above — empty array only if none apply), findings_summary (key findings, open questions requiring a decision, parity entry IDs that will need updating).`,
+    { label: 'investigate', agentType: 'investigator', schema: INVESTIGATION_SCHEMA }
   )
 
-  investigationText = investigation.toString().trim()
+  investigationText = investigation.findings_summary
   pushEvent('Investigate', 'investigator', 'ok', investigationText.slice(0, 200), investigationTs)
 
   // Shadow context-packet call site (TCK-20260729-SHADOW-PACKET-CALL-SITE): advisory-only,
@@ -716,7 +732,7 @@ const IMPL_SCHEMA = {
   required: ['files_changed', 'behavior_changed', 'implementation_summary', 'summary'],
   properties: {
     files_changed: { type: 'array', items: { type: 'string' } },
-    behavior_changed: { type: 'boolean' },
+    behavior_changed: { type: 'boolean', description: 'True for ANY new logic, new feature, or new setting/config value this ticket introduces — not only modifications to behavior that already existed. A brand-new feature has no prior behavior to diverge from, but it still counts as true.' },
     parity_subsystems: { type: 'array', items: { type: 'string' } },
     implementation_summary: { type: 'string' },
     summary: { type: 'string', description: 'One sentence: what was implemented (≤200 chars)' },
@@ -748,6 +764,8 @@ After writing code:
 1. Update the "Implementation Notes" section in ${ticketInfo.ticket_path} with what was done (concise, factual). Also fill in the ticket's "## Completion Summary" section now — never leave it blank when the ticket is later moved to done; a blank Completion Summary is a DOD_BLOCKED failure caught late at Verify.
 ${tier !== 'hotfix' ? `2. Update staging_artifacts/${tid}/plan.md "Deviations" section if any step differed from the plan — never silently deviate. If you amend that file, keep its existing frontmatter block valid — artifact_type must remain one of investigation, plan, test_plan (tools/validate_frontmatter.py's ARTIFACT_TYPE_VALUES enum).` : ''}
 
+Note on behavior_changed: set this true for ANY new logic, new feature, or new setting/config value this ticket introduces — not only modifications to behavior that already existed. A brand-new feature has no prior behavior to diverge from, but it still requires doc updates and parity-ledger entries the same as a modification would.
+
 Return: files_changed (list of paths), behavior_changed (boolean), parity_subsystems (from: substrate, combat_movement, strategic_cognition, town_resource, progression, social_narrative, world_dynamics, infrastructure), implementation_summary (one paragraph), summary (one sentence ≤200 chars).`,
   { label: 'implement', schema: IMPL_SCHEMA, agentType: 'implementer' }
 )
@@ -766,9 +784,15 @@ Return: files_changed (list of paths), behavior_changed (boolean), parity_subsys
 // synthetic pseudo-agent name outside vocabulary.py's WORKFLOW_AGENTS. Deterministic script
 // check, no LLM judgment involved, so no agent() call — mirrors the tag-registry check's own
 // orchestrator-only shape.
+//
+// docs_to_update (TCK-20260802-DOC-UPDATE-DISCIPLINE): Investigate's docs_to_update is passed
+// through via an optional --docs-to-update CLI sentinel — purely additive, produces at most a
+// separate non-blocking ADVISORY entry, never changes the PASS/FAIL verdict computed above.
+const docsToUpdate = Array.isArray(investigation.docs_to_update) ? investigation.docs_to_update : []
 const docStalenessFilesArgs = implementation.files_changed.map(f => `"${f}"`).join(' ')
+const docsToUpdateArgs = docsToUpdate.length > 0 ? `--docs-to-update ${docsToUpdate.map(d => `"${d}"`).join(' ')}` : ''
 const docStalenessOutput = await bash(
-  `python3 tools/gate_checks/doc_staleness_check.py ${implementation.behavior_changed} ${docStalenessFilesArgs}`
+  `python3 tools/gate_checks/doc_staleness_check.py ${implementation.behavior_changed} ${docStalenessFilesArgs} ${docsToUpdateArgs}`
 )
 let docStalenessResults = null
 const docStalenessMarkerIndex = docStalenessOutput.indexOf('MARKER:')
@@ -777,16 +801,25 @@ if (docStalenessMarkerIndex !== -1) {
   catch (e) { docStalenessResults = null }
 }
 const docStalenessFailure = docStalenessResults && docStalenessResults.find(r => r.status === 'FAIL')
+const docStalenessAdvisory = docStalenessResults && docStalenessResults.find(r => r.status === 'ADVISORY')
 
 // No reason_code — DOC_STALENESS_BLOCKED already disambiguates 1:1 like TAGS_NOT_REGISTERED/
 // PARITY_INCOMPLETE/SECURITY_BLOCKED/TESTS_FAILED/CONFLICTS_DETECTED; reason_code exists only for
 // statuses that collapse multiple distinct causes into one value (see schema.md).
+const implementBaseSummary = implementation.summary || implementation.implementation_summary || 'Implementation complete'
+const implementEventSummary = docStalenessFailure
+  ? docStalenessFailure.evidence
+  : (docStalenessAdvisory ? `${implementBaseSummary} | advisory: ${docStalenessAdvisory.evidence}`.slice(0, 200) : implementBaseSummary)
 pushEvent(
   'Implement', 'implementer',
   docStalenessFailure ? 'failed' : 'ok',
-  docStalenessFailure ? docStalenessFailure.evidence : (implementation.summary || implementation.implementation_summary || 'Implementation complete'),
+  implementEventSummary,
   implementTs
 )
+
+if (docStalenessAdvisory) {
+  log(`Doc relevance advisory (non-blocking): ${docStalenessAdvisory.evidence}`)
+}
 
 if (docStalenessFailure) {
   log(`Doc staleness: ${docStalenessFailure.evidence}`)
@@ -1359,6 +1392,27 @@ if (finalizeFailures.length > 0) {
     ticket_id: tid,
     failing_items: finalizeFailures.map(f => f.condition + ': ' + f.evidence),
     message: 'Finalize completed its steps but the post-migration self-check found a discrepancy — see failing_items.',
+  }
+}
+
+// ─── Post-Finalize knowledge-index refresh (TCK-20260802-DOC-UPDATE-DISCIPLINE) ───────────────
+// CLAUDE.md's After Work rule ("If any files under docs/ were created or modified: run make
+// knowledge-index-update") and docs/guidelines/agent_working_environment.md's Index Lifecycle
+// Rules both require this whenever docs/ changes — previously never wired into this workflow at
+// all (confirmed absent by grep before this ticket). Orchestrator-run bash(), never inside the
+// Finalize agent's own prompt text — docs/ai/ticket-lifecycle.md's existing Reliability caveat for
+// the post-Test cleanup checkpoint documents that a bare, non-phase()-anchored bash instruction
+// inside agent prose has been observed to silently not execute, and the whole point of this step
+// is to close a silent gap, not reintroduce one. Fail-open per the same convention as the
+// monitoring-write/tag-drift checks directly below: a stale search index degrades future
+// search_docs() quality but must never block ticket close.
+const docsChangedOutput = await bash(`git status --porcelain -- docs/ 2>/dev/null`)
+if (docsChangedOutput && docsChangedOutput.trim().length > 0) {
+  const reindexOutput = await bash(`make knowledge-index-update 2>&1 || echo "REINDEX_FAILED"`)
+  if (reindexOutput.includes('REINDEX_FAILED')) {
+    log('WARNING: make knowledge-index-update failed after Finalize — search index may be stale. Run it manually.')
+  } else {
+    log('Knowledge index refreshed (docs/ changed during this run).')
   }
 }
 

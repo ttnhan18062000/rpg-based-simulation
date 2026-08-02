@@ -66,4 +66,4 @@ def test_terminal_status_conformance_finalize_incomplete_appears_once_on_both_si
     assert contract_values.count("FINALIZE_INCOMPLETE") == 1
 
     live_finalize_incomplete = next(e for e in live_statuses if e["value"] == "FINALIZE_INCOMPLETE")
-    assert live_finalize_incomplete["call_sites"] == [1234, 1246]
+    assert live_finalize_incomplete["call_sites"] == [1377, 1389]

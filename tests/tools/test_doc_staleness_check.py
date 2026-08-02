@@ -100,6 +100,107 @@ def test_workflow_js_change_with_behavior_changed_true_and_a_docs_path_passes():
 
 
 # ---------------------------------------------------------------------------
+# config/ flagged-path coverage (TCK-20260802-DOC-UPDATE-DISCIPLINE) — settings that drive
+# behavior (e.g. SimQ scoring weights/thresholds) but live outside src/
+# ---------------------------------------------------------------------------
+
+
+def test_config_path_change_with_behavior_changed_true_and_no_docs_path_fails():
+    results = check_doc_staleness(
+        files_changed=["config/simulation_quality/scoring_weights.yaml"],
+        behavior_changed=True,
+    )
+    assert len(results) == 1
+    assert results[0]["status"] == "FAIL"
+    assert "config/simulation_quality/scoring_weights.yaml" in results[0]["evidence"]
+
+
+def test_config_path_change_with_behavior_changed_true_and_a_docs_path_passes():
+    results = check_doc_staleness(
+        files_changed=[
+            "config/simulation_quality/scoring_weights.yaml",
+            "docs/simulation_quality/quality_scoring_contract.md",
+        ],
+        behavior_changed=True,
+    )
+    assert len(results) == 1
+    assert results[0]["status"] == "PASS"
+
+
+# ---------------------------------------------------------------------------
+# docs_to_update advisory coverage (TCK-20260802-DOC-UPDATE-DISCIPLINE) — non-blocking check that
+# the SPECIFIC docs Investigate flagged were actually touched, not just any docs/ path
+# ---------------------------------------------------------------------------
+
+
+def test_docs_to_update_all_present_no_advisory():
+    results = check_doc_staleness(
+        files_changed=["src/systems/foo.py", "docs/mechanics/03_economic_laws.md"],
+        behavior_changed=True,
+        docs_to_update=["docs/mechanics/03_economic_laws.md"],
+    )
+    assert len(results) == 1
+    assert results[0]["status"] == "PASS"
+    assert not any(r["status"] == "ADVISORY" for r in results)
+
+
+def test_docs_to_update_missing_path_adds_advisory_not_fail():
+    results = check_doc_staleness(
+        files_changed=["src/systems/foo.py", "docs/engine/known_limitations.md"],
+        behavior_changed=True,
+        docs_to_update=["docs/mechanics/03_economic_laws.md"],
+    )
+    assert len(results) == 2
+    statuses = {r["status"] for r in results}
+    assert statuses == {"PASS", "ADVISORY"}
+    advisory = next(r for r in results if r["status"] == "ADVISORY")
+    assert "docs/mechanics/03_economic_laws.md" in advisory["evidence"]
+
+
+def test_docs_to_update_empty_list_no_advisory():
+    results = check_doc_staleness(
+        files_changed=["src/systems/foo.py", "docs/engine/known_limitations.md"],
+        behavior_changed=True,
+        docs_to_update=[],
+    )
+    assert len(results) == 1
+    assert results[0]["status"] == "PASS"
+
+
+def test_docs_to_update_ignored_when_fail_branch_taken():
+    results = check_doc_staleness(
+        files_changed=["src/systems/foo.py"],
+        behavior_changed=True,
+        docs_to_update=["docs/mechanics/03_economic_laws.md"],
+    )
+    assert len(results) == 1
+    assert results[0]["status"] == "FAIL"
+
+
+def test_cli_docs_to_update_sentinel_produces_advisory():
+    proc = subprocess.run(
+        [
+            sys.executable,
+            str(_MODULE_PATH),
+            "true",
+            "src/foo.py",
+            "docs/engine/x.md",
+            "--docs-to-update",
+            "docs/engine/y.md",
+        ],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    output_line = proc.stdout.strip()
+    payload = json.loads(output_line[len("MARKER:"):])
+    statuses = {entry["status"] for entry in payload}
+    assert statuses == {"PASS", "ADVISORY"}
+    advisory = next(entry for entry in payload if entry["status"] == "ADVISORY")
+    assert "docs/engine/y.md" in advisory["evidence"]
+
+
+# ---------------------------------------------------------------------------
 # Other edge cases
 # ---------------------------------------------------------------------------
 

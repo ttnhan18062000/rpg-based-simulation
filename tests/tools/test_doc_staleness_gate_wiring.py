@@ -101,3 +101,18 @@ def test_doc_staleness_check_passes_behavior_changed_and_files_changed():
     call_line = text[call_line_start:call_line_end]
     assert "implementation.behavior_changed" in call_line
     assert "docStalenessFilesArgs" in call_line
+
+
+def test_docs_to_update_wired_into_doc_staleness_invocation():
+    # TCK-20260802-DOC-UPDATE-DISCIPLINE: Investigate's docs_to_update must reach the
+    # doc_staleness_check.py invocation (via the --docs-to-update CLI sentinel), purely additive —
+    # never replacing implementation.behavior_changed/docStalenessFilesArgs from the test above.
+    text = _read()
+    invoke_idx = text.find("python3 tools/gate_checks/doc_staleness_check.py")
+    call_line_start = text.rfind("\n", 0, invoke_idx)
+    call_line_end = text.find("\n", invoke_idx)
+    call_line = text[call_line_start:call_line_end]
+    assert "docsToUpdateArgs" in call_line
+    assert "investigation.docs_to_update" in text[:invoke_idx][-1500:], (
+        "investigation.docs_to_update must be read somewhere shortly before the invocation line"
+    )

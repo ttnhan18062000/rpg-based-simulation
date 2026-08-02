@@ -57,6 +57,13 @@ For each affected component: what it does now, key functions/classes, file:line 
 Which laws from docs/mechanics/ or docs/engine/ directly constrain what the implementation can do.
 Cite specific chapter and section.
 
+## Docs Requiring Update
+Every specific docs/ path this ticket must change if implemented as scoped — Mechanics Bible
+chapter, engine contract, docs/parity_ledger/*.yaml entry, or a guideline doc — with a one-line
+reason each. Empty/"None" only if no doc anywhere needs to change; this is a deliberate judgment
+call, not a lazy default. Consider new logic/features/settings the same as modifications to
+existing behavior — a brand-new feature still needs a doc describing it.
+
 ## Parity Ledger Overlap
 List entry IDs and current status from docs/parity_ledger/ that this work touches.
 Flag any P0 entries — they require a passing test_path after changes.
@@ -121,4 +128,6 @@ Tests that would catch scope-creep or silent behavior change in adjacent systems
 
 ## Output
 
-Write both files. Begin your response with **one sentence** (≤200 chars) summarizing the key finding — this is used as the agent monitoring event summary. Then return: key findings, open questions that require a decision, and parity entries that will need updating.
+Write both files. Begin your response with **one sentence** (≤200 chars) summarizing the key finding — this is used as the agent monitoring event summary. Then return:
+- `docs_to_update`: array of the exact docs/ paths from the "Docs Requiring Update" section above (empty array only if none apply)
+- `findings_summary`: key findings, open questions that require a decision, and parity entries that will need updating

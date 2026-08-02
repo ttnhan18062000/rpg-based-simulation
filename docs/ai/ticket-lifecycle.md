@@ -164,6 +164,14 @@ been set by a human or by `create-tickets.js` without going through this check.
 - `staging_artifacts/{id}/investigation.md` — current combat classification behavior at `file:line`, relation projection service interface, legacy fallback path, anti-drift hazards ("do not rewrite full combat system", "do not remove legacy enum fallback")
 - `staging_artifacts/{id}/test_plan.md` — regression surface (existing arena/combat tests that must pass), new tests required (5 per the repair plan), scoped pytest commands
 
+**Structured return (added by `TCK-20260802-DOC-UPDATE-DISCIPLINE`):** the Investigate `agent()`
+call now has a schema requiring `docs_to_update` (array of the exact `docs/` paths this ticket must
+change if implemented as scoped — empty array only if none apply, never a lazy default) and
+`findings_summary` (the prose findings/open-questions/parity-IDs content the free-text return used
+to carry). `investigation.md`'s own template gained a matching `## Docs Requiring Update` section
+between `Mechanics/Engine Constraints` and `Parity Ledger Overlap`. `docs_to_update` feeds the
+Implement phase's doc-relevance advisory check below — it is not itself a gate.
+
 ---
 
 ### Plan
@@ -247,16 +255,36 @@ Step 5 — Legacy regression
 }
 ```
 
+**`behavior_changed` definition (broadened by `TCK-20260802-DOC-UPDATE-DISCIPLINE`):** the
+`implementer` agent must report `true` for *any* new logic, new feature, or new setting/config
+value this ticket introduces — not only modifications to behavior that already existed. A
+brand-new feature has no prior behavior to diverge from, but it still requires doc updates and
+parity-ledger entries the same as a modification would; this closes an ambiguity where an
+implementer could otherwise reasonably report `false` on the reasoning that nothing *existing*
+changed.
+
 **Gate (doc staleness):** Immediately after the agent returns, the orchestrator runs
 `tools/gate_checks/doc_staleness_check.py` (via `bash()` — deterministic, no agent call) against
 `files_changed`/`behavior_changed`. If `behavior_changed` is true, at least one changed path is
-under `src/` or is a `.claude/workflows/*.js` file, and zero changed paths are under `docs/`, the
-workflow returns `DOC_STALENESS_BLOCKED` (`TCK-20260720-GATE-CHECK-WIRING-DECISIONS`, wired in
-after shipping unwired from `TCK-20260711-DOC-STALENESS-GATE-CHECK`) — the same "catch it here
-instead of 6+ phases later at Verify" reasoning already applied to Scope's tag-registry gate
-above; the 2026-W28 retro found 36% of `done-checker`'s first-attempt Verify failures traced to
-exactly this gap. The user adds a `docs/` update reflecting the behavior change, then re-runs with
-`ticket_id`.
+under `src/`, under `config/` (added by `TCK-20260802-DOC-UPDATE-DISCIPLINE` — behavior-driving
+settings like `config/simulation_quality/*.yaml` scoring weights/thresholds live outside `src/`
+but change simulation behavior the same as code would), or is a `.claude/workflows/*.js` file, and
+zero changed paths are under `docs/`, the workflow returns `DOC_STALENESS_BLOCKED`
+(`TCK-20260720-GATE-CHECK-WIRING-DECISIONS`, wired in after shipping unwired from
+`TCK-20260711-DOC-STALENESS-GATE-CHECK`) — the same "catch it here instead of 6+ phases later at
+Verify" reasoning already applied to Scope's tag-registry gate above; the 2026-W28 retro found 36%
+of `done-checker`'s first-attempt Verify failures traced to exactly this gap. The user adds a
+`docs/` update reflecting the behavior change, then re-runs with `ticket_id`.
+
+**Advisory doc-relevance check (added by `TCK-20260802-DOC-UPDATE-DISCIPLINE`):** the blanket gate
+above only confirms *some* `docs/` path was touched, not that it's the *right* one. When the
+blanket check already `PASS`es, the same script call also checks Investigate's `docs_to_update`
+list against `files_changed`; if a specifically-flagged doc wasn't touched, it appends a separate
+`ADVISORY` entry (never `FAIL`) that gets folded into the existing Implement-phase event summary
+and logged as a non-blocking warning. This is deliberately advisory-only for now — promoting it to
+a hard block is deferred until there's evidence of how often Investigate over-lists docs that turn
+out not to need touching once Review/Implement refine the plan (same reasoning that kept the
+blanket check itself unwired for one ticket cycle before being promoted to blocking).
 
 ---
 
@@ -443,6 +471,17 @@ pre-check, `tools/gate_checks/mechanics_auditor_static.py::verify_entry_test_pat
    (or unparseable script output) returns `FINALIZE_INCOMPLETE` with `failing_items` instead of
    falling through to `DONE`.
 7. **Write agent monitoring records** (`writeMonitoring`): appends one run entry to `agent-monitoring/runs.jsonl` and one event per phase to `agent-monitoring/events.jsonl` — status is `DONE` if the self-check passed, `FINALIZE_INCOMPLETE` otherwise. This step is non-fatal — if the write fails, it logs a WARNING and the workflow still returns its computed status.
+8. **Refresh the knowledge-search index** (added by `TCK-20260802-DOC-UPDATE-DISCIPLINE`, runs
+   right after the self-check passes and before the `DONE` return): orchestrator-run `bash()`
+   checks `git status --porcelain -- docs/`; if this run touched any `docs/` path, it runs `make
+   knowledge-index-update`. Closes a gap where CLAUDE.md's After Work rule and
+   `docs/guidelines/agent_working_environment.md`'s Index Lifecycle Rules both required this but
+   nothing in the workflow ever ran it — `search_docs`'s index silently went stale after every
+   ticket touching `docs/`. Fail-open, same as monitoring-write and tag-drift below: a stale index
+   degrades future search quality but must never block ticket close. Deliberately orchestrator-run,
+   not inside the Finalize agent's own prompt — see the post-Test cleanup checkpoint's Reliability
+   caveat above for why a bare, non-`phase()`-anchored agent-prompt bash instruction is not trusted
+   for this kind of step.
 
 ---
 
