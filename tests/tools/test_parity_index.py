@@ -29,6 +29,13 @@ if str(_REPO_ROOT) not in sys.path:
 
 _MODULE_PATH = _REPO_ROOT / "tools" / "parity_index.py"
 
+_TOOLS_DIR = _REPO_ROOT / "tools"
+if str(_TOOLS_DIR) not in sys.path:
+    sys.path.insert(0, str(_TOOLS_DIR))
+
+from parity_ledger_scan import find_p0_intersection  # noqa: E402
+from gate_checks.parity_updater_static import derive_mapping  # noqa: E402
+
 
 def _load_module() -> types.ModuleType:
     spec = importlib.util.spec_from_file_location("parity_index", _MODULE_PATH)
@@ -469,6 +476,34 @@ class TestDeterminism:
         del second_gen["built_at"]
         assert first_gen == second_gen
 
+    def test_impact_query_is_reproducible_on_unchanged_index(self, tmp_path):
+        paths = _make_corpus(
+            tmp_path,
+            {
+                "combat_movement.yaml": [
+                    _entry(
+                        "COMB-901",
+                        v2_evidence="`src/engine/legality.py`",
+                        test_path="tests/parity/test_legality.py",
+                    )
+                ]
+            },
+        )
+        report = _pi.build(ledger_dir=paths["ledger_dir"], db_path=paths["db_path"])
+        assert report["status"] == "ok"
+
+        impact_1 = _pi.impact(changed_path="src/engine/legality.py", db_path=paths["db_path"])
+        impact_2 = _pi.impact(changed_path="src/engine/legality.py", db_path=paths["db_path"])
+        assert _pi.serialize_manifest(impact_1) == _pi.serialize_manifest(impact_2)
+
+        entry_1 = _pi.entry("COMB-901", db_path=paths["db_path"])
+        entry_2 = _pi.entry("COMB-901", db_path=paths["db_path"])
+        assert _pi.serialize_manifest(entry_1) == _pi.serialize_manifest(entry_2)
+
+        health_1 = _pi.health(db_path=paths["db_path"])
+        health_2 = _pi.health(db_path=paths["db_path"])
+        assert _pi.serialize_manifest(health_1) == _pi.serialize_manifest(health_2)
+
 
 # ---------------------------------------------------------------------------
 # Group 8 — architecture guards (anti-drift)
@@ -477,12 +512,15 @@ class TestDeterminism:
 
 class TestArchitectureGuards:
 
-    def test_importer_does_not_implement_impact_or_entry_or_health_cli(self):
+    def test_impact_entry_health_still_forbid_search_cli(self):
+        """Narrowed by TCK-20260731-PARITY-IMPACT-PROOF: Phase 1's guard originally forbade
+        impact/entry/health entirely. Phase 2 (this ticket) is the named, anticipated
+        successor authorized to add exactly those three subcommands (see Phase 1's own
+        plan.md Scope Guards forward reference). Only `search` (FTS-backed) remains out of
+        scope and is still asserted absent here.
+        """
         source = _MODULE_PATH.read_text(encoding="utf-8")
-        assert 'add_parser("impact"' not in source
         assert 'add_parser("search"' not in source
-        assert 'add_parser("entry"' not in source
-        assert 'add_parser("health"' not in source
 
         result = subprocess.run(
             [sys.executable, str(_MODULE_PATH), "--help"],
@@ -492,8 +530,7 @@ class TestArchitectureGuards:
         )
         combined = result.stdout + result.stderr
         assert "build" in combined
-        assert "impact" not in combined
-        assert "entry" not in combined
+        assert "search" not in combined
 
     def test_no_mutation_cli_or_write_path_to_docs_parity_ledger(self):
         source = _MODULE_PATH.read_text(encoding="utf-8")
@@ -507,3 +544,399 @@ class TestArchitectureGuards:
         )
         for call in forbidden_write_calls:
             assert "docs/parity_ledger" not in call
+
+    def test_health_subcommand_never_writes_to_docs_parity_ledger(self, tmp_path):
+        paths = _make_corpus(
+            tmp_path,
+            {
+                "combat_movement.yaml": [
+                    _entry("COMB-401", status="verified", v2_evidence=None, test_path=None)
+                ],
+                "town_resource.yaml": [
+                    _entry(
+                        "TOWN-401",
+                        status="verified",
+                        v2_evidence="unstructured text with no recognizable path",
+                        test_path=None,
+                    )
+                ],
+            },
+        )
+        report = _pi.build(ledger_dir=paths["ledger_dir"], db_path=paths["db_path"])
+        assert report["status"] == "ok"
+
+        before = {
+            name: hashlib.sha256(path.read_bytes()).hexdigest()
+            for name, path in paths["shard_paths"].items()
+        }
+
+        result = _pi.health(db_path=paths["db_path"])
+        finding_types = {f["finding_type"] for f in result["findings"]}
+        assert "missing_test_path" in finding_types
+        assert "legacy_unstructured" in finding_types
+
+        after = {
+            name: hashlib.sha256(path.read_bytes()).hexdigest()
+            for name, path in paths["shard_paths"].items()
+        }
+        assert before == after
+
+
+# ---------------------------------------------------------------------------
+# Group 9 — entry query (TCK-20260731-PARITY-IMPACT-PROOF)
+# ---------------------------------------------------------------------------
+
+
+class TestEntryQuery:
+
+    def test_entry_returns_full_normalized_record_for_known_id(self, tmp_path):
+        paths = _make_corpus(
+            tmp_path,
+            {
+                "combat_movement.yaml": [
+                    _entry(
+                        "COMB-101",
+                        v2_evidence="`src/engine/legality.py`",
+                        test_path="tests/parity/test_legality.py",
+                    )
+                ]
+            },
+        )
+        report = _pi.build(ledger_dir=paths["ledger_dir"], db_path=paths["db_path"])
+        assert report["status"] == "ok"
+
+        result = _pi.entry("COMB-101", db_path=paths["db_path"])
+
+        assert result["found"] is True
+        assert result["entry_id"] == "COMB-101"
+        assert result["record"]["id"] == "COMB-101"
+        assert result["record"]["status"] == "verified"
+        assert result["record"]["priority"] == "P1"
+        assert any(ref["path"] == "src/engine/legality.py" for ref in result["code_refs"])
+        assert any(ref["path"] == "tests/parity/test_legality.py" for ref in result["test_refs"])
+        assert result["constraint_refs"] == []
+        assert result["ticket_refs"] == []
+        assert isinstance(result["health_findings"], list)
+        for ref in result["test_refs"]:
+            assert ref["selection_reason"] == "test_refs declared via test_path field"
+        for ref in result["code_refs"]:
+            assert ref["selection_reason"] == "code_refs match via v2_evidence field"
+
+    def test_entry_returns_explicit_unknown_for_missing_id(self, tmp_path):
+        paths = _make_corpus(tmp_path, {"combat_movement.yaml": [_entry("COMB-102")]})
+        report = _pi.build(ledger_dir=paths["ledger_dir"], db_path=paths["db_path"])
+        assert report["status"] == "ok"
+
+        result = _pi.entry("NONEXISTENT-999", db_path=paths["db_path"])
+
+        assert result == {"entry_id": "NONEXISTENT-999", "found": False}
+
+
+# ---------------------------------------------------------------------------
+# Group 10 — impact query (TCK-20260731-PARITY-IMPACT-PROOF)
+# ---------------------------------------------------------------------------
+
+
+class TestImpactQuery:
+
+    def test_impact_returns_sorted_deterministic_schema_for_known_changed_path(self, tmp_path):
+        paths = _make_corpus(
+            tmp_path,
+            {
+                "combat_movement.yaml": [
+                    _entry(
+                        "COMB-201",
+                        priority="P1",
+                        status="verified",
+                        v2_evidence="`src/engine/legality.py`",
+                    )
+                ],
+                "strategic_cognition.yaml": [
+                    _entry(
+                        "STRA-201",
+                        priority="P0",
+                        status="divergent",
+                        v2_evidence="`src/engine/legality.py`",
+                    )
+                ],
+            },
+        )
+        report = _pi.build(ledger_dir=paths["ledger_dir"], db_path=paths["db_path"])
+        assert report["status"] == "ok"
+
+        result = _pi.impact(changed_path="src/engine/legality.py", db_path=paths["db_path"])
+
+        assert result["status"] == "ok"
+        # P0/divergent must sort ahead of P1/verified.
+        assert [r["entry_id"] for r in result["results"]] == ["STRA-201", "COMB-201"]
+        required_keys = {"entry_id", "priority", "status", "table", "path", "source_field", "selection_reason"}
+        for row in result["results"]:
+            assert required_keys <= set(row.keys())
+
+        result_again = _pi.impact(changed_path="src/engine/legality.py", db_path=paths["db_path"])
+        assert _pi.serialize_manifest(result) == _pi.serialize_manifest(result_again)
+
+    def test_impact_returns_explicit_no_match_for_unknown_path(self, tmp_path):
+        paths = _make_corpus(
+            tmp_path,
+            {
+                "combat_movement.yaml": [
+                    _entry("COMB-202", v2_evidence="`src/engine/legality.py`")
+                ]
+            },
+        )
+        report = _pi.build(ledger_dir=paths["ledger_dir"], db_path=paths["db_path"])
+        assert report["status"] == "ok"
+
+        no_match_result = _pi.impact(changed_path="src/nonexistent/path.py", db_path=paths["db_path"])
+        assert no_match_result == {"status": "no_match", "results": []}
+
+        no_filter_result = _pi.impact(db_path=paths["db_path"])
+        assert no_filter_result == {"status": "no_filter_provided", "results": []}
+
+    def test_impact_never_claims_symbol_level_match(self, tmp_path):
+        paths = _make_corpus(
+            tmp_path,
+            {
+                "combat_movement.yaml": [
+                    _entry("COMB-203", v2_evidence="`src/engine/legality.py`")
+                ]
+            },
+        )
+        report = _pi.build(ledger_dir=paths["ledger_dir"], db_path=paths["db_path"])
+        assert report["status"] == "ok"
+
+        result = _pi.impact(
+            changed_path="src/engine/legality.py",
+            symbol="LegalityChecker.check",
+            db_path=paths["db_path"],
+        )
+
+        assert result["status"] == "ok"
+        assert "warnings" in result
+        assert any("symbol" in warning.lower() for warning in result["warnings"])
+        for row in result["results"]:
+            assert "symbol" not in row
+
+        result_without_symbol = _pi.impact(
+            changed_path="src/engine/legality.py", db_path=paths["db_path"]
+        )
+        assert "warnings" not in result_without_symbol
+
+
+# ---------------------------------------------------------------------------
+# Group 11 — health query (TCK-20260731-PARITY-IMPACT-PROOF)
+# ---------------------------------------------------------------------------
+
+
+class TestHealthQuery:
+
+    def test_health_output_is_ordered_and_machine_readable(self, tmp_path):
+        paths = _make_corpus(
+            tmp_path,
+            {
+                "combat_movement.yaml": [
+                    _entry("COMB-301", status="verified", v2_evidence=None, test_path=None)
+                ],
+                "town_resource.yaml": [
+                    _entry(
+                        "TOWN-301",
+                        status="verified",
+                        v2_evidence="unstructured text with no recognizable path",
+                        test_path=None,
+                    )
+                ],
+            },
+        )
+        report = _pi.build(ledger_dir=paths["ledger_dir"], db_path=paths["db_path"])
+        assert report["status"] == "ok"
+
+        result = _pi.health(db_path=paths["db_path"])
+
+        shards_in_order = [f["shard"] for f in result["findings"]]
+        assert shards_in_order == sorted(shards_in_order)
+        assert set(result["summary"].keys()) == {
+            "schema_version", "built_at", "shard_count", "entry_count", "fts5_available",
+        }
+
+        serialized = _pi.serialize_manifest(result)
+        assert serialized.endswith("\n")
+        assert json.loads(serialized) == result
+
+        result_again = _pi.health(db_path=paths["db_path"])
+        assert _pi.serialize_manifest(result) == _pi.serialize_manifest(result_again)
+
+
+# ---------------------------------------------------------------------------
+# Group 12 — equivalence fixtures against legacy comparison targets
+# (TCK-20260731-PARITY-IMPACT-PROOF)
+# ---------------------------------------------------------------------------
+
+
+class TestEquivalenceFixtures:
+
+    def test_equivalence_p0_substring_vs_all_priority_documented(self, tmp_path):
+        paths = _make_corpus(
+            tmp_path,
+            {
+                "combat_movement.yaml": [
+                    _entry(
+                        "COMB-501",
+                        priority="P0",
+                        v2_evidence="`src/engine/legality.py`",
+                        test_path="tests/parity/test_legality.py",
+                    ),
+                    _entry(
+                        "COMB-502",
+                        priority="P1",
+                        v2_evidence="`src/engine/legality.py`",
+                        test_path="tests/parity/test_legality2.py",
+                    ),
+                ],
+            },
+        )
+        report = _pi.build(ledger_dir=paths["ledger_dir"], db_path=paths["db_path"])
+        assert report["status"] == "ok"
+
+        # Legacy behavior: find_p0_intersection is P0-only, v2_evidence-only, substring.
+        legacy_hits = find_p0_intersection(
+            ["src/engine/legality.py"], ledger_dir=str(paths["ledger_dir"])
+        )
+        legacy_ids = {hit[1] for hit in legacy_hits}
+        assert legacy_ids == {"COMB-501"}
+
+        # New behavior: impact is all-priority by design -- an intentional, documented
+        # difference from find_p0_intersection's P0-only scope, not an accidental omission.
+        impact_result = _pi.impact(changed_path="src/engine/legality.py", db_path=paths["db_path"])
+        impact_ids = {r["entry_id"] for r in impact_result["results"]}
+        assert impact_ids == {"COMB-501", "COMB-502"}
+
+    def test_equivalence_any_of_multi_shard_semantics_matches_legacy(self, tmp_path):
+        paths = _make_corpus(
+            tmp_path,
+            {
+                "combat_movement.yaml": [
+                    _entry(
+                        "CM-601",
+                        v2_evidence="src/engine/apply.py",
+                        test_path="tests/unit/test_apply.py",
+                    )
+                ],
+                "strategic_cognition.yaml": [
+                    _entry(
+                        "SC-601",
+                        v2_evidence="src/engine/apply.py",
+                        test_path="tests/unit/test_apply2.py",
+                    )
+                ],
+            },
+        )
+        report = _pi.build(ledger_dir=paths["ledger_dir"], db_path=paths["db_path"])
+        assert report["status"] == "ok"
+
+        legacy_mapping = derive_mapping(paths["ledger_dir"])
+        assert legacy_mapping["src/engine/apply.py"] == {
+            "combat_movement.yaml", "strategic_cognition.yaml",
+        }
+
+        impact_result = _pi.impact(changed_path="src/engine/apply.py", db_path=paths["db_path"])
+        impact_ids = {r["entry_id"] for r in impact_result["results"]}
+        assert impact_ids == {"CM-601", "SC-601"}
+
+    def test_equivalence_malformed_input_treatment_documented_as_divergence(self, tmp_path):
+        paths = _make_corpus(
+            tmp_path,
+            {
+                "town_resource.yaml": [
+                    _entry(
+                        "TR-701",
+                        v2_evidence="src/town/harvest.py",
+                        test_path="tests/unit/test_harvest.py",
+                    )
+                ],
+            },
+        )
+        (paths["ledger_dir"] / "combat_movement.yaml").write_text(
+            ": : : not valid yaml : : :\n\tbad indent"
+        )
+
+        # Legacy divergence: derive_mapping silently skips the malformed shard and keeps
+        # going, returning a mapping built only from the valid shard.
+        legacy_mapping = derive_mapping(paths["ledger_dir"])
+        assert legacy_mapping["src/town/harvest.py"] == {"town_resource.yaml"}
+
+        # New importer divergence: the same malformed shard aborts the whole build. This is
+        # a labeled intentional difference (Phase 1's deliberate strengthening over the
+        # legacy silent-skip) -- it must not be "fixed" to match derive_mapping's tolerance.
+        report = _pi.build(ledger_dir=paths["ledger_dir"], db_path=paths["db_path"])
+        assert report["status"] == "failed"
+        assert report["failure_class"] == "ShardParseError"
+        assert not paths["db_path"].exists()
+
+    def test_faction_evidence_case_present_in_new_index_despite_legacy_exclusion(self, tmp_path):
+        paths = _make_corpus(
+            tmp_path,
+            {
+                "faction.yaml": [
+                    _entry(
+                        "FAC-801",
+                        priority="P1",
+                        v2_evidence="`src/factions/diplomacy.py`",
+                        test_path="tests/unit/test_diplomacy.py",
+                    )
+                ],
+            },
+        )
+
+        # Legacy exclusion: both comparison targets never see faction.yaml at all.
+        legacy_hits = find_p0_intersection(
+            ["src/factions/diplomacy.py"], ledger_dir=str(paths["ledger_dir"])
+        )
+        assert legacy_hits == []
+        legacy_mapping = derive_mapping(paths["ledger_dir"])
+        assert "src/factions/diplomacy.py" not in legacy_mapping
+
+        # New index: faction.yaml is included like any other shard.
+        report = _pi.build(ledger_dir=paths["ledger_dir"], db_path=paths["db_path"])
+        assert report["status"] == "ok"
+
+        entry_result = _pi.entry("FAC-801", db_path=paths["db_path"])
+        assert entry_result["found"] is True
+
+        impact_result = _pi.impact(
+            changed_path="src/factions/diplomacy.py", db_path=paths["db_path"]
+        )
+        assert impact_result["status"] == "ok"
+        assert any(r["entry_id"] == "FAC-801" for r in impact_result["results"])
+
+
+# ---------------------------------------------------------------------------
+# Group 13 — all-nine-shards coverage via entry/impact (TCK-20260731-PARITY-IMPACT-PROOF)
+# ---------------------------------------------------------------------------
+
+
+class TestAllShardsCoverage:
+
+    def test_impact_and_entry_cover_all_nine_shards_including_faction(self, tmp_path):
+        shards = {
+            filename: [_entry(f"{filename[:4].upper()}-001")]
+            for filename in _NINE_SHARD_FILENAMES
+        }
+        shards["faction.yaml"] = [
+            _entry("FACT-001", v2_evidence="`src/factions/diplomacy.py`")
+        ]
+        paths = _make_corpus(tmp_path, shards)
+
+        report = _pi.build(ledger_dir=paths["ledger_dir"], db_path=paths["db_path"])
+        assert report["status"] == "ok"
+
+        for filename in _NINE_SHARD_FILENAMES:
+            entry_id = f"{filename[:4].upper()}-001"
+            result = _pi.entry(entry_id, db_path=paths["db_path"])
+            assert result["found"] is True, f"entry {entry_id} from {filename} not found"
+
+        impact_result = _pi.impact(
+            changed_path="src/factions/diplomacy.py", db_path=paths["db_path"]
+        )
+        assert impact_result["status"] == "ok"
+        assert any(r["entry_id"] == "FACT-001" for r in impact_result["results"])

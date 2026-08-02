@@ -31,8 +31,9 @@ path-level string matching only, per v1_decisions_phase0.md's "Path-only links"
 decision -- no Graphify symbol resolution. A field with no confident match
 produces no row anywhere; nothing is fabricated.
 
-impact_candidates (the Phase-2 impact query view) is intentionally not built
-here -- see TCK-20260731-PARITY-IMPACT-PROOF.
+`impact`, `entry`, and `health` (the Phase-2 read path) were added by
+TCK-20260731-PARITY-IMPACT-PROOF on top of this module's Phase-1 schema; `search`
+(FTS-backed) remains out of scope and unimplemented.
 """
 
 import argparse
@@ -73,6 +74,29 @@ _CONSTRAINT_DOC_PREFIXES = (
 )
 
 _REF_TABLES = ("code_refs", "test_refs", "constraint_refs", "ticket_refs")
+
+_STATUS_SEVERITY = {"divergent": 0, "missing": 1, "unsupported": 2, "verified": 3, "legacy_verified": 4}
+_PRIORITY_ORDER = {"P0": 0, "P1": 1, "P2": 2}
+_IMPACT_PATH_TABLES = ("code_refs", "constraint_refs", "ticket_refs")
+
+
+class IndexNotBuiltError(Exception):
+    pass
+
+
+def _connect_readonly(db_path: Path) -> sqlite3.Connection:
+    if not db_path.exists():
+        raise IndexNotBuiltError(
+            f"parity index not found at {db_path} -- run `python3 tools/parity_index.py build` first"
+        )
+    return sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
+
+
+def _selection_reason(table: str, source_field: str, relation) -> str:
+    if relation == "declared":
+        return f"{table} declared via {source_field} field"
+    return f"{table} match via {source_field} field"
+
 
 _EXPECTED_COLUMNS = {
     "ledger_generation": {
@@ -458,6 +482,167 @@ def build(
         }
 
 
+def entry(entry_id: str, db_path=None) -> dict:
+    resolved_path = DEFAULT_DB_PATH if db_path is None else Path(db_path)
+    conn = _connect_readonly(resolved_path)
+    try:
+        cursor = conn.execute("SELECT * FROM entries WHERE id = ?", (entry_id,))
+        columns = [description[0] for description in cursor.description]
+        row = cursor.fetchone()
+        if row is None:
+            return {"entry_id": entry_id, "found": False}
+        record = dict(zip(columns, row))
+
+        refs = {}
+        for table in _REF_TABLES:
+            ref_rows = conn.execute(
+                f"SELECT path, source_field, relation FROM {table} WHERE entry_id = ? "
+                "ORDER BY path, source_field",
+                (entry_id,),
+            ).fetchall()
+            refs[table] = [
+                {
+                    "path": path,
+                    "source_field": source_field,
+                    "selection_reason": _selection_reason(table, source_field, relation),
+                }
+                for path, source_field, relation in ref_rows
+            ]
+
+        health_rows = conn.execute(
+            "SELECT finding_type, detail FROM entry_health WHERE entry_id = ? ORDER BY finding_type",
+            (entry_id,),
+        ).fetchall()
+        health_findings = [
+            {"finding_type": finding_type, "detail": detail} for finding_type, detail in health_rows
+        ]
+
+        return {
+            "entry_id": entry_id,
+            "found": True,
+            "record": record,
+            "code_refs": refs["code_refs"],
+            "test_refs": refs["test_refs"],
+            "constraint_refs": refs["constraint_refs"],
+            "ticket_refs": refs["ticket_refs"],
+            "health_findings": health_findings,
+        }
+    finally:
+        conn.close()
+
+
+def impact(changed_path=None, test_path=None, symbol=None, db_path=None) -> dict:
+    if changed_path is None and test_path is None:
+        return {"status": "no_filter_provided", "results": []}
+
+    resolved_path = DEFAULT_DB_PATH if db_path is None else Path(db_path)
+    conn = _connect_readonly(resolved_path)
+    try:
+        matches = []
+        if changed_path is not None:
+            for table in _IMPACT_PATH_TABLES:
+                rows = conn.execute(
+                    f"SELECT entry_id, path, source_field, relation FROM {table} WHERE path = ?",
+                    (changed_path,),
+                ).fetchall()
+                for entry_id, path, source_field, relation in rows:
+                    matches.append((table, entry_id, path, source_field, relation))
+        if test_path is not None:
+            rows = conn.execute(
+                "SELECT entry_id, path, source_field, relation FROM test_refs WHERE path = ?",
+                (test_path,),
+            ).fetchall()
+            for entry_id, path, source_field, relation in rows:
+                matches.append(("test_refs", entry_id, path, source_field, relation))
+
+        results = []
+        for table, entry_id, path, source_field, relation in matches:
+            priority, status = conn.execute(
+                "SELECT priority, status FROM entries WHERE id = ?", (entry_id,)
+            ).fetchone()
+            results.append(
+                {
+                    "entry_id": entry_id,
+                    "priority": priority,
+                    "status": status,
+                    "table": table,
+                    "path": path,
+                    "source_field": source_field,
+                    "selection_reason": _selection_reason(table, source_field, relation),
+                }
+            )
+
+        results.sort(
+            key=lambda r: (
+                _PRIORITY_ORDER.get(r["priority"], 99),
+                _STATUS_SEVERITY.get(r["status"], 99),
+                r["entry_id"],
+            )
+        )
+
+        response = {"status": "ok", "results": results} if results else {"status": "no_match", "results": []}
+
+        if symbol is not None:
+            response["warnings"] = [
+                "--symbol was accepted but not used for filtering; v1 has no symbol-level reference "
+                "data (see v1_decisions_phase0.md \"Path-only links\")"
+            ]
+
+        return response
+    finally:
+        conn.close()
+
+
+def health(subsystem=None, priority=None, db_path=None) -> dict:
+    resolved_path = DEFAULT_DB_PATH if db_path is None else Path(db_path)
+    conn = _connect_readonly(resolved_path)
+    try:
+        query = (
+            "SELECT entries.id, entries.shard, entries.subsystem, entries.priority, "
+            "entry_health.finding_type, entry_health.detail "
+            "FROM entry_health JOIN entries ON entries.id = entry_health.entry_id"
+        )
+        conditions = []
+        params = []
+        if subsystem is not None:
+            conditions.append("entries.subsystem = ?")
+            params.append(subsystem)
+        if priority is not None:
+            conditions.append("entries.priority = ?")
+            params.append(priority)
+        if conditions:
+            query += " WHERE " + " AND ".join(conditions)
+        query += " ORDER BY entries.shard, entries.id"
+
+        rows = conn.execute(query, params).fetchall()
+        findings = [
+            {
+                "entry_id": entry_id,
+                "shard": shard,
+                "subsystem": subsystem_value,
+                "priority": priority_value,
+                "finding_type": finding_type,
+                "detail": detail,
+            }
+            for entry_id, shard, subsystem_value, priority_value, finding_type, detail in rows
+        ]
+
+        summary_row = conn.execute(
+            "SELECT schema_version, built_at, shard_count, entry_count, fts5_available "
+            "FROM ledger_generation"
+        ).fetchone()
+        summary = dict(
+            zip(
+                ("schema_version", "built_at", "shard_count", "entry_count", "fts5_available"),
+                summary_row,
+            )
+        )
+
+        return {"summary": summary, "findings": findings}
+    finally:
+        conn.close()
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="Read-only importer: rebuild the derived SQLite parity-ledger index."
@@ -470,11 +655,52 @@ def main() -> int:
     build_parser.add_argument("--db-path", default=str(DEFAULT_DB_PATH))
     build_parser.add_argument("--force-fts5-unavailable", action="store_true")
 
+    entry_parser = subparsers.add_parser(
+        "entry", help="Look up one entry by ID with its joined references and health findings"
+    )
+    entry_parser.add_argument("entry_id")
+    entry_parser.add_argument("--db-path", default=str(DEFAULT_DB_PATH))
+
+    impact_parser = subparsers.add_parser(
+        "impact", help="Find entries whose evidence cites a changed path"
+    )
+    impact_parser.add_argument("--changed-path", default=None)
+    impact_parser.add_argument("--test", dest="test_path", default=None)
+    impact_parser.add_argument("--symbol", default=None)
+    impact_parser.add_argument("--db-path", default=str(DEFAULT_DB_PATH))
+
+    health_parser = subparsers.add_parser(
+        "health", help="Report entry_health findings, optionally filtered by subsystem/priority"
+    )
+    health_parser.add_argument("--subsystem", default=None)
+    health_parser.add_argument("--priority", default=None)
+    health_parser.add_argument("--db-path", default=str(DEFAULT_DB_PATH))
+
     args = parser.parse_args()
 
-    report = build(db_path=args.db_path, force_fts5_unavailable=args.force_fts5_unavailable)
-    print(serialize_manifest(report), end="")
-    return 0 if report["status"] == "ok" else 1
+    if args.command == "build":
+        report = build(db_path=args.db_path, force_fts5_unavailable=args.force_fts5_unavailable)
+        print(serialize_manifest(report), end="")
+        return 0 if report["status"] == "ok" else 1
+
+    try:
+        if args.command == "entry":
+            result = entry(args.entry_id, db_path=args.db_path)
+        elif args.command == "impact":
+            result = impact(
+                changed_path=args.changed_path,
+                test_path=args.test_path,
+                symbol=args.symbol,
+                db_path=args.db_path,
+            )
+        elif args.command == "health":
+            result = health(subsystem=args.subsystem, priority=args.priority, db_path=args.db_path)
+    except IndexNotBuiltError as exc:
+        print(serialize_manifest({"status": "error", "detail": str(exc)}), end="")
+        return 1
+
+    print(serialize_manifest(result), end="")
+    return 0
 
 
 if __name__ == "__main__":
