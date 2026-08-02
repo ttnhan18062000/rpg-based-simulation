@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: observability
 authority: P1
 audience: agent
 ticket_id: TCK-20260721-MONITORING-WRITER-UNIFICATION
-phase: open
+phase: done
 date: 2026-07-21
 tags: [agent-monitoring, dashboard, observability]
 ---
@@ -15,7 +15,7 @@ tags: [agent-monitoring, dashboard, observability]
 Linux common monitoring writer plus additive reader/query/dashboard support
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard

@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ticket
 authority: P1
 audience: agent
 ticket_id: TCK-20260801-MONITORING-WRITER-STATUS-STALE
-phase: open
+phase: done
 date: 2026-08-01
 tags: [frontmatter, documentation, process-improvement]
 ---
@@ -15,7 +15,7 @@ tags: [frontmatter, documentation, process-improvement]
 Correct stale lifecycle fields on TCK-20260721-MONITORING-WRITER-UNIFICATION
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -59,12 +59,12 @@ ticket (`tickets/done/TCK-20260730-CLAUDE-EXECUTION-IDENTITY.md`), not guessed:
   behavior change; no parity entry applies.
 
 ## Acceptance Criteria
-- [ ] `tickets/done/TCK-20260721-MONITORING-WRITER-UNIFICATION.md` frontmatter reads
+- [x] `tickets/done/TCK-20260721-MONITORING-WRITER-UNIFICATION.md` frontmatter reads
       `status: historical` and `phase: done`.
-- [ ] The same file's body `## Status` section reads `DONE`.
-- [ ] `python3 tools/validate_frontmatter.py tickets/done/TCK-20260721-MONITORING-WRITER-UNIFICATION.md`
+- [x] The same file's body `## Status` section reads `DONE`.
+- [x] `python3 tools/validate_frontmatter.py tickets/done/TCK-20260721-MONITORING-WRITER-UNIFICATION.md`
       passes with no violations.
-- [ ] No unrelated source, ticket, or documentation content changes. The only permitted
+- [x] No unrelated source, ticket, or documentation content changes. The only permitted
       non-target changes are the standard, reviewable `implement-ticket` lifecycle
       outputs for this candidate ticket itself (its own status/artifacts, one
       `working_log.csv` row, append-only monitoring records, and regenerated
@@ -102,13 +102,31 @@ None (hotfix — no staging artifacts required).
   which executor completes it.
 
 ## Implementation Notes
-(pending)
+Released from `TCK-20260730-CODEX-CONTROLLED-PILOT`'s reservation and implemented as an ordinary
+non-live hotfix, per that ticket's own stated fallback ("this ticket remains eligible for ordinary
+non-live implementation ... nothing about its scope depends on which executor completes it") — the
+pilot itself remains BLOCKED/deferred pending separate human authorization, and there was no reason
+to hold this trivial fix hostage to that unresolved decision. User explicitly confirmed the release.
+
+Edited exactly the three declared lifecycle fields on
+`tickets/done/TCK-20260721-MONITORING-WRITER-UNIFICATION.md`:
+`status: active` → `historical`, `phase: open` → `done`, body `## Status\nOPEN` → `DONE`. No other
+line in that file was touched (confirmed via `git diff` showing only these three lines changed).
 
 ## Test Summary
-(pending)
+`python3 tools/validate_frontmatter.py tickets/done/TCK-20260721-MONITORING-WRITER-UNIFICATION.md`
+— OK, no violations. `tools/ticket_field_values.py::check_ticket_field_values` (the module has no
+CLI entry point, invoked directly) — PASS on both `## Tier` (`standard`) and `## Priority` (`P1`),
+both already canonical and untouched by this change.
 
 ## Files Changed
-(pending)
+- `tickets/done/TCK-20260721-MONITORING-WRITER-UNIFICATION.md` — 3 lifecycle field values corrected
+  (frontmatter `status`, frontmatter `phase`, body `## Status`); no other content changed.
 
 ## Completion Summary
-(pending)
+Corrected the three stale lifecycle fields on `TCK-20260721-MONITORING-WRITER-UNIFICATION.md`
+(the only file among ~1096 in `tickets/done/` missing `phase: done`, per the originating
+investigation). Verified via `validate_frontmatter.py` and `ticket_field_values.py` — both pass.
+No other content in the target ticket changed. This candidate ticket was explicitly released from
+its reservation as the Codex controlled-pilot's live-pilot test case (that pilot remains
+BLOCKED/deferred) and completed instead as an ordinary hotfix, per user decision.
