@@ -266,6 +266,10 @@ knowledge-index/
 # Agent-monitoring derived SQLite index (local only — rebuild with: make agent-monitoring-index)
 agent-monitoring-index/
 
+# Parity-ledger derived SQLite index (local only — rebuild with: python3 tools/parity_index.py build)
+# TCK-20260731-PARITY-INDEX-IMPORTER
+parity-index/
+
 # Docusaurus
 website/node_modules/
 website/build/

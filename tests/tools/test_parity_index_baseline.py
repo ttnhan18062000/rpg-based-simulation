@@ -9,6 +9,7 @@ surface.
 
 import hashlib
 import inspect
+import subprocess
 import sys
 from pathlib import Path
 
@@ -189,13 +190,22 @@ def test_no_database_or_gitignore_or_make_target_created():
     for pattern in ("*.db", "*.sqlite", "*.sqlite3"):
         assert list(staging_dir.glob(pattern)) == []
 
-    gitignore_text = (_REPO_ROOT / ".gitignore").read_text()
-    assert "parity-index" not in gitignore_text
-    assert "parity.db" not in gitignore_text
-
-    makefile_text = (_REPO_ROOT / "Makefile").read_text()
-    assert "parity-index" not in makefile_text
-    assert "parity_index" not in makefile_text
+    # This checks TCK-20260731-PARITY-INDEX-BASELINE's OWN commit diff, not the live repo
+    # state. A live-state assertion ("parity-index" not in the current .gitignore/Makefile)
+    # would break by design the moment TCK-20260731-PARITY-INDEX-IMPORTER (Phase 1) ships,
+    # since that ticket's own scope -- per v1_decisions_phase0.md's atomic-lifecycle decision
+    # -- requires adding a `parity-index/` .gitignore entry. This BASELINE (Phase 0) ticket's
+    # real AC #5 ("No DB, workflow/config/context integration, source rewrite, or mutation
+    # command is introduced") is a claim about what THIS ticket's own commit did, so it is
+    # checked against that commit's actual diff -- a fact that stays true forever, unlike a
+    # present-tense read of files later tickets are expected to modify.
+    baseline_commit = "1ec93c0d"
+    changed_paths = subprocess.run(
+        ["git", "diff-tree", "--no-commit-id", "--name-only", "-r", baseline_commit],
+        cwd=_REPO_ROOT, capture_output=True, text=True, check=True,
+    ).stdout.splitlines()
+    assert ".gitignore" not in changed_paths
+    assert "Makefile" not in changed_paths
 
 
 def test_v1_decision_artifact_does_not_authorize_mutation_cli():
