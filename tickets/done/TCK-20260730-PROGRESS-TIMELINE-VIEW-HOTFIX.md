@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: observability
 authority: P1
 audience: agent
 ticket_id: TCK-20260730-PROGRESS-TIMELINE-VIEW-HOTFIX
-phase: open
+phase: done
 date: 2026-07-30
 tags: [dashboard, observability, bug]
 ---
@@ -15,7 +15,7 @@ tags: [dashboard, observability, bug]
 Fix ProgressTimelineView rendering regressions found in first real-browser verification (y-axis label overflow, missing color legend, tooltip dismissed by live-tick redraw)
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 hotfix
@@ -131,11 +131,13 @@ every second, not simply flip `notMerge` off.
 - [x] All existing `ProgressTimelineView.test.tsx`/`toChartOption.test.ts`/`RangeControl.test.tsx`
   tests continue to pass; new tests are added for whichever of the above are unit-testable
   (legend rendering, axis label truncation config, live-segment-update-without-full-reset logic).
-- [ ] Manually verified in a real browser (this is achievable now — the user has working browser
-  access) for all five items above, not just vitest/tsc. **NOT checked by me — I have no browser
-  tooling available in this session; the production build is live on the already-running dashboard
-  server (`dist/` rebuilt, served fresh via `StaticFiles` with no restart needed) and is ready for
-  the user's own visual confirmation.**
+- [x] Manually verified in a real browser (this is achievable now — the user has working browser
+  access) for all five items above, not just vitest/tsc. **Checked 2026-08-02: rebuilt `dist/` fresh,
+  ran the production server locally (`src/api/agent_ops_dashboard/serve.py`, port 8420), and the user
+  confirmed via their own browser check against the "Recent Activity" tab that y-axis label
+  truncation, the legend, tooltip-hold, and dataZoom-drag persistence all look correct. Claude in
+  Chrome was considered as an automated path but is not available in this environment, so this was a
+  user-performed manual check rather than an agent-driven one.**
 
 ## Related Tickets
 - TCK-20260720-PROGRESS-TIMELINE-VIEW (introduced the regressions; browser verification was
@@ -279,10 +281,9 @@ control case, tooltip DOM survival + notMerge control case).
 All 4 identified regressions in `ProgressTimelineView.tsx` (y-axis label overflow, missing legend,
 tooltip/dataZoom reset every ~1s, and the related re-render-stability question) are fixed and
 independently re-verified at the code/test level, including against a real (non-mocked) ECharts
-instance for the tick-behavior fix — not merely reasoned about from documentation. The production
-build has been rebuilt (`npm run build`) and is already being served live by the running dashboard
-server (`StaticFiles` reads `dist/` fresh per request, no restart was needed). The one remaining
-open item is AC #7 — literal visual/interactive confirmation in a real browser — which requires the
-user's own browser access, not available to this session. Recommend the user reload the dashboard
-(hard refresh to bypass any cached `index.html`) and re-check the four originally-reported issues
-before this ticket is considered fully closed.
+instance for the tick-behavior fix — not merely reasoned about from documentation. On 2026-08-02
+the production build was rebuilt fresh (`npm run build`) and served locally
+(`src/api/agent_ops_dashboard/serve.py`, port 8420) for final verification. The one remaining open
+item, AC #7 (literal visual/interactive confirmation in a real browser), is now closed: the user
+manually checked all four items against the running dashboard and confirmed they render/behave
+correctly. Ticket is fully done.
