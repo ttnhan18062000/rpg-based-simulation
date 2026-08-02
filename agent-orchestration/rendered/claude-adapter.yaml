@@ -95,7 +95,7 @@ terminal_statuses:
 - value: DOC_STALENESS_BLOCKED
   kind: literal
   phases:
-  - Architecture-Verify
+  - Implement
 - value: TESTS_FAILED
   kind: literal
   phases:

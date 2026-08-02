@@ -8,12 +8,14 @@
 # Source: exhaustive line-by-line re-read of .claude/workflows/implement-ticket.js as of
 # 2026-07-22 (staging_artifacts/TCK-20260721-CLAUDE-CONFORMANCE-ADAPTER/investigation.md), 13
 # literal `writeMonitoring('STRING')` call sites (12 distinct values — FINALIZE_INCOMPLETE appears
-# at two call sites, :1234 and :1246), 2 verdict-derived call sites (`writeMonitoring(review.verdict)`
-# at :582 and `writeMonitoring(archVerify.verdict)` at :760, shared NEEDS_CHANGES/BLOCKED value
+# at two call sites, :1377 and :1389), 2 verdict-derived call sites (`writeMonitoring(review.verdict)`
+# at :708 and `writeMonitoring(archVerify.verdict)` at :903, shared NEEDS_CHANGES/BLOCKED value
 # space across Review and Architecture-Verify), and 1 bypass call site (SCOPE_AGENT_FAILED, written
-# via a raw bash()-embedded `record_run.py --data` call at :178-183, never passed through
+# via a raw bash()-embedded `record_run.py --data` call at :190-193, never passed through
 # writeMonitoring() at all). Cross-checked against docs/agent-monitoring/schema.md's `final_status`
-# table.
+# table. Line citations re-verified 2026-08-02 (TCK-20260802-TERMSTATUS-DRIFT-FIX) — line numbers in
+# this comment drift whenever implement-ticket.js grows; treat this file's `statuses:` data below as
+# authoritative, this header as best-effort provenance only.
 #
 # `kind` vocabulary:
 #   literal         — single writeMonitoring('STRING') call site (or more than one, for a
@@ -46,7 +48,7 @@ statuses:
     phases: [Review, Architecture-Verify]
   - value: DOC_STALENESS_BLOCKED
     kind: literal
-    phases: [Architecture-Verify]
+    phases: [Implement]
   - value: TESTS_FAILED
     kind: literal
     phases: [Test]
