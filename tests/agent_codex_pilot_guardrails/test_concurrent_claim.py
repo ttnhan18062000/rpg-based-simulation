@@ -46,11 +46,8 @@ def test_concurrent_claim_check_ignores_unrelated_ticket_ids():
     assert_no_concurrent_claim("TCK-EXAMPLE", records)  # must not raise: different ticket_id
 
 
-def test_provider_field_coverage_against_real_corpus_is_currently_zero():
-    # Confirms investigation.md Risk #3's finding: no real agent-monitoring/runs.jsonl record
-    # carries a provider field today (.claude/workflows/implement-ticket.js never constructs
-    # one). This is the documented gap, not a bug to "fix" here — assert_no_concurrent_claim
-    # above is real, tested code that is currently unexercised by real production data. A green
-    # pass on the synthetic tests above must not be mistaken for proof this check works against
-    # live traffic.
-    assert provider_field_coverage(_REAL_AGENT_MONITORING_DIR) == 0
+def test_provider_field_coverage_against_real_corpus_is_populated():
+    # TCK-20260730-CLAUDE-EXECUTION-IDENTITY closed the earlier real-corpus coverage gap.
+    # Keep this as a lightweight integration assertion without depending on an exact run count:
+    # later legitimate identity-bearing executions may append additional records.
+    assert provider_field_coverage(_REAL_AGENT_MONITORING_DIR) >= 1

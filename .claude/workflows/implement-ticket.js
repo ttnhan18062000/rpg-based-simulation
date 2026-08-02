@@ -200,6 +200,21 @@ if (!ticketInfo || !ticketInfo.ticket_id) {
 }
 
 const tid = ticketInfo.ticket_id
+
+// Execution identity (TCK-20260730-CLAUDE-EXECUTION-IDENTITY): generated exactly once, here,
+// after tid is confirmed real by the ticket-scoper agent — never before (the Scope-agent-failed
+// fallback above and the Scope-phase resume-branch's pre-tid sidecar write intentionally stay
+// identity-less, per docs/ai/monitoring_writer_decision.md §2). writeSidecar/writeMonitoring
+// close over executionId/PROVIDER the same way they already close over tid.
+const PROVIDER = 'claude'
+const execIdSuffixRaw = await bash(`python3 -c "
+import secrets, time
+print('EXECID:' + str(int(time.time() * 1000)) + '-' + secrets.token_hex(4))
+" 2>/dev/null`)
+const execIdMarker = (execIdSuffixRaw || '').indexOf('EXECID:')
+const execIdSuffix = execIdMarker !== -1 ? execIdSuffixRaw.slice(execIdMarker + 'EXECID:'.length).trim() : `${Date.now()}-fallback`
+const executionId = `${PROVIDER}-${tid}-${execIdSuffix}`
+
 const tier = tierOverride || ticketInfo.tier || 'standard'
 const startTs = scopeTs || null
 
@@ -241,8 +256,8 @@ const writeSidecar = async (seq, phase, agent) => {
   await bash(
     `python3 -c "
 import json, sys
-open('.claude/current_run', 'w').write(json.dumps({'run_id': sys.argv[1], 'seq': int(sys.argv[2]), 'phase': sys.argv[3], 'agent': sys.argv[4]}))
-" "${tid}" "${seq}" "${phase}" "${agent}" 2>/dev/null || true`
+open('.claude/current_run', 'w').write(json.dumps({'run_id': sys.argv[1], 'seq': int(sys.argv[2]), 'phase': sys.argv[3], 'agent': sys.argv[4], 'execution_id': sys.argv[5], 'provider': sys.argv[6]}))
+" "${tid}" "${seq}" "${phase}" "${agent}" "${executionId}" "${PROVIDER}" 2>/dev/null || true`
   )
 }
 
@@ -338,14 +353,18 @@ Step 1 — get current timestamp (run end time):
 
 Step 2 — build and write events:
   Input events: ${eventsJson}
-  For each event: add "run_id": "${tid}". If "ts" is null or missing, set "ts" to END_TS.
+  For each event: add exactly these four separate keys — "run_id": "${tid}", "execution_id":
+  "${executionId}", "provider": "${PROVIDER}", "ticket_id": "${tid}". Do not omit, duplicate, or
+  collapse any of the four into another; "run_id" keeps its own existing value and must never be
+  overwritten by "execution_id"/"provider"/"ticket_id" or vice versa. If "ts" is null or missing,
+  set "ts" to END_TS.
   Do NOT compute or set "tool_call_count"/"cost_proxy_score" yourself — record_events.py now
   computes both deterministically from agent-monitoring/tools.jsonl ground truth at write time
   and always overrides whatever you pass, so omit both keys entirely from each event object.
   Run: python3 tools/agent-monitoring/record_events.py --data '<final JSON array>'
 
 Step 3 — write run record (replace <END_TS> with the value from Step 1):
-  Run: python3 tools/agent-monitoring/record_run.py --data '{"run_id":"${tid}","start_ts":"${startTsLiteral}","end_ts":"<END_TS>","workflow":"implement-ticket","tier":"${tier}","final_status":"${finalStatus}","agent_count":${eventsCount}}'
+  Run: python3 tools/agent-monitoring/record_run.py --data '{"run_id":"${tid}","execution_id":"${executionId}","provider":"${PROVIDER}","ticket_id":"${tid}","start_ts":"${startTsLiteral}","end_ts":"<END_TS>","workflow":"implement-ticket","tier":"${tier}","final_status":"${finalStatus}","agent_count":${eventsCount}}'
 
 If any command fails, print "WARNING: monitoring write failed: <error>" and continue — do NOT raise.
 Return "monitoring written" or "monitoring write failed: <reason>".`,

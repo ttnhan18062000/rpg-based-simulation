@@ -56,11 +56,14 @@ hooks no real provider workflow currently uses would make the contract falsely i
 speculatively.
 
 **Execution-identity activation.** `tools/agent-monitoring/post_tool_hook.py` and the unified writer
-support `provider`/`execution_id` fields (per `TCK-20260721-MONITORING-WRITER-UNIFICATION`), but
-`.claude/workflows/implement-ticket.js` does not construct either field on any real run — the
-`.claude/current_run` sidecar only ever carries `run_id`/`seq`/`phase`/`agent`. The concurrent-provider
-guard in `tools/agent_codex_pilot_guardrails/ticket_selection.py::assert_no_concurrent_claim` is
-therefore correctly implemented but currently exercised only against synthetic fixtures, never real
-traffic. A narrowly-scoped follow-up ticket should populate `provider="claude"` and a validated
-`execution_id` in the live workflow/sidecar before any concurrent-provider guard is relied on for real
-traffic — not yet filed as of this note.
+support `provider`/`execution_id` fields (per `TCK-20260721-MONITORING-WRITER-UNIFICATION`). As of
+`TCK-20260730-CLAUDE-EXECUTION-IDENTITY`, `.claude/workflows/implement-ticket.js` now constructs
+`provider="claude"` and a validated `execution_id` once per execution (immediately after `tid` is
+confirmed real) and threads both — plus `ticket_id` — into the `.claude/current_run` sidecar
+(`writeSidecar`'s body) and into new `runs.jsonl`/`events.jsonl` records (`writeMonitoring`'s
+prompt). The no-ticket Scope and scope-failure paths remain identity-less by design (identity is
+only synthesized after a ticket is confirmed real). The concurrent-provider guard in
+`tools/agent_codex_pilot_guardrails/ticket_selection.py::assert_no_concurrent_claim` can now be
+exercised against real Claude-attributed traffic in addition to synthetic fixtures; Codex still has
+no active writer, so no real Codex-attributed traffic exists yet — Codex-side activation remains a
+separate, unstarted follow-up.

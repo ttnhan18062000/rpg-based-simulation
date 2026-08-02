@@ -17,6 +17,15 @@ def test_generated_skill_frontmatter_traces_to_contract(tmp_path):
         assert f"name: {skill['id']}" in text
         assert f"description: {skill['description']!r}" in text
 
+
+def test_generated_guidance_renders_validated_continuation_policy(tmp_path):
+    render_codex_guidance(ROOT, tmp_path, allow_outside_contract=True)
+    text = (tmp_path / "AGENTS.md").read_text()
+    assert "## Workflow Continuation" in text
+    assert "current ticket invocation" in text
+    assert "EPIC_SCOPED" in text
+    assert "never pre-write a completion row before the ticket move" in text
+
 def test_generated_skill_body_is_byte_identical_to_claude_source(tmp_path):
     render_codex_guidance(ROOT, tmp_path, allow_outside_contract=True)
     for skill_id in ("brainstorming", "test-driven-development"):

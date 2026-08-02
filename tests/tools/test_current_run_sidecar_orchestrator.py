@@ -38,6 +38,7 @@ if str(_MONITORING_TOOLS_DIR) not in sys.path:
     sys.path.insert(0, str(_MONITORING_TOOLS_DIR))
 
 from record_events import REQUIRED  # noqa: E402
+from record_run import REQUIRED as RUN_REQUIRED  # noqa: E402
 
 _SIDECAR_WRITE_PROMPT_TEXT = (
     "run \\`python3 -c \"import json; open('.claude/current_run','w')"
@@ -354,3 +355,98 @@ def test_all_nine_two_line_site_labels_present():
     source = _read_workflow_source()
     for label in _NINE_TWO_LINE_SITE_LABELS:
         assert f"label: '{label}'" in source, f"missing label site: {label}"
+
+
+# ---------------------------------------------------------------------------
+# 10. TCK-20260730-CLAUDE-EXECUTION-IDENTITY — executionId/PROVIDER generated once,
+#     after tid, before writeSidecar/writeMonitoring are defined; threaded into both
+#     function bodies via closure only (never a widened parameter list or call-site edit).
+# ---------------------------------------------------------------------------
+
+
+def test_execution_id_generated_once_and_reused_across_events():
+    source = _read_workflow_source()
+
+    tid_idx = source.index("const tid = ticketInfo.ticket_id")
+    provider_idx = source.index("const PROVIDER = 'claude'")
+    exec_id_idx = source.index("const executionId = `${PROVIDER}-${tid}-${execIdSuffix}`")
+    write_sidecar_idx = source.index("const writeSidecar = async (seq, phase, agent)")
+    write_monitoring_idx = source.index("const writeMonitoring = async")
+
+    assert tid_idx < provider_idx < exec_id_idx < write_sidecar_idx < write_monitoring_idx
+
+    # Generated exactly once — no re-computation anywhere else in the file.
+    assert source.count("const executionId = ") == 1
+    assert source.count("const PROVIDER = ") == 1
+
+
+def test_writeSidecar_body_includes_execution_id_and_provider_via_closure_not_param():
+    source = _read_workflow_source()
+    helper_match = re.search(
+        r"const writeSidecar = async \(seq, phase, agent\) => \{.*?\n\}\n",
+        source,
+        re.DOTALL,
+    )
+    assert helper_match is not None
+    helper_body = helper_match.group(0)
+
+    # Signature not widened — identity fields threaded via closure only.
+    assert "const writeSidecar = async (seq, phase, agent) => {" in helper_body
+
+    assert "'execution_id': sys.argv[5]" in helper_body
+    assert "'provider': sys.argv[6]" in helper_body
+    # New argv elements appended strictly after "${agent}" — the existing 4-arg substring
+    # (asserted unbroken by test_tid_and_seq_and_phase_and_agent_passed_as_argv_not_json_embedded)
+    # is a prefix of the new 6-arg argv line, never split apart.
+    assert '"${tid}" "${seq}" "${phase}" "${agent}" "${executionId}" "${PROVIDER}"' in helper_body
+
+
+def test_writeMonitoring_prompt_embeds_execution_id_provider_ticket_id_in_events_and_run_record():
+    source = _read_workflow_source()
+
+    monitoring_write_start = source.index("const writeMonitoring = async")
+    monitoring_write_label_idx = source.index("{ label: 'monitoring-write' }", monitoring_write_start)
+    monitoring_prompt_region = source[monitoring_write_start:monitoring_write_label_idx]
+
+    step2_idx = monitoring_prompt_region.index("Step 2 — build and write events")
+    step3_idx = monitoring_prompt_region.index("Step 3 — write run record")
+    step2_region = monitoring_prompt_region[step2_idx:step3_idx]
+    step3_region = monitoring_prompt_region[step3_idx:]
+
+    for field in ('"execution_id"', '"provider"', '"ticket_id"'):
+        assert field in step2_region, f"{field} missing from writeMonitoring Step 2 region"
+        assert field in step3_region, f"{field} missing from writeMonitoring Step 3 region"
+
+    # run_id must never be overwritten by the new fields within the same instruction.
+    assert '"run_id"' in step2_region
+    assert '"run_id":"${tid}"' in step3_region
+
+    # provider is always the literal "claude" — never the legacy "claude-code" token anywhere
+    # in new code this ticket adds.
+    assert '"${PROVIDER}"' in step2_region
+    assert '"${PROVIDER}"' in step3_region
+    assert "claude-code" not in monitoring_prompt_region
+
+
+def test_scope_agent_failed_and_resume_pre_tid_paths_stay_identity_less():
+    # TCK-20260730-CLAUDE-EXECUTION-IDENTITY AC4: the no-ticket Scope and scope-failure paths
+    # never synthesize an execution_id/provider — both run before tid is confirmed real.
+    source = _read_workflow_source()
+
+    fail_fallback_start = source.index("if (!ticketInfo || !ticketInfo.ticket_id) {")
+    fail_fallback_end = source.index("const tid = ticketInfo.ticket_id")
+    fail_fallback_region = source[fail_fallback_start:fail_fallback_end]
+    assert "execution_id" not in fail_fallback_region
+    assert "'provider'" not in fail_fallback_region
+    assert '"provider"' not in fail_fallback_region
+
+    resume_branch_start = source.index("let seqOffset = 0")
+    resume_branch_end = source.index("const TICKET_SCHEMA = {")
+    resume_branch_region = source[resume_branch_start:resume_branch_end]
+    assert "execution_id" not in resume_branch_region
+    assert "'provider'" not in resume_branch_region
+    assert '"provider"' not in resume_branch_region
+
+
+def test_record_run_required_fields_unchanged():
+    assert RUN_REQUIRED == {"run_id", "start_ts", "workflow", "tier", "final_status", "agent_count"}

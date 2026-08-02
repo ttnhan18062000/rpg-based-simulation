@@ -1,0 +1,37 @@
+# Declares, per provider, the distinction between a hook event being available (the provider
+# documents it), normalized (agent-orchestration/hook-events.yaml's shared vocabulary), and
+# enabled (actually wired in a committed project configuration). Recording this policy is not
+# authorization to enable a hook, write monitoring data, invoke paid Codex work, or run a live
+# pilot — every activation_prerequisites entry below is a requirement still to be satisfied by a
+# later ticket, never a completed checkbox.
+hook_surface_policy_version: 1
+providers:
+  claude:
+    enabled_events: [PreToolUse, PostToolUse]
+  codex:
+    available_events: [PreToolUse, PermissionRequest, PostToolUse, PreCompact, PostCompact, UserPromptSubmit, SubagentStop, Stop, SessionStart, SubagentStart]
+    enabled_events: []
+activation_candidates:
+  - provider: codex
+    event: PostToolUse
+    status: candidate
+    writer_functions: [write_line, write_lines]
+activation_prerequisites:
+  - id: human_approval
+    description: Contemporaneous human sign-off recorded before any Codex hook is enabled.
+  - id: scratch_first_verification
+    description: Payload/schema verified in a scratch environment before any committed config change.
+  - id: project_trust_review
+    description: Project-level trust reviewed and recorded independently of hook trust.
+  - id: hook_trust_review
+    description: Hook-level trust reviewed and recorded independently of project trust.
+  - id: failure_timeout_fail_open
+    description: Hook failure or timeout must fail open, never block the run.
+  - id: redacted_output
+    description: Hook output must be redacted before storage or display.
+  - id: out_of_band_diagnostics
+    description: Diagnostics for a live hook must be captured out-of-band from the run's own state.
+  - id: reviewed_config_diff
+    description: The exact config diff enabling the hook must be reviewed before commit.
+  - id: one_action_rollback
+    description: A single action must fully roll back the enabled hook to the pre-activation state.

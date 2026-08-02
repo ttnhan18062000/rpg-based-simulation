@@ -202,3 +202,34 @@ runner or VM), not something this ticket can honestly claim today.
   above).
 - Every named-but-out-of-set platform is explicitly marked rather than silently omitted:
   **Windows — yes, NOT APPROVED / BLOCKED. macOS — yes, NOT APPROVED / BLOCKED.**
+
+---
+
+## 5. Scratch-only Codex pilot executor boundary
+
+Pre-pilot workflow lifecycle records are mandatory but identity-less: they omit
+`provider` (or use `null`) until a separately authorized real pilot.  This
+preserves traceability without falsely representing an actual Codex execution.
+
+`tools/agent_codex_pilot_executor/` provides only a disposable simulation
+boundary.  Its caller supplies a scratch root outside the repository; it
+rejects the repository, real `agent-monitoring/`, and any resolved escape.
+It never reads or changes `.codex/config.toml`, registers a hook, invokes
+Codex, or writes the real corpus.
+
+Within that scratch root, a per-ticket advisory `fcntl.flock(LOCK_EX)` guards
+claim-marker transitions.  Markers are atomically replaced and retained as
+`completed` or `failed`; an `active` marker is never automatically reclaimed.
+The kernel releases a transition lock after process exit, so the protocol has
+no age-based stale-lock deletion race.
+
+The simulation captures existing scratch JSONL lines before append, proves
+their exact prefixes are unchanged afterward, and compares every appended
+suffix to the declared ordered run, event, and tool records.  It then proves
+the existing dashboard reader can see the coherent synthetic lifecycle before
+terminalizing the claim.
+
+This fixture-level `provider="codex"` evidence does **not** authorize a real
+provider-bearing record.  A real pilot still requires its named low-risk
+candidate, human owner and rollback request, and contemporaneous explicit
+human approval under the separate controlled-pilot gate.

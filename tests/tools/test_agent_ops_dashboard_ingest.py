@@ -472,6 +472,35 @@ def test_get_runs_filters_by_provider_and_execution_id(tmp_path):
     assert [r.run_id for r in by_execution_id] == ["TCK-NATIVE-FILTER-TEST"]
 
 
+def test_provider_claude_code_legacy_value_tolerated_not_normalized_as_new_write(tmp_path):
+    # TCK-20260730-CLAUDE-EXECUTION-IDENTITY AC3: the reader tolerates a legacy-shaped
+    # "claude-code" provider value without crashing or silently dropping the row — this is a
+    # synthetic fixture, not a claim that any real historical record carries this value (the
+    # corpus has zero provider-bearing records as of this ticket's investigation). No
+    # normalization/aliasing is performed: the value passes through unchanged, exactly like every
+    # other pass-through field.
+    _init_repo_skeleton(tmp_path)
+    runs_file = tmp_path / "agent-monitoring" / "runs.jsonl"
+    legacy_shaped_row = {
+        "run_id": "TCK-LEGACY-TOKEN-TEST",
+        "start_ts": "2026-07-22T00:00:00Z",
+        "workflow": "implement-ticket",
+        "tier": "standard",
+        "final_status": "DONE",
+        "execution_id": "claude-code-TCK-LEGACY-TOKEN-TEST-1234567890-abcd1234",
+        "provider": "claude-code",
+        "ticket_id": "TCK-LEGACY-TOKEN-TEST",
+    }
+    runs_file.write_text(json.dumps(legacy_shaped_row) + "\n")
+
+    cache = ingest.DashboardCache(repo_root=tmp_path)
+    runs = cache.get_runs(limit=100)
+    assert len(runs) == 1
+    summary = runs[0]
+    assert summary.provider == "claude-code"  # tolerant pass-through, no normalization to "claude"
+    assert summary.identity_provenance == "native"  # execution_id present, regardless of provider value
+
+
 # ---------------------------------------------------------------------------
 # TCK-20260716-AGENTOPS-TICKETS-VIEW — get_tickets AND-across-dimensions,
 # OR-within-tag filter semantics (closes a coverage gap left by this file's

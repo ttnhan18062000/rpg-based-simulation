@@ -20,6 +20,21 @@ The completed provider-agnostic initiative delivered shared semantics, safe
 Codex guidance, direct-experiment evidence, replay proof, and pilot guardrails.
 It intentionally did not activate Codex as a production workflow provider.
 
+## 2026-08-02 disposition — temporary activation deferral
+
+The provider-agnostic foundation and the complete non-live controlled-pilot capability chain are
+now finished and independently reviewed: harness, live transport, orchestration/config rollback,
+just-in-time entrypoint, and the inert PostToolUse hook command. The latter remains only a
+reviewable capability: `.codex/config.toml` is still hook-free, no live Codex run has occurred,
+and no `provider="codex"` monitoring record exists in the project corpus.
+
+Work on live Codex activation is temporarily finalized as **deferred**, not completed. Keep
+`TCK-20260730-CODEX-CONTROLLED-PILOT` and
+`TCK-20260730-CODEX-RUNTIME-ACTIVATION-EPIC` `BLOCKED`. The reserved candidate
+`TCK-20260801-MONITORING-WRITER-STATUS-STALE` remains unimplemented. Resumption requires a fresh
+owner decision plus human approval, project/hook trust review, exact config-diff sign-off, and
+fresh three-factor consent; none may be inferred from the completed capability tickets.
+
 ## Status summary
 
 | Pillar | Current status | Production readiness |
@@ -30,7 +45,7 @@ It intentionally did not activate Codex as a production workflow provider.
 | Codex runtime workflow | Replay-only; no `implement-ticket` runtime | Not active |
 | Codex hooks | Payload captured; project config intentionally hook-free | Not active |
 | Shared monitoring writer/schema | Implemented and tested | Capability ready, no Codex call site |
-| Execution identity | Schema supported, not supplied by real Claude/Codex writes | Not operational |
+| Execution identity | Schema supported; real Claude `implement-ticket` writes now supply `provider="claude"`, `execution_id`, `ticket_id` (TCK-20260730-CLAUDE-EXECUTION-IDENTITY); Codex writes still unsupplied | Operational for Claude; not operational for Codex |
 | Codex replay/shadow parity | Real, consent-gated proof for Scope→Review fixture | Proven for limited replay only |
 | Pilot safety/rollback | Implemented and tested | Ready to gate, not authorize, a pilot |
 | Dashboard/provider analysis | Reader support implemented | No real provider-attributed traffic yet |
@@ -164,10 +179,14 @@ when a shared skill gains a new dependency.
 
 **Current limitation**
 
-- Real Claude workflow records do not currently supply `provider` or
-  `execution_id`; Codex has no active writer at all.
-- Concurrent-provider detection is therefore tested with fixtures but has no
-  real provider-attributed traffic to evaluate.
+- Real Claude workflow records now supply `provider="claude"`, `execution_id`,
+  and `ticket_id` on new `runs.jsonl`/`events.jsonl`/`tools.jsonl` writes
+  (TCK-20260730-CLAUDE-EXECUTION-IDENTITY); Codex still has no active writer
+  at all.
+- Concurrent-provider detection is therefore tested with fixtures and now has
+  real Claude-attributed traffic to evaluate against, but no Codex-attributed
+  traffic yet — activation of the Codex side remains a separate, unstarted
+  step.
 
 **Activation plan**
 

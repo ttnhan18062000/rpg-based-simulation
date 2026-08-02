@@ -4694,6 +4694,17 @@
     (exempt from registration) never appear here either — both intentional, not a regression.
     TicketsView.tsx/TicketsView.test.tsx confirmed to need no change (read directly, not assumed —
     MAX_VISIBLE_TAGS(40) + search-narrowing already tolerate larger synthetic counts).
+    TCK-20260730-CLAUDE-EXECUTION-IDENTITY (follow-up evidence note, no ingest.py/models.py code
+    change): this ticket is the first to make the already-built provider/execution_id/ticket_id
+    fields documented above (TCK-20260721-MONITORING-WRITER-UNIFICATION) carry real data from a
+    live Claude implement-ticket run — .claude/workflows/implement-ticket.js's writeSidecar/
+    writeMonitoring now construct provider="claude" and a validated execution_id
+    (claude-{ticket_id}-{unix_ts_ms}-{hex}) once per execution and thread them through the
+    .claude/current_run sidecar and new runs.jsonl/events.jsonl records. INFRA-275's own
+    ingest.py/models.py claims are unaffected (dashboard reader code untouched); this note exists
+    solely to record that the reader's already-tested native-identity code paths now have real
+    write-side traffic to serve, not just fixtures. See INFRA-281 for the writer-side
+    (writeSidecar) evidence pointer.
   proof_type: feature
   test_path: >
     tests/tools/test_agent_ops_dashboard_ingest.py (including
@@ -5178,6 +5189,16 @@
     inside the existing `try/except Exception: pass` block that already covers `run_id`/`seq`)
     and :65-74 (the `record = {...}` dict literal, now including `"phase": phase, "agent":
     agent` alongside the pre-existing `run_id`/`seq` keys).
+    TCK-20260730-CLAUDE-EXECUTION-IDENTITY (follow-up evidence note): `writeSidecar`'s body was
+    widened again, still without touching its `(seq, phase, agent)` call signature or any of its
+    10 call sites — a new `executionId`/`PROVIDER` pair (generated once, immediately after `tid`
+    is confirmed real) is threaded in via closure and appended as two new trailing argv elements
+    (`sys.argv[5]`/`sys.argv[6]` → `'execution_id'`/`'provider'` in the sidecar JSON), strictly
+    after the pre-existing `"${tid}" "${seq}" "${phase}" "${agent}"` argv sequence this entry
+    documents above. `post_tool_hook.py` already read `execution_id`/`provider`/`ticket_id` off
+    the sidecar (built by `TCK-20260721-MONITORING-WRITER-UNIFICATION`, previously never
+    populated) — this entry's `phase`/`agent` widening claims remain accurate and unaffected; only
+    the sidecar's field set widened further, following the same argv-based idiom.
   proof_type: contract
   test_path: >
     tests/tools/test_post_tool_hook.py::test_phase_and_agent_included_when_sidecar_present
@@ -6673,3 +6694,345 @@
     `seed_words_still_registered_as_subsystem_topic`), tests/tools/
     test_classify_checklist_failure_js_mirror.py (4 structural JS-mirror guard tests, no JS
     runtime exists in this repo so this is a shape guard, not full behavioral-equivalence proof).
+
+- id: INFRA-306
+  text: >
+    TCK-20260730-CODEX-POSTTOOL-ADAPTER -- builds the isolated Codex `PostToolUse` monitoring
+    adapter (`tools/agent_codex_posttool_adapter/`), the Codex-side counterpart to INFRA-281's
+    Claude-side `post_tool_hook.py` identity/phase-agent model. `input_model.py::parse_payload`
+    validates a captured Codex `PostToolUse` payload's dict-shape, 5 required fields, `tool_input`
+    dict-shape, and `hook_event_name` against `agent_codex_pilot_guardrails.enabled_surface.
+    EVIDENCED_HOOK_EVENTS` (imported, not re-hardcoded). `redaction.py::summarize_tool_input`/
+    `derive_status` produce redacted/minimal fields and never touch `tool_response` content
+    structurally beyond inspection. `record_builder.py::build_record` emits the exact same
+    13-field `tools.jsonl` record shape `post_tool_hook.py` writes (`duration_ms` always `None`;
+    no `tool_response` field exists in the shape at all, so it cannot be persisted even by
+    accident). `identity.py::validate_identity` is a format-only, I/O-free check of
+    `provider`/`execution_id`/`ticket_id`, mirroring the identity convention
+    TCK-20260730-CLAUDE-EXECUTION-IDENTITY established for Claude (see INFRA-281's follow-up
+    evidence note). `live_gate.py::require_live_append` gates on
+    `CODEX_POSTTOOL_ADAPTER_LIVE_APPEND == "1"` (strict string equality), checked in
+    `adapter.py::process_post_tool_use` before any write is attempted. `writer_bridge.py` is the
+    package's sole file referencing `tools/agent-monitoring/writer.py` (loaded via
+    `importlib.util.spec_from_file_location`, matching `entry_criterion.py`'s existing loading
+    pattern) and re-exports `write_line` -- the adapter delegates the actual append to this
+    existing writer, never a second append mechanism. `activation_fragment.py` produces a
+    reviewable proposed hook command/config fragment (`PROPOSED_HOOK_BLOCK`, inert `command =
+    "true"` placeholder) but never applies it: `render_proposed_fragment` is pure byte-append
+    logic never called against a real path anywhere in package source, and `assert_scratch_target`
+    independently refuses `repo_root/.codex/config.toml` as a target. `.codex/config.toml` remains
+    byte-identical/hook-free throughout (confirmed via `git diff --stat`/`git status --porcelain`,
+    both empty). This is agent-orchestration/developer-tooling only -- no `src/` simulation code,
+    `docs/mechanics/` chapter, or `docs/engine/` contract governs this module.
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: >
+    tools/agent_codex_posttool_adapter/input_model.py (`CodexPostToolUsePayload` dataclass +
+    `parse_payload`, hook_event_name validated against `agent_codex_pilot_guardrails.
+    enabled_surface.EVIDENCED_HOOK_EVENTS`) + tools/agent_codex_posttool_adapter/redaction.py
+    (`summarize_tool_input`, `derive_status` -- structurally parallel to but not imported from
+    `post_tool_hook.py::_input_summary`) + tools/agent_codex_posttool_adapter/record_builder.py
+    (`build_record`, 13-field shape matching `tools/agent-monitoring/post_tool_hook.py`'s own
+    record shape exactly, no `tool_response` parameter) +
+    tools/agent_codex_posttool_adapter/identity.py (`TICKET_ID_PATTERN`, `validate_identity`,
+    format-only/pure) + tools/agent_codex_posttool_adapter/live_gate.py
+    (`LIVE_APPEND_ENV_VAR = "CODEX_POSTTOOL_ADAPTER_LIVE_APPEND"`, `require_live_append`,
+    strict-equality check) + tools/agent_codex_posttool_adapter/writer_bridge.py (sole
+    reference to tools/agent-monitoring/writer.py::write_line, loaded via
+    importlib.util.spec_from_file_location) + tools/agent_codex_posttool_adapter/adapter.py
+    (`process_post_tool_use`: parse -> validate identity -> live-gate check before any write ->
+    build record -> write via writer_bridge; whole body wrapped in
+    `try/except Exception: return False`) + tools/agent_codex_posttool_adapter/
+    activation_fragment.py (`PROPOSED_HOOK_BLOCK`, `render_proposed_fragment`,
+    `assert_scratch_target` -- never invoked against a real path) +
+    docs/ai/codex_posttool_adapter_activation_fragment.md (human-reviewable fragment doc, 9
+    unmet hook-surface-policy.yaml prerequisites listed as an unchecked checklist).
+  proof_type: contract
+  test_path: >
+    tests/agent_codex_posttool_adapter/test_input_model.py, tests/agent_codex_posttool_adapter/
+    test_redaction.py, tests/agent_codex_posttool_adapter/test_identity_validation.py,
+    tests/agent_codex_posttool_adapter/test_live_gate.py, tests/agent_codex_posttool_adapter/
+    test_uses_shared_writer.py, tests/agent_codex_posttool_adapter/test_no_write_on_failure.py,
+    tests/agent_codex_posttool_adapter/test_failure_injection.py,
+    tests/agent_codex_posttool_adapter/test_config_guard.py, tests/agent_codex_posttool_adapter/
+    test_activation_fragment.py, tests/agent_codex_posttool_adapter/
+    test_no_subprocess_and_no_live_wiring.py (41 tests total, all passing per this ticket's Test
+    Summary: `python3 -m pytest tests/agent_codex_posttool_adapter/ -q` -> "41 passed").
+  divergence_note: null
+  support_boundary: >
+    Agent-orchestration/developer-tooling only -- no simulation behavior, Mechanics Bible chapter,
+    or engine contract governs this module's semantics (same support_boundary category as
+    INFRA-263/264/265/277 through INFRA-282/305). Does not touch, extend, or duplicate INFRA-281
+    (the Claude-side post_tool_hook.py phase/agent/identity widening, unchanged by this ticket --
+    this entry documents the parallel Codex-side adapter that reuses the same writer.py append
+    path and the same identity-field shape as a precedent, not a modification of INFRA-281's own
+    evidence). Package is operationally inert by construction: gated behind
+    CODEX_POSTTOOL_ADAPTER_LIVE_APPEND=1 checked before any write, .codex/config.toml stays
+    byte-identical/hook-free (verified empty git diff), and
+    test_no_subprocess_and_no_live_wiring.py proves via AST inspection (not string-match) that no
+    subprocess/codex-exec path exists anywhere in the package. No P0 entries are touched by this
+    ticket.
+    TCK-20260802-CODEX-POSTTOOL-HOOK-COMMAND extends this same inert adapter boundary with a
+    fail-open absolute-script entrypoint and identity-only transport environment threading. It adds
+    an explicitly policy-bound bounded proof only for live `tools.jsonl` callbacks (exact identity,
+    contiguous sequence, count cap, and transport timestamp window); existing exact suffix proof
+    behavior for all static rows remains unchanged. No hook config is activated by this capability.
+- id: INFRA-307
+  text: >
+    TCK-20260730-CODEX-RUNTIME-SHADOW -- builds the minimal Codex `implement-ticket` phase/tier
+    runtime contract and its in-process shadow-parity proof (`tools/agent_codex_runtime_shadow/`),
+    a fully additive package (zero existing file touched). `matrix.py::load_supported_matrix`
+    reads `workflow_version` from the real `agent-orchestration/workflows/implement-ticket.yaml`
+    (read-only) and pairs it with the ticket's hardcoded supported slice
+    (`tier=standard`, `phases=[Scope, Investigate, Plan, Review]` -- the exact slice the one real
+    fixture and canonical `tools.agent_replay.runner.replay_slice()` cover), raising
+    `ContractVersionMismatchError`/`UnsupportedTierError`/`UnsupportedPhaseError` for anything
+    outside it. `phase_order.py::validate_phase_order` enforces that an input's phases are exactly
+    an in-order prefix of the supported list, raising `PhaseOrderViolationError` otherwise.
+    `gate_validation.py::validate_required_gate` enforces Review's `output.verdict` gate, raising
+    `RequiredGateMissingError`. `required_artifacts.py::check_required_artifacts` is a
+    `repo_root`-parameterized, path-agnostic existence check (Investigate requires
+    `investigation.md`+`test_plan.md`; Plan requires `plan.md`), additive and external to
+    `tools/agent_replay/fixture_envelope.py`'s schema -- no artifact-path field was added there.
+    `shadow_runner.py::derive_codex_shadow_outcome` is the in-process functional replacement for
+    `agent_replay_codex.invoker.run_codex_replay()`: it walks a `FixtureEnvelope`'s phases in the
+    same shape as `replay_slice()` but never imports or calls it and never spawns a subprocess or
+    real `codex exec` invocation, producing a `CodexShadowOutcome`.
+    `shadow_comparison.py::run_shadow_comparison` makes the package's one and only import of
+    `tools.agent_replay.runner.replay_slice()` (read-only, canonical Claude-side ground truth) and
+    compares on exactly the 4 axes `agent-orchestration/intentional-divergences.md`'s `## Entry
+    Format` documents (`terminal_status`, `phase_order`, `gate_policy`,
+    `artifact_requirements`) -- not the predecessor `shadow_mode.py`'s undocumented
+    `"codex_parity"` catch-all -- gating each mismatched axis on
+    `tools.agent_orchestration_claude_adapter.divergence_log.is_approved` (reused unmodified) and
+    raising `ShadowMismatchError` naming the unapproved axis/axes otherwise. Containment proven
+    both by `tests/agent_codex_runtime_shadow/test_no_subprocess.py` (AST/string-constant scan,
+    mirroring `tests/agent_replay/test_runner_no_forbidden_calls.py` and
+    `tests/agent_codex_posttool_adapter/test_no_subprocess_and_no_live_wiring.py`'s existing
+    precedent) and by direct verification that `.codex/config.toml`, `tools/agent_replay/`,
+    `tools/agent_replay_codex/`, and `tools/agent_codex_pilot_guardrails/` all stayed
+    byte-identical across Implement (empty `git diff --stat`). This is
+    agent-orchestration/developer-tooling only -- no `src/` simulation code, `docs/mechanics/`
+    chapter, or `docs/engine/` contract governs this module.
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: >
+    tools/agent_codex_runtime_shadow/errors.py (7 typed exceptions: `UnsupportedTierError`,
+    `UnsupportedPhaseError`, `ContractVersionMismatchError`, `PhaseOrderViolationError`,
+    `RequiredGateMissingError`, `RequiredArtifactMissingError`, `ShadowMismatchError`) +
+    tools/agent_codex_runtime_shadow/matrix.py (`SupportedMatrix` dataclass,
+    `load_supported_matrix`, hardcoded `_SUPPORTED_TIER = "standard"` /
+    `_SUPPORTED_PHASES = ["Scope", "Investigate", "Plan", "Review"]`, `workflow_version` read from
+    the real `agent-orchestration/workflows/implement-ticket.yaml`) +
+    tools/agent_codex_runtime_shadow/phase_order.py (`validate_phase_order`, in-order-prefix-only
+    check) + tools/agent_codex_runtime_shadow/gate_validation.py (`validate_required_gate`,
+    Review-only `output.verdict` check, no call into or modification of
+    `tools.agent_replay.runner.replay_slice()`'s own gate branch) +
+    tools/agent_codex_runtime_shadow/required_artifacts.py
+    (`REQUIRED_ARTIFACTS_BY_PHASE`, `check_required_artifacts`, `repo_root`-parameterized) +
+    tools/agent_codex_runtime_shadow/shadow_runner.py (`CodexShadowOutcome` dataclass,
+    `derive_codex_shadow_outcome` -- structurally independent of, never imports,
+    `tools.agent_replay.runner.replay_slice()`) + tools/agent_codex_runtime_shadow/
+    shadow_comparison.py (`ShadowComparisonResult` dataclass, `run_shadow_comparison`, the
+    package's sole `tools.agent_replay.runner.replay_slice()` import; reuses
+    `tools.agent_orchestration_claude_adapter.divergence_log.load_divergences`/`is_approved`
+    unmodified for the RATIFIED-divergence escape hatch) +
+    tools/agent_codex_runtime_shadow/__init__.py (package docstring distinguishing this
+    contract-shape proof from `tools/agent_replay_codex/`'s execution-environment proof and from
+    `tools/agent_codex_pilot_guardrails/`'s signoff/rollback governance, neither of which this
+    package overlaps or duplicates).
+  proof_type: contract
+  test_path: >
+    tests/agent_codex_runtime_shadow/test_phase_tier_matrix.py, tests/agent_codex_runtime_shadow/
+    test_phase_order_validation.py, tests/agent_codex_runtime_shadow/test_gate_validation.py,
+    tests/agent_codex_runtime_shadow/test_required_artifact_validation.py,
+    tests/agent_codex_runtime_shadow/test_shadow_comparison.py, tests/agent_codex_runtime_shadow/
+    test_no_subprocess.py, tests/agent_codex_runtime_shadow/test_containment.py,
+    tests/agent_codex_runtime_shadow/test_no_live_consent_dependency.py (38 tests total, all
+    passing per this ticket's Test Summary: `.venv/bin/python3 -m pytest
+    tests/agent_codex_runtime_shadow/ -v` -> "38 passed"; independently re-run during parity
+    update -> "38 passed in 0.47s").
+  divergence_note: null
+  support_boundary: >
+    Agent-orchestration/developer-tooling only -- no simulation behavior, Mechanics Bible chapter,
+    or engine contract governs this module's semantics (same support_boundary category as
+    INFRA-263/264/265/277 through INFRA-282/305/306). Does not touch, extend, or duplicate
+    `tools/agent_replay/{runner.py,fixture_envelope.py}`, `tools/agent_replay_codex/*`, or
+    `tools/agent_codex_pilot_guardrails/*` -- all read-only dependencies, confirmed byte-identical
+    across Implement. Does not extend `tools/agent_replay/fixture_envelope.py`'s
+    `FixtureEnvelope`/`PhaseEntry` schema with an artifact-path field; required-artifact checking
+    is a separate, additive layer. Never invokes a real `codex exec` subprocess (proven by AST
+    scan in `test_no_subprocess.py`, not string-match), so no live-consent gate is needed and none
+    of this package's own tests are consent-gated or skipped
+    (`test_no_live_consent_dependency.py`). Registers no new entry in
+    `agent-orchestration/intentional-divergences.md` -- this ticket's own comparison logic found
+    no unresolved axis mismatch requiring ratification; the escape hatch exists for future
+    mismatches, not one raised by this ticket. Does not backfill
+    TCK-20260721-CODEX-REPLAY-PARITY's pre-existing missing parity-ledger entry (a separate,
+    prior gap explicitly out of this ticket's scope, per this ticket's own investigation.md). No
+    P0 entries are touched by this ticket.
+- id: INFRA-308
+  text: >
+    TCK-20260731-CODEX-PILOT-EXECUTOR adds a scratch-only Codex pilot lifecycle
+    simulator with Linux advisory claim locking, containment-first request/claim
+    paths, synthetic run/event/tool evidence, exact suffix proof, and dashboard
+    reader verification. It is agent-orchestration/developer tooling only and
+    never enables a hook, invokes Codex, changes project config, or writes the
+    real monitoring corpus.
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: >
+    tools/agent_codex_pilot_executor/{paths.py,preflight.py,claims.py,simulation.py}
+    plus docs/ai/monitoring_writer_decision.md.
+  proof_type: contract
+  test_path: tests/agent_codex_pilot_executor/
+  divergence_note: null
+  support_boundary: >
+    Agent-orchestration/developer-tooling only; no simulation behavior or
+    Mechanics Bible contract is affected. All provider=codex records are
+    disposable scratch fixtures; a real pilot remains separately human-gated.
+- id: INFRA-309
+  text: >
+    TCK-20260801-CODEX-WORKFLOW-CONTINUATION-POLICY formalizes a validated, guidance-only
+    continuation policy for an already-selected Codex ticket invocation. It reuses one neutral
+    terminal-status schema authority, rejects every non-DONE terminal value from non_gates,
+    preserves DONE and EPIC_SCOPED as invocation-ending completion outcomes, and renders only
+    validated text into AGENTS.md. It does not alter the Claude JS workflow, add a runtime state
+    machine, choose future tickets, bypass gates, or authorize hooks/config/live/provider activity.
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: >
+    tools/agent_orchestration/terminal_statuses.py + tools/agent_orchestration/loader.py +
+    tools/agent_orchestration/generator.py + tools/agent_orchestration_codex_adapter/generator.py
+    + agent-orchestration/{contract.yaml,terminal-statuses.yaml,workflows/implement-ticket.yaml}
+    + AGENTS.md.
+  proof_type: contract
+  test_path: >
+    tests/agent_orchestration/test_contract_structure.py,
+    tests/agent_orchestration/test_validator_errors.py,
+    tests/agent_orchestration/test_validator_no_network_calls.py,
+    tests/agent_orchestration_codex_adapter/test_generator_traceability.py.
+  divergence_note: null
+  support_boundary: >
+    Agent-orchestration/developer-tooling only. The policy is validated rendered guidance, not a
+    runtime enforcement mechanism; no simulation behavior or Mechanics Bible contract is affected.
+    Claude workflow JS remains unchanged by this ticket, and live Codex activation remains subject
+    to separate human authority.
+- id: INFRA-310
+  text: >
+    TCK-20260801-CODEX-REALREPO-PILOT-HARNESS adds a scratch-root-only, non-live harness for a
+    future single controlled Codex pilot. It captures immutable preflight evidence before any
+    injected invoker, requires dual authority plus a policy-bound baseline, permits only exact
+    declared historical-target transitions and monitoring suffixes, rejects traversal and symlink
+    proof trees, and confines adapter-owned rollback to a captured scratch `.codex/config.toml`.
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: >
+    tools/agent_codex_realrepo_pilot_harness/{preflight.py,policy.py,proofs.py,boundary.py,
+    rollback.py} plus stored_artifacts/TCK-20260801-CODEX-REALREPO-PILOT-HARNESS/{investigation.md,
+    plan.md,architecture_verify.md,test_report.md}.
+  proof_type: contract
+  test_path: tests/agent_codex_realrepo_pilot_harness/
+  divergence_note: null
+  support_boundary: >
+    Agent-orchestration/developer-tooling only; no simulation behavior, Mechanics Bible chapter,
+    or engine contract is affected. Every harness test uses an injected scratch root and an
+    autouse real-worktree snapshot guard. The package constructs no subprocess or hook transport,
+    does not invoke Codex, leaves `.codex/config.toml` hook-free, and writes no provider=codex
+    project monitoring record. A real transport, fresh human authority, and one controlled pilot
+    remain separately scoped and gated.
+- id: INFRA-311
+  text: >
+    TCK-20260801-CODEX-LIVE-TRANSPORT adds the first fixed-argv Codex transport capability for a
+    future controlled pilot. It accepts only dual authority plus a private-factory-created
+    canonical-root live-preflight capability, re-checks both exact consent values as the literal
+    first invocation operation, derives its instruction only from validated evidence fields, and
+    rejects raw root/prompt/options APIs and dangerous bypass flags.
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: >
+    tools/agent_codex_realrepo_pilot_harness/{preflight.py,live_preflight.py,boundary.py} +
+    tools/agent_codex_live_transport/invoker.py +
+    stored_artifacts/TCK-20260801-CODEX-LIVE-TRANSPORT/{investigation.md,plan.md,test_plan.md}.
+  proof_type: contract
+  test_path: tests/agent_codex_live_transport/
+  divergence_note: null
+  support_boundary: >
+    Agent-orchestration/developer-tooling only; no simulation behavior, Mechanics Bible chapter,
+    or engine contract is affected. The capability is intentionally unexercised: default tests use
+    no real-root admission or Codex call, and the non-autouse opt-in fixture skips unless the
+    existing real-repository consent is exact while still refusing a real invocation in this
+    ticket. It registers no hook, leaves `.codex/config.toml` unchanged, does not implement the
+    reserved candidate or alter blocked parent tickets, and writes no provider=codex project
+    monitoring record. A separately authorized pilot integration remains required.
+- id: INFRA-312
+  text: >
+    TCK-20260801-CODEX-PILOT-ORCHESTRATION adds the non-exercised composition capability for a
+    future single controlled Codex pilot: canonical-root typed config capability, fixed approved
+    PostToolUse bytes, fresh dual-consent enablement, ownership-bound consent-independent exact
+    rollback, fixed transport composition, post-run policy proof, and dual-failure reporting that
+    preserves both an operational error and cleanup error.
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: >
+    tools/agent_codex_pilot_orchestration/{production_config.py,orchestrator.py} +
+    stored_artifacts/TCK-20260801-CODEX-PILOT-ORCHESTRATION/{investigation.md,plan.md,test_plan.md}.
+  proof_type: contract
+  test_path: tests/agent_codex_pilot_orchestration/
+  divergence_note: null
+  support_boundary: >
+    Agent-orchestration/developer tooling only; no simulation or Mechanics Bible behavior is
+    affected. The capability is intentionally unexercised: all tests use temporary paths or
+    synthetic evidence, the committed config stays hook-free, no Codex invocation or provider=codex
+    record occurs, and the reserved candidate plus blocked activation tickets remain untouched.
+    Completion does not satisfy the future human approval, project/hook trust review, exact config
+    diff review, or reviewed real-run evidence prerequisites.
+- id: INFRA-313
+  text: >
+    TCK-20260802-CODEX-PILOT-ENTRYPOINT adds a prepare-only fixed-candidate entrypoint that
+    builds a just-in-time, self-excluded expected-write policy and typed context without pilot
+    invocation. It records only the preparation capability; a real adapter-invoking hook command
+    and genuine provider=codex monitoring remain separately deferred.
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: >
+    tools/agent_codex_pilot_entrypoint/{__main__.py,preparation.py} +
+    stored_artifacts/TCK-20260802-CODEX-PILOT-ENTRYPOINT/{investigation.md,plan.md,test_plan.md}.
+  proof_type: contract
+  test_path: tests/agent_codex_pilot_orchestration/test_entrypoint.py
+  divergence_note: null
+  support_boundary: >
+    Agent tooling only. The CLI prepares policy evidence but does not invoke Codex, alter config,
+    register a hook, implement the candidate, or write project monitoring records.
+- id: INFRA-314
+  text: >
+    TCK-20260802-CODEX-POSTTOOL-HOOK-COMMAND completes the non-live Codex PostToolUse command
+    capability: a fail-open stdin entrypoint with environment-only identity, absolute review-only
+    command rendering, and identity-only child-environment threading. It adds a tools.jsonl-only
+    bounded proof (exact identity, contiguous sequence, policy cap, transport-time window) without
+    changing the existing exact static-suffix proof.
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: >
+    tools/agent_codex_posttool_adapter/{hook_entry.py,command.py} +
+    tools/agent_codex_live_transport/invoker.py +
+    tools/agent_codex_realrepo_pilot_harness/{policy.py,proofs.py} +
+    staging_artifacts/TCK-20260802-CODEX-POSTTOOL-HOOK-COMMAND/{security_review.md,parity.md}.
+  proof_type: contract
+  test_path: >
+    tests/agent_codex_posttool_adapter/test_hook_entry.py,
+    tests/agent_codex_live_transport/test_hook_environment.py,
+    tests/agent_codex_realrepo_pilot_harness/test_bounded_tool_suffix.py.
+  divergence_note: null
+  support_boundary: >
+    Agent tooling only. The capability remains unactivated: no config change, hook registration,
+    live invocation, candidate edit, blocked-parent edit, or production monitoring write occurs.

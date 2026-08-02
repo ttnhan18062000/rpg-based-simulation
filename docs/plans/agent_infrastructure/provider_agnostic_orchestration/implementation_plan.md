@@ -1,21 +1,21 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: developer
-maturity: draft-pending-closure-review
-date: 2026-07-21
+maturity: implemented-nonlive-activation-deferred
+date: 2026-08-02
 tags: [ai, workflows, hooks, agent-monitoring, process-improvement]
 ---
 
 # Implementation Plan: Provider-Agnostic Agent Orchestration
 
-> **Status: DRAFT — PENDING DISCOVERY-GATE CORRECTION AND CLAUDE REVIEW.**
-> This is a sequenced implementation blueprint, not authorization to modify
-> the live Claude workflow or open implementation tickets. The parent discovery
-> epic may close only after its Codex instruction/skill-location correction is
-> approved. Each implementation slice must separately satisfy its entry and
-> exit criteria below.
+> **Status: IMPLEMENTED FOR NON-LIVE PROVIDER PARITY; LIVE ACTIVATION DEFERRED (2026-08-02).**
+> The provider-neutral contract, generated Codex guidance, non-live runtime proof, and controlled
+> pilot capability chain have been completed and independently reviewed. This plan remains a
+> historical implementation record; it does not authorize a live Codex workflow, a hook-bearing
+> config, a monitoring append, or a pilot. Those actions remain blocked pending a future explicit
+> owner decision and the governed human prerequisites.
 
 ## Objective
 
@@ -316,28 +316,16 @@ provider scope, required rollback action, and exact promotion evidence. No
 ticket may combine writer implementation, historical-data remediation, and
 provider live rollout.
 
-## Claude Review Request
+## Completion and Deferral Disposition
 
-Please review this plan specifically for:
-
-1. any conflict with the discovered Claude workflow/gate behavior;
-2. whether the Codex native-surface correction is complete and accurately
-   separates canonical source from generated delivery;
-3. historical monitoring-data preservation and reader compatibility gaps;
-4. missing rollback/containment conditions before a live Codex pilot; and
-5. ticket sequencing that could accidentally change the live Claude path before
-   parity evidence exists.
-
-Record accepted corrections, rejected suggestions with rationale, and any
-remaining blocking questions in a separate review-response document. Do not
-edit or create implementation tickets until the discovery parent is formally
-closed and this plan is approved.
+The non-live delivery groups have been implemented, tested, and independently
+reviewed. The remaining live pilot/activation work is intentionally deferred
+under the two blocked tickets; it is not a remaining implementation omission in
+this plan and must only resume with a fresh human decision.
 
 ## Related Material
 
 - `docs/plans/agent_infrastructure/idea_provider_agnostic_agent_orchestration.md`
-- `docs/plans/agent_infrastructure/idea_provider_agnostic_agent_orchestration_discovery_gate_closure_claude.md`
-- `docs/plans/agent_infrastructure/idea_provider_agnostic_agent_orchestration_discovery_gate_closure_response_codex.md`
 - `docs/architecture/agent_orchestration_contract.md`
 - `docs/ai/agents_dir_disposition.md`
 - `docs/ai/monitoring_writer_decision.md`

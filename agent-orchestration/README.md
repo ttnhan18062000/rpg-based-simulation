@@ -13,18 +13,20 @@ read it first for the *why*; this README covers the *what's here* and *how to us
 
 | File | Governs |
 |---|---|
-| `contract.yaml` | Top-level manifest: contract `version`, name, description, pointers to the five sibling files. |
+| `contract.yaml` | Top-level manifest: contract `version`, name, description, pointers to governed sibling files. |
 | `workflows/implement-ticket.yaml` | Phase list, per-tier applicability matrix, and the 10-role agent vocabulary for `implement-ticket`. |
 | `roles/*.yaml` (10 files) | One file per delegated subagent role that participates in `implement-ticket`. |
 | `skills.yaml` | Catalog of reusable skills (`.claude/skills/*/SKILL.md`) and their workflow/role associations. |
 | `monitoring-schema.yaml` | Execution-identity field model (`execution_id`/`run_id`/`ticket_id`), consumed verbatim from `docs/ai/monitoring_writer_decision.md`. |
 | `hook-events.yaml` | Normalized lifecycle hook-event vocabulary currently wired in `.claude/settings.json`. |
+| `hook-surface-policy.yaml` | Per-provider available/normalized/enabled hook-event policy and the Codex activation boundary (available/normalized/enabled distinction, activation candidates, activation prerequisites). |
+| `terminal-statuses.yaml` | Normalized terminal outcomes for `implement-ticket`; every value ends the current invocation. |
 
 ## Versioning scheme
 
 Each file carries its own independent **integer generation counter** — `version` in
 `contract.yaml`, `workflow_version`, `role_version` (per role file), `skills_version`,
-`schema_version`, `hook_schema_version` — starting at `1`. Not semver: this is a single-repo
+`schema_version`, `hook_schema_version`, `hook_surface_policy_version`, `terminal_status_schema_version` — starting at `1`. Not semver: this is a single-repo
 internal contract with zero external consumers today (no provider adapter yet reads it), so
 semver's major/minor/patch compatibility triad would model guarantees that don't exist yet.
 
@@ -32,6 +34,14 @@ semver's major/minor/patch compatibility triad would model guarantees that don't
 file (a field rename, a required-field addition, a structural reshape). A non-breaking addition
 (a new optional field, a new role/skill entry) does not bump the counter. Each file's counter is
 independent — a breaking change to `roles/*.yaml` does not force-bump `hook-events.yaml`.
+
+`workflows/implement-ticket.yaml` may carry an optional validated `continuation_policy`. When
+present, it is consumed by the Codex guidance renderer only: it keeps a healthy, already-selected
+ticket invocation moving, but every declared terminal outcome ends that invocation. `DONE` and
+`EPIC_SCOPED` are completion outcomes; all other terminal outcomes are stop/gate outcomes. It
+does not alter the live Claude workflow, select another ticket, or authorize scope changes,
+gate bypass, hooks, live/destructive actions, or provider activation. Removing the optional field
+and regenerating `AGENTS.md` is the rollback path.
 
 ## Bootstrap vocabulary — one-time, not a permanent sync
 

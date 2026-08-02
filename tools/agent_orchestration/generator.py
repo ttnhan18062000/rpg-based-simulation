@@ -95,4 +95,24 @@ def generate(
     _write_yaml(repo_root, hook_events_path, bundle.hook_events, allow_outside_contract=allow_outside_contract)
     written.append(hook_events_path)
 
+    hook_surface_policy_path = target_dir / "hook-surface-policy.yaml"
+    _write_yaml(
+        repo_root, hook_surface_policy_path, bundle.hook_surface_policy,
+        allow_outside_contract=allow_outside_contract,
+    )
+    written.append(hook_surface_policy_path)
+
+    terminal_statuses_path = target_dir / "terminal-statuses.yaml"
+    _write_yaml(
+        repo_root,
+        terminal_statuses_path,
+        {
+            "terminal_status_schema_version": 1,
+            "workflow_id": bundle.workflow["workflow_id"],
+            "statuses": bundle.terminal_statuses,
+        },
+        allow_outside_contract=allow_outside_contract,
+    )
+    written.append(terminal_statuses_path)
+
     return written

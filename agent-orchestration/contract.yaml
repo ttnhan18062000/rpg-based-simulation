@@ -25,3 +25,9 @@ governs:
   - path: hook-events.yaml
     version_field: hook_schema_version
     description: Normalized lifecycle hook-event vocabulary currently wired in .claude/settings.json.
+  - path: hook-surface-policy.yaml
+    version_field: hook_surface_policy_version
+    description: Per-provider available/normalized/enabled hook-event policy and Codex activation boundary.
+  - path: terminal-statuses.yaml
+    version_field: terminal_status_schema_version
+    description: Normalized terminal outcomes for the implement-ticket workflow.

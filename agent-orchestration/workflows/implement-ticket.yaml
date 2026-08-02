@@ -12,8 +12,23 @@
 #                        written to events.jsonl (the phase is not literally absent from the log).
 #   conditional_absent — phase writes NO event at all when its trigger condition is false; this is
 #                        materially different from skipped_event and must not be conflated with it.
-workflow_version: 1
+workflow_version: 2
 workflow_id: implement-ticket
+continuation_policy:
+  mode: continue_until_terminal_or_hard_gate
+  instruction: >
+    Once a ticket workflow begins, continue through applicable healthy phases only
+    within the current ticket invocation. Every declared terminal status ends the
+    invocation: DONE and EPIC_SCOPED are completion outcomes; all others are stop
+    outcomes. Continuation never grants scope, ticket-selection, gate-bypass, or
+    live/destructive/provider-activation authority. In Finalize, preserve the
+    canonical order: update ticket status, move ticket to tickets/done, append
+    exactly one working_log row, then migrate staging artifacts and regenerate
+    the registry; never pre-write a completion row before the ticket move.
+  non_gates:
+    - ordinary phase completion
+    - intermediate progress updates
+    - work that can safely proceed under the approved ticket scope
 phases:
   - name: Scope
     tiers: {standard: full, hotfix: full}

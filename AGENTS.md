@@ -22,6 +22,17 @@ All durable-state changes in this simulation are refined through the 32-phase au
 
 ## Roles
 
+
+## Workflow Continuation
+
+Once a ticket workflow begins, continue through applicable healthy phases only within the current ticket invocation. Every declared terminal status ends the invocation: DONE and EPIC_SCOPED are completion outcomes; all others are stop outcomes. Continuation never grants scope, ticket-selection, gate-bypass, or live/destructive/provider-activation authority. In Finalize, preserve the canonical order: update ticket status, move ticket to tickets/done, append exactly one working_log row, then migrate staging artifacts and regenerate the registry; never pre-write a completion row before the ticket move.
+
+Do not stop merely for:
+
+- ordinary phase completion
+- intermediate progress updates
+- work that can safely proceed under the approved ticket scope
+
 - `architecture-reviewer` — Validates the plan against durable-state, API-boundary, registry, and Mechanics Bible rules before implementation, then re-validates the actual diff after implementation.
 - `done-checker` — Verifies all Definition-of-Done conditions before a ticket can move to tickets/done/.
 - `finalizer` — Closes out the ticket — DoD checks, artifact migration, working_log, monitoring writes.
