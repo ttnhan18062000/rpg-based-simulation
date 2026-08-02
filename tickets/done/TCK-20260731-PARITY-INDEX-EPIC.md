@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20260731-PARITY-INDEX-EPIC
-phase: open
+phase: done
 date: 2026-07-31
 tags: [ai, process-improvement, testing]
 ---
@@ -15,7 +15,7 @@ tags: [ai, process-improvement, testing]
 Read-only SQLite parity-ledger index and context-read-path evidence epic
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 epic
@@ -50,11 +50,11 @@ changing the YAML ledger, existing workflow gates, or live context assembly.
 - Semantic/vector/Graphify correctness dependencies, sqlite-vec, and any simulation-state change.
 
 ## Acceptance Criteria
-- [ ] Each child independently completes the standard ticket workflow and its stated safety checks.
-- [ ] The Phase 0–2 outputs prove a deterministic, all-shard, read-only index and document every
+- [x] Each child independently completes the standard ticket workflow and its stated safety checks.
+- [x] The Phase 0–2 outputs prove a deterministic, all-shard, read-only index and document every
       intentional difference from the existing legacy tools.
-- [ ] Gate A records a reproducible GO, NO-GO, or INCONCLUSIVE decision before any later phase is scoped.
-- [ ] No child modifies source YAML bytes, changes legacy gate behavior, or enables a live consumer.
+- [x] Gate A records a reproducible GO, NO-GO, or INCONCLUSIVE decision before any later phase is scoped.
+- [x] No child modifies source YAML bytes, changes legacy gate behavior, or enables a live consumer.
 
 ## Related Tickets
 - TCK-20260731-PARITY-INDEX-BASELINE
@@ -92,4 +92,18 @@ No direct tests apply to this scope-only epic.
 This ticket file and its child-ticket sequence only.
 
 ## Completion Summary
+All four child tickets are complete: TCK-20260731-PARITY-INDEX-BASELINE (Phase 0 baseline manifest
+and v1 decision record), TCK-20260731-PARITY-INDEX-IMPORTER (Phase 1 deterministic all-9-shard
+SQLite importer/health index in `tools/parity_index.py`), TCK-20260731-PARITY-IMPACT-PROOF (Phase 2
+read-only impact/entry/health query surface proved equivalent-or-better against legacy selection
+behavior via a versioned fixture corpus), and TCK-20260731-PARITY-READPATH-GATE (Gate A payoff
+review). Gate A reached an explicit **GO** verdict — recorded in
+`docs/ai/parity_readpath_gate_a_decision.md` — showing 66.7% aggregate recall (14/21) for the
+index's unmodified read path against real, git-pinned expected obligations, versus legacy's 4.8%
+(1/21), with zero recall regression on any real case. The GO is narrowly scoped to future
+ticket-*scoping* only (not implementation) and carries forward two documented limitations (a
+`.claude/`-prefix blind spot and a single-shard-per-case scope limitation) for a future Phase-3
+ticket to resolve. Throughout all four tickets, no `docs/parity_ledger/*.yaml` file, legacy gate
+behavior, or live consumer/workflow/config/telemetry surface was modified — the entire epic
+delivered a read-only, rebuildable, locally-ignored index exactly as scoped.
 
