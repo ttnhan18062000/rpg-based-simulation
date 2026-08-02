@@ -1,0 +1,6 @@
+- id: CM-101
+  text: Synthetic entry for the unmapped-path fixture case.
+  status: verified
+  priority: P1
+  v2_evidence: src/engine/foo.py
+  test_path: tests/unit/test_foo.py

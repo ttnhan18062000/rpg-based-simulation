@@ -1,0 +1,6 @@
+- id: SC-101
+  text: Synthetic entry citing a path shared with combat_movement.yaml in this fixture set.
+  status: verified
+  priority: P1
+  v2_evidence: src/engine/apply.py
+  test_path: tests/unit/test_apply2.py
