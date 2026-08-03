@@ -336,11 +336,23 @@ frontmatter carries six fields — `status`, `layer`, `authority`, `audience`, `
 `AUTHORITY_VALUES`, `tools/validate_frontmatter.py:44` and `:54`) that `docs/REGISTRY.yaml`'s own
 `doc`/`ticket` entries use — not a second, disjoint vocabulary the way `parity_ledger_entry`'s
 5-value `status` enum is (Branch 3, §3's parity extension). This rules out Branch 2 (`unrated`
-sentinel): unlike `code_symbol`/`test`/`graphify_node`/in-progress-ticket-body sources, which carry
-**no** authority/freshness primitive anywhere in the repo, `stored_artifacts/*.md` files carry
-real, populated values — an empirical corpus scan found 2,941 real artifact files with an
-`authority` spread of `P0=4`/`P1=258`/`P2=1698`. The field-shape match means the only reason
-`docs/REGISTRY.yaml` doesn't already treat these as a REGISTRY-backed kind is that `collect_docs()`
+sentinel) for the corpus's schema-current majority: unlike `code_symbol`/`test`/`graphify_node`/
+in-progress-ticket-body sources, which carry **no** authority/freshness primitive anywhere in the
+repo, most `stored_artifacts/*.md` files carry real, populated values — an empirical corpus scan
+of the canonical `investigation.md`/`plan.md`/`test_plan.md` triplet (2,368 files) found an
+`authority` spread of `P0=3`/`P1=230`/`P2=1,556` (1,789 files, 75.5%), with the remaining
+**579 files (24.5%) carrying no `authority` field at all** — legacy artifacts predating
+`tools/validate_frontmatter.py::_validate_artifact()`'s current 6-field artifact schema (some have
+only a partial frontmatter block, e.g. `ticket_id`/`phase` only; at least one sampled file has no
+frontmatter block at all). This legacy-schema gap does not change the "yes" verdict — current and
+future artifact writes genuinely conform to the REGISTRY-backed shape, and a `stored_artifact`-kind
+scanner would classify these 579 files as a `missing`/`unrated`-style health finding for that
+specific file, the same tolerant treatment `docs/REGISTRY.yaml` already gives a doc missing
+`last_verified` — but it is a real, disclosed characteristic of the corpus, not a uniformly-populated
+one, and a future scanner-building ticket must handle it explicitly rather than assume every
+canonical-triplet file has a real `authority` value to read. The field-shape match for the
+schema-current majority means the only reason `docs/REGISTRY.yaml` doesn't already treat these as a
+REGISTRY-backed kind is that `collect_docs()`
 (`tools/generate_registry.py:186-238`) walks `root / "docs"` only (`docs_dir = root / "docs"`,
 line 192; `docs_dir.rglob("*.md")`, line 199) — `stored_artifacts/` sits at repo root, a sibling of
 `docs/`, structurally unreachable by that walk regardless of `_SKIP_DOC_SUBDIRS` — a
