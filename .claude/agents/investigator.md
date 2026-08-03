@@ -59,10 +59,22 @@ Cite specific chapter and section.
 
 ## Docs Requiring Update
 Every specific docs/ path this ticket must change if implemented as scoped — Mechanics Bible
-chapter, engine contract, docs/parity_ledger/*.yaml entry, or a guideline doc — with a one-line
-reason each. Empty/"None" only if no doc anywhere needs to change; this is a deliberate judgment
-call, not a lazy default. Consider new logic/features/settings the same as modifications to
-existing behavior — a brand-new feature still needs a doc describing it.
+chapter, engine contract, docs/parity_ledger/*.yaml entry, or a guideline doc. Empty/"None" only if
+no doc anywhere needs to change; this is a deliberate judgment call, not a lazy default. Consider
+new logic/features/settings the same as modifications to existing behavior — a brand-new feature
+still needs a doc describing it.
+
+**Required format** (machine-parsed by `done-checker`'s static coverage check,
+`tools/gate_checks/done_checker_static.py::check_docs_to_update_coverage` —
+TCK-20260802-DOC-COVERAGE-CHECK): one bullet per path, in this exact form, with the path
+backtick-wrapped and immediately following `- `:
+```
+- `docs/mechanics/03_economic_laws.md`: one-line reason
+- `docs/parity_ledger/town_resource.yaml`: one-line reason
+```
+If none apply, write exactly: `None.` (no bullets). Do not use any other format — a non-bullet
+paragraph or an un-backticked path will not parse and is treated as a format regression, not a
+clean "nothing required" case.
 
 ## Parity Ledger Overlap
 List entry IDs and current status from docs/parity_ledger/ that this work touches.

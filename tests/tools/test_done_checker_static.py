@@ -7,6 +7,7 @@ happy path.
 
 import csv
 import os
+import subprocess
 import sys
 import time
 from pathlib import Path
@@ -18,7 +19,11 @@ if str(_TOOLS_DIR) not in sys.path:
 from gate_checks.done_checker_static import (  # noqa: E402
     _find_flagged_data_run_files,
     _frontmatter_has_unregistered_tags,
+    _git_touched_paths,
+    _parse_docs_to_update,
+    _path_touched,
     check_data_runs_clean,
+    check_docs_to_update_coverage,
     check_frontmatter_valid,
     check_migration_complete,
     check_monitoring_write_recorded,
@@ -607,9 +612,10 @@ def test_run_static_precheck_all_pass_eligible(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
 
     results = run_static_precheck("TCK-FAKE", "standard", "2026-07-05T00:00:00Z")
-    # 6 conditions as of TCK-20260718-TIER-PRIORITY-CANONICAL-ENUM (was 5; added
-    # ticket_field_values_valid).
-    assert len(results) == 6
+    # 7 conditions as of TCK-20260802-DOC-COVERAGE-CHECK (was 6, added ticket_field_values_valid
+    # per TCK-20260718-TIER-PRIORITY-CANONICAL-ENUM; was 5 originally). New 7th:
+    # docs_to_update_coverage.
+    assert len(results) == 7
     statuses = {r["condition"]: r["status"] for r in results}
     assert all(s in ("PASS", "NA") for s in statuses.values()), statuses
 
@@ -1171,3 +1177,227 @@ def test_claude_md_documents_registry_regen_trigger():
     content = doc_path.read_text(encoding="utf-8")
     assert "regenerated unconditionally" in content
     assert "git add docs/REGISTRY.yaml" in content
+
+
+# ---------------------------------------------------------------------------
+# _parse_docs_to_update (TCK-20260802-DOC-COVERAGE-CHECK)
+# ---------------------------------------------------------------------------
+
+
+def test_parse_docs_extracts_multiple_bullets():
+    section = (
+        "- `docs/mechanics/03_economic_laws.md`: harvesting yield formula changes\n"
+        "- `docs/engine/known_limitations.md`: new scope boundary\n"
+        "- `docs/parity_ledger/town_resource.yaml`: entry TR-12 status update\n"
+    )
+    assert _parse_docs_to_update(section) == [
+        "docs/mechanics/03_economic_laws.md",
+        "docs/engine/known_limitations.md",
+        "docs/parity_ledger/town_resource.yaml",
+    ]
+
+
+def test_parse_docs_none_variants():
+    for text in ("", "None", "None.", "N/A", "n/a", "  none.  "):
+        assert _parse_docs_to_update(text) == [], repr(text)
+
+
+def test_parse_docs_ignores_non_bullet_prose():
+    section = "This ticket may eventually need to update docs/mechanics/x.md but nothing is decided yet."
+    assert _parse_docs_to_update(section) == []
+
+
+# ---------------------------------------------------------------------------
+# _git_touched_paths (TCK-20260802-DOC-COVERAGE-CHECK)
+# ---------------------------------------------------------------------------
+
+
+def test_git_touched_paths_reflects_real_status(tmp_path):
+    subprocess.run(["git", "init", "-q"], cwd=tmp_path, check=True)
+    subprocess.run(["git", "config", "user.email", "test@example.com"], cwd=tmp_path, check=True)
+    subprocess.run(["git", "config", "user.name", "Test"], cwd=tmp_path, check=True)
+    # git status --porcelain collapses a wholly-new untracked directory to the directory path
+    # itself (trailing slash), not the individual file inside it — this is real git behavior, not
+    # a wrapper bug; _path_touched (tested separately below) handles the directory-prefix case.
+    (tmp_path / "docs").mkdir()
+    (tmp_path / "docs" / "new_file.md").write_text("content", encoding="utf-8")
+
+    touched = _git_touched_paths(root=tmp_path)
+    assert "docs/" in touched
+
+
+def test_git_touched_paths_individual_file_in_tracked_directory(tmp_path):
+    subprocess.run(["git", "init", "-q"], cwd=tmp_path, check=True)
+    subprocess.run(["git", "config", "user.email", "test@example.com"], cwd=tmp_path, check=True)
+    subprocess.run(["git", "config", "user.name", "Test"], cwd=tmp_path, check=True)
+    (tmp_path / "docs").mkdir()
+    (tmp_path / "docs" / "existing.md").write_text("x", encoding="utf-8")
+    subprocess.run(["git", "add", "-A"], cwd=tmp_path, check=True)
+    subprocess.run(["git", "commit", "-q", "-m", "init"], cwd=tmp_path, check=True)
+
+    (tmp_path / "docs" / "new_file.md").write_text("content", encoding="utf-8")
+    touched = _git_touched_paths(root=tmp_path)
+    assert "docs/new_file.md" in touched
+
+
+def test_git_touched_paths_fails_open_on_non_repo(tmp_path):
+    # tmp_path has no .git directory at all.
+    assert _git_touched_paths(root=tmp_path) == set()
+
+
+# ---------------------------------------------------------------------------
+# _path_touched (TCK-20260802-DOC-COVERAGE-CHECK)
+# ---------------------------------------------------------------------------
+
+
+def test_path_touched_exact_match():
+    assert _path_touched("docs/x.md", {"docs/x.md"}) is True
+
+
+def test_path_touched_directory_prefix_match():
+    assert _path_touched("docs/newsubsystem/x.md", {"docs/newsubsystem/"}) is True
+
+
+def test_path_touched_no_match():
+    assert _path_touched("docs/x.md", {"docs/y.md"}) is False
+
+
+# ---------------------------------------------------------------------------
+# check_docs_to_update_coverage (TCK-20260802-DOC-COVERAGE-CHECK)
+# ---------------------------------------------------------------------------
+
+
+def test_docs_coverage_hotfix_is_na(tmp_path):
+    base = tmp_path / "staging_artifacts"  # directory does not even exist
+    status, evidence = check_docs_to_update_coverage("TCK-FAKE", "hotfix", base_dir=base)
+    assert status == "NA"
+
+
+def test_docs_coverage_missing_investigation_file_fails(tmp_path):
+    base = tmp_path / "staging_artifacts"
+    (base / "TCK-FAKE").mkdir(parents=True)
+    # investigation.md intentionally absent
+    status, evidence = check_docs_to_update_coverage("TCK-FAKE", "standard", base_dir=base)
+    assert status == "FAIL"
+    assert "investigation.md" in evidence
+
+
+def _write_investigation(base: Path, ticket_id: str, docs_section_body: str) -> Path:
+    directory = base / ticket_id
+    directory.mkdir(parents=True, exist_ok=True)
+    path = directory / "investigation.md"
+    path.write_text(
+        ARTIFACT_FM.format(ticket_id=ticket_id, artifact_type="investigation")
+        + f"\n## Docs Requiring Update\n{docs_section_body}\n\n## Parity Ledger Overlap\nNone.\n",
+        encoding="utf-8",
+    )
+    return path
+
+
+def test_docs_coverage_no_section_heading_passes(tmp_path):
+    base = tmp_path / "staging_artifacts"
+    directory = base / "TCK-FAKE"
+    directory.mkdir(parents=True)
+    (directory / "investigation.md").write_text(
+        ARTIFACT_FM.format(ticket_id="TCK-FAKE", artifact_type="investigation"),
+        encoding="utf-8",
+    )
+    status, evidence = check_docs_to_update_coverage("TCK-FAKE", "standard", base_dir=base)
+    assert status == "PASS"
+
+
+def test_docs_coverage_explicit_none_passes(tmp_path):
+    base = tmp_path / "staging_artifacts"
+    _write_investigation(base, "TCK-FAKE", "None.")
+    status, evidence = check_docs_to_update_coverage("TCK-FAKE", "standard", base_dir=base)
+    assert status == "PASS"
+
+
+def test_docs_coverage_unparseable_non_none_section_fails(tmp_path):
+    base = tmp_path / "staging_artifacts"
+    _write_investigation(base, "TCK-FAKE", "Probably docs/mechanics/x.md but not sure yet.")
+    status, evidence = check_docs_to_update_coverage("TCK-FAKE", "standard", base_dir=base)
+    assert status == "FAIL"
+    assert "no docs/ path could be parsed" in evidence
+
+
+def test_docs_coverage_all_flagged_paths_touched_passes(tmp_path, monkeypatch):
+    subprocess.run(["git", "init", "-q"], cwd=tmp_path, check=True)
+    subprocess.run(["git", "config", "user.email", "test@example.com"], cwd=tmp_path, check=True)
+    subprocess.run(["git", "config", "user.name", "Test"], cwd=tmp_path, check=True)
+    (tmp_path / "docs" / "mechanics").mkdir(parents=True)
+    (tmp_path / "docs" / "mechanics" / "x.md").write_text("content", encoding="utf-8")
+
+    base = tmp_path / "staging_artifacts"
+    _write_investigation(base, "TCK-FAKE", "- `docs/mechanics/x.md`: reason")
+    monkeypatch.chdir(tmp_path)
+
+    status, evidence = check_docs_to_update_coverage("TCK-FAKE", "standard", base_dir=Path("staging_artifacts"))
+    assert status == "PASS"
+    assert "docs/mechanics/x.md" in evidence
+
+
+def test_docs_coverage_missing_flagged_path_fails(tmp_path, monkeypatch):
+    subprocess.run(["git", "init", "-q"], cwd=tmp_path, check=True)
+    subprocess.run(["git", "config", "user.email", "test@example.com"], cwd=tmp_path, check=True)
+    subprocess.run(["git", "config", "user.name", "Test"], cwd=tmp_path, check=True)
+    # No docs/mechanics/x.md ever created — nothing for git to show as touched.
+
+    base = tmp_path / "staging_artifacts"
+    _write_investigation(base, "TCK-FAKE", "- `docs/mechanics/x.md`: reason")
+    monkeypatch.chdir(tmp_path)
+
+    status, evidence = check_docs_to_update_coverage("TCK-FAKE", "standard", base_dir=Path("staging_artifacts"))
+    assert status == "FAIL"
+    assert "docs/mechanics/x.md" in evidence
+
+
+def test_docs_coverage_ignores_behavior_changed_entirely():
+    # Signature/design guard: the function only ever accepts ticket_id/tier/base_dir — there is
+    # no behavior_changed-shaped parameter to accidentally wire up, unlike doc_staleness_check.py's
+    # gate (TCK-20260802-DOC-UPDATE-DISCIPLINE), which this check deliberately does not mirror.
+    import inspect
+
+    params = list(inspect.signature(check_docs_to_update_coverage).parameters)
+    assert params == ["ticket_id", "tier", "base_dir"]
+
+
+# ---------------------------------------------------------------------------
+# run_static_precheck — docs_to_update_coverage wiring (TCK-20260802-DOC-COVERAGE-CHECK)
+# ---------------------------------------------------------------------------
+
+
+def test_run_static_precheck_includes_docs_to_update_coverage_condition(tmp_path, monkeypatch):
+    _scaffold_precheck_repo(tmp_path)
+    monkeypatch.chdir(tmp_path)
+
+    results = run_static_precheck("TCK-FAKE", "standard", "2026-07-05T00:00:00Z")
+    conditions = {r["condition"] for r in results}
+    assert "docs_to_update_coverage" in conditions
+
+
+# ---------------------------------------------------------------------------
+# implement-ticket.js Verify-prompt wiring (TCK-20260802-DOC-COVERAGE-CHECK) — static
+# source-text test, mirrors tests/tools/test_doc_staleness_gate_wiring.py's established pattern
+# (no JS test runner exists for .claude/workflows/*.js in this repo).
+# ---------------------------------------------------------------------------
+
+_IMPLEMENT_TICKET_JS_PATH = Path(__file__).parent.parent.parent / ".claude" / "workflows" / "implement-ticket.js"
+
+
+def test_verify_prompt_cites_condition_6_alongside_static_conditions():
+    text = _IMPLEMENT_TICKET_JS_PATH.read_text(encoding="utf-8")
+    idx = text.find("Before checking conditions")
+    assert idx != -1
+    line_end = text.find("\n", idx)
+    line = text[idx:line_end]
+    assert "conditions 3, 4, 6, 7, 10, 12" in line
+
+
+def test_verify_prompt_condition_6_precedes_static_precheck_invocation():
+    text = _IMPLEMENT_TICKET_JS_PATH.read_text(encoding="utf-8")
+    condition_idx = text.find("Before checking conditions 3, 4, 6, 7, 10, 12")
+    invoke_idx = text.find("run_static_precheck('${tid}'")
+    assert condition_idx != -1
+    assert invoke_idx != -1
+    assert condition_idx < invoke_idx

@@ -510,7 +510,7 @@ Read:
 Produce two files:
 
 FILE 1: staging_artifacts/${tid}/investigation.md
-Sections: Current Behavior (file:line refs) | Mechanics/Engine Constraints | Docs Requiring Update (every specific docs/ path this ticket must change if implemented as scoped, with a one-line reason each — empty/"None" only if no doc anywhere needs to change) | Parity Ledger Overlap (IDs + status) | Prior Work | Risks and Open Questions | Anti-Drift Hazards
+Sections: Current Behavior (file:line refs) | Mechanics/Engine Constraints | Docs Requiring Update (every specific docs/ path this ticket must change if implemented as scoped — empty/"None" only if no doc anywhere needs to change. REQUIRED FORMAT, machine-parsed by done-checker's static coverage check: one bullet per path, backtick-wrapped, immediately after "- ", e.g. "- \`docs/mechanics/03_economic_laws.md\`: one-line reason". If none apply, write exactly "None." with no bullets — any other format is treated as a format regression, not a clean "nothing required" case) | Parity Ledger Overlap (IDs + status) | Prior Work | Risks and Open Questions | Anti-Drift Hazards
 
 FILE 2: staging_artifacts/${tid}/test_plan.md
 Sections: Regression Surface (existing tests that must pass) | New Tests Required (per AC) | Scoped Pytest Commands | Anti-Drift Test Guards
@@ -1257,8 +1257,11 @@ Tier-specific N/A rules:
 - If tier is 'hotfix': mark Condition 4 (staging artifacts) as N/A — no investigation.md / plan.md / test_plan.md required.
 - If tier is 'standard': all conditions apply.
 
-Before checking conditions 3, 4, 7, 10, 12 by hand, run the static pre-check script and cite its JSON
-output verbatim for those five conditions instead of re-deriving them:
+Before checking conditions 3, 4, 6, 7, 10, 12 by hand, run the static pre-check script and cite its
+JSON output verbatim for those conditions instead of re-deriving them (condition 6, "Docs updated",
+is now backed by the script's docs_to_update_coverage check, added by TCK-20260802-DOC-COVERAGE-CHECK
+— it independently re-verifies Investigate's flagged docs were touched, regardless of what
+behavior_changed was self-reported at Implement time):
   python3 -c "import sys; sys.path.insert(0,'.'); from tools.gate_checks.done_checker_static import run_static_precheck; import json; print(json.dumps(run_static_precheck('${tid}', '${tier}', '${startTs}')))"
 
 Check all DoD conditions with evidence. For these, mark as noted:

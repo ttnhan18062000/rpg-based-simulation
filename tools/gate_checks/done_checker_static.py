@@ -26,6 +26,8 @@ tuple returns, no argparse/CLI — consumed exclusively via `python3 -c "..."`.
 
 import csv
 import json
+import re
+import subprocess
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -303,8 +305,129 @@ def check_ticket_field_values_valid(
     return (result["status"], result["evidence"])
 
 
+_DOCS_BULLET_RE = re.compile(r"^-\s+`(docs/[^`]+)`", re.MULTILINE)
+_DOCS_NONE_PHRASES = {"", "none", "none.", "n/a"}
+
+
+def _git_touched_paths(root: Path = Path(".")) -> set[str]:
+    """Return every path `git status --porcelain` reports as changed, relative to `root`.
+
+    Read-only, fail-open: any subprocess error (missing `git` binary, `root` not a repo, timeout)
+    returns an empty set rather than raising — mirrors this module's established fail-open
+    convention (e.g. `_find_flagged_data_run_files`'s "unparsable start_ts is not evidence of
+    cleanliness" choice: an empty result here means "nothing confirmed touched," which correctly
+    fails a coverage check closed rather than silently passing it open).
+    """
+    try:
+        result = subprocess.run(
+            ["git", "status", "--porcelain"],
+            cwd=root,
+            capture_output=True,
+            text=True,
+            timeout=10,
+            check=False,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return set()
+
+    paths: set[str] = set()
+    for line in result.stdout.splitlines():
+        if not line.strip():
+            continue
+        # Porcelain format: "XY PATH" or "XY PATH1 -> PATH2" for renames — take the rename target.
+        rest = line[3:] if len(line) > 3 else line.strip()
+        if " -> " in rest:
+            rest = rest.split(" -> ", 1)[1]
+        paths.add(rest.strip())
+    return paths
+
+
+def _path_touched(path: str, touched: set[str]) -> bool:
+    """True if `path` is directly in `touched`, or falls under a touched directory entry.
+
+    `git status --porcelain` collapses a wholly-new untracked directory to just the directory
+    path with a trailing slash (e.g. `?? docs/newsubsystem/`) rather than listing every file
+    inside it individually — a required doc path under such a directory would never exact-match
+    `touched` on its own, producing a false FAIL for a case that is, in fact, covered.
+    """
+    if path in touched:
+        return True
+    return any(t.endswith("/") and path.startswith(t) for t in touched)
+
+
+def _parse_docs_to_update(section_text: str) -> list[str]:
+    """Extract `docs/` paths from investigation.md's '## Docs Requiring Update' bullet list.
+
+    Requires the tightened format (TCK-20260802-DOC-COVERAGE-CHECK): one bullet per path, each
+    starting with `- ` followed immediately by a backtick-wrapped `docs/...` path. Free-text after
+    the path (the reason) is not validated — only the leading path token is parsed. Returns `[]`
+    for an empty section or a recognized "none applicable" phrase (case-insensitive).
+    """
+    if section_text.strip().lower() in _DOCS_NONE_PHRASES:
+        return []
+    return _DOCS_BULLET_RE.findall(section_text)
+
+
+def check_docs_to_update_coverage(
+    ticket_id: str, tier: str, base_dir: Path = Path("staging_artifacts")
+) -> tuple[str, str]:
+    """Independently re-verify that every docs/ path Investigate flagged as required was actually
+    touched in the final diff — deliberately reads only investigation.md and real git state, NEVER
+    any Implement-phase self-report (`behavior_changed`, `files_changed`).
+
+    Built for TCK-20260802-DOC-COVERAGE-CHECK: closes the gap where an implementer wrongly reports
+    `behavior_changed=false` for a change that did introduce new logic/features/settings —
+    `doc_staleness_check.py`'s gate and its `docs_to_update` advisory (both from
+    TCK-20260802-DOC-UPDATE-DISCIPLINE) only ever run when `behavior_changed=true`, so a false
+    `false` bypasses both silently. Investigate's `docs_to_update` obligation is derived from ticket
+    scope/acceptance criteria, independent of that later self-report, so re-checking it here at
+    Verify time — after Architecture-Verify/Test/Parity have already run and the implementation is
+    stable — catches this silent-skip case regardless of what the implementer claimed.
+
+    `tier == "hotfix"` → `NA` (no investigation.md exists, same as `check_staging_artifacts_complete`).
+    A missing `investigation.md` for standard/epic tier is a `FAIL` — it must exist by Verify time.
+    An empty/"None." section is a valid, deliberate judgment call — `PASS`, not `NA`: the section
+    itself is still required to exist and be read, just found to have nothing flagged.
+    A non-empty section that fails to parse any path is treated as a format regression (`FAIL`),
+    not silently passed — this also enforces the tightened bullet format going forward.
+    """
+    if tier == "hotfix":
+        return ("NA", "hotfix tier — no investigation.md, no Docs Requiring Update section")
+
+    investigation_path = base_dir / ticket_id / "investigation.md"
+    if not investigation_path.exists():
+        return (
+            "FAIL",
+            f"{investigation_path} does not exist — cannot check docs_to_update coverage",
+        )
+
+    text = investigation_path.read_text(encoding="utf-8")
+    section_text = _extract_section_text(text, "Docs Requiring Update")
+    required_docs = _parse_docs_to_update(section_text)
+
+    if not required_docs:
+        if section_text.strip().lower() in _DOCS_NONE_PHRASES:
+            return ("PASS", "no docs/ paths flagged as requiring update")
+        return (
+            "FAIL",
+            f"'## Docs Requiring Update' section is non-empty but no docs/ path could be parsed "
+            f"from it — expected one bullet per path (e.g. '- `docs/x.md`: reason'); "
+            f"got: {section_text[:200]!r}",
+        )
+
+    touched = _git_touched_paths()
+    missing = [d for d in required_docs if not _path_touched(d, touched)]
+    if missing:
+        return (
+            "FAIL",
+            f"investigation.md flagged {missing} as requiring an update but git status shows no "
+            f"changes to these path(s)",
+        )
+    return ("PASS", f"all {len(required_docs)} flagged doc path(s) touched: {required_docs}")
+
+
 def run_static_precheck(ticket_id: str, tier: str, start_ts: str | None) -> list[dict]:
-    """Aggregate all 6 Part A checks. Returns one dict per check, in this fixed order, matching
+    """Aggregate all 7 Part A checks. Returns one dict per check, in this fixed order, matching
     `DONE_SCHEMA.checklist`'s own item shape so the agent can transcribe directly. Does not
     collapse to a single boolean — per-check detail must survive.
     """
@@ -315,6 +438,7 @@ def run_static_precheck(ticket_id: str, tier: str, start_ts: str | None) -> list
         ("working_log_no_row_yet", check_working_log_no_row_yet(ticket_id)),
         ("frontmatter_valid", check_frontmatter_valid(ticket_id, tier)),
         ("ticket_field_values_valid", check_ticket_field_values_valid(ticket_id)),
+        ("docs_to_update_coverage", check_docs_to_update_coverage(ticket_id, tier)),
     )
     return [
         {"condition": name, "status": status, "evidence": evidence}

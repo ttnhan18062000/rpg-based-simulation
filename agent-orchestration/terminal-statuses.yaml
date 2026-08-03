@@ -8,14 +8,15 @@
 # Source: exhaustive line-by-line re-read of .claude/workflows/implement-ticket.js as of
 # 2026-07-22 (staging_artifacts/TCK-20260721-CLAUDE-CONFORMANCE-ADAPTER/investigation.md), 13
 # literal `writeMonitoring('STRING')` call sites (12 distinct values — FINALIZE_INCOMPLETE appears
-# at two call sites, :1377 and :1389), 2 verdict-derived call sites (`writeMonitoring(review.verdict)`
+# at two call sites, :1380 and :1392), 2 verdict-derived call sites (`writeMonitoring(review.verdict)`
 # at :708 and `writeMonitoring(archVerify.verdict)` at :903, shared NEEDS_CHANGES/BLOCKED value
 # space across Review and Architecture-Verify), and 1 bypass call site (SCOPE_AGENT_FAILED, written
 # via a raw bash()-embedded `record_run.py --data` call at :190-193, never passed through
 # writeMonitoring() at all). Cross-checked against docs/agent-monitoring/schema.md's `final_status`
-# table. Line citations re-verified 2026-08-02 (TCK-20260802-TERMSTATUS-DRIFT-FIX) — line numbers in
-# this comment drift whenever implement-ticket.js grows; treat this file's `statuses:` data below as
-# authoritative, this header as best-effort provenance only.
+# table. Line citations re-verified 2026-08-02 (TCK-20260802-TERMSTATUS-DRIFT-FIX, then again by
+# TCK-20260802-DOC-COVERAGE-CHECK) — line numbers in this comment drift whenever
+# implement-ticket.js grows; treat this file's `statuses:` data below as authoritative, this header
+# as best-effort provenance only.
 #
 # `kind` vocabulary:
 #   literal         — single writeMonitoring('STRING') call site (or more than one, for a

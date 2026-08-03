@@ -172,6 +172,13 @@ to carry). `investigation.md`'s own template gained a matching `## Docs Requirin
 between `Mechanics/Engine Constraints` and `Parity Ledger Overlap`. `docs_to_update` feeds the
 Implement phase's doc-relevance advisory check below — it is not itself a gate.
 
+**Required bullet format (tightened by `TCK-20260802-DOC-COVERAGE-CHECK`):** one bullet per path,
+backtick-wrapped, immediately after `- ` (e.g. `` - `docs/mechanics/03_economic_laws.md`: reason ``),
+or exactly `None.` if nothing applies. This isn't just style — `done-checker`'s
+`docs_to_update_coverage` static check (Verify phase, below) machine-parses this exact section to
+independently re-verify coverage; a non-bullet paragraph or an un-backticked path fails that check
+as a format regression, not a clean "nothing required" case.
+
 ---
 
 ### Plan
@@ -416,14 +423,19 @@ including artifacts Parity's or `done-checker`'s own re-verification pytest runs
 the post-Test checkpoint (above) ran or was skipped. A deletion-error result here is folded
 directly into condition 10 rather than raising a separate blocking status.
 
-**Step 0b:** Before judging conditions 3, 4, 7, 10 (if not already marked `FAIL` by Step 0a), 12 by
-hand, `done-checker` runs
+**Step 0b:** Before judging conditions 3, 4, 6, 7, 10 (if not already marked `FAIL` by Step 0a), 12
+by hand, `done-checker` runs
 `tools/gate_checks/done_checker_static.py::run_static_precheck(ticket_id, tier, start_ts)` and
 cites its PASS/FAIL/NA + evidence output verbatim for those conditions, then self-reports a
 `verified_by` field listing which condition(s) came from which script(s) vs. pure judgment.
-`run_static_precheck` aggregates 6 checks as of `TCK-20260718-TIER-PRIORITY-CANONICAL-ENUM`: the 5
-named above plus `ticket_field_values_valid` (canonical `## Tier`/`## Priority` body-field
-values), which does not yet have a dedicated numbered condition in the 13-condition table below.
+`run_static_precheck` aggregates 7 checks as of `TCK-20260802-DOC-COVERAGE-CHECK`: the 5 originally
+named above, `ticket_field_values_valid` (added by `TCK-20260718-TIER-PRIORITY-CANONICAL-ENUM` —
+canonical `## Tier`/`## Priority` body-field values, not mapped to a dedicated numbered condition),
+and `docs_to_update_coverage` (condition 6's real backing — independently re-parses
+`investigation.md`'s "Docs Requiring Update" section and cross-references each flagged path against
+real `git status --porcelain` output, deliberately never reading `behavior_changed` or any other
+Implement-phase self-report, so it still catches a wrongly-self-reported `behavior_changed=false`
+that would otherwise let both the Implement-phase gate and its advisory silently not fire).
 
 `mechanics-auditor` is a separate, ad hoc agent (not part of this Verify phase or any pipeline phase)
 available for checking mechanics parity before/after a change; it now has its own self-invoked static
@@ -438,7 +450,7 @@ pre-check, `tools/gate_checks/mechanics_auditor_static.py::verify_entry_test_pat
 | 3 | Ticket in inprogress/ | ✓ (moved to done/ by finalizer after this check) — script-checked |
 | 4 | Staging artifacts complete | investigation.md, plan.md, test_plan.md all exist — script-checked |
 | 5 | Tests run and updated | 5 new tests + passing arena/combat regression |
-| 6 | Docs updated | `combat_movement.yaml` updated, Ch02 unchanged (classification not a formula) |
+| 6 | Docs updated | `combat_movement.yaml` updated, Ch02 unchanged (classification not a formula) — script-checked as of `TCK-20260802-DOC-COVERAGE-CHECK` via `docs_to_update_coverage` (independent of `behavior_changed`) |
 | 7 | working_log.csv entry | Not yet present — will be written by finalizer — script-checked |
 | 8 | No undocumented decisions | Fallback-first vs. projection-first decision documented in plan |
 | 9 | Repo consistent | No leftover temp files |
