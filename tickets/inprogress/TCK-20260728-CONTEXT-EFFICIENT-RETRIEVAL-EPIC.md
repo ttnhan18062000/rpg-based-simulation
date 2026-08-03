@@ -71,6 +71,9 @@ Create a single epic-tier tracking ticket for the whole context-efficient agent 
 - TCK-20260729-SHADOW-PACKET-CALL-SITE
 - TCK-20260729-SHADOW-BASELINE-COMPARISON
 - TCK-20260730-SHADOW-PROMOTION-GATE-THRESHOLDS
+- TCK-20260802-CONTEXT-KIND-PRIORITY
+- TCK-20260802-STORED-ARTIFACT-KIND
+- TCK-20260802-EXACT-LOOKUP-CONVENTION
 
 ## Related Docs
 - docs/plans/agent_infrastructure/context_efficient_agent_retrieval/idea_context_efficient_agent_retrieval_observability.md
@@ -168,6 +171,53 @@ None.
   repo as of this decision (`tickets/todos/codex-runtime-activation/` not started, no `.codex/`
   directory exists) — provider parity is exactly as unverifiable here as it was for Open Decision 5.
   Full evidence and reasoning: `docs/ai/context_packet_exposure_mechanism_decision.md`.
+- OPEN DECISION 7 — **RESOLVED** (2026-08-02/03, `TCK-20260802-CONTEXT-KIND-PRIORITY`): Open
+  Decision 3 fixed how a single `included[]` entry's `authority`/`freshness` are populated per
+  `kind`, but never how competing candidates of *different* `kind`s are ranked or chosen between
+  under a bounded `token_budget`. What cross-kind candidate-selection/ranking policy applies?
+  Answer: three technical constraints are resolved definitively — `unrated` must not default to
+  worst (§3's existing fabricated-default prohibition is newly binding cross-kind), `score` is not
+  a cross-kind-comparable signal today (`code_symbol`/`parity_ledger_entry` candidates hardcode
+  `score = 0.0` while `HybridResult`-derived candidates carry a real RRF float), and
+  `_resolve_subject_conflicts()` cannot structurally fire cross-kind (its `_CONFLICT_ELIGIBLE_
+  FRESHNESS` gate mathematically excludes every `unrated`/parity-status freshness value before
+  comparison begins). The residual ordering question — where `unrated` sits relative to `P1`/`P2`,
+  and whether a `P0` `parity_ledger_entry` gets a hard inclusion floor — is explicitly **not**
+  resolved here: it is a genuine value judgment with zero existing repo precedent for an
+  inclusion-floor/budget-trimming mechanism, and is deferred pending explicit human sign-off rather
+  than settled by self-chosen ordering. Full resolution and code citations:
+  `docs/engine/contracts/context_packet_contract.md` §5.
+- OPEN DECISION 8 — **RESOLVED** (2026-08-02/03, `TCK-20260802-STORED-ARTIFACT-KIND`): should
+  `stored_artifacts/{ticket_id}/*.md` become its own registry-indexed `kind` (its rationale/decision
+  content is currently invisible to retrieval except via the parent ticket's `artifact_files` path
+  list), and should `staging_artifacts/`'s current total exclusion from `generate_registry.py` be
+  recorded as an explicit permanent decision rather than an implicit gap? Answer: resolved as a
+  documentation-only change. Yes — `stored_artifacts/*.md` (the canonical
+  `investigation.md`/`plan.md`/`test_plan.md` triplet) warrants a new `stored_artifact`
+  registry-indexed kind, classified under Open Decision 3's Branch 1 (REGISTRY-backed direct
+  mapping), since its frontmatter carries the same `status`/`authority` enums REGISTRY.yaml's own
+  `doc`/`ticket` entries use and the only reason it isn't already indexed is `collect_docs()`'s
+  `docs/`-only walk, a directory-scope gap rather than a schema mismatch. `staging_artifacts/`'s
+  exclusion is confirmed intentional permanent design, not an accidental gap. Corpus heterogeneity
+  (412 `index.md` files, legacy non-`TCK-*` directories, dozens of non-canonical filenames) is
+  flagged as a scope boundary for a future scanner-building ticket, not resolved here. Full
+  resolution and code citations: `docs/engine/contracts/context_packet_contract.md` §6.
+- OPEN DECISION 9 — **RESOLVED** (2026-08-02/03, `TCK-20260802-EXACT-LOOKUP-CONVENTION`): should
+  the exact-structural-lookup query pattern `tools/parity_index.py`'s `entry()`/`impact()`/
+  `health()` establishes (deterministic, gate-safe, distinct from the fuzzy RRF-fused `search`
+  path) be documented as a general project convention for future `kind`s needing gate-safe
+  lookups, rather than staying parity-specific? Answer: **no**, for now. With n=1 (no second
+  `kind` has ever needed a gate-safe exact lookup), rule-of-three reasoning applies — applicability
+  criteria written today from a single instance would either overfit to `parity_index.py`'s
+  specific implementation choices or be abstracted so far it becomes unfalsifiable. The Gate A GO
+  verdict's recall numbers (66.7% vs. 4.8%) are evidence of parity-domain retrieval quality, not
+  of pattern generalizability to a different `kind` — those are two different claims, and this
+  resolution does not conflate them. The pattern's generalizable properties (read-only access,
+  exact equality matching, deterministic sort, explicit typed no-match response, zero mutation
+  surface) are recorded as a citable, non-mandatory reference, not a mandatory convention, with an
+  explicit reopening condition: revisit once a second real `kind` genuinely needs a gate-safe
+  exact lookup. Full resolution and code citations:
+  `docs/engine/contracts/context_packet_contract.md` §7.
 
 ## Implementation Notes
 
