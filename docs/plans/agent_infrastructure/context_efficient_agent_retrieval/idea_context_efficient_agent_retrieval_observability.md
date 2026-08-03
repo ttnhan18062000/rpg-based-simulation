@@ -329,6 +329,32 @@ provider-agnostic implementation has a stable shared monitoring path:
    advisory to default behavior?
 6. Should context packets be exposed as an MCP tool, a provider-adapter library,
    or both after the provider-neutral contract is implemented?
+7. Open Decision 3 fixed how a single `included[]` entry's `authority`/`freshness` are
+   populated per `kind`, but never how competing candidates of *different* `kind`s
+   (e.g. a `doc` and a `parity_ledger_entry`) are ranked or chosen between when a bounded
+   `token_budget` cannot fit both. What cross-kind candidate-selection/ranking policy
+   applies once more than one live `kind` exists? (Raised 2026-08-02, surfaced by
+   `tools/parity_index.py`'s new `parity_ledger_entry` read path landing alongside the
+   existing `doc`/`ticket`/`code_symbol`/etc. kinds with no decided precedence between
+   them — `tools/context_packet_assembler.py::assemble_context_packet()` takes an
+   already-decided `included_candidates` list and never re-sorts/weights by `kind`.)
+8. Should `stored_artifacts/{ticket_id}/*.md` (`investigation.md`/`plan.md`/`test_plan.md`,
+   each carrying real frontmatter — `artifact_type`, `status`, `authority`) become its own
+   registry-indexed `kind` (e.g. `stored_artifact`), so the rationale/decision content
+   inside a closed ticket's artifacts is retrievable on its own terms rather than only
+   visible via the parent ticket's `artifact_files` path list (`tools/generate_registry.py`
+   ::`join_artifact_files()`)? Relatedly: confirm whether `staging_artifacts/`'s current
+   total exclusion from `generate_registry.py`'s scan (correct today, since it holds
+   in-progress/scratch content for open tickets) should be recorded as an explicit,
+   permanent design decision rather than an implicit gap, once/if Decision 8 gives
+   `stored_artifacts/` its own retrieval treatment. (Raised 2026-08-02.)
+9. `tools/parity_index.py`'s `entry()`/`impact()`/`health()` functions establish a
+   deterministic, exact-structural-lookup query pattern (never similarity-ranked, always
+   gate-safe, explicitly distinct from the fuzzy RRF-fused `search`/`tools/hybrid_retrieval.py`
+   path) for the `parity_ledger_entry` kind specifically. Should this exact-vs-fuzzy
+   retrieval-type split be documented as a general project convention that any future
+   `kind` needing gate-safe lookups should follow, rather than remaining an
+   implicit, parity-specific pattern? (Raised 2026-08-02.)
 
 ## Related Material
 
