@@ -8,9 +8,11 @@ never the real agent-monitoring/events.jsonl (test_plan.md's "No-real-run_id-pol
 """
 from __future__ import annotations
 
+import inspect
 import json
 import sqlite3
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 import pytest
@@ -215,6 +217,40 @@ class TestEmitRetrievalEvent:
         )
         written = (tmp_path / "agent-monitoring" / "events.jsonl").read_text()
         assert "default events_file test" in written
+
+    def test_ts_override_is_used_verbatim(self, tmp_path):
+        events_file = tmp_path / "agent-monitoring" / "events.jsonl"
+        re_mod.emit_retrieval_event(
+            run_id="RETRIEVAL-EVENT-test",
+            seq=1,
+            phase="Retrieval",
+            agent="hybrid-retrieval-wrapper",
+            summary="ts override test",
+            status="ok",
+            events_file=events_file,
+            ts="2026-08-03T02:26:02Z",
+        )
+        written = json.loads(events_file.read_text().splitlines()[0])
+        assert written["ts"] == "2026-08-03T02:26:02Z"
+
+    def test_ts_default_none_produces_fresh_utc_now_timestamp(self, tmp_path):
+        events_file = tmp_path / "agent-monitoring" / "events.jsonl"
+        before = datetime.now(timezone.utc)
+        re_mod.emit_retrieval_event(
+            run_id="RETRIEVAL-EVENT-test",
+            seq=1,
+            phase="Retrieval",
+            agent="hybrid-retrieval-wrapper",
+            summary="ts default test",
+            status="ok",
+            events_file=events_file,
+        )
+        after = datetime.now(timezone.utc)
+
+        written = json.loads(events_file.read_text().splitlines()[0])
+        assert written["ts"].endswith("Z")
+        written_dt = datetime.fromisoformat(written["ts"].replace("Z", "+00:00"))
+        assert before <= written_dt <= after
 
 
 # ---------------------------------------------------------------------------
@@ -490,3 +526,91 @@ class TestWrapContextPacketAssembly:
         assert written["selected_count"] == len(packet.included)
         assert written["corpus_generation"] == "gen-1"
         assert written["retrieval_version"] == 1
+
+    def test_ts_override_is_forwarded_verbatim_to_emit_retrieval_event(self, tmp_path):
+        included_candidate = cpa.candidate_from_code_index_record(
+            {
+                "id": "node-1",
+                "module": "src.ai.example",
+                "symbol": "ExampleClass",
+                "docstring": "d",
+                "owned_component": 1,
+                "associated_tests": "t",
+            }
+        )
+
+        events_file = tmp_path / "events.jsonl"
+        re_mod.wrap_context_packet_assembly(
+            seq=1,
+            summary="ts override forwarding test",
+            events_file=events_file,
+            ts="2026-08-03T02:26:02Z",
+            packet_id="packet-1",
+            corpus_generation="gen-1",
+            retrieval_version=1,
+            budget_requested=1000,
+            included_candidates=[included_candidate],
+            excluded=[],
+        )
+
+        written = json.loads(events_file.read_text().splitlines()[0])
+        assert written["ts"] == "2026-08-03T02:26:02Z"
+
+    def test_ts_default_none_produces_fresh_utc_now_timestamp(self, tmp_path):
+        included_candidate = cpa.candidate_from_code_index_record(
+            {
+                "id": "node-1",
+                "module": "src.ai.example",
+                "symbol": "ExampleClass",
+                "docstring": "d",
+                "owned_component": 1,
+                "associated_tests": "t",
+            }
+        )
+
+        events_file = tmp_path / "events.jsonl"
+        before = datetime.now(timezone.utc)
+        re_mod.wrap_context_packet_assembly(
+            seq=1,
+            summary="ts default forwarding test",
+            events_file=events_file,
+            packet_id="packet-1",
+            corpus_generation="gen-1",
+            retrieval_version=1,
+            budget_requested=1000,
+            included_candidates=[included_candidate],
+            excluded=[],
+        )
+        after = datetime.now(timezone.utc)
+
+        written = json.loads(events_file.read_text().splitlines()[0])
+        assert written["ts"].endswith("Z")
+        written_dt = datetime.fromisoformat(written["ts"].replace("Z", "+00:00"))
+        assert before <= written_dt <= after
+
+
+# ---------------------------------------------------------------------------
+# AC3 -- ts signature/forwarding assertions for wrap_hybrid_retrieval() and
+# wrap_retrieval_cache_check(), the two wrappers not covered by a full
+# override/default invocation test per the ticket's Scope (full invocation coverage lives on
+# emit_retrieval_event() and wrap_context_packet_assembly() above).
+# ---------------------------------------------------------------------------
+
+class TestTsKeywordSignatureAndForwarding:
+    def test_wrap_hybrid_retrieval_accepts_optional_keyword_only_ts(self):
+        sig = inspect.signature(re_mod.wrap_hybrid_retrieval)
+        assert sig.parameters["ts"].kind == inspect.Parameter.KEYWORD_ONLY
+        assert sig.parameters["ts"].default is None
+
+    def test_wrap_retrieval_cache_check_accepts_optional_keyword_only_ts(self):
+        sig = inspect.signature(re_mod.wrap_retrieval_cache_check)
+        assert sig.parameters["ts"].kind == inspect.Parameter.KEYWORD_ONLY
+        assert sig.parameters["ts"].default is None
+
+    def test_wrap_hybrid_retrieval_forwards_ts_to_emit_retrieval_event(self):
+        source = inspect.getsource(re_mod.wrap_hybrid_retrieval)
+        assert "ts=ts" in source
+
+    def test_wrap_retrieval_cache_check_forwards_ts_to_emit_retrieval_event(self):
+        source = inspect.getsource(re_mod.wrap_retrieval_cache_check)
+        assert "ts=ts" in source

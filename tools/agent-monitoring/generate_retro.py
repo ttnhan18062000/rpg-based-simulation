@@ -206,6 +206,50 @@ def _normalize_agent(e):
     return _canonicalize(agent, WORKFLOW_AGENTS.get(workflow, set()))
 
 
+def _is_search_or_graphify_call(tool_row):
+    """True if this tools.jsonl row satisfies the CLAUDE.md search-before-grep hard rule:
+    mcp__knowledge-search__search_docs, or a Bash call invoking graphify. Deliberately
+    independent of retrieval_baseline_metrics.py's SEARCH_TOOL_NAMES (a different vocabulary
+    for a different metric) — do not import or reuse that constant here."""
+    tool = tool_row.get("tool")
+    if tool == "mcp__knowledge-search__search_docs":
+        return True
+    if tool == "Bash":
+        summary = tool_row.get("input_summary") or ""
+        return summary.startswith("graphify")
+    return False
+
+
+def _is_grep_call(tool_row):
+    """True if this tools.jsonl row is a Grep tool call or a Bash call whose input_summary
+    contains 'grep'."""
+    tool = tool_row.get("tool")
+    if tool == "Grep":
+        return True
+    if tool == "Bash":
+        summary = tool_row.get("input_summary") or ""
+        return "grep" in summary
+    return False
+
+
+def _is_parity_ledger_yaml_write(tool_row):
+    if tool_row.get("tool") not in ("Edit", "Write"):
+        return False
+    summary = tool_row.get("input_summary") or ""
+    return "docs/parity_ledger/" in summary and ".yaml" in summary
+
+
+def _is_unsafe_parity_build_call(tool_row):
+    if tool_row.get("tool") != "Bash":
+        return False
+    summary = tool_row.get("input_summary") or ""
+    if "parity_index.py" not in summary or "build" not in summary:
+        return False
+    if "--db-path" not in summary:
+        return True  # no override -> defaults to the real repo parity-index/parity.db path
+    return "parity-index/parity.db" in summary
+
+
 def _collect_inprogress_tagged_tickets(root):
     """Walk tickets/inprogress/ (rglob, future-proofed against subfolders even
     though it is flat today) applying the same three skip rules
@@ -696,7 +740,77 @@ def compute_shadow_baseline_comparison(events: list[dict]) -> dict:
     }
 
 
-def generate(runs, events, label, week_str=None, tickets_root=None):
+def compute_tool_safety_metrics(events: list[dict], tools: list[dict]) -> dict:
+    """Pure, read-only computation over `events`/`tools` auditing (1) search-before-grep
+    hard-rule compliance (CLAUDE.md) for tools.jsonl rows within real Investigate-phase
+    (run_id, seq) pairs, identified via events.jsonl's `phase` field (the authoritative
+    phase-transition record — never tools.jsonl's own, less-authoritative `phase` field, which
+    is null for records predating TCK-20260719-LIVE-PHASE-AGENT-LABEL), and (2)
+    parity_index.py write-safety across the whole `tools` argument as passed in (not scoped to
+    Investigate-phase pairs) — a zero-tolerance count of Edit/Write calls into
+    docs/parity_ledger/*.yaml and of `parity_index.py build` invocations targeting the real
+    repo parity-index/parity.db path instead of a scratch path. Never calls write_lines/
+    write_line or opens any file; operates entirely on its `events`/`tools` arguments.
+
+    tools.jsonl rows with seq: null or seq <= 0 (shadow-packet rows) are structurally excluded
+    by never matching an Investigate-phase key derived from events.jsonl (whose seq is
+    non-nullable and >= 1 for real phase events) — no explicit skip branch is needed.
+    """
+    investigate_pairs = {
+        (e.get("run_id"), e.get("seq"))
+        for e in events
+        if _normalize_phase(e) == "Investigate"
+        and e.get("run_id") is not None
+        and e.get("seq") is not None
+    }
+
+    pair_tool_rows = defaultdict(list)
+    for row in tools:
+        key = (row.get("run_id"), row.get("seq"))
+        if key in investigate_pairs:
+            pair_tool_rows[key].append(row)
+
+    per_pair_compliance = {}
+    for key, rows in pair_tool_rows.items():
+        first_search_idx = next(
+            (i for i, r in enumerate(rows) if _is_search_or_graphify_call(r)), None
+        )
+        first_grep_idx = next((i for i, r in enumerate(rows) if _is_grep_call(r)), None)
+        if first_grep_idx is None:
+            per_pair_compliance[key] = True
+        elif first_search_idx is None:
+            per_pair_compliance[key] = False
+        else:
+            per_pair_compliance[key] = first_search_idx < first_grep_idx
+
+    investigate_pair_count = len(per_pair_compliance)
+    compliant_count = sum(1 for v in per_pair_compliance.values() if v)
+
+    parity_yaml_writes = [r for r in tools if _is_parity_ledger_yaml_write(r)]
+    unsafe_parity_builds = [r for r in tools if _is_unsafe_parity_build_call(r)]
+
+    return {
+        "search_before_grep": {
+            "investigate_pair_count": investigate_pair_count,
+            "compliant_count": compliant_count,
+            "compliance_rate": (
+                compliant_count / investigate_pair_count if investigate_pair_count else None
+            ),
+            "per_pair_compliance": {
+                f"{run_id}::{seq}": compliant
+                for (run_id, seq), compliant in per_pair_compliance.items()
+            },
+        },
+        "parity_write_safety": {
+            "parity_ledger_yaml_write_count": len(parity_yaml_writes),
+            "unsafe_parity_build_count": len(unsafe_parity_builds),
+            "parity_ledger_yaml_write_examples": parity_yaml_writes[:5],
+            "unsafe_parity_build_examples": unsafe_parity_builds[:5],
+        },
+    }
+
+
+def generate(runs, events, label, week_str=None, tickets_root=None, tools=None):
     """Render `compute_retro_metrics()`'s result to the retro report's Markdown text — the sole
     rendering consumer of that function. Signature/behavior unchanged by the
     TCK-20260718-RETRO-STATS-REFACTOR extraction; see that ticket's plan.md Step 3 for the
@@ -705,6 +819,7 @@ def generate(runs, events, label, week_str=None, tickets_root=None):
     metrics = compute_retro_metrics(runs, events, tickets_root)
     retrieval_metrics = compute_retrieval_metrics(events)
     shadow_comparison = compute_shadow_baseline_comparison(events)
+    tool_safety = compute_tool_safety_metrics(events, tools or [])
     rs = metrics["run_summary"]
     gate_counter = Counter(metrics["gate_failure_breakdown"])
     reason_counter = Counter(metrics["reason_code_breakdown"])
@@ -1076,6 +1191,40 @@ def generate(runs, events, label, week_str=None, tickets_root=None):
         lines.append(f"Freshness: {dict(baseline_m['freshness_distribution']) or '_none_'}")
         lines.append("")
 
+    # Tool Safety Audit (TCK-20260803-RETRO-TOOL-SAFETY-AUDIT): audits search-before-grep hard-rule
+    # compliance (CLAUDE.md) during real Investigate phases, and parity_index.py write-safety
+    # (zero-tolerance docs/parity_ledger/*.yaml write / real-path build invocation count).
+    # Additive, separately-gated section — omitted entirely (not rendered empty) when the period
+    # has zero real Investigate-phase tool-call data, matching the Shadow vs. Baseline section's
+    # own gate.
+    sbg = tool_safety["search_before_grep"]
+    if sbg["investigate_pair_count"]:
+        lines.append("## Tool Safety Audit")
+        lines.append("")
+
+        lines.append("### Search-Before-Grep Compliance (Investigate Phase)")
+        lines.append("")
+        rate = sbg["compliance_rate"]
+        rate_str = "n/a" if rate is None else f"{rate * 100:.1f}%"
+        lines.append(
+            f"**Compliance rate:** {rate_str} "
+            f"({sbg['compliant_count']}/{sbg['investigate_pair_count']} Investigate-phase calls)"
+        )
+        lines.append("")
+
+        pws = tool_safety["parity_write_safety"]
+        lines.append("### Parity Ledger Write-Safety")
+        lines.append("")
+        lines.append(
+            f"**`docs/parity_ledger/*.yaml` write violations:** "
+            f"{pws['parity_ledger_yaml_write_count']}"
+        )
+        lines.append(
+            f"**Unsafe `parity_index.py build` invocations (real repo path):** "
+            f"{pws['unsafe_parity_build_count']}"
+        )
+        lines.append("")
+
     # Notes (human-written)
     lines.append("## Notes")
     lines.append("")
@@ -1093,10 +1242,12 @@ def main():
     args = parser.parse_args()
 
     all_runs, all_events = _load_runs_and_events()
+    all_tools = load_jsonl(DEFAULT_TOOLS_FILE)
 
     if args.all:
         runs = all_runs
         events = all_events
+        tools = all_tools
         label = "All Time"
         week_str = None
         out_name = "RETRO-ALL.md"
@@ -1105,6 +1256,7 @@ def main():
         runs = [r for r in all_runs if _record_since_cutoff(r.get("start_ts"), cutoff)]
         run_ids = {r["run_id"] for r in runs}
         events = [e for e in all_events if e.get("run_id") in run_ids]
+        tools = [t for t in all_tools if t.get("run_id") in run_ids]
         label = f"Last {args.days} Days"
         week_str = None
         out_name = f"RETRO-LAST{args.days}D.md"
@@ -1113,10 +1265,11 @@ def main():
         runs = [r for r in all_runs if iso_week(r.get("start_ts", "")) == week_str]
         run_ids = {r["run_id"] for r in runs}
         events = [e for e in all_events if e.get("run_id") in run_ids]
+        tools = [t for t in all_tools if t.get("run_id") in run_ids]
         label = week_str
         out_name = f"RETRO-{week_str}.md"
 
-    report = generate(runs, events, label, week_str)
+    report = generate(runs, events, label, week_str, tools=tools)
 
     RETRO_DIR.mkdir(parents=True, exist_ok=True)
     out_path = RETRO_DIR / out_name

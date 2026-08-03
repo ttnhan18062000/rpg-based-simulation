@@ -5455,7 +5455,15 @@
     showing it as removed). Makefile: new `agent-monitoring-weight-check` target (mirrors
     `agent-monitoring-query`'s `$(ARGS)` passthrough shape, not added to `.PHONY` -- matching the
     confirmed-via-grep precedent that no other `agent-monitoring-*` target is listed there
-    either).
+    either). UPDATE 2026-08-03 (TCK-20260803-AGENT-MONITORING-INDEX-PHONY-FIX): that "no other
+    `agent-monitoring-*` target is in `.PHONY`" precedent is now partially superseded --
+    `agent-monitoring-index` was added to `.PHONY` (Makefile line 1) to fix a silent, permanent
+    no-op caused by that target's name colliding with the real, gitignored
+    `agent-monitoring-index/` directory created by `build_index.py`'s `DEFAULT_DB_PATH` (once that
+    directory existed on disk, `make` treated the target as an already-up-to-date file target and
+    never re-ran the recipe). `agent-monitoring-weight-check` has no such colliding filesystem
+    path, so it correctly remains non-phony and is unaffected by that fix -- this entry's own
+    `compute_weight_sensitivity_report`/CLI behavior and test coverage are untouched.
   proof_type: contract
   test_path: >
     tests/tools/test_weight_sensitivity_check.py::test_score_with_weights_matches_hand_computed_formula,
@@ -6243,16 +6251,24 @@
     `retrieval_cache.RETRIEVAL_VERSION`), :52-76 (`RETRIEVAL_EVENT_FIELDS` -- the single
     source-of-truth 18-field retrieval-specific field set, excluding `execution_id`/`provider`/
     the 7 REQUIRED base fields), :77-89 (`NOISY_RATIO_THRESHOLD` / `compute_adequacy_verdict()`
-    -- the 3-branch insufficient/noisy/sufficient placeholder heuristic), :91-137
+    -- the 3-branch insufficient/noisy/sufficient placeholder heuristic), :91-143
     (`emit_retrieval_event()` -- validates via `record_events.validate_record()`, writes via
     `writer.write_lines()`, rejects any field outside `RETRIEVAL_EVENT_FIELDS` loudly, never
-    raises on a write failure), :142-193 (`wrap_hybrid_retrieval()` -- times and observes
-    `hybrid_fuse_and_filter()`, `RUN_ID_HYBRID`/`AGENT_HYBRID`), :196-257
-    (`wrap_retrieval_cache_check()` -- dispatches to `check_index_cache`/`check_query_cache`/
-    `check_packet_cache` by imported category constant, `cache_status` sourced verbatim from the
-    imported `HIT`/`MISS`/`STALE_REJECTED` constants), :260-308 (`wrap_context_packet_assembly()`
-    -- times and observes `assemble_context_packet()`, `exclusion_reason_counts`/
-    `cited_source_hashes` derived from its real return value).
+    raises on a write failure; TCK-20260803-RETRIEVAL-EVENT-TS-OVERRIDE added an optional
+    keyword-only `ts: str | None = None` param -- `None` (the default) preserves the original
+    `datetime.now(timezone.utc)`-derived `"ts"` value verbatim, a caller-supplied value is used
+    as the record's `"ts"` field verbatim instead; never mutates an already-written record, only
+    affects new appends), :154-199 (`wrap_hybrid_retrieval()` -- times and observes
+    `hybrid_fuse_and_filter()`, `RUN_ID_HYBRID`/`AGENT_HYBRID`, forwards its own optional `ts`
+    param to `emit_retrieval_event()` unchanged), :210-265 (`wrap_retrieval_cache_check()` --
+    dispatches to `check_index_cache`/`check_query_cache`/`check_packet_cache` by imported
+    category constant, `cache_status` sourced verbatim from the imported
+    `HIT`/`MISS`/`STALE_REJECTED` constants, forwards its own optional `ts` param to
+    `emit_retrieval_event()` unchanged), :276-322 (`wrap_context_packet_assembly()` -- times and
+    observes `assemble_context_packet()`, `exclusion_reason_counts`/`cited_source_hashes` derived
+    from its real return value, forwards its own optional `ts` param to `emit_retrieval_event()`
+    unchanged; `implement-ticket.js`'s shadow-packet call site, INFRA-299, never passes `ts` and
+    is unaffected).
     tools/agent-monitoring/generate_retro.py:561-612 (`compute_retrieval_metrics()` -- read-only,
     fixture-tested proof-of-queryability function: cache hit/miss/stale-rejection rates grouped
     by `cache_level`, candidate-to-selected and selected-to-cited ratios, both zero-division
@@ -7036,3 +7052,33 @@
   support_boundary: >
     Agent tooling only. The capability remains unactivated: no config change, hook registration,
     live invocation, candidate edit, blocked-parent edit, or production monitoring write occurs.
+- id: INFRA-315
+  text: >
+    TCK-20260803-RETRO-TOOL-SAFETY-AUDIT -- generate_retro.py gains
+    compute_tool_safety_metrics(events, tools), a new pure function auditing (1) search-before-grep
+    hard-rule compliance (CLAUDE.md) for tools.jsonl rows within Investigate-phase (run_id, seq)
+    pairs identified via events.jsonl's phase field, and (2) parity_index.py write-safety -- a
+    zero-tolerance count of Edit/Write calls into docs/parity_ledger/*.yaml and of
+    `parity_index.py build` invocations targeting the real repo parity-index/parity.db path instead
+    of a scratch path. generate() renders the result as a new, additively-appended
+    "## Tool Safety Audit" section, placed after "## Shadow vs. Baseline Retrieval Comparison" and
+    before "## Notes", gated on investigate_pair_count being nonzero -- omitted entirely, not
+    rendered empty, when zero.
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: >
+    tools/agent-monitoring/generate_retro.py (`def compute_tool_safety_metrics()` -- new function,
+    partitions tools.jsonl rows by Investigate-phase (run_id, seq) membership derived from
+    events.jsonl, returns {"search_before_grep": ..., "parity_write_safety": ...}).
+    tools/agent-monitoring/generate_retro.py (`generate()` gains a trailing `tools=None` parameter
+    and calls compute_tool_safety_metrics(events, tools); new conditionally-rendered
+    "## Tool Safety Audit" section). tools/agent-monitoring/generate_retro.py (`main()` loads
+    all_tools via load_jsonl(DEFAULT_TOOLS_FILE) and window-filters it alongside runs/events).
+  proof_type: regression
+  test_path: tests/tools/test_generate_retro.py
+  divergence_note: null
+  support_boundary: >
+    Agent-orchestration/monitoring-pipeline tooling only -- no simulation behavior is involved.
+    No `src/` file touched, no on-disk schema/corpus change, no new event-emission or call-site
+    logic -- this is a pure read-only consumer of already-emitted tools.jsonl/events.jsonl data.

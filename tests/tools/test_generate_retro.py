@@ -21,6 +21,7 @@ from generate_retro import (  # noqa: E402
     compute_retro_metrics,
     compute_retrieval_metrics,
     compute_shadow_baseline_comparison,
+    compute_tool_safety_metrics,
     generate,
     _record_since_cutoff,
     _resolve_status,
@@ -1486,3 +1487,236 @@ def test_shadow_comparison_new_tests_are_fixture_only_no_live_data_read():
         assert "RUNS_FILE" not in source
         assert "DEFAULT_DB_PATH" not in source
         assert "_load_runs_and_events" not in source
+
+
+# ---------------------------------------------------------------------------
+# TCK-20260803-RETRO-TOOL-SAFETY-AUDIT — compute_tool_safety_metrics() and the
+# "## Tool Safety Audit" rendered section
+# ---------------------------------------------------------------------------
+
+def _investigate_event(**overrides):
+    base = {
+        "run_id": "TCK-SAFETY-TEST",
+        "seq": 1,
+        "ts": "2026-08-03T00:00:00Z",
+        "phase": "Investigate",
+        "agent": "investigator",
+        "summary": "investigate fixture event",
+        "status": "ok",
+    }
+    base.update(overrides)
+    return base
+
+
+def _tool_row(**overrides):
+    base = {
+        "run_id": "TCK-SAFETY-TEST",
+        "seq": 1,
+        "tool": "Read",
+        "input_summary": "some file",
+    }
+    base.update(overrides)
+    return base
+
+
+def test_search_before_grep_compliance_true_when_search_docs_precedes_grep():
+    events = [_investigate_event()]
+    tools = [
+        _tool_row(tool="mcp__knowledge-search__search_docs", input_summary="query: foo"),
+        _tool_row(tool="Grep", input_summary="pattern foo"),
+    ]
+    metrics = compute_tool_safety_metrics(events, tools)
+    sbg = metrics["search_before_grep"]
+    assert sbg["investigate_pair_count"] == 1
+    assert sbg["compliant_count"] == 1
+    assert sbg["compliance_rate"] == pytest.approx(1.0)
+    assert sbg["per_pair_compliance"]["TCK-SAFETY-TEST::1"] is True
+
+
+def test_search_before_grep_compliance_true_when_graphify_bash_call_precedes_grep():
+    events = [_investigate_event()]
+    tools = [
+        _tool_row(tool="Bash", input_summary="graphify query \"foo\""),
+        _tool_row(tool="Bash", input_summary="grep -rn foo ."),
+    ]
+    metrics = compute_tool_safety_metrics(events, tools)
+    sbg = metrics["search_before_grep"]
+    assert sbg["compliant_count"] == 1
+    assert sbg["per_pair_compliance"]["TCK-SAFETY-TEST::1"] is True
+
+
+def test_search_before_grep_compliance_false_when_grep_tool_precedes_search_docs():
+    events = [_investigate_event()]
+    tools = [
+        _tool_row(tool="Grep", input_summary="pattern foo"),
+        _tool_row(tool="mcp__knowledge-search__search_docs", input_summary="query: foo"),
+    ]
+    metrics = compute_tool_safety_metrics(events, tools)
+    sbg = metrics["search_before_grep"]
+    assert sbg["compliant_count"] == 0
+    assert sbg["compliance_rate"] == pytest.approx(0.0)
+    assert sbg["per_pair_compliance"]["TCK-SAFETY-TEST::1"] is False
+
+
+def test_search_before_grep_compliance_false_when_bash_grep_precedes_search_docs():
+    events = [_investigate_event()]
+    tools = [
+        _tool_row(tool="Bash", input_summary="grep -rn foo ."),
+        _tool_row(tool="mcp__knowledge-search__search_docs", input_summary="query: foo"),
+    ]
+    metrics = compute_tool_safety_metrics(events, tools)
+    sbg = metrics["search_before_grep"]
+    assert sbg["compliant_count"] == 0
+    assert sbg["per_pair_compliance"]["TCK-SAFETY-TEST::1"] is False
+
+
+def test_search_before_grep_compliance_rate_aggregated_across_multiple_investigate_pairs():
+    events = [
+        _investigate_event(run_id="TCK-A", seq=1),
+        _investigate_event(run_id="TCK-B", seq=1),
+        _investigate_event(run_id="TCK-C", seq=1),
+    ]
+    tools = [
+        # TCK-A: compliant (search before grep)
+        _tool_row(run_id="TCK-A", seq=1, tool="mcp__knowledge-search__search_docs", input_summary="q"),
+        _tool_row(run_id="TCK-A", seq=1, tool="Grep", input_summary="p"),
+        # TCK-B: compliant (never greps at all)
+        _tool_row(run_id="TCK-B", seq=1, tool="mcp__knowledge-search__search_docs", input_summary="q"),
+        _tool_row(run_id="TCK-B", seq=1, tool="Read", input_summary="f"),
+        # TCK-C: non-compliant (grep before search)
+        _tool_row(run_id="TCK-C", seq=1, tool="Grep", input_summary="p"),
+        _tool_row(run_id="TCK-C", seq=1, tool="mcp__knowledge-search__search_docs", input_summary="q"),
+    ]
+    metrics = compute_tool_safety_metrics(events, tools)
+    sbg = metrics["search_before_grep"]
+    assert sbg["investigate_pair_count"] == 3
+    assert sbg["compliant_count"] == 2
+    assert sbg["compliance_rate"] == pytest.approx(2 / 3)
+
+
+def test_search_before_grep_ignores_non_investigate_phase_tool_calls():
+    events = [
+        {"run_id": "TCK-IMPL", "seq": 1, "phase": "Implement", "agent": "implementer",
+         "status": "ok", "summary": "not investigate"},
+    ]
+    tools = [
+        _tool_row(run_id="TCK-IMPL", seq=1, tool="Grep", input_summary="p"),
+        _tool_row(run_id="TCK-IMPL", seq=1, tool="mcp__knowledge-search__search_docs", input_summary="q"),
+    ]
+    metrics = compute_tool_safety_metrics(events, tools)
+    sbg = metrics["search_before_grep"]
+    assert sbg["investigate_pair_count"] == 0
+    assert sbg["per_pair_compliance"] == {}
+
+
+def test_parity_write_safety_zero_violations_on_clean_fixture():
+    tools = [
+        _tool_row(tool="Edit", input_summary="src/engine/kernel.py"),
+        _tool_row(tool="Write", input_summary="tests/tools/test_generate_retro.py"),
+        _tool_row(tool="Bash", input_summary="python3 tools/parity_index.py build --db-path /tmp/pi_smoke2/parity.db"),
+    ]
+    metrics = compute_tool_safety_metrics([], tools)
+    pws = metrics["parity_write_safety"]
+    assert pws["parity_ledger_yaml_write_count"] == 0
+    assert pws["unsafe_parity_build_count"] == 0
+    assert pws["parity_ledger_yaml_write_examples"] == []
+    assert pws["unsafe_parity_build_examples"] == []
+
+
+def test_parity_write_safety_detects_edit_targeting_parity_ledger_yaml():
+    violating_row = _tool_row(tool="Edit", input_summary="docs/parity_ledger/combat_movement.yaml")
+    tools = [
+        _tool_row(tool="Edit", input_summary="src/engine/kernel.py"),
+        violating_row,
+    ]
+    metrics = compute_tool_safety_metrics([], tools)
+    pws = metrics["parity_write_safety"]
+    assert pws["parity_ledger_yaml_write_count"] == 1
+    assert pws["parity_ledger_yaml_write_examples"] == [violating_row]
+
+
+def test_parity_write_safety_detects_build_targeting_real_repo_path():
+    no_override_row = _tool_row(tool="Bash", input_summary="python3 tools/parity_index.py build")
+    real_path_row = _tool_row(
+        tool="Bash",
+        input_summary="python3 tools/parity_index.py build --db-path parity-index/parity.db",
+    )
+    scratch_row = _tool_row(
+        tool="Bash",
+        input_summary="python3 tools/parity_index.py build --db-path /tmp/pi_smoke2/parity.db",
+    )
+    tools = [no_override_row, real_path_row, scratch_row]
+    metrics = compute_tool_safety_metrics([], tools)
+    pws = metrics["parity_write_safety"]
+    assert pws["unsafe_parity_build_count"] == 2
+    assert no_override_row in pws["unsafe_parity_build_examples"]
+    assert real_path_row in pws["unsafe_parity_build_examples"]
+    assert scratch_row not in pws["unsafe_parity_build_examples"]
+
+
+def test_tool_safety_function_never_crashes_on_malformed_rows():
+    events = [_investigate_event(run_id="TCK-SAFETY-TEST", seq=1)]
+    tools = [
+        {"run_id": "TCK-SAFETY-TEST", "seq": 1, "tool": "Grep"},  # missing input_summary
+        {"run_id": "TCK-SAFETY-TEST", "seq": None, "tool": "Grep", "input_summary": "p"},  # seq null
+        {"run_id": "TCK-OTHER", "seq": 1, "tool": "Grep", "input_summary": "p"},  # no matching pair
+        {"run_id": "TCK-SAFETY-TEST", "seq": -1, "tool": "Grep", "input_summary": "p"},  # shadow packet
+        {"run_id": None, "seq": None, "tool": "Bash", "input_summary": None},  # fully null
+    ]
+    metrics = compute_tool_safety_metrics(events, tools)
+    sbg = metrics["search_before_grep"]
+    # Only the row with matching (run_id, seq) == ("TCK-SAFETY-TEST", 1) is attributed to the
+    # Investigate pair; the malformed input_summary does not raise.
+    assert sbg["investigate_pair_count"] == 1
+    assert sbg["per_pair_compliance"]["TCK-SAFETY-TEST::1"] is False  # grep with no preceding search
+    pws = metrics["parity_write_safety"]
+    assert pws["parity_ledger_yaml_write_count"] == 0
+    assert pws["unsafe_parity_build_count"] == 0
+
+
+def test_tool_safety_function_is_pure_no_file_io():
+    import inspect
+
+    source = inspect.getsource(compute_tool_safety_metrics)
+    assert "write_lines(" not in source
+    assert "write_line(" not in source
+    assert '"w")' not in source and "'w')" not in source
+    assert '"a")' not in source and "'a')" not in source
+    assert "EVENTS_FILE" not in source
+    assert "RUNS_FILE" not in source
+    assert "DEFAULT_TOOLS_FILE" not in source
+    assert "load_jsonl" not in source
+    assert "DEFAULT_DB_PATH" not in source
+
+
+def test_new_section_rendered_in_generate_output_when_investigate_tool_data_present():
+    runs = [_BASE_RUN]
+    events = [_investigate_event()]
+    tools = [
+        _tool_row(tool="mcp__knowledge-search__search_docs", input_summary="query: foo"),
+        _tool_row(tool="Grep", input_summary="pattern foo"),
+    ]
+
+    report = generate(runs, events, "test-label", tools=tools)
+
+    assert "## Tool Safety Audit" in report
+    assert "### Search-Before-Grep Compliance (Investigate Phase)" in report
+    assert "**Compliance rate:** 100.0% (1/1 Investigate-phase calls)" in report
+    assert "### Parity Ledger Write-Safety" in report
+    assert "`docs/parity_ledger/*.yaml` write violations:** 0" in report
+    assert "Unsafe `parity_index.py build` invocations (real repo path):** 0" in report
+
+    notes_idx = report.index("## Notes")
+    tool_safety_idx = report.index("## Tool Safety Audit")
+    assert tool_safety_idx < notes_idx
+
+
+def test_new_section_omitted_not_rendered_empty_when_no_investigate_tool_data():
+    runs = [_BASE_RUN]
+    events = [_ORDINARY_WORKFLOW_EVENT]
+
+    report_no_tools = generate(runs, events, "test-label")
+    assert "## Tool Safety Audit" not in report_no_tools
+
+    report_empty_tools = generate(runs, events, "test-label", tools=[])
+    assert "## Tool Safety Audit" not in report_empty_tools

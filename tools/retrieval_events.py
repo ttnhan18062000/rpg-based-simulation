@@ -97,6 +97,7 @@ def emit_retrieval_event(
     summary: str,
     status: str = "ok",
     events_file: Path | None = None,
+    ts: str | None = None,
     **retrieval_fields,
 ) -> bool:
     """Build, validate, and append one retrieval-event record.
@@ -107,6 +108,11 @@ def emit_retrieval_event(
     CLAUDE.md's "monitoring write failure must never fail the workflow"); it DOES raise on a
     caller-usage error (an unknown retrieval field, or a record validate_record() itself would
     reject) — fail loud on bad caller input, fail soft on infra write failure.
+
+    `ts` defaults to None, preserving the historical datetime.now(timezone.utc) behavior. A
+    caller-supplied `ts` is used verbatim (e.g. backfilling a record's real event-time when it
+    differs from write-time) — this never mutates an already-written record, since this function
+    only ever appends.
     """
     unknown_fields = set(retrieval_fields) - RETRIEVAL_EVENT_FIELDS
     if unknown_fields:
@@ -117,7 +123,9 @@ def emit_retrieval_event(
     record = {
         "run_id": run_id,
         "seq": seq,
-        "ts": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+        "ts": ts
+        if ts is not None
+        else datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
         "phase": phase,
         "agent": agent,
         "summary": summary,
@@ -150,6 +158,7 @@ def wrap_hybrid_retrieval(
     run_id: str = RUN_ID_HYBRID,
     status: str = "ok",
     events_file: Path | None = None,
+    ts: str | None = None,
     **hybrid_kwargs,
 ):
     """Times and observes one hybrid_fuse_and_filter() call, emits exactly one retrieval event,
@@ -178,6 +187,7 @@ def wrap_hybrid_retrieval(
         summary=summary,
         status=status,
         events_file=events_file,
+        ts=ts,
         latency_ms=latency_ms,
         candidate_count=candidate_count,
         selected_count=selected_count,
@@ -205,6 +215,7 @@ def wrap_retrieval_cache_check(
     run_id: str = RUN_ID_CACHE,
     status: str = "ok",
     events_file: Path | None = None,
+    ts: str | None = None,
     **check_kwargs,
 ):
     """Dispatches to check_index_cache/check_query_cache/check_packet_cache by `cache_level`
@@ -248,6 +259,7 @@ def wrap_retrieval_cache_check(
         summary=summary,
         status=status,
         events_file=events_file,
+        ts=ts,
         **retrieval_fields,
     )
     return result
@@ -268,6 +280,7 @@ def wrap_context_packet_assembly(
     run_id: str = RUN_ID_PACKET,
     status: str = "ok",
     events_file: Path | None = None,
+    ts: str | None = None,
     **assemble_kwargs,
 ):
     """Times and observes one assemble_context_packet() call, emits exactly one retrieval event,
@@ -297,6 +310,7 @@ def wrap_context_packet_assembly(
         summary=summary,
         status=status,
         events_file=events_file,
+        ts=ts,
         latency_ms=latency_ms,
         selected_count=selected_count,
         cited_source_hashes=cited_source_hashes,
