@@ -7,6 +7,7 @@ export const meta = {
     { title: 'Plan', detail: 'Produce plan.md from investigation findings (skipped for hotfix)' },
     { title: 'Review', detail: 'Architecture review of plan — gate before implementation (skipped for hotfix)' },
     { title: 'Implement', detail: 'Write code following the approved plan' },
+    { title: 'Document-Update', detail: 'Specialist doc-updater agent applies docs/ updates for this ticket (outside parity_ledger/, audits/, archive/, scenarios/, entity/); its files merge into the doc-staleness gate\'s input before that gate runs' },
     { title: 'Architecture-Verify', detail: "Post-Implement deterministic backstop for architecture-reviewer's durable-state/API-boundary/reason-metadata rules — re-invokes architecture-reviewer against the actual diff (skipped for hotfix)" },
     { title: 'Test', detail: 'Scope and run tests for changed files' },
     { title: 'Parity', detail: 'Update parity ledger entries for behavior changes — skips the parity-updater agent call when files_changed has no src/ path and behavior_changed is false (a P0 ledger safeguard can force it to run anyway)' },
@@ -770,6 +771,71 @@ Return: files_changed (list of paths), behavior_changed (boolean), parity_subsys
   { label: 'implement', schema: IMPL_SCHEMA, agentType: 'implementer' }
 )
 
+// ─── Phase 5a: Document-Update ─────────────────────────────────────────────────
+// docs/architecture/doc_updater_agent.md: runs unconditionally, every tier, strictly before the
+// gate below — merging this phase's own reported docs into that gate's input is the entire point
+// (see the gate's own comment block just below for why ordering here is load-bearing).
+
+phase('Document-Update')
+
+const DOC_UPDATE_SCHEMA = {
+  type: 'object',
+  required: ['docs_updated', 'docs_skipped', 'summary'],
+  properties: {
+    docs_updated: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          path: { type: 'string' },
+          reason: { type: 'string' },
+          what_changed: { type: 'string' },
+        },
+      },
+    },
+    docs_skipped: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          path: { type: 'string' },
+          justification: { type: 'string' },
+        },
+      },
+    },
+    verified_by: { type: 'array', items: { type: 'string' } },
+    summary: { type: 'string', description: 'One sentence: what was updated (≤200 chars)' },
+    blocker: { type: ['string', 'null'], description: 'Non-null ONLY when doc-updater hit genuine ambiguity or could not resolve how to update a flagged doc — distinct from docs_skipped, which is the correct place for "this flagged doc genuinely did not need touching".' },
+    ts: { type: 'string', description: 'ISO timestamp from `date -u +%Y-%m-%dT%H:%M:%SZ` at start of this phase' },
+  },
+}
+
+const docUpdateTs = await captureTs()
+await writeSidecar(events.length + 1 + seqOffset, 'Document-Update', 'doc-updater')
+const docUpdate = await agent(
+  `Update documentation for ticket ${tid}. Tier: ${tier}.
+
+${tier !== 'hotfix'
+    ? `Read staging_artifacts/${tid}/investigation.md's "## Docs Requiring Update" section for the full path/reason list. Docs flagged (paths only — read investigation.md for the reason text): ${(investigation.docs_to_update || []).join(', ') || '(none flagged — use your own judgment against the implementation summary below)'}`
+    : `Hotfix tier — no investigation.md exists. Read ${ticketInfo.ticket_path}'s "## Scope" section directly and use the real diff below to judge whether a docs/ update is warranted, and where.`}
+
+Implementation summary: ${implementation.implementation_summary}
+Files changed: ${implementation.files_changed.join(', ')}
+Behavior changed: ${implementation.behavior_changed}
+
+Follow the per-family rules in your own agent definition (.claude/agents/doc-updater.md) for how to update each doc family.
+
+Return: docs_updated (list of {path, reason, what_changed}), docs_skipped (list of {path, justification} — allowed, not a failure), verified_by (list of strings), summary (one sentence ≤200 chars), blocker (a short description ONLY if you hit genuine ambiguity or could not resolve how to update a flagged doc, otherwise null).`,
+  { label: 'doc-update', schema: DOC_UPDATE_SCHEMA, agentType: 'doc-updater' }
+)
+
+pushEvent(
+  'Document-Update', 'doc-updater',
+  docUpdate.blocker ? 'failed' : 'ok',
+  docUpdate.blocker || docUpdate.summary || 'Document update complete',
+  docUpdateTs
+)
+
 // ─── Doc-staleness gate (orchestrator-run, no agent call) ─────────────────────
 // TCK-20260720-GATE-CHECK-WIRING-DECISIONS: tools/gate_checks/doc_staleness_check.py shipped
 // unwired (TCK-20260711-DOC-STALENESS-GATE-CHECK) — built after the 2026-W28 retro found 36% of
@@ -789,7 +855,11 @@ Return: files_changed (list of paths), behavior_changed (boolean), parity_subsys
 // through via an optional --docs-to-update CLI sentinel — purely additive, produces at most a
 // separate non-blocking ADVISORY entry, never changes the PASS/FAIL verdict computed above.
 const docsToUpdate = Array.isArray(investigation.docs_to_update) ? investigation.docs_to_update : []
-const docStalenessFilesArgs = implementation.files_changed.map(f => `"${f}"`).join(' ')
+const combinedFilesChanged = Array.from(new Set([
+  ...implementation.files_changed,
+  ...(docUpdate.docs_updated || []).map(d => d.path),
+]))
+const docStalenessFilesArgs = combinedFilesChanged.map(f => `"${f}"`).join(' ')
 const docsToUpdateArgs = docsToUpdate.length > 0 ? `--docs-to-update ${docsToUpdate.map(d => `"${d}"`).join(' ')}` : ''
 const docStalenessOutput = await bash(
   `python3 tools/gate_checks/doc_staleness_check.py ${implementation.behavior_changed} ${docStalenessFilesArgs} ${docsToUpdateArgs}`

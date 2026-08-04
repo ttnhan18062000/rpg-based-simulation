@@ -53,6 +53,7 @@ _EXPECTED_TIER_MATRIX = {
     "Plan": {"standard": "full", "hotfix": "skipped_event"},
     "Review": {"standard": "full", "hotfix": "skipped_event"},
     "Implement": {"standard": "full", "hotfix": "full"},
+    "Document-Update": {"standard": "full", "hotfix": "full"},
     "Architecture-Verify": {"standard": "full", "hotfix": "skipped_event"},
     "Test": {"standard": "full", "hotfix": "full"},
     "Parity": {"standard": "conditional", "hotfix": "conditional"},
@@ -77,7 +78,7 @@ def test_agent_orchestration_dir_has_required_files():
         assert isinstance(parsed, dict), f"{path} does not parse to a YAML mapping"
 
     role_paths = sorted((_CONTRACT_DIR / "roles").glob("*.yaml"))
-    assert len(role_paths) == 10, f"expected exactly 10 role files, found {len(role_paths)}: {role_paths}"
+    assert len(role_paths) == 11, f"expected exactly 11 role files, found {len(role_paths)}: {role_paths}"
     for path in role_paths:
         parsed = yaml.safe_load(path.read_text(encoding="utf-8"))
         assert isinstance(parsed, dict), f"{path} does not parse to a YAML mapping"
@@ -143,7 +144,7 @@ def test_finalizer_role_entry_documents_inline_prompt_exception():
 def test_load_contract_succeeds_against_the_real_contract():
     bundle = load_contract(_REPO_ROOT)
     assert bundle.contract["version"] == 1
-    assert len(bundle.roles) == 10
+    assert len(bundle.roles) == 11
 
 
 def test_load_contract_includes_hook_surface_policy():

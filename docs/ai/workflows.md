@@ -85,6 +85,7 @@ Workflow({ name: "workflow-name", args: { key: value } })
 | Plan | `planner` | Stops if unresolved questions in plan |
 | Review | `architecture-reviewer` | Stops if NEEDS_CHANGES or BLOCKED |
 | Implement | `implementer` | — |
+| Document-Update | `doc-updater` | Runs unconditionally, every tier; its `docs_updated` paths merge into `implementation.files_changed` before the doc-staleness gate evaluates them; a doc-updater blocker is reported via a `failed`-status event but does not stop the pipeline — Verify's `check_docs_to_update_coverage` remains the actual backstop for standard/epic tier |
 | Architecture-Verify | `architecture-reviewer` | Second, post-Implement call; runs `tools/gate_checks/architecture_reviewer_static.py::run_architecture_checks` before the agent call and injects its JSON output; narrowly scoped to judging flagged items, not re-reviewing the plan; stops if NEEDS_CHANGES or BLOCKED (same vocabulary as Review); skipped for hotfix |
 | Test | `test-scoper` | Stops if any test fails |
 | Parity | `parity-updater` | Skipped when `files_changed` has no `src/` path and `behavior_changed` is false; a P0 ledger safeguard forces the full run instead if any P0 entry's `v2_evidence` would go stale; when not skipped, runs `tools/gate_checks/parity_updater_static.py::expected_subsystems_for_files` before the agent call and `::cross_reference_touched` after it returns, surfacing any untouched-mapped-subsystem miss; a genuine miss now hard-blocks the phase (returns `PARITY_INCOMPLETE`); an unparseable cross-ref result remains non-blocking |

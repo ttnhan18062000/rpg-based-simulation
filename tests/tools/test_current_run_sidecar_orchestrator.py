@@ -8,9 +8,11 @@ file is never executed (no JS test runner exists in this repo for `.claude/workf
 
 Covers: the former per-prompt "Step 0b" (and Finalize's combined "Step 0") sidecar-write
 agent-prompt-text instruction has been replaced by an orchestrator-side `writeSidecar(seq)`
-helper invoked via `bash()` immediately before each of the 10 corresponding `await agent(...)`
-calls (the 9 two-line sites: Investigate, Plan, Review, Implement, Architecture-Verify, Test,
-Parity, Security-Review, Verify; plus Finalize's single combined site).
+helper invoked via `bash()` immediately before each of the 11 corresponding `await agent(...)`
+calls (the 10 two-line sites: Investigate, Plan, Review, Implement, Document-Update,
+Architecture-Verify, Test, Parity, Security-Review, Verify; plus Finalize's single combined site).
+Document-Update site added by TCK-20260803-DOC-UPDATER-CORE-WIRING, following the exact same
+writeSidecar(seq)-then-agent() adjacency template as every other two-line site.
 
 Two follow-up fixes from TCK-20260711-MONITORING-TOOLCOUNT-SIDECAR-COLLISION, which found (via
 direct empirical cross-check of tool_call_count against tools.jsonl ground truth) that ~35% of
@@ -55,6 +57,7 @@ _COVERED_SITE_ADJACENCY = [
     "  await writeSidecar(events.length + 1 + seqOffset, 'Plan', 'planner')\n  plan = await agent(",
     "  await writeSidecar(events.length + 1 + seqOffset, 'Review', 'architecture-reviewer')\n  review = await agent(",
     "await writeSidecar(events.length + 1 + seqOffset, 'Implement', 'implementer')\nconst implementation = await agent(",
+    "await writeSidecar(events.length + 1 + seqOffset, 'Document-Update', 'doc-updater')\nconst docUpdate = await agent(",
     "  await writeSidecar(events.length + 1 + seqOffset, 'Architecture-Verify', 'architecture-reviewer')\n  const archVerify = await agent(",
     "await writeSidecar(events.length + 1 + seqOffset, 'Test', 'test-scoper')\nconst testResult = await agent(",
     "  await writeSidecar(events.length + 1 + seqOffset, 'Parity', 'parity-updater')\n  const parity = await agent(",
@@ -63,8 +66,8 @@ _COVERED_SITE_ADJACENCY = [
     "await writeSidecar(events.length + 1 + seqOffset, 'Finalize', 'finalizer')\nawait agent(",
 ]
 
-_NINE_TWO_LINE_SITE_LABELS = [
-    "investigate", "plan", "architecture-review", "implement", "architecture-verify",
+_TEN_TWO_LINE_SITE_LABELS = [
+    "investigate", "plan", "architecture-review", "implement", "doc-update", "architecture-verify",
     "test-scope-and-run", "parity-update", "security-review", "done-check",
 ]
 
@@ -89,7 +92,7 @@ def test_no_step_0b_agent_prompt_sidecar_text_remains():
 
 
 # ---------------------------------------------------------------------------
-# 2. writeSidecar(seq) precedes each of the 10 covered agent() calls, with
+# 2. writeSidecar(seq) precedes each of the 11 covered agent() calls, with
 #    nothing else (no other agent() call) interleaved.
 # ---------------------------------------------------------------------------
 
@@ -99,8 +102,8 @@ def test_sidecar_bash_write_precedes_each_covered_agent_call():
     for adjacency in _COVERED_SITE_ADJACENCY:
         assert adjacency in source, f"expected adjacency not found: {adjacency!r}"
 
-    # Exactly 10 writeSidecar() calls total (9 two-line sites + Finalize).
-    assert len(re.findall(r"await writeSidecar\(events\.length \+ 1 \+ seqOffset, '[^']+', '[^']+'\)", source)) == 10
+    # Exactly 11 writeSidecar() calls total (10 two-line sites + Finalize).
+    assert len(re.findall(r"await writeSidecar\(events\.length \+ 1 \+ seqOffset, '[^']+', '[^']+'\)", source)) == 11
 
     # No other `await agent(` call sits between a writeSidecar call and its paired agent() call —
     # each adjacency string above already asserts direct (whitespace-only) adjacency, so a passing
@@ -346,14 +349,14 @@ def test_record_events_required_fields_unchanged():
 
 
 # ---------------------------------------------------------------------------
-# 9. All 9 two-line site labels are still present in the file (sanity check
+# 9. All 10 two-line site labels are still present in the file (sanity check
 #    that no call site was accidentally dropped during relocation)
 # ---------------------------------------------------------------------------
 
 
-def test_all_nine_two_line_site_labels_present():
+def test_all_ten_two_line_site_labels_present():
     source = _read_workflow_source()
-    for label in _NINE_TWO_LINE_SITE_LABELS:
+    for label in _TEN_TWO_LINE_SITE_LABELS:
         assert f"label: '{label}'" in source, f"missing label site: {label}"
 
 

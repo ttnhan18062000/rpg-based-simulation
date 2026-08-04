@@ -270,6 +270,31 @@ by the injected context vs. independent judgment in a `verified_by` field.
 
 ---
 
+### `doc-updater`
+
+**Role:** Applies `docs/` updates for a behavior change, outside `parity_ledger/`, `audits/`,
+`archive/`, `scenarios/`, `entity/`.
+
+**Step 0 — orchestrator-injected context:** Standard/epic tier: the orchestrator injects
+`investigation.md`'s `## Docs Requiring Update` bullets (flagged paths) into the prompt preamble,
+and the agent reads `investigation.md` itself for the full reason text alongside each. Hotfix tier:
+no `investigation.md` exists, so the agent reads `${ticketInfo.ticket_path}`'s own `## Scope`
+section directly, plus the real `files_changed` diff, and uses its own judgment for whether a
+`docs/` update is warranted.
+
+**Per-family rules it applies:**
+- `docs/mechanics/` — bit-identical parity with source, cite chapter + section
+- `docs/engine/` — cite the specific contract ID (`project_lawbook_m10.md` is the index)
+- `docs/guides/*.md` — match the file's existing terse per-row table convention
+- `docs/guidelines/intentional_divergences.md` — rationale class + description + `Verification:` test path, all three required
+- `docs/plans/` — update in place if still live, never move to `docs/plans/archive/`
+- `docs/audits/` — never edited; cite-only, dated point-in-time snapshots
+- Everything else (17 general folders) — read the target doc's frontmatter plus 2-3 sibling docs first, match existing structure; `status: authoritative` docs get full Mechanics-Bible-level rigor regardless of folder
+
+**When to invoke directly:** After any manual doc-relevant change — mirrors `parity-updater`'s own guidance.
+
+---
+
 ### `mechanics-auditor`
 
 **Role:** Compares a Mechanics Bible chapter to the source implementation and reports divergences.
@@ -414,6 +439,7 @@ deserialization, or file-path handling, even outside the automated workflow.
 | `implementer` | Implementation | Code changes + implementation notes |
 | `test-scoper` | Post-implementation | Test results (pass/fail) |
 | `parity-updater` | Post-implementation | Updated `docs/parity_ledger/*.yaml` |
+| `doc-updater` | Post-implementation | Updated `docs/` files (`docs_updated`/`docs_skipped`) |
 | `done-checker` | Closure gate | READY_TO_CLOSE / BLOCKED verdict |
 | `mechanics-auditor` | Quality / compliance | PARITY/DIVERGENT/MISSING table |
 | `security-reviewer` | Conditional gate (security-tagged tickets only) | APPROVED/NEEDS_CHANGES/BLOCKED verdict |

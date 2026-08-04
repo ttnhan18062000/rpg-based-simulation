@@ -43,7 +43,7 @@ def test_phase_order_conformance_byte_identical_to_live_meta_phases(tmp_path):
     )
 
 
-def test_live_phase_order_has_the_expected_11_phases():
+def test_live_phase_order_has_the_expected_12_phases():
     live_phase_order = extract_meta_phases(_WORKFLOW_JS_PATH)
     assert live_phase_order == [
         "Scope",
@@ -51,6 +51,7 @@ def test_live_phase_order_has_the_expected_11_phases():
         "Plan",
         "Review",
         "Implement",
+        "Document-Update",
         "Architecture-Verify",
         "Test",
         "Parity",

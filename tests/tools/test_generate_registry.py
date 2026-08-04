@@ -1,5 +1,6 @@
 """Tests for tools/generate_registry.py."""
 
+import inspect
 import subprocess
 import sys
 from pathlib import Path
@@ -547,6 +548,20 @@ class TestRealDocsTree:
             f"_SKIP_DOC_SUBDIRS entries with no matching docs/ subdirectory: {missing}. "
             "Remove dead entries, or if intentionally forward-compatible/retained, "
             "document that in-code next to _SKIP_DOC_SUBDIRS."
+        )
+
+    def test_skip_doc_subdirs_inert_entries_documented(self):
+        source = inspect.getsource(sys.modules[collect_docs.__module__])
+        comment_start = source.index("# Subdirectories under docs/ to skip entirely")
+        comment_end = source.index("_SKIP_DOC_SUBDIRS = {", comment_start)
+        comment_block = source[comment_start:comment_end]
+        assert "scenarios" in comment_block, (
+            "The comment block adjacent to _SKIP_DOC_SUBDIRS must document why "
+            "'scenarios' is a currently-inert-but-retained entry."
+        )
+        assert "entity" in comment_block, (
+            "The comment block adjacent to _SKIP_DOC_SUBDIRS must document why "
+            "'entity' is a currently-inert-but-retained entry."
         )
 
 

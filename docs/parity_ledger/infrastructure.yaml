@@ -6489,24 +6489,28 @@
   legacy_evidence: null
   v2_evidence: >
     dashboard-frontend/package.json:20-21 (`echarts`/`echarts-for-react` under `dependencies`,
-    caret-range convention). dashboard-frontend/src/lib/phasePalette.ts:46-50 (`WorkflowPhase`
-    union, 21 members), :52-54 (`PhaseFamily` union, 8 members), :56-66 (`PHASE_FAMILY` mapping),
-    :71-80 (`PHASE_PALETTE` mapping, 8 unchanged base hexes stepped by lightness within each
-    family), :83-85 (`getPhaseColor()`, pure passthrough). Validated via the dataviz skill's
+    caret-range convention). dashboard-frontend/src/lib/phasePalette.ts:51-56 (`WorkflowPhase`
+    union, 22 members), :58-60 (`PhaseFamily` union, 8 members), :62-72 (`PHASE_FAMILY` mapping),
+    :77-86 (`PHASE_PALETTE` mapping, 8 unchanged base hexes stepped by lightness within each
+    family), :89-91 (`getPhaseColor()`, pure passthrough). Validated via the dataviz skill's
     scripts/validate_palette.js against this app's actual dark chart surface (--color-bg-tertiary
-    #242835), run three separate ways (never all 21 values as one categorical list -- see
-    phasePalette.ts:1-40 header comment for the full rationale and per-run results): (1)
+    #242835), run three separate ways (never all 22 values as one categorical list -- see
+    phasePalette.ts:1-49 header comment for the full rationale and per-run results): (1)
     categorical check on the 8 unchanged family base hues -- ALL PASS, one pre-existing WARN
     (#008300 at 2.97:1, same as chartPalette.ts's CHART_SERIES_2 precedent); (2) `--ordinal` check
     per family (8 runs) -- ALL PASS (monotone lightness, >=0.06 OKLCH L gap, single hue, light-end
-    contrast >=2.0); (3) direct per-hex WCAG contrast check -- 8 of 21 entries sit in the same
-    sub-3:1 "relief" WARN band, documented with the mandatory-visible-label mitigation.
+    contrast >=2.0); the `build` family's ordinal run now covers 3 members (`#008300`, `#289724`,
+    `#41ab3b`, added by TCK-20260803-DOC-UPDATER-DASHBOARD-PALETTE) and still passes: monotone L,
+    single hue (0deg spread), all adjacent gaps >=0.06 OKLCH L; (3) direct per-hex WCAG contrast
+    check -- 8 of 22 entries sit in the same sub-3:1 "relief" WARN band, documented with the
+    mandatory-visible-label mitigation (`Document-Update`'s new hex `#41ab3b` clears the floor at
+    4.97:1 and is not WARN-listed).
     tests/tools/test_agent_ops_dashboard_frontend_api_surface.py:59-67
     (`test_echarts_dependencies_declared_in_package_json`), :70-85
     (`test_no_source_file_imports_full_echarts_bundle`).
-    dashboard-frontend/src/test/phasePalette.test.ts:45-48 (literal 21-key completeness, not
-    Set-derived), :50-59 (per-hex contrast floor, WARN-allowlisted), :61-64
-    (purity/determinism), :66-68 (8-family cap).
+    dashboard-frontend/src/test/phasePalette.test.ts:45-49 (literal 22-key completeness, not
+    Set-derived), :51-60 (per-hex contrast floor, WARN-allowlisted), :62-65
+    (purity/determinism), :67-69 (8-family cap).
   proof_type: regression
   test_path: dashboard-frontend/src/test/phasePalette.test.ts
   divergence_note: null
@@ -7082,3 +7086,60 @@
     Agent-orchestration/monitoring-pipeline tooling only -- no simulation behavior is involved.
     No `src/` file touched, no on-disk schema/corpus change, no new event-emission or call-site
     logic -- this is a pure read-only consumer of already-emitted tools.jsonl/events.jsonl data.
+
+- id: INFRA-316
+  text: >
+    TCK-20260803-DOC-UPDATER-VOCAB-REGISTRATION -- registers the two literals the sibling
+    TCK-20260803-DOC-UPDATER-CORE-WIRING ticket already wired into
+    `.claude/workflows/implement-ticket.js`'s live `phase(...)`/`pushEvent(...)` call sites:
+    `"Document-Update"` added to `tools/agent-monitoring/vocabulary.py`'s
+    `WORKFLOW_PHASES["implement-ticket"]` set, and `"doc-updater"` added to
+    `WORKFLOW_AGENTS["implement-ticket"]`. One matching `category: "phase"` glossary entry for
+    `"Document-Update"` is appended to `registries/glossary_registry.jsonl` via the existing
+    `add_term()` CLI, satisfying `test_glossary_registry.py`'s
+    `test_real_seeded_registry_covers_every_workflow_phase` coverage assertion. This is a minimal,
+    routine one-entry extension of the `phase` glossary category INFRA-287 established (adding one
+    phase/agent pair to an already-existing category), not a second category-creation event -- no
+    `GLOSSARY_CATEGORIES` change, no dashboard wiring change.
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: >
+    tools/agent-monitoring/vocabulary.py:23 (`WORKFLOW_PHASES["implement-ticket"]` gains
+    `"Document-Update"`) and tools/agent-monitoring/vocabulary.py:42
+    (`WORKFLOW_AGENTS["implement-ticket"]` gains `"doc-updater"`).
+    registries/glossary_registry.jsonl (new line, `added_date: "2026-08-03"`, `category: "phase"`,
+    `term: "Document-Update"`, appended via `tools/glossary_registry.py add`).
+    Deviation fix (discovered at Test phase, same ticket, same session): the identical two literals
+    were also missing from a second, separate vocabulary-declaration site,
+    `agent-orchestration/workflows/implement-ticket.yaml`'s `phases:`/`agents:` lists (the
+    provider-neutral orchestration contract, "bootstrap-initialized once" from `vocabulary.py` per
+    its own header comment) -- added there too, narrowly and additively. That edit surfaced 4
+    mechanically-derived stale-literal corrections (phase count/order and 2 line-number staleness
+    fixes carried over from the sibling CORE-WIRING ticket's earlier edit) across
+    `tests/agent_orchestration/test_contract_structure.py` and
+    `tests/agent_orchestration_claude_adapter/{test_phase_order_conformance.py,
+    test_generator_containment.py,test_terminal_status_extractor.py,
+    test_terminal_status_conformance.py}` -- no test logic weakened, only stale literals corrected
+    to match verified current state. Both vocabulary-declaration sites are now in sync.
+    Follow-up (TCK-20260804-DOC-UPDATER-ROLE-FILE, discovered during a post-close provider-agnostic
+    registration audit): the `phases:`/`agents:` sync above did not extend to `roles/*.yaml` --
+    `doc-updater` was added to `agents:` but had no matching `agent-orchestration/roles/doc-updater.yaml`
+    file, unlike the other 10 agents in that list, a gap explicitly disclosed (not silently skipped)
+    in this ticket's own Implementation Notes at the time. Closed by adding
+    `agent-orchestration/roles/doc-updater.yaml` (mirrors `parity-updater.yaml`'s shape) and
+    correcting 2 stale hardcoded role-count literals plus 2 stale README prose mentions. All three
+    vocabulary-declaration surfaces are now in sync.
+  proof_type: regression
+  test_path: tests/tools/test_glossary_registry.py,tests/agent_orchestration/test_bootstrap_vocabulary_equality.py::test_bootstrap_phase_agent_vocabulary_matches_vocabulary_py,tests/agent_orchestration/test_contract_structure.py
+  divergence_note: null
+  support_boundary: >
+    Agent-orchestration/monitoring-pipeline tooling only -- no simulation behavior is involved.
+    No `src/` file touched, no new `GLOSSARY_CATEGORIES` member, no dashboard-frontend change --
+    this only registers two already-live literal strings and their one matching glossary entry so
+    `validate.py`'s drift report and `generate_retro.py` recognize real `Document-Update`/
+    `doc-updater` events the sibling ticket's already-landed workflow wiring now emits.
+    TCK-20260804-DOC-UPDATER-ROLE-FILE follow-up: agent-orchestration/roles/doc-updater.yaml added
+    (role_id: doc-updater, phases: [Document-Update], has_agent_file: true);
+    test_contract_structure.py:81 and :147 (`== 10` -> `== 11`); README.md:17-18 corrected. Full
+    124-test `tests/agent_orchestration*` suite passes.

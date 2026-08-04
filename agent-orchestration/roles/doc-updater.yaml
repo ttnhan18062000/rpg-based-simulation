@@ -1,0 +1,5 @@
+role_version: 1
+role_id: doc-updater
+description: After a behavior change is implemented, updates the relevant docs/ files (outside parity_ledger/, audits/, archive/, scenarios/, entity/) to reflect the new state.
+phases: [Document-Update]
+has_agent_file: true

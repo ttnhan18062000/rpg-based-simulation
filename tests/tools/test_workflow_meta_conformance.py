@@ -64,7 +64,7 @@ def _write_events_jsonl(tmp_path, run_id, phase_statuses):
 def test_parses_meta_phases_from_implement_ticket_js():
     titles = extract_meta_phases(_WORKFLOWS_DIR / "implement-ticket.js")
     assert titles == [
-        "Scope", "Investigate", "Plan", "Review", "Implement", "Architecture-Verify",
+        "Scope", "Investigate", "Plan", "Review", "Implement", "Document-Update", "Architecture-Verify",
         "Test", "Parity", "Security-Review", "Verify", "Finalize",
     ]
 

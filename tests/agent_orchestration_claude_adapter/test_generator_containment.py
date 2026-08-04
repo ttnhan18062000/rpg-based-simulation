@@ -36,7 +36,7 @@ def test_generator_output_matches_representation_schema_shape(tmp_path):
     assert data["claude_adapter_schema_version"] == 1
     assert data["source_workflow_id"] == "implement-ticket"
 
-    assert isinstance(data["phase_order"], list) and len(data["phase_order"]) == 11
+    assert isinstance(data["phase_order"], list) and len(data["phase_order"]) == 12
     assert all(isinstance(p, str) for p in data["phase_order"])
 
     assert isinstance(data["terminal_statuses"], list) and len(data["terminal_statuses"]) == 15

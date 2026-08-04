@@ -19,8 +19,8 @@ The workflow short-circuits based on the ticket's `## Tier` field:
 
 | Tier | Phases run | Use when |
 |---|---|---|
-| `hotfix` | Scope → Implement → Test → Parity → Verify → Finalize | Targeted fix with self-evident intent — no investigation needed |
-| `standard` | Full 10-phase pipeline (default) | Any substantive feature, repair, or refactor |
+| `hotfix` | Scope → Implement → Document-Update → Test → Parity → Verify → Finalize | Targeted fix with self-evident intent — no investigation needed |
+| `standard` | Full 11-phase pipeline (default) | Any substantive feature, repair, or refactor |
 | `epic` | Scope only | Large initiative; tracks child tickets, no direct implementation |
 
 The tier can be set in the ticket file (`## Tier`) or passed as `args.tier` to override.
@@ -57,7 +57,9 @@ flowchart TD
 
     Implement["Implement<br/><i>implementer</i><br/>→ code changes, Implementation Notes updated"]
     Implement -- DOC_STALENESS_BLOCKED --> DocStalenessFix[/"Add a docs/ update reflecting the behavior change, re-run with ticket_id"/]
-    Implement --> ArchVerify
+    Implement --> DocUpdate
+
+    DocUpdate["Document-Update<br/><i>doc-updater</i><br/>→ docs/ updates applied<br/><small>files merge into doc-staleness gate's input</small>"] --> ArchVerify
 
     subgraph StandardOnly2 ["Standard tier only"]
         ArchVerify["Architecture-Verify<br/><i>architecture-reviewer</i> (2nd call)<br/>static pre-check + judges flagged diff only"]
@@ -292,6 +294,40 @@ and logged as a non-blocking warning. This is deliberately advisory-only for now
 a hard block is deferred until there's evidence of how often Investigate over-lists docs that turn
 out not to need touching once Review/Implement refine the plan (same reasoning that kept the
 blanket check itself unwired for one ticket cycle before being promoted to blocking).
+
+---
+
+### Document-Update
+
+**Agent:** `doc-updater`
+
+**Step 0:** the orchestrator computes the "what" before spawning the agent, mirroring
+`parity-updater`'s own `expected_subsystems_for_files()` precedent. Standard/epic tier: the prompt
+preamble includes `investigation.md`'s `## Docs Requiring Update` bullets (the flagged
+`docs_to_update` paths, plus an instruction to read `investigation.md` itself for the full reason
+text alongside each). Hotfix tier: no `investigation.md` exists, so the agent is instructed to read
+the ticket's own `## Scope` section directly, plus the real `implementation.files_changed` diff,
+and use its own judgment for whether a `docs/` update is warranted.
+
+**What the agent does:** applies the per-family rules in its own agent definition
+(`.claude/agents/doc-updater.md`) — bit-identical parity citations for `docs/mechanics/`, contract
+IDs for `docs/engine/`, matching existing table conventions for `docs/guides/`, rationale
+class + `Verification:` test path for `docs/guidelines/intentional_divergences.md`, in-place
+updates (never archiving) for `docs/plans/`, and read-sibling-docs-first structure matching for the
+remaining general folders. `docs/parity_ledger/` stays `parity-updater`'s exclusive territory and
+`docs/audits/` stays cite-only — neither is touched here.
+
+**Gate behavior:** this phase never returns a blocking `status`. Its own reported files
+(`docs_updated`) are merged into `implementation.files_changed` before the doc-staleness gate
+(below) runs — this ordering is load-bearing: if Document-Update ran *after* that gate instead,
+every ticket whose only `docs/` change comes from doc-updater would trip `DOC_STALENESS_BLOCKED`
+before doc-updater ever got a chance to run. A `blocker` in the agent's own output (genuine
+ambiguity it could not resolve) is reported via a `failed`-status event only — the pipeline
+continues regardless. Verify's `check_docs_to_update_coverage` remains the actual backstop for
+standard/epic tier, independently re-deriving ground truth from `investigation.md` and real `git
+status` rather than trusting doc-updater's self-report. Hotfix tier has no equivalent backstop
+(`check_docs_to_update_coverage` returns `NA` unconditionally for hotfix) — an accepted,
+pre-existing gap, not something this phase introduces.
 
 ---
 

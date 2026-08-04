@@ -6,6 +6,7 @@ phase_order:
 - Plan
 - Review
 - Implement
+- Document-Update
 - Architecture-Verify
 - Test
 - Parity
@@ -30,6 +31,10 @@ phases:
     standard: full
     hotfix: skipped_event
 - name: Implement
+  tiers:
+    standard: full
+    hotfix: full
+- name: Document-Update
   tiers:
     standard: full
     hotfix: full

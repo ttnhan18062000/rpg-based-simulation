@@ -20,7 +20,7 @@ CANONICAL_TIERS = {"hotfix", "standard", "epic", "n/a"}
 WORKFLOW_PHASES = {
     "implement-ticket": {
         "Scope", "Investigate", "Plan", "Review", "Implement", "Architecture-Verify",
-        "Test", "Parity", "Security-Review", "Verify", "Finalize",
+        "Document-Update", "Test", "Parity", "Security-Review", "Verify", "Finalize",
     },
     "create-tickets": {"Comprehend", "Investigate", "Structure", "Write", "Link"},
     "implement-epic": {"Implement"},
@@ -39,7 +39,7 @@ WORKFLOW_PHASES = {
 WORKFLOW_AGENTS = {
     "implement-ticket": {
         "ticket-scoper", "investigator", "planner", "architecture-reviewer",
-        "implementer", "test-scoper", "parity-updater", "security-reviewer",
+        "implementer", "doc-updater", "test-scoper", "parity-updater", "security-reviewer",
         "done-checker", "finalizer", "implement-ticket-orchestrator",
     },
     "create-tickets": {"create-tickets", "structure", "ticket-scoper", "link-epic"},

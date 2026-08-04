@@ -40,6 +40,8 @@ phases:
     tiers: {standard: full, hotfix: skipped_event}
   - name: Implement
     tiers: {standard: full, hotfix: full}
+  - name: Document-Update
+    tiers: {standard: full, hotfix: full}
   - name: Architecture-Verify
     tiers: {standard: full, hotfix: skipped_event}
   - name: Test
@@ -62,6 +64,7 @@ agents:
   - planner
   - architecture-reviewer
   - implementer
+  - doc-updater
   - test-scoper
   - parity-updater
   - security-reviewer

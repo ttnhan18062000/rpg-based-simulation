@@ -39,6 +39,21 @@ from validate_frontmatter import extract_frontmatter  # noqa: E402
 # ---------------------------------------------------------------------------
 
 # Subdirectories under docs/ to skip entirely (not indexed in the registry).
+#
+# - "archive", "parity_ledger" — real exclusions: contain .md files that would
+#   otherwise be indexed by collect_docs()'s docs_dir.rglob("*.md"); skip-list
+#   membership is load-bearing for these two.
+# - "scenarios", "entity" — currently inert no-ops: as of the audit date below
+#   they contain zero .md files (they hold .yaml/.mmd content instead), so
+#   collect_docs()'s *.md-only rglob already excludes them regardless of this
+#   set's membership. Retained anyway for forward-compatibility documentation
+#   and because their content is actively referenced elsewhere:
+#   docs/scenarios/phase1/*.yaml by tests/unit/strategic/test_scenario_runner.py;
+#   docs/entity/*.mmd by docs/strategy/world_capability_design.md and
+#   docs/guides/diagram_index.md. Do not remove without re-verifying those
+#   references first.
+#
+# Audited and confirmed accurate by TCK-20260803-DOCS-STRUCTURE-AUDIT (2026-08-03).
 _SKIP_DOC_SUBDIRS = {"archive", "parity_ledger", "scenarios", "entity"}
 
 _AUTHORITY_SORT = {"P0": 0, "P1": 1, "P2": 2}

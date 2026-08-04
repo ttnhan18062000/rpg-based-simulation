@@ -79,11 +79,13 @@ directly from `.claude/workflows/create-tickets.js`'s `phase(...)` calls, not fr
 `docs/agent-monitoring/schema.md`'s `events.jsonl` phase list for `create-tickets` already lists these
 same 5 phases, independently confirming them.
 
-**The 10-phase `implement-ticket` pipeline** (standard tier): Scope (`ticket-scoper`, plus an
+**The 11-phase `implement-ticket` pipeline** (standard tier): Scope (`ticket-scoper`, plus an
 orchestrator-run check of `ticketInfo.tags` against `registries/tag_registry.jsonl` after the
 agent returns — gate: `TAGS_NOT_REGISTERED`, `TCK-20260706-SCOPE-TAG-REGISTRY-CHECK`) → Investigate
 (`investigator`) → Plan (`planner`) → Review (`architecture-reviewer`, gate: `NEEDS_CHANGES`/`BLOCKED`)
 → Implement (`implementer`) →
+**Document-Update (`doc-updater`, runs unconditionally; `docs_updated` paths merge into the
+doc-staleness gate's input)** →
 **Architecture-Verify (`architecture-reviewer`, 2nd call, gate: `NEEDS_CHANGES`/`BLOCKED` — runs
 `tools/gate_checks/architecture_reviewer_static.py::run_architecture_checks` against
 `implementation.files_changed` before the agent call and injects its JSON output; narrowly scoped to
@@ -97,9 +99,9 @@ agent call and `::cross_reference_touched` after it returns, flagging any untouc
 in the pushed event — visibility only, no new blocking status)** →
 **Security-Review (`security-reviewer`, conditional: fires when the ticket's `tags` include `security`
 or `suggested_skills` includes `/security-review`; gate: `SECURITY_BLOCKED`)** → Verify (`done-checker`,
-gate: `DOD_BLOCKED`) → Finalize (inline, no agent). Security-Review is an 11th, conditional phase — it
-does not run for every ticket, so the pipeline is still described as 10 standing phases plus this one
-conditional gate. Parity itself remains one of those 10 standing phases (it always runs and is always
+gate: `DOD_BLOCKED`) → Finalize (inline, no agent). Security-Review is a 12th, conditional phase — it
+does not run for every ticket, so the pipeline is still described as 11 standing phases plus this one
+conditional gate. Parity itself remains one of those 11 standing phases (it always runs and is always
 announced/logged) — only its `agent(...)` call within the phase is conditional, which does not change
 the phase count. This matches `docs/ai/workflows.md` and `docs/ai/ticket-lifecycle.md`, both of which
 match `.claude/workflows/implement-ticket.js` exactly.
@@ -114,8 +116,8 @@ Tier routing, matching this repository's own `CLAUDE.md` "Tier Routing" table:
 
 | Tier | Phases run | Use when |
 |---|---|---|
-| `hotfix` | Scope → Implement → Test → Parity → Verify → Finalize | Bug fix or minimal targeted change with self-evident intent |
-| `standard` | Full 10-phase pipeline | Any new feature, refactor, or substantive repair |
+| `hotfix` | Scope → Implement → Document-Update → Test → Parity → Verify → Finalize | Bug fix or minimal targeted change with self-evident intent |
+| `standard` | Full 11-phase pipeline | Any new feature, refactor, or substantive repair |
 | `epic` | Scope only — tracks child tickets | Large multi-ticket initiative; no direct implementation |
 
 **`implement-epic` has 3 phases**: Discover → Implement → Report, matching `docs/ai/workflows.md` and

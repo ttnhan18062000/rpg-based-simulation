@@ -10,6 +10,7 @@ const ALL_WORKFLOW_PHASES: WorkflowPhase[] = [
   'Architecture-Verify', 'Test', 'Parity', 'Security-Review', 'Verify',
   'Finalize', 'Comprehend', 'Structure', 'Write', 'Link', 'Recalibrate',
   'Classify Drift', 'Update Anchors', 'Sync Docs', 'Parity Check', 'Report',
+  'Document-Update',
 ]
 
 const SURFACE = '#242835'
@@ -42,7 +43,7 @@ function contrastRatio(a: string, b: string): number {
 }
 
 describe('phasePalette', () => {
-  it('exports a key set exactly equal to the 21 distinct WORKFLOW_PHASES strings', () => {
+  it('exports a key set exactly equal to the 22 distinct WORKFLOW_PHASES strings', () => {
     expect(Object.keys(PHASE_PALETTE).sort()).toEqual([...ALL_WORKFLOW_PHASES].sort())
     expect(Object.keys(PHASE_FAMILY).sort()).toEqual([...ALL_WORKFLOW_PHASES].sort())
   })

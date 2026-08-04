@@ -14,8 +14,8 @@ read it first for the *why*; this README covers the *what's here* and *how to us
 | File | Governs |
 |---|---|
 | `contract.yaml` | Top-level manifest: contract `version`, name, description, pointers to governed sibling files. |
-| `workflows/implement-ticket.yaml` | Phase list, per-tier applicability matrix, and the 10-role agent vocabulary for `implement-ticket`. |
-| `roles/*.yaml` (10 files) | One file per delegated subagent role that participates in `implement-ticket`. |
+| `workflows/implement-ticket.yaml` | Phase list, per-tier applicability matrix, and the 11-role agent vocabulary for `implement-ticket`. |
+| `roles/*.yaml` (11 files) | One file per delegated subagent role that participates in `implement-ticket`. |
 | `skills.yaml` | Catalog of reusable skills (`.claude/skills/*/SKILL.md`) and their workflow/role associations. |
 | `monitoring-schema.yaml` | Execution-identity field model (`execution_id`/`run_id`/`ticket_id`), consumed verbatim from `docs/ai/monitoring_writer_decision.md`. |
 | `hook-events.yaml` | Normalized lifecycle hook-event vocabulary currently wired in `.claude/settings.json`. |
