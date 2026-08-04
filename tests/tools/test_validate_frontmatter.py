@@ -687,7 +687,7 @@ class TestEnumAntiDrift:
         assert ARTIFACT_TYPE_VALUES == {"investigation", "plan", "test_plan"}
 
     def test_enum_values_phase(self):
-        assert PHASE_VALUES == {"open", "inprogress", "blocked", "done"}
+        assert PHASE_VALUES == {"open", "inprogress", "blocked", "done", "backlog"}
 
     def test_forbidden_priority_tags(self):
         assert FORBIDDEN_PRIORITY_TAGS == {"p0", "p1", "p2"}

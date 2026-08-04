@@ -2394,17 +2394,17 @@
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: "src/observability/cognition/decision_trace_writer.py::DecisionTraceWriter.write_trace + DecisionTraceWriter.get_latest_goal_scores + src/domains/adventure/phase.py::AdventureDecisionPhase.apply + src/observability/live/entity_inspector.py::EntityInspectionSnapshot.goal_scores + src/observability/config.py::OBS_DECISION_TRACE"
+  v2_evidence: "src/observability/cognition/decision_trace_writer.py::DecisionTraceWriter.write_trace (bounded in-memory enqueue only, hot-path safety contract §3) + DecisionTraceWriter._write_entry_to_file (actual decision_trace.jsonl write, dispatched off-path by a private QueueDrainWorker) + DecisionTraceWriter.get_latest_goal_scores + src/domains/adventure/phase.py::AdventureDecisionPhase.apply + src/observability/live/entity_inspector.py::EntityInspectionSnapshot.goal_scores + src/observability/config.py::OBS_DECISION_TRACE"
   proof_type: feature
   test_path: tests/unit/observability/test_decision_trace.py::test_decision_trace_runner_up_scores_present
   divergence_note: null
   support_boundary: null
 - id: INFRA-212
-  text: "Decision trace tick-index sidecar (Epic 2.2B): DecisionTraceIndex maintains decision_trace_index.json mapping tick→first byte offset, enabling O(1) random-access reads by tick. Updated incrementally on each write_trace() call (crash recovery) and rebuilt on close(). Not authoritative state — rebuildable from JSONL."
+  text: "Decision trace tick-index sidecar (Epic 2.2B): DecisionTraceIndex maintains decision_trace_index.json mapping tick→first byte offset, enabling O(1) random-access reads by tick. Updated incrementally on the DecisionTraceWriter drain worker's cadence (crash recovery, bounded by interval_sec) via DecisionTraceIndex.append_entry, not synchronously on each write_trace() call, and rebuilt on close(). Not authoritative state — rebuildable from JSONL."
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: src/observability/cognition/tick_index.py::DecisionTraceIndex + src/observability/cognition/decision_trace_writer.py::DecisionTraceWriter.write_trace + DecisionTraceWriter.close
+  v2_evidence: src/observability/cognition/tick_index.py::DecisionTraceIndex + src/observability/cognition/decision_trace_writer.py::DecisionTraceWriter._write_entry_to_file + DecisionTraceWriter.close
   proof_type: feature
   test_path: tests/unit/observability/test_decision_trace.py::test_tick_index_o1_lookup
   divergence_note: null
@@ -7143,3 +7143,154 @@
     (role_id: doc-updater, phases: [Document-Update], has_agent_file: true);
     test_contract_structure.py:81 and :147 (`== 10` -> `== 11`); README.md:17-18 corrected. Full
     124-test `tests/agent_orchestration*` suite passes.
+
+- id: INFRA-317
+  text: >
+    TCK-20260702-OBSISO-BROKER-CONFIG (G1) -- BrokerQualityFeed.__init__, build_feed_from_env(), and
+    QualityWorker.__init__ resolve stream_name and broker_url through
+    ObservabilityConfig.get_stream_name()/get_redis_url() (src/observability/config.py) when
+    QUALITY_STREAM_NAME/QUALITY_BROKER_URL are unset, instead of an independently-hardcoded
+    "sim:events"/"redis://localhost:6379" default that diverged from the producer's
+    "simulation:events" default and left broker mode silently dead out-of-box. Explicit
+    QUALITY_STREAM_NAME/QUALITY_BROKER_URL overrides continue to take precedence.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/simulation_quality/feed.py (BrokerQualityFeed.__init__ resolves broker_url/stream_name via
+    ObservabilityConfig when None; build_feed_from_env() forwards os.environ.get(...) with no
+    hardcoded fallback), src/simulation_quality/worker.py (QualityWorker.__init__ forwards
+    os.environ.get(...) with no hardcoded fallback). All four tests in test_path executed and
+    passed, including the REDIS_AVAILABLE-gated integration test
+    (test_broker_feed_integration.py::test_no_env_vars_set_broker_mode_producer_consumer_share_stream_name),
+    run against a real Redis instance (docker run redis:7-alpine) during Architecture-Verify --
+    the initial implementation could not run it in-sandbox and honestly disclosed that gap, but
+    that disclosure surfaced two real, independent, pre-existing latent bugs in this test file
+    (never previously caught because the whole module was skipped by default with no
+    REDIS_AVAILABLE env var ever set): (1) the new test's SimulationEvent construction used
+    event_category="action", not a valid EventCategory literal -- fixed to "strategy", matching
+    the existing event_type="action_executed" pairing already used in
+    src/observability/event_extractor.py:249; (2)
+    test_broker_feed_graceful_when_redis_unavailable mocked
+    "src.simulation_quality.feed.RedisStreamConsumer" (wrong patch target -- RedisStreamConsumer
+    is lazily imported inside BrokerQualityFeed.start(), not present in feed.py's module
+    namespace) and used side_effect=ConnectionError(...) when the real
+    RedisStreamConsumer.connect() never raises, only returns bool -- fixed to patch
+    "src.observability.stream.consumer.RedisStreamConsumer" with return_value=False. All 3 tests
+    in test_broker_feed_integration.py now pass against real Redis. Full
+    tests/simulation_quality/ -m "not slow" suite re-run clean afterward (437 passed; the sole
+    unrelated failure, test_grade_regression.py::test_grade_anchor_file_exists_and_valid,
+    confirmed pre-existing via git stash comparison against unmodified HEAD).
+  proof_type: regression
+  test_path: tests/simulation_quality/test_feed.py::test_broker_stream_name_defaults_to_observability_config,tests/simulation_quality/test_feed.py::test_broker_url_defaults_to_observability_config,tests/simulation_quality/test_worker.py::test_quality_worker_stream_name_defaults_to_observability_config,tests/simulation_quality/test_broker_feed_integration.py::test_no_env_vars_set_broker_mode_producer_consumer_share_stream_name
+  divergence_note: null
+  support_boundary: >
+    Config default-value resolution only -- no change to RedisStreamAdapter/RedisStreamConsumer
+    wire behavior, no new stream backend, no change to consumer_group defaulting.
+
+- id: INFRA-318
+  text: >
+    TCK-20260702-OBSISO-BROKER-CONFIG (G3) -- when QUALITY_FEED_MODE=broker, the engine process
+    (src/engine/kernel.py, Kernel.__init__) constructs zero QualityHub instances and starts zero
+    Redis consumer threads. Kernel detects broker mode by inspecting the resolved feed instance
+    (isinstance(_feed, BrokerQualityFeed)), not by re-reading QUALITY_FEED_MODE from env a second
+    time. In-process mode (QUALITY_FEED_MODE=inprocess, the default) is unaffected -- the kernel
+    still builds all 10 pillar scorers and a QualityHub exactly as before. This closes the isolation
+    gap where broker-mode scoring ran fully in-engine (defeating the purpose of broker mode) and
+    could double-consume the same Redis consumer group alongside an external QualityWorker.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: >
+    src/engine/kernel.py (Kernel.__init__, hub-construction block wrapped in
+    `if not isinstance(_feed, BrokerQualityFeed):`; self._quality_feed hoisted out of that
+    conditional so it is still set in broker mode; EventRecorder construction and the
+    `self._quality_feed.start(...)` guard at the existing call site left unmodified -- the guard's
+    pre-existing `self._quality_hub is not None` check now naturally prevents `.start()` from being
+    called in broker mode; quality_hub property docstring updated). All 4 cited tests executed and
+    passed.
+  proof_type: regression
+  test_path: tests/simulation_quality/test_kernel_simq_integration.py::test_kernel_broker_mode_builds_zero_quality_hub,tests/simulation_quality/test_kernel_simq_integration.py::test_kernel_broker_mode_starts_zero_consumer_threads,tests/simulation_quality/test_kernel_simq_integration.py::test_kernel_inprocess_mode_unaffected_by_g3_fix,tests/simulation_quality/test_kernel_simq_integration.py::test_quality_scoring_disabled_still_wins_in_both_modes
+  divergence_note: null
+  support_boundary: >
+    Kernel-side mode-routing only -- QualityWorker's own scorer completeness (G2) and any
+    broker-vs-inprocess performance comparison (G5) are explicitly out of scope and not claimed by
+    this entry.
+
+- id: INFRA-319
+  text: >
+    TCK-20260804-OBSISO-WORKER-PARITY-HOTFIX (G2) -- broker-mode scoring, performed by the
+    standalone QualityWorker process (src/simulation_quality/worker.py), constructs the same full
+    set of 10 SimQ pillar scorers as the in-process kernel path (src/engine/kernel.py), via the
+    shared build_all_scorers(weights) factory (src/simulation_quality/scorers/__init__.py). Prior
+    to this fix, QualityWorker.__init__ hardcoded a 2-scorer list ([AgencyScorer(weights),
+    CombatScorer(weights)]), so any deployment running QUALITY_FEED_MODE=broker silently scored
+    only AGENCY and COMBAT and omitted the other 8 pillars (COGNITION, ECONOMY, FACTION,
+    INFORMATION, NARRATIVE, PROGRESSION, SOCIAL, WORLD_DYNAMICS) from every broker-mode quality
+    report, with no error or warning surfaced. This closes that gap: broker-mode and in-process
+    mode now produce scorer-complete reports over the identical 10-pillar set. Also extends the
+    QualityWorker /health payload with a pillar_event_counts dict (one entry per PillarId, sourced
+    from the existing QualityHub._accumulators[pid].snapshot()["event_count"] -- no new counting
+    mechanism), giving operators a way to detect a future regression of this kind from outside the
+    process without waiting for a full quality report.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: >
+    src/simulation_quality/worker.py (QualityWorker.__init__, line ~77: `scorers =
+    build_all_scorers(weights)` replacing the prior hardcoded 2-scorer list;
+    _HealthHandler.do_GET, lines ~30-38: `/health` payload's `pillar_event_counts` dict built from
+    `self.hub._accumulators[pid].snapshot()["event_count"]` for `pid in PillarId`); shared factory
+    at src/simulation_quality/scorers/__init__.py::build_all_scorers, already used identically by
+    src/engine/kernel.py's in-process hub-construction path (see INFRA-318). Both cited tests
+    re-executed and passed in this session.
+  proof_type: regression
+  test_path: tests/simulation_quality/test_worker.py::test_quality_worker_hub_has_all_ten_pillars_represented,tests/simulation_quality/test_worker.py::test_quality_worker_health_payload_includes_per_pillar_event_counts
+  divergence_note: null
+  support_boundary: >
+    QualityWorker scorer-set completeness and its /health per-pillar event-count observability
+    only -- does not claim anything about broker-vs-inprocess scoring numerical parity beyond
+    scorer-set identity (weights resolution, event delivery timing, and Redis consumer-group
+    semantics are covered by other entries, e.g. INFRA-316/INFRA-317/INFRA-318), and does not
+    claim broker-vs-inprocess performance comparison (G5, still open per INFRA-318's
+    support_boundary).
+
+- id: INFRA-320
+  text: >
+    TCK-20260702-OBSISO-ISOLATION-PROOF (G5) -- tools/calibrate_simq.py's _run_engine() hard-fails
+    a calibration run when SimQ lost events to either of the two independent loss mechanisms:
+    BoundedObservabilityQueue overflow-evict (queue.dropped_count > 0) or ObservabilityMode
+    SURVIVAL mode-shed (observability_status()["survival_counts"] non-empty, which bypasses the
+    queue entirely -- SimQ receives nothing while the run appears to complete normally). Previously
+    neither condition was checked anywhere in calibrate_simq.py or evaluate_simq.py, so a run that
+    silently dropped or shed events could still produce a "successful" quality_report.json with a
+    misleadingly clean grade. The guard reads kernel.event_recorder.observability_status() and
+    .queue.dropped_count once, immediately after the tick loop (kernel.shutdown() is still called
+    unconditionally afterward for resource cleanup; the CalibrationIntegrityError raise is a
+    separate statement never nested inside that call's exception-swallowing try/except, so it can
+    never be silently caught). On every run (pass or fail) a typed RunHealthRecord sidecar
+    (quality_report.run_health.json, src/simulation_quality/run_health.py) is written next to
+    quality_report.json via QualityPersistence.write_run_health()'s tmp-write-then-os.rename()
+    pattern -- additive, QualityReport's own schema is untouched. evaluate_simq.py's --dry-run path
+    reads this sidecar and warns (non-fatal) when guard_passed is false, since a dry-run never
+    re-executes the engine and cannot observe a live drop itself; evaluate-full inherits the
+    hard-fail directly since it calls calibrate_simq.main().
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: >
+    tools/calibrate_simq.py (_run_engine(), post-tick-loop guard reading
+    kernel.event_recorder.observability_status() / .queue.dropped_count, CalibrationIntegrityError
+    raised as its own statement after the unconditional kernel.shutdown() try/except, never nested
+    inside it); src/simulation_quality/run_health.py (RunHealthRecord dataclass, to_dict/from_dict);
+    src/simulation_quality/persistence.py (QualityPersistence.write_run_health() static method);
+    tools/evaluate_simq.py (_warn_if_run_health_guard_failed(), called from the --dry-run path).
+  proof_type: regression
+  test_path: tests/simulation_quality/test_calibrate_simq.py::TestQueueOverflowGuard::test_calibrate_simq_fails_on_forced_queue_overflow,tests/simulation_quality/test_calibrate_simq.py::TestQueueOverflowGuard::test_calibrate_simq_succeeds_normally_with_zero_drops,tests/simulation_quality/test_calibrate_simq.py::TestSurvivalModeGuard::test_survival_mode_flags_run_instead_of_silently_grading,tests/simulation_quality/test_evaluate_harness.py::TestQueueOverflowGuardIntegration::test_evaluate_simq_flags_queue_overflow_run
+  divergence_note: null
+  support_boundary: >
+    Calibration/evaluation-tooling integrity guard only -- does not alter EventRecorder's SURVIVAL
+    transition logic (INFRA-199, unchanged) or Kernel's SimQ feed-selection/routing (INFRA-318,
+    INFRA-319, unchanged); this entry is orthogonal to and does not claim anything about SimQ mode
+    engine-overhead measurement (also part of TCK-20260702-OBSISO-ISOLATION-PROOF, see
+    docs/performance/simq_isolation_overhead.md).

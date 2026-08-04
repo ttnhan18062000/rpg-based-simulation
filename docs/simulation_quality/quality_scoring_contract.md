@@ -162,8 +162,8 @@ Additional env vars for broker mode:
 
 | Variable | Default | Purpose |
 |---|---|---|
-| `QUALITY_BROKER_URL` | `redis://localhost:6379` | Redis connection URL |
-| `QUALITY_STREAM_NAME` | `sim:events` | Redis stream key to consume from |
+| `QUALITY_BROKER_URL` | `ObservabilityConfig.get_redis_url()` (`redis://localhost:6379/0` when no `SIM_REDIS_URL`/`RPG_REDIS_URL` override) | Redis connection URL |
+| `QUALITY_STREAM_NAME` | `ObservabilityConfig.get_stream_name()` (`simulation:events` when no `SIM_STREAM_NAME`/`RPG_STREAM_NAME` override) | Redis stream key to consume from |
 | `QUALITY_CONSUMER_GROUP` | `quality_scoring` | Consumer group name |
 
 #### `QualityFeedAdapter` interface
@@ -175,7 +175,9 @@ class QualityFeedAdapter(ABC):
     def health(self) -> dict: ...                  # status, lag, dropped_count
 ```
 
-`InProcessQualityFeed.start()` registers a drain callback on `BoundedObservabilityQueue`.
+`InProcessQualityFeed.start()` stores the `QualityHub` reference for health/stop reporting;
+the actual envelope delivery is wired by the kernel injecting `quality_fn=hub.on_envelope`
+into `EventRecorder`'s `QueueDrainWorker` at kernel init time (`kernel.py`).
 `BrokerQualityFeed.start()` instantiates a `RedisStreamConsumer` (from `src/observability/stream/consumer.py`)
 and calls `hub.on_envelope()` from its callback. No other code changes — `RedisStreamConsumer`
 is already built (M36).
@@ -1126,7 +1128,7 @@ investigation snapshot.
 | Candidate dimension | Owning system (verified) |
 |---|---|
 | Determinism / replay-fidelity | `tests/certification/`, `tests/integration/kernel/test_long_run_determinism.py`, `tests/integration/observability/test_phase28_observability_determinism.py`, `tests/unit/kernel/test_replay_determinism.py` |
-| Performance / tick-time budget | `tests/perf/` (38 files), tied to `docs/engine/performance_contract.md`'s hardware classes; SimQ's own overhead is separately budgeted in `tests/simulation_quality/test_performance.py` |
+| Performance / tick-time budget | `tests/perf/` (38 files), tied to `docs/engine/performance_contract.md`'s hardware classes; SimQ's own scorer/accumulator microbenchmarks are budgeted in `tests/simulation_quality/test_performance.py`; SimQ's engine-level (disabled/in-process/broker) overhead is measured by `tests/perf/test_simq_isolation_overhead.py`, results in `docs/performance/simq_isolation_overhead.md` |
 | Save/checkpoint integrity | `tests/integration/kernel/test_checkpoint_reproducibility.py`, `tests/unit/engine/test_scenario_checkpointer.py` |
 | Content/catalog health | `src/content/validator.py`'s `CAT-REL-001`–`CAT-REL-004` and `CAT-REL-011`–`CAT-REL-019` rules (non-contiguous range; there is no `CAT-REL-005`–`CAT-REL-010`) |
 
@@ -1405,7 +1407,7 @@ verification trail (test commands run, live code reads performed).
 
 ### Performance
 
-- [x] Simulation tick timing is not measurably affected by quality scoring (< 1% overhead) — `src/observability/event_recorder.py::EventRecorder.record` (enqueues only, no scorer call on the tick thread) + `src/observability/queue.py::QueueDrainWorker._run` (invokes `quality_fn` on a separate daemon thread, `name="observability-drain-worker"`, fully decoupled from tick execution) — confirmed by direct code read 2026-07-11
+- [x] Simulation tick timing is not measurably affected by quality scoring (< 1% overhead) — `src/observability/event_recorder.py::EventRecorder.record` (enqueues only, no scorer call on the tick thread) + `src/observability/queue.py::QueueDrainWorker._run` (invokes `quality_fn` on a separate daemon thread, `name="observability-drain-worker"`, fully decoupled from tick execution) — confirmed by direct code read 2026-07-11; **measured** 2026-08-04 (TCK-20260702-OBSISO-ISOLATION-PROOF, G5): `docs/performance/simq_isolation_overhead.md` — in-process mode showed no measurable engine-CPU overhead vs. the `QUALITY_SCORING_DISABLED=1` baseline (-8.4% on the committed run, i.e. within measurement noise, not a real cost), broker mode +0.6% — both consistent with the "< 1%" figure above; `tests/perf/test_simq_isolation_overhead.py`
 - [x] `QUALITY_SCORING_DISABLED=1` produces bit-identical simulation output — `src/simulation_quality/feed.py::build_feed_from_env` lines 125-126, unconditional short-circuit re-read directly 2026-07-11 (`if os.environ.get("QUALITY_SCORING_DISABLED") == "1": return None`, checked before any mode branching) + `tests/simulation_quality/test_feed.py::test_build_feed_returns_none_when_disabled` — run this session, passes (see corrected `docs/parity_ledger/infrastructure.yaml` INFRA-233, whose `test_path` had gone stale)
 - [x] Scoring exceptions are caught and logged; they do not propagate to simulation — `src/simulation_quality/quality_hub.py::QualityHub.on_envelope` lines 135-159 re-read directly 2026-07-11: disabled check at entry, then `try/except Exception` wraps every `scorer.score()` call individually, logging at `logger.warning(...)` — no exception can escape the loop + `tests/simulation_quality/test_quality_hub_integration.py::TestErrorIsolation::test_scorer_exception_does_not_propagate` — run this session, passes
 - [x] `scorer.score()` runs in < 0.1 ms per event — `tests/simulation_quality/test_performance.py::test_agency_scorer_median_under_0_1ms`, `::test_combat_scorer_median_under_0_1ms` — run with `pytest -m slow` this session, passes

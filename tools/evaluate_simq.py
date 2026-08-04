@@ -85,6 +85,42 @@ def _load_calibration_report(run_key: str) -> dict[str, Any] | None:
     return json.loads(path.read_text())
 
 
+def _warn_if_run_health_guard_failed(run_key: str) -> None:
+    """--dry-run's non-fatal counterpart to calibrate_simq.py's hard-fail guard.
+
+    literal `make evaluate` (--dry-run) never re-runs the engine, so it cannot
+    observe a live queue drop or SURVIVAL entry itself — it can only read back
+    the RunHealthRecord sidecar calibrate_simq.py wrote the last time this run_key
+    was actually calibrated. Per the ticket's own stated default (hard-fail for
+    calibration, warn for ad-hoc evaluation), this warns rather than exits non-zero.
+    """
+    from src.simulation_quality.run_health import RunHealthRecord
+
+    sidecar_path = CALIBRATION_ROOT / run_key / "quality_report.run_health.json"
+    if not sidecar_path.exists():
+        print(
+            f"WARNING: {run_key!r} has no quality_report.run_health.json — cannot verify "
+            "the SimQ event-loss guard for this run (predates this guard, or the sidecar "
+            "write failed).",
+            file=sys.stderr,
+        )
+        return
+    try:
+        health = RunHealthRecord.from_dict(json.loads(sidecar_path.read_text()))
+    except Exception as exc:
+        print(f"WARNING: {run_key!r} quality_report.run_health.json unreadable: {exc}", file=sys.stderr)
+        return
+    if not health.guard_passed:
+        print(
+            f"WARNING: {run_key!r} run integrity guard FAILED last time it was calibrated "
+            f"(dropped_count={health.dropped_count}, "
+            f"pressure_mode_final={health.pressure_mode_final}, "
+            f"survival_triggered={health.survival_triggered}) — grades for this run may be "
+            "unreliable. Re-run calibration (without --dry-run) to get a valid report.",
+            file=sys.stderr,
+        )
+
+
 def _run_calibration(world_name: str, profile_name: str, seed: int, ticks: int, run_key: str) -> None:
     """Run calibration, writing the report under CALIBRATION_ROOT/{run_key}.
 
@@ -195,6 +231,9 @@ def main() -> None:
             print(f"WARNING: no calibration report for {run_key} — skipping", file=sys.stderr)
             missing_count += 1
             continue
+
+        if args.dry_run:
+            _warn_if_run_health_guard_failed(run_key)
 
         actual_grades = _extract_pillar_grades(report)
         anchor_grades = {p: v["grade"] for p, v in all_anchors[run_key].items()}

@@ -27,6 +27,15 @@ class _HealthHandler(BaseHTTPRequestHandler):
                     payload["run_id"] = self.hub._run_id
                 except Exception:
                     pass
+                try:
+                    from src.simulation_quality.pillars import PillarId
+
+                    payload["pillar_event_counts"] = {
+                        pid.value: self.hub._accumulators[pid].snapshot()["event_count"]
+                        for pid in PillarId
+                    }
+                except Exception:
+                    pass
             body = json.dumps(payload).encode()
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
@@ -48,8 +57,7 @@ class QualityWorker:
         from src.simulation_quality.feed import BrokerQualityFeed, build_feed_from_env
         from src.simulation_quality.persistence import QualityPersistence
         from src.simulation_quality.quality_hub import QualityHub
-        from src.simulation_quality.scorers.agency import AgencyScorer
-        from src.simulation_quality.scorers.combat import CombatScorer
+        from src.simulation_quality.scorers import build_all_scorers
         from src.simulation_quality.weights import ScoringWeights
 
         weights_path = os.environ.get(
@@ -62,21 +70,27 @@ class QualityWorker:
             "QUALITY_DETECTION_PATH", "config/simulation_quality/detection_params.yaml"
         )
         profile = os.environ.get("QUALITY_PROFILE", "default")
-        run_dir = os.environ.get("QUALITY_RUN_DIR", "data/runs/quality_worker")
         run_id = os.environ.get("QUALITY_RUN_ID", "broker_worker")
+        run_dir = os.environ.get("QUALITY_RUN_DIR", f"data/runs/{run_id}")
 
         weights = ScoringWeights.load(weights_path, grade_path, detection_path, profile)
-        scorers = [AgencyScorer(weights), CombatScorer(weights)]
+        scorers = build_all_scorers(weights)
         persistence = QualityPersistence(run_dir)
 
         self._feed = BrokerQualityFeed(
-            broker_url=os.environ.get("QUALITY_BROKER_URL", "redis://localhost:6379"),
-            stream_name=os.environ.get("QUALITY_STREAM_NAME", "sim:events"),
+            broker_url=os.environ.get("QUALITY_BROKER_URL"),
+            stream_name=os.environ.get("QUALITY_STREAM_NAME"),
             consumer_group=os.environ.get("QUALITY_CONSUMER_GROUP", "quality_scoring"),
         )
         self._hub = QualityHub(scorers, weights, persistence, run_id)
         self._persistence = persistence
         self._stop_event = threading.Event()
+        self._stale_watchdog: threading.Timer | None = None
+
+        logger.info(
+            "QualityWorker: resolved broker config — url=%s stream=%s group=%s",
+            self._feed._broker_url, self._feed._stream_name, self._feed._consumer_group,
+        )
 
     def run(self) -> None:
         port = int(os.environ.get("QUALITY_WORKER_PORT", "8082"))
@@ -96,8 +110,24 @@ class QualityWorker:
         self._feed.start(self._hub)
         logger.info("QualityWorker: broker feed started")
 
+        stale_seconds = int(os.environ.get("QUALITY_STALE_WARNING_SECONDS", "30"))
+
+        def _warn_if_no_events_consumed() -> None:
+            if self._feed.events_consumed_count == 0:
+                logger.warning(
+                    "QualityWorker: no events received on stream=%s after %ds — check "
+                    "producer-side SIM_STREAM_NAME/RPG_STREAM_NAME/SIM_REDIS_URL/RPG_REDIS_URL "
+                    "env vars match this worker's resolved broker config (logged above)",
+                    self._feed._stream_name, stale_seconds,
+                )
+
+        self._stale_watchdog = threading.Timer(stale_seconds, _warn_if_no_events_consumed)
+        self._stale_watchdog.daemon = True
+        self._stale_watchdog.start()
+
         self._stop_event.wait()
 
+        self._stale_watchdog.cancel()
         self._feed.stop()
         report = self._hub.get_quality_report()
         self._persistence.write_report(report)

@@ -10,7 +10,8 @@ tags: [ai, agent-monitoring, process-improvement]
 
 A standalone decision/evidence artifact bundling Open Decision #3 (execution identity) and
 Open Decision #5 (concurrent-write strategy) from
-`docs/plans/agent_infrastructure/idea_provider_agnostic_agent_orchestration.md`, per Codex's
+`docs/plans/archive/agent_infrastructure/idea_provider_agnostic_agent_orchestration.md`
+(archived — shipped), per Codex's
 2026-07-21 batch review of `TCK-20260721-PROVIDER-AGNOSTIC-EPIC`'s child tickets, which
 determined both decisions belong in this one ticket rather than split across this ticket and
 the downstream `TCK-20260721-ORCHESTRATION-CONTRACT-ADR`.
@@ -80,7 +81,8 @@ invocation) and **the ticket-linkage key** (identifying which ticket the run bel
 conflation is safe only as long as exactly one provider ever executes a given ticket, at most
 once concurrently. It breaks once the same ticket can be executed by more than one provider
 (Claude Code and Codex, per
-`docs/plans/agent_infrastructure/idea_provider_agnostic_agent_orchestration.md`), or re-run —
+`docs/plans/archive/agent_infrastructure/idea_provider_agnostic_agent_orchestration.md`,
+archived — shipped), or re-run —
 two executions of the same ticket would either collide on `run_id` or require inventing a new
 ad hoc suffix convention (exactly the pattern the schema doc's Known Limitations already
 document as a historical mistake, see above). Section 2 below resolves this by separating the

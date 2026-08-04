@@ -24,8 +24,8 @@ Proposed
 
 ## Context
 This document is discovery output #2 of the 5-output exit gate defined in
-`docs/plans/agent_infrastructure/idea_provider_agnostic_agent_orchestration.md`'s
-"Approval model and exit gate" section (lines 124-145): "A contract-format ADR,
+`docs/plans/archive/agent_infrastructure/idea_provider_agnostic_agent_orchestration.md`
+(archived — shipped)'s "Approval model and exit gate" section (lines 125-146): "A contract-format ADR,
 including source ownership and adapter-generation or conformance strategy." The
 parent discovery epic, `TCK-20260721-PROVIDER-AGNOSTIC-EPIC`, is complete only
 once all 5 listed outputs are reviewed and approved; this ADR does not by itself

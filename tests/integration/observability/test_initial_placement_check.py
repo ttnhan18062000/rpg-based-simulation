@@ -17,6 +17,7 @@ from src.platform.rng import DeterministicRNG
 from src.engine.kernel import Kernel
 from src.observability.config import ObservabilityConfig, ObservabilityMode
 from src.observability.event_recorder import EventRecorder
+from src.observability.cognition.decision_trace_writer import DecisionTraceWriter
 from src.observability.hard_law_monitor import HardLawMonitor, HardLawViolationError
 
 
@@ -101,9 +102,10 @@ def test_check_initial_placement_mode_gating_matches_precedent(mock_profile, moc
 
     # DEBUG / CERTIFICATION: construction raises HardLawViolationError (fail-fast).
     # __init__ never returns on this path, so there is no kernel handle to call
-    # shutdown() through — the EventRecorder it already started (pre-existing
-    # to this ticket: __init__ has no exception-safe teardown for anything
-    # raised after EventRecorder construction) must be reclaimed via gc instead.
+    # shutdown() through — the EventRecorder and DecisionTraceWriter it already
+    # started (pre-existing to this ticket: __init__ has no exception-safe
+    # teardown for anything raised after their construction) must be reclaimed
+    # via gc instead.
     for fail_fast_mode in (ObservabilityMode.DEBUG, ObservabilityMode.CERTIFICATION):
         ObservabilityConfig.set_override_mode(fail_fast_mode)
         try:
@@ -114,6 +116,8 @@ def test_check_initial_placement_mode_gating_matches_precedent(mock_profile, moc
             for obj in gc.get_objects():
                 if isinstance(obj, EventRecorder) and getattr(obj, "_worker", None) is not None:
                     obj.shutdown()
+                elif isinstance(obj, DecisionTraceWriter) and getattr(obj, "_worker", None) is not None:
+                    obj.close()
 
     # LIGHT and LONG_RUN: construction succeeds without raising; violation is
     # still recorded onto status (LONG_RUN deliberately inherits the existing

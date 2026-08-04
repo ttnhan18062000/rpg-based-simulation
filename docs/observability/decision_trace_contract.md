@@ -96,6 +96,18 @@ Defined in `src/domains/adventure/scoring.py:AdventureRouteScorer.score()`.
 - **Lifecycle managed by:** `src/engine/kernel.py` (parallel to cognition recorder)
 - **execute_brain() is NOT touched** — route scoring is in the strategic pipeline phase,
   not the tactical cognition domain.
+- **Async write path (TCK-20260702-OBSISO-TRACE-ASYNC):** `write_trace()` is a bounded
+  in-memory enqueue only — no file I/O runs on the phase call path
+  (`docs/architecture/observability_hot_path_safety_contract.md` §3). Each call builds the
+  scored-route `entry` dict (unchanged shape/logic), updates the in-memory
+  `_latest_goal_scores` cache synchronously, then pushes a `_DecisionTraceQueueItem` onto a
+  private `BoundedObservabilityQueue`. A private `QueueDrainWorker`, owned by the
+  `DecisionTraceWriter` instance (the same per-instance pattern `EventRecorder` uses, not the
+  global observability queue singleton), drains the queue on its own cadence and performs the
+  actual `decision_trace.jsonl` write **and** the `DecisionTraceIndex.append_entry()` call
+  off-path, via `_write_entry_to_file`. `close()` stops the worker, synchronously drains and
+  writes any remaining queued entries, closes the file, then rebuilds the tick-index sidecar.
+  See "Accepted Crash-Loss and Overflow-Drop Windows" below.
 
 ## Tick Index Sidecar
 
@@ -131,11 +143,30 @@ Example:
 ### Lifecycle
 
 - **During run (incremental):** `DecisionTraceIndex.append_entry(tick, offset)` is called from
-  `DecisionTraceWriter.write_trace()` after each flush. Only the first occurrence of a tick is
-  recorded. This keeps the sidecar valid after every write for crash recovery.
+  `DecisionTraceWriter`'s private async drain worker (`_write_entry_to_file`), once per queued
+  entry actually written to `decision_trace.jsonl` — not synchronously from `write_trace()`.
+  Only the first occurrence of a tick is recorded. This keeps the sidecar valid after every
+  **drained** write, at the worker's drain cadence, not synchronously per hot-path call.
 - **At run end (rebuild):** `DecisionTraceIndex.rebuild()` is called from
   `DecisionTraceWriter.close()` to produce a clean, complete index from the final file.
 - The sidecar is **not authoritative state** — it can be rebuilt at any time via `rebuild()`.
+
+### Accepted Crash-Loss and Overflow-Drop Windows
+
+Moving the file write and index update off the hot path (TCK-20260702-OBSISO-TRACE-ASYNC)
+introduces two bounded, accepted windows where an enqueued trace record may never reach disk:
+
+- **Crash-loss window**: entries still sitting in the queue (not yet drained) at the moment of
+  an unclean process kill are lost. Bounded by the drain worker's `interval_sec=0.01s` default
+  cadence, not unbounded.
+- **Queue-overflow-drop window**: under sustained queue saturation (occupancy at
+  `ObservabilityConfig.get_max_queue_size()`), new entries are silently dropped rather than
+  blocking the hot path.
+
+Both windows mirror the already-accepted precedent set by `EventRecorder`/
+`simulation_events.jsonl` on the identical `BoundedObservabilityQueue`/`QueueDrainWorker`
+primitive. See `docs/guidelines/intentional_divergences.md` §2.31 for the full rationale and
+verification paths.
 
 ### Implementation
 

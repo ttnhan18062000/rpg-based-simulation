@@ -30,6 +30,7 @@ This document is the canonical record of intentional behavior shifts in `src` co
 | **Engine / Cognition** | `self_model_bundle_set` Durable Materialization (`SelfModelPatch`) | **Bug Fix** | RATIFIED |
 | **World / Ecology** | Resource Ecology Kind-Emission Catalog Alignment | **Bug Fix** | RATIFIED |
 | **World / Environment** | Non-Native Faction Hazard Exposure (`town_council`/`bandit_road`) | **Intentional Gameplay Change** | RATIFIED |
+| **Engine / Observability** | DecisionTraceWriter Async Drain — Crash-Loss & Overflow-Drop Windows | **Bounded** | RATIFIED |
 
 ---
 
@@ -532,6 +533,50 @@ This document is the canonical record of intentional behavior shifts in `src` co
   `::test_hazard_kind_matches_populating_faction_immunity[generated_frontier_3_42]`
   (region-level immunity match already satisfied by `bandit_company`/`merchant_league`, unaffected
   by this ruling).
+- **Status**: ACTIVE
+
+### 2.31 DecisionTraceWriter Async Drain — Crash-Loss & Overflow-Drop Windows (TCK-20260702-OBSISO-TRACE-ASYNC)
+- **Subsystem**: Engine / Observability
+- **Old Behavior**: `DecisionTraceWriter.write_trace()` wrote `decision_trace.jsonl` and called
+  `DecisionTraceIndex.append_entry()` (which itself flushes `decision_trace_index.json`)
+  synchronously, in-line, from inside `AdventureDecisionPhase.apply()`'s per-hero loop — a
+  direct §3 hot-path file-I/O violation of
+  `docs/architecture/observability_hot_path_safety_contract.md`, but with the effect that every
+  written record was durable on disk by the time `write_trace()` returned.
+- **New Behavior**: `write_trace()` is now a bounded in-memory enqueue only
+  (`self._queue.try_push(_DecisionTraceQueueItem(entry=entry))`); the actual
+  `decision_trace.jsonl` write and `DecisionTraceIndex.append_entry()` call happen off-path on a
+  private `QueueDrainWorker` (`_write_entry_to_file`), following the same per-instance
+  `BoundedObservabilityQueue`/`QueueDrainWorker` pattern already shipped and accepted for
+  `EventRecorder`/`simulation_events.jsonl`. This introduces two independent, bounded windows
+  where an entry that was successfully enqueued is not guaranteed to reach disk:
+  - **Crash-loss window**: any entries still sitting in the queue (not yet drained) at the
+    moment of an unclean process kill are lost. Bounded by the worker's `interval_sec=0.01s`
+    default drain cadence (`QueueDrainWorker.__init__`, `src/observability/queue.py`) — not
+    unbounded, since the worker drains the full queue on every cycle.
+  - **Queue-overflow-drop window**: `_DecisionTraceQueueItem.severity` is hardcoded to
+    `"INFO"` (it exists only to satisfy `BoundedObservabilityQueue.try_push()`'s shared
+    severity-eviction interface, not to express real priority for trace entries). Under
+    sustained queue saturation (occupancy at `ObservabilityConfig.get_max_queue_size()`), new
+    decision-trace entries are silently dropped rather than blocking the hot path — real,
+    design-level data loss, independent of the crash-loss window above, bounded by `max_size`.
+- **Decision**: Both windows are accepted as-is. No periodic off-path fsync/force-drain
+  mechanism is introduced.
+- **Rationale**: **Bounded**. (a) `EventRecorder` already carries the identical crash-loss and
+  overflow-drop profile on the identical `BoundedObservabilityQueue`/`QueueDrainWorker`
+  primitive for `simulation_events.jsonl`, shipped and accepted with no fsync mechanism of its
+  own — introducing one only for the trace writer would be an unexplained, unjustified
+  inconsistency between two components sharing the same underlying pattern. (b) The ticket's own
+  Assumptions section names this as the expected fallback-avoidance outcome ("crash-loss
+  window... is acceptable if documented"), and no contract owner has recorded disagreement.
+- **Verification**:
+  `tests/integration/observability/test_decision_trace_determinism.py` (proves queue occupancy
+  stays well under `max_size` — i.e. `dropped_count == 0` — across a real two-run seeded scenario,
+  the occupancy-headroom proof the determinism guarantee itself depends on);
+  `tests/unit/observability/test_decision_trace.py::test_worker_thread_does_not_survive_close`,
+  `::test_close_is_idempotent` (demonstrate the buffered-vs-persisted boundary: `close()`
+  synchronously drains and persists all remaining queued entries before returning, bounding the
+  crash-loss window to "process is still running").
 - **Status**: ACTIVE
 
 ---

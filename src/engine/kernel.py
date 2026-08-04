@@ -229,33 +229,34 @@ class Kernel:
         self._quality_feed = None
         _quality_fn = None
         if obs_mode != ObservabilityMode.OFF:
-            from src.simulation_quality.feed import build_feed_from_env
+            from src.simulation_quality.feed import build_feed_from_env, BrokerQualityFeed
             _feed = build_feed_from_env()
             if _feed is not None:
-                from src.simulation_quality.weights import ScoringWeights
-                from src.simulation_quality.quality_hub import QualityHub
-                from src.simulation_quality.persistence import QualityPersistence
-                from src.simulation_quality.scorers import build_all_scorers
-                try:
-                    _q_profile = os.environ.get("QUALITY_PROFILE", "default")
-                    _weights = ScoringWeights.load(
-                        "config/simulation_quality/scoring_weights.yaml",
-                        "config/simulation_quality/grade_thresholds.yaml",
-                        "config/simulation_quality/detection_params.yaml",
-                        _q_profile,
-                    )
-                    _q_run_dir = run_dir_str or f"data/runs/{self._run_id}"
-                    _hub = QualityHub(
-                        scorers=build_all_scorers(_weights),
-                        weights=_weights,
-                        persistence=QualityPersistence(_q_run_dir),
-                        run_id=self._run_id,
-                    )
-                    _quality_fn = _hub.on_envelope
-                    self._quality_hub = _hub
-                    self._quality_feed = _feed
-                except Exception:
-                    logger.warning("SimQ hub construction failed (non-fatal) — quality scoring disabled for this run")
+                self._quality_feed = _feed
+                if not isinstance(_feed, BrokerQualityFeed):
+                    from src.simulation_quality.weights import ScoringWeights
+                    from src.simulation_quality.quality_hub import QualityHub
+                    from src.simulation_quality.persistence import QualityPersistence
+                    from src.simulation_quality.scorers import build_all_scorers
+                    try:
+                        _q_profile = os.environ.get("QUALITY_PROFILE", "default")
+                        _weights = ScoringWeights.load(
+                            "config/simulation_quality/scoring_weights.yaml",
+                            "config/simulation_quality/grade_thresholds.yaml",
+                            "config/simulation_quality/detection_params.yaml",
+                            _q_profile,
+                        )
+                        _q_run_dir = run_dir_str or f"data/runs/{self._run_id}"
+                        _hub = QualityHub(
+                            scorers=build_all_scorers(_weights),
+                            weights=_weights,
+                            persistence=QualityPersistence(_q_run_dir),
+                            run_id=self._run_id,
+                        )
+                        _quality_fn = _hub.on_envelope
+                        self._quality_hub = _hub
+                    except Exception:
+                        logger.warning("SimQ hub construction failed (non-fatal) — quality scoring disabled for this run")
 
         self._event_recorder = EventRecorder(
             run_dir=run_dir_str,
@@ -301,8 +302,9 @@ class Kernel:
         self._current_tick_violation_count = 0
 
         # Lifecycle supervisor: count registered workers for shutdown accounting.
-        # 1 = EventRecorder._worker (QueueDrainWorker), started when obs is enabled.
-        self._workers_started = 1 if (obs_mode != ObservabilityMode.OFF) else 0
+        # 2 = EventRecorder._worker + DecisionTraceWriter._worker (both QueueDrainWorker
+        # instances), started when obs is enabled.
+        self._workers_started = 2 if (obs_mode != ObservabilityMode.OFF) else 0
         self._last_shutdown_report = None
 
         from src.observability.event_extractor import EventExtractor
@@ -322,7 +324,9 @@ class Kernel:
 
     @property
     def quality_hub(self):
-        """Read-only access to the QualityHub instance (None if SimQ is disabled)."""
+        """Read-only access to the QualityHub instance (None if SimQ is disabled or
+        QUALITY_FEED_MODE=broker — broker-mode scoring runs in the external QualityWorker
+        process, not in-engine)."""
         return self._quality_hub
 
     def validate(self, flags: Optional[Dict[str, bool]] = None) -> None:
@@ -1072,6 +1076,7 @@ class Kernel:
                 logger.exception("DecisionTraceWriter.close() failed during shutdown (non-fatal)")
             from src.observability.cognition.decision_trace_writer import set_active_writer
             set_active_writer(None)
+            workers_stopped += 1
 
         # Wire BehaviorWorker into shutdown: join any running behavior-normalization threads.
         import threading

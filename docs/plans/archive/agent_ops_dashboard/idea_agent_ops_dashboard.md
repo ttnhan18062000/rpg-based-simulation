@@ -35,8 +35,10 @@ real, unticketed follow-up; see that doc's own Archived note for the precise spl
 > `TCK-20260716-AGENTOPS-ACTIVITY-GANTT`, `TCK-20260716-AGENTOPS-TICKETS-VIEW`,
 > `TCK-20260716-AGENTOPS-REPLAY-TIMELINE` (`tickets/done/`), documented by
 > `TCK-20260717-AGENTOPS-DASHBOARD-DOCS`. Full investigation trail, exact API/data schemas, and UX
-> detail remain archived in `experiments/agent_ops_dashboard/` (`PROPOSAL.md` + 5 companion
-> documents) for historical reference. See companion idea
+> detail previously lived in `experiments/agent_ops_dashboard/` (`PROPOSAL.md` + 5 companion
+> documents); deleted 2026-08-04 (`TCK-20260804-PLANS-EXPERIMENTS-SWEEP`) as fully-shipped
+> scaffolding once its findings were absorbed into the delivered dashboard — this doc is now the
+> sole surviving summary. See companion idea
 > [`idea_agent_monitoring_live_phase_label.md`](idea_agent_monitoring_live_phase_label.md)
 > (partially shipped, see that doc's own Archived note) for the related, deliberately-independent
 > instrumentation gap this investigation also found.
@@ -184,14 +186,18 @@ and tier/type/priority distribution as **not built** — was later resolved by
   dashboard to revisit later.
 - `experiments/agent_ops_dashboard/TEST_PLAN.md` row 9's ticket-data-quality signal (a ticket with
   valid frontmatter but missing `## Tier`/`## Priority`/`## Type` body sections) — worth its own
-  assertion per that document, not silently defaulted, but not decided here either.
+  assertion per that document, not silently defaulted, but not decided here either. (That source
+  file was deleted 2026-08-04, `TCK-20260804-PLANS-EXPERIMENTS-SWEEP`, as fully-shipped scaffolding;
+  this note preserves the still-undecided signal.)
 
 ---
 
 *Raised: 2026-07-16, distilled from `experiments/agent_ops_dashboard/PROPOSAL.md` and its five
 companion documents (`IMPLEMENTATION_CONTEXT.md`, `DATA_MODEL.md`, `UI_INTERACTION_SPEC.md`,
-`TEST_PLAN.md`, `MONITORING_INSTRUMENTATION_GAP.md`) — see that folder for the full investigation
-trail, exact endpoint/field schemas, and view-by-view UX detail this idea's claims are drawn from.
+`TEST_PLAN.md`, `MONITORING_INSTRUMENTATION_GAP.md`) — that folder was deleted 2026-08-04
+(`TCK-20260804-PLANS-EXPERIMENTS-SWEEP`) as fully-shipped scaffolding; this doc is the surviving
+summary of the investigation trail, exact endpoint/field schemas, and view-by-view UX detail
+this idea's claims were drawn from.
 Four open design decisions (stack, gap-fix sequencing, ticket↔run ambiguity, concurrency) were
 investigated further and confirmed with the user on 2026-07-16; those documents were updated in
 place with dated decision notes rather than left as open questions.*

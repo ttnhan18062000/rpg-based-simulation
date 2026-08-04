@@ -67,6 +67,8 @@ class BenchHarness:
         import gc
 
         try:
+            cpu_start = self._process.cpu_times()
+
             # 1. WARMUP
             for _ in range(warmup_ticks):
                 kernel.tick_once()
@@ -91,6 +93,7 @@ class BenchHarness:
                     gc.enable()
 
             wall_end_ts = time.perf_counter()
+            cpu_end = self._process.cpu_times()
 
             wall_clock_s = wall_end_ts - wall_start_ts
             wall_clock_tps = sample_ticks / wall_clock_s if wall_clock_s > 0 else 0
@@ -124,6 +127,10 @@ class BenchHarness:
             for k, vals in metric_aggregates.items():
                 metric_stats[k] = round(sum(vals) / len(vals), 2) if vals else 0.0
 
+            cpu_time_user_delta_s = cpu_end.user - cpu_start.user
+            cpu_time_system_delta_s = cpu_end.system - cpu_start.system
+            cpu_time_total_delta_s = cpu_time_user_delta_s + cpu_time_system_delta_s
+
             result = {
                 "scenario_id": scenario_id,
                 "profile": self._profile.name,
@@ -140,6 +147,9 @@ class BenchHarness:
                 },
                 "phase_breakdown": phase_stats,
                 "metrics": metric_stats,
+                "cpu_time_user_delta_s": round(cpu_time_user_delta_s, 4),
+                "cpu_time_system_delta_s": round(cpu_time_system_delta_s, 4),
+                "cpu_time_total_delta_s": round(cpu_time_total_delta_s, 4),
                 "replay_enabled": not effective_flags.get("no_replay", False),
                 "frame_pacing_enabled": not effective_flags.get("no_frame_pacing", False),
                 "timestamp": time.time()

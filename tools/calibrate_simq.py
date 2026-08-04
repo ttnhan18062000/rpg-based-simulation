@@ -29,6 +29,13 @@ logger = logging.getLogger("calibrate_simq")
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 
+class CalibrationIntegrityError(Exception):
+    """Raised when a calibration run lost SimQ events to queue overflow or SURVIVAL
+    mode-shed — a run in this state must not silently produce a graded quality_report.json.
+    """
+    pass
+
+
 def _resolve_profile(name: str) -> str:
     """Return the profile name to use for the given world name.
 
@@ -149,7 +156,14 @@ def _load_world_state(name: str, seed: int):
         return None, None
 
 
-def _run_engine(name: str, seed: int, ticks: int, entity_count: int = 10, extra_flags: dict | None = None) -> tuple[str, float]:
+def _run_engine(
+    name: str,
+    seed: int,
+    ticks: int,
+    entity_count: int = 10,
+    extra_flags: dict | None = None,
+    cal_dir: str | None = None,
+) -> tuple[str, float, str]:
     """Drive the kernel tick_once() N times; return (run_dir, elapsed_sec, run_id).
 
     If a compiled world spec exists for ``name``, loads it via WorldCompiler and
@@ -160,6 +174,10 @@ def _run_engine(name: str, seed: int, ticks: int, entity_count: int = 10, extra_
     from the calibration profile YAML's ``feature_flags:`` block.  These are applied
     before env-var overrides so that environment variables can still override profile
     defaults.
+
+    ``cal_dir``, when given, is where the RunHealthRecord sidecar
+    (``quality_report.run_health.json``) is written — same directory
+    ``quality_report.json`` itself lands in (see ``main()``).
     """
     from src.engine.kernel import Kernel
     from src.core.state import AuthoritativeState
@@ -247,12 +265,62 @@ def _run_engine(name: str, seed: int, ticks: int, entity_count: int = 10, extra_
         kernel.tick_once()
     elapsed = time.perf_counter() - start
 
-    # Shutdown so drain worker flushes remaining JSONL events
+    # Read drop/pressure/SURVIVAL state while the recorder is still alive. This must
+    # happen before kernel.shutdown() below (EventRecorder.shutdown() does not clear
+    # queue.dropped_count — drain() only empties the queue, the counter itself
+    # persists — but the guard's raise, not this read, is what the ordering below
+    # protects).
+    obs_status = kernel.event_recorder.observability_status()
+    dropped_count = kernel.event_recorder.queue.dropped_count
+    survival_triggered = any(obs_status["survival_counts"].values())
+    guard_passed = (
+        dropped_count == 0
+        and obs_status["mode"] == "NORMAL"
+        and not survival_triggered
+    )
+
+    if cal_dir:
+        from src.simulation_quality.run_health import RunHealthRecord
+        from src.simulation_quality.persistence import QualityPersistence
+        QualityPersistence.write_run_health(
+            cal_dir,
+            RunHealthRecord(
+                dropped_count=dropped_count,
+                pressure_mode_final=obs_status["mode"],
+                survival_triggered=survival_triggered,
+                guard_passed=guard_passed,
+            ),
+        )
+
+    # Shutdown so drain worker flushes remaining JSONL events. Unconditional — runs
+    # regardless of guard_passed so background threads (this recorder's own drain
+    # worker, plus the kernel's independent DecisionTraceWriter worker) and open
+    # file handles are always released, even when the guard below is about to
+    # hard-fail this run. (Deviation from the original plan's literal "raise
+    # strictly BEFORE this block" — see plan.md Deviations: skipping shutdown
+    # entirely on guard failure leaked the DecisionTraceWriter worker thread and
+    # tripped tests/conftest.py's session-scoped thread-leak sentinel, a real
+    # regression this ticket must not introduce. The protected invariant — the
+    # raise must never be nested inside / swallowed by this try/except — holds
+    # either way, since the raise below is a separate, non-nested statement.)
     try:
         kernel.shutdown()
     except Exception:
         pass
     time.sleep(0.3)
+
+    # P0 hard-fail — raised in its own statement, never nested inside the
+    # try/except above. That block swallows exceptions from kernel.shutdown()
+    # itself; if this raise were moved inside it (or merged into its body), the
+    # guard's hard-fail would be silently swallowed and do nothing.
+    if not guard_passed:
+        raise CalibrationIntegrityError(
+            f"Calibration run integrity check failed for run_id={run_id}: "
+            f"dropped_count={dropped_count}, pressure_mode_final={obs_status['mode']}, "
+            f"survival_triggered={survival_triggered}. SimQ scoring for this run is "
+            "unreliable (events were lost to queue overflow or SURVIVAL mode-shed) — "
+            "see quality_report.run_health.json."
+        )
 
     if run_id and os.path.isdir(os.path.join("data", "runs", run_id)):
         run_dir = os.path.join("data", "runs", run_id)
@@ -351,7 +419,10 @@ def main():
         print(f"[calibrate_simq] Profile feature flags: {profile_feature_flags}")
 
     print(f"[calibrate_simq] Running engine: {run_tag} entities={args.entities} profile={profile}")
-    engine_run_dir, elapsed, run_id = _run_engine(args.name, args.seed, args.ticks, args.entities, extra_flags=profile_feature_flags)
+    engine_run_dir, elapsed, run_id = _run_engine(
+        args.name, args.seed, args.ticks, args.entities,
+        extra_flags=profile_feature_flags, cal_dir=cal_dir,
+    )
     print(f"[calibrate_simq] Engine done in {elapsed:.2f}s. JSONL at: {engine_run_dir}")
 
     weights = _load_weights(profile)

@@ -111,6 +111,18 @@ class TestCleanShutdown:
         report = k.shutdown_report()
         assert report.workers_stopped == report.workers_started
 
+    def test_workers_started_counts_event_recorder_and_decision_trace_writer(self):
+        """TCK-20260702-OBSISO-TRACE-ASYNC: DecisionTraceWriter's own QueueDrainWorker
+        must be counted alongside EventRecorder's, or workers_stopped under-reports and
+        every LIGHT+ run is forced to PARTIAL outcome."""
+        k = _make_kernel()
+        assert k._workers_started == 2
+        k.shutdown()
+        report = k.shutdown_report()
+        assert report.workers_started == 2
+        assert report.workers_stopped == 2
+        assert report.outcome == "SUCCESS"
+
 
 class TestPendingReplayFlushesWarning:
     def test_pending_replay_flushes_zero_no_warning(self):

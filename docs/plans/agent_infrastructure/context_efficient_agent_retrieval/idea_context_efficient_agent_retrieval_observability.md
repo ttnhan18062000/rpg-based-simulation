@@ -358,7 +358,7 @@ provider-agnostic implementation has a stable shared monitoring path:
 
 ## Related Material
 
-- `docs/plans/agent_infrastructure/idea_provider_agnostic_agent_orchestration.md`
+- `docs/plans/archive/agent_infrastructure/idea_provider_agnostic_agent_orchestration.md` (archived — shipped)
 - `docs/plans/archive/agent_infrastructure/idea_agent_monitoring_derived_index.md` (archived — shipped)
 - `tools/knowledge_search.py`
 - `tools/search_mcp.py`

@@ -27,6 +27,18 @@ Performance baselines are calibrated specifically for targeted hardware profiles
 - **`CLASS_B` (Standard Gaming Desktop)**: 4 Dedicated Cores, 8GB RAM. Target: 2,500 entities at < 40ms per tick.
 - **`CLASS_C` (Constrained Edge / CI Runner)**: 2 Cores, 2GB RAM. Target: 500 entities at < 30ms per tick.
 
+> **Known conflict, not resolved here**: `docs/engine/contracts/certification_contract.md` §3 defines
+> these classes by a binary AND-rule (`CLASS_B` = ≥4 logical cores **and** ≥8GB RAM) instead of this
+> table's core-count-only reading, so a 4-core/<8GB machine is `CLASS_B` by this table but `CLASS_C`
+> under the canonical certification contract. See `docs/performance/simq_isolation_overhead.md`'s
+> Hardware Class section for a worked example of the discrepancy. Flagged, not fixed, by
+> TCK-20260702-OBSISO-ISOLATION-PROOF — pre-existing and out of that ticket's scope.
+
+### 2.3 Named Benchmark Results
+- **SimQ mode isolation overhead** (`QUALITY_SCORING_DISABLED=1` vs. in-process vs. broker):
+  `docs/performance/simq_isolation_overhead.md`, produced by
+  `tests/perf/test_simq_isolation_overhead.py`.
+
 ---
 
 ## 3. CI Performance Regression Guards

@@ -96,3 +96,38 @@ def test_broker_feed_stop_is_noop():
 def test_quality_feed_mode_enum_values():
     assert QualityFeedMode.INPROCESS == "inprocess"
     assert QualityFeedMode.BROKER == "broker"
+
+
+def test_broker_stream_name_defaults_to_observability_config(monkeypatch):
+    from src.observability.config import ObservabilityConfig
+
+    for var in ("QUALITY_STREAM_NAME", "SIM_STREAM_NAME", "RPG_STREAM_NAME"):
+        monkeypatch.delenv(var, raising=False)
+    monkeypatch.setenv("QUALITY_FEED_MODE", "broker")
+    monkeypatch.delenv("QUALITY_SCORING_DISABLED", raising=False)
+
+    feed = build_feed_from_env()
+    assert isinstance(feed, BrokerQualityFeed)
+    assert feed._stream_name == "simulation:events"
+    assert feed._stream_name == ObservabilityConfig.get_stream_name()
+
+    monkeypatch.setenv("QUALITY_STREAM_NAME", "custom:events")
+    overridden_feed = build_feed_from_env()
+    assert overridden_feed._stream_name == "custom:events"
+
+
+def test_broker_url_defaults_to_observability_config(monkeypatch):
+    from src.observability.config import ObservabilityConfig
+
+    for var in ("QUALITY_BROKER_URL", "SIM_REDIS_URL", "RPG_REDIS_URL"):
+        monkeypatch.delenv(var, raising=False)
+    monkeypatch.setenv("QUALITY_FEED_MODE", "broker")
+    monkeypatch.delenv("QUALITY_SCORING_DISABLED", raising=False)
+
+    feed = build_feed_from_env()
+    assert isinstance(feed, BrokerQualityFeed)
+    assert feed._broker_url == ObservabilityConfig.get_redis_url()
+
+    monkeypatch.setenv("QUALITY_BROKER_URL", "redis://custom-host:6379/1")
+    overridden_feed = build_feed_from_env()
+    assert overridden_feed._broker_url == "redis://custom-host:6379/1"

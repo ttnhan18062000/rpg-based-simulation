@@ -8,8 +8,11 @@ mapping tick → first byte offset for that tick. Enables O(1) random-access rea
 by tick without scanning the full JSONL file.
 
 Lifecycle:
-- `append_entry()` is called incrementally from `DecisionTraceWriter.write_trace()`
-  (crash-safe: any crash leaves the index valid for all completed writes).
+- `append_entry()` is called from `DecisionTraceWriter`'s async drain worker
+  callback (`_write_entry_to_file`), once per queued entry actually written to
+  decision_trace.jsonl — not synchronously from `write_trace()`. Crash-safe up
+  to the worker's drain cadence: any crash leaves the index valid for all
+  entries drained (written) so far.
 - `rebuild()` is called from `DecisionTraceWriter.close()` to produce a clean,
   complete index at run end.
 - `lookup()` is used by the REST API (E22C) to byte-seek directly to a tick.
@@ -44,8 +47,11 @@ class DecisionTraceIndex:
         on the same tick are contiguous in the file and will be traversed by
         `lookup()` until the tick changes.
 
-        Called from `DecisionTraceWriter.write_trace()` before each flush so
-        the sidecar is kept valid after every write (crash recovery).
+        Called from `DecisionTraceWriter`'s async drain worker
+        (`_write_entry_to_file`) after each queued entry is written to
+        decision_trace.jsonl, so the sidecar is kept valid after every
+        drained write — at the worker's drain cadence, not synchronously per
+        hot-path `write_trace()` call.
         """
         if tick in self._index:
             return  # already recorded the first offset for this tick

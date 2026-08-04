@@ -53,7 +53,7 @@ STATUS_VALUES = {"authoritative", "active", "historical", "archive"}
 LAYER_VALUES = _layer_values()
 AUTHORITY_VALUES = {"P0", "P1", "P2"}
 AUDIENCE_VALUES = {"developer", "agent", "designer", "historical"}
-PHASE_VALUES = {"open", "inprogress", "blocked", "done"}
+PHASE_VALUES = {"open", "inprogress", "blocked", "done", "backlog"}
 ARTIFACT_TYPE_VALUES = {"investigation", "plan", "test_plan"}
 
 _TICKET_ID_DATE_PATTERN = re.compile(r"^TCK-(\d{8})-")

@@ -325,7 +325,7 @@ this plan and must only resume with a fresh human decision.
 
 ## Related Material
 
-- `docs/plans/agent_infrastructure/idea_provider_agnostic_agent_orchestration.md`
+- `docs/plans/archive/agent_infrastructure/idea_provider_agnostic_agent_orchestration.md` (archived — shipped)
 - `docs/architecture/agent_orchestration_contract.md`
 - `docs/ai/agents_dir_disposition.md`
 - `docs/ai/monitoring_writer_decision.md`

@@ -57,17 +57,20 @@ class BrokerQualityFeed(QualityFeedAdapter):
 
     def __init__(
         self,
-        broker_url: str = "redis://localhost:6379",
-        stream_name: str = "sim:events",
+        broker_url: Optional[str] = None,
+        stream_name: Optional[str] = None,
         consumer_group: str = "quality_scoring",
     ) -> None:
-        self._broker_url = broker_url
-        self._stream_name = stream_name
+        from src.observability.config import ObservabilityConfig
+
+        self._broker_url = broker_url if broker_url is not None else ObservabilityConfig.get_redis_url()
+        self._stream_name = stream_name if stream_name is not None else ObservabilityConfig.get_stream_name()
         self._consumer_group = consumer_group
         self._running: bool = False
         self._thread: Optional[threading.Thread] = None
         self._health_status: str = "STOPPED"
         self._consumer: Optional[Any] = None
+        self.events_consumed_count: int = 0
 
     def start(self, hub: Any) -> None:
         from src.observability.events import ObservabilityEventEnvelope
@@ -94,6 +97,7 @@ class BrokerQualityFeed(QualityFeedAdapter):
         def _callback(sim_event: Any) -> None:
             envelope = ObservabilityEventEnvelope.from_simulation_event(sim_event)
             hub.on_envelope(envelope)
+            self.events_consumed_count += 1
 
         def _consume_loop() -> None:
             while self._running:
@@ -129,8 +133,8 @@ def build_feed_from_env() -> Optional[QualityFeedAdapter]:
         return InProcessQualityFeed()
     if mode == "broker":
         return BrokerQualityFeed(
-            broker_url=os.environ.get("QUALITY_BROKER_URL", "redis://localhost:6379"),
-            stream_name=os.environ.get("QUALITY_STREAM_NAME", "sim:events"),
+            broker_url=os.environ.get("QUALITY_BROKER_URL"),
+            stream_name=os.environ.get("QUALITY_STREAM_NAME"),
             consumer_group=os.environ.get("QUALITY_CONSUMER_GROUP", "quality_scoring"),
         )
     raise ValueError(

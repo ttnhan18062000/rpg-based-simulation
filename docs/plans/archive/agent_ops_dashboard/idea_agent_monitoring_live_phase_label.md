@@ -31,9 +31,9 @@ This document is the historical design reference for the shipped half.
 > (`.claude/workflows/implement-ticket.js`), which per this repo's rules cannot be modified inside
 > an `experiments/` sandbox proposal. See
 > [`idea_agent_ops_dashboard.md`](idea_agent_ops_dashboard.md)
-> (archived — shipped) and its companion
-> `experiments/agent_ops_dashboard/MONITORING_INSTRUMENTATION_GAP.md` for the full investigation
-> trail this doc distills.
+> (archived — shipped) and its companion `experiments/agent_ops_dashboard/MONITORING_INSTRUMENTATION_GAP.md`
+> (deleted 2026-08-04, `TCK-20260804-PLANS-EXPERIMENTS-SWEEP`, as fully-shipped scaffolding) for
+> the full investigation trail this doc distills.
 
 ## Problem
 
@@ -131,6 +131,7 @@ unticketed work, not a closed loop.
 ---
 
 *Raised: 2026-07-16, distilled from `experiments/agent_ops_dashboard/MONITORING_INSTRUMENTATION_GAP.md`
-— see that document for the full evidence chain and exact line citations this idea's claims are
-drawn from. Sequencing decision (independent sibling ticket, non-blocking) confirmed with the user
+(deleted 2026-08-04, `TCK-20260804-PLANS-EXPERIMENTS-SWEEP`, as fully-shipped scaffolding) — this
+doc preserves the evidence chain and exact line citations this idea's claims were drawn from.
+Sequencing decision (independent sibling ticket, non-blocking) confirmed with the user
 on 2026-07-16.*
