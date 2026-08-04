@@ -29,6 +29,7 @@ from retrieval_baseline_metrics import (  # noqa: E402
     build_duration_section,
     build_gate_outcome_section,
     build_legacy_schema_notes,
+    build_raw_investigation_count_section,
     build_review_rework_section,
     build_search_count_section,
     load_all_sources,
@@ -130,6 +131,79 @@ def test_baseline_report_search_count_derivation_matches_stated_fields():
         "ToolSearch",
         "WebSearch",
     }
+
+
+# ---------------------------------------------------------------------------
+# AC-NEW — raw-investigation (Read) count, derived proxy for grep-equivalent effort
+# ---------------------------------------------------------------------------
+
+def test_baseline_report_raw_investigation_count_is_marked_or_derived_never_silent():
+    section = build_raw_investigation_count_section([])
+    assert isinstance(section["total"], int)
+    assert section["total"] == 0
+    assert section["derivation"]
+    assert "tool" in section["derivation"]
+    assert "Read" in section["derivation"]
+    assert "Grep" in section["derivation"] or "Bash" in section["derivation"]
+
+
+def test_baseline_report_raw_investigation_count_derivation_matches_stated_fields():
+    tools = [
+        {"run_id": "TCK-A", "tool": "Read"},
+        {"run_id": "TCK-A", "tool": "Read"},
+        {"run_id": "TCK-A", "tool": "Bash"},
+        {"run_id": "TCK-B", "tool": "Read"},
+        {"run_id": "TCK-B", "tool": "Edit"},
+        {"run_id": None, "tool": "Read"},
+        {"run_id": "TCK-B", "tool": "mcp__knowledge-search__search_docs"},
+    ]
+    section = build_raw_investigation_count_section(tools)
+    assert section["total"] == 4
+    assert section["per_run"] == {"TCK-A": 2, "TCK-B": 1, "unattributed": 1}
+
+
+def test_baseline_report_raw_investigation_count_wired_into_report():
+    runs = [{"run_id": "TCK-A", "final_status": "DONE"}]
+    events = []
+    tools = [
+        {"run_id": "TCK-A", "tool": "Read"},
+        {"run_id": "TCK-A", "tool": "Bash"},
+        {"run_id": "TCK-A", "tool": "mcp__knowledge-search__search_docs"},
+    ]
+    report = build_baseline_report(runs, events, tools)
+    assert report["raw_investigation_count"] == build_raw_investigation_count_section(tools)
+
+
+def test_baseline_report_raw_investigation_count_ratio_never_silent_if_present():
+    # Case A: search_total > 0 -> finite float ratio
+    tools_with_search = [
+        {"run_id": "TCK-A", "tool": "Read"},
+        {"run_id": "TCK-A", "tool": "Read"},
+        {"run_id": "TCK-A", "tool": "Read"},
+        {"run_id": "TCK-A", "tool": "mcp__knowledge-search__search_docs"},
+    ]
+    section = build_raw_investigation_count_section(tools_with_search)
+    read_total = section["total"]
+    search_total = build_search_count_section(tools_with_search)["total"]
+    assert isinstance(section["read_to_search_ratio"], float)
+    assert section["read_to_search_ratio"] == round(read_total / search_total, 4)
+
+    # Case B: search_total == 0 -> explicit "undefined" marker string, never an exception
+    tools_no_search = [
+        {"run_id": "TCK-A", "tool": "Read"},
+        {"run_id": "TCK-A", "tool": "Bash"},
+    ]
+    section_no_search = build_raw_investigation_count_section(tools_no_search)
+    assert isinstance(section_no_search["read_to_search_ratio"], str)
+    assert "undefined" in section_no_search["read_to_search_ratio"]
+
+
+def test_baseline_report_raw_investigation_count_plausible_on_real_corpus():
+    runs, events, tools = load_all_sources()
+    section = build_raw_investigation_count_section(tools)
+    assert isinstance(section["total"], int)
+    assert section["total"] > 1000
+    assert section["total"] == sum(section["per_run"].values())
 
 
 # ---------------------------------------------------------------------------
@@ -242,5 +316,5 @@ def test_baseline_report_cli_runs_against_real_corpus_and_prints_json():
     assert report["context_tokens"]["status"] == "unavailable"
     assert set(report.keys()) == {
         "ticket_id", "generated_note", "context_tokens", "search_count", "duration",
-        "gate_outcome", "review_rework", "legacy_schema_notes",
+        "gate_outcome", "review_rework", "legacy_schema_notes", "raw_investigation_count",
     }

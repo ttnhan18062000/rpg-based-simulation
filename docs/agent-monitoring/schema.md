@@ -284,7 +284,7 @@ base REQUIRED set enforced by `record_events.py::validate_record()`.
 | `exclusion_reason_counts` | object | Counts of excluded candidates by reason. |
 | `cited_source_hashes` | array of string | Content hashes of cited sources — never raw content, per the retention/redaction policy's PROHIBITED list. |
 | `adequacy_verdict` | string | `sufficient` \| `insufficient` \| `noisy` — a deliberately simple, documented-placeholder heuristic (`tools/retrieval_events.py::compute_adequacy_verdict()`), not a claim of real quality assessment. |
-| `expansion_reason` / `expansion_count` | string / int | Present only if a follow-up expansion occurred. |
+| `expansion_reason` / `expansion_count` | string / int | Present only if a follow-up expansion occurred. As of TCK-20260804-EXPANSION-RATE-WIRING, all 3 `wrap_*()` producers in `tools/retrieval_events.py` accept these as optional keyword-only pass-through parameters, forwarded to `emit_retrieval_event()` only when a caller supplies them — but no producer in this codebase currently supplies them. Open Decisions 5/6 (expansion escalation semantics, see `tools/context_packet_assembler.py`'s `EXPANSION_POLICY_STUB`) remain deferred, so `expansion_rate` (`generate_retro.py::compute_retrieval_metrics()`) reads 0.0% in practice. This is an intentional, disclosed limitation, not a bug. |
 | `scenario` / `risk_tier` | string | Optional, caller-supplied classification fields. |
 
 **Provenance (`run_id`/`seq`/`phase`/`agent`) for standalone invocations:** retrieval events are

@@ -1255,6 +1255,16 @@ class TestComputeRetrievalMetrics:
         metrics = compute_retrieval_metrics([_ORDINARY_WORKFLOW_EVENT])
         assert metrics["expansion_rate"] == 0.0
 
+    def test_expansion_rate_reads_zero_percent_on_real_corpus_absent_any_real_trigger(self):
+        # TCK-20260804-EXPANSION-RATE-WIRING: none of the 3 wrap_*() producers in
+        # tools/retrieval_events.py is called by any real (non-test) caller yet, so no event in
+        # the live corpus can carry expansion_reason/expansion_count. This is the honest, disclosed
+        # current state (Open Decisions 5/6 remain deferred), not a bug -- and this test is a
+        # regression guard against a future accidental fabrication silently making this non-zero.
+        real_events = generate_retro.load_jsonl(generate_retro.EVENTS_FILE)
+        metrics = compute_retrieval_metrics(real_events)
+        assert metrics["expansion_rate"] == 0.0
+
 
 # ---------------------------------------------------------------------------
 # TCK-20260729-RETRIEVAL-RETRO-VIEWS — "## Retrieval Quality" rendered section

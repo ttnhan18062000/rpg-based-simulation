@@ -365,6 +365,66 @@ class TestWrapHybridRetrieval:
         assert set(written["freshness_counts"]) <= {hr.UNRATED}
         assert written["latency_ms"] >= 0
 
+    def test_wrapper_omits_expansion_fields_when_not_supplied(self, tmp_path, monkeypatch):
+        conn = _make_docs_db(
+            tmp_path,
+            [(0, "doc-a", "docs/a.md", "A", "docs", "alpha text", "doc_chunk")],
+        )
+        monkeypatch.setattr(
+            sys.modules["hybrid_retrieval"], "_dense_candidates",
+            lambda conn, query_vec_bytes, dense_candidate_k: [
+                (0, "doc-a", "docs/a.md", "A", "docs", "alpha text", "doc_chunk", 0.1),
+            ],
+        )
+        events_file = tmp_path / "events.jsonl"
+        re_mod.wrap_hybrid_retrieval(
+            seq=1,
+            summary="omission test",
+            events_file=events_file,
+            conn=conn,
+            query_vec_bytes=b"",
+            query_tokens=[],
+            bm25_obj=None,
+            bm25_doc_ids=[],
+            top_k=5,
+        )
+        conn.close()
+
+        written = json.loads(events_file.read_text().splitlines()[0])
+        assert "expansion_reason" not in written
+        assert "expansion_count" not in written
+
+    def test_wrapper_forwards_expansion_fields_when_supplied(self, tmp_path, monkeypatch):
+        conn = _make_docs_db(
+            tmp_path,
+            [(0, "doc-a", "docs/a.md", "A", "docs", "alpha text", "doc_chunk")],
+        )
+        monkeypatch.setattr(
+            sys.modules["hybrid_retrieval"], "_dense_candidates",
+            lambda conn, query_vec_bytes, dense_candidate_k: [
+                (0, "doc-a", "docs/a.md", "A", "docs", "alpha text", "doc_chunk", 0.1),
+            ],
+        )
+        events_file = tmp_path / "events.jsonl"
+        re_mod.wrap_hybrid_retrieval(
+            seq=1,
+            summary="forwarding test",
+            events_file=events_file,
+            conn=conn,
+            query_vec_bytes=b"",
+            query_tokens=[],
+            bm25_obj=None,
+            bm25_doc_ids=[],
+            top_k=5,
+            expansion_reason="manual_widen",
+            expansion_count=1,
+        )
+        conn.close()
+
+        written = json.loads(events_file.read_text().splitlines()[0])
+        assert written["expansion_reason"] == "manual_widen"
+        assert written["expansion_count"] == 1
+
 
 # ---------------------------------------------------------------------------
 # Step 6 — wrap_retrieval_cache_check(): AC5, parametrized over 3 levels x 3 outcomes
@@ -471,6 +531,38 @@ class TestWrapRetrievalCacheCheck:
         written = json.loads(events_file.read_text().splitlines()[0])
         assert written["cache_status"] in (rc.HIT, rc.MISS, rc.STALE_REJECTED)
         assert written["cache_status"] == rc.MISS
+
+    def test_wrapper_omits_expansion_fields_when_not_supplied(self, tmp_path):
+        events_file = tmp_path / "events.jsonl"
+        re_mod.wrap_retrieval_cache_check(
+            rc.INDEX_CACHE_CATEGORY,
+            seq=1,
+            summary="omission test",
+            events_file=events_file,
+            content_hash="hash-omit",
+            embedding_version="emb-v1",
+            chunking_version="chunk-v1",
+        )
+        written = json.loads(events_file.read_text().splitlines()[0])
+        assert "expansion_reason" not in written
+        assert "expansion_count" not in written
+
+    def test_wrapper_forwards_expansion_fields_when_supplied(self, tmp_path):
+        events_file = tmp_path / "events.jsonl"
+        re_mod.wrap_retrieval_cache_check(
+            rc.INDEX_CACHE_CATEGORY,
+            seq=1,
+            summary="forwarding test",
+            events_file=events_file,
+            content_hash="hash-forward",
+            embedding_version="emb-v1",
+            chunking_version="chunk-v1",
+            expansion_reason="manual_widen",
+            expansion_count=1,
+        )
+        written = json.loads(events_file.read_text().splitlines()[0])
+        assert written["expansion_reason"] == "manual_widen"
+        assert written["expansion_count"] == 1
 
 
 # ---------------------------------------------------------------------------
@@ -587,6 +679,163 @@ class TestWrapContextPacketAssembly:
         assert written["ts"].endswith("Z")
         written_dt = datetime.fromisoformat(written["ts"].replace("Z", "+00:00"))
         assert before <= written_dt <= after
+
+    def test_wrapper_omits_expansion_fields_when_not_supplied(self, tmp_path):
+        included_candidate = cpa.candidate_from_code_index_record(
+            {
+                "id": "node-1",
+                "module": "src.ai.example",
+                "symbol": "ExampleClass",
+                "docstring": "d",
+                "owned_component": 1,
+                "associated_tests": "t",
+            }
+        )
+
+        events_file = tmp_path / "events.jsonl"
+        re_mod.wrap_context_packet_assembly(
+            seq=1,
+            summary="omission test",
+            events_file=events_file,
+            packet_id="packet-1",
+            corpus_generation="gen-1",
+            retrieval_version=1,
+            budget_requested=1000,
+            included_candidates=[included_candidate],
+            excluded=[],
+        )
+
+        written = json.loads(events_file.read_text().splitlines()[0])
+        assert "expansion_reason" not in written
+        assert "expansion_count" not in written
+
+    def test_wrapper_forwards_expansion_fields_when_supplied(self, tmp_path):
+        included_candidate = cpa.candidate_from_code_index_record(
+            {
+                "id": "node-1",
+                "module": "src.ai.example",
+                "symbol": "ExampleClass",
+                "docstring": "d",
+                "owned_component": 1,
+                "associated_tests": "t",
+            }
+        )
+
+        events_file = tmp_path / "events.jsonl"
+        re_mod.wrap_context_packet_assembly(
+            seq=1,
+            summary="forwarding test",
+            events_file=events_file,
+            packet_id="packet-1",
+            corpus_generation="gen-1",
+            retrieval_version=1,
+            budget_requested=1000,
+            included_candidates=[included_candidate],
+            excluded=[],
+            expansion_reason="manual_widen",
+            expansion_count=1,
+        )
+
+        written = json.loads(events_file.read_text().splitlines()[0])
+        assert written["expansion_reason"] == "manual_widen"
+        assert written["expansion_count"] == 1
+
+
+# ---------------------------------------------------------------------------
+# TCK-20260804-EXPANSION-RATE-WIRING -- anti-fabrication regression guard, exercises all 3
+# wrap_*() wrappers across inputs that could plausibly be mistaken for an expansion signal by a
+# future careless edit. Must keep passing forever: its entire purpose is catching a future
+# accidental auto-population of expansion_reason/expansion_count from an unrelated field.
+# ---------------------------------------------------------------------------
+
+class TestWrapFunctionsNeverFabricateExpansionReason:
+    def test_wrap_functions_never_fabricate_expansion_reason_internally(self, tmp_path, monkeypatch):
+        # wrap_retrieval_cache_check(): a cache MISS (not just HIT) must not auto-populate.
+        events_file_cache = tmp_path / "cache_events.jsonl"
+        re_mod.wrap_retrieval_cache_check(
+            rc.INDEX_CACHE_CATEGORY,
+            seq=1,
+            summary="miss must not trigger expansion",
+            events_file=events_file_cache,
+            content_hash="hash-never-seen-anti-fab",
+            embedding_version="emb-v1",
+            chunking_version="chunk-v1",
+        )
+        cache_written = json.loads(events_file_cache.read_text().splitlines()[0])
+        assert cache_written["cache_status"] == rc.MISS
+        assert "expansion_reason" not in cache_written
+        assert "expansion_count" not in cache_written
+
+        # wrap_hybrid_retrieval(): a noisy-triggering candidate/selected ratio must not
+        # auto-populate. Only 1 doc exists in the DB (selected_count=1), while top_k=2 makes
+        # candidate_k(2)=8 -- 8 >= NOISY_RATIO_THRESHOLD(5)*1, triggering "noisy" per
+        # compute_adequacy_verdict().
+        conn = _make_docs_db(
+            tmp_path,
+            [(0, "doc-a", "docs/a.md", "A", "docs", "alpha text", "doc_chunk")],
+        )
+        monkeypatch.setattr(
+            sys.modules["hybrid_retrieval"], "_dense_candidates",
+            lambda conn, query_vec_bytes, dense_candidate_k: [
+                (0, "doc-a", "docs/a.md", "A", "docs", "alpha text", "doc_chunk", 0.1),
+            ],
+        )
+        events_file_hybrid = tmp_path / "hybrid_events.jsonl"
+        re_mod.wrap_hybrid_retrieval(
+            seq=1,
+            summary="noisy verdict must not trigger expansion",
+            events_file=events_file_hybrid,
+            conn=conn,
+            query_vec_bytes=b"",
+            query_tokens=[],
+            bm25_obj=None,
+            bm25_doc_ids=[],
+            top_k=2,
+        )
+        conn.close()
+        hybrid_written = json.loads(events_file_hybrid.read_text().splitlines()[0])
+        assert hybrid_written["adequacy_verdict"] == "noisy"
+        assert "expansion_reason" not in hybrid_written
+        assert "expansion_count" not in hybrid_written
+
+        # wrap_context_packet_assembly(): a nonzero exclusion_reason_counts must not
+        # auto-populate.
+        included_candidate = cpa.candidate_from_code_index_record(
+            {
+                "id": "node-1",
+                "module": "src.ai.example",
+                "symbol": "ExampleClass",
+                "docstring": "d",
+                "owned_component": 1,
+                "associated_tests": "t",
+            }
+        )
+        excluded_candidate = cpa.candidate_from_code_index_record(
+            {
+                "id": "node-2",
+                "module": "src.ai.example",
+                "symbol": "OtherClass",
+                "docstring": "d",
+                "owned_component": 1,
+                "associated_tests": "t",
+            }
+        )
+        events_file_packet = tmp_path / "packet_events.jsonl"
+        re_mod.wrap_context_packet_assembly(
+            seq=1,
+            summary="nonzero exclusion_reason_counts must not trigger expansion",
+            events_file=events_file_packet,
+            packet_id="packet-anti-fab",
+            corpus_generation="gen-1",
+            retrieval_version=1,
+            budget_requested=1000,
+            included_candidates=[included_candidate],
+            excluded=[(excluded_candidate, "below_budget_threshold")],
+        )
+        packet_written = json.loads(events_file_packet.read_text().splitlines()[0])
+        assert packet_written["exclusion_reason_counts"]
+        assert "expansion_reason" not in packet_written
+        assert "expansion_count" not in packet_written
 
 
 # ---------------------------------------------------------------------------

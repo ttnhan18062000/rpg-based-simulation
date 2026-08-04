@@ -5974,7 +5974,10 @@
     TCK-20260728-RETRIEVAL-BASELINE-METRICS. Follows the INFRA-281 through INFRA-291
     agent-tooling-infrastructure precedent for ledgering this class of change, rather than
     TCK-20260721-BASELINE-MONITORING-MANIFEST's own (older, less-followed) "no entry needed"
-    conclusion for the structurally identical sibling manifest tool.
+    conclusion for the structurally identical sibling manifest tool. Extended by
+    TCK-20260804-RETRIEVAL-RAW-INVESTIGATION-METRIC to add a raw-investigation (Read-call)
+    count section as a grep-effort proxy, plus a corpus-wide read_to_search_ratio derived
+    field.
   status: verified
   priority: P2
   legacy_evidence: null
@@ -5990,10 +5993,20 @@
     build_duration_section(runs)`, `def build_gate_outcome_section(runs)`, `def
     build_review_rework_section(runs)` -- the phase-duration/gate-outcome/review-rework ACs, each
     disclosed as a derived proxy rather than fabricated data at :101-104/:121-122/:151-153),
-    :157-180 (`def build_legacy_schema_notes(runs, events, tools)` and `def
-    build_baseline_report(...)`, assembling all 5 sections), :183-196 (`def main()`, prints JSON
+    :157-167 (`def build_legacy_schema_notes(runs, events, tools)`), :170-210 (`def
+    build_raw_investigation_count_section(tools)` -- added by
+    TCK-20260804-RETRIEVAL-RAW-INVESTIGATION-METRIC, inserted between
+    build_legacy_schema_notes and build_baseline_report; filters strictly to `tool == "Read"`;
+    derivation states why `Grep` is not counted (no distinct `Grep` tool name recorded in this
+    environment, grep-equivalent work runs via the catch-all `Bash` tool excluded per the same
+    non-distinguishability rationale as SEARCH_TOOL_NAMES); computes `read_to_search_ratio`
+    corpus-wide only, by calling `build_search_count_section(tools)["total"]` internally, never
+    per-run, returning the literal string `"undefined: zero search_count.total in corpus, ..."`
+    instead of dividing by zero when search_total is 0), :213-224 (`def
+    build_baseline_report(...)`, assembling all 6 sections including the new
+    `raw_investigation_count` key alongside `search_count`), :227-240 (`def main()`, prints JSON
     to stdout via `json.dumps(..., sort_keys=True)` and optionally writes to `--output` only
-    after `_assert_safe_output_path` validation at :193 -- never writes into
+    after `_assert_safe_output_path` validation at :237 -- never writes into
     agent-monitoring/ itself).
   proof_type: regression
   test_path: tests/tools/test_retrieval_baseline_metrics.py
@@ -6002,8 +6015,9 @@
     Agent-orchestration/monitoring-pipeline tooling only -- no simulation behavior, Mechanics
     Bible chapter, or engine contract governs this reporting tool's semantics (same category as
     INFRA-281 through INFRA-291). No `src/` file touched, no on-disk schema change to
-    runs.jsonl/events.jsonl/tools.jsonl, and strictly read-only -- computes its 5 baseline
-    metrics purely by importing and composing existing functions from generate_retro.py
+    runs.jsonl/events.jsonl/tools.jsonl, and strictly read-only -- computes its 6 baseline
+    metrics (the original 5 plus the new raw-investigation-count/read_to_search_ratio section)
+    purely by importing and composing existing functions from generate_retro.py
     (`_load_runs_and_events`, `load_jsonl`, `_resolve_status`, `_is_gate_fail`), legacy_reader.py
     (`classify_provenance`), and manifest.py (`_assert_safe_output_path`); never modifies any of
     those files, never writes into `agent-monitoring/` or `agent-monitoring/retro/`.
@@ -6248,7 +6262,7 @@
   legacy_evidence: null
   v2_evidence: >
     tools/retrieval_events.py:46 (`retrieval_event_schema_version = 1`, explicitly distinct from
-    `retrieval_cache.RETRIEVAL_VERSION`), :52-76 (`RETRIEVAL_EVENT_FIELDS` -- the single
+    `retrieval_cache.RETRIEVAL_VERSION`), :52-73 (`RETRIEVAL_EVENT_FIELDS` -- the single
     source-of-truth 18-field retrieval-specific field set, excluding `execution_id`/`provider`/
     the 7 REQUIRED base fields), :77-89 (`NOISY_RATIO_THRESHOLD` / `compute_adequacy_verdict()`
     -- the 3-branch insufficient/noisy/sufficient placeholder heuristic), :91-143
@@ -6258,17 +6272,32 @@
     keyword-only `ts: str | None = None` param -- `None` (the default) preserves the original
     `datetime.now(timezone.utc)`-derived `"ts"` value verbatim, a caller-supplied value is used
     as the record's `"ts"` field verbatim instead; never mutates an already-written record, only
-    affects new appends), :154-199 (`wrap_hybrid_retrieval()` -- times and observes
+    affects new appends), :154-212 (`wrap_hybrid_retrieval()` -- times and observes
     `hybrid_fuse_and_filter()`, `RUN_ID_HYBRID`/`AGENT_HYBRID`, forwards its own optional `ts`
-    param to `emit_retrieval_event()` unchanged), :210-265 (`wrap_retrieval_cache_check()` --
+    param to `emit_retrieval_event()` unchanged; TCK-20260804-EXPANSION-RATE-WIRING added optional
+    keyword-only `expansion_reason: str | None = None` / `expansion_count: int | None = None`
+    params, forwarded to `emit_retrieval_event()` only when supplied via a conditional
+    `optional_expansion_fields` dict-then-spread -- never defaulted/fabricated; no producer in
+    this codebase supplies them yet), :223-288 (`wrap_retrieval_cache_check()` --
     dispatches to `check_index_cache`/`check_query_cache`/`check_packet_cache` by imported
     category constant, `cache_status` sourced verbatim from the imported
     `HIT`/`MISS`/`STALE_REJECTED` constants, forwards its own optional `ts` param to
-    `emit_retrieval_event()` unchanged), :276-322 (`wrap_context_packet_assembly()` -- times and
+    `emit_retrieval_event()` unchanged; TCK-20260804-EXPANSION-RATE-WIRING added the same optional
+    `expansion_reason`/`expansion_count` params, extending this function's existing conditional
+    `retrieval_fields` dict alongside `corpus_generation`/`retrieval_version` -- same
+    never-fabricated guarantee, no producer supplies them yet), :299-358
+    (`wrap_context_packet_assembly()` -- times and
     observes `assemble_context_packet()`, `exclusion_reason_counts`/`cited_source_hashes` derived
     from its real return value, forwards its own optional `ts` param to `emit_retrieval_event()`
     unchanged; `implement-ticket.js`'s shadow-packet call site, INFRA-299, never passes `ts` and
-    is unaffected).
+    is unaffected; TCK-20260804-EXPANSION-RATE-WIRING added the same optional
+    `expansion_reason`/`expansion_count` params via the same conditional dict-then-spread pattern
+    as `wrap_hybrid_retrieval()` -- no producer, including INFRA-299's shadow-packet call site,
+    supplies them yet). Line ranges for these 3 wrappers reflect each function's current, grown
+    extent (each gained ~10-13 lines from the expansion-fields params/docstring/dict-build added by
+    TCK-20260804-EXPANSION-RATE-WIRING, shifting every subsequent line number in the file --
+    re-verified against the live file during this ticket's Parity phase, not carried over stale
+    from the pre-ticket citation).
     tools/agent-monitoring/generate_retro.py:561-612 (`compute_retrieval_metrics()` -- read-only,
     fixture-tested proof-of-queryability function: cache hit/miss/stale-rejection rates grouped
     by `cache_level`, candidate-to-selected and selected-to-cited ratios, both zero-division
@@ -6289,6 +6318,11 @@
     `SHADOW_CONTEXT_PACKET_ENABLED=1` (off by default, fail-open). `wrap_hybrid_retrieval()` and
     `wrap_retrieval_cache_check()` remain unwired. Real-event volume stays at zero only while the
     flag is unset (the current default), not unconditionally by design.
+    **Update (TCK-20260804-EXPANSION-RATE-WIRING):** the optional `expansion_reason`/
+    `expansion_count` pass-through params added to all 3 `wrap_*()` functions do not change the
+    "no producer wired" characterization already established here for those two fields -- that
+    characterization predates this ticket (see INFRA-298) and remains true after it; plumbing
+    readiness is not producer wiring.
 - id: INFRA-298
   text: >
     generate_retro.py's compute_retrieval_metrics() (previously computed but never rendered by
@@ -6329,6 +6363,15 @@
     retrieval-event volume in the live `agent-monitoring/events.jsonl` stays at zero after this
     ticket ships, by design; the new report section only ever populates against fixture/test data
     or a future manual invocation, never against a real tracked workflow run.
+    **Update (TCK-20260804-EXPANSION-RATE-WIRING):** the `text` field's "no shipped wrap_*()
+    function emits expansion_reason/expansion_count today" describes actual emission behavior
+    (does emit), not pass-through capability (can emit) -- as of TCK-20260804-EXPANSION-RATE-WIRING
+    all 3 wrap_*() functions in `tools/retrieval_events.py` accept optional
+    `expansion_reason`/`expansion_count` pass-through parameters (see INFRA-297's v2_evidence),
+    forwarded to `emit_retrieval_event()` only when a caller supplies them. No real caller in this
+    codebase supplies them yet, so the literal "emits ... today" claim, and the resulting
+    permanently-0.0% `expansion_rate`, both remain true and unchanged after this ticket -- this
+    note exists only to prevent the phrase from being misread as "cannot accept them."
 
 - id: INFRA-299
   text: >

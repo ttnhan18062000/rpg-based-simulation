@@ -159,10 +159,16 @@ def wrap_hybrid_retrieval(
     status: str = "ok",
     events_file: Path | None = None,
     ts: str | None = None,
+    expansion_reason: str | None = None,
+    expansion_count: int | None = None,
     **hybrid_kwargs,
 ):
     """Times and observes one hybrid_fuse_and_filter() call, emits exactly one retrieval event,
     and returns the wrapped call's real return value unchanged.
+
+    `expansion_reason`/`expansion_count` are optional pass-through fields: forwarded to
+    `emit_retrieval_event()` only when the caller supplies them, never fabricated or defaulted
+    (TCK-20260804-EXPANSION-RATE-WIRING). No caller in this codebase supplies them today.
     """
     from hybrid_retrieval import candidate_k, hybrid_fuse_and_filter
 
@@ -178,6 +184,12 @@ def wrap_hybrid_retrieval(
     source_kind_counts = Counter(r.kind for r in results)
     authority_counts = Counter(r.authority for r in results)
     freshness_counts = Counter(r.freshness for r in results)
+
+    optional_expansion_fields = {}
+    if expansion_reason is not None:
+        optional_expansion_fields["expansion_reason"] = expansion_reason
+    if expansion_count is not None:
+        optional_expansion_fields["expansion_count"] = expansion_count
 
     emit_retrieval_event(
         run_id=run_id,
@@ -195,6 +207,7 @@ def wrap_hybrid_retrieval(
         authority_counts=dict(authority_counts),
         freshness_counts=dict(freshness_counts),
         adequacy_verdict=compute_adequacy_verdict(selected_count, candidate_count),
+        **optional_expansion_fields,
     )
     return results
 
@@ -216,12 +229,18 @@ def wrap_retrieval_cache_check(
     status: str = "ok",
     events_file: Path | None = None,
     ts: str | None = None,
+    expansion_reason: str | None = None,
+    expansion_count: int | None = None,
     **check_kwargs,
 ):
     """Dispatches to check_index_cache/check_query_cache/check_packet_cache by `cache_level`
     (one of retrieval_cache.INDEX_CACHE_CATEGORY/QUERY_CACHE_CATEGORY/PACKET_CACHE_CATEGORY),
     emits exactly one retrieval event whose cache_status is the imported HIT/MISS/STALE_REJECTED
     constant verbatim (never re-literaled), and returns the wrapped call's real result unchanged.
+
+    `expansion_reason`/`expansion_count` are optional pass-through fields: forwarded to
+    `emit_retrieval_event()` only when the caller supplies them, never fabricated or defaulted
+    (TCK-20260804-EXPANSION-RATE-WIRING). No caller in this codebase supplies them today.
     """
     from retrieval_cache import (
         INDEX_CACHE_CATEGORY,
@@ -250,6 +269,10 @@ def wrap_retrieval_cache_check(
         retrieval_fields["corpus_generation"] = check_kwargs["corpus_generation"]
     if "retrieval_version" in check_kwargs:
         retrieval_fields["retrieval_version"] = check_kwargs["retrieval_version"]
+    if expansion_reason is not None:
+        retrieval_fields["expansion_reason"] = expansion_reason
+    if expansion_count is not None:
+        retrieval_fields["expansion_count"] = expansion_count
 
     emit_retrieval_event(
         run_id=run_id,
@@ -281,6 +304,8 @@ def wrap_context_packet_assembly(
     status: str = "ok",
     events_file: Path | None = None,
     ts: str | None = None,
+    expansion_reason: str | None = None,
+    expansion_count: int | None = None,
     **assemble_kwargs,
 ):
     """Times and observes one assemble_context_packet() call, emits exactly one retrieval event,
@@ -289,6 +314,10 @@ def wrap_context_packet_assembly(
     candidate_count has no natural pre-assembly analogue exposed by assemble_context_packet()'s
     signature, so it is omitted here rather than fabricated — adequacy_verdict degenerates to
     "sufficient"/"insufficient" only at this layer (Resolved Decision 4/7).
+
+    `expansion_reason`/`expansion_count` are optional pass-through fields: forwarded to
+    `emit_retrieval_event()` only when the caller supplies them, never fabricated or defaulted
+    (TCK-20260804-EXPANSION-RATE-WIRING). No caller in this codebase supplies them today.
     """
     from context_packet_assembler import assemble_context_packet
 
@@ -301,6 +330,12 @@ def wrap_context_packet_assembly(
     exclusion_reason_counts = {
         f'{row["kind"]}:{row["reason"]}': row["count"] for row in packet.excluded_summary
     }
+
+    optional_expansion_fields = {}
+    if expansion_reason is not None:
+        optional_expansion_fields["expansion_reason"] = expansion_reason
+    if expansion_count is not None:
+        optional_expansion_fields["expansion_count"] = expansion_count
 
     emit_retrieval_event(
         run_id=run_id,
@@ -318,5 +353,6 @@ def wrap_context_packet_assembly(
         corpus_generation=packet.corpus_generation,
         retrieval_version=packet.retrieval_version,
         adequacy_verdict=compute_adequacy_verdict(selected_count, selected_count),
+        **optional_expansion_fields,
     )
     return packet

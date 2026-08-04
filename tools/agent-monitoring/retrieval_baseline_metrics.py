@@ -167,12 +167,56 @@ def build_legacy_schema_notes(runs: list, events: list, tools: list) -> dict:
     }
 
 
+def build_raw_investigation_count_section(tools: list) -> dict:
+    per_run: dict = defaultdict(int)
+    total = 0
+    for record in tools:
+        if record.get("tool") == "Read":
+            # Same run_id=None -> "unattributed" convention as build_search_count_section
+            # (see that function's inline comment) — reused verbatim, not reinvented.
+            run_id = record.get("run_id") or "unattributed"
+            per_run[run_id] += 1
+            total += 1
+
+    search_total = build_search_count_section(tools)["total"]
+    if search_total > 0:
+        ratio = round(total / search_total, 4)
+    else:
+        ratio = (
+            "undefined: zero search_count.total in corpus, cannot compute a ratio "
+            "without a fabricated denominator"
+        )
+
+    return {
+        "derivation": (
+            "Derived from tools.jsonl's literal `tool` field, filtered to `tool == \"Read\"` "
+            "(the single most common non-Bash tool in this corpus). `Grep` is not counted "
+            "because no distinct `Grep` tool name is ever recorded in this environment; "
+            "grep-equivalent work runs through the catch-all `Bash` tool, which is excluded "
+            "here for the same non-distinguishability rationale documented on "
+            "SEARCH_TOOL_NAMES above (some Bash calls are search/grep-flavored by content, "
+            "but that is not distinguishable by tool name alone). This section is therefore "
+            "a proxy for raw investigation effort (how often the agent had to open a file "
+            "directly to look), not a literal grep-call count. read_to_search_ratio is "
+            "computed corpus-wide only (this section's total Read count divided by "
+            "search_count's total, both derived from this same tools list), never per-run, "
+            "because search_count.per_run and this section's per_run do not share an "
+            "identical run_id key set in general; if search_count.total is 0 the ratio is "
+            "the literal string above instead of a divided-by-zero or fabricated value."
+        ),
+        "per_run": dict(per_run),
+        "total": total,
+        "read_to_search_ratio": ratio,
+    }
+
+
 def build_baseline_report(runs: list, events: list, tools: list) -> dict:
     return {
         "ticket_id": "TCK-20260728-RETRIEVAL-BASELINE-METRICS",
         "generated_note": "one-off baseline snapshot — not the recurring weekly retro cadence",
         "context_tokens": build_context_tokens_section(),
         "search_count": build_search_count_section(tools),
+        "raw_investigation_count": build_raw_investigation_count_section(tools),
         "duration": build_duration_section(runs),
         "gate_outcome": build_gate_outcome_section(runs),
         "review_rework": build_review_rework_section(runs),

@@ -47,6 +47,17 @@ group under two weight sets and compares the resulting spend-by-phase/spend-by-a
 so a candidate reweighting's real impact is measured before it ships, not discovered after. See
 `make agent-monitoring-weight-check` below.
 
+## Baseline Metrics Snapshot (one-off)
+
+`tools/agent-monitoring/retrieval_baseline_metrics.py` is a separate, one-off/periodic
+read-only baseline-snapshot script (distinct from the recurring weekly retro above) that prints a
+JSON report over the same `runs.jsonl`/`events.jsonl`/`tools.jsonl` sources. Report sections:
+`context_tokens`, `search_count`, `raw_investigation_count`, `duration`, `gate_outcome`,
+`review_rework`, `legacy_schema_notes`. Every derived/proxy section states its own computation and
+limits inline via a `derivation`/`disclosure`/`reason` field — never a silent number. See
+`docs/parity_ledger/infrastructure.yaml`'s `INFRA-292` entry for exact source line-range
+provenance of each section.
+
 ## Navigation
 
 | Doc | Contents |
