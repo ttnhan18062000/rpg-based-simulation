@@ -89,7 +89,17 @@ into this exact question. The real chain, in order:
    - **Factor 2**: even with routing ON, `AdventureRouteScorer` never selects
      `craft_upgrade`/`buy_upgrade` — empirically confirmed 0 selections across 2 real routing-enabled
      calibration runs (0/492 in `hero_guild_routing`, 0/342 in `simq_routing_test`), consistently
-     outscored by `form_party`/`gather_resource`.
+     outscored by `form_party`/`gather_resource`. **Investigated and closed 2026-08-05**
+     (`TCK-20260805-SIMQ-ECONOMY-ADVENTURE-ROUTE-SCORER-BIAS`): this is **correct scorer behavior,
+     not a miscalibration**. Traced to `scoring.py`'s flat `blocker_penalty=2.0`, which fires
+     whenever `route.blockers` is non-empty and clamps the final score to `0.0`
+     (`max(0.0, final_score)`). `AdventureRouteGenerator` sets a blocker whenever the entity lacks
+     the `has_gold`/`has_item` a craft/buy opportunity requires (`generator.py:54-68`,
+     `services.py:50-111`) — and since entities never harvest resources or earn gold (Factor 3's
+     own zero-harvest finding), craft/buy opportunities are *correctly* blocked every time. No
+     scoring fix was made — per direct user guidance this session, forcing craft/buy to score
+     higher without entities actually having the resources would manufacture an unrealistic route,
+     not close a real gap. The real fix, if pursued, is upstream (Factors 1/3), not this scorer.
    - **Factor 3**: `ObjectiveIntentResolver`'s `REACH_RESOURCE → MOVE_TO` mapping never transitions
      to a harvest action on arrival. Filed as a direct follow-up:
      `TCK-20260714-SIMQ-HARVEST-RESOURCE-ARRIVAL-TRANSITION`.
@@ -356,18 +366,19 @@ on, empirically confirmed 0/492 and 0/342 across 2 real routing-enabled runs; (3
 full-corpus run confirms Factor 3's fix alone was not sufficient — exactly as that ticket's own
 Completion Summary predicted, since Factors 1 and 2 were deliberately left out of its scope.
 
-**What remains, precisely:** Factor 2 is the one real, actionable, narrowly-scoped remaining gap —
-it doesn't require reopening AGENCY's DA ruling (Factor 1), it's already empirically isolated
-(`AdventureRouteScorer`'s existing bias terms, not touched by any prior ticket), and closing it
-would let ECONOMY actually produce a live signal in the routing-enabled worlds that already exist
-in the corpus. Whether Factor 1 (turning `ENABLE_ADVENTURE_ROUTING` on more broadly) should also be
-revisited is a separate, real decision — it would mean reopening a DA ruling, not a pure bug fix,
-and is not assumed here.
+**Factor 2 — investigated and closed 2026-08-05** (`TCK-20260805-SIMQ-ECONOMY-ADVENTURE-ROUTE-SCORER-BIAS`):
+confirmed correct scorer behavior, not a miscalibration — see Finding 2 above for the full causal
+chain. Entities are correctly blocked from craft/buy because they never harvest resources or earn
+gold in the first place (the same root cause behind the zero-harvest finding), so
+`AdventureRouteScorer`'s flat `blocker_penalty=2.0` correctly zeroes their score every time. No
+scoring fix was made — forcing craft/buy to score higher without entities actually having the
+resources would manufacture an unrealistic route, not close a real gap.
 
-**Effort estimate:** S-M for Factor 2 alone (a scorer-bias investigation + fix, with the routing
-mechanism itself already proven correct) — substantially smaller than this recommendation's
-original "unknown, likely larger than M" estimate, now that the harder routing-infrastructure work
-is already done.
+**What remains, precisely:** with Factor 2 now closed as "working as intended," the only path left
+to make ECONOMY produce a live signal is upstream — getting entities to actually harvest/earn gold,
+which loops back to Factor 1 (`ENABLE_ADVENTURE_ROUTING`'s default) and the broader
+goal-generation chain, not a scorer change. Whether Factor 1 should be revisited is a separate,
+real decision — it would mean reopening a DA ruling, not a pure bug fix, and is not assumed here.
 
 ### 3. Wire `ActionIntentAdapter.execute()` into the production tick pipeline — DONE
 

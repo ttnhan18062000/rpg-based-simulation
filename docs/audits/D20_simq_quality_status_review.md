@@ -87,14 +87,16 @@ not just isolated unit tests — and precisely isolated exactly 3 remaining cont
    feature flag that lets entities consider `craft_upgrade`/`buy_upgrade` routes at all. Tied to
    AGENCY's own DA-ruled design decision (`TCK-20260702-SIMQ-UPLIFT2-AGENCY-DA`) — turning it on
    more broadly is a policy question, not a bug fix, and is explicitly not assumed here.
-2. **Factor 2 — `AdventureRouteScorer` never selects craft/buy routes even when routing is on.**
+2. **Factor 2 — `AdventureRouteScorer` never selects craft/buy routes even when routing is on. —
+   INVESTIGATED AND CLOSED 2026-08-05** (`TCK-20260805-SIMQ-ECONOMY-ADVENTURE-ROUTE-SCORER-BIAS`).
    Empirically confirmed 0/492 and 0/342 real selections across 2 routing-enabled runs — always
-   outscored by `form_party`/`gather_resource`. This is the one narrowly-scoped, concrete remaining
-   gap: whether the scorer's bias terms are miscalibrated, or whether `form_party`/`gather_resource`
-   are correctly winning because the corpus's archetypes genuinely have less reason to want
-   craft/buy in those situations, is not yet determined — it needs to stay an investigation before
-   any fix, precisely to avoid forcing a route the entity has no in-fiction cognitive reason to take
-   (see the sequencing caution below).
+   outscored by `form_party`/`gather_resource`. Root-caused: `scoring.py`'s flat
+   `blocker_penalty=2.0` clamps craft/buy's score to exactly `0.0` whenever
+   `AdventureRouteGenerator` marks the route blocked, which it correctly does whenever the entity
+   lacks the `has_gold`/`has_item` a craft/buy opportunity requires — and since entities never
+   harvest resources or earn gold (Factor 3's own finding), that's always. **Confirmed correct
+   scorer behavior, not a miscalibration.** No scoring fix was made — see the sequencing caution
+   below, which this finding validates rather than merely anticipates.
 3. **Factor 3 — the `REACH_RESOURCE→MOVE_TO` arrival-transition gap.** Fixed by the direct follow-up
    `TCK-20260714-SIMQ-HARVEST-RESOURCE-ARRIVAL-TRANSITION` (done, landed 07-16). This session's
    fresh full-corpus run confirms the fix alone has zero measured corpus-wide effect —
@@ -140,7 +142,7 @@ workaround needed): the bug is fixed. No outstanding tooling issue in this path.
 | INFORMATION | 0 | 3 | 36 | 36 | 0 | Declared structurally complete (roadmap Phase 5) |
 | COGNITION | 8 | 5 | 40 | 22 | 0 | Both halves wired and closed (`TCK-20260713-SIMQ-COGNITION-PIPELINE-WIRE`) |
 | SOCIAL | 16 | 0 | 0 | 59 | 0 | Staged depth is the deliberate permanent bar (roadmap Phase 5) |
-| ECONOMY | 0 | 1 | 16 | 58 | 0 | **Finding 2** — investigation done, 2 precise factors remain (Factor 1 policy question, Factor 2 needs its own investigation first) |
+| ECONOMY | 0 | 1 | 16 | 58 | 0 | **Finding 2** — both factors resolved to decisions: Factor 1 is a policy question (not filed), Factor 2 confirmed correct behavior, not a bug (closed 08-05) |
 | AGENCY | 0 | 8 | 0 | 67 | 0 | C-by-design, `ENABLE_ADVENTURE_ROUTING` opt-in (DA-ruled) |
 
 ---
@@ -159,7 +161,7 @@ correction note above.
 |---|---|---|---|---|---|
 | A | Recalibrate WORLD pillar anchors against the spawn-occupancy signal | Yes — anchor staleness (Finding 1) | S | **High** — regression gate is untrustworthy for WORLD until done | Root cause fully diagnosed already; no further investigation needed before implementing |
 | B1 | Decide whether to reopen `ENABLE_ADVENTURE_ROUTING`'s DA-ruled default (ECONOMY Factor 1) | Real, but a policy question, not a bug | — | Low — no defect, a deliberate design boundary | Not a ticket unless the user wants to revisit the DA ruling; noted for completeness, not filed by default |
-| B2 | Investigate whether `AdventureRouteScorer`'s craft/buy selection bias (0/492, 0/342 observed) is a miscalibration or a correct reflection of archetype incentives, and fix only if miscalibrated (ECONOMY Factor 2) | Yes — narrowly isolated, empirically confirmed (Finding 2) | S-M | Medium | **Must stay investigation-first** — a forced fix that routes entities to craft/buy without a legible in-fiction cognitive reason would manufacture an unrealistic route, not close a real gap (direct user guidance, 2026-08-05) |
+| B2 | ~~Investigate whether `AdventureRouteScorer`'s craft/buy selection bias is a miscalibration~~ — **DONE 2026-08-05**, confirmed correct behavior, no fix (ECONOMY Factor 2) | Was real (Finding 2), now resolved as "working as intended" | — | — | `TCK-20260805-SIMQ-ECONOMY-ADVENTURE-ROUTE-SCORER-BIAS`: blocker_penalty=2.0 correctly fires because entities never harvest/earn gold; root cause loops back to Factors 1/3, not this scorer |
 
 **Not recommended right now:** reopening FACTION/INFORMATION/SOCIAL/AGENCY depth (all closed with
 real evidence under the SimQ roadmap's Phase 5 ruling), or any of SimQ's explicit MVP Non-Goals
@@ -175,10 +177,9 @@ Explicitly the user's decision, not pre-decided here — but the shape of the op
 
 - **Item A** is small, urgent, and fully diagnosed — a strong hotfix-tier candidate on its own,
   independent of any other decision.
-- **Item B2** is the one remaining genuinely open pillar-quality question in the whole system, but
-  it must be scoped and executed as an investigation-first ticket, with an explicit acceptance
-  criterion that any scoring adjustment is justified by a real cognitive/action-layer path, not a
-  score-forcing hack. It has no hard dependency on A.
+- **Item B2 is resolved** (2026-08-05) — investigated as instructed, confirmed correct scorer
+  behavior, no fix made. The investigation-first discipline paid off directly: forcing a fix here
+  would have manufactured an unrealistic route exactly as the sequencing caution warned against.
 - **Item B1** is not recommended to file as a ticket right now — it's a policy question about
   reopening a DA ruling, not a defect. Noted here for visibility only; would need explicit user
   intent to reopen the DA decision before it becomes ticket-worthy.
