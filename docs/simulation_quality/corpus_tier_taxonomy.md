@@ -136,7 +136,7 @@ tables and per-world justification.
 | `unit_faction_tension` | Unit | 18 entities, 3 regions — isolates FACTION only (TCK-20260704-SIMQ-CORPUS-UNIT-WORLDS-FACTION-INFO) |
 | `unit_information_source` | Unit | 16 entities, 1 region — isolates INFORMATION only (TCK-20260704-SIMQ-CORPUS-UNIT-WORLDS-FACTION-INFO) |
 | `unit_selfmodel_pilot` | Unit | 16 entities, 1 region — isolates COGNITION's self-model materialization half only (TCK-20260704-SIMQ-CORPUS-UNIT-WORLD-SELFMODEL-PILOT) |
-| `hero_guild_routing` | Unit | 31 entities, 4 regions — isolates AGENCY/route-selection only via `ENABLE_ADVENTURE_ROUTING` (TCK-20260704-SIMQ-CORPUS-UNIT-WORLD-AGENCY); real-archetype scale distinguishes it from calibration-minimal `simq_routing_test` |
+| `hero_guild_routing` | Unit (dual role) | 31 entities, 4 regions, 10 quests, 5 factions — isolates AGENCY/route-selection via `ENABLE_ADVENTURE_ROUTING` in the test suite (TCK-20260704-SIMQ-CORPUS-UNIT-WORLD-AGENCY) **and** fills gap 4 (routing-active real archetype): scale/content dramatically exceeds every real Unit-tier world and matches/exceeds End-to-end peers `urban_political`/`dungeon_crawl`, composing `frontier_village_core`'s real shop/blacksmith/trade content across a town + 3 wilderness destinations (TCK-20260805-SIMQ-CORPUS-AGENCY-REAL-ARCHETYPE) |
 | `unit_information_density` | Unit | 16 entities, 1 region — isolates INFORMATION *event density* (3 `pending_information_responses` entries vs. `unit_information_source`'s deliberately-minimal 1), complementary to that world rather than a replacement (TCK-20260713-SIMQ-SCORE-CEILING-FIX) |
 | `crowded_frontier` | Stress | 38 entities, 4 regions — fills gap 1 (many-factions/small-map): 6 distinct populated factions in a 4-region footprint (TCK-20260704-SIMQ-CORPUS-STRESS-WORLDS) |
 | `resource_dense_basin` | Stress | 23 entities, 3 regions — fills gap 2 (resource-saturated/small-map): the corpus's new resource-node density maximum, ~2.33 nodes/region (TCK-20260704-SIMQ-CORPUS-STRESS-WORLDS) |
@@ -217,8 +217,17 @@ the concrete candidates a stress-tier world should cite when justifying its auth
    not added after the fact — at `frontier_extended`-comparable scale (62 entities/9 regions vs.
    56/10). `wilderness_survival`'s near-zero settlement structure remains an intentional
    INFORMATION skip (no settlement-adjacent module), not a gap this ticket addresses.
-4. **A routing-capable (AGENCY-active) world that is also a "real" gameplay archetype**, as opposed
-   to `simq_routing_test`'s purpose-built minimal-calibration framing.
+4. ~~**A routing-capable (AGENCY-active) world that is also a "real" gameplay archetype**, as
+   opposed to `simq_routing_test`'s purpose-built minimal-calibration framing.~~ — **CLOSED, found
+   stale 2026-08-05** (`TCK-20260805-SIMQ-CORPUS-AGENCY-REAL-ARCHETYPE`): `hero_guild_routing`
+   already satisfies this, verified via direct scale/content comparison — 31 entities/4 regions/10
+   quests/5 factions, dramatically exceeding every real Unit-tier world (16-18/1-3/3-6/3) and
+   matching or exceeding End-to-end peers `urban_political`/`dungeon_crawl`. It composes
+   `frontier_village_core`'s real shop/blacksmith/trade content and its own `world.yaml`
+   description already self-identifies as a "real-scale routing-capable archetype," distinct from
+   `simq_routing_test`'s explicit "minimal calibration" framing. Its formal Unit-tier label
+   (reflecting its role isolating `ENABLE_ADVENTURE_ROUTING` in the test suite) doesn't reflect
+   its actual scale — see its corrected per-world table entry below. No new world needed.
 5. ~~**Quest density decoupled from entity count.** Quest-def count currently scales almost
    linearly with entity count across the corpus; no world deliberately decouples these axes.~~ —
    **CLOSED 2026-08-05** (`TCK-20260805-SIMQ-CORPUS-QUEST-DENSITY-DECOUPLE`): verified this gap
