@@ -187,8 +187,16 @@ Per `staging_artifacts/TCK-20260704-SIMQ-CORPUS-TIERS-EPIC/investigation.md` §2
 scale/composition combinations are **not currently represented** by any world in the corpus, and are
 the concrete candidates a stress-tier world should cite when justifying its authoring:
 
-1. **Large faction count + small entity/region footprint.** No world combines a high distinct-faction
-   count (6-9) with a small map — faction density and world size currently move together.
+1. ~~**Large faction count + small entity/region footprint.** No world combines a high
+   distinct-faction count (6-9) with a small map~~ — **CLOSED, found stale 2026-08-05**
+   (`TCK-20260805-SIMQ-CORPUS-FACTION-DENSITY-SMALL-MAP`): this gap was already closed twice over
+   by pre-existing worlds before this ticket was even filed — `crowded_frontier` (6 genuinely
+   populated distinct factions, verified via `WorldCompiler.compile()`, on a 4-region/38-entity
+   map, already correctly documented as closing this gap in the per-world table above) and
+   `generated_frontier_3_42` (7 populated factions on a 6-region/44-entity map). This gap-list
+   section had simply never been updated when those two worlds closed it — this ticket found and
+   corrected the staleness rather than authoring a 3rd redundant world with an identical footprint
+   to `generated_frontier_3_42`'s. No new world needed.
 2. **High resource-node density with a small map** (or the inverse: a sprawling map with sparse
    resources). Node-per-region density is currently roughly flat (1.3-1.75) across the corpus
    regardless of overall scale.
