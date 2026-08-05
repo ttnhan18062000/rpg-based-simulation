@@ -88,6 +88,16 @@ routing), 13 deliberately unscored.
 **Governing doc:** `docs/simulation_quality/event_type_coverage.md`,
 `docs/guides/simulation_quality.md`
 
+**2026-08-05 addendum — per-entity event-chain substrate:** two disconnected systems can
+reconstruct an entity's full behavioral history beyond raw pillar events: `decision_trace.jsonl`
+(live today, including in SimQ's default LIGHT mode — per-tick, per-entity candidate-route score
+breakdowns) and `cognition_graph_snapshots.jsonl`/diffs (wired but capture-gated to DEBUG/
+CERTIFICATION mode only, see `TCK-20260805-COGNITION-GRAPH-CAPTURE-CORPUS-GAP`). A third,
+`EntityBehaviorScorecard` (Phase 25/26), computes similar diversity/stagnation metrics but is
+fully unwired to the engine — whether it's worth reviving is under investigation in
+`TCK-20260805-BEHAVIOR-SCORECARD-REDUNDANCY-INVESTIGATION`. None of the three currently feed a
+SimQ pillar or scored signal.
+
 ---
 
 ## 4. Recorded pillars — broader than raw events
