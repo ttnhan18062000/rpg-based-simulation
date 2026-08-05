@@ -18,14 +18,18 @@ if str(_TOOLS_DIR) not in sys.path:
 
 import gate_checks.workflow_meta_conformance as workflow_meta_conformance  # noqa: E402
 from gate_checks.workflow_meta_conformance import (  # noqa: E402
+    check_skill_doc_covers_meta_phases,
     check_workflow_meta_conformance,
     collect_run_event_statuses,
     extract_meta_phases,
+    resolve_skill_md_path,
     resolve_workflow_source_path,
+    summarize_conformance_results,
 )
 
 _REPO_ROOT = Path(__file__).parent.parent.parent
 _WORKFLOWS_DIR = _REPO_ROOT / ".claude" / "workflows"
+_SKILLS_DIR = _REPO_ROOT / ".claude" / "skills"
 _REAL_EVENTS_PATH = _REPO_ROOT / "agent-monitoring" / "events.jsonl"
 
 
@@ -41,6 +45,12 @@ def _write_workflow_js(tmp_path, workflow_name, titles):
         "  ],\n"
         "}\n"
     )
+
+
+def _write_skill_md(tmp_path, workflow_name, body_text):
+    skill_dir = tmp_path / workflow_name
+    skill_dir.mkdir(parents=True, exist_ok=True)
+    (skill_dir / "SKILL.md").write_text(body_text)
 
 
 def _write_events_jsonl(tmp_path, run_id, phase_statuses):
@@ -239,3 +249,141 @@ def test_reuses_vocabulary_infer_workflow_not_a_reimplementation():
     source = Path(workflow_meta_conformance.__file__).read_text(encoding="utf-8")
     assert "from vocabulary import infer_workflow" in source
     assert not hasattr(workflow_meta_conformance, "WORKFLOW_PHASES")
+
+
+# ---------------------------------------------------------------------------
+# check_skill_doc_covers_meta_phases — doc-drift check (TCK-20260804-SKILL-DRIFT-DETECTION)
+# ---------------------------------------------------------------------------
+
+
+def test_skill_doc_covers_all_declared_phases_happy_path(tmp_path):
+    _write_workflow_js(tmp_path, "sample-workflow", ["Alpha", "Beta"])
+    _write_skill_md(tmp_path, "sample-workflow", "1. **Alpha** — does a thing.\n2. **Beta** — does another.\n")
+
+    results = check_skill_doc_covers_meta_phases(
+        "sample-workflow", workflows_dir=tmp_path, skills_dir=tmp_path
+    )
+    assert all(r["status"] == "PASS" for r in results)
+    assert {r["phase"] for r in results} == {"Alpha", "Beta"}
+
+
+def test_skill_doc_flags_missing_phase_title(tmp_path):
+    _write_workflow_js(tmp_path, "sample-workflow", ["Alpha", "Beta", "Gamma"])
+    _write_skill_md(tmp_path, "sample-workflow", "1. **Alpha** — does a thing.\n2. **Beta** — does another.\n")
+
+    results = check_skill_doc_covers_meta_phases(
+        "sample-workflow", workflows_dir=tmp_path, skills_dir=tmp_path
+    )
+    by_phase = {r["phase"]: r for r in results}
+    assert by_phase["Gamma"]["status"] == "FAIL"
+    assert "Gamma" in by_phase["Gamma"]["evidence"]
+    assert "SKILL.md" in by_phase["Gamma"]["evidence"]
+    assert by_phase["Alpha"]["status"] == "PASS"
+    assert by_phase["Beta"]["status"] == "PASS"
+
+
+def test_skill_doc_tolerates_bold_and_plain_wrapping(tmp_path):
+    _write_workflow_js(tmp_path, "sample-workflow", ["Alpha", "Beta"])
+    _write_skill_md(
+        tmp_path,
+        "sample-workflow",
+        "1. **Alpha** — does a thing.\nLater, the Beta phase derives its inputs from Alpha.\n",
+    )
+
+    results = check_skill_doc_covers_meta_phases(
+        "sample-workflow", workflows_dir=tmp_path, skills_dir=tmp_path
+    )
+    by_phase = {r["phase"]: r for r in results}
+    assert by_phase["Beta"]["status"] == "PASS"
+
+
+def test_skill_doc_flags_missing_title_masked_by_sibling_superstring_title(tmp_path):
+    """The critical collision guard test.
+
+    `meta.phases = ["Review", "Security-Review"]`, but the SKILL.md's standalone `**Review**`
+    heading was deleted (only `**Security-Review**` remains). A naive `"Review" in text` substring
+    check would false-PASS `Review` via the `Security-Review` match. This must be reported FAIL.
+    """
+    _write_workflow_js(tmp_path, "sample-workflow", ["Review", "Security-Review"])
+    _write_skill_md(
+        tmp_path,
+        "sample-workflow",
+        "1. **Security-Review** — security gate, conditional.\n",
+    )
+
+    results = check_skill_doc_covers_meta_phases(
+        "sample-workflow", workflows_dir=tmp_path, skills_dir=tmp_path
+    )
+    by_phase = {r["phase"]: r for r in results}
+    assert by_phase["Review"]["status"] == "FAIL"
+    assert by_phase["Security-Review"]["status"] == "PASS"
+
+
+def test_check_covers_real_implement_ticket_skill_md():
+    results = check_skill_doc_covers_meta_phases(
+        "implement-ticket", workflows_dir=_WORKFLOWS_DIR, skills_dir=_SKILLS_DIR
+    )
+    failing = [r for r in results if r["status"] == "FAIL"]
+    assert failing == [], f"expected zero FAIL findings, got: {failing}"
+    assert len(results) == 12
+
+
+def test_check_covers_real_create_tickets_skill_md():
+    results = check_skill_doc_covers_meta_phases(
+        "create-tickets", workflows_dir=_WORKFLOWS_DIR, skills_dir=_SKILLS_DIR
+    )
+    failing = [r for r in results if r["status"] == "FAIL"]
+    assert failing == [], f"expected zero FAIL findings, got: {failing}"
+    assert len(results) == 5
+
+
+def test_check_covers_real_implement_epic_skill_md():
+    results = check_skill_doc_covers_meta_phases(
+        "implement-epic", workflows_dir=_WORKFLOWS_DIR, skills_dir=_SKILLS_DIR
+    )
+    failing = [r for r in results if r["status"] == "FAIL"]
+    assert failing == [], f"expected zero FAIL findings, got: {failing}"
+    assert {r["phase"] for r in results} == {"Discover", "Implement", "Report"}
+
+
+def test_new_function_reuses_extract_meta_phases_not_a_reimplementation():
+    import inspect
+    import re
+
+    source = inspect.getsource(check_skill_doc_covers_meta_phases)
+    assert "extract_meta_phases(" in source
+    assert not re.search(r"phases:\s*\\?\[", source)
+    assert not re.search(r"title:\s*\\?'", source)
+
+
+# ---------------------------------------------------------------------------
+# Finalize-tail wiring (implement-ticket.js) — verified from the Python side, no JS runtime needed
+# ---------------------------------------------------------------------------
+
+_IMPLEMENT_TICKET_JS = _WORKFLOWS_DIR / "implement-ticket.js"
+
+
+def test_finalize_wiring_output_never_changes_terminal_status():
+    js_text = _IMPLEMENT_TICKET_JS.read_text(encoding="utf-8")
+
+    marker_index = js_text.index("PHASE_META_CHECK_JSON:")
+    ok_event_index = js_text.index("pushEvent('Finalize', 'finalizer', 'ok'")
+    write_monitoring_done_index = js_text.index("await writeMonitoring('DONE')")
+    assert marker_index > ok_event_index
+    assert marker_index > write_monitoring_done_index
+
+    return_start = js_text.index("return {", write_monitoring_done_index)
+    return_end = js_text.index("\n}", return_start)
+    return_block = js_text[return_start:return_end]
+    assert "phaseMetaCheck.status" not in return_block
+    assert "status: 'DONE'" in return_block
+
+    fixture_results = [
+        {"phase": "Investigate", "status": "FAIL", "evidence": "declared but zero events"},
+    ]
+    status, evidence = summarize_conformance_results(fixture_results)
+    assert status == "FAIL"
+
+    payload = json.dumps({"status": status, "evidence": evidence})
+    parsed = json.loads(payload)
+    assert parsed["status"] == "FAIL"

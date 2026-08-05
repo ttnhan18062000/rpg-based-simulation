@@ -7337,3 +7337,103 @@
     INFRA-319, unchanged); this entry is orthogonal to and does not claim anything about SimQ mode
     engine-overhead measurement (also part of TCK-20260702-OBSISO-ISOLATION-PROOF, see
     docs/performance/simq_isolation_overhead.md).
+
+- id: INFRA-321
+  text: >
+    TCK-20260804-SKILL-DRIFT-DETECTION -- two additive doc-drift/runtime-drift verifiers added to
+    tools/gate_checks/workflow_meta_conformance.py (built unwired by TCK-20260710-WORKFLOW-META-
+    CONFORMANCE-CHECK): (1) check_skill_doc_covers_meta_phases(), a new pytest-only check asserting
+    every meta.phases[i].title a workflow's .js file declares has a dedicated mention in its
+    corresponding .claude/skills/<name>/SKILL.md text, collision-safe against substring-masking
+    siblings (e.g. "Review" vs. "Security-Review", "Verify" vs. "Architecture-Verify") via
+    _title_has_dedicated_mention()'s strip-then-recheck guard; (2) the pre-existing, previously-
+    unwired check_workflow_meta_conformance() is now actually wired into implement-ticket.js's
+    Finalize tail as a third advisory-only check (alongside check_monitoring_write_recorded,
+    check_tag_drift) via a new generic summarize_conformance_results() List[dict]->tuple[str,str]
+    fold, with the Security-Review phase filtered out of results inline at the implement-ticket.js
+    call site only (never inside the checker module itself, preserving TCK-20260710's own no-per-
+    workflow-allowlist-inside-the-checker Scope Guard). Neither addition ever reassigns the
+    Finalize phase's terminal `status` -- both are pure log-warning advisories, matching the
+    existing two Finalize-tail checks' non-blocking contract exactly.
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: >
+    tools/gate_checks/workflow_meta_conformance.py: DEFAULT_SKILLS_DIR constant (line 51),
+    resolve_skill_md_path() (lines 102-115), _title_has_dedicated_mention() (lines 117-137),
+    check_skill_doc_covers_meta_phases() (lines 139-188), summarize_conformance_results()
+    (lines 258-280) -- all added alongside the pre-existing, untouched extract_meta_phases(),
+    resolve_workflow_source_path(), collect_run_event_statuses(), check_workflow_meta_conformance()
+    (its own FAIL/PASS logic unchanged). .claude/workflows/implement-ticket.js: new Finalize-tail
+    block at lines 1559-1581 (bash() call to check_workflow_meta_conformance() +
+    summarize_conformance_results(), Security-Review filtered inline in the embedded python3 -c
+    string, PHASE_META_CHECK_JSON: marker-prefixed parse, conditional pushEvent/log only on FAIL --
+    never touches the terminal `return { status: 'DONE', ... }`).
+  proof_type: regression
+  test_path: tests/tools/test_workflow_meta_conformance.py::test_skill_doc_covers_all_declared_phases_happy_path,tests/tools/test_workflow_meta_conformance.py::test_skill_doc_flags_missing_phase_title,tests/tools/test_workflow_meta_conformance.py::test_skill_doc_tolerates_bold_and_plain_wrapping,tests/tools/test_workflow_meta_conformance.py::test_skill_doc_flags_missing_title_masked_by_sibling_superstring_title,tests/tools/test_workflow_meta_conformance.py::test_check_covers_real_implement_ticket_skill_md,tests/tools/test_workflow_meta_conformance.py::test_check_covers_real_create_tickets_skill_md,tests/tools/test_workflow_meta_conformance.py::test_check_covers_real_implement_epic_skill_md,tests/tools/test_workflow_meta_conformance.py::test_new_function_reuses_extract_meta_phases_not_a_reimplementation,tests/tools/test_workflow_meta_conformance.py::test_finalize_wiring_output_never_changes_terminal_status
+  divergence_note: null
+  support_boundary: >
+    Advisory-only doc-drift/runtime-drift detection tooling -- never blocks ticket close, never
+    reassigns Finalize's terminal status, and makes no claim about doc-vs-code drift in any file
+    outside the 3 in-scope hand-orchestration skills (implement-ticket, create-tickets,
+    implement-epic); other .claude/workflows/*.js files with no corresponding SKILL.md (simq-audit,
+    compact-simulation-result, etc.) are out of this entry's scope entirely, per the ticket's own
+    Out of Scope. Supersedes no prior entry -- TCK-20260710-WORKFLOW-META-CONFORMANCE-CHECK's own
+    original build (check_workflow_meta_conformance(), extract_meta_phases(), etc.) had no parity
+    ledger entry of its own (confirmed by corpus search before this entry was added); this is the
+    first ledger entry for this module.
+
+- id: INFRA-322
+  text: >
+    TCK-20260804-AGENT-DEF-GAP-FIXES (item 3) -- done-checker's "Docs Requiring Update" section
+    parser, introduced unwired-to-the-ledger by TCK-20260802-DOC-COVERAGE-CHECK, gains tolerance
+    for trailing rationale prose after a "None."/"N/A" opening. Previously
+    `_parse_docs_to_update`/`check_docs_to_update_coverage` both did an exact-match-only check
+    against `_DOCS_NONE_PHRASES` (`{"", "none", "none.", "n/a"}`); an investigator writing
+    "None. <extra rationale sentence>" instead of byte-identical "None." fell through to
+    `_DOCS_BULLET_RE`, found no bullet in the trailing prose, and produced a false FAIL --
+    confirmed as the real, currently-recurring cause of 3 fresh Verify-phase gate failures
+    (`TCK-20260803-DOCS-STRUCTURE-AUDIT` directly confirmed via its own logged failure text; 2
+    more consistent with the same mechanism). New `_is_none_section(section_text)` helper keeps
+    the exact-match fast path unchanged, then for a "None"/"N/A"-prefixed section (case-insensitive,
+    optional trailing period) checks whether the remainder contains a `- \`docs/...\`` bullet -- no
+    bullet means treat the whole section as "none" (closes the false-FAIL gap); a bullet found means
+    normal full-text bullet parsing still applies (guards the opposite-direction false-PASS risk,
+    e.g. "None of the above, but `docs/foo.md` needs updating" must still require that path).
+    `_DOCS_BULLET_RE` itself, `_git_touched_paths`, and `_path_touched` are unchanged by this fix.
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: >
+    tools/gate_checks/done_checker_static.py:310 (`_DOCS_NONE_PREFIX_RE = re.compile(r"^(none|n/a)
+    \.?\s*", re.IGNORECASE)`), :313-336 (`_is_none_section(section_text)` -- exact-match fast path
+    preserved, then prefix-then-remainder-bullet-search check), :395 (`_parse_docs_to_update` call
+    site, replacing the prior inline exact-match check) and its docstring (updated to describe the
+    tolerant behavior), :438 (`check_docs_to_update_coverage`'s `if not required_docs:` branch call
+    site, replacing the duplicated inline exact-match check).
+  proof_type: regression
+  test_path: >
+    tests/tools/test_done_checker_static.py::test_parse_docs_none_with_trailing_rationale_prose,
+    tests/tools/test_done_checker_static.py::test_parse_docs_none_prefix_with_later_bullet_still_parses,
+    tests/tools/test_done_checker_static.py::test_docs_coverage_none_with_trailing_rationale_passes,
+    tests/tools/test_done_checker_static.py::test_docs_coverage_none_prefix_but_real_bullet_still_required
+    (4/4 re-run and confirmed passing during this parity update: `pytest
+    tests/tools/test_done_checker_static.py -k "none" -v` -> "8 passed", including the 4 new tests
+    alongside the 4 pre-existing none-phrase tests they sit beside, all unmodified).
+  divergence_note: null
+  support_boundary: >
+    Ticket-closing gate-check tooling only -- no simulation behavior is involved (mirrors
+    INFRA-263/264/265/277/278/279/280/281/282/315/321's support_boundary pattern for gate-check/
+    orchestration-tooling entries). Does not touch, extend, or duplicate INFRA-263 (Finalize
+    registry-regen), INFRA-264 (CI registry-drift backstop), or INFRA-278 (ticket field-value
+    enums) -- this is a distinct guarantee scoped to the "Docs Requiring Update" section parser
+    specifically. Note on lineage: `_parse_docs_to_update`/`check_docs_to_update_coverage`
+    themselves were introduced by `TCK-20260802-DOC-COVERAGE-CHECK` with no ledger entry of their
+    own at the time (confirmed by corpus search before this entry was added -- that ticket's own
+    `## Related Docs` names only `docs/ai/ticket-lifecycle.md`); this entry is the first ledger
+    coverage for this parser, established at its first behavior-changing follow-up rather than
+    retroactively for the original introduction, consistent with INFRA-321's own "first ledger
+    entry for this module" precedent for a comparably-aged unwired predecessor
+    (`TCK-20260710-WORKFLOW-META-CONFORMANCE-CHECK`). `_DOCS_BULLET_RE`'s separate, already-known
+    `:line`-suffix-inside-backticks bug (`TCK-20260804-EXPANSION-RATE-WIRING`) remains live and
+    unfixed -- explicitly out of this entry's scope, not claimed as covered here.

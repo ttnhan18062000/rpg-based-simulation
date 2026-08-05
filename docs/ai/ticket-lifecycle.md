@@ -19,7 +19,7 @@ The workflow short-circuits based on the ticket's `## Tier` field:
 
 | Tier | Phases run | Use when |
 |---|---|---|
-| `hotfix` | Scope → Implement → Document-Update → Test → Parity → Verify → Finalize | Targeted fix with self-evident intent — no investigation needed |
+| `hotfix` | Scope → Implement → Document-Update → Test → Parity → (Security-Review, if `security`-tagged) → Verify → Finalize | Targeted fix with self-evident intent — no investigation needed |
 | `standard` | Full 11-phase pipeline (default) | Any substantive feature, repair, or refactor |
 | `epic` | Scope only | Large initiative; tracks child tickets, no direct implementation |
 
@@ -530,6 +530,17 @@ pre-check, `tools/gate_checks/mechanics_auditor_static.py::verify_entry_test_pat
    not inside the Finalize agent's own prompt — see the post-Test cleanup checkpoint's Reliability
    caveat above for why a bare, non-`phase()`-anchored agent-prompt bash instruction is not trusted
    for this kind of step.
+9. **Advisory-only Finalize-tail checks** (`implement-ticket.js:1502-1581`, added incrementally by
+   `TCK-20260708-AGENT-GATE-ENFORCEMENT-HARDENING`, `TCK-20260720-TAG-RELEVANCE-VERIFY`, and
+   `TCK-20260804-SKILL-DRIFT-DETECTION`): three checks run immediately after step 7's monitoring
+   write — `check_monitoring_write_recorded` (confirms the write in step 7 actually landed),
+   `check_tag_drift` (flags a possible mismatch between the ticket's declared `tags:` and its
+   `Files Changed`/`Related Code Areas` content; uses `CLEAN`/`FLAGGED`, never `PASS`/`FAIL`, so it
+   can never be misread as a DoD condition), and `check_workflow_meta_conformance` (flags a
+   workflow phase declared in `meta.phases` that fired zero events during this run; `Security-Review`
+   is filtered out at the call site since it legitimately emits zero events on non-`security`-tagged
+   tickets). All three are logged `WARNING`s only and never change the terminal `status` away from
+   `DONE`.
 
 ---
 

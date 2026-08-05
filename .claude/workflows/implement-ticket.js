@@ -1011,6 +1011,13 @@ const testResult = await agent(
 
 Files changed:
 ${implementation.files_changed.join('\n')}
+${(ticketInfo.tags && ticketInfo.tags.includes('performance')) ? `
+This ticket is tagged \`performance\` — always include \`tests/unit/perf/\` and \`tests/perf/\` (with
+\`-m "not slow"\`) in the scoped pytest command regardless of which src/ paths were touched. A
+performance-motivated change is frequently outside src/perf/ itself (e.g. a hot-path optimization
+in src/engine/ or src/world/), so the naming-convention mapping in Step 1 alone would miss the real
+regression-gate check (PerfRegressionGate, docs/performance/perf_baseline_policy.md §3) this tag
+exists to trigger.` : ''}
 
 Step 1 — Map each changed src/ file to its tests/unit/ counterpart. For changes to src/core/, src/systems/, or src/engine/, also find transitive test dependents via grep.
 
@@ -1545,6 +1552,38 @@ if (tagDriftMarkerIndex !== -1) {
 if (tagDriftCheck !== null && tagDriftCheck.status === 'FLAGGED') {
   pushEvent('Finalize', 'finalizer', 'failed', ('tag_drift: ' + tagDriftCheck.evidence).slice(0, 200))
   log(`WARNING: possible tag drift for ${tid} — ${tagDriftCheck.evidence}`)
+}
+
+// Advisory-only workflow-meta-conformance check (TCK-20260710-WORKFLOW-META-CONFORMANCE-CHECK,
+// wired in by TCK-20260804-SKILL-DRIFT-DETECTION) — mirrors check_monitoring_write_recorded's
+// placement: runs after status is already 'DONE', never gates ticket close. Security-Review is
+// filtered out of the FAIL set at THIS call site (not inside workflow_meta_conformance.py itself,
+// per TCK-20260710's no-per-workflow-allowlist Scope Guard on that module) because it is a
+// conditionally-skipped phase that emits zero events (not even 'skipped') for every
+// non-security-tagged ticket — see docs/agent-monitoring/schema.md and
+// test_workflow_meta_conformance.py's xfail(strict=True) guard for the underlying gap this
+// filter works around.
+const phaseMetaCheckOutput = await bash(
+  `python3 -c "
+import sys, json
+sys.path.insert(0, 'tools')
+from gate_checks.workflow_meta_conformance import check_workflow_meta_conformance, summarize_conformance_results
+results = check_workflow_meta_conformance(sys.argv[1])
+results = [r for r in results if r.get('phase') != 'Security-Review']
+status, evidence = summarize_conformance_results(results)
+print('PHASE_META_CHECK_JSON:' + json.dumps({'status': status, 'evidence': evidence}))
+" "${tid}"`
+)
+let phaseMetaCheck = null
+const phaseMetaMarkerIndex = phaseMetaCheckOutput.indexOf('PHASE_META_CHECK_JSON:')
+if (phaseMetaMarkerIndex !== -1) {
+  try {
+    phaseMetaCheck = JSON.parse(phaseMetaCheckOutput.slice(phaseMetaMarkerIndex + 'PHASE_META_CHECK_JSON:'.length).trim())
+  } catch (e) { phaseMetaCheck = null }
+}
+if (phaseMetaCheck !== null && phaseMetaCheck.status === 'FAIL') {
+  pushEvent('Finalize', 'finalizer', 'failed', ('phase_meta_conformance: ' + phaseMetaCheck.evidence).slice(0, 200))
+  log(`WARNING: possible phase-meta drift for ${tid} — ${phaseMetaCheck.evidence}`)
 }
 
 return {

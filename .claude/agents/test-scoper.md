@@ -33,6 +33,7 @@ tests/unit/
 
 - Scope to the domain under modification first.
 - Expand to cross-cutting tests only when the change touches shared infrastructure (`src/core/`, `src/systems/`, `src/engine/`).
+- If the orchestrator's prompt states the ticket is tagged `performance`, always include `tests/unit/perf/` and `tests/perf/` (with `-m "not slow"`) in the scoped command, regardless of which `src/` paths were changed — a performance-motivated change is frequently outside `src/perf/` itself (e.g. a hot-path change in `src/engine/` or `src/world/`), so the naming-convention mapping alone would miss the real regression-gate check (`PerfRegressionGate`, `docs/performance/perf_baseline_policy.md` §3) this tag exists to trigger.
 - Never output `pytest tests/` — always scope to specific paths or use `-m "not slow"` at minimum.
 - If a changed file has no corresponding test directory, flag it explicitly as untested.
 

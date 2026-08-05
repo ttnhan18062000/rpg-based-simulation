@@ -33,6 +33,16 @@ skills:
     workflows: []
     roles: []
     companion_assets: [spec-document-reviewer-prompt.md, visual-companion.md, scripts/frame-template.html, scripts/helper.js, scripts/server.cjs, scripts/start-server.sh, scripts/stop-server.sh]
+  - id: combat-mechanics
+    description: Deterministic combat resolution (damage formula, tactical modifiers) and CombatPosture pre-combat assessment in src/domains/combat_engagement/.
+    workflows: []
+    roles: []
+    companion_assets: []
+  - id: cognition-strategy
+    description: Internal self-model, bounded strategic appraisal, goal hierarchy, and interruption resistance across src/cognition/, src/strategy/, src/ai/goals/ — foregrounds the boundary between them.
+    workflows: []
+    roles: []
+    companion_assets: []
   - id: create-tickets
     description: Ticket creation/scoping workflow — comprehend, investigate, structure, write, link.
     workflows: []
@@ -63,6 +73,16 @@ skills:
     workflows: [implement-ticket]
     roles: []
     companion_assets: []
+  - id: observability
+    description: HardLawMonitor's 7 invariant laws, ObservabilityMode policy, and EventRecorder backpressure modes in src/observability/.
+    workflows: []
+    roles: []
+    companion_assets: []
+  - id: progression-entities
+    description: Core attributes, derived combat stats, XP curve, level-up execution, and AP allocation across src/entities/ and src/progression/.
+    workflows: []
+    roles: []
+    companion_assets: []
   - id: prompt-builder
     description: Guides creation of high-quality structured prompts with proper tool and format conventions.
     workflows: []
@@ -80,6 +100,16 @@ skills:
     companion_assets: []
   - id: simq-audit
     description: Recalibration/drift-classification audit workflow for simulation quality.
+    workflows: []
+    roles: []
+    companion_assets: []
+  - id: simq-dev
+    description: Development/debugging side of simulation_quality scorers — adding pillars, adding scoring rules, debugging a wrong score.
+    workflows: []
+    roles: []
+    companion_assets: []
+  - id: systems-economy
+    description: Economy, crafting, harvest, market, quest, guild logic in src/systems/ — atomic conservation, inventory limits, market/reputation formulas.
     workflows: []
     roles: []
     companion_assets: []

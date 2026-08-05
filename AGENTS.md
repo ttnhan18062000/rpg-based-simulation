@@ -13,6 +13,7 @@ All durable-state changes in this simulation are refined through the 32-phase au
 - Plan
 - Review
 - Implement
+- Document-Update
 - Architecture-Verify
 - Test
 - Parity
@@ -34,6 +35,7 @@ Do not stop merely for:
 - work that can safely proceed under the approved ticket scope
 
 - `architecture-reviewer` — Validates the plan against durable-state, API-boundary, registry, and Mechanics Bible rules before implementation, then re-validates the actual diff after implementation.
+- `doc-updater` — After a behavior change is implemented, updates the relevant docs/ files (outside parity_ledger/, audits/, archive/, scenarios/, entity/) to reflect the new state.
 - `done-checker` — Verifies all Definition-of-Done conditions before a ticket can move to tickets/done/.
 - `finalizer` — Closes out the ticket — DoD checks, artifact migration, working_log, monitoring writes.
 - `implementer` — Writes the code changes described in the approved plan, following the project's durable-state and API-boundary architecture constraints.
@@ -51,14 +53,20 @@ Do not stop merely for:
 - `architecture` — Architectural decision-making framework — requirements analysis, trade-off evaluation, ADR documentation. (see `.agents/skills/architecture/SKILL.md`)
 - `backend-testing` — Writes comprehensive backend unit, integration, and API tests. (see `.agents/skills/backend-testing/SKILL.md`)
 - `brainstorming` — Explores user intent, requirements, and design before creative implementation work. (see `.agents/skills/brainstorming/SKILL.md`)
+- `combat-mechanics` — Deterministic combat resolution (damage formula, tactical modifiers) and CombatPosture pre-combat assessment in src/domains/combat_engagement/. (see `.agents/skills/combat-mechanics/SKILL.md`)
+- `cognition-strategy` — Internal self-model, bounded strategic appraisal, goal hierarchy, and interruption resistance across src/cognition/, src/strategy/, src/ai/goals/ — foregrounds the boundary between them. (see `.agents/skills/cognition-strategy/SKILL.md`)
 - `create-tickets` — Ticket creation/scoping workflow — comprehend, investigate, structure, write, link. (see `.agents/skills/create-tickets/SKILL.md`)
 - `debugging-strategies` — Systematic debugging techniques, profiling tools, and root cause analysis. (see `.agents/skills/debugging-strategies/SKILL.md`)
 - `doc-coauthoring` — Structured workflow for co-authoring documentation, proposals, and technical specs. (see `.agents/skills/doc-coauthoring/SKILL.md`)
 - `frontend-design` — Produces distinctive, production-grade frontend interfaces and UI components. (see `.agents/skills/frontend-design/SKILL.md`)
 - `implement-epic` — Scopes and tracks child tickets for a large multi-ticket initiative. (see `.agents/skills/implement-epic/SKILL.md`)
 - `implement-ticket` — Full ticket implementation workflow orchestrator — scope through finalize. (see `.agents/skills/implement-ticket/SKILL.md`)
+- `observability` — HardLawMonitor's 7 invariant laws, ObservabilityMode policy, and EventRecorder backpressure modes in src/observability/. (see `.agents/skills/observability/SKILL.md`)
+- `progression-entities` — Core attributes, derived combat stats, XP curve, level-up execution, and AP allocation across src/entities/ and src/progression/. (see `.agents/skills/progression-entities/SKILL.md`)
 - `prompt-builder` — Guides creation of high-quality structured prompts with proper tool and format conventions. (see `.agents/skills/prompt-builder/SKILL.md`)
 - `python-performance-optimization` — Profiles and optimizes Python code using cProfile, memory profilers, and performance best practices. (see `.agents/skills/python-performance-optimization/SKILL.md`)
 - `python-testing-patterns` — Comprehensive pytest testing strategies — fixtures, mocking, test-driven development. (see `.agents/skills/python-testing-patterns/SKILL.md`)
 - `simq-audit` — Recalibration/drift-classification audit workflow for simulation quality. (see `.agents/skills/simq-audit/SKILL.md`)
+- `simq-dev` — Development/debugging side of simulation_quality scorers — adding pillars, adding scoring rules, debugging a wrong score. (see `.agents/skills/simq-dev/SKILL.md`)
+- `systems-economy` — Economy, crafting, harvest, market, quest, guild logic in src/systems/ — atomic conservation, inventory limits, market/reputation formulas. (see `.agents/skills/systems-economy/SKILL.md`)
 - `test-driven-development` — Write-tests-first workflow used before implementing any feature or bugfix. (see `.agents/skills/test-driven-development/SKILL.md`)

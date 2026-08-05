@@ -307,6 +307,33 @@ def check_ticket_field_values_valid(
 
 _DOCS_BULLET_RE = re.compile(r"^-\s+`(docs/[^`]+)`", re.MULTILINE)
 _DOCS_NONE_PHRASES = {"", "none", "none.", "n/a"}
+_DOCS_NONE_PREFIX_RE = re.compile(r"^(none|n/a)\.?\s*", re.IGNORECASE)
+
+
+def _is_none_section(section_text: str) -> bool:
+    """True if section_text should be treated as "no docs/ paths flagged."
+
+    Two cases both count:
+    1. An exact recognized none-phrase (`_DOCS_NONE_PHRASES`, case-insensitive,
+       whitespace-stripped) — the original, still-supported exact form.
+    2. A leading "None."/"N/A" prefix (case-insensitive, optional trailing period) followed by
+       trailing rationale prose that itself contains no `- \`docs/...\`` bullet line. This
+       tolerates the real observed failure mode (TCK-20260804-AGENT-DEF-GAP-FIXES
+       investigation, corrected by architecture-review): an investigator writing
+       "None. <extra rationale sentence>" instead of exactly "None." — see plan.md's Decision
+       section for the confirmed real-ticket evidence (`TCK-20260803-DOCS-STRUCTURE-AUDIT`'s
+       own logged Verify-failure text). A "None"-led opening that is in fact followed by a real
+       bullet (e.g. "None of the above, but `docs/foo.md` needs updating") still correctly
+       requires that path — case 2 only fires when no bullet is found in the remainder.
+    """
+    stripped = section_text.strip()
+    if stripped.lower() in _DOCS_NONE_PHRASES:
+        return True
+    m = _DOCS_NONE_PREFIX_RE.match(stripped)
+    if not m:
+        return False
+    remainder = stripped[m.end():]
+    return _DOCS_BULLET_RE.search(remainder) is None
 
 
 def _git_touched_paths(root: Path = Path(".")) -> set[str]:
@@ -361,9 +388,11 @@ def _parse_docs_to_update(section_text: str) -> list[str]:
     Requires the tightened format (TCK-20260802-DOC-COVERAGE-CHECK): one bullet per path, each
     starting with `- ` followed immediately by a backtick-wrapped `docs/...` path. Free-text after
     the path (the reason) is not validated — only the leading path token is parsed. Returns `[]`
-    for an empty section or a recognized "none applicable" phrase (case-insensitive).
+    for an empty section, a recognized "none applicable" phrase (case-insensitive, exact match), or
+    a "None."/"N/A"-prefixed section whose remaining text contains no docs/ bullet — tolerates
+    trailing rationale prose after "None." (see `_is_none_section`, TCK-20260804-AGENT-DEF-GAP-FIXES).
     """
-    if section_text.strip().lower() in _DOCS_NONE_PHRASES:
+    if _is_none_section(section_text):
         return []
     return _DOCS_BULLET_RE.findall(section_text)
 
@@ -406,7 +435,7 @@ def check_docs_to_update_coverage(
     required_docs = _parse_docs_to_update(section_text)
 
     if not required_docs:
-        if section_text.strip().lower() in _DOCS_NONE_PHRASES:
+        if _is_none_section(section_text):
             return ("PASS", "no docs/ paths flagged as requiring update")
         return (
             "FAIL",

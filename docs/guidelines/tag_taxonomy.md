@@ -60,6 +60,20 @@ serve future scenarios 1-2 (tag-driven skill suggestion, tag-driven gate routing
 tag names are chosen to line up with the skill/process they would eventually trigger, so a later
 routing table is a lookup, not a re-mapping exercise.
 
+`security` is the only tag converted to a full binding gate (a dedicated `Security-Review` phase,
+`TCK-20260705-WORKFLOW-SECURITY-GATE`). `TCK-20260805-SKILL-GATE-CONVERSION-DECISION` investigated
+whether `api-design`/`performance`/`debugging` should follow the same pattern and found the
+asymmetry matters: `api-design` and `debugging` have no deterministic pass/fail verdict shape a
+gate could check, so both remain advisory-only. `performance` does have a real, pre-existing
+verdict shape (`PerfRegressionGate`, `docs/performance/perf_baseline_policy.md` §3) — but rather
+than duplicating it as a second phase, `performance`-tagged tickets now get a routed enrichment of
+the *existing* Test phase (`ticketInfo.tags.includes('performance')` in
+`.claude/workflows/implement-ticket.js`'s Test-phase prompt, mirrored in
+`.claude/agents/test-scoper.md`), ensuring `tests/unit/perf/`/`tests/perf/` are always included in
+that ticket's scoped run regardless of which `src/` paths changed. Not a full gate like
+`security`, but the first real instance of tag-driven *routing* this category's own rationale
+names above.
+
 ### Quality-attribute
 
 Cross-cutting characterizations of a change's *nature*, not tied to a specific skill or process —

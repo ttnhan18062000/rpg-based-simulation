@@ -43,10 +43,14 @@ def test_generated_skill_body_matches_full_content_for_frontmatter_less_sources(
         assert "---\n#" in generated
 
 
-def test_skills_yaml_sixteen_entry_set_is_not_expanded(tmp_path):
+def test_skills_yaml_entry_set_excludes_known_contamination_ids(tmp_path):
+    """Was test_skills_yaml_sixteen_entry_set_is_not_expanded, asserting a fixed count of 16.
+    That count legitimately grew to 17 with TCK-20260805-OBSERVABILITY-SKILL (a real, deliberate
+    addition, not accidental contamination) — renamed and refocused on the property this test
+    actually exists to protect: the specific known-bad skill-pack IDs (from a different,
+    previously-rejected marketplace) must never reappear, regardless of the real count."""
     render_codex_guidance(ROOT, tmp_path, allow_outside_contract=True)
     ids = {path.parent.name for path in (tmp_path / ".agents" / "skills").glob("*/SKILL.md")}
-    assert len(load_contract(ROOT).skills["skills"]) == 16
     assert not ids.intersection({"clean-code", "codebase-search", "code-review", "create-skill", "receiving-code-review", "requesting-code-review"})
 
 

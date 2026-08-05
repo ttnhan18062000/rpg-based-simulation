@@ -26,7 +26,7 @@ Parse the user's input to extract:
 
 **Do not call the Workflow tool — it is not available.** Execute the workflow directly:
 
-1. Read `.claude/workflows/create-tickets.js` in full before doing anything else.
+1. Read `.claude/workflows/create-tickets.js` in full before doing anything else — it is the authoritative source; this file is a translation aid and can drift from it (see TCK-20260804-CREATE-TICKETS-SKILL-SYNC, which corrected exactly that). If the two ever disagree, the JS wins.
 2. Execute each phase block in order, translating JS constructs to tool calls as follows:
 
 | JS construct | What to do |
@@ -35,6 +35,7 @@ Parse the user's input to extract:
 | `log(msg)` | Output the message to the user |
 | `await agent(prompt, { agentType: 'name', schema: S })` | Spawn `Agent(subagent_type: "name", prompt: prompt)`; parse its JSON response and validate it matches schema S |
 | `await agent(prompt, { label: 'L' })` | Spawn `Agent(prompt: prompt)` — no specific agent type; label is for monitoring context only |
+| Orchestrator-run `await bash(...)` (no `agent()` wrapper) | Run the exact command yourself via Bash — never delegate to a sub-agent prompt, never skip it |
 | `await writeMonitoring(finalStatus)` | Execute the monitoring write block defined in that function in the JS — mandatory at every exit point; use `python3 tools/agent-monitoring/record_run.py` and `record_events.py`, never write to those files directly |
 | `return { status, ... }` | Report the final status and relevant fields to the user |
 
@@ -74,8 +75,10 @@ Parse the user's input to extract:
 
    **Step 6 — Derive AC signals** from concern + code behavior + doc constraints + test patterns.
 
-3. **Structure** — one synthesis agent takes all investigation results and produces properly-formed ticket fields: real file paths from grep, concrete ACs from code evidence, correct tier from scope, author's intent preserved in request_summary.
-4. **Write** — creates `TCK-YYYYMMDD-<SHORT-SCOPE>.md` per task into the output folder (parallel).
+3. **Structure** — one synthesis agent takes all investigation results and produces properly-formed ticket fields: real file paths from grep, concrete ACs from code evidence, correct tier from scope, author's intent preserved in request_summary. After the agent returns, two orchestrator-run checks narrow the batch before Write — never delegate either to a sub-agent:
+   - **`short_scope` dedup** (`create-tickets.js:559-574`, plain JS logic, no bash call): if the Structure agent produced two tasks with the same `short_scope` despite instructions, drop the second silently and log a `WARNING:` — do not write duplicate files.
+   - **Tag-registry gate** (`create-tickets.js:576-614`, orchestrator-run bash): run `python3 -c "...from tag_registry import check_tags_registered; ..."` against the full batch's tag set. Any task carrying a tag `check_tags_registered()` flags as unregistered is filtered OUT of the write set (not written), a `blocked`-status event is pushed, and a log line tells the user to register the tag (`python3 tools/tag_registry.py add <tag> --category <cat> --note "..."`) and re-run to pick up the skipped concern. This narrows the batch — it does **not** abort the whole run over one task's tag.
+4. **Write** — creates `TCK-YYYYMMDD-<SHORT-SCOPE>.md` per task into the output folder (parallel), using only the tasks that survived both checks above.
 5. **Link** — if `epic_id` given, appends the new ticket IDs to the epic's `## Related Tickets` section.
 
 ## Notes

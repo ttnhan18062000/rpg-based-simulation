@@ -30,7 +30,7 @@ If the input is ambiguous (no prefix), treat as a folder path if it contains `/`
 **Do not call the Workflow tool — it is not available.** Execute the workflow directly:
 
 1. Read `.claude/workflows/implement-epic.js` in full before doing anything else.
-2. Execute each phase using the same JS → tool translation as `implement-ticket` (see that skill's translation table).
+2. Execute each phase using the same JS → tool translation as `implement-ticket` (see that skill's translation table) — **including its "Gate Integrity" hard rule**: never edit a gate-relevant artifact to make a check pass, whether directly or by instructing a further sub-agent to do it. This applies with extra force here, since `implement-epic`'s own orchestrator is already one level of delegation removed from each child ticket's pipeline, and may delegate individual phases to sub-agents of its own — every one of those hops is bound by the same rule, not just the top level.
 3. For the `await workflow('implement-ticket', args)` call inside the ticket loop:
    - Do not call a Workflow tool.
    - Instead, read `.claude/workflows/implement-ticket.js` and execute the full implement-ticket pipeline for that `ticket_id`, following the same translation rules.

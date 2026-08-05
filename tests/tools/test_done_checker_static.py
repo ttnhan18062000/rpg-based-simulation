@@ -1207,6 +1207,24 @@ def test_parse_docs_ignores_non_bullet_prose():
     assert _parse_docs_to_update(section) == []
 
 
+def test_parse_docs_none_with_trailing_rationale_prose():
+    # Reproduces the real observed failure (TCK-20260803-DOCS-STRUCTURE-AUDIT's own logged
+    # Verify-failure text: "fails the static none-phrase/bullet parser due to trailing rationale
+    # prose") — "None." plus an extra rationale sentence, not byte-identical to "none.".
+    section = "None. This ticket is documentation-prose-only and touches no docs/ files directly."
+    assert _parse_docs_to_update(section) == []
+
+
+def test_parse_docs_none_prefix_with_later_bullet_still_parses():
+    # Guards against Option (a)'s false-PASS risk (see plan.md Decision section): a "None"-led
+    # opening clause must not swallow a genuine bullet that follows later in the same section.
+    section = (
+        "None of the initially-considered docs needed changes, but on reflection:\n"
+        "- `docs/mechanics/x.md`: reason\n"
+    )
+    assert _parse_docs_to_update(section) == ["docs/mechanics/x.md"]
+
+
 # ---------------------------------------------------------------------------
 # _git_touched_paths (TCK-20260802-DOC-COVERAGE-CHECK)
 # ---------------------------------------------------------------------------
@@ -1311,6 +1329,43 @@ def test_docs_coverage_explicit_none_passes(tmp_path):
     _write_investigation(base, "TCK-FAKE", "None.")
     status, evidence = check_docs_to_update_coverage("TCK-FAKE", "standard", base_dir=base)
     assert status == "PASS"
+
+
+def test_docs_coverage_none_with_trailing_rationale_passes(tmp_path):
+    # End-to-end regression test for the actual observed FAIL, at the exact call site
+    # (check_docs_to_update_coverage) that produced it for TCK-20260803-DOCS-STRUCTURE-AUDIT,
+    # TCK-20260803-DOC-UPDATER-DASHBOARD-PALETTE, TCK-20260803-DOC-UPDATER-VOCAB-REGISTRATION.
+    base = tmp_path / "staging_artifacts"
+    _write_investigation(
+        base,
+        "TCK-FAKE",
+        "None. This ticket only touches tooling/test files, no docs/ content changes needed.",
+    )
+    status, evidence = check_docs_to_update_coverage("TCK-FAKE", "standard", base_dir=base)
+    assert status == "PASS"
+
+
+def test_docs_coverage_none_prefix_but_real_bullet_still_required(tmp_path, monkeypatch):
+    # A "None of the..." opening clause followed by a real, untouched bullet must still FAIL —
+    # confirms the Option (b) remainder-check keeps working end-to-end, not just at parse level.
+    subprocess.run(["git", "init", "-q"], cwd=tmp_path, check=True)
+    subprocess.run(["git", "config", "user.email", "test@example.com"], cwd=tmp_path, check=True)
+    subprocess.run(["git", "config", "user.name", "Test"], cwd=tmp_path, check=True)
+
+    base = tmp_path / "staging_artifacts"
+    _write_investigation(
+        base,
+        "TCK-FAKE",
+        "None of the originally-scoped docs, but on reflection:\n"
+        "- `docs/mechanics/x.md`: reason\n",
+    )
+    monkeypatch.chdir(tmp_path)
+
+    status, evidence = check_docs_to_update_coverage(
+        "TCK-FAKE", "standard", base_dir=Path("staging_artifacts")
+    )
+    assert status == "FAIL"
+    assert "docs/mechanics/x.md" in evidence
 
 
 def test_docs_coverage_unparseable_non_none_section_fails(tmp_path):

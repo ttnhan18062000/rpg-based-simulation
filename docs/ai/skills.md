@@ -46,6 +46,18 @@ phase, surfaced via `log(...)` in `implement-ticket.js`'s Scope phase. See
 [`docs/guides/ticket_tagging.md`](../guides/ticket_tagging.md) for the full tag→skill mapping and the
 related registry-search-filter mechanism — not duplicated here.
 
+The tag→skill mapping itself is single-sourced, not a hand-copied table: it lives as a
+`triggers_skill` field on each tag's `tag_registry.jsonl` row, read live via
+`tools/tag_registry.py::get_skill_mapping()` (or `python3 tools/tag_registry.py skill-mapping` from
+the CLI) — every consumer (`ticket-scoper.md`, `ticket_tagging.md`, `create-tickets.js`,
+`implement-ticket.js`) reads this one source (`TCK-20260720-SKILL-MAPPING-DEDUP`).
+
+For 3 of the 4 tags (`api-design`, `debugging`, `performance`), the suggestion stays purely
+advisory — logged, never enforced. `security` is the one exception: it is no longer advisory-only.
+`implement-ticket.js` runs a mandatory `Security-Review` gate whenever a ticket's frontmatter `tags`
+includes `security` (ground truth) or `suggested_skills` includes `/security-review` — this can
+block ticket close (`SECURITY_BLOCKED`) (`TCK-20260705-WORKFLOW-SECURITY-GATE`).
+
 ---
 
 ## Project Skills (Workflow Shortcuts)
@@ -182,6 +194,12 @@ These skills are Python and engineering patterns adapted for this project and st
 | `/prompt-builder` | `prompt-builder/SKILL.md` | Prompt construction guidance |
 | `/frontend-design` | `frontend-design/SKILL.md` | Frontend component design |
 | `/agent-monitoring-retro` | `agent-monitoring-retro/SKILL.md` | Agent monitoring retro report generation |
+| `/observability` | `observability/SKILL.md` | `src/observability/` — HardLawMonitor's 7 laws, `ObservabilityMode` policy, `EventRecorder` backpressure modes (added `TCK-20260805-OBSERVABILITY-SKILL`, part of the domain-coverage sweep — a real, mature subsystem that had zero prior skill/agent coverage) |
+| `/simq-dev` | `simq-dev/SKILL.md` | Development/debugging side of `src/simulation_quality/` — adding scorers/pillars, debugging a wrong score. Complements `/simq-audit`'s audit-only coverage, does not duplicate it (added `TCK-20260805-SIMQ-DEV-SKILL`) |
+| `/systems-economy` | `systems-economy/SKILL.md` | `src/systems/` — atomic conservation, inventory limits, market/reputation-discount formulas, crafting, quests, guild — sourced from the Mechanics Bible's Economic Laws chapter (added `TCK-20260805-SYSTEMS-SKILL`, the largest single domain gap found in the sweep) |
+| `/combat-mechanics` | `combat-mechanics/SKILL.md` | `src/domains/combat_engagement/` and combat resolution — deterministic damage formula, tactical modifiers, `CombatPosture` pre-combat assessment, the Sliding State pipeline-ordering rule (added `TCK-20260805-COMBAT-SKILL`) |
+| `/cognition-strategy` | `cognition-strategy/SKILL.md` | `src/cognition/`, `src/strategy/`, `src/ai/goals/` — foregrounds the cognition/strategy/domain-decision boundary a generic skill would get wrong; goal hierarchy, interruption resistance, bounded strategic appraisal scoring (added `TCK-20260805-COGNITION-STRATEGY-SKILL`, flagged the highest-value gap in the sweep) |
+| `/progression-entities` | `progression-entities/SKILL.md` | `src/entities/`, `src/progression/` — core attributes, derived stat formulas, XP curve, level-up execution, AP allocation gates (added `TCK-20260805-PROGRESSION-ENTITIES-SKILL`, the last of the 6 confirmed domain-coverage-sweep gaps) |
 
 ---
 

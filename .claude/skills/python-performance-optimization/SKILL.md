@@ -43,6 +43,22 @@ Comprehensive guide to profiling, analyzing, and optimizing Python code for bett
 - **Caching**: Avoid redundant computation
 - **Native Extensions**: C/Rust for critical paths
 
+## In This Repo
+
+This repo already has a real, deterministic performance regression gate — `PerfRegressionGate`
+(`src/perf/regression_gate.py`, `tests/unit/perf/test_perf_regression_gate.py`), checking p50/p95
+tick-latency and memory-stability thresholds against baselines
+(`docs/performance/perf_baseline_policy.md` §3). Any profiling work aimed at fixing a real
+regression should be verified against that gate, not just against ad-hoc `cProfile` output.
+
+The actual hot path most performance work in this repo touches is the tick loop's 32-phase
+`AuthoritativeApplyPipeline` (`docs/engine/authoritative_pipeline.md`) and its `DirtySet`
+optimization layer (`docs/core/dirty_state_and_dependency.md`, `src/core/dirty.py`) — the
+mechanism that avoids an O(N) full-entity-population scan every phase. Before assuming a
+bottleneck is algorithmic, check whether it's actually a `DirtySet` mis-scoping issue (a
+`force_full_scan` bypass firing when it shouldn't, or a domain not being marked dirty when it
+should be).
+
 ## Quick Start
 
 ### Basic Timing

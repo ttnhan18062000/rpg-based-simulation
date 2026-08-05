@@ -58,6 +58,28 @@ limits inline via a `derivation`/`disclosure`/`reason` field — never a silent 
 `docs/parity_ledger/infrastructure.yaml`'s `INFRA-292` entry for exact source line-range
 provenance of each section.
 
+## Security Gate Firing Check
+
+`tools/agent-monitoring/security_gate_firing_check.py` is a separate, read-only pass/fail check
+(distinct from `compute_retro_metrics()`'s aggregate `tag_breakdown_skill` count above) that
+classifies every `security`-tagged ticket into `missed` (a `DONE` run with no `Security-Review`
+event ever recorded — the gate should have fired and didn't), `clean` (a `DONE` run with a
+`Security-Review` event or `SECURITY_BLOCKED` status somewhere in its history), or `pending` (not
+yet reached `DONE`, not evaluable). Exits `1` if `missed` is non-empty. Built by
+`TCK-20260805-SECURITY-GATE-FIRING-MONITOR` after `TCK-20260731-GATE-BYPASS-HARDENING` proved that
+a gate's code being structurally correct does not guarantee it fired on a real historical run.
+
+## Skill Usage Metric
+
+`tools/agent-monitoring/skill_usage_metric.py` is a separate, read-only per-skill invocation-count
+tool (distinct from `compute_retro_metrics()`'s `tag_breakdown_skill` above, which counts
+tag-driven gate hits, not raw invocations) that answers "how many times was each skill actually
+invoked" by filtering `tools.jsonl` to `tool == 'Skill'` and extracting the skill name from
+`input_summary` via regex (that field is a Python dict-repr string, not JSON — `json.loads()` on
+it raises). Reports `per_skill`, `per_skill_per_run`, and an `unparseable` count for any record the
+regex can't match. Built by `TCK-20260805-SKILL-USAGE-METRIC` after this session's own skill-usage
+audit found this question previously required ad hoc regex against raw `tools.jsonl` every time.
+
 ## Navigation
 
 | Doc | Contents |

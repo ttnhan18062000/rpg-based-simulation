@@ -47,6 +47,20 @@ Comprehensive guide to implementing robust testing strategies in Python using py
 - No shared state between tests
 - Each test should clean up after itself
 
+## In This Repo
+
+This repo's own pytest conventions layer on top of the generic patterns below:
+- Never run a bare `pytest tests/` — always scope to the domain under modification, or at minimum
+  add `-m "not slow"` (CLAUDE.md's Testing Rule; the `test-scoper` agent builds the correct scoped
+  command from a set of changed files during `implement-ticket`'s Test phase).
+- `slow`/`not slow` are real, registered pytest markers in this repo — CI itself runs with
+  `-m "not slow"` on most jobs (`.github/workflows/test.yml`); a `performance`-tagged ticket
+  additionally always includes `tests/unit/perf/`/`tests/perf/` regardless of which `src/` paths
+  changed (`TCK-20260805-SKILL-GATE-CONVERSION-DECISION`).
+- For API-layer tests specifically, see the `backend-testing` skill — this repo's real convention
+  (subprocess-launched live server + `requests`) differs from the in-process `TestClient` pattern
+  a generic FastAPI testing guide would otherwise suggest.
+
 ## Quick Start
 
 ```python
