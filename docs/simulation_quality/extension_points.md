@@ -283,18 +283,29 @@ diagnostic question.
 
 **Why this matters:** directly serves the "do the scores help you troubleshoot" quality question
 raised earlier this session (2026-08-03) — if two pillars degrade in the same tick range today,
-nothing surfaces that as a compound signal distinct from two coincidental, unrelated grades. No
-evidence yet on how often correlated degradation actually occurs across the corpus — this is a
-real, named gap, not a validated opportunity; it needs investigation before any implementation
-would be justified.
+nothing surfaces that as a compound signal distinct from two coincidental, unrelated grades.
+
+**Investigated and closed 2026-08-05** (`TCK-20260805-SIMQ-CROSS-PILLAR-CORRELATION-INVESTIGATION`):
+analyzed all 76 real calibration reports for tick-window overlap in negative `worst_events` across
+pillar pairs. **No meaningful cross-pillar correlation exists in the current corpus.** The one
+apparent signal (PROGRESSION↔SOCIAL, 81% overlap across 16 reports) traced back to a methodological
+artifact, not a real compound-failure signature: `progression_plateau_detected` fires at a fixed
+tick (51, identical in every report — a scoring-rule tick-gate, not an emergent event) which
+collides with `contract_expired_offer`'s near-continuous event stream (99 negative events across a
+140-tick span in one sampled report) — any pillar's event anywhere in that window would register a
+false "overlap" regardless of causation. No other pillar pair exceeded 25%, and all non-zero pairs
+had samples too small (≤10 reports) to distinguish from chance. Building a correlation-detection
+layer today would have nothing real to detect.
 
 **Extend via:** would need a new layer above `QualityReport` (not inside any single scorer) that
 reads multiple pillars' `worst_events`/tick ranges after a run completes and looks for tick-range
-overlap or event-tag co-occurrence across pillars.
+overlap or event-tag co-occurrence across pillars — not currently justified, revisit if the corpus
+composition changes substantially (e.g. a stress-tier world deliberately designed to cascade
+failures across pillars) or a real incident surfaces correlated degradation manually.
 
-**Governing doc:** none yet — investigation tracked in
-`TCK-20260805-SIMQ-CROSS-PILLAR-CORRELATION-INVESTIGATION` (determines whether correlated
-degradation actually occurs in the corpus before any build is justified).
+**Governing doc:** none — investigated, no build justified. See
+`stored_artifacts/TCK-20260805-SIMQ-CROSS-PILLAR-CORRELATION-INVESTIGATION/investigation.md` for
+the full analysis.
 
 ---
 
