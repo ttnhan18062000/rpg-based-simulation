@@ -1441,3 +1441,26 @@
     tests/simulation_quality/test_traceability_path.py::test_spawn_occupancy_violation_reaches_world_pillar_via_real_kernel_construction
   divergence_note: null
   support_boundary: null
+- id: WORLD-114
+  text: >
+    Of the 7 real HardLawMonitor laws, only LAW-SPAWN-OCCUPANCY (WORLD-113) was bridged into SimQ.
+    The other 6 fell through _translate_invariant() untranslated. LAW-HP-NONNEGATIVE and
+    LAW-READINESS-NONNEGATIVE (combat-domain, DirtySet.combat_entities) now route to the existing
+    combat_hard_law_violation signal (CombatScorer); LAW-GOLD-NONNEGATIVE (economic invariant)
+    routes to the existing conservation_law_violated signal (EconomyScorer); LAW-STAMINA-NONNEGATIVE,
+    LAW-POSITION-FINITE, and LAW-OCCUPANCY-COLLISION (biological/movement domain, no existing
+    generic signal fit) route to a new world_hard_law_violation signal (WorldDynamicsScorer,
+    weight -30.0, same tier as spawn_occupancy_violation and combat_hard_law).
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: "src/simulation_quality/quality_hub.py::_translate_invariant() -- new _LAW_ID_TO_EVENT_TYPE exact-match dict routing LAW-HP-NONNEGATIVE/LAW-READINESS-NONNEGATIVE -> combat_hard_law_violation, LAW-GOLD-NONNEGATIVE -> conservation_law_violated, LAW-STAMINA-NONNEGATIVE/LAW-POSITION-FINITE/LAW-OCCUPANCY-COLLISION -> world_hard_law_violation; src/simulation_quality/scorers/world_dynamics.py::WorldDynamicsScorer -- world_hard_law_violation added to EVENT_TYPES and score(); config/simulation_quality/scoring_weights.yaml WORLD: world_hard_law: -30.0. The pre-existing COMBAT*/CONSERVATION* prefix branches were left in place (git history confirmed neither was ever matched by a real law) rather than repurposed -- out of scope to rename the 6 real LAW-* laws. TCK-20260805-SIMQ-HARDLAW-BRIDGE-COVERAGE-GAP."
+  proof_type: parity
+  test_path: >
+    tests/simulation_quality/test_quality_hub_event_translation.py::test_invariant_hp_nonnegative_routes_to_combat_hard_law;
+    tests/simulation_quality/test_quality_hub_event_translation.py::test_invariant_readiness_nonnegative_routes_to_combat_hard_law;
+    tests/simulation_quality/test_quality_hub_event_translation.py::test_invariant_gold_nonnegative_routes_to_conservation_violated;
+    tests/simulation_quality/test_quality_hub_event_translation.py::test_invariant_stamina_position_occupancy_route_to_world_hard_law;
+    tests/simulation_quality/test_world_dynamics_scorer.py::TestWorldHardLawViolation::test_world_hard_law_violation_scores_negative
+  divergence_note: null
+  support_boundary: null

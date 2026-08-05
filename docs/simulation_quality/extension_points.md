@@ -223,25 +223,23 @@ assertion alongside the existing letter-grade check).
 
 ## 9. The engine-correctness bridge
 
-**Now:** `quality_hub.py::_translate_invariant()` is the dispatcher — `law_id`-prefix matching,
-exactly 3 branches: `COMBAT*` → `combat_hard_law_violation` (COMBAT pillar), `CONSERVATION*` →
-`conservation_law_violated` (ECONOMY pillar), `LAW-SPAWN-OCCUPANCY` → `spawn_occupancy_violation`
-(WORLD pillar, `TCK-20260716-PLACELEGAL-SIMQ-SIGNAL`). SimQ scores *how often* a violation occurs,
-not whether any single instance is legal — that judgment stays `HardLawMonitor`'s job, per the
-determinism-exclusion precedent.
-
-**Real, precisely-scoped gap found (2026-08-05):** of the 7 real, currently-enforced
-`HardLawMonitor` laws, only `LAW-SPAWN-OCCUPANCY` is actually bridged. The other 6
-(`LAW-HP-NONNEGATIVE`, `LAW-READINESS-NONNEGATIVE`, `LAW-GOLD-NONNEGATIVE`,
-`LAW-STAMINA-NONNEGATIVE`, `LAW-POSITION-FINITE`, `LAW-OCCUPANCY-COLLISION`) don't match the
-`COMBAT`/`CONSERVATION` prefixes and fall through untranslated — completely invisible to SimQ.
-Meanwhile the `combat_hard_law_violation`/`conservation_law_violated` scorer signals are fully
-wired and ready, but dormant — no real law_id currently starts with `COMBAT`/`CONSERVATION` to
-trigger them. Tracked in `TCK-20260805-SIMQ-HARDLAW-BRIDGE-COVERAGE-GAP`.
+**Now:** `quality_hub.py::_translate_invariant()` is the dispatcher. All 7 real `HardLawMonitor`
+laws are bridged as of `TCK-20260805-SIMQ-HARDLAW-BRIDGE-COVERAGE-GAP` (2026-08-05):
+`LAW-HP-NONNEGATIVE`/`LAW-READINESS-NONNEGATIVE` → `combat_hard_law_violation` (COMBAT pillar),
+`LAW-GOLD-NONNEGATIVE` → `conservation_law_violated` (ECONOMY pillar),
+`LAW-STAMINA-NONNEGATIVE`/`LAW-POSITION-FINITE`/`LAW-OCCUPANCY-COLLISION` → new
+`world_hard_law_violation` (WORLD pillar), `LAW-SPAWN-OCCUPANCY` → `spawn_occupancy_violation`
+(WORLD pillar, `TCK-20260716-PLACELEGAL-SIMQ-SIGNAL`). The old speculative `COMBAT*`/
+`CONSERVATION*` prefix branches were left in place (git history found no evidence any real law was
+ever planned under those prefixes) but are now dead code paths, superseded by exact-match routing
+for the real `LAW-*` law_ids. SimQ scores *how often* a violation occurs, not whether any single
+instance is legal — that judgment stays `HardLawMonitor`'s job, per the determinism-exclusion
+precedent.
 
 **Extend via:** the same pattern — a new `_translate_invariant()` branch keyed on the violating
 law_id, routed to whichever pillar owns that domain (per the Scenario Registry), plus a matching
-`EVENT_TYPES` entry and pillar contract table row.
+`EVENT_TYPES` entry and pillar contract table row. No further gap remains on this axis — all 7 real
+laws are covered.
 
 **Governing doc:** `docs/simulation_quality/event_type_coverage.md` §1 (translation table),
 `docs/observability/hard_law_monitor.md`

@@ -176,6 +176,27 @@ class TestSpawnOccupancyViolation:
         assert scoring_weights["spawn_occupancy_violation"] < 0
 
 
+class TestWorldHardLawViolation:
+    """TCK-20260805-SIMQ-HARDLAW-BRIDGE-COVERAGE-GAP: covers LAW-STAMINA-NONNEGATIVE,
+    LAW-POSITION-FINITE, and LAW-OCCUPANCY-COLLISION, none of which had an existing
+    pillar-generic signal to reuse (unlike HP/READINESS -> combat_hard_law_violation and
+    GOLD -> conservation_law_violated)."""
+
+    def test_world_hard_law_violation_in_event_types(self) -> None:
+        assert "world_hard_law_violation" in WorldDynamicsScorer.EVENT_TYPES
+
+    def test_world_hard_law_violation_scores_negative(self, scorer: WorldDynamicsScorer, scoring_weights: ScoringWeights) -> None:
+        rec = scorer.score(_env("world_hard_law_violation", payload={"law_id": "LAW-STAMINA-NONNEGATIVE"}), _ctx())
+        assert rec is not None
+        assert rec.delta == scoring_weights["world_hard_law"]
+        assert rec.delta < 0
+        assert rec.pillar == PillarId.WORLD
+        assert "world_hard_law" in rec.tags
+
+    def test_scoring_weights_yaml_has_world_hard_law_key(self, scoring_weights: ScoringWeights) -> None:
+        assert scoring_weights.for_pillar(PillarId.WORLD)["world_hard_law"] < 0
+
+
 class TestNullReturn:
     def test_threat_evolved_returns_none(self, scorer: WorldDynamicsScorer) -> None:
         assert scorer.score(_env("threat_evolved"), _ctx()) is None

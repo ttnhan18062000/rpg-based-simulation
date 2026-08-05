@@ -170,6 +170,7 @@ WORLD:
   boss_spawn_blocked: -6.0
   trauma_accumulation_broken: -8.0
   spawn_occupancy_violation: -30.0
+  world_hard_law: -30.0
 
 NARRATIVE:
   quest_active: 5.0

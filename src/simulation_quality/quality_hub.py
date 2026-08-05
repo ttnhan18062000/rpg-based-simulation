@@ -56,8 +56,28 @@ def _translate_strategic_project(env: ObservabilityEventEnvelope) -> str:
     return "project_started"
 
 
+# The 6 real HardLawMonitor laws below (docs/observability/hard_law_monitor.md) previously fell
+# through untranslated — only LAW-SPAWN-OCCUPANCY was bridged. HP/READINESS are combat-domain
+# invariants (DirtySet.combat_entities) routed to the existing generic combat_hard_law_violation
+# signal, matching its own "hard law violated in combat pipeline" scope (not law-specific).
+# GOLD is an economic invariant routed to the existing (previously dormant) conservation_law_violated
+# signal. STAMINA/POSITION/OCCUPANCY-COLLISION have no existing pillar-generic signal to reuse — new
+# world_hard_law_violation added (TCK-20260805-SIMQ-HARDLAW-BRIDGE-COVERAGE-GAP), mirroring
+# combat_hard_law_violation's genericness rather than one signal per law.
+_LAW_ID_TO_EVENT_TYPE = {
+    "LAW-HP-NONNEGATIVE": "combat_hard_law_violation",
+    "LAW-READINESS-NONNEGATIVE": "combat_hard_law_violation",
+    "LAW-GOLD-NONNEGATIVE": "conservation_law_violated",
+    "LAW-STAMINA-NONNEGATIVE": "world_hard_law_violation",
+    "LAW-POSITION-FINITE": "world_hard_law_violation",
+    "LAW-OCCUPANCY-COLLISION": "world_hard_law_violation",
+}
+
+
 def _translate_invariant(env: ObservabilityEventEnvelope) -> str:
     law_id = str((env.payload or {}).get("law_id", "")).upper()
+    if law_id in _LAW_ID_TO_EVENT_TYPE:
+        return _LAW_ID_TO_EVENT_TYPE[law_id]
     if law_id.startswith("COMBAT"):
         return "combat_hard_law_violation"
     if law_id.startswith("CONSERVATION"):

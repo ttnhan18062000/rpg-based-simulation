@@ -912,7 +912,8 @@ WD-14 (`camp lifecycle`), WD-15 (`demographics`)
 `region_transformed`, `region_trauma_delta`, `region_ownership_changed`,
 `ecology_cycle_completed`, `spawn_cadence_fired`, `demographic_birth`,
 `demographic_mortality`, `camp_constructed`†, `hazard_drain_applied`,
-`threat_evolved`, `node_recharged`, `building_sabotaged`, `spawn_occupancy_violation`
+`threat_evolved`, `node_recharged`, `building_sabotaged`, `spawn_occupancy_violation`,
+`world_hard_law_violation`
 
 †`camp_constructed` is registered, not currently emittable — see
 `event_type_coverage.md` §3.9.
@@ -933,6 +934,7 @@ WD-14 (`camp lifecycle`), WD-15 (`demographics`)
 | Hazard drain applies damage in hazardous region | +1 | `hazard_active` |
 | Building takes sabotage damage (hp_delta < 0 on building_updates) | +1 | `infrastructure_damaged` |
 | Spawn placement violates occupancy/terrain legality (LAW-SPAWN-OCCUPANCY) | −30 | `spawn_occupancy_violation` |
+| Hard law violated outside combat/spawn-occupancy domain (LAW-STAMINA-NONNEGATIVE, LAW-POSITION-FINITE, LAW-OCCUPANCY-COLLISION) | −30 | `world_hard_law_violation` |
 | Zero calamity events in run of 500+ ticks | −8 | `calamity_dormant` |
 | Zero spawn cadence fires (no monster repopulation after depletion) | −10 | `world_depopulating` |
 | Zero region transformations in run of 1000+ ticks | −6 | `world_static` |

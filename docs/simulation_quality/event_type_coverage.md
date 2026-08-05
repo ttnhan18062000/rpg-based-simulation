@@ -28,16 +28,28 @@ config, and more).
 
 | Category | Count | Notes |
 |---|---|---|
-| scored | 83 | +1 `spawn_occupancy_violation` (TCK-20260716-PLACELEGAL-SIMQ-SIGNAL) |
+| scored | 84 | +1 `world_hard_law_violation` (TCK-20260805-SIMQ-HARDLAW-BRIDGE-COVERAGE-GAP) |
 | translation_gap | 0 | — |
 | engine_emission_gap | 0 | — |
 | no_engine_path | 1 | `camp_constructed` — no dynamic camp construction in simulation; scorer entry is premature |
 | p0_a_blocked | 3 | Unchanged — campaign/scenario gate |
 | unscored_intentional | 13 | Unchanged |
 
-**Last updated:** 2026-07-30 (TCK-20260716-PLACELEGAL-SIMQ-SIGNAL — added the `spawn_occupancy_violation` `_TRANSLATE_CONDITIONAL` row for `InvariantViolation`/`law_id` starting with "LAW-SPAWN-OCCUPANCY", scored by WorldDynamicsScorer)
+**Last updated:** 2026-08-05 (`TCK-20260805-SIMQ-HARDLAW-BRIDGE-COVERAGE-GAP` — of the 7 real
+`HardLawMonitor` laws, only `LAW-SPAWN-OCCUPANCY` was previously bridged. Added exact-match
+`law_id` routing for the other 6: `LAW-HP-NONNEGATIVE`/`LAW-READINESS-NONNEGATIVE` →
+`combat_hard_law_violation` (CombatScorer, previously dormant — no real law ever used its
+`COMBAT*`-prefix match), `LAW-GOLD-NONNEGATIVE` → `conservation_law_violated` (EconomyScorer,
+previously dormant — no real law ever used its `CONSERVATION*`-prefix match),
+`LAW-STAMINA-NONNEGATIVE`/`LAW-POSITION-FINITE`/`LAW-OCCUPANCY-COLLISION` → new
+`world_hard_law_violation` (WorldDynamicsScorer, no existing generic signal fit these 3). The
+`COMBAT*`/`CONSERVATION*` prefix branches were left in place, not repurposed — git history found
+no evidence any real law was ever planned under those prefixes, and renaming the 6 real `LAW-*`
+laws was out of this ticket's scope.)
 
-**Translation table status:** Complete. All 8 `_TRANSLATE_SIMPLE` and 5 `_TRANSLATE_CONDITIONAL` entries in `quality_hub.py` are correct. No translation table gaps found.
+**Translation table status:** Complete. All 8 `_TRANSLATE_SIMPLE` entries and the
+`_TRANSLATE_CONDITIONAL` entry for `InvariantViolation` (now dispatching all 7 real hard laws, not
+just 1) in `quality_hub.py` are correct. No translation table gaps found.
 
 **Remaining gaps:** 0 engine emission gaps. 1 scorer entry has no viable engine path (`camp_constructed` — camps are pre-placed at world generation, no dynamic construction mechanic). See §3.9.
 
@@ -168,8 +180,11 @@ All events below are emitted by the engine and reach at least one pillar scorer,
 | `StrategicProjectChanged` | "complet" in reason | `project_completed` | AgencyScorer | 0 |
 | `StrategicProjectChanged` | "abandon" in reason | `project_abandoned` | AgencyScorer | 0 |
 | `StrategicProjectChanged` | default | `project_started` | AgencyScorer | 0 |
-| `InvariantViolation` | law_id starts with "COMBAT" | `combat_hard_law_violation` | CombatScorer | 0 |
-| `InvariantViolation` | law_id starts with "CONSERVATION" | `conservation_law_violated` | EconomyScorer | 0 |
+| `InvariantViolation` | law_id == "LAW-HP-NONNEGATIVE" or "LAW-READINESS-NONNEGATIVE" | `combat_hard_law_violation` | CombatScorer | 0 |
+| `InvariantViolation` | law_id == "LAW-GOLD-NONNEGATIVE" | `conservation_law_violated` | EconomyScorer | 0 |
+| `InvariantViolation` | law_id == "LAW-STAMINA-NONNEGATIVE", "LAW-POSITION-FINITE", or "LAW-OCCUPANCY-COLLISION" | `world_hard_law_violation` | WorldDynamicsScorer | 0 |
+| `InvariantViolation` | law_id starts with "COMBAT" (no real law uses this prefix — dormant) | `combat_hard_law_violation` | CombatScorer | 0 |
+| `InvariantViolation` | law_id starts with "CONSERVATION" (no real law uses this prefix — dormant) | `conservation_law_violated` | EconomyScorer | 0 |
 | `InvariantViolation` | law_id starts with "LAW-SPAWN-OCCUPANCY" | `spawn_occupancy_violation` | WorldDynamicsScorer | 0 |
 | `InvariantViolation` | other law_id | passthrough — no translation | none | 0 |
 | `betrayal_desertion` | payload.faction_id present | `faction_tension_delta` | FactionScorer | 0 |
