@@ -1,0 +1,226 @@
+schema_version: worldspec.v1
+world_id: quest_dense_frontier
+name: Quest-Dense Frontier
+description: 'Stress-tier world closing corpus_tier_taxonomy.md''s named scale-diversity
+  gap #5: quest-def count currently scales almost linearly with entity count across
+  the corpus. Composes ruins_mystery_quest (standalone, no settlement dependency,
+  6 entities via undead_battlefield_patrol, 2 quest_definitions) with 3 zero-population
+  terrain/ecology modules that each still contribute quest_definitions: mountain_pass
+  (2 quests, 0 population), river_crossing (1 quest, 0 population), forest_deep_ecology
+  (1 quest, 0 population). Result: 6 entities, 6 quest_definitions, ratio 1.0 -- well
+  beyond the corpus''s prior incidental maximum (wilderness_survival, ratio 0.636,
+  not deliberately authored for this purpose) -- deliberately minimizing population
+  while maximizing quest count from population-free modules (TCK-20260805-SIMQ-CORPUS-QUEST-DENSITY-DECOUPLE).'
+topology:
+  width: 161
+  height: 121
+  coordinate_system: grid
+regions:
+- id: mountain_pass_zone
+  type: wilderness
+  bounds:
+  - 80
+  - 80
+  - 120
+  - 120
+  terrain: mountain
+  hazard_level: 2.5
+  hazard_kind: PHYSICAL
+  tags:
+  - mountain
+- id: river_ford
+  type: wilderness
+  bounds:
+  - 130
+  - 30
+  - 160
+  - 70
+  terrain: river
+  hazard_level: 1.0
+  hazard_kind: PHYSICAL
+  tags: []
+- id: haunted_battlefield
+  type: wilderness
+  bounds:
+  - 60
+  - 80
+  - 100
+  - 120
+  terrain: ruin
+  hazard_level: 3.5
+  hazard_kind: UNDEAD_CORRUPTION
+  tags:
+  - ruins
+factions:
+- id: hero_guild
+  type: defender
+  initial_tension_level: 0.0
+- id: town_council
+  type: defender
+  initial_tension_level: 0.0
+- id: neutral
+  type: neutral
+  initial_tension_level: 0.0
+- id: wild_beast_pack
+  type: wild
+  initial_tension_level: 0.0
+- id: goblin_warband
+  type: invader
+  initial_tension_level: 0.0
+- id: merchant_league
+  type: neutral
+  initial_tension_level: 0.0
+- id: bandit_company
+  type: invader
+  initial_tension_level: 0.0
+- id: forest_wardens
+  type: defender
+  initial_tension_level: 0.0
+- id: orc_clan
+  type: rival
+  initial_tension_level: 0.0
+- id: dwarven_mine_clan
+  type: defender
+  initial_tension_level: 0.0
+- id: moon_cult
+  type: invader
+  initial_tension_level: 0.0
+- id: undead_remnants
+  type: invader
+  initial_tension_level: 0.0
+- id: arcane_circle
+  type: neutral
+  initial_tension_level: 0.0
+- id: swamp_tribe
+  type: rival
+  initial_tension_level: 0.0
+- id: dragon_cult
+  type: invader
+  initial_tension_level: 0.0
+- id: spirit_court
+  type: neutral
+  initial_tension_level: 0.0
+information_source_profiles: []
+pending_information_responses: []
+pending_self_model_information_events: []
+entities:
+- id: undead_battlefield_patrol_undead_sentinel
+  count: 6
+  role: sentinel
+  faction: undead_remnants
+  spawn_region: haunted_battlefield
+  archetype_id: undead_sentinel
+resources:
+- id: mountain_pass__iron_vein_0
+  resource_type: iron_vein
+  count: 4
+  region: mountain_pass_zone
+  regen_rate: 1
+- id: mountain_pass__frost_shard_cluster_1
+  resource_type: frost_shard_cluster
+  count: 2
+  region: mountain_pass_zone
+  regen_rate: 1
+- id: river_crossing__herb_patch_0
+  resource_type: herb_patch
+  count: 3
+  region: river_ford
+  regen_rate: 1
+buildings:
+- id: watchtower_0
+  type: watchtower
+  region: river_ford
+quest_definitions:
+- id: forest_survey
+  type: explore
+  required_participant_tags: []
+  required_location_tags:
+  - wilderness
+  reward_budget: 80
+  procedural_hints:
+    difficulty: 1
+    escalation: false
+  tags:
+  - nature
+  - exploration
+  source_module: forest_deep_ecology
+- id: explore_mountain_route
+  type: explore
+  required_participant_tags:
+  - humanoid
+  required_location_tags:
+  - mountain
+  - wilderness
+  reward_budget: 90
+  procedural_hints:
+    difficulty: 2
+    escalation: false
+  tags:
+  - mountain
+  - terrain
+  - exploration
+  source_module: mountain_pass
+- id: hunt_mountain_predator
+  type: hunt
+  required_participant_tags:
+  - humanoid
+  required_location_tags:
+  - mountain
+  - wilderness
+  reward_budget: 130
+  procedural_hints:
+    difficulty: 3
+    escalation: true
+  tags:
+  - mountain
+  - terrain
+  - combat
+  source_module: mountain_pass
+- id: survey_river_route
+  type: explore
+  required_participant_tags:
+  - humanoid
+  required_location_tags:
+  - wilderness
+  - river
+  reward_budget: 80
+  procedural_hints:
+    difficulty: 1
+    escalation: false
+  tags:
+  - river
+  - terrain
+  - scouting
+  source_module: river_crossing
+- id: ruins_first_contact
+  type: investigate
+  required_participant_tags:
+  - undead
+  required_location_tags:
+  - ruins
+  reward_budget: 120
+  procedural_hints:
+    difficulty: 2
+    escalation: false
+  tags:
+  - mystery
+  - ruins
+  source_module: ruins_mystery_quest
+- id: spirit_source_trace
+  type: investigate
+  required_participant_tags:
+  - spiritual
+  required_location_tags:
+  - ruins
+  reward_budget: 150
+  procedural_hints:
+    difficulty: 3
+    escalation: true
+  tags:
+  - mystery
+  - ruins
+  - spirit
+  source_module: ruins_mystery_quest
+validation:
+  expected_min_entities: 1
+  allow_overlapping_regions: false

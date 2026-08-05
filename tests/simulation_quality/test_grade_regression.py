@@ -179,6 +179,13 @@ FAST_ANCHOR_KEYS = [
     "unit_information_density_seed42_200t",
     "unit_information_density_seed123_200t",
     "unit_information_density_seed456_200t",
+    # new — TCK-20260805-SIMQ-CORPUS-QUEST-DENSITY-DECOUPLE: stress-tier world closing the named
+    # scale-diversity gap of no world deliberately decoupling quest-def count from entity count
+    # (6 entities, 6 quest_definitions, ratio 1.0 -- beyond the corpus's prior incidental max of
+    # 0.636, wilderness_survival, which was not authored for this purpose), 3 seeds, 200t
+    "quest_dense_frontier_seed42_200t",
+    "quest_dense_frontier_seed123_200t",
+    "quest_dense_frontier_seed456_200t",
 ]
 
 SLOW_ANCHOR_KEYS = [
@@ -639,14 +646,13 @@ def test_grade_anchors_entry_count_unchanged(grade_anchors: dict) -> None:
     """Anti-drift guard: the migration (bare string -> {grade, score}) must not silently
     drop or duplicate a scenario entry.
 
-    76 real scenario entries as of TCK-20260713-SIMQ-COGNITION-PIPELINE-WIRE, which added
-    urban_political_selfmodel_execution_probe_seed42_200t (79 total keys minus the 3
-    metadata keys: _note, _instructions, _grade_order).
+    79 real scenario entries as of TCK-20260805-SIMQ-CORPUS-QUEST-DENSITY-DECOUPLE, which
+    added quest_dense_frontier_seed{42,123,456}_200t (3 new entries, 76 -> 79).
     """
     metadata_keys = {"_note", "_instructions", "_grade_order"}
     scenario_keys = set(grade_anchors.keys()) - metadata_keys
-    assert len(scenario_keys) == 76, (
-        f"Expected 76 real scenario entries, found {len(scenario_keys)} — "
+    assert len(scenario_keys) == 79, (
+        f"Expected 79 real scenario entries, found {len(scenario_keys)} — "
         "an anchor entry may have been silently dropped or duplicated"
     )
 

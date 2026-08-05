@@ -141,6 +141,7 @@ tables and per-world justification.
 | `crowded_frontier` | Stress | 38 entities, 4 regions — fills gap 1 (many-factions/small-map): 6 distinct populated factions in a 4-region footprint (TCK-20260704-SIMQ-CORPUS-STRESS-WORLDS) |
 | `resource_dense_basin` | Stress | 23 entities, 3 regions — fills gap 2 (resource-saturated/small-map): the corpus's new resource-node density maximum, ~2.33 nodes/region (TCK-20260704-SIMQ-CORPUS-STRESS-WORLDS) |
 | `frontier_marches` | Stress | 62 entities, 9 regions — fills gap 3 (large-scale FACTION/INFORMATION, authored-from-inception): `faction_tension_overrides` + `information_source_profiles`/`pending_information_responses` seeded from this world's first compile, at `frontier_extended`-comparable scale (TCK-20260704-SIMQ-CORPUS-STRESS-WORLDS) |
+| `quest_dense_frontier` | Stress | 6 entities, 3 regions — fills gap 5 (quest-density decoupled from entity count): composes `ruins_mystery_quest` (standalone, minimal population) with 3 zero-population terrain/ecology modules (`mountain_pass`, `river_crossing`, `forest_deep_ecology`) that each still contribute `quest_definitions`; quest/entity ratio 1.0, deliberately beyond the corpus's prior incidental maximum (`wilderness_survival`, ratio 0.636, not authored for this purpose) (TCK-20260805-SIMQ-CORPUS-QUEST-DENSITY-DECOUPLE) |
 
 Full per-world entity/region/resource/quest counts and module composition are documented in
 `staging_artifacts/TCK-20260704-SIMQ-CORPUS-TIERS-EPIC/investigation.md` §2 — this doc cites that
@@ -218,8 +219,13 @@ the concrete candidates a stress-tier world should cite when justifying its auth
    INFORMATION skip (no settlement-adjacent module), not a gap this ticket addresses.
 4. **A routing-capable (AGENCY-active) world that is also a "real" gameplay archetype**, as opposed
    to `simq_routing_test`'s purpose-built minimal-calibration framing.
-5. **Quest density decoupled from entity count.** Quest-def count currently scales almost linearly
-   with entity count across the corpus; no world deliberately decouples these axes.
+5. ~~**Quest density decoupled from entity count.** Quest-def count currently scales almost
+   linearly with entity count across the corpus; no world deliberately decouples these axes.~~ —
+   **CLOSED 2026-08-05** (`TCK-20260805-SIMQ-CORPUS-QUEST-DENSITY-DECOUPLE`): verified this gap
+   was genuinely open (unlike gaps #1 and #2, which turned out already closed and just undocumented)
+   — real corpus ratios ranged 0.19-0.64 with no deliberately-authored outlier — before authoring
+   `quest_dense_frontier` (6 entities, 6 quest_definitions, ratio 1.0), which composes population-free
+   terrain/ecology modules specifically to maximize quest count while minimizing entity count.
 
 `TCK-20260704-SIMQ-CORPUS-STRESS-WORLDS` is scoped to address a subset of these gaps — it is not
 required to close all five in one ticket.

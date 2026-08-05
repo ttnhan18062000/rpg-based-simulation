@@ -3200,5 +3200,131 @@
       "grade": "A",
       "score": 1.0185185185185186
     }
+  },
+  "quest_dense_frontier_seed42_200t": {
+    "COGNITION": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "AGENCY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "COMBAT": {
+      "grade": "B",
+      "score": 0.06
+    },
+    "FACTION": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "ECONOMY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "PROGRESSION": {
+      "grade": "A",
+      "score": 1.0196078431372548
+    },
+    "SOCIAL": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "INFORMATION": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "WORLD": {
+      "grade": "B",
+      "score": 0.27
+    },
+    "NARRATIVE": {
+      "grade": "C",
+      "score": 0.0
+    }
+  },
+  "quest_dense_frontier_seed123_200t": {
+    "COGNITION": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "AGENCY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "COMBAT": {
+      "grade": "C",
+      "score": -0.06
+    },
+    "FACTION": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "ECONOMY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "PROGRESSION": {
+      "grade": "B",
+      "score": 0.43137254901960786
+    },
+    "SOCIAL": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "INFORMATION": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "WORLD": {
+      "grade": "B",
+      "score": 0.19
+    },
+    "NARRATIVE": {
+      "grade": "C",
+      "score": 0.0
+    }
+  },
+  "quest_dense_frontier_seed456_200t": {
+    "COGNITION": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "AGENCY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "COMBAT": {
+      "grade": "B",
+      "score": 0.12
+    },
+    "FACTION": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "ECONOMY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "PROGRESSION": {
+      "grade": "A",
+      "score": 1.3137254901960784
+    },
+    "SOCIAL": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "INFORMATION": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "WORLD": {
+      "grade": "B",
+      "score": 0.31
+    },
+    "NARRATIVE": {
+      "grade": "C",
+      "score": 0.0
+    }
   }
 }
