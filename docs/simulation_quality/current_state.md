@@ -30,12 +30,14 @@ was last committed."
 
 ## 2026-08-05 refresh — 2 real findings
 
-### Finding 1: WORLD pillar anchors are stale — a real scoring change, not a regression
+### Finding 1: WORLD pillar anchors were stale — FIXED (`TCK-20260805-SIMQ-WORLD-ANCHOR-RECALIBRATION`)
 
-`test_grade_regression.py` (fast tier, 200t/500t) found **20 of 65 comparable scenarios** drifted
-beyond score tolerance — **19 of the 20 are the WORLD pillar**, every one scoring *lower* than its
-anchor by a consistent delta (e.g. `anchor=0.09 → actual=-0.06`, `anchor=0.59 → actual=0.44`,
-`anchor=0.24 → actual=0.09` — deltas cluster around -0.15/-0.12/-0.075 depending on scenario).
+**Status: resolved 2026-08-05.** `test_grade_regression.py` (fast tier, 200t/500t) originally found
+**20 of 65 comparable scenarios** drifted beyond score tolerance — **19 of the 20 were the WORLD
+pillar**, every one scoring *lower* than its anchor by a consistent delta (e.g. `anchor=0.09 →
+actual=-0.06`, `anchor=0.59 → actual=0.44`, `anchor=0.24 → actual=0.09` — deltas clustered around
+-0.15/-0.12/-0.075 depending on scenario). This was a live-corpus finding from earlier the same day
+(2026-08-05); the recalibration below fixes it.
 
 Root cause, confirmed not assumed: `TCK-20260716-PLACELEGAL-SIMQ-SIGNAL` (landed 2026-07-30) added
 a new, intentional, negative-weighted signal (`spawn_occupancy_violation`, weight **-30.0**) to
@@ -49,15 +51,22 @@ gate is trustworthy again. Real corpus-wide effect (75 fresh reports vs. the 07-
 
 | Pillar | S | A | B | C | D | vs. 07-13 |
 |---|---|---|---|---|---|---|
-| WORLD | 0 | 3 | 62 | 10 | 0 | **A 4→3, B 71→62, C 0→10 — real regression-gate-visible drop** |
+| WORLD (pre-fix) | 0 | 3 | 62 | 10 | 0 | **A 4→3, B 71→62, C 0→10 — real regression-gate-visible drop** |
+| WORLD (post-fix, 08-05) | 0 | 3 | 63 | 10 | 0 | anchors recalibrated against `spawn_occupancy_violation`; distribution now matches live scoring |
 
 The one non-WORLD outlier, `urban_political_seed42_200t` (NARRATIVE `A`, SOCIAL `S` — letter
 grades unchanged, only the raw `normalized_score` drifted outside its tolerance band), is far more
 likely ordinary run-to-run variance (already documented in `docs/audits/D20_simq_integration.md`'s
-wall-clock-throttle findings) than a real issue — not part of the WORLD pattern above.
+wall-clock-throttle findings) than a real issue — not part of the WORLD pattern above, and
+explicitly out of `TCK-20260805-SIMQ-WORLD-ANCHOR-RECALIBRATION`'s scope (WORLD-only). Still open,
+unrelated to this finding.
 
-**Not yet fixed in this refresh** — recalibrating `grade_anchors.json`'s WORLD column is a real,
-scoped follow-up, deliberately not done unilaterally as part of a status-report refresh.
+**Fixed 2026-08-05** (`TCK-20260805-SIMQ-WORLD-ANCHOR-RECALIBRATION`): recalibrated all 37 affected
+scenarios' WORLD entries in `grade_anchors.json` against a fresh full-corpus live-engine run,
+touching only the WORLD key per scenario (verified: 0 non-WORLD pillar entries changed).
+`test_grade_regression.py -m "not slow"` now passes 64/65 comparable scenarios — the sole remaining
+failure is the pre-existing, unrelated `urban_political_seed42_200t` NARRATIVE/SOCIAL variance
+noted above, not WORLD.
 
 ### Finding 2: ECONOMY still produces zero real events — but the remaining gap is now precisely
 ### isolated to 2 named, already-diagnosed factors, not an open-ended goal-generation mystery
@@ -138,16 +147,18 @@ against this doc's own paragraph — the fix landed as a side effect of other Si
 
 ---
 
-## Current grade distribution (75 of 76 anchor entries, live-corpus run, 2026-08-05)
+## Current grade distribution (76 of 76 anchor entries, live-corpus run, 2026-08-05)
 
-`unit_selfmodel_pilot_seed42_1000t` excluded — unreliable run this refresh, see Known Issue below.
-WORLD's distribution reflects Finding 1 above (stale anchors, not a real regression); ECONOMY's
-reflects Finding 2 (fix landed, zero measured effect on this corpus). All other pillars are
-materially unchanged from 2026-07-13 within normal rounding.
+`unit_selfmodel_pilot_seed42_1000t` — flagged unreliable in the earlier same-day refresh (Known
+Issue below); this table's underlying run (the `TCK-20260805-SIMQ-WORLD-ANCHOR-RECALIBRATION` fix
+run) completed it cleanly (`pressure_mode_final=NORMAL`, `guard_passed=true`), so all 76 are
+included here. WORLD's distribution now reflects the post-recalibration anchors (Finding 1,
+resolved); ECONOMY's reflects Finding 2 (fix landed, zero measured effect on this corpus). All
+other pillars are materially unchanged from 2026-07-13 within normal rounding.
 
 | Pillar | S | A | B | C | D |
 |---|---|---|---|---|---|
-| WORLD | 0 | 3 | 62 | 10 | 0 |
+| WORLD | 0 | 3 | 63 | 10 | 0 |
 | NARRATIVE | 8 | 59 | 4 | 4 | 0 |
 | COMBAT | 0 | 0 | 44 | 31 | 0 |
 | PROGRESSION | 0 | 8 | 39 | 28 | 0 |

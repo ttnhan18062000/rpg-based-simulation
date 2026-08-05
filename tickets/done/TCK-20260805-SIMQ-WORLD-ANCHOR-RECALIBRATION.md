@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: simulation
 authority: P1
 audience: agent
 ticket_id: TCK-20260805-SIMQ-WORLD-ANCHOR-RECALIBRATION
-phase: open
+phase: done
 date: 2026-08-05
 tags: [simulation-quality, calibration]
 ---
@@ -15,7 +15,7 @@ tags: [simulation-quality, calibration]
 Recalibrate WORLD pillar grade anchors against the spawn-occupancy signal
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -97,13 +97,33 @@ None — root cause fully diagnosed already (Finding 1), no further investigatio
 implementing.
 
 ## Implementation Notes
-(fill during implementation)
+Ran `make simq-full-audit-full` for a fresh full-corpus live-engine calibration (76 scenarios,
+`data/calibration/*/quality_report.json`). Wrote a small script
+(`update_world_anchors.py`, scratch-only, not committed) that reads each scenario's real
+`pillars.WORLD.{grade,normalized_score}` and overwrites ONLY the `WORLD` key in
+`grade_anchors.json` for that scenario — verified structurally (script only ever touches the
+`"WORLD"` dict key) and empirically (diffed before/after: 0 non-WORLD pillar entries changed, 37
+WORLD entries updated, 39 unchanged). Updated `docs/simulation_quality/current_state.md`'s Finding
+1 and grade-distribution table with the real post-fix numbers (also noticed
+`unit_selfmodel_pilot_seed42_1000t`, flagged unreliable in an earlier same-day refresh, completed
+cleanly this run — noted honestly rather than silently carrying the old exclusion forward).
 
 ## Test Summary
-(fill during implementation)
+`pytest tests/simulation_quality/test_grade_regression.py -m "not slow" -q`: before fix, 20 failed
+(19 WORLD + 1 unrelated) / 45 passed / 18 deselected. After fix: 1 failed / 64 passed / 18
+deselected — the sole remaining failure is `urban_political_seed42_200t`'s pre-existing,
+already-documented NARRATIVE/SOCIAL variance, explicitly out of this ticket's WORLD-only scope.
 
 ## Files Changed
-(fill during implementation)
+- `tests/simulation_quality/fixtures/grade_anchors.json` — WORLD entries recalibrated for 37
+  scenarios
+- `docs/simulation_quality/current_state.md` — Finding 1 marked resolved, grade-distribution table
+  updated
 
 ## Completion Summary
-(fill during implementation)
+Recalibrated `grade_anchors.json`'s WORLD pillar entries against a fresh full-corpus live-engine
+run, closing the regression-gate blind spot `TCK-20260716-PLACELEGAL-SIMQ-SIGNAL`'s intentional
+`spawn_occupancy_violation` signal had opened. All 4 acceptance criteria met: (1) WORLD anchors
+updated for every affected scenario from a real calibration run; (2) `test_grade_regression.py`
+passes cleanly for WORLD (0 WORLD failures, down from 19); (3) rationale captured here and in
+`current_state.md`; (4) `current_state.md`'s Finding 1 and grade-distribution table both updated.

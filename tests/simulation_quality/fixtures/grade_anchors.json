@@ -84,8 +84,8 @@
       "score": 0.2
     },
     "WORLD": {
-      "grade": "B",
-      "score": 0.09
+      "grade": "C",
+      "score": -0.06
     },
     "NARRATIVE": {
       "grade": "A",
@@ -127,7 +127,7 @@
     },
     "WORLD": {
       "grade": "B",
-      "score": 0.21
+      "score": 0.06
     },
     "NARRATIVE": {
       "grade": "A",
@@ -337,7 +337,7 @@
     },
     "WORLD": {
       "grade": "B",
-      "score": 0.118
+      "score": 0.114
     },
     "NARRATIVE": {
       "grade": "A",
@@ -421,7 +421,7 @@
     },
     "WORLD": {
       "grade": "B",
-      "score": 0.09
+      "score": 0.015
     },
     "NARRATIVE": {
       "grade": "A",
@@ -463,7 +463,7 @@
     },
     "WORLD": {
       "grade": "B",
-      "score": 0.189873417721519
+      "score": 0.19
     },
     "NARRATIVE": {
       "grade": "A",
@@ -505,7 +505,7 @@
     },
     "WORLD": {
       "grade": "B",
-      "score": 0.16
+      "score": 0.14657210401891252
     },
     "NARRATIVE": {
       "grade": "A",
@@ -547,7 +547,7 @@
     },
     "WORLD": {
       "grade": "B",
-      "score": 0.21897810218978103
+      "score": 0.18491484184914841
     },
     "NARRATIVE": {
       "grade": "A",
@@ -673,7 +673,7 @@
     },
     "WORLD": {
       "grade": "B",
-      "score": 0.15
+      "score": 0.075
     },
     "NARRATIVE": {
       "grade": "B",
@@ -799,7 +799,7 @@
     },
     "WORLD": {
       "grade": "B",
-      "score": 0.138
+      "score": 0.146
     },
     "NARRATIVE": {
       "grade": "B",
@@ -841,7 +841,7 @@
     },
     "WORLD": {
       "grade": "B",
-      "score": 0.154
+      "score": 0.15
     },
     "NARRATIVE": {
       "grade": "B",
@@ -883,7 +883,7 @@
     },
     "WORLD": {
       "grade": "B",
-      "score": 0.142
+      "score": 0.108
     },
     "NARRATIVE": {
       "grade": "B",
@@ -1009,7 +1009,7 @@
     },
     "WORLD": {
       "grade": "B",
-      "score": 0.194
+      "score": 0.188
     },
     "NARRATIVE": {
       "grade": "B",
@@ -1051,7 +1051,7 @@
     },
     "WORLD": {
       "grade": "B",
-      "score": 0.132
+      "score": 0.13
     },
     "NARRATIVE": {
       "grade": "A",
@@ -1093,7 +1093,7 @@
     },
     "WORLD": {
       "grade": "B",
-      "score": 0.48
+      "score": 0.45
     },
     "NARRATIVE": {
       "grade": "A",
@@ -1135,7 +1135,7 @@
     },
     "WORLD": {
       "grade": "A",
-      "score": 0.59
+      "score": 0.56
     },
     "NARRATIVE": {
       "grade": "A",
@@ -1176,8 +1176,8 @@
       "score": 0.2
     },
     "WORLD": {
-      "grade": "A",
-      "score": 0.59
+      "grade": "B",
+      "score": 0.44
     },
     "NARRATIVE": {
       "grade": "A",
@@ -1219,7 +1219,7 @@
     },
     "WORLD": {
       "grade": "B",
-      "score": 0.39
+      "score": 0.46
     },
     "NARRATIVE": {
       "grade": "A",
@@ -1303,7 +1303,7 @@
     },
     "WORLD": {
       "grade": "B",
-      "score": 0.33
+      "score": 0.21
     },
     "NARRATIVE": {
       "grade": "A",
@@ -1597,7 +1597,7 @@
     },
     "WORLD": {
       "grade": "B",
-      "score": 0.12
+      "score": 0.15
     },
     "NARRATIVE": {
       "grade": "A",
@@ -1639,7 +1639,7 @@
     },
     "WORLD": {
       "grade": "B",
-      "score": 0.12
+      "score": 0.15
     },
     "NARRATIVE": {
       "grade": "A",
@@ -1680,8 +1680,8 @@
       "score": 0.2
     },
     "WORLD": {
-      "grade": "B",
-      "score": 0.12
+      "grade": "C",
+      "score": 0.0
     },
     "NARRATIVE": {
       "grade": "A",
@@ -1806,8 +1806,8 @@
       "score": 0.0
     },
     "WORLD": {
-      "grade": "B",
-      "score": 0.09
+      "grade": "C",
+      "score": -0.06
     },
     "NARRATIVE": {
       "grade": "A",
@@ -1848,8 +1848,8 @@
       "score": 0.2
     },
     "WORLD": {
-      "grade": "B",
-      "score": 0.03
+      "grade": "C",
+      "score": -0.12
     },
     "NARRATIVE": {
       "grade": "A",
@@ -1932,8 +1932,8 @@
       "score": 0.2
     },
     "WORLD": {
-      "grade": "B",
-      "score": 0.03
+      "grade": "C",
+      "score": -0.12
     },
     "NARRATIVE": {
       "grade": "A",
@@ -1974,8 +1974,8 @@
       "score": 0.0
     },
     "WORLD": {
-      "grade": "B",
-      "score": 0.03
+      "grade": "C",
+      "score": -0.12
     },
     "NARRATIVE": {
       "grade": "A",
@@ -2058,8 +2058,8 @@
       "score": 0.0
     },
     "WORLD": {
-      "grade": "B",
-      "score": 0.03
+      "grade": "C",
+      "score": -0.12
     },
     "NARRATIVE": {
       "grade": "A",
@@ -2227,7 +2227,7 @@
     },
     "WORLD": {
       "grade": "B",
-      "score": 0.19
+      "score": 0.115
     },
     "NARRATIVE": {
       "grade": "S",
@@ -2353,7 +2353,7 @@
     },
     "WORLD": {
       "grade": "B",
-      "score": 0.24
+      "score": 0.09
     },
     "NARRATIVE": {
       "grade": "A",
@@ -2478,8 +2478,8 @@
       "score": 0.0
     },
     "WORLD": {
-      "grade": "B",
-      "score": 0.09
+      "grade": "C",
+      "score": -0.06
     },
     "NARRATIVE": {
       "grade": "A",
@@ -2605,7 +2605,7 @@
     },
     "WORLD": {
       "grade": "B",
-      "score": 0.45
+      "score": 0.3
     },
     "NARRATIVE": {
       "grade": "A",
@@ -2647,7 +2647,7 @@
     },
     "WORLD": {
       "grade": "B",
-      "score": 0.054
+      "score": 0.018
     },
     "NARRATIVE": {
       "grade": "B",
@@ -2773,7 +2773,7 @@
     },
     "WORLD": {
       "grade": "B",
-      "score": 0.118
+      "score": 0.114
     },
     "NARRATIVE": {
       "grade": "A",
@@ -2815,7 +2815,7 @@
     },
     "WORLD": {
       "grade": "B",
-      "score": 0.134
+      "score": 0.13
     },
     "NARRATIVE": {
       "grade": "A",
@@ -2983,7 +2983,7 @@
     },
     "WORLD": {
       "grade": "B",
-      "score": 0.3
+      "score": 0.15
     },
     "NARRATIVE": {
       "grade": "A",
@@ -3025,7 +3025,7 @@
     },
     "WORLD": {
       "grade": "B",
-      "score": 0.34
+      "score": 0.336
     },
     "NARRATIVE": {
       "grade": "A",
@@ -3066,8 +3066,8 @@
       "score": 0.6
     },
     "WORLD": {
-      "grade": "B",
-      "score": 0.03
+      "grade": "C",
+      "score": -0.12
     },
     "NARRATIVE": {
       "grade": "A",
@@ -3150,8 +3150,8 @@
       "score": 0.6
     },
     "WORLD": {
-      "grade": "B",
-      "score": 0.03
+      "grade": "C",
+      "score": -0.12
     },
     "NARRATIVE": {
       "grade": "A",
