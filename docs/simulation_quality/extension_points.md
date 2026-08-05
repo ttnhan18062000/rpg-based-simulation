@@ -96,10 +96,20 @@ CERTIFICATION/NORMAL/FULL/RESEARCH modes — extended from DEBUG/CERTIFICATION-o
 `TCK-20260805-COGNITION-GRAPH-CAPTURE-CORPUS-GAP`, which also measured real corpus-wide storage
 cost (143MB for a single 2000-tick scenario) and concluded it's prohibitive for SimQ's calibration
 harness to adopt — LIGHT mode, SimQ's default, remains anomaly-only for this artifact). A third,
-`EntityBehaviorScorecard` (Phase 25/26), computes similar diversity/stagnation metrics but is
-fully unwired to the engine — whether it's worth reviving is under investigation in
-`TCK-20260805-BEHAVIOR-SCORECARD-REDUNDANCY-INVESTIGATION`. None of the three currently feed a
-SimQ pillar or scored signal.
+`EntityBehaviorScorecard` (Phase 25/26) is a third, fully unwired system — investigated and closed
+2026-08-05 (`TCK-20260805-BEHAVIOR-SCORECARD-REDUNDANCY-INVESTIGATION`): not fully redundant nor
+fully worth reviving as-is. Its `route_families_used` field is genuinely redundant with
+`decision_trace.jsonl` (richer, already live). Its category/episode fields
+(`behavior_categories_used`, `episodes_started/completed/failed`, failure/adaptation counts)
+require raw gameplay-*outcome* event categorization (`BehaviorEventNormalizer`/`EpisodeDetector`,
+real working code) that neither `decision_trace` (route-decision scores) nor `cognition_graph`
+(project/objective structure) can see — genuinely different information, worth reviving narrowly
+(`BehaviorWorker`'s wiring specifically) if ever needed. Its 6 numeric score fields
+(`stagnation_score`, `progression_score`, etc.) have **no computation logic anywhere in the
+codebase** — confirmed via a construction-site grep showing `EntityBehaviorScorecard(` only
+appears in test fixtures with hardcoded literal values — so these need to be designed and written
+from scratch regardless of substrate. None of the three systems currently feed a SimQ pillar or
+scored signal.
 
 ---
 
