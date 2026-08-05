@@ -124,7 +124,7 @@ Does not surface cognition snapshots or behavior timeline events.
 |---|---|---|
 | OFF | No | No |
 | LIGHT (default) | **No** | Yes |
-| NORMAL / FULL / RESEARCH | **No** | Yes |
+| NORMAL / FULL / RESEARCH | **Yes (all/selected entities)** — fixed 2026-08-05, `TCK-20260805-COGNITION-GRAPH-CAPTURE-CORPUS-GAP` | Yes |
 | DEBUG | Yes (all entities) | Yes |
 | CERTIFICATION | Yes (selected entities) | Yes |
 | LONG_RUN | **No** | Yes |
@@ -133,7 +133,8 @@ Does not surface cognition snapshots or behavior timeline events.
 run directory directly or `grep` them.
 
 **Rating:** Architecture is sound and the data model is rich. Two problems: (a) not queryable
-via API; (b) only available in DEBUG/CERTIFICATION mode for routine strategic changes.
+via API; (b) only available in DEBUG/CERTIFICATION/NORMAL/FULL/RESEARCH mode for routine strategic
+changes — LIGHT (the default) and LONG_RUN still only capture anomalies, unchanged.
 
 ---
 
@@ -306,11 +307,20 @@ invisible to external tools, dashboards, or CLI queries.
 
 ### Gap 6 — Default mode (LIGHT) severely limits cognition capture — Impact: 7 / 15
 
-> **RESOLVED: TCK-20260619-E22-DECISION-EXPLAIN (2026-06-20):** Decision trace promoted to first-class durable object; REST API at /api/v1/observability/cognition/{entity_id}/tick/{n} implemented; tick index and LIGHT-mode capture added.
+> **PARTIALLY RESOLVED — corrected 2026-08-05 (`TCK-20260805-COGNITION-GRAPH-CAPTURE-CORPUS-GAP`):**
+> the "RESOLVED" annotation this entry previously carried conflated two separate artifacts.
+> `TCK-20260619-E22-DECISION-EXPLAIN` (2026-06-20) genuinely added LIGHT-mode capture, but only for
+> `decision_trace.jsonl` (`DecisionTraceWriter`) — verified directly, `decision_trace.jsonl` is
+> real and populated in a LIGHT-mode run. It did **not** touch `cognition_graph_snapshots.jsonl`/
+> diffs (`ObservabilityCognitionRecorder`/`CognitionCapturePolicy`, a separate recorder), which is
+> what this gap's own title and cost/frequency scoring below describe. That half remained
+> genuinely unresolved until this ticket, which also found and fixed a related bug: NORMAL/FULL/
+> RESEARCH modes fell through `CognitionCapturePolicy.should_capture()`'s branching to `False`
+> despite their `ObservabilityConfig` flags implying richer capture — see the corrected table below.
 
 | Dimension | Score | Reason |
 |---|---|---|
-| Debug Time Cost | 2 | Workaround is known: switch to DEBUG mode and re-run |
+| Debug Time Cost | 2 | Workaround is known: switch to DEBUG/CERTIFICATION mode (or NORMAL/FULL/RESEARCH, fixed 2026-08-05) and re-run |
 | Frequency of Need | 3 | Affects every LIGHT-mode run; common scenario |
 | Fix Leverage | 2 | Requires policy change; risk of performance impact in LIGHT mode |
 | **Total** | **7** | |
@@ -318,7 +328,11 @@ invisible to external tools, dashboards, or CLI queries.
 In LIGHT mode — the mode most developers run — cognition snapshots are only written
 when an anomaly fires. Normal goal switching, blocker resolution, and project changes
 produce no cognition artifact. Developers who don't run in DEBUG mode see a black box
-for all routine strategic decisions.
+for all routine strategic decisions. **Still true as of 2026-08-05** — LIGHT mode is
+unchanged; `TCK-20260805-COGNITION-GRAPH-CAPTURE-CORPUS-GAP` investigated whether to change
+SimQ's calibration harness to a richer mode and found the storage/perf cost prohibitive at
+corpus scale (see that ticket's own investigation.md for real measured figures) — deliberately
+not adopted, not silently dropped.
 
 ---
 

@@ -42,8 +42,19 @@ class CognitionCapturePolicy:
         if mode in (ObservabilityMode.LIGHT, ObservabilityMode.LONG_RUN):
             return False
 
-        # In DEBUG/CERTIFICATION modes, selected or debug entities capture state changes
-        if mode in (ObservabilityMode.DEBUG, ObservabilityMode.CERTIFICATION):
+        # In DEBUG/CERTIFICATION/NORMAL/FULL/RESEARCH modes, selected or debug entities capture
+        # state changes. NORMAL/FULL/RESEARCH were previously excluded here despite
+        # ObservabilityConfig's flag table marking them progressively richer than LIGHT
+        # (OBS_BEHAVIOR_NORMALIZATION/OBS_BEHAVIOR_SCORECARDS etc.) -- a real mismatch between the
+        # mode table's documented intent and this policy's actual behavior
+        # (TCK-20260805-COGNITION-GRAPH-CAPTURE-CORPUS-GAP).
+        if mode in (
+            ObservabilityMode.DEBUG,
+            ObservabilityMode.CERTIFICATION,
+            ObservabilityMode.NORMAL,
+            ObservabilityMode.FULL,
+            ObservabilityMode.RESEARCH,
+        ):
             # If selected_entity_ids is empty, default to capturing all active entities
             if not self.selected_entity_ids or entity.id in self.selected_entity_ids:
                 return True
