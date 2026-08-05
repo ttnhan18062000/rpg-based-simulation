@@ -197,9 +197,13 @@ the concrete candidates a stress-tier world should cite when justifying its auth
    section had simply never been updated when those two worlds closed it — this ticket found and
    corrected the staleness rather than authoring a 3rd redundant world with an identical footprint
    to `generated_frontier_3_42`'s. No new world needed.
-2. **High resource-node density with a small map** (or the inverse: a sprawling map with sparse
+2. ~~**High resource-node density with a small map** (or the inverse: a sprawling map with sparse
    resources). Node-per-region density is currently roughly flat (1.3-1.75) across the corpus
-   regardless of overall scale.
+   regardless of overall scale.~~ — **CLOSED, found stale 2026-08-05**
+   (`TCK-20260805-SIMQ-CORPUS-RESOURCE-DENSITY-DECOUPLE`): the same staleness pattern as gap #1 —
+   `resource_dense_basin` (2.33 nodes/region, 3-region map, already correctly documented in the
+   per-world table above) sits well outside the claimed flat 1.3-1.75 band. This section had
+   simply never been updated when that world closed it. No new world needed.
 3. **Pattern-6 gated content (FACTION/INFORMATION/self-model) combined with a large-scale
    population.** ~~The only world with any of this content populated (`urban_political`) is
    mid-scale; there's no data point for how these mechanics behave at `frontier_extended`'s scale~~
