@@ -230,6 +230,57 @@ frequency signal — not yet exercised beyond this one case.
 
 ---
 
+## 10. Attribution granularity — population vs. per-entity vs. per-cohort
+
+**Now:** every pillar score is a single run-level number (`QualityReport`'s per-pillar
+`normalized_score`). §14 of `quality_scoring_contract.md` explicitly parks "per-entity quality
+profiles" as an MVP Non-Goal. Some pillars already track per-entity *instance state* internally as
+scoring input (e.g. AGENCY's `_entity_defer_streak`/`_entity_stasis_fired`), but this is folded
+back into the single aggregate score — it never surfaces as an output.
+
+**Real substrate exists, not yet wired to SimQ (found 2026-08-05):** `decision_trace.jsonl` (live
+today, including SimQ's default LIGHT mode) already gives a genuine per-entity, per-tick record —
+every candidate route considered and its full score breakdown. `cognition_graph_snapshots.jsonl`/
+diffs gives per-entity structural state, but is capture-gated to DEBUG/CERTIFICATION mode (see
+axis 3's addendum above, `TCK-20260805-COGNITION-GRAPH-CAPTURE-CORPUS-GAP`). Per-cohort
+aggregation (e.g. grouped by `class_id`) is sketched but unbuilt, in
+`docs/plans/idea_cognition_graph_analytics_pipeline.md`'s "cross-entity comparison" section.
+
+**Extend via:** architecturally a new layer on top of the existing pillar scorers, not a change to
+them — a `PillarAccumulator` sibling that keys by `entity_id`/`class_id` instead of (or alongside)
+the run-level aggregate, built on the substrate above once
+`TCK-20260805-COGNITION-GRAPH-CAPTURE-CORPUS-GAP` and
+`TCK-20260805-BEHAVIOR-SCORECARD-REDUNDANCY-INVESTIGATION` resolve what substrate is actually
+worth building on.
+
+**Governing doc:** none yet — tracked informally via the two tickets above and
+`docs/plans/idea_cognition_graph_analytics_pipeline.md`.
+
+---
+
+## 11. Cross-pillar correlation — compound-failure signature
+
+**Now:** every pillar scores fully independently. The only cross-pillar reasoning anywhere in the
+system is one manual, hand-written instance in the Scenario Registry (SQ-03: "WORLD only scored if
+attrition correlates with spawn config") — not a general mechanism, just a single rule for a single
+diagnostic question.
+
+**Why this matters:** directly serves the "do the scores help you troubleshoot" quality question
+raised earlier this session (2026-08-03) — if two pillars degrade in the same tick range today,
+nothing surfaces that as a compound signal distinct from two coincidental, unrelated grades. No
+evidence yet on how often correlated degradation actually occurs across the corpus — this is a
+real, named gap, not a validated opportunity; it needs investigation before any implementation
+would be justified.
+
+**Extend via:** would need a new layer above `QualityReport` (not inside any single scorer) that
+reads multiple pillars' `worst_events`/tick ranges after a run completes and looks for tick-range
+overlap or event-tag co-occurrence across pillars — genuinely unexplored; no prototype, ticket, or
+design exists yet.
+
+**Governing doc:** none yet — first documented here, 2026-08-05.
+
+---
+
 ## Related
 
 - `docs/simulation_quality/quality_scoring_contract.md` — the authoritative scoring spec
