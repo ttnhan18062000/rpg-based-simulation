@@ -8,6 +8,10 @@ last_verified: 2026-07-04
 
 # SimQ Event Type Coverage
 
+**See also:** `docs/simulation_quality/extension_points.md` §3 (Recorded events) situates this
+table's counts within the full set of extension axes (world breadth/depth, pillars, tuning
+config, and more).
+
 **Status:** Certified Level 1 — Authoritative  
 **Ticket:** TCK-20260630-SIMQ-TRANSLATE  
 **Date:** 2026-06-30  

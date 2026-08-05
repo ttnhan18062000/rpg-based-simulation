@@ -1,4 +1,5 @@
 ---
+status: active
 title: Simulation Quality Scoring — Getting Started Guide
 layer: observability
 authority: P1
@@ -9,7 +10,12 @@ tags: [simq, quality, observability, guide]
 # Simulation Quality Scoring — Getting Started Guide
 
 This guide explains how to enable, read, and act on the Simulation Quality (SimQ) module.
-For the authoritative spec, see [`quality_scoring_contract.md`](../quality_scoring_contract.md).
+For the authoritative spec, see
+[`quality_scoring_contract.md`](../simulation_quality/quality_scoring_contract.md) (relative path
+corrected — the previous `../quality_scoring_contract.md` resolved to a nonexistent
+`docs/quality_scoring_contract.md`). For every axis this system can be extended along (world
+breadth/depth, tuning config, temporal depth, feed mode, anchor granularity, and more), see
+[`extension_points.md`](../simulation_quality/extension_points.md).
 
 ---
 

@@ -253,3 +253,8 @@ All integration gaps resolved. Module is fully wired, calibrated, and producing 
 *Superseded as the live action list by `docs/plans/archive/simq_development_roadmap.md` (archived
 2026-07-13, all 6 phases complete) — this document is the historical wiring/calibration record, not
 a current task list. No open follow-up work remains from any batch above.*
+
+*For the current, periodically-refreshed status picture (post-roadmap), see
+`docs/audits/D20_simq_quality_status_review.md` — a broader-view synthesis document, distinct from
+both this integration-history record and `docs/simulation_quality/current_state.md`'s own
+numbers-only snapshot.*

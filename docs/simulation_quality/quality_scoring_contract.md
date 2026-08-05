@@ -13,6 +13,11 @@ tags: [simulation-quality, scoring, pillars, architecture, contract, major-featu
 **Investigation source:** `docs/plans/sim_quality_scoring_module.md`  
 **Last updated:** 2026-06-28
 
+**See also:** `docs/simulation_quality/extension_points.md` — a single map of every axis this
+system can be extended along (world breadth/depth, event vocabulary, pillar/scenario registry,
+tuning config, temporal depth, feed mode, anchor granularity, the engine-correctness bridge),
+each with current real numbers and the extension mechanism.
+
 ---
 
 ## 1. Purpose & Scope

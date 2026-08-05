@@ -238,6 +238,8 @@ its *authoring justification*, not by every mechanic it happens to touch.
 
 ## Related documents
 
+- `docs/simulation_quality/extension_points.md` — situates this doc's world-breadth/depth
+  taxonomy within the full set of SimQ extension axes (events, pillars, tuning config, and more)
 - `staging_artifacts/TCK-20260704-SIMQ-CORPUS-TIERS-EPIC/investigation.md` — full evidentiary
   source for the mechanic inventory (§1) and scale diversity tables/gap analysis (§2) this doc
   summarizes. **Path no longer resolves** — `staging_artifacts/` is gitignored and this pre-ticket

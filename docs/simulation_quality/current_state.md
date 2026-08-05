@@ -15,15 +15,97 @@ this doc is the answer to "what's the current picture," refreshed in place rathe
 with dated notes. When this doc and `eval_matrix_results.md` disagree, re-run the refresh command
 below — this doc should always reflect the latest run, not accumulate history of its own.
 
-**Last refreshed:** 2026-07-13 (post `TCK-20260713-SIMQ-ECONOMY-CONTENT-DEPTH`), from the committed
-`tests/simulation_quality/fixtures/grade_anchors.json` (**75 real scenario entries, 18 worlds** —
-corrected from the previously-cited "72 entries, 17 worlds"; the file's 3 non-scenario meta keys
-(`_note`, `_instructions`, `_grade_order`) had been under-excluded by one in the prior count, and
-`TCK-20260713-SIMQ-SCORE-CEILING-FIX` separately added 1 new world, `unit_information_density`,
-3 seeds) — each entry independently verified against a live run at the time it was last committed,
-spot-checked here via a standalone `calibrate_simq.py` re-run of
-`urban_political_selfmodel_probe_seed42_200t` (see Known Issue below for why the full-corpus live
-run couldn't be used directly this time).
+**Last refreshed:** 2026-08-05, via a real full-corpus live engine re-run (`make simq-full-audit-full`,
+`data/calibration/` was empty going in — a fresh-checkout state, not a targeted diff). 75 of 76
+anchor scenarios produced a report (`unit_selfmodel_pilot_seed42_1000t` hit `PRESSURE`-mode
+backpressure during calibration and was excluded as unreliable — see Known Issue below). This
+refresh found 2 real findings the 2026-07-13 refresh predates: **(1)** the WORLD pillar's committed
+anchors are now stale against a real, intentional scoring change landed since, and **(2)** an
+ECONOMY fix that looked promising on paper has zero measured effect on this corpus. Both detailed
+below. Superseded text (2026-07-13, post `TCK-20260713-SIMQ-ECONOMY-CONTENT-DEPTH`): "75 real
+scenario entries, 18 worlds... each entry independently verified against a live run at the time it
+was last committed."
+
+---
+
+## 2026-08-05 refresh — 2 real findings
+
+### Finding 1: WORLD pillar anchors are stale — a real scoring change, not a regression
+
+`test_grade_regression.py` (fast tier, 200t/500t) found **20 of 65 comparable scenarios** drifted
+beyond score tolerance — **19 of the 20 are the WORLD pillar**, every one scoring *lower* than its
+anchor by a consistent delta (e.g. `anchor=0.09 → actual=-0.06`, `anchor=0.59 → actual=0.44`,
+`anchor=0.24 → actual=0.09` — deltas cluster around -0.15/-0.12/-0.075 depending on scenario).
+
+Root cause, confirmed not assumed: `TCK-20260716-PLACELEGAL-SIMQ-SIGNAL` (landed 2026-07-30) added
+a new, intentional, negative-weighted signal (`spawn_occupancy_violation`, weight **-30.0**) to
+`WorldDynamicsScorer`, routing real `LAW-SPAWN-OCCUPANCY` hard-law violations
+(`HardLawMonitor.check_initial_placement()`) into the WORLD DYNAMICS pillar. The committed
+`grade_anchors.json` predates this addition — every scenario whose initial placement happens to hit
+even one spawn-occupancy collision now correctly loses points the anchor never accounted for. This
+is real, working, intentional detection surfacing a previously-invisible signal — **not a quality
+regression** — but the anchors need recalibrating to the new baseline before WORLD's regression
+gate is trustworthy again. Real corpus-wide effect (75 fresh reports vs. the 07-13 table):
+
+| Pillar | S | A | B | C | D | vs. 07-13 |
+|---|---|---|---|---|---|---|
+| WORLD | 0 | 3 | 62 | 10 | 0 | **A 4→3, B 71→62, C 0→10 — real regression-gate-visible drop** |
+
+The one non-WORLD outlier, `urban_political_seed42_200t` (NARRATIVE `A`, SOCIAL `S` — letter
+grades unchanged, only the raw `normalized_score` drifted outside its tolerance band), is far more
+likely ordinary run-to-run variance (already documented in `docs/audits/D20_simq_integration.md`'s
+wall-clock-throttle findings) than a real issue — not part of the WORLD pattern above.
+
+**Not yet fixed in this refresh** — recalibrating `grade_anchors.json`'s WORLD column is a real,
+scoped follow-up, deliberately not done unilaterally as part of a status-report refresh.
+
+### Finding 2: ECONOMY still produces zero real events — but the remaining gap is now precisely
+### isolated to 2 named, already-diagnosed factors, not an open-ended goal-generation mystery
+
+**Corrected 2026-08-05** — this finding originally understated how much work had already gone
+into this exact question. The real chain, in order:
+
+1. `TCK-20260713-SIMQ-ECONOMY-CONTENT-DEPTH` — authored real content into 3 more worlds, found
+   zero effect, discovered the gap was structural not content-volume.
+2. `TCK-20260713-SIMQ-ECONOMY-INTENT-GENERATION-GAP` (**DONE**) — root-caused and fixed a general
+   `ObjectiveKind` routing gap: `TacticalDecisionSystem` only understood `REACH_LOCATION`, silently
+   dropping every other objective kind. Wired the previously-orphaned `ObjectiveIntentResolver`
+   into production, fixed 2 more structural gaps found along the way (`ServiceOpportunityProvider`
+   never called; unresolvable opportunity-id target refs). **Ran real, non-mocked calibration
+   verification (not just unit tests)** and precisely isolated 3 remaining contributing factors,
+   deliberately left out of that ticket's scope:
+   - **Factor 1**: `ENABLE_ADVENTURE_ROUTING` defaults `OFF` in every shipped profile — System A
+     (where the fix lives) never runs during real calibration. Tied to AGENCY's own DA-ruled
+     intentional design (`TCK-20260702-SIMQ-UPLIFT2-AGENCY-DA`) — not casually reversible.
+   - **Factor 2**: even with routing ON, `AdventureRouteScorer` never selects
+     `craft_upgrade`/`buy_upgrade` — empirically confirmed 0 selections across 2 real routing-enabled
+     calibration runs (0/492 in `hero_guild_routing`, 0/342 in `simq_routing_test`), consistently
+     outscored by `form_party`/`gather_resource`.
+   - **Factor 3**: `ObjectiveIntentResolver`'s `REACH_RESOURCE → MOVE_TO` mapping never transitions
+     to a harvest action on arrival. Filed as a direct follow-up:
+     `TCK-20260714-SIMQ-HARVEST-RESOURCE-ARRIVAL-TRANSITION`.
+3. `TCK-20260714-SIMQ-HARVEST-RESOURCE-ARRIVAL-TRANSITION` (**DONE**) — fixed Factor 3 specifically.
+
+**This session's fresh full-corpus re-run (2026-08-05) directly confirms Factor 3's fix, while
+real, did not close the gap**: `resource_harvested`/`item_crafted`/`trade_executed`/
+`shop_transaction` combined still appear in **zero** calibration runs, corpus-wide (`grep` across
+all 75 `quality_scores.jsonl` files). This is exactly consistent with Factors 1 and 2 remaining
+unaddressed — `TCK-20260713-SIMQ-ECONOMY-INTENT-GENERATION-GAP`'s own Completion Summary predicted
+precisely this outcome, explicitly deferring both to "a differently-scoped ticket (the
+`simq_audit`/calibration workstream)." ECONOMY's grade distribution is unchanged from 07-13 (0 S /
+1 A / 16-17 B / 57-58 C — within 1-report rounding). **The real remaining work is narrowly Factor
+2** (Factor 1 requires reopening a DA-ruled decision, out of scope without a fresh decision) — see
+the corrected Recommendation 2 below.
+
+### Known issue — 1 unreliable run this refresh
+
+`unit_selfmodel_pilot_seed42_1000t` failed its calibration integrity check
+(`pressure_mode_final=PRESSURE`, `dropped_count=0` — events were sampled/shed under observability
+backpressure, not silently lost, but the run is flagged unreliable and excluded here). Likely
+session-load-related (this machine was running substantial concurrent load during this refresh),
+not a content issue — unconfirmed, not investigated further as part of this refresh.
+
+---
 
 `TCK-20260713-SIMQ-ECONOMY-CONTENT-DEPTH` composed `trading_company_hub` into 3 more worlds
 (`frontier_living_world`, `frontier_extended`, `swamp_border_world`) and recalibrated their 9
@@ -31,48 +113,58 @@ anchors (3 worlds x 3 seeds, 200t) — this moved 9 anchors' COMBAT/PROGRESSION/
 NARRATIVE columns (new entities/quest content changing those pillars' event counts as a side
 effect) but **ECONOMY itself did not move for any of the 9** — see Recommendation 2 below for why.
 
-**To refresh this report:** `python3 tools/evaluate_simq.py --dry-run`, then update the table below
-from its output. Prefer `--dry-run` for now — see the known tooling bug below before running the
-live (non-dry-run) full-corpus mode. If `--dry-run` reports any `REGRESS` pillars, resolve those
-first (stale anchor vs. real regression — see `docs/audits/D20_simq_integration.md` for the
-established investigation pattern) before treating this doc's numbers as current.
+**To refresh this report:** if `data/calibration/` already has fresh (<24h) reports for every
+scenario, `python3 tools/evaluate_simq.py --dry-run` is enough. Otherwise (as it was for this
+refresh — a fresh checkout has none), use `make simq-full-audit-full` to re-run the live engine
+across the full corpus first (the previously-documented live-mode tooling bug is resolved, see
+below — safe to use directly now), then re-derive the grade table from `data/calibration/*/quality_report.json`
+directly (`evaluate_simq.py`'s own comparison table only prints if every scenario succeeds with
+zero calibration errors — see `main()`'s `error_count > 0` early-exit). If `test_grade_regression.py`
+reports any drift, resolve it first (stale anchor vs. real regression — see
+`docs/audits/D20_simq_integration.md` for the established investigation pattern) before treating
+this doc's numbers as current. Real full-corpus engine runtime: ~15-20 minutes for the 76-scenario
+fast+medium tier (200t/500t/1000t); expect to run it in the background.
 
-**Known issue — `tools/evaluate_simq.py`'s live (non-`--dry-run`) mode has a real bug:**
-`_run_calibration()` (line 59) never forwards `--profile` to `calibrate_simq.py`; `_parse_run_key()`
-(line 45) derives the calibration `--name` purely from the run_key's regex-matched prefix. For any
-run_key where the profile name differs from the world name (currently only
-`urban_political_selfmodel_probe_seed42_200t`, the probe fixture added this session), this passes
-the *profile* name where the *world* name is expected. `calibrate_simq.py`'s world-loading then
-silently falls back to a generic synthetic scenario (`world_id: "unknown"`,
-`scenario_name: "PROD_SMALL"`, confirmed via that run's `run_manifest.json`) instead of erroring —
-producing a near-empty, meaningless result that gets compared against the real anchor. Verified via
-a standalone re-run of the same scenario, which reproduces the correct, anchor-matching result
-(COGNITION=S/5610 events, FACTION=S/29, SOCIAL=S/770, NARRATIVE=A/11) — confirming this is a tooling
-bug, not a quality regression. Evidence preserved in `tmp/evaluate_simq_bug_evidence/`. Not yet
-filed as a ticket.
+**Previously-documented tooling bug — RESOLVED, confirmed 2026-08-05.** This doc previously
+described `_run_calibration()` as never forwarding `--profile` to `calibrate_simq.py`, causing
+`urban_political_selfmodel_probe_seed42_200t` to silently fall back to a meaningless synthetic
+scenario. Re-checked the current source directly: `_run_calibration()` (`tools/evaluate_simq.py`)
+now passes `"--profile", profile_name` explicitly. Confirmed empirically too — this refresh's
+normal automated full-corpus run (no standalone workaround) produced exactly the correct,
+previously-only-manually-obtainable result for that scenario (COGNITION=S/5610 events,
+FACTION=S/29, SOCIAL=S/770, NARRATIVE=A/11). Whatever fixed this was not specifically tracked
+against this doc's own paragraph — the fix landed as a side effect of other SimQ work between
+07-13 and 08-05. No outstanding tooling bug in this path as of this refresh.
 
 ---
 
-## Current grade distribution (75 anchor entries, 18 worlds)
+## Current grade distribution (75 of 76 anchor entries, live-corpus run, 2026-08-05)
+
+`unit_selfmodel_pilot_seed42_1000t` excluded — unreliable run this refresh, see Known Issue below.
+WORLD's distribution reflects Finding 1 above (stale anchors, not a real regression); ECONOMY's
+reflects Finding 2 (fix landed, zero measured effect on this corpus). All other pillars are
+materially unchanged from 2026-07-13 within normal rounding.
 
 | Pillar | S | A | B | C | D |
 |---|---|---|---|---|---|
-| WORLD | 0 | 4 | 71 | 0 | 0 |
-| NARRATIVE | 7 | 55 | 9 | 4 | 0 |
-| COMBAT | 0 | 1 | 46 | 28 | 0 |
+| WORLD | 0 | 3 | 62 | 10 | 0 |
+| NARRATIVE | 8 | 59 | 4 | 4 | 0 |
+| COMBAT | 0 | 0 | 44 | 31 | 0 |
 | PROGRESSION | 0 | 8 | 39 | 28 | 0 |
-| FACTION | 30 | 15 | 6 | 24 | 0 |
-| INFORMATION | 0 | 3 | 35 | 37 | 0 |
-| COGNITION | 8 | 8 | 37 | 22 | 0 |
-| SOCIAL | 15 | 0 | 0 | 60 | 0 |
-| ECONOMY | 0 | 1 | 17 | 57 | 0 |
+| FACTION | 31 | 15 | 6 | 23 | 0 |
+| INFORMATION | 0 | 3 | 36 | 36 | 0 |
+| COGNITION | 8 | 5 | 40 | 22 | 0 |
+| SOCIAL | 16 | 0 | 0 | 59 | 0 |
+| ECONOMY | 0 | 1 | 16 | 58 | 0 |
 | AGENCY | 0 | 8 | 0 | 67 | 0 |
 
-WORLD/PROGRESSION moved by 2/1 entries respectively as a side effect of
-`TCK-20260713-SIMQ-ECONOMY-CONTENT-DEPTH`'s content addition (new entities/quest content shifting
-those pillars' event counts in `frontier_living_world`/`frontier_extended`'s 200t anchors) — **not**
-an intentional target of that ticket, which targeted ECONOMY. ECONOMY's own distribution is
-unchanged (0/1/17/57) — the content addition did not move it; see Recommendation 2 below.
+(2026-07-13 history, preserved for context) WORLD/PROGRESSION moved by 2/1 entries respectively as
+a side effect of `TCK-20260713-SIMQ-ECONOMY-CONTENT-DEPTH`'s content addition (new entities/quest
+content shifting those pillars' event counts in `frontier_living_world`/`frontier_extended`'s 200t
+anchors) — **not** an intentional target of that ticket, which targeted ECONOMY. As of this
+2026-08-05 refresh, ECONOMY's distribution remains effectively unchanged (0/1/16-17/57-58 across
+both refreshes, within 1-report rounding) — see Finding 2 above and Recommendation 2 below, now
+corrected to reflect the harvest-wiring fix's zero measured effect on this corpus.
 
 WORLD/PROGRESSION/INFORMATION/ECONOMY's `A` columns went from all-zero to non-zero this session
 (`TCK-20260713-SIMQ-SCORE-CEILING-FIX`) — see the discriminative-power section below, now updated
@@ -189,12 +281,29 @@ the `FeatureMode` gating question the roadmap's 4 pillars shared).
 
 ## Recommended next features
 
-Three remain genuinely open — not previously investigated-and-declined, unlike FACTION/
-INFORMATION/SOCIAL depth (closed) or AGENCY rollout (closed). None requires re-litigating any
-existing DA ruling. Numbering preserved from the prior refresh for continuity even though item 1 is
-now done; 4 was (and remains) a measurement-validity fix that probably belongs before 2 and 3 in any
-real sequencing, since it affects whether *any* future content-authoring or engine work would even
-be visible in the grades.
+Numbering preserved from the prior refresh for continuity even though item 1 is now done; 4 was
+(and remains) a measurement-validity fix that probably belongs before 2 and 3 in any real
+sequencing, since it affects whether *any* future content-authoring or engine work would even be
+visible in the grades. Item 0 is new this refresh and is the most urgent — it's the only item
+actively degrading the regression-detection gate's own trustworthiness right now.
+
+### 0. Recalibrate WORLD pillar anchors against the new spawn-occupancy signal — NEW, URGENT
+
+**Why now:** Finding 1 above — `TCK-20260716-PLACELEGAL-SIMQ-SIGNAL` (07-30) correctly,
+intentionally added a new `spawn_occupancy_violation` signal to WORLD DYNAMICS scoring, but
+`grade_anchors.json` was never recalibrated against it. Result: 19 of 20 real
+`test_grade_regression.py` failures found by this refresh are this exact stale-anchor pattern —
+the regression gate is currently crying wolf on WORLD for every scenario that happens to have any
+spawn-occupancy collision, which is real signal, not noise, but the *anchors* don't know that yet.
+Until this is recalibrated, WORLD's regression gate cannot distinguish a genuine future regression
+from this already-known, already-explained baseline shift.
+
+**Shape of the work:** re-run calibration for the ~19 affected `WORLD` anchor entries (or the full
+corpus, simpler and safer) and commit the new WORLD scores/grades to `grade_anchors.json`. Small,
+mechanical, well-scoped — the root cause is already fully diagnosed by this refresh, no further
+investigation needed first.
+
+**Effort estimate:** S — a recalibration + anchor-file update, not new logic.
 
 ### 1. Recalibrate the weight/normalization scale for WORLD, ECONOMY, PROGRESSION, INFORMATION — DONE
 
@@ -221,69 +330,63 @@ corpus's only observed ECONOMY signal, at any content level, is the generic `gol
 Gini-threshold mechanism. See the ECONOMY paragraph above and `docs/parity_ledger/infrastructure.yaml`
 INFRA-242 for the full finding.
 
-**What this means for future work:** the real gap is upstream, in the strategy/cognition layer — no
-entity archetype currently generates an accepted harvest, craft, or trade intent, so
-`trading_company_hub`'s merchants (and every other archetype in the corpus) never exercise the
-resolution path `event_extractor.py` reads from. This is structurally similar to AGENCY's
-`ENABLE_ADVENTURE_ROUTING` gap (a real behavior path that exists but has no live trigger in any
-shipped world/profile) — **not** a "the modules/populations aren't there yet" problem, which is
-what this recommendation originally assumed. A follow-up investigation into why no entity ever
-forms/accepts a NODE/CRAFTING/SHOP_BUY/SHOP_SELL intent (goal-generation in the strategy layer, or
-a missing wiring analogous to AGENCY's) is the next real step for this pillar — content authoring
-alone cannot close it further. Not filed as a new ticket by this recommendation update; left for a
-deliberate scoping decision given the depth of engine-layer work implied.
+**2026-08-05 correction — the goal-generation investigation this recommendation called for has
+already happened, and mostly closed.** `TCK-20260713-SIMQ-ECONOMY-INTENT-GENERATION-GAP` (**DONE**,
+landed the day after this recommendation was first written) did exactly the investigation this
+section originally called for: found the general `ObjectiveKind` routing gap in
+`TacticalDecisionSystem`, fixed it by wiring the previously-orphaned `ObjectiveIntentResolver` into
+production, and — critically — ran **real, non-mocked calibration verification**, not just
+isolated unit tests, precisely isolating exactly 3 remaining contributing factors (full detail in
+Finding 2 above): (1) `ENABLE_ADVENTURE_ROUTING` defaults OFF in shipped profiles, tied to AGENCY's
+own DA-ruled design; (2) `AdventureRouteScorer` never selects craft/buy routes even when routing is
+on, empirically confirmed 0/492 and 0/342 across 2 real routing-enabled runs; (3) the
+`REACH_RESOURCE→MOVE_TO` arrival-transition gap. Factor 3 was fixed by the direct follow-up
+`TCK-20260714-SIMQ-HARVEST-RESOURCE-ARRIVAL-TRANSITION` (**DONE**). This session's fresh
+full-corpus run confirms Factor 3's fix alone was not sufficient — exactly as that ticket's own
+Completion Summary predicted, since Factors 1 and 2 were deliberately left out of its scope.
 
-**Effort estimate for the follow-up:** unknown until the strategy-layer investigation is done — likely
-larger than the M estimate this recommendation originally carried, since the gap is now understood
-to be a missing decision/goal-generation path rather than a content-volume shortfall.
+**What remains, precisely:** Factor 2 is the one real, actionable, narrowly-scoped remaining gap —
+it doesn't require reopening AGENCY's DA ruling (Factor 1), it's already empirically isolated
+(`AdventureRouteScorer`'s existing bias terms, not touched by any prior ticket), and closing it
+would let ECONOMY actually produce a live signal in the routing-enabled worlds that already exist
+in the corpus. Whether Factor 1 (turning `ENABLE_ADVENTURE_ROUTING` on more broadly) should also be
+revisited is a separate, real decision — it would mean reopening a DA ruling, not a pure bug fix,
+and is not assumed here.
 
-### 3. Wire `ActionIntentAdapter.execute()` into the production tick pipeline
+**Effort estimate:** S-M for Factor 2 alone (a scorer-bias investigation + fix, with the routing
+mechanism itself already proven correct) — substantially smaller than this recommendation's
+original "unknown, likely larger than M" estimate, now that the harder routing-infrastructure work
+is already done.
 
-**Why now:** this is the specific, named blocker the Phase 5 gate identified and explicitly
-deferred as "a distinct future initiative if gameplay ever actually needs live self-model
-query-routing" — not a re-opening of a closed question, but picking up a thread that was
-deliberately left for exactly this kind of follow-up decision.
+### 3. Wire `ActionIntentAdapter.execute()` into the production tick pipeline — DONE
 
-**Shape of the work:** add a new gated phase to `src/engine/pipeline.py` (matching the existing
-`run_phase("cooperation", ...)` / `run_phase("information_belief", ...)` pattern) that takes the
-`ActionIntent` routed by `InformationBeliefPhase` Branch B and calls
-`ActionIntentAdapter.execute()` on it, merging the resulting `EntityUpdate` back into the tick's
-update set. Should start as an investigation ticket — the exact merge point, ordering relative to
-the two existing information/cooperation phases, and whether a new feature flag is needed (almost
-certainly yes, to keep this off by default in shipped profiles) all need scoping before
-implementation.
+**Status (corrected 2026-08-05 — this section previously, incorrectly, still listed this as
+open):** done, `TCK-20260713-SIMQ-COGNITION-PIPELINE-WIRE`. A new gated phase,
+`InformationIntentExecutionPhase`, is wired into `src/engine/pipeline.py` (confirmed live in
+source, 2026-08-05: `run_phase("information_intent_execution", ...)` calling
+`InformationIntentExecutionPhase.execute()`), behind a new `ENABLE_INFORMATION_INTENT_EXECUTION`
+flag (default `OFF` in every shipped profile). Proven firing through a real `Kernel.tick_once()`
+loop via a dedicated test
+(`test_information_intent_execution_fires_through_kernel_tick_once`) — though the ticket's own
+Implementation Notes disclose the `urban_political` corpus itself does not naturally route
+Branch B within a 200-tick/seed-42 window, so the proof uses a hand-built scenario, not a live
+calibration run. The mechanism is real and correctly wired; whether any shipped world/profile
+actually exercises it in practice is a separate, not-yet-answered question — not blocking, since
+this item's own AC only required the call site to exist and fire correctly when invoked.
 
-**Effort estimate:** M-L — this is real engine work (a new pipeline phase, not content authoring),
-but narrowly scoped: the routing and execution logic already exist and are already tested in
-isolation; the gap is purely the missing call site.
+### 4. Persist raw `normalized_score` alongside the letter grade, with its own tolerance check — DONE
 
-### 4. Persist raw `normalized_score` alongside the letter grade, with its own tolerance check
-
-**Why now:** `grade_anchors.json` stores only the discretized letter (`"S"`, `"B"`, etc.) — never
-the raw `normalized_score` that produced it, even though every `quality_report.json` computes and
-prints it. Combined with S being an unbounded top band (`>2.0`, no ceiling specified), this makes
-the regression-detection goal itself blind in both directions for any pillar already at S: a real
-improvement (e.g. norm-score 2.1 → 10.0) shows as "S → S", invisible — but so does a real
-*regression* (10.0 → 2.1) that doesn't happen to cross a full band boundary. The anchor system can
-currently only catch changes that cross a grade-letter line, not changes in magnitude within one.
-
-**Why this isn't the excluded Non-Goal:** SimQ's §14 explicitly rules out "historical run
-comparison" (dashboards, trend charts across runs over time) — that stays out of scope, reaffirmed
-2026-07-10. This is narrower: one additional number stored per anchor entry, checked with one
-additional tolerance assertion, squarely inside the existing regression-detection goal (§1), not a
-new comparison/analytics capability.
-
-**Shape of the work:** extend `grade_anchors.json`'s schema to carry `{"grade": "S", "score":
-2.87}` per pillar instead of a bare string (migration needed for all 75×10 existing entries);
-extend `test_grade_regression.py`'s comparison to also assert the raw score stays within a
-tolerance band (e.g. ±15%) of the anchored value, independent of whether the letter grade moved.
-Should start as an investigation ticket to confirm the right tolerance width empirically (too tight
-→ false positives from legitimate run-to-run variance already documented in
-`docs/audits/D20_simq_integration.md`'s wall-clock-throttle findings; too loose → doesn't actually
-catch anything the letter-only check wouldn't).
-
-**Effort estimate:** S-M — schema migration touches every anchor entry, but the logic itself is a
-straightforward tolerance check, not new scoring infrastructure.
+**Status (corrected 2026-08-05 — this section previously, incorrectly, still listed this as
+open):** done, `TCK-20260713-SIMQ-RAWSCORE-PERSIST`. `grade_anchors.json` now stores
+`{"grade": "S", "score": 2.87}` per pillar per anchor entry (confirmed live in the fixture,
+2026-08-05 — e.g. `sandbox_world_seed42_200t`'s `FACTION` entry reads
+`{"grade": "S", "score": 2.9}`), and `test_grade_regression.py` independently asserts the raw
+score stays within a documented tolerance
+(`abs_delta <= max(SCORE_TOLERANCE_ABS_FLOOR=0.05, SCORE_TOLERANCE_REL_PCT=0.20 * |anchor_score|)`)
+of the anchored value — confirmed live in source, 2026-08-05. This mechanism is exactly what
+surfaced Finding 1 above (the WORLD pillar's stale-anchor score-tolerance failures) — this
+session's own audit run depended on this fix already being live without realizing it, which is
+what caused the original staleness in this section.
 
 **Not recommended right now:** re-opening FACTION/INFORMATION/SOCIAL/AGENCY depth (all closed with
 real evidence, see Phase 5 ruling), or any of SimQ's explicit MVP Non-Goals (per-entity profiles,
@@ -294,6 +397,10 @@ historical run comparison, real-time alerting, ML anomaly detection, automated c
 
 ## Related
 
+- `docs/audits/D20_simq_quality_status_review.md` — the broader-view synthesis document (findings
+  interpretation, candidate work items, epic-scoping recommendation) that draws on this doc's
+  numbers; read that doc first for "what should we do about this," this doc for "what are the
+  current numbers"
 - `docs/simulation_quality/quality_scoring_contract.md` — the authoritative scoring spec
 - `docs/simulation_quality/eval_matrix_results.md` — full historical calibration batch log
 - `docs/simulation_quality/corpus_tier_taxonomy.md` — corpus tier structure and per-world classification
