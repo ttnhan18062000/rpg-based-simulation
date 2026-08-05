@@ -1,9 +1,10 @@
 # Implementation Sequence — simulation-quality
 
-All 9 tickets here came out of a 2026-08-05 SimQ status review, a follow-up per-entity event-chain
-investigation, and a corpus scale-diversity gap sweep. Two soft dependencies exist (#3 → #4, #9 →
-#2, both noted below); everything else is independent and can be picked up in any order or in
-parallel. This sequence reflects priority, not strict blocking, except where noted.
+All 11 tickets here came out of a 2026-08-05 SimQ status review, a follow-up per-entity
+event-chain investigation, a corpus scale-diversity gap sweep, and an extension-points completeness
+check. Two soft dependencies exist (#3 → #4, #9 → #2, both noted below); everything else is
+independent and can be picked up in any order or in parallel. This sequence reflects priority, not
+strict blocking, except where noted.
 
 ## Order
 
@@ -36,6 +37,12 @@ parallel. This sequence reflects priority, not strict blocking, except where not
    #2 can complete first using existing worlds, or #9 can land first to improve #2's evidence base.
    Ranked above #6-8 in practical priority (though listed last) precisely because of this
    connection to already-open work.
+10. **TCK-20260805-SIMQ-HARDLAW-BRIDGE-COVERAGE-GAP** (standard) — no dependencies. A concrete,
+    well-evidenced gap (6 of 7 real hard laws invisible to SimQ, 2 scorer signals dormant) — higher
+    practical value than #6-8 despite being listed near the end; comparable in scope/urgency to #2.
+11. **TCK-20260805-SIMQ-CROSS-PILLAR-CORRELATION-INVESTIGATION** (standard) — no dependencies.
+    Lowest-confidence item in this folder — genuinely unknown whether it'll find anything actionable;
+    cheap to run, filed last.
 
 ## Notes
 

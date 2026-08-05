@@ -210,20 +210,25 @@ assertion alongside the existing letter-grade check).
 
 ## 9. The engine-correctness bridge
 
-**Now:** one existing bridge — `HardLawMonitor` (a separate engine-invariant-checking system, not
-part of SimQ) routes `LAW-SPAWN-OCCUPANCY` violations into SimQ's WORLD DYNAMICS pillar as a
-frequency signal (`spawn_occupancy_violation`, `TCK-20260716-PLACELEGAL-SIMQ-SIGNAL`). SimQ scores
-*how often* a violation occurs, not whether any single placement is legal — that judgment stays
-HardLawMonitor's job, per the determinism-exclusion precedent.
+**Now:** `quality_hub.py::_translate_invariant()` is the dispatcher — `law_id`-prefix matching,
+exactly 3 branches: `COMBAT*` → `combat_hard_law_violation` (COMBAT pillar), `CONSERVATION*` →
+`conservation_law_violated` (ECONOMY pillar), `LAW-SPAWN-OCCUPANCY` → `spawn_occupancy_violation`
+(WORLD pillar, `TCK-20260716-PLACELEGAL-SIMQ-SIGNAL`). SimQ scores *how often* a violation occurs,
+not whether any single instance is legal — that judgment stays `HardLawMonitor`'s job, per the
+determinism-exclusion precedent.
 
-**Extend via:** the same pattern — a `QualityHub._translate()` conditional rule keyed on the
-violating law/rule ID, routed to whichever pillar owns that domain (per the Scenario Registry).
+**Real, precisely-scoped gap found (2026-08-05):** of the 7 real, currently-enforced
+`HardLawMonitor` laws, only `LAW-SPAWN-OCCUPANCY` is actually bridged. The other 6
+(`LAW-HP-NONNEGATIVE`, `LAW-READINESS-NONNEGATIVE`, `LAW-GOLD-NONNEGATIVE`,
+`LAW-STAMINA-NONNEGATIVE`, `LAW-POSITION-FINITE`, `LAW-OCCUPANCY-COLLISION`) don't match the
+`COMBAT`/`CONSERVATION` prefixes and fall through untranslated — completely invisible to SimQ.
+Meanwhile the `combat_hard_law_violation`/`conservation_law_violated` scorer signals are fully
+wired and ready, but dormant — no real law_id currently starts with `COMBAT`/`CONSERVATION` to
+trigger them. Tracked in `TCK-20260805-SIMQ-HARDLAW-BRIDGE-COVERAGE-GAP`.
 
-**Why this is its own axis:** most of SimQ's 83 event types come from gameplay/domain logic; this
-is the one deliberate seam between *engine-layer correctness* (owned by
-`tests/certification/`/`HardLawMonitor`/architecture tests) and *SimQ's* behavioral scoring. It's
-a real, generalizable pattern if other engine-invariant classes ever warrant a SimQ-visible
-frequency signal — not yet exercised beyond this one case.
+**Extend via:** the same pattern — a new `_translate_invariant()` branch keyed on the violating
+law_id, routed to whichever pillar owns that domain (per the Scenario Registry), plus a matching
+`EVENT_TYPES` entry and pillar contract table row.
 
 **Governing doc:** `docs/simulation_quality/event_type_coverage.md` §1 (translation table),
 `docs/observability/hard_law_monitor.md`
@@ -274,10 +279,11 @@ would be justified.
 
 **Extend via:** would need a new layer above `QualityReport` (not inside any single scorer) that
 reads multiple pillars' `worst_events`/tick ranges after a run completes and looks for tick-range
-overlap or event-tag co-occurrence across pillars — genuinely unexplored; no prototype, ticket, or
-design exists yet.
+overlap or event-tag co-occurrence across pillars.
 
-**Governing doc:** none yet — first documented here, 2026-08-05.
+**Governing doc:** none yet — investigation tracked in
+`TCK-20260805-SIMQ-CROSS-PILLAR-CORRELATION-INVESTIGATION` (determines whether correlated
+degradation actually occurs in the corpus before any build is justified).
 
 ---
 
