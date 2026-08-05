@@ -2,6 +2,7 @@
   "_note": "Empirical grade anchors committed from calibration runs. Update by re-running calibration and editing grades here. See docs/simulation_quality/quality_scoring_contract.md \u00a711.3.",
   "_instructions": "Each pillar entry is an object {grade, score} (score = normalized_score from quality_report.json, not raw_score). Two independent checks run against it: (1) letter-grade band \u00b11 \u2014 if a pillar grade moves by more than one letter from the anchor, the regression test fails (anchor=B accepts A/B/C, fails D or S); (2) score tolerance \u2014 the live normalized_score must stay within max(0.05, 0.20 * |anchored_score|) of the anchored score, independent of whether the letter grade moved (catches within-band magnitude regressions the letter check alone cannot see). Either check failing is a regression. To update: re-run calibration, confirm new grades/scores, edit this file, commit.",
   "_grade_order": [
+    "F",
     "D",
     "C",
     "B",

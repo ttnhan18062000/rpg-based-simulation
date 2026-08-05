@@ -26,7 +26,7 @@ from typing import Any
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-GRADE_ORDER = ["D", "C", "B", "A", "S"]
+GRADE_ORDER = ["F", "D", "C", "B", "A", "S"]
 
 DEFAULT_ANCHORS = Path("tests/simulation_quality/fixtures/grade_anchors.json")
 CALIBRATION_ROOT = Path("data/calibration")

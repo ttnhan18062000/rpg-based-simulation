@@ -9,7 +9,7 @@ Two independent regressions are flagged:
 Band tolerance rule (±1 letter):
   anchor=B → accepts A, B, C — fails on D or S
   anchor=A → accepts S, A, B — fails on C or D
-  GRADE_ORDER (ascending quality): D < C < B < A < S
+  GRADE_ORDER (ascending quality): F < D < C < B < A < S
 
 Score tolerance rule (independent of the letter band):
   abs(actual_score - anchor_score) <= max(SCORE_TOLERANCE_ABS_FLOOR,
@@ -41,7 +41,7 @@ import pytest
 # Constants
 # ---------------------------------------------------------------------------
 
-GRADE_ORDER = ["D", "C", "B", "A", "S"]  # ascending quality; index distance = band distance
+GRADE_ORDER = ["F", "D", "C", "B", "A", "S"]  # ascending quality; index distance = band distance
 
 SCORE_TOLERANCE_ABS_FLOOR = 0.05
 SCORE_TOLERANCE_REL_PCT = 0.20
@@ -218,7 +218,7 @@ MINIMUM_FAST_ANCHORS = set(FAST_ANCHOR_KEYS)
 def _within_band(actual: str, anchor: str, tolerance: int = 1) -> bool:
     """Return True if *actual* grade is within *tolerance* positions of *anchor*.
 
-    Uses GRADE_ORDER (ascending quality: D=0, C=1, B=2, A=3, S=4).
+    Uses GRADE_ORDER (ascending quality: F=0, D=1, C=2, B=3, A=4, S=5).
     Both grades must be valid members of GRADE_ORDER; unknown grades return False.
     """
     if actual not in GRADE_ORDER or anchor not in GRADE_ORDER:
@@ -603,6 +603,27 @@ def test_score_tolerance_catches_within_band_regression() -> None:
     assert abs(live_score - anchor_score) > max(
         SCORE_TOLERANCE_ABS_FLOOR, SCORE_TOLERANCE_REL_PCT * abs(anchor_score)
     )
+
+
+def test_grade_order_includes_f_band() -> None:
+    """TCK-20260805-SIMQ-GRADE-ORDER-F-BAND-GAP: `_assign_grade()` in quality_report.py has a
+    real 6th band, F (everything below the D cutoff) — GRADE_ORDER previously excluded it,
+    silently mismatching `_within_band`'s ordinal comparison for any real F occurrence.
+
+    `_within_band` previously returned False unconditionally for F (treated as "unknown grade",
+    same code path as a typo) rather than a graded ordinal distance — this is the regression this
+    fix closes.
+    """
+    assert "F" in GRADE_ORDER
+    assert GRADE_ORDER.index("F") == 0  # F is the lowest band, ascending quality order
+
+    # D vs F: adjacent bands, distance 1 — within default tolerance.
+    assert _within_band("F", "D", tolerance=1) is True
+    assert _within_band("D", "F", tolerance=1) is True
+
+    # F vs S: maximum possible distance (5), never within any real tolerance window.
+    assert _within_band("F", "S", tolerance=1) is False
+    assert abs(GRADE_ORDER.index("F") - GRADE_ORDER.index("S")) == 5
 
 
 def test_within_band_default_tolerance_unchanged() -> None:
