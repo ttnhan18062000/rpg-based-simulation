@@ -1225,6 +1225,39 @@ def test_parse_docs_none_prefix_with_later_bullet_still_parses():
     assert _parse_docs_to_update(section) == ["docs/mechanics/x.md"]
 
 
+def test_parse_docs_strips_line_number_suffix():
+    # TCK-20260804-DOCS-BULLET-LINE-SUFFIX-FIX: reproduces the real observed failure form
+    # (TCK-20260804-EXPANSION-RATE-WIRING's logged evidence text) — a `:line` suffix baked inside
+    # the backticks must not be captured into the extracted path.
+    section = "- `docs/agent-monitoring/schema.md:287`: reason\n"
+    assert _parse_docs_to_update(section) == ["docs/agent-monitoring/schema.md"]
+
+
+def test_parse_docs_line_suffix_multiple_bullets_mixed_with_bare():
+    section = (
+        "- `docs/agent-monitoring/schema.md:287`: reason one\n"
+        "- `docs/mechanics/x.md`: reason two\n"
+    )
+    assert _parse_docs_to_update(section) == [
+        "docs/agent-monitoring/schema.md",
+        "docs/mechanics/x.md",
+    ]
+
+
+def test_parse_docs_does_not_strip_compliance_id_suffix():
+    # Real corpus precedent (checked during TCK-20260804-AGENT-DEF-GAP-FIXES review) — a
+    # `::COMPLIANCE-ID` suffix is not a line number and must survive uncut.
+    section = "- `docs/parity_ledger/world_dynamics.yaml::WORLD-103`: reason\n"
+    assert _parse_docs_to_update(section) == ["docs/parity_ledger/world_dynamics.yaml::WORLD-103"]
+
+
+def test_parse_docs_does_not_strip_comma_range_suffix():
+    # Real corpus precedent — a comma-separated line range is not a single `:digits` suffix and
+    # must survive uncut.
+    section = "- `docs/x.md:3,5`: reason\n"
+    assert _parse_docs_to_update(section) == ["docs/x.md:3,5"]
+
+
 # ---------------------------------------------------------------------------
 # _git_touched_paths (TCK-20260802-DOC-COVERAGE-CHECK)
 # ---------------------------------------------------------------------------
@@ -1390,6 +1423,26 @@ def test_docs_coverage_all_flagged_paths_touched_passes(tmp_path, monkeypatch):
     status, evidence = check_docs_to_update_coverage("TCK-FAKE", "standard", base_dir=Path("staging_artifacts"))
     assert status == "PASS"
     assert "docs/mechanics/x.md" in evidence
+
+
+def test_docs_coverage_line_suffix_bullet_matches_bare_git_path(tmp_path, monkeypatch):
+    # End-to-end regression test for the actual observed FAIL
+    # (TCK-20260804-EXPANSION-RATE-WIRING's logged evidence text: "BLOCKED - docs_to_update_coverage
+    # failed on investigation.md bullet format (:line baked inside backticks)") — a `:line`-suffixed
+    # bullet must correctly match `git status`'s bare-path form.
+    subprocess.run(["git", "init", "-q"], cwd=tmp_path, check=True)
+    subprocess.run(["git", "config", "user.email", "test@example.com"], cwd=tmp_path, check=True)
+    subprocess.run(["git", "config", "user.name", "Test"], cwd=tmp_path, check=True)
+    (tmp_path / "docs" / "agent-monitoring").mkdir(parents=True)
+    (tmp_path / "docs" / "agent-monitoring" / "schema.md").write_text("content", encoding="utf-8")
+
+    base = tmp_path / "staging_artifacts"
+    _write_investigation(base, "TCK-FAKE", "- `docs/agent-monitoring/schema.md:287`: reason")
+    monkeypatch.chdir(tmp_path)
+
+    status, evidence = check_docs_to_update_coverage("TCK-FAKE", "standard", base_dir=Path("staging_artifacts"))
+    assert status == "PASS"
+    assert "docs/agent-monitoring/schema.md" in evidence
 
 
 def test_docs_coverage_missing_flagged_path_fails(tmp_path, monkeypatch):

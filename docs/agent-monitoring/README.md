@@ -80,6 +80,23 @@ it raises). Reports `per_skill`, `per_skill_per_run`, and an `unparseable` count
 regex can't match. Built by `TCK-20260805-SKILL-USAGE-METRIC` after this session's own skill-usage
 audit found this question previously required ad hoc regex against raw `tools.jsonl` every time.
 
+## Done-Ticket Monitoring Coverage Audit
+
+`tools/agent-monitoring/done_ticket_monitoring_coverage.py` is a separate, read-only audit
+checking whether every ticket under `tickets/done/` has at least one matching `run_id` record in
+`runs.jsonl`. Reports `covered`/`missing`/`unparseable` ticket lists. Deliberately reads
+`runs.jsonl` directly rather than through `generate_retro`'s SQLite-index path — that index is
+only rebuilt when missing, not when stale, and this audit's whole purpose (catching a just-closed
+ticket with no monitoring record) requires up-to-the-second freshness a lazily-rebuilt index
+cannot guarantee. Built by `TCK-20260805-DONE-TICKET-MONITORING-COVERAGE-AUDIT` after
+`TCK-20260805-CODEX-EVENT-TRACE-GAP-INVESTIGATION` found 2 `DONE` tickets with zero monitoring
+records. The full audit found 719 of 1,303 tickets missing coverage, but this is **not** an
+ongoing systemic bug — the earliest real `runs.jsonl` record is dated 2026-06-07 (the
+`TCK-20260607-MON-CAPTURE` ticket that built agent-monitoring capture itself), so every ticket
+dated before that structurally cannot have a record; bucketing the remainder by month shows a
+clean rollout-adoption curve (124 missing in the June 2026 rollout month, 24 in July, converging
+to a single isolated miss in August) rather than a flat ongoing rate.
+
 ## Navigation
 
 | Doc | Contents |

@@ -305,7 +305,7 @@ def check_ticket_field_values_valid(
     return (result["status"], result["evidence"])
 
 
-_DOCS_BULLET_RE = re.compile(r"^-\s+`(docs/[^`]+)`", re.MULTILINE)
+_DOCS_BULLET_RE = re.compile(r"^-\s+`(docs/[^`]+?)(?::\d+)?`", re.MULTILINE)
 _DOCS_NONE_PHRASES = {"", "none", "none.", "n/a"}
 _DOCS_NONE_PREFIX_RE = re.compile(r"^(none|n/a)\.?\s*", re.IGNORECASE)
 
@@ -391,6 +391,14 @@ def _parse_docs_to_update(section_text: str) -> list[str]:
     for an empty section, a recognized "none applicable" phrase (case-insensitive, exact match), or
     a "None."/"N/A"-prefixed section whose remaining text contains no docs/ bullet — tolerates
     trailing rationale prose after "None." (see `_is_none_section`, TCK-20260804-AGENT-DEF-GAP-FIXES).
+
+    Tolerates a trailing `:digits` line-number suffix baked inside the backticks (e.g.
+    `` `docs/agent-monitoring/schema.md:287` ``), stripping only that suffix from the extracted
+    path so it matches `git status`'s bare-path form during coverage verification
+    (TCK-20260804-DOCS-BULLET-LINE-SUFFIX-FIX). Other colon-bearing forms confirmed present in the
+    real corpus — `` `docs/parity_ledger/x.yaml::WORLD-103` `` (compliance-ID suffix) and
+    `` `docs/x.md:3,5` `` (comma-separated range) — are deliberately left uncut, since neither is a
+    single-`:digits` line-number suffix.
     """
     if _is_none_section(section_text):
         return []
