@@ -15,16 +15,48 @@ this doc is the answer to "what's the current picture," refreshed in place rathe
 with dated notes. When this doc and `eval_matrix_results.md` disagree, re-run the refresh command
 below — this doc should always reflect the latest run, not accumulate history of its own.
 
-**Last refreshed:** 2026-08-05, via a real full-corpus live engine re-run (`make simq-full-audit-full`,
-`data/calibration/` was empty going in — a fresh-checkout state, not a targeted diff). 75 of 76
-anchor scenarios produced a report (`unit_selfmodel_pilot_seed42_1000t` hit `PRESSURE`-mode
-backpressure during calibration and was excluded as unreliable — see Known Issue below). This
-refresh found 2 real findings the 2026-07-13 refresh predates: **(1)** the WORLD pillar's committed
-anchors are now stale against a real, intentional scoring change landed since, and **(2)** an
-ECONOMY fix that looked promising on paper has zero measured effect on this corpus. Both detailed
-below. Superseded text (2026-07-13, post `TCK-20260713-SIMQ-ECONOMY-CONTENT-DEPTH`): "75 real
-scenario entries, 18 worlds... each entry independently verified against a live run at the time it
-was last committed."
+**Last refreshed:** 2026-08-06, via a real full-corpus live engine re-run (`make simq-full-audit-full`,
+79 of 79 anchor scenarios produced a report — 0 exclusions this run, including
+`unit_selfmodel_pilot_seed42_1000t`, which was unreliable in the earlier 2026-08-05 same-day
+refresh but completed cleanly here). This refresh is the closing snapshot for a full working
+session (5 fixes, 5 investigations, 1 new corpus world — see "2026-08-05/06 session summary"
+below), superseding the mid-session 2026-08-05 refresh whose "Finding 1"/"Finding 2" text below is
+now historical record of what was found and fixed, not the current state.
+
+---
+
+## 2026-08-05/06 session summary
+
+A full working session covering all 11 tickets in `tickets/done/simulation-quality/`. Real
+fixes/changes: **(1)** WORLD pillar anchors recalibrated against the `spawn_occupancy_violation`
+signal (37 scenarios, `TCK-20260805-SIMQ-WORLD-ANCHOR-RECALIBRATION`); **(2)** cognition-graph
+capture policy bug fixed (`TCK-20260805-COGNITION-GRAPH-CAPTURE-CORPUS-GAP`); **(3)** the F grade
+band added to `GRADE_ORDER` in 3 places (`TCK-20260805-SIMQ-GRADE-ORDER-F-BAND-GAP`); **(4)** all 7
+real `HardLawMonitor` laws now bridged into SimQ, up from 1 (`TCK-20260805-SIMQ-HARDLAW-BRIDGE-COVERAGE-GAP`,
+new `world_hard_law_violation` signal, confirmed 0 real corpus occurrences this refresh); **(5)** a
+new corpus world, `quest_dense_frontier` (ratio 1.0 quest-def/entity, closing a genuine scale-
+diversity gap, `TCK-20260805-SIMQ-CORPUS-QUEST-DENSITY-DECOUPLE`) — corpus grew from 76 to 79
+anchors. Investigated-and-closed-without-a-fix: ECONOMY's craft/buy scorer bias (confirmed correct
+behavior, not a bug), the `EntityBehaviorScorecard` redundancy question (nuanced, no revival
+needed), cross-pillar correlation (no real signal found in the corpus). Found stale rather than
+fixed: 3 of 4 targeted corpus-scale-diversity gaps (faction-density, resource-density,
+AGENCY-real-archetype) turned out already closed by pre-existing worlds
+(`crowded_frontier`/`resource_dense_basin`/`hero_guild_routing`) and undocumented — corrected
+`corpus_tier_taxonomy.md` instead of shipping redundant world content in each case.
+
+**New this refresh (2026-08-06), not yet investigated in depth:** 2 single-draw score-tolerance
+failures — `hero_guild_routing_seed42_500t`/COGNITION (anchor 1.016, actual 1.827) and
+`generated_frontier_3_42_seed456_200t`/NARRATIVE (anchor 0.979, actual 0.761). Both are within
+letter-grade band (A/A in both cases, confirmed via `evaluate_simq.py`'s own PASS table) — only the
+score-tolerance check flags them. Neither this session's tickets nor any other work touched either
+world's content or the COGNITION/NARRATIVE scorers. Notably, `urban_political_seed42_200t` — the
+one failure cited as "stable" throughout this session's earlier tickets — did *not* reproduce in
+this run, which is itself evidence this is ordinary single-draw variance (the specific
+scenario/pillar that flakes shifts run to run) rather than a new regression. Not investigated
+further or added to `SCORE_TOLERANCE_OVERRIDES` this refresh — that mechanism's own precedent
+(see the override table's comments in `test_grade_regression.py`) requires multiple independent
+fresh draws before committing a widened floor, to avoid overfitting a tolerance band to one
+sample of noise. Flagged here for whoever picks this up next.
 
 ---
 
@@ -116,13 +148,13 @@ precisely this outcome, explicitly deferring both to "a differently-scoped ticke
 2** (Factor 1 requires reopening a DA-ruled decision, out of scope without a fresh decision) — see
 the corrected Recommendation 2 below.
 
-### Known issue — 1 unreliable run this refresh
+### Known issue — RESOLVED, 0 unreliable runs in the 2026-08-06 refresh
 
-`unit_selfmodel_pilot_seed42_1000t` failed its calibration integrity check
-(`pressure_mode_final=PRESSURE`, `dropped_count=0` — events were sampled/shed under observability
-backpressure, not silently lost, but the run is flagged unreliable and excluded here). Likely
-session-load-related (this machine was running substantial concurrent load during this refresh),
-not a content issue — unconfirmed, not investigated further as part of this refresh.
+The 2026-08-05 mid-session refresh (quoted above) had 1 unreliable run
+(`unit_selfmodel_pilot_seed42_1000t`, `pressure_mode_final=PRESSURE`), suspected session-load-
+related. The 2026-08-06 closing full-corpus re-run (79/79 scenarios) completed this exact scenario
+cleanly (`pressure_mode_final=NORMAL`, `guard_passed=true`), consistent with the session-load
+theory — not investigated further, since it didn't recur.
 
 ---
 
@@ -141,7 +173,7 @@ directly (`evaluate_simq.py`'s own comparison table only prints if every scenari
 zero calibration errors — see `main()`'s `error_count > 0` early-exit). If `test_grade_regression.py`
 reports any drift, resolve it first (stale anchor vs. real regression — see
 `docs/audits/D20_simq_integration.md` for the established investigation pattern) before treating
-this doc's numbers as current. Real full-corpus engine runtime: ~15-20 minutes for the 76-scenario
+this doc's numbers as current. Real full-corpus engine runtime: ~15-20 minutes for the 79-scenario
 fast+medium tier (200t/500t/1000t); expect to run it in the background.
 
 **Previously-documented tooling bug — RESOLVED, confirmed 2026-08-05.** This doc previously
@@ -157,27 +189,27 @@ against this doc's own paragraph — the fix landed as a side effect of other Si
 
 ---
 
-## Current grade distribution (76 of 76 anchor entries, live-corpus run, 2026-08-05)
+## Current grade distribution (79 of 79 anchor entries, live-corpus run, 2026-08-06)
 
-`unit_selfmodel_pilot_seed42_1000t` — flagged unreliable in the earlier same-day refresh (Known
-Issue below); this table's underlying run (the `TCK-20260805-SIMQ-WORLD-ANCHOR-RECALIBRATION` fix
-run) completed it cleanly (`pressure_mode_final=NORMAL`, `guard_passed=true`), so all 76 are
-included here. WORLD's distribution now reflects the post-recalibration anchors (Finding 1,
-resolved); ECONOMY's reflects Finding 2 (fix landed, zero measured effect on this corpus). All
-other pillars are materially unchanged from 2026-07-13 within normal rounding.
+The full session's closing snapshot — 0 unreliable runs, 3 more anchors than the 2026-08-05
+mid-session table (76 → 79, from `quest_dense_frontier`'s 3 new seeds). WORLD reflects the
+post-recalibration anchors (Finding 1, resolved); ECONOMY reflects Finding 2 (investigated,
+confirmed correct behavior, no fix needed). All other pillars are materially unchanged from the
+2026-08-05 table within normal rounding, aside from the 2 single-draw score-tolerance variances
+noted in the session summary above (both within-band, not grade-distribution-visible here).
 
 | Pillar | S | A | B | C | D |
 |---|---|---|---|---|---|
-| WORLD | 0 | 3 | 63 | 10 | 0 |
-| NARRATIVE | 8 | 59 | 4 | 4 | 0 |
-| COMBAT | 0 | 0 | 44 | 31 | 0 |
-| PROGRESSION | 0 | 8 | 39 | 28 | 0 |
-| FACTION | 31 | 15 | 6 | 23 | 0 |
-| INFORMATION | 0 | 3 | 36 | 36 | 0 |
-| COGNITION | 8 | 5 | 40 | 22 | 0 |
-| SOCIAL | 16 | 0 | 0 | 59 | 0 |
-| ECONOMY | 0 | 1 | 16 | 58 | 0 |
-| AGENCY | 0 | 8 | 0 | 67 | 0 |
+| WORLD | 0 | 3 | 66 | 10 | 0 |
+| NARRATIVE | 8 | 58 | 6 | 7 | 0 |
+| COMBAT | 0 | 0 | 47 | 32 | 0 |
+| PROGRESSION | 0 | 10 | 41 | 28 | 0 |
+| FACTION | 31 | 15 | 6 | 27 | 0 |
+| INFORMATION | 0 | 3 | 36 | 40 | 0 |
+| COGNITION | 9 | 5 | 40 | 25 | 0 |
+| SOCIAL | 16 | 0 | 0 | 63 | 0 |
+| ECONOMY | 0 | 1 | 17 | 61 | 0 |
+| AGENCY | 0 | 8 | 0 | 71 | 0 |
 
 (2026-07-13 history, preserved for context) WORLD/PROGRESSION moved by 2/1 entries respectively as
 a side effect of `TCK-20260713-SIMQ-ECONOMY-CONTENT-DEPTH`'s content addition (new entities/quest
@@ -308,23 +340,11 @@ sequencing, since it affects whether *any* future content-authoring or engine wo
 visible in the grades. Item 0 is new this refresh and is the most urgent — it's the only item
 actively degrading the regression-detection gate's own trustworthiness right now.
 
-### 0. Recalibrate WORLD pillar anchors against the new spawn-occupancy signal — NEW, URGENT
+### 0. Recalibrate WORLD pillar anchors against the new spawn-occupancy signal — DONE
 
-**Why now:** Finding 1 above — `TCK-20260716-PLACELEGAL-SIMQ-SIGNAL` (07-30) correctly,
-intentionally added a new `spawn_occupancy_violation` signal to WORLD DYNAMICS scoring, but
-`grade_anchors.json` was never recalibrated against it. Result: 19 of 20 real
-`test_grade_regression.py` failures found by this refresh are this exact stale-anchor pattern —
-the regression gate is currently crying wolf on WORLD for every scenario that happens to have any
-spawn-occupancy collision, which is real signal, not noise, but the *anchors* don't know that yet.
-Until this is recalibrated, WORLD's regression gate cannot distinguish a genuine future regression
-from this already-known, already-explained baseline shift.
-
-**Shape of the work:** re-run calibration for the ~19 affected `WORLD` anchor entries (or the full
-corpus, simpler and safer) and commit the new WORLD scores/grades to `grade_anchors.json`. Small,
-mechanical, well-scoped — the root cause is already fully diagnosed by this refresh, no further
-investigation needed first.
-
-**Effort estimate:** S — a recalibration + anchor-file update, not new logic.
+**Status:** done, `TCK-20260805-SIMQ-WORLD-ANCHOR-RECALIBRATION` (2026-08-05). 37 affected `WORLD`
+anchor entries recalibrated from a fresh full-corpus run; WORLD-specific `test_grade_regression.py`
+failures went from 19 to 0. See Finding 1 above for the original diagnosis.
 
 ### 1. Recalibrate the weight/normalization scale for WORLD, ECONOMY, PROGRESSION, INFORMATION — DONE
 

@@ -22,11 +22,11 @@ the "Last refreshed" line below is always the source of truth for how current th
   synthesis layer current_state.md deliberately doesn't attempt: what do the numbers mean *as a
   system*, what's the real menu of candidate work, and how should it be sequenced/scoped.
 
-**Last refreshed:** 2026-08-05, from a real full-corpus live engine re-run (`make simq-full-audit-full`
-— `data/calibration/` was empty going in, a fresh-checkout state). 75 of 76 anchor scenarios
-produced a valid report. Full detail and raw evidence citations for every finding below live in
-`current_state.md`'s own 2026-08-05 refresh section — this document summarizes and synthesizes,
-it does not duplicate the evidence trail.
+**Last refreshed:** 2026-08-06, from a real full-corpus live engine re-run (`make simq-full-audit-full`).
+79 of 79 anchor scenarios produced a valid report (0 exclusions). This is the closing snapshot for
+a full working session spanning 11 tickets — see `current_state.md`'s "2026-08-05/06 session
+summary" for the complete list; this document summarizes and synthesizes, it does not duplicate
+the evidence trail.
 
 ---
 
@@ -42,35 +42,58 @@ it does not duplicate the evidence trail.
   mistake traced back to trusting `current_state.md`'s older "Recommended next features" section
   at face value instead of re-checking `tickets/done/` and the actual code; both are now corrected
   here and there. No tickets needed for either.
-- **1 pillar's regression gate is currently untrustworthy** (WORLD) — not a quality problem, a
-  measurement one: a real, intentional scoring addition landed without an anchor recalibration.
-  Small, urgent fix.
-- **1 pillar has a confirmed, narrowly-scoped remaining gap** (ECONOMY) — the broad
-  goal-generation investigation this review previously called for has *already happened and mostly
-  closed* (`TCK-20260713-SIMQ-ECONOMY-INTENT-GENERATION-GAP`, done). It precisely isolated 3
-  factors; 1 of the 3 (the arrival-transition wiring) is fixed. What's left is 2 specific,
-  already-diagnosed factors, not a fresh investigation — see Finding 2.
-- **8 pillars are healthy, intentionally bounded, or fully closed** (FACTION, INFORMATION, SOCIAL,
-  AGENCY, NARRATIVE, COMBAT, PROGRESSION, and COGNITION's query-routing half, now wired) — no
-  action recommended for any of them.
+- **WORLD's regression gate is now trustworthy** — `TCK-20260805-SIMQ-WORLD-ANCHOR-RECALIBRATION`
+  recalibrated all 37 affected anchors; WORLD-specific `test_grade_regression.py` failures went
+  from 19 to 0.
+- **ECONOMY's remaining gap is closed to a decision, not left open** — the goal-generation
+  investigation this review previously called for already happened
+  (`TCK-20260713-SIMQ-ECONOMY-INTENT-GENERATION-GAP`, done) and isolated 3 factors; Factor 3
+  (arrival-transition wiring) was already fixed; **Factor 2 (`AdventureRouteScorer`'s craft/buy
+  bias) is now also investigated and closed** (`TCK-20260805-SIMQ-ECONOMY-ADVENTURE-ROUTE-SCORER-BIAS`) —
+  confirmed correct scorer behavior (entities never harvest/earn gold, so craft/buy are correctly
+  blocked), not a bug; no fix was made, deliberately, per direct user guidance against forcing
+  unrealistic routes. Only Factor 1 remains, as a genuine policy question (reopening a DA ruling),
+  not filed as a ticket.
+- **The engine-correctness bridge is now complete** — all 7 real `HardLawMonitor` laws are bridged
+  into SimQ, up from 1 (`TCK-20260805-SIMQ-HARDLAW-BRIDGE-COVERAGE-GAP`); confirmed 0 real corpus
+  occurrences of the new signal this refresh.
+- **A real gap in cognition-graph observability was found and fixed**
+  (`TCK-20260805-COGNITION-GRAPH-CAPTURE-CORPUS-GAP`) — NORMAL/FULL/RESEARCH modes now capture
+  state changes correctly; a real corpus-wide cost measurement (143MB for one 2000-tick scenario)
+  showed adopting this for SimQ's own calibration harness isn't worth it, a decision made and
+  documented, not left implicit.
+- **Corpus-breadth investigation found 3 of 4 targeted "gaps" were already closed** by pre-existing
+  worlds (`crowded_frontier`, `resource_dense_basin`, `hero_guild_routing`) and simply
+  undocumented — corrected `corpus_tier_taxonomy.md` in each case instead of shipping redundant
+  world content. The 4th gap (quest density decoupled from entity count) was genuinely open; closed
+  with a new world, `quest_dense_frontier` (ratio 1.0, well beyond the corpus's prior incidental
+  max of 0.636).
+- **2 new single-draw score-tolerance variances observed this refresh**
+  (`hero_guild_routing_seed42_500t`/COGNITION, `generated_frontier_3_42_seed456_200t`/NARRATIVE) —
+  both within letter-grade band, neither traced to any change made this session. Flagged, not yet
+  investigated with the multiple-fresh-draws rigor `SCORE_TOLERANCE_OVERRIDES` requires before
+  committing a widened floor — see `current_state.md`'s session summary.
+- **9 pillars are healthy, intentionally bounded, or fully closed** (FACTION, INFORMATION, SOCIAL,
+  AGENCY, NARRATIVE, COMBAT, PROGRESSION, WORLD, and COGNITION's query-routing half) — no action
+  recommended for any of them.
 
 ---
 
-## Findings (evidence-backed, 2026-08-05 refresh)
+## Findings (evidence-backed, 2026-08-05/06 session)
 
-Full evidence, exact deltas, and root-cause chains for all four findings below are in
-`current_state.md`'s "2026-08-05 refresh" section — summarized here for the broader-view read.
+Full evidence, exact deltas, and root-cause chains for all findings below are in
+`current_state.md`'s "2026-08-05/06 session summary" section — summarized here for the
+broader-view read.
 
-### Finding 1 — WORLD pillar anchors are stale against an intentional scoring change (real, urgent, small)
+### Finding 1 — WORLD pillar anchors were stale against an intentional scoring change — FIXED
 
+**Status: resolved 2026-08-05** (`TCK-20260805-SIMQ-WORLD-ANCHOR-RECALIBRATION`).
 `TCK-20260716-PLACELEGAL-SIMQ-SIGNAL` (landed 2026-07-30) correctly added a new, intentional
 negative-weighted signal (`spawn_occupancy_violation`, weight -30.0) to `WorldDynamicsScorer`,
 routing real `LAW-SPAWN-OCCUPANCY` hard-law violations into the WORLD pillar. `grade_anchors.json`
-was never recalibrated against it. Result: 19 of 20 real `test_grade_regression.py` failures found
-this refresh are this exact pattern. This is real, working detection surfacing a
-previously-invisible signal — not a regression — but the WORLD regression gate cannot currently
-distinguish this known baseline shift from a genuine future regression until the anchors are
-recalibrated.
+was never recalibrated against it, causing 19 of 20 real `test_grade_regression.py` failures in
+the original 2026-08-05 refresh. All 37 affected anchors were recalibrated from a fresh
+full-corpus run; WORLD-specific regression failures went from 19 to 0.
 
 ### Finding 2 — ECONOMY's goal-generation gap is already investigated and mostly fixed; 2 precise factors remain
 
@@ -114,12 +137,55 @@ the scorer's current bias is a genuine miscalibration versus a correct reflectio
 archetype incentives, and only then decide whether — and how — to adjust scoring, not jump straight
 to "make craft/buy score higher." See `docs/parity_ledger/infrastructure.yaml` INFRA-242.
 
-### Finding 3 — 1 unreliable calibration run this refresh (informational, unconfirmed cause)
+### Finding 3 — 1 unreliable calibration run in the original refresh — RESOLVED, did not recur
 
 `unit_selfmodel_pilot_seed42_1000t` failed its calibration integrity check under observability
-backpressure (`pressure_mode_final=PRESSURE`) and was excluded. Likely session-load-related (this
-machine had substantial concurrent load during the refresh) — not investigated further; flagged
-for awareness, not as a finding requiring action.
+backpressure (`pressure_mode_final=PRESSURE`) in the original 2026-08-05 refresh, likely
+session-load-related. The 2026-08-06 closing full-corpus run (79/79 scenarios) completed this
+exact scenario cleanly — consistent with the session-load theory, not investigated further since
+it didn't recur.
+
+### Finding 5 — the engine-correctness bridge is now complete (real, closed)
+
+Of the 7 real `HardLawMonitor` laws, only `LAW-SPAWN-OCCUPANCY` was bridged into SimQ prior to this
+session. `TCK-20260805-SIMQ-HARDLAW-BRIDGE-COVERAGE-GAP` bridged the remaining 6:
+`LAW-HP-NONNEGATIVE`/`LAW-READINESS-NONNEGATIVE` route to the existing (previously dormant)
+`combat_hard_law_violation` signal, `LAW-GOLD-NONNEGATIVE` routes to the existing (previously
+dormant) `conservation_law_violated` signal, and `LAW-STAMINA-NONNEGATIVE`/`LAW-POSITION-FINITE`/
+`LAW-OCCUPANCY-COLLISION` route to a new `world_hard_law_violation` signal. Confirmed 0 real
+corpus occurrences of the new signal in this refresh — no anchor impact, purely closing a coverage
+gap for whenever these laws do fire in the future.
+
+### Finding 6 — cognition-graph capture had a real mode-handling bug, now fixed; corpus-wide adoption deliberately declined
+
+`CognitionCapturePolicy.should_capture()` previously handled OFF/LIGHT/LONG_RUN and DEBUG/
+CERTIFICATION explicitly but silently fell through to `False` for NORMAL/FULL/RESEARCH modes,
+despite their `ObservabilityConfig` flags implying richer capture than LIGHT.
+`TCK-20260805-COGNITION-GRAPH-CAPTURE-CORPUS-GAP` fixed this. Separately, that ticket measured
+real corpus-wide storage cost (143MB for a single 2000-tick scenario) and concluded adopting this
+for SimQ's own calibration harness is not worth it — a deliberate, documented decision, not a
+silent gap.
+
+### Finding 7 — 3 of 4 targeted corpus scale-diversity gaps were already closed and undocumented
+
+`corpus_tier_taxonomy.md`'s "Named scale-diversity gaps" list disagreed with its own per-world
+table in 3 of 4 cases: `crowded_frontier` already closed the faction-density gap,
+`resource_dense_basin` already closed the resource-density gap, and `hero_guild_routing` (31
+entities/4 regions/10 quests, dramatically exceeding every real Unit-tier world and matching
+End-to-end peers) already closed the AGENCY-real-archetype gap — all found via direct verification
+before authoring anything, and corrected in the doc rather than shipping redundant world content.
+The 4th gap (quest density decoupled from entity count) was genuinely open — closed with a new
+world, `quest_dense_frontier` (6 entities, 6 quest_definitions, ratio 1.0).
+
+### Finding 8 — 2 new single-draw score-tolerance variances observed, not yet investigated
+
+This refresh's fresh full-corpus run found 2 within-band score-tolerance failures
+(`hero_guild_routing_seed42_500t`/COGNITION, `generated_frontier_3_42_seed456_200t`/NARRATIVE),
+neither traced to any change made this session — and notably, `urban_political_seed42_200t` (the
+failure cited as "stable" throughout this session) did not reproduce this run, itself evidence
+this is ordinary single-draw variance rather than a new regression. Not investigated further or
+added to `SCORE_TOLERANCE_OVERRIDES` this refresh, per that mechanism's own precedent requiring
+multiple independent fresh draws before committing a widened floor.
 
 ### Finding 4 — a previously-documented tooling bug is confirmed resolved
 
@@ -130,20 +196,20 @@ workaround needed): the bug is fixed. No outstanding tooling issue in this path.
 
 ---
 
-## Full Pillar Health (2026-08-05, 75 of 76 scenarios)
+## Full Pillar Health (2026-08-06, 79 of 79 scenarios)
 
 | Pillar | S | A | B | C | D | Read |
 |---|---|---|---|---|---|---|
-| WORLD | 0 | 3 | 62 | 10 | 0 | **Finding 1** — anchors stale, not a real drop |
-| NARRATIVE | 8 | 59 | 4 | 4 | 0 | Healthy, real spread, unchanged |
-| COMBAT | 0 | 0 | 44 | 31 | 0 | Healthy, archetype-correct spread |
-| PROGRESSION | 0 | 8 | 39 | 28 | 0 | Healthy, unchanged |
-| FACTION | 31 | 15 | 6 | 23 | 0 | Declared structurally complete (roadmap Phase 5) |
-| INFORMATION | 0 | 3 | 36 | 36 | 0 | Declared structurally complete (roadmap Phase 5) |
-| COGNITION | 8 | 5 | 40 | 22 | 0 | Both halves wired and closed (`TCK-20260713-SIMQ-COGNITION-PIPELINE-WIRE`) |
-| SOCIAL | 16 | 0 | 0 | 59 | 0 | Staged depth is the deliberate permanent bar (roadmap Phase 5) |
-| ECONOMY | 0 | 1 | 16 | 58 | 0 | **Finding 2** — both factors resolved to decisions: Factor 1 is a policy question (not filed), Factor 2 confirmed correct behavior, not a bug (closed 08-05) |
-| AGENCY | 0 | 8 | 0 | 67 | 0 | C-by-design, `ENABLE_ADVENTURE_ROUTING` opt-in (DA-ruled) |
+| WORLD | 0 | 3 | 66 | 10 | 0 | **Finding 1** — anchors recalibrated, gate now trustworthy |
+| NARRATIVE | 8 | 58 | 6 | 7 | 0 | Healthy; 1 unrelated single-draw variance this refresh (Finding 8) |
+| COMBAT | 0 | 0 | 47 | 32 | 0 | Healthy, archetype-correct spread |
+| PROGRESSION | 0 | 10 | 41 | 28 | 0 | Healthy, unchanged |
+| FACTION | 31 | 15 | 6 | 27 | 0 | Declared structurally complete (roadmap Phase 5) |
+| INFORMATION | 0 | 3 | 36 | 40 | 0 | Declared structurally complete (roadmap Phase 5) |
+| COGNITION | 9 | 5 | 40 | 25 | 0 | Both halves wired and closed; 1 unrelated single-draw variance this refresh (Finding 8) |
+| SOCIAL | 16 | 0 | 0 | 63 | 0 | Staged depth is the deliberate permanent bar (roadmap Phase 5) |
+| ECONOMY | 0 | 1 | 17 | 61 | 0 | **Finding 2** — both factors resolved to decisions: Factor 1 is a policy question (not filed), Factor 2 confirmed correct behavior, not a bug (closed 08-05) |
+| AGENCY | 0 | 8 | 0 | 71 | 0 | C-by-design, `ENABLE_ADVENTURE_ROUTING` opt-in (DA-ruled); `hero_guild_routing` now also formally credited with closing the real-archetype corpus gap (Finding 7) |
 
 ---
 
@@ -173,16 +239,18 @@ automated config suggestion — `quality_scoring_contract.md` §14, reaffirmed o
 
 ## Recommendation
 
-Explicitly the user's decision, not pre-decided here — but the shape of the options:
+**All previously-open candidate work items are now closed.** Item A (WORLD anchors) and Item B2
+(ECONOMY scorer investigation) both resolved 2026-08-05, alongside 5 more tickets not originally
+scoped in this review (hardlaw bridge coverage, cognition-graph capture fix, behavior-scorecard
+redundancy investigation, cross-pillar correlation investigation, and the 4 corpus-scale-diversity
+tickets). **Item B1** (reopening `ENABLE_ADVENTURE_ROUTING`'s DA-ruled default) remains not
+recommended to file — a policy question, not a defect, needing explicit user intent to reopen.
 
-- **Item A** is small, urgent, and fully diagnosed — a strong hotfix-tier candidate on its own,
-  independent of any other decision.
-- **Item B2 is resolved** (2026-08-05) — investigated as instructed, confirmed correct scorer
-  behavior, no fix made. The investigation-first discipline paid off directly: forcing a fix here
-  would have manufactured an unrealistic route exactly as the sequencing caution warned against.
-- **Item B1** is not recommended to file as a ticket right now — it's a policy question about
-  reopening a DA ruling, not a defect. Noted here for visibility only; would need explicit user
-  intent to reopen the DA decision before it becomes ticket-worthy.
+**What's genuinely left for a future session:**
+- The 2 new single-draw score-tolerance variances (Finding 8) — worth a proper multi-draw
+  investigation if they recur, not urgent on their own.
+- Nothing else from this review's own scope remains open. Any further SimQ work would come from a
+  fresh investigation, not a backlog item this document is still tracking.
 
 ---
 
