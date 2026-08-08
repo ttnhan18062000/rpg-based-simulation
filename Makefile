@@ -1,4 +1,4 @@
-.PHONY: help install install-py install-fe build dev serve stop clean lint profile-api memray-profile docs-serve docs-build docs-registry tag-report docs-artifacts knowledge-index knowledge-index-update search-server search-server-docker search-server-stop search-server-logs install-hooks eval-search evaluate evaluate-full simq-full-audit simq-full-audit-full simq-full-audit-slow simq-corpus-diversity-slow-isolated mcp-server-test world-list world-validate world-compile world-resolve world-inspect world-template catalog-list sim sim-debug sim-quick sim-world sim-sweep check-resources export-run retention-plan retention-clean warehouse-init warehouse-ingest typecheck-py perf-measure dashboard-install dashboard-build dashboard-dev dashboard-serve ticket-stats-report test-collect agent-monitoring-index simq-corpus-registry parity-index parity-index-check simq-long-run-lifecycle-observation
+.PHONY: help install install-py install-fe build dev serve stop clean lint profile-api memray-profile docs-serve docs-build docs-registry tag-report docs-artifacts knowledge-index knowledge-index-update search-server search-server-docker search-server-stop search-server-logs install-hooks eval-search evaluate evaluate-full simq-full-audit simq-full-audit-full simq-full-audit-slow simq-corpus-diversity-slow-isolated mcp-server-test world-list world-validate world-compile world-resolve world-inspect world-template catalog-list sim sim-debug sim-quick sim-world sim-sweep check-resources export-run retention-plan retention-clean warehouse-init warehouse-ingest typecheck-py perf-measure dashboard-install dashboard-build dashboard-dev dashboard-serve ticket-stats-report test-collect agent-monitoring-index simq-corpus-registry parity-index parity-index-check simq-long-run-lifecycle-observation content-inventory
 
 # Default
 help: ## Show available commands
@@ -293,6 +293,9 @@ parity-index-check: ## Report whether parity-index/parity.db is stale relative t
 
 simq-long-run-lifecycle-observation: ## Run the 5000-tick combined SimQ + entity-lifecycle observation across the curated 6-world sample
 	python3 tools/simq_long_run_observation.py
+
+content-inventory: ## Regenerate config/content_inventory.json from real data/content/ counts
+	python3 tools/generate_content_inventory.py
 
 # ── Knowledge Search ─────────────────────────────────────────────────────────
 # developer env only — not CI
