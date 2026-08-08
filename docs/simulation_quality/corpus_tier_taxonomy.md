@@ -200,6 +200,26 @@ reassignment or content-authoring work against this table is queued.
 
 ---
 
+## Long-run observation (a separate, orthogonal dimension from tier)
+
+`TCK-20260808-SIMQ-LONG-RUN-LIFECYCLE-OBSERVATION-TIER`: **run length is not a tier** — a world's
+tier (Unit/End-to-end/Stress/Regression-baseline, above) answers why it exists in the corpus,
+independent of how long any given run drives it, exactly the same relationship
+`corpus_registry.yaml`'s `_worlds.<name>.archetype` field
+(`TCK-20260808-LIFECYCLE-SCORE-WORLD-ARCHETYPE-AWARENESS`) has to tier. 62.5% of
+`grade_anchors.json`'s real run_keys use only 200 ticks — too short for several real lifecycle/
+diversity signals (`entity_lifecycle_score.py`'s own `clustering_reliable_tick_threshold: 1000`;
+a real, corpus-wide survey found 7 more tick-gated SimQ scorer rules beyond the 2 previously
+known, real max 500 ticks — see `stored_artifacts/TCK-20260808-SIMQ-LONG-RUN-LIFECYCLE-
+OBSERVATION-TIER/investigation.md`). `tools/simq_long_run_observation.py`
+(`make simq-long-run-lifecycle-observation`) drives one real 5000-tick run (measured cost: ~250s
+for the corpus's 2 largest worlds, `dropped_count=0`) per world across a 6-world curated sample
+(reusing `TCK-20260808-ENTITY-LIFECYCLE-SCORE-CALIBRATION`'s own density-correlation set), writing
+combined SimQ pillar + entity-lifecycle-score snapshots to
+`docs/simulation_quality/long_run_observations/`. This is an additive, periodic observation
+practice, not a fast-tier regression fixture — it never touches `grade_anchors.json` or any
+pillar-scoring formula.
+
 ## Named scale-diversity gaps (stress-tier candidates)
 
 Per `staging_artifacts/TCK-20260704-SIMQ-CORPUS-TIERS-EPIC/investigation.md` §2, the following

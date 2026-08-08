@@ -186,3 +186,30 @@ evidence doesn't justify changing it; this is documented as a verified, delibera
 **`life_arc_detector_reachable`** remains `null` — none of this ticket's own real runs reached
 Hero generation 2 either, consistent with the sibling ticket's own disclosed rarity finding, not
 resolved here.
+
+## Long-run observation tier (TCK-20260808-SIMQ-LONG-RUN-LIFECYCLE-OBSERVATION-TIER)
+
+The tick-length profile above (200-2000 ticks, `sandbox_world` only) motivated a real, corpus-wide
+follow-up: a survey of `docs/simulation_quality/quality_scoring_contract.md` found 7 more
+tick/event-window-gated SimQ scorer rules beyond `capability_growth_stalled` (300 ticks) and this
+tool's own `clustering_reliable_tick_threshold` (1000 ticks) — `belief_system_dormant`/
+`entropy_reward` (100 ticks), `faction_trajectory_stagnant`/`social_structure_static` (300
+ticks), `gold_frozen`/`emergence_dormant` (500 ticks), `trauma_hazard_broken` (loop signal, >100
+ticks). Real max found: 500 ticks — below this tool's own 1000-tick `clustering_reliable`
+threshold, which remains the binding constraint. §4.7's own 200-scored-event loop-detection
+window is a distinct, related concept (events, not ticks — see that section) with only an
+indirect tick-length implication.
+
+Real 5000-tick runtime cost, measured (not assumed): `frontier_extended` (59 entities) and
+`simq_scale_stress_seed42` (68 entities — the corpus's 2 largest worlds) both complete a real
+5000-tick `Kernel` run in ~250s, `dropped_count=0`. `tools/simq_long_run_observation.py`
+(`make simq-long-run-lifecycle-observation`) drives one real Kernel run per world at 5000 ticks
+(reusing this tool's own `_run_for_analysis()` driver, not `calibrate_simq.py`'s `_run_engine()`
+— same non-determinism-avoidance rationale as this doc's own "real conflict" note above), and
+derives **both** the real SimQ pillar report (reusing `calibrate_simq.py`'s own
+`_build_hub`/`_replay_jsonl_through_hub` against the same `run_dir`, no second Kernel run) and the
+entity-lifecycle score from that single run — writing both to
+`docs/simulation_quality/long_run_observations/{world}_seed{seed}_{ticks}t.json`. Default world
+set is the same 6-world density-correlation sample this ticket's own calibration sibling already
+established. This is a periodic observation practice, not a fast-tier regression fixture —
+`grade_anchors.json` and pillar-scoring formulas are untouched.

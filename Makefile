@@ -1,4 +1,4 @@
-.PHONY: help install install-py install-fe build dev serve stop clean lint profile-api memray-profile docs-serve docs-build docs-registry tag-report docs-artifacts knowledge-index knowledge-index-update search-server search-server-docker search-server-stop search-server-logs install-hooks eval-search evaluate evaluate-full simq-full-audit simq-full-audit-full simq-full-audit-slow simq-corpus-diversity-slow-isolated mcp-server-test world-list world-validate world-compile world-resolve world-inspect world-template catalog-list sim sim-debug sim-quick sim-world sim-sweep check-resources export-run retention-plan retention-clean warehouse-init warehouse-ingest typecheck-py perf-measure dashboard-install dashboard-build dashboard-dev dashboard-serve ticket-stats-report test-collect agent-monitoring-index
+.PHONY: help install install-py install-fe build dev serve stop clean lint profile-api memray-profile docs-serve docs-build docs-registry tag-report docs-artifacts knowledge-index knowledge-index-update search-server search-server-docker search-server-stop search-server-logs install-hooks eval-search evaluate evaluate-full simq-full-audit simq-full-audit-full simq-full-audit-slow simq-corpus-diversity-slow-isolated mcp-server-test world-list world-validate world-compile world-resolve world-inspect world-template catalog-list sim sim-debug sim-quick sim-world sim-sweep check-resources export-run retention-plan retention-clean warehouse-init warehouse-ingest typecheck-py perf-measure dashboard-install dashboard-build dashboard-dev dashboard-serve ticket-stats-report test-collect agent-monitoring-index simq-corpus-registry parity-index parity-index-check simq-long-run-lifecycle-observation
 
 # Default
 help: ## Show available commands
@@ -255,6 +255,9 @@ docs-build: docs-artifacts ## Build Docusaurus static site to website/build/
 docs-registry: ## Regenerate docs/REGISTRY.yaml from frontmatter
 	python3 tools/generate_registry.py
 
+simq-corpus-registry: ## Regenerate config/simulation_quality/corpus_registry.yaml from real world/profile/anchor data
+	python3 tools/generate_corpus_registry.py
+
 tag-report: ## Print a tag-usage report over completed tickets (pass ARGS="--json reports/tag_report.json")
 	python3 tools/tag_report.py $(ARGS)
 
@@ -281,6 +284,15 @@ agent-monitoring-epic-staleness: ## Report open epics with no recent child-ticke
 agent-monitoring-index: ## Rebuild the derived read-only SQLite index over agent-monitoring JSONL logs (on-demand only — not CI)
 	$(shell for py in .venv/bin/python3 /home/vboxuser/Work/venv/bin/python3 python3; do [ -x "$$py" ] && echo "$$py" && break; done) \
 	  tools/agent-monitoring/build_index.py
+
+parity-index: ## Rebuild the derived read-only SQLite index over docs/parity_ledger/*.yaml (on-demand only — not CI)
+	python3 tools/parity_index.py build
+
+parity-index-check: ## Report whether parity-index/parity.db is stale relative to live docs/parity_ledger/*.yaml
+	python3 tools/parity_index.py check-staleness
+
+simq-long-run-lifecycle-observation: ## Run the 5000-tick combined SimQ + entity-lifecycle observation across the curated 6-world sample
+	python3 tools/simq_long_run_observation.py
 
 # ── Knowledge Search ─────────────────────────────────────────────────────────
 # developer env only — not CI
