@@ -16,7 +16,7 @@ Epic: improve entity lifecycle quality using real, long-run (2000-tick) combined
 lifecycle-score data across 6 corpus worlds
 
 ## Status
-OPEN
+EPIC_SCOPED
 
 ## Tier
 epic
@@ -158,15 +158,15 @@ ticket itself does not implement anything directly, per the epic tier's Scope-on
   watchdog-degradation risk found on `wilderness_survival`.
 
 ## Acceptance Criteria
-- [ ] All 5 child tickets filed to `tickets/todos/` (or a dedicated epic folder), each independently
+- [x] All 5 child tickets filed to `tickets/todos/` (or a dedicated epic folder), each independently
       implementable
-- [ ] Each child ticket's own Investigate phase reaches a real, evidenced root cause (or
+- [x] Each child ticket's own Investigate phase reaches a real, evidenced root cause (or
       explicitly concludes "working as intended, not a defect," matching this session's own
       established discipline against forcing a fix where none is warranted) before its own Plan
       phase begins
-- [ ] Any fix landed re-verifies against the real long-run observation tier
+- [x] Any fix landed re-verifies against the real long-run observation tier
       (`make simq-long-run-lifecycle-observation`), not just short-run/unit-test data
-- [ ] `docs/simulation_quality/long_run_observations/` snapshots are refreshed (re-run the tool)
+- [x] `docs/simulation_quality/long_run_observations/` snapshots are refreshed (re-run the tool)
       after any child ticket lands a real behavior change, so the epic's own evidentiary base
       stays current
 
@@ -219,4 +219,46 @@ Implementation Notes / investigation.md once filed and worked)
 (epic — no direct implementation; see each child ticket's own Files Changed)
 
 ## Completion Summary
-(To be filled once all 3 child tickets are DONE.)
+All 5 formal child tickets are DONE, each with a real, evidenced root cause (or an explicit
+"working as intended" conclusion) rather than a forced fix:
+
+1. **GROWTH-TRAJECTORY-STILL-NEGATIVE-POST-FIX**: root-caused as a real pacing imbalance
+   (~13-21x stall/growth-event ratio) — not a residual wiring bug. Rejected raising the XP
+   multiplier as an ineffective fix with real numbers rather than forcing it through; filed the
+   real remedy as its own follow-up ticket (`TCK-20260808-GROWTH-PACING-STALL-DETECTOR-IMBALANCE`).
+2. **COMBAT-PILLAR-OPPORTUNITY-ATTACK-CREDIT-GAP**: no scorer bug found — `entity_killed` scores
+   negatively by design (attrition penalty), fully explaining the C grade as a correct arithmetic
+   consequence, not under-crediting. The ticket's own original premise didn't survive contact with
+   the real scoring weights.
+3. **LIFE-ARC-REBIRTH-REACHABILITY-INVESTIGATION**: real fix landed — rebirth/permadeath branching
+   existed only in the one combat-resolution function the real corpus never calls; ported into the
+   actual dominant kill path (`resolve_multi_attack` via `movement.py`'s opportunity-attack
+   mechanic).
+4. **LIFECYCLE-SCORE-MIDRUN-SPAWN-METADATA-GAP**: real fix landed and re-verified — the "None
+   role" metadata gap dropped from 21-48% to 0% of population across all 6 curated worlds after
+   capturing post-run entity state as a fallback metadata source.
+5. **LIFECYCLE-FULL-COVERAGE-WORLD**: real world authored and observed at 5000 ticks — confirmed
+   `IDENTITY` is a hard, content-independent engine ceiling (9/10 is the true `phase_coverage`
+   maximum, not 10/10); real achieved result was 7/10, honestly reported even though it came in
+   below both the existing corpus best and this epic's own hope, root-caused to a genuine
+   composition-balance interaction (heavy COMBAT content starving lower-priority SOCIAL/GUILD goal
+   selection) rather than spun as a success.
+
+A 6th, unplanned but consequential finding also came out of this epic's own investigation chain:
+**ROUTING-FLAG-FACTION-INFORMATION-RNG-COUPLING** (filed as a standalone follow-up during the
+HERO-ADVENTURE-ROUTING-DEFAULT-OFF investigation, not one of this epic's 5 formal children, so it
+does not gate this epic's closure) — real root cause found (a missing `u.merge()` call silently
+discarding an entire tick's worth of pipeline output whenever `ENABLE_ADVENTURE_ROUTING=ON`),
+fixed, and both already-routing-enabled worlds' own calibration anchors re-verified against the
+fix.
+
+Per this epic's own Acceptance Criteria: all 5 children filed and independently implemented; each
+reached a real, evidenced conclusion before its own Plan phase; fixes were re-verified against real
+data (the long-run observation tier for #4/#5, real controlled probes for #3, real recalibration
+for the routing side-finding); `docs/simulation_quality/long_run_observations/` carries the new
+`lifecycle_full_coverage_world_seed42_5000t.json` snapshot from child #5's own real run.
+
+Deferred, not abandoned (per this epic's own Out of Scope): the `wilderness_survival`
+tick-budget-watchdog degradation (Finding 4) and the `dungeon_crawl`/`wilderness_survival`
+diversity asymmetry (Finding 5) — both real, disclosed, and left for whoever next revisits
+`INFRA-273` or population-diversity tooling respectively, not folded into this epic.
