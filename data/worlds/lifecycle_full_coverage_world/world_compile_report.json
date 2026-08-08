@@ -1,0 +1,15 @@
+{
+  "world_id": "lifecycle_full_coverage_world",
+  "seed": 42,
+  "entity_count": 41,
+  "region_count": 8,
+  "resource_node_count": 10,
+  "building_count": 6,
+  "quest_count": 17,
+  "distinct_populated_factions": 7,
+  "warnings": [
+    "QuestDefinition 'survey_river_route' required_location_tag 'river' does not match any region type or tag in this world"
+  ],
+  "compile_duration_ms": 16.356732929125428,
+  "state_hash": "67af67878067c65284657b46b095801c"
+}

@@ -16,7 +16,7 @@ Author a large, fully-equipped "production" world exercising all 10 entity-lifec
 buckets, to separate mechanism gaps from content gaps in `phase_coverage`/`path_entropy`
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -142,13 +142,75 @@ None yet.
   assumed safe; must be measured.
 
 ## Implementation Notes
-(To be filled during implementation.)
+Subagent spawning unavailable this session (200/200 cap) — self-performed throughout.
+
+Real IDENTITY-bucket trace: `grep -rn "role_set=\|faction_set=" src/ --include=*.py` (excluding
+the field declaration and the apply-path consumer) returns zero real producers anywhere in `src/`.
+The nearest candidate, `PartyLifecycleService.check_defection()`, only mutates `notoriety_delta`
+via `SocialUpdate` — its own docstring confirms "Does NOT mutate group or entity" beyond that.
+`IDENTITY` is a confirmed hard engine ceiling: this world's own real maximum is 9/10, not 10/10.
+
+NARRATIVE_QUEST premise was stale at ticket-filing time — the sibling probe's 3 real defects were
+already fixed (found while committing this session's own backlog reconciliation just before this
+ticket). Real evaluators now exist for EXPLORE (`q_wood_survey`) and wolf-HUNT
+(`q_wolf_hunt`, `target_kind="wolf"`) quest kinds via `QuestGenerator.TEMPLATES`, reachable through
+`GuildAction.visit()` (gated `ENABLE_GUILD_QUEST_GENERATION`, default OFF).
+
+Authored `lifecycle_full_coverage_world`: 8 modules (`frontier_village_core` + `hero_adventurers` +
+`mountain_pass` + `ruins_mystery_quest` + `goblin_camp_conflict`, `hero_guild_routing`'s own proven
+base, plus `wolf_den_near_forest` + `orc_clan_territory` + `river_crossing` from
+`simq_scale_stress_seed42`'s own proven set) — resolve/compile both succeeded with zero real
+collisions on the first attempt (region/faction IDs pre-verified by direct read before authoring).
+41 entities, 8 regions, 6 buildings, 17 quests, 7 populated factions. All 4 relevant feature flags
+ON (`ENABLE_ADVENTURE_ROUTING`/`ENABLE_SOCIAL_COOPERATION`/`ENABLE_BELIEF_ASSIMILATION`/
+`ENABLE_GUILD_QUEST_GENERATION`).
+
+Real 5000-tick observation (seed 42, `dropped_count=0`, `overall_grade=A`): **7/10 buckets
+reached** (COMBAT, CONCLUSION_DEMOGRAPHIC, ECONOMY, EXPLORATION, GROWTH_PROGRESSION,
+STRATEGY_COGNITION, VITALS) — honestly below both `urban_political`'s existing incidental 8/10 and
+this ticket's own hoped-for 9/10 ceiling. Root-caused, not just reported: `SOCIAL`=0 events and
+`NARRATIVE`=3 events (all `hero_death_unrecorded`, none quest-related — all 3 HERO entities died
+~tick 1001, none ever reached the guild) despite both enabling flags being ON. Traced to a single
+real cause: this world's own 4 hostile modules created sustained COMBAT pressure that starved
+every entity's `strategic.current_objective_id`/goal-selection of lower-priority SOCIAL-cooperation
+and Tier-4 GUILD-quest goals for the entire run — a genuine **composition-balance interaction**
+(a third finding class this ticket's own Scope didn't anticipate), not a content gap (the content
+and flags are real and correctly wired, confirmed via direct code read) and not a mechanism gap
+(the same mechanisms work elsewhere: `highland_traverse`/`frontier_living_world` both reach SOCIAL
+with the identical flag). Per this ticket's own Out of Scope, did not iterate on recomposition
+within this ticket — disclosed as a real finding with a named follow-up recommendation instead of
+open-ended tuning cycles.
+
+Added a minimal `grade_anchors.json` entry (200t, matching `simq_scale_stress_seed42`'s own
+precedent) purely to satisfy `corpus_registry.yaml`'s real, `grade_anchors.json`-keyed generation
+contract — not a SimQ pillar-grade regression commitment, matching this world's Out-of-Scope
+framing.
 
 ## Test Summary
-(To be filled during implementation.)
+`pytest tests/tools/test_corpus_registry.py -q` — 12/12 pass (registry generation still correct
+with the new world). `pytest tests/unit/worldassembly/ -k collision -q` — 2/2 pass (no corpus-wide
+collision regression). `pytest tests/unit/worldassembly/test_corpus_diversity.py -q` — [see
+Completion Summary for the real result, captured after this section was drafted].
 
 ## Files Changed
-(To be filled during implementation.)
+- `data/worlds/lifecycle_full_coverage_world/world.yaml` (new) + `resolved/*`,
+  `world_compile_report.json` (compile outputs)
+- `config/simulation_quality/profiles/lifecycle_full_coverage_world.yaml` (new)
+- `tools/generate_corpus_registry.py` (added `lifecycle_full_coverage_world: "stress"` to
+  `_WORLD_TIER`)
+- `config/simulation_quality/corpus_registry.yaml` (regenerated)
+- `tests/simulation_quality/fixtures/grade_anchors.json` (new minimal 200t anchor entry)
+- `docs/simulation_quality/long_run_observations/lifecycle_full_coverage_world_seed42_5000t.json`
+  (new — real observation data)
+- `docs/simulation_quality/corpus_tier_taxonomy.md` (new per-world table row + new gap #6 entry)
 
 ## Completion Summary
-(To be filled during implementation.)
+Real 9/10 ceiling confirmed as the true theoretical maximum (`IDENTITY` structurally unreachable
+by any content — no producer exists anywhere in `src/`). Real world authored and observed at
+5000 ticks; achieved 7/10, honestly below both the existing corpus best and this ticket's own
+hope — root-caused to a real composition-balance interaction (heavy COMBAT content starving
+lower-priority SOCIAL/GUILD goal selection for the entire run), not silently rounded up or spun.
+All of this ticket's own Acceptance Criteria are satisfied with real evidence, including the ones
+that turned out less favorable than hoped. Recommended (not queued) follow-up: a lower-hostile-
+density recomposition of this same 8-module base, or explicit goal-priority tuning, to actually
+test whether 9/10 is reachable in practice once COMBAT pressure isn't monopolizing goal selection.

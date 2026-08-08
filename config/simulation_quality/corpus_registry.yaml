@@ -181,6 +181,25 @@ _worlds:
       region_count: 5
       resource_node_count: 3
     tier: end_to_end
+  lifecycle_full_coverage_world:
+    archetype: civilian_settlement
+    density:
+      building_density: 0.75
+      entity_density_per_area: 0.001686
+      entity_density_per_region: 5.125
+      faction_density: 0.875
+      quest_density: 0.4146
+      resource_density: 1.25
+    run_keys:
+    - lifecycle_full_coverage_world_seed42_200t
+    scale:
+      building_count: 6
+      distinct_populated_factions: 7
+      entity_count: 41
+      quest_count: 17
+      region_count: 8
+      resource_node_count: 10
+    tier: stress
   quest_dense_frontier:
     archetype: monster_only_gauntlet
     density:
@@ -932,6 +951,24 @@ highland_traverse_seed456_200t:
   ticks: 200
   tier: end_to_end
   world_name: highland_traverse
+lifecycle_full_coverage_world_seed42_200t:
+  active_feature_flags:
+    ENABLE_ADVENTURE_ROUTING: 'ON'
+    ENABLE_BELIEF_ASSIMILATION: 'ON'
+    ENABLE_GUILD_QUEST_GENERATION: 'ON'
+    ENABLE_SOCIAL_COOPERATION: 'ON'
+  profile_name: lifecycle_full_coverage_world
+  scale:
+    building_count: 6
+    distinct_populated_factions: 7
+    entity_count: 41
+    quest_count: 17
+    region_count: 8
+    resource_node_count: 10
+  seed: 42
+  ticks: 200
+  tier: stress
+  world_name: lifecycle_full_coverage_world
 quest_dense_frontier_seed123_200t:
   active_feature_flags: {}
   profile_name: quest_dense_frontier

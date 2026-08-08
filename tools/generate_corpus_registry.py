@@ -47,6 +47,7 @@ _WORLD_TIER = {
     "frontier_marches": "stress",
     "quest_dense_frontier": "stress",
     "simq_scale_stress_seed42": "stress",
+    "lifecycle_full_coverage_world": "stress",
 }
 
 

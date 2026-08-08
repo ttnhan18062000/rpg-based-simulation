@@ -3368,5 +3368,47 @@
       "grade": "C",
       "score": 0.0
     }
+  },
+  "lifecycle_full_coverage_world_seed42_200t": {
+    "COGNITION": {
+      "grade": "A",
+      "score": 1.2878787878787878
+    },
+    "AGENCY": {
+      "grade": "A",
+      "score": 1.925
+    },
+    "COMBAT": {
+      "grade": "B",
+      "score": 0.010050251256281407
+    },
+    "FACTION": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "ECONOMY": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "PROGRESSION": {
+      "grade": "C",
+      "score": -0.1568627450980392
+    },
+    "SOCIAL": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "INFORMATION": {
+      "grade": "C",
+      "score": 0.0
+    },
+    "WORLD": {
+      "grade": "A",
+      "score": 0.54
+    },
+    "NARRATIVE": {
+      "grade": "C",
+      "score": 0.0
+    }
   }
 }
