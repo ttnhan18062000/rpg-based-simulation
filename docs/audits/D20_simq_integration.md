@@ -29,7 +29,7 @@ are, not the live numbers.
 | **Interest** | 5 / 5 |
 | **Priority** | 9 |
 | **Method** | run-sim + code-read |
-| **Audit history** | 2026-06-30 (original, found broken) → 2026-07-01 (wiring fixed, re-verified) → 2026-07-02/07-11 (4 uplift batches + 2 corpus epics, see Batch History below) → 2026-07-10 audit run `SIMQ-AUDIT-20260710T020542Z`: `no_regression` |
+| **Audit history** | 2026-06-30 (original, found broken) → 2026-07-01 (wiring fixed, re-verified) → 2026-07-02/07-11 (4 uplift batches + 2 corpus epics, see Batch History below) → 2026-07-10 audit run `SIMQ-AUDIT-20260710T020542Z`: `no_regression` → 2026-08-07 hand-orchestrated audit (post `TCK-20260807-QUEST-EVENT-PUSH-MIGRATION`/`-COMMITMENT-ABANDONED-PUSH-MIGRATION-GAP`/`-REJECTION-CASCADE-TICK-PUSH-MIGRATION-GAP`, 79-scenario full corpus): `no_regression` for the push migration itself (AGENCY 79/79 clean); NARRATIVE + PROGRESSION anchors recalibrated (127 pillar entries, 2 already-disclosed causes — see `docs/simulation_quality/current_state.md`'s "2026-08-07 session summary"); 26 COMBAT + 1 COGNITION + 1 SOCIAL score-tolerance drift left unresolved, flagged for a follow-up session |
 
 **Related dimensions:**
 
