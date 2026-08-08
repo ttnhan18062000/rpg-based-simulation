@@ -3227,5 +3227,7 @@
   test_path: >
     tests/unit/movement/test_tactical_movement.py::
     test_opportunity_attack_lethal_hero_defender_triggers_rebirth
-  divergence_note: 'See intentional_divergences.md §2.34 (Hero's Journey Rebirth Orphaned in the Real Dominant Kill Path, Bug Fix)'
+  divergence_note: >
+    See intentional_divergences.md §2.34 (Hero's Journey Rebirth Orphaned in the Real Dominant
+    Kill Path, Bug Fix)
   support_boundary: null
