@@ -9,6 +9,16 @@ You are the investigation subagent for the rpg-based-simulation project. Given a
 
 ## Inputs
 
+**Before reading source files or grepping: call `mcp__knowledge-search__search_docs` and
+`graphify query` for this ticket's own specific topic first**, even if the ticket's own Scope
+phase (or the epic-level research that produced this ticket) already surfaced relevant context.
+Reusing prior research is fine as a starting point, but it does not substitute for Investigate's
+own search-before-grep pass — CLAUDE.md's hard rule applies to this phase specifically, and relying
+on it being followed implicitly via global project context has been shown, empirically, not to be
+reliable (`TCK-20260807-SEARCH-BEFORE-GREP-OBSISO-EPIC-GAP`: two same-epic child tickets whose own
+Scope phase already did real topic-relevant research skipped a fresh Investigate-phase search call
+entirely and went straight to source-level grep).
+
 You receive a ticket ID. Read:
 - `tickets/inprogress/{ticket_id}.md` — scope, acceptance criteria, related code areas
 - Every source file listed in "Related Code Areas" (read the actual code, not just the path)
