@@ -1464,3 +1464,48 @@
     tests/simulation_quality/test_world_dynamics_scorer.py::TestWorldHardLawViolation::test_world_hard_law_violation_scores_negative
   divergence_note: null
   support_boundary: null
+- id: WORLD-115
+  text: >-
+    14 WORLD dynamics (+ demographic + NARRATIVE co-fire) event types (demographic_birth,
+    demographic_mortality, ecology_cycle_completed, spawn_cadence_fired, threat_evolved,
+    building_sabotaged, region_ownership_changed, region_transformed, region_trauma_delta,
+    calamity_spawned, boss_spawned, raid_party_spawned, narrative_milestone,
+    world_emergence_event) are available via an apply-layer WorldDynamicsShaper
+    (src/observability/event_shapers.py), reading StateUpdate.entities_add/entities_remove,
+    WorldUpdate.trauma_delta/owner_faction_id_set/kind_set, building_updates,
+    last_calamity_tick_set, and world_events_add directly -- no post-apply current_state read
+    required. demographic_mortality closes Phase 1's own INFRA-324 deferral (StateUpdate.
+    entities_remove + the shared _real_combat_update() helper give the same signal without new
+    instrumentation). narrative_milestone/world_emergence_event read the same world_events_add
+    record FactionShaper already migrated -- left "out of scope" by Phase 1 only because
+    NARRATIVE wasn't that ticket's domain, not because they weren't push-ready.
+    building_sabotaged substitutes prior_state for current_state in its
+    SpatialQueryService.get_building_region() call, confirmed equivalent (building positions are
+    durable, sabotage never changes them). Registered in PHASE2_SHAPER_REGISTRY, gated by
+    ENABLE_PUSH_EVENT_SHAPERS_PHASE2 (shared with StrategyShaper/ProgressionShaper). SHADOW-only
+    in this ticket. Verified via real kernel runs across 3 worlds (dungeon_crawl,
+    urban_political, hero_guild_routing, 500 ticks): exact 1:1 parity between event_extractor and
+    event_shapers source counts for every event type that fired. (TCK-20260806-PUSH-SHAPER-
+    REGISTRY-WORLD-DYNAMICS)
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >-
+    src/observability/event_shapers.py — WorldDynamicsShaper, PHASE2_SHAPER_REGISTRY["world_dynamics"];
+    real, non-mocked kernel runs across 3 worlds confirmed exact parity for ecology_cycle_completed/
+    region_trauma_delta (the events that fired within 500 ticks on these worlds); SHADOW mode
+    confirmed 0 WorldDynamics-specific deliveries
+  proof_type: parity
+  test_path: >-
+    tests/unit/observability/test_event_shapers_world_dynamics.py (25 tests, all passing)
+  divergence_note: null
+  support_boundary: >-
+    SHADOW-mode construction only — live delivery is a separate, later Phase 2 cutover ticket's
+    scope. See docs/parity_ledger/infrastructure.yaml's INFRA-324 update for the
+    demographic_mortality deferral closure specifically.
+  update_2026_08_07: >-
+    TCK-20260806-PUSH-CUTOVER-PHASE2: cut over to live delivery. ENABLE_PUSH_EVENT_SHAPERS_PHASE2
+    default flipped OFF->ON; event_extractor.py's legacy WORLD_DYNAMICS branches individually
+    flag-gated behind the new _push_shapers_phase2_active. See STRAT-247's update note and
+    infrastructure.yaml INFRA-326 for the run_shadow_shapers() default-lockstep bug found and
+    fixed during this cutover, verified fixed via real 5-world runs.

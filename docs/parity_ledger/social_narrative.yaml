@@ -3095,3 +3095,195 @@
     tests/unit/observability/test_event_extractor_social_memory.py
   divergence_note: null
   support_boundary: null
+
+- id: SOC-239
+  text: >
+    cooperation_event (event_category="social") is now also available via the apply-layer
+    StrategyShaper (src/observability/event_shapers.py, PHASE2_SHAPER_REGISTRY), colocated
+    with AGENCY/COGNITION/INFORMATION events rather than in a dedicated SocialShaper — it is
+    implemented in the same EntityUpdate.property_updates-reading code region as those events
+    in the old extractor (event_extractor.py:372-380), reading
+    property_updates["last_cooperation_decision"] directly, no diffing involved either way.
+    SHADOW-only in this ticket, gated by ENABLE_PUSH_EVENT_SHAPERS_PHASE2 (default OFF), fully
+    independent of Phase 1's own ENABLE_PUSH_EVENT_SHAPERS. (TCK-20260806-PUSH-SHAPER-REGISTRY-STRATEGY)
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: >-
+    src/observability/event_shapers.py — StrategyShaper.shape()'s cooperation_event branch
+  proof_type: parity
+  test_path: >-
+    tests/unit/observability/test_event_shapers_strategy.py::test_cooperation_event
+  divergence_note: null
+  support_boundary: >-
+    Cross-reference only — see STRAT-247 (docs/parity_ledger/strategic_cognition.yaml) for the
+    full shaper/flag-split design this entry's mechanism is part of.
+  update_2026_08_07: >-
+    TCK-20260806-PUSH-CUTOVER-PHASE2: cut over to live delivery alongside STRAT-247's own
+    branches (same code region). See STRAT-247's update note for details.
+
+- id: SOC-240
+  text: >-
+    10 SOCIAL event types (social_memory_created, reputation_delta, group_joined,
+    group_expelled, contract_offer_created, contract_offer_accepted, contract_completed,
+    contract_lapsed, contract_expired_offer, contract_milestone_completed) are available via an
+    apply-layer SocialShaper (src/observability/event_shapers.py), resolving the epic's one
+    previously-unconfirmed field: EntityUpdate.group_id_set uses a -1 sentinel for "left the
+    group" (confirmed by tracing src/engine/patches.py:210-211's actual materialization logic),
+    distinct from None ("not touched this tick"). contract_milestone_completed needed the same
+    full-reconstruction pattern belief_stale/progression_plateau_detected already established
+    (a purely time-based check that must re-scan ALL current ACTIVE contracts, not just ones
+    touched this tick). A real bug was found and fixed via real-kernel verification:
+    contract_expired_offer double-fired when a contract was BOTH status-transitioned to EXPIRED
+    (contracts_add_or_update, ContractLifecycleSystem.check_expirations()) AND reaped
+    (contracts_remove, ContractLifecycleSystem.reap_expired_offers()) in the same tick — the old
+    extractor is immune (single materialized dict, present-with-new-status and absent are
+    mutually exclusive), a shaper reading the two raw update lists independently is not. Fixed by
+    having the status-transition loop skip any contract ID also present in that tick's
+    contracts_remove. Post-fix: contract_expired_offer went from a ~2x mismatch (1991 vs 996) to
+    1019 vs 1022 (within normal run-to-run noise), contract_offer_created matched exactly
+    (1049/1049). Registered in PHASE2_SHAPER_REGISTRY, gated by ENABLE_PUSH_EVENT_SHAPERS_PHASE2.
+    SHADOW-only in this ticket. (TCK-20260806-PUSH-SHAPER-REGISTRY-SOCIAL)
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >-
+    src/observability/event_shapers.py — SocialShaper, PHASE2_SHAPER_REGISTRY["social"];
+    src/engine/kernel.py — SocialShaper.reset_run_state() wired into Kernel.__init__;
+    src/engine/patches.py:210-211 — group_id_set's -1 sentinel confirmed;
+    src/systems/social_systems/contracts.py:64-76,316-343 — the two independent functions whose
+    same-tick interaction caused the contract_expired_offer double-fire, now reconciled;
+    real, non-mocked kernel run (urban_political_seed42_500t, ENABLE_SOCIAL_COOPERATION=ON)
+    confirmed the fix's before/after counts
+  proof_type: parity
+  test_path: >-
+    tests/unit/observability/test_event_shapers_social.py (20 tests, all passing, including
+    test_contract_expired_offer_not_double_fired_when_both_signals_present)
+  divergence_note: null
+  support_boundary: >-
+    SHADOW-mode construction only — live delivery is a separate, later Phase 2 cutover ticket's
+    scope.
+  update_2026_08_07: >-
+    TCK-20260806-PUSH-CUTOVER-PHASE2: cut over to live delivery. ENABLE_PUSH_EVENT_SHAPERS_PHASE2
+    default flipped OFF->ON; event_extractor.py's legacy SOCIAL branches (group_joined through
+    contract_milestone_completed) individually flag-gated behind the new
+    _push_shapers_phase2_active — the Quest progress lifecycle block (QuestEvent, separate
+    quest_system source) confirmed left untouched. See STRAT-247's update note and
+    infrastructure.yaml INFRA-326 for the run_shadow_shapers() default-lockstep bug found and
+    fixed during this cutover, verified fixed via real 5-world runs.
+
+- id: SOC-241
+  text: >
+    TCK-20260807-QUEST-EVENT-TYPE-FILTER-BUG -- `event_extractor.py`'s "Quest progress lifecycle
+    events" block (the source of `quest_event`, translated by `quality_hub.py`'s
+    `_translate_quest_event()` into `quest_started`/`quest_completed`/`quest_failed` for
+    `NarrativeScorer`) had no `isinstance(qstate, QuestState)` filter -- it constructed a
+    `QuestEvent` for every strategic project of any kind (quests or not), mislabeling
+    `GoalKind`-typed AI strategic goals (`TOWN_RETURN`/`COMBAT_ENGAGE`/`HARVESTING`/etc.) as quest
+    activity. Confirmed via real corpus data (`TCK-20260806-SIMQ-QUEST-COMPLETION-PACING-PROBE`
+    Finding 2): 182-700 "quest_event" messages per 2000-tick run, none an actual quest. Also read
+    `.status` (generic `ProjectStatus`) instead of `.quest_status` (the `QuestStatus` field
+    `QuestService`/`QuestResolutionSystem` actually mutate).
+
+    A second, deeper bug found during this ticket's own Implement phase: `QuestEvent.status` is a
+    top-level Pydantic field, never copied into `.payload` by `QuestEvent.__init__` --
+    `ObservabilityEventEnvelope.from_simulation_event()` only carries `.payload` through, so
+    `_translate_quest_event()`'s `payload.get("status", "started")` always returned the default
+    `"started"` regardless of the real status, even with a correct field read. Fixed narrowly at
+    `event_extractor.py`'s own construction sites (`payload={"status": ...}` added explicitly),
+    not at the `QuestEvent`/`ObservabilityEventEnvelope` class level -- confirmed
+    `src/observability/behavior/normalizer.py:244` already correctly prefers the direct attribute
+    over payload for a different consumer, so a class-level change carried unnecessary wider risk.
+
+    Also found: `QuestStatus` has no `FAILED` value at all (`ACTIVE`/`COMPLETED`/
+    `REWARD_PENDING`/`REWARDED` only, per `docs/simulation/quest_contract.md`'s own documented
+    lifecycle) -- `NarrativeScorer`'s `quest_failed` branch (`src/simulation_quality/scorers/
+    narrative.py:84-85`) can therefore never fire from a real quest's own lifecycle; a permanent
+    structural limitation, not a new bug, not fixed here (out of scope -- would require either a
+    new `QuestStatus` value or a different failure-detection mechanism entirely).
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: >-
+    src/observability/event_extractor.py -- QuestState import, isinstance-gated QuestEvent
+    construction reading .quest_status with explicit payload={"status": ...}, commitment_abandoned
+    kept structurally independent (still reads generic .status, applies to any project kind).
+    Real-kernel verification (dungeon_crawl_seed42_500t): quest_event count dropped from 700
+    (pre-fix, 100% mislabeled) to 0 (post-fix -- correctly excludes non-quest projects; 0 expected
+    since TCK-20260807-QUEST-GUILDACTION-DEAD-WIRING, still open, means no real QuestState quests
+    exist in live gameplay yet).
+  proof_type: parity
+  test_path: >-
+    tests/unit/observability/test_event_extractor_narrative.py::TestQuestEventConfirmation
+    (rewritten fixtures using MagicMock(spec=QuestState), 6 tests including the mixed-projects and
+    quest_status-independent-of-status cases), tests/unit/observability/
+    test_event_extractor_agency2.py (2 corrected tests confirming commitment_abandoned remains
+    independent of the QuestState gate)
+  divergence_note: null
+  support_boundary: >-
+    Observability bug fix only -- no gameplay mechanic change. NarrativeScorer's own scoring logic
+    (quest_started/quest_completed/quest_failed weights) untouched. quest_failed's permanent
+    unreachability (QuestStatus has no FAILED value) is disclosed, not fixed -- would need new
+    quest-system design work, out of this ticket's scope.
+  update_2026_08_07: >-
+    TCK-20260807-QUEST-EVENT-PUSH-MIGRATION: this fixed logic is now ALSO the live default path
+    via a new NarrativeShaper (src/observability/event_shapers.py) -- see SOC-242. The
+    event_extractor.py block this entry documents remains in the codebase as the flag-gated
+    rollback path (ENABLE_PUSH_EVENT_SHAPERS_QUEST set to anything other than "ON"), byte-for-byte
+    the same fix described above.
+
+- id: SOC-242
+  text: >-
+    quest_event (entity-project quest lifecycle, scored by NarrativeScorer) migrated from
+    event_extractor.py's post-tick diffing to a live, push-based NarrativeShaper
+    (src/observability/event_shapers.py) -- correcting TCK-20260806-SIMQ-OBSERVABILITY-PUSH-
+    MIGRATION-PHASE2-EPIC's own stale "Out of Scope" claim that quest_event "already come[s] from
+    quest_system, a separate live-emission source, not event_extractor.py's diffing pass."
+  status: divergent
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >-
+    src/observability/event_shapers.py -- new NarrativeShaper.shape(), new _current_projects()
+    helper (mirrors _current_leads()'s prior-full-state + this-tick-delta reconstruction
+    pattern), new QUEST_SHAPER_REGISTRY, new quest_mode gating block inside run_shadow_shapers()
+    (own ENABLE_PUSH_EVENT_SHAPERS_QUEST flag, deliberately NOT folded into
+    ENABLE_PUSH_EVENT_SHAPERS_PHASE2 which already defaults ON -- reusing it would have delivered
+    live immediately with no SHADOW window, the identical double-fire-risk mistake
+    TCK-20260806-PUSH-SHAPER-REGISTRY-STRATEGY already found and fixed once for Phase 2 itself).
+    src/observability/event_extractor.py -- event_extractor.py's own quest_event construction now
+    gated behind `not _push_shapers_quest_active` (rollback path; commitment_abandoned in the same
+    loop deliberately left ungated -- separate signal, not migrated by this ticket, see SOC-243).
+    src/domains/optimization/feature_flags.py -- new ENABLE_PUSH_EVENT_SHAPERS_QUEST, default ON.
+    Real-kernel-adjacent verification (direct EventExtractor.extract() + run_shadow_shapers()
+    comparison, both default and explicit-OFF): default delivers exactly 1 quest_event from the
+    shaper (0 from the extractor's own rollback branch); explicit OFF delivers exactly 1 from the
+    extractor (0 from the shaper) -- confirmed no double-fire in either mode.
+  proof_type: parity
+  test_path: >-
+    tests/unit/observability/test_event_shapers_narrative.py (13 tests: registry wiring, 3-way
+    flag gating (default/OFF/SHADOW/ON), independence from ENABLE_PUSH_EVENT_SHAPERS_PHASE2,
+    direct NarrativeShaper.shape() behavior including the same non-QuestState-project exclusion
+    TCK-20260807-QUEST-EVENT-TYPE-FILTER-BUG fixed in event_extractor.py's own version)
+  divergence_note: >-
+    TCK-20260806-SIMQ-OBSERVABILITY-PUSH-MIGRATION-PHASE2-EPIC's own closed ticket record
+    (tickets/done/TCK-20260806-SIMQ-OBSERVABILITY-PUSH-MIGRATION-PHASE2-EPIC.md, Out of Scope
+    section) states quest_event "already come[s] from quest_system, a separate live-emission
+    source, not event_extractor.py's diffing pass" based on a raw-JSONL inspection. This is
+    incorrect, confirmed by reading the code directly: quest_event was constructed inside
+    event_extractor.py's own diffing loop the whole time (the near-zero JSONL hit count the epic's
+    inspection saw was because real quest generation wasn't wired into live gameplay until
+    TCK-20260807-QUEST-GUILDACTION-DEAD-WIRING, and quest_event itself had its own type-filter bug
+    until TCK-20260807-QUEST-EVENT-TYPE-FILTER-BUG, both the same session as this epic's own
+    close). The genuinely separate live-emission mechanism the epic's inspection likely actually
+    saw is QuestOpportunityRewardSystem's WorldEvent(category=QUEST_COMPLETED)
+    (src/engine/pipeline_phases/quest_opportunity_rewards.py) -- a different mechanism for a
+    different registry (state.quest_registry's QuestOpportunity entries, E23C), not the
+    entity-project QuestState lifecycle quest_event actually tracks. Historical ticket files in
+    tickets/done/ are not edited after close; this entry is the correction of record going
+    forward.
+  support_boundary: >-
+    Observability delivery-mechanism migration only -- no change to NarrativeScorer's scoring
+    logic, no change to which statuses fire (byte-identical to SOC-241's fix, just delivered via a
+    different code path). grade_anchors.json not recalibrated: quest_event's calibration_hits was
+    0 before this migration (no real quests existed in live gameplay in any scored scenario as of
+    SOC-241's own verification), so no existing baseline reflects a state to shift away from.

@@ -194,22 +194,170 @@ silently mishandled the one scenario whose profile name differs from its world n
 the current source directly and confirmed via this refresh's own normal automated run (no
 workaround needed): the bug is fixed. No outstanding tooling issue in this path.
 
+### Finding 9 — COMBAT/PROGRESSION boundary and layer-lifecycle-trajectory gap identified, scoped (not yet implemented)
+
+A 2026-08-06 session discussion pushed on two structural questions: whether COMBAT and PROGRESSION
+need clearer scope separation ("combat also means strategy and build-up character," "progression
+means growing richer/stronger"), and whether each simulation layer (entity/region/faction/world)
+needs its own lifecycle/progression signal. Checked against the §7.1-vs-§7.2 test in
+`quality_scoring_contract.md` §7.6: **no new top-level pillar is justified.** COMBAT stays scoped
+to resolution mechanics (unchanged). PROGRESSION has a real gap — no signal for whether an entity's
+overall capability (level + gear + wealth + skills) trends upward, or whether its life arc is
+coherent. FACTION has a real gap — no trajectory-coherence rule paralleling WORLD's existing
+`trauma_hazard_broken`. Region and world layers were re-checked and are already covered by WORLD's
+existing rules. Filed as `TCK-20260806-SIMQ-PROGRESSION-CAPABILITY-LIFECYCLE` and
+`TCK-20260806-SIMQ-FACTION-LIFECYCLE-TRAJECTORY`, rationale recorded in
+`TCK-20260806-SIMQ-LIFECYCLE-PILLAR-BOUNDARY-DOC`. Not yet implemented.
+
+### Finding 10 — COMBAT event stream confirmed to include hazard damage misclassified as combat; whole-pipeline observability architecture question opened
+
+Follow-up raw-event investigation (3 worlds, 500 ticks, real `simulation_events.jsonl`, not
+aggregate rollups) found zero `entity_killed`/`level_up`/`xp_granted`/`quest_reward_dispensed`
+events across all 3 runs. Traced to root cause, twice escalating past the original hypothesis:
+
+1. `ENABLE_COMBAT_ENGAGEMENT` being off-by-default is a prior, deliberate, already-documented
+   decision (DEV-002, "Stabilized") — not an unexamined gap — and the domain it gates is a
+   posture-assessment layer only, not damage resolution, so it was never the relevant lever.
+2. The real combat/damage events come from `event_extractor.py`'s post-tick HP-diff detection,
+   which — **confirmed, not hypothesized** — fires on any HP loss without checking
+   `CombatUpdate.outcome_kind`, double-classifying hazard-drain damage (`outcome_kind="HAZARD"`,
+   already tagged correctly by `world_dynamics.py`) as combat. Exact bug, exact fix:
+   `TCK-20260806-SIMQ-EXTRACTOR-HAZARD-COMBAT-MISCLASSIFICATION-FIX` (hotfix).
+3. This generalizes: `kernel.py:909`'s `EventExtractor.extract()` is the sole source of nearly
+   every event type in the corpus (not just combat) — the entire observability pipeline is
+   post-tick snapshot diffing, not trigger-point emission, with a real delivery queue
+   (`BoundedObservabilityQueue`) sitting unused as a push target. Investigated as its own ticket:
+   `TCK-20260806-SIMQ-OBSERVABILITY-PUSH-BASED-ARCHITECTURE` (standard, investigation-first).
+
+Zero XP/quest-reward findings themselves are a clean, correctly-explained consequence of zero real
+kills and zero quest completions in the sample — not a separate anomaly. Quest-completion pacing
+(200-2000t) remains open, tracked by `TCK-20260806-SIMQ-QUEST-COMPLETION-PACING-PROBE`.
+
+### Finding 11 — push-based event emission investigated: recommended, feasible, phased
+
+`TCK-20260806-SIMQ-OBSERVABILITY-PUSH-BASED-ARCHITECTURE` investigated whether the diffing pattern
+from Finding 10 should be replaced with emission at the authoritative apply layer. All three
+originally-feared blockers resolved to non-issues on inspection: the replay-determinism contract
+never covered observability events (`test_replay_determinism.py`/`tests/certification/` assert only
+on `AuthoritativeState`); `quality_scoring_contract.md` §3.1's "Zero Simulation Impact" guarantee
+protects *scoring*, not *emission* — emission already runs synchronously inside the tick today; and
+a mature, reusable performance harness already exists
+(`tests/perf/test_simq_isolation_overhead.py`) whose "disabled" baseline already includes today's
+diffing cost. Coverage audit found COMBAT, ECONOMY, and FACTION already read typed, causally-tagged
+update records today (`event_extractor.py`'s own `diplomatic_transition` code already reads
+`update.faction_updates` directly, not diffed) — push-ready with no new instrumentation. PROGRESSION's
+quest detection is genuinely diff-only and needs new instrumentation first (Phase 2, not yet
+scoped). **Recommendation: build it, phased, SHADOW-mode rollout first.** Phase 1 was subsequently
+promoted to its own 5-ticket gated epic (`TCK-20260806-SIMQ-OBSERVABILITY-PUSH-MIGRATION-EPIC`,
+user-designated top priority) rather than the single ticket originally sketched here — see Finding
+12 for its outcome.
+
+### Finding 12 — push-based migration epic complete: COMBAT/ECONOMY/FACTION cut over to live
+### apply-layer emission, with a real, verified rollback path
+
+`TCK-20260806-SIMQ-OBSERVABILITY-PUSH-MIGRATION-EPIC` (5 child tickets, strictly sequential) is
+done. Built `src/observability/event_shapers.py`'s shaper registry (mirroring
+`QualityHub.SCORER_REGISTRY`'s shape), migrated 18 of 21 audited COMBAT/ECONOMY/FACTION-adjacent
+events with 3 explicitly deferred (not silently dropped — `demographic_mortality`,
+`combat_resolved`/`attrition_threshold_crossed` dead code, plus 5 ECONOMY and 1 FACTION event
+needing new instrumentation, see the epic's own investigation.md for the full per-event audit).
+
+The mandatory shadow-validation gate (child 4) found and drove the fix for 2 real bugs — an
+`entity_killed` false-positive on hazard-caused death and a missing volumization rule — by
+reopening the responsible child ticket, exactly the process this epic was designed to enforce.
+Post-fix: 130/131 real-corpus active ticks matched the old extractor exactly, 0 payload-value
+mismatches, no measurable performance overhead.
+
+Cutover (child 5) flipped `ENABLE_PUSH_EVENT_SHAPERS`'s default from `OFF` to `ON` —
+push-based emission is now the live default path for these 3 domains. The old diffing branches in
+`event_extractor.py` were **not deleted** — kept flag-gated as a real, verified rollback (setting
+the flag away from `"ON"` restores byte-identical pre-cutover behavior, confirmed via real,
+non-mocked kernel runs in both directions, not assumed). One genuine complication required special
+handling: `entity_killed`/`hero_death_unrecorded` could not be a clean branch removal, since the
+shaper's version is narrower (same-tick `outcome_kind=="KILL"` only) than the old extractor's
+(any-cause `lifecycle.active` transition) — fixed by narrowing the old branch's *condition*
+(exclude exactly the case the shaper now owns) rather than removing it, preserving old-age and
+delayed-hazard-transition death coverage exactly as before. Parity ledger entries: `COMB-295`
+(combat), `TOWN-190` (economy), `FAC-013` (faction).
+
+**Full-corpus re-run (79 scenarios) found 32 grade-regression test failures — not silently waved
+through.** Root-caused, not assumed clean: an isolated flag-on-vs-flag-off differential repro of
+the most-affected scenario (`hero_guild_routing_seed42_500t`, COMBAT/ECONOMY/FACTION all showing
+`event_count=0`) produced byte-identical results whichever pipeline (new shaper or old extractor)
+was live, proving the drift is not attributable to this migration — it is the pre-existing,
+already-tracked `INFRA-273` tick-budget-watchdog mechanism (dropped-resolution-queue-item
+trajectory divergence, first documented `TCK-20260715-SIMQ-ANCHOR-LOAD-SENSITIVITY-SWEEP`), now
+confirmed capable of starving a domain's event count to zero entirely under sustained load, a
+stronger characterization than the "partial cascading divergence" previously documented for it.
+`grade_anchors.json` was left unrecalibrated — recalibrating against a pre-existing, unrelated
+infrastructure issue would have silently masked it under this migration's commit. See
+`docs/parity_ledger/infrastructure.yaml` `INFRA-273`'s 2026-08-06 update and
+`stored_artifacts/TCK-20260806-PUSH-CUTOVER-COMBAT-ECONOMY-FACTION/investigation.md` for the full
+repro methodology.
+
+**Phase 2 (quest/demographic/XP domains) remains unscoped** — deliberately, per the epic's own
+design: build on what Phase 1's real findings revealed, not a guess made in advance.
+
+### Finding 13 — Phase 2 push-based migration epic complete: AGENCY/COGNITION/INFORMATION/
+### PROGRESSION/WORLD/SOCIAL cut over to live apply-layer emission, full event coverage honored
+
+`TCK-20260806-SIMQ-OBSERVABILITY-PUSH-MIGRATION-PHASE2-EPIC` (8 child tickets, strictly
+sequential) is done — the direct continuation of Finding 12's Phase 1 epic. Every event this
+epic's own governing instruction covered ("make sure the new push is not missing any existing
+defined event, if it cannot be implemented in the current design, defer it not skip it") was
+individually accounted for: migrated (~50 events across `StrategyShaper`, `ProgressionShaper`,
+`WorldDynamicsShaper`, `SocialShaper`, `DeferredInstrumentationShaper`), or confirmed genuinely
+out of scope (`quest_event`/`quest_system` — separate source entirely; campaign/scenario-gated
+events). Exactly one event remains deliberately deferred with a documented reason:
+`gold_transferred`/`gold_transaction` — no typed record exists yet for `entity.inventory.gold`'s
+raw diff.
+
+A real, distinct bug was found and fixed during the final child's (`TCK-20260806-PUSH-CUTOVER-
+PHASE2`) own real-kernel cutover verification: `event_shapers.py`'s `run_shadow_shapers()`
+function read `ENABLE_PUSH_EVENT_SHAPERS_PHASE2` via its own, separate, hardcoded default
+(`"OFF"`) that fell out of lockstep with `feature_flags.py`'s and `event_extractor.py`'s own
+updated defaults, causing a total blackout of all ~50 Phase 2 events under the real post-cutover
+default state (no explicit override) — found, fixed, and verified in both directions (default now
+delivers; explicit `OFF` still rolls back correctly). See `docs/parity_ledger/infrastructure.yaml`
+`INFRA-326` for the full account.
+
+**Full-corpus re-run (79 scenarios) found 37 grade-regression test failures — not silently waved
+through.** Root-caused via the same differential-repro discipline Phase 1 established: a decisive
+confirming experiment (`ENABLE_PUSH_EVENT_SHAPERS_PHASE2` forced `OFF` vs `ON`, kernel driven
+directly for `urban_political_selfmodel_probe_seed42_200t`) showed COMBAT and PROGRESSION pillar
+scores byte-identical between the two pipelines, and SOCIAL varying by only ~1.5% with the same
+letter grade — with real `WatchdogTrip` CRITICAL alerts firing in *both* runs regardless of the
+flag. Confirmed as the same pre-existing `INFRA-273` tick-budget-watchdog mechanism (Finding 12's
+own root cause), now visible on 5 more scenario/test combinations because Phase 2 widened live
+delivery to AGENCY/COGNITION/INFORMATION/PROGRESSION/WORLD/SOCIAL — not a Phase 2 regression.
+`grade_anchors.json` left unrecalibrated, for the same reason as Phase 1's own cutover. See
+`docs/parity_ledger/infrastructure.yaml` `INFRA-273`'s 2026-08-07 update and
+`stored_artifacts/TCK-20260806-PUSH-CUTOVER-PHASE2/investigation.md` for the full repro
+methodology.
+
+**The push-based migration is now functionally complete for both the observability epic's own
+scope and the original `event_extractor.py` audit** — COMBAT/ECONOMY/FACTION (Phase 1) plus
+AGENCY/COGNITION/INFORMATION/PROGRESSION/WORLD/SOCIAL (Phase 2) are all live apply-layer emission
+by default, each with a real, verified, flag-gated rollback path to the old diffing extractor.
+Only `gold_transferred`/`gold_transaction` remains on the old path, deliberately deferred, not
+silently dropped.
+
 ---
 
 ## Full Pillar Health (2026-08-06, 79 of 79 scenarios)
 
 | Pillar | S | A | B | C | D | Read |
 |---|---|---|---|---|---|---|
-| WORLD | 0 | 3 | 66 | 10 | 0 | **Finding 1** — anchors recalibrated, gate now trustworthy |
+| WORLD | 0 | 3 | 66 | 10 | 0 | **Finding 1** — anchors recalibrated, gate now trustworthy; push-migration epic complete (**Finding 13**) |
 | NARRATIVE | 8 | 58 | 6 | 7 | 0 | Healthy; 1 unrelated single-draw variance this refresh (Finding 8) |
-| COMBAT | 0 | 0 | 47 | 32 | 0 | Healthy, archetype-correct spread |
-| PROGRESSION | 0 | 10 | 41 | 28 | 0 | Healthy, unchanged |
+| COMBAT | 0 | 0 | 47 | 32 | 0 | Hazard-misclassification bug fixed and push-migration epic complete (**Finding 12**); a residual, pre-existing `INFRA-273` load-sensitivity issue can zero out COMBAT event counts on some scenarios under sustained tick-budget pressure — not this epic's defect, tracked separately; row counts predate the epic and are not yet re-verified against it |
+| PROGRESSION | 0 | 10 | 41 | 28 | 0 | Healthy; push-migration epic complete (**Finding 13**), differential-repro confirmed byte-identical scores old-path-vs-new; row counts predate the epic and are not yet re-verified against it |
 | FACTION | 31 | 15 | 6 | 27 | 0 | Declared structurally complete (roadmap Phase 5) |
-| INFORMATION | 0 | 3 | 36 | 40 | 0 | Declared structurally complete (roadmap Phase 5) |
-| COGNITION | 9 | 5 | 40 | 25 | 0 | Both halves wired and closed; 1 unrelated single-draw variance this refresh (Finding 8) |
-| SOCIAL | 16 | 0 | 0 | 63 | 0 | Staged depth is the deliberate permanent bar (roadmap Phase 5) |
+| INFORMATION | 0 | 3 | 36 | 40 | 0 | Declared structurally complete (roadmap Phase 5); push-migration epic complete (**Finding 13**) |
+| COGNITION | 9 | 5 | 40 | 25 | 0 | Both halves wired and closed; 1 unrelated single-draw variance this refresh (Finding 8); push-migration epic complete (**Finding 13**) |
+| SOCIAL | 16 | 0 | 0 | 63 | 0 | Staged depth is the deliberate permanent bar (roadmap Phase 5); push-migration epic complete (**Finding 13**), a residual pre-existing `INFRA-273` load-sensitivity issue can cause small event-count variance under sustained tick-budget pressure — not this epic's defect |
 | ECONOMY | 0 | 1 | 17 | 61 | 0 | **Finding 2** — both factors resolved to decisions: Factor 1 is a policy question (not filed), Factor 2 confirmed correct behavior, not a bug (closed 08-05) |
-| AGENCY | 0 | 8 | 0 | 71 | 0 | C-by-design, `ENABLE_ADVENTURE_ROUTING` opt-in (DA-ruled); `hero_guild_routing` now also formally credited with closing the real-archetype corpus gap (Finding 7) |
+| AGENCY | 0 | 8 | 0 | 71 | 0 | C-by-design, `ENABLE_ADVENTURE_ROUTING` opt-in (DA-ruled); `hero_guild_routing` now also formally credited with closing the real-archetype corpus gap (Finding 7); push-migration epic complete (**Finding 13**) |
 
 ---
 
@@ -228,6 +376,7 @@ correction note above.
 | A | Recalibrate WORLD pillar anchors against the spawn-occupancy signal | Yes — anchor staleness (Finding 1) | S | **High** — regression gate is untrustworthy for WORLD until done | Root cause fully diagnosed already; no further investigation needed before implementing |
 | B1 | Decide whether to reopen `ENABLE_ADVENTURE_ROUTING`'s DA-ruled default (ECONOMY Factor 1) | Real, but a policy question, not a bug | — | Low — no defect, a deliberate design boundary | Not a ticket unless the user wants to revisit the DA ruling; noted for completeness, not filed by default |
 | B2 | ~~Investigate whether `AdventureRouteScorer`'s craft/buy selection bias is a miscalibration~~ — **DONE 2026-08-05**, confirmed correct behavior, no fix (ECONOMY Factor 2) | Was real (Finding 2), now resolved as "working as intended" | — | — | `TCK-20260805-SIMQ-ECONOMY-ADVENTURE-ROUTE-SCORER-BIAS`: blocker_penalty=2.0 correctly fires because entities never harvest/earn gold; root cause loops back to Factors 1/3, not this scorer |
+| C | Entity capability-trend + life-arc coherence signal (PROGRESSION), faction-trajectory signal (FACTION) | Yes — real gap (Finding 9) | M each | Medium — deepens diagnostic value, not a defect | **Filed 2026-08-06**: `TCK-20260806-SIMQ-PROGRESSION-CAPABILITY-LIFECYCLE`, `TCK-20260806-SIMQ-FACTION-LIFECYCLE-TRAJECTORY`, rationale in `TCK-20260806-SIMQ-LIFECYCLE-PILLAR-BOUNDARY-DOC` — the one exception to this section's "none filed yet" framing |
 
 **Not recommended right now:** reopening FACTION/INFORMATION/SOCIAL/AGENCY depth (all closed with
 real evidence under the SimQ roadmap's Phase 5 ruling), or any of SimQ's explicit MVP Non-Goals

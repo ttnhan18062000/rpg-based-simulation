@@ -127,6 +127,79 @@ environment available to measure them this session. Re-tightening is a
 legitimate follow-up once a clean-machine measurement exists, not required
 by this ticket's acceptance criteria.
 
+## Push-Shaper Registry Overhead
+
+`TCK-20260806-PUSH-SHAPER-PERF-REGRESSION-GATE` (child 1 of `TCK-20260806-SIMQ-
+OBSERVABILITY-PUSH-MIGRATION-PHASE2-EPIC`) extended this file's test with a
+standing, committed gate for `src/observability/event_shapers.py`'s
+cumulative CPU cost — orthogonal to the three `QUALITY_FEED_MODE` legs above,
+which never varied `ENABLE_PUSH_EVENT_SHAPERS`. This gate exists because
+Phase 1 of the push migration (`TCK-20260806-SIMQ-OBSERVABILITY-PUSH-
+MIGRATION-EPIC`, DONE) validated its own performance impact via an
+uncommitted, reduced-scope scratch script, and Phase 2 adds 4-5x more shaper
+classes on top of it — a standing gate catches overhead accumulation across
+those future children automatically instead of re-measuring by hand each
+phase.
+
+**Method**: same `BenchHarness`/`PROD_SMALL`/`sandbox_world_seed42`/
+warmup=100/sample=1000 convention as the three modes above, but under the
+`inprocess` SimQ mode only (the live default), varying
+`AuthoritativeState.feature_flags["ENABLE_PUSH_EVENT_SHAPERS"]` between
+`"ON"` and `"OFF"` explicitly (pinned via `dataclasses.replace`, since the
+kernel's own default is `"ON"` when the key is absent). Test:
+`tests/perf/test_simq_isolation_overhead.py::
+test_push_shaper_registry_overhead_benchmark` (`@pytest.mark.slow`).
+
+### Committed Results — `(PROD_SMALL, sandbox_world_seed42, inprocess mode)`
+
+| Run | shapers OFF `cpu_time_total_delta_s` | shapers ON `cpu_time_total_delta_s` | Overhead |
+|---|---|---|---|
+| 1 | 5.870s | 5.650s | -3.75% |
+| 2 | 5.970s | 5.830s | -2.35% |
+
+Convergence check (OFF leg, the value every run shares): `|5.970 - 5.870| /
+5.870 = 1.7%` — well within the 10% convergence threshold this doc's other
+section already establishes. Both runs show the shaper-registry path
+**faster**, not slower, than the old diffing-extractor path at this scale —
+plausible given the shaper reads typed update-record fields directly
+(`CombatUpdate.outcome_kind`, `ResourceTransferIntent.source_kind`,
+`FactionUpdate.diplomatic_relations_set`) instead of the extractor's
+prior/current full-state diffing for the same domains. Not claimed as a
+durable general speedup — reported as measured, at this scale, on this
+hardware, same honesty standard as the rest of this doc.
+
+### Locked Regression-Guard Threshold
+
+Per `perf_baseline_policy.md` §3's band-tolerance convention: **push-shaper
+registry vs. `OFF` baseline CPU overhead must stay < 25%**
+(`test_push_shaper_registry_overhead_within_regression_band`) — set with the
+same margin-above-noise-floor philosophy as the in-process-vs-disabled
+threshold above, not the raw (negative) measured overhead, since a threshold
+locked at ~0% would be a flaky gate on noisy hardware for a genuinely
+near-zero-cost change.
+
+**CI wiring**: no new Makefile/CI target was needed — this file's existing
+tests were already reached only via `.github/workflows/test.yml`'s broad
+`pytest tests/ -m "slow or extra_slow"` sweep (the `slow` job), not a
+dedicated per-file target; the 2 new tests are `@pytest.mark.slow` in the
+same file, so they're automatically covered by that same sweep.
+
+## Phase 2 Full-Registry Overhead
+
+`TCK-20260806-PUSH-SHADOW-VALIDATION-PERF-PHASE2` extended the gate above with a second pair of
+tests, `test_phase2_shaper_registry_overhead_benchmark`/
+`test_phase2_shaper_registry_overhead_within_regression_band`, measuring the *complete* Phase 2
+registry (`StrategyShaper`, `ProgressionShaper`, `WorldDynamicsShaper`, `SocialShaper`,
+`DeferredInstrumentationShaper` — 5 shaper classes, ~50 event types) via
+`ENABLE_PUSH_EVENT_SHAPERS_PHASE2=ON` vs `OFF`, on top of (not replacing) Phase 1's own
+already-committed gate above — `ENABLE_PUSH_EVENT_SHAPERS` (Phase 1's flag) is left at its own
+default (`ON`) in both legs, isolating Phase 2's own incremental cost specifically.
+
+**Result** (`sandbox_world_seed42`, warmup=100/sample=1000): `phase2_off=5.880s`,
+`phase2_on=5.770s`, **-0.35% overhead** — consistent with Phase 1's own measured
+negative/near-zero cost; the complete Phase 2 registry adds no measurable CPU cost at this scale.
+Locked threshold: same 25% band as Phase 1's gate, same margin-above-noise-floor philosophy.
+
 ## Related
 
 - `docs/plans/observability_process_isolation.md` (G5 — this doc closes it)
@@ -134,4 +207,6 @@ by this ticket's acceptance criteria.
   routing/scorer-parity fixes this benchmark measures but does not alter)
 - `docs/simulation_quality/quality_scoring_contract.md` line 1410 (reconciled
   against these numbers)
+- `docs/parity_ledger/infrastructure.yaml` (`INFRA-324`, `INFRA-325` — the
+  push-shaper-registry parity entries this gate protects)
 - `tests/perf/test_simq_isolation_overhead.py`, `tests/perf/test_bench_harness.py`

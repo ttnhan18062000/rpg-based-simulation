@@ -1,0 +1,12 @@
+{
+  "entries": [
+    {
+      "run_key": null,
+      "pillar": "NARRATIVE",
+      "ceiling_kind": "corrected",
+      "reason": "quest_event was misclassified corpus-wide before the fix, inflating NARRATIVE's quest_active score; the 2026-08-07 recalibration reflects the honest, corrected value, not an ongoing ceiling.",
+      "evidence": "src/observability/event_extractor.py's quest_event type filter",
+      "since_ticket": "TCK-20260807-QUEST-EVENT-TYPE-FILTER-BUG"
+    }
+  ]
+}

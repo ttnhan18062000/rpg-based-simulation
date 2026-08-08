@@ -52,6 +52,8 @@ FACTION:
   faction_early_extinction: -8.0
   all_factions_neutral: -25.0
   tension_oscillation: -5.0
+  # TCK-20260806-SIMQ-FACTION-LIFECYCLE-TRAJECTORY: trajectory-coherence signal.
+  faction_trajectory_stagnant: -8.0
 
 ECONOMY:
   # Positive per-event weights raised x4 (TCK-20260713-SIMQ-SCORE-CEILING-FIX): the
@@ -98,6 +100,9 @@ PROGRESSION:
   xp_plateau: -8.0
   trait_system_silent: -10.0
   level_cap_reached: -1.0
+  # TCK-20260806-SIMQ-PROGRESSION-CAPABILITY-LIFECYCLE: capability-trend + life-arc coherence.
+  capability_growth_stalled: -10.0
+  life_arc_incoherent: -15.0
 
 SOCIAL:
   cooperation_active: 4.0

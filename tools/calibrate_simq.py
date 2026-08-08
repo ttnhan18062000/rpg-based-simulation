@@ -218,6 +218,7 @@ def _run_engine(
         "ENABLE_BELIEF_ASSIMILATION", "ENABLE_PROGRESSION_EVOLUTION",
         "ENABLE_SOCIAL_COOPERATION", "ENABLE_WORLD_EMERGENCE",
         "ENABLE_LIFE_ARC_CAMPAIGNS", "ENABLE_ENHANCED_TRACE_EVENTS",
+        "ENABLE_PUSH_EVENT_SHAPERS",
     ]
 
     def _parse_flag_value(raw: str) -> FeatureMode | None:

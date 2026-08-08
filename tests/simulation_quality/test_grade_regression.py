@@ -109,6 +109,7 @@ FIXTURE_PATH = Path(__file__).parent / "fixtures" / "grade_anchors.json"
 _CALIBRATION_ROOT = Path("data/calibration")
 
 FAST_ANCHOR_KEYS = [
+    "simq_scale_stress_seed42_seed42_200t",
     "sandbox_world_seed42_200t",
     "sandbox_world_seed137_200t",
     "sandbox_world_seed999_200t",
@@ -249,6 +250,40 @@ def _within_score_tolerance(
     return abs(actual_score - anchor_score) <= max(abs_floor, rel_pct * abs(anchor_score))
 
 
+def _format_score_failures(
+    run_key: str, anchors: dict, actual_scores: dict
+) -> list[str]:
+    """Build score-tolerance failure lines, appending a known structural_ceiling classification
+    when one exists (TCK-20260808-SIMQ-SCORE-CEILING-PROVENANCE) so a drift immediately shows
+    whether it's a known, already-explained ceiling/correction rather than a bare number mismatch.
+    """
+    import sys as _sys
+    from pathlib import Path as _Path
+
+    _sys.path.insert(0, str(_Path(__file__).resolve().parents[2] / "tools"))
+    from simq_ceiling import lookup_ceiling  # noqa: E402
+
+    lines = []
+    for pillar, anchor in anchors.items():
+        kwargs = _score_tolerance_kwargs(run_key, pillar)
+        actual = actual_scores.get(pillar, 0.0)
+        if _within_score_tolerance(actual, anchor["score"], **kwargs):
+            continue
+        line = (
+            f"  {pillar}: actual_score={actual!r} outside tolerance of "
+            f"anchor_score={anchor['score']!r}"
+        )
+        ceiling = lookup_ceiling(run_key, pillar)
+        if ceiling is not None:
+            line += (
+                f" [known {ceiling.ceiling_kind}: {ceiling.reason}"
+                + (f" — {ceiling.since_ticket}" if ceiling.since_ticket else "")
+                + "]"
+            )
+        lines.append(line)
+    return lines
+
+
 def _extract_pillar_grades(report: dict[str, Any]) -> dict[str, str]:
     """Extract ``{PILLAR: grade}`` mapping from a quality_report.json dict."""
     return {
@@ -311,23 +346,14 @@ def test_grade_within_anchor_band(run_key: str, grade_anchors: dict) -> None:
     actual_scores = _extract_pillar_scores(report)
 
     band_failures: list[str] = []
-    score_failures: list[str] = []
     for pillar, anchor in anchors.items():
         anchor_grade = anchor["grade"]
-        anchor_score = anchor["score"]
         actual_grade = actual_grades.get(pillar, "C")
-        actual_score = actual_scores.get(pillar, 0.0)
         if not _within_band(actual_grade, anchor_grade):
             band_failures.append(
                 f"  {pillar}: actual={actual_grade!r} is outside ±1 band of anchor={anchor_grade!r}"
             )
-        if not _within_score_tolerance(
-            actual_score, anchor_score, **_score_tolerance_kwargs(run_key, pillar)
-        ):
-            score_failures.append(
-                f"  {pillar}: actual_score={actual_score!r} is outside tolerance of "
-                f"anchor_score={anchor_score!r}"
-            )
+    score_failures = _format_score_failures(run_key, anchors, actual_scores)
 
     assert not band_failures, (
         f"{run_key} — {len(band_failures)} pillar(s) drifted beyond anchor band:\n"
@@ -367,23 +393,14 @@ def test_grade_within_anchor_band_long_run(run_key: str, grade_anchors: dict) ->
     actual_scores = _extract_pillar_scores(report)
 
     band_failures: list[str] = []
-    score_failures: list[str] = []
     for pillar, anchor in anchors.items():
         anchor_grade = anchor["grade"]
-        anchor_score = anchor["score"]
         actual_grade = actual_grades.get(pillar, "C")
-        actual_score = actual_scores.get(pillar, 0.0)
         if not _within_band(actual_grade, anchor_grade):
             band_failures.append(
                 f"  {pillar}: actual={actual_grade!r} is outside ±1 band of anchor={anchor_grade!r}"
             )
-        if not _within_score_tolerance(
-            actual_score, anchor_score, **_score_tolerance_kwargs(run_key, pillar)
-        ):
-            score_failures.append(
-                f"  {pillar}: actual_score={actual_score!r} is outside tolerance of "
-                f"anchor_score={anchor_score!r}"
-            )
+    score_failures = _format_score_failures(run_key, anchors, actual_scores)
 
     assert not band_failures, (
         f"{run_key} — {len(band_failures)} pillar(s) drifted beyond anchor band:\n"
@@ -436,12 +453,7 @@ def test_urban_political_selfmodel_cognition_isolated_grade_anchor(grade_anchors
         for pillar, anchor in anchors.items()
         if not _within_band(actual_grades.get(pillar, "C"), anchor["grade"])
     ]
-    score_failures = [
-        f"  {pillar}: actual_score={actual_scores.get(pillar, 0.0)!r} outside tolerance of "
-        f"anchor_score={anchor['score']!r}"
-        for pillar, anchor in anchors.items()
-        if not _within_score_tolerance(actual_scores.get(pillar, 0.0), anchor["score"])
-    ]
+    score_failures = _format_score_failures(run_key, anchors, actual_scores)
     assert not band_failures, f"{run_key} — pillar(s) drifted beyond anchor band:\n" + "\n".join(band_failures)
     assert not score_failures, f"{run_key} — pillar(s) drifted beyond score tolerance:\n" + "\n".join(score_failures)
 
@@ -482,12 +494,7 @@ def test_urban_political_selfmodel_execution_isolated_grade_anchor(grade_anchors
         for pillar, anchor in anchors.items()
         if not _within_band(actual_grades.get(pillar, "C"), anchor["grade"])
     ]
-    score_failures = [
-        f"  {pillar}: actual_score={actual_scores.get(pillar, 0.0)!r} outside tolerance of "
-        f"anchor_score={anchor['score']!r}"
-        for pillar, anchor in anchors.items()
-        if not _within_score_tolerance(actual_scores.get(pillar, 0.0), anchor["score"])
-    ]
+    score_failures = _format_score_failures(run_key, anchors, actual_scores)
     assert not band_failures, f"{run_key} — pillar(s) drifted beyond anchor band:\n" + "\n".join(band_failures)
     assert not score_failures, f"{run_key} — pillar(s) drifted beyond score tolerance:\n" + "\n".join(score_failures)
 
@@ -580,8 +587,18 @@ def test_grade_anchor_file_exists_and_valid(grade_anchors: dict) -> None:
 
     # Field-confusion guard: catches an implementer wiring raw_score instead of
     # normalized_score into the "score" field (the two differ by an order of magnitude).
-    guard_run_key = "hero_guild_routing_seed42_1000t"
-    guard_pillar = "NARRATIVE"
+    #
+    # Re-pointed from hero_guild_routing_seed42_1000t/NARRATIVE (SimQ audit 2026-08-07):
+    # that anchor's own S grade was itself a corrupted value — event_extractor.py mislabeled
+    # every non-quest AI project start as quest_event before TCK-20260807-QUEST-EVENT-TYPE-
+    # FILTER-BUG fixed it, artificially inflating NARRATIVE's quest_active score across the
+    # corpus. Re-pointed to urban_political_selfmodel_execution_probe_seed42_200t/COGNITION,
+    # a real, unaffected S-grade anchor (raw_score=5579.0 vs normalized_score=27.895 in the
+    # live report -- confirmed genuinely distinct, not a coincidental match) so the guard keeps
+    # testing its own purpose (catching raw_score/normalized_score field confusion) rather than
+    # asserting a value that needed correcting for an unrelated reason.
+    guard_run_key = "urban_political_selfmodel_execution_probe_seed42_200t"
+    guard_pillar = "COGNITION"
     guard_entry = grade_anchors[guard_run_key][guard_pillar]
     assert guard_entry["grade"] == "S"
     assert guard_entry["score"] > 2.0
@@ -646,13 +663,15 @@ def test_grade_anchors_entry_count_unchanged(grade_anchors: dict) -> None:
     """Anti-drift guard: the migration (bare string -> {grade, score}) must not silently
     drop or duplicate a scenario entry.
 
-    79 real scenario entries as of TCK-20260805-SIMQ-CORPUS-QUEST-DENSITY-DECOUPLE, which
-    added quest_dense_frontier_seed{42,123,456}_200t (3 new entries, 76 -> 79).
+    80 real scenario entries as of TCK-20260808-SIMQ-LARGE-SCALE-WORLD-VALIDATION, which added
+    simq_scale_stress_seed42_seed42_200t (1 new entry, 79 -> 80) — previously 79 as of
+    TCK-20260805-SIMQ-CORPUS-QUEST-DENSITY-DECOUPLE, which added
+    quest_dense_frontier_seed{42,123,456}_200t (3 new entries, 76 -> 79).
     """
     metadata_keys = {"_note", "_instructions", "_grade_order"}
     scenario_keys = set(grade_anchors.keys()) - metadata_keys
-    assert len(scenario_keys) == 79, (
-        f"Expected 79 real scenario entries, found {len(scenario_keys)} — "
+    assert len(scenario_keys) == 80, (
+        f"Expected 80 real scenario entries, found {len(scenario_keys)} — "
         "an anchor entry may have been silently dropped or duplicated"
     )
 

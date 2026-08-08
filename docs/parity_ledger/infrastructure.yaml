@@ -4406,6 +4406,50 @@
     contradict or restate the existing mechanism-1/mechanism-2 distinction above -- it is a
     new anchor/tier data point for mechanism-1, cross-referenced here. See
     stored_artifacts/TCK-20260716-SIMQ-URBAN-POLITICAL-FULL-PILLAR-SWEEP/investigation.md.
+    UPDATE 2026-08-06 (TCK-20260806-PUSH-CUTOVER-COMBAT-ECONOMY-FACTION): a full
+    `make simq-full-audit-full` run (79 scenarios, required by that ticket's own corpus-parity
+    Scope item) showed hero_guild_routing_seed42_500t with COMBAT.event_count=0,
+    ECONOMY.event_count=0, FACTION.event_count=0 against a non-zero COMBAT anchor. Root-caused,
+    not assumed: reproduced the same scenario in isolation 3x (outside the 79-scenario corpus,
+    so no cross-scenario carryover) -- once each with the new push-shaper path live (flag ON,
+    twice for a determinism check) and once with the old event_extractor path forced live
+    instead (flag OFF via a kernel-level monkeypatch, since calibrate_simq.py's own
+    flag-override parser has no OFF value). All three runs produced near-identical pillar
+    breakdowns, COMBAT/ECONOMY/FACTION all 0 in every run regardless of which observability
+    pipeline was active -- proving the zero-count is not an observability-layer defect (shaper
+    or extractor) but a simulation-level fact for this run: combat_engagement work is not being
+    scheduled/executed at all (watchdog alert phase_costs.combat_engagement ~0.003ms/tick
+    throughout), a new, more complete characterization of this entry's dropped-resolution-
+    queue-item mechanism than the "cascading divergence" (partial, not total, event-count
+    shift) previously documented above -- this run shows the mechanism can starve a domain's
+    real event count to zero entirely, not just shift it. This is additional confirming
+    evidence for this entry, not a new anchor exception requiring its own ticket: no anchor
+    value or override table was touched by TCK-20260806-PUSH-CUTOVER-COMBAT-ECONOMY-FACTION,
+    since grade_anchors.json/test_grade_regression.py were explicitly out of scope for that
+    migration ticket. See
+    staging_artifacts/TCK-20260806-PUSH-CUTOVER-COMBAT-ECONOMY-FACTION/investigation.md
+    "Full-corpus verification" section for the full repro methodology and raw-JSONL evidence.
+
+    UPDATE 2026-08-06 (TCK-20260806-PUSH-SHADOW-VALIDATION-PERF-PHASE2): a 6-world x 500-tick
+    event-stream comparison across the complete Phase 2 shaper registry (StrategyShaper/
+    ProgressionShaper/WorldDynamicsShaper/SocialShaper/DeferredInstrumentationShaper) found exact
+    parity in 5 of 6 worlds and 6 event-type mismatches in the 6th (urban_political, run with 2
+    extra CPU-intensive feature flags -- ENABLE_SOCIAL_COOPERATION, ENABLE_SELF_MODEL_COGNITION).
+    Root-caused via the same differential-repro discipline as the update above: re-ran the
+    identical urban_political config twice more in isolation, isolating self_model_updated --
+    baseline (unmodified, single-pipeline) OFF-mode alone already showed 2.8% run-to-run variance
+    (9023 vs 9275), and the ON-mode configuration (both pipelines active, per this epic's still-
+    unguarded-until-cutover design) showed ~18% variance between otherwise-identical runs (4298-
+    4373 vs 5227-5152). Within each individual ON run, the two pipelines' counts stayed close to
+    each other (as expected, since both read the same tick's update data) -- the large swings are
+    between separate kernel invocations, not between the two pipelines within one invocation.
+    This is the same mechanism, now confirmed present for the Phase 2 registry too, not just
+    Phase 1's 3 domains: more shaper CPU work per tick increases watchdog-trip frequency in the
+    already-most-loaded world in the test set, cascading into genuinely different simulation
+    trajectories between runs -- not a defect in either the old extractor or the new shapers.
+    No anchor or grade_anchors.json value was touched. See
+    staging_artifacts/TCK-20260806-PUSH-SHADOW-VALIDATION-PERF-PHASE2/investigation.md for the
+    full repro methodology.
   proof_type: regression
   test_path: >
     tests/unit/worldassembly/test_corpus_diversity.py -m slow --resource-budget large -k
@@ -4427,6 +4471,20 @@
     heuristic should be formally revised is left to a future doc-only update of
     docs/audits/D06_longrun_health.md, not performed here (out of this ticket's Related Docs
     scope, which names the file as read-only reference).
+
+    UPDATE 2026-08-07 (TCK-20260806-PUSH-CUTOVER-PHASE2): the full post-cutover calibration
+    corpus (`make simq-full-audit-full`, 79 scenarios) showed 37/69 `test_grade_regression.py`
+    failures, up from Phase 1's own cutover result (32/69). Root-caused via a decisive
+    differential-repro, not assumed: drove the kernel directly for
+    `urban_political_selfmodel_probe_seed42_200t` with `ENABLE_PUSH_EVENT_SHAPERS_PHASE2` forced
+    `OFF` vs `ON` -- COMBAT and PROGRESSION pillar scores were byte-identical between the two
+    (COMBAT norm=+0.0000/events=0 both; PROGRESSION norm=-0.1569/events=1 both, to 4 decimals),
+    and SOCIAL showed only small (~1.5%) event-count variance (715 vs 704) with the same letter
+    grade in both -- with real `WatchdogTrip` CRITICAL alerts firing in *both* runs. This confirms
+    the same mechanism, now visible on more pillars because Phase 2 widened live delivery to
+    AGENCY/COGNITION/INFORMATION/PROGRESSION/WORLD/SOCIAL -- not a Phase 2 regression.
+    `grade_anchors.json` left unrecalibrated for the same reason as Phase 1's own cutover. See
+    stored_artifacts/TCK-20260806-PUSH-CUTOVER-PHASE2/investigation.md for the full repro.
 - id: INFRA-274
   text: >
     Plan-phase "unresolved questions" gate false-positive fix (TCK-20260716-PLAN-GATE-SUBSTRING-
@@ -7437,3 +7495,370 @@
     (`TCK-20260710-WORKFLOW-META-CONFORMANCE-CHECK`). `_DOCS_BULLET_RE`'s separate, already-known
     `:line`-suffix-inside-backticks bug (`TCK-20260804-EXPANSION-RATE-WIRING`) remains live and
     unfixed -- explicitly out of this entry's scope, not claimed as covered here.
+
+- id: INFRA-323
+  text: >
+    TCK-20260806-SIMQ-EXTRACTOR-HAZARD-COMBAT-MISCLASSIFICATION-FIX -- event_extractor.py's
+    combat-damage/combat-initiated/near-death-survival branches (lines 136-227) previously
+    classified ANY hp_diff<0 as combat, regardless of cause, because they read a nonexistent
+    attribute (`e_upd.combat_upd`) instead of the real `EntityUpdate.combat` field. `getattr(e_upd,
+    "combat_upd", None)` silently returned None every time (no AttributeError, since a default was
+    given), so attacker_id/killer_id were always None and the outcome_kind-based hazard exclusion
+    INFRA-273 documents for hazard_drain_applied's own detection branch (a separate, correctly-
+    written code path at line ~419) was never actually reachable for the combat branches -- they
+    had no working causal-attribution mechanism at all, not just a missing HAZARD filter. Fixed by
+    a new `_real_combat_update(e_upd)` helper: reads the real `.combat` field, requires
+    `attacker_id is not None` (confirmed as the correct primary discriminant -- every real
+    damage-dealing CombatUpdate in combat.py sets it, hazard drain and biological/starvation
+    damage in world_dynamics.py/biological.py never do), and excludes outcome_kind in
+    ("HAZARD","REJECTED") as defense-in-depth. A plain outcome_kind allow-list alone (e.g.
+    including "SURVIVE") was considered and rejected during investigation: CombatUpdate's own
+    dataclass default for outcome_kind is "SURVIVE", and biological.py's starvation/exhaustion
+    damage (src/systems/lifecycle_systems/biological.py:40) relies on that default without setting
+    an explicit tag -- an outcome_kind-only filter would have let biological damage through as
+    "combat" the same way hazard damage previously did. Also fixed as the same root cause: the
+    Kill-events branch's killer_id (same wrong-attribute bug, corrected to use the real field;
+    whether CombatKillEvent should fire at all on a non-combat death remains open, explicitly not
+    decided by this fix) and the despawn-lifecycle branch's has_attacker check (previously always
+    False due to the same bug, meaning every real combat kill was also incorrectly co-emitting
+    demographic_mortality alongside CombatKillEvent -- now correctly suppressed for genuine
+    combat kills). near_death_survival gained the same guard; it previously had no causal check
+    at all, firing on any HP-threshold crossing regardless of cause.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/observability/event_extractor.py:22-43 (`_NON_COMBAT_OUTCOME_KINDS`,
+    `_real_combat_update()`), :127 (despawn-branch has_attacker fix), :160-175 (combat_damage,
+    now gated on `_real_combat_update(e_upd) is not None`), :177-187 (Kill-events killer_id fix,
+    CombatKillEvent's own firing condition intentionally left unchanged), :202-215
+    (combat_initiated gated), :217-227 (near_death_survival gated, previously ungated entirely).
+    Cross-checked against every real hp_delta-setting call site in src/ (combat.py's 5 sites, all
+    set attacker_id; world_dynamics.py hazard drain and biological.py starvation/exhaustion, both
+    never set it; town_resolution.py/town_service.py healing paths are positive-only, irrelevant
+    to the hp_diff<0 branch; evolution.py's level-up heal bonus only adds to an existing hp_delta,
+    inherits whatever attacker_id was already present; sabotage.py's hp_delta is on BuildingState,
+    not entity combat.hp, unrelated).
+  proof_type: regression
+  test_path: >
+    tests/unit/observability/test_event_extractor_simq.py::test_combat_initiated_emitted_on_first_hit,
+    tests/unit/observability/test_event_extractor_simq.py::test_combat_initiated_not_emitted_for_hazard_damage,
+    tests/unit/observability/test_event_extractor_simq.py::test_combat_initiated_not_emitted_for_biological_damage,
+    tests/unit/observability/test_event_extractor_simq.py::test_combat_damage_attacker_id_populated_for_real_combat,
+    tests/unit/observability/test_event_extractor_simq.py::test_near_death_survival_emitted_when_hp_crosses_threshold,
+    tests/unit/observability/test_event_extractor_simq.py::test_near_death_survival_not_emitted_for_hazard_damage,
+    tests/unit/observability/test_event_extractor_simq.py::test_demographic_mortality_emitted_on_despawn_no_attacker,
+    tests/unit/observability/test_event_extractor_simq.py::test_demographic_mortality_not_emitted_on_combat_kill,
+    tests/unit/observability/test_event_extractor_world.py::test_hazard_damage_not_misclassified_as_combat,
+    tests/unit/observability/test_event_extractor_world.py::test_hazard_drain_not_emitted_for_normal_combat
+    (759 of 759 non-skipped tests in tests/unit/observability/ pass; 6 pre-existing, unrelated
+    skips unchanged).
+  divergence_note: null
+  support_boundary: >
+    Fixes causal-attribution correctness for the 3 combat-classification branches and the
+    despawn-lifecycle demographic_mortality check only. Does not touch, extend, or change
+    `world_dynamics.py`'s own already-correct hazard_drain_applied detection (line ~419-427,
+    unmodified) or `combat.py`'s outcome_kind tagging (unmodified, already correct -- this was
+    always a read-side bug, never a write-side one). Also fixed, disclosed rather than silently
+    absorbed: 3 pre-existing tests in test_event_extractor_simq.py mocked the wrong attribute name
+    (`combat_upd=` instead of `combat=`), meaning they never exercised the real production code
+    path and could not have caught this bug -- corrected to mock the real field. Whether
+    CombatKillEvent's own firing condition (currently: fires on ANY lifecycle.active->False
+    transition, not gated by _real_combat_update) should also require a genuine combat cause is
+    an identified, deliberately deferred question -- not decided or silently expanded into by
+    this fix. Related, larger architecture question (push-based emission at the mutation point
+    instead of post-tick diffing, which would prevent this entire class of read-side
+    misattribution bug structurally) is tracked separately:
+    TCK-20260806-SIMQ-OBSERVABILITY-PUSH-MIGRATION-EPIC.
+
+- id: INFRA-324
+  text: >
+    TCK-20260806-PUSH-SHAPER-REGISTRY-COMBAT (epic child 2 of
+    TCK-20260806-SIMQ-OBSERVABILITY-PUSH-MIGRATION-EPIC) -- adds a new, parallel, SHADOW-only
+    apply-layer event-emission path for COMBAT, alongside (not replacing) the existing diff-based
+    `EventExtractor`. New module `src/observability/event_shapers.py`: a `SHAPER_REGISTRY`
+    mirroring `QualityHub.SCORER_REGISTRY`'s shape, and `CombatShaper`, which derives
+    `combat_damage`/`combat_initiated`/`near_death_survival`/`entity_killed`/
+    `hazard_drain_applied`/`hero_death_unrecorded` from `prior_state` + `update` alone -- the same
+    two objects already available as `ApplyPath.apply_generation()`'s own input parameters, before
+    any state reconstruction -- reusing `event_extractor._real_combat_update()` (from INFRA-323)
+    as the single source of truth for the attacker_id-primary combat-classification discriminant.
+    Confirmed via direct trace of `apply.py`/`apply_plan.py` that no hook into
+    `ApplyPath.apply_generation()` or `ApplyPlanBuilder` internals is needed -- `CombatUpdate`
+    already carries `hp_delta`/`alive_set`/`attacker_id`/`outcome_kind`, sufficient to derive every
+    migrated event from `prior_state.entities[eid]` + the update's own delta fields. New flag
+    `ENABLE_PUSH_EVENT_SHAPERS` (registered in `FeatureFlagManager.__init__` for documentation
+    consistency, but read directly from `prior_state.feature_flags` inside
+    `Kernel._phase_observability()` -- NOT routed through `FeatureFlagManager`/`run_phase()`,
+    since that mechanism gates pipeline *phases*, not this observability-only comparison path).
+    `SHADOW` mode constructs events and logs a count via `logger.debug()`; nothing is delivered to
+    `self._event_recorder`/the live `BoundedObservabilityQueue` -- wrapped in try/except so a bug
+    in this experimental path can never affect the real tick.
+
+    A full event-coverage audit (epic-level investigation.md) confirmed 4 core COMBAT events are
+    cleanly migratable and found 2 more (`hazard_drain_applied`, `hero_death_unrecorded`) safe to
+    migrate alongside them (same typed-record read, physically colocated in the old extractor).
+    `demographic_mortality` (despawn branch) was explicitly deferred -- broader than combat,
+    covers non-combat death causes too. `combat_resolved`/`attrition_threshold_crossed` were
+    re-confirmed dead code (never emitted by any path in this repo, referenced only in the scorer's
+    own `EVENT_TYPES`/`score()`) -- disclosed, not migrated, since nothing exists to migrate.
+
+    A known, disclosed, narrow limitation was found and NOT fixed here (see support_boundary):
+    `apply.py:93-110`'s passive health decay and `apply.py:463-495`'s level-up heal/stat-clamp both
+    mutate HP at apply-time without ever touching `EntityUpdate.combat` -- if either coincides with
+    a real combat hit on the same entity in the same tick, this shaper's `damage`/`hp`/`is_lethal`
+    *payload values* (not event *types*, which stay correct) could diverge from the old extractor's
+    materialized-state read. Carried forward as an explicit, named check for
+    `TCK-20260806-PUSH-SHADOW-VALIDATION-PERF` to quantify before cutover.
+
+    UPDATE 2026-08-06 (TCK-20260806-PUSH-SHADOW-VALIDATION-PERF): that ticket's real, non-mocked
+    6-world comparison found 2 real bugs in this entry's original implementation, both fixed by
+    reopening this same ticket rather than patched around downstream. (1) `entity_killed` false
+    positive on hazard-caused "death": the original implementation derived death from `alive_set`
+    (which maps to `CombatComponent.alive`, confirmed `src/engine/patches.py:301`) -- a different
+    field from `LifecycleComponent.active`, which `LifecycleSystem.resolve_lifecycle()`
+    (`src/systems/lifecycle_systems/lifecycle.py:43`) only transitions on `outcome_kind=="KILL"`
+    or old-age, never on `alive_set` alone. Fixed by gating `entity_killed`/`hero_death_unrecorded`
+    on `outcome_kind=="KILL"` directly -- this also disclosed a second, related, accepted
+    limitation: a hazard-caused `combat.alive=False` can transition `lifecycle.active` on a LATER
+    tick with zero `EntityUpdate.combat` present at that tick, invisible to this shaper by
+    construction; confirmed rare (1 occurrence / 6 worlds x 500 ticks), accepted as disclosed, not
+    fixed. (2) Missing volumization rule: the original implementation never ported
+    `event_extractor.py`'s "skip routine non-lethal combat_damage in LIGHT/LONG_RUN mode" rule --
+    a plain omission, not an edge case, causing real over-firing in every sustained-combat sequence
+    since `ObservabilityConfig`'s default mode is LIGHT. Fixed by adding a `mode` parameter to the
+    `EventShaper` protocol and `CombatShaper.shape()`, threaded through `kernel.py`'s already-
+    computed `obs_mode`. Post-fix re-verification: 130/131 active ticks match the old extractor
+    exactly across the same 6-world real comparison, 0 payload-value mismatches.
+
+    UPDATE 2026-08-06 (TCK-20260806-PUSH-SHAPER-REGISTRY-WORLD-DYNAMICS): the `demographic_mortality`
+    deferral above is now closed, not superseded — Phase 2's `WorldDynamicsShaper`
+    (`docs/parity_ledger/world_dynamics.yaml` `WORLD-115`) migrates it, confirming the original
+    "broader than combat" classification was a real, correctly-drawn scope boundary at the time
+    (Phase 1 was COMBAT-only), not an error: `StateUpdate.entities_remove` plus the same
+    `_real_combat_update()` helper this entry's own `CombatShaper` already uses give the "despawn
+    without a combat attacker" signal without new instrumentation, once a ticket's scope was
+    WORLD/demographic rather than strictly COMBAT. See `WORLD-115` for the full mechanism and
+    real-kernel verification evidence.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/observability/event_shapers.py (new file): `EventShaper` protocol (now with a `mode`
+    parameter), `CombatShaper.shape()` (entity_killed gated on outcome_kind=="KILL", combat_damage
+    gated on the volumization rule), `EconomyShaper`/`FactionShaper` (mode-conformant, no
+    volumization needed), `SHAPER_REGISTRY`, `run_shadow_shapers()` (mode threaded through).
+    src/engine/kernel.py:909-926 (`_phase_observability`, new step "1b" alongside the existing
+    `EventExtractor.extract()` call, passes `obs_mode` through, try/except-wrapped).
+    src/domains/optimization/feature_flags.py:25 (`ENABLE_PUSH_EVENT_SHAPERS` added to
+    `FeatureFlagManager.__init__`'s dict, default OFF). tools/calibrate_simq.py (`_KNOWN_FLAGS`
+    list extended). Verified via real, non-mocked kernel integration runs across 6 real worlds
+    (`dungeon_crawl`, `sandbox_world`, `hero_guild_routing`, `urban_political`,
+    `wilderness_survival`, `crowded_frontier`, seed 42, 500 ticks each) with
+    `ENABLE_PUSH_EVENT_SHAPERS=SHADOW`, event-for-event and payload-value compared against the old
+    extractor's real `simulation_events.jsonl` output: 130/131 active ticks match exactly, 0
+    payload mismatches. Full trace, methodology, and both bugs' root-causing documented in
+    `stored_artifacts/TCK-20260806-PUSH-SHADOW-VALIDATION-PERF/investigation.md`.
+  proof_type: regression
+  test_path: >
+    tests/unit/observability/test_event_shapers.py (15 tests post-fix: registry mechanism, all 6
+    migrated COMBAT events, hazard/biological-damage exclusion, entity-not-in-prior-state/no-
+    combat-field edge cases, SHADOW-mode queue-inertness, hazard-death entity_killed exclusion,
+    volumization-rule suppression/override across LIGHT/NORMAL modes and the default-mode check),
+    tests/unit/config/test_phase10_feature_flags.py (12/12 pass), tests/unit/kernel/ (53/53 pass),
+    tests/unit/observability/ full directory (798 passed, 6 skipped -- up from 793 immediately
+    pre-reopen [INFRA-325's own count, itself up from 779 pre-INFRA-324], +5 new tests from this
+    reopen's fix cycle).
+  divergence_note: null
+  support_boundary: >
+    SHADOW-mode only -- no live behavior change, no event delivered to any consumer, confirmed by
+    a dedicated test asserting the module never imports `BoundedObservabilityQueue`/`EventRecorder`.
+    `event_extractor.py`, `apply.py`, and `apply_plan.py` are all unmodified by this entry --
+    confirmed via `git diff` before Finalize, not merely asserted. Does not implement `ON` mode
+    (live delivery) -- reserved for `TCK-20260806-PUSH-CUTOVER-COMBAT-ECONOMY-FACTION`, gated on
+    `TCK-20260806-PUSH-SHADOW-VALIDATION-PERF`'s go verdict. Does not migrate ECONOMY or FACTION --
+    `TCK-20260806-PUSH-SHAPER-ECONOMY-FACTION`'s scope, reusing this entry's registry design
+    unchanged. The 2 apply-time-only HP-mutation sources found during this ticket's own
+    investigation (`apply.py:93-110`, `apply.py:463-495`) are a disclosed, narrow limitation, not a
+    fixed bug -- see this entry's `text` field and the investigation.md section it summarizes for
+    the full reasoning; `TCK-20260806-PUSH-SHADOW-VALIDATION-PERF` must quantify real-corpus
+    frequency before this is accepted as permanently negligible or escalated to a design change.
+    A separate, adjacent finding -- `biological.py`'s own starvation/exhaustion hp_delta mechanism
+    appearing to duplicate `apply.py:93-110`'s passive health decay at different thresholds -- is
+    flagged in this ticket's own investigation.md as a possible pre-existing redundant-damage bug,
+    explicitly NOT fixed or further investigated here; out of scope, noted only for traceability.
+
+- id: INFRA-325
+  text: >
+    TCK-20260806-PUSH-SHAPER-ECONOMY-FACTION (epic child 3 of
+    TCK-20260806-SIMQ-OBSERVABILITY-PUSH-MIGRATION-EPIC) -- extends INFRA-324's shaper registry
+    with `EconomyShaper` (7 events: `resource_harvested`/`item_crafted`/`shop_transaction`/
+    `trade_executed`/`quest_reward_dispensed`/`gold_sink_fired`/`paid_information_transaction`+
+    `paid_info_transaction`+`paid_info_changed_goal`, all reading
+    `entity_updates[eid].intent_results[].source_kind`) and `FactionShaper` (8 events:
+    `diplomatic_transition`/`alliance_proposed`/`alliance_accepted`/`territory_ownership_changed`/
+    `resource_seized`/`faction_tension_delta`/`war_declared`/`military_conflict_resolved`, reading
+    `update.faction_updates[]` and `update.world_events_add[]`). Both re-verified against fresh
+    reads of `event_extractor.py` (line numbers shifted since the epic-level audit) before
+    implementation, not trusted from the earlier citation.
+
+    `paid_info_changed_goal`'s condition (does the entity's current project differ from its prior
+    tick's) is resolved via `StrategicUpdate.current_project_id_set` -- confirmed this typed field
+    (the "_set" suffix convention, same as `alive_set`/`owner_faction_id_set` elsewhere in this
+    codebase) carries the NEW project id directly on the update record, so no post-mutation state
+    read is needed, consistent with every other migrated event in this and the prior entry.
+
+    6 events explicitly deferred, re-confirmed via fresh source reads rather than trusted from the
+    epic audit: `gold_transaction`/`gold_transferred` (pure `entity.inventory.gold` state diff),
+    `resource_node_depleted`/`resource_node_regenerated`/`node_recharged` (pure
+    `state.resource_nodes` dict diff, not per-entity), `conservation_law_verified` (meta-derived
+    from other events already emitted this tick + a tick-cadence gate), `faction_extinct` (full
+    entity-census scan across `current_state.entities`/`prior_state.entities`, not a single
+    update-record read). None implemented, none silently dropped -- each carried forward by name
+    into `TCK-20260806-PUSH-SHAPER-ECONOMY-FACTION`'s own Out of Scope and the epic's `SEQUENCE.md`
+    "Deferred events" section.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/observability/event_shapers.py: `EconomyShaper.shape()`, `FactionShaper.shape()`, both
+    registered in `SHAPER_REGISTRY`. Verified via real, non-mocked kernel integration run against
+    `dungeon_crawl_seed42_500t` (same world/seed/tick-count this session used for its much earlier
+    raw-event investigation): captured event-type counts via a monkeypatched
+    `run_shadow_shapers` wrapper -- `{'diplomatic_transition': 29, 'hazard_drain_applied': 10,
+    'entity_killed': 2}` -- the `diplomatic_transition`/`hazard_drain_applied` counts match that
+    earlier investigation's real `simulation_events.jsonl` counts exactly (29 and 10
+    respectively), a real correctness signal beyond unit coverage alone. Also confirmed
+    tick-budget warnings in this sandbox occur regardless of `ENABLE_PUSH_EVENT_SHAPERS` (25
+    warnings in a flag-absent baseline run of the same scenario) -- consistent with
+    `docs/performance/simq_isolation_overhead.md`'s already-documented swap-pressure caveat for
+    this environment, not a regression from this ticket.
+  proof_type: regression
+  test_path: >
+    tests/unit/observability/test_event_shapers_economy_faction.py (20 tests: registry extension,
+    all 7 EconomyShaper events including the rejected-intent no-op and both
+    paid_info_changed_goal cases, all 8 FactionShaper events including diplomatic-pair dedup and
+    both alliance_proposed prior-state cases and the positive-tension-delta resource_seized gate),
+    tests/unit/observability/ full directory (793 passed, 6 skipped -- up from 779 pre-ticket).
+  divergence_note: null
+  support_boundary: >
+    SHADOW-mode only, same as INFRA-324 -- no live behavior change. `event_extractor.py`,
+    `apply.py`, `apply_plan.py`, `kernel.py` all unmodified by this entry -- confirmed via `git
+    diff` before Finalize. Does not implement any of the 6 deferred events named above in any
+    form, not even partially. Does not implement `ON` mode (live delivery) -- reserved for
+    `TCK-20260806-PUSH-CUTOVER-COMBAT-ECONOMY-FACTION`, gated on
+    `TCK-20260806-PUSH-SHADOW-VALIDATION-PERF`'s go verdict.
+
+- id: INFRA-326
+  text: >
+    TCK-20260806-PUSH-CUTOVER-PHASE2 (epic child 8, final child of
+    TCK-20260806-SIMQ-OBSERVABILITY-PUSH-MIGRATION-PHASE2-EPIC) -- found and fixed a real
+    total-blackout bug during this cutover's own real-kernel verification, distinct from
+    INFRA-273's tick-budget-watchdog trajectory divergence. `ENABLE_PUSH_EVENT_SHAPERS_PHASE2`'s
+    default was flipped `OFF`->`ON` in `src/domains/optimization/feature_flags.py`, and
+    `event_extractor.py`'s own read of the flag (`_push_shapers_phase2_active`) was updated to
+    match -- but `src/observability/event_shapers.py`'s `run_shadow_shapers()` function reads the
+    *same* flag string via its own, structurally-independent, hardcoded default (`"OFF"`, correct
+    at the time it was written during `TCK-20260806-PUSH-SHAPER-REGISTRY-STRATEGY`, since Phase 2
+    wasn't cut over yet). This ticket updated the first two call sites but not the third, since
+    `event_shapers.py`'s own default read wasn't part of this ticket's initial mental model of
+    "where the flag is read." Result under the real post-cutover default state (no explicit
+    override): `event_extractor.py`'s legacy branches correctly suppressed (reading the new "ON"
+    default) AND `event_shapers.py`'s Phase 2 shaper registry still not delivering (reading its
+    own stale "OFF" default) -- every world tested showed `event_extractor=0` AND
+    `event_shapers=0`, a total blackout of all ~50 Phase 2 event types with no explicit flag
+    override anywhere.
+
+    This is the same *bug class* Phase 1's own cutover (INFRA-273's sibling entries, see
+    `TCK-20260806-PUSH-CUTOVER-COMBAT-ECONOMY-FACTION`) did not encounter, because Phase 1's
+    shaper registry (`SHAPER_REGISTRY`) and its delivery gate live inside the single, already-
+    unconditional `run_shadow_shapers()` call path with only one flag read
+    (`ENABLE_PUSH_EVENT_SHAPERS`) -- Phase 2 introduced a second, independently-read flag
+    (`ENABLE_PUSH_EVENT_SHAPERS_PHASE2`) specifically to avoid double-firing against Phase 1's
+    already-`ON` default (see STRAT-247), and that second flag's two read sites
+    (`event_extractor.py` and `event_shapers.py`) are not structurally coupled by the type system
+    or any shared constant -- only by convention and comments.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: >
+    src/observability/event_shapers.py — run_shadow_shapers()'s ENABLE_PUSH_EVENT_SHAPERS_PHASE2
+    default changed from "OFF" to "ON", with an explicit comment cross-referencing
+    event_extractor.py's own _push_shapers_phase2_active read and warning both must stay in
+    lockstep; src/observability/event_extractor.py — matching comment added at
+    _push_shapers_phase2_active's own definition. Verified via real, non-mocked 5-world kernel
+    runs in both directions: (1) default state (no override) — before fix: event_extractor=0,
+    event_shapers=0 on every world (total blackout); after fix: event_extractor=0 (no leak),
+    event_shapers=43-845 (real, non-zero delivery, magnitude varying by world activity level).
+    (2) explicit ENABLE_PUSH_EVENT_SHAPERS_PHASE2=OFF rollback, hero_guild_routing world:
+    event_extractor=911 (old path correctly restored).
+  proof_type: regression
+  test_path: >
+    tests/unit/observability/test_event_shapers_strategy.py::test_run_shadow_shapers_default_includes_phase2_events,
+    ::test_run_shadow_shapers_explicit_off_excludes_phase2_events (both added/renamed this
+    ticket to cover the fixed default and the rollback path respectively; unit tests alone did
+    not catch this bug originally since MagicMock-based test fixtures never exercise the real
+    default-value fallback path the way a real kernel run with an unset flags dict does).
+  divergence_note: null
+  support_boundary: >
+    This entry documents the bug and its fix, not a new observability capability -- see STRAT-247,
+    PROG-117, WORLD-115, SOC-239/SOC-240, TOWN-190, and FAC-013's own 2026-08-07 update notes for
+    the per-domain cutover-to-live-delivery closure this fix unblocked. Anti-drift note carried
+    into TCK-20260806-PUSH-CUTOVER-PHASE2's own investigation.md: the two flag-default read sites
+    remain independently editable going forward (no enforced invariant, comments only) -- worth
+    checking explicitly, not assuming fixed by precedent, on any future Phase 3+ cutover that
+    introduces another independently-gated flag.
+
+- id: INFRA-327
+  text: >-
+    commitment_abandoned and rejection_cascade_tick (both AgencyScorer, the last 2 of
+    TCK-20260701-SIMQ-EMIT-AGENCY2's 4 emitters -- SIMQ-CALIBRATED-001's own v2_evidence text)
+    migrated from event_extractor.py's post-tick diffing/aggregation to a live, push-based
+    AgencyShaper (src/observability/event_shapers.py) -- the last 2 real push-migration gaps
+    found during TCK-20260807-QUEST-EVENT-PUSH-MIGRATION's own systematic sweep of the file.
+  status: divergent
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: >-
+    src/observability/event_shapers.py -- new AgencyShaper.shape(), reusing NarrativeShaper's own
+    _current_projects() helper for commitment_abandoned's ProjectState.status diffing (generic to
+    any project kind, not just QuestState); hp/max_hp reconstructed from prior_ent.combat +
+    this tick's CombatUpdate.hp_delta/max_hp_delta (mirrors CombatShaper's own prior-plus-delta
+    pattern) since AbandonmentEvaluator.evaluate_abandonment() needs the post-mutation hp/max_hp,
+    not the prior tick's value. rejection_cascade_tick is a pure update-derived population
+    aggregate (counts rejected intent_results across all of update.entity_updates), no
+    prior_state comparison needed at all. New AGENCY_SHAPER_REGISTRY, new dedicated
+    ENABLE_PUSH_EVENT_SHAPERS_AGENCY flag gating block inside run_shadow_shapers() --
+    deliberately NOT colocated with NarrativeShaper (whose own ENABLE_PUSH_EVENT_SHAPERS_QUEST
+    flag already defaults ON, which would have delivered these two events live immediately with
+    no independent verification window, the same double-fire-risk reasoning that gave
+    NarrativeShaper its own flag apart from ENABLE_PUSH_EVENT_SHAPERS_PHASE2 in the first place).
+    src/observability/event_extractor.py -- both blocks gated behind `not
+    _push_shapers_agency_active` (rollback path). src/domains/optimization/feature_flags.py --
+    new ENABLE_PUSH_EVENT_SHAPERS_AGENCY, default ON. Real-kernel-adjacent verification (direct
+    EventExtractor.extract() + run_shadow_shapers() comparison, both default and explicit-OFF,
+    for both events): default delivers exactly 1 event per type from the shaper (0 from the
+    extractor's own rollback branch); explicit OFF delivers exactly 1 from the extractor (0 from
+    the shaper) -- confirmed no double-fire in either mode, for both event types independently.
+  proof_type: parity
+  test_path: >-
+    tests/unit/observability/test_event_shapers_agency.py (16 tests: registry wiring, 4-way flag
+    gating for both events combined, independence from ENABLE_PUSH_EVENT_SHAPERS_QUEST, direct
+    AgencyShaper.shape() behavior for both commitment_abandoned -- including the hp-delta
+    reconstruction correctness case -- and rejection_cascade_tick -- including the
+    population-aggregate-not-per-entity case and the no-prior-state-dependency case)
+  divergence_note: >-
+    Byte-for-byte identical trigger logic and payload shape to event_extractor.py's own pre-fix
+    version (SIMQ-CALIBRATED-001's own TCK-20260701-SIMQ-EMIT-AGENCY2 entry) -- this is a delivery
+    mechanism migration only, not a behavior change. Completes the push-based observability
+    migration's own event-type coverage: as of this entry, every scored event this repo tracks is
+    either push-based (this fix's own 2 events plus the ~72 migrated by TCK-20260806-SIMQ-
+    OBSERVABILITY-PUSH-MIGRATION-EPIC/-PHASE2-EPIC and TCK-20260807-QUEST-EVENT-PUSH-MIGRATION) or
+    a deliberately-undisturbed new signal with no legacy diffing equivalent to migrate
+    (capability_growth_stalled/life_arc_incoherent, confirmed not a gap during the same sweep).
+  support_boundary: >-
+    Observability delivery-mechanism migration only -- no change to AgencyScorer's own scoring
+    logic or AbandonmentEvaluator's classification rules. grade_anchors.json not recalibrated:
+    both events' calibration_hits were already 0 in every scored scenario before this migration
+    (per SIMQ-CALIBRATED-001's own text), so no existing baseline reflects a state to shift away
+    from.

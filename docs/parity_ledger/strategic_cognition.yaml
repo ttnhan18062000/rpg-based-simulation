@@ -2845,6 +2845,25 @@
     tests/unit/quest/test_quest_generation.py::test_quest_generation_favors_gather_under_high_scarcity
   divergence_note: null
   support_boundary: null
+  update_2026_08_07: >-
+    TCK-20260807-GUILD-SCARCITY-REGION-COVERAGE-GAP: GuildAction.visit()'s scarcity computation
+    (documented here) was a latent risk when this entry was first written -- GuildAction was not
+    live-dispatched at the time. TCK-20260807-QUEST-GUILDACTION-DEAD-WIRING made it live and
+    role-agnostic (no hero-role gate, unlike AdventureDecisionPhase). A fresh corpus-wide
+    re-verification (prompted by that wiring going live) found the resource-tag catalog coverage
+    established by TCK-20260706-SIMQ-CORPUS-RESOURCE-REGION-COVERAGE-AUDIT had drifted: 3 new
+    regions appeared in the corpus since 2026-07-06 (river_ford, deep_forest, survivor_outpost).
+    river_ford was a genuine tag-gap (herb_patch physically placed there, module biome already
+    trusted by herb_patch's source_region_tags) -- fixed additively
+    (data/content/world/resources.yaml). deep_forest/survivor_outpost are zero-content regions by
+    design, extending the existing accepted-gap disposition
+    (docs/guidelines/intentional_divergences.md #2.29). New corpus-wide regression test added
+    (tests/integration/content/test_resource_region_coverage_corpus.py::
+    test_no_entity_of_any_role_spawns_in_an_unresolved_region_corpus_wide) checking ALL entity
+    roles, not just hero -- closing the role-scope gap the original hero-only test left, now that
+    GuildAction is a real non-hero consumer. Verified directly: an entity in river_ford now
+    computes scarcity=0.8 from a real herb_patch node's charge ratio, vs. the pre-fix scarcity=0.0
+    ("fully abundant") false reading.
 
 - id: STRAT-245
   text: >
@@ -2950,3 +2969,170 @@
     touch scorer weights/thresholds, do not touch feature-flag defaults) — they remain
     calibration-profile/scoring-balance questions belonging to the simq_audit/calibration
     workstream and are not filed as separate tickets here.
+- id: STRAT-247
+  text: >-
+    AGENCY/COGNITION/INFORMATION event emission (route_selected, action_executed,
+    route_family_first_use, defer_with_reason, self_model_updated, belief_assimilated,
+    belief_updated, route_new_query, lead_certainty_changed, lead_certainty_updated,
+    belief_stale, decision_diverged_by_belief, decision_divergence_detected) is available
+    via an apply-layer StrategyShaper (src/observability/event_shapers.py), reading
+    EntityUpdate.property_updates/self_model_bundle_set directly, and reconstructing a
+    "current" leads/projects/concerns view from prior_state's full snapshot merged with
+    StrategicUpdate's per-tick delta fields (leads_add_or_update/leads_remove,
+    projects_add_or_update/projects_remove, concerns_add_or_update/concerns_remove) — no
+    post-apply current_state read required. Registered in PHASE2_SHAPER_REGISTRY, gated by
+    the new ENABLE_PUSH_EVENT_SHAPERS_PHASE2 flag (default OFF), kept deliberately separate
+    from Phase 1's ENABLE_PUSH_EVENT_SHAPERS (which already defaults ON) — a real double-firing
+    bug was found and fixed during this ticket's own real-kernel verification when the shaper
+    was first registered directly into the Phase 1 registry (both event_extractor.py's
+    unguarded branches and the new shaper delivered simultaneously). SHADOW-only in this ticket
+    (constructs, does not deliver); cutover is a separate, later Phase 2 child ticket.
+    (TCK-20260806-PUSH-SHAPER-REGISTRY-STRATEGY)
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >-
+    src/observability/event_shapers.py — StrategyShaper, _current_leads(), PHASE2_SHAPER_REGISTRY,
+    run_shadow_shapers()'s internal ENABLE_PUSH_EVENT_SHAPERS_PHASE2 gating;
+    src/domains/optimization/feature_flags.py — ENABLE_PUSH_EVENT_SHAPERS_PHASE2 (default OFF);
+    src/engine/kernel.py — StrategyShaper.reset_run_state() wired alongside
+    EventExtractor.reset_run_state() at Kernel.__init__;
+    real, non-mocked kernel runs confirmed: default (0 event_shapers-sourced strategy events),
+    SHADOW (constructed but 0 delivered), ON (expected double-fire against event_extractor.py's
+    still-unguarded branches, confirmed as Cutover's job not this ticket's)
+  proof_type: parity
+  test_path: >-
+    tests/unit/observability/test_event_shapers_strategy.py (26 tests, all passing)
+  divergence_note: null
+  support_boundary: >-
+    This entry covers SHADOW-mode construction only — live delivery (event_extractor.py's
+    branches flag-gated, ENABLE_PUSH_EVENT_SHAPERS_PHASE2 flipped to a live default) is a
+    separate, later Phase 2 cutover ticket's scope, not yet landed as of this entry.
+  update_2026_08_07: >-
+    TCK-20260806-PUSH-CUTOVER-PHASE2: cut over to live delivery.
+    ENABLE_PUSH_EVENT_SHAPERS_PHASE2 default flipped OFF->ON in feature_flags.py;
+    event_extractor.py's legacy AGENCY/COGNITION/INFORMATION branches individually
+    flag-gated behind the new _push_shapers_phase2_active. A real bug was found and fixed
+    during this cutover's own real-kernel verification: event_shapers.py's
+    run_shadow_shapers() read the same flag with its own separate, stale "OFF" default,
+    causing a total blackout (0 delivered from either path) under the real post-cutover
+    default state until fixed to "ON" in lockstep — see new infrastructure.yaml entry
+    INFRA-326. Verified via real, non-mocked 5-world runs in both directions (default
+    delivers, explicit OFF rolls back to legacy event_extractor.py path).
+
+- id: STRAT-248
+  text: >
+    TCK-20260807-QUEST-GUILDACTION-DEAD-WIRING -- wires GuildAction.visit() (src/town/guild.py),
+    previously entirely unreachable from live gameplay (zero callers anywhere outside its own
+    file, tests, and a docstring mention), into a real, dispatched decision/execution path. New
+    `GoalKind.GUILD` + `GuildNeedScorer` (src/ai/goals/scorers.py) -- mirrors EatScorer/
+    SleepScorer's exact SpatialQueryService.nearest_building() + target_id=str(building.id)
+    pattern, rebased onto `town_hall` since no world in the real content corpus ever declares a
+    dedicated "guild" building kind (confirmed via every resolved world.resolved.yaml). New
+    `GuildVisitPhase` (src/engine/pipeline_phases/guild_visit.py) -- a dedicated authoritative-
+    pipeline phase (run_phase("guild_visit", ...)), NOT an ENTITY_ACT/ActionRouter dispatch,
+    because GuildAction.visit() needs full state access (regions/resource_nodes) the concurrent-
+    worker ENTITY_ACT path's WorkerPacket structurally cannot provide ("Law: A worker must
+    receive a compact, bounded, and read-only context", src/core/worker_protocol.py). Detects
+    arrival independently (mirrors _resolve_active_objective's own "detour" pattern), calls
+    GuildAction.visit(), marks the project COMPLETED. Gated behind new flag
+    ENABLE_GUILD_QUEST_GENERATION (default OFF -- new gameplay behavior, not a validated
+    replacement, per DEV-002).
+
+    Two deeper blockers found and resolved during investigation, both surfaced to and confirmed
+    by the user before implementation: (1) TownScorer's own target_id="town_center" convention
+    is unparseable by TacticalDecisionSystem._resolve_target_position() -- sidestepped, not
+    fixed, by using the already-correct building-ID convention instead (separate,  disclosed,
+    deferred: TCK-20260807-TOWN-RETURN-TARGET-RESOLUTION-BUG); (2) no "guild" building kind
+    exists in any real world content -- resolved by rebasing onto town_hall per explicit user
+    decision.
+
+    A third finding, made while wiring the actual dispatch: making GuildAction live reactivates
+    a real, PRE-EXISTING, explicitly-foreseen risk documented by
+    TCK-20260706-SIMQ-CORPUS-RESOURCE-REGION-COVERAGE-AUDIT (STRAT-244) -- GuildAction's own
+    scarcity computation can silently report scarcity=0.0 (fully abundant) for regions with
+    incomplete source_region_tags catalog coverage, previously dormant, now active whenever the
+    flag is ON. Disclosed via tests/architecture/test_guild_action_dormancy.py (updated, not
+    deleted -- now confirms the reference is limited to exactly the one deliberate site) and a
+    new follow-up ticket, TCK-20260807-GUILD-SCARCITY-REGION-COVERAGE-GAP, per that audit's own
+    explicit guidance ("needs its own region-coverage evaluation").
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >-
+    src/core/strategic.py -- GoalKind.GUILD; src/ai/goals/scorers.py -- GuildNeedScorer;
+    src/ai/goals/__init__.py -- GoalRegistry registration;
+    src/engine/pipeline_phases/guild_visit.py -- GuildVisitPhase;
+    src/engine/pipeline.py -- run_phase("guild_visit", ..., "ENABLE_GUILD_QUEST_GENERATION");
+    src/domains/optimization/feature_flags.py -- ENABLE_GUILD_QUEST_GENERATION (default OFF).
+    Real-kernel verification: a synthetic entity placed exactly at the real town_hall building
+    (hero_guild_routing) produced a genuine QuestState ("Survey the Woods", EXPLORE) via
+    GuildVisitPhase in a single tick, proving the mechanism correct end-to-end. Natural
+    (unmodified) real-kernel runs: sandbox_world_seed42 generated 5 real quests (HUNT x3,
+    EXPLORE, GATHER, BOUNTY, LIBERATE across a 3000-tick run) via the live AI decision layer with
+    no synthetic placement -- confirming the goal-competition/movement/arrival chain works
+    naturally, not just under direct construction. None reached COMPLETED/REWARDED within tested
+    tick budgets -- traced to a separate, pre-existing bug (QuestGenerator never populates
+    QuestState.metadata, so neither evaluate_combat_victory() nor evaluate_explore() can ever
+    match a real generated quest to progress) disclosed as an update to the sibling ticket
+    TCK-20260807-QUEST-EVALUATOR-GATHER-BOUNTY-LIBERATE-GAP, not this ticket's own scope.
+  proof_type: parity
+  test_path: >-
+    tests/unit/ai/test_guild_need_scorer.py (5 tests), tests/unit/engine/
+    test_guild_visit_phase.py (8 tests), tests/architecture/test_guild_action_dormancy.py
+    (updated, 1 test, still passing)
+  divergence_note: null
+  support_boundary: >-
+    Makes GuildAction.visit() live and dispatched -- does not fix the QuestGenerator metadata gap
+    (quests generate but can't progress to completion), the region-coverage scarcity gap (filed
+    separately), or the TOWN_RETURN/RECOVER/RESOLVE_BLOCKER target-resolution bug (filed
+    separately, sidestepped not fixed here). `grade_anchors.json` not recalibrated -- flag
+    defaults OFF, no behavior change in any unmodified/default-flag run.
+
+- id: STRAT-249
+  text: >-
+    TOWN_RETURN/RECOVER/RESOLVE_BLOCKER's reach_location objectives now resolve a real navigable
+    position via a target_position fallback in TacticalDecisionSystem._resolve_target_position();
+    previously these projects won the goal competition but the entity never actually navigated
+    anywhere, since target_id values like "town_center" (TownScorer/RecoverScorer's no-inn
+    fallback) or a blocker id (ResolveBlockerScorer) were never int-castable or a coordinate
+    string.
+  status: divergent
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: >-
+    src/engine/tactical.py -- TacticalDecisionSystem._resolve_target_position() now falls back to
+    obj.target_position when the existing int/coordinate-string parse of obj.target yields no
+    position, mirroring StrategicIntelligenceSystem._resolve_active_objective()'s own "detour"
+    case (intelligence.py:1030-1044), which already preferred target_position this same way.
+    Additive only: the fallback only activates when the int-parse branch (still tried first)
+    fails to yield a position, so node_id/building_id-driven INTERACT/EAT/REST arrival-dispatch
+    for the currently-working paths (HarvestScorer/EatScorer/SleepScorer/GuildNeedScorer) is
+    unaffected.
+  proof_type: parity
+  test_path: >-
+    tests/unit/tactical/test_objective_pursuit_coverage.py
+    (test_reach_location_with_unparseable_target_id_falls_back_to_target_position,
+    test_reach_location_with_unparseable_target_id_and_no_target_position_stays_unresolved,
+    test_reach_location_target_position_fallback_does_not_override_resolvable_node_id),
+    tests/unit/strategic/test_expanded_goals.py
+    (test_town_return_project_now_produces_real_navigation -- real end-to-end
+    evaluate_strategic_intent -> evaluate_entity_intent verification)
+  divergence_note: >-
+    docs/engine/contracts/tactical_contract.md documented target selection/engagement/retreat
+    rules but had no section at all covering how a reach_location objective's own target
+    resolves to a position -- Section 7 added by this ticket. Prior to this fix, TOWN_RETURN's own
+    goal-competition win (TownScorer, `src/ai/goals/scorers.py`) was entirely inert in practice:
+    the entity's project/objective state updated correctly but no navigation ever resulted,
+    silently masked (no error, no log) since `_resolve_target_position` just returned
+    `(None, None, None)` and the caller's `if target_pos:` guard quietly no-opped. RECOVER's
+    no-inn fallback and RESOLVE_BLOCKER's non-coordinate blocker-id case were affected
+    identically. Arrival-dispatch once these DO arrive still resolves to a bare idle
+    EntityUpdate (no node_id/building_id to act on) -- fixing "does it navigate" only, not "what
+    happens at arrival," per this ticket's own explicit Out-of-Scope.
+  support_boundary: >-
+    Tactical-layer target resolution only -- no scorer utility-value or goal-competition-priority
+    change (TownScorer/RecoverScorer/ResolveBlockerScorer's own scoring logic is byte-identical).
+    grade_anchors.json not recalibrated: TOWN_RETURN/RECOVER/RESOLVE_BLOCKER projects were
+    silently inert before this fix in every scored scenario, so there is no existing baseline
+    grade that reflected a "these goals produce movement" state to shift away from.

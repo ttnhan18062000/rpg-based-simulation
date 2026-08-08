@@ -23,6 +23,7 @@ class FactionScorer(PillarScorer):
         "resource_seized",
         "faction_tension_delta",
         "faction_extinct",
+        "faction_trajectory_stagnant",
     )
 
     def __init__(self, weights: ScoringWeights) -> None:
@@ -137,5 +138,12 @@ class FactionScorer(PillarScorer):
                     ("faction_early_extinction",),
                 )
             return None
+
+        if et == "faction_trajectory_stagnant":
+            return _rec(
+                self.weights["faction_trajectory_stagnant"],
+                "faction territory unchanged despite ongoing diplomatic activity",
+                ("faction_trajectory_stagnant",),
+            )
 
         return None

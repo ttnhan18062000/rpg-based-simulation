@@ -289,3 +289,134 @@
     tests/unit/faction/test_diplomacy.py::test_urban_political_seeded_tension_fires_tense_transition
   divergence_note: null
   support_boundary: null
+
+- id: FAC-013
+  text: >
+    TCK-20260806-PUSH-CUTOVER-COMBAT-ECONOMY-FACTION -- cuts FACTION observability event emission
+    (diplomatic_transition, alliance_proposed, alliance_accepted, territory_ownership_changed,
+    resource_seized, faction_tension_delta, war_declared, military_conflict_resolved) over to
+    `FactionShaper` (src/observability/event_shapers.py, INFRA-325) as the live default path, same
+    flag-gated mutual-exclusion mechanism as COMB-295/TOWN-190. The `FactionUpdate`-driven loop
+    (6 events) is guarded as one unit, same reasoning as TOWN-190 -- every event inside maps 1:1 to
+    a migrated shaper event, no partial-scope case. The `world_events_add`-driven loop needed
+    narrower handling: it also produces `world_emergence_event`/`narrative_milestone`
+    (NARRATIVE-category, out of migration scope) for every `WorldEvent`, so only the
+    `war_declared`/`military_conflict_resolved` if/elif inside that loop is guarded, not the loop
+    itself -- guarding the whole loop would have silently suppressed 2 unrelated NARRATIVE event
+    types whenever the flag was "ON". `faction_extinct` (the full entity-census-scan event,
+    deferred per INFRA-325) is a separate block below both loops, untouched, fires unconditionally
+    regardless of the flag.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: >
+    src/observability/event_extractor.py's two faction-event loops, guarded via the same
+    `_push_shapers_active` flag read as COMB-295/TOWN-190 (the second loop narrowly, preserving
+    world_emergence_event/narrative_milestone unconditionally). Verified via real kernel run
+    (`dungeon_crawl_seed42_500t`, default flag state): `diplomatic_transition: 29` events, all
+    attributed to `event_shapers`, matching the exact count from
+    TCK-20260806-PUSH-SHADOW-VALIDATION-PERF's shadow-mode validation and this session's much
+    earlier raw-event investigation of the same world/seed. `world_emergence_event`/
+    `narrative_milestone` presence not disrupted (confirmed by the code path being untouched, not
+    re-verified via a fresh count in this entry — no reason to expect a change since the guard is
+    structurally scoped to exclude them).
+  proof_type: regression
+  test_path: >
+    tests/unit/observability/test_event_shapers_economy_faction.py (20 tests, unchanged by this
+    cutover — FactionShaper's own logic was not modified, only its delivery path).
+  divergence_note: null
+  support_boundary: >
+    FACTION domain only — see COMB-295 (combat) and TOWN-190 (economy) for the sibling cutover
+    entries. `faction_extinct` remains entirely on the old diffing path (deferred, not migrated),
+    unaffected by this flag. `world_emergence_event`/`narrative_milestone` (NARRATIVE category)
+    were structurally protected from THIS guard, not touched by THIS (Phase 1) migration — since
+    superseded: TCK-20260806-PUSH-SHAPER-REGISTRY-WORLD-DYNAMICS (Phase 2, WORLD-115) migrated
+    both into `WorldDynamicsShaper` (SHADOW-only, `ENABLE_PUSH_EVENT_SHAPERS_PHASE2`), reading the
+    same `world_events_add` record this entry's own guard already protects. Not a contradiction of
+    this entry — just noting the "not touched by this migration at all" phrase above was accurate
+    only as of Phase 1, kept here verbatim rather than edited, with this note for anyone reading
+    it after Phase 2 landed.
+
+    UPDATE 2026-08-06 (TCK-20260806-PUSH-SHAPER-DEFERRED-INSTRUMENTATION): the `faction_extinct`
+    deferral above is now closed. Migrated via `DeferredInstrumentationShaper`
+    (src/observability/event_shapers.py), which reconstructs the full living-entity-per-faction
+    census from `prior_state.entities` + this tick's `entities_add`/`entities_remove`/
+    `entity_updates[eid].identity.faction_set` deltas — same cost profile as the old extractor's
+    own full census scan, just reconstructed instead of read from `current_state` directly.
+    Deliberately did NOT fix a real, found bug in the old extractor: its HP-alive check reads
+    `getattr(entity, "hp", None)`, but `EntityState` has no top-level `hp` attribute (confirmed
+    directly — only `entity.combat.hp` exists), making that check dead code, always `True`. This
+    causes no wrong behavior in practice (dead entities are removed from `entities` entirely, not
+    HP-zeroed), so this shaper faithfully reproduces the *actual* (entity-presence-only) behavior,
+    not the *documented intent* (an HP check) — fixing the dead code is separate, small,
+    out-of-scope cleanup, not part of this migration ticket. Registered in
+    `PHASE2_SHAPER_REGISTRY`, gated by `ENABLE_PUSH_EVENT_SHAPERS_PHASE2` (default OFF).
+    SHADOW-only in this ticket. See
+    stored_artifacts/TCK-20260806-PUSH-SHAPER-DEFERRED-INSTRUMENTATION/investigation.md for the
+    full trace.
+
+    UPDATE 2026-08-07 (TCK-20260806-PUSH-CUTOVER-PHASE2): the SHADOW-only status above for
+    faction_extinct (and WORLD-115's world_emergence_event/narrative_milestone reuse of this
+    entry's own world_events_add loop) is now closed too — ENABLE_PUSH_EVENT_SHAPERS_PHASE2
+    default flipped OFF->ON, event_extractor.py's legacy faction_extinct block flag-gated behind
+    the new _push_shapers_phase2_active; the dead HP-check bug noted above was deliberately NOT
+    fixed (still out of scope). See STRAT-247's update note and infrastructure.yaml INFRA-326 for
+    the run_shadow_shapers() default-lockstep bug found and fixed during this cutover, verified
+    fixed via real 5-world runs.
+
+- id: FAC-014
+  text: >
+    TCK-20260806-SIMQ-FACTION-LIFECYCLE-TRAJECTORY -- adds a new FACTION scoring rule per
+    quality_scoring_contract.md's own §7.6 audit, mirroring WORLD's own `trauma_hazard_broken`
+    pattern: `faction_trajectory_stagnant` fires when a faction's territory (`territory_add`/
+    `territory_remove` combined) stays unchanged for `_FACTION_STAGNANT_TICKS` (300) ticks while
+    that same faction continues to show diplomatic activity (`diplomatic_relations_set`
+    non-empty) -- a trend flat despite an active, ongoing related signal, not a single bad event
+    or static threshold. Implemented directly in `FactionShaper` (`event_shapers.py`), the
+    current live-by-default path for FACTION (Phase 1 of the push-migration epic) -- this is the
+    first cross-tick state `FactionShaper` carries (every other FACTION event is derived from a
+    single tick's `FactionUpdate` alone), so `reset_run_state()` was added and wired into
+    `Kernel.__init__` alongside the other stateful shapers (`StrategyShaper`/`ProgressionShaper`/
+    `SocialShaper`). Region/world-layer trajectory coverage re-confirmed already sufficient via
+    WORLD's existing rules (§7.6's own conclusion) -- `world_dynamics.py` untouched.
+
+    Separately found and disclosed, not fixed here: neither `event_extractor.py`'s legacy
+    `territory_ownership_changed` construction nor `FactionShaper`'s live construction ever sets
+    a `faction_territory_pct` payload key, so `FactionScorer`'s existing `faction_monopoly`/
+    `faction_conquest_degenerate` branches (both gated on that key) can never fire in either path
+    -- a genuine, pre-existing, unrelated bug, present since before Phase 1's migration. Filed as
+    `TCK-20260807-FACTION-TERRITORY-PCT-PAYLOAD-GAP`, not fixed inline.
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: >-
+    src/observability/event_shapers.py -- FactionShaper._FACTION_STAGNANT_TICKS,
+    _last_territory_change_tick/_emitted_stagnant class state, reset_run_state(), new detection
+    block inside shape()'s per-FactionUpdate loop; src/engine/kernel.py --
+    FactionShaper.reset_run_state() wired into Kernel.__init__;
+    config/simulation_quality/scoring_weights.yaml -- faction_trajectory_stagnant: -8.0;
+    src/simulation_quality/scorers/faction.py -- new EVENT_TYPES entry and score() branch, weight
+    read from config (no numeric literals).
+  proof_type: parity
+  test_path: >-
+    tests/unit/observability/test_event_shapers_economy_faction.py (new
+    TestFactionTrajectoryStagnant coverage), tests/simulation_quality/test_faction_scorer.py (new
+    coverage)
+  divergence_note: null
+  support_boundary: >-
+    Observability signal addition only -- no gameplay mechanic change. `grade_anchors.json`
+    recalibrated only if a real scoped test/calibration run shows an actual scenario grade shift
+    -- not reflexively.
+  update_2026_08_07: >-
+    TCK-20260807-FACTION-TERRITORY-PCT-PAYLOAD-GAP: closed the faction_territory_pct finding
+    disclosed above. `faction_territory_pct` (this faction's territory region count over total
+    world regions) is now computed and included in `territory_ownership_changed`'s payload at
+    both construction sites -- `event_extractor.py` reads `current_state.factions[fid].territory`
+    directly (full snapshot access); `FactionShaper` reconstructs current territory from
+    `prior_state.factions[fid].territory` plus this tick's `territory_add`/`territory_remove`
+    deltas. `faction_monopoly`/`faction_conquest_degenerate` are no longer dead code in either
+    delivery path. Verified via unit tests constructing the exact crossing scenario; real-kernel
+    checks (dungeon_crawl 500t, urban_political 1500t) showed zero territory_ownership_changed
+    events in either (rare in these corpora at these tick depths) -- no crash, no false positive,
+    but no real-run positive-path confirmation either. `grade_anchors.json` not recalibrated (no
+    behavior change observed in real runs to recalibrate against).

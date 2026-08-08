@@ -35,6 +35,29 @@ regression); these worlds add entity-count/region-count/module-family diversity 
 
 ---
 
+> **NOTE (2026-08-07 — `TCK-20260807-QUEST-EVENT-PUSH-MIGRATION` verification sweep, NARRATIVE +
+> PROGRESSION recalibration):** Full 79-scenario, 790-pillar-check corpus verification run after
+> this session's `quest_event`/`commitment_abandoned`/`rejection_cascade_tick` push-based
+> observability migration. The migration itself introduced zero regressions (AGENCY, the pillar
+> the 3 migrated events feed, is 79/79 clean). 78 grade-band REGRESS + additional same-grade
+> score-tolerance drift were found and traced to 2 already-landed causes from earlier the same
+> session, not new bugs: **NARRATIVE** — `TCK-20260807-QUEST-EVENT-TYPE-FILTER-BUG` correctly
+> stopped `event_extractor.py` mislabeling every non-quest AI project start as `quest_event`,
+> which had been artificially inflating `NarrativeScorer`'s `quest_active` weight corpus-wide
+> (every regressed anchor had grade A or S — i.e. every one was inflated). **PROGRESSION** —
+> `TCK-20260806-SIMQ-PROGRESSION-CAPABILITY-LIFECYCLE`'s `capability_growth_stalled` signal,
+> explicitly documented "not yet calibrated" when added, landing correctly now that it fires
+> across the corpus. Recalibrated: 127 pillar entries (NARRATIVE + PROGRESSION only) across 64
+> run_keys — `tests/simulation_quality/test_grade_regression.py -m "not slow"`'s NARRATIVE/
+> PROGRESSION assertions are now clean. **Deliberately NOT recalibrated:** 26 COMBAT + 1 COGNITION
+> + 1 SOCIAL score-tolerance failures with no traceable cause in this session's work, matching the
+> same shape as the 2026-08-06 refresh's own "ordinary single-draw variance" disclosure at larger
+> scale — plausibly the documented F6 watchdog-throttle non-determinism
+> (`docs/audits/D06_longrun_health.md`), not confirmed, left for a follow-up session per the
+> `SCORE_TOLERANCE_OVERRIDES` precedent (requires multiple independent clean draws before
+> committing). Full detail: `docs/simulation_quality/current_state.md`'s "2026-08-07 session
+> summary" section.
+
 > **NOTE (TCK-20260702-SIMQ-UPLIFT-GRADE-DECAY — D2 formula fix):** Grade tables in this document
 > were re-calibrated on 2026-07-02 after fixing the tick-dilution artifact (H2) in the
 > normalized_score formula. The original formula divided raw_score by current_tick, causing
@@ -1065,6 +1088,13 @@ C in all 8 worlds this document covers — neither `ENABLE_ADVENTURE_ROUTING` no
 ---
 
 ## Corpus World-Scale Summary (TCK-20260704-SIMQ-CORPUS-SCALE-METRIC)
+
+**Current numbers now live in `config/simulation_quality/corpus_registry.yaml`**
+(`TCK-20260808-SIMQ-CORPUS-WORLD-METADATA-REGISTRY`, regenerate via `make simq-corpus-registry`)
+— generated live from each world's own `world_compile_report.json` on every regeneration, so it
+never drifts the way this table (a point-in-time snapshot) inevitably will. The table below is
+retained as the historical record of the batch that first consolidated this data, not as a
+currently-accurate source.
 
 Consolidated scale reporting for all 10 worlds under `data/worlds/`, pulled directly from each
 world's `world_compile_report.json`. Earlier per-world reporting in "Newly-Anchored Worlds" above
@@ -2669,3 +2699,61 @@ tolerance-guard conversion was needed).
 `urban_political_seed42_500t` and `urban_political_seed456_500t` (sibling `FAST_ANCHOR_KEYS`
 entries) remain unverified against F6 — out of this ticket's scope, candidates for a future ticket
 if their own controlled repro is warranted.
+
+---
+
+## Anchor Reliability Verification, Part 6 (TCK-20260807-SIMQ-COMBAT-SCORE-TOLERANCE-DRIFT-INVESTIGATION)
+
+A 2026-08-07 full-corpus verification run (post observability push-migration epic) flagged 27
+(run_key, pillar) pairs beyond score tolerance: 26 COMBAT + 1 COGNITION (no SOCIAL, despite the
+originating retro's own prose citing one — not reproduced in direct recomputation). This section
+runs the `TCK-20260710`/`TCK-20260715` 3-independent-trial methodology (real throttled `Kernel`, no
+`audit_mode`) against all 27 — directly following up the gap this document's own prior section
+noted ("`urban_political_seed42_500t` and `urban_political_seed456_500t` remain unverified against
+F6... candidates for a future ticket"), plus 24 additional pairs found in the same 2026-08-07 run.
+
+**Result: 26/27 pairs show ZERO trial-to-trial variance — the opposite of Parts 1/2's own
+load-sensitivity signature.** Every COMBAT pair's `normalized_score` was bit-identical across all 3
+independent trials (e.g. `frontier_extended_seed42_200t`: `0.0, 0.0, 0.0`;
+`urban_political_seed42_500t`: `-0.0266..., -0.0266..., -0.0266...`). Parts 1/2 found genuine
+load-sensitive anchors show real trial-to-trial spread (event-count/score jitter, elapsed-time
+variance up to 4x); this batch shows none of that. **This ticket's own F6/wall-clock-noise working
+hypothesis is refuted for all 26 COMBAT pairs** — the drift is a stable, fully reproducible,
+currently-unexplained regression, not noise, and was deliberately left as a flagged failing gate
+condition rather than converted to a `SCORE_TOLERANCE_OVERRIDES` entry (converting a confirmed-stable
+regression into a tolerance override would silence real signal, the opposite of Parts 1/2's own
+intent in creating overrides only for confirmed genuine variance). Root-cause investigation tracked
+separately: `TCK-20260807-SIMQ-COMBAT-DORMANT-REGRESSION-ROOT-CAUSE`.
+
+The 1 COGNITION pair (`simq_routing_test_seed42_500t`) resolved without an anchor edit: 3 fresh
+trials all give `1.827` (stable, within tolerance of the existing `1.8373` anchor) — the
+originally-flagged `1.016` was a single stale cached draw from the full-corpus run, overwritten by
+this investigation's own trial re-runs. Consistent with, not contradicting, this pillar/run_key's
+existing Part 2 `test_corpus_diversity.py` grade-stability guard.
+
+`combat_dormant`'s trigger (`src/simulation_quality/scorers/combat.py:54-66`,
+`zero_combat_by_tick: 200`) is a plausible causal link for the 22/26 pairs that are exactly
+`_200t` scenarios (zero margin before the gate fires) — but the remaining 4 `_500t` pairs
+(`urban_political_seed42_500t`, `urban_political_seed456_500t`, `hero_guild_routing_seed42_500t`,
+`hero_guild_routing_seed123_500t`) have 300 ticks of margin past the gate and still show the same
+stable zero/negative signal, favoring a genuine COMBAT-event-generation regression over "combat
+merely started a few ticks late."
+
+### Part 6 closure (TCK-20260807-SIMQ-COMBAT-DORMANT-REGRESSION-ROOT-CAUSE)
+
+Root cause confirmed same day, via `search_docs` surfacing 2 already-landed 2026-08-06 tickets:
+`ENABLE_COMBAT_ENGAGEMENT` is deliberately OFF corpus-wide (DEV-002 ruling,
+`TCK-20260806-SIMQ-COMBAT-ENGAGEMENT-GATE-CORPUS-VALIDITY`), and
+`TCK-20260806-SIMQ-EXTRACTOR-HAZARD-COMBAT-MISCLASSIFICATION-FIX` (hotfix, same day) fixed
+`event_extractor.py` to stop double-classifying hazard-drain damage as combat — the only source of
+nonzero COMBAT signal these 26 scenarios ever had, since PP-16 (`CombatEngagementPhase`) never
+runs anywhere in the corpus. That hotfix's own AC explicitly deferred `grade_anchors.json`
+recalibration; this ticket completes it. Not a code regression — the 2026-08-07 full-corpus run
+was simply the first live re-run against the already-fixed extractor, correctly reporting the new
+(honest, zero-real-combat) reality. All 26 COMBAT anchors recalibrated to their confirmed-stable
+(zero-variance across 3 trials, reused from Part 6's own data) post-fix values.
+
+One new, unrelated, disclosed-not-fixed finding surfaced while closing this out:
+`hero_guild_routing_seed42_500t`/COGNITION — anchor `1.016` vs. 3 fresh trials averaging `~1.83`
+with small genuine jitter (not bit-identical, unlike the COMBAT batch) — no cause diagnosed,
+left as-is, candidate for a future small investigation.

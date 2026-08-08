@@ -111,6 +111,14 @@ class TestResourceSeized:
         assert rec.delta == scoring_weights["economic_military_coupling"]
 
 
+class TestFactionTrajectoryStagnant:
+    def test_scores_configured_weight_and_tag(self, scorer: FactionScorer, scoring_weights: ScoringWeights) -> None:
+        rec = scorer.score(_env("faction_trajectory_stagnant", payload={"faction_id": "f1", "ticks_since_territory_change": 301}), _ctx())
+        assert rec is not None
+        assert rec.delta == scoring_weights["faction_trajectory_stagnant"]
+        assert "faction_trajectory_stagnant" in rec.tags
+
+
 class TestNullReturn:
     def test_null_unknown(self, scorer: FactionScorer) -> None:
         assert scorer.score(_env("combat_initiated"), _ctx()) is None

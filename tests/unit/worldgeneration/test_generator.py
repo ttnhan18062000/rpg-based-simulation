@@ -176,3 +176,119 @@ def test_generated_world_catalog_smoke_simulation(repos):
         # Restore registries to legacy fallback defaults
         from src.core.modes import RuntimeContentMode
         seed_phase1_content(None, mode=RuntimeContentMode.LEGACY_FALLBACK)
+
+
+def _population_counts(bundle):
+    counts = {e.id: e.count for e in bundle.world_spec.entities}
+    return counts["citizens"], counts["monsters"]
+
+
+def test_population_matches_flat_formula_at_default_reference_point(repos):
+    """TCK-20260808-WORLDGEN-AREA-AWARE-DENSITY: the new area-aware formula must reproduce the
+    old flat formula's exact values at the default GenerationIntentSpec reference point."""
+    cat, mod = repos
+    intent = GenerationIntentSpec(
+        generation_id="gen_reference_point",
+        seed=1,
+        target_world_size=(100, 100),
+        population_scale=1.0,
+        danger_level=1.0,
+    )
+    generator = WorldProceduralGenerator(cat, mod)
+    bundle = generator.generate(intent)
+    citizens, monsters = _population_counts(bundle)
+    assert citizens == 15
+    assert monsters == 8
+
+
+def test_population_scales_with_target_world_size(repos):
+    """town_center's own bounds are carved with a fixed +/-15 radius around the map center
+    (generator.py, unrelated to this ticket, out of scope to change) -- so town_area, and
+    therefore citizen count, does NOT vary with target_world_size (confirmed directly, disclosed
+    in investigation.md rather than forced). wilderness_forest's own bounds fill "everything left
+    of the town", so wild_area -- and monster count -- DOES scale with target_world_size. Both
+    behaviors are the real, honest formula output, not a bug."""
+    cat, mod = repos
+    generator = WorldProceduralGenerator(cat, mod)
+
+    small = generator.generate(GenerationIntentSpec(
+        generation_id="gen_small_world", seed=1, target_world_size=(100, 100),
+    ))
+    large = generator.generate(GenerationIntentSpec(
+        generation_id="gen_large_world", seed=1, target_world_size=(300, 300),
+    ))
+    small_citizens, small_monsters = _population_counts(small)
+    large_citizens, large_monsters = _population_counts(large)
+    assert large_monsters > small_monsters, "target_world_size no longer affects monster count"
+    assert large_citizens == small_citizens, (
+        "town_center's fixed-radius carving means citizen count should NOT vary with "
+        "target_world_size alone -- if this changes, town-carving itself changed too"
+    )
+
+
+def test_monster_population_scales_with_danger_level(repos):
+    cat, mod = repos
+    generator = WorldProceduralGenerator(cat, mod)
+
+    low_danger = generator.generate(GenerationIntentSpec(
+        generation_id="gen_low_danger", seed=1, target_world_size=(100, 100), danger_level=1.0,
+    ))
+    high_danger = generator.generate(GenerationIntentSpec(
+        generation_id="gen_high_danger", seed=1, target_world_size=(100, 100), danger_level=3.0,
+    ))
+    low_citizens, low_monsters = _population_counts(low_danger)
+    high_citizens, high_monsters = _population_counts(high_danger)
+    assert high_monsters > low_monsters, "danger_level no longer affects monster count"
+    assert high_citizens == low_citizens, "danger_level should not affect citizen count (town hazard is always 0)"
+
+
+def test_faction_fallback_survives_catalog_with_no_defender_or_invader_factions():
+    """Real robustness fix: a catalog with real factions but none flagged defender/invader must
+    not produce a dangling faction reference (the actual bug this ticket found, distinct from
+    the originally-claimed default-path bug which does not reproduce with the real catalog)."""
+    from src.content.repository import CatalogRepository
+    from src.worldmodules.repository import WorldModuleRepository
+
+    cat = CatalogRepository("data/content")
+    cat.load_all()
+    # Neutralize every faction's alignment_bucket so defenders/invaders are both empty, without
+    # touching the real faction registry itself. FactionDefinition is a frozen pydantic model.
+    for f_id, f in list(cat.factions.items()):
+        cat.factions[f_id] = f.model_copy(update={"alignment_bucket": "neutral"})
+
+    mod = WorldModuleRepository("data/world_modules")
+    mod.load_all()
+
+    intent = GenerationIntentSpec(generation_id="gen_no_defenders_invaders", seed=1)
+    generator = WorldProceduralGenerator(cat, mod)
+    bundle = generator.generate(intent)
+
+    real_faction_ids = {f.id for f in bundle.world_spec.factions}
+    used_faction_ids = {e.faction for e in bundle.world_spec.entities}
+    assert used_faction_ids <= real_faction_ids, (
+        f"population entities reference faction(s) not in the generated factions dict: "
+        f"{used_faction_ids - real_faction_ids}"
+    )
+
+
+def test_no_reasonable_parameter_combination_breaches_high_entity_density_warning(repos):
+    """Real assertion from investigation.md: generation-time population stays under
+    HighEntityDensityWarningRule's own 50%-of-map-area threshold across a reasonable parameter
+    sweep, computed fresh, not hardcoded."""
+    cat, mod = repos
+    generator = WorldProceduralGenerator(cat, mod)
+
+    for size in [(50, 50), (120, 120), (250, 250)]:
+        for scale in [0.5, 1.5, 3.0]:
+            for danger in [0.5, 1.5, 2.0]:
+                intent = GenerationIntentSpec(
+                    generation_id=f"gen_sweep_{size}_{scale}_{danger}",
+                    seed=1, target_world_size=size, population_scale=scale, danger_level=danger,
+                )
+                bundle = generator.generate(intent)
+                total_pop = sum(e.count for e in bundle.world_spec.entities)
+                map_area = size[0] * size[1]
+                assert total_pop <= map_area * 0.5, (
+                    f"size={size} scale={scale} danger={danger}: total_pop={total_pop} "
+                    f"breaches WORLD-WARN-002's 50% threshold (map_area={map_area})"
+                )

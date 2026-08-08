@@ -94,7 +94,7 @@ All methods are `@staticmethod` and return a new `QuestState` — they do not mu
 
 ## Quest Generation Contract (generator.py)
 
-`QuestGenerator.generate(seed, level, tick, existing_ids=None) → Optional[QuestState]`
+`QuestGenerator.generate(seed, level, tick, existing_ids=None, pressure_profile=None, origin_pos=None) → Optional[QuestState]`
 
 **Determinism:** Uses `DeterministicRNG(seed)` — same `(seed, level, tick)` inputs always produce the same quest (or `None`).
 
@@ -102,9 +102,36 @@ All methods are `@staticmethod` and return a new `QuestState` — they do not mu
 1. Filter `TEMPLATES` by level band (`min_level <= level <= max_level`).
 2. Exclude templates whose `id` is in `existing_ids` (prevents quest duplicates).
 3. If no candidates remain: returns `None`.
-4. Select from candidates using `DeterministicRNG.choice(Domain.QUEST, tick, level, candidates)`.
+4. Select from candidates using `DeterministicRNG.choice(Domain.QUEST, tick, level, candidates)`
+   (or `DeterministicRNG.weighted_choice(...)` when `pressure_profile` differentiates the
+   candidates' weights).
 
 **Reward scaling:** Linear — 10% increase per level above `template.min_level`.
+
+**Metadata population (TCK-20260807-QUEST-EVALUATOR-GATHER-BOUNTY-LIBERATE-GAP,
+TCK-20260807-QUEST-HUNT-TARGET-METADATA-GAP):**
+`QuestState.metadata` is the contract `QuestResolutionSystem`'s evaluators read to detect
+completion (`target_pos` for EXPLORE, `target_archetype_id`/`target_faction_id`/
+`target_projected_label`/`target_kind` for HUNT). Prior to these fixes, `generate()` never
+populated `metadata` for any kind, making every generated quest permanently uncompletable.
+
+- **EXPLORE**: when the drawn template is `QuestKind.EXPLORE` and the caller supplies `origin_pos`
+  (the requesting entity's position — `GuildAction.visit()` passes `entity.navigation.position`),
+  `generate()` computes a deterministic target position offset `[15.0, 40.0]` tiles from
+  `origin_pos` (random angle/distance via `DeterministicRNG`) and sets
+  `metadata={"target_pos": (x, y)}`. Without `origin_pos`, `metadata` stays without a
+  `target_pos` key.
+- **HUNT**: `QuestTemplate` gained a `target_kind: Optional[str] = None` field — a real,
+  corpus-grounded `EntityState.kind` value (derived from the archetype's `race` catalog entry,
+  e.g. `"wolf"` for both `hungry_wolf`/`alpha_wolf`) a killed entity must match for
+  `evaluate_combat_victory()`'s legacy `target_kind` fallback path to advance the quest. Only
+  `q_wolf_hunt` has one set (`"wolf"`) — `q_slime_cull` deliberately has none: no `"slime"`
+  race/archetype exists anywhere in the real content corpus
+  (`data/content/entities/entity_archetypes.yaml`), so this quest stays honestly uncompletable
+  rather than matching against a fabricated kind string. When set, `generate()` sets
+  `metadata={"target_kind": template.target_kind}` for HUNT templates.
+- **GATHER/BOUNTY/LIBERATE remain uncompletable**: they have no `evaluate_*` method in
+  `QuestResolutionSystem` at all (out of scope for both tickets above).
 
 **Built-in templates by tier:**
 
@@ -113,6 +140,31 @@ All methods are `@staticmethod` and return a new `QuestState` — they do not mu
 | Tier 1 | 1–8 | `q_slime_cull` (HUNT), `q_wood_survey` (EXPLORE) |
 | Tier 2 | 4–12 | `q_wolf_hunt` (HUNT), `q_herb_gather` (GATHER) |
 | Tier 3 | 11–100 | `q_bandit_bounty` (BOUNTY), `q_camp_liberate` (LIBERATE) |
+
+---
+
+## Live Entry Point: Guild Visit (TCK-20260807-QUEST-GUILDACTION-DEAD-WIRING)
+
+`QuestGenerator.generate()` is deterministic pure logic — something must actually call it during
+live gameplay to produce a real `QuestState` an entity carries. That caller is
+`GuildAction.visit()` (`src/town/guild.py`), which computes a `QuestPressureProfile` (trauma/
+hazard/scarcity) from the entity's region and calls `QuestGenerator.generate_quests()`.
+
+**Dispatch mechanism:** `GuildVisitPhase` (`src/engine/pipeline_phases/guild_visit.py`) — a
+dedicated authoritative-pipeline phase (`run_phase("guild_visit", ...)` in `pipeline.py`), gated
+behind `ENABLE_GUILD_QUEST_GENERATION` (default `OFF`; see `docs/guides/feature_flags.md`). An
+entity's own AI decision layer selects a `GoalKind.GUILD` goal (scored by `GuildNeedScorer`,
+`src/ai/goals/scorers.py`, targeting the nearest `town_hall` building — no dedicated "guild"
+building kind exists in any real world content, so this is deliberately rebased onto `town_hall`)
+when it has spare project capacity; once the entity physically arrives (Manhattan distance ≤ 1),
+`GuildVisitPhase` detects the arrival independently (mirroring `_resolve_active_objective`'s own
+"detour" arrival-check pattern) and calls `GuildAction.visit()` directly with full `state` access.
+
+This is **not** an `ENTITY_ACT`/`ActionRouter` dispatch (unlike `EAT`/`REST`/`INTERACT`) —
+`GuildAction.visit()` needs `state.regions`/`state.resource_nodes` for its pressure/lead
+computation, which the concurrent-worker `ENTITY_ACT` path's `WorkerPacket` cannot provide by
+design ("Law: A worker must receive a compact, bounded, and read-only context",
+`src/core/worker_protocol.py`).
 
 ---
 

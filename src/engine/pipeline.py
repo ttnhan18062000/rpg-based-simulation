@@ -300,6 +300,13 @@ class AuthoritativeApplyPipeline:
         dirty_builder.mark_from_update(state, update)
         update = update.replace(dirty_set=dirty_builder.build())
         update = run_phase("quest_rewards", update, lambda u: AuthoritativeApplyPipeline._resolve_quest_rewards(state, u))
+
+        # TCK-20260807-QUEST-GUILDACTION-DEAD-WIRING: guild-visit arrival detection + completion.
+        # Placed adjacent to quest_rewards — new project completion/lead generation is
+        # conceptually part of this phase group, not earlier trust/validity phases.
+        from src.engine.pipeline_phases.guild_visit import GuildVisitPhase
+        update = run_phase("guild_visit", update, lambda u: GuildVisitPhase.resolve(state, u), "ENABLE_GUILD_QUEST_GENERATION")
+
         update = run_phase("shop", update, lambda u: ShopSystem.enforce(state, u))
 
         # E42C: Paid information transactions — inject intents before resolver runs.

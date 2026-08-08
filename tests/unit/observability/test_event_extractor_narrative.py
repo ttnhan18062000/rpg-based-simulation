@@ -21,6 +21,7 @@ from unittest.mock import MagicMock
 from src.observability.config import ObservabilityMode
 from src.observability.event_extractor import EventExtractor
 from src.domains.world_emergence.schema import WorldEventCategory
+from src.core.quests import QuestState, QuestStatus
 
 
 # ── Builders ──────────────────────────────────────────────────────────────────
@@ -295,21 +296,33 @@ class TestHeroDeathUnrecorded:
 # ── Group F: quest event confirmation ─────────────────────────────────────────
 
 class TestQuestEventConfirmation:
-    """N-12..N-14: QuestEvent emission confirmed via EventExtractor (translation layer handles rename)."""
+    """N-12..N-14: QuestEvent emission confirmed via EventExtractor (translation layer handles
+    rename).
 
-    def _make_quest_entity(self, eid: int, qid: str, prior_status: str | None, curr_status: str):
+    TCK-20260807-QUEST-EVENT-TYPE-FILTER-BUG: fixtures use `MagicMock(spec=QuestState)` (real
+    `isinstance()` pass) with `.quest_status` (a real `QuestStatus` enum value), not a bare
+    `MagicMock().status = "<string>"` — the old fixtures predate the fix that gates quest_event
+    construction to real `QuestState` instances and reads `.quest_status`, not the generic
+    `.status`. N-14's original "failed" premise is also corrected: `QuestStatus` has no FAILED
+    value at all (`ACTIVE`/`COMPLETED`/`REWARD_PENDING`/`REWARDED` only, per
+    `docs/simulation/quest_contract.md`'s own documented lifecycle) — that test was asserting
+    behavior the real type system cannot produce, the same class of bug this ticket fixes
+    elsewhere. Replaced with a real terminal-state transition (`REWARDED`) instead.
+    """
+
+    def _make_quest_entity(self, eid: int, qid: str,
+                            prior_status: QuestStatus | None, curr_status: QuestStatus):
         prior_ent = _entity(eid)
         curr_ent = _entity(eid)
 
-        prior_qstate = MagicMock()
-        prior_qstate.status = prior_status
-
-        curr_qstate = MagicMock()
-        curr_qstate.status = curr_status
+        curr_qstate = MagicMock(spec=QuestState)
+        curr_qstate.quest_status = curr_status
 
         if prior_status is None:
             prior_ent.strategic.projects = {}
         else:
+            prior_qstate = MagicMock(spec=QuestState)
+            prior_qstate.quest_status = prior_status
             prior_ent.strategic.projects = {qid: prior_qstate}
         curr_ent.strategic.projects = {qid: curr_qstate}
         return prior_ent, curr_ent
@@ -321,7 +334,7 @@ class TestQuestEventConfirmation:
         EventExtractor must NOT emit quest_started itself.
         """
         eid = 1
-        prior_ent, curr_ent = self._make_quest_entity(eid, "quest_main", None, "started")
+        prior_ent, curr_ent = self._make_quest_entity(eid, "quest_main", None, QuestStatus.ACTIVE)
         prior = _state({eid: prior_ent}, tick=9)
         curr = _state({eid: curr_ent}, tick=10)
         upd = _update(entity_updates={eid: MagicMock(
@@ -333,11 +346,15 @@ class TestQuestEventConfirmation:
         types = _types(events)
         assert "quest_event" in types
         assert "quest_started" not in types, "quest_started must not be emitted directly by EventExtractor"
+        evt = next(e for e in events if e.event_type == "quest_event")
+        assert evt.status == "started"
+        assert evt.payload["status"] == "started"
 
     def test_quest_completed_confirmed_via_quest_event(self):
-        """N-13: Quest status change to 'completed' emits QuestEvent — translation handles rename."""
+        """N-13: Quest status change to COMPLETED emits QuestEvent — translation handles rename."""
         eid = 2
-        prior_ent, curr_ent = self._make_quest_entity(eid, "quest_side", "active", "completed")
+        prior_ent, curr_ent = self._make_quest_entity(
+            eid, "quest_side", QuestStatus.ACTIVE, QuestStatus.COMPLETED)
         prior = _state({eid: prior_ent}, tick=9)
         curr = _state({eid: curr_ent}, tick=10)
         upd = _update(entity_updates={eid: MagicMock(
@@ -349,11 +366,16 @@ class TestQuestEventConfirmation:
         types = _types(events)
         assert "quest_event" in types
         assert "quest_completed" not in types, "quest_completed must not be emitted directly by EventExtractor"
+        evt = next(e for e in events if e.event_type == "quest_event")
+        assert evt.status == "completed"
+        assert evt.payload["status"] == "completed"
 
-    def test_quest_failed_confirmed_via_quest_event(self):
-        """N-14: Quest status change to 'failed' emits QuestEvent — translation handles rename."""
+    def test_quest_rewarded_confirmed_via_quest_event(self):
+        """N-14 (corrected): quest_status transition to REWARDED (the real terminal state —
+        QuestStatus has no FAILED value) emits QuestEvent with the correct status string."""
         eid = 3
-        prior_ent, curr_ent = self._make_quest_entity(eid, "quest_boss", "active", "failed")
+        prior_ent, curr_ent = self._make_quest_entity(
+            eid, "quest_boss", QuestStatus.REWARD_PENDING, QuestStatus.REWARDED)
         prior = _state({eid: prior_ent}, tick=9)
         curr = _state({eid: curr_ent}, tick=10)
         upd = _update(entity_updates={eid: MagicMock(
@@ -364,7 +386,84 @@ class TestQuestEventConfirmation:
         events = EventExtractor.extract(prior, curr, upd)
         types = _types(events)
         assert "quest_event" in types
-        assert "quest_failed" not in types, "quest_failed must not be emitted directly by EventExtractor"
+        evt = next(e for e in events if e.event_type == "quest_event")
+        assert evt.status == "rewarded"
+        assert evt.payload["status"] == "rewarded"
+
+    def test_non_quest_project_does_not_emit_quest_event(self):
+        """A non-QuestState strategic project (e.g. a GoalKind-typed AI goal) must not produce a
+        quest_event at all — the exact mislabeling this ticket fixes."""
+        eid = 4
+        prior_ent = _entity(eid)
+        curr_ent = _entity(eid)
+        prior_ent.strategic.projects = {}
+        non_quest_project = MagicMock()  # deliberately NOT spec=QuestState
+        non_quest_project.status = "some_goal_status"
+        curr_ent.strategic.projects = {"goal_1": non_quest_project}
+        prior = _state({eid: prior_ent}, tick=9)
+        curr = _state({eid: curr_ent}, tick=10)
+        upd = _update(entity_updates={eid: MagicMock(
+            combat_upd=None, property_updates={}, self_model_bundle_set=None,
+            intent_results=[], combat=None,
+        )})
+
+        events = EventExtractor.extract(prior, curr, upd)
+        assert "quest_event" not in _types(events)
+
+    def test_mixed_projects_dict_produces_exactly_one_quest_event(self):
+        """AC: a mixed entity.strategic.projects dict (1 QuestState + 1 non-quest project)
+        produces exactly 1 QuestEvent, not 2."""
+        eid = 5
+        prior_ent = _entity(eid)
+        curr_ent = _entity(eid)
+
+        quest_qstate = MagicMock(spec=QuestState)
+        quest_qstate.quest_status = QuestStatus.ACTIVE
+        non_quest_project = MagicMock()  # deliberately NOT spec=QuestState
+        non_quest_project.status = "some_goal_status"
+
+        prior_ent.strategic.projects = {}
+        curr_ent.strategic.projects = {"quest_1": quest_qstate, "goal_1": non_quest_project}
+        prior = _state({eid: prior_ent}, tick=9)
+        curr = _state({eid: curr_ent}, tick=10)
+        upd = _update(entity_updates={eid: MagicMock(
+            combat_upd=None, property_updates={}, self_model_bundle_set=None,
+            intent_results=[], combat=None,
+        )})
+
+        events = EventExtractor.extract(prior, curr, upd)
+        quest_events = [e for e in events if e.event_type == "quest_event"]
+        assert len(quest_events) == 1
+        assert quest_events[0].quest_id == "quest_1"
+
+    def test_quest_status_transition_independent_of_generic_status(self):
+        """AC: a QuestState whose .quest_status transitions but whose generic .status does not
+        still produces a QuestEvent with the correct new status — proving the fix reads
+        .quest_status, not .status, for change detection."""
+        eid = 6
+        prior_qstate = MagicMock(spec=QuestState)
+        prior_qstate.quest_status = QuestStatus.ACTIVE
+        prior_qstate.status = "UNCHANGED"  # generic ProjectStatus field stays constant
+
+        curr_qstate = MagicMock(spec=QuestState)
+        curr_qstate.quest_status = QuestStatus.COMPLETED
+        curr_qstate.status = "UNCHANGED"  # deliberately identical to prior — must not matter
+
+        prior_ent = _entity(eid)
+        curr_ent = _entity(eid)
+        prior_ent.strategic.projects = {"quest_1": prior_qstate}
+        curr_ent.strategic.projects = {"quest_1": curr_qstate}
+        prior = _state({eid: prior_ent}, tick=9)
+        curr = _state({eid: curr_ent}, tick=10)
+        upd = _update(entity_updates={eid: MagicMock(
+            combat_upd=None, property_updates={}, self_model_bundle_set=None,
+            intent_results=[], combat=None,
+        )})
+
+        events = EventExtractor.extract(prior, curr, upd)
+        quest_events = [e for e in events if e.event_type == "quest_event"]
+        assert len(quest_events) == 1
+        assert quest_events[0].status == "completed"
 
 
 # ── Group G: architecture import guards ───────────────────────────────────────

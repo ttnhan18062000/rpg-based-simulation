@@ -22,6 +22,8 @@ class ProgressionScorer(PillarScorer):
         "progression_conversion_applied",
         "near_death_survival",
         "progression_plateau_detected",
+        "capability_growth_stalled",
+        "life_arc_incoherent",
     )
 
     def __init__(self, weights: ScoringWeights) -> None:
@@ -139,5 +141,19 @@ class ProgressionScorer(PillarScorer):
                     ("trait_system_silent",),
                 )
             return None
+
+        if et == "capability_growth_stalled":
+            return _rec(
+                self.weights["capability_growth_stalled"],
+                "entity's level/skills/gear/gold all flat for the stall window",
+                ("capability_growth_stalled",),
+            )
+
+        if et == "life_arc_incoherent":
+            return _rec(
+                self.weights["life_arc_incoherent"],
+                "entity reached a late Hero's Journey generation with no meaningful growth",
+                ("life_arc_incoherent",),
+            )
 
         return None

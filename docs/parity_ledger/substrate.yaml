@@ -3823,6 +3823,15 @@
     TCK-20260619-P0-DETERMINISM (replaced bare random.Random with DeterministicRNG) +
     tests/unit/worldgeneration/test_generator.py +
     tests/integration/kernel/test_phase2_determinism.py (lint gate: no bare random. in src/)
+
+    UPDATE 2026-08-08 (TCK-20260808-WORLDGEN-AREA-AWARE-DENSITY): Step 6's population formula and
+    the faction fallback were both changed (area/hazard-aware population sizing, present-faction
+    fallback hardening) -- neither introduces any new RNG call; both are pure arithmetic over
+    already-deterministic inputs (intent fields, region bounds computed earlier in the same
+    deterministic pass, dict iteration order over `factions` which is itself built by iterating
+    `self.catalog_repo.factions` in file-load order). `test_procedural_generator_determinism`
+    (existing, unmodified) re-confirms bit-identical output for same-seed reruns after this
+    change -- not just assumed unaffected.
   proof_type: null
   test_path: tests/unit/worldgeneration/test_generator.py
   divergence_note: >
@@ -4185,3 +4194,195 @@
     SelfModelBundle.empty() regardless of this fix, so no shipped baseline's hash VALUE
     changes as a direct result of landing SelfModelPatch.
   support_boundary: null
+
+- id: SUB-375
+  text: >
+    TCK-20260808-ENTITY-VITALS-OBSERVABILITY-GAP -- entity biological pressures
+    (hunger/sleep_debt/rest_pressure, BiologicalComponent) and stamina (StaminaComponent.current
+    vs exhaustion_threshold) were durable state with zero observability coverage
+    (docs/event_ledger/entity.yaml ENTITY-009/ENTITY-017, both previously `status: silent`).
+    Adds two new events to src/observability/event_extractor.py's diff loop:
+    `biological_state_changed` (fires on any real hunger/sleep_debt/rest_pressure delta,
+    severity CRITICAL >=95 / WARNING >=80 / INFO otherwise, using the worst of the three
+    pressures) and `stamina_changed` (fires on any real stamina.current delta, severity WARNING
+    when below the existing `exhaustion_threshold`, INFO otherwise). Full-coverage-by-design
+    (every real delta, not just threshold crossings) per explicit user direction, matching the
+    `movement` event's own existing high-volume-but-real precedent in the same file. Both
+    reuse existing, already-defined thresholds (`StaminaComponent.exhaustion_threshold`,
+    BiologicalComponent's documented 0-100 scale) -- no new numeric constants invented.
+    Suppressed in LIGHT/LONG_RUN observability modes, matching the file's existing volume-control
+    convention for other high-frequency events.
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: >
+    src/observability/event_extractor.py -- `biological_state_changed`/`stamina_changed` diff
+    blocks, guarded by a local `_is_real_number()` isinstance helper (defensive against
+    MagicMock-based test fixtures elsewhere in the suite that don't wire `.biological`/`.stamina`,
+    never true for a real EntityState). Confirmed firing through a real, non-mocked
+    `Kernel.tick_once()` loop over 15 ticks on `sandbox_world` (seed 42) -- not just constructed
+    from hand-built state.
+  proof_type: regression
+  test_path: >
+    tests/unit/observability/test_event_extractor_vitals.py::
+    test_biological_state_changed_fires_through_real_kernel_tick_once,
+    ::test_stamina_changed_fires_through_real_kernel_tick_once,
+    ::test_vitals_events_suppressed_in_light_and_long_run_modes
+  divergence_note: null
+  support_boundary: >
+    Emitted events are classified `unscored_intentional` (docs/simulation_quality/
+    event_type_coverage.md Section 5) -- not wired to any SimQ pillar, a deliberate separate
+    decision, not a residual gap. Wound/scar coverage (the other half of this ticket's scope) is
+    tracked separately under combat_movement.yaml's own entry, since wounds are a CombatUpdate
+    field, not a biological/stamina one.
+
+- id: SUB-376
+  text: >
+    TCK-20260808-ENTITY-ATTRIBUTES-OBSERVABILITY-GAP -- base attribute changes
+    (STR/AGI/VIT/END/INT/SPI/WIS/PER/CHA, AttributeComponent) were durable state with zero
+    observability coverage (docs/event_ledger/entity.yaml ENTITY-008, previously `status: silent`).
+    Adds one new event to src/observability/event_extractor.py's diff loop: `attribute_changed`
+    (fires on any real delta across the 9 fields; payload carries only the changed fields;
+    severity direction-based -- WARNING on any decline, INFO otherwise -- since no existing
+    numeric "significant attribute change" threshold exists anywhere in the repo to reuse, unlike
+    SUB-375's stamina/biological thresholds). Of the 4 grep-found `AttributeUpdate(` producers in
+    src/, only 1 (`src/engine/evolution.py`'s non-hero level-up) is genuinely live and
+    pipeline-wired; 1 (`src/engine/domain/core_actions.py::execute_allocate_ap`, strength/vitality
+    only) is real, tested, action-router-wired code with no live AI driver -- the one real
+    gap-resolution pipeline that could trigger it (progression/gaps.py's level_gap ->
+    progression/generator.py -> progression/resolver.py's ConversionKind.ALLOCATE_AP) resolves
+    through a separate, cosmetic path that only decrements unspent_ap and never touches
+    AttributeUpdate; 2 (`src/domains/demographics/cohort.py::compute_elder_attribute_update`,
+    `src/actions/attributes.py::AllocateAttributeAction`) are confirmed dead code -- zero real
+    callers anywhere in src/, verified via direct grep, not assumed from their presence.
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: >
+    src/observability/event_extractor.py -- `attribute_changed` diff block, guarded by the same
+    `_is_real_number()` isinstance helper as SUB-375. Real producer (`evolution.py` non-hero
+    level-up) confirmed too rare to hit within a real, non-mocked 1500-tick `Kernel.tick_once()`
+    loop on `sandbox_world` (zero HERO-role entities among the 8 WORKER/3 GUARD/7 CITIZEN present,
+    none leveled up in that window) -- checked directly, not assumed. Verified instead via real
+    hand-constructed `AttributeComponent` objects passed through the real
+    `EventExtractor.extract()` function directly, same fallback pattern as COMB-296's wound/scar
+    verification.
+  proof_type: regression
+  test_path: >
+    tests/unit/observability/test_event_extractor_attributes.py (6 tests, all passing)
+  divergence_note: null
+  support_boundary: >
+    Emitted event classified `unscored_intentional` (docs/simulation_quality/
+    event_type_coverage.md Section 5) -- not wired to any SimQ pillar. The tangential finding that
+    `AttributePatch.apply` (src/engine/patches.py:557-570) clamps only an upper bound (100) with
+    no lower-bound floor is disclosed in this ticket's own investigation.md but explicitly NOT
+    fixed here -- an apply-pipeline correctness question, out of scope for an observability
+    ticket, and currently unreachable in practice since the only negative-delta producer
+    (`compute_elder_attribute_update`) is dead code. See SUB-375/COMB-296 for the sibling entity
+    entries from the predecessor vitals ticket.
+
+- id: SUB-377
+  text: >
+    TCK-20260808-ENTITY-EQUIPMENT-OBSERVABILITY-GAP -- equipment slot assignment
+    (EquipmentComponent.slots) and durability (EquipmentComponent.durability) were durable state
+    with zero observability coverage (docs/event_ledger/entity.yaml ENTITY-014, previously
+    `status: silent`). Adds 3 new events to src/observability/event_extractor.py's diff loop:
+    `item_equipped` / `item_unequipped` (per-slot slots diff, `item_equipped` payload includes
+    `previous_item_id` on a swap) and `equipment_durability_changed` (per-slot durability delta;
+    severity INFO for a repair/increase or a decrease staying >= 50.0, WARNING for a decrease
+    below 50.0, CRITICAL for a decrease reaching <= 0.0 -- reusing the same 50% "needs repair"
+    intent already designed into src/domains/progression/gaps.py / src/engine/gold_sink.py, just
+    applied on the field's real 0-100 scale instead of the 0-1 scale those two call sites
+    mistakenly compare against). Of the 7 grep-found `EquipmentUpdate(` producers in src/, only 1
+    (`src/engine/evolution.py`'s goblin-kind species-evolution gear grant, evolution level >= 10)
+    is genuinely live and unconditional; 3 (`src/domains/progression/resolver.py`'s `EQUIP_ITEM`,
+    `src/engine/combat.py`'s durability decay, `src/engine/domain/core_actions.py::execute_repair`)
+    are real, wired code gated off corpus-wide (`ENABLE_PROGRESSION_EVOLUTION` /
+    `ENABLE_COMBAT_ENGAGEMENT`, both OFF in every shipped profile); 2
+    (`src/core/equipment.py::EquipmentService.auto_equip`/`.repair_equipment`) are confirmed dead
+    code -- zero real callers anywhere in src/, verified via direct grep, not assumed.
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: >
+    src/observability/event_extractor.py -- `item_equipped`/`item_unequipped`/
+    `equipment_durability_changed` diff blocks, guarded by `isinstance(..., dict)` checks on
+    `entity.equipment.slots`/`.durability` and the same `_is_real_number()` helper for durability
+    floats (defensive against MagicMock-based test fixtures elsewhere in the suite). The one live
+    producer (`evolution.py`'s goblin-evolution gear grant) confirmed unreachable in
+    `sandbox_world` -- zero goblin-kind entities present, checked directly via a real, non-mocked
+    1000-tick `Kernel.tick_once()` loop producing zero matching events, not assumed. Verified
+    instead via real hand-constructed `EquipmentComponent` objects passed through the real
+    `EventExtractor.extract()` function directly, same fallback pattern as SUB-375/SUB-376/
+    COMB-296.
+  proof_type: regression
+  test_path: >
+    tests/unit/observability/test_event_extractor_equipment.py (9 tests, all passing)
+  divergence_note: null
+  support_boundary: >
+    Emitted events classified `unscored_intentional` (docs/simulation_quality/
+    event_type_coverage.md Section 5) -- not wired to any SimQ pillar (ECONOMY flagged as a
+    plausible future candidate in the ticket's own Out of Scope, not decided here). The tangential
+    finding that src/domains/progression/gaps.py's `repair_gap` detection and
+    src/engine/gold_sink.py's `_count_degraded_slots` (REPAIR_FEE) both compare durability against
+    a 0-1 scale while the real field uses 0-100 -- silently making both checks unreachable in
+    practice -- is disclosed in this ticket's own investigation.md but explicitly NOT fixed here
+    (an apply/detection-logic correctness question, out of scope for an observability ticket, and
+    currently non-regressive since the producers that would generate a meaningful non-100 value
+    are themselves gated off). See SUB-375/SUB-376/COMB-296 for the sibling entity entries from
+    the predecessor vitals/attributes tickets.
+
+- id: SUB-378
+  text: >
+    TCK-20260808-ENTITY-IDENTITY-ROLE-FACTION-OBSERVABILITY-GAP -- entity role/faction
+    reassignment, recipe learning, and skill cooldowns were durable state with zero observability
+    coverage (docs/event_ledger/entity.yaml ENTITY-007, previously `status: partial`). Adds 4 new
+    events to src/observability/event_extractor.py's diff loop: `entity_role_changed` /
+    `entity_faction_changed` (entity.identity.role/.faction delta), `recipe_learned`
+    (entity.identity.known_recipes set-diff, new entries only), `skill_cooldown_started`
+    (entity.identity.cooldowns new/changed entry). `role_set`/`faction_set` have ZERO real
+    producers anywhere in src/ (confirmed via direct grep, not assumed) -- role/faction
+    reassignment (defection, promotion) is a defined-but-entirely-unimplemented mechanic, not
+    merely gated; the event is wired anyway (future-proof, per explicit user direction to build
+    "even invisible events, maybe we will change the code to make it visible"). `recipe_learned`'s
+    one real producer (`src/engine/blacksmith.py::BlacksmithSystem.enforce`, wholesale recipe
+    grant on a functional-blacksmith-tile visit) is unconditional, not feature-flag-gated --
+    confirmed via `pipeline.py:174`'s `run_phase` call carrying no flag argument, unlike the
+    4-arg gated calls elsewhere. `skill_cooldown_started`'s producer
+    (`src/engine/domain/skill_actions.py`) is real and action-router-wired but has no live AI
+    driver ever selecting the `"SKILL"` action -- same class as `execute_allocate_ap`/
+    `execute_repair` in the sibling attributes/equipment tickets. Separately, `TaskUpdate.
+    work_kind_set` (docs/event_ledger/entity.yaml ENTITY-015) was investigated and given a
+    `deliberately_uncovered` verdict, not an event -- 24 real producers found, overwhelmingly
+    per-tick action-scheduling plumbing (`src/engine/tactical.py`/`executor.py`/`worker_logic.py`,
+    setting `ENTITY_MOVE`/`ENTITY_ACT` for essentially every acting entity every tick), no
+    persistent narrative content, would be `movement`-class volume for zero signal.
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: >
+    src/observability/event_extractor.py -- 4 new diff blocks, guarded by the same
+    `_is_real_number()` helper for the int-typed role/faction fields and `isinstance(...,
+    (set,frozenset)/dict)` checks for known_recipes/cooldowns (defensive against MagicMock-based
+    test fixtures elsewhere in the suite). `recipe_learned`'s trigger conditions confirmed met in
+    `sandbox_world` (1 blacksmith building, all 18 entities start with empty known_recipes) via a
+    real, non-mocked 1500-tick `Kernel.tick_once()` loop, but no entity happened to path onto the
+    blacksmith tile within that window -- checked directly, not assumed unreachable.
+    `entity_role_changed`/`entity_faction_changed`/`skill_cooldown_started` verified via real
+    hand-constructed `IdentityComponent` objects passed through the real
+    `EventExtractor.extract()` function directly, same fallback pattern as SUB-375/SUB-376/
+    SUB-377/COMB-296.
+  proof_type: regression
+  test_path: >
+    tests/unit/observability/test_event_extractor_identity.py (9 tests, 8 hard-assert + 1
+    soft-warn for the real-kernel `recipe_learned` attempt, all passing)
+  divergence_note: null
+  support_boundary: >
+    Emitted events classified `unscored_intentional` (docs/simulation_quality/
+    event_type_coverage.md Section 5) -- not wired to any SimQ pillar (the ticket's own Out of
+    Scope flags FACTION pillar as a plausible future candidate for `entity_faction_changed`, not
+    decided here). `entity_role_changed`/`entity_faction_changed` cannot fire in ANY current code
+    path, not just gated worlds -- the underlying mechanic (role/faction reassignment) does not
+    exist anywhere in src/ yet; this differs from every sibling entity ticket's findings so far,
+    which all found at least one gated-but-real producer. See SUB-375/SUB-376/SUB-377/COMB-296 for
+    the sibling entity entries from the predecessor vitals/attributes/equipment tickets.

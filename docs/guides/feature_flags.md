@@ -29,10 +29,15 @@ default OFF, how per-world SimQ profiles can activate them, and how the `Rollout
 | `ON` | Feature active; output applied |
 | `STRICT` | Feature active; any failure raises immediately (no silent degradation) |
 
-## The 11 flags
+## The 16 flags
 
-`FeatureFlagManager.__init__` (`feature_flags.py:13-25`) hardcodes exactly 11 flags. **All 11
-default to `FeatureMode.OFF`** (confirmed in `docs/engine/known_limitations.md` §1.5):
+`FeatureFlagManager.__init__` (`feature_flags.py:13-33`) hardcodes exactly 16 flags. **12 of the
+16 default to `FeatureMode.OFF`** (confirmed in `docs/engine/known_limitations.md` §1.5); 4
+(`ENABLE_PUSH_EVENT_SHAPERS`, `ENABLE_PUSH_EVENT_SHAPERS_PHASE2`,
+`ENABLE_PUSH_EVENT_SHAPERS_QUEST`, `ENABLE_PUSH_EVENT_SHAPERS_AGENCY`) are real, documented,
+individually-reasoned exceptions defaulting `ON` (cutover-validated replacements of existing
+behavior — not speculative rollouts); the 16th (`ENABLE_GUILD_QUEST_GENERATION`) is new gameplay
+behavior and correctly defaults `OFF` per the standard policy below:
 
 | Flag | Default | Controls |
 |---|---|---|
@@ -47,24 +52,44 @@ default to `FeatureMode.OFF`** (confirmed in `docs/engine/known_limitations.md` 
 | `ENABLE_WORLD_EMERGENCE` | OFF | World emergence domain activation |
 | `ENABLE_LIFE_ARC_CAMPAIGNS` | OFF | Life-arc campaign domain |
 | `ENABLE_ENHANCED_TRACE_EVENTS` | OFF | Enhanced trace/observability event emission |
+| `ENABLE_PUSH_EVENT_SHAPERS` | **ON** | **Not routed through `FeatureFlagManager`/`run_phase()`** — the other flags gate pipeline *phases*; this one gates COMBAT/ECONOMY/FACTION event-emission delivery. `Kernel._phase_observability()` reads it directly from `prior_state.feature_flags` (bypassing `FeatureFlagManager` entirely — registering it in `__init__`'s dict is for documentation/consistency only). Flipped to `ON` (from `OFF`) by `TCK-20260806-PUSH-CUTOVER-COMBAT-ECONOMY-FACTION` (Phase 1's cutover, DONE) — this is the live default path for COMBAT/ECONOMY/FACTION event emission via the apply-layer shaper registry (`src/observability/event_shapers.py`); `event_extractor.py`'s old diffing branches for these 3 domains remain, flag-gated to fire only when this is NOT `"ON"` — setting it `"OFF"` is a real, working rollback. |
+| `ENABLE_PUSH_EVENT_SHAPERS_PHASE2` | **ON** | Same mechanism as `ENABLE_PUSH_EVENT_SHAPERS` (bypasses `FeatureFlagManager`, read directly from `prior_state.feature_flags`, but internally by `event_shapers.py::run_shadow_shapers()` itself rather than `kernel.py`), governing Phase 2 domains (AGENCY/COGNITION/INFORMATION/PROGRESSION/WORLD/SOCIAL) in `PHASE2_SHAPER_REGISTRY`. Kept on a **separate** flag from `ENABLE_PUSH_EVENT_SHAPERS` specifically because that flag already defaults `ON` — a Phase 2 shaper added to the same registry/flag would have gone live immediately with no SHADOW-validation window (a real double-firing bug found and fixed by `TCK-20260806-PUSH-SHAPER-REGISTRY-STRATEGY`). Flipped to `ON` (from `OFF`) by `TCK-20260806-PUSH-CUTOVER-PHASE2` (DONE) — this row was previously stale, not updated at that cutover's own doc-update step; corrected here while editing this same table for `ENABLE_GUILD_QUEST_GENERATION`. `event_extractor.py`'s old diffing branches for Phase 2's domains remain, flag-gated to fire only when this is NOT `"ON"` — setting it `"OFF"` is a real, working rollback. |
+| `ENABLE_PUSH_EVENT_SHAPERS_QUEST` | **ON** | Same mechanism as the two flags above (bypasses `FeatureFlagManager`, read directly from `prior_state.feature_flags`, gated internally by `event_shapers.py::run_shadow_shapers()`), governing the single `narrative` domain (`quest_event`, entity-project quest lifecycle) in `QUEST_SHAPER_REGISTRY` (`NarrativeShaper`). Kept on its own separate flag rather than folded into `ENABLE_PUSH_EVENT_SHAPERS_PHASE2` for the identical reason Phase 2 needed its own flag distinct from Phase 1's — that flag already defaults `ON`. Added and defaulted `ON` (verified via real-kernel-adjacent checks in both SHADOW and ON mode, no double-fire against `event_extractor.py`'s own rollback path) by `TCK-20260807-QUEST-EVENT-PUSH-MIGRATION` — corrects a stale claim in `TCK-20260806-SIMQ-OBSERVABILITY-PUSH-MIGRATION-PHASE2-EPIC`'s own closed record that `quest_event` "already come[s] from `quest_system`," which was never true. `event_extractor.py`'s old `quest_event`-only diffing branch (not `commitment_abandoned`, migrated separately below) remains, flag-gated to fire only when this is NOT `"ON"` — setting it `"OFF"` is a real, working rollback. |
+| `ENABLE_PUSH_EVENT_SHAPERS_AGENCY` | **ON** | Same mechanism as the three flags above, governing the single `agency` domain (`commitment_abandoned` + `rejection_cascade_tick`, both `AgencyScorer`) in `AGENCY_SHAPER_REGISTRY` (`AgencyShaper`) — the last 2 events found still diffing-based during `TCK-20260807-QUEST-EVENT-PUSH-MIGRATION`'s own systematic sweep. Kept on its own separate flag rather than colocated with `NarrativeShaper`/`ENABLE_PUSH_EVENT_SHAPERS_QUEST` (despite sharing the same `_current_projects()` reconstruction helper) for the identical reason that flag already defaults `ON` — colocating would have delivered these two events live with no independent verification window. Added and defaulted `ON` (verified via real-kernel-adjacent checks in both SHADOW and ON mode, no double-fire, for both events independently) by `TCK-20260807-COMMITMENT-ABANDONED-PUSH-MIGRATION-GAP`/`TCK-20260807-REJECTION-CASCADE-TICK-PUSH-MIGRATION-GAP`. `event_extractor.py`'s old diffing/aggregation blocks for both events remain, flag-gated to fire only when this is NOT `"ON"` — setting it `"OFF"` is a real, working rollback. |
+| `ENABLE_GUILD_QUEST_GENERATION` | OFF | Gates `GuildNeedScorer` (`src/ai/goals/scorers.py`, checked via `state.feature_flags` directly) and the `guild_visit` pipeline phase (`GuildVisitPhase`, `src/engine/pipeline_phases/guild_visit.py`, routed through `FeatureFlagManager`/`run_phase()` like the 12 phase-gating flags above — NOT the push-event-shaper bypass pattern). New gameplay behavior (entities can now visit a `town_hall` building to receive real quests/leads via `GuildAction.visit()`, previously fully unreachable — `TCK-20260807-QUEST-GUILDACTION-DEAD-WIRING`), not a validated replacement of existing behavior, so it correctly defaults `OFF` per DEV-002. |
 
 ## Default-OFF policy
 
-All 11 flags start `OFF` by design — this is a deliberate rollout gate, not an oversight. To
+12 of the 16 flags start `OFF` by design — this is a deliberate rollout gate, not an oversight. To
 exercise a flag-gated pipeline, a scenario or test must explicitly opt in via the
 `overrides` constructor argument or `FeatureFlagManager.set_flag_mode()`. The canonical example is
 `_build_kernel(enable_routing=True)` in `tests/integration/scenarios/test_balance_regression.py`.
+`ENABLE_PUSH_EVENT_SHAPERS`, `ENABLE_PUSH_EVENT_SHAPERS_PHASE2`,
+`ENABLE_PUSH_EVENT_SHAPERS_QUEST`, and `ENABLE_PUSH_EVENT_SHAPERS_AGENCY` (all `ON`, all
+cutover-validated replacements of existing behavior) are the 4 documented exceptions — see the
+table above and each flag's own row for the specific reasoning. `ENABLE_GUILD_QUEST_GENERATION`
+is new gameplay behavior, not a replacement, so it correctly follows the standard default-OFF
+policy rather than joining those 4 exceptions.
 
 **Do not change a default to `ON` without first re-running `tools/balance_measure.py`** to
 establish new baseline constants and updating `test_balance_regression.py` accordingly — see
-[`known_limitations.md` §1.5](../engine/known_limitations.md) for the full policy text.
+[`known_limitations.md` §1.5](../engine/known_limitations.md) for the full policy text. This
+applies to the 12 phase-gating flags; the 4 push-event-shaper flags are observability-only
+(construct/deliver events, not pipeline phases) and are governed by their own cutover tickets'
+validation instead, not `balance_measure.py`.
 
 ## DEV-002 — default-OFF decision record
 
-The decision to keep all 11 flags `OFF` by default (rationale class **Stabilized**) is recorded
-in [`intentional_divergences.md` § DEV-002](../guidelines/intentional_divergences.md). The
-sentinel test `test_adventure_routing_defaults_off()` in `test_balance_regression.py` guards this
-policy. See that entry for the full rationale and unblock condition — not duplicated here.
+The decision to keep all flags `OFF` by default (rationale class **Stabilized**) is recorded
+in [`intentional_divergences.md` § DEV-002](../guidelines/intentional_divergences.md) (that entry
+predates `ENABLE_PUSH_EVENT_SHAPERS`/`ENABLE_PUSH_EVENT_SHAPERS_PHASE2`/
+`ENABLE_PUSH_EVENT_SHAPERS_QUEST`/`ENABLE_PUSH_EVENT_SHAPERS_AGENCY`/
+`ENABLE_GUILD_QUEST_GENERATION` and cites "11 flags" — the same rationale applies to the 12
+OFF-default flags unchanged; the 4 push-event-shaper flags are each individually-reasoned,
+documented exceptions, not re-litigated here). The sentinel test
+`test_adventure_routing_defaults_off()` in `test_balance_regression.py` guards this policy for the
+12 phase-gating flags. See that entry for the full rationale and unblock condition — not
+duplicated here.
 
 ## SimQ profile activation
 

@@ -129,6 +129,7 @@ class GoalKind(str, Enum):
     COMBAT_RETREAT = "combat_retreat"
     RECOVER = "recover"
     RESOLVE_BLOCKER = "resolve_blocker"
+    GUILD = "guild"
 
 
 class ProjectKind(str, Enum):

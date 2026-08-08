@@ -701,6 +701,20 @@ class TacticalDecisionSystem:
         Caller must guard `obj.target` truthy before calling — `int(None)` raises
         TypeError, which is deliberately left uncaught here to keep this a byte-
         identical extraction of the pre-existing REACH_LOCATION inline logic.
+
+        `obj.target_position` fallback (TCK-20260807-TOWN-RETURN-TARGET-RESOLUTION-BUG):
+        some scorers (`TownScorer`, `RecoverScorer`, `ResolveBlockerScorer`) set `target_id` to a
+        non-int-castable, non-coordinate string (e.g. `"town_center"`) that this function can
+        never parse into a position, even though the objective's own `target_position` field
+        already carries the real, correct position (set from the same `GoalScore.target_pos` at
+        objective-creation time — see `evaluate_strategic_intent()`'s `ObjectiveState(...)`
+        construction). When the int/tuple parse above yields no position, fall back to it. This
+        is additive only: for the currently-working int-castable paths (`HarvestScorer`/
+        `EatScorer`/`SleepScorer`/`GuildNeedScorer`), the parse above always succeeds first, so
+        `node_id`/`building_id` (needed for the INTERACT/EAT/REST arrival-dispatch branches) are
+        still populated exactly as before — this fallback only activates when they'd otherwise
+        stay `None` anyway. Mirrors `StrategicIntelligenceSystem._resolve_active_objective()`'s
+        own "detour" case, which already prefers `target_position` this same way.
         """
         target_pos = None
         node_id = None
@@ -725,6 +739,8 @@ class TacticalDecisionSystem:
                 target_pos = ast.literal_eval(obj.target)
             except (ValueError, SyntaxError):
                 target_pos = None
+        if target_pos is None and getattr(obj, "target_position", None) is not None:
+            target_pos = obj.target_position
         return target_pos, node_id, building_id
 
     @staticmethod

@@ -287,3 +287,117 @@ def test_reach_location_arrival_behavior_unchanged():
     assert update_rest.task is not None
     assert update_rest.task.work_kind_set == "ENTITY_ACT"
     assert update_rest.task.payload_set == {"action": "REST", "target_id": inn.id}
+
+
+# ── target_position fallback (TCK-20260807-TOWN-RETURN-TARGET-RESOLUTION-BUG) ──────────────
+# TownScorer/RecoverScorer set target="town_center" (not int-castable, not a coordinate
+# string) but target_position=state.town_center (a real tuple). Prior to this fix,
+# _resolve_target_position only ever looked at `target`, so these objectives never resolved a
+# position and the entity never navigated toward it.
+
+def test_reach_location_with_unparseable_target_id_falls_back_to_target_position():
+    """
+    An objective whose `target` field is neither int-castable nor a coordinate string (e.g.
+    TownScorer's "town_center") must still navigate using `target_position` when it's set,
+    instead of silently resolving to no position at all.
+    """
+    town_center = (0.0, 0.0)
+    obj = ObjectiveState(
+        id="obj.reach_location.town_return.ent1.t10",
+        kind=ObjectiveKind.REACH_LOCATION,
+        target="town_center",
+        target_position=town_center,
+        status=ObjectiveStatus.ACTIVE,
+    )
+    project = ProjectState(
+        id="proj.town_return.ent1.t10",
+        kind="town_return",
+        status=ProjectStatus.ACTIVE,
+        objectives=[obj],
+        active_objective_id=obj.id,
+        lock_until_tick=0,
+    )
+    hero = _with_project(_hero(1, (50.0, 50.0)), project)
+    state = AuthoritativeState(tick=10, seed=1, entities={1: hero})
+
+    update = TacticalDecisionSystem.evaluate_entity_intent(state, hero, neighbors=[])
+
+    assert update.entity_id == 1
+    assert update.navigation is not None and update.navigation.target_set == town_center, (
+        "town_return objective with an unparseable target id did not fall back to "
+        "target_position — the entity never received a real navigation target"
+    )
+
+
+def test_reach_location_with_unparseable_target_id_and_no_target_position_stays_unresolved():
+    """
+    If neither `target` parses nor `target_position` is set, the objective must resolve to no
+    position at all (same behavior as before this fix) -- not silently invent a fallback.
+    """
+    obj = ObjectiveState(
+        id="obj.reach_location.nowhere.ent1.t10",
+        kind=ObjectiveKind.REACH_LOCATION,
+        target="nowhere",
+        target_position=None,
+        status=ObjectiveStatus.ACTIVE,
+    )
+    project = ProjectState(
+        id="proj.nowhere.ent1.t10",
+        kind="town_return",
+        status=ProjectStatus.ACTIVE,
+        objectives=[obj],
+        active_objective_id=obj.id,
+        lock_until_tick=0,
+    )
+    hero = _with_project(_hero(1, (50.0, 50.0)), project)
+    state = AuthoritativeState(tick=10, seed=1, entities={1: hero})
+
+    update = TacticalDecisionSystem.evaluate_entity_intent(state, hero, neighbors=[])
+
+    assert update.entity_id == 1
+    assert update.navigation is None
+
+
+def test_reach_location_target_position_fallback_does_not_override_resolvable_node_id():
+    """
+    Anti-regression: when `target` DOES parse to a real resource-node id, the int-parse branch
+    must still win and populate node_id -- the target_position fallback must never short-circuit
+    the currently-working int-castable path (which needs node_id/building_id for the
+    INTERACT/EAT/REST arrival-dispatch branches, not just a bare position).
+    """
+    node = ResourceNodeState(
+        id=901,
+        kind="iron_ore",
+        position=(10.0, 10.0),
+        yields_item="iron_ore",
+        remaining_charges=5,
+        max_charges=5,
+        required_ticks=5,
+    )
+    # Deliberately set a target_position that does NOT match the node's real position, to prove
+    # the int-parse branch (which yields the node's real position) took priority and the
+    # fallback was never consulted.
+    obj = ObjectiveState(
+        id="obj.reach_location.node.ent1.t10",
+        kind=ObjectiveKind.REACH_LOCATION,
+        target=str(node.id),
+        target_position=(999.0, 999.0),
+        status=ObjectiveStatus.ACTIVE,
+    )
+    project = ProjectState(
+        id="proj.reach_location.node.ent1.t10",
+        kind=ProjectKind.EXPLORATION,
+        status=ProjectStatus.ACTIVE,
+        objectives=[obj],
+        active_objective_id=obj.id,
+        lock_until_tick=0,
+    )
+    hero = _with_project(_hero(1, node.position), project)
+    state = AuthoritativeState(tick=10, seed=1, entities={1: hero}, resource_nodes={901: node})
+
+    update = TacticalDecisionSystem.evaluate_entity_intent(state, hero, neighbors=[])
+
+    assert update.entity_id == 1
+    assert update.interaction is not None and update.interaction.target_node_id == node.id, (
+        "target_position fallback incorrectly overrode a resolvable int-castable target id"
+    )

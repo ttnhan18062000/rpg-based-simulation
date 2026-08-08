@@ -567,6 +567,20 @@ def test_territory_ownership_changed_not_emitted_on_territory_remove():
     assert "territory_ownership_changed" not in _types(events)
 
 
+def test_territory_ownership_changed_includes_faction_territory_pct():
+    # TCK-20260807-FACTION-TERRITORY-PCT-PAYLOAD-GAP
+    upd = _update(
+        faction_updates=[_faction_update("fac_a", territory_add=("region_1",))]
+    )
+    current_faction = MagicMock(territory=("region_1", "region_2", "region_3"))
+    state = _state({}, factions={"fac_a": current_faction})
+    state.regions = {"region_1": MagicMock(), "region_2": MagicMock(),
+                      "region_3": MagicMock(), "region_4": MagicMock()}
+    events = EventExtractor.extract(state, state, upd, ObservabilityMode.NORMAL)
+    ev = next(x for x in events if x.event_type == "territory_ownership_changed")
+    assert ev.payload["faction_territory_pct"] == 0.75
+
+
 # ── F-17..F-19: faction_tension_delta (PP-09) ────────────────────────────────
 
 def test_faction_tension_delta_on_nonzero_tension_delta():

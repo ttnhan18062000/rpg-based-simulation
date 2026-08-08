@@ -125,6 +125,24 @@ def test_hazard_drain_not_emitted_for_normal_combat():
     assert "hazard_drain_applied" not in _types(events)
 
 
+def test_hazard_damage_not_misclassified_as_combat():
+    """TCK-20260806-SIMQ-EXTRACTOR-HAZARD-COMBAT-MISCLASSIFICATION-FIX: a real HP drop caused by
+    hazard drain (outcome_kind="HAZARD", no attacker_id) must fire hazard_drain_applied only —
+    never combat_damage/combat_initiated, which the extractor previously emitted unconditionally
+    on any hp_diff < 0 regardless of cause."""
+    prior = _entity(1)
+    prior.combat.hp = 100
+    prior_state = _state({1: prior})
+    curr = _entity(1)
+    curr.combat.hp = 85
+    curr_state = _state({1: curr})
+    events = EventExtractor.extract(prior_state, curr_state, _update_with_hazard(1, -15), ObservabilityMode.NORMAL)
+    types = _types(events)
+    assert "hazard_drain_applied" in types
+    assert "combat_damage" not in types
+    assert "combat_initiated" not in types
+
+
 # ── region_trauma_delta ───────────────────────────────────────────────────────
 
 def test_region_trauma_delta_emitted():

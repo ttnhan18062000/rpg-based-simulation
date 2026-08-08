@@ -82,6 +82,7 @@ class GuildAction:
                 building_id=building_id,
                 count=1,
                 pressure_profile=pressure_profile,
+                origin_pos=entity.navigation.position,
             )
             new_projects.extend(quests)
             

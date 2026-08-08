@@ -309,6 +309,11 @@ class Kernel:
 
         from src.observability.event_extractor import EventExtractor
         EventExtractor.reset_run_state()
+        from src.observability.event_shapers import StrategyShaper, ProgressionShaper, SocialShaper, FactionShaper
+        StrategyShaper.reset_run_state()
+        ProgressionShaper.reset_run_state()
+        SocialShaper.reset_run_state()
+        FactionShaper.reset_run_state()
 
         self.validate(flags)
 
@@ -907,6 +912,35 @@ class Kernel:
         
         # 1. Extract domain events
         generated_events = EventExtractor.extract(prior_state, self._state, update, obs_mode)
+
+        # 1b. Push-based event shapers (src/observability/event_shapers.py) — the live default
+        # path for COMBAT/ECONOMY/FACTION as of TCK-20260806-PUSH-CUTOVER-COMBAT-ECONOMY-FACTION.
+        # Read directly from prior_state.feature_flags — NOT routed through FeatureFlagManager/
+        # run_phase (that mechanism gates pipeline phases; this flag gates an observability-only
+        # delivery path). Default "ON" when the key is absent — matches FeatureFlagManager's own
+        # default, so a run with no explicit override gets live delivery, not a silent fallback to
+        # SHADOW/construct-only behavior. "ON" delivers to generated_events (merged into the same
+        # record loop below, identical treatment to EventExtractor's own output); "SHADOW"
+        # constructs and logs a count only, delivering nothing — useful for validating future
+        # (Phase 2) shaper additions the same way this epic validated Phase 1. Wrapped defensively
+        # so a bug in this path can never affect the real tick (Zero Simulation Impact,
+        # quality_scoring_contract.md §3.1) — event_extractor.py's own flag-gated branches are the
+        # real rollback path if this ever needs to be disabled entirely.
+        _push_shaper_mode = (getattr(prior_state, "feature_flags", None) or {}).get(
+            "ENABLE_PUSH_EVENT_SHAPERS", "ON")
+        if _push_shaper_mode in ("ON", "SHADOW"):
+            try:
+                from src.observability.event_shapers import run_shadow_shapers
+                shaper_events = run_shadow_shapers(prior_state, update, tick, obs_mode)
+                if _push_shaper_mode == "ON":
+                    generated_events.extend(shaper_events)
+                else:
+                    logger.debug(
+                        "push_event_shapers SHADOW: %d events constructed (tick=%d, not delivered)",
+                        len(shaper_events), tick,
+                    )
+            except Exception:
+                logger.exception("push_event_shapers raised — ignored, tick unaffected")
 
         # 2. Convert hard law violations to SimulationEvents
         current_violations = getattr(self._status, "current_tick_violations", [])

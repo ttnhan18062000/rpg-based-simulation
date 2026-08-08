@@ -2177,3 +2177,101 @@
     zero hero-role entities affected in the live corpus prior to this fix (confirmed in
     investigation.md §2 — every hero-role entity corpus-wide spawns in hometown, already covered).
   support_boundary: null
+
+- id: TOWN-190
+  text: >
+    TCK-20260806-PUSH-CUTOVER-COMBAT-ECONOMY-FACTION -- cuts ECONOMY observability event emission
+    (resource_harvested, item_crafted, shop_transaction, trade_executed, quest_reward_dispensed,
+    gold_sink_fired, paid_information_transaction, paid_info_transaction, paid_info_changed_goal)
+    over to `EconomyShaper` (src/observability/event_shapers.py, built by
+    TCK-20260806-PUSH-SHAPER-ECONOMY-FACTION / INFRA-325) as the live default path, same flag-
+    gated mutual-exclusion mechanism as COMB-295 (`ENABLE_PUSH_EVENT_SHAPERS` default now "ON";
+    the old `event_extractor.py` intent_results loop is flag-gated, not deleted -- real rollback
+    via setting the flag away from "ON"). Unlike COMBAT's entity_killed, every ECONOMY event in
+    the old extractor's `intent_results` loop maps 1:1 to a shaper-migrated event with no broader
+    old-extractor scope to preserve -- confirmed during this ticket's Investigate phase before
+    implementation, so the entire loop could be guarded as one unit (`for ir in ([] if
+    _push_shapers_active else (...intent_results...)):`) rather than needing per-branch narrowing.
+    `gold_transaction`/`gold_transferred`, `resource_node_depleted`/`regenerated`, `node_recharged`,
+    and `conservation_law_verified` (all deferred, per INFRA-325) are in separate code locations
+    entirely, untouched by this cutover, unaffected by the flag either way.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: >
+    src/observability/event_extractor.py's economy `intent_results` loop, guarded via the same
+    `_push_shapers_active` flag read as COMB-295. Verified via real kernel run
+    (`dungeon_crawl_seed42_500t`, default flag state): 0 economy-category events attributed to
+    `event_extractor` in the real event stream; all combat/economy/faction events (39 total)
+    attributed to `event_shapers` instead. See COMB-295's v2_evidence for the shared kernel.py
+    delivery-path change.
+  proof_type: regression
+  test_path: >
+    tests/unit/observability/test_event_shapers_economy_faction.py (20 tests, unchanged by this
+    cutover — EconomyShaper's own logic was not modified, only its delivery path).
+  divergence_note: null
+  support_boundary: >
+    ECONOMY domain only — see COMB-295 (combat) and FAC-013 (faction) for the sibling cutover
+    entries. Deferred events (gold_transferred, resource_node_depleted/regenerated, node_recharged,
+    conservation_law_verified) remain entirely on the old diffing path, unaffected by this flag.
+
+    UPDATE 2026-08-06 (TCK-20260806-PUSH-SHAPER-DEFERRED-INSTRUMENTATION): the
+    resource_node_depleted/resource_node_regenerated/node_recharged deferral above is now closed
+    — the original "no typed per-node record" classification was wrong, found by tracing the real
+    mutation site (src/engine/apply_plan.py:152-177): StateUpdate.node_updates: Dict[int,
+    ResourceNodeUpdate] already existed, with charges_delta giving exactly the needed signal, no
+    new instrumentation required. Migrated via DeferredInstrumentationShaper
+    (src/observability/event_shapers.py), registered in PHASE2_SHAPER_REGISTRY, gated by
+    ENABLE_PUSH_EVENT_SHAPERS_PHASE2 (default OFF) — SHADOW-only in this ticket, cutover is a
+    separate, later Phase 2 child. conservation_law_verified also closed, implemented as a
+    cross-shaper aggregation step inside run_shadow_shapers() itself (checks the tick's combined
+    Phase 1 shaper output for any of 5 economy event types, tick%50 throttled — the same "check
+    already-constructed events" pattern the old extractor's own version uses). gold_transferred/
+    gold_transaction remains the one genuinely still-deferred ECONOMY event — no typed record
+    exists for entity.inventory.gold's raw diff, not scoped to this ticket. See
+    stored_artifacts/TCK-20260806-PUSH-SHAPER-DEFERRED-INSTRUMENTATION/investigation.md for the
+    full trace and the deliberately-preserved faction_extinct dead-HP-check finding (FAC-013).
+
+    UPDATE 2026-08-07 (TCK-20260806-PUSH-CUTOVER-PHASE2): the SHADOW-only status above for
+    resource_node_depleted/regenerated/node_recharged/conservation_law_verified is now closed too
+    — ENABLE_PUSH_EVENT_SHAPERS_PHASE2 default flipped OFF->ON, event_extractor.py's legacy
+    resource-node and conservation_law_verified branches individually flag-gated behind the new
+    _push_shapers_phase2_active. gold_transferred/gold_transaction remains the one genuinely
+    still-deferred ECONOMY event (no typed record exists), confirmed still out of scope. See
+    STRAT-247's update note and infrastructure.yaml INFRA-326 for the run_shadow_shapers()
+    default-lockstep bug found and fixed during this cutover, verified fixed via real 5-world
+    runs.
+
+- id: TOWN-191
+  text: >-
+    herb_patch resource nodes placed in river_ford (by river_crossing.yaml, composed by
+    highland_traverse and quest_dense_frontier) now correctly yield gather_resource
+    opportunities for entities standing in that region. Same root mechanism as TOWN-189: a
+    catalog-authoring gap in herb_patch's source_region_tags allowlist that surfaced via a fresh
+    corpus-wide re-verification (TCK-20260807-GUILD-SCARCITY-REGION-COVERAGE-GAP), prompted by
+    GuildAction.visit() becoming a live, role-agnostic consumer of the same gating mechanism
+    (TCK-20260807-QUEST-GUILDACTION-DEAD-WIRING) -- the corpus had drifted with 3 new regions
+    since TOWN-189/TOWN-190's 2026-07-06 audit.
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: >-
+    data/content/world/resources.yaml -- herb_patch's metadata.source_region_tags additively
+    extended with "river_ford". src/core/registries.py CatalogToResourceRegistryAdapter.adapt()
+    precedence unchanged. src/world/providers/resources.py:69 gating check unchanged.
+    src/town/guild.py::GuildAction.visit()'s own parallel scarcity computation (STRAT-244)
+    verified directly: an entity in river_ford now computes scarcity=0.8 from a real herb_patch
+    node's charge ratio, vs. the pre-fix scarcity=0.0 false-abundant reading.
+  proof_type: parity
+  test_path: >-
+    tests/unit/strategic/test_opportunities.py::test_resource_opportunities_river_ford_herb_patch;
+    tests/integration/content/test_resource_region_coverage_corpus.py::test_no_entity_of_any_role_spawns_in_an_unresolved_region_corpus_wide
+  divergence_note: >-
+    Content-authoring gap, not a decision-logic or scoring bug, identical root cause to TOWN-189/
+    TOWN-188. Additionally documents 2 new zero-content regions found in the same re-scan
+    (deep_forest, survivor_outpost) -- both extend the existing accepted-gap disposition
+    (docs/guidelines/intentional_divergences.md #2.29) rather than needing a catalog fix, since
+    neither has any resource node physically placed there (confirmed by tracing the placing
+    module's flat resources: dict and the compiler's first-declared-region-only placement rule,
+    same methodology as the original audit).
+  support_boundary: null

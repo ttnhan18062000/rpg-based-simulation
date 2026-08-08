@@ -8,6 +8,31 @@ tags: [simulation-quality, corpus, calibration]
 
 # SimQ Current State Report
 
+**Score provenance (`TCK-20260808-SIMQ-SCORE-CEILING-PROVENANCE`):** when a pillar score is low or
+drifts, `tools/simq_ceiling.py::lookup_ceiling(run_key, pillar)` classifies whether a known
+explanation already exists — `tick_budget` (scenario's own tick count is too short for a
+threshold-based rule to avoid firing, computed from `config/simulation_quality/detection_params.yaml`),
+`flag_gated` (a feature flag is deliberately off corpus-wide, hand-verified table in that same
+module — currently just COMBAT/`ENABLE_COMBAT_ENGAGEMENT`), `content_threshold` (a documented
+judgment call, `tests/simulation_quality/fixtures/score_ceilings.json`), or `corrected` (a past
+drift already traced and fixed — currently NARRATIVE/quest_event). `test_grade_regression.py`'s
+own failure messages surface this classification automatically when one exists.
+
+**Large-scale world validation (`TCK-20260808-SIMQ-LARGE-SCALE-WORLD-VALIDATION`):** the corpus's
+largest world was 62 entities (`frontier_marches`); the engine itself is validated to 5000
+(`tests/perf/`). Investigated whether tooling could close that gap — found it can't, honestly:
+the only code path with genuinely uncapped population scale (`WorldProceduralGenerator`,
+`src/worldgeneration/generator.py`) is unwired to any CLI and fails its own validation (references
+undefined faction IDs), confirmed via direct instantiation, not assumed. The real, working path
+(`ProceduralCompositionGenerator`'s module composition) tops out around 68-100 entities given the
+corpus's 20 available content modules and their real building/region-ID collision constraints (2
+genuine collisions hit and resolved). Authored and calibrated `simq_scale_stress_seed42` at that
+real ceiling (68 entities, 13 regions — new corpus max) rather than forcing an unreachable number.
+One real, disclosed (not proven-causal) observation: watchdog/throttle warnings fired 9 times in a
+single 200-tick run at this scale, first trip at tick 100 — earlier than F6's documented ~tick
+300-320 onset, consistent with (not proof of) an entity-scale correlation worth a dedicated,
+controlled multi-scale sweep if pursued further.
+
 **Purpose:** a single, periodically-refreshed snapshot of where the 10-pillar quality corpus
 actually stands right now — distinct from `eval_matrix_results.md`, which is an append-only
 historical log of every calibration batch since 2026-07-02. That log is the evidentiary record;
@@ -15,13 +40,115 @@ this doc is the answer to "what's the current picture," refreshed in place rathe
 with dated notes. When this doc and `eval_matrix_results.md` disagree, re-run the refresh command
 below — this doc should always reflect the latest run, not accumulate history of its own.
 
-**Last refreshed:** 2026-08-06, via a real full-corpus live engine re-run (`make simq-full-audit-full`,
-79 of 79 anchor scenarios produced a report — 0 exclusions this run, including
-`unit_selfmodel_pilot_seed42_1000t`, which was unreliable in the earlier 2026-08-05 same-day
-refresh but completed cleanly here). This refresh is the closing snapshot for a full working
-session (5 fixes, 5 investigations, 1 new corpus world — see "2026-08-05/06 session summary"
-below), superseding the mid-session 2026-08-05 refresh whose "Finding 1"/"Finding 2" text below is
-now historical record of what was found and fixed, not the current state.
+**Last refreshed:** 2026-08-07, via a real full-corpus live engine re-run (`python3
+tools/evaluate_simq.py`, 79 of 79 anchor scenarios produced a report). This refresh is the closing
+snapshot for the observability push-based-migration epic's own verification pass (see "2026-08-07
+session summary" below), superseding the 2026-08-06 refresh's NARRATIVE/PROGRESSION
+numbers specifically — WORLD/FACTION/INFORMATION/COGNITION/SOCIAL/ECONOMY/AGENCY are carried
+forward unchanged from 2026-08-06 (this refresh did not touch their anchors). A follow-up 3-trial
+investigation the same day found the 26 COMBAT (+1 transient COGNITION) drifts this full-corpus
+run also surfaced are a real, disclosed, unresolved regression — see "2026-08-07 COMBAT
+score-tolerance drift investigation" immediately below — COMBAT anchors were deliberately NOT
+touched by that investigation and remain the pre-existing values.
+
+---
+
+## 2026-08-07 COMBAT score-tolerance drift investigation (`TCK-20260807-SIMQ-COMBAT-SCORE-TOLERANCE-DRIFT-INVESTIGATION`)
+
+Full 3-independent-trial re-verification (`TCK-20260710`/`TCK-20260715` methodology: real
+throttled `Kernel`, no `audit_mode`) of the 27 (run_key, pillar) pairs the same-day full-corpus run
+above flagged beyond score tolerance (26 COMBAT + 1 COGNITION — no SOCIAL pillar reproduced, unlike
+the originating retro's own prose count).
+
+**Result: the F6 wall-clock-throttle-noise hypothesis is refuted for all 26 COMBAT pairs.** Every
+one produced a bit-identical `normalized_score` across all 3 independent trials — zero
+trial-to-trial variance, the opposite of the genuine load-sensitivity signature
+`TCK-20260710`/`TCK-20260715` found for other anchors. This is a stable, fully reproducible,
+currently-unexplained regression, not noise — **deliberately left as a flagged, failing gate
+condition** (`tests/simulation_quality/test_grade_regression.py -m "not slow"` still correctly
+fails on all 26) rather than laundered into a `SCORE_TOLERANCE_OVERRIDES` entry. Root-cause
+investigation (why COMBAT scoring stably lands at 0.0/a stable negative penalty for these 26
+scenarios) is tracked separately: `TCK-20260807-SIMQ-COMBAT-DORMANT-REGRESSION-ROOT-CAUSE`.
+
+The 1 COGNITION pair (`simq_routing_test_seed42_500t`) self-resolved: its originally-flagged value
+was a single stale cached draw from the full-corpus run; fresh trials are stable and within
+tolerance, no anchor edit needed. One additional, out-of-scope stale NARRATIVE anchor
+(`urban_political_selfmodel_execution_probe_seed42_200t`) was surfaced as a side effect of this
+investigation's own trial-running and fixed directly — the same already-diagnosed quest_event
+push-migration cause as the section below, evidently missed by that sweep.
+
+**Root cause of the 26 COMBAT regressions, confirmed and closed same day
+(`TCK-20260807-SIMQ-COMBAT-DORMANT-REGRESSION-ROOT-CAUSE`):** not a live regression — a stale-anchor
+consequence of 2 already-landed, already-disclosed 2026-08-06 changes.
+`ENABLE_COMBAT_ENGAGEMENT` is deliberately OFF corpus-wide (DEV-002 ruling,
+`TCK-20260806-SIMQ-COMBAT-ENGAGEMENT-GATE-CORPUS-VALIDITY`), and
+`TCK-20260806-SIMQ-EXTRACTOR-HAZARD-COMBAT-MISCLASSIFICATION-FIX` (hotfix, same day) correctly
+stopped `event_extractor.py` from double-classifying hazard-drain damage as combat — removing the
+only source of nonzero COMBAT signal these scenarios ever had, but that hotfix's own AC explicitly
+deferred `grade_anchors.json` recalibration to a follow-up. This explains the predecessor
+investigation's own most striking finding (zero trial-to-trial variance): with PP-16 gated off and
+hazard-drain no longer miscounted, there is no code path left that could produce a nonzero score,
+hence perfect reproducibility. All 26 COMBAT anchors recalibrated to their confirmed-stable
+post-fix values; `test_grade_regression.py -m "not slow"` passes for all 26. One NEW, unrelated,
+disclosed-but-unfixed finding surfaced during this closure: `hero_guild_routing_seed42_500t`'s
+COGNITION anchor (1.016) is far from 3 fresh trials (~1.83, with small genuine trial-to-trial
+jitter, unlike COMBAT's zero-variance signature) — left untouched, no diagnosed cause yet,
+candidate for a small follow-up if pursued.
+
+---
+
+## 2026-08-07 session summary — quest_event push migration + anchor recalibration
+
+Full-corpus verification (79 scenarios, 790 pillar checks, real engine re-run per scenario — not
+a `--dry-run` diff) run after this session's observability work: migrating `quest_event`,
+`commitment_abandoned`, and `rejection_cascade_tick` from `event_extractor.py`'s post-tick
+diffing to live, push-based `event_shapers.py` shapers (`TCK-20260807-QUEST-EVENT-PUSH-MIGRATION`,
+`TCK-20260807-COMMITMENT-ABANDONED-PUSH-MIGRATION-GAP`,
+`TCK-20260807-REJECTION-CASCADE-TICK-PUSH-MIGRATION-GAP`).
+
+**Result: AGENCY pillar (the domain the 3 migrated events feed) is 79/79 clean — the migration
+itself introduced zero regressions**, confirmed both by this full sweep and by none of the 3
+migrated event types appearing anywhere in the fresh corpus's event data (real quest generation
+is still gated `OFF` corpus-wide; `commitment_abandoned`/`rejection_cascade_tick` require
+conditions this corpus's current content doesn't trigger).
+
+**790-check sweep found 78 REGRESS at the grade-band level, all traced to 2 already-landed,
+already-disclosed causes from earlier in this same session — not new bugs:**
+- **NARRATIVE (62 grade-band regressions of the 77 total grade-band regressions found):**
+  `TCK-20260807-QUEST-EVENT-TYPE-FILTER-BUG` (this session)
+  fixed `event_extractor.py` mislabeling *every* non-quest AI project start (hunger, combat_engage,
+  harvesting, etc.) as `quest_event`, which had been artificially inflating `NarrativeScorer`'s
+  `quest_active`/`quest_resolved` weights corpus-wide. Every one of the 62 regressed anchors had
+  grade A or S — i.e. every one was a corrupted, inflated anchor. Confirmed the fix didn't break
+  real narrative signal: `urban_political_selfmodel_execution_probe_seed42_200t` still legitimately
+  produces 11 real narrative events and still scores A.
+- **PROGRESSION (15 grade-band regressions):** `TCK-20260806-SIMQ-PROGRESSION-CAPABILITY-LIFECYCLE`
+  (earlier this session) added `capability_growth_stalled`/`life_arc_incoherent`, explicitly
+  documented at the time as "not yet calibrated." This sweep is that calibration landing —
+  `capability_growth_stalled` now fires (correctly) across nearly the entire corpus wherever
+  entities go 300+ ticks with zero level/skill/gear/gold growth.
+
+**Recalibrated:** both letter-grade regressions AND same-grade score-tolerance drift for these 2
+pillars only — 127 pillar entries across 64 run_keys total (77 grade-band + 50 additional
+score-tolerance-only, since `capability_growth_stalled` moves PROGRESSION's raw score even in
+scenarios where the letter grade didn't flip a full band). `tests/simulation_quality/
+test_grade_regression.py -m "not slow"`'s NARRATIVE/PROGRESSION assertions are now 100% clean.
+
+**Deliberately NOT touched — a separate, unexplained finding, left for the next session:**
+running the FULL fast-tier gate (not just the NARRATIVE/PROGRESSION-scoped one) surfaced 26 COMBAT
++ 1 COGNITION + 1 SOCIAL score-tolerance failures with no traceable cause in this session's own
+work (COMBAT mostly drops to exactly `0.0` events — `combat_dormant`, "zero combat events by tick
+threshold"). This matches the SAME shape as the 2026-08-06 refresh's own disclosed "2 single-draw
+score-tolerance failures... ordinary single-draw variance" finding above, at a larger scale — very
+plausibly the same environment-load-driven watchdog-throttle non-determinism (`docs/audits/
+D06_longrun_health.md` F6, already documented as intentional, not a bug) rather than a real
+regression, since this run's own log showed extensive `WatchdogTrip`/`PRESSURE`-mode activity far
+earlier and more often than the mechanism's own documented tick~300-320 onset. **Not confirmed**
+with the same rigor as the NARRATIVE/PROGRESSION findings above (would need a second, independent
+clean-environment run to confirm one way or the other) — anchors left untouched per the
+established `SCORE_TOLERANCE_OVERRIDES` precedent ("requires multiple independent fresh draws
+before committing a widened floor, to avoid overfitting a tolerance band to one sample of noise").
+Flagged here for whoever picks this up next, same as the prior session's own 2 single-draw cases.
 
 ---
 
@@ -189,27 +316,32 @@ against this doc's own paragraph — the fix landed as a side effect of other Si
 
 ---
 
-## Current grade distribution (79 of 79 anchor entries, live-corpus run, 2026-08-06)
+## Current grade distribution (79 of 79 anchor entries, live-corpus run, 2026-08-07)
 
-The full session's closing snapshot — 0 unreliable runs, 3 more anchors than the 2026-08-05
-mid-session table (76 → 79, from `quest_dense_frontier`'s 3 new seeds). WORLD reflects the
-post-recalibration anchors (Finding 1, resolved); ECONOMY reflects Finding 2 (investigated,
-confirmed correct behavior, no fix needed). All other pillars are materially unchanged from the
-2026-08-05 table within normal rounding, aside from the 2 single-draw score-tolerance variances
-noted in the session summary above (both within-band, not grade-distribution-visible here).
+Anchor-file distribution (not live actuals), refreshed after the 2026-08-07 NARRATIVE/PROGRESSION
+recalibration AND the same-day COMBAT recalibration
+(`TCK-20260807-SIMQ-COMBAT-DORMANT-REGRESSION-ROOT-CAUSE`, 26 entries corrected — see above).
+FACTION/INFORMATION/COGNITION/SOCIAL/ECONOMY/AGENCY/WORLD are carried forward unchanged from the
+2026-08-06 table (untouched by either recalibration).
 
 | Pillar | S | A | B | C | D |
 |---|---|---|---|---|---|
 | WORLD | 0 | 3 | 66 | 10 | 0 |
-| NARRATIVE | 8 | 58 | 6 | 7 | 0 |
-| COMBAT | 0 | 0 | 47 | 32 | 0 |
-| PROGRESSION | 0 | 10 | 41 | 28 | 0 |
+| NARRATIVE | 0 | 0 | 2 | 77 | 0 |
+| COMBAT | 0 | 0 | 26 | 53 | 0 |
+| PROGRESSION | 0 | 0 | 2 | 70 | 7 |
 | FACTION | 31 | 15 | 6 | 27 | 0 |
 | INFORMATION | 0 | 3 | 36 | 40 | 0 |
 | COGNITION | 9 | 5 | 40 | 25 | 0 |
 | SOCIAL | 16 | 0 | 0 | 63 | 0 |
 | ECONOMY | 0 | 1 | 17 | 61 | 0 |
 | AGENCY | 0 | 8 | 0 | 71 | 0 |
+
+**NARRATIVE/PROGRESSION distribution history (2026-08-06 → 2026-08-07):** NARRATIVE
+S=8/A=58/B=6/C=7 → S=0/A=1/B=2/C=76 (the quest_event-inflation fix landing — see session summary).
+PROGRESSION S=0/A=10/B=41/C=28/D=0 → S=0/A=0/B=2/C=70/D=7 (the capability_growth_stalled signal
+landing). Both moves are large and expected, not concerning — see the session summary's
+root-cause trace above for why.
 
 (2026-07-13 history, preserved for context) WORLD/PROGRESSION moved by 2/1 entries respectively as
 a side effect of `TCK-20260713-SIMQ-ECONOMY-CONTENT-DEPTH`'s content addition (new entities/quest
@@ -434,6 +566,18 @@ what caused the original staleness in this section.
 real evidence, see Phase 5 ruling), or any of SimQ's explicit MVP Non-Goals (per-entity profiles,
 historical run comparison, real-time alerting, ML anomaly detection, automated config suggestion —
 `quality_scoring_contract.md` §14, reaffirmed out of scope by explicit user decision 2026-07-10).
+
+### 5. Add entity-layer and faction-layer lifecycle-trajectory signals — SCOPED (tickets filed)
+
+**Status (2026-08-06):** A session discussion on COMBAT/PROGRESSION scope separation and
+per-layer (entity/region/faction/world) progression concluded no new top-level pillar is
+justified, but found two real gaps: PROGRESSION has no signal for entity capability-trend
+(level+gear+wealth+skills combined) or life-arc coherence, and FACTION has no trajectory-coherence
+rule paralleling WORLD's existing `trauma_hazard_broken`. Region and world layers were re-checked
+and are already covered. Filed as `TCK-20260806-SIMQ-PROGRESSION-CAPABILITY-LIFECYCLE` and
+`TCK-20260806-SIMQ-FACTION-LIFECYCLE-TRAJECTORY` (rationale in
+`TCK-20260806-SIMQ-LIFECYCLE-PILLAR-BOUNDARY-DOC`, §7.6 of `quality_scoring_contract.md`). Not yet
+implemented — see those tickets for status.
 
 ---
 

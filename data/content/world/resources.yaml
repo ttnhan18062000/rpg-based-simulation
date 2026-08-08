@@ -40,7 +40,10 @@
   default_charges: 8
   preferred_biomes: ["near_forest", "sunken_swamp"]
   metadata:
-    source_region_tags: ["near_forest", "moon_cave", "hometown", "swamp_border_territory"]
+    # river_ford added TCK-20260807-GUILD-SCARCITY-REGION-COVERAGE-GAP: river_crossing.yaml
+    # module places herb_patch:3 there and declares biomes: ["near_forest"] (already trusted
+    # above) -- same tag-gap shape as the swamp_border_territory fix.
+    source_region_tags: ["near_forest", "moon_cave", "hometown", "swamp_border_territory", "river_ford"]
 
 # STATE: LEGACY-EXPORT
 - id: "healing_flower_patch"

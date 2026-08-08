@@ -216,11 +216,44 @@ class ResolveBlockerScorer(GoalScorer):
                     
         if target_pos is None:
             target_pos = state.town_center
-            
+
         return GoalScore(
             kind=GoalKind.RESOLVE_BLOCKER,
             utility=80.0,
             target_id=target_id,
             target_pos=target_pos
         )
+
+
+class GuildNeedScorer(GoalScorer):
+    """Scores the need to visit the guild for quests/intel (TCK-20260807-QUEST-GUILDACTION-
+    DEAD-WIRING). Gated behind ENABLE_GUILD_QUEST_GENERATION (default OFF) — a new gameplay
+    behavior, not a validated replacement of existing behavior.
+
+    Targets `town_hall` (not a dedicated "guild" building — no world in the real content corpus
+    ever declares one; `town_hall` is present in every world) via
+    `SpatialQueryService.nearest_building()`, the SAME pattern `EatScorer`/`SleepScorer` already
+    use successfully — `target_id=str(building.id)` is a real int-castable building ID,
+    correctly resolved by TacticalDecisionSystem._resolve_target_position() without any change
+    to that shared function (unlike TownScorer's own broken "town_center" string convention,
+    left untouched — a separate, disclosed, deferred bug).
+
+    Utility signal mirrors GuildAction.visit()'s own existing precondition: spare project
+    capacity. Moderate, non-urgent magnitude — Tier 4 (Economic) per
+    docs/mechanics/04_strategic_cognition.md's own goal hierarchy, comparable to harvesting."""
+    def score(self, entity: EntityState, state: AuthoritativeState) -> GoalScore:
+        flags = getattr(state, "feature_flags", None) or {}
+        if flags.get("ENABLE_GUILD_QUEST_GENERATION", "OFF") != "ON":
+            return GoalScore(kind=GoalKind.GUILD, utility=0.0)
+
+        strat = entity.strategic
+        if len(strat.projects) >= strat.profile.max_active_projects:
+            return GoalScore(kind=GoalKind.GUILD, utility=0.0)
+
+        from src.engine.spatial_query import SpatialQueryService
+        best_bldg = SpatialQueryService.nearest_building(state, entity.navigation.position, "town_hall")
+        if not best_bldg:
+            return GoalScore(kind=GoalKind.GUILD, utility=0.0)
+
+        return GoalScore(kind=GoalKind.GUILD, utility=25.0, target_id=str(best_bldg.id), target_pos=best_bldg.position)
 

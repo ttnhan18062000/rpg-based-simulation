@@ -421,6 +421,62 @@ def test_resource_opportunities_bandit_road_and_wolf_den_no_resource_nodes():
         )
 
 
+def test_resource_opportunities_river_ford_herb_patch():
+    """TCK-20260807-GUILD-SCARCITY-REGION-COVERAGE-GAP: a corpus-wide re-verification (motivated
+    by GuildAction.visit() becoming live/role-agnostic in TCK-20260807-QUEST-GUILDACTION-DEAD-
+    WIRING) found river_ford (river_crossing.yaml, composed by highland_traverse and
+    quest_dense_frontier) is a NEW tag-gap that arose after the 2026-07-06 audit: the module
+    places herb_patch:3 there and declares biomes: ["near_forest"] -- a biome herb_patch's own
+    source_region_tags already fully trusted, the exact same tag-gap shape as the
+    swamp_border_territory fix. herb_patch's source_region_tags gained an additive "river_ford"
+    entry."""
+    ent = (V2EntityBuilder(1)
+        .kind("hero")
+        .build())
+    object.__setattr__(ent.navigation, "region_id", "river_ford")
+
+    from src.core.state import ResourceNodeState
+    node = ResourceNodeState(id=1, kind="herb_patch", position=(0.0, 0.0), yields_item="herb", remaining_charges=10, max_charges=10, required_ticks=5)
+    mock_state = MockState(resource_nodes={1: node})
+
+    opportunities = ResourceOpportunityProvider.get_opportunities(ent, mock_state)
+
+    assert len(opportunities) > 0
+    assert all(opp.kind == "gather_resource" for opp in opportunities)
+    assert any(opp.subject == "herb" for opp in opportunities)
+
+
+def test_resource_opportunities_deep_forest_and_survivor_outpost_no_resource_nodes():
+    """TCK-20260807-GUILD-SCARCITY-REGION-COVERAGE-GAP: the same corpus-wide re-verification
+    found 2 more zero-content regions matching the existing bandit_road/goblin_camp/wolf_den
+    accepted-gap disposition (docs/guidelines/intentional_divergences.md #2.29), extended here
+    rather than re-litigated as new open questions (same root causes already reviewed):
+    - deep_forest (forest_warden_grove.yaml): the module's flat resources: dict
+      (healing_flower_patch:5, spirit_wisp:2) is placed entirely in the module's
+      first-declared region (sacred_grove), the exact same compiler-placement quirk that made
+      wolf_den a zero-content region -- deep_forest itself receives zero nodes.
+    - survivor_outpost (survivor_camp_shelter.yaml): a "shelter" module with no resources:
+      block at all -- genuinely no foraging content by design, an even more clear-cut case than
+      the compiler-quirk regions.
+    No source_region_tags addition was made for either region."""
+    from src.core.state import ResourceNodeState
+
+    for region_id in ("deep_forest", "survivor_outpost"):
+        ent = (V2EntityBuilder(1)
+            .kind("hero")
+            .build())
+        object.__setattr__(ent.navigation, "region_id", region_id)
+
+        mock_state = MockState(resource_nodes={})
+
+        opportunities = ResourceOpportunityProvider.get_opportunities(ent, mock_state)
+
+        assert opportunities == [], (
+            f"{region_id}: expected zero gather_resource opportunities (intentional hazard-zone "
+            f"gap, no resource node placed corpus-wide), got {opportunities!r}"
+        )
+
+
 def test_service_opportunities_basic(minimal_service_registry):
     """Verify ServiceOpportunityProvider returns town service options."""
     ent = (V2EntityBuilder(1)

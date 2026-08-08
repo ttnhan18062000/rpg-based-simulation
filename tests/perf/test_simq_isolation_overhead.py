@@ -29,6 +29,14 @@ Hazards).
 Results and the locked regression-guard thresholds are documented in
 docs/performance/simq_isolation_overhead.md -- this file is the source of the
 numbers recorded there, not a duplicate of them.
+
+Also includes a standing regression gate (TCK-20260806-PUSH-SHAPER-PERF-REGRESSION-GATE)
+for the apply-layer push-shaper registry's (`src/observability/event_shapers.py`)
+cumulative CPU cost, measured as `ENABLE_PUSH_EVENT_SHAPERS=ON` vs `OFF` under the
+`inprocess` SimQ mode (the live default) -- orthogonal to the three SimQ-delivery
+modes above, which never vary this flag. See
+docs/performance/simq_isolation_overhead.md's "Push-Shaper Registry Overhead"
+section for the committed numbers this test's output feeds.
 """
 from __future__ import annotations
 
@@ -39,7 +47,7 @@ import sys
 import time
 import urllib.error
 import urllib.request
-from dataclasses import dataclass
+from dataclasses import dataclass, replace as dc_replace
 from pathlib import Path
 from typing import Optional
 
@@ -152,6 +160,60 @@ def _run_mode_inprocess(monkeypatch) -> ModeResult:
         flags={"no_replay": True, "no_frame_pacing": True},
     )
     return ModeResult("inprocess", result["wall_clock_tps"], result["cpu_time_total_delta_s"], "1")
+
+
+def _run_mode_inprocess_with_shaper_flag(monkeypatch, shapers_on: bool) -> ModeResult:
+    """Same `inprocess` SimQ config as `_run_mode_inprocess`, but with
+    `AuthoritativeState.feature_flags["ENABLE_PUSH_EVENT_SHAPERS"]` pinned
+    explicitly, rather than left at its default (`"ON"` when absent, per
+    `kernel.py`'s `_phase_observability`). Orthogonal to `QUALITY_FEED_MODE`
+    -- this varies which observability *emission* path (apply-layer shaper
+    registry vs. post-tick diffing extractor) produces COMBAT/ECONOMY/FACTION
+    events in the first place, not how SimQ scores them once emitted."""
+    _clear_quality_env(monkeypatch)
+    monkeypatch.setenv("QUALITY_FEED_MODE", "inprocess")
+    state = _build_state()
+    state = dc_replace(state, feature_flags={
+        **(state.feature_flags or {}),
+        "ENABLE_PUSH_EVENT_SHAPERS": "ON" if shapers_on else "OFF",
+    })
+    result = BenchHarness(PROD_SMALL).run_benchmark(
+        scenario_id=f"{WORLD_NAME}_seed{SEED}_shapers_{'on' if shapers_on else 'off'}",
+        initial_state=state,
+        warmup_ticks=WARMUP_TICKS,
+        sample_ticks=SAMPLE_TICKS,
+        flags={"no_replay": True, "no_frame_pacing": True},
+    )
+    label = "shapers_on" if shapers_on else "shapers_off"
+    return ModeResult(label, result["wall_clock_tps"], result["cpu_time_total_delta_s"], "1")
+
+
+def _run_mode_inprocess_with_phase2_flag(monkeypatch, phase2_on: bool) -> ModeResult:
+    """Same shape as `_run_mode_inprocess_with_shaper_flag`, but varies
+    `ENABLE_PUSH_EVENT_SHAPERS_PHASE2` (the complete Phase 2 registry --
+    StrategyShaper/ProgressionShaper/WorldDynamicsShaper/SocialShaper/
+    DeferredInstrumentationShaper -- all 5 shapers together) instead of Phase
+    1's single already-cutover flag. ENABLE_PUSH_EVENT_SHAPERS itself is left
+    at its own default ("ON") in both legs, since Phase 1's own cost is
+    already covered by the tests above -- this isolates Phase 2's own
+    incremental cost specifically, per TCK-20260806-PUSH-SHADOW-VALIDATION-
+    PERF-PHASE2's "full-registry" requirement."""
+    _clear_quality_env(monkeypatch)
+    monkeypatch.setenv("QUALITY_FEED_MODE", "inprocess")
+    state = _build_state()
+    state = dc_replace(state, feature_flags={
+        **(state.feature_flags or {}),
+        "ENABLE_PUSH_EVENT_SHAPERS_PHASE2": "ON" if phase2_on else "OFF",
+    })
+    result = BenchHarness(PROD_SMALL).run_benchmark(
+        scenario_id=f"{WORLD_NAME}_seed{SEED}_phase2_{'on' if phase2_on else 'off'}",
+        initial_state=state,
+        warmup_ticks=WARMUP_TICKS,
+        sample_ticks=SAMPLE_TICKS,
+        flags={"no_replay": True, "no_frame_pacing": True},
+    )
+    label = "phase2_on" if phase2_on else "phase2_off"
+    return ModeResult(label, result["wall_clock_tps"], result["cpu_time_total_delta_s"], "1")
 
 
 def _wait_worker_ready(port: int, timeout_s: float = WORKER_READY_TIMEOUT_S) -> None:
@@ -329,5 +391,100 @@ def test_broker_mode_engine_cpu_within_disabled_band(monkeypatch, tmp_path):
     assert overhead_pct < BROKER_CPU_OVERHEAD_BAND_PCT, (
         f"broker-mode engine-process CPU overhead {overhead_pct:.2f}% exceeds the "
         f"{BROKER_CPU_OVERHEAD_BAND_PCT}% band locked in "
+        "docs/performance/simq_isolation_overhead.md"
+    )
+
+
+# --- Push-shaper registry cumulative overhead gate (TCK-20260806-PUSH-SHAPER- ------------------
+# PERF-REGRESSION-GATE) -------------------------------------------------------------------------
+#
+# Standing, committed gate for src/observability/event_shapers.py's cumulative CPU cost, so
+# overhead accumulation across future migration phases (Phase 2 adds ~4-5x more shapers than
+# Phase 1's COMBAT/ECONOMY/FACTION) is caught automatically instead of re-measured by hand once
+# per phase. Threshold locked from docs/performance/simq_isolation_overhead.md's "Push-Shaper
+# Registry Overhead" section, per perf_baseline_policy.md Section 3's band-tolerance convention.
+
+PUSH_SHAPER_CPU_OVERHEAD_BAND_PCT = 25.0
+
+
+@pytest.mark.slow
+def test_push_shaper_registry_overhead_benchmark(monkeypatch):
+    """Produces engine-process CPU time for ENABLE_PUSH_EVENT_SHAPERS=ON vs OFF under the
+    `inprocess` SimQ mode. See docs/performance/simq_isolation_overhead.md for the committed
+    results table this test's output feeds."""
+    shapers_off = _run_mode_inprocess_with_shaper_flag(monkeypatch, shapers_on=False)
+    shapers_on = _run_mode_inprocess_with_shaper_flag(monkeypatch, shapers_on=True)
+
+    print(f"\n[shapers_off] wall_clock_tps={shapers_off.wall_clock_tps:.2f}  cpu_time_total_delta_s={shapers_off.cpu_time_total_delta_s:.3f}")
+    print(f"[shapers_on]  wall_clock_tps={shapers_on.wall_clock_tps:.2f}  cpu_time_total_delta_s={shapers_on.cpu_time_total_delta_s:.3f}")
+
+    assert shapers_off.cpu_time_total_delta_s > 0
+    assert shapers_on.cpu_time_total_delta_s > 0
+
+
+@pytest.mark.slow
+def test_push_shaper_registry_overhead_within_regression_band(monkeypatch):
+    """Standing regression gate: apply-layer shaper-registry CPU overhead vs. the
+    ENABLE_PUSH_EVENT_SHAPERS=OFF (old diffing-extractor) baseline stays under the locked band,
+    under the `inprocess` SimQ mode (the live default)."""
+    shapers_off = _run_mode_inprocess_with_shaper_flag(monkeypatch, shapers_on=False)
+    shapers_on = _run_mode_inprocess_with_shaper_flag(monkeypatch, shapers_on=True)
+
+    assert shapers_off.cpu_time_total_delta_s > 0, "baseline CPU delta must be positive to compute a ratio"
+    overhead_pct = (
+        (shapers_on.cpu_time_total_delta_s - shapers_off.cpu_time_total_delta_s)
+        / shapers_off.cpu_time_total_delta_s
+        * 100.0
+    )
+    print(f"\npush-shaper-registry overhead vs OFF baseline: {overhead_pct:.2f}% (band: {PUSH_SHAPER_CPU_OVERHEAD_BAND_PCT}%)")
+    assert overhead_pct < PUSH_SHAPER_CPU_OVERHEAD_BAND_PCT, (
+        f"push-shaper-registry CPU overhead {overhead_pct:.2f}% exceeds the "
+        f"{PUSH_SHAPER_CPU_OVERHEAD_BAND_PCT}% band locked in "
+        "docs/performance/simq_isolation_overhead.md"
+    )
+
+
+# --- Phase 2 push-shaper registry overhead gate (TCK-20260806-PUSH-SHADOW-VALIDATION- -----------
+# PERF-PHASE2) -------------------------------------------------------------------------------
+#
+# Full-registry re-validation: all 5 Phase 2 shapers (StrategyShaper/ProgressionShaper/
+# WorldDynamicsShaper/SocialShaper/DeferredInstrumentationShaper) together, on top of Phase 1's
+# already-committed cost above. Same band-tolerance convention.
+
+PHASE2_CPU_OVERHEAD_BAND_PCT = 25.0
+
+
+@pytest.mark.slow
+def test_phase2_shaper_registry_overhead_benchmark(monkeypatch):
+    """Produces engine-process CPU time for ENABLE_PUSH_EVENT_SHAPERS_PHASE2=ON vs OFF (the
+    complete Phase 2 registry) under the `inprocess` SimQ mode."""
+    phase2_off = _run_mode_inprocess_with_phase2_flag(monkeypatch, phase2_on=False)
+    phase2_on = _run_mode_inprocess_with_phase2_flag(monkeypatch, phase2_on=True)
+
+    print(f"\n[phase2_off] wall_clock_tps={phase2_off.wall_clock_tps:.2f}  cpu_time_total_delta_s={phase2_off.cpu_time_total_delta_s:.3f}")
+    print(f"[phase2_on]  wall_clock_tps={phase2_on.wall_clock_tps:.2f}  cpu_time_total_delta_s={phase2_on.cpu_time_total_delta_s:.3f}")
+
+    assert phase2_off.cpu_time_total_delta_s > 0
+    assert phase2_on.cpu_time_total_delta_s > 0
+
+
+@pytest.mark.slow
+def test_phase2_shaper_registry_overhead_within_regression_band(monkeypatch):
+    """Standing regression gate: the complete Phase 2 shaper registry's CPU overhead vs. the
+    ENABLE_PUSH_EVENT_SHAPERS_PHASE2=OFF baseline stays under the locked band, under the
+    `inprocess` SimQ mode."""
+    phase2_off = _run_mode_inprocess_with_phase2_flag(monkeypatch, phase2_on=False)
+    phase2_on = _run_mode_inprocess_with_phase2_flag(monkeypatch, phase2_on=True)
+
+    assert phase2_off.cpu_time_total_delta_s > 0, "baseline CPU delta must be positive to compute a ratio"
+    overhead_pct = (
+        (phase2_on.cpu_time_total_delta_s - phase2_off.cpu_time_total_delta_s)
+        / phase2_off.cpu_time_total_delta_s
+        * 100.0
+    )
+    print(f"\nPhase 2 shaper-registry overhead vs OFF baseline: {overhead_pct:.2f}% (band: {PHASE2_CPU_OVERHEAD_BAND_PCT}%)")
+    assert overhead_pct < PHASE2_CPU_OVERHEAD_BAND_PCT, (
+        f"Phase 2 shaper-registry CPU overhead {overhead_pct:.2f}% exceeds the "
+        f"{PHASE2_CPU_OVERHEAD_BAND_PCT}% band locked in "
         "docs/performance/simq_isolation_overhead.md"
     )

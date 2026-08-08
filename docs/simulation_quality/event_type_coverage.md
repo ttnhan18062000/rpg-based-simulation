@@ -10,7 +10,14 @@ last_verified: 2026-07-04
 
 **See also:** `docs/simulation_quality/extension_points.md` §3 (Recorded events) situates this
 table's counts within the full set of extension axes (world breadth/depth, pillars, tuning
-config, and more).
+config, and more). **`docs/event_ledger/entity.yaml`** (`TCK-20260808-ENTITY-EVENT-LEDGER`) is a
+broader, complementary catalog: this doc audits SimQ-scored event coverage; that ledger audits
+every `EntityUpdate` durable-state mutation type against whether ANY observability event exists
+for it at all, scored or not. It originally found 6 mutation types (attributes, biological,
+equipment, stamina, wounds, task) with zero event coverage of any kind. As of 2026-08-08, 5 of
+those 6 have real events (`TCK-20260808-ENTITY-{VITALS,ATTRIBUTES,EQUIPMENT,IDENTITY-ROLE-
+FACTION}-OBSERVABILITY-GAP`); `task` (`TaskUpdate.work_kind_set`) was investigated and confirmed
+deliberately uncovered — see the `deliberately_uncovered` row below, not a residual gap.
 
 **Status:** Certified Level 1 — Authoritative  
 **Ticket:** TCK-20260630-SIMQ-TRANSLATE  
@@ -33,9 +40,19 @@ config, and more).
 | engine_emission_gap | 0 | — |
 | no_engine_path | 1 | `camp_constructed` — no dynamic camp construction in simulation; scorer entry is premature |
 | p0_a_blocked | 3 | Unchanged — campaign/scenario gate |
-| unscored_intentional | 13 | Unchanged |
+| unscored_intentional | 26 | +5 (TCK-20260808-ENTITY-VITALS-OBSERVABILITY-GAP): `biological_state_changed`, `stamina_changed`, `wound_sustained`, `wound_healed`, `scar_gained`. +1 (TCK-20260808-ENTITY-ATTRIBUTES-OBSERVABILITY-GAP): `attribute_changed`. +3 (TCK-20260808-ENTITY-EQUIPMENT-OBSERVABILITY-GAP): `item_equipped`, `item_unequipped`, `equipment_durability_changed`. +4 (TCK-20260808-ENTITY-IDENTITY-ROLE-FACTION-OBSERVABILITY-GAP): `entity_role_changed`, `entity_faction_changed`, `recipe_learned`, `skill_cooldown_started` — real entity mutations that previously had zero observability event of any kind, not just unscored |
+| deliberately_uncovered | 1 | `TaskUpdate.work_kind_set` — investigated and confirmed pure per-tick scheduling plumbing (which verb runs next), not persistent narrative state; an event would be `movement`-class volume with no narrative content. TCK-20260808-ENTITY-IDENTITY-ROLE-FACTION-OBSERVABILITY-GAP. This is a NEW category, distinct from the others above: a field that was investigated and deliberately judged not worth an event, as opposed to `unscored_intentional` (has an event, just not SimQ-scored) or a genuine gap. |
 
-**Last updated:** 2026-08-05 (`TCK-20260805-SIMQ-HARDLAW-BRIDGE-COVERAGE-GAP` — of the 7 real
+**Last updated:** 2026-08-08 (`TCK-20260808-ENTITY-IDENTITY-ROLE-FACTION-OBSERVABILITY-GAP` — see
+§5 for `entity_role_changed`/`entity_faction_changed`/`recipe_learned`/`skill_cooldown_started`,
+and the new `deliberately_uncovered` category for `TaskUpdate.work_kind_set`)
+
+Previously updated: 2026-08-08 (`TCK-20260808-ENTITY-EQUIPMENT-OBSERVABILITY-GAP` — see §5 for
+`item_equipped`/`item_unequipped`/`equipment_durability_changed`); 2026-08-08
+(`TCK-20260808-ENTITY-ATTRIBUTES-OBSERVABILITY-GAP` — see §5 for `attribute_changed`); 2026-08-08
+(`TCK-20260808-ENTITY-VITALS-OBSERVABILITY-GAP` — see §5 for the 5 vitals events)
+
+**Previously updated:** 2026-08-05 (`TCK-20260805-SIMQ-HARDLAW-BRIDGE-COVERAGE-GAP` — of the 7 real
 `HardLawMonitor` laws, only `LAW-SPAWN-OCCUPANCY` was previously bridged. Added exact-match
 `law_id` routing for the other 6: `LAW-HP-NONNEGATIVE`/`LAW-READINESS-NONNEGATIVE` →
 `combat_hard_law_violation` (CombatScorer, previously dormant — no real law ever used its
@@ -114,8 +131,11 @@ All events below are emitted by the engine and reach at least one pillar scorer,
 | `pillar_trait_unlocked` | event_extractor | ProgressionScorer | 0 | active_breakthroughs set diff — TCK-20260701-SIMQ-EMIT-PROGRESSION |
 | `progression_conversion_applied` | event_extractor | ProgressionScorer | 0 | unspent_ap decrease — TCK-20260701-SIMQ-EMIT-PROGRESSION |
 | `progression_plateau_detected` | event_extractor | ProgressionScorer | 18 | XP unchanged for > 50 ticks from run start — TCK-20260701-SIMQ-EMIT-PROGRESSION; calibration_hits updated 2026-07-02 (TCK-20260701-SIMQ-CALIBRATE-REFRESH) |
+| `capability_growth_stalled` | event_extractor | ProgressionScorer | 0 | level/skills/gear/gold all flat for 300+ ticks — TCK-20260806-SIMQ-PROGRESSION-CAPABILITY-LIFECYCLE, not yet calibrated |
+| `life_arc_incoherent` | event_extractor | ProgressionScorer | 0 | generation >= 2 with level <= 1 and zero skills — TCK-20260806-SIMQ-PROGRESSION-CAPABILITY-LIFECYCLE, not yet calibrated |
 | `alliance_proposed` | event_extractor | FactionScorer | 0 | NEUTRAL/HOSTILE → ALLIED transition — TCK-20260701-SIMQ-EMIT-FACTION-ECONOMY |
 | `resource_seized` | event_extractor | FactionScorer | 0 | territory_add + tension_delta > 0 — TCK-20260701-SIMQ-EMIT-FACTION-ECONOMY |
+| `faction_trajectory_stagnant` | event_shapers (FactionShaper) | FactionScorer | 0 | territory unchanged 300+ ticks despite diplomatic activity — TCK-20260806-SIMQ-FACTION-LIFECYCLE-TRAJECTORY, not yet calibrated |
 | `ecology_cycle_completed` | event_extractor | WorldDynamicsScorer | 0 | tick % 200 per region — TCK-20260701-SIMQ-EMIT-WORLD-DYNAMICS |
 | `spawn_cadence_fired` | event_extractor | WorldDynamicsScorer | 0 | tick % 50 + non-boss entities_add — TCK-20260701-SIMQ-EMIT-WORLD-DYNAMICS |
 | `threat_evolved` | event_extractor | WorldDynamicsScorer | 0 | trauma_score threshold crossing 25/50/75/100 — TCK-20260701-SIMQ-EMIT-WORLD-DYNAMICS |
@@ -324,6 +344,15 @@ Events emitted by the engine that are deliberately NOT routed to any scorer. No 
 | `belief_contradiction` | engine/pipeline_phases/lead_contradiction | Not yet wired to quality scoring |
 | `plan_revision` | campaigns/plan_revision | Campaign planning artifact; not a simulation quality signal |
 | `DEFLATION_RISK`, `INFLATION_SPIRAL`, `ECONOMIC_COLLAPSE`, `GOLD_HOARDING` | EconomyHealthMonitor | Defined in events.py but marked deferred — not yet emitted |
+| `biological_state_changed` | event_extractor | Hunger/sleep_debt/rest_pressure delta, every tick — high-volume, same class as `movement`. Confirmed firing through a real `Kernel.tick_once()` loop. TCK-20260808-ENTITY-VITALS-OBSERVABILITY-GAP |
+| `stamina_changed` | event_extractor | Stamina delta, every tick — high-volume, same class as `movement`. Confirmed firing through a real `Kernel.tick_once()` loop. TCK-20260808-ENTITY-VITALS-OBSERVABILITY-GAP |
+| `wound_sustained` / `wound_healed` / `scar_gained` | event_extractor | New wound / heal / scar, per real occurrence. Not exercised through a real tick loop this session — combat is corpus-wide gated off (`ENABLE_COMBAT_ENGAGEMENT`); verified instead via real hand-constructed `WoundState`/`ScarState` objects (same precedent as `test_information_intent_execution_fires_through_kernel_tick_once`). TCK-20260808-ENTITY-VITALS-OBSERVABILITY-GAP |
+| `attribute_changed` | event_extractor | Any of the 9 base attributes (STR/AGI/VIT/END/INT/SPI/WIS/PER/CHA) delta, per real occurrence — payload carries only the changed fields. Severity direction-based (WARNING on any decline, INFO otherwise), not magnitude-based — no existing numeric "significant attribute change" threshold exists anywhere in the repo. Real, pipeline-wired producer (`src/engine/evolution.py`'s non-hero level-up) confirmed too rare to hit within a real 1500-tick `Kernel.tick_once()` loop on `sandbox_world` (zero HERO-role entities, none leveled up) — verified instead via real hand-constructed `AttributeComponent` objects, same precedent as the wound events above. Two other grep-found `AttributeUpdate` producers (`src/domains/demographics/cohort.py::compute_elder_attribute_update`, `src/actions/attributes.py::AllocateAttributeAction`) are confirmed dead code — zero real callers. TCK-20260808-ENTITY-ATTRIBUTES-OBSERVABILITY-GAP |
+| `item_equipped` / `item_unequipped` | event_extractor | Per-slot `entity.equipment.slots` delta, per real occurrence — `item_equipped` payload includes `previous_item_id` on a swap. Every producer with real narrative weight (combat durability decay, progression-conversion equip/repair) is gated off corpus-wide (`ENABLE_COMBAT_ENGAGEMENT`, `ENABLE_PROGRESSION_EVOLUTION`); the one live, unconditional producer (`src/engine/evolution.py`'s goblin-kind species-evolution gear grant) requires a goblin-kind entity at evolution level >= 10, confirmed absent from `sandbox_world` (zero goblin-kind entities) within a real 1000-tick `Kernel.tick_once()` loop. Verified via real hand-constructed `EquipmentComponent` objects, same precedent as the wound/attribute events above. TCK-20260808-ENTITY-EQUIPMENT-OBSERVABILITY-GAP |
+| `equipment_durability_changed` | event_extractor | Per-slot `entity.equipment.durability` delta, per real occurrence — not per-tick (durability only changes on discrete combat-hit/repair actions). Severity on the field's real 0–100 scale: INFO for a repair/increase or a decrease staying >= 50.0, WARNING for a decrease dropping below 50.0, CRITICAL for a decrease reaching <= 0.0. The 50.0 threshold reuses the same intent already designed into `src/domains/progression/gaps.py`/`src/engine/gold_sink.py` (both compare against 0.5 on a 0-1 scale by mistake — a disclosed, unfixed scale-mismatch bug, see the ticket's own investigation.md), just applied on the field's actual scale. Same reachability/verification story as `item_equipped` above. TCK-20260808-ENTITY-EQUIPMENT-OBSERVABILITY-GAP |
+| `entity_role_changed` / `entity_faction_changed` | event_extractor | `entity.identity.role`/`.faction` delta, per real occurrence. No live producer exists anywhere in `src/` for either field (confirmed via direct grep, not assumed) — role/faction reassignment is a defined-but-entirely-unimplemented mechanic. Wired anyway (future-proof, zero runtime cost when unused), verified via real hand-constructed `IdentityComponent` objects since there is no live trigger of any kind, gated or otherwise, to attempt a real-kernel check against. TCK-20260808-ENTITY-IDENTITY-ROLE-FACTION-OBSERVABILITY-GAP |
+| `recipe_learned` | event_extractor | Per new entry in `entity.identity.known_recipes` (set diff), per real occurrence. Real, unconditional producer (`src/engine/blacksmith.py::BlacksmithSystem.enforce`, wholesale recipe grant on a functional-blacksmith-tile visit with empty `known_recipes` — not feature-flag-gated). Trigger conditions confirmed met in `sandbox_world` (1 blacksmith building, all 18 entities start with empty `known_recipes`), but no entity happened to path onto the blacksmith tile within a real 1500-tick `Kernel.tick_once()` loop — verified instead via real hand-constructed `IdentityComponent` objects. TCK-20260808-ENTITY-IDENTITY-ROLE-FACTION-OBSERVABILITY-GAP |
+| `skill_cooldown_started` | event_extractor | Per new/changed entry in `entity.identity.cooldowns` (skill_id → tick_ready), per real occurrence. Real, action-router-wired producer (`src/engine/domain/skill_actions.py`) with no live AI driver ever selecting the `"SKILL"` action — same reachability class as `execute_allocate_ap`/`execute_repair` in the sibling attributes/equipment tickets. Verified via real hand-constructed `IdentityComponent` objects. TCK-20260808-ENTITY-IDENTITY-ROLE-FACTION-OBSERVABILITY-GAP |
 
 ---
 

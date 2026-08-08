@@ -117,6 +117,22 @@ class TestProgressionPlateau:
         assert "trait_system_silent" in rec.tags
 
 
+class TestCapabilityGrowthStalled:
+    def test_scores_configured_weight_and_tag(self, scorer: ProgressionScorer, scoring_weights: ScoringWeights) -> None:
+        rec = scorer.score(_env("capability_growth_stalled", payload={"ticks_since_growth": 301, "level": 3}), _ctx())
+        assert rec is not None
+        assert rec.delta == scoring_weights["capability_growth_stalled"]
+        assert "capability_growth_stalled" in rec.tags
+
+
+class TestLifeArcIncoherent:
+    def test_scores_configured_weight_and_tag(self, scorer: ProgressionScorer, scoring_weights: ScoringWeights) -> None:
+        rec = scorer.score(_env("life_arc_incoherent", payload={"generation": 2, "level": 1}), _ctx())
+        assert rec is not None
+        assert rec.delta == scoring_weights["life_arc_incoherent"]
+        assert "life_arc_incoherent" in rec.tags
+
+
 class TestNullReturn:
     def test_null_unknown(self, scorer: ProgressionScorer) -> None:
         assert scorer.score(_env("combat_initiated"), _ctx()) is None

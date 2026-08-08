@@ -1259,3 +1259,183 @@
     tests/unit/observability/test_event_extractor_progression.py::TestProgressionPlateauDetected
   divergence_note: null
   support_boundary: null
+- id: PROG-117
+  text: >-
+    All 7 PROGRESSION event types (xp_granted, level_up, skill_unlocked, trait_expressed,
+    pillar_trait_unlocked, progression_conversion_applied, progression_plateau_detected) are
+    available via an apply-layer ProgressionShaper (src/observability/event_shapers.py),
+    reading IdentityUpdate.evolution_points_delta/evolution_level_set/learned_skills/
+    traits_add/breakthroughs_add/unspent_ap_delta directly -- confirmed learned_skills is a
+    per-tick accumulator of newly-unlocked skill IDs, not a full-snapshot replacement, by
+    tracing its construction site (src/engine/evolution.py:122-125). progression_plateau_detected
+    is cross-tick derived via shaper-local state (_last_xp_tick/_emitted_plateau, mirroring
+    EventExtractor's identically-named class attributes) and must run for ANY entity with some
+    update this tick, not only an identity-specific one -- a real gating bug found via a real
+    kernel run (ON mode initially showed event_shapers=0 vs event_extractor=32 for the same
+    500-tick run) and fixed by decoupling the plateau check from the id_upd-not-None gate the
+    other 6 events correctly use. Post-fix: event_extractor=32, event_shapers=32, exact parity.
+    Registered in PHASE2_SHAPER_REGISTRY, gated by ENABLE_PUSH_EVENT_SHAPERS_PHASE2 (default
+    OFF, shared with StrategyShaper -- see STRAT-247). SHADOW-only in this ticket; cutover is a
+    separate, later Phase 2 child. (TCK-20260806-PUSH-SHAPER-REGISTRY-PROGRESSION)
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >-
+    src/observability/event_shapers.py — ProgressionShaper, PHASE2_SHAPER_REGISTRY["progression"];
+    src/engine/kernel.py — ProgressionShaper.reset_run_state() wired into Kernel.__init__;
+    real, non-mocked kernel run (dungeon_crawl_seed42_500t) confirmed event_extractor=32,
+    event_shapers=32 exact parity for progression_plateau_detected under ON mode post-fix, and 0
+    delivered under SHADOW mode
+  proof_type: parity
+  test_path: >-
+    tests/unit/observability/test_event_shapers_progression.py (18 tests, all passing)
+  divergence_note: null
+  support_boundary: >-
+    SHADOW-mode construction only — live delivery (event_extractor.py's branches flag-gated,
+    ENABLE_PUSH_EVENT_SHAPERS_PHASE2 flipped to a live default) is a separate, later Phase 2
+    cutover ticket's scope.
+  update_2026_08_07: >-
+    TCK-20260806-PUSH-CUTOVER-PHASE2: cut over to live delivery. ENABLE_PUSH_EVENT_SHAPERS_PHASE2
+    default flipped OFF->ON in feature_flags.py; event_extractor.py's legacy PROGRESSION branches
+    (xp_granted through progression_plateau_detected) individually flag-gated behind the new
+    _push_shapers_phase2_active. See STRAT-247's update note and infrastructure.yaml INFRA-326 for
+    the run_shadow_shapers() default-lockstep bug found and fixed during this cutover — affected
+    all Phase 2 domains including this one, verified fixed via real 5-world runs.
+- id: PROG-118
+  text: >
+    TCK-20260806-SIMQ-PROGRESSION-CAPABILITY-LIFECYCLE -- adds 2 new PROGRESSION scoring rules per
+    quality_scoring_contract.md's own §7.6 audit: `capability_growth_stalled` (entity's level,
+    skill count, equipped-gear count, and gold all flat simultaneously for
+    `_CAPABILITY_STALL_TICKS` (300) ticks) and `life_arc_incoherent` (entity reaches Hero's Journey
+    `lifecycle.generation >= 2` -- a rebirth already occurred -- while still at `evolution_level
+    <= 1` with zero unlocked skills). Both are genuinely new signals, not a migration of existing
+    behavior, so both are implemented as new, unconditional (NOT flag-gated behind
+    `ENABLE_PUSH_EVENT_SHAPERS_PHASE2`) code directly in `event_extractor.py` -- a deliberate
+    architecture decision, not an oversight: `ScoringContext` (the push-shaper architecture's own
+    read surface) carries no entity-state snapshot at all (confirmed directly,
+    `src/simulation_quality/score_record.py`), while `event_extractor.py`'s `extract()` already
+    receives both full `prior_state`/`current_state` snapshots, making all 4 capability dimensions
+    directly and reliably readable with zero reconstruction risk -- and since no
+    `ProgressionShaper` equivalent exists for either event, there is no double-fire risk requiring
+    flag-gated mutual exclusion.
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: >-
+    src/observability/event_extractor.py -- _CAPABILITY_STALL_TICKS, _LATE_GENERATION_THRESHOLD,
+    _last_capability_growth_tick/_emitted_capability_stalled/_emitted_life_arc_incoherent class
+    state (cleared in reset_run_state()), new unconditional detection block in the entity loop;
+    config/simulation_quality/scoring_weights.yaml -- capability_growth_stalled: -10.0,
+    life_arc_incoherent: -15.0; src/simulation_quality/scorers/progression.py -- 2 new EVENT_TYPES
+    entries and score() branches, both reading weights from config (no numeric literals).
+  proof_type: parity
+  test_path: >-
+    tests/unit/observability/test_event_extractor_progression.py (new TestCapabilityGrowthStalled/
+    TestLifeArcIncoherent classes), tests/simulation_quality/test_progression_scorer.py (new
+    coverage for both event types)
+  divergence_note: >-
+    Update 2026-08-08 (TCK-20260808-LIFE-ARC-REBIRTH-REACHABILITY-INVESTIGATION): this rule's own
+    precondition (`lifecycle.generation >= 2`, a rebirth having occurred) was structurally
+    unreachable corpus-wide -- the rebirth-granting mechanic itself only existed in
+    `resolve_attack()`, a combat function the real corpus never calls. Fixed at the mechanic level
+    (combat_movement.yaml COMB-297, intentional_divergences.md §2.34) -- this scorer rule's own
+    detection logic is unchanged and was already correct once its precondition becomes reachable.
+  support_boundary: >-
+    Observability signal addition only -- no gameplay mechanic change, no new equipment/skill
+    types. COMBAT's own scope (resolution mechanics only, per §7.6's own boundary ruling) is
+    untouched. `grade_anchors.json` recalibrated only if a real scoped test/calibration run shows
+    an actual scenario grade shift -- not reflexively.
+
+- id: PROG-119
+  text: >-
+    Generated EXPLORE quests carry a real, deterministic target position so
+    QuestResolutionSystem.evaluate_explore() can detect arrival and complete them; HUNT/GATHER/
+    BOUNTY/LIBERATE quests remain permanently uncompletable in live gameplay (documented gap, not
+    fixed here).
+  status: divergent
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: >-
+    src/quests/generator.py -- QuestGenerator._EXPLORE_TARGET_MIN_DIST/_EXPLORE_TARGET_MAX_DIST
+    class constants, new origin_pos parameter on generate()/generate_quests(), deterministic
+    target_pos computed via DeterministicRNG(Domain.QUEST, tick, level, sub_id=1/2) when
+    template.kind == QuestKind.EXPLORE and origin_pos is given, passed as
+    metadata={"target_pos": (x, y)} into the QuestState constructor (previously the constructor
+    call never passed a metadata kwarg at all, defaulting to {} for every quest of every kind);
+    src/town/guild.py -- GuildAction.visit() threads entity.navigation.position through as
+    origin_pos, the only real live caller of the generator
+    (TCK-20260807-QUEST-GUILDACTION-DEAD-WIRING's GuildVisitPhase).
+  proof_type: parity
+  test_path: >-
+    tests/unit/quest/test_quest_generation.py (test_explore_quest_gets_target_pos_when_origin_given,
+    test_explore_quest_target_pos_deterministic, test_explore_quest_without_origin_pos_has_no_target_pos,
+    test_non_explore_quest_has_empty_metadata_regardless_of_origin,
+    test_evaluate_explore_completes_quest_once_entity_reaches_target_pos,
+    test_evaluate_explore_does_not_complete_quest_far_from_target_pos)
+  divergence_note: >-
+    docs/simulation/quest_contract.md's QuestKind table documents all 5 kinds (HUNT/GATHER/
+    EXPLORE/LIBERATE/BOUNTY) as live quest types with no caveat. In practice, prior to this ticket
+    every generated quest of every kind was permanently uncompletable (QuestState.metadata always
+    {}). This fix closes the gap for EXPLORE only, per an explicit user scope decision
+    (TCK-20260807-QUEST-EVALUATOR-GATHER-BOUNTY-LIBERATE-GAP: "Fix HUNT + EXPLORE now; defer
+    GATHER/BOUNTY/LIBERATE", further narrowed to EXPLORE-only after investigation found HUNT has
+    no safe fix -- QuestTemplate carries no subject/target-kind field, and no real
+    entity-identity signal in any sampled world content (role_id/faction_id) distinguishes
+    hostile monsters from other neutral NPCs). HUNT's gap is tracked separately by
+    TCK-20260807-QUEST-HUNT-TARGET-METADATA-GAP; GATHER/BOUNTY/LIBERATE have no evaluate_* method
+    at all and remain out of scope, unchanged from this ticket's own original scope.
+  support_boundary: >-
+    Quest generation/completion mechanism only -- no reward-value, template-catalog, or
+    pressure-weighting change. grade_anchors.json not recalibrated: EXPLORE quests were never
+    completable in any scored scenario before this fix (guild-visit wiring itself only landed in
+    TCK-20260807-QUEST-GUILDACTION-DEAD-WIRING, same session), so no existing scenario's baseline
+    grade reflects a pre-fix "quests never complete" state to shift away from.
+  update_2026_08_07: >-
+    TCK-20260807-QUEST-HUNT-TARGET-METADATA-GAP: HUNT is now partially fixed too -- see PROG-120.
+    This entry's own "HUNT/GATHER/BOUNTY/LIBERATE quests remain permanently uncompletable" text is
+    now stale for HUNT specifically (q_wolf_hunt only; q_slime_cull remains uncompletable, no real
+    content backing exists for a "slime" target). GATHER/BOUNTY/LIBERATE remain fully
+    uncompletable, unchanged.
+
+- id: PROG-120
+  text: >-
+    q_wolf_hunt (HUNT-kind) quests now carry a real, corpus-grounded target_kind so
+    QuestResolutionSystem.evaluate_combat_victory()'s legacy target_kind fallback can detect a
+    matching kill and complete them; q_slime_cull (the other HUNT template) remains permanently
+    uncompletable -- no "slime" race/archetype exists anywhere in the real content corpus, so no
+    target_kind was fabricated for it.
+  status: divergent
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: >-
+    src/quests/generator.py -- QuestTemplate gained a target_kind: Optional[str] = None field;
+    q_wolf_hunt's TEMPLATES entry sets target_kind="wolf" (both hungry_wolf and alpha_wolf
+    archetypes declare race: "wolf" in data/content/entities/entity_archetypes.yaml, which
+    src/entities/contract_builder.py maps to EntityState.kind at spawn time -- confirmed via
+    direct trace, not assumed); q_slime_cull's entry deliberately has no target_kind (confirmed
+    via corpus-wide grep: no "slime" race value exists in entity_archetypes.yaml). generate() now
+    sets metadata={"target_kind": template.target_kind} for HUNT templates that declare one.
+  proof_type: parity
+  test_path: >-
+    tests/unit/quest/test_quest_generation.py (test_wolf_hunt_quest_gets_real_target_kind,
+    test_slime_cull_quest_has_no_target_kind,
+    test_evaluate_combat_victory_completes_wolf_hunt_quest_on_matching_kill,
+    test_evaluate_combat_victory_does_not_progress_wolf_hunt_quest_on_unrelated_kill,
+    test_wolf_hunt_quest_reaches_completed_status_through_real_kill_loop -- the last one drives
+    the full real generate() -> evaluate_combat_victory() -> QuestService.add_progress() lifecycle
+    through 9 real "wolf" kills to QuestStatus.COMPLETED, not just a single evaluator call)
+  divergence_note: >-
+    docs/simulation/quest_contract.md's QuestKind table documents HUNT as a live quest type with
+    no per-template caveat. In practice, only 1 of the 2 HUNT templates (q_wolf_hunt) is
+    completable -- q_slime_cull's own target monster type has no real content backing anywhere in
+    the corpus, a genuine content-authoring gap (not a wiring gap) left honestly disclosed rather
+    than worked around with a fabricated target_kind value. Per the user's explicit design
+    decision for this ticket ("add a target_kind field, hardcoded per template, matched against
+    the real entity.kind string") -- the option chosen over investigating a broader
+    identity-model change, which would have had a much wider blast radius for a two-template gap.
+  support_boundary: >-
+    Quest generation/completion mechanism only -- no reward-value or template-catalog structural
+    change beyond the one new optional field. GATHER/BOUNTY/LIBERATE unaffected (still no
+    evaluate_* method). grade_anchors.json not recalibrated: HUNT quests were never completable in
+    any scored scenario before this fix, so no existing baseline grade reflects a
+    "HUNT quests complete" state to shift away from.
