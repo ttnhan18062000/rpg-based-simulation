@@ -1633,16 +1633,50 @@ def test_parity_write_safety_zero_violations_on_clean_fixture():
     assert pws["unsafe_parity_build_examples"] == []
 
 
-def test_parity_write_safety_detects_edit_targeting_parity_ledger_yaml():
+def test_parity_write_safety_detects_edit_cooccurring_with_same_run_build_call():
     violating_row = _tool_row(tool="Edit", input_summary="docs/parity_ledger/combat_movement.yaml")
+    build_row = _tool_row(tool="Bash", input_summary="python3 tools/parity_index.py build --db-path /tmp/pi/parity.db")
     tools = [
         _tool_row(tool="Edit", input_summary="src/engine/kernel.py"),
         violating_row,
+        build_row,
     ]
     metrics = compute_tool_safety_metrics([], tools)
     pws = metrics["parity_write_safety"]
     assert pws["parity_ledger_yaml_write_count"] == 1
     assert pws["parity_ledger_yaml_write_examples"] == [violating_row]
+
+
+def test_parity_write_safety_lone_yaml_edit_no_longer_counts():
+    lone_edit = _tool_row(tool="Edit", input_summary="docs/parity_ledger/combat_movement.yaml")
+    tools = [
+        _tool_row(tool="Edit", input_summary="src/engine/kernel.py"),
+        lone_edit,
+    ]
+    metrics = compute_tool_safety_metrics([], tools)
+    pws = metrics["parity_write_safety"]
+    assert pws["parity_ledger_yaml_write_count"] == 0
+    assert pws["parity_ledger_yaml_write_examples"] == []
+
+
+def test_parity_write_safety_yaml_edit_and_build_different_run_ids_not_flagged():
+    edit_row = _tool_row(run_id="TCK-A", tool="Edit", input_summary="docs/parity_ledger/combat_movement.yaml")
+    build_row = _tool_row(run_id="TCK-B", tool="Bash", input_summary="python3 tools/parity_index.py build")
+    tools = [edit_row, build_row]
+    metrics = compute_tool_safety_metrics([], tools)
+    pws = metrics["parity_write_safety"]
+    assert pws["parity_ledger_yaml_write_count"] == 0
+    assert pws["parity_ledger_yaml_write_examples"] == []
+
+
+def test_parity_write_safety_help_call_does_not_count_as_build():
+    edit_row = _tool_row(tool="Edit", input_summary="docs/parity_ledger/combat_movement.yaml")
+    help_row = _tool_row(tool="Bash", input_summary="python3 tools/parity_index.py --help")
+    tools = [edit_row, help_row]
+    metrics = compute_tool_safety_metrics([], tools)
+    pws = metrics["parity_write_safety"]
+    assert pws["parity_ledger_yaml_write_count"] == 0
+    assert pws["parity_ledger_yaml_write_examples"] == []
 
 
 def test_parity_write_safety_detects_build_targeting_real_repo_path():
@@ -1713,7 +1747,7 @@ def test_new_section_rendered_in_generate_output_when_investigate_tool_data_pres
     assert "### Search-Before-Grep Compliance (Investigate Phase)" in report
     assert "**Compliance rate:** 100.0% (1/1 Investigate-phase calls)" in report
     assert "### Parity Ledger Write-Safety" in report
-    assert "`docs/parity_ledger/*.yaml` write violations:** 0" in report
+    assert "`docs/parity_ledger/*.yaml` edits co-occurring with a same-run `parity_index.py build` call:** 0" in report
     assert "Unsafe `parity_index.py build` invocations (real repo path):** 0" in report
 
     notes_idx = report.index("## Notes")

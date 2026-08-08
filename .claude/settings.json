@@ -79,6 +79,15 @@
             "command": "DESC=$(python3 -c \"import json,sys; d=json.load(sys.stdin); i=d.get('tool_input',{}); print(i.get('description','') + ' ' + i.get('prompt',''))\" 2>/dev/null || true); case \"$DESC\" in *invest*|*search*|*find*|*explor*|*locat*|*grep*|*where*|*ticket*|*scope*) echo '{\"hookSpecificOutput\":{\"hookEventName\":\"PreToolUse\",\"additionalContext\":\"context-search: Before spawning this agent, have you called search_docs (mcp__knowledge-search__search_docs) and graphify query for this topic? These are REQUIRED before grep/find per CLAUDE.md Hard Rules.\"}}' ;; esac"
           }
         ]
+      },
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "FILE=$(python3 -c \"import json,sys; d=json.load(sys.stdin); print(d.get('tool_input',d).get('file_path',''))\" 2>/dev/null || true); case \"$FILE\" in */tickets/*|*/staging_artifacts/*|*/src/*|*/tests/*|*/docs/*) if ls tickets/inprogress/*.md >/dev/null 2>&1; then RUN_ID=$(python3 -c \"import json; print(json.load(open('.claude/current_run')).get('run_id') or '')\" 2>/dev/null || true); if [ -z \"$RUN_ID\" ]; then echo '{\"hookSpecificOutput\":{\"hookEventName\":\"PreToolUse\",\"additionalContext\":\"sidecar-check: tickets/inprogress/ has an active ticket but .claude/current_run has no run_id. If you are hand-orchestrating implement-ticket.js, write the sidecar (writeSidecar shape: run_id/seq/phase/agent/execution_id/provider) before continuing, or tool_call_count/cost_proxy_score will read 0 for this phase.\"}}'; fi; fi ;; esac"
+          }
+        ]
       }
     ],
     "PostToolUse": [

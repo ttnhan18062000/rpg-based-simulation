@@ -239,12 +239,22 @@ def _is_parity_ledger_yaml_write(tool_row):
     return "docs/parity_ledger/" in summary and ".yaml" in summary
 
 
-def _is_unsafe_parity_build_call(tool_row):
+def _is_parity_index_build_call(tool_row):
+    """True if this row invokes parity_index.py's build path — the shared, broader precondition
+    both _is_unsafe_parity_build_call (is THIS call unsafe) and the parity_write_safety
+    co-occurrence check (did this RUN touch parity_index.py's build path at all) need. A safe
+    scratch-path build still establishes real risk-adjacent behavior in that run for the
+    co-occurrence check's purposes, even though it isn't itself "unsafe"."""
     if tool_row.get("tool") != "Bash":
         return False
     summary = tool_row.get("input_summary") or ""
-    if "parity_index.py" not in summary or "build" not in summary:
+    return "parity_index.py" in summary and "build" in summary
+
+
+def _is_unsafe_parity_build_call(tool_row):
+    if not _is_parity_index_build_call(tool_row):
         return False
+    summary = tool_row.get("input_summary") or ""
     if "--db-path" not in summary:
         return True  # no override -> defaults to the real repo parity-index/parity.db path
     return "parity-index/parity.db" in summary
@@ -747,10 +757,13 @@ def compute_tool_safety_metrics(events: list[dict], tools: list[dict]) -> dict:
     phase-transition record — never tools.jsonl's own, less-authoritative `phase` field, which
     is null for records predating TCK-20260719-LIVE-PHASE-AGENT-LABEL), and (2)
     parity_index.py write-safety across the whole `tools` argument as passed in (not scoped to
-    Investigate-phase pairs) — a zero-tolerance count of Edit/Write calls into
-    docs/parity_ledger/*.yaml and of `parity_index.py build` invocations targeting the real
-    repo parity-index/parity.db path instead of a scratch path. Never calls write_lines/
-    write_line or opens any file; operates entirely on its `events`/`tools` arguments.
+    Investigate-phase pairs) — a count of Edit/Write calls into docs/parity_ledger/*.yaml made in
+    a run that ALSO invokes parity_index.py's build path (same run_id, anywhere in that run's own
+    tool history — a normal parity-ledger edit alone, with no co-occurring build call in the same
+    run, is not flagged; TCK-20260807-PARITY-WRITE-SAFETY-METRIC-RESCOPE), and of
+    `parity_index.py build` invocations targeting the real repo parity-index/parity.db path
+    instead of a scratch path. Never calls write_lines/write_line or opens any file; operates
+    entirely on its `events`/`tools` arguments.
 
     tools.jsonl rows with seq: null or seq <= 0 (shadow-packet rows) are structurally excluded
     by never matching an Investigate-phase key derived from events.jsonl (whose seq is
@@ -786,7 +799,14 @@ def compute_tool_safety_metrics(events: list[dict], tools: list[dict]) -> dict:
     investigate_pair_count = len(per_pair_compliance)
     compliant_count = sum(1 for v in per_pair_compliance.values() if v)
 
-    parity_yaml_writes = [r for r in tools if _is_parity_ledger_yaml_write(r)]
+    run_ids_with_build_calls = {
+        r.get("run_id") for r in tools if _is_parity_index_build_call(r) and r.get("run_id")
+    }
+    parity_yaml_writes = [
+        r
+        for r in tools
+        if _is_parity_ledger_yaml_write(r) and r.get("run_id") in run_ids_with_build_calls
+    ]
     unsafe_parity_builds = [r for r in tools if _is_unsafe_parity_build_call(r)]
 
     return {
@@ -1216,7 +1236,8 @@ def generate(runs, events, label, week_str=None, tickets_root=None, tools=None):
         lines.append("### Parity Ledger Write-Safety")
         lines.append("")
         lines.append(
-            f"**`docs/parity_ledger/*.yaml` write violations:** "
+            f"**`docs/parity_ledger/*.yaml` edits co-occurring with a same-run "
+            f"`parity_index.py build` call:** "
             f"{pws['parity_ledger_yaml_write_count']}"
         )
         lines.append(

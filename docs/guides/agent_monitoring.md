@@ -67,7 +67,7 @@ The index at `agent-monitoring/retro/index.md` is updated automatically.
 | **Summary Quality** | Empty-summary count is scoped to current-schema events only (agent field set); pre-normalization legacy events (agent is null) never had a summary field and are reported separately as "Legacy-format records," not as a prompt-quality issue. Truncation count still covers all events (current + legacy). |
 | **Slow Runs** | > 30 min runs (fixed threshold) — usually Review or Implement phase. Consider splitting or simplifying scope. |
 | **Outliers** | Conditionally rendered — only appears when at least one value exceeds 3x its group's median (`duration_s` grouped by tier, `cost_proxy_score` grouped by normalized phase). A *relative* signal, distinct from Slow Runs' fixed 30-minute threshold: a run can be an Outlier without being a Slow Run (fast overall, but far from its tier's norm) and vice versa. Flags a value as worth a look, not a claim about *why* it's high — investigate before assuming (`TCK-20260719-RETRO-OUTLIER-FLAGS`). |
-| **Tool Safety Audit** | Conditionally rendered — only appears when at least one Investigate-phase `(run_id, seq)` pair has `tools.jsonl` data in the period. Reports search-before-grep hard-rule (CLAUDE.md) compliance rate for real Investigate phases, and a zero-tolerance count of `docs/parity_ledger/*.yaml` write calls and unsafe `parity_index.py build` invocations (targeting the real repo path instead of a scratch path). Both counts should read 0 — a nonzero count is a real hard-rule/read-only-guarantee violation, not noise (`TCK-20260803-RETRO-TOOL-SAFETY-AUDIT`). |
+| **Tool Safety Audit** | Conditionally rendered — only appears when at least one Investigate-phase `(run_id, seq)` pair has `tools.jsonl` data in the period. Reports search-before-grep hard-rule (CLAUDE.md) compliance rate for real Investigate phases, and (since `TCK-20260807-PARITY-WRITE-SAFETY-METRIC-RESCOPE`) a count of `docs/parity_ledger/*.yaml` write calls made in a run that ALSO invokes `parity_index.py`'s build path (same `run_id`, anywhere in that run's own tool history) — an ordinary parity-updater edit with no co-occurring build call in the same run is not flagged, since it's the normal, required workflow (CLAUDE.md's Authoritative Mechanics Rule), not a risk. Also reports a zero-tolerance count of unsafe `parity_index.py build` invocations (targeting the real repo path instead of a scratch path) — unaffected by the rescope. Both counts should read 0 — a nonzero count is a real read-only-guarantee violation, not noise (`TCK-20260803-RETRO-TOOL-SAFETY-AUDIT`). |
 
 ---
 
@@ -188,6 +188,28 @@ A `PostToolUse` hook entry (`epic_staleness_check.py --hook`, wired alongside
 nudge, at most once per session (own state file,
 `.claude/.epic_staleness_state.json`), only when the **stale** list is
 non-empty — the never-started/informational list never reaches the hook.
+
+---
+
+## Sidecar Reminder Hook
+
+Hand-orchestrated ticket sessions (no `Workflow` tool available) must
+manually replicate `implement-ticket.js`'s `writeSidecar(seq, phase, agent)`
+call at each phase transition, writing
+`{run_id, seq, phase, agent, execution_id, provider}` to
+`.claude/current_run` — this is what lets `post_tool_hook.py` attribute
+`tools.jsonl` rows to a run (see "How tool calls are attributed to agent
+events" in `docs/agent-monitoring/schema.md`). This step is easy to forget
+under hand-orchestration and, when skipped, silently zeroes
+`tool_call_count`/`cost_proxy_score` for the affected phase(s)
+(`TCK-20260807-CURRENT-RUN-SIDECAR-HAND-ORCHESTRATION-GAP`).
+
+A `PreToolUse` hook entry (matcher `Edit|Write`, in `.claude/settings.json`)
+fires an advisory `additionalContext` reminder whenever `tickets/inprogress/`
+has an active ticket but `.claude/current_run`'s `run_id` is empty — it goes
+silent again as soon as the sidecar is correctly written for that phase.
+Advisory-only, non-blocking; does not replace the orchestrating agent's own
+responsibility to write the sidecar.
 
 ---
 
