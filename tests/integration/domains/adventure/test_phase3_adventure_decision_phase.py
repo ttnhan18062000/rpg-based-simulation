@@ -84,3 +84,45 @@ def test_filters_out_locked_projects():
     
     # Should skip hero because project is locked
     assert not update.entity_updates
+
+
+def test_adventure_decision_does_not_discard_earlier_phase_updates():
+    """TCK-20260808-ROUTING-FLAG-FACTION-INFORMATION-RNG-COUPLING: the adventure_decision phase's
+    own run_phase call site in pipeline.py previously returned AdventureDecisionPhase.apply()'s
+    fresh StateUpdate directly instead of merging it into the accumulated update -- silently
+    discarding every phase's output that ran earlier in the same tick (diplomatic_transitions,
+    information_belief, cooperation, contracts/blacksmith) whenever ENABLE_ADVENTURE_ROUTING=ON.
+    Real, controlled proof this was NOT an RNG-consumption-order bug (the ticket's own original
+    hypothesis): compute_transitions() is a pure function of state.factions and produced the
+    identical FactionUpdate list regardless of the flag -- the discard happened strictly inside
+    refine(), after diplomatic_transitions merged its updates, before refine() returned."""
+    from src.engine.pipeline import AuthoritativeApplyPipeline
+    from src.core.state import FactionState, DiplomaticState
+    from src.systems.world_systems.generator import EntityGenerator
+    from src.domains.optimization.feature_flags import FeatureMode
+
+    # Two factions with tension high enough that diplomatic_state_machine.compute_transitions()
+    # produces a real NEUTRAL -> TENSE FactionUpdate for this pair (threshold: pair_tension > 0.4).
+    factions = {
+        "alpha": FactionState(faction_id="alpha", tension_level=0.5),
+        "beta": FactionState(faction_id="beta", tension_level=0.5),
+    }
+    hero = EntityGenerator(seed=1).spawn_hero((10.0, 10.0))
+
+    state = _state([hero])
+    from dataclasses import replace as dc_replace
+    state = dc_replace(
+        state, factions=factions, building_tiles={},
+        feature_flags={"ENABLE_ADVENTURE_ROUTING": FeatureMode.ON},
+    )
+
+    refined = AuthoritativeApplyPipeline.refine(state, StateUpdate())
+
+    assert refined.faction_updates, (
+        "diplomatic_transitions' own real FactionUpdate output was discarded by the "
+        "adventure_decision phase -- it must survive refine() when routing is ON"
+    )
+    assert any(
+        fu.faction_id in ("alpha", "beta") and fu.diplomatic_relations_set
+        for fu in refined.faction_updates
+    )

@@ -3136,3 +3136,37 @@
     grade_anchors.json not recalibrated: TOWN_RETURN/RECOVER/RESOLVE_BLOCKER projects were
     silently inert before this fix in every scored scenario, so there is no existing baseline
     grade that reflected a "these goals produce movement" state to shift away from.
+- id: STRAT-250
+  text: >
+    TCK-20260808-ROUTING-FLAG-FACTION-INFORMATION-RNG-COUPLING -- AuthoritativeApplyPipeline's own
+    adventure_decision phase call site (src/engine/pipeline.py) was the one phase in the file whose
+    run_phase() lambda did not wrap AdventureDecisionPhase.apply()'s result in u.merge(...), unlike
+    every sibling phase. AdventureDecisionPhase.apply() is itself correctly self-contained (returns
+    a fresh StateUpdate with no knowledge of prior-phase output, by design) -- the bug was entirely
+    at the call site: the lambda's own u parameter was captured but never used, so run_phase
+    returned that fresh, near-empty StateUpdate directly, silently discarding every phase's output
+    that ran earlier in the same tick (information_belief, cooperation, contracts/blacksmith,
+    faction_decision, faction_awareness, diplomatic_transitions) whenever
+    ENABLE_ADVENTURE_ROUTING=ON -- every tick, not just tick 1.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    Real, controlled monkey-patched frontier_marches seed-42 probe: diplomatic_state_machine
+    .compute_transitions() (a pure function of state.factions, confirmed zero RNG calls) produced
+    the identical 58 FactionUpdate objects regardless of the routing flag -- ruling out this
+    ticket's own original RNG-consumption-order hypothesis. AuthoritativeApplyPipeline.refine()'s
+    own returned StateUpdate.faction_updates count was 58 with routing OFF and 0 with routing ON
+    before the fix; identical (58, same objects) in both configurations after it. Routing itself
+    verified unregressed: 3 heroes still receive real strategic projects across a live 5-tick run
+    with routing ON post-fix.
+  proof_type: regression
+  test_path: >
+    tests/integration/domains/adventure/test_phase3_adventure_decision_phase.py::
+    test_adventure_decision_does_not_discard_earlier_phase_updates
+  divergence_note: >
+    See intentional_divergences.md section 2.35 (Adventure-Routing Phase Discarding All
+    Earlier-Tick Updates, Bug Fix). hero_guild_routing/simq_routing_test's own already-committed
+    grade_anchors.json entries were checked (not assumed) for real drift from this fix -- see
+    those worlds' own re-verification note if a real ECONOMY-anchor update landed.
+  support_boundary: null

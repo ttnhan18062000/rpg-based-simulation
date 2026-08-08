@@ -222,11 +222,11 @@
   "simq_routing_test_seed42_500t": {
     "COGNITION": {
       "grade": "A",
-      "score": 1.8273092369477912
+      "score": 1.3253012048192772
     },
     "AGENCY": {
-      "grade": "A",
-      "score": 1.420731707317073
+      "grade": "S",
+      "score": 2.43
     },
     "COMBAT": {
       "grade": "C",
@@ -242,7 +242,7 @@
     },
     "PROGRESSION": {
       "grade": "C",
-      "score": -0.40828402366863903
+      "score": -0.2964824120603015
     },
     "SOCIAL": {
       "grade": "C",
@@ -347,8 +347,8 @@
   },
   "simq_routing_test_seed123_500t": {
     "COGNITION": {
-      "grade": "S",
-      "score": 2.3393574297188753
+      "grade": "A",
+      "score": 1.7718940936863543
     },
     "AGENCY": {
       "grade": "A",
@@ -356,7 +356,7 @@
     },
     "COMBAT": {
       "grade": "C",
-      "score": 0.0
+      "score": -0.03006012024048096
     },
     "FACTION": {
       "grade": "C",
@@ -368,7 +368,7 @@
     },
     "PROGRESSION": {
       "grade": "D",
-      "score": -0.9746835443037974
+      "score": -0.6285714285714286
     },
     "SOCIAL": {
       "grade": "C",
@@ -390,7 +390,7 @@
   "simq_routing_test_seed456_500t": {
     "COGNITION": {
       "grade": "A",
-      "score": 1.6297786720321932
+      "score": 0.570264765784114
     },
     "AGENCY": {
       "grade": "A",
@@ -398,7 +398,7 @@
     },
     "COMBAT": {
       "grade": "C",
-      "score": -0.018
+      "score": 0.0
     },
     "FACTION": {
       "grade": "C",
@@ -410,7 +410,7 @@
     },
     "PROGRESSION": {
       "grade": "D",
-      "score": -0.9685534591194969
+      "score": -0.6927374301675978
     },
     "SOCIAL": {
       "grade": "C",
@@ -2112,11 +2112,11 @@
   "hero_guild_routing_seed42_500t": {
     "COGNITION": {
       "grade": "A",
-      "score": 1.8373493975903614
+      "score": 1.5763052208835342
     },
     "AGENCY": {
       "grade": "A",
-      "score": 1.420731707317073
+      "score": 1.5963855421686748
     },
     "COMBAT": {
       "grade": "C",
@@ -2132,7 +2132,7 @@
     },
     "PROGRESSION": {
       "grade": "C",
-      "score": -0.40828402366863903
+      "score": -0.3150684931506849
     },
     "SOCIAL": {
       "grade": "C",
@@ -2153,8 +2153,8 @@
   },
   "hero_guild_routing_seed123_500t": {
     "COGNITION": {
-      "grade": "S",
-      "score": 2.3393574297188753
+      "grade": "A",
+      "score": 1.2650602409638554
     },
     "AGENCY": {
       "grade": "A",
@@ -2162,7 +2162,7 @@
     },
     "COMBAT": {
       "grade": "C",
-      "score": -0.10483870967741936
+      "score": -0.022044088176352707
     },
     "FACTION": {
       "grade": "C",
@@ -2174,7 +2174,7 @@
     },
     "PROGRESSION": {
       "grade": "D",
-      "score": -0.8481012658227848
+      "score": -0.6707692307692308
     },
     "SOCIAL": {
       "grade": "C",
@@ -2195,16 +2195,16 @@
   },
   "hero_guild_routing_seed456_500t": {
     "COGNITION": {
-      "grade": "A",
-      "score": 1.6297786720321932
+      "grade": "B",
+      "score": 0.2917505030181087
     },
     "AGENCY": {
       "grade": "A",
-      "score": 0.6415478615071283
+      "score": 0.6726907630522089
     },
     "COMBAT": {
       "grade": "C",
-      "score": -0.008
+      "score": -0.0967741935483871
     },
     "FACTION": {
       "grade": "C",
@@ -2216,7 +2216,7 @@
     },
     "PROGRESSION": {
       "grade": "D",
-      "score": -0.9056603773584906
+      "score": -0.6212534059945504
     },
     "SOCIAL": {
       "grade": "C",
@@ -2657,16 +2657,16 @@
   },
   "hero_guild_routing_seed42_1000t": {
     "COGNITION": {
-      "grade": "S",
-      "score": 2.0541082164328657
+      "grade": "A",
+      "score": 1.705
     },
     "AGENCY": {
       "grade": "A",
-      "score": 1.0070564516129032
+      "score": 1.4624624624624625
     },
     "COMBAT": {
-      "grade": "B",
-      "score": 0.008
+      "grade": "C",
+      "score": 0.0
     },
     "FACTION": {
       "grade": "C",
@@ -2674,11 +2674,11 @@
     },
     "ECONOMY": {
       "grade": "B",
-      "score": 0.21309655937846836
+      "score": 0.2038735983690112
     },
     "PROGRESSION": {
       "grade": "C",
-      "score": -0.2530612244897959
+      "score": -0.21712538226299694
     },
     "SOCIAL": {
       "grade": "C",
@@ -2690,25 +2690,25 @@
     },
     "WORLD": {
       "grade": "B",
-      "score": 0.196
+      "score": 0.204
     },
     "NARRATIVE": {
       "grade": "C",
-      "score": 0.0
+      "score": -0.0010030090270812437
     }
   },
   "simq_routing_test_seed42_1000t": {
     "COGNITION": {
       "grade": "A",
-      "score": 1.993987975951904
+      "score": 1.225
     },
     "AGENCY": {
-      "grade": "A",
-      "score": 1.0070564516129032
+      "grade": "S",
+      "score": 2.396938775510204
     },
     "COMBAT": {
       "grade": "B",
-      "score": 0.036036036036036036
+      "score": 0.001
     },
     "FACTION": {
       "grade": "C",
@@ -2716,11 +2716,11 @@
     },
     "ECONOMY": {
       "grade": "B",
-      "score": 0.21309655937846836
+      "score": 0.21333333333333335
     },
     "PROGRESSION": {
       "grade": "C",
-      "score": -0.24526315789473685
+      "score": -0.23848515864892528
     },
     "SOCIAL": {
       "grade": "C",
@@ -2732,11 +2732,11 @@
     },
     "WORLD": {
       "grade": "B",
-      "score": 0.126
+      "score": 0.13
     },
     "NARRATIVE": {
       "grade": "C",
-      "score": 0.0
+      "score": -0.0010141987829614604
     }
   },
   "unit_faction_tension_seed42_1000t": {

@@ -714,6 +714,49 @@ This document is the canonical record of intentional behavior shifts in `src` co
   generation_delta == 1`).
 - **Status**: ACTIVE
 
+### 2.35 Adventure-Routing Phase Discarding All Earlier-Tick Updates (TCK-20260808-ROUTING-FLAG-FACTION-INFORMATION-RNG-COUPLING)
+- **Subsystem**: Engine / Pipeline
+- **Old Behavior**: `AuthoritativeApplyPipeline.refine()`'s (`src/engine/pipeline.py`)
+  `adventure_decision` phase call site was the one phase in the file whose `run_phase(...)` lambda
+  did not wrap its own result in `u.merge(...)` — every sibling phase (`information_belief`,
+  `cooperation`, `diplomatic_transitions`, etc.) correctly does. `AdventureDecisionPhase.apply()`
+  (`src/domains/adventure/phase.py`) is itself correctly self-contained — it starts from a fresh
+  `StateUpdate()` and returns only its own hero-routing entity updates, by design, with no `u`
+  parameter at all. The bug was entirely at the call site: the lambda's `u` was captured but never
+  used, so `run_phase` returned that fresh, near-empty `StateUpdate` directly, **replacing** (not
+  merging into) the entire accumulated `update` from every phase that had already run earlier in
+  the same tick (`information_belief`, `cooperation`, `contracts`/`blacksmith`, `faction_decision`,
+  `faction_awareness`, `diplomatic_transitions`). Real, controlled proof (not assumed): a
+  monkey-patched `frontier_marches` seed-42 probe showed `diplomatic_state_machine.compute_
+  transitions()` computing the identical 58 `FactionUpdate` objects regardless of the routing flag
+  (ruling out the RNG-consumption-order hypothesis this ticket was originally filed under), while
+  `refine()`'s own returned `faction_updates` count was 58 with routing OFF and **0** with routing
+  ON — the discard happened strictly inside `refine()`, after the merge, before return.
+- **New Behavior**: the lambda now wraps `AdventureDecisionPhase.apply(...)`'s result in
+  `u.merge(...)`, matching the established pattern every other phase in the file already uses.
+  Verified via the same controlled probe: post-fix, `refine()`'s `faction_updates` count and
+  content are identical (58 updates) with routing ON or OFF, and the fix does not regress
+  `AdventureDecisionPhase`'s own behavior (heroes still receive real strategic projects across a
+  live multi-tick run with routing ON).
+- **Rationale**: **Bug Fix**. Any world with `ENABLE_ADVENTURE_ROUTING=ON` silently lost every
+  pipeline phase's output that ran before `adventure_decision` in the same tick, every tick — not
+  a routing-specific interaction, a missing merge call.
+- **Note (real scope check, not assumed)**: the 2 existing routing-enabled worlds
+  (`hero_guild_routing`, `simq_routing_test`) share this code path, but their own already-committed
+  `grade_anchors.json` SOCIAL/FACTION/INFORMATION anchors are unaffected — SOCIAL because neither
+  world enables `ENABLE_SOCIAL_COOPERATION`, FACTION/INFORMATION because both worlds are already
+  documented FACTION/INFORMATION-inert by deliberate tier-purity design (no content authored). Real
+  ECONOMY-signal impact (from the unconditional `contracts`/`blacksmith` phase, which also runs
+  before `adventure_decision`) was checked and re-verified for both worlds — see
+  `docs/simulation_quality/eval_matrix_results.md`'s own drift-tracking entry for this ticket if
+  a real anchor update landed.
+- **Verification**:
+  `tests/integration/domains/adventure/test_phase3_adventure_decision_phase.py::test_adventure_decision_does_not_discard_earlier_phase_updates`
+  (real `AuthoritativeApplyPipeline.refine()` run with `ENABLE_ADVENTURE_ROUTING=ON`, a `HERO`
+  entity present, and a queued `diplomatic_transitions`-eligible faction pair: asserts the returned
+  `StateUpdate.faction_updates` is non-empty, not silently discarded).
+- **Status**: ACTIVE
+
 ---
 
 ## 3. Unsupported / Retired Behavior

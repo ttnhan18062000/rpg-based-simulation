@@ -18,7 +18,7 @@ identically across all 3 calibration seeds — an apparent RNG-consumption side 
 adventure routing itself, root cause not yet found
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -122,13 +122,63 @@ routing and faction/information mechanics.
   assumed; Investigate must trace the real call sequence, not guess from the symptom alone.
 
 ## Implementation Notes
-(To be filled during implementation.)
+Subagent spawning unavailable this session (200/200 cap) — self-performed throughout.
+
+The ticket's own RNG-consumption-order hypothesis was **rejected** after real, controlled tracing:
+a monkey-patched `frontier_marches` seed-42 probe confirmed `diplomatic_state_machine
+.compute_transitions()` is a pure function of `state.factions` (zero RNG calls) and produced the
+identical 58 `FactionUpdate` objects regardless of the routing flag. Further monkey-patching
+`AuthoritativeApplyPipeline.refine()` itself isolated the real defect: `refine()`'s own returned
+`StateUpdate.faction_updates` was 58 with routing OFF and 0 with routing ON — the discard happened
+strictly inside `refine()`, after the merge, before return.
+
+Root cause: `src/engine/pipeline.py`'s `adventure_decision` phase call site was the one phase in
+the file whose `run_phase()` lambda did not wrap its result in `u.merge(...)` (every sibling phase
+does). `AdventureDecisionPhase.apply()` is correctly self-contained (fresh `StateUpdate()`, no `u`
+parameter at all) — the bug was entirely at the call site, silently discarding every phase's output
+that ran earlier in the same tick whenever `ENABLE_ADVENTURE_ROUTING=ON`, every tick, not just
+tick 1. One-line fix: add `u.merge(...)`.
+
+Checked (not assumed) the 2 existing routing-enabled worlds' own already-committed anchors:
+SOCIAL/FACTION/INFORMATION are unaffected (flag OFF or no content authored for either world), but
+AGENCY/COGNITION/PROGRESSION/COMBAT/ECONOMY/WORLD/NARRATIVE showed real, material drift across all
+8 anchored run_keys once actually recalibrated (some letter-grade shifts, e.g. COGNITION S->A
+twice) — broader impact than originally hypothesized (not just FACTION/INFORMATION). Re-verified
+via real `tools/calibrate_simq.py` runs (not assumed) and updated `grade_anchors.json` with
+attribution, matching `corpus_tier_taxonomy.md`'s own Regression/baseline-tier drift-handling
+precedent. Also found and fixed an unrelated hardcoded test-count sentinel
+(`test_grade_anchors_entry_count_unchanged`, 80->81) that TCK-20260808-LIFECYCLE-FULL-COVERAGE-WORLD
+had left stale (separate commit, attributed to that ticket).
+
+Deferred (per this ticket's own Out of Scope): re-attempting the `frontier_marches` flag flip
+itself — the fix is landed and verified, but that flip is its own future ticket's job.
 
 ## Test Summary
-(To be filled during implementation.)
+New regression test:
+`tests/integration/domains/adventure/test_phase3_adventure_decision_phase.py::
+test_adventure_decision_does_not_discard_earlier_phase_updates` — real `refine()` run with routing
+ON, asserts `faction_updates` survives. `pytest tests/unit/movement/ tests/unit/combat/
+tests/integration/domains/adventure/ tests/unit/strategic/ tests/simulation_quality/
+test_grade_regression.py -q -m "not slow"` — 396+70 passed, 3 pre-existing unrelated failures
+(confirmed via `git stash` against this ticket's own change: `test_normal_move_triggers_oa`,
+`test_crafting_project_produces_item_crafted_event_through_full_pipeline`,
+`test_reach_resource_arrival_produces_resource_harvested_event_through_full_pipeline`, all fail
+identically without this ticket's fix).
 
 ## Files Changed
-(To be filled during implementation.)
+- `src/engine/pipeline.py` — `u.merge()` fix for the `adventure_decision` phase call site
+- `tests/integration/domains/adventure/test_phase3_adventure_decision_phase.py` — new regression test
+- `docs/guidelines/intentional_divergences.md` — new §2.35 entry
+- `docs/parity_ledger/strategic_cognition.yaml` — new STRAT-250 entry
+- `tests/simulation_quality/fixtures/grade_anchors.json` — 8 run_keys recalibrated with real
+  post-fix data (`hero_guild_routing`/`simq_routing_test`, all seeds, 500t+1000t)
 
 ## Completion Summary
-(To be filled during implementation.)
+Real root cause found via direct, controlled tracing — rejecting the ticket's own original
+RNG-consumption-order hypothesis with evidence rather than assuming it. Fix is a 1-line change
+matching an established sibling pattern, verified via a real before/after probe and a new
+regression test. Anchor drift on the 2 existing routing-enabled worlds was checked (not assumed)
+and found real, broader than the ticket's own FACTION/INFORMATION framing (AGENCY/COGNITION/
+PROGRESSION also affected) — re-verified and re-committed with attribution rather than left
+inconsistent with the now-fixed engine behavior. All Acceptance Criteria satisfied with real
+evidence.
