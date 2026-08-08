@@ -49,7 +49,7 @@ def observe_world(world: str, seed: int, ticks: int, obs_mode: str = "NORMAL") -
     from entity_lifecycle_score import _run_for_analysis, load_weights, score_run
     from calibrate_simq import _build_hub, _load_weights, _load_world_state, _replay_jsonl_through_hub, _resolve_profile
 
-    run_dir, health = _run_for_analysis(world, seed, ticks, obs_mode)
+    run_dir, health, final_entities = _run_for_analysis(world, seed, ticks, obs_mode)
     try:
         profile = _resolve_profile(world)
         simq_weights = _load_weights(profile)
@@ -63,6 +63,7 @@ def observe_world(world: str, seed: int, ticks: int, obs_mode: str = "NORMAL") -
         lifecycle_score = score_run(
             run_dir, world_state, ticks, els_weights,
             group_by=["role", "faction", "kind", "region"], world_name=world,
+            final_entities=final_entities,
         )
 
         return {

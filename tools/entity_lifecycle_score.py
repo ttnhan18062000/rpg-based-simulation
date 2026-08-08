@@ -64,11 +64,17 @@ def _event_type_to_bucket(weights: dict) -> dict[str, str]:
 
 def _run_for_analysis(
     world: str, seed: int, ticks: int, obs_mode: str, entity_count: int = 10
-) -> tuple[str, dict]:
-    """Drive a short-lived Kernel run at the given observability mode; return (run_dir, health).
+) -> tuple[str, dict, dict]:
+    """Drive a short-lived Kernel run at the given observability mode; return
+    (run_dir, health, final_entities).
 
     health = {"dropped_count": int, "pressure_mode_final": str, "survival_triggered": bool} --
     reported, not hard-failed on, per this module's own docstring.
+
+    final_entities is the real, post-run entity map (dict[int, EntityState]), captured before
+    Kernel.shutdown() -- lets extract_entity_paths() resolve identity metadata for entities born
+    mid-run (see TCK-20260808-LIFECYCLE-SCORE-MIDRUN-SPAWN-METADATA-GAP), which the pre-run
+    world_state snapshot alone cannot see.
     """
     os.environ["SIM_OBS_MODE"] = obs_mode
 
@@ -116,6 +122,12 @@ def _run_for_analysis(
     dropped_count = kernel.event_recorder.queue.dropped_count
     survival_triggered = any(obs_status["survival_counts"].values())
 
+    # Captured before shutdown so entities born mid-run (real, multi-source population growth --
+    # SpawnService/BossService/RaidService/CampService/CalamityService/DemographicCycleService,
+    # see TCK-20260808-LIFECYCLE-SCORE-MIDRUN-SPAWN-METADATA-GAP's own investigation.md) have
+    # resolvable identity metadata -- the pre-run world_state snapshot alone cannot see them.
+    final_entities = dict(kernel.state.entities)
+
     try:
         kernel.shutdown()
     except Exception:
@@ -129,7 +141,7 @@ def _run_for_analysis(
         "data_loss": dropped_count > 0,
     }
     run_dir = os.path.join("data", "runs", run_id) if run_id else ""
-    return run_dir, health
+    return run_dir, health, final_entities
 
 
 # ---------------------------------------------------------------------------
@@ -137,7 +149,7 @@ def _run_for_analysis(
 # ---------------------------------------------------------------------------
 
 
-def _entity_metadata(world_state) -> dict[int, dict]:
+def _entity_metadata(entities: dict) -> dict[int, dict]:
     """role/faction/kind/region per entity, per investigation.md Item 1's corrected field paths.
 
     faction reads entity.identity.properties["faction_id"] (the real, content-driven faction
@@ -145,12 +157,17 @@ def _entity_metadata(world_state) -> dict[int, dict]:
     inspection to collapse all real per-world faction diversity into 4 buckets).
     region reads entity.identity.properties["spawn_region"] directly -- no
     LegalityServiceV2.get_region_for_position spatial lookup needed, confirmed always present.
+
+    `entities` is a raw dict[int, EntityState] (e.g. world_state.entities or a post-run
+    kernel.state.entities snapshot) -- not a world_state wrapper -- so this can be reused for
+    both the pre-run and post-run metadata sources (TCK-20260808-LIFECYCLE-SCORE-MIDRUN-SPAWN-
+    METADATA-GAP).
     """
     from src.core.enums import EntityRole
 
     role_names = {int(r): r.name for r in EntityRole}
     metadata: dict[int, dict] = {}
-    for eid, ent in world_state.entities.items():
+    for eid, ent in entities.items():
         props = getattr(ent.identity, "properties", None) or {}
         metadata[eid] = {
             "role": role_names.get(int(ent.identity.role), str(int(ent.identity.role))),
@@ -161,7 +178,7 @@ def _entity_metadata(world_state) -> dict[int, dict]:
     return metadata
 
 
-def extract_entity_paths(run_dir: str, world_state) -> dict[int, dict]:
+def extract_entity_paths(run_dir: str, world_state, final_entities: dict | None = None) -> dict[int, dict]:
     """Read simulation_events.jsonl, group by entity_id, join real metadata.
 
     Raw JSONL event_type values are the PRE-translation, engine-emitted names (e.g.
@@ -170,11 +187,20 @@ def extract_entity_paths(run_dir: str, world_state) -> dict[int, dict]:
     QualityHub._translate() directly (real reuse, not a hand-duplicated partial alias list) so
     this tool's bucket mapping -- built from the translated/snake_case entity.yaml catalog --
     actually matches what's really in the JSONL.
+
+    `final_entities` (optional): the real, post-run entity map from `_run_for_analysis()`.
+    Entities present in the pre-run `world_state` keep their pre-run (spawn-time) metadata
+    unchanged; entities missing from it (born mid-run) are resolved from `final_entities` instead
+    of falling back to None. Entities in neither snapshot (born AND removed within the observed
+    window -- a real, disclosed residual limitation, see investigation.md) still fall back to
+    None. Omit `final_entities` (e.g. `--run-dir` mode, scoring a historical run with no live
+    Kernel) to keep the old pre-run-only behavior.
     """
     from src.simulation_quality.quality_hub import QualityHub
     from src.observability.events import ObservabilityEventEnvelope
 
-    metadata = _entity_metadata(world_state)
+    metadata = _entity_metadata(world_state.entities)
+    final_metadata = _entity_metadata(final_entities) if final_entities else {}
     jsonl_path = os.path.join(run_dir, "simulation_events.jsonl")
     paths: dict[int, list] = {}
     with open(jsonl_path, encoding="utf-8") as fh:
@@ -198,9 +224,12 @@ def extract_entity_paths(run_dir: str, world_state) -> dict[int, dict]:
     result: dict[int, dict] = {}
     for eid, events in paths.items():
         events_sorted = sorted(events, key=lambda x: (x[0] if x[0] is not None else 0))
+        entity_metadata = metadata.get(eid) or final_metadata.get(eid) or {
+            "role": None, "faction": None, "kind": None, "region": None,
+        }
         result[eid] = {
             "events": events_sorted,
-            "metadata": metadata.get(eid, {"role": None, "faction": None, "kind": None, "region": None}),
+            "metadata": entity_metadata,
         }
     return result
 
@@ -448,8 +477,9 @@ def score_run(
     weights: dict,
     group_by: Optional[list[str]] = None,
     world_name: Optional[str] = None,
+    final_entities: Optional[dict] = None,
 ) -> dict:
-    entity_paths = extract_entity_paths(run_dir, world_state)
+    entity_paths = extract_entity_paths(run_dir, world_state, final_entities=final_entities)
     entity_metrics = {
         eid: compute_entity_metrics(ep, weights, ticks) for eid, ep in entity_paths.items()
     }
@@ -478,6 +508,7 @@ def main() -> int:
     sys.path.insert(0, str(_TOOLS_DIR))
     from calibrate_simq import _load_world_state
 
+    final_entities = None
     if args.run_dir:
         run_dir = args.run_dir
         health = None
@@ -490,10 +521,13 @@ def main() -> int:
             print(json.dumps({"error": "--world is required"}))
             return 1
         obs_mode = args.obs_mode or weights["default_obs_mode"]
-        run_dir, health = _run_for_analysis(args.world, args.seed, args.ticks, obs_mode)
+        run_dir, health, final_entities = _run_for_analysis(args.world, args.seed, args.ticks, obs_mode)
         world_state, _report = _load_world_state(args.world, args.seed)
 
-    result = score_run(run_dir, world_state, args.ticks, weights, group_by=group_by, world_name=args.world)
+    result = score_run(
+        run_dir, world_state, args.ticks, weights, group_by=group_by, world_name=args.world,
+        final_entities=final_entities,
+    )
     if health is not None:
         result["run_health"] = health
 

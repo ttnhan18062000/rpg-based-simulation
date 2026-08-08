@@ -54,6 +54,12 @@ The JSON has 4 top-level sections:
   have fired yet, a different claim from "confirmed not stalling."
 - **`entity_metrics`**: per-entity, the 7 metrics plus `metadata` (role/faction/kind/region) and
   `confidence` markers on entropy/loop_score below the minimum-sample threshold.
+  **`metadata.role: None`** (grouped as `"None"` in `aggregation.groups`/`clustering.groups`)
+  should now be rare when driving a fresh run (`TCK-20260808-LIFECYCLE-SCORE-MIDRUN-SPAWN-
+  METADATA-GAP` resolves it for any entity present in the real post-run state) — if you still see
+  it, either the entity was born *and* removed entirely within the observed window (a real,
+  disclosed residual case), or you're scoring via `--run-dir` (no live Kernel to resolve post-run
+  metadata from, pre-run-only by design).
 - **`aggregation`**: `global` (mean+stdev per metric across the whole population),
   `zscores` (per entity, per metric, relative to the run's own population), and `groups` (same
   mean+stdev breakdown per role/faction/kind/region value).

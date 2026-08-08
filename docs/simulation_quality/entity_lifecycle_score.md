@@ -90,6 +90,19 @@ two of these are NOT what they first look like:
   closest real proxy for "race/species" this codebase has, not literal species. Disclosed as
   such, not overclaimed.
 
+**Mid-run-spawned entities** (`TCK-20260808-LIFECYCLE-SCORE-MIDRUN-SPAWN-METADATA-GAP`): real
+population growth during a run (via `SpawnService`/`BossService`/`RaidService`/`CampService`/
+`CalamityService`/`DemographicCycleService` — a real, multi-source mechanic, not one birth
+formula) used to leave newly-born entities with `role: None`/`faction: None`/`kind: None`/
+`region: None` in every grouped breakdown, since the metadata source was built once from the
+pre-run world snapshot. `_run_for_analysis()` now also captures the real, post-run entity map
+(`kernel.state.entities`, before shutdown) and `extract_entity_paths()` resolves any entity
+missing from the pre-run snapshot against it. **One real, disclosed residual limitation**: an
+entity both born and removed (death/despawn) entirely within the observed window still falls back
+to `None` — present in neither snapshot. This only affects driving a fresh run
+(`--world`/`--ticks`); `--run-dir` mode (scoring a historical run with no live Kernel) keeps the
+pre-run-only behavior, since there is no live `kernel.state` to read post-run metadata from.
+
 ## Population aggregation, grouping, and clustering
 
 For every metric: **mean and stdev**, globally and per group (`role`/`faction`/`kind`/`region`).

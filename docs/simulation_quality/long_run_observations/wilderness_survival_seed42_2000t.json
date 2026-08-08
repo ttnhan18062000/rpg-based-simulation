@@ -9,13 +9,13 @@
     "survival_triggered": false,
     "data_loss": false
   },
-  "simq_event_count": 18156,
+  "simq_event_count": 18150,
   "simq_report": {
-    "run_id": "run_1786183536_5169",
+    "run_id": "run_1786188794_5169",
     "tick_count": 2000,
-    "overall_score": 0.04791529368060281,
+    "overall_score": 0.047933954970530004,
     "overall_grade": "B",
-    "generated_at": "2026-08-08T10:06:17.913913+00:00",
+    "generated_at": "2026-08-08T11:33:56.732826+00:00",
     "pillars": {
       "COGNITION": {
         "raw_score": 0.0,
@@ -50,7 +50,7 @@
         "worst_events": [
           {
             "tick": 846,
-            "event_id": "98e79267df014e08b03a61474395d399",
+            "event_id": "3d9ed2b8405f4db592b12c3f2c587ea7",
             "pillar": "COMBAT",
             "delta": -15.0,
             "reason": "zero combat events in hostile world by tick threshold",
@@ -63,7 +63,7 @@
           },
           {
             "tick": 1551,
-            "event_id": "d95036cf41c9449daba489c7b084b897",
+            "event_id": "c468b307110c45a8a70e664e9efd2fc3",
             "pillar": "COMBAT",
             "delta": -1.0,
             "reason": "entity killed in combat",
@@ -76,7 +76,7 @@
           },
           {
             "tick": 1551,
-            "event_id": "af9dc24fa96c47c8b690d97a893b369c",
+            "event_id": "f5137a45ee754829a0dd6a504be9ee84",
             "pillar": "COMBAT",
             "delta": -1.0,
             "reason": "entity killed in combat",
@@ -113,7 +113,7 @@
       },
       "PROGRESSION": {
         "raw_score": -203.0,
-        "normalized_score": -0.11246537396121883,
+        "normalized_score": -0.1122787610619469,
         "grade": "C",
         "event_count": 23,
         "negative_count": 22,
@@ -125,7 +125,7 @@
         "worst_events": [
           {
             "tick": 302,
-            "event_id": "f13ab2dd54c84ab69f83d1c2f3ade82e",
+            "event_id": "53b5ed434234430a9dc9fb25a83862d7",
             "pillar": "PROGRESSION",
             "delta": -10.0,
             "reason": "entity's level/skills/gear/gold all flat for the stall window",
@@ -138,7 +138,7 @@
           },
           {
             "tick": 302,
-            "event_id": "da1b94ca7dff43c8a9ba27ca84726016",
+            "event_id": "ea9a0bcd85a04139bfcc5d5141849155",
             "pillar": "PROGRESSION",
             "delta": -10.0,
             "reason": "entity's level/skills/gear/gold all flat for the stall window",
@@ -151,7 +151,7 @@
           },
           {
             "tick": 302,
-            "event_id": "3211468527f6447d9a78de05554b65f4",
+            "event_id": "71e662e0a2cd4ca092f981873375afbe",
             "pillar": "PROGRESSION",
             "delta": -10.0,
             "reason": "entity's level/skills/gear/gold all flat for the stall window",
@@ -164,7 +164,7 @@
           },
           {
             "tick": 302,
-            "event_id": "2ba635ffcfe44439b875453843a7dd79",
+            "event_id": "ecdb194918ed41de8e99e9d3fff828d1",
             "pillar": "PROGRESSION",
             "delta": -10.0,
             "reason": "entity's level/skills/gear/gold all flat for the stall window",
@@ -177,7 +177,7 @@
           },
           {
             "tick": 302,
-            "event_id": "dc08f42d07f24563ab0fc14ede07ebbb",
+            "event_id": "0039ecd7673f4e55b413c9e9691d0040",
             "pillar": "PROGRESSION",
             "delta": -10.0,
             "reason": "entity's level/skills/gear/gold all flat for the stall window",
@@ -190,7 +190,7 @@
           },
           {
             "tick": 302,
-            "event_id": "c0172d0eeec6461380c142cedc1b583c",
+            "event_id": "5bcc03e53a9c4043bc1a4b8c5009bcdc",
             "pillar": "PROGRESSION",
             "delta": -10.0,
             "reason": "entity's level/skills/gear/gold all flat for the stall window",
@@ -203,7 +203,7 @@
           },
           {
             "tick": 302,
-            "event_id": "2d3098d25e0746bcb1474175a767e21d",
+            "event_id": "0fae350ba43940db8f8d5f4d2cadaefc",
             "pillar": "PROGRESSION",
             "delta": -10.0,
             "reason": "entity's level/skills/gear/gold all flat for the stall window",
@@ -216,7 +216,7 @@
           },
           {
             "tick": 302,
-            "event_id": "194f283bfb94416eb5770df8db170131",
+            "event_id": "7e567bf86a704b21af65b0c1a1b015f3",
             "pillar": "PROGRESSION",
             "delta": -10.0,
             "reason": "entity's level/skills/gear/gold all flat for the stall window",
@@ -229,7 +229,7 @@
           },
           {
             "tick": 302,
-            "event_id": "a2724ba3a40c411cb60ce760f4ce4982",
+            "event_id": "6e77494cb7314e73b7540c6c8f554eae",
             "pillar": "PROGRESSION",
             "delta": -10.0,
             "reason": "entity's level/skills/gear/gold all flat for the stall window",
@@ -242,7 +242,7 @@
           },
           {
             "tick": 302,
-            "event_id": "f2a386462f074ca1b7c4c1130cfaa4c2",
+            "event_id": "7d72e7adedbe40a589dae67670dbfa7f",
             "pillar": "PROGRESSION",
             "delta": -10.0,
             "reason": "entity's level/skills/gear/gold all flat for the stall window",
@@ -255,7 +255,7 @@
           },
           {
             "tick": 302,
-            "event_id": "9d64a94c32864a76945efb097b3e9dff",
+            "event_id": "25547791632d41ed8a8e4f9133cc533c",
             "pillar": "PROGRESSION",
             "delta": -10.0,
             "reason": "entity's level/skills/gear/gold all flat for the stall window",
@@ -268,7 +268,7 @@
           },
           {
             "tick": 803,
-            "event_id": "1e5d91f44f00477080258a8d1d35ea81",
+            "event_id": "6129537e62384f1b97e8360c47219ede",
             "pillar": "PROGRESSION",
             "delta": -10.0,
             "reason": "entity's level/skills/gear/gold all flat for the stall window",
@@ -281,7 +281,7 @@
           },
           {
             "tick": 804,
-            "event_id": "968b57b6d95b4b85b0aabb91b1b41f93",
+            "event_id": "a09f20465399451fa97e92b1eface6cd",
             "pillar": "PROGRESSION",
             "delta": -10.0,
             "reason": "entity's level/skills/gear/gold all flat for the stall window",
@@ -294,7 +294,7 @@
           },
           {
             "tick": 805,
-            "event_id": "bdad8882eb2c44338cb4fe27b9c14815",
+            "event_id": "38cd60e9836546538d9c19bc02e3873d",
             "pillar": "PROGRESSION",
             "delta": -10.0,
             "reason": "entity's level/skills/gear/gold all flat for the stall window",
@@ -307,7 +307,7 @@
           },
           {
             "tick": 1303,
-            "event_id": "b8cf310425d140bfa08962b8527460b5",
+            "event_id": "76ab5ce361ec467e809b1854fb057c6b",
             "pillar": "PROGRESSION",
             "delta": -10.0,
             "reason": "entity's level/skills/gear/gold all flat for the stall window",
@@ -320,7 +320,7 @@
           },
           {
             "tick": 1304,
-            "event_id": "4b361e2980ce402e8492f89e7a41f70b",
+            "event_id": "0b2aa083995943fe8009393a64f6461a",
             "pillar": "PROGRESSION",
             "delta": -10.0,
             "reason": "entity's level/skills/gear/gold all flat for the stall window",
@@ -333,7 +333,7 @@
           },
           {
             "tick": 1305,
-            "event_id": "186617129c824814b3bbc417086a7fde",
+            "event_id": "e94634d21d4442779871117100390095",
             "pillar": "PROGRESSION",
             "delta": -10.0,
             "reason": "entity's level/skills/gear/gold all flat for the stall window",
@@ -345,47 +345,8 @@
             ]
           },
           {
-            "tick": 1803,
-            "event_id": "d1dbc478578e4abdb641e3edc8afebc8",
-            "pillar": "PROGRESSION",
-            "delta": -10.0,
-            "reason": "entity's level/skills/gear/gold all flat for the stall window",
-            "event_type": "capability_growth_stalled",
-            "entity_id": 20,
-            "region_id": null,
-            "tags": [
-              "capability_growth_stalled"
-            ]
-          },
-          {
-            "tick": 1804,
-            "event_id": "240d26cc449e4d73b540c394464d652c",
-            "pillar": "PROGRESSION",
-            "delta": -10.0,
-            "reason": "entity's level/skills/gear/gold all flat for the stall window",
-            "event_type": "capability_growth_stalled",
-            "entity_id": 19,
-            "region_id": null,
-            "tags": [
-              "capability_growth_stalled"
-            ]
-          },
-          {
             "tick": 1805,
-            "event_id": "59dbad621cd24156a38285319f285cdd",
-            "pillar": "PROGRESSION",
-            "delta": -10.0,
-            "reason": "entity's level/skills/gear/gold all flat for the stall window",
-            "event_type": "capability_growth_stalled",
-            "entity_id": 18,
-            "region_id": null,
-            "tags": [
-              "capability_growth_stalled"
-            ]
-          },
-          {
-            "tick": 1805,
-            "event_id": "f0c9b3dc34574d6a9d52876992328e65",
+            "event_id": "590e9865bb7b48068e41ec17507a037f",
             "pillar": "PROGRESSION",
             "delta": -10.0,
             "reason": "entity's level/skills/gear/gold all flat for the stall window",
@@ -397,8 +358,47 @@
             ]
           },
           {
+            "tick": 1806,
+            "event_id": "b65067ae973540798fc88b59059e483d",
+            "pillar": "PROGRESSION",
+            "delta": -10.0,
+            "reason": "entity's level/skills/gear/gold all flat for the stall window",
+            "event_type": "capability_growth_stalled",
+            "entity_id": 20,
+            "region_id": null,
+            "tags": [
+              "capability_growth_stalled"
+            ]
+          },
+          {
+            "tick": 1807,
+            "event_id": "60d284be79e943c19f28cc88fd9f3dc8",
+            "pillar": "PROGRESSION",
+            "delta": -10.0,
+            "reason": "entity's level/skills/gear/gold all flat for the stall window",
+            "event_type": "capability_growth_stalled",
+            "entity_id": 19,
+            "region_id": null,
+            "tags": [
+              "capability_growth_stalled"
+            ]
+          },
+          {
+            "tick": 1808,
+            "event_id": "f9626333f50e40f3b647f5e3dc7d17e2",
+            "pillar": "PROGRESSION",
+            "delta": -10.0,
+            "reason": "entity's level/skills/gear/gold all flat for the stall window",
+            "event_type": "capability_growth_stalled",
+            "entity_id": 18,
+            "region_id": null,
+            "tags": [
+              "capability_growth_stalled"
+            ]
+          },
+          {
             "tick": 201,
-            "event_id": "3fc79f7efd424389b9b23142fc77b8f5",
+            "event_id": "b930805186c34e98bbff7fa46bc73076",
             "pillar": "PROGRESSION",
             "delta": -8.0,
             "reason": "XP gain rate dropped to zero after tick gate",
@@ -771,9 +771,9 @@
         "conclusion_coherence": true,
         "silent_from_spawn": false,
         "metadata": {
-          "role": null,
+          "role": "MONSTER",
           "faction": null,
-          "kind": null,
+          "kind": "goblin_raider",
           "region": null
         }
       },
@@ -798,9 +798,9 @@
         "conclusion_coherence": true,
         "silent_from_spawn": false,
         "metadata": {
-          "role": null,
+          "role": "MONSTER",
           "faction": null,
-          "kind": null,
+          "kind": "goblin_raider",
           "region": null
         }
       },
@@ -825,9 +825,9 @@
         "conclusion_coherence": true,
         "silent_from_spawn": false,
         "metadata": {
-          "role": null,
+          "role": "MONSTER",
           "faction": null,
-          "kind": null,
+          "kind": "goblin_raider",
           "region": null
         }
       },
@@ -852,15 +852,15 @@
         "conclusion_coherence": true,
         "silent_from_spawn": false,
         "metadata": {
-          "role": null,
+          "role": "MONSTER",
           "faction": null,
-          "kind": null,
+          "kind": "goblin_raider",
           "region": null
         }
       },
       "16": {
-        "path_length": 1782,
-        "path_density": 0.891,
+        "path_length": 1784,
+        "path_density": 0.892,
         "phase_coverage": 0.6,
         "buckets_touched": [
           "COMBAT",
@@ -870,24 +870,24 @@
           "STRATEGY_COGNITION",
           "VITALS"
         ],
-        "path_entropy": 0.4765,
+        "path_entropy": 0.4768,
         "path_entropy_confidence": "normal",
-        "loop_score": 0.4733,
+        "loop_score": 0.4773,
         "loop_score_period": 3,
         "loop_score_confidence": "normal",
         "growth_trajectory": -0.0011,
         "conclusion_coherence": true,
         "silent_from_spawn": false,
         "metadata": {
-          "role": null,
+          "role": "MONSTER",
           "faction": null,
-          "kind": null,
+          "kind": "goblin_raider",
           "region": null
         }
       },
       "17": {
-        "path_length": 1795,
-        "path_density": 0.8975,
+        "path_length": 1797,
+        "path_density": 0.8985,
         "phase_coverage": 0.6,
         "buckets_touched": [
           "COMBAT",
@@ -897,24 +897,24 @@
           "STRATEGY_COGNITION",
           "VITALS"
         ],
-        "path_entropy": 0.4788,
+        "path_entropy": 0.479,
         "path_entropy_confidence": "normal",
-        "loop_score": 0.4827,
+        "loop_score": 0.4889,
         "loop_score_period": 3,
         "loop_score_confidence": "normal",
         "growth_trajectory": -0.0011,
         "conclusion_coherence": true,
         "silent_from_spawn": false,
         "metadata": {
-          "role": null,
+          "role": "MONSTER",
           "faction": null,
-          "kind": null,
+          "kind": "goblin_raider",
           "region": null
         }
       },
       "18": {
-        "path_length": 554,
-        "path_density": 0.277,
+        "path_length": 553,
+        "path_density": 0.2765,
         "phase_coverage": 0.6,
         "buckets_touched": [
           "COMBAT",
@@ -924,24 +924,24 @@
           "STRATEGY_COGNITION",
           "VITALS"
         ],
-        "path_entropy": 0.5063,
+        "path_entropy": 0.5113,
         "path_entropy_confidence": "normal",
-        "loop_score": 0.5868,
+        "loop_score": 0.652,
         "loop_score_period": 7,
         "loop_score_confidence": "normal",
         "growth_trajectory": -0.0036,
         "conclusion_coherence": true,
         "silent_from_spawn": false,
         "metadata": {
-          "role": null,
+          "role": "MONSTER",
           "faction": null,
-          "kind": null,
+          "kind": "goblin_raider",
           "region": null
         }
       },
       "19": {
-        "path_length": 556,
-        "path_density": 0.278,
+        "path_length": 555,
+        "path_density": 0.2775,
         "phase_coverage": 0.6,
         "buckets_touched": [
           "COMBAT",
@@ -951,24 +951,24 @@
           "STRATEGY_COGNITION",
           "VITALS"
         ],
-        "path_entropy": 0.5114,
+        "path_entropy": 0.5087,
         "path_entropy_confidence": "normal",
-        "loop_score": 0.561,
+        "loop_score": 0.6551,
         "loop_score_period": 7,
         "loop_score_confidence": "normal",
         "growth_trajectory": -0.0036,
         "conclusion_coherence": true,
         "silent_from_spawn": false,
         "metadata": {
-          "role": null,
+          "role": "MONSTER",
           "faction": null,
-          "kind": null,
+          "kind": "goblin_raider",
           "region": null
         }
       },
       "20": {
-        "path_length": 559,
-        "path_density": 0.2795,
+        "path_length": 551,
+        "path_density": 0.2755,
         "phase_coverage": 0.6,
         "buckets_touched": [
           "COMBAT",
@@ -978,24 +978,24 @@
           "STRATEGY_COGNITION",
           "VITALS"
         ],
-        "path_entropy": 0.512,
+        "path_entropy": 0.5081,
         "path_entropy_confidence": "normal",
-        "loop_score": 0.5761,
+        "loop_score": 0.6489,
         "loop_score_period": 7,
         "loop_score_confidence": "normal",
         "growth_trajectory": -0.0036,
         "conclusion_coherence": true,
         "silent_from_spawn": false,
         "metadata": {
-          "role": null,
+          "role": "MONSTER",
           "faction": null,
-          "kind": null,
+          "kind": "goblin_raider",
           "region": null
         }
       },
       "21": {
-        "path_length": 563,
-        "path_density": 0.2815,
+        "path_length": 561,
+        "path_density": 0.2805,
         "phase_coverage": 0.6,
         "buckets_touched": [
           "COMBAT",
@@ -1005,18 +1005,18 @@
           "STRATEGY_COGNITION",
           "VITALS"
         ],
-        "path_entropy": 0.5064,
+        "path_entropy": 0.5335,
         "path_entropy_confidence": "normal",
-        "loop_score": 0.6223,
+        "loop_score": 0.6137,
         "loop_score_period": 7,
         "loop_score_confidence": "normal",
         "growth_trajectory": -0.0036,
         "conclusion_coherence": true,
         "silent_from_spawn": false,
         "metadata": {
-          "role": null,
+          "role": "MONSTER",
           "faction": null,
-          "kind": null,
+          "kind": "goblin_raider",
           "region": null
         }
       }
@@ -1025,24 +1025,24 @@
       "global": {
         "entity_count": 21,
         "path_length": {
-          "mean": 856.1905,
-          "stdev": 537.1589
+          "mean": 855.8095,
+          "stdev": 537.8086
         },
         "path_density": {
-          "mean": 0.4281,
-          "stdev": 0.2686
+          "mean": 0.4279,
+          "stdev": 0.2689
         },
         "phase_coverage": {
           "mean": 0.5476,
           "stdev": 0.0499
         },
         "path_entropy": {
-          "mean": 0.4748,
-          "stdev": 0.0479
+          "mean": 0.476,
+          "stdev": 0.049
         },
         "loop_score": {
-          "mean": 0.7277,
-          "stdev": 0.1809
+          "mean": 0.7389,
+          "stdev": 0.1729
         },
         "growth_trajectory": {
           "mean": -0.0031,
@@ -1052,171 +1052,171 @@
       },
       "zscores": {
         "1": {
-          "path_length": -0.8586,
-          "path_density": -0.8586,
+          "path_length": -0.8568,
+          "path_density": -0.8568,
           "phase_coverage": -0.9535,
-          "path_entropy": -2.586,
-          "loop_score": 0.9779,
+          "path_entropy": -2.5518,
+          "loop_score": 0.9586,
           "growth_trajectory": -1.279
         },
         "2": {
-          "path_length": -0.261,
-          "path_density": -0.261,
+          "path_length": -0.26,
+          "path_density": -0.26,
           "phase_coverage": -0.9535,
-          "path_entropy": -0.0879,
-          "loop_score": 0.9436,
+          "path_entropy": -0.1112,
+          "loop_score": 0.9227,
           "growth_trajectory": 0.2241
         },
         "3": {
-          "path_length": -0.7506,
-          "path_density": -0.7506,
+          "path_length": -0.749,
+          "path_density": -0.749,
           "phase_coverage": -0.9535,
-          "path_entropy": -1.644,
-          "loop_score": 0.9353,
+          "path_entropy": -1.6314,
+          "loop_score": 0.9141,
           "growth_trajectory": -0.8216
         },
         "4": {
-          "path_length": -0.3969,
-          "path_density": -0.3969,
+          "path_length": -0.3957,
+          "path_density": -0.3957,
           "phase_coverage": -0.9535,
-          "path_entropy": -0.4513,
-          "loop_score": 1.01,
+          "path_entropy": -0.4662,
+          "loop_score": 0.9921,
           "growth_trajectory": 0.028
         },
         "5": {
-          "path_length": -0.3038,
-          "path_density": -0.3038,
+          "path_length": -0.3027,
+          "path_density": -0.3027,
           "phase_coverage": -0.9535,
-          "path_entropy": -0.2529,
-          "loop_score": 0.9812,
+          "path_entropy": -0.2724,
+          "loop_score": 0.9621,
           "growth_trajectory": 0.1587
         },
         "6": {
-          "path_length": -0.315,
-          "path_density": -0.315,
+          "path_length": -0.3139,
+          "path_density": -0.3139,
           "phase_coverage": -0.9535,
-          "path_entropy": -0.207,
-          "loop_score": 0.9685,
+          "path_entropy": -0.2275,
+          "loop_score": 0.9488,
           "growth_trajectory": 0.1587
         },
         "7": {
-          "path_length": -0.7469,
-          "path_density": -0.7469,
+          "path_length": -0.7453,
+          "path_density": -0.7453,
           "phase_coverage": -0.9535,
-          "path_entropy": -0.75,
-          "loop_score": 0.728,
+          "path_entropy": -0.758,
+          "loop_score": 0.6972,
           "growth_trajectory": -0.8216
         },
         "8": {
-          "path_length": -0.4192,
-          "path_density": -0.4192,
+          "path_length": -0.418,
+          "path_density": -0.418,
           "phase_coverage": -0.9535,
-          "path_entropy": 0.2504,
-          "loop_score": 0.8496,
+          "path_entropy": 0.2194,
+          "loop_score": 0.8244,
           "growth_trajectory": -0.0373
         },
         "9": {
-          "path_length": 1.2395,
-          "path_density": 1.2395,
+          "path_length": 1.2387,
+          "path_density": 1.2387,
           "phase_coverage": -0.9535,
-          "path_entropy": -0.7124,
-          "loop_score": 0.9691,
+          "path_entropy": -0.7213,
+          "loop_score": 0.9493,
           "growth_trajectory": 1.2043
         },
         "10": {
-          "path_length": -0.5421,
-          "path_density": -0.5421,
+          "path_length": -0.5407,
+          "path_density": -0.5407,
           "phase_coverage": -0.9535,
-          "path_entropy": -0.1965,
-          "loop_score": 0.9011,
+          "path_entropy": -0.2173,
+          "loop_score": 0.8782,
           "growth_trajectory": -0.2334
         },
         "11": {
-          "path_length": -0.5086,
-          "path_density": -0.5086,
+          "path_length": -0.5073,
+          "path_density": -0.5073,
           "phase_coverage": -0.9535,
-          "path_entropy": 0.1502,
-          "loop_score": 0.7855,
+          "path_entropy": 0.1215,
+          "loop_score": 0.7573,
           "growth_trajectory": -0.168
         },
         "12": {
-          "path_length": -1.1062,
-          "path_density": -1.1062,
+          "path_length": -1.1041,
+          "path_density": -1.1041,
           "phase_coverage": 1.0488,
-          "path_entropy": 2.4749,
-          "loop_score": -0.1423,
+          "path_entropy": 2.3927,
+          "loop_score": -0.2133,
           "growth_trajectory": -2.9128
         },
         "13": {
-          "path_length": 2.0028,
-          "path_density": 2.0028,
+          "path_length": 2.0011,
+          "path_density": 2.0011,
           "phase_coverage": 1.0488,
-          "path_entropy": -0.0963,
-          "loop_score": -1.2781,
+          "path_entropy": -0.1193,
+          "loop_score": -1.4013,
           "growth_trajectory": 1.4004
         },
         "14": {
-          "path_length": 1.9749,
-          "path_density": 1.9749,
+          "path_length": 1.9732,
+          "path_density": 1.9732,
           "phase_coverage": 1.0488,
-          "path_entropy": -0.2279,
-          "loop_score": -1.345,
+          "path_entropy": -0.2479,
+          "loop_score": -1.4713,
           "growth_trajectory": 1.4004
         },
         "15": {
-          "path_length": -0.2591,
-          "path_density": -0.2591,
+          "path_length": -0.2581,
+          "path_density": -0.2581,
           "phase_coverage": 1.0488,
-          "path_entropy": 1.3595,
-          "loop_score": -1.3997,
+          "path_entropy": 1.303,
+          "loop_score": -1.5286,
           "growth_trajectory": 0.2241
         },
         "16": {
-          "path_length": 1.7235,
-          "path_density": 1.7235,
+          "path_length": 1.7259,
+          "path_density": 1.7259,
           "phase_coverage": 1.0488,
-          "path_entropy": 0.0353,
-          "loop_score": -1.4069,
+          "path_entropy": 0.0154,
+          "loop_score": -1.513,
           "growth_trajectory": 1.335
         },
         "17": {
-          "path_length": 1.7477,
-          "path_density": 1.7477,
+          "path_length": 1.75,
+          "path_density": 1.75,
           "phase_coverage": 1.0488,
-          "path_entropy": 0.0833,
-          "loop_score": -1.3549,
+          "path_entropy": 0.0602,
+          "loop_score": -1.4459,
           "growth_trajectory": 1.335
         },
         "18": {
-          "path_length": -0.5626,
-          "path_density": -0.5626,
+          "path_length": -0.563,
+          "path_density": -0.563,
           "phase_coverage": 1.0488,
-          "path_entropy": 0.6577,
-          "loop_score": -0.7793,
+          "path_entropy": 0.7194,
+          "loop_score": -0.5025,
           "growth_trajectory": -0.2987
         },
         "19": {
-          "path_length": -0.5588,
-          "path_density": -0.5588,
+          "path_length": -0.5593,
+          "path_density": -0.5593,
           "phase_coverage": 1.0488,
-          "path_entropy": 0.7642,
-          "loop_score": -0.922,
+          "path_entropy": 0.6663,
+          "loop_score": -0.4845,
           "growth_trajectory": -0.2987
         },
         "20": {
-          "path_length": -0.5533,
-          "path_density": -0.5533,
+          "path_length": -0.5668,
+          "path_density": -0.5668,
           "phase_coverage": 1.0488,
-          "path_entropy": 0.7768,
-          "loop_score": -0.8385,
+          "path_entropy": 0.6541,
+          "loop_score": -0.5204,
           "growth_trajectory": -0.2987
         },
         "21": {
-          "path_length": -0.5458,
-          "path_density": -0.5458,
+          "path_length": -0.5482,
+          "path_density": -0.5482,
           "phase_coverage": 1.0488,
-          "path_entropy": 0.6598,
-          "loop_score": -0.583,
+          "path_entropy": 1.1724,
+          "loop_score": -0.724,
           "growth_trajectory": -0.2987
         }
       },
@@ -1250,27 +1250,27 @@
             },
             "conclusion_coherence_rate": 1.0
           },
-          "None": {
+          "MONSTER": {
             "entity_count": 10,
             "path_length": {
-              "mean": 1063.7,
-              "stdev": 657.1697
+              "mean": 1062.9,
+              "stdev": 658.5365
             },
             "path_density": {
-              "mean": 0.5319,
-              "stdev": 0.3286
+              "mean": 0.5314,
+              "stdev": 0.3293
             },
             "phase_coverage": {
               "mean": 0.6,
               "stdev": 0.0
             },
             "path_entropy": {
-              "mean": 0.5059,
-              "stdev": 0.0367
+              "mean": 0.5085,
+              "stdev": 0.0376
             },
             "loop_score": {
-              "mean": 0.546,
-              "stdev": 0.0732
+              "mean": 0.5694,
+              "stdev": 0.0875
             },
             "growth_trajectory": {
               "mean": -0.0029,
@@ -1339,24 +1339,24 @@
           "None": {
             "entity_count": 10,
             "path_length": {
-              "mean": 1063.7,
-              "stdev": 657.1697
+              "mean": 1062.9,
+              "stdev": 658.5365
             },
             "path_density": {
-              "mean": 0.5319,
-              "stdev": 0.3286
+              "mean": 0.5314,
+              "stdev": 0.3293
             },
             "phase_coverage": {
               "mean": 0.6,
               "stdev": 0.0
             },
             "path_entropy": {
-              "mean": 0.5059,
-              "stdev": 0.0367
+              "mean": 0.5085,
+              "stdev": 0.0376
             },
             "loop_score": {
-              "mean": 0.546,
-              "stdev": 0.0732
+              "mean": 0.5694,
+              "stdev": 0.0875
             },
             "growth_trajectory": {
               "mean": -0.0029,
@@ -1450,27 +1450,27 @@
             },
             "conclusion_coherence_rate": 1.0
           },
-          "None": {
+          "goblin_raider": {
             "entity_count": 10,
             "path_length": {
-              "mean": 1063.7,
-              "stdev": 657.1697
+              "mean": 1062.9,
+              "stdev": 658.5365
             },
             "path_density": {
-              "mean": 0.5319,
-              "stdev": 0.3286
+              "mean": 0.5314,
+              "stdev": 0.3293
             },
             "phase_coverage": {
               "mean": 0.6,
               "stdev": 0.0
             },
             "path_entropy": {
-              "mean": 0.5059,
-              "stdev": 0.0367
+              "mean": 0.5085,
+              "stdev": 0.0376
             },
             "loop_score": {
-              "mean": 0.546,
-              "stdev": 0.0732
+              "mean": 0.5694,
+              "stdev": 0.0875
             },
             "growth_trajectory": {
               "mean": -0.0029,
@@ -1539,24 +1539,24 @@
           "None": {
             "entity_count": 10,
             "path_length": {
-              "mean": 1063.7,
-              "stdev": 657.1697
+              "mean": 1062.9,
+              "stdev": 658.5365
             },
             "path_density": {
-              "mean": 0.5319,
-              "stdev": 0.3286
+              "mean": 0.5314,
+              "stdev": 0.3293
             },
             "phase_coverage": {
               "mean": 0.6,
               "stdev": 0.0
             },
             "path_entropy": {
-              "mean": 0.5059,
-              "stdev": 0.0367
+              "mean": 0.5085,
+              "stdev": 0.0376
             },
             "loop_score": {
-              "mean": 0.546,
-              "stdev": 0.0732
+              "mean": 0.5694,
+              "stdev": 0.0875
             },
             "growth_trajectory": {
               "mean": -0.0029,
@@ -1603,7 +1603,7 @@
             "dominant_shape_count": 10,
             "dominant_shape_share": 0.9091
           },
-          "None": {
+          "MONSTER": {
             "entity_count": 10,
             "distinct_shapes": 3,
             "dominant_shape": [
@@ -1618,8 +1618,8 @@
               "stamina_changed",
               "strategic_goal_changed"
             ],
-            "dominant_shape_count": 6,
-            "dominant_shape_share": 0.6
+            "dominant_shape_count": 5,
+            "dominant_shape_share": 0.5
           }
         },
         "faction": {
@@ -1670,8 +1670,8 @@
               "stamina_changed",
               "strategic_goal_changed"
             ],
-            "dominant_shape_count": 6,
-            "dominant_shape_share": 0.6
+            "dominant_shape_count": 5,
+            "dominant_shape_share": 0.5
           }
         },
         "kind": {
@@ -1723,7 +1723,7 @@
             "dominant_shape_count": 1,
             "dominant_shape_share": 1.0
           },
-          "None": {
+          "goblin_raider": {
             "entity_count": 10,
             "distinct_shapes": 3,
             "dominant_shape": [
@@ -1738,8 +1738,8 @@
               "stamina_changed",
               "strategic_goal_changed"
             ],
-            "dominant_shape_count": 6,
-            "dominant_shape_share": 0.6
+            "dominant_shape_count": 5,
+            "dominant_shape_share": 0.5
           }
         },
         "region": {
@@ -1790,8 +1790,8 @@
               "stamina_changed",
               "strategic_goal_changed"
             ],
-            "dominant_shape_count": 6,
-            "dominant_shape_share": 0.6
+            "dominant_shape_count": 5,
+            "dominant_shape_share": 0.5
           }
         }
       }

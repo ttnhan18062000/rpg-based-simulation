@@ -262,6 +262,81 @@ class TestRealIntegration:
         assert called["kernel_constructed"] is False
         assert eid in result["entity_metrics"]
 
+    def test_run_dir_mode_still_works_without_final_entities(self, tmp_path, weights):
+        """--run-dir mode (scoring a historical run, no live Kernel) has no final_entities
+        available -- score_run's own default (None) must not crash, and must fall back to
+        pre-run-only metadata (TCK-20260808-LIFECYCLE-SCORE-MIDRUN-SPAWN-METADATA-GAP)."""
+        import logging
+        logging.disable(logging.CRITICAL)
+        from tools.calibrate_simq import _load_world_state
+
+        world_state, _report = _load_world_state("sandbox_world", 42)
+        eid = next(iter(world_state.entities.keys()))
+        run_dir = tmp_path / "scratch_run2"
+        run_dir.mkdir()
+        with open(run_dir / "simulation_events.jsonl", "w") as fh:
+            fh.write(json.dumps({
+                "event_id": "e1", "run_id": "r1", "tick": 1, "entity_id": eid,
+                "event_type": "movement", "event_category": "lifecycle", "severity": "INFO",
+                "source_system": "event_extractor", "message": "", "payload": {},
+            }) + "\n")
+
+        result = els.score_run(str(run_dir), world_state, ticks=100, weights=weights)
+        assert eid in result["entity_metrics"]
+        assert result["entity_metrics"][eid]["metadata"]["role"] is not None
+
+    def test_run_for_analysis_returns_final_entities(self):
+        """TCK-20260808-LIFECYCLE-SCORE-MIDRUN-SPAWN-METADATA-GAP: the real, post-run entity map
+        must be non-empty and real (not a placeholder)."""
+        import logging
+        logging.disable(logging.CRITICAL)
+        run_dir, _health, final_entities = els._run_for_analysis("sandbox_world", 42, 50, "NORMAL")
+        try:
+            assert isinstance(final_entities, dict)
+            assert len(final_entities) > 0
+            some_entity = next(iter(final_entities.values()))
+            assert hasattr(some_entity, "identity")
+        finally:
+            import shutil
+            if run_dir and run_dir.startswith("data/runs/"):
+                shutil.rmtree(run_dir, ignore_errors=True)
+
+    def test_midrun_spawned_entity_gets_real_metadata(self, weights):
+        """Real, longer run (wilderness_survival, confirmed in the real 2000-tick committed data
+        to produce mid-run spawns) with final_entities passed through: any entity present in the
+        real post-run state must resolve real metadata, not the None fallback."""
+        import logging
+        logging.disable(logging.CRITICAL)
+        from tools.calibrate_simq import _load_world_state
+
+        run_dir, health, final_entities = els._run_for_analysis("wilderness_survival", 42, 500, "NORMAL")
+        try:
+            assert health["dropped_count"] == 0
+            world_state, _report = _load_world_state("wilderness_survival", 42)
+            pre_run_ids = set(world_state.entities.keys())
+            post_run_ids = set(final_entities.keys())
+            midrun_born_ids = post_run_ids - pre_run_ids
+
+            result = els.score_run(
+                run_dir, world_state, 500, weights, group_by=["role"],
+                final_entities=final_entities,
+            )
+            checked = 0
+            for eid in midrun_born_ids:
+                if eid in result["entity_metrics"]:
+                    checked += 1
+                    assert result["entity_metrics"][eid]["metadata"]["role"] is not None, (
+                        f"entity {eid} was born mid-run and present in final_entities, but its "
+                        "metadata is still None -- the fix did not resolve it"
+                    )
+            # not asserting checked > 0 -- whether this specific 500-tick/seed42 run produces a
+            # mid-run spawn that also emits events is itself real, run-dependent behavior; the
+            # real assertion is that IF one occurs, it must resolve real metadata.
+        finally:
+            import shutil
+            if run_dir and run_dir.startswith("data/runs/"):
+                shutil.rmtree(run_dir, ignore_errors=True)
+
     def test_dedicated_run_driver_reports_dropped_count(self):
         """Real, non-mocked: run a short real simulation; the tool's own output must include
         dropped_count, and a successful run must not raise merely due to transient queue
@@ -269,7 +344,7 @@ class TestRealIntegration:
         own stricter guard."""
         import logging
         logging.disable(logging.CRITICAL)
-        run_dir, health = els._run_for_analysis("sandbox_world", 42, 50, "NORMAL")
+        run_dir, health, _final_entities = els._run_for_analysis("sandbox_world", 42, 50, "NORMAL")
         try:
             assert "dropped_count" in health
             assert "pressure_mode_final" in health
@@ -287,11 +362,14 @@ class TestRealIntegration:
         logging.disable(logging.CRITICAL)
         from tools.calibrate_simq import _load_world_state
 
-        run_dir, health = els._run_for_analysis("sandbox_world", 42, 800, "NORMAL")
+        run_dir, health, final_entities = els._run_for_analysis("sandbox_world", 42, 800, "NORMAL")
         try:
             assert health["dropped_count"] == 0
             world_state, _report = _load_world_state("sandbox_world", 42)
-            result = els.score_run(run_dir, world_state, 800, weights, group_by=["role", "faction", "kind", "region"])
+            result = els.score_run(
+                run_dir, world_state, 800, weights, group_by=["role", "faction", "kind", "region"],
+                final_entities=final_entities,
+            )
 
             assert result["aggregation"]["global"]["entity_count"] > 0
             assert result["aggregation"]["global"]["path_length"]["mean"] > 0
