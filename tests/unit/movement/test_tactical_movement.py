@@ -59,6 +59,41 @@ def test_opportunity_attack_on_egress():
     assert upd1.combat.is_opportunity_attack is True
     assert upd1.combat.damage_taken > 0
 
+def test_opportunity_attack_lethal_grants_resource_transfers_to_attacker():
+    state = create_mock_state()
+    # Entity 1 at (5, 5) with 1 HP (any real hit is lethal), Hostile at (5, 6)
+    e1 = create_mock_entity(1, (5.0, 5.0), faction=0, role=1)  # MONSTER defender
+    e1 = replace(e1, combat=replace(e1.combat, hp=1))
+    e2 = create_mock_entity(2, (5.0, 6.0), faction=1)
+    state = replace(state, entities={1: e1, 2: e2})
+
+    # E1 proposes to move to (4, 5) - leaving engagement, taking a lethal opportunity attack
+    raw_update = StateUpdate(
+        entity_updates={
+            1: EntityUpdate(entity_id=1, navigation=NavigationUpdate(target_set=(4.0, 5.0), movement_mode_set=MovementMode.PURSUE))
+        }
+    )
+
+    refined = AuthoritativeApplyPipeline.refine(state, raw_update)
+
+    # Victim (E1): took the hit, but must NOT receive the kill reward meant for the attacker.
+    upd1 = refined.entity_updates.get(1)
+    assert upd1 is not None
+    assert upd1.combat is not None
+    assert upd1.combat.alive_set is False
+    assert not upd1.resource_transfers
+
+    # Attacker (E2): must receive the reward. AuthoritativeApplyPipeline.refine() runs the full
+    # pipeline, so by this point ResourceTransactionPhase has already resolved and cleared the
+    # intent (src/engine/economy.py:274) and EvolutionSystem has consolidated it into
+    # identity.evolution_points_delta — the final, authoritative signal that the reward actually
+    # reached the attacker (before the fix: this was always 0/None, since the intent was
+    # orphaned on the victim's own EntityUpdate.combat.resource_transfers and never resolved).
+    upd2 = refined.entity_updates.get(2)
+    assert upd2 is not None
+    assert upd2.identity is not None
+    assert upd2.identity.evolution_points_delta > 0
+
 def test_hold_mode_refuses_to_yield():
     state = create_mock_state()
     # E1 at (5, 5) with HOLD mode

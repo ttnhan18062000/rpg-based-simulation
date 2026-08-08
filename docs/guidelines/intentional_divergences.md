@@ -31,6 +31,7 @@ This document is the canonical record of intentional behavior shifts in `src` co
 | **World / Ecology** | Resource Ecology Kind-Emission Catalog Alignment | **Bug Fix** | RATIFIED |
 | **World / Environment** | Non-Native Faction Hazard Exposure (`town_council`/`bandit_road`) | **Intentional Gameplay Change** | RATIFIED |
 | **Engine / Observability** | DecisionTraceWriter Async Drain — Crash-Loss & Overflow-Drop Windows | **Bounded** | RATIFIED |
+| **Engine / Combat-Progression** | Opportunity-Attack Kill Reward Orphaned on the Victim | **Bug Fix** | RATIFIED |
 
 ---
 
@@ -470,6 +471,34 @@ This document is the canonical record of intentional behavior shifts in `src` co
   `tests/integration/content/test_resource_region_coverage_corpus.py` (parity ledger `TOWN-189`)
 - **Status**: ACTIVE
 
+### 2.32 River Ford Resource-Region Tag-Gap Fix (TCK-20260807-GUILD-SCARCITY-REGION-COVERAGE-GAP)
+- **Subsystem**: World / Resource Opportunities
+- **Old Behavior**: `herb_patch` had a resource node physically placed in `river_ford` by its
+  composing world module (`river_crossing.yaml`, `resources: {herb_patch: 3}`, composed by
+  `highland_traverse` and `quest_dense_frontier` — both new worlds authored after §2.28's
+  2026-07-06 audit), but the catalog's `source_region_tags` allowlist
+  (`data/content/world/resources.yaml`) omitted `river_ford`, so `ResourceOpportunityProvider`
+  silently returned zero `gather_resource` opportunities for entities standing there, and
+  `GuildAction.visit()`'s parallel scarcity computation silently reported `scarcity=0.0` ("fully
+  abundant") instead of the real, low-charge value. Same root mechanism as §2.28, discovered via a
+  fresh corpus-wide re-verification prompted by `GuildAction.visit()` becoming a live,
+  role-agnostic consumer of this same gating data
+  (`TCK-20260807-QUEST-GUILDACTION-DEAD-WIRING`) — the corpus had drifted with 3 new regions since
+  §2.28's audit (`river_ford`, plus `deep_forest`/`survivor_outpost`, see §2.29's 2026-08-07
+  update for those two).
+- **New Behavior**: purely additive extension of `metadata.source_region_tags`:
+  `herb_patch`: `["near_forest", "moon_cave", "hometown", "swamp_border_territory"]` →
+  `[..., "river_ford"]`.
+- **Rationale**: **Bug Fix** (same class as §2.26/§2.27/§2.28 — authoring staleness following new
+  world content, not a deliberate design decision). `river_crossing.yaml` declares
+  `biomes: ["near_forest"]` — a biome `herb_patch`'s `source_region_tags` already fully trusted —
+  and its own description explicitly states "Freshwater herb growth lines the banks," strong
+  self-evident authoring intent, matching the evidentiary bar §2.28 used for its own fixes.
+- **Verification**: `tests/unit/strategic/test_opportunities.py::test_resource_opportunities_river_ford_herb_patch`,
+  `tests/integration/content/test_resource_region_coverage_corpus.py::test_no_entity_of_any_role_spawns_in_an_unresolved_region_corpus_wide`
+  (parity ledger `TOWN-191`, `STRAT-244`'s 2026-08-07 update note)
+- **Status**: ACTIVE
+
 ### 2.29 Hazard-Zone Resource-Free Regions (TCK-20260706-SIMQ-CORPUS-RESOURCE-REGION-COVERAGE-AUDIT)
 - **Subsystem**: World / Resource Opportunities — Content Disposition
 - **Situation**: `bandit_road`, `goblin_camp`, and `wolf_den` carry zero resource-node content
@@ -487,6 +516,21 @@ This document is the canonical record of intentional behavior shifts in `src` co
   (bandit_road, wolf_den) and the pre-existing
   `test_resource_opportunities_goblin_camp_and_haunted_battlefield_no_resource_nodes` (goblin_camp)
 - **Status**: ACTIVE
+- **Update (2026-08-07, TCK-20260807-GUILD-SCARCITY-REGION-COVERAGE-GAP)**: extended this same
+  disposition class to 2 more zero-content regions found by a fresh corpus-wide re-verification
+  (prompted by `GuildAction.visit()` — a role-agnostic consumer of this same gating mechanism —
+  going live via `TCK-20260807-QUEST-GUILDACTION-DEAD-WIRING`): `deep_forest`
+  (`forest_warden_grove.yaml` places its flat `resources:` dict entirely in the module's
+  first-declared region, `sacred_grove`, the identical compiler-placement quirk that produced
+  `wolf_den`'s gap — `deep_forest` itself receives zero nodes) and `survivor_outpost`
+  (`survivor_camp_shelter.yaml` declares no `resources:` block at all — a "shelter" module with no
+  foraging content by design). Verification extended to
+  `tests/unit/strategic/test_opportunities.py::test_resource_opportunities_deep_forest_and_survivor_outpost_no_resource_nodes`
+  and a new corpus-wide, all-roles regression test,
+  `tests/integration/content/test_resource_region_coverage_corpus.py::test_no_entity_of_any_role_spawns_in_an_unresolved_region_corpus_wide`
+  (the original regression test in that file only checked hero-role spawns, a scope that was
+  correct while `GuildAction` was dormant but stale now that it is a live, role-agnostic
+  consumer of the same coverage data).
 
 ### 2.30 Non-Native Faction Hazard Exposure — `town_council` at `bandit_road` (TCK-20260710-TOWN-COUNCIL-HAZARD-DA)
 - **Subsystem**: World / Environment — Content Disposition
@@ -577,6 +621,57 @@ This document is the canonical record of intentional behavior shifts in `src` co
   `::test_close_is_idempotent` (demonstrate the buffered-vs-persisted boundary: `close()`
   synchronously drains and persists all remaining queued entries before returning, bounding the
   crash-loss window to "process is still running").
+- **Status**: ACTIVE
+
+### 2.33 Opportunity-Attack Kill Reward Orphaned on the Victim (TCK-20260808-PROGRESSION-GROWTH-ECONOMY-UNREACHABLE-IN-PRACTICE)
+- **Subsystem**: Engine / Combat-Progression
+- **Old Behavior**: `MovementSystem.resolve_move`'s opportunity-attack branch
+  (`src/engine/movement.py`, triggered when an entity tries to move away from
+  `engaged_hostiles`) called `CombatResolutionSystem.resolve_multi_attack(attackers, entity,
+  ...)` and attached the entire resulting `CombatUpdate` — including its
+  `resource_transfers` (the kill's XP/gold reward, correctly computed by `resolve_multi_attack`
+  itself) — onto `entity`'s own `EntityUpdate` (`updates[entity.id] = EntityUpdate(entity_id=
+  entity.id, combat=combat_update)`). `entity` here is the retreating/moving unit — the
+  **victim** of the attack, not the `attackers` who should receive the reward. Even had the
+  attribution been correct, `resource_transfers` was never lifted out of the nested
+  `CombatUpdate.combat` field into the top-level `EntityUpdate.resource_transfers` field that
+  `ResourceTransactionSystem.resolve_all()` actually reads (`src/engine/economy.py:58`) — a
+  second, independent defect. Confirmed via direct grep that nothing in the codebase ever reads
+  `.combat.resource_transfers` back out — the reward was written to a field nothing consumes,
+  on every single occurrence. Empirically, this is not a rare edge case: a real 2000-tick
+  instrumented run of `sandbox_world` (seed 42) showed the deliberate `ATTACK` action firing
+  **zero** times, while this opportunity-attack path fired 560 times and produced 9 real
+  deaths — i.e. this was the dominant, near-exclusive real combat-kill path in the corpus, and
+  its reward was unconditionally discarded. This fully explains the corpus-wide
+  `growth_trajectory` ≈ 0 finding from `TCK-20260808-ENTITY-LIFECYCLE-SCORE-METRICS`'s own
+  full-corpus lifecycle-score run — not because kills were too rare to matter, but because the
+  path that reliably produces them could never reward anyone regardless of volume.
+- **New Behavior**: after building `combat_update`, if it carries `resource_transfers` and a
+  resolved `attacker_id`, a second `EntityUpdate(entity_id=combat_update.attacker_id,
+  resource_transfers=combat_update.resource_transfers)` is built and merged into `updates`
+  (using `.merge()` defensively, since `updates` can already hold an entry for the same id from
+  an earlier occupancy-swap branch in the same function). `attacker_id` follows the same
+  "first attacker" attribution convention `entity_killed`'s own event shaper already uses for
+  multi-attacker kills (`src/observability/event_shapers.py:158`). Verified end-to-end: before
+  the fix, `entity.identity.evolution_points`/`evolution_level` never changed across a real
+  2000-tick `sandbox_world` run despite confirmed kills; after the fix, the same scenario
+  produces a real `evolution_points_delta > 0` on the attacker.
+- **Rationale**: **Bug Fix**. Reward misattribution plus a missing lift onto the field the
+  authoritative resolution path actually reads — not a design tradeoff, same class as `§2.24`'s
+  pipeline-wiring merge fix and `§2.25`'s missing apply-path materialization.
+- **Note (deliberately out of scope for this fix)**: the same call site hardcodes
+  `is_lethal=False`, so `resolve_multi_attack`'s `outcome_kind` can never be `"KILL"` on this
+  path (only `"DEFEAT"`), meaning `entity_killed`/`hero_death_unrecorded`
+  (`event_shapers.py:157`, gated specifically on `outcome_kind == "KILL"`) never fire for this
+  entire class of real deaths either. The XP/gold reward itself is gated on `alive`, not
+  `outcome_kind`, so this fix is sufficient to unblock progression without touching `is_lethal`
+  — whether opportunistic strikes during a retreat should ever count as a full "kill" outcome is
+  a game-design judgment call left to a follow-up, not assumed here.
+- **Verification**:
+  `tests/unit/movement/test_tactical_movement.py::test_opportunity_attack_lethal_grants_resource_transfers_to_attacker`
+  (real lethal opportunity-attack scenario through the full `AuthoritativeApplyPipeline.refine()`
+  path: asserts the victim's own `EntityUpdate` carries no `resource_transfers` and the
+  attacker's own `identity.evolution_points_delta > 0` after full resolution).
 - **Status**: ACTIVE
 
 ---

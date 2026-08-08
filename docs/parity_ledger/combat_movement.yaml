@@ -516,10 +516,18 @@
   status: verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  v2_evidence: >-
+    Re-verified 2026-08-08 (TCK-20260808-PROGRESSION-GROWTH-ECONOMY-UNREACHABLE-IN-PRACTICE):
+    the direct ATTACK-action kill-reward path (combat.py::resolve_attack ->
+    combat_actions.py::execute_attack) was already correctly wired. A separate, previously
+    unverified path — MovementSystem.resolve_move's opportunity-attack branch
+    (src/engine/movement.py, resolve_multi_attack) — was found to silently orphan its own
+    kill reward (attached to the victim's EntityUpdate, never lifted to the top-level
+    resource_transfers field ResourceTransactionSystem.resolve_all() reads) and is now fixed.
+    See docs/guidelines/intentional_divergences.md §2.33.
   proof_type: null
-  test_path: null
-  divergence_note: null
+  test_path: tests/unit/movement/test_tactical_movement.py::test_opportunity_attack_lethal_grants_resource_transfers_to_attacker
+  divergence_note: 'See intentional_divergences.md §2.33 (Opportunity-Attack Kill Reward Orphaned on the Victim, Bug Fix)'
   support_boundary: null
 - id: COMB-050
   text: '`test_no_reward_on_non_lethal_hit`: No reward on non lethal hit.'
@@ -3093,3 +3101,103 @@
     per-pair delta table (both consumers) is in
     tickets/done/TCK-20260704-SIMQ-CORPUS-FACTION-RELATIONSHIPS.md's Implementation Notes.
   support_boundary: null
+
+- id: COMB-295
+  text: >
+    TCK-20260806-PUSH-CUTOVER-COMBAT-ECONOMY-FACTION (final child of
+    TCK-20260806-SIMQ-OBSERVABILITY-PUSH-MIGRATION-EPIC) -- cuts COMBAT observability event
+    emission (combat_damage, combat_initiated, near_death_survival, entity_killed,
+    hazard_drain_applied, hero_death_unrecorded) over to the apply-layer shaper registry
+    (src/observability/event_shapers.py, built across INFRA-324/325) as the live default path.
+    `ENABLE_PUSH_EVENT_SHAPERS` flipped to default "ON" (`FeatureFlagManager.__init__`) --
+    validated by TCK-20260806-PUSH-SHADOW-VALIDATION-PERF's 130/131-tick real-corpus match before
+    this flip. `event_extractor.py`'s old diffing branches for these events are NOT deleted --
+    flag-gated (`if not _push_shapers_active:`) to fire only when the flag is explicitly set away
+    from "ON", providing a real, working rollback (not a partial one) rather than requiring a code
+    revert if a production issue surfaces.
+
+    `entity_killed`/`hero_death_unrecorded` required special handling, not a clean branch removal:
+    the shaper's version is narrower by design (same-tick `outcome_kind=="KILL"` only, per
+    INFRA-324's reopen fix), while the old extractor's Kill-events branch covers ANY
+    `lifecycle.active` transition (old-age death, delayed hazard-transition death -- both
+    confirmed real by the validation ticket). Removing the old branch wholesale would have
+    silently dropped coverage for these non-KILL-tagged causes in production, not deferred it.
+    Fixed by narrowing the old branch's condition instead of removing it:
+    `is_shaper_owned_kill = (_push_shapers_active and real_combat_upd is not None and
+    real_combat_upd.outcome_kind == "KILL")`; the old branch fires `if not is_shaper_owned_kill`.
+    When the flag is off, `is_shaper_owned_kill` is always False, restoring byte-identical
+    pre-cutover behavior. Verified directly with real, non-mocked kernel runs (not just unit
+    tests): `dungeon_crawl_seed42_500t` with the flag absent (real `AuthoritativeState.
+    feature_flags` defaults to `{}`, confirmed) delivered all 39 combat/economy/faction events via
+    `source_system="event_shapers"`; the same world with `ENABLE_PUSH_EVENT_SHAPERS="OFF"`
+    produced byte-identical event counts via `source_system="event_extractor"`, confirming the
+    rollback path is real, not theoretical. `hero_guild_routing_seed42_500t` confirmed the
+    delayed-hazard-death case (entities 26/28/30, tick 5) still correctly emits `combat_kill` from
+    the old extractor even in the new default-ON state.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: >
+    src/observability/event_extractor.py: `_push_shapers_active` flag read added at the top of
+    `extract()` (defaults `"ON"` matching `FeatureFlagManager`'s new default when
+    `state.feature_flags` doesn't override it); combat_damage/combat_initiated/near_death_survival/
+    hazard_drain_applied branches guarded `if not _push_shapers_active:`; Kill-events branch
+    narrowed (not guarded wholesale) per the `is_shaper_owned_kill` logic above.
+    src/domains/optimization/feature_flags.py:25 (`ENABLE_PUSH_EVENT_SHAPERS` default flipped
+    OFF->ON). src/engine/kernel.py:909-935 (`_phase_observability`'s shaper-events block now
+    extends `generated_events` -- delivered through the identical record/timeline path as
+    `EventExtractor`'s own output -- when the flag is "ON"; "SHADOW" mode keeps constructing and
+    logging only, for future Phase-2 validation reuse).
+  proof_type: regression
+  test_path: >
+    tests/unit/observability/ full suite (798 passed, 6 skipped, unchanged from pre-cutover --
+    existing MagicMock-based tests are unaffected by the new default because MagicMock's
+    auto-attribute-creation on an unconfigured `feature_flags` mock evaluates falsy against the
+    string "ON" comparison, coincidentally matching each test's own pre-cutover expectation; real
+    default-ON behavior was verified separately via non-mocked kernel integration runs, disclosed
+    explicitly in this entry's text rather than trusted from unit-test pass counts alone).
+  divergence_note: null
+  support_boundary: >
+    COMBAT domain only -- see TOWN-190 (economy) and FAC-013 (faction) for the other 2 migrated
+    domains' cutover entries. Does not touch `demographic_mortality` (despawn branch, deferred),
+    `combat_resolved`/`attrition_threshold_crossed` (dead code, disclosed not migrated). Does not
+    implement Phase 2 (quest/demographic/XP domains) -- unscoped future work.
+
+- id: COMB-296
+  text: >
+    TCK-20260808-ENTITY-VITALS-OBSERVABILITY-GAP -- wound infliction, wound healing, and scar
+    gain (EntityUpdate.wound_update / WoundState, ScarState) were durable state with zero
+    observability coverage distinct from CombatUpdate's own already-observed hp_delta/outcome
+    (docs/event_ledger/entity.yaml ENTITY-018, previously `status: silent`). Adds three new
+    events to src/observability/event_extractor.py's diff loop: `wound_sustained` (new wound ID
+    appears in entity.combat.wounds; severity CRITICAL >=0.7 / WARNING >=0.4 / INFO otherwise,
+    keyed off the existing `WoundState.severity` field, no new threshold invented), `wound_healed`
+    (an existing wound's `healed` flag flips False->True), and `scar_gained` (new scar ID appears
+    in entity.combat.scars). Full-coverage-by-design, same rationale as SUB-375's biological/
+    stamina events (grouped in the same ticket, split across ledger files because wounds are a
+    CombatUpdate field, not a biological/stamina one).
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: >
+    src/observability/event_extractor.py -- `wound_sustained`/`wound_healed`/`scar_gained` diff
+    blocks, guarded by `isinstance(..., list)` checks against `entity.combat.wounds`/`.scars`
+    (defensive against MagicMock-based test fixtures elsewhere in the suite, never true for a
+    real EntityState). Verified via real, non-mocked `WoundState`/`ScarState` objects constructed
+    by hand and passed through the real `EventExtractor.extract()` function directly (not
+    through a live `Kernel.tick_once()` loop) -- ENABLE_COMBAT_ENGAGEMENT is corpus-wide gated
+    off (TCK-20260806-SIMQ-COMBAT-ENGAGEMENT-GATE-CORPUS-VALIDITY), so no shipped calibration
+    world can currently produce a wound through a real tick loop. Matches this repo's own
+    precedented pattern for verifying gated mechanics without a live trigger path (see
+    test_information_intent_execution_fires_through_kernel_tick_once).
+  proof_type: regression
+  test_path: >
+    tests/unit/observability/test_event_extractor_vitals.py::
+    test_wound_sustained_severity_mapping, ::test_wound_healed_fires, ::test_scar_gained_fires
+  divergence_note: null
+  support_boundary: >
+    Emitted events are classified `unscored_intentional` (docs/simulation_quality/
+    event_type_coverage.md Section 5) -- not wired to any SimQ pillar. Code path is real and
+    tested but currently unreachable in any shipped calibration world since combat engagement is
+    corpus-wide off; will begin firing naturally once a future ticket re-enables it. See SUB-375
+    for the sibling biological/stamina entry from the same ticket.

@@ -203,6 +203,24 @@ class MovementSystem:
                 )
                 updates[entity.id] = EntityUpdate(entity_id=entity.id, combat=combat_update)
 
+                # combat_update.resource_transfers rewards whoever defeated `entity` (the
+                # attackers), not `entity` itself — must be lifted onto the attacker's own
+                # top-level EntityUpdate.resource_transfers, the only field
+                # ResourceTransactionSystem.resolve_all() reads (src/engine/economy.py:58).
+                # Left un-lifted, the reward was silently orphaned inside a nested CombatUpdate
+                # that nothing ever reads back out. attacker_id follows the same "first attacker"
+                # attribution convention already used for multi-attacker kills elsewhere
+                # (src/observability/event_shapers.py:158).
+                if combat_update.resource_transfers and combat_update.attacker_id is not None:
+                    reward_upd = EntityUpdate(
+                        entity_id=combat_update.attacker_id,
+                        resource_transfers=combat_update.resource_transfers,
+                    )
+                    existing_attacker_upd = updates.get(combat_update.attacker_id)
+                    updates[combat_update.attacker_id] = (
+                        existing_attacker_upd.merge(reward_upd) if existing_attacker_upd else reward_upd
+                    )
+
         # 6. Final Subject Execution
         actor_up = updates.get(entity.id, EntityUpdate(entity_id=entity.id))
         
