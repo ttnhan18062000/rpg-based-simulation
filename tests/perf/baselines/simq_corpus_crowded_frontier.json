@@ -1,0 +1,297 @@
+{
+  "scenario_id": "simq_corpus_crowded_frontier",
+  "profile": "PERF_512MB_LOCAL",
+  "sample_ticks": 1000,
+  "wall_clock_s": 8.2478,
+  "wall_clock_tps": 121.24,
+  "compute_tps": 945.43,
+  "avg_tps": 945.43,
+  "tick_ms": {
+    "avg": 10.577,
+    "p50": 10.497,
+    "p95": 12.167,
+    "p99": 13.18,
+    "max": 13.18,
+    "min": 8.887
+  },
+  "mem_rss_mb": {
+    "avg": 376.38,
+    "max": 696.3,
+    "delta": 627.26
+  },
+  "phase_breakdown": {
+    "init": {
+      "avg": 0.098,
+      "p50": 0.092,
+      "p95": 0.155,
+      "p99": 0.224,
+      "max": 0.224,
+      "min": 0.076
+    },
+    "scheduling": {
+      "avg": 0.038,
+      "p50": 0.037,
+      "p95": 0.054,
+      "p99": 0.075,
+      "max": 0.075,
+      "min": 0.029
+    },
+    "collection": {
+      "avg": 0.508,
+      "p50": 0.464,
+      "p95": 0.763,
+      "p99": 0.86,
+      "max": 0.86,
+      "min": 0.363
+    },
+    "trust_validity": {
+      "avg": 0.068,
+      "p50": 0.062,
+      "p95": 0.098,
+      "p99": 0.111,
+      "max": 0.111,
+      "min": 0.058
+    },
+    "self_model": {
+      "avg": 0.005,
+      "p50": 0.005,
+      "p95": 0.006,
+      "p99": 0.007,
+      "max": 0.007,
+      "min": 0.004
+    },
+    "information_belief": {
+      "avg": 0.002,
+      "p50": 0.002,
+      "p95": 0.003,
+      "p99": 0.004,
+      "max": 0.004,
+      "min": 0.002
+    },
+    "information_intent_execution": {
+      "avg": 0.002,
+      "p50": 0.002,
+      "p95": 0.002,
+      "p99": 0.003,
+      "max": 0.003,
+      "min": 0.001
+    },
+    "cooperation": {
+      "avg": 0.002,
+      "p50": 0.002,
+      "p95": 0.003,
+      "p99": 0.026,
+      "max": 0.026,
+      "min": 0.001
+    },
+    "contracts_production": {
+      "avg": 0.071,
+      "p50": 0.067,
+      "p95": 0.095,
+      "p99": 0.112,
+      "max": 0.112,
+      "min": 0.064
+    },
+    "faction_decision": {
+      "avg": 0.025,
+      "p50": 0.023,
+      "p95": 0.037,
+      "p99": 0.052,
+      "max": 0.052,
+      "min": 0.021
+    },
+    "faction_awareness": {
+      "avg": 0.015,
+      "p50": 0.014,
+      "p95": 0.019,
+      "p99": 0.042,
+      "max": 0.042,
+      "min": 0.013
+    },
+    "diplomatic_transitions": {
+      "avg": 0.421,
+      "p50": 0.413,
+      "p95": 0.482,
+      "p99": 0.547,
+      "max": 0.547,
+      "min": 0.393
+    },
+    "military_conflict": {
+      "avg": 0.033,
+      "p50": 0.03,
+      "p95": 0.051,
+      "p99": 0.184,
+      "max": 0.184,
+      "min": 0.027
+    },
+    "adventure_decision": {
+      "avg": 0.002,
+      "p50": 0.003,
+      "p95": 0.003,
+      "p99": 0.004,
+      "max": 0.004,
+      "min": 0.002
+    },
+    "locomotion": {
+      "avg": 1.15,
+      "p50": 1.138,
+      "p95": 1.368,
+      "p99": 1.436,
+      "max": 1.436,
+      "min": 0.946
+    },
+    "combat_engagement": {
+      "avg": 0.004,
+      "p50": 0.004,
+      "p95": 0.004,
+      "p99": 0.006,
+      "max": 0.006,
+      "min": 0.003
+    },
+    "interaction": {
+      "avg": 0.141,
+      "p50": 0.135,
+      "p95": 0.178,
+      "p99": 0.286,
+      "max": 0.286,
+      "min": 0.121
+    },
+    "governance_ecology": {
+      "avg": 0.492,
+      "p50": 0.439,
+      "p95": 0.795,
+      "p99": 1.786,
+      "max": 1.786,
+      "min": 0.31
+    },
+    "world_emergence": {
+      "avg": 0.003,
+      "p50": 0.003,
+      "p95": 0.004,
+      "p99": 0.021,
+      "max": 0.021,
+      "min": 0.003
+    },
+    "economy": {
+      "avg": 0.27,
+      "p50": 0.26,
+      "p95": 0.346,
+      "p99": 0.483,
+      "max": 0.483,
+      "min": 0.233
+    },
+    "progression_conversion": {
+      "avg": 0.003,
+      "p50": 0.003,
+      "p95": 0.003,
+      "p99": 0.004,
+      "max": 0.004,
+      "min": 0.002
+    },
+    "final_integrity": {
+      "avg": 4.282,
+      "p50": 4.286,
+      "p95": 5.244,
+      "p99": 5.755,
+      "max": 5.755,
+      "min": 3.342
+    },
+    "resolution_overhead": {
+      "avg": 0.588,
+      "p50": 0.579,
+      "p95": 0.683,
+      "p99": 0.735,
+      "max": 0.735,
+      "min": 0.538
+    },
+    "cleanup": {
+      "avg": 0.024,
+      "p50": 0.013,
+      "p95": 0.093,
+      "p99": 0.299,
+      "max": 0.299,
+      "min": 0.011
+    },
+    "advancement": {
+      "avg": 2.328,
+      "p50": 2.206,
+      "p95": 3.187,
+      "p99": 3.832,
+      "max": 3.832,
+      "min": 1.826
+    },
+    "persistence": {
+      "avg": 0.004,
+      "p50": 0.004,
+      "p95": 0.005,
+      "p99": 0.006,
+      "max": 0.006,
+      "min": 0.003
+    }
+  },
+  "metrics": {
+    "raw_entity_updates": 0.23,
+    "compacted_entity_updates": 0.11,
+    "phase_runs": 28.01,
+    "run_trust_boundary": 1.0,
+    "run_actor_validity": 1.0,
+    "skip_self_model": 1.0,
+    "skip_information_belief": 1.0,
+    "skip_information_intent_execution": 1.0,
+    "skip_cooperation": 1.0,
+    "run_contracts": 1.0,
+    "run_blacksmith": 1.0,
+    "run_faction_awareness": 1.0,
+    "run_diplomatic_transitions": 1.0,
+    "run_military_conflict": 1.0,
+    "skip_adventure_decision": 1.0,
+    "run_action_routing": 1.0,
+    "run_position_swaps": 1.0,
+    "run_movement_routing": 1.0,
+    "movement_candidates": 24.15,
+    "skip_combat_engagement": 1.0,
+    "run_interaction_routing": 1.0,
+    "run_interaction_enforcement": 1.0,
+    "run_building_sabotage": 1.0,
+    "run_town_resolution": 1.0,
+    "run_gold_sink": 1.0,
+    "run_world_dynamics": 1.0,
+    "skip_world_emergence": 1.0,
+    "run_quest_rewards": 1.0,
+    "skip_guild_visit": 1.0,
+    "run_shop": 1.0,
+    "run_paid_information": 1.0,
+    "run_resource_transactions": 1.0,
+    "run_evolution": 1.0,
+    "skip_progression_conversion": 1.0,
+    "run_strategic_intelligence": 1.0,
+    "run_near_death_hardening": 1.0,
+    "run_occupancy_resolution": 1.0,
+    "run_lifecycle": 1.0,
+    "run_groups": 1.0,
+    "run_active_contracts": 1.0,
+    "run_expired_offers": 1.0,
+    "run_capacity_enforcement": 1.0,
+    "spatial_index_hits": 20742.53,
+    "spatial_index_misses": 1050.5,
+    "phase_skips": 1.0,
+    "skip_building_sabotage": 1.0
+  },
+  "cpu_time_user_delta_s": 9.2,
+  "cpu_time_system_delta_s": 0.36,
+  "cpu_time_total_delta_s": 9.56,
+  "replay_enabled": false,
+  "frame_pacing_enabled": false,
+  "timestamp": 1786131467.1320333,
+  "avg_tick_compute_ms": 10.577,
+  "p50_tick_compute_ms": 10.497,
+  "p95_tick_compute_ms": 12.167,
+  "p99_tick_compute_ms": 13.18,
+  "max_tick_compute_ms": 13.18,
+  "peak_rss_mb": 696.3,
+  "memory_delta_mb": 627.26,
+  "matrix_scenario": "simq_corpus",
+  "source_world": "crowded_frontier",
+  "source_entity_count": 38,
+  "source_region_count": 4
+}
