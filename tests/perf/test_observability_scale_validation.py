@@ -46,10 +46,16 @@ def test_scale_performance_and_footprint(monkeypatch):
             max_tick_budget_ms=16.6
         )
 
-        # Generate 100 entities to simulate high-intensity workload
+        # Generate 100 entities to simulate high-intensity workload. Spread across a 10x10 grid,
+        # one integer tile apart (LAW-SPAWN-OCCUPANCY collides on int(x), int(y) — see
+        # HardLawMonitor._check_spawn_occupancy) — TCK-20260807-SCALE-VALIDATION-ENTITY-COLLISION-
+        # BUG: all 100 previously shared literal (10.0, 10.0), tripping a real hard-law violation
+        # that this test's own zero-telemetry-accumulation assertion then (correctly) caught.
         entities = {}
         for idx in range(1, 101):
-            entities[idx] = V2EntityBuilder(idx).combat(hp=100, alive=True).location(10.0, 10.0).build()
+            grid_x = 10.0 + ((idx - 1) % 10)
+            grid_y = 10.0 + ((idx - 1) // 10)
+            entities[idx] = V2EntityBuilder(idx).combat(hp=100, alive=True).location(grid_x, grid_y).build()
 
         state = AuthoritativeState(tick=1, seed=42, world_time=100, entities=entities)
         rng = DeterministicRNG(42)
