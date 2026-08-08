@@ -41,6 +41,13 @@ WORKFLOW_AGENTS = {
         "ticket-scoper", "investigator", "planner", "architecture-reviewer",
         "implementer", "doc-updater", "test-scoper", "parity-updater", "security-reviewer",
         "done-checker", "finalizer", "implement-ticket-orchestrator",
+        # "claude": the real, dominant hand-orchestration literal (45 of ~91 non-standard
+        # agent values in events.jsonl history, confirmed via direct query) -- used when a
+        # session runs implement-ticket.js phases directly with no subagent dispatch (e.g.
+        # after the subagent spawn cap is reached), same category as the
+        # "implement-ticket-orchestrator" pseudo-agent above: a real orchestrator identity
+        # logging its own event, not drift (TCK-20260808-AGENT-MONITORING-CLAUDE-VOCAB-REGISTRATION).
+        "claude",
     },
     "create-tickets": {"create-tickets", "structure", "ticket-scoper", "link-epic"},
     "implement-epic": {"implement-ticket"},

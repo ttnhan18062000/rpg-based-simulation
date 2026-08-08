@@ -45,7 +45,11 @@ def test_bootstrap_phase_agent_vocabulary_matches_vocabulary_py():
     assert contract_phase_names == vocabulary.WORKFLOW_PHASES["implement-ticket"]
 
     contract_agent_ids = set(bundle.workflow["agents"])
-    expected_agents = vocabulary.WORKFLOW_AGENTS["implement-ticket"] - {"implement-ticket-orchestrator"}
+    # "implement-ticket-orchestrator" and "claude" are both orchestrator/hand-orchestration
+    # pseudo-agent identities (an event logged with no delegated subagent), not contract-declared
+    # subagent roles -- excluded from this comparison for the same reason, not a re-sync of the
+    # contract itself (TCK-20260808-AGENT-MONITORING-CLAUDE-VOCAB-REGISTRATION).
+    expected_agents = vocabulary.WORKFLOW_AGENTS["implement-ticket"] - {"implement-ticket-orchestrator", "claude"}
     assert contract_agent_ids == expected_agents
 
 
