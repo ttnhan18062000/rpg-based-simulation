@@ -161,11 +161,15 @@ class TacticalDecisionSystem:
                 entity.task.payload.get("target_id") == n.id
                 or n.task.payload.get("target_id") == entity.id
             )
+            # `intruding` left unset (None) -- see the matching note in
+            # LegalityServiceV2.verify_attack_legality (src/engine/legality.py); hardcoding
+            # False here previously made contextual_intruder_groups-based hostility
+            # (e.g. wild_beast_pack's stance) structurally unreachable regardless of
+            # combat_engaged (TCK-20260809-COMBAT-ATTACK-LEGALITY-ALWAYS-FALSE-INVESTIGATION).
             context = RelationContext(
                 distance=float(dist),
                 combat_engaged=combat_engaged,
                 target_race=get_race_id_str(n),
-                intruding=False,
             )
             try:
                 _tgt_identity = _id_resolver.resolve(n)

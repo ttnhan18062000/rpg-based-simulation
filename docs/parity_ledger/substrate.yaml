@@ -4386,3 +4386,25 @@
     exist anywhere in src/ yet; this differs from every sibling entity ticket's findings so far,
     which all found at least one gated-but-real producer. See SUB-375/SUB-376/SUB-377/COMB-296 for
     the sibling entity entries from the predecessor vitals/attributes/equipment tickets.
+
+- id: SUB-379
+  text: >
+    TCK-20260809-COMBAT-ATTACK-LEGALITY-ALWAYS-FALSE-INVESTIGATION -- V2EntityBuilder.combat()
+    exposes the new CombatComponent.readiness_speed field (see COMB-298 in combat_movement.yaml
+    for the full readiness-regen fix this field belongs to) as a builder kwarg, for
+    test/content-authoring parity with the existing readiness kwarg. Mechanical pass-through, no
+    new formula or construction logic.
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: >
+    src/core/builder.py V2EntityBuilder.combat() -- readiness_speed added to the updates dict
+    alongside the existing readiness kwarg, following the exact same optional-override pattern.
+    All existing .combat(...) call sites that don't pass readiness_speed continue to inherit the
+    CombatComponent dataclass default (10.0) via the builder's self._combat = CombatComponent()
+    initialization -- no call-site changes required.
+  proof_type: regression
+  test_path: >
+    tests/unit/combat/test_readiness_regen.py (readiness_speed set via .combat() throughout)
+  divergence_note: null
+  support_boundary: null

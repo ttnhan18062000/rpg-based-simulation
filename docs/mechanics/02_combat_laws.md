@@ -3,7 +3,7 @@ status: authoritative
 layer: mechanics
 authority: P0
 audience: developer
-last_verified: 2026-06-27
+last_verified: 2026-08-09
 ---
 
 # Chapter 2: Combat Laws
@@ -85,3 +85,27 @@ For skills with a `splash_radius`:
 2.  **Splash Victims**: All other entities in the radius receive **50%** of the attacker's base ATK as damage.
 3.  **Line of Sight**: Splash damage is blocked by solid walls/terrain.
 4.  **Friendly Fire**: Faction allies do not take splash damage from their teammates.
+
+---
+
+## 7. Action Legality & the Readiness Gate
+Every non-opportunity `ATTACK` requires the attacker's `readiness` to be at **exactly 100.0 or
+higher** (`LegalityServiceV2.verify_attack_legality`). Opportunity attacks (triggered by
+disengaging while adjacent to a hostile) bypass this specific check.
+
+*   **Consumption**: A successful attack resets readiness by **-100.0** (a full reset). Movement
+    consumes a variable amount: `move_cost * terrain_cost`.
+*   **Passive Regeneration**: Every tick, an entity below 100.0 readiness regenerates by its own
+    `readiness_speed` stat (`CombatComponent.readiness_speed`, default **10.0/tick**), capped at
+    100.0. This closes a gap between the documented kernel contract
+    (`docs/engine/contracts/minimal_kernel.md` §5, "Readiness Accumulation") and the source: prior
+    to `TCK-20260809-COMBAT-ATTACK-LEGALITY-ALWAYS-FALSE-INVESTIGATION`, no passive regeneration
+    existed anywhere in the pipeline — readiness only ever decreased, and the only restoration
+    path was a narrow town-specific REST action (+10.0, `src/engine/town_resolution.py`).
+*   **Friendly-Fire Law**: Attacks against a target the real faction-semantics service does not
+    consider hostile (`FactionSemanticsService.is_hostile_compat`) are illegal
+    (`ReasonCode.FRIENDLY_FIRE_ILLEGAL`). Hostility for `contextual_intruder_groups`-classified
+    relationships (real content: `data/content/social/perspectives.yaml`) resolves from real
+    combat-engagement state, not a hardcoded assumption of non-intrusion.
+*   **Range & LoS**: Attacks additionally require the target within `effective_range` (melee: must
+    be exactly adjacent) and unobstructed line of sight.

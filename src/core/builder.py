@@ -249,6 +249,7 @@ class V2EntityBuilder:
         action_style: Optional[int] = None,
         alive: Optional[bool] = None,
         readiness: Optional[float] = None,
+        readiness_speed: Optional[float] = None,
         wounds: Optional[List[WoundState]] = None,
         scars: Optional[List[ScarState]] = None,
     ) -> V2EntityBuilder:
@@ -267,6 +268,7 @@ class V2EntityBuilder:
             "action_style": action_style,
             "alive": alive,
             "readiness": readiness,
+            "readiness_speed": readiness_speed,
             "wounds": list(wounds) if wounds is not None else None,
             "scars": list(scars) if scars is not None else None,
         }

@@ -308,6 +308,7 @@ class CombatComponent:
     action_style: int = 0 # ActionStyle.BALANCED
     alive: bool = True
     readiness: float = 0.0
+    readiness_speed: float = 10.0
     wounds: List[WoundState] = field(default_factory=list)
     scars: List[ScarState] = field(default_factory=list)
     latest_result: Optional["IntentResult"] = None
@@ -329,6 +330,7 @@ class CombatComponent:
             "action_style": self.action_style,
             "alive": self.alive,
             "readiness": self.readiness,
+            "readiness_speed": self.readiness_speed,
             "wounds": [asdict(w) for w in self.wounds],
             "scars": [asdict(s) for s in self.scars],
             "latest_result": asdict(self.latest_result) if self.latest_result else None
@@ -855,6 +857,7 @@ class EntityState:
                 action_style=combat_comp.action_style,
                 alive=combat_comp.alive,
                 readiness=combat_comp.readiness,
+                readiness_speed=combat_comp.readiness_speed,
                 wounds=tuple(combat_comp.wounds),
                 scars=tuple(combat_comp.scars),
                 latest_result=combat_comp.latest_result

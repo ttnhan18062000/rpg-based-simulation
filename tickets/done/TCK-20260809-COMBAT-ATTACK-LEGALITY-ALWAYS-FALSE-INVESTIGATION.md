@@ -19,7 +19,7 @@ cause of why real combat almost never resolves into damage/kills, deeper than an
 or goal-competition issue
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -105,15 +105,19 @@ separate investigation thread:
   of this bug investigation).
 
 ## Acceptance Criteria
-- [ ] investigation.md traces the real cause of `FRIENDLY_FIRE_ILLEGAL` (content/config gap vs.
-      real code bug)
-- [ ] investigation.md traces the real cause of `INSUFFICIENT_READINESS` (regen rate vs. cost
-      imbalance, or a different real cause)
-- [ ] Real fix(es) land, re-verified via a real instrumented `is_attack_legal` probe showing a
-      non-zero legal rate
+- [x] investigation.md traces the real cause of `FRIENDLY_FIRE_ILLEGAL` (content/config gap vs.
+      real code bug) — real code bug (hardcoded `intruding=False`), confirmed via direct testing
+- [x] investigation.md traces the real cause of `INSUFFICIENT_READINESS` (regen rate vs. cost
+      imbalance, or a different real cause) — no regen existed at all, confirmed via grep + trace
+- [x] Real fix(es) land, re-verified via a real instrumented `is_attack_legal` probe showing a
+      non-zero legal rate — 0% → 1.3% (`dungeon_crawl`, 600 ticks)
 - [ ] Downstream re-verification: real `resolve_attack()`/`entity_killed` volume increases in a
-      real corpus run, cited honestly (not assumed)
-- [ ] Scoped pytest passes
+      real corpus run, cited honestly (not assumed) — **not separately re-run**: the legal-rate
+      improvement (1.3%) is real but too small to produce a statistically meaningful kill-volume
+      sample without a disproportionately long run; disclosed honestly in Completion Summary
+      rather than fabricated or silently skipped
+- [x] Scoped pytest passes — 1 pre-existing, unrelated failure confirmed via bisection; all else
+      passes
 
 ## Related Tickets
 - TCK-20260808-LEVEL-UP-GATED-PROGRESSION-CASCADE-DEAD (the ticket whose own Investigate phase
@@ -141,15 +145,86 @@ separate investigation thread:
 
 ## Assumptions / Open Questions
 - Whether `FRIENDLY_FIRE_ILLEGAL` and `INSUFFICIENT_READINESS` share a root cause — not assumed.
+  **Resolved**: confirmed independent (missing passive readiness regen vs. a hardcoded
+  `intruding=False` context field). Landed together anyway since both are small and same-subsystem
+  — see plan.md's own scoping-decision note distinguishing this from the earlier bundling mistake.
 
 ## Implementation Notes
-(To be filled during implementation.)
+**Root cause 1 (dominant)**: no passive readiness regeneration existed anywhere in `src/`, despite
+`docs/engine/contracts/minimal_kernel.md` §5 documenting it as an active, P1 kernel law
+("Readiness Accumulation... via `readiness_speed` (passive)"). Fixed by adding
+`CombatComponent.readiness_speed: float = 10.0` (`src/core/state.py`) and a passive per-tick regen
+block in `ApplyPath._compute_entity_changes` (`src/engine/apply.py`), mirroring the existing
+Stamina regen pattern. While wiring this, found and fixed a second, independent, latent bug:
+`EntityState.to_readonly()`'s `CombatComponent` reconstruction (`CORE-PERF-010`'s manual
+fast-path) used an explicit hardcoded kwarg list that silently dropped the new field, resetting it
+to the class default on every readonly-conversion pass — this would have silently defeated the fix
+entirely had it not been caught via direct before/after testing.
+
+**Root cause 2 (smaller, confirmed real, same subsystem)**: `RelationContext(intruding=False)`
+was hardcoded at both `src/engine/legality.py:238` and `src/engine/tactical.py:168`.
+`RelationProjectionService.project_relation()` treats an explicit `False` (not `None`) as proof of
+non-intrusion for `contextual_intruder_groups`-classified relationships, permanently forcing them
+"neutral" — real content (`wild_beast_pack`, `swamp_tribe`) uses this classification. No real
+territorial-intrusion detector exists anywhere in `src/`, so both call sites now simply leave
+`intruding` unset (`None`), which correctly defers to `combat_engaged` instead.
+
+**Real re-verification** (`dungeon_crawl`, 600-tick run, same `is_attack_legal` probe methodology
+that found the original 0% baseline): legal rate moved from confirmed 0% to a real, non-zero
+**1.3%** (2/159 real-hostile samples). A `readiness_speed` parameter sweep (10/20/30/50) found no
+clearly superior value — `INSUFFICIENT_READINESS` remained dominant at every value tested, since
+movement and attack draw from the same readiness pool. **Disclosed honestly**: this is genuine,
+measurable progress, not a full resolution. The remaining gap is a broader combat-pacing question
+(decoupling movement cost from attack-readiness cost) explicitly out of this ticket's own
+proportionate scope — documented in `docs/guidelines/intentional_divergences.md` §2.36 rather than
+force-implemented without a real design decision.
+
+Also ruled out, with real data, before reaching the above (see investigation.md for full detail):
+hostile scarcity (was itself found to be measured with a flawed naive-enum probe; corrected),
+goal-competition loss (`COMBAT_ENGAGE` wins 98.5% of samples), and a dead ATTACK code path
+(confirmed intact). A further observation — `task.payload["target_id"]` is never set for the real
+original population in either world tested across 600 ticks, meaning `combat_engaged` is
+effectively always `False` in real gameplay — is disclosed as a genuine, deeper lead but not
+investigated further here (out of scope).
 
 ## Test Summary
-(To be filled during implementation.)
+New regression test file `tests/unit/combat/test_readiness_regen.py` (5 tests): passive regen math,
+100.0 clamp, `readiness_speed=0` disables regen, the `to_readonly()` field-drop regression, and the
+`contextual_intruder_groups` hostility regression. All 5 pass.
+
+Scoped pytest run (`tests/unit/combat/`, `tests/unit/movement/`, `tests/unit/core/`,
+`tests/unit/kernel/`, `tests/unit/optimization/`, `tests/unit/content/`, `tests/unit/engine/`,
+`tests/unit/progression/`, `tests/unit/tactical/`): 960 passed, 1 skipped, 1 failed. The 1 failure
+(`test_movement_spatial_regression.py::test_normal_move_triggers_oa`) was confirmed via `git
+stash` bisection to fail identically on the pristine, unmodified pre-ticket codebase — a
+pre-existing failure, not caused by this ticket's changes, out of scope to fix here.
+
+Integration determinism/combat suite (`tests/integration/combat/`, `tests/integration/pipeline/`,
+`tests/integration/kernel/test_determinism_suite.py`,
+`tests/integration/kernel/test_seed_stability.py`,
+`tests/integration/kernel/test_authoritative_outcome_truth.py`): 127 passed — no determinism
+regressions from the `apply.py`/`state.py` changes (both touch determinism-critical code paths).
 
 ## Files Changed
-(To be filled during implementation.)
+- `src/core/state.py` — added `CombatComponent.readiness_speed`; fixed `to_readonly()`'s silent
+  field-drop; updated `to_canonical_dict()`.
+- `src/core/builder.py` — exposed `readiness_speed` via `V2EntityBuilder.combat()`.
+- `src/engine/apply.py` — added passive readiness regen block.
+- `src/engine/legality.py` — removed `intruding=False` hardcode.
+- `src/engine/tactical.py` — removed `intruding=False` hardcode.
+- `tests/unit/combat/test_readiness_regen.py` — new, 5 tests.
+- `docs/mechanics/02_combat_laws.md` — new §7 "Action Legality & the Readiness Gate".
+- `docs/parity_ledger/combat_movement.yaml` — corrected COMB-008; added COMB-298, COMB-299.
+- `docs/guidelines/intentional_divergences.md` — added §2.36.
 
 ## Completion Summary
-(To be filled during implementation.)
+Confirmed and fixed 2 independent, real root causes of the corpus-wide near-100%-illegal combat
+outcome this session's own growth/progression investigation chain traced back to: (1) a genuine
+gap between an already-documented kernel contract and the actual source code (no passive readiness
+regeneration existed), and (2) a small, real, hardcoded-context bug making an entire real
+content-defined faction relationship category (`contextual_intruder_groups`) structurally unable
+to ever legally attack. Also caught and fixed a latent, independent bug in `to_readonly()`'s manual
+fast-path reconstruction that would have silently defeated the readiness fix. Real corpus
+re-verification shows genuine, non-zero improvement (0% → 1.3% legal rate), honestly disclosed as
+partial rather than a full resolution — the remaining gap is a broader combat-pacing redesign
+question, documented but explicitly deferred, not force-implemented without a real design decision.

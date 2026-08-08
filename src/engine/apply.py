@@ -118,7 +118,17 @@ class ApplyPath:
                     new_stam = min(stamina.max_stamina, stamina.current + stam_regen)
                     if new_stam != stamina.current:
                         changes["stamina"] = ApplyPath._fast_replace_stamina(stamina, new_stam)
-            
+
+            # Readiness Regen (Action Readiness Law, COMB-266; contract: minimal_kernel.md
+            # Section 5 "Readiness Accumulation: Entities gain readiness based on their
+            # readiness_speed (passive)"). Movement/action costs already drain readiness via
+            # readiness_delta; this is the missing passive counterpart.
+            comb = changes.get("combat", entity.combat)
+            if comb.readiness < 100.0 and comb.readiness_speed > 0:
+                new_readiness = min(100.0, comb.readiness + comb.readiness_speed)
+                if new_readiness != comb.readiness:
+                    changes["combat"] = replace(comb, readiness=new_readiness)
+
             # --- World Dynamics (Hazard/Environment Impact) ---
             region = None
             if has_regions:

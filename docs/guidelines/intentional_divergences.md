@@ -759,6 +759,65 @@ This document is the canonical record of intentional behavior shifts in `src` co
 
 ---
 
+### 2.36 Readiness Never Regenerated Outside Town REST (TCK-20260809-COMBAT-ATTACK-LEGALITY-ALWAYS-FALSE-INVESTIGATION)
+- **Subsystem**: Combat / Engine
+- **Old Behavior**: `docs/engine/contracts/minimal_kernel.md` Section 5 ("Readiness-Gated Action
+  Semantics") has documented, as an active P1 kernel law, that "Entities gain readiness based on
+  their `readiness_speed` (passive)". No such field or passive regeneration existed anywhere in
+  `src/` (confirmed via grep) — `CombatComponent` had no `readiness_speed` field, and
+  `ApplyPath._compute_entity_changes` (`src/engine/apply.py`) never regenerated readiness. The
+  only restoration path was a narrow, town-specific `REST`-at-inn/home action
+  (`src/engine/town_resolution.py`, `+10.0`). Every other consumer of readiness only ever
+  decreased it: movement (`move_cost * terrain_cost`), attacks (`-100.0` full reset), and region
+  suppression drain (`-5.0`/tick). A real, instrumented probe (`urban_political`, 330 samples
+  across a 2000-tick run) found `LegalityServiceV2.verify_attack_legality()` FALSE in 100% of
+  cases, 55% specifically via `ReasonCode.INSUFFICIENT_READINESS` — readiness monotonically
+  decayed to 0 within the first ~15-40 ticks of any run (via ordinary ambient `WANDER` movement,
+  not just deliberate pursuit) and then stayed there permanently. This was the single largest real
+  contributor to the corpus-wide near-zero combat/kill rate this session's own growth/progression
+  investigation chain (`TCK-20260808-LEVEL-UP-GATED-PROGRESSION-CASCADE-DEAD`) traced back to.
+- **New Behavior**: Added `CombatComponent.readiness_speed: float = 10.0`
+  (`src/core/state.py`) and a passive per-tick regen block in
+  `ApplyPath._compute_entity_changes` (`src/engine/apply.py`), mirroring the existing Stamina
+  regen block's own pattern — readiness below 100.0 climbs by `readiness_speed` each tick, capped
+  at 100.0. While implementing this, also found and fixed a latent, independent bug: `EntityState.
+  to_readonly()` (`src/core/state.py`, `CORE-PERF-010`'s manual-reconstruction optimization)
+  rebuilds `CombatComponent` via an explicit hardcoded keyword-argument list on every entity whose
+  `wounds`/`scars` aren't already tuples — this list omitted the new field, silently resetting any
+  non-default `readiness_speed` back to the dataclass default every readonly-conversion pass. Both
+  are now covered by direct regression tests (`tests/unit/combat/test_readiness_regen.py`).
+  Separately (same investigation, same subsystem, small enough to land together): both
+  `LegalityServiceV2.verify_attack_legality()` and `TacticalDecisionSystem`'s own hostile-detection
+  loop hardcoded `RelationContext(intruding=False)`; `RelationProjectionService.project_relation()`
+  treats an explicit `False` (not `None`) as a confirmed non-intrusion for
+  `contextual_intruder_groups`-classified relationships, permanently forcing them to "neutral"
+  regardless of real combat engagement. No real territorial-intrusion detector exists anywhere in
+  `src/` (confirmed via grep), so both call sites now simply leave `intruding` unset (`None`),
+  which correctly defers to `combat_engaged` instead of asserting a false negative.
+- **Rationale**: **Bug Fix**. The readiness gap is a confirmed divergence from an already-documented
+  authoritative kernel contract (not a new design decision), and the `intruding` hardcode is a
+  confirmed logic bug with no real detector ever backing the hardcoded value.
+- **Note (real scope check, not assumed)**: real re-verification (`dungeon_crawl`, 600-tick run,
+  same `is_attack_legal` probe methodology) shows the legal rate moving from a confirmed 0%
+  baseline to a real, non-zero 1.3% (2/159 real-hostile samples) — genuine, measurable progress,
+  but **not** a full resolution. Movement and attack both draw from the same `readiness` pool, and
+  an entity that must travel to reach a target can still arrive with insufficient readiness even
+  with passive regen active; a parameter sweep (`readiness_speed` 10/20/30/50) showed no clearly
+  superior single value within this ticket's own testing, and INSUFFICIENT_READINESS remained the
+  dominant reason at every tested value. Closing this further is a broader combat-pacing question
+  (e.g. separating movement cost from attack-readiness cost) explicitly out of this ticket's own
+  proportionate scope — disclosed honestly rather than force-tuned further. The `intruding` fix is
+  similarly disclosed as real but not proven to be the dominant real-corpus driver of
+  `FRIENDLY_FIRE_ILLEGAL` in the specific world tested (`urban_political`'s own original population
+  contains no `wild_beast_pack`/`swamp_tribe` entities to exercise it).
+- **Verification**:
+  `tests/unit/combat/test_readiness_regen.py` (5 tests: passive regen, 100.0 clamp,
+  `readiness_speed=0` disables regen, `to_readonly()` field-drop regression, and the
+  `contextual_intruder_groups` hostility regression).
+- **Status**: ACTIVE
+
+---
+
 ## 3. Unsupported / Retired Behavior
 
 The following legacy behaviors have been intentionally omitted or retired.
