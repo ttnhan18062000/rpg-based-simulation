@@ -127,6 +127,26 @@ combat path is too low relative to the 300-tick stall-detection cadence, and que
 separately: `TCK-20260808-GROWTH-PACING-STALL-DETECTOR-IMBALANCE` (not implemented — this doc
 documents the gap, it doesn't close it).
 
+**Update 2026-08-08** (follow-up investigation, split into 3 tickets after user review — this
+was originally one combined finding, corrected to reflect that the underlying causes are
+genuinely distinct):
+
+- `skill_unlocked`, `progression_conversion_applied`, and part of `attribute_changed`/
+  `item_equipped` share one real, confirmed, *fixable* cause: `EvolutionSystem`'s entire
+  level-up reward block is gated behind `levels_gained > 0`, and `level_up` itself rarely fires
+  (`TCK-20260808-LEVEL-UP-GATED-PROGRESSION-CASCADE-DEAD`, not yet fixed — pending a scoping
+  decision with `TCK-20260808-GROWTH-PACING-STALL-DETECTOR-IMBALANCE`).
+- `item_equipped` has 2 *other*, independent real producers, both confirmed dormant for their own
+  distinct reasons (`TCK-20260808-ITEM-EQUIPPED-DORMANT-PATH-INVESTIGATION`): `ConversionIntentResolver`'s
+  `EQUIP_ITEM` path is gated behind `ENABLE_PROGRESSION_EVOLUTION`, which defaults OFF and is
+  never turned on in any real corpus profile; `EquipmentService.auto_equip()` is a real, complete,
+  tested function with **zero real callers anywhere** — dead-but-correct code, never wired into
+  the pipeline. Neither fixed here — both are real, actionable leads for a future ticket, not
+  forced into an unscoped implementation.
+- `trait_expressed`/`pillar_trait_unlocked` were found to have **no real producer at all**
+  anywhere in `src/` — see the dedicated section below, the same class of finding as `IDENTITY`'s
+  own hard ceiling.
+
 ## COMBAT — solid, but the real path is not the obvious one
 
 **Real trigger events:** `combat_damage`, `combat_initiated`, `combat_kill`,

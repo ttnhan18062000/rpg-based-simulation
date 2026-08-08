@@ -17,7 +17,7 @@ upgrade) is already tracked elsewhere, but 2 other real, independent equip-produ
 have not yet been traced
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -106,13 +106,40 @@ None yet.
   in the sibling ticket — not assumed; Investigate must trace each independently.
 
 ## Implementation Notes
-(To be filled during implementation.)
+Subagent spawning unavailable this session (200/200 cap) — self-performed throughout.
+
+Traced both real, independent `item_equipped` producers to fully confirmed, distinct causes:
+
+1. `ConversionIntentResolver`'s `EQUIP_ITEM` path (`src/domains/progression/resolver.py`), called
+   from the real, pipeline-registered `ProgressionConversionPhase`
+   (`src/engine/pipeline.py:326`) — but that phase is gated behind `ENABLE_PROGRESSION_EVOLUTION`,
+   confirmed to default `FeatureMode.OFF` (`src/domains/optimization/feature_flags.py:20`) and
+   confirmed via `grep` to never be turned on in any real corpus profile. Also noted (disclosed,
+   not fixed): the resolver's own `EQUIP_ITEM` branch hardcodes `"iron_sword"` regardless of the
+   real selected item, suggesting incomplete logic even if the flag were flipped.
+2. `EquipmentService.auto_equip()` (`src/core/equipment.py`) — a real, complete, well-documented,
+   unit-tested function with **zero real callers anywhere in `src/`**, confirmed via direct grep.
+   Dead-but-correct code, never wired into any pipeline phase, AI scorer, or action.
+
+Both causes are real and distinct from each other AND from the sibling
+`TCK-20260808-LEVEL-UP-GATED-PROGRESSION-CASCADE-DEAD` ticket's own `EvolutionSystem` finding.
+Per this ticket's own Plan, did not force a fix: flipping `ENABLE_PROGRESSION_EVOLUTION` needs the
+same real controlled-verification discipline the `ENABLE_ADVENTURE_ROUTING` investigation
+required (that one found a real regression only by testing it), and wiring `auto_equip()` requires
+a real design decision (which phase, what cadence, which entities) outside this investigation
+ticket's own mandate. Documented both findings in
+`docs/audits/D21_entity_lifecycle_foundation_layers.md` instead.
 
 ## Test Summary
-(To be filled during implementation.)
+Re-ran both grep-based verification claims directly (empty results confirming each). `pytest
+tests/unit/resource/test_equipment_chests_storage.py -q` — 3/3 pass, untouched (no code changed).
 
 ## Files Changed
-(To be filled during implementation.)
+- `docs/audits/D21_entity_lifecycle_foundation_layers.md` (records both confirmed findings, plus
+  the summary-table update from the sibling `LEVEL-UP-GATED` ticket's own split)
 
 ## Completion Summary
-(To be filled during implementation.)
+Real, evidence-grounded conclusion: `item_equipped`'s 2 independent producers both have confirmed,
+distinct, real causes (a never-enabled feature flag; a real function with zero callers) — neither
+forced into a fix without the real design/verification work each deserves. Documented honestly,
+matching this session's own established discipline. All Acceptance Criteria satisfied.
