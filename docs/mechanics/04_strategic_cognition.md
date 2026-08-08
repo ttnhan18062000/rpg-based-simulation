@@ -3,7 +3,7 @@ status: authoritative
 layer: mechanics
 authority: P0
 audience: developer
-last_verified: 2026-06-27
+last_verified: 2026-08-09
 ---
 
 # Chapter 4: Strategic Cognition
@@ -139,6 +139,15 @@ risk_multiplier = max(0.1, (1.0 + caution × 0.8) − bravery × 0.6)
 | Floor | 0.1 | Prevents multiplier going negative (very high bravery edge case) |
 
 Range: 0.1 (pure bravery) to 1.8 (pure caution). Default personality (bravery=0, caution=1.0) → multiplier = 1.8.
+
+**Related, real-time counterpart** (`TCK-20260809-COMBAT-OUTCOME-FLEE-VS-FIGHT-PERSONALITY`):
+this Risk Multiplier governs strategic (long-horizon) risk assessment. The tactical, real-time
+panic/flee decision (`AppraisalSystem.evaluate_emotional_state`, `src/engine/cognition.py`) is a
+separate function — until this ticket, it did not reference `bravery` at all, despite
+`bravery`'s own dataclass comment declaring "Biases combat vs flee"
+(`src/core/state.py:420`). It now subtracts `bravery * 0.3` from accumulated panic before the
+`panic > 0.4` flee threshold check, giving personality a real effect on the immediate,
+per-tick combat-vs-flee decision as well as the strategic one documented above.
 
 ### 6.4 Personality Bias by Route Family
 

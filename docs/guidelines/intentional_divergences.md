@@ -818,6 +818,50 @@ This document is the canonical record of intentional behavior shifts in `src` co
 
 ---
 
+### 2.37 Bravery Never Affected the Real-Time Flee Decision (TCK-20260809-COMBAT-OUTCOME-FLEE-VS-FIGHT-PERSONALITY)
+- **Subsystem**: Combat / Strategic Cognition
+- **Old Behavior**: `AppraisalSystem.evaluate_emotional_state()` (`src/engine/cognition.py`) — the
+  hard, first-checked real-time flee gate consumed by `src/engine/tactical.py`'s own
+  `PANIC_RETREAT` branch (`if emotion.is_fleeing: ...`, checked *before* any goal-competition
+  layer runs) — computed `panic` from regional dread, nemesis/grudge history, HP percentage, and
+  outnumbered ratio, but never referenced `subject.identity.personality.bravery`. This
+  contradicted `bravery`'s own dataclass field comment, present since the field was added:
+  `bravery: float = 0.0  # Biases combat vs flee` (`src/core/state.py:420`). A separate, real,
+  already-verified mechanism (`STRAT-226` in `docs/parity_ledger/strategic_cognition.yaml`,
+  `AdventureRouteScorer`'s bravery/caution risk multiplier) *does* bias strategic route selection
+  by bravery — but that governs a different, longer-horizon decision; the tactical, per-tick
+  panic/flee gate had no bravery term of its own until this ticket, meaning a maximally brave and
+  a maximally cowardly entity fled at identical HP/context thresholds in real gameplay.
+- **New Behavior**: `panic -= subject.identity.personality.bravery * 0.3` is now applied before
+  the `is_fleeing = panic > 0.4` decision. Bravery is real-valued in `[0.0, 1.0)`, RNG-assigned
+  per entity at generation (`src/worldbuilding/compiler.py:304`) — a zero-bravery entity is
+  unaffected (subtracting 0), a maximally brave entity's effective flee threshold rises from 0.4
+  toward ~0.7.
+- **Rationale**: **Bug Fix**. The field's own comment already declared this intent; the function
+  simply never implemented it.
+- **Note (real scope check, not assumed)**: investigation also confirmed, but did **not**
+  implement, two related findings: (1) the real opportunity-attack "pursuit prevents escape"
+  mechanic the user recalled already exists and already applies uniformly to the entire real
+  population — its one documented escape hatch (`ActionStyle.EVASIVE` + `MovementMode.RETREAT`
+  skipping the OA, `src/engine/movement.py:185-186`) is structurally unreachable, since no real
+  entity-generation path (`generator.py`, `worldbuilding/compiler.py`) ever assigns anything but
+  the default `ActionStyle.BALANCED`; (2) `bravery` has zero race/archetype correlation in real
+  content (`data/content/entities/entity_archetypes.yaml` has no personality fields at all) — it
+  is pure per-entity RNG, so a "wolf" archetype does not yet get systematically higher bravery
+  than any other entity. Both are real, evaluated, and deferred: wiring `ActionStyle` would
+  meaningfully change corpus-wide OA/escape dynamics while `TCK-20260809-COMBAT-ATTACK-LEGALITY-
+  ALWAYS-FALSE-INVESTIGATION`'s own downstream effects (landed earlier this same session) are
+  still being absorbed; race-correlated bravery requires a real content/design decision not made
+  here. This fix changes *which* entities flee at a given state, not combat *frequency* — no full
+  corpus re-verification was run (judged disproportionate for this narrow, unit-testable change).
+- **Verification**:
+  `tests/unit/strategic/test_cognition_immediate_fixes.py::
+  test_bravery_dampens_panic_and_raises_flee_threshold` (also re-confirms the pre-existing
+  `test_near_death_panic_progression` baseline is unaffected for the zero-bravery default case).
+- **Status**: ACTIVE
+
+---
+
 ## 3. Unsupported / Retired Behavior
 
 The following legacy behaviors have been intentionally omitted or retired.

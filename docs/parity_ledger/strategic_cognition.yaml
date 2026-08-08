@@ -3170,3 +3170,39 @@
     grade_anchors.json entries were checked (not assumed) for real drift from this fix -- see
     those worlds' own re-verification note if a real ECONOMY-anchor update landed.
   support_boundary: null
+
+- id: STRAT-251
+  text: >-
+    TCK-20260809-COMBAT-OUTCOME-FLEE-VS-FIGHT-PERSONALITY -- AppraisalSystem.
+    evaluate_emotional_state() (src/engine/cognition.py), the hard, first-checked real-time
+    flee gate consumed by src/engine/tactical.py's PANIC_RETREAT branch, never referenced
+    subject.identity.personality.bravery, despite bravery's own dataclass comment declaring
+    intent ("Biases combat vs flee", src/core/state.py:420). This differs from the already-real,
+    already-verified STRAT-226 bravery/caution risk multiplier (AdventureRouteScorer, strategic
+    long-horizon route selection) -- that is a separate function governing a separate,
+    longer-horizon decision; the tactical, per-tick panic/flee gate had no bravery term at all
+    until this ticket.
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: >-
+    panic -= subject.identity.personality.bravery * 0.3 added before the panic > 0.4 is_fleeing
+    decision (src/engine/cognition.py). Coefficient chosen to match the function's own existing
+    modifier magnitudes (HP thresholds 0.2/0.5/0.8, outnumbered +0.3, region_trauma*0.5). Verified:
+    a zero-bravery entity at HP=15% is unaffected (panic stays 0.5, still flees, matching the
+    pre-existing test_near_death_panic_progression baseline exactly); a bravery=1.0 entity at the
+    same HP drops to panic=0.2 and no longer crosses the 0.4 flee threshold.
+  proof_type: regression
+  test_path: >
+    tests/unit/strategic/test_cognition_immediate_fixes.py::
+    test_bravery_dampens_panic_and_raises_flee_threshold
+  divergence_note: >
+    See intentional_divergences.md section 2.37 (Bravery Never Affected the Real-Time Flee
+    Decision, Bug Fix).
+  support_boundary: >
+    Investigation also confirmed (not implemented, disclosed only): the real opportunity-attack
+    "pursuit prevents escape" mechanic already exists and already applies uniformly to 100% of the
+    real population (its one documented escape hatch, ActionStyle.EVASIVE + MovementMode.RETREAT,
+    is structurally unreachable -- no real entity-generation path ever assigns a non-default
+    ActionStyle); and bravery has zero race/archetype correlation (pure per-entity RNG) -- both
+    real, evaluated, and deferred as separate scope, not fixed here.

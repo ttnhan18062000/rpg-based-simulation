@@ -1,6 +1,6 @@
 import pytest
 from src.core.builder import V2EntityBuilder
-from src.core.state import AuthoritativeState, RegionState
+from src.core.state import AuthoritativeState, RegionState, PersonalityComponent
 from src.engine.cognition import AppraisalSystem
 from src.ai.goals.scorers import TownScorer
 from src.systems.strategic import StrategicIntelligenceSystem
@@ -48,6 +48,28 @@ def test_near_death_panic_progression():
     assert profile_5.panic_level > profile_15.panic_level
     assert profile_15.panic_level > profile_35.panic_level
     assert profile_35.panic_level > profile_healthy.panic_level
+
+
+def test_bravery_dampens_panic_and_raises_flee_threshold():
+    """TCK-20260809-COMBAT-OUTCOME-FLEE-VS-FIGHT-PERSONALITY: bravery previously had no effect
+    on evaluate_emotional_state (the hard, first-checked flee gate in tactical.py) despite its
+    own dataclass comment declaring intent ("Biases combat vs flee", src/core/state.py). At
+    HP=15% (panic 0.5 for a zero-bravery entity, per test_near_death_panic_progression above),
+    a brave entity should have measurably lower panic and may no longer cross the 0.4 flee
+    threshold, while a coward's panic is unaffected (bravery=0.0 is the floor, no penalty)."""
+    coward = (V2EntityBuilder(1).kind("HERO").combat(hp=15, max_hp=100)
+              .identity(personality=PersonalityComponent(bravery=0.0)).build())
+    brave = (V2EntityBuilder(2).kind("HERO").combat(hp=15, max_hp=100)
+             .identity(personality=PersonalityComponent(bravery=1.0)).build())
+
+    profile_coward = AppraisalSystem.evaluate_emotional_state(coward, [])
+    profile_brave = AppraisalSystem.evaluate_emotional_state(brave, [])
+
+    assert profile_coward.panic_level == pytest.approx(0.5)
+    assert profile_coward.is_fleeing
+
+    assert profile_brave.panic_level == pytest.approx(0.2)
+    assert not profile_brave.is_fleeing
 
 
 def test_town_scorer_bridge():
