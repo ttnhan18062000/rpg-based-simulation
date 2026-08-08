@@ -34,7 +34,13 @@ It answers two *different* questions that are easy to conflate:
 The central finding of this document: **the answer to (1) is excellent across the board — 0 real
 translation or emission gaps.** The answer to (2) is mostly also yes, with **one significant real
 exception: `GROWTH_PROGRESSION`**, where 5 of 6 positive-signal event types are correctly wired but
-essentially never fire in practice.
+essentially never fire in practice. **Update 2026-08-08**: follow-up investigation split this into
+2 real, distinct causes rather than one — see `TCK-20260808-LEVEL-UP-GATED-PROGRESSION-CASCADE-DEAD`
+(a real, fixable gate: skill/AP/attribute/evolution progress is blocked behind `level_up`, which
+itself rarely fires) and the confirmed-no-producer finding below (`trait_expressed`/
+`pillar_trait_unlocked` have no real gate to open at all — a missing mechanic, not a blocked one).
+`item_equipped`'s own dormancy has a 3rd, still-open thread
+(`TCK-20260808-ITEM-EQUIPPED-DORMANT-PATH-INVESTIGATION`).
 
 ## Summary table
 
@@ -168,6 +174,24 @@ every entity's life ends via one of these three. A real bug was found and fixed 
 `entity_lifecycle_score.py` silently dropped metadata for entities born mid-run via
 `demographic_birth` (a "None role" group, 21-48% of population per world before the fix, 0% after)
 — `TCK-20260808-LIFECYCLE-SCORE-MIDRUN-SPAWN-METADATA-GAP`.
+
+## `trait_expressed`/`pillar_trait_unlocked` — confirmed no producer, same class as IDENTITY
+
+**Update 2026-08-08** (`TCK-20260808-TRAIT-EXPRESSED-PRODUCER-INVESTIGATION`, split from this
+audit's own `GROWTH_PROGRESSION` finding after user review): traced `IdentityUpdate.traits_add`/
+`traits_remove`/`breakthroughs_add` (`src/core/updates.py:229,233-234`) and confirmed **zero real
+production code anywhere in `src/` constructs either field** — the only real construction sites
+are 3 test files (`tests/unit/progression/test_breakthroughs.py`,
+`tests/unit/observability/test_event_shapers_progression.py`,
+`tests/unit/core/test_domain_6_hardening.py`). The apply-path (consumer side,
+`src/engine/patches.py`/`src/engine/apply.py`) is real, correct, and tested — the "Tough" trait's
+own stat bonus (`max_hp` 100→142) genuinely works when the field is populated by hand. This is the
+exact same class of finding as `IDENTITY`'s own confirmed hard ceiling below: a real, working,
+tested mechanism with no real gameplay system that ever drives it. Unlike `GROWTH_PROGRESSION`'s
+other zero-triggered events (which are blocked behind a real, fixable gate — see
+`TCK-20260808-LEVEL-UP-GATED-PROGRESSION-CASCADE-DEAD`), there is no dormant gate to open here —
+the gap is a missing mechanic entirely, not a blocked one. No fix landed; documented as a
+confirmed, honest finding, not forced.
 
 ## IDENTITY — hard ceiling, not a foundation-layer bug
 

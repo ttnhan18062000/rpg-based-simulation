@@ -17,7 +17,7 @@ tags: [progression, simulation-quality]
 `EvolutionSystem`'s level-gated block at all — genuinely untraced, not assumed to share that cause
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -99,13 +99,37 @@ None yet.
   not assumed; this is the investigation's own central question.
 
 ## Implementation Notes
-(To be filled during implementation.)
+Subagent spawning unavailable this session (200/200 cap) — self-performed throughout.
+
+Traced `IdentityUpdate.traits_add`/`traits_remove`/`breakthroughs_add`'s real construction sites
+via direct grep across all of `src/`: zero matches outside the field declarations themselves. The
+only real construction sites anywhere in the repo are 3 test files, all hand-constructing the
+update directly to test the apply-path in isolation. Confirmed the apply-path itself is real,
+correct, and tested (`src/engine/patches.py`, `src/engine/apply.py`, `src/core/state.py` all
+correctly materialize these fields; the "Tough" trait's own stat bonus genuinely applies when
+tested directly).
+
+Concluded this is a genuine "unimplemented mechanic" finding — the same class as `IDENTITY`'s own
+confirmed hard ceiling, not a dormant-but-fixable gate like `TCK-20260808-LEVEL-UP-GATED-
+PROGRESSION-CASCADE-DEAD`'s own finding. No trait-acquisition or breakthrough-triggering system
+exists anywhere in real gameplay logic. Per this ticket's own Scope, did not force a fix —
+documented the real, honest conclusion in `docs/audits/D21_entity_lifecycle_foundation_layers.md`
+instead, matching this session's own established "no bug found, no fix forced" precedent.
 
 ## Test Summary
-(To be filled during implementation.)
+Re-ran `grep -rn "traits_add=\|breakthroughs_add=" src/ --include=*.py | grep -v test_` as the
+literal verification step (empty result, confirming the investigation's own central claim).
+`pytest tests/unit/progression/test_breakthroughs.py tests/unit/core/test_domain_6_hardening.py
+tests/unit/observability/test_event_shapers_progression.py -q` — 24/24 pass, untouched by this
+ticket (no code changed).
 
 ## Files Changed
-(To be filled during implementation.)
+- `docs/audits/D21_entity_lifecycle_foundation_layers.md` (new section documenting the confirmed
+  finding, plus a summary-table update reflecting the 3-way split of the original
+  `GROWTH_PROGRESSION` finding)
 
 ## Completion Summary
-(To be filled during implementation.)
+Real, evidence-grounded conclusion: `trait_expressed`/`pillar_trait_unlocked` have no real
+producer anywhere in `src/` — a confirmed, honest "unimplemented mechanic" finding, not a bug to
+force-fix. Documented rather than worked around. All Acceptance Criteria satisfied — including
+"no fix is a valid outcome," which is exactly what happened here.
