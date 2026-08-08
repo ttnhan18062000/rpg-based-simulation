@@ -1,0 +1,160 @@
+# TCK-20260808-ENTITY-LIFECYCLE-SCORE-METRICS
+#
+# Data-driven thresholds for tools/entity_lifecycle_score.py, matching
+# docs/simulation_quality/quality_scoring_contract.md §4.8's "no numeric literals in scorer
+# code" convention. Hand-edit; not machine-generated.
+
+# path_length floor below which entropy/loop_score/conclusion_coherence are marked low-confidence
+# (small-sample noise) rather than trusted at face value. Carried over from the investigation's
+# own scratch-script precedent. TCK-20260808-ENTITY-LIFECYCLE-SCORE-CALIBRATION empirically
+# swept truncated-prefix entropy against full-length entropy across 59 real entities (>=30 events
+# each, frontier_extended, 800 ticks): mean |entropy(L) - entropy(full)| decreases smoothly from
+# 0.43 at L=3 to 0.26 at L=25, with no sharp knee anywhere -- no evidence justifies raising or
+# lowering this value from 6. Kept unchanged; this is a verified, not a failed, finding.
+minimum_sample_threshold: 6
+
+# Tick count below which clustering-based diversity metrics (dominant_shape_share, distinct
+# shape counts) are unreliable -- TCK-20260808-ENTITY-LIFECYCLE-SCORE-CALIBRATION found
+# dominant_shape_share is artificially HIGH at short tick-lengths (0.50 at 200t, 0.61 at 500t on
+# sandbox_world/seed42) simply because paths are too short to differentiate, then stabilizes by
+# ~1000 ticks (0.190 at 1000t, 0.179 at 2000t -- a small, plausibly-noise-level gap vs. the much
+# larger 500->1000 swing). run_metadata() reports clustering_reliable = ticks >= this value.
+clustering_reliable_tick_threshold: 1000
+
+# Mirrors capability_growth_stalled's own real 300-tick flat-detection window
+# (src/observability/event_extractor.py's _CAPABILITY_STALL_TICKS). A run shorter than this
+# cannot structurally produce that tag at all -- run_metadata() reports this as
+# stall_detector_reachable so a short run's "0% stalled" is never silently compared against a
+# long run's "0% stalled" as if they meant the same claim.
+stall_detector_window_ticks: 300
+
+# Mirrors life_arc_incoherent's own real Hero's Journey generation threshold
+# (src/observability/event_extractor.py's _LATE_GENERATION_THRESHOLD). Reaching this within a
+# short run is rare -- run_metadata() reports life_arc_detector_reachable per this ticket's own
+# documented reasoning, an empirical question the calibration sibling ticket owns, not decided
+# here with a guessed tick-count proxy.
+life_arc_generation_threshold: 2
+
+# Transition-bigram Jaccard cutoff for flagging an entity pair as "near-duplicate path" during
+# clustering. Matches the threshold used during this session's own real investigation probe.
+clustering_similarity_threshold: 0.85
+
+# Real default observability mode this tool forces via SIM_OBS_MODE before running a fresh
+# simulation -- see this ticket's own investigation.md Item 2 for why NORMAL (not LIGHT, the real
+# production default) is necessary: LIGHT suppresses movement and all entity-vitals/growth/
+# equipment/identity events this repo's own observability layer emits.
+default_obs_mode: NORMAL
+
+# 9 lifecycle-phase buckets, re-derived from docs/event_ledger/entity.yaml's own authoritative
+# EntityUpdate-mutation -> event-type catalog (see investigation.md Item 3 for the full
+# row-by-row cross-reference), not invented ad hoc. ENTITY-015 (TaskUpdate) contributes no
+# bucket, matching its own already-documented deliberately_uncovered verdict.
+lifecycle_phase_buckets:
+  VITALS:
+    - biological_state_changed
+    - stamina_changed
+    - wound_sustained
+    - wound_healed
+    - scar_gained
+  GROWTH_PROGRESSION:
+    - attribute_changed
+    - xp_granted
+    - level_up
+    - skill_unlocked
+    - trait_expressed
+    - pillar_trait_unlocked
+    - recipe_learned
+    - skill_cooldown_started
+    - item_equipped
+    - item_unequipped
+    - equipment_durability_changed
+    - progression_conversion_applied
+    - capability_growth_stalled
+    - life_arc_incoherent
+    - progression_plateau_detected
+  EXPLORATION:
+    - movement
+    - resource_harvested
+  COMBAT:
+    - combat_damage
+    - combat_initiated
+    - combat_kill
+    - hazard_drain_applied
+    - near_death_survival
+    - combat_hard_law_violation
+    - world_hard_law_violation
+    - spawn_occupancy_violation
+    - raid_party_spawned
+  ECONOMY:
+    - shop_transaction
+    - trade_executed
+    - quest_reward_dispensed
+    - gold_sink_fired
+    - gold_transaction
+    - gold_transferred
+    - paid_information_transaction
+    - paid_info_transaction
+    - conservation_law_verified
+    - conservation_law_violated
+  SOCIAL:
+    - social_memory_created
+    - reputation_delta
+    - contract_offer_created
+    - contract_offer_accepted
+    - contract_completed
+    - contract_lapsed
+    - contract_expired_offer
+    - contract_milestone_completed
+    - group_joined
+    - group_expelled
+    - diplomatic_transition
+    - alliance_accepted
+    - faction_tension_delta
+  STRATEGY_COGNITION:
+    - strategic_goal_changed
+    - project_started
+    - project_completed
+    - project_abandoned
+    - knowledge_default_fallback
+    - belief_assimilated
+    - belief_updated
+    - lead_certainty_updated
+    - self_model_updated
+    # StrategicBlockerAdded has no SimQ-contract translation (confirmed via direct inspection of
+    # src/simulation_quality/quality_hub.py's own _TRANSLATE_SIMPLE/_TRANSLATE_CONDITIONAL) -- it
+    # stays as its raw, untranslated engine event_type. Still real strategic-cognition activity,
+    # included here since this tool's own scope is broader than the SimQ-scored event set.
+    - StrategicBlockerAdded
+  NARRATIVE_QUEST:
+    - quest_started
+    - quest_completed
+    - quest_failed
+  IDENTITY:
+    - entity_role_changed
+    - entity_faction_changed
+  CONCLUSION_DEMOGRAPHIC:
+    - entity_killed
+    - demographic_mortality
+    - demographic_birth
+
+# growth_trajectory's own positive/negative tag sets -- a labeled subset of the buckets above,
+# not a new taxonomy. GROWTH_TAGS deliberately excludes progression_conversion_applied (its
+# effect direction isn't uniformly positive) and STALL_TAGS is exactly the 2 detector tags found
+# dominating the real, sparse LIGHT-mode event stream during this ticket's own investigation.
+growth_trajectory_tags:
+  positive:
+    - attribute_changed
+    - xp_granted
+    - level_up
+    - skill_unlocked
+    - recipe_learned
+    - item_equipped
+  negative:
+    - capability_growth_stalled
+    - progression_plateau_detected
+
+# conclusion_coherence's own incoherent-flag tag -- entities carrying this tag anywhere in their
+# path are marked incoherent regardless of path_length (this is the one metric NOT gated by
+# minimum_sample_threshold, since the tag itself is the direct signal, not a derived statistic).
+conclusion_incoherent_tags:
+  - life_arc_incoherent
