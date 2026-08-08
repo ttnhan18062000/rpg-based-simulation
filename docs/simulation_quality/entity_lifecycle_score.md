@@ -200,6 +200,40 @@ evidence doesn't justify changing it; this is documented as a verified, delibera
 Hero generation 2 either, consistent with the sibling ticket's own disclosed rarity finding, not
 resolved here.
 
+## Why `growth_trajectory` reads negative population-wide (TCK-20260808-GROWTH-TRAJECTORY-STILL-NEGATIVE-POST-FIX)
+
+A real, structural pacing finding, not a residual bug from the sibling kill-reward fix
+(`TCK-20260808-PROGRESSION-GROWTH-ECONOMY-UNREACHABLE-IN-PRACTICE`, which was independently
+verified correct). Two real, live 2000-tick probes (`urban_political`, `resource_dense_basin`)
+found **only `xp_granted`** ever fires among the 6 `growth_trajectory_tags.positive` tags —
+`level_up`, `skill_unlocked`, `recipe_learned`, `item_equipped`, `attribute_changed` were all zero
+in both. `xp_granted` itself only fired 3-5 times population-wide, vs. `capability_growth_stalled`
++ `progression_plateau_detected` firing 63-64 times — a real ~13-21x imbalance, sufficient on its
+own to explain the negative population mean (most entities never receive a single growth-tagged
+event across 2000 ticks, while the stall detector re-fires roughly every 300 ticks regardless).
+
+Traced why `level_up` specifically never fires despite `xp_granted` occurring: a single kill
+delivers `defender.identity.evolution_level * classification.xp_multiplier` = 10 XP (level-1
+monster) against a real level-1 threshold of 100 XP (`LevelingService.get_xp_required(1)`) — with
+only 3-5 real kills population-wide, spread across different attackers rather than concentrated,
+no entity in either real run crosses even the first level threshold.
+
+**A real fix candidate (raising the per-kill XP multiplier) was evaluated and found insufficient
+by the numbers** — even doubling the growth-event count (via unlocking `level_up` on the first
+kill) remains tiny against the real ~63-64 stall-tag count; the imbalance is ~13-21x, not ~2x. Not
+implemented — it would be a disclosed Mechanics Bible divergence for a change that demonstrably
+doesn't resolve the finding. Real quest-completion rate re-confirmed still zero at 2000 ticks
+(`quest_started`/`quest_completed` both 0, direct probe, not inherited from the 1000-tick finding
+uncritically).
+
+**Real conclusion**: this is a genuine pacing/balance characteristic of the current corpus — real
+combat/kill frequency is too low relative to the stall detector's own comparatively frequent
+300-tick cadence — the same class of finding as `wilderness_survival`'s archetype-correct low
+diversity, not a code defect. The real remedy (raising corpus-wide combat frequency, or
+lengthening `capability_growth_stalled`'s own cadence) is a substantial balance initiative with
+its own real risk (`grade_anchors.json` recalibration across dozens of scenarios) — tracked as its
+own follow-up ticket rather than forced through here.
+
 ## Long-run observation tier (TCK-20260808-SIMQ-LONG-RUN-LIFECYCLE-OBSERVATION-TIER)
 
 The tick-length profile above (200-2000 ticks, `sandbox_world` only) motivated a real, corpus-wide
