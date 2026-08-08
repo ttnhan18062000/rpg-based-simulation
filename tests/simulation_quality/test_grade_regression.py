@@ -663,15 +663,17 @@ def test_grade_anchors_entry_count_unchanged(grade_anchors: dict) -> None:
     """Anti-drift guard: the migration (bare string -> {grade, score}) must not silently
     drop or duplicate a scenario entry.
 
-    80 real scenario entries as of TCK-20260808-SIMQ-LARGE-SCALE-WORLD-VALIDATION, which added
+    81 real scenario entries as of TCK-20260808-LIFECYCLE-FULL-COVERAGE-WORLD, which added
+    lifecycle_full_coverage_world_seed42_200t (1 new entry, 80 -> 81) — previously 80 as of
+    TCK-20260808-SIMQ-LARGE-SCALE-WORLD-VALIDATION, which added
     simq_scale_stress_seed42_seed42_200t (1 new entry, 79 -> 80) — previously 79 as of
     TCK-20260805-SIMQ-CORPUS-QUEST-DENSITY-DECOUPLE, which added
     quest_dense_frontier_seed{42,123,456}_200t (3 new entries, 76 -> 79).
     """
     metadata_keys = {"_note", "_instructions", "_grade_order"}
     scenario_keys = set(grade_anchors.keys()) - metadata_keys
-    assert len(scenario_keys) == 80, (
-        f"Expected 80 real scenario entries, found {len(scenario_keys)} — "
+    assert len(scenario_keys) == 81, (
+        f"Expected 81 real scenario entries, found {len(scenario_keys)} — "
         "an anchor entry may have been silently dropped or duplicated"
     )
 
