@@ -32,6 +32,7 @@ This document is the canonical record of intentional behavior shifts in `src` co
 | **World / Environment** | Non-Native Faction Hazard Exposure (`town_council`/`bandit_road`) | **Intentional Gameplay Change** | RATIFIED |
 | **Engine / Observability** | DecisionTraceWriter Async Drain — Crash-Loss & Overflow-Drop Windows | **Bounded** | RATIFIED |
 | **Engine / Combat-Progression** | Opportunity-Attack Kill Reward Orphaned on the Victim | **Bug Fix** | RATIFIED |
+| **Engine / Combat-Progression** | Hero's Journey Rebirth Orphaned in the Real Dominant Kill Path | **Bug Fix** | RATIFIED |
 
 ---
 
@@ -672,6 +673,45 @@ This document is the canonical record of intentional behavior shifts in `src` co
   (real lethal opportunity-attack scenario through the full `AuthoritativeApplyPipeline.refine()`
   path: asserts the victim's own `EntityUpdate` carries no `resource_transfers` and the
   attacker's own `identity.evolution_points_delta > 0` after full resolution).
+- **Status**: ACTIVE
+
+### 2.34 Hero's Journey Rebirth Orphaned in the Real Dominant Kill Path (TCK-20260808-LIFE-ARC-REBIRTH-REACHABILITY-INVESTIGATION)
+- **Subsystem**: Engine / Combat-Progression
+- **Old Behavior**: `CombatResolutionSystem.resolve_attack()` (`src/engine/combat.py`) was the
+  only one of 4 real kill-resolution functions (`resolve_attack`, `resolve_skill_usage`,
+  `resolve_multi_attack`, `resolve_aoe_attack`) that read `classification.rebirth_eligible`
+  (`CombatRewardClassificationService.classify_defeated_target()`'s own output, `True` iff the
+  defeated defender's role is `HERO`) and branched into `REBIRTH`/`PERMADEATH` outcomes with
+  `generation_delta`/`is_permadeath_set`. The other 3 functions — including `resolve_multi_attack`
+  — already computed the same `classification` object for `xp_gain`/`gold_gain`, but never
+  consumed its `rebirth_eligible` field at all. This session's own direct instrumentation
+  (`TCK-20260808-HERO-ADVENTURE-ROUTING-DEFAULT-OFF`, `TCK-20260808-PROGRESSION-GROWTH-ECONOMY-
+  UNREACHABLE-IN-PRACTICE`) already established `resolve_attack` fires **zero** times in real
+  2000-tick corpus runs (the AI never selects the plain `ATTACK` action) while `resolve_multi_attack`
+  (via `movement.py`'s opportunity-attack mechanic) is the corpus's real, dominant kill path —
+  making Hero's Journey rebirth structurally unreachable regardless of HERO population size or
+  kill rate, not merely rare. Confirmed real, not assumed: `entity_lifecycle_score.py`'s own
+  `life_arc_detector_reachable` field read `null` (never observed) across every real run this
+  session's own tools produced, at every tick length tested (200 through 2000).
+- **New Behavior**: `resolve_multi_attack()` now ports the same rebirth/permadeath branch
+  `resolve_attack()` already had, reusing the classification it already computes, and sets
+  `generation_delta`/`is_permadeath_set` on its own returned `CombatUpdate` (previously omitted
+  entirely). `movement.py`'s own opportunity-attack call site now also lifts those two fields into
+  a `LifecycleUpdate` on the victim's own top-level `EntityUpdate` — the identical "computed but
+  never lifted to the field the authoritative apply path actually reads" pattern already found and
+  fixed once this session (§2.33) for the same call site's own `resource_transfers`.
+- **Rationale**: **Bug Fix**. A real mechanic, already correctly implemented once, silently
+  inaccessible because it only existed in the one combat-resolution function the real corpus never
+  exercises — same class as §2.33 and §2.24/§2.25.
+- **Note (deliberately deferred, disclosed)**: `resolve_skill_usage()`/`resolve_aoe_attack()` have
+  the identical gap but 0 real calls observed in this session's own direct instrumentation —
+  porting there too would be speculative without real data showing either path is corpus-active;
+  left as a residual, lower-priority gap for a future ticket if that changes.
+- **Verification**:
+  `tests/unit/movement/test_tactical_movement.py::test_opportunity_attack_lethal_hero_defender_triggers_rebirth`
+  (real lethal opportunity-attack scenario, `EntityRole.HERO` defender, through the full
+  `AuthoritativeApplyPipeline.refine()` path: asserts the victim's own `EntityUpdate.lifecycle.
+  generation_delta == 1`).
 - **Status**: ACTIVE
 
 ---

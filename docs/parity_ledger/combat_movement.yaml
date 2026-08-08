@@ -3201,3 +3201,31 @@
     tested but currently unreachable in any shipped calibration world since combat engagement is
     corpus-wide off; will begin firing naturally once a future ticket re-enables it. See SUB-375
     for the sibling biological/stamina entry from the same ticket.
+- id: COMB-297
+  text: >
+    TCK-20260808-LIFE-ARC-REBIRTH-REACHABILITY-INVESTIGATION -- Hero's Journey rebirth/permadeath
+    branching (`classification.rebirth_eligible` -> `generation_delta`/`is_permadeath_set`)
+    previously existed only in `CombatResolutionSystem.resolve_attack()`, the one real
+    kill-resolution function this corpus's own AI never calls (0 real calls in 2000-tick runs,
+    confirmed by this session's own direct instrumentation). `resolve_multi_attack()` -- the
+    corpus's real, dominant kill mechanism via `movement.py`'s opportunity-attack call site --
+    already computed the same `classification` object for xp/gold rewards but never consumed its
+    own `rebirth_eligible` field, making rebirth structurally unreachable regardless of HERO
+    population size or kill rate.
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: >
+    Ported the existing branch verbatim into `resolve_multi_attack()` (src/engine/combat.py),
+    reusing the classification it already computes -- no new mechanic, no formula change. Added
+    the matching `LifecycleUpdate` lift in `movement.py`'s own opportunity-attack call site
+    (identical "computed but never lifted" pattern already found and fixed once this session for
+    the same call site's own resource_transfers, see COMB-049/intentional_divergences.md §2.33).
+    Real, non-mocked verification through the full `AuthoritativeApplyPipeline.refine()` path, not
+    a hand-constructed CombatUpdate.
+  proof_type: regression
+  test_path: >
+    tests/unit/movement/test_tactical_movement.py::
+    test_opportunity_attack_lethal_hero_defender_triggers_rebirth
+  divergence_note: 'See intentional_divergences.md §2.34 (Hero's Journey Rebirth Orphaned in the Real Dominant Kill Path, Bug Fix)'
+  support_boundary: null
