@@ -8,7 +8,14 @@ docs/parity_ledger/*.yaml shard (all nine, including faction.yaml -- deliberatel
 independent of tools.parity_ledger_scan.CANONICAL_LEDGER_FILES's frozen 8-file
 compatibility list) and imports them into a local, gitignored, derived-only SQLite
 database (default parity-index/parity.db). It never writes into docs/parity_ledger/
-and implements no mutation CLI ("build" is the only subcommand).
+and implements no mutation CLI ("build" is the only subcommand that writes anything,
+and only to the derived database).
+
+`check-staleness` (TCK-20260808-PARITY-INDEX-STALENESS-VISIBILITY) reports FRESH/
+STALE/NOT_BUILT by cheaply recomputing the same source_manifest_hash `build` stores,
+without a full rebuild -- see check_staleness()'s own docstring. `make parity-index`
+/ `make parity-index-check` wrap `build`/`check-staleness` for the real repo path,
+matching the sibling `make agent-monitoring-index` precedent.
 
 Build lifecycle: a sibling temporary database file is created next to the final
 path, populated and validated in full, then atomically swapped into place with
@@ -377,6 +384,69 @@ def _validate_build(conn: sqlite3.Connection, shard_manifest: list, entry_count:
             raise BuildValidationError(f"table {table!r} missing expected columns: {missing}")
 
 
+def _shard_manifest_hash(shards: list) -> tuple[list, str, str]:
+    """Compute the lean, hashable shard-manifest shape and its sha256 digest.
+
+    Factored out of _build_into() (TCK-20260808-PARITY-INDEX-STALENESS-VISIBILITY) so
+    check_staleness() can recompute the exact same hash a real build would produce, without
+    duplicating the shape by hand and risking silent drift between the two. Cheap by
+    construction: only needs each shard's filename/sha256/entry_count, not the full
+    _populate_entries/_populate_ref_tables/_populate_entry_health/_populate_entry_fts machinery
+    _build_into() runs afterward.
+    """
+    shard_manifest = [
+        {"filename": s["filename"], "sha256": s["sha256"], "entry_count": len(s["entries"])}
+        for s in shards
+    ]
+    shard_manifest_json = serialize_manifest(shard_manifest)
+    source_manifest_hash = hashlib.sha256(shard_manifest_json.encode("utf-8")).hexdigest()
+    return shard_manifest, shard_manifest_json, source_manifest_hash
+
+
+def check_staleness(db_path=None, ledger_dir=None) -> dict:
+    """Cheaply report whether an already-built parity-index/parity.db is stale relative to the
+    live docs/parity_ledger/*.yaml shards, without doing a full rebuild.
+
+    Reuses _load_shards() + _shard_manifest_hash() -- the exact same functions a real build calls
+    -- so this can never compute a different hash than a real build would for the same ledger
+    state. Returns one of three statuses:
+      - "NOT_BUILT": no DB file at db_path
+      - "FRESH": DB's own stored source_manifest_hash matches a fresh hash of the live shards
+      - "STALE": they differ
+    """
+    resolved_db_path = DEFAULT_DB_PATH if db_path is None else Path(db_path)
+    resolved_ledger_dir = DEFAULT_LEDGER_DIR if ledger_dir is None else Path(ledger_dir)
+
+    if not resolved_db_path.exists():
+        return {"status": "NOT_BUILT", "db_path": str(resolved_db_path)}
+
+    shards = _load_shards(resolved_ledger_dir)
+    _, _, live_hash = _shard_manifest_hash(shards)
+
+    conn = _connect_readonly(resolved_db_path)
+    try:
+        row = conn.execute(
+            "SELECT source_manifest_hash, built_at FROM ledger_generation "
+            "ORDER BY built_at DESC LIMIT 1"
+        ).fetchone()
+    finally:
+        conn.close()
+
+    if row is None:
+        return {"status": "NOT_BUILT", "db_path": str(resolved_db_path)}
+
+    db_hash, built_at = row
+    status = "FRESH" if db_hash == live_hash else "STALE"
+    return {
+        "status": status,
+        "db_path": str(resolved_db_path),
+        "ledger_dir": str(resolved_ledger_dir),
+        "db_hash": db_hash,
+        "live_hash": live_hash,
+        "built_at": built_at,
+    }
+
+
 def _build_into(conn: sqlite3.Connection, ledger_dir: Path, force_fts5_unavailable: bool) -> dict:
     fts5_available = False if force_fts5_unavailable else _probe_fts5(conn)
     _create_schema(conn, fts5_available)
@@ -389,12 +459,7 @@ def _build_into(conn: sqlite3.Connection, ledger_dir: Path, force_fts5_unavailab
     if fts5_available:
         _populate_entry_fts(conn)
 
-    shard_manifest = [
-        {"filename": s["filename"], "sha256": s["sha256"], "entry_count": len(s["entries"])}
-        for s in shards
-    ]
-    shard_manifest_json = serialize_manifest(shard_manifest)
-    source_manifest_hash = hashlib.sha256(shard_manifest_json.encode("utf-8")).hexdigest()
+    shard_manifest, shard_manifest_json, source_manifest_hash = _shard_manifest_hash(shards)
     built_at = datetime.now(timezone.utc).isoformat()
 
     conn.execute(
@@ -676,12 +741,24 @@ def main() -> int:
     health_parser.add_argument("--priority", default=None)
     health_parser.add_argument("--db-path", default=str(DEFAULT_DB_PATH))
 
+    staleness_parser = subparsers.add_parser(
+        "check-staleness",
+        help="Report whether the built index is stale relative to live docs/parity_ledger/*.yaml, without a full rebuild",
+    )
+    staleness_parser.add_argument("--db-path", default=str(DEFAULT_DB_PATH))
+    staleness_parser.add_argument("--ledger-dir", default=str(DEFAULT_LEDGER_DIR))
+
     args = parser.parse_args()
 
     if args.command == "build":
         report = build(db_path=args.db_path, force_fts5_unavailable=args.force_fts5_unavailable)
         print(serialize_manifest(report), end="")
         return 0 if report["status"] == "ok" else 1
+
+    if args.command == "check-staleness":
+        report = check_staleness(db_path=args.db_path, ledger_dir=args.ledger_dir)
+        print(serialize_manifest(report), end="")
+        return 0 if report["status"] == "FRESH" else 1
 
     try:
         if args.command == "entry":

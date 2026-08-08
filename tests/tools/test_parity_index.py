@@ -940,3 +940,97 @@ class TestAllShardsCoverage:
         )
         assert impact_result["status"] == "ok"
         assert any(r["entry_id"] == "FACT-001" for r in impact_result["results"])
+
+
+# ---------------------------------------------------------------------------
+# Group 14 — staleness check (TCK-20260808-PARITY-INDEX-STALENESS-VISIBILITY)
+# ---------------------------------------------------------------------------
+
+
+class TestCheckStaleness:
+
+    def test_check_staleness_not_built_when_db_missing(self, tmp_path):
+        paths = _full_nine_shard_corpus(tmp_path)
+        result = _pi.check_staleness(db_path=paths["db_path"], ledger_dir=paths["ledger_dir"])
+        assert result["status"] == "NOT_BUILT"
+
+    def test_check_staleness_fresh_immediately_after_build(self, tmp_path):
+        paths = _full_nine_shard_corpus(tmp_path)
+        report = _pi.build(ledger_dir=paths["ledger_dir"], db_path=paths["db_path"])
+        assert report["status"] == "ok"
+
+        result = _pi.check_staleness(db_path=paths["db_path"], ledger_dir=paths["ledger_dir"])
+        assert result["status"] == "FRESH"
+        assert result["db_hash"] == result["live_hash"]
+
+    def test_check_staleness_stale_after_shard_edit(self, tmp_path):
+        paths = _full_nine_shard_corpus(tmp_path)
+        report = _pi.build(ledger_dir=paths["ledger_dir"], db_path=paths["db_path"])
+        assert report["status"] == "ok"
+
+        # Append a real, valid new entry to one shard -- a genuine live-ledger edit.
+        edited_filename = "combat_movement.yaml"
+        existing = yaml.safe_load((paths["ledger_dir"] / edited_filename).read_text())
+        existing.append(_entry("COMB-STALE-001"))
+        (paths["ledger_dir"] / edited_filename).write_text(yaml.safe_dump(existing, sort_keys=False))
+
+        result = _pi.check_staleness(db_path=paths["db_path"], ledger_dir=paths["ledger_dir"])
+        assert result["status"] == "STALE"
+        assert result["db_hash"] != result["live_hash"]
+
+    def test_check_staleness_reuses_load_shards_not_reimplemented(self, tmp_path):
+        """The live_hash check_staleness() computes must be byte-identical to what a fresh
+        build() into a second scratch DB would produce for the same ledger dir -- proves the
+        check can't silently drift from what a real build actually hashes."""
+        paths = _full_nine_shard_corpus(tmp_path)
+        report1 = _pi.build(ledger_dir=paths["ledger_dir"], db_path=paths["db_path"])
+        assert report1["status"] == "ok"
+
+        staleness = _pi.check_staleness(db_path=paths["db_path"], ledger_dir=paths["ledger_dir"])
+        assert staleness["status"] == "FRESH"
+
+        second_db_path = paths["db_path"].parent / "second.db"
+        report2 = _pi.build(ledger_dir=paths["ledger_dir"], db_path=second_db_path)
+        assert report2["status"] == "ok"
+        assert report2["ledger_generation"]["source_manifest_hash"] == staleness["live_hash"]
+
+    def test_check_staleness_cli_exit_code(self, tmp_path):
+        paths = _full_nine_shard_corpus(tmp_path)
+
+        # NOT_BUILT -> exit 1
+        result = subprocess.run(
+            [
+                sys.executable, str(_MODULE_PATH), "check-staleness",
+                "--db-path", str(paths["db_path"]), "--ledger-dir", str(paths["ledger_dir"]),
+            ],
+            capture_output=True, text=True, cwd=str(_REPO_ROOT),
+        )
+        assert result.returncode == 1
+
+        report = _pi.build(ledger_dir=paths["ledger_dir"], db_path=paths["db_path"])
+        assert report["status"] == "ok"
+
+        # FRESH -> exit 0
+        result = subprocess.run(
+            [
+                sys.executable, str(_MODULE_PATH), "check-staleness",
+                "--db-path", str(paths["db_path"]), "--ledger-dir", str(paths["ledger_dir"]),
+            ],
+            capture_output=True, text=True, cwd=str(_REPO_ROOT),
+        )
+        assert result.returncode == 0
+
+        edited_filename = "combat_movement.yaml"
+        existing = yaml.safe_load((paths["ledger_dir"] / edited_filename).read_text())
+        existing.append(_entry("COMB-STALE-002"))
+        (paths["ledger_dir"] / edited_filename).write_text(yaml.safe_dump(existing, sort_keys=False))
+
+        # STALE -> exit 1
+        result = subprocess.run(
+            [
+                sys.executable, str(_MODULE_PATH), "check-staleness",
+                "--db-path", str(paths["db_path"]), "--ledger-dir", str(paths["ledger_dir"]),
+            ],
+            capture_output=True, text=True, cwd=str(_REPO_ROOT),
+        )
+        assert result.returncode == 1
