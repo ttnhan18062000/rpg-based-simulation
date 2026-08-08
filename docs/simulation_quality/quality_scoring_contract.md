@@ -668,6 +668,20 @@ PP-33 (`lifecycle` — death finalization), PP-11 (`military_conflict` — facti
 **Loop signal:** `attrition` appearing without `combat_resolved` at >80% of combat window
 → `loop_detected:unresolved_combat`
 
+**Real, confirmed finding (`TCK-20260808-COMBAT-PILLAR-OPPORTUNITY-ATTACK-CREDIT-GAP`):**
+`entity_killed` is emitted by two separate mechanisms that co-exist by design (see
+`TCK-20260806-PUSH-CUTOVER-COMBAT-ECONOMY-FACTION`'s own completion notes) — the push-shaper
+(`event_shapers.py`, narrow: fires only on `outcome_kind=="KILL"`, which the corpus's own real
+dominant kill mechanism, `movement.py`'s opportunity-attack path, never produces since it
+hardcodes `is_lethal=False`) and the older diffing extractor (`event_extractor.py`, broad: fires
+on any `lifecycle.active` transition, deliberately kept to cover exactly this class of
+non-shaper-owned kill). Confirmed via same-run instrumentation: real DEFEAT-outcome deaths from
+the opportunity-attack path *do* reach `CombatScorer` correctly via the broad path — not a
+credit gap. Since `entity_killed` scores negatively (`attrition`/`early_extinction`, both above),
+a monster-heavy world is not expected to score *higher* on COMBAT than a civilian world purely
+from more kills — more kills means more attrition penalty, not more credit. A C grade on a
+combat-active world is not, by itself, evidence of under-crediting.
+
 **Traceability path:**
 ```
 grade F → worst_events: tag="extinction_degenerate", tick=200
@@ -688,7 +702,7 @@ PP-10 (`diplomatic_transitions`), PP-11 (`military_conflict`), PP-23 (`world_eme
 
 **Event types scored:** `diplomatic_transition`, `alliance_proposed`, `alliance_accepted`,
 `war_declared`, `military_conflict_resolved`, `territory_ownership_changed`,
-`resource_seized`, `faction_tension_delta`, `faction_extinct`
+`resource_seized`, `faction_tension_delta`, `faction_extinct`, `faction_trajectory_stagnant`
 
 | Signal | Delta | Tag |
 |---|---|---|
@@ -706,6 +720,7 @@ PP-10 (`diplomatic_transitions`), PP-11 (`military_conflict`), PP-23 (`world_eme
 | Faction extinct within 50 ticks of run start | −8 | `faction_early_extinction` |
 | All factions remain NEUTRAL for entire run | −25 | `all_factions_neutral` |
 | Tension oscillates between same two values without crossing threshold, >5 cycles | −5 | `tension_oscillation` |
+| Faction territory unchanged for 300+ ticks despite ongoing diplomatic activity for that faction (trajectory coherence, §7.6) | −8 | `faction_trajectory_stagnant` |
 
 **Loop signal:** `tension_oscillation` at >60% of window → `loop_detected:tension_oscillation`
 
@@ -778,7 +793,7 @@ PP-31 (`near_death_hardening`), PP-33 (`lifecycle`)
 
 **Event types scored:** `xp_granted`, `level_up`, `skill_unlocked`, `trait_expressed`,
 `pillar_trait_unlocked`, `progression_conversion_applied`, `near_death_survival`,
-`progression_plateau_detected`
+`progression_plateau_detected`, `capability_growth_stalled`, `life_arc_incoherent`
 
 | Signal | Delta | Tag |
 |---|---|---|
@@ -795,6 +810,8 @@ PP-31 (`near_death_hardening`), PP-33 (`lifecycle`)
 | XP gain rate drops to zero after tick 50 and never recovers | −8 | `xp_plateau` |
 | Trait expression rate = 0 for entire run | −10 | `trait_system_silent` |
 | Level cap reached: entity generates level_up event with no effect | −1 | `level_cap_reached` |
+| Entity's level, skill count, equipped-gear count, and gold all flat for 300+ ticks simultaneously (capability trend, §7.6) | −10 | `capability_growth_stalled` |
+| Entity reaches Hero's Journey generation 2+ (a rebirth already occurred) still at level 1 with zero skills (life-arc coherence, §7.6) | −15 | `life_arc_incoherent` |
 
 **Loop signal:** `progression_frozen` at >80% of entity-ticks in window
 → `loop_detected:progression_stasis`
@@ -1166,6 +1183,46 @@ conflict to resolve by picking a secondary. This gap is tracked and implemented 
 scoring rule itself), which cites this subsection as its evidence source.
 
 **Conclusion: no new top-level SimQ pillar is justified at this time.**
+
+### 7.6 Pillar Completeness Audit (2026-08) — Combat/Progression Boundary & Layer-Lifecycle Trajectory
+
+A 2026-08-06 session discussion (post SimQ-epic closeout and full-corpus calibration refresh)
+raised two further candidates, distinct from the four checked in §7.5: whether COMBAT and
+PROGRESSION need clearer scope separation, and whether the simulation's other layers (entities,
+regions, factions, world) each need their own progression/lifecycle signal. Both were checked
+against the same §7.1-vs-§7.2 test.
+
+**Boundary clarified — COMBAT vs. PROGRESSION.** COMBAT (§5, lines 642-678) already correctly
+scores resolution mechanics only: damage, tactical-modifier variety (`tactical_variety`),
+durability, wounds. PROGRESSION (§5, lines 771-810) scores XP/level/skill/trait events, but only as
+isolated per-event deltas — it has no signal for whether an entity's overall **capability** (level +
+equipped-gear quality + gold + unlocked skills, combined) is trending upward across its lifetime,
+which is the fuller "growing richer/stronger" sense of progression. **Ruling: COMBAT stays
+resolution-only. PROGRESSION owns capability-trend and entity life-arc coherence** — this is a new
+scoring rule on PROGRESSION's existing usage question ("are entities growing"), not grounds for a
+new pillar or for COMBAT to absorb build/capability concerns.
+
+**Layer-lifecycle trajectory gap — entity and faction layers, not region/world.** WORLD already has
+a real trajectory-*coherence* rule, not just an event-density check: `trauma_hazard_broken`
+("regional trauma monotonically increasing with no hazard_level effect", line 942) catches a
+degenerate trend over a window, the same pattern a "is this layer's lifecycle healthy" check would
+need. Re-checking each layer against that bar:
+
+| Layer | Existing trajectory-coherence rule? | Verdict |
+|---|---|---|
+| Entity | None — PROGRESSION has threshold/plateau checks (`all_level_1`, `progression_frozen`, `xp_plateau`) but nothing synthesizing level+gear+wealth+skills into one capability trend, or checking life-arc coherence (e.g. surviving 500+ ticks with zero growth, or reaching a late Hero generation without meaningful prior growth) | **Real gap** |
+| Region | `trauma_hazard_broken` (WORLD, line 942) | Covered |
+| Faction | None — FACTION (§5, lines 681-718) has threshold checks (`faction_monopoly`, `all_factions_neutral`, `tension_oscillation`) but nothing catching a faction's territory/influence staying flat across a run despite ongoing `military_conflict_resolved`/`diplomatic_transition` events | **Real gap** |
+| World | `world_static`, `trauma_accumulation_broken`, `ecology_broken` (WORLD, lines 940-945) | Covered |
+
+Applying §7.1 vs §7.2: both gaps are new scoring rules on an existing pillar's existing usage
+question, not new usage questions requiring their own pillar. **Conclusion: no new top-level
+pillar is justified.** PROGRESSION gains an entity capability-trend + life-arc coherence rule;
+FACTION gains a `trauma_hazard_broken`-style faction-trajectory rule. Region and world layers need
+no change — already covered. Tracked by
+`TCK-20260806-SIMQ-PROGRESSION-CAPABILITY-LIFECYCLE` and
+`TCK-20260806-SIMQ-FACTION-LIFECYCLE-TRAJECTORY`, which cite this subsection as their rationale
+source; full scoping context in `TCK-20260806-SIMQ-LIFECYCLE-PILLAR-BOUNDARY-DOC`.
 
 ---
 
