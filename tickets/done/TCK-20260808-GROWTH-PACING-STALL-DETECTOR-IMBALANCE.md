@@ -17,7 +17,7 @@ lower than `capability_growth_stalled`'s own 300-tick re-firing cadence — a re
 mismatch, not a code bug, found by `TCK-20260808-GROWTH-TRAJECTORY-STILL-NEGATIVE-POST-FIX`
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -109,13 +109,28 @@ which that ticket's own narrow scope could responsibly take on:
   Investigate must weigh real recalibration blast radius for each before deciding.
 
 ## Implementation Notes
-(To be filled during implementation.)
+**SUPERSEDED, not implemented separately** (2026-08-08, per explicit user decision after
+`TCK-20260808-LEVEL-UP-GATED-PROGRESSION-CASCADE-DEAD`'s own Investigate phase found a broader,
+more consequential real finding — see that ticket's own Request Summary): this ticket's own
+"lever 2" (lengthen `capability_growth_stalled`'s 300-tick cadence) would only fix the *score*
+reading correctly; it would leave the real, underlying gameplay dead (skills/AP/attribute
+growth/species evolution never actually happening for real entities). The user explicitly chose
+to unify the fix: `TCK-20260808-LEVEL-UP-GATED-PROGRESSION-CASCADE-DEAD` becomes the single real
+fix (raising real kill rate and/or lowering the XP curve so `level_up` genuinely fires), verified
+against real corpus data showing both the score AND the underlying gameplay correctly reading
+non-dormant in one pass — not two separate re-verifications.
 
 ## Test Summary
-(To be filled during implementation.)
+N/A — no code implemented under this ticket; see
+`TCK-20260808-LEVEL-UP-GATED-PROGRESSION-CASCADE-DEAD`'s own Test Summary for the unified fix's
+real verification.
 
 ## Files Changed
-(To be filled during implementation.)
+None — superseded before Implement.
 
 ## Completion Summary
-(To be filled during implementation.)
+Closed as superseded, not abandoned: the real problem this ticket identified (score-cadence
+mismatch) is real and confirmed, but the user decided the more consequential sibling finding
+(dead gameplay cascade) should drive one unified fix rather than two separate ones. See
+`TCK-20260808-LEVEL-UP-GATED-PROGRESSION-CASCADE-DEAD` for the actual implementation and
+verification.
