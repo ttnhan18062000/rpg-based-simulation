@@ -17,7 +17,7 @@ Skill unlocks, AP spending, non-HERO attribute growth, and species evolution are
 a confirmed-shared-cause dead gameplay cascade, not just a dormant scoring signal
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -124,14 +124,18 @@ unilaterally** — see `## Assumptions / Open Questions`.
   independent, non-level-gated producer paths)
 - TCK-20260808-TRAIT-EXPRESSED-PRODUCER-INVESTIGATION (split out — `trait_expressed`/
   `pillar_trait_unlocked`'s entirely untraced producer)
-- TCK-20260808-GROWTH-PACING-STALL-DETECTOR-IMBALANCE (sibling, narrower scoring-cadence framing
-  — see relationship note above)
+- TCK-20260808-GROWTH-PACING-STALL-DETECTOR-IMBALANCE (DONE — closed as superseded; unified into
+  this ticket per explicit user decision)
 - TCK-20260808-GROWTH-TRAJECTORY-STILL-NEGATIVE-POST-FIX (DONE — the real kill-rate/XP numbers
   this ticket's own evidence is grounded in)
 - TCK-20260808-LOWER-LAYER-FOUNDATION-AUDIT (DONE — `docs/audits/D21_entity_lifecycle_foundation_layers.md`,
   the audit that surfaced this as the highest-priority open foundation gap)
 - TCK-20260701-SIMQ-EMIT-PROGRESSION (DONE — the ticket that originally wired these event
   emitters)
+- TCK-20260809-COMBAT-ATTACK-LEGALITY-ALWAYS-FALSE-INVESTIGATION (NEW — the real, deeper root
+  cause this ticket's own investigation traced the low kill rate to; the real fix belongs there)
+- TCK-20260809-COMBAT-OUTCOME-FLEE-VS-FIGHT-PERSONALITY (NEW — a related but distinct feature idea
+  raised during this investigation, filed separately)
 
 ## Related Docs
 - `docs/audits/D21_entity_lifecycle_foundation_layers.md`
@@ -148,21 +152,59 @@ None yet.
   already correctly wired per `TCK-20260701-SIMQ-EMIT-PROGRESSION`)
 
 ## Assumptions / Open Questions
-- **Needs a user decision before Plan**: should this ticket's own fix be unified with
-  `TCK-20260808-GROWTH-PACING-STALL-DETECTOR-IMBALANCE` (one combined kill-rate/XP-curve change
-  addressing both the score-reading problem and the real gameplay-dead-code problem), or kept as
-  2 separate tickets with 2 separate, more surgical fixes (e.g. lengthen the stall-detector window
-  for the score, AND separately lower the level-1 XP threshold or add non-combat XP sources for
-  the real gameplay cascade)? Not decided here.
+- **Resolved with the user**: unified with `TCK-20260808-GROWTH-PACING-STALL-DETECTOR-IMBALANCE`
+  into a single ticket/fix (that ticket closed as superseded).
+- **Resolved with the user**: after the chosen fix (raise `xp_multiplier`) was implemented and
+  found insufficient even at 6x for real original-population entities, the user chose to
+  investigate the real combat-frequency bottleneck rather than keep escalating the multiplier —
+  see Implementation Notes.
 
 ## Implementation Notes
-(To be filled during implementation.)
+Implemented the originally-chosen fix (raise `CombatRewardClassificationService.xp_multiplier`
+MONSTER 10→40, HERO 20→80) and re-verified it against a real 2000-tick `urban_political` corpus
+run tracking only the original (pre-tick) population. Result: **insufficient** — max real XP gain
+among original entities was 60 against a 100 XP level-2 threshold, even at a later-escalated 6x.
+Zero original entities ever leveled up.
+
+Per explicit user direction to keep tracing rather than escalate the multiplier further, ruled out
+3 successive hypotheses with real, instrumented probes before finding the actual cause:
+1. Hostile scarcity — ruled out (100% hostile presence within radius 10 across 50 sampled ticks).
+2. Goal-competition loss — ruled out (`COMBAT_ENGAGE` wins competition in 98.5% of 330 samples).
+3. Dead ATTACK-routing code path — ruled out (routing from `tactical.py` through `ActionRouter` to
+   `CombatResolutionSystem.resolve_attack()` confirmed intact with a real, non-None context).
+4. **Real, decisive cause**: `LegalityServiceV2.verify_attack_legality()` returns FALSE in 100% of
+   330 real samples (`FRIENDLY_FIRE_ILLEGAL` 45%, `INSUFFICIENT_READINESS` 55%) — entities
+   perpetually pursue but never legally attack.
+
+This is a genuinely deeper, more consequential finding than this ticket's own original scope.
+Per explicit user direction ("if the scope is large, create tickets for combat only, study
+deeply"), reverted the multiplier change (`git checkout -- src/engine/combat_rewards.py`, confirmed
+clean via `git status --porcelain -- src/`) and filed the real fix as a dedicated new ticket:
+`TCK-20260809-COMBAT-ATTACK-LEGALITY-ALWAYS-FALSE-INVESTIGATION`. A related but distinct feature
+idea raised by the user mid-investigation (personality/race-driven flee-vs-fight behavior, and a
+recalled "pursuit prevents escape" penalty) was filed separately:
+`TCK-20260809-COMBAT-OUTCOME-FLEE-VS-FIGHT-PERSONALITY`.
 
 ## Test Summary
-(To be filled during implementation.)
+No `src/` change lands from this ticket (fix implemented, tested, found insufficient, reverted) —
+no scoped pytest run required for this ticket's own close. All verification claims are real,
+instrumented probes against the live `urban_political` kernel — see `test_plan.md`'s own "Final
+verification claims" section for the full list (4x/6x multiplier re-test, hostile-density probe,
+goal-competition probe, decisive `is_attack_legal` probe).
 
 ## Files Changed
-(To be filled during implementation.)
+None (net). `src/engine/combat_rewards.py` was edited then fully reverted via
+`git checkout -- src/engine/combat_rewards.py`; confirmed clean. Docs updated:
+`docs/audits/D21_entity_lifecycle_foundation_layers.md`.
 
 ## Completion Summary
-(To be filled during implementation.)
+This ticket's own investigation successfully root-caused the real, deep reason
+level-up/skill/AP/attribute-growth/species-evolution all stay dormant in real gameplay: not
+reward magnitude (the originally-chosen fix), but a real combat-legality gate
+(`LegalityServiceV2.verify_attack_legality()`) that returns FALSE 100% of the time, preventing real
+combat from ever resolving into damage in the first place. The chosen multiplier fix was
+implemented, honestly re-tested, found insufficient, and reverted rather than forced or escalated
+without evidence. The real fix work is redirected to two newly-created, properly-scoped tickets
+(`TCK-20260809-COMBAT-ATTACK-LEGALITY-ALWAYS-FALSE-INVESTIGATION`,
+`TCK-20260809-COMBAT-OUTCOME-FLEE-VS-FIGHT-PERSONALITY`) rather than force-fit into this ticket's
+own narrower original scope.

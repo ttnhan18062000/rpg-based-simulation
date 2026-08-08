@@ -132,10 +132,20 @@ was originally one combined finding, corrected to reflect that the underlying ca
 genuinely distinct):
 
 - `skill_unlocked`, `progression_conversion_applied`, and part of `attribute_changed`/
-  `item_equipped` share one real, confirmed, *fixable* cause: `EvolutionSystem`'s entire
-  level-up reward block is gated behind `levels_gained > 0`, and `level_up` itself rarely fires
-  (`TCK-20260808-LEVEL-UP-GATED-PROGRESSION-CASCADE-DEAD`, not yet fixed — pending a scoping
-  decision with `TCK-20260808-GROWTH-PACING-STALL-DETECTOR-IMBALANCE`).
+  `item_equipped` share one real, confirmed cause: `EvolutionSystem`'s entire level-up reward
+  block is gated behind `levels_gained > 0`, and `level_up` itself rarely fires
+  (`TCK-20260808-LEVEL-UP-GATED-PROGRESSION-CASCADE-DEAD`, unified with and superseding
+  `TCK-20260808-GROWTH-PACING-STALL-DETECTOR-IMBALANCE`). **Update 2026-08-09**: the chosen fix
+  (raise `CombatRewardClassificationService.xp_multiplier` 4x, then 6x) was implemented and
+  re-tested against real corpus data, and found insufficient even at 6x — zero *original*-population
+  entities ever leveled up (max real XP gain 60 against a 100 XP threshold). Tracing deeper (per
+  explicit user direction) found the real bottleneck is one level below XP magnitude entirely: real
+  combat almost never lands a hit because `LegalityServiceV2.verify_attack_legality()` returns
+  FALSE in 100% of a real 330-sample probe (`ReasonCode.FRIENDLY_FIRE_ILLEGAL` 45%,
+  `ReasonCode.INSUFFICIENT_READINESS` 55%) — see the new dedicated section below, "Combat legality
+  always false — the real bottleneck behind low kill rate." The multiplier change was reverted
+  (no net `src/` change); the real fix is redirected to
+  `TCK-20260809-COMBAT-ATTACK-LEGALITY-ALWAYS-FALSE-INVESTIGATION`.
 - `item_equipped` has 2 *other*, independent real producers, both confirmed dormant for their own
   distinct reasons (`TCK-20260808-ITEM-EQUIPPED-DORMANT-PATH-INVESTIGATION`): `ConversionIntentResolver`'s
   `EQUIP_ITEM` path is gated behind `ENABLE_PROGRESSION_EVOLUTION`, which defaults OFF and is
@@ -168,6 +178,38 @@ branch into the real dominant path.
 (`TCK-20260808-COMBAT-PILLAR-OPPORTUNITY-ATTACK-CREDIT-GAP`). A "successful" foundation-layer
 combat loop is a *controlled*, non-extinction one, not a high-kill-count one — worth keeping in
 mind when reasoning about what "COMBAT working well" should even mean for this simulation.
+
+## Combat legality always false — the real bottleneck behind low kill rate
+
+Found while tracing `TCK-20260808-LEVEL-UP-GATED-PROGRESSION-CASCADE-DEAD`'s own combat-frequency
+root cause, after 3 successive hypotheses were ruled out with real, instrumented probes against a
+live `urban_political` kernel run (not assumed):
+
+1. **Not hostile scarcity** — hostiles present within `radius=10.0` in 100% of 50 sampled ticks.
+2. **Not goal-competition loss** — `GoalKind.COMBAT_ENGAGE` wins the goal competition in 325/330
+   (98.5%) samples when available.
+3. **Not a dead code path** — `tactical.py`'s real ATTACK branch routes through `ActionRouter` →
+   `CombatActions.execute_attack()` → `CombatResolutionSystem.resolve_attack()` with a real,
+   non-None `context` at the real pipeline call site — confirmed intact.
+
+**The real, decisive cause**: `is_attack_legal` (`tactical.py:397`, via
+`LegalityServiceV2.verify_attack_legality()`) was **FALSE in 100% of 330 real samples**, splitting
+into `ReasonCode.FRIENDLY_FIRE_ILLEGAL` (150, 45%) and `ReasonCode.INSUFFICIENT_READINESS` (180,
+55%). Because it's always false, `tactical.py`'s decision tree always falls through to the
+`else: Pursuit` branch — entities perpetually chase hostiles via `MovementMode.PURSUE`, never
+emitting a real ATTACK action. This is consistent with, and explains, the COMBAT section's own
+earlier finding above that `resolve_attack()` had zero real calls in 2000-tick corpus runs — the
+`ATTACK` action path isn't merely underused, it is **structurally unreachable** under current
+legality conditions, leaving the opportunity-attack path (which requires a *retreating* entity, the
+opposite of PURSUE) as the only real kill mechanism corpus-wide.
+
+This is the real, deeper root cause underlying this whole document's own `GROWTH_PROGRESSION`
+findings — low kill rate was treated as a given fact to design reward magnitude around; this
+finding traces *why* it's low. Not fixed here — filed as
+`TCK-20260809-COMBAT-ATTACK-LEGALITY-ALWAYS-FALSE-INVESTIGATION` (the legality-gate bug/investigation)
+and `TCK-20260809-COMBAT-OUTCOME-FLEE-VS-FIGHT-PERSONALITY` (a related but distinct feature idea:
+personality/race-driven flee-vs-fight outcomes and pursuit-prevents-escape, raised by the user
+during this same investigation).
 
 ## STRATEGY_COGNITION (flag-free baseline)
 
