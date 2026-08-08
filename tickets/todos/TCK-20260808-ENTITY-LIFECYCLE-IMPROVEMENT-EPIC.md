@@ -81,11 +81,30 @@ reading of that combined SimQ pillar + entity-lifecycle-score data, not assumed 
    population, only 3 monster kinds vs. `dungeon_crawl`'s 5, is a plausible but unverified
    confound worth a future investigation, not blocking this epic).
 
+**2 more real findings, added after deeper reading of this same data during follow-up
+conversation (user-directed):**
+
+6. **`phase_coverage`/`path_entropy` have a real, per-world content ceiling, not a universal 0-1
+   scale.** Directly confirmed: `wilderness_survival` only ever touches 6/10 lifecycle-phase
+   buckets across its *entire* population (no `ECONOMY`/`SOCIAL`/`IDENTITY`/`NARRATIVE_QUEST`
+   content exists there at all); `urban_political` reaches 8/10. Neither metric currently has a
+   universal pass/fail threshold, and forcing either "as high as possible" would mean forcing
+   content into worlds deliberately authored without it — the same category of mistake as
+   flipping `ENABLE_ADVENTURE_ROUTING` corpus-wide. No world in the current corpus can reach all
+   10 buckets, so there is no way to tell a real mechanism gap from a real content gap for these
+   2 metrics specifically — Child 5.
+7. **`entity_lifecycle_score.py` silently drops metadata for entities born mid-run.** Every one of
+   the 6 worlds shows an exactly-10-entity `"role": None` group in its per-role aggregation
+   (21-48% of that world's own real observed population), traced directly to a real, gated
+   `demographic_birth` mechanic combined with the tool's own pre-run-only `world_state` metadata
+   snapshot. These are not junk entities — several have real, substantial lifecycles (path
+   lengths up to 3289 events) — Child 4.
+
 ## Scope
 
-Break down into 3 child tickets (Child 4 above is intentionally deferred, see Out of Scope), each
-running its own full `implement-ticket.js` pipeline — this epic ticket itself does not implement
-anything directly, per the epic tier's Scope-only pipeline:
+Break down into 5 child tickets (the tick-budget-watchdog finding above is intentionally
+deferred, see Out of Scope), each running its own full `implement-ticket.js` pipeline — this epic
+ticket itself does not implement anything directly, per the epic tier's Scope-only pipeline:
 
 1. **`TCK-20260808-GROWTH-TRAJECTORY-STILL-NEGATIVE-POST-FIX`** (standard) — investigate why
    population-level `growth_trajectory` remains negative across all 6 real worlds even after the
@@ -107,6 +126,18 @@ anything directly, per the epic tier's Scope-only pipeline:
    determine why (level/XP threshold too high relative to real growth rate — itself possibly
    entangled with Child 1's own finding; a missing trigger path; or a deliberately rare, working-
    as-intended mechanic) before proposing any change.
+4. **`TCK-20260808-LIFECYCLE-SCORE-MIDRUN-SPAWN-METADATA-GAP`** (standard) — fix
+   `entity_lifecycle_score.py`'s own metadata-join gap for entities born during a run (Finding 7
+   above). Root-cause the exactly-10-per-world consistency, then fix the metadata source (likely
+   resolving from post-run state, not just the pre-run snapshot) and re-verify the `"None"` role
+   group shrinks/disappears across the 6 curated worlds.
+5. **`TCK-20260808-LIFECYCLE-FULL-COVERAGE-WORLD`** (standard) — author a large, fully-equipped
+   world exercising all 10 lifecycle-phase buckets (Finding 6 above), reusing existing corpus
+   module/flag precedent rather than authoring redundant content, to give `phase_coverage`/
+   `path_entropy` a real ceiling-free data point — separating "this metric under-reports" from
+   "no world has ever had this much content" for the first time. Real, honest reporting of the
+   achieved bucket ceiling is required even if it falls short of 10/10 (e.g. if `IDENTITY` or
+   `NARRATIVE_QUEST`'s `quest_completed` prove to be hard engine-level ceilings, not content gaps).
 
 ## Out of Scope
 - The tick-budget-watchdog degradation on `wilderness_survival` at 5000 ticks (Finding 4 above) —
@@ -116,16 +147,18 @@ anything directly, per the epic tier's Scope-only pipeline:
   scoped as a child of this epic.
 - The `dungeon_crawl`/`wilderness_survival` diversity asymmetry (Finding 5) — real and disclosed,
   lower priority, not yet evidenced enough to justify a dedicated ticket on its own.
-- Any change to `entity_lifecycle_score.py`'s own metric formulas, `corpus_registry.yaml`'s
-  archetype field, or the long-run observation tooling itself — all 3 are freshly built and
-  verified this session; this epic uses their real output, it doesn't revisit their design.
+- Any change to `entity_lifecycle_score.py`'s own 7 metric *formulas* (`path_length`,
+  `phase_coverage`, `path_entropy`, etc.), `corpus_registry.yaml`'s archetype field, or the
+  long-run observation tooling's own design — all freshly built and verified this session; this
+  epic uses their real output, it doesn't revisit their formulas. Child 4's own metadata-join fix
+  is a real exception, narrowly scoped to that one, since-confirmed bug — not a formula change.
 - Re-running the long-run observation at 5000 ticks for all 6 worlds — the 2000-tick data already
   gathered is real, `clustering_reliable: true`, and `stall_detector_reachable: true` for every
   world; sufficient for this epic's own children to work from without incurring the real
   watchdog-degradation risk found on `wilderness_survival`.
 
 ## Acceptance Criteria
-- [ ] All 3 child tickets filed to `tickets/todos/` (or a dedicated epic folder), each independently
+- [ ] All 5 child tickets filed to `tickets/todos/` (or a dedicated epic folder), each independently
       implementable
 - [ ] Each child ticket's own Investigate phase reaches a real, evidenced root cause (or
       explicitly concludes "working as intended, not a defect," matching this session's own
@@ -146,6 +179,8 @@ anything directly, per the epic tier's Scope-only pipeline:
   motivating Child 2)
 - TCK-20260808-LIFECYCLE-SCORE-WORLD-ARCHETYPE-AWARENESS (DONE — the archetype field used to frame
   Findings 2 and 5)
+- TCK-20260808-LIFECYCLE-SCORE-MIDRUN-SPAWN-METADATA-GAP (Child 4, filed this session)
+- TCK-20260808-LIFECYCLE-FULL-COVERAGE-WORLD (Child 5, filed this session)
 - TCK-20260808-ROUTING-FLAG-FACTION-INFORMATION-RNG-COUPLING (OPEN, filed this session — a
   separate, unrelated regression found during the HERO ticket's own investigation)
 
