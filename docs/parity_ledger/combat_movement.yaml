@@ -3605,3 +3605,49 @@
     calculate_tactical_multipliers()'s own real modifier-computation logic is untouched -- this
     fix reads its already-computed trace output only. CombatScorer.score()'s own scoring logic
     is untouched -- it already had a correct, ready handler.
+
+- id: COMB-307
+  text: >
+    TCK-20260809-COMBAT-STUCK-ATTACK-TASK-DEAD-TARGET -- an entity's ATTACK task, once emitted
+    with a real target_id, was never cleared on failure (src/engine/pipeline_phases/actions.py's
+    own route() preserved the entire original payload on any legality/readiness failure, mirror
+    ing the file's own EAT/REST/SLEEP-success reset pattern but with no equivalent for ATTACK
+    failure). Because scheduler.py's own is_idle_act check (`work_kind == "ENTITY_ACT" and not
+    ent.task.payload`) requires an EMPTY payload to route an entity back through the tactical-
+    brain-cadence gate, a non-empty stale-target payload meant the same failing ATTACK was
+    re-dispatched every tick the attacker's readiness recovered from the real -50.0 illegal-
+    target penalty (~5 real ticks to regen) -- confirmed via live corpus trace to repeat for
+    180+ real ticks against the same already-dead target, with no natural end observed.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    ActionRoutingPhase.route() now resets the task to idle (payload_set={}) specifically when
+    action=="ATTACK" and the failure reason is TARGET_INCAPACITATED -- an unrecoverable
+    condition (the target is dead/inactive and can never become legal again), unlike
+    INSUFFICIENT_READINESS/OUT_OF_RANGE which are real, recoverable conditions deliberately left
+    un-reset. Also confirmed, disclosed, and left untouched: a real, legitimate 2-pass
+    architecture (Kernel._phase_collection's own parallel-worker Collection phase, then
+    AuthoritativeApplyPipeline._route_action_intent's own same-tick refinement pass, per
+    actions.py::route()'s own documented same-tick-ordering law) means each real attack attempt
+    is checked twice per tick by design -- not a bug, not touched. Real corpus re-verification
+    (2000-tick live Kernel.tick_once() loop, dungeon_crawl_seed42, corpus-default flags, 3 clean
+    re-runs): TARGET_INCAPACITATED volume dropped from 128-144 (pre-fix, one stuck pair
+    repeating for 180+ ticks) to exactly 4 per run (post-fix, 2 distinct pairs x 2 real
+    same-tick dispatches each -- the expected, legitimate 2-pass cost with the stuck-task
+    condition eliminated) -- a genuine, ~35x real reduction.
+  proof_type: regression
+  test_path: >
+    tests/unit/actions/test_action_routing_task_reset.py (5 new tests: dead-target reset,
+    incapacitated-but-alive-target reset, INSUFFICIENT_READINESS/OUT_OF_RANGE preserved
+    unchanged, missing-action short-circuit unaffected). Full scoped re-run:
+    tests/unit/actions/, tests/unit/combat/, tests/unit/tactical/, tests/unit/movement/,
+    tests/unit/kernel/ -- 206 passed, 1 pre-existing unrelated failure
+    (test_normal_move_triggers_oa).
+  divergence_note: null
+  support_boundary: >
+    combat_actions.py's own real -50.0 illegal-target readiness penalty is unchanged -- this fix
+    stops the *repeated* penalty from compounding against a target that can never become legal
+    again, without changing the penalty itself for a target that might still become legal.
+    scheduler.py's own cadence mechanism and the 2-pass Collection/action_routing architecture
+    are both untouched.

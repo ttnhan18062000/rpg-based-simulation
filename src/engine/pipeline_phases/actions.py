@@ -189,7 +189,24 @@ class ActionRoutingPhase:
             reason_value = failure_reason.value if hasattr(failure_reason, "value") else failure_reason
             # Survival actions reset the task to idle on success so the brain
             # can re-evaluate on the next cadence tick (entity stays near tavern).
-            if is_survival and outcome == "SUCCESS":
+            #
+            # ATTACK + TARGET_INCAPACITATED also resets to idle -- a real, unrecoverable failure
+            # (the target is dead/inactive; retrying can never succeed). Without this, the stale
+            # target_id in payload keeps the task classified ENTITY_ACT with a non-empty payload,
+            # which bypasses scheduler.py's own is_idle_act/brain-cadence gate entirely (that gate
+            # only applies when payload is empty) -- the same failing attack gets re-dispatched
+            # every tick readiness recovers (readiness regens from execute_attack's own -50.0
+            # illegal-target penalty in ~5 real ticks), forever, confirmed via live corpus trace to
+            # repeat for 180+ real ticks against the same dead target with no natural end
+            # (TCK-20260809-COMBAT-STUCK-ATTACK-TASK-DEAD-TARGET). INSUFFICIENT_READINESS/
+            # OUT_OF_RANGE are deliberately NOT reset here -- both are real, recoverable
+            # conditions (readiness regens; range may close via a fresh pursuit decision), unlike
+            # a dead target which can never become legal again.
+            is_unrecoverable_attack_failure = (
+                action == "ATTACK" and outcome == "FAILURE"
+                and reason_value == ReasonCode.TARGET_INCAPACITATED.value
+            )
+            if (is_survival and outcome == "SUCCESS") or is_unrecoverable_attack_failure:
                 annotated_task = replace(task_upd, payload_set={})
             else:
                 annotated_task = replace(task_upd, payload_set={**payload, "outcome": outcome, **({"reason": reason_value} if reason_value else {})})

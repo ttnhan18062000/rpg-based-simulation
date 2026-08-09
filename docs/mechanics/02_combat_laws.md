@@ -116,3 +116,17 @@ disengaging while adjacent to a hostile) bypass this specific check.
     combat-engagement state, not a hardcoded assumption of non-intrusion.
 *   **Range & LoS**: Attacks additionally require the target within `effective_range` (melee: must
     be exactly adjacent) and unobstructed line of sight.
+*   **Unrecoverable-Failure Task Reset**: An `ATTACK` task that fails with
+    `ReasonCode.TARGET_INCAPACITATED` (the target died or otherwise became inactive since the
+    attack was chosen) resets the entity's task to idle (`ActionRoutingPhase.route()`,
+    `src/engine/pipeline_phases/actions.py`), mirroring the file's own established survival-action
+    (`EAT`/`REST`/`SLEEP`) success-reset pattern. Without this, the stale `target_id` kept the
+    task classified `ENTITY_ACT` with a non-empty payload — which bypasses the scheduler's own
+    tactical-brain-cadence gate entirely (that gate only applies when a task's payload is empty)
+    — so the same failing attack was re-dispatched every tick readiness recovered from the real
+    illegal-target penalty (`-50.0`, ~5 ticks to regen), confirmed via live corpus trace to
+    repeat for 180+ real ticks against the same dead target with no natural end
+    (`TCK-20260809-COMBAT-STUCK-ATTACK-TASK-DEAD-TARGET`). `INSUFFICIENT_READINESS`/
+    `OUT_OF_RANGE` failures are deliberately **not** reset — both are real, recoverable
+    conditions (readiness regens; range may close via a fresh pursuit decision), unlike a dead
+    target which can never become legal again.
