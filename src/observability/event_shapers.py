@@ -16,8 +16,9 @@ from __future__ import annotations
 
 import logging
 import time
-from typing import Any, List, Protocol
+from typing import Any, Dict, List, Optional, Protocol
 
+from src.core.enums import EntityRole
 from src.core.state import AuthoritativeState
 from src.core.updates import StateUpdate
 from src.observability.config import ObservabilityMode
@@ -46,6 +47,38 @@ class EventShaper(Protocol):
         tick: int,
         mode: ObservabilityMode = ObservabilityMode.LIGHT,
     ) -> List[SimulationEvent]: ...
+
+
+def _combat_entity_snapshot(ent: Optional[Any]) -> Optional[Dict[str, Any]]:
+    """Real, honest snapshot of one combat participant's own state at the moment of a
+    combat_engagement_started/ended event -- level, hp/max_hp, atk/def, role/faction/race,
+    bravery, action_style -- sufficient to later judge whether a given combat scenario was
+    reasonable (TCK-20260809-COMBAT-LIFECYCLE-OBSERVABILITY). Reads prior_state only, matching
+    this shaper's own prior_state+update-only design. Returns None if ent is None (e.g. an
+    attacker_id that no longer resolves in prior_state)."""
+    if ent is None:
+        return None
+    identity = getattr(ent, "identity", None)
+    combat = getattr(ent, "combat", None)
+    role_val = getattr(identity, "role", None)
+    try:
+        role_name = EntityRole(role_val).name
+    except Exception:
+        role_name = str(role_val) if role_val is not None else None
+    properties = getattr(identity, "properties", None) or {}
+    personality = getattr(identity, "personality", None)
+    return {
+        "level": getattr(identity, "evolution_level", None),
+        "hp": getattr(combat, "hp", None),
+        "max_hp": getattr(combat, "max_hp", None),
+        "atk": getattr(combat, "atk", None),
+        "def_stat": getattr(combat, "def_stat", None),
+        "role": role_name,
+        "faction_id": properties.get("faction_id"),
+        "race_id": properties.get("race_id"),
+        "bravery": getattr(personality, "bravery", None),
+        "action_style": getattr(combat, "action_style", None),
+    }
 
 
 class CombatShaper:
@@ -81,6 +114,48 @@ class CombatShaper:
                 continue
 
             combat_upd = getattr(e_upd, "combat", None)
+
+            # combat_engagement_ended(PURSUIT_ABANDONED) / (ESCAPED) -- real, but neither one
+            # sets e_upd.combat (giving up a chase and a clean disengagement both involve no
+            # CombatUpdate at all), so both must be checked BEFORE the combat_upd-is-None guard
+            # below -- otherwise they would be silently skipped, exactly the kind of gap this
+            # ticket exists to close (TCK-20260809-COMBAT-LIFECYCLE-OBSERVABILITY).
+            task_upd = getattr(e_upd, "task", None)
+            task_reason = None
+            if task_upd is not None:
+                payload_set = getattr(task_upd, "payload_set", None) or {}
+                task_reason = payload_set.get("reason")
+            if task_reason in ("LEASH_RETURN", "STALEMATE_BREAK"):
+                prior_task = getattr(prior_ent, "task", None)
+                prior_target_id = None
+                if prior_task is not None:
+                    prior_target_id = getattr(prior_task, "payload", None) or {}
+                    prior_target_id = prior_target_id.get("target_id")
+                events.append(SimulationEvent(
+                    event_type="combat_engagement_ended", event_category="combat",
+                    tick=tick, entity_id=eid, target_id=prior_target_id, severity="INFO",
+                    source_system="event_shapers", message="",
+                    payload={
+                        "outcome": "PURSUIT_ABANDONED",
+                        "reason": task_reason,
+                        "actor_snapshot": _combat_entity_snapshot(prior_ent),
+                    },
+                ))
+
+            property_updates = getattr(e_upd, "property_updates", None) or {}
+            if property_updates.get("combat_escape") == "EVASIVE_SUCCESS":
+                evaded_ids = list(property_updates.get("combat_escape_evaded_ids") or [])
+                events.append(SimulationEvent(
+                    event_type="combat_engagement_ended", event_category="combat",
+                    tick=tick, entity_id=eid, severity="INFO",
+                    source_system="event_shapers", message="",
+                    payload={
+                        "outcome": "ESCAPED",
+                        "evaded_ids": evaded_ids,
+                        "actor_snapshot": _combat_entity_snapshot(prior_ent),
+                    },
+                ))
+
             if combat_upd is None:
                 continue
 
@@ -125,6 +200,38 @@ class CombatShaper:
                         source_system="event_shapers", message="",
                         payload={"attacker_id": real_combat.attacker_id},
                     ))
+                    # combat_engagement_started -- fires alongside the gate above, same tick,
+                    # same entity pair. trigger_reason is directly derivable from
+                    # CombatUpdate.is_opportunity_attack: a legal attack that isn't an OA can
+                    # only originate from tactical.py's own deliberate ATTACK/SKILL emission
+                    # branch (structurally distinct from every retreat/reposition/hold branch).
+                    attacker_ent = prior_state.entities.get(real_combat.attacker_id)
+                    events.append(SimulationEvent(
+                        event_type="combat_engagement_started", event_category="combat",
+                        tick=tick, entity_id=eid, target_id=real_combat.attacker_id,
+                        severity="INFO", source_system="event_shapers", message="",
+                        payload={
+                            "trigger_reason": "OPPORTUNITY_ATTACK" if real_combat.is_opportunity_attack else "GOAL_ENGAGE",
+                            "defender_snapshot": _combat_entity_snapshot(prior_ent),
+                            "attacker_snapshot": _combat_entity_snapshot(attacker_ent),
+                        },
+                    ))
+                # combat_engagement_ended(CAUGHT_FLEEING) -- a real opportunity attack, by
+                # construction, only ever fires on a hostile's own disengagement movement
+                # (movement.py's engaged_hostiles-and-not-skip_oa gate) -- this IS "caught
+                # while fleeing". Excludes a kill this tick (KILL fires its own outcome below).
+                if real_combat.is_opportunity_attack and getattr(combat_upd, "outcome_kind", None) != "KILL":
+                    attacker_ent = prior_state.entities.get(real_combat.attacker_id)
+                    events.append(SimulationEvent(
+                        event_type="combat_engagement_ended", event_category="combat",
+                        tick=tick, entity_id=eid, target_id=real_combat.attacker_id,
+                        severity="INFO", source_system="event_shapers", message="",
+                        payload={
+                            "outcome": "CAUGHT_FLEEING",
+                            "defender_snapshot": _combat_entity_snapshot(prior_ent),
+                            "attacker_snapshot": _combat_entity_snapshot(attacker_ent),
+                        },
+                    ))
                 near_death_hp = prior_max_hp * _NEAR_DEATH_THRESHOLD
                 if new_hp < near_death_hp <= prior_hp and new_combat_alive:
                     events.append(SimulationEvent(
@@ -161,6 +268,17 @@ class CombatShaper:
                     tick=tick, entity_id=eid, severity="INFO",
                     source_system="event_shapers", message="",
                     payload={"killer_id": killer_id},
+                ))
+                killer_ent = prior_state.entities.get(killer_id) if killer_id is not None else None
+                events.append(SimulationEvent(
+                    event_type="combat_engagement_ended", event_category="combat",
+                    tick=tick, entity_id=eid, target_id=killer_id, severity="INFO",
+                    source_system="event_shapers", message="",
+                    payload={
+                        "outcome": "KILL",
+                        "defender_snapshot": _combat_entity_snapshot(prior_ent),
+                        "attacker_snapshot": _combat_entity_snapshot(killer_ent),
+                    },
                 ))
                 if getattr(prior_ent, "kind", None) == "hero":
                     events.append(SimulationEvent(

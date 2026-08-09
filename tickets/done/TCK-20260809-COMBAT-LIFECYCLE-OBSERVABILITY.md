@@ -20,7 +20,7 @@ observability layer first (per-attack tactical-modifier detail deferred, see Out
 combat scenarios can be judged for reasonableness later
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -201,13 +201,77 @@ None yet.
   existing `SimulationEvent`/payload conventions.
 
 ## Implementation Notes
-(To be filled during implementation.)
+- `src/engine/movement.py::resolve_move()` — added a purely additive `escape_tag` dict, computed
+  right after the existing `skip_oa` computation, merged into the returned `EntityUpdate`'s
+  `property_updates` only when `engaged_hostiles` is real and non-empty and `skip_oa` is `True`:
+  `{"combat_escape": "EVASIVE_SUCCESS", "combat_escape_evaded_ids": [...]}`. No change to the real
+  `skip_oa`/opportunity-attack resolution logic itself.
+- `src/observability/event_shapers.py::CombatShaper` — added `_combat_entity_snapshot(ent)`, a
+  module-level helper reading `identity.evolution_level`/`combat.hp`/`combat.max_hp`/`combat.atk`/
+  `combat.def_stat`/`identity.role` (via `EntityRole(...).name`, with a defensive string fallback
+  for any unmapped legacy int)/`identity.properties`'s `faction_id`/`race_id`/
+  `identity.personality.bravery`/`combat.action_style` off a real `EntityState`. Added two new
+  event types, both deliberately additive (no change to any existing gate):
+  - `combat_engagement_started` — fires alongside the existing `combat_initiated` gate;
+    `payload.trigger_reason` = `GOAL_ENGAGE`/`OPPORTUNITY_ATTACK` from
+    `CombatUpdate.is_opportunity_attack`; carries both `attacker_snapshot`/`defender_snapshot`.
+  - `combat_engagement_ended` — 4 real outcomes: `KILL` (alongside the existing `entity_killed`
+    gate), `CAUGHT_FLEEING` (a real, non-lethal opportunity attack), `PURSUIT_ABANDONED`
+    (`TaskUpdate.payload_set.reason` in `LEASH_RETURN`/`STALEMATE_BREAK`), `ESCAPED` (reads the
+    new `movement.py` `combat_escape` tag). The `PURSUIT_ABANDONED`/`ESCAPED` checks are placed
+    **before** the shaper's own `combat_upd is None: continue` early-exit — both real conditions
+    have no `CombatUpdate` on their `EntityUpdate` at all (a task-only or property-only update),
+    so they would have been silently skipped by the pre-existing guard otherwise.
+- Deliberately did not surface `CombatUpdate.trace` (per-attack tactical-modifier detail) — stays
+  deferred to a future ticket, per the user's own explicit direction earlier in this session.
+- Both new event types registered in `docs/simulation_quality/event_type_coverage.md` §5
+  (Unscored Intentional) — pillar-scoring integration deliberately deferred to a later ticket,
+  matching this repo's own established precedent for new observability additions.
 
 ## Test Summary
-(To be filled during implementation.)
+- 12 new unit tests in `tests/unit/observability/test_event_shapers.py` covering all 6 real
+  trigger conditions (2 for `combat_engagement_started`, 4 for `combat_engagement_ended`) plus 3
+  for the new `_combat_entity_snapshot()` helper — all passing (34/34 in that file).
+- Full scoped re-run: `tests/unit/observability/ tests/unit/movement/ tests/unit/combat/` —
+  1130 passed, 6 skipped, 1 pre-existing unrelated failure
+  (`test_normal_move_triggers_oa`, confirmed via `git stash` bisection to fail identically on the
+  pre-ticket tree — not caused or touched by this work).
+- Real corpus re-verification: a live `Kernel.tick_once()` loop, 2000 ticks, against
+  `dungeon_crawl_seed42` (32 entities) and `urban_political_seed42` (30 entities). Under
+  corpus-default feature flags, `combat_engagement_ended(PURSUIT_ABANDONED)` fired 10 times in
+  each world and `combat_engagement_ended(ESCAPED)` fired 5 times in `urban_political` (0 in
+  `dungeon_crawl`) — real, non-zero, honestly-reported volume. `combat_engagement_started` and
+  the `KILL`/`CAUGHT_FLEEING` outcomes (all gated behind `ENABLE_COMBAT_ENGAGEMENT`, real default
+  `OFF` corpus-wide) did not fire at this corpus/scale in either configuration tried
+  (corpus-default and `ENABLE_COMBAT_ENGAGEMENT=ON` forced via env) — verified this is **not** a
+  gap from this ticket: the pre-existing sibling events they ride alongside (`combat_initiated`,
+  `combat_damage`, `entity_killed`) also recorded zero occurrences in the exact same runs. Full
+  breakdown and methodology in `investigation.md`'s "Real corpus re-verification" section.
+- Unrelated, pre-existing finding surfaced (not fixed, out of this ticket's scope): the anchor
+  regression test `test_grade_within_anchor_band_long_run[urban_political_seed42_2000t]`
+  (SOCIAL pillar) fails identically on the clean pre-ticket tree — confirmed via `git stash`, not
+  caused by this ticket's changes.
 
 ## Files Changed
-(To be filled during implementation.)
+- `src/engine/movement.py` — new additive `combat_escape` `property_updates` tag.
+- `src/observability/event_shapers.py` — `_combat_entity_snapshot()` helper,
+  `combat_engagement_started`/`combat_engagement_ended` event types.
+- `tests/unit/observability/test_event_shapers.py` — 12 new tests, extended `_entity()`/
+  `_real_combat_upd()` builders.
+- `docs/simulation_quality/event_type_coverage.md` — §5 registration for both new event types.
+- `docs/parity_ledger/combat_movement.yaml` — COMB-302 (movement.py escape tag).
+- `docs/parity_ledger/infrastructure.yaml` — INFRA-329 (event_shapers.py new events).
 
 ## Completion Summary
-(To be filled during implementation.)
+Built the missing high-level combat-engagement observability layer: `combat_engagement_started`
+(deliberate-engage vs. opportunity-attack) and `combat_engagement_ended` (KILL, CAUGHT_FLEEING,
+PURSUIT_ABANDONED, ESCAPED — all 4 real end-without-a-kill... plus-kill paths traced in this
+ticket's own investigation), both carrying a real entity-state snapshot (level, hp/max_hp, atk/
+def, role/faction/race, bravery, action_style) for later scenario-reasonableness analysis. Purely
+additive — no existing event, combat-resolution, or movement-resolution logic changed. Per-attack
+tactical-modifier detail (`CombatUpdate.trace`) remains explicitly deferred to a future ticket, per
+direct user direction. Real corpus re-verification confirmed 2 of 4 new outcome paths
+(PURSUIT_ABANDONED, ESCAPED) fire naturally at real volume without any combat-engagement-phase
+dependency; the other paths ride the same real gate as pre-existing, already-shipped events that
+are themselves corpus-inactive at this scale — an honestly-disclosed, pre-existing condition, not
+a defect of this ticket's own work.

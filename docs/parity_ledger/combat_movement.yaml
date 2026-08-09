@@ -3391,3 +3391,37 @@
   support_boundary: >
     style/ActionStyle remain real, used imports/locals in tactical.py -- the real kiting-distance
     consumer (line ~555) is untouched by this removal.
+
+- id: COMB-302
+  text: >
+    TCK-20260809-COMBAT-LIFECYCLE-OBSERVABILITY -- movement.py's real, successful-disengagement
+    case (MovementMode.RETREAT + ActionStyle.EVASIVE -> skip_oa=True, with engaged_hostiles
+    genuinely non-empty) previously left zero trace on the returned EntityUpdate -- no existing
+    field distinguished "escaped from a real hostile that would have attacked" from an ordinary
+    move with nothing nearby. Added a purely additive property_updates tag
+    ({"combat_escape": "EVASIVE_SUCCESS", "combat_escape_evaded_ids": [...]}) at the exact site
+    the skip_oa decision is already made, mirroring this file's own established
+    "movement_resolution": "POSITION_SWAP" pattern. No change to the real skip_oa/opportunity-
+    attack resolution logic itself.
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: >
+    src/engine/movement.py's resolve_move(): a new escape_tag dict is computed right after the
+    existing skip_oa computation and merged into the final EntityUpdate's property_updates only
+    when engaged_hostiles and skip_oa are both true. Consumed by
+    src/observability/event_shapers.py's CombatShaper as one of 4 real
+    combat_engagement_ended outcomes (ESCAPED) -- see infrastructure.yaml for the shaper-side
+    entry. Real corpus re-verification (2000-tick live Kernel.tick_once() loop,
+    dungeon_crawl_seed42 + urban_political_seed42, corpus-default feature-flag config): ESCAPED
+    fired 5 times naturally in urban_political, 0 times in dungeon_crawl within this window --
+    disclosed honestly, not forced.
+  proof_type: regression
+  test_path: >
+    tests/unit/movement/ (41 passed, 1 pre-existing unrelated failure --
+    test_normal_move_triggers_oa, confirmed via bisection to predate this ticket) and
+    tests/unit/observability/test_event_shapers.py::test_combat_engagement_ended_escaped_reads_movement_escape_tag.
+  divergence_note: null
+  support_boundary: >
+    Purely additive read-side tag -- does not change skip_oa's own real condition, the
+    opportunity-attack resolution path, or any other movement outcome.

@@ -7888,3 +7888,48 @@
     tests/unit/content/test_content_usage_matrix.py
   divergence_note: null
   support_boundary: null
+
+- id: INFRA-329
+  text: >-
+    TCK-20260809-COMBAT-LIFECYCLE-OBSERVABILITY -- no real, high-level record of a combat
+    engagement's own start/end existed anywhere: only per-hit combat_damage/entity_killed events
+    existed, with no signal for how a combat started (deliberate goal-engage vs. an opportunity
+    attack) or for 3 of the 4 real ways it can end without a kill (a fleeing entity getting
+    caught, a chaser giving up pursuit, a clean escape). Entity-level context (level, hp/max_hp,
+    atk/def, role/faction/race, bravery, action_style) was also absent from every existing combat
+    event, making it impossible to later judge whether a given combat scenario was reasonable.
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: >-
+    src/observability/event_shapers.py's CombatShaper gained a new _combat_entity_snapshot()
+    helper and two new event types, both deliberately additive (existing combat_initiated/
+    entity_killed/combat_damage untouched): combat_engagement_started (fires alongside the
+    existing combat_initiated gate; payload.trigger_reason = GOAL_ENGAGE/OPPORTUNITY_ATTACK from
+    CombatUpdate.is_opportunity_attack) and combat_engagement_ended (4 real outcomes -- KILL
+    alongside the existing entity_killed gate; CAUGHT_FLEEING from a non-lethal real opportunity
+    attack; PURSUIT_ABANDONED from TaskUpdate.payload_set.reason in LEASH_RETURN/STALEMATE_BREAK,
+    read before the shaper's own combat_upd-is-None early-continue so a task-only update with no
+    CombatUpdate is not silently skipped; ESCAPED from the new movement.py combat_escape tag, see
+    combat_movement.yaml COMB-302). Both events carry attacker/defender entity snapshots. Not yet
+    routed to any SimQ scorer -- registered as unscored_intentional in
+    docs/simulation_quality/event_type_coverage.md §5, deferring the pillar-scoring decision to a
+    later ticket per this repo's own established precedent. Per-attack tactical-modifier detail
+    (CombatUpdate.trace) remains deliberately deferred/out of scope, per the user's own direction.
+  proof_type: regression
+  test_path: >
+    tests/unit/observability/test_event_shapers.py (12 new tests covering all 6 real trigger
+    conditions -- 2 for combat_engagement_started, 4 for combat_engagement_ended -- plus the
+    snapshot helper); real 2000-tick Kernel.tick_once() corpus re-verification against
+    dungeon_crawl_seed42/urban_political_seed42 confirmed PURSUIT_ABANDONED/ESCAPED fire at real,
+    non-zero volume under corpus-default feature flags (see this ticket's own investigation.md
+    "Real corpus re-verification" section for the full breakdown and the honest disclosure that
+    the 3 conditions gated behind ENABLE_COMBAT_ENGAGEMENT did not fire at this corpus/scale --
+    a pre-existing condition shared by the sibling events they ride alongside, not a gap this
+    ticket introduced).
+  divergence_note: null
+  support_boundary: >-
+    Purely additive observability-layer read of already-real prior_state/update fields -- no
+    change to combat resolution, tactical decision-making, or movement resolution logic itself
+    (the one exception, movement.py's new additive property_updates tag, is tracked separately
+    under combat_movement.yaml COMB-302).

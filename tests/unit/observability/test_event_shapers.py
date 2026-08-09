@@ -10,18 +10,28 @@ from unittest.mock import MagicMock
 
 from src.observability.config import ObservabilityMode
 from src.observability.event_shapers import (
-    CombatShaper, SHAPER_REGISTRY, run_shadow_shapers, EventShaper,
+    CombatShaper, SHAPER_REGISTRY, run_shadow_shapers, EventShaper, _combat_entity_snapshot,
 )
 
 
 # ── Minimal mock builders ─────────────────────────────────────────────────────
 
-def _entity(eid: int = 1, hp: int = 100, max_hp: int = 100, active: bool = True, kind: str = "hero"):
+def _entity(eid: int = 1, hp: int = 100, max_hp: int = 100, active: bool = True, kind: str = "hero",
+            atk: int = 10, def_stat: int = 5, action_style: int = 0, evolution_level: int = 3,
+            role: int | None = 2, faction_id: str = "town_a", race_id: str = "human",
+            bravery: float = 0.5, task=None):
     e = MagicMock()
     e.id = eid
     e.kind = kind
-    e.combat = MagicMock(hp=hp, max_hp=max_hp)
+    e.combat = MagicMock(hp=hp, max_hp=max_hp, atk=atk, def_stat=def_stat, action_style=action_style)
     e.lifecycle = MagicMock(active=active)
+    e.identity = MagicMock(
+        evolution_level=evolution_level,
+        role=role,
+        properties={"faction_id": faction_id, "race_id": race_id},
+        personality=MagicMock(bravery=bravery),
+    )
+    e.task = task
     return e
 
 
@@ -33,9 +43,9 @@ def _prior_state(entities: dict, tick: int = 10):
 
 
 def _real_combat_upd(attacker_id: int = 99, outcome_kind: str = "SURVIVE", hp_delta: int = -20,
-                      alive_set=None):
+                      alive_set=None, is_opportunity_attack: bool = False):
     return MagicMock(attacker_id=attacker_id, outcome_kind=outcome_kind, hp_delta=hp_delta,
-                      alive_set=alive_set)
+                      alive_set=alive_set, is_opportunity_attack=is_opportunity_attack)
 
 
 def _update(entity_updates: dict | None = None):
@@ -233,3 +243,185 @@ def test_run_shadow_shapers_does_not_touch_a_queue():
     module_names = set(dir(event_shapers))
     assert "BoundedObservabilityQueue" not in module_names
     assert "EventRecorder" not in module_names
+
+
+# ── _combat_entity_snapshot() (TCK-20260809-COMBAT-LIFECYCLE-OBSERVABILITY) ────
+
+def test_combat_entity_snapshot_returns_real_fields():
+    ent = _entity(hp=42, max_hp=100, atk=15, def_stat=8, action_style=1, evolution_level=4,
+                  role=2, faction_id="wolf_pack", race_id="wolf", bravery=0.35)
+    snap = _combat_entity_snapshot(ent)
+    assert snap["level"] == 4
+    assert snap["hp"] == 42
+    assert snap["max_hp"] == 100
+    assert snap["atk"] == 15
+    assert snap["def_stat"] == 8
+    assert snap["role"] == "MONSTER"
+    assert snap["faction_id"] == "wolf_pack"
+    assert snap["race_id"] == "wolf"
+    assert snap["bravery"] == 0.35
+    assert snap["action_style"] == 1
+
+
+def test_combat_entity_snapshot_none_entity_returns_none():
+    assert _combat_entity_snapshot(None) is None
+
+
+def test_combat_entity_snapshot_unmapped_role_falls_back_to_str():
+    ent = _entity(role=999)
+    snap = _combat_entity_snapshot(ent)
+    assert snap["role"] == "999"
+
+
+# ── combat_engagement_started (TCK-20260809-COMBAT-LIFECYCLE-OBSERVABILITY) ────
+
+def test_combat_engagement_started_fires_alongside_combat_initiated_goal_engage():
+    defender = _entity(eid=1, hp=100, max_hp=100)
+    attacker = _entity(eid=42, hp=100, max_hp=100)
+    upd = _update({1: MagicMock(combat=_real_combat_upd(attacker_id=42, hp_delta=-20,
+                                                          is_opportunity_attack=False))})
+    events = CombatShaper().shape(_prior_state({1: defender, 42: attacker}), upd, tick=10,
+                                   mode=ObservabilityMode.NORMAL)
+    types = _types(events)
+    assert "combat_engagement_started" in types
+    started = next(e for e in events if e.event_type == "combat_engagement_started")
+    assert started.payload["trigger_reason"] == "GOAL_ENGAGE"
+    assert started.payload["defender_snapshot"] is not None
+    assert started.payload["attacker_snapshot"] is not None
+    assert started.target_id == 42
+    # A deliberate (non-OA) engage is not also a CAUGHT_FLEEING end this tick.
+    assert "combat_engagement_ended" not in types
+
+
+def test_combat_engagement_started_trigger_reason_opportunity_attack():
+    defender = _entity(eid=1, hp=100, max_hp=100)
+    attacker = _entity(eid=42, hp=100, max_hp=100)
+    upd = _update({1: MagicMock(combat=_real_combat_upd(attacker_id=42, hp_delta=-20,
+                                                          is_opportunity_attack=True))})
+    events = CombatShaper().shape(_prior_state({1: defender, 42: attacker}), upd, tick=10,
+                                   mode=ObservabilityMode.NORMAL)
+    started = next(e for e in events if e.event_type == "combat_engagement_started")
+    assert started.payload["trigger_reason"] == "OPPORTUNITY_ATTACK"
+
+
+def test_combat_engagement_started_not_emitted_when_already_damaged():
+    defender = _entity(eid=1, hp=80, max_hp=100)
+    attacker = _entity(eid=42, hp=100, max_hp=100)
+    upd = _update({1: MagicMock(combat=_real_combat_upd(attacker_id=42, hp_delta=-10))})
+    events = CombatShaper().shape(_prior_state({1: defender, 42: attacker}), upd, tick=10,
+                                   mode=ObservabilityMode.NORMAL)
+    assert "combat_engagement_started" not in _types(events)
+
+
+# ── combat_engagement_ended: KILL (TCK-20260809-COMBAT-LIFECYCLE-OBSERVABILITY) ─
+
+def test_combat_engagement_ended_kill_fires_alongside_entity_killed():
+    defender = _entity(eid=1, hp=10, max_hp=100, active=True)
+    killer = _entity(eid=7, hp=100, max_hp=100)
+    upd = _update({1: MagicMock(combat=_real_combat_upd(
+        attacker_id=7, hp_delta=-10, alive_set=False, outcome_kind="KILL"))})
+    events = CombatShaper().shape(_prior_state({1: defender, 7: killer}), upd, tick=10)
+    types = _types(events)
+    assert "entity_killed" in types
+    assert "combat_engagement_ended" in types
+    ended = next(e for e in events if e.event_type == "combat_engagement_ended")
+    assert ended.payload["outcome"] == "KILL"
+    assert ended.target_id == 7
+    assert ended.payload["defender_snapshot"] is not None
+    assert ended.payload["attacker_snapshot"] is not None
+
+
+# ── combat_engagement_ended: CAUGHT_FLEEING ─────────────────────────────────
+
+def test_combat_engagement_ended_caught_fleeing_for_non_lethal_opportunity_attack():
+    defender = _entity(eid=1, hp=100, max_hp=100)
+    attacker = _entity(eid=42, hp=100, max_hp=100)
+    upd = _update({1: MagicMock(combat=_real_combat_upd(attacker_id=42, hp_delta=-20,
+                                                          is_opportunity_attack=True,
+                                                          outcome_kind="SURVIVE"))})
+    events = CombatShaper().shape(_prior_state({1: defender, 42: attacker}), upd, tick=10,
+                                   mode=ObservabilityMode.NORMAL)
+    ended = [e for e in events if e.event_type == "combat_engagement_ended"]
+    assert len(ended) == 1
+    assert ended[0].payload["outcome"] == "CAUGHT_FLEEING"
+    assert ended[0].target_id == 42
+
+
+def test_combat_engagement_ended_caught_fleeing_not_emitted_for_deliberate_attack():
+    defender = _entity(eid=1, hp=100, max_hp=100)
+    attacker = _entity(eid=42, hp=100, max_hp=100)
+    upd = _update({1: MagicMock(combat=_real_combat_upd(attacker_id=42, hp_delta=-20,
+                                                          is_opportunity_attack=False))})
+    events = CombatShaper().shape(_prior_state({1: defender, 42: attacker}), upd, tick=10,
+                                   mode=ObservabilityMode.NORMAL)
+    assert "combat_engagement_ended" not in _types(events)
+
+
+def test_combat_engagement_ended_caught_fleeing_not_emitted_when_also_a_kill():
+    """A lethal opportunity attack is reported as KILL, not double-counted as CAUGHT_FLEEING."""
+    defender = _entity(eid=1, hp=10, max_hp=100, active=True)
+    attacker = _entity(eid=42, hp=100, max_hp=100)
+    upd = _update({1: MagicMock(combat=_real_combat_upd(
+        attacker_id=42, hp_delta=-10, alive_set=False, outcome_kind="KILL",
+        is_opportunity_attack=True))})
+    events = CombatShaper().shape(_prior_state({1: defender, 42: attacker}), upd, tick=10)
+    ended = [e for e in events if e.event_type == "combat_engagement_ended"]
+    assert len(ended) == 1
+    assert ended[0].payload["outcome"] == "KILL"
+
+
+# ── combat_engagement_ended: PURSUIT_ABANDONED (task-only, no combat field) ─
+
+def test_combat_engagement_ended_pursuit_abandoned_leash_return():
+    prior = _entity(eid=1, task=MagicMock(payload={"target_id": 55}))
+    e_upd = MagicMock(combat=None, task=MagicMock(payload_set={"reason": "LEASH_RETURN"}),
+                       property_updates={})
+    events = CombatShaper().shape(_prior_state({1: prior}), _update({1: e_upd}), tick=10)
+    ended = [e for e in events if e.event_type == "combat_engagement_ended"]
+    assert len(ended) == 1
+    assert ended[0].payload["outcome"] == "PURSUIT_ABANDONED"
+    assert ended[0].payload["reason"] == "LEASH_RETURN"
+    assert ended[0].target_id == 55
+
+
+def test_combat_engagement_ended_pursuit_abandoned_stalemate_break():
+    prior = _entity(eid=1, task=MagicMock(payload={"target_id": 77}))
+    e_upd = MagicMock(combat=None, task=MagicMock(payload_set={"reason": "STALEMATE_BREAK"}),
+                       property_updates={})
+    events = CombatShaper().shape(_prior_state({1: prior}), _update({1: e_upd}), tick=10)
+    ended = [e for e in events if e.event_type == "combat_engagement_ended"]
+    assert len(ended) == 1
+    assert ended[0].payload["outcome"] == "PURSUIT_ABANDONED"
+    assert ended[0].payload["reason"] == "STALEMATE_BREAK"
+
+
+def test_combat_engagement_ended_pursuit_abandoned_not_emitted_for_other_reasons():
+    """Real tactical.py reason codes unrelated to giving up a chase (e.g. PANIC_RETREAT) must
+    not be misread as PURSUIT_ABANDONED."""
+    prior = _entity(eid=1, task=MagicMock(payload={"target_id": 55}))
+    e_upd = MagicMock(combat=None, task=MagicMock(payload_set={"reason": "PANIC_RETREAT"}),
+                       property_updates={})
+    events = CombatShaper().shape(_prior_state({1: prior}), _update({1: e_upd}), tick=10)
+    assert "combat_engagement_ended" not in _types(events)
+
+
+# ── combat_engagement_ended: ESCAPED (movement.py's new combat_escape tag) ──
+
+def test_combat_engagement_ended_escaped_reads_movement_escape_tag():
+    prior = _entity(eid=1)
+    e_upd = MagicMock(combat=None, task=None,
+                       property_updates={"combat_escape": "EVASIVE_SUCCESS",
+                                         "combat_escape_evaded_ids": [7, 8]})
+    events = CombatShaper().shape(_prior_state({1: prior}), _update({1: e_upd}), tick=10)
+    ended = [e for e in events if e.event_type == "combat_engagement_ended"]
+    assert len(ended) == 1
+    assert ended[0].payload["outcome"] == "ESCAPED"
+    assert ended[0].payload["evaded_ids"] == [7, 8]
+    assert ended[0].payload["actor_snapshot"] is not None
+
+
+def test_combat_engagement_ended_escaped_not_emitted_without_the_tag():
+    prior = _entity(eid=1)
+    e_upd = MagicMock(combat=None, task=None, property_updates={})
+    events = CombatShaper().shape(_prior_state({1: prior}), _update({1: e_upd}), tick=10)
+    assert "combat_engagement_ended" not in _types(events)

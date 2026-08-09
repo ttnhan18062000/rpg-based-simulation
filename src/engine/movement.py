@@ -185,6 +185,19 @@ class MovementSystem:
         if mode == MovementMode.RETREAT and entity.combat.action_style == 2: # EVASIVE
              skip_oa = True
 
+        # Real, additive tag for a genuine successful escape (real hostile(s) present, would have
+        # attacked, but didn't) -- previously left zero trace on the returned EntityUpdate, making
+        # this real outcome indistinguishable from an ordinary move with nothing nearby
+        # (TCK-20260809-COMBAT-LIFECYCLE-OBSERVABILITY). Mirrors this file's own established
+        # property_updates pattern (see "movement_resolution": "POSITION_SWAP" elsewhere in this
+        # module) -- purely additive, no change to the real skip_oa/OA resolution logic itself.
+        escape_tag: Dict[str, Any] = {}
+        if engaged_hostiles and skip_oa:
+            escape_tag = {
+                "combat_escape": "EVASIVE_SUCCESS",
+                "combat_escape_evaded_ids": list(engaged_hostiles),
+            }
+
         # 5. Opportunity Attack Trigger (Checklist Section 8)
         # Logic ID: COMB-009 (Disengagement, pursuit, target stickiness are explicit rules)
         # Logic ID: COMB-272 (Disengagement has explicit consequence)
@@ -273,7 +286,8 @@ class MovementSystem:
             new_position=effective_target,
             moved_this_tick=success,
             navigation=nav_upd,
-            stamina_update=stamina_upd
+            stamina_update=stamina_upd,
+            property_updates={**actor_up.property_updates, **escape_tag} if escape_tag else actor_up.property_updates
         )
 
         
