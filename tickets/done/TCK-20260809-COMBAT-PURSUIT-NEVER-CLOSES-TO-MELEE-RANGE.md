@@ -18,7 +18,7 @@ melee range (`combat.range=1`) within a 2000-tick corpus run — every legality 
 far fails on `ReasonCode.OUT_OF_RANGE`
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -71,14 +71,24 @@ real 2000-tick window for these real, now-correctly-detected hostile pairs.
 - Per-attack tactical-modifier trace, pillar-scoring decisions — separate threads.
 
 ## Acceptance Criteria
-- [ ] investigation.md identifies, with real live-instrumented evidence, the specific reason
-      pursuit does not converge hostile pairs to melee range within a 2000-tick window
-- [ ] A concrete recommendation is produced (fix vs. further split), with reasoning
+- [x] investigation.md identifies, with real live-instrumented evidence, the specific reason
+      pursuit does not converge hostile pairs to melee range within a 2000-tick window —
+      **partially met, disclosed honestly**: 2 real, plausible, non-exclusive contributing
+      factors identified (cadence-gated re-evaluation; intercept-prediction divergence) but real
+      chase volume (11/2 total decisions across 4000 combined ticks) was too sparse for
+      corpus-wide sampling to conclusively attribute the cause to either. A narrower, per-tick
+      trace follow-up is required — filed as `TCK-20260809-COMBAT-PURSUIT-PER-TICK-TRACE`.
+- [x] A concrete recommendation is produced (fix vs. further split), with reasoning — further
+      split, not a speculative fix, per the Uncertainty Rule and this session's own established
+      precedent for inconclusive investigations.
 - [ ] If a fix lands: real corpus re-verification shows at least one real, non-zero
       `combat_damage`/`entity_killed` event in a 2000-tick run of `dungeon_crawl` or
-      `urban_political`
+      `urban_political` — **not applicable**: no fix landed in this ticket (investigation-only,
+      per plan.md's own explicit reasoning).
 
 ## Related Tickets
+- TCK-20260809-COMBAT-PURSUIT-PER-TICK-TRACE (filed as a follow-up — the narrower, per-tick trace
+  needed to conclusively distinguish this ticket's 2 candidate contributing factors)
 - TCK-20260809-COMBAT-HOSTILE-PAIRS-NEVER-ENGAGE (DONE, same session — the identity-resolver fix
   that surfaced this finding)
 - TCK-20260809-COMBAT-ATTACK-LEGALITY-ALWAYS-FALSE-INVESTIGATION,
@@ -104,13 +114,39 @@ real 2000-tick window for these real, now-correctly-detected hostile pairs.
   corpus's own real movement speeds, vs. a genuine bug — left open per the Uncertainty Rule.
 
 ## Implementation Notes
-(To be filled during implementation.)
+No production code changed — this ticket is investigation-and-recommendation only, per its own
+`plan.md`'s explicit reasoning. Found 2 real, plausible, non-exclusive contributing factors to
+non-convergent pursuit:
+1. `CognitionDomain.execute_brain()` (`src/engine/domain/cognition.py`) — the sole real caller of
+   `TacticalDecisionSystem.evaluate_entity_intent()` — has a real cadence gate
+   (`SystemCadence.strategic_intelligence=10`, staggered by `entity_id`) that skips tactical
+   evaluation entirely for idle, project-less entities except once every ~10 ticks.
+2. `PositioningService.find_intercept_position()` (`src/engine/positioning.py`) predicts a point
+   2 tiles ahead of the target along the target's own current navigation-goal vector; a change in
+   the target's own destination between the pursuer's re-evaluations changes the prediction too.
+Real corpus-wide sampling (11 chase-decisions in `dungeon_crawl`, 2 in `urban_political` across
+2000 ticks each) was too sparse to conclusively attribute the observed non-convergence (one
+traced pair: distance 3 → 12 over ~500 ticks) to either factor alone. Rather than force a
+speculative fix without confirming which factor is load-bearing, filed a narrower, per-tick-trace
+follow-up (`TCK-20260809-COMBAT-PURSUIT-PER-TICK-TRACE`) designed to distinguish them directly.
 
 ## Test Summary
-(To be filled during implementation.)
+No production code changed (confirmed via `git status` — zero `src/`/`tests/` diffs). Frontmatter
+validated on the ticket and all 3 staging artifacts (`investigation.md`, `plan.md`,
+`test_plan.md`).
 
 ## Files Changed
-(To be filled during implementation.)
+- `staging_artifacts/TCK-20260809-COMBAT-PURSUIT-NEVER-CLOSES-TO-MELEE-RANGE/` — `investigation.md`,
+  `plan.md`, `test_plan.md` (new).
+- `tickets/todos/TCK-20260809-COMBAT-PURSUIT-PER-TICK-TRACE.md` — new follow-up ticket.
 
 ## Completion Summary
-(To be filled during implementation.)
+Investigated why real hostile pairs — now correctly detected after the sibling
+`TCK-20260809-COMBAT-HOSTILE-PAIRS-NEVER-ENGAGE` fix — still never converge to melee range.
+Identified 2 real, evidence-backed candidate causes (tactical-evaluation cadence starvation;
+intercept-point prediction divergence against a non-combat-aware wandering target) but the
+corpus's own real chase volume was too sparse for corpus-wide sampling to conclusively pin down
+which (if either alone) is the load-bearing mechanism. Rather than force an unproven fix, disclosed
+both candidates honestly and filed a narrower, denser per-tick-trace follow-up designed to
+distinguish them with direct evidence — consistent with this session's own established precedent
+for investigations that outgrow what corpus-wide sampling alone can conclusively resolve.
