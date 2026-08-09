@@ -21,6 +21,15 @@ _POST_BOOTSTRAP_BACKUP = dict(ItemRegistry._backup_items)
 _CANONICAL_ITEMS: dict = {**_POST_BOOTSTRAP_ITEMS, **_PRE_BOOTSTRAP_ITEMS}
 _CANONICAL_BACKUP: dict = {**_POST_BOOTSTRAP_BACKUP, **_PRE_BOOTSTRAP_BACKUP}
 
+# ResourceRegistry has the identical real-code hazard as ItemRegistry above:
+# src/runtime/bootstrap.py calls ResourceRegistry.bootstrap({}) (an empty dict) on the real
+# runtime bootstrap path. Any test that exercises it leaves ResourceRegistry empty for the rest
+# of the process (TCK-20260809-TEST-ISOLATION-RESOURCE-REGISTRY-RESET) -- capture the canonical
+# post-import state (full real catalog, populated by src.core.registries's own module-level
+# bootstrap above) so it can be restored the same way ItemRegistry already is.
+from src.core.registries import ResourceRegistry
+_CANONICAL_RESOURCES: dict = dict(ResourceRegistry._resources)
+
 try:
     import resource
 except ImportError:
@@ -145,6 +154,20 @@ def _reset_item_registry():
     _restore_canonical_registry()
     yield
     _restore_canonical_registry()
+
+
+@pytest.fixture(autouse=True)
+def _reset_resource_registry():
+    """Restore ResourceRegistry to canonical test state before and after each test.
+
+    src/runtime/bootstrap.py calls ResourceRegistry.bootstrap({}) on the real runtime
+    bootstrap path -- any test exercising it left ResourceRegistry empty for the rest of the
+    process, silently failing resource-kind lookups (e.g. ResourceOpportunityProvider) in
+    unrelated later tests (TCK-20260809-TEST-ISOLATION-RESOURCE-REGISTRY-RESET).
+    """
+    ResourceRegistry._resources = dict(_CANONICAL_RESOURCES)
+    yield
+    ResourceRegistry._resources = dict(_CANONICAL_RESOURCES)
 
 
 @pytest.fixture(scope="session", autouse=True)
