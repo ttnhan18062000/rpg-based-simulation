@@ -3651,3 +3651,53 @@
     again, without changing the penalty itself for a target that might still become legal.
     scheduler.py's own cadence mechanism and the 2-pass Collection/action_routing architecture
     are both untouched.
+
+- id: COMB-308
+  text: >
+    TCK-20260809-COMBAT-ENGAGEMENT-FLAG-SUPPRESSES-PUSH-SHAPER-EVENTS -- PP-16's own real
+    run_phase("combat_engagement", ...) registration (src/engine/pipeline.py) called
+    CombatEngagementPhase.apply(state) without merging the result into the incoming,
+    already-accumulated StateUpdate (u). Every other phase in this same real chain that needs to
+    preserve prior phases' own output correctly calls u.merge(...) on its own real output (e.g.
+    information_belief's identical pattern); this phase's own lambda never referenced u at all.
+    run_phase()'s own real chaining logic replaces the accumulated update wholesale with
+    whatever the phase function returns, so whenever combat_engagement actually ran (flag ON,
+    not skipped by dependency-graph policy), every real StateUpdate produced by every earlier
+    phase in that same tick -- including the real action_routing/ATTACK-dispatch phase and
+    movement_routing -- was silently discarded.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: >
+    Added the missing u.merge(CombatEngagementPhase.apply(state)) call, matching the file's own
+    already-established precedent. Real corpus A/B testing (2000-tick live Kernel.tick_once()
+    loop, dungeon_crawl_seed42, ENABLE_COMBAT_ENGAGEMENT=ON explicitly forced -- the exact
+    condition that previously showed total, deterministic suppression) confirms:
+    combat_engagement_started/ended, combat_resolved, combat_damage, entity_killed all now fire
+    alongside combat_kill, matching the corpus-default (flag-off) baseline's own real event
+    presence, for both dungeon_crawl and urban_political. A real, secondary, smaller effect was
+    also measured and disclosed: CombatEngagementPhase.apply()'s own real per-tick cost (0.85ms
+    avg) increases the rate of real "tick exceeded budget" warnings from 6.2% to 7.1% of ticks --
+    a real, modest, secondary contributing factor, not the primary cause. Real, disclosed
+    containment context: ENABLE_COMBAT_ENGAGEMENT defaults OFF and was never turned ON in any of
+    the 17 shipped SimQ calibration profiles at the time this bug was found -- the real,
+    practical blast radius was zero on any currently-shipped configuration.
+  proof_type: regression
+  test_path: >
+    tests/unit/domains/combat_engagement/test_combat_engagement_phase_merge.py
+    (2 new tests: prior-phase StateUpdate survives combat_engagement with the flag ON,
+    confirmed to genuinely fail against the pre-fix code via git-stash bisection; regression
+    guard confirming the flag-OFF/corpus-default path was never affected). Full scoped re-run:
+    tests/unit/domains/combat_engagement/, tests/integration/domains/combat_engagement/,
+    tests/unit/combat/, tests/unit/tactical/, tests/unit/kernel/ -- 187 passed, zero
+    regressions. Broader sweep (tests/unit/ -k "pipeline or phase") -- 575 passed. Broader
+    sweep (tests/unit/movement/, tests/unit/strategic/, tests/unit/entities/,
+    tests/unit/actions/, tests/unit/observability/) -- 1286 passed, 1 pre-existing unrelated
+    failure (test_normal_move_triggers_oa).
+  divergence_note: null
+  support_boundary: >
+    CombatEngagementPhase.apply()'s own real posture-evaluation logic is untouched -- the bug
+    was entirely in how its own output gets chained, not in what it computes. The real,
+    secondary, smaller tick-budget-pressure effect and a real, much bigger, disclosed-but-
+    out-of-scope chronic tick-budget-exceeded condition (persistence phase's own dominant real
+    cost, ~6% of ticks even at baseline) are both documented but not fixed here.

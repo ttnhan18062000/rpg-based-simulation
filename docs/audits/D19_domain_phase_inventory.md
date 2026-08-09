@@ -140,6 +140,26 @@ to `run_phase()` and tracked in `metric_counters`.
 |---|---|---|---|---|---|---|
 | PP-16 | `combat_engagement` | `CombatEngagementPhase` | `src/domains/combat_engagement/phase.py` | `feature-gated` (flag: `ENABLE_COMBAT_ENGAGEMENT`) | Resolves entity-level combat: applies damage formula, durability decay, and tactical modifiers; emits combat outcome updates. | With flag ON two hostile entities in range produce combat updates with hp_delta applied; with flag OFF no combat updates are emitted. |
 
+**Real fix, `TCK-20260809-COMBAT-ENGAGEMENT-FLAG-SUPPRESSES-PUSH-SHAPER-EVENTS`:** `PP-16`'s own
+real `run_phase("combat_engagement", ...)` registration (`src/engine/pipeline.py`) previously
+called `CombatEngagementPhase.apply(state)` **without** merging the result into the incoming,
+already-accumulated `StateUpdate` (`u`) — every other phase in this same real chain that needs
+to preserve prior phases' own output correctly calls `u.merge(...)` on its own real output; this
+phase's own lambda never referenced `u` at all. Since `run_phase()`'s own real chaining logic
+replaces the accumulated `update` wholesale with whatever the phase function returns, this meant
+that whenever `combat_engagement` actually ran (flag `ON`, not skipped by dependency-graph
+policy), **every** real `StateUpdate` produced by every earlier phase in that same tick —
+including the real `action_routing`/`ATTACK`-dispatch phase and `movement_routing` — was
+silently discarded, confirmed via live corpus A/B testing to deterministically suppress all
+push-shaper combat events (`combat_engagement_started/ended`, `combat_resolved`, `combat_damage`,
+`entity_killed`) to zero. Fixed with a one-line `u.merge(...)` addition, matching the file's own
+already-established precedent (the `information_belief` phase's identical pattern). Real,
+disclosed containment context: `ENABLE_COMBAT_ENGAGEMENT` defaults `OFF` and was never turned
+`ON` in any of the 17 shipped SimQ calibration profiles at the time this bug was found — the
+real, practical blast radius was zero on any currently-shipped configuration, but the bug was
+real and would have silently affected any future scenario/test/profile that legitimately enabled
+this flag.
+
 ### §13 — Interaction & World Effects (Phase 4)
 
 | Phase ID | `run_phase` key | Class / Service | File Path | Wiring Status | Description | Suggested Acceptance Criterion |

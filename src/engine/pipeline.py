@@ -256,7 +256,17 @@ class AuthoritativeApplyPipeline:
         # --- Enhanced RPG Phase 4: Combat Engagement ---
         t_start = time.perf_counter_ns()
         from src.domains.combat_engagement.phase import CombatEngagementPhase
-        update = run_phase("combat_engagement", update, lambda u: CombatEngagementPhase.apply(state), "ENABLE_COMBAT_ENGAGEMENT")
+        # u.merge(...) is required here (TCK-20260809-COMBAT-ENGAGEMENT-FLAG-SUPPRESSES-
+        # PUSH-SHAPER-EVENTS): CombatEngagementPhase.apply() builds a fresh StateUpdate() with no
+        # awareness of prior phases' own output. Without merging into the incoming `u`, run_phase's
+        # own real chaining (`return phase_upd`) replaced the ENTIRE accumulated update wholesale
+        # whenever this phase ran -- silently discarding every real StateUpdate produced by every
+        # earlier phase in this same tick (including action_routing's own real ATTACK dispatch and
+        # movement_routing), confirmed via live corpus A/B testing to deterministically suppress
+        # all push-shaper combat events (combat_engagement_started/ended, combat_resolved,
+        # combat_damage, entity_killed) to zero whenever ENABLE_COMBAT_ENGAGEMENT=ON. Matches the
+        # same u.merge(...) pattern already used by information_belief above.
+        update = run_phase("combat_engagement", update, lambda u: u.merge(CombatEngagementPhase.apply(state)), "ENABLE_COMBAT_ENGAGEMENT")
         costs["combat_engagement"] = (time.perf_counter_ns() - t_start) / 1e6
 
         # --- Phase 4: Interaction & World Effects ---
