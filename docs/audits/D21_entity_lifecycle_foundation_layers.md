@@ -231,6 +231,16 @@ but every one still fails on `ReasonCode.OUT_OF_RANGE` at real distances of 2-12
 appear to converge hostile pairs to melee range within a 2000-tick window. Filed as
 `TCK-20260809-COMBAT-PURSUIT-NEVER-CLOSES-TO-MELEE-RANGE`, not fixed in the same ticket.
 
+**Correction, same update** (`TCK-20260809-COMBAT-PURSUIT-PER-TICK-TRACE`): the "combat_damage/
+entity_killed still at zero" claim above was incomplete — based on a filtered, `bandit_company`-
+only sample, not a full event-count check. A full, unfiltered re-check on the identical
+corpus-default `dungeon_crawl_seed42` run (post-fix) shows real, non-zero
+`combat_damage=1`/`combat_initiated=1`/`entity_killed=1`/`combat_engagement_started=1` — a real
+kill genuinely occurred. `urban_political_seed42` genuinely remains at zero in the same run. The
+real, corrected question is why convergence is *rare* (1 kill / 2000 ticks / 32 entities in
+`dungeon_crawl`, zero in `urban_political`), not why it is structurally impossible — reframed and
+carried forward into `TCK-20260809-COMBAT-PURSUIT-PER-TICK-TRACE`'s own investigation.
+
 ## STRATEGY_COGNITION (flag-free baseline)
 
 **Real trigger events (baseline subset, no flags required):** `strategic_goal_changed`,

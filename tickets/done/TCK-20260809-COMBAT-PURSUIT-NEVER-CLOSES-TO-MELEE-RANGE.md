@@ -150,3 +150,14 @@ which (if either alone) is the load-bearing mechanism. Rather than force an unpr
 both candidates honestly and filed a narrower, denser per-tick-trace follow-up designed to
 distinguish them with direct evidence — consistent with this session's own established precedent
 for investigations that outgrow what corpus-wide sampling alone can conclusively resolve.
+
+## Correction (added during `TCK-20260809-COMBAT-PURSUIT-PER-TICK-TRACE`, same session)
+This ticket's own framing ("never converge") was based on the parent ticket's incomplete
+verification. The per-tick trace found a real, successful pursuit-to-attack sequence
+(`dungeon_crawl`, entity 1 → entity 19, ~tick 900: `INTERCEPTING` at dist 3 → later a real
+`ATTACK` dispatched with `outcome: SUCCESS`), and a full corpus event-count re-check confirms
+real `combat_damage`/`entity_killed`/`combat_engagement_started` all occurred at least once in
+that same run. Pursuit **can** converge — it is rare (1 real kill across 2000 ticks / 32
+entities), not structurally impossible. The real question this reframes to: why is convergence
+rare, not why does it never happen. See `TCK-20260809-COMBAT-PURSUIT-PER-TICK-TRACE`'s own
+investigation.md for the corrected numbers and updated framing.

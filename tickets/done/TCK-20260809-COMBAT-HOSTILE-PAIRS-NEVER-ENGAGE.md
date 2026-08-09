@@ -205,6 +205,21 @@ None yet — will be created at
   `combat_damage`/`entity_killed` remain zero in this specific 2000-tick window — not claimed as
   fully resolved. Follow-up filed: `TCK-20260809-COMBAT-PURSUIT-NEVER-CLOSES-TO-MELEE-RANGE`.
 
+## Correction (added during `TCK-20260809-COMBAT-PURSUIT-PER-TICK-TRACE`, same session)
+The "`combat_damage`/`entity_killed` remain zero" claim above was **incomplete, not fully
+verified** — a real error in this ticket's own Test-phase reporting. The per-tick-trace follow-up
+directly observed a real, successful `ATTACK` (entity 1 → entity 19, `dungeon_crawl`, ~tick 900),
+and a full, unfiltered `kernel._event_recorder.event_count_by_type` re-check on the identical
+corpus-default `dungeon_crawl_seed42` run confirms: `combat_damage=1`, `combat_initiated=1`,
+`entity_killed=1`, `combat_engagement_started=1` — real, non-zero, genuine post-fix combat. The
+original claim was based on a filtered, `bandit_company`-only sample of illegal-reason breakdowns
+and an unverified generalization from a small, non-representative OUT_OF_RANGE sample — not a
+full event-count check. `urban_political_seed42` genuinely remains at zero in the same run (that
+part of the original claim holds). Left visible here rather than silently edited, per this
+session's own transparency discipline — see `TCK-20260809-COMBAT-PURSUIT-PER-TICK-TRACE`'s own
+investigation.md for the corrected, verified numbers and the reframed real question (rarity, not
+impossibility).
+
 ## Files Changed
 - `src/entities/identity_resolver.py` — Path 1 gate relaxed, derives `role_id` when absent.
 - `tests/unit/entities/test_entity_identity_resolver.py` — 2 new tests.

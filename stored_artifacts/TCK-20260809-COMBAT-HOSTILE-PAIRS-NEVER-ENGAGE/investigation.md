@@ -168,6 +168,18 @@ this finding is filed under) — per this ticket's own Acceptance Criteria, this
 honestly rather than forced into a "fully resolved, non-zero combat volume" claim that the real
 data does not support.
 
+## Correction (added during `TCK-20260809-COMBAT-PURSUIT-PER-TICK-TRACE`, same session)
+The "Honest disclosure" paragraph above was itself incomplete — based on a filtered,
+`bandit_company`-only sample of illegal-reason breakdowns, not a full event-count check. A
+per-tick trace of `dungeon_crawl` entity 1 (`goblin_warband`) directly observed a real, successful
+`ATTACK` against entity 19 (`undead_remnants`) around tick 900, and a full, unfiltered
+`kernel._event_recorder.event_count_by_type` re-check on the identical corpus-default
+`dungeon_crawl_seed42` run confirms real, non-zero `combat_damage=1`/`combat_initiated=1`/
+`entity_killed=1`/`combat_engagement_started=1`. `urban_political_seed42` genuinely remains at
+zero in the same run — that part holds. Not silently corrected; left visible per this session's
+own transparency discipline. See `TCK-20260809-COMBAT-PURSUIT-PER-TICK-TRACE`'s own
+investigation.md for the full corrected numbers.
+
 ## Docs Requiring Update
 - `docs/audits/D21_entity_lifecycle_foundation_layers.md` — add a finding documenting this as the
   real, deeper cause behind the "Combat legality always false" section's own residual gap after the

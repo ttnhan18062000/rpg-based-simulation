@@ -86,6 +86,17 @@ tactical-decision ticks) across a real chase, to distinguish cadence-gap-starvat
 intercept-prediction divergence with direct evidence. Leaving this open as a real, disclosed,
 partially-investigated finding rather than closing with an unproven claim.
 
+## Correction (added during `TCK-20260809-COMBAT-PURSUIT-PER-TICK-TRACE`, same session)
+This ticket's own Finding 1 framing ("chase-relevant tactical decisions are genuinely rare, not
+just non-convergent") was correct on rarity but its parent's premise ("distance widened, not
+narrowed") described only one traced sample, not a representative outcome. The per-tick-trace
+follow-up found a real, successful chase-to-kill sequence in the same corpus (`dungeon_crawl`,
+entity 1 → entity 19, ~tick 900) and confirmed via a full event-count check that real
+`combat_damage`/`entity_killed`/`combat_engagement_started` all occurred at least once in that
+run. Convergence is real and possible, just rare — the recommendation below (a per-tick trace) is
+still the right next step, but the framing shifts from "does pursuit ever converge" to "why is
+convergence rare."
+
 ## Docs Requiring Update
 None — no fix landed in this ticket; the parent ticket's own `D21_entity_lifecycle_foundation_
 layers.md` update already references this ticket by ID for the newly-surfaced bottleneck.
