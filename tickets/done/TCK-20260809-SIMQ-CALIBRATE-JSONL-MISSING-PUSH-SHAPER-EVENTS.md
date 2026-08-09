@@ -17,7 +17,7 @@ tags: [simulation-quality, combat, observability]
 `Kernel.tick_once()` probes using the identical world/seed/tick-count/flag configuration
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -91,20 +91,30 @@ confirmed** — left explicitly open, not guessed.
   observability pipeline, not the event producers themselves.
 
 ## Acceptance Criteria
-- [ ] investigation.md identifies the exact real point in the pipeline where push-shaper events
+- [x] investigation.md identifies the exact real point in the pipeline where push-shaper events
       are lost between direct in-process observation and `calibrate_simq.py`'s own real JSONL
-      output
-- [ ] The real scope of impact is determined (this session's new events only, vs. all
-      `CombatShaper` output, vs. all push-shaper output across every domain)
-- [ ] A concrete recommendation is produced, with reasoning
-- [ ] If a fix lands: real corpus re-verification via `calibrate_simq.py` itself shows the
-      real, previously-missing event types now present in its own JSONL output
+      output — **definitively resolved: nowhere.** File and in-memory recorder always match
+      exactly (confirmed 3 separate ways); the real cause was a methodological inconsistency
+      (`ENABLE_COMBAT_ENGAGEMENT=ON`) in the sibling ticket's own verification, not a pipeline gap
+- [x] The real scope of impact is determined — **zero real scope**: the calibration tool's own
+      JSONL pipeline is confirmed correct for all push-shaper event types, in both worlds
+- [x] A concrete recommendation is produced, with reasoning — correct the sibling ticket's own
+      closed record (done, addendum added); file a new, separate follow-up for the real,
+      newly-discovered `ENABLE_COMBAT_ENGAGEMENT=ON` suppression effect
+- [x] If a fix lands: real corpus re-verification via `calibrate_simq.py` itself shows the
+      real, previously-missing event types now present in its own JSONL output — **confirmed**:
+      3 real `calibrate_simq.py` invocations (no flag override) all show `combat_damage`,
+      `combat_engagement_started/ended`, `combat_initiated`, `combat_resolved`, `entity_killed`
+      present in the real JSONL for both worlds
 
 ## Related Tickets
+- TCK-20260809-COMBAT-ENGAGEMENT-FLAG-SUPPRESSES-PUSH-SHAPER-EVENTS (filed as a follow-up — the
+  real, new, unexpected finding this ticket's own investigation surfaced)
 - TCK-20260809-SIMQ-COMBAT-PILLAR-RECALIBRATION-CHECK (DONE, same session — the ticket whose own
-  real verification work surfaced this finding)
-- TCK-20260806-PUSH-CUTOVER-COMBAT-ECONOMY-FACTION (DONE, prior session — the real cutover this
-  finding potentially calls into question for calibration-tool purposes specifically)
+  real verification work surfaced this finding; corrected via addendum as part of this ticket's
+  own Finalize)
+- TCK-20260806-PUSH-CUTOVER-COMBAT-ECONOMY-FACTION (DONE, prior session — confirmed unaffected;
+  the real cutover works correctly)
 
 ## Related Docs
 - `docs/simulation_quality/quality_scoring_contract.md` §5 COMBAT
@@ -126,13 +136,52 @@ None yet.
   left open per the Uncertainty Rule, Investigate phase must not assume either way.
 
 ## Implementation Notes
-(To be filled during implementation.)
+No production code changed — investigation-only, per `plan.md`'s explicit reasoning. Real,
+controlled A/B tests (same-run file-vs-memory comparison, with-flag-vs-without-flag comparison,
+fixed-run_id-vs-auto-generated comparison) definitively ruled out the originally-suspected
+JSONL-persistence bug. `Kernel.__init__`'s own real `run_dir_str` resolution
+(`src/engine/kernel.py:221-225`) was confirmed to always resolve a real, non-None path whenever
+`ObservabilityConfig.get_mode() != ObservabilityMode.OFF` (the real default is LIGHT) — not
+conditional on an explicit `run_id`/`replay` argument as originally suspected; every Kernel
+construction this whole session used (including every prior direct probe script) always wrote a
+real file. `EventRecorder.record()`'s own real code path pushes to both the in-memory buffer and
+the file-writing queue from the same call, with no real divergence path for a non-dropped event.
+
+The real, actual cause: the sibling `SIMQ-COMBAT-PILLAR-RECALIBRATION-CHECK` ticket's own
+verification used `ENABLE_COMBAT_ENGAGEMENT=ON`, inconsistent with every other combat-fix
+ticket's own real corpus-verification methodology this session (all of which used corpus-default
+flags). Direct A/B testing confirmed this flag genuinely suppresses the tactical.py/
+event_shapers.py combat path — a real, new, unexpected finding on its own, contradicting the
+flag's own documented "posture assessment only" scope (`TCK-20260806-SIMQ-COMBAT-ENGAGEMENT-
+GATE-CORPUS-VALIDITY`'s own DEV-002 ruling). Disclosed and filed as its own dedicated follow-up
+(`TCK-20260809-COMBAT-ENGAGEMENT-FLAG-SUPPRESSES-PUSH-SHAPER-EVENTS`) rather than investigated
+further here, per this ticket's own proportionate scope.
+
+Added a correction addendum to `TCK-20260809-SIMQ-COMBAT-PILLAR-RECALIBRATION-CHECK`'s own
+already-closed record, per this session's own established transparency precedent — its original
+"deeper, previously-undisclosed [calibration-tool] gap" framing was itself incorrect, and the
+addendum documents the real, corrected finding without silently rewriting the original text.
 
 ## Test Summary
-(To be filled during implementation.)
+No `src`/`tests` code changed (confirmed via `git status`). Real verification: 3 controlled A/B
+probe runs plus 3 real `tools/calibrate_simq.py` invocations (the actual tool). Frontmatter
+validated on the ticket and all 3 staging artifacts.
 
 ## Files Changed
-(To be filled during implementation.)
+- `staging_artifacts/TCK-20260809-SIMQ-CALIBRATE-JSONL-MISSING-PUSH-SHAPER-EVENTS/` —
+  `investigation.md`, `plan.md`, `test_plan.md` (new).
+- `tickets/done/TCK-20260809-SIMQ-COMBAT-PILLAR-RECALIBRATION-CHECK.md` — correction addendum.
+- `tickets/todos/TCK-20260809-COMBAT-ENGAGEMENT-FLAG-SUPPRESSES-PUSH-SHAPER-EVENTS.md` — new
+  follow-up ticket.
 
 ## Completion Summary
-(To be filled during implementation.)
+Definitively resolved the suspected calibration-tool JSONL-persistence gap: it does not exist.
+`tools/calibrate_simq.py`'s own file-writing pipeline works correctly — in-memory recorder and
+on-disk file always match exactly, confirmed via 3 separate controlled tests. The real cause of
+the original "missing events" finding was a real, disclosed, self-caused methodological
+inconsistency in the sibling verification ticket (`ENABLE_COMBAT_ENGAGEMENT=ON`, not used by any
+other combat-fix ticket's own real verification this session). Corrected that ticket's own closed
+record via a visible addendum rather than silently rewriting it. The investigation also surfaced
+a genuine, new, unexpected finding — the flag appears to suppress the tactical-combat pipeline
+entirely, contradicting its own documented scope — disclosed honestly and filed as its own
+properly-scoped follow-up rather than chased further within this ticket's own boundaries.

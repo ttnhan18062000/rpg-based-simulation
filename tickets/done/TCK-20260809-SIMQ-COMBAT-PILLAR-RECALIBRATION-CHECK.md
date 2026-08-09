@@ -150,3 +150,32 @@ output at all, a real, deeper, previously-undisclosed gap this ticket's own veri
 surfaced. Rather than force a conclusion the tool's own current, real output doesn't support,
 disclosed the discrepancy honestly and filed a dedicated, properly-scoped follow-up
 investigation.
+
+## Correction (added during `TCK-20260809-SIMQ-CALIBRATE-JSONL-MISSING-PUSH-SHAPER-EVENTS`, same
+## session)
+The "deeper, previously-undisclosed gap" framing above was itself incorrect — a real, self-caused
+methodological error, not a calibration-tool defect. The follow-up ticket's own controlled A/B
+testing definitively confirmed `tools/calibrate_simq.py`'s own JSONL-persistence pipeline works
+correctly (in-memory recorder and on-disk file always match exactly, verified 3 separate ways).
+**The real cause**: this ticket's own verification runs used `ENABLE_COMBAT_ENGAGEMENT=ON`, which
+is inconsistent with every other combat-fix ticket's own real corpus-verification methodology
+this session (`COMBAT-HOSTILE-PAIRS-NEVER-ENGAGE` through `COMBAT-STUCK-ATTACK-TASK-DEAD-TARGET`,
+all of which used corpus-default flags). Direct A/B testing on the identical world/seed/tick-count
+confirmed `ENABLE_COMBAT_ENGAGEMENT=ON` genuinely suppresses the tactical.py/event_shapers.py
+combat path — with the flag on, zero `combat_engagement_*`/`combat_resolved`/`combat_damage`
+events fire, confirmed across 3 separate real runs; without it, they fire reliably. Re-running
+the real `tools/calibrate_simq.py` tool itself **without** the flag (the correct, consistent
+methodology) confirms its own real JSONL output includes every push-shaper combat event type for
+both worlds — `combat_damage`, `combat_engagement_started/ended`, `combat_initiated`,
+`combat_resolved`, `entity_killed`, all present and correctly persisted. Under this corrected,
+correct-methodology run: COMBAT grade is **still C for both worlds** (a small, real, honest
+improvement in the underlying norm is visible in some samples — e.g. `dungeon_crawl` norm ranged
+-0.0142 to -0.0284 across 3 corpus-default samples vs. the flawed -0.0284-with-flag baseline —
+but not enough to cross a grade boundary at this corpus's own current combat-activity scale).
+This correction supersedes the original recommendation ("leave `grade_anchors.json` as-is until
+the follow-up resolves the real gap") — there is no real gap in the calibration tool to resolve;
+the anchors can be left as-is simply because the real, correctly-measured grade genuinely hasn't
+moved past its existing band, not because of any unresolved uncertainty. The
+`ENABLE_COMBAT_ENGAGEMENT=ON` suppression effect itself is a real, new, separately-disclosed
+finding, filed as `TCK-20260809-COMBAT-ENGAGEMENT-FLAG-SUPPRESSES-PUSH-SHAPER-EVENTS` — not
+resolved here.
