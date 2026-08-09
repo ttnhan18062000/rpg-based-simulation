@@ -3523,3 +3523,42 @@
     scheduler.py's own cadence gate and find_intercept_position()'s own prediction math are both
     untouched -- this fix is entirely in movement-routing's target-position lookup, not in
     when tactical decisions get made or how an intercept point is computed at decision time.
+
+- id: COMB-305
+  text: >
+    TCK-20260809-COMBAT-RESOLVED-SCORER-GAP-FIX -- combat_resolved (CombatScorer.EVENT_TYPES,
+    +3, the largest positive weight in the whole COMBAT pillar) has had a real, ready scoring
+    handler since the pillar's own original design, but zero real producers anywhere in src/ --
+    self-disclosed only in CombatShaper's own class docstring, never cross-referenced into
+    docs/simulation_quality/event_type_coverage.md's own §3 audit until this ticket. Direct
+    continuation of the user's own deferred pillar-scoring decision for
+    combat_engagement_started/ended (TCK-20260809-COMBAT-LIFECYCLE-OBSERVABILITY).
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/observability/event_shapers.py's CombatShaper now emits a real combat_resolved event
+    alongside combat_engagement_ended for exactly 2 of its 4 real outcomes -- KILL and ESCAPED,
+    both literal matches for the pillar contract's own wording ("clear winner, loser retreats or
+    dies"); CAUGHT_FLEEING/PURSUIT_ABANDONED deliberately excluded (neither represents a clear
+    resolution). combat_engagement_started confirmed NOT a promotion candidate -- it fires on
+    the exact same real gate as the already-scored combat_initiated, so promoting it would
+    double-count the identical real-world event, not add new signal; documented as a deliberate
+    decision, not left open. Real corpus re-verification (2000-tick live Kernel.tick_once()
+    loop, dungeon_crawl_seed42 + urban_political_seed42, corpus-default flags, all 3 of this
+    session's own combat fixes active): combat_resolved fires at real, non-zero volume (1x
+    dungeon_crawl, 4x urban_political), 1:1 correlated with the real KILL/ESCAPED count in each
+    world, zero leakage into the excluded outcomes.
+  proof_type: regression
+  test_path: >
+    tests/unit/observability/test_event_shapers.py::test_combat_resolved_fires_alongside_kill,
+    ::test_combat_resolved_fires_alongside_escaped,
+    ::test_combat_resolved_not_emitted_for_caught_fleeing,
+    ::test_combat_resolved_not_emitted_for_pursuit_abandoned (4 new tests). Full scoped re-run:
+    tests/unit/observability/, tests/simulation_quality/test_combat_scorer.py -- 1017 passed,
+    6 skipped, zero regressions.
+  divergence_note: null
+  support_boundary: >
+    CombatScorer.score()'s own scoring logic is untouched -- it already had a correct, ready
+    handler; this ticket only adds the missing producer. No change to combat_engagement_started/
+    ended's own already-implemented behavior, or to any combat-resolution logic itself.

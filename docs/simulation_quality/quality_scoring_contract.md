@@ -668,6 +668,14 @@ PP-33 (`lifecycle` — death finalization), PP-11 (`military_conflict` — facti
 **Loop signal:** `attrition` appearing without `combat_resolved` at >80% of combat window
 → `loop_detected:unresolved_combat`
 
+**Real producer (`TCK-20260809-COMBAT-RESOLVED-SCORER-GAP-FIX`):** `combat_resolved` had a real,
+ready scorer handler since this pillar's own original design, but no real producer anywhere in
+`src/` until this ticket — `event_shapers.py`'s `CombatShaper` now emits it for exactly the
+`KILL`/`ESCAPED` outcomes of `combat_engagement_ended` (`TCK-20260809-COMBAT-LIFECYCLE-
+OBSERVABILITY`), both literal matches for this row's own "clear winner, loser retreats or dies"
+wording. `CAUGHT_FLEEING`/`PURSUIT_ABANDONED` deliberately excluded. See
+`docs/simulation_quality/event_type_coverage.md` §3.10 for the full mapping.
+
 **Real, confirmed finding (`TCK-20260808-COMBAT-PILLAR-OPPORTUNITY-ATTACK-CREDIT-GAP`):**
 `entity_killed` is emitted by two separate mechanisms that co-exist by design (see
 `TCK-20260806-PUSH-CUTOVER-COMBAT-ECONOMY-FACTION`'s own completion notes) — the push-shaper

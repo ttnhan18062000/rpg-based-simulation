@@ -331,6 +331,20 @@ def test_combat_engagement_ended_kill_fires_alongside_entity_killed():
     assert ended.payload["attacker_snapshot"] is not None
 
 
+def test_combat_resolved_fires_alongside_kill():
+    """TCK-20260809-COMBAT-RESOLVED-SCORER-GAP-FIX: combat_resolved (the real, ready
+    CombatScorer signal that never had a producer) must fire for the KILL outcome."""
+    defender = _entity(eid=1, hp=10, max_hp=100, active=True)
+    killer = _entity(eid=7, hp=100, max_hp=100)
+    upd = _update({1: MagicMock(combat=_real_combat_upd(
+        attacker_id=7, hp_delta=-10, alive_set=False, outcome_kind="KILL"))})
+    events = CombatShaper().shape(_prior_state({1: defender, 7: killer}), upd, tick=10)
+    resolved = [e for e in events if e.event_type == "combat_resolved"]
+    assert len(resolved) == 1
+    assert resolved[0].payload["outcome"] == "KILL"
+    assert resolved[0].target_id == 7
+
+
 # ── combat_engagement_ended: CAUGHT_FLEEING ─────────────────────────────────
 
 def test_combat_engagement_ended_caught_fleeing_for_non_lethal_opportunity_attack():
@@ -425,3 +439,35 @@ def test_combat_engagement_ended_escaped_not_emitted_without_the_tag():
     e_upd = MagicMock(combat=None, task=None, property_updates={})
     events = CombatShaper().shape(_prior_state({1: prior}), _update({1: e_upd}), tick=10)
     assert "combat_engagement_ended" not in _types(events)
+
+
+# ── combat_resolved (TCK-20260809-COMBAT-RESOLVED-SCORER-GAP-FIX) ──────────
+
+def test_combat_resolved_fires_alongside_escaped():
+    prior = _entity(eid=1)
+    e_upd = MagicMock(combat=None, task=None,
+                       property_updates={"combat_escape": "EVASIVE_SUCCESS",
+                                         "combat_escape_evaded_ids": [7, 8]})
+    events = CombatShaper().shape(_prior_state({1: prior}), _update({1: e_upd}), tick=10)
+    resolved = [e for e in events if e.event_type == "combat_resolved"]
+    assert len(resolved) == 1
+    assert resolved[0].payload["outcome"] == "ESCAPED"
+
+
+def test_combat_resolved_not_emitted_for_caught_fleeing():
+    defender = _entity(eid=1, hp=100, max_hp=100)
+    attacker = _entity(eid=42, hp=100, max_hp=100)
+    upd = _update({1: MagicMock(combat=_real_combat_upd(attacker_id=42, hp_delta=-20,
+                                                          is_opportunity_attack=True,
+                                                          outcome_kind="SURVIVE"))})
+    events = CombatShaper().shape(_prior_state({1: defender, 42: attacker}), upd, tick=10,
+                                   mode=ObservabilityMode.NORMAL)
+    assert "combat_resolved" not in _types(events)
+
+
+def test_combat_resolved_not_emitted_for_pursuit_abandoned():
+    prior = _entity(eid=1, task=MagicMock(payload={"target_id": 55}))
+    e_upd = MagicMock(combat=None, task=MagicMock(payload_set={"reason": "LEASH_RETURN"}),
+                       property_updates={})
+    events = CombatShaper().shape(_prior_state({1: prior}), _update({1: e_upd}), tick=10)
+    assert "combat_resolved" not in _types(events)

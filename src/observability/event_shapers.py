@@ -155,6 +155,18 @@ class CombatShaper:
                         "actor_snapshot": _combat_entity_snapshot(prior_ent),
                     },
                 ))
+                # combat_resolved -- real, ready COMBAT-pillar scorer signal (+3, the largest
+                # positive weight in the pillar) that has never had a real producer anywhere in
+                # this repo (TCK-20260809-COMBAT-RESOLVED-SCORER-GAP-FIX). ESCAPED is a literal
+                # match for the pillar contract's own wording ("clear winner, loser retreats or
+                # dies") -- the loser cleanly disengaged. CombatScorer requires no specific
+                # payload fields, only a matching event_type.
+                events.append(SimulationEvent(
+                    event_type="combat_resolved", event_category="combat",
+                    tick=tick, entity_id=eid, severity="INFO",
+                    source_system="event_shapers", message="",
+                    payload={"outcome": "ESCAPED"},
+                ))
 
             if combat_upd is None:
                 continue
@@ -279,6 +291,18 @@ class CombatShaper:
                         "defender_snapshot": _combat_entity_snapshot(prior_ent),
                         "attacker_snapshot": _combat_entity_snapshot(killer_ent),
                     },
+                ))
+                # combat_resolved -- real, ready COMBAT-pillar scorer signal (+3, the largest
+                # positive weight in the pillar) that has never had a real producer anywhere in
+                # this repo (TCK-20260809-COMBAT-RESOLVED-SCORER-GAP-FIX). KILL is a literal
+                # match for the pillar contract's own wording ("clear winner, loser retreats or
+                # dies") -- the loser died. CombatScorer requires no specific payload fields,
+                # only a matching event_type.
+                events.append(SimulationEvent(
+                    event_type="combat_resolved", event_category="combat",
+                    tick=tick, entity_id=eid, target_id=killer_id, severity="INFO",
+                    source_system="event_shapers", message="",
+                    payload={"outcome": "KILL"},
                 ))
                 if getattr(prior_ent, "kind", None) == "hero":
                     events.append(SimulationEvent(
