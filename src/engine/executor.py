@@ -116,6 +116,21 @@ class LocalSequentialExecutor:
                         "target_position",
                         frozen_subject.navigation.position,
                     )
+                    # Live-refresh a stale entity-tracking target
+                    # (TCK-20260810-COMBAT-PURSUIT-STALE-TARGET-SNAPSHOT-NEVER-RETARGETS): this
+                    # dispatch re-emits NavigationUpdate(target_set=...) every tick a pursuit task
+                    # is scheduled, which route_movement_intent's own live-retargeting fix
+                    # (TCK-20260809-COMBAT-PURSUIT-PER-TICK-TRACE) reads as `has_fresh_decision`
+                    # -- meaning that fix's own fallback-to-live-tracking branch never engages,
+                    # since target_set is always non-None here even though its VALUE is the same
+                    # stale payload snapshot every tick. Refreshing it live at the source keeps
+                    # the "always reaffirm target_set" contract non-pursuit ENTITY_MOVE work
+                    # (WANDER/RETREAT/objective movement) relies on, while fixing pursuit at its
+                    # own real origin.
+                    from src.engine.candidate_selector import MovementCandidateSelector
+                    target = MovementCandidateSelector.resolve_live_tracking_target(
+                        frozen_subject, readonly_state.entities, target
+                    )
                     from src.core.updates import NavigationUpdate
                     updates = {
                         frozen_subject.id: EntityUpdate(

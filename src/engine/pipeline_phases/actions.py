@@ -207,6 +207,16 @@ class ActionRoutingPhase:
                 and reason_value == ReasonCode.TARGET_INCAPACITATED.value
             )
             if (is_survival and outcome == "SUCCESS") or is_unrecoverable_attack_failure:
+                # Wholesale-empty payload_set is required, not merely clearing action/target_id:
+                # scheduler.py's own is_idle_act check (`work_kind=="ENTITY_ACT" and not
+                # ent.task.payload`) needs a genuinely falsy payload to reclassify this entity
+                # back to ENTITY_BRAIN scheduling on the next tick. Confirmed via live corpus
+                # trace (TCK-20260810-COMBAT-PURSUIT-STALE-TARGET-SNAPSHOT-NEVER-RETARGETS): a
+                # {"outcome":..., "reason":...}-only payload (non-empty but action/target_id-less)
+                # still bypasses is_idle_act, and the stuck-retry-forever bug this reset exists to
+                # prevent (TCK-20260809-COMBAT-STUCK-ATTACK-TASK-DEAD-TARGET) reoccurs -- one real
+                # entity hit TARGET_INCAPACITATED 73 times in a 2000-tick run with a non-empty-but-
+                # actionless payload, vs. ~4 with a genuinely empty one.
                 annotated_task = replace(task_upd, payload_set={})
             else:
                 annotated_task = replace(task_upd, payload_set={**payload, "outcome": outcome, **({"reason": reason_value} if reason_value else {})})

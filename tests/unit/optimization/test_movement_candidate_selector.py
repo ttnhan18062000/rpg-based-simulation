@@ -154,3 +154,105 @@ def test_movement_selector_is_deterministic(base_state: AuthoritativeState):
 
     for r in results[1:]:
         assert r == results[0]
+
+
+# TCK-20260810-COMBAT-PURSUIT-STALE-TARGET-SNAPSHOT-NEVER-RETARGETS: a pursuing entity that
+# "arrived" at a stale, one-time snapshot of its target's OLD position must not be permanently
+# excluded from movement candidacy -- it must live-retrack the target's CURRENT position via
+# task.payload["target_id"] and remain a candidate as long as it isn't there yet.
+
+def test_resolve_live_tracking_target_returns_live_position_when_target_alive():
+    pursuer = (
+        V2EntityBuilder(10)
+        .kind("ACTOR")
+        .location(10.0, 10.0)
+        .navigation(target=(10.0, 10.0))
+        .combat(alive=True)
+        .lifecycle(active=True)
+        .task(work_kind="ENTITY_MOVE", payload={"target_id": 11, "target_position": (10.0, 10.0)})
+        .build()
+    )
+    target = (
+        V2EntityBuilder(11)
+        .kind("ACTOR")
+        .location(50.0, 50.0)
+        .combat(alive=True)
+        .lifecycle(active=True)
+        .build()
+    )
+    entities = {10: pursuer, 11: target}
+    result = MovementCandidateSelector.resolve_live_tracking_target(
+        pursuer, entities, pursuer.navigation.target
+    )
+    assert result == (50.0, 50.0)
+
+
+def test_resolve_live_tracking_target_falls_back_when_target_dead():
+    pursuer = (
+        V2EntityBuilder(10)
+        .kind("ACTOR")
+        .location(10.0, 10.0)
+        .navigation(target=(10.0, 10.0))
+        .combat(alive=True)
+        .lifecycle(active=True)
+        .task(work_kind="ENTITY_MOVE", payload={"target_id": 11, "target_position": (10.0, 10.0)})
+        .build()
+    )
+    target = (
+        V2EntityBuilder(11)
+        .kind("ACTOR")
+        .location(50.0, 50.0)
+        .combat(alive=False)
+        .lifecycle(active=True)
+        .build()
+    )
+    entities = {10: pursuer, 11: target}
+    fallback = pursuer.navigation.target
+    result = MovementCandidateSelector.resolve_live_tracking_target(pursuer, entities, fallback)
+    assert result == fallback
+
+
+def test_resolve_live_tracking_target_falls_back_when_no_target_id():
+    pursuer = (
+        V2EntityBuilder(10)
+        .kind("ACTOR")
+        .location(10.0, 10.0)
+        .navigation(target=(10.0, 10.0))
+        .combat(alive=True)
+        .lifecycle(active=True)
+        .task(work_kind="ENTITY_MOVE", payload={})
+        .build()
+    )
+    fallback = (99.0, 99.0)
+    result = MovementCandidateSelector.resolve_live_tracking_target(pursuer, {}, fallback)
+    assert result == fallback
+
+
+def test_movement_selector_includes_pursuer_arrived_at_stale_snapshot_but_target_moved():
+    """The exact bug: a pursuer whose persisted navigation.target equals its own current
+    position (it "arrived" at a stale, one-time snapshot) must still be selected if
+    task.payload["target_id"] points at a still-alive entity that is no longer at that stale
+    position -- confirmed via live corpus trace (dungeon_crawl_seed42_2000t) to otherwise freeze
+    two mutually-pursuing entities at a fixed distance for 990+ consecutive ticks."""
+    pursuer = (
+        V2EntityBuilder(20)
+        .kind("ACTOR")
+        .location(58.0, 60.0)
+        .navigation(target=(58.0, 60.0), movement_mode=MovementMode.PURSUE)
+        .combat(alive=True, readiness=100.0, move_cost=10.0)
+        .lifecycle(active=True)
+        .task(work_kind="ENTITY_MOVE", payload={"target_id": 21, "target_position": (58.0, 60.0)})
+        .build()
+    )
+    target = (
+        V2EntityBuilder(21)
+        .kind("ACTOR")
+        .location(57.0, 59.0)
+        .combat(alive=True)
+        .lifecycle(active=True)
+        .build()
+    )
+    state = AuthoritativeState(tick=100, seed=42, entities={20: pursuer, 21: target})
+    update = StateUpdate()
+    selected = MovementCandidateSelector.select(state, update, [20])
+    assert 20 in selected

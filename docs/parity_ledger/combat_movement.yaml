@@ -3762,3 +3762,101 @@
     disclosed-but-unconfirmed mechanism by which some deaths reach `lifecycle.active=False` with
     `death_reason` unset (neither "OLD_AGE" nor "COMBAT") -- treated conservatively as non-combat
     by this fix regardless of true origin, which is the safe default either way.
+
+- id: COMB-310
+  text: >
+    TCK-20260810-COMBAT-PURSUIT-STALE-TARGET-SNAPSHOT-NEVER-RETARGETS -- direct follow-up to
+    COMB-304 (TCK-20260809-COMBAT-PURSUIT-PER-TICK-TRACE). That fix live-refreshed a stale
+    pursuit navigation target inside `route_movement_intent()`, but two OTHER real, independent
+    places compute their own, separate "is this entity's nav_target stale" logic and were never
+    given the same fix: (1) `MovementCandidateSelector.select()` (`src/engine/candidate_selector.py`)
+    has its own, earlier "already at target, skip" check that runs BEFORE route_movement_intent's
+    own per-entity loop even gets a chance to run for a given entity -- a pursuer that had
+    "arrived" at a stale snapshot was permanently excluded from movement candidacy here, before
+    route_movement_intent's own live-retarget logic ever engaged; (2) both real `ENTITY_MOVE`
+    work-item dispatchers (`src/engine/executor.py`'s `LocalSequentialExecutor`,
+    `src/engine/worker_logic.py`'s `default_simulation_worker`, used by
+    `ConcurrentExecutionAdapter`) re-emit `NavigationUpdate(target_set=...)` every tick a pursuit
+    task is scheduled, reading the SAME static `task.payload["target_position"]` snapshot every
+    time -- which route_movement_intent's own `has_fresh_decision` check
+    (`ent_upd.navigation.target_set is not None`) misreads as a genuine new tactical decision
+    every single tick, silently defeating COMB-304's own live-retarget fallback entirely (it
+    never activates, since `has_fresh_decision` is always spuriously True). Confirmed via live
+    corpus trace on `dungeon_crawl_seed42_2000t`: two mutually-pursuing entities (25, 12) were
+    frozen at exactly Manhattan distance 2.0 (diagonally adjacent) for 990+ consecutive real
+    ticks, with `readiness=100.0` throughout (ruling out a readiness-starvation explanation) --
+    even with COMB-304's own fix already merged and active. This is the real, complete,
+    previously-unidentified mechanism producing the 100% `PURSUIT_ABANDONED` rate that
+    COMB-309's own investigation (TCK-20260809-COMBAT-KILL-LIFECYCLE-CREDIT-GAP-INVESTIGATION)
+    traced the COMBAT pillar's own positive-scoring-surface unreachability to.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: >
+    Extracted the live-retargeting logic into a single shared helper,
+    `MovementCandidateSelector.resolve_live_tracking_target(entity, entities, fallback_target)`
+    (`src/engine/candidate_selector.py`), taking a plain `{entity_id: EntityState}` mapping
+    (not a full state/packet object) so it's usable from all four real call sites without
+    threading a wider dependency through the bounded, read-only `WorkerPacket` context. Applied
+    at: `MovementCandidateSelector.select()`'s own nav_target fallback (replacing its prior,
+    un-refreshed stale-snapshot check), `route_movement_intent()`'s own live-retarget branch
+    (now calling the shared helper instead of its own inline, duplicate copy of the same logic),
+    `LocalSequentialExecutor.execute()`'s `ENTITY_MOVE` branch (`executor.py`), and
+    `default_simulation_worker`'s `ENTITY_MOVE` branch (`worker_logic.py`). Real corpus
+    re-verification (`dungeon_crawl_seed42_2000t`, `urban_political_seed42_2000t`, corpus-default
+    flags): the specific frozen pair (25, 12) now moves and diverges from its prior fixed
+    position (though a real, disclosed, separate secondary issue -- see support_boundary --
+    means this specific pair still doesn't converge to melee range, via a different mechanism).
+    Real, decisive, corpus-wide measure: `combat_resolved`/`entity_killed`/`combat_damage`/
+    `combat_initiated`/`combat_engagement_started` event counts, all exactly 0 in a fresh
+    post-COMB-309 baseline run of both worlds, now fire non-zero post-fix (`dungeon_crawl`:
+    combat_initiated=1, combat_engagement_started=1, combat_damage=1, entity_killed=1,
+    combat_resolved=1; `urban_political`: combat_resolved=5). COMBAT pillar norm on
+    `dungeon_crawl_seed42_2000t` moved from exactly 0.0 (zero credited combat activity, COMB-309's
+    own post-fix baseline) to -0.0096 with 6 real events (grade stayed C -- a small, real, honest
+    change at this corpus's own low combat-volume scale, not a forced improvement).
+
+    Also caught and fixed a real, independent regression this session's own earlier
+    `TCK-20260809-COMBAT-STUCK-ATTACK-TASK-DEAD-TARGET` fix (COMB-307) introduced but its own
+    test scope never caught: `ActionRoutingPhase.route()`'s `is_unrecoverable_attack_failure`
+    reset (`payload_set={}`) conflicts with
+    `tests/integration/pipeline/test_combat_legality_matrix.py::
+    test_pipeline_simultaneous_attack_atomicity`/`test_aoe_sliding_state_awareness`, both of
+    which expected `outcome`/`reason` to survive in the SAME tick's own returned
+    `EntityUpdate.task.payload_set` for same-tick atomic-ordering visibility. Tried preserving
+    `outcome`/`reason` in the reset payload first; live corpus re-verification showed this
+    reintroduces a partial version of the original stuck-retry bug (one entity hit
+    `TARGET_INCAPACITATED` 73 times in a 2000-tick run, since `scheduler.py`'s own
+    `is_idle_act` check requires a genuinely falsy/empty payload, not merely an
+    action/target_id-less one, to reclassify the entity back to brain-cadence scheduling).
+    Reverted to the original, corpus-verified `payload_set={}` behavior (0 repeats,
+    confirmed) and updated the 2 stale integration tests instead, since no real production code
+    (confirmed via grep) reads `task.payload.get("outcome")` -- only these 2 tests' own
+    assertions did.
+  proof_type: regression
+  test_path: >
+    tests/unit/optimization/test_movement_candidate_selector.py (4 new tests, all confirmed via
+    git-stash bisection to genuinely fail pre-fix -- 3 with AttributeError since the shared
+    helper doesn't exist pre-fix, 1 with the exact confirmed candidacy-exclusion bug). Full
+    scoped re-run: tests/unit/optimization/, tests/unit/movement/, tests/unit/combat/,
+    tests/unit/tactical/, tests/unit/kernel/, tests/unit/core/, tests/unit/engine/,
+    tests/unit/actions/, tests/unit/strategic/, tests/unit/observability/, tests/unit/entities/,
+    tests/integration/combat/, tests/integration/pipeline/ -- 2047 passed, only the 1
+    pre-existing, already-confirmed-unrelated failure (test_normal_move_triggers_oa, confirmed
+    via bisection identical on pristine pre-fix code too).
+    tests/integration/kernel/test_determinism_suite.py, test_seed_stability.py,
+    test_authoritative_outcome_truth.py -- 9 passed. test_long_run_determinism.py's own
+    test_1000_tick_determinism hit a pre-existing, unrelated 60s CI resource-timeout (confirmed
+    identical on pristine pre-fix code), matching the already-disclosed chronic
+    tick-budget-exceeded finding from COMB-308.
+  divergence_note: null
+  support_boundary: >
+    The specific traced pair (entities 25/12) still does not converge to melee range post-fix --
+    they now move but enter a stable mutual-orbit oscillation (swapping which diagonal corner
+    they occupy each tick, never closing the gap), a real, disclosed, SEPARATE issue in
+    `NavigationSystem.get_next_step()`'s own single-axis-priority stepping algorithm (never moves
+    diagonally, only one axis per tick), not something this ticket's own retargeting fix touches
+    or claims to solve. This fix's own real, decisive, corpus-wide contribution is unblocking
+    combat resolution for pursuit pairs whose own geometry doesn't hit that specific oscillation
+    (confirmed via the non-zero combat_resolved/entity_killed counts above) -- not a claim that
+    all pursuit now converges reliably.

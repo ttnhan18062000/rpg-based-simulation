@@ -13,6 +13,16 @@ def default_simulation_worker(packet: WorkerPacket) -> List[WorkerResult]:
     """
     if packet.work_kind == "ENTITY_MOVE":
         target = packet.payload.get("target_position", packet.subject.navigation.position)
+        # Live-refresh a stale entity-tracking target
+        # (TCK-20260810-COMBAT-PURSUIT-STALE-TARGET-SNAPSHOT-NEVER-RETARGETS) -- see the
+        # identical, more fully-commented fix in executor.py's own ENTITY_MOVE branch and
+        # MovementCandidateSelector.resolve_live_tracking_target's own docstring for the full
+        # explanation. `packet.all_entities` is the bounded, read-only equivalent of
+        # `state.entities` this WorkerPacket already carries.
+        from src.engine.candidate_selector import MovementCandidateSelector
+        target = MovementCandidateSelector.resolve_live_tracking_target(
+            packet.subject, packet.all_entities, target
+        )
         from src.core.updates import EntityUpdate, NavigationUpdate
         updates = {packet.subject.id: EntityUpdate(
             entity_id=packet.subject.id,

@@ -4558,3 +4558,53 @@
     itself in the live SimQ scoring pipeline. This fix does not currently change any real,
     scored combat outcome or SimQ grade -- it closes a confirmed, real, but currently-dormant
     gap, matching this ticket's own disclosed scope.
+
+- id: SUB-383
+  text: >
+    TCK-20260810-COMBAT-PURSUIT-STALE-TARGET-SNAPSHOT-NEVER-RETARGETS -- `executor.py`'s own
+    real, sequential `LocalSequentialExecutor.execute()` (used when `profile.max_worker_count==0`)
+    dispatches `ENTITY_MOVE` work items by re-emitting `NavigationUpdate(target_set=...)` every
+    tick a pursuit task is scheduled, reading the SAME static `task.payload["target_position"]`
+    snapshot every time -- confirmed, via live corpus trace, to silently defeat
+    `route_movement_intent`'s own already-correct live-retargeting fix
+    (TCK-20260809-COMBAT-PURSUIT-PER-TICK-TRACE), since that fix's own `has_fresh_decision` check
+    (`target_set is not None`) cannot distinguish a genuine new tactical decision from this
+    dispatcher's own routine re-affirmation of an unchanged, stale value.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: >
+    `LocalSequentialExecutor.execute()`'s own `ENTITY_MOVE` branch now calls the same shared
+    `MovementCandidateSelector.resolve_live_tracking_target()` helper
+    (`src/engine/candidate_selector.py`) used by `route_movement_intent`/`select`, live-refreshing
+    `target` from `task.payload["target_id"]`'s current position (via `readonly_state.entities`,
+    the same bounded, read-only snapshot this executor already receives) before constructing the
+    `NavigationUpdate`. The parallel-worker equivalent (`ConcurrentExecutionAdapter` ->
+    `worker_logic.py`'s `default_simulation_worker`, used when `max_worker_count>0` -- the real
+    dispatch path for `PROD_SMALL`, `HardwareClass.CLASS_C`, confirmed via
+    `Kernel.__init__`'s own executor-selection logic) received the identical fix using
+    `packet.all_entities`, the `WorkerPacket`'s own bounded equivalent. Real corpus re-
+    verification (`dungeon_crawl_seed42_2000t`): two entities previously frozen at a fixed
+    Manhattan distance for 990+ consecutive ticks (confirmed still occurring even with
+    TCK-20260809-COMBAT-PURSUIT-PER-TICK-TRACE's own fix already merged) now move and diverge
+    from that frozen state; real `combat_resolved`/`entity_killed`/`combat_damage` events (0
+    before this fix, in a fresh post-COMB-309 baseline) now fire non-zero in both
+    `dungeon_crawl` and `urban_political`.
+  proof_type: regression
+  test_path: >
+    tests/unit/optimization/test_movement_candidate_selector.py (4 new tests, including
+    test_movement_selector_includes_pursuer_arrived_at_stale_snapshot_but_target_moved, all
+    confirmed via git-stash bisection to genuinely fail pre-fix). Full scoped re-run:
+    tests/unit/optimization/, tests/unit/movement/, tests/unit/combat/, tests/unit/tactical/,
+    tests/unit/kernel/, tests/unit/core/, tests/unit/engine/, tests/unit/actions/,
+    tests/unit/strategic/, tests/unit/observability/, tests/unit/entities/,
+    tests/integration/combat/, tests/integration/pipeline/ -- 2047 passed, only the 1
+    pre-existing, already-confirmed-unrelated failure (test_normal_move_triggers_oa).
+    tests/integration/kernel/test_determinism_suite.py, test_seed_stability.py,
+    test_authoritative_outcome_truth.py -- 9 passed, no determinism regressions.
+  divergence_note: null
+  support_boundary: >
+    See COMB-310 (docs/parity_ledger/combat_movement.yaml) for the full fix (all 4 real call
+    sites) and root-cause chain. This entry documents specifically the substrate/executor-layer
+    half of the fix (the sequential dispatch path), matching this file's own existing SUB-034
+    citation of executor.py.

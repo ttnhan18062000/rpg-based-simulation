@@ -245,12 +245,17 @@ class MovementPhase:
             # snapshot of where its target *was*, arrived, and then idled until its next cadence
             # tick while the real target kept moving -- confirmed via live per-tick trace to be
             # the real, precise reason chase convergence was rare rather than reliable.
+            #
+            # Shared with MovementCandidateSelector.select's own, separately-computed nav_target
+            # (TCK-20260810-COMBAT-PURSUIT-STALE-TARGET-SNAPSHOT-NEVER-RETARGETS) -- that function
+            # runs BEFORE this loop to decide which entities are even offered a chance to move,
+            # and its own un-refreshed staleness check was silently excluding an "arrived at a
+            # stale snapshot" entity from candidacy entirely, before this already-correct live
+            # retarget ever got a chance to run for it.
             if not has_fresh_decision:
-                tracked_id = entity.task.payload.get("target_id")
-                if tracked_id is not None:
-                    tracked_entity = state.entities.get(tracked_id)
-                    if tracked_entity is not None and tracked_entity.lifecycle.active and tracked_entity.combat.alive:
-                        nav_target = tracked_entity.navigation.position
+                nav_target = MovementCandidateSelector.resolve_live_tracking_target(
+                    entity, state.entities, nav_target
+                )
 
             if not nav_target or entity.navigation.position == nav_target:
                 continue

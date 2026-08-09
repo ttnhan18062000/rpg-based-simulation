@@ -6,7 +6,7 @@ from src.core.movement_modes import MovementMode
 from src.engine.phase_governor import ScanPolicy
 
 if TYPE_CHECKING:
-    from src.core.state import AuthoritativeState
+    from src.core.state import AuthoritativeState, EntityState
     from src.core.updates import StateUpdate
 
 
@@ -16,6 +16,50 @@ class MovementCandidateSelector:
     Logic ID: PERF-009 (Movement Candidate Selection)
     Milestone 17 Law: Enforces candidate budget and adaptive scan policy under pressure.
     """
+
+    @staticmethod
+    def resolve_live_tracking_target(
+        entity: "EntityState",
+        entities,
+        fallback_target,
+    ):
+        """
+        Given a stale fallback nav target (typically `entity.navigation.target`, a one-time
+        snapshot from whichever prior tick last issued a fresh decision), return the pursued
+        entity's own CURRENT position if `entity.task.payload["target_id"]` names a still-alive
+        target -- otherwise return `fallback_target` unchanged.
+
+        `entities` is a plain `{entity_id: EntityState}` mapping (accepts `AuthoritativeState.
+        entities`, `WorkerPacket.all_entities`, or any equivalent) -- deliberately NOT a full
+        state/packet object, since this is the only piece either caller actually needs and it
+        keeps this helper usable from both the authoritative-state call sites (movement.py,
+        this file's own `select`) and the bounded, read-only `WorkerPacket` context
+        (worker_logic.py) without threading a wider dependency through.
+
+        Shared by `route_movement_intent` (movement.py), `MovementCandidateSelector.select`
+        (this file), and both real `ENTITY_MOVE` work-item dispatchers
+        (`executor.py`'s `LocalSequentialExecutor`/`ConcurrentExecutionAdapter`,
+        `worker_logic.py`'s `default_simulation_worker`) -- all four independently computed a
+        "what should this entity be moving toward" target from the same
+        `entity.task.payload["target_id"]` signal. Only `route_movement_intent` was originally
+        fixed to live-track it (TCK-20260809-COMBAT-PURSUIT-PER-TICK-TRACE); the other three kept
+        their own separate, stale-target logic, which meant (a) `select`'s own separate
+        staleness check permanently excluded an "arrived at a stale snapshot" entity from
+        movement candidacy before route_movement_intent's own fix ever got a chance to run for
+        it, and (b) the `ENTITY_MOVE` dispatchers re-emit `NavigationUpdate(target_set=...)`
+        every tick from the same frozen payload snapshot, which route_movement_intent's own
+        `has_fresh_decision` check reads as "this tick has a genuine new decision" -- silently
+        defeating its own live-retarget fallback, since `target_set` is always non-None even
+        though its VALUE never changes (TCK-20260810-COMBAT-PURSUIT-STALE-TARGET-SNAPSHOT-NEVER-
+        RETARGETS). Extracted here so all four call sites can never drift out of sync again.
+        """
+        tracked_id = entity.task.payload.get("target_id")
+        if tracked_id is None:
+            return fallback_target
+        tracked_entity = entities.get(tracked_id)
+        if tracked_entity is not None and tracked_entity.lifecycle.active and tracked_entity.combat.alive:
+            return tracked_entity.navigation.position
+        return fallback_target
 
     @staticmethod
     def select(
@@ -51,7 +95,15 @@ class MovementCandidateSelector:
                     mode = ent_upd.navigation.movement_mode_set
 
             if nav_target is None:
-                nav_target = entity.navigation.target
+                # Live-refresh a stale entity-tracking target (see
+                # resolve_live_tracking_target's own docstring) -- without this, an entity
+                # that already "arrived" at a stale snapshot of its pursuit target's old
+                # position gets permanently excluded from candidacy below, even though its
+                # target has since moved and a fresh route_movement_intent pass would find a
+                # real, legal step toward it.
+                nav_target = MovementCandidateSelector.resolve_live_tracking_target(
+                    entity, state.entities, entity.navigation.target
+                )
 
             # If no target or already at target, skip unconditionally
             if nav_target is None or entity.navigation.position == nav_target:
