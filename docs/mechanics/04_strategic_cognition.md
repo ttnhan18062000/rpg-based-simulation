@@ -149,6 +149,17 @@ separate function — until this ticket, it did not reference `bravery` at all, 
 `panic > 0.4` flee threshold check, giving personality a real effect on the immediate,
 per-tick combat-vs-flee decision as well as the strategic one documented above.
 
+**Where `bravery` itself comes from** (`TCK-20260809-COMBAT-PERSONALITY-RACE-CORRELATION`):
+`bravery` is a real, per-entity `DeterministicRNG` draw in `[0.0, 1.0)`
+(`src/worldbuilding/compiler.py`, `get_bravery_bias()`). Until this ticket it was uncorrelated
+with race/faction — a wolf and a citizen drew from the identical distribution. It is now biased
+by the entity's real faction `alignment_bucket` (`data/content/social/factions.yaml`, via
+`FactionSemanticsService.get_alignment_bucket`): `wild` +0.35, `invader` +0.25, `rival` +0.15,
+`defender` +0.05, `neutral` +0.0, additive and clamped to `[0.0, 1.0]` — individual per-entity
+variance is preserved within each faction, but the population mean now differs meaningfully by
+faction (e.g. a real `wild_beast_pack` population averages bravery ≈0.89 vs. a real
+`merchant_league` population's ≈0.49, measured on live compiled worlds).
+
 ### 6.4 Personality Bias by Route Family
 
 | RouteFamily | Trait | Weight |

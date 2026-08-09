@@ -4,7 +4,7 @@ import os
 import tempfile
 import json
 from src.worldbuilding.schema import WorldSpec
-from src.worldbuilding.compiler import WorldCompiler, get_role_enum, get_faction_enum, get_quest_kind
+from src.worldbuilding.compiler import WorldCompiler, get_role_enum, get_faction_enum, get_quest_kind, get_bravery_bias
 from src.core.enums import EntityRole, Faction
 from src.core.quests import QuestKind
 
@@ -622,3 +622,53 @@ def test_quest_location_tag_warns_on_genuine_mismatch():
     assert "settlement" in report["warnings"][0], (
         "Warning message should name the unmatched tag"
     )
+
+
+def test_get_bravery_bias_by_real_alignment_bucket():
+    """TCK-20260809-COMBAT-PERSONALITY-RACE-CORRELATION: bravery bias is derived from the real,
+    content-defined alignment_bucket (data/content/social/factions.yaml), not a raw per-faction
+    table -- new factions inherit a sensible bias automatically via their real bucket."""
+    assert get_bravery_bias("wild_beast_pack") == 0.35   # alignment_bucket: wild
+    assert get_bravery_bias("goblin_warband") == 0.25    # alignment_bucket: invader
+    assert get_bravery_bias("orc_clan") == 0.15          # alignment_bucket: rival
+    assert get_bravery_bias("hero_guild") == 0.05        # alignment_bucket: defender
+    assert get_bravery_bias("merchant_league") == 0.0    # alignment_bucket: neutral
+    assert get_bravery_bias("nonexistent_faction_xyz") == 0.0  # no crash, no real content match
+
+
+def test_compiler_faction_bravery_bias_produces_real_population_skew():
+    """A predator faction's real, compiled population should show a measurably higher average
+    bravery than a neutral civilian faction's, while individual per-entity RNG variance is
+    preserved (not every entity identical)."""
+    data = create_base_valid_spec()
+    data["regions"].append({"id": "predator_zone", "type": "wilderness", "bounds": [20, 20, 40, 40], "terrain": "FOREST"})
+    data["factions"] = [
+        {"id": "wild_beast_pack", "type": "hostile"},
+        {"id": "merchant_league", "type": "civilian"},
+    ]
+    data["entities"] = [
+        {"id": "predators", "count": 30, "role": "monster", "faction": "wild_beast_pack", "spawn_region": "predator_zone"},
+        {"id": "merchants", "count": 30, "role": "citizen", "faction": "merchant_league", "spawn_region": "town_square"},
+    ]
+    spec = WorldSpec.model_validate(data)
+    state, _ = WorldCompiler.compile(spec, seed=42)
+
+    predator_bravery = [
+        e.identity.personality.bravery for e in state.entities.values()
+        if e.identity.properties.get("faction_id") == "wild_beast_pack"
+    ]
+    merchant_bravery = [
+        e.identity.personality.bravery for e in state.entities.values()
+        if e.identity.properties.get("faction_id") == "merchant_league"
+    ]
+    assert len(predator_bravery) == 30
+    assert len(merchant_bravery) == 30
+
+    avg_predator = sum(predator_bravery) / len(predator_bravery)
+    avg_merchant = sum(merchant_bravery) / len(merchant_bravery)
+    assert avg_predator > avg_merchant + 0.2, (
+        f"predator faction avg bravery ({avg_predator:.3f}) should be measurably higher than "
+        f"merchant faction avg bravery ({avg_merchant:.3f})"
+    )
+    # Individual variance preserved within the faction -- not every predator identical.
+    assert len(set(predator_bravery)) > 1

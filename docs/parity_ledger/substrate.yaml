@@ -4408,3 +4408,41 @@
     tests/unit/combat/test_readiness_regen.py (readiness_speed set via .combat() throughout)
   divergence_note: null
   support_boundary: null
+
+- id: SUB-380
+  text: >
+    TCK-20260809-COMBAT-PERSONALITY-RACE-CORRELATION -- WorldCompiler.compile()'s per-entity
+    personality seeding (bravery, greed, sociability, industry -- real DeterministicRNG draws,
+    src/worldbuilding/compiler.py) was uncorrelated with race/faction/archetype: a wolf archetype
+    and a town citizen drew bravery from the identical distribution. Real per-entity variance
+    already existed and was already calibrated to matter for strategic route selection
+    (STRAT-226, strategic_cognition.yaml) -- the gap was population-level race correlation, not
+    variance itself.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    Added get_bravery_bias(faction_str) -> float, deriving from the real, already-loaded
+    alignment_bucket content field (data/content/social/factions.yaml, via
+    FactionSemanticsService.get_alignment_bucket) rather than a new content schema or a
+    reinterpretation of cognition_profiles.yaml's qualitative fields (resolved with the user via
+    AskUserQuestion). Bias table: wild +0.35, invader +0.25, rival +0.15, defender +0.05, neutral
+    +0.0; additive and clamped to [0.0, 1.0], applied on top of the existing per-entity RNG draw.
+    Real re-verification on live compiled worlds: dungeon_crawl's wild_beast_pack population
+    averages bravery ~0.89 vs. goblin_warband/bandit_company/undead_remnants (invader) ~0.73-0.83;
+    urban_political's bandit_company (invader) ~0.85 > hero_guild/town_council (defender)
+    ~0.61-0.72 > merchant_league (neutral) ~0.49 -- real, ordered, measurable population skew,
+    individual entity variance preserved within each faction.
+  proof_type: regression
+  test_path: >
+    tests/unit/worldbuilding/test_world_compiler.py::
+    test_get_bravery_bias_by_real_alignment_bucket,
+    tests/unit/worldbuilding/test_world_compiler.py::
+    test_compiler_faction_bravery_bias_produces_real_population_skew
+  divergence_note: null
+  support_boundary: >
+    A real, separate, unfixed entity-construction path (WorldEntitySpawner/
+    ArchetypeEntityFactory, src/worldassembly/) never sets personality at all -- confirmed via
+    direct source read, disclosed and filed as its own follow-up ticket, not fixed here (its live
+    corpus blast radius is not yet confirmed -- only 1 known caller,
+    src/scenarios/catalog_state_builder.py).

@@ -75,6 +75,31 @@ def get_faction_enum(faction_str: str, catalog_repo: Optional[Any] = None, conte
 
 
 
+# Real per-entity bravery is RNG-seeded (see personality seeding below) but was previously
+# uncorrelated with race/faction -- a wolf and a citizen drew from the identical distribution
+# (TCK-20260809-COMBAT-PERSONALITY-RACE-CORRELATION). Derived from the real, already-loaded
+# `alignment_bucket` content field (data/content/social/factions.yaml) rather than a raw
+# per-faction-string table, so new factions get a sensible bias automatically. Bias is additive
+# and clamped, preserving individual per-entity RNG variance within each faction.
+_BRAVERY_BIAS_BY_ALIGNMENT_BUCKET: Dict[str, float] = {
+    "wild": 0.35,      # apex predators, e.g. wild_beast_pack
+    "invader": 0.25,   # aggressive raiders, e.g. goblin_warband, bandit_company, dragon_cult
+    "rival": 0.15,     # contesting factions, e.g. orc_clan, swamp_tribe
+    "defender": 0.05,  # professional guards/heroes, e.g. hero_guild, town_council
+    "neutral": 0.0,    # civilians/merchants, e.g. merchant_league, arcane_circle
+}
+
+
+def get_bravery_bias(faction_str: str) -> float:
+    """Real, content-derived bravery bias for a faction (see _BRAVERY_BIAS_BY_ALIGNMENT_BUCKET)."""
+    try:
+        from src.content_semantics.faction import get_faction_semantics_service
+        bucket = get_faction_semantics_service().get_alignment_bucket(faction_str)
+    except Exception:
+        return 0.0
+    return _BRAVERY_BIAS_BY_ALIGNMENT_BUCKET.get(bucket, 0.0)
+
+
 def get_quest_kind(kind_str: str) -> QuestKind:
     """Map raw quest kind string to QuestKind enum."""
     k = kind_str.upper()
@@ -298,10 +323,15 @@ class WorldCompiler:
                         if hasattr(resolved, "legacy_faction") and resolved.legacy_faction is not None:
                             faction_enum = Faction(resolved.legacy_faction)
 
-                    # Seed personality deterministically from entity ID + world seed
+                    # Seed personality deterministically from entity ID + world seed.
+                    # Bravery is biased by the entity's real faction alignment_bucket (see
+                    # get_bravery_bias) so race/faction produces a real, measurable population
+                    # skew (e.g. wild_beast_pack trending brave) while individual per-entity RNG
+                    # variance is preserved within that skew.
+                    bravery_bias = get_bravery_bias(pop_spec.faction)
                     personality = PersonalityComponent(
                         greed=rng.get_float(Domain.WORLD, 0, next_entity_id, sub_id=10),
-                        bravery=rng.get_float(Domain.WORLD, 0, next_entity_id, sub_id=11),
+                        bravery=min(1.0, max(0.0, rng.get_float(Domain.WORLD, 0, next_entity_id, sub_id=11) + bravery_bias)),
                         sociability=rng.get_float(Domain.WORLD, 0, next_entity_id, sub_id=12),
                         industry=rng.get_float(Domain.WORLD, 0, next_entity_id, sub_id=13),
                     )
