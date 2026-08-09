@@ -638,27 +638,14 @@ def test_get_bravery_bias_by_real_alignment_bucket():
     assert get_bravery_bias("nonexistent_faction_xyz") == 0.0  # no crash, no real content match
 
 
-def test_personality_bias_config_loads_from_real_data_file():
-    """The bias/threshold values are read from data/content/social/personality_bias.yaml, not
-    the in-code fallback -- confirms the data-driven path is actually exercised, not silently
-    falling back."""
-    from src.worldbuilding import compiler as compiler_module
-    compiler_module._personality_bias_cache = None  # force a fresh load
-    loaded = compiler_module._load_personality_bias_config()
-    assert loaded is not compiler_module._PERSONALITY_BIAS_FALLBACK
-    assert loaded["bravery_bias_by_alignment_bucket"]["wild"] == 0.35
-
-
-def test_personality_bias_config_falls_back_safely_on_bad_file(monkeypatch, tmp_path):
-    """A missing or malformed personality_bias.yaml must never crash world compilation -- falls
-    back to the in-code default values instead."""
-    from src.worldbuilding import compiler as compiler_module
-    bad_path = tmp_path / "does_not_exist.yaml"
-    monkeypatch.setattr(compiler_module, "Path", lambda _p: bad_path)
-    compiler_module._personality_bias_cache = None
-    loaded = compiler_module._load_personality_bias_config()
-    assert loaded == compiler_module._PERSONALITY_BIAS_FALLBACK
-    compiler_module._personality_bias_cache = None  # reset cache so later tests reload the real file
+# test_personality_bias_config_loads_from_real_data_file and
+# test_personality_bias_config_falls_back_safely_on_bad_file moved to
+# tests/unit/content_semantics/test_personality.py -- _load_personality_bias_config,
+# _PERSONALITY_BIAS_FALLBACK, and _personality_bias_cache moved to
+# src/content_semantics/personality.py (TCK-20260809-WORLDENTITYSPAWNER-ZERO-PERSONALITY),
+# shared with ArchetypeEntityFactory's own entity-construction path. get_bravery_bias/
+# get_action_style_for_bravery are re-exported from this module (compiler.py) for backward
+# compatibility with this file's own remaining tests below.
 
 
 def test_compiler_faction_bravery_bias_produces_real_population_skew():

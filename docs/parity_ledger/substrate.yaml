@@ -4479,13 +4479,82 @@
     test_get_action_style_for_bravery_thresholds,
     tests/unit/worldbuilding/test_world_compiler.py::
     test_compiler_faction_bravery_bias_produces_real_action_style_skew,
-    tests/unit/worldbuilding/test_world_compiler.py::
+    tests/unit/content_semantics/test_personality.py::
     test_personality_bias_config_loads_from_real_data_file,
-    tests/unit/worldbuilding/test_world_compiler.py::
+    tests/unit/content_semantics/test_personality.py::
     test_personality_bias_config_falls_back_safely_on_bad_file
   divergence_note: null
   support_boundary: >
     tactical.py's own confirmed-dead AGGRESSIVE range-bonus and EVASIVE reposition-stub are not
     fixed here -- a separate, real bug in that function's own control flow, disclosed not fixed
     to avoid scope creep into re-auditing every dormant sub-branch of a large, already-dense
-    tactical decision function.
+    tactical decision function. UPDATE (TCK-20260809-WORLDENTITYSPAWNER-ZERO-PERSONALITY, same
+    session): the 2 config-loading tests referenced above moved from test_world_compiler.py to
+    test_personality.py when _load_personality_bias_config/_PERSONALITY_BIAS_FALLBACK were
+    extracted into src/content_semantics/personality.py -- see SUB-382.
+
+- id: SUB-382
+  text: >
+    TCK-20260809-WORLDENTITYSPAWNER-ZERO-PERSONALITY -- ArchetypeEntityFactory.build_entity()
+    (src/entities/archetype_factory.py) and WorldEntitySpawner._spawn_legacy_guard()
+    (src/worldassembly/entity_spawner.py) -- the 2 entity-construction branches
+    WorldEntitySpawner.spawn_from_context() itself dispatches to -- never set
+    PersonalityComponent at all, leaving every entity spawned through either at the class's own
+    all-zero default regardless of real race_id/faction_id. Same class of bug as
+    WorldCompiler.compile()'s own earlier all-zero-personality bug (TCK-20260619-P0-ENTITY-INIT),
+    for a separate, newer construction path that fix never covered. Confirmed zero real impact on
+    any currently-scored SimQ pipeline before fixing (this path's only real caller,
+    CatalogScenarioStateBuilder, has zero callers itself outside certification/integration test
+    files) -- fixed anyway as real, disclosed, correctly-scoped technical debt.
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: >
+    Extracted the shared bravery-bias/ActionStyle helpers (_load_personality_bias_config,
+    _PERSONALITY_BIAS_FALLBACK, get_bravery_bias, get_action_style_for_bravery -- previously
+    module-level in src/worldbuilding/compiler.py, TCK-20260809-COMBAT-PERSONALITY-RACE-
+    CORRELATION/TCK-20260809-COMBAT-ACTIONSTYLE-WIRING) into a new src/content_semantics/
+    personality.py, matching this repo's own established precedent for cross-cutting semantic
+    helpers shared across worldbuilding/worldassembly/engine (content_semantics/faction.py,
+    relation.py, role.py) -- avoids a backward dependency from src/entities/ (used by both
+    worldbuilding and worldassembly paths) onto a specific worldbuilding compiler module.
+    compiler.py re-imports the 2 public functions for its own existing callers -- zero behavior
+    change to its own already-shipped personality seeding. Added
+    build_personality_for_entity(entity_id, faction_id, seed) to the same new module (same
+    DeterministicRNG/Domain.WORLD/sub_id convention WorldCompiler.compile() already uses), shared
+    by both ArchetypeEntityFactory.build_entity() and WorldEntitySpawner._spawn_legacy_guard().
+    Threaded seed: int = 42 (matching CatalogScenarioStateBuilder.build()'s own pre-existing
+    default exactly) through build_entity()'s own signature, spawn_from_context()'s own
+    signature, and wired CatalogScenarioStateBuilder.build()'s own already-existing seed
+    parameter down into spawn_from_context() (previously computed but never passed through).
+    Real, live end-to-end verification (not unit-test-only): CatalogScenarioStateBuilder.build()
+    against the real wolf_territory_pressure scenario -- 15/15 real entities get non-zero
+    personality; the 3 real wild_beast_pack wolf/spider entities show bravery 0.617-0.989
+    (correctly biased high) with 2/3 landing AGGRESSIVE ActionStyle.
+  proof_type: regression
+  test_path: >
+    tests/unit/content_semantics/test_personality.py (9 tests),
+    tests/unit/entities/test_archetype_entity_factory.py::
+    test_build_entity_produces_real_nonzero_personality,
+    tests/unit/entities/test_archetype_entity_factory.py::
+    test_build_entity_action_style_correlates_with_bravery,
+    tests/unit/entities/test_archetype_entity_factory.py::
+    test_build_entity_personality_is_deterministic_given_seed,
+    tests/unit/entities/test_archetype_entity_factory.py::
+    test_build_entity_default_seed_backward_compatible,
+    tests/unit/worldassembly/test_entity_spawner_legacy_guard.py (4 tests),
+    tests/integration/worldassembly/test_world_entity_spawner.py::
+    test_spawned_entities_have_real_nonzero_personality,
+    tests/integration/worldassembly/test_world_entity_spawner.py::
+    test_spawn_from_context_is_deterministic_given_seed,
+    tests/integration/worldassembly/test_world_entity_spawner.py::
+    test_spawn_from_context_different_seeds_differ
+  divergence_note: >
+    See intentional_divergences.md §2.39 (WorldEntitySpawner/ArchetypeEntityFactory Zero
+    Personality, Bug Fix).
+  support_boundary: >
+    Real impact still confirmed limited to certification/integration test infrastructure --
+    CatalogScenarioStateBuilder (the only real caller of WorldEntitySpawner) has zero callers
+    itself in the live SimQ scoring pipeline. This fix does not currently change any real,
+    scored combat outcome or SimQ grade -- it closes a confirmed, real, but currently-dormant
+    gap, matching this ticket's own disclosed scope.

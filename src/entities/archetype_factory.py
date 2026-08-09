@@ -12,6 +12,7 @@ from src.core.state import (
 )
 from src.core.models.inventory import InventoryComponent, ItemStack
 from src.core.builder import V2EntityBuilder
+from src.content_semantics.personality import build_personality_for_entity, get_action_style_for_bravery
 from src.entities.runtime_contract import ResolvedEntityRuntimeContract
 
 
@@ -41,6 +42,7 @@ class ArchetypeEntityFactory:
         entity_id: int,
         contract: ResolvedEntityRuntimeContract,
         spawn: EntitySpawnContext,
+        seed: int = 42,
     ) -> EntityState:
         # Metadata carried into properties for traceability
         properties: dict = {
@@ -78,6 +80,15 @@ class ArchetypeEntityFactory:
             for item_id, qty in sorted(contract.inventory_items.items())
         ]
 
+        # Real, per-entity, race/faction-correlated personality -- this path previously left
+        # every entity at PersonalityComponent()'s own all-zero default, the same class of bug
+        # already fixed once for WorldCompiler.compile()'s own path (TCK-20260619-P0-ENTITY-INIT)
+        # (TCK-20260809-WORLDENTITYSPAWNER-ZERO-PERSONALITY). Uses the exact same
+        # DeterministicRNG/Domain.WORLD/sub_id convention as WorldCompiler.compile()'s own
+        # personality seeding, and the same shared bravery-bias/ActionStyle helpers
+        # (src/content_semantics/personality.py) this session's sibling combat tickets added.
+        personality = build_personality_for_entity(entity_id, contract.faction_id, seed)
+
         builder = (
             V2EntityBuilder(entity_id)
             .kind(contract.kind)
@@ -87,6 +98,7 @@ class ArchetypeEntityFactory:
                 faction=legacy_faction_int,
                 traits=set(contract.traits),
                 properties=properties,
+                personality=personality,
             )
             .combat(
                 hp=contract.hp,
@@ -96,6 +108,7 @@ class ArchetypeEntityFactory:
                 attack_range=contract.attack_range,
                 readiness=contract.readiness,
                 alive=spawn.initial_alive,
+                action_style=get_action_style_for_bravery(personality.bravery),
             )
         )
 

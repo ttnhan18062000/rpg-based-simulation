@@ -3,7 +3,7 @@ status: authoritative
 layer: engine
 authority: P0
 audience: agent
-last_verified: 2026-06-16
+last_verified: 2026-08-09
 tags: [worldassembly, engine, contract, compilation, entity-spawning]
 ---
 
@@ -128,7 +128,18 @@ Profiles without `archetype_id` (e.g. town NPCs, synthetic entities) → `V2Enti
 
 **Output:** `Dict[int, EntityState]` — loaded into `AuthoritativeState` by the caller.
 
-**Determinism:** Given the same `CompileContext` and `base_entity_id`, `spawn_from_context` produces bit-identical `EntityState` objects. No randomness is introduced during spawning.
+**Personality generation** (`TCK-20260809-WORLDENTITYSPAWNER-ZERO-PERSONALITY`): `spawn_from_context`
+accepts a `seed: int = 42` parameter, used to seed real, per-entity `PersonalityComponent` values
+(both the archetype-native path, via `ArchetypeEntityFactory.build_entity()`, and the legacy-guard
+path) via `src/content_semantics/personality.py::build_personality_for_entity` — the same
+`DeterministicRNG`/race-correlated-bravery/`ActionStyle` mechanism `WorldCompiler.compile()` uses.
+Prior to this ticket, every entity spawned through this path kept `PersonalityComponent()`'s own
+all-zero default regardless of race/faction.
+
+**Determinism:** Given the same `CompileContext`, `base_entity_id`, and `seed`, `spawn_from_context`
+produces bit-identical `EntityState` objects — the same real, verified guarantee as before, now
+parameterized by `seed` rather than being seed-free (personality generation is the only source of
+randomness in this pipeline, and it is `DeterministicRNG`-based, not entropy-based).
 
 ---
 

@@ -907,6 +907,58 @@ This document is the canonical record of intentional behavior shifts in `src` co
 
 ---
 
+### 2.39 WorldEntitySpawner/ArchetypeEntityFactory Zero Personality (TCK-20260809-WORLDENTITYSPAWNER-ZERO-PERSONALITY)
+- **Subsystem**: Entities / World Assembly
+- **Old Behavior**: `ArchetypeEntityFactory.build_entity()` (`src/entities/archetype_factory.py`)
+  and `WorldEntitySpawner._spawn_legacy_guard()` (`src/worldassembly/entity_spawner.py`) — the two
+  branches `WorldEntitySpawner.spawn_from_context()` itself dispatches every entity to — never set
+  `PersonalityComponent` at all, leaving every entity spawned through either path at the class's
+  own all-zero default regardless of real `race_id`/`faction_id`. Same class of bug as
+  `WorldCompiler.compile()`'s own earlier all-zero-personality bug
+  (`TCK-20260619-P0-ENTITY-INIT`), for a separate, newer construction path that fix never covered.
+  `docs/world/assembly_contract.md`'s own real, authoritative contract additionally stated "No
+  randomness is introduced during spawning" — accurate at the time, but meant this path's own
+  entities could never get the real, per-entity variance the `WorldCompiler.compile()` path
+  already had.
+- **New Behavior**: Extracted the shared bravery-bias/`ActionStyle` helpers
+  (`_load_personality_bias_config`, `_PERSONALITY_BIAS_FALLBACK`, `get_bravery_bias`,
+  `get_action_style_for_bravery` — previously module-level in `src/worldbuilding/compiler.py`,
+  `TCK-20260809-COMBAT-PERSONALITY-RACE-CORRELATION`/`TCK-20260809-COMBAT-ACTIONSTYLE-WIRING`)
+  into a new `src/content_semantics/personality.py`, matching this repo's own established
+  precedent for cross-cutting semantic helpers shared across `worldbuilding`/`worldassembly`/
+  `engine` (`content_semantics/faction.py`, `relation.py`, `role.py`) — avoids a backward
+  dependency from `src/entities/` onto a specific `worldbuilding` compiler module. Added
+  `build_personality_for_entity(entity_id, faction_id, seed)` to the same new module (same
+  `DeterministicRNG`/`Domain.WORLD`/`sub_id` convention `WorldCompiler.compile()` already uses),
+  shared by both real construction branches. Threaded `seed: int = 42` (matching
+  `CatalogScenarioStateBuilder.build()`'s own pre-existing default exactly) through
+  `build_entity()`'s own signature and `spawn_from_context()`'s own signature, and wired
+  `CatalogScenarioStateBuilder.build()`'s own already-existing `seed` parameter down into
+  `spawn_from_context()` (previously computed but never passed through at all).
+- **Rationale**: **Bug Fix**. The same real, confirmed pattern as the earlier
+  `TCK-20260619-P0-ENTITY-INIT` fix, for a construction path that fix never covered — not a new
+  design decision.
+- **Note (real scope check, not assumed)**: real impact remains confirmed limited to
+  certification/integration test infrastructure — `CatalogScenarioStateBuilder` (the only real
+  caller of `WorldEntitySpawner`) has zero callers itself in the live SimQ scoring pipeline. This
+  fix does not currently change any real, scored combat outcome or SimQ grade — it closes a
+  confirmed, real, but currently-dormant gap. Real, live end-to-end verification (not
+  unit-test-only): ran `CatalogScenarioStateBuilder.build()` against the real
+  `wolf_territory_pressure` scenario — 15/15 real entities got non-zero personality; the 3 real
+  `wild_beast_pack` wolf/spider entities showed bravery 0.617-0.989 (correctly biased high) with
+  2/3 landing `AGGRESSIVE` `ActionStyle`. Also caught and fixed, during this ticket's own Test
+  phase: the extraction broke 2 pre-existing tests that referenced
+  `compiler._load_personality_bias_config` directly (moved to `test_personality.py`, the real new
+  owner of that logic) and `src/content/matrix.py`'s own `social/personality_bias` content-usage-
+  matrix entry, whose `evidence_tests` field still pointed at the old, moved test location.
+- **Verification**: `tests/unit/content_semantics/test_personality.py` (9 tests),
+  `tests/unit/entities/test_archetype_entity_factory.py` (4 new tests),
+  `tests/unit/worldassembly/test_entity_spawner_legacy_guard.py` (4 tests, new),
+  `tests/integration/worldassembly/test_world_entity_spawner.py` (4 new tests).
+- **Status**: ACTIVE
+
+---
+
 ## 3. Unsupported / Retired Behavior
 
 The following legacy behaviors have been intentionally omitted or retired.
