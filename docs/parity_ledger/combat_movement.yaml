@@ -3425,3 +3425,50 @@
   support_boundary: >
     Purely additive read-side tag -- does not change skip_oa's own real condition, the
     opportunity-attack resolution path, or any other movement outcome.
+
+- id: COMB-303
+  text: >
+    TCK-20260809-COMBAT-HOSTILE-PAIRS-NEVER-ENGAGE -- EntityIdentityResolver.resolve()'s Path 1
+    (clean_metadata) required both faction_id and role_id in identity.properties before trusting
+    an entity's real, content-driven faction. worldbuilding/compiler.py (the real compile path
+    for the SimQ corpus worlds) sets faction_id but never role_id, so every entity fell through
+    to Path 3 (compatibility_projection), which maps the raw legacy 4-value Faction enum
+    (HERO_GUILD/MONSTER_HORDE/TOWN_COUNCIL/NEUTRAL) to a string -- silently collapsing any
+    content-driven faction outside those 4 buckets to "neutral", destroying hostility detection
+    for the majority of the real corpus roster (confirmed: 100% of dungeon_crawl's entities, 43%
+    of urban_political's). tactical.py's own hostile-detection loop (evaluate_entity_intent)
+    uses this resolver's faction_id, not the more direct get_faction_id_str() helper used
+    elsewhere -- the bug was invisible to any check using the latter, including this session's
+    own 2 prior legality-hardening tickets.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/entities/identity_resolver.py's EntityIdentityResolver.resolve() Path 1 now trusts a
+    real faction_id on its own, deriving role_id from the existing _ROLE_COMPAT legacy-role
+    compat map (the same one Path 3 already used) only when the caller didn't supply one, instead
+    of falling through to Path 3 (which discarded faction_id too). Confirmed via grep that
+    ResolvedEntityIdentity.role_id has zero real consumers anywhere in src/ (only .faction_id/
+    .archetype_id are ever read, in tactical.py/quests.py) -- a derived-not-authored role_id
+    carries no downstream risk. Real corpus re-verification (2000-tick live Kernel.tick_once()
+    loop, dungeon_crawl_seed42 + urban_political_seed42, corpus-default feature flags): real
+    hostile pairs (goblin_warband<->undead_remnants, bandit_company<->wild_beast_pack/
+    merchant_league) now genuinely reach verify_attack_legality -- 26+3+2 real checks, versus 0
+    before this fix. Honestly disclosed: every one still fails on ReasonCode.OUT_OF_RANGE
+    (attacker combat.range=1, checked at real distances 2-12) -- a distinct, downstream
+    pursuit-convergence bottleneck, not this bug, filed separately as
+    TCK-20260809-COMBAT-PURSUIT-NEVER-CLOSES-TO-MELEE-RANGE. combat_damage/entity_killed remain
+    zero in this specific 2000-tick window -- not claimed as fully resolved.
+  proof_type: regression
+  test_path: >
+    tests/unit/entities/test_entity_identity_resolver.py::test_faction_id_alone_resolves_clean_not_collapsed_to_neutral,
+    ::test_faction_id_alone_with_unmappable_legacy_role_gets_unresolved_role (2 new tests, plus
+    the file's existing 8, all passing -- regression-covered). Full scoped re-run:
+    tests/unit/entities/, tests/unit/tactical/, tests/unit/combat/, tests/unit/strategic/,
+    tests/unit/core/ -- 551 passed, zero regressions.
+  divergence_note: null
+  support_boundary: >
+    Path 2 (runtime_identity_extension), Path 3 (compatibility_projection), Path 4 (legacy_enum)
+    are unchanged -- entities with genuinely no faction_id at all still fall through the same
+    existing chain. No change to resolve_attack()/calculate_damage()/any real combat-resolution
+    logic -- this fix is entirely in target identity resolution, upstream of legality/damage.

@@ -211,6 +211,26 @@ and `TCK-20260809-COMBAT-OUTCOME-FLEE-VS-FIGHT-PERSONALITY` (a related but disti
 personality/race-driven flee-vs-fight outcomes and pursuit-prevents-escape, raised by the user
 during this same investigation).
 
+**Update 2026-08-09** (`TCK-20260809-COMBAT-HOSTILE-PAIRS-NEVER-ENGAGE`): the 2 sibling tickets
+above raised the real, live `is_attack_legal` probe rate from 0% to 28.5%/36.6%, but a subsequent
+full 2000-tick corpus re-verification found `combat_damage`/`combat_initiated`/`entity_killed`
+still at **zero** in either `dungeon_crawl`/`urban_political`. Traced to a deeper, upstream cause:
+`EntityIdentityResolver.resolve()`'s Path 1 (`clean_metadata`) required **both** `faction_id`
+**and** `role_id` in `identity.properties`; `worldbuilding/compiler.py` (the real compile path for
+these 2 worlds) sets `faction_id` but never `role_id`, so every entity fell through to Path 3
+(`compatibility_projection`), which maps the raw *legacy* 4-value `Faction` enum
+(`HERO_GUILD`/`MONSTER_HORDE`/`TOWN_COUNCIL`/`NEUTRAL`) to a string — silently collapsing any
+content-driven faction outside those 4 buckets (confirmed: 100% of `dungeon_crawl`'s roster, 43%
+of `urban_political`'s) to `faction_id="neutral"`, destroying real hostility detection for the
+majority of the corpus. Fixed: Path 1 now trusts a real `faction_id` on its own, deriving `role_id`
+from the existing legacy-role compat map only when absent (confirmed zero real consumers of
+`role_id` itself). Real corpus re-verification confirmed the fix works — `is_attack_legal` now
+gets checked for real hostile pairs that were never checked at all before (0 → 26+ real checks) —
+but every one still fails on `ReasonCode.OUT_OF_RANGE` at real distances of 2-12 against a
+`combat.range=1` melee attacker, revealing a **third, distinct bottleneck**: pursuit does not
+appear to converge hostile pairs to melee range within a 2000-tick window. Filed as
+`TCK-20260809-COMBAT-PURSUIT-NEVER-CLOSES-TO-MELEE-RANGE`, not fixed in the same ticket.
+
 ## STRATEGY_COGNITION (flag-free baseline)
 
 **Real trigger events (baseline subset, no flags required):** `strategic_goal_changed`,
