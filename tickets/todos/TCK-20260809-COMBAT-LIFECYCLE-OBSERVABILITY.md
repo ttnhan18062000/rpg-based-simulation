@@ -12,10 +12,12 @@ tags: [combat, observability, simulation-quality]
 # TCK-20260809-COMBAT-LIFECYCLE-OBSERVABILITY
 
 ## Title
-Real combat-lifecycle data (why an engagement started, per-attack tactical context, and how it
-ended — kill, successful escape, caught-while-fleeing, or pursuit abandoned) is computed
-throughout `combat.py`/`tactical.py`/`movement.py` but almost entirely discarded before reaching
-any observable event — build the missing observability layer to support future balance work
+Real, high-level combat-engagement data (why an engagement started, who was involved and their
+real state at the time, and how it ended — kill, successful escape, caught-while-fleeing, or
+pursuit abandoned) is computed throughout `combat.py`/`tactical.py`/`movement.py` but almost
+entirely discarded before reaching any observable event — build the missing high-level
+observability layer first (per-attack tactical-modifier detail deferred, see Out of Scope) so
+combat scenarios can be judged for reasonableness later
 
 ## Status
 OPEN
@@ -59,12 +61,25 @@ indistinguishable in any event:
    (`movement.py`, `CombatUpdate.is_opportunity_attack=True`) — the attacker didn't choose this
    fight, the target's own retreat triggered it.
 
-**During (what happens on a single attack)** — a real, already-computed tactical-modifier trace
-(`CombatUpdate.trace`: `HIGH_GROUND`, `FLANKING`, `SURROUNDED`, `COVER_REDUCTION`, `SHATTER`,
-`EXHAUSTION`, `STAMINA_EXHAUSTION`, `BOND_SYNERGY`, `FINAL_ATK_MULT`/`FINAL_DEF_MULT`,
-`REWARD_SOURCE`/`REWARD_CATEGORY`, `WOUND_INFLICTED`) is computed on every single `resolve_attack()`
-call — confirmed via direct grep that `src/observability/event_shapers.py`/`event_extractor.py`
-never read this field at all. Real, valuable, already-computed balance data currently thrown away.
+**During (what happens on a single attack) — explicitly deferred, per direct user direction
+("let in-combat mechanism later, we investigate high-level of combat first")**: a real, already-
+computed tactical-modifier trace (`CombatUpdate.trace`: `HIGH_GROUND`, `FLANKING`, `SURROUNDED`,
+`COVER_REDUCTION`, `SHATTER`, `EXHAUSTION`, `STAMINA_EXHAUSTION`, `BOND_SYNERGY`,
+`FINAL_ATK_MULT`/`FINAL_DEF_MULT`, `REWARD_SOURCE`/`REWARD_CATEGORY`, `WOUND_INFLICTED`) is
+computed on every single `resolve_attack()` call and discarded before reaching any event — real,
+valuable, but explicitly **not this ticket's own scope** (see Out of Scope). Documented here only
+so the finding isn't lost; a future, dedicated in-combat-mechanism ticket should pick it up.
+
+**Entity information at engagement time (real requirement of this ticket)**: to let a later
+investigation judge whether a given combat scenario was *reasonable* — e.g. a low-level civilian
+killed by a high-level predator, or a low-bravery entity that should have fled forced into a fight
+— both `combat_engagement_started` and `combat_engagement_ended` must carry a real snapshot of
+each involved entity's own state at that moment, not just bare IDs. Real, already-available
+fields: `identity.evolution_level` (power/level), `combat.hp`/`combat.max_hp` (health state),
+`combat.atk`/`combat.def_stat` (raw combat stats), `identity.role` and `identity.properties`'s own
+`faction_id`/`race_id`/`archetype_id` (who/what they are), `identity.personality.bravery` and
+`combat.action_style` (this session's own new personality-driven signals — lets a later analysis
+directly ask "did an EVASIVE-styled, low-bravery entity get denied its own escape chance").
 
 **End without a kill (real, currently 100% invisible)** — traced 4 distinct real real outcomes:
 1. **Successful escape**: `MovementMode.RETREAT` + `ActionStyle.EVASIVE` → `skip_oa=True`
@@ -95,42 +110,55 @@ state — none reach `event_shapers.py`.
    `docs/simulation_quality/event_type_coverage.md`/`docs/simulation_quality/quality_scoring_contract.md`
    for the real registration requirements for new event types; check whether any new event types
    should be scored by the COMBAT pillar or marked `unscored_intentional` (matching this session's
-   own precedent for new-but-not-yet-pillar-integrated events).
-2. **Plan**: design the real event-type additions — likely a `combat_engagement_started` (with a
-   real `trigger_reason`: `GOAL_ENGAGE` | `OPPORTUNITY_ATTACK`), a `combat_engagement_ended` (with
-   a real `outcome`: `KILL` | `ESCAPED` | `CAUGHT_FLEEING` | `PURSUIT_ABANDONED`, plus
-   attacker/defender IDs), and extending `combat_damage`'s own existing payload with the already-
-   computed `trace` dict (no new computation needed, just stop discarding it). Decide the real
-   `SimulationEvent`/`event_shapers.py` wiring shape, matching this session's own established
-   push-based event patterns.
+   own precedent for new-but-not-yet-pillar-integrated events); confirm the real, minimal set of
+   per-entity fields to snapshot (evolution_level, hp/max_hp, atk/def_stat, role, faction_id/
+   race_id/archetype_id, personality.bravery, action_style) against live `EntityState` structure.
+2. **Plan**: design the real, high-level event-type additions — a `combat_engagement_started`
+   (real `trigger_reason`: `GOAL_ENGAGE` | `OPPORTUNITY_ATTACK`, plus a real entity snapshot for
+   both participants) and a `combat_engagement_ended` (real `outcome`: `KILL` | `ESCAPED` |
+   `CAUGHT_FLEEING` | `PURSUIT_ABANDONED`, plus attacker/defender IDs and each participant's own
+   real end-state snapshot, e.g. final HP, so a later analysis can see both the starting and
+   ending state of a scenario). Decide the real `SimulationEvent`/`event_shapers.py` wiring shape,
+   matching this session's own established push-based event patterns.
 3. **Implement**: the real, minimal event additions — reusing already-computed data
-   (`CombatUpdate.trace`, `is_opportunity_attack`, `tactical.py`'s own existing reason strings),
-   not inventing new game logic.
+   (`is_opportunity_attack`, `tactical.py`'s own existing reason strings, real `EntityState`
+   fields for the snapshot), not inventing new game logic and not surfacing the per-attack
+   `CombatUpdate.trace` (deferred, see Out of Scope).
 
 ## Out of Scope
+- **Per-attack tactical-modifier detail** (`CombatUpdate.trace`: high ground, flanking, cover,
+  exhaustion, bond synergy, etc.) — explicitly deferred per direct user direction ("let in-combat
+  mechanism later, we investigate high-level of combat first"). This ticket covers
+  engagement-level start/end only, not individual attack resolution detail. Documented in this
+  ticket's own Request Summary so the finding isn't lost for that future ticket.
 - Building a real evasion/miss/to-hit-roll mechanic — `CombatComponent.evasion` remains unused;
   the user explicitly clarified this ticket is about avoiding combat (fleeing), not a per-attack
   dodge roll. If a real to-hit mechanic is ever wanted, that's a separate, bigger design decision
   (a new combat law, not observability) — not bundled here.
 - Statistical aggregation/reporting tooling (win-rate dashboards, per-faction/per-`ActionStyle`
-  outcome correlation reports) — this ticket produces the real, raw event data; building
-  aggregation on top of it is a natural, real follow-up once the events exist, not this ticket's
-  own scope.
+  outcome correlation reports) — this ticket produces the real, raw event data (including the
+  entity-snapshot fields needed for reasonableness analysis); building aggregation/analysis
+  tooling on top of it is a natural, real follow-up once the events exist, not this ticket's own
+  scope.
 - Any change to real combat resolution logic itself (`calculate_damage`, `resolve_attack`,
   legality checks) — purely additive observability on top of already-computed data.
 
 ## Acceptance Criteria
-- [ ] investigation.md re-confirms the real, current combat-lifecycle architecture (initiation,
-      during, and all 4+ end-without-kill paths) against live source, not assumed from this
-      ticket's own request-summary alone
-- [ ] Real, new event type(s) land covering: initiation reason (deliberate vs. opportunity-
-      forced), the already-computed tactical-modifier trace, and all real end-without-a-kill
-      outcomes (successful escape, caught-while-fleeing, pursuit-abandoned)
+- [ ] investigation.md re-confirms the real, current combat-lifecycle architecture (initiation and
+      all 4+ end-without-kill paths) against live source, not assumed from this ticket's own
+      request-summary alone
+- [ ] Real, new high-level event type(s) land covering: initiation reason (deliberate vs.
+      opportunity-forced) and all real end-without-a-kill outcomes (successful escape,
+      caught-while-fleeing, pursuit-abandoned) — per-attack tactical trace explicitly deferred
+- [ ] Both new event types carry a real, honest snapshot of each involved entity's own state
+      (level, hp/max_hp, atk/def_stat, role/faction/race, bravery, action_style) sufficient to
+      later judge whether a given combat scenario was reasonable
 - [ ] New event types registered in `docs/simulation_quality/event_type_coverage.md` and, if
       pillar-scored, `docs/simulation_quality/quality_scoring_contract.md`
 - [ ] Real corpus re-verification: a live run against `dungeon_crawl`/`urban_political` shows the
-      new events firing at real, non-zero, honestly-reported volume — not assumed from unit tests
-      alone (matching this session's own established discipline)
+      new events firing at real, non-zero, honestly-reported volume, with real, sensible-looking
+      entity-snapshot data — not assumed from unit tests alone (matching this session's own
+      established discipline)
 - [ ] Scoped pytest passes
 
 ## Related Tickets
@@ -154,17 +182,23 @@ state — none reach `event_shapers.py`.
 None yet.
 
 ## Related Code Areas
-- `src/engine/combat.py` (`CombatResolutionSystem.resolve_attack`, the real `trace` dict)
 - `src/engine/tactical.py` (all real reason codes, the deliberate-engage `ATTACK`/`SKILL` branch)
 - `src/engine/movement.py` (opportunity-attack trigger, `skip_oa` real escape condition)
+- `src/core/state.py` (`EntityState`/`IdentityComponent`/`CombatComponent`/`PersonalityComponent`
+  — the real fields the entity snapshot draws from)
 - `src/observability/event_shapers.py`, `src/observability/event_extractor.py` (where the new
   event types need real wiring)
+- `src/engine/combat.py` (`CombatResolutionSystem.resolve_attack`, the real `trace` dict) —
+  reference only, not touched by this ticket (see Out of Scope)
 
 ## Assumptions / Open Questions
 - Whether `combat_engagement_started`/`combat_engagement_ended` should be scored by the COMBAT
   pillar directly, or land as `unscored_intentional` initially (matching this session's own
   precedent for new events not yet integrated into scoring) — a real Plan-phase decision, not
   pre-decided here.
+- Exact shape of the entity snapshot (a flat dict on the event payload vs. a typed sub-structure)
+  — a real Plan-phase decision, matching whatever pattern is most consistent with this repo's own
+  existing `SimulationEvent`/payload conventions.
 
 ## Implementation Notes
 (To be filled during implementation.)
