@@ -160,6 +160,23 @@ variance is preserved within each faction, but the population mean now differs m
 faction (e.g. a real `wild_beast_pack` population averages bravery ≈0.89 vs. a real
 `merchant_league` population's ≈0.49, measured on live compiled worlds).
 
+Both the bias table and the values below are real, external, data-driven tuning data
+(`data/content/social/personality_bias.yaml`, read by `WorldCompiler.compile()`), not hardcoded
+in `compiler.py` — a designer can retune magnitudes without a code change.
+
+**`ActionStyle` wiring** (`TCK-20260809-COMBAT-ACTIONSTYLE-WIRING`): the entity's own final
+(bias-applied) bravery also sets its real `ActionStyle` (`src/core/enums.py`:
+`BALANCED`/`AGGRESSIVE`/`EVASIVE`) at generation, via thresholds in the same data file
+(`aggressive_at_or_above: 0.65`, `evasive_at_or_below: 0.35`). Until this ticket every entity kept
+`ActionStyle`'s own class default (`BALANCED`) regardless of personality or race, leaving 2 real,
+already-wired code hooks entirely dormant: kiting distance for `SKIRMISHER`-role entities
+(`src/engine/tactical.py` — `AGGRESSIVE` kites less, `EVASIVE` kites more) and opportunity-attack
+suppression on a deliberate `EVASIVE` retreat (`src/engine/movement.py`). Two further sub-branches
+of `ActionStyle`'s own consumption in `tactical.py` (an `AGGRESSIVE` effective-range bonus and an
+`EVASIVE` "reposition instead of attacking" stub) were traced and found to be genuinely dead code
+independent of this fix — a local variable computed but never read by the function's own
+downstream branches — disclosed, not fixed here (out of this ticket's own scope).
+
 ### 6.4 Personality Bias by Route Family
 
 | RouteFamily | Trait | Weight |

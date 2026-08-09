@@ -603,6 +603,20 @@ CONTENT_USAGE_MATRIX: Dict[str, ContentFamilyMatrixEntry] = {
         implementation_state="DESIGN_ONLY",
         content_maturity="ADDITIONAL",
     ),
+    "social/personality_bias": ContentFamilyMatrixEntry(
+        file_path="social/personality_bias.yaml",
+        schema_class=None,
+        repository_index="None",
+        validator_coverage="None",
+        resolver_component="None (read directly by WorldCompiler, not CatalogRepository)",
+        compile_runtime_consumer="None (Design-Only)",
+        test_coverage="tests/unit/worldbuilding/test_world_compiler.py",
+        evidence_tests="tests/unit/worldbuilding/test_world_compiler.py::test_personality_bias_config_loads_from_real_data_file",
+        resolver_evidence="None",
+        runtime_consumer_evidence="WorldCompiler.compile() reads bravery_bias_by_alignment_bucket and action_style_thresholds directly (outside the CatalogRepository/resolver system) to bias per-entity personality/ActionStyle at generation",
+        implementation_state="DESIGN_ONLY",
+        content_maturity="REDESIGNED-CORE",
+    ),
 }
 
 

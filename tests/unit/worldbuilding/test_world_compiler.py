@@ -4,8 +4,8 @@ import os
 import tempfile
 import json
 from src.worldbuilding.schema import WorldSpec
-from src.worldbuilding.compiler import WorldCompiler, get_role_enum, get_faction_enum, get_quest_kind, get_bravery_bias
-from src.core.enums import EntityRole, Faction
+from src.worldbuilding.compiler import WorldCompiler, get_role_enum, get_faction_enum, get_quest_kind, get_bravery_bias, get_action_style_for_bravery
+from src.core.enums import EntityRole, Faction, ActionStyle
 from src.core.quests import QuestKind
 
 
@@ -625,15 +625,40 @@ def test_quest_location_tag_warns_on_genuine_mismatch():
 
 
 def test_get_bravery_bias_by_real_alignment_bucket():
-    """TCK-20260809-COMBAT-PERSONALITY-RACE-CORRELATION: bravery bias is derived from the real,
-    content-defined alignment_bucket (data/content/social/factions.yaml), not a raw per-faction
-    table -- new factions inherit a sensible bias automatically via their real bucket."""
+    """TCK-20260809-COMBAT-PERSONALITY-RACE-CORRELATION: bravery bias values are real, external
+    data (data/content/social/personality_bias.yaml), keyed by the real, content-defined
+    alignment_bucket (data/content/social/factions.yaml) -- not hardcoded per-faction in code, so
+    a designer can retune values or a new faction's alignment_bucket inherits a sensible bias
+    with no code change required."""
     assert get_bravery_bias("wild_beast_pack") == 0.35   # alignment_bucket: wild
     assert get_bravery_bias("goblin_warband") == 0.25    # alignment_bucket: invader
     assert get_bravery_bias("orc_clan") == 0.15          # alignment_bucket: rival
     assert get_bravery_bias("hero_guild") == 0.05        # alignment_bucket: defender
     assert get_bravery_bias("merchant_league") == 0.0    # alignment_bucket: neutral
     assert get_bravery_bias("nonexistent_faction_xyz") == 0.0  # no crash, no real content match
+
+
+def test_personality_bias_config_loads_from_real_data_file():
+    """The bias/threshold values are read from data/content/social/personality_bias.yaml, not
+    the in-code fallback -- confirms the data-driven path is actually exercised, not silently
+    falling back."""
+    from src.worldbuilding import compiler as compiler_module
+    compiler_module._personality_bias_cache = None  # force a fresh load
+    loaded = compiler_module._load_personality_bias_config()
+    assert loaded is not compiler_module._PERSONALITY_BIAS_FALLBACK
+    assert loaded["bravery_bias_by_alignment_bucket"]["wild"] == 0.35
+
+
+def test_personality_bias_config_falls_back_safely_on_bad_file(monkeypatch, tmp_path):
+    """A missing or malformed personality_bias.yaml must never crash world compilation -- falls
+    back to the in-code default values instead."""
+    from src.worldbuilding import compiler as compiler_module
+    bad_path = tmp_path / "does_not_exist.yaml"
+    monkeypatch.setattr(compiler_module, "Path", lambda _p: bad_path)
+    compiler_module._personality_bias_cache = None
+    loaded = compiler_module._load_personality_bias_config()
+    assert loaded == compiler_module._PERSONALITY_BIAS_FALLBACK
+    compiler_module._personality_bias_cache = None  # reset cache so later tests reload the real file
 
 
 def test_compiler_faction_bravery_bias_produces_real_population_skew():
@@ -672,3 +697,36 @@ def test_compiler_faction_bravery_bias_produces_real_population_skew():
     )
     # Individual variance preserved within the faction -- not every predator identical.
     assert len(set(predator_bravery)) > 1
+
+
+def test_get_action_style_for_bravery_thresholds():
+    """TCK-20260809-COMBAT-ACTIONSTYLE-WIRING: ActionStyle is derived from bravery via real,
+    data-driven thresholds (personality_bias.yaml), not hardcoded per-entity."""
+    assert get_action_style_for_bravery(0.9) == ActionStyle.AGGRESSIVE
+    assert get_action_style_for_bravery(0.65) == ActionStyle.AGGRESSIVE  # boundary, inclusive
+    assert get_action_style_for_bravery(0.5) == ActionStyle.BALANCED
+    assert get_action_style_for_bravery(0.35) == ActionStyle.EVASIVE  # boundary, inclusive
+    assert get_action_style_for_bravery(0.1) == ActionStyle.EVASIVE
+
+
+def test_compiler_faction_bravery_bias_produces_real_action_style_skew():
+    """A predator faction's real, compiled population should skew toward AGGRESSIVE ActionStyle
+    (previously every entity defaulted to BALANCED regardless of faction) -- the real mechanism
+    that activates dormant kiting-distance and opportunity-attack-escape differentiation."""
+    data = create_base_valid_spec()
+    data["regions"].append({"id": "predator_zone", "type": "wilderness", "bounds": [20, 20, 40, 40], "terrain": "FOREST"})
+    data["factions"] = [{"id": "wild_beast_pack", "type": "hostile"}]
+    data["entities"] = [
+        {"id": "predators", "count": 30, "role": "monster", "faction": "wild_beast_pack", "spawn_region": "predator_zone"},
+    ]
+    spec = WorldSpec.model_validate(data)
+    state, _ = WorldCompiler.compile(spec, seed=42)
+
+    styles = [e.combat.action_style for e in state.entities.values()]
+    assert len(styles) == 30
+    # Not every entity is the class default (BALANCED=0) -- action_style is real, not dormant.
+    assert any(s != 0 for s in styles)
+    aggressive_count = sum(1 for s in styles if s == ActionStyle.AGGRESSIVE)
+    assert aggressive_count > len(styles) / 2, (
+        "wild_beast_pack's high bravery bias (+0.35) should skew most entities AGGRESSIVE"
+    )

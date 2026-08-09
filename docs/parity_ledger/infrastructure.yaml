@@ -7862,3 +7862,29 @@
     both events' calibration_hits were already 0 in every scored scenario before this migration
     (per SIMQ-CALIBRATED-001's own text), so no existing baseline reflects a state to shift away
     from.
+
+- id: INFRA-328
+  text: >-
+    TCK-20260809-COMBAT-ACTIONSTYLE-WIRING -- CatalogRepository's strict-load validation
+    (src/content/repository.py) requires every real YAML file present under data/content/ to be
+    either a registered content family or an explicitly allowlisted NON_CATALOG_FILES entry.
+    A new real gameplay-tuning data file, data/content/social/personality_bias.yaml (introduced
+    by this ticket and its sibling TCK-20260809-COMBAT-PERSONALITY-RACE-CORRELATION, per the
+    user's own explicit data-driven-not-hardcoded direction), needed correct registration to avoid
+    tripping this validator.
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: >-
+    Registered social/personality_bias.yaml in NON_CATALOG_FILES (src/content/repository.py) --
+    it is read directly by WorldCompiler.compile() outside the CatalogRepository/resolver system
+    (a small, flat bias/threshold table, not a per-record catalog needing a full Pydantic
+    schema/resolver). Also added a real DESIGN_ONLY entry to src/content/matrix.py's content usage
+    matrix, matching the existing precedent for other intentionally-non-catalog files
+    (compatibility/migration_map.yaml, packs/*.yaml).
+  proof_type: regression
+  test_path: >
+    tests/unit/content/test_content_paths.py::test_strict_load_on_real_content_dir,
+    tests/unit/content/test_content_usage_matrix.py
+  divergence_note: null
+  support_boundary: null

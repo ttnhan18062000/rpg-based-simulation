@@ -1,0 +1,21 @@
+# Personality-generation tuning data. Read by src/worldbuilding/compiler.py during entity
+# generation. Real, per-entity personality traits are seeded via DeterministicRNG (genuine
+# individual variance); these biases shift the population MEAN per faction so race/faction
+# produces a real, measurable skew without collapsing individual variance.
+# TCK-20260809-COMBAT-PERSONALITY-RACE-CORRELATION / TCK-20260809-COMBAT-ACTIONSTYLE-WIRING.
+
+# Bravery bias by real faction alignment_bucket (social/factions.yaml). Additive, then clamped
+# to [0.0, 1.0] on top of the entity's own RNG draw. A new faction's alignment_bucket
+# automatically inherits a sensible bias here with no code change required.
+bravery_bias_by_alignment_bucket:
+  wild: 0.35       # apex predators, e.g. wild_beast_pack
+  invader: 0.25    # aggressive raiders, e.g. goblin_warband, bandit_company, dragon_cult
+  rival: 0.15      # contesting factions, e.g. orc_clan, swamp_tribe
+  defender: 0.05   # professional guards/heroes, e.g. hero_guild, town_council
+  neutral: 0.0     # civilians/merchants, e.g. merchant_league, arcane_circle
+
+# ActionStyle (src/core/enums.py: BALANCED/AGGRESSIVE/EVASIVE) thresholds derived from an
+# entity's own final (bias-applied) bravery value.
+action_style_thresholds:
+  aggressive_at_or_above: 0.65
+  evasive_at_or_below: 0.35

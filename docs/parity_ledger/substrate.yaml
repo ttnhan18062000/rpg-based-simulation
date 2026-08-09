@@ -4446,3 +4446,46 @@
     direct source read, disclosed and filed as its own follow-up ticket, not fixed here (its live
     corpus blast radius is not yet confirmed -- only 1 known caller,
     src/scenarios/catalog_state_builder.py).
+
+- id: SUB-381
+  text: >
+    TCK-20260809-COMBAT-ACTIONSTYLE-WIRING -- ActionStyle (BALANCED/AGGRESSIVE/EVASIVE,
+    src/core/enums.py) has 2 real, already-wired combat-behavior consumers (kiting distance for
+    SKIRMISHER-role entities, opportunity-attack suppression on a deliberate EVASIVE retreat --
+    src/engine/tactical.py, src/engine/movement.py) but every real entity kept the class default
+    (BALANCED) regardless of personality/race, leaving both hooks entirely dormant. Also: this
+    ticket's own SUB-380 sibling entry's hardcoded _BRAVERY_BIAS_BY_ALIGNMENT_BUCKET dict was
+    migrated to real, external data (data/content/social/personality_bias.yaml) per an explicit
+    mid-session user design correction, alongside this ticket's own new action_style_thresholds.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    Added get_action_style_for_bravery(bravery) -> int (src/worldbuilding/compiler.py), reading
+    real thresholds (aggressive_at_or_above: 0.65, evasive_at_or_below: 0.35) from
+    personality_bias.yaml (cached, with an in-code fallback matching the shipped data exactly).
+    Wired into the same personality-seeding call site SUB-380 already touches:
+    action_style=get_action_style_for_bravery(personality.bravery). Also traced ActionStyle's own
+    full real consumption in tactical.py: found and disclosed that an AGGRESSIVE effective-range
+    bonus and an EVASIVE reposition-stub (tactical.py:596-603) are genuinely dead code -- a local
+    variable mutated but never read by the function's own downstream branches -- not fixed here
+    (separate bug, out of this ticket's own scope). Real re-verification on live compiled worlds:
+    dungeon_crawl's wild_beast_pack population (avg bravery ~0.89) -> 5/5 real entities
+    AGGRESSIVE; urban_political's merchant_league (no bias) -> a real, roughly even 3/3/3 split
+    across all 3 ActionStyle values.
+  proof_type: regression
+  test_path: >
+    tests/unit/worldbuilding/test_world_compiler.py::
+    test_get_action_style_for_bravery_thresholds,
+    tests/unit/worldbuilding/test_world_compiler.py::
+    test_compiler_faction_bravery_bias_produces_real_action_style_skew,
+    tests/unit/worldbuilding/test_world_compiler.py::
+    test_personality_bias_config_loads_from_real_data_file,
+    tests/unit/worldbuilding/test_world_compiler.py::
+    test_personality_bias_config_falls_back_safely_on_bad_file
+  divergence_note: null
+  support_boundary: >
+    tactical.py's own confirmed-dead AGGRESSIVE range-bonus and EVASIVE reposition-stub are not
+    fixed here -- a separate, real bug in that function's own control flow, disclosed not fixed
+    to avoid scope creep into re-auditing every dormant sub-branch of a large, already-dense
+    tactical decision function.
