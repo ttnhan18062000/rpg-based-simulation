@@ -30,6 +30,17 @@ _CANONICAL_BACKUP: dict = {**_POST_BOOTSTRAP_BACKUP, **_PRE_BOOTSTRAP_BACKUP}
 from src.core.registries import ResourceRegistry
 _CANONICAL_RESOURCES: dict = dict(ResourceRegistry._resources)
 
+# src.core.registries.ItemRegistry is a SEPARATE, distinct class from src.core.items.ItemRegistry
+# imported above (confirmed via direct identity check: `src.core.items.ItemRegistry is not
+# src.core.registries.ItemRegistry`) -- _reset_item_registry above only ever resets the
+# src.core.items one. src/runtime/bootstrap.py also calls this OTHER ItemRegistry's own
+# .bootstrap({}) (empty dict) on the real runtime bootstrap path, the same hazard as
+# ResourceRegistry above, but with zero reset protection until now
+# (TCK-20260809-TEST-ISOLATION-ITEM-REGISTRY-STONE, found via test_registries.py::
+# test_referential_integrity failing under specific test-ordering combinations).
+from src.core.registries import ItemRegistry as RegistriesItemRegistry
+_CANONICAL_REGISTRIES_ITEMS: dict = dict(RegistriesItemRegistry._items)
+
 try:
     import resource
 except ImportError:
@@ -168,6 +179,21 @@ def _reset_resource_registry():
     ResourceRegistry._resources = dict(_CANONICAL_RESOURCES)
     yield
     ResourceRegistry._resources = dict(_CANONICAL_RESOURCES)
+
+
+@pytest.fixture(autouse=True)
+def _reset_registries_item_registry():
+    """Restore src.core.registries.ItemRegistry to canonical test state before/after each test.
+
+    A separate, distinct class from src.core.items.ItemRegistry (which _reset_item_registry
+    above already protects) -- src/runtime/bootstrap.py also calls this ItemRegistry's own
+    .bootstrap({}) (empty dict) on the real runtime bootstrap path, the same hazard as
+    ResourceRegistry above, previously with zero reset protection
+    (TCK-20260809-TEST-ISOLATION-ITEM-REGISTRY-STONE).
+    """
+    RegistriesItemRegistry._items = dict(_CANONICAL_REGISTRIES_ITEMS)
+    yield
+    RegistriesItemRegistry._items = dict(_CANONICAL_REGISTRIES_ITEMS)
 
 
 @pytest.fixture(scope="session", autouse=True)
