@@ -3701,3 +3701,64 @@
     secondary, smaller tick-budget-pressure effect and a real, much bigger, disclosed-but-
     out-of-scope chronic tick-budget-exceeded condition (persistence phase's own dominant real
     cost, ~6% of ticks even at baseline) are both documented but not fixed here.
+
+- id: COMB-309
+  text: >
+    TCK-20260809-COMBAT-KILL-LIFECYCLE-CREDIT-GAP-INVESTIGATION -- COMB-295's own real
+    "Kill events" fallback in event_extractor.py fired `CombatKillEvent` (scored under the COMBAT
+    pillar as `combat_kill`/`entity_killed`, -1 attrition each) on ANY `lifecycle.active->False`
+    transition not already owned live by the shaper, regardless of the death's real cause.
+    Direct pipeline instrumentation on `dungeon_crawl_seed42_2000t` (corpus-default flags) traced
+    every one of the run's 25 calibrate_simq-scored `combat_kill` events back to a non-combat
+    cause: a HAZARD-preceded death (world_dynamics.py's own environmental drain mechanic,
+    already excluded from `_real_combat_update()` via `_NON_COMBAT_OUTCOME_KINDS` elsewhere in
+    the same file) or an unset `death_reason` (a mass despawn/old-age cluster) -- zero traced to
+    `LifecycleSystem.resolve_lifecycle()`'s own authoritative `death_reason=="COMBAT"` value.
+    Meanwhile the run's genuine `combat_engagement_ended` activity (10 real pursuit sequences)
+    produced zero credit because every one resolved as `PURSUIT_ABANDONED`, the one outcome
+    `CombatShaper` deliberately excludes from `combat_resolved`. This was the real, structural
+    reason the COMBAT pillar sat at the B/C grade boundary even after this session's 5 prior
+    combat fixes: it was absorbing negative attrition credit from non-combat mortality while its
+    own positive-scoring surface (`combat_active`, `combat_resolved`, `tactical_variety`,
+    `survival_tension`) stayed structurally unreachable for this corpus's real kill population.
+  status: verified
+  priority: P0
+  legacy_evidence: null
+  v2_evidence: >
+    Narrowed the fallback in `src/observability/event_extractor.py` to additionally require
+    `entity.lifecycle.death_reason == "COMBAT"` (the durable, typed field
+    `LifecycleSystem.resolve_lifecycle()` sets in the same EntityUpdate as the `active=False`
+    flip, and the only place in the runtime pipeline that legitimately performs that flip) before
+    firing `CombatKillEvent`. `hero_death_unrecorded` (a broader "hero death went unrecorded by
+    anything else" narrative signal, not combat-specific) deliberately kept un-gated on the new
+    condition -- narrowing it too would have been an unrelated scope change; verified via a real
+    regression these two existing tests caught (`TestHeroDeathUnrecorded`) before the fix was
+    corrected. Old-age/despawn deaths keep their own real credit path unaffected:
+    `demographic_mortality` (WORLD pillar) fires separately on `entities_remove` when the corpse
+    is later removed. Real corpus re-verification post-fix:
+    `dungeon_crawl_seed42_2000t` COMBAT norm moved from -0.0251 (25 false-attributed events) to
+    +0.0000 (0 events -- an honest "no real credited combat activity" reading, not a false
+    penalty); `urban_political_seed42_2000t` moved from -0.00197 to +0.0000 identically. Grade
+    stayed C for both (0 events defaults to C per the scoring contract's own "no signal"
+    convention, not a boundary artifact) -- overall_score improved slightly in both cases since
+    the false penalty no longer drags the weighted total down.
+  proof_type: regression
+  test_path: >
+    tests/unit/observability/test_event_extractor_world.py::test_combat_kill_not_emitted_for_hazard_caused_death
+    (confirmed via git-stash bisection to genuinely fail against the pre-fix code) and
+    ::test_combat_kill_emitted_for_genuine_combat_death (regression guard -- real combat deaths
+    still fire). Full scoped re-run: tests/unit/observability/, tests/simulation_quality/,
+    tests/observability/ -- 1477 passed, 89 skipped; the only 3 failures
+    (test_grade_anchor_file_exists_and_valid, test_metrics_endpoint_integration,
+    test_ws_events_stream) confirmed pre-existing via git-stash bisection, unrelated to this
+    change (missing local calibration-report fixture and refused localhost connections,
+    respectively).
+  divergence_note: null
+  support_boundary: >
+    Does not address WHY genuine `combat_engagement_ended` activity in this corpus never
+    resolves as KILL/ESCAPED (always PURSUIT_ABANDONED) -- a related but separate question,
+    out of this ticket's own scope, that would need its own investigation if the corpus's own
+    real combat-resolution rate is judged worth improving. Does not address the smaller,
+    disclosed-but-unconfirmed mechanism by which some deaths reach `lifecycle.active=False` with
+    `death_reason` unset (neither "OLD_AGE" nor "COMBAT") -- treated conservatively as non-combat
+    by this fix regardless of true origin, which is the safe default either way.

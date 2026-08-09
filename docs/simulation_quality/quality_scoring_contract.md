@@ -687,19 +687,43 @@ present in that trace (mechanics-bible table order: `HIGH_GROUND`, `FLANKING`, `
 `combat_damage`'s own payload. Confirmed real in live corpus runs (`STAMINA_EXHAUSTION`
 observed).
 
-**Real, confirmed finding (`TCK-20260808-COMBAT-PILLAR-OPPORTUNITY-ATTACK-CREDIT-GAP`):**
-`entity_killed` is emitted by two separate mechanisms that co-exist by design (see
-`TCK-20260806-PUSH-CUTOVER-COMBAT-ECONOMY-FACTION`'s own completion notes) — the push-shaper
-(`event_shapers.py`, narrow: fires only on `outcome_kind=="KILL"`, which the corpus's own real
-dominant kill mechanism, `movement.py`'s opportunity-attack path, never produces since it
-hardcodes `is_lethal=False`) and the older diffing extractor (`event_extractor.py`, broad: fires
-on any `lifecycle.active` transition, deliberately kept to cover exactly this class of
-non-shaper-owned kill). Confirmed via same-run instrumentation: real DEFEAT-outcome deaths from
-the opportunity-attack path *do* reach `CombatScorer` correctly via the broad path — not a
-credit gap. Since `entity_killed` scores negatively (`attrition`/`early_extinction`, both above),
-a monster-heavy world is not expected to score *higher* on COMBAT than a civilian world purely
-from more kills — more kills means more attrition penalty, not more credit. A C grade on a
-combat-active world is not, by itself, evidence of under-crediting.
+**Real, confirmed finding (`TCK-20260808-COMBAT-PILLAR-OPPORTUNITY-ATTACK-CREDIT-GAP`, corrected
+by `TCK-20260809-COMBAT-KILL-LIFECYCLE-CREDIT-GAP-INVESTIGATION`):** `entity_killed` is emitted
+by two separate mechanisms that co-exist by design (see `TCK-20260806-PUSH-CUTOVER-COMBAT-
+ECONOMY-FACTION`'s own completion notes) — the push-shaper (`event_shapers.py`, narrow: fires
+only on `outcome_kind=="KILL"`) and the older diffing extractor (`event_extractor.py`, broad:
+fires on a `lifecycle.active` transition, kept to cover non-shaper-owned kill causes). Since
+`entity_killed` scores negatively (`attrition`/`early_extinction`, both above), a monster-heavy
+world is not expected to score *higher* on COMBAT than a civilian world purely from more kills —
+more kills means more attrition penalty, not more credit. A C grade on a combat-active world is
+not, by itself, evidence of under-crediting. **Correction:** the original finding's claim that
+this broad path "correctly catches the opportunity-attack path's own real DEFEAT-outcome deaths"
+does not hold — `LifecycleSystem.resolve_lifecycle()` only flips `lifecycle.active` for
+`OLD_AGE` or `outcome_kind=="KILL"` specifically, never `DEFEAT` (`is_lethal=False`, the
+opportunity-attack path's own hardcoded value), so a DEFEAT-outcome death cannot reach this
+branch at all. See the `entity_killed` finding immediately below for the real cause the broad
+path was actually (mis-)crediting.
+
+**Real, confirmed finding (`TCK-20260809-COMBAT-KILL-LIFECYCLE-CREDIT-GAP-INVESTIGATION`):** the
+old diffing extractor's `combat_kill`/`entity_killed` fallback previously fired on *any*
+`lifecycle.active` transition not already shaper-owned, regardless of real cause. Direct pipeline
+instrumentation on `dungeon_crawl_seed42_2000t` (corpus-default flags) traced every one of the
+run's 25 real `combat_kill` events to a `HAZARD`-preceded death (`world_dynamics.py`'s
+environmental drain, already excluded from `_real_combat_update()` elsewhere in the same file) or
+an unset `death_reason` (a mass despawn/old-age cluster) — zero traced to
+`LifecycleSystem.resolve_lifecycle()`'s own authoritative `death_reason=="COMBAT"` value. Fixed
+by additionally requiring `death_reason=="COMBAT"` before firing `combat_kill` (COMB-309,
+`docs/parity_ledger/combat_movement.yaml`). Old-age/despawn deaths keep their own, unaffected
+credit path (`demographic_mortality`, WORLD pillar, on `entities_remove`). Post-fix,
+`dungeon_crawl`/`urban_political` COMBAT norm both moved from a small negative (false attrition
+credit) to exactly `0.0` (an honest "no real credited combat activity" reading) — grade stayed C
+for both (0 events is the scoring contract's own "no signal" default, not a boundary artifact).
+This — not under-crediting of DEFEAT-outcome deaths — is the real, structural reason the pillar
+sat at the B/C boundary even after this session's prior 5 combat fixes: its positive-scoring
+surface (`combat_active`, `combat_resolved`, `tactical_variety`, `survival_tension`) never fired
+because the corpus's own real `combat_engagement_ended` activity always resolved as
+`PURSUIT_ABANDONED`, the one outcome excluded from `combat_resolved` credit — a separate,
+out-of-scope, disclosed-but-unfixed follow-up question.
 
 **Traceability path:**
 ```

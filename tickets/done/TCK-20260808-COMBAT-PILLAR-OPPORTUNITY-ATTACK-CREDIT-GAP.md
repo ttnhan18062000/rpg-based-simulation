@@ -153,3 +153,30 @@ confound) rather than accepting the ticket's own original premise uncritically. 
 found — the real event-delivery mechanism is correct, and the C grades reflect the real, intended
 scoring direction (kills penalize, not reward). Documented rather than forcing a fix onto a
 non-defect, matching this session's own established discipline.
+
+## Correction (added during `TCK-20260809-COMBAT-KILL-LIFECYCLE-CREDIT-GAP-INVESTIGATION`, next
+## session day)
+This ticket's own causal claim — "the 26 real `entity_killed` events... are the broader diffing
+path correctly catching the opportunity-attack path's own real DEFEAT-outcome deaths" — is not
+supported by the runtime code and should be treated as unverified, not as an established
+mechanism. An exhaustive grep of every runtime site that ever writes `lifecycle.active=False`
+(`src/systems/lifecycle_systems/lifecycle.py:53`, the sole such site for an already-live entity)
+shows `LifecycleSystem.resolve_lifecycle()` only sets `is_dead=True` for `age_ticks >=
+max_age_ticks` (`OLD_AGE`) or `ent_upd.combat.outcome_kind == "KILL"` specifically — a `DEFEAT`
+outcome (`is_lethal=False`, the opportunity-attack path's own hardcoded value) never flips
+`lifecycle.active`, so the old diffing extractor's `combat_kill` branch (gated on a
+`lifecycle.active` transition) cannot have been reached by a DEFEAT-outcome death at all. The
+real source of this ticket's own observed 26 `entity_killed` events was not re-identified — most
+likely a real `KILL` outcome from a combat-resolution path this ticket's own instrumentation
+didn't cover (it only wrapped `resolve_multi_attack`), not the DEFEAT-outcome mechanism it
+credited. This does not change this ticket's own core, still-valid conclusion (`entity_killed`
+scores negatively by design, so a C grade is not itself evidence of under-crediting) — only the
+specific causal mechanism claimed for the DEFEAT/broad-path case. See COMB-309
+(`docs/parity_ledger/combat_movement.yaml`) and
+`TCK-20260809-COMBAT-KILL-LIFECYCLE-CREDIT-GAP-INVESTIGATION` for the real finding this
+correction is based on: 100% of a fresh `dungeon_crawl_seed42_2000t` run's real `combat_kill`
+events traced to `HAZARD`-preceded or unset `death_reason`, zero to `COMBAT` — independently
+confirming DEFEAT-outcome deaths are not a meaningful contributor to this pillar's real,
+observed `entity_killed` volume in the current corpus (0 DEFEAT outcomes and 0
+`lifecycle.active=True`/`combat.alive=False` "zombie" entities were directly measured across all
+3 corpus worlds this same investigation, at the identical seed/tick-count).

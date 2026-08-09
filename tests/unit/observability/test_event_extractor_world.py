@@ -143,6 +143,63 @@ def test_hazard_damage_not_misclassified_as_combat():
     assert "combat_initiated" not in types
 
 
+def _dying_update(eid: int, death_reason, prior_combat_outcome_kind: str | None = None):
+    """A same-tick EntityUpdate representing a lifecycle.active->False transition, with an
+    optional combat_upd left over from the tick that actually caused the fatal damage (HAZARD
+    drain sets outcome_kind on the SAME tick it drops HP <= 0, one tick before
+    LifecycleSystem.resolve_lifecycle() finalizes the transition -- see
+    TCK-20260809-COMBAT-KILL-LIFECYCLE-CREDIT-GAP-INVESTIGATION)."""
+    eu = MagicMock()
+    eu.property_updates = {}
+    eu.resource_transfers = []
+    eu.self_model_bundle_set = None
+    if prior_combat_outcome_kind is not None:
+        combat_upd = MagicMock()
+        combat_upd.outcome_kind = prior_combat_outcome_kind
+        combat_upd.attacker_id = None
+        combat_upd.hp_delta = 0
+        eu.combat = combat_upd
+    else:
+        eu.combat = None
+    u = MagicMock()
+    u.entity_updates = {eid: eu}
+    u.world_updates = {}
+    u.last_calamity_tick_set = None
+    u.entities_add = []
+    return u
+
+
+def test_combat_kill_not_emitted_for_hazard_caused_death():
+    """TCK-20260809-COMBAT-KILL-LIFECYCLE-CREDIT-GAP-INVESTIGATION: a death whose own
+    authoritative LifecycleComponent.death_reason isn't "COMBAT" (e.g. a hazard-drain-caused
+    death, or the death_reason=None mass-despawn case) must not fire combat_kill -- it isn't a
+    real combat event and shouldn't be penalized under the COMBAT pillar's attrition scoring."""
+    prior = _entity(1)
+    prior.lifecycle.active = True
+    curr = _entity(1)
+    curr.lifecycle.active = False
+    curr.lifecycle.death_reason = None
+    prior_state = _state({1: prior})
+    curr_state = _state({1: curr})
+    events = EventExtractor.extract(prior_state, curr_state, _dying_update(1, None, "HAZARD"), ObservabilityMode.NORMAL)
+    assert "combat_kill" not in _types(events)
+
+
+def test_combat_kill_emitted_for_genuine_combat_death():
+    """Regression guard: a real combat-caused death (death_reason=="COMBAT", the value
+    LifecycleSystem.resolve_lifecycle() assigns on ent_upd.combat.outcome_kind=="KILL") must
+    still fire combat_kill -- this fix narrows the fallback, it doesn't remove it."""
+    prior = _entity(1)
+    prior.lifecycle.active = True
+    curr = _entity(1)
+    curr.lifecycle.active = False
+    curr.lifecycle.death_reason = "COMBAT"
+    prior_state = _state({1: prior})
+    curr_state = _state({1: curr})
+    events = EventExtractor.extract(prior_state, curr_state, _dying_update(1, "COMBAT", "KILL"), ObservabilityMode.NORMAL)
+    assert "combat_kill" in _types(events)
+
+
 # ── region_trauma_delta ───────────────────────────────────────────────────────
 
 def test_region_trauma_delta_emitted():

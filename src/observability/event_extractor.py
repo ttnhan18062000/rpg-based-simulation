@@ -454,17 +454,32 @@ class EventExtractor:
                             is_lethal=is_lethal
                         ))
 
-            # Kill events — fires on any lifecycle.active→False transition regardless of cause,
-            # EXCEPT the same-tick outcome_kind=="KILL" case, which CombatShaper now owns live
-            # when ENABLE_PUSH_EVENT_SHAPERS is "ON" (TCK-20260806-PUSH-CUTOVER-COMBAT-ECONOMY-
-            # FACTION). Narrowed, not removed: old-age death and delayed-hazard-transition death
-            # (neither ever carries a same-tick outcome_kind=="KILL" combat_upd) are NOT covered
-            # by the shaper and must keep firing here regardless of the flag — this is the one
-            # migrated-event case where the old and new paths are not simply mutually exclusive
-            # by flag, they're mutually exclusive by condition (see
-            # TCK-20260806-PUSH-CUTOVER-COMBAT-ECONOMY-FACTION's investigation.md). When the flag
-            # is OFF (rollback), is_shaper_owned_kill is always False, restoring the exact
-            # pre-cutover unconditional-fire behavior.
+            # Kill events — fires on a lifecycle.active→False transition, EXCEPT the same-tick
+            # outcome_kind=="KILL" case, which CombatShaper now owns live when
+            # ENABLE_PUSH_EVENT_SHAPERS is "ON" (TCK-20260806-PUSH-CUTOVER-COMBAT-ECONOMY-
+            # FACTION), and EXCEPT any death whose own authoritative
+            # `LifecycleComponent.death_reason` isn't "COMBAT" (TCK-20260809-COMBAT-KILL-
+            # LIFECYCLE-CREDIT-GAP-INVESTIGATION). `LifecycleSystem.resolve_lifecycle()` is the
+            # sole runtime writer of both `lifecycle.active` and `death_reason` (set together, same
+            # EntityUpdate) and only ever assigns "OLD_AGE" or "COMBAT" — this branch used to fire
+            # unconditionally on ANY active->False transition regardless of cause, which meant
+            # HAZARD-caused deaths (a world_dynamics-owned mechanic, already excluded from
+            # `_real_combat_update` via `_NON_COMBAT_OUTCOME_KINDS`) and OLD_AGE deaths were both
+            # being counted as `combat_kill`/`entity_killed` and penalized under the COMBAT
+            # pillar's attrition scoring, even though neither is combat. Confirmed via direct
+            # pipeline instrumentation on `dungeon_crawl_seed42_2000t`: of the run's 25
+            # calibrate_simq-scored `combat_kill` events, every one traced back to a `death_reason`
+            # of "HAZARD-preceded" (killer_id always None, prior combat_upd outcome_kind="HAZARD")
+            # or unset (no combat_upd at all, matching a mass despawn/old-age cluster) — none
+            # traced to "COMBAT" — while genuine `combat_engagement_ended` activity that same run
+            # produced zero credit because it never resolved as KILL/ESCAPED. This was the real,
+            # structural reason the COMBAT pillar sat at the B/C grade boundary: it was absorbing
+            # negative credit from non-combat mortality while its own positive-scoring surface
+            # stayed unreachable. Genuine combat deaths (`death_reason=="COMBAT"`) were separately
+            # confirmed still to fire correctly under this fix.
+            # Old-age/despawn deaths keep their own real credit path: `demographic_mortality`
+            # (WORLD pillar) fires separately when the corpse is later removed via
+            # `entities_remove`, unaffected by this change.
             if prior_ent.lifecycle.active and not entity.lifecycle.active:
                 e_upd = update.entity_updates.get(eid) if update and hasattr(update, "entity_updates") else None
                 real_combat_upd = _real_combat_update(e_upd)
@@ -472,15 +487,21 @@ class EventExtractor:
                     _push_shapers_active and real_combat_upd is not None
                     and getattr(real_combat_upd, "outcome_kind", None) == "KILL"
                 )
+                is_genuine_combat_death = getattr(entity.lifecycle, "death_reason", None) == "COMBAT"
                 if not is_shaper_owned_kill:
-                    killer_id = real_combat_upd.attacker_id if real_combat_upd is not None else None
+                    if is_genuine_combat_death:
+                        killer_id = real_combat_upd.attacker_id if real_combat_upd is not None else None
 
-                    events.append(CombatKillEvent(
-                        tick=tick, timestamp=now, entity_id=eid,
-                        killer_id=killer_id
-                    ))
+                        events.append(CombatKillEvent(
+                            tick=tick, timestamp=now, entity_id=eid,
+                            killer_id=killer_id
+                        ))
 
-                    # NARRATIVE: hero_death_unrecorded — hero-kind entity deactivated this tick (D4)
+                    # NARRATIVE: hero_death_unrecorded — hero-kind entity deactivated this tick
+                    # (D4). Deliberately NOT gated on is_genuine_combat_death: this is a broader
+                    # "a hero died and nothing else recorded it" narrative-gap signal, not a
+                    # combat-specific one — a hero dying of old age with no other tracking is just
+                    # as real an "unrecorded" gap as a hero dying in unattributed combat.
                     if getattr(entity, "kind", None) == "hero":
                         events.append(SimulationEvent(
                             event_type="hero_death_unrecorded",
