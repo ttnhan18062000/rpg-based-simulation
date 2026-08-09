@@ -2885,7 +2885,7 @@ These items are appended rather than replacing existing checklist items. They ar
 - [x] COMB-260: Area attack affects only entities inside AoE radius. <!-- ID: COMB-260 SOURCE: src/engine/legality.py TEST: tests/integration/pipeline/test_combat_legality_matrix.py PROOF: unit -->
 - [x] COMB-261: AoE friendly-fire behavior is explicit. <!-- ID: COMB-261 SOURCE: src/engine/legality.py TEST: tests/integration/pipeline/test_combat_legality_matrix.py PROOF: unit -->
 - [x] COMB-262: Cover behavior is explicit if ranged combat supports cover. <!-- ID: COMB-262 SOURCE: src/engine/legality.py TEST: tests/integration/pipeline/test_combat_legality_matrix.py PROOF: unit -->
-- [x] COMB-263: Weapon range affects tactical choice. <!-- ID: COMB-263 SOURCE: src/engine/tactical.py TEST: tests/unit/movement/test_tactical_movement.py PROOF: unit -->
+- [x] COMB-263: Weapon range affects tactical choice. <!-- ID: COMB-263 SOURCE: src/engine/tactical.py TEST: tests/unit/combat/test_tactical_legality.py PROOF: unit -->
 
 - [x] COMB-264: Skill range affects tactical choice. <!-- ID: COMB-264 SOURCE: src/engine/tactical.py TEST: tests/integration/pipeline/test_combat_legality_matrix.py PROOF: unit -->
 - [x] COMB-265: Skill cost affects tactical choice. <!-- ID: COMB-265 SOURCE: src/engine/tactical.py TEST: tests/integration/pipeline/test_combat_legality_matrix.py PROOF: unit -->

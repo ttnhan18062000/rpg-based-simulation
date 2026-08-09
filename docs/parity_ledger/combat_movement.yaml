@@ -3353,3 +3353,41 @@
     worlds tested -- a further, real, and much smaller-magnitude lead (pursuit/approach pacing)
     not investigated further here, since it no longer represents a structural blocker of the
     scale readiness was.
+
+- id: COMB-301
+  text: >
+    TCK-20260809-TACTICAL-DEAD-ACTIONSTYLE-SUBBRANCHES -- tactical.py's own AGGRESSIVE
+    effective-range bonus and EVASIVE "reposition instead of attacking" stub (formerly lines
+    596-603) were confirmed dead code: is_attack_legal is already decided earlier in the same
+    function (line ~401), using the entity's real, un-biased combat range, before this block ever
+    ran; the local attack_range variable this block computed was never read again by anything
+    downstream. Comments describing intended behavior ("Aggressive entities ignore range
+    buffers", "Evasive skirmishers might choose to reposition") did not match what the code
+    actually did (nothing).
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: >
+    Removed the dead block. Chose removal over implementing it for real: doing so would require
+    feeding an ActionStyle-biased range into is_attack_legal's own computation -- the exact
+    combat-legality decision point TCK-20260809-COMBAT-ATTACK-LEGALITY-ALWAYS-FALSE-
+    INVESTIGATION/TCK-20260809-COMBAT-PACING-READINESS-MOVEMENT-DECOUPLE (same session) spent
+    real, corpus-verified effort hardening (0% -> 28.5%/36.6% real legal rate) -- re-touching it
+    for a speculative, never-requested game-feel effect (with no real EVASIVE reposition logic
+    even existing to pair it with) carried real regression risk for no confirmed benefit. Real
+    re-verification via the same live is_attack_legal probe methodology confirmed the freshly-
+    hardened legality path is genuinely unaffected: dungeon_crawl 27.7% legal (was 28.5%
+    pre-removal, within real sampling variance), urban_political 36.6% legal (unchanged).
+    Adjacent, disclosed finding fixed alongside: docs/compliance/checklist.md's own COMB-263
+    entry cited a test file (tests/unit/movement/test_tactical_movement.py) that never actually
+    tested its own claim -- corrected to a real test that does
+    (tests/unit/combat/test_tactical_legality.py::test_tactical_legality_filtering).
+  proof_type: regression
+  test_path: >
+    Full scoped pytest re-run (tests/unit/tactical/, tests/unit/combat/, tests/unit/movement/,
+    tests/unit/strategic/, tests/unit/core/, tests/unit/kernel/) -- no new test needed since no
+    prior coverage referenced the removed block's behavior (confirmed via grep before removal).
+  divergence_note: null
+  support_boundary: >
+    style/ActionStyle remain real, used imports/locals in tactical.py -- the real kiting-distance
+    consumer (line ~555) is untouched by this removal.

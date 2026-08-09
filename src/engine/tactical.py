@@ -593,14 +593,19 @@ class TacticalDecisionSystem:
                 )
             )
 
-        # ActionStyle Bias: Aggressive entities ignore range buffers, Evasive entities maintain them strictly
-        # Logic ID: COMB-263 (Weapon range affects tactical choice)
-        attack_range = entity.combat.range
-        if style == ActionStyle.AGGRESSIVE:
-             attack_range += 1
-        elif style == ActionStyle.EVASIVE and dist_to_target < attack_range:
-             # Evasive skirmishers might choose to reposition instead of attacking if too close
-             pass
+        # (Removed, TCK-20260809-TACTICAL-DEAD-ACTIONSTYLE-SUBBRANCHES: this block previously
+        # computed an ActionStyle-biased `attack_range` local variable -- AGGRESSIVE +1,
+        # EVASIVE a bare `pass` stub with no real reposition logic -- but `is_attack_legal` is
+        # already decided above (line ~401) using the entity's real, un-biased combat range,
+        # before this block ever ran, and nothing below reads this variable. Confirmed dead code,
+        # not a design decision. Re-implementing it "for real" would require feeding an
+        # ActionStyle-biased range into `is_attack_legal`'s own computation -- the exact
+        # combat-legality decision point this same session's earlier tickets
+        # (TCK-20260809-COMBAT-ATTACK-LEGALITY-ALWAYS-FALSE-INVESTIGATION,
+        # TCK-20260809-COMBAT-PACING-READINESS-MOVEMENT-DECOUPLE) spent significant real,
+        # corpus-verified effort hardening (0% -> 28.5%/36.6% real legal rate). Removed rather
+        # than risk regressing that freshly-verified path for a speculative game-feel effect with
+        # no confirmed requirement.
 
         if is_attack_legal:
             # 5.5 Skill Selection (Task 8.7 Hardening)
