@@ -676,6 +676,17 @@ OBSERVABILITY`), both literal matches for this row's own "clear winner, loser re
 wording. `CAUGHT_FLEEING`/`PURSUIT_ABANDONED` deliberately excluded. See
 `docs/simulation_quality/event_type_coverage.md` §3.10 for the full mapping.
 
+**Real producer (`TCK-20260809-COMBAT-TACTICAL-VARIETY-SCORER-GAP-FIX`):** the same class of gap
+as `combat_resolved` above — `tactical_variety` had a real, ready scorer handler
+(`CombatScorer.score()`'s `combat_damage` branch reading `payload.get("tactical_modifier")`) but
+zero real producers anywhere in `src/`, despite `CombatResolutionSystem.
+calculate_tactical_multipliers()` computing a real, rich per-attack modifier trace on every
+attack. `event_shapers.py`'s `CombatShaper` now selects the first real tactical-modifier key
+present in that trace (mechanics-bible table order: `HIGH_GROUND`, `FLANKING`, `SURROUNDED`,
+`COVER_REDUCTION`, `SHATTER`, `EXHAUSTION`, `STAMINA_EXHAUSTION`, `BOND_SYNERGY`) into
+`combat_damage`'s own payload. Confirmed real in live corpus runs (`STAMINA_EXHAUSTION`
+observed).
+
 **Real, confirmed finding (`TCK-20260808-COMBAT-PILLAR-OPPORTUNITY-ATTACK-CREDIT-GAP`):**
 `entity_killed` is emitted by two separate mechanisms that co-exist by design (see
 `TCK-20260806-PUSH-CUTOVER-COMBAT-ECONOMY-FACTION`'s own completion notes) — the push-shaper

@@ -49,6 +49,30 @@ class EventShaper(Protocol):
     ) -> List[SimulationEvent]: ...
 
 
+# Real mechanics-bible modifier order (docs/mechanics/02_combat_laws.md §2), used as the
+# deterministic tie-break when multiple tactical modifiers are simultaneously active on the
+# same attack -- TCK-20260809-COMBAT-TACTICAL-VARIETY-SCORER-GAP-FIX. Deliberately excludes
+# FINAL_ATK_MULT/FINAL_DEF_MULT (aggregate multipliers, not a discrete condition),
+# REWARD_SOURCE/REWARD_CATEGORY (reward classification), and WOUND_INFLICTED (wound tracking) --
+# all real CombatUpdate.trace keys, none a "tactical modifier" in the mechanics-bible sense.
+_TACTICAL_MODIFIER_ORDER = (
+    "HIGH_GROUND", "FLANKING", "SURROUNDED", "COVER_REDUCTION",
+    "SHATTER", "EXHAUSTION", "STAMINA_EXHAUSTION", "BOND_SYNERGY",
+)
+
+
+def _select_tactical_modifier(trace: Optional[Dict[str, Any]]) -> Optional[str]:
+    """First real tactical-modifier key present in a real CombatUpdate.trace, checked in
+    mechanics-bible table order -- CombatScorer's own tactical_variety signal (+1 per unique
+    modifier ever seen) expects a single string per combat_damage event, not the full trace."""
+    if not trace:
+        return None
+    for key in _TACTICAL_MODIFIER_ORDER:
+        if key in trace:
+            return key
+    return None
+
+
 def _combat_entity_snapshot(ent: Optional[Any]) -> Optional[Dict[str, Any]]:
     """Real, honest snapshot of one combat participant's own state at the moment of a
     combat_engagement_started/ended event -- level, hp/max_hp, atk/def, role/faction/race,
@@ -198,12 +222,16 @@ class CombatShaper:
                 # shadow comparison (urban_political/crowded_frontier showed combat_damage firing
                 # far more often than the old extractor during sustained combat sequences).
                 if is_lethal or mode not in (ObservabilityMode.LIGHT, ObservabilityMode.LONG_RUN):
+                    dmg_payload = {"attacker_id": real_combat.attacker_id, "damage": int(-hp_delta),
+                                    "is_lethal": is_lethal}
+                    tactical_modifier = _select_tactical_modifier(getattr(real_combat, "trace", None))
+                    if tactical_modifier is not None:
+                        dmg_payload["tactical_modifier"] = tactical_modifier
                     events.append(SimulationEvent(
                         event_type="combat_damage", event_category="combat",
                         tick=tick, entity_id=eid, severity="INFO",
                         source_system="event_shapers", message="",
-                        payload={"attacker_id": real_combat.attacker_id, "damage": int(-hp_delta),
-                                 "is_lethal": is_lethal},
+                        payload=dmg_payload,
                     ))
                 if prior_hp == prior_max_hp and new_hp < prior_max_hp:
                     events.append(SimulationEvent(

@@ -3562,3 +3562,46 @@
     CombatScorer.score()'s own scoring logic is untouched -- it already had a correct, ready
     handler; this ticket only adds the missing producer. No change to combat_engagement_started/
     ended's own already-implemented behavior, or to any combat-resolution logic itself.
+
+- id: COMB-306
+  text: >
+    TCK-20260809-COMBAT-TACTICAL-VARIETY-SCORER-GAP-FIX -- the same class of gap as COMB-305/
+    combat_resolved: CombatScorer.score()'s combat_damage handler reads
+    payload.get("tactical_modifier") and scores tactical_variety (+1, first occurrence of each
+    unique modifier), a real, ready signal since the pillar's own original design, but zero real
+    producers anywhere in src/ ever populated tactical_modifier. Meanwhile
+    CombatResolutionSystem.calculate_tactical_multipliers() (src/engine/combat.py:52-107)
+    computes a real, rich per-attack modifier trace (HIGH_GROUND/FLANKING/SURROUNDED/
+    COVER_REDUCTION/SHATTER/EXHAUSTION/STAMINA_EXHAUSTION/BOND_SYNERGY, matching
+    docs/mechanics/02_combat_laws.md §2's own documented table) on CombatUpdate.trace every
+    single attack -- stored, never read by src/observability/ anywhere, the same "computed but
+    discarded" finding this whole investigation thread traces back to.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    src/observability/event_shapers.py's CombatShaper now selects the first real
+    tactical-modifier key present in real_combat.trace (deterministic mechanics-bible table
+    order, via the new _select_tactical_modifier() helper) into combat_damage's own
+    tactical_modifier payload field, when one is present. FINAL_ATK_MULT/FINAL_DEF_MULT
+    (aggregate multipliers)/REWARD_SOURCE/REWARD_CATEGORY (reward classification)/
+    WOUND_INFLICTED (wound tracking) deliberately excluded -- real trace keys, none a tactical
+    modifier in the mechanics-bible sense. Real corpus re-verification (2000-tick live
+    Kernel.tick_once() loop, dungeon_crawl_seed42, corpus-default flags): combat_damage/
+    tactical_modifier are sparse and run-to-run timing-variable at this corpus scale (0-1
+    combat_damage per run across 3 clean re-runs, matching combat_damage's own already-disclosed
+    sparsity), but 2 of 3 runs showed a real, correct tactical_modifier="STAMINA_EXHAUSTION" --
+    confirmed working, not just unit-tested.
+  proof_type: regression
+  test_path: >
+    tests/unit/observability/test_event_shapers.py::test_combat_damage_carries_tactical_modifier_when_active,
+    ::test_combat_damage_tactical_modifier_absent_when_no_trace,
+    ::test_combat_damage_tactical_modifier_picks_mechanics_bible_order_when_multiple_active,
+    ::test_combat_damage_tactical_modifier_excludes_non_modifier_trace_keys (4 new tests). Full
+    scoped re-run: tests/unit/observability/, tests/simulation_quality/test_combat_scorer.py --
+    1021 passed, 6 skipped, zero regressions.
+  divergence_note: null
+  support_boundary: >
+    calculate_tactical_multipliers()'s own real modifier-computation logic is untouched -- this
+    fix reads its already-computed trace output only. CombatScorer.score()'s own scoring logic
+    is untouched -- it already had a correct, ready handler.

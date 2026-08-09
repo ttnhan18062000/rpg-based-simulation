@@ -95,7 +95,7 @@ All events below are emitted by the engine and reach at least one pillar scorer,
 | `demographic_mortality` | event_extractor | WorldDynamicsScorer | 0 | Emitted only on despawn-without-attacker; rare in short runs |
 | `demographic_birth` | event_extractor | WorldDynamicsScorer | 0 | Emitted on entity spawn; scored via world_dynamics pillar |
 | `hero_death_unrecorded` | event_extractor | NarrativeScorer | 0 | Only for kind="hero" entities |
-| `combat_damage` | CombatDamageEvent | CombatScorer | 0 | Light/long-run mode suppresses non-lethal; lethal path hits scorer |
+| `combat_damage` | CombatDamageEvent | CombatScorer | 0 | Light/long-run mode suppresses non-lethal; lethal path hits scorer. `payload.tactical_modifier` (added `TCK-20260809-COMBAT-TACTICAL-VARIETY-SCORER-GAP-FIX`) activates the pillar's own `tactical_variety` signal (+1 per unique modifier), previously permanently dead for lack of a producer — confirmed real in live corpus runs (`STAMINA_EXHAUSTION`), sparse/environment-timing-variable at this corpus scale like `combat_damage` itself |
 | `combat_initiated` | event_extractor | CombatScorer | 117 | Fires when entity at full HP takes first hit |
 | `near_death_survival` | event_extractor | CombatScorer, ProgressionScorer | 164 | HP crosses below 20% threshold |
 | `xp_granted` | event_extractor | ProgressionScorer | 0 | Fires on identity.evolution_points delta |

@@ -43,9 +43,10 @@ def _prior_state(entities: dict, tick: int = 10):
 
 
 def _real_combat_upd(attacker_id: int = 99, outcome_kind: str = "SURVIVE", hp_delta: int = -20,
-                      alive_set=None, is_opportunity_attack: bool = False):
+                      alive_set=None, is_opportunity_attack: bool = False, trace: dict | None = None):
     return MagicMock(attacker_id=attacker_id, outcome_kind=outcome_kind, hp_delta=hp_delta,
-                      alive_set=alive_set, is_opportunity_attack=is_opportunity_attack)
+                      alive_set=alive_set, is_opportunity_attack=is_opportunity_attack,
+                      trace=trace if trace is not None else {})
 
 
 def _update(entity_updates: dict | None = None):
@@ -136,6 +137,46 @@ def test_combat_damage_default_mode_is_light():
     upd = _update({1: MagicMock(combat=_real_combat_upd(attacker_id=42, hp_delta=-20, alive_set=True))})
     events = CombatShaper().shape(_prior_state({1: prior}), upd, tick=10)
     assert "combat_damage" not in _types(events)
+
+
+# ── combat_damage: tactical_modifier (TCK-20260809-COMBAT-TACTICAL-VARIETY-SCORER-GAP-FIX) ──
+
+def test_combat_damage_carries_tactical_modifier_when_active():
+    prior = _entity(hp=100, max_hp=100)
+    upd = _update({1: MagicMock(combat=_real_combat_upd(
+        attacker_id=42, hp_delta=-20, trace={"FLANKING": 0.15}))})
+    events = CombatShaper().shape(_prior_state({1: prior}), upd, tick=10, mode=ObservabilityMode.NORMAL)
+    dmg = next(e for e in events if e.event_type == "combat_damage")
+    assert dmg.payload["tactical_modifier"] == "FLANKING"
+
+
+def test_combat_damage_tactical_modifier_absent_when_no_trace():
+    prior = _entity(hp=100, max_hp=100)
+    upd = _update({1: MagicMock(combat=_real_combat_upd(attacker_id=42, hp_delta=-20, trace={}))})
+    events = CombatShaper().shape(_prior_state({1: prior}), upd, tick=10, mode=ObservabilityMode.NORMAL)
+    dmg = next(e for e in events if e.event_type == "combat_damage")
+    assert "tactical_modifier" not in dmg.payload
+
+
+def test_combat_damage_tactical_modifier_picks_mechanics_bible_order_when_multiple_active():
+    prior = _entity(hp=100, max_hp=100)
+    # BOND_SYNERGY and HIGH_GROUND both active -- HIGH_GROUND must win (earlier in table order).
+    upd = _update({1: MagicMock(combat=_real_combat_upd(
+        attacker_id=42, hp_delta=-20,
+        trace={"BOND_SYNERGY": 0.10, "HIGH_GROUND": 0.20}))})
+    events = CombatShaper().shape(_prior_state({1: prior}), upd, tick=10, mode=ObservabilityMode.NORMAL)
+    dmg = next(e for e in events if e.event_type == "combat_damage")
+    assert dmg.payload["tactical_modifier"] == "HIGH_GROUND"
+
+
+def test_combat_damage_tactical_modifier_excludes_non_modifier_trace_keys():
+    prior = _entity(hp=100, max_hp=100)
+    upd = _update({1: MagicMock(combat=_real_combat_upd(
+        attacker_id=42, hp_delta=-20,
+        trace={"FINAL_ATK_MULT": 1.2, "REWARD_SOURCE": "combat", "WOUND_INFLICTED": 1.0}))})
+    events = CombatShaper().shape(_prior_state({1: prior}), upd, tick=10, mode=ObservabilityMode.NORMAL)
+    dmg = next(e for e in events if e.event_type == "combat_damage")
+    assert "tactical_modifier" not in dmg.payload
 
 
 def test_near_death_survival_emitted_when_hp_crosses_threshold():
