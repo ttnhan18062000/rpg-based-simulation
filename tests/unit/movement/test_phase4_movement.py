@@ -79,3 +79,24 @@ def test_anti_oscillation():
     assert updates[1].navigation.clear_target is True # Replan: clear target
     assert updates[1].navigation.oscillation_count_delta == -3 # Reset
     assert updates[1].new_position is None # Stop moving
+
+
+def test_successful_move_no_longer_costs_readiness():
+    """TCK-20260809-COMBAT-PACING-READINESS-MOVEMENT-DECOUPLE: readiness is a pure attack-
+    eligibility gate (docs/engine/contracts/minimal_kernel.md Section 5), not a movement-fatigue
+    resource -- stamina already covers movement fatigue with its own separate regen. Movement
+    previously drained both, capping the real attack-legal rate even with passive readiness
+    regen active. A successful move must still cost stamina, but no longer readiness."""
+    hero = (V2EntityBuilder(1)
+            .kind("HERO")
+            .location(5, 5)
+            .combat(readiness=100.0)
+            .build())
+    state = AuthoritativeState(entities={1: hero}, tick=0, seed=123)
+
+    updates = MovementSystem.resolve_move(state, hero, (6, 5))
+
+    assert updates[1].new_position == (6.0, 5.0)
+    assert updates[1].readiness_delta == 0.0
+    assert updates[1].stamina_update is not None
+    assert updates[1].stamina_update.current_delta == -hero.stamina.MOVE_COST

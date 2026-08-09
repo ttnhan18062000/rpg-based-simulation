@@ -862,6 +862,51 @@ This document is the canonical record of intentional behavior shifts in `src` co
 
 ---
 
+### 2.38 Movement Double-Costed Readiness and Stamina for the Same Fatigue Concern (TCK-20260809-COMBAT-PACING-READINESS-MOVEMENT-DECOUPLE)
+- **Subsystem**: Combat / Engine
+- **Old Behavior**: A successful move (`MovementSystem.resolve_move()`, `src/engine/movement.py`,
+  and the position-swap path in `src/engine/pipeline_phases/movement.py`) drained **both**
+  `combat.readiness` (`readiness_cost = move_cost * terrain_cost`, or a flat `-move_cost` on the
+  position-swap path) **and** `stamina` (`StaminaComponent.MOVE_COST`, a flat per-move cost with
+  its own separate `StaminaService.tick_regen()` and exhaustion mechanic,
+  `docs/combat/combat_movement_overhaul_spec.md` §5) — two distinct resources charged for the same
+  single fatigue concern. `readiness`'s own documented contract
+  (`docs/engine/contracts/minimal_kernel.md` §5) describes it as a pure attack-eligibility/
+  cooldown gate ("Entities are eligible to act only when their readiness threshold is met"), not a
+  movement-fatigue resource — `stamina` already existed to fill that role. This was the real cause
+  `TCK-20260809-COMBAT-ATTACK-LEGALITY-ALWAYS-FALSE-INVESTIGATION`'s own §2.36 entry disclosed but
+  explicitly deferred: even with passive readiness regeneration active, an entity that had to
+  travel to reach a hostile could still arrive readiness-depleted, capping the real corpus-wide
+  attack-legal rate at ~1.3% (`dungeon_crawl`, 600-tick real probe).
+- **New Behavior**: Removed the `readiness_delta` cost from both real movement-application sites,
+  leaving `stamina` as the sole movement-fatigue cost. `verify_movement_legality()`'s own smaller
+  readiness pre-check (`readiness >= move_cost`, a much lower bar than the 100.0 attack threshold)
+  was left untouched — it still provides a brief, real movement lockout immediately after an
+  attack resets readiness to 0, which is correct and not disruptive.
+- **Rationale**: **Bug Fix**. Confirmed a genuine double-cost against `stamina`'s own already-real,
+  already-documented fatigue role — not a new design decision, closing a real gap the prior
+  ticket's own investigation had already traced to this exact mechanism and explicitly named as
+  the next real lever.
+- **Note (real scope check, not assumed)**: real re-verification (same `is_attack_legal` probe
+  methodology as §2.36, live compiled worlds): legal rate moved from 1.3% to a real, measured
+  28.5% (`dungeon_crawl`, 600 ticks) and 36.6% (`urban_political`, 600 ticks) —
+  `INSUFFICIENT_READINESS` no longer appears at all in either world's own real reason-code
+  breakdown. The remaining illegal reasons are `OUT_OF_RANGE` (now dominant — expected, since
+  random sampling catches entities mid-approach) and `FRIENDLY_FIRE_ILLEGAL`. Scoped pytest
+  (`tests/unit/movement/`, `tests/unit/combat/`, `tests/unit/core/`, `tests/unit/kernel/`,
+  `tests/unit/tactical/`, `tests/unit/optimization/`, `tests/unit/worldbuilding/`,
+  `tests/unit/worldassembly/`, `tests/unit/strategic/`, `tests/unit/entities/`,
+  `tests/unit/content/`, `tests/unit/resource/`, `tests/unit/social/`, plus integration combat/
+  pipeline/determinism suites): zero new regressions — the only failures present were the 2
+  pre-existing, already-confirmed-unrelated ones from earlier this session.
+- **Verification**:
+  `tests/unit/movement/test_phase4_movement.py::test_successful_move_no_longer_costs_readiness`,
+  `tests/unit/movement/test_position_swap.py::test_mutual_adjacent_position_swap_succeeds`
+  (extended with a readiness-unchanged assertion).
+- **Status**: ACTIVE
+
+---
+
 ## 3. Unsupported / Retired Behavior
 
 The following legacy behaviors have been intentionally omitted or retired.

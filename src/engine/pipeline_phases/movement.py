@@ -421,11 +421,14 @@ class MovementPhase:
         new_position: tuple[float, float],
         reason,
     ) -> EntityUpdate:
+        # Movement no longer costs readiness -- see the matching note in
+        # MovementSystem.resolve_move (src/engine/movement.py)
+        # (TCK-20260809-COMBAT-PACING-READINESS-MOVEMENT-DECOUPLE). Stamina (below) already
+        # covers movement fatigue.
         return EntityUpdate(
             entity_id=entity.id,
             new_position=new_position,
             moved_this_tick=True,
-            readiness_delta=-entity.combat.move_cost,
             navigation=NavigationUpdate(
                 moved_recently_set=True,
                 failure_reason=reason,

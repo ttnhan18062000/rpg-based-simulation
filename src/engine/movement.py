@@ -233,12 +233,6 @@ class MovementSystem:
 
         # 6. Final Subject Execution
         actor_up = updates.get(entity.id, EntityUpdate(entity_id=entity.id))
-        
-        # Terrain Cost (Checklist Section 7)
-        terrain_cost = 1.0
-        if success and effective_target:
-            tile = (int(effective_target[0]), int(effective_target[1]))
-            terrain_cost = TerrainCostService.get_tile_cost(tile, state_or_context)
 
         # Stamina drain on movement (Checklist Part 6 Section E)
         # VERIFIED v2: stamina_drain_movement
@@ -264,16 +258,20 @@ class MovementSystem:
             region_id_set=new_region_id
         )
 
-        # VERIFIED v2: environmental_move_cost
-        # Logic ID: COMB-199 (Movement cost applied during authoritative application)
-        readiness_cost = (entity.combat.move_cost * terrain_cost) / max(0.1, move_speed_mult)
-
+        # Movement no longer costs readiness (TCK-20260809-COMBAT-PACING-READINESS-MOVEMENT-
+        # DECOUPLE): readiness's own documented contract (docs/engine/contracts/minimal_kernel.md
+        # Section 5) is a pure attack-eligibility/cooldown gate, not a movement-fatigue resource --
+        # stamina (stamina_upd above, VERIFIED v2: stamina_drain_movement) already fills that role
+        # with its own separate regen and exhaustion mechanic
+        # (docs/combat/combat_movement_overhaul_spec.md Section 5). Movement previously
+        # double-costed both resources, meaning any entity that had to travel to reach a hostile
+        # arrived readiness-depleted even with passive readiness regen active, capping the real
+        # corpus-wide attack-legal rate at ~1.3% even after
+        # TCK-20260809-COMBAT-ATTACK-LEGALITY-ALWAYS-FALSE-INVESTIGATION's own fixes.
         updates[entity.id] = replace(
             actor_up,
             new_position=effective_target,
             moved_this_tick=success,
-            # VERIFIED v2: authoritative_move_cost
-            readiness_delta=-readiness_cost if success else 0.0,
             navigation=nav_upd,
             stamina_update=stamina_upd
         )

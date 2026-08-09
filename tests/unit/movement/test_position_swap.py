@@ -79,6 +79,11 @@ def test_mutual_adjacent_position_swap_succeeds():
     assert new_state.entities[2].navigation.position == (0.0, 0.0)
     assert new_state.entities[1].navigation.position != new_state.entities[2].navigation.position
 
+    # TCK-20260809-COMBAT-PACING-READINESS-MOVEMENT-DECOUPLE: a position-swap move must not cost
+    # readiness -- only stamina covers movement fatigue.
+    assert new_state.entities[1].combat.readiness == 100.0
+    assert new_state.entities[2].combat.readiness == 100.0
+
 
 def test_accepted_position_swap_contract_succeeds_with_one_sided_intent():
     """
