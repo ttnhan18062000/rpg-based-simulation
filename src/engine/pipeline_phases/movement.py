@@ -231,10 +231,30 @@ class MovementPhase:
                 continue
                 
             # Determine target and mode (prefer update if present)
-            nav_target = ent_upd.navigation.target_set if (ent_upd and ent_upd.navigation and ent_upd.navigation.target_set is not None) else entity.navigation.target
+            has_fresh_decision = bool(ent_upd and ent_upd.navigation and ent_upd.navigation.target_set is not None)
+            nav_target = ent_upd.navigation.target_set if has_fresh_decision else entity.navigation.target
+
+            # Live-refresh a stale entity-tracking target (TCK-20260809-COMBAT-PURSUIT-PER-TICK-TRACE):
+            # when this tick has no fresh brain decision, nav_target is a static snapshot from
+            # whichever prior tick's decision last set it -- correct for a fixed-point errand
+            # (WANDER/RETREAT/objective pursuit, none of which set task.payload["target_id"]) but
+            # stale for a real entity-tracking mode (PURSUE/INTERCEPT/KITING/BRACKETING/
+            # GUARDING_ALLY), all of which do set target_id. Tactical decisions are cadence-gated
+            # to once per ~10 ticks (scheduler.py's own strategic_intelligence cadence) while
+            # movement itself runs every tick, so a pursuer previously walked straight to a
+            # snapshot of where its target *was*, arrived, and then idled until its next cadence
+            # tick while the real target kept moving -- confirmed via live per-tick trace to be
+            # the real, precise reason chase convergence was rare rather than reliable.
+            if not has_fresh_decision:
+                tracked_id = entity.task.payload.get("target_id")
+                if tracked_id is not None:
+                    tracked_entity = state.entities.get(tracked_id)
+                    if tracked_entity is not None and tracked_entity.lifecycle.active and tracked_entity.combat.alive:
+                        nav_target = tracked_entity.navigation.position
+
             if not nav_target or entity.navigation.position == nav_target:
                 continue
-                
+
             mode = ent_upd.navigation.movement_mode_set if (ent_upd and ent_upd.navigation and ent_upd.navigation.movement_mode_set is not None) else entity.navigation.movement_mode
             
             move_updates = MovementSystem.resolve_move(state, entity, nav_target, mode=mode)

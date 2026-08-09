@@ -3466,9 +3466,60 @@
     the file's existing 8, all passing -- regression-covered). Full scoped re-run:
     tests/unit/entities/, tests/unit/tactical/, tests/unit/combat/, tests/unit/strategic/,
     tests/unit/core/ -- 551 passed, zero regressions.
-  divergence_note: null
+  divergence_note: >
+    Correction (TCK-20260809-COMBAT-PURSUIT-PER-TICK-TRACE): the v2_evidence claim
+    "combat_damage/entity_killed remain zero" above was incomplete -- based on a filtered
+    sample, not a full event-count check. A full re-check on the identical dungeon_crawl_seed42
+    run confirms real, non-zero combat_damage=1/entity_killed=1/combat_engagement_started=1.
+    urban_political_seed42 genuinely remains at zero. See COMB-304 for the follow-up fix this
+    correction fed into.
   support_boundary: >
     Path 2 (runtime_identity_extension), Path 3 (compatibility_projection), Path 4 (legacy_enum)
     are unchanged -- entities with genuinely no faction_id at all still fall through the same
     existing chain. No change to resolve_attack()/calculate_damage()/any real combat-resolution
     logic -- this fix is entirely in target identity resolution, upstream of legality/damage.
+
+- id: COMB-304
+  text: >
+    TCK-20260809-COMBAT-PURSUIT-PER-TICK-TRACE -- src/engine/pipeline_phases/movement.py's
+    MovementPhase.route_movement_intent() used a static, persisted entity.navigation.target
+    snapshot for every tick that lacked a fresh
+    tactical decision. Since tactical re-evaluation itself is cadence-gated to once per ~10
+    ticks (scheduler.py's own SystemCadence.strategic_intelligence) while movement execution runs
+    every tick unthrottled, a pursuing entity walked straight to a stale snapshot of where its
+    target *was* at the last decision, arrived, then idled until its next cadence tick while the
+    real (unaware, wandering) target kept moving -- confirmed via a real per-tick trace to be the
+    precise mechanism behind rare/slow pursuit convergence, not a crash or dead code path.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: >
+    route_movement_intent() now re-derives the live navigation target from
+    task.payload["target_id"]'s current position each tick, when relying on the persisted
+    snapshot and a real, alive target_id is present. Scoped safely: target_id is only ever set
+    by real entity-tracking tactical branches (PURSUE/INTERCEPT/KITING/BRACKETING/
+    GUARDING_ALLY); TaskUpdate.payload_set replaces (not merges into) the persisted task.payload
+    (src/engine/patches.py:538), so fixed-point errands (WANDER/RETREAT/objective-pursuit, none
+    of which set target_id) are unaffected by construction. scheduler.py's own cadence mechanism
+    is untouched. Real corpus re-verification (2000-tick live Kernel.tick_once() loop,
+    dungeon_crawl_seed42, corpus-default flags): direct instrumentation confirms the fix fires
+    176 times (real cases where live position differed from the stale snapshot); the direct,
+    load-bearing measure of pursuit convergence (real is_attack_legal rate for hostile pairs)
+    improved from 0% (100% OUT_OF_RANGE) to 44% (69/156 real checks) -- a genuine,
+    order-of-magnitude improvement. Honestly disclosed: the final aggregate combat_damage/
+    entity_killed count for this specific short run stayed numerically flat (1/1) despite the
+    large legal-rate improvement, a plausible deterministic-butterfly-effect consequence, not
+    claimed as a full resolution of combat rarity (other factors, e.g. post-attack readiness
+    cooldown and multi-attacker pileup on an already-dead target, remain unaddressed).
+  proof_type: regression
+  test_path: >
+    tests/unit/movement/test_pursuit_target_refresh.py (4 new tests: live-refresh works,
+    fixed-point errands unaffected, dead/missing target_id falls back safely). Full scoped
+    re-run: tests/unit/movement/, tests/unit/tactical/, tests/unit/combat/, tests/unit/kernel/,
+    tests/unit/strategic/ -- 398 passed, 1 pre-existing unrelated failure
+    (test_normal_move_triggers_oa).
+  divergence_note: null
+  support_boundary: >
+    scheduler.py's own cadence gate and find_intercept_position()'s own prediction math are both
+    untouched -- this fix is entirely in movement-routing's target-position lookup, not in
+    when tactical decisions get made or how an intercept point is computed at decision time.

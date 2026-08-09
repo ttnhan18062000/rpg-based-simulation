@@ -22,7 +22,7 @@ Targets are selected from hostiles within the visibility radius using the follow
 
 ## 3. Engagement & Pursuit Rules (GAP-T02/T04)
 - **Stickiness**: Entities retain their current `target_id` if the target is still alive and within a **Stickiness Radius** (Default: 15.0).
-- **Pursuit**: If a target is outside combat range but within visibility, the entity sets its navigation target to the target's current position.
+- **Pursuit**: If a target is outside combat range but within visibility, the entity sets its navigation target to the target's current position. Tactical re-evaluation itself is cadence-gated (`SystemCadence.strategic_intelligence`, default every ~10 ticks); movement execution runs every tick and, while a real `target_id` is active in the entity's own task payload, re-derives the live target position each tick (`MovementPhase.route_movement_intent`) rather than walking to a stale snapshot from the last tactical decision (`TCK-20260809-COMBAT-PURSUIT-PER-TICK-TRACE`).
 
 ## 4. Retreat & Disengage Rules (GAP-T03)
 - **Retreat Threshold**: Triggered when `hp < max_hp * 0.2`.
