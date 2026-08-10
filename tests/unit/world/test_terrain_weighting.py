@@ -47,6 +47,13 @@ def test_terrain_readiness_rejection():
 def test_terrain_readiness_success():
     """
     Test that movement into high-cost terrain succeeds if readiness is sufficient.
+
+    TCK-20260809-COMBAT-PACING-READINESS-MOVEMENT-DECOUPLE (docs/guidelines/
+    intentional_divergences.md Section 2.38): a successful move no longer costs readiness at
+    all -- readiness is a pure attack-eligibility gate, stamina is the sole movement-fatigue
+    resource. verify_movement_legality()'s own smaller readiness PRE-CHECK (readiness >=
+    move_cost, exercised by test_terrain_readiness_rejection above) was left untouched, but the
+    real hp_delta-equivalent readiness COST on a successful move was removed.
     """
     terrain = {(1, 1): "MOUNTAIN"}
     from src.core.builder import V2EntityBuilder
@@ -71,4 +78,4 @@ def test_terrain_readiness_success():
     ent_upd = updates[1]
     assert ent_upd.moved_this_tick is True
     assert ent_upd.new_position == (1, 1)
-    assert ent_upd.readiness_delta == -80.0 # (10.0 * 4.0) / 0.5 (WANDER mode)
+    assert ent_upd.readiness_delta == 0.0
