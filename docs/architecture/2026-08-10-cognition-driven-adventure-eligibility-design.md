@@ -76,17 +76,21 @@ per profile — not derived from existing qualitative fields (`planning_depth`, 
 etc.), which remain descriptive-only. Content authoring for the 7 existing profiles:
 `practical_humanoid`, `arcane_scholar` → `True` (matches current hero-eligible behavior and the
 elf/human parity example); `instinctive_animal`, `opportunistic_humanoid`, `undead_fixated` →
-`False`; `disciplined_guard`/`trade_pragmatist` → resolved during Implement based on real usage
-(not yet referenced by any race in `races.yaml`, need to check other content sources before
-assigning).
+`False`. **Implement checklist item:** `disciplined_guard`/`trade_pragmatist` are not referenced
+by any race in `races.yaml` today (checked directly) — before assigning them a value, search all
+of `data/content/` for any other real reference (NPC templates, hero archetypes, etc.) so the
+value isn't a guess.
 
 ### 2. `AdventureDecisionPhase` eligibility
 
 Resolve the entity's `cognition_profile_id` (already present in `entity.identity.properties`) to
 its real `CognitionProfileDefinition` via the catalog, and check `supports_adventure_routing`
-instead of (or in addition to — a real Implement-phase decision once the resolution code is
-written and its interaction with the existing `EntityRole.HERO` filter is visible) the current
-hardcoded role check.
+**in place of** the current hardcoded `EntityRole.HERO` check, not in addition to it — Goal 1's
+own "regardless of role" language is a hard requirement, not an aspiration: a cognitively-capable
+non-hero entity (e.g. a non-hero `human`/`practical_humanoid`) must be as eligible as a hero one.
+The other 3 existing eligibility criteria in `docs/simulation/domains/adventure_contract.md`'s
+own table (alive, active, project-lock-expired) are retained unchanged — only the role/cognition
+axis changes.
 
 ### 3. Generic interruption bypass
 
@@ -109,9 +113,26 @@ floor, may bypass an active lock — regardless of its `kind`. This is a direct 
 the code's own existing pattern (a numeric floor already gates the `"danger"` case specifically)
 to the case-general form, not a new invented concept. The exact floor value is a calibration
 detail for Implement (same spirit as `TCK-20260619-E11D-SCORING-CAL`'s own empirical bravery-
-coefficient calibration), not a design-level decision — both systems' `ProjectState.score` fields
-are already directly comparable today (used in the existing non-locked switch path), so no new
-score-normalization is needed.
+coefficient calibration), not a design-level decision.
+
+> **Open question for Investigate (real, confirmed scale mismatch — not yet resolved):**
+> `docs/mechanics/04_strategic_cognition.md` §6.6 documents System A's own real score range as
+> **max ≈2.9** (non-blocked). System B's `CombatEngageScorer` utility reaches **100**
+> (`40 + bravery×40 + stamina_ratio×20`), and the existing `"danger"` bypass floor is `score > 80`
+> — clearly calibrated against System B's own scale, not System A's. Both systems' raw
+> `ProjectState.score` values ARE already compared directly today in the normal (unlocked)
+> `evaluate_project_switch()` path, but given this scale gap, that comparison is almost certainly
+> already lopsided in practice (any System B goal trivially outscores any System A route). Also:
+> `AdventureDecisionPhase.apply()` itself never calls `evaluate_project_switch()` at all — on its
+> own re-evaluation, once unlocked, it unconditionally overwrites `current_project_id` with no
+> score comparison against whatever is currently active, which is the real mechanism behind
+> System A "always winning" the moment its own lock expires (not a scoring contest, an
+> unconditional overwrite). Both of these need direct, empirical confirmation in Investigate
+> before deciding whether the generic bypass rule needs score *normalization* (e.g., percentage-
+> of-observed-max per system) rather than a raw cross-system comparison, and whether
+> `AdventureDecisionPhase` itself also needs to start respecting `evaluate_project_switch()`'s own
+> retention logic (a second, related asymmetry, not just the bypass allowlist) to make the fix
+> actually symmetric between the two systems.
 
 ### 4. Documentation (durable, not per-ticket)
 
@@ -143,8 +164,19 @@ score-normalization is needed.
 
 ## Rollout risk
 
-Low for existing corpus behavior: confirmed only `human`/`practical_humanoid` is compatible with
-the `hero` role in current content, so marking it eligible is behavior-preserving by construction.
-`GoalRegistry`'s own universal scope is unchanged (still runs for every entity, always) — this
-design only adds eligibility-gating to System A's own enrichment layer, a strict superset
-expansion for any future race/role combination, never a removal of existing behavior.
+**Eligibility side**: low for existing corpus behavior. Confirmed only `human`/`practical_humanoid`
+is compatible with the `hero` role in current content, so marking it eligible is behavior-
+preserving by construction. `GoalRegistry`'s own universal scope is unchanged (still runs for
+every entity, always) — this design only adds eligibility-gating to System A's own enrichment
+layer, a strict superset expansion for any future race/role combination, never a removal of
+existing behavior.
+
+**Bypass side**: a real, deliberate behavior tightening, not risk-free. The generalized rule adds
+a condition the current `"danger"` case doesn't have — a `"danger"`-kind candidate scoring >80
+today bypasses unconditionally; under the new rule it must *also* clear
+`effective_current_score`. This is intentional (a `"danger"` project that scores below the
+current project's own retention-adjusted score arguably shouldn't preempt it either), but it
+means a corpus scenario that currently relies on unconditional `"danger"` bypass could see
+different behavior post-fix. Test must explicitly verify existing `"danger"`-bypass scenarios
+(score > 80) still resolve the same way under the dual-condition rule, not just that the new
+generalized case works.
