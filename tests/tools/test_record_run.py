@@ -132,6 +132,30 @@ def test_compute_duration_s_none_when_end_ts_null():
     assert compute_duration_s(record) is None
 
 
+# ---------------------------------------------------------------------------
+# TCK-20260810-MONITORING-NEGATIVE-DURATION-TIMESTAMP-BUG — end_ts earlier
+# than start_ts must degrade to null, not a negative duration_s
+# ---------------------------------------------------------------------------
+
+def test_compute_duration_s_none_when_end_before_start(capsys):
+    """A fabricated start_ts later than the real, captured end_ts (confirmed to happen when a
+    hand-typed start_ts uses a wrong date assumption) must not silently store a negative
+    duration_s -- degrade to None and warn, matching the None-for-missing-end_ts precedent."""
+    record = {**_VALID_RECORD, "start_ts": "2026-08-10T00:50:00Z", "end_ts": "2026-08-09T17:20:09Z"}
+    assert compute_duration_s(record) is None
+    captured = capsys.readouterr()
+    assert "WARNING" in captured.err
+    assert "earlier than start_ts" in captured.err
+
+
+def test_compute_duration_s_zero_when_end_equals_start():
+    """Regression guard: end_ts == start_ts (a real, separate prior bug,
+    TCK-20260809-MONITORING-ZERO-DURATION-COMBAT-RUNS-HOTFIX) must still compute 0, not be
+    treated as invalid -- only a strictly negative delta should degrade to None."""
+    record = {**_VALID_RECORD, "start_ts": "2026-08-09T10:00:00Z", "end_ts": "2026-08-09T10:00:00Z"}
+    assert compute_duration_s(record) == 0
+
+
 class TestDurationWrittenToRecord:
     def _run_and_read(self, data: dict, tmp_path):
         result = subprocess.run(

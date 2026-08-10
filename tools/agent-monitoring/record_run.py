@@ -26,19 +26,38 @@ def validate_record(record: dict) -> list[str]:
 
 
 def compute_duration_s(record: dict) -> int | None:
-    """Wall-clock seconds from start_ts to end_ts, or None if end_ts is absent.
+    """Wall-clock seconds from start_ts to end_ts, or None if end_ts is absent
+    or the pair is invalid (end before start).
 
     end_ts is not in REQUIRED (schema.md documents it nullable for crashed
     runs), so this must degrade to None rather than error when it's missing.
     Always overrides any caller-supplied duration_s — the point of computing
     it here is to stop depending on caller-supplied correctness.
+
+    A negative result (end_ts earlier than start_ts) means at least one of
+    the two timestamps was fabricated/estimated rather than really captured
+    (TCK-20260810-MONITORING-NEGATIVE-DURATION-TIMESTAMP-BUG confirmed this
+    happens when a caller hand-types start_ts under a wrong date assumption
+    while end_ts is a real `date -u` capture) — degrading to None here,
+    rather than silently storing a negative duration, surfaces the caller's
+    own bad input instead of feeding it straight into the dashboard's
+    Progress Timeline rendering.
     """
     end_ts = record.get("end_ts")
     if not end_ts:
         return None
     start = datetime.fromisoformat(record["start_ts"].replace("Z", "+00:00"))
     end = datetime.fromisoformat(end_ts.replace("Z", "+00:00"))
-    return int((end - start).total_seconds())
+    delta_s = int((end - start).total_seconds())
+    if delta_s < 0:
+        print(
+            f"WARNING: end_ts ({end_ts}) is earlier than start_ts "
+            f"({record['start_ts']}) — duration_s set to null instead of "
+            f"{delta_s}. Re-check start_ts.",
+            file=sys.stderr,
+        )
+        return None
+    return delta_s
 
 
 def main():
