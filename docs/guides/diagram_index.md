@@ -22,7 +22,6 @@ premature — see `stored_artifacts/TCK-20260706-DIAGRAM-COVERAGE/plan.md`).
 
 | Doc | Diagram | Covers |
 |---|---|---|
-| [`docs/systems/state_machines.md`](../systems/state_machines.md) | Mermaid `stateDiagram-v2` | Engine tick cycle (`tick_once()` phase transitions) |
 | [`docs/engine/architecture.md`](../engine/architecture.md) | Mermaid | Engine architecture |
 | [`docs/engine/contracts/infrastructure_overview.md`](../engine/contracts/infrastructure_overview.md) | Mermaid | Component map — full ecosystem structural directory |
 

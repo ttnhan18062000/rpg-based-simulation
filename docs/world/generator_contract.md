@@ -11,7 +11,10 @@ tags: [worldgeneration, engine, contract, determinism, procedural, pipeline]
 
 **Source:** `src/worldgeneration/` (2 files: generator.py, schema.py)  
 **Compliance namespace:** `WORLD-GEN-001` through `WORLD-GEN-004`  
-**System overview:** `docs/systems/world_generation.md` — do not duplicate here.
+**System overview:** `docs/systems/world_generation.md` was archived 2026-08-10
+(`TCK-20260809-STALE-DOCS-AI-BRAIN-ARCHITECTURE-AUDIT` — cited non-existent files like
+`src/core/grid.py`) to `docs/archive/systems/world_generation.md`. This contract is now the
+primary current technical reference for world generation; no separate overview doc exists.
 
 ---
 

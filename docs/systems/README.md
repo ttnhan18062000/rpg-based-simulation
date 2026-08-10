@@ -10,10 +10,16 @@ audience: developer
 Technical specifications for individual simulation domains.
 
 ## Domains
-- [Combat & Progression](../systems/combat_and_progression.md): Formulas, damage, and leveling.
 - [Strategic Cognition](../systems/strategic_cognition.md): Bounded cognition and project management.
-- [World & Ecology](../systems/world.md): Environment, time, and world events.
-- [Buildings & Economy](../systems/buildings_and_economy.md): Harvest, craft, and trade loops.
-- [World Generation](../systems/world_generation.md): Map generation and regional distribution.
-- [Evolution & Resilience](../systems/world_evolution_and_resilience.md): Difficulty scaling and regional conquest.
-- [AI System](../systems/ai_system.md): Brain architecture and state machines.
+- [Faction Contract](../systems/faction_contract.md): Faction relationships and diplomatic state.
+
+## Retired (2026-08-10)
+
+`TCK-20260809-STALE-DOCS-AI-BRAIN-ARCHITECTURE-AUDIT` found that `combat_and_progression.md`,
+`world.md`, `buildings_and_economy.md`, `world_generation.md`, `world_evolution_and_resilience.md`,
+`ai_system.md`, and this directory's own unlinked `mechanics.md`/`state_machines.md` all describe a
+`src/actions/`-and-`src/ai/states.py`-centric architecture that predates the current codebase
+structure — moved to `docs/archive/systems/` with pointer notes to their real current replacements
+(mostly `docs/mechanics/`, `docs/engine/`, and `docs/simulation/` contract docs; some ground —
+buildings, progression/XP, tile/terrain-detail, biome/region design — has no single current
+reference doc yet, a disclosed gap rather than a silent one).

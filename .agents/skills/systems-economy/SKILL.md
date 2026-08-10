@@ -8,7 +8,8 @@ description: 'Economy, crafting, harvest, market, quest, guild logic in src/syst
 Covers `src/systems/` (25 top-level files: `economy.py`, `crafting.py`, `harvest_system.py`,
 `market.py`, `quest_system.py`, `guild_system.py`, `town_service.py`, etc., plus 5
 `*_systems/` subdirectories). Sourced from `docs/mechanics/03_economic_laws.md` (Mechanics Bible
-ch.3, P0 authoritative) and `docs/systems/buildings_and_economy.md`. This is the largest single
+ch.3, P0 authoritative) and `docs/simulation/town_contract.md` (authoritative, `src/town/`).
+This is the largest single
 domain gap found in this repo's skill-catalog sweep — 32+ tickets reference this subsystem, zero
 prior skill or agent coverage.
 
