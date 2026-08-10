@@ -3,10 +3,13 @@
 
 Diffs calibration grades against committed anchors (grade_anchors.json).
 Use --dry-run to read existing data/calibration/ reports without re-running the engine.
+With no --scenario, an engine re-run (non --dry-run) defaults to fast-tier scenarios only
+(<=500t); pass --include-slow to also re-run SLOW-tier (1000t/2000t) scenarios.
 
 Usage:
     python3 tools/evaluate_simq.py --dry-run
     python3 tools/evaluate_simq.py
+    python3 tools/evaluate_simq.py --include-slow
     python3 tools/evaluate_simq.py --scenario dungeon_crawl_seed42_200t --dry-run
 
 Exit codes:
@@ -174,11 +177,42 @@ def _print_table(rows: list[dict[str, str]]) -> None:
         )
 
 
+def _select_scenarios(anchor_keys: list[str], scenario: str | None, dry_run: bool, include_slow: bool) -> list[str]:
+    """Choose which run_keys to process, per evaluate_simq's own CLI contract.
+
+    An explicit --scenario always wins. --dry-run reads already-computed reports (cheap
+    regardless of tier) so it is never tier-filtered. Otherwise (a real engine re-run), default
+    to fast-tier only (<=500t) -- matches `make simq-full-audit-full`'s documented contract --
+    unless --include-slow opts back into the full corpus. A key that fails to parse is kept
+    (treated as fast) rather than silently dropped; its own parse failure is surfaced later by
+    the per-scenario loop, not swallowed here.
+    """
+    if scenario:
+        return [scenario]
+    if dry_run or include_slow:
+        return list(anchor_keys)
+    fast_keys = []
+    for k in anchor_keys:
+        try:
+            _, _, ticks = _parse_run_key(k)
+        except ValueError:
+            fast_keys.append(k)
+            continue
+        if ticks <= 500:
+            fast_keys.append(k)
+    return fast_keys
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="SimQ evaluation harness")
     parser.add_argument("--dry-run", action="store_true", help="Read existing calibration data; do not re-run engine")
     parser.add_argument("--scenario", type=str, default=None, help="Run a single scenario by run_key")
     parser.add_argument("--anchors", type=str, default=str(DEFAULT_ANCHORS), help="Path to grade_anchors.json")
+    parser.add_argument(
+        "--include-slow",
+        action="store_true",
+        help="Also re-run SLOW-tier (>500t) scenarios (default engine re-run is fast-tier only, <=500t)",
+    )
     args = parser.parse_args()
 
     anchors_path = Path(args.anchors)
@@ -194,10 +228,7 @@ def main() -> None:
     # Strip metadata keys (start with _)
     anchor_keys = [k for k in all_anchors if not k.startswith("_")]
 
-    if args.scenario:
-        scenarios = [args.scenario]
-    else:
-        scenarios = anchor_keys
+    scenarios = _select_scenarios(anchor_keys, args.scenario, args.dry_run, args.include_slow)
 
     all_rows: list[dict[str, str]] = []
     missing_count = 0

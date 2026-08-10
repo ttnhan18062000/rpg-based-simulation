@@ -114,6 +114,12 @@ make simq-full-audit-full   # same, but re-runs the engine for fast scenarios fi
 make simq-full-audit-slow   # slow-tier (1000t/2000t) regression check
 ```
 
+`tools/evaluate_simq.py`'s engine re-run mode (no `--scenario`, no `--dry-run`) defaults to
+fast-tier scenarios only (<=500t), matching `simq-full-audit-full`'s own contract above — pass
+`--include-slow` to also re-run the SLOW tier in the same invocation (expect a much longer wall
+-clock time; `TCK-20260810-SIMQ-EVALUATE-SLOW-TIER-SCOPE-LEAK` found the un-scoped SLOW-tier
+re-run alone adds ~450s+ of engine compute across the corpus).
+
 `tools/simq_audit_gaps.py` can also be run directly for just the coverage/parity scan:
 
 ```
