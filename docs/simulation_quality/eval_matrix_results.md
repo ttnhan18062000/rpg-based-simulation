@@ -326,6 +326,28 @@ see the AGENCY Cross-World Design Note below for why that is archetype-correct, 
 > NARRATIVE=A, PROGRESSION=C, AGENCY=C, COGNITION=B, ECONOMY=C, FACTION=S, INFORMATION=B, SOCIAL=S,
 > WORLD=B); `tools/evaluate_simq.py --dry-run` now shows 0 regressions corpus-wide.
 
+> **NOTE (2026-08-10 — SimQ audit `SIMQ-AUDIT-20260810T032558Z`, root cause
+> `TCK-20260808-MONSTER-ROLE-MISTAGGING-INVESTIGATION`, commit `6fd735a3`):** `urban_political`'s
+> COMBAT anchor jumped C→A at all 3 fast-tier seed/tick combinations (`_seed42_200t`,
+> `_seed42_500t`, `_seed456_500t`), and the SAME pattern reproduced independently on
+> `frontier_extended` (`_seed42_200t` C→A, `_seed456_200t` C→A) and `frontier_living_world`
+> (`_seed42_200t` C→S, `_seed456_200t` C→A). Confirmed cause: `WorldCompiler.compile()` had no
+> catalog access of its own and silently defaulted almost every real monster-archetype entity's
+> `role`/`faction` to CITIZEN/NEUTRAL corpus-wide (not just these 3 worlds — every world compiled
+> through the affected call sites was subject to the same bug); the fix surfaces each world's own
+> already-computed `resolved/compile_context.json`. Real hostile-faction entities that were
+> previously invisible to faction-based hostility detection (zero `MONSTER_HORDE`-tagged entities
+> existed anywhere in `urban_political`'s own compiled state before this fix) are now correctly
+> detected, unlocking real combat engagement. All 7 affected COMBAT anchor entries updated in place
+> to the live post-fix values; see `docs/parity_ledger/substrate.yaml` SUB-384 for the full
+> before/after data. **Disclosed, not resolved by this update**: the SAME audit run surfaced a
+> separate, real, unexplained SOCIAL/ECONOMY/PROGRESSION score-tolerance drift across
+> `urban_political`, `frontier_living_world`, and `highland_traverse` (consistently large,
+> unannotated SOCIAL score inflation in particular) with no confirmed cause — NOT assumed to be
+> the same role/faction fix without direct evidence, left un-anchored and disclosed as a genuine
+> `REGRESSION` classification pending its own dedicated investigation
+> (`TCK-20260810-SIMQ-CORPUS-ROLE-FACTION-DRIFT-VERIFICATION` or successor).
+
 ---
 
 ### simq_routing_test (ENABLE_ADVENTURE_ROUTING=ON)
